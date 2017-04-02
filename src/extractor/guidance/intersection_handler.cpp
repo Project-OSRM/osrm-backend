@@ -31,11 +31,11 @@ inline bool requiresAnnouncement(const EdgeData &from, const EdgeData &to)
 }
 
 IntersectionHandler::IntersectionHandler(const util::NodeBasedDynamicGraph &node_based_graph,
-                                         const std::vector<QueryNode> &node_info_list,
+                                         const std::vector<util::Coordinate> &coordinates,
                                          const util::NameTable &name_table,
                                          const SuffixTable &street_name_suffix_table,
                                          const IntersectionGenerator &intersection_generator)
-    : node_based_graph(node_based_graph), node_info_list(node_info_list), name_table(name_table),
+    : node_based_graph(node_based_graph), coordinates(coordinates), name_table(name_table),
       street_name_suffix_table(street_name_suffix_table),
       intersection_generator(intersection_generator),
       graph_walker(node_based_graph, intersection_generator)
@@ -127,8 +127,8 @@ TurnInstruction IntersectionHandler::getInstructionForObvious(const std::size_t 
                     // or actually follow the full road. When 2399 lands, we can exchange here for a
                     // precalculated distance value.
                     const auto distance = util::coordinate_calculation::haversineDistance(
-                        node_info_list[node_based_graph.GetTarget(via_edge)],
-                        node_info_list[node_based_graph.GetTarget(road.eid)]);
+                        coordinates[node_based_graph.GetTarget(via_edge)],
+                        coordinates[node_based_graph.GetTarget(road.eid)]);
                     return {
                         TurnType::Turn,
                         (angularDeviation(road.angle, STRAIGHT_ANGLE) < FUZZY_ANGLE_DIFFERENCE ||

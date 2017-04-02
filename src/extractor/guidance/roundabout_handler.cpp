@@ -23,19 +23,19 @@ namespace guidance
 {
 
 RoundaboutHandler::RoundaboutHandler(const util::NodeBasedDynamicGraph &node_based_graph,
-                                     const std::vector<QueryNode> &node_info_list,
+                                     const std::vector<util::Coordinate> &coordinates,
                                      const CompressedEdgeContainer &compressed_edge_container,
                                      const util::NameTable &name_table,
                                      const SuffixTable &street_name_suffix_table,
                                      const ProfileProperties &profile_properties,
                                      const IntersectionGenerator &intersection_generator)
     : IntersectionHandler(node_based_graph,
-                          node_info_list,
+                          coordinates,
                           name_table,
                           street_name_suffix_table,
                           intersection_generator),
       compressed_edge_container(compressed_edge_container), profile_properties(profile_properties),
-      coordinate_extractor(node_based_graph, compressed_edge_container, node_info_list)
+      coordinate_extractor(node_based_graph, compressed_edge_container, coordinates)
 {
 }
 
@@ -149,10 +149,6 @@ void RoundaboutHandler::invalidateExitAgainstDirection(const NodeID from_nid,
 bool RoundaboutHandler::qualifiesAsRoundaboutIntersection(
     const std::unordered_set<NodeID> &roundabout_nodes) const
 {
-    // translate a node ID into its respective coordinate stored in the node_info_list
-    const auto getCoordinate = [this](const NodeID node) {
-        return util::Coordinate(node_info_list[node].lon, node_info_list[node].lat);
-    };
     const bool has_limited_size = roundabout_nodes.size() <= 4;
     if (!has_limited_size)
         return false;
@@ -169,7 +165,7 @@ bool RoundaboutHandler::qualifiesAsRoundaboutIntersection(
     // Find all exit bearings. Only if they are well distinct (at least 60 degrees between
     // them), we allow a roundabout turn
 
-    const auto exit_bearings = [this, &roundabout_nodes, getCoordinate]() {
+    const auto exit_bearings = [this, &roundabout_nodes]() {
         std::vector<double> result;
         for (const auto node : roundabout_nodes)
         {
@@ -182,7 +178,7 @@ bool RoundaboutHandler::qualifiesAsRoundaboutIntersection(
                     continue;
 
                 // there is a single non-roundabout edge
-                const auto src_coordinate = getCoordinate(node);
+                const auto src_coordinate = coordinates[node];
 
                 const auto edge_range = node_based_graph.GetAdjacentEdgeRange(node);
                 const auto number_of_lanes_at_intersection = std::accumulate(
@@ -242,11 +238,6 @@ bool RoundaboutHandler::qualifiesAsRoundaboutIntersection(
 
 RoundaboutType RoundaboutHandler::getRoundaboutType(const NodeID nid) const
 {
-    // translate a node ID into its respective coordinate stored in the node_info_list
-    const auto getCoordinate = [this](const NodeID node) {
-        return util::Coordinate(node_info_list[node].lon, node_info_list[node].lat);
-    };
-
     std::unordered_set<unsigned> roundabout_name_ids;
     std::unordered_set<unsigned> connected_names;
 
@@ -305,11 +296,11 @@ RoundaboutType RoundaboutHandler::getRoundaboutType(const NodeID nid) const
 
     const auto getEdgeLength = [&](const NodeID source_node, EdgeID eid) {
         double length = 0.;
-        auto last_coord = getCoordinate(source_node);
+        auto last_coord = coordinates[source_node];
         const auto &edge_bucket = compressed_edge_container.GetBucketReference(eid);
         for (const auto &compressed_edge : edge_bucket)
         {
-            const auto next_coord = getCoordinate(compressed_edge.node_id);
+            const auto next_coord = coordinates[compressed_edge.node_id];
             length += util::coordinate_calculation::haversineDistance(last_coord, next_coord);
             last_coord = next_coord;
         }

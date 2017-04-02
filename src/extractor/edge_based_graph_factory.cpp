@@ -41,13 +41,15 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(
     const std::unordered_set<NodeID> &barrier_nodes,
     const std::unordered_set<NodeID> &traffic_lights,
     std::shared_ptr<const RestrictionMap> restriction_map,
-    const std::vector<QueryNode> &node_info_list,
+    const std::vector<util::Coordinate> &coordinates,
+    const util::PackedVector<OSMNodeID> &osm_node_ids,
     ProfileProperties profile_properties,
     const util::NameTable &name_table,
     std::vector<std::uint32_t> &turn_lane_offsets,
     std::vector<guidance::TurnLaneType::Mask> &turn_lane_masks,
     guidance::LaneDescriptionMap &lane_description_map)
-    : m_max_edge_id(0), m_node_info_list(node_info_list),
+    : m_max_edge_id(0), m_coordinates(coordinates),
+      m_osm_node_ids(osm_node_ids),
       m_node_based_graph(std::move(node_based_graph)),
       m_restriction_map(std::move(restriction_map)), m_barrier_nodes(barrier_nodes),
       m_traffic_lights(traffic_lights), m_compressed_edge_container(compressed_edge_container),
@@ -67,15 +69,6 @@ void EdgeBasedGraphFactory::GetEdgeBasedEdges(
 
 void EdgeBasedGraphFactory::GetEdgeBasedNodes(std::vector<EdgeBasedNode> &nodes)
 {
-#ifndef NDEBUG
-    for (const EdgeBasedNode &node : m_edge_based_node_list)
-    {
-        BOOST_ASSERT(
-            util::Coordinate(m_node_info_list[node.u].lon, m_node_info_list[node.u].lat).IsValid());
-        BOOST_ASSERT(
-            util::Coordinate(m_node_info_list[node.v].lon, m_node_info_list[node.v].lat).IsValid());
-    }
-#endif
     using std::swap; // Koenig swap
     swap(nodes, m_edge_based_node_list);
 }
@@ -325,7 +318,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     // linear number of turns only.
     SuffixTable street_name_suffix_table(scripting_environment);
     guidance::TurnAnalysis turn_analysis(*m_node_based_graph,
-                                         m_node_info_list,
+                                         m_coordinates,
                                          *m_restriction_map,
                                          m_barrier_nodes,
                                          m_compressed_edge_container,
@@ -548,18 +541,17 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
                     const auto &from_node =
                         isTrivial
-                            ? m_node_info_list[node_along_road_entering]
-                            : m_node_info_list[m_compressed_edge_container.GetLastEdgeSourceID(
+                            ? m_osm_node_ids[node_along_road_entering]
+                            : m_osm_node_ids[m_compressed_edge_container.GetLastEdgeSourceID(
                                   incoming_edge)];
                     const auto &via_node =
-                        m_node_info_list[m_compressed_edge_container.GetLastEdgeTargetID(
+                        m_osm_node_ids[m_compressed_edge_container.GetLastEdgeTargetID(
                             incoming_edge)];
                     const auto &to_node =
-                        m_node_info_list[m_compressed_edge_container.GetFirstEdgeTargetID(
+                        m_osm_node_ids[m_compressed_edge_container.GetFirstEdgeTargetID(
                             turn.eid)];
 
-                    lookup::TurnIndexBlock turn_index_block = {
-                        from_node.node_id, via_node.node_id, to_node.node_id};
+                    lookup::TurnIndexBlock turn_index_block = {from_node, via_node, to_node};
 
                     turn_penalties_index_file.WriteOne(turn_index_block);
                 }

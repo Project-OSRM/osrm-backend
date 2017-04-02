@@ -13,11 +13,11 @@ namespace guidance
 
 SuppressModeHandler::SuppressModeHandler(const IntersectionGenerator &intersection_generator,
                                          const util::NodeBasedDynamicGraph &node_based_graph,
-                                         const std::vector<QueryNode> &node_info_list,
+                                         const std::vector<util::Coordinate> &coordinates,
                                          const util::NameTable &name_table,
                                          const SuffixTable &street_name_suffix_table)
     : IntersectionHandler(node_based_graph,
-                          node_info_list,
+                          coordinates,
                           name_table,
                           street_name_suffix_table,
                           intersection_generator)

@@ -262,10 +262,12 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
         util::DeallocatingVector<EdgeBasedEdge> edge_based_edge_list;
         std::vector<bool> node_is_startpoint;
         std::vector<EdgeWeight> edge_based_node_weights;
-        std::vector<QueryNode> internal_to_external_node_map;
+        std::vector<util::Coordinate> coordinates;
+        util::PackedVector<OSMNodeID> osm_node_ids;
 
         auto graph_size = BuildEdgeExpandedGraph(scripting_environment,
-                                                 internal_to_external_node_map,
+                                                 coordinates,
+                                                 osm_node_ids,
                                                  edge_based_node_list,
                                                  node_is_startpoint,
                                                  edge_based_node_weights,
@@ -292,14 +294,12 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
 
         util::Log() << "Building r-tree ...";
         TIMER_START(rtree);
-        BuildRTree(std::move(edge_based_node_list),
-                   std::move(node_is_startpoint),
-                   internal_to_external_node_map);
+        BuildRTree(std::move(edge_based_node_list), std::move(node_is_startpoint), coordinates);
 
         TIMER_STOP(rtree);
 
         util::Log() << "Writing node map ...";
-        WriteNodeMapping(internal_to_external_node_map);
+        files::writeNodes<storage::Ownership::Container>(config.node_output_path, coordinates, osm_node_ids);
 
         WriteEdgeBasedGraph(config.edge_graph_output_path, max_edge_id, edge_based_edge_list);
 
@@ -406,7 +406,8 @@ std::shared_ptr<RestrictionMap> Extractor::LoadRestrictionMap()
 std::shared_ptr<util::NodeBasedDynamicGraph>
 Extractor::LoadNodeBasedGraph(std::unordered_set<NodeID> &barriers,
                               std::unordered_set<NodeID> &traffic_signals,
-                              std::vector<QueryNode> &internal_to_external_node_map)
+                              std::vector<util::Coordinate> &coordiantes,
+                              util::PackedVector<OSMNodeID> &osm_node_ids)
 {
     storage::io::FileReader file_reader(config.output_file_name,
                                         storage::io::FileReader::VerifyFingerprint);
@@ -415,7 +416,7 @@ Extractor::LoadNodeBasedGraph(std::unordered_set<NodeID> &barriers,
     auto traffic_signals_iter = inserter(traffic_signals, end(traffic_signals));
 
     NodeID number_of_node_based_nodes = util::loadNodesFromFile(
-        file_reader, barriers_iter, traffic_signals_iter, internal_to_external_node_map);
+        file_reader, barriers_iter, traffic_signals_iter, coordiantes, osm_node_ids);
 
     util::Log() << " - " << barriers.size() << " bollard nodes, " << traffic_signals.size()
                 << " traffic lights";
@@ -437,7 +438,8 @@ Extractor::LoadNodeBasedGraph(std::unordered_set<NodeID> &barriers,
 */
 std::pair<std::size_t, EdgeID>
 Extractor::BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
-                                  std::vector<QueryNode> &internal_to_external_node_map,
+                                  std::vector<util::Coordinate> &coordinates,
+                                  util::PackedVector<OSMNodeID> &osm_node_ids,
                                   std::vector<EdgeBasedNode> &node_based_edge_list,
                                   std::vector<bool> &node_is_startpoint,
                                   std::vector<EdgeWeight> &edge_based_node_weights,
@@ -449,7 +451,7 @@ Extractor::BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
 
     auto restriction_map = LoadRestrictionMap();
     auto node_based_graph =
-        LoadNodeBasedGraph(barrier_nodes, traffic_lights, internal_to_external_node_map);
+        LoadNodeBasedGraph(barrier_nodes, traffic_lights, coordinates, osm_node_ids);
 
     CompressedEdgeContainer compressed_edge_container;
     GraphCompressor graph_compressor;
@@ -473,7 +475,8 @@ Extractor::BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
         barrier_nodes,
         traffic_lights,
         std::const_pointer_cast<RestrictionMap const>(restriction_map),
-        internal_to_external_node_map,
+        coordinates,
+        osm_node_ids,
         scripting_environment.GetProfileProperties(),
         name_table,
         turn_lane_offsets,
@@ -508,7 +511,7 @@ Extractor::BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
     compressed_node_based_graph_writing = std::async(std::launch::async, [&] {
         WriteCompressedNodeBasedGraph(config.compressed_node_based_graph_output_path,
                                       *node_based_graph,
-                                      internal_to_external_node_map);
+                                      coordinates);
     });
 
     WriteTurnLaneData(config.turn_lane_descriptions_file_name);
@@ -532,28 +535,16 @@ Extractor::BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
 }
 
 /**
-  \brief Writing info on original (node-based) nodes
- */
-void Extractor::WriteNodeMapping(const std::vector<QueryNode> &internal_to_external_node_map)
-{
-    storage::io::FileWriter node_file(config.node_output_path,
-                                      storage::io::FileWriter::HasNoFingerprint);
-
-    node_file.SerializeVector(internal_to_external_node_map);
-}
-
-/**
     \brief Building rtree-based nearest-neighbor data structure
 
     Saves tree into '.ramIndex' and leaves into '.fileIndex'.
  */
 void Extractor::BuildRTree(std::vector<EdgeBasedNode> node_based_edge_list,
                            std::vector<bool> node_is_startpoint,
-                           const std::vector<QueryNode> &internal_to_external_node_map)
+                           const std::vector<util::Coordinate> &coordinates)
 {
     util::Log() << "constructing r-tree of " << node_based_edge_list.size()
-                << " edge elements build on-top of " << internal_to_external_node_map.size()
-                << " coordinates";
+                << " edge elements build on-top of " << coordinates.size() << " coordinates";
 
     BOOST_ASSERT(node_is_startpoint.size() == node_based_edge_list.size());
 
@@ -580,10 +571,10 @@ void Extractor::BuildRTree(std::vector<EdgeBasedNode> node_based_edge_list,
     node_based_edge_list.resize(new_size);
 
     TIMER_START(construction);
-    util::StaticRTree<EdgeBasedNode, std::vector<QueryNode>> rtree(node_based_edge_list,
-                                                                   config.rtree_nodes_output_path,
-                                                                   config.rtree_leafs_output_path,
-                                                                   internal_to_external_node_map);
+    util::StaticRTree<EdgeBasedNode> rtree(node_based_edge_list,
+                                           config.rtree_nodes_output_path,
+                                           config.rtree_leafs_output_path,
+                                           coordinates);
 
     TIMER_STOP(construction);
     util::Log() << "finished r-tree construction in " << TIMER_SEC(construction) << " seconds";
@@ -678,7 +669,7 @@ void Extractor::WriteTurnLaneData(const std::string &turn_lane_file) const
 
 void Extractor::WriteCompressedNodeBasedGraph(const std::string &path,
                                               const util::NodeBasedDynamicGraph &graph,
-                                              const std::vector<QueryNode> &externals)
+                                              const std::vector<util::Coordinate> &coordinates)
 {
     const auto fingerprint = storage::io::FileWriter::GenerateFingerprint;
 
@@ -693,7 +684,7 @@ void Extractor::WriteCompressedNodeBasedGraph(const std::string &path,
     const auto num_edges = graph.GetNumberOfEdges();
     const auto num_nodes = graph.GetNumberOfNodes();
 
-    BOOST_ASSERT_MSG(num_nodes == externals.size(), "graph and embedding out of sync");
+    BOOST_ASSERT_MSG(num_nodes == coordinates.size(), "graph and embedding out of sync");
 
     writer.WriteElementCount64(num_edges);
     writer.WriteElementCount64(num_nodes);
@@ -710,7 +701,8 @@ void Extractor::WriteCompressedNodeBasedGraph(const std::string &path,
         }
     }
 
-    for (const auto &qnode : externals)
+    // FIXME this is unneccesary: We have this data
+    for (const auto &qnode : coordinates)
     {
         writer.WriteOne(qnode.lon);
         writer.WriteOne(qnode.lat);

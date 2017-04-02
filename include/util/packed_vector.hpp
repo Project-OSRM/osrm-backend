@@ -4,6 +4,7 @@
 #include "util/shared_memory_vector_wrapper.hpp"
 #include "util/typedefs.hpp"
 
+#include "storage/io.hpp"
 #include "storage/shared_memory_ownership.hpp"
 
 #include <cmath>
@@ -13,7 +14,22 @@ namespace osrm
 {
 namespace util
 {
+namespace detail
+{
+template <typename T, storage::Ownership Ownership> class PackedVector;
+}
 
+namespace serialization
+{
+template <typename T, storage::Ownership Ownership>
+inline void read(storage::io::FileReader &reader, detail::PackedVector<T, Ownership> &vec);
+
+template <typename T, storage::Ownership Ownership>
+inline void write(storage::io::FileWriter &writer, const detail::PackedVector<T, Ownership> &vec);
+}
+
+namespace detail
+{
 /**
  * Since OSM node IDs are (at the time of writing) not quite yet overflowing 32 bits, and
  * will predictably be containable within 33 bits for a long time, the following packs
@@ -22,8 +38,7 @@ namespace util
  * NOTE: this type is templated for future use, but will require a slight refactor to
  * configure BITSIZE and ELEMSIZE
  */
-template <typename T, storage::Ownership Ownership = storage::Ownership::Container>
-class PackedVector
+template <typename T, storage::Ownership Ownership> class PackedVector
 {
     static const constexpr std::size_t BITSIZE = 33;
     static const constexpr std::size_t ELEMSIZE = 64;
@@ -80,7 +95,9 @@ class PackedVector
         num_elements++;
     }
 
-    T at(const std::size_t &a_index) const
+    T operator[](const std::size_t index) const { return at(index); }
+
+    T at(const std::size_t a_index) const
     {
         BOOST_ASSERT(a_index < num_elements);
 
@@ -147,10 +164,16 @@ class PackedVector
         return std::floor(static_cast<double>(vec.capacity()) * ELEMSIZE / BITSIZE);
     }
 
+    friend void serialization::read<T, Ownership>(storage::io::FileReader &reader,
+                                                  detail::PackedVector<T, Ownership> &vec);
+
+    friend void serialization::write<T, Ownership>(storage::io::FileWriter &writer,
+                                                   const detail::PackedVector<T, Ownership> &vec);
+
   private:
     typename util::ShM<std::uint64_t, Ownership>::vector vec;
 
-    std::size_t num_elements = 0;
+    std::uint64_t num_elements = 0;
 
     signed cursor = -1;
 
@@ -191,6 +214,10 @@ class PackedVector
         return vec.back();
     }
 };
+}
+
+template <typename T> using PackedVector = detail::PackedVector<T, storage::Ownership::Container>;
+template <typename T> using PackedVectorView = detail::PackedVector<T, storage::Ownership::View>;
 }
 }
 

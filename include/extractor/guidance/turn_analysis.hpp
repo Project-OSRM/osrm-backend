@@ -40,7 +40,7 @@ class TurnAnalysis
 {
   public:
     TurnAnalysis(const util::NodeBasedDynamicGraph &node_based_graph,
-                 const std::vector<QueryNode> &node_info_list,
+                 const std::vector<util::Coordinate> &coordinates,
                  const RestrictionMap &restriction_map,
                  const std::unordered_set<NodeID> &barrier_nodes,
                  const CompressedEdgeContainer &compressed_edge_container,

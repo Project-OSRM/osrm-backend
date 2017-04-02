@@ -143,10 +143,9 @@ updateSegmentData(const UpdaterConfig &config,
 {
     auto weight_multiplier = profile_properties.GetWeightMultiplier();
 
-    std::vector<extractor::QueryNode> internal_to_external_node_map;
-    storage::io::FileReader nodes_file(config.node_based_graph_path,
-                                       storage::io::FileReader::HasNoFingerprint);
-    nodes_file.DeserializeVector(internal_to_external_node_map);
+    std::vector<util::Coordinate> coordinates;
+    util::PackedVector<OSMNodeID> osm_node_ids;
+    extractor::files::readNodes(config.node_based_graph_path, coordinates, osm_node_ids);
 
     // vector to count used speeds for logging
     // size offset by one since index 0 is used for speeds not from external file
@@ -180,8 +179,7 @@ updateSegmentData(const UpdaterConfig &config,
             segment_lengths.reserve(nodes_range.size() + 1);
             util::for_each_pair(nodes_range, [&](const auto &u, const auto &v) {
                 segment_lengths.push_back(util::coordinate_calculation::greatCircleDistance(
-                    util::Coordinate{internal_to_external_node_map[u]},
-                    util::Coordinate{internal_to_external_node_map[v]}));
+                    coordinates[u], coordinates[v]));
             });
 
             auto fwd_weights_range = segment_data.GetForwardWeights(geometry_id);
@@ -190,8 +188,8 @@ updateSegmentData(const UpdaterConfig &config,
             bool fwd_was_updated = false;
             for (const auto segment_offset : util::irange<std::size_t>(0, fwd_weights_range.size()))
             {
-                auto u = internal_to_external_node_map[nodes_range[segment_offset]].node_id;
-                auto v = internal_to_external_node_map[nodes_range[segment_offset + 1]].node_id;
+                auto u = osm_node_ids[nodes_range[segment_offset]];
+                auto v = osm_node_ids[nodes_range[segment_offset + 1]];
                 if (auto value = segment_speed_lookup({u, v}))
                 {
                     auto new_duration =
@@ -224,8 +222,8 @@ updateSegmentData(const UpdaterConfig &config,
 
             for (const auto segment_offset : util::irange<std::size_t>(0, rev_weights_range.size()))
             {
-                auto u = internal_to_external_node_map[nodes_range[segment_offset]].node_id;
-                auto v = internal_to_external_node_map[nodes_range[segment_offset + 1]].node_id;
+                auto u = osm_node_ids[nodes_range[segment_offset]];
+                auto v = osm_node_ids[nodes_range[segment_offset + 1]];
                 if (auto value = segment_speed_lookup({v, u}))
                 {
                     auto new_duration =
@@ -301,9 +299,8 @@ updateSegmentData(const UpdaterConfig &config,
                 if (old_fwd_durations_range[segment_offset] >=
                     (new_fwd_durations_range[segment_offset] * config.log_edge_updates_factor))
                 {
-                    auto from = internal_to_external_node_map[nodes_range[segment_offset]].node_id;
-                    auto to =
-                        internal_to_external_node_map[nodes_range[segment_offset + 1]].node_id;
+                    auto from = osm_node_ids[nodes_range[segment_offset]];
+                    auto to = osm_node_ids[nodes_range[segment_offset + 1]];
                     util::Log(logWARNING)
                         << "[weight updates] Edge weight update from "
                         << old_fwd_durations_range[segment_offset] / 10. << "s to "
@@ -323,9 +320,8 @@ updateSegmentData(const UpdaterConfig &config,
                 if (old_rev_durations_range[segment_offset] >=
                     (new_rev_durations_range[segment_offset] * config.log_edge_updates_factor))
                 {
-                    auto from =
-                        internal_to_external_node_map[nodes_range[segment_offset + 1]].node_id;
-                    auto to = internal_to_external_node_map[nodes_range[segment_offset]].node_id;
+                    auto from = osm_node_ids[nodes_range[segment_offset + 1]];
+                    auto to = osm_node_ids[nodes_range[segment_offset]];
                     util::Log(logWARNING)
                         << "[weight updates] Edge weight update from "
                         << old_rev_durations_range[segment_offset] / 10. << "s to "

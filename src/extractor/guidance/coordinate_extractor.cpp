@@ -60,7 +60,7 @@ double GetOffsetCorrectionFactor(const RoadClassification &road_classification)
 CoordinateExtractor::CoordinateExtractor(
     const util::NodeBasedDynamicGraph &node_based_graph,
     const extractor::CompressedEdgeContainer &compressed_geometries,
-    const std::vector<extractor::QueryNode> &node_coordinates)
+    const std::vector<util::Coordinate> &node_coordinates)
     : node_based_graph(node_based_graph), compressed_geometries(compressed_geometries),
       node_coordinates(node_coordinates)
 {
@@ -95,9 +95,9 @@ util::Coordinate CoordinateExtractor::ExtractRepresentativeCoordinate(
 {
     // check if the coordinate is equal to the interseciton coordinate
     const auto not_same_as_start = [&](const util::Coordinate coordinate) {
-        return util::Coordinate(traversed_in_reverse
-                                    ? node_coordinates[to_node]
-                                    : node_coordinates[intersection_node]) != coordinate;
+        return node_coordinates[traversed_in_reverse
+                                    ? to_node
+                                    : intersection_node] != coordinate;
     };
     // this is only used for debug purposes in assertions. We don't want warnings about it
     (void)not_same_as_start;

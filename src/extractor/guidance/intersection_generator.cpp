@@ -33,11 +33,11 @@ IntersectionGenerator::IntersectionGenerator(
     const util::NodeBasedDynamicGraph &node_based_graph,
     const RestrictionMap &restriction_map,
     const std::unordered_set<NodeID> &barrier_nodes,
-    const std::vector<QueryNode> &node_info_list,
+    const std::vector<util::Coordinate> &coordinates,
     const CompressedEdgeContainer &compressed_edge_container)
     : node_based_graph(node_based_graph), restriction_map(restriction_map),
-      barrier_nodes(barrier_nodes), node_info_list(node_info_list),
-      coordinate_extractor(node_based_graph, compressed_edge_container, node_info_list)
+      barrier_nodes(barrier_nodes), coordinates(coordinates),
+      coordinate_extractor(node_based_graph, compressed_edge_container, coordinates)
 {
 }
 
@@ -56,7 +56,7 @@ IntersectionGenerator::ComputeIntersectionShape(const NodeID node_at_center_of_i
     // reserve enough items (+ the possibly missing u-turn edge)
     const auto intersection_degree = node_based_graph.GetOutDegree(node_at_center_of_intersection);
     intersection.reserve(intersection_degree);
-    const util::Coordinate turn_coordinate = node_info_list[node_at_center_of_intersection];
+    const util::Coordinate turn_coordinate = coordinates[node_at_center_of_intersection];
 
     // number of lanes at the intersection changes how far we look down the road
     const auto edge_range = node_based_graph.GetAdjacentEdgeRange(node_at_center_of_intersection);

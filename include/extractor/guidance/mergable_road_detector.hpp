@@ -4,6 +4,7 @@
 #include "extractor/guidance/intersection.hpp"
 #include "util/node_based_graph.hpp"
 #include "util/typedefs.hpp"
+#include "util/coordinate.hpp"
 
 #include <cstdint>
 #include <functional>
@@ -22,7 +23,6 @@ class NameTable;
 namespace extractor
 {
 
-struct QueryNode;
 class SuffixTable;
 
 namespace guidance
@@ -37,7 +37,7 @@ class MergableRoadDetector
     using MergableRoadData = IntersectionShapeData;
 
     MergableRoadDetector(const util::NodeBasedDynamicGraph &node_based_graph,
-                         const std::vector<QueryNode> &node_coordinates,
+                         const std::vector<util::Coordinate> &node_coordinates,
                          const IntersectionGenerator &intersection_generator,
                          const CoordinateExtractor &coordinate_extractor,
                          const util::NameTable &name_table,
@@ -138,7 +138,7 @@ class MergableRoadDetector
     bool IsLinkRoad(const NodeID intersection_node, const MergableRoadData &road) const;
 
     const util::NodeBasedDynamicGraph &node_based_graph;
-    const std::vector<QueryNode> &node_coordinates;
+    const std::vector<util::Coordinate> &node_coordinates;
     const IntersectionGenerator &intersection_generator;
     const CoordinateExtractor &coordinate_extractor;
 
