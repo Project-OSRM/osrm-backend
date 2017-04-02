@@ -15,6 +15,7 @@
 #include "extractor/guidance/turn_lane_types.hpp"
 #include "extractor/profile_properties.hpp"
 #include "extractor/segment_data_container.hpp"
+#include "extractor/turn_data_container.hpp"
 
 #include "partition/cell_storage.hpp"
 #include "partition/multi_level_partition.hpp"
@@ -213,21 +214,13 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     unsigned m_check_sum;
     util::vector_view<util::Coordinate> m_coordinate_list;
     util::PackedVector<OSMNodeID, storage::Ownership::View> m_osmnodeid_list;
-    util::vector_view<GeometryID> m_via_geometry_list;
-    util::vector_view<NameID> m_name_ID_list;
-    util::vector_view<LaneDataID> m_lane_data_id;
-    util::vector_view<extractor::guidance::TurnInstruction> m_turn_instruction_list;
-    util::vector_view<extractor::TravelMode> m_travel_mode_list;
-    util::vector_view<util::guidance::TurnBearing> m_pre_turn_bearing;
-    util::vector_view<util::guidance::TurnBearing> m_post_turn_bearing;
     util::NameTable m_names_table;
-    util::vector_view<unsigned> m_name_begin_indices;
-    util::vector_view<bool> m_is_core_node;
     util::vector_view<std::uint32_t> m_lane_description_offsets;
     util::vector_view<extractor::guidance::TurnLaneType::Mask> m_lane_description_masks;
     util::vector_view<TurnPenalty> m_turn_weight_penalties;
     util::vector_view<TurnPenalty> m_turn_duration_penalties;
     extractor::SegmentDataView segment_data;
+    extractor::TurnDataView turn_data;
 
     util::vector_view<char> m_datasource_name_data;
     util::vector_view<std::size_t> m_datasource_name_offsets;
@@ -303,8 +296,7 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
             new SharedGeospatialQuery(*m_static_rtree, m_coordinate_list, *this));
     }
 
-    void InitializeNodeAndEdgeInformationPointers(storage::DataLayout &data_layout,
-                                                  char *memory_block)
+    void InitializeNodeInformationPointers(storage::DataLayout &data_layout, char *memory_block)
     {
         const auto coordinate_list_ptr = data_layout.GetBlockPtr<util::Coordinate>(
             memory_block, storage::DataLayout::COORDINATE_LIST);
@@ -323,66 +315,59 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         // We (ab)use the number of coordinates here because we know we have the same amount of ids
         m_osmnodeid_list.set_number_of_entries(
             data_layout.num_entries[storage::DataLayout::COORDINATE_LIST]);
-
-        const auto travel_mode_list_ptr = data_layout.GetBlockPtr<extractor::TravelMode>(
-            memory_block, storage::DataLayout::TRAVEL_MODE);
-        util::vector_view<extractor::TravelMode> travel_mode_list(
-            travel_mode_list_ptr, data_layout.num_entries[storage::DataLayout::TRAVEL_MODE]);
-        m_travel_mode_list = std::move(travel_mode_list);
-
-        const auto lane_data_id_ptr =
-            data_layout.GetBlockPtr<LaneDataID>(memory_block, storage::DataLayout::LANE_DATA_ID);
-        util::vector_view<LaneDataID> lane_data_id(
-            lane_data_id_ptr, data_layout.num_entries[storage::DataLayout::LANE_DATA_ID]);
-        m_lane_data_id = std::move(lane_data_id);
-
-        const auto lane_tupel_id_pair_ptr =
-            data_layout.GetBlockPtr<util::guidance::LaneTupleIdPair>(
-                memory_block, storage::DataLayout::TURN_LANE_DATA);
-        util::vector_view<util::guidance::LaneTupleIdPair> lane_tupel_id_pair(
-            lane_tupel_id_pair_ptr, data_layout.num_entries[storage::DataLayout::TURN_LANE_DATA]);
-        m_lane_tupel_id_pairs = std::move(lane_tupel_id_pair);
-
-        const auto turn_instruction_list_ptr =
-            data_layout.GetBlockPtr<extractor::guidance::TurnInstruction>(
-                memory_block, storage::DataLayout::TURN_INSTRUCTION);
-        util::vector_view<extractor::guidance::TurnInstruction> turn_instruction_list(
-            turn_instruction_list_ptr,
-            data_layout.num_entries[storage::DataLayout::TURN_INSTRUCTION]);
-        m_turn_instruction_list = std::move(turn_instruction_list);
-
-        const auto name_id_list_ptr =
-            data_layout.GetBlockPtr<NameID>(memory_block, storage::DataLayout::NAME_ID_LIST);
-        util::vector_view<NameID> name_id_list(
-            name_id_list_ptr, data_layout.num_entries[storage::DataLayout::NAME_ID_LIST]);
-        m_name_ID_list = std::move(name_id_list);
-
-        const auto entry_class_id_list_ptr =
-            data_layout.GetBlockPtr<EntryClassID>(memory_block, storage::DataLayout::ENTRY_CLASSID);
-        typename util::vector_view<EntryClassID> entry_class_id_list(
-            entry_class_id_list_ptr, data_layout.num_entries[storage::DataLayout::ENTRY_CLASSID]);
-        m_entry_class_id_list = std::move(entry_class_id_list);
-
-        const auto pre_turn_bearing_ptr = data_layout.GetBlockPtr<util::guidance::TurnBearing>(
-            memory_block, storage::DataLayout::PRE_TURN_BEARING);
-        typename util::vector_view<util::guidance::TurnBearing> pre_turn_bearing(
-            pre_turn_bearing_ptr, data_layout.num_entries[storage::DataLayout::PRE_TURN_BEARING]);
-        m_pre_turn_bearing = std::move(pre_turn_bearing);
-
-        const auto post_turn_bearing_ptr = data_layout.GetBlockPtr<util::guidance::TurnBearing>(
-            memory_block, storage::DataLayout::POST_TURN_BEARING);
-        typename util::vector_view<util::guidance::TurnBearing> post_turn_bearing(
-            post_turn_bearing_ptr, data_layout.num_entries[storage::DataLayout::POST_TURN_BEARING]);
-        m_post_turn_bearing = std::move(post_turn_bearing);
     }
 
-    void InitializeViaNodeListPointer(storage::DataLayout &data_layout, char *memory_block)
+    void InitializeEdgeInformationPointers(storage::DataLayout &layout, char *memory_ptr)
     {
         auto via_geometry_list_ptr =
-            data_layout.GetBlockPtr<GeometryID>(memory_block, storage::DataLayout::VIA_NODE_LIST);
-        util::vector_view<GeometryID> via_geometry_list(
-            via_geometry_list_ptr, data_layout.num_entries[storage::DataLayout::VIA_NODE_LIST]);
-        m_via_geometry_list = std::move(via_geometry_list);
+            layout.GetBlockPtr<GeometryID>(memory_ptr, storage::DataLayout::VIA_NODE_LIST);
+        util::vector_view<GeometryID> geometry_ids(
+            via_geometry_list_ptr, layout.num_entries[storage::DataLayout::VIA_NODE_LIST]);
+
+        const auto travel_mode_list_ptr =
+            layout.GetBlockPtr<extractor::TravelMode>(memory_ptr, storage::DataLayout::TRAVEL_MODE);
+        util::vector_view<extractor::TravelMode> travel_modes(
+            travel_mode_list_ptr, layout.num_entries[storage::DataLayout::TRAVEL_MODE]);
+
+        const auto lane_data_id_ptr =
+            layout.GetBlockPtr<LaneDataID>(memory_ptr, storage::DataLayout::LANE_DATA_ID);
+        util::vector_view<LaneDataID> lane_data_ids(
+            lane_data_id_ptr, layout.num_entries[storage::DataLayout::LANE_DATA_ID]);
+
+        const auto turn_instruction_list_ptr =
+            layout.GetBlockPtr<extractor::guidance::TurnInstruction>(
+                memory_ptr, storage::DataLayout::TURN_INSTRUCTION);
+        util::vector_view<extractor::guidance::TurnInstruction> turn_instructions(
+            turn_instruction_list_ptr, layout.num_entries[storage::DataLayout::TURN_INSTRUCTION]);
+
+        const auto name_id_list_ptr =
+            layout.GetBlockPtr<NameID>(memory_ptr, storage::DataLayout::NAME_ID_LIST);
+        util::vector_view<NameID> name_ids(name_id_list_ptr,
+                                           layout.num_entries[storage::DataLayout::NAME_ID_LIST]);
+
+        const auto entry_class_id_list_ptr =
+            layout.GetBlockPtr<EntryClassID>(memory_ptr, storage::DataLayout::ENTRY_CLASSID);
+        util::vector_view<EntryClassID> entry_class_ids(
+            entry_class_id_list_ptr, layout.num_entries[storage::DataLayout::ENTRY_CLASSID]);
+
+        const auto pre_turn_bearing_ptr = layout.GetBlockPtr<util::guidance::TurnBearing>(
+            memory_ptr, storage::DataLayout::PRE_TURN_BEARING);
+        util::vector_view<util::guidance::TurnBearing> pre_turn_bearings(
+            pre_turn_bearing_ptr, layout.num_entries[storage::DataLayout::PRE_TURN_BEARING]);
+
+        const auto post_turn_bearing_ptr = layout.GetBlockPtr<util::guidance::TurnBearing>(
+            memory_ptr, storage::DataLayout::POST_TURN_BEARING);
+        util::vector_view<util::guidance::TurnBearing> post_turn_bearings(
+            post_turn_bearing_ptr, layout.num_entries[storage::DataLayout::POST_TURN_BEARING]);
+
+        turn_data = extractor::TurnDataView(std::move(geometry_ids),
+                                            std::move(name_ids),
+                                            std::move(turn_instructions),
+                                            std::move(lane_data_ids),
+                                            std::move(travel_modes),
+                                            std::move(entry_class_ids),
+                                            std::move(pre_turn_bearings),
+                                            std::move(post_turn_bearings));
     }
 
     void InitializeNamePointers(storage::DataLayout &data_layout, char *memory_block)
@@ -408,6 +393,13 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         util::vector_view<extractor::guidance::TurnLaneType::Mask> masks(
             masks_ptr, data_layout.num_entries[storage::DataLayout::LANE_DESCRIPTION_MASKS]);
         m_lane_description_masks = std::move(masks);
+
+        const auto lane_tupel_id_pair_ptr =
+            data_layout.GetBlockPtr<util::guidance::LaneTupleIdPair>(
+                memory_block, storage::DataLayout::TURN_LANE_DATA);
+        util::vector_view<util::guidance::LaneTupleIdPair> lane_tupel_id_pair(
+            lane_tupel_id_pair_ptr, data_layout.num_entries[storage::DataLayout::TURN_LANE_DATA]);
+        m_lane_tupel_id_pairs = std::move(lane_tupel_id_pair);
     }
 
     void InitializeTurnPenalties(storage::DataLayout &data_layout, char *memory_block)
@@ -514,11 +506,11 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     void InitializeInternalPointers(storage::DataLayout &data_layout, char *memory_block)
     {
         InitializeChecksumPointer(data_layout, memory_block);
-        InitializeNodeAndEdgeInformationPointers(data_layout, memory_block);
+        InitializeNodeInformationPointers(data_layout, memory_block);
+        InitializeEdgeInformationPointers(data_layout, memory_block);
         InitializeTurnPenalties(data_layout, memory_block);
         InitializeGeometryPointers(data_layout, memory_block);
         InitializeTimestampPointer(data_layout, memory_block);
-        InitializeViaNodeListPointer(data_layout, memory_block);
         InitializeNamePointers(data_layout, memory_block);
         InitializeTurnLaneDescriptionsPointers(data_layout, memory_block);
         InitializeProfilePropertiesPointer(data_layout, memory_block);
@@ -607,7 +599,7 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
 
     virtual GeometryID GetGeometryIndexForEdgeID(const EdgeID id) const override final
     {
-        return m_via_geometry_list.at(id);
+        return turn_data.GetGeometryID(id);
     }
 
     virtual TurnPenalty GetWeightPenaltyForEdgeID(const unsigned id) const override final
@@ -625,12 +617,12 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     extractor::guidance::TurnInstruction
     GetTurnInstructionForEdgeID(const EdgeID id) const override final
     {
-        return m_turn_instruction_list.at(id);
+        return turn_data.GetTurnInstruction(id);
     }
 
     extractor::TravelMode GetTravelModeForEdgeID(const EdgeID id) const override final
     {
-        return m_travel_mode_list.at(id);
+        return turn_data.GetTravelMode(id);
     }
 
     std::vector<RTreeLeaf> GetEdgesInBox(const util::Coordinate south_west,
@@ -752,7 +744,7 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
 
     NameID GetNameIndexFromEdgeID(const EdgeID id) const override final
     {
-        return m_name_ID_list.at(id);
+        return turn_data.GetNameID(id);
     }
 
     StringView GetNameForID(const NameID id) const override final
@@ -824,16 +816,16 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
 
     EntryClassID GetEntryClassID(const EdgeID eid) const override final
     {
-        return m_entry_class_id_list.at(eid);
+        return turn_data.GetEntryClassID(eid);
     }
 
     util::guidance::TurnBearing PreTurnBearing(const EdgeID eid) const override final
     {
-        return m_pre_turn_bearing.at(eid);
+        return turn_data.GetPreTurnBearing(eid);
     }
     util::guidance::TurnBearing PostTurnBearing(const EdgeID eid) const override final
     {
-        return m_post_turn_bearing.at(eid);
+        return turn_data.GetPostTurnBearing(eid);
     }
 
     util::guidance::EntryClass GetEntryClass(const EntryClassID entry_class_id) const override final
@@ -841,15 +833,12 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         return m_entry_class_table.at(entry_class_id);
     }
 
-    bool HasLaneData(const EdgeID id) const override final
-    {
-        return INVALID_LANE_DATAID != m_lane_data_id.at(id);
-    }
+    bool HasLaneData(const EdgeID id) const override final { return turn_data.HasLaneData(id); }
 
     util::guidance::LaneTupleIdPair GetLaneData(const EdgeID id) const override final
     {
         BOOST_ASSERT(HasLaneData(id));
-        return m_lane_tupel_id_pairs.at(m_lane_data_id.at(id));
+        return m_lane_tupel_id_pairs.at(turn_data.GetLaneDataID(id));
     }
 
     extractor::guidance::TurnLaneDescription

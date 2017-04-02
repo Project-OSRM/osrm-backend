@@ -69,6 +69,8 @@ template <storage::Ownership Ownership> class TurnDataContainerImpl
 
     EntryClassID GetEntryClassID(const EdgeID id) const { return entry_class_ids[id]; }
 
+    extractor::TravelMode GetTravelMode(const EdgeID id) const { return travel_modes[id]; }
+
     util::guidance::TurnBearing GetPreTurnBearing(const EdgeID id) const
     {
         return pre_turn_bearings[id];
@@ -78,6 +80,8 @@ template <storage::Ownership Ownership> class TurnDataContainerImpl
     {
         return post_turn_bearings[id];
     }
+
+    LaneDataID GetLaneDataID(const EdgeID id) const { return lane_data_ids[id]; }
 
     bool HasLaneData(const EdgeID id) const { return INVALID_LANE_DATAID != lane_data_ids[id]; }
 

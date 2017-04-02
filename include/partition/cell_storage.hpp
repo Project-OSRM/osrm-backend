@@ -97,9 +97,10 @@ template <storage::Ownership Ownership> class CellStorageImpl
                                                              WeightValueT,
                                                              boost::random_access_traversal_tag>
         {
-            typedef boost::
-                iterator_facade<ColumnIterator, WeightValueT, boost::random_access_traversal_tag>
-                    base_t;
+            typedef boost::iterator_facade<ColumnIterator,
+                                           WeightValueT,
+                                           boost::random_access_traversal_tag>
+                base_t;
 
           public:
             typedef typename base_t::value_type value_type;

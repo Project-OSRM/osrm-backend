@@ -2,11 +2,11 @@
 
 #include "updater/csv_source.hpp"
 
-#include "extractor/files.hpp"
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/edge_based_graph_factory.hpp"
-#include "extractor/seralization.hpp"
+#include "extractor/files.hpp"
 #include "extractor/node_based_edge.hpp"
+#include "extractor/seralization.hpp"
 
 #include "storage/io.hpp"
 
@@ -515,12 +515,11 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
         updated_segments.resize(offset + updated_turn_penalties.size());
         // we need to re-compute all edges that have updated turn penalties.
         // this marks it for re-computation
-        std::transform(updated_turn_penalties.begin(),
-                       updated_turn_penalties.end(),
-                       updated_segments.begin() + offset,
-                       [&turn_data](const std::uint64_t turn_id) {
-                           return turn_data.GetGeometryID(turn_id);
-                       });
+        std::transform(
+            updated_turn_penalties.begin(),
+            updated_turn_penalties.end(),
+            updated_segments.begin() + offset,
+            [&turn_data](const std::uint64_t turn_id) { return turn_data.GetGeometryID(turn_id); });
     }
 
     tbb::parallel_sort(updated_segments.begin(),

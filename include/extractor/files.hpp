@@ -22,7 +22,8 @@ inline void readNBGMapping(const boost::filesystem::path &path, std::vector<NBGT
 }
 
 // writes .osrm.cnbg_to_ebg
-inline void writeNBGMapping(const boost::filesystem::path &path, const std::vector<NBGToEBG> &mapping)
+inline void writeNBGMapping(const boost::filesystem::path &path,
+                            const std::vector<NBGToEBG> &mapping)
 {
     const auto fingerprint = storage::io::FileWriter::GenerateFingerprint;
     storage::io::FileWriter writer{path, fingerprint};
@@ -58,7 +59,8 @@ inline void readSegmentData(const boost::filesystem::path &path, SegmentDataCont
 }
 
 // writes .osrm.geometry
-inline void writeSegmentData(const boost::filesystem::path &path, const SegmentDataContainer &segment_data)
+inline void writeSegmentData(const boost::filesystem::path &path,
+                             const SegmentDataContainer &segment_data)
 {
     const auto fingerprint = storage::io::FileWriter::HasNoFingerprint;
     storage::io::FileWriter writer{path, fingerprint};
@@ -67,8 +69,9 @@ inline void writeSegmentData(const boost::filesystem::path &path, const SegmentD
 }
 
 // reads .osrm.edges
-template<storage::Ownership Ownership>
-inline void readTurnData(const boost::filesystem::path &path, detail::TurnDataContainerImpl<Ownership> &turn_data)
+template <storage::Ownership Ownership>
+inline void readTurnData(const boost::filesystem::path &path,
+                         detail::TurnDataContainerImpl<Ownership> &turn_data)
 {
     const auto fingerprint = storage::io::FileReader::HasNoFingerprint;
     storage::io::FileReader reader{path, fingerprint};
@@ -77,15 +80,15 @@ inline void readTurnData(const boost::filesystem::path &path, detail::TurnDataCo
 }
 
 // writes .osrm.edges
-template<storage::Ownership Ownership>
-inline void writeTurnData(const boost::filesystem::path &path, const detail::TurnDataContainerImpl<Ownership> &turn_data)
+template <storage::Ownership Ownership>
+inline void writeTurnData(const boost::filesystem::path &path,
+                          const detail::TurnDataContainerImpl<Ownership> &turn_data)
 {
     const auto fingerprint = storage::io::FileWriter::HasNoFingerprint;
     storage::io::FileWriter writer{path, fingerprint};
 
     serialization::write(writer, turn_data);
 }
-
 }
 }
 }
