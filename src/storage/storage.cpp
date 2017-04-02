@@ -324,14 +324,12 @@ void Storage::PopulateLayout(DataLayout &layout)
 
     // load geometries sizes
     {
-        io::FileReader geometry_file(config.geometries_path, io::FileReader::HasNoFingerprint);
+        io::FileReader reader(config.geometries_path, io::FileReader::HasNoFingerprint);
 
-        const auto number_of_geometries_indices = geometry_file.ReadElementCount32();
+        const auto number_of_geometries_indices = reader.ReadVectorSize<unsigned>();
         layout.SetBlockSize<unsigned>(DataLayout::GEOMETRIES_INDEX, number_of_geometries_indices);
 
-        geometry_file.Skip<unsigned>(number_of_geometries_indices);
-
-        const auto number_of_compressed_geometries = geometry_file.ReadElementCount32();
+        const auto number_of_compressed_geometries = reader.ReadVectorSize<NodeID>();
         layout.SetBlockSize<NodeID>(DataLayout::GEOMETRIES_NODE_LIST,
                                     number_of_compressed_geometries);
         layout.SetBlockSize<EdgeWeight>(DataLayout::GEOMETRIES_FWD_WEIGHT_LIST,
