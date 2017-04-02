@@ -17,8 +17,28 @@
 
 namespace osrm
 {
+namespace storage
+{
+namespace io
+{
+class FileReader;
+class FileWriter;
+}
+}
+
 namespace util
 {
+template <typename EdgeDataT> class DynamicGraph;
+
+namespace serialization
+{
+template <typename EdgeDataT, bool UseSharedMemory>
+void read(storage::io::FileReader &reader, DynamicGraph<EdgeDataT> &graph);
+
+template <typename EdgeDataT, bool UseSharedMemory>
+void write(storage::io::FileWriter &writer,
+           const DynamicGraph<EdgeDataT> &graph);
+}
 
 template <typename EdgeDataT> class DynamicGraph
 {
