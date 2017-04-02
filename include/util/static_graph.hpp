@@ -139,7 +139,7 @@ class StaticGraph
 
     StaticGraph() {}
 
-    template <typename ContainerT> StaticGraph(const int nodes, const ContainerT &edges)
+    template <typename ContainerT> StaticGraph(const std::uint32_t nodes, const ContainerT &edges)
     {
         BOOST_ASSERT(std::is_sorted(const_cast<ContainerT &>(edges).begin(),
                                     const_cast<ContainerT &>(edges).end()));
@@ -258,7 +258,7 @@ class StaticGraph
 
   protected:
     template <typename IterT>
-    void InitializeFromSortedEdgeRange(const unsigned nodes, IterT begin, IterT end)
+    void InitializeFromSortedEdgeRange(const std::uint32_t nodes, IterT begin, IterT end)
     {
         number_of_nodes = nodes;
         number_of_edges = static_cast<EdgeIterator>(std::distance(begin, end));
@@ -272,7 +272,7 @@ class StaticGraph
             unsigned offset = std::distance(begin, iter);
             node_array.push_back(NodeArrayEntry{offset});
         }
-        BOOST_ASSERT(iter == end);
+        BOOST_ASSERT_MSG(iter == end, ("Still " + std::to_string(std::distance(iter, end)) + " edges left.").c_str());
         BOOST_ASSERT(node_array.size() == number_of_nodes + 1);
 
         edge_array.resize(number_of_edges);

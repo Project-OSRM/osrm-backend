@@ -17,6 +17,8 @@
 #include "extractor/segment_data_container.hpp"
 #include "extractor/turn_data_container.hpp"
 
+#include "contractor/query_graph.hpp"
+
 #include "partition/cell_storage.hpp"
 #include "partition/multi_level_partition.hpp"
 
@@ -62,11 +64,11 @@ template <>
 class ContiguousInternalMemoryAlgorithmDataFacade<CH> : public datafacade::AlgorithmDataFacade<CH>
 {
   private:
-    using QueryGraph = util::StaticGraph<EdgeData, storage::Ownership::View>;
+    using QueryGraph = contractor::QueryGraphView;
     using GraphNode = QueryGraph::NodeArrayEntry;
     using GraphEdge = QueryGraph::EdgeArrayEntry;
 
-    std::unique_ptr<QueryGraph> m_query_graph;
+    QueryGraph m_query_graph;
 
     // allocator that keeps the allocation data
     std::shared_ptr<ContiguousBlockAllocator> allocator;
@@ -83,7 +85,7 @@ class ContiguousInternalMemoryAlgorithmDataFacade<CH> : public datafacade::Algor
             graph_nodes_ptr, data_layout.num_entries[storage::DataLayout::CH_GRAPH_NODE_LIST]);
         util::vector_view<GraphEdge> edge_list(
             graph_edges_ptr, data_layout.num_entries[storage::DataLayout::CH_GRAPH_EDGE_LIST]);
-        m_query_graph.reset(new QueryGraph(node_list, edge_list));
+        m_query_graph = QueryGraph(node_list, edge_list);
     }
 
   public:
@@ -100,53 +102,53 @@ class ContiguousInternalMemoryAlgorithmDataFacade<CH> : public datafacade::Algor
     }
 
     // search graph access
-    unsigned GetNumberOfNodes() const override final { return m_query_graph->GetNumberOfNodes(); }
+    unsigned GetNumberOfNodes() const override final { return m_query_graph.GetNumberOfNodes(); }
 
-    unsigned GetNumberOfEdges() const override final { return m_query_graph->GetNumberOfEdges(); }
+    unsigned GetNumberOfEdges() const override final { return m_query_graph.GetNumberOfEdges(); }
 
     unsigned GetOutDegree(const NodeID n) const override final
     {
-        return m_query_graph->GetOutDegree(n);
+        return m_query_graph.GetOutDegree(n);
     }
 
-    NodeID GetTarget(const EdgeID e) const override final { return m_query_graph->GetTarget(e); }
+    NodeID GetTarget(const EdgeID e) const override final { return m_query_graph.GetTarget(e); }
 
-    EdgeData &GetEdgeData(const EdgeID e) const override final
+    const EdgeData &GetEdgeData(const EdgeID e) const override final
     {
-        return m_query_graph->GetEdgeData(e);
+        return m_query_graph.GetEdgeData(e);
     }
 
-    EdgeID BeginEdges(const NodeID n) const override final { return m_query_graph->BeginEdges(n); }
+    EdgeID BeginEdges(const NodeID n) const override final { return m_query_graph.BeginEdges(n); }
 
-    EdgeID EndEdges(const NodeID n) const override final { return m_query_graph->EndEdges(n); }
+    EdgeID EndEdges(const NodeID n) const override final { return m_query_graph.EndEdges(n); }
 
     EdgeRange GetAdjacentEdgeRange(const NodeID node) const override final
     {
-        return m_query_graph->GetAdjacentEdgeRange(node);
+        return m_query_graph.GetAdjacentEdgeRange(node);
     }
 
     // searches for a specific edge
     EdgeID FindEdge(const NodeID from, const NodeID to) const override final
     {
-        return m_query_graph->FindEdge(from, to);
+        return m_query_graph.FindEdge(from, to);
     }
 
     EdgeID FindEdgeInEitherDirection(const NodeID from, const NodeID to) const override final
     {
-        return m_query_graph->FindEdgeInEitherDirection(from, to);
+        return m_query_graph.FindEdgeInEitherDirection(from, to);
     }
 
     EdgeID
     FindEdgeIndicateIfReverse(const NodeID from, const NodeID to, bool &result) const override final
     {
-        return m_query_graph->FindEdgeIndicateIfReverse(from, to, result);
+        return m_query_graph.FindEdgeIndicateIfReverse(from, to, result);
     }
 
     EdgeID FindSmallestEdge(const NodeID from,
                             const NodeID to,
                             std::function<bool(EdgeData)> filter) const override final
     {
-        return m_query_graph->FindSmallestEdge(from, to, filter);
+        return m_query_graph.FindSmallestEdge(from, to, filter);
     }
 };
 

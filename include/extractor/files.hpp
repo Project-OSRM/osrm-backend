@@ -95,10 +95,10 @@ inline void writeTurnData(const boost::filesystem::path &path,
 }
 
 // reads .osrm.tls
-template <bool UseShareMemory>
+template <storage::Ownership Ownership>
 inline void readTurnLaneDescriptions(const boost::filesystem::path &path,
-                         typename util::ShM<std::uint32_t, UseShareMemory>::vector &turn_offsets,
-                         typename util::ShM<extractor::guidance::TurnLaneType::Mask, UseShareMemory>::vector &turn_masks)
+                         typename util::ShM<std::uint32_t, Ownership>::vector &turn_offsets,
+                         typename util::ShM<extractor::guidance::TurnLaneType::Mask, Ownership>::vector &turn_masks)
 {
     const auto fingerprint = storage::io::FileReader::HasNoFingerprint;
     storage::io::FileReader reader{path, fingerprint};
@@ -108,10 +108,10 @@ inline void readTurnLaneDescriptions(const boost::filesystem::path &path,
 }
 
 // writes .osrm.tls
-template <bool UseShareMemory>
+template <storage::Ownership Ownership>
 inline void writeTurnLaneDescriptions(const boost::filesystem::path &path,
-                         const typename util::ShM<std::uint32_t, UseShareMemory>::vector &turn_offsets,
-                         const typename util::ShM<extractor::guidance::TurnLaneType::Mask, UseShareMemory>::vector &turn_masks)
+                         const typename util::ShM<std::uint32_t, Ownership>::vector &turn_offsets,
+                         const typename util::ShM<extractor::guidance::TurnLaneType::Mask, Ownership>::vector &turn_masks)
 {
     const auto fingerprint = storage::io::FileWriter::HasNoFingerprint;
     storage::io::FileWriter writer{path, fingerprint};

@@ -239,6 +239,19 @@ class DeallocatingVector
         bucket_list.emplace_back(new ElementT[ELEMENTS_PER_BLOCK]);
     }
 
+    DeallocatingVector(DeallocatingVector &&other)
+    {
+        bucket_list = std::move(other.bucket_list);
+        current_size = std::move(other.current_size);
+    }
+
+    DeallocatingVector& operator=(DeallocatingVector &&other)
+    {
+        bucket_list = std::move(other.bucket_list);
+        current_size = std::move(other.current_size);
+        return *this;
+    }
+
     ~DeallocatingVector() { clear(); }
 
     friend void swap<>(DeallocatingVector<ElementT, ELEMENTS_PER_BLOCK> &lhs,

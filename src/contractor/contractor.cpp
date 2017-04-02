@@ -1,4 +1,5 @@
 #include "contractor/contractor.hpp"
+#include "contractor/files.hpp"
 #include "contractor/crc32_processor.hpp"
 #include "contractor/graph_contractor.hpp"
 #include "contractor/graph_contractor_adaptors.hpp"
@@ -84,7 +85,7 @@ int Contractor::Run()
 
     util::Log() << "Contraction took " << TIMER_SEC(contraction) << " sec";
 
-    std::size_t number_of_used_edges = WriteContractedGraph(max_edge_id, contracted_edge_list);
+    WriteContractedGraph(max_edge_id, std::move(contracted_edge_list));
     WriteCoreNodeMarker(std::move(is_core_node));
     if (!config.use_cached_priority)
     {
@@ -93,14 +94,7 @@ int Contractor::Run()
 
     TIMER_STOP(preparing);
 
-    const auto nodes_per_second =
-        static_cast<std::uint64_t>((max_edge_id + 1) / TIMER_SEC(contraction));
-    const auto edges_per_second =
-        static_cast<std::uint64_t>(number_of_used_edges / TIMER_SEC(contraction));
-
     util::Log() << "Preprocessing : " << TIMER_SEC(preparing) << " seconds";
-    util::Log() << "Contraction: " << nodes_per_second << " nodes/sec and " << edges_per_second
-                << " edges/sec";
 
     util::Log() << "finished preprocessing";
 
@@ -144,117 +138,21 @@ void Contractor::WriteCoreNodeMarker(std::vector<bool> &&in_is_core_node) const
     core_marker_output_file.WriteFrom(unpacked_bool_flags.data(), count);
 }
 
-std::size_t
+void
 Contractor::WriteContractedGraph(unsigned max_node_id,
-                                 const util::DeallocatingVector<QueryEdge> &contracted_edge_list)
+                                 util::DeallocatingVector<QueryEdge> contracted_edge_list)
 {
     // Sorting contracted edges in a way that the static query graph can read some in in-place.
     tbb::parallel_sort(contracted_edge_list.begin(), contracted_edge_list.end());
-    const std::uint64_t contracted_edge_count = contracted_edge_list.size();
-    util::Log() << "Serializing compacted graph of " << contracted_edge_count << " edges";
-
-    storage::io::FileWriter hsgr_output_file(config.graph_output_path,
-                                             storage::io::FileWriter::GenerateFingerprint);
-
-    const NodeID max_used_node_id = [&contracted_edge_list] {
-        NodeID tmp_max = 0;
-        for (const QueryEdge &edge : contracted_edge_list)
-        {
-            BOOST_ASSERT(SPECIAL_NODEID != edge.source);
-            BOOST_ASSERT(SPECIAL_NODEID != edge.target);
-            tmp_max = std::max(tmp_max, edge.source);
-            tmp_max = std::max(tmp_max, edge.target);
-        }
-        return tmp_max;
-    }();
-
-    util::Log(logDEBUG) << "input graph has " << (max_node_id + 1) << " nodes";
-    util::Log(logDEBUG) << "contracted graph has " << (max_used_node_id + 1) << " nodes";
-
-    std::vector<util::StaticGraph<EdgeData>::NodeArrayEntry> node_array;
-    // make sure we have at least one sentinel
-    node_array.resize(max_node_id + 2);
-
-    util::Log() << "Building node array";
-    util::StaticGraph<EdgeData>::EdgeIterator edge = 0;
-    util::StaticGraph<EdgeData>::EdgeIterator position = 0;
-    util::StaticGraph<EdgeData>::EdgeIterator last_edge;
-
-    // initializing 'first_edge'-field of nodes:
-    for (const auto node : util::irange(0u, max_used_node_id + 1))
-    {
-        last_edge = edge;
-        while ((edge < contracted_edge_count) && (contracted_edge_list[edge].source == node))
-        {
-            ++edge;
-        }
-        node_array[node].first_edge = position; //=edge
-        position += edge - last_edge;           // remove
-    }
-
-    for (const auto sentinel_counter :
-         util::irange<unsigned>(max_used_node_id + 1, node_array.size()))
-    {
-        // sentinel element, guarded against underflow
-        node_array[sentinel_counter].first_edge = contracted_edge_count;
-    }
-
-    util::Log() << "Serializing node array";
+    auto new_end = std::unique(contracted_edge_list.begin(), contracted_edge_list.end());
+    contracted_edge_list.resize(new_end - contracted_edge_list.begin());
 
     RangebasedCRC32 crc32_calculator;
-    const unsigned edges_crc32 = crc32_calculator(contracted_edge_list);
-    util::Log() << "Writing CRC32: " << edges_crc32;
+    const unsigned checksum = crc32_calculator(contracted_edge_list);
 
-    const std::uint64_t node_array_size = node_array.size();
-    // serialize crc32, aka checksum
-    hsgr_output_file.WriteOne(edges_crc32);
-    // serialize number of nodes
-    hsgr_output_file.WriteOne(node_array_size);
-    // serialize number of edges
-    hsgr_output_file.WriteOne(contracted_edge_count);
-    // serialize all nodes
-    if (node_array_size > 0)
-    {
-        hsgr_output_file.WriteFrom(node_array.data(), node_array_size);
-    }
+    QueryGraph query_graph {max_node_id+1, contracted_edge_list};
 
-    // serialize all edges
-    util::Log() << "Building edge array";
-    std::size_t number_of_used_edges = 0;
-
-    util::StaticGraph<EdgeData>::EdgeArrayEntry current_edge;
-    for (const auto edge : util::irange<std::size_t>(0UL, contracted_edge_list.size()))
-    {
-        // some self-loops are required for oneway handling. Need to assertthat we only keep these
-        // (TODO)
-        // no eigen loops
-        // BOOST_ASSERT(contracted_edge_list[edge].source != contracted_edge_list[edge].target ||
-        // node_represents_oneway[contracted_edge_list[edge].source]);
-        current_edge.target = contracted_edge_list[edge].target;
-        current_edge.data = contracted_edge_list[edge].data;
-
-        // every target needs to be valid
-        BOOST_ASSERT(current_edge.target <= max_used_node_id);
-#ifndef NDEBUG
-        if (current_edge.data.weight <= 0)
-        {
-            util::Log(logWARNING) << "Edge: " << edge
-                                  << ",source: " << contracted_edge_list[edge].source
-                                  << ", target: " << contracted_edge_list[edge].target
-                                  << ", weight: " << current_edge.data.weight;
-
-            util::Log(logWARNING) << "Failed at adjacency list of node "
-                                  << contracted_edge_list[edge].source << "/"
-                                  << node_array.size() - 1;
-            throw util::exception("Edge weight is <= 0" + SOURCE_REF);
-        }
-#endif
-        hsgr_output_file.WriteOne(current_edge);
-
-        ++number_of_used_edges;
-    }
-
-    return number_of_used_edges;
+    files::writeGraph(config.graph_output_path, checksum, query_graph);
 }
 
 } // namespace contractor

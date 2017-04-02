@@ -29,47 +29,6 @@ namespace serialization
 // To make function calls consistent, this function returns the fixed number of properties
 inline std::size_t readPropertiesCount() { return 1; }
 
-struct HSGRHeader
-{
-    std::uint32_t checksum;
-    std::uint64_t number_of_nodes;
-    std::uint64_t number_of_edges;
-};
-
-// Reads the checksum, number of nodes and number of edges written in the header file of a `.hsgr`
-// file and returns them in a HSGRHeader struct
-inline HSGRHeader readHSGRHeader(io::FileReader &input_file)
-{
-
-    HSGRHeader header;
-    input_file.ReadInto(header.checksum);
-    input_file.ReadInto(header.number_of_nodes);
-    input_file.ReadInto(header.number_of_edges);
-
-    // If we have edges, then we must have nodes.
-    // However, there can be nodes with no edges (some test cases create this)
-    BOOST_ASSERT_MSG(header.number_of_edges == 0 || header.number_of_nodes > 0,
-                     "edges exist, but there are no nodes");
-
-    return header;
-}
-
-// Reads the graph data of a `.hsgr` file into memory
-// Needs to be called after readHSGRHeader() to get the correct offset in the stream
-using NodeT = typename util::StaticGraph<contractor::QueryEdge::EdgeData>::NodeArrayEntry;
-using EdgeT = typename util::StaticGraph<contractor::QueryEdge::EdgeData>::EdgeArrayEntry;
-inline void readHSGR(io::FileReader &input_file,
-                     NodeT *node_buffer,
-                     const std::uint64_t number_of_nodes,
-                     EdgeT *edge_buffer,
-                     const std::uint64_t number_of_edges)
-{
-    BOOST_ASSERT(node_buffer);
-    BOOST_ASSERT(edge_buffer);
-    input_file.ReadInto(node_buffer, number_of_nodes);
-    input_file.ReadInto(edge_buffer, number_of_edges);
-}
-
 // Loads coordinates and OSM node IDs from .nodes files into memory
 // Needs to be called after readElementCount() to get the correct offset in the stream
 template <typename OSMNodeIDVectorT>

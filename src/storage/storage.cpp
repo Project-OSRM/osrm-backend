@@ -1,6 +1,17 @@
 #include "storage/storage.hpp"
-#include "contractor/query_edge.hpp"
+
+#include "storage/io.hpp"
+#include "storage/serialization.hpp"
+#include "storage/shared_datatype.hpp"
+#include "storage/shared_memory.hpp"
+#include "storage/shared_memory_ownership.hpp"
+#include "storage/shared_monitor.hpp"
+
+#include "contractor/query_graph.hpp"
+#include "contractor/files.hpp"
+
 #include "customizer/edge_based_graph.hpp"
+
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/edge_based_edge.hpp"
 #include "extractor/files.hpp"
@@ -9,17 +20,14 @@
 #include "extractor/profile_properties.hpp"
 #include "extractor/query_node.hpp"
 #include "extractor/travel_mode.hpp"
+
 #include "partition/cell_storage.hpp"
 #include "partition/edge_based_graph_reader.hpp"
 #include "partition/files.hpp"
 #include "partition/multi_level_partition.hpp"
-#include "storage/io.hpp"
-#include "storage/serialization.hpp"
-#include "storage/shared_datatype.hpp"
-#include "storage/shared_memory.hpp"
-#include "storage/shared_memory_ownership.hpp"
-#include "storage/shared_monitor.hpp"
+
 #include "engine/datafacade/datafacade_base.hpp"
+
 #include "util/coordinate.hpp"
 #include "util/exception.hpp"
 #include "util/exception_utils.hpp"
@@ -56,8 +64,7 @@ namespace storage
 {
 
 using RTreeLeaf = engine::datafacade::BaseDataFacade::RTreeLeaf;
-using RTreeNode = util::
-    StaticRTree<RTreeLeaf, util::vector_view<util::Coordinate>, storage::Ownership::View>::TreeNode;
+using RTreeNode = util:: StaticRTree<RTreeLeaf, util::vector_view<util::Coordinate>, storage::Ownership::View>::TreeNode;
 using QueryGraph = util::StaticGraph<contractor::QueryEdge::EdgeData>;
 using EdgeBasedGraph = util::StaticGraph<extractor::EdgeBasedEdge::EdgeData>;
 
@@ -244,20 +251,23 @@ void Storage::PopulateLayout(DataLayout &layout)
 
     if (boost::filesystem::exists(config.hsgr_data_path))
     {
-        io::FileReader hsgr_file(config.hsgr_data_path, io::FileReader::VerifyFingerprint);
+        io::FileReader reader(config.hsgr_data_path, io::FileReader::VerifyFingerprint);
 
-        const auto hsgr_header = serialization::readHSGRHeader(hsgr_file);
+        reader.Skip<std::uint32_t>(1); // checksum
+        auto num_nodes = reader.ReadVectorSize<contractor::QueryGraph::NodeArrayEntry>();
+        auto num_edges = reader.ReadVectorSize<contractor::QueryGraph::EdgeArrayEntry>();
+
         layout.SetBlockSize<unsigned>(DataLayout::HSGR_CHECKSUM, 1);
-        layout.SetBlockSize<QueryGraph::NodeArrayEntry>(DataLayout::CH_GRAPH_NODE_LIST,
-                                                        hsgr_header.number_of_nodes);
-        layout.SetBlockSize<QueryGraph::EdgeArrayEntry>(DataLayout::CH_GRAPH_EDGE_LIST,
-                                                        hsgr_header.number_of_edges);
+        layout.SetBlockSize<contractor::QueryGraph::NodeArrayEntry>(DataLayout::CH_GRAPH_NODE_LIST,
+                                                        num_nodes);
+        layout.SetBlockSize<contractor::QueryGraph::EdgeArrayEntry>(DataLayout::CH_GRAPH_EDGE_LIST,
+                                                        num_edges);
     }
     else
     {
         layout.SetBlockSize<unsigned>(DataLayout::HSGR_CHECKSUM, 0);
-        layout.SetBlockSize<QueryGraph::NodeArrayEntry>(DataLayout::CH_GRAPH_NODE_LIST, 0);
-        layout.SetBlockSize<QueryGraph::EdgeArrayEntry>(DataLayout::CH_GRAPH_EDGE_LIST, 0);
+        layout.SetBlockSize<contractor::QueryGraph::NodeArrayEntry>(DataLayout::CH_GRAPH_NODE_LIST, 0);
+        layout.SetBlockSize<contractor::QueryGraph::EdgeArrayEntry>(DataLayout::CH_GRAPH_EDGE_LIST, 0);
     }
 
     // load rsearch tree size
@@ -480,34 +490,26 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
     // Load the HSGR file
     if (boost::filesystem::exists(config.hsgr_data_path))
     {
-        io::FileReader hsgr_file(config.hsgr_data_path, io::FileReader::VerifyFingerprint);
-        auto hsgr_header = serialization::readHSGRHeader(hsgr_file);
-        unsigned *checksum_ptr =
-            layout.GetBlockPtr<unsigned, true>(memory_ptr, DataLayout::HSGR_CHECKSUM);
-        *checksum_ptr = hsgr_header.checksum;
+        auto graph_nodes_ptr = layout.GetBlockPtr<contractor::QueryGraphView::NodeArrayEntry, true>(
+            memory_ptr, storage::DataLayout::CH_GRAPH_NODE_LIST);
+        auto graph_edges_ptr = layout.GetBlockPtr<contractor::QueryGraphView::EdgeArrayEntry, true>(
+            memory_ptr, storage::DataLayout::CH_GRAPH_EDGE_LIST);
+        auto checksum = layout.GetBlockPtr<unsigned, true>(memory_ptr, DataLayout::HSGR_CHECKSUM);
 
-        // load the nodes of the search graph
-        QueryGraph::NodeArrayEntry *graph_node_list_ptr =
-            layout.GetBlockPtr<QueryGraph::NodeArrayEntry, true>(memory_ptr,
-                                                                 DataLayout::CH_GRAPH_NODE_LIST);
+        util::vector_view<contractor::QueryGraphView::NodeArrayEntry> node_list(
+            graph_nodes_ptr, layout.num_entries[storage::DataLayout::CH_GRAPH_NODE_LIST]);
+        util::vector_view<contractor::QueryGraphView::EdgeArrayEntry> edge_list(
+            graph_edges_ptr, layout.num_entries[storage::DataLayout::CH_GRAPH_EDGE_LIST]);
 
-        // load the edges of the search graph
-        QueryGraph::EdgeArrayEntry *graph_edge_list_ptr =
-            layout.GetBlockPtr<QueryGraph::EdgeArrayEntry, true>(memory_ptr,
-                                                                 DataLayout::CH_GRAPH_EDGE_LIST);
-
-        serialization::readHSGR(hsgr_file,
-                                graph_node_list_ptr,
-                                hsgr_header.number_of_nodes,
-                                graph_edge_list_ptr,
-                                hsgr_header.number_of_edges);
+        contractor::QueryGraphView graph_view(std::move(node_list), std::move(edge_list));
+        contractor::files::readGraph(config.hsgr_data_path, *checksum, graph_view);
     }
     else
     {
         layout.GetBlockPtr<unsigned, true>(memory_ptr, DataLayout::HSGR_CHECKSUM);
-        layout.GetBlockPtr<QueryGraph::NodeArrayEntry, true>(memory_ptr,
+        layout.GetBlockPtr<contractor::QueryGraphView::NodeArrayEntry, true>(memory_ptr,
                                                              DataLayout::CH_GRAPH_NODE_LIST);
-        layout.GetBlockPtr<QueryGraph::EdgeArrayEntry, true>(memory_ptr,
+        layout.GetBlockPtr<contractor::QueryGraphView::EdgeArrayEntry, true>(memory_ptr,
                                                              DataLayout::CH_GRAPH_EDGE_LIST);
     }
 
@@ -558,7 +560,7 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
     {
         auto offsets_ptr = layout.GetBlockPtr<std::uint32_t, true>(
             memory_ptr, storage::DataLayout::LANE_DESCRIPTION_OFFSETS);
-        util::ShM<std::uint32_t, true>::vector offsets(
+        util::vector_view<std::uint32_t> offsets(
             offsets_ptr, layout.num_entries[storage::DataLayout::LANE_DESCRIPTION_OFFSETS]);
 
         auto masks_ptr = layout.GetBlockPtr<extractor::guidance::TurnLaneType::Mask, true>(
@@ -566,7 +568,7 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
         util::vector_view<extractor::guidance::TurnLaneType::Mask> masks(
             masks_ptr, layout.num_entries[storage::DataLayout::LANE_DESCRIPTION_MASKS]);
 
-        extractor::files::readTurnLaneDescriptions<true>(config.turn_lane_description_path, offsets, masks);
+        extractor::files::readTurnLaneDescriptions<storage::Ownership::View>(config.turn_lane_description_path, offsets, masks);
     }
 
     // Load original edge data
