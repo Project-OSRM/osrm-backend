@@ -50,7 +50,9 @@ inline void writeDatasources(const boost::filesystem::path &path, Datasources &s
 }
 
 // reads .osrm.geometry
-inline void readSegmentData(const boost::filesystem::path &path, SegmentDataContainer &segment_data)
+template <bool UseShareMemory>
+inline void readSegmentData(const boost::filesystem::path &path,
+                            detail::SegmentDataContainerImpl<UseShareMemory> &segment_data)
 {
     const auto fingerprint = storage::io::FileReader::HasNoFingerprint;
     storage::io::FileReader reader{path, fingerprint};
@@ -59,8 +61,9 @@ inline void readSegmentData(const boost::filesystem::path &path, SegmentDataCont
 }
 
 // writes .osrm.geometry
+template <bool UseShareMemory>
 inline void writeSegmentData(const boost::filesystem::path &path,
-                             const SegmentDataContainer &segment_data)
+                             const detail::SegmentDataContainerImpl<UseShareMemory> &segment_data)
 {
     const auto fingerprint = storage::io::FileWriter::HasNoFingerprint;
     storage::io::FileWriter writer{path, fingerprint};
