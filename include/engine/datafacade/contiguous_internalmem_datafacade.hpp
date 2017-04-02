@@ -841,14 +841,14 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         return m_entry_class_table.at(entry_class_id);
     }
 
-    bool hasLaneData(const EdgeID id) const override final
+    bool HasLaneData(const EdgeID id) const override final
     {
         return INVALID_LANE_DATAID != m_lane_data_id.at(id);
     }
 
     util::guidance::LaneTupleIdPair GetLaneData(const EdgeID id) const override final
     {
-        BOOST_ASSERT(hasLaneData(id));
+        BOOST_ASSERT(HasLaneData(id));
         return m_lane_tupel_id_pairs.at(m_lane_data_id.at(id));
     }
 

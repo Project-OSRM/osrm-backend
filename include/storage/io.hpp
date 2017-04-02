@@ -128,7 +128,7 @@ class FileReader
     std::uint32_t ReadElementCount32() { return ReadOne<std::uint32_t>(); }
     std::uint64_t ReadElementCount64() { return ReadOne<std::uint64_t>(); }
 
-    template <typename T> void DeserializeVector(std::vector<T> &data)
+    template <typename VectorT> void DeserializeVector(VectorT &data)
     {
         const auto count = ReadElementCount64();
         data.resize(count);
@@ -296,7 +296,7 @@ class FileWriter
     void WriteElementCount32(const std::uint32_t count) { WriteOne<std::uint32_t>(count); }
     void WriteElementCount64(const std::uint64_t count) { WriteOne<std::uint64_t>(count); }
 
-    template <typename T> void SerializeVector(const std::vector<T> &data)
+    template <typename VectorT> void SerializeVector(const VectorT &data)
     {
         const auto count = data.size();
         WriteElementCount64(count);

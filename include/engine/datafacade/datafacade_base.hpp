@@ -130,7 +130,7 @@ class BaseDataFacade
                                                       const int bearing,
                                                       const int bearing_range) const = 0;
 
-    virtual bool hasLaneData(const EdgeID id) const = 0;
+    virtual bool HasLaneData(const EdgeID id) const = 0;
     virtual util::guidance::LaneTupleIdPair GetLaneData(const EdgeID id) const = 0;
     virtual extractor::guidance::TurnLaneDescription
     GetTurnDescription(const LaneDescriptionID lane_description_id) const = 0;

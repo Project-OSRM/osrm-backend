@@ -83,20 +83,15 @@ void checkWeightsConsistency(
     const UpdaterConfig &config,
     const std::vector<osrm::extractor::EdgeBasedEdge> &edge_based_edge_list)
 {
-    using Reader = storage::io::FileReader;
-    using OriginalEdgeData = osrm::extractor::OriginalEdgeData;
-
     extractor::SegmentDataContainer segment_data;
     extractor::files::readSegmentData(config.geometry_path, segment_data);
 
-    Reader edges_input_file(config.osrm_input_path.string() + ".edges", Reader::HasNoFingerprint);
-    std::vector<OriginalEdgeData> current_edge_data(edges_input_file.ReadElementCount64());
-    edges_input_file.ReadInto(current_edge_data);
+    extractor::TurnDataContainer turn_data;
+    extractor::files::readTurnData(config.osrm_input_path.string() + ".edges", turn_data);
 
     for (auto &edge : edge_based_edge_list)
     {
-        BOOST_ASSERT(edge.data.turn_id < current_edge_data.size());
-        auto geometry_id = current_edge_data[edge.data.turn_id].via_geometry;
+        auto geometry_id = turn_data.GetGeometryID(edge.data.turn_id);
 
         if (geometry_id.forward)
         {
@@ -453,9 +448,9 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
         throw util::exception("Limit of 255 segment speed and turn penalty files each reached" +
                               SOURCE_REF);
 
-    extractor::ProfileProperties profile_properties;
-    std::vector<extractor::OriginalEdgeData> edge_data;
+    extractor::TurnDataContainer turn_data;
     extractor::SegmentDataContainer segment_data;
+    extractor::ProfileProperties profile_properties;
     std::vector<TurnPenalty> turn_weight_penalties;
     std::vector<TurnPenalty> turn_duration_penalties;
     if (update_edge_weights || update_turn_penalties)
@@ -465,9 +460,7 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
         };
 
         const auto load_edge_data = [&] {
-            storage::io::FileReader edges_input_file(config.edge_data_path,
-                                                     storage::io::FileReader::HasNoFingerprint);
-            edges_input_file.DeserializeVector(edge_data);
+            extractor::files::readTurnData(config.edge_data_path, turn_data);
         };
 
         const auto load_turn_weight_penalties = [&] {
@@ -525,8 +518,8 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
         std::transform(updated_turn_penalties.begin(),
                        updated_turn_penalties.end(),
                        updated_segments.begin() + offset,
-                       [&edge_data](const std::uint64_t edge_index) {
-                           return edge_data[edge_index].via_geometry;
+                       [&turn_data](const std::uint64_t turn_id) {
+                           return turn_data.GetGeometryID(turn_id);
                        });
     }
 
@@ -585,7 +578,7 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
                       });
 
     const auto update_edge = [&](extractor::EdgeBasedEdge &edge) {
-        const auto geometry_id = edge_data[edge.data.turn_id].via_geometry;
+        const auto geometry_id = turn_data.GetGeometryID(edge.data.turn_id);
         auto updated_iter = std::lower_bound(updated_segments.begin(),
                                              updated_segments.end(),
                                              geometry_id,

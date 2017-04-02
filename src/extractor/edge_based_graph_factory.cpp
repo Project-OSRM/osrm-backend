@@ -175,22 +175,8 @@ NBGToEBG EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const N
     return NBGToEBG{node_u, node_v, forward_data.edge_id, reverse_data.edge_id};
 }
 
-void EdgeBasedGraphFactory::FlushVectorToStream(
-    storage::io::FileWriter &edge_data_file,
-    std::vector<OriginalEdgeData> &original_edge_data_vector) const
-{
-    if (original_edge_data_vector.empty())
-    {
-        return;
-    }
-
-    edge_data_file.WriteFrom(original_edge_data_vector.data(), original_edge_data_vector.size());
-
-    original_edge_data_vector.clear();
-}
-
 void EdgeBasedGraphFactory::Run(ScriptingEnvironment &scripting_environment,
-                                const std::string &original_edge_data_filename,
+                                const std::string &turn_data_filename,
                                 const std::string &turn_lane_data_filename,
                                 const std::string &turn_weight_penalties_filename,
                                 const std::string &turn_duration_penalties_filename,
@@ -211,7 +197,7 @@ void EdgeBasedGraphFactory::Run(ScriptingEnvironment &scripting_environment,
 
     TIMER_START(generate_edges);
     GenerateEdgeExpandedEdges(scripting_environment,
-                              original_edge_data_filename,
+                              turn_data_filename,
                               turn_lane_data_filename,
                               turn_weight_penalties_filename,
                               turn_duration_penalties_filename,
@@ -312,10 +298,10 @@ std::vector<NBGToEBG> EdgeBasedGraphFactory::GenerateEdgeExpandedNodes()
     return mapping;
 }
 
-/// Actually it also generates OriginalEdgeData and serializes them...
+/// Actually it also generates turn data and serializes them...
 void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     ScriptingEnvironment &scripting_environment,
-    const std::string &original_edge_data_filename,
+    const std::string &turn_data_filename,
     const std::string &turn_lane_data_filename,
     const std::string &turn_weight_penalties_filename,
     const std::string &turn_duration_penalties_filename,
@@ -324,22 +310,15 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     util::Log() << "Generating edge-expanded edges ";
 
     std::size_t node_based_edge_counter = 0;
-    std::size_t original_edges_counter = 0;
     restricted_turns_counter = 0;
     skipped_uturns_counter = 0;
     skipped_barrier_turns_counter = 0;
 
-    storage::io::FileWriter edge_data_file(original_edge_data_filename,
-                                           storage::io::FileWriter::HasNoFingerprint);
-
     storage::io::FileWriter turn_penalties_index_file(turn_penalties_index_filename,
                                                       storage::io::FileWriter::HasNoFingerprint);
 
-    // Writes a dummy value at the front that is updated later with the total length
-    edge_data_file.WriteElementCount64(0);
-
-    std::vector<OriginalEdgeData> original_edge_data_vector;
-    original_edge_data_vector.reserve(1024 * 1024);
+    // TODO investigate increased peak memory consumption by keeping this in memory now
+    TurnDataContainer turn_data_container;
 
     // Loop over all turns and generate new set of edges.
     // Three nested loop look super-linear, but we are dealing with a (kind of)
@@ -489,13 +468,13 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                     BOOST_ASSERT(is_encoded_forwards || is_encoded_backwards);
                     if (is_encoded_forwards)
                     {
-                        original_edge_data_vector.emplace_back(
+                        turn_data_container.push_back(
                             GeometryID{m_compressed_edge_container.GetZippedPositionForForwardID(
                                            incoming_edge),
                                        true},
                             edge_data1.name_id,
-                            turn.lane_data_id,
                             turn.instruction,
+                            turn.lane_data_id,
                             entry_class_id,
                             edge_data1.travel_mode,
                             util::guidance::TurnBearing(intersection[0].bearing),
@@ -503,23 +482,17 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                     }
                     else if (is_encoded_backwards)
                     {
-                        original_edge_data_vector.emplace_back(
+                        turn_data_container.push_back(
                             GeometryID{m_compressed_edge_container.GetZippedPositionForReverseID(
                                            incoming_edge),
                                        false},
                             edge_data1.name_id,
-                            turn.lane_data_id,
                             turn.instruction,
+                            turn.lane_data_id,
                             entry_class_id,
                             edge_data1.travel_mode,
                             util::guidance::TurnBearing(intersection[0].bearing),
                             util::guidance::TurnBearing(turn.bearing));
-                    }
-
-                    ++original_edges_counter;
-                    if (original_edge_data_vector.size() > 1024 * 1024 * 10)
-                    {
-                        FlushVectorToStream(edge_data_file, original_edge_data_vector);
                     }
 
                     // compute weight and duration penalties
@@ -554,7 +527,6 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                                         duration,
                                                         true,
                                                         false);
-                    BOOST_ASSERT(original_edges_counter == m_edge_based_edge_list.size());
 
                     BOOST_ASSERT(turn_weight_penalties.size() == turn_id);
                     turn_weight_penalties.push_back(weight_penalty);
@@ -626,13 +598,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
     util::Log() << "done.";
 
-    FlushVectorToStream(edge_data_file, original_edge_data_vector);
-
-    // Finally jump back to the empty space at the beginning and write length prefix
-    edge_data_file.SkipToBeginning();
-
-    const auto length_prefix = boost::numeric_cast<std::uint64_t>(original_edges_counter);
-    edge_data_file.WriteElementCount64(length_prefix);
+    files::writeTurnData(turn_data_filename, turn_data_container);
 
     util::Log() << "Generated " << m_edge_based_node_list.size() << " edge based nodes";
     util::Log() << "Node-based graph contains " << node_based_edge_counter << " edges";

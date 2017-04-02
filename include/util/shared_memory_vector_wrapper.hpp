@@ -2,6 +2,7 @@
 #define SHARED_MEMORY_VECTOR_WRAPPER_HPP
 
 #include "util/log.hpp"
+#include "util/exception.hpp"
 
 #include "storage/shared_memory_ownership.hpp"
 
@@ -82,6 +83,15 @@ template <typename DataT> class vector_view
         m_size = size;
     }
 
+    // for a vector-like interface
+    void resize(std::size_t size) const
+    {
+        if(m_size != size)
+        {
+            throw util::exception("Invalid resize on immutable shared memory vector.");
+        }
+    }
+
     DataT &at(const std::size_t index) { return m_ptr[index]; }
 
     const DataT &at(const std::size_t index) const { return m_ptr[index]; }
@@ -128,7 +138,8 @@ template <typename DataT> class vector_view
 
     auto data() const { return m_ptr; }
 
-    template <typename T> friend void swap(vector_view<T> &, vector_view<T> &) noexcept;
+    template <typename T>
+    friend void swap(vector_view<T> &, vector_view<T> &) noexcept;
 };
 
 template <> class vector_view<bool>
@@ -138,6 +149,8 @@ template <> class vector_view<bool>
     std::size_t m_size;
 
   public:
+    using value_type = bool;
+
     vector_view() : m_ptr(nullptr), m_size(0) {}
 
     vector_view(unsigned *ptr, std::size_t size) : m_ptr(ptr), m_size(size) {}
@@ -150,10 +163,18 @@ template <> class vector_view<bool>
         return m_ptr[bucket] & (1u << offset);
     }
 
-    void reset(unsigned *ptr, std::size_t size)
+    void reset(unsigned *, std::size_t size)
     {
-        m_ptr = ptr;
         m_size = size;
+    }
+
+    // for ensuring a vector compatible interface
+    void resize(std::size_t size) const
+    {
+        if(m_size != size)
+        {
+            throw util::exception("Invalid resize on immutable shared memory vector.");
+        }
     }
 
     std::size_t size() const { return m_size; }
@@ -178,6 +199,7 @@ template <typename DataT, storage::Ownership Ownership> struct ShM
                                              vector_view<DataT>,
                                              std::vector<DataT>>::type;
 };
+
 }
 }
 

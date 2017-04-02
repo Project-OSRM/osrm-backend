@@ -4,6 +4,7 @@
 #include "extractor/datasources.hpp"
 #include "extractor/nbg_to_ebg.hpp"
 #include "extractor/segment_data_container.hpp"
+#include "extractor/turn_data_container.hpp"
 
 #include "storage/io.hpp"
 
@@ -36,8 +37,9 @@ inline void write(storage::io::FileWriter &writer, Datasources &sources)
     writer.WriteFrom(sources);
 }
 
-template <>
-inline void read(storage::io::FileReader &reader, SegmentDataContainer &segment_data)
+template <storage::Ownership Ownership>
+inline void read(storage::io::FileReader &reader,
+                 detail::SegmentDataContainerImpl<Ownership> &segment_data)
 {
     auto num_indices = reader.ReadElementCount32();
     segment_data.index.resize(num_indices);
@@ -59,8 +61,9 @@ inline void read(storage::io::FileReader &reader, SegmentDataContainer &segment_
     reader.ReadInto(segment_data.datasources);
 }
 
-template <>
-inline void write(storage::io::FileWriter &writer, const SegmentDataContainer &segment_data)
+template <storage::Ownership Ownership>
+inline void write(storage::io::FileWriter &writer,
+                  const detail::SegmentDataContainerImpl<Ownership> &segment_data)
 {
     writer.WriteElementCount32(segment_data.index.size());
     writer.WriteFrom(segment_data.index);
@@ -77,6 +80,34 @@ inline void write(storage::io::FileWriter &writer, const SegmentDataContainer &s
     writer.WriteFrom(segment_data.fwd_durations);
     writer.WriteFrom(segment_data.rev_durations);
     writer.WriteFrom(segment_data.datasources);
+}
+
+template <storage::Ownership Ownership>
+inline void read(storage::io::FileReader &reader,
+                 detail::TurnDataContainerImpl<Ownership> &turn_data_container)
+{
+    reader.DeserializeVector(turn_data_container.geometry_ids);
+    reader.DeserializeVector(turn_data_container.name_ids);
+    reader.DeserializeVector(turn_data_container.turn_instructions);
+    reader.DeserializeVector(turn_data_container.lane_data_ids);
+    reader.DeserializeVector(turn_data_container.travel_modes);
+    reader.DeserializeVector(turn_data_container.entry_class_ids);
+    reader.DeserializeVector(turn_data_container.pre_turn_bearings);
+    reader.DeserializeVector(turn_data_container.post_turn_bearings);
+}
+
+template <storage::Ownership Ownership>
+inline void write(storage::io::FileWriter &writer,
+                  const detail::TurnDataContainerImpl<Ownership> &turn_data_container)
+{
+    writer.SerializeVector(turn_data_container.geometry_ids);
+    writer.SerializeVector(turn_data_container.name_ids);
+    writer.SerializeVector(turn_data_container.turn_instructions);
+    writer.SerializeVector(turn_data_container.lane_data_ids);
+    writer.SerializeVector(turn_data_container.travel_modes);
+    writer.SerializeVector(turn_data_container.entry_class_ids);
+    writer.SerializeVector(turn_data_container.pre_turn_bearings);
+    writer.SerializeVector(turn_data_container.post_turn_bearings);
 }
 }
 }
