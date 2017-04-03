@@ -187,7 +187,8 @@ inline std::vector<routing_algorithms::TurnData> RoutingAlgorithms<Algorithm>::G
 
 // CoreCH overrides
 template <>
-InternalRouteResult inline RoutingAlgorithms<routing_algorithms::corech::Algorithm>::AlternativePathSearch(const PhantomNodes &) const
+InternalRouteResult inline RoutingAlgorithms<
+    routing_algorithms::corech::Algorithm>::AlternativePathSearch(const PhantomNodes &) const
 {
     throw util::exception("AlternativePathSearch is disabled due to performance reasons");
 }
@@ -208,14 +209,6 @@ InternalRouteResult inline RoutingAlgorithms<
     routing_algorithms::mld::Algorithm>::AlternativePathSearch(const PhantomNodes &) const
 {
     throw util::exception("AlternativePathSearch is not implemented");
-}
-
-template <>
-inline InternalRouteResult
-RoutingAlgorithms<routing_algorithms::mld::Algorithm>::ShortestPathSearch(
-    const std::vector<PhantomNodes> &, const boost::optional<bool>) const
-{
-    throw util::exception("ShortestPathSearch is not implemented");
 }
 
 template <>

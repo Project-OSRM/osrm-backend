@@ -174,6 +174,8 @@ std::tuple<EdgeWeight, NodeID, NodeID, std::vector<EdgeID>>
 search(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
        SearchEngineData<Algorithm>::QueryHeap &forward_heap,
        SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
+       const bool force_loop_forward,
+       const bool force_loop_reverse,
        Args... args)
 {
 
@@ -268,7 +270,7 @@ search(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
             NodeID subpath_source, subpath_target;
             std::vector<EdgeID> subpath;
             std::tie(subpath_weight, subpath_source, subpath_target, subpath) =
-                search(facade, forward_heap, reverse_heap, sublevel, parent_cell_id);
+                search(facade, forward_heap, reverse_heap, force_loop_forward, force_loop_reverse, sublevel, parent_cell_id);
             BOOST_ASSERT(!subpath.empty());
             BOOST_ASSERT(subpath_source == source);
             BOOST_ASSERT(subpath_target == target);
@@ -277,6 +279,63 @@ search(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
     }
 
     return std::make_tuple(weight, source_node, target_node, std::move(unpacked_path));
+}
+
+// Alias to be compatible with the overload for CoreCH that needs 4 heaps
+inline void search(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
+                   SearchEngineData<Algorithm>::QueryHeap &forward_heap,
+                   SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
+                   SearchEngineData<Algorithm>::QueryHeap &,
+                   SearchEngineData<Algorithm>::QueryHeap &,
+                   EdgeWeight &weight,
+                   std::vector<NodeID> &packed_leg,
+                   const bool force_loop_forward,
+                   const bool force_loop_reverse,
+                   const PhantomNodes &phantom_nodes,
+                   const int duration_upper_bound = INVALID_EDGE_WEIGHT)
+{
+    (void)duration_upper_bound;
+
+    NodeID source_node, target_node;
+    std::vector<EdgeID> unpacked_edges;
+    std::tie(weight, source_node, target_node, unpacked_edges) =
+        mld::search(facade, forward_heap, reverse_heap, force_loop_forward, force_loop_reverse, phantom_nodes);
+
+    if (weight != INVALID_EDGE_WEIGHT)
+    {
+        packed_leg.push_back(source_node);
+        std::transform(unpacked_edges.begin(),
+                       unpacked_edges.end(),
+                       std::back_inserter(packed_leg),
+                       [&facade](const auto edge) { return facade.GetTarget(edge); });
+    }
+}
+
+template <typename RandomIter, typename FacadeT>
+void unpackPath(const FacadeT &facade,
+                RandomIter packed_path_begin,
+                RandomIter packed_path_end,
+                const PhantomNodes &phantom_nodes,
+                std::vector<PathData> &unpacked_path)
+{
+    const auto nodes_number = std::distance(packed_path_begin, packed_path_end);
+    BOOST_ASSERT(nodes_number > 0);
+
+    std::vector<EdgeID> unpacked_edges;
+
+    auto source_node = *packed_path_begin, target_node = *packed_path_begin;
+
+    if (nodes_number > 1)
+    {
+        target_node = *std::prev(packed_path_end);
+        util::for_each_pair(packed_path_begin,
+                            packed_path_end,
+                            [&facade, &unpacked_edges](const auto from, const auto to) {
+                                unpacked_edges.push_back(facade.FindEdge(from, to));
+                            });
+    }
+
+    annotatePath(facade, source_node, target_node, unpacked_edges, phantom_nodes, unpacked_path);
 }
 
 } // namespace mld

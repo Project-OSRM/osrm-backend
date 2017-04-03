@@ -96,6 +96,9 @@ template <> struct HasGetTileTurns<corech::Algorithm> final : std::true_type
 template <> struct HasDirectShortestPathSearch<mld::Algorithm> final : std::true_type
 {
 };
+template <> struct HasShortestPathSearch<mld::Algorithm> final : std::true_type
+{
+};
 }
 }
 }
