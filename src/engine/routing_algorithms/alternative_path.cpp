@@ -28,7 +28,7 @@ const double constexpr VIAPATH_ALPHA = 0.10;
 const double constexpr VIAPATH_EPSILON = 0.15; // alternative at most 15% longer
 const double constexpr VIAPATH_GAMMA = 0.75;   // alternative shares at most 75% with the shortest.
 
-using QueryHeap = SearchEngineData::QueryHeap;
+using QueryHeap = SearchEngineData<Algorithm>::QueryHeap;
 using SearchSpaceEdge = std::pair<NodeID, NodeID>;
 
 struct RankedCandidateNode
@@ -154,7 +154,7 @@ void retrievePackedAlternatePath(const QueryHeap &forward_heap1,
 // from v and intersecting against queues. only half-searches have to be
 // done at this stage
 void computeLengthAndSharingOfViaPath(
-    SearchEngineData &engine_working_data,
+    SearchEngineData<Algorithm> &engine_working_data,
     const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
     const NodeID via_node,
     int *real_length_of_via_path,
@@ -164,10 +164,10 @@ void computeLengthAndSharingOfViaPath(
 {
     engine_working_data.InitializeOrClearSecondThreadLocalStorage(facade.GetNumberOfNodes());
 
-    auto &existing_forward_heap = *engine_working_data.GetForwardHeapPtr(Algorithm{});
-    auto &existing_reverse_heap = *engine_working_data.GetReverseHeapPtr(Algorithm{});
-    QueryHeap &new_forward_heap = *engine_working_data.forward_heap_2;
-    QueryHeap &new_reverse_heap = *engine_working_data.reverse_heap_2;
+    auto &existing_forward_heap = *engine_working_data.forward_heap_1;
+    auto &existing_reverse_heap = *engine_working_data.reverse_heap_1;
+    auto &new_forward_heap = *engine_working_data.forward_heap_2;
+    auto &new_reverse_heap = *engine_working_data.reverse_heap_2;
 
     std::vector<NodeID> packed_s_v_path;
     std::vector<NodeID> packed_v_t_path;
@@ -319,7 +319,7 @@ void computeLengthAndSharingOfViaPath(
 
 // conduct T-Test
 bool viaNodeCandidatePassesTTest(
-    SearchEngineData &engine_working_data,
+    SearchEngineData<Algorithm> &engine_working_data,
     const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
     QueryHeap &existing_forward_heap,
     QueryHeap &existing_reverse_heap,
@@ -563,7 +563,7 @@ bool viaNodeCandidatePassesTTest(
 }
 
 InternalRouteResult
-alternativePathSearch(SearchEngineData &engine_working_data,
+alternativePathSearch(SearchEngineData<Algorithm> &engine_working_data,
                       const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
                       const PhantomNodes &phantom_node_pair)
 {
@@ -575,15 +575,14 @@ alternativePathSearch(SearchEngineData &engine_working_data,
     std::vector<SearchSpaceEdge> reverse_search_space;
 
     // Init queues, semi-expensive because access to TSS invokes a sys-call
-    engine_working_data.InitializeOrClearFirstThreadLocalStorage(Algorithm{},
-                                                                 facade.GetNumberOfNodes());
+    engine_working_data.InitializeOrClearFirstThreadLocalStorage(facade.GetNumberOfNodes());
     engine_working_data.InitializeOrClearSecondThreadLocalStorage(facade.GetNumberOfNodes());
     engine_working_data.InitializeOrClearThirdThreadLocalStorage(facade.GetNumberOfNodes());
 
-    auto &forward_heap1 = *engine_working_data.GetForwardHeapPtr(Algorithm{});
-    auto &reverse_heap1 = *engine_working_data.GetReverseHeapPtr(Algorithm{});
-    QueryHeap &forward_heap2 = *(engine_working_data.forward_heap_2);
-    QueryHeap &reverse_heap2 = *(engine_working_data.reverse_heap_2);
+    auto &forward_heap1 = *engine_working_data.forward_heap_1;
+    auto &reverse_heap1 = *engine_working_data.reverse_heap_1;
+    auto &forward_heap2 = *engine_working_data.forward_heap_2;
+    auto &reverse_heap2 = *engine_working_data.reverse_heap_2;
 
     EdgeWeight upper_bound_to_shortest_path_weight = INVALID_EDGE_WEIGHT;
     NodeID middle_node = SPECIAL_NODEID;

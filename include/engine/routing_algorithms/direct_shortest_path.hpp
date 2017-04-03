@@ -21,11 +21,16 @@ namespace routing_algorithms
 /// by the previous route.
 /// This variation is only an optimazation for graphs with slow queries, for example
 /// not fully contracted graphs.
-template <typename AlgorithmT>
+template <typename Algorithm>
 InternalRouteResult
-directShortestPathSearch(SearchEngineData &engine_working_data,
-                         const datafacade::ContiguousInternalMemoryDataFacade<AlgorithmT> &facade,
+directShortestPathSearch(SearchEngineData<Algorithm> &engine_working_data,
+                         const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
                          const PhantomNodes &phantom_nodes);
+
+InternalRouteResult directShortestPathSearch(
+    SearchEngineData<mld::Algorithm> &engine_working_data,
+    const datafacade::ContiguousInternalMemoryDataFacade<mld::Algorithm> &facade,
+    const PhantomNodes &phantom_nodes);
 
 } // namespace routing_algorithms
 } // namespace engine

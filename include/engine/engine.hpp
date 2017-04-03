@@ -49,7 +49,7 @@ class EngineInterface
     virtual Status Tile(const api::TileParameters &parameters, std::string &result) const = 0;
 };
 
-template <typename AlgorithmT> class Engine final : public EngineInterface
+template <typename Algorithm> class Engine final : public EngineInterface
 {
   public:
     explicit Engine(const EngineConfig &config)
@@ -64,15 +64,14 @@ template <typename AlgorithmT> class Engine final : public EngineInterface
         if (config.use_shared_memory)
         {
             util::Log(logDEBUG) << "Using shared memory with algorithm "
-                                << routing_algorithms::name<AlgorithmT>();
-            facade_provider = std::make_unique<WatchingProvider<AlgorithmT>>();
+                                << routing_algorithms::name<Algorithm>();
+            facade_provider = std::make_unique<WatchingProvider<Algorithm>>();
         }
         else
         {
             util::Log(logDEBUG) << "Using internal memory with algorithm "
-                                << routing_algorithms::name<AlgorithmT>();
-            facade_provider =
-                std::make_unique<ImmutableProvider<AlgorithmT>>(config.storage_config);
+                                << routing_algorithms::name<Algorithm>();
+            facade_provider = std::make_unique<ImmutableProvider<Algorithm>>(config.storage_config);
         }
     }
 
@@ -87,7 +86,7 @@ template <typename AlgorithmT> class Engine final : public EngineInterface
                  util::json::Object &result) const override final
     {
         auto facade = facade_provider->Get();
-        auto algorithms = RoutingAlgorithms<AlgorithmT>{heaps, *facade};
+        auto algorithms = RoutingAlgorithms<Algorithm>{heaps, *facade};
         return route_plugin.HandleRequest(*facade, algorithms, params, result);
     }
 
@@ -95,7 +94,7 @@ template <typename AlgorithmT> class Engine final : public EngineInterface
                  util::json::Object &result) const override final
     {
         auto facade = facade_provider->Get();
-        auto algorithms = RoutingAlgorithms<AlgorithmT>{heaps, *facade};
+        auto algorithms = RoutingAlgorithms<Algorithm>{heaps, *facade};
         return table_plugin.HandleRequest(*facade, algorithms, params, result);
     }
 
@@ -103,14 +102,14 @@ template <typename AlgorithmT> class Engine final : public EngineInterface
                    util::json::Object &result) const override final
     {
         auto facade = facade_provider->Get();
-        auto algorithms = RoutingAlgorithms<AlgorithmT>{heaps, *facade};
+        auto algorithms = RoutingAlgorithms<Algorithm>{heaps, *facade};
         return nearest_plugin.HandleRequest(*facade, algorithms, params, result);
     }
 
     Status Trip(const api::TripParameters &params, util::json::Object &result) const override final
     {
         auto facade = facade_provider->Get();
-        auto algorithms = RoutingAlgorithms<AlgorithmT>{heaps, *facade};
+        auto algorithms = RoutingAlgorithms<Algorithm>{heaps, *facade};
         return trip_plugin.HandleRequest(*facade, algorithms, params, result);
     }
 
@@ -118,22 +117,22 @@ template <typename AlgorithmT> class Engine final : public EngineInterface
                  util::json::Object &result) const override final
     {
         auto facade = facade_provider->Get();
-        auto algorithms = RoutingAlgorithms<AlgorithmT>{heaps, *facade};
+        auto algorithms = RoutingAlgorithms<Algorithm>{heaps, *facade};
         return match_plugin.HandleRequest(*facade, algorithms, params, result);
     }
 
     Status Tile(const api::TileParameters &params, std::string &result) const override final
     {
         auto facade = facade_provider->Get();
-        auto algorithms = RoutingAlgorithms<AlgorithmT>{heaps, *facade};
+        auto algorithms = RoutingAlgorithms<Algorithm>{heaps, *facade};
         return tile_plugin.HandleRequest(*facade, algorithms, params, result);
     }
 
     static bool CheckCompability(const EngineConfig &config);
 
   private:
-    std::unique_ptr<DataFacadeProvider<AlgorithmT>> facade_provider;
-    mutable SearchEngineData heaps;
+    std::unique_ptr<DataFacadeProvider<Algorithm>> facade_provider;
+    mutable SearchEngineData<Algorithm> heaps;
 
     const plugins::ViaRoutePlugin route_plugin;
     const plugins::TablePlugin table_plugin;

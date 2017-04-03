@@ -16,7 +16,7 @@ namespace
 {
 
 const static constexpr bool DO_NOT_FORCE_LOOP = false;
-using QueryHeap = SearchEngineData::QueryHeap;
+using QueryHeap = SearchEngineData<ch::Algorithm>::QueryHeap;
 
 // allows a uturn at the target_phantom
 // searches source forward/reverse -> target forward/reverse
@@ -230,7 +230,7 @@ void unpackLegs(const datafacade::ContiguousInternalMemoryDataFacade<ch::Algorit
 
 template <typename Algorithm>
 InternalRouteResult
-shortestPathSearchImpl(SearchEngineData &engine_working_data,
+shortestPathSearchImpl(SearchEngineData<Algorithm> &engine_working_data,
                        const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
                        const std::vector<PhantomNodes> &phantom_nodes_vector,
                        const boost::optional<bool> continue_straight_at_waypoint)
@@ -241,14 +241,13 @@ shortestPathSearchImpl(SearchEngineData &engine_working_data,
         !(continue_straight_at_waypoint ? *continue_straight_at_waypoint
                                         : facade.GetContinueStraightDefault());
 
-    engine_working_data.InitializeOrClearFirstThreadLocalStorage(Algorithm{},
-                                                                 facade.GetNumberOfNodes());
+    engine_working_data.InitializeOrClearFirstThreadLocalStorage(facade.GetNumberOfNodes());
     engine_working_data.InitializeOrClearSecondThreadLocalStorage(facade.GetNumberOfNodes());
 
-    auto &forward_heap = *engine_working_data.GetForwardHeapPtr(Algorithm{});
-    auto &reverse_heap = *engine_working_data.GetReverseHeapPtr(Algorithm{});
-    QueryHeap &forward_core_heap = *(engine_working_data.forward_heap_2);
-    QueryHeap &reverse_core_heap = *(engine_working_data.reverse_heap_2);
+    auto &forward_heap = *engine_working_data.forward_heap_1;
+    auto &reverse_heap = *engine_working_data.reverse_heap_1;
+    auto &forward_core_heap = *engine_working_data.forward_heap_2;
+    auto &reverse_core_heap = *engine_working_data.reverse_heap_2;
 
     int total_weight_to_forward = 0;
     int total_weight_to_reverse = 0;
@@ -485,8 +484,9 @@ shortestPathSearchImpl(SearchEngineData &engine_working_data,
 }
 }
 
+template<>
 InternalRouteResult
-shortestPathSearch(SearchEngineData &engine_working_data,
+shortestPathSearch(SearchEngineData<ch::Algorithm> &engine_working_data,
                    const datafacade::ContiguousInternalMemoryDataFacade<ch::Algorithm> &facade,
                    const std::vector<PhantomNodes> &phantom_nodes_vector,
                    const boost::optional<bool> continue_straight_at_waypoint)
@@ -495,8 +495,9 @@ shortestPathSearch(SearchEngineData &engine_working_data,
         engine_working_data, facade, phantom_nodes_vector, continue_straight_at_waypoint);
 }
 
+template<>
 InternalRouteResult
-shortestPathSearch(SearchEngineData &engine_working_data,
+shortestPathSearch(SearchEngineData<corech::Algorithm> &engine_working_data,
                    const datafacade::ContiguousInternalMemoryDataFacade<corech::Algorithm> &facade,
                    const std::vector<PhantomNodes> &phantom_nodes_vector,
                    const boost::optional<bool> continue_straight_at_waypoint)
