@@ -54,7 +54,7 @@ class ShMemIterator
     DataT *m_value;
 };
 
-template <typename DataT> class SharedMemoryWrapper
+template <typename DataT> class vector_view
 {
   private:
     DataT *m_ptr;
@@ -66,9 +66,9 @@ template <typename DataT> class SharedMemoryWrapper
     using const_iterator = ShMemIterator<const DataT>;
     using reverse_iterator = boost::reverse_iterator<iterator>;
 
-    SharedMemoryWrapper() : m_ptr(nullptr), m_size(0) {}
+    vector_view() : m_ptr(nullptr), m_size(0) {}
 
-    SharedMemoryWrapper(DataT *ptr, std::size_t size) : m_ptr(ptr), m_size(size) {}
+    vector_view(DataT *ptr, std::size_t size) : m_ptr(ptr), m_size(size) {}
 
     void reset(DataT *ptr, std::size_t size)
     {
@@ -129,19 +129,19 @@ template <typename DataT> class SharedMemoryWrapper
     auto data() const { return m_ptr; }
 
     template <typename T>
-    friend void swap(SharedMemoryWrapper<T> &, SharedMemoryWrapper<T> &) noexcept;
+    friend void swap(vector_view<T> &, vector_view<T> &) noexcept;
 };
 
-template <> class SharedMemoryWrapper<bool>
+template <> class vector_view<bool>
 {
   private:
     unsigned *m_ptr;
     std::size_t m_size;
 
   public:
-    SharedMemoryWrapper() : m_ptr(nullptr), m_size(0) {}
+    vector_view() : m_ptr(nullptr), m_size(0) {}
 
-    SharedMemoryWrapper(unsigned *ptr, std::size_t size) : m_ptr(ptr), m_size(size) {}
+    vector_view(unsigned *ptr, std::size_t size) : m_ptr(ptr), m_size(size) {}
 
     bool at(const std::size_t index) const
     {
@@ -164,12 +164,12 @@ template <> class SharedMemoryWrapper<bool>
     bool operator[](const unsigned index) const { return at(index); }
 
     template <typename T>
-    friend void swap(SharedMemoryWrapper<T> &, SharedMemoryWrapper<T> &) noexcept;
+    friend void swap(vector_view<T> &, vector_view<T> &) noexcept;
 };
 
-// Both SharedMemoryWrapper<T> and the SharedMemoryWrapper<bool> specializations share this impl.
+// Both vector_view<T> and the vector_view<bool> specializations share this impl.
 template <typename DataT>
-void swap(SharedMemoryWrapper<DataT> &lhs, SharedMemoryWrapper<DataT> &rhs) noexcept
+void swap(vector_view<DataT> &lhs, vector_view<DataT> &rhs) noexcept
 {
     std::swap(lhs.m_ptr, rhs.m_ptr);
     std::swap(lhs.m_size, rhs.m_size);
@@ -179,15 +179,9 @@ template <typename DataT, osrm::storage::MemorySetting MemorySetting> struct ShM
 {
     using vector =
         typename std::conditional<MemorySetting == osrm::storage::MemorySetting::SharedMemory,
-                                  SharedMemoryWrapper<DataT>,
+                                  vector_view<DataT>,
                                   std::vector<DataT>>::type;
 };
-
-template <typename DataT>
-using vector_view = typename util::ShM<DataT, osrm::storage::MemorySetting::SharedMemory>::vector;
-template <typename DataT>
-using InternalMemoryVector =
-    typename util::ShM<DataT, osrm::storage::MemorySetting::InternalMemory>::vector;
 }
 }
 
