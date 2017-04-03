@@ -15,10 +15,10 @@ namespace engine
 namespace routing_algorithms
 {
 
-using ManyToManyQueryHeap = SearchEngineData::ManyToManyQueryHeap;
-
 namespace ch
 {
+
+using ManyToManyQueryHeap = SearchEngineData<Algorithm>::ManyToManyQueryHeap;
 
 namespace
 {
@@ -151,7 +151,7 @@ void backwardRoutingStep(const datafacade::ContiguousInternalMemoryDataFacade<Al
 }
 
 std::vector<EdgeWeight>
-manyToManySearch(SearchEngineData &engine_working_data,
+manyToManySearch(SearchEngineData<Algorithm> &engine_working_data,
                  const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
                  const std::vector<PhantomNode> &phantom_nodes,
                  const std::vector<std::size_t> &source_indices,

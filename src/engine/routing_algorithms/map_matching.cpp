@@ -49,7 +49,7 @@ unsigned getMedianSampleTime(const std::vector<unsigned> &timestamps)
 
 template <typename Algorithm>
 SubMatchingList
-mapMatchingImpl(SearchEngineData &engine_working_data,
+mapMatchingImpl(SearchEngineData<Algorithm> &engine_working_data,
                 const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
                 const CandidateLists &candidates_list,
                 const std::vector<util::Coordinate> &trace_coordinates,
@@ -142,13 +142,13 @@ mapMatchingImpl(SearchEngineData &engine_working_data,
     }
 
     const auto nodes_number = facade.GetNumberOfNodes();
-    engine_working_data.InitializeOrClearFirstThreadLocalStorage(Algorithm{}, nodes_number);
+    engine_working_data.InitializeOrClearFirstThreadLocalStorage(nodes_number);
     engine_working_data.InitializeOrClearSecondThreadLocalStorage(nodes_number);
 
-    auto &forward_heap = *engine_working_data.GetForwardHeapPtr(Algorithm{});
-    auto &reverse_heap = *engine_working_data.GetReverseHeapPtr(Algorithm{});
-    auto &forward_core_heap = *(engine_working_data.forward_heap_2);
-    auto &reverse_core_heap = *(engine_working_data.reverse_heap_2);
+    auto &forward_heap = *engine_working_data.forward_heap_1;
+    auto &reverse_heap = *engine_working_data.reverse_heap_1;
+    auto &forward_core_heap = *engine_working_data.forward_heap_2;
+    auto &reverse_core_heap = *engine_working_data.reverse_heap_2;
 
     std::size_t breakage_begin = map_matching::INVALID_STATE;
     std::vector<std::size_t> split_points;
@@ -420,10 +420,9 @@ mapMatchingImpl(SearchEngineData &engine_working_data,
     return sub_matchings;
 }
 
-namespace ch
-{
-SubMatchingList mapMatching(SearchEngineData &engine_working_data,
-                            const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
+template<>
+SubMatchingList mapMatching(SearchEngineData<ch::Algorithm> &engine_working_data,
+                            const datafacade::ContiguousInternalMemoryDataFacade<ch::Algorithm> &facade,
                             const CandidateLists &candidates_list,
                             const std::vector<util::Coordinate> &trace_coordinates,
                             const std::vector<unsigned> &trace_timestamps,
@@ -438,12 +437,10 @@ SubMatchingList mapMatching(SearchEngineData &engine_working_data,
                            trace_gps_precision,
                            use_tidying);
 }
-}
 
-namespace corech
-{
-SubMatchingList mapMatching(SearchEngineData &engine_working_data,
-                            const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
+template<>
+SubMatchingList mapMatching(SearchEngineData<corech::Algorithm> &engine_working_data,
+                            const datafacade::ContiguousInternalMemoryDataFacade<corech::Algorithm> &facade,
                             const CandidateLists &candidates_list,
                             const std::vector<util::Coordinate> &trace_coordinates,
                             const std::vector<unsigned> &trace_timestamps,
@@ -458,7 +455,6 @@ SubMatchingList mapMatching(SearchEngineData &engine_working_data,
                            trace_timestamps,
                            trace_gps_precision,
                            use_tidying);
-}
 }
 
 } // namespace routing_algorithms

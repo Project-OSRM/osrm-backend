@@ -58,8 +58,8 @@ bool checkParentCellRestriction(CellID cell, LevelID, CellID parent) { return ce
 
 template <bool DIRECTION, typename... Args>
 void routingStep(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
-                 SearchEngineData::MultiLayerDijkstraHeap &forward_heap,
-                 SearchEngineData::MultiLayerDijkstraHeap &reverse_heap,
+                 SearchEngineData<Algorithm>::QueryHeap &forward_heap,
+                 SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
                  NodeID &middle_node,
                  EdgeWeight &path_upper_bound,
                  Args... args)
@@ -172,8 +172,8 @@ void routingStep(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm>
 template <typename... Args>
 std::tuple<EdgeWeight, NodeID, NodeID, std::vector<EdgeID>>
 search(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
-       SearchEngineData::MultiLayerDijkstraHeap &forward_heap,
-       SearchEngineData::MultiLayerDijkstraHeap &reverse_heap,
+       SearchEngineData<Algorithm>::QueryHeap &forward_heap,
+       SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
        Args... args)
 {
 

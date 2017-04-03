@@ -54,11 +54,11 @@ class RoutingAlgorithmsInterface
 };
 
 // Short-lived object passed to each plugin in request to wrap routing algorithms
-template <typename AlgorithmT> class RoutingAlgorithms final : public RoutingAlgorithmsInterface
+template <typename Algorithm> class RoutingAlgorithms final : public RoutingAlgorithmsInterface
 {
   public:
-    RoutingAlgorithms(SearchEngineData &heaps,
-                      const datafacade::ContiguousInternalMemoryDataFacade<AlgorithmT> &facade)
+    RoutingAlgorithms(SearchEngineData<Algorithm> &heaps,
+                      const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade)
         : heaps(heaps), facade(facade)
     {
     }
@@ -93,49 +93,49 @@ template <typename AlgorithmT> class RoutingAlgorithms final : public RoutingAlg
 
     bool HasAlternativePathSearch() const final override
     {
-        return routing_algorithms::HasAlternativePathSearch<AlgorithmT>::value;
+        return routing_algorithms::HasAlternativePathSearch<Algorithm>::value;
     }
 
     bool HasShortestPathSearch() const final override
     {
-        return routing_algorithms::HasShortestPathSearch<AlgorithmT>::value;
+        return routing_algorithms::HasShortestPathSearch<Algorithm>::value;
     }
 
     bool HasDirectShortestPathSearch() const final override
     {
-        return routing_algorithms::HasDirectShortestPathSearch<AlgorithmT>::value;
+        return routing_algorithms::HasDirectShortestPathSearch<Algorithm>::value;
     }
 
     bool HasMapMatching() const final override
     {
-        return routing_algorithms::HasMapMatching<AlgorithmT>::value;
+        return routing_algorithms::HasMapMatching<Algorithm>::value;
     }
 
     bool HasManyToManySearch() const final override
     {
-        return routing_algorithms::HasManyToManySearch<AlgorithmT>::value;
+        return routing_algorithms::HasManyToManySearch<Algorithm>::value;
     }
 
     bool HasGetTileTurns() const final override
     {
-        return routing_algorithms::HasGetTileTurns<AlgorithmT>::value;
+        return routing_algorithms::HasGetTileTurns<Algorithm>::value;
     }
 
   private:
-    SearchEngineData &heaps;
+    SearchEngineData<Algorithm> &heaps;
     // Owned by shared-ptr passed to the query
-    const datafacade::ContiguousInternalMemoryDataFacade<AlgorithmT> &facade;
+    const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade;
 };
 
-template <typename AlgorithmT>
+template <typename Algorithm>
 InternalRouteResult
-RoutingAlgorithms<AlgorithmT>::AlternativePathSearch(const PhantomNodes &phantom_node_pair) const
+RoutingAlgorithms<Algorithm>::AlternativePathSearch(const PhantomNodes &phantom_node_pair) const
 {
     return routing_algorithms::ch::alternativePathSearch(heaps, facade, phantom_node_pair);
 }
 
-template <typename AlgorithmT>
-InternalRouteResult RoutingAlgorithms<AlgorithmT>::ShortestPathSearch(
+template <typename Algorithm>
+InternalRouteResult RoutingAlgorithms<Algorithm>::ShortestPathSearch(
     const std::vector<PhantomNodes> &phantom_node_pair,
     const boost::optional<bool> continue_straight_at_waypoint) const
 {
@@ -143,46 +143,63 @@ InternalRouteResult RoutingAlgorithms<AlgorithmT>::ShortestPathSearch(
         heaps, facade, phantom_node_pair, continue_straight_at_waypoint);
 }
 
-template <typename AlgorithmT>
+template <typename Algorithm>
 InternalRouteResult
-RoutingAlgorithms<AlgorithmT>::DirectShortestPathSearch(const PhantomNodes &phantom_nodes) const
+RoutingAlgorithms<Algorithm>::DirectShortestPathSearch(const PhantomNodes &phantom_nodes) const
 {
     return routing_algorithms::directShortestPathSearch(heaps, facade, phantom_nodes);
 }
 
-template <typename AlgorithmT>
-std::vector<EdgeWeight> RoutingAlgorithms<AlgorithmT>::ManyToManySearch(
-    const std::vector<PhantomNode> &phantom_nodes,
-    const std::vector<std::size_t> &source_indices,
-    const std::vector<std::size_t> &target_indices) const
+template <typename Algorithm>
+std::vector<EdgeWeight>
+RoutingAlgorithms<Algorithm>::ManyToManySearch(const std::vector<PhantomNode> &phantom_nodes,
+                                               const std::vector<std::size_t> &source_indices,
+                                               const std::vector<std::size_t> &target_indices) const
 {
     return routing_algorithms::ch::manyToManySearch(
         heaps, facade, phantom_nodes, source_indices, target_indices);
 }
 
-template <typename AlgorithmT>
-inline routing_algorithms::SubMatchingList RoutingAlgorithms<AlgorithmT>::MapMatching(
+template <typename Algorithm>
+inline routing_algorithms::SubMatchingList RoutingAlgorithms<Algorithm>::MapMatching(
     const routing_algorithms::CandidateLists &candidates_list,
     const std::vector<util::Coordinate> &trace_coordinates,
     const std::vector<unsigned> &trace_timestamps,
     const std::vector<boost::optional<double>> &trace_gps_precision,
     const bool allow_splitting) const
 {
-    return routing_algorithms::ch::mapMatching(heaps,
-                                               facade,
-                                               candidates_list,
-                                               trace_coordinates,
-                                               trace_timestamps,
-                                               trace_gps_precision,
-                                               allow_splitting);
+    return routing_algorithms::mapMatching(heaps,
+                                           facade,
+                                           candidates_list,
+                                           trace_coordinates,
+                                           trace_timestamps,
+                                           trace_gps_precision,
+                                           allow_splitting);
 }
 
-template <typename AlgorithmT>
-inline std::vector<routing_algorithms::TurnData> RoutingAlgorithms<AlgorithmT>::GetTileTurns(
+template <typename Algorithm>
+inline std::vector<routing_algorithms::TurnData> RoutingAlgorithms<Algorithm>::GetTileTurns(
     const std::vector<datafacade::BaseDataFacade::RTreeLeaf> &edges,
     const std::vector<std::size_t> &sorted_edge_indexes) const
 {
     return routing_algorithms::getTileTurns(facade, edges, sorted_edge_indexes);
+}
+
+// CoreCH overrides
+template <>
+InternalRouteResult inline RoutingAlgorithms<routing_algorithms::corech::Algorithm>::AlternativePathSearch(const PhantomNodes &) const
+{
+    throw util::exception("AlternativePathSearch is disabled due to performance reasons");
+}
+
+template <>
+inline std::vector<EdgeWeight>
+RoutingAlgorithms<routing_algorithms::corech::Algorithm>::ManyToManySearch(
+    const std::vector<PhantomNode> &,
+    const std::vector<std::size_t> &,
+    const std::vector<std::size_t> &) const
+{
+    throw util::exception("ManyToManySearch is disabled due to performance reasons");
 }
 
 // MLD overrides for not implemented

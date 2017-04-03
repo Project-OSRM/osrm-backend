@@ -58,7 +58,8 @@ void insertNodesInHeap(Heap &heap, const PhantomNode &phantom_node)
 }
 
 template <bool DIRECTION>
-void insertNodesInHeap(SearchEngineData::ManyToManyQueryHeap &heap, const PhantomNode &phantom_node)
+void insertNodesInHeap(SearchEngineData<ch::Algorithm>::ManyToManyQueryHeap &heap,
+                       const PhantomNode &phantom_node)
 {
     BOOST_ASSERT(phantom_node.IsValid());
 
