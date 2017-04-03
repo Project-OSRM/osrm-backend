@@ -13,7 +13,7 @@ using namespace osrm;
 using namespace osrm::util;
 
 constexpr unsigned BLOCK_SIZE = 16;
-typedef RangeTable<BLOCK_SIZE, osrm::storage::MemorySetting::InternalMemory> TestRangeTable;
+typedef RangeTable<BLOCK_SIZE, osrm::storage::Ownership::Container> TestRangeTable;
 
 void ConstructionTest(stxxl::vector<unsigned> lengths, std::vector<unsigned> offsets)
 {

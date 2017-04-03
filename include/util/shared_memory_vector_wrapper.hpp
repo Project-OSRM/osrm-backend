@@ -175,10 +175,10 @@ void swap(vector_view<DataT> &lhs, vector_view<DataT> &rhs) noexcept
     std::swap(lhs.m_size, rhs.m_size);
 }
 
-template <typename DataT, osrm::storage::MemorySetting MemorySetting> struct ShM
+template <typename DataT, osrm::storage::Ownership Ownership> struct ShM
 {
     using vector =
-        typename std::conditional<MemorySetting == osrm::storage::MemorySetting::SharedMemory,
+        typename std::conditional<Ownership == osrm::storage::Ownership::View,
                                   vector_view<DataT>,
                                   std::vector<DataT>>::type;
 };

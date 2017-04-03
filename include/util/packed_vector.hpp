@@ -23,7 +23,7 @@ namespace util
  * configure BITSIZE and ELEMSIZE
  */
 template <typename T,
-          osrm::storage::MemorySetting MemorySetting = osrm::storage::MemorySetting::InternalMemory>
+          osrm::storage::Ownership Ownership = osrm::storage::Ownership::Container>
 class PackedVector
 {
     static const constexpr std::size_t BITSIZE = 33;
@@ -124,20 +124,20 @@ class PackedVector
 
     std::size_t size() const { return num_elements; }
 
-    template <bool enabled = (MemorySetting == osrm::storage::MemorySetting::SharedMemory)>
+    template <bool enabled = (Ownership == osrm::storage::Ownership::View)>
     void reserve(typename std::enable_if<!enabled, std::size_t>::type capacity)
     {
         vec.reserve(elements_to_blocks(capacity));
     }
 
-    template <bool enabled = (MemorySetting == osrm::storage::MemorySetting::SharedMemory)>
+    template <bool enabled = (Ownership == osrm::storage::Ownership::View)>
     void reset(typename std::enable_if<enabled, std::uint64_t>::type *ptr,
                typename std::enable_if<enabled, std::size_t>::type size)
     {
         vec.reset(ptr, size);
     }
 
-    template <bool enabled = (MemorySetting == osrm::storage::MemorySetting::SharedMemory)>
+    template <bool enabled = (Ownership == osrm::storage::Ownership::View)>
     void set_number_of_entries(typename std::enable_if<enabled, std::size_t>::type count)
     {
         num_elements = count;
@@ -149,44 +149,44 @@ class PackedVector
     }
 
   private:
-    typename util::ShM<std::uint64_t, MemorySetting>::vector vec;
+    typename util::ShM<std::uint64_t, Ownership>::vector vec;
 
     std::size_t num_elements = 0;
 
     signed cursor = -1;
 
-    template <bool enabled = (MemorySetting == osrm::storage::MemorySetting::SharedMemory)>
+    template <bool enabled = (Ownership == osrm::storage::Ownership::View)>
     void replace_last_elem(typename std::enable_if<enabled, std::uint64_t>::type last_elem)
     {
         vec[cursor] = last_elem;
     }
 
-    template <bool enabled = (MemorySetting == osrm::storage::MemorySetting::SharedMemory)>
+    template <bool enabled = (Ownership == osrm::storage::Ownership::View)>
     void replace_last_elem(typename std::enable_if<!enabled, std::uint64_t>::type last_elem)
     {
         vec.back() = last_elem;
     }
 
-    template <bool enabled = (MemorySetting == osrm::storage::MemorySetting::SharedMemory)>
+    template <bool enabled = (Ownership == osrm::storage::Ownership::View)>
     void add_last_elem(typename std::enable_if<enabled, std::uint64_t>::type last_elem)
     {
         vec[cursor + 1] = last_elem;
         cursor++;
     }
 
-    template <bool enabled = (MemorySetting == osrm::storage::MemorySetting::SharedMemory)>
+    template <bool enabled = (Ownership == osrm::storage::Ownership::View)>
     void add_last_elem(typename std::enable_if<!enabled, std::uint64_t>::type last_elem)
     {
         vec.push_back(last_elem);
     }
 
-    template <bool enabled = (MemorySetting == osrm::storage::MemorySetting::SharedMemory)>
+    template <bool enabled = (Ownership == osrm::storage::Ownership::View)>
     std::uint64_t vec_back(typename std::enable_if<enabled>::type * = nullptr)
     {
         return vec[cursor];
     }
 
-    template <bool enabled = (MemorySetting == osrm::storage::MemorySetting::SharedMemory)>
+    template <bool enabled = (Ownership == osrm::storage::Ownership::View)>
     std::uint64_t vec_back(typename std::enable_if<!enabled>::type * = nullptr)
     {
         return vec.back();

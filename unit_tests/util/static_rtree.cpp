@@ -42,12 +42,12 @@ constexpr uint32_t TEST_LEAF_NODE_SIZE = 64;
 using TestData = extractor::EdgeBasedNode;
 using TestStaticRTree = StaticRTree<TestData,
                                     std::vector<Coordinate>,
-                                    osrm::storage::MemorySetting::InternalMemory,
+                                    osrm::storage::Ownership::Container,
                                     TEST_BRANCHING_FACTOR,
                                     TEST_LEAF_NODE_SIZE>;
 using MiniStaticRTree = StaticRTree<TestData,
                                     std::vector<Coordinate>,
-                                    osrm::storage::MemorySetting::InternalMemory,
+                                    osrm::storage::Ownership::Container,
                                     2,
                                     128>;
 
@@ -279,7 +279,7 @@ BOOST_FIXTURE_TEST_CASE(construct_tiny, TestRandomGraphFixture_10_30)
 {
     using TinyTestTree = StaticRTree<TestData,
                                      std::vector<Coordinate>,
-                                     osrm::storage::MemorySetting::InternalMemory,
+                                     osrm::storage::Ownership::Container,
                                      2,
                                      64>;
     construction_test<TinyTestTree>("test_tiny", this);

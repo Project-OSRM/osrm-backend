@@ -30,10 +30,10 @@ namespace osrm
 namespace storage
 {
 
-enum class MemorySetting
+enum class Ownership
 {
-    SharedMemory,
-    InternalMemory
+    Container,
+    View
 };
 
 struct OSRMLockFile

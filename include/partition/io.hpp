@@ -16,9 +16,9 @@ namespace partition
 namespace io
 {
 
-template <typename EdgeDataT, osrm::storage::MemorySetting MemorySetting>
+template <typename EdgeDataT, osrm::storage::Ownership Ownership>
 inline void read(const boost::filesystem::path &path,
-                 MultiLevelGraph<EdgeDataT, MemorySetting> &graph)
+                 MultiLevelGraph<EdgeDataT, Ownership> &graph)
 {
     const auto fingerprint = storage::io::FileReader::VerifyFingerprint;
     storage::io::FileReader reader{path, fingerprint};
@@ -28,9 +28,9 @@ inline void read(const boost::filesystem::path &path,
     reader.DeserializeVector(graph.edge_to_level);
 }
 
-template <typename EdgeDataT, osrm::storage::MemorySetting MemorySetting>
+template <typename EdgeDataT, osrm::storage::Ownership Ownership>
 inline void write(const boost::filesystem::path &path,
-                  const MultiLevelGraph<EdgeDataT, MemorySetting> &graph)
+                  const MultiLevelGraph<EdgeDataT, Ownership> &graph)
 {
     const auto fingerprint = storage::io::FileWriter::GenerateFingerprint;
     storage::io::FileWriter writer{path, fingerprint};
