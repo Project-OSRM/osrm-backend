@@ -251,8 +251,7 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     util::vector_view<util::guidance::EntryClass> m_entry_class_table;
     // the look-up table for distinct bearing classes. A bearing class lists the available bearings
     // at an intersection
-    std::shared_ptr<util::RangeTable<16, osrm::storage::Ownership::View>>
-        m_bearing_ranges_table;
+    std::shared_ptr<util::RangeTable<16, osrm::storage::Ownership::View>> m_bearing_ranges_table;
     util::vector_view<DiscreteBearing> m_bearing_values_table;
 
     // allocator that keeps the allocation data

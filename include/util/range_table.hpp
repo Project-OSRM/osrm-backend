@@ -216,8 +216,7 @@ template <unsigned BLOCK_SIZE, osrm::storage::Ownership Ownership> class RangeTa
 };
 
 template <unsigned BLOCK_SIZE, osrm::storage::Ownership Ownership>
-unsigned RangeTable<BLOCK_SIZE, Ownership>::PrefixSumAtIndex(int index,
-                                                                 const BlockT &block) const
+unsigned RangeTable<BLOCK_SIZE, Ownership>::PrefixSumAtIndex(int index, const BlockT &block) const
 {
     // this loop looks inefficent, but a modern compiler
     // will emit nice SIMD here, at least for sensible block sizes. (I checked.)

@@ -17,8 +17,7 @@ namespace io
 {
 
 template <typename EdgeDataT, osrm::storage::Ownership Ownership>
-inline void read(const boost::filesystem::path &path,
-                 MultiLevelGraph<EdgeDataT, Ownership> &graph)
+inline void read(const boost::filesystem::path &path, MultiLevelGraph<EdgeDataT, Ownership> &graph)
 {
     const auto fingerprint = storage::io::FileReader::VerifyFingerprint;
     storage::io::FileReader reader{path, fingerprint};

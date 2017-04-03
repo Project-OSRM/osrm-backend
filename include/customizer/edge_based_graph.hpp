@@ -19,20 +19,17 @@ namespace customizer
 using EdgeBasedGraphEdgeData = partition::EdgeBasedGraphEdgeData;
 
 struct MultiLevelEdgeBasedGraph
-    : public partition::MultiLevelGraph<EdgeBasedGraphEdgeData,
-                                        osrm::storage::Ownership::Container>
+    : public partition::MultiLevelGraph<EdgeBasedGraphEdgeData, osrm::storage::Ownership::Container>
 {
-    using Base = partition::MultiLevelGraph<EdgeBasedGraphEdgeData,
-                                            osrm::storage::Ownership::Container>;
+    using Base =
+        partition::MultiLevelGraph<EdgeBasedGraphEdgeData, osrm::storage::Ownership::Container>;
     using Base::Base;
 };
 
 struct MultiLevelEdgeBasedGraphView
-    : public partition::MultiLevelGraph<EdgeBasedGraphEdgeData,
-                                        osrm::storage::Ownership::View>
+    : public partition::MultiLevelGraph<EdgeBasedGraphEdgeData, osrm::storage::Ownership::View>
 {
-    using Base = partition::MultiLevelGraph<EdgeBasedGraphEdgeData,
-                                            osrm::storage::Ownership::View>;
+    using Base = partition::MultiLevelGraph<EdgeBasedGraphEdgeData, osrm::storage::Ownership::View>;
     using Base::Base;
 };
 

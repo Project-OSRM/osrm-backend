@@ -22,8 +22,7 @@ namespace util
  * NOTE: this type is templated for future use, but will require a slight refactor to
  * configure BITSIZE and ELEMSIZE
  */
-template <typename T,
-          osrm::storage::Ownership Ownership = osrm::storage::Ownership::Container>
+template <typename T, osrm::storage::Ownership Ownership = osrm::storage::Ownership::Container>
 class PackedVector
 {
     static const constexpr std::size_t BITSIZE = 33;

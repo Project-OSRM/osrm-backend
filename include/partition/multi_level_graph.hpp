@@ -24,8 +24,7 @@ template <typename EdgeDataT, osrm::storage::Ownership Ownership>
 void read(const boost::filesystem::path &path, MultiLevelGraph<EdgeDataT, Ownership> &graph);
 
 template <typename EdgeDataT, osrm::storage::Ownership Ownership>
-void write(const boost::filesystem::path &path,
-           const MultiLevelGraph<EdgeDataT, Ownership> &graph);
+void write(const boost::filesystem::path &path, const MultiLevelGraph<EdgeDataT, Ownership> &graph);
 }
 
 template <typename EdgeDataT, osrm::storage::Ownership Ownership>
@@ -183,12 +182,10 @@ class MultiLevelGraph : public util::StaticGraph<EdgeDataT, Ownership>
         node_to_edge_offset.push_back(mlp.GetNumberOfLevels());
     }
 
-    friend void
-    io::read<EdgeDataT, Ownership>(const boost::filesystem::path &path,
-                                       MultiLevelGraph<EdgeDataT, Ownership> &graph);
-    friend void
-    io::write<EdgeDataT, Ownership>(const boost::filesystem::path &path,
-                                        const MultiLevelGraph<EdgeDataT, Ownership> &graph);
+    friend void io::read<EdgeDataT, Ownership>(const boost::filesystem::path &path,
+                                               MultiLevelGraph<EdgeDataT, Ownership> &graph);
+    friend void io::write<EdgeDataT, Ownership>(const boost::filesystem::path &path,
+                                                const MultiLevelGraph<EdgeDataT, Ownership> &graph);
 
     Vector<EdgeOffset> node_to_edge_offset;
 };

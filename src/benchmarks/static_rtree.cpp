@@ -27,10 +27,10 @@ constexpr int32_t WORLD_MIN_LON = -180 * COORDINATE_PRECISION;
 constexpr int32_t WORLD_MAX_LON = 180 * COORDINATE_PRECISION;
 
 using RTreeLeaf = extractor::EdgeBasedNode;
-using BenchStaticRTree = util::StaticRTree<
-    RTreeLeaf,
-    util::ShM<util::Coordinate, osrm::storage::Ownership::Container>::vector,
-    osrm::storage::Ownership::Container>;
+using BenchStaticRTree =
+    util::StaticRTree<RTreeLeaf,
+                      util::ShM<util::Coordinate, osrm::storage::Ownership::Container>::vector,
+                      osrm::storage::Ownership::Container>;
 
 std::vector<util::Coordinate> loadCoordinates(const boost::filesystem::path &nodes_file)
 {
