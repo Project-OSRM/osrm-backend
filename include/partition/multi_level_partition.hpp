@@ -28,10 +28,8 @@ namespace detail
 {
 template <osrm::storage::Ownership Ownership> class MultiLevelPartitionImpl;
 }
-using MultiLevelPartition =
-    detail::MultiLevelPartitionImpl<osrm::storage::Ownership::Container>;
-using MultiLevelPartitionView =
-    detail::MultiLevelPartitionImpl<osrm::storage::Ownership::View>;
+using MultiLevelPartition = detail::MultiLevelPartitionImpl<osrm::storage::Ownership::Container>;
+using MultiLevelPartitionView = detail::MultiLevelPartitionImpl<osrm::storage::Ownership::View>;
 
 namespace io
 {
@@ -70,8 +68,7 @@ template <osrm::storage::Ownership Ownership> class MultiLevelPartitionImpl fina
     // cell_sizes is index by level (starting at 0, the base graph).
     // However level 0 always needs to have cell size 1, since it is the
     // basegraph.
-    template <typename = typename std::enable_if<Ownership ==
-                                                 osrm::storage::Ownership::Container>>
+    template <typename = typename std::enable_if<Ownership == osrm::storage::Ownership::Container>>
     MultiLevelPartitionImpl(const std::vector<std::vector<CellID>> &partitions,
                             const std::vector<std::uint32_t> &lidx_to_num_cells)
         : level_data(MakeLevelData(lidx_to_num_cells))
@@ -79,8 +76,7 @@ template <osrm::storage::Ownership Ownership> class MultiLevelPartitionImpl fina
         InitializePartitionIDs(partitions);
     }
 
-    template <typename = typename std::enable_if<Ownership ==
-                                                 osrm::storage::Ownership::View>>
+    template <typename = typename std::enable_if<Ownership == osrm::storage::Ownership::View>>
     MultiLevelPartitionImpl(LevelData level_data,
                             Vector<PartitionID> partition_,
                             Vector<CellID> cell_to_children_)
@@ -139,9 +135,9 @@ template <osrm::storage::Ownership Ownership> class MultiLevelPartitionImpl fina
     }
 
     friend void io::read<Ownership>(const boost::filesystem::path &file,
-                                        MultiLevelPartitionImpl &mlp);
+                                    MultiLevelPartitionImpl &mlp);
     friend void io::write<Ownership>(const boost::filesystem::path &file,
-                                         const MultiLevelPartitionImpl &mlp);
+                                     const MultiLevelPartitionImpl &mlp);
 
   private:
     auto MakeLevelData(const std::vector<std::uint32_t> &lidx_to_num_cells)

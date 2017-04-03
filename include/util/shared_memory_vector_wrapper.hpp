@@ -128,8 +128,7 @@ template <typename DataT> class vector_view
 
     auto data() const { return m_ptr; }
 
-    template <typename T>
-    friend void swap(vector_view<T> &, vector_view<T> &) noexcept;
+    template <typename T> friend void swap(vector_view<T> &, vector_view<T> &) noexcept;
 };
 
 template <> class vector_view<bool>
@@ -163,13 +162,11 @@ template <> class vector_view<bool>
 
     bool operator[](const unsigned index) const { return at(index); }
 
-    template <typename T>
-    friend void swap(vector_view<T> &, vector_view<T> &) noexcept;
+    template <typename T> friend void swap(vector_view<T> &, vector_view<T> &) noexcept;
 };
 
 // Both vector_view<T> and the vector_view<bool> specializations share this impl.
-template <typename DataT>
-void swap(vector_view<DataT> &lhs, vector_view<DataT> &rhs) noexcept
+template <typename DataT> void swap(vector_view<DataT> &lhs, vector_view<DataT> &rhs) noexcept
 {
     std::swap(lhs.m_ptr, rhs.m_ptr);
     std::swap(lhs.m_size, rhs.m_size);
@@ -177,10 +174,9 @@ void swap(vector_view<DataT> &lhs, vector_view<DataT> &rhs) noexcept
 
 template <typename DataT, osrm::storage::Ownership Ownership> struct ShM
 {
-    using vector =
-        typename std::conditional<Ownership == osrm::storage::Ownership::View,
-                                  vector_view<DataT>,
-                                  std::vector<DataT>>::type;
+    using vector = typename std::conditional<Ownership == osrm::storage::Ownership::View,
+                                             vector_view<DataT>,
+                                             std::vector<DataT>>::type;
 };
 }
 }

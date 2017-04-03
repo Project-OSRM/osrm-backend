@@ -190,12 +190,11 @@ template <osrm::storage::Ownership Ownership> class SegmentDataContainerImpl
     auto GetNumberOfGeometries() const { return index.size() - 1; }
     auto GetNumberOfSegments() const { return fwd_weights.size(); }
 
-    friend void
-    io::read<Ownership>(const boost::filesystem::path &path,
-                            detail::SegmentDataContainerImpl<Ownership> &segment_data);
+    friend void io::read<Ownership>(const boost::filesystem::path &path,
+                                    detail::SegmentDataContainerImpl<Ownership> &segment_data);
     friend void
     io::write<Ownership>(const boost::filesystem::path &path,
-                             const detail::SegmentDataContainerImpl<Ownership> &segment_data);
+                         const detail::SegmentDataContainerImpl<Ownership> &segment_data);
 
   private:
     Vector<std::uint32_t> index;
@@ -208,10 +207,8 @@ template <osrm::storage::Ownership Ownership> class SegmentDataContainerImpl
 };
 }
 
-using SegmentDataView =
-    detail::SegmentDataContainerImpl<osrm::storage::Ownership::View>;
-using SegmentDataContainer =
-    detail::SegmentDataContainerImpl<osrm::storage::Ownership::Container>;
+using SegmentDataView = detail::SegmentDataContainerImpl<osrm::storage::Ownership::View>;
+using SegmentDataContainer = detail::SegmentDataContainerImpl<osrm::storage::Ownership::Container>;
 }
 }
 

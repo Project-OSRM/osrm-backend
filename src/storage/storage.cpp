@@ -365,15 +365,14 @@ void Storage::PopulateLayout(DataLayout &layout)
         intersection_file.Skip<std::uint32_t>(1); // sum_lengths
 
         layout.SetBlockSize<unsigned>(DataLayout::BEARING_OFFSETS, bearing_blocks);
-        layout.SetBlockSize<
-            typename util::RangeTable<16, osrm::storage::Ownership::View>::BlockT>(
+        layout.SetBlockSize<typename util::RangeTable<16, osrm::storage::Ownership::View>::BlockT>(
             DataLayout::BEARING_BLOCKS, bearing_blocks);
 
         // No need to read the data
         intersection_file.Skip<unsigned>(bearing_blocks);
-        intersection_file.Skip<
-            typename util::RangeTable<16, osrm::storage::Ownership::View>::BlockT>(
-            bearing_blocks);
+        intersection_file
+            .Skip<typename util::RangeTable<16, osrm::storage::Ownership::View>::BlockT>(
+                bearing_blocks);
 
         const auto num_bearings = intersection_file.ReadElementCount64();
 
@@ -807,8 +806,7 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
         intersection_file.Skip<std::uint32_t>(1); // sum_lengths
 
         std::vector<unsigned> bearing_offsets_data(bearing_blocks);
-        std::vector<
-            typename util::RangeTable<16, osrm::storage::Ownership::View>::BlockT>
+        std::vector<typename util::RangeTable<16, osrm::storage::Ownership::View>::BlockT>
             bearing_blocks_data(bearing_blocks);
 
         intersection_file.ReadInto(bearing_offsets_data.data(), bearing_blocks);

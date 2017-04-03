@@ -35,8 +35,7 @@ using CellStorageView = detail::CellStorageImpl<osrm::storage::Ownership::View>;
 namespace io
 {
 template <osrm::storage::Ownership Ownership>
-inline void read(const boost::filesystem::path &path,
-                 detail::CellStorageImpl<Ownership> &storage);
+inline void read(const boost::filesystem::path &path, detail::CellStorageImpl<Ownership> &storage);
 template <osrm::storage::Ownership Ownership>
 inline void write(const boost::filesystem::path &path,
                   const detail::CellStorageImpl<Ownership> &storage);
@@ -186,9 +185,8 @@ template <osrm::storage::Ownership Ownership> class CellStorageImpl
 
     CellStorageImpl() {}
 
-    template <
-        typename GraphT,
-        typename = std::enable_if<Ownership == osrm::storage::Ownership::Container>>
+    template <typename GraphT,
+              typename = std::enable_if<Ownership == osrm::storage::Ownership::Container>>
     CellStorageImpl(const partition::MultiLevelPartition &partition, const GraphT &base_graph)
     {
         // pre-allocate storge for CellData so we can have random access to it by cell id
@@ -317,8 +315,7 @@ template <osrm::storage::Ownership Ownership> class CellStorageImpl
         weights.resize(weight_offset + 1, INVALID_EDGE_WEIGHT);
     }
 
-    template <
-        typename = std::enable_if<Ownership == osrm::storage::Ownership::View>>
+    template <typename = std::enable_if<Ownership == osrm::storage::Ownership::View>>
     CellStorageImpl(Vector<EdgeWeight> weights_,
                     Vector<NodeID> source_boundary_,
                     Vector<NodeID> destination_boundary_,
@@ -343,8 +340,7 @@ template <osrm::storage::Ownership Ownership> class CellStorageImpl
                          destination_boundary.empty() ? nullptr : destination_boundary.data()};
     }
 
-    template <
-        typename = std::enable_if<Ownership == osrm::storage::Ownership::Container>>
+    template <typename = std::enable_if<Ownership == osrm::storage::Ownership::Container>>
     Cell GetCell(LevelID level, CellID id)
     {
         const auto level_index = LevelIDToIndex(level);
@@ -357,9 +353,9 @@ template <osrm::storage::Ownership Ownership> class CellStorageImpl
     }
 
     friend void io::read<Ownership>(const boost::filesystem::path &path,
-                                        detail::CellStorageImpl<Ownership> &storage);
+                                    detail::CellStorageImpl<Ownership> &storage);
     friend void io::write<Ownership>(const boost::filesystem::path &path,
-                                         const detail::CellStorageImpl<Ownership> &storage);
+                                     const detail::CellStorageImpl<Ownership> &storage);
 
   private:
     Vector<EdgeWeight> weights;
