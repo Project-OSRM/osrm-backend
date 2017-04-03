@@ -13,7 +13,7 @@ namespace engine
 namespace routing_algorithms
 {
 
-template<typename Algorithm>
+template <typename Algorithm>
 InternalRouteResult
 shortestPathSearch(SearchEngineData<Algorithm> &engine_working_data,
                    const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,

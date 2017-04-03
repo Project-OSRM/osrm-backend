@@ -37,6 +37,10 @@ static constexpr bool FORWARD_DIRECTION = true;
 static constexpr bool REVERSE_DIRECTION = false;
 static constexpr bool DO_NOT_FORCE_LOOPS = false;
 
+bool needsLoopForward(const PhantomNode &source_phantom, const PhantomNode &target_phantom);
+
+bool needsLoopBackwards(const PhantomNode &source_phantom, const PhantomNode &target_phantom);
+
 template <bool DIRECTION, typename Heap>
 void insertNodesInHeap(Heap &heap, const PhantomNode &phantom_node)
 {

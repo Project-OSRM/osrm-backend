@@ -420,14 +420,15 @@ mapMatchingImpl(SearchEngineData<Algorithm> &engine_working_data,
     return sub_matchings;
 }
 
-template<>
-SubMatchingList mapMatching(SearchEngineData<ch::Algorithm> &engine_working_data,
-                            const datafacade::ContiguousInternalMemoryDataFacade<ch::Algorithm> &facade,
-                            const CandidateLists &candidates_list,
-                            const std::vector<util::Coordinate> &trace_coordinates,
-                            const std::vector<unsigned> &trace_timestamps,
-                            const std::vector<boost::optional<double>> &trace_gps_precision,
-                            const bool use_tidying)
+template <>
+SubMatchingList
+mapMatching(SearchEngineData<ch::Algorithm> &engine_working_data,
+            const datafacade::ContiguousInternalMemoryDataFacade<ch::Algorithm> &facade,
+            const CandidateLists &candidates_list,
+            const std::vector<util::Coordinate> &trace_coordinates,
+            const std::vector<unsigned> &trace_timestamps,
+            const std::vector<boost::optional<double>> &trace_gps_precision,
+            const bool use_tidying)
 {
     return mapMatchingImpl(engine_working_data,
                            facade,
@@ -438,14 +439,15 @@ SubMatchingList mapMatching(SearchEngineData<ch::Algorithm> &engine_working_data
                            use_tidying);
 }
 
-template<>
-SubMatchingList mapMatching(SearchEngineData<corech::Algorithm> &engine_working_data,
-                            const datafacade::ContiguousInternalMemoryDataFacade<corech::Algorithm> &facade,
-                            const CandidateLists &candidates_list,
-                            const std::vector<util::Coordinate> &trace_coordinates,
-                            const std::vector<unsigned> &trace_timestamps,
-                            const std::vector<boost::optional<double>> &trace_gps_precision,
-                            const bool use_tidying)
+template <>
+SubMatchingList
+mapMatching(SearchEngineData<corech::Algorithm> &engine_working_data,
+            const datafacade::ContiguousInternalMemoryDataFacade<corech::Algorithm> &facade,
+            const CandidateLists &candidates_list,
+            const std::vector<util::Coordinate> &trace_coordinates,
+            const std::vector<unsigned> &trace_timestamps,
+            const std::vector<boost::optional<double>> &trace_gps_precision,
+            const bool use_tidying)
 {
 
     return mapMatchingImpl(engine_working_data,

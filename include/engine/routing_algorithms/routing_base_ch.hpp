@@ -365,10 +365,11 @@ inline void search(const datafacade::ContiguousInternalMemoryDataFacade<Algorith
                    SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
                    SearchEngineData<Algorithm>::QueryHeap &,
                    SearchEngineData<Algorithm>::QueryHeap &,
-                   std::int32_t &weight,
+                   EdgeWeight &weight,
                    std::vector<NodeID> &packed_leg,
                    const bool force_loop_forward,
                    const bool force_loop_reverse,
+                   const PhantomNodes & /*phantom_nodes*/,
                    const int duration_upper_bound = INVALID_EDGE_WEIGHT)
 {
     search(facade,
@@ -380,10 +381,6 @@ inline void search(const datafacade::ContiguousInternalMemoryDataFacade<Algorith
            force_loop_reverse,
            duration_upper_bound);
 }
-
-bool needsLoopForward(const PhantomNode &source_phantom, const PhantomNode &target_phantom);
-
-bool needsLoopBackwards(const PhantomNode &source_phantom, const PhantomNode &target_phantom);
 
 double getPathDistance(const datafacade::ContiguousInternalMemoryDataFacade<ch::Algorithm> &facade,
                        const std::vector<NodeID> &packed_path,
@@ -437,6 +434,7 @@ void search(const datafacade::ContiguousInternalMemoryDataFacade<corech::Algorit
             std::vector<NodeID> &packed_leg,
             const bool force_loop_forward,
             const bool force_loop_reverse,
+            const PhantomNodes &phantom_nodes,
             int duration_upper_bound = INVALID_EDGE_WEIGHT);
 
 // Requires the heaps for be empty
@@ -451,6 +449,17 @@ getNetworkDistance(const datafacade::ContiguousInternalMemoryDataFacade<corech::
                    const PhantomNode &source_phantom,
                    const PhantomNode &target_phantom,
                    int duration_upper_bound = INVALID_EDGE_WEIGHT);
+
+template <typename RandomIter, typename FacadeT>
+void unpackPath(const FacadeT &facade,
+                RandomIter packed_path_begin,
+                RandomIter packed_path_end,
+                const PhantomNodes &phantom_nodes,
+                std::vector<PathData> &unpacked_path)
+{
+    return ch::unpackPath(facade, packed_path_begin, packed_path_end, phantom_nodes, unpacked_path);
+}
+
 } // namespace corech
 
 } // namespace routing_algorithms

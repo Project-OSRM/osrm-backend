@@ -139,22 +139,6 @@ void search(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &fac
     }
 }
 
-bool needsLoopForward(const PhantomNode &source_phantom, const PhantomNode &target_phantom)
-{
-    return source_phantom.forward_segment_id.enabled && target_phantom.forward_segment_id.enabled &&
-           source_phantom.forward_segment_id.id == target_phantom.forward_segment_id.id &&
-           source_phantom.GetForwardWeightPlusOffset() >
-               target_phantom.GetForwardWeightPlusOffset();
-}
-
-bool needsLoopBackwards(const PhantomNode &source_phantom, const PhantomNode &target_phantom)
-{
-    return source_phantom.reverse_segment_id.enabled && target_phantom.reverse_segment_id.enabled &&
-           source_phantom.reverse_segment_id.id == target_phantom.reverse_segment_id.id &&
-           source_phantom.GetReverseWeightPlusOffset() >
-               target_phantom.GetReverseWeightPlusOffset();
-}
-
 double getPathDistance(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
                        const std::vector<NodeID> &packed_path,
                        const PhantomNode &source_phantom,
@@ -290,6 +274,7 @@ void search(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &fac
             std::vector<NodeID> &packed_leg,
             const bool force_loop_forward,
             const bool force_loop_reverse,
+            const PhantomNodes & /*phantom_nodes*/,
             EdgeWeight weight_upper_bound)
 {
     NodeID middle = SPECIAL_NODEID;
@@ -486,6 +471,7 @@ double getNetworkDistance(const datafacade::ContiguousInternalMemoryDataFacade<A
            packed_path,
            DO_NOT_FORCE_LOOPS,
            DO_NOT_FORCE_LOOPS,
+           {source_phantom, target_phantom},
            weight_upper_bound);
 
     double distance = std::numeric_limits<double>::max();
