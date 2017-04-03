@@ -100,7 +100,7 @@ EntryT edgeToEntry(const OtherEdge &from, std::false_type)
 } // namespace static_graph_details
 
 template <typename EdgeDataT,
-          osrm::storage::MemorySetting MemorySetting = osrm::storage::MemorySetting::InternalMemory>
+          osrm::storage::Ownership Ownership = osrm::storage::Ownership::Container>
 class StaticGraph
 {
   public:
@@ -126,8 +126,8 @@ class StaticGraph
         InitializeFromSortedEdgeRange(nodes, edges.begin(), edges.end());
     }
 
-    StaticGraph(typename util::ShM<NodeArrayEntry, MemorySetting>::vector node_array_,
-                typename util::ShM<EdgeArrayEntry, MemorySetting>::vector edge_array_)
+    StaticGraph(typename util::ShM<NodeArrayEntry, Ownership>::vector node_array_,
+                typename util::ShM<EdgeArrayEntry, Ownership>::vector edge_array_)
         : node_array(std::move(node_array_)), edge_array(std::move(edge_array_))
     {
         BOOST_ASSERT(!node_array.empty());
@@ -262,8 +262,8 @@ class StaticGraph
     NodeIterator number_of_nodes;
     EdgeIterator number_of_edges;
 
-    typename ShM<NodeArrayEntry, MemorySetting>::vector node_array;
-    typename ShM<EdgeArrayEntry, MemorySetting>::vector edge_array;
+    typename ShM<NodeArrayEntry, Ownership>::vector node_array;
+    typename ShM<EdgeArrayEntry, Ownership>::vector edge_array;
 };
 
 } // namespace util

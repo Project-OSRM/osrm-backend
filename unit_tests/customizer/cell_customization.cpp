@@ -38,7 +38,7 @@ auto makeGraph(const MultiLevelPartition &mlp, const std::vector<MockEdge> &mock
         edges.push_back(Edge{m.target, m.start, m.weight, false, true});
     }
     std::sort(edges.begin(), edges.end());
-    return partition::MultiLevelGraph<EdgeData, osrm::storage::MemorySetting::InternalMemory>(
+    return partition::MultiLevelGraph<EdgeData, osrm::storage::Ownership::Container>(
         mlp, max_id + 1, edges);
 }
 }

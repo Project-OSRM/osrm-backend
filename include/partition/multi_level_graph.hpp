@@ -16,24 +16,24 @@ namespace osrm
 {
 namespace partition
 {
-template <typename EdgeDataT, osrm::storage::MemorySetting MemorySetting> class MultiLevelGraph;
+template <typename EdgeDataT, osrm::storage::Ownership Ownership> class MultiLevelGraph;
 
 namespace io
 {
-template <typename EdgeDataT, osrm::storage::MemorySetting MemorySetting>
-void read(const boost::filesystem::path &path, MultiLevelGraph<EdgeDataT, MemorySetting> &graph);
+template <typename EdgeDataT, osrm::storage::Ownership Ownership>
+void read(const boost::filesystem::path &path, MultiLevelGraph<EdgeDataT, Ownership> &graph);
 
-template <typename EdgeDataT, osrm::storage::MemorySetting MemorySetting>
+template <typename EdgeDataT, osrm::storage::Ownership Ownership>
 void write(const boost::filesystem::path &path,
-           const MultiLevelGraph<EdgeDataT, MemorySetting> &graph);
+           const MultiLevelGraph<EdgeDataT, Ownership> &graph);
 }
 
-template <typename EdgeDataT, osrm::storage::MemorySetting MemorySetting>
-class MultiLevelGraph : public util::StaticGraph<EdgeDataT, MemorySetting>
+template <typename EdgeDataT, osrm::storage::Ownership Ownership>
+class MultiLevelGraph : public util::StaticGraph<EdgeDataT, Ownership>
 {
   private:
-    using SuperT = util::StaticGraph<EdgeDataT, MemorySetting>;
-    template <typename T> using Vector = typename util::ShM<T, MemorySetting>::vector;
+    using SuperT = util::StaticGraph<EdgeDataT, Ownership>;
+    template <typename T> using Vector = typename util::ShM<T, Ownership>::vector;
 
   public:
     // We limit each node to have 255 edges
@@ -184,11 +184,11 @@ class MultiLevelGraph : public util::StaticGraph<EdgeDataT, MemorySetting>
     }
 
     friend void
-    io::read<EdgeDataT, MemorySetting>(const boost::filesystem::path &path,
-                                       MultiLevelGraph<EdgeDataT, MemorySetting> &graph);
+    io::read<EdgeDataT, Ownership>(const boost::filesystem::path &path,
+                                       MultiLevelGraph<EdgeDataT, Ownership> &graph);
     friend void
-    io::write<EdgeDataT, MemorySetting>(const boost::filesystem::path &path,
-                                        const MultiLevelGraph<EdgeDataT, MemorySetting> &graph);
+    io::write<EdgeDataT, Ownership>(const boost::filesystem::path &path,
+                                        const MultiLevelGraph<EdgeDataT, Ownership> &graph);
 
     Vector<EdgeOffset> node_to_edge_offset;
 };

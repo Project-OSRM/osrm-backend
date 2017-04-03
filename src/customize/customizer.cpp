@@ -86,7 +86,7 @@ auto LoadAndUpdateEdgeExpandedGraph(const CustomizationConfig &config,
         partition::prepareEdgesForUsageInGraph<StaticEdgeBasedGraphEdge>(std::move(directed));
     auto edge_based_graph =
         std::make_unique<partition::MultiLevelGraph<EdgeBasedGraphEdgeData,
-                                                    osrm::storage::MemorySetting::InternalMemory>>(
+                                                    osrm::storage::Ownership::Container>>(
             mlp, num_nodes, std::move(tidied));
 
     util::Log() << "Loaded edge based graph for mapping partition ids: "

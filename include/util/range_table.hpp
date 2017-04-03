@@ -20,14 +20,14 @@ namespace util
  */
 
 template <unsigned BLOCK_SIZE = 16,
-          osrm::storage::MemorySetting MemorySetting = osrm::storage::MemorySetting::InternalMemory>
+          osrm::storage::Ownership Ownership = osrm::storage::Ownership::Container>
 class RangeTable;
 
-template <unsigned BLOCK_SIZE, osrm::storage::MemorySetting MemorySetting>
-std::ostream &operator<<(std::ostream &out, const RangeTable<BLOCK_SIZE, MemorySetting> &table);
+template <unsigned BLOCK_SIZE, osrm::storage::Ownership Ownership>
+std::ostream &operator<<(std::ostream &out, const RangeTable<BLOCK_SIZE, Ownership> &table);
 
-template <unsigned BLOCK_SIZE, osrm::storage::MemorySetting MemorySetting>
-std::istream &operator>>(std::istream &in, RangeTable<BLOCK_SIZE, MemorySetting> &table);
+template <unsigned BLOCK_SIZE, osrm::storage::Ownership Ownership>
+std::istream &operator>>(std::istream &in, RangeTable<BLOCK_SIZE, Ownership> &table);
 
 /**
  * Stores adjacent ranges in a compressed format.
@@ -38,12 +38,12 @@ std::istream &operator>>(std::istream &in, RangeTable<BLOCK_SIZE, MemorySetting>
  * But each block consists of an absolute value and BLOCK_SIZE differential values.
  * So the effective block size is sizeof(unsigned) + BLOCK_SIZE.
  */
-template <unsigned BLOCK_SIZE, osrm::storage::MemorySetting MemorySetting> class RangeTable
+template <unsigned BLOCK_SIZE, osrm::storage::Ownership Ownership> class RangeTable
 {
   public:
     using BlockT = std::array<unsigned char, BLOCK_SIZE>;
-    using BlockContainerT = typename ShM<BlockT, MemorySetting>::vector;
-    using OffsetContainerT = typename ShM<unsigned, MemorySetting>::vector;
+    using BlockContainerT = typename ShM<BlockT, Ownership>::vector;
+    using OffsetContainerT = typename ShM<unsigned, Ownership>::vector;
     using RangeT = range<unsigned>;
 
     friend std::ostream &operator<<<>(std::ostream &out, const RangeTable &table);
@@ -215,8 +215,8 @@ template <unsigned BLOCK_SIZE, osrm::storage::MemorySetting MemorySetting> class
     unsigned sum_lengths;
 };
 
-template <unsigned BLOCK_SIZE, osrm::storage::MemorySetting MemorySetting>
-unsigned RangeTable<BLOCK_SIZE, MemorySetting>::PrefixSumAtIndex(int index,
+template <unsigned BLOCK_SIZE, osrm::storage::Ownership Ownership>
+unsigned RangeTable<BLOCK_SIZE, Ownership>::PrefixSumAtIndex(int index,
                                                                  const BlockT &block) const
 {
     // this loop looks inefficent, but a modern compiler
@@ -230,8 +230,8 @@ unsigned RangeTable<BLOCK_SIZE, MemorySetting>::PrefixSumAtIndex(int index,
     return sum;
 }
 
-template <unsigned BLOCK_SIZE, osrm::storage::MemorySetting MemorySetting>
-std::ostream &operator<<(std::ostream &out, const RangeTable<BLOCK_SIZE, MemorySetting> &table)
+template <unsigned BLOCK_SIZE, osrm::storage::Ownership Ownership>
+std::ostream &operator<<(std::ostream &out, const RangeTable<BLOCK_SIZE, Ownership> &table)
 {
     // write number of block
     const unsigned number_of_blocks = table.diff_blocks.size();
@@ -246,8 +246,8 @@ std::ostream &operator<<(std::ostream &out, const RangeTable<BLOCK_SIZE, MemoryS
     return out;
 }
 
-template <unsigned BLOCK_SIZE, osrm::storage::MemorySetting MemorySetting>
-std::istream &operator>>(std::istream &in, RangeTable<BLOCK_SIZE, MemorySetting> &table)
+template <unsigned BLOCK_SIZE, osrm::storage::Ownership Ownership>
+std::istream &operator>>(std::istream &in, RangeTable<BLOCK_SIZE, Ownership> &table)
 {
     // read number of block
     unsigned number_of_blocks;

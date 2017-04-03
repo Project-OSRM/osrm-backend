@@ -27,24 +27,24 @@ namespace partition
 {
 namespace detail
 {
-template <osrm::storage::MemorySetting MemorySetting> class CellStorageImpl;
+template <osrm::storage::Ownership Ownership> class CellStorageImpl;
 }
-using CellStorage = detail::CellStorageImpl<osrm::storage::MemorySetting::InternalMemory>;
-using CellStorageView = detail::CellStorageImpl<osrm::storage::MemorySetting::SharedMemory>;
+using CellStorage = detail::CellStorageImpl<osrm::storage::Ownership::Container>;
+using CellStorageView = detail::CellStorageImpl<osrm::storage::Ownership::View>;
 
 namespace io
 {
-template <osrm::storage::MemorySetting MemorySetting>
+template <osrm::storage::Ownership Ownership>
 inline void read(const boost::filesystem::path &path,
-                 detail::CellStorageImpl<MemorySetting> &storage);
-template <osrm::storage::MemorySetting MemorySetting>
+                 detail::CellStorageImpl<Ownership> &storage);
+template <osrm::storage::Ownership Ownership>
 inline void write(const boost::filesystem::path &path,
-                  const detail::CellStorageImpl<MemorySetting> &storage);
+                  const detail::CellStorageImpl<Ownership> &storage);
 }
 
 namespace detail
 {
-template <osrm::storage::MemorySetting MemorySetting> class CellStorageImpl
+template <osrm::storage::Ownership Ownership> class CellStorageImpl
 {
   public:
     using WeightOffset = std::uint32_t;
@@ -66,7 +66,7 @@ template <osrm::storage::MemorySetting MemorySetting> class CellStorageImpl
     };
 
   private:
-    template <typename T> using Vector = typename util::ShM<T, MemorySetting>::vector;
+    template <typename T> using Vector = typename util::ShM<T, Ownership>::vector;
 
     // Implementation of the cell view. We need a template parameter here
     // because we need to derive a read-only and read-write view from this.
@@ -188,7 +188,7 @@ template <osrm::storage::MemorySetting MemorySetting> class CellStorageImpl
 
     template <
         typename GraphT,
-        typename = std::enable_if<MemorySetting == osrm::storage::MemorySetting::InternalMemory>>
+        typename = std::enable_if<Ownership == osrm::storage::Ownership::Container>>
     CellStorageImpl(const partition::MultiLevelPartition &partition, const GraphT &base_graph)
     {
         // pre-allocate storge for CellData so we can have random access to it by cell id
@@ -318,7 +318,7 @@ template <osrm::storage::MemorySetting MemorySetting> class CellStorageImpl
     }
 
     template <
-        typename = std::enable_if<MemorySetting == osrm::storage::MemorySetting::SharedMemory>>
+        typename = std::enable_if<Ownership == osrm::storage::Ownership::View>>
     CellStorageImpl(Vector<EdgeWeight> weights_,
                     Vector<NodeID> source_boundary_,
                     Vector<NodeID> destination_boundary_,
@@ -344,7 +344,7 @@ template <osrm::storage::MemorySetting MemorySetting> class CellStorageImpl
     }
 
     template <
-        typename = std::enable_if<MemorySetting == osrm::storage::MemorySetting::InternalMemory>>
+        typename = std::enable_if<Ownership == osrm::storage::Ownership::Container>>
     Cell GetCell(LevelID level, CellID id)
     {
         const auto level_index = LevelIDToIndex(level);
@@ -356,10 +356,10 @@ template <osrm::storage::MemorySetting MemorySetting> class CellStorageImpl
             cells[cell_index], weights.data(), source_boundary.data(), destination_boundary.data()};
     }
 
-    friend void io::read<MemorySetting>(const boost::filesystem::path &path,
-                                        detail::CellStorageImpl<MemorySetting> &storage);
-    friend void io::write<MemorySetting>(const boost::filesystem::path &path,
-                                         const detail::CellStorageImpl<MemorySetting> &storage);
+    friend void io::read<Ownership>(const boost::filesystem::path &path,
+                                        detail::CellStorageImpl<Ownership> &storage);
+    friend void io::write<Ownership>(const boost::filesystem::path &path,
+                                         const detail::CellStorageImpl<Ownership> &storage);
 
   private:
     Vector<EdgeWeight> weights;

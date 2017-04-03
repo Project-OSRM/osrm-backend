@@ -26,32 +26,32 @@ namespace partition
 {
 namespace detail
 {
-template <osrm::storage::MemorySetting MemorySetting> class MultiLevelPartitionImpl;
+template <osrm::storage::Ownership Ownership> class MultiLevelPartitionImpl;
 }
 using MultiLevelPartition =
-    detail::MultiLevelPartitionImpl<osrm::storage::MemorySetting::InternalMemory>;
+    detail::MultiLevelPartitionImpl<osrm::storage::Ownership::Container>;
 using MultiLevelPartitionView =
-    detail::MultiLevelPartitionImpl<osrm::storage::MemorySetting::SharedMemory>;
+    detail::MultiLevelPartitionImpl<osrm::storage::Ownership::View>;
 
 namespace io
 {
-template <osrm::storage::MemorySetting MemorySetting>
-void read(const boost::filesystem::path &file, detail::MultiLevelPartitionImpl<MemorySetting> &mlp);
-template <osrm::storage::MemorySetting MemorySetting>
+template <osrm::storage::Ownership Ownership>
+void read(const boost::filesystem::path &file, detail::MultiLevelPartitionImpl<Ownership> &mlp);
+template <osrm::storage::Ownership Ownership>
 void write(const boost::filesystem::path &file,
-           const detail::MultiLevelPartitionImpl<MemorySetting> &mlp);
+           const detail::MultiLevelPartitionImpl<Ownership> &mlp);
 }
 
 namespace detail
 {
 
-template <osrm::storage::MemorySetting MemorySetting> class MultiLevelPartitionImpl final
+template <osrm::storage::Ownership Ownership> class MultiLevelPartitionImpl final
 {
     // we will support at most 16 levels
     static const constexpr std::uint8_t MAX_NUM_LEVEL = 16;
     static const constexpr std::uint8_t NUM_PARTITION_BITS = sizeof(PartitionID) * CHAR_BIT;
 
-    template <typename T> using Vector = typename util::ShM<T, MemorySetting>::vector;
+    template <typename T> using Vector = typename util::ShM<T, Ownership>::vector;
 
   public:
     // Contains all data necessary to describe the level hierarchy
@@ -70,8 +70,8 @@ template <osrm::storage::MemorySetting MemorySetting> class MultiLevelPartitionI
     // cell_sizes is index by level (starting at 0, the base graph).
     // However level 0 always needs to have cell size 1, since it is the
     // basegraph.
-    template <typename = typename std::enable_if<MemorySetting ==
-                                                 osrm::storage::MemorySetting::InternalMemory>>
+    template <typename = typename std::enable_if<Ownership ==
+                                                 osrm::storage::Ownership::Container>>
     MultiLevelPartitionImpl(const std::vector<std::vector<CellID>> &partitions,
                             const std::vector<std::uint32_t> &lidx_to_num_cells)
         : level_data(MakeLevelData(lidx_to_num_cells))
@@ -79,8 +79,8 @@ template <osrm::storage::MemorySetting MemorySetting> class MultiLevelPartitionI
         InitializePartitionIDs(partitions);
     }
 
-    template <typename = typename std::enable_if<MemorySetting ==
-                                                 osrm::storage::MemorySetting::SharedMemory>>
+    template <typename = typename std::enable_if<Ownership ==
+                                                 osrm::storage::Ownership::View>>
     MultiLevelPartitionImpl(LevelData level_data,
                             Vector<PartitionID> partition_,
                             Vector<CellID> cell_to_children_)
@@ -138,9 +138,9 @@ template <osrm::storage::MemorySetting MemorySetting> class MultiLevelPartitionI
         return cell_to_children[offset + cell + 1];
     }
 
-    friend void io::read<MemorySetting>(const boost::filesystem::path &file,
+    friend void io::read<Ownership>(const boost::filesystem::path &file,
                                         MultiLevelPartitionImpl &mlp);
-    friend void io::write<MemorySetting>(const boost::filesystem::path &file,
+    friend void io::write<Ownership>(const boost::filesystem::path &file,
                                          const MultiLevelPartitionImpl &mlp);
 
   private:

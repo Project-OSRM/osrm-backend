@@ -24,24 +24,24 @@ class CompressedEdgeContainer;
 
 namespace detail
 {
-template <osrm::storage::MemorySetting MemorySetting> class SegmentDataContainerImpl;
+template <osrm::storage::Ownership Ownership> class SegmentDataContainerImpl;
 }
 
 namespace io
 {
-template <osrm::storage::MemorySetting MemorySetting>
+template <osrm::storage::Ownership Ownership>
 inline void read(const boost::filesystem::path &path,
-                 detail::SegmentDataContainerImpl<MemorySetting> &segment_data);
-template <osrm::storage::MemorySetting MemorySetting>
+                 detail::SegmentDataContainerImpl<Ownership> &segment_data);
+template <osrm::storage::Ownership Ownership>
 inline void write(const boost::filesystem::path &path,
-                  const detail::SegmentDataContainerImpl<MemorySetting> &segment_data);
+                  const detail::SegmentDataContainerImpl<Ownership> &segment_data);
 }
 
 namespace detail
 {
-template <osrm::storage::MemorySetting MemorySetting> class SegmentDataContainerImpl
+template <osrm::storage::Ownership Ownership> class SegmentDataContainerImpl
 {
-    template <typename T> using Vector = typename util::ShM<T, MemorySetting>::vector;
+    template <typename T> using Vector = typename util::ShM<T, Ownership>::vector;
 
     friend CompressedEdgeContainer;
 
@@ -191,11 +191,11 @@ template <osrm::storage::MemorySetting MemorySetting> class SegmentDataContainer
     auto GetNumberOfSegments() const { return fwd_weights.size(); }
 
     friend void
-    io::read<MemorySetting>(const boost::filesystem::path &path,
-                            detail::SegmentDataContainerImpl<MemorySetting> &segment_data);
+    io::read<Ownership>(const boost::filesystem::path &path,
+                            detail::SegmentDataContainerImpl<Ownership> &segment_data);
     friend void
-    io::write<MemorySetting>(const boost::filesystem::path &path,
-                             const detail::SegmentDataContainerImpl<MemorySetting> &segment_data);
+    io::write<Ownership>(const boost::filesystem::path &path,
+                             const detail::SegmentDataContainerImpl<Ownership> &segment_data);
 
   private:
     Vector<std::uint32_t> index;
@@ -209,9 +209,9 @@ template <osrm::storage::MemorySetting MemorySetting> class SegmentDataContainer
 }
 
 using SegmentDataView =
-    detail::SegmentDataContainerImpl<osrm::storage::MemorySetting::SharedMemory>;
+    detail::SegmentDataContainerImpl<osrm::storage::Ownership::View>;
 using SegmentDataContainer =
-    detail::SegmentDataContainerImpl<osrm::storage::MemorySetting::InternalMemory>;
+    detail::SegmentDataContainerImpl<osrm::storage::Ownership::Container>;
 }
 }
 
