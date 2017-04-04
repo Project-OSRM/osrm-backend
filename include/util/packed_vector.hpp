@@ -4,7 +4,7 @@
 #include "util/typedefs.hpp"
 #include "util/vector_view.hpp"
 
-#include "storage/io.hpp"
+#include "storage/io_fwd.hpp"
 #include "storage/shared_memory_ownership.hpp"
 
 #include <cmath>

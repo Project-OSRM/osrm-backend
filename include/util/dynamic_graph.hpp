@@ -5,6 +5,8 @@
 #include "util/integer_range.hpp"
 #include "util/typedefs.hpp"
 
+#include "storage/io_fwd.hpp"
+
 #include <boost/assert.hpp>
 
 #include <cstdint>
@@ -17,15 +19,6 @@
 
 namespace osrm
 {
-namespace storage
-{
-namespace io
-{
-class FileReader;
-class FileWriter;
-}
-}
-
 namespace util
 {
 template <typename EdgeDataT> class DynamicGraph;
