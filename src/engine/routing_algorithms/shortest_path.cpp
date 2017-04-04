@@ -230,13 +230,14 @@ void unpackLegs(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> 
              phantom_nodes_vector[current_leg].target_phantom.forward_segment_id.id));
     }
 }
+}
 
 template <typename Algorithm>
 InternalRouteResult
-shortestPathSearchImpl(SearchEngineData<Algorithm> &engine_working_data,
-                       const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
-                       const std::vector<PhantomNodes> &phantom_nodes_vector,
-                       const boost::optional<bool> continue_straight_at_waypoint)
+shortestPathSearch(SearchEngineData<Algorithm> &engine_working_data,
+                   const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
+                   const std::vector<PhantomNodes> &phantom_nodes_vector,
+                   const boost::optional<bool> continue_straight_at_waypoint)
 {
     InternalRouteResult raw_route_data;
     raw_route_data.segment_end_coordinates = phantom_nodes_vector;
@@ -487,40 +488,24 @@ shortestPathSearchImpl(SearchEngineData<Algorithm> &engine_working_data,
 
     return raw_route_data;
 }
-}
 
-template <>
-InternalRouteResult
+template InternalRouteResult
 shortestPathSearch(SearchEngineData<ch::Algorithm> &engine_working_data,
                    const datafacade::ContiguousInternalMemoryDataFacade<ch::Algorithm> &facade,
                    const std::vector<PhantomNodes> &phantom_nodes_vector,
-                   const boost::optional<bool> continue_straight_at_waypoint)
-{
-    return shortestPathSearchImpl(
-        engine_working_data, facade, phantom_nodes_vector, continue_straight_at_waypoint);
-}
+                   const boost::optional<bool> continue_straight_at_waypoint);
 
-template <>
-InternalRouteResult
+template InternalRouteResult
 shortestPathSearch(SearchEngineData<corech::Algorithm> &engine_working_data,
                    const datafacade::ContiguousInternalMemoryDataFacade<corech::Algorithm> &facade,
                    const std::vector<PhantomNodes> &phantom_nodes_vector,
-                   const boost::optional<bool> continue_straight_at_waypoint)
-{
-    return shortestPathSearchImpl(
-        engine_working_data, facade, phantom_nodes_vector, continue_straight_at_waypoint);
-}
+                   const boost::optional<bool> continue_straight_at_waypoint);
 
-template <>
-InternalRouteResult
+template InternalRouteResult
 shortestPathSearch(SearchEngineData<mld::Algorithm> &engine_working_data,
                    const datafacade::ContiguousInternalMemoryDataFacade<mld::Algorithm> &facade,
                    const std::vector<PhantomNodes> &phantom_nodes_vector,
-                   const boost::optional<bool> continue_straight_at_waypoint)
-{
-    return shortestPathSearchImpl(
-        engine_working_data, facade, phantom_nodes_vector, continue_straight_at_waypoint);
-}
+                   const boost::optional<bool> continue_straight_at_waypoint);
 
 } // namespace routing_algorithms
 } // namespace engine
