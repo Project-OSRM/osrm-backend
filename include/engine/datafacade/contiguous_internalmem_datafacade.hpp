@@ -20,7 +20,7 @@
 #include "partition/multi_level_partition.hpp"
 
 #include "storage/shared_datatype.hpp"
-#include "storage/shared_memory.hpp"
+#include "storage/shared_memory_ownership.hpp"
 
 #include "util/exception.hpp"
 #include "util/exception_utils.hpp"
@@ -62,7 +62,7 @@ class ContiguousInternalMemoryAlgorithmDataFacade<algorithm::CH>
     : public datafacade::AlgorithmDataFacade<algorithm::CH>
 {
   private:
-    using QueryGraph = util::StaticGraph<EdgeData, osrm::storage::Ownership::View>;
+    using QueryGraph = util::StaticGraph<EdgeData, storage::Ownership::View>;
     using GraphNode = QueryGraph::NodeArrayEntry;
     using GraphEdge = QueryGraph::EdgeArrayEntry;
 
@@ -200,11 +200,10 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
 {
   private:
     using super = BaseDataFacade;
-    using IndexBlock = util::RangeTable<16, osrm::storage::Ownership::View>::BlockT;
+    using IndexBlock = util::RangeTable<16, storage::Ownership::View>::BlockT;
     using RTreeLeaf = super::RTreeLeaf;
-    using SharedRTree = util::StaticRTree<RTreeLeaf,
-                                          util::vector_view<util::Coordinate>,
-                                          osrm::storage::Ownership::View>;
+    using SharedRTree =
+        util::StaticRTree<RTreeLeaf, util::vector_view<util::Coordinate>, storage::Ownership::View>;
     using SharedGeospatialQuery = GeospatialQuery<SharedRTree, BaseDataFacade>;
     using RTreeNode = SharedRTree::TreeNode;
 
@@ -214,7 +213,7 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
 
     unsigned m_check_sum;
     util::vector_view<util::Coordinate> m_coordinate_list;
-    util::PackedVector<OSMNodeID, osrm::storage::Ownership::View> m_osmnodeid_list;
+    util::PackedVector<OSMNodeID, storage::Ownership::View> m_osmnodeid_list;
     util::vector_view<GeometryID> m_via_geometry_list;
     util::vector_view<NameID> m_name_ID_list;
     util::vector_view<LaneDataID> m_lane_data_id;
@@ -251,7 +250,7 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     util::vector_view<util::guidance::EntryClass> m_entry_class_table;
     // the look-up table for distinct bearing classes. A bearing class lists the available bearings
     // at an intersection
-    std::shared_ptr<util::RangeTable<16, osrm::storage::Ownership::View>> m_bearing_ranges_table;
+    std::shared_ptr<util::RangeTable<16, storage::Ownership::View>> m_bearing_ranges_table;
     util::vector_view<DiscreteBearing> m_bearing_values_table;
 
     // allocator that keeps the allocation data
@@ -503,11 +502,8 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         util::vector_view<IndexBlock> bearing_blocks(
             blocks_ptr, data_layout.num_entries[storage::DataLayout::BEARING_BLOCKS]);
 
-        m_bearing_ranges_table =
-            std::make_unique<util::RangeTable<16, osrm::storage::Ownership::View>>(
-                bearing_offsets,
-                bearing_blocks,
-                static_cast<unsigned>(m_bearing_values_table.size()));
+        m_bearing_ranges_table = std::make_unique<util::RangeTable<16, storage::Ownership::View>>(
+            bearing_offsets, bearing_blocks, static_cast<unsigned>(m_bearing_values_table.size()));
 
         auto entry_class_ptr = data_layout.GetBlockPtr<util::guidance::EntryClass>(
             memory_block, storage::DataLayout::ENTRY_CLASS);

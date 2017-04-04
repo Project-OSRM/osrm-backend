@@ -3,7 +3,7 @@
 
 #include "partition/multi_level_partition.hpp"
 
-#include "storage/shared_memory.hpp"
+#include "storage/shared_memory_ownership.hpp"
 
 #include "util/static_graph.hpp"
 
@@ -16,18 +16,18 @@ namespace osrm
 {
 namespace partition
 {
-template <typename EdgeDataT, osrm::storage::Ownership Ownership> class MultiLevelGraph;
+template <typename EdgeDataT, storage::Ownership Ownership> class MultiLevelGraph;
 
 namespace io
 {
-template <typename EdgeDataT, osrm::storage::Ownership Ownership>
+template <typename EdgeDataT, storage::Ownership Ownership>
 void read(const boost::filesystem::path &path, MultiLevelGraph<EdgeDataT, Ownership> &graph);
 
-template <typename EdgeDataT, osrm::storage::Ownership Ownership>
+template <typename EdgeDataT, storage::Ownership Ownership>
 void write(const boost::filesystem::path &path, const MultiLevelGraph<EdgeDataT, Ownership> &graph);
 }
 
-template <typename EdgeDataT, osrm::storage::Ownership Ownership>
+template <typename EdgeDataT, storage::Ownership Ownership>
 class MultiLevelGraph : public util::StaticGraph<EdgeDataT, Ownership>
 {
   private:

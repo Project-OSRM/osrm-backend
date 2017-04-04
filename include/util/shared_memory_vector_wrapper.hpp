@@ -3,7 +3,7 @@
 
 #include "util/log.hpp"
 
-#include "storage/shared_memory.hpp"
+#include "storage/shared_memory_ownership.hpp"
 
 #include <boost/assert.hpp>
 #include <boost/iterator/iterator_facade.hpp>
@@ -172,9 +172,9 @@ template <typename DataT> void swap(vector_view<DataT> &lhs, vector_view<DataT> 
     std::swap(lhs.m_size, rhs.m_size);
 }
 
-template <typename DataT, osrm::storage::Ownership Ownership> struct ShM
+template <typename DataT, storage::Ownership Ownership> struct ShM
 {
-    using vector = typename std::conditional<Ownership == osrm::storage::Ownership::View,
+    using vector = typename std::conditional<Ownership == storage::Ownership::View,
                                              vector_view<DataT>,
                                              std::vector<DataT>>::type;
 };

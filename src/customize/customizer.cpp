@@ -8,7 +8,7 @@
 #include "partition/io.hpp"
 #include "partition/multi_level_partition.hpp"
 
-#include "storage/shared_memory.hpp"
+#include "storage/shared_memory_ownership.hpp"
 
 #include "updater/updater.hpp"
 
@@ -85,7 +85,7 @@ auto LoadAndUpdateEdgeExpandedGraph(const CustomizationConfig &config,
     auto tidied =
         partition::prepareEdgesForUsageInGraph<StaticEdgeBasedGraphEdge>(std::move(directed));
     auto edge_based_graph = std::make_unique<
-        partition::MultiLevelGraph<EdgeBasedGraphEdgeData, osrm::storage::Ownership::Container>>(
+        partition::MultiLevelGraph<EdgeBasedGraphEdgeData, storage::Ownership::Container>>(
         mlp, num_nodes, std::move(tidied));
 
     util::Log() << "Loaded edge based graph for mapping partition ids: "

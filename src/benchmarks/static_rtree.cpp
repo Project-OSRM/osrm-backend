@@ -29,13 +29,13 @@ constexpr int32_t WORLD_MAX_LON = 180 * COORDINATE_PRECISION;
 using RTreeLeaf = extractor::EdgeBasedNode;
 using BenchStaticRTree =
     util::StaticRTree<RTreeLeaf,
-                      util::ShM<util::Coordinate, osrm::storage::Ownership::Container>::vector,
-                      osrm::storage::Ownership::Container>;
+                      util::ShM<util::Coordinate, storage::Ownership::Container>::vector,
+                      storage::Ownership::Container>;
 
 std::vector<util::Coordinate> loadCoordinates(const boost::filesystem::path &nodes_file)
 {
-    osrm::storage::io::FileReader nodes_path_file_reader(
-        nodes_file, osrm::storage::io::FileReader::HasNoFingerprint);
+    storage::io::FileReader nodes_path_file_reader(nodes_file,
+                                                   storage::io::FileReader::HasNoFingerprint);
 
     extractor::QueryNode current_node;
     unsigned coordinate_count = nodes_path_file_reader.ReadElementCount32();

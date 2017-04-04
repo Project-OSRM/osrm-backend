@@ -10,7 +10,7 @@
 #include "util/typedefs.hpp"
 
 #include "storage/io.hpp"
-#include "storage/shared_memory.hpp"
+#include "storage/shared_memory_ownership.hpp"
 
 #include <boost/iterator/iterator_facade.hpp>
 #include <boost/range/iterator_range.hpp>
@@ -27,23 +27,23 @@ namespace partition
 {
 namespace detail
 {
-template <osrm::storage::Ownership Ownership> class CellStorageImpl;
+template <storage::Ownership Ownership> class CellStorageImpl;
 }
-using CellStorage = detail::CellStorageImpl<osrm::storage::Ownership::Container>;
-using CellStorageView = detail::CellStorageImpl<osrm::storage::Ownership::View>;
+using CellStorage = detail::CellStorageImpl<storage::Ownership::Container>;
+using CellStorageView = detail::CellStorageImpl<storage::Ownership::View>;
 
 namespace io
 {
-template <osrm::storage::Ownership Ownership>
+template <storage::Ownership Ownership>
 inline void read(const boost::filesystem::path &path, detail::CellStorageImpl<Ownership> &storage);
-template <osrm::storage::Ownership Ownership>
+template <storage::Ownership Ownership>
 inline void write(const boost::filesystem::path &path,
                   const detail::CellStorageImpl<Ownership> &storage);
 }
 
 namespace detail
 {
-template <osrm::storage::Ownership Ownership> class CellStorageImpl
+template <storage::Ownership Ownership> class CellStorageImpl
 {
   public:
     using WeightOffset = std::uint32_t;
@@ -186,7 +186,7 @@ template <osrm::storage::Ownership Ownership> class CellStorageImpl
     CellStorageImpl() {}
 
     template <typename GraphT,
-              typename = std::enable_if<Ownership == osrm::storage::Ownership::Container>>
+              typename = std::enable_if<Ownership == storage::Ownership::Container>>
     CellStorageImpl(const partition::MultiLevelPartition &partition, const GraphT &base_graph)
     {
         // pre-allocate storge for CellData so we can have random access to it by cell id
@@ -315,7 +315,7 @@ template <osrm::storage::Ownership Ownership> class CellStorageImpl
         weights.resize(weight_offset + 1, INVALID_EDGE_WEIGHT);
     }
 
-    template <typename = std::enable_if<Ownership == osrm::storage::Ownership::View>>
+    template <typename = std::enable_if<Ownership == storage::Ownership::View>>
     CellStorageImpl(Vector<EdgeWeight> weights_,
                     Vector<NodeID> source_boundary_,
                     Vector<NodeID> destination_boundary_,
@@ -340,7 +340,7 @@ template <osrm::storage::Ownership Ownership> class CellStorageImpl
                          destination_boundary.empty() ? nullptr : destination_boundary.data()};
     }
 
-    template <typename = std::enable_if<Ownership == osrm::storage::Ownership::Container>>
+    template <typename = std::enable_if<Ownership == storage::Ownership::Container>>
     Cell GetCell(LevelID level, CellID id)
     {
         const auto level_index = LevelIDToIndex(level);

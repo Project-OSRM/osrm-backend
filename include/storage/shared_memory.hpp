@@ -25,16 +25,12 @@
 #include <exception>
 #include <thread>
 
+#include "storage/shared_memory_ownership.hpp"
+
 namespace osrm
 {
 namespace storage
 {
-
-enum class Ownership
-{
-    Container,
-    View
-};
 
 struct OSRMLockFile
 {

@@ -7,7 +7,7 @@
 #include "util/static_graph.hpp"
 #include "util/typedefs.hpp"
 
-#include "storage/shared_memory.hpp"
+#include "storage/shared_memory_ownership.hpp"
 
 #include <boost/filesystem/path.hpp>
 
@@ -19,17 +19,16 @@ namespace customizer
 using EdgeBasedGraphEdgeData = partition::EdgeBasedGraphEdgeData;
 
 struct MultiLevelEdgeBasedGraph
-    : public partition::MultiLevelGraph<EdgeBasedGraphEdgeData, osrm::storage::Ownership::Container>
+    : public partition::MultiLevelGraph<EdgeBasedGraphEdgeData, storage::Ownership::Container>
 {
-    using Base =
-        partition::MultiLevelGraph<EdgeBasedGraphEdgeData, osrm::storage::Ownership::Container>;
+    using Base = partition::MultiLevelGraph<EdgeBasedGraphEdgeData, storage::Ownership::Container>;
     using Base::Base;
 };
 
 struct MultiLevelEdgeBasedGraphView
-    : public partition::MultiLevelGraph<EdgeBasedGraphEdgeData, osrm::storage::Ownership::View>
+    : public partition::MultiLevelGraph<EdgeBasedGraphEdgeData, storage::Ownership::View>
 {
-    using Base = partition::MultiLevelGraph<EdgeBasedGraphEdgeData, osrm::storage::Ownership::View>;
+    using Base = partition::MultiLevelGraph<EdgeBasedGraphEdgeData, storage::Ownership::View>;
     using Base::Base;
 };
 
