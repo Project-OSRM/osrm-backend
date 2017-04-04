@@ -21,11 +21,12 @@ class CellCustomizer
     {
         bool from_clique;
     };
+
+  public:
     using Heap = util::
         BinaryHeap<NodeID, NodeID, EdgeWeight, HeapData, util::ArrayStorage<NodeID, int>>;
     using HeapPtr = tbb::enumerable_thread_specific<Heap>;
 
-  public:
     CellCustomizer(const partition::MultiLevelPartition &partition) : partition(partition) {}
 
     template <typename GraphT>
