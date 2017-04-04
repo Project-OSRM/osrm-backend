@@ -81,7 +81,7 @@ void checkWeightsConsistency(
     const UpdaterConfig &config,
     const std::vector<osrm::extractor::EdgeBasedEdge> &edge_based_edge_list)
 {
-    using Reader = osrm::storage::io::FileReader;
+    using Reader = storage::io::FileReader;
     using OriginalEdgeData = osrm::extractor::OriginalEdgeData;
 
     extractor::SegmentDataContainer segment_data;

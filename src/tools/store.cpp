@@ -14,7 +14,7 @@
 
 using namespace osrm;
 
-void removeLocks() { osrm::storage::SharedMonitor<osrm::storage::SharedDataTimestamp>::remove(); }
+void removeLocks() { storage::SharedMonitor<storage::SharedDataTimestamp>::remove(); }
 
 void deleteRegion(const storage::SharedDataType region)
 {

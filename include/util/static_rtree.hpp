@@ -15,7 +15,7 @@
 
 #include "osrm/coordinate.hpp"
 
-#include "storage/shared_memory.hpp"
+#include "storage/shared_memory_ownership.hpp"
 
 #include <boost/assert.hpp>
 #include <boost/filesystem.hpp>
@@ -54,7 +54,7 @@ namespace util
 // are computed, this means the internal distance metric doesn not represent meters!
 template <class EdgeDataT,
           class CoordinateListT = std::vector<Coordinate>,
-          osrm::storage::Ownership Ownership = osrm::storage::Ownership::Container,
+          storage::Ownership Ownership = storage::Ownership::Container,
           std::uint32_t BRANCHING_FACTOR = 128,
           std::uint32_t LEAF_PAGE_SIZE = 4096>
 class StaticRTree
@@ -159,7 +159,7 @@ class StaticRTree
 
     boost::iostreams::mapped_file_source m_leaves_region;
     // read-only view of leaves
-    typename ShM<const LeafNode, osrm::storage::Ownership::View>::vector m_leaves;
+    typename ShM<const LeafNode, storage::Ownership::View>::vector m_leaves;
 
   public:
     StaticRTree(const StaticRTree &) = delete;

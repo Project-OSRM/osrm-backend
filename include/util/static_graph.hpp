@@ -7,7 +7,7 @@
 #include "util/shared_memory_vector_wrapper.hpp"
 #include "util/typedefs.hpp"
 
-#include "storage/shared_memory.hpp"
+#include "storage/shared_memory_ownership.hpp"
 
 #include <boost/assert.hpp>
 
@@ -99,8 +99,7 @@ EntryT edgeToEntry(const OtherEdge &from, std::false_type)
 
 } // namespace static_graph_details
 
-template <typename EdgeDataT,
-          osrm::storage::Ownership Ownership = osrm::storage::Ownership::Container>
+template <typename EdgeDataT, storage::Ownership Ownership = storage::Ownership::Container>
 class StaticGraph
 {
   public:

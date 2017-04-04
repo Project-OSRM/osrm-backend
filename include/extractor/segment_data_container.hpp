@@ -4,7 +4,7 @@
 #include "util/shared_memory_vector_wrapper.hpp"
 #include "util/typedefs.hpp"
 
-#include "storage/shared_memory.hpp"
+#include "storage/shared_memory_ownership.hpp"
 
 #include <boost/filesystem/path.hpp>
 #include <boost/range/adaptor/reversed.hpp>
@@ -24,22 +24,22 @@ class CompressedEdgeContainer;
 
 namespace detail
 {
-template <osrm::storage::Ownership Ownership> class SegmentDataContainerImpl;
+template <storage::Ownership Ownership> class SegmentDataContainerImpl;
 }
 
 namespace io
 {
-template <osrm::storage::Ownership Ownership>
+template <storage::Ownership Ownership>
 inline void read(const boost::filesystem::path &path,
                  detail::SegmentDataContainerImpl<Ownership> &segment_data);
-template <osrm::storage::Ownership Ownership>
+template <storage::Ownership Ownership>
 inline void write(const boost::filesystem::path &path,
                   const detail::SegmentDataContainerImpl<Ownership> &segment_data);
 }
 
 namespace detail
 {
-template <osrm::storage::Ownership Ownership> class SegmentDataContainerImpl
+template <storage::Ownership Ownership> class SegmentDataContainerImpl
 {
     template <typename T> using Vector = typename util::ShM<T, Ownership>::vector;
 
@@ -207,8 +207,8 @@ template <osrm::storage::Ownership Ownership> class SegmentDataContainerImpl
 };
 }
 
-using SegmentDataView = detail::SegmentDataContainerImpl<osrm::storage::Ownership::View>;
-using SegmentDataContainer = detail::SegmentDataContainerImpl<osrm::storage::Ownership::Container>;
+using SegmentDataView = detail::SegmentDataContainerImpl<storage::Ownership::View>;
+using SegmentDataContainer = detail::SegmentDataContainerImpl<storage::Ownership::Container>;
 }
 }
 

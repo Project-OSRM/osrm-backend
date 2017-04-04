@@ -2,7 +2,7 @@
 #define RANGE_TABLE_HPP
 
 #include "storage/io.hpp"
-#include "storage/shared_memory.hpp"
+#include "storage/shared_memory_ownership.hpp"
 #include "util/integer_range.hpp"
 #include "util/shared_memory_vector_wrapper.hpp"
 
@@ -19,14 +19,13 @@ namespace util
  * and otherwise the compiler gets confused.
  */
 
-template <unsigned BLOCK_SIZE = 16,
-          osrm::storage::Ownership Ownership = osrm::storage::Ownership::Container>
+template <unsigned BLOCK_SIZE = 16, storage::Ownership Ownership = storage::Ownership::Container>
 class RangeTable;
 
-template <unsigned BLOCK_SIZE, osrm::storage::Ownership Ownership>
+template <unsigned BLOCK_SIZE, storage::Ownership Ownership>
 std::ostream &operator<<(std::ostream &out, const RangeTable<BLOCK_SIZE, Ownership> &table);
 
-template <unsigned BLOCK_SIZE, osrm::storage::Ownership Ownership>
+template <unsigned BLOCK_SIZE, storage::Ownership Ownership>
 std::istream &operator>>(std::istream &in, RangeTable<BLOCK_SIZE, Ownership> &table);
 
 /**
@@ -38,7 +37,7 @@ std::istream &operator>>(std::istream &in, RangeTable<BLOCK_SIZE, Ownership> &ta
  * But each block consists of an absolute value and BLOCK_SIZE differential values.
  * So the effective block size is sizeof(unsigned) + BLOCK_SIZE.
  */
-template <unsigned BLOCK_SIZE, osrm::storage::Ownership Ownership> class RangeTable
+template <unsigned BLOCK_SIZE, storage::Ownership Ownership> class RangeTable
 {
   public:
     using BlockT = std::array<unsigned char, BLOCK_SIZE>;
@@ -142,7 +141,7 @@ template <unsigned BLOCK_SIZE, osrm::storage::Ownership Ownership> class RangeTa
         sum_lengths = lengths_prefix_sum;
     }
 
-    void Write(osrm::storage::io::FileWriter &filewriter)
+    void Write(storage::io::FileWriter &filewriter)
     {
         unsigned number_of_blocks = diff_blocks.size();
 
@@ -154,7 +153,7 @@ template <unsigned BLOCK_SIZE, osrm::storage::Ownership Ownership> class RangeTa
         filewriter.WriteFrom(diff_blocks.data(), number_of_blocks);
     }
 
-    void Read(osrm::storage::io::FileReader &filereader)
+    void Read(storage::io::FileReader &filereader)
     {
         unsigned number_of_blocks = filereader.ReadElementCount32();
         // read total length
@@ -215,7 +214,7 @@ template <unsigned BLOCK_SIZE, osrm::storage::Ownership Ownership> class RangeTa
     unsigned sum_lengths;
 };
 
-template <unsigned BLOCK_SIZE, osrm::storage::Ownership Ownership>
+template <unsigned BLOCK_SIZE, storage::Ownership Ownership>
 unsigned RangeTable<BLOCK_SIZE, Ownership>::PrefixSumAtIndex(int index, const BlockT &block) const
 {
     // this loop looks inefficent, but a modern compiler
@@ -229,7 +228,7 @@ unsigned RangeTable<BLOCK_SIZE, Ownership>::PrefixSumAtIndex(int index, const Bl
     return sum;
 }
 
-template <unsigned BLOCK_SIZE, osrm::storage::Ownership Ownership>
+template <unsigned BLOCK_SIZE, storage::Ownership Ownership>
 std::ostream &operator<<(std::ostream &out, const RangeTable<BLOCK_SIZE, Ownership> &table)
 {
     // write number of block
@@ -245,7 +244,7 @@ std::ostream &operator<<(std::ostream &out, const RangeTable<BLOCK_SIZE, Ownersh
     return out;
 }
 
-template <unsigned BLOCK_SIZE, osrm::storage::Ownership Ownership>
+template <unsigned BLOCK_SIZE, storage::Ownership Ownership>
 std::istream &operator>>(std::istream &in, RangeTable<BLOCK_SIZE, Ownership> &table)
 {
     // read number of block
