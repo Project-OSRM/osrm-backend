@@ -30,7 +30,7 @@ class CellCustomizer
         {
             std::unordered_set<NodeID> destinations_set(destinations.begin(), destinations.end());
             Heap heap(graph.GetNumberOfNodes());
-            heap.Insert(source, 0, {});
+            heap.Insert(source, 0, {false});
 
             // explore search space
             while (!heap.Empty() && !destinations_set.empty())
@@ -75,6 +75,7 @@ class CellCustomizer
   private:
     struct HeapData
     {
+        bool from_clique;
     };
     using Heap = util::
         BinaryHeap<NodeID, NodeID, EdgeWeight, HeapData, util::UnorderedMapStorage<NodeID, int>>;
@@ -88,29 +89,42 @@ class CellCustomizer
                    NodeID node,
                    EdgeWeight weight) const
     {
+        BOOST_ASSERT(heap.WasInserted(node));
+
         if (!first_level)
         {
-            // Relax sub-cell nodes
-            auto subcell_id = partition.GetCell(level - 1, node);
-            auto subcell = cells.GetCell(level - 1, subcell_id);
-            auto subcell_destination = subcell.GetDestinationNodes().begin();
-            for (auto subcell_weight : subcell.GetOutWeight(node))
+            // if we reaches this node from a clique arc we don't need to scan
+            // the clique arcs again because of the triangle inequality
+            //
+            // d(parent, node) + d(node, v) >= d(parent, v)
+            //
+            // And if there is a path (parent, node, v) there must also be a
+            // clique arc (parent, v) with d(parent, v).
+            if (!heap.GetData(node).from_clique)
             {
-                if (subcell_weight != INVALID_EDGE_WEIGHT)
+                // Relax sub-cell nodes
+                auto subcell_id = partition.GetCell(level - 1, node);
+                auto subcell = cells.GetCell(level - 1, subcell_id);
+                auto subcell_destination = subcell.GetDestinationNodes().begin();
+                for (auto subcell_weight : subcell.GetOutWeight(node))
                 {
-                    const NodeID to = *subcell_destination;
-                    const EdgeWeight to_weight = subcell_weight + weight;
-                    if (!heap.WasInserted(to))
+                    if (subcell_weight != INVALID_EDGE_WEIGHT)
                     {
-                        heap.Insert(to, to_weight, {});
+                        const NodeID to = *subcell_destination;
+                        const EdgeWeight to_weight = subcell_weight + weight;
+                        if (!heap.WasInserted(to))
+                        {
+                            heap.Insert(to, to_weight, {true});
+                        }
+                        else if (to_weight < heap.GetKey(to))
+                        {
+                            heap.DecreaseKey(to, to_weight);
+                            heap.GetData(to).from_clique = true;
+                        }
                     }
-                    else if (to_weight < heap.GetKey(to))
-                    {
-                        heap.DecreaseKey(to, to_weight);
-                    }
-                }
 
-                ++subcell_destination;
+                    ++subcell_destination;
+                }
             }
         }
 
@@ -126,11 +140,12 @@ class CellCustomizer
                 const EdgeWeight to_weight = data.weight + weight;
                 if (!heap.WasInserted(to))
                 {
-                    heap.Insert(to, to_weight, {});
+                    heap.Insert(to, to_weight, {false});
                 }
                 else if (to_weight < heap.GetKey(to))
                 {
                     heap.DecreaseKey(to, to_weight);
+                    heap.GetData(to).from_clique = false;
                 }
             }
         }
