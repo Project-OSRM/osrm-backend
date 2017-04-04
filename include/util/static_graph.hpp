@@ -4,7 +4,7 @@
 #include "util/graph_traits.hpp"
 #include "util/integer_range.hpp"
 #include "util/percent.hpp"
-#include "util/shared_memory_vector_wrapper.hpp"
+#include "util/vector_view.hpp"
 #include "util/typedefs.hpp"
 
 #include "storage/shared_memory_ownership.hpp"
@@ -122,7 +122,7 @@ EntryT edgeToEntry(const OtherEdge &from, std::false_type)
 template <typename EdgeDataT, storage::Ownership Ownership = storage::Ownership::Container>
 class StaticGraph
 {
-    template <typename T> using Vector = typename util::ShM<T, Ownership>::vector;
+    template <typename T> using Vector = util::ViewOrVector<T, Ownership>;
 
   public:
     using InputEdge = static_graph_details::SortableEdgeWithData<EdgeDataT>;

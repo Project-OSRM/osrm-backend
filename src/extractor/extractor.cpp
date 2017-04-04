@@ -281,11 +281,11 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
 
         util::Log() << "Saving edge-based node weights to file.";
         TIMER_START(timer_write_node_weights);
-
-        storage::io::FileWriter edge_file(config.edge_based_node_weights_output_path,
-                                          storage::io::FileWriter::GenerateFingerprint);
-        edge_file.SerializeVector(edge_based_node_weights);
-
+        {
+            storage::io::FileWriter writer(config.edge_based_node_weights_output_path,
+                                           storage::io::FileWriter::GenerateFingerprint);
+            storage::serialization::write(writer, edge_based_node_weights);
+        }
         TIMER_STOP(timer_write_node_weights);
         util::Log() << "Done writing. (" << TIMER_SEC(timer_write_node_weights) << ")";
 
@@ -299,7 +299,8 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
         TIMER_STOP(rtree);
 
         util::Log() << "Writing node map ...";
-        files::writeNodes<storage::Ownership::Container>(config.node_output_path, coordinates, osm_node_ids);
+        files::writeNodes<storage::Ownership::Container>(
+            config.node_output_path, coordinates, osm_node_ids);
 
         WriteEdgeBasedGraph(config.edge_graph_output_path, max_edge_id, edge_based_edge_list);
 
@@ -509,9 +510,8 @@ Extractor::BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
     };
 
     compressed_node_based_graph_writing = std::async(std::launch::async, [&] {
-        WriteCompressedNodeBasedGraph(config.compressed_node_based_graph_output_path,
-                                      *node_based_graph,
-                                      coordinates);
+        WriteCompressedNodeBasedGraph(
+            config.compressed_node_based_graph_output_path, *node_based_graph, coordinates);
     });
 
     WriteTurnLaneData(config.turn_lane_descriptions_file_name);
@@ -612,11 +612,11 @@ void Extractor::WriteIntersectionClassificationData(
     const std::vector<util::guidance::BearingClass> &bearing_classes,
     const std::vector<util::guidance::EntryClass> &entry_classes) const
 {
-    storage::io::FileWriter file(output_file_name, storage::io::FileWriter::GenerateFingerprint);
+    storage::io::FileWriter writer(output_file_name, storage::io::FileWriter::GenerateFingerprint);
 
     util::Log() << "Writing Intersection Classification Data";
     TIMER_START(write_edges);
-    file.SerializeVector(node_based_intersection_classes);
+    storage::serialization::write(writer, node_based_intersection_classes);
 
     // create range table for vectors:
     std::vector<unsigned> bearing_counts;
@@ -630,17 +630,17 @@ void Extractor::WriteIntersectionClassificationData(
     }
 
     util::RangeTable<> bearing_class_range_table(bearing_counts);
-    bearing_class_range_table.Write(file);
+    bearing_class_range_table.Write(writer);
 
-    file.WriteOne(total_bearings);
+    writer.WriteOne(total_bearings);
 
     for (const auto &bearing_class : bearing_classes)
     {
         const auto &bearings = bearing_class.getAvailableBearings();
-        file.WriteFrom(bearings.data(), bearings.size());
+        writer.WriteFrom(bearings.data(), bearings.size());
     }
 
-    file.SerializeVector(entry_classes);
+    storage::serialization::write(writer, entry_classes);
 
     TIMER_STOP(write_edges);
     util::Log() << "ok, after " << TIMER_SEC(write_edges) << "s for "
@@ -659,9 +659,9 @@ void Extractor::WriteTurnLaneData(const std::string &turn_lane_file) const
     util::Log() << "Writing turn lane masks...";
     TIMER_START(turn_lane_timer);
 
-    storage::io::FileWriter file(turn_lane_file, storage::io::FileWriter::HasNoFingerprint);
-    file.SerializeVector(turn_lane_offsets);
-    file.SerializeVector(turn_lane_masks);
+    storage::io::FileWriter writer(turn_lane_file, storage::io::FileWriter::HasNoFingerprint);
+    storage::serialization::write(writer, turn_lane_offsets);
+    storage::serialization::write(writer, turn_lane_masks);
 
     TIMER_STOP(turn_lane_timer);
     util::Log() << "done (" << TIMER_SEC(turn_lane_timer) << ")";

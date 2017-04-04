@@ -4,7 +4,9 @@
 #include "util/packed_vector.hpp"
 #include "util/static_graph.hpp"
 #include "util/dynamic_graph.hpp"
+
 #include "storage/io.hpp"
+#include "storage/serialization.hpp"
 
 namespace osrm
 {
@@ -17,7 +19,7 @@ inline void read(storage::io::FileReader &reader,
                  detail::PackedVector<T, Ownership> &vec)
 {
     vec.num_elements =reader.ReadOne<std::uint64_t>();
-    reader.DeserializeVector(vec.vec);
+    storage::serialization::read(reader, vec.vec);
 }
 
 template <typename T, storage::Ownership Ownership>
@@ -25,30 +27,30 @@ inline void write(storage::io::FileWriter &writer,
                  const detail::PackedVector<T, Ownership> &vec)
 {
     writer.WriteOne(vec.num_elements);
-    writer.SerializeVector(vec.vec);
+    storage::serialization::write(writer, vec.vec);
 }
 
 template <typename EdgeDataT, storage::Ownership Ownership>
 inline void read(storage::io::FileReader &reader,
                  StaticGraph<EdgeDataT, Ownership> &graph)
 {
-    reader.DeserializeVector(graph.node_array);
-    reader.DeserializeVector(graph.edge_array);
+    storage::serialization::read(reader, graph.node_array);
+    storage::serialization::read(reader, graph.edge_array);
 }
 
 template <typename EdgeDataT, storage::Ownership Ownership>
 inline void write(storage::io::FileWriter &writer,
                  const StaticGraph<EdgeDataT, Ownership> &graph)
 {
-    writer.SerializeVector(graph.node_array);
-    writer.SerializeVector(graph.edge_array);
+    storage::serialization::write(writer, graph.node_array);
+    storage::serialization::write(writer, graph.edge_array);
 }
 
 template <typename EdgeDataT>
 inline void read(storage::io::FileReader &reader,
                  DynamicGraph<EdgeDataT> &graph)
 {
-    reader.DeserializeVector(graph.node_array);
+    storage::serialization::read(reader, graph.node_array);
     auto num_edges = reader.ReadElementCount64();
     graph.edge_list.resize(num_edges);
     for (auto index : irange<std::size_t>(0, num_edges))
@@ -63,7 +65,7 @@ template <typename EdgeDataT>
 inline void write(storage::io::FileWriter &writer,
                  const DynamicGraph<EdgeDataT> &graph)
 {
-    writer.SerializeVector(graph.node_array);
+    storage::serialization::write(writer, graph.node_array);
     writer.WriteElementCount64(graph.number_of_edges);
     for (auto index : irange<std::size_t>(0, graph.number_of_edges))
     {

@@ -34,10 +34,10 @@
 #include "util/log.hpp"
 #include "util/packed_vector.hpp"
 #include "util/range_table.hpp"
-#include "util/shared_memory_vector_wrapper.hpp"
 #include "util/static_graph.hpp"
 #include "util/static_rtree.hpp"
 #include "util/typedefs.hpp"
+#include "util/vector_view.hpp"
 
 #ifdef __linux__
 #include <sys/mman.h>
@@ -63,7 +63,7 @@ namespace storage
 {
 
 using RTreeLeaf = engine::datafacade::BaseDataFacade::RTreeLeaf;
-using RTreeNode = util:: StaticRTree<RTreeLeaf, storage::Ownership::View>::TreeNode;
+using RTreeNode = util::StaticRTree<RTreeLeaf, storage::Ownership::View>::TreeNode;
 using QueryGraph = util::StaticGraph<contractor::QueryEdge::EdgeData>;
 using EdgeBasedGraph = util::StaticGraph<extractor::EdgeBasedEdge::EdgeData>;
 
@@ -361,7 +361,7 @@ void Storage::PopulateLayout(DataLayout &layout)
                                          io::FileReader::VerifyFingerprint);
 
         std::vector<BearingClassID> bearing_class_id_table;
-        intersection_file.DeserializeVector(bearing_class_id_table);
+        serialization::read(intersection_file, bearing_class_id_table);
 
         layout.SetBlockSize<BearingClassID>(DataLayout::BEARING_CLASSID,
                                             bearing_class_id_table.size());
@@ -386,7 +386,7 @@ void Storage::PopulateLayout(DataLayout &layout)
         layout.SetBlockSize<DiscreteBearing>(DataLayout::BEARING_VALUES, num_bearings);
 
         std::vector<util::guidance::EntryClass> entry_class_table;
-        intersection_file.DeserializeVector(entry_class_table);
+        serialization::read(intersection_file, entry_class_table);
 
         layout.SetBlockSize<util::guidance::EntryClass>(DataLayout::ENTRY_CLASS,
                                                         entry_class_table.size());
@@ -690,11 +690,13 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
             layout.GetBlockPtr<util::Coordinate, true>(memory_ptr, DataLayout::COORDINATE_LIST);
         const auto osmnodeid_ptr =
             layout.GetBlockPtr<std::uint64_t, true>(memory_ptr, DataLayout::OSM_NODE_ID_LIST);
-        util::vector_view<util::Coordinate> coordinates(coordinates_ptr, layout.num_entries[DataLayout::COORDINATE_LIST]);
+        util::vector_view<util::Coordinate> coordinates(
+            coordinates_ptr, layout.num_entries[DataLayout::COORDINATE_LIST]);
         util::PackedVectorView<OSMNodeID> osm_node_ids;
         osm_node_ids.reset(osmnodeid_ptr, layout.num_entries[DataLayout::OSM_NODE_ID_LIST]);
 
-        extractor::files::readNodes<storage::Ownership::View>(config.nodes_data_path, coordinates, osm_node_ids);
+        extractor::files::readNodes<storage::Ownership::View>(
+            config.nodes_data_path, coordinates, osm_node_ids);
     }
 
     // load turn weight penalties
@@ -790,7 +792,7 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
                                          io::FileReader::VerifyFingerprint);
 
         std::vector<BearingClassID> bearing_class_id_table;
-        intersection_file.DeserializeVector(bearing_class_id_table);
+        serialization::read(intersection_file, bearing_class_id_table);
 
         const auto bearing_blocks = intersection_file.ReadElementCount32();
         intersection_file.Skip<std::uint32_t>(1); // sum_lengths
@@ -808,7 +810,7 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
         intersection_file.ReadInto(bearing_class_table.data(), num_bearings);
 
         std::vector<util::guidance::EntryClass> entry_class_table;
-        intersection_file.DeserializeVector(entry_class_table);
+        serialization::read(intersection_file, entry_class_table);
 
         // load intersection classes
         if (!bearing_class_id_table.empty())

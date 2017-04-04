@@ -9,7 +9,7 @@
 #include "util/hilbert_value.hpp"
 #include "util/integer_range.hpp"
 #include "util/rectangle.hpp"
-#include "util/shared_memory_vector_wrapper.hpp"
+#include "util/vector_view.hpp"
 #include "util/typedefs.hpp"
 #include "util/web_mercator.hpp"
 
@@ -58,7 +58,7 @@ template <class EdgeDataT,
           std::uint32_t LEAF_PAGE_SIZE = 4096>
 class StaticRTree
 {
-    template <typename T> using Vector = typename ShM<T, Ownership>::vector;
+    template <typename T> using Vector = ViewOrVector<T, Ownership>;
 
   public:
     using Rectangle = RectangleInt2D;
@@ -160,7 +160,7 @@ class StaticRTree
 
     boost::iostreams::mapped_file_source m_leaves_region;
     // read-only view of leaves
-    typename ShM<const LeafNode, storage::Ownership::View>::vector m_leaves;
+    util::vector_view<const LeafNode> m_leaves;
 
   public:
     StaticRTree(const StaticRTree &) = delete;

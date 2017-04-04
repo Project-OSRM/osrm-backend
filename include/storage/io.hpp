@@ -128,38 +128,11 @@ class FileReader
     std::uint32_t ReadElementCount32() { return ReadOne<std::uint32_t>(); }
     std::uint64_t ReadElementCount64() { return ReadOne<std::uint64_t>(); }
 
-    template <typename VectorT> void DeserializeVector(VectorT &data)
-    {
-        const auto count = ReadElementCount64();
-        data.resize(count);
-        ReadInto(data.data(), count);
-    }
-
-    template <typename T> std::size_t GetVectorMemorySize()
-    {
-        const auto count = ReadElementCount64();
-        Skip<T>(count);
-        return sizeof(count) + sizeof(T) * count;
-    }
-
     template <typename T> std::size_t ReadVectorSize()
     {
         const auto count = ReadElementCount64();
         Skip<T>(count);
         return count;
-    }
-
-    template <typename T> void *DeserializeVector(void *begin, const void *end)
-    {
-        auto count = ReadElementCount64();
-        auto required = reinterpret_cast<char *>(begin) + sizeof(count) + sizeof(T) * count;
-        if (required > end)
-            throw util::exception("Not enough memory ");
-
-        *reinterpret_cast<decltype(count) *>(begin) = count;
-        ReadInto(reinterpret_cast<T *>(reinterpret_cast<char *>(begin) + sizeof(decltype(count))),
-                 count);
-        return required;
     }
 
     bool ReadAndCheckFingerprint()
@@ -198,42 +171,6 @@ class FileReader
         auto length = input_stream.tellg();
         input_stream.seekg(current_pos, input_stream.beg);
         return length;
-    }
-
-    std::vector<std::string> ReadLines()
-    {
-        std::vector<std::string> result;
-        std::string thisline;
-        try
-        {
-            while (std::getline(input_stream, thisline))
-            {
-                result.push_back(thisline);
-            }
-        }
-        catch (const std::ios_base::failure &)
-        {
-            // EOF is OK here, everything else, re-throw
-            if (!input_stream.eof())
-                throw;
-        }
-        return result;
-    }
-
-    std::string ReadLine()
-    {
-        std::string thisline;
-        try
-        {
-            std::getline(input_stream, thisline);
-        }
-        catch (const std::ios_base::failure & /*e*/)
-        {
-            // EOF is OK here, everything else, re-throw
-            if (!input_stream.eof())
-                throw;
-        }
-        return thisline;
     }
 };
 
@@ -295,13 +232,6 @@ class FileWriter
 
     void WriteElementCount32(const std::uint32_t count) { WriteOne<std::uint32_t>(count); }
     void WriteElementCount64(const std::uint64_t count) { WriteOne<std::uint64_t>(count); }
-
-    template <typename VectorT> void SerializeVector(const VectorT &data)
-    {
-        const auto count = data.size();
-        WriteElementCount64(count);
-        return WriteFrom(data.data(), count);
-    }
 
     void WriteFingerprint()
     {

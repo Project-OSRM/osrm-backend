@@ -4,7 +4,7 @@
 #include "util/exception.hpp"
 #include "util/for_each_pair.hpp"
 #include "util/msb.hpp"
-#include "util/shared_memory_vector_wrapper.hpp"
+#include "util/vector_view.hpp"
 #include "util/typedefs.hpp"
 
 #include "storage/io.hpp"
@@ -56,7 +56,7 @@ template <storage::Ownership Ownership> class MultiLevelPartitionImpl final
     static const constexpr std::uint8_t MAX_NUM_LEVEL = 16;
     static const constexpr std::uint8_t NUM_PARTITION_BITS = sizeof(PartitionID) * CHAR_BIT;
 
-    template <typename T> using Vector = typename util::ShM<T, Ownership>::vector;
+    template <typename T> using Vector = util::ViewOrVector<T, Ownership>;
 
   public:
     // Contains all data necessary to describe the level hierarchy

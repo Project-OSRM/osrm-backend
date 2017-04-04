@@ -48,8 +48,7 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(
     std::vector<std::uint32_t> &turn_lane_offsets,
     std::vector<guidance::TurnLaneType::Mask> &turn_lane_masks,
     guidance::LaneDescriptionMap &lane_description_map)
-    : m_max_edge_id(0), m_coordinates(coordinates),
-      m_osm_node_ids(osm_node_ids),
+    : m_max_edge_id(0), m_coordinates(coordinates), m_osm_node_ids(osm_node_ids),
       m_node_based_graph(std::move(node_based_graph)),
       m_restriction_map(std::move(restriction_map)), m_barrier_nodes(barrier_nodes),
       m_traffic_lights(traffic_lights), m_compressed_edge_container(compressed_edge_container),
@@ -540,16 +539,14 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                     const bool isTrivial = m_compressed_edge_container.IsTrivial(incoming_edge);
 
                     const auto &from_node =
-                        isTrivial
-                            ? m_osm_node_ids[node_along_road_entering]
-                            : m_osm_node_ids[m_compressed_edge_container.GetLastEdgeSourceID(
-                                  incoming_edge)];
+                        isTrivial ? m_osm_node_ids[node_along_road_entering]
+                                  : m_osm_node_ids[m_compressed_edge_container.GetLastEdgeSourceID(
+                                        incoming_edge)];
                     const auto &via_node =
                         m_osm_node_ids[m_compressed_edge_container.GetLastEdgeTargetID(
                             incoming_edge)];
                     const auto &to_node =
-                        m_osm_node_ids[m_compressed_edge_container.GetFirstEdgeTargetID(
-                            turn.eid)];
+                        m_osm_node_ids[m_compressed_edge_container.GetFirstEdgeTargetID(turn.eid)];
 
                     lookup::TurnIndexBlock turn_index_block = {from_node, via_node, to_node};
 
@@ -562,32 +559,32 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     // write weight penalties per turn
     BOOST_ASSERT(turn_weight_penalties.size() == turn_duration_penalties.size());
     {
-        storage::io::FileWriter turn_weight_penalties_file(
-            turn_weight_penalties_filename, storage::io::FileWriter::HasNoFingerprint);
-        turn_weight_penalties_file.SerializeVector(turn_weight_penalties);
+        storage::io::FileWriter writer(turn_weight_penalties_filename,
+                                       storage::io::FileWriter::HasNoFingerprint);
+        storage::serialization::write(writer, turn_weight_penalties);
     }
 
     {
-        storage::io::FileWriter turn_duration_penalties_file(
-            turn_duration_penalties_filename, storage::io::FileWriter::HasNoFingerprint);
-        turn_duration_penalties_file.SerializeVector(turn_duration_penalties);
+        storage::io::FileWriter writer(turn_duration_penalties_filename,
+                                       storage::io::FileWriter::HasNoFingerprint);
+        storage::serialization::write(writer, turn_duration_penalties);
     }
 
     util::Log() << "Created " << entry_class_hash.size() << " entry classes and "
                 << bearing_class_hash.size() << " Bearing Classes";
 
     util::Log() << "Writing Turn Lane Data to File...";
+    {
+        storage::io::FileWriter writer(turn_lane_data_filename,
+                                       storage::io::FileWriter::HasNoFingerprint);
 
-    storage::io::FileWriter turn_lane_data_file(turn_lane_data_filename,
-                                                storage::io::FileWriter::HasNoFingerprint);
+        std::vector<util::guidance::LaneTupleIdPair> lane_data(lane_data_map.size());
+        // extract lane data sorted by ID
+        for (auto itr : lane_data_map)
+            lane_data[itr.second] = itr.first;
 
-    std::vector<util::guidance::LaneTupleIdPair> lane_data(lane_data_map.size());
-    // extract lane data sorted by ID
-    for (auto itr : lane_data_map)
-        lane_data[itr.second] = itr.first;
-
-    turn_lane_data_file.SerializeVector(lane_data);
-
+        storage::serialization::write(writer, lane_data);
+    }
     util::Log() << "done.";
 
     files::writeTurnData(turn_data_filename, turn_data_container);

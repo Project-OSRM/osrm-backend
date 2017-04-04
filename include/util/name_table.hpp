@@ -2,7 +2,6 @@
 #define OSRM_UTIL_NAME_TABLE_HPP
 
 #include "util/indexed_data.hpp"
-#include "util/shared_memory_vector_wrapper.hpp"
 #include "util/string_view.hpp"
 #include "util/typedefs.hpp"
 
