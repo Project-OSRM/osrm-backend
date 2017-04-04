@@ -2,9 +2,9 @@
 #define OSRM_EXTRACTOR_GUIDANCE_MERGEABLE_ROADS
 
 #include "extractor/guidance/intersection.hpp"
+#include "util/coordinate.hpp"
 #include "util/node_based_graph.hpp"
 #include "util/typedefs.hpp"
-#include "util/coordinate.hpp"
 
 #include <cstdint>
 #include <functional>

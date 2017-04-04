@@ -36,8 +36,7 @@ template <typename EdgeDataT, bool UseSharedMemory>
 void read(storage::io::FileReader &reader, DynamicGraph<EdgeDataT> &graph);
 
 template <typename EdgeDataT, bool UseSharedMemory>
-void write(storage::io::FileWriter &writer,
-           const DynamicGraph<EdgeDataT> &graph);
+void write(storage::io::FileWriter &writer, const DynamicGraph<EdgeDataT> &graph);
 }
 
 template <typename EdgeDataT> class DynamicGraph

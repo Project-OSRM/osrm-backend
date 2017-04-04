@@ -1,8 +1,8 @@
 #ifndef PACKED_VECTOR_HPP
 #define PACKED_VECTOR_HPP
 
-#include "util/vector_view.hpp"
 #include "util/typedefs.hpp"
+#include "util/vector_view.hpp"
 
 #include "storage/io.hpp"
 #include "storage/shared_memory_ownership.hpp"

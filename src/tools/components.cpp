@@ -42,7 +42,8 @@ std::size_t loadGraph(const std::string &path,
 
     auto nop = boost::make_function_output_iterator([](auto) {});
 
-    const auto number_of_nodes = util::loadNodesFromFile(file_reader, nop, nop, coordinate_list, osm_node_ids);
+    const auto number_of_nodes =
+        util::loadNodesFromFile(file_reader, nop, nop, coordinate_list, osm_node_ids);
 
     util::loadEdgesFromFile(file_reader, edge_list);
 
@@ -75,10 +76,11 @@ struct FeatureWriter
         out << "{\"type\":\"FeatureCollection\",\"features\":[";
     }
 
-    void
-    AddLine(const util::Coordinate from, const util::Coordinate to, 
-            const OSMNodeID from_id, const OSMNodeID to_id,
-            const std::string &type)
+    void AddLine(const util::Coordinate from,
+                 const util::Coordinate to,
+                 const OSMNodeID from_id,
+                 const OSMNodeID to_id,
+                 const std::string &type)
     {
         const auto from_lon = static_cast<double>(util::toFloating(from.lon));
         const auto from_lat = static_cast<double>(util::toFloating(from.lat));
@@ -189,7 +191,11 @@ int main(int argc, char *argv[])
                     auto same_component = source_component_id == target_component_id;
                     std::string type = same_component ? "inner" : "border";
 
-                    writer.AddLine(coordinate_list[source], coordinate_list[target], osm_node_ids[source], osm_node_ids[target], type);
+                    writer.AddLine(coordinate_list[source],
+                                   coordinate_list[target],
+                                   osm_node_ids[source],
+                                   osm_node_ids[target],
+                                   type);
                 }
             }
         }

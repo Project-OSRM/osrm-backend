@@ -18,10 +18,10 @@ namespace files
 {
 
 // reads .osrm.nodes
-template<storage::Ownership Ownership>
+template <storage::Ownership Ownership>
 inline void readNodes(const boost::filesystem::path &path,
-        util::ViewOrVector<util::Coordinate, Ownership> &coordinates,
-        util::detail::PackedVector<OSMNodeID, Ownership> &osm_node_ids)
+                      util::ViewOrVector<util::Coordinate, Ownership> &coordinates,
+                      util::detail::PackedVector<OSMNodeID, Ownership> &osm_node_ids)
 {
     const auto fingerprint = storage::io::FileReader::VerifyFingerprint;
     storage::io::FileReader reader{path, fingerprint};
@@ -31,10 +31,10 @@ inline void readNodes(const boost::filesystem::path &path,
 }
 
 // writes .osrm.nodes
-template<storage::Ownership Ownership>
+template <storage::Ownership Ownership>
 inline void writeNodes(const boost::filesystem::path &path,
-        const util::ViewOrVector<util::Coordinate, Ownership> &coordinates,
-        const util::detail::PackedVector<OSMNodeID, Ownership> &osm_node_ids)
+                       const util::ViewOrVector<util::Coordinate, Ownership> &coordinates,
+                       const util::detail::PackedVector<OSMNodeID, Ownership> &osm_node_ids)
 {
     const auto fingerprint = storage::io::FileWriter::GenerateFingerprint;
     storage::io::FileWriter writer{path, fingerprint};
@@ -126,9 +126,10 @@ inline void writeTurnData(const boost::filesystem::path &path,
 
 // reads .osrm.tls
 template <storage::Ownership Ownership>
-inline void readTurnLaneDescriptions(const boost::filesystem::path &path,
-                         util::ViewOrVector<std::uint32_t, Ownership> &turn_offsets,
-                         util::ViewOrVector<extractor::guidance::TurnLaneType::Mask, Ownership> &turn_masks)
+inline void readTurnLaneDescriptions(
+    const boost::filesystem::path &path,
+    util::ViewOrVector<std::uint32_t, Ownership> &turn_offsets,
+    util::ViewOrVector<extractor::guidance::TurnLaneType::Mask, Ownership> &turn_masks)
 {
     const auto fingerprint = storage::io::FileReader::HasNoFingerprint;
     storage::io::FileReader reader{path, fingerprint};
@@ -139,9 +140,10 @@ inline void readTurnLaneDescriptions(const boost::filesystem::path &path,
 
 // writes .osrm.tls
 template <storage::Ownership Ownership>
-inline void writeTurnLaneDescriptions(const boost::filesystem::path &path,
-                         const util::ViewOrVector<std::uint32_t, Ownership> &turn_offsets,
-                         const util::ViewOrVector<extractor::guidance::TurnLaneType::Mask, Ownership> &turn_masks)
+inline void writeTurnLaneDescriptions(
+    const boost::filesystem::path &path,
+    const util::ViewOrVector<std::uint32_t, Ownership> &turn_offsets,
+    const util::ViewOrVector<extractor::guidance::TurnLaneType::Mask, Ownership> &turn_masks)
 {
     const auto fingerprint = storage::io::FileWriter::HasNoFingerprint;
     storage::io::FileWriter writer{path, fingerprint};
@@ -149,7 +151,6 @@ inline void writeTurnLaneDescriptions(const boost::filesystem::path &path,
     storage::serialization::write(writer, turn_offsets);
     storage::serialization::write(writer, turn_masks);
 }
-
 }
 }
 }

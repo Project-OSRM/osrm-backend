@@ -48,7 +48,7 @@ int Contractor::Run()
     std::vector<EdgeWeight> node_weights;
     {
         storage::io::FileReader reader(config.node_file_path,
-                                          storage::io::FileReader::VerifyFingerprint);
+                                       storage::io::FileReader::VerifyFingerprint);
         storage::serialization::read(reader, node_weights);
     }
     util::Log() << "Done reading node weights.";
