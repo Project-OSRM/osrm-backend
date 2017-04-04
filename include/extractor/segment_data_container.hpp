@@ -4,6 +4,7 @@
 #include "util/typedefs.hpp"
 #include "util/vector_view.hpp"
 
+#include "storage/io_fwd.hpp"
 #include "storage/shared_memory_ownership.hpp"
 
 #include <boost/filesystem/path.hpp>
@@ -17,15 +18,6 @@
 
 namespace osrm
 {
-namespace storage
-{
-namespace io
-{
-class FileReader;
-class FileWriter;
-}
-}
-
 namespace extractor
 {
 

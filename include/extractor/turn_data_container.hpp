@@ -4,7 +4,9 @@
 #include "extractor/guidance/turn_instruction.hpp"
 #include "extractor/travel_mode.hpp"
 
+#include "storage/io_fwd.hpp"
 #include "storage/shared_memory_ownership.hpp"
+
 #include "util/guidance/turn_bearing.hpp"
 #include "util/vector_view.hpp"
 
@@ -12,16 +14,6 @@
 
 namespace osrm
 {
-
-namespace storage
-{
-namespace io
-{
-class FileReader;
-class FileWriter;
-}
-}
-
 namespace extractor
 {
 namespace detail
