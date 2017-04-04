@@ -126,10 +126,6 @@ template <typename NodeID,
           typename IndexStorage = ArrayStorage<NodeID, NodeID>>
 class BinaryHeap
 {
-  private:
-    BinaryHeap(const BinaryHeap &right);
-    void operator=(const BinaryHeap &right);
-
   public:
     using WeightType = Weight;
     using DataType = Data;
