@@ -62,6 +62,8 @@ void routingStep(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm>
                  SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
                  NodeID &middle_node,
                  EdgeWeight &path_upper_bound,
+                 const bool force_loop_forward,
+                 const bool force_loop_reverse,
                  Args... args)
 {
     const auto &partition = facade.GetMultiLevelPartition();
@@ -79,8 +81,37 @@ void routingStep(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm>
     {
         auto reverse_weight = reverse_heap.GetKey(node);
         auto path_weight = weight + reverse_weight;
-        if (path_weight >= 0 && path_weight < path_upper_bound)
+
+        // if loops are forced, they are so at the source
+        if ((force_loop_forward && forward_heap.GetData(node).parent == node) ||
+            (force_loop_reverse && reverse_heap.GetData(node).parent == node) ||
+            // in this case we are looking at a bi-directional way where the source
+            // and target phantom are on the same edge based node
+            path_weight < 0)
         {
+            // check whether there is a loop present at the node
+            for (const auto edge : facade.GetAdjacentEdgeRange(node))
+            {
+                const auto &data = facade.GetEdgeData(edge);
+                if (DIRECTION == FORWARD_DIRECTION ? data.forward : data.backward)
+                {
+                    const NodeID to = facade.GetTarget(edge);
+                    if (to == node)
+                    {
+                        const EdgeWeight edge_weight = data.weight;
+                        const EdgeWeight loop_weight = path_weight + edge_weight;
+                        if (loop_weight >= 0 && loop_weight < path_upper_bound)
+                        {
+                            middle_node = node;
+                            path_upper_bound = loop_weight;
+                        }
+                    }
+                }
+            }
+        }
+        else if (path_weight >= 0 && path_weight < path_upper_bound)
+        {
+
             middle_node = node;
             path_upper_bound = path_weight;
         }
@@ -194,15 +225,27 @@ search(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
     {
         if (!forward_heap.Empty())
         {
-            routingStep<FORWARD_DIRECTION>(
-                facade, forward_heap, reverse_heap, middle, weight, args...);
+            routingStep<FORWARD_DIRECTION>(facade,
+                                           forward_heap,
+                                           reverse_heap,
+                                           middle,
+                                           weight,
+                                           force_loop_forward,
+                                           force_loop_reverse,
+                                           args...);
             if (!forward_heap.Empty())
                 forward_heap_min = forward_heap.MinKey();
         }
         if (!reverse_heap.Empty())
         {
-            routingStep<REVERSE_DIRECTION>(
-                facade, reverse_heap, forward_heap, middle, weight, args...);
+            routingStep<REVERSE_DIRECTION>(facade,
+                                           reverse_heap,
+                                           forward_heap,
+                                           middle,
+                                           weight,
+                                           force_loop_reverse,
+                                           force_loop_forward,
+                                           args...);
             if (!reverse_heap.Empty())
                 reverse_heap_min = reverse_heap.MinKey();
         }
@@ -270,7 +313,13 @@ search(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
             NodeID subpath_source, subpath_target;
             std::vector<EdgeID> subpath;
             std::tie(subpath_weight, subpath_source, subpath_target, subpath) =
-                search(facade, forward_heap, reverse_heap, force_loop_forward, force_loop_reverse, sublevel, parent_cell_id);
+                search(facade,
+                       forward_heap,
+                       reverse_heap,
+                       force_loop_forward,
+                       force_loop_reverse,
+                       sublevel,
+                       parent_cell_id);
             BOOST_ASSERT(!subpath.empty());
             BOOST_ASSERT(subpath_source == source);
             BOOST_ASSERT(subpath_target == target);
@@ -298,8 +347,8 @@ inline void search(const datafacade::ContiguousInternalMemoryDataFacade<Algorith
 
     NodeID source_node, target_node;
     std::vector<EdgeID> unpacked_edges;
-    std::tie(weight, source_node, target_node, unpacked_edges) =
-        mld::search(facade, forward_heap, reverse_heap, force_loop_forward, force_loop_reverse, phantom_nodes);
+    std::tie(weight, source_node, target_node, unpacked_edges) = mld::search(
+        facade, forward_heap, reverse_heap, force_loop_forward, force_loop_reverse, phantom_nodes);
 
     if (weight != INVALID_EDGE_WEIGHT)
     {
