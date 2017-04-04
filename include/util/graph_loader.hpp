@@ -9,8 +9,8 @@
 #include "util/exception.hpp"
 #include "util/fingerprint.hpp"
 #include "util/log.hpp"
-#include "util/typedefs.hpp"
 #include "util/packed_vector.hpp"
+#include "util/typedefs.hpp"
 
 #include <boost/assert.hpp>
 #include <boost/filesystem.hpp>

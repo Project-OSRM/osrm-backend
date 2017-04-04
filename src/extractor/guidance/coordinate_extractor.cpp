@@ -95,9 +95,7 @@ util::Coordinate CoordinateExtractor::ExtractRepresentativeCoordinate(
 {
     // check if the coordinate is equal to the interseciton coordinate
     const auto not_same_as_start = [&](const util::Coordinate coordinate) {
-        return node_coordinates[traversed_in_reverse
-                                    ? to_node
-                                    : intersection_node] != coordinate;
+        return node_coordinates[traversed_in_reverse ? to_node : intersection_node] != coordinate;
     };
     // this is only used for debug purposes in assertions. We don't want warnings about it
     (void)not_same_as_start;

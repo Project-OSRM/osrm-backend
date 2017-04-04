@@ -4,8 +4,8 @@
 #include "util/exception.hpp"
 #include "util/for_each_pair.hpp"
 #include "util/msb.hpp"
-#include "util/vector_view.hpp"
 #include "util/typedefs.hpp"
+#include "util/vector_view.hpp"
 
 #include "storage/io.hpp"
 #include "storage/shared_memory_ownership.hpp"
@@ -336,7 +336,8 @@ inline MultiLevelPartitionImpl<storage::Ownership::Container>::MultiLevelPartiti
 }
 
 template <>
-inline MultiLevelPartitionImpl<storage::Ownership::View>::MultiLevelPartitionImpl() : level_data(nullptr)
+inline MultiLevelPartitionImpl<storage::Ownership::View>::MultiLevelPartitionImpl()
+    : level_data(nullptr)
 {
 }
 }

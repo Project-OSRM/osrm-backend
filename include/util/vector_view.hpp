@@ -29,9 +29,10 @@ class VectorViewIterator : public boost::iterator_facade<VectorViewIterator<Data
                                                          DataT,
                                                          boost::random_access_traversal_tag>
 {
-    typedef boost::
-        iterator_facade<VectorViewIterator<DataT>, DataT, boost::random_access_traversal_tag>
-            base_t;
+    typedef boost::iterator_facade<VectorViewIterator<DataT>,
+                                   DataT,
+                                   boost::random_access_traversal_tag>
+        base_t;
 
   public:
     typedef typename base_t::value_type value_type;
@@ -83,17 +84,6 @@ template <typename DataT> class vector_view
     {
         m_ptr = reinterpret_cast<DataT *>(ptr);
         m_size = size;
-    }
-
-    // for a vector-like interface
-    void resize(std::size_t size) const
-    {
-        if (m_size != size)
-        {
-            throw util::exception("Invalid resize " + std::to_string(size) +
-                                  " on immutable vector view of size " + std::to_string(m_size) +
-                                  ".");
-        }
     }
 
     DataT &at(const std::size_t index) { return m_ptr[index]; }
@@ -167,15 +157,6 @@ template <> class vector_view<bool>
     }
 
     void reset(unsigned *, std::size_t size) { m_size = size; }
-
-    // for ensuring a vector compatible interface
-    void resize(std::size_t size) const
-    {
-        if (m_size != size)
-        {
-            throw util::exception("Invalid resize on immutable shared memory vector.");
-        }
-    }
 
     std::size_t size() const { return m_size; }
 

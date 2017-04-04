@@ -1,8 +1,8 @@
 #ifndef OSRM_EXTRACTOR_SEGMENT_DATA_CONTAINER_HPP_
 #define OSRM_EXTRACTOR_SEGMENT_DATA_CONTAINER_HPP_
 
-#include "util/vector_view.hpp"
 #include "util/typedefs.hpp"
+#include "util/vector_view.hpp"
 
 #include "storage/shared_memory_ownership.hpp"
 

@@ -4,8 +4,8 @@
 #include "util/graph_traits.hpp"
 #include "util/integer_range.hpp"
 #include "util/percent.hpp"
-#include "util/vector_view.hpp"
 #include "util/typedefs.hpp"
+#include "util/vector_view.hpp"
 
 #include "storage/shared_memory_ownership.hpp"
 
@@ -272,7 +272,9 @@ class StaticGraph
             unsigned offset = std::distance(begin, iter);
             node_array.push_back(NodeArrayEntry{offset});
         }
-        BOOST_ASSERT_MSG(iter == end, ("Still " + std::to_string(std::distance(iter, end)) + " edges left.").c_str());
+        BOOST_ASSERT_MSG(
+            iter == end,
+            ("Still " + std::to_string(std::distance(iter, end)) + " edges left.").c_str());
         BOOST_ASSERT(node_array.size() == number_of_nodes + 1);
 
         edge_array.resize(number_of_edges);

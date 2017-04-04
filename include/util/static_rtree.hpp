@@ -9,8 +9,8 @@
 #include "util/hilbert_value.hpp"
 #include "util/integer_range.hpp"
 #include "util/rectangle.hpp"
-#include "util/vector_view.hpp"
 #include "util/typedefs.hpp"
+#include "util/vector_view.hpp"
 #include "util/web_mercator.hpp"
 
 #include "osrm/coordinate.hpp"
