@@ -5,7 +5,8 @@
 #include "partition/multi_level_partition.hpp"
 #include "util/binary_heap.hpp"
 
-#include <boost/thread/tss.hpp>
+#include <tbb/enumerable_thread_specific.h>
+
 #include <unordered_set>
 
 namespace osrm
@@ -15,12 +16,20 @@ namespace customizer
 
 class CellCustomizer
 {
+  private:
+    struct HeapData
+    {
+        bool from_clique;
+    };
+    using Heap = util::
+        BinaryHeap<NodeID, NodeID, EdgeWeight, HeapData, util::ArrayStorage<NodeID, int>>;
+    using HeapPtr = tbb::enumerable_thread_specific<Heap>;
 
   public:
     CellCustomizer(const partition::MultiLevelPartition &partition) : partition(partition) {}
 
     template <typename GraphT>
-    void Customize(const GraphT &graph, partition::CellStorage &cells, LevelID level, CellID id)
+    void Customize(const GraphT &graph, Heap& heap, partition::CellStorage &cells, LevelID level, CellID id)
     {
         auto cell = cells.GetCell(level, id);
         auto destinations = cell.GetDestinationNodes();
@@ -29,7 +38,7 @@ class CellCustomizer
         for (auto source : cell.GetSourceNodes())
         {
             std::unordered_set<NodeID> destinations_set(destinations.begin(), destinations.end());
-            Heap heap(graph.GetNumberOfNodes());
+            heap.Clear();
             heap.Insert(source, 0, {false});
 
             // explore search space
@@ -60,26 +69,23 @@ class CellCustomizer
 
     template <typename GraphT> void Customize(const GraphT &graph, partition::CellStorage &cells)
     {
+        Heap heap_exemplar(graph.GetNumberOfNodes());
+        HeapPtr heaps(heap_exemplar);
+
         for (std::size_t level = 1; level < partition.GetNumberOfLevels(); ++level)
         {
             tbb::parallel_for(tbb::blocked_range<std::size_t>(0, partition.GetNumberOfCells(level)),
                               [&](const tbb::blocked_range<std::size_t> &range) {
+                                  auto& heap = heaps.local();
                                   for (auto id = range.begin(), end = range.end(); id != end; ++id)
                                   {
-                                      Customize(graph, cells, level, id);
+                                      Customize(graph, heap, cells, level, id);
                                   }
                               });
         }
     }
 
   private:
-    struct HeapData
-    {
-        bool from_clique;
-    };
-    using Heap = util::
-        BinaryHeap<NodeID, NodeID, EdgeWeight, HeapData, util::UnorderedMapStorage<NodeID, int>>;
-    using HeapPtr = boost::thread_specific_ptr<Heap>;
 
     template <bool first_level, typename GraphT>
     void RelaxNode(const GraphT &graph,
