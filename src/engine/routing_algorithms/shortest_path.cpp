@@ -456,20 +456,9 @@ shortestPathSearchImpl(SearchEngineData<Algorithm> &engine_working_data,
                  total_weight_to_reverse != INVALID_EDGE_WEIGHT);
 
     // We make sure the fastest route is always in packed_legs_to_forward
-    if (total_weight_to_forward > total_weight_to_reverse)
-    {
-        // insert sentinel
-        packed_leg_to_reverse_begin.push_back(total_packed_path_to_reverse.size());
-        BOOST_ASSERT(packed_leg_to_reverse_begin.size() == phantom_nodes_vector.size() + 1);
-
-        unpackLegs(facade,
-                   phantom_nodes_vector,
-                   total_packed_path_to_reverse,
-                   packed_leg_to_reverse_begin,
-                   total_weight_to_reverse,
-                   raw_route_data);
-    }
-    else
+    if (total_weight_to_forward < total_weight_to_reverse ||
+        (total_weight_to_forward == total_weight_to_reverse &&
+         total_packed_path_to_forward.size() < total_packed_path_to_reverse.size()))
     {
         // insert sentinel
         packed_leg_to_forward_begin.push_back(total_packed_path_to_forward.size());
@@ -480,6 +469,19 @@ shortestPathSearchImpl(SearchEngineData<Algorithm> &engine_working_data,
                    total_packed_path_to_forward,
                    packed_leg_to_forward_begin,
                    total_weight_to_forward,
+                   raw_route_data);
+    }
+    else
+    {
+        // insert sentinel
+        packed_leg_to_reverse_begin.push_back(total_packed_path_to_reverse.size());
+        BOOST_ASSERT(packed_leg_to_reverse_begin.size() == phantom_nodes_vector.size() + 1);
+
+        unpackLegs(facade,
+                   phantom_nodes_vector,
+                   total_packed_path_to_reverse,
+                   packed_leg_to_reverse_begin,
+                   total_weight_to_reverse,
                    raw_route_data);
     }
 
