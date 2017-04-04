@@ -6,6 +6,7 @@
 #include "storage/shared_memory_ownership.hpp"
 
 #include "util/static_graph.hpp"
+#include "util/vector_view.hpp"
 
 #include <tbb/parallel_sort.h>
 
@@ -41,7 +42,7 @@ class MultiLevelGraph : public util::StaticGraph<EdgeDataT, Ownership>
 {
   private:
     using SuperT = util::StaticGraph<EdgeDataT, Ownership>;
-    template <typename T> using Vector = typename util::ShM<T, Ownership>::vector;
+    template <typename T> using Vector = util::ViewOrVector<T, Ownership>;
 
   public:
     // We limit each node to have 255 edges

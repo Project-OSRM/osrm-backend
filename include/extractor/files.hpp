@@ -2,7 +2,7 @@
 #define OSRM_EXTRACTOR_FILES_HPP
 
 #include "extractor/guidance/turn_lane_types.hpp"
-#include "extractor/seralization.hpp"
+#include "extractor/serialization.hpp"
 
 #include "util/coordinate.hpp"
 #include "util/packed_vector.hpp"
@@ -20,26 +20,26 @@ namespace files
 // reads .osrm.nodes
 template<storage::Ownership Ownership>
 inline void readNodes(const boost::filesystem::path &path,
-        typename util::ShM<util::Coordinate, Ownership>::vector &coordinates,
+        util::ViewOrVector<util::Coordinate, Ownership> &coordinates,
         util::detail::PackedVector<OSMNodeID, Ownership> &osm_node_ids)
 {
     const auto fingerprint = storage::io::FileReader::VerifyFingerprint;
     storage::io::FileReader reader{path, fingerprint};
 
-    reader.DeserializeVector(coordinates);
+    storage::serialization::read(reader, coordinates);
     util::serialization::read(reader, osm_node_ids);
 }
 
 // writes .osrm.nodes
 template<storage::Ownership Ownership>
 inline void writeNodes(const boost::filesystem::path &path,
-        const typename util::ShM<util::Coordinate, Ownership>::vector &coordinates,
+        const util::ViewOrVector<util::Coordinate, Ownership> &coordinates,
         const util::detail::PackedVector<OSMNodeID, Ownership> &osm_node_ids)
 {
     const auto fingerprint = storage::io::FileWriter::GenerateFingerprint;
     storage::io::FileWriter writer{path, fingerprint};
 
-    writer.SerializeVector(coordinates);
+    storage::serialization::write(writer, coordinates);
     util::serialization::write(writer, osm_node_ids);
 }
 
@@ -49,7 +49,7 @@ inline void readNBGMapping(const boost::filesystem::path &path, std::vector<NBGT
     const auto fingerprint = storage::io::FileReader::VerifyFingerprint;
     storage::io::FileReader reader{path, fingerprint};
 
-    serialization::read(reader, mapping);
+    storage::serialization::read(reader, mapping);
 }
 
 // writes .osrm.cnbg_to_ebg
@@ -59,7 +59,7 @@ inline void writeNBGMapping(const boost::filesystem::path &path,
     const auto fingerprint = storage::io::FileWriter::GenerateFingerprint;
     storage::io::FileWriter writer{path, fingerprint};
 
-    serialization::write(writer, mapping);
+    storage::serialization::write(writer, mapping);
 }
 
 // reads .osrm.datasource_names
@@ -127,27 +127,27 @@ inline void writeTurnData(const boost::filesystem::path &path,
 // reads .osrm.tls
 template <storage::Ownership Ownership>
 inline void readTurnLaneDescriptions(const boost::filesystem::path &path,
-                         typename util::ShM<std::uint32_t, Ownership>::vector &turn_offsets,
-                         typename util::ShM<extractor::guidance::TurnLaneType::Mask, Ownership>::vector &turn_masks)
+                         util::ViewOrVector<std::uint32_t, Ownership> &turn_offsets,
+                         util::ViewOrVector<extractor::guidance::TurnLaneType::Mask, Ownership> &turn_masks)
 {
     const auto fingerprint = storage::io::FileReader::HasNoFingerprint;
     storage::io::FileReader reader{path, fingerprint};
 
-    reader.DeserializeVector(turn_offsets);
-    reader.DeserializeVector(turn_masks);
+    storage::serialization::read(reader, turn_offsets);
+    storage::serialization::read(reader, turn_masks);
 }
 
 // writes .osrm.tls
 template <storage::Ownership Ownership>
 inline void writeTurnLaneDescriptions(const boost::filesystem::path &path,
-                         const typename util::ShM<std::uint32_t, Ownership>::vector &turn_offsets,
-                         const typename util::ShM<extractor::guidance::TurnLaneType::Mask, Ownership>::vector &turn_masks)
+                         const util::ViewOrVector<std::uint32_t, Ownership> &turn_offsets,
+                         const util::ViewOrVector<extractor::guidance::TurnLaneType::Mask, Ownership> &turn_masks)
 {
     const auto fingerprint = storage::io::FileWriter::HasNoFingerprint;
     storage::io::FileWriter writer{path, fingerprint};
 
-    writer.SerializeVector(turn_offsets);
-    writer.SerializeVector(turn_masks);
+    storage::serialization::write(writer, turn_offsets);
+    storage::serialization::write(writer, turn_masks);
 }
 
 }

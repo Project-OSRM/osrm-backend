@@ -1,5 +1,5 @@
-#ifndef SHARED_MEMORY_VECTOR_WRAPPER_HPP
-#define SHARED_MEMORY_VECTOR_WRAPPER_HPP
+#ifndef UTIL_VECTOR_VIEW_HPP
+#define UTIL_VECTOR_VIEW_HPP
 
 #include "util/exception.hpp"
 #include "util/log.hpp"
@@ -25,11 +25,13 @@ namespace util
 {
 
 template <typename DataT>
-class ShMemIterator
-    : public boost::iterator_facade<ShMemIterator<DataT>, DataT, boost::random_access_traversal_tag>
+class VectorViewIterator : public boost::iterator_facade<VectorViewIterator<DataT>,
+                                                         DataT,
+                                                         boost::random_access_traversal_tag>
 {
-    typedef boost::iterator_facade<ShMemIterator<DataT>, DataT, boost::random_access_traversal_tag>
-        base_t;
+    typedef boost::
+        iterator_facade<VectorViewIterator<DataT>, DataT, boost::random_access_traversal_tag>
+            base_t;
 
   public:
     typedef typename base_t::value_type value_type;
@@ -37,16 +39,16 @@ class ShMemIterator
     typedef typename base_t::reference reference;
     typedef std::random_access_iterator_tag iterator_category;
 
-    explicit ShMemIterator() : m_value(nullptr) {}
-    explicit ShMemIterator(DataT *x) : m_value(x) {}
+    explicit VectorViewIterator() : m_value(nullptr) {}
+    explicit VectorViewIterator(DataT *x) : m_value(x) {}
 
   private:
     void increment() { ++m_value; }
     void decrement() { --m_value; }
     void advance(difference_type offset) { m_value += offset; }
-    bool equal(const ShMemIterator &other) const { return m_value == other.m_value; }
+    bool equal(const VectorViewIterator &other) const { return m_value == other.m_value; }
     reference dereference() const { return *m_value; }
-    difference_type distance_to(const ShMemIterator &other) const
+    difference_type distance_to(const VectorViewIterator &other) const
     {
         return other.m_value - m_value;
     }
@@ -63,8 +65,8 @@ template <typename DataT> class vector_view
 
   public:
     using value_type = DataT;
-    using iterator = ShMemIterator<DataT>;
-    using const_iterator = ShMemIterator<const DataT>;
+    using iterator = VectorViewIterator<DataT>;
+    using const_iterator = VectorViewIterator<const DataT>;
     using reverse_iterator = boost::reverse_iterator<iterator>;
 
     vector_view() : m_ptr(nullptr), m_size(0) {}
@@ -88,7 +90,9 @@ template <typename DataT> class vector_view
     {
         if (m_size != size)
         {
-            throw util::exception("Invalid resize " + std::to_string(size) + " on immutable vector view of size " + std::to_string(m_size) + ".");
+            throw util::exception("Invalid resize " + std::to_string(size) +
+                                  " on immutable vector view of size " + std::to_string(m_size) +
+                                  ".");
         }
     }
 
@@ -189,12 +193,10 @@ template <typename DataT> void swap(vector_view<DataT> &lhs, vector_view<DataT> 
     std::swap(lhs.m_size, rhs.m_size);
 }
 
-template <typename DataT, storage::Ownership Ownership> struct ShM
-{
-    using vector = typename std::conditional<Ownership == storage::Ownership::View,
-                                             vector_view<DataT>,
-                                             std::vector<DataT>>::type;
-};
+template <typename DataT, storage::Ownership Ownership>
+using ViewOrVector = typename std::conditional<Ownership == storage::Ownership::View,
+                                               vector_view<DataT>,
+                                               std::vector<DataT>>::type;
 }
 }
 

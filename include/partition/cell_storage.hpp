@@ -6,7 +6,7 @@
 #include "util/assert.hpp"
 #include "util/for_each_range.hpp"
 #include "util/log.hpp"
-#include "util/shared_memory_vector_wrapper.hpp"
+#include "util/vector_view.hpp"
 #include "util/typedefs.hpp"
 
 #include "storage/io.hpp"
@@ -74,7 +74,7 @@ template <storage::Ownership Ownership> class CellStorageImpl
     };
 
   private:
-    template <typename T> using Vector = typename util::ShM<T, Ownership>::vector;
+    template <typename T> using Vector = util::ViewOrVector<T, Ownership>;
 
     // Implementation of the cell view. We need a template parameter here
     // because we need to derive a read-only and read-write view from this.

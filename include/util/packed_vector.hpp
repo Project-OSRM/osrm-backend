@@ -1,7 +1,7 @@
 #ifndef PACKED_VECTOR_HPP
 #define PACKED_VECTOR_HPP
 
-#include "util/shared_memory_vector_wrapper.hpp"
+#include "util/vector_view.hpp"
 #include "util/typedefs.hpp"
 
 #include "storage/io.hpp"
@@ -171,7 +171,7 @@ template <typename T, storage::Ownership Ownership> class PackedVector
                                                    const detail::PackedVector<T, Ownership> &vec);
 
   private:
-    typename util::ShM<std::uint64_t, Ownership>::vector vec;
+    util::ViewOrVector<std::uint64_t, Ownership> vec;
 
     std::uint64_t num_elements = 0;
 

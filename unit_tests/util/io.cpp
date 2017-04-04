@@ -1,4 +1,5 @@
 #include "storage/io.hpp"
+#include "storage/serialization.hpp"
 #include "util/exception.hpp"
 #include "util/fingerprint.hpp"
 #include "util/typedefs.hpp"
@@ -29,12 +30,12 @@ BOOST_AUTO_TEST_CASE(io_data)
     {
         osrm::storage::io::FileWriter outfile(IO_TMP_FILE,
                                               osrm::storage::io::FileWriter::GenerateFingerprint);
-        outfile.SerializeVector(data_in);
+        osrm::storage::serialization::write(outfile, data_in);
     }
 
     osrm::storage::io::FileReader infile(IO_TMP_FILE,
                                          osrm::storage::io::FileReader::VerifyFingerprint);
-    infile.DeserializeVector(data_out);
+    osrm::storage::serialization::read(infile, data_out);
 
     BOOST_REQUIRE_EQUAL(data_in.size(), data_out.size());
     BOOST_CHECK_EQUAL_COLLECTIONS(data_out.begin(), data_out.end(), data_in.begin(), data_in.end());
@@ -65,7 +66,7 @@ BOOST_AUTO_TEST_CASE(file_too_small)
         {
             osrm::storage::io::FileWriter outfile(
                 IO_TOO_SMALL_FILE, osrm::storage::io::FileWriter::GenerateFingerprint);
-            outfile.SerializeVector(v);
+            osrm::storage::serialization::write(outfile, v);
         }
 
         std::fstream f(IO_TOO_SMALL_FILE);
@@ -79,7 +80,7 @@ BOOST_AUTO_TEST_CASE(file_too_small)
         osrm::storage::io::FileReader infile(IO_TOO_SMALL_FILE,
                                              osrm::storage::io::FileReader::VerifyFingerprint);
         std::vector<int> buffer;
-        infile.DeserializeVector(buffer);
+        osrm::storage::serialization::read(infile, buffer);
         BOOST_REQUIRE_MESSAGE(false, "Should not get here");
     }
     catch (const osrm::util::exception &e)
@@ -101,7 +102,7 @@ BOOST_AUTO_TEST_CASE(io_corrupt_fingerprint)
                                               osrm::storage::io::FileWriter::HasNoFingerprint);
 
         outfile.WriteOne(0xDEADBEEFCAFEFACE);
-        outfile.SerializeVector(v);
+        osrm::storage::serialization::write(outfile, v);
     }
 
     try
@@ -130,7 +131,7 @@ BOOST_AUTO_TEST_CASE(io_incompatible_fingerprint)
 
             const auto fingerprint = osrm::util::FingerPrint::GetValid();
             outfile.WriteOne(fingerprint);
-            outfile.SerializeVector(v);
+            osrm::storage::serialization::write(outfile, v);
         }
 
         std::fstream f(IO_INCOMPATIBLE_FINGERPRINT_FILE);

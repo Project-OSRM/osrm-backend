@@ -1,6 +1,6 @@
 #include "contractor/contractor.hpp"
-#include "contractor/files.hpp"
 #include "contractor/crc32_processor.hpp"
+#include "contractor/files.hpp"
 #include "contractor/graph_contractor.hpp"
 #include "contractor/graph_contractor_adaptors.hpp"
 
@@ -47,9 +47,9 @@ int Contractor::Run()
     util::Log() << "Reading node weights.";
     std::vector<EdgeWeight> node_weights;
     {
-        storage::io::FileReader node_file(config.node_file_path,
+        storage::io::FileReader reader(config.node_file_path,
                                           storage::io::FileReader::VerifyFingerprint);
-        node_file.DeserializeVector(node_weights);
+        storage::serialization::read(reader, node_weights);
     }
     util::Log() << "Done reading node weights.";
 
@@ -115,10 +115,10 @@ void Contractor::WriteNodeLevels(std::vector<float> &&in_node_levels) const
 {
     std::vector<float> node_levels(std::move(in_node_levels));
 
-    storage::io::FileWriter node_level_file(config.level_output_path,
-                                            storage::io::FileWriter::HasNoFingerprint);
+    storage::io::FileWriter writer(config.level_output_path,
+                                   storage::io::FileWriter::HasNoFingerprint);
 
-    node_level_file.SerializeVector(node_levels);
+    storage::serialization::write(writer, node_levels);
 }
 
 void Contractor::WriteCoreNodeMarker(std::vector<bool> &&in_is_core_node) const
@@ -138,9 +138,8 @@ void Contractor::WriteCoreNodeMarker(std::vector<bool> &&in_is_core_node) const
     core_marker_output_file.WriteFrom(unpacked_bool_flags.data(), count);
 }
 
-void
-Contractor::WriteContractedGraph(unsigned max_node_id,
-                                 util::DeallocatingVector<QueryEdge> contracted_edge_list)
+void Contractor::WriteContractedGraph(unsigned max_node_id,
+                                      util::DeallocatingVector<QueryEdge> contracted_edge_list)
 {
     // Sorting contracted edges in a way that the static query graph can read some in in-place.
     tbb::parallel_sort(contracted_edge_list.begin(), contracted_edge_list.end());
@@ -150,7 +149,7 @@ Contractor::WriteContractedGraph(unsigned max_node_id,
     RangebasedCRC32 crc32_calculator;
     const unsigned checksum = crc32_calculator(contracted_edge_list);
 
-    QueryGraph query_graph {max_node_id+1, contracted_edge_list};
+    QueryGraph query_graph{max_node_id + 1, contracted_edge_list};
 
     files::writeGraph(config.graph_output_path, checksum, query_graph);
 }

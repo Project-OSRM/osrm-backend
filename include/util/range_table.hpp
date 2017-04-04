@@ -4,7 +4,7 @@
 #include "storage/io.hpp"
 #include "storage/shared_memory_ownership.hpp"
 #include "util/integer_range.hpp"
-#include "util/shared_memory_vector_wrapper.hpp"
+#include "util/vector_view.hpp"
 
 #include <array>
 #include <fstream>
@@ -41,8 +41,8 @@ template <unsigned BLOCK_SIZE, storage::Ownership Ownership> class RangeTable
 {
   public:
     using BlockT = std::array<unsigned char, BLOCK_SIZE>;
-    using BlockContainerT = typename ShM<BlockT, Ownership>::vector;
-    using OffsetContainerT = typename ShM<unsigned, Ownership>::vector;
+    using BlockContainerT = util::ViewOrVector<BlockT, Ownership>;
+    using OffsetContainerT = util::ViewOrVector<unsigned, Ownership>;
     using RangeT = range<unsigned>;
 
     friend std::ostream &operator<<<>(std::ostream &out, const RangeTable &table);

@@ -1,7 +1,7 @@
 #ifndef OSRM_EXTRACTOR_SEGMENT_DATA_CONTAINER_HPP_
 #define OSRM_EXTRACTOR_SEGMENT_DATA_CONTAINER_HPP_
 
-#include "util/shared_memory_vector_wrapper.hpp"
+#include "util/vector_view.hpp"
 #include "util/typedefs.hpp"
 
 #include "storage/shared_memory_ownership.hpp"
@@ -50,7 +50,7 @@ namespace detail
 {
 template <storage::Ownership Ownership> class SegmentDataContainerImpl
 {
-    template <typename T> using Vector = typename util::ShM<T, Ownership>::vector;
+    template <typename T> using Vector = util::ViewOrVector<T, Ownership>;
 
     friend CompressedEdgeContainer;
 

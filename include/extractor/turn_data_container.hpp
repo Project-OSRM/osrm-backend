@@ -6,7 +6,7 @@
 
 #include "storage/shared_memory_ownership.hpp"
 #include "util/guidance/turn_bearing.hpp"
-#include "util/shared_memory_vector_wrapper.hpp"
+#include "util/vector_view.hpp"
 
 #include "util/typedefs.hpp"
 
@@ -43,7 +43,7 @@ namespace detail
 {
 template <storage::Ownership Ownership> class TurnDataContainerImpl
 {
-    template <typename T> using Vector = typename util::ShM<T, Ownership>::vector;
+    template <typename T> using Vector = util::ViewOrVector<T, Ownership>;
 
   public:
     TurnDataContainerImpl() = default;

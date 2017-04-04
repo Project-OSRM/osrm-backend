@@ -6,7 +6,6 @@
 #include "extractor/edge_based_graph_factory.hpp"
 #include "extractor/files.hpp"
 #include "extractor/node_based_edge.hpp"
-#include "extractor/seralization.hpp"
 
 #include "storage/io.hpp"
 
@@ -460,14 +459,14 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
 
         const auto load_turn_weight_penalties = [&] {
             using storage::io::FileReader;
-            FileReader file(config.turn_weight_penalties_path, FileReader::HasNoFingerprint);
-            file.DeserializeVector(turn_weight_penalties);
+            FileReader reader(config.turn_weight_penalties_path, FileReader::HasNoFingerprint);
+            storage::serialization::read(reader, turn_weight_penalties);
         };
 
         const auto load_turn_duration_penalties = [&] {
             using storage::io::FileReader;
-            FileReader file(config.turn_duration_penalties_path, FileReader::HasNoFingerprint);
-            file.DeserializeVector(turn_duration_penalties);
+            FileReader reader(config.turn_duration_penalties_path, FileReader::HasNoFingerprint);
+            storage::serialization::read(reader, turn_duration_penalties);
         };
 
         const auto load_profile_properties = [&] {
@@ -648,8 +647,8 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
     if (update_turn_penalties)
     {
         const auto save_penalties = [](const auto &filename, const auto &data) -> void {
-            storage::io::FileWriter file(filename, storage::io::FileWriter::HasNoFingerprint);
-            file.SerializeVector(data);
+            storage::io::FileWriter writer(filename, storage::io::FileWriter::HasNoFingerprint);
+            storage::serialization::write(writer, data);
         };
 
         tbb::parallel_invoke(
