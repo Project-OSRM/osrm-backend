@@ -19,15 +19,21 @@ namespace util
 template <typename NodeID, typename Key> class GenerationArrayStorage
 {
     using GenerationCounter = std::uint16_t;
-  public:
-    explicit GenerationArrayStorage(std::size_t size) : positions(size, 0), generation(1), generations(size, 0) {}
 
-    Key &operator[](NodeID node) {
+  public:
+    explicit GenerationArrayStorage(std::size_t size)
+        : positions(size, 0), generation(1), generations(size, 0)
+    {
+    }
+
+    Key &operator[](NodeID node)
+    {
         generation[node] = generation;
         return positions[node];
     }
 
-    Key peek_index(const NodeID node) const {
+    Key peek_index(const NodeID node) const
+    {
         if (generations[node] < generation)
         {
             return std::numeric_limits<Key>::max();
@@ -35,7 +41,8 @@ template <typename NodeID, typename Key> class GenerationArrayStorage
         return positions[node];
     }
 
-    void Clear() {
+    void Clear()
+    {
         generation++;
         // if generation overflows we end up at 0 again and need to clear the vector
         if (generation == 0)

@@ -23,14 +23,15 @@ class CellCustomizer
     };
 
   public:
-    using Heap = util::
-        BinaryHeap<NodeID, NodeID, EdgeWeight, HeapData, util::ArrayStorage<NodeID, int>>;
+    using Heap =
+        util::BinaryHeap<NodeID, NodeID, EdgeWeight, HeapData, util::ArrayStorage<NodeID, int>>;
     using HeapPtr = tbb::enumerable_thread_specific<Heap>;
 
     CellCustomizer(const partition::MultiLevelPartition &partition) : partition(partition) {}
 
     template <typename GraphT>
-    void Customize(const GraphT &graph, Heap& heap, partition::CellStorage &cells, LevelID level, CellID id)
+    void Customize(
+        const GraphT &graph, Heap &heap, partition::CellStorage &cells, LevelID level, CellID id)
     {
         auto cell = cells.GetCell(level, id);
         auto destinations = cell.GetDestinationNodes();
@@ -77,7 +78,7 @@ class CellCustomizer
         {
             tbb::parallel_for(tbb::blocked_range<std::size_t>(0, partition.GetNumberOfCells(level)),
                               [&](const tbb::blocked_range<std::size_t> &range) {
-                                  auto& heap = heaps.local();
+                                  auto &heap = heaps.local();
                                   for (auto id = range.begin(), end = range.end(); id != end; ++id)
                                   {
                                       Customize(graph, heap, cells, level, id);
@@ -87,7 +88,6 @@ class CellCustomizer
     }
 
   private:
-
     template <bool first_level, typename GraphT>
     void RelaxNode(const GraphT &graph,
                    const partition::CellStorage &cells,
