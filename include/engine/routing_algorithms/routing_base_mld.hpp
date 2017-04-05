@@ -318,7 +318,7 @@ inline void search(const datafacade::ContiguousInternalMemoryDataFacade<Algorith
                    const PhantomNodes &phantom_nodes,
                    const int duration_upper_bound = INVALID_EDGE_WEIGHT)
 {
-    (void)duration_upper_bound;
+    (void)duration_upper_bound; // TODO: limiting search radius is not implemented for MLD
 
     NodeID source_node, target_node;
     std::vector<EdgeID> unpacked_edges;
