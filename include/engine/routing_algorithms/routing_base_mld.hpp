@@ -83,35 +83,10 @@ void routingStep(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm>
         auto path_weight = weight + reverse_weight;
 
         // if loops are forced, they are so at the source
-        if ((force_loop_forward && forward_heap.GetData(node).parent == node) ||
-            (force_loop_reverse && reverse_heap.GetData(node).parent == node) ||
-            // in this case we are looking at a bi-directional way where the source
-            // and target phantom are on the same edge based node
-            path_weight < 0)
+        if (!(force_loop_forward && forward_heap.GetData(node).parent == node) &&
+            !(force_loop_reverse && reverse_heap.GetData(node).parent == node) &&
+            (path_weight >= 0) && (path_weight < path_upper_bound))
         {
-            // check whether there is a loop present at the node
-            for (const auto edge : facade.GetAdjacentEdgeRange(node))
-            {
-                const auto &data = facade.GetEdgeData(edge);
-                if (DIRECTION == FORWARD_DIRECTION ? data.forward : data.backward)
-                {
-                    const NodeID to = facade.GetTarget(edge);
-                    if (to == node)
-                    {
-                        const EdgeWeight edge_weight = data.weight;
-                        const EdgeWeight loop_weight = path_weight + edge_weight;
-                        if (loop_weight >= 0 && loop_weight < path_upper_bound)
-                        {
-                            middle_node = node;
-                            path_upper_bound = loop_weight;
-                        }
-                    }
-                }
-            }
-        }
-        else if (path_weight >= 0 && path_weight < path_upper_bound)
-        {
-
             middle_node = node;
             path_upper_bound = path_weight;
         }
