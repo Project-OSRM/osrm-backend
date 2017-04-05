@@ -45,6 +45,8 @@ template <typename T, storage::Ownership Ownership> class PackedVector
     static const constexpr std::size_t PACKSIZE = BITSIZE * ELEMSIZE;
 
   public:
+    using value_type = T;
+
     /**
      * Returns the size of the packed vector datastructure with `elements` packed elements (the size
      * of

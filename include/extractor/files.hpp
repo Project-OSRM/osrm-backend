@@ -18,11 +18,14 @@ namespace files
 {
 
 // reads .osrm.nodes
-template <storage::Ownership Ownership>
+template <typename CoordinatesT, typename PackedOSMIDsT>
 inline void readNodes(const boost::filesystem::path &path,
-                      util::ViewOrVector<util::Coordinate, Ownership> &coordinates,
-                      util::detail::PackedVector<OSMNodeID, Ownership> &osm_node_ids)
+                      CoordinatesT &coordinates,
+                      PackedOSMIDsT &osm_node_ids)
 {
+    static_assert(std::is_same<typename CoordinatesT::value_type, util::Coordinate>::value, "");
+    static_assert(std::is_same<typename PackedOSMIDsT::value_type, OSMNodeID>::value, "");
+
     const auto fingerprint = storage::io::FileReader::VerifyFingerprint;
     storage::io::FileReader reader{path, fingerprint};
 
@@ -31,11 +34,14 @@ inline void readNodes(const boost::filesystem::path &path,
 }
 
 // writes .osrm.nodes
-template <storage::Ownership Ownership>
+template <typename CoordinatesT, typename PackedOSMIDsT>
 inline void writeNodes(const boost::filesystem::path &path,
-                       const util::ViewOrVector<util::Coordinate, Ownership> &coordinates,
-                       const util::detail::PackedVector<OSMNodeID, Ownership> &osm_node_ids)
+                       const CoordinatesT &coordinates,
+                       const PackedOSMIDsT &osm_node_ids)
 {
+    static_assert(std::is_same<typename CoordinatesT::value_type, util::Coordinate>::value, "");
+    static_assert(std::is_same<typename PackedOSMIDsT::value_type, OSMNodeID>::value, "");
+
     const auto fingerprint = storage::io::FileWriter::GenerateFingerprint;
     storage::io::FileWriter writer{path, fingerprint};
 
@@ -81,10 +87,12 @@ inline void writeDatasources(const boost::filesystem::path &path, Datasources &s
 }
 
 // reads .osrm.geometry
-template <storage::Ownership Ownership>
-inline void readSegmentData(const boost::filesystem::path &path,
-                            detail::SegmentDataContainerImpl<Ownership> &segment_data)
+template <typename SegmentDataT>
+inline void readSegmentData(const boost::filesystem::path &path, SegmentDataT &segment_data)
 {
+    static_assert(std::is_same<SegmentDataContainer, SegmentDataT>::value ||
+                      std::is_same<SegmentDataView, SegmentDataT>::value,
+                  "");
     const auto fingerprint = storage::io::FileReader::HasNoFingerprint;
     storage::io::FileReader reader{path, fingerprint};
 
@@ -92,10 +100,12 @@ inline void readSegmentData(const boost::filesystem::path &path,
 }
 
 // writes .osrm.geometry
-template <storage::Ownership Ownership>
-inline void writeSegmentData(const boost::filesystem::path &path,
-                             const detail::SegmentDataContainerImpl<Ownership> &segment_data)
+template <typename SegmentDataT>
+inline void writeSegmentData(const boost::filesystem::path &path, const SegmentDataT &segment_data)
 {
+    static_assert(std::is_same<SegmentDataContainer, SegmentDataT>::value ||
+                      std::is_same<SegmentDataView, SegmentDataT>::value,
+                  "");
     const auto fingerprint = storage::io::FileWriter::HasNoFingerprint;
     storage::io::FileWriter writer{path, fingerprint};
 
@@ -103,10 +113,12 @@ inline void writeSegmentData(const boost::filesystem::path &path,
 }
 
 // reads .osrm.edges
-template <storage::Ownership Ownership>
-inline void readTurnData(const boost::filesystem::path &path,
-                         detail::TurnDataContainerImpl<Ownership> &turn_data)
+template <typename TurnDataT>
+inline void readTurnData(const boost::filesystem::path &path, TurnDataT &turn_data)
 {
+    static_assert(std::is_same<TurnDataContainer, TurnDataT>::value ||
+                      std::is_same<TurnDataView, TurnDataT>::value,
+                  "");
     const auto fingerprint = storage::io::FileReader::HasNoFingerprint;
     storage::io::FileReader reader{path, fingerprint};
 
@@ -114,10 +126,12 @@ inline void readTurnData(const boost::filesystem::path &path,
 }
 
 // writes .osrm.edges
-template <storage::Ownership Ownership>
-inline void writeTurnData(const boost::filesystem::path &path,
-                          const detail::TurnDataContainerImpl<Ownership> &turn_data)
+template <typename TurnDataT>
+inline void writeTurnData(const boost::filesystem::path &path, const TurnDataT &turn_data)
 {
+    static_assert(std::is_same<TurnDataContainer, TurnDataT>::value ||
+                      std::is_same<TurnDataView, TurnDataT>::value,
+                  "");
     const auto fingerprint = storage::io::FileWriter::HasNoFingerprint;
     storage::io::FileWriter writer{path, fingerprint};
 
@@ -125,12 +139,16 @@ inline void writeTurnData(const boost::filesystem::path &path,
 }
 
 // reads .osrm.tls
-template <storage::Ownership Ownership>
-inline void readTurnLaneDescriptions(
-    const boost::filesystem::path &path,
-    util::ViewOrVector<std::uint32_t, Ownership> &turn_offsets,
-    util::ViewOrVector<extractor::guidance::TurnLaneType::Mask, Ownership> &turn_masks)
+template <typename OffsetsT, typename MaskT>
+inline void readTurnLaneDescriptions(const boost::filesystem::path &path,
+                                     OffsetsT &turn_offsets,
+                                     MaskT &turn_masks)
 {
+    static_assert(
+        std::is_same<typename MaskT::value_type, extractor::guidance::TurnLaneType::Mask>::value,
+        "");
+    static_assert(std::is_same<typename OffsetsT::value_type, std::uint32_t>::value, "");
+
     const auto fingerprint = storage::io::FileReader::HasNoFingerprint;
     storage::io::FileReader reader{path, fingerprint};
 
@@ -139,12 +157,16 @@ inline void readTurnLaneDescriptions(
 }
 
 // writes .osrm.tls
-template <storage::Ownership Ownership>
-inline void writeTurnLaneDescriptions(
-    const boost::filesystem::path &path,
-    const util::ViewOrVector<std::uint32_t, Ownership> &turn_offsets,
-    const util::ViewOrVector<extractor::guidance::TurnLaneType::Mask, Ownership> &turn_masks)
+template <typename OffsetsT, typename MaskT>
+inline void writeTurnLaneDescriptions(const boost::filesystem::path &path,
+                                      const OffsetsT &turn_offsets,
+                                      const MaskT &turn_masks)
 {
+    static_assert(
+        std::is_same<typename MaskT::value_type, extractor::guidance::TurnLaneType::Mask>::value,
+        "");
+    static_assert(std::is_same<typename OffsetsT::value_type, std::uint32_t>::value, "");
+
     const auto fingerprint = storage::io::FileWriter::HasNoFingerprint;
     storage::io::FileWriter writer{path, fingerprint};
 

@@ -566,7 +566,7 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
         util::vector_view<extractor::guidance::TurnLaneType::Mask> masks(
             masks_ptr, layout.num_entries[storage::DataLayout::LANE_DESCRIPTION_MASKS]);
 
-        extractor::files::readTurnLaneDescriptions<storage::Ownership::View>(
+        extractor::files::readTurnLaneDescriptions(
             config.turn_lane_description_path, offsets, masks);
     }
 
@@ -695,8 +695,7 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
         util::PackedVectorView<OSMNodeID> osm_node_ids;
         osm_node_ids.reset(osmnodeid_ptr, layout.num_entries[DataLayout::OSM_NODE_ID_LIST]);
 
-        extractor::files::readNodes<storage::Ownership::View>(
-            config.nodes_data_path, coordinates, osm_node_ids);
+        extractor::files::readNodes(config.nodes_data_path, coordinates, osm_node_ids);
     }
 
     // load turn weight penalties
