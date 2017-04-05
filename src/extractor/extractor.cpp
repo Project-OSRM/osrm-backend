@@ -299,8 +299,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
         TIMER_STOP(rtree);
 
         util::Log() << "Writing node map ...";
-        files::writeNodes<storage::Ownership::Container>(
-            config.node_output_path, coordinates, osm_node_ids);
+        files::writeNodes(config.node_output_path, coordinates, osm_node_ids);
 
         WriteEdgeBasedGraph(config.edge_graph_output_path, max_edge_id, edge_based_edge_list);
 
