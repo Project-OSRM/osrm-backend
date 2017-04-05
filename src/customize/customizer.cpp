@@ -84,7 +84,7 @@ auto LoadAndUpdateEdgeExpandedGraph(const CustomizationConfig &config,
     auto tidied =
         partition::prepareEdgesForUsageInGraph<StaticEdgeBasedGraphEdge>(std::move(directed));
     auto edge_based_graph =
-        std::make_unique <customizer::MultiLevelEdgeBasedGraph>(mlp, num_nodes, std::move(tidied));
+        std::make_unique<customizer::MultiLevelEdgeBasedGraph>(mlp, num_nodes, std::move(tidied));
 
     util::Log() << "Loaded edge based graph for mapping partition ids: "
                 << edge_based_graph->GetNumberOfEdges() << " edges, "
