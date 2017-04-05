@@ -20,7 +20,7 @@ template <typename NodeID, typename Key> class GenerationArrayStorage
 {
     using GenerationCounter = std::uint16_t;
   public:
-    explicit GenerationArrayStorage(std::size_t size) : positions(size, 0), generation(0), generations(size, 0) {}
+    explicit GenerationArrayStorage(std::size_t size) : positions(size, 0), generation(1), generations(size, 0) {}
 
     Key &operator[](NodeID node) {
         generation[node] = generation;
@@ -37,10 +37,11 @@ template <typename NodeID, typename Key> class GenerationArrayStorage
 
     void Clear() {
         generation++;
-        if (generation == std::numeric_limits<GenerationCounter>::max())
+        // if generation overflows we end up at 0 again and need to clear the vector
+        if (generation == 0)
         {
+            generation = 1;
             std::fill(generations.begin(), generations.end(), 0);
-            std::fill(positions.begin(), positions.end(), 0);
         }
     }
 
