@@ -687,21 +687,23 @@ Feature: Basic Roundabout
     Scenario: Only Enter
         Given the node map
             """
-                a
-                b
-              c   e ~ ~ ~ f - h
-                d
-                g
+                  a
+                  b
+           i   c     e ~ ~ ~ f - h
+                j d
+              k   g
             """
 
         And the ways
-            | nodes | junction   | route |
-            | ab    |            |       |
-            | ef    |            | ferry |
-            | fh    |            |       |
-            | dg    |            |       |
-            | bcdeb | roundabout |       |
+            | nodes  | junction   | route |
+            | ab     |            |       |
+            | ef     |            | ferry |
+            | fh     |            |       |
+            | dg     |            |       |
+            | ic     |            |       |
+            | jk     |            |       |
+            | bcjdeb | roundabout |       |
 
         When I route I should get
-            | waypoints | route    | turns                           |
-            | a,h       | ab,ef,fh | depart,roundabout-exit-2,arrive |
+            | waypoints | route          | turns                                                                           |
+            | a,h       | ab,ef,ef,fh,fh | depart,roundabout-exit-4,notification slight right,notification straight,arrive |

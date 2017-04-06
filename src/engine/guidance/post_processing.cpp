@@ -118,12 +118,14 @@ bool setUpRoundabout(RouteStep &step)
 
 void closeOffRoundabout(const bool on_roundabout,
                         std::vector<RouteStep> &steps,
-                        const std::size_t step_index)
+                        std::size_t step_index)
 {
     auto &step = steps[step_index];
     step.maneuver.exit += 1;
     if (!on_roundabout)
     {
+        BOOST_ASSERT(steps.size() >= 2);
+
         // We reached a special case that requires the addition of a special route step in the
         // beginning. We started in a roundabout, so to announce the exit, we move use the exit
         // instruction and move it right to the beginning to make sure to immediately announce the
@@ -160,6 +162,23 @@ void closeOffRoundabout(const bool on_roundabout,
         }
     }
 
+    if (step_index > 1)
+    {
+        auto &exit_step = steps[step_index];
+        auto &prev_step = steps[step_index - 1];
+        // In case the step with the roundabout exit instruction cannot be merged with the
+        // previous step we change the instruction to a normal turn
+        if (!guidance::haveSameMode(exit_step, prev_step))
+        {
+            BOOST_ASSERT(leavesRoundabout(exit_step.maneuver.instruction));
+            prev_step.maneuver.instruction = exit_step.maneuver.instruction;
+            if (!entersRoundabout(prev_step.maneuver.instruction))
+                prev_step.maneuver.exit = exit_step.maneuver.exit;
+            exit_step.maneuver.instruction.type = TurnType::Notification;
+            step_index--;
+        }
+    }
+
     // Normal exit from the roundabout, or exit from a previously fixed roundabout. Propagate the
     // index back to the entering location and prepare the current silent set of instructions for
     // removal.
@@ -170,6 +189,7 @@ void closeOffRoundabout(const bool on_roundabout,
     const auto exit_intersection = steps[step_index].intersections.front();
     const auto exit_bearing = exit_intersection.bearings[exit_intersection.out];
     const auto destination_copy = step;
+
     if (step_index > 1)
     {
         // The very first route-step is head, so we cannot iterate past that one
@@ -177,8 +197,11 @@ void closeOffRoundabout(const bool on_roundabout,
              --propagation_index)
         {
             auto &propagation_step = steps[propagation_index];
-            propagation_step.ElongateBy(steps[propagation_index + 1]);
-            propagation_step.maneuver.exit = steps[propagation_index + 1].maneuver.exit;
+            auto &next_step = steps[propagation_index + 1];
+            propagation_step.ElongateBy(next_step);
+            propagation_step.maneuver.exit = next_step.maneuver.exit;
+            next_step.Invalidate();
+
             if (entersRoundabout(propagation_step.maneuver.instruction))
             {
                 const auto entry_intersection = propagation_step.intersections.front();
@@ -206,12 +229,7 @@ void closeOffRoundabout(const bool on_roundabout,
                 }
 
                 propagation_step.AdaptStepSignage(destination_copy);
-                steps[propagation_index + 1].Invalidate();
                 break;
-            }
-            else
-            {
-                steps[propagation_index + 1].Invalidate();
             }
         }
         // remove exit
