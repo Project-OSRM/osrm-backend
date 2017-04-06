@@ -3,13 +3,19 @@
     - Algorithm:
       - Multi-Level Dijkstra:
         - Plugins supported: `table`
+        - Adds alternative routes support (see [#4047](https://github.com/Project-OSRM/osrm-backend/pull/4047) and [3905](https://github.com/Project-OSRM/osrm-backend/issues/3905)): provides reasonably looking alternative routes (many, if possible) with reasonable query times.
     - API:
+      - Exposes `alternatives=Number` parameter overload in addition to the boolean flag.
       - Support for exits numbers and names. New member `exits` in `RouteStep`, based on `junction:ref` on ways
       - `RouteStep` now has new parameter `classes` that can be set in the profile on each way.
     - Profiles:
-        - `result.exits` allows you to set a way's exit numbers and names, see [`junction:ref`](http://wiki.openstreetmap.org/wiki/Proposed_features/junction_details)
-        - `ExtractionWay` now as new property `forward_classes` and `backward_classes` that can set in the `way_function`.
-           The maximum number of classes is 8.
+      - `result.exits` allows you to set a way's exit numbers and names, see [`junction:ref`](http://wiki.openstreetmap.org/wiki/Proposed_features/junction_details)
+      - `ExtractionWay` now as new property `forward_classes` and `backward_classes` that can set in the `way_function`.
+         The maximum number of classes is 8.
+    - Node.js Bindings:
+      - Exposes `alternatives=Number` parameter overload in addition to the boolean flag
+    - Tools:
+      - Exposes engine limit on number of alternatives to generate `--max-alternatives` in `osrm-routed` (3 by default)
 
 # 5.8.0
   - Changes from 5.7

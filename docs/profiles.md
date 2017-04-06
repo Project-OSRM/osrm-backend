@@ -27,16 +27,16 @@ As you scroll down the file you'll see local variables, and then local functions
 
 The following global properties can be set in your profile:
 
-Attribute                     | Type     | Notes
-------------------------------|----------|----------------------------------------------------------------------------
-weight_name                   | String   | Name used in output for the routing weight property (default `'duration'`)
-weight_precision              | Unsigned | Decimal precision of edge weights (default `1`)
-left_hand_driving             | Boolean  | Are vehicles assumed to drive on the left? (used in guidance, default `false`)
-use_turn_restrictions         | Boolean  | Are turn instructions followed? (default `false`)
-continue_straight_at_waypoint | Boolean  | Must the route continue straight on at a via point, or are U-turns allowed? (default `true`)
-max_speed_for_map_matching    | Float    | Maximum vehicle speed to be assumed in matching (in m/s)
-max_turn_weight               | Float    | Maximum turn penalty weight
-force_split_edges             | Boolean  | True value forces a split of forward and backward edges of extracted ways and guarantees that `segment_function` will be called for all segments (default `false`)
+Attribute                            | Type     | Notes
+-------------------------------------|----------|----------------------------------------------------------------------------
+weight_name                          | String   | Name used in output for the routing weight property (default `'duration'`)
+weight_precision                     | Unsigned | Decimal precision of edge weights (default `1`)
+left_hand_driving                    | Boolean  | Are vehicles assumed to drive on the left? (used in guidance, default `false`)
+use_turn_restrictions                | Boolean  | Are turn instructions followed? (default `false`)
+continue_straight_at_waypoint        | Boolean  | Must the route continue straight on at a via point, or are U-turns allowed? (default `true`)
+max_speed_for_map_matching           | Float    | Maximum vehicle speed to be assumed in matching (in m/s)
+max_turn_weight                      | Float    | Maximum turn penalty weight
+force_split_edges                    | Boolean  | True value forces a split of forward and backward edges of extracted ways and guarantees that `segment_function` will be called for all segments (default `false`)
 
 ## way_function
 

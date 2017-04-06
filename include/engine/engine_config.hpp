@@ -87,6 +87,7 @@ struct EngineConfig final
     int max_locations_distance_table = -1;
     int max_locations_map_matching = -1;
     int max_results_nearest = -1;
+    int max_alternatives = 3; // set an arbitrary upper bound; can be adjusted by user
     bool use_shared_memory = true;
     Algorithm algorithm = Algorithm::CH;
 };

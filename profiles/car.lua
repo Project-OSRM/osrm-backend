@@ -9,16 +9,16 @@ local Handlers = require("lib/handlers")
 local next = next       -- bind to local for speed
 
 -- set profile properties
-properties.max_speed_for_map_matching      = 180/3.6 -- 180kmph -> m/s
-properties.use_turn_restrictions           = true
-properties.continue_straight_at_waypoint   = true
-properties.left_hand_driving               = false
+properties.max_speed_for_map_matching           = 180/3.6 -- 180kmph -> m/s
+properties.use_turn_restrictions                = true
+properties.continue_straight_at_waypoint        = true
+properties.left_hand_driving                    = false
 -- For routing based on duration, but weighted for preferring certain roads
-properties.weight_name                     = 'routability'
+properties.weight_name                          = 'routability'
 -- For shortest duration without penalties for accessibility
---properties.weight_name                     = 'duration'
+--properties.weight_name                        = 'duration'
 -- For shortest distance without penalties for accessibility
---properties.weight_name                     = 'distance'
+--properties.weight_name                        = 'distance'
 
 -- Set to true if you need to call the node_function for every node.
 -- Generally can be left as false to avoid unnecessary Lua calls

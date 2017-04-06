@@ -55,7 +55,7 @@ test('route: throws with too few or invalid args', function(assert) {
 });
 
 test('route: provides no alternatives by default, but when requested it may (not guaranteed)', function(assert) {
-    assert.plan(6);
+    assert.plan(9);
     var osrm = new OSRM(monaco_path);
     var options = {coordinates: two_test_coordinates};
 
@@ -65,6 +65,12 @@ test('route: provides no alternatives by default, but when requested it may (not
         assert.equal(route.routes.length, 1);
     });
     options.alternatives = true;
+    osrm.route(options, function(err, route) {
+        assert.ifError(err);
+        assert.ok(route.routes);
+        assert.ok(route.routes.length >= 1);
+    });
+    options.alternatives = 3;
     osrm.route(options, function(err, route) {
         assert.ifError(err);
         assert.ok(route.routes);

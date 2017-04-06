@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <boost/assert.hpp>
 #include <boost/numeric/conversion/cast.hpp>
+#include <cstdint>
 
 namespace osrm
 {
@@ -109,7 +110,6 @@ struct ProfileProperties
     std::array<char[MAX_CLASS_NAME_LENGTH + 1], MAX_CLASS_INDEX + 1> class_names;
     unsigned weight_precision = 1;
     bool force_split_edges = false;
-
     bool call_tagless_node_function = true;
 };
 }

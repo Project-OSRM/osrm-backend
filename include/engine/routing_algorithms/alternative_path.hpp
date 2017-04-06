@@ -15,13 +15,19 @@ namespace engine
 {
 namespace routing_algorithms
 {
-namespace ch
-{
+
 InternalManyRoutesResult
-alternativePathSearch(SearchEngineData<Algorithm> &search_engine_data,
-                      const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
-                      const PhantomNodes &phantom_node_pair);
-} // namespace ch
+alternativePathSearch(SearchEngineData<ch::Algorithm> &search_engine_data,
+                      const datafacade::ContiguousInternalMemoryDataFacade<ch::Algorithm> &facade,
+                      const PhantomNodes &phantom_node_pair,
+                      unsigned number_of_alternatives);
+
+InternalManyRoutesResult
+alternativePathSearch(SearchEngineData<mld::Algorithm> &search_engine_data,
+                      const datafacade::ContiguousInternalMemoryDataFacade<mld::Algorithm> &facade,
+                      const PhantomNodes &phantom_node_pair,
+                      unsigned number_of_alternatives);
+
 } // namespace routing_algorithms
 } // namespace engine
 } // namespace osrm

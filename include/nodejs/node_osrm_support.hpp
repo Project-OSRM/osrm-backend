@@ -703,7 +703,7 @@ argumentsToRouteParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
 
         if (!value->IsBoolean() && !value->IsNull())
         {
-            Nan::ThrowError("'continue_straight' parama must be boolean or null");
+            Nan::ThrowError("'continue_straight' param must be boolean or null");
             return route_parameters_ptr();
         }
         if (value->IsBoolean())
@@ -718,12 +718,21 @@ argumentsToRouteParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
         if (value.IsEmpty())
             return route_parameters_ptr();
 
-        if (!value->IsBoolean())
+        if (value->IsBoolean())
         {
-            Nan::ThrowError("'alternatives' parama must be boolean");
+            params->alternatives = value->BooleanValue();
+            params->number_of_alternatives = 1u;
+        }
+        else if (value->IsNumber())
+        {
+            params->alternatives = value->BooleanValue();
+            params->number_of_alternatives = static_cast<unsigned>(value->NumberValue());
+        }
+        else
+        {
+            Nan::ThrowError("'alternatives' param must be boolean or number");
             return route_parameters_ptr();
         }
-        params->alternatives = value->BooleanValue();
     }
 
     bool parsedSuccessfully = parseCommonParameters(obj, params);

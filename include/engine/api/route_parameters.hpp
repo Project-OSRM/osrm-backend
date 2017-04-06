@@ -89,8 +89,9 @@ struct RouteParameters : public BaseParameters
                     const boost::optional<bool> continue_straight_,
                     Args... args_)
         : BaseParameters{std::forward<Args>(args_)...}, steps{steps_}, alternatives{alternatives_},
-          annotations{false}, annotations_type{AnnotationsType::None}, geometries{geometries_},
-          overview{overview_}, continue_straight{continue_straight_}
+          number_of_alternatives{alternatives_ ? 1u : 0u}, annotations{false},
+          annotations_type{AnnotationsType::None}, geometries{geometries_}, overview{overview_},
+          continue_straight{continue_straight_}
     // Once we perfectly-forward `args` (see #2990) this constructor can delegate to the one below.
     {
     }
@@ -105,7 +106,7 @@ struct RouteParameters : public BaseParameters
                     const boost::optional<bool> continue_straight_,
                     Args... args_)
         : BaseParameters{std::forward<Args>(args_)...}, steps{steps_}, alternatives{alternatives_},
-          annotations{annotations_},
+          number_of_alternatives{alternatives_ ? 1u : 0u}, annotations{annotations_},
           annotations_type{annotations_ ? AnnotationsType::All : AnnotationsType::None},
           geometries{geometries_}, overview{overview_}, continue_straight{continue_straight_}
     {
@@ -121,6 +122,7 @@ struct RouteParameters : public BaseParameters
                     const boost::optional<bool> continue_straight_,
                     Args... args_)
         : BaseParameters{std::forward<Args>(args_)...}, steps{steps_}, alternatives{alternatives_},
+          number_of_alternatives{alternatives_ ? 1u : 0u},
           annotations{annotations_ == AnnotationsType::None ? false : true},
           annotations_type{annotations_}, geometries{geometries_}, overview{overview_},
           continue_straight{continue_straight_}
@@ -128,14 +130,21 @@ struct RouteParameters : public BaseParameters
     }
 
     bool steps = false;
+    // TODO: in v6 we should remove the boolean and only keep the number parameter; for compat.
     bool alternatives = false;
+    unsigned number_of_alternatives = 0;
     bool annotations = false;
     AnnotationsType annotations_type = AnnotationsType::None;
     GeometriesType geometries = GeometriesType::Polyline;
     OverviewType overview = OverviewType::Simplified;
     boost::optional<bool> continue_straight;
 
-    bool IsValid() const { return coordinates.size() >= 2 && BaseParameters::IsValid(); }
+    bool IsValid() const
+    {
+        const auto coordinates_ok = coordinates.size() >= 2;
+        const auto base_params_ok = BaseParameters::IsValid();
+        return coordinates_ok && base_params_ok;
+    }
 };
 
 inline bool operator&(RouteParameters::AnnotationsType lhs, RouteParameters::AnnotationsType rhs)

@@ -185,8 +185,9 @@ inline void async(const Nan::FunctionCallbackInfo<v8::Value> &info,
  *                                   Can be `null` or an array of `[{value},{range}]` with `integer 0 .. 360,integer 0 .. 180`.
  * @param {Array} [options.radiuses] Limits the coordinate snapping to streets in the given radius in meters. Can be `null` (unlimited, default) or `double >= 0`.
  * @param {Array} [options.hints] Hints for the coordinate snapping. Array of base64 encoded strings.
- * @param {Boolean} [options.alternatives=false] Search for alternative routes and return as well.
- * *Please note that even if an alternative route is requested, a result cannot be guaranteed.*
+ * @param {Boolean} [options.alternatives=false] Search for alternative routes.
+ * @param {Number} [options.alternatives=0] Search for up to this many alternative routes.
+ * *Please note that even if alternative routes are requested, a result cannot be guaranteed.*
  * @param {Boolean} [options.steps=false] Return route steps for each route leg.
  * @param {Array|Boolean} [options.annotations=false] An array with strings of `duration`, `nodes`, `distance`, `weight`, `datasources`, `speed` or boolean for enabling/disabling all.
  * @param {String} [options.geometries=polyline] Returned route geometry format (influences overview and per step). Can also be `geojson`.

@@ -11,39 +11,6 @@ namespace engine
 namespace routing_algorithms
 {
 
-template <typename AlgorithmT>
-InternalRouteResult
-extractRoute(const datafacade::ContiguousInternalMemoryDataFacade<AlgorithmT> &facade,
-             const EdgeWeight weight,
-             const PhantomNodes &phantom_nodes,
-             const std::vector<NodeID> &unpacked_nodes,
-             const std::vector<EdgeID> &unpacked_edges)
-{
-    InternalRouteResult raw_route_data;
-    raw_route_data.segment_end_coordinates = {phantom_nodes};
-
-    // No path found for both target nodes?
-    if (INVALID_EDGE_WEIGHT == weight)
-    {
-        return raw_route_data;
-    }
-
-    raw_route_data.shortest_path_weight = weight;
-    raw_route_data.unpacked_path_segments.resize(1);
-    raw_route_data.source_traversed_in_reverse.push_back(
-        (unpacked_nodes.front() != phantom_nodes.source_phantom.forward_segment_id.id));
-    raw_route_data.target_traversed_in_reverse.push_back(
-        (unpacked_nodes.back() != phantom_nodes.target_phantom.forward_segment_id.id));
-
-    annotatePath(facade,
-                 phantom_nodes,
-                 unpacked_nodes,
-                 unpacked_edges,
-                 raw_route_data.unpacked_path_segments.front());
-
-    return raw_route_data;
-}
-
 /// This is a striped down version of the general shortest path algorithm.
 /// The general algorithm always computes two queries for each leg. This is only
 /// necessary in case of vias, where the directions of the start node is constrainted
