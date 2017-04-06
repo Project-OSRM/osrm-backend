@@ -9,6 +9,7 @@
 #include "osrm/osrm.hpp"
 #include "osrm/storage_config.hpp"
 
+#include <boost/algorithm/string/case_conv.hpp>
 #include <boost/any.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
@@ -51,13 +52,15 @@ const static unsigned INIT_OK_START_ENGINE = 0;
 const static unsigned INIT_OK_DO_NOT_START_ENGINE = 1;
 const static unsigned INIT_FAILED = -1;
 
-EngineConfig::Algorithm stringToAlgorithm(const std::string &algorithm)
+static EngineConfig::Algorithm stringToAlgorithm(std::string algorithm)
 {
-    if (algorithm == "CH")
+    boost::to_lower(algorithm);
+
+    if (algorithm == "ch")
         return EngineConfig::Algorithm::CH;
-    if (algorithm == "CoreCH")
+    if (algorithm == "corech")
         return EngineConfig::Algorithm::CoreCH;
-    if (algorithm == "MLD")
+    if (algorithm == "mld")
         return EngineConfig::Algorithm::MLD;
     throw util::RuntimeError(algorithm, ErrorCode::UnknownAlgorithm, SOURCE_REF);
 }
@@ -76,7 +79,8 @@ inline unsigned generateServerProgramOptions(const int argc,
                                              int &max_locations_viaroute,
                                              int &max_locations_distance_table,
                                              int &max_locations_map_matching,
-                                             int &max_results_nearest)
+                                             int &max_results_nearest,
+                                             int &max_alternatives)
 {
     using boost::program_options::value;
     using boost::filesystem::path;
@@ -119,7 +123,10 @@ inline unsigned generateServerProgramOptions(const int argc,
          "Max. locations supported in map matching query") //
         ("max-nearest-size",
          value<int>(&max_results_nearest)->default_value(100),
-         "Max. results supported in nearest query");
+         "Max. results supported in nearest query") //
+        ("max-alternatives",
+         value<int>(&max_alternatives)->default_value(3),
+         "Max. number of alternatives supported in the MLD route query");
 
     // hidden options, will be allowed on command line, but will not be shown to the user
     boost::program_options::options_description hidden_options("Hidden options");
@@ -210,7 +217,8 @@ int main(int argc, const char *argv[]) try
                                                               config.max_locations_viaroute,
                                                               config.max_locations_distance_table,
                                                               config.max_locations_map_matching,
-                                                              config.max_results_nearest);
+                                                              config.max_results_nearest,
+                                                              config.max_alternatives);
     if (init_result == INIT_OK_DO_NOT_START_ENGINE)
     {
         return EXIT_SUCCESS;

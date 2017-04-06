@@ -21,8 +21,8 @@ namespace engine
 namespace plugins
 {
 
-ViaRoutePlugin::ViaRoutePlugin(int max_locations_viaroute)
-    : max_locations_viaroute(max_locations_viaroute)
+ViaRoutePlugin::ViaRoutePlugin(int max_locations_viaroute, int max_alternatives)
+    : max_locations_viaroute(max_locations_viaroute), max_alternatives(max_alternatives)
 {
 }
 
@@ -60,6 +60,16 @@ ViaRoutePlugin::HandleRequest(const datafacade::ContiguousInternalMemoryDataFaca
                      json_result);
     }
 
+    // Takes care of alternatives=n and alternatives=true
+    if ((route_parameters.number_of_alternatives > static_cast<unsigned>(max_alternatives)) ||
+        (route_parameters.alternatives && max_alternatives == 0))
+    {
+        return Error("TooBig",
+                     "Requested number of alternatives is higher than current maximum (" +
+                         std::to_string(max_alternatives) + ")",
+                     json_result);
+    }
+
     if (!CheckAllCoordinates(route_parameters.coordinates))
     {
         return Error("InvalidValue", "Invalid coordinate value.", json_result);
@@ -88,13 +98,19 @@ ViaRoutePlugin::HandleRequest(const datafacade::ContiguousInternalMemoryDataFaca
 
     InternalManyRoutesResult routes;
 
+    // TODO: in v6 we should remove the boolean and only keep the number parameter.
+    // For now just force them to be in sync. and keep backwards compatibility.
+    const auto wants_alternatives =
+        (max_alternatives > 0) &&
+        (route_parameters.alternatives || route_parameters.number_of_alternatives > 0);
+    const auto number_of_alternatives = std::max(1u, route_parameters.number_of_alternatives);
+
     // Alternatives do not support vias, only direct s,t queries supported
     // See the implementation notes and high-level outline.
     // https://github.com/Project-OSRM/osrm-backend/issues/3905
-    if (1 == start_end_nodes.size() && algorithms.HasAlternativePathSearch() &&
-        route_parameters.alternatives)
+    if (1 == start_end_nodes.size() && algorithms.HasAlternativePathSearch() && wants_alternatives)
     {
-        routes = algorithms.AlternativePathSearch(start_end_nodes.front());
+        routes = algorithms.AlternativePathSearch(start_end_nodes.front(), number_of_alternatives);
     }
     else if (1 == start_end_nodes.size() && algorithms.HasDirectShortestPathSearch())
     {

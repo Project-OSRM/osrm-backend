@@ -25,7 +25,8 @@ bool EngineConfig::IsValid() const
                               unlimited_or_more_than(max_locations_map_matching, 2) &&
                               unlimited_or_more_than(max_locations_trip, 2) &&
                               unlimited_or_more_than(max_locations_viaroute, 2) &&
-                              unlimited_or_more_than(max_results_nearest, 0);
+                              unlimited_or_more_than(max_results_nearest, 0) &&
+                              max_alternatives >= 0;
 
     return ((use_shared_memory && all_path_are_empty) || storage_config.IsValid()) && limits_valid;
 }

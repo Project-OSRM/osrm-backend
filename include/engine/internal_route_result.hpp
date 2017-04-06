@@ -61,6 +61,18 @@ struct InternalRouteResult
     {
         return (leg != unpacked_path_segments.size() - 1);
     }
+
+    // Note: includes duration for turns, except for at start and end node.
+    EdgeWeight duration() const
+    {
+        EdgeWeight ret{0};
+
+        for (const auto &leg : unpacked_path_segments)
+            for (const auto &segment : leg)
+                ret += segment.duration_until_turn;
+
+        return ret;
+    }
 };
 
 struct InternalManyRoutesResult

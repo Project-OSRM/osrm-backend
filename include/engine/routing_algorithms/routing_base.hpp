@@ -6,6 +6,7 @@
 #include "engine/algorithm.hpp"
 #include "engine/datafacade/contiguous_internalmem_datafacade.hpp"
 #include "engine/internal_route_result.hpp"
+#include "engine/phantom_node.hpp"
 #include "engine/search_engine_data.hpp"
 
 #include "util/coordinate_calculation.hpp"
@@ -38,8 +39,10 @@ static constexpr bool REVERSE_DIRECTION = false;
 static constexpr bool DO_NOT_FORCE_LOOPS = false;
 
 bool needsLoopForward(const PhantomNode &source_phantom, const PhantomNode &target_phantom);
-
 bool needsLoopBackwards(const PhantomNode &source_phantom, const PhantomNode &target_phantom);
+
+bool needsLoopForward(const PhantomNodes &phantoms);
+bool needsLoopBackwards(const PhantomNodes &phantoms);
 
 template <typename Heap>
 void insertNodesInHeaps(Heap &forward_heap, Heap &reverse_heap, const PhantomNodes &nodes)
@@ -367,6 +370,39 @@ double getPathDistance(const datafacade::ContiguousInternalMemoryDataFacade<Algo
     distance += EARTH_RADIUS * charv;
 
     return distance;
+}
+
+template <typename AlgorithmT>
+InternalRouteResult
+extractRoute(const datafacade::ContiguousInternalMemoryDataFacade<AlgorithmT> &facade,
+             const EdgeWeight weight,
+             const PhantomNodes &phantom_nodes,
+             const std::vector<NodeID> &unpacked_nodes,
+             const std::vector<EdgeID> &unpacked_edges)
+{
+    InternalRouteResult raw_route_data;
+    raw_route_data.segment_end_coordinates = {phantom_nodes};
+
+    // No path found for both target nodes?
+    if (INVALID_EDGE_WEIGHT == weight)
+    {
+        return raw_route_data;
+    }
+
+    raw_route_data.shortest_path_weight = weight;
+    raw_route_data.unpacked_path_segments.resize(1);
+    raw_route_data.source_traversed_in_reverse.push_back(
+        (unpacked_nodes.front() != phantom_nodes.source_phantom.forward_segment_id.id));
+    raw_route_data.target_traversed_in_reverse.push_back(
+        (unpacked_nodes.back() != phantom_nodes.target_phantom.forward_segment_id.id));
+
+    annotatePath(facade,
+                 phantom_nodes,
+                 unpacked_nodes,
+                 unpacked_edges,
+                 raw_route_data.unpacked_path_segments.front());
+
+    return raw_route_data;
 }
 
 } // namespace routing_algorithms

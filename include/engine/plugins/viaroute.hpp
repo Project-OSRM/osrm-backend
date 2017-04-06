@@ -27,9 +27,10 @@ class ViaRoutePlugin final : public BasePlugin
 {
   private:
     const int max_locations_viaroute;
+    const int max_alternatives;
 
   public:
-    explicit ViaRoutePlugin(int max_locations_viaroute);
+    explicit ViaRoutePlugin(int max_locations_viaroute, int max_alternatives);
 
     Status HandleRequest(const datafacade::ContiguousInternalMemoryDataFacadeBase &facade,
                          const RoutingAlgorithmsInterface &algorithms,

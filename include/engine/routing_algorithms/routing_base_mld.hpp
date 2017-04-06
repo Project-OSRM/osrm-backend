@@ -10,6 +10,12 @@
 
 #include <boost/assert.hpp>
 
+#include <algorithm>
+#include <iterator>
+#include <limits>
+#include <tuple>
+#include <vector>
+
 namespace osrm
 {
 namespace engine
@@ -24,7 +30,7 @@ namespace
 // Unrestricted search (Args is const PhantomNodes &):
 //   * use partition.GetQueryLevel to find the node query level based on source and target phantoms
 //   * allow to traverse all cells
-inline LevelID getNodeQureyLevel(const partition::MultiLevelPartitionView &partition,
+inline LevelID getNodeQueryLevel(const partition::MultiLevelPartitionView &partition,
                                  NodeID node,
                                  const PhantomNodes &phantom_nodes)
 {
@@ -49,7 +55,7 @@ inline bool checkParentCellRestriction(CellID, const PhantomNodes &) { return tr
 //   * use the fixed level for queries
 //   * check if the node cell is the same as the specified parent onr
 inline LevelID
-getNodeQureyLevel(const partition::MultiLevelPartitionView &, NodeID, LevelID level, CellID)
+getNodeQueryLevel(const partition::MultiLevelPartitionView &, NodeID, LevelID level, CellID)
 {
     return level;
 }
@@ -58,6 +64,70 @@ inline bool checkParentCellRestriction(CellID cell, LevelID, CellID parent)
 {
     return cell == parent;
 }
+}
+
+// Heaps only record for each node its predecessor ("parent") on the shortest path.
+// For re-constructing the actual path we need to trace back all parent "pointers".
+// In contrast to the CH code MLD needs to know the edges (with clique arc property).
+
+using PackedEdge = std::tuple</*from*/ NodeID, /*to*/ NodeID, /*from_clique_arc*/ bool>;
+using PackedPath = std::vector<PackedEdge>;
+
+template <bool DIRECTION, typename OutIter>
+inline void retrievePackedPathFromSingleHeap(const SearchEngineData<Algorithm>::QueryHeap &heap,
+                                             const NodeID middle,
+                                             OutIter out)
+{
+    NodeID current = middle;
+    NodeID parent = heap.GetData(current).parent;
+
+    while (current != parent)
+    {
+        const auto &data = heap.GetData(current);
+
+        if (DIRECTION == FORWARD_DIRECTION)
+        {
+            *out = std::make_tuple(parent, current, data.from_clique_arc);
+            ++out;
+        }
+        else if (DIRECTION == REVERSE_DIRECTION)
+        {
+            *out = std::make_tuple(current, parent, data.from_clique_arc);
+            ++out;
+        }
+
+        current = parent;
+        parent = heap.GetData(parent).parent;
+    }
+}
+
+template <bool DIRECTION>
+inline PackedPath
+retrievePackedPathFromSingleHeap(const SearchEngineData<Algorithm>::QueryHeap &heap,
+                                 const NodeID middle)
+{
+    PackedPath packed_path;
+    retrievePackedPathFromSingleHeap<DIRECTION>(heap, middle, std::back_inserter(packed_path));
+    return packed_path;
+}
+
+// Trace path from middle to start in the forward search space (in reverse)
+// and from middle to end in the reverse search space. Middle connects paths.
+
+inline PackedPath
+retrievePackedPathFromHeap(const SearchEngineData<Algorithm>::QueryHeap &forward_heap,
+                           const SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
+                           const NodeID middle)
+{
+    // Retrieve start -> middle. Is in reverse order since tracing back starts from middle.
+    auto packed_path = retrievePackedPathFromSingleHeap<FORWARD_DIRECTION>(forward_heap, middle);
+    std::reverse(begin(packed_path), end(packed_path));
+
+    // Retrieve middle -> end. Is already in correct order, tracing starts from middle.
+    auto into = std::back_inserter(packed_path);
+    retrievePackedPathFromSingleHeap<REVERSE_DIRECTION>(reverse_heap, middle, into);
+
+    return packed_path;
 }
 
 template <bool DIRECTION, typename... Args>
@@ -96,7 +166,7 @@ void routingStep(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm>
         }
     }
 
-    const auto level = getNodeQureyLevel(partition, node, args...);
+    const auto level = getNodeQueryLevel(partition, node, args...);
 
     if (level >= 1 && !forward_heap.GetData(node).from_clique_arc)
     {
@@ -112,6 +182,7 @@ void routingStep(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm>
                 if (shortcut_weight != INVALID_EDGE_WEIGHT && node != to)
                 {
                     const EdgeWeight to_weight = weight + shortcut_weight;
+                    BOOST_ASSERT(to_weight >= weight);
                     if (!forward_heap.WasInserted(to))
                     {
                         forward_heap.Insert(to, to_weight, {node, true});
@@ -137,6 +208,7 @@ void routingStep(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm>
                 if (shortcut_weight != INVALID_EDGE_WEIGHT && node != to)
                 {
                     const EdgeWeight to_weight = weight + shortcut_weight;
+                    BOOST_ASSERT(to_weight >= weight);
                     if (!forward_heap.WasInserted(to))
                     {
                         forward_heap.Insert(to, to_weight, {node, true});
@@ -179,16 +251,24 @@ void routingStep(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm>
     }
 }
 
+// With (s, middle, t) we trace back the paths middle -> s and middle -> t.
+// This gives us a packed path (node ids) from the base graph around s and t,
+// and overlay node ids otherwise. We then have to unpack the overlay clique
+// edges by recursively descending unpacking the path down to the base graph.
+
+using UnpackedNodes = std::vector<NodeID>;
+using UnpackedEdges = std::vector<EdgeID>;
+using UnpackedPath = std::tuple<EdgeWeight, UnpackedNodes, UnpackedEdges>;
+
 template <typename... Args>
-std::tuple<EdgeWeight, std::vector<NodeID>, std::vector<EdgeID>>
-search(SearchEngineData<Algorithm> &engine_working_data,
-       const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
-       SearchEngineData<Algorithm>::QueryHeap &forward_heap,
-       SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
-       const bool force_loop_forward,
-       const bool force_loop_reverse,
-       EdgeWeight weight_upper_bound,
-       Args... args)
+UnpackedPath search(SearchEngineData<Algorithm> &engine_working_data,
+                    const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
+                    SearchEngineData<Algorithm>::QueryHeap &forward_heap,
+                    SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
+                    const bool force_loop_forward,
+                    const bool force_loop_reverse,
+                    EdgeWeight weight_upper_bound,
+                    Args... args)
 {
     if (forward_heap.Empty() || reverse_heap.Empty())
     {
@@ -242,27 +322,12 @@ search(SearchEngineData<Algorithm> &engine_working_data,
         return std::make_tuple(INVALID_EDGE_WEIGHT, std::vector<NodeID>(), std::vector<EdgeID>());
     }
 
-    // Get packed path as edges {from node ID, to node ID, edge ID}
-    std::vector<std::tuple<NodeID, NodeID, bool>> packed_path;
-    NodeID current_node = middle, parent_node = forward_heap.GetData(middle).parent;
-    while (parent_node != current_node)
-    {
-        const auto &data = forward_heap.GetData(current_node);
-        packed_path.push_back(std::make_tuple(parent_node, current_node, data.from_clique_arc));
-        current_node = parent_node;
-        parent_node = forward_heap.GetData(parent_node).parent;
-    }
-    std::reverse(std::begin(packed_path), std::end(packed_path));
-    const NodeID source_node = current_node;
+    // Get packed path as edges {from node ID, to node ID, from_clique_arc}
+    auto packed_path = retrievePackedPathFromHeap(forward_heap, reverse_heap, middle);
 
-    current_node = middle, parent_node = reverse_heap.GetData(middle).parent;
-    while (parent_node != current_node)
-    {
-        const auto &data = reverse_heap.GetData(current_node);
-        packed_path.push_back(std::make_tuple(current_node, parent_node, data.from_clique_arc));
-        current_node = parent_node;
-        parent_node = reverse_heap.GetData(parent_node).parent;
-    }
+    // Beware the edge case when start, middle, end are all the same.
+    // In this case we return a single node, no edges. We also don't unpack.
+    const NodeID source_node = !packed_path.empty() ? std::get<0>(packed_path.front()) : middle;
 
     // Unpack path
     std::vector<NodeID> unpacked_nodes;
@@ -271,6 +336,7 @@ search(SearchEngineData<Algorithm> &engine_working_data,
     unpacked_edges.reserve(packed_path.size());
 
     unpacked_nodes.push_back(source_node);
+
     for (auto const &packed_edge : packed_path)
     {
         NodeID source, target;
@@ -283,7 +349,7 @@ search(SearchEngineData<Algorithm> &engine_working_data,
         }
         else
         { // an overlay graph edge
-            LevelID level = getNodeQureyLevel(partition, source, args...);
+            LevelID level = getNodeQueryLevel(partition, source, args...);
             CellID parent_cell_id = partition.GetCell(level, source);
             BOOST_ASSERT(parent_cell_id == partition.GetCell(level, target));
 

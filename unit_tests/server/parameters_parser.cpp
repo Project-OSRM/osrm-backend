@@ -59,6 +59,8 @@ BOOST_AUTO_TEST_CASE(invalid_route_urls)
                       32L);
     BOOST_CHECK_EQUAL(
         testInvalidOptions<RouteParameters>("1,2;3,4?overview=false&alternatives=foo"), 36UL);
+    BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>("1,2;3,4?overview=false&alternatives=-1"),
+                      36UL);
     BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>(""), 0);
     BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>("1,2;3.4.unsupported"), 7);
     BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>("1,2;3,4.json?nooptions"), 13);
@@ -118,6 +120,7 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
 
     RouteParameters reference_2{};
     reference_2.alternatives = true;
+    reference_2.number_of_alternatives = 1;
     reference_2.steps = true;
     reference_2.annotations = true;
     reference_2.coordinates = coords_1;
@@ -127,6 +130,7 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
     BOOST_CHECK(result_2);
     BOOST_CHECK_EQUAL(reference_2.steps, result_2->steps);
     BOOST_CHECK_EQUAL(reference_2.alternatives, result_2->alternatives);
+    BOOST_CHECK_EQUAL(reference_2.number_of_alternatives, result_2->number_of_alternatives);
     BOOST_CHECK_EQUAL(reference_2.geometries, result_2->geometries);
     BOOST_CHECK_EQUAL(reference_2.annotations, result_2->annotations);
     BOOST_CHECK_EQUAL(reference_2.overview, result_2->overview);
@@ -151,6 +155,7 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
     BOOST_CHECK(result_3);
     BOOST_CHECK_EQUAL(reference_3.steps, result_3->steps);
     BOOST_CHECK_EQUAL(reference_3.alternatives, result_3->alternatives);
+    BOOST_CHECK_EQUAL(reference_3.number_of_alternatives, result_3->number_of_alternatives);
     BOOST_CHECK_EQUAL(reference_3.geometries, result_3->geometries);
     BOOST_CHECK_EQUAL(reference_3.annotations, result_3->annotations);
     BOOST_CHECK_EQUAL(reference_3.overview, result_3->overview);
@@ -428,6 +433,44 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
     CHECK_EQUAL_RANGE(reference_18.approaches, result_18->approaches);
     CHECK_EQUAL_RANGE(reference_18.coordinates, result_18->coordinates);
     CHECK_EQUAL_RANGE(reference_18.hints, result_18->hints);
+
+    RouteParameters reference_19{};
+    reference_19.alternatives = true;
+    reference_19.number_of_alternatives = 3;
+    reference_19.coordinates = coords_1;
+    auto result_19 = parseParameters<RouteParameters>("1,2;3,4?alternatives=3");
+    BOOST_CHECK(result_19);
+    BOOST_CHECK_EQUAL(reference_19.steps, result_19->steps);
+    BOOST_CHECK_EQUAL(reference_19.alternatives, result_19->alternatives);
+    BOOST_CHECK_EQUAL(reference_19.number_of_alternatives, result_19->number_of_alternatives);
+    BOOST_CHECK_EQUAL(reference_19.geometries, result_19->geometries);
+    BOOST_CHECK_EQUAL(reference_19.annotations, result_19->annotations);
+    BOOST_CHECK_EQUAL(reference_19.overview, result_19->overview);
+    BOOST_CHECK_EQUAL(reference_19.continue_straight, result_19->continue_straight);
+    CHECK_EQUAL_RANGE(reference_19.bearings, result_19->bearings);
+    CHECK_EQUAL_RANGE(reference_19.radiuses, result_19->radiuses);
+    CHECK_EQUAL_RANGE(reference_19.approaches, result_19->approaches);
+    CHECK_EQUAL_RANGE(reference_19.coordinates, result_19->coordinates);
+    CHECK_EQUAL_RANGE(reference_19.hints, result_19->hints);
+
+    RouteParameters reference_20{};
+    reference_20.alternatives = false;
+    reference_20.number_of_alternatives = 0;
+    reference_20.coordinates = coords_1;
+    auto result_20 = parseParameters<RouteParameters>("1,2;3,4?alternatives=0");
+    BOOST_CHECK(result_20);
+    BOOST_CHECK_EQUAL(reference_20.steps, result_20->steps);
+    BOOST_CHECK_EQUAL(reference_20.alternatives, result_20->alternatives);
+    BOOST_CHECK_EQUAL(reference_20.number_of_alternatives, result_20->number_of_alternatives);
+    BOOST_CHECK_EQUAL(reference_20.geometries, result_20->geometries);
+    BOOST_CHECK_EQUAL(reference_20.annotations, result_20->annotations);
+    BOOST_CHECK_EQUAL(reference_20.overview, result_20->overview);
+    BOOST_CHECK_EQUAL(reference_20.continue_straight, result_20->continue_straight);
+    CHECK_EQUAL_RANGE(reference_20.bearings, result_20->bearings);
+    CHECK_EQUAL_RANGE(reference_20.radiuses, result_20->radiuses);
+    CHECK_EQUAL_RANGE(reference_20.approaches, result_20->approaches);
+    CHECK_EQUAL_RANGE(reference_20.coordinates, result_20->coordinates);
+    CHECK_EQUAL_RANGE(reference_20.hints, result_20->hints);
 }
 
 BOOST_AUTO_TEST_CASE(valid_table_urls)

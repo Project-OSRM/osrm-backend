@@ -23,6 +23,16 @@ bool needsLoopBackwards(const PhantomNode &source_phantom, const PhantomNode &ta
                target_phantom.GetReverseWeightPlusOffset();
 }
 
+bool needsLoopForward(const PhantomNodes &phantoms)
+{
+    return needsLoopForward(phantoms.source_phantom, phantoms.target_phantom);
+}
+
+bool needsLoopBackwards(const PhantomNodes &phantoms)
+{
+    return needsLoopBackwards(phantoms.source_phantom, phantoms.target_phantom);
+}
+
 } // namespace routing_algorithms
 } // namespace engine
 } // namespace osrm

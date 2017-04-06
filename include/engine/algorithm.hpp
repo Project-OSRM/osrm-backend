@@ -93,6 +93,9 @@ template <> struct HasGetTileTurns<corech::Algorithm> final : std::true_type
 };
 
 // Algorithms supported by Multi-Level Dijkstra
+template <> struct HasAlternativePathSearch<mld::Algorithm> final : std::true_type
+{
+};
 template <> struct HasDirectShortestPathSearch<mld::Algorithm> final : std::true_type
 {
 };
