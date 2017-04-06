@@ -242,19 +242,9 @@ class DeallocatingVector
     // copying is not safe since this would only do a shallow copy
     DeallocatingVector(DeallocatingVector &other) = delete;
     DeallocatingVector &operator=(DeallocatingVector &other) = delete;
-
-    DeallocatingVector(DeallocatingVector &&other)
-    {
-        bucket_list = std::move(other.bucket_list);
-        current_size = std::move(other.current_size);
-    }
-
-    DeallocatingVector &operator=(DeallocatingVector &&other)
-    {
-        bucket_list = std::move(other.bucket_list);
-        current_size = std::move(other.current_size);
-        return *this;
-    }
+    // moving is fine
+    DeallocatingVector(DeallocatingVector &&other) = default;
+    DeallocatingVector &operator=(DeallocatingVector &&other) = default;
 
     ~DeallocatingVector() { clear(); }
 
