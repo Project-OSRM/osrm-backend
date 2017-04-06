@@ -44,7 +44,7 @@ using TestStaticRTree = StaticRTree<TestData,
                                     osrm::storage::Ownership::Container,
                                     TEST_BRANCHING_FACTOR,
                                     TEST_LEAF_NODE_SIZE>;
-using MiniStaticRTree = StaticRTree<TestData,osrm::storage::Ownership::Container, 2, 128>;
+using MiniStaticRTree = StaticRTree<TestData, osrm::storage::Ownership::Container, 2, 128>;
 using TestDataFacade = MockDataFacade<osrm::engine::routing_algorithms::ch::Algorithm>;
 
 // Choosen by a fair W20 dice roll (this value is completely arbitrary)
