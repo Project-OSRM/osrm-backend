@@ -287,7 +287,7 @@ void Storage::PopulateLayout(DataLayout &layout)
     if (boost::filesystem::exists(config.core_data_path))
     {
         io::FileReader core_marker_file(config.core_data_path, io::FileReader::HasNoFingerprint);
-        const auto number_of_core_markers = core_marker_file.ReadElementCount32();
+        const auto number_of_core_markers = core_marker_file.ReadElementCount64();
         layout.SetBlockSize<unsigned>(DataLayout::CH_CORE_MARKER, number_of_core_markers);
     }
     else
@@ -327,12 +327,12 @@ void Storage::PopulateLayout(DataLayout &layout)
     {
         io::FileReader geometry_file(config.geometries_path, io::FileReader::HasNoFingerprint);
 
-        const auto number_of_geometries_indices = geometry_file.ReadElementCount32();
+        const auto number_of_geometries_indices = geometry_file.ReadElementCount64();
         layout.SetBlockSize<unsigned>(DataLayout::GEOMETRIES_INDEX, number_of_geometries_indices);
 
         geometry_file.Skip<unsigned>(number_of_geometries_indices);
 
-        const auto number_of_compressed_geometries = geometry_file.ReadElementCount32();
+        const auto number_of_compressed_geometries = geometry_file.ReadElementCount64();
         layout.SetBlockSize<NodeID>(DataLayout::GEOMETRIES_NODE_LIST,
                                     number_of_compressed_geometries);
         layout.SetBlockSize<EdgeWeight>(DataLayout::GEOMETRIES_FWD_WEIGHT_LIST,
@@ -362,7 +362,7 @@ void Storage::PopulateLayout(DataLayout &layout)
         layout.SetBlockSize<BearingClassID>(DataLayout::BEARING_CLASSID,
                                             bearing_class_id_table.size());
 
-        const auto bearing_blocks = intersection_file.ReadElementCount32();
+        const auto bearing_blocks = intersection_file.ReadElementCount64();
         intersection_file.Skip<std::uint32_t>(1); // sum_lengths
 
         layout.SetBlockSize<unsigned>(DataLayout::BEARING_OFFSETS, bearing_blocks);
@@ -640,7 +640,7 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
         io::FileReader geometry_input_file(config.geometries_path,
                                            io::FileReader::HasNoFingerprint);
 
-        const auto geometry_index_count = geometry_input_file.ReadElementCount32();
+        const auto geometry_index_count = geometry_input_file.ReadElementCount64();
         const auto geometries_index_ptr =
             layout.GetBlockPtr<unsigned, true>(memory_ptr, DataLayout::GEOMETRIES_INDEX);
         BOOST_ASSERT(geometry_index_count == layout.num_entries[DataLayout::GEOMETRIES_INDEX]);
@@ -648,7 +648,7 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
 
         const auto geometries_node_id_list_ptr =
             layout.GetBlockPtr<NodeID, true>(memory_ptr, DataLayout::GEOMETRIES_NODE_LIST);
-        const auto geometry_node_lists_count = geometry_input_file.ReadElementCount32();
+        const auto geometry_node_lists_count = geometry_input_file.ReadElementCount64();
         BOOST_ASSERT(geometry_node_lists_count ==
                      layout.num_entries[DataLayout::GEOMETRIES_NODE_LIST]);
         geometry_input_file.ReadInto(geometries_node_id_list_ptr, geometry_node_lists_count);
@@ -753,7 +753,7 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
     if (boost::filesystem::exists(config.core_data_path))
     {
         io::FileReader core_marker_file(config.core_data_path, io::FileReader::HasNoFingerprint);
-        const auto number_of_core_markers = core_marker_file.ReadElementCount32();
+        const auto number_of_core_markers = core_marker_file.ReadElementCount64();
 
         // load core markers
         std::vector<char> unpacked_core_markers(number_of_core_markers);
@@ -802,7 +802,7 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
         std::vector<BearingClassID> bearing_class_id_table;
         intersection_file.DeserializeVector(bearing_class_id_table);
 
-        const auto bearing_blocks = intersection_file.ReadElementCount32();
+        const auto bearing_blocks = intersection_file.ReadElementCount64();
         intersection_file.Skip<std::uint32_t>(1); // sum_lengths
 
         std::vector<unsigned> bearing_offsets_data(bearing_blocks);

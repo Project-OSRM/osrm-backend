@@ -54,11 +54,11 @@ inline void read(const boost::filesystem::path &path, SegmentDataContainer &segm
     const auto fingerprint = storage::io::FileReader::HasNoFingerprint;
     storage::io::FileReader reader{path, fingerprint};
 
-    auto num_indices = reader.ReadElementCount32();
+    auto num_indices = reader.ReadElementCount64();
     segment_data.index.resize(num_indices);
     reader.ReadInto(segment_data.index.data(), num_indices);
 
-    auto num_entries = reader.ReadElementCount32();
+    auto num_entries = reader.ReadElementCount64();
     segment_data.nodes.resize(num_entries);
     segment_data.fwd_weights.resize(num_entries);
     segment_data.rev_weights.resize(num_entries);
@@ -80,10 +80,10 @@ inline void write(const boost::filesystem::path &path, const SegmentDataContaine
     const auto fingerprint = storage::io::FileWriter::HasNoFingerprint;
     storage::io::FileWriter writer{path, fingerprint};
 
-    writer.WriteElementCount32(segment_data.index.size());
+    writer.WriteElementCount64(segment_data.index.size());
     writer.WriteFrom(segment_data.index);
 
-    writer.WriteElementCount32(segment_data.nodes.size());
+    writer.WriteElementCount64(segment_data.nodes.size());
     BOOST_ASSERT(segment_data.fwd_weights.size() == segment_data.nodes.size());
     BOOST_ASSERT(segment_data.rev_weights.size() == segment_data.nodes.size());
     BOOST_ASSERT(segment_data.fwd_durations.size() == segment_data.nodes.size());

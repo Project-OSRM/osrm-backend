@@ -113,7 +113,7 @@ void Contractor::ReadNodeLevels(std::vector<float> &node_levels) const
     storage::io::FileReader order_file(config.level_output_path,
                                        storage::io::FileReader::HasNoFingerprint);
 
-    const auto level_size = order_file.ReadElementCount32();
+    const auto level_size = order_file.ReadElementCount64();
     node_levels.resize(level_size);
     order_file.ReadInto(node_levels);
 }
@@ -141,7 +141,7 @@ void Contractor::WriteCoreNodeMarker(std::vector<bool> &&in_is_core_node) const
                                                     storage::io::FileWriter::HasNoFingerprint);
 
     const std::size_t count = unpacked_bool_flags.size();
-    core_marker_output_file.WriteElementCount32(count);
+    core_marker_output_file.WriteElementCount64(count);
     core_marker_output_file.WriteFrom(unpacked_bool_flags.data(), count);
 }
 
