@@ -2,24 +2,20 @@
 # require CMake 2.8.11 so that we can build e.g. on Trusty by default.
 cmake_minimum_required(VERSION 3.1)
 
-message(STATUS "Building node-osrm")
+message(STATUS "Building node_osrm")
 
 set(BINDING_DIR "${PROJECT_SOURCE_DIR}/lib/binding")
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/nodejs")
+include(NodeJS)
+nodejs_init()
 
-set(NodeJS_CXX_STANDARD 14 CACHE INTERNAL "Use C++14" FORCE)
-set(NodeJS_DOWNLOAD ON CACHE INTERNAL "Download node.js sources" FORCE)
-set(NodeJS_USE_CLANG_STDLIB OFF CACHE BOOL "Don't use libc++ by default" FORCE)
+message(STATUS "Configuring node_osrm bindings for NodeJs ${NODEJS_VERSION}")
 
-# ^ Make sure to set NodeJs options before including and requiring the NodeJs module.
-# Otherwise the module will use defaults (which - among many bad choices - means libc++).
-include(FindNodeJS)
-find_package(NodeJS REQUIRED)
-add_nodejs_module(node-osrm node_osrm.cpp)
-target_link_libraries(node-osrm osrm)
+add_nodejs_module(node_osrm node_osrm.cpp)
+set_target_properties(node_osrm PROPERTIES CXX_STANDARD 14)
+target_link_libraries(node_osrm osrm)
 
-# node-osrm artifacts in ${BINDING_DIR} to depend targets on
+# node_osrm artifacts in ${BINDING_DIR} to depend targets on
 set(ARTIFACTS "")
 
 set(OSRM_BINARIES osrm-extract osrm-contract osrm-routed osrm-datastore osrm-components osrm-partition osrm-customize)
@@ -31,7 +27,7 @@ foreach(binary ${OSRM_BINARIES})
 endforeach(binary)
 
 # For mason-enabled builds we copy over tbb's shared objects for packaging.
-# TODO: consider using statically linked tbb library (for node-osrm only!)
+# TODO: consider using statically linked tbb library (for node_osrm only!)
 if (ENABLE_MASON)
   foreach(libpath ${MASON_PACKAGE_tbb_LIBRARY_DIRS})
     file(GLOB TBBGlob ${libpath}/*.*)
@@ -46,11 +42,11 @@ if (ENABLE_MASON)
 endif()
 
 
-add_custom_command(OUTPUT ${BINDING_DIR}/node-osrm.node
-                   COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:node-osrm> ${BINDING_DIR}
-                   DEPENDS node-osrm ${BINDING_DIR})
-list(APPEND ARTIFACTS "${BINDING_DIR}/node-osrm.node")
+add_custom_command(OUTPUT ${BINDING_DIR}/node_osrm.node
+                   COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:node_osrm> ${BINDING_DIR}
+                   DEPENDS node_osrm ${BINDING_DIR})
+list(APPEND ARTIFACTS "${BINDING_DIR}/node_osrm.node")
 
 
-message(STATUS "node-osrm artifacts will be copied to: ${BINDING_DIR}")
+message(STATUS "node_osrm artifacts will be copied to: ${BINDING_DIR}")
 add_custom_target(copy_artifacts ALL DEPENDS ${ARTIFACTS})
