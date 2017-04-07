@@ -32,7 +32,7 @@ using BenchStaticRTree = util::StaticRTree<RTreeLeaf, storage::Ownership::Contai
 std::vector<util::Coordinate> loadCoordinates(const boost::filesystem::path &nodes_file)
 {
     storage::io::FileReader nodes_path_file_reader(nodes_file,
-                                                   storage::io::FileReader::HasNoFingerprint);
+                                                   storage::io::FileReader::VerifyFingerprint);
 
     extractor::QueryNode current_node;
     unsigned coordinate_count = nodes_path_file_reader.ReadElementCount32();

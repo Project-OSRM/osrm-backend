@@ -272,7 +272,7 @@ void Storage::PopulateLayout(DataLayout &layout)
 
     // load rsearch tree size
     {
-        io::FileReader tree_node_file(config.ram_index_path, io::FileReader::HasNoFingerprint);
+        io::FileReader tree_node_file(config.ram_index_path, io::FileReader::VerifyFingerprint);
 
         const auto tree_size = tree_node_file.ReadElementCount64();
         layout.SetBlockSize<RTreeNode>(DataLayout::R_SEARCH_TREE, tree_size);
@@ -731,7 +731,7 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
 
     // store search tree portion of rtree
     {
-        io::FileReader tree_node_file(config.ram_index_path, io::FileReader::HasNoFingerprint);
+        io::FileReader tree_node_file(config.ram_index_path, io::FileReader::VerifyFingerprint);
         // perform this read so that we're at the right stream position for the next
         // read.
         tree_node_file.Skip<std::uint64_t>(1);
