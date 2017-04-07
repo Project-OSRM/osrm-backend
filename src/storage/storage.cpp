@@ -292,8 +292,8 @@ void Storage::PopulateLayout(DataLayout &layout)
     // load core marker size
     if (boost::filesystem::exists(config.core_data_path))
     {
-        io::FileReader core_marker_file(config.core_data_path, io::FileReader::HasNoFingerprint);
-        const auto number_of_core_markers = core_marker_file.ReadElementCount32();
+        io::FileReader core_marker_file(config.core_data_path, io::FileReader::VerifyFingerprint);
+        const auto number_of_core_markers = core_marker_file.ReadElementCount64();
         layout.SetBlockSize<unsigned>(DataLayout::CH_CORE_MARKER, number_of_core_markers);
     }
     else
@@ -743,8 +743,8 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
 
     if (boost::filesystem::exists(config.core_data_path))
     {
-        io::FileReader core_marker_file(config.core_data_path, io::FileReader::HasNoFingerprint);
-        const auto number_of_core_markers = core_marker_file.ReadElementCount32();
+        io::FileReader core_marker_file(config.core_data_path, io::FileReader::VerifyFingerprint);
+        const auto number_of_core_markers = core_marker_file.ReadElementCount64();
 
         // load core markers
         std::vector<char> unpacked_core_markers(number_of_core_markers);

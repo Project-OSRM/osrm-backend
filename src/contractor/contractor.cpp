@@ -123,10 +123,10 @@ void Contractor::WriteCoreNodeMarker(std::vector<bool> &&in_is_core_node) const
     }
 
     storage::io::FileWriter core_marker_output_file(config.core_output_path,
-                                                    storage::io::FileWriter::HasNoFingerprint);
+                                                    storage::io::FileWriter::GenerateFingerprint);
 
     const std::size_t count = unpacked_bool_flags.size();
-    core_marker_output_file.WriteElementCount32(count);
+    core_marker_output_file.WriteElementCount64(count);
     core_marker_output_file.WriteFrom(unpacked_bool_flags.data(), count);
 }
 

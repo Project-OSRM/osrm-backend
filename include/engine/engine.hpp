@@ -22,6 +22,7 @@
 #include "engine/status.hpp"
 #include "util/exception.hpp"
 #include "util/exception_utils.hpp"
+#include "util/fingerprint.hpp"
 #include "util/json_container.hpp"
 
 #include <memory>
@@ -184,7 +185,7 @@ bool Engine<routing_algorithms::corech::Algorithm>::CheckCompability(const Engin
 
         auto mem = storage::makeSharedMemory(barrier.data().region);
         auto layout = reinterpret_cast<storage::DataLayout *>(mem->Ptr());
-        return layout->GetBlockSize(storage::DataLayout::CH_CORE_MARKER) > 4;
+        return layout->GetBlockSize(storage::DataLayout::CH_CORE_MARKER) > 16;
     }
     else
     {
@@ -194,8 +195,8 @@ bool Engine<routing_algorithms::corech::Algorithm>::CheckCompability(const Engin
 
         in.seekg(0, std::ios::end);
         std::size_t size = in.tellg();
-        // An empty core files is only the 4 byte size header.
-        return size > sizeof(std::uint32_t);
+        // An empty core files is only the 8 byte size header plus the 8 byte Fingerprint.
+        return size > sizeof(std::uint64_t) + sizeof(util::FingerPrint);
     }
 }
 }
