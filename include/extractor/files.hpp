@@ -71,7 +71,7 @@ inline void writeNBGMapping(const boost::filesystem::path &path,
 // reads .osrm.datasource_names
 inline void readDatasources(const boost::filesystem::path &path, Datasources &sources)
 {
-    const auto fingerprint = storage::io::FileReader::HasNoFingerprint;
+    const auto fingerprint = storage::io::FileReader::VerifyFingerprint;
     storage::io::FileReader reader{path, fingerprint};
 
     serialization::read(reader, sources);
@@ -80,7 +80,7 @@ inline void readDatasources(const boost::filesystem::path &path, Datasources &so
 // writes .osrm.datasource_names
 inline void writeDatasources(const boost::filesystem::path &path, Datasources &sources)
 {
-    const auto fingerprint = storage::io::FileWriter::HasNoFingerprint;
+    const auto fingerprint = storage::io::FileWriter::GenerateFingerprint;
     storage::io::FileWriter writer{path, fingerprint};
 
     serialization::write(writer, sources);
