@@ -120,7 +120,7 @@ inline void readTurnData(const boost::filesystem::path &path, TurnDataT &turn_da
                       std::is_same<TurnDataView, TurnDataT>::value ||
                       std::is_same<TurnDataExternalContainer, TurnDataT>::value,
                   "");
-    const auto fingerprint = storage::io::FileReader::HasNoFingerprint;
+    const auto fingerprint = storage::io::FileReader::VerifyFingerprint;
     storage::io::FileReader reader{path, fingerprint};
 
     serialization::read(reader, turn_data);
@@ -134,7 +134,7 @@ inline void writeTurnData(const boost::filesystem::path &path, const TurnDataT &
                       std::is_same<TurnDataView, TurnDataT>::value ||
                       std::is_same<TurnDataExternalContainer, TurnDataT>::value,
                   "");
-    const auto fingerprint = storage::io::FileWriter::HasNoFingerprint;
+    const auto fingerprint = storage::io::FileWriter::GenerateFingerprint;
     storage::io::FileWriter writer{path, fingerprint};
 
     serialization::write(writer, turn_data);

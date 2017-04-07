@@ -229,7 +229,7 @@ void Storage::PopulateLayout(DataLayout &layout)
 
     // Loading information for original edges
     {
-        io::FileReader edges_file(config.edges_data_path, io::FileReader::HasNoFingerprint);
+        io::FileReader edges_file(config.edges_data_path, io::FileReader::VerifyFingerprint);
         const auto number_of_original_edges = edges_file.ReadElementCount64();
 
         // note: settings this all to the same size is correct, we extract them from the same struct
