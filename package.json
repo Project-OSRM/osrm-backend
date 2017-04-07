@@ -57,7 +57,7 @@
   ],
   "main": "lib/index.js",
   "binary": {
-    "module_name": "node-osrm",
+    "module_name": "node_osrm",
     "module_path": "./lib/binding/",
     "host": "https://mapbox-node-binary.s3.amazonaws.com",
     "remote_path": "./{name}/v{version}/{configuration}/",
