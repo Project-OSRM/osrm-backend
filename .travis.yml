@@ -132,6 +132,52 @@ matrix:
       #-     packages: ['clang-4.0', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
       #- env: CCOMPILER='clang-4.0' CXXCOMPILER='clang++-4.0' BUILD_TYPE='Release' BUILD_SHARED_LIBS=ON
 
+    # Node build jobs. These skip running the tests.
+    - os: linux
+      sudo: false
+      compiler: "node-4-mason-linux-release"
+      addons:
+        apt:
+          sources: ['ubuntu-toolchain-r-test']
+          packages: ['libstdc++-5-dev']
+      env: CLANG_VERSION='4.0.0' BUILD_TYPE='Release' ENABLE_MASON=ON ENABLE_LTO=ON ENABLE_NODE_BINDINGS=ON PUBLISH_NODE_BINDINGS=On
+      nodejs: "4"
+      script:
+          npm run nodejs-tests
+    - os: linux
+      sudo: false
+      compiler: "node-4-mason-linux-release"
+      addons:
+        apt:
+          sources: ['ubuntu-toolchain-r-test']
+          packages: ['libstdc++-5-dev']
+      env: CLANG_VERSION='4.0.0' BUILD_TYPE='Debug' ENABLE_MASON=ON ENABLE_LTO=ON ENABLE_NODE_BINDINGS=ON PUBLISH_NODE_BINDINGS=On
+      nodejs: "4"
+      script:
+          npm run nodejs-tests
+    - os: linux
+      sudo: false
+      compiler: "node-6-mason-linux-release"
+      addons:
+        apt:
+          sources: ['ubuntu-toolchain-r-test']
+          packages: ['libstdc++-5-dev']
+      env: CLANG_VERSION='4.0.0' BUILD_TYPE='Release' ENABLE_MASON=ON ENABLE_LTO=ON ENABLE_NODE_BINDINGS=ON PUBLISH_NODE_BINDINGS=On
+      nodejs: "6"
+      script:
+          npm run nodejs-tests
+    - os: linux
+      sudo: false
+      compiler: "node-6-mason-linux-release"
+      addons:
+        apt:
+          sources: ['ubuntu-toolchain-r-test']
+          packages: ['libstdc++-5-dev']
+      env: CLANG_VERSION='4.0.0' BUILD_TYPE='Debug' ENABLE_MASON=ON ENABLE_LTO=ON ENABLE_NODE_BINDINGS=ON PUBLISH_NODE_BINDINGS=On
+      nodejs: "6"
+      script:
+          npm run nodejs-tests
+
 before_install:
   - if [[ ! -z $TARGET_ARCH ]] ; then source ./scripts/travis/before_install.$TARGET_ARCH.sh ; fi
   - |
@@ -179,6 +225,7 @@ install:
     if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
       ./scripts/check_taginfo.py taginfo.json profiles/car.lua
     fi
+  - export OSRM_INSTALL_DIR="$(pwd)/install-osrm"
   - export OSRM_BUILD_DIR="$(pwd)/build-osrm"
   - mkdir ${OSRM_BUILD_DIR} && pushd ${OSRM_BUILD_DIR}
   - export CC=${CCOMPILER} CXX=${CXXCOMPILER}
@@ -191,7 +238,8 @@ install:
              -DENABLE_NODE_BINDINGS=${ENABLE_NODE_BINDINGS:-OFF} \
              -DENABLE_SANITIZER=${ENABLE_SANITIZER:-OFF} \
              -DBUILD_TOOLS=ON \
-             -DENABLE_CCACHE=ON
+             -DENABLE_CCACHE=ON \
+             -DCMAKE_INSTALL_PREFIX=${OSRM_INSTALL_DIR}
   - echo "travis_fold:start:MAKE"
   - make --jobs=${JOBS}
   - make tests --jobs=${JOBS}
@@ -201,10 +249,11 @@ install:
   - sudo make install
   - |
     if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
-      sudo ldconfig
+      export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${OSRM_INSTALL_DIR}/lib
     fi
   - popd
   - mkdir example/build && pushd example/build
+  - export PKG_CONFIG_PATH=${OSRM_INSTALL_DIR}/lib/pkgconfig
   - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
   - make --jobs=${JOBS}
   - popd
@@ -237,6 +286,6 @@ after_success:
     fi
 
   - |
-    if [ -n "${ENABLE_NODE_BINDINGS}" ]; then
+    if [ -n "${PUBLISH_NODE_BINDINGS}" ]; then
       ./scripts/travis/publish.sh
     fi
