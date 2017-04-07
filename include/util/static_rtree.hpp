@@ -334,7 +334,7 @@ class StaticRTree
 
         // open tree file
         storage::io::FileWriter tree_node_file(tree_node_filename,
-                                               storage::io::FileWriter::HasNoFingerprint);
+                                               storage::io::FileWriter::GenerateFingerprint);
 
         std::uint64_t size_of_tree = m_search_tree.size();
         BOOST_ASSERT_MSG(0 < size_of_tree, "tree empty");
@@ -351,7 +351,7 @@ class StaticRTree
         : m_coordinate_list(coordinate_list)
     {
         storage::io::FileReader tree_node_file(node_file,
-                                               storage::io::FileReader::HasNoFingerprint);
+                                               storage::io::FileReader::VerifyFingerprint);
 
         const auto tree_size = tree_node_file.ReadElementCount64();
 
