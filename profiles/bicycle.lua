@@ -544,5 +544,10 @@ function turn_function(turn)
       if not turn.source_restricted and turn.target_restricted then
           turn.weight = turn.weight + 3000
       end
+    if normalized_angle >= 0.0 then
+      turn.weight = turn.weight + normalized_angle * normalized_angle * profile.turn_penalty / profile.turn_bias
+    else
+      turn.weight = turn.weight + normalized_angle * normalized_angle * profile.turn_penalty * profile.turn_bias
+    end
   end
 end
