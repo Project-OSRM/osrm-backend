@@ -5,13 +5,17 @@ set -o pipefail
 
 if [[ ${PUBLISH} == 'On' ]]; then
     echo "PUBLISH is set to '${PUBLISH}', publishing!"
+    NPM_FLAGS=''
+    if [[ ${BUILD_TYPE} == "Debug" ]]; then
+        NPM_FLAGS='--debug'
+    fi
 
     echo "node version is:"
     which node
     node -v
 
     echo "dumping binary meta..."
-    ./node_modules/.bin/node-pre-gyp reveal
+    ./node_modules/.bin/node-pre-gyp reveal $NPM_FLAGS
 
     # enforce that binary has proper ORIGIN flags so that
     # it can portably find libtbb.so in the same directory
@@ -27,7 +31,7 @@ if [[ ${PUBLISH} == 'On' ]]; then
         fi
     fi
 
-    ./node_modules/.bin/node-pre-gyp package publish info
+    ./node_modules/.bin/node-pre-gyp package publish info $NPM_FLAGS
 else
     echo "PUBLISH is set to '${PUBLISH}', skipping."
 fi
