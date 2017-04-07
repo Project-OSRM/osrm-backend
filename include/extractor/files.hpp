@@ -149,7 +149,7 @@ inline void readTurnLaneDescriptions(const boost::filesystem::path &path,
         "");
     static_assert(std::is_same<typename OffsetsT::value_type, std::uint32_t>::value, "");
 
-    const auto fingerprint = storage::io::FileReader::HasNoFingerprint;
+    const auto fingerprint = storage::io::FileReader::VerifyFingerprint;
     storage::io::FileReader reader{path, fingerprint};
 
     storage::serialization::read(reader, turn_offsets);
@@ -167,7 +167,7 @@ inline void writeTurnLaneDescriptions(const boost::filesystem::path &path,
         "");
     static_assert(std::is_same<typename OffsetsT::value_type, std::uint32_t>::value, "");
 
-    const auto fingerprint = storage::io::FileWriter::HasNoFingerprint;
+    const auto fingerprint = storage::io::FileWriter::GenerateFingerprint;
     storage::io::FileWriter writer{path, fingerprint};
 
     storage::serialization::write(writer, turn_offsets);
