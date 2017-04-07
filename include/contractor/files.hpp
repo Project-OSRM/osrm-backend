@@ -6,6 +6,7 @@
 #include "util/serialization.hpp"
 
 #include "storage/io.hpp"
+#include "storage/serialization.hpp"
 
 namespace osrm
 {
@@ -43,6 +44,25 @@ writeGraph(const boost::filesystem::path &path, unsigned checksum, const QueryGr
     writer.WriteOne(checksum);
     util::serialization::write(writer, graph);
 }
+
+// reads .levels file
+inline void readLevels(const boost::filesystem::path &path, std::vector<float> &node_levels)
+{
+    const auto fingerprint = storage::io::FileReader::VerifyFingerprint;
+    storage::io::FileReader reader{path, fingerprint};
+
+    storage::serialization::read(reader, node_levels);
+}
+
+// writes .levels file
+inline void writeLevels(const boost::filesystem::path &path, const std::vector<float> &node_levels)
+{
+    const auto fingerprint = storage::io::FileWriter::GenerateFingerprint;
+    storage::io::FileWriter writer{path, fingerprint};
+
+    storage::serialization::write(writer, node_levels);
+}
+
 }
 }
 }
