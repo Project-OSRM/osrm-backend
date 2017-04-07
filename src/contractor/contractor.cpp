@@ -103,22 +103,14 @@ int Contractor::Run()
 
 void Contractor::ReadNodeLevels(std::vector<float> &node_levels) const
 {
-    storage::io::FileReader order_file(config.level_output_path,
-                                       storage::io::FileReader::HasNoFingerprint);
-
-    const auto level_size = order_file.ReadElementCount32();
-    node_levels.resize(level_size);
-    order_file.ReadInto(node_levels);
+    files::readLevels(config.level_output_path, node_levels);
 }
 
 void Contractor::WriteNodeLevels(std::vector<float> &&in_node_levels) const
 {
     std::vector<float> node_levels(std::move(in_node_levels));
 
-    storage::io::FileWriter writer(config.level_output_path,
-                                   storage::io::FileWriter::HasNoFingerprint);
-
-    storage::serialization::write(writer, node_levels);
+    files::writeLevels(config.level_output_path, node_levels);
 }
 
 void Contractor::WriteCoreNodeMarker(std::vector<bool> &&in_is_core_node) const
