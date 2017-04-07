@@ -658,9 +658,7 @@ void Extractor::WriteTurnLaneData(const std::string &turn_lane_file) const
     util::Log() << "Writing turn lane masks...";
     TIMER_START(turn_lane_timer);
 
-    storage::io::FileWriter writer(turn_lane_file, storage::io::FileWriter::HasNoFingerprint);
-    storage::serialization::write(writer, turn_lane_offsets);
-    storage::serialization::write(writer, turn_lane_masks);
+    files::writeTurnLaneDescriptions(turn_lane_file, turn_lane_offsets, turn_lane_masks);
 
     TIMER_STOP(turn_lane_timer);
     util::Log() << "done (" << TIMER_SEC(turn_lane_timer) << ")";

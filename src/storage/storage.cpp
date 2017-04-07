@@ -218,7 +218,7 @@ void Storage::PopulateLayout(DataLayout &layout)
     }
 
     {
-        io::FileReader reader(config.turn_lane_description_path, io::FileReader::HasNoFingerprint);
+        io::FileReader reader(config.turn_lane_description_path, io::FileReader::VerifyFingerprint);
         auto num_offsets = reader.ReadVectorSize<std::uint32_t>();
         auto num_masks = reader.ReadVectorSize<extractor::guidance::TurnLaneType::Mask>();
 
