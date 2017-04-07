@@ -331,7 +331,7 @@ void Storage::PopulateLayout(DataLayout &layout)
 
     // load geometries sizes
     {
-        io::FileReader reader(config.geometries_path, io::FileReader::HasNoFingerprint);
+        io::FileReader reader(config.geometries_path, io::FileReader::VerifyFingerprint);
 
         const auto number_of_geometries_indices = reader.ReadVectorSize<unsigned>();
         layout.SetBlockSize<unsigned>(DataLayout::GEOMETRIES_INDEX, number_of_geometries_indices);
