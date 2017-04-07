@@ -93,7 +93,7 @@ inline void readSegmentData(const boost::filesystem::path &path, SegmentDataT &s
     static_assert(std::is_same<SegmentDataContainer, SegmentDataT>::value ||
                       std::is_same<SegmentDataView, SegmentDataT>::value,
                   "");
-    const auto fingerprint = storage::io::FileReader::HasNoFingerprint;
+    const auto fingerprint = storage::io::FileReader::VerifyFingerprint;
     storage::io::FileReader reader{path, fingerprint};
 
     serialization::read(reader, segment_data);
@@ -106,7 +106,7 @@ inline void writeSegmentData(const boost::filesystem::path &path, const SegmentD
     static_assert(std::is_same<SegmentDataContainer, SegmentDataT>::value ||
                       std::is_same<SegmentDataView, SegmentDataT>::value,
                   "");
-    const auto fingerprint = storage::io::FileWriter::HasNoFingerprint;
+    const auto fingerprint = storage::io::FileWriter::GenerateFingerprint;
     storage::io::FileWriter writer{path, fingerprint};
 
     serialization::write(writer, segment_data);
