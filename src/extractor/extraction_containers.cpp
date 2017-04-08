@@ -175,6 +175,10 @@ void ExtractionContainers::WriteCharData(const std::string &file_name)
     TIMER_START(write_index);
     boost::filesystem::ofstream file(file_name, std::ios::binary);
 
+    // TODO wrap this in a FileWriter
+    const auto fingerprint = util::FingerPrint::GetValid();
+    file.write(reinterpret_cast<const char *>(&fingerprint), sizeof(util::FingerPrint));
+
     const util::NameTable::IndexedData indexed_data;
     indexed_data.write(file, name_offsets.begin(), name_offsets.end(), name_char_data.begin());
 
