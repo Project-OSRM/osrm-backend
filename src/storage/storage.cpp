@@ -304,7 +304,7 @@ void Storage::PopulateLayout(DataLayout &layout)
     // load turn weight penalties
     {
         io::FileReader turn_weight_penalties_file(config.turn_weight_penalties_path,
-                                                  io::FileReader::HasNoFingerprint);
+                                                  io::FileReader::VerifyFingerprint);
         const auto number_of_penalties = turn_weight_penalties_file.ReadElementCount64();
         layout.SetBlockSize<TurnPenalty>(DataLayout::TURN_WEIGHT_PENALTIES, number_of_penalties);
     }
@@ -312,7 +312,7 @@ void Storage::PopulateLayout(DataLayout &layout)
     // load turn duration penalties
     {
         io::FileReader turn_duration_penalties_file(config.turn_duration_penalties_path,
-                                                    io::FileReader::HasNoFingerprint);
+                                                    io::FileReader::VerifyFingerprint);
         const auto number_of_penalties = turn_duration_penalties_file.ReadElementCount64();
         layout.SetBlockSize<TurnPenalty>(DataLayout::TURN_DURATION_PENALTIES, number_of_penalties);
     }
@@ -701,7 +701,7 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
     // load turn weight penalties
     {
         io::FileReader turn_weight_penalties_file(config.turn_weight_penalties_path,
-                                                  io::FileReader::HasNoFingerprint);
+                                                  io::FileReader::VerifyFingerprint);
         const auto number_of_penalties = turn_weight_penalties_file.ReadElementCount64();
         const auto turn_weight_penalties_ptr =
             layout.GetBlockPtr<TurnPenalty, true>(memory_ptr, DataLayout::TURN_WEIGHT_PENALTIES);
@@ -711,7 +711,7 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
     // load turn duration penalties
     {
         io::FileReader turn_duration_penalties_file(config.turn_duration_penalties_path,
-                                                    io::FileReader::HasNoFingerprint);
+                                                    io::FileReader::VerifyFingerprint);
         const auto number_of_penalties = turn_duration_penalties_file.ReadElementCount64();
         const auto turn_duration_penalties_ptr =
             layout.GetBlockPtr<TurnPenalty, true>(memory_ptr, DataLayout::TURN_DURATION_PENALTIES);

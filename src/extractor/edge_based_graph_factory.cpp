@@ -559,13 +559,13 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     BOOST_ASSERT(turn_weight_penalties.size() == turn_duration_penalties.size());
     {
         storage::io::FileWriter writer(turn_weight_penalties_filename,
-                                       storage::io::FileWriter::HasNoFingerprint);
+                                       storage::io::FileWriter::GenerateFingerprint);
         storage::serialization::write(writer, turn_weight_penalties);
     }
 
     {
         storage::io::FileWriter writer(turn_duration_penalties_filename,
-                                       storage::io::FileWriter::HasNoFingerprint);
+                                       storage::io::FileWriter::GenerateFingerprint);
         storage::serialization::write(writer, turn_duration_penalties);
     }
 

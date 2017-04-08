@@ -473,13 +473,13 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
 
         const auto load_turn_weight_penalties = [&] {
             using storage::io::FileReader;
-            FileReader reader(config.turn_weight_penalties_path, FileReader::HasNoFingerprint);
+            FileReader reader(config.turn_weight_penalties_path, FileReader::VerifyFingerprint);
             storage::serialization::read(reader, turn_weight_penalties);
         };
 
         const auto load_turn_duration_penalties = [&] {
             using storage::io::FileReader;
-            FileReader reader(config.turn_duration_penalties_path, FileReader::HasNoFingerprint);
+            FileReader reader(config.turn_duration_penalties_path, FileReader::VerifyFingerprint);
             storage::serialization::read(reader, turn_duration_penalties);
         };
 
@@ -661,7 +661,7 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
     if (update_turn_penalties)
     {
         const auto save_penalties = [](const auto &filename, const auto &data) -> void {
-            storage::io::FileWriter writer(filename, storage::io::FileWriter::HasNoFingerprint);
+            storage::io::FileWriter writer(filename, storage::io::FileWriter::GenerateFingerprint);
             storage::serialization::write(writer, data);
         };
 
