@@ -486,7 +486,7 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
         const auto load_profile_properties = [&] {
             // Propagate profile properties to contractor configuration structure
             storage::io::FileReader profile_properties_file(
-                config.profile_properties_path, storage::io::FileReader::HasNoFingerprint);
+                config.profile_properties_path, storage::io::FileReader::VerifyFingerprint);
             profile_properties = profile_properties_file.ReadOne<extractor::ProfileProperties>();
         };
 
