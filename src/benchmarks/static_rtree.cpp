@@ -35,7 +35,7 @@ std::vector<util::Coordinate> loadCoordinates(const boost::filesystem::path &nod
                                                    storage::io::FileReader::VerifyFingerprint);
 
     extractor::QueryNode current_node;
-    unsigned coordinate_count = nodes_path_file_reader.ReadElementCount32();
+    auto coordinate_count = nodes_path_file_reader.ReadElementCount64();
     std::vector<util::Coordinate> coords(coordinate_count);
     for (unsigned i = 0; i < coordinate_count; ++i)
     {

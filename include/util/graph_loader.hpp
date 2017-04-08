@@ -38,7 +38,7 @@ namespace util
 inline unsigned loadRestrictionsFromFile(storage::io::FileReader &file_reader,
                                          std::vector<extractor::TurnRestriction> &restriction_list)
 {
-    unsigned number_of_usable_restrictions = file_reader.ReadElementCount32();
+    auto number_of_usable_restrictions = file_reader.ReadElementCount64();
     restriction_list.resize(number_of_usable_restrictions);
     if (number_of_usable_restrictions > 0)
     {
@@ -61,7 +61,7 @@ NodeID loadNodesFromFile(storage::io::FileReader &file_reader,
                          std::vector<util::Coordinate> &coordinates,
                          util::PackedVector<OSMNodeID> &osm_node_ids)
 {
-    NodeID number_of_nodes = file_reader.ReadElementCount32();
+    auto number_of_nodes = file_reader.ReadElementCount64();
     Log() << "Importing number_of_nodes new = " << number_of_nodes << " nodes ";
 
     coordinates.resize(number_of_nodes);
@@ -98,8 +98,7 @@ NodeID loadNodesFromFile(storage::io::FileReader &file_reader,
 inline NodeID loadEdgesFromFile(storage::io::FileReader &file_reader,
                                 std::vector<extractor::NodeBasedEdge> &edge_list)
 {
-    EdgeID number_of_edges = file_reader.ReadElementCount32();
-    BOOST_ASSERT(sizeof(EdgeID) == sizeof(number_of_edges));
+    auto number_of_edges = file_reader.ReadElementCount64();
 
     edge_list.resize(number_of_edges);
     Log() << " and " << number_of_edges << " edges ";
