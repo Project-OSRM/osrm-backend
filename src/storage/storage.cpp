@@ -366,7 +366,7 @@ void Storage::PopulateLayout(DataLayout &layout)
         layout.SetBlockSize<BearingClassID>(DataLayout::BEARING_CLASSID,
                                             bearing_class_id_table.size());
 
-        const auto bearing_blocks = intersection_file.ReadElementCount32();
+        const auto bearing_blocks = intersection_file.ReadElementCount64();
         intersection_file.Skip<std::uint32_t>(1); // sum_lengths
 
         layout.SetBlockSize<unsigned>(DataLayout::BEARING_OFFSETS, bearing_blocks);
@@ -793,7 +793,7 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
         std::vector<BearingClassID> bearing_class_id_table;
         serialization::read(intersection_file, bearing_class_id_table);
 
-        const auto bearing_blocks = intersection_file.ReadElementCount32();
+        const auto bearing_blocks = intersection_file.ReadElementCount64();
         intersection_file.Skip<std::uint32_t>(1); // sum_lengths
 
         std::vector<unsigned> bearing_offsets_data(bearing_blocks);

@@ -259,7 +259,7 @@ void ExtractionContainers::PrepareNodes()
                                   "supports 2^32 unique nodes, but there were " +
                                   std::to_string(internal_id) + SOURCE_REF);
         }
-        max_internal_node_id = boost::numeric_cast<NodeID>(internal_id);
+        max_internal_node_id = boost::numeric_cast<std::uint64_t>(internal_id);
         TIMER_STOP(id_map);
         log << "ok, after " << TIMER_SEC(id_map) << "s";
     }
@@ -575,7 +575,7 @@ void ExtractionContainers::WriteEdges(storage::io::FileWriter &file_out) const
             throw util::exception("There are too many edges, OSRM only supports 2^32" + SOURCE_REF);
         }
 
-        file_out.WriteElementCount32(normal_edges.size());
+        file_out.WriteElementCount64(normal_edges.size());
         file_out.WriteFrom(normal_edges.data(), normal_edges.size());
 
         TIMER_STOP(write_edges);
@@ -590,7 +590,7 @@ void ExtractionContainers::WriteNodes(storage::io::FileWriter &file_out) const
         // write dummy value, will be overwritten later
         util::UnbufferedLog log;
         log << "setting number of nodes   ... " << std::flush;
-        file_out.WriteElementCount32(max_internal_node_id);
+        file_out.WriteElementCount64(max_internal_node_id);
         log << "ok";
     }
 
@@ -633,11 +633,11 @@ void ExtractionContainers::WriteNodes(storage::io::FileWriter &file_out) const
 void ExtractionContainers::WriteRestrictions(const std::string &path) const
 {
     // serialize restrictions
-    unsigned written_restriction_count = 0;
+    std::uint64_t written_restriction_count = 0;
     storage::io::FileWriter restrictions_out_file(path,
                                                   storage::io::FileWriter::GenerateFingerprint);
 
-    restrictions_out_file.WriteElementCount32(written_restriction_count);
+    restrictions_out_file.WriteElementCount64(written_restriction_count);
 
     for (const auto &restriction_container : restrictions_list)
     {
@@ -650,7 +650,7 @@ void ExtractionContainers::WriteRestrictions(const std::string &path) const
         }
     }
     restrictions_out_file.SkipToBeginning();
-    restrictions_out_file.WriteElementCount32(written_restriction_count);
+    restrictions_out_file.WriteElementCount64(written_restriction_count);
     util::Log() << "usable restrictions: " << written_restriction_count;
 }
 

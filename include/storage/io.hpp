@@ -126,7 +126,6 @@ class FileReader
 
     /*******************************************/
 
-    std::uint32_t ReadElementCount32() { return ReadOne<std::uint32_t>(); }
     std::uint64_t ReadElementCount64() { return ReadOne<std::uint64_t>(); }
 
     template <typename T> std::size_t ReadVectorSize()
@@ -228,7 +227,6 @@ class FileWriter
 
     template <typename T> void WriteOne(const T tmp) { WriteFrom(tmp); }
 
-    void WriteElementCount32(const std::uint32_t count) { WriteOne<std::uint32_t>(count); }
     void WriteElementCount64(const std::uint64_t count) { WriteOne<std::uint64_t>(count); }
 
     void WriteFingerprint()
