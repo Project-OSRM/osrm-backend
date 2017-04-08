@@ -778,7 +778,7 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
     // load profile properties
     {
         io::FileReader profile_properties_file(config.properties_path,
-                                               io::FileReader::HasNoFingerprint);
+                                               io::FileReader::VerifyFingerprint);
         const auto profile_properties_ptr = layout.GetBlockPtr<extractor::ProfileProperties, true>(
             memory_ptr, DataLayout::PROPERTIES);
         profile_properties_file.ReadInto(profile_properties_ptr,

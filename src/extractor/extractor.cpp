@@ -320,7 +320,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
 void Extractor::WriteProfileProperties(const std::string &output_path,
                                        const ProfileProperties &properties) const
 {
-    storage::io::FileWriter file(output_path, storage::io::FileWriter::HasNoFingerprint);
+    storage::io::FileWriter file(output_path, storage::io::FileWriter::GenerateFingerprint);
 
     file.WriteOne(properties);
 }
