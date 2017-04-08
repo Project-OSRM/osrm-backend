@@ -213,7 +213,7 @@ void Storage::PopulateLayout(DataLayout &layout)
     {
         util::Log() << "load names from: " << config.names_data_path;
         // number of entries in name index
-        io::FileReader name_file(config.names_data_path, io::FileReader::HasNoFingerprint);
+        io::FileReader name_file(config.names_data_path, io::FileReader::VerifyFingerprint);
         layout.SetBlockSize<char>(DataLayout::NAME_CHAR_DATA, name_file.GetSize());
     }
 
@@ -529,7 +529,7 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
 
     // Name data
     {
-        io::FileReader name_file(config.names_data_path, io::FileReader::HasNoFingerprint);
+        io::FileReader name_file(config.names_data_path, io::FileReader::VerifyFingerprint);
         std::size_t name_file_size = name_file.GetSize();
 
         BOOST_ASSERT(name_file_size == layout.GetBlockSize(DataLayout::NAME_CHAR_DATA));

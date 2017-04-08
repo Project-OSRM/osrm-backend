@@ -11,7 +11,7 @@ NameTable::NameTable(const std::string &file_name)
 {
     using FileReader = storage::io::FileReader;
 
-    FileReader name_stream_file_reader(file_name, FileReader::HasNoFingerprint);
+    FileReader name_stream_file_reader(file_name, FileReader::VerifyFingerprint);
     const auto file_size = name_stream_file_reader.GetSize();
 
     m_buffer = BufferType(static_cast<ValueType *>(::operator new(file_size)),
