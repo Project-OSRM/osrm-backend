@@ -23,10 +23,6 @@ namespace io
 
 class FileReader
 {
-  private:
-    const boost::filesystem::path filepath;
-    boost::filesystem::ifstream input_stream;
-
   public:
     class LineWrapper : public std::string
     {
@@ -50,7 +46,7 @@ class FileReader
     }
 
     FileReader(const boost::filesystem::path &filepath_, const FingerprintFlag flag)
-        : filepath(filepath_)
+        : filepath(filepath_), fingerprint(flag)
     {
         input_stream.open(filepath, std::ios::binary);
         if (!input_stream)
@@ -75,7 +71,12 @@ class FileReader
 
         // restore the current position
         input_stream.seekg(positon, std::ios::beg);
-        return file_size;
+
+        if(fingerprint == FingerprintFlag::VerifyFingerprint) {
+          return std::size_t(file_size) - sizeof(util::FingerPrint);
+        } else {
+          return file_size;
+        }
     }
 
     /* Read count objects of type T into pointer dest */
@@ -164,14 +165,11 @@ class FileReader
         return true;
     }
 
-    std::size_t Size()
-    {
-        auto current_pos = input_stream.tellg();
-        input_stream.seekg(0, input_stream.end);
-        auto length = input_stream.tellg();
-        input_stream.seekg(current_pos, input_stream.beg);
-        return length;
-    }
+  private:
+    const boost::filesystem::path filepath;
+    boost::filesystem::ifstream input_stream;
+    FingerprintFlag fingerprint;
+
 };
 
 class FileWriter

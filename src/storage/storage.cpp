@@ -284,8 +284,8 @@ void Storage::PopulateLayout(DataLayout &layout)
 
     // read timestampsize
     {
-        io::FileReader timestamp_file(config.timestamp_path, io::FileReader::HasNoFingerprint);
-        const auto timestamp_size = timestamp_file.Size();
+        io::FileReader timestamp_file(config.timestamp_path, io::FileReader::VerifyFingerprint);
+        const auto timestamp_size = timestamp_file.GetSize();
         layout.SetBlockSize<char>(DataLayout::TIMESTAMP, timestamp_size);
     }
 
@@ -720,8 +720,8 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
 
     // store timestamp
     {
-        io::FileReader timestamp_file(config.timestamp_path, io::FileReader::HasNoFingerprint);
-        const auto timestamp_size = timestamp_file.Size();
+        io::FileReader timestamp_file(config.timestamp_path, io::FileReader::VerifyFingerprint);
+        const auto timestamp_size = timestamp_file.GetSize();
 
         const auto timestamp_ptr =
             layout.GetBlockPtr<char, true>(memory_ptr, DataLayout::TIMESTAMP);
