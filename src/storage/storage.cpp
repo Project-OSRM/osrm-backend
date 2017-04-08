@@ -394,7 +394,7 @@ void Storage::PopulateLayout(DataLayout &layout)
 
     {
         // Loading turn lane data
-        io::FileReader lane_data_file(config.turn_lane_data_path, io::FileReader::HasNoFingerprint);
+        io::FileReader lane_data_file(config.turn_lane_data_path, io::FileReader::VerifyFingerprint);
         const auto lane_tuple_count = lane_data_file.ReadElementCount64();
         layout.SetBlockSize<util::guidance::LaneTupleIdPair>(DataLayout::TURN_LANE_DATA,
                                                              lane_tuple_count);
@@ -541,7 +541,7 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
 
     // Turn lane data
     {
-        io::FileReader lane_data_file(config.turn_lane_data_path, io::FileReader::HasNoFingerprint);
+        io::FileReader lane_data_file(config.turn_lane_data_path, io::FileReader::VerifyFingerprint);
 
         const auto lane_tuple_count = lane_data_file.ReadElementCount64();
 

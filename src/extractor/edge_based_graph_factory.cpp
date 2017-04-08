@@ -576,7 +576,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     util::Log() << "Writing Turn Lane Data to File...";
     {
         storage::io::FileWriter writer(turn_lane_data_filename,
-                                       storage::io::FileWriter::HasNoFingerprint);
+                                       storage::io::FileWriter::GenerateFingerprint);
 
         std::vector<util::guidance::LaneTupleIdPair> lane_data(lane_data_map.size());
         // extract lane data sorted by ID
