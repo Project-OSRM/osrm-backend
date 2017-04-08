@@ -112,10 +112,16 @@ auto mmapFile(const std::string &filename, boost::interprocess::mode_t mode)
     using boost::interprocess::file_mapping;
     using boost::interprocess::mapped_region;
 
+    {
+        storage::io::FileReader file(filename, storage::io::FileReader::VerifyFingerprint);
+    }
+
     try
     {
         const file_mapping mapping{filename.c_str(), mode};
-        mapped_region region{mapping, mode};
+
+        // map region started at an offset of util::FingerPrint size
+        mapped_region region{mapping, mode, 8};
         region.advise(mapped_region::advice_sequential);
         return region;
     }

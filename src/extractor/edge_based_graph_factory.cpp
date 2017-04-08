@@ -307,7 +307,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     skipped_barrier_turns_counter = 0;
 
     storage::io::FileWriter turn_penalties_index_file(turn_penalties_index_filename,
-                                                      storage::io::FileWriter::HasNoFingerprint);
+                                                      storage::io::FileWriter::GenerateFingerprint);
 
     TurnDataExternalContainer turn_data_container;
 
