@@ -47,7 +47,7 @@ class RasterGrid
         storage::io::FileReader file_reader(filepath, storage::io::FileReader::HasNoFingerprint);
 
         std::string buffer;
-        buffer.resize(file_reader.Size());
+        buffer.resize(file_reader.GetSize());
 
         BOOST_ASSERT(buffer.size() > 1);
 
