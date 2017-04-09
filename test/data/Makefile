@@ -11,7 +11,7 @@ OSRM_CUSTOMIZE:=$(OSRM_BUILD_DIR)/osrm-customize
 OSRM_ROUTED:=$(OSRM_BUILD_DIR)/osrm-routed
 POLY2REQ:=$(SCRIPT_ROOT)/poly2req.js
 MD5SUM:=$(SCRIPT_ROOT)/md5sum.js
-TIMER:=$(SCRIPT_ROOT)/timer.sh
+TIMER:=$(SCRIPT_ROOT)/timer.js
 PROFILE:=$(PROFILE_ROOT)/car.lua
 
 all: data

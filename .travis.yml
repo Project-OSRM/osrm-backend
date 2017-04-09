@@ -248,6 +248,7 @@ install:
              -DCMAKE_INSTALL_PREFIX=${OSRM_INSTALL_DIR}
   - echo "travis_fold:start:MAKE"
   - make --jobs=${JOBS}
+  - if [[ -n $PUBLISH_NODE_BINDINGS ]] ; then echo "Skip building tests for building node binaries" && exit 0 ; fi
   - make tests --jobs=${JOBS}
   - make benchmarks --jobs=${JOBS}
   - echo "travis_fold:end:MAKE"
