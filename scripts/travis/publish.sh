@@ -3,16 +3,16 @@
 set -eu
 set -o pipefail
 
+echo "node version is:"
+which node
+node -v
+
 if [[ ${PUBLISH} == 'On' ]]; then
     echo "PUBLISH is set to '${PUBLISH}', publishing!"
     NPM_FLAGS=''
     if [[ ${BUILD_TYPE} == "Debug" ]]; then
         NPM_FLAGS='--debug'
     fi
-
-    echo "node version is:"
-    which node
-    node -v
 
     echo "dumping binary meta..."
     ./node_modules/.bin/node-pre-gyp reveal $NPM_FLAGS
