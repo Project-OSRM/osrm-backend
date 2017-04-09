@@ -242,23 +242,22 @@ install:
              -DBUILD_TOOLS=ON \
              -DENABLE_CCACHE=ON \
              -DCMAKE_INSTALL_PREFIX=${OSRM_INSTALL_DIR}
+  - echo "travis_fold:start:MAKE"
   - make --jobs=${JOBS}
+  - make tests --jobs=${JOBS}
+  - make benchmarks --jobs=${JOBS}
+  - echo "travis_fold:end:MAKE"
+  - ccache -s
+  - sudo make install
   - |
-    if [ -z "${PUBLISH_NODE_BINDINGS}" ]; then
-      make tests --jobs=${JOBS}
-      make benchmarks --jobs=${JOBS}
-      ccache -s
-      sudo make install
-      |
-      if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
-        export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${OSRM_INSTALL_DIR}/lib
-      fi
-      popd
-      mkdir example/build && pushd example/build
-      export PKG_CONFIG_PATH=${OSRM_INSTALL_DIR}/lib/pkgconfig
-      cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
-      make --jobs=${JOBS}
+    if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
+      export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${OSRM_INSTALL_DIR}/lib
     fi
+  - popd
+  - mkdir example/build && pushd example/build
+  - export PKG_CONFIG_PATH=${OSRM_INSTALL_DIR}/lib/pkgconfig
+  - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
+  - make --jobs=${JOBS}
   - popd
   # building docs only works with npm3+ not with yarn or npm2
   #- yarn run docs
