@@ -142,7 +142,8 @@ matrix:
           packages: ['libstdc++-5-dev']
       env: CLANG_VERSION='4.0.0' BUILD_TYPE='Release' ENABLE_MASON=ON ENABLE_LTO=ON ENABLE_NODE_BINDINGS=ON PUBLISH_NODE_BINDINGS=On JOBS=4
       nodejs: "4"
-
+      script:
+          npm run nodejs-tests
     - os: linux
       sudo: false
       compiler: "node-4-mason-linux-release"
@@ -152,7 +153,8 @@ matrix:
           packages: ['libstdc++-5-dev']
       env: CLANG_VERSION='4.0.0' BUILD_TYPE='Debug' ENABLE_MASON=ON ENABLE_LTO=ON ENABLE_NODE_BINDINGS=ON PUBLISH_NODE_BINDINGS=On JOBS=4
       nodejs: "4"
-
+      script:
+          npm run nodejs-tests
     - os: linux
       sudo: false
       compiler: "node-6-mason-linux-release"
@@ -162,7 +164,8 @@ matrix:
           packages: ['libstdc++-5-dev']
       env: CLANG_VERSION='4.0.0' BUILD_TYPE='Release' ENABLE_MASON=ON ENABLE_LTO=ON ENABLE_NODE_BINDINGS=ON PUBLISH_NODE_BINDINGS=On JOBS=4
       nodejs: "6"
-
+      script:
+          npm run nodejs-tests
     - os: linux
       sudo: false
       compiler: "node-6-mason-linux-release"
@@ -172,9 +175,10 @@ matrix:
           packages: ['libstdc++-5-dev']
       env: CLANG_VERSION='4.0.0' BUILD_TYPE='Debug' ENABLE_MASON=ON ENABLE_LTO=ON ENABLE_NODE_BINDINGS=ON PUBLISH_NODE_BINDINGS=On JOBS=4
       nodejs: "6"
+      script:
+          npm run nodejs-tests
 
 before_install:
-  - node --version
   - if [[ ! -z $TARGET_ARCH ]] ; then source ./scripts/travis/before_install.$TARGET_ARCH.sh ; fi
   - |
     if [[ -z $JOBS ]]; then
@@ -264,25 +268,22 @@ install:
 
 script:
   - if [[ $TARGET_ARCH == armhf ]] ; then echo "Skip tests for $TARGET_ARCH" && exit 0 ; fi
-  - |
-    if [ -z "${PUBLISH_NODE_BINDINGS}" ]; then
-      make -C test/data benchmark
-      ./example/build/osrm-example test/data/ch/monaco.osrm
-      # All tests assume to be run from the build directory
-      pushd ${OSRM_BUILD_DIR}
-      ./unit_tests/library-tests
-      ./unit_tests/extractor-tests
-      ./unit_tests/engine-tests
-      ./unit_tests/util-tests
-      ./unit_tests/server-tests
-      ./unit_tests/partition-tests
-      popd
-      yarn test
-    fi
+  - make -C test/data benchmark
+  - ./example/build/osrm-example test/data/ch/monaco.osrm
+  # All tests assume to be run from the build directory
+  - pushd ${OSRM_BUILD_DIR}
+  - ./unit_tests/library-tests
+  - ./unit_tests/extractor-tests
+  - ./unit_tests/engine-tests
+  - ./unit_tests/util-tests
+  - ./unit_tests/server-tests
+  - ./unit_tests/partition-tests
   - |
     if [ -n "${ENABLE_NODE_BINDINGS}" ] && [ -z "${ENABLE_SANITIZER}" ]; then
       npm run nodejs-tests
     fi
+  - popd
+  - yarn test
 
 after_success:
   - |
