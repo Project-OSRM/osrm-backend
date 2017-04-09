@@ -10,7 +10,7 @@ CMD=${@:2}
 START=$(date "+%s.%N")
 /bin/bash -c "$CMD"
 END=$(date "+%s.%N")
-TIME="$(echo "$END - $START" | bc)s"
+TIME="$(node -e "console.log($END - $START)")s"
 NEW_ENTRY="$NAME\t$TIME"
 
 echo -e "$NEW_ENTRY" >> $TIMINGS_FILE
