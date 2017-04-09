@@ -9,7 +9,8 @@ namespace storage
 enum class Ownership
 {
     Container,
-    View
+    View,
+    External
 };
 }
 }

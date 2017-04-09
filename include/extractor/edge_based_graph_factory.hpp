@@ -159,9 +159,6 @@ class EdgeBasedGraphFactory
 
     NBGToEBG InsertEdgeBasedNode(const NodeID u, const NodeID v);
 
-    void FlushVectorToStream(storage::io::FileWriter &edge_data_file,
-                             std::vector<OriginalEdgeData> &original_edge_data_vector) const;
-
     std::size_t restricted_turns_counter;
     std::size_t skipped_uturns_counter;
     std::size_t skipped_barrier_turns_counter;
