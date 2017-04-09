@@ -2,8 +2,11 @@
 #define OSRM_STORAGE_SERIALIZATION_HPP
 
 #include "util/vector_view.hpp"
+#include "util/integer_range.hpp"
 
 #include "storage/io.hpp"
+
+#include <cstdint>
 
 namespace osrm
 {
@@ -11,6 +14,27 @@ namespace storage
 {
 namespace serialization
 {
+template <typename T>
+inline void read(storage::io::FileReader &reader, stxxl::vector<T> &vec)
+{
+    auto size = reader.ReadOne<std::uint64_t>();
+    vec.reserve(size);
+    for (auto idx : util::irange<std::size_t>(0, size))
+    {
+        (void)idx;
+        vec.push_back(reader.ReadOne<T>());
+    }
+}
+
+template <typename T>
+inline void write(storage::io::FileWriter &writer, const stxxl::vector<T> &vec)
+{
+    writer.WriteOne(vec.size());
+    for (auto idx : util::irange<std::size_t>(0, vec.size()))
+    {
+        writer.WriteOne<T>(vec[idx]);
+    }
+}
 
 template <typename T> void read(io::FileReader &reader, std::vector<T> &data)
 {

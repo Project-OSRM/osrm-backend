@@ -309,8 +309,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     storage::io::FileWriter turn_penalties_index_file(turn_penalties_index_filename,
                                                       storage::io::FileWriter::HasNoFingerprint);
 
-    // TODO investigate increased peak memory consumption by keeping this in memory now
-    TurnDataContainer turn_data_container;
+    TurnDataExternalContainer turn_data_container;
 
     // Loop over all turns and generate new set of edges.
     // Three nested loop look super-linear, but we are dealing with a (kind of)

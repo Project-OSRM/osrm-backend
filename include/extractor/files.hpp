@@ -117,7 +117,8 @@ template <typename TurnDataT>
 inline void readTurnData(const boost::filesystem::path &path, TurnDataT &turn_data)
 {
     static_assert(std::is_same<TurnDataContainer, TurnDataT>::value ||
-                      std::is_same<TurnDataView, TurnDataT>::value,
+                      std::is_same<TurnDataView, TurnDataT>::value ||
+                      std::is_same<TurnDataExternalContainer, TurnDataT>::value,
                   "");
     const auto fingerprint = storage::io::FileReader::HasNoFingerprint;
     storage::io::FileReader reader{path, fingerprint};
@@ -130,7 +131,8 @@ template <typename TurnDataT>
 inline void writeTurnData(const boost::filesystem::path &path, const TurnDataT &turn_data)
 {
     static_assert(std::is_same<TurnDataContainer, TurnDataT>::value ||
-                      std::is_same<TurnDataView, TurnDataT>::value,
+                      std::is_same<TurnDataView, TurnDataT>::value ||
+                      std::is_same<TurnDataExternalContainer, TurnDataT>::value,
                   "");
     const auto fingerprint = storage::io::FileWriter::HasNoFingerprint;
     storage::io::FileWriter writer{path, fingerprint};
