@@ -143,7 +143,17 @@ matrix:
       env: CLANG_VERSION='4.0.0' BUILD_TYPE='Release' ENABLE_MASON=ON ENABLE_LTO=ON ENABLE_NODE_BINDINGS=ON PUBLISH_NODE_BINDINGS=On JOBS=4
       nodejs: "4"
       script:
+      install:
+        - |
+          cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
+              -DENABLE_MASON=${ENABLE_MASON:-OFF} \
+              -DENABLE_NODE_BINDINGS=${ENABLE_NODE_BINDINGS:-OFF} \
+              -DENABLE_CCACHE=ON \
+              -DCMAKE_INSTALL_PREFIX=${OSRM_INSTALL_DIR}
+        - make --jobs=${JOBS}
           npm run nodejs-tests
+      after_success:
+          ./scripts/travis/publish.sh
     - os: linux
       sudo: false
       compiler: "node-4-mason-linux-release"
@@ -153,8 +163,18 @@ matrix:
           packages: ['libstdc++-5-dev']
       env: CLANG_VERSION='4.0.0' BUILD_TYPE='Debug' ENABLE_MASON=ON ENABLE_LTO=ON ENABLE_NODE_BINDINGS=ON PUBLISH_NODE_BINDINGS=On JOBS=4
       nodejs: "4"
+      install:
+        - |
+          cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
+              -DENABLE_MASON=${ENABLE_MASON:-OFF} \
+              -DENABLE_NODE_BINDINGS=${ENABLE_NODE_BINDINGS:-OFF} \
+              -DENABLE_CCACHE=ON \
+              -DCMAKE_INSTALL_PREFIX=${OSRM_INSTALL_DIR}
+        - make --jobs=${JOBS}
       script:
           npm run nodejs-tests
+      after_success:
+          ./scripts/travis/publish.sh
     - os: linux
       sudo: false
       compiler: "node-6-mason-linux-release"
@@ -164,8 +184,18 @@ matrix:
           packages: ['libstdc++-5-dev']
       env: CLANG_VERSION='4.0.0' BUILD_TYPE='Release' ENABLE_MASON=ON ENABLE_LTO=ON ENABLE_NODE_BINDINGS=ON PUBLISH_NODE_BINDINGS=On JOBS=4
       nodejs: "6"
+      install:
+        - |
+          cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
+              -DENABLE_MASON=${ENABLE_MASON:-OFF} \
+              -DENABLE_NODE_BINDINGS=${ENABLE_NODE_BINDINGS:-OFF} \
+              -DENABLE_CCACHE=ON \
+              -DCMAKE_INSTALL_PREFIX=${OSRM_INSTALL_DIR}
+        - make --jobs=${JOBS}
       script:
           npm run nodejs-tests
+      after_success:
+          ./scripts/travis/publish.sh
     - os: linux
       sudo: false
       compiler: "node-6-mason-linux-release"
@@ -175,8 +205,18 @@ matrix:
           packages: ['libstdc++-5-dev']
       env: CLANG_VERSION='4.0.0' BUILD_TYPE='Debug' ENABLE_MASON=ON ENABLE_LTO=ON ENABLE_NODE_BINDINGS=ON PUBLISH_NODE_BINDINGS=On JOBS=4
       nodejs: "6"
+      install:
+        - |
+          cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
+              -DENABLE_MASON=${ENABLE_MASON:-OFF} \
+              -DENABLE_NODE_BINDINGS=${ENABLE_NODE_BINDINGS:-OFF} \
+              -DENABLE_CCACHE=ON \
+              -DCMAKE_INSTALL_PREFIX=${OSRM_INSTALL_DIR}
+        - make --jobs=${JOBS}
       script:
           npm run nodejs-tests
+      after_success:
+          ./scripts/travis/publish.sh
 
 before_install:
   - if [[ ! -z $TARGET_ARCH ]] ; then source ./scripts/travis/before_install.$TARGET_ARCH.sh ; fi
@@ -225,16 +265,16 @@ before_install:
       fi
     fi
   - ccache --max-size=256M  # limiting the cache's size to roughly the previous job's object sizes
+  - export OSRM_INSTALL_DIR="$(pwd)/install-osrm"
+  - export OSRM_BUILD_DIR="$(pwd)/build-osrm"
+  - mkdir ${OSRM_BUILD_DIR} && pushd ${OSRM_BUILD_DIR}
+  - export CC=${CCOMPILER} CXX=${CXXCOMPILER}
 
 install:
   - |
     if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
       ./scripts/check_taginfo.py taginfo.json profiles/car.lua
     fi
-  - export OSRM_INSTALL_DIR="$(pwd)/install-osrm"
-  - export OSRM_BUILD_DIR="$(pwd)/build-osrm"
-  - mkdir ${OSRM_BUILD_DIR} && pushd ${OSRM_BUILD_DIR}
-  - export CC=${CCOMPILER} CXX=${CXXCOMPILER}
   - |
     cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
              -DENABLE_MASON=${ENABLE_MASON:-OFF} \
@@ -248,7 +288,6 @@ install:
              -DCMAKE_INSTALL_PREFIX=${OSRM_INSTALL_DIR}
   - echo "travis_fold:start:MAKE"
   - make --jobs=${JOBS}
-  - if [[ -n $PUBLISH_NODE_BINDINGS ]] ; then echo "Skip building tests for building node binaries" && exit 0 ; fi
   - make tests --jobs=${JOBS}
   - make benchmarks --jobs=${JOBS}
   - echo "travis_fold:end:MAKE"
@@ -290,9 +329,4 @@ after_success:
   - |
     if [ -n "${ENABLE_COVERAGE}" ]; then
       bash <(curl -s https://codecov.io/bash)
-    fi
-
-  - |
-    if [ -n "${PUBLISH_NODE_BINDINGS}" ]; then
-      ./scripts/travis/publish.sh
     fi
