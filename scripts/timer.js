@@ -10,7 +10,7 @@ exec(cmd, (err) => {
     if (err) return console.log(err);
     var stop = +new Date();
     var time = (stop - start) / 1000.;
-    fs.appendFileSync('/tmp/osrm.timings', `${name}\t${time}`, 'utf-8')
-})
+    fs.appendFileSync('/tmp/osrm.timings', `${name}\t${time}`, 'utf-8');
+});
 
 
