@@ -59,7 +59,7 @@ class Extractor
     std::pair<std::size_t, EdgeID>
     BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
                            std::vector<util::Coordinate> &coordinates,
-                           util::PackedVector<OSMNodeID> &osm_node_ids,
+                           extractor::PackedOSMIDs &osm_node_ids,
                            std::vector<EdgeBasedNode> &node_based_edge_list,
                            std::vector<bool> &node_is_startpoint,
                            std::vector<EdgeWeight> &edge_based_node_weights,
@@ -78,7 +78,7 @@ class Extractor
     LoadNodeBasedGraph(std::unordered_set<NodeID> &barrier_nodes,
                        std::unordered_set<NodeID> &traffic_lights,
                        std::vector<util::Coordinate> &coordinates,
-                       util::PackedVector<OSMNodeID> &osm_node_ids);
+                       extractor::PackedOSMIDs &osm_node_ids);
 
     void WriteEdgeBasedGraph(const std::string &output_file_filename,
                              const EdgeID max_edge_id,

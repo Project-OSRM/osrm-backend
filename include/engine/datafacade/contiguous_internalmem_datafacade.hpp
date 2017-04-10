@@ -16,6 +16,7 @@
 #include "extractor/profile_properties.hpp"
 #include "extractor/segment_data_container.hpp"
 #include "extractor/turn_data_container.hpp"
+#include "extractor/packed_osm_ids.hpp"
 
 #include "contractor/query_graph.hpp"
 
@@ -214,7 +215,7 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
 
     unsigned m_check_sum;
     util::vector_view<util::Coordinate> m_coordinate_list;
-    util::PackedVectorView<OSMNodeID> m_osmnodeid_list;
+    extractor::PackedOSMIDsView m_osmnodeid_list;
     util::NameTable m_names_table;
     util::vector_view<std::uint32_t> m_lane_description_offsets;
     util::vector_view<extractor::guidance::TurnLaneType::Mask> m_lane_description_masks;

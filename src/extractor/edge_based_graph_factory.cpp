@@ -42,7 +42,7 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(
     const std::unordered_set<NodeID> &traffic_lights,
     std::shared_ptr<const RestrictionMap> restriction_map,
     const std::vector<util::Coordinate> &coordinates,
-    const util::PackedVector<OSMNodeID> &osm_node_ids,
+    const extractor::PackedOSMIDs &osm_node_ids,
     ProfileProperties profile_properties,
     const util::NameTable &name_table,
     std::vector<std::uint32_t> &turn_lane_offsets,

@@ -5,6 +5,7 @@
 #include "extractor/node_based_edge.hpp"
 #include "extractor/query_node.hpp"
 #include "extractor/restriction.hpp"
+#include "extractor/packed_osm_ids.hpp"
 #include "storage/io.hpp"
 #include "util/exception.hpp"
 #include "util/fingerprint.hpp"
@@ -59,7 +60,7 @@ NodeID loadNodesFromFile(storage::io::FileReader &file_reader,
                          BarrierOutIter barriers,
                          TrafficSignalsOutIter traffic_signals,
                          std::vector<util::Coordinate> &coordinates,
-                         util::PackedVector<OSMNodeID> &osm_node_ids)
+                         extractor::PackedOSMIDs &osm_node_ids)
 {
     auto number_of_nodes = file_reader.ReadElementCount64();
     Log() << "Importing number_of_nodes new = " << number_of_nodes << " nodes ";
