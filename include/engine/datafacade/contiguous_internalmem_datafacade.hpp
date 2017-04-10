@@ -431,27 +431,27 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
             geometries_node_list_ptr,
             data_layout.num_entries[storage::DataLayout::GEOMETRIES_NODE_LIST]);
 
-        auto geometries_fwd_weight_list_ptr = data_layout.GetBlockPtr<EdgeWeight>(
+        auto geometries_fwd_weight_list_ptr = data_layout.GetBlockPtr<SegmentWeight>(
             memory_block, storage::DataLayout::GEOMETRIES_FWD_WEIGHT_LIST);
-        util::vector_view<EdgeWeight> geometry_fwd_weight_list(
+        util::vector_view<SegmentWeight> geometry_fwd_weight_list(
             geometries_fwd_weight_list_ptr,
             data_layout.num_entries[storage::DataLayout::GEOMETRIES_FWD_WEIGHT_LIST]);
 
-        auto geometries_rev_weight_list_ptr = data_layout.GetBlockPtr<EdgeWeight>(
+        auto geometries_rev_weight_list_ptr = data_layout.GetBlockPtr<SegmentWeight>(
             memory_block, storage::DataLayout::GEOMETRIES_REV_WEIGHT_LIST);
-        util::vector_view<EdgeWeight> geometry_rev_weight_list(
+        util::vector_view<SegmentWeight> geometry_rev_weight_list(
             geometries_rev_weight_list_ptr,
             data_layout.num_entries[storage::DataLayout::GEOMETRIES_REV_WEIGHT_LIST]);
 
-        auto geometries_fwd_duration_list_ptr = data_layout.GetBlockPtr<EdgeWeight>(
+        auto geometries_fwd_duration_list_ptr = data_layout.GetBlockPtr<SegmentDuration>(
             memory_block, storage::DataLayout::GEOMETRIES_FWD_DURATION_LIST);
-        util::vector_view<EdgeWeight> geometry_fwd_duration_list(
+        util::vector_view<SegmentDuration> geometry_fwd_duration_list(
             geometries_fwd_duration_list_ptr,
             data_layout.num_entries[storage::DataLayout::GEOMETRIES_FWD_DURATION_LIST]);
 
-        auto geometries_rev_duration_list_ptr = data_layout.GetBlockPtr<EdgeWeight>(
+        auto geometries_rev_duration_list_ptr = data_layout.GetBlockPtr<SegmentDuration>(
             memory_block, storage::DataLayout::GEOMETRIES_REV_DURATION_LIST);
-        util::vector_view<EdgeWeight> geometry_rev_duration_list(
+        util::vector_view<SegmentDuration> geometry_rev_duration_list(
             geometries_rev_duration_list_ptr,
             data_layout.num_entries[storage::DataLayout::GEOMETRIES_REV_DURATION_LIST]);
 

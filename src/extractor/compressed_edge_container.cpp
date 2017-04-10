@@ -4,6 +4,7 @@
 #include <boost/assert.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
+#include <boost/numeric/conversion/cast.hpp>
 
 #include <limits>
 #include <string>
@@ -88,16 +89,16 @@ void CompressedEdgeContainer::CompressEdge(const EdgeID edge_id_1,
                                            const NodeID target_node_id,
                                            const EdgeWeight weight1,
                                            const EdgeWeight weight2,
-                                           const EdgeWeight duration1,
-                                           const EdgeWeight duration2)
+                                           const EdgeDuration duration1,
+                                           const EdgeDuration duration2)
 {
     // remove super-trivial geometries
     BOOST_ASSERT(SPECIAL_EDGEID != edge_id_1);
     BOOST_ASSERT(SPECIAL_EDGEID != edge_id_2);
     BOOST_ASSERT(SPECIAL_NODEID != via_node_id);
     BOOST_ASSERT(SPECIAL_NODEID != target_node_id);
-    BOOST_ASSERT(INVALID_EDGE_WEIGHT != weight1);
-    BOOST_ASSERT(INVALID_EDGE_WEIGHT != weight2);
+    BOOST_ASSERT(INVALID_SEGMENT_WEIGHT != weight1);
+    BOOST_ASSERT(INVALID_SEGMENT_WEIGHT != weight2);
 
     // append list of removed edge_id plus via node to surviving edge id:
     // <surv_1, .. , surv_n, via_node_id, rem_1, .. rem_n
@@ -134,7 +135,10 @@ void CompressedEdgeContainer::CompressEdge(const EdgeID edge_id_1,
     // weight1 is the distance to the (currently) last coordinate in the bucket
     if (edge_bucket_list1.empty())
     {
-        edge_bucket_list1.emplace_back(OnewayCompressedEdge{via_node_id, weight1, duration1});
+        edge_bucket_list1.emplace_back(
+            OnewayCompressedEdge{via_node_id,
+                                 boost::numeric_cast<SegmentWeight>(weight1),
+                                 boost::numeric_cast<SegmentDuration>(duration1)});
     }
 
     BOOST_ASSERT(0 < edge_bucket_list1.size());
@@ -165,14 +169,17 @@ void CompressedEdgeContainer::CompressEdge(const EdgeID edge_id_1,
     else
     {
         // we are certain that the second edge is atomic.
-        edge_bucket_list1.emplace_back(OnewayCompressedEdge{target_node_id, weight2, duration2});
+        edge_bucket_list1.emplace_back(
+            OnewayCompressedEdge{target_node_id,
+                                 boost::numeric_cast<SegmentWeight>(weight2),
+                                 boost::numeric_cast<SegmentDuration>(duration2)});
     }
 }
 
 void CompressedEdgeContainer::AddUncompressedEdge(const EdgeID edge_id,
                                                   const NodeID target_node_id,
-                                                  const EdgeWeight weight,
-                                                  const EdgeWeight duration)
+                                                  const SegmentWeight weight,
+                                                  const SegmentDuration duration)
 {
     // remove super-trivial geometries
     BOOST_ASSERT(SPECIAL_EDGEID != edge_id);

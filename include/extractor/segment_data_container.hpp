@@ -55,10 +55,10 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
 
     SegmentDataContainerImpl(Vector<std::uint32_t> index_,
                              Vector<NodeID> nodes_,
-                             Vector<EdgeWeight> fwd_weights_,
-                             Vector<EdgeWeight> rev_weights_,
-                             Vector<EdgeWeight> fwd_durations_,
-                             Vector<EdgeWeight> rev_durations_,
+                             Vector<SegmentWeight> fwd_weights_,
+                             Vector<SegmentWeight> rev_weights_,
+                             Vector<SegmentDuration> fwd_durations_,
+                             Vector<SegmentDuration> rev_durations_,
                              Vector<DatasourceID> datasources_)
         : index(std::move(index_)), nodes(std::move(nodes_)), fwd_weights(std::move(fwd_weights_)),
           rev_weights(std::move(rev_weights_)), fwd_durations(std::move(fwd_durations_)),
@@ -201,10 +201,10 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
   private:
     Vector<std::uint32_t> index;
     Vector<NodeID> nodes;
-    Vector<EdgeWeight> fwd_weights;
-    Vector<EdgeWeight> rev_weights;
-    Vector<EdgeWeight> fwd_durations;
-    Vector<EdgeWeight> rev_durations;
+    Vector<SegmentWeight> fwd_weights;
+    Vector<SegmentWeight> rev_weights;
+    Vector<SegmentDuration> fwd_durations;
+    Vector<SegmentDuration> rev_durations;
     Vector<DatasourceID> datasources;
 };
 }
