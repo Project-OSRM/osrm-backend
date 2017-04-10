@@ -340,13 +340,13 @@ void Storage::PopulateLayout(DataLayout &layout)
         const auto number_of_compressed_geometries = reader.ReadVectorSize<NodeID>();
         layout.SetBlockSize<NodeID>(DataLayout::GEOMETRIES_NODE_LIST,
                                     number_of_compressed_geometries);
-        layout.SetBlockSize<EdgeWeight>(DataLayout::GEOMETRIES_FWD_WEIGHT_LIST,
+        layout.SetBlockSize<SegmentWeight>(DataLayout::GEOMETRIES_FWD_WEIGHT_LIST,
+                                         number_of_compressed_geometries);
+        layout.SetBlockSize<SegmentWeight>(DataLayout::GEOMETRIES_REV_WEIGHT_LIST,
                                         number_of_compressed_geometries);
-        layout.SetBlockSize<EdgeWeight>(DataLayout::GEOMETRIES_REV_WEIGHT_LIST,
-                                        number_of_compressed_geometries);
-        layout.SetBlockSize<EdgeWeight>(DataLayout::GEOMETRIES_FWD_DURATION_LIST,
-                                        number_of_compressed_geometries);
-        layout.SetBlockSize<EdgeWeight>(DataLayout::GEOMETRIES_REV_DURATION_LIST,
+        layout.SetBlockSize<SegmentDuration>(DataLayout::GEOMETRIES_FWD_DURATION_LIST,
+                                 number_of_compressed_geometries);
+        layout.SetBlockSize<SegmentDuration>(DataLayout::GEOMETRIES_REV_DURATION_LIST,
                                         number_of_compressed_geometries);
         layout.SetBlockSize<DatasourceID>(DataLayout::DATASOURCES_LIST,
                                           number_of_compressed_geometries);
@@ -641,27 +641,27 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
             geometries_node_list_ptr,
             layout.num_entries[storage::DataLayout::GEOMETRIES_NODE_LIST]);
 
-        auto geometries_fwd_weight_list_ptr = layout.GetBlockPtr<EdgeWeight, true>(
+        auto geometries_fwd_weight_list_ptr = layout.GetBlockPtr<SegmentWeight, true>(
             memory_ptr, storage::DataLayout::GEOMETRIES_FWD_WEIGHT_LIST);
-        util::vector_view<EdgeWeight> geometry_fwd_weight_list(
+        util::vector_view<SegmentWeight> geometry_fwd_weight_list(
             geometries_fwd_weight_list_ptr,
             layout.num_entries[storage::DataLayout::GEOMETRIES_FWD_WEIGHT_LIST]);
 
-        auto geometries_rev_weight_list_ptr = layout.GetBlockPtr<EdgeWeight, true>(
+        auto geometries_rev_weight_list_ptr = layout.GetBlockPtr<SegmentWeight, true>(
             memory_ptr, storage::DataLayout::GEOMETRIES_REV_WEIGHT_LIST);
-        util::vector_view<EdgeWeight> geometry_rev_weight_list(
+        util::vector_view<SegmentWeight> geometry_rev_weight_list(
             geometries_rev_weight_list_ptr,
             layout.num_entries[storage::DataLayout::GEOMETRIES_REV_WEIGHT_LIST]);
 
-        auto geometries_fwd_duration_list_ptr = layout.GetBlockPtr<EdgeWeight, true>(
+        auto geometries_fwd_duration_list_ptr = layout.GetBlockPtr<SegmentDuration, true>(
             memory_ptr, storage::DataLayout::GEOMETRIES_FWD_DURATION_LIST);
-        util::vector_view<EdgeWeight> geometry_fwd_duration_list(
+        util::vector_view<SegmentDuration> geometry_fwd_duration_list(
             geometries_fwd_duration_list_ptr,
             layout.num_entries[storage::DataLayout::GEOMETRIES_FWD_DURATION_LIST]);
 
-        auto geometries_rev_duration_list_ptr = layout.GetBlockPtr<EdgeWeight, true>(
+        auto geometries_rev_duration_list_ptr = layout.GetBlockPtr<SegmentDuration, true>(
             memory_ptr, storage::DataLayout::GEOMETRIES_REV_DURATION_LIST);
-        util::vector_view<EdgeWeight> geometry_rev_duration_list(
+        util::vector_view<SegmentDuration> geometry_rev_duration_list(
             geometries_rev_duration_list_ptr,
             layout.num_entries[storage::DataLayout::GEOMETRIES_REV_DURATION_LIST]);
 

@@ -19,7 +19,7 @@ struct NodeBasedEdge
                   NodeID target,
                   NodeID name_id,
                   EdgeWeight weight,
-                  EdgeWeight duration,
+                  EdgeDuration duration,
                   bool forward,
                   bool backward,
                   bool roundabout,
@@ -37,7 +37,7 @@ struct NodeBasedEdge
     NodeID target;                                    // 32 4
     NodeID name_id;                                   // 32 4
     EdgeWeight weight;                                // 32 4
-    EdgeWeight duration;                              // 32 4
+    EdgeDuration duration;                            // 32 4
     std::uint8_t forward : 1;                         // 1
     std::uint8_t backward : 1;                        // 1
     std::uint8_t roundabout : 1;                      // 1
@@ -56,7 +56,7 @@ struct NodeBasedEdgeWithOSM : NodeBasedEdge
                          OSMNodeID target,
                          NodeID name_id,
                          EdgeWeight weight,
-                         EdgeWeight duration,
+                         EdgeDuration duration,
                          bool forward,
                          bool backward,
                          bool roundabout,
@@ -86,7 +86,7 @@ inline NodeBasedEdge::NodeBasedEdge(NodeID source,
                                     NodeID target,
                                     NodeID name_id,
                                     EdgeWeight weight,
-                                    EdgeWeight duration,
+                                    EdgeDuration duration,
                                     bool forward,
                                     bool backward,
                                     bool roundabout,
@@ -125,7 +125,7 @@ inline NodeBasedEdgeWithOSM::NodeBasedEdgeWithOSM(OSMNodeID source,
                                                   OSMNodeID target,
                                                   NodeID name_id,
                                                   EdgeWeight weight,
-                                                  EdgeWeight duration,
+                                                  EdgeDuration duration,
                                                   bool forward,
                                                   bool backward,
                                                   bool roundabout,

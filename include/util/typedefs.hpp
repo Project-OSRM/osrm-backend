@@ -58,6 +58,9 @@ using NodeID = std::uint32_t;
 using EdgeID = std::uint32_t;
 using NameID = std::uint32_t;
 using EdgeWeight = std::int32_t;
+using EdgeDuration = std::int32_t;
+using SegmentWeight = std::uint16_t;
+using SegmentDuration = std::uint16_t;
 using TurnPenalty = std::int16_t; // turn penalty in 100ms units
 
 static const std::size_t INVALID_INDEX = std::numeric_limits<std::size_t>::max();
@@ -85,8 +88,10 @@ static const EdgeID SPECIAL_EDGEID = std::numeric_limits<EdgeID>::max();
 static const NameID INVALID_NAMEID = std::numeric_limits<NameID>::max();
 static const NameID EMPTY_NAMEID = 0;
 static const unsigned INVALID_COMPONENTID = 0;
+static const SegmentWeight INVALID_SEGMENT_WEIGHT = std::numeric_limits<SegmentWeight>::max();
+static const SegmentDuration INVALID_SEGMENT_DURATION = std::numeric_limits<SegmentDuration>::max();
 static const EdgeWeight INVALID_EDGE_WEIGHT = std::numeric_limits<EdgeWeight>::max();
-static const EdgeWeight MAXIMAL_EDGE_DURATION = std::numeric_limits<EdgeWeight>::max();
+static const EdgeDuration MAXIMAL_EDGE_DURATION = std::numeric_limits<EdgeDuration>::max();
 static const TurnPenalty INVALID_TURN_PENALTY = std::numeric_limits<TurnPenalty>::max();
 
 // FIXME the bitfields we use require a reduced maximal duration, this should be kept consistent
