@@ -14,15 +14,15 @@ namespace util
 {
 namespace serialization
 {
-template <typename T, storage::Ownership Ownership>
-inline void read(storage::io::FileReader &reader, detail::PackedVector<T, Ownership> &vec)
+template <typename T, std::size_t Bits, storage::Ownership Ownership>
+inline void read(storage::io::FileReader &reader, detail::PackedVector<T, Bits, Ownership> &vec)
 {
     vec.num_elements = reader.ReadOne<std::uint64_t>();
     storage::serialization::read(reader, vec.vec);
 }
 
-template <typename T, storage::Ownership Ownership>
-inline void write(storage::io::FileWriter &writer, const detail::PackedVector<T, Ownership> &vec)
+template <typename T, std::size_t Bits, storage::Ownership Ownership>
+inline void write(storage::io::FileWriter &writer, const detail::PackedVector<T, Bits, Ownership> &vec)
 {
     writer.WriteOne(vec.num_elements);
     storage::serialization::write(writer, vec.vec);

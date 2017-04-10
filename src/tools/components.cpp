@@ -33,7 +33,7 @@ using TarjanEdge = util::static_graph_details::SortableEdgeWithData<void>;
 
 std::size_t loadGraph(const std::string &path,
                       std::vector<util::Coordinate> &coordinate_list,
-                      util::PackedVector<OSMNodeID> &osm_node_ids,
+                      extractor::PackedOSMIDs &osm_node_ids,
                       std::vector<TarjanEdge> &graph_edge_list)
 {
     storage::io::FileReader file_reader(path, storage::io::FileReader::VerifyFingerprint);
@@ -142,7 +142,7 @@ int main(int argc, char *argv[])
 
     std::vector<tools::TarjanEdge> graph_edge_list;
     std::vector<util::Coordinate> coordinate_list;
-    util::PackedVector<OSMNodeID> osm_node_ids;
+    extractor::PackedOSMIDs osm_node_ids;
     auto number_of_nodes = tools::loadGraph(inpath, coordinate_list, osm_node_ids, graph_edge_list);
 
     tbb::parallel_sort(graph_edge_list.begin(), graph_edge_list.end());

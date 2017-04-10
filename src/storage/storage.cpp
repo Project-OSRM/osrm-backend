@@ -19,6 +19,7 @@
 #include "extractor/profile_properties.hpp"
 #include "extractor/query_node.hpp"
 #include "extractor/travel_mode.hpp"
+#include "extractor/packed_osm_ids.hpp"
 
 #include "partition/cell_storage.hpp"
 #include "partition/edge_based_graph_reader.hpp"
@@ -326,7 +327,7 @@ void Storage::PopulateLayout(DataLayout &layout)
         // number of items:
         layout.SetBlockSize<std::uint64_t>(
             DataLayout::OSM_NODE_ID_LIST,
-            util::PackedVectorView<OSMNodeID>::elements_to_blocks(coordinate_list_size));
+            extractor::PackedOSMIDsView::elements_to_blocks(coordinate_list_size));
     }
 
     // load geometries sizes
@@ -694,7 +695,7 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
             layout.GetBlockPtr<std::uint64_t, true>(memory_ptr, DataLayout::OSM_NODE_ID_LIST);
         util::vector_view<util::Coordinate> coordinates(
             coordinates_ptr, layout.num_entries[DataLayout::COORDINATE_LIST]);
-        util::PackedVectorView<OSMNodeID> osm_node_ids;
+        extractor::PackedOSMIDsView osm_node_ids;
         osm_node_ids.reset(osmnodeid_ptr, layout.num_entries[DataLayout::OSM_NODE_ID_LIST]);
 
         extractor::files::readNodes(config.nodes_data_path, coordinates, osm_node_ids);

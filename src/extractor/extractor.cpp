@@ -263,7 +263,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
         std::vector<bool> node_is_startpoint;
         std::vector<EdgeWeight> edge_based_node_weights;
         std::vector<util::Coordinate> coordinates;
-        util::PackedVector<OSMNodeID> osm_node_ids;
+        extractor::PackedOSMIDs osm_node_ids;
 
         auto graph_size = BuildEdgeExpandedGraph(scripting_environment,
                                                  coordinates,
@@ -407,7 +407,7 @@ std::shared_ptr<util::NodeBasedDynamicGraph>
 Extractor::LoadNodeBasedGraph(std::unordered_set<NodeID> &barriers,
                               std::unordered_set<NodeID> &traffic_signals,
                               std::vector<util::Coordinate> &coordiantes,
-                              util::PackedVector<OSMNodeID> &osm_node_ids)
+                              extractor::PackedOSMIDs &osm_node_ids)
 {
     storage::io::FileReader file_reader(config.output_file_name,
                                         storage::io::FileReader::VerifyFingerprint);
@@ -439,7 +439,7 @@ Extractor::LoadNodeBasedGraph(std::unordered_set<NodeID> &barriers,
 std::pair<std::size_t, EdgeID>
 Extractor::BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
                                   std::vector<util::Coordinate> &coordinates,
-                                  util::PackedVector<OSMNodeID> &osm_node_ids,
+                                  extractor::PackedOSMIDs &osm_node_ids,
                                   std::vector<EdgeBasedNode> &node_based_edge_list,
                                   std::vector<bool> &node_is_startpoint,
                                   std::vector<EdgeWeight> &edge_based_node_weights,

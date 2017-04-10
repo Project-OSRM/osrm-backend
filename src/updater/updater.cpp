@@ -134,7 +134,7 @@ updateSegmentData(const UpdaterConfig &config,
                   extractor::SegmentDataContainer &segment_data)
 {
     std::vector<util::Coordinate> coordinates;
-    util::PackedVector<OSMNodeID> osm_node_ids;
+    extractor::PackedOSMIDs osm_node_ids;
     extractor::files::readNodes(config.node_based_graph_path, coordinates, osm_node_ids);
 
     // vector to count used speeds for logging
