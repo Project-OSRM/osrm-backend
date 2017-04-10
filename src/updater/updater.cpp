@@ -62,18 +62,34 @@ inline EdgeWeight convertToDuration(double speed_in_kmh, double distance_in_mete
     if (speed_in_kmh <= 0.)
         return MAXIMAL_EDGE_DURATION;
 
-    const double speed_in_ms = speed_in_kmh / 3.6;
-    const double duration = distance_in_meters / speed_in_ms;
-    return std::max<EdgeWeight>(1, static_cast<EdgeWeight>(std::round(duration * 10.)));
+    const auto speed_in_ms = speed_in_kmh / 3.6;
+    const auto duration = distance_in_meters / speed_in_ms;
+    return std::max(1, boost::numeric_cast<EdgeWeight>(std::round(duration * 10.)));
 }
 
-inline EdgeWeight convertToWeight(double weight, double weight_multiplier, EdgeWeight duration)
+inline EdgeWeight convertToWeight(const SpeedSource &value,
+                                  double distance_in_meters,
+                                  const extractor::ProfileProperties &profile_properties)
 {
-    if (std::isfinite(weight))
-        return std::round(weight * weight_multiplier);
+    double rate = value.rate;
+    if (!std::isfinite(rate))
+    {
+        if (!profile_properties.fallback_to_duration)
+        {
+            util::Log(logWARNING) << "rate is not specified for '"
+                                  << profile_properties.GetWeightName()
+                                  << "', falling back to speed";
+        }
 
-    return duration == MAXIMAL_EDGE_DURATION ? INVALID_EDGE_WEIGHT
-                                             : duration * weight_multiplier / 10.;
+        rate = value.speed / 3.6;
+    }
+
+    if (rate <= 0.)
+        return INVALID_EDGE_WEIGHT;
+
+    const auto weight_multiplier = profile_properties.GetWeightMultiplier();
+    const auto weight = distance_in_meters / rate;
+    return std::max(1, boost::numeric_cast<EdgeWeight>(std::round(weight * weight_multiplier)));
 }
 
 #if !defined(NDEBUG)
@@ -140,8 +156,6 @@ updateSegmentData(const UpdaterConfig &config,
                   const SegmentLookupTable &segment_speed_lookup,
                   extractor::SegmentDataContainer &segment_data)
 {
-    auto weight_multiplier = profile_properties.GetWeightMultiplier();
-
     std::vector<util::Coordinate> coordinates;
     util::PackedVector<OSMNodeID> osm_node_ids;
     extractor::files::readNodes(config.node_based_graph_path, coordinates, osm_node_ids);
@@ -191,10 +205,9 @@ updateSegmentData(const UpdaterConfig &config,
                 auto v = osm_node_ids[nodes_range[segment_offset + 1]];
                 if (auto value = segment_speed_lookup({u, v}))
                 {
-                    auto new_duration =
-                        convertToDuration(value->speed, segment_lengths[segment_offset]);
-                    auto new_weight =
-                        convertToWeight(value->weight, weight_multiplier, new_duration);
+                    auto segment_length = segment_lengths[segment_offset];
+                    auto new_duration = convertToDuration(value->speed, segment_length);
+                    auto new_weight = convertToWeight(*value, segment_length, profile_properties);
                     fwd_was_updated = true;
 
                     fwd_weights_range[segment_offset] = new_weight;
@@ -225,10 +238,9 @@ updateSegmentData(const UpdaterConfig &config,
                 auto v = osm_node_ids[nodes_range[segment_offset + 1]];
                 if (auto value = segment_speed_lookup({v, u}))
                 {
-                    auto new_duration =
-                        convertToDuration(value->speed, segment_lengths[segment_offset]);
-                    auto new_weight =
-                        convertToWeight(value->weight, weight_multiplier, new_duration);
+                    auto segment_length = segment_lengths[segment_offset];
+                    auto new_duration = convertToDuration(value->speed, segment_length);
+                    auto new_weight = convertToWeight(*value, segment_length, profile_properties);
                     rev_was_updated = true;
 
                     rev_weights_range[segment_offset] = new_weight;

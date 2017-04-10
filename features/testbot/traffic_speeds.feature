@@ -30,12 +30,12 @@ Feature: Traffic - speeds
         And the customize extra arguments "--segment-speed-file {speeds_file}"
         And the speed file
         """
-        1,2,0
-        2,1,0
-        2,3,27
-        3,2,27
-        1,4,27
-        4,1,27
+        1,2,0,0
+        2,1,0,0
+        2,3,27,7.5
+        3,2,27,7.5
+        1,4,27,7.5
+        4,1,27,7.5
         """
         And the query options
           | annotations | datasources |
@@ -56,12 +56,12 @@ Feature: Traffic - speeds
         And the customize extra arguments "--segment-speed-file {speeds_file}"
         And the speed file
         """
-        1,2,1,20020.7
-        2,1,1,20020.7
-        2,3,27,741.5
-        3,2,27,741.5
-        1,4,27,1275.7
-        4,1,27,1275.7
+        1,2,1,0.2777777
+        2,1,1
+        2,3,27
+        3,2,27,7.5
+        1,4,27,7.5
+        4,1,27,7.5
         """
         And the query options
           | annotations | datasources |
@@ -89,26 +89,26 @@ Feature: Traffic - speeds
         And the customize extra arguments "--segment-speed-file {speeds_file}"
         And the speed file
         """
-        1,2,1,20020.789
-        2,1,1,20020.123
-        2,3,27,741.56789
-        3,2,27,741.3
-        1,4,1,34445.12
-        4,1,1,34445.3
+        1,2,1,0.27777777
+        2,1,1,0.27777777
+        2,3,27,7.5
+        3,2,27
+        1,4,1
+        4,1,1
         """
         And the query options
           | annotations | datasources |
 
         When I route I should get
           | from | to | route       | speed   | weights                     | a:datasources |
-          | a    | b  | ab,ab       | 1 km/h  | 20020.789,0                 | 1:0           |
-          | a    | c  | ab,bc,bc    | 2 km/h  | 20020.789,741.568,0         | 1:1:0         |
-          | b    | c  | bc,bc       | 27 km/h | 741.568,0                   | 1:0           |
-          | a    | d  | ab,eb,de,de | 2 km/h  | 20020.789,378.169,400.415,0 | 1:0:0         |
+          | a    | b  | ab,ab       | 1 km/h  | 20020.735,0                 | 1:0           |
+          | a    | c  | ab,bc,bc    | 2 km/h  | 20020.735,741.509,0         | 1:1:0         |
+          | b    | c  | bc,bc       | 27 km/h | 741.509,0                   | 1:0           |
+          | a    | d  | ab,eb,de,de | 2 km/h  | 20020.735,378.169,400.415,0 | 1:0:0         |
           | d    | c  | dc,dc       | 36 km/h | 956.805,0                   | 0             |
-          | g    | b  | ab,ab       | 1 km/h  | 10010.392,0                 | 1:0           |
-          | a    | g  | ab,ab       | 1 km/h  | 10010.397,0                 | 1             |
-          | g    | a  | ab,ab       | 1 km/h  | 10010.064,0                 | 1:1           |
+          | g    | b  | ab,ab       | 1 km/h  | 10010.365,0                 | 1:0           |
+          | a    | g  | ab,ab       | 1 km/h  | 10010.37,0                  | 1             |
+          | g    | a  | ab,ab       | 1 km/h  | 10010.37,0                  | 1:1           |
 
 
     Scenario: Speeds that isolate a single node (a)
@@ -121,10 +121,10 @@ Feature: Traffic - speeds
         """
         1,2,0
         2,1,0
-        2,3,27
-        3,2,27
-        1,4,0
-        4,1,0
+        2,3,27,7.5
+        3,2,27,7.5
+        1,4,0,0
+        4,1,0,0
         """
         And the query options
           | annotations | true |
