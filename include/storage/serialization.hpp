@@ -1,8 +1,8 @@
 #ifndef OSRM_STORAGE_SERIALIZATION_HPP
 #define OSRM_STORAGE_SERIALIZATION_HPP
 
-#include "util/vector_view.hpp"
 #include "util/integer_range.hpp"
+#include "util/vector_view.hpp"
 
 #include "storage/io.hpp"
 
@@ -14,8 +14,7 @@ namespace storage
 {
 namespace serialization
 {
-template <typename T>
-inline void read(storage::io::FileReader &reader, stxxl::vector<T> &vec)
+template <typename T> inline void read(storage::io::FileReader &reader, stxxl::vector<T> &vec)
 {
     auto size = reader.ReadOne<std::uint64_t>();
     vec.reserve(size);

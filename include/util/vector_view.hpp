@@ -177,7 +177,10 @@ template <typename DataT> void swap(vector_view<DataT> &lhs, vector_view<DataT> 
 }
 
 template <typename DataT, storage::Ownership Ownership>
-using InternalOrExternalVector = typename std::conditional<Ownership == storage::Ownership::External, stxxl::vector<DataT>, std::vector<DataT>>::type;
+using InternalOrExternalVector =
+    typename std::conditional<Ownership == storage::Ownership::External,
+                              stxxl::vector<DataT>,
+                              std::vector<DataT>>::type;
 
 template <typename DataT, storage::Ownership Ownership>
 using ViewOrVector = typename std::conditional<Ownership == storage::Ownership::View,
