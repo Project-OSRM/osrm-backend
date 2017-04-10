@@ -198,9 +198,9 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
 
             const auto haversine_distance = util::coordinate_calculation::haversineDistance(
                 prev_coordinate, current_coordinate);
-            // assumes minumum of 0.1 m/s
-            const int duration_upper_bound =
-                ((haversine_distance + max_distance_delta) * 0.25) * 10;
+            // assumes minumum of 4 m/s
+            const EdgeWeight weight_upper_bound =
+                ((haversine_distance + max_distance_delta) / 4.) * facade.GetWeightMultiplier();
 
             // compute d_t for this timestamp and the next one
             for (const auto s : util::irange<std::size_t>(0UL, prev_viterbi.size()))
@@ -227,7 +227,7 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
                                            reverse_core_heap,
                                            prev_unbroken_timestamps_list[s].phantom_node,
                                            current_timestamps_list[s_prime].phantom_node,
-                                           duration_upper_bound);
+                                           weight_upper_bound);
 
                     // get distance diff between loc1/2 and locs/s_prime
                     const auto d_t = std::abs(network_distance - haversine_distance);

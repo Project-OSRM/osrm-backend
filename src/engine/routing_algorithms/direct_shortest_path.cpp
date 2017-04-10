@@ -140,8 +140,13 @@ InternalRouteResult directShortestPathSearch(
     EdgeWeight weight;
     NodeID source_node, target_node;
     std::vector<EdgeID> unpacked_edges;
-    std::tie(weight, source_node, target_node, unpacked_edges) = mld::search(
-        facade, forward_heap, reverse_heap, DO_NOT_FORCE_LOOPS, DO_NOT_FORCE_LOOPS, phantom_nodes);
+    std::tie(weight, source_node, target_node, unpacked_edges) = mld::search(facade,
+                                                                             forward_heap,
+                                                                             reverse_heap,
+                                                                             DO_NOT_FORCE_LOOPS,
+                                                                             DO_NOT_FORCE_LOOPS,
+                                                                             INVALID_EDGE_WEIGHT,
+                                                                             phantom_nodes);
 
     return extractRoute(facade, weight, source_node, target_node, unpacked_edges, phantom_nodes);
 }
