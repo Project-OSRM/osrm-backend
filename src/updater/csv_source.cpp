@@ -11,7 +11,7 @@ BOOST_FUSION_ADAPT_STRUCT(osrm::updater::Segment,
                          (decltype(osrm::updater::Segment::to), to))
 BOOST_FUSION_ADAPT_STRUCT(osrm::updater::SpeedSource,
                           (decltype(osrm::updater::SpeedSource::speed), speed)
-                          (decltype(osrm::updater::SpeedSource::weight), weight))
+                          (decltype(osrm::updater::SpeedSource::rate), rate))
 BOOST_FUSION_ADAPT_STRUCT(osrm::updater::Turn,
                           (decltype(osrm::updater::Turn::from), from)
                           (decltype(osrm::updater::Turn::via), via)

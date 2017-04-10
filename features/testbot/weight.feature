@@ -284,8 +284,8 @@ Feature: Weight tests
 
         When I route I should get
             | waypoints | route | distance | weights   | times        |
-            | a,d       | ,     | 59.9m    | 62,0      | 24s,0s       |
-            | a,e       | ,,    | 60.1m    | 68.7,10,0 | 38.5s,11s,0s |
+            | a,d       | ,     | 59.9m    | 20.5,0    | 24s,0s       |
+            | a,e       | ,,    | 60.1m    | 27.2,10,0 | 38.5s,11s,0s |
             | d,e       | ,,    | 39.9m    | 10,10,0   | 11s,11s,0s   |
 
     @traffic @speed
@@ -320,6 +320,6 @@ Feature: Weight tests
 
         When I route I should get
             | waypoints | route      | distance | weights       | times    |
-            | a,d       | abcd,abcd  | 59.9m    | 6.993,0       | 7s,0s    |
-            | a,e       | abcd,ce,ce | 60.1m    | 6.002,2.002,0 | 6s,2s,0s |
+            | a,d       | abcd,abcd  | 59.9m    | 6.996,0       | 7s,0s    |
+            | a,e       | abcd,ce,ce | 60.1m    | 6.005,2.002,0 | 6s,2s,0s |
             | d,e       | abcd,ce,ce | 39.9m    | 1.991,2.002,0 | 2s,2s,0s |

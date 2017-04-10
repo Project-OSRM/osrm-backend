@@ -49,9 +49,9 @@ struct Segment final
 
 struct SpeedSource final
 {
-    SpeedSource() : speed(0), weight(std::numeric_limits<double>::quiet_NaN()) {}
+    SpeedSource() : speed(0), rate(std::numeric_limits<double>::quiet_NaN()) {}
     unsigned speed;
-    double weight;
+    double rate;
     std::uint8_t source;
 };
 

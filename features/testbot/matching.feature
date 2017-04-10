@@ -213,7 +213,7 @@ Feature: Basic Map Matching
 
         And the speed file
         """
-        1,2,36
+        1,2,36,10
         """
 
         And the contract extra arguments "--segment-speed-file {speeds_file}"
@@ -240,7 +240,7 @@ Feature: Basic Map Matching
 
         And the speed file
         """
-        1,2,36
+        1,2,36,10
         """
 
         And the contract extra arguments "--segment-speed-file {speeds_file}"
