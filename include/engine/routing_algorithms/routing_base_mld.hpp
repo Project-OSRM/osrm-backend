@@ -186,6 +186,7 @@ search(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
        SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
        const bool force_loop_forward,
        const bool force_loop_reverse,
+       EdgeWeight weight_upper_bound,
        Args... args)
 {
 
@@ -196,7 +197,7 @@ search(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
 
     // run two-Target Dijkstra routing step.
     NodeID middle = SPECIAL_NODEID;
-    EdgeWeight weight = INVALID_EDGE_WEIGHT;
+    EdgeWeight weight = weight_upper_bound;
     EdgeWeight forward_heap_min = forward_heap.MinKey();
     EdgeWeight reverse_heap_min = reverse_heap.MinKey();
     while (forward_heap.Size() + reverse_heap.Size() > 0 &&
@@ -231,7 +232,7 @@ search(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
     };
 
     // No path found for both target nodes?
-    if (weight == INVALID_EDGE_WEIGHT || SPECIAL_NODEID == middle)
+    if (weight >= weight_upper_bound || SPECIAL_NODEID == middle)
     {
         return std::make_tuple(
             INVALID_EDGE_WEIGHT, SPECIAL_NODEID, SPECIAL_NODEID, std::vector<EdgeID>());
@@ -297,6 +298,7 @@ search(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
                        reverse_heap,
                        force_loop_forward,
                        force_loop_reverse,
+                       INVALID_EDGE_WEIGHT,
                        sublevel,
                        parent_cell_id);
             BOOST_ASSERT(!subpath.empty());
@@ -320,14 +322,17 @@ inline void search(const datafacade::ContiguousInternalMemoryDataFacade<Algorith
                    const bool force_loop_forward,
                    const bool force_loop_reverse,
                    const PhantomNodes &phantom_nodes,
-                   const int duration_upper_bound = INVALID_EDGE_WEIGHT)
+                   const EdgeWeight weight_upper_bound = INVALID_EDGE_WEIGHT)
 {
-    (void)duration_upper_bound; // TODO: limiting search radius is not implemented for MLD
-
     NodeID source_node, target_node;
     std::vector<EdgeID> unpacked_edges;
-    std::tie(weight, source_node, target_node, unpacked_edges) = mld::search(
-        facade, forward_heap, reverse_heap, force_loop_forward, force_loop_reverse, phantom_nodes);
+    std::tie(weight, source_node, target_node, unpacked_edges) = mld::search(facade,
+                                                                             forward_heap,
+                                                                             reverse_heap,
+                                                                             force_loop_forward,
+                                                                             force_loop_reverse,
+                                                                             weight_upper_bound,
+                                                                             phantom_nodes);
 
     if (weight != INVALID_EDGE_WEIGHT)
     {
@@ -374,7 +379,7 @@ getNetworkDistance(const datafacade::ContiguousInternalMemoryDataFacade<Algorith
                    SearchEngineData<Algorithm>::QueryHeap & /*reverse_core_heap*/,
                    const PhantomNode &source_phantom,
                    const PhantomNode &target_phantom,
-                   int /*duration_upper_bound*/)
+                   EdgeWeight weight_upper_bound = INVALID_EDGE_WEIGHT)
 {
     forward_heap.Clear();
     reverse_heap.Clear();
@@ -385,8 +390,13 @@ getNetworkDistance(const datafacade::ContiguousInternalMemoryDataFacade<Algorith
     EdgeWeight weight;
     NodeID source_node, target_node;
     std::vector<EdgeID> unpacked_edges;
-    std::tie(weight, source_node, target_node, unpacked_edges) = search(
-        facade, forward_heap, reverse_heap, DO_NOT_FORCE_LOOPS, DO_NOT_FORCE_LOOPS, phantom_nodes);
+    std::tie(weight, source_node, target_node, unpacked_edges) = search(facade,
+                                                                        forward_heap,
+                                                                        reverse_heap,
+                                                                        DO_NOT_FORCE_LOOPS,
+                                                                        DO_NOT_FORCE_LOOPS,
+                                                                        weight_upper_bound,
+                                                                        phantom_nodes);
 
     if (weight == INVALID_EDGE_WEIGHT)
         return std::numeric_limits<double>::max();
