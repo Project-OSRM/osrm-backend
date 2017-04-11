@@ -20,11 +20,11 @@ const static constexpr bool DO_NOT_FORCE_LOOP = false;
 
 // allows a uturn at the target_phantom
 // searches source forward/reverse -> target forward/reverse
-template <typename Algorithm>
-void searchWithUTurn(SearchEngineData<Algorithm> &engine_working_data,
+template <typename Algorithm, typename SearchEngineData>
+void searchWithUTurn(SearchEngineData &engine_working_data,
                      const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
-                     typename SearchEngineData<Algorithm>::QueryHeap &forward_heap,
-                     typename SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
+                     typename SearchEngineData::QueryHeap &forward_heap,
+                     typename SearchEngineData::QueryHeap &reverse_heap,
                      const bool search_from_forward_node,
                      const bool search_from_reverse_node,
                      const bool search_to_forward_node,
@@ -94,11 +94,11 @@ void searchWithUTurn(SearchEngineData<Algorithm> &engine_working_data,
 // searches shortest path between:
 // source forward/reverse -> target forward
 // source forward/reverse -> target reverse
-template <typename Algorithm>
-void search(SearchEngineData<Algorithm> &engine_working_data,
+template <typename Algorithm, typename SearchEngineData>
+void search(SearchEngineData &engine_working_data,
             const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
-            typename SearchEngineData<Algorithm>::QueryHeap &forward_heap,
-            typename SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
+            typename SearchEngineData::QueryHeap &forward_heap,
+            typename SearchEngineData::QueryHeap &reverse_heap,
             const bool search_from_forward_node,
             const bool search_from_reverse_node,
             const bool search_to_forward_node,
@@ -215,9 +215,9 @@ void unpackLegs(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> 
 }
 }
 
-template <typename Algorithm>
+template <typename Algorithm, typename SearchEngineData>
 InternalRouteResult
-shortestPathSearch(SearchEngineData<Algorithm> &engine_working_data,
+shortestPathSearch(SearchEngineData &engine_working_data,
                    const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
                    const std::vector<PhantomNodes> &phantom_nodes_vector,
                    const boost::optional<bool> continue_straight_at_waypoint)
@@ -474,7 +474,7 @@ shortestPathSearch(SearchEngineData<ch::Algorithm> &engine_working_data,
                    const boost::optional<bool> continue_straight_at_waypoint);
 
 template InternalRouteResult
-shortestPathSearch(SearchEngineData<corech::Algorithm> &engine_working_data,
+shortestPathSearch(SearchEngineData<ch::Algorithm> &engine_working_data,
                    const datafacade::ContiguousInternalMemoryDataFacade<corech::Algorithm> &facade,
                    const std::vector<PhantomNodes> &phantom_nodes_vector,
                    const boost::optional<bool> continue_straight_at_waypoint);

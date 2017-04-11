@@ -132,7 +132,7 @@ template <typename Algorithm> class Engine final : public EngineInterface
 
   private:
     std::unique_ptr<DataFacadeProvider<Algorithm>> facade_provider;
-    mutable SearchEngineData<Algorithm> heaps;
+    mutable SearchEngineData<typename RoutingAlgorithms<Algorithm>::HeapAlgorithm> heaps;
 
     const plugins::ViaRoutePlugin route_plugin;
     const plugins::TablePlugin table_plugin;

@@ -22,8 +22,8 @@ static const constexpr double DEFAULT_GPS_PRECISION = 5;
 
 //[1] "Hidden Markov Map Matching Through Noise and Sparseness";
 //     P. Newson and J. Krumm; 2009; ACM GIS
-template <typename Algorithm>
-SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
+template <typename Algorithm, typename SearchEngineData>
+SubMatchingList mapMatching(SearchEngineData &engine_working_data,
                             const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
                             const CandidateLists &candidates_list,
                             const std::vector<util::Coordinate> &trace_coordinates,
