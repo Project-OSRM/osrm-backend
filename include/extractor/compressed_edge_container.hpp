@@ -21,8 +21,8 @@ class CompressedEdgeContainer
     struct OnewayCompressedEdge
     {
       public:
-        NodeID node_id;      // refers to an internal node-based-node
-        SegmentWeight weight;   // the weight of the edge leading to this node
+        NodeID node_id;           // refers to an internal node-based-node
+        SegmentWeight weight;     // the weight of the edge leading to this node
         SegmentDuration duration; // the duration of the edge leading to this node
     };
 
@@ -64,6 +64,8 @@ class CompressedEdgeContainer
 
   private:
     int free_list_maximum = 0;
+    std::atomic_size_t clipped_weights;
+    std::atomic_size_t clipped_durations;
 
     void IncreaseFreeList();
     std::vector<OnewayEdgeBucket> m_compressed_oneway_geometries;
