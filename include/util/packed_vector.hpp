@@ -33,10 +33,12 @@ namespace detail
 {
 template <typename T, std::size_t Bits, storage::Ownership Ownership> class PackedVector
 {
+    static_assert(std::is_integral<T>, "T must be an integral type.");
     static_assert(sizeof(T) <= sizeof(std::uint64_t), "Maximum size of type T is 8 bytes");
-    static_assert(Bits <= sizeof(std::uint64_t)*CHAR_BIT, "Maximum number of bits it 64.");
+    static_assert(Bits > 0, "Minimum number of bits is 0.");
+    static_assert(Bits <= sizeof(std::uint64_t) * CHAR_BIT, "Maximum number of bits is 64.");
 
-    static const constexpr std::size_t ELEMSIZE = sizeof(std::uint64_t)*CHAR_BIT;
+    static const constexpr std::size_t ELEMSIZE = sizeof(std::uint64_t) * CHAR_BIT;
     static const constexpr std::size_t PACKSIZE = Bits * ELEMSIZE;
 
   public:
@@ -213,8 +215,10 @@ template <typename T, std::size_t Bits, storage::Ownership Ownership> class Pack
 };
 }
 
-template <typename T, std::size_t Bits> using PackedVector = detail::PackedVector<T, Bits, storage::Ownership::Container>;
-template <typename T, std::size_t Bits> using PackedVectorView = detail::PackedVector<T, Bits, storage::Ownership::View>;
+template <typename T, std::size_t Bits>
+using PackedVector = detail::PackedVector<T, Bits, storage::Ownership::Container>;
+template <typename T, std::size_t Bits>
+using PackedVectorView = detail::PackedVector<T, Bits, storage::Ownership::View>;
 }
 }
 
