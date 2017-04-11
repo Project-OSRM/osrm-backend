@@ -5,7 +5,7 @@ var fs = require('fs');
 
 var name = process.argv[2];
 var cmd = process.argv.slice(3).join(' ');
-var start = +new Date();
+var start = Date.now();
 exec(cmd, (err) => {
     if (err) return console.log(err);
     var stop = +new Date();
