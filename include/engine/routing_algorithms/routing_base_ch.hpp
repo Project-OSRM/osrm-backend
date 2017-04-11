@@ -388,8 +388,8 @@ namespace corech
 // a force loop, if the heaps have been initialized with positive offsets.
 void search(SearchEngineData<Algorithm> &engine_working_data,
             const datafacade::ContiguousInternalMemoryDataFacade<corech::Algorithm> &facade,
-            SearchEngineData<Algorithm>::QueryHeap &forward_heap,
-            SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
+            SearchEngineData<ch::Algorithm>::QueryHeap &forward_heap,
+            SearchEngineData<ch::Algorithm>::QueryHeap &reverse_heap,
             int &weight,
             std::vector<NodeID> &packed_leg,
             const bool force_loop_forward,
@@ -403,8 +403,8 @@ void search(SearchEngineData<Algorithm> &engine_working_data,
 double
 getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
                    const datafacade::ContiguousInternalMemoryDataFacade<corech::Algorithm> &facade,
-                   SearchEngineData<Algorithm>::QueryHeap &forward_heap,
-                   SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
+                   SearchEngineData<ch::Algorithm>::QueryHeap &forward_heap,
+                   SearchEngineData<ch::Algorithm>::QueryHeap &reverse_heap,
                    const PhantomNode &source_phantom,
                    const PhantomNode &target_phantom,
                    int duration_upper_bound = INVALID_EDGE_WEIGHT);

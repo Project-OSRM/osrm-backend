@@ -48,8 +48,8 @@ unsigned getMedianSampleTime(const std::vector<unsigned> &timestamps)
 }
 }
 
-template <typename Algorithm>
-SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
+template <typename Algorithm, typename SearchEngineData>
+SubMatchingList mapMatching(SearchEngineData &engine_working_data,
                             const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
                             const CandidateLists &candidates_list,
                             const std::vector<util::Coordinate> &trace_coordinates,
@@ -426,7 +426,7 @@ mapMatching(SearchEngineData<ch::Algorithm> &engine_working_data,
             const bool allow_splitting);
 
 template SubMatchingList
-mapMatching(SearchEngineData<corech::Algorithm> &engine_working_data,
+mapMatching(SearchEngineData<ch::Algorithm> &engine_working_data,
             const datafacade::ContiguousInternalMemoryDataFacade<corech::Algorithm> &facade,
             const CandidateLists &candidates_list,
             const std::vector<util::Coordinate> &trace_coordinates,
