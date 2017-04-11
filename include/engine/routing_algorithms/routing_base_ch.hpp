@@ -350,63 +350,29 @@ void retrievePackedPathFromSingleHeap(const SearchEngineData<Algorithm>::QueryHe
 // && source_phantom.GetForwardWeightPlusOffset() > target_phantom.GetForwardWeightPlusOffset())
 // requires
 // a force loop, if the heaps have been initialized with positive offsets.
-void search(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
+void search(SearchEngineData<Algorithm> &engine_working_data,
+            const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
             SearchEngineData<Algorithm>::QueryHeap &forward_heap,
             SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
             std::int32_t &weight,
             std::vector<NodeID> &packed_leg,
             const bool force_loop_forward,
             const bool force_loop_reverse,
+            const PhantomNodes &phantom_nodes,
             const int duration_upper_bound = INVALID_EDGE_WEIGHT);
-
-// Alias to be compatible with the overload for CoreCH that needs 4 heaps
-inline void search(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
-                   SearchEngineData<Algorithm>::QueryHeap &forward_heap,
-                   SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
-                   SearchEngineData<Algorithm>::QueryHeap &,
-                   SearchEngineData<Algorithm>::QueryHeap &,
-                   EdgeWeight &weight,
-                   std::vector<NodeID> &packed_leg,
-                   const bool force_loop_forward,
-                   const bool force_loop_reverse,
-                   const PhantomNodes & /*phantom_nodes*/,
-                   const int duration_upper_bound = INVALID_EDGE_WEIGHT)
-{
-    search(facade,
-           forward_heap,
-           reverse_heap,
-           weight,
-           packed_leg,
-           force_loop_forward,
-           force_loop_reverse,
-           duration_upper_bound);
-}
 
 // Requires the heaps for be empty
 // If heaps should be adjusted to be initialized outside of this function,
 // the addition of force_loop parameters might be required
 double
-getNetworkDistance(const datafacade::ContiguousInternalMemoryDataFacade<ch::Algorithm> &facade,
+getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
+                   const datafacade::ContiguousInternalMemoryDataFacade<ch::Algorithm> &facade,
                    SearchEngineData<Algorithm>::QueryHeap &forward_heap,
                    SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
                    const PhantomNode &source_phantom,
                    const PhantomNode &target_phantom,
                    int duration_upper_bound = INVALID_EDGE_WEIGHT);
 
-// Alias to be compatible with the overload for CoreCH that needs 4 heaps
-inline double
-getNetworkDistance(const datafacade::ContiguousInternalMemoryDataFacade<ch::Algorithm> &facade,
-                   SearchEngineData<Algorithm>::QueryHeap &forward_heap,
-                   SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
-                   SearchEngineData<Algorithm>::QueryHeap &,
-                   SearchEngineData<Algorithm>::QueryHeap &,
-                   const PhantomNode &source_phantom,
-                   const PhantomNode &target_phantom,
-                   int duration_upper_bound = INVALID_EDGE_WEIGHT)
-{
-    return getNetworkDistance(
-        facade, forward_heap, reverse_heap, source_phantom, target_phantom, duration_upper_bound);
-}
 } // namespace ch
 
 namespace corech
@@ -420,11 +386,10 @@ namespace corech
 // && source_phantom.GetForwardWeightPlusOffset() > target_phantom.GetForwardWeightPlusOffset())
 // requires
 // a force loop, if the heaps have been initialized with positive offsets.
-void search(const datafacade::ContiguousInternalMemoryDataFacade<corech::Algorithm> &facade,
+void search(SearchEngineData<Algorithm> &engine_working_data,
+            const datafacade::ContiguousInternalMemoryDataFacade<corech::Algorithm> &facade,
             SearchEngineData<Algorithm>::QueryHeap &forward_heap,
             SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
-            SearchEngineData<Algorithm>::QueryHeap &forward_core_heap,
-            SearchEngineData<Algorithm>::QueryHeap &reverse_core_heap,
             int &weight,
             std::vector<NodeID> &packed_leg,
             const bool force_loop_forward,
@@ -436,11 +401,10 @@ void search(const datafacade::ContiguousInternalMemoryDataFacade<corech::Algorit
 // If heaps should be adjusted to be initialized outside of this function,
 // the addition of force_loop parameters might be required
 double
-getNetworkDistance(const datafacade::ContiguousInternalMemoryDataFacade<corech::Algorithm> &facade,
+getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
+                   const datafacade::ContiguousInternalMemoryDataFacade<corech::Algorithm> &facade,
                    SearchEngineData<Algorithm>::QueryHeap &forward_heap,
                    SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
-                   SearchEngineData<Algorithm>::QueryHeap &forward_core_heap,
-                   SearchEngineData<Algorithm>::QueryHeap &reverse_core_heap,
                    const PhantomNode &source_phantom,
                    const PhantomNode &target_phantom,
                    int duration_upper_bound = INVALID_EDGE_WEIGHT);

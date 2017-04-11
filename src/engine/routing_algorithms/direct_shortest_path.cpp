@@ -62,25 +62,19 @@ InternalRouteResult directShortestPathSearchImpl(
     const PhantomNodes &phantom_nodes)
 {
     engine_working_data.InitializeOrClearFirstThreadLocalStorage(facade.GetNumberOfNodes());
-    engine_working_data.InitializeOrClearSecondThreadLocalStorage(facade.GetNumberOfNodes());
     auto &forward_heap = *engine_working_data.forward_heap_1;
     auto &reverse_heap = *engine_working_data.reverse_heap_1;
-    auto &forward_core_heap = *engine_working_data.forward_heap_2;
-    auto &reverse_core_heap = *engine_working_data.reverse_heap_2;
     forward_heap.Clear();
     reverse_heap.Clear();
-    forward_core_heap.Clear();
-    reverse_core_heap.Clear();
 
     EdgeWeight weight = INVALID_EDGE_WEIGHT;
     std::vector<NodeID> packed_leg;
     insertNodesInHeaps(forward_heap, reverse_heap, phantom_nodes);
 
-    search(facade,
+    search(engine_working_data,
+           facade,
            forward_heap,
            reverse_heap,
-           forward_core_heap,
-           reverse_core_heap,
            weight,
            packed_leg,
            DO_NOT_FORCE_LOOPS,
@@ -140,7 +134,8 @@ InternalRouteResult directShortestPathSearch(
     EdgeWeight weight;
     NodeID source_node, target_node;
     std::vector<EdgeID> unpacked_edges;
-    std::tie(weight, source_node, target_node, unpacked_edges) = mld::search(facade,
+    std::tie(weight, source_node, target_node, unpacked_edges) = mld::search(engine_working_data,
+                                                                             facade,
                                                                              forward_heap,
                                                                              reverse_heap,
                                                                              DO_NOT_FORCE_LOOPS,
