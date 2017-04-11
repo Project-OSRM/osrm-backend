@@ -87,10 +87,10 @@ void CompressedEdgeContainer::CompressEdge(const EdgeID edge_id_1,
                                            const EdgeID edge_id_2,
                                            const NodeID via_node_id,
                                            const NodeID target_node_id,
-                                           const EdgeWeight weight1,
-                                           const EdgeWeight weight2,
-                                           const EdgeDuration duration1,
-                                           const EdgeDuration duration2)
+                                           EdgeWeight weight1,
+                                           EdgeWeight weight2,
+                                           EdgeDuration duration1,
+                                           EdgeDuration duration2)
 {
     // remove super-trivial geometries
     BOOST_ASSERT(SPECIAL_EDGEID != edge_id_1);
@@ -135,10 +135,21 @@ void CompressedEdgeContainer::CompressEdge(const EdgeID edge_id_1,
     // weight1 is the distance to the (currently) last coordinate in the bucket
     if (edge_bucket_list1.empty())
     {
+        if (weight1 >= INVALID_SEGMENT_WEIGHT)
+        {
+            weight1 = INVALID_SEGMENT_WEIGHT - 1;
+            clipped_weights++;
+        }
+        if (duration1 >= INVALID_SEGMENT_DURATION)
+        {
+            duration1 = INVALID_SEGMENT_DURATION - 1;
+            clipped_durations++;
+        }
+
         edge_bucket_list1.emplace_back(
             OnewayCompressedEdge{via_node_id,
-                                 boost::numeric_cast<SegmentWeight>(weight1),
-                                 boost::numeric_cast<SegmentDuration>(duration1)});
+                                 static_cast<SegmentWeight>(weight1),
+                                 static_cast<SegmentDuration>(duration1)});
     }
 
     BOOST_ASSERT(0 < edge_bucket_list1.size());
@@ -168,11 +179,22 @@ void CompressedEdgeContainer::CompressEdge(const EdgeID edge_id_1,
     }
     else
     {
+        if (weight2 >= INVALID_SEGMENT_WEIGHT)
+        {
+            weight2 = INVALID_SEGMENT_WEIGHT - 1;
+            clipped_weights++;
+        }
+        if (duration2 >= INVALID_SEGMENT_DURATION)
+        {
+            duration2 = INVALID_SEGMENT_DURATION - 1;
+            clipped_durations++;
+        }
+
         // we are certain that the second edge is atomic.
         edge_bucket_list1.emplace_back(
             OnewayCompressedEdge{target_node_id,
-                                 boost::numeric_cast<SegmentWeight>(weight2),
-                                 boost::numeric_cast<SegmentDuration>(duration2)});
+                                 static_cast<SegmentWeight>(weight2),
+                                 static_cast<SegmentDuration>(duration2)});
     }
 }
 
@@ -294,6 +316,17 @@ void CompressedEdgeContainer::PrintStatistics() const
     {
         compressed_geometries += current_vector.size();
         longest_chain_length = std::max(longest_chain_length, (uint64_t)current_vector.size());
+    }
+
+    if (clipped_weights > 0)
+    {
+        util::Log(logWARNING) << "Clipped " << clipped_weights << " segment weights to "
+                              << (INVALID_SEGMENT_WEIGHT - 1);
+    }
+    if (clipped_durations > 0)
+    {
+        util::Log(logWARNING) << "Clipped " << clipped_durations << " segment durations to "
+                              << (INVALID_SEGMENT_DURATION - 1);
     }
 
     util::Log() << "Geometry successfully removed:"
