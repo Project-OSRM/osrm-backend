@@ -12,10 +12,10 @@
 #include "extractor/guidance/turn_lane_types.hpp"
 #include "extractor/nbg_to_ebg.hpp"
 #include "extractor/original_edge_data.hpp"
+#include "extractor/packed_osm_ids.hpp"
 #include "extractor/profile_properties.hpp"
 #include "extractor/query_node.hpp"
 #include "extractor/restriction_map.hpp"
-#include "extractor/packed_osm_ids.hpp"
 
 #include "util/deallocating_vector.hpp"
 #include "util/guidance/bearing_class.hpp"

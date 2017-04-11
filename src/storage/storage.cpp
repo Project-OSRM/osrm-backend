@@ -16,10 +16,10 @@
 #include "extractor/files.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
 #include "extractor/original_edge_data.hpp"
+#include "extractor/packed_osm_ids.hpp"
 #include "extractor/profile_properties.hpp"
 #include "extractor/query_node.hpp"
 #include "extractor/travel_mode.hpp"
-#include "extractor/packed_osm_ids.hpp"
 
 #include "partition/cell_storage.hpp"
 #include "partition/edge_based_graph_reader.hpp"

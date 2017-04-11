@@ -33,7 +33,8 @@ namespace detail
 {
 template <typename T, std::size_t Bits, storage::Ownership Ownership> class PackedVector
 {
-    static_assert(std::is_integral<T>, "T must be an integral type.");
+    // This fails for all strong typedef types
+    // static_assert(std::is_integral<T>::value, "T must be an integral type.");
     static_assert(sizeof(T) <= sizeof(std::uint64_t), "Maximum size of type T is 8 bytes");
     static_assert(Bits > 0, "Minimum number of bits is 0.");
     static_assert(Bits <= sizeof(std::uint64_t) * CHAR_BIT, "Maximum number of bits is 64.");
