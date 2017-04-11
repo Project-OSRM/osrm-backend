@@ -79,12 +79,8 @@ template <> struct SearchEngineData<routing_algorithms::mld::Algorithm>
 
     static SearchEngineHeapPtr forward_heap_1;
     static SearchEngineHeapPtr reverse_heap_1;
-    static SearchEngineHeapPtr forward_heap_2;
-    static SearchEngineHeapPtr reverse_heap_2;
 
     void InitializeOrClearFirstThreadLocalStorage(unsigned number_of_nodes);
-
-    void InitializeOrClearSecondThreadLocalStorage(unsigned number_of_nodes);
 };
 }
 }
