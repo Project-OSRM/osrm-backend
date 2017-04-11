@@ -22,7 +22,8 @@ inline void read(storage::io::FileReader &reader, detail::PackedVector<T, Bits, 
 }
 
 template <typename T, std::size_t Bits, storage::Ownership Ownership>
-inline void write(storage::io::FileWriter &writer, const detail::PackedVector<T, Bits, Ownership> &vec)
+inline void write(storage::io::FileWriter &writer,
+                  const detail::PackedVector<T, Bits, Ownership> &vec)
 {
     writer.WriteOne(vec.num_elements);
     storage::serialization::write(writer, vec.vec);

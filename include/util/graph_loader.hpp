@@ -3,9 +3,9 @@
 
 #include "extractor/external_memory_node.hpp"
 #include "extractor/node_based_edge.hpp"
+#include "extractor/packed_osm_ids.hpp"
 #include "extractor/query_node.hpp"
 #include "extractor/restriction.hpp"
-#include "extractor/packed_osm_ids.hpp"
 #include "storage/io.hpp"
 #include "util/exception.hpp"
 #include "util/fingerprint.hpp"
