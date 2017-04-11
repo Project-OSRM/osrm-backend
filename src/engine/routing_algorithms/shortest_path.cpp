@@ -21,11 +21,10 @@ const static constexpr bool DO_NOT_FORCE_LOOP = false;
 // allows a uturn at the target_phantom
 // searches source forward/reverse -> target forward/reverse
 template <typename Algorithm>
-void searchWithUTurn(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
+void searchWithUTurn(SearchEngineData<Algorithm> &engine_working_data,
+                     const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
                      typename SearchEngineData<Algorithm>::QueryHeap &forward_heap,
                      typename SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
-                     typename SearchEngineData<Algorithm>::QueryHeap &forward_core_heap,
-                     typename SearchEngineData<Algorithm>::QueryHeap &reverse_core_heap,
                      const bool search_from_forward_node,
                      const bool search_from_reverse_node,
                      const bool search_to_forward_node,
@@ -75,15 +74,10 @@ void searchWithUTurn(const datafacade::ContiguousInternalMemoryDataFacade<Algori
     auto needs_loop_backwards =
         is_oneway_target && needsLoopBackwards(source_phantom, target_phantom);
 
-    forward_core_heap.Clear();
-    reverse_core_heap.Clear();
-    BOOST_ASSERT(forward_core_heap.Size() == 0);
-    BOOST_ASSERT(reverse_core_heap.Size() == 0);
-    search(facade,
+    search(engine_working_data,
+           facade,
            forward_heap,
            reverse_heap,
-           forward_core_heap,
-           reverse_core_heap,
            new_total_weight,
            leg_packed_path,
            needs_loop_forwards,
@@ -101,11 +95,10 @@ void searchWithUTurn(const datafacade::ContiguousInternalMemoryDataFacade<Algori
 // source forward/reverse -> target forward
 // source forward/reverse -> target reverse
 template <typename Algorithm>
-void search(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
+void search(SearchEngineData<Algorithm> &engine_working_data,
+            const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
             typename SearchEngineData<Algorithm>::QueryHeap &forward_heap,
             typename SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
-            typename SearchEngineData<Algorithm>::QueryHeap &forward_core_heap,
-            typename SearchEngineData<Algorithm>::QueryHeap &reverse_core_heap,
             const bool search_from_forward_node,
             const bool search_from_reverse_node,
             const bool search_to_forward_node,
@@ -144,15 +137,10 @@ void search(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &fac
         BOOST_ASSERT(forward_heap.Size() > 0);
         BOOST_ASSERT(reverse_heap.Size() > 0);
 
-        forward_core_heap.Clear();
-        reverse_core_heap.Clear();
-        BOOST_ASSERT(forward_core_heap.Size() == 0);
-        BOOST_ASSERT(reverse_core_heap.Size() == 0);
-        search(facade,
+        search(engine_working_data,
+               facade,
                forward_heap,
                reverse_heap,
-               forward_core_heap,
-               reverse_core_heap,
                new_total_weight_to_forward,
                leg_packed_path_forward,
                needsLoopForward(source_phantom, target_phantom),
@@ -183,15 +171,10 @@ void search(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &fac
         }
         BOOST_ASSERT(forward_heap.Size() > 0);
         BOOST_ASSERT(reverse_heap.Size() > 0);
-        forward_core_heap.Clear();
-        reverse_core_heap.Clear();
-        BOOST_ASSERT(forward_core_heap.Size() == 0);
-        BOOST_ASSERT(reverse_core_heap.Size() == 0);
-        search(facade,
+        search(engine_working_data,
+               facade,
                forward_heap,
                reverse_heap,
-               forward_core_heap,
-               reverse_core_heap,
                new_total_weight_to_reverse,
                leg_packed_path_reverse,
                routing_algorithms::DO_NOT_FORCE_LOOP,
@@ -246,12 +229,9 @@ shortestPathSearch(SearchEngineData<Algorithm> &engine_working_data,
                                         : facade.GetContinueStraightDefault());
 
     engine_working_data.InitializeOrClearFirstThreadLocalStorage(facade.GetNumberOfNodes());
-    engine_working_data.InitializeOrClearSecondThreadLocalStorage(facade.GetNumberOfNodes());
 
     auto &forward_heap = *engine_working_data.forward_heap_1;
     auto &reverse_heap = *engine_working_data.reverse_heap_1;
-    auto &forward_core_heap = *engine_working_data.forward_heap_2;
-    auto &reverse_core_heap = *engine_working_data.reverse_heap_2;
 
     int total_weight_to_forward = 0;
     int total_weight_to_reverse = 0;
@@ -294,11 +274,10 @@ shortestPathSearch(SearchEngineData<Algorithm> &engine_working_data,
         {
             if (allow_uturn_at_waypoint)
             {
-                searchWithUTurn(facade,
+                searchWithUTurn(engine_working_data,
+                                facade,
                                 forward_heap,
                                 reverse_heap,
-                                forward_core_heap,
-                                reverse_core_heap,
                                 search_from_forward_node,
                                 search_from_reverse_node,
                                 search_to_forward_node,
@@ -331,11 +310,10 @@ shortestPathSearch(SearchEngineData<Algorithm> &engine_working_data,
             }
             else
             {
-                search(facade,
+                search(engine_working_data,
+                       facade,
                        forward_heap,
                        reverse_heap,
-                       forward_core_heap,
-                       reverse_core_heap,
                        search_from_forward_node,
                        search_from_reverse_node,
                        search_to_forward_node,

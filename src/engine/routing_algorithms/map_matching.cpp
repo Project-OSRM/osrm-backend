@@ -143,12 +143,9 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
 
     const auto nodes_number = facade.GetNumberOfNodes();
     engine_working_data.InitializeOrClearFirstThreadLocalStorage(nodes_number);
-    engine_working_data.InitializeOrClearSecondThreadLocalStorage(nodes_number);
 
     auto &forward_heap = *engine_working_data.forward_heap_1;
     auto &reverse_heap = *engine_working_data.reverse_heap_1;
-    auto &forward_core_heap = *engine_working_data.forward_heap_2;
-    auto &reverse_core_heap = *engine_working_data.reverse_heap_2;
 
     std::size_t breakage_begin = map_matching::INVALID_STATE;
     std::vector<std::size_t> split_points;
@@ -220,11 +217,10 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
                     }
 
                     double network_distance =
-                        getNetworkDistance(facade,
+                        getNetworkDistance(engine_working_data,
+                                           facade,
                                            forward_heap,
                                            reverse_heap,
-                                           forward_core_heap,
-                                           reverse_core_heap,
                                            prev_unbroken_timestamps_list[s].phantom_node,
                                            current_timestamps_list[s_prime].phantom_node,
                                            weight_upper_bound);

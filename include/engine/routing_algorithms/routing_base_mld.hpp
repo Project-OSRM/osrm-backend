@@ -181,7 +181,8 @@ void routingStep(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm>
 
 template <typename... Args>
 std::tuple<EdgeWeight, NodeID, NodeID, std::vector<EdgeID>>
-search(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
+search(SearchEngineData<Algorithm> &engine_working_data,
+       const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
        SearchEngineData<Algorithm>::QueryHeap &forward_heap,
        SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
        const bool force_loop_forward,
@@ -293,7 +294,8 @@ search(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
             NodeID subpath_source, subpath_target;
             std::vector<EdgeID> subpath;
             std::tie(subpath_weight, subpath_source, subpath_target, subpath) =
-                search(facade,
+                search(engine_working_data,
+                       facade,
                        forward_heap,
                        reverse_heap,
                        force_loop_forward,
@@ -311,12 +313,12 @@ search(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
     return std::make_tuple(weight, source_node, target_node, std::move(unpacked_path));
 }
 
+// TODO reorder parameters
 // Alias to be compatible with the overload for CoreCH that needs 4 heaps for shortest path search
-inline void search(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
+inline void search(SearchEngineData<Algorithm> &engine_working_data,
+                   const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
                    SearchEngineData<Algorithm>::QueryHeap &forward_heap,
                    SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
-                   SearchEngineData<Algorithm>::QueryHeap &,
-                   SearchEngineData<Algorithm>::QueryHeap &,
                    EdgeWeight &weight,
                    std::vector<NodeID> &packed_leg,
                    const bool force_loop_forward,
@@ -326,7 +328,8 @@ inline void search(const datafacade::ContiguousInternalMemoryDataFacade<Algorith
 {
     NodeID source_node, target_node;
     std::vector<EdgeID> unpacked_edges;
-    std::tie(weight, source_node, target_node, unpacked_edges) = mld::search(facade,
+    std::tie(weight, source_node, target_node, unpacked_edges) = mld::search(engine_working_data,
+                                                                             facade,
                                                                              forward_heap,
                                                                              reverse_heap,
                                                                              force_loop_forward,
@@ -372,11 +375,10 @@ void unpackPath(const FacadeT &facade,
 }
 
 inline double
-getNetworkDistance(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
+getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
+                   const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
                    SearchEngineData<Algorithm>::QueryHeap &forward_heap,
                    SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
-                   SearchEngineData<Algorithm>::QueryHeap & /*forward_core_heap*/,
-                   SearchEngineData<Algorithm>::QueryHeap & /*reverse_core_heap*/,
                    const PhantomNode &source_phantom,
                    const PhantomNode &target_phantom,
                    EdgeWeight weight_upper_bound = INVALID_EDGE_WEIGHT)
@@ -390,7 +392,8 @@ getNetworkDistance(const datafacade::ContiguousInternalMemoryDataFacade<Algorith
     EdgeWeight weight;
     NodeID source_node, target_node;
     std::vector<EdgeID> unpacked_edges;
-    std::tie(weight, source_node, target_node, unpacked_edges) = search(facade,
+    std::tie(weight, source_node, target_node, unpacked_edges) = search(engine_working_data,
+                                                                        facade,
                                                                         forward_heap,
                                                                         reverse_heap,
                                                                         DO_NOT_FORCE_LOOPS,
