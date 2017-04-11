@@ -22,9 +22,28 @@ Feature: osrm-contract command line option: edge-weight-updates-over-factor
     Scenario: Logging weight with updates over factor of 2, long segment
         When I run "osrm-extract --profile {profile_file} {osm_file} --generate-edge-lookup"
         When I run "osrm-contract --edge-weight-updates-over-factor 2 --segment-speed-file {speeds_file} {processed_file}"
+        Then stderr should not contain "Speed values were used to update 2 segment(s)"
         And stderr should contain "Segment: 1,2"
         And stderr should contain "Segment: 1,3"
         And I route I should get
             | from | to | route    | speed     |
             | a    | b  | ab,ab    | 100 km/h  |
             | a    | c  | ac,ac    | 100 km/h  |
+
+
+    Scenario: Logging using weigts as durations for non-duration profile
+        Given the profile file "testbot" extended with
+        """
+        properties.weight_name = 'steps'
+        function way_function(way, result)
+          result.forward_mode = mode.driving
+          result.backward_mode = mode.driving
+          result.weight = 1
+          result.duration = 1
+        end
+        """
+        And the data has been saved to disk
+
+        When I run "osrm-extract --profile {profile_file} {osm_file} --generate-edge-lookup"
+        When I run "osrm-contract --edge-weight-updates-over-factor 2 --segment-speed-file {speeds_file} {processed_file}"
+        Then stderr should contain "Speed values were used to update 2 segments for 'steps' profile"

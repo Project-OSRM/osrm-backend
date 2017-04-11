@@ -34,6 +34,7 @@
 #include <tbb/parallel_invoke.h>
 
 #include <algorithm>
+#include <atomic>
 #include <bitset>
 #include <cstdint>
 #include <fstream>
@@ -65,31 +66,6 @@ inline EdgeWeight convertToDuration(double speed_in_kmh, double distance_in_mete
     const auto speed_in_ms = speed_in_kmh / 3.6;
     const auto duration = distance_in_meters / speed_in_ms;
     return std::max(1, boost::numeric_cast<EdgeWeight>(std::round(duration * 10.)));
-}
-
-inline EdgeWeight convertToWeight(const SpeedSource &value,
-                                  double distance_in_meters,
-                                  const extractor::ProfileProperties &profile_properties)
-{
-    double rate = value.rate;
-    if (!std::isfinite(rate))
-    {
-        if (!profile_properties.fallback_to_duration)
-        {
-            util::Log(logWARNING) << "rate is not specified for '"
-                                  << profile_properties.GetWeightName()
-                                  << "', falling back to speed";
-        }
-
-        rate = value.speed / 3.6;
-    }
-
-    if (rate <= 0.)
-        return INVALID_EDGE_WEIGHT;
-
-    const auto weight_multiplier = profile_properties.GetWeightMultiplier();
-    const auto weight = distance_in_meters / rate;
-    return std::max(1, boost::numeric_cast<EdgeWeight>(std::round(weight * weight_multiplier)));
 }
 
 #if !defined(NDEBUG)
@@ -168,6 +144,25 @@ updateSegmentData(const UpdaterConfig &config,
         counters_type(num_counters, 0));
     const constexpr auto LUA_SOURCE = 0;
 
+    // closure to convert SpeedSource value to weight and count fallbacks to durations
+    std::atomic<std::uint32_t> fallbacks_to_duration{0};
+    auto convertToWeight = [&profile_properties, &fallbacks_to_duration](
+        const SpeedSource &value, double distance_in_meters) {
+        double rate = value.rate;
+        if (!std::isfinite(rate))
+        { // use speed value in meters per second as the rate
+            ++fallbacks_to_duration;
+            rate = value.speed / 3.6;
+        }
+
+        if (rate <= 0.)
+            return INVALID_EDGE_WEIGHT;
+
+        const auto weight_multiplier = profile_properties.GetWeightMultiplier();
+        const auto weight = distance_in_meters / rate;
+        return std::max(1, boost::numeric_cast<EdgeWeight>(std::round(weight * weight_multiplier)));
+    };
+
     // The check here is enabled by the `--edge-weight-updates-over-factor` flag it logs a
     // warning if the new duration exceeds a heuristic of what a reasonable duration update is
     std::unique_ptr<extractor::SegmentDataContainer> segment_data_backup;
@@ -207,7 +202,7 @@ updateSegmentData(const UpdaterConfig &config,
                 {
                     auto segment_length = segment_lengths[segment_offset];
                     auto new_duration = convertToDuration(value->speed, segment_length);
-                    auto new_weight = convertToWeight(*value, segment_length, profile_properties);
+                    auto new_weight = convertToWeight(*value, segment_length);
                     fwd_was_updated = true;
 
                     fwd_weights_range[segment_offset] = new_weight;
@@ -240,7 +235,7 @@ updateSegmentData(const UpdaterConfig &config,
                 {
                     auto segment_length = segment_lengths[segment_offset];
                     auto new_duration = convertToDuration(value->speed, segment_length);
-                    auto new_weight = convertToWeight(*value, segment_length, profile_properties);
+                    auto new_weight = convertToWeight(*value, segment_length);
                     rev_was_updated = true;
 
                     rev_weights_range[segment_offset] = new_weight;
@@ -281,6 +276,13 @@ updateSegmentData(const UpdaterConfig &config,
             util::Log() << "Used " << merged_counters[i] << " speeds from "
                         << config.segment_speed_lookup_paths[i - 1];
         }
+    }
+
+    if (!profile_properties.fallback_to_duration && fallbacks_to_duration > 0)
+    {
+        util::Log(logWARNING) << "Speed values were used to update " << fallbacks_to_duration
+                              << " segments for '" << profile_properties.GetWeightName()
+                              << "' profile";
     }
 
     if (config.log_edge_updates_factor > 0)
