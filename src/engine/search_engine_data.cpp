@@ -96,8 +96,6 @@ void SearchEngineData<CH>::InitializeOrClearManyToManyThreadLocalStorage(unsigne
 using MLD = routing_algorithms::mld::Algorithm;
 SearchEngineData<MLD>::SearchEngineHeapPtr SearchEngineData<MLD>::forward_heap_1;
 SearchEngineData<MLD>::SearchEngineHeapPtr SearchEngineData<MLD>::reverse_heap_1;
-SearchEngineData<MLD>::SearchEngineHeapPtr SearchEngineData<MLD>::forward_heap_2;
-SearchEngineData<MLD>::SearchEngineHeapPtr SearchEngineData<MLD>::reverse_heap_2;
 
 void SearchEngineData<MLD>::InitializeOrClearFirstThreadLocalStorage(unsigned number_of_nodes)
 {
@@ -117,27 +115,6 @@ void SearchEngineData<MLD>::InitializeOrClearFirstThreadLocalStorage(unsigned nu
     else
     {
         reverse_heap_1.reset(new QueryHeap(number_of_nodes));
-    }
-}
-
-void SearchEngineData<MLD>::InitializeOrClearSecondThreadLocalStorage(unsigned)
-{
-    if (forward_heap_2.get())
-    {
-        forward_heap_2->Clear();
-    }
-    else
-    {
-        forward_heap_2.reset(new QueryHeap(1));
-    }
-
-    if (reverse_heap_2.get())
-    {
-        reverse_heap_2->Clear();
-    }
-    else
-    {
-        reverse_heap_2.reset(new QueryHeap(1));
     }
 }
 }
