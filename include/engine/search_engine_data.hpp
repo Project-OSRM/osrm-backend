@@ -12,6 +12,10 @@ namespace osrm
 namespace engine
 {
 
+template <typename Algorithm> struct SearchEngineData
+{
+};
+
 struct HeapData
 {
     NodeID parent;
@@ -24,7 +28,7 @@ struct ManyToManyHeapData : HeapData
     ManyToManyHeapData(NodeID p, EdgeWeight duration) : HeapData(p), duration(duration) {}
 };
 
-template <typename Algorithm> struct SearchEngineData
+template <> struct SearchEngineData<routing_algorithms::ch::Algorithm>
 {
     using QueryHeap = util::
         BinaryHeap<NodeID, NodeID, EdgeWeight, HeapData, util::UnorderedMapStorage<NodeID, int>>;
