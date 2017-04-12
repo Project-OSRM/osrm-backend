@@ -221,10 +221,10 @@ namespace corech
 // && source_phantom.GetForwardWeightPlusOffset() > target_phantom.GetForwardWeightPlusOffset())
 // requires
 // a force loop, if the heaps have been initialized with positive offsets.
-void search(SearchEngineData<ch::Algorithm> &engine_working_data,
+void search(SearchEngineData<Algorithm> &engine_working_data,
             const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
-            SearchEngineData<ch::Algorithm>::QueryHeap &forward_heap,
-            SearchEngineData<ch::Algorithm>::QueryHeap &reverse_heap,
+            SearchEngineData<Algorithm>::QueryHeap &forward_heap,
+            SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
             EdgeWeight &weight,
             std::vector<NodeID> &packed_leg,
             const bool force_loop_forward,
@@ -401,10 +401,10 @@ void search(SearchEngineData<ch::Algorithm> &engine_working_data,
 // Requires the heaps for be empty
 // If heaps should be adjusted to be initialized outside of this function,
 // the addition of force_loop parameters might be required
-double getNetworkDistance(SearchEngineData<ch::Algorithm> &engine_working_data,
+double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
                           const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
-                          SearchEngineData<ch::Algorithm>::QueryHeap &forward_heap,
-                          SearchEngineData<ch::Algorithm>::QueryHeap &reverse_heap,
+                          SearchEngineData<Algorithm>::QueryHeap &forward_heap,
+                          SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
                           const PhantomNode &source_phantom,
                           const PhantomNode &target_phantom,
                           EdgeWeight weight_upper_bound)

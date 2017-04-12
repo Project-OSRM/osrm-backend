@@ -13,9 +13,9 @@ namespace engine
 namespace routing_algorithms
 {
 
-template <typename Algorithm, typename SearchEngineData>
+template <typename Algorithm>
 InternalRouteResult
-shortestPathSearch(SearchEngineData &engine_working_data,
+shortestPathSearch(SearchEngineData<Algorithm> &engine_working_data,
                    const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
                    const std::vector<PhantomNodes> &phantom_nodes_vector,
                    const boost::optional<bool> continue_straight_at_waypoint);

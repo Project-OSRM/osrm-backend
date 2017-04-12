@@ -57,16 +57,7 @@ class RoutingAlgorithmsInterface
 template <typename Algorithm> class RoutingAlgorithms final : public RoutingAlgorithmsInterface
 {
   public:
-    // HeapAlgorithm is an explicit heap algorithm type to be used with Algorithm
-    // - CH algorithms use CH heap
-    // - CoreCH algorithms use CH heap
-    // - MLD algorithms use MLD heap
-    using HeapAlgorithm = typename std::conditional<
-        std::is_same<Algorithm, routing_algorithms::corech::Algorithm>::value,
-        routing_algorithms::ch::Algorithm,
-        Algorithm>::type;
-
-    RoutingAlgorithms(SearchEngineData<HeapAlgorithm> &heaps,
+    RoutingAlgorithms(SearchEngineData<Algorithm> &heaps,
                       const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade)
         : heaps(heaps), facade(facade)
     {
@@ -131,7 +122,7 @@ template <typename Algorithm> class RoutingAlgorithms final : public RoutingAlgo
     }
 
   private:
-    SearchEngineData<HeapAlgorithm> &heaps;
+    SearchEngineData<Algorithm> &heaps;
 
     // Owned by shared-ptr passed to the query
     const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade;
