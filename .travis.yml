@@ -7,8 +7,9 @@ git:
 sudo: required
 dist: trusty
 
-nodejs:
+node_js:
     - "4"
+    - "6"
 
 notifications:
   email: false
@@ -36,6 +37,7 @@ env:
    - CCACHE_VERSION=3.3.1
    - CMAKE_VERSION=3.7.2
    - MASON="$(pwd)/scripts/mason.sh"
+   - NODE="4"
 
 matrix:
   fast_finish: true
@@ -141,7 +143,6 @@ matrix:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['libstdc++-5-dev']
       env: CLANG_VERSION='4.0.0' BUILD_TYPE='Release' ENABLE_MASON=ON ENABLE_LTO=ON ENABLE_NODE_BINDINGS=ON PUBLISH_NODE_BINDINGS=On JOBS=4
-      nodejs: "4"
       install:
         - pushd ${OSRM_BUILD_DIR}
         - |
@@ -165,7 +166,6 @@ matrix:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['libstdc++-5-dev']
       env: CLANG_VERSION='4.0.0' BUILD_TYPE='Debug' ENABLE_MASON=ON ENABLE_LTO=ON ENABLE_NODE_BINDINGS=ON PUBLISH_NODE_BINDINGS=On JOBS=4
-      nodejs: "4"
       install:
         - pushd ${OSRM_BUILD_DIR}
         - |
@@ -188,8 +188,7 @@ matrix:
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['libstdc++-5-dev']
-      env: CLANG_VERSION='4.0.0' BUILD_TYPE='Release' ENABLE_MASON=ON ENABLE_LTO=ON ENABLE_NODE_BINDINGS=ON PUBLISH_NODE_BINDINGS=On JOBS=4
-      nodejs: "6"
+      env: CLANG_VERSION='4.0.0' BUILD_TYPE='Release' ENABLE_MASON=ON ENABLE_LTO=ON ENABLE_NODE_BINDINGS=ON PUBLISH_NODE_BINDINGS=On JOBS=4 NODE="6"
       install:
         - pushd ${OSRM_BUILD_DIR}
         - |
@@ -212,8 +211,7 @@ matrix:
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['libstdc++-5-dev']
-      env: CLANG_VERSION='4.0.0' BUILD_TYPE='Debug' ENABLE_MASON=ON ENABLE_LTO=ON ENABLE_NODE_BINDINGS=ON PUBLISH_NODE_BINDINGS=On JOBS=4
-      nodejs: "6"
+      env: CLANG_VERSION='4.0.0' BUILD_TYPE='Debug' ENABLE_MASON=ON ENABLE_LTO=ON ENABLE_NODE_BINDINGS=ON PUBLISH_NODE_BINDINGS=On JOBS=4 NODE="6"
       install:
         - pushd ${OSRM_BUILD_DIR}
         - |
@@ -230,6 +228,9 @@ matrix:
         - ./scripts/travis/publish.sh
 
 before_install:
+  - source $NVM_DIR/nvm.sh
+  - nvm use $NODE
+  - node --version
   - if [[ ! -z $TARGET_ARCH ]] ; then source ./scripts/travis/before_install.$TARGET_ARCH.sh ; fi
   - |
     if [[ -z $JOBS ]]; then
