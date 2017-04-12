@@ -55,9 +55,9 @@ namespace detail
 /// by the previous route.
 /// This variation is only an optimazation for graphs with slow queries, for example
 /// not fully contracted graphs.
-template <typename Algorithm, typename SearchEngineData>
+template <typename Algorithm>
 InternalRouteResult directShortestPathSearchImpl(
-    SearchEngineData &engine_working_data,
+    SearchEngineData<Algorithm> &engine_working_data,
     const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
     const PhantomNodes &phantom_nodes)
 {
@@ -102,7 +102,7 @@ InternalRouteResult directShortestPathSearchImpl(
 } // namespace ch
 
 InternalRouteResult directShortestPathSearch(
-    SearchEngineData<ch::Algorithm> &engine_working_data,
+    SearchEngineData<corech::Algorithm> &engine_working_data,
     const datafacade::ContiguousInternalMemoryDataFacade<corech::Algorithm> &facade,
     const PhantomNodes &phantom_nodes)
 {

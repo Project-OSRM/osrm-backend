@@ -27,7 +27,7 @@ InternalRouteResult directShortestPathSearch(
     const PhantomNodes &phantom_nodes);
 
 InternalRouteResult directShortestPathSearch(
-    SearchEngineData<ch::Algorithm> &engine_working_data,
+    SearchEngineData<corech::Algorithm> &engine_working_data,
     const datafacade::ContiguousInternalMemoryDataFacade<corech::Algorithm> &facade,
     const PhantomNodes &phantom_nodes);
 

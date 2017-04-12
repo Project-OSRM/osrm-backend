@@ -12,6 +12,12 @@ namespace osrm
 namespace engine
 {
 
+// Algorithm-dependent heaps
+// - CH algorithms use CH heaps
+// - CoreCH algorithms use CoreCH heaps that can be upcasted to CH heaps when CH algorithms reused
+//    by CoreCH at calling ch::routingStep, ch::retrievePackedPathFromSingleHeap and ch::unpackPath
+// - MLD algorithms use MLD heaps
+
 template <typename Algorithm> struct SearchEngineData
 {
 };
@@ -57,6 +63,12 @@ template <> struct SearchEngineData<routing_algorithms::ch::Algorithm>
     void InitializeOrClearThirdThreadLocalStorage(unsigned number_of_nodes);
 
     void InitializeOrClearManyToManyThreadLocalStorage(unsigned number_of_nodes);
+};
+
+template <>
+struct SearchEngineData<routing_algorithms::corech::Algorithm>
+    : public SearchEngineData<routing_algorithms::ch::Algorithm>
+{
 };
 
 struct MultiLayerDijkstraHeapData
