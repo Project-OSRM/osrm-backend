@@ -230,6 +230,7 @@ matrix:
 
 before_install:
   - source $NVM_DIR/nvm.sh
+  - nvm install $NODE
   - nvm use $NODE
   - node --version
   - if [[ ! -z $TARGET_ARCH ]] ; then source ./scripts/travis/before_install.$TARGET_ARCH.sh ; fi
