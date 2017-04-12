@@ -1019,3 +1019,39 @@ Feature: Collapse
 			|       a,g | road,cross,cross	    | depart,fork left,arrive 			         | a,b,g 	 |
      		|       a,e | road,road,road 		| depart,fork slight right,arrive 			 | a,b,e 	 |
      		|       a,f | road,road,cross,cross | depart,fork slight right,turn right,arrive | a,b,d,f 	 |
+
+
+    # http://www.openstreetmap.org/way/92415447 #3933
+    Scenario: Use total angle for turn instruction if entry step has large distance
+        #   """
+        #    kf-_     a
+        #     |  - b
+        #    |  c
+        #    |d
+        #    e
+        #    |
+        #    i
+        #    """
+
+        And the node locations
+          | node |         lat |         lon |        #id |
+          | a    | -33.9644254 | 151.1378673 |   33226063 |
+          | b    | -33.9644373 | 151.1377172 | 1072787030 |
+          | c    | -33.9644791 | 151.1374452 | 4222903609 |
+          | d    | -33.9645661 | 151.1372654 | 4222903610 |
+          | e    | -33.9646986 | 151.1371539 | 4222903611 |
+          | f    |  -33.964386 | 151.1372133 | 1072786875 |
+          | i    | -33.9661796 | 151.1368491 | 2781176918 |
+          | k    | -33.9643781 | 151.1371422 | 1684173853 |
+
+        And the ways
+          | nodes | highway | name             | oneway |       #id |
+          | ab    | trunk   | President Avenue | yes    |  92415447 |
+          | bcde  | trunk   | President Avenue | yes    | 422534457 |
+          | bf    | trunk   | President Avenue | yes    | 447779786 |
+          | fk    | trunk   | President Avenue | yes    | 179293012 |
+          | fei   | trunk   | Princes Highway  | yes    | 130099670 |
+
+       When I route I should get
+         | waypoints | route                                            | turns                   | locations |
+         | a,i       | President Avenue,Princes Highway,Princes Highway | depart,turn left,arrive | a,b,i     |

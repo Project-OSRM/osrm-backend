@@ -74,9 +74,6 @@ double findTotalTurnAngle(const RouteStep &entry_step, const RouteStep &exit_ste
         if (entry_step.distance < MAX_COLLAPSE_DISTANCE)
             return true;
 
-        if (entry_step.distance > 2 * MAX_COLLAPSE_DISTANCE)
-            return false;
-
         // both go roughly in the same direction
         if ((entry_angle <= 185 && exit_angle <= 185) || (entry_angle >= 175 && exit_angle >= 175))
             return true;
