@@ -142,7 +142,7 @@ matrix:
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['libstdc++-5-dev']
-      env: CLANG_VERSION='4.0.0' BUILD_TYPE='Release' ENABLE_MASON=ON ENABLE_LTO=ON ENABLE_NODE_BINDINGS=ON PUBLISH_NODE_BINDINGS=On JOBS=4
+      env: CLANG_VERSION='4.0.0' BUILD_TYPE='Release' ENABLE_MASON=ON ENABLE_LTO=ON ENABLE_NODE_BINDINGS=ON PUBLISH_NODE_BINDINGS=On JOBS=3
       install:
         - pushd ${OSRM_BUILD_DIR}
         - |
@@ -165,7 +165,7 @@ matrix:
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['libstdc++-5-dev']
-      env: CLANG_VERSION='4.0.0' BUILD_TYPE='Debug' ENABLE_MASON=ON ENABLE_LTO=ON ENABLE_NODE_BINDINGS=ON PUBLISH_NODE_BINDINGS=On JOBS=4
+      env: CLANG_VERSION='4.0.0' BUILD_TYPE='Debug' ENABLE_MASON=ON ENABLE_LTO=ON ENABLE_NODE_BINDINGS=ON PUBLISH_NODE_BINDINGS=On JOBS=3
       install:
         - pushd ${OSRM_BUILD_DIR}
         - |
@@ -188,7 +188,7 @@ matrix:
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['libstdc++-5-dev']
-      env: CLANG_VERSION='4.0.0' BUILD_TYPE='Release' ENABLE_MASON=ON ENABLE_LTO=ON ENABLE_NODE_BINDINGS=ON PUBLISH_NODE_BINDINGS=On JOBS=4 NODE="6"
+      env: CLANG_VERSION='4.0.0' BUILD_TYPE='Release' ENABLE_MASON=ON ENABLE_LTO=ON ENABLE_NODE_BINDINGS=ON PUBLISH_NODE_BINDINGS=On JOBS=3 NODE="6"
       install:
         - pushd ${OSRM_BUILD_DIR}
         - |
@@ -211,7 +211,7 @@ matrix:
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['libstdc++-5-dev']
-      env: CLANG_VERSION='4.0.0' BUILD_TYPE='Debug' ENABLE_MASON=ON ENABLE_LTO=ON ENABLE_NODE_BINDINGS=ON PUBLISH_NODE_BINDINGS=On JOBS=4 NODE="6"
+      env: CLANG_VERSION='4.0.0' BUILD_TYPE='Debug' ENABLE_MASON=ON ENABLE_LTO=ON ENABLE_NODE_BINDINGS=ON PUBLISH_NODE_BINDINGS=On JOBS=3 NODE="6"
       install:
         - pushd ${OSRM_BUILD_DIR}
         - |
