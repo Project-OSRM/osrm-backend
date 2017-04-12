@@ -80,6 +80,8 @@ inline Result keep_all(const MatchParameters &params)
 
 inline Result tidy(const MatchParameters &params, Thresholds cfg = {15., 5})
 {
+    BOOST_ASSERT(!params.coordinates.empty());
+
     Result result;
 
     result.can_be_removed.resize(params.coordinates.size(), false);
@@ -91,10 +93,8 @@ inline Result tidy(const MatchParameters &params, Thresholds cfg = {15., 5})
     Thresholds running{0., 0};
 
     // Walk over adjacent (coord, ts)-pairs, with rhs being the candidate to discard or keep
-    for (std::size_t current = 0; current < params.coordinates.size() - 1; ++current)
+    for (std::size_t current = 0, next = 1; next < params.coordinates.size() - 1; ++current, ++next)
     {
-        const auto next = current + 1;
-
         auto distance_delta = util::coordinate_calculation::haversineDistance(
             params.coordinates[current], params.coordinates[next]);
         running.distance_in_meters += distance_delta;
@@ -130,7 +130,11 @@ inline Result tidy(const MatchParameters &params, Thresholds cfg = {15., 5})
         }
     }
 
-    BOOST_ASSERT(result.can_be_removed.size() == params.coordinates.size());
+    // Always use the last coordinate if more than two original coordinates
+    if (params.coordinates.size() > 1)
+    {
+        result.tidied_to_original.push_back(params.coordinates.size() - 1);
+    }
 
     // We have to filter parallel arrays that may be empty or the exact same size.
     // result.parameters contains an empty MatchParameters at this point: conditionally fill.

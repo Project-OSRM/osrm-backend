@@ -53,10 +53,10 @@ BOOST_AUTO_TEST_CASE(two_item_trace_needs_tidiying_test)
     auto result = tidy::tidy(params, thresholds);
 
     BOOST_CHECK_EQUAL(result.can_be_removed.size(), 2);
-    BOOST_CHECK_EQUAL(result.tidied_to_original.size(), 1);
+    BOOST_CHECK_EQUAL(result.tidied_to_original.size(), 2);
 
     BOOST_CHECK_EQUAL(result.can_be_removed[0], false);
-    BOOST_CHECK_EQUAL(result.can_be_removed[1], true);
+    BOOST_CHECK_EQUAL(result.can_be_removed[1], false);
     BOOST_CHECK_EQUAL(result.tidied_to_original[0], 0);
 }
 
@@ -87,16 +87,18 @@ BOOST_AUTO_TEST_CASE(two_blobs_in_traces_needs_tidiying_test)
     auto result = tidy::tidy(params, thresholds);
 
     BOOST_CHECK_EQUAL(result.can_be_removed.size(), params.coordinates.size());
-    BOOST_CHECK_EQUAL(result.tidied_to_original.size(), 2);
+    BOOST_CHECK_EQUAL(result.tidied_to_original.size(), 3);
 
     BOOST_CHECK_EQUAL(result.tidied_to_original[0], 0);
     BOOST_CHECK_EQUAL(result.tidied_to_original[1], 3);
+    BOOST_CHECK_EQUAL(result.tidied_to_original[2], 5);
 
     const auto redundant = result.can_be_removed.count();
-    BOOST_CHECK_EQUAL(redundant, params.coordinates.size() - 2);
+    BOOST_CHECK_EQUAL(redundant, params.coordinates.size() - 3);
 
     BOOST_CHECK_EQUAL(result.can_be_removed[0], false);
     BOOST_CHECK_EQUAL(result.can_be_removed[3], false);
+    BOOST_CHECK_EQUAL(result.can_be_removed[5], false);
 }
 
 BOOST_AUTO_TEST_CASE(two_blobs_in_traces_needs_tidiying_no_timestamps_test)
@@ -118,15 +120,17 @@ BOOST_AUTO_TEST_CASE(two_blobs_in_traces_needs_tidiying_no_timestamps_test)
     auto result = tidy::tidy(params, thresholds);
 
     BOOST_CHECK_EQUAL(result.can_be_removed.size(), params.coordinates.size());
-    BOOST_CHECK_EQUAL(result.tidied_to_original.size(), 2);
+    BOOST_CHECK_EQUAL(result.tidied_to_original.size(), 3);
     BOOST_CHECK_EQUAL(result.tidied_to_original[0], 0);
     BOOST_CHECK_EQUAL(result.tidied_to_original[1], 3);
+    BOOST_CHECK_EQUAL(result.tidied_to_original[2], 5);
 
     const auto redundant = result.can_be_removed.count();
-    BOOST_CHECK_EQUAL(redundant, params.coordinates.size() - 2);
+    BOOST_CHECK_EQUAL(redundant, params.coordinates.size() - 3);
 
     BOOST_CHECK_EQUAL(result.can_be_removed[0], false);
     BOOST_CHECK_EQUAL(result.can_be_removed[3], false);
+    BOOST_CHECK_EQUAL(result.can_be_removed[5], false);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
