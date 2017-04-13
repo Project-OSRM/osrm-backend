@@ -66,8 +66,6 @@ class Contractor
                        std::vector<bool> &is_core_node,
                        std::vector<float> &inout_node_levels) const;
     void WriteCoreNodeMarker(std::vector<bool> &&is_core_node) const;
-    void WriteNodeLevels(std::vector<float> &&node_levels) const;
-    void ReadNodeLevels(std::vector<float> &contraction_order) const;
     void WriteContractedGraph(unsigned number_of_edge_based_nodes,
                               util::DeallocatingVector<QueryEdge> contracted_edge_list);
     void FindComponents(unsigned max_edge_id,
