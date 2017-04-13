@@ -7,6 +7,8 @@
 #############################
 osrm-deps
 
+.ycm_extra_conf.py
+
 # Compiled source #
 ###################
 *.com
