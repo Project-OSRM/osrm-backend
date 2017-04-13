@@ -72,10 +72,13 @@ class FileReader
         // restore the current position
         input_stream.seekg(positon, std::ios::beg);
 
-        if(fingerprint == FingerprintFlag::VerifyFingerprint) {
-          return std::size_t(file_size) - sizeof(util::FingerPrint);
-        } else {
-          return file_size;
+        if (fingerprint == FingerprintFlag::VerifyFingerprint)
+        {
+            return std::size_t(file_size) - sizeof(util::FingerPrint);
+        }
+        else
+        {
+            return file_size;
         }
     }
 
@@ -168,7 +171,6 @@ class FileReader
     const boost::filesystem::path filepath;
     boost::filesystem::ifstream input_stream;
     FingerprintFlag fingerprint;
-
 };
 
 class FileWriter

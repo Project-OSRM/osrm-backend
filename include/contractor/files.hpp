@@ -62,7 +62,6 @@ inline void writeLevels(const boost::filesystem::path &path, const std::vector<f
 
     storage::serialization::write(writer, node_levels);
 }
-
 }
 }
 }
