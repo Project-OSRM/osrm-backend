@@ -18,7 +18,6 @@
 #include "osrm/trip_parameters.hpp"
 
 #include <boost/assert.hpp>
-#include <boost/make_unique.hpp>
 #include <boost/optional.hpp>
 
 #include <algorithm>
@@ -81,7 +80,7 @@ inline void ParseResult(const osrm::Status &result_status, const std::string & /
 inline engine_config_ptr argumentsToEngineConfig(const Nan::FunctionCallbackInfo<v8::Value> &args)
 {
     Nan::HandleScope scope;
-    auto engine_config = boost::make_unique<osrm::EngineConfig>();
+    auto engine_config = std::make_unique<osrm::EngineConfig>();
 
     if (args.Length() == 0)
     {
@@ -631,7 +630,7 @@ inline route_parameters_ptr
 argumentsToRouteParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
                           bool requires_multiple_coordinates)
 {
-    route_parameters_ptr params = boost::make_unique<osrm::RouteParameters>();
+    route_parameters_ptr params = std::make_unique<osrm::RouteParameters>();
     bool has_base_params = argumentsToParameter(args, params, requires_multiple_coordinates);
     if (!has_base_params)
         return route_parameters_ptr();
@@ -681,7 +680,7 @@ argumentsToRouteParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
 inline tile_parameters_ptr
 argumentsToTileParameters(const Nan::FunctionCallbackInfo<v8::Value> &args, bool /*unused*/)
 {
-    tile_parameters_ptr params = boost::make_unique<osrm::TileParameters>();
+    tile_parameters_ptr params = std::make_unique<osrm::TileParameters>();
 
     if (args.Length() < 2)
     {
@@ -742,7 +741,7 @@ inline nearest_parameters_ptr
 argumentsToNearestParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
                             bool requires_multiple_coordinates)
 {
-    nearest_parameters_ptr params = boost::make_unique<osrm::NearestParameters>();
+    nearest_parameters_ptr params = std::make_unique<osrm::NearestParameters>();
     bool has_base_params = argumentsToParameter(args, params, requires_multiple_coordinates);
     if (!has_base_params)
         return nearest_parameters_ptr();
@@ -781,7 +780,7 @@ inline table_parameters_ptr
 argumentsToTableParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
                           bool requires_multiple_coordinates)
 {
-    table_parameters_ptr params = boost::make_unique<osrm::TableParameters>();
+    table_parameters_ptr params = std::make_unique<osrm::TableParameters>();
     bool has_base_params = argumentsToParameter(args, params, requires_multiple_coordinates);
     if (!has_base_params)
         return table_parameters_ptr();
@@ -875,7 +874,7 @@ inline trip_parameters_ptr
 argumentsToTripParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
                          bool requires_multiple_coordinates)
 {
-    trip_parameters_ptr params = boost::make_unique<osrm::TripParameters>();
+    trip_parameters_ptr params = std::make_unique<osrm::TripParameters>();
     bool has_base_params = argumentsToParameter(args, params, requires_multiple_coordinates);
     if (!has_base_params)
         return trip_parameters_ptr();
@@ -970,7 +969,7 @@ inline match_parameters_ptr
 argumentsToMatchParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
                           bool requires_multiple_coordinates)
 {
-    match_parameters_ptr params = boost::make_unique<osrm::MatchParameters>();
+    match_parameters_ptr params = std::make_unique<osrm::MatchParameters>();
     bool has_base_params = argumentsToParameter(args, params, requires_multiple_coordinates);
     if (!has_base_params)
         return match_parameters_ptr();
