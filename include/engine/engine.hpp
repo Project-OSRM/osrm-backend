@@ -185,7 +185,7 @@ bool Engine<routing_algorithms::corech::Algorithm>::CheckCompability(const Engin
 
         auto mem = storage::makeSharedMemory(barrier.data().region);
         auto layout = reinterpret_cast<storage::DataLayout *>(mem->Ptr());
-        return layout->GetBlockSize(storage::DataLayout::CH_CORE_MARKER) > 16;
+        return layout->GetBlockSize(storage::DataLayout::CH_CORE_MARKER) > sizeof(std::uint64_t) + sizeof(util::FingerPrint);
     }
     else
     {

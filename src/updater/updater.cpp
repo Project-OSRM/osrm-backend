@@ -121,7 +121,7 @@ auto mmapFile(const std::string &filename, boost::interprocess::mode_t mode)
         const file_mapping mapping{filename.c_str(), mode};
 
         // map region started at an offset of util::FingerPrint size
-        mapped_region region{mapping, mode, 8};
+        mapped_region region{mapping, mode, sizeof(util::FingerPrint)};
         region.advise(mapped_region::advice_sequential);
         return region;
     }

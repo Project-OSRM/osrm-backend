@@ -67,7 +67,7 @@ int Contractor::Run()
     std::vector<float> node_levels;
     if (config.use_cached_priority)
     {
-        ReadNodeLevels(node_levels);
+        files::readLevels(config.level_output_path, node_levels);
     }
 
     util::DeallocatingVector<QueryEdge> contracted_edge_list;
@@ -89,7 +89,9 @@ int Contractor::Run()
     WriteCoreNodeMarker(std::move(is_core_node));
     if (!config.use_cached_priority)
     {
-        WriteNodeLevels(std::move(node_levels));
+        std::vector<float> out_node_levels(std::move(node_levels));
+
+        files::writeLevels(config.level_output_path, node_levels);
     }
 
     TIMER_STOP(preparing);
@@ -99,18 +101,6 @@ int Contractor::Run()
     util::Log() << "finished preprocessing";
 
     return 0;
-}
-
-void Contractor::ReadNodeLevels(std::vector<float> &node_levels) const
-{
-    files::readLevels(config.level_output_path, node_levels);
-}
-
-void Contractor::WriteNodeLevels(std::vector<float> &&in_node_levels) const
-{
-    std::vector<float> node_levels(std::move(in_node_levels));
-
-    files::writeLevels(config.level_output_path, node_levels);
 }
 
 void Contractor::WriteCoreNodeMarker(std::vector<bool> &&in_is_core_node) const
