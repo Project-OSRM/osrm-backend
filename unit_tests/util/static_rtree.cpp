@@ -37,14 +37,12 @@ using namespace osrm::util;
 using namespace osrm::test;
 
 constexpr uint32_t TEST_BRANCHING_FACTOR = 8;
-constexpr uint32_t TEST_LEAF_NODE_SIZE = 64;
+constexpr uint32_t TEST_LEAF_PAGE_SIZE = 64;
 
 using TestData = extractor::EdgeBasedNode;
-using TestStaticRTree = StaticRTree<TestData,
-                                    osrm::storage::Ownership::Container,
-                                    TEST_BRANCHING_FACTOR,
-                                    TEST_LEAF_NODE_SIZE>;
-using MiniStaticRTree = StaticRTree<TestData, osrm::storage::Ownership::Container, 2, 128>;
+using TestStaticRTree =
+    StaticRTree<TestData, osrm::storage::Ownership::Container, TEST_BRANCHING_FACTOR>;
+using MiniStaticRTree = StaticRTree<TestData, osrm::storage::Ownership::Container, 4>;
 using TestDataFacade = MockDataFacade<osrm::engine::routing_algorithms::ch::Algorithm>;
 
 // Choosen by a fair W20 dice roll (this value is completely arbitrary)
@@ -180,17 +178,17 @@ struct GraphFixture
     std::vector<TestData> edges;
 };
 
-typedef RandomGraphFixture<TEST_LEAF_NODE_SIZE * 3, TEST_LEAF_NODE_SIZE / 2>
+typedef RandomGraphFixture<TEST_LEAF_PAGE_SIZE * 3, TEST_LEAF_PAGE_SIZE / 2>
     TestRandomGraphFixture_LeafHalfFull;
-typedef RandomGraphFixture<TEST_LEAF_NODE_SIZE * 5, TEST_LEAF_NODE_SIZE>
+typedef RandomGraphFixture<TEST_LEAF_PAGE_SIZE * 5, TEST_LEAF_PAGE_SIZE>
     TestRandomGraphFixture_LeafFull;
-typedef RandomGraphFixture<TEST_LEAF_NODE_SIZE * 10, TEST_LEAF_NODE_SIZE * 2>
+typedef RandomGraphFixture<TEST_LEAF_PAGE_SIZE * 10, TEST_LEAF_PAGE_SIZE * 2>
     TestRandomGraphFixture_TwoLeaves;
-typedef RandomGraphFixture<TEST_LEAF_NODE_SIZE * TEST_BRANCHING_FACTOR * 3,
-                           TEST_LEAF_NODE_SIZE * TEST_BRANCHING_FACTOR>
+typedef RandomGraphFixture<TEST_LEAF_PAGE_SIZE * TEST_BRANCHING_FACTOR * 3,
+                           TEST_LEAF_PAGE_SIZE * TEST_BRANCHING_FACTOR>
     TestRandomGraphFixture_Branch;
-typedef RandomGraphFixture<TEST_LEAF_NODE_SIZE * TEST_BRANCHING_FACTOR * 3,
-                           TEST_LEAF_NODE_SIZE * TEST_BRANCHING_FACTOR * 2>
+typedef RandomGraphFixture<TEST_LEAF_PAGE_SIZE * TEST_BRANCHING_FACTOR * 3,
+                           TEST_LEAF_PAGE_SIZE * TEST_BRANCHING_FACTOR * 2>
     TestRandomGraphFixture_MultipleLevels;
 typedef RandomGraphFixture<10, 30> TestRandomGraphFixture_10_30;
 
@@ -273,7 +271,7 @@ void construction_test(const std::string &prefix, FixtureT *fixture)
 
 BOOST_FIXTURE_TEST_CASE(construct_tiny, TestRandomGraphFixture_10_30)
 {
-    using TinyTestTree = StaticRTree<TestData, osrm::storage::Ownership::Container, 2, 64>;
+    using TinyTestTree = StaticRTree<TestData, osrm::storage::Ownership::Container, 2>;
     construction_test<TinyTestTree>("test_tiny", this);
 }
 

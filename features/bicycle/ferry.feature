@@ -53,8 +53,8 @@ Feature: Bike - Handle ferry routes
     Scenario: Bike - Ferry duration, multiple nodes
         Given the node map
             """
-            x         y
-              a b c d
+                       
+            x a b c d y
             """
 
         And the ways

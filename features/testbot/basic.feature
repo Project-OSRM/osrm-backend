@@ -260,7 +260,9 @@ Feature: Basic Routing
         Given the node map
             """
                   d
+                  2
             a b c
+                  1
                   e
             """
 
@@ -274,7 +276,7 @@ Feature: Basic Routing
         When I route I should get
             | from | to | route    |
             | d    | c  | de,ce,ce |
-            | e    | d  | de,de    |
+            | 1    | 2  | de,de    |
 
     Scenario: Ambiguous edge weights - Use minimal edge weight
         Given the node map

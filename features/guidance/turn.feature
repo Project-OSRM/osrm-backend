@@ -970,7 +970,7 @@ Feature: Simple Turns
             j k a   b   x
                   e   c
                     d
-
+                  1
                   h
             """
 
@@ -990,7 +990,7 @@ Feature: Simple Turns
 
         When I route I should get
             | waypoints | turns                                        | route                                                         |
-            | a,h       | depart,off ramp right,turn sharp left,arrive | Blue Star Memorial Hwy,bcde,Centreville Road,Centreville Road |
+            | a,1       | depart,off ramp right,turn sharp left,arrive | Blue Star Memorial Hwy,bcde,Centreville Road,Centreville Road |
 
     @todo
     # https://www.openstreetmap.org/#map=20/52.51609/13.41080

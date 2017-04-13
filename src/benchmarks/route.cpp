@@ -1,35 +1,26 @@
-#include "util/static_rtree.hpp"
 #include "extractor/edge_based_node.hpp"
 #include "extractor/external_memory_node.hpp"
 #include "extractor/query_node.hpp"
-#include "mocks/mock_datafacade.hpp"
 #include "storage/io.hpp"
 #include "engine/geospatial_query.hpp"
+#include "osrm/engine_config.hpp"
+#include "osrm/json_container.hpp"
+#include "osrm/osrm.hpp"
+#include "osrm/route_parameters.hpp"
+#include "osrm/status.hpp"
 #include "util/coordinate.hpp"
 #include "util/serialization.hpp"
+#include "util/static_rtree.hpp"
 #include "util/timing_util.hpp"
 
 #include <iostream>
 #include <random>
 
 #include <boost/filesystem/fstream.hpp>
-
-namespace osrm
-{
-namespace benchmarks
-{
-
-using namespace osrm::test;
+using namespace osrm;
 
 // Choosen by a fair W20 dice roll (this value is completely arbitrary)
 constexpr unsigned RANDOM_SEED = 13;
-constexpr int32_t WORLD_MIN_LAT = -90 * COORDINATE_PRECISION;
-constexpr int32_t WORLD_MAX_LAT = 90 * COORDINATE_PRECISION;
-constexpr int32_t WORLD_MIN_LON = -180 * COORDINATE_PRECISION;
-constexpr int32_t WORLD_MAX_LON = 180 * COORDINATE_PRECISION;
-
-using RTreeLeaf = extractor::EdgeBasedNode;
-using BenchStaticRTree = util::StaticRTree<RTreeLeaf, storage::Ownership::Container>;
 
 std::vector<util::Coordinate> loadCoordinates(const boost::filesystem::path &nodes_file)
 {
@@ -43,7 +34,7 @@ std::vector<util::Coordinate> loadCoordinates(const boost::filesystem::path &nod
 }
 
 template <typename QueryT>
-void benchmarkQuery(const std::vector<util::Coordinate> &queries,
+void benchmarkQuery(const std::vector<std::pair<util::Coordinate, util::Coordinate>> &queries,
                     const std::string &name,
                     QueryT query)
 {
@@ -64,47 +55,55 @@ void benchmarkQuery(const std::vector<util::Coordinate> &queries,
               << ")" << std::endl;
 }
 
-void benchmark(BenchStaticRTree &rtree, unsigned num_queries)
+void benchmark(OSRM &osrm, const std::vector<util::Coordinate> &coords, const unsigned num_queries)
 {
     std::mt19937 mt_rand(RANDOM_SEED);
-    std::uniform_int_distribution<> lat_udist(WORLD_MIN_LAT, WORLD_MAX_LAT);
-    std::uniform_int_distribution<> lon_udist(WORLD_MIN_LON, WORLD_MAX_LON);
-    std::vector<util::Coordinate> queries;
+    std::uniform_int_distribution<> coord_udist(0, coords.size());
+    std::vector<std::pair<util::Coordinate, util::Coordinate>> queries;
     for (unsigned i = 0; i < num_queries; i++)
     {
-        queries.emplace_back(util::FixedLongitude{lon_udist(mt_rand)},
-                             util::FixedLatitude{lat_udist(mt_rand)});
+        queries.push_back(
+            std::make_pair(coords[coord_udist(mt_rand)], coords[coord_udist(mt_rand)]));
     }
 
-    benchmarkQuery(queries, "raw RTree queries (1 result)", [&rtree](const util::Coordinate &q) {
-        return rtree.Nearest(q, 1);
-    });
-    benchmarkQuery(queries, "raw RTree queries (10 results)", [&rtree](const util::Coordinate &q) {
-        return rtree.Nearest(q, 10);
-    });
-}
-}
+    benchmarkQuery(
+        queries, "Route queries", [&osrm](const std::pair<util::Coordinate, util::Coordinate> &q) {
+            RouteParameters params;
+            params.overview = RouteParameters::OverviewType::False;
+            params.steps = false;
+
+            params.coordinates.push_back(q.first);
+            params.coordinates.push_back(q.second);
+            json::Object result;
+            const auto rc = osrm.Route(params, result);
+            return rc;
+        });
 }
 
 int main(int argc, char **argv)
 {
-    if (argc < 4)
+    if (argc < 2)
     {
-        std::cout << "./rtree-bench file.ramIndex file.fileIndx file.nodes"
-                  << "\n";
-        return 1;
+        std::cout << "./route-bench file.osrm" << std::endl;
+        return EXIT_FAILURE;
     }
     osrm::util::LogPolicy::GetInstance().Unmute();
 
-    const char *ram_path = argv[1];
-    const char *file_path = argv[2];
-    const char *nodes_path = argv[3];
+    const char *file_path = argv[1];
 
-    auto coords = osrm::benchmarks::loadCoordinates(nodes_path);
+    using namespace osrm;
 
-    osrm::benchmarks::BenchStaticRTree rtree(ram_path, file_path, coords);
+    // Configure based on a .osrm base path, and no datasets in shared mem from osrm-datastore
+    EngineConfig config;
+    config.storage_config = {file_path};
+    config.use_shared_memory = false;
 
-    osrm::benchmarks::benchmark(rtree, 10000);
+    // Routing machine with several services (such as Route, Table, Nearest, Trip, Match)
+    OSRM osrm{config};
+
+    auto coords = loadCoordinates(std::string(file_path) + ".nodes");
+
+    benchmark(osrm, coords, 10000);
 
     return 0;
 }

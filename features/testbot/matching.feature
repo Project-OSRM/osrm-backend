@@ -228,7 +228,7 @@ Feature: Basic Map Matching
 
         Given the node map
             """
-            a b c d e   g h
+          1 a2b4c d e3  g h
                 i
             """
 
@@ -246,15 +246,15 @@ Feature: Basic Map Matching
         And the customize extra arguments "--segment-speed-file {speeds_file}"
 
         When I match I should get
-            | trace | matchings | a:duration      |
-            | abeh  | abeh      | 1:0,1:1:1,0:2:1 |
-            | abci  | abci      | 1:0,1,0:1       |
+            | trace | a:duration              |
+            | a23h  | 0.5,0.5:1:1:1:0.4,1.6:1 |
+            | a24i  | 0.5,0.5:0.4,0.6:1.4     |
 
         # The following is the same as the above, but separated for readability (line length)
         When I match I should get
-            | trace | matchings | a:nodes               |
-            | abeh  | abeh      | 1:2:3,2:3:4:5,4:5:6:7 |
-            | abci  | abci      | 1:2:3,2:3,2:3:8       |
+            | trace | a:nodes               |
+            | a23h  | 1:2,1:2:3:4:5:6,5:6:7 |
+            | a24i  | 1:2,1:2:3,2:3:8       |
 
     Scenario: Testbot - Regression test for #3037
         Given the query options

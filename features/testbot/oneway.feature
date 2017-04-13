@@ -10,8 +10,11 @@ Feature: Testbot - oneways
         """
                 v
         x   d c
+           1 
+           2
           e     b
           f     a
+           3
             g h   y
           z
         """
@@ -36,7 +39,7 @@ Feature: Testbot - oneways
             | a    | b  | ab,ab                   |
             | b    | c  | bc,bc                   |
             | c    | d  | cd,cd                   |
-            | d    | e  | de,de                   |
+            | 1    | 2  | de,de                   |
             | e    | f  | ef,ef                   |
             | f    | g  | fg,fg                   |
             | g    | h  | gh,gh                   |
@@ -45,7 +48,7 @@ Feature: Testbot - oneways
             | c    | b  | cd,de,ef,fg,gh,ha,ab,ab |
             | d    | c  | de,ef,fg,gh,ha,ab,bc,bc |
             | e    | d  | ef,fg,gh,ha,ab,bc,cd,cd |
-            | f    | e  | fg,gh,ha,ab,bc,cd,de,de |
+            | 3    | 2  | fg,gh,ha,ab,bc,cd,de,de |
             | g    | f  | gh,ha,ab,bc,cd,de,ef,ef |
             | h    | g  | ha,ab,bc,cd,de,ef,fg,fg |
             | a    | h  | ab,bc,cd,de,ef,fg,gh,gh |

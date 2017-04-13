@@ -33,9 +33,9 @@ Feature: Car - Handle driving
     Scenario: Car - Control test without durations, osrm uses movable bridge speed to calculate duration
         Given the node map
             """
-            a b c
+            a b1c
                 d
-                e f g
+                e2f g
             """
 
         And the ways
@@ -48,8 +48,8 @@ Feature: Car - Handle driving
             | from | to | route           | modes                           | speed   | time     |
             | a    | g  | abc,cde,efg,efg | driving,driving,driving,driving | 13 km/h | 340s +-1 |
             | b    | f  | abc,cde,efg,efg | driving,driving,driving,driving | 9 km/h  | 318s +-1 |
-            | c    | e  | cde,cde         | driving,driving                 | 5 km/h  | 295s +-1 |
-            | e    | c  | cde,cde         | driving,driving                 | 5 km/h  | 295s +-1 |
+            | 1    | 2  | abc,cde,efg     | driving,driving,driving         | 7 km/h  | 306s +-1 |
+            | 2    | 1  | efg,cde,abc     | driving,driving,driving         | 7 km/h  | 306s +-1 |
 
     Scenario: Car - Properly handle durations
         Given the node map

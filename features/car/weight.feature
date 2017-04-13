@@ -30,7 +30,7 @@ Feature: Car - weights
             a
             |
             b
-            |\
+            |\ 1
             | e
             |/
             c
@@ -60,7 +60,7 @@ Feature: Car - weights
         When I route I should get
             | from | to | route       | speed   | weight |
             | a    | d  | ab,bc,cd,cd | 65 km/h | 44.4   |
-            | a    | e  | ab,be,be    | 14 km/h | 112    |
+            | a    | 1  | ab,be,be    | 16 km/h | 81.6   |
 
     Scenario: Distance weights
         Given the profile file "car" extended with
