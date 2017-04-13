@@ -37,6 +37,7 @@ env:
    - CCACHE_VERSION=3.3.1
    - CMAKE_VERSION=3.7.2
    - MASON="$(pwd)/scripts/mason.sh"
+   - ENABLE_NODE_BINDINGS=On
    - NODE="4"
 
 matrix:
@@ -47,12 +48,14 @@ matrix:
 
     # Debug Builds
     - os: linux
-      compiler: "gcc-6-debug"
+      compiler: "gcc-6-debug-cov-asan"
       addons: &gcc6
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['g++-6', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
       env: CCOMPILER='gcc-6' CXXCOMPILER='g++-6' BUILD_TYPE='Debug' TARGET_ARCH='x86_64-asan' ENABLE_COVERAGE=ON ENABLE_SANITIZER=ON
+      after_success:
+        - bash <(curl -s https://codecov.io/bash)
 
     - os: linux
       compiler: "clang-4.0-debug"
@@ -63,12 +66,12 @@ matrix:
       env: CLANG_VERSION='4.0.0' BUILD_TYPE='Debug' CUCUMBER_TIMEOUT=60000
 
     - os: linux
-      compiler: "mason-linux-debug-santize"
+      compiler: "mason-linux-debug-asan"
       addons:
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['libstdc++-5-dev']
-      env: CLANG_VERSION='4.0.0' BUILD_TYPE='Release' ENABLE_MASON=ON ENABLE_SANITIZER=ON ENABLE_NODE_BINDINGS=ON
+      env: CLANG_VERSION='4.0.0' BUILD_TYPE='Release' ENABLE_MASON=ON ENABLE_SANITIZER=ON
 
     # Release Builds
     - os: linux
@@ -77,7 +80,7 @@ matrix:
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['libstdc++-5-dev']
-      env: CLANG_VERSION='4.0.0' BUILD_TYPE='Release' ENABLE_MASON=ON RUN_CLANG_FORMAT=ON ENABLE_LTO=ON ENABLE_NODE_BINDINGS=ON
+      env: CLANG_VERSION='4.0.0' BUILD_TYPE='Release' ENABLE_MASON=ON RUN_CLANG_FORMAT=ON ENABLE_LTO=ON
 
     - os: linux
       compiler: "gcc-6-release"
@@ -106,6 +109,8 @@ matrix:
       compiler: "mason-osx-release"
       # we use the xcode provides clang and don't install our own
       env: ENABLE_MASON=ON BUILD_TYPE='Release' CUCUMBER_TIMEOUT=60000 CCOMPILER='clang' CXXCOMPILER='clang++' ENABLE_ASSERTIONS=ON ENABLE_LTO=ON
+      after_success:
+        - ./scripts/travis/publish.sh
 
       # Disabled because of CI slowness
       #- os: linux
@@ -142,7 +147,7 @@ matrix:
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['libstdc++-5-dev']
-      env: CLANG_VERSION='4.0.0' BUILD_TYPE='Release' ENABLE_MASON=ON ENABLE_LTO=ON ENABLE_NODE_BINDINGS=ON PUBLISH_NODE_BINDINGS=On JOBS=3
+      env: CLANG_VERSION='4.0.0' BUILD_TYPE='Release' ENABLE_MASON=ON ENABLE_LTO=ON PUBLISH_NODE_BINDINGS=On JOBS=3
       install:
         - pushd ${OSRM_BUILD_DIR}
         - |
@@ -165,7 +170,7 @@ matrix:
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['libstdc++-5-dev']
-      env: CLANG_VERSION='4.0.0' BUILD_TYPE='Debug' ENABLE_MASON=ON ENABLE_LTO=ON ENABLE_NODE_BINDINGS=ON PUBLISH_NODE_BINDINGS=On JOBS=3
+      env: CLANG_VERSION='4.0.0' BUILD_TYPE='Debug' ENABLE_MASON=ON ENABLE_LTO=ON PUBLISH_NODE_BINDINGS=On JOBS=3
       install:
         - pushd ${OSRM_BUILD_DIR}
         - |
@@ -188,7 +193,7 @@ matrix:
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['libstdc++-5-dev']
-      env: CLANG_VERSION='4.0.0' BUILD_TYPE='Release' ENABLE_MASON=ON ENABLE_LTO=ON ENABLE_NODE_BINDINGS=ON PUBLISH_NODE_BINDINGS=On JOBS=3 NODE="6"
+      env: CLANG_VERSION='4.0.0' BUILD_TYPE='Release' ENABLE_MASON=ON ENABLE_LTO=ON PUBLISH_NODE_BINDINGS=On JOBS=3 NODE="6"
       install:
         - pushd ${OSRM_BUILD_DIR}
         - |
@@ -211,7 +216,7 @@ matrix:
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['libstdc++-5-dev']
-      env: CLANG_VERSION='4.0.0' BUILD_TYPE='Debug' ENABLE_MASON=ON ENABLE_LTO=ON ENABLE_NODE_BINDINGS=ON PUBLISH_NODE_BINDINGS=On JOBS=3 NODE="6"
+      env: CLANG_VERSION='4.0.0' BUILD_TYPE='Debug' ENABLE_MASON=ON ENABLE_LTO=ON PUBLISH_NODE_BINDINGS=On JOBS=3 NODE="6"
       install:
         - pushd ${OSRM_BUILD_DIR}
         - |
@@ -333,14 +338,9 @@ script:
   - ./unit_tests/server-tests
   - ./unit_tests/partition-tests
   - |
-    if [ -n "${ENABLE_NODE_BINDINGS}" ] && [ -z "${ENABLE_SANITIZER}" ]; then
+    if [ -z "${ENABLE_SANITIZER}" ]; then
       npm run nodejs-tests
     fi
   - popd
   - yarn test
 
-after_success:
-  - |
-    if [ -n "${ENABLE_COVERAGE}" ]; then
-      bash <(curl -s https://codecov.io/bash)
-    fi
