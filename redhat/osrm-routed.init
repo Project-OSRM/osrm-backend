@@ -1,0 +1,97 @@
+#!/bin/sh
+#
+# osrm-routed        init file for starting up the osrm-routed daemon
+#
+# chkconfig:   - 20 80
+# description: Starts and stops the osrm-routed daemon.
+
+# Source function library.
+. /etc/rc.d/init.d/functions
+
+name="osrm-routed"
+exec="/usr/bin/$name"
+pidfile="/var/run/osrm/osrm-routed.pid"
+ROUTED_CONFIG="/etc/osrm/server.ini"
+DAEMON_ARGS=" >> /var/log/osrm/osrm-routed.log 2>&1 &"
+OSRM_FILE="/etc/osrm/osrm.osrm"
+
+[ -e /etc/sysconfig/osrm-routed ] && . /etc/sysconfig/osrm-routed
+
+lockfile=/var/lock/subsys/osrm-routed
+
+start() {
+    [ -f $ROUTED_CONFIG ] || exit 6
+    [ -x $exec ] || exit 5
+    echo -n $"Starting $name: "
+    ulimit -l unlimited
+    daemon --pidfile="$pidfile" --user ${ROUTED_USER-apache} "$exec -c $ROUTED_CONFIG $OSRM_FILE $DAEMON_ARGS"
+    retval=$?
+    echo
+
+    pid=`pidof $exec`
+    if [ -n "$pid" ]; then
+        echo $pid > "$pidfile"
+    fi
+
+    [ $retval -eq 0 ] && touch $lockfile
+    return $retval
+}
+
+stop() {
+    echo -n $"Stopping $name: "
+    killproc -p $pidfile -d 10 $name
+    retval=$?
+    echo
+    [ $retval -eq 0 ] && rm -f $lockfile
+    return $retval
+}
+
+restart() {
+    stop
+    start
+}
+
+reload() {
+    false
+}
+
+rh_status() {
+    status -p $pidfile $name
+}
+
+rh_status_q() {
+    rh_status >/dev/null 2>&1
+}
+
+
+case "$1" in
+    start)
+        rh_status_q && exit 0
+        $1
+        ;;
+    stop)
+        rh_status_q || exit 0
+        $1
+        ;;
+    restart)
+        $1
+        ;;
+    reload)
+        rh_status_q || exit 7
+        $1
+        ;;
+    force-reload)
+        force_reload
+        ;;
+    status)
+        rh_status
+        ;;
+    condrestart|try-restart)
+        rh_status_q || exit 0
+        restart
+        ;;
+    *)
+        echo $"Usage: $0 {start|stop|status|restart|condrestart|try-restart}"
+        exit 2
+esac
+exit $?
