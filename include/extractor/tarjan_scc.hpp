@@ -69,6 +69,7 @@ template <typename GraphT> class TarjanSCC
         std::stack<NodeID> tarjan_stack;
         std::vector<TarjanNode> tarjan_node_list(max_node_id);
         unsigned component_index = 0, size_of_current_component = 0;
+        unsigned large_component_count = 0;
         unsigned index = 0;
         std::vector<bool> processing_node_before_recursion(max_node_id, true);
         for (const NodeID node : util::irange(0u, max_node_id))
@@ -146,8 +147,9 @@ template <typename GraphT> class TarjanSCC
 
                         if (size_of_current_component > 1000)
                         {
-                            util::Log() << "large component [" << component_index
-                                        << "]=" << size_of_current_component;
+                            ++large_component_count;
+                            util::Log(logDEBUG) << "large component [" << component_index
+                                                << "]=" << size_of_current_component;
                         }
 
                         ++component_index;
@@ -158,6 +160,8 @@ template <typename GraphT> class TarjanSCC
         }
 
         TIMER_STOP(SCC_RUN);
+        util::Log() << "Found " << component_index << " SCC (" << large_component_count
+                    << " large, " << (component_index - large_component_count) << " small)";
         util::Log() << "SCC run took: " << TIMER_MSEC(SCC_RUN) / 1000. << "s";
 
         size_one_counter = std::count_if(component_size_vector.begin(),
