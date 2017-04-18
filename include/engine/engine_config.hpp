@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef ENGINE_CONFIG_HPP
 #define ENGINE_CONFIG_HPP
 
-#include "storage/storage_config.hpp"
+#include "../storage/storage_config.hpp"
 
 #include <boost/filesystem/path.hpp>
 
