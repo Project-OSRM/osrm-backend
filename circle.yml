@@ -1,0 +1,35 @@
+machine:
+  xcode:
+    version: 7.3
+  environment:
+    XCODE_SCHEME: "no"
+    XCODE_WORKSPACE: "no"
+    JOBS: 8
+    CCACHE_TEMPDIR: /tmp/.ccache-temp
+    CCACHE_COMPRESS: 1
+    LLVM_VERSION: 3.8
+    BUILD_TYPE: Debug
+    BUILD_SHARED_LIBS: OFF
+    COVERAGE: OFF
+
+dependencies:
+  cache_directories:
+    - "~/.ccache"
+    - "~/.apt-cache"
+    - "mason_packages"
+  pre:
+    # https://discuss.circleci.com/t/add-ability-to-cache-apt-get-programs/598/3
+    - sudo rm -rf /var/cache/apt/archives && sudo ln -s ~/.apt-cache /var/cache/apt/archives && mkdir -p ~/.apt-cache/partial
+    - sudo wget -O - http://llvm.org/apt/llvm-snapshot.gpg.key | sudo apt-key add -
+    - sudo add-apt-repository -y "deb http://llvm.org/apt/trusty/ llvm-toolchain-trusty-${LLVM_VERSION} main"
+    - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+    - sudo apt-get update -y
+  override:
+    - sudo apt-get install clang-${LLVM_VERSION} -y libstdc++6
+  post:
+    - which clang-${LLVM_VERSION}
+    - which clang++-${LLVM_VERSION}
+
+test:
+  override:
+    - CC=clang-${LLVM_VERSION} CXX=clang++-${LLVM_VERSION} ./scripts/circleci.sh $(pwd)/local-install
