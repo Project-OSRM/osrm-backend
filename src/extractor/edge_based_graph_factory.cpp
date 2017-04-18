@@ -307,7 +307,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     skipped_barrier_turns_counter = 0;
 
     storage::io::FileWriter turn_penalties_index_file(turn_penalties_index_filename,
-                                                      storage::io::FileWriter::GenerateFingerprint);
+                                                      storage::io::FileWriter::HasNoFingerprint);
 
     // TODO investigate increased peak memory consumption by keeping this in memory now
     TurnDataContainer turn_data_container;
