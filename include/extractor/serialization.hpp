@@ -100,37 +100,51 @@ inline void write(storage::io::FileWriter &writer,
 }
 
 // read/write for conditional turn restrictions file
-inline void read(const boost::filesystem::path &path, std::vector<InputRestrictionContainer> &restrictions)
+inline void read(const boost::filesystem::path &path, std::vector<TurnRestriction> &restrictions)
 {
     const auto fingerprint = storage::io::FileReader::VerifyFingerprint;
     storage::io::FileReader reader{path, fingerprint};
 
     auto num_indices = reader.ReadElementCount64();
-    restrictions.resize(num_indices);
+    restrictions.reserve(num_indices);
+    TurnRestriction restriction;
     while (num_indices > 0)
     {
-        InputRestrictionContainer restriction;
         bool is_only;
-        reader.ReadInto(restriction.restriction.via);
-        reader.ReadInto(restriction.restriction.from);
-        reader.ReadInto(restriction.restriction.to);
+        reader.ReadInto(restriction.via);
+        reader.ReadInto(restriction.from);
+        reader.ReadInto(restriction.to);
         reader.ReadInto(is_only);
-        reader.ReadInto(restriction.restriction.condition);
-        restriction.restriction.flags.is_only = is_only;
+        auto num_conditions = reader.ReadElementCount64();
+        restriction.condition.resize(num_conditions);
+        for (uint64_t i = 0; i < num_conditions; i++)
+        {
+            reader.ReadInto(restriction.condition[i].modifier);
+            storage::serialization::read(reader, restriction.condition[i].times);
+            storage::serialization::read(reader, restriction.condition[i].weekdays);
+            storage::serialization::read(reader, restriction.condition[i].monthdays);
+        }
+        restriction.flags.is_only = is_only;
 
-        restrictions.push_back(restriction);
+        restrictions.push_back(std::move(restriction));
         num_indices--;
     }
 }
 
-inline void write(storage::io::FileWriter &writer, const InputRestrictionContainer &container)
+inline void write(storage::io::FileWriter &writer, const TurnRestriction &restriction)
 {
-    writer.WriteOne(container.restriction.via);
-    writer.WriteOne(container.restriction.from);
-    writer.WriteOne(container.restriction.to);
-    writer.WriteOne(container.restriction.flags.is_only);
-    // condition is a string
-    writer.WriteFrom(container.restriction.condition);
+    writer.WriteOne(restriction.via);
+    writer.WriteOne(restriction.from);
+    writer.WriteOne(restriction.to);
+    writer.WriteOne(restriction.flags.is_only);
+    writer.WriteElementCount64(restriction.condition.size());
+    for (auto &c : restriction.condition)
+    {
+        writer.WriteOne(c.modifier);
+        storage::serialization::write(writer, c.times);
+        storage::serialization::write(writer, c.weekdays);
+        storage::serialization::write(writer, c.monthdays);
+    }
 }
 }
 }

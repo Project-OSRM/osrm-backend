@@ -649,13 +649,13 @@ void ExtractionContainers::WriteRestrictions(const std::string &path)
             if (!restriction_container.restriction.condition.empty())
             {
                 // write conditional turn restrictions to disk, for use in contractor later
-                io::write(restrictions_out_file, restriction_container.restriction);
+                extractor::serialization::write(restrictions_out_file, restriction_container.restriction);
                 ++written_restriction_count;
             }
             else
             {
                 // save unconditional turn restriction to memory, for use in ebg later
-                unconditional_turn_restrictions.push_back(restriction_container.restriction);
+                unconditional_turn_restrictions.push_back(std::move(restriction_container.restriction));
             }
         }
     }

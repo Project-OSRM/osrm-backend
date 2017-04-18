@@ -1,6 +1,6 @@
 #include "extractor/edge_based_edge.hpp"
-#include "extractor/files.hpp"
 #include "extractor/edge_based_graph_factory.hpp"
+#include "extractor/files.hpp"
 #include "extractor/guidance/turn_analysis.hpp"
 #include "extractor/guidance/turn_lane_handler.hpp"
 #include "extractor/scripting_environment.hpp"
@@ -552,14 +552,12 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                     const bool isTrivial = m_compressed_edge_container.IsTrivial(incoming_edge);
 
                     const auto &from_node =
-                        isTrivial ? m_osm_node_ids[node_along_road_entering]
-                                  : m_osm_node_ids[m_compressed_edge_container.GetLastEdgeSourceID(
-                                        incoming_edge)];
+                        isTrivial ? node_along_road_entering
+                                  : m_compressed_edge_container.GetLastEdgeSourceID(incoming_edge);
                     const auto &via_node =
-                        m_osm_node_ids[m_compressed_edge_container.GetLastEdgeTargetID(
-                            incoming_edge)];
+                        m_compressed_edge_container.GetLastEdgeTargetID(incoming_edge);
                     const auto &to_node =
-                        m_osm_node_ids[m_compressed_edge_container.GetFirstEdgeTargetID(turn.eid)];
+                        m_compressed_edge_container.GetFirstEdgeTargetID(turn.eid);
 
                     lookup::TurnIndexBlock turn_index_block = {from_node, via_node, to_node};
 
