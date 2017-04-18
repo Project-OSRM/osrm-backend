@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+const fs = require('fs');
 const http = require('http');
 const process = require('process');
 const cla = require('command-line-args');
@@ -52,11 +53,7 @@ function generate_queries(options, query_points, coordinates_number) {
     {
         let points = query_points.slice(chunk, chunk + coordinates_number);
         let query = options.path.replace(/{}/g, x =>  points.pop().join(','));
-        queries.push({
-            hostname: options.server.hostname,
-            port: options.server.port,
-            path: query
-        });
+        queries.push(query);
     }
     return queries;
 }
@@ -86,8 +83,9 @@ const optionsList = [
     {name: 'max-sockets', alias: 'm', type: Number, defaultValue: 1,
      description: 'how many concurrent sockets the agent can have open per origin, default 1', typeLabel: '[underline]{number}'},
     {name: 'number', alias: 'n', type: Number, defaultValue: 10,
-     description: 'number of query points, default 10', typeLabel: '[underline]{number}'}
-]
+     description: 'number of query points, default 10', typeLabel: '[underline]{number}'},
+    {name: 'queries-files', alias: 'q', type: String,
+     description: 'CSV file with queries in the first row', typeLabel: '[underline]{file}'}];
 const options = cla(optionsList);
 if (options.help) {
     const banner = '╔═╗╔═╗╦═╗╔╦╗      \n║ ║╚═╗╠╦╝║║║      \n╚═╝╚═╝╩╚═╩ ╩      \n┬─┐┬ ┬┌┐┌┌┐┌┌─┐┬─┐\n├┬┘│ │││││││├┤ ├┬┘\n┴└─└─┘┘└┘┘└┘└─┘┴└─';
@@ -100,11 +98,23 @@ if (options.help) {
     process.exit(0);
 }
 
-const polygon = options['bounding-box'].map(x => x.poly).reduce((x,y) => turf.union(x, y));
-const coordinates_number = (options.path.match(/{}/g) || []).length;
-const query_points = generate_points(polygon, coordinates_number * options.number);
-const queries = generate_queries(options, query_points, coordinates_number);
+// read or generate random queries
+let queries = [];
+if (options.hasOwnProperty('queries-files')) {
+    queries = fs.readFileSync(options['queries-files'])
+        .toString()
+        .split('\n')
+        .map(r => { const match = /^"([^+]+)"/.exec(r); return match ? match[1] : null; })
+        .filter(q => q);
+} else {
+    const polygon = options['bounding-box'].map(x => x.poly).reduce((x,y) => turf.union(x, y));
+    const coordinates_number = (options.path.match(/{}/g) || []).length;
+    const query_points = generate_points(polygon, coordinates_number * options.number);
+    queries = generate_queries(options, query_points, coordinates_number);
+}
+queries = queries.map(q => { return {hostname: options.server.hostname, port: options.server.port, path: q}; });
 
+// run queries
 http.globalAgent.maxSockets = options['max-sockets'];
 queries.map(query => {
     run_query(query, options.filter, (query, code, ttfb, total, results) => {
