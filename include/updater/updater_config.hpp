@@ -33,52 +33,24 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <chrono>
 #include <string>
 
+#include "storage/io_config.hpp"
+#include "storage/storage_config.hpp"
+
 namespace osrm
 {
 namespace updater
 {
 
-struct UpdaterConfig final
+struct UpdaterConfig final : storage::IOConfig
 {
-    // Infer the output names from the path of the .osrm file
-    void UseDefaultOutputNames()
-    {
-        edge_based_graph_path = osrm_input_path.string() + ".ebg";
-        turn_weight_penalties_path = osrm_input_path.string() + ".turn_weight_penalties";
-        turn_duration_penalties_path = osrm_input_path.string() + ".turn_duration_penalties";
-        turn_penalties_index_path = osrm_input_path.string() + ".turn_penalties_index";
-        node_based_nodes_data_path = osrm_input_path.string() + ".nbg_nodes";
-        edge_based_nodes_data_path = osrm_input_path.string() + ".ebg_nodes";
-        edge_data_path = osrm_input_path.string() + ".edges";
-        geometry_path = osrm_input_path.string() + ".geometry";
-        rtree_leaf_path = osrm_input_path.string() + ".fileIndex";
-        datasource_names_path = osrm_input_path.string() + ".datasource_names";
-        profile_properties_path = osrm_input_path.string() + ".properties";
-        turn_restrictions_path = osrm_input_path.string() + ".restrictions";
-    }
-
-    boost::filesystem::path osrm_input_path;
-
-    std::string edge_based_graph_path;
-
-    std::string turn_weight_penalties_path;
-    std::string turn_duration_penalties_path;
-    std::string turn_penalties_index_path;
-    std::string node_based_nodes_data_path;
-    std::string edge_based_nodes_data_path;
-    std::string edge_data_path;
-    std::string geometry_path;
-    std::string rtree_leaf_path;
+    UpdaterConfig() {}
+    UpdaterConfig(const boost::filesystem::path &base) : IOConfig(base) {}
 
     double log_edge_updates_factor;
     std::time_t valid_now;
 
     std::vector<std::string> segment_speed_lookup_paths;
     std::vector<std::string> turn_penalty_lookup_paths;
-    std::string datasource_names_path;
-    std::string profile_properties_path;
-    std::string turn_restrictions_path;
-    std::string tz_file_path;
 };
 }
 }

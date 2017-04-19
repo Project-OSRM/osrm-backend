@@ -105,13 +105,13 @@ void checkWeightsConsistency(
     const std::vector<osrm::extractor::EdgeBasedEdge> &edge_based_edge_list)
 {
     extractor::SegmentDataContainer segment_data;
-    extractor::files::readSegmentData(config.geometry_path, segment_data);
+    extractor::files::readSegmentData(config.geometries_path, segment_data);
 
     extractor::EdgeBasedNodeDataContainer node_data;
     extractor::files::readNodeData(config.osrm_input_path.string() + ".ebg_nodes", node_data);
 
     extractor::TurnDataContainer turn_data;
-    extractor::files::readTurnData(config.osrm_input_path.string() + ".edges", turn_data);
+    extractor::files::readTurnData(config.edges_data_path, turn_data);
 
     for (auto &edge : edge_based_edge_list)
     {
@@ -593,7 +593,7 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
     if (update_edge_weights || update_turn_penalties || update_conditional_turns)
     {
         const auto load_segment_data = [&] {
-            extractor::files::readSegmentData(config.geometry_path, segment_data);
+            extractor::files::readSegmentData(config.geometries_path, segment_data);
         };
 
         const auto load_node_data = [&] {
@@ -601,7 +601,7 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
         };
 
         const auto load_edge_data = [&] {
-            extractor::files::readTurnData(config.edge_data_path, turn_data);
+            extractor::files::readTurnData(config.edges_data_path, turn_data);
         };
 
         const auto load_turn_weight_penalties = [&] {
@@ -619,7 +619,7 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
         const auto load_profile_properties = [&] {
             // Propagate profile properties to contractor configuration structure
             storage::io::FileReader profile_properties_file(
-                config.profile_properties_path, storage::io::FileReader::VerifyFingerprint);
+                config.properties_path, storage::io::FileReader::VerifyFingerprint);
             profile_properties = profile_properties_file.ReadOne<extractor::ProfileProperties>();
         };
 
@@ -652,7 +652,7 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
                                              coordinates,
                                              osm_node_ids);
         // Now save out the updated compressed geometries
-        extractor::files::writeSegmentData(config.geometry_path, segment_data);
+        extractor::files::writeSegmentData(config.geometries_path, segment_data);
         TIMER_STOP(segment);
         util::Log() << "Updating segment data took " << TIMER_MSEC(segment) << "ms.";
     }
