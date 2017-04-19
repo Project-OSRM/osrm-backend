@@ -741,7 +741,7 @@ set(UtilHeader include/util/coordinate.hpp include/util/json_container.hpp inclu
 set(ExtractorHeader include/extractor/extractor.hpp include/extractor/extractor_config.hpp include/extractor/travel_mode.hpp)
 set(PartitionerHeader include/partition/partitioner.hpp include/partition/partition_config.hpp)
 set(ContractorHeader include/contractor/contractor.hpp include/contractor/contractor_config.hpp)
-set(StorageHeader include/storage/storage.hpp include/storage/storage_config.hpp)
+set(StorageHeader include/storage/storage.hpp include/storage/io_config.hpp include/storage/storage_config.hpp)
 install(FILES ${EngineHeader} DESTINATION include/osrm/engine)
 install(FILES ${UtilHeader} DESTINATION include/osrm/util)
 install(FILES ${StorageHeader} DESTINATION include/osrm/storage)

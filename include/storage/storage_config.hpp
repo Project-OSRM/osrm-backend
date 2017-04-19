@@ -30,6 +30,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <boost/filesystem/path.hpp>
 
+#include "storage/io_config.hpp"
+
 namespace osrm
 {
 namespace storage
@@ -40,7 +42,7 @@ namespace storage
  *
  * \see OSRM, EngineConfig
  */
-struct StorageConfig final
+struct StorageConfig final : IOConfig
 {
     StorageConfig() = default;
 
@@ -49,30 +51,8 @@ struct StorageConfig final
      *
      * \param base The base path (e.g. france.pbf.osrm) to derive auxiliary file suffixes from.
      */
-    StorageConfig(const boost::filesystem::path &base);
+    StorageConfig(const boost::filesystem::path &base) : IOConfig(base) {}
     bool IsValid() const;
-
-    boost::filesystem::path ram_index_path;
-    boost::filesystem::path file_index_path;
-    boost::filesystem::path hsgr_data_path;
-    boost::filesystem::path node_based_nodes_data_path;
-    boost::filesystem::path edge_based_nodes_data_path;
-    boost::filesystem::path edges_data_path;
-    boost::filesystem::path core_data_path;
-    boost::filesystem::path geometries_path;
-    boost::filesystem::path timestamp_path;
-    boost::filesystem::path turn_weight_penalties_path;
-    boost::filesystem::path turn_duration_penalties_path;
-    boost::filesystem::path datasource_names_path;
-    boost::filesystem::path datasource_indexes_path;
-    boost::filesystem::path names_data_path;
-    boost::filesystem::path properties_path;
-    boost::filesystem::path intersection_class_path;
-    boost::filesystem::path turn_lane_data_path;
-    boost::filesystem::path turn_lane_description_path;
-    boost::filesystem::path mld_partition_path;
-    boost::filesystem::path mld_storage_path;
-    boost::filesystem::path mld_graph_path;
 };
 }
 }
