@@ -79,101 +79,101 @@ module.exports = function () {
 
                         if (headers.has('route')) {
                             got.route = (instructions || '').trim();
-
-                            if (headers.has('summary')) {
-                                got.summary = (summary || '').trim();
-                            }
-
-                            if (headers.has('alternative')) {
-                                // TODO examine more than first alternative?
-                                got.alternative ='';
-                                if (json.routes && json.routes.length > 1)
-                                    got.alternative = this.wayList(json.routes[1]);
-                            }
-
-                            var distance = hasRoute && json.routes[0].distance,
-                                time = hasRoute && json.routes[0].duration,
-                                weight = hasRoute && json.routes[0].weight;
-
-                            if (headers.has('distance')) {
-                                if (row.distance.length) {
-                                    if (!row.distance.match(/\d+m/))
-                                        return cb(new Error('*** Distance must be specified in meters. (ex: 250m)'));
-                                    got.distance = instructions ? util.format('%dm', distance) : '';
-                                } else {
-                                    got.distance = '';
-                                }
-                            }
-
-                            if (headers.has('weight')) {
-                                if (row.weight.length) {
-                                    if (!row.weight.match(/[\d\.]+/))
-                                        return cb(new Error('*** Weight must be specified as a numeric value. (ex: 8)'));
-                                    got.weight = instructions ? util.format('%d', weight) : '';
-                                } else {
-                                    got.weight = '';
-                                }
-                            }
-
-                            if (headers.has('time')) {
-                                if (!row.time.match(/\d+s/))
-                                    return cb(new Error('*** Time must be specied in seconds. (ex: 60s)'));
-                                got.time = instructions ? util.format('%ds', time) : '';
-                            }
-
-                            if (headers.has('lanes')) {
-                                got.lanes = (lanes || '').trim();
-                            }
-
-                            if (headers.has('speed')) {
-                                if (row.speed !== '' && instructions) {
-                                    if (!row.speed.match(/\d+ km\/h/))
-                                        cb(new Error('*** Speed must be specied in km/h. (ex: 50 km/h)'));
-                                    var speed = time > 0 ? Math.round(3.6*distance/time) : null;
-                                    got.speed = util.format('%d km/h', speed);
-                                } else {
-                                    got.speed = '';
-                                }
-                            }
-
-                            if (headers.has('intersections')) {
-                                got.intersections = (intersections || '').trim();
-                            }
-
-                            if (headers.has('locations')){
-                                got.locations = (locations || '').trim();
-                            }
-
-                            // if header matches 'a:*', parse out the values for *
-                            // and return in that header
-                            headers.forEach((k) => {
-                                let whitelist = ['duration', 'distance', 'datasources', 'nodes', 'weight', 'speed'];
-                                if (k.match(/^a:/)) {
-                                    let a_type = k.slice(2);
-                                    if (whitelist.indexOf(a_type) == -1)
-                                        return cb(new Error('Unrecognized annotation field', a_type));
-                                    if (annotation && !annotation[a_type])
-                                        return cb(new Error('Annotation not found in response', a_type));
-                                    got[k] = annotation && annotation[a_type] || '';
-                                }
-                            });
-
-                            var putValue = (key, value) => {
-                                if (headers.has(key)) got[key] = instructions ? value : '';
-                            };
-
-                            putValue('ref', refs);
-                            putValue('bearing', bearings);
-                            putValue('turns', turns);
-                            putValue('modes', modes);
-                            putValue('times', times);
-                            putValue('distances', distances);
-                            putValue('pronunciations', pronunciations);
-                            putValue('destinations', destinations);
-                            putValue('weight_name', weight_name);
-                            putValue('weights', weights);
-                            putValue('weight', weight);
                         }
+
+                        if (headers.has('summary')) {
+                            got.summary = (summary || '').trim();
+                        }
+
+                        if (headers.has('alternative')) {
+                            // TODO examine more than first alternative?
+                            got.alternative ='';
+                            if (json.routes && json.routes.length > 1)
+                                got.alternative = this.wayList(json.routes[1]);
+                        }
+
+                        var distance = hasRoute && json.routes[0].distance,
+                            time = hasRoute && json.routes[0].duration,
+                            weight = hasRoute && json.routes[0].weight;
+
+                        if (headers.has('distance')) {
+                            if (row.distance.length) {
+                                if (!row.distance.match(/\d+m/))
+                                    return cb(new Error('*** Distance must be specified in meters. (ex: 250m)'));
+                                got.distance = instructions ? util.format('%dm', distance) : '';
+                            } else {
+                                got.distance = '';
+                            }
+                        }
+
+                        if (headers.has('weight')) {
+                            if (row.weight.length) {
+                                if (!row.weight.match(/[\d\.]+/))
+                                    return cb(new Error('*** Weight must be specified as a numeric value. (ex: 8)'));
+                                got.weight = instructions ? util.format('%d', weight) : '';
+                            } else {
+                                got.weight = '';
+                            }
+                        }
+
+                        if (headers.has('time')) {
+                            if (!row.time.match(/\d+s/))
+                                return cb(new Error('*** Time must be specied in seconds. (ex: 60s)'));
+                            got.time = instructions ? util.format('%ds', time) : '';
+                        }
+
+                        if (headers.has('lanes')) {
+                            got.lanes = (lanes || '').trim();
+                        }
+
+                        if (headers.has('speed')) {
+                            if (row.speed !== '' && instructions) {
+                                if (!row.speed.match(/\d+ km\/h/))
+                                    cb(new Error('*** Speed must be specied in km/h. (ex: 50 km/h)'));
+                                var speed = time > 0 ? Math.round(3.6*distance/time) : null;
+                                got.speed = util.format('%d km/h', speed);
+                            } else {
+                                got.speed = '';
+                            }
+                        }
+
+                        if (headers.has('intersections')) {
+                            got.intersections = (intersections || '').trim();
+                        }
+
+                        if (headers.has('locations')){
+                            got.locations = (locations || '').trim();
+                        }
+
+                        // if header matches 'a:*', parse out the values for *
+                        // and return in that header
+                        headers.forEach((k) => {
+                            let whitelist = ['duration', 'distance', 'datasources', 'nodes', 'weight', 'speed'];
+                            if (k.match(/^a:/)) {
+                                let a_type = k.slice(2);
+                                if (whitelist.indexOf(a_type) == -1)
+                                    return cb(new Error('Unrecognized annotation field', a_type));
+                                if (annotation && !annotation[a_type])
+                                    return cb(new Error('Annotation not found in response', a_type));
+                                got[k] = annotation && annotation[a_type] || '';
+                            }
+                        });
+
+                        var putValue = (key, value) => {
+                            if (headers.has(key)) got[key] = instructions ? value : '';
+                        };
+
+                        putValue('ref', refs);
+                        putValue('bearing', bearings);
+                        putValue('turns', turns);
+                        putValue('modes', modes);
+                        putValue('times', times);
+                        putValue('distances', distances);
+                        putValue('pronunciations', pronunciations);
+                        putValue('destinations', destinations);
+                        putValue('weight_name', weight_name);
+                        putValue('weights', weights);
+                        putValue('weight', weight);
 
                         for (var key in row) {
                             if (this.FuzzyMatch.match(got[key], row[key])) {
