@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <boost/filesystem/path.hpp>
 
+#include <chrono>
 #include <string>
 
 namespace osrm
@@ -70,6 +71,7 @@ struct UpdaterConfig final
     std::string rtree_leaf_path;
 
     double log_edge_updates_factor;
+    std::time_t valid_now;
 
     std::vector<std::string> segment_speed_lookup_paths;
     std::vector<std::string> turn_penalty_lookup_paths;

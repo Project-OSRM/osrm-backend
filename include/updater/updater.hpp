@@ -26,8 +26,9 @@ class Timezoner
   public:
     Timezoner() = default;
 
-    Timezoner(std::string tz_filename, std::time_t utc_time_now)
+    Timezoner(std::string tz_filename, std::time_t utc_time_now_)
     {
+        utc_time_now = utc_time_now_;
         GetLocalTime = LoadLocalTimesRTree(tz_filename, utc_time_now);
     }
 
@@ -37,6 +38,7 @@ class Timezoner
     {
     }
 
+    std::time_t utc_time_now;
     std::function<struct tm(const point_t &)> GetLocalTime;
 
   private:

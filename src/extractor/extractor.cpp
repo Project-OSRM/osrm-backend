@@ -241,7 +241,7 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
     util::Log() << "timestamp: " << timestamp;
 
     storage::io::FileWriter timestamp_file(config.timestamp_file_name,
-                                           storage::io::FileWriter::HasNoFingerprint);
+                                           storage::io::FileWriter::GenerateFingerprint);
 
     timestamp_file.WriteFrom(timestamp.c_str(), timestamp.length());
 

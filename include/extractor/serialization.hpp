@@ -138,7 +138,7 @@ inline void write(storage::io::FileWriter &writer, const TurnRestriction &restri
     writer.WriteOne(restriction.to);
     writer.WriteOne(restriction.flags.is_only);
     writer.WriteElementCount64(restriction.condition.size());
-    for (auto &c : restriction.condition)
+    for (const auto &c : restriction.condition)
     {
         writer.WriteOne(c.modifier);
         storage::serialization::write(writer, c.times);

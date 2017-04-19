@@ -47,25 +47,6 @@
 #include <tuple>
 #include <vector>
 
-namespace std
-{
-template <typename T1, typename T2, typename T3> struct hash<std::tuple<T1, T2, T3>>
-{
-    size_t operator()(const std::tuple<T1, T2, T3> &t) const
-    {
-        return hash_val(std::get<0>(t), std::get<1>(t), std::get<2>(t));
-    }
-};
-
-template <typename T1, typename T2> struct hash<std::tuple<T1, T2>>
-{
-    size_t operator()(const std::tuple<T1, T2> &t) const
-    {
-        return hash_val(std::get<0>(t), std::get<1>(t));
-    }
-};
-}
-
 namespace osrm
 {
 namespace updater
@@ -438,7 +419,6 @@ updateTurnPenalties(const UpdaterConfig &config,
                     const TurnLookupTable &turn_penalty_lookup,
                     std::vector<TurnPenalty> &turn_weight_penalties,
                     std::vector<TurnPenalty> &turn_duration_penalties,
-                    std::vector<util::Coordinate> node_coordinates,
                     extractor::PackedOSMIDs osm_node_ids)
 {
     const auto weight_multiplier = profile_properties.GetWeightMultiplier();
@@ -510,7 +490,7 @@ updateConditionalTurns(const UpdaterConfig &config,
     // TODO make this into a function
     LookupTable<std::tuple<NodeID, NodeID>, NodeID> is_only_lookup;
     std::unordered_set<std::tuple<NodeID, NodeID, NodeID>,
-                       std::hash<std::tuple<NodeID, NodeID, NodeID>>>
+                       boost::hash<std::tuple<NodeID, NodeID, NodeID>>>
         is_no_set;
     for (const auto &c : conditional_turns)
     {
@@ -684,7 +664,6 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
                                                           turn_penalty_lookup,
                                                           turn_weight_penalties,
                                                           turn_duration_penalties,
-                                                          node_coordinates,
                                                           osm_node_ids);
         const auto offset = updated_segments.size();
         updated_segments.resize(offset + updated_turn_penalties.size());
@@ -701,8 +680,15 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
 
     if (update_conditional_turns)
     {
+        Timezoner time_zone_handler;
         // initialize instance of class that handles time zone resolution
-        Timezoner time_zone_handler = Timezoner(config.tz_file_path);
+        if (config.valid_now <= 0)
+        {
+            time_zone_handler = Timezoner(config.tz_file_path);
+        } else {
+            time_zone_handler = Timezoner(config.tz_file_path, config.valid_now);
+        }
+        util::Log() << "Using time " << time_zone_handler.utc_time_now << " to validate conditional restrictions.";
         auto updated_turn_penalties = updateConditionalTurns(config,
                                                              turn_weight_penalties,
                                                              conditional_turns,

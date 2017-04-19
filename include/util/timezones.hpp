@@ -1,5 +1,5 @@
-#ifndef TIMEZONES_HPP
-#define TIMEZONES_HPP
+#ifndef OSRM_TIMEZONES_HPP
+#define OSRM_TIMEZONES_HPP
 
 #include <boost/geometry.hpp>
 #include <boost/geometry/index/rtree.hpp>

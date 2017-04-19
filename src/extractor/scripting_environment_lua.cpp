@@ -531,7 +531,7 @@ void Sol2ScriptingEnvironment::ProcessElements(
                         static_cast<const osmium::Relation &>(*entity));
                     if (result_res.size() > 0)
                     {
-                        for (boost::optional<InputRestrictionContainer> r : result_res)
+                        for (const boost::optional<InputRestrictionContainer> &r : result_res)
                         {
                             resulting_restrictions.push_back(r);
                         }

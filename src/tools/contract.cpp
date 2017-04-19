@@ -65,10 +65,14 @@ return_code parseArguments(int argc, char *argv[], contractor::ContractorConfig 
         "weights updated by more than this factor")(
         "time-zone-file",
         boost::program_options::value<std::string>(&contractor_config.updater_config.tz_file_path)
-            ->default_value("world/tz_world.shp"),
-            //->default_value(""),
+            ->default_value(""),
         "Required for conditional turn restriction parsing, provide a shp or dbf file containing "
-        "time zone boundaries");
+        "time zone boundaries")(
+        "parse-conditionals-from-now",
+        boost::program_options::value<std::time_t>(&contractor_config.updater_config.valid_now)
+            ->default_value(0),
+        "Optional for conditional turn restriction parsing, provide a UTC time stamp from which "
+        "to evaluate the validity of conditional turn restrictions");
 
     // hidden options, will be allowed on command line, but will not be shown to the user
     boost::program_options::options_description hidden_options("Hidden options");
