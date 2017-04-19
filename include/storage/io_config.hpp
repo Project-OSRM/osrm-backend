@@ -1,0 +1,77 @@
+#ifndef IO_CONFIG_HPP
+#define IO_CONFIG_HPP
+
+#include <boost/filesystem/path.hpp>
+
+namespace osrm
+{
+namespace storage
+{
+struct IOConfig
+{
+    IOConfig() = default;
+
+    IOConfig(const boost::filesystem::path &base) : osrm_input_path(base)
+    {
+        UseDefaultOutputNames();
+    }
+
+    // Infer the output names from the path of the .osrm file
+    void UseDefaultOutputNames()
+    {
+        ram_index_path = {osrm_input_path.string() + ".ramIndex"};
+        file_index_path = {osrm_input_path.string() + ".fileIndex"};
+        hsgr_data_path = {osrm_input_path.string() + ".hsgr"};
+        nodes_data_path = {osrm_input_path.string() + ".nodes"};
+        edges_data_path = {osrm_input_path.string() + ".edges"};
+        core_data_path = {osrm_input_path.string() + ".core"};
+        geometries_path = {osrm_input_path.string() + ".geometry"};
+        timestamp_path = {osrm_input_path.string() + ".timestamp"};
+        turn_weight_penalties_path = {osrm_input_path.string() + ".turn_weight_penalties"};
+        turn_duration_penalties_path = {osrm_input_path.string() + ".turn_duration_penalties"};
+        turn_penalties_index_path = {osrm_input_path.string() + ".turn_penalties_index"};
+        datasource_names_path = {osrm_input_path.string() + ".datasource_names"};
+        names_data_path = {osrm_input_path.string() + ".names"};
+        properties_path = {osrm_input_path.string() + ".properties"};
+        intersection_class_path = {osrm_input_path.string() + ".icd"};
+        turn_lane_data_path = {osrm_input_path.string() + ".tld"};
+        turn_lane_description_path = {osrm_input_path.string() + ".tls"};
+        mld_partition_path = {osrm_input_path.string() + ".partition"};
+        mld_storage_path = {osrm_input_path.string() + ".cells"};
+        mld_graph_path = {osrm_input_path.string() + ".mldgr"};
+        level_path = {osrm_input_path.string() + ".level"};
+        node_path = {osrm_input_path.string() + ".enw"};
+        edge_based_graph_path = {osrm_input_path.string() + ".ebg"};
+    }
+
+    boost::filesystem::path osrm_input_path;
+
+    boost::filesystem::path ram_index_path;
+    boost::filesystem::path file_index_path;
+    boost::filesystem::path hsgr_data_path;
+    boost::filesystem::path nodes_data_path;
+    boost::filesystem::path edges_data_path;
+    boost::filesystem::path core_data_path;
+    boost::filesystem::path geometries_path;
+    boost::filesystem::path timestamp_path;
+    boost::filesystem::path turn_weight_penalties_path;
+    boost::filesystem::path turn_duration_penalties_path;
+    boost::filesystem::path turn_penalties_index_path;
+    boost::filesystem::path datasource_names_path;
+    boost::filesystem::path datasource_indexes_path;
+    boost::filesystem::path names_data_path;
+    boost::filesystem::path properties_path;
+    boost::filesystem::path intersection_class_path;
+    boost::filesystem::path turn_lane_data_path;
+    boost::filesystem::path turn_lane_description_path;
+    boost::filesystem::path mld_partition_path;
+    boost::filesystem::path mld_storage_path;
+    boost::filesystem::path mld_graph_path;
+    boost::filesystem::path level_path;
+    boost::filesystem::path node_path;
+    boost::filesystem::path edge_based_graph_path;
+};
+}
+}
+
+#endif
