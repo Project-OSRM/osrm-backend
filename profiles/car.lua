@@ -392,19 +392,19 @@ function turn_function (turn)
   local turn_penalty = profile.turn_penalty
   local turn_bias = profile.turn_bias
 
+  if turn.has_traffic_light then
+      turn.duration = profile.traffic_light_penalty
+  end
+
   if turn.turn_type ~= turn_type.no_turn then
     if turn.angle >= 0 then
-      turn.duration = turn_penalty / (1 + math.exp( -((13 / turn_bias) *  turn.angle/180 - 6.5*turn_bias)))
+      turn.duration = turn.duration + turn_penalty / (1 + math.exp( -((13 / turn_bias) *  turn.angle/180 - 6.5*turn_bias)))
     else
-      turn.duration = turn_penalty / (1 + math.exp( -((13 * turn_bias) * -turn.angle/180 - 6.5/turn_bias)))
+      turn.duration = turn.duration + turn_penalty / (1 + math.exp( -((13 * turn_bias) * -turn.angle/180 - 6.5/turn_bias)))
     end
 
     if turn.direction_modifier == direction_modifier.u_turn then
       turn.duration = turn.duration + profile.u_turn_penalty
-    end
-
-    if turn.has_traffic_light then
-       turn.duration = turn.duration + profile.traffic_light_penalty
     end
 
     -- for distance based routing we don't want to have penalties based on turn angle
