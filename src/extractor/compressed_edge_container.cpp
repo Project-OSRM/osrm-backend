@@ -131,20 +131,29 @@ void CompressedEdgeContainer::CompressEdge(const EdgeID edge_id_1,
     std::vector<OnewayCompressedEdge> &edge_bucket_list1 =
         m_compressed_oneway_geometries[edge_bucket_id1];
 
+    const auto clip_weight = [&](const SegmentWeight weight) {
+        if (weight >= INVALID_SEGMENT_WEIGHT)
+        {
+            clipped_weights++;
+            return INVALID_SEGMENT_WEIGHT - 1;
+        }
+        return weight;
+    };
+    const auto clip_duration = [&](const SegmentDuration duration) {
+        if (duration >= INVALID_SEGMENT_DURATION)
+        {
+            clipped_weights++;
+            return INVALID_SEGMENT_DURATION - 1;
+        }
+        return duration;
+    };
+
     // note we don't save the start coordinate: it is implicitly given by edge 1
     // weight1 is the distance to the (currently) last coordinate in the bucket
     if (edge_bucket_list1.empty())
     {
-        if (weight1 >= INVALID_SEGMENT_WEIGHT)
-        {
-            weight1 = INVALID_SEGMENT_WEIGHT - 1;
-            clipped_weights++;
-        }
-        if (duration1 >= INVALID_SEGMENT_DURATION)
-        {
-            duration1 = INVALID_SEGMENT_DURATION - 1;
-            clipped_durations++;
-        }
+        weight1 = clip_weight(weight1);
+        duration1 = clip_duration(duration1);
 
         edge_bucket_list1.emplace_back(
             OnewayCompressedEdge{via_node_id,
@@ -179,16 +188,8 @@ void CompressedEdgeContainer::CompressEdge(const EdgeID edge_id_1,
     }
     else
     {
-        if (weight2 >= INVALID_SEGMENT_WEIGHT)
-        {
-            weight2 = INVALID_SEGMENT_WEIGHT - 1;
-            clipped_weights++;
-        }
-        if (duration2 >= INVALID_SEGMENT_DURATION)
-        {
-            duration2 = INVALID_SEGMENT_DURATION - 1;
-            clipped_durations++;
-        }
+        weight2 = clip_weight(weight2);
+        duration2 = clip_duration(duration2);
 
         // we are certain that the second edge is atomic.
         edge_bucket_list1.emplace_back(
