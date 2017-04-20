@@ -59,8 +59,8 @@ using EdgeID = std::uint32_t;
 using NameID = std::uint32_t;
 using EdgeWeight = std::int32_t;
 using EdgeDuration = std::int32_t;
-using SegmentWeight = std::int32_t;
-using SegmentDuration = std::int32_t;
+using SegmentWeight = std::uint32_t;
+using SegmentDuration = std::uint32_t;
 using TurnPenalty = std::int16_t; // turn penalty in 100ms units
 
 static const std::size_t INVALID_INDEX = std::numeric_limits<std::size_t>::max();
