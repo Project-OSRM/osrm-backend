@@ -1,5 +1,9 @@
 # 5.7.0
   - Changes from 5.6
+    - Bug fixes:
+      - Fixed 505: Invalid distance value for distance as routing weight.
+      - Fixed 3958: Fix traffic light penalties for non-turns
+      - Fixed 3933: crash when collapsing instructions
     - Algorithm:
       - OSRM object has new option `algorithm` that allows the selection of a routing algorithm.
       - New experimental algorithm: Multi-Level Dijkstra with new toolchain:
