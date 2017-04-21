@@ -49,36 +49,46 @@ template <typename From, typename Tag> struct Alias final
 
     explicit operator From &() { return __value; }
     explicit operator From() const { return __value; }
-    Alias operator+(const Alias rhs_) const
+    inline Alias operator+(const Alias rhs_) const
     {
         return Alias{__value + static_cast<const From>(rhs_)};
     }
-    Alias operator-(const Alias rhs_) const
+    inline Alias operator-(const Alias rhs_) const
     {
         return Alias{__value - static_cast<const From>(rhs_)};
     }
-    Alias operator*(const Alias rhs_) const
+    inline Alias operator*(const Alias rhs_) const
     {
         return Alias{__value * static_cast<const From>(rhs_)};
     }
-    Alias operator/(const Alias rhs_) const
+    inline Alias operator/(const Alias rhs_) const
     {
         return Alias{__value / static_cast<const From>(rhs_)};
     }
-    Alias operator|(const Alias rhs_) const
+    inline Alias operator|(const Alias rhs_) const
     {
         return Alias{__value | static_cast<const From>(rhs_)};
     }
-    Alias operator&(const Alias rhs_) const
+    inline Alias operator&(const Alias rhs_) const
     {
         return Alias{__value & static_cast<const From>(rhs_)};
     }
-    bool operator<(const Alias z_) const { return __value < static_cast<const From>(z_); }
-    bool operator>(const Alias z_) const { return __value > static_cast<const From>(z_); }
-    bool operator<=(const Alias z_) const { return __value <= static_cast<const From>(z_); }
-    bool operator>=(const Alias z_) const { return __value >= static_cast<const From>(z_); }
-    bool operator==(const Alias z_) const { return __value == static_cast<const From>(z_); }
-    bool operator!=(const Alias z_) const { return __value != static_cast<const From>(z_); }
+    inline bool operator<(const Alias z_) const { return __value < static_cast<const From>(z_); }
+    inline bool operator>(const Alias z_) const { return __value > static_cast<const From>(z_); }
+    inline bool operator<=(const Alias z_) const { return __value <= static_cast<const From>(z_); }
+    inline bool operator>=(const Alias z_) const { return __value >= static_cast<const From>(z_); }
+    inline bool operator==(const Alias z_) const { return __value == static_cast<const From>(z_); }
+    inline bool operator!=(const Alias z_) const { return __value != static_cast<const From>(z_); }
+
+    inline Alias operator++() { __value++; return *this; }
+    inline Alias operator--() { __value--; return *this; }
+
+    inline Alias operator+=(const Alias z_) { __value += static_cast<const From>(z_); return *this; }
+    inline Alias operator-=(const Alias z_) { __value -= static_cast<const From>(z_); return *this; }
+    inline Alias operator/=(const Alias z_) { __value /= static_cast<const From>(z_); return *this; }
+    inline Alias operator*=(const Alias z_) { __value *= static_cast<const From>(z_); return *this; }
+    inline Alias operator|=(const Alias z_) { __value |= static_cast<const From>(z_); return *this; }
+    inline Alias operator&=(const Alias z_) { __value &= static_cast<const From>(z_); return *this; }
 };
 
 template <typename From, typename Tag>
