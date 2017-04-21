@@ -4,11 +4,11 @@
 #include "util/timing_util.hpp"
 
 #include <algorithm>
+#include <iomanip>
 #include <numeric>
 #include <random>
 #include <string>
 #include <vector>
-#include <iomanip>
 
 using namespace osrm;
 
