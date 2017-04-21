@@ -1,0 +1,112 @@
+/*
+
+Copyright (c) 2016, Project OSRM contributors
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
+
+Redistributions of source code must retain the above copyright notice, this list
+of conditions and the following disclaimer.
+Redistributions in binary form must reproduce the above copyright notice, this
+list of conditions and the following disclaimer in the documentation and/or
+other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+*/
+
+#ifndef ALIAS_HPP
+#define ALIAS_HPP
+
+#include <functional>
+#include <iostream>
+#include <type_traits>
+
+namespace osrm
+{
+
+template <typename From, typename Tag> struct Alias;
+template <typename From, typename Tag>
+inline std::ostream &operator<<(std::ostream &stream, const Alias<From, Tag> &inst);
+
+template <typename From, typename Tag> struct Alias final
+{
+    using value_type = From;
+    static_assert(std::is_arithmetic<From>(), "");
+
+    From __value;
+    friend std::ostream &operator<<<From, Tag>(std::ostream &stream, const Alias &inst);
+
+    explicit operator From &() { return __value; }
+    explicit operator From() const { return __value; }
+    Alias operator+(const Alias rhs_) const
+    {
+        return Alias{__value + static_cast<const From>(rhs_)};
+    }
+    Alias operator-(const Alias rhs_) const
+    {
+        return Alias{__value - static_cast<const From>(rhs_)};
+    }
+    Alias operator*(const Alias rhs_) const
+    {
+        return Alias{__value * static_cast<const From>(rhs_)};
+    }
+    Alias operator/(const Alias rhs_) const
+    {
+        return Alias{__value / static_cast<const From>(rhs_)};
+    }
+    Alias operator|(const Alias rhs_) const
+    {
+        return Alias{__value | static_cast<const From>(rhs_)};
+    }
+    Alias operator&(const Alias rhs_) const
+    {
+        return Alias{__value & static_cast<const From>(rhs_)};
+    }
+    bool operator<(const Alias z_) const { return __value < static_cast<const From>(z_); }
+    bool operator>(const Alias z_) const { return __value > static_cast<const From>(z_); }
+    bool operator<=(const Alias z_) const { return __value <= static_cast<const From>(z_); }
+    bool operator>=(const Alias z_) const { return __value >= static_cast<const From>(z_); }
+    bool operator==(const Alias z_) const { return __value == static_cast<const From>(z_); }
+    bool operator!=(const Alias z_) const { return __value != static_cast<const From>(z_); }
+};
+
+template <typename From, typename Tag>
+inline std::ostream &operator<<(std::ostream &stream, const Alias<From, Tag> &inst)
+{
+    return stream << inst.__value;
+}
+
+template <typename T>
+struct is_valid_alias
+    : std::integral_constant<bool,
+                             std::is_trivial<T>::value && std::is_standard_layout<T>::value &&
+                                 std::is_pod<T>::value>
+{
+};
+}
+
+namespace std
+{
+template <typename From, typename Tag> struct hash<osrm::Alias<From, Tag>>
+{
+    typedef osrm::Alias<From, Tag> argument_type;
+    typedef std::size_t result_type;
+    result_type operator()(argument_type const &s) const
+    {
+        return std::hash<From>()(static_cast<const From>(s));
+    }
+};
+}
+
+#endif // OSRM_ALIAS_HPP

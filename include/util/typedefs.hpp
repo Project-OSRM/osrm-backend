@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef TYPEDEFS_H
 #define TYPEDEFS_H
 
-#include "util/strong_typedef.hpp"
+#include "util/alias.hpp"
 
 #include <boost/assert.hpp>
 
@@ -37,11 +37,19 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <limits>
 
 // OpenStreetMap node ids are higher than 2^32
-OSRM_STRONG_TYPEDEF(std::uint64_t, OSMNodeID)
-OSRM_STRONG_TYPEDEF_HASHABLE(std::uint64_t, OSMNodeID)
-
-OSRM_STRONG_TYPEDEF(std::uint32_t, OSMWayID)
-OSRM_STRONG_TYPEDEF_HASHABLE(std::uint32_t, OSMWayID)
+namespace tag
+{
+struct osm_node_id
+{
+};
+struct osm_way_id
+{
+};
+}
+using OSMNodeID = osrm::Alias<std::uint64_t, tag::osm_node_id>;
+static_assert(osrm::is_valid_alias<OSMNodeID>(), "OSMNodeID is not a valid alias");
+using OSMWayID = osrm::Alias<std::uint64_t, tag::osm_way_id>;
+static_assert(osrm::is_valid_alias<OSMWayID>(), "OSMWayID is not a valid alias");
 
 static const OSMNodeID SPECIAL_OSM_NODEID = OSMNodeID{std::numeric_limits<std::uint64_t>::max()};
 static const OSMWayID SPECIAL_OSM_WAYID = OSMWayID{std::numeric_limits<std::uint32_t>::max()};

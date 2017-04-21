@@ -115,8 +115,8 @@ std::string waypointTypeToString(const guidance::WaypointType waypoint_type)
 util::json::Array coordinateToLonLat(const util::Coordinate coordinate)
 {
     util::json::Array array;
-    array.values.push_back(static_cast<double>(toFloating(coordinate.lon)));
-    array.values.push_back(static_cast<double>(toFloating(coordinate.lat)));
+    array.values.push_back(static_cast<double>(util::toFloating(coordinate.lon)));
+    array.values.push_back(static_cast<double>(util::toFloating(coordinate.lat)));
     return array;
 }
 

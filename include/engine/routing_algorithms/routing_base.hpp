@@ -320,17 +320,19 @@ double getPathDistance(const datafacade::ContiguousInternalMemoryDataFacade<Algo
     using util::coordinate_calculation::detail::EARTH_RADIUS;
 
     double distance = 0;
-    double prev_lat = static_cast<double>(toFloating(source_phantom.location.lat)) * DEGREE_TO_RAD;
-    double prev_lon = static_cast<double>(toFloating(source_phantom.location.lon)) * DEGREE_TO_RAD;
+    double prev_lat =
+        static_cast<double>(util::toFloating(source_phantom.location.lat)) * DEGREE_TO_RAD;
+    double prev_lon =
+        static_cast<double>(util::toFloating(source_phantom.location.lon)) * DEGREE_TO_RAD;
     double prev_cos = std::cos(prev_lat);
     for (const auto &p : unpacked_path)
     {
         const auto current_coordinate = facade.GetCoordinateOfNode(p.turn_via_node);
 
         const double current_lat =
-            static_cast<double>(toFloating(current_coordinate.lat)) * DEGREE_TO_RAD;
+            static_cast<double>(util::toFloating(current_coordinate.lat)) * DEGREE_TO_RAD;
         const double current_lon =
-            static_cast<double>(toFloating(current_coordinate.lon)) * DEGREE_TO_RAD;
+            static_cast<double>(util::toFloating(current_coordinate.lon)) * DEGREE_TO_RAD;
         const double current_cos = std::cos(current_lat);
 
         const double sin_dlon = std::sin((prev_lon - current_lon) / 2.0);
@@ -346,9 +348,9 @@ double getPathDistance(const datafacade::ContiguousInternalMemoryDataFacade<Algo
     }
 
     const double current_lat =
-        static_cast<double>(toFloating(target_phantom.location.lat)) * DEGREE_TO_RAD;
+        static_cast<double>(util::toFloating(target_phantom.location.lat)) * DEGREE_TO_RAD;
     const double current_lon =
-        static_cast<double>(toFloating(target_phantom.location.lon)) * DEGREE_TO_RAD;
+        static_cast<double>(util::toFloating(target_phantom.location.lon)) * DEGREE_TO_RAD;
     const double current_cos = std::cos(current_lat);
 
     const double sin_dlon = std::sin((prev_lon - current_lon) / 2.0);
