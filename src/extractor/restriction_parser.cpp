@@ -1,5 +1,5 @@
-#include "extractor/profile_properties.hpp"
 #include "extractor/restriction_parser.hpp"
+#include "extractor/profile_properties.hpp"
 #include "extractor/scripting_environment.hpp"
 
 #include "extractor/external_memory_node.hpp"
@@ -25,8 +25,10 @@ namespace osrm
 namespace extractor
 {
 
-RestrictionParser::RestrictionParser(ScriptingEnvironment &scripting_environment, bool parse_conditionals_)
-    : use_turn_restrictions(scripting_environment.GetProfileProperties().use_turn_restrictions), parse_conditionals(parse_conditionals_)
+RestrictionParser::RestrictionParser(ScriptingEnvironment &scripting_environment,
+                                     bool parse_conditionals_)
+    : use_turn_restrictions(scripting_environment.GetProfileProperties().use_turn_restrictions),
+      parse_conditionals(parse_conditionals_)
 {
     if (use_turn_restrictions)
     {
@@ -183,25 +185,21 @@ RestrictionParser::TryParse(const osmium::Relation &relation) const
         {
             const std::string key(fi_begin->key());
             const std::string value(fi_begin->value());
+
             // Parse condition and add independent value/condition pairs
             const auto &parsed = osrm::util::ParseConditionalRestrictions(value);
 
             if (parsed.empty())
-            {
-                osrm::util::Log(logWARNING) << "Conditional restriction parsing failed for \""
-                                            << fi_begin->value() << "\" at the turn "
-                                            << restriction_container.restriction.from.way << " -> "
-                                            << restriction_container.restriction.via.node << " -> "
-                                            << restriction_container.restriction.to.way;
                 continue;
-            }
 
-            // TODO: parse conditional restrictions string directly into OpeningHours type
             for (const auto &p : parsed)
             {
-                std::vector<util::OpeningHours> parsed = util::ParseOpeningHours(p.condition);
-                if (!parsed.empty())
-                    restriction_container.restriction.condition = std::move(parsed);
+                std::vector<util::OpeningHours> hours = util::ParseOpeningHours(p.condition);
+                // found unrecognized condition, continue
+                if (hours.empty())
+                    return {};
+
+                restriction_container.restriction.condition = std::move(hours);
             }
         }
     }

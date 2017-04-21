@@ -17,6 +17,7 @@
   "scripts": {
     "lint": "eslint -c ./.eslintrc features/step_definitions/ features/support/",
     "test": "npm run lint && node ./node_modules/cucumber/bin/cucumber.js features/ -p verify && node ./node_modules/cucumber/bin/cucumber.js features/ -p mld",
+    "test-conditionals": "npm run lint && node ./node_modules/cucumber/bin/cucumber.js features/ -p conditionals",
     "clean": "rm -rf test/cache",
     "docs": "./scripts/build_api_docs.sh",
     "install": "node-pre-gyp install --fallback-to-build=false || ./scripts/node_install.sh",

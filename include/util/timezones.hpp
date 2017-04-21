@@ -1,8 +1,12 @@
 #ifndef OSRM_TIMEZONES_HPP
 #define OSRM_TIMEZONES_HPP
 
+#include "util/log.hpp"
+
 #include <boost/geometry.hpp>
 #include <boost/geometry/index/rtree.hpp>
+
+#include <chrono>
 
 // Time zone shape polygons loaded in R-tree
 // local_time_t is a pair of a time zone shape polygon and the corresponding local time
@@ -17,5 +21,24 @@ using local_time_t = std::pair<polygon_t, struct tm>;
 
 std::function<struct tm(const point_t &)> LoadLocalTimesRTree(const std::string &tz_shapes_filename,
                                                               std::time_t utc_time);
+namespace osrm
+{
+namespace updater
+{
+
+bool SupportsShapefiles();
+
+class Timezoner
+{
+  public:
+    Timezoner() = default;
+
+    Timezoner(std::string tz_filename, std::time_t utc_time_now);
+
+    Timezoner(std::string tz_filename);
+    std::function<struct tm(const point_t &)> GetLocalTime;
+};
+}
+}
 
 #endif

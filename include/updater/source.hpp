@@ -64,8 +64,8 @@ struct Turn final
     {
     }
     Turn(const OSMNodeID &from_id, const OSMNodeID &via_id, const OSMNodeID &to_id)
-        : from(static_cast<std::uint64_t>(from_id)),
-          via(static_cast<std::uint64_t>(via_id)), to(static_cast<std::uint64_t>(to_id))
+        : from(static_cast<std::uint64_t>(from_id)), via(static_cast<std::uint64_t>(via_id)),
+          to(static_cast<std::uint64_t>(to_id))
     {
     }
     bool operator<(const Turn &rhs) const

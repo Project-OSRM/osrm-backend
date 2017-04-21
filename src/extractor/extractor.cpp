@@ -191,9 +191,8 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     return 0;
 }
 
-std::vector<TurnRestriction>
-Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
-                        const unsigned number_of_threads)
+std::vector<TurnRestriction> Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
+                                                     const unsigned number_of_threads)
 {
     TIMER_START(extracting);
 
@@ -279,8 +278,7 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
         for (const auto &result : resulting_nodes)
         {
             extractor_callbacks->ProcessNode(
-                static_cast<const osmium::Node &>(*(osm_elements[result.first])),
-                result.second);
+                static_cast<const osmium::Node &>(*(osm_elements[result.first])), result.second);
         }
         number_of_ways += resulting_ways.size();
         for (const auto &result : resulting_ways)

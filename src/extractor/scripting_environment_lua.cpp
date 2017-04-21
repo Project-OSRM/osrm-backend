@@ -527,8 +527,8 @@ void Sol2ScriptingEnvironment::ProcessElements(
                     break;
                 case osmium::item_type::relation:
                     result_res.clear();
-                    result_res = restriction_parser.TryParse(
-                        static_cast<const osmium::Relation &>(*entity));
+                    result_res =
+                        restriction_parser.TryParse(static_cast<const osmium::Relation &>(*entity));
                     if (result_res.size() > 0)
                     {
                         for (const boost::optional<InputRestrictionContainer> &r : result_res)
