@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef COORDINATE_HPP_
 #define COORDINATE_HPP_
 
-#include "util/strong_typedef.hpp"
+#include "util/alias.hpp"
 
 #include <boost/numeric/conversion/cast.hpp>
 
@@ -45,10 +45,24 @@ constexpr const double COORDINATE_PRECISION = 1e6;
 namespace util
 {
 
-OSRM_STRONG_TYPEDEF(int32_t, FixedLatitude)
-OSRM_STRONG_TYPEDEF(int32_t, FixedLongitude)
-OSRM_STRONG_TYPEDEF(double, FloatLatitude)
-OSRM_STRONG_TYPEDEF(double, FloatLongitude)
+namespace tag
+{
+struct latitude
+{
+};
+struct longitude
+{
+};
+}
+
+using FixedLatitude = Alias<std::int32_t, tag::latitude>;
+using FixedLongitude = Alias<std::int32_t, tag::longitude>;
+using FloatLatitude = Alias<double, tag::latitude>;
+using FloatLongitude = Alias<double, tag::longitude>;
+static_assert(osrm::is_valid_alias<FixedLatitude>(), "FixedLatitude is not a valid alias");
+static_assert(osrm::is_valid_alias<FixedLongitude>(), "FixedLongitude is not a valid alias");
+static_assert(osrm::is_valid_alias<FloatLatitude>(), "FloatLatitude is not a valid alias");
+static_assert(osrm::is_valid_alias<FloatLongitude>(), "FloatLongitude is not a valid alias");
 
 /**
  * Converts a typed latitude from floating to fixed representation.

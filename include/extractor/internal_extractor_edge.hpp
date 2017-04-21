@@ -6,7 +6,6 @@
 #include "extractor/node_based_edge.hpp"
 #include "extractor/travel_mode.hpp"
 #include "osrm/coordinate.hpp"
-#include "util/strong_typedef.hpp"
 #include "util/typedefs.hpp"
 
 #include <boost/assert.hpp>

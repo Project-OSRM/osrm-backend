@@ -33,6 +33,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace osrm
 {
 using util::Coordinate;
+using util::toFixed;
+using util::toFloating;
+using util::FixedLatitude;
+using util::FixedLongitude;
+using util::FloatLatitude;
+using util::FloatLongitude;
 }
 
 #endif
