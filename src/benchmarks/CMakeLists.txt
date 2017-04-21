@@ -1,5 +1,6 @@
 file(GLOB RTreeBenchmarkSources static_rtree.cpp)
 file(GLOB MatchBenchmarkSources match.cpp)
+file(GLOB AliasBenchmarkSources alias.cpp)
 
 add_executable(rtree-bench
 	EXCLUDE_FROM_ALL
@@ -26,7 +27,18 @@ target_link_libraries(match-bench
 	${CMAKE_THREAD_LIBS_INIT}
 	${TBB_LIBRARIES})
 
+add_executable(alias-bench
+	EXCLUDE_FROM_ALL
+    ${AliasBenchmarkSources}
+	$<TARGET_OBJECTS:UTIL>)
+
+target_link_libraries(alias-bench
+	${BOOST_BASE_LIBRARIES}
+	${CMAKE_THREAD_LIBS_INIT}
+	${TBB_LIBRARIES})
+
 add_custom_target(benchmarks
 	DEPENDS
 	rtree-bench
-	match-bench)
+	match-bench
+    alias-bench)
