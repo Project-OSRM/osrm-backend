@@ -59,10 +59,10 @@ using FixedLatitude = Alias<std::int32_t, tag::latitude>;
 using FixedLongitude = Alias<std::int32_t, tag::longitude>;
 using FloatLatitude = Alias<double, tag::latitude>;
 using FloatLongitude = Alias<double, tag::longitude>;
-static_assert(osrm::is_valid_alias<FixedLatitude>(), "FixedLatitude is not a valid alias");
-static_assert(osrm::is_valid_alias<FixedLongitude>(), "FixedLongitude is not a valid alias");
-static_assert(osrm::is_valid_alias<FloatLatitude>(), "FloatLatitude is not a valid alias");
-static_assert(osrm::is_valid_alias<FloatLongitude>(), "FloatLongitude is not a valid alias");
+static_assert(std::is_pod<FixedLatitude>(), "FixedLatitude is not a valid alias");
+static_assert(std::is_pod<FixedLongitude>(), "FixedLongitude is not a valid alias");
+static_assert(std::is_pod<FloatLatitude>(), "FloatLatitude is not a valid alias");
+static_assert(std::is_pod<FloatLongitude>(), "FloatLongitude is not a valid alias");
 
 /**
  * Converts a typed latitude from floating to fixed representation.

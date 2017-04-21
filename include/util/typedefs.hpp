@@ -47,9 +47,9 @@ struct osm_way_id
 };
 }
 using OSMNodeID = osrm::Alias<std::uint64_t, tag::osm_node_id>;
-static_assert(osrm::is_valid_alias<OSMNodeID>(), "OSMNodeID is not a valid alias");
+static_assert(std::is_pod<OSMNodeID>(), "OSMNodeID is not a valid alias");
 using OSMWayID = osrm::Alias<std::uint64_t, tag::osm_way_id>;
-static_assert(osrm::is_valid_alias<OSMWayID>(), "OSMWayID is not a valid alias");
+static_assert(std::is_pod<OSMWayID>(), "OSMWayID is not a valid alias");
 
 static const OSMNodeID SPECIAL_OSM_NODEID = OSMNodeID{std::numeric_limits<std::uint64_t>::max()};
 static const OSMWayID SPECIAL_OSM_WAYID = OSMWayID{std::numeric_limits<std::uint32_t>::max()};
