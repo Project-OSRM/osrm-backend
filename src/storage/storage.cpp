@@ -329,11 +329,14 @@ void Storage::PopulateLayout(DataLayout &layout)
         io::FileReader node_file(config.nodes_data_path, io::FileReader::VerifyFingerprint);
         const auto coordinate_list_size = node_file.ReadElementCount64();
         layout.SetBlockSize<util::Coordinate>(DataLayout::COORDINATE_LIST, coordinate_list_size);
+        node_file.Skip<util::Coordinate>(coordinate_list_size);
+        // skip number of elements
+        node_file.Skip<std::uint64_t>(1);
+        const auto num_id_blocks = node_file.ReadElementCount64();
         // we'll read a list of OSM node IDs from the same data, so set the block size for the same
         // number of items:
-        layout.SetBlockSize<std::uint64_t>(
-            DataLayout::OSM_NODE_ID_LIST,
-            extractor::PackedOSMIDsView::elements_to_blocks(coordinate_list_size));
+        layout.SetBlockSize<extractor::PackedOSMIDsView::block_type>(DataLayout::OSM_NODE_ID_LIST,
+                                                                     num_id_blocks);
     }
 
     // load geometries sizes
@@ -703,11 +706,15 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
         const auto coordinates_ptr =
             layout.GetBlockPtr<util::Coordinate, true>(memory_ptr, DataLayout::COORDINATE_LIST);
         const auto osmnodeid_ptr =
-            layout.GetBlockPtr<std::uint64_t, true>(memory_ptr, DataLayout::OSM_NODE_ID_LIST);
+            layout.GetBlockPtr<extractor::PackedOSMIDsView::block_type, true>(
+                memory_ptr, DataLayout::OSM_NODE_ID_LIST);
         util::vector_view<util::Coordinate> coordinates(
             coordinates_ptr, layout.num_entries[DataLayout::COORDINATE_LIST]);
-        extractor::PackedOSMIDsView osm_node_ids;
-        osm_node_ids.reset(osmnodeid_ptr, layout.num_entries[DataLayout::OSM_NODE_ID_LIST]);
+        extractor::PackedOSMIDsView osm_node_ids(
+            util::vector_view<extractor::PackedOSMIDsView::block_type>(
+                osmnodeid_ptr, layout.num_entries[DataLayout::OSM_NODE_ID_LIST]),
+            layout.num_entries[DataLayout::OSM_NODE_ID_LIST] *
+                extractor::PackedOSMIDsView::BLOCK_ELEMENTS);
 
         extractor::files::readNodes(config.nodes_data_path, coordinates, osm_node_ids);
     }

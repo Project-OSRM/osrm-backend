@@ -1,6 +1,7 @@
 file(GLOB RTreeBenchmarkSources static_rtree.cpp)
 file(GLOB MatchBenchmarkSources match.cpp)
 file(GLOB AliasBenchmarkSources alias.cpp)
+file(GLOB PackedVectorBenchmarkSources packed_vector.cpp)
 
 add_executable(rtree-bench
 	EXCLUDE_FROM_ALL
@@ -40,8 +41,21 @@ target_link_libraries(alias-bench
 	${TBB_LIBRARIES}
 	${MAYBE_SHAPEFILE})
 
+add_executable(packedvector-bench
+	EXCLUDE_FROM_ALL
+    ${PackedVectorBenchmarkSources}
+	$<TARGET_OBJECTS:UTIL>)
+
+target_link_libraries(packedvector-bench
+	${BOOST_BASE_LIBRARIES}
+	${CMAKE_THREAD_LIBS_INIT}
+	${TBB_LIBRARIES}
+    ${MAYBE_SHAPEFILE})
+
+
 add_custom_target(benchmarks
 	DEPENDS
 	rtree-bench
+	packedvector-bench
 	match-bench
     alias-bench)

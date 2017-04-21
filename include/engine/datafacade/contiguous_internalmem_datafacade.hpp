@@ -300,25 +300,21 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
             new SharedGeospatialQuery(*m_static_rtree, m_coordinate_list, *this));
     }
 
-    void InitializeNodeInformationPointers(storage::DataLayout &data_layout, char *memory_block)
+    void InitializeNodeInformationPointers(storage::DataLayout &layout, char *memory_ptr)
     {
-        const auto coordinate_list_ptr = data_layout.GetBlockPtr<util::Coordinate>(
-            memory_block, storage::DataLayout::COORDINATE_LIST);
+        const auto coordinate_list_ptr =
+            layout.GetBlockPtr<util::Coordinate>(memory_ptr, storage::DataLayout::COORDINATE_LIST);
         m_coordinate_list.reset(coordinate_list_ptr,
-                                data_layout.num_entries[storage::DataLayout::COORDINATE_LIST]);
+                                layout.num_entries[storage::DataLayout::COORDINATE_LIST]);
 
-        for (unsigned i = 0; i < m_coordinate_list.size(); ++i)
-        {
-            BOOST_ASSERT(GetCoordinateOfNode(i).IsValid());
-        }
-
-        const auto osmnodeid_list_ptr = data_layout.GetBlockPtr<std::uint64_t>(
-            memory_block, storage::DataLayout::OSM_NODE_ID_LIST);
-        m_osmnodeid_list.reset(osmnodeid_list_ptr,
-                               data_layout.num_entries[storage::DataLayout::OSM_NODE_ID_LIST]);
-        // We (ab)use the number of coordinates here because we know we have the same amount of ids
-        m_osmnodeid_list.set_number_of_entries(
-            data_layout.num_entries[storage::DataLayout::COORDINATE_LIST]);
+        const auto osmnodeid_ptr = layout.GetBlockPtr<extractor::PackedOSMIDsView::block_type>(
+            memory_ptr, storage::DataLayout::OSM_NODE_ID_LIST);
+        m_osmnodeid_list = extractor::PackedOSMIDsView(
+            util::vector_view<extractor::PackedOSMIDsView::block_type>(
+                osmnodeid_ptr, layout.num_entries[storage::DataLayout::OSM_NODE_ID_LIST]),
+            // We (ab)use the number of coordinates here because we know we have the same amount of
+            // ids
+            layout.num_entries[storage::DataLayout::COORDINATE_LIST]);
     }
 
     void InitializeEdgeBasedNodeDataInformationPointers(storage::DataLayout &layout,
@@ -544,7 +540,7 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
 
     OSMNodeID GetOSMNodeIDOfNode(const NodeID id) const override final
     {
-        return m_osmnodeid_list.at(id);
+        return m_osmnodeid_list[id];
     }
 
     std::vector<NodeID> GetUncompressedForwardGeometry(const EdgeID id) const override final
