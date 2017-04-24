@@ -47,7 +47,7 @@ int Contractor::Run()
     util::Log() << "Reading node weights.";
     std::vector<EdgeWeight> node_weights;
     {
-        storage::io::FileReader reader(config.node_file_path,
+        storage::io::FileReader reader(config.node_path,
                                        storage::io::FileReader::VerifyFingerprint);
         storage::serialization::read(reader, node_weights);
     }
@@ -67,7 +67,7 @@ int Contractor::Run()
     std::vector<float> node_levels;
     if (config.use_cached_priority)
     {
-        files::readLevels(config.level_output_path, node_levels);
+        files::readLevels(config.level_path, node_levels);
     }
 
     util::DeallocatingVector<QueryEdge> contracted_edge_list;
@@ -90,15 +90,15 @@ int Contractor::Run()
         RangebasedCRC32 crc32_calculator;
         const unsigned checksum = crc32_calculator(contracted_edge_list);
 
-        files::writeGraph(config.graph_output_path,
+        files::writeGraph(config.hsgr_data_path,
                           checksum,
                           QueryGraph{max_edge_id + 1, std::move(contracted_edge_list)});
     }
 
-    files::writeCoreMarker(config.core_output_path, is_core_node);
+    files::writeCoreMarker(config.core_data_path, is_core_node);
     if (!config.use_cached_priority)
     {
-        files::writeLevels(config.level_output_path, node_levels);
+        files::writeLevels(config.level_path, node_levels);
     }
 
     TIMER_STOP(preparing);

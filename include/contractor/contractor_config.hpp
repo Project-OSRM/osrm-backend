@@ -28,6 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef CONTRACTOR_OPTIONS_HPP
 #define CONTRACTOR_OPTIONS_HPP
 
+#include "storage/storage_config.hpp"
 #include "updater/updater_config.hpp"
 
 #include <boost/filesystem/path.hpp>
@@ -39,30 +40,23 @@ namespace osrm
 namespace contractor
 {
 
-struct ContractorConfig
+struct ContractorConfig final : storage::IOConfig
 {
     ContractorConfig() : requested_num_threads(0) {}
+
+    ContractorConfig(const boost::filesystem::path &base) : requested_num_threads(0), IOConfig(base)
+    {
+    }
 
     // Infer the output names from the path of the .osrm file
     void UseDefaultOutputNames()
     {
-        level_output_path = osrm_input_path.string() + ".level";
-        core_output_path = osrm_input_path.string() + ".core";
-        graph_output_path = osrm_input_path.string() + ".hsgr";
-        node_file_path = osrm_input_path.string() + ".enw";
+        IOConfig::UseDefaultOutputNames();
         updater_config.osrm_input_path = osrm_input_path;
         updater_config.UseDefaultOutputNames();
     }
 
     updater::UpdaterConfig updater_config;
-
-    boost::filesystem::path osrm_input_path;
-
-    std::string level_output_path;
-    std::string core_output_path;
-    std::string graph_output_path;
-
-    std::string node_file_path;
 
     bool use_cached_priority;
 
