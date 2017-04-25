@@ -83,7 +83,8 @@ class EdgeBasedGraphFactory
                                    guidance::LaneDescriptionMap &lane_description_map);
 
     void Run(ScriptingEnvironment &scripting_environment,
-             const std::string &original_edge_data_filename,
+             const std::string &nodes_data_filename,
+             const std::string &turn_data_filename,
              const std::string &turn_lane_data_filename,
              const std::string &turn_weight_penalties_filename,
              const std::string &turn_duration_penalties_filename,
@@ -151,12 +152,17 @@ class EdgeBasedGraphFactory
 
     std::vector<NBGToEBG> GenerateEdgeExpandedNodes();
 
-    void GenerateEdgeExpandedEdges(ScriptingEnvironment &scripting_environment,
-                                   const std::string &original_edge_data_filename,
-                                   const std::string &turn_lane_data_filename,
-                                   const std::string &turn_weight_penalties_filename,
-                                   const std::string &turn_duration_penalties_filename,
-                                   const std::string &turn_penalties_index_filename);
+    std::unordered_map<EdgeID, NodeID>
+    GenerateEdgeExpandedNodesData(const std::string &node_data_filename) const;
+
+    void
+    GenerateEdgeExpandedEdges(ScriptingEnvironment &scripting_environment,
+                              const std::unordered_map<EdgeID, NodeID> &index_nbg_edgeid_ebg_nodeid,
+                              const std::string &original_edge_data_filename,
+                              const std::string &turn_lane_data_filename,
+                              const std::string &turn_weight_penalties_filename,
+                              const std::string &turn_duration_penalties_filename,
+                              const std::string &turn_penalties_index_filename);
 
     NBGToEBG InsertEdgeBasedNode(const NodeID u, const NodeID v);
 

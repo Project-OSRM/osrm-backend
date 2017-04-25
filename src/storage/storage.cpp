@@ -234,10 +234,7 @@ void Storage::PopulateLayout(DataLayout &layout)
         const auto number_of_original_edges = edges_file.ReadElementCount64();
 
         // note: settings this all to the same size is correct, we extract them from the same struct
-        layout.SetBlockSize<NodeID>(DataLayout::VIA_NODE_LIST, number_of_original_edges);
-        layout.SetBlockSize<unsigned>(DataLayout::NAME_ID_LIST, number_of_original_edges);
-        layout.SetBlockSize<extractor::TravelMode>(DataLayout::TRAVEL_MODE,
-                                                   number_of_original_edges);
+        layout.SetBlockSize<NodeID>(DataLayout::EDGE_BASED_NODE_ID_LIST, number_of_original_edges);
         layout.SetBlockSize<util::guidance::TurnBearing>(DataLayout::PRE_TURN_BEARING,
                                                          number_of_original_edges);
         layout.SetBlockSize<util::guidance::TurnBearing>(DataLayout::POST_TURN_BEARING,
@@ -246,6 +243,16 @@ void Storage::PopulateLayout(DataLayout &layout)
                                                                   number_of_original_edges);
         layout.SetBlockSize<LaneDataID>(DataLayout::LANE_DATA_ID, number_of_original_edges);
         layout.SetBlockSize<EntryClassID>(DataLayout::ENTRY_CLASSID, number_of_original_edges);
+    }
+
+    {
+        io::FileReader nodes_data_file(config.edge_based_nodes_data_path,
+                                       io::FileReader::VerifyFingerprint);
+        const auto nodes_number = nodes_data_file.ReadElementCount64();
+
+        layout.SetBlockSize<NodeID>(DataLayout::GEOMETRY_ID_LIST, nodes_number);
+        layout.SetBlockSize<unsigned>(DataLayout::NAME_ID_LIST, nodes_number);
+        layout.SetBlockSize<extractor::TravelMode>(DataLayout::TRAVEL_MODE_LIST, nodes_number);
     }
 
     if (boost::filesystem::exists(config.hsgr_data_path))
@@ -573,17 +580,35 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
             config.turn_lane_description_path, offsets, masks);
     }
 
+    // Load edge-based nodes data
+    {
+        auto geometry_id_list_ptr =
+            layout.GetBlockPtr<GeometryID, true>(memory_ptr, storage::DataLayout::GEOMETRY_ID_LIST);
+        util::vector_view<GeometryID> geometry_ids(
+            geometry_id_list_ptr, layout.num_entries[storage::DataLayout::GEOMETRY_ID_LIST]);
+
+        auto name_id_list_ptr =
+            layout.GetBlockPtr<NameID, true>(memory_ptr, storage::DataLayout::NAME_ID_LIST);
+        util::vector_view<NameID> name_ids(name_id_list_ptr,
+                                           layout.num_entries[storage::DataLayout::NAME_ID_LIST]);
+
+        auto travel_mode_list_ptr = layout.GetBlockPtr<extractor::TravelMode, true>(
+            memory_ptr, storage::DataLayout::TRAVEL_MODE_LIST);
+        util::vector_view<extractor::TravelMode> travel_modes(
+            travel_mode_list_ptr, layout.num_entries[storage::DataLayout::TRAVEL_MODE_LIST]);
+
+        extractor::EdgeBasedNodeDataView node_data(
+            std::move(geometry_ids), std::move(name_ids), std::move(travel_modes));
+
+        extractor::files::readNodeData(config.edge_based_nodes_data_path, node_data);
+    }
+
     // Load original edge data
     {
-        auto via_geometry_list_ptr =
-            layout.GetBlockPtr<GeometryID, true>(memory_ptr, storage::DataLayout::VIA_NODE_LIST);
-        util::vector_view<GeometryID> geometry_ids(
-            via_geometry_list_ptr, layout.num_entries[storage::DataLayout::VIA_NODE_LIST]);
-
-        const auto travel_mode_list_ptr = layout.GetBlockPtr<extractor::TravelMode, true>(
-            memory_ptr, storage::DataLayout::TRAVEL_MODE);
-        util::vector_view<extractor::TravelMode> travel_modes(
-            travel_mode_list_ptr, layout.num_entries[storage::DataLayout::TRAVEL_MODE]);
+        auto node_id_list_ptr = layout.GetBlockPtr<NodeID, true>(
+            memory_ptr, storage::DataLayout::EDGE_BASED_NODE_ID_LIST);
+        util::vector_view<NodeID> node_ids(
+            node_id_list_ptr, layout.num_entries[storage::DataLayout::EDGE_BASED_NODE_ID_LIST]);
 
         const auto lane_data_id_ptr =
             layout.GetBlockPtr<LaneDataID, true>(memory_ptr, storage::DataLayout::LANE_DATA_ID);
@@ -595,11 +620,6 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
                 memory_ptr, storage::DataLayout::TURN_INSTRUCTION);
         util::vector_view<extractor::guidance::TurnInstruction> turn_instructions(
             turn_instruction_list_ptr, layout.num_entries[storage::DataLayout::TURN_INSTRUCTION]);
-
-        const auto name_id_list_ptr =
-            layout.GetBlockPtr<NameID, true>(memory_ptr, storage::DataLayout::NAME_ID_LIST);
-        util::vector_view<NameID> name_ids(name_id_list_ptr,
-                                           layout.num_entries[storage::DataLayout::NAME_ID_LIST]);
 
         const auto entry_class_id_list_ptr =
             layout.GetBlockPtr<EntryClassID, true>(memory_ptr, storage::DataLayout::ENTRY_CLASSID);
@@ -616,11 +636,9 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
         util::vector_view<util::guidance::TurnBearing> post_turn_bearings(
             post_turn_bearing_ptr, layout.num_entries[storage::DataLayout::POST_TURN_BEARING]);
 
-        extractor::TurnDataView turn_data(std::move(geometry_ids),
-                                          std::move(name_ids),
+        extractor::TurnDataView turn_data(std::move(node_ids),
                                           std::move(turn_instructions),
                                           std::move(lane_data_ids),
-                                          std::move(travel_modes),
                                           std::move(entry_class_ids),
                                           std::move(pre_turn_bearings),
                                           std::move(post_turn_bearings));

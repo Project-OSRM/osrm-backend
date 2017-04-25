@@ -115,15 +115,16 @@ void annotatePath(const FacadeT &facade,
     for (auto edge_id : unpacked_edges)
     {
         const auto &edge_data = facade.GetEdgeData(edge_id);
-        const auto turn_id = edge_data.turn_id; // edge-based node ID
-        const auto name_index = facade.GetNameIndexFromEdgeID(turn_id);
+        const auto turn_id = edge_data.turn_id;                      // edge-based edge ID
+        const auto ebg_node_id = facade.GetEdgeBasedNodeID(turn_id); // edge-based source node ID
+        const auto name_index = facade.GetNameIndex(ebg_node_id);
         const auto turn_instruction = facade.GetTurnInstructionForEdgeID(turn_id);
         const extractor::TravelMode travel_mode =
             (unpacked_path.empty() && start_traversed_in_reverse)
                 ? phantom_node_pair.source_phantom.backward_travel_mode
-                : facade.GetTravelModeForEdgeID(turn_id);
+                : facade.GetTravelMode(ebg_node_id);
 
-        const auto geometry_index = facade.GetGeometryIndexForEdgeID(turn_id);
+        const auto geometry_index = facade.GetGeometryIndex(ebg_node_id);
         std::vector<NodeID> id_vector;
 
         std::vector<EdgeWeight> weight_vector;

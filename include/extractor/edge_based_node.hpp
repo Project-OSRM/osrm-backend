@@ -52,7 +52,7 @@ struct EdgeBasedNode
     SegmentID reverse_segment_id; // needed for edge-expanded graph
     NodeID u;                     // indices into the coordinates array
     NodeID v;                     // indices into the coordinates array
-    unsigned name_id;             // id of the edge name
+    NameID name_id;               // id of the edge name
 
     unsigned packed_geometry_id;
     struct

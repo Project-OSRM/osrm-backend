@@ -15,6 +15,7 @@ namespace
     std::cerr << "[assert][" << tid << "] " << file << ":" << line << "\nin: " << function << ": "
               << expr << "\n"
               << msg;
+
     std::terminate();
 }
 }

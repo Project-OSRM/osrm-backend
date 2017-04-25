@@ -3,6 +3,7 @@
 
 #include "extractor/datasources.hpp"
 #include "extractor/nbg_to_ebg.hpp"
+#include "extractor/node_data_container.hpp"
 #include "extractor/segment_data_container.hpp"
 #include "extractor/turn_data_container.hpp"
 
@@ -58,11 +59,9 @@ template <storage::Ownership Ownership>
 inline void read(storage::io::FileReader &reader,
                  detail::TurnDataContainerImpl<Ownership> &turn_data_container)
 {
-    storage::serialization::read(reader, turn_data_container.geometry_ids);
-    storage::serialization::read(reader, turn_data_container.name_ids);
+    storage::serialization::read(reader, turn_data_container.node_data_ids);
     storage::serialization::read(reader, turn_data_container.turn_instructions);
     storage::serialization::read(reader, turn_data_container.lane_data_ids);
-    storage::serialization::read(reader, turn_data_container.travel_modes);
     storage::serialization::read(reader, turn_data_container.entry_class_ids);
     storage::serialization::read(reader, turn_data_container.pre_turn_bearings);
     storage::serialization::read(reader, turn_data_container.post_turn_bearings);
@@ -72,14 +71,30 @@ template <storage::Ownership Ownership>
 inline void write(storage::io::FileWriter &writer,
                   const detail::TurnDataContainerImpl<Ownership> &turn_data_container)
 {
-    storage::serialization::write(writer, turn_data_container.geometry_ids);
-    storage::serialization::write(writer, turn_data_container.name_ids);
+    storage::serialization::write(writer, turn_data_container.node_data_ids);
     storage::serialization::write(writer, turn_data_container.turn_instructions);
     storage::serialization::write(writer, turn_data_container.lane_data_ids);
-    storage::serialization::write(writer, turn_data_container.travel_modes);
     storage::serialization::write(writer, turn_data_container.entry_class_ids);
     storage::serialization::write(writer, turn_data_container.pre_turn_bearings);
     storage::serialization::write(writer, turn_data_container.post_turn_bearings);
+}
+
+template <storage::Ownership Ownership>
+inline void read(storage::io::FileReader &reader,
+                 detail::EdgeBasedNodeDataContainerImpl<Ownership> &node_data_container)
+{
+    storage::serialization::read(reader, node_data_container.geometry_ids);
+    storage::serialization::read(reader, node_data_container.name_ids);
+    storage::serialization::read(reader, node_data_container.travel_modes);
+}
+
+template <storage::Ownership Ownership>
+inline void write(storage::io::FileWriter &writer,
+                  const detail::EdgeBasedNodeDataContainerImpl<Ownership> &node_data_container)
+{
+    storage::serialization::write(writer, node_data_container.geometry_ids);
+    storage::serialization::write(writer, node_data_container.name_ids);
+    storage::serialization::write(writer, node_data_container.travel_modes);
 }
 }
 }

@@ -30,7 +30,7 @@ class MockBaseDataFacade : public engine::datafacade::BaseDataFacade
     }
     OSMNodeID GetOSMNodeIDOfNode(const NodeID /* id */) const override { return OSMNodeID{0}; }
     bool EdgeIsCompressed(const EdgeID /* id */) const { return false; }
-    GeometryID GetGeometryIndexForEdgeID(const EdgeID /* id */) const override
+    GeometryID GetGeometryIndex(const NodeID /* id */) const override
     {
         return GeometryID{SPECIAL_GEOMETRYID, false};
     }
@@ -84,10 +84,6 @@ class MockBaseDataFacade : public engine::datafacade::BaseDataFacade
     GetTurnInstructionForEdgeID(const EdgeID /* id */) const override
     {
         return extractor::guidance::TurnInstruction::NO_TURN();
-    }
-    extractor::TravelMode GetTravelModeForEdgeID(const EdgeID /* id */) const override
-    {
-        return TRAVEL_MODE_INACCESSIBLE;
     }
     std::vector<RTreeLeaf> GetEdgesInBox(const util::Coordinate /* south_west */,
                                          const util::Coordinate /*north_east */) const override
@@ -178,7 +174,12 @@ class MockBaseDataFacade : public engine::datafacade::BaseDataFacade
 
     unsigned GetCheckSum() const override { return 0; }
 
-    NameID GetNameIndexFromEdgeID(const EdgeID /* id */) const override { return 0; }
+    NodeID GetEdgeBasedNodeID(const NodeID /*id*/) const override { return 0; }
+    extractor::TravelMode GetTravelMode(const NodeID /* id */) const override
+    {
+        return TRAVEL_MODE_INACCESSIBLE;
+    }
+    NameID GetNameIndex(const NodeID /* id */) const override { return 0; }
 
     StringView GetNameForID(const NameID) const override final { return {}; }
     StringView GetRefForID(const NameID) const override final { return {}; }

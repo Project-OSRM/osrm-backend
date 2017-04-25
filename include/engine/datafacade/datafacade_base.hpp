@@ -51,7 +51,7 @@ class BaseDataFacade
 
     virtual OSMNodeID GetOSMNodeIDOfNode(const NodeID id) const = 0;
 
-    virtual GeometryID GetGeometryIndexForEdgeID(const EdgeID id) const = 0;
+    virtual GeometryID GetGeometryIndex(const NodeID id) const = 0;
 
     virtual std::vector<NodeID> GetUncompressedForwardGeometry(const EdgeID id) const = 0;
 
@@ -79,10 +79,12 @@ class BaseDataFacade
     // Gets the name of a datasource
     virtual StringView GetDatasourceName(const DatasourceID id) const = 0;
 
+    virtual NodeID GetEdgeBasedNodeID(const NodeID id) const = 0;
+
     virtual extractor::guidance::TurnInstruction
     GetTurnInstructionForEdgeID(const EdgeID id) const = 0;
 
-    virtual extractor::TravelMode GetTravelModeForEdgeID(const EdgeID id) const = 0;
+    virtual extractor::TravelMode GetTravelMode(const NodeID id) const = 0;
 
     virtual std::vector<RTreeLeaf> GetEdgesInBox(const util::Coordinate south_west,
                                                  const util::Coordinate north_east) const = 0;
@@ -135,7 +137,7 @@ class BaseDataFacade
     virtual extractor::guidance::TurnLaneDescription
     GetTurnDescription(const LaneDescriptionID lane_description_id) const = 0;
 
-    virtual NameID GetNameIndexFromEdgeID(const EdgeID id) const = 0;
+    virtual NameID GetNameIndex(const NodeID id) const = 0;
 
     virtual StringView GetNameForID(const NameID id) const = 0;
 
