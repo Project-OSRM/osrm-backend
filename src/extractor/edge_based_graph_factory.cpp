@@ -168,6 +168,7 @@ NBGToEBG EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const N
 }
 
 void EdgeBasedGraphFactory::Run(ScriptingEnvironment &scripting_environment,
+                                const std::string &nodes_data_filename,
                                 const std::string &turn_data_filename,
                                 const std::string &turn_lane_data_filename,
                                 const std::string &turn_weight_penalties_filename,
@@ -186,8 +187,13 @@ void EdgeBasedGraphFactory::Run(ScriptingEnvironment &scripting_environment,
     }
     TIMER_STOP(generate_nodes);
 
+    TIMER_START(generate_nodes_data);
+    auto index_nbg_edgeid_to_ebg_nodeid = GenerateEdgeExpandedNodesData(nodes_data_filename);
+    TIMER_STOP(generate_nodes_data);
+
     TIMER_START(generate_edges);
     GenerateEdgeExpandedEdges(scripting_environment,
+                              index_nbg_edgeid_to_ebg_nodeid,
                               turn_data_filename,
                               turn_lane_data_filename,
                               turn_weight_penalties_filename,
@@ -293,8 +299,47 @@ std::vector<NBGToEBG> EdgeBasedGraphFactory::GenerateEdgeExpandedNodes()
 }
 
 /// Actually it also generates turn data and serializes them...
+std::unordered_map<EdgeID, NodeID>
+EdgeBasedGraphFactory::GenerateEdgeExpandedNodesData(const std::string &node_data_filename) const
+{
+    // parallel_for( blocked_range<int>( 0, n ), avg, auto_partitioner( ) );
+
+    NodeID ebg_node_id = 0;
+    std::unordered_map<EdgeID, NodeID> index;
+    EdgeBasedNodeDataExternalContainer node_data_container;
+    for (auto node_id : util::irange(0u, m_node_based_graph->GetNumberOfNodes()))
+    {
+        for (auto edge_id : m_node_based_graph->GetAdjacentEdgeRange(node_id))
+        {
+            const EdgeData &edge_data = m_node_based_graph->GetEdgeData(edge_id);
+            const bool is_encoded_forwards =
+                m_compressed_edge_container.HasZippedEntryForForwardID(edge_id);
+            const bool is_encoded_backwards =
+                m_compressed_edge_container.HasZippedEntryForReverseID(edge_id);
+            if (is_encoded_forwards || is_encoded_backwards)
+            {
+                auto geometry_id =
+                    is_encoded_forwards
+                        ? m_compressed_edge_container.GetZippedPositionForForwardID(edge_id)
+                        : m_compressed_edge_container.GetZippedPositionForReverseID(edge_id);
+
+                BOOST_ASSERT(index.find(edge_id) == index.end());
+                index.insert({edge_id, ebg_node_id++});
+                node_data_container.push_back(GeometryID{geometry_id, is_encoded_forwards},
+                                              edge_data.name_id,
+                                              edge_data.travel_mode);
+            }
+        }
+    }
+
+    files::writeNodeData(node_data_filename, node_data_container);
+    return index;
+}
+
+/// Actually it also generates turn data and serializes them...
 void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     ScriptingEnvironment &scripting_environment,
+    const std::unordered_map<EdgeID, NodeID> &nbg_edgeid_to_ebg_nodeid,
     const std::string &turn_data_filename,
     const std::string &turn_lane_data_filename,
     const std::string &turn_weight_penalties_filename,
@@ -454,39 +499,15 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                     BOOST_ASSERT(!edge_data2.reversed);
 
                     // the following is the core of the loop.
-                    const bool is_encoded_forwards =
-                        m_compressed_edge_container.HasZippedEntryForForwardID(incoming_edge);
-                    const bool is_encoded_backwards =
-                        m_compressed_edge_container.HasZippedEntryForReverseID(incoming_edge);
-                    BOOST_ASSERT(is_encoded_forwards || is_encoded_backwards);
-                    if (is_encoded_forwards)
-                    {
-                        turn_data_container.push_back(
-                            GeometryID{m_compressed_edge_container.GetZippedPositionForForwardID(
-                                           incoming_edge),
-                                       true},
-                            edge_data1.name_id,
-                            turn.instruction,
-                            turn.lane_data_id,
-                            entry_class_id,
-                            edge_data1.travel_mode,
-                            util::guidance::TurnBearing(intersection[0].bearing),
-                            util::guidance::TurnBearing(turn.bearing));
-                    }
-                    else if (is_encoded_backwards)
-                    {
-                        turn_data_container.push_back(
-                            GeometryID{m_compressed_edge_container.GetZippedPositionForReverseID(
-                                           incoming_edge),
-                                       false},
-                            edge_data1.name_id,
-                            turn.instruction,
-                            turn.lane_data_id,
-                            entry_class_id,
-                            edge_data1.travel_mode,
-                            util::guidance::TurnBearing(intersection[0].bearing),
-                            util::guidance::TurnBearing(turn.bearing));
-                    }
+                    BOOST_ASSERT(nbg_edgeid_to_ebg_nodeid.find(incoming_edge) !=
+                                 nbg_edgeid_to_ebg_nodeid.end());
+                    turn_data_container.push_back(
+                        nbg_edgeid_to_ebg_nodeid.find(incoming_edge)->second,
+                        turn.instruction,
+                        turn.lane_data_id,
+                        entry_class_id,
+                        util::guidance::TurnBearing(intersection[0].bearing),
+                        util::guidance::TurnBearing(turn.bearing));
 
                     // compute weight and duration penalties
                     auto is_traffic_light = m_traffic_lights.count(node_at_center_of_intersection);

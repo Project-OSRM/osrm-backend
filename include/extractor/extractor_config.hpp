@@ -74,6 +74,7 @@ struct ExtractorConfig
         turn_weight_penalties_path = basepath + ".osrm.turn_weight_penalties";
         turn_penalties_index_path = basepath + ".osrm.turn_penalties_index";
         edge_based_node_weights_output_path = basepath + ".osrm.enw";
+        edge_based_nodes_data_path = basepath + ".osrm.nodes_data";
         profile_properties_output_path = basepath + ".osrm.properties";
         intersection_class_data_output_path = basepath + ".osrm.icd";
         compressed_node_based_graph_output_path = basepath + ".osrm.cnbg";
@@ -92,6 +93,7 @@ struct ExtractorConfig
     std::string geometry_output_path;
     std::string edge_output_path;
     std::string edge_graph_output_path;
+    std::string edge_based_nodes_data_path;
     std::string edge_based_node_weights_output_path;
     std::string node_output_path;
     std::string rtree_nodes_output_path;

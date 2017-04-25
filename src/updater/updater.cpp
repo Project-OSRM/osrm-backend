@@ -76,12 +76,16 @@ void checkWeightsConsistency(
     extractor::SegmentDataContainer segment_data;
     extractor::files::readSegmentData(config.geometry_path, segment_data);
 
+    extractor::EdgeBasedNodeDataContainer node_data;
+    extractor::files::readNodeData(config.osrm_input_path.string() + ".nodes_data", node_data);
+
     extractor::TurnDataContainer turn_data;
     extractor::files::readTurnData(config.osrm_input_path.string() + ".edges", turn_data);
 
     for (auto &edge : edge_based_edge_list)
     {
-        auto geometry_id = turn_data.GetGeometryID(edge.data.turn_id);
+        const auto node_id = turn_data.GetNodeID(edge.data.turn_id);
+        const auto geometry_id = node_data.GetGeometryID(node_id);
 
         if (geometry_id.forward)
         {
@@ -457,6 +461,7 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
         throw util::exception("Limit of 255 segment speed and turn penalty files each reached" +
                               SOURCE_REF);
 
+    extractor::EdgeBasedNodeDataContainer node_data;
     extractor::TurnDataContainer turn_data;
     extractor::SegmentDataContainer segment_data;
     extractor::ProfileProperties profile_properties;
@@ -466,6 +471,10 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
     {
         const auto load_segment_data = [&] {
             extractor::files::readSegmentData(config.geometry_path, segment_data);
+        };
+
+        const auto load_node_data = [&] {
+            extractor::files::readNodeData(config.edge_based_nodes_data_path, node_data);
         };
 
         const auto load_edge_data = [&] {
@@ -491,7 +500,8 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
             profile_properties = profile_properties_file.ReadOne<extractor::ProfileProperties>();
         };
 
-        tbb::parallel_invoke(load_edge_data,
+        tbb::parallel_invoke(load_node_data,
+                             load_edge_data,
                              load_segment_data,
                              load_turn_weight_penalties,
                              load_turn_duration_penalties,
@@ -524,11 +534,13 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
         updated_segments.resize(offset + updated_turn_penalties.size());
         // we need to re-compute all edges that have updated turn penalties.
         // this marks it for re-computation
-        std::transform(
-            updated_turn_penalties.begin(),
-            updated_turn_penalties.end(),
-            updated_segments.begin() + offset,
-            [&turn_data](const std::uint64_t turn_id) { return turn_data.GetGeometryID(turn_id); });
+        std::transform(updated_turn_penalties.begin(),
+                       updated_turn_penalties.end(),
+                       updated_segments.begin() + offset,
+                       [&node_data, &turn_data](const std::uint64_t turn_id) {
+                           const auto node_id = turn_data.GetNodeID(turn_id);
+                           return node_data.GetGeometryID(node_id);
+                       });
     }
 
     tbb::parallel_sort(updated_segments.begin(),
@@ -586,7 +598,8 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
                       });
 
     const auto update_edge = [&](extractor::EdgeBasedEdge &edge) {
-        const auto geometry_id = turn_data.GetGeometryID(edge.data.turn_id);
+        const auto node_id = turn_data.GetNodeID(edge.data.turn_id);
+        const auto geometry_id = node_data.GetGeometryID(node_id);
         auto updated_iter = std::lower_bound(updated_segments.begin(),
                                              updated_segments.end(),
                                              geometry_id,

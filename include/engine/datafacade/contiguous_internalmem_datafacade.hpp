@@ -13,6 +13,7 @@
 #include "extractor/datasources.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
 #include "extractor/guidance/turn_lane_types.hpp"
+#include "extractor/node_data_container.hpp"
 #include "extractor/packed_osm_ids.hpp"
 #include "extractor/profile_properties.hpp"
 #include "extractor/segment_data_container.hpp"
@@ -223,6 +224,7 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     util::vector_view<TurnPenalty> m_turn_duration_penalties;
     extractor::SegmentDataView segment_data;
     extractor::TurnDataView turn_data;
+    extractor::EdgeBasedNodeDataView edge_based_node_data;
 
     util::vector_view<char> m_datasource_name_data;
     util::vector_view<std::size_t> m_datasource_name_offsets;
@@ -319,17 +321,34 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
             data_layout.num_entries[storage::DataLayout::COORDINATE_LIST]);
     }
 
-    void InitializeEdgeInformationPointers(storage::DataLayout &layout, char *memory_ptr)
+    void InitializeEdgeBasedNodeDataInformationPointers(storage::DataLayout &layout,
+                                                        char *memory_ptr)
     {
         auto via_geometry_list_ptr =
-            layout.GetBlockPtr<GeometryID>(memory_ptr, storage::DataLayout::VIA_NODE_LIST);
+            layout.GetBlockPtr<GeometryID>(memory_ptr, storage::DataLayout::GEOMETRY_ID_LIST);
         util::vector_view<GeometryID> geometry_ids(
-            via_geometry_list_ptr, layout.num_entries[storage::DataLayout::VIA_NODE_LIST]);
+            via_geometry_list_ptr, layout.num_entries[storage::DataLayout::GEOMETRY_ID_LIST]);
 
-        const auto travel_mode_list_ptr =
-            layout.GetBlockPtr<extractor::TravelMode>(memory_ptr, storage::DataLayout::TRAVEL_MODE);
+        const auto name_id_list_ptr =
+            layout.GetBlockPtr<NameID>(memory_ptr, storage::DataLayout::NAME_ID_LIST);
+        util::vector_view<NameID> name_ids(name_id_list_ptr,
+                                           layout.num_entries[storage::DataLayout::NAME_ID_LIST]);
+
+        const auto travel_mode_list_ptr = layout.GetBlockPtr<extractor::TravelMode>(
+            memory_ptr, storage::DataLayout::TRAVEL_MODE_LIST);
         util::vector_view<extractor::TravelMode> travel_modes(
-            travel_mode_list_ptr, layout.num_entries[storage::DataLayout::TRAVEL_MODE]);
+            travel_mode_list_ptr, layout.num_entries[storage::DataLayout::TRAVEL_MODE_LIST]);
+
+        edge_based_node_data = extractor::EdgeBasedNodeDataView(
+            std::move(geometry_ids), std::move(name_ids), std::move(travel_modes));
+    }
+
+    void InitializeEdgeInformationPointers(storage::DataLayout &layout, char *memory_ptr)
+    {
+        auto node_ids_list_ptr =
+            layout.GetBlockPtr<NodeID>(memory_ptr, storage::DataLayout::EDGE_BASED_NODE_ID_LIST);
+        util::vector_view<NodeID> node_ids(
+            node_ids_list_ptr, layout.num_entries[storage::DataLayout::EDGE_BASED_NODE_ID_LIST]);
 
         const auto lane_data_id_ptr =
             layout.GetBlockPtr<LaneDataID>(memory_ptr, storage::DataLayout::LANE_DATA_ID);
@@ -341,11 +360,6 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
                 memory_ptr, storage::DataLayout::TURN_INSTRUCTION);
         util::vector_view<extractor::guidance::TurnInstruction> turn_instructions(
             turn_instruction_list_ptr, layout.num_entries[storage::DataLayout::TURN_INSTRUCTION]);
-
-        const auto name_id_list_ptr =
-            layout.GetBlockPtr<NameID>(memory_ptr, storage::DataLayout::NAME_ID_LIST);
-        util::vector_view<NameID> name_ids(name_id_list_ptr,
-                                           layout.num_entries[storage::DataLayout::NAME_ID_LIST]);
 
         const auto entry_class_id_list_ptr =
             layout.GetBlockPtr<EntryClassID>(memory_ptr, storage::DataLayout::ENTRY_CLASSID);
@@ -362,11 +376,9 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         util::vector_view<util::guidance::TurnBearing> post_turn_bearings(
             post_turn_bearing_ptr, layout.num_entries[storage::DataLayout::POST_TURN_BEARING]);
 
-        turn_data = extractor::TurnDataView(std::move(geometry_ids),
-                                            std::move(name_ids),
+        turn_data = extractor::TurnDataView(std::move(node_ids),
                                             std::move(turn_instructions),
                                             std::move(lane_data_ids),
-                                            std::move(travel_modes),
                                             std::move(entry_class_ids),
                                             std::move(pre_turn_bearings),
                                             std::move(post_turn_bearings));
@@ -509,6 +521,7 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     {
         InitializeChecksumPointer(data_layout, memory_block);
         InitializeNodeInformationPointers(data_layout, memory_block);
+        InitializeEdgeBasedNodeDataInformationPointers(data_layout, memory_block);
         InitializeEdgeInformationPointers(data_layout, memory_block);
         InitializeTurnPenalties(data_layout, memory_block);
         InitializeGeometryPointers(data_layout, memory_block);
@@ -540,7 +553,7 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         return m_osmnodeid_list.at(id);
     }
 
-    virtual std::vector<NodeID> GetUncompressedForwardGeometry(const EdgeID id) const override final
+    std::vector<NodeID> GetUncompressedForwardGeometry(const EdgeID id) const override final
     {
 
         auto range = segment_data.GetForwardGeometry(id);
@@ -599,11 +612,6 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         return std::vector<DatasourceID>{range.begin(), range.end()};
     }
 
-    virtual GeometryID GetGeometryIndexForEdgeID(const EdgeID id) const override final
-    {
-        return turn_data.GetGeometryID(id);
-    }
-
     virtual TurnPenalty GetWeightPenaltyForEdgeID(const unsigned id) const override final
     {
         BOOST_ASSERT(m_turn_weight_penalties.size() > id);
@@ -616,15 +624,15 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         return m_turn_duration_penalties[id];
     }
 
+    NodeID GetEdgeBasedNodeID(const EdgeID id) const override final
+    {
+        return turn_data.GetNodeID(id);
+    }
+
     extractor::guidance::TurnInstruction
     GetTurnInstructionForEdgeID(const EdgeID id) const override final
     {
         return turn_data.GetTurnInstruction(id);
-    }
-
-    extractor::TravelMode GetTravelModeForEdgeID(const EdgeID id) const override final
-    {
-        return turn_data.GetTravelMode(id);
     }
 
     std::vector<RTreeLeaf> GetEdgesInBox(const util::Coordinate south_west,
@@ -744,9 +752,19 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
 
     unsigned GetCheckSum() const override final { return m_check_sum; }
 
-    NameID GetNameIndexFromEdgeID(const EdgeID id) const override final
+    GeometryID GetGeometryIndex(const NodeID id) const override final
     {
-        return turn_data.GetNameID(id);
+        return edge_based_node_data.GetGeometryID(id);
+    }
+
+    extractor::TravelMode GetTravelMode(const NodeID id) const override final
+    {
+        return edge_based_node_data.GetTravelMode(id);
+    }
+
+    NameID GetNameIndex(const NodeID id) const override final
+    {
+        return edge_based_node_data.GetNameID(id);
     }
 
     StringView GetNameForID(const NameID id) const override final

@@ -484,6 +484,7 @@ Extractor::BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
         turn_lane_map);
 
     edge_based_graph_factory.Run(scripting_environment,
+                                 config.edge_based_nodes_data_path,
                                  config.edge_output_path,
                                  config.turn_lane_data_file_name,
                                  config.turn_weight_penalties_path,

@@ -57,6 +57,7 @@ struct StorageConfig final
     boost::filesystem::path hsgr_data_path;
     boost::filesystem::path nodes_data_path;
     boost::filesystem::path edges_data_path;
+    boost::filesystem::path edge_based_nodes_data_path;
     boost::filesystem::path core_data_path;
     boost::filesystem::path geometries_path;
     boost::filesystem::path timestamp_path;

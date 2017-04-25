@@ -2,7 +2,9 @@
 #define OSRM_EXTRACTOR_FILES_HPP
 
 #include "extractor/guidance/turn_lane_types.hpp"
+#include "extractor/node_data_container.hpp"
 #include "extractor/serialization.hpp"
+#include "extractor/turn_data_container.hpp"
 
 #include "util/coordinate.hpp"
 #include "util/packed_vector.hpp"
@@ -138,6 +140,34 @@ inline void writeTurnData(const boost::filesystem::path &path, const TurnDataT &
     storage::io::FileWriter writer{path, fingerprint};
 
     serialization::write(writer, turn_data);
+}
+
+// reads .osrm.nodes_data
+template <typename NodeDataT>
+inline void readNodeData(const boost::filesystem::path &path, NodeDataT &node_data)
+{
+    static_assert(std::is_same<EdgeBasedNodeDataContainer, NodeDataT>::value ||
+                      std::is_same<EdgeBasedNodeDataView, NodeDataT>::value ||
+                      std::is_same<EdgeBasedNodeDataExternalContainer, NodeDataT>::value,
+                  "");
+    const auto fingerprint = storage::io::FileReader::VerifyFingerprint;
+    storage::io::FileReader reader{path, fingerprint};
+
+    serialization::read(reader, node_data);
+}
+
+// writes .osrm.nodes_data
+template <typename NodeDataT>
+inline void writeNodeData(const boost::filesystem::path &path, const NodeDataT &node_data)
+{
+    static_assert(std::is_same<EdgeBasedNodeDataContainer, NodeDataT>::value ||
+                      std::is_same<EdgeBasedNodeDataView, NodeDataT>::value ||
+                      std::is_same<EdgeBasedNodeDataExternalContainer, NodeDataT>::value,
+                  "");
+    const auto fingerprint = storage::io::FileWriter::GenerateFingerprint;
+    storage::io::FileWriter writer{path, fingerprint};
+
+    serialization::write(writer, node_data);
 }
 
 // reads .osrm.tls
