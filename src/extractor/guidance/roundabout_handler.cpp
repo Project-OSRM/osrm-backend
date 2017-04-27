@@ -111,32 +111,57 @@ void RoundaboutHandler::invalidateExitAgainstDirection(const NodeID from_nid,
     if (in_edge_data.roundabout || in_edge_data.circular)
         return;
 
-    bool past_roundabout_angle = false;
-    const bool lhs = profile_properties.left_hand_driving;
-    const int step = lhs ? -1 : 1;
-    for (std::size_t cnt = 0, idx = lhs ? intersection.size() - 1 : 0; cnt < intersection.size();
-         ++cnt, idx += step)
+    std::cout << "invalidateExitAgainstDirection\n";
+
+    // Find range in which exits that must be invalidated (shaded areas):
+    // exit..end   exit..end  begin..exit for ↺ roundabouts
+    // ⭦           ⭦  ⭩         ⭦
+    //  ⭡⭧          ⭡⭩ ▒       ▒⭨⭡
+    //  ⭡⭦          ⭡⭨▒▒       ▒▒⭡⭨
+    // ⭧▒▒⭦        ⭧▒▒▒▒      ▒▒⭧
+    //
+    // begin..exit  begin..exit  exit..end for ↻ roundabouts
+    // ⭨▒▒▒         ⭨▒▒ ⭩        ▒▒⭨
+    //  ⭣⭧▒          ⭣⭩           ▒▒⭣⭧
+    //  ⭣⭦▒          ⭣⭨           ▒⭧⭣
+    // ⭩  ⭦         ⭩              ⭩
+    bool roundabout_entry_first = false;
+    auto invalidate_from = intersection.end(), invalidate_to = intersection.end();
+    for (auto road = intersection.begin(); road != intersection.end(); ++road)
     {
-        auto &road = intersection[idx];
-        const auto &edge_data = node_based_graph.GetEdgeData(road.eid);
-        // only check actual outgoing edges
-        if (edge_data.reversed)
+        const auto &edge_data = node_based_graph.GetEdgeData(road->eid);
+        if (edge_data.roundabout || edge_data.circular)
         {
-            // remember whether we have seen the roundabout in-part
-            if (edge_data.roundabout || edge_data.circular)
-                past_roundabout_angle = true;
-
-            continue;
+            if (edge_data.reversed)
+            {
+                if (roundabout_entry_first)
+                { // invalidate turns in range exit..end
+                    invalidate_from = road + 1;
+                    invalidate_to = intersection.end();
+                }
+                else
+                { // invalidate turns in range begin..exit
+                    invalidate_from = intersection.begin() + 1;
+                    invalidate_to = road;
+                }
+            }
+            else
+            {
+                roundabout_entry_first = true;
+            }
         }
+    }
 
-        // Exiting roundabouts at an entry point is technically a data-modelling issue.
-        // This workaround handles cases in which an exit precedes and entry. The resulting
-        // u-turn against the roundabout direction is invalidated.
-        // The sorting of the angles represents a problem for left-sided driving, though.
+    // Exiting roundabouts at an entry point is technically a data-modelling issue.
+    // This workaround handles cases in which an exit precedes and entry. The resulting
+    // u-turn against the roundabout direction is invalidated.
+    for (; invalidate_from != invalidate_to; ++invalidate_from)
+    {
+        const auto &edge_data = node_based_graph.GetEdgeData(invalidate_from->eid);
         if (!edge_data.roundabout && !edge_data.circular &&
-            node_based_graph.GetTarget(road.eid) != from_nid && past_roundabout_angle)
+            node_based_graph.GetTarget(invalidate_from->eid) != from_nid)
         {
-            road.entry_allowed = false;
+            invalidate_from->entry_allowed = false;
         }
     }
 }

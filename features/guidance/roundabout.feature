@@ -222,6 +222,43 @@ Feature: Basic Roundabout
            | j,f       | jkl,def,def | depart,roundabout-exit-2,arrive |
            | j,c       | jkl,abc,abc | depart,roundabout-exit-3,arrive |
 
+     Scenario: Mixed Entry and Exit - clockwise order
+        Given the node map
+           """
+             c   a
+           j   b   f
+             k   e
+           l   h   d
+             g   i
+           """
+
+        And the ways
+           | nodes | junction   | oneway |
+           | abc   |            | yes    |
+           | def   |            | yes    |
+           | ghi   |            | yes    |
+           | jkl   |            | yes    |
+           | behkb | roundabout | yes    |
+
+        When I route I should get
+           | waypoints | route       | turns                           |
+           | a,c       | abc,abc,abc | depart,roundabout-exit-4,arrive |
+           | a,l       | abc,jkl,jkl | depart,roundabout-exit-3,arrive |
+           | a,i       | abc,ghi,ghi | depart,roundabout-exit-2,arrive |
+           | a,f       | abc,def,def | depart,roundabout-exit-1,arrive |
+           | d,f       | def,def,def | depart,roundabout-exit-4,arrive |
+           | d,c       | def,abc,abc | depart,roundabout-exit-3,arrive |
+           | d,l       | def,jkl,jkl | depart,roundabout-exit-2,arrive |
+           | d,i       | def,ghi,ghi | depart,roundabout-exit-1,arrive |
+           | g,i       | ghi,ghi,ghi | depart,roundabout-exit-4,arrive |
+           | g,f       | ghi,def,def | depart,roundabout-exit-3,arrive |
+           | g,c       | ghi,abc,abc | depart,roundabout-exit-2,arrive |
+           | g,l       | ghi,jkl,jkl | depart,roundabout-exit-1,arrive |
+           | j,l       | jkl,jkl,jkl | depart,roundabout-exit-4,arrive |
+           | j,i       | jkl,ghi,ghi | depart,roundabout-exit-3,arrive |
+           | j,f       | jkl,def,def | depart,roundabout-exit-2,arrive |
+           | j,c       | jkl,abc,abc | depart,roundabout-exit-1,arrive |
+
     Scenario: Mixed Entry and Exit - segregated roads, different names
         Given the node map
            """
@@ -707,3 +744,27 @@ Feature: Basic Roundabout
         When I route I should get
             | waypoints | route          | turns                                                                           |
             | a,h       | ab,ef,ef,fh,fh | depart,roundabout-exit-4,notification slight right,notification straight,arrive |
+
+
+     Scenario: Drive through roundabout
+        Given the node map
+           """
+              a
+            b e d  f
+              c
+            g   h
+           """
+
+        And the ways
+           | nodes | junction   | oneway |
+           | abcda | roundabout | yes    |
+           | edf   |            |        |
+           | gch   |            | yes    |
+
+        When I route I should get
+           | waypoints | bearings | route       | turns                           |
+           | e,f       | 90 90    | edf,edf,edf | depart,roundabout-exit-1,arrive |
+           | e,h       | 90 135   | edf,gch,gch | depart,roundabout-exit-2,arrive |
+           | g,f       | 45 90    | gch,edf,edf | depart,roundabout-exit-2,arrive |
+           | g,h       | 45 135   | gch,gch,gch | depart,roundabout-exit-1,arrive |
+           | e,e       | 90 270   | edf,edf,edf | depart,roundabout-exit-3,arrive |
