@@ -249,8 +249,12 @@ std::vector<TurnRestriction> Extractor::ParseOSMData(ScriptingEnvironment &scrip
     tbb::concurrent_vector<std::pair<std::size_t, ExtractionWay>> resulting_ways;
     tbb::concurrent_vector<boost::optional<InputRestrictionContainer>> resulting_restrictions;
 
+    std::vector<std::string> restrictions = scripting_environment.GetRestrictions();
     // setup restriction parser
-    const RestrictionParser restriction_parser(scripting_environment, config.parse_conditionals);
+    const RestrictionParser restriction_parser(
+        scripting_environment.GetProfileProperties().use_turn_restrictions,
+        config.parse_conditionals,
+        restrictions);
 
     // create a vector of iterators into the buffer
     for (std::vector<osmium::memory::Buffer::const_iterator> osm_elements;

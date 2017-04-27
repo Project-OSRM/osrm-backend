@@ -57,12 +57,9 @@ int Contractor::Run()
     util::Log() << "Loading edge-expanded graph representation";
 
     std::vector<extractor::EdgeBasedEdge> edge_based_edge_list;
-    std::vector<util::Coordinate> node_coordinates;
-    extractor::PackedOSMIDs osm_node_ids;
 
     updater::Updater updater(config.updater_config);
-    EdgeID max_edge_id = updater.LoadAndUpdateEdgeExpandedGraph(
-        edge_based_edge_list, node_weights, node_coordinates, osm_node_ids);
+    EdgeID max_edge_id = updater.LoadAndUpdateEdgeExpandedGraph(edge_based_edge_list, node_weights);
 
     // Contracting the edge-expanded graph
 

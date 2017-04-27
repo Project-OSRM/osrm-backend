@@ -32,9 +32,7 @@ class Updater
 
     EdgeID
     LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &edge_based_edge_list,
-                                   std::vector<EdgeWeight> &node_weights,
-                                   std::vector<util::Coordinate> node_coordinates,
-                                   extractor::PackedOSMIDs osm_node_ids) const;
+                                   std::vector<EdgeWeight> &node_weights) const;
 
   private:
     UpdaterConfig config;

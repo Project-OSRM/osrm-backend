@@ -1,6 +1,5 @@
-#include "extractor/restriction_parser.hpp"
 #include "extractor/profile_properties.hpp"
-#include "extractor/scripting_environment.hpp"
+#include "extractor/restriction_parser.hpp"
 
 #include "extractor/external_memory_node.hpp"
 
@@ -25,14 +24,14 @@ namespace osrm
 namespace extractor
 {
 
-RestrictionParser::RestrictionParser(ScriptingEnvironment &scripting_environment,
-                                     bool parse_conditionals_)
-    : use_turn_restrictions(scripting_environment.GetProfileProperties().use_turn_restrictions),
-      parse_conditionals(parse_conditionals_)
+RestrictionParser::RestrictionParser(bool use_turn_restrictions_,
+                                     bool parse_conditionals_,
+                                     std::vector<std::string> &restrictions_)
+    : use_turn_restrictions(use_turn_restrictions_), parse_conditionals(parse_conditionals_),
+      restrictions(restrictions_)
 {
     if (use_turn_restrictions)
     {
-        restrictions = scripting_environment.GetRestrictions();
         const unsigned count = restrictions.size();
         if (count > 0)
         {
