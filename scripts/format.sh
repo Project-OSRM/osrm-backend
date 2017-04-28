@@ -36,14 +36,3 @@ fi
 
 find src include unit_tests example -type f -name '*.hpp' -o -name '*.cpp' \
   | xargs -I{} -P ${NPROC} ${CLANG_FORMAT} -i -style=file {}
-
-
-dirty=$(git ls-files --modified)
-
-if [[ $dirty ]]; then
-    echo "The following files do not adhere to the .clang-format style file:"
-    echo $dirty
-    exit 1
-else
-    exit 0
-fi
