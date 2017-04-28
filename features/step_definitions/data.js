@@ -67,7 +67,7 @@ module.exports = function () {
                 if (this.nameNodeHash[name]) throw new Error(util.format('*** duplicate node %s', name));
                 this.addOSMNode(name, lonLat[0], lonLat[1], null);
             } else if (name.match(/[0-9]/) ) {
-                if (this.locationHash[name]) throw new Error(util.format('*** duplicate node %s'), name);
+                if (this.locationHash[name]) throw new Error(util.format('*** duplicate node %s', name));
                 this.addLocation(name, lonLat[0], lonLat[1], null);
             }
             cb();
@@ -89,7 +89,7 @@ module.exports = function () {
 
         let addNodeLocations = (row, cb) => {
             let name = row.node;
-            if (this.findNodeByName(name)) throw new Error(util.format('*** duplicate node %s'), name);
+            if (this.findNodeByName(name)) throw new Error(util.format('*** duplicate node %s', name));
 
             if (name.match(/[a-z]/)) {
                 let id = row.id && parseInt(row.id);
@@ -194,19 +194,19 @@ module.exports = function () {
                     isColonSeparated = key.match(/^(.*):(.*)/);
                 if (isNode) {
                     row[key].split(',').map(function(v) { return v.trim(); }).forEach((nodeName) => {
-                        if (nodeName.length !== 1) throw new Error(util.format('*** invalid relation node member "%s"'), nodeName);
+                        if (nodeName.length !== 1) throw new Error(util.format('*** invalid relation node member "%s"', nodeName));
                         let node = this.findNodeByName(nodeName);
-                        if (!node) throw new Error(util.format('*** unknown relation node member "%s"'), nodeName);
+                        if (!node) throw new Error(util.format('*** unknown relation node member "%s"', nodeName));
                         relation.addMember('node', node.id, isNode[1]);
                     });
                 } else if (isWay) {
                     row[key].split(',').map(function(v) { return v.trim(); }).forEach((wayName) => {
                         let way = this.findWayByName(wayName);
-                        if (!way) throw new Error(util.format('*** unknown relation way member "%s"'), wayName);
+                        if (!way) throw new Error(util.format('*** unknown relation way member "%s"', wayName));
                         relation.addMember('way', way.id, isWay[1]);
                     });
                 } else if (isColonSeparated && isColonSeparated[1] !== 'restriction') {
-                    throw new Error(util.format('*** unknown relation member type "%s:%s", must be either "node" or "way"'), isColonSeparated[1], isColonSeparated[2]);
+                    throw new Error(util.format('*** unknown relation member type "%s:%s", must be either "node" or "way"', isColonSeparated[1], isColonSeparated[2]));
                 } else {
                     relation.addTag(key, row[key]);
                 }

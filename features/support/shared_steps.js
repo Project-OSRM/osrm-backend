@@ -217,11 +217,11 @@ module.exports = function () {
 
                     if (row.from && row.to) {
                         var fromNode = this.findNodeByName(row.from);
-                        if (!fromNode) return cb(new Error(util.format('*** unknown from-node "%s"'), row.from));
+                        if (!fromNode) return cb(new Error(util.format('*** unknown from-node "%s"', row.from)));
                         waypoints.push(fromNode);
 
                         var toNode = this.findNodeByName(row.to);
-                        if (!toNode) return cb(new Error(util.format('*** unknown to-node "%s"'), row.to));
+                        if (!toNode) return cb(new Error(util.format('*** unknown to-node "%s"', row.to)));
                         waypoints.push(toNode);
 
                         got.from = row.from;

@@ -225,7 +225,7 @@ module.exports = function () {
                         for (var i=0; i<row.trace.length; i++) {
                             var n = row.trace[i],
                                 node = this.findNodeByName(n);
-                            if (!node) throw new Error(util.format('*** unknown waypoint node "%s"'), n);
+                            if (!node) throw new Error(util.format('*** unknown waypoint node "%s"', n));
                             trace.push(node);
                         }
                         if (row.timestamps) {

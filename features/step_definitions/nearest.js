@@ -6,10 +6,10 @@ module.exports = function () {
             if (e) return callback(e);
             var testRow = (row, ri, cb) => {
                 var inNode = this.findNodeByName(row.in);
-                if (!inNode) throw new Error(util.format('*** unknown in-node "%s"'), row.in);
+                if (!inNode) throw new Error(util.format('*** unknown in-node "%s"', row.in));
 
                 var outNode = this.findNodeByName(row.out);
-                if (!outNode) throw new Error(util.format('*** unknown out-node "%s"'), row.out);
+                if (!outNode) throw new Error(util.format('*** unknown out-node "%s"', row.out));
 
                 this.requestNearest(inNode, this.queryParams, (err, response) => {
                     if (err) return cb(err);
