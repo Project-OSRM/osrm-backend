@@ -48,13 +48,22 @@ matrix:
 
     # Debug Builds
     - os: linux
-      compiler: "format-taginfo"
+      compiler: "format-taginfo-docs"
+      env: NODE=6
       sudo: false
       before_install:
       install:
+        - source $NVM_DIR/nvm.sh
+        - nvm install $NODE
+        - nvm use $NODE
+        - npm --version
+        - npm install --ignore-scripts
+        - npm link --ignore-scripts
       script:
-        - ${MASON} install clang-format 3.8.1 && PATH=$(${MASON} prefix clang-format 3.8.1)/bin:${PATH} ./scripts/format.sh
+        - ${MASON} install clang-format 3.8.1
+        - PATH=$(${MASON} prefix clang-format 3.8.1)/bin:${PATH} ./scripts/format.sh && ./scripts/error_on_dirty.sh
         - ./scripts/check_taginfo.py taginfo.json profiles/car.lua
+        - npm run docs && ./scripts/error_on_dirty.sh
       after_success:
 
     - os: linux
@@ -332,8 +341,6 @@ install:
   - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
   - make --jobs=${JOBS}
   - popd
-  # building docs only works with npm3+ not with yarn or npm2
-  #- yarn run docs
 
 script:
   - if [[ $TARGET_ARCH == armhf ]] ; then echo "Skip tests for $TARGET_ARCH" && exit 0 ; fi
