@@ -14,7 +14,7 @@ babel -V >/dev/null 2>&1 || { echo >&2 "Can't find babel.  Add node_modules/.bin
 browserify --help >/dev/null 2>&1 || { echo >&2 "Can't find browserify.  Add node_modules/.bin to your path, or run via \"npm run\""; exit 1; }
 uglifyjs -V >/dev/null 2>&1 || { echo >&2 "Can't find uglifyjs.  Add node_modules/.bin to your path, or run via \"npm run\""; exit 1; }
 
-#documentation build src/nodejs/node_osrm.cpp --polyglot -f md -o docs/nodejs/api.md
+documentation build src/nodejs/node_osrm.cpp --polyglot -f md -o docs/nodejs/api.md
 
 # Clean up previous version
 rm -rf build/docs
