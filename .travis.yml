@@ -48,14 +48,32 @@ matrix:
 
     # Debug Builds
     - os: linux
-      compiler: "gcc-6-debug-cov-asan"
+      compiler: "format-taginfo"
+      sudo: false
+      before_install:
+      install:
+      script:
+        - ${MASON} install clang-format 3.8.1 && PATH=$(${MASON} prefix clang-format 3.8.1)/bin:${PATH} ./scripts/format.sh
+        - ./scripts/check_taginfo.py taginfo.json profiles/car.lua
+      after_success:
+
+    - os: linux
+      compiler: "gcc-6-debug-cov"
       addons: &gcc6
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['g++-6', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
-      env: CCOMPILER='gcc-6' CXXCOMPILER='g++-6' BUILD_TYPE='Debug' TARGET_ARCH='x86_64-asan' ENABLE_COVERAGE=ON ENABLE_SANITIZER=ON
+      env: CCOMPILER='gcc-6' CXXCOMPILER='g++-6' BUILD_TYPE='Debug' ENABLE_COVERAGE=ON
       after_success:
         - bash <(curl -s https://codecov.io/bash)
+
+    - os: linux
+      compiler: "gcc-6-debug-asan"
+      addons: &gcc6
+        apt:
+          sources: ['ubuntu-toolchain-r-test']
+          packages: ['g++-6', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
+      env: CCOMPILER='gcc-6' CXXCOMPILER='g++-6' BUILD_TYPE='Debug' TARGET_ARCH='x86_64-asan' ENABLE_SANITIZER=ON
 
     - os: linux
       compiler: "clang-4.0-debug"
@@ -247,10 +265,6 @@ before_install:
       fi
     fi
   - |
-    if [ -n "${RUN_CLANG_FORMAT}" ]; then
-      ${MASON} install clang-format 3.8.1 && PATH=$(${MASON} prefix clang-format 3.8.1)/bin:${PATH} ./scripts/format.sh
-    fi
-  - |
     if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
       sudo mdutil -i off /
     fi
@@ -289,10 +303,6 @@ before_install:
   - mkdir ${OSRM_BUILD_DIR}
 
 install:
-  - |
-    if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
-      ./scripts/check_taginfo.py taginfo.json profiles/car.lua
-    fi
   - pushd ${OSRM_BUILD_DIR}
   - |
     cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
