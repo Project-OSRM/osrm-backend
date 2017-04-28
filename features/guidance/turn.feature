@@ -1319,3 +1319,33 @@ Feature: Simple Turns
         When I route I should get
             | waypoints | route           | ref             | turns                                         |
             | a,h       | Road,,,         | C 42,,C 42,C 42 | depart,on ramp right,merge slight left,arrive |
+
+    Scenario: End of road, T-intersection, no obvious turn, only one road allowed
+        Given the node map
+            """
+                           d
+                          .
+            a . b  .  .  c
+                    '   .
+                      'e
+                      .
+                      f
+            """
+
+        And the ways
+            | nodes  | highway      | oneway | ref       |
+            | ab     | primary      |        | B 191     |
+            | bc     | primary      |        | B 191     |
+            | be     | primary_link | yes    |           |
+            | dc     | primary      |        | B 4;B 191 |
+            | ce     | primary      |        | B 4       |
+            | ef     | primary      |        | B 4       |
+
+        And the relations
+            | type        | way:from | way:to | node:via | restriction     |
+            | restriction | bc       | ce     | c        | no_right_turn   |
+            | restriction | be       | ef     | e        | only_right_turn |
+
+       When I route I should get
+            | waypoints | route    | turns                   |
+            | a,d       | ab,dc,dc | depart,turn left,arrive |
