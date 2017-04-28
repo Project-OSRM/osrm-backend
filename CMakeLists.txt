@@ -359,7 +359,7 @@ if("${LINKER_VERSION}" MATCHES "GNU gold" OR "${LINKER_VERSION}" MATCHES "GNU ld
     set(LINKER_FLAGS "${LINKER_FLAGS} -Wl,--gc-sections")
   endif()
   # Default linker optimization flags
-  set(LINKER_FLAGS "${LINKER_FLAGS} -Wl,-O1 -Wl,--hash-style=gnu -Wl,--sort-common")
+  set(LINKER_FLAGS "${LINKER_FLAGS} -Wl,-O1 -Wl,--hash-style=gnu -Wl,--sort-common -Wl,-z,now")
 
 else()
   message(STATUS "Using unknown linker, not setting linker optimizations")
