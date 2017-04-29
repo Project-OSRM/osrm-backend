@@ -41,9 +41,12 @@ struct IOConfig
         mld_graph_path = {osrm_input_path.string() + ".mldgr"};
         level_path = {osrm_input_path.string() + ".level"};
         node_path = {osrm_input_path.string() + ".enw"};
+        edge_based_nodes_data_path = {osrm_input_path.string() + ".nodes_data"};
         edge_based_graph_path = {osrm_input_path.string() + ".ebg"};
         compressed_node_based_graph_path = {osrm_input_path.string() + ".cnbg"};
         cnbg_ebg_mapping_path = {osrm_input_path.string() + ".cnbg_to_ebg"};
+        restriction_path = {osrm_input_path.string() + ".restrictions"};
+        intersection_class_data_path = {osrm_input_path.string() + ".icd"};
     }
 
     boost::filesystem::path osrm_input_path;
@@ -71,9 +74,12 @@ struct IOConfig
     boost::filesystem::path mld_graph_path;
     boost::filesystem::path level_path;
     boost::filesystem::path node_path;
+    boost::filesystem::path edge_based_nodes_data_path;
     boost::filesystem::path edge_based_graph_path;
     boost::filesystem::path compressed_node_based_graph_path;
     boost::filesystem::path cnbg_ebg_mapping_path;
+    boost::filesystem::path restriction_path;
+    boost::filesystem::path intersection_class_data_path;
 
 
 };

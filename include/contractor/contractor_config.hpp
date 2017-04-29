@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef CONTRACTOR_OPTIONS_HPP
 #define CONTRACTOR_OPTIONS_HPP
 
-#include "storage/storage_config.hpp"
+#include "storage/io_config.hpp"
 #include "updater/updater_config.hpp"
 
 #include <boost/filesystem/path.hpp>
