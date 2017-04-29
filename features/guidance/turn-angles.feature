@@ -201,14 +201,14 @@ Feature: Simple Turns
             | ef      | residential  | road | 2     | yes    |
 
        When I route I should get
-            | waypoints | route          | turns                        | locations |
-            | a,c       | road,road      | depart,arrive                | a,c       |
-            | c,a       | road,road      | depart,arrive                | c,a       |
-            | g,a       | turn,road,road | depart,turn left,arrive      | g,b,a     |
-            | g,c       | turn,road,road | depart,turn right,arrive     | g,b,c     |
-            | g,f       | turn,road,road | depart,turn left,arrive      | g,e,f     |
-            | c,f       | road,road,road | depart,continue right,arrive | c,b,f     |
-            | a,f       | road,road,road | depart,continue uturn,arrive | a,b,f     |
+            | waypoints | route          | turns                          | locations |
+            | a,c       | road,road      | depart,arrive                  | a,c       |
+            | c,a       | road,road      | depart,arrive                  | c,a       |
+            | g,a       | turn,road,road | depart,turn left,arrive        | g,b,a     |
+            | g,c       | turn,road,road | depart,turn right,arrive       | g,b,c     |
+            | g,f       | turn,road,road | depart,end of road left,arrive | g,e,f     |
+            | c,f       | road,road,road | depart,turn right,arrive       | c,b,f     |
+            | a,f       | road,road,road | depart,continue uturn,arrive   | a,b,f     |
 
     # http://www.openstreetmap.org/#map=19/52.48753/13.52838
     Scenario: Traffic Circle
@@ -1312,8 +1312,8 @@ Feature: Simple Turns
 
         # we don't care for turn instructions, this is a coordinate extraction bug check
         When I route I should get
-            | waypoints | route      | intersections                                |
-            | a,g       | ab,bcdefgh | true:90,true:45 false:180 false:270;true:180 |
+            | waypoints | route              | intersections                                |
+            | a,g       | ab,bcdefgh,bcdefgh | true:90;true:45 false:180 false:270;true:180 |
 
     #https://github.com/Project-OSRM/osrm-backend/pull/3469#issuecomment-270806580
     Scenario: Oszillating Lower Priority Road

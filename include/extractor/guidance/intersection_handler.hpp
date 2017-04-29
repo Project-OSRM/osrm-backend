@@ -410,14 +410,11 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
             const auto &best_option_data =
                 node_based_graph.GetEdgeData(intersection[best_option].eid);
             const auto adjusted_distinction_ratio = [&]() {
-                // not allowed competitors are easily distinct
-                if (!intersection[index].entry_allowed)
-                    return 0.7 * DISTINCTION_RATIO;
-                // a bit less obvious are road classes
-                else if (in_way_data.road_classification == best_option_data.road_classification &&
-                         best_option_data.road_classification.GetPriority() <
-                             node_based_graph.GetEdgeData(intersection[index].eid)
-                                 .road_classification.GetPriority())
+                // obviousness by road classes
+                if (in_way_data.road_classification == best_option_data.road_classification &&
+                    best_option_data.road_classification.GetPriority() <
+                        node_based_graph.GetEdgeData(intersection[index].eid)
+                            .road_classification.GetPriority())
                     return 0.8 * DISTINCTION_RATIO;
                 // if road classes are the same, we use the full ratio
                 else
