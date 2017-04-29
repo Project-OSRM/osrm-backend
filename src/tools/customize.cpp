@@ -72,7 +72,7 @@ parseArguments(int argc, char *argv[], customizer::CustomizationConfig &customiz
     boost::program_options::options_description hidden_options("Hidden options");
     hidden_options.add_options()(
         "input,i",
-        boost::program_options::value<boost::filesystem::path>(&customization_config.base_path),
+        boost::program_options::value<boost::filesystem::path>(&customization_config.osrm_input_path),
         "Input file in .osrm format");
 
     // positional option
@@ -145,7 +145,7 @@ int main(int argc, char *argv[]) try
     }
 
     // set the default in/output names
-    customization_config.UseDefaults();
+    customization_config.UseDefaultOutputNames();
 
     if (1 > customization_config.requested_num_threads)
     {
@@ -153,9 +153,9 @@ int main(int argc, char *argv[]) try
         return EXIT_FAILURE;
     }
 
-    if (!boost::filesystem::is_regular_file(customization_config.base_path))
+    if (!boost::filesystem::is_regular_file(customization_config.osrm_input_path))
     {
-        util::Log(logERROR) << "Input file " << customization_config.base_path.string()
+        util::Log(logERROR) << "Input file " << customization_config.osrm_input_path.string()
                             << " not found!";
         return EXIT_FAILURE;
     }
