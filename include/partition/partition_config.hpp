@@ -6,12 +6,14 @@
 #include <array>
 #include <string>
 
+#include "storage/io_config.hpp"
+
 namespace osrm
 {
 namespace partition
 {
 
-struct PartitionConfig
+struct PartitionConfig final : storage::IOConfig
 {
     PartitionConfig()
         : requested_num_threads(0), balance(1.2), boundary_factor(0.25), num_optimizing_cuts(10),
@@ -19,42 +21,6 @@ struct PartitionConfig
           max_cell_sizes{128, 128 * 32, 128 * 32 * 16, 128 * 32 * 16 * 32}
     {
     }
-
-    void UseDefaults()
-    {
-        std::string basepath = base_path.string();
-
-        const std::string ext = ".osrm";
-        const auto pos = basepath.find(ext);
-        if (pos != std::string::npos)
-        {
-            basepath.replace(pos, ext.size(), "");
-        }
-        else
-        {
-            // unknown extension
-        }
-
-        edge_based_graph_path = basepath + ".osrm.ebg";
-        compressed_node_based_graph_path = basepath + ".osrm.cnbg";
-        cnbg_ebg_mapping_path = basepath + ".osrm.cnbg_to_ebg";
-        file_index_path = basepath + ".osrm.fileIndex";
-        partition_path = basepath + ".osrm.partition";
-        storage_path = basepath + ".osrm.cells";
-        node_data_path = basepath + ".osrm.ebg_nodes";
-        hsgr_path = basepath + ".osrm.hsgr";
-    }
-
-    // might be changed to the node based graph at some point
-    boost::filesystem::path base_path;
-    boost::filesystem::path edge_based_graph_path;
-    boost::filesystem::path compressed_node_based_graph_path;
-    boost::filesystem::path cnbg_ebg_mapping_path;
-    boost::filesystem::path partition_path;
-    boost::filesystem::path file_index_path;
-    boost::filesystem::path storage_path;
-    boost::filesystem::path node_data_path;
-    boost::filesystem::path hsgr_path;
 
     unsigned requested_num_threads;
 
