@@ -242,10 +242,13 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
     }
     util::Log() << "timestamp: " << timestamp;
 
-    storage::io::FileWriter timestamp_file(config.timestamp_file_name,
-                                           storage::io::FileWriter::GenerateFingerprint);
+    extraction_containers.PrepareData(scripting_environment,
+                                      config.osrm_input_path.string(),
+                                      config.restriction_path.string(),
+                                      config.names_data_path.string());
 
-    timestamp_file.WriteFrom(timestamp.c_str(), timestamp.length());
+    WriteProfileProperties(config.properties_path.string(),
+                           scripting_environment.GetProfileProperties());
 
     std::vector<std::string> restrictions = scripting_environment.GetRestrictions();
     // setup restriction parser
@@ -414,7 +417,7 @@ Extractor::LoadNodeBasedGraph(std::unordered_set<NodeID> &barriers,
                               std::vector<util::Coordinate> &coordiantes,
                               extractor::PackedOSMIDs &osm_node_ids)
 {
-    storage::io::FileReader file_reader(config.output_file_name,
+    storage::io::FileReader file_reader(config.osrm_input_path,
                                         storage::io::FileReader::VerifyFingerprint);
 
     auto barriers_iter = inserter(barriers, end(barriers));
@@ -431,7 +434,7 @@ Extractor::LoadNodeBasedGraph(std::unordered_set<NodeID> &barriers,
 
     if (edge_list.empty())
     {
-        throw util::exception("Node-based-graph (" + config.output_file_name +
+        throw util::exception("Node-based-graph (" + config.osrm_input_path.string() +
                               ") contains no edges." + SOURCE_REF);
     }
 
@@ -469,7 +472,7 @@ Extractor::BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
                               *node_based_graph,
                               compressed_edge_container);
 
-    util::NameTable name_table(config.names_file_name);
+    util::NameTable name_table(config.names_data_path.string());
 
     EdgeBasedGraphFactory edge_based_graph_factory(
         node_based_graph,
@@ -484,12 +487,12 @@ Extractor::BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
         turn_lane_map);
 
     edge_based_graph_factory.Run(scripting_environment,
-                                 config.edge_output_path,
-                                 config.turn_lane_data_file_name,
-                                 config.turn_weight_penalties_path,
-                                 config.turn_duration_penalties_path,
-                                 config.turn_penalties_index_path,
-                                 config.cnbg_ebg_graph_mapping_output_path);
+                                 config.edges_data_path.string(),
+                                 config.turn_lane_data_path.string(),
+                                 config.turn_weight_penalties_path.string(),
+                                 config.turn_duration_penalties_path.string(),
+                                 config.turn_penalties_index_path.string(),
+                                 config.cnbg_ebg_mapping_path.string());
 
     compressed_edge_container.PrintStatistics();
 
@@ -512,7 +515,7 @@ Extractor::BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
 
     compressed_node_based_graph_writing = std::async(std::launch::async, [&] {
         WriteCompressedNodeBasedGraph(
-            config.compressed_node_based_graph_output_path, *node_based_graph, coordinates);
+            config.compressed_node_based_graph_path.string(), *node_based_graph, coordinates);
     });
 
     {
@@ -521,9 +524,9 @@ Extractor::BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
         std::tie(turn_lane_offsets, turn_lane_masks) =
             guidance::transformTurnLaneMapIntoArrays(turn_lane_map);
         files::writeTurnLaneDescriptions(
-            config.turn_lane_descriptions_file_name, turn_lane_offsets, turn_lane_masks);
+            config.turn_lane_description_path, turn_lane_offsets, turn_lane_masks);
     }
-    files::writeSegmentData(config.geometry_output_path,
+    files::writeSegmentData(config.geometries_path,
                             *compressed_edge_container.ToSegmentData());
 
     edge_based_graph_factory.GetEdgeBasedEdges(edge_based_edge_list);
@@ -585,10 +588,10 @@ void Extractor::BuildRTree(std::vector<EdgeBasedNodeSegment> edge_based_node_seg
     edge_based_node_segments.resize(new_size);
 
     TIMER_START(construction);
-    util::StaticRTree<EdgeBasedNodeSegment> rtree(edge_based_node_segments,
-                                                  config.rtree_nodes_output_path,
-                                                  config.rtree_leafs_output_path,
-                                                  coordinates);
+    util::StaticRTree<EdgeBasedNode> rtree(edge_based_node_segments,
+                                           config.ram_index_path.string(),
+                                           config.file_index_path.string(),
+                                           coordinates);
 
     TIMER_STOP(construction);
     util::Log() << "finished r-tree construction in " << TIMER_SEC(construction) << " seconds";
