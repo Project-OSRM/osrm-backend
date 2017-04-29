@@ -42,6 +42,8 @@ struct IOConfig
         level_path = {osrm_input_path.string() + ".level"};
         node_path = {osrm_input_path.string() + ".enw"};
         edge_based_graph_path = {osrm_input_path.string() + ".ebg"};
+        compressed_node_based_graph_path = {osrm_input_path.string() + ".cnbg"};
+        cnbg_ebg_mapping_path = {osrm_input_path.string() + ".cnbg_to_ebg"};
     }
 
     boost::filesystem::path osrm_input_path;
@@ -70,6 +72,10 @@ struct IOConfig
     boost::filesystem::path level_path;
     boost::filesystem::path node_path;
     boost::filesystem::path edge_based_graph_path;
+    boost::filesystem::path compressed_node_based_graph_path;
+    boost::filesystem::path cnbg_ebg_mapping_path;
+
+
 };
 }
 }

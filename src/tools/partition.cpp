@@ -114,7 +114,7 @@ return_code parseArguments(int argc, char *argv[], partition::PartitionConfig &c
     boost::program_options::options_description hidden_options("Hidden options");
     hidden_options.add_options()(
         "input,i",
-        boost::program_options::value<boost::filesystem::path>(&config.base_path),
+        boost::program_options::value<boost::filesystem::path>(&config.osrm_input_path),
         "Input file in .osrm format");
 
     // positional option
@@ -199,7 +199,7 @@ int main(int argc, char *argv[]) try
     }
 
     // set the default in/output names
-    partition_config.UseDefaults();
+    partition_config.UseDefaultOutputNames();
 
     if (1 > partition_config.requested_num_threads)
     {
