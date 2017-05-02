@@ -2,6 +2,7 @@
 #define BINARY_HEAP_H
 
 #include <boost/assert.hpp>
+#include <boost/heap/d_ary_heap.hpp>
 
 #include <algorithm>
 #include <cstddef>
@@ -142,50 +143,38 @@ class BinaryHeap
 
     void Clear()
     {
-        heap.resize(1);
+        heap.clear();
         inserted_nodes.clear();
-        heap[0].weight = std::numeric_limits<Weight>::min();
         node_index.Clear();
     }
 
-    std::size_t Size() const { return (heap.size() - 1); }
+    std::size_t Size() const { return heap.size(); }
 
     bool Empty() const { return 0 == Size(); }
 
     void Insert(NodeID node, Weight weight, const Data &data)
     {
-        HeapElement element;
-        element.index = static_cast<NodeID>(inserted_nodes.size());
-        element.weight = weight;
-        const Key key = static_cast<Key>(heap.size());
-        heap.emplace_back(element);
-        inserted_nodes.emplace_back(node, key, weight, data);
-        node_index[node] = element.index;
-        Upheap(key);
-        CheckHeap();
+        const auto index = static_cast<Key>(inserted_nodes.size());
+        const auto handle = heap.push(std::make_pair(weight, index));
+        inserted_nodes.emplace_back(node, handle, weight, data);
+        node_index[node] = index;
     }
 
     Data &GetData(NodeID node)
     {
-        const Key index = node_index.peek_index(node);
+        const auto index = node_index.peek_index(node);
         return inserted_nodes[index].data;
     }
 
     Data const &GetData(NodeID node) const
     {
-        const Key index = node_index.peek_index(node);
+        const auto index = node_index.peek_index(node);
         return inserted_nodes[index].data;
-    }
-
-    Weight &GetKey(NodeID node)
-    {
-        const Key index = node_index[node];
-        return inserted_nodes[index].weight;
     }
 
     const Weight &GetKey(NodeID node) const
     {
-        const Key index = node_index.peek_index(node);
+        const auto index = node_index.peek_index(node);
         return inserted_nodes[index].weight;
     }
 
@@ -193,7 +182,7 @@ class BinaryHeap
     {
         BOOST_ASSERT(WasInserted(node));
         const Key index = node_index.peek_index(node);
-        return inserted_nodes[index].key == 0;
+        return inserted_nodes[index].handle == HeapHandle{};
     }
 
     bool WasInserted(const NodeID node) const
@@ -208,132 +197,67 @@ class BinaryHeap
 
     NodeID Min() const
     {
-        BOOST_ASSERT(heap.size() > 1);
-        return inserted_nodes[heap[1].index].node;
+        BOOST_ASSERT(!heap.empty());
+        return inserted_nodes[heap.top().second].node;
     }
 
     Weight MinKey() const
     {
-        BOOST_ASSERT(heap.size() > 1);
-        return heap[1].weight;
+        BOOST_ASSERT(!heap.empty());
+        return heap.top().first;
     }
 
     NodeID DeleteMin()
     {
-        BOOST_ASSERT(heap.size() > 1);
-        const Key removedIndex = heap[1].index;
-        heap[1] = heap[heap.size() - 1];
-        heap.pop_back();
-        if (heap.size() > 1)
-        {
-            Downheap(1);
-        }
-        inserted_nodes[removedIndex].key = 0;
-        CheckHeap();
+        BOOST_ASSERT(!heap.empty());
+        const Key removedIndex = heap.top().second;
+        heap.pop();
+        inserted_nodes[removedIndex].handle = HeapHandle{};
         return inserted_nodes[removedIndex].node;
     }
 
     void DeleteAll()
     {
-        auto iend = heap.end();
-        for (auto i = heap.begin() + 1; i != iend; ++i)
-        {
-            inserted_nodes[i->index].key = 0;
-        }
-        heap.resize(1);
-        heap[0].weight = (std::numeric_limits<Weight>::min)();
+        std::for_each(inserted_nodes.begin(), inserted_nodes.end(), [](auto &node) {
+            node.handle = HeapHandle();
+        });
+        heap.clear();
     }
 
     void DecreaseKey(NodeID node, Weight weight)
     {
-        BOOST_ASSERT(std::numeric_limits<NodeID>::max() != node);
-        const Key &index = node_index.peek_index(node);
-        Key &key = inserted_nodes[index].key;
-        BOOST_ASSERT(key >= 0);
-
-        inserted_nodes[index].weight = weight;
-        heap[key].weight = weight;
-        Upheap(key);
-        CheckHeap();
+        BOOST_ASSERT(!WasRemoved(node));
+        const auto index = node_index.peek_index(node);
+        auto &reference = inserted_nodes[index];
+        reference.weight = weight;
+        heap.increase(reference.handle, std::make_pair(weight, index));
     }
 
   private:
+    using HeapData = std::pair<Weight, Key>;
+    using HeapContainer = boost::heap::d_ary_heap<HeapData,
+                                                  boost::heap::arity<4>,
+                                                  boost::heap::mutable_<true>,
+                                                  boost::heap::compare<std::greater<HeapData>>>;
+    using HeapHandle = typename HeapContainer::handle_type;
+
     class HeapNode
     {
       public:
-        HeapNode(NodeID n, Key k, Weight w, Data d) : node(n), key(k), weight(w), data(std::move(d))
+        HeapNode(NodeID n, HeapHandle h, Weight w, Data d)
+            : node(n), handle(h), weight(w), data(std::move(d))
         {
         }
 
         NodeID node;
-        Key key;
+        HeapHandle handle;
         Weight weight;
         Data data;
     };
-    struct HeapElement
-    {
-        Key index;
-        Weight weight;
-    };
 
     std::vector<HeapNode> inserted_nodes;
-    std::vector<HeapElement> heap;
+    HeapContainer heap;
     IndexStorage node_index;
-
-    void Downheap(Key key)
-    {
-        const Key droppingIndex = heap[key].index;
-        const Weight weight = heap[key].weight;
-        const Key heap_size = static_cast<Key>(heap.size());
-        Key nextKey = key << 1;
-        while (nextKey < heap_size)
-        {
-            const Key nextKeyOther = nextKey + 1;
-            if ((nextKeyOther < heap_size) && (heap[nextKey].weight > heap[nextKeyOther].weight))
-            {
-                nextKey = nextKeyOther;
-            }
-            if (weight <= heap[nextKey].weight)
-            {
-                break;
-            }
-            heap[key] = heap[nextKey];
-            inserted_nodes[heap[key].index].key = key;
-            key = nextKey;
-            nextKey <<= 1;
-        }
-        heap[key].index = droppingIndex;
-        heap[key].weight = weight;
-        inserted_nodes[droppingIndex].key = key;
-    }
-
-    void Upheap(Key key)
-    {
-        const Key risingIndex = heap[key].index;
-        const Weight weight = heap[key].weight;
-        Key nextKey = key >> 1;
-        while (heap[nextKey].weight > weight)
-        {
-            BOOST_ASSERT(nextKey != 0);
-            heap[key] = heap[nextKey];
-            inserted_nodes[heap[key].index].key = key;
-            key = nextKey;
-            nextKey >>= 1;
-        }
-        heap[key].index = risingIndex;
-        heap[key].weight = weight;
-        inserted_nodes[risingIndex].key = key;
-    }
-
-    void CheckHeap()
-    {
-#ifndef NDEBUG
-        for (std::size_t i = 2; i < heap.size(); ++i)
-        {
-            BOOST_ASSERT(heap[i].weight >= heap[i >> 1].weight);
-        }
-#endif
-    }
 };
 }
 }
