@@ -151,4 +151,27 @@ BOOST_AUTO_TEST_CASE(test_table_three_coordinates_matrix)
     }
 }
 
+// See https://github.com/Project-OSRM/osrm-backend/pull/3992
+BOOST_AUTO_TEST_CASE(test_table_no_segment_for_some_coordinates)
+{
+    using namespace osrm;
+
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm");
+
+    TableParameters params;
+    params.coordinates.push_back(get_dummy_location());
+    params.coordinates.push_back(get_dummy_location());
+    // resembles query option: `&radiuses=0;`
+    params.radiuses.push_back(boost::make_optional(0.));
+    params.radiuses.push_back(boost::none);
+
+    json::Object result;
+
+    const auto rc = osrm.Table(params, result);
+
+    BOOST_CHECK(rc == Status::Error);
+    const auto code = result.values.at("code").get<json::String>().value;
+    BOOST_CHECK_EQUAL(code, "NoSegment");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
