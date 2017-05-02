@@ -111,20 +111,26 @@ void RoundaboutHandler::invalidateExitAgainstDirection(const NodeID from_nid,
     if (in_edge_data.roundabout || in_edge_data.circular)
         return;
 
-    std::cout << "invalidateExitAgainstDirection\n";
-
     // Find range in which exits that must be invalidated (shaded areas):
-    // exit..end   exit..end  begin..exit for ↺ roundabouts
-    // ⭦           ⭦  ⭩         ⭦
-    //  ⭡⭧          ⭡⭩ ▒       ▒⭨⭡
-    //  ⭡⭦          ⭡⭨▒▒       ▒▒⭡⭨
-    // ⭧▒▒⭦        ⭧▒▒▒▒      ▒▒⭧
+    //   exit..end   exit..end  begin..exit for ↺ roundabouts
+    // *************************************
+    // * <--.   ^    <--.   /     <--.     *
+    // *     | /         | /░         |    *
+    // *     |/          |v░░      -->|    *
+    // *     |^          |\ ░      ░░░|\   *
+    // *     |░\         |░\░      ░░░| \  *
+    // *  --'░░░\     --'░░░v      --'   v *
+    // *************************************
     //
     // begin..exit  begin..exit  exit..end for ↻ roundabouts
-    // ⭨▒▒▒         ⭨▒▒ ⭩        ▒▒⭨
-    //  ⭣⭧▒          ⭣⭩           ▒▒⭣⭧
-    //  ⭣⭦▒          ⭣⭨           ▒⭧⭣
-    // ⭩  ⭦         ⭩              ⭩
+    // *************************************
+    // *  --.░░░^     --.░░░/      --.   ^ *
+    // *     |░/░        |░/       ░░░| /  *
+    // *     |/░░        |v        ░░░|/   *
+    // *     |^░░        |\        -->|    *
+    // *     | \░        | \          |    *
+    // * <--'   \    <--'   v     <--'     *
+    // *************************************
     bool roundabout_entry_first = false;
     auto invalidate_from = intersection.end(), invalidate_to = intersection.end();
     for (auto road = intersection.begin(); road != intersection.end(); ++road)
