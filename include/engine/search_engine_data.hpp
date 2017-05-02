@@ -4,7 +4,7 @@
 #include <boost/thread/tss.hpp>
 
 #include "engine/algorithm.hpp"
-#include "util/binary_heap.hpp"
+#include "util/query_heap.hpp"
 #include "util/typedefs.hpp"
 
 namespace osrm
@@ -14,8 +14,7 @@ namespace engine
 
 // Algorithm-dependent heaps
 // - CH algorithms use CH heaps
-// - CoreCH algorithms use CoreCH heaps that can be upcasted to CH heaps when CH algorithms reused
-//    by CoreCH at calling ch::routingStep, ch::retrievePackedPathFromSingleHeap and ch::unpackPath
+// - CoreCH algorithms use CH
 // - MLD algorithms use MLD heaps
 
 template <typename Algorithm> struct SearchEngineData
@@ -37,14 +36,14 @@ struct ManyToManyHeapData : HeapData
 template <> struct SearchEngineData<routing_algorithms::ch::Algorithm>
 {
     using QueryHeap = util::
-        BinaryHeap<NodeID, NodeID, EdgeWeight, HeapData, util::UnorderedMapStorage<NodeID, int>>;
+        QueryHeap<NodeID, NodeID, EdgeWeight, HeapData, util::UnorderedMapStorage<NodeID, int>>;
     using SearchEngineHeapPtr = boost::thread_specific_ptr<QueryHeap>;
 
-    using ManyToManyQueryHeap = util::BinaryHeap<NodeID,
-                                                 NodeID,
-                                                 EdgeWeight,
-                                                 ManyToManyHeapData,
-                                                 util::UnorderedMapStorage<NodeID, int>>;
+    using ManyToManyQueryHeap = util::QueryHeap<NodeID,
+                                                NodeID,
+                                                EdgeWeight,
+                                                ManyToManyHeapData,
+                                                util::UnorderedMapStorage<NodeID, int>>;
 
     using ManyToManyHeapPtr = boost::thread_specific_ptr<ManyToManyQueryHeap>;
 
@@ -81,11 +80,11 @@ struct MultiLayerDijkstraHeapData
 
 template <> struct SearchEngineData<routing_algorithms::mld::Algorithm>
 {
-    using QueryHeap = util::BinaryHeap<NodeID,
-                                       NodeID,
-                                       EdgeWeight,
-                                       MultiLayerDijkstraHeapData,
-                                       util::UnorderedMapStorage<NodeID, int>>;
+    using QueryHeap = util::QueryHeap<NodeID,
+                                      NodeID,
+                                      EdgeWeight,
+                                      MultiLayerDijkstraHeapData,
+                                      util::UnorderedMapStorage<NodeID, int>>;
 
     using SearchEngineHeapPtr = boost::thread_specific_ptr<QueryHeap>;
 
