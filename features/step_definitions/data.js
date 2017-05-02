@@ -38,7 +38,7 @@ module.exports = function () {
         callback();
     });
 
-    this.Given(/^the origin ([-+]?[0-9]*\.?[0-9]+),([-+]?[0-9]*\.?[0-9]+)$/, (lat, lon, callback) => {
+    this.Given(/^the origin ([-+]?[0-9]*\.?[0-9]+),([-+]?[0-9]*\.?[0-9]+)$/, (lon, lat, callback) => {
         this.setOrigin([parseFloat(lon), parseFloat(lat)]);
         callback();
     });

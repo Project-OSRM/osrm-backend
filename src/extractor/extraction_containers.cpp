@@ -769,6 +769,11 @@ void ExtractionContainers::PrepareRestrictions()
                 }
                 restrictions_iterator->restriction.from.node = id_iter->second;
             }
+            else
+            {
+                // if it's neither, this is an invalid restriction
+                restrictions_iterator->restriction.from.node = SPECIAL_NODEID;
+            }
             ++restrictions_iterator;
         }
 
@@ -858,6 +863,11 @@ void ExtractionContainers::PrepareRestrictions()
                     continue;
                 }
                 restrictions_iterator->restriction.to.node = to_id_iter->second;
+            }
+            else
+            {
+                // if it's neither, this is an invalid restriction
+                restrictions_iterator->restriction.to.node = SPECIAL_NODEID;
             }
             ++restrictions_iterator;
         }
