@@ -156,7 +156,7 @@ class BinaryHeap
     {
         const auto index = static_cast<Key>(inserted_nodes.size());
         const auto handle = heap.push(std::make_pair(weight, index));
-        inserted_nodes.emplace_back(node, handle, weight, data);
+        inserted_nodes.emplace_back(HeapNode{handle, node, weight, data});
         node_index[node] = index;
     }
 
@@ -241,16 +241,10 @@ class BinaryHeap
                                                   boost::heap::compare<std::greater<HeapData>>>;
     using HeapHandle = typename HeapContainer::handle_type;
 
-    class HeapNode
+    struct HeapNode
     {
-      public:
-        HeapNode(NodeID n, HeapHandle h, Weight w, Data d)
-            : node(n), handle(h), weight(w), data(std::move(d))
-        {
-        }
-
-        NodeID node;
         HeapHandle handle;
+        NodeID node;
         Weight weight;
         Data data;
     };
