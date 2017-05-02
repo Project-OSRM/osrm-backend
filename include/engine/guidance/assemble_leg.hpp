@@ -170,10 +170,13 @@ inline RouteLeg assembleLeg(const datafacade::BaseDataFacade &facade,
     weight = weight + target_weight;
     if (route_data.empty())
     {
-        duration -= (target_traversed_in_reverse ? source_node.reverse_duration
-                                                 : source_node.forward_duration);
         weight -=
             (target_traversed_in_reverse ? source_node.reverse_weight : source_node.forward_weight);
+        duration -= (target_traversed_in_reverse ? source_node.reverse_duration
+                                                 : source_node.forward_duration);
+        // use rectified linear unit function to avoid negative duration values
+        // due to flooring errors in phantom snapping
+        duration = std::max(0, duration);
     }
 
     std::string summary;
