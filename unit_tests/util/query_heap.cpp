@@ -1,4 +1,4 @@
-#include "util/binary_heap.hpp"
+#include "util/query_heap.hpp"
 #include "util/typedefs.hpp"
 
 #include <boost/mpl/list.hpp>
@@ -56,7 +56,7 @@ constexpr unsigned NUM_NODES = 100;
 
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(insert_test, T, storage_types, RandomDataFixture<NUM_NODES>)
 {
-    BinaryHeap<TestNodeID, TestKey, TestWeight, TestData, T> heap(NUM_NODES);
+    QueryHeap<TestNodeID, TestKey, TestWeight, TestData, T> heap(NUM_NODES);
 
     TestWeight min_weight = std::numeric_limits<TestWeight>::max();
     TestNodeID min_id;
@@ -89,7 +89,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(insert_test, T, storage_types, RandomDataFixtur
 
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(delete_min_test, T, storage_types, RandomDataFixture<NUM_NODES>)
 {
-    BinaryHeap<TestNodeID, TestKey, TestWeight, TestData, T> heap(NUM_NODES);
+    QueryHeap<TestNodeID, TestKey, TestWeight, TestData, T> heap(NUM_NODES);
 
     for (unsigned idx : order)
     {
@@ -111,7 +111,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(delete_min_test, T, storage_types, RandomDataFi
 
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(delete_all_test, T, storage_types, RandomDataFixture<NUM_NODES>)
 {
-    BinaryHeap<TestNodeID, TestKey, TestWeight, TestData, T> heap(NUM_NODES);
+    QueryHeap<TestNodeID, TestKey, TestWeight, TestData, T> heap(NUM_NODES);
 
     for (unsigned idx : order)
     {
@@ -125,7 +125,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(delete_all_test, T, storage_types, RandomDataFi
 
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(decrease_key_test, T, storage_types, RandomDataFixture<10>)
 {
-    BinaryHeap<TestNodeID, TestKey, TestWeight, TestData, T> heap(10);
+    QueryHeap<TestNodeID, TestKey, TestWeight, TestData, T> heap(10);
 
     for (unsigned idx : order)
     {

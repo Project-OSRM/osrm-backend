@@ -1,7 +1,5 @@
 #include "engine/search_engine_data.hpp"
 
-#include "util/binary_heap.hpp"
-
 namespace osrm
 {
 namespace engine

@@ -1,14 +1,12 @@
-#ifndef BINARY_HEAP_H
-#define BINARY_HEAP_H
+#ifndef OSRM_UTIL_QUERY_HEAP_HPP
+#define OSRM_UTIL_QUERY_HEAP_HPP
 
 #include <boost/assert.hpp>
 #include <boost/heap/d_ary_heap.hpp>
 
 #include <algorithm>
-#include <cstddef>
 #include <limits>
 #include <map>
-#include <type_traits>
 #include <unordered_map>
 #include <vector>
 
@@ -133,13 +131,13 @@ template <typename NodeID,
           typename Weight,
           typename Data,
           typename IndexStorage = ArrayStorage<NodeID, NodeID>>
-class BinaryHeap
+class QueryHeap
 {
   public:
     using WeightType = Weight;
     using DataType = Data;
 
-    explicit BinaryHeap(std::size_t maxID) : node_index(maxID) { Clear(); }
+    explicit QueryHeap(std::size_t maxID) : node_index(maxID) { Clear(); }
 
     void Clear()
     {
@@ -256,4 +254,4 @@ class BinaryHeap
 }
 }
 
-#endif // BINARY_HEAP_H
+#endif // OSRM_UTIL_QUERY_HEAP_HPP
