@@ -318,31 +318,30 @@ search(SearchEngineData<Algorithm> &engine_working_data,
     return std::make_tuple(weight, std::move(unpacked_nodes), std::move(unpacked_edges));
 }
 
-// TODO reorder parameters
-// Alias to be compatible with the overload for CoreCH that needs 4 heaps for shortest path search
+// Alias to be compatible with the CH-based search
 inline void search(SearchEngineData<Algorithm> &engine_working_data,
                    const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
                    SearchEngineData<Algorithm>::QueryHeap &forward_heap,
                    SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
                    EdgeWeight &weight,
-                   std::vector<NodeID> &packed_leg,
+                   std::vector<NodeID> &unpacked_nodes,
                    const bool force_loop_forward,
                    const bool force_loop_reverse,
                    const PhantomNodes &phantom_nodes,
                    const EdgeWeight weight_upper_bound = INVALID_EDGE_WEIGHT)
 {
     // TODO: change search calling interface to use unpacked_edges result
-    std::tie(weight, packed_leg, std::ignore) = mld::search(engine_working_data,
-                                                            facade,
-                                                            forward_heap,
-                                                            reverse_heap,
-                                                            force_loop_forward,
-                                                            force_loop_reverse,
-                                                            weight_upper_bound,
-                                                            phantom_nodes);
+    std::tie(weight, unpacked_nodes, std::ignore) = search(engine_working_data,
+                                                           facade,
+                                                           forward_heap,
+                                                           reverse_heap,
+                                                           force_loop_forward,
+                                                           force_loop_reverse,
+                                                           weight_upper_bound,
+                                                           phantom_nodes);
 }
 
-// TODO: remove CH-related stub
+// TODO: refactor CH-related stub to use unpacked_edges
 template <typename RandomIter, typename FacadeT>
 void unpackPath(const FacadeT &facade,
                 RandomIter packed_path_begin,
