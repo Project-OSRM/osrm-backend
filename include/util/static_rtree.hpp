@@ -385,10 +385,12 @@ class StaticRTree
 
                 // Now, for each column we generated, sort those by latitude, so the data
                 // is ready for the subsequent tile-by-tile processing in the next loop.
-                tbb::parallel_do(tiles, [&](const std::pair<EdgeIndex, EdgeIndex> tile) {
-                    tbb::parallel_sort(
-                        edges.begin() + tile.first, edges.begin() + tile.second, latitude_compare);
-                });
+                tbb::parallel_do(
+                    tiles.begin(), tiles.end(), [&](const std::pair<EdgeIndex, EdgeIndex> tile) {
+                        tbb::parallel_sort(edges.begin() + tile.first,
+                                           edges.begin() + tile.second,
+                                           latitude_compare);
+                    });
             }
 
             // Because we used a queue above, the m_search_tree vector is sorted in
