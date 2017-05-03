@@ -456,7 +456,7 @@ test('route: throws on bad hints', function(assert) {
 });
 
 test('route: routes Monaco with valid radius values', function(assert) {
-    assert.plan(3);
+    assert.plan(4);
     var osrm = new OSRM(monaco_path);
     var options = {
         coordinates: two_test_coordinates,
@@ -470,6 +470,10 @@ test('route: routes Monaco with valid radius values', function(assert) {
         assert.ifError(err);
     });
     options.radiuses = [100, null];
+    osrm.route(options, function(err, route) {
+        assert.ifError(err);
+    });
+    options.radiuses = [100, 'unlimited'];
     osrm.route(options, function(err, route) {
         assert.ifError(err);
     });
