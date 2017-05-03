@@ -84,7 +84,7 @@ void checkWeightsConsistency(
 
     for (auto &edge : edge_based_edge_list)
     {
-        const auto node_id = turn_data.GetNodeID(edge.data.turn_id);
+        const auto node_id = edge.source;
         const auto geometry_id = node_data.GetGeometryID(node_id);
 
         if (geometry_id.forward)
@@ -537,8 +537,8 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
         std::transform(updated_turn_penalties.begin(),
                        updated_turn_penalties.end(),
                        updated_segments.begin() + offset,
-                       [&node_data, &turn_data](const std::uint64_t turn_id) {
-                           const auto node_id = turn_data.GetNodeID(turn_id);
+                       [&node_data, &edge_based_edge_list](const std::uint64_t turn_id) {
+                           const auto node_id = edge_based_edge_list[turn_id].source;
                            return node_data.GetGeometryID(node_id);
                        });
     }
@@ -598,7 +598,7 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
                       });
 
     const auto update_edge = [&](extractor::EdgeBasedEdge &edge) {
-        const auto node_id = turn_data.GetNodeID(edge.data.turn_id);
+        const auto node_id = edge.source;
         const auto geometry_id = node_data.GetGeometryID(node_id);
         auto updated_iter = std::lower_bound(updated_segments.begin(),
                                              updated_segments.end(),

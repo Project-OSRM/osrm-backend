@@ -234,7 +234,6 @@ void Storage::PopulateLayout(DataLayout &layout)
         const auto number_of_original_edges = edges_file.ReadElementCount64();
 
         // note: settings this all to the same size is correct, we extract them from the same struct
-        layout.SetBlockSize<NodeID>(DataLayout::EDGE_BASED_NODE_ID_LIST, number_of_original_edges);
         layout.SetBlockSize<util::guidance::TurnBearing>(DataLayout::PRE_TURN_BEARING,
                                                          number_of_original_edges);
         layout.SetBlockSize<util::guidance::TurnBearing>(DataLayout::POST_TURN_BEARING,
@@ -605,11 +604,6 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
 
     // Load original edge data
     {
-        auto node_id_list_ptr = layout.GetBlockPtr<NodeID, true>(
-            memory_ptr, storage::DataLayout::EDGE_BASED_NODE_ID_LIST);
-        util::vector_view<NodeID> node_ids(
-            node_id_list_ptr, layout.num_entries[storage::DataLayout::EDGE_BASED_NODE_ID_LIST]);
-
         const auto lane_data_id_ptr =
             layout.GetBlockPtr<LaneDataID, true>(memory_ptr, storage::DataLayout::LANE_DATA_ID);
         util::vector_view<LaneDataID> lane_data_ids(
@@ -636,8 +630,7 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
         util::vector_view<util::guidance::TurnBearing> post_turn_bearings(
             post_turn_bearing_ptr, layout.num_entries[storage::DataLayout::POST_TURN_BEARING]);
 
-        extractor::TurnDataView turn_data(std::move(node_ids),
-                                          std::move(turn_instructions),
+        extractor::TurnDataView turn_data(std::move(turn_instructions),
                                           std::move(lane_data_ids),
                                           std::move(entry_class_ids),
                                           std::move(pre_turn_bearings),

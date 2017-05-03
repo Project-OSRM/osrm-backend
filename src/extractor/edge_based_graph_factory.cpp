@@ -495,7 +495,6 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
                     // the following is the core of the loop.
                     turn_data_container.push_back(
-                        edge_data1.edge_id,
                         turn.instruction,
                         turn.lane_data_id,
                         entry_class_id,

@@ -59,7 +59,6 @@ template <storage::Ownership Ownership>
 inline void read(storage::io::FileReader &reader,
                  detail::TurnDataContainerImpl<Ownership> &turn_data_container)
 {
-    storage::serialization::read(reader, turn_data_container.node_data_ids);
     storage::serialization::read(reader, turn_data_container.turn_instructions);
     storage::serialization::read(reader, turn_data_container.lane_data_ids);
     storage::serialization::read(reader, turn_data_container.entry_class_ids);
@@ -71,7 +70,6 @@ template <storage::Ownership Ownership>
 inline void write(storage::io::FileWriter &writer,
                   const detail::TurnDataContainerImpl<Ownership> &turn_data_container)
 {
-    storage::serialization::write(writer, turn_data_container.node_data_ids);
     storage::serialization::write(writer, turn_data_container.turn_instructions);
     storage::serialization::write(writer, turn_data_container.lane_data_ids);
     storage::serialization::write(writer, turn_data_container.entry_class_ids);

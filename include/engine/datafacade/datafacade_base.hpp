@@ -79,8 +79,6 @@ class BaseDataFacade
     // Gets the name of a datasource
     virtual StringView GetDatasourceName(const DatasourceID id) const = 0;
 
-    virtual NodeID GetEdgeBasedNodeID(const NodeID id) const = 0;
-
     virtual extractor::guidance::TurnInstruction
     GetTurnInstructionForEdgeID(const EdgeID id) const = 0;
 

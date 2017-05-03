@@ -174,7 +174,6 @@ class MockBaseDataFacade : public engine::datafacade::BaseDataFacade
 
     unsigned GetCheckSum() const override { return 0; }
 
-    NodeID GetEdgeBasedNodeID(const NodeID /*id*/) const override { return 0; }
     extractor::TravelMode GetTravelMode(const NodeID /* id */) const override
     {
         return TRAVEL_MODE_INACCESSIBLE;
