@@ -15,13 +15,12 @@ template <typename AlgorithmT>
 InternalRouteResult
 extractRoute(const datafacade::ContiguousInternalMemoryDataFacade<AlgorithmT> &facade,
              const EdgeWeight weight,
-             const NodeID source_node,
-             const NodeID target_node,
-             const std::vector<EdgeID> &edges,
-             const PhantomNodes &nodes)
+             const PhantomNodes &phantom_nodes,
+             const std::vector<NodeID> &unpacked_nodes,
+             const std::vector<EdgeID> &unpacked_edges)
 {
     InternalRouteResult raw_route_data;
-    raw_route_data.segment_end_coordinates = {nodes};
+    raw_route_data.segment_end_coordinates = {phantom_nodes};
     // No path found for both target nodes?
     if (INVALID_EDGE_WEIGHT == weight)
     {
@@ -33,15 +32,14 @@ extractRoute(const datafacade::ContiguousInternalMemoryDataFacade<AlgorithmT> &f
     raw_route_data.shortest_path_length = weight;
     raw_route_data.unpacked_path_segments.resize(1);
     raw_route_data.source_traversed_in_reverse.push_back(
-        (source_node != nodes.source_phantom.forward_segment_id.id));
+        (unpacked_nodes.front() != phantom_nodes.source_phantom.forward_segment_id.id));
     raw_route_data.target_traversed_in_reverse.push_back(
-        (target_node != nodes.target_phantom.forward_segment_id.id));
+        (unpacked_nodes.back() != phantom_nodes.target_phantom.forward_segment_id.id));
 
     annotatePath(facade,
-                 source_node,
-                 target_node,
-                 edges,
-                 nodes,
+                 phantom_nodes,
+                 unpacked_nodes,
+                 unpacked_edges,
                  raw_route_data.unpacked_path_segments.front());
 
     return raw_route_data;
@@ -81,22 +79,26 @@ InternalRouteResult directShortestPathSearchImpl(
            DO_NOT_FORCE_LOOPS,
            phantom_nodes);
 
+    std::vector<NodeID> unpacked_nodes;
     std::vector<EdgeID> unpacked_edges;
-    auto source_node = SPECIAL_NODEID, target_node = SPECIAL_NODEID;
+
     if (!packed_leg.empty())
     {
-        source_node = packed_leg.front();
-        target_node = packed_leg.back();
+        unpacked_nodes.reserve(packed_leg.size());
         unpacked_edges.reserve(packed_leg.size());
-        ch::unpackPath(
-            facade,
-            packed_leg.begin(),
-            packed_leg.end(),
-            [&facade, &unpacked_edges](std::pair<NodeID, NodeID> & /* edge */,
-                                       const auto &edge_id) { unpacked_edges.push_back(edge_id); });
+        unpacked_nodes.push_back(packed_leg.front());
+        ch::unpackPath(facade,
+                       packed_leg.begin(),
+                       packed_leg.end(),
+                       [&unpacked_nodes, &unpacked_edges](std::pair<NodeID, NodeID> &edge,
+                                                          const auto &edge_id) {
+                           BOOST_ASSERT(edge.first == unpacked_nodes.back());
+                           unpacked_nodes.push_back(edge.second);
+                           unpacked_edges.push_back(edge_id);
+                       });
     }
 
-    return extractRoute(facade, weight, source_node, target_node, unpacked_edges, phantom_nodes);
+    return extractRoute(facade, weight, phantom_nodes, unpacked_nodes, unpacked_edges);
 }
 
 } // namespace ch
@@ -130,18 +132,18 @@ InternalRouteResult directShortestPathSearch(
     // TODO: when structured bindings will be allowed change to
     // auto [weight, source_node, target_node, unpacked_edges] = ...
     EdgeWeight weight;
-    NodeID source_node, target_node;
+    std::vector<NodeID> unpacked_nodes;
     std::vector<EdgeID> unpacked_edges;
-    std::tie(weight, source_node, target_node, unpacked_edges) = mld::search(engine_working_data,
-                                                                             facade,
-                                                                             forward_heap,
-                                                                             reverse_heap,
-                                                                             DO_NOT_FORCE_LOOPS,
-                                                                             DO_NOT_FORCE_LOOPS,
-                                                                             INVALID_EDGE_WEIGHT,
-                                                                             phantom_nodes);
+    std::tie(weight, unpacked_nodes, unpacked_edges) = mld::search(engine_working_data,
+                                                                   facade,
+                                                                   forward_heap,
+                                                                   reverse_heap,
+                                                                   DO_NOT_FORCE_LOOPS,
+                                                                   DO_NOT_FORCE_LOOPS,
+                                                                   INVALID_EDGE_WEIGHT,
+                                                                   phantom_nodes);
 
-    return extractRoute(facade, weight, source_node, target_node, unpacked_edges, phantom_nodes);
+    return extractRoute(facade, weight, phantom_nodes, unpacked_nodes, unpacked_edges);
 }
 
 } // namespace routing_algorithms
