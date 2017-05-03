@@ -180,7 +180,6 @@ void EdgeBasedGraphFactory::Run(ScriptingEnvironment &scripting_environment,
     TIMER_STOP(renumber);
 
     TIMER_START(generate_nodes);
-    m_edge_based_node_weights.reserve(m_max_edge_id + 1);
     {
         auto mapping = GenerateEdgeExpandedNodes();
         files::writeNBGMapping(cnbg_ebg_mapping_path, mapping);
@@ -208,6 +207,9 @@ void EdgeBasedGraphFactory::Run(ScriptingEnvironment &scripting_environment,
 /// Returns the number of edge based nodes.
 unsigned EdgeBasedGraphFactory::RenumberEdges()
 {
+    // heuristic: node-based graph node is a simple intersection with four edges (edge-based nodes)
+    m_edge_based_node_weights.reserve(4 * m_node_based_graph->GetNumberOfNodes());
+
     // renumber edge based node of outgoing edges
     unsigned numbered_edges_count = 0;
     for (const auto current_node : util::irange(0u, m_node_based_graph->GetNumberOfNodes()))
