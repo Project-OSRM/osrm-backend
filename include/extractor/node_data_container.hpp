@@ -32,31 +32,37 @@ namespace detail
 template <storage::Ownership Ownership> class EdgeBasedNodeDataContainerImpl
 {
     template <typename T> using Vector = util::ViewOrVector<T, Ownership>;
+    using TravelMode = extractor::TravelMode;
 
   public:
     EdgeBasedNodeDataContainerImpl() = default;
 
+    EdgeBasedNodeDataContainerImpl(std::size_t size)
+        : geometry_ids(size), name_ids(size), travel_modes(size)
+    {
+    }
+
     EdgeBasedNodeDataContainerImpl(Vector<GeometryID> geometry_ids,
                                    Vector<NameID> name_ids,
-                                   Vector<extractor::TravelMode> travel_modes)
+                                   Vector<TravelMode> travel_modes)
         : geometry_ids(std::move(geometry_ids)), name_ids(std::move(name_ids)),
           travel_modes(std::move(travel_modes))
     {
     }
 
-    GeometryID GetGeometryID(const NodeID id) const { return geometry_ids[id]; }
+    GeometryID GetGeometryID(const NodeID node_id) const { return geometry_ids[node_id]; }
 
-    extractor::TravelMode GetTravelMode(const NodeID id) const { return travel_modes[id]; }
+    TravelMode GetTravelMode(const NodeID node_id) const { return travel_modes[node_id]; }
 
-    NameID GetNameID(const NodeID id) const { return name_ids[id]; }
+    NameID GetNameID(const NodeID node_id) const { return name_ids[node_id]; }
 
     // Used by EdgeBasedGraphFactory to fill data structure
     template <typename = std::enable_if<Ownership == storage::Ownership::Container>>
-    void push_back(GeometryID geometry_id, NameID name_id, extractor::TravelMode travel_mode)
+    void SetData(NodeID node_id, GeometryID geometry_id, NameID name_id, TravelMode travel_mode)
     {
-        geometry_ids.push_back(geometry_id);
-        name_ids.push_back(name_id);
-        travel_modes.push_back(travel_mode);
+        geometry_ids[node_id] = geometry_id;
+        name_ids[node_id] = name_id;
+        travel_modes[node_id] = travel_mode;
     }
 
     friend void serialization::read<Ownership>(storage::io::FileReader &reader,
@@ -68,7 +74,7 @@ template <storage::Ownership Ownership> class EdgeBasedNodeDataContainerImpl
   private:
     Vector<GeometryID> geometry_ids;
     Vector<NameID> name_ids;
-    Vector<extractor::TravelMode> travel_modes;
+    Vector<TravelMode> travel_modes;
 };
 }
 

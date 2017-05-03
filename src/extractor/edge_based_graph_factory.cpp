@@ -168,7 +168,7 @@ NBGToEBG EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const N
 }
 
 void EdgeBasedGraphFactory::Run(ScriptingEnvironment &scripting_environment,
-                                const std::string &nodes_data_filename,
+                                const std::string &node_data_filename,
                                 const std::string &turn_data_filename,
                                 const std::string &turn_lane_data_filename,
                                 const std::string &turn_weight_penalties_filename,
@@ -182,18 +182,13 @@ void EdgeBasedGraphFactory::Run(ScriptingEnvironment &scripting_environment,
 
     TIMER_START(generate_nodes);
     {
-        auto mapping = GenerateEdgeExpandedNodes();
+        auto mapping = GenerateEdgeExpandedNodes(node_data_filename);
         files::writeNBGMapping(cnbg_ebg_mapping_path, mapping);
     }
     TIMER_STOP(generate_nodes);
 
-    TIMER_START(generate_nodes_data);
-    auto index_nbg_edgeid_to_ebg_nodeid = GenerateEdgeExpandedNodesData(nodes_data_filename);
-    TIMER_STOP(generate_nodes_data);
-
     TIMER_START(generate_edges);
     GenerateEdgeExpandedEdges(scripting_environment,
-                              index_nbg_edgeid_to_ebg_nodeid,
                               turn_data_filename,
                               turn_lane_data_filename,
                               turn_weight_penalties_filename,
@@ -244,7 +239,8 @@ unsigned EdgeBasedGraphFactory::RenumberEdges()
 }
 
 /// Creates the nodes in the edge expanded graph from edges in the node-based graph.
-std::vector<NBGToEBG> EdgeBasedGraphFactory::GenerateEdgeExpandedNodes()
+std::vector<NBGToEBG>
+EdgeBasedGraphFactory::GenerateEdgeExpandedNodes(const std::string &node_data_filename)
 {
     std::vector<NBGToEBG> mapping;
 
@@ -293,53 +289,52 @@ std::vector<NBGToEBG> EdgeBasedGraphFactory::GenerateEdgeExpandedNodes()
     BOOST_ASSERT(m_edge_based_node_list.size() == m_edge_based_node_is_startpoint.size());
     BOOST_ASSERT(m_max_edge_id + 1 == m_edge_based_node_weights.size());
 
+    {
+        // TODO: refactor saving edge-based node data with InsertEdgeBasedNode
+        EdgeBasedNodeDataExternalContainer ebg_node_data_container(m_max_edge_id + 1);
+
+        for (const auto nbg_node_id : util::irange(0u, m_node_based_graph->GetNumberOfNodes()))
+        {
+            for (const auto nbg_edge_id : m_node_based_graph->GetAdjacentEdgeRange(nbg_node_id))
+            {
+                const auto &nbg_edge_data = m_node_based_graph->GetEdgeData(nbg_edge_id);
+
+                if (nbg_edge_data.edge_id == SPECIAL_EDGEID)
+                    continue;
+
+                const bool is_encoded_forwards =
+                    m_compressed_edge_container.HasZippedEntryForForwardID(nbg_edge_id);
+                const bool is_encoded_backwards =
+                    m_compressed_edge_container.HasZippedEntryForReverseID(nbg_edge_id);
+
+                BOOST_ASSERT(is_encoded_forwards || is_encoded_backwards);
+
+                auto geometry_id =
+                    is_encoded_forwards
+                        ? m_compressed_edge_container.GetZippedPositionForForwardID(nbg_edge_id)
+                        : is_encoded_backwards
+                              ? m_compressed_edge_container.GetZippedPositionForReverseID(
+                                    nbg_edge_id)
+                              : SPECIAL_GEOMETRYID;
+
+                ebg_node_data_container.SetData(nbg_edge_data.edge_id,
+                                                GeometryID{geometry_id, is_encoded_forwards},
+                                                nbg_edge_data.name_id,
+                                                nbg_edge_data.travel_mode);
+            }
+        }
+
+        files::writeNodeData(node_data_filename, ebg_node_data_container);
+    }
+
     util::Log() << "Generated " << m_edge_based_node_list.size() << " nodes in edge-expanded graph";
 
     return mapping;
 }
 
 /// Actually it also generates turn data and serializes them...
-std::unordered_map<EdgeID, NodeID>
-EdgeBasedGraphFactory::GenerateEdgeExpandedNodesData(const std::string &node_data_filename) const
-{
-    // parallel_for( blocked_range<int>( 0, n ), avg, auto_partitioner( ) );
-
-    NodeID ebg_node_id = 0;
-    std::unordered_map<EdgeID, NodeID> index;
-    EdgeBasedNodeDataExternalContainer node_data_container;
-    for (auto node_id : util::irange(0u, m_node_based_graph->GetNumberOfNodes()))
-    {
-        for (auto edge_id : m_node_based_graph->GetAdjacentEdgeRange(node_id))
-        {
-            const EdgeData &edge_data = m_node_based_graph->GetEdgeData(edge_id);
-            const bool is_encoded_forwards =
-                m_compressed_edge_container.HasZippedEntryForForwardID(edge_id);
-            const bool is_encoded_backwards =
-                m_compressed_edge_container.HasZippedEntryForReverseID(edge_id);
-            if (is_encoded_forwards || is_encoded_backwards)
-            {
-                auto geometry_id =
-                    is_encoded_forwards
-                        ? m_compressed_edge_container.GetZippedPositionForForwardID(edge_id)
-                        : m_compressed_edge_container.GetZippedPositionForReverseID(edge_id);
-
-                BOOST_ASSERT(index.find(edge_id) == index.end());
-                index.insert({edge_id, ebg_node_id++});
-                node_data_container.push_back(GeometryID{geometry_id, is_encoded_forwards},
-                                              edge_data.name_id,
-                                              edge_data.travel_mode);
-            }
-        }
-    }
-
-    files::writeNodeData(node_data_filename, node_data_container);
-    return index;
-}
-
-/// Actually it also generates turn data and serializes them...
 void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     ScriptingEnvironment &scripting_environment,
-    const std::unordered_map<EdgeID, NodeID> &nbg_edgeid_to_ebg_nodeid,
     const std::string &turn_data_filename,
     const std::string &turn_lane_data_filename,
     const std::string &turn_weight_penalties_filename,
@@ -499,10 +494,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                     BOOST_ASSERT(!edge_data2.reversed);
 
                     // the following is the core of the loop.
-                    BOOST_ASSERT(nbg_edgeid_to_ebg_nodeid.find(incoming_edge) !=
-                                 nbg_edgeid_to_ebg_nodeid.end());
                     turn_data_container.push_back(
-                        nbg_edgeid_to_ebg_nodeid.find(incoming_edge)->second,
+                        edge_data1.edge_id,
                         turn.instruction,
                         turn.lane_data_id,
                         entry_class_id,
