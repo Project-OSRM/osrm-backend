@@ -222,11 +222,12 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
         // u-------------v
         // |   |---------| source_weight
         // |         |---| target_weight
+        BOOST_ASSERT(target_weight >= source_weight);
         const EdgeWeight weight = target_weight - source_weight;
-        BOOST_ASSERT(weight >= 0);
 
         // use rectified linear unit function to avoid negative duration values
         // due to flooring errors in phantom snapping
+        BOOST_ASSERT(target_duration >= source_duration || weight == 0);
         const EdgeWeight duration = std::max(0, target_duration - source_duration);
 
         steps.push_back(RouteStep{source_node.name_id,
