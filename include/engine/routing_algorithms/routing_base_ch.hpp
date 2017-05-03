@@ -299,22 +299,25 @@ void unpackPath(const FacadeT &facade,
     const auto nodes_number = std::distance(packed_path_begin, packed_path_end);
     BOOST_ASSERT(nodes_number > 0);
 
+    std::vector<NodeID> unpacked_nodes;
     std::vector<EdgeID> unpacked_edges;
+    unpacked_nodes.reserve(nodes_number);
+    unpacked_edges.reserve(nodes_number);
 
-    auto source_node = *packed_path_begin, target_node = *packed_path_begin;
+    unpacked_nodes.push_back(*packed_path_begin);
     if (nodes_number > 1)
     {
-        target_node = *std::prev(packed_path_end);
-        unpacked_edges.reserve(std::distance(packed_path_begin, packed_path_end));
-        unpackPath(
-            facade,
-            packed_path_begin,
-            packed_path_end,
-            [&facade, &unpacked_edges](std::pair<NodeID, NodeID> & /* edge */,
-                                       const auto &edge_id) { unpacked_edges.push_back(edge_id); });
+        unpackPath(facade,
+                   packed_path_begin,
+                   packed_path_end,
+                   [&](std::pair<NodeID, NodeID> &edge, const auto &edge_id) {
+                       BOOST_ASSERT(edge.first == unpacked_nodes.back());
+                       unpacked_nodes.push_back(edge.second);
+                       unpacked_edges.push_back(edge_id);
+                   });
     }
 
-    annotatePath(facade, source_node, target_node, unpacked_edges, phantom_nodes, unpacked_path);
+    annotatePath(facade, phantom_nodes, unpacked_nodes, unpacked_edges, unpacked_path);
 }
 
 /**

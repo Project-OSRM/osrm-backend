@@ -93,38 +93,38 @@ void insertNodesInHeaps(Heap &forward_heap, Heap &reverse_heap, const PhantomNod
 
 template <typename FacadeT>
 void annotatePath(const FacadeT &facade,
-                  const NodeID source_node,
-                  const NodeID target_node,
-                  const std::vector<EdgeID> &unpacked_edges,
                   const PhantomNodes &phantom_node_pair,
+                  const std::vector<NodeID> &unpacked_nodes,
+                  const std::vector<EdgeID> &unpacked_edges,
                   std::vector<PathData> &unpacked_path)
 {
-    BOOST_ASSERT(source_node != SPECIAL_NODEID && target_node != SPECIAL_NODEID);
-    BOOST_ASSERT(!unpacked_edges.empty() || source_node == target_node);
+    BOOST_ASSERT(!unpacked_nodes.empty());
+    BOOST_ASSERT(unpacked_nodes.size() == unpacked_edges.size() + 1);
 
     const bool start_traversed_in_reverse =
-        phantom_node_pair.source_phantom.forward_segment_id.id != source_node;
+        phantom_node_pair.source_phantom.forward_segment_id.id != unpacked_nodes.front();
     const bool target_traversed_in_reverse =
-        phantom_node_pair.target_phantom.forward_segment_id.id != target_node;
+        phantom_node_pair.target_phantom.forward_segment_id.id != unpacked_nodes.back();
 
-    BOOST_ASSERT(phantom_node_pair.source_phantom.forward_segment_id.id == source_node ||
-                 phantom_node_pair.source_phantom.reverse_segment_id.id == source_node);
-    BOOST_ASSERT(phantom_node_pair.target_phantom.forward_segment_id.id == target_node ||
-                 phantom_node_pair.target_phantom.reverse_segment_id.id == target_node);
+    BOOST_ASSERT(phantom_node_pair.source_phantom.forward_segment_id.id == unpacked_nodes.front() ||
+                 phantom_node_pair.source_phantom.reverse_segment_id.id == unpacked_nodes.front());
+    BOOST_ASSERT(phantom_node_pair.target_phantom.forward_segment_id.id == unpacked_nodes.back() ||
+                 phantom_node_pair.target_phantom.reverse_segment_id.id == unpacked_nodes.back());
 
-    for (auto edge_id : unpacked_edges)
+    auto node_from = unpacked_nodes.begin(), node_last = std::prev(unpacked_nodes.end());
+    for (auto edge = unpacked_edges.begin(); node_from != node_last; ++node_from, ++edge)
     {
-        const auto &edge_data = facade.GetEdgeData(edge_id);
-        const auto turn_id = edge_data.turn_id;                      // edge-based edge ID
-        const auto ebg_node_id = facade.GetEdgeBasedNodeID(turn_id); // edge-based source node ID
-        const auto name_index = facade.GetNameIndex(ebg_node_id);
+        const auto &edge_data = facade.GetEdgeData(*edge);
+        const auto turn_id = edge_data.turn_id; // edge-based graph edge index
+        const auto node_id = *node_from;        // edge-based graph node index
+        const auto name_index = facade.GetNameIndex(node_id);
         const auto turn_instruction = facade.GetTurnInstructionForEdgeID(turn_id);
         const extractor::TravelMode travel_mode =
             (unpacked_path.empty() && start_traversed_in_reverse)
                 ? phantom_node_pair.source_phantom.backward_travel_mode
-                : facade.GetTravelMode(ebg_node_id);
+                : facade.GetTravelMode(node_id);
 
-        const auto geometry_index = facade.GetGeometryIndex(ebg_node_id);
+        const auto geometry_index = facade.GetGeometryIndex(node_id);
         std::vector<NodeID> id_vector;
 
         std::vector<EdgeWeight> weight_vector;

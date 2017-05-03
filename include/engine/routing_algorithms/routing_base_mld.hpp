@@ -180,7 +180,7 @@ void routingStep(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm>
 }
 
 template <typename... Args>
-std::tuple<EdgeWeight, NodeID, NodeID, std::vector<EdgeID>>
+std::tuple<EdgeWeight, std::vector<NodeID>, std::vector<EdgeID>>
 search(SearchEngineData<Algorithm> &engine_working_data,
        const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
        SearchEngineData<Algorithm>::QueryHeap &forward_heap,
@@ -235,8 +235,7 @@ search(SearchEngineData<Algorithm> &engine_working_data,
     // No path found for both target nodes?
     if (weight >= weight_upper_bound || SPECIAL_NODEID == middle)
     {
-        return std::make_tuple(
-            INVALID_EDGE_WEIGHT, SPECIAL_NODEID, SPECIAL_NODEID, std::vector<EdgeID>());
+        return std::make_tuple(INVALID_EDGE_WEIGHT, std::vector<NodeID>(), std::vector<EdgeID>());
     }
 
     // Get packed path as edges {from node ID, to node ID, edge ID}
@@ -260,11 +259,14 @@ search(SearchEngineData<Algorithm> &engine_working_data,
         current_node = parent_node;
         parent_node = reverse_heap.GetData(parent_node).parent;
     }
-    const NodeID target_node = current_node;
 
     // Unpack path
-    std::vector<EdgeID> unpacked_path;
-    unpacked_path.reserve(packed_path.size());
+    std::vector<NodeID> unpacked_nodes;
+    std::vector<EdgeID> unpacked_edges;
+    unpacked_nodes.reserve(packed_path.size());
+    unpacked_edges.reserve(packed_path.size());
+
+    unpacked_nodes.push_back(source_node);
     for (auto const &packed_edge : packed_path)
     {
         NodeID source, target;
@@ -272,7 +274,8 @@ search(SearchEngineData<Algorithm> &engine_working_data,
         std::tie(source, target, overlay_edge) = packed_edge;
         if (!overlay_edge)
         { // a base graph edge
-            unpacked_path.push_back(facade.FindEdge(source, target));
+            unpacked_nodes.push_back(target);
+            unpacked_edges.push_back(facade.FindEdge(source, target));
         }
         else
         { // an overlay graph edge
@@ -291,26 +294,28 @@ search(SearchEngineData<Algorithm> &engine_working_data,
             // TODO: when structured bindings will be allowed change to
             // auto [subpath_weight, subpath_source, subpath_target, subpath] = ...
             EdgeWeight subpath_weight;
-            NodeID subpath_source, subpath_target;
-            std::vector<EdgeID> subpath;
-            std::tie(subpath_weight, subpath_source, subpath_target, subpath) =
-                search(engine_working_data,
-                       facade,
-                       forward_heap,
-                       reverse_heap,
-                       force_loop_forward,
-                       force_loop_reverse,
-                       INVALID_EDGE_WEIGHT,
-                       sublevel,
-                       parent_cell_id);
-            BOOST_ASSERT(!subpath.empty());
-            BOOST_ASSERT(subpath_source == source);
-            BOOST_ASSERT(subpath_target == target);
-            unpacked_path.insert(unpacked_path.end(), subpath.begin(), subpath.end());
+            std::vector<NodeID> subpath_nodes;
+            std::vector<EdgeID> subpath_edges;
+            std::tie(subpath_weight, subpath_nodes, subpath_edges) = search(engine_working_data,
+                                                                            facade,
+                                                                            forward_heap,
+                                                                            reverse_heap,
+                                                                            force_loop_forward,
+                                                                            force_loop_reverse,
+                                                                            INVALID_EDGE_WEIGHT,
+                                                                            sublevel,
+                                                                            parent_cell_id);
+            BOOST_ASSERT(!subpath_edges.empty());
+            BOOST_ASSERT(subpath_nodes.size() > 1);
+            BOOST_ASSERT(subpath_nodes.front() == source);
+            BOOST_ASSERT(subpath_nodes.back() == target);
+            unpacked_nodes.insert(
+                unpacked_nodes.end(), std::next(subpath_nodes.begin()), subpath_nodes.end());
+            unpacked_edges.insert(unpacked_edges.end(), subpath_edges.begin(), subpath_edges.end());
         }
     }
 
-    return std::make_tuple(weight, source_node, target_node, std::move(unpacked_path));
+    return std::make_tuple(weight, std::move(unpacked_nodes), std::move(unpacked_edges));
 }
 
 // TODO reorder parameters
@@ -326,27 +331,18 @@ inline void search(SearchEngineData<Algorithm> &engine_working_data,
                    const PhantomNodes &phantom_nodes,
                    const EdgeWeight weight_upper_bound = INVALID_EDGE_WEIGHT)
 {
-    NodeID source_node, target_node;
-    std::vector<EdgeID> unpacked_edges;
-    std::tie(weight, source_node, target_node, unpacked_edges) = mld::search(engine_working_data,
-                                                                             facade,
-                                                                             forward_heap,
-                                                                             reverse_heap,
-                                                                             force_loop_forward,
-                                                                             force_loop_reverse,
-                                                                             weight_upper_bound,
-                                                                             phantom_nodes);
-
-    if (weight != INVALID_EDGE_WEIGHT)
-    {
-        packed_leg.push_back(source_node);
-        std::transform(unpacked_edges.begin(),
-                       unpacked_edges.end(),
-                       std::back_inserter(packed_leg),
-                       [&facade](const auto edge) { return facade.GetTarget(edge); });
-    }
+    // TODO: change search calling interface to use unpacked_edges result
+    std::tie(weight, packed_leg, std::ignore) = mld::search(engine_working_data,
+                                                            facade,
+                                                            forward_heap,
+                                                            reverse_heap,
+                                                            force_loop_forward,
+                                                            force_loop_reverse,
+                                                            weight_upper_bound,
+                                                            phantom_nodes);
 }
 
+// TODO: remove CH-related stub
 template <typename RandomIter, typename FacadeT>
 void unpackPath(const FacadeT &facade,
                 RandomIter packed_path_begin,
@@ -357,21 +353,24 @@ void unpackPath(const FacadeT &facade,
     const auto nodes_number = std::distance(packed_path_begin, packed_path_end);
     BOOST_ASSERT(nodes_number > 0);
 
+    std::vector<NodeID> unpacked_nodes;
     std::vector<EdgeID> unpacked_edges;
+    unpacked_nodes.reserve(nodes_number);
+    unpacked_edges.reserve(nodes_number);
 
-    auto source_node = *packed_path_begin, target_node = *packed_path_begin;
-
+    unpacked_nodes.push_back(*packed_path_begin);
     if (nodes_number > 1)
     {
-        target_node = *std::prev(packed_path_end);
-        util::for_each_pair(packed_path_begin,
-                            packed_path_end,
-                            [&facade, &unpacked_edges](const auto from, const auto to) {
-                                unpacked_edges.push_back(facade.FindEdge(from, to));
-                            });
+        util::for_each_pair(
+            packed_path_begin,
+            packed_path_end,
+            [&facade, &unpacked_nodes, &unpacked_edges](const auto from, const auto to) {
+                unpacked_nodes.push_back(to);
+                unpacked_edges.push_back(facade.FindEdge(from, to));
+            });
     }
 
-    annotatePath(facade, source_node, target_node, unpacked_edges, phantom_nodes, unpacked_path);
+    annotatePath(facade, phantom_nodes, unpacked_nodes, unpacked_edges, unpacked_path);
 }
 
 inline double
@@ -390,22 +389,23 @@ getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
     insertNodesInHeaps(forward_heap, reverse_heap, phantom_nodes);
 
     EdgeWeight weight;
-    NodeID source_node, target_node;
+    std::vector<NodeID> unpacked_nodes;
     std::vector<EdgeID> unpacked_edges;
-    std::tie(weight, source_node, target_node, unpacked_edges) = search(engine_working_data,
-                                                                        facade,
-                                                                        forward_heap,
-                                                                        reverse_heap,
-                                                                        DO_NOT_FORCE_LOOPS,
-                                                                        DO_NOT_FORCE_LOOPS,
-                                                                        weight_upper_bound,
-                                                                        phantom_nodes);
+    std::tie(weight, unpacked_nodes, unpacked_edges) = search(engine_working_data,
+                                                              facade,
+                                                              forward_heap,
+                                                              reverse_heap,
+                                                              DO_NOT_FORCE_LOOPS,
+                                                              DO_NOT_FORCE_LOOPS,
+                                                              weight_upper_bound,
+                                                              phantom_nodes);
 
     if (weight == INVALID_EDGE_WEIGHT)
         return std::numeric_limits<double>::max();
 
     std::vector<PathData> unpacked_path;
-    annotatePath(facade, source_node, target_node, unpacked_edges, phantom_nodes, unpacked_path);
+
+    annotatePath(facade, phantom_nodes, unpacked_nodes, unpacked_edges, unpacked_path);
 
     return getPathDistance(facade, unpacked_path, source_phantom, target_phantom);
 }
