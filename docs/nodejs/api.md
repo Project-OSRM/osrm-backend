@@ -33,13 +33,13 @@ var osrm = new OSRM('network.osrm');
 
 Each OSRM method (except for `OSRM.tile()`) has set of general options as well as unique options, outlined below.
 
-| Option          | Values                                                  | Description                                                                                            | Format                                                                         |
-| --------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------ |
-| coordinates     | `array` of `coordinate` elements: `[{coordinate}, ...]` | The coordinates this request will use.                                                                 | `array` with `[{lon},{lat}]` values, in decimal degrees                        |
-| bearings        | `array` of `bearing` elements: `[{bearing}, ...]`       | Limits the search to segments with given bearing in degrees towards true north in clockwise direction. | `null` or `array` with `[{value},{range}]` `integer 0 .. 360,integer 0 .. 180` |
-| radiuses        | `array` of `radius` elements: `[{radius}, ...]`         | Limits the search to given radius in meters.                                                           | `null` or `double >= 0` or `unlimited` (default)                               |
-| hints           | `array` of `hint` elements: `[{hint}, ...]`             | Hint to derive position in street network.                                                             | Base64 `string`                                                                |
-| generate\_hints | `true` (default) or `false`                             | Adds a Hint to the response which can be used in subsequent requests, see `hints` parameter.           | `Boolean`                                                                      |
+| Option          | Values                                                  | Description                                                                                            | Format                                                                                   |
+| --------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------- |
+| coordinates     | `array` of `coordinate` elements: `[{coordinate}, ...]` | The coordinates this request will use.                                                                 | `array` with `[{lon},{lat}]` values, in decimal degrees                                  |
+| bearings        | `array` of `bearing` elements: `[{bearing}, ...]`       | Limits the search to segments with given bearing in degrees towards true north in clockwise direction. | `null` or `array` with `null` or `[{value},{range}]` `integer 0 .. 360,integer 0 .. 180` |
+| radiuses        | `array` of `radius` elements: `[{radius}, ...]`         | Limits the search to given radius in meters.                                                           | `null` or `double >= 0` or `unlimited` (default)                                         |
+| hints           | `array` of `hint` elements: `[{hint}, ...]`             | Hint to derive position in street network.                                                             | Base64 `string`                                                                          |
+| generate\_hints | `true` (default) or `false`                             | Adds a Hint to the response which can be used in subsequent requests, see `hints` parameter.           | `Boolean`                                                                                |
 
 ## route
 
