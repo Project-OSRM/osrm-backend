@@ -4,6 +4,10 @@ cmake_minimum_required(VERSION 3.1)
 
 message(STATUS "Building node_osrm")
 
+if (NOT EXISTS "${PROJECT_SOURCE_DIR}/node_modules")
+  message(FATAL_ERROR "NodeJs bindings require NAN, get it via: npm install --ignore-scripts")
+endif()
+
 set(BINDING_DIR "${PROJECT_SOURCE_DIR}/lib/binding")
 
 include(NodeJS)
