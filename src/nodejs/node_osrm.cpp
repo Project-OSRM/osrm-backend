@@ -183,7 +183,7 @@ inline void async(const Nan::FunctionCallbackInfo<v8::Value> &info,
  * @param {Array} [options.coordinates] The coordinates this request will use, coordinates as `[{lon},{lat}]` values, in decimal degrees.
  * @param {Array} [options.bearings] Limits the search to segments with given bearing in degrees towards true north in clockwise direction.
  *                                   Can be `null` or an array of `[{value},{range}]` with `integer 0 .. 360,integer 0 .. 180`.
- * @param {Array} [options.radiuses] Limits the coordinate snapping to streets in the given radius in meters. Can be `null` or `double >= 0` or `unlimited` (default).
+ * @param {Array} [options.radiuses] Limits the coordinate snapping to streets in the given radius in meters. Can be `null` (unlimited, default) or `double >= 0`.
  * @param {Array} [options.hints] Hints for the coordinate snapping. Array of base64 encoded strings.
  * @param {Boolean} [options.alternatives=false] Search for alternative routes and return as well.
  * *Please note that even if an alternative route is requested, a result cannot be guaranteed.*
@@ -223,7 +223,7 @@ NAN_METHOD(Engine::route) //
  * @param {Array} [options.coordinates] The coordinates this request will use, coordinates as `[{lon},{lat}]` values, in decimal degrees.
  * @param {Array} [options.bearings] Limits the search to segments with given bearing in degrees towards true north in clockwise direction.
  *                                   Can be `null` or an array of `[{value},{range}]` with `integer 0 .. 360,integer 0 .. 180`.
- * @param {Array} [options.radiuses] Limits the coordinate snapping to streets in the given radius in meters. Can be `null` or `double >= 0` or `unlimited` (default).
+ * @param {Array} [options.radiuses] Limits the coordinate snapping to streets in the given radius in meters. Can be `null` (unlimited, default) or `double >= 0`.
  * @param {Array} [options.hints] Hints for the coordinate snapping. Array of base64 encoded strings.
  * @param {Number} [options.number=1] Number of nearest segments that should be returned.
  * Must be an integer greater than or equal to `1`.
@@ -261,7 +261,7 @@ NAN_METHOD(Engine::nearest) //
  * @param {Array} [options.coordinates] The coordinates this request will use, coordinates as `[{lon},{lat}]` values, in decimal degrees.
  * @param {Array} [options.bearings] Limits the search to segments with given bearing in degrees towards true north in clockwise direction.
  *                                   Can be `null` or an array of `[{value},{range}]` with `integer 0 .. 360,integer 0 .. 180`.
- * @param {Array} [options.radiuses] Limits the coordinate snapping to streets in the given radius in meters. Can be `null` or `double >= 0` or `unlimited` (default).
+ * @param {Array} [options.radiuses] Limits the coordinate snapping to streets in the given radius in meters. Can be `null` (unlimited, default) or `double >= 0`.
  * @param {Array} [options.hints] Hints for the coordinate snapping. Array of base64 encoded strings.
  * @param {Array} [options.sources] An array of `index` elements (`0 <= integer < #coordinates`) to
  * use
@@ -342,14 +342,13 @@ NAN_METHOD(Engine::tile)
  * @param {Array} [options.coordinates] The coordinates this request will use, coordinates as `[{lon},{lat}]` values, in decimal degrees.
  * @param {Array} [options.bearings] Limits the search to segments with given bearing in degrees towards true north in clockwise direction.
  *                                   Can be `null` or an array of `[{value},{range}]` with `integer 0 .. 360,integer 0 .. 180`.
- * @param {Array} [options.radiuses] Limits the coordinate snapping to streets in the given radius in meters. Can be `null` or `double >= 0` or `unlimited` (default).
  * @param {Array} [options.hints] Hints for the coordinate snapping. Array of base64 encoded strings.
  * @param {Boolean} [options.steps=false] Return route steps for each route.
  * @param {Array|Boolean} [options.annotations=false] An array with strings of `duration`, `nodes`, `distance`, `weight`, `datasources`, `speed` or boolean for enabling/disabling all.
  * @param {String} [options.geometries=polyline] Returned route geometry format (influences overview and per step). Can also be `geojson`.
  * @param {String} [options.overview=simplified] Add overview geometry either `full`, `simplified` according to highest zoom level it could be display on, or not at all (`false`).
  * @param {Array<Number>} [options.timestamps] Timestamp of the input location (integers, UNIX-like timestamp).
- * @param {Array} [options.radiuses] Standard deviation of GPS precision used for map matching. If applicable use GPS accuracy (`double >= 0`, default `5m`).
+ * @param {Array} [options.radiuses] Standard deviation of GPS precision used for map matching. If applicable use GPS accuracy. Can be `null` for default value `5` meters or `double >= 0`.
  * @param {Function} callback
  *
  * @returns {Object} containing `tracepoints` and `matchings`.
@@ -408,7 +407,7 @@ NAN_METHOD(Engine::match) //
  * @param {Array} [options.coordinates] The coordinates this request will use, coordinates as `[{lon},{lat}]` values, in decimal degrees.
  * @param {Array} [options.bearings] Limits the search to segments with given bearing in degrees towards true north in clockwise direction.
  *                                   Can be `null` or an array of `[{value},{range}]` with `integer 0 .. 360,integer 0 .. 180`.
- * @param {Array} [options.radiuses] Limits the coordinate snapping to streets in the given radius in meters. Can be `null` or `double >= 0` or `unlimited` (default).
+ * @param {Array} [options.radiuses] Limits the coordinate snapping to streets in the given radius in meters. Can be `double >= 0` or `null` (unlimited, default).
  * @param {Array} [options.hints] Hints for the coordinate snapping. Array of base64 encoded strings.
  * @param {Boolean} [options.steps=false] Return route steps for each route.
  * @param {Array|Boolean} [options.annotations=false] An array with strings of `duration`, `nodes`, `distance`, `weight`, `datasources`, `speed` or boolean for enabling/disabling all.
