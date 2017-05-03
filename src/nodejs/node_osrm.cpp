@@ -66,20 +66,12 @@ NAN_MODULE_INIT(Engine::Init)
  * var osrm = new OSRM('network.osrm');
  * ```
  *
- * @param {Object} [options={shared_memory: true}] Options for creating an OSRM object.
+ * @param {Object|String} [options={shared_memory: true}] Options for creating an OSRM object or string to the `.osrm` file.
  * @param {String} [options.algorithm] The algorithm to use for routing. Can be 'CH', 'CoreCH' or 'MLD'. Default is 'CH'.
  *        Make sure you prepared the dataset with the correct toolchain.
  * @param {Boolean} [options.shared_memory] Connects to the persistent shared memory datastore.
  *        This requires you to run `osrm-datastore` prior to creating an `OSRM` object.
  * @param {String} [options.path] The path to the `.osrm` files. This is mutually exclusive with setting {options.shared_memory} to true.
- *
- * @class OSRM
- *
- */
-/**
- * Constructs an `OSRM` object directly from a path.
- *
- * @param {string} [path] The path to the `.osrm` files.
  *
  * @class OSRM
  *
@@ -196,8 +188,7 @@ inline void async(const Nan::FunctionCallbackInfo<v8::Value> &info,
  * @param {Boolean} [options.alternatives=false] Search for alternative routes and return as well.
  * *Please note that even if an alternative route is requested, a result cannot be guaranteed.*
  * @param {Boolean} [options.steps=false] Return route steps for each route leg.
- * @param {Boolean} [options.annotations=false] Return annotations for each route leg.
- * @param {Array} [options.annotations] An array with strings of `duration`, `nodes`, `distance`, `weight`, `datasources`, `speed`.
+ * @param {Array|Boolean} [options.annotations=false] An array with strings of `duration`, `nodes`, `distance`, `weight`, `datasources`, `speed` or boolean for enabling/disabling all.
  * @param {String} [options.geometries=polyline] Returned route geometry format (influences overview and per step). Can also be `geojson`.
  * @param {String} [options.overview=simplified] Add overview geometry either `full`, `simplified` according to highest zoom level it could be display on, or not at all (`false`).
  * @param {Boolean} [options.continue_straight] Forces the route to keep going straight at waypoints and don't do a uturn even if it would be faster. Default value depends on the profile.
@@ -354,8 +345,7 @@ NAN_METHOD(Engine::tile)
  * @param {Array} [options.radiuses] Limits the coordinate snapping to streets in the given radius in meters. Can be `null` or `double >= 0` or `unlimited` (default).
  * @param {Array} [options.hints] Hints for the coordinate snapping. Array of base64 encoded strings.
  * @param {Boolean} [options.steps=false] Return route steps for each route.
- * @param {Boolean} [options.annotations=false] Return annotations for each route leg.
- * @param {Array} [options.annotations] An array with strings of `duration`, `nodes`, `distance`, `weight`, `datasources`, `speed`.
+ * @param {Array|Boolean} [options.annotations=false] An array with strings of `duration`, `nodes`, `distance`, `weight`, `datasources`, `speed` or boolean for enabling/disabling all.
  * @param {String} [options.geometries=polyline] Returned route geometry format (influences overview and per step). Can also be `geojson`.
  * @param {String} [options.overview=simplified] Add overview geometry either `full`, `simplified` according to highest zoom level it could be display on, or not at all (`false`).
  * @param {Array<Number>} [options.timestamps] Timestamp of the input location (integers, UNIX-like timestamp).
@@ -421,8 +411,7 @@ NAN_METHOD(Engine::match) //
  * @param {Array} [options.radiuses] Limits the coordinate snapping to streets in the given radius in meters. Can be `null` or `double >= 0` or `unlimited` (default).
  * @param {Array} [options.hints] Hints for the coordinate snapping. Array of base64 encoded strings.
  * @param {Boolean} [options.steps=false] Return route steps for each route.
- * @param {Boolean} [options.annotations=false] Return annotations for each route leg.
- * @param {Array} [options.annotations] An array with strings of `duration`, `nodes`, `distance`, `weight`, `datasources`, `speed`.
+ * @param {Array|Boolean} [options.annotations=false] An array with strings of `duration`, `nodes`, `distance`, `weight`, `datasources`, `speed` or boolean for enabling/disabling all.
  * @param {String} [options.geometries=polyline] Returned route geometry format (influences overview and per step). Can also be `geojson`.
  * @param {String} [options.overview=simplified] Add overview geometry either `full`, `simplified`
  * @param {Function} callback
