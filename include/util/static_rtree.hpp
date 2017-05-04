@@ -55,7 +55,7 @@ namespace util
 // are computed, this means the internal distance metric doesn not represent meters!
 template <class EdgeDataT,
           storage::Ownership Ownership = storage::Ownership::Container,
-          std::uint32_t BRANCHING_FACTOR = 63>
+          std::uint32_t BRANCHING_FACTOR = 64>
 class StaticRTree
 {
     template <typename T> using Vector = ViewOrVector<T, Ownership>;
@@ -268,7 +268,7 @@ class StaticRTree
                     // Calculate the bounding-box for this leaf node based on the
                     // endpoints of the EdgeDataT values contained within
                     std::for_each(edges.begin() + current_tile.left_edge_index,
-                                  edges.begin() + current_tile.right_edge_index,
+                                  edges.begin() + current_tile.left_edge_index + number_of_edges,
                                   [this, &leaf_node](const EdgeDataT &edge) {
                                       Coordinate projected_u{web_mercator::fromWGS84(
                                           Coordinate{m_coordinate_list[edge.u]})};
@@ -596,32 +596,24 @@ class StaticRTree
                 const auto &current_candidate =
                     CandidateSegment{current_query_node.fixed_projected_coordinate, edge_data};
 
-                /*
-                                std::clog << "Selecting item at " <<
-                   current_query_node.squared_min_dist
-                                          << std::endl;
-                                          */
-                // to allow returns of no-results if too restrictive filtering, this needs
-                // to be
-                // done here even though performance would indicate that we want to stop
-                // after
+                // to allow returns of no-results if too restrictive filtering, this needs to be
+                // done here even though performance would indicate that we want to stop after
                 // adding the first candidate
                 if (terminate(results.size(), current_candidate))
                 {
-                    // std::clog << "Terminating" << std::endl;
                     break;
                 }
 
+                // Check if either directino of the segment passes our filter.  If not
+                // continue to the next candidate
                 auto use_segment = filter(current_candidate);
                 if (!use_segment.first && !use_segment.second)
                 {
-                    // std::clog << "Can't use" << std::endl;
                     continue;
                 }
                 edge_data.forward_segment_id.enabled &= use_segment.first;
                 edge_data.reverse_segment_id.enabled &= use_segment.second;
 
-                // std::clog << "Pushing result" << std::endl;
                 // store phantom node in result vector
                 results.push_back(std::move(edge_data));
             }
