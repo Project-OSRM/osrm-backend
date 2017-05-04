@@ -1,3 +1,10 @@
+# 5.7.1
+  - Changes from 5.7.0:
+    - Bug fixes:
+     - Fixes 3995: Negative duration caused by rounding issues.
+     - Fixes 3977: Fixes exit number in roundabout if starting inside the roundabout
+     - Fixes 3981: The NodeJS documentation was outdated and incomplete.
+
 # 5.7.0
   - Changes from 5.6
     - Bug fixes:
