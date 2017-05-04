@@ -101,6 +101,10 @@ local profile = {
    	'tertiary_link'
   },
 
+  service_penalties = {
+    alley             = 0.5,
+  },
+
   bicycle_speeds = {
     cycleway = default_speed,
     primary = default_speed,
@@ -480,29 +484,29 @@ function way_function (way, result)
   limit( result, maxspeed, maxspeed_forward, maxspeed_backward )
 
   -- convert duration into cyclability
-  local is_unsafe = profile.safety_penalty < 1 and profile.unsafe_highway_list[data.highway]
-  if result.forward_speed > 0 then
-    -- convert from km/h to m/s
-    result.forward_rate = result.forward_speed / 3.6;
-    if is_unsafe then
-      result.forward_rate = result.forward_rate * profile.safety_penalty
-    end
-  end
-  if result.backward_speed > 0 then
-    -- convert from km/h to m/s
-    result.backward_rate = result.backward_speed / 3.6;
-    if is_unsafe then
-      result.backward_rate = result.backward_rate * profile.safety_penalty
-    end
-  end
-  if result.duration > 0 then
-    result.weight = result.duration;
-    if is_unsafe then
-      result.weight = result.weight * (1+profile.safety_penalty)
-    end
-  end
+  if properties.weight_name == 'cyclability' then
+      local is_unsafe = profile.safety_penalty < 1 and profile.unsafe_highway_list[data.highway]
+      local is_undesireable = data.highway == "service" and profile.service_penalties[service]
+      local penalty = 1.0
+      if is_unsafe then
+        penalty = math.min(penalty, profile.safety_penalty)
+      end
+      if is_undesireable then
+        penalty = math.min(penalty, profile.service_penalties[service])
+      end
 
-
+      if result.forward_speed > 0 then
+        -- convert from km/h to m/s
+        result.forward_rate = result.forward_speed / 3.6 * penalty
+      end
+      if result.backward_speed > 0 then
+        -- convert from km/h to m/s
+        result.backward_rate = result.backward_speed / 3.6 * penalty
+      end
+      if result.duration > 0 then
+        result.weight = result.duration / penalty
+      end
+  end
 
   local handlers = Sequence {
     -- compute speed taking into account way type, maxspeed tags, etc.
