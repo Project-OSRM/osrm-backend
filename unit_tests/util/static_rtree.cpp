@@ -253,7 +253,7 @@ void build_rtree(const std::string &prefix,
     nodes_path = prefix + ".ramIndex";
     leaves_path = prefix + ".fileIndex";
 
-    RTreeT r(fixture->edges, nodes_path, leaves_path, fixture->coords);
+    RTreeT r(std::move(fixture->edges), nodes_path, leaves_path, fixture->coords);
 }
 
 template <typename RTreeT = TestStaticRTree, typename FixtureT>
