@@ -8,9 +8,9 @@ Feature: Traffic - speeds
                 /  |
               f    5
            //  \   4
-          //     \ |g
+          /7     \ 6g
          d--- e --1b
-          \        |
+          \        8
             \      |
               \    |
                 \  |
@@ -146,13 +146,13 @@ Feature: Traffic - speeds
 
         When I route I should get
           | from | to | route    | speed   | weights     | a:datasources |
-          | a    | b  | fb,fb    | 36 km/h | 38.3,0      | 0:0           |
+          | a    | 6  | fb,fb    | 36 km/h | 30.7,0      | 0             |
           | a    | c  | fb,bc,bc | 30 km/h | 38.3,66.7,0 | 0:1           |
           | b    | c  | bc,bc    | 27 km/h | 66.7,0      | 1             |
-          | a    | d  | fb,df,df | 36 km/h | 0.7,39,0    | 0:0           |
+          | a    | 7  | fb,df,df | 36 km/h | 0.7,25,0    | 0:0           |
           | d    | c  | dc,dc    | 36 km/h | 70.7,0      | 0:1           |
-          | g    | b  | fb,fb    | 36 km/h | 10.8,0      | 0:0           |
-          | a    | g  | fb,fb    | 36 km/h | 27.5,0      | 0             |
+          | g    | 8  | fb,bc    | 29 km/h | 17.7,0      | 0:1           |
+          | a    | g  | fb,fb    | 36 km/h | 33.9,0      | 0             |
 
 
     Scenario: Verify that negative values cause an error, they're not valid at all
