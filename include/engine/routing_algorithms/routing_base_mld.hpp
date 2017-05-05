@@ -190,6 +190,10 @@ search(SearchEngineData<Algorithm> &engine_working_data,
        EdgeWeight weight_upper_bound,
        Args... args)
 {
+    if (forward_heap.Empty() || reverse_heap.Empty())
+    {
+        return std::make_tuple(INVALID_EDGE_WEIGHT, std::vector<NodeID>(), std::vector<EdgeID>());
+    }
 
     const auto &partition = facade.GetMultiLevelPartition();
 
@@ -387,7 +391,7 @@ getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
     const PhantomNodes phantom_nodes{source_phantom, target_phantom};
     insertNodesInHeaps(forward_heap, reverse_heap, phantom_nodes);
 
-    EdgeWeight weight;
+    EdgeWeight weight = INVALID_EDGE_WEIGHT;
     std::vector<NodeID> unpacked_nodes;
     std::vector<EdgeID> unpacked_edges;
     std::tie(weight, unpacked_nodes, unpacked_edges) = search(engine_working_data,
@@ -400,7 +404,9 @@ getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
                                                               phantom_nodes);
 
     if (weight == INVALID_EDGE_WEIGHT)
+    {
         return std::numeric_limits<double>::max();
+    }
 
     std::vector<PathData> unpacked_path;
 
