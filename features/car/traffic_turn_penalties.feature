@@ -48,7 +48,6 @@ Feature: Traffic - turn penalties
             | mn    | primary |
             | mp    | primary |
         And the profile "car"
-        And the extract extra arguments "--generate-edge-lookup"
 
     Scenario: Weighting not based on turn penalty file
         When I route I should get

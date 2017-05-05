@@ -22,7 +22,6 @@ Feature: Traffic - speeds
           | df    | primary |
           | fb    | primary |
         And the profile "testbot"
-        And the extract extra arguments "--generate-edge-lookup"
 
 
     Scenario: Weighting based on speed file
