@@ -28,7 +28,7 @@ RUN NPROC=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || 1) && \
     echo "Building OSRM ${DOCKER_TAG}" && \
     cd /src && \
     git show --format="%H" | head -n1 > /opt/OSRM_GITSHA && \
-    echo "Building OSRM gitsha ${cat /opt/OSRM_GITSHA}" && \
+    echo "Building OSRM gitsha $(cat /opt/OSRM_GITSHA)" && \
     mkdir build && \
     cd build && \
     cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DENABLE_LTO=On .. && \
