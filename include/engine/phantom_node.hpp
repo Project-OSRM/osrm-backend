@@ -46,37 +46,6 @@ namespace engine
 
 struct PhantomNode
 {
-    PhantomNode(SegmentID forward_segment_id,
-                SegmentID reverse_segment_id,
-                unsigned name_id,
-                EdgeWeight forward_weight,
-                EdgeWeight reverse_weight,
-                EdgeWeight forward_weight_offset,
-                EdgeWeight reverse_weight_offset,
-                EdgeWeight forward_duration,
-                EdgeWeight reverse_duration,
-                EdgeWeight forward_duration_offset,
-                EdgeWeight reverse_duration_offset,
-                unsigned packed_geometry_id_,
-                bool is_tiny_component,
-                unsigned component_id,
-                util::Coordinate location,
-                util::Coordinate input_location,
-                unsigned short fwd_segment_position,
-                extractor::TravelMode forward_travel_mode,
-                extractor::TravelMode backward_travel_mode)
-        : forward_segment_id(forward_segment_id), reverse_segment_id(reverse_segment_id),
-          name_id(name_id), forward_weight(forward_weight), reverse_weight(reverse_weight),
-          forward_weight_offset(forward_weight_offset),
-          reverse_weight_offset(reverse_weight_offset), forward_duration(forward_duration),
-          reverse_duration(reverse_duration), forward_duration_offset(forward_duration_offset),
-          reverse_duration_offset(reverse_duration_offset), packed_geometry_id(packed_geometry_id_),
-          component{component_id, is_tiny_component}, location(std::move(location)),
-          input_location(std::move(input_location)), fwd_segment_position(fwd_segment_position),
-          forward_travel_mode(forward_travel_mode), backward_travel_mode(backward_travel_mode)
-    {
-    }
-
     PhantomNode()
         : forward_segment_id{SPECIAL_SEGMENTID, false},
           reverse_segment_id{SPECIAL_SEGMENTID, false},
@@ -86,7 +55,9 @@ struct PhantomNode
           forward_duration_offset(0), reverse_duration_offset(0),
           packed_geometry_id(SPECIAL_GEOMETRYID), component{INVALID_COMPONENTID, false},
           fwd_segment_position(0), forward_travel_mode(TRAVEL_MODE_INACCESSIBLE),
-          backward_travel_mode(TRAVEL_MODE_INACCESSIBLE)
+          backward_travel_mode(TRAVEL_MODE_INACCESSIBLE), is_forward_valid_source(false),
+          is_forward_valid_target(false), is_reverse_valid_source(false),
+          is_reverse_valid_target(false)
     {
     }
 
@@ -134,6 +105,23 @@ struct PhantomNode
 
     bool IsValid() const { return location.IsValid() && (name_id != INVALID_NAMEID); }
 
+    bool IsForwardValidSource() const
+    {
+        return forward_segment_id.enabled && is_forward_valid_source;
+    }
+    bool IsForwardValidTarget() const
+    {
+        return forward_segment_id.enabled && is_forward_valid_target;
+    }
+    bool IsReverseValidSource() const
+    {
+        return reverse_segment_id.enabled && is_reverse_valid_source;
+    }
+    bool IsReverseValidTarget() const
+    {
+        return reverse_segment_id.enabled && is_reverse_valid_target;
+    }
+
     bool operator==(const PhantomNode &other) const { return location == other.location; }
 
     template <class OtherT>
@@ -146,6 +134,10 @@ struct PhantomNode
                          EdgeWeight reverse_duration,
                          EdgeWeight forward_duration_offset,
                          EdgeWeight reverse_duration_offset,
+                         bool is_forward_valid_source,
+                         bool is_forward_valid_target,
+                         bool is_reverse_valid_source,
+                         bool is_reverse_valid_target,
                          const util::Coordinate location,
                          const util::Coordinate input_location)
         : forward_segment_id{other.forward_segment_id},
@@ -159,7 +151,11 @@ struct PhantomNode
           component{other.component.id, other.component.is_tiny}, location{location},
           input_location{input_location}, fwd_segment_position{other.fwd_segment_position},
           forward_travel_mode{other.forward_travel_mode},
-          backward_travel_mode{other.backward_travel_mode}
+          backward_travel_mode{other.backward_travel_mode},
+          is_forward_valid_source{is_forward_valid_source},
+          is_forward_valid_target{is_forward_valid_target},
+          is_reverse_valid_source{is_reverse_valid_source},
+          is_reverse_valid_target{is_reverse_valid_target}
     {
     }
 
@@ -187,8 +183,14 @@ struct PhantomNode
     unsigned short fwd_segment_position;
     // note 4 bits would suffice for each,
     // but the saved byte would be padding anyway
-    extractor::TravelMode forward_travel_mode;
-    extractor::TravelMode backward_travel_mode;
+    extractor::TravelMode forward_travel_mode : 4;
+    extractor::TravelMode backward_travel_mode : 4;
+    // is phantom node valid to be used as source or target
+  private:
+    bool is_forward_valid_source : 1;
+    bool is_forward_valid_target : 1;
+    bool is_reverse_valid_source : 1;
+    bool is_reverse_valid_target : 1;
 };
 
 static_assert(sizeof(PhantomNode) == 72, "PhantomNode has more padding then expected");

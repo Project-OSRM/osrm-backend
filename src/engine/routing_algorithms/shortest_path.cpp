@@ -63,9 +63,6 @@ void searchWithUTurn(SearchEngineData<Algorithm> &engine_working_data,
                             target_phantom.reverse_segment_id.id);
     }
 
-    BOOST_ASSERT(forward_heap.Size() > 0);
-    BOOST_ASSERT(reverse_heap.Size() > 0);
-
     // this is only relevent if source and target are on the same compressed edge
     auto is_oneway_source = !(search_from_forward_node && search_from_reverse_node);
     auto is_oneway_target = !(search_to_forward_node && search_to_reverse_node);
@@ -236,9 +233,9 @@ shortestPathSearch(SearchEngineData<Algorithm> &engine_working_data,
     int total_weight_to_forward = 0;
     int total_weight_to_reverse = 0;
     bool search_from_forward_node =
-        phantom_nodes_vector.front().source_phantom.forward_segment_id.enabled;
+        phantom_nodes_vector.front().source_phantom.IsForwardValidSource();
     bool search_from_reverse_node =
-        phantom_nodes_vector.front().source_phantom.reverse_segment_id.enabled;
+        phantom_nodes_vector.front().source_phantom.IsReverseValidSource();
 
     std::vector<NodeID> prev_packed_leg_to_forward;
     std::vector<NodeID> prev_packed_leg_to_reverse;
@@ -262,13 +259,11 @@ shortestPathSearch(SearchEngineData<Algorithm> &engine_working_data,
         const auto &source_phantom = phantom_node_pair.source_phantom;
         const auto &target_phantom = phantom_node_pair.target_phantom;
 
-        bool search_to_forward_node = target_phantom.forward_segment_id.enabled;
-        bool search_to_reverse_node = target_phantom.reverse_segment_id.enabled;
+        bool search_to_forward_node = target_phantom.IsForwardValidTarget();
+        bool search_to_reverse_node = target_phantom.IsReverseValidTarget();
 
-        BOOST_ASSERT(!search_from_forward_node || source_phantom.forward_segment_id.enabled);
-        BOOST_ASSERT(!search_from_reverse_node || source_phantom.reverse_segment_id.enabled);
-
-        BOOST_ASSERT(search_from_forward_node || search_from_reverse_node);
+        BOOST_ASSERT(!search_from_forward_node || source_phantom.IsForwardValidSource());
+        BOOST_ASSERT(!search_from_reverse_node || source_phantom.IsReverseValidSource());
 
         if (search_to_reverse_node || search_to_forward_node)
         {
@@ -290,9 +285,9 @@ shortestPathSearch(SearchEngineData<Algorithm> &engine_working_data,
                                 packed_leg_to_forward);
                 // if only the reverse node is valid (e.g. when using the match plugin) we
                 // actually need to move
-                if (!target_phantom.forward_segment_id.enabled)
+                if (!target_phantom.IsForwardValidTarget())
                 {
-                    BOOST_ASSERT(target_phantom.reverse_segment_id.enabled);
+                    BOOST_ASSERT(target_phantom.IsReverseValidTarget());
                     new_total_weight_to_reverse = new_total_weight_to_forward;
                     packed_leg_to_reverse = std::move(packed_leg_to_forward);
                     new_total_weight_to_forward = INVALID_EDGE_WEIGHT;
@@ -302,7 +297,7 @@ shortestPathSearch(SearchEngineData<Algorithm> &engine_working_data,
                     //   Below we have to check if new_total_weight_to_forward is invalid.
                     //   This prevents use-after-move on packed_leg_to_forward.
                 }
-                else if (target_phantom.reverse_segment_id.enabled)
+                else if (target_phantom.IsReverseValidTarget())
                 {
                     new_total_weight_to_reverse = new_total_weight_to_forward;
                     packed_leg_to_reverse = packed_leg_to_forward;
@@ -390,7 +385,7 @@ shortestPathSearch(SearchEngineData<Algorithm> &engine_working_data,
 
         if (new_total_weight_to_forward != INVALID_EDGE_WEIGHT)
         {
-            BOOST_ASSERT(target_phantom.forward_segment_id.enabled);
+            BOOST_ASSERT(target_phantom.IsForwardValidTarget());
 
             packed_leg_to_forward_begin.push_back(total_packed_path_to_forward.size());
             total_packed_path_to_forward.insert(total_packed_path_to_forward.end(),
@@ -407,7 +402,7 @@ shortestPathSearch(SearchEngineData<Algorithm> &engine_working_data,
 
         if (new_total_weight_to_reverse != INVALID_EDGE_WEIGHT)
         {
-            BOOST_ASSERT(target_phantom.reverse_segment_id.enabled);
+            BOOST_ASSERT(target_phantom.IsReverseValidTarget());
 
             packed_leg_to_reverse_begin.push_back(total_packed_path_to_reverse.size());
             total_packed_path_to_reverse.insert(total_packed_path_to_reverse.end(),

@@ -129,7 +129,7 @@ InternalRouteResult directShortestPathSearch(
 
     // TODO: when structured bindings will be allowed change to
     // auto [weight, source_node, target_node, unpacked_edges] = ...
-    EdgeWeight weight;
+    EdgeWeight weight = INVALID_EDGE_WEIGHT;
     NodeID source_node, target_node;
     std::vector<EdgeID> unpacked_edges;
     std::tie(weight, source_node, target_node, unpacked_edges) = mld::search(engine_working_data,
