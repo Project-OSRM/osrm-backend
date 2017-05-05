@@ -114,7 +114,7 @@ return_code parseArguments(int argc, char *argv[], partition::PartitionConfig &c
     boost::program_options::options_description hidden_options("Hidden options");
     hidden_options.add_options()(
         "input,i",
-        boost::program_options::value<boost::filesystem::path>(&config.osrm_input_path),
+        boost::program_options::value<boost::filesystem::path>(&config.osrm_path),
         "Input file in .osrm format");
 
     // positional option

@@ -61,7 +61,7 @@ struct ExtractorConfig final : storage::IOConfig
             }
         }
 
-        osrm_input_path = basepath + ".osrm";
+        osrm_path = basepath + ".osrm";
 
         IOConfig::UseDefaultOutputNames();
     }

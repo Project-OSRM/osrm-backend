@@ -240,7 +240,7 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
     util::Log() << "timestamp: " << timestamp;
 
     extraction_containers.PrepareData(scripting_environment,
-                                      config.osrm_input_path.string(),
+                                      config.osrm_path.string(),
                                       config.restriction_path.string(),
                                       config.names_data_path.string());
 
@@ -339,7 +339,7 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
 
     auto profile_properties = scripting_environment.GetProfileProperties();
     SetClassNames(classes_map, profile_properties);
-    files::writeProfileProperties(config.profile_properties_output_path, profile_properties);
+    files::writeProfileProperties(config.profile_properties_path, profile_properties);
 
     TIMER_STOP(extracting);
     util::Log() << "extraction finished after " << TIMER_SEC(extracting) << "s";
@@ -414,7 +414,7 @@ Extractor::LoadNodeBasedGraph(std::unordered_set<NodeID> &barriers,
                               std::vector<util::Coordinate> &coordiantes,
                               extractor::PackedOSMIDs &osm_node_ids)
 {
-    storage::io::FileReader file_reader(config.osrm_input_path,
+    storage::io::FileReader file_reader(config.osrm_path,
                                         storage::io::FileReader::VerifyFingerprint);
 
     auto barriers_iter = inserter(barriers, end(barriers));
@@ -431,7 +431,7 @@ Extractor::LoadNodeBasedGraph(std::unordered_set<NodeID> &barriers,
 
     if (edge_list.empty())
     {
-        throw util::exception("Node-based-graph (" + config.osrm_input_path.string() +
+        throw util::exception("Node-based-graph (" + config.osrm_path.string() +
                               ") contains no edges." + SOURCE_REF);
     }
 
