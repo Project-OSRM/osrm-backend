@@ -352,3 +352,64 @@ Feature: Via points
             | waypoints | bearings   | route    | turns                    |
             | 1,a       | 90,2 270,2 | ab,ab,ab | depart,turn uturn,arrive |
             | 1,b       | 270,2 90,2 | ab,ab,ab | depart,turn uturn,arrive |
+
+    Scenario: Continue Straight in presence of Bearings
+        Given the node map
+            """
+            h - a 1 b -- g
+                |   |
+                |   |- 2 c - f
+                |        3
+                e ------ d - i
+                         |
+                         j
+            """
+
+        And the query options
+            | continue_straight | false |
+
+        And the ways
+            | nodes | oneway |
+            | ab    | no     |
+            | bc    | no     |
+            | cdea  | no     |
+            | ah    | yes    |
+            | bg    | yes    |
+            | cf    | yes    |
+            | di    | yes    |
+            | dj    | yes    |
+
+        When I route I should get
+            | waypoints | bearings               | route                           |
+            | 1,2,3     | 270,90 180,180 180,180 | ab,cdea,cdea,bc,bc,bc,cdea,cdea |
+
+    Scenario: Continue Straight in presence of Bearings
+        Given the node map
+            """
+            h - a 1 b -- g
+                |   |
+                |   |- 2 c - f
+                |        3
+                e ------ d - i
+                         |
+                         j
+            """
+
+        And the query options
+            | continue_straight | true |
+
+        And the ways
+            | nodes | oneway |
+            | ab    | no     |
+            | bc    | no     |
+            | cdea  | no     |
+            | ah    | yes    |
+            | bg    | yes    |
+            | cf    | yes    |
+            | di    | yes    |
+            | dj    | yes    |
+
+        When I route I should get
+            | waypoints | bearings               | route                                   |
+            | 1,2,3     | 270,90 180,180 180,180 | ab,cdea,cdea,bc,bc,bc,ab,cdea,cdea,cdea |
+
