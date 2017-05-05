@@ -153,3 +153,11 @@ Feature: Traffic - speeds
         When I try to run "osrm-contract --segment-speed-file {speeds_file} {processed_file}"
         And stderr should contain "malformed"
         And it should exit with an error
+
+    Scenario: Check with an empty speed file
+        Given the speed file
+        """
+        """
+        And the data has been extracted
+        When I try to run "osrm-contract --segment-speed-file {speeds_file} {processed_file}"
+        And it should exit successfully
