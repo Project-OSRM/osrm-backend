@@ -52,7 +52,7 @@ struct ContractorConfig final : storage::IOConfig
     void UseDefaultOutputNames()
     {
         IOConfig::UseDefaultOutputNames();
-        updater_config.osrm_input_path = osrm_input_path;
+        updater_config.osrm_path = osrm_path;
         updater_config.UseDefaultOutputNames();
     }
 

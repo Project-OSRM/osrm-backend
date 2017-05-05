@@ -125,12 +125,11 @@ ExtractionContainers::ExtractionContainers()
  *
  */
 void ExtractionContainers::PrepareData(ScriptingEnvironment &scripting_environment,
-                                       const std::string &osrm_input_path,
+                                       const std::string &osrm_path,
                                        const std::string &restrictions_file_name,
                                        const std::string &name_file_name)
 {
-    storage::io::FileWriter file_out(osrm_input_path,
-                                     storage::io::FileWriter::GenerateFingerprint);
+    storage::io::FileWriter file_out(osrm_path, storage::io::FileWriter::GenerateFingerprint);
 
     PrepareNodes();
     WriteNodes(file_out);
