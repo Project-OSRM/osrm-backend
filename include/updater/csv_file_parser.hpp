@@ -10,6 +10,7 @@
 #include <tbb/parallel_for.h>
 #include <tbb/spin_mutex.h>
 
+#include <boost/exception/diagnostic_information.hpp>
 #include <boost/iostreams/device/mapped_file.hpp>
 #include <boost/spirit/include/phoenix.hpp>
 #include <boost/spirit/include/qi.hpp>
@@ -92,32 +93,41 @@ template <typename Key, typename Value> struct CSVFilesParser
     // Parse a single CSV file and return result as a vector<Key, Value>
     auto ParseCSVFile(const std::string &filename, std::size_t file_id) const
     {
-        boost::iostreams::mapped_file_source mmap(filename);
-        auto first = mmap.begin(), last = mmap.end();
-
-        BOOST_ASSERT(file_id <= std::numeric_limits<std::uint8_t>::max());
-        ValueRule value_source =
-            value_rule[qi::_val = qi::_1, boost::phoenix::bind(&Value::source, qi::_val) = file_id];
-        qi::rule<Iterator, std::pair<Key, Value>()> csv_line =
-            (key_rule >> ',' >> value_source) >> -(',' >> *(qi::char_ - qi::eol));
-        std::vector<std::pair<Key, Value>> result;
-        const auto ok = qi::parse(first, last, -(csv_line % qi::eol) >> *qi::eol, result);
-
-        if (!ok || first != last)
+        try
         {
-            auto begin_of_line = first - 1;
-            while (begin_of_line >= mmap.begin() && *begin_of_line != '\n')
-                --begin_of_line;
-            auto line_number = std::count(mmap.begin(), first, '\n') + 1;
-            const auto message = boost::format("CSV file %1% malformed on line %2%: %3%") %
-                                 filename % std::to_string(line_number) %
-                                 std::string(begin_of_line + 1, std::find(first, last, '\n'));
+            boost::iostreams::mapped_file_source mmap(filename);
+            auto first = mmap.begin(), last = mmap.end();
+
+            BOOST_ASSERT(file_id <= std::numeric_limits<std::uint8_t>::max());
+            ValueRule value_source =
+                value_rule[qi::_val = qi::_1, boost::phoenix::bind(&Value::source, qi::_val) = file_id];
+            qi::rule<Iterator, std::pair<Key, Value>()> csv_line =
+                (key_rule >> ',' >> value_source) >> -(',' >> *(qi::char_ - qi::eol));
+            std::vector<std::pair<Key, Value>> result;
+            const auto ok = qi::parse(first, last, -(csv_line % qi::eol) >> *qi::eol, result);
+
+            if (!ok || first != last)
+            {
+                auto begin_of_line = first - 1;
+                while (begin_of_line >= mmap.begin() && *begin_of_line != '\n')
+                    --begin_of_line;
+                auto line_number = std::count(mmap.begin(), first, '\n') + 1;
+                const auto message = boost::format("CSV file %1% malformed on line %2%: %3%") %
+                    filename % std::to_string(line_number) %
+                    std::string(begin_of_line + 1, std::find(first, last, '\n'));
+                throw util::exception(message.str() + SOURCE_REF);
+            }
+
+            util::Log() << "Loaded " << filename << " with " << result.size() << "values";
+
+            return std::move(result);
+        }
+        catch (const boost::exception& e)
+        {
+            const auto message = boost::format("exception in loading %1%:\n %2%") %
+                filename % boost::diagnostic_information(e);
             throw util::exception(message.str() + SOURCE_REF);
         }
-
-        util::Log() << "Loaded " << filename << " with " << result.size() << "values";
-
-        return std::move(result);
     }
 
     const std::size_t start_index;
