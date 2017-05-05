@@ -10,13 +10,10 @@
 #include <tbb/parallel_for.h>
 #include <tbb/spin_mutex.h>
 
-#include <boost/interprocess/file_mapping.hpp>
-#include <boost/interprocess/mapped_region.hpp>
+#include <boost/iostreams/device/mapped_file.hpp>
 #include <boost/spirit/include/phoenix.hpp>
 #include <boost/spirit/include/qi.hpp>
-#include <boost/spirit/include/support_line_pos_iterator.hpp>
 
-#include <fstream>
 #include <vector>
 
 namespace osrm
@@ -35,7 +32,7 @@ namespace qi = boost::spirit::qi;
 // with the corresponding file index in the CSV filenames vector.
 template <typename Key, typename Value> struct CSVFilesParser
 {
-    using Iterator = boost::spirit::line_pos_iterator<boost::spirit::istream_iterator>;
+    using Iterator = boost::iostreams::mapped_file_source::iterator;
     using KeyRule = qi::rule<Iterator, Key()>;
     using ValueRule = qi::rule<Iterator, Value()>;
 
@@ -95,11 +92,8 @@ template <typename Key, typename Value> struct CSVFilesParser
     // Parse a single CSV file and return result as a vector<Key, Value>
     auto ParseCSVFile(const std::string &filename, std::size_t file_id) const
     {
-        std::ifstream input_stream(filename, std::ios::binary);
-        input_stream.unsetf(std::ios::skipws);
-
-        boost::spirit::istream_iterator sfirst(input_stream), slast;
-        Iterator first(sfirst), last(slast);
+        boost::iostreams::mapped_file_source mmap(filename);
+        auto first = mmap.begin(), last = mmap.end();
 
         BOOST_ASSERT(file_id <= std::numeric_limits<std::uint8_t>::max());
         ValueRule value_source =
@@ -111,8 +105,13 @@ template <typename Key, typename Value> struct CSVFilesParser
 
         if (!ok || first != last)
         {
-            const auto message =
-                boost::format("CSV file %1% malformed on line %2%") % filename % first.position();
+            auto begin_of_line = first - 1;
+            while (begin_of_line >= mmap.begin() && *begin_of_line != '\n')
+                --begin_of_line;
+            auto line_number = std::count(mmap.begin(), first, '\n') + 1;
+            const auto message = boost::format("CSV file %1% malformed on line %2%: %3%") %
+                                 filename % std::to_string(line_number) %
+                                 std::string(begin_of_line + 1, std::find(first, last, '\n'));
             throw util::exception(message.str() + SOURCE_REF);
         }
 
