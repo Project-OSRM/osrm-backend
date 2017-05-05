@@ -77,27 +77,10 @@ ViaRoutePlugin::HandleRequest(const datafacade::ContiguousInternalMemoryDataFaca
 
     auto snapped_phantoms = SnapPhantomNodes(phantom_node_pairs);
 
-    const bool continue_straight_at_waypoint = route_parameters.continue_straight
-                                                   ? *route_parameters.continue_straight
-                                                   : facade.GetContinueStraightDefault();
-
     std::vector<PhantomNodes> start_end_nodes;
-    auto build_phantom_pairs = [&start_end_nodes, continue_straight_at_waypoint](
-        const PhantomNode &first_node, const PhantomNode &second_node) {
+    auto build_phantom_pairs = [&start_end_nodes](const PhantomNode &first_node,
+                                                  const PhantomNode &second_node) {
         start_end_nodes.push_back(PhantomNodes{first_node, second_node});
-        auto &last_inserted = start_end_nodes.back();
-        // enable forward direction if possible
-        if (last_inserted.source_phantom.forward_segment_id.id != SPECIAL_SEGMENTID)
-        {
-            last_inserted.source_phantom.forward_segment_id.enabled |=
-                !continue_straight_at_waypoint;
-        }
-        // enable reverse direction if possible
-        if (last_inserted.source_phantom.reverse_segment_id.id != SPECIAL_SEGMENTID)
-        {
-            last_inserted.source_phantom.reverse_segment_id.enabled |=
-                !continue_straight_at_waypoint;
-        }
     };
     util::for_each_pair(snapped_phantoms, build_phantom_pairs);
 
