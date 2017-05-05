@@ -4,6 +4,7 @@
      - Fixes 3995: Negative duration caused by rounding issues.
      - Fixes 3977: Fixes exit number in roundabout if starting inside the roundabout
      - Fixes 3981: The NodeJS documentation was outdated and incomplete.
+     - Fixes 4010: Performance regression while parsing CSV files. Now 5x faster.
 
 # 5.7.0
   - Changes from 5.6
