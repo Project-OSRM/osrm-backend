@@ -69,6 +69,15 @@ In case Docker complains about not being able to connect to the Docker daemon ma
 
 After adding yourself to the `docker` group make sure to log out and back in again with your terminal.
 
+We support the following images on Docker Cloud:
+
+Name | Description
+-----|------
+`latest` | `master` compiled with release flag
+`latest-assertions` | `master` compiled with with release flag, assertions enabled and debug symbols
+`latest-debug` | `master` compiled with debug flag
+`<tag>` | specific tag compiled with release flag
+`<tag>-debug` | specific tag compiled with debug flag
 
 ### Building from Source
 
