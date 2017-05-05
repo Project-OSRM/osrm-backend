@@ -31,7 +31,6 @@ Feature: Traffic - turn penalties applied to turn onto which a phantom node snap
             | dg    | primary |
         And the profile "testbot"
         # Since testbot doesn't have turn penalties, a penalty from file of 0 should produce a neutral effect
-        And the extract extra arguments "--generate-edge-lookup"
 
     Scenario: Weighting based on turn penalty file, with an extreme negative value -- clamps and does not fail
         Given the turn penalty file
