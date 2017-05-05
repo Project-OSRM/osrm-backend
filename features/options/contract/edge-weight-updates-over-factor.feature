@@ -20,7 +20,7 @@ Feature: osrm-contract command line option: edge-weight-updates-over-factor
         And the data has been saved to disk
 
     Scenario: Logging weight with updates over factor of 2, long segment
-        When I run "osrm-extract --profile {profile_file} {osm_file} --generate-edge-lookup"
+        When I run "osrm-extract --profile {profile_file} {osm_file}"
         When I run "osrm-contract --edge-weight-updates-over-factor 2 --segment-speed-file {speeds_file} {processed_file}"
         Then stderr should not contain "Speed values were used to update 2 segment(s)"
         And stderr should contain "Segment: 1,2"
@@ -44,6 +44,6 @@ Feature: osrm-contract command line option: edge-weight-updates-over-factor
         """
         And the data has been saved to disk
 
-        When I run "osrm-extract --profile {profile_file} {osm_file} --generate-edge-lookup"
+        When I run "osrm-extract --profile {profile_file} {osm_file}"
         When I run "osrm-contract --edge-weight-updates-over-factor 2 --segment-speed-file {speeds_file} {processed_file}"
         Then stderr should contain "Speed values were used to update 2 segments for 'steps' profile"

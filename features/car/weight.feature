@@ -51,7 +51,6 @@ Feature: Car - weights
             | cd    | primary | yes    |
             | be    | service | yes    |
             | ec    | service | yes    |
-        And the extract extra arguments "--generate-edge-lookup"
         And the contract extra arguments "--segment-speed-file {speeds_file}"
         And the customize extra arguments "--segment-speed-file {speeds_file}"
         And the speed file
