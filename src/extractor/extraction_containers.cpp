@@ -663,8 +663,10 @@ void ExtractionContainers::WriteRestrictions(const std::string &path)
     }
     restrictions_out_file.SkipToBeginning();
     restrictions_out_file.WriteElementCount64(written_restriction_count);
-    util::Log() << "number of restrictions saved to memory: " << unconditional_turn_restrictions.size();
-    util::Log() << "number of conditional restrictions written to disk: " << written_restriction_count;
+    util::Log() << "number of restrictions saved to memory: "
+                << unconditional_turn_restrictions.size();
+    util::Log() << "number of conditional restrictions written to disk: "
+                << written_restriction_count;
 }
 
 void ExtractionContainers::PrepareRestrictions()

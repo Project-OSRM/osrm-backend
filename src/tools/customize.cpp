@@ -6,9 +6,9 @@
 
 #include <tbb/task_scheduler_init.h>
 
-#include <util/timezones.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
+#include <util/timezones.hpp>
 
 #include <iostream>
 
@@ -64,13 +64,13 @@ parseArguments(int argc, char *argv[], customizer::CustomizationConfig &customiz
                                      "shp or dbf file containing "
                                      "time zone boundaries")(
             "parse-conditionals-from-now",
-            boost::program_options::value<std::time_t>(&customization_config.updater_config.valid_now)
+            boost::program_options::value<std::time_t>(
+                &customization_config.updater_config.valid_now)
                 ->default_value(0),
             "Optional for conditional turn restriction parsing, provide a UTC time stamp from "
             "which "
             "to evaluate the validity of conditional turn restrictions");
     }
-
 
     // hidden options, will be allowed on command line, but will not be
     // shown to the user

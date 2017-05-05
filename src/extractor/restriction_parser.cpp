@@ -1,5 +1,5 @@
-#include "extractor/profile_properties.hpp"
 #include "extractor/restriction_parser.hpp"
+#include "extractor/profile_properties.hpp"
 
 #include "extractor/external_memory_node.hpp"
 
