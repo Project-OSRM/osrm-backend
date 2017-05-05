@@ -62,7 +62,7 @@ Feature: Traffic - speeds
           | b    | c  | bc,bc          | 27 km/h | 66.7,0            | 1             |
           | a    | d  | ad,ad          | 27 km/h | 94.3,0            | 1             |
           | d    | c  | dc,dc          | 36 km/h | 70.7,0            | 0:1           |
-          | 6    | b  | fb,fb          | 36 km/h | 7.6,0             | 0:0           |
+          | 6    | 8  | fb,bc          | 30 km/h | 20.9,0            | 0:1           |
           | a    | 8  | ad,de,eb,bc,bc | 30 km/h | 94.3,25,25,13.3,0 | 1:0:0:1       |
 
 
