@@ -12,7 +12,8 @@
 #include <boost/interprocess/sync/scoped_lock.hpp>
 
 #if defined(__linux__)
-#define USE_BOOST_INTERPROCESS_CONDITION 1
+// See issue #3911, boost interprocess is broken with a glibc > 2.25
+// #define USE_BOOST_INTERPROCESS_CONDITION 1
 #endif
 
 namespace osrm
