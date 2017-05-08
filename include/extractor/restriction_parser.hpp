@@ -44,8 +44,7 @@ class RestrictionParser
     RestrictionParser(bool use_turn_restrictions,
                       bool parse_conditionals,
                       std::vector<std::string> &restrictions);
-    std::vector<boost::optional<InputRestrictionContainer>>
-    TryParse(const osmium::Relation &relation) const;
+    std::vector<InputRestrictionContainer> TryParse(const osmium::Relation &relation) const;
 
   private:
     bool ShouldIgnoreRestriction(const std::string &except_tag_string) const;

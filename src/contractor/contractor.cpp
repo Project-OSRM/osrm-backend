@@ -7,7 +7,6 @@
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/edge_based_graph_factory.hpp"
 #include "extractor/node_based_edge.hpp"
-#include "extractor/packed_osm_ids.hpp"
 
 #include "storage/io.hpp"
 

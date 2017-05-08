@@ -49,10 +49,11 @@ Feature: Car - Turn restrictions
         Given the node map
             """
               n
-           p
+           p  |
+            \ |
               j
-                 m
-              s
+              | \
+              s  m
             """
 
         And the ways
@@ -97,11 +98,11 @@ Feature: Car - Turn restrictions
             | restriction | jp       | nj     | j        | only_left_turn @ (Mo-Su 08:00-12:00)  | bus      |
 
         When I route I should get
-            | from | to | route          |
-            | e    | s  | ej,js,js       |
-            | e    | n  | ej,nj,nj       |
-            | e    | p  | ej,jp,jp       |
-            | p    | s  | jp,nj,nj,js,js |
+            | from | to | route          | # |
+            | e    | s  | ej,js,js       |   |
+            | e    | n  | ej,nj,nj       | restriction does not apply to cars |
+            | e    | p  | ej,jp,jp       |   |
+            | p    | s  | jp,nj,nj,js,js | restriction excepting busses still applies to cars  |
 
     @no_turning @conditionals
     Scenario: Car - only_right_turn
@@ -293,18 +294,19 @@ Feature: Car - Turn restrictions
         Given the node map
             """
               n
-           p
+           p  |
+            \ |
               j
-                 e
-              s
+              | \
+              s  m
             """
 
         And the ways
             | nodes | oneway |
             | nj    | no     |
             | js    | no     |
-            | ej    | yes    |
             | jp    | yes    |
+            | mj    | yes    |
 
         And the relations
             | type        | way:from | way:to | node:via | restriction:conditional                         |
@@ -313,7 +315,9 @@ Feature: Car - Turn restrictions
         When I route I should get
             | from | to | route          |
             | n    | p  | nj,js,js,jp,jp |
+            | m    | p  | mj,jp,jp       |
 
+    # https://www.openstreetmap.org/#map=18/38.91099/-77.00888
     @no_turning @conditionals
     Scenario: Car - DC North capitol situation, two on one off
         Given the extract extra arguments "--parse-conditional-restrictions=1"

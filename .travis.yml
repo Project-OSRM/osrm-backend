@@ -325,7 +325,7 @@ install:
              -DENABLE_CCACHE=ON \
              -DCMAKE_INSTALL_PREFIX=${OSRM_INSTALL_DIR}
   - echo "travis_fold:start:MAKE"
-  - make --jobs=${JOBS} VERBOSE=1
+  - make --jobs=${JOBS}
   - make tests --jobs=${JOBS}
   - make benchmarks --jobs=${JOBS}
   - echo "travis_fold:end:MAKE"

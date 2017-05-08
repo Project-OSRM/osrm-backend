@@ -100,11 +100,8 @@ inline void write(storage::io::FileWriter &writer,
 }
 
 // read/write for conditional turn restrictions file
-inline void read(const boost::filesystem::path &path, std::vector<TurnRestriction> &restrictions)
+inline void read(storage::io::FileReader &reader, std::vector<TurnRestriction> &restrictions)
 {
-    const auto fingerprint = storage::io::FileReader::VerifyFingerprint;
-    storage::io::FileReader reader{path, fingerprint};
-
     auto num_indices = reader.ReadElementCount64();
     restrictions.reserve(num_indices);
     TurnRestriction restriction;

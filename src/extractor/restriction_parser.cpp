@@ -56,10 +56,10 @@ RestrictionParser::RestrictionParser(bool use_turn_restrictions_,
  * in the corresponding profile. We use it for both namespacing restrictions, as in
  * restriction:motorcar as well as whitelisting if its in except:motorcar.
  */
-std::vector<boost::optional<InputRestrictionContainer>>
+std::vector<InputRestrictionContainer>
 RestrictionParser::TryParse(const osmium::Relation &relation) const
 {
-    std::vector<boost::optional<InputRestrictionContainer>> parsed_restrictions;
+    std::vector<InputRestrictionContainer> parsed_restrictions;
     // return if turn restrictions should be ignored
     if (!use_turn_restrictions)
     {
@@ -204,7 +204,10 @@ RestrictionParser::TryParse(const osmium::Relation &relation) const
     }
 
     // push back a copy of turn restriction
-    parsed_restrictions.push_back(boost::make_optional(restriction_container));
+    if (restriction_container.restriction.via.node != SPECIAL_NODEID &&
+        restriction_container.restriction.from.node != SPECIAL_NODEID &&
+        restriction_container.restriction.to.node != SPECIAL_NODEID)
+        parsed_restrictions.push_back(restriction_container);
 
     return parsed_restrictions;
 }

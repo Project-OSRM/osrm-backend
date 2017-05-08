@@ -121,72 +121,70 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     tbb::task_scheduler_init init(number_of_threads ? number_of_threads
                                                     : tbb::task_scheduler_init::automatic);
 
+    auto turn_restrictions = ParseOSMData(scripting_environment, number_of_threads);
+
+    // Transform the node-based graph that OSM is based on into an edge-based graph
+    // that is better for routing.  Every edge becomes a node, and every valid
+    // movement (e.g. turn from A->B, and B->A) becomes an edge
+    util::Log() << "Generating edge-expanded graph representation";
+
+    TIMER_START(expansion);
+
+    std::vector<EdgeBasedNode> edge_based_node_list;
+    util::DeallocatingVector<EdgeBasedEdge> edge_based_edge_list;
+    std::vector<bool> node_is_startpoint;
+    std::vector<EdgeWeight> edge_based_node_weights;
+    std::vector<util::Coordinate> coordinates;
+    extractor::PackedOSMIDs osm_node_ids;
+
+    auto graph_size = BuildEdgeExpandedGraph(scripting_environment,
+                                             coordinates,
+                                             osm_node_ids,
+                                             edge_based_node_list,
+                                             node_is_startpoint,
+                                             edge_based_node_weights,
+                                             edge_based_edge_list,
+                                             config.intersection_class_data_output_path,
+                                             turn_restrictions);
+
+    auto number_of_node_based_nodes = graph_size.first;
+    auto max_edge_id = graph_size.second;
+
+    TIMER_STOP(expansion);
+
+    util::Log() << "Saving edge-based node weights to file.";
+    TIMER_START(timer_write_node_weights);
     {
-        auto turn_restrictions = ParseOSMData(scripting_environment, number_of_threads);
-
-        // Transform the node-based graph that OSM is based on into an edge-based graph
-        // that is better for routing.  Every edge becomes a node, and every valid
-        // movement (e.g. turn from A->B, and B->A) becomes an edge
-        util::Log() << "Generating edge-expanded graph representation";
-
-        TIMER_START(expansion);
-
-        std::vector<EdgeBasedNode> edge_based_node_list;
-        util::DeallocatingVector<EdgeBasedEdge> edge_based_edge_list;
-        std::vector<bool> node_is_startpoint;
-        std::vector<EdgeWeight> edge_based_node_weights;
-        std::vector<util::Coordinate> coordinates;
-        extractor::PackedOSMIDs osm_node_ids;
-
-        auto graph_size = BuildEdgeExpandedGraph(scripting_environment,
-                                                 coordinates,
-                                                 osm_node_ids,
-                                                 edge_based_node_list,
-                                                 node_is_startpoint,
-                                                 edge_based_node_weights,
-                                                 edge_based_edge_list,
-                                                 config.intersection_class_data_output_path,
-                                                 turn_restrictions);
-
-        auto number_of_node_based_nodes = graph_size.first;
-        auto max_edge_id = graph_size.second;
-
-        TIMER_STOP(expansion);
-
-        util::Log() << "Saving edge-based node weights to file.";
-        TIMER_START(timer_write_node_weights);
-        {
-            storage::io::FileWriter writer(config.edge_based_node_weights_output_path,
-                                           storage::io::FileWriter::GenerateFingerprint);
-            storage::serialization::write(writer, edge_based_node_weights);
-        }
-        TIMER_STOP(timer_write_node_weights);
-        util::Log() << "Done writing. (" << TIMER_SEC(timer_write_node_weights) << ")";
-
-        util::Log() << "Computing strictly connected components ...";
-        FindComponents(max_edge_id, edge_based_edge_list, edge_based_node_list);
-
-        util::Log() << "Building r-tree ...";
-        TIMER_START(rtree);
-        BuildRTree(std::move(edge_based_node_list), std::move(node_is_startpoint), coordinates);
-
-        TIMER_STOP(rtree);
-
-        util::Log() << "Writing node map ...";
-        files::writeNodes(config.node_output_path, coordinates, osm_node_ids);
-
-        WriteEdgeBasedGraph(config.edge_graph_output_path, max_edge_id, edge_based_edge_list);
-
-        const auto nodes_per_second =
-            static_cast<std::uint64_t>(number_of_node_based_nodes / TIMER_SEC(expansion));
-        const auto edges_per_second =
-            static_cast<std::uint64_t>((max_edge_id + 1) / TIMER_SEC(expansion));
-
-        util::Log() << "Expansion: " << nodes_per_second << " nodes/sec and " << edges_per_second
-                    << " edges/sec";
-        util::Log() << "To prepare the data for routing, run: "
-                    << "./osrm-contract " << config.output_file_name;
+        storage::io::FileWriter writer(config.edge_based_node_weights_output_path,
+                                       storage::io::FileWriter::GenerateFingerprint);
+        storage::serialization::write(writer, edge_based_node_weights);
     }
+    TIMER_STOP(timer_write_node_weights);
+    util::Log() << "Done writing. (" << TIMER_SEC(timer_write_node_weights) << ")";
+
+    util::Log() << "Computing strictly connected components ...";
+    FindComponents(max_edge_id, edge_based_edge_list, edge_based_node_list);
+
+    util::Log() << "Building r-tree ...";
+    TIMER_START(rtree);
+    BuildRTree(std::move(edge_based_node_list), std::move(node_is_startpoint), coordinates);
+
+    TIMER_STOP(rtree);
+
+    util::Log() << "Writing node map ...";
+    files::writeNodes(config.node_output_path, coordinates, osm_node_ids);
+
+    WriteEdgeBasedGraph(config.edge_graph_output_path, max_edge_id, edge_based_edge_list);
+
+    const auto nodes_per_second =
+        static_cast<std::uint64_t>(number_of_node_based_nodes / TIMER_SEC(expansion));
+    const auto edges_per_second =
+        static_cast<std::uint64_t>((max_edge_id + 1) / TIMER_SEC(expansion));
+
+    util::Log() << "Expansion: " << nodes_per_second << " nodes/sec and " << edges_per_second
+                << " edges/sec";
+    util::Log() << "To prepare the data for routing, run: "
+                << "./osrm-contract " << config.output_file_name;
 
     return 0;
 }
