@@ -139,6 +139,5 @@ struct tm Timezoner::operator()(const point_t &point) const
     }
     return default_time;
 }
-
 }
 }
