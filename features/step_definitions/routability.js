@@ -126,6 +126,7 @@ module.exports = function () {
 
                 r.query = this.query;
                 r.json = JSON.parse(body);
+                r.code = r.json.code;
                 r.status = res.statusCode === 200 ? 'x' : null;
                 if (r.status) {
                     r.route = this.wayList(r.json.routes[0]);
