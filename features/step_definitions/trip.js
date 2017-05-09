@@ -29,8 +29,10 @@ module.exports = function () {
                     }
 
                     var json;
+                    got.code = 'unknown';
                     if (res.body.length) {
                         json = JSON.parse(res.body);
+                        got.code = json.code;
                     }
 
                     if (headers.has('status')) {
@@ -153,11 +155,11 @@ module.exports = function () {
 
                         if (row.source) {
                             params.source = got.source = row.source;
-                        } 
-                        
+                        }
+
                         if (row.destination) {
                             params.destination = got.destination = row.destination;
-                        } 
+                        }
 
                         if (row.hasOwnProperty('roundtrip')) { //roundtrip is a boolean so row.roundtrip alone doesn't work as a check here
                             params.roundtrip = got.roundtrip = row.roundtrip;
