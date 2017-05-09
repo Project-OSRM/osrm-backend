@@ -39,6 +39,8 @@ module.exports = function () {
 
                         let json = JSON.parse(body);
 
+                        got.code = json.code;
+
                         let hasRoute = json.code === 'Ok';
 
                         if (hasRoute) {
