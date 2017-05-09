@@ -18,14 +18,6 @@ namespace osrm
 {
 namespace updater
 {
-// Time zone shape polygons loaded in R-tree
-// local_time_t is a pair of a time zone shape polygon and the corresponding local time
-// rtree_t is a lookup R-tree that maps a geographic point to an index in a local_time_t vector
-using polygon_t = boost::geometry::model::polygon<point_t>;
-using box_t = boost::geometry::model::box<point_t>;
-using rtree_t =
-    boost::geometry::index::rtree<std::pair<box_t, size_t>, boost::geometry::index::rstar<8>>;
-using local_time_t = std::pair<polygon_t, struct tm>;
 
 bool SupportsShapefiles()
 {
@@ -36,8 +28,20 @@ bool SupportsShapefiles()
 #endif
 }
 
-std::function<struct tm(const point_t &)> LoadLocalTimesRTree(const std::string &tz_shapes_filename,
-                                                              std::time_t utc_time)
+Timezoner::Timezoner(std::string tz_filename, std::time_t utc_time_now)
+{
+    util::Log() << "Time zone validation based on UTC time : " << utc_time_now;
+    // Thread safety: MT-Unsafe const:env
+    default_time = *gmtime(&utc_time_now);
+    LoadLocalTimesRTree(tz_filename, utc_time_now);
+}
+
+Timezoner::Timezoner(std::string tz_filename)
+    : Timezoner(tz_filename, std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()))
+{
+}
+
+void Timezoner::LoadLocalTimesRTree(const std::string &tz_shapes_filename, std::time_t utc_time)
 {
 #ifdef ENABLE_SHAPEFILE
     // Load time zones shapes and collect local times of utc_time
@@ -91,7 +95,6 @@ std::function<struct tm(const point_t &)> LoadLocalTimesRTree(const std::string 
 
     // Get all time zone shapes and save local times in a vector
     std::vector<rtree_t::value_type> polygons;
-    std::vector<local_time_t> local_times;
     for (int shape = 0; shape < num_entities; ++shape)
     {
         auto object = SHPReadObject(shphandle, shape);
@@ -120,33 +123,22 @@ std::function<struct tm(const point_t &)> LoadLocalTimesRTree(const std::string 
     }
 
     // Create R-tree for collected shape polygons
-    rtree_t rtree(polygons);
-
-    // Return a lambda function that maps the input point and UTC time to the local time
-    // binds rtree and local_times
-    return [rtree, local_times](const point_t &point) {
-        std::vector<rtree_t::value_type> result;
-        rtree.query(boost::geometry::index::intersects(point), std::back_inserter(result));
-        for (const auto v : result)
-        {
-            const auto index = v.second;
-            if (boost::geometry::within(point, local_times[index].first))
-                return local_times[index].second;
-        }
-        return tm{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-    };
+    rtree = rtree_t(polygons);
 #endif
 }
 
-Timezoner::Timezoner(std::string tz_filename, std::time_t utc_time_now)
+struct tm Timezoner::operator()(const point_t &point) const
 {
-    util::Log() << "Time zone validation based on UTC time : " << utc_time_now;
-    GetLocalTime = LoadLocalTimesRTree(tz_filename, utc_time_now);
+    std::vector<rtree_t::value_type> result;
+    rtree.query(boost::geometry::index::intersects(point), std::back_inserter(result));
+    for (const auto v : result)
+    {
+        const auto index = v.second;
+        if (boost::geometry::within(point, local_times[index].first))
+            return local_times[index].second;
+    }
+    return default_time;
 }
 
-Timezoner::Timezoner(std::string tz_filename)
-    : Timezoner(tz_filename, std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()))
-{
-}
 }
 }

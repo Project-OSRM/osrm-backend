@@ -470,7 +470,7 @@ bool IsRestrictionValid(const Timezoner &tz_handler,
     const auto &condition = turn.condition;
 
     // Get local time of the restriction
-    const auto &local_time = tz_handler.GetLocalTime(point_t{lon, lat});
+    const auto &local_time = tz_handler(point_t{lon, lat});
 
     // TODO: check restriction type [:<transportation mode>][:<direction>]
     // http://wiki.openstreetmap.org/wiki/Conditional_restrictions#Tagging
