@@ -81,14 +81,22 @@ template <typename T> inline bool is_aligned(const void *pointer)
 }
 
 // Returns duration in deci-seconds
-inline EdgeWeight convertToDuration(double speed_in_kmh, double distance_in_meters)
+inline SegmentDuration convertToDuration(double speed_in_kmh, double distance_in_meters)
 {
     if (speed_in_kmh <= 0.)
-        return MAXIMAL_EDGE_DURATION;
+        return INVALID_SEGMENT_DURATION;
 
     const auto speed_in_ms = speed_in_kmh / 3.6;
     const auto duration = distance_in_meters / speed_in_ms;
-    return std::max(1, boost::numeric_cast<EdgeWeight>(std::round(duration * 10.)));
+    auto segment_duration = std::max<SegmentDuration>(
+        1, boost::numeric_cast<SegmentDuration>(std::round(duration * 10.)));
+    if (segment_duration >= INVALID_SEGMENT_DURATION)
+    {
+        util::Log(logWARNING) << "Clamping segment duration " << segment_duration << " to "
+                              << MAX_SEGMENT_DURATION;
+        segment_duration = MAX_SEGMENT_DURATION;
+    }
+    return segment_duration;
 }
 
 #if !defined(NDEBUG)
@@ -182,11 +190,19 @@ updateSegmentData(const UpdaterConfig &config,
         }
 
         if (rate <= 0.)
-            return INVALID_EDGE_WEIGHT;
+            return INVALID_SEGMENT_WEIGHT;
 
         const auto weight_multiplier = profile_properties.GetWeightMultiplier();
         const auto weight = distance_in_meters / rate;
-        return std::max(1, boost::numeric_cast<EdgeWeight>(std::round(weight * weight_multiplier)));
+        auto segment_weight = std::max<SegmentWeight>(
+            1, boost::numeric_cast<SegmentWeight>(std::round(weight * weight_multiplier)));
+        if (segment_weight >= INVALID_SEGMENT_WEIGHT)
+        {
+            util::Log(logWARNING) << "Clamping segment weight " << segment_weight << " to "
+                                  << MAX_SEGMENT_WEIGHT;
+            segment_weight = MAX_SEGMENT_WEIGHT;
+        }
+        return segment_weight;
     };
 
     // The check here is enabled by the `--edge-weight-updates-over-factor` flag it logs a
@@ -739,7 +755,7 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
             const auto weights = segment_data.GetForwardWeights(geometry_id.id);
             for (const auto weight : weights)
             {
-                if (weight == INVALID_EDGE_WEIGHT)
+                if (weight == INVALID_SEGMENT_WEIGHT)
                 {
                     new_weight = INVALID_EDGE_WEIGHT;
                     break;
@@ -754,7 +770,7 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
             const auto weights = segment_data.GetReverseWeights(geometry_id.id);
             for (const auto weight : weights)
             {
-                if (weight == INVALID_EDGE_WEIGHT)
+                if (weight == INVALID_SEGMENT_WEIGHT)
                 {
                     new_weight = INVALID_EDGE_WEIGHT;
                     break;

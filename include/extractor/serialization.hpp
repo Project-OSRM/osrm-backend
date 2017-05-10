@@ -38,10 +38,10 @@ inline void read(storage::io::FileReader &reader,
 {
     storage::serialization::read(reader, segment_data.index);
     storage::serialization::read(reader, segment_data.nodes);
-    storage::serialization::read(reader, segment_data.fwd_weights);
-    storage::serialization::read(reader, segment_data.rev_weights);
-    storage::serialization::read(reader, segment_data.fwd_durations);
-    storage::serialization::read(reader, segment_data.rev_durations);
+    util::serialization::read(reader, segment_data.fwd_weights);
+    util::serialization::read(reader, segment_data.rev_weights);
+    util::serialization::read(reader, segment_data.fwd_durations);
+    util::serialization::read(reader, segment_data.rev_durations);
     storage::serialization::read(reader, segment_data.datasources);
 }
 
@@ -51,10 +51,10 @@ inline void write(storage::io::FileWriter &writer,
 {
     storage::serialization::write(writer, segment_data.index);
     storage::serialization::write(writer, segment_data.nodes);
-    storage::serialization::write(writer, segment_data.fwd_weights);
-    storage::serialization::write(writer, segment_data.rev_weights);
-    storage::serialization::write(writer, segment_data.fwd_durations);
-    storage::serialization::write(writer, segment_data.rev_durations);
+    util::serialization::write(writer, segment_data.fwd_weights);
+    util::serialization::write(writer, segment_data.rev_weights);
+    util::serialization::write(writer, segment_data.fwd_durations);
+    util::serialization::write(writer, segment_data.rev_durations);
     storage::serialization::write(writer, segment_data.datasources);
 }
 

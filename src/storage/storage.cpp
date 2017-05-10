@@ -351,14 +351,29 @@ void Storage::PopulateLayout(DataLayout &layout)
         const auto number_of_compressed_geometries = reader.ReadVectorSize<NodeID>();
         layout.SetBlockSize<NodeID>(DataLayout::GEOMETRIES_NODE_LIST,
                                     number_of_compressed_geometries);
-        layout.SetBlockSize<SegmentWeight>(DataLayout::GEOMETRIES_FWD_WEIGHT_LIST,
-                                           number_of_compressed_geometries);
-        layout.SetBlockSize<SegmentWeight>(DataLayout::GEOMETRIES_REV_WEIGHT_LIST,
-                                           number_of_compressed_geometries);
-        layout.SetBlockSize<SegmentDuration>(DataLayout::GEOMETRIES_FWD_DURATION_LIST,
-                                             number_of_compressed_geometries);
-        layout.SetBlockSize<SegmentDuration>(DataLayout::GEOMETRIES_REV_DURATION_LIST,
-                                             number_of_compressed_geometries);
+
+        reader.ReadElementCount64(); // number of segments
+        const auto number_of_segment_weight_blocks =
+            reader.ReadVectorSize<extractor::SegmentDataView::SegmentWeightVector::block_type>();
+
+        reader.ReadElementCount64(); // number of segments
+        auto number_of_rev_weight_blocks =
+            reader.ReadVectorSize<extractor::SegmentDataView::SegmentWeightVector::block_type>();
+        BOOST_ASSERT(number_of_rev_weight_blocks == number_of_segment_weight_blocks);
+        (void)number_of_rev_weight_blocks;
+
+        reader.ReadElementCount64(); // number of segments
+        const auto number_of_segment_duration_blocks =
+            reader.ReadVectorSize<extractor::SegmentDataView::SegmentDurationVector::block_type>();
+
+        layout.SetBlockSize<extractor::SegmentDataView::SegmentWeightVector::block_type>(
+            DataLayout::GEOMETRIES_FWD_WEIGHT_LIST, number_of_segment_weight_blocks);
+        layout.SetBlockSize<extractor::SegmentDataView::SegmentWeightVector::block_type>(
+            DataLayout::GEOMETRIES_REV_WEIGHT_LIST, number_of_segment_weight_blocks);
+        layout.SetBlockSize<extractor::SegmentDataView::SegmentDurationVector::block_type>(
+            DataLayout::GEOMETRIES_FWD_DURATION_LIST, number_of_segment_duration_blocks);
+        layout.SetBlockSize<extractor::SegmentDataView::SegmentDurationVector::block_type>(
+            DataLayout::GEOMETRIES_REV_DURATION_LIST, number_of_segment_duration_blocks);
         layout.SetBlockSize<DatasourceID>(DataLayout::DATASOURCES_LIST,
                                           number_of_compressed_geometries);
     }
@@ -658,35 +673,47 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
         util::vector_view<unsigned> geometry_begin_indices(
             geometries_index_ptr, layout.num_entries[storage::DataLayout::GEOMETRIES_INDEX]);
 
+        auto num_entries = layout.num_entries[storage::DataLayout::GEOMETRIES_NODE_LIST];
+
         auto geometries_node_list_ptr =
             layout.GetBlockPtr<NodeID, true>(memory_ptr, storage::DataLayout::GEOMETRIES_NODE_LIST);
-        util::vector_view<NodeID> geometry_node_list(
-            geometries_node_list_ptr,
-            layout.num_entries[storage::DataLayout::GEOMETRIES_NODE_LIST]);
+        util::vector_view<NodeID> geometry_node_list(geometries_node_list_ptr, num_entries);
 
-        auto geometries_fwd_weight_list_ptr = layout.GetBlockPtr<SegmentWeight, true>(
-            memory_ptr, storage::DataLayout::GEOMETRIES_FWD_WEIGHT_LIST);
-        util::vector_view<SegmentWeight> geometry_fwd_weight_list(
-            geometries_fwd_weight_list_ptr,
-            layout.num_entries[storage::DataLayout::GEOMETRIES_FWD_WEIGHT_LIST]);
+        auto geometries_fwd_weight_list_ptr =
+            layout.GetBlockPtr<extractor::SegmentDataView::SegmentWeightVector::block_type, true>(
+                memory_ptr, storage::DataLayout::GEOMETRIES_FWD_WEIGHT_LIST);
+        extractor::SegmentDataView::SegmentWeightVector geometry_fwd_weight_list(
+            util::vector_view<extractor::SegmentDataView::SegmentWeightVector::block_type>(
+                geometries_fwd_weight_list_ptr,
+                layout.num_entries[storage::DataLayout::GEOMETRIES_FWD_WEIGHT_LIST]),
+            num_entries);
 
-        auto geometries_rev_weight_list_ptr = layout.GetBlockPtr<SegmentWeight, true>(
-            memory_ptr, storage::DataLayout::GEOMETRIES_REV_WEIGHT_LIST);
-        util::vector_view<SegmentWeight> geometry_rev_weight_list(
-            geometries_rev_weight_list_ptr,
-            layout.num_entries[storage::DataLayout::GEOMETRIES_REV_WEIGHT_LIST]);
+        auto geometries_rev_weight_list_ptr =
+            layout.GetBlockPtr<extractor::SegmentDataView::SegmentWeightVector::block_type, true>(
+                memory_ptr, storage::DataLayout::GEOMETRIES_REV_WEIGHT_LIST);
+        extractor::SegmentDataView::SegmentWeightVector geometry_rev_weight_list(
+            util::vector_view<extractor::SegmentDataView::SegmentWeightVector::block_type>(
+                geometries_rev_weight_list_ptr,
+                layout.num_entries[storage::DataLayout::GEOMETRIES_REV_WEIGHT_LIST]),
+            num_entries);
 
-        auto geometries_fwd_duration_list_ptr = layout.GetBlockPtr<SegmentDuration, true>(
-            memory_ptr, storage::DataLayout::GEOMETRIES_FWD_DURATION_LIST);
-        util::vector_view<SegmentDuration> geometry_fwd_duration_list(
-            geometries_fwd_duration_list_ptr,
-            layout.num_entries[storage::DataLayout::GEOMETRIES_FWD_DURATION_LIST]);
+        auto geometries_fwd_duration_list_ptr =
+            layout.GetBlockPtr<extractor::SegmentDataView::SegmentDurationVector::block_type, true>(
+                memory_ptr, storage::DataLayout::GEOMETRIES_FWD_DURATION_LIST);
+        extractor::SegmentDataView::SegmentDurationVector geometry_fwd_duration_list(
+            util::vector_view<extractor::SegmentDataView::SegmentDurationVector::block_type>(
+                geometries_fwd_duration_list_ptr,
+                layout.num_entries[storage::DataLayout::GEOMETRIES_FWD_DURATION_LIST]),
+            num_entries);
 
-        auto geometries_rev_duration_list_ptr = layout.GetBlockPtr<SegmentDuration, true>(
-            memory_ptr, storage::DataLayout::GEOMETRIES_REV_DURATION_LIST);
-        util::vector_view<SegmentDuration> geometry_rev_duration_list(
-            geometries_rev_duration_list_ptr,
-            layout.num_entries[storage::DataLayout::GEOMETRIES_REV_DURATION_LIST]);
+        auto geometries_rev_duration_list_ptr =
+            layout.GetBlockPtr<extractor::SegmentDataView::SegmentDurationVector::block_type, true>(
+                memory_ptr, storage::DataLayout::GEOMETRIES_REV_DURATION_LIST);
+        extractor::SegmentDataView::SegmentDurationVector geometry_rev_duration_list(
+            util::vector_view<extractor::SegmentDataView::SegmentDurationVector::block_type>(
+                geometries_rev_duration_list_ptr,
+                layout.num_entries[storage::DataLayout::GEOMETRIES_REV_DURATION_LIST]),
+            num_entries);
 
         auto datasources_list_ptr = layout.GetBlockPtr<DatasourceID, true>(
             memory_ptr, storage::DataLayout::DATASOURCES_LIST);
@@ -722,8 +749,7 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
         extractor::PackedOSMIDsView osm_node_ids(
             util::vector_view<extractor::PackedOSMIDsView::block_type>(
                 osmnodeid_ptr, layout.num_entries[DataLayout::OSM_NODE_ID_LIST]),
-            layout.num_entries[DataLayout::OSM_NODE_ID_LIST] *
-                extractor::PackedOSMIDsView::BLOCK_ELEMENTS);
+            layout.num_entries[DataLayout::COORDINATE_LIST]);
 
         extractor::files::readNodes(config.node_based_nodes_data_path, coordinates, osm_node_ids);
     }

@@ -411,6 +411,8 @@ template <typename T, std::size_t Bits, storage::Ownership Ownership> class Pack
 
     void push_back(const T value)
     {
+        BOOST_ASSERT_MSG(value <= T{(1ULL << Bits) - 1}, "Value too big for packed storage.");
+
         auto internal_index = get_internal_index(num_elements);
 
         while (internal_index.lower_word + 1 >= vec.size())

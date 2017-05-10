@@ -1,6 +1,7 @@
 #ifndef OSRM_EXTRACTOR_SEGMENT_DATA_CONTAINER_HPP_
 #define OSRM_EXTRACTOR_SEGMENT_DATA_CONTAINER_HPP_
 
+#include "util/packed_vector.hpp"
 #include "util/typedefs.hpp"
 #include "util/vector_view.hpp"
 
@@ -43,6 +44,8 @@ namespace detail
 template <storage::Ownership Ownership> class SegmentDataContainerImpl
 {
     template <typename T> using Vector = util::ViewOrVector<T, Ownership>;
+    template <typename T, std::size_t Bits>
+    using PackedVector = util::detail::PackedVector<T, Bits, Ownership>;
 
     friend CompressedEdgeContainer;
 
@@ -50,15 +53,17 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
     // FIXME We should change the indexing to Edge-Based-Node id
     using DirectionalGeometryID = std::uint32_t;
     using SegmentOffset = std::uint32_t;
+    using SegmentWeightVector = PackedVector<SegmentWeight, SEGMENT_WEIGHT_BITS>;
+    using SegmentDurationVector = PackedVector<SegmentDuration, SEGMENT_DURAITON_BITS>;
 
     SegmentDataContainerImpl() = default;
 
     SegmentDataContainerImpl(Vector<std::uint32_t> index_,
                              Vector<NodeID> nodes_,
-                             Vector<SegmentWeight> fwd_weights_,
-                             Vector<SegmentWeight> rev_weights_,
-                             Vector<SegmentDuration> fwd_durations_,
-                             Vector<SegmentDuration> rev_durations_,
+                             SegmentWeightVector fwd_weights_,
+                             SegmentWeightVector rev_weights_,
+                             SegmentDurationVector fwd_durations_,
+                             SegmentDurationVector rev_durations_,
                              Vector<DatasourceID> datasources_)
         : index(std::move(index_)), nodes(std::move(nodes_)), fwd_weights(std::move(fwd_weights_)),
           rev_weights(std::move(rev_weights_)), fwd_durations(std::move(fwd_durations_)),
@@ -201,10 +206,10 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
   private:
     Vector<std::uint32_t> index;
     Vector<NodeID> nodes;
-    Vector<SegmentWeight> fwd_weights;
-    Vector<SegmentWeight> rev_weights;
-    Vector<SegmentDuration> fwd_durations;
-    Vector<SegmentDuration> rev_durations;
+    SegmentWeightVector fwd_weights;
+    SegmentWeightVector rev_weights;
+    SegmentDurationVector fwd_durations;
+    SegmentDurationVector rev_durations;
     Vector<DatasourceID> datasources;
 };
 }
