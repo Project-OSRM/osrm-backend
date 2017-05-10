@@ -1,5 +1,5 @@
-#include "updater/csv_source.hpp"
 #include "updater/updater.hpp"
+#include "updater/csv_source.hpp"
 
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/edge_based_graph_factory.hpp"
@@ -694,7 +694,7 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
                        });
     }
 
-    if (SupportsShapefiles() && update_conditional_turns)
+    if (update_conditional_turns)
     {
         // initialize instance of class that handles time zone resolution
         if (config.valid_now <= 0)

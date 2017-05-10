@@ -159,10 +159,10 @@ Feature: Car - Turn restrictions
             | restriction | ej       | nj     | j        | no_right_turn @ (Mo-Fr 07:00-13:00)   |
 
         When I route I should get
-            | from | to | route          |
-            | e    | s  | ej,js,js       |
-            | e    | n  | ej,js,js,nj,nj |
-            | e    | p  | ej,jp,jp       |
+            | from | to | route          | # |
+            | e    | s  | ej,js,js       | normal turn |
+            | e    | n  | ej,js,js,nj,nj | avoids right turn |
+            | e    | p  | ej,jp,jp       | normal maneuver |
 
     @only_turning @conditionals
     Scenario: Car - only_left_turn
@@ -228,8 +228,8 @@ Feature: Car - Turn restrictions
     Scenario: Car - Conditional restriction is off
         Given the extract extra arguments "--parse-conditional-restrictions"
                                             # time stamp for 10am on Tues, 02 May 2017 GMT
-        Given the contract extra arguments "--time-zone-file=test/data/tz_world.shp --parse-conditionals-from-now=1493719200"
-        Given the customize extra arguments "--time-zone-file=test/data/tz_world.shp --parse-conditionals-from-now=1493719200"
+        Given the contract extra arguments "--parse-conditionals-from-now=1493719200"
+        Given the customize extra arguments "--parse-conditionals-from-now=1493719200"
         Given the node map
             """
               n
@@ -410,10 +410,10 @@ Feature: Car - Turn restrictions
             | restriction | ej       | nj     | j        | no_right_turn @ (Mo-Fr 07:00-13:00)   |
 
         When I route I should get
-            | from | to | route          |
-            | e    | s  | ej,js,js       |
-            | e    | n  | ej,js,js,nj,nj |
-            | e    | p  | ej,jp,jp       |
+            | from | to | route          | # |
+            | e    | s  | ej,js,js       | normal turn |
+            | e    | n  | ej,js,js,nj,nj | avoids right turn |
+            | e    | p  | ej,jp,jp       | normal maneuver |
 
     @todo @only_turning @conditionals
     Scenario: Car - only_left_turn
