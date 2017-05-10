@@ -1,6 +1,5 @@
-#include "extractor/extractor.hpp"
-#include "extractor/extractor_config.hpp"
-#include "extractor/scripting_environment_lua.hpp"
+#include "osrm/extractor.hpp"
+#include "osrm/extractor_config.hpp"
 #include "util/log.hpp"
 #include "util/version.hpp"
 
@@ -156,15 +155,12 @@ int main(int argc, char *argv[]) try
         return EXIT_FAILURE;
     }
 
-    // setup scripting environment
-    extractor::Sol2ScriptingEnvironment scripting_environment(
-        extractor_config.profile_path.string().c_str());
-    auto exitcode = extractor::Extractor(extractor_config).run(scripting_environment);
+    osrm::extract(extractor_config);
 
     util::DumpSTXXLStats();
     util::DumpMemoryStats();
 
-    return exitcode;
+    return EXIT_SUCCESS;
 }
 catch (const std::bad_alloc &e)
 {

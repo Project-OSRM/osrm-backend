@@ -1,7 +1,6 @@
-#include "contractor/contractor.hpp"
-#include "contractor/contractor_config.hpp"
-#include "extractor/profile_properties.hpp"
 #include "storage/io.hpp"
+#include "osrm/contractor.hpp"
+#include "osrm/contractor_config.hpp"
 #include "util/log.hpp"
 #include "util/version.hpp"
 
@@ -170,12 +169,12 @@ int main(int argc, char *argv[]) try
 
     tbb::task_scheduler_init init(contractor_config.requested_num_threads);
 
-    auto exitcode = contractor::Contractor(contractor_config).Run();
+    osrm::contract(contractor_config);
 
     util::DumpSTXXLStats();
     util::DumpMemoryStats();
 
-    return exitcode;
+    return EXIT_SUCCESS;
 }
 catch (const std::bad_alloc &e)
 {
