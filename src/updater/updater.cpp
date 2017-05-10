@@ -1,5 +1,5 @@
-#include "updater/updater.hpp"
 #include "updater/csv_source.hpp"
+#include "updater/updater.hpp"
 
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/edge_based_graph_factory.hpp"
@@ -585,7 +585,7 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
     }
 
     const bool update_conditional_turns =
-        !config.turn_restrictions_path.empty() && !config.tz_file_path.empty();
+        !config.turn_restrictions_path.empty() && config.valid_now;
     const bool update_edge_weights = !config.segment_speed_lookup_paths.empty();
     const bool update_turn_penalties = !config.turn_penalty_lookup_paths.empty();
 
@@ -697,12 +697,13 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
     if (SupportsShapefiles() && update_conditional_turns)
     {
         // initialize instance of class that handles time zone resolution
-        const Timezoner time_zone_handler = [&]() {
-            if (config.valid_now > 0)
-                return Timezoner(config.tz_file_path, config.valid_now);
+        if (config.valid_now <= 0)
+        {
+            util::Log(logERROR) << "Given UTC time is invalid: " << config.valid_now;
+            throw;
+        }
+        const Timezoner time_zone_handler = Timezoner(config.tz_file_path, config.valid_now);
 
-            return Timezoner(config.tz_file_path);
-        }();
         auto updated_turn_penalties = updateConditionalTurns(config,
                                                              turn_weight_penalties,
                                                              conditional_turns,

@@ -13,8 +13,8 @@ Feature: Car - Turn restrictions
     Scenario: Car - ignores unrecognized restriction
         Given the extract extra arguments "--parse-conditional-restrictions"
                                             # time stamp for 10am on Tues, 02 May 2017 GMT
-        Given the contract extra arguments "--time-zone-file=test/data/tz_world.shp --parse-conditionals-from-now=1493719200"
-        Given the customize extra arguments "--time-zone-file=test/data/tz_world.shp --parse-conditionals-from-now=1493719200"
+        Given the contract extra arguments "--parse-conditionals-from-now=1493719200"
+        Given the customize extra arguments "--parse-conditionals-from-now=1493719200"
         Given the node map
             """
               n
@@ -41,10 +41,10 @@ Feature: Car - Turn restrictions
 
     @no_turning @conditionals
     Scenario: Car - Restriction would be on, but the restriction was badly tagged
-        Given the extract extra arguments "--parse-conditional-restrictions=1"
+        Given the extract extra arguments "--parse-conditional-restrictions"
                                             # time stamp for 10am on Tues, 02 May 2017 GMT
-        Given the contract extra arguments "--time-zone-file=test/data/tz_world.shp --parse-conditionals-from-now=1493719200"
-        Given the customize extra arguments "--time-zone-file=test/data/tz_world.shp --parse-conditionals-from-now=1493719200"
+        Given the contract extra arguments "--parse-conditionals-from-now=1493719200"
+        Given the customize extra arguments "--parse-conditionals-from-now=1493719200"
 
         Given the node map
             """
@@ -74,10 +74,10 @@ Feature: Car - Turn restrictions
 
     @no_turning @conditionals
     Scenario: Car - ignores except restriction
-        Given the extract extra arguments "--parse-conditional-restrictions=1"
+        Given the extract extra arguments "--parse-conditional-restrictions"
                                             # time stamp for 10am on Tues, 02 May 2017 GMT
-        Given the contract extra arguments "--time-zone-file=test/data/tz_world.shp --parse-conditionals-from-now=1493719200"
-        Given the customize extra arguments "--time-zone-file=test/data/tz_world.shp --parse-conditionals-from-now=1493719200"
+        Given the contract extra arguments "--parse-conditionals-from-now=1493719200"
+        Given the customize extra arguments "--parse-conditionals-from-now=1493719200"
         Given the node map
             """
               n
@@ -108,8 +108,8 @@ Feature: Car - Turn restrictions
     Scenario: Car - only_right_turn
         Given the extract extra arguments "--parse-conditional-restrictions"
                                             # time stamp for 10am on Tues, 02 May 2017 GMT
-        Given the contract extra arguments "--time-zone-file=test/data/tz_world.shp --parse-conditionals-from-now=1493719200"
-        Given the customize extra arguments "--time-zone-file=test/data/tz_world.shp --parse-conditionals-from-now=1493719200"
+        Given the contract extra arguments "--parse-conditionals-from-now=1493719200"
+        Given the customize extra arguments "--parse-conditionals-from-now=1493719200"
         Given the node map
             """
               n
@@ -138,8 +138,8 @@ Feature: Car - Turn restrictions
     Scenario: Car - No right turn
         Given the extract extra arguments "--parse-conditional-restrictions"
                                             # time stamp for 10am on Tues, 02 May 2017 GMT
-        Given the contract extra arguments "--time-zone-file=test/data/tz_world.shp --parse-conditionals-from-now=1493719200"
-        Given the customize extra arguments "--time-zone-file=test/data/tz_world.shp --parse-conditionals-from-now=1493719200"
+        Given the contract extra arguments "--parse-conditionals-from-now=1493719200"
+        Given the customize extra arguments "--parse-conditionals-from-now=1493719200"
         Given the node map
             """
               n
@@ -168,8 +168,8 @@ Feature: Car - Turn restrictions
     Scenario: Car - only_left_turn
         Given the extract extra arguments "--parse-conditional-restrictions"
                                             # time stamp for 10am on Tues, 02 May 2017 GMT
-        Given the contract extra arguments "--time-zone-file=test/data/tz_world.shp --parse-conditionals-from-now=1493719200"
-        Given the customize extra arguments "--time-zone-file=test/data/tz_world.shp --parse-conditionals-from-now=1493719200"
+        Given the contract extra arguments "--parse-conditionals-from-now=1493719200"
+        Given the customize extra arguments "--parse-conditionals-from-now=1493719200"
         Given the node map
             """
               n
@@ -198,8 +198,8 @@ Feature: Car - Turn restrictions
     Scenario: Car - No left turn
         Given the extract extra arguments "--parse-conditional-restrictions"
                                             # time stamp for 10am on Tues, 02 May 2017 GMT
-        Given the contract extra arguments "--time-zone-file=test/data/tz_world.shp --parse-conditionals-from-now=1493719200"
-        Given the customize extra arguments "--time-zone-file=test/data/tz_world.shp --parse-conditionals-from-now=1493719200"
+        Given the contract extra arguments "--parse-conditionals-from-now=1493719200"
+        Given the customize extra arguments "--parse-conditionals-from-now=1493719200"
         Given the node map
             """
               n
@@ -258,6 +258,257 @@ Feature: Car - Turn restrictions
     Scenario: Car - Conditional restriction is on
         Given the extract extra arguments "--parse-conditional-restrictions"
         # 10am utc, wed
+        Given the contract extra arguments "--parse-conditionals-from-now=1493805600"
+        Given the customize extra arguments "--parse-conditionals-from-now=1493805600"
+        Given the node map
+            """
+              n
+            p j e
+              s
+            """
+
+        And the ways
+            | nodes | oneway |
+            | nj    | no     |
+            | js    | no     |
+            | ej    | yes    |
+            | jp    | yes    |
+
+        And the relations
+            | type        | way:from | way:to | node:via | restriction:conditional             |
+            | restriction | ej       | nj     | j        | no_right_turn @ (Mo-Fr 07:00-14:00) |
+
+        When I route I should get
+            | from | to | route          |
+            | e    | s  | ej,js,js       |
+            | e    | n  | ej,js,js,nj,nj |
+            | e    | p  | ej,jp,jp       |
+
+    @no_turning @conditionals
+    Scenario: Car - Conditional restriction with multiple time windows
+        Given the extract extra arguments "--parse-conditional-restrictions"
+        # 5pm Wed 02 May, 2017 GMT
+        Given the contract extra arguments "--parse-conditionals-from-now=1493744400"
+        Given the customize extra arguments "--parse-conditionals-from-now=1493744400"
+
+        Given the node map
+            """
+              n
+           p  |
+            \ |
+              j
+              | \
+              s  m
+            """
+
+        And the ways
+            | nodes | oneway |
+            | nj    | no     |
+            | js    | no     |
+            | jp    | yes    |
+            | mj    | yes    |
+
+        And the relations
+            | type        | way:from | way:to | node:via | restriction:conditional                         |
+            | restriction | nj       | jp     | j        | no_right_turn @ (Mo-Fr 07:00-11:00,16:00-18:30) |
+
+        When I route I should get
+            | from | to | route          |
+            | n    | p  | nj,js,js,jp,jp |
+            | m    | p  | mj,jp,jp       |
+
+    @only_turning @conditionals
+    Scenario: Car - Somewhere in Liverpool, the UK, GMT timezone
+        Given the extract extra arguments "--parse-conditional-restrictions=1"
+        # 9am UTC, 10am BST
+        Given the contract extra arguments "--parse-conditionals-from-now=1493802000"
+        Given the customize extra arguments "--parse-conditionals-from-now=1493802000"
+
+        #    """
+        #     a
+        #          e
+        #      b
+        #   d
+        #       c
+        #    """
+        Given the node locations
+            | node | lat     | lon     |
+            | a    | 51.5250 | -0.1166 |
+            | b    | 51.5243 | -0.1159 |
+            | c    | 51.5238 | -0.1152 |
+            | d    | 51.5241 | -0.1167 |
+            | e    | 51.5247 | -0.1153 |
+
+        And the ways
+            | nodes | name  |
+            | ab    | albic |
+            | bc    | albic |
+            | db    | dobe |
+            | be    | dobe |
+
+        And the relations
+            | type        | way:from  | way:to  | node:via | restriction:conditional               |
+            | restriction | ab        | be      | b        | only_left_turn @ (Mo-Fr 07:00-11:00)  |
+
+        When I route I should get
+            | from | to | route                       | turns                                        |
+            | a    | c  | albic,dobe,dobe,albic,albic | depart,turn left,turn uturn,turn left,arrive |
+            | a    | e  | albic,dobe,dobe             | depart,turn left,arrive                      |
+
+    @todo @no_turning @conditionals
+    Scenario: Car - only_right_turn
+        Given the extract extra arguments "--parse-conditional-restrictions"
+                                            # time stamp for 10am on Tues, 02 May 2017 GMT
+        Given the contract extra arguments "--time-zone-file=test/data/tz_world.shp --parse-conditionals-from-now=1493719200"
+        Given the customize extra arguments "--time-zone-file=test/data/tz_world.shp --parse-conditionals-from-now=1493719200"
+        Given the node map
+            """
+              n
+            p j e
+              s
+            """
+
+        And the ways
+            | nodes | oneway |
+            | nj    | no     |
+            | js    | no     |
+            | ej    | yes    |
+            | jp    | yes    |
+
+        And the relations
+            | type        | way:from | way:to | node:via | restriction:conditional               |
+            | restriction | ej       | nj     | j        | only_right_turn @ (Mo-Su 07:00-14:00) |
+
+        When I route I should get
+            | from | to | route          |
+            | e    | s  | ej,nj,nj,js,js |
+            | e    | n  | ej,nj,nj       |
+            | e    | p  | ej,nj,nj,jp,jp |
+
+    @todo @no_turning @conditionals
+    Scenario: Car - No right turn
+        Given the extract extra arguments "--parse-conditional-restrictions"
+                                            # time stamp for 10am on Tues, 02 May 2017 GMT
+        Given the contract extra arguments "--time-zone-file=test/data/tz_world.shp --parse-conditionals-from-now=1493719200"
+        Given the customize extra arguments "--time-zone-file=test/data/tz_world.shp --parse-conditionals-from-now=1493719200"
+        Given the node map
+            """
+              n
+            p j e
+              s
+            """
+
+        And the ways
+            | nodes | oneway |
+            | nj    | no     |
+            | js    | no     |
+            | ej    | yes    |
+            | jp    | yes    |
+
+        And the relations
+            | type        | way:from | way:to | node:via | restriction:conditional               |
+            | restriction | ej       | nj     | j        | no_right_turn @ (Mo-Fr 07:00-13:00)   |
+
+        When I route I should get
+            | from | to | route          |
+            | e    | s  | ej,js,js       |
+            | e    | n  | ej,js,js,nj,nj |
+            | e    | p  | ej,jp,jp       |
+
+    @todo @only_turning @conditionals
+    Scenario: Car - only_left_turn
+        Given the extract extra arguments "--parse-conditional-restrictions"
+                                            # time stamp for 10am on Tues, 02 May 2017 GMT
+        Given the contract extra arguments "--time-zone-file=test/data/tz_world.shp --parse-conditionals-from-now=1493719200"
+        Given the customize extra arguments "--time-zone-file=test/data/tz_world.shp --parse-conditionals-from-now=1493719200"
+        Given the node map
+            """
+              n
+            p j e
+              s
+            """
+
+        And the ways
+            | nodes | oneway |
+            | nj    | no     |
+            | js    | no     |
+            | ej    | yes    |
+            | jp    | yes    |
+
+        And the relations
+            | type        | way:from | way:to | node:via | restriction:conditional              |
+            | restriction | ej       | js     | j        | only_left_turn @ (Mo-Fr 07:00-16:00) |
+
+        When I route I should get
+            | from | to | route          |
+            | e    | s  | ej,js,js       |
+            | e    | n  | ej,js,js,nj,nj |
+            | e    | p  | ej,js,js,jp,jp |
+
+    @todo @no_turning @conditionals
+    Scenario: Car - No left turn
+        Given the extract extra arguments "--parse-conditional-restrictions"
+                                            # time stamp for 10am on Tues, 02 May 2017 GMT
+        Given the contract extra arguments "--time-zone-file=test/data/tz_world.shp --parse-conditionals-from-now=1493719200"
+        Given the customize extra arguments "--time-zone-file=test/data/tz_world.shp --parse-conditionals-from-now=1493719200"
+        Given the node map
+            """
+              n
+            p j e
+              s
+            """
+
+        And the ways
+            | nodes | oneway |
+            | nj    | no     |
+            | js    | no     |
+            | ej    | yes    |
+            | jp    | yes    |
+
+        And the relations
+            | type        | way:from | way:to | node:via | restriction:conditional            |
+            | restriction | ej       | js     | j        | no_left_turn @ (Mo-Su 00:00-23:59) |
+
+        When I route I should get
+            | from | to | route          |
+            | e    | s  | ej,nj,nj,js,js |
+            | e    | n  | ej,nj,nj       |
+            | e    | p  | ej,jp,jp       |
+
+    @todo @no_turning @conditionals
+    Scenario: Car - Conditional restriction is off
+        Given the extract extra arguments "--parse-conditional-restrictions"
+                                            # time stamp for 10am on Tues, 02 May 2017 GMT
+        Given the contract extra arguments "--time-zone-file=test/data/tz_world.shp --parse-conditionals-from-now=1493719200"
+        Given the customize extra arguments "--time-zone-file=test/data/tz_world.shp --parse-conditionals-from-now=1493719200"
+        Given the node map
+            """
+              n
+            p j e
+              s
+            """
+
+        And the ways
+            | nodes | oneway |
+            | nj    | no     |
+            | js    | no     |
+            | ej    | yes    |
+            | jp    | yes    |
+
+        And the relations
+            | type        | way:from | way:to | node:via | restriction:conditional             |
+            | restriction | ej       | nj     | j        | no_right_turn @ (Mo-Su 16:00-20:00) |
+
+        When I route I should get
+            | from | to | route    |
+            | e    | s  | ej,js,js |
+            | e    | n  | ej,nj,nj |
+            | e    | p  | ej,jp,jp |
+
+    @todo @no_turning @conditionals
+    Scenario: Car - Conditional restriction is on
+        Given the extract extra arguments "--parse-conditional-restrictions"
+        # 10am utc, wed
         Given the contract extra arguments "--time-zone-file=test/data/tz_world.shp --parse-conditionals-from-now=1493805600"
         Given the customize extra arguments "--time-zone-file=test/data/tz_world.shp --parse-conditionals-from-now=1493805600"
         Given the node map
@@ -284,7 +535,7 @@ Feature: Car - Turn restrictions
             | e    | n  | ej,js,js,nj,nj |
             | e    | p  | ej,jp,jp       |
 
-    @no_turning @conditionals
+    @todo @no_turning @conditionals
     Scenario: Car - Conditional restriction with multiple time windows
         Given the extract extra arguments "--parse-conditional-restrictions"
         # 5pm Wed 02 May, 2017 GMT
@@ -318,7 +569,7 @@ Feature: Car - Turn restrictions
             | m    | p  | mj,jp,jp       |
 
     # https://www.openstreetmap.org/#map=18/38.91099/-77.00888
-    @no_turning @conditionals
+    @todo @no_turning @conditionals
     Scenario: Car - DC North capitol situation, two on one off
         Given the extract extra arguments "--parse-conditional-restrictions=1"
         # 9pm Wed 02 May, 2017 UTC, 5pm EST
@@ -365,7 +616,7 @@ Feature: Car - Turn restrictions
             | f    | d  | cap north,florida,florida nw               | depart,turn left,arrive                 |
             | e    | c  | florida ne,florida nw,cap south,cap south  | depart,continue uturn,turn right,arrive |
 
-    @no_turning @conditionals
+    @todo @no_turning @conditionals
     Scenario: Car - DC North capitol situation, one on two off
         Given the extract extra arguments "--parse-conditional-restrictions=1"
         # 10:30am utc, wed, 6:30am est
@@ -412,7 +663,7 @@ Feature: Car - Turn restrictions
             | f    | d  | cap north,florida ne,florida ne,florida nw | depart,turn sharp right,turn uturn,arrive |
             | e    | c  | florida ne,cap south,cap south             | depart,turn left,arrive                   |
 
-    @only_turning @conditionals
+    @todo @only_turning @conditionals
     Scenario: Car - Somewhere in Liverpool, the UK, GMT timezone
         Given the extract extra arguments "--parse-conditional-restrictions=1"
         # 9am UTC, 10am BST

@@ -33,8 +33,6 @@ class Timezoner
 
     Timezoner(std::string tz_filename, std::time_t utc_time_now);
 
-    Timezoner(std::string tz_filename);
-
     struct tm operator()(const point_t &point) const;
 
   private:

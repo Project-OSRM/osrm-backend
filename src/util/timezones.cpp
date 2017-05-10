@@ -36,13 +36,10 @@ Timezoner::Timezoner(std::string tz_filename, std::time_t utc_time_now)
     LoadLocalTimesRTree(tz_filename, utc_time_now);
 }
 
-Timezoner::Timezoner(std::string tz_filename)
-    : Timezoner(tz_filename, std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()))
-{
-}
-
 void Timezoner::LoadLocalTimesRTree(const std::string &tz_shapes_filename, std::time_t utc_time)
 {
+    if (tz_shapes_filename.empty())
+        return;
 #ifdef ENABLE_SHAPEFILE
     // Load time zones shapes and collect local times of utc_time
     auto shphandle = SHPOpen(tz_shapes_filename.c_str(), "rb");
