@@ -1,6 +1,7 @@
 #include "extractor/guidance/roundabout_handler.hpp"
 #include "extractor/guidance/constants.hpp"
 
+#include "util/assert.hpp"
 #include "util/bearing.hpp"
 #include "util/coordinate_calculation.hpp"
 #include "util/guidance/name_announcements.hpp"
@@ -157,6 +158,8 @@ void RoundaboutHandler::invalidateExitAgainstDirection(const NodeID from_nid,
             }
         }
     }
+
+    OSRM_ASSERT(invalidate_from <= invalidate_to, coordinates[from_nid]);
 
     // Exiting roundabouts at an entry point is technically a data-modelling issue.
     // This workaround handles cases in which an exit precedes and entry. The resulting
