@@ -233,9 +233,9 @@ shortestPathSearch(SearchEngineData<Algorithm> &engine_working_data,
     int total_weight_to_forward = 0;
     int total_weight_to_reverse = 0;
     bool search_from_forward_node =
-        phantom_nodes_vector.front().source_phantom.IsForwardValidSource();
+        phantom_nodes_vector.front().source_phantom.IsValidForwardSource();
     bool search_from_reverse_node =
-        phantom_nodes_vector.front().source_phantom.IsReverseValidSource();
+        phantom_nodes_vector.front().source_phantom.IsValidReverseSource();
 
     std::vector<NodeID> prev_packed_leg_to_forward;
     std::vector<NodeID> prev_packed_leg_to_reverse;
@@ -259,11 +259,11 @@ shortestPathSearch(SearchEngineData<Algorithm> &engine_working_data,
         const auto &source_phantom = phantom_node_pair.source_phantom;
         const auto &target_phantom = phantom_node_pair.target_phantom;
 
-        bool search_to_forward_node = target_phantom.IsForwardValidTarget();
-        bool search_to_reverse_node = target_phantom.IsReverseValidTarget();
+        bool search_to_forward_node = target_phantom.IsValidForwardTarget();
+        bool search_to_reverse_node = target_phantom.IsValidReverseTarget();
 
-        BOOST_ASSERT(!search_from_forward_node || source_phantom.IsForwardValidSource());
-        BOOST_ASSERT(!search_from_reverse_node || source_phantom.IsReverseValidSource());
+        BOOST_ASSERT(!search_from_forward_node || source_phantom.IsValidForwardSource());
+        BOOST_ASSERT(!search_from_reverse_node || source_phantom.IsValidReverseSource());
 
         if (search_to_reverse_node || search_to_forward_node)
         {
@@ -285,9 +285,9 @@ shortestPathSearch(SearchEngineData<Algorithm> &engine_working_data,
                                 packed_leg_to_forward);
                 // if only the reverse node is valid (e.g. when using the match plugin) we
                 // actually need to move
-                if (!target_phantom.IsForwardValidTarget())
+                if (!target_phantom.IsValidForwardTarget())
                 {
-                    BOOST_ASSERT(target_phantom.IsReverseValidTarget());
+                    BOOST_ASSERT(target_phantom.IsValidReverseTarget());
                     new_total_weight_to_reverse = new_total_weight_to_forward;
                     packed_leg_to_reverse = std::move(packed_leg_to_forward);
                     new_total_weight_to_forward = INVALID_EDGE_WEIGHT;
@@ -297,7 +297,7 @@ shortestPathSearch(SearchEngineData<Algorithm> &engine_working_data,
                     //   Below we have to check if new_total_weight_to_forward is invalid.
                     //   This prevents use-after-move on packed_leg_to_forward.
                 }
-                else if (target_phantom.IsReverseValidTarget())
+                else if (target_phantom.IsValidReverseTarget())
                 {
                     new_total_weight_to_reverse = new_total_weight_to_forward;
                     packed_leg_to_reverse = packed_leg_to_forward;
@@ -385,7 +385,7 @@ shortestPathSearch(SearchEngineData<Algorithm> &engine_working_data,
 
         if (new_total_weight_to_forward != INVALID_EDGE_WEIGHT)
         {
-            BOOST_ASSERT(target_phantom.IsForwardValidTarget());
+            BOOST_ASSERT(target_phantom.IsValidForwardTarget());
 
             packed_leg_to_forward_begin.push_back(total_packed_path_to_forward.size());
             total_packed_path_to_forward.insert(total_packed_path_to_forward.end(),
@@ -402,7 +402,7 @@ shortestPathSearch(SearchEngineData<Algorithm> &engine_working_data,
 
         if (new_total_weight_to_reverse != INVALID_EDGE_WEIGHT)
         {
-            BOOST_ASSERT(target_phantom.IsReverseValidTarget());
+            BOOST_ASSERT(target_phantom.IsValidReverseTarget());
 
             packed_leg_to_reverse_begin.push_back(total_packed_path_to_reverse.size());
             total_packed_path_to_reverse.insert(total_packed_path_to_reverse.end(),
