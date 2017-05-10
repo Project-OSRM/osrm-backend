@@ -12,6 +12,7 @@ Feature: Testbot - Handle ferry routes
             i j k l
             m n o p
             q r s t
+            u v w x
             """
 
         And the ways
@@ -26,11 +27,14 @@ Feature: Testbot - Handle ferry routes
             | op    | primary |       |          |
             | qr    | primary |       |          |
             | st    | primary |       |          |
+            | uv    | primary |       |          |
+            | wx    | primary |       |          |
             | bc    |         | ferry | 0:01     |
             | fg    |         | ferry | 0:10     |
             | jk    |         | ferry | 1:00     |
             | no    |         | ferry | 24:00    |
             | rs    |         | ferry | 96:00    |
+            | vw    |         | ferry | P5D      |
 
         When I route I should get
             | from | to | route | time        |
@@ -39,6 +43,7 @@ Feature: Testbot - Handle ferry routes
             | j    | k  | jk,jk | 3600s +-1   |
             | n    | o  | no,no | 86400s +-1  |
             | r    | s  | rs,rs | 345600s +-1 |
+            | v    | w  | vw,vw | 419430s +-1|
 
     @todo
     Scenario: Testbot - Week long ferry routes

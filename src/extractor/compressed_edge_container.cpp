@@ -74,6 +74,26 @@ unsigned CompressedEdgeContainer::GetZippedPositionForReverseID(const EdgeID edg
     return map_iterator->second;
 }
 
+SegmentWeight CompressedEdgeContainer::ClipWeight(const SegmentWeight weight)
+{
+    if (weight >= INVALID_SEGMENT_WEIGHT)
+    {
+        clipped_weights++;
+        return MAX_SEGMENT_WEIGHT;
+    }
+    return weight;
+}
+
+SegmentDuration CompressedEdgeContainer::ClipDuration(const SegmentDuration duration)
+{
+    if (duration >= INVALID_SEGMENT_DURATION)
+    {
+        clipped_weights++;
+        return MAX_SEGMENT_DURATION;
+    }
+    return duration;
+}
+
 // Adds info for a compressed edge to the container.   edge_id_2
 // has been removed from the graph, so we have to save These edges/nodes
 // have already been trimmed from the graph, this function just stores
@@ -87,10 +107,10 @@ void CompressedEdgeContainer::CompressEdge(const EdgeID edge_id_1,
                                            const EdgeID edge_id_2,
                                            const NodeID via_node_id,
                                            const NodeID target_node_id,
-                                           EdgeWeight weight1,
-                                           EdgeWeight weight2,
-                                           EdgeDuration duration1,
-                                           EdgeDuration duration2)
+                                           const EdgeWeight weight1,
+                                           const EdgeWeight weight2,
+                                           const EdgeDuration duration1,
+                                           const EdgeDuration duration2)
 {
     // remove super-trivial geometries
     BOOST_ASSERT(SPECIAL_EDGEID != edge_id_1);
@@ -131,34 +151,12 @@ void CompressedEdgeContainer::CompressEdge(const EdgeID edge_id_1,
     std::vector<OnewayCompressedEdge> &edge_bucket_list1 =
         m_compressed_oneway_geometries[edge_bucket_id1];
 
-    const auto clip_weight = [&](const SegmentWeight weight) {
-        if (weight >= INVALID_SEGMENT_WEIGHT)
-        {
-            clipped_weights++;
-            return INVALID_SEGMENT_WEIGHT - 1;
-        }
-        return weight;
-    };
-    const auto clip_duration = [&](const SegmentDuration duration) {
-        if (duration >= INVALID_SEGMENT_DURATION)
-        {
-            clipped_weights++;
-            return INVALID_SEGMENT_DURATION - 1;
-        }
-        return duration;
-    };
-
     // note we don't save the start coordinate: it is implicitly given by edge 1
     // weight1 is the distance to the (currently) last coordinate in the bucket
     if (edge_bucket_list1.empty())
     {
-        weight1 = clip_weight(weight1);
-        duration1 = clip_duration(duration1);
-
         edge_bucket_list1.emplace_back(
-            OnewayCompressedEdge{via_node_id,
-                                 static_cast<SegmentWeight>(weight1),
-                                 static_cast<SegmentDuration>(duration1)});
+            OnewayCompressedEdge{via_node_id, ClipWeight(weight1), ClipDuration(duration1)});
     }
 
     BOOST_ASSERT(0 < edge_bucket_list1.size());
@@ -188,14 +186,9 @@ void CompressedEdgeContainer::CompressEdge(const EdgeID edge_id_1,
     }
     else
     {
-        weight2 = clip_weight(weight2);
-        duration2 = clip_duration(duration2);
-
         // we are certain that the second edge is atomic.
         edge_bucket_list1.emplace_back(
-            OnewayCompressedEdge{target_node_id,
-                                 static_cast<SegmentWeight>(weight2),
-                                 static_cast<SegmentDuration>(duration2)});
+            OnewayCompressedEdge{target_node_id, ClipWeight(weight2), ClipDuration(duration2)});
     }
 }
 
@@ -238,7 +231,8 @@ void CompressedEdgeContainer::AddUncompressedEdge(const EdgeID edge_id,
     // Don't re-add this if it's already in there.
     if (edge_bucket_list.empty())
     {
-        edge_bucket_list.emplace_back(OnewayCompressedEdge{target_node_id, weight, duration});
+        edge_bucket_list.emplace_back(
+            OnewayCompressedEdge{target_node_id, ClipWeight(weight), ClipDuration(duration)});
     }
 }
 
@@ -272,9 +266,9 @@ unsigned CompressedEdgeContainer::ZipEdges(const EdgeID f_edge_id, const EdgeID 
     constexpr DatasourceID LUA_SOURCE = 0;
 
     segment_data->nodes.emplace_back(first_node.node_id);
-    segment_data->fwd_weights.emplace_back(INVALID_EDGE_WEIGHT);
+    segment_data->fwd_weights.emplace_back(INVALID_SEGMENT_WEIGHT);
     segment_data->rev_weights.emplace_back(first_node.weight);
-    segment_data->fwd_durations.emplace_back(INVALID_EDGE_WEIGHT);
+    segment_data->fwd_durations.emplace_back(INVALID_SEGMENT_DURATION);
     segment_data->rev_durations.emplace_back(first_node.duration);
     segment_data->datasources.emplace_back(LUA_SOURCE);
 
@@ -297,9 +291,9 @@ unsigned CompressedEdgeContainer::ZipEdges(const EdgeID f_edge_id, const EdgeID 
 
     segment_data->nodes.emplace_back(last_node.node_id);
     segment_data->fwd_weights.emplace_back(last_node.weight);
-    segment_data->rev_weights.emplace_back(INVALID_EDGE_WEIGHT);
+    segment_data->rev_weights.emplace_back(INVALID_SEGMENT_WEIGHT);
     segment_data->fwd_durations.emplace_back(last_node.duration);
-    segment_data->rev_durations.emplace_back(INVALID_EDGE_WEIGHT);
+    segment_data->rev_durations.emplace_back(INVALID_SEGMENT_DURATION);
     segment_data->datasources.emplace_back(LUA_SOURCE);
 
     return zipped_geometry_id;

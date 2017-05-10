@@ -63,9 +63,12 @@ class CompressedEdgeContainer
     std::unique_ptr<SegmentDataContainer> ToSegmentData();
 
   private:
+    SegmentWeight ClipWeight(const SegmentWeight weight);
+    SegmentDuration ClipDuration(const SegmentDuration duration);
+
     int free_list_maximum = 0;
-    std::atomic_size_t clipped_weights;
-    std::atomic_size_t clipped_durations;
+    std::atomic_size_t clipped_weights{0};
+    std::atomic_size_t clipped_durations{0};
 
     void IncreaseFreeList();
     std::vector<OnewayEdgeBucket> m_compressed_oneway_geometries;
