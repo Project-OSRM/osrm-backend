@@ -7,6 +7,7 @@
 #include "extractor/edge_based_edge.hpp"
 #include "extractor/edge_based_node.hpp"
 #include "extractor/extraction_turn.hpp"
+#include "extractor/node_data_container.hpp"
 #include "extractor/guidance/turn_analysis.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
 #include "extractor/guidance/turn_lane_types.hpp"
@@ -129,6 +130,7 @@ class EdgeBasedGraphFactory
 
     //! list of edge based nodes (compressed segments)
     std::vector<EdgeBasedNode> m_edge_based_node_list;
+    EdgeBasedNodeDataExternalContainer m_ebg_node_data_container;
     util::DeallocatingVector<EdgeBasedEdge> m_edge_based_edge_list;
     EdgeID m_max_edge_id;
 

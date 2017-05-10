@@ -134,7 +134,21 @@ NBGToEBG EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const N
         return SegmentID{edge_based_node_id, true};
     };
 
-    // traverse arrays
+    // Add edge-based node data for forward and reverse nodes indexed by edge_id
+    BOOST_ASSERT(forward_data.edge_id != SPECIAL_EDGEID);
+    m_ebg_node_data_container.SetData(forward_data.edge_id,
+                                      GeometryID{packed_geometry_id, true},
+                                      forward_data.name_id,
+                                      forward_data.travel_mode);
+    if (reverse_data.edge_id != SPECIAL_EDGEID)
+    {
+        m_ebg_node_data_container.SetData(reverse_data.edge_id,
+                                          GeometryID{packed_geometry_id, false},
+                                          reverse_data.name_id,
+                                          reverse_data.travel_mode);
+    }
+
+    // Add segments of edge-based nodes
     for (const auto i : util::irange(std::size_t{0}, segment_count))
     {
         BOOST_ASSERT(
@@ -244,6 +258,9 @@ EdgeBasedGraphFactory::GenerateEdgeExpandedNodes(const std::string &node_data_fi
 {
     std::vector<NBGToEBG> mapping;
 
+    // TODO: make m_ebg_node_data_container local
+    m_ebg_node_data_container = EdgeBasedNodeDataExternalContainer(m_max_edge_id + 1);
+
     util::Log() << "Generating edge expanded nodes ... ";
     {
         util::UnbufferedLog log;
@@ -252,35 +269,34 @@ EdgeBasedGraphFactory::GenerateEdgeExpandedNodes(const std::string &node_data_fi
         m_compressed_edge_container.InitializeBothwayVector();
 
         // loop over all edges and generate new set of nodes
-        for (const auto node_u : util::irange(0u, m_node_based_graph->GetNumberOfNodes()))
+        for (const auto nbg_node_u : util::irange(0u, m_node_based_graph->GetNumberOfNodes()))
         {
-            BOOST_ASSERT(node_u != SPECIAL_NODEID);
-            BOOST_ASSERT(node_u < m_node_based_graph->GetNumberOfNodes());
-            progress.PrintStatus(node_u);
-            for (EdgeID e1 : m_node_based_graph->GetAdjacentEdgeRange(node_u))
+            BOOST_ASSERT(nbg_node_u != SPECIAL_NODEID);
+            progress.PrintStatus(nbg_node_u);
+            for (EdgeID nbg_edge_id : m_node_based_graph->GetAdjacentEdgeRange(nbg_node_u))
             {
-                const EdgeData &edge_data = m_node_based_graph->GetEdgeData(e1);
-                BOOST_ASSERT(e1 != SPECIAL_EDGEID);
-                const NodeID node_v = m_node_based_graph->GetTarget(e1);
+                BOOST_ASSERT(nbg_edge_id != SPECIAL_EDGEID);
 
-                BOOST_ASSERT(SPECIAL_NODEID != node_v);
+                const EdgeData &nbg_edge_data = m_node_based_graph->GetEdgeData(nbg_edge_id);
+                const NodeID nbg_node_v = m_node_based_graph->GetTarget(nbg_edge_id);
+                BOOST_ASSERT(nbg_node_v != SPECIAL_NODEID);
+                BOOST_ASSERT(nbg_node_u != nbg_node_v);
+
                 // pick only every other edge, since we have every edge as an outgoing
                 // and incoming egde
-                if (node_u > node_v)
+                if (nbg_node_u >= nbg_node_v)
                 {
                     continue;
                 }
 
-                BOOST_ASSERT(node_u < node_v);
-
                 // if we found a non-forward edge reverse and try again
-                if (edge_data.edge_id == SPECIAL_NODEID)
+                if (nbg_edge_data.edge_id == SPECIAL_NODEID)
                 {
-                    mapping.push_back(InsertEdgeBasedNode(node_v, node_u));
+                    mapping.push_back(InsertEdgeBasedNode(nbg_node_v, nbg_node_u));
                 }
                 else
                 {
-                    mapping.push_back(InsertEdgeBasedNode(node_u, node_v));
+                    mapping.push_back(InsertEdgeBasedNode(nbg_node_u, nbg_node_v));
                 }
             }
         }
@@ -291,8 +307,6 @@ EdgeBasedGraphFactory::GenerateEdgeExpandedNodes(const std::string &node_data_fi
 
     {
         // TODO: refactor saving edge-based node data with InsertEdgeBasedNode
-        EdgeBasedNodeDataExternalContainer ebg_node_data_container(m_max_edge_id + 1);
-
         for (const auto nbg_node_id : util::irange(0u, m_node_based_graph->GetNumberOfNodes()))
         {
             for (const auto nbg_edge_id : m_node_based_graph->GetAdjacentEdgeRange(nbg_node_id))
@@ -317,17 +331,21 @@ EdgeBasedGraphFactory::GenerateEdgeExpandedNodes(const std::string &node_data_fi
                                     nbg_edge_id)
                               : SPECIAL_GEOMETRYID;
 
-                ebg_node_data_container.SetData(nbg_edge_data.edge_id,
-                                                GeometryID{geometry_id, is_encoded_forwards},
-                                                nbg_edge_data.name_id,
-                                                nbg_edge_data.travel_mode);
+                BOOST_ASSERT(m_ebg_node_data_container.GetNameID(nbg_edge_data.edge_id) == nbg_edge_data.name_id);
+                BOOST_ASSERT(m_ebg_node_data_container.GetTravelMode(nbg_edge_data.edge_id) == nbg_edge_data.travel_mode);
+
+                // m_ebg_node_data_container.SetData(nbg_edge_data.edge_id,
+                //                                 GeometryID{geometry_id, is_encoded_forwards},
+                //                                 nbg_edge_data.name_id,
+                //                                 nbg_edge_data.travel_mode);
             }
         }
-
-        files::writeNodeData(node_data_filename, ebg_node_data_container);
     }
 
     util::Log() << "Generated " << m_edge_based_node_list.size() << " nodes in edge-expanded graph";
+
+    files::writeNodeData(node_data_filename, m_ebg_node_data_container);
+    m_ebg_node_data_container = EdgeBasedNodeDataExternalContainer();
 
     return mapping;
 }
