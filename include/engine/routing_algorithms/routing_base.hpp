@@ -41,43 +41,24 @@ bool needsLoopForward(const PhantomNode &source_phantom, const PhantomNode &targ
 
 bool needsLoopBackwards(const PhantomNode &source_phantom, const PhantomNode &target_phantom);
 
-template <bool DIRECTION>
-void insertNodesInHeap(SearchEngineData<ch::Algorithm>::ManyToManyQueryHeap &heap,
-                       const PhantomNode &phantom_node)
-{
-    BOOST_ASSERT(phantom_node.IsValid());
+void insertSourceInHeap(SearchEngineData<ch::Algorithm>::ManyToManyQueryHeap &heap,
+                        const PhantomNode &phantom_node);
 
-    const auto weight_sign = DIRECTION == FORWARD_DIRECTION ? -1 : 1;
-    if ((DIRECTION == FORWARD_DIRECTION && phantom_node.IsForwardValidSource()) ||
-        (DIRECTION == REVERSE_DIRECTION && phantom_node.IsForwardValidTarget()))
-    {
-        heap.Insert(
-            phantom_node.forward_segment_id.id,
-            weight_sign * phantom_node.GetForwardWeightPlusOffset(),
-            {phantom_node.forward_segment_id.id, weight_sign * phantom_node.GetForwardDuration()});
-    }
-    if ((DIRECTION == FORWARD_DIRECTION && phantom_node.IsReverseValidSource()) ||
-        (DIRECTION == REVERSE_DIRECTION && phantom_node.IsReverseValidTarget()))
-    {
-        heap.Insert(
-            phantom_node.reverse_segment_id.id,
-            weight_sign * phantom_node.GetReverseWeightPlusOffset(),
-            {phantom_node.reverse_segment_id.id, weight_sign * phantom_node.GetReverseDuration()});
-    }
-}
+void insertTargetInHeap(SearchEngineData<ch::Algorithm>::ManyToManyQueryHeap &heap,
+                        const PhantomNode &phantom_node);
 
 template <typename Heap>
 void insertNodesInHeaps(Heap &forward_heap, Heap &reverse_heap, const PhantomNodes &nodes)
 {
     const auto &source = nodes.source_phantom;
-    if (source.IsForwardValidSource())
+    if (source.IsValidForwardSource())
     {
         forward_heap.Insert(source.forward_segment_id.id,
                             -source.GetForwardWeightPlusOffset(),
                             source.forward_segment_id.id);
     }
 
-    if (source.IsReverseValidSource())
+    if (source.IsValidReverseSource())
     {
         forward_heap.Insert(source.reverse_segment_id.id,
                             -source.GetReverseWeightPlusOffset(),
@@ -85,14 +66,14 @@ void insertNodesInHeaps(Heap &forward_heap, Heap &reverse_heap, const PhantomNod
     }
 
     const auto &target = nodes.target_phantom;
-    if (target.IsForwardValidTarget())
+    if (target.IsValidForwardTarget())
     {
         reverse_heap.Insert(target.forward_segment_id.id,
                             target.GetForwardWeightPlusOffset(),
                             target.forward_segment_id.id);
     }
 
-    if (target.IsReverseValidTarget())
+    if (target.IsValidReverseTarget())
     {
         reverse_heap.Insert(target.reverse_segment_id.id,
                             target.GetReverseWeightPlusOffset(),

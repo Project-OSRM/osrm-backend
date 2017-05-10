@@ -55,9 +55,9 @@ struct PhantomNode
           forward_duration_offset(0), reverse_duration_offset(0),
           packed_geometry_id(SPECIAL_GEOMETRYID), component{INVALID_COMPONENTID, false},
           fwd_segment_position(0), forward_travel_mode(TRAVEL_MODE_INACCESSIBLE),
-          backward_travel_mode(TRAVEL_MODE_INACCESSIBLE), is_forward_valid_source(false),
-          is_forward_valid_target(false), is_reverse_valid_source(false),
-          is_reverse_valid_target(false)
+          backward_travel_mode(TRAVEL_MODE_INACCESSIBLE), is_valid_forward_source(false),
+          is_valid_forward_target(false), is_valid_reverse_source(false),
+          is_valid_reverse_target(false)
     {
     }
 
@@ -105,21 +105,21 @@ struct PhantomNode
 
     bool IsValid() const { return location.IsValid() && (name_id != INVALID_NAMEID); }
 
-    bool IsForwardValidSource() const
+    bool IsValidForwardSource() const
     {
-        return forward_segment_id.enabled && is_forward_valid_source;
+        return forward_segment_id.enabled && is_valid_forward_source;
     }
-    bool IsForwardValidTarget() const
+    bool IsValidForwardTarget() const
     {
-        return forward_segment_id.enabled && is_forward_valid_target;
+        return forward_segment_id.enabled && is_valid_forward_target;
     }
-    bool IsReverseValidSource() const
+    bool IsValidReverseSource() const
     {
-        return reverse_segment_id.enabled && is_reverse_valid_source;
+        return reverse_segment_id.enabled && is_valid_reverse_source;
     }
-    bool IsReverseValidTarget() const
+    bool IsValidReverseTarget() const
     {
-        return reverse_segment_id.enabled && is_reverse_valid_target;
+        return reverse_segment_id.enabled && is_valid_reverse_target;
     }
 
     bool operator==(const PhantomNode &other) const { return location == other.location; }
@@ -134,10 +134,10 @@ struct PhantomNode
                          EdgeWeight reverse_duration,
                          EdgeWeight forward_duration_offset,
                          EdgeWeight reverse_duration_offset,
-                         bool is_forward_valid_source,
-                         bool is_forward_valid_target,
-                         bool is_reverse_valid_source,
-                         bool is_reverse_valid_target,
+                         bool is_valid_forward_source,
+                         bool is_valid_forward_target,
+                         bool is_valid_reverse_source,
+                         bool is_valid_reverse_target,
                          const util::Coordinate location,
                          const util::Coordinate input_location)
         : forward_segment_id{other.forward_segment_id},
@@ -152,10 +152,10 @@ struct PhantomNode
           input_location{input_location}, fwd_segment_position{other.fwd_segment_position},
           forward_travel_mode{other.forward_travel_mode},
           backward_travel_mode{other.backward_travel_mode},
-          is_forward_valid_source{is_forward_valid_source},
-          is_forward_valid_target{is_forward_valid_target},
-          is_reverse_valid_source{is_reverse_valid_source},
-          is_reverse_valid_target{is_reverse_valid_target}
+          is_valid_forward_source{is_valid_forward_source},
+          is_valid_forward_target{is_valid_forward_target},
+          is_valid_reverse_source{is_valid_reverse_source},
+          is_valid_reverse_target{is_valid_reverse_target}
     {
     }
 
@@ -187,10 +187,10 @@ struct PhantomNode
     extractor::TravelMode backward_travel_mode : 4;
     // is phantom node valid to be used as source or target
   private:
-    bool is_forward_valid_source : 1;
-    bool is_forward_valid_target : 1;
-    bool is_reverse_valid_source : 1;
-    bool is_reverse_valid_target : 1;
+    bool is_valid_forward_source : 1;
+    bool is_valid_forward_target : 1;
+    bool is_valid_reverse_source : 1;
+    bool is_valid_reverse_target : 1;
 };
 
 static_assert(sizeof(PhantomNode) == 72, "PhantomNode has more padding then expected");
