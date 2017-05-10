@@ -72,7 +72,7 @@ matrix:
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['g++-6', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
-      env: CCOMPILER='gcc-6' CXXCOMPILER='g++-6' BUILD_TYPE='Debug' ENABLE_COVERAGE=ON
+      env: CCOMPILER='gcc-6' CXXCOMPILER='g++-6' BUILD_TYPE='Debug' ENABLE_COVERAGE=ON CUCUMBER_TIMEOUT=20000
       after_success:
         - bash <(curl -s https://codecov.io/bash)
 
@@ -360,4 +360,3 @@ script:
     fi
   - popd
   - yarn test
-
