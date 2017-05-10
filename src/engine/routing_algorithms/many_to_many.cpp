@@ -176,7 +176,7 @@ manyToManySearch(SearchEngineData<Algorithm> &engine_working_data,
     const auto search_target_phantom = [&](const PhantomNode &phantom) {
         // clear heap and insert target nodes
         query_heap.Clear();
-        insertNodesInHeap<REVERSE_DIRECTION>(query_heap, phantom);
+        insertTargetInHeap(query_heap, phantom);
 
         // explore search space
         while (!query_heap.Empty())
@@ -191,7 +191,7 @@ manyToManySearch(SearchEngineData<Algorithm> &engine_working_data,
     const auto search_source_phantom = [&](const PhantomNode &phantom) {
         // clear heap and insert source nodes
         query_heap.Clear();
-        insertNodesInHeap<FORWARD_DIRECTION>(query_heap, phantom);
+        insertSourceInHeap(query_heap, phantom);
 
         // explore search space
         while (!query_heap.Empty())
