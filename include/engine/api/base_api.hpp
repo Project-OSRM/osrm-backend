@@ -50,14 +50,19 @@ class BaseAPI
     {
         if (parameters.generate_hints)
         {
-            return json::makeWaypoint(phantom.location,
-                                      facade.GetNameForID(phantom.name_id).to_string(),
-                                      Hint{phantom, facade.GetCheckSum()});
+            // TODO: check forward/reverse
+            return json::makeWaypoint(
+                phantom.location,
+                facade.GetNameForID(facade.GetNameIndex(phantom.forward_segment_id.id)).to_string(),
+                Hint{phantom, facade.GetCheckSum()});
         }
         else
         {
-            return json::makeWaypoint(phantom.location,
-                                      facade.GetNameForID(phantom.name_id).to_string());
+            // TODO: check forward/reverse
+            return json::makeWaypoint(
+                phantom.location,
+                facade.GetNameForID(facade.GetNameIndex(phantom.forward_segment_id.id))
+                    .to_string());
         }
     }
 

@@ -91,15 +91,17 @@ void annotatePath(const FacadeT &facade,
     BOOST_ASSERT(!unpacked_nodes.empty());
     BOOST_ASSERT(unpacked_nodes.size() == unpacked_edges.size() + 1);
 
+    const auto source_node_id = unpacked_nodes.front();
+    const auto target_node_id = unpacked_nodes.back();
     const bool start_traversed_in_reverse =
-        phantom_node_pair.source_phantom.forward_segment_id.id != unpacked_nodes.front();
+        phantom_node_pair.source_phantom.forward_segment_id.id != source_node_id;
     const bool target_traversed_in_reverse =
-        phantom_node_pair.target_phantom.forward_segment_id.id != unpacked_nodes.back();
+        phantom_node_pair.target_phantom.forward_segment_id.id != target_node_id;
 
-    BOOST_ASSERT(phantom_node_pair.source_phantom.forward_segment_id.id == unpacked_nodes.front() ||
-                 phantom_node_pair.source_phantom.reverse_segment_id.id == unpacked_nodes.front());
-    BOOST_ASSERT(phantom_node_pair.target_phantom.forward_segment_id.id == unpacked_nodes.back() ||
-                 phantom_node_pair.target_phantom.reverse_segment_id.id == unpacked_nodes.back());
+    BOOST_ASSERT(phantom_node_pair.source_phantom.forward_segment_id.id == source_node_id ||
+                 phantom_node_pair.source_phantom.reverse_segment_id.id == source_node_id);
+    BOOST_ASSERT(phantom_node_pair.target_phantom.forward_segment_id.id == target_node_id ||
+                 phantom_node_pair.target_phantom.reverse_segment_id.id == target_node_id);
 
     auto node_from = unpacked_nodes.begin(), node_last = std::prev(unpacked_nodes.end());
     for (auto edge = unpacked_edges.begin(); node_from != node_last; ++node_from, ++edge)
@@ -109,10 +111,7 @@ void annotatePath(const FacadeT &facade,
         const auto node_id = *node_from;        // edge-based graph node index
         const auto name_index = facade.GetNameIndex(node_id);
         const auto turn_instruction = facade.GetTurnInstructionForEdgeID(turn_id);
-        const extractor::TravelMode travel_mode =
-            (unpacked_path.empty() && start_traversed_in_reverse)
-                ? phantom_node_pair.source_phantom.backward_travel_mode
-                : facade.GetTravelMode(node_id);
+        const extractor::TravelMode travel_mode = facade.GetTravelMode(node_id);
 
         const auto geometry_index = facade.GetGeometryIndex(node_id);
         std::vector<NodeID> id_vector;
@@ -181,23 +180,16 @@ void annotatePath(const FacadeT &facade,
     std::vector<EdgeWeight> weight_vector;
     std::vector<EdgeWeight> duration_vector;
     std::vector<DatasourceID> datasource_vector;
-    const bool is_local_path = (phantom_node_pair.source_phantom.packed_geometry_id ==
-                                phantom_node_pair.target_phantom.packed_geometry_id) &&
-                               unpacked_path.empty();
+    const auto source_geometry_id = facade.GetGeometryIndex(source_node_id).id;
+    const auto target_geometry_id = facade.GetGeometryIndex(target_node_id).id;
+    const auto is_local_path = source_geometry_id == target_geometry_id && unpacked_path.empty();
 
     if (target_traversed_in_reverse)
     {
-        id_vector = facade.GetUncompressedReverseGeometry(
-            phantom_node_pair.target_phantom.packed_geometry_id);
-
-        weight_vector = facade.GetUncompressedReverseWeights(
-            phantom_node_pair.target_phantom.packed_geometry_id);
-
-        duration_vector = facade.GetUncompressedReverseDurations(
-            phantom_node_pair.target_phantom.packed_geometry_id);
-
-        datasource_vector = facade.GetUncompressedReverseDatasources(
-            phantom_node_pair.target_phantom.packed_geometry_id);
+        id_vector = facade.GetUncompressedReverseGeometry(target_geometry_id);
+        weight_vector = facade.GetUncompressedReverseWeights(target_geometry_id);
+        duration_vector = facade.GetUncompressedReverseDurations(target_geometry_id);
+        datasource_vector = facade.GetUncompressedReverseDatasources(target_geometry_id);
 
         if (is_local_path)
         {
@@ -215,17 +207,10 @@ void annotatePath(const FacadeT &facade,
         }
         end_index = phantom_node_pair.target_phantom.fwd_segment_position;
 
-        id_vector = facade.GetUncompressedForwardGeometry(
-            phantom_node_pair.target_phantom.packed_geometry_id);
-
-        weight_vector = facade.GetUncompressedForwardWeights(
-            phantom_node_pair.target_phantom.packed_geometry_id);
-
-        duration_vector = facade.GetUncompressedForwardDurations(
-            phantom_node_pair.target_phantom.packed_geometry_id);
-
-        datasource_vector = facade.GetUncompressedForwardDatasources(
-            phantom_node_pair.target_phantom.packed_geometry_id);
+        id_vector = facade.GetUncompressedForwardGeometry(target_geometry_id);
+        weight_vector = facade.GetUncompressedForwardWeights(target_geometry_id);
+        duration_vector = facade.GetUncompressedForwardDurations(target_geometry_id);
+        datasource_vector = facade.GetUncompressedForwardDatasources(target_geometry_id);
     }
 
     // Given the following compressed geometry:
@@ -239,20 +224,19 @@ void annotatePath(const FacadeT &facade,
          (start_index < end_index ? ++segment_idx : --segment_idx))
     {
         BOOST_ASSERT(segment_idx < id_vector.size() - 1);
-        BOOST_ASSERT(phantom_node_pair.target_phantom.forward_travel_mode > 0);
-        unpacked_path.push_back(PathData{
-            id_vector[start_index < end_index ? segment_idx + 1 : segment_idx - 1],
-            phantom_node_pair.target_phantom.name_id,
-            weight_vector[segment_idx],
-            duration_vector[segment_idx],
-            extractor::guidance::TurnInstruction::NO_TURN(),
-            {{0, INVALID_LANEID}, INVALID_LANE_DESCRIPTIONID},
-            target_traversed_in_reverse ? phantom_node_pair.target_phantom.backward_travel_mode
-                                        : phantom_node_pair.target_phantom.forward_travel_mode,
-            INVALID_ENTRY_CLASSID,
-            datasource_vector[segment_idx],
-            util::guidance::TurnBearing(0),
-            util::guidance::TurnBearing(0)});
+        BOOST_ASSERT(facade.GetTravelMode(target_node_id) > 0);
+        unpacked_path.push_back(
+            PathData{id_vector[start_index < end_index ? segment_idx + 1 : segment_idx - 1],
+                     facade.GetNameIndex(target_node_id),
+                     weight_vector[segment_idx],
+                     duration_vector[segment_idx],
+                     extractor::guidance::TurnInstruction::NO_TURN(),
+                     {{0, INVALID_LANEID}, INVALID_LANE_DESCRIPTIONID},
+                     facade.GetTravelMode(target_node_id),
+                     INVALID_ENTRY_CLASSID,
+                     datasource_vector[segment_idx],
+                     util::guidance::TurnBearing(0),
+                     util::guidance::TurnBearing(0)});
     }
 
     if (unpacked_path.size() > 0)

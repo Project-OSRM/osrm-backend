@@ -171,7 +171,6 @@ struct GraphFixture
             d.forward_segment_id = {pair.second, true};
             d.reverse_segment_id = {pair.first, true};
             d.fwd_segment_position = 0;
-            d.packed_geometry_id = 0;
             edges.emplace_back(d);
         }
     }

@@ -163,13 +163,9 @@ NBGToEBG EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const N
                                             edge_id_to_segment_id(reverse_data.edge_id),
                                             current_edge_source_coordinate_id,
                                             current_edge_target_coordinate_id,
-                                            forward_data.name_id,
-                                            packed_geometry_id,
                                             false,
                                             INVALID_COMPONENTID,
-                                            i,
-                                            forward_data.travel_mode,
-                                            reverse_data.travel_mode);
+                                            i);
 
         m_edge_based_node_is_startpoint.push_back(forward_data.startpoint ||
                                                   reverse_data.startpoint);
@@ -323,16 +319,18 @@ EdgeBasedGraphFactory::GenerateEdgeExpandedNodes(const std::string &node_data_fi
 
                 BOOST_ASSERT(is_encoded_forwards || is_encoded_backwards);
 
-                auto geometry_id =
-                    is_encoded_forwards
-                        ? m_compressed_edge_container.GetZippedPositionForForwardID(nbg_edge_id)
-                        : is_encoded_backwards
-                              ? m_compressed_edge_container.GetZippedPositionForReverseID(
-                                    nbg_edge_id)
-                              : SPECIAL_GEOMETRYID;
+                // auto geometry_id =
+                //     is_encoded_forwards
+                //         ? m_compressed_edge_container.GetZippedPositionForForwardID(nbg_edge_id)
+                //         : is_encoded_backwards
+                //               ? m_compressed_edge_container.GetZippedPositionForReverseID(
+                //                     nbg_edge_id)
+                //               : SPECIAL_GEOMETRYID;
 
-                BOOST_ASSERT(m_ebg_node_data_container.GetNameID(nbg_edge_data.edge_id) == nbg_edge_data.name_id);
-                BOOST_ASSERT(m_ebg_node_data_container.GetTravelMode(nbg_edge_data.edge_id) == nbg_edge_data.travel_mode);
+                BOOST_ASSERT(m_ebg_node_data_container.GetNameID(nbg_edge_data.edge_id) ==
+                             nbg_edge_data.name_id);
+                BOOST_ASSERT(m_ebg_node_data_container.GetTravelMode(nbg_edge_data.edge_id) ==
+                             nbg_edge_data.travel_mode);
 
                 // m_ebg_node_data_container.SetData(nbg_edge_data.edge_id,
                 //                                 GeometryID{geometry_id, is_encoded_forwards},

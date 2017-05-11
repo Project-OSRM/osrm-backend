@@ -37,6 +37,10 @@ getTileTurns(const datafacade::ContiguousInternalMemoryDataFacade<ch::Algorithm>
     // it saves us a bunch of re-allocations during iteration.
     directed_graph.reserve(edges.size() * 2);
 
+    const auto get_geometry_id = [&facade](auto edge) {
+        return facade.GetGeometryIndex(edge.forward_segment_id.id).id;
+    };
+
     // Build an adjacency list for all the road segments visible in
     // the tile
     for (const auto &edge_index : sorted_edge_indexes)
@@ -48,14 +52,14 @@ getTileTurns(const datafacade::ContiguousInternalMemoryDataFacade<ch::Algorithm>
             directed_graph[edge.u].push_back({edge.v, edge.forward_segment_id.id});
             if (edge_based_node_info.count(edge.forward_segment_id.id) == 0)
             {
-                edge_based_node_info[edge.forward_segment_id.id] = {true, edge.packed_geometry_id};
+                edge_based_node_info[edge.forward_segment_id.id] = {true, get_geometry_id(edge)};
             }
             else
             {
                 BOOST_ASSERT(edge_based_node_info[edge.forward_segment_id.id].is_geometry_forward ==
                              true);
                 BOOST_ASSERT(edge_based_node_info[edge.forward_segment_id.id].packed_geometry_id ==
-                             edge.packed_geometry_id);
+                             get_geometry_id(edge));
             }
         }
         if (edge.reverse_segment_id.enabled)
@@ -63,14 +67,14 @@ getTileTurns(const datafacade::ContiguousInternalMemoryDataFacade<ch::Algorithm>
             directed_graph[edge.v].push_back({edge.u, edge.reverse_segment_id.id});
             if (edge_based_node_info.count(edge.reverse_segment_id.id) == 0)
             {
-                edge_based_node_info[edge.reverse_segment_id.id] = {false, edge.packed_geometry_id};
+                edge_based_node_info[edge.reverse_segment_id.id] = {false, get_geometry_id(edge)};
             }
             else
             {
                 BOOST_ASSERT(edge_based_node_info[edge.reverse_segment_id.id].is_geometry_forward ==
                              false);
                 BOOST_ASSERT(edge_based_node_info[edge.reverse_segment_id.id].packed_geometry_id ==
-                             edge.packed_geometry_id);
+                             get_geometry_id(edge));
             }
         }
     }
