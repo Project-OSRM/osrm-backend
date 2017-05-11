@@ -32,24 +32,6 @@ namespace util
 {
 
 /**
- * Reads the .restrictions file and loads it to a vector.
- * The since the restrictions reference nodes using their external node id,
- * we need to renumber it to the new internal id.
-*/
-inline unsigned loadRestrictionsFromFile(storage::io::FileReader &file_reader,
-                                         std::vector<extractor::TurnRestriction> &restriction_list)
-{
-    auto number_of_usable_restrictions = file_reader.ReadElementCount64();
-    restriction_list.resize(number_of_usable_restrictions);
-    if (number_of_usable_restrictions > 0)
-    {
-        file_reader.ReadInto(restriction_list.data(), number_of_usable_restrictions);
-    }
-
-    return number_of_usable_restrictions;
-}
-
-/**
  * Reads the beginning of an .osrm file and produces:
  *  - barrier nodes
  *  - traffic lights

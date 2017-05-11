@@ -1,6 +1,8 @@
 #ifndef RESTRICTION_HPP
 #define RESTRICTION_HPP
 
+#include "util/coordinate.hpp"
+#include "util/opening_hours.hpp"
 #include "util/typedefs.hpp"
 
 #include <limits>
@@ -19,6 +21,8 @@ struct TurnRestriction
     WayOrNode via;
     WayOrNode from;
     WayOrNode to;
+
+    std::vector<util::OpeningHours> condition;
 
     struct Bits
     { // mostly unused

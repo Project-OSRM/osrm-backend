@@ -95,7 +95,7 @@ class RestrictionMap
             return;
         }
 
-        // find all potential start edges. It is more efficent to get a (small) list
+        // find all potential start edges. It is more efficient to get a (small) list
         // of potential start edges than iterating over all buckets
         std::vector<NodeID> predecessors;
         for (const EdgeID current_edge_id : graph.GetAdjacentEdgeRange(node_u))

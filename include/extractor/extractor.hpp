@@ -56,6 +56,9 @@ class Extractor
   private:
     ExtractorConfig config;
 
+    std::vector<TurnRestriction> ParseOSMData(ScriptingEnvironment &scripting_environment,
+                                              const unsigned number_of_threads);
+
     std::pair<std::size_t, EdgeID>
     BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
                            std::vector<util::Coordinate> &coordinates,
@@ -64,7 +67,8 @@ class Extractor
                            std::vector<bool> &node_is_startpoint,
                            std::vector<EdgeWeight> &edge_based_node_weights,
                            util::DeallocatingVector<EdgeBasedEdge> &edge_based_edge_list,
-                           const std::string &intersection_class_output_file);
+                           const std::string &intersection_class_output_file,
+                           std::vector<TurnRestriction> &turn_restrictions);
     void WriteProfileProperties(const std::string &output_path,
                                 const ProfileProperties &properties) const;
     void FindComponents(unsigned max_edge_id,

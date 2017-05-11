@@ -1,6 +1,8 @@
 #include "extractor/extraction_containers.hpp"
 #include "extractor/extraction_segment.hpp"
 #include "extractor/extraction_way.hpp"
+#include "extractor/restriction.hpp"
+#include "extractor/serialization.hpp"
 
 #include "util/coordinate_calculation.hpp"
 
@@ -134,7 +136,6 @@ void ExtractionContainers::FlushVectors()
     all_edges_list.flush();
     name_char_data.flush();
     name_offsets.flush();
-    restrictions_list.flush();
     way_start_end_id_list.flush();
 }
 
@@ -142,7 +143,7 @@ void ExtractionContainers::FlushVectors()
  * Processes the collected data and serializes it.
  * At this point nodes are still referenced by their OSM id.
  *
- * - map start-end nodes of ways to ways used int restrictions to compute compressed
+ * - map start-end nodes of ways to ways used in restrictions to compute compressed
  *   trippe representation
  * - filter nodes list to nodes that are referenced by ways
  * - merge edges with nodes to include location of start/end points and serialize
@@ -630,7 +631,7 @@ void ExtractionContainers::WriteNodes(storage::io::FileWriter &file_out) const
     util::Log() << "Processed " << max_internal_node_id << " nodes";
 }
 
-void ExtractionContainers::WriteRestrictions(const std::string &path) const
+void ExtractionContainers::WriteRestrictions(const std::string &path)
 {
     // serialize restrictions
     std::uint64_t written_restriction_count = 0;
@@ -645,13 +646,27 @@ void ExtractionContainers::WriteRestrictions(const std::string &path) const
             SPECIAL_NODEID != restriction_container.restriction.via.node &&
             SPECIAL_NODEID != restriction_container.restriction.to.node)
         {
-            restrictions_out_file.WriteOne(restriction_container.restriction);
-            ++written_restriction_count;
+            if (!restriction_container.restriction.condition.empty())
+            {
+                // write conditional turn restrictions to disk, for use in contractor later
+                extractor::serialization::write(restrictions_out_file,
+                                                restriction_container.restriction);
+                ++written_restriction_count;
+            }
+            else
+            {
+                // save unconditional turn restriction to memory, for use in ebg later
+                unconditional_turn_restrictions.push_back(
+                    std::move(restriction_container.restriction));
+            }
         }
     }
     restrictions_out_file.SkipToBeginning();
     restrictions_out_file.WriteElementCount64(written_restriction_count);
-    util::Log() << "usable restrictions: " << written_restriction_count;
+    util::Log() << "number of restrictions saved to memory: "
+                << unconditional_turn_restrictions.size();
+    util::Log() << "number of conditional restrictions written to disk: "
+                << written_restriction_count;
 }
 
 void ExtractionContainers::PrepareRestrictions()
@@ -672,10 +687,8 @@ void ExtractionContainers::PrepareRestrictions()
         util::UnbufferedLog log;
         log << "Sorting " << restrictions_list.size() << " restriction. by from... ";
         TIMER_START(sort_restrictions);
-        stxxl::sort(restrictions_list.begin(),
-                    restrictions_list.end(),
-                    CmpRestrictionContainerByFrom(),
-                    stxxl_memory);
+        std::sort(
+            restrictions_list.begin(), restrictions_list.end(), CmpRestrictionContainerByFrom());
         TIMER_STOP(sort_restrictions);
         log << "ok, after " << TIMER_SEC(sort_restrictions) << "s";
     }
@@ -758,6 +771,11 @@ void ExtractionContainers::PrepareRestrictions()
                 }
                 restrictions_iterator->restriction.from.node = id_iter->second;
             }
+            else
+            {
+                // if it's neither, this is an invalid restriction
+                restrictions_iterator->restriction.from.node = SPECIAL_NODEID;
+            }
             ++restrictions_iterator;
         }
 
@@ -769,10 +787,8 @@ void ExtractionContainers::PrepareRestrictions()
         util::UnbufferedLog log;
         log << "Sorting restrictions. by to  ... " << std::flush;
         TIMER_START(sort_restrictions_to);
-        stxxl::sort(restrictions_list.begin(),
-                    restrictions_list.end(),
-                    CmpRestrictionContainerByTo(),
-                    stxxl_memory);
+        std::sort(
+            restrictions_list.begin(), restrictions_list.end(), CmpRestrictionContainerByTo());
         TIMER_STOP(sort_restrictions_to);
         log << "ok, after " << TIMER_SEC(sort_restrictions_to) << "s";
     }
@@ -849,6 +865,11 @@ void ExtractionContainers::PrepareRestrictions()
                     continue;
                 }
                 restrictions_iterator->restriction.to.node = to_id_iter->second;
+            }
+            else
+            {
+                // if it's neither, this is an invalid restriction
+                restrictions_iterator->restriction.to.node = SPECIAL_NODEID;
             }
             ++restrictions_iterator;
         }

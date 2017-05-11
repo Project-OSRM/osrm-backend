@@ -547,20 +547,17 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                     // If this edge is 'trivial' -- where the compressed edge corresponds
                     // exactly to an original OSM segment -- we can pull the turn's preceding
                     // node ID directly with `node_along_road_entering`; otherwise, we need to
-                    // look
-                    // up the node
-                    // immediately preceding the turn from the compressed edge container.
+                    // look up the node immediately preceding the turn from the compressed edge
+                    // container.
                     const bool isTrivial = m_compressed_edge_container.IsTrivial(incoming_edge);
 
                     const auto &from_node =
-                        isTrivial ? m_osm_node_ids[node_along_road_entering]
-                                  : m_osm_node_ids[m_compressed_edge_container.GetLastEdgeSourceID(
-                                        incoming_edge)];
+                        isTrivial ? node_along_road_entering
+                                  : m_compressed_edge_container.GetLastEdgeSourceID(incoming_edge);
                     const auto &via_node =
-                        m_osm_node_ids[m_compressed_edge_container.GetLastEdgeTargetID(
-                            incoming_edge)];
+                        m_compressed_edge_container.GetLastEdgeTargetID(incoming_edge);
                     const auto &to_node =
-                        m_osm_node_ids[m_compressed_edge_container.GetFirstEdgeTargetID(turn.eid)];
+                        m_compressed_edge_container.GetFirstEdgeTargetID(turn.eid);
 
                     lookup::TurnIndexBlock turn_index_block = {from_node, via_node, to_node};
 

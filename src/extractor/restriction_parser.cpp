@@ -1,9 +1,9 @@
 #include "extractor/restriction_parser.hpp"
 #include "extractor/profile_properties.hpp"
-#include "extractor/scripting_environment.hpp"
 
 #include "extractor/external_memory_node.hpp"
 
+#include "util/conditional_restrictions.hpp"
 #include "util/log.hpp"
 
 #include <boost/algorithm/string.hpp>
@@ -24,12 +24,14 @@ namespace osrm
 namespace extractor
 {
 
-RestrictionParser::RestrictionParser(ScriptingEnvironment &scripting_environment)
-    : use_turn_restrictions(scripting_environment.GetProfileProperties().use_turn_restrictions)
+RestrictionParser::RestrictionParser(bool use_turn_restrictions_,
+                                     bool parse_conditionals_,
+                                     std::vector<std::string> &restrictions_)
+    : use_turn_restrictions(use_turn_restrictions_), parse_conditionals(parse_conditionals_),
+      restrictions(restrictions_)
 {
     if (use_turn_restrictions)
     {
-        restrictions = scripting_environment.GetRestrictions();
         const unsigned count = restrictions.size();
         if (count > 0)
         {
@@ -54,9 +56,10 @@ RestrictionParser::RestrictionParser(ScriptingEnvironment &scripting_environment
  * in the corresponding profile. We use it for both namespacing restrictions, as in
  * restriction:motorcar as well as whitelisting if its in except:motorcar.
  */
-boost::optional<InputRestrictionContainer>
+std::vector<InputRestrictionContainer>
 RestrictionParser::TryParse(const osmium::Relation &relation) const
 {
+    std::vector<InputRestrictionContainer> parsed_restrictions;
     // return if turn restrictions should be ignored
     if (!use_turn_restrictions)
     {
@@ -65,10 +68,21 @@ RestrictionParser::TryParse(const osmium::Relation &relation) const
 
     osmium::tags::KeyFilter filter(false);
     filter.add(true, "restriction");
+    if (parse_conditionals)
+    {
+        filter.add(true, "restriction:conditional");
+        for (const auto &namespaced : restrictions)
+        {
+            filter.add(true, "restriction:" + namespaced + ":conditional");
+        }
+    }
 
     // Not only use restriction= but also e.g. restriction:motorcar=
+    // Include restriction:{mode}:conditional if flagged
     for (const auto &namespaced : restrictions)
+    {
         filter.add(true, "restriction:" + namespaced);
+    }
 
     const osmium::TagList &tag_list = relation.tags();
 
@@ -160,7 +174,42 @@ RestrictionParser::TryParse(const osmium::Relation &relation) const
             break;
         }
     }
-    return boost::make_optional(std::move(restriction_container));
+
+    // parse conditional tags
+    if (parse_conditionals)
+    {
+        osmium::tags::KeyFilter::iterator fi_begin(filter, tag_list.begin(), tag_list.end());
+        osmium::tags::KeyFilter::iterator fi_end(filter, tag_list.end(), tag_list.end());
+        for (; fi_begin != fi_end; ++fi_begin)
+        {
+            const std::string key(fi_begin->key());
+            const std::string value(fi_begin->value());
+
+            // Parse condition and add independent value/condition pairs
+            const auto &parsed = osrm::util::ParseConditionalRestrictions(value);
+
+            if (parsed.empty())
+                continue;
+
+            for (const auto &p : parsed)
+            {
+                std::vector<util::OpeningHours> hours = util::ParseOpeningHours(p.condition);
+                // found unrecognized condition, continue
+                if (hours.empty())
+                    return {};
+
+                restriction_container.restriction.condition = std::move(hours);
+            }
+        }
+    }
+
+    // push back a copy of turn restriction
+    if (restriction_container.restriction.via.node != SPECIAL_NODEID &&
+        restriction_container.restriction.from.node != SPECIAL_NODEID &&
+        restriction_container.restriction.to.node != SPECIAL_NODEID)
+        parsed_restrictions.push_back(restriction_container);
+
+    return parsed_restrictions;
 }
 
 bool RestrictionParser::ShouldIgnoreRestriction(const std::string &except_tag_string) const

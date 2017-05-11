@@ -14,7 +14,8 @@ target_include_directories(rtree-bench
 target_link_libraries(rtree-bench
 	${BOOST_BASE_LIBRARIES}
 	${CMAKE_THREAD_LIBS_INIT}
-	${TBB_LIBRARIES})
+	${TBB_LIBRARIES}
+	${MAYBE_SHAPEFILE})
 
 add_executable(match-bench
 	EXCLUDE_FROM_ALL
@@ -25,7 +26,8 @@ target_link_libraries(match-bench
 	osrm
 	${BOOST_BASE_LIBRARIES}
 	${CMAKE_THREAD_LIBS_INIT}
-	${TBB_LIBRARIES})
+	${TBB_LIBRARIES}
+	${MAYBE_SHAPEFILE})
 
 add_executable(alias-bench
 	EXCLUDE_FROM_ALL
@@ -35,7 +37,8 @@ add_executable(alias-bench
 target_link_libraries(alias-bench
 	${BOOST_BASE_LIBRARIES}
 	${CMAKE_THREAD_LIBS_INIT}
-	${TBB_LIBRARIES})
+	${TBB_LIBRARIES}
+	${MAYBE_SHAPEFILE})
 
 add_custom_target(benchmarks
 	DEPENDS

@@ -41,14 +41,17 @@ class ScriptingEnvironment;
 class RestrictionParser
 {
   public:
-    RestrictionParser(ScriptingEnvironment &scripting_environment);
-    boost::optional<InputRestrictionContainer> TryParse(const osmium::Relation &relation) const;
+    RestrictionParser(bool use_turn_restrictions,
+                      bool parse_conditionals,
+                      std::vector<std::string> &restrictions);
+    std::vector<InputRestrictionContainer> TryParse(const osmium::Relation &relation) const;
 
   private:
     bool ShouldIgnoreRestriction(const std::string &except_tag_string) const;
 
-    std::vector<std::string> restrictions;
     bool use_turn_restrictions;
+    bool parse_conditionals;
+    std::vector<std::string> restrictions;
 };
 }
 }
