@@ -366,6 +366,10 @@ void encodeVectorTile(const datafacade::ContiguousInternalMemoryDataFacadeBase &
         return offset;
     };
 
+    const auto get_geometry_id = [&facade](auto edge) {
+        return facade.GetGeometryIndex(edge.forward_segment_id.id).id;
+    };
+
     // Vector tiles encode feature properties as indexes into a lookup table.  So, we need
     // to "pre-loop" over all the edges to create the lookup tables.  Once we have those, we
     // can then encode the features, and we'll know the indexes that feature properties
@@ -374,10 +378,11 @@ void encodeVectorTile(const datafacade::ContiguousInternalMemoryDataFacadeBase &
     {
         const auto &edge = edges[edge_index];
 
+        const auto geometry_id = get_geometry_id(edge);
         const auto forward_datasource_vector =
-            facade.GetUncompressedForwardDatasources(edge.packed_geometry_id);
+            facade.GetUncompressedForwardDatasources(geometry_id);
         const auto reverse_datasource_vector =
-            facade.GetUncompressedReverseDatasources(edge.packed_geometry_id);
+            facade.GetUncompressedReverseDatasources(geometry_id);
 
         BOOST_ASSERT(edge.fwd_segment_position < forward_datasource_vector.size());
         const auto forward_datasource = forward_datasource_vector[edge.fwd_segment_position];
@@ -421,12 +426,13 @@ void encodeVectorTile(const datafacade::ContiguousInternalMemoryDataFacadeBase &
             for (const auto &edge_index : sorted_edge_indexes)
             {
                 const auto &edge = edges[edge_index];
+                const auto geometry_id = get_geometry_id(edge);
 
                 // Weight values
                 const auto forward_weight_vector =
-                    facade.GetUncompressedForwardWeights(edge.packed_geometry_id);
+                    facade.GetUncompressedForwardWeights(geometry_id);
                 const auto reverse_weight_vector =
-                    facade.GetUncompressedReverseWeights(edge.packed_geometry_id);
+                    facade.GetUncompressedReverseWeights(geometry_id);
                 const auto forward_weight = forward_weight_vector[edge.fwd_segment_position];
                 const auto reverse_weight = reverse_weight_vector[reverse_weight_vector.size() -
                                                                   edge.fwd_segment_position - 1];
@@ -435,9 +441,9 @@ void encodeVectorTile(const datafacade::ContiguousInternalMemoryDataFacadeBase &
 
                 // Duration values
                 const auto forward_duration_vector =
-                    facade.GetUncompressedForwardDurations(edge.packed_geometry_id);
+                    facade.GetUncompressedForwardDurations(geometry_id);
                 const auto reverse_duration_vector =
-                    facade.GetUncompressedReverseDurations(edge.packed_geometry_id);
+                    facade.GetUncompressedReverseDurations(geometry_id);
                 const auto forward_duration = forward_duration_vector[edge.fwd_segment_position];
                 const auto reverse_duration =
                     reverse_duration_vector[reverse_duration_vector.size() -
@@ -453,6 +459,8 @@ void encodeVectorTile(const datafacade::ContiguousInternalMemoryDataFacadeBase &
                 for (const auto &edge_index : sorted_edge_indexes)
                 {
                     const auto &edge = edges[edge_index];
+                    const auto geometry_id = get_geometry_id(edge);
+
                     // Get coordinates for start/end nodes of segment (NodeIDs u and v)
                     const auto a = facade.GetCoordinateOfNode(edge.u);
                     const auto b = facade.GetCoordinateOfNode(edge.v);
@@ -461,17 +469,17 @@ void encodeVectorTile(const datafacade::ContiguousInternalMemoryDataFacadeBase &
                         osrm::util::coordinate_calculation::haversineDistance(a, b);
 
                     const auto forward_weight_vector =
-                        facade.GetUncompressedForwardWeights(edge.packed_geometry_id);
+                        facade.GetUncompressedForwardWeights(geometry_id);
                     const auto reverse_weight_vector =
-                        facade.GetUncompressedReverseWeights(edge.packed_geometry_id);
+                        facade.GetUncompressedReverseWeights(geometry_id);
                     const auto forward_duration_vector =
-                        facade.GetUncompressedForwardDurations(edge.packed_geometry_id);
+                        facade.GetUncompressedForwardDurations(geometry_id);
                     const auto reverse_duration_vector =
-                        facade.GetUncompressedReverseDurations(edge.packed_geometry_id);
+                        facade.GetUncompressedReverseDurations(geometry_id);
                     const auto forward_datasource_vector =
-                        facade.GetUncompressedForwardDatasources(edge.packed_geometry_id);
+                        facade.GetUncompressedForwardDatasources(geometry_id);
                     const auto reverse_datasource_vector =
-                        facade.GetUncompressedReverseDatasources(edge.packed_geometry_id);
+                        facade.GetUncompressedReverseDatasources(geometry_id);
                     const auto forward_weight = forward_weight_vector[edge.fwd_segment_position];
                     const auto reverse_weight =
                         reverse_weight_vector[reverse_weight_vector.size() -
@@ -487,7 +495,8 @@ void encodeVectorTile(const datafacade::ContiguousInternalMemoryDataFacadeBase &
                         reverse_datasource_vector[reverse_datasource_vector.size() -
                                                   edge.fwd_segment_position - 1];
 
-                    auto name = facade.GetNameForID(edge.name_id);
+                    const auto name_id = facade.GetNameIndex(edge.forward_segment_id.id);
+                    auto name = facade.GetNameForID(name_id);
 
                     const auto name_offset = [&name, &names, &name_offsets]() {
                         auto iter = name_offsets.find(name);

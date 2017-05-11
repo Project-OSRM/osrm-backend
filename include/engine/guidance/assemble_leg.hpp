@@ -40,7 +40,8 @@ struct NamedSegment
 
 template <std::size_t SegmentNumber>
 
-std::array<std::uint32_t, SegmentNumber> summarizeRoute(const std::vector<PathData> &route_data,
+std::array<std::uint32_t, SegmentNumber> summarizeRoute(const datafacade::BaseDataFacade &facade,
+                                                        const std::vector<PathData> &route_data,
                                                         const PhantomNode &target_node,
                                                         const bool target_traversed_in_reverse)
 {
@@ -80,8 +81,10 @@ std::array<std::uint32_t, SegmentNumber> summarizeRoute(const std::vector<PathDa
         });
     const auto target_duration =
         target_traversed_in_reverse ? target_node.reverse_duration : target_node.forward_duration;
+    const auto target_node_id = target_traversed_in_reverse ? target_node.reverse_segment_id.id
+                                                            : target_node.forward_segment_id.id;
     if (target_duration > 1)
-        segments.push_back({target_duration, index++, target_node.name_id});
+        segments.push_back({target_duration, index++, facade.GetNameIndex(target_node_id)});
     // this makes sure that the segment with the lowest position comes first
     std::sort(
         segments.begin(), segments.end(), [](const NamedSegment &lhs, const NamedSegment &rhs) {
@@ -183,7 +186,7 @@ inline RouteLeg assembleLeg(const datafacade::BaseDataFacade &facade,
     if (needs_summary)
     {
         auto summary_array = detail::summarizeRoute<detail::MAX_USED_SEGMENTS>(
-            route_data, target_node, target_traversed_in_reverse);
+            facade, route_data, target_node, target_traversed_in_reverse);
 
         BOOST_ASSERT(detail::MAX_USED_SEGMENTS > 0);
         BOOST_ASSERT(summary_array.begin() != summary_array.end());
