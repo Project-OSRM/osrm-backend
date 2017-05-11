@@ -84,28 +84,34 @@ ViaRoutePlugin::HandleRequest(const datafacade::ContiguousInternalMemoryDataFaca
     };
     util::for_each_pair(snapped_phantoms, build_phantom_pairs);
 
-    InternalRouteResult raw_route;
+    api::RouteAPI route_api{facade, route_parameters};
+
+    InternalManyRoutesResult routes;
+
+    // Alternatives do not support vias, only direct s,t queries supported
+    // See the implementation notes and high-level outline.
+    // https://github.com/Project-OSRM/osrm-backend/issues/3905
     if (1 == start_end_nodes.size() && algorithms.HasAlternativePathSearch() &&
         route_parameters.alternatives)
     {
-        raw_route = algorithms.AlternativePathSearch(start_end_nodes.front());
+        routes = algorithms.AlternativePathSearch(start_end_nodes.front());
     }
     else if (1 == start_end_nodes.size() && algorithms.HasDirectShortestPathSearch())
     {
-        raw_route = algorithms.DirectShortestPathSearch(start_end_nodes.front());
+        routes = algorithms.DirectShortestPathSearch(start_end_nodes.front());
     }
     else
     {
-        raw_route =
-            algorithms.ShortestPathSearch(start_end_nodes, route_parameters.continue_straight);
+        routes = algorithms.ShortestPathSearch(start_end_nodes, route_parameters.continue_straight);
     }
 
     // we can only know this after the fact, different SCC ids still
     // allow for connection in one direction.
-    if (raw_route.is_valid())
+    BOOST_ASSERT(!routes.routes.empty());
+
+    if (routes.routes[0].is_valid())
     {
-        api::RouteAPI route_api{facade, route_parameters};
-        route_api.MakeResponse(raw_route, json_result);
+        route_api.MakeResponse(routes, json_result);
     }
     else
     {

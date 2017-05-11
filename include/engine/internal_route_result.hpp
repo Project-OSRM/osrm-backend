@@ -47,23 +47,28 @@ struct PathData
 struct InternalRouteResult
 {
     std::vector<std::vector<PathData>> unpacked_path_segments;
-    std::vector<PathData> unpacked_alternative;
     std::vector<PhantomNodes> segment_end_coordinates;
     std::vector<bool> source_traversed_in_reverse;
     std::vector<bool> target_traversed_in_reverse;
-    std::vector<bool> alt_source_traversed_in_reverse;
-    std::vector<bool> alt_target_traversed_in_reverse;
     EdgeWeight shortest_path_weight = INVALID_EDGE_WEIGHT;
-    EdgeWeight alternative_path_weight = INVALID_EDGE_WEIGHT;
 
     bool is_valid() const { return INVALID_EDGE_WEIGHT != shortest_path_weight; }
-
-    bool has_alternative() const { return INVALID_EDGE_WEIGHT != alternative_path_weight; }
 
     bool is_via_leg(const std::size_t leg) const
     {
         return (leg != unpacked_path_segments.size() - 1);
     }
+};
+
+struct InternalManyRoutesResult
+{
+    InternalManyRoutesResult() = default;
+    InternalManyRoutesResult(InternalRouteResult route) : routes{std::move(route)} {}
+    InternalManyRoutesResult(std::vector<InternalRouteResult> routes_) : routes{std::move(routes_)}
+    {
+    }
+
+    std::vector<InternalRouteResult> routes;
 };
 }
 }

@@ -19,7 +19,7 @@ namespace engine
 class RoutingAlgorithmsInterface
 {
   public:
-    virtual InternalRouteResult
+    virtual InternalManyRoutesResult
     AlternativePathSearch(const PhantomNodes &phantom_node_pair) const = 0;
 
     virtual InternalRouteResult
@@ -65,7 +65,7 @@ template <typename Algorithm> class RoutingAlgorithms final : public RoutingAlgo
 
     virtual ~RoutingAlgorithms() = default;
 
-    InternalRouteResult
+    InternalManyRoutesResult
     AlternativePathSearch(const PhantomNodes &phantom_node_pair) const final override;
 
     InternalRouteResult ShortestPathSearch(
@@ -129,7 +129,7 @@ template <typename Algorithm> class RoutingAlgorithms final : public RoutingAlgo
 };
 
 template <typename Algorithm>
-InternalRouteResult
+InternalManyRoutesResult
 RoutingAlgorithms<Algorithm>::AlternativePathSearch(const PhantomNodes &phantom_node_pair) const
 {
     return routing_algorithms::ch::alternativePathSearch(heaps, facade, phantom_node_pair);
@@ -188,7 +188,7 @@ inline std::vector<routing_algorithms::TurnData> RoutingAlgorithms<Algorithm>::G
 
 // CoreCH overrides
 template <>
-InternalRouteResult inline RoutingAlgorithms<
+InternalManyRoutesResult inline RoutingAlgorithms<
     routing_algorithms::corech::Algorithm>::AlternativePathSearch(const PhantomNodes &) const
 {
     throw util::exception("AlternativePathSearch is disabled due to performance reasons");
@@ -206,7 +206,7 @@ RoutingAlgorithms<routing_algorithms::corech::Algorithm>::ManyToManySearch(
 
 // MLD overrides for not implemented
 template <>
-InternalRouteResult inline RoutingAlgorithms<
+InternalManyRoutesResult inline RoutingAlgorithms<
     routing_algorithms::mld::Algorithm>::AlternativePathSearch(const PhantomNodes &) const
 {
     throw util::exception("AlternativePathSearch is not implemented");

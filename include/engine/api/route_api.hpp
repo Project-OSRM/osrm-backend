@@ -41,27 +41,33 @@ class RouteAPI : public BaseAPI
     {
     }
 
+    void MakeResponse(const InternalManyRoutesResult &raw_routes,
+                      util::json::Object &response) const
+    {
+        BOOST_ASSERT(!raw_routes.routes.empty());
+
+        util::json::Array jsRoutes;
+
+        for (const auto &route : raw_routes.routes)
+        {
+            if (!route.is_valid())
+                continue;
+
+            jsRoutes.values.push_back(MakeRoute(route.segment_end_coordinates,
+                                                route.unpacked_path_segments,
+                                                route.source_traversed_in_reverse,
+                                                route.target_traversed_in_reverse));
+        }
+
+        response.values["waypoints"] =
+            BaseAPI::MakeWaypoints(raw_routes.routes[0].segment_end_coordinates);
+        response.values["routes"] = std::move(jsRoutes);
+        response.values["code"] = "Ok";
+    }
+
     void MakeResponse(const InternalRouteResult &raw_route, util::json::Object &response) const
     {
-        auto number_of_routes = raw_route.has_alternative() ? 2UL : 1UL;
-        util::json::Array routes;
-        routes.values.resize(number_of_routes);
-        routes.values[0] = MakeRoute(raw_route.segment_end_coordinates,
-                                     raw_route.unpacked_path_segments,
-                                     raw_route.source_traversed_in_reverse,
-                                     raw_route.target_traversed_in_reverse);
-        if (raw_route.has_alternative())
-        {
-            std::vector<std::vector<PathData>> wrapped_leg(1);
-            wrapped_leg.front() = std::move(raw_route.unpacked_alternative);
-            routes.values[1] = MakeRoute(raw_route.segment_end_coordinates,
-                                         wrapped_leg,
-                                         raw_route.alt_source_traversed_in_reverse,
-                                         raw_route.alt_target_traversed_in_reverse);
-        }
-        response.values["waypoints"] = BaseAPI::MakeWaypoints(raw_route.segment_end_coordinates);
-        response.values["routes"] = std::move(routes);
-        response.values["code"] = "Ok";
+        return MakeResponse(raw_route, response);
     }
 
   protected:

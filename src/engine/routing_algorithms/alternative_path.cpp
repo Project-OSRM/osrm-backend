@@ -563,13 +563,17 @@ bool viaNodeCandidatePassesTTest(
 }
 }
 
-InternalRouteResult
+InternalManyRoutesResult
 alternativePathSearch(SearchEngineData<Algorithm> &engine_working_data,
                       const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
                       const PhantomNodes &phantom_node_pair)
 {
-    InternalRouteResult raw_route_data;
-    raw_route_data.segment_end_coordinates = {phantom_node_pair};
+    InternalRouteResult primary_route;
+    InternalRouteResult secondary_route;
+
+    primary_route.segment_end_coordinates = {phantom_node_pair};
+    secondary_route.segment_end_coordinates = {phantom_node_pair};
+
     std::vector<NodeID> alternative_path;
     std::vector<NodeID> via_node_candidate_list;
     std::vector<SearchSpaceEdge> forward_search_space;
@@ -626,7 +630,7 @@ alternativePathSearch(SearchEngineData<Algorithm> &engine_working_data,
 
     if (INVALID_EDGE_WEIGHT == upper_bound_to_shortest_path_weight)
     {
-        return raw_route_data;
+        return InternalManyRoutesResult{std::move(primary_route)};
     }
 
     std::sort(begin(via_node_candidate_list), end(via_node_candidate_list));
@@ -795,11 +799,11 @@ alternativePathSearch(SearchEngineData<Algorithm> &engine_working_data,
     if (INVALID_EDGE_WEIGHT != upper_bound_to_shortest_path_weight)
     {
         BOOST_ASSERT(!packed_shortest_path.empty());
-        raw_route_data.unpacked_path_segments.resize(1);
-        raw_route_data.source_traversed_in_reverse.push_back(
+        primary_route.unpacked_path_segments.resize(1);
+        primary_route.source_traversed_in_reverse.push_back(
             (packed_shortest_path.front() !=
              phantom_node_pair.source_phantom.forward_segment_id.id));
-        raw_route_data.target_traversed_in_reverse.push_back((
+        primary_route.target_traversed_in_reverse.push_back((
             packed_shortest_path.back() != phantom_node_pair.target_phantom.forward_segment_id.id));
 
         ch::unpackPath(facade,
@@ -809,8 +813,8 @@ alternativePathSearch(SearchEngineData<Algorithm> &engine_working_data,
                        // -- start of route
                        phantom_node_pair,
                        // -- unpacked output
-                       raw_route_data.unpacked_path_segments.front());
-        raw_route_data.shortest_path_weight = upper_bound_to_shortest_path_weight;
+                       primary_route.unpacked_path_segments.front());
+        primary_route.shortest_path_weight = upper_bound_to_shortest_path_weight;
     }
 
     if (SPECIAL_NODEID != selected_via_node)
@@ -825,10 +829,11 @@ alternativePathSearch(SearchEngineData<Algorithm> &engine_working_data,
                                     v_t_middle,
                                     packed_alternate_path);
 
-        raw_route_data.alt_source_traversed_in_reverse.push_back(
+        secondary_route.unpacked_path_segments.resize(1);
+        secondary_route.source_traversed_in_reverse.push_back(
             (packed_alternate_path.front() !=
              phantom_node_pair.source_phantom.forward_segment_id.id));
-        raw_route_data.alt_target_traversed_in_reverse.push_back(
+        secondary_route.target_traversed_in_reverse.push_back(
             (packed_alternate_path.back() !=
              phantom_node_pair.target_phantom.forward_segment_id.id));
 
@@ -837,16 +842,16 @@ alternativePathSearch(SearchEngineData<Algorithm> &engine_working_data,
                        packed_alternate_path.begin(),
                        packed_alternate_path.end(),
                        phantom_node_pair,
-                       raw_route_data.unpacked_alternative);
+                       secondary_route.unpacked_path_segments.front());
 
-        raw_route_data.alternative_path_weight = weight_of_via_path;
+        secondary_route.shortest_path_weight = weight_of_via_path;
     }
     else
     {
-        BOOST_ASSERT(raw_route_data.alternative_path_weight == INVALID_EDGE_WEIGHT);
+        BOOST_ASSERT(secondary_route.shortest_path_weight == INVALID_EDGE_WEIGHT);
     }
 
-    return raw_route_data;
+    return InternalManyRoutesResult{{std::move(primary_route), std::move(secondary_route)}};
 }
 
 } // namespace ch

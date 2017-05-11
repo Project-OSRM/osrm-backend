@@ -17,7 +17,7 @@ namespace routing_algorithms
 {
 namespace ch
 {
-InternalRouteResult
+InternalManyRoutesResult
 alternativePathSearch(SearchEngineData<Algorithm> &search_engine_data,
                       const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
                       const PhantomNodes &phantom_node_pair);
