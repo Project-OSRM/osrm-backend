@@ -21,15 +21,14 @@ extractRoute(const datafacade::ContiguousInternalMemoryDataFacade<AlgorithmT> &f
 {
     InternalRouteResult raw_route_data;
     raw_route_data.segment_end_coordinates = {phantom_nodes};
+
     // No path found for both target nodes?
     if (INVALID_EDGE_WEIGHT == weight)
     {
-        raw_route_data.shortest_path_length = INVALID_EDGE_WEIGHT;
-        raw_route_data.alternative_path_length = INVALID_EDGE_WEIGHT;
         return raw_route_data;
     }
 
-    raw_route_data.shortest_path_length = weight;
+    raw_route_data.shortest_path_weight = weight;
     raw_route_data.unpacked_path_segments.resize(1);
     raw_route_data.source_traversed_in_reverse.push_back(
         (unpacked_nodes.front() != phantom_nodes.source_phantom.forward_segment_id.id));

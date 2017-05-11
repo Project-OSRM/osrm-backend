@@ -235,7 +235,7 @@ Status MatchPlugin::HandleRequest(const datafacade::ContiguousInternalMemoryData
         // phantom nodes for possible uturns
         sub_routes[index] =
             algorithms.ShortestPathSearch(sub_routes[index].segment_end_coordinates, {false});
-        BOOST_ASSERT(sub_routes[index].shortest_path_length != INVALID_EDGE_WEIGHT);
+        BOOST_ASSERT(sub_routes[index].shortest_path_weight != INVALID_EDGE_WEIGHT);
     }
 
     api::MatchAPI match_api{facade, parameters, tidied};

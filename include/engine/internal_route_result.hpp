@@ -16,8 +16,6 @@ namespace osrm
 namespace engine
 {
 
-const constexpr unsigned INVALID_EXIT_NR = 0;
-
 struct PathData
 {
     // id of via node of the turn
@@ -55,21 +53,16 @@ struct InternalRouteResult
     std::vector<bool> target_traversed_in_reverse;
     std::vector<bool> alt_source_traversed_in_reverse;
     std::vector<bool> alt_target_traversed_in_reverse;
-    int shortest_path_length;
-    int alternative_path_length;
+    EdgeWeight shortest_path_weight = INVALID_EDGE_WEIGHT;
+    EdgeWeight alternative_path_weight = INVALID_EDGE_WEIGHT;
 
-    bool is_valid() const { return INVALID_EDGE_WEIGHT != shortest_path_length; }
+    bool is_valid() const { return INVALID_EDGE_WEIGHT != shortest_path_weight; }
 
-    bool has_alternative() const { return INVALID_EDGE_WEIGHT != alternative_path_length; }
+    bool has_alternative() const { return INVALID_EDGE_WEIGHT != alternative_path_weight; }
 
     bool is_via_leg(const std::size_t leg) const
     {
         return (leg != unpacked_path_segments.size() - 1);
-    }
-
-    InternalRouteResult()
-        : shortest_path_length(INVALID_EDGE_WEIGHT), alternative_path_length(INVALID_EDGE_WEIGHT)
-    {
     }
 };
 }

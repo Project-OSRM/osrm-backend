@@ -185,12 +185,12 @@ void unpackLegs(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> 
                 const std::vector<PhantomNodes> &phantom_nodes_vector,
                 const std::vector<NodeID> &total_packed_path,
                 const std::vector<std::size_t> &packed_leg_begin,
-                const int shortest_path_length,
+                const EdgeWeight shortest_path_weight,
                 InternalRouteResult &raw_route_data)
 {
     raw_route_data.unpacked_path_segments.resize(packed_leg_begin.size() - 1);
 
-    raw_route_data.shortest_path_length = shortest_path_length;
+    raw_route_data.shortest_path_weight = shortest_path_weight;
 
     for (const auto current_leg : util::irange<std::size_t>(0UL, packed_leg_begin.size() - 1))
     {
@@ -331,8 +331,6 @@ shortestPathSearch(SearchEngineData<Algorithm> &engine_working_data,
         if ((INVALID_EDGE_WEIGHT == new_total_weight_to_forward) &&
             (INVALID_EDGE_WEIGHT == new_total_weight_to_reverse))
         {
-            raw_route_data.shortest_path_length = INVALID_EDGE_WEIGHT;
-            raw_route_data.alternative_path_length = INVALID_EDGE_WEIGHT;
             return raw_route_data;
         }
 
