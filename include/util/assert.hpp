@@ -34,9 +34,9 @@
 #define OSRM_ASSERT_MSG(cond, coordinate, msg)                                                     \
     do                                                                                             \
     {                                                                                              \
-        (void)cond;                                                                                \
-        (void)coordinate;                                                                          \
-        (void)msg;                                                                                 \
+        (void)(cond);                                                                              \
+        (void)(coordinate);                                                                        \
+        (void)(msg);                                                                               \
     } while (0)
 #define OSRM_ASSERT(cond, coordinate) OSRM_ASSERT_MSG(cond, coordinate, "")
 
