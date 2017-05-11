@@ -794,3 +794,29 @@ Feature: Basic Roundabout
             |    1 | f  | abcda,af,af | depart,roundabout-exit-1,arrive |
             |    1 | g  | abcda,bg,bg | depart,roundabout-exit-1,arrive |
             |    1 | h  | abcda,bh,bh | depart,roundabout-exit-1,arrive |
+
+    Scenario: CCW and CW roundabouts with overlaps
+        Given the node map
+            """
+            a   d          g   h
+
+            b   c          j   i
+            f   e          k   l
+            """
+
+        And the ways
+            | nodes | highway  | junction   |
+            | abcda | tertiary | roundabout |
+            | ed    | tertiary |            |
+            | af    | tertiary |            |
+            | ghijg | tertiary | roundabout |
+            | kg    | tertiary |            |
+            | hl    | tertiary |            |
+
+        When I route I should get
+            | from | to | route    | turns                           | distance |
+            | e    | f  | ed,af,af | depart,roundabout-exit-1,arrive | 80.1m    |
+            | f    | e  | af,ed,ed | depart,roundabout-exit-1,arrive | 120.1m   |
+            | k    | l  | kg,hl,hl | depart,roundabout-exit-1,arrive | 80.1m    |
+            | l    | k  | hl,kg,kg | depart,roundabout-exit-1,arrive | 120.1m   |
+
