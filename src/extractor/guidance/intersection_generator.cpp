@@ -278,7 +278,8 @@ IntersectionView IntersectionGenerator::TransformIntersectionShapeIntoView(
     };
 
     // due to merging of roads, the u-turn might actually not be part of the intersection anymore
-    const auto uturn_bearing = [&]() {
+    // uturn is a pair of {edge id, bearing}
+    const auto uturn = [&]() {
         const auto merge_entry = std::find_if(
             performed_merges.begin(), performed_merges.end(), [&uturn_edge_itr](const auto entry) {
                 return entry.merged_eid == uturn_edge_itr->eid;
@@ -291,7 +292,8 @@ IntersectionView IntersectionGenerator::TransformIntersectionShapeIntoView(
                 normalized_intersection.end(),
                 [&](const IntersectionShapeData &road) { return road.eid == merged_into_id; });
             BOOST_ASSERT(merged_u_turn != normalized_intersection.end());
-            return util::bearing::reverse(merged_u_turn->bearing);
+            return std::make_pair(merged_u_turn->eid,
+                                  util::bearing::reverse(merged_u_turn->bearing));
         }
         else
         {
@@ -301,7 +303,9 @@ IntersectionView IntersectionGenerator::TransformIntersectionShapeIntoView(
                              connect_to_previous_node);
             BOOST_ASSERT(uturn_edge_at_normalized_intersection_itr !=
                          normalized_intersection.end());
-            return util::bearing::reverse(uturn_edge_at_normalized_intersection_itr->bearing);
+            return std::make_pair(
+                uturn_edge_at_normalized_intersection_itr->eid,
+                util::bearing::reverse(uturn_edge_at_normalized_intersection_itr->bearing));
         }
     }();
 
@@ -314,7 +318,7 @@ IntersectionView IntersectionGenerator::TransformIntersectionShapeIntoView(
                        return IntersectionViewData(
                            road,
                            is_allowed_turn(road),
-                           util::bearing::angleBetween(uturn_bearing, road.bearing));
+                           util::bearing::angleBetween(uturn.second, road.bearing));
                    });
 
     const auto uturn_edge_at_intersection_view_itr =
@@ -369,8 +373,22 @@ IntersectionView IntersectionGenerator::TransformIntersectionShapeIntoView(
               std::end(intersection_view),
               std::mem_fn(&IntersectionViewData::CompareByAngle));
 
-    BOOST_ASSERT(intersection_view[0].angle >= 0. &&
-                 intersection_view[0].angle < std::numeric_limits<double>::epsilon());
+    // Move entering_via_edge to intersection front and place all roads prior entering_via_edge
+    // at the end of the intersection view with 360° angle
+    auto entering_via_it = std::find_if(intersection_view.begin(),
+                                        intersection_view.end(),
+                                        [&uturn](auto &road) { return road.eid == uturn.first; });
+
+    OSRM_ASSERT(entering_via_it != intersection_view.end() && entering_via_it->angle >= 0. &&
+                    entering_via_it->angle < std::numeric_limits<double>::epsilon(),
+                coordinates[node_at_intersection]);
+
+    if (entering_via_it != intersection_view.begin() && entering_via_it != intersection_view.end())
+    {
+        std::for_each(
+            intersection_view.begin(), entering_via_it, [](auto &road) { road.angle = 360.; });
+        std::rotate(intersection_view.begin(), entering_via_it, intersection_view.end());
+    }
 
     return intersection_view;
 }
