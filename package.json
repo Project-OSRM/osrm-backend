@@ -37,7 +37,7 @@
     "node": ">=4.0.0"
   },
   "devDependencies": {
-    "docbox": "^1.0.5",
+    "docbox": "^1.0.6",
     "documentation": "^4.0.0-rc.1",
     "eslint": "^2.4.0",
     "chalk": "^1.1.3",
