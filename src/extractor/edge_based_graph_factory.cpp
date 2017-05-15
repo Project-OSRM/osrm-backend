@@ -66,7 +66,14 @@ void EdgeBasedGraphFactory::GetEdgeBasedEdges(
     swap(m_edge_based_edge_list, output_edge_list);
 }
 
-void EdgeBasedGraphFactory::GetEdgeBasedNodes(std::vector<EdgeBasedNode> &nodes)
+void EdgeBasedGraphFactory::GetEdgeBasedNodes(
+    EdgeBasedNodeDataExternalContainer &ebg_node_data_container)
+{
+    using std::swap; // Koenig swap
+    swap(ebg_node_data_container, m_ebg_node_data_container);
+}
+
+void EdgeBasedGraphFactory::GetNodeBasedEdges(std::vector<EdgeBasedNode> &nodes)
 {
     using std::swap; // Koenig swap
     swap(nodes, m_edge_based_node_list);
@@ -163,8 +170,6 @@ NBGToEBG EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const N
                                             edge_id_to_segment_id(reverse_data.edge_id),
                                             current_edge_source_coordinate_id,
                                             current_edge_target_coordinate_id,
-                                            false,
-                                            INVALID_COMPONENTID,
                                             i);
 
         m_edge_based_node_is_startpoint.push_back(forward_data.startpoint ||
@@ -178,7 +183,6 @@ NBGToEBG EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const N
 }
 
 void EdgeBasedGraphFactory::Run(ScriptingEnvironment &scripting_environment,
-                                const std::string &node_data_filename,
                                 const std::string &turn_data_filename,
                                 const std::string &turn_lane_data_filename,
                                 const std::string &turn_weight_penalties_filename,
@@ -192,7 +196,7 @@ void EdgeBasedGraphFactory::Run(ScriptingEnvironment &scripting_environment,
 
     TIMER_START(generate_nodes);
     {
-        auto mapping = GenerateEdgeExpandedNodes(node_data_filename);
+        auto mapping = GenerateEdgeExpandedNodes();
         files::writeNBGMapping(cnbg_ebg_mapping_path, mapping);
     }
     TIMER_STOP(generate_nodes);
@@ -249,12 +253,11 @@ unsigned EdgeBasedGraphFactory::RenumberEdges()
 }
 
 /// Creates the nodes in the edge expanded graph from edges in the node-based graph.
-std::vector<NBGToEBG>
-EdgeBasedGraphFactory::GenerateEdgeExpandedNodes(const std::string &node_data_filename)
+std::vector<NBGToEBG> EdgeBasedGraphFactory::GenerateEdgeExpandedNodes()
 {
     std::vector<NBGToEBG> mapping;
 
-    // TODO: make m_ebg_node_data_container local
+    // Allocate memory for edge-based nodes
     m_ebg_node_data_container = EdgeBasedNodeDataExternalContainer(m_max_edge_id + 1);
 
     util::Log() << "Generating edge expanded nodes ... ";
@@ -301,49 +304,7 @@ EdgeBasedGraphFactory::GenerateEdgeExpandedNodes(const std::string &node_data_fi
     BOOST_ASSERT(m_edge_based_node_list.size() == m_edge_based_node_is_startpoint.size());
     BOOST_ASSERT(m_max_edge_id + 1 == m_edge_based_node_weights.size());
 
-    {
-        // TODO: refactor saving edge-based node data with InsertEdgeBasedNode
-        for (const auto nbg_node_id : util::irange(0u, m_node_based_graph->GetNumberOfNodes()))
-        {
-            for (const auto nbg_edge_id : m_node_based_graph->GetAdjacentEdgeRange(nbg_node_id))
-            {
-                const auto &nbg_edge_data = m_node_based_graph->GetEdgeData(nbg_edge_id);
-
-                if (nbg_edge_data.edge_id == SPECIAL_EDGEID)
-                    continue;
-
-                const bool is_encoded_forwards =
-                    m_compressed_edge_container.HasZippedEntryForForwardID(nbg_edge_id);
-                const bool is_encoded_backwards =
-                    m_compressed_edge_container.HasZippedEntryForReverseID(nbg_edge_id);
-
-                BOOST_ASSERT(is_encoded_forwards || is_encoded_backwards);
-
-                // auto geometry_id =
-                //     is_encoded_forwards
-                //         ? m_compressed_edge_container.GetZippedPositionForForwardID(nbg_edge_id)
-                //         : is_encoded_backwards
-                //               ? m_compressed_edge_container.GetZippedPositionForReverseID(
-                //                     nbg_edge_id)
-                //               : SPECIAL_GEOMETRYID;
-
-                BOOST_ASSERT(m_ebg_node_data_container.GetNameID(nbg_edge_data.edge_id) ==
-                             nbg_edge_data.name_id);
-                BOOST_ASSERT(m_ebg_node_data_container.GetTravelMode(nbg_edge_data.edge_id) ==
-                             nbg_edge_data.travel_mode);
-
-                // m_ebg_node_data_container.SetData(nbg_edge_data.edge_id,
-                //                                 GeometryID{geometry_id, is_encoded_forwards},
-                //                                 nbg_edge_data.name_id,
-                //                                 nbg_edge_data.travel_mode);
-            }
-        }
-    }
-
     util::Log() << "Generated " << m_edge_based_node_list.size() << " nodes in edge-expanded graph";
-
-    files::writeNodeData(node_data_filename, m_ebg_node_data_container);
-    m_ebg_node_data_container = EdgeBasedNodeDataExternalContainer();
 
     return mapping;
 }

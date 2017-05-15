@@ -51,8 +51,7 @@ struct PhantomNode
           reverse_segment_id{SPECIAL_SEGMENTID, false}, forward_weight(INVALID_EDGE_WEIGHT),
           reverse_weight(INVALID_EDGE_WEIGHT), forward_weight_offset(0), reverse_weight_offset(0),
           forward_duration(MAXIMAL_EDGE_DURATION), reverse_duration(MAXIMAL_EDGE_DURATION),
-          forward_duration_offset(0), reverse_duration_offset(0),
-          component{INVALID_COMPONENTID, false}, fwd_segment_position(0),
+          forward_duration_offset(0), reverse_duration_offset(0), fwd_segment_position(0),
           is_valid_forward_source{false}, is_valid_forward_target{false},
           is_valid_reverse_source{false}, is_valid_reverse_target{false}, unused{0}
     {
@@ -123,6 +122,7 @@ struct PhantomNode
 
     template <class OtherT>
     explicit PhantomNode(const OtherT &other,
+                         ComponentID component,
                          EdgeWeight forward_weight,
                          EdgeWeight reverse_weight,
                          EdgeWeight forward_weight_offset,
@@ -143,7 +143,7 @@ struct PhantomNode
           reverse_weight_offset{reverse_weight_offset}, forward_duration{forward_duration},
           reverse_duration{reverse_duration}, forward_duration_offset{forward_duration_offset},
           reverse_duration_offset{reverse_duration_offset},
-          component{other.component.id, other.component.is_tiny}, location{location},
+          component{component.id, component.is_tiny}, location{location},
           input_location{input_location}, fwd_segment_position{other.fwd_segment_position},
           is_valid_forward_source{is_valid_forward_source},
           is_valid_forward_target{is_valid_forward_target},
@@ -162,12 +162,7 @@ struct PhantomNode
     EdgeWeight reverse_duration;
     EdgeWeight forward_duration_offset; // TODO: try to remove -> requires path unpacking changes
     EdgeWeight reverse_duration_offset; // TODO: try to remove -> requires path unpacking changes
-    struct ComponentType
-    {
-        std::uint32_t id : 31;
-        std::uint32_t is_tiny : 1;
-    } component;
-    static_assert(sizeof(ComponentType) == 4, "ComponentType needs to be 4 bytes big");
+    ComponentID component;
 
     util::Coordinate location;
     util::Coordinate input_location;

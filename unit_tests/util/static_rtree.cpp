@@ -137,7 +137,6 @@ template <unsigned NUM_NODES, unsigned NUM_EDGES> struct RandomGraphFixture
             if (used_edges.find(std::pair<unsigned, unsigned>(
                     std::min(data.u, data.v), std::max(data.u, data.v))) == used_edges.end())
             {
-                data.component.id = 0;
                 edges.emplace_back(data);
                 used_edges.emplace(std::min(data.u, data.v), std::max(data.u, data.v));
             }

@@ -63,6 +63,7 @@ class Extractor
     BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
                            std::vector<util::Coordinate> &coordinates,
                            extractor::PackedOSMIDs &osm_node_ids,
+                           EdgeBasedNodeDataExternalContainer &ebg_node_data_container,
                            std::vector<EdgeBasedNode> &node_based_edge_list,
                            std::vector<bool> &node_is_startpoint,
                            std::vector<EdgeWeight> &edge_based_node_weights,
@@ -73,7 +74,7 @@ class Extractor
                                 const ProfileProperties &properties) const;
     void FindComponents(unsigned max_edge_id,
                         const util::DeallocatingVector<EdgeBasedEdge> &edges,
-                        std::vector<EdgeBasedNode> &nodes) const;
+                        EdgeBasedNodeDataExternalContainer &nodes) const;
     void BuildRTree(std::vector<EdgeBasedNode> node_based_edge_list,
                     std::vector<bool> node_is_startpoint,
                     const std::vector<util::Coordinate> &coordinates);

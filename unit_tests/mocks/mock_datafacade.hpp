@@ -34,6 +34,10 @@ class MockBaseDataFacade : public engine::datafacade::BaseDataFacade
     {
         return GeometryID{SPECIAL_GEOMETRYID, false};
     }
+    ComponentID GetComponentID(const NodeID /* id */) const override
+    {
+        return ComponentID{INVALID_COMPONENTID, false};
+    }
     TurnPenalty GetWeightPenaltyForEdgeID(const unsigned /* id */) const override final
     {
         return 0;

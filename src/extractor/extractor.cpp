@@ -130,7 +130,8 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
 
     TIMER_START(expansion);
 
-    std::vector<EdgeBasedNode> edge_based_node_list;
+    EdgeBasedNodeDataExternalContainer edge_based_nodes_container;
+    std::vector<EdgeBasedNode> node_based_edges_list;
     util::DeallocatingVector<EdgeBasedEdge> edge_based_edge_list;
     std::vector<bool> node_is_startpoint;
     std::vector<EdgeWeight> edge_based_node_weights;
@@ -140,7 +141,8 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     auto graph_size = BuildEdgeExpandedGraph(scripting_environment,
                                              coordinates,
                                              osm_node_ids,
-                                             edge_based_node_list,
+                                             edge_based_nodes_container,
+                                             node_based_edges_list,
                                              node_is_startpoint,
                                              edge_based_node_weights,
                                              edge_based_edge_list,
@@ -163,16 +165,17 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     util::Log() << "Done writing. (" << TIMER_SEC(timer_write_node_weights) << ")";
 
     util::Log() << "Computing strictly connected components ...";
-    FindComponents(max_edge_id, edge_based_edge_list, edge_based_node_list);
+    FindComponents(max_edge_id, edge_based_edge_list, edge_based_nodes_container);
 
     util::Log() << "Building r-tree ...";
     TIMER_START(rtree);
-    BuildRTree(std::move(edge_based_node_list), std::move(node_is_startpoint), coordinates);
+    BuildRTree(std::move(node_based_edges_list), std::move(node_is_startpoint), coordinates);
 
     TIMER_STOP(rtree);
 
-    util::Log() << "Writing node map ...";
+    util::Log() << "Writing nodes for nodes-based and edges-based graphs ...";
     files::writeNodes(config.node_output_path, coordinates, osm_node_ids);
+    files::writeNodeData(config.edge_based_nodes_data_path, edge_based_nodes_container);
 
     WriteEdgeBasedGraph(config.edge_graph_output_path, max_edge_id, edge_based_edge_list);
 
@@ -335,7 +338,7 @@ void Extractor::WriteProfileProperties(const std::string &output_path,
 
 void Extractor::FindComponents(unsigned max_edge_id,
                                const util::DeallocatingVector<EdgeBasedEdge> &input_edge_list,
-                               std::vector<EdgeBasedNode> &input_nodes) const
+                               EdgeBasedNodeDataExternalContainer &input_nodes) const
 {
     using InputEdge = util::static_graph_details::SortableEdgeWithData<void>;
     using UncontractedGraph = util::StaticGraph<void>;
@@ -359,18 +362,6 @@ void Extractor::FindComponents(unsigned max_edge_id,
         }
     }
 
-    // connect forward and backward nodes of each edge
-    for (const auto &node : input_nodes)
-    {
-        if (node.reverse_segment_id.enabled)
-        {
-            BOOST_ASSERT(node.forward_segment_id.id <= max_edge_id);
-            BOOST_ASSERT(node.reverse_segment_id.id <= max_edge_id);
-            edges.push_back({node.forward_segment_id.id, node.reverse_segment_id.id});
-            edges.push_back({node.reverse_segment_id.id, node.forward_segment_id.id});
-        }
-    }
-
     tbb::parallel_sort(edges.begin(), edges.end());
     edges.erase(std::unique(edges.begin(), edges.end()), edges.end());
 
@@ -379,16 +370,14 @@ void Extractor::FindComponents(unsigned max_edge_id,
     TarjanSCC<UncontractedGraph> component_search(uncontracted_graph);
     component_search.Run();
 
-    for (auto &node : input_nodes)
+    stxxl::vector<ComponentID> component_ids;
+    component_ids.reserve(max_edge_id + 1);
+    for (NodeID node_id = 0; node_id <= max_edge_id; ++node_id)
     {
-        auto forward_component = component_search.GetComponentID(node.forward_segment_id.id);
-        BOOST_ASSERT(!node.reverse_segment_id.enabled ||
-                     forward_component ==
-                         component_search.GetComponentID(node.reverse_segment_id.id));
-
-        const unsigned component_size = component_search.GetComponentSize(forward_component);
-        node.component.is_tiny = component_size < config.small_component_size;
-        node.component.id = 1 + forward_component;
+        const auto forward_component = component_search.GetComponentID(node_id);
+        const auto component_size = component_search.GetComponentSize(forward_component);
+        const auto is_tiny = component_size < config.small_component_size;
+        input_nodes.SetData(node_id, {1 + forward_component, is_tiny});
     }
 }
 
@@ -432,7 +421,8 @@ std::pair<std::size_t, EdgeID>
 Extractor::BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
                                   std::vector<util::Coordinate> &coordinates,
                                   extractor::PackedOSMIDs &osm_node_ids,
-                                  std::vector<EdgeBasedNode> &node_based_edge_list,
+                                  EdgeBasedNodeDataExternalContainer &ebg_node_data_container,
+                                  std::vector<EdgeBasedNode> &node_based_edges_list,
                                   std::vector<bool> &node_is_startpoint,
                                   std::vector<EdgeWeight> &edge_based_node_weights,
                                   util::DeallocatingVector<EdgeBasedEdge> &edge_based_edge_list,
@@ -477,7 +467,6 @@ Extractor::BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
         turn_lane_map);
 
     edge_based_graph_factory.Run(scripting_environment,
-                                 config.edge_based_nodes_data_path,
                                  config.edge_output_path,
                                  config.turn_lane_data_file_name,
                                  config.turn_weight_penalties_path,
@@ -512,7 +501,8 @@ Extractor::BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
                             *compressed_edge_container.ToSegmentData());
 
     edge_based_graph_factory.GetEdgeBasedEdges(edge_based_edge_list);
-    edge_based_graph_factory.GetEdgeBasedNodes(node_based_edge_list);
+    edge_based_graph_factory.GetEdgeBasedNodes(ebg_node_data_container);
+    edge_based_graph_factory.GetNodeBasedEdges(node_based_edges_list);
     edge_based_graph_factory.GetStartPointMarkers(node_is_startpoint);
     edge_based_graph_factory.GetEdgeBasedNodeWeights(edge_based_node_weights);
     auto max_edge_id = edge_based_graph_factory.GetHighestEdgeID();
@@ -532,21 +522,21 @@ Extractor::BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
 
     Saves tree into '.ramIndex' and leaves into '.fileIndex'.
  */
-void Extractor::BuildRTree(std::vector<EdgeBasedNode> node_based_edge_list,
+void Extractor::BuildRTree(std::vector<EdgeBasedNode> node_based_edges_list,
                            std::vector<bool> node_is_startpoint,
                            const std::vector<util::Coordinate> &coordinates)
 {
-    util::Log() << "constructing r-tree of " << node_based_edge_list.size()
+    util::Log() << "constructing r-tree of " << node_based_edges_list.size()
                 << " edge elements build on-top of " << coordinates.size() << " coordinates";
 
-    BOOST_ASSERT(node_is_startpoint.size() == node_based_edge_list.size());
+    BOOST_ASSERT(node_is_startpoint.size() == node_based_edges_list.size());
 
     // Filter node based edges based on startpoint
-    auto out_iter = node_based_edge_list.begin();
-    auto in_iter = node_based_edge_list.begin();
+    auto out_iter = node_based_edges_list.begin();
+    auto in_iter = node_based_edges_list.begin();
     for (auto index : util::irange<std::size_t>(0UL, node_is_startpoint.size()))
     {
-        BOOST_ASSERT(in_iter != node_based_edge_list.end());
+        BOOST_ASSERT(in_iter != node_based_edges_list.end());
         if (node_is_startpoint[index])
         {
             *out_iter = *in_iter;
@@ -554,17 +544,17 @@ void Extractor::BuildRTree(std::vector<EdgeBasedNode> node_based_edge_list,
         }
         in_iter++;
     }
-    auto new_size = out_iter - node_based_edge_list.begin();
+    auto new_size = out_iter - node_based_edges_list.begin();
     if (new_size == 0)
     {
         throw util::exception("There are no snappable edges left after processing.  Are you "
                               "setting travel modes correctly in the profile?  Cannot continue." +
                               SOURCE_REF);
     }
-    node_based_edge_list.resize(new_size);
+    node_based_edges_list.resize(new_size);
 
     TIMER_START(construction);
-    util::StaticRTree<EdgeBasedNode> rtree(node_based_edge_list,
+    util::StaticRTree<EdgeBasedNode> rtree(node_based_edges_list,
                                            config.rtree_nodes_output_path,
                                            config.rtree_leafs_output_path,
                                            coordinates);

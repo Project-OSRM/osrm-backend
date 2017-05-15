@@ -68,9 +68,6 @@ class Contractor
     void WriteCoreNodeMarker(std::vector<bool> &&is_core_node) const;
     void WriteContractedGraph(unsigned number_of_edge_based_nodes,
                               util::DeallocatingVector<QueryEdge> contracted_edge_list);
-    void FindComponents(unsigned max_edge_id,
-                        const util::DeallocatingVector<extractor::EdgeBasedEdge> &edges,
-                        std::vector<extractor::EdgeBasedNode> &nodes) const;
 
   private:
     ContractorConfig config;

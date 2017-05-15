@@ -38,15 +38,16 @@ template <storage::Ownership Ownership> class EdgeBasedNodeDataContainerImpl
     EdgeBasedNodeDataContainerImpl() = default;
 
     EdgeBasedNodeDataContainerImpl(std::size_t size)
-        : geometry_ids(size), name_ids(size), travel_modes(size)
+        : geometry_ids(size), name_ids(size), component_ids(size), travel_modes(size)
     {
     }
 
     EdgeBasedNodeDataContainerImpl(Vector<GeometryID> geometry_ids,
                                    Vector<NameID> name_ids,
+                                   Vector<ComponentID> component_ids,
                                    Vector<TravelMode> travel_modes)
         : geometry_ids(std::move(geometry_ids)), name_ids(std::move(name_ids)),
-          travel_modes(std::move(travel_modes))
+          component_ids(std::move(component_ids)), travel_modes(std::move(travel_modes))
     {
     }
 
@@ -56,6 +57,8 @@ template <storage::Ownership Ownership> class EdgeBasedNodeDataContainerImpl
 
     NameID GetNameID(const NodeID node_id) const { return name_ids[node_id]; }
 
+    ComponentID GetComponentID(const NodeID node_id) const { return component_ids[node_id]; }
+
     // Used by EdgeBasedGraphFactory to fill data structure
     template <typename = std::enable_if<Ownership == storage::Ownership::Container>>
     void SetData(NodeID node_id, GeometryID geometry_id, NameID name_id, TravelMode travel_mode)
@@ -63,6 +66,13 @@ template <storage::Ownership Ownership> class EdgeBasedNodeDataContainerImpl
         geometry_ids[node_id] = geometry_id;
         name_ids[node_id] = name_id;
         travel_modes[node_id] = travel_mode;
+    }
+
+    // Used by EdgeBasedGraphFactory to fill data structure
+    template <typename = std::enable_if<Ownership == storage::Ownership::Container>>
+    void SetData(NodeID node_id, ComponentID component_id)
+    {
+        component_ids[node_id] = component_id;
     }
 
     friend void serialization::read<Ownership>(storage::io::FileReader &reader,
@@ -74,6 +84,7 @@ template <storage::Ownership Ownership> class EdgeBasedNodeDataContainerImpl
   private:
     Vector<GeometryID> geometry_ids;
     Vector<NameID> name_ids;
+    Vector<ComponentID> component_ids;
     Vector<TravelMode> travel_modes;
 };
 }

@@ -147,4 +147,11 @@ struct GeometryID
 
 static_assert(sizeof(SegmentID) == 4, "SegmentID needs to be 4 bytes big");
 
+// Strongly connected component ID of an edge-based node
+struct ComponentID
+{
+    std::uint32_t id : 31;
+    std::uint32_t is_tiny : 1;
+};
+
 #endif /* TYPEDEFS_H */

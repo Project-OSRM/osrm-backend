@@ -84,7 +84,6 @@ class EdgeBasedGraphFactory
                                    guidance::LaneDescriptionMap &lane_description_map);
 
     void Run(ScriptingEnvironment &scripting_environment,
-             const std::string &nodes_data_filename,
              const std::string &turn_data_filename,
              const std::string &turn_lane_data_filename,
              const std::string &turn_weight_penalties_filename,
@@ -94,7 +93,8 @@ class EdgeBasedGraphFactory
 
     // The following get access functions destroy the content in the factory
     void GetEdgeBasedEdges(util::DeallocatingVector<EdgeBasedEdge> &edges);
-    void GetEdgeBasedNodes(std::vector<EdgeBasedNode> &nodes);
+    void GetEdgeBasedNodes(EdgeBasedNodeDataExternalContainer &ebg_node_data_container);
+    void GetNodeBasedEdges(std::vector<EdgeBasedNode> &nodes);
     void GetStartPointMarkers(std::vector<bool> &node_is_startpoint);
     void GetEdgeBasedNodeWeights(std::vector<EdgeWeight> &output_node_weights);
 
@@ -152,7 +152,7 @@ class EdgeBasedGraphFactory
 
     unsigned RenumberEdges();
 
-    std::vector<NBGToEBG> GenerateEdgeExpandedNodes(const std::string &node_data_filename);
+    std::vector<NBGToEBG> GenerateEdgeExpandedNodes();
 
     void GenerateEdgeExpandedEdges(ScriptingEnvironment &scripting_environment,
                                    const std::string &original_edge_data_filename,
