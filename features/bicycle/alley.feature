@@ -29,7 +29,7 @@ Feature: Bicycle - Route around alleys
 
         When I route I should get
             | from | to | a:nodes    | weight | #                                |
-            | a    | f  | 1:2:3:6    | 192    | Avoids d,e,f                     |
-            | a    | e  | 1:2:5      | 168    | Take the alley b,e if neccessary |
-            | d    | f  | 4:1:2:3:6  | 240    | Avoids the alley d,e,f           |
+            | a    | f  | 1:2:3:6    | 200.4  | Avoids d,e,f                     |
+            | a    | e  | 1:2:5      | 176.4  | Take the alley b,e if neccessary |
+            | d    | f  | 4:1:2:3:6  | 252.6  | Avoids the alley d,e,f           |
 
