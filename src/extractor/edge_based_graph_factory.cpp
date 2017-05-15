@@ -66,8 +66,7 @@ void EdgeBasedGraphFactory::GetEdgeBasedEdges(
     swap(m_edge_based_edge_list, output_edge_list);
 }
 
-void EdgeBasedGraphFactory::GetEdgeBasedNodes(
-    EdgeBasedNodeDataExternalContainer &ebg_node_data_container)
+void EdgeBasedGraphFactory::GetEdgeBasedNodes(EdgeBasedNodeDataContainer &ebg_node_data_container)
 {
     using std::swap; // Koenig swap
     swap(ebg_node_data_container, m_ebg_node_data_container);
@@ -258,7 +257,7 @@ std::vector<NBGToEBG> EdgeBasedGraphFactory::GenerateEdgeExpandedNodes()
     std::vector<NBGToEBG> mapping;
 
     // Allocate memory for edge-based nodes
-    m_ebg_node_data_container = EdgeBasedNodeDataExternalContainer(m_max_edge_id + 1);
+    m_ebg_node_data_container = EdgeBasedNodeDataContainer(m_max_edge_id + 1);
 
     util::Log() << "Generating edge expanded nodes ... ";
     {

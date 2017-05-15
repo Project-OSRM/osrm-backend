@@ -130,7 +130,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
 
     TIMER_START(expansion);
 
-    EdgeBasedNodeDataExternalContainer edge_based_nodes_container;
+    EdgeBasedNodeDataContainer edge_based_nodes_container;
     std::vector<EdgeBasedNode> node_based_edges_list;
     util::DeallocatingVector<EdgeBasedEdge> edge_based_edge_list;
     std::vector<bool> node_is_startpoint;
@@ -338,7 +338,7 @@ void Extractor::WriteProfileProperties(const std::string &output_path,
 
 void Extractor::FindComponents(unsigned max_edge_id,
                                const util::DeallocatingVector<EdgeBasedEdge> &input_edge_list,
-                               EdgeBasedNodeDataExternalContainer &input_nodes) const
+                               EdgeBasedNodeDataContainer &input_nodes) const
 {
     using InputEdge = util::static_graph_details::SortableEdgeWithData<void>;
     using UncontractedGraph = util::StaticGraph<void>;
@@ -421,7 +421,7 @@ std::pair<std::size_t, EdgeID>
 Extractor::BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
                                   std::vector<util::Coordinate> &coordinates,
                                   extractor::PackedOSMIDs &osm_node_ids,
-                                  EdgeBasedNodeDataExternalContainer &ebg_node_data_container,
+                                  EdgeBasedNodeDataContainer &ebg_node_data_container,
                                   std::vector<EdgeBasedNode> &node_based_edges_list,
                                   std::vector<bool> &node_is_startpoint,
                                   std::vector<EdgeWeight> &edge_based_node_weights,
