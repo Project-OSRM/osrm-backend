@@ -34,8 +34,8 @@ local profile = {
   turn_bias                 = 1.4,
 
   -- reduce the driving speed by 30% for unsafe roads
-  -- local safety_penalty            = 0.7,
-  safety_penalty            = 1.0,
+  -- only used for cyclability metric
+  safety_penalty            = 0.7,
   use_public_transport      = true,
 
   allowed_start_modes = Set {
