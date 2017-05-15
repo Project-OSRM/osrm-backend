@@ -703,7 +703,7 @@ if(BUILD_TOOLS)
   install(TARGETS osrm-io-benchmark DESTINATION bin)
 
   add_executable(osrm-rtree-dump src/tools/rtree-dump.cpp $<TARGET_OBJECTS:UTIL>)
-  target_link_libraries(osrm-rtree-dump ${BOOST_BASE_LIBRARIES})
+  target_link_libraries(osrm-rtree-dump ${BOOST_BASE_LIBRARIES} ${MAYBE_SHAPEFILE})
 
   install(TARGETS osrm-rtree-dump DESTINATION bin)
 
