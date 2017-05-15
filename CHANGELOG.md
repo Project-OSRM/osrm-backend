@@ -2,6 +2,8 @@
   - Changes from 5.7
     - Features
       - Added conditional restriction support with `parse-conditional-restrictions=true|false` to osrm-extract. This option saves conditional turn restrictions to the .restrictions file for parsing by contract later. Added `parse-conditionals-from-now=utc time stamp` and `--time-zone-file=/path/to/file`  to osrm-contract
+    - Files
+      - .osrm.nodes file was renamed to .nbg_nodes and .ebg_nodes was added
 
 # 5.7.0
   - Changes from 5.6
