@@ -62,6 +62,14 @@ struct RectangleInt2D
         BOOST_ASSERT(max_lat != FixedLatitude{std::numeric_limits<std::int32_t>::min()});
     }
 
+    void Extend(const FixedLongitude lon_, const FixedLatitude lat_)
+    {
+        min_lon = std::min(min_lon, lon_);
+        max_lon = std::max(max_lon, lon_);
+        min_lat = std::min(min_lat, lat_);
+        max_lat = std::max(max_lat, lat_);
+    }
+
     Coordinate Centroid() const
     {
         Coordinate centroid;

@@ -28,7 +28,7 @@ bool stallAtNode(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm>
                  const EdgeWeight weight,
                  const HeapT &query_heap)
 {
-    for (auto edge : facade.GetAdjacentEdgeRange(node))
+    for (const auto &edge : facade.GetAdjacentEdgeRange(node))
     {
         const auto &data = facade.GetEdgeData(edge);
         if (DIRECTION == REVERSE_DIRECTION ? data.forward : data.backward)

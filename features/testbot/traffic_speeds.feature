@@ -2,15 +2,31 @@
 Feature: Traffic - speeds
 
     Background: Use specific speeds
-        Given the node locations
-          | node |   lat |   lon |
-          | a    |   0.1 |   0.1 |
-          | b    |  0.05 |   0.1 |
-          | c    |   0.0 |   0.1 |
-          | d    |  0.05 |  0.03 |
-          | e    |  0.05 | 0.066 |
-          | f    | 0.075 | 0.066 |
-          | g    | 0.075 |   0.1 |
+        Given the node map
+        """
+                  2a
+                /  |
+              f    5
+           //  \   4
+          /7     \ 6g
+         d--- e --1b
+          \        8
+            \      |
+              \    |
+                \  |
+                  3c
+        """
+
+        And the nodes
+            | node | id |
+            | a    | 1  |
+            | b    | 2  |
+            | c    | 3  |
+            | d    | 4  |
+            | e    | 5  |
+            | f    | 6  |
+            | g    | 7  |
+
         And the ways
           | nodes | highway |
           | ab    | primary |
@@ -40,14 +56,14 @@ Feature: Traffic - speeds
           | annotations | datasources |
 
         When I route I should get
-          | from | to | route       | speed   | weights              | a:datasources |
-          | a    | b  | ad,de,eb,eb | 30 km/h | 1275.7,400.4,378.2,0 | 1:0:0:0       |
-          | a    | c  | ad,dc,dc    | 31 km/h | 1275.7,956.8,0       | 1:0           |
-          | b    | c  | bc,bc       | 27 km/h | 741.5,0              | 1:0           |
-          | a    | d  | ad,ad       | 27 km/h | 1275.7,0             | 1:0           |
-          | d    | c  | dc,dc       | 36 km/h | 956.8,0              | 0             |
-          | g    | b  | fb,fb       | 36 km/h | 164.7,0              | 0             |
-          | a    | g  | ad,df,fb,fb | 30 km/h | 1275.7,487.5,304.7,0 | 1:0:0         |
+          | from | to | route          | speed   | weights           | a:datasources |
+          | 2    | 1  | ad,de,eb,eb    | 30 km/h | 89.6,25,20,0      | 1:0:0         |
+          | a    | c  | ad,dc,dc       | 31 km/h | 94.3,70.7,0       | 1:0:1         |
+          | b    | c  | bc,bc          | 27 km/h | 66.7,0            | 1             |
+          | a    | d  | ad,ad          | 27 km/h | 94.3,0            | 1             |
+          | d    | c  | dc,dc          | 36 km/h | 70.7,0            | 0:1           |
+          | 6    | 8  | fb,bc          | 30 km/h | 20.9,0            | 0:1           |
+          | a    | 8  | ad,de,eb,bc,bc | 30 km/h | 94.3,25,25,13.3,0 | 1:0:0:1       |
 
 
     Scenario: Weighting based on speed file weights, ETA based on file durations
@@ -67,13 +83,13 @@ Feature: Traffic - speeds
 
         When I route I should get
           | from | to | route       | speed   | weights              | a:datasources |
-          | a    | b  | ad,de,eb,eb | 30 km/h | 1275.7,400.4,378.2,0 | 1:0:0:0       |
-          | a    | c  | ad,dc,dc    | 31 km/h | 1275.7,956.8,0       | 1:0           |
-          | b    | c  | bc,bc       | 27 km/h | 741.5,0              | 1:0           |
-          | a    | d  | ad,ad       | 27 km/h | 1275.7,0             | 1:0           |
-          | d    | c  | dc,dc       | 36 km/h | 956.8,0              | 0             |
-          | g    | b  | ab,ab       | 1 km/h  | 10010.4,0            | 1:0           |
-          | a    | g  | ab,ab       | 1 km/h  | 10010.3,0            | 1             |
+          | 2    | 1  | ad,de,eb,eb | 30 km/h | 89.6,25,20,0         | 1:0:0         |
+          | 2    | 3  | ad,dc,dc    | 31 km/h | 89.6,67.2,0          | 1:0           |
+          | b    | c  | bc,bc       | 27 km/h | 66.7,0               | 1             |
+          | a    | d  | ad,ad       | 27 km/h | 94.3,0               | 1             |
+          | d    | c  | dc,dc       | 36 km/h | 70.7,0               | 0:1           |
+          | 4    | 5  | ab,ab       | 1 km/h  | 360,0                | 1             |
+          | 5    | 4  | ab,ab       | 1 km/h  | 360,0                | 1             |
 
 
     Scenario: Weighting based on speed file weights, ETA based on file durations
@@ -88,8 +104,8 @@ Feature: Traffic - speeds
         And the customize extra arguments "--segment-speed-file {speeds_file}"
         And the speed file
         """
-        1,2,1,0.27777777
-        2,1,1,0.27777777
+        1,2,1,0.499962
+        2,1,1,0.499962
         2,3,27,7.5
         3,2,27
         1,4,1
@@ -99,15 +115,15 @@ Feature: Traffic - speeds
           | annotations | datasources |
 
         When I route I should get
-          | from | to | route       | speed   | weights                     | a:datasources |
-          | a    | b  | ab,ab       | 1 km/h  | 20020.735,0                 | 1:0           |
-          | a    | c  | ab,bc,bc    | 2 km/h  | 20020.735,741.509,0         | 1:1:0         |
-          | b    | c  | bc,bc       | 27 km/h | 741.509,0                   | 1:0           |
-          | a    | d  | ab,eb,de,de | 2 km/h  | 20020.735,378.169,400.415,0 | 1:0:0         |
-          | d    | c  | dc,dc       | 36 km/h | 956.805,0                   | 0             |
-          | g    | b  | ab,ab       | 1 km/h  | 10010.365,0                 | 1:0           |
-          | a    | g  | ab,ab       | 1 km/h  | 10010.37,0                  | 1             |
-          | g    | a  | ab,ab       | 1 km/h  | 10010.37,0                  | 1:1           |
+          | from | to | route       | speed   | weights          | a:datasources |
+          | a    | b  | ab,ab       | 1 km/h  | 1000,0           | 1             |
+          | a    | c  | ab,bc,bc    | 2 km/h  | 1000,66.676,0    | 1:1           |
+          | b    | c  | bc,bc       | 27 km/h | 66.676,0         | 1             |
+          | a    | d  | ab,eb,de,de | 2 km/h  | 1000,25,24.989,0 | 1:0:0:1       |
+          | d    | c  | dc,dc       | 36 km/h | 70.708,0         | 0:1           |
+          | 4    | b  | ab,ab       | 1 km/h  | 400,0            | 1             |
+          | 5    | 4  | ab,ab       | 1 km/h  | 200,0            | 1             |
+          | 4    | 5  | ab,ab       | 1 km/h  | 200,0            | 1             |
 
 
     Scenario: Speeds that isolate a single node (a)
@@ -129,14 +145,14 @@ Feature: Traffic - speeds
           | annotations | true |
 
         When I route I should get
-          | from | to | route    | speed   | weights       | a:datasources |
-          | a    | b  | fb,fb    | 36 km/h | 329.4,0       | 0             |
-          | a    | c  | fb,bc,bc | 30 km/h | 329.4,741.5,0 | 0:1:0         |
-          | b    | c  | bc,bc    | 27 km/h | 741.5,0       | 1:0           |
-          | a    | d  | fb,df,df | 36 km/h | 140,487.5,0   | 0:0:0         |
-          | d    | c  | dc,dc    | 36 km/h | 956.8,0       | 0             |
-          | g    | b  | fb,fb    | 36 km/h | 164.7,0       | 0             |
-          | a    | g  | fb,fb    | 36 km/h | 164.7,0       | 0             |
+          | from | to | route    | speed   | weights     | a:datasources |
+          | a    | 6  | fb,fb    | 36 km/h | 30.7,0      | 0             |
+          | a    | c  | fb,bc,bc | 30 km/h | 38.3,66.7,0 | 0:1           |
+          | b    | c  | bc,bc    | 27 km/h | 66.7,0      | 1             |
+          | a    | 7  | fb,df,df | 36 km/h | 0.7,25,0    | 0:0           |
+          | d    | c  | dc,dc    | 36 km/h | 70.7,0      | 0:1           |
+          | g    | 8  | fb,bc    | 29 km/h | 17.7,0      | 0:1           |
+          | a    | g  | fb,fb    | 36 km/h | 33.9,0      | 0             |
 
 
     Scenario: Verify that negative values cause an error, they're not valid at all

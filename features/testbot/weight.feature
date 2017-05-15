@@ -214,6 +214,9 @@ Feature: Weight tests
         end
         function turn_function (turn)
           print (turn.angle)
+          if turn.angle == 0 then
+            return
+          end
           turn.weight = 2 + turn.angle / 100
           turn.duration = turn.angle
         end
@@ -221,6 +224,8 @@ Feature: Weight tests
 
         Given the node map
             """
+                    f
+                    ⋮
             a---b---c---d
                     ⋮
                     e
@@ -228,13 +233,16 @@ Feature: Weight tests
 
         And the ways
             | nodes |
-            | abcd  |
+            | abc   |
+            | cd    |
             | ce    |
+            | cf    |
 
         When I route I should get
             | waypoints | route | distance | weights      | times          |
-            | a,c       | ,     | 40m +-.1 | 5.119,0      | 289.9s,0s      |
+            | a,d       | ,     | 60m +-.1 | 5.329,0      | 300s,0s      |
             | a,e       | ,,    | 60m +-.1 | 5.119,1.11,0 | 289.9s,100s,0s |
+            | a,f       | ,,    | 60m +-.1 | 3.319,1.11,0 | 110s,100s,0s   |
             | e,a       | ,,    | 60m +-.1 | 2.21,2.22,0  | 10.1s,200s,0s  |
             | e,d       | ,,    | 40m +-.1 | 4.009,1.11,0 | 189.9s,100s,0s |
             | d,e       | ,,    | 40m +-.1 | 2.21,1.11,0  | 10.1s,100s,0s  |
