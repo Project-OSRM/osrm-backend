@@ -9,7 +9,9 @@ bool EngineConfig::IsValid() const
 {
     const bool all_path_are_empty =
         storage_config.ram_index_path.empty() && storage_config.file_index_path.empty() &&
-        storage_config.hsgr_data_path.empty() && storage_config.nodes_data_path.empty() &&
+        storage_config.hsgr_data_path.empty() &&
+        storage_config.node_based_nodes_data_path.empty() &&
+        storage_config.edge_based_nodes_data_path.empty() &&
         storage_config.edges_data_path.empty() && storage_config.core_data_path.empty() &&
         storage_config.geometries_path.empty() && storage_config.timestamp_path.empty() &&
         storage_config.datasource_names_path.empty() &&

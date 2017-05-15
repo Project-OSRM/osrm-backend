@@ -100,7 +100,7 @@ void checkWeightsConsistency(
     extractor::files::readSegmentData(config.geometry_path, segment_data);
 
     extractor::EdgeBasedNodeDataContainer node_data;
-    extractor::files::readNodeData(config.osrm_input_path.string() + ".nodes_data", node_data);
+    extractor::files::readNodeData(config.osrm_input_path.string() + ".ebg_nodes", node_data);
 
     extractor::TurnDataContainer turn_data;
     extractor::files::readTurnData(config.osrm_input_path.string() + ".edges", turn_data);
@@ -570,7 +570,7 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
     TIMER_START(load_edges);
 
     EdgeID max_edge_id = 0;
-    std::vector<util::Coordinate> node_coordinates;
+    std::vector<util::Coordinate> coordinates;
     extractor::PackedOSMIDs osm_node_ids;
 
     {
@@ -581,7 +581,7 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
         max_edge_id = reader.ReadOne<EdgeID>();
         reader.ReadInto(edge_based_edge_list);
 
-        extractor::files::readNodes(config.node_based_graph_path, node_coordinates, osm_node_ids);
+        extractor::files::readNodes(config.node_based_nodes_data_path, coordinates, osm_node_ids);
     }
 
     const bool update_conditional_turns =
@@ -664,7 +664,7 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
                                              profile_properties,
                                              segment_speed_lookup,
                                              segment_data,
-                                             node_coordinates,
+                                             coordinates,
                                              osm_node_ids);
         // Now save out the updated compressed geometries
         extractor::files::writeSegmentData(config.geometry_path, segment_data);
@@ -707,7 +707,7 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
         auto updated_turn_penalties = updateConditionalTurns(config,
                                                              turn_weight_penalties,
                                                              conditional_turns,
-                                                             node_coordinates,
+                                                             coordinates,
                                                              osm_node_ids,
                                                              time_zone_handler);
         const auto offset = updated_segments.size();

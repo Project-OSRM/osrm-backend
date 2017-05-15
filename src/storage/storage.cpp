@@ -327,7 +327,8 @@ void Storage::PopulateLayout(DataLayout &layout)
 
     // load coordinate size
     {
-        io::FileReader node_file(config.nodes_data_path, io::FileReader::VerifyFingerprint);
+        io::FileReader node_file(config.node_based_nodes_data_path,
+                                 io::FileReader::VerifyFingerprint);
         const auto coordinate_list_size = node_file.ReadElementCount64();
         layout.SetBlockSize<util::Coordinate>(DataLayout::COORDINATE_LIST, coordinate_list_size);
         node_file.Skip<util::Coordinate>(coordinate_list_size);
@@ -724,7 +725,7 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
             layout.num_entries[DataLayout::OSM_NODE_ID_LIST] *
                 extractor::PackedOSMIDsView::BLOCK_ELEMENTS);
 
-        extractor::files::readNodes(config.nodes_data_path, coordinates, osm_node_ids);
+        extractor::files::readNodes(config.node_based_nodes_data_path, coordinates, osm_node_ids);
     }
 
     // load turn weight penalties

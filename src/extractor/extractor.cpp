@@ -174,7 +174,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     TIMER_STOP(rtree);
 
     util::Log() << "Writing nodes for nodes-based and edges-based graphs ...";
-    files::writeNodes(config.node_output_path, coordinates, osm_node_ids);
+    files::writeNodes(config.node_based_nodes_data_path, coordinates, osm_node_ids);
     files::writeNodeData(config.edge_based_nodes_data_path, edge_based_nodes_container);
 
     WriteEdgeBasedGraph(config.edge_graph_output_path, max_edge_id, edge_based_edge_list);

@@ -229,55 +229,23 @@ int main(int argc, const char *argv[]) try
         }
         else
         {
-            if (!boost::filesystem::is_regular_file(config.storage_config.ram_index_path))
+            auto required_files = {config.storage_config.ram_index_path,
+                                   config.storage_config.file_index_path,
+                                   config.storage_config.hsgr_data_path,
+                                   config.storage_config.node_based_nodes_data_path,
+                                   config.storage_config.edge_based_nodes_data_path,
+                                   config.storage_config.edges_data_path,
+                                   config.storage_config.core_data_path,
+                                   config.storage_config.geometries_path,
+                                   config.storage_config.datasource_indexes_path,
+                                   config.storage_config.names_data_path,
+                                   config.storage_config.properties_path};
+            for (auto file : required_files)
             {
-                util::Log(logWARNING) << config.storage_config.ram_index_path << " is not found";
-            }
-            if (!boost::filesystem::is_regular_file(config.storage_config.file_index_path))
-            {
-                util::Log(logWARNING) << config.storage_config.file_index_path << " is not found";
-            }
-            if (!boost::filesystem::is_regular_file(config.storage_config.hsgr_data_path))
-            {
-                util::Log(logWARNING) << config.storage_config.hsgr_data_path << " is not found";
-            }
-            if (!boost::filesystem::is_regular_file(config.storage_config.nodes_data_path))
-            {
-                util::Log(logWARNING) << config.storage_config.nodes_data_path << " is not found";
-            }
-            if (!boost::filesystem::is_regular_file(config.storage_config.edges_data_path))
-            {
-                util::Log(logWARNING) << config.storage_config.edges_data_path << " is not found";
-            }
-            if (!boost::filesystem::is_regular_file(config.storage_config.core_data_path))
-            {
-                util::Log(logWARNING) << config.storage_config.core_data_path << " is not found";
-            }
-            if (!boost::filesystem::is_regular_file(config.storage_config.geometries_path))
-            {
-                util::Log(logWARNING) << config.storage_config.geometries_path << " is not found";
-            }
-            if (!boost::filesystem::is_regular_file(config.storage_config.timestamp_path))
-            {
-                util::Log(logWARNING) << config.storage_config.timestamp_path << " is not found";
-            }
-            if (!boost::filesystem::is_regular_file(config.storage_config.datasource_names_path))
-            {
-                util::Log(logWARNING) << config.storage_config.datasource_names_path
-                                      << " is not found";
-            }
-            if (!boost::filesystem::is_regular_file(config.storage_config.datasource_indexes_path))
-            {
-                util::Log(logWARNING) << config.storage_config.datasource_indexes_path
-                                      << " is not found";
-            }
-            if (!boost::filesystem::is_regular_file(config.storage_config.names_data_path))
-            {
-                util::Log(logWARNING) << config.storage_config.names_data_path << " is not found";
-            }
-            if (!boost::filesystem::is_regular_file(config.storage_config.properties_path))
-            {
-                util::Log(logWARNING) << config.storage_config.properties_path << " is not found";
+                if (!boost::filesystem::is_regular_file(file))
+                {
+                    util::Log(logWARNING) << file << " is not found";
+                }
             }
         }
         return EXIT_FAILURE;
