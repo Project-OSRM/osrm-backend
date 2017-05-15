@@ -250,7 +250,8 @@ void Storage::PopulateLayout(DataLayout &layout)
         const auto nodes_number = nodes_data_file.ReadElementCount64();
 
         layout.SetBlockSize<NodeID>(DataLayout::GEOMETRY_ID_LIST, nodes_number);
-        layout.SetBlockSize<unsigned>(DataLayout::NAME_ID_LIST, nodes_number);
+        layout.SetBlockSize<NameID>(DataLayout::NAME_ID_LIST, nodes_number);
+        layout.SetBlockSize<ComponentID>(DataLayout::COMPONENT_ID_LIST, nodes_number);
         layout.SetBlockSize<extractor::TravelMode>(DataLayout::TRAVEL_MODE_LIST, nodes_number);
     }
 
@@ -594,13 +595,20 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
         util::vector_view<NameID> name_ids(name_id_list_ptr,
                                            layout.num_entries[storage::DataLayout::NAME_ID_LIST]);
 
+        auto component_ids_ptr = layout.GetBlockPtr<ComponentID, true>(
+            memory_ptr, storage::DataLayout::COMPONENT_ID_LIST);
+        util::vector_view<ComponentID> component_ids(
+            component_ids_ptr, layout.num_entries[storage::DataLayout::COMPONENT_ID_LIST]);
+
         auto travel_mode_list_ptr = layout.GetBlockPtr<extractor::TravelMode, true>(
             memory_ptr, storage::DataLayout::TRAVEL_MODE_LIST);
         util::vector_view<extractor::TravelMode> travel_modes(
             travel_mode_list_ptr, layout.num_entries[storage::DataLayout::TRAVEL_MODE_LIST]);
 
-        extractor::EdgeBasedNodeDataView node_data(
-            std::move(geometry_ids), std::move(name_ids), std::move(travel_modes));
+        extractor::EdgeBasedNodeDataView node_data(std::move(geometry_ids),
+                                                   std::move(name_ids),
+                                                   std::move(component_ids),
+                                                   std::move(travel_modes));
 
         extractor::files::readNodeData(config.edge_based_nodes_data_path, node_data);
     }

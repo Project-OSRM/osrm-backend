@@ -87,6 +87,7 @@ inline void read(storage::io::FileReader &reader,
 {
     storage::serialization::read(reader, node_data_container.geometry_ids);
     storage::serialization::read(reader, node_data_container.name_ids);
+    storage::serialization::read(reader, node_data_container.component_ids);
     storage::serialization::read(reader, node_data_container.travel_modes);
 }
 
@@ -96,6 +97,7 @@ inline void write(storage::io::FileWriter &writer,
 {
     storage::serialization::write(writer, node_data_container.geometry_ids);
     storage::serialization::write(writer, node_data_container.name_ids);
+    storage::serialization::write(writer, node_data_container.component_ids);
     storage::serialization::write(writer, node_data_container.travel_modes);
 }
 

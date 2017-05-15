@@ -495,6 +495,7 @@ void encodeVectorTile(const datafacade::ContiguousInternalMemoryDataFacadeBase &
                         reverse_datasource_vector[reverse_datasource_vector.size() -
                                                   edge.fwd_segment_position - 1];
 
+                    const auto component_id = facade.GetComponentID(edge.forward_segment_id.id);
                     const auto name_id = facade.GetNameIndex(edge.forward_segment_id.id);
                     auto name = facade.GetNameForID(name_id);
 
@@ -512,6 +513,7 @@ void encodeVectorTile(const datafacade::ContiguousInternalMemoryDataFacadeBase &
 
                     const auto encode_tile_line = [&line_layer_writer,
                                                    &edge,
+                                                   &component_id,
                                                    &id,
                                                    &max_datasource_id,
                                                    &used_line_ints](const FixedLine &tile_line,
@@ -549,7 +551,7 @@ void encodeVectorTile(const datafacade::ContiguousInternalMemoryDataFacadeBase &
                                 std::min(speed_kmh, 127u)); // save the speed value, capped at 127
                             field.add_element(1);           // "is_small" tag key offset
                             field.add_element(128 +
-                                              (edge.component.is_tiny ? 0 : 1)); // is_small feature
+                                              (component_id.is_tiny ? 0 : 1)); // is_small feature
                             field.add_element(2);                // "datasource" tag key offset
                             field.add_element(130 + datasource); // datasource value offset
                             field.add_element(3);                // "weight" tag key offset

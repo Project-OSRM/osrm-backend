@@ -53,6 +53,8 @@ class BaseDataFacade
 
     virtual GeometryID GetGeometryIndex(const NodeID id) const = 0;
 
+    virtual ComponentID GetComponentID(const NodeID id) const = 0;
+
     virtual std::vector<NodeID> GetUncompressedForwardGeometry(const EdgeID id) const = 0;
 
     virtual std::vector<NodeID> GetUncompressedReverseGeometry(const EdgeID id) const = 0;

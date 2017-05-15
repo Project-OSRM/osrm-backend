@@ -330,13 +330,20 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         util::vector_view<NameID> name_ids(name_id_list_ptr,
                                            layout.num_entries[storage::DataLayout::NAME_ID_LIST]);
 
+        const auto component_id_list_ptr =
+            layout.GetBlockPtr<ComponentID>(memory_ptr, storage::DataLayout::COMPONENT_ID_LIST);
+        util::vector_view<ComponentID> component_ids(
+            component_id_list_ptr, layout.num_entries[storage::DataLayout::COMPONENT_ID_LIST]);
+
         const auto travel_mode_list_ptr = layout.GetBlockPtr<extractor::TravelMode>(
             memory_ptr, storage::DataLayout::TRAVEL_MODE_LIST);
         util::vector_view<extractor::TravelMode> travel_modes(
             travel_mode_list_ptr, layout.num_entries[storage::DataLayout::TRAVEL_MODE_LIST]);
 
-        edge_based_node_data = extractor::EdgeBasedNodeDataView(
-            std::move(geometry_ids), std::move(name_ids), std::move(travel_modes));
+        edge_based_node_data = extractor::EdgeBasedNodeDataView(std::move(geometry_ids),
+                                                                std::move(name_ids),
+                                                                std::move(component_ids),
+                                                                std::move(travel_modes));
     }
 
     void InitializeEdgeInformationPointers(storage::DataLayout &layout, char *memory_ptr)
@@ -740,6 +747,11 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     GeometryID GetGeometryIndex(const NodeID id) const override final
     {
         return edge_based_node_data.GetGeometryID(id);
+    }
+
+    ComponentID GetComponentID(const NodeID id) const
+    {
+        return edge_based_node_data.GetComponentID(id);
     }
 
     extractor::TravelMode GetTravelMode(const NodeID id) const override final
