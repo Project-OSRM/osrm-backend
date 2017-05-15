@@ -53,8 +53,8 @@ struct PhantomNode
           forward_duration(MAXIMAL_EDGE_DURATION), reverse_duration(MAXIMAL_EDGE_DURATION),
           forward_duration_offset(0), reverse_duration_offset(0),
           component{INVALID_COMPONENTID, false}, fwd_segment_position(0),
-          is_valid_forward_source(false), is_valid_forward_target(false),
-          is_valid_reverse_source(false), is_valid_reverse_target(false)
+          is_valid_forward_source{false}, is_valid_forward_target{false},
+          is_valid_reverse_source{false}, is_valid_reverse_target{false}, unused{0}
     {
     }
 
@@ -148,7 +148,7 @@ struct PhantomNode
           is_valid_forward_source{is_valid_forward_source},
           is_valid_forward_target{is_valid_forward_target},
           is_valid_reverse_source{is_valid_reverse_source},
-          is_valid_reverse_target{is_valid_reverse_target}
+          is_valid_reverse_target{is_valid_reverse_target}, unused{0}
     {
     }
 
@@ -174,10 +174,11 @@ struct PhantomNode
     unsigned short fwd_segment_position;
     // is phantom node valid to be used as source or target
   private:
-    bool is_valid_forward_source : 1;
-    bool is_valid_forward_target : 1;
-    bool is_valid_reverse_source : 1;
-    bool is_valid_reverse_target : 1;
+    unsigned short is_valid_forward_source : 1;
+    unsigned short is_valid_forward_target : 1;
+    unsigned short is_valid_reverse_source : 1;
+    unsigned short is_valid_reverse_target : 1;
+    unsigned short unused : 12;
 };
 
 static_assert(sizeof(PhantomNode) == 64, "PhantomNode has more padding then expected");
