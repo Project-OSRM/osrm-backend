@@ -60,10 +60,11 @@ matrix:
         - npm install --ignore-scripts
         - npm link --ignore-scripts
       script:
+        - ./scripts/check_taginfo.py taginfo.json profiles/car.lua
         - ${MASON} install clang-format 3.8.1
         - PATH=$(${MASON} prefix clang-format 3.8.1)/bin:${PATH} ./scripts/format.sh && ./scripts/error_on_dirty.sh
-        - ./scripts/check_taginfo.py taginfo.json profiles/car.lua
-        - npm run docs && ./scripts/error_on_dirty.sh
+        # See issue 4043
+        #- npm run docs && ./scripts/error_on_dirty.sh
       after_success:
 
     - os: linux
