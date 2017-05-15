@@ -51,7 +51,8 @@ target_link_libraries(route-bench
 	osrm
 	${BOOST_BASE_LIBRARIES}
 	${CMAKE_THREAD_LIBS_INIT}
-	${TBB_LIBRARIES})
+	${TBB_LIBRARIES}
+	${MAYBE_SHAPEFILE})
 
 add_executable(table-bench
 	EXCLUDE_FROM_ALL
@@ -62,12 +63,13 @@ target_link_libraries(table-bench
 	osrm
 	${BOOST_BASE_LIBRARIES}
 	${CMAKE_THREAD_LIBS_INIT}
-	${TBB_LIBRARIES})
+	${TBB_LIBRARIES}
+	${MAYBE_SHAPEFILE})
 
 add_custom_target(benchmarks
 	DEPENDS
 	rtree-bench
 	match-bench
-    alias-bench
+        alias-bench
 	route-bench
 	table-bench)
