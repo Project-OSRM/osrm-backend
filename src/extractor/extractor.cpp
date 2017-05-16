@@ -131,7 +131,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     TIMER_START(expansion);
 
     EdgeBasedNodeDataContainer edge_based_nodes_container;
-    std::vector<EdgeBasedNode> node_based_edges_list;
+    std::vector<EdgeBasedNodeSegment> edge_based_node_segments;
     util::DeallocatingVector<EdgeBasedEdge> edge_based_edge_list;
     std::vector<bool> node_is_startpoint;
     std::vector<EdgeWeight> edge_based_node_weights;
@@ -142,7 +142,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
                                              coordinates,
                                              osm_node_ids,
                                              edge_based_nodes_container,
-                                             node_based_edges_list,
+                                             edge_based_node_segments,
                                              node_is_startpoint,
                                              edge_based_node_weights,
                                              edge_based_edge_list,
@@ -169,7 +169,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
 
     util::Log() << "Building r-tree ...";
     TIMER_START(rtree);
-    BuildRTree(std::move(node_based_edges_list), std::move(node_is_startpoint), coordinates);
+    BuildRTree(std::move(edge_based_node_segments), std::move(node_is_startpoint), coordinates);
 
     TIMER_STOP(rtree);
 
@@ -370,14 +370,12 @@ void Extractor::FindComponents(unsigned max_edge_id,
     TarjanSCC<UncontractedGraph> component_search(uncontracted_graph);
     component_search.Run();
 
-    stxxl::vector<ComponentID> component_ids;
-    component_ids.reserve(max_edge_id + 1);
     for (NodeID node_id = 0; node_id <= max_edge_id; ++node_id)
     {
         const auto forward_component = component_search.GetComponentID(node_id);
         const auto component_size = component_search.GetComponentSize(forward_component);
         const auto is_tiny = component_size < config.small_component_size;
-        input_nodes.SetData(node_id, {1 + forward_component, is_tiny});
+        input_nodes.SetComponentID(node_id, {1 + forward_component, is_tiny});
     }
 }
 
@@ -421,8 +419,8 @@ std::pair<std::size_t, EdgeID>
 Extractor::BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
                                   std::vector<util::Coordinate> &coordinates,
                                   extractor::PackedOSMIDs &osm_node_ids,
-                                  EdgeBasedNodeDataContainer &ebg_node_data_container,
-                                  std::vector<EdgeBasedNode> &node_based_edges_list,
+                                  EdgeBasedNodeDataContainer &edge_based_nodes_container,
+                                  std::vector<EdgeBasedNodeSegment> &edge_based_node_segments,
                                   std::vector<bool> &node_is_startpoint,
                                   std::vector<EdgeWeight> &edge_based_node_weights,
                                   util::DeallocatingVector<EdgeBasedEdge> &edge_based_edge_list,
@@ -501,8 +499,8 @@ Extractor::BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
                             *compressed_edge_container.ToSegmentData());
 
     edge_based_graph_factory.GetEdgeBasedEdges(edge_based_edge_list);
-    edge_based_graph_factory.GetEdgeBasedNodes(ebg_node_data_container);
-    edge_based_graph_factory.GetNodeBasedEdges(node_based_edges_list);
+    edge_based_graph_factory.GetEdgeBasedNodes(edge_based_nodes_container);
+    edge_based_graph_factory.GetEdgeBasedNodeSegments(edge_based_node_segments);
     edge_based_graph_factory.GetStartPointMarkers(node_is_startpoint);
     edge_based_graph_factory.GetEdgeBasedNodeWeights(edge_based_node_weights);
     auto max_edge_id = edge_based_graph_factory.GetHighestEdgeID();
@@ -522,21 +520,21 @@ Extractor::BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
 
     Saves tree into '.ramIndex' and leaves into '.fileIndex'.
  */
-void Extractor::BuildRTree(std::vector<EdgeBasedNode> node_based_edges_list,
+void Extractor::BuildRTree(std::vector<EdgeBasedNodeSegment> edge_based_node_segments,
                            std::vector<bool> node_is_startpoint,
                            const std::vector<util::Coordinate> &coordinates)
 {
-    util::Log() << "constructing r-tree of " << node_based_edges_list.size()
-                << " edge elements build on-top of " << coordinates.size() << " coordinates";
+    util::Log() << "Constructing r-tree of " << edge_based_node_segments.size()
+                << " segments build on-top of " << coordinates.size() << " coordinates";
 
-    BOOST_ASSERT(node_is_startpoint.size() == node_based_edges_list.size());
+    BOOST_ASSERT(node_is_startpoint.size() == edge_based_node_segments.size());
 
     // Filter node based edges based on startpoint
-    auto out_iter = node_based_edges_list.begin();
-    auto in_iter = node_based_edges_list.begin();
+    auto out_iter = edge_based_node_segments.begin();
+    auto in_iter = edge_based_node_segments.begin();
     for (auto index : util::irange<std::size_t>(0UL, node_is_startpoint.size()))
     {
-        BOOST_ASSERT(in_iter != node_based_edges_list.end());
+        BOOST_ASSERT(in_iter != edge_based_node_segments.end());
         if (node_is_startpoint[index])
         {
             *out_iter = *in_iter;
@@ -544,20 +542,20 @@ void Extractor::BuildRTree(std::vector<EdgeBasedNode> node_based_edges_list,
         }
         in_iter++;
     }
-    auto new_size = out_iter - node_based_edges_list.begin();
+    auto new_size = out_iter - edge_based_node_segments.begin();
     if (new_size == 0)
     {
         throw util::exception("There are no snappable edges left after processing.  Are you "
                               "setting travel modes correctly in the profile?  Cannot continue." +
                               SOURCE_REF);
     }
-    node_based_edges_list.resize(new_size);
+    edge_based_node_segments.resize(new_size);
 
     TIMER_START(construction);
-    util::StaticRTree<EdgeBasedNode> rtree(node_based_edges_list,
-                                           config.rtree_nodes_output_path,
-                                           config.rtree_leafs_output_path,
-                                           coordinates);
+    util::StaticRTree<EdgeBasedNodeSegment> rtree(edge_based_node_segments,
+                                                  config.rtree_nodes_output_path,
+                                                  config.rtree_leafs_output_path,
+                                                  coordinates);
 
     TIMER_STOP(construction);
     util::Log() << "finished r-tree construction in " << TIMER_SEC(construction) << " seconds";

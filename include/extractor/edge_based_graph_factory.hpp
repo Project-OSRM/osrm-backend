@@ -5,7 +5,7 @@
 
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/edge_based_edge.hpp"
-#include "extractor/edge_based_node.hpp"
+#include "extractor/edge_based_node_segment.hpp"
 #include "extractor/extraction_turn.hpp"
 #include "extractor/guidance/turn_analysis.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
@@ -93,8 +93,8 @@ class EdgeBasedGraphFactory
 
     // The following get access functions destroy the content in the factory
     void GetEdgeBasedEdges(util::DeallocatingVector<EdgeBasedEdge> &edges);
-    void GetEdgeBasedNodes(EdgeBasedNodeDataContainer &ebg_node_data_container);
-    void GetNodeBasedEdges(std::vector<EdgeBasedNode> &nodes);
+    void GetEdgeBasedNodes(EdgeBasedNodeDataContainer &data_container);
+    void GetEdgeBasedNodeSegments(std::vector<EdgeBasedNodeSegment> &nodes);
     void GetStartPointMarkers(std::vector<bool> &node_is_startpoint);
     void GetEdgeBasedNodeWeights(std::vector<EdgeWeight> &output_node_weights);
 
@@ -129,8 +129,8 @@ class EdgeBasedGraphFactory
     std::vector<EdgeWeight> m_edge_based_node_weights;
 
     //! list of edge based nodes (compressed segments)
-    std::vector<EdgeBasedNode> m_edge_based_node_list;
-    EdgeBasedNodeDataContainer m_ebg_node_data_container;
+    std::vector<EdgeBasedNodeSegment> m_edge_based_node_segments;
+    EdgeBasedNodeDataContainer m_edge_based_node_container;
     util::DeallocatingVector<EdgeBasedEdge> m_edge_based_edge_list;
     EdgeID m_max_edge_id;
 

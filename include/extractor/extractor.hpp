@@ -63,8 +63,8 @@ class Extractor
     BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
                            std::vector<util::Coordinate> &coordinates,
                            extractor::PackedOSMIDs &osm_node_ids,
-                           EdgeBasedNodeDataContainer &ebg_node_data_container,
-                           std::vector<EdgeBasedNode> &node_based_edge_list,
+                           EdgeBasedNodeDataContainer &edge_based_nodes_container,
+                           std::vector<EdgeBasedNodeSegment> &edge_based_node_segments,
                            std::vector<bool> &node_is_startpoint,
                            std::vector<EdgeWeight> &edge_based_node_weights,
                            util::DeallocatingVector<EdgeBasedEdge> &edge_based_edge_list,
@@ -75,7 +75,7 @@ class Extractor
     void FindComponents(unsigned max_edge_id,
                         const util::DeallocatingVector<EdgeBasedEdge> &edges,
                         EdgeBasedNodeDataContainer &nodes) const;
-    void BuildRTree(std::vector<EdgeBasedNode> node_based_edge_list,
+    void BuildRTree(std::vector<EdgeBasedNodeSegment> edge_based_node_segments,
                     std::vector<bool> node_is_startpoint,
                     const std::vector<util::Coordinate> &coordinates);
     std::shared_ptr<RestrictionMap> LoadRestrictionMap();

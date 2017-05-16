@@ -4,7 +4,7 @@
 // Exposes all data access interfaces to the algorithms via base class ptr
 
 #include "contractor/query_edge.hpp"
-#include "extractor/edge_based_node.hpp"
+#include "extractor/edge_based_node_segment.hpp"
 #include "extractor/external_memory_node.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
 #include "extractor/guidance/turn_lane_types.hpp"
@@ -40,7 +40,7 @@ using StringView = util::StringView;
 class BaseDataFacade
 {
   public:
-    using RTreeLeaf = extractor::EdgeBasedNode;
+    using RTreeLeaf = extractor::EdgeBasedNodeSegment;
     BaseDataFacade() {}
     virtual ~BaseDataFacade() {}
 
