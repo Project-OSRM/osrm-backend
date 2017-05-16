@@ -120,15 +120,7 @@ inline double reverse(const double bearing)
 // entry_bearing of 0.
 inline double angleBetween(const double entry_bearing, const double exit_bearing)
 {
-    // transform bearing from cw into ccw order
-    const double offset = 360 - entry_bearing;
-    const double rotated_exit = [](double bearing, const double offset) {
-        bearing += offset;
-        return bearing > 360 ? bearing - 360 : bearing;
-    }(exit_bearing, offset);
-
-    const auto angle = 540 - rotated_exit;
-    return angle >= 360 ? angle - 360 : angle;
+    return std::fmod(entry_bearing - exit_bearing + 540., 360.);
 }
 
 } // namespace bearing
