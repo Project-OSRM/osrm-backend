@@ -47,4 +47,10 @@ BOOST_AUTO_TEST_CASE(bearing_range_test)
     BOOST_CHECK_EQUAL(true, bearing::CheckInBounds(1, 1, 0));
 }
 
+BOOST_AUTO_TEST_CASE(bearing_angle_test)
+{
+    BOOST_CHECK_EQUAL(bearing::angleBetween(257.78421507794314, 77.784215077943117), 0.);
+    BOOST_CHECK_EQUAL(bearing::angleBetween(77.784215077943117, 257.78421507794314), 0.);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
