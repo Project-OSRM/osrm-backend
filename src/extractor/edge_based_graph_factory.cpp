@@ -8,6 +8,7 @@
 
 #include "storage/io.hpp"
 
+#include "util/assert.hpp"
 #include "util/bearing.hpp"
 #include "util/coordinate.hpp"
 #include "util/coordinate_calculation.hpp"
@@ -442,7 +443,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 auto intersection = turn_analysis.AssignTurnTypes(
                     node_along_road_entering, incoming_edge, intersection_with_flags_and_angles);
 
-                BOOST_ASSERT(intersection.valid());
+                OSRM_ASSERT(intersection.valid(), m_coordinates[node_at_center_of_intersection]);
 
                 intersection = turn_lane_handler.assignTurnLanes(
                     node_along_road_entering, incoming_edge, std::move(intersection));
