@@ -46,8 +46,9 @@ module.exports = function () {
         return waypoints.map(w => [w.lon, w.lat].map(ensureDecimal).join(','));
     };
 
-    this.requestRoute = (waypoints, bearings, userParams, callback) => {
+    this.requestRoute = (waypoints, bearings, sides, userParams, callback) => {
         if (bearings.length && bearings.length !== waypoints.length) throw new Error('*** number of bearings does not equal the number of waypoints');
+        if (sides.length && sides.length !== waypoints.length) throw new Error('*** number of sides does not equal the number of waypoints');
 
         var defaults = {
                 output: 'json',
@@ -67,6 +68,9 @@ module.exports = function () {
             }).join(';');
         }
 
+        if (sides.length) {
+            params.sides = sides.join(';');
+        }
         return this.requestPath('route', params, callback);
     };
 
@@ -161,6 +165,10 @@ module.exports = function () {
         return this.extractInstructionList(instructions, s => ('in' in s.intersections[0] ? this.reverseBearing(s.intersections[0].bearings[s.intersections[0].in]) : 0)
                                                               + '->' +
                                                               ('out' in s.intersections[0] ? s.intersections[0].bearings[s.intersections[0].out] : 0));
+    };
+
+    this.sideList = (instructions) => {
+        return this.extractInstructionList(instructions, s => s.sides || '');
     };
 
     this.annotationList = (instructions) => {
