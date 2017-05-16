@@ -8,10 +8,6 @@ local Sequence = require('lib/sequence')
 local Handlers = require("lib/handlers")
 local next = next       -- bind to local for speed
 
-penalty_table = {
-  ["service"] = 0.5,
-}
-
 -- set profile properties
 properties.max_speed_for_map_matching      = 180/3.6 -- 180kmph -> m/s
 properties.use_turn_restrictions           = true
