@@ -1,5 +1,5 @@
-#ifndef EDGE_BASED_NODE_HPP
-#define EDGE_BASED_NODE_HPP
+#ifndef OSRM_EXTRACT_EDGE_BASED_NODE_SEGMENT_HPP
+#define OSRM_EXTRACT_EDGE_BASED_NODE_SEGMENT_HPP
 
 #include "extractor/travel_mode.hpp"
 #include "util/typedefs.hpp"
@@ -17,20 +17,20 @@ namespace extractor
 
 /// This is what util::StaticRTree serialized and stores on disk
 /// It is generated in EdgeBasedGraphFactory.
-struct EdgeBasedNode
+struct EdgeBasedNodeSegment
 {
-    EdgeBasedNode()
+    EdgeBasedNodeSegment()
         : forward_segment_id{SPECIAL_SEGMENTID, false},
           reverse_segment_id{SPECIAL_SEGMENTID, false}, u(SPECIAL_NODEID), v(SPECIAL_NODEID),
           fwd_segment_position(std::numeric_limits<unsigned short>::max())
     {
     }
 
-    explicit EdgeBasedNode(const SegmentID forward_segment_id_,
-                           const SegmentID reverse_segment_id_,
-                           NodeID u,
-                           NodeID v,
-                           unsigned short fwd_segment_position)
+    explicit EdgeBasedNodeSegment(const SegmentID forward_segment_id_,
+                                  const SegmentID reverse_segment_id_,
+                                  NodeID u,
+                                  NodeID v,
+                                  unsigned short fwd_segment_position)
         : forward_segment_id(forward_segment_id_), reverse_segment_id(reverse_segment_id_), u(u),
           v(v), fwd_segment_position(fwd_segment_position)
     {
@@ -46,4 +46,4 @@ struct EdgeBasedNode
 }
 }
 
-#endif // EDGE_BASED_NODE_HPP
+#endif // OSRM_EXTRACT_EDGE_BASED_NODE_SEGMENT_HPP

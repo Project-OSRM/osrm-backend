@@ -31,7 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "contractor/contractor_config.hpp"
 #include "contractor/query_edge.hpp"
 #include "extractor/edge_based_edge.hpp"
-#include "extractor/edge_based_node.hpp"
+#include "extractor/edge_based_node_segment.hpp"
 #include "util/deallocating_vector.hpp"
 #include "util/typedefs.hpp"
 

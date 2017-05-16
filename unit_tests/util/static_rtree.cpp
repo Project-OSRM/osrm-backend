@@ -1,5 +1,5 @@
 #include "util/static_rtree.hpp"
-#include "extractor/edge_based_node.hpp"
+#include "extractor/edge_based_node_segment.hpp"
 #include "engine/geospatial_query.hpp"
 #include "util/coordinate.hpp"
 #include "util/coordinate_calculation.hpp"
@@ -39,7 +39,7 @@ using namespace osrm::test;
 constexpr uint32_t TEST_BRANCHING_FACTOR = 8;
 constexpr uint32_t TEST_LEAF_NODE_SIZE = 64;
 
-using TestData = extractor::EdgeBasedNode;
+using TestData = extractor::EdgeBasedNodeSegment;
 using TestStaticRTree = StaticRTree<TestData,
                                     osrm::storage::Ownership::Container,
                                     TEST_BRANCHING_FACTOR,

@@ -70,7 +70,7 @@ template <storage::Ownership Ownership> class EdgeBasedNodeDataContainerImpl
 
     // Used by EdgeBasedGraphFactory to fill data structure
     template <typename = std::enable_if<Ownership == storage::Ownership::Container>>
-    void SetData(NodeID node_id, ComponentID component_id)
+    void SetComponentID(NodeID node_id, ComponentID component_id)
     {
         component_ids[node_id] = component_id;
     }
