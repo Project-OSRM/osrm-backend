@@ -65,11 +65,6 @@ class RouteAPI : public BaseAPI
         response.values["code"] = "Ok";
     }
 
-    void MakeResponse(const InternalRouteResult &raw_route, util::json::Object &response) const
-    {
-        return MakeResponse(raw_route, response);
-    }
-
   protected:
     template <typename ForwardIter>
     util::json::Value MakeGeometry(ForwardIter begin, ForwardIter end) const
