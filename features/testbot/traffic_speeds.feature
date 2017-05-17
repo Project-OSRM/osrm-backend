@@ -10,14 +10,14 @@ Feature: Traffic - speeds
         #   \ |  /
         #     d./
         Given the node locations
-          | node |   lat |   lon |
-          | a    |   0.1 |   0.1 |
-          | b    |  0.05 |   0.1 |
-          | c    |   0.0 |   0.1 |
-          | d    |  0.05 |  0.03 |
-          | e    |  0.05 | 0.066 |
-          | f    | 0.075 | 0.066 |
-          | g    | 0.075 |   0.1 |
+          | node |   lat |   lon | id |
+          | a    |   0.1 |   0.1 | 1  |
+          | b    |  0.05 |   0.1 | 2  |
+          | c    |   0.0 |   0.1 | 3  |
+          | d    |  0.05 |  0.03 | 4  |
+          | e    |  0.05 | 0.066 | 5  |
+          | f    | 0.075 | 0.066 | 6  |
+          | g    | 0.075 |   0.1 | 7  |
         And the ways
           | nodes | highway |
           | ab    | primary |

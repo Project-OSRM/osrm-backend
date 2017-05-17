@@ -179,9 +179,12 @@ struct RectangleInt2D
 };
 inline std::ostream &operator<<(std::ostream &out, const RectangleInt2D &rect)
 {
-    out << std::setprecision(12) << "(" << toFloating(rect.min_lon) << ","
-        << toFloating(rect.max_lon) << "," << toFloating(rect.min_lat) << ","
-        << toFloating(rect.max_lat) << ")";
+    out << std::setprecision(12) << "{\"type\":\"Polygon\",\"coordinates\": [["
+        << toFloating(rect.min_lon) << "," << toFloating(rect.min_lat) << "],["
+        << toFloating(rect.min_lon) << "," << toFloating(rect.max_lat) << "],["
+        << toFloating(rect.max_lon) << "," << toFloating(rect.max_lat) << "],["
+        << toFloating(rect.max_lon) << "," << toFloating(rect.min_lat) << "],["
+        << toFloating(rect.min_lon) << "," << toFloating(rect.min_lat) << "]] }";
     return out;
 }
 }
