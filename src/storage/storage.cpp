@@ -284,6 +284,9 @@ void Storage::PopulateLayout(DataLayout &layout)
 
         const auto tree_size = tree_node_file.ReadElementCount64();
         layout.SetBlockSize<RTreeNode>(DataLayout::R_SEARCH_TREE, tree_size);
+        tree_node_file.Skip<RTreeNode>(tree_size);
+        const auto tree_levels_size = tree_node_file.ReadElementCount64();
+        layout.SetBlockSize<std::uint64_t>(DataLayout::R_SEARCH_TREE_LEVELS, tree_levels_size);
     }
 
     {
@@ -795,6 +798,13 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
             layout.GetBlockPtr<RTreeNode, true>(memory_ptr, DataLayout::R_SEARCH_TREE);
 
         tree_node_file.ReadInto(rtree_ptr, layout.num_entries[DataLayout::R_SEARCH_TREE]);
+
+        tree_node_file.Skip<std::uint64_t>(1);
+        const auto rtree_levelsizes_ptr =
+            layout.GetBlockPtr<std::uint64_t, true>(memory_ptr, DataLayout::R_SEARCH_TREE_LEVELS);
+
+        tree_node_file.ReadInto(rtree_levelsizes_ptr,
+                                layout.num_entries[DataLayout::R_SEARCH_TREE_LEVELS]);
     }
 
     if (boost::filesystem::exists(config.core_data_path))
