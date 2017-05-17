@@ -73,8 +73,9 @@ class Extractor
     void WriteProfileProperties(const std::string &output_path,
                                 const ProfileProperties &properties) const;
     void FindComponents(unsigned max_edge_id,
-                        const util::DeallocatingVector<EdgeBasedEdge> &edges,
-                        EdgeBasedNodeDataContainer &nodes) const;
+                        const util::DeallocatingVector<EdgeBasedEdge> &input_edge_list,
+                        const std::vector<EdgeBasedNodeSegment> &input_node_segments,
+                        EdgeBasedNodeDataContainer &nodes_container) const;
     void BuildRTree(std::vector<EdgeBasedNodeSegment> edge_based_node_segments,
                     std::vector<bool> node_is_startpoint,
                     const std::vector<util::Coordinate> &coordinates);

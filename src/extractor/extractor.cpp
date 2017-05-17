@@ -165,7 +165,8 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     util::Log() << "Done writing. (" << TIMER_SEC(timer_write_node_weights) << ")";
 
     util::Log() << "Computing strictly connected components ...";
-    FindComponents(max_edge_id, edge_based_edge_list, edge_based_nodes_container);
+    FindComponents(
+        max_edge_id, edge_based_edge_list, edge_based_node_segments, edge_based_nodes_container);
 
     util::Log() << "Building r-tree ...";
     TIMER_START(rtree);
@@ -338,7 +339,8 @@ void Extractor::WriteProfileProperties(const std::string &output_path,
 
 void Extractor::FindComponents(unsigned max_edge_id,
                                const util::DeallocatingVector<EdgeBasedEdge> &input_edge_list,
-                               EdgeBasedNodeDataContainer &input_nodes) const
+                               const std::vector<EdgeBasedNodeSegment> &input_node_segments,
+                               EdgeBasedNodeDataContainer &nodes_container) const
 {
     using InputEdge = util::static_graph_details::SortableEdgeWithData<void>;
     using UncontractedGraph = util::StaticGraph<void>;
@@ -362,6 +364,19 @@ void Extractor::FindComponents(unsigned max_edge_id,
         }
     }
 
+    // Connect forward and backward nodes of each edge to enforce
+    // forward and backward edge-based nodes be in one strongly-connected component
+    for (const auto &segment : input_node_segments)
+    {
+        if (segment.reverse_segment_id.enabled)
+        {
+            BOOST_ASSERT(segment.forward_segment_id.id <= max_edge_id);
+            BOOST_ASSERT(segment.reverse_segment_id.id <= max_edge_id);
+            edges.push_back({segment.forward_segment_id.id, segment.reverse_segment_id.id});
+            edges.push_back({segment.reverse_segment_id.id, segment.forward_segment_id.id});
+        }
+    }
+
     tbb::parallel_sort(edges.begin(), edges.end());
     edges.erase(std::unique(edges.begin(), edges.end()), edges.end());
 
@@ -375,7 +390,7 @@ void Extractor::FindComponents(unsigned max_edge_id,
         const auto forward_component = component_search.GetComponentID(node_id);
         const auto component_size = component_search.GetComponentSize(forward_component);
         const auto is_tiny = component_size < config.small_component_size;
-        input_nodes.SetComponentID(node_id, {1 + forward_component, is_tiny});
+        nodes_container.SetComponentID(node_id, {1 + forward_component, is_tiny});
     }
 }
 
