@@ -99,6 +99,16 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
                 base_parameters.bearings.push_back(std::move(bearing));
             };
 
+        const auto add_side = [](engine::api::BaseParameters &base_parameters,
+                                 const boost::optional<std::string> &side_string) {
+            boost::optional<engine::Side> side;
+            if (side_string)
+            {
+                side = engine::Side{engine::Side::fromString(side_string.get())};
+            }
+            base_parameters.sides.push_back(std::move(side));
+        };
+
         polyline_chars = qi::char_("a-zA-Z0-9_.--[]{}@?|\\%~`^");
         base64_char = qi::char_("a-zA-Z0-9--_=");
         unlimited_rule = qi::lit("unlimited")[qi::_val = std::numeric_limits<double>::infinity()];
@@ -149,10 +159,13 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
             qi::lit("bearings=") >
             (-(qi::short_ > ',' > qi::short_))[ph::bind(add_bearing, qi::_r1, qi::_1)] % ';';
 
+        sides_rule = qi::lit("sides=") >
+                     (-qi::as_string[qi::char_("a-zA")])[ph::bind(add_side, qi::_r1, qi::_1)] % ';';
+
         base_rule = radiuses_rule(qi::_r1)   //
                     | hints_rule(qi::_r1)    //
                     | bearings_rule(qi::_r1) //
-                    | generate_hints_rule(qi::_r1);
+                    | generate_hints_rule(qi::_r1) | sides_rule(qi::_r1);
     }
 
   protected:
@@ -163,6 +176,7 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
     qi::rule<Iterator, Signature> bearings_rule;
     qi::rule<Iterator, Signature> radiuses_rule;
     qi::rule<Iterator, Signature> hints_rule;
+    qi::rule<Iterator, Signature> sides_rule;
 
     qi::rule<Iterator, Signature> generate_hints_rule;
 
