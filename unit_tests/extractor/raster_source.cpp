@@ -22,7 +22,7 @@ int normalize(double coord) { return static_cast<int>(coord * COORDINATE_PRECISI
 
 BOOST_AUTO_TEST_CASE(raster_test)
 {
-    SourceContainer sources;
+    RasterContainer sources;
     int source_id =
         sources.LoadRasterSource(OSRM_FIXTURES_DIR "/raster_data.asc", 1, 1.09, 1, 1.09, 10, 10);
     BOOST_CHECK_EQUAL(source_id, 0);

@@ -216,15 +216,13 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
                            "sharp_left",
                            extractor::guidance::DirectionModifier::SharpLeft);
 
-    context.state.new_usertype<SourceContainer>("sources",
+    context.state.new_usertype<RasterContainer>("raster",
                                                 "load",
-                                                &SourceContainer::LoadRasterSource,
+                                                &RasterContainer::LoadRasterSource,
                                                 "query",
-                                                &SourceContainer::GetRasterDataFromSource,
+                                                &RasterContainer::GetRasterDataFromSource,
                                                 "interpolate",
-                                                &SourceContainer::GetRasterInterpolateFromSource);
-
-    context.state.new_enum("constants", "precision", COORDINATE_PRECISION);
+                                                &RasterContainer::GetRasterInterpolateFromSource);
 
     context.state.new_usertype<ProfileProperties>(
         "ProfileProperties",
@@ -421,8 +419,10 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
     context.state.new_usertype<RasterDatum>(
         "RasterDatum", "datum", &RasterDatum::datum, "invalid_data", &RasterDatum::get_invalid);
 
+    // the "properties" global is only used in v1 of the api, but we don't know
+    // the version until we have read the file. so we have to declare it in any case.
+    // we will then clear it for v2 profiles after reading the file
     context.state["properties"] = &context.properties;
-    context.state["sources"] = &context.sources;
 
     //
     // end of register block
@@ -430,24 +430,15 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
 
     util::luaAddScriptFolderToLoadPath(context.state.lua_state(), file_name.c_str());
 
-    context.state.script_file(file_name);
-
-    // cache references to functions for faster execution
-    context.turn_function = context.state["turn_function"];
-    context.node_function = context.state["node_function"];
-    context.way_function = context.state["way_function"];
-    context.segment_function = context.state["segment_function"];
-
-    context.has_turn_penalty_function = context.turn_function.valid();
-    context.has_node_function = context.node_function.valid();
-    context.has_way_function = context.way_function.valid();
-    context.has_segment_function = context.segment_function.valid();
+    sol::optional<sol::table> function_table = context.state.script_file(file_name);
 
     // Check profile API version
     auto maybe_version = context.state.get<sol::optional<int>>("api_version");
     if (maybe_version)
-    {
         context.api_version = *maybe_version;
+    else
+    {
+        context.api_version = 0;
     }
 
     if (context.api_version < SUPPORTED_MIN_API_VERSION ||
@@ -459,14 +450,140 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
                               " are supported." + SOURCE_REF);
     }
 
-    // Assert that version-dependent properties were not changed by profile
+    util::Log() << "Using profile api version " << context.api_version;
+
+    // version-dependent parts of the api
     switch (context.api_version)
     {
+    case 2:
+    {
+        // clear global not used in v2
+        context.state["properties"] = sol::nullopt;
+
+        // check function table
+        if (function_table == sol::nullopt)
+            throw util::exception("Profile must return a function table.");
+
+        // setup helpers
+        context.state["raster"] = &context.raster_sources;
+
+        // set constants
+        context.state.new_enum("constants",
+                               "precision",
+                               COORDINATE_PRECISION,
+                               "max_turn_weight",
+                               std::numeric_limits<TurnPenalty>::max());
+
+        // call initialize function
+        sol::function setup_function = function_table.value()["setup"];
+        if (!setup_function.valid())
+            throw util::exception("Profile must have an setup() function.");
+        sol::optional<sol::table> profile_table = setup_function();
+        if (profile_table == sol::nullopt)
+            throw util::exception("Profile setup() must return a table.");
+        else
+            context.profile_table = profile_table.value();
+
+        // store functions
+        context.turn_function = function_table.value()["process_turn"];
+        context.node_function = function_table.value()["process_node"];
+        context.way_function = function_table.value()["process_way"];
+        context.segment_function = function_table.value()["process_segment"];
+
+        context.has_turn_penalty_function = context.turn_function.valid();
+        context.has_node_function = context.node_function.valid();
+        context.has_way_function = context.way_function.valid();
+        context.has_segment_function = context.segment_function.valid();
+
+        // read properties from 'profile.properties' table
+        sol::table properties = context.profile_table["properties"];
+        if (properties.valid())
+        {
+            sol::optional<std::string> weight_name = properties["weight_name"];
+            if (weight_name != sol::nullopt)
+                context.properties.SetWeightName(weight_name.value());
+
+            sol::optional<std::int32_t> traffic_signal_penalty =
+                properties["traffic_signal_penalty"];
+            if (traffic_signal_penalty != sol::nullopt)
+                context.properties.SetTrafficSignalPenalty(traffic_signal_penalty.value());
+
+            sol::optional<std::int32_t> u_turn_penalty = properties["u_turn_penalty"];
+            if (u_turn_penalty != sol::nullopt)
+                context.properties.SetUturnPenalty(u_turn_penalty.value());
+
+            sol::optional<double> max_speed_for_map_matching =
+                properties["max_speed_for_map_matching"];
+            if (max_speed_for_map_matching != sol::nullopt)
+                context.properties.SetMaxSpeedForMapMatching(max_speed_for_map_matching.value());
+
+            sol::optional<bool> continue_straight_at_waypoint =
+                properties["continue_straight_at_waypoint"];
+            if (continue_straight_at_waypoint != sol::nullopt)
+                context.properties.continue_straight_at_waypoint =
+                    continue_straight_at_waypoint.value();
+
+            sol::optional<bool> use_turn_restrictions = properties["use_turn_restrictions"];
+            if (use_turn_restrictions != sol::nullopt)
+                context.properties.use_turn_restrictions = use_turn_restrictions.value();
+
+            sol::optional<bool> left_hand_driving = properties["left_hand_driving"];
+            if (left_hand_driving != sol::nullopt)
+                context.properties.left_hand_driving = left_hand_driving.value();
+
+            sol::optional<unsigned> weight_precision = properties["weight_precision"];
+            if (weight_precision != sol::nullopt)
+                context.properties.weight_precision = weight_precision.value();
+
+            sol::optional<bool> force_split_edges = properties["force_split_edges"];
+            if (force_split_edges != sol::nullopt)
+                context.properties.force_split_edges = force_split_edges.value();
+        }
+        break;
+    }
     case 1:
+    {
+        // cache references to functions for faster execution
+        context.turn_function = context.state["turn_function"];
+        context.node_function = context.state["node_function"];
+        context.way_function = context.state["way_function"];
+        context.segment_function = context.state["segment_function"];
+
+        context.has_turn_penalty_function = context.turn_function.valid();
+        context.has_node_function = context.node_function.valid();
+        context.has_way_function = context.way_function.valid();
+        context.has_segment_function = context.segment_function.valid();
+
+        // setup helpers
+        context.state["sources"] = &context.raster_sources;
+
+        // set constants
+        context.state.new_enum("constants", "precision", COORDINATE_PRECISION);
+
         BOOST_ASSERT(context.properties.GetUturnPenalty() == 0);
         BOOST_ASSERT(context.properties.GetTrafficSignalPenalty() == 0);
+
+        // call source_function if present
+        sol::function source_function = context.state["source_function"];
+        if (source_function.valid())
+        {
+            source_function();
+        }
+
         break;
+    }
     case 0:
+        // cache references to functions for faster execution
+        context.turn_function = context.state["turn_function"];
+        context.node_function = context.state["node_function"];
+        context.way_function = context.state["way_function"];
+        context.segment_function = context.state["segment_function"];
+
+        context.has_turn_penalty_function = context.turn_function.valid();
+        context.has_node_function = context.node_function.valid();
+        context.has_way_function = context.way_function.valid();
+        context.has_segment_function = context.segment_function.valid();
+
         BOOST_ASSERT(context.properties.GetWeightName() == "duration");
         break;
     }
@@ -542,48 +659,62 @@ void Sol2ScriptingEnvironment::ProcessElements(
     }
 }
 
-std::vector<std::string> Sol2ScriptingEnvironment::GetNameSuffixList()
+std::vector<std::string>
+Sol2ScriptingEnvironment::GetStringListFromFunction(const std::string &function_name)
 {
     auto &context = GetSol2Context();
     BOOST_ASSERT(context.state.lua_state() != nullptr);
-    std::vector<std::string> suffixes_vector;
-
-    sol::function get_name_suffix_list = context.state["get_name_suffix_list"];
-
-    if (get_name_suffix_list.valid())
+    std::vector<std::string> strings;
+    sol::function function = context.state[function_name];
+    if (function.valid())
     {
-        get_name_suffix_list(suffixes_vector);
+        function(strings);
     }
+    return strings;
+}
 
-    return suffixes_vector;
+std::vector<std::string>
+Sol2ScriptingEnvironment::GetStringListFromTable(const std::string &table_name)
+{
+    auto &context = GetSol2Context();
+    BOOST_ASSERT(context.state.lua_state() != nullptr);
+    std::vector<std::string> strings;
+    sol::table table = context.profile_table[table_name];
+    if (table.valid())
+    {
+        for (auto &&pair : table)
+        {
+            strings.push_back(pair.second.as<std::string>());
+        };
+    }
+    return strings;
+}
+
+std::vector<std::string> Sol2ScriptingEnvironment::GetNameSuffixList()
+{
+    auto &context = GetSol2Context();
+    switch (context.api_version)
+    {
+    case 2:
+        return Sol2ScriptingEnvironment::GetStringListFromTable("suffix_list");
+    case 1:
+        return Sol2ScriptingEnvironment::GetStringListFromFunction("get_name_suffix_list");
+    default:
+        return {};
+    }
 }
 
 std::vector<std::string> Sol2ScriptingEnvironment::GetRestrictions()
 {
     auto &context = GetSol2Context();
-    BOOST_ASSERT(context.state.lua_state() != nullptr);
-    std::vector<std::string> restrictions;
-
-    sol::function get_restrictions = context.state["get_restrictions"];
-
-    if (get_restrictions.valid())
+    switch (context.api_version)
     {
-        get_restrictions(restrictions);
-    }
-
-    return restrictions;
-}
-
-void Sol2ScriptingEnvironment::SetupSources()
-{
-    auto &context = GetSol2Context();
-    BOOST_ASSERT(context.state.lua_state() != nullptr);
-
-    sol::function source_function = context.state["source_function"];
-
-    if (source_function.valid())
-    {
-        source_function();
+    case 2:
+        return Sol2ScriptingEnvironment::GetStringListFromTable("restrictions");
+    case 1:
+        return Sol2ScriptingEnvironment::GetStringListFromFunction("get_restrictions");
+    default:
+        return {};
     }
 }
 
@@ -593,6 +724,21 @@ void Sol2ScriptingEnvironment::ProcessTurn(ExtractionTurn &turn)
 
     switch (context.api_version)
     {
+    case 2:
+        if (context.has_turn_penalty_function)
+        {
+            context.turn_function(context.profile_table, turn);
+
+            // Turn weight falls back to the duration value in deciseconds
+            // or uses the extracted unit-less weight value
+            if (context.properties.fallback_to_duration)
+                turn.weight = turn.duration;
+            else
+                // cap turn weight to max turn weight, which depend on weight precision
+                turn.weight = std::min(turn.weight, context.properties.GetMaxTurnWeight());
+        }
+
+        break;
     case 1:
         if (context.has_turn_penalty_function)
         {
@@ -644,6 +790,9 @@ void Sol2ScriptingEnvironment::ProcessSegment(ExtractionSegment &segment)
     {
         switch (context.api_version)
         {
+        case 2:
+            context.segment_function(context.profile_table, segment);
+            break;
         case 1:
             context.segment_function(segment);
             break;
@@ -660,14 +809,32 @@ void LuaScriptingContext::ProcessNode(const osmium::Node &node, ExtractionNode &
 {
     BOOST_ASSERT(state.lua_state() != nullptr);
 
-    node_function(node, result);
+    switch (api_version)
+    {
+    case 2:
+        node_function(profile_table, node, result);
+        break;
+    case 1:
+    case 0:
+        node_function(node, result);
+        break;
+    }
 }
 
 void LuaScriptingContext::ProcessWay(const osmium::Way &way, ExtractionWay &result)
 {
     BOOST_ASSERT(state.lua_state() != nullptr);
 
-    way_function(way, result);
+    switch (api_version)
+    {
+    case 2:
+        way_function(profile_table, way, result);
+        break;
+    case 1:
+    case 0:
+        way_function(way, result);
+        break;
+    }
 }
 }
 }

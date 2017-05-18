@@ -1,11 +1,9 @@
 @routing @car @weight
 Feature: Car - weights
 
-    Background: Use specific speeds
-        Given the profile "car"
-
     Scenario: Only routes down service road when that's the destination
-        Given the node map
+        Given the profile "car"
+        And the node map
             """
             a--b--c
                |
@@ -25,7 +23,8 @@ Feature: Car - weights
             | a    | d  | abc,bdf,bdf    | 18 km/h | 71.7   |
 
     Scenario: Does not jump off the highway to go down service road
-        Given the node map
+        Given the profile "car"
+        And the node map
             """
             a
             |
@@ -63,10 +62,9 @@ Feature: Car - weights
             | a    | e  | ab,be,be    | 14 km/h | 112    |
 
     Scenario: Distance weights
-        Given the profile file "car" extended with
+        Given the profile file "car" initialized with
         """
-        api_version = 1
-        properties.weight_name = 'distance'
+        profile.properties.weight_name = 'distance'
         """
 
         Given the node map

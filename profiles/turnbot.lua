@@ -1,10 +1,10 @@
-api_version = 1
-
 -- Testbot, with turn penalty
 -- Used for testing turn penalties
 
-require 'testbot'
+functions = require 'testbot'
 
-function turn_function (turn)
-    turn.duration = 20 * math.abs(turn.angle) / 180
+functions.process_turn = function(profile, turn)
+  turn.duration = 20 * math.abs(turn.angle) / 180
 end
+
+return functions

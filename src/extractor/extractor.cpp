@@ -224,9 +224,6 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
                                              turn_lane_map,
                                              scripting_environment.GetProfileProperties());
 
-    // setup raster sources
-    scripting_environment.SetupSources();
-
     std::string generator = header.get("generator");
     if (generator.empty())
     {

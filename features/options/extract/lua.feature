@@ -12,15 +12,20 @@ Feature: osrm-extract lua ways:get_nodes()
         And the data has been saved to disk
 
     Scenario: osrm-extract - Passing base file
-        Given the profile file "testbot" extended with
+        Given the profile file
         """
-        function way_function(way, result)
+        functions = require('testbot')
+
+        function way_function(profile, way, result)
           for _, node in ipairs(way:get_nodes()) do
             print('node id ' .. node:id())
           end
           result.forward_mode = mode.driving
           result.forward_speed = 1
         end
+
+        functions.process_way = way_function
+        return functions
         """
         When I run "osrm-extract --profile {profile_file} {osm_file}"
         Then it should exit successfully

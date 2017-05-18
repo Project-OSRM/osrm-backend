@@ -9,25 +9,26 @@ local set_classification = require("lib/guidance").set_classification
 local get_destination = require("lib/destination").get_destination
 local Tags = require('lib/tags')
 
-Handlers = {}
+WayHandlers = {}
 
 -- check that way has at least one tag that could imply routability-
 -- we store the checked tags in data, to avoid fetching again later
-function Handlers.handle_tag_prefetch(way,result,data,profile)
+function WayHandlers.tag_prefetch(profile,way,result,data)
   for key,v in pairs(profile.prefetch) do
     data[key] = way:get_value_by_key( key )
   end
+
   return next(data) ~= nil
 end
 
 -- set default mode
-function Handlers.handle_default_mode(way,result,data,profile)
+function WayHandlers.default_mode(profile,way,result,data)
   result.forward_mode = profile.default_mode
   result.backward_mode = profile.default_mode
 end
 
 -- handles name, including ref and pronunciation
-function Handlers.handle_names(way,result,data,profile)
+function WayHandlers.names(profile,way,result,data)
   -- parse the remaining tags
   local name = way:get_value_by_key("name")
   local pronunciation = way:get_value_by_key("name:pronunciation")
@@ -53,7 +54,7 @@ function Handlers.handle_names(way,result,data,profile)
 end
 
 -- junctions
-function Handlers.handle_roundabouts(way,result,data,profile)
+function WayHandlers.roundabouts(profile,way,result,data)
   local junction = way:get_value_by_key("junction");
 
   if junction == "roundabout" then
@@ -69,7 +70,7 @@ function Handlers.handle_roundabouts(way,result,data,profile)
 end
 
 -- determine if this way can be used as a start/end point for routing
-function Handlers.handle_startpoint(way,result,data,profile)
+function WayHandlers.startpoint(profile,way,result,data)
   -- if profile specifies set of allowed start modes, then check for that
   -- otherwise require default mode
   if profile.allowed_start_modes then
@@ -82,7 +83,7 @@ function Handlers.handle_startpoint(way,result,data,profile)
 end
 
 -- handle turn lanes
-function Handlers.handle_turn_lanes(way,result,data,profile)
+function WayHandlers.turn_lanes(profile,way,result,data)
   local forward, backward = get_turn_lanes(way,data)
 
   if forward then
@@ -95,12 +96,12 @@ function Handlers.handle_turn_lanes(way,result,data,profile)
 end
 
 -- set the road classification based on guidance globals configuration
-function Handlers.handle_classification(way,result,data,profile)
+function WayHandlers.classification(profile,way,result,data)
   set_classification(data.highway,result,way)
 end
 
 -- handle destination tags
-function Handlers.handle_destinations(way,result,data,profile)
+function WayHandlers.destinations(profile,way,result,data)
   if data.is_forward_oneway or data.is_reverse_oneway then
     local destination = get_destination(way, data.is_forward_oneway)
     result.destinations = canonicalizeStringList(destination, ",")
@@ -108,7 +109,7 @@ function Handlers.handle_destinations(way,result,data,profile)
 end
 
 -- handling ferries and piers
-function Handlers.handle_ferries(way,result,data,profile)
+function WayHandlers.ferries(profile,way,result,data)
   local route = data.route
   if route then
     local route_speed = profile.route_speeds[route]
@@ -126,7 +127,7 @@ function Handlers.handle_ferries(way,result,data,profile)
 end
 
 -- handling movable bridges
-function Handlers.handle_movables(way,result,data,profile)
+function WayHandlers.movables(profile,way,result,data)
   local bridge = data.bridge
   if bridge then
     local bridge_speed = profile.bridge_speeds[bridge]
@@ -148,7 +149,7 @@ function Handlers.handle_movables(way,result,data,profile)
 end
 
 -- service roads
-function Handlers.handle_service(way,result,data,profile)
+function WayHandlers.service(profile,way,result,data)
   local service = way:get_value_by_key("service")
   if service then
     -- Set don't allow access to certain service roads
@@ -161,7 +162,7 @@ function Handlers.handle_service(way,result,data,profile)
 end
 
 -- all lanes restricted to hov vehicles?
-function Handlers.has_all_designated_hov_lanes(lanes)
+function WayHandlers.has_all_designated_hov_lanes(lanes)
   if not lanes then
     return false
   end
@@ -176,7 +177,7 @@ function Handlers.has_all_designated_hov_lanes(lanes)
 end
 
 -- handle high occupancy vehicle tags
-function Handlers.handle_hov(way,result,data,profile)
+function WayHandlers.hov(profile,way,result,data)
   -- respect user-preference for HOV
   if not profile.avoid.hov_lanes then
     return
@@ -189,11 +190,11 @@ function Handlers.handle_hov(way,result,data,profile)
   end
 
   data.hov_lanes_forward, data.hov_lanes_backward = Tags.get_forward_backward_by_key(way,data,'hov:lanes')
-  local all_hov_forward = Handlers.has_all_designated_hov_lanes(data.hov_lanes_forward)
-  local all_hov_backward = Handlers.has_all_designated_hov_lanes(data.hov_lanes_backward)
+  local all_hov_forward = WayHandlers.has_all_designated_hov_lanes(data.hov_lanes_forward)
+  local all_hov_backward = WayHandlers.has_all_designated_hov_lanes(data.hov_lanes_backward)
 
   -- in this case we will use turn penalties instead of filtering out
-  if properties.weight_name == 'routability' then
+  if profile.properties.weight_name == 'routability' then
     if (all_hov_forward) then
       result.forward_restricted = true
     end
@@ -213,7 +214,7 @@ function Handlers.handle_hov(way,result,data,profile)
 end
 
 -- check accessibility by traversing our access tag hierarchy
-function Handlers.handle_access(way,result,data,profile)
+function WayHandlers.access(profile,way,result,data)
   data.forward_access, data.backward_access =
     Tags.get_forward_backward_by_set(way,data,profile.access_tags_hierarchy)
 
@@ -242,7 +243,7 @@ function Handlers.handle_access(way,result,data,profile)
 end
 
 -- handle speed (excluding maxspeed)
-function Handlers.handle_speed(way,result,data,profile)
+function WayHandlers.speed(profile,way,result,data)
   if result.forward_speed ~= -1 then
     return        -- abort if already set, eg. by a route
   end
@@ -278,7 +279,7 @@ function Handlers.handle_speed(way,result,data,profile)
 end
 
 -- add class information
-function Handlers.handle_classes(way,result,data,profile)
+function WayHandlers.classes(profile,way,result,data)
     local forward_toll, backward_toll = Tags.get_forward_backward_by_key(way, data, "toll")
     local forward_route, backward_route = Tags.get_forward_backward_by_key(way, data, "route")
 
@@ -310,7 +311,7 @@ function Handlers.handle_classes(way,result,data,profile)
 end
 
 -- reduce speed on bad surfaces
-function Handlers.handle_surface(way,result,data,profile)
+function WayHandlers.surface(profile,way,result,data)
   local surface = way:get_value_by_key("surface")
   local tracktype = way:get_value_by_key("tracktype")
   local smoothness = way:get_value_by_key("smoothness")
@@ -330,7 +331,7 @@ function Handlers.handle_surface(way,result,data,profile)
 end
 
 -- scale speeds to get better average driving times
-function Handlers.handle_penalties(way,result,data,profile)
+function WayHandlers.penalties(profile,way,result,data)
   -- heavily penalize a way tagged with all HOV lanes
   -- in order to only route over them if there is no other option
   local service_penalty = 1.0
@@ -375,7 +376,7 @@ function Handlers.handle_penalties(way,result,data,profile)
   local forward_penalty = math.min(service_penalty, width_penalty, alternating_penalty, sideroad_penalty)
   local backward_penalty = math.min(service_penalty, width_penalty, alternating_penalty, sideroad_penalty)
 
-  if properties.weight_name == 'routability' then
+  if profile.properties.weight_name == 'routability' then
     if result.forward_speed > 0 then
       result.forward_rate = (result.forward_speed * forward_penalty) / 3.6
     end
@@ -389,11 +390,11 @@ function Handlers.handle_penalties(way,result,data,profile)
 end
 
 -- maxspeed and advisory maxspeed
-function Handlers.handle_maxspeed(way,result,data,profile)
+function WayHandlers.maxspeed(profile,way,result,data)
   local keys = Sequence { 'maxspeed:advisory', 'maxspeed' }
   local forward, backward = Tags.get_forward_backward_by_set(way,data,keys)
-  forward = Handlers.parse_maxspeed(forward,profile)
-  backward = Handlers.parse_maxspeed(backward,profile)
+  forward = WayHandlers.parse_maxspeed(forward,profile)
+  backward = WayHandlers.parse_maxspeed(backward,profile)
 
   if forward and forward > 0 then
     result.forward_speed = forward * profile.speed_reduction
@@ -404,7 +405,7 @@ function Handlers.handle_maxspeed(way,result,data,profile)
   end
 end
 
-function Handlers.parse_maxspeed(source,profile)
+function WayHandlers.parse_maxspeed(source,profile)
   if not source then
     return 0
   end
@@ -429,7 +430,7 @@ function Handlers.parse_maxspeed(source,profile)
 end
 
 -- handle oneways tags
-function Handlers.handle_oneway(way,result,data,profile)
+function WayHandlers.oneway(profile,way,result,data)
   if not profile.oneway_handling then
     return
   end
@@ -476,8 +477,8 @@ function Handlers.handle_oneway(way,result,data,profile)
   end
 end
 
-function Handlers.handle_weights(way,result,data,profile)
-  if properties.weight_name == 'distance' then
+function WayHandlers.weights(profile,way,result,data)
+  if profile.properties.weight_name == 'distance' then
     result.weight = -1
      -- set weight rates to 1 for the distance weight, edge weights are distance / rate
     if (result.forward_mode ~= mode.inaccessible and result.forward_speed > 0) then
@@ -490,7 +491,7 @@ function Handlers.handle_weights(way,result,data,profile)
 end
 
 -- handle various that can block access
-function Handlers.handle_blocked_ways(way,result,data,profile)
+function WayHandlers.blocked_ways(profile,way,result,data)
 
   -- areas
   if profile.avoid.area and way:get_value_by_key("area") == "yes" then
@@ -554,27 +555,27 @@ end
 -- Call a sequence of handlers, aborting in case a handler returns false. Example:
 --
 -- handlers = Sequence {
---   'handle_tag_prefetch',
---   'handle_default_mode',
---   'handle_blocked_ways',
---   'handle_access',
---   'handle_speed',
---   'handle_names'
+--   WayHandlers.tag_prefetch,
+--   WayHandlers.default_mode,
+--   WayHandlers.blocked_ways,
+--   WayHandlers.access,
+--   WayHandlers.speed,
+--   WayHandlers.names
 -- }
 --
--- Handlers.run(handlers,way,result,data,profile)
+-- WayHandlers.run(handlers,way,result,data,profile)
 --
--- Each method in the list will be called on the Handlers object.
--- All handlers must accept the parameteres (way,result,data,profile) and return false
+-- Each method in the list will be called on the WayHandlers object.
+-- All handlers must accept the parameteres (profile,way,result,data) and return false
 -- if the handler chain should be aborted.
 -- To ensure the correct order of method calls, use a Sequence of handler names.
 
-function Handlers.run(handlers,way,result,data,profile)
+function WayHandlers.run(profile,way,result,data,handlers)
   for i,handler in ipairs(handlers) do
-    if Handlers[handler](way,result,data,profile) == false then
+    if handler(profile,way,result,data) == false then
       return false
     end
   end
 end
 
-return Handlers
+return WayHandlers
