@@ -23,7 +23,7 @@ struct LuaScriptingContext final
     void ProcessWay(const osmium::Way &, ExtractionWay &result);
 
     ProfileProperties properties;
-    SourceContainer sources;
+    RasterContainer raster_sources;
     sol::state state;
 
     bool has_turn_penalty_function;
@@ -37,6 +37,7 @@ struct LuaScriptingContext final
     sol::function segment_function;
 
     int api_version;
+    sol::table profile_table;
 };
 
 /**
@@ -50,7 +51,7 @@ class Sol2ScriptingEnvironment final : public ScriptingEnvironment
 {
   public:
     static const constexpr int SUPPORTED_MIN_API_VERSION = 0;
-    static const constexpr int SUPPORTED_MAX_API_VERSION = 1;
+    static const constexpr int SUPPORTED_MAX_API_VERSION = 2;
 
     explicit Sol2ScriptingEnvironment(const std::string &file_name);
     ~Sol2ScriptingEnvironment() override = default;
@@ -59,9 +60,10 @@ class Sol2ScriptingEnvironment final : public ScriptingEnvironment
 
     LuaScriptingContext &GetSol2Context();
 
+    std::vector<std::string> GetStringListFromTable(const std::string &table_name);
+    std::vector<std::string> GetStringListFromFunction(const std::string &function_name);
     std::vector<std::string> GetNameSuffixList() override;
     std::vector<std::string> GetRestrictions() override;
-    void SetupSources() override;
     void ProcessTurn(ExtractionTurn &turn) override;
     void ProcessSegment(ExtractionSegment &segment) override;
 

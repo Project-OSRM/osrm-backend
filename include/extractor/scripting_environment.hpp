@@ -54,7 +54,6 @@ class ScriptingEnvironment
 
     virtual std::vector<std::string> GetNameSuffixList() = 0;
     virtual std::vector<std::string> GetRestrictions() = 0;
-    virtual void SetupSources() = 0;
     virtual void ProcessTurn(ExtractionTurn &turn) = 0;
     virtual void ProcessSegment(ExtractionSegment &segment) = 0;
 

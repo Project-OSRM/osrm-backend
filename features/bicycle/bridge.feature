@@ -4,7 +4,7 @@ Feature: Bicycle - Handle cycling
     Background:
         Given the profile "bicycle"
 
-    Scenario: Bicycle - Use a ferry route
+    Scenario: Bicycle - Use a movable bridge
         Given the node map
             """
             a b   c

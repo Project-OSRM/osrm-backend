@@ -39,13 +39,17 @@ Feature: Projection to nearest point on road
 
 
     Scenario: Projection results negative duration
-        Given the profile file "testbot" extended with
+        Given the profile file
         """
-        api_version = 1
-        function segment_function (segment)
+        functions = require('testbot')
+
+        function segment_function(profile, segment)
           segment.weight = 5.5
           segment.duration = 2.8
         end
+
+        functions.process_segment = segment_function
+        return functions
         """
 
         Given the node locations

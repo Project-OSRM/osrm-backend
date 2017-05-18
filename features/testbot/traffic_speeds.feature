@@ -84,12 +84,11 @@ Feature: Traffic - speeds
 
 
     Scenario: Weighting based on speed file weights, ETA based on file durations
-        Given the profile file "testbot" extended with
+        Given the profile file "testbot" initialized with
         """
-        api_version = 1
-        properties.traffic_signal_penalty = 0
-        properties.u_turn_penalty = 0
-        properties.weight_precision = 2
+        profile.properties.traffic_signal_penalty = 0
+        profile.properties.u_turn_penalty = 0
+        profile.properties.weight_precision = 2
         """
         And the contract extra arguments "--segment-speed-file {speeds_file}"
         And the customize extra arguments "--segment-speed-file {speeds_file}"

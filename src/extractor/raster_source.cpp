@@ -79,7 +79,7 @@ RasterDatum RasterSource::GetRasterInterpolate(const int lon, const int lat) con
 }
 
 // Load raster source into memory
-int SourceContainer::LoadRasterSource(const std::string &path_string,
+int RasterContainer::LoadRasterSource(const std::string &path_string,
                                       double xmin,
                                       double xmax,
                                       double ymin,
@@ -125,7 +125,7 @@ int SourceContainer::LoadRasterSource(const std::string &path_string,
 }
 
 // External function for looking up nearest data point from a specified source
-RasterDatum SourceContainer::GetRasterDataFromSource(unsigned int source_id, double lon, double lat)
+RasterDatum RasterContainer::GetRasterDataFromSource(unsigned int source_id, double lon, double lat)
 {
     if (LoadedSources.size() < source_id + 1)
     {
@@ -146,7 +146,7 @@ RasterDatum SourceContainer::GetRasterDataFromSource(unsigned int source_id, dou
 
 // External function for looking up interpolated data from a specified source
 RasterDatum
-SourceContainer::GetRasterInterpolateFromSource(unsigned int source_id, double lon, double lat)
+RasterContainer::GetRasterInterpolateFromSource(unsigned int source_id, double lon, double lat)
 {
     if (LoadedSources.size() < source_id + 1)
     {

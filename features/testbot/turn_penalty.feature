@@ -1,12 +1,9 @@
 @routing @testbot @turn_penalty
 Feature: Turn Penalties
 
-    Background:
+    Scenario: Turns should incur a delay that depend on the angle
         Given the profile "turnbot"
         Given a grid size of 200 meters
-
-
-    Scenario: Turns should incur a delay that depend on the angle
         Given the node map
             """
             c d e

@@ -1,29 +1,27 @@
 @routing @testbot @nil
 Feature: Testbot - Check assigning nil values
     Scenario: Assign nil values to all way strings
-        Given the profile file "testbot" extended with
+        Given the profile file
         """
-        function way_function (way, result)
-            result.name = "name"
-            result.ref = "ref"
-            result.destinations = "destinations"
-            result.pronunciation = "pronunciation"
-            result.turn_lanes_forward = "turn_lanes_forward"
-            result.turn_lanes_backward = "turn_lanes_backward"
+        functions = require('testbot')
 
-            result.name = nil
-            result.ref = nil
-            result.destinations = nil
-            result.exits = nil
-            result.pronunciation = nil
-            result.turn_lanes_forward = nil
-            result.turn_lanes_backward = nil
+        function way_function(profile, way, result)
+          result.name = nil
+          result.ref = nil
+          result.destinations = nil
+          result.exits = nil
+          result.pronunciation = nil
+          result.turn_lanes_forward = nil
+          result.turn_lanes_backward = nil
 
-            result.forward_speed = 10
-            result.backward_speed = 10
-            result.forward_mode = mode.driving
-            result.backward_mode = mode.driving
+          result.forward_speed = 10
+          result.backward_speed = 10
+          result.forward_mode = mode.driving
+          result.backward_mode = mode.driving
         end
+
+        functions.process_way = way_function
+        return functions
         """
         Given the node map
             """

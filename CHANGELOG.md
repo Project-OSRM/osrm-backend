@@ -1,5 +1,19 @@
 # 5.10.0
- - Changes from 5.9:
+  - Changes from 5.9:
+    - Profiles:
+      - New version 2 profile API which cleans up a number of things and makes it easier to for profiles to include each other. Profiles using the old version 0 and 1 APIs are still supported.
+      - New required `setup()` function that must return a configuration hash. Storing configuration in globals is deprecated.
+      - Passes the config hash returned in `setup()` as an argument to `process_node/way/segment/turn`.
+      - Properties are now set in `.properties` in the config hash returend by setup().
+      - initialize raster sources in `setup()` instead of in a separate callback.
+      - Renames the `sources` helper to `raster`.
+      - Renames `way_functions` to `process_way` (same for node, segment and turn).
+      - Removes `get_restrictions()`. Instead set `.restrictions` in the config hash in `setup()`.
+      - Removes `get_name_suffix_list()`. Instead set `.suffix_list` in the config hash in `setup()`.
+      - Renames `Handlers` to `WayHandlers`.
+      - Pass functions instead of strings to `WayHandlers.run()`, so it's possible to mix in your own functions.
+      - Reorders arguments to `WayHandlers` functions to match `process_way()`.
+      - Profiles must return a hash of profile functions. This makes it easier for profiles to include each other.
 
 # 5.9.0
   - Changes from 5.8:

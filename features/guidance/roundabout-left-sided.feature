@@ -3,11 +3,10 @@ Feature: Basic Roundabout
 
     Background:
         Given a grid size of 10 meters
-        Given the profile file
-           """
-           require 'car'
-            properties.left_hand_driving = true
-           """
+        Given the profile file "car" initialized with
+            """
+            profile.properties.left_hand_driving = true
+            """
 
     Scenario: Roundabout exit counting for left sided driving
         And a grid size of 10 meters

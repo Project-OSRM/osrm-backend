@@ -1,19 +1,30 @@
-api_version = 1
 -- Rasterbot profile
 
-properties.force_split_edges = true
+api_version = 2
 
--- Set to true if you need to call the node_function for every node.
--- Generally can be left as false to avoid unnecessary Lua calls
--- (which slow down pre-processing).
-properties.call_tagless_node_function      = false
+function setup()
+  local raster_path = os.getenv('OSRM_RASTER_SOURCE') or "rastersource.asc"
 
--- Minimalist node_ and way_functions in order to test source_ and segment_functions
-
-function node_function (node, result)
+  return {
+    properties = {
+      force_split_edges = true,
+      process_call_tagless_node = false,
+    },
+    
+    raster_source = raster:load(
+      raster_path,
+      0,    -- lon_min
+      0.1,  -- lon_max
+      0,    -- lat_min
+      0.1,  -- lat_max
+      5,    -- nrows
+      4     -- ncols
+    )
+  }
 end
 
-function way_function (way, result)
+-- Minimalist process_ways in order to test source_ and process_segments
+function process_way (profile, way, result)
   local highway = way:get_value_by_key("highway")
   local name = way:get_value_by_key("name")
 
@@ -28,25 +39,9 @@ function way_function (way, result)
   result.backward_speed = 15
 end
 
-function source_function ()
-  local path = os.getenv('OSRM_RASTER_SOURCE')
-  if not path then
-    path = "rastersource.asc"
-  end
-  raster_source = sources:load(
-    path,
-    0,    -- lon_min
-    0.1,  -- lon_max
-    0,    -- lat_min
-    0.1,  -- lat_max
-    5,    -- nrows
-    4     -- ncols
-  )
-end
-
-function segment_function (segment)
-  local sourceData = sources:query(raster_source, segment.source.lon, segment.source.lat)
-  local targetData = sources:query(raster_source, segment.target.lon, segment.target.lat)
+function process_segment (profile, segment)
+  local sourceData = raster:query(profile.raster_source, segment.source.lon, segment.source.lat)
+  local targetData = raster:query(profile.raster_source, segment.target.lon, segment.target.lat)
   io.write("evaluating segment: " .. sourceData.datum .. " " .. targetData.datum .. "\n")
   local invalid = sourceData.invalid_data()
   local scaled_weight = segment.weight
@@ -66,3 +61,9 @@ function segment_function (segment)
   segment.weight = scaled_weight
   segment.duration = scaled_duration
 end
+
+return {
+  setup = setup,
+  process_way = process_way,
+  process_segment = process_segment
+}

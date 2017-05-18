@@ -125,10 +125,10 @@ class RasterSource
                  int _ymax);
 };
 
-class SourceContainer
+class RasterContainer
 {
   public:
-    SourceContainer() = default;
+    RasterContainer() = default;
 
     int LoadRasterSource(const std::string &path_string,
                          double xmin,

@@ -1,18 +1,11 @@
 @routing @testbot @sidebias
 Feature: Testbot - side bias
 
-    Background:
-        Given the profile file
+    Scenario: Left-hand bias
+        Given the profile file "car" initialized with
         """
-        require 'testbot'
-        properties.left_hand_driving = true
-        """
-
-    Scenario: Left hand bias
-        Given the profile file "car" extended with
-        """
-        properties.left_hand_driving = true
-        profile.turn_bias = properties.left_hand_driving and 1/1.075 or 1.075
+        profile.left_hand_driving = true
+        profile.turn_bias = 1/1.075
         """
         Given the node map
             """
@@ -31,11 +24,11 @@ Feature: Testbot - side bias
             | d    | a  | bd,ab,ab | 24s +-1    |
             | d    | c  | bd,bc,bc | 27s +-1    |
 
-    Scenario: Right hand bias
-        Given the profile file "car" extended with
+    Scenario: Right-hand bias
+        Given the profile file "car" initialized with
         """
-        properties.left_hand_driving = false
-        profile.turn_bias = properties.left_hand_driving and 1/1.075 or 1.075
+        profile.left_hand_driving = true
+        profile.turn_bias = 1.075
         """
         And the node map
             """
@@ -56,6 +49,11 @@ Feature: Testbot - side bias
             | d    | c  | bd,bc,bc | 24s +-1    |
 
     Scenario: Roundabout exit counting for left sided driving
+        Given the profile file "testbot" initialized with
+        """
+        profile.left_hand_driving = true
+        profile.turn_bias = 1/1.075
+        """
         And a grid size of 10 meters
         And the node map
             """
