@@ -30,9 +30,6 @@ local profile = {
   speed_reduction            = 0.8,
   traffic_light_penalty      = 2,
   u_turn_penalty             = 20,
-  restricted_penalty         = 3000,
-  -- Note^: abstract value but in seconds correlates approximately to 50 min
-  -- meaning that a route through a local access way is > 50 min faster than around
 
   -- Note: this biases right-side driving.
   -- Should be inverted for left-driving countries.
@@ -413,7 +410,7 @@ function turn_function (turn)
   if properties.weight_name == 'routability' then
       -- penalize turns from non-local access only segments onto local access only tags
       if not turn.source_restricted and turn.target_restricted then
-          turn.weight = profile.restricted_penalty
+          turn.weight = properties.max_turn_weight;
       end
   end
 end
