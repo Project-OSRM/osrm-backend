@@ -3,6 +3,7 @@
 
 #include "engine/api/route_parameters.hpp"
 #include "engine/bearing.hpp"
+#include "engine/side.hpp"
 
 #include <ostream>
 
@@ -51,6 +52,12 @@ inline std::ostream &operator<<(std::ostream &out, api::RouteParameters::Overvie
 inline std::ostream &operator<<(std::ostream &out, Bearing bearing)
 {
     out << bearing.bearing << "," << bearing.range;
+    return out;
+}
+
+inline std::ostream &operator<<(std::ostream &out, Side side)
+{
+    out << Side::toString(side);
     return out;
 }
 }

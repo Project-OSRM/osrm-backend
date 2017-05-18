@@ -55,7 +55,28 @@ struct Side
         else
             return BOTH;
     }
+    static std::string toString(const Side &side)
+    {
+        switch(side.side)
+        {
+            case(DEFAULT) :
+              return "0";
+            case(OPPOSITE) :
+              return "d";
+            case(BOTH) :
+              return "b";
+            default :
+              //TODO I don't know what to do here.
+              return "b";
+        }
+    }
 };
+
+inline bool operator==(const Side lhs, const Side rhs)
+{
+    return lhs.side == rhs.side;
+}
+inline bool operator!=(const Side lhs, const Side rhs) { return !(lhs == rhs); }
 }
 }
 
