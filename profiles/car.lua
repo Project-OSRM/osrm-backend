@@ -413,7 +413,7 @@ function turn_function (turn)
   if properties.weight_name == 'routability' then
       -- penalize turns from non-local access only segments onto local access only tags
       if not turn.source_restricted and turn.target_restricted then
-          turn.weight = turn.weight + profile.restricted_penalty
+          turn.weight = profile.restricted_penalty
       end
   end
 end
