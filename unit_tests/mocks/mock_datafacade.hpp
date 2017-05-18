@@ -147,7 +147,8 @@ class MockBaseDataFacade : public engine::datafacade::BaseDataFacade
 
     std::pair<engine::PhantomNode, engine::PhantomNode>
     NearestPhantomNodeWithAlternativeFromBigComponent(
-        const util::Coordinate /*input_coordinate*/) const override
+        const util::Coordinate /*input_coordinate*/,
+        const engine::SideValue /*side_value*/) const override
     {
         return {};
     }
