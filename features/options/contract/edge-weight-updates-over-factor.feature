@@ -1,4 +1,5 @@
-@contract @options @edge-weight-updates-over-factor
+# Broken see issue #4065
+@contract @options @edge-weight-updates-over-factor @todo
 Feature: osrm-contract command line option: edge-weight-updates-over-factor
 
     Background: Log edge weight updates over given factor
