@@ -1,5 +1,8 @@
 Feature: Check zero speed updates
 
+    Background:
+        Given the profile "testbot"
+
     Scenario: Matching on restricted way, single segment
         Given the query options
             | geometries  | geojson |
