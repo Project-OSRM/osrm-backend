@@ -131,8 +131,6 @@ void search(SearchEngineData<Algorithm> &engine_working_data,
                                     source_phantom.GetReverseWeightPlusOffset(),
                                 source_phantom.reverse_segment_id.id);
         }
-        BOOST_ASSERT(forward_heap.Size() > 0);
-        BOOST_ASSERT(reverse_heap.Size() > 0);
 
         search(engine_working_data,
                facade,
@@ -166,8 +164,7 @@ void search(SearchEngineData<Algorithm> &engine_working_data,
                                     source_phantom.GetReverseWeightPlusOffset(),
                                 source_phantom.reverse_segment_id.id);
         }
-        BOOST_ASSERT(forward_heap.Size() > 0);
-        BOOST_ASSERT(reverse_heap.Size() > 0);
+
         search(engine_working_data,
                facade,
                forward_heap,
