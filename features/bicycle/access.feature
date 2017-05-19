@@ -139,11 +139,11 @@ Feature: Bike - Access tags on ways
             | primary |              | permissive   |              | cycling      |
             | primary |              | designated   |              | cycling      |
             | primary |              | some_tag     |              | cycling      |
-            | primary |              | no           |              |              |
-            | primary |              | private      |              |              |
-            | primary |              | agricultural |              |              |
-            | primary |              | forestry     |              |              |
-            | primary |              | delivery     |              |              |
+            | primary |              | no           |              | pushing bike |
+            | primary |              | private      |              | pushing bike |
+            | primary |              | agricultural |              | pushing bike |
+            | primary |              | forestry     |              | pushing bike |
+            | primary |              | delivery     |              | pushing bike |
             | primary |              |              | yes          | cycling      |
             | primary |              |              | permissive   | cycling      |
             | primary |              |              | designated   | cycling      |
@@ -161,7 +161,7 @@ Feature: Bike - Access tags on ways
             | footway | yes          |              |              | cycling      |
             | footway | permissive   |              |              | cycling      |
             | footway | designated   |              |              | cycling      |
-            | footway | some_tag     |              |              | cycling      |
+            | footway | some_tag     |              |              | pushing bike |
             | footway | no           |              |              |              |
             | footway | private      |              |              |              |
             | footway | agricultural |              |              |              |
@@ -170,12 +170,12 @@ Feature: Bike - Access tags on ways
             | footway |              | yes          |              | cycling      |
             | footway |              | permissive   |              | cycling      |
             | footway |              | designated   |              | cycling      |
-            | footway |              | some_tag     |              | cycling      |
-            | footway |              | no           |              |              |
-            | footway |              | private      |              |              |
-            | footway |              | agricultural |              |              |
-            | footway |              | forestry     |              |              |
-            | footway |              | delivery     |              |              |
+            | footway |              | some_tag     |              | pushing bike |
+            | footway |              | no           |              | pushing bike |
+            | footway |              | private      |              | pushing bike |
+            | footway |              | agricultural |              | pushing bike |
+            | footway |              | forestry     |              | pushing bike |
+            | footway |              | delivery     |              | pushing bike |
             | footway |              |              | yes          | pushing bike |
             | footway |              |              | permissive   | pushing bike |
             | footway |              |              | designated   | pushing bike |
@@ -193,7 +193,7 @@ Feature: Bike - Access tags on ways
             | runway  | yes          |              |              | cycling      |
             | runway  | permissive   |              |              | cycling      |
             | runway  | designated   |              |              | cycling      |
-            | runway  | some_tag     |              |              | cycling      |
+            | runway  | some_tag     |              |              |              |
             | runway  | no           |              |              |              |
             | runway  | private      |              |              |              |
             | runway  | agricultural |              |              |              |
@@ -202,7 +202,7 @@ Feature: Bike - Access tags on ways
             | runway  |              | yes          |              | cycling      |
             | runway  |              | permissive   |              | cycling      |
             | runway  |              | designated   |              | cycling      |
-            | runway  |              | some_tag     |              | cycling      |
+            | runway  |              | some_tag     |              |              |
             | runway  |              | no           |              |              |
             | runway  |              | private      |              |              |
             | runway  |              | agricultural |              |              |
@@ -211,7 +211,7 @@ Feature: Bike - Access tags on ways
             | runway  |              |              | yes          | pushing bike |
             | runway  |              |              | permissive   | pushing bike |
             | runway  |              |              | designated   | pushing bike |
-            | runway  |              |              | some_tag     | pushing bike |
+            | runway  |              |              | some_tag     |              |
             | runway  |              |              | no           |              |
             | runway  |              |              | private      |              |
             | runway  |              |              | agricultural |              |
@@ -238,9 +238,9 @@ Feature: Bike - Access tags on ways
             | footway     |            | no         | permissive | cycling      | cycling      |
             | motorway    |            |            | yes        | cycling      |              |
             | track       | forestry   |            | permissive | cycling      | cycling      |
-            | cycleway    | yes        | designated | no         |              |              |
-            | primary     |            | yes        | private    |              |              |
-            | residential | permissive |            | no         |              |              |
+            | cycleway    | yes        | designated | no         | pushing bike | pushing bike |
+            | primary     |            | yes        | private    | pushing bike | pushing bike |
+            | residential | permissive |            | no         | pushing bike | pushing bike |
 
     Scenario: Bike - Ignore access tags for other modes
         Then routability should be
@@ -273,9 +273,9 @@ Feature: Bike - Access tags on ways
         Then routability should be
             | highway | oneway | bicycle | forw         | backw        |
             | footway |        |         | pushing bike | pushing bike |
-            | footway |        | no      |              |              |
+            | footway |        | no      | pushing bike | pushing bike |
             | primary | yes    |         | cycling      | pushing bike |
-            | primary | yes    | no      |              |              |
+            | primary | yes    | no      | pushing bike | pushing bike |
 
     Scenario: Bike - access=no should prevent pushing bike
         Then routability should be

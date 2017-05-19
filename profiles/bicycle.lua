@@ -400,14 +400,29 @@ function way_function (way, result)
     -- regular ways
     result.forward_speed = profile.bicycle_speeds[data.highway]
     result.backward_speed = profile.bicycle_speeds[data.highway]
-  elseif not profile.pedestrian_speeds[data.highway] then
-      -- unknown highway type, check if its on the whitelist, otherwise throw it out
-      if not forward_access or not profile.access_tag_whitelist[forward_access]  then
-          result.forward_mode = mode.inaccessible
+  else
+    -- unknown highway type, check if its on the whitelist, otherwise throw it out
+    if forward_access and profile.access_tag_whitelist[forward_access]  then
+      result.forward_mode = mode.cycling
+      result.forward_speed = default_speed
+    else
+      if profile.pedestrian_speeds[data.highway] or profile.access_tag_whitelist[forward_push_access] then
+        result.forward_mode = mode.pushing_bike
+        result.forward_speed = walking_speed
+      else
+        result.forward_mode = mode.inaccessible
       end
-      if not forward_access or not profile.access_tag_whitelist[backward_access]  then
-          result.backward_mode = mode.inaccessible
+    end
+    if backward_access and profile.access_tag_whitelist[backward_access]  then
+        result.backward_mode = mode.cycling
+        result.backward_speed = default_speed
+    else
+      if profile.pedestrian_speeds[data.highway] or profile.access_tag_whitelist[backward_push_access] then
+        result.backward_mode = mode.pushing_bike
+      else
+        result.backward_mode = mode.inaccessible
       end
+    end
   end
 
   -- cycleways
@@ -446,10 +461,10 @@ function way_function (way, result)
   elseif oneway == "no" or oneway == "0" or oneway == "false" then
     -- prevent implied oneway
   elseif oneway == "-1" then
-    result.forward_mode = mode.inaccessible
+    result.forward_mode = mode.pushing_bike
     has_cycleway_forward = false
   elseif oneway == "yes" or oneway == "1" or oneway == "true" or impliedOneway then
-    result.backward_mode = mode.inaccessible
+    result.backward_mode = mode.pushing_bike
     has_cycleway_backward = false
   end
 
@@ -457,7 +472,7 @@ function way_function (way, result)
     result.forward_speed = profile.bicycle_speeds["cycleway"]
   end
   if has_cycleway_backward then
-    result.backward_speed =profile.bicycle_speeds["cycleway"]
+    result.backward_speed = profile.bicycle_speeds["cycleway"]
   end
 
   -- apply dismount override or check again of we need to adjust accessibility
@@ -481,19 +496,33 @@ function way_function (way, result)
   -- biking not allowed, maybe we can push our bike?
   -- essentially requires pedestrian profiling, for example foot=no mean we can't push a bike
   if result.forward_mode == mode.pushing_bike or result.backward_mode == mode.pushing_bike then
-    local push_speed = -1
+    local forward_push_speed = -1
+    local backward_push_speed = -1
     if profile.pedestrian_speeds[data.highway] then
       -- pedestrian-only ways and areas
-      push_speed = profile.pedestrian_speeds[data.highway]
+      forward_push_speed = profile.pedestrian_speeds[data.highway]
+      backward_push_speed = profile.pedestrian_speeds[data.highway]
     elseif man_made and profile.man_made_speeds[man_made] then
       -- man made structures
-      push_speed = profile.man_made_speeds[man_made]
+      forward_push_speed = profile.man_made_speeds[man_made]
+      backward_push_speed = profile.man_made_speeds[man_made]
+    else
+        if profile.access_tag_whitelist[forward_push_access] then
+            forward_push_speed = walking_speed
+        elseif result.forward_mode == mode.pushing_bike then
+            result.forward_mode = mode.inaccessible
+        end
+        if profile.access_tag_whitelist[backward_push_access] then
+            backward_push_speed = walking_speed
+        elseif result.backward_mode == mode.pushing_bike then
+            result.backward_mode = mode.inaccessible
+        end
     end
     if result.forward_mode == mode.pushing_bike then
-        result.forward_speed = push_speed
+        result.forward_speed = forward_push_speed
     end
     if result.backward_mode == mode.pushing_bike then
-        result.backward_speed = push_speed
+        result.backward_speed = backward_push_speed
     end
   end
 
