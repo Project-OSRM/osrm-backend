@@ -111,8 +111,8 @@ Feature: Check zero speed updates
             """
 
         When I route I should get
-          | from | to | bearings | code    |
-          |    1 |  2 | 270 270  | NoRoute |
+          | from | to | bearings | code      |
+          |    1 |  2 | 270 270  | NoSegment |
 
 
     Scenario: Via routing on restricted oneway
