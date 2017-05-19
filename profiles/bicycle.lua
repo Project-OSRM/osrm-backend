@@ -370,8 +370,8 @@ function way_function (way, result)
     result.backward_speed = bridge_speed
   elseif profile.route_speeds[route] then
     -- ferries (doesn't cover routes tagged using relations)
-    result.forward_mode = mode.forward_mode ~= mode.inaccessible and mode.ferry or mode.inaccessible
-    result.backward_mode = mode.backward_mode ~= mode.inaccessible and mode.ferry or mode.inaccessible
+    result.forward_mode = mode.ferry
+    result.backward_mode = mode.ferry
     if duration and durationIsValid(duration) then
       result.duration = math.max( 1, parseDuration(duration) )
     else
@@ -382,16 +382,24 @@ function way_function (way, result)
   elseif railway and profile.platform_speeds[railway] then
     result.forward_speed = profile.platform_speeds[railway]
     result.backward_speed = profile.platform_speeds[railway]
+    result.forward_mode = mode.pushing_bike
+    result.backward_mode = mode.pushing_bike
   -- public_transport platforms (new tagging platform)
   elseif public_transport and profile.platform_speeds[public_transport] then
     result.forward_speed = profile.platform_speeds[public_transport]
     result.backward_speed = profile.platform_speeds[public_transport]
+    result.forward_mode = mode.pushing_bike
+    result.backward_mode = mode.pushing_bike
   -- railways
-  elseif profile.use_public_transport and railway and profile.railway_speeds[railway] and profile.access_tag_whitelist[access] then
-    result.forward_mode = mode.forward_mode ~= mode.inaccessible and mode.train or mode.inaccessible
-    result.backward_mode = mode.backward_mode ~= mode.inaccessible and mode.train or mode.inaccessible
-    result.forward_speed = profile.railway_speeds[railway]
-    result.backward_speed = profile.railway_speeds[railway]
+  elseif profile.use_public_transport and railway and profile.railway_speeds[railway] then
+    if forward_access and profile.access_tag_whitelist[forward_access] then
+      result.forward_mode = mode.forward_mode ~= mode.inaccessible and mode.train or mode.inaccessible
+      result.forward_speed = profile.railway_speeds[railway]
+    end
+    if backward_access and profile.access_tag_whitelist[backward_access] then
+      result.backward_mode = mode.backward_mode ~= mode.inaccessible and mode.train or mode.inaccessible
+      result.backward_speed = profile.railway_speeds[railway]
+    end
   elseif amenity and profile.amenity_speeds[amenity] then
     -- parking areas
     result.forward_speed = profile.amenity_speeds[amenity]
@@ -428,15 +436,15 @@ function way_function (way, result)
   -- cycleways
   local has_cycleway_forward = false
   local has_cycleway_backward = false
+  local has_cycleway_left= false
+  local has_cycleway_right = false
   if cycleway and profile.cycleway_tags[cycleway] then
-    has_cycleway_forward = true
-    has_cycleway_backward = true
+    has_cycleway_left = true
+    has_cycleway_right = true
   elseif cycleway_left and profile.cycleway_tags[cycleway_left] then
-    has_cycleway_backward = true
-    has_cycleway_forward = true
+    has_cycleway_left = true
   elseif cycleway_right and profile.cycleway_tags[cycleway_right] then
-    has_cycleway_backward = true
-    has_cycleway_forward = true
+    has_cycleway_right = true
   end
 
   -- direction
@@ -448,9 +456,21 @@ function way_function (way, result)
   if onewayClass == "yes" or onewayClass == "1" or onewayClass == "true" then
     result.backward_mode = mode.pushing_bike
     result.forward_mode = mode.cycling
+    -- in this case we don't care on which side the cycleway is
+    has_cycleway_forward = false
     has_cycleway_backward = false
-  elseif onewayClass == "no" or onewayClass == "0" or onewayClass == "false" then
-    -- prevent implied oneway
+  elseif onewayClass == "no" or onewayClass == "0" or onewayClass == "false" or
+    -- opposite works like oneway:bicycle=no
+    (cycleway and cycleway == "opposite") or
+    (cycleway_left and cycleway_left == "opposite") or
+    (cycleway_right and cycleway_right == "opposite") then
+    -- FIXME assumes right-handed traffic
+    if has_cycleway_left then
+        has_cycleway_backward = true
+    end
+    if has_cycleway_right then
+        has_cycleway_forward = true
+    end
   elseif onewayClass == "-1" or
       (cycleway and (cycleway == "opposite_lane" or cycleway == "opposite_track")) or
       (cycleway_left and (cycleway_left == "opposite_lane" or cycleway_left == "opposite_track")) or
@@ -459,7 +479,13 @@ function way_function (way, result)
     result.backward_mode = mode.cycling
     has_cycleway_forward = false
   elseif oneway == "no" or oneway == "0" or oneway == "false" then
-    -- prevent implied oneway
+    -- FIXME assumes right-handed traffic
+    if has_cycleway_left then
+        has_cycleway_backward = true
+    end
+    if has_cycleway_right then
+        has_cycleway_forward = true
+    end
   elseif oneway == "-1" then
     result.forward_mode = mode.pushing_bike
     has_cycleway_forward = false
@@ -469,9 +495,11 @@ function way_function (way, result)
   end
 
   if has_cycleway_forward then
+    result.forward_mode = mode.cycling
     result.forward_speed = profile.bicycle_speeds["cycleway"]
   end
   if has_cycleway_backward then
+    result.backward_mode = mode.cycling
     result.backward_speed = profile.bicycle_speeds["cycleway"]
   end
 
@@ -498,7 +526,13 @@ function way_function (way, result)
   if result.forward_mode == mode.pushing_bike or result.backward_mode == mode.pushing_bike then
     local forward_push_speed = -1
     local backward_push_speed = -1
-    if profile.pedestrian_speeds[data.highway] then
+    if railway and profile.platform_speeds[railway] then
+      forward_push_speed = profile.platform_speeds[railway]
+      backward_push_speed = profile.platform_speeds[railway]
+    elseif public_transport and profile.platform_speeds[public_transport] then
+      forward_push_speed = profile.platform_speeds[public_transport]
+      backward_push_speed = profile.platform_speeds[public_transport]
+    elseif profile.pedestrian_speeds[data.highway] then
       -- pedestrian-only ways and areas
       forward_push_speed = profile.pedestrian_speeds[data.highway]
       backward_push_speed = profile.pedestrian_speeds[data.highway]

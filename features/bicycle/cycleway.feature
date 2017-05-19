@@ -42,19 +42,19 @@ Feature: Bike - Cycle tracks/lanes
 
     Scenario: Bike - Left/right side cycleways on implied oneways
         Then routability should be
-            | highway  | cycleway | cycleway:left | cycleway:right | forw | backw |
-            | primary  |          |               |                | x    | x     |
-            | motorway |          |               |                |      |       |
-            | motorway | track    |               |                | x    |       |
-            | motorway | opposite |               |                |      | x     |
-            | motorway |          | track         |                |      | x     |
-            | motorway |          | opposite      |                |      | x     |
-            | motorway |          |               | track          | x    |       |
-            | motorway |          |               | opposite       | x    |       |
-            | motorway |          | track         | track          | x    | x     |
-            | motorway |          | opposite      | opposite       | x    | x     |
-            | motorway |          | track         | opposite       | x    | x     |
-            | motorway |          | opposite      | track          | x    | x     |
+            | highway  | cycleway | cycleway:left | cycleway:right | forw    | backw   | #                                                                                  |
+            | primary  |          |               |                | cycling | cycling |                                                                                    |
+            | motorway |          |               |                |         |         |                                                                                    |
+            | motorway | track    |               |                | cycling |         |                                                                                    |
+            | motorway | opposite |               |                | cycling | cycling |                                                                                    |
+            | motorway |          | track         |                |         | cycling |                                                                                    |
+            | motorway |          | opposite      |                | cycling | cycling |                                                                                    |
+            | motorway |          |               | track          | cycling |         |                                                                                    |
+            | motorway |          |               | opposite       | cycling | cycling |                                                                                    |
+            | motorway |          | track         | track          | cycling | cycling |                                                                                    |
+            | motorway |          | opposite      | opposite       | cycling | cycling | This combination does not really make sense, as opposite already implies both way. |
+            | motorway |          | track         | opposite       | cycling | cycling | This combination does not really make sense, as opposite already implies both way. |
+            | motorway |          | opposite      | track          | cycling | cycling | This combination does not really make sense, as opposite already implies both way. |
 
     Scenario: Bike - Invalid cycleway tags
         Then routability should be
