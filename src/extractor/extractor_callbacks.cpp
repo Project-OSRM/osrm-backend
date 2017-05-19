@@ -54,8 +54,8 @@ void ExtractorCallbacks::ProcessNode(const osmium::Node &input_node,
                                      const ExtractionNode &result_node)
 {
     external_memory.all_nodes_list.push_back(
-        {util::toFixed(util::FloatLongitude{input_node.location().lon()}),
-         util::toFixed(util::FloatLatitude{input_node.location().lat()}),
+        {util::toFixed(util::UnsafeFloatLongitude{input_node.location().lon()}),
+         util::toFixed(util::UnsafeFloatLatitude{input_node.location().lat()}),
          OSMNodeID{static_cast<std::uint64_t>(input_node.id())},
          result_node.barrier,
          result_node.traffic_lights});
