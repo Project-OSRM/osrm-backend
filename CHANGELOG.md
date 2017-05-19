@@ -6,6 +6,9 @@
      - Fixes 3981: The NodeJS documentation was outdated and incomplete.
      - Fixes 4010: Performance regression while parsing CSV files. Now 5x faster.
      - Fixes 3919: Turn penalties on the cyclabilty metric were disabled.
+     - Fixes 3992: Table plugin not checking for valid phantom nodes
+     - Fixes 4013: `continue_straight` interaction with bearing constraints
+     - Fixes 4063: Potential overflow in custom profiles for restricted ways
 
 # 5.7.0
   - Changes from 5.6
