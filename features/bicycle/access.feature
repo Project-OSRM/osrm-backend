@@ -10,80 +10,80 @@ Feature: Bike - Access tags on ways
             | access | vehicle | bicycle  | bothw        |
             |        |         |          | cycling      |
             |        |         | yes      | cycling      |
-            |        |         | no       |              |
+            |        |         | no       | pushing bike |
             |        |         | dismount | pushing bike |
             |        | yes     |          | cycling      |
             |        | yes     | yes      | cycling      |
-            |        | yes     | no       |              |
+            |        | yes     | no       | pushing bike |
             |        | yes     | dismount | pushing bike |
             |        | no      |          | pushing bike |
             |        | no      | yes      | cycling      |
-            |        | no      | no       |              |
+            |        | no      | no       | pushing bike |
             |        | no      | dismount | pushing bike |
             | yes    |         |          | cycling      |
             | yes    |         | yes      | cycling      |
-            | yes    |         | no       |              |
+            | yes    |         | no       | pushing bike |
             | yes    |         | dismount | pushing bike |
             | yes    | yes     |          | cycling      |
             | yes    | yes     | yes      | cycling      |
-            | yes    | yes     | no       |              |
+            | yes    | yes     | no       | pushing bike |
             | yes    | yes     | dismount | pushing bike |
             | yes    | no      |          | pushing bike |
             | yes    | no      | yes      | cycling      |
-            | yes    | no      | no       |              |
+            | yes    | no      | no       | pushing bike |
             | yes    | no      | dismount | pushing bike |
             | no     |         |          |              |
             | no     |         | yes      | cycling      |
             | no     |         | no       |              |
-            | no     |         | dismount |              |
+            | no     |         | dismount | pushing bike |
             | no     | yes     |          | cycling      |
             | no     | yes     | yes      | cycling      |
             | no     | yes     | no       |              |
-            | no     | yes     | dismount |              |
+            | no     | yes     | dismount | pushing bike |
             | no     | no      |          |              |
             | no     | no      | yes      | cycling      |
             | no     | no      | no       |              |
-            | no     | no      | dismount |              |
+            | no     | no      | dismount | pushing bike |
 
     Scenario: Bike - Access tag for both bicycle and foot
         Then routability should be
-            | access | foot | bicycle  | bothw        |
-            |        |      |          | cycling      |
-            |        |      | yes      | cycling      |
-            |        |      | no       |              |
-            |        |      | dismount | pushing bike |
-            |        | yes  |          | cycling      |
-            |        | yes  | yes      | cycling      |
-            |        | yes  | no       |              |
-            |        | yes  | dismount | pushing bike |
-            |        | no   |          | cycling      |
-            |        | no   | yes      | cycling      |
-            |        | no   | no       |              |
-            |        | no   | dismount |              |
-            | yes    |      |          | cycling      |
-            | yes    |      | yes      | cycling      |
-            | yes    |      | no       |              |
-            | yes    |      | dismount | pushing bike |
-            | yes    | yes  |          | cycling      |
-            | yes    | yes  | yes      | cycling      |
-            | yes    | yes  | no       |              |
-            | yes    | yes  | dismount | pushing bike |
-            | yes    | no   |          | cycling      |
-            | yes    | no   | yes      | cycling      |
-            | yes    | no   | no       |              |
-            | yes    | no   | dismount |              |
-            | no     |      |          |              |
-            | no     |      | yes      | cycling      |
-            | no     |      | no       |              |
-            | no     |      | dismount |              |
-            | no     | yes  |          | pushing bike |
-            | no     | yes  | yes      | cycling      |
-            | no     | yes  | no       |              |
-            | no     | yes  | dismount | pushing bike |
-            | no     | no   |          |              |
-            | no     | no   | yes      | cycling      |
-            | no     | no   | no       |              |
-            | no     | no   | dismount |              |
+            | access | foot | bicycle  | bothw        | #                        |
+            |        |      |          | cycling      |                          |
+            |        |      | yes      | cycling      |                          |
+            |        |      | no       | pushing bike |                          |
+            |        |      | dismount | pushing bike |                          |
+            |        | yes  |          | cycling      |                          |
+            |        | yes  | yes      | cycling      |                          |
+            |        | yes  | no       | pushing bike |                          |
+            |        | yes  | dismount | pushing bike |                          |
+            |        | no   |          | cycling      |                          |
+            |        | no   | yes      | cycling      |                          |
+            |        | no   | no       |              |                          |
+            |        | no   | dismount | pushing bike | questionable combination |
+            | yes    |      |          | cycling      |                          |
+            | yes    |      | yes      | cycling      |                          |
+            | yes    |      | no       | pushing bike |                          |
+            | yes    |      | dismount | pushing bike |                          |
+            | yes    | yes  |          | cycling      |                          |
+            | yes    | yes  | yes      | cycling      |                          |
+            | yes    | yes  | no       | pushing bike |                          |
+            | yes    | yes  | dismount | pushing bike |                          |
+            | yes    | no   |          | cycling      |                          |
+            | yes    | no   | yes      | cycling      |                          |
+            | yes    | no   | no       |              |                          |
+            | yes    | no   | dismount | pushing bike | questionable combination |
+            | no     |      |          |              |                          |
+            | no     |      | yes      | cycling      |                          |
+            | no     |      | no       |              |                          |
+            | no     |      | dismount | pushing bike |                          |
+            | no     | yes  |          | pushing bike |                          |
+            | no     | yes  | yes      | cycling      |                          |
+            | no     | yes  | no       | pushing bike |                          |
+            | no     | yes  | dismount | pushing bike |                          |
+            | no     | no   |          |              |                          |
+            | no     | no   | yes      | cycling      |                          |
+            | no     | no   | no       |              |                          |
+            | no     | no   | dismount | pushing bike | questionable combination |
 
     Scenario: Bike - Access tag in forward direction
         Then routability should be
