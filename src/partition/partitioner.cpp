@@ -8,6 +8,7 @@
 #include "partition/multi_level_partition.hpp"
 #include "partition/recursive_bisection.hpp"
 #include "partition/remove_unconnected.hpp"
+#include "partition/renumber.hpp"
 
 #include "extractor/files.hpp"
 
@@ -17,12 +18,14 @@
 #include "util/integer_range.hpp"
 #include "util/json_container.hpp"
 #include "util/log.hpp"
+#include "util/mmap_file.hpp"
 
 #include <algorithm>
 #include <iterator>
 #include <vector>
 
 #include <boost/assert.hpp>
+#include <boost/filesystem/operations.hpp>
 
 #include "util/geojson_debug_logger.hpp"
 #include "util/geojson_debug_policies.hpp"
@@ -129,10 +132,10 @@ int Partitioner::Run(const PartitionConfig &config)
     extractor::files::readNBGMapping(config.cnbg_ebg_mapping_path.string(), mapping);
     util::Log() << "Loaded node based graph to edge based graph mapping";
 
-    auto edge_based_graph = LoadEdgeBasedGraph(config.edge_based_graph_path.string());
+    auto edge_based_graph = LoadEdgeBasedGraph(config.edge_based_graph_path);
     util::Log() << "Loaded edge based graph for mapping partition ids: "
-                << edge_based_graph->GetNumberOfEdges() << " edges, "
-                << edge_based_graph->GetNumberOfNodes() << " nodes";
+                << edge_based_graph.GetNumberOfEdges() << " edges, "
+                << edge_based_graph.GetNumberOfNodes() << " nodes";
 
     // TODO: node based graph to edge based graph partition id mapping should be done split off.
 
@@ -140,7 +143,7 @@ int Partitioner::Run(const PartitionConfig &config)
     const auto &node_based_partition_ids = recursive_bisection.BisectionIDs();
 
     // Partition ids, keyed by edge based graph nodes
-    std::vector<NodeID> edge_based_partition_ids(edge_based_graph->GetNumberOfNodes(),
+    std::vector<NodeID> edge_based_partition_ids(edge_based_graph.GetNumberOfNodes(),
                                                  SPECIAL_NODEID);
 
     // Only resolve all easy cases in the first pass
@@ -163,7 +166,7 @@ int Partitioner::Run(const PartitionConfig &config)
     std::tie(partitions, level_to_num_cells) =
         bisectionToPartition(edge_based_partition_ids, config.max_cell_sizes);
 
-    auto num_unconnected = removeUnconnectedBoundaryNodes(*edge_based_graph, partitions);
+    auto num_unconnected = removeUnconnectedBoundaryNodes(edge_based_graph, partitions);
     util::Log() << "Fixed " << num_unconnected << " unconnected nodes";
 
     util::Log() << "Edge-based-graph annotation:";
@@ -173,19 +176,47 @@ int Partitioner::Run(const PartitionConfig &config)
                     << " bit size " << std::ceil(std::log2(level_to_num_cells[level] + 1));
     }
 
+    TIMER_START(renumber);
+    auto permutation = makePermutation(edge_based_graph, partitions);
+    renumber(edge_based_graph, permutation);
+    renumber(partitions, permutation);
+    {
+        boost::iostreams::mapped_file segment_region;
+        auto segments =
+            util::mmapFile<extractor::EdgeBasedNodeSegment>(config.file_index_path, segment_region);
+        renumber(segments, permutation);
+    }
+    {
+        extractor::EdgeBasedNodeDataContainer node_data;
+        extractor::files::readNodeData(config.node_data_path, node_data);
+        renumber(node_data, permutation);
+        extractor::files::writeNodeData(config.node_data_path, node_data);
+    }
+    if (boost::filesystem::exists(config.hsgr_path))
+    {
+        util::Log(logWARNING) << "Found existing .osrm.hsgr file, removing. You need to re-run "
+                                 "osrm-contract after osrm-partition.";
+        boost::filesystem::remove(config.hsgr_path);
+    }
+    TIMER_STOP(renumber);
+    util::Log() << "Renumbered data in " << TIMER_SEC(renumber) << " seconds";
+
     TIMER_START(packed_mlp);
     MultiLevelPartition mlp{partitions, level_to_num_cells};
     TIMER_STOP(packed_mlp);
     util::Log() << "MultiLevelPartition constructed in " << TIMER_SEC(packed_mlp) << " seconds";
 
     TIMER_START(cell_storage);
-    CellStorage storage(mlp, *edge_based_graph);
+    CellStorage storage(mlp, edge_based_graph);
     TIMER_STOP(cell_storage);
     util::Log() << "CellStorage constructed in " << TIMER_SEC(cell_storage) << " seconds";
 
     TIMER_START(writing_mld_data);
-    files::writePartition(config.mld_partition_path, mlp);
-    files::writeCells(config.mld_storage_path, storage);
+    files::writePartition(config.partition_path, mlp);
+    files::writeCells(config.storage_path, storage);
+    extractor::files::writeEdgeBasedGraph(config.edge_based_graph_path,
+                                          edge_based_graph.GetNumberOfNodes() - 1,
+                                          graphToEdges(edge_based_graph));
     TIMER_STOP(writing_mld_data);
     util::Log() << "MLD data writing took " << TIMER_SEC(writing_mld_data) << " seconds";
 

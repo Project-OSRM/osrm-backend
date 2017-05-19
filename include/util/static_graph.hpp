@@ -4,6 +4,7 @@
 #include "util/graph_traits.hpp"
 #include "util/integer_range.hpp"
 #include "util/percent.hpp"
+#include "util/permutation.hpp"
 #include "util/typedefs.hpp"
 #include "util/vector_view.hpp"
 
@@ -146,6 +147,7 @@ class StaticGraph
         number_of_nodes = static_cast<decltype(number_of_nodes)>(node_array.size() - 1);
         number_of_edges = static_cast<decltype(number_of_edges)>(node_array.back().first_edge);
         BOOST_ASSERT(number_of_edges <= edge_array.size());
+        BOOST_ASSERT(number_of_nodes == node_array.size() - 1);
     }
 
     unsigned GetNumberOfNodes() const { return number_of_nodes; }
@@ -239,6 +241,35 @@ class StaticGraph
             }
         }
         return current_iterator;
+    }
+
+    void Renumber(const std::vector<NodeID> &old_to_new_node)
+    {
+        std::vector<NodeID> new_to_old_node(number_of_nodes);
+        for (auto node : util::irange<NodeID>(0, number_of_nodes))
+            new_to_old_node[old_to_new_node[node]] = node;
+
+        Vector<NodeArrayEntry> new_node_array(node_array.size());
+
+        // Build up edge permutation
+        auto new_edge_index = 0;
+        std::vector<EdgeID> old_to_new_edge(edge_array.size(), SPECIAL_EDGEID);
+        for (auto node : util::irange<NodeID>(0, number_of_nodes))
+        {
+            auto new_first_edge = new_edge_index;
+            for (auto edge : GetAdjacentEdgeRange(new_to_old_node[node]))
+            {
+                edge_array[edge].target = old_to_new_node[edge_array[edge].target];
+                old_to_new_edge[edge] = new_edge_index++;
+            }
+            new_node_array[node].first_edge = new_first_edge;
+        }
+        new_node_array.back().first_edge = new_edge_index;
+        node_array = std::move(new_node_array);
+        BOOST_ASSERT(std::find(old_to_new_edge.begin(), old_to_new_edge.end(), SPECIAL_EDGEID) ==
+                     old_to_new_edge.end());
+
+        util::inplacePermutation(edge_array.begin(), edge_array.end(), old_to_new_edge);
     }
 
     friend void serialization::read<EdgeDataT, Ownership>(storage::io::FileReader &reader,

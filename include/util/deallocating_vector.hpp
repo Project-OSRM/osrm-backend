@@ -1,6 +1,7 @@
 #ifndef DEALLOCATING_VECTOR_HPP
 #define DEALLOCATING_VECTOR_HPP
 
+#include "storage/io_fwd.hpp"
 #include "util/integer_range.hpp"
 
 #include <boost/iterator/iterator_facade.hpp>
@@ -13,7 +14,23 @@ namespace osrm
 {
 namespace util
 {
+template <typename ElementT> class DeallocatingVector;
+}
 
+namespace storage
+{
+namespace serialization
+{
+template <typename T>
+inline void read(storage::io::FileReader &reader, util::DeallocatingVector<T> &vec);
+
+template <typename T>
+inline void write(storage::io::FileWriter &writer, const util::DeallocatingVector<T> &vec);
+}
+}
+
+namespace util
+{
 template <typename ElementT> struct ConstDeallocatingVectorIteratorState
 {
     ConstDeallocatingVectorIteratorState()
@@ -216,18 +233,16 @@ class DeallocatingVectorRemoveIterator
     }
 };
 
-template <typename ElementT, std::size_t ELEMENTS_PER_BLOCK> class DeallocatingVector;
+template <typename T> void swap(DeallocatingVector<T> &lhs, DeallocatingVector<T> &rhs);
 
-template <typename T, std::size_t S>
-void swap(DeallocatingVector<T, S> &lhs, DeallocatingVector<T, S> &rhs);
-
-template <typename ElementT, std::size_t ELEMENTS_PER_BLOCK = 8388608 / sizeof(ElementT)>
-class DeallocatingVector
+template <typename ElementT> class DeallocatingVector
 {
+    static constexpr std::size_t ELEMENTS_PER_BLOCK = 8388608 / sizeof(ElementT);
     std::size_t current_size;
     std::vector<ElementT *> bucket_list;
 
   public:
+    using value_type = ElementT;
     using iterator = DeallocatingVectorIterator<ElementT, ELEMENTS_PER_BLOCK>;
     using const_iterator = ConstDeallocatingVectorIterator<ElementT, ELEMENTS_PER_BLOCK>;
 
@@ -248,10 +263,9 @@ class DeallocatingVector
 
     ~DeallocatingVector() { clear(); }
 
-    friend void swap<>(DeallocatingVector<ElementT, ELEMENTS_PER_BLOCK> &lhs,
-                       DeallocatingVector<ElementT, ELEMENTS_PER_BLOCK> &rhs);
+    friend void swap<>(DeallocatingVector<ElementT> &lhs, DeallocatingVector<ElementT> &rhs);
 
-    void swap(DeallocatingVector<ElementT, ELEMENTS_PER_BLOCK> &other)
+    void swap(DeallocatingVector<ElementT> &other)
     {
         std::swap(current_size, other.current_size);
         bucket_list.swap(other.bucket_list);
@@ -377,10 +391,14 @@ class DeallocatingVector
             ++position;
         }
     }
+
+    friend void storage::serialization::read<ElementT>(storage::io::FileReader &reader,
+                                                       DeallocatingVector &vec);
+    friend void storage::serialization::write<ElementT>(storage::io::FileWriter &writer,
+                                                        const DeallocatingVector &vec);
 };
 
-template <typename T, std::size_t S>
-void swap(DeallocatingVector<T, S> &lhs, DeallocatingVector<T, S> &rhs)
+template <typename T> void swap(DeallocatingVector<T> &lhs, DeallocatingVector<T> &rhs)
 {
     lhs.swap(rhs);
 }

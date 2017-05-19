@@ -21,9 +21,15 @@ namespace partition
 
 struct EdgeBasedGraphEdgeData : extractor::EdgeBasedEdge::EdgeData
 {
-    // We need to write out the full edge based graph again.
+    using Base = extractor::EdgeBasedEdge::EdgeData;
+    using Base::Base;
 
-    // TODO: in case we want to modify the graph we need to store a boundary_arc flag here
+    EdgeBasedGraphEdgeData(const EdgeBasedGraphEdgeData &) = default;
+    EdgeBasedGraphEdgeData(EdgeBasedGraphEdgeData &&) = default;
+    EdgeBasedGraphEdgeData &operator=(const EdgeBasedGraphEdgeData &) = default;
+    EdgeBasedGraphEdgeData &operator=(EdgeBasedGraphEdgeData &&) = default;
+    EdgeBasedGraphEdgeData(const Base &base) : Base(base) {}
+    EdgeBasedGraphEdgeData() : Base() {}
 };
 
 struct DynamicEdgeBasedGraph : util::DynamicGraph<EdgeBasedGraphEdgeData>

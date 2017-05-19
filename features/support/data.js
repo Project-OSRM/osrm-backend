@@ -243,8 +243,8 @@ module.exports = function () {
                  processedCacheFile: this.processedCacheFile, environment: this.environment};
         let queue = d3.queue(1);
         queue.defer(this.extractData.bind(this), p);
-        queue.defer(this.contractData.bind(this), p);
         queue.defer(this.partitionData.bind(this), p);
+        queue.defer(this.contractData.bind(this), p);
         queue.defer(this.customizeData.bind(this), p);
         queue.awaitAll(callback);
     };

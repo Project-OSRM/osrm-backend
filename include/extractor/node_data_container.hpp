@@ -1,9 +1,12 @@
 #ifndef OSRM_EXTRACTOR_NODE_DATA_CONTAINER_HPP
 #define OSRM_EXTRACTOR_NODE_DATA_CONTAINER_HPP
 
+#include "extractor/travel_mode.hpp"
+
 #include "storage/io_fwd.hpp"
 #include "storage/shared_memory_ownership.hpp"
 
+#include "util/permutation.hpp"
 #include "util/typedefs.hpp"
 #include "util/vector_view.hpp"
 
@@ -80,6 +83,15 @@ template <storage::Ownership Ownership> class EdgeBasedNodeDataContainerImpl
     friend void
     serialization::write<Ownership>(storage::io::FileWriter &writer,
                                     const EdgeBasedNodeDataContainerImpl &ebn_data_container);
+
+    template <typename = std::enable_if<Ownership == storage::Ownership::Container>>
+    void Renumber(const std::vector<std::uint32_t> &permutation)
+    {
+        util::inplacePermutation(geometry_ids.begin(), geometry_ids.end(), permutation);
+        util::inplacePermutation(name_ids.begin(), name_ids.end(), permutation);
+        util::inplacePermutation(component_ids.begin(), component_ids.end(), permutation);
+        util::inplacePermutation(travel_modes.begin(), travel_modes.end(), permutation);
+    }
 
   private:
     Vector<GeometryID> geometry_ids;

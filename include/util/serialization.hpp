@@ -34,6 +34,8 @@ inline void read(storage::io::FileReader &reader, StaticGraph<EdgeDataT, Ownersh
 {
     storage::serialization::read(reader, graph.node_array);
     storage::serialization::read(reader, graph.edge_array);
+    graph.number_of_nodes = graph.node_array.size() - 1;
+    graph.number_of_edges = graph.edge_array.size();
 }
 
 template <typename EdgeDataT, storage::Ownership Ownership>
