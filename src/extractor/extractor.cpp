@@ -178,7 +178,13 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     files::writeNodes(config.node_based_nodes_data_path, coordinates, osm_node_ids);
     files::writeNodeData(config.edge_based_nodes_data_path, edge_based_nodes_container);
 
-    WriteEdgeBasedGraph(config.edge_graph_output_path, max_edge_id, edge_based_edge_list);
+    util::Log() << "Writing edge-based-graph edges       ... " << std::flush;
+    TIMER_START(write_edges);
+    files::writeEdgeBasedGraph(config.edge_graph_output_path, max_edge_id, edge_based_edge_list);
+    TIMER_STOP(write_edges);
+    util::Log() << "ok, after " << TIMER_SEC(write_edges) << "s";
+
+    util::Log() << "Processed " << edge_based_edge_list.size() << " edges";
 
     const auto nodes_per_second =
         static_cast<std::uint64_t>(number_of_node_based_nodes / TIMER_SEC(expansion));
@@ -576,32 +582,6 @@ void Extractor::BuildRTree(std::vector<EdgeBasedNodeSegment> edge_based_node_seg
 
     TIMER_STOP(construction);
     util::Log() << "finished r-tree construction in " << TIMER_SEC(construction) << " seconds";
-}
-
-void Extractor::WriteEdgeBasedGraph(
-    std::string const &output_file_filename,
-    EdgeID const max_edge_id,
-    util::DeallocatingVector<EdgeBasedEdge> const &edge_based_edge_list)
-{
-    storage::io::FileWriter file(output_file_filename,
-                                 storage::io::FileWriter::GenerateFingerprint);
-
-    util::Log() << "Writing edge-based-graph edges       ... " << std::flush;
-    TIMER_START(write_edges);
-
-    std::uint64_t number_of_used_edges = edge_based_edge_list.size();
-    file.WriteElementCount64(number_of_used_edges);
-    file.WriteOne(max_edge_id);
-
-    for (const auto &edge : edge_based_edge_list)
-    {
-        file.WriteOne(edge);
-    }
-
-    TIMER_STOP(write_edges);
-    util::Log() << "ok, after " << TIMER_SEC(write_edges) << "s";
-
-    util::Log() << "Processed " << number_of_used_edges << " edges";
 }
 
 void Extractor::WriteIntersectionClassificationData(

@@ -3,6 +3,7 @@
 
 #include "util/deallocating_vector.hpp"
 #include "util/integer_range.hpp"
+#include "util/permutation.hpp"
 #include "util/typedefs.hpp"
 
 #include "storage/io_fwd.hpp"
@@ -115,6 +116,28 @@ template <typename EdgeDataT> class DynamicGraph
                 ++edge;
             }
         }
+    }
+
+    DynamicGraph(DynamicGraph &&other)
+    {
+        number_of_nodes = other.number_of_nodes;
+        // atomics can't be moved this is why we need an own constructor
+        number_of_edges = static_cast<std::uint32_t>(other.number_of_edges);
+
+        node_array = std::move(other.node_array);
+        edge_list = std::move(other.edge_list);
+    }
+
+    DynamicGraph &operator=(DynamicGraph &&other)
+    {
+        number_of_nodes = other.number_of_nodes;
+        // atomics can't be moved this is why we need an own constructor
+        number_of_edges = static_cast<std::uint32_t>(other.number_of_edges);
+
+        node_array = std::move(other.node_array);
+        edge_list = std::move(other.edge_list);
+
+        return *this;
     }
 
     unsigned GetNumberOfNodes() const { return number_of_nodes; }
@@ -307,6 +330,36 @@ template <typename EdgeDataT> class DynamicGraph
             }
         }
         return current_iterator;
+    }
+
+    void Renumber(const std::vector<NodeID> &old_to_new_node)
+    {
+        // permutate everything but the sentinel
+        util::inplacePermutation(node_array.begin(), std::prev(node_array.end()), old_to_new_node);
+
+        // Build up edge permutation
+        auto new_edge_index = 0;
+        std::vector<EdgeID> old_to_new_edge(edge_list.size(), SPECIAL_EDGEID);
+        for (auto node : util::irange<NodeID>(0, number_of_nodes))
+        {
+            auto new_first_edge = new_edge_index;
+            // move all filled edges
+            for (auto edge : GetAdjacentEdgeRange(node))
+            {
+                edge_list[edge].target = old_to_new_node[edge_list[edge].target];
+                old_to_new_edge[edge] = new_edge_index++;
+            }
+            // and all adjacent empty edges
+            for (auto edge = EndEdges(node); edge < number_of_edges && isDummy(edge); edge++)
+            {
+                old_to_new_edge[edge] = new_edge_index++;
+            }
+            node_array[node].first_edge = new_first_edge;
+        }
+        BOOST_ASSERT(std::find(old_to_new_edge.begin(), old_to_new_edge.end(), SPECIAL_EDGEID) ==
+                     old_to_new_edge.end());
+
+        util::inplacePermutation(edge_list.begin(), edge_list.end(), old_to_new_edge);
     }
 
   protected:

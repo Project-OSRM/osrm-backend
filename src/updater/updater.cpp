@@ -142,26 +142,6 @@ void checkWeightsConsistency(
 }
 #endif
 
-auto mmapFile(const std::string &filename, boost::interprocess::mode_t mode)
-{
-    using boost::interprocess::file_mapping;
-    using boost::interprocess::mapped_region;
-
-    try
-    {
-        const file_mapping mapping{filename.c_str(), mode};
-
-        mapped_region region{mapping, mode};
-        region.advise(mapped_region::advice_sequential);
-        return region;
-    }
-    catch (const std::exception &e)
-    {
-        util::Log(logERROR) << "Error while trying to mmap " + filename + ": " + e.what();
-        throw;
-    }
-}
-
 tbb::concurrent_vector<GeometryID>
 updateSegmentData(const UpdaterConfig &config,
                   const extractor::ProfileProperties &profile_properties,
@@ -420,14 +400,11 @@ updateTurnPenalties(const UpdaterConfig &config,
                     extractor::PackedOSMIDs osm_node_ids)
 {
     const auto weight_multiplier = profile_properties.GetWeightMultiplier();
-    const auto turn_index_region =
-        mmapFile(config.turn_penalties_index_path, boost::interprocess::read_only);
 
     // Mapped file pointer for turn indices
-    const extractor::lookup::TurnIndexBlock *turn_index_blocks =
-        reinterpret_cast<const extractor::lookup::TurnIndexBlock *>(
-            turn_index_region.get_address());
-    BOOST_ASSERT(is_aligned<extractor::lookup::TurnIndexBlock>(turn_index_blocks));
+    boost::iostreams::mapped_file_source turn_index_region;
+    auto turn_index_blocks = util::mmapFile<extractor::lookup::TurnIndexBlock>(
+        config.turn_penalties_index_path, turn_index_region);
 
     // Get the turn penalty and update to the new value if required
     std::vector<std::uint64_t> updated_turns;
@@ -508,13 +485,10 @@ updateConditionalTurns(const UpdaterConfig &config,
                        extractor::PackedOSMIDs &osm_node_ids,
                        Timezoner time_zone_handler)
 {
-    const auto turn_index_region =
-        mmapFile(config.turn_penalties_index_path, boost::interprocess::read_only);
     // Mapped file pointer for turn indices
-    const extractor::lookup::TurnIndexBlock *turn_index_blocks =
-        reinterpret_cast<const extractor::lookup::TurnIndexBlock *>(
-            turn_index_region.get_address());
-    BOOST_ASSERT(is_aligned<extractor::lookup::TurnIndexBlock>(turn_index_blocks));
+    boost::iostreams::mapped_file_source turn_index_region;
+    auto turn_index_blocks = util::mmapFile<extractor::lookup::TurnIndexBlock>(
+        config.turn_penalties_index_path, turn_index_region);
 
     std::vector<std::uint64_t> updated_turns;
     if (conditional_turns.size() == 0)
@@ -589,16 +563,9 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
     std::vector<util::Coordinate> coordinates;
     extractor::PackedOSMIDs osm_node_ids;
 
-    {
-        storage::io::FileReader reader(config.edge_based_graph_path,
-                                       storage::io::FileReader::VerifyFingerprint);
-        auto num_edges = reader.ReadElementCount64();
-        edge_based_edge_list.resize(num_edges);
-        max_edge_id = reader.ReadOne<EdgeID>();
-        reader.ReadInto(edge_based_edge_list);
-
-        extractor::files::readNodes(config.node_based_nodes_data_path, coordinates, osm_node_ids);
-    }
+    extractor::files::readEdgeBasedGraph(
+        config.edge_based_graph_path, max_edge_id, edge_based_edge_list);
+    extractor::files::readNodes(config.node_based_nodes_data_path, coordinates, osm_node_ids);
 
     const bool update_conditional_turns =
         !config.turn_restrictions_path.empty() && config.valid_now;

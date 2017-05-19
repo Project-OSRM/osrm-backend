@@ -150,4 +150,59 @@ BOOST_AUTO_TEST_CASE(find_test)
     BOOST_CHECK_EQUAL(simple_graph.GetEdgeData(eit).id, 2);
 }
 
+BOOST_AUTO_TEST_CASE(renumber_test)
+{
+    /*
+     *  (0) -1-> (1)
+     *  ^ ^
+     *  2 5
+     *  | |
+     *  (3) -3-> (4)
+     *      <-4-
+     */
+    std::vector<TestInputEdge> input_edges = {TestInputEdge{0, 1, EdgeID{1}},
+                                              TestInputEdge{3, 0, EdgeID{2}},
+                                              TestInputEdge{3, 0, EdgeID{5}},
+                                              TestInputEdge{3, 4, EdgeID{3}},
+                                              TestInputEdge{4, 3, EdgeID{4}}};
+    TestStaticGraph simple_graph(5, input_edges);
+    /*
+     *  (1) -1-> (3)
+     *  ^ ^
+     *  2 5
+     *  | |
+     *  (0) -3-> (2)
+     *      <-4-
+     */
+    simple_graph.Renumber({1, 3, 4, 0, 2});
+
+    auto eit = simple_graph.FindEdge(1, 3);
+    BOOST_CHECK(eit != SPECIAL_EDGEID);
+    BOOST_CHECK_EQUAL(simple_graph.GetEdgeData(eit).id, 1);
+
+    eit = simple_graph.FindEdge(3, 1);
+    BOOST_CHECK_EQUAL(eit, SPECIAL_EDGEID);
+
+    eit = simple_graph.FindEdgeInEitherDirection(3, 1);
+    BOOST_CHECK_EQUAL(simple_graph.GetEdgeData(eit).id, 1);
+
+    bool reverse = false;
+    eit = simple_graph.FindEdgeIndicateIfReverse(3, 1, reverse);
+    BOOST_CHECK_EQUAL(simple_graph.GetEdgeData(eit).id, 1);
+    BOOST_CHECK(reverse);
+
+    eit = simple_graph.FindEdge(0, 3);
+    BOOST_CHECK_EQUAL(eit, SPECIAL_EDGEID);
+    eit = simple_graph.FindEdge(1, 2);
+    BOOST_CHECK_EQUAL(eit, SPECIAL_EDGEID);
+
+    eit = simple_graph.FindEdge(0, 2);
+    BOOST_CHECK_EQUAL(simple_graph.GetEdgeData(eit).id, 3);
+    eit = simple_graph.FindEdgeInEitherDirection(0, 2);
+    BOOST_CHECK_EQUAL(simple_graph.GetEdgeData(eit).id, 3);
+
+    eit = simple_graph.FindEdge(0, 1);
+    BOOST_CHECK_EQUAL(simple_graph.GetEdgeData(eit).id, 2);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

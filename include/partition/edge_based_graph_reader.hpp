@@ -4,10 +4,14 @@
 #include "partition/edge_based_graph.hpp"
 
 #include "extractor/edge_based_edge.hpp"
+#include "extractor/files.hpp"
 #include "storage/io.hpp"
 #include "util/coordinate.hpp"
 #include "util/dynamic_graph.hpp"
 #include "util/typedefs.hpp"
+
+#include <tbb/parallel_reduce.h>
+#include <tbb/parallel_sort.h>
 
 #include <cstdint>
 
@@ -56,124 +60,137 @@ splitBidirectionalEdges(const std::vector<extractor::EdgeBasedEdge> &edges)
 template <typename OutputEdgeT>
 std::vector<OutputEdgeT> prepareEdgesForUsageInGraph(std::vector<extractor::EdgeBasedEdge> edges)
 {
-    std::sort(begin(edges), end(edges));
+    // sort into blocks of edges with same source + target
+    // the we partition by the forward flag to sort all edges with a forward direction first.
+    // the we sort by weight to ensure the first forward edge is the smallest forward edge
+    std::sort(begin(edges), end(edges), [](const auto &lhs, const auto &rhs) {
+        return std::tie(lhs.source, lhs.target, rhs.data.forward, lhs.data.weight) <
+               std::tie(rhs.source, rhs.target, lhs.data.forward, rhs.data.weight);
+    });
 
-    std::vector<OutputEdgeT> graph_edges;
-    graph_edges.reserve(edges.size());
+    std::vector<OutputEdgeT> output_edges;
+    output_edges.reserve(edges.size());
 
-    for (NodeID i = 0; i < edges.size();)
+    for (auto begin_interval = edges.begin(); begin_interval != edges.end();)
     {
-        const NodeID source = edges[i].source;
-        const NodeID target = edges[i].target;
+        const NodeID source = begin_interval->source;
+        const NodeID target = begin_interval->target;
+
+        auto end_interval =
+            std::find_if_not(begin_interval, edges.end(), [source, target](const auto &edge) {
+                return std::tie(edge.source, edge.target) == std::tie(source, target);
+            });
+        BOOST_ASSERT(begin_interval != end_interval);
 
         // remove eigenloops
         if (source == target)
         {
-            ++i;
+            begin_interval = end_interval;
             continue;
         }
 
-        OutputEdgeT forward_edge;
-        OutputEdgeT reverse_edge;
-        forward_edge.source = reverse_edge.source = source;
-        forward_edge.target = reverse_edge.target = target;
-        forward_edge.data.turn_id = reverse_edge.data.turn_id = edges[i].data.turn_id;
-        forward_edge.data.weight = reverse_edge.data.weight = INVALID_EDGE_WEIGHT;
-        forward_edge.data.duration = reverse_edge.data.duration = MAXIMAL_EDGE_DURATION_INT_30;
-        forward_edge.data.forward = reverse_edge.data.backward = true;
-        forward_edge.data.backward = reverse_edge.data.forward = false;
+        BOOST_ASSERT_MSG(begin_interval->data.forward != begin_interval->data.backward,
+                         "The forward and backward flag need to be mutally exclusive");
 
-        // remove parallel edges
-        while (i < edges.size() && edges[i].source == source && edges[i].target == target)
+        // find smallest backward edge and check if we can merge
+        auto first_backward = std::find_if(
+            begin_interval, end_interval, [](const auto &edge) { return edge.data.backward; });
+
+        // thanks to the sorting we know this is the smallest backward edge
+        // and there is no forward edge
+        if (begin_interval == first_backward)
         {
-            if (edges[i].data.forward)
-            {
-                forward_edge.data.weight = std::min(edges[i].data.weight, forward_edge.data.weight);
-                forward_edge.data.duration =
-                    std::min(edges[i].data.duration, forward_edge.data.duration);
-            }
-            if (edges[i].data.backward)
-            {
-                reverse_edge.data.weight = std::min(edges[i].data.weight, reverse_edge.data.weight);
-                reverse_edge.data.duration =
-                    std::min(edges[i].data.duration, reverse_edge.data.duration);
-            }
-            ++i;
+            output_edges.push_back(OutputEdgeT{source, target, first_backward->data});
         }
-        // merge edges (s,t) and (t,s) into bidirectional edge
-        if (forward_edge.data.weight == reverse_edge.data.weight)
+        // only a forward edge, thanks to the sorting this is the smallest
+        else if (first_backward == end_interval)
         {
-            if ((int)forward_edge.data.weight != INVALID_EDGE_WEIGHT)
-            {
-                forward_edge.data.backward = true;
-                graph_edges.push_back(forward_edge);
-            }
+            output_edges.push_back(OutputEdgeT{source, target, begin_interval->data});
         }
+        // we have both a forward and a backward edge, we need to evaluate
+        // if we can merge them
         else
-        { // insert seperate edges
-            if (((int)forward_edge.data.weight) != INVALID_EDGE_WEIGHT)
+        {
+            BOOST_ASSERT(begin_interval->data.forward);
+            BOOST_ASSERT(first_backward->data.backward);
+            BOOST_ASSERT(first_backward != end_interval);
+
+            // same weight, so we can just merge them
+            if (begin_interval->data.weight == first_backward->data.weight)
             {
-                graph_edges.push_back(forward_edge);
+                OutputEdgeT merged{source, target, begin_interval->data};
+                merged.data.backward = true;
+                output_edges.push_back(std::move(merged));
             }
-            if ((int)reverse_edge.data.weight != INVALID_EDGE_WEIGHT)
+            // we need to insert separate forward and reverse edges
+            else
             {
-                graph_edges.push_back(reverse_edge);
+                output_edges.push_back(OutputEdgeT{source, target, begin_interval->data});
+                output_edges.push_back(OutputEdgeT{source, target, first_backward->data});
             }
         }
+
+        begin_interval = end_interval;
     }
 
-    return graph_edges;
+    return output_edges;
 }
 
-struct EdgeBasedGraphReader
+std::vector<extractor::EdgeBasedEdge> graphToEdges(const DynamicEdgeBasedGraph &edge_based_graph)
 {
-    EdgeBasedGraphReader(storage::io::FileReader &reader)
-    {
-        // Reads:  | Fingerprint | #e | max_eid | edges |
-        // - uint64: number of edges
-        // - EdgeID: max edge id
-        // - extractor::EdgeBasedEdge edges
-        //
-        // Gets written in Extractor::WriteEdgeBasedGraph
+    auto range = tbb::blocked_range<NodeID>(0, edge_based_graph.GetNumberOfNodes());
+    auto max_turn_id =
+        tbb::parallel_reduce(range,
+                             NodeID{0},
+                             [&edge_based_graph](const auto range, NodeID initial) {
+                                 NodeID max_turn_id = initial;
+                                 for (auto node = range.begin(); node < range.end(); ++node)
+                                 {
+                                     for (auto edge : edge_based_graph.GetAdjacentEdgeRange(node))
+                                     {
+                                         const auto &data = edge_based_graph.GetEdgeData(edge);
+                                         max_turn_id = std::max(max_turn_id, data.turn_id);
+                                     }
+                                 }
+                                 return max_turn_id;
+                             },
+                             [](const NodeID lhs, const NodeID rhs) { return std::max(lhs, rhs); });
 
-        const auto num_edges = reader.ReadElementCount64();
-        const auto max_edge_id = reader.ReadOne<EdgeID>();
+    std::vector<extractor::EdgeBasedEdge> edges(max_turn_id + 1);
+    tbb::parallel_for(range, [&](const auto range) {
+        for (auto node = range.begin(); node < range.end(); ++node)
+        {
+            for (auto edge : edge_based_graph.GetAdjacentEdgeRange(node))
+            {
+                const auto &data = edge_based_graph.GetEdgeData(edge);
+                // we only need to save the forward edges, since the read method will
+                // convert from forward to bi-directional edges again
+                if (data.forward)
+                {
+                    auto target = edge_based_graph.GetTarget(edge);
+                    BOOST_ASSERT(data.turn_id <= max_turn_id);
+                    edges[data.turn_id] = extractor::EdgeBasedEdge{node, target, data};
+                    // only save the forward edge
+                    edges[data.turn_id].data.forward = true;
+                    edges[data.turn_id].data.backward = false;
+                }
+            }
+        }
+    });
 
-        num_nodes = max_edge_id + 1;
+    return edges;
+}
 
-        edges.resize(num_edges);
-        reader.ReadInto(edges);
-    }
-
-    // FIXME: wrapped in unique_ptr since dynamic_graph is not move-able
-
-    std::unique_ptr<DynamicEdgeBasedGraph> BuildEdgeBasedGraph()
-    {
-        // FIXME: The following is a rough adaption from:
-        // - adaptToContractorInput
-        // - GraphContractor::GraphContractor
-        // and should really be abstracted over.
-        // FIXME: edges passed as a const reference, can be changed pass-by-value if can be moved
-
-        auto directed = splitBidirectionalEdges(edges);
-        auto tidied = prepareEdgesForUsageInGraph<DynamicEdgeBasedGraphEdge>(std::move(directed));
-
-        return std::make_unique<DynamicEdgeBasedGraph>(num_nodes, std::move(tidied));
-    }
-
-  private:
+inline DynamicEdgeBasedGraph LoadEdgeBasedGraph(const boost::filesystem::path &path)
+{
+    EdgeID max_node_id;
     std::vector<extractor::EdgeBasedEdge> edges;
-    std::size_t num_nodes;
-};
+    extractor::files::readEdgeBasedGraph(path, max_node_id, edges);
 
-inline std::unique_ptr<DynamicEdgeBasedGraph> LoadEdgeBasedGraph(const std::string &path)
-{
-    const auto fingerprint = storage::io::FileReader::VerifyFingerprint;
-    storage::io::FileReader reader(path, fingerprint);
+    auto directed = splitBidirectionalEdges(edges);
+    auto tidied = prepareEdgesForUsageInGraph<DynamicEdgeBasedGraphEdge>(std::move(directed));
 
-    EdgeBasedGraphReader builder{reader};
-
-    return builder.BuildEdgeBasedGraph();
+    return DynamicEdgeBasedGraph(max_node_id + 1, std::move(tidied));
 }
 
 } // ns partition

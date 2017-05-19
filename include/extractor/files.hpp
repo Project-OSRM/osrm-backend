@@ -1,6 +1,7 @@
 #ifndef OSRM_EXTRACTOR_FILES_HPP
 #define OSRM_EXTRACTOR_FILES_HPP
 
+#include "extractor/edge_based_edge.hpp"
 #include "extractor/guidance/turn_lane_types.hpp"
 #include "extractor/node_data_container.hpp"
 #include "extractor/serialization.hpp"
@@ -18,6 +19,32 @@ namespace extractor
 {
 namespace files
 {
+
+template <typename EdgeBasedEdgeVector>
+void writeEdgeBasedGraph(const boost::filesystem::path &path,
+                         EdgeID const max_edge_id,
+                         const EdgeBasedEdgeVector &edge_based_edge_list)
+{
+    static_assert(std::is_same<typename EdgeBasedEdgeVector::value_type, EdgeBasedEdge>::value, "");
+
+    storage::io::FileWriter writer(path, storage::io::FileWriter::GenerateFingerprint);
+
+    writer.WriteElementCount64(max_edge_id);
+    storage::serialization::write(writer, edge_based_edge_list);
+}
+
+template <typename EdgeBasedEdgeVector>
+void readEdgeBasedGraph(const boost::filesystem::path &path,
+                        EdgeID &max_edge_id,
+                        EdgeBasedEdgeVector &edge_based_edge_list)
+{
+    static_assert(std::is_same<typename EdgeBasedEdgeVector::value_type, EdgeBasedEdge>::value, "");
+
+    storage::io::FileReader reader(path, storage::io::FileReader::VerifyFingerprint);
+
+    max_edge_id = reader.ReadElementCount64();
+    storage::serialization::read(reader, edge_based_edge_list);
+}
 
 // reads .osrm.nodes
 template <typename CoordinatesT, typename PackedOSMIDsT>

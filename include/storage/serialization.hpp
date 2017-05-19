@@ -1,6 +1,7 @@
 #ifndef OSRM_STORAGE_SERIALIZATION_HPP
 #define OSRM_STORAGE_SERIALIZATION_HPP
 
+#include "util/deallocating_vector.hpp"
 #include "util/integer_range.hpp"
 #include "util/vector_view.hpp"
 
@@ -14,6 +15,49 @@ namespace storage
 {
 namespace serialization
 {
+
+/* All vector formats here use the same on-disk format.
+ * This is important because we want to be able to write from a vector
+ * of one kind, but read it into a vector of another kind.
+ *
+ * All vector types with this guarantee should be placed in this file.
+ */
+
+template <typename T>
+inline void read(storage::io::FileReader &reader, util::DeallocatingVector<T> &vec)
+{
+    vec.current_size = reader.ReadElementCount64(vec.current_size);
+    std::size_t num_blocks =
+        std::ceil(vec.current_size / util::DeallocatingVector<T>::ELEMENTS_PER_BLOCK);
+    vec.bucket_list.resize(num_blocks);
+    // Read all but the last block which can be partital
+    for (auto bucket_index : util::irange<std::size_t>(0, num_blocks - 1))
+    {
+        vec.bucket_list[bucket_index] = new T[util::DeallocatingVector<T>::ELEMENTS_PER_BLOCK];
+        reader.ReadInto(vec.bucket_list[bucket_index],
+                        util::DeallocatingVector<T>::ELEMENTS_PER_BLOCK);
+    }
+    std::size_t last_block_size =
+        vec.current_size % util::DeallocatingVector<T>::ELEMENTS_PER_BLOCK;
+    vec.bucket_list.back() = new T[util::DeallocatingVector<T>::ELEMENTS_PER_BLOCK];
+    reader.ReadInto(vec.bucket_list.back(), last_block_size);
+}
+
+template <typename T>
+inline void write(storage::io::FileWriter &writer, const util::DeallocatingVector<T> &vec)
+{
+    writer.WriteElementCount64(vec.current_size);
+    // Write all but the last block which can be partially filled
+    for (auto bucket_index : util::irange<std::size_t>(0, vec.bucket_list.size() - 1))
+    {
+        writer.WriteFrom(vec.bucket_list[bucket_index],
+                         util::DeallocatingVector<T>::ELEMENTS_PER_BLOCK);
+    }
+    std::size_t last_block_size =
+        vec.current_size % util::DeallocatingVector<T>::ELEMENTS_PER_BLOCK;
+    writer.WriteFrom(vec.bucket_list.back(), last_block_size);
+}
+
 template <typename T> inline void read(storage::io::FileReader &reader, stxxl::vector<T> &vec)
 {
     auto size = reader.ReadOne<std::uint64_t>();

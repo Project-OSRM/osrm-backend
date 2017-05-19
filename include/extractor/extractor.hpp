@@ -86,10 +86,6 @@ class Extractor
                        std::vector<util::Coordinate> &coordinates,
                        extractor::PackedOSMIDs &osm_node_ids);
 
-    void WriteEdgeBasedGraph(const std::string &output_file_filename,
-                             const EdgeID max_edge_id,
-                             util::DeallocatingVector<EdgeBasedEdge> const &edge_based_edge_list);
-
     void WriteIntersectionClassificationData(
         const std::string &output_file_name,
         const std::vector<std::uint32_t> &node_based_intersection_classes,

@@ -13,23 +13,6 @@ namespace extractor
 struct EdgeBasedEdge
 {
   public:
-    EdgeBasedEdge();
-
-    template <class EdgeT> explicit EdgeBasedEdge(const EdgeT &other);
-
-    EdgeBasedEdge(const NodeID source,
-                  const NodeID target,
-                  const NodeID edge_id,
-                  const EdgeWeight weight,
-                  const EdgeWeight duration,
-                  const bool forward,
-                  const bool backward);
-
-    bool operator<(const EdgeBasedEdge &other) const;
-
-    NodeID source;
-    NodeID target;
-
     struct EdgeData
     {
         EdgeData() : turn_id(0), weight(0), duration(0), forward(false), backward(false) {}
@@ -51,7 +34,24 @@ struct EdgeBasedEdge
         std::uint32_t backward : 1;
 
         auto is_unidirectional() const { return !forward || !backward; }
-    } data;
+    };
+
+    EdgeBasedEdge();
+    template <class EdgeT> explicit EdgeBasedEdge(const EdgeT &other);
+    EdgeBasedEdge(const NodeID source,
+                  const NodeID target,
+                  const NodeID edge_id,
+                  const EdgeWeight weight,
+                  const EdgeWeight duration,
+                  const bool forward,
+                  const bool backward);
+    EdgeBasedEdge(const NodeID source, const NodeID target, const EdgeBasedEdge::EdgeData &data);
+
+    bool operator<(const EdgeBasedEdge &other) const;
+
+    NodeID source;
+    NodeID target;
+    EdgeData data;
 };
 static_assert(sizeof(extractor::EdgeBasedEdge) == 20,
               "Size of extractor::EdgeBasedEdge type is "
@@ -70,6 +70,13 @@ inline EdgeBasedEdge::EdgeBasedEdge(const NodeID source,
                                     const bool forward,
                                     const bool backward)
     : source(source), target(target), data{turn_id, weight, duration, forward, backward}
+{
+}
+
+inline EdgeBasedEdge::EdgeBasedEdge(const NodeID source,
+                                    const NodeID target,
+                                    const EdgeBasedEdge::EdgeData &data)
+    : source(source), target(target), data{data}
 {
 }
 

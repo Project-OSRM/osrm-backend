@@ -6,6 +6,8 @@
         Note : the curb side depend on the `ProfileProperties::left_hand_driving`, it's a global property set once by the profile. If you are working with a planet dataset, the api will be wrong in some countries, and right in others.
     - NodeJs Bindings
       - new parameter `approaches` for `route`, `table`, `trip` and `nearest` requests.
+    - Tools
+      - `osrm-partition` now ensures it is called before `osrm-contract` and removes inconsitent .hsgr files automatically.
     - Features
       - Added conditional restriction support with `parse-conditional-restrictions=true|false` to osrm-extract. This option saves conditional turn restrictions to the .restrictions file for parsing by contract later. Added `parse-conditionals-from-now=utc time stamp` and `--time-zone-file=/path/to/file`  to osrm-contract
     - Files
