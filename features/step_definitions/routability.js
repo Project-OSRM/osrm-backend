@@ -6,11 +6,11 @@ module.exports = function () {
     this.Then(/^routability should be$/, (table, callback) => {
         this.buildWaysFromTable(table, () => {
             var directions = ['forw','backw','bothw'],
-                testedHeaders = ['forw','backw','bothw','forw_rate','backw_rate','bothw_rate'],
+                testedHeaders = ['forw','backw','bothw','forw_rate','backw_rate','bothw_rate','forw_mode','backw_mode'],
                 headers = new Set(Object.keys(table.hashes()[0]));
 
             if (!testedHeaders.some(k => !!headers.has(k))) {
-                throw new Error('*** routability table must contain either "forw", "backw", "bothw", "forw_rate" or "backw_mode" column');
+                throw new Error('*** routability table must contain either "forw", "backw", "bothw", "forw_rate" or "backw_rate" column');
             }
 
             this.reprocessAndLoadData((e) => {

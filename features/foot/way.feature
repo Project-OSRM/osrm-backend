@@ -4,7 +4,7 @@ Feature: Foot - Accessability of different way types
     Background:
         Given the profile "foot"
 
-    Scenario: Foot - Basic access
+    Scenario: Foot - highway
         Then routability should be
             | highway        | forw |
             | motorway       |      |
@@ -31,8 +31,32 @@ Feature: Foot - Accessability of different way types
             | cycleway       |      |
             | bridleway      |      |
 
-    Scenario: Foot - Basic access
+    Scenario: Foot - leisure=*
         Then routability should be
-            | highway | leisure  | forw |
-            | (nil)   | track    |   x  |
+            | highway | leisure | forw    |  
+            | (nil)   |         |         |  
+            | (nil)   | track   | walking |  
 
+    Scenario: Foot - man_made=*
+        Then routability should be
+            | highway | man_made  | forw    |  
+            | (nil)   |           |         |  
+            | (nil)   | pier      | walking |  
+
+    Scenario: Foot - railway=*
+        Then routability should be
+            | highway | railway  | forw    |  
+            | (nil)   |          |         |  
+            | (nil)   | platform | walking |  
+
+    Scenario: Foot - public_transport=*
+        Then routability should be
+            | highway | public_transport  | forw    |  
+            | (nil)   |                   |         |  
+            | (nil)   | platform          | walking |  
+
+    Scenario: Foot - amenity=*
+        Then routability should be
+            | highway | amenity | forw    |  
+            | (nil)   |         |         |  
+            | (nil)   | parking | walking |  
