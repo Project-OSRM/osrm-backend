@@ -793,3 +793,27 @@ Feature: Basic Roundabout
             | f    | e  | af,ed,ed | depart,roundabout-exit-1,arrive | 120.1m   |
             | k    | l  | kg,hl,hl | depart,roundabout-exit-1,arrive | 80.1m    |
             | l    | k  | hl,kg,kg | depart,roundabout-exit-1,arrive | 120.1m   |
+
+    Scenario: Service roundabout with service exits
+        Given the node map
+            """
+                e
+            f a d
+            g b1c
+              h
+            """
+
+        And the ways
+            | nodes | highway  | junction   |
+            | abcda | service  | roundabout |
+            | de    | service  |            |
+            | af    | service  |            |
+            | bg    | tertiary |            |
+            | bh    | service  |            |
+
+        When I route I should get
+            | from | to | route       | turns                           |
+            |    1 | e  | abcda,de,de | depart,roundabout-exit-1,arrive |
+            |    1 | f  | abcda,af,af | depart,roundabout-exit-1,arrive |
+            |    1 | g  | abcda,bg,bg | depart,roundabout-exit-1,arrive |
+            |    1 | h  | abcda,bh,bh | depart,roundabout-exit-1,arrive |
