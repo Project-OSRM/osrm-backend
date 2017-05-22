@@ -796,26 +796,23 @@ Feature: Basic Roundabout
 
     @4030 @4075
     Scenario: Service roundabout with service exits
-      # Counting of service exits must be adjusted in #4075
         Given the node map
             """
-                e
-            f a d
-            g b1c
-              h
+            g a d f
+            h b1c e
             """
 
         And the ways
             | nodes | highway  | junction   |
             | abcda | service  | roundabout |
-            | de    | service  |            |
-            | af    | service  |            |
-            | bg    | tertiary |            |
+            | ce    | service  |            |
+            | df    | service  |            |
+            | ag    | tertiary |            |
             | bh    | service  |            |
 
         When I route I should get
             | from | to | route       | turns                           |
-            |    1 | e  | abcda,de,de | depart,roundabout-exit-1,arrive |
-            |    1 | f  | abcda,af,af | depart,roundabout-exit-1,arrive |
-            |    1 | g  | abcda,bg,bg | depart,roundabout-exit-1,arrive |
-            |    1 | h  | abcda,bh,bh | depart,roundabout-exit-1,arrive |
+            |    1 | e  | abcda,ce,ce | depart,roundabout-exit-1,arrive |
+            |    1 | f  | abcda,df,df | depart,roundabout-exit-2,arrive |
+            |    1 | g  | abcda,ag,ag | depart,roundabout-exit-3,arrive |
+            |    1 | h  | abcda,bh,bh | depart,roundabout-exit-4,arrive |

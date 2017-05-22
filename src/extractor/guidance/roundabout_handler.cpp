@@ -478,13 +478,18 @@ Intersection RoundaboutHandler::handleRoundabouts(const RoundaboutType roundabou
                                 return true;
                         }
                         return false;
-                    }();
+                    };
 
-                    if (has_non_ignorable_exit)
+                    if (out_data.road_classification.IsLowPriorityRoadClass() ||
+                        has_non_ignorable_exit())
+                    {
                         turn.instruction = TurnInstruction::REMAIN_ROUNDABOUT(
                             roundabout_type, getTurnDirection(turn.angle));
+                    }
                     else
+                    { // Suppress exit instructions from normal roundabouts to service roads
                         turn.instruction = {TurnType::Suppressed, getTurnDirection(turn.angle)};
+                    }
                 }
             }
             else
