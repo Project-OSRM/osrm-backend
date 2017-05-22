@@ -197,6 +197,7 @@ class MockBaseDataFacade : public engine::datafacade::BaseDataFacade
     double GetWeightMultiplier() const override final { return 10.; }
     BearingClassID GetBearingClassID(const NodeID /*id*/) const override { return 0; }
     EntryClassID GetEntryClassID(const EdgeID /*id*/) const override { return 0; }
+    bool IsLeftHandDriving() const override { return false; }
 
     util::guidance::TurnBearing PreTurnBearing(const EdgeID /*eid*/) const override final
     {

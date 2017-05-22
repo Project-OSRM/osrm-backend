@@ -883,6 +883,11 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
                 m_lane_description_masks.begin() +
                     m_lane_description_offsets[lane_description_id + 1]);
     }
+
+    bool IsLeftHandDriving() const override final
+    {
+      return m_profile_properties->left_hand_driving;
+    }
 };
 
 template <typename AlgorithmT> class ContiguousInternalMemoryDataFacade;

@@ -237,10 +237,8 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
                     bool input_coordinate_is_at_right = !util::coordinate_calculation::isCCW(
                         coordinates[segment.data.u], coordinates[segment.data.v], input_coordinate);
 
-                    // TODO Check the country approach, for the moment right is the default country
-                    // approach.
-                    // if drive left
-                    // input_coordinate_is_at_right = !input_coordinate_is_at_right
+                    if(datafacade.IsLeftHandDriving())
+                        input_coordinate_is_at_right = !input_coordinate_is_at_right;
 
                     // Apply the approach.
                     use_directions.first = use_directions.first && input_coordinate_is_at_right;
