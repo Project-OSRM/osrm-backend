@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(invalid_route_urls)
     BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>("1,2;3,4?overview=false&radiuses=foo"),
                       32UL);
     BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>("1,2;3,4?overview=false&sides=foo"),
-                      30UL);
+                      29UL);
     BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>("1,2;3,4?overview=false&hints=foo"),
                       29UL);
     BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>("1,2;3,4?overview=false&hints=;;; ;"),
@@ -400,22 +400,19 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
     BOOST_CHECK_EQUAL(result_17->annotations, true);
 
     std::vector<boost::optional<engine::Side>> sides_18 = {
-        boost::none,
-        engine::Side{engine::SideValue::DEFAULT},
-        engine::Side{engine::SideValue::BOTH},
-        engine::Side{engine::SideValue::OPPOSITE},
+        boost::none, engine::Side::DEFAULT, engine::Side::BOTH, engine::Side::OPPOSITE,
     };
     RouteParameters reference_18{false,
-                                false,
-                                false,
-                                RouteParameters::GeometriesType::Polyline,
-                                RouteParameters::OverviewType::Simplified,
-                                boost::optional<bool>{},
-                                coords_3,
-                                std::vector<boost::optional<engine::Hint>>{},
-                                std::vector<boost::optional<double>>{},
-                                std::vector<boost::optional<engine::Bearing>>{},
-                                sides_18};
+                                 false,
+                                 false,
+                                 RouteParameters::GeometriesType::Polyline,
+                                 RouteParameters::OverviewType::Simplified,
+                                 boost::optional<bool>{},
+                                 coords_3,
+                                 std::vector<boost::optional<engine::Hint>>{},
+                                 std::vector<boost::optional<double>>{},
+                                 std::vector<boost::optional<engine::Bearing>>{},
+                                 sides_18};
 
     auto result_18 = parseParameters<RouteParameters>("1,2;3,4;5,6;7,8?steps=false&sides=;d;b;o");
     BOOST_CHECK(result_18);

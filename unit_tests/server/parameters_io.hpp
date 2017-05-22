@@ -57,7 +57,7 @@ inline std::ostream &operator<<(std::ostream &out, Bearing bearing)
 
 inline std::ostream &operator<<(std::ostream &out, Side side)
 {
-    out << Side::toString(side);
+    out << side;
     return out;
 }
 }

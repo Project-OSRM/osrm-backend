@@ -231,11 +231,11 @@ class BasePlugin
         BOOST_ASSERT(parameters.IsValid());
         for (const auto i : util::irange<std::size_t>(0UL, parameters.coordinates.size()))
         {
-            SideValue sideValue = engine::SideValue::BOTH;
+            Side side = engine::Side::BOTH;
             // TODO init at SIDE for test
-            // SideValue sideValue = engine::SideValue::DEFAULT;
+            // SideValue side = engine::SideValue::DEFAULT;
             if (use_sides && parameters.sides[i])
-                sideValue = parameters.sides[i]->side;
+                side = parameters.sides[i].get();
 
             if (use_hints && parameters.hints[i] &&
                 parameters.hints[i]->IsValid(parameters.coordinates[i], facade))
@@ -277,7 +277,7 @@ class BasePlugin
                 {
                     phantom_node_pairs[i] =
                         facade.NearestPhantomNodeWithAlternativeFromBigComponent(
-                            parameters.coordinates[i], sideValue);
+                            parameters.coordinates[i], side);
                 }
             }
 
