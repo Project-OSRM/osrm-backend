@@ -4,6 +4,7 @@
 #include "nodejs/json_v8_renderer.hpp"
 
 #include "osrm/bearing.hpp"
+#include "osrm/approach.hpp"
 #include "osrm/coordinate.hpp"
 #include "osrm/engine_config.hpp"
 #include "osrm/json_container.hpp"
@@ -295,6 +296,63 @@ inline bool argumentsToParameter(const Nan::FunctionCallbackInfo<v8::Value> &arg
         BOOST_ASSERT(!coordinates->IsArray());
         Nan::ThrowError("Coordinates must be an array of (lon/lat) pairs");
         return false;
+    }
+
+    if (obj->Has(Nan::New("approaches").ToLocalChecked()))
+    {
+        v8::Local<v8::Value> approaches = obj->Get(Nan::New("approaches").ToLocalChecked());
+        if (approaches.IsEmpty())
+            return false;
+
+        if (!approaches->IsArray())
+        {
+            Nan::ThrowError("Approaches must be an array of arrays of numbers");
+            return false;
+        }
+
+        auto approaches_array = v8::Local<v8::Array>::Cast(approaches);
+
+        if (approaches_array->Length() != params->coordinates.size())
+        {
+            Nan::ThrowError("Approaches array must have the same length as coordinates array");
+            return false;
+        }
+
+        for (uint32_t i = 0; i < approaches_array->Length(); ++i)
+        {
+            v8::Local<v8::Value> approach_raw = approaches_array->Get(i);
+            if (approach_raw.IsEmpty())
+                return false;
+
+            if (approach_raw->IsNull())
+            {
+                params->bearings.emplace_back();
+            }
+            else if (approach_raw->IsString())
+            {
+                const Nan::Utf8String approach_utf8str(approach_raw);
+                std::string approach_str{*approach_utf8str,
+                  *approach_utf8str + approach_utf8str.length()};
+                if (approach_str == "curb")
+                {
+                    params->approaches.push_back(osrm::Approach::CURB);
+                }
+                else if (approach_str == "unrestricted")
+                {
+                    params->approaches.push_back(osrm::Approach::UNRESTRICTED);
+                }
+                else
+                {
+                    Nan::ThrowError("'approach' param must be one of [curb, unrestricted]");
+                    return false; 
+                }
+            }
+            else
+            {
+                Nan::ThrowError("Approach must be a string: [curb, unrestricted] or null");
+                return false;
+            }
+        }
     }
 
     if (obj->Has(Nan::New("bearings").ToLocalChecked()))
