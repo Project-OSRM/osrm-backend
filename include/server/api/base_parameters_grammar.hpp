@@ -149,16 +149,16 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
             qi::lit("bearings=") >
             (-(qi::short_ > ',' > qi::short_))[ph::bind(add_bearing, qi::_r1, qi::_1)] % ';';
 
-        side_type.add("d", engine::Side::DEFAULT)("o", engine::Side::OPPOSITE)("b", engine::Side::BOTH);
-        sides_rule =
-            qi::lit("sides=") >
-            (-side_type % ';')[ph::bind(&engine::api::BaseParameters::sides, qi::_r1) = qi::_1];
+        approach_type.add("unrestricted", engine::Approach::UNRESTRICTED)("curb", engine::Approach::CURB);
+        approach_rule =
+            qi::lit("approaches=") >
+            (-approach_type % ';')[ph::bind(&engine::api::BaseParameters::approaches, qi::_r1) = qi::_1];
 
         base_rule = radiuses_rule(qi::_r1)   //
                     | hints_rule(qi::_r1)    //
                     | bearings_rule(qi::_r1) //
                     | generate_hints_rule(qi::_r1)
-                    | sides_rule(qi::_r1);
+                    | approach_rule(qi::_r1);
     }
 
   protected:
@@ -171,7 +171,7 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
     qi::rule<Iterator, Signature> hints_rule;
 
     qi::rule<Iterator, Signature> generate_hints_rule;
-    qi::rule<Iterator, Signature> sides_rule;
+    qi::rule<Iterator, Signature> approach_rule;
 
     qi::rule<Iterator, osrm::engine::Bearing()> bearing_rule;
     qi::rule<Iterator, osrm::util::Coordinate()> location_rule;
@@ -182,7 +182,7 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
     qi::rule<Iterator, double()> unlimited_rule;
     qi::real_parser<double, json_policy> double_;
 
-    qi::symbols<char, engine::Side> side_type;
+    qi::symbols<char, engine::Approach> approach_type;
 };
 }
 }

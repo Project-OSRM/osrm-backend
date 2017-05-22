@@ -35,7 +35,7 @@ module.exports = function () {
                     if (err) return cb(err);
                     if (body && body.length) {
                         let destinations, pronunciations, instructions, refs, bearings, turns, modes, times,
-                            distances, summary, intersections, lanes, locations, annotation, weight_name, weights, sides;
+                            distances, summary, intersections, lanes, locations, annotation, weight_name, weights, approaches;
 
                         let json = JSON.parse(body);
 
@@ -60,7 +60,7 @@ module.exports = function () {
                             annotation = this.annotationList(json.routes[0]);
                             weight_name = this.weightName(json.routes[0]);
                             weights = this.weightList(json.routes[0]);
-                            sides = this.sideList(json.routes[0]);
+                            approaches = this.approachList(json.routes[0]);
                         }
 
                         if (headers.has('status')) {
@@ -148,8 +148,8 @@ module.exports = function () {
                             got.locations = (locations || '').trim();
                         }
 /*
-                        if (headers.has('sides')){
-                            got.sides = (sides || '').trim();
+                        if (headers.has('approaches')){
+                            got.approaches = (approaches || '').trim();
                         }*/
                         // if header matches 'a:*', parse out the values for *
                         // and return in that header
@@ -180,7 +180,7 @@ module.exports = function () {
                         putValue('weight_name', weight_name);
                         putValue('weights', weights);
                         putValue('weight', weight);
-                        putValue('side', sides);
+                        putValue('approach', approaches);
 
                         for (var key in row) {
                             if (this.FuzzyMatch.match(got[key], row[key])) {
@@ -216,16 +216,16 @@ module.exports = function () {
                     var params = this.overwriteParams(defaultParams, userParams),
                         waypoints = [],
                         bearings = [],
-                        sides = [];
+                        approaches = [];
 
                     if (row.bearings) {
                         got.bearings = row.bearings;
                         bearings = row.bearings.split(' ').filter(b => !!b);
                     }
 
-                    if (row.sides) {
-                        got.sides = row.sides;
-                        sides = row.sides.split(' ').filter(b => !!b);
+                    if (row.approaches) {
+                        got.approaches = row.approaches;
+                        approaches = row.approaches.split(' ').filter(b => !!b);
                     }
 
                     if (row.from && row.to) {
@@ -239,7 +239,7 @@ module.exports = function () {
 
                         got.from = row.from;
                         got.to = row.to;
-                        this.requestRoute(waypoints, bearings, sides, params, afterRequest);
+                        this.requestRoute(waypoints, bearings, approaches, params, afterRequest);
                     } else if (row.waypoints) {
                         row.waypoints.split(',').forEach((n) => {
                             var node = this.findNodeByName(n.trim());
@@ -247,7 +247,7 @@ module.exports = function () {
                             waypoints.push(node);
                         });
                         got.waypoints = row.waypoints;
-                        this.requestRoute(waypoints, bearings, sides, params, afterRequest);
+                        this.requestRoute(waypoints, bearings, approaches, params, afterRequest);
                     } else {
                         return cb(new Error('*** no waypoints'));
                     }

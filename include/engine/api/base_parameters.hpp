@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "engine/bearing.hpp"
 #include "engine/hint.hpp"
-#include "engine/side.hpp"
+#include "engine/approach.hpp"
 #include "util/coordinate.hpp"
 
 #include <boost/optional.hpp>
@@ -56,7 +56,7 @@ namespace api
  *              optional per coordinate
  *  - bearings: limits the search for segments in the road network to given bearing(s) in degree
  *              towards true north in clockwise direction, optional per coordinate
- *  - sides: force the phantom node to start towards the node with the road country side.
+ *  - approaches: force the phantom node to start towards the node with the road country side.
  *
  * \see OSRM, Coordinate, Hint, Bearing, RouteParame, RouteParameters, TableParameters,
  *      NearestParameters, TripParameters, MatchParameters and TileParameters
@@ -67,7 +67,7 @@ struct BaseParameters
     std::vector<boost::optional<Hint>> hints;
     std::vector<boost::optional<double>> radiuses;
     std::vector<boost::optional<Bearing>> bearings;
-    std::vector<boost::optional<Side>> sides;
+    std::vector<boost::optional<Approach>> approaches;
 
     // Adds hints to response which can be included in subsequent requests, see `hints` above.
     bool generate_hints = true;
@@ -76,10 +76,10 @@ struct BaseParameters
                    const std::vector<boost::optional<Hint>> hints_ = {},
                    std::vector<boost::optional<double>> radiuses_ = {},
                    std::vector<boost::optional<Bearing>> bearings_ = {},
-                   std::vector<boost::optional<Side>> sides_ = {},
+                   std::vector<boost::optional<Approach>> approaches_ = {},
                    bool generate_hints_ = true)
         : coordinates(coordinates_), hints(hints_), radiuses(radiuses_), bearings(bearings_),
-          sides(sides_), generate_hints(generate_hints_)
+          approaches(approaches_), generate_hints(generate_hints_)
     {
     }
 
@@ -89,7 +89,7 @@ struct BaseParameters
         return (hints.empty() || hints.size() == coordinates.size()) &&
                (bearings.empty() || bearings.size() == coordinates.size()) &&
                (radiuses.empty() || radiuses.size() == coordinates.size()) &&
-               (sides.empty() || sides.size() == coordinates.size()) &&
+               (approaches.empty() || approaches.size() == coordinates.size()) &&
                std::all_of(bearings.begin(),
                            bearings.end(),
                            [](const boost::optional<Bearing> bearing_and_range) {

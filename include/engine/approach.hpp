@@ -25,19 +25,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef OSRM_ENGINE_SIDE_HPP
-#define OSRM_ENGINE_SIDE_HPP
+#ifndef OSRM_ENGINE_APPROACH_HPP
+#define OSRM_ENGINE_APPROACH_HPP
 
 namespace osrm
 {
 namespace engine
 {
 
-enum Side
+enum Approach
 {
-    DEFAULT,
-    OPPOSITE,
-    BOTH
+    CURB,
+    UNRESTRICTED
 
 };
 }

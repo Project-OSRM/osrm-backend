@@ -226,16 +226,16 @@ class BasePlugin
         const bool use_hints = !parameters.hints.empty();
         const bool use_bearings = !parameters.bearings.empty();
         const bool use_radiuses = !parameters.radiuses.empty();
-        const bool use_sides = !parameters.sides.empty();
+        const bool use_approaches = !parameters.approaches.empty();
 
         BOOST_ASSERT(parameters.IsValid());
         for (const auto i : util::irange<std::size_t>(0UL, parameters.coordinates.size()))
         {
-            Side side = engine::Side::BOTH;
+            Approach approach = engine::Approach::UNRESTRICTED;
             // TODO init at SIDE for test
             // SideValue side = engine::SideValue::DEFAULT;
-            if (use_sides && parameters.sides[i])
-                side = parameters.sides[i].get();
+            if (use_approaches && parameters.approaches[i])
+                approach = parameters.approaches[i].get();
 
             if (use_hints && parameters.hints[i] &&
                 parameters.hints[i]->IsValid(parameters.coordinates[i], facade))
@@ -277,7 +277,7 @@ class BasePlugin
                 {
                     phantom_node_pairs[i] =
                         facade.NearestPhantomNodeWithAlternativeFromBigComponent(
-                            parameters.coordinates[i], side);
+                            parameters.coordinates[i], approach);
                 }
             }
 
