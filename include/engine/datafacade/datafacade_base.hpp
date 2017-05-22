@@ -172,6 +172,8 @@ class BaseDataFacade
     virtual EntryClassID GetEntryClassID(const EdgeID eid) const = 0;
 
     virtual util::guidance::EntryClass GetEntryClass(const EntryClassID entry_class_id) const = 0;
+
+    virtual bool IsLeftHandDriving() const = 0;
 };
 }
 }

@@ -232,8 +232,6 @@ class BasePlugin
         for (const auto i : util::irange<std::size_t>(0UL, parameters.coordinates.size()))
         {
             Approach approach = engine::Approach::UNRESTRICTED;
-            // TODO init at SIDE for test
-            // SideValue side = engine::SideValue::DEFAULT;
             if (use_approaches && parameters.approaches[i])
                 approach = parameters.approaches[i].get();
 
