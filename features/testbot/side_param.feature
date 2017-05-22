@@ -205,3 +205,41 @@ Feature: Side parameter
         When I route I should get
             | from | to | sides | route |
             | s    | e  | b o   | ab,bc |
+
+
+
+
+    Scenario: Testbot - UTurn test, router can't found a route because uturn unauthorized on the segment selected
+        Given the node map
+            """
+               s        e
+            a------b------c
+            """
+
+        And the ways
+            | nodes |
+            | ab    |
+            | bc    |
+
+            
+        And the relations
+            | type        | way:from | way:to | node:via | restriction |
+            | restriction | bc       | bc     | c        | no_u_turn   |
+
+        When I route I should get
+            | from | to | sides | route    |
+            | s    | e  | b d   |          |
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
