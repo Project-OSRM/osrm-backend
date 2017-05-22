@@ -3,7 +3,7 @@
 
 #include "engine/api/route_parameters.hpp"
 #include "engine/bearing.hpp"
-#include "engine/side.hpp"
+#include "engine/approach.hpp"
 
 #include <ostream>
 
@@ -55,9 +55,9 @@ inline std::ostream &operator<<(std::ostream &out, Bearing bearing)
     return out;
 }
 
-inline std::ostream &operator<<(std::ostream &out, Side side)
+inline std::ostream &operator<<(std::ostream &out, Approach approach)
 {
-    out << side;
+    out << approach;
     return out;
 }
 }

@@ -2,7 +2,7 @@
 #define GEOSPATIAL_QUERY_HPP
 
 #include "engine/phantom_node.hpp"
-#include "engine/side.hpp"
+#include "engine/approach.hpp"
 #include "util/bearing.hpp"
 #include "util/coordinate_calculation.hpp"
 #include "util/rectangle.hpp"
@@ -212,20 +212,20 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
     // a second phantom node is return that is the nearest coordinate in a big component.
     std::pair<PhantomNode, PhantomNode>
     NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
-                                                      const engine::Side side) const
+                                                      const engine::Approach approach) const
     {
         bool has_small_component = false;
         bool has_big_component = false;
         auto results = rtree.Nearest(
             input_coordinate,
-            [this, &side, &input_coordinate, &has_big_component, &has_small_component](
+            [this, &approach, &input_coordinate, &has_big_component, &has_small_component](
                 const CandidateSegment &segment) {
                 auto use_segment =
                     (!has_small_component || (!has_big_component && !IsTinyComponent(segment)));
                 auto use_directions = std::make_pair(use_segment, use_segment);
                 bool isOnewaySegment = !(segment.data.forward_segment_id.enabled &&
                                          segment.data.reverse_segment_id.enabled);
-                if (!isOnewaySegment && side != BOTH)
+                if (!isOnewaySegment && approach != UNRESTRICTED)
                 {
                     // Check the counter clockwise
                     //
@@ -237,16 +237,12 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
                     bool input_coordinate_is_at_right = !util::coordinate_calculation::isCCW(
                         coordinates[segment.data.u], coordinates[segment.data.v], input_coordinate);
 
-                    // TODO Check the country side, for the moment right is the default country
-                    // side.
+                    // TODO Check the country approach, for the moment right is the default country
+                    // approach.
                     // if drive left
                     // input_coordinate_is_at_right = !input_coordinate_is_at_right
 
-                    // We reverse goCountrySide if side is OPPOSITE
-                    if (side == OPPOSITE)
-                        input_coordinate_is_at_right = !input_coordinate_is_at_right;
-
-                    // Apply the side.
+                    // Apply the approach.
                     use_directions.first = use_directions.first && input_coordinate_is_at_right;
                     use_directions.second = use_directions.second && !input_coordinate_is_at_right;
                 }

@@ -10,7 +10,7 @@
 #include "extractor/guidance/turn_lane_types.hpp"
 #include "extractor/original_edge_data.hpp"
 #include "engine/phantom_node.hpp"
-#include "engine/side.hpp"
+#include "engine/approach.hpp"
 #include "util/exception.hpp"
 #include "util/guidance/bearing_class.hpp"
 #include "util/guidance/entry_class.hpp"
@@ -120,7 +120,7 @@ class BaseDataFacade
 
     virtual std::pair<PhantomNode, PhantomNode>
     NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
-                                                      const engine::Side side) const = 0;
+                                                      const engine::Approach approach) const = 0;
     virtual std::pair<PhantomNode, PhantomNode>
     NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
                                                       const double max_distance) const = 0;

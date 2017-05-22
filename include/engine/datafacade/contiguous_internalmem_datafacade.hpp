@@ -7,7 +7,7 @@
 
 #include "engine/algorithm.hpp"
 #include "engine/geospatial_query.hpp"
-#include "engine/side.hpp"
+#include "engine/approach.hpp"
 
 #include "customizer/edge_based_graph.hpp"
 
@@ -716,12 +716,12 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
 
     std::pair<PhantomNode, PhantomNode>
     NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
-                                                      const engine::Side side) const override final
+                                                      const engine::Approach approach) const override final
     {
         BOOST_ASSERT(m_geospatial_query.get());
 
         return m_geospatial_query->NearestPhantomNodeWithAlternativeFromBigComponent(
-            input_coordinate, side);
+            input_coordinate, approach);
     }
 
     std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
