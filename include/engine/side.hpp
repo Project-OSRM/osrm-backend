@@ -28,56 +28,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef OSRM_ENGINE_SIDE_HPP
 #define OSRM_ENGINE_SIDE_HPP
 
-#include <string>
-
 namespace osrm
 {
 namespace engine
 {
 
-enum SideValue
+enum Side
 {
     DEFAULT,
     OPPOSITE,
     BOTH
 
 };
-
-struct Side
-{
-    SideValue side;
-    static SideValue fromString(const std::string &str)
-    {
-        if (str == "d")
-            return DEFAULT;
-        else if (str == "o")
-            return OPPOSITE;
-        else
-            return BOTH;
-    }
-    static std::string toString(const Side &side)
-    {
-        switch(side.side)
-        {
-            case(DEFAULT) :
-              return "0";
-            case(OPPOSITE) :
-              return "d";
-            case(BOTH) :
-              return "b";
-            default :
-              //TODO I don't know what to do here.
-              return "b";
-        }
-    }
-};
-
-inline bool operator==(const Side lhs, const Side rhs)
-{
-    return lhs.side == rhs.side;
-}
-inline bool operator!=(const Side lhs, const Side rhs) { return !(lhs == rhs); }
 }
 }
-
 #endif

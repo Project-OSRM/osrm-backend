@@ -212,19 +212,20 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
     // a second phantom node is return that is the nearest coordinate in a big component.
     std::pair<PhantomNode, PhantomNode>
     NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
-                                                      const engine::SideValue side_value) const
+                                                      const engine::Side side) const
     {
         bool has_small_component = false;
         bool has_big_component = false;
         auto results = rtree.Nearest(
             input_coordinate,
-            [this, &side_value, &input_coordinate, &has_big_component, &has_small_component](const CandidateSegment &segment) {
+            [this, &side, &input_coordinate, &has_big_component, &has_small_component](
+                const CandidateSegment &segment) {
                 auto use_segment =
                     (!has_small_component || (!has_big_component && !IsTinyComponent(segment)));
                 auto use_directions = std::make_pair(use_segment, use_segment);
                 bool isOnewaySegment = !(segment.data.forward_segment_id.enabled &&
                                          segment.data.reverse_segment_id.enabled);
-                if (!isOnewaySegment && side_value != BOTH)
+                if (!isOnewaySegment && side != BOTH)
                 {
                     // Check the counter clockwise
                     //
@@ -241,8 +242,8 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
                     // if drive left
                     // input_coordinate_is_at_right = !input_coordinate_is_at_right
 
-                    // We reverse goCountrySide if side_value is OPPOSITE
-                    if (side_value == OPPOSITE)
+                    // We reverse goCountrySide if side is OPPOSITE
+                    if (side == OPPOSITE)
                         input_coordinate_is_at_right = !input_coordinate_is_at_right;
 
                     // Apply the side.
