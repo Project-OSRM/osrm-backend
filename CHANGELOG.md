@@ -9,6 +9,7 @@
      - Fixes 3992: Table plugin not checking for valid phantom nodes
      - Fixes 4013: `continue_straight` interaction with bearing constraints
      - Fixes 4063: Potential overflow in custom profiles for restricted ways
+     - Fixes 4030: Roundabout edge-case crashes post-processing
 
 # 5.7.0
   - Changes from 5.6

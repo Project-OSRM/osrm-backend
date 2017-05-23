@@ -794,7 +794,9 @@ Feature: Basic Roundabout
             | k    | l  | kg,hl,hl | depart,roundabout-exit-1,arrive | 80.1m    |
             | l    | k  | hl,kg,kg | depart,roundabout-exit-1,arrive | 120.1m   |
 
+    @4030 @4075
     Scenario: Service roundabout with service exits
+      # Counting of service exits must be adjusted in #4075
         Given the node map
             """
                 e
