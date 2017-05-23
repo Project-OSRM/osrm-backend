@@ -14,6 +14,7 @@
       - #4075 Changed counting of exits on service roundabouts
     - Bugfixes
       - Fixed a copy/paste issue assigning wrong directions in similar turns (left over right)
+      - #4074: fixed a bug that would announce entering highway ramps as u-turns
 
 # 5.7.1
     - Bugfixes

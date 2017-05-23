@@ -123,8 +123,9 @@ inline bool requiresNameAnnounced(const std::string &from_name,
         (names_are_equal && ref_is_removed) || is_suffix_change;
 
     const auto needs_announce =
-        // " (Ref)" -> "Name "
-        (from_name.empty() && !from_ref.empty() && !to_name.empty() && to_ref.empty());
+        // " (Ref)" -> "Name " and reverse
+        (from_name.empty() && !from_ref.empty() && !to_name.empty() && to_ref.empty()) ||
+        (!from_name.empty() && from_ref.empty() && to_name.empty() && !to_ref.empty());
 
     const auto pronunciation_changes = from_pronunciation != to_pronunciation;
 
