@@ -125,39 +125,39 @@ void routingStep(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm>
     const NodeID node = forward_heap.DeleteMin();
     const EdgeWeight weight = forward_heap.GetKey(node);
 
-    if (reverse_heap.WasInserted(node))
+    if (reverse_heap.WasInserted(node) && reverse_heap.GetData(node).parent != node)
     {
         const EdgeWeight new_weight = reverse_heap.GetKey(node) + weight;
         if (new_weight < upper_bound)
         {
-            // if loops are forced, they are so at the source
-            if ((force_loop_forward && forward_heap.GetData(node).parent == node) ||
-                (force_loop_reverse && reverse_heap.GetData(node).parent == node) ||
-                // in this case we are looking at a bi-directional way where the source
-                // and target phantom are on the same edge based node
-                new_weight < 0)
-            {
-                // check whether there is a loop present at the node
-                for (const auto edge : facade.GetAdjacentEdgeRange(node))
-                {
-                    const auto &data = facade.GetEdgeData(edge);
-                    if (DIRECTION == FORWARD_DIRECTION ? data.forward : data.backward)
-                    {
-                        const NodeID to = facade.GetTarget(edge);
-                        if (to == node)
-                        {
-                            const EdgeWeight edge_weight = data.weight;
-                            const EdgeWeight loop_weight = new_weight + edge_weight;
-                            if (loop_weight >= 0 && loop_weight < upper_bound)
-                            {
-                                middle_node_id = node;
-                                upper_bound = loop_weight;
-                            }
-                        }
-                    }
-                }
-            }
-            else
+        //     // if loops are forced, they are so at the source
+        //     if ((force_loop_forward && forward_heap.GetData(node).parent == node) ||
+        //         (force_loop_reverse && reverse_heap.GetData(node).parent == node) ||
+        //         // in this case we are looking at a bi-directional way where the source
+        //         // and target phantom are on the same edge based node
+        //         new_weight < 0)
+        //     {
+        //         // check whether there is a loop present at the node
+        //         for (const auto edge : facade.GetAdjacentEdgeRange(node))
+        //         {
+        //             const auto &data = facade.GetEdgeData(edge);
+        //             if (DIRECTION == FORWARD_DIRECTION ? data.forward : data.backward)
+        //             {
+        //                 const NodeID to = facade.GetTarget(edge);
+        //                 if (to == node)
+        //                 {
+        //                     const EdgeWeight edge_weight = data.weight;
+        //                     const EdgeWeight loop_weight = new_weight + edge_weight;
+        //                     if (loop_weight >= 0 && loop_weight < upper_bound)
+        //                     {
+        //                         middle_node_id = node;
+        //                         upper_bound = loop_weight;
+        //                     }
+        //                 }
+        //             }
+        //         }
+        //     }
+        //     else
             {
                 BOOST_ASSERT(new_weight >= 0);
 

@@ -322,3 +322,45 @@ Feature: Weight tests
             | a,d       | abcd,abcd  | 59.9m    | 6.996,0       | 7s,0s    |
             | a,e       | abcd,ce,ce | 60.1m    | 6.005,2.002,0 | 6s,2s,0s |
             | d,e       | abcd,ce,ce | 39.9m    | 1.991,2.002,0 | 2s,2s,0s |
+
+
+    @traffic @speed
+    Scenario: Step weights -- segment_function with speed and turn updates
+        Given the profile file "testbot" extended with
+        """
+        api_version = 1
+        properties.traffic_signal_penalty = 0
+        properties.u_turn_penalty = 0
+        properties.weight_name = 'steps'
+        function way_function(way, result)
+          result.forward_mode = mode.driving
+          result.backward_mode = mode.driving
+          result.weight = 42
+          result.duration = 3
+        end
+        function segment_function (segment)
+          segment.weight = 20
+          segment.duration = 2
+        end
+        function turn_function (turn)
+          turn.weight = 50
+          turn.duration = 5
+        end
+        """
+
+        And the node map
+            """
+            a---b---c
+                .
+            d---e---f
+            """
+        And the ways
+            | nodes |
+            | abc   |
+            | def   |
+            | be    |
+
+        When I route I should get
+            | waypoints | route | distance | weight | weights    | times       |
+            | a,d       | ,,,   | 60.1m    |    160 | 70,70,20,0 | 7s,7s,2s,0s |
+            | a,f       | ,,,   | 60.1m    |    160 | 70,70,20,0 | 7s,7s,2s,0s |

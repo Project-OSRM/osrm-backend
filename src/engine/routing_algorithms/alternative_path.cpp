@@ -598,7 +598,7 @@ alternativePathSearch(SearchEngineData<Algorithm> &engine_working_data,
                      ? -phantom_node_pair.source_phantom.GetReverseWeightPlusOffset()
                      : 0);
 
-    insertNodesInHeaps(forward_heap1, reverse_heap1, phantom_node_pair);
+    insertNodesInHeaps(facade, forward_heap1, reverse_heap1, phantom_node_pair);
 
     // search from s and t till new_min/(1+epsilon) > weight_of_shortest_path
     while (0 < (forward_heap1.Size() + reverse_heap1.Size()))

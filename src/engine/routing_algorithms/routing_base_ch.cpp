@@ -131,20 +131,7 @@ void search(SearchEngineData<Algorithm> & /*engine_working_data*/,
         return;
     }
 
-    // Was a paths over one of the forward/reverse nodes not found?
-    BOOST_ASSERT_MSG((SPECIAL_NODEID != middle && INVALID_EDGE_WEIGHT != weight), "no path found");
-
-    // make sure to correctly unpack loops
-    if (weight != forward_heap.GetKey(middle) + reverse_heap.GetKey(middle))
-    {
-        // self loop makes up the full path
-        packed_leg.push_back(middle);
-        packed_leg.push_back(middle);
-    }
-    else
-    {
-        retrievePackedPathFromHeap(forward_heap, reverse_heap, middle, packed_leg);
-    }
+    retrievePackedPathFromHeap(forward_heap, reverse_heap, middle, packed_leg);
 }
 
 // Requires the heaps for be empty
@@ -161,7 +148,7 @@ double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
     forward_heap.Clear();
     reverse_heap.Clear();
 
-    insertNodesInHeaps(forward_heap, reverse_heap, {source_phantom, target_phantom});
+    insertNodesInHeaps(facade, forward_heap, reverse_heap, {source_phantom, target_phantom});
 
     EdgeWeight weight = INVALID_EDGE_WEIGHT;
     std::vector<NodeID> packed_path;
@@ -394,7 +381,7 @@ double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
     forward_heap.Clear();
     reverse_heap.Clear();
 
-    insertNodesInHeaps(forward_heap, reverse_heap, {source_phantom, target_phantom});
+    insertNodesInHeaps(facade, forward_heap, reverse_heap, {source_phantom, target_phantom});
 
     EdgeWeight weight = INVALID_EDGE_WEIGHT;
     std::vector<NodeID> packed_path;
