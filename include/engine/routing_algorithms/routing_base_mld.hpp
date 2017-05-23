@@ -192,7 +192,8 @@ search(SearchEngineData<Algorithm> &engine_working_data,
 {
     if (forward_heap.Empty() || reverse_heap.Empty())
     {
-        return std::make_tuple(INVALID_EDGE_WEIGHT, SPECIAL_NODEID, SPECIAL_NODEID, std::vector<EdgeID>());
+        return std::make_tuple(
+            INVALID_EDGE_WEIGHT, SPECIAL_NODEID, SPECIAL_NODEID, std::vector<EdgeID>());
     }
 
     const auto &partition = facade.GetMultiLevelPartition();
