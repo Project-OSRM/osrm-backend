@@ -147,6 +147,12 @@ bool isUTurn(const RouteStepIterator step_prior_to_intersection,
             step_prior_to_intersection, step_entering_intersection, step_leaving_intersection))
         return false;
 
+    // uturns only allowed on turns
+    if (!hasTurnType(*step_entering_intersection, TurnType::Turn) &&
+        !hasTurnType(*step_entering_intersection, TurnType::Continue) &&
+        !hasTurnType(*step_entering_intersection, TurnType::EndOfRoad))
+        return false;
+
     // the most basic condition for a uturn is that we actually turn around
     const bool takes_u_turn = bearingsAreReversed(
         util::bearing::reverse(step_entering_intersection->intersections.front()

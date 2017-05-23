@@ -1279,3 +1279,43 @@ Feature: Simple Turns
         When I route I should get
             | waypoints | route       | turns                           |
             | a,d       | foo,bar,bar | depart,turn slight right,arrive |
+
+    Scenario: UTurn onto ramp
+        Given the node map
+            """
+                       a - - - b - c
+                                  .|
+                _________________ de
+            h-g-----------------------f
+            """
+        And the ways
+            | nodes | name  | ref  | oneway | highway       |
+            | abc   | Road  |      | yes    | primary       |
+            | ce    | other |      | yes    | primary       |
+            | cdg   |       |      | yes    | motorway_link |
+            | fgh   |       | C 42 | yes    | motorway      |
+
+
+        When I route I should get
+            | waypoints | route   | ref         | turns                                         |
+            | a,h       | Road,,, | ,,C 42,C 42 | depart,on ramp right,merge slight left,arrive |
+
+    Scenario: UTurn onto ramp (same ref)
+        Given the node map
+            """
+                       a - - - b - c
+                                  .|
+                _________________ de
+            h-g-----------------------f
+            """
+        And the ways
+            | nodes | name  | ref  | oneway | highway       |
+            | abc   | Road  | C 42 | yes    | primary       |
+            | ce    | other |      | yes    | primary       |
+            | cdg   |       |      | yes    | motorway_link |
+            | fgh   |       | C 42 | yes    | motorway      |
+
+
+        When I route I should get
+            | waypoints | route           | ref             | turns                                         |
+            | a,h       | Road,,,         | C 42,,C 42,C 42 | depart,on ramp right,merge slight left,arrive |
