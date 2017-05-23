@@ -278,7 +278,7 @@ void IntersectionHandler::assignFork(const EdgeID via_edge,
 
     // right side of fork
     if (low_priority_left && !low_priority_right)
-        right.instruction = {suppressed_right_type, DirectionModifier::SlightLeft};
+        right.instruction = {suppressed_right_type, DirectionModifier::SlightRight};
     else
     {
         if (low_priority_right && !low_priority_left)

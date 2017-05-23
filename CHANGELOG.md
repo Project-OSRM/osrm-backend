@@ -6,7 +6,8 @@
       - .osrm.nodes file was renamed to .nbg_nodes and .ebg_nodes was added
     - Guidance
       - #4075 Changed counting of exits on service roundabouts
-
+    - Bugfixes
+      - Fixed a copy/paste issue assigning wrong directions in similar turns (left over right)
 
 # 5.7.1
     - Bugfixes

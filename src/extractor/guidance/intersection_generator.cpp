@@ -145,6 +145,7 @@ IntersectionGenerator::ComputeIntersectionShape(const NodeID node_at_center_of_i
                   intersection.end(),
                   makeCompareShapeDataAngleToBearing(base_bearing));
     }
+
     return intersection;
 }
 

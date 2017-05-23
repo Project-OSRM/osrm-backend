@@ -705,9 +705,8 @@ void TurnHandler::handleDistinctConflict(const EdgeID via_edge,
         const auto left_classification = node_based_graph.GetEdgeData(left.eid).road_classification;
         const auto right_classification =
             node_based_graph.GetEdgeData(right.eid).road_classification;
-        if (canBeSeenAsFork(left_classification, right_classification))
-            assignFork(via_edge, left, right);
-        else if (left_classification.GetPriority() > right_classification.GetPriority())
+
+        if (left_classification.GetPriority() > right_classification.GetPriority())
         {
             // FIXME this should possibly know about the actual roads?
             // here we don't know about the intersection size. To be on the save side,
@@ -726,6 +725,7 @@ void TurnHandler::handleDistinctConflict(const EdgeID via_edge,
             right.instruction = {findBasicTurnType(via_edge, right),
                                  DirectionModifier::SlightRight};
         }
+        return;
     }
     const auto left_type = findBasicTurnType(via_edge, left);
     const auto right_type = findBasicTurnType(via_edge, right);
