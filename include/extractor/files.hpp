@@ -225,7 +225,7 @@ inline void writeTurnData(const boost::filesystem::path &path, const TurnDataT &
     serialization::write(writer, turn_data);
 }
 
-// reads .osrm.nodes_data
+// reads .osrm.ebg_nodes
 template <typename NodeDataT>
 inline void readNodeData(const boost::filesystem::path &path, NodeDataT &node_data)
 {
@@ -239,7 +239,7 @@ inline void readNodeData(const boost::filesystem::path &path, NodeDataT &node_da
     serialization::read(reader, node_data);
 }
 
-// writes .osrm.nodes_data
+// writes .osrm.ebg_nodes
 template <typename NodeDataT>
 inline void writeNodeData(const boost::filesystem::path &path, const NodeDataT &node_data)
 {
