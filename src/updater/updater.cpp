@@ -108,7 +108,7 @@ void checkWeightsConsistency(
     extractor::files::readSegmentData(config.geometries_path, segment_data);
 
     extractor::EdgeBasedNodeDataContainer node_data;
-    extractor::files::readNodeData(config.osrm_path.string() + ".ebg_nodes", node_data);
+    extractor::files::readNodeData(config.edge_based_nodes_data_path, node_data);
 
     extractor::TurnDataContainer turn_data;
     extractor::files::readTurnData(config.edges_data_path, turn_data);

@@ -134,7 +134,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
                                              node_is_startpoint,
                                              edge_based_node_weights,
                                              edge_based_edge_list,
-                                             config.intersection_class_data_output_path,
+                                             config.intersection_class_path.string(),
                                              turn_restrictions,
                                              turn_lane_map);
 
@@ -146,7 +146,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     util::Log() << "Saving edge-based node weights to file.";
     TIMER_START(timer_write_node_weights);
     {
-        storage::io::FileWriter writer(config.edge_based_node_weights_output_path,
+        storage::io::FileWriter writer(config.node_path,
                                        storage::io::FileWriter::GenerateFingerprint);
         storage::serialization::write(writer, edge_based_node_weights);
     }
@@ -183,7 +183,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     util::Log() << "Expansion: " << nodes_per_second << " nodes/sec and " << edges_per_second
                 << " edges/sec";
     util::Log() << "To prepare the data for routing, run: "
-                << "./osrm-contract " << config.output_file_name;
+                << "./osrm-contract " << config.osrm_path;
 
     return 0;
 }
@@ -239,13 +239,10 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
     }
     util::Log() << "timestamp: " << timestamp;
 
-    extraction_containers.PrepareData(scripting_environment,
-                                      config.osrm_path.string(),
-                                      config.restriction_path.string(),
-                                      config.names_data_path.string());
+    storage::io::FileWriter timestamp_file(config.timestamp_path,
+                                           storage::io::FileWriter::GenerateFingerprint);
 
-    WriteProfileProperties(config.properties_path.string(),
-                           scripting_environment.GetProfileProperties());
+    timestamp_file.WriteFrom(timestamp.c_str(), timestamp.length());
 
     std::vector<std::string> restrictions = scripting_environment.GetRestrictions();
     // setup restriction parser
@@ -333,13 +330,13 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
     }
 
     extraction_containers.PrepareData(scripting_environment,
-                                      config.output_file_name,
-                                      config.restriction_file_name,
-                                      config.names_file_name);
+                                      config.osrm_path.string(),
+                                      config.turn_restrictions_path.string(),
+                                      config.names_data_path.string());
 
     auto profile_properties = scripting_environment.GetProfileProperties();
     SetClassNames(classes_map, profile_properties);
-    files::writeProfileProperties(config.profile_properties_path, profile_properties);
+    files::writeProfileProperties(config.properties_path.string(), profile_properties);
 
     TIMER_STOP(extracting);
     util::Log() << "extraction finished after " << TIMER_SEC(extracting) << "s";
@@ -585,10 +582,10 @@ void Extractor::BuildRTree(std::vector<EdgeBasedNodeSegment> edge_based_node_seg
     edge_based_node_segments.resize(new_size);
 
     TIMER_START(construction);
-    util::StaticRTree<EdgeBasedNode> rtree(edge_based_node_segments,
-                                           config.ram_index_path.string(),
-                                           config.file_index_path.string(),
-                                           coordinates);
+    util::StaticRTree<EdgeBasedNodeSegment> rtree(edge_based_node_segments,
+                                                  config.ram_index_path.string(),
+                                                  config.file_index_path.string(),
+                                                  coordinates);
 
     TIMER_STOP(construction);
     util::Log() << "finished r-tree construction in " << TIMER_SEC(construction) << " seconds";
