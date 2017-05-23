@@ -465,7 +465,7 @@ Intersection RoundaboutHandler::handleRoundabouts(const RoundaboutType roundabou
                 }
                 else
                 {
-                    // check if there is a non-service exit
+                    // Check if there is a non-service exit
                     const auto has_non_ignorable_exit = [&]() {
                         for (const auto eid :
                              node_based_graph.GetAdjacentEdgeRange(node_at_center_of_intersection))
@@ -480,6 +480,8 @@ Intersection RoundaboutHandler::handleRoundabouts(const RoundaboutType roundabou
                         return false;
                     };
 
+                    // Count normal exits and service roads, if the roundabout is a service road
+                    // itself
                     if (out_data.road_classification.IsLowPriorityRoadClass() ||
                         has_non_ignorable_exit())
                     {
