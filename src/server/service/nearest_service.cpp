@@ -28,6 +28,8 @@ std::string getWrongOptionHelp(const engine::api::NearestParameters &parameters)
         PARAMETER_SIZE_MISMATCH_MSG, "bearings", parameters.bearings, coord_size, help);
     constrainParamSize(
         PARAMETER_SIZE_MISMATCH_MSG, "radiuses", parameters.radiuses, coord_size, help);
+    constrainParamSize(
+        PARAMETER_SIZE_MISMATCH_MSG, "approaches", parameters.approaches, coord_size, help);
 
     return help;
 }

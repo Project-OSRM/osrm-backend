@@ -28,7 +28,9 @@ std::string getWrongOptionHelp(const engine::api::TripParameters &parameters)
         constrainParamSize(
             PARAMETER_SIZE_MISMATCH_MSG, "bearings", parameters.bearings, coord_size, help) ||
         constrainParamSize(
-            PARAMETER_SIZE_MISMATCH_MSG, "radiuses", parameters.radiuses, coord_size, help);
+            PARAMETER_SIZE_MISMATCH_MSG, "radiuses", parameters.radiuses, coord_size, help) ||
+        constrainParamSize(
+            PARAMETER_SIZE_MISMATCH_MSG, "approaches", parameters.approaches, coord_size, help);
 
     if (!param_size_mismatch && parameters.coordinates.size() < 2)
     {
