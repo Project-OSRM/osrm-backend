@@ -1260,3 +1260,22 @@ Feature: Simple Turns
             | waypoints | route              | turns                       |
             | a,d       | Goethe,Fried,Fried | depart,continue left,arrive |
             | a,g       | Goethe,Fried,Fried | depart,turn right,arrive    |
+
+	# Conflicting roads (https://www.openstreetmap.org/export#map=19/37.57805/-77.46049)
+	Scenario: Turning at forklike structure
+        Given the node map
+            """
+            c  d
+               - - - b - - - a
+                   -
+              e
+            """
+        And the ways
+            | nodes | name | oneway | highway       |
+            | abc   | foo  | no     | residential   |
+            | bd    | bar  | yes    | residential   |
+            | eb    | some | yes    | tertiary_link |
+
+        When I route I should get
+            | waypoints | route       | turns                           |
+            | a,d       | foo,bar,bar | depart,turn slight right,arrive |
