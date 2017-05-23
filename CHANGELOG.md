@@ -5,6 +5,10 @@
     - Files
       - .osrm.nodes file was renamed to .nbg_nodes and .ebg_nodes was added
 
+# 5.7.1
+    - Bugfixes
+      - #4030 Roundabout edge-case crashes post-processing
+
 # 5.7.0
   - Changes from 5.6
     - Algorithm:
