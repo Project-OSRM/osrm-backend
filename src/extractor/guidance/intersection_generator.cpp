@@ -3,10 +3,10 @@
 #include "extractor/geojson_debug_policies.hpp"
 #include "util/geojson_debug_logger.hpp"
 
+#include "util/assert.hpp"
 #include "util/bearing.hpp"
 #include "util/coordinate_calculation.hpp"
 #include "util/log.hpp"
-#include "util/assert.hpp"
 
 #include <algorithm>
 #include <cmath>
