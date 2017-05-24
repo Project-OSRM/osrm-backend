@@ -6,6 +6,7 @@
 #include "util/bearing.hpp"
 #include "util/coordinate_calculation.hpp"
 #include "util/log.hpp"
+#include "util/assert.hpp"
 
 #include <algorithm>
 #include <cmath>
