@@ -156,23 +156,16 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
     {
 
         const bool gap_in_trace = [&]() {
-            // do not determine split if wasn't asked about it
-            if (allow_splitting)
+            // use temporal information if available to determine a split
+            // but do not determine split by timestamps if wasn't asked about it
+            if (use_timestamps && allow_splitting)
             {
-                // use temporal information if available to determine a split
-                if (use_timestamps)
-                {
-                    return trace_timestamps[t] - trace_timestamps[prev_unbroken_timestamps.back()] >
-                           max_broken_time;
-                }
-                else
-                {
-                    return t - prev_unbroken_timestamps.back() > MAX_BROKEN_STATES;
-                }
+                return trace_timestamps[t] - trace_timestamps[prev_unbroken_timestamps.back()] >
+                       max_broken_time;
             }
             else
             {
-                return false;
+                return t - prev_unbroken_timestamps.back() > MAX_BROKEN_STATES;
             }
         }();
 
