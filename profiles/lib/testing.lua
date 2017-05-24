@@ -23,6 +23,9 @@
 --   } 
 -- }
 -- 
+-- a lua tcp service requires the module luasocket. to install this on lua 5.2 see:
+-- https://stackoverflow.com/questions/39760619/lua-cannot-find-installed-luarocks-on-ubuntu
+
 
 local Debug = require('lib/profile_debugger')
 local pprint = require('lib/pprint')
