@@ -1,3 +1,8 @@
+# 5.7.2
+  - Changes from 5.7.1:
+   - Bug fixes:
+    - Fixes segmentation fault caused by the fix for 3977
+
 # 5.7.1
   - Changes from 5.7.0:
     - Bug fixes:
