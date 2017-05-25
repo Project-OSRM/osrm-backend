@@ -761,7 +761,7 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         return edge_based_node_data.GetGeometryID(id);
     }
 
-    ComponentID GetComponentID(const NodeID id) const
+    ComponentID GetComponentID(const NodeID id) const override final
     {
         return edge_based_node_data.GetComponentID(id);
     }
