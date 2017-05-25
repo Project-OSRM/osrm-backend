@@ -6,6 +6,8 @@
 #include <boost/geometry.hpp>
 #include <boost/geometry/index/rtree.hpp>
 
+#include <rapidjson/document.h>
+
 #include <chrono>
 
 namespace osrm
@@ -37,6 +39,7 @@ class Timezoner
 
   private:
     void LoadLocalTimesRTree(const std::string &tz_shapes_filename, std::time_t utc_time);
+    void ValidateFeature(const rapidjson::Value &feature);
 
     struct tm default_time;
     rtree_t rtree;

@@ -478,6 +478,8 @@ if(ENABLE_MASON)
   # expat and bzip2 are used from mason rather than the system
   include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/include)
 
+  include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/rapidjson/include)
+
 else()
 
   find_package(Boost 1.54 REQUIRED COMPONENTS ${BOOST_COMPONENTS})
