@@ -75,7 +75,7 @@ inline void ParseResult(const osrm::Status &result_status, osrm::json::Object &r
     }
 }
 
-inline void ParseResult(const osrm::Status &result_status, const std::string & /*unused*/) {}
+inline void ParseResult(const osrm::Status & /*result_status*/, const std::string & /*unused*/) {}
 
 inline engine_config_ptr argumentsToEngineConfig(const Nan::FunctionCallbackInfo<v8::Value> &args)
 {
