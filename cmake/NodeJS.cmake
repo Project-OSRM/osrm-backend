@@ -595,7 +595,7 @@ function(add_nodejs_module NAME)
         PUBLIC ${NODEJS_DEFINITIONS}
     )
     # This properly defines includes for the module
-    target_include_directories(${NAME} PUBLIC ${NODEJS_INCLUDE_DIRS})
+    target_include_directories(${NAME} SYSTEM PUBLIC ${NODEJS_INCLUDE_DIRS})
 
     # Add link flags to the module
     target_link_libraries(${NAME} ${NODEJS_LIBRARIES})
