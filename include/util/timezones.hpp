@@ -39,7 +39,7 @@ class Timezoner
 
   private:
     void LoadLocalTimesRTree(const std::string &tz_shapes_filename, std::time_t utc_time);
-    void ValidateFeature(const rapidjson::Value &feature);
+    void ValidateFeature(const rapidjson::Value &feature, const std::string &filename);
 
     struct tm default_time;
     rtree_t rtree;

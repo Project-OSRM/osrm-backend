@@ -558,6 +558,9 @@ else()
   find_package(Osmium REQUIRED COMPONENTS io)
   include_directories(SYSTEM ${OSMIUM_INCLUDE_DIR})
 
+  set(RAPIDJSON_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/rapidjson/include")
+  include_directories(SYSTEM ${RAPIDJSON_INCLUDE_DIR})
+
 endif()
 
 # prefix compilation with ccache by default if available and on clang or gcc
