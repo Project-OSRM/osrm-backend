@@ -1,9 +1,11 @@
 #include "server/server.hpp"
-#include "util/exception.hpp"
+#include "util/exception_utils.hpp"
 #include "util/log.hpp"
+#include "util/meminfo.hpp"
 #include "util/version.hpp"
 
 #include "osrm/engine_config.hpp"
+#include "osrm/exception.hpp"
 #include "osrm/osrm.hpp"
 #include "osrm/storage_config.hpp"
 
@@ -57,7 +59,7 @@ EngineConfig::Algorithm stringToAlgorithm(const std::string &algorithm)
         return EngineConfig::Algorithm::CoreCH;
     if (algorithm == "MLD")
         return EngineConfig::Algorithm::MLD;
-    throw util::exception("Invalid algorithm name: " + algorithm);
+    throw util::RuntimeError(algorithm, ErrorCode::UnknownAlgorithm, SOURCE_REF);
 }
 
 // generate boost::program_options object for the routing part
@@ -331,8 +333,14 @@ int main(int argc, const char *argv[]) try
     routing_server.reset();
     util::Log() << "shutdown completed";
 }
+catch (const osrm::RuntimeError &e)
+{
+    util::Log(logERROR) << e.what();
+    return e.GetCode();
+}
 catch (const std::bad_alloc &e)
 {
+    util::DumpMemoryStats();
     util::Log(logWARNING) << "[exception] " << e.what();
     util::Log(logWARNING) << "Please provide more memory or consider using a larger swapfile";
     return EXIT_FAILURE;

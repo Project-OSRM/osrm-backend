@@ -1,3 +1,4 @@
+#include "osrm/exception.hpp"
 #include "osrm/extractor.hpp"
 #include "osrm/extractor_config.hpp"
 #include "util/log.hpp"
@@ -168,8 +169,24 @@ int main(int argc, char *argv[]) try
 
     return EXIT_SUCCESS;
 }
+catch (const osrm::RuntimeError &e)
+{
+    util::DumpSTXXLStats();
+    util::DumpMemoryStats();
+    util::Log(logERROR) << e.what();
+    return e.GetCode();
+}
+catch (const std::system_error &e)
+{
+    util::DumpSTXXLStats();
+    util::DumpMemoryStats();
+    util::Log(logERROR) << e.what();
+    return e.code().value();
+}
 catch (const std::bad_alloc &e)
 {
+    util::DumpSTXXLStats();
+    util::DumpMemoryStats();
     util::Log(logERROR) << "[exception] " << e.what();
     util::Log(logERROR) << "Please provide more memory or consider using a larger swapfile";
     return EXIT_FAILURE;

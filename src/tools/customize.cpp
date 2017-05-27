@@ -1,5 +1,6 @@
 #include "customizer/customizer.hpp"
 
+#include "osrm/exception.hpp"
 #include "util/log.hpp"
 #include "util/meminfo.hpp"
 #include "util/version.hpp"
@@ -167,8 +168,15 @@ int main(int argc, char *argv[]) try
 
     return exitcode;
 }
+catch (const osrm::RuntimeError &e)
+{
+    util::DumpMemoryStats();
+    util::Log(logERROR) << e.what();
+    return e.GetCode();
+}
 catch (const std::bad_alloc &e)
 {
+    util::DumpMemoryStats();
     util::Log(logERROR) << "[exception] " << e.what();
     util::Log(logERROR) << "Please provide more memory or consider using a larger swapfile";
     return EXIT_FAILURE;

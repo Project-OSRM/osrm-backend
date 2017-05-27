@@ -25,7 +25,7 @@ test('constructor: does not accept more than one parameter', function(assert) {
 test('constructor: throws if necessary files do not exist', function(assert) {
     assert.plan(1);
     assert.throws(function() { new OSRM("missing.osrm"); },
-        /Error opening missing.osrm.names/);
+        /Problem opening file: missing.osrm.names/);
 });
 
 test('constructor: takes a shared memory argument', function(assert) {

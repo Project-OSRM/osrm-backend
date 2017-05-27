@@ -1,8 +1,9 @@
 #include "storage/shared_memory.hpp"
 #include "storage/shared_monitor.hpp"
 #include "storage/storage.hpp"
-#include "util/exception.hpp"
+#include "osrm/exception.hpp"
 #include "util/log.hpp"
+#include "util/meminfo.hpp"
 #include "util/typedefs.hpp"
 #include "util/version.hpp"
 
@@ -172,8 +173,14 @@ int main(const int argc, const char *argv[]) try
 
     return storage.Run(max_wait);
 }
+catch (const osrm::RuntimeError &e)
+{
+    util::Log(logERROR) << e.what();
+    return e.GetCode();
+}
 catch (const std::bad_alloc &e)
 {
+    util::DumpMemoryStats();
     util::Log(logERROR) << "[exception] " << e.what();
     util::Log(logERROR) << "Please provide more memory or disable locking the virtual "
                            "address space (note: this makes OSRM swap, i.e. slow)";

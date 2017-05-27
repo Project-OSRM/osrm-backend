@@ -36,7 +36,9 @@ OSRM::OSRM(engine::EngineConfig &config)
         // throw error if dataset is not usable with CoreCH
         if (config.algorithm == EngineConfig::Algorithm::CoreCH && !corech_compatible)
         {
-            throw util::exception("Dataset is not compatible with CoreCH.");
+            throw util::RuntimeError("Dataset is not compatible with CoreCH.",
+                                     ErrorCode::IncompatibleDataset,
+                                     SOURCE_REF);
         }
     }
 

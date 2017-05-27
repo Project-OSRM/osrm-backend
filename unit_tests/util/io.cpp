@@ -49,11 +49,12 @@ BOOST_AUTO_TEST_CASE(io_nonexistent_file)
                                              osrm::storage::io::FileReader::VerifyFingerprint);
         BOOST_REQUIRE_MESSAGE(false, "Should not get here");
     }
-    catch (const osrm::util::exception &e)
+    catch (const osrm::util::RuntimeError &e)
     {
-        const std::string expected("Error opening non_existent_test_io.tmp");
+        const std::string expected("Problem opening file: " + IO_NONEXISTENT_FILE);
         const std::string got(e.what());
         BOOST_REQUIRE(std::equal(expected.begin(), expected.end(), got.begin()));
+        BOOST_REQUIRE(e.GetCode() == osrm::ErrorCode::FileOpenError);
     }
 }
 
@@ -83,12 +84,12 @@ BOOST_AUTO_TEST_CASE(file_too_small)
         osrm::storage::serialization::read(infile, buffer);
         BOOST_REQUIRE_MESSAGE(false, "Should not get here");
     }
-    catch (const osrm::util::exception &e)
+    catch (const osrm::util::RuntimeError &e)
     {
-        const std::string expected(
-            "Error reading from file_too_small_test_io.tmp: Unexpected end of file");
+        const std::string expected("Unexpected end of file: " + IO_TOO_SMALL_FILE);
         const std::string got(e.what());
         BOOST_REQUIRE(std::equal(expected.begin(), expected.end(), got.begin()));
+        BOOST_REQUIRE(e.GetCode() == osrm::ErrorCode::UnexpectedEndOfFile);
     }
 }
 
@@ -111,11 +112,13 @@ BOOST_AUTO_TEST_CASE(io_corrupt_fingerprint)
                                              osrm::storage::io::FileReader::VerifyFingerprint);
         BOOST_REQUIRE_MESSAGE(false, "Should not get here");
     }
-    catch (const osrm::util::exception &e)
+    catch (const osrm::util::RuntimeError &e)
     {
-        const std::string expected("Fingerprint mismatch in corrupt_fingerprint_file_test_io.tmp");
+        const std::string expected("Fingerprint did not match the expected value: " +
+                                   IO_CORRUPT_FINGERPRINT_FILE);
         const std::string got(e.what());
         BOOST_REQUIRE(std::equal(expected.begin(), expected.end(), got.begin()));
+        BOOST_REQUIRE(e.GetCode() == osrm::ErrorCode::InvalidFingerprint);
     }
 }
 
@@ -146,11 +149,13 @@ BOOST_AUTO_TEST_CASE(io_incompatible_fingerprint)
                                              osrm::storage::io::FileReader::VerifyFingerprint);
         BOOST_REQUIRE_MESSAGE(false, "Should not get here");
     }
-    catch (const osrm::util::exception &e)
+    catch (const osrm::util::RuntimeError &e)
     {
-        const std::string expected("Fingerprint mismatch in " + IO_INCOMPATIBLE_FINGERPRINT_FILE);
+        const std::string expected("Fingerprint did not match the expected value: " +
+                                   IO_INCOMPATIBLE_FINGERPRINT_FILE);
         const std::string got(e.what());
         BOOST_REQUIRE(std::equal(expected.begin(), expected.end(), got.begin()));
+        BOOST_REQUIRE(e.GetCode() == osrm::ErrorCode::InvalidFingerprint);
     }
 }
 

@@ -108,7 +108,8 @@ int SourceContainer::LoadRasterSource(const std::string &path_string,
     boost::filesystem::path filepath(path_string);
     if (!boost::filesystem::exists(filepath))
     {
-        throw util::exception(path_string + " does not exist" + SOURCE_REF);
+        throw util::RuntimeError(
+            path_string, ErrorCode::FileOpenError, SOURCE_REF, "File not found");
     }
 
     RasterGrid rasterData{filepath, ncols, nrows};
