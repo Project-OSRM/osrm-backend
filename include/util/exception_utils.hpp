@@ -10,6 +10,6 @@
 #define OSRM_SOURCE_FILE_ PROJECT_RELATIVE_PATH_(__FILE__)
 
 // This is the macro to use
-#define SOURCE_REF std::string(" (at ") + OSRM_SOURCE_FILE_ + ":" + std::to_string(__LINE__) + ")"
+#define SOURCE_REF OSRM_SOURCE_FILE_ + ":" + std::to_string(__LINE__)
 
 #endif // SOURCE_MACROS_HPP

@@ -1,6 +1,8 @@
 #ifndef OSRM_STORAGE_IO_HPP_
 #define OSRM_STORAGE_IO_HPP_
 
+#include "osrm/error_codes.hpp"
+
 #include "util/exception.hpp"
 #include "util/exception_utils.hpp"
 #include "util/fingerprint.hpp"
@@ -10,6 +12,8 @@
 #include <boost/filesystem/fstream.hpp>
 #include <boost/iostreams/seek.hpp>
 
+#include <cerrno>
+#include <cstring>
 #include <cstring>
 #include <tuple>
 #include <type_traits>
@@ -49,12 +53,16 @@ class FileReader
         : filepath(filepath_), fingerprint(flag)
     {
         input_stream.open(filepath, std::ios::binary);
+
+        // Note: filepath.string() is wrapped in std::string() because it can
+        // return char * on some platforms, which makes the + operator not work
         if (!input_stream)
-            throw util::exception("Error opening " + filepath.string());
+            throw util::RuntimeError(
+                filepath.string(), ErrorCode::FileOpenError, SOURCE_REF, std::strerror(errno));
 
         if (flag == VerifyFingerprint && !ReadAndCheckFingerprint())
         {
-            throw util::exception("Fingerprint mismatch in " + filepath_.string() + SOURCE_REF);
+            throw util::RuntimeError(filepath.string(), ErrorCode::InvalidFingerprint, SOURCE_REF);
         }
     }
 
@@ -66,7 +74,11 @@ class FileReader
 
         if (file_size == boost::filesystem::ifstream::pos_type(-1))
         {
-            throw util::exception("File size for " + filepath.string() + " failed " + SOURCE_REF);
+            throw util::RuntimeError("Unable to determine file size for " +
+                                         std::string(filepath.string()),
+                                     ErrorCode::FileIOError,
+                                     SOURCE_REF,
+                                     std::strerror(errno));
         }
 
         // restore the current position
@@ -101,10 +113,11 @@ class FileReader
         {
             if (result.eof())
             {
-                throw util::exception("Error reading from " + filepath.string() +
-                                      ": Unexpected end of file " + SOURCE_REF);
+                throw util::RuntimeError(
+                    filepath.string(), ErrorCode::UnexpectedEndOfFile, SOURCE_REF);
             }
-            throw util::exception("Error reading from " + filepath.string() + " " + SOURCE_REF);
+            throw util::RuntimeError(
+                filepath.string(), ErrorCode::FileReadError, SOURCE_REF, std::strerror(errno));
         }
     }
 
@@ -145,23 +158,19 @@ class FileReader
 
         if (!loaded_fingerprint.IsValid())
         {
-            util::Log(logERROR) << "Fingerprint magic number or checksum is invalid in "
-                                << filepath.string();
-            return false;
+            throw util::RuntimeError(filepath.string(), ErrorCode::InvalidFingerprint, SOURCE_REF);
         }
 
         if (!expected_fingerprint.IsDataCompatible(loaded_fingerprint))
         {
-            util::Log(logERROR) << filepath.string()
-                                << " is not compatible with this version of OSRM";
-
-            util::Log(logERROR) << "It was prepared with OSRM "
-                                << loaded_fingerprint.GetMajorVersion() << "."
-                                << loaded_fingerprint.GetMinorVersion() << "."
-                                << loaded_fingerprint.GetPatchVersion() << " but you are running "
-                                << OSRM_VERSION;
-            util::Log(logERROR) << "Data is only compatible between minor releases.";
-            return false;
+            const std::string fileversion =
+                std::to_string(loaded_fingerprint.GetMajorVersion()) + "." +
+                std::to_string(loaded_fingerprint.GetMinorVersion()) + "." +
+                std::to_string(loaded_fingerprint.GetPatchVersion());
+            throw util::RuntimeError(std::string(filepath.string()) + " prepared with OSRM " +
+                                         fileversion + " but this is " + OSRM_VERSION,
+                                     ErrorCode::IncompatibleFileVersion,
+                                     SOURCE_REF);
         }
 
         return true;
@@ -192,7 +201,10 @@ class FileWriter
     {
         output_stream.open(filepath, std::ios::binary);
         if (!output_stream)
-            throw util::exception("Error opening " + filepath.string());
+        {
+            throw util::RuntimeError(
+                filepath.string(), ErrorCode::FileOpenError, SOURCE_REF, std::strerror(errno));
+        }
 
         if (flag == GenerateFingerprint)
         {
@@ -216,7 +228,8 @@ class FileWriter
 
         if (!result)
         {
-            throw util::exception("Error writing to " + filepath.string());
+            throw util::RuntimeError(
+                filepath.string(), ErrorCode::FileWriteError, SOURCE_REF, std::strerror(errno));
         }
     }
 

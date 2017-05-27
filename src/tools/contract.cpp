@@ -1,6 +1,7 @@
 #include "storage/io.hpp"
 #include "osrm/contractor.hpp"
 #include "osrm/contractor_config.hpp"
+#include "osrm/exception.hpp"
 #include "util/log.hpp"
 #include "util/timezones.hpp"
 #include "util/version.hpp"
@@ -187,9 +188,18 @@ int main(int argc, char *argv[]) try
 
     return EXIT_SUCCESS;
 }
+catch (const osrm::RuntimeError &e)
+{
+    util::DumpSTXXLStats();
+    util::DumpMemoryStats();
+    util::Log(logERROR) << e.what();
+    return e.GetCode();
+}
 catch (const std::bad_alloc &e)
 {
-    util::Log(logERROR) << "[exception] " << e.what();
+    util::DumpSTXXLStats();
+    util::DumpMemoryStats();
+    util::Log(logERROR) << e.what();
     util::Log(logERROR) << "Please provide more memory or consider using a larger swapfile";
     return EXIT_FAILURE;
 }

@@ -28,10 +28,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef OSRM_EXCEPTION_HPP
 #define OSRM_EXCEPTION_HPP
 
+#include <array>
 #include <exception>
+#include <iostream>
 #include <string>
 #include <utility>
 
+#include "osrm/error_codes.hpp"
 #include <boost/format.hpp>
 
 namespace osrm
@@ -39,7 +42,7 @@ namespace osrm
 namespace util
 {
 
-class exception final : public std::exception
+class exception : public std::exception
 {
   public:
     explicit exception(const char *message) : message(message) {}
@@ -53,6 +56,72 @@ class exception final : public std::exception
     // this header. (Caught by -Wweak-vtables under Clang.)
     virtual void anchor() const;
     const std::string message;
+};
+
+/**
+ * Indicates a class of error that occurred that was caused by some kind of
+ * external input (common examples are out of disk space, file permission errors,
+ * user supplied bad data, etc).
+ */
+
+constexpr const std::array<const char *, 11> ErrorDescriptions = {{
+    "",                                                      // Dummy - ErrorCode values start at 2
+    "",                                                      // Dummy - ErrorCode values start at 2
+    "Fingerprint did not match the expected value",          // InvalidFingerprint
+    "File is incompatible with this version of OSRM",        // IncompatibleFileVersion
+    "Problem opening file",                                  // FileOpenError
+    "Problem reading from file",                             // FileReadError
+    "Problem writing to file",                               // FileWriteError
+    "I/O error occurred",                                    // FileIOError
+    "Unexpected end of file",                                // UnexpectedEndOfFile
+    "The dataset you are trying to load is not "             // IncompatibleDataset
+    "compatible with the routing algorithm you want to use." // ...continued...
+    "Incompatible algorithm"                                 // IncompatibleAlgorithm
+}};
+
+#ifndef NDEBUG
+// Check that we have messages for every enum
+static_assert(ErrorDescriptions.size() == ErrorCode::__ENDMARKER__,
+              "ErrorCode list and ErrorDescription lists are different sizes");
+#endif
+
+class RuntimeError : public exception
+{
+    using Base = exception;
+    using Base::Base;
+
+  public:
+    explicit RuntimeError(const std::string &message,
+                          const ErrorCode code_,
+                          const std::string &sourceref,
+                          const char *possiblecause = nullptr)
+        : Base(BuildMessage(message, code_, sourceref, possiblecause)), code(code_)
+    {
+    }
+
+    ErrorCode GetCode() const { return code; }
+
+  private:
+    // This function exists to 'anchor' the class, and stop the compiler from
+    // copying vtable and RTTI info into every object file that includes
+    // this header. (Caught by -Wweak-vtables under Clang.)
+    virtual void anchor() const;
+    const ErrorCode code;
+
+    static std::string BuildMessage(const std::string &message,
+                                    const ErrorCode code_,
+                                    const std::string &sourceref,
+                                    const char *possiblecause = nullptr)
+    {
+        std::string result;
+        result += ErrorDescriptions[code_];
+        result += ": " + std::string(message);
+        result += possiblecause != nullptr
+                      ? (std::string(" (possible cause: \"") + possiblecause + "\")")
+                      : "";
+        result += " (at " + sourceref + ")";
+        return result;
+    }
 };
 }
 }
