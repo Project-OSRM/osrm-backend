@@ -19,7 +19,6 @@
 
 #include <boost/assert.hpp>
 #include <boost/filesystem.hpp>
-#include <boost/filesystem/fstream.hpp>
 #include <boost/format.hpp>
 #include <boost/iostreams/device/mapped_file.hpp>
 
@@ -204,73 +203,78 @@ class StaticRTree
                 }
             });
 
-        // open leaf file
-        boost::filesystem::ofstream leaf_node_file(leaf_node_filename, std::ios::binary);
-
+        std::vector<TreeNode> tree_nodes_in_level;
         // sort the hilbert-value representatives
         tbb::parallel_sort(input_wrapper_vector.begin(), input_wrapper_vector.end());
-        std::vector<TreeNode> tree_nodes_in_level;
 
-        // pack M elements into leaf node, write to leaf file and add child index to the parent node
-        uint64_t wrapped_element_index = 0;
-        for (std::uint32_t node_index = 0; wrapped_element_index < element_count; ++node_index)
         {
-            TreeNode current_node;
-            for (std::uint32_t leaf_index = 0;
-                 leaf_index < BRANCHING_FACTOR && wrapped_element_index < element_count;
-                 ++leaf_index)
+            storage::io::FileWriter leaf_node_file(leaf_node_filename,
+                                                   storage::io::FileWriter::HasNoFingerprint);
+
+            // pack M elements into leaf node, write to leaf file and add child index to the parent
+            // node
+            uint64_t wrapped_element_index = 0;
+            for (std::uint32_t node_index = 0; wrapped_element_index < element_count; ++node_index)
             {
-                LeafNode current_leaf;
-                Rectangle &rectangle = current_leaf.minimum_bounding_rectangle;
-                for (std::uint32_t object_index = 0;
-                     object_index < LEAF_NODE_SIZE && wrapped_element_index < element_count;
-                     ++object_index, ++wrapped_element_index)
+                TreeNode current_node;
+                for (std::uint32_t leaf_index = 0;
+                     leaf_index < BRANCHING_FACTOR && wrapped_element_index < element_count;
+                     ++leaf_index)
                 {
-                    const std::uint32_t input_object_index =
-                        input_wrapper_vector[wrapped_element_index].m_array_index;
-                    const EdgeDataT &object = input_data_vector[input_object_index];
+                    LeafNode current_leaf;
+                    Rectangle &rectangle = current_leaf.minimum_bounding_rectangle;
+                    for (std::uint32_t object_index = 0;
+                         object_index < LEAF_NODE_SIZE && wrapped_element_index < element_count;
+                         ++object_index, ++wrapped_element_index)
+                    {
+                        const std::uint32_t input_object_index =
+                            input_wrapper_vector[wrapped_element_index].m_array_index;
+                        const EdgeDataT &object = input_data_vector[input_object_index];
 
-                    current_leaf.object_count += 1;
-                    current_leaf.objects[object_index] = object;
+                        current_leaf.object_count += 1;
+                        current_leaf.objects[object_index] = object;
 
-                    Coordinate projected_u{
-                        web_mercator::fromWGS84(Coordinate{m_coordinate_list[object.u]})};
-                    Coordinate projected_v{
-                        web_mercator::fromWGS84(Coordinate{m_coordinate_list[object.v]})};
+                        Coordinate projected_u{
+                            web_mercator::fromWGS84(Coordinate{m_coordinate_list[object.u]})};
+                        Coordinate projected_v{
+                            web_mercator::fromWGS84(Coordinate{m_coordinate_list[object.v]})};
 
-                    BOOST_ASSERT(std::abs(toFloating(projected_u.lon).operator double()) <= 180.);
-                    BOOST_ASSERT(std::abs(toFloating(projected_u.lat).operator double()) <= 180.);
-                    BOOST_ASSERT(std::abs(toFloating(projected_v.lon).operator double()) <= 180.);
-                    BOOST_ASSERT(std::abs(toFloating(projected_v.lat).operator double()) <= 180.);
+                        BOOST_ASSERT(std::abs(toFloating(projected_u.lon).operator double()) <=
+                                     180.);
+                        BOOST_ASSERT(std::abs(toFloating(projected_u.lat).operator double()) <=
+                                     180.);
+                        BOOST_ASSERT(std::abs(toFloating(projected_v.lon).operator double()) <=
+                                     180.);
+                        BOOST_ASSERT(std::abs(toFloating(projected_v.lat).operator double()) <=
+                                     180.);
 
-                    rectangle.min_lon =
-                        std::min(rectangle.min_lon, std::min(projected_u.lon, projected_v.lon));
-                    rectangle.max_lon =
-                        std::max(rectangle.max_lon, std::max(projected_u.lon, projected_v.lon));
+                        rectangle.min_lon =
+                            std::min(rectangle.min_lon, std::min(projected_u.lon, projected_v.lon));
+                        rectangle.max_lon =
+                            std::max(rectangle.max_lon, std::max(projected_u.lon, projected_v.lon));
 
-                    rectangle.min_lat =
-                        std::min(rectangle.min_lat, std::min(projected_u.lat, projected_v.lat));
-                    rectangle.max_lat =
-                        std::max(rectangle.max_lat, std::max(projected_u.lat, projected_v.lat));
+                        rectangle.min_lat =
+                            std::min(rectangle.min_lat, std::min(projected_u.lat, projected_v.lat));
+                        rectangle.max_lat =
+                            std::max(rectangle.max_lat, std::max(projected_u.lat, projected_v.lat));
 
-                    BOOST_ASSERT(rectangle.IsValid());
+                        BOOST_ASSERT(rectangle.IsValid());
+                    }
+
+                    // append the leaf node to the current tree node
+                    current_node.child_count += 1;
+                    current_node.children[leaf_index] =
+                        TreeIndex{node_index * BRANCHING_FACTOR + leaf_index, true};
+                    current_node.minimum_bounding_rectangle.MergeBoundingBoxes(
+                        current_leaf.minimum_bounding_rectangle);
+
+                    // write leaf_node to leaf node file
+                    leaf_node_file.WriteOne(current_leaf);
                 }
 
-                // append the leaf node to the current tree node
-                current_node.child_count += 1;
-                current_node.children[leaf_index] =
-                    TreeIndex{node_index * BRANCHING_FACTOR + leaf_index, true};
-                current_node.minimum_bounding_rectangle.MergeBoundingBoxes(
-                    current_leaf.minimum_bounding_rectangle);
-
-                // write leaf_node to leaf node file
-                leaf_node_file.write((char *)&current_leaf, sizeof(current_leaf));
+                tree_nodes_in_level.emplace_back(current_node);
             }
-
-            tree_nodes_in_level.emplace_back(current_node);
         }
-        leaf_node_file.flush();
-        leaf_node_file.close();
 
         std::uint32_t processing_level = 0;
         while (1 < tree_nodes_in_level.size())
@@ -332,15 +336,17 @@ class StaticRTree
                 }
             });
 
-        // open tree file
-        storage::io::FileWriter tree_node_file(tree_node_filename,
-                                               storage::io::FileWriter::HasNoFingerprint);
+        {
+            // open tree file
+            storage::io::FileWriter tree_node_file(tree_node_filename,
+                                                   storage::io::FileWriter::HasNoFingerprint);
 
-        std::uint64_t size_of_tree = m_search_tree.size();
-        BOOST_ASSERT_MSG(0 < size_of_tree, "tree empty");
+            std::uint64_t size_of_tree = m_search_tree.size();
+            BOOST_ASSERT_MSG(0 < size_of_tree, "tree empty");
 
-        tree_node_file.WriteOne(size_of_tree);
-        tree_node_file.WriteFrom(&m_search_tree[0], size_of_tree);
+            tree_node_file.WriteOne(size_of_tree);
+            tree_node_file.WriteFrom(&m_search_tree[0], size_of_tree);
+        }
 
         MapLeafNodesFile(leaf_node_filename);
     }
@@ -379,6 +385,24 @@ class StaticRTree
             std::size_t num_leaves = m_leaves_region.size() / sizeof(LeafNode);
             auto data_ptr = m_leaves_region.data();
             BOOST_ASSERT(reinterpret_cast<uintptr_t>(data_ptr) % alignof(LeafNode) == 0);
+#ifndef NDEBUG
+            // Find the maximum leaf node ID and make sure we have that many from our file
+            BOOST_ASSERT(m_search_tree.size() > 0);
+            std::uint32_t max_leaf_node_id = 0;
+            // Search in reverse, the bottom of the tree is at the end of the array
+            for (auto iter = m_search_tree.rbegin(); iter != m_search_tree.rend(); iter++)
+            {
+                // If we find a non-leaf node, we can quit, we've seen the
+                // bottom level of the tree
+                if (iter->child_count > 0 && !iter->children[0].is_leaf)
+                    break;
+                for (std::uint32_t i = 0; i < iter->child_count; ++i)
+                {
+                    max_leaf_node_id = std::max(max_leaf_node_id, iter->children[i].index);
+                }
+            }
+            BOOST_ASSERT(max_leaf_node_id == num_leaves - 1);
+#endif
             m_leaves.reset(reinterpret_cast<const LeafNode *>(data_ptr), num_leaves);
         }
         catch (const std::exception &exc)
