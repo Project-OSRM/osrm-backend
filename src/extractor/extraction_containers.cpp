@@ -173,7 +173,7 @@ void ExtractionContainers::WriteCharData(const std::string &file_name)
     util::UnbufferedLog log;
     log << "writing street name index ... ";
     TIMER_START(write_index);
-    boost::filesystem::ofstream file(file_name, std::ios::binary);
+    storage::io::FileWriter file(file_name, storage::io::FileWriter::GenerateFingerprint);
 
     const util::NameTable::IndexedData indexed_data;
     indexed_data.write(file, name_offsets.begin(), name_offsets.end(), name_char_data.begin());

@@ -1,6 +1,8 @@
 #ifndef OSRM_INDEXED_DATA_HPP
 #define OSRM_INDEXED_DATA_HPP
 
+#include "storage/io.hpp"
+
 #include "util/exception.hpp"
 #include "util/string_view.hpp"
 
@@ -9,7 +11,6 @@
 #include <array>
 #include <iterator>
 #include <limits>
-#include <ostream>
 #include <string>
 #include <type_traits>
 
@@ -85,7 +86,7 @@ template <int N, typename T = std::string> struct VariableGroupBlock
     /// prefix length.
     /// Returns the block prefix length.
     template <typename Offset, typename OffsetIterator>
-    Offset WriteBlockReference(std::ostream &out,
+    Offset WriteBlockReference(storage::io::FileWriter &out,
                                Offset data_offset,
                                OffsetIterator first,
                                OffsetIterator last) const
@@ -105,7 +106,7 @@ template <int N, typename T = std::string> struct VariableGroupBlock
             prefix_length += byte_length;
         }
 
-        out.write((const char *)&refernce, sizeof(refernce));
+        out.WriteOne(refernce);
 
         return prefix_length;
     }
@@ -118,7 +119,8 @@ template <int N, typename T = std::string> struct VariableGroupBlock
     /// [first..last] is an inclusive range of block data.
     /// The length of the last item in the block is not stored.
     template <typename OffsetIterator>
-    void WriteBlockPrefix(std::ostream &out, OffsetIterator first, OffsetIterator last) const
+    void
+    WriteBlockPrefix(storage::io::FileWriter &out, OffsetIterator first, OffsetIterator last) const
     {
         for (OffsetIterator curr = first, next = std::next(first); curr != last; ++curr, ++next)
         {
@@ -127,7 +129,9 @@ template <int N, typename T = std::string> struct VariableGroupBlock
             if (byte_length == 0)
                 continue;
 
-            out.write((const char *)&data_length, byte_length);
+            // Here, we're only writing a few bytes from the 4-byte std::uint32_t,
+            // so we need to cast to (char *)
+            out.WriteFrom((const char *)&data_length, byte_length);
         }
     }
 
@@ -175,20 +179,23 @@ template <int N, typename T = std::string> struct FixedGroupBlock
     /// Write a block reference {offset}, where offset is a global block offset
     /// Returns the fixed block prefix length.
     template <typename Offset, typename OffsetIterator>
-    Offset
-    WriteBlockReference(std::ostream &out, Offset data_offset, OffsetIterator, OffsetIterator) const
+    Offset WriteBlockReference(storage::io::FileWriter &out,
+                               Offset data_offset,
+                               OffsetIterator,
+                               OffsetIterator) const
     {
         BOOST_ASSERT(data_offset <= std::numeric_limits<decltype(BlockReference::offset)>::max());
 
         BlockReference refernce{static_cast<decltype(BlockReference::offset)>(data_offset)};
-        out.write((const char *)&refernce, sizeof(refernce));
+        out.WriteOne(refernce);
 
         return BLOCK_SIZE;
     }
 
     /// Write a fixed length block prefix.
     template <typename OffsetIterator>
-    void WriteBlockPrefix(std::ostream &out, OffsetIterator first, OffsetIterator last) const
+    void
+    WriteBlockPrefix(storage::io::FileWriter &out, OffsetIterator first, OffsetIterator last) const
     {
         std::uint32_t index = 0;
         std::array<ValueType, BLOCK_SIZE> block_prefix;
@@ -200,7 +207,7 @@ template <int N, typename T = std::string> struct FixedGroupBlock
 
             block_prefix[index++] = static_cast<ValueType>(data_length);
         }
-        out.write((const char *)block_prefix.data(), block_prefix.size());
+        out.WriteFrom(block_prefix.data(), block_prefix.size());
     }
 
     /// Advances the range to an item stored in the referenced block.
@@ -244,8 +251,10 @@ template <typename GroupBlock> struct IndexedData
     bool empty() const { return blocks_number == 0; }
 
     template <typename OffsetIterator, typename DataIterator>
-    void
-    write(std::ostream &out, OffsetIterator first, OffsetIterator last, DataIterator data) const
+    void write(storage::io::FileWriter &out,
+               OffsetIterator first,
+               OffsetIterator last,
+               DataIterator data) const
     {
         static_assert(sizeof(typename DataIterator::value_type) == 1, "data basic type must char");
 
@@ -259,7 +268,7 @@ template <typename GroupBlock> struct IndexedData
         const BlocksNumberType number_of_blocks =
             number_of_elements == 0 ? 0
                                     : 1 + (std::distance(first, sentinel) - 1) / (BLOCK_SIZE + 1);
-        out.write((const char *)&number_of_blocks, sizeof(number_of_blocks));
+        out.WriteOne(number_of_blocks);
 
         // Write block references and compute the total data size that includes prefix and data
         const GroupBlock block;
@@ -273,7 +282,7 @@ template <typename GroupBlock> struct IndexedData
         }
 
         // Write the total data size
-        out.write((const char *)&data_size, sizeof(data_size));
+        out.WriteOne(data_size);
 
         // Write data blocks that are (prefix, data)
         for (OffsetIterator curr = first, next = first; next != sentinel; curr = next)
@@ -281,7 +290,8 @@ template <typename GroupBlock> struct IndexedData
             std::advance(next, std::min<diff_type>(BLOCK_SIZE, std::distance(next, sentinel)));
             block.WriteBlockPrefix(out, curr, next);
             std::advance(next, std::min<diff_type>(1, std::distance(next, sentinel)));
-            std::copy(data + *curr, data + *next, std::ostream_iterator<unsigned char>(out));
+            std::for_each(
+                data + *curr, data + *next, [&out](const auto &element) { out.WriteOne(element); });
         }
     }
 
