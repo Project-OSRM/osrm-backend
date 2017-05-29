@@ -228,7 +228,7 @@ class FileWriter
 
     template <typename T> void WriteFrom(const T &src) { WriteFrom(&src, 1); }
 
-    template <typename T> void WriteOne(const T tmp) { WriteFrom(tmp); }
+    template <typename T> void WriteOne(const T &tmp) { WriteFrom(tmp); }
 
     void WriteElementCount32(const std::uint32_t count) { WriteOne<std::uint32_t>(count); }
     void WriteElementCount64(const std::uint64_t count) { WriteOne<std::uint64_t>(count); }
