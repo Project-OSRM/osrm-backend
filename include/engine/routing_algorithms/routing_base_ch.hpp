@@ -125,54 +125,25 @@ void routingStep(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm>
     const NodeID node = forward_heap.DeleteMin();
     const EdgeWeight weight = forward_heap.GetKey(node);
 
-    if (reverse_heap.WasInserted(node) && reverse_heap.GetData(node).parent != node)
+    // Check if node is a rendez-vous node candidate of forward and reverse heaps
+    // and not a edge-based nodes loop (node->node) and (node->node)
+    if (reverse_heap.WasInserted(node) &&
+        forward_heap.GetData(node).parent != reverse_heap.GetData(node).parent)
     {
         const EdgeWeight new_weight = reverse_heap.GetKey(node) + weight;
         if (new_weight < upper_bound)
         {
-            //     // if loops are forced, they are so at the source
-            //     if ((force_loop_forward && forward_heap.GetData(node).parent == node) ||
-            //         (force_loop_reverse && reverse_heap.GetData(node).parent == node) ||
-            //         // in this case we are looking at a bi-directional way where the source
-            //         // and target phantom are on the same edge based node
-            //         new_weight < 0)
-            //     {
-            //         // check whether there is a loop present at the node
-            //         for (const auto edge : facade.GetAdjacentEdgeRange(node))
-            //         {
-            //             const auto &data = facade.GetEdgeData(edge);
-            //             if (DIRECTION == FORWARD_DIRECTION ? data.forward : data.backward)
-            //             {
-            //                 const NodeID to = facade.GetTarget(edge);
-            //                 if (to == node)
-            //                 {
-            //                     const EdgeWeight edge_weight = data.weight;
-            //                     const EdgeWeight loop_weight = new_weight + edge_weight;
-            //                     if (loop_weight >= 0 && loop_weight < upper_bound)
-            //                     {
-            //                         middle_node_id = node;
-            //                         upper_bound = loop_weight;
-            //                     }
-            //                 }
-            //             }
-            //         }
-            //     }
-            //     else
-            {
-                BOOST_ASSERT(new_weight >= 0);
-
-                middle_node_id = node;
-                upper_bound = new_weight;
-            }
+            BOOST_ASSERT(new_weight >= 0);
+            middle_node_id = node;
+            upper_bound = new_weight;
         }
     }
 
-    // make sure we don't terminate too early if we initialize the weight
+    // Make sure we don't terminate too early if we initialize the weight
     // for the nodes in the forward heap with the forward/reverse offset
     BOOST_ASSERT(min_edge_offset <= 0);
     if (weight + min_edge_offset > upper_bound)
     {
-        forward_heap.DeleteAll();
         return;
     }
 
