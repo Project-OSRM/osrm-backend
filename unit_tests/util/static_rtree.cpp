@@ -363,7 +363,8 @@ BOOST_AUTO_TEST_CASE(radius_regression_test)
     Coordinate input(FloatLongitude{5.2}, FloatLatitude{5.0});
 
     {
-        auto results = query.NearestPhantomNodesInRange(input, 0.01, osrm::engine::UNRESTRICTED);
+        auto results =
+            query.NearestPhantomNodesInRange(input, 0.01, osrm::engine::Approach::UNRESTRICTED);
         BOOST_CHECK_EQUAL(results.size(), 0);
     }
 }
@@ -390,19 +391,21 @@ BOOST_AUTO_TEST_CASE(bearing_tests)
     Coordinate input(FloatLongitude{5.1}, FloatLatitude{5.0});
 
     {
-        auto results = query.NearestPhantomNodes(input, 5, osrm::engine::UNRESTRICTED);
+        auto results = query.NearestPhantomNodes(input, 5, osrm::engine::Approach::UNRESTRICTED);
         BOOST_CHECK_EQUAL(results.size(), 2);
         BOOST_CHECK_EQUAL(results.back().phantom_node.forward_segment_id.id, 0);
         BOOST_CHECK_EQUAL(results.back().phantom_node.reverse_segment_id.id, 1);
     }
 
     {
-        auto results = query.NearestPhantomNodes(input, 5, 270, 10, osrm::engine::UNRESTRICTED);
+        auto results =
+            query.NearestPhantomNodes(input, 5, 270, 10, osrm::engine::Approach::UNRESTRICTED);
         BOOST_CHECK_EQUAL(results.size(), 0);
     }
 
     {
-        auto results = query.NearestPhantomNodes(input, 5, 45, 10, osrm::engine::UNRESTRICTED);
+        auto results =
+            query.NearestPhantomNodes(input, 5, 45, 10, osrm::engine::Approach::UNRESTRICTED);
         BOOST_CHECK_EQUAL(results.size(), 2);
 
         BOOST_CHECK(results[0].phantom_node.forward_segment_id.enabled);
@@ -415,19 +418,20 @@ BOOST_AUTO_TEST_CASE(bearing_tests)
     }
 
     {
-        auto results = query.NearestPhantomNodesInRange(input, 11000, osrm::engine::UNRESTRICTED);
+        auto results =
+            query.NearestPhantomNodesInRange(input, 11000, osrm::engine::Approach::UNRESTRICTED);
         BOOST_CHECK_EQUAL(results.size(), 2);
     }
 
     {
-        auto results =
-            query.NearestPhantomNodesInRange(input, 11000, 270, 10, osrm::engine::UNRESTRICTED);
+        auto results = query.NearestPhantomNodesInRange(
+            input, 11000, 270, 10, osrm::engine::Approach::UNRESTRICTED);
         BOOST_CHECK_EQUAL(results.size(), 0);
     }
 
     {
-        auto results =
-            query.NearestPhantomNodesInRange(input, 11000, 45, 10, osrm::engine::UNRESTRICTED);
+        auto results = query.NearestPhantomNodesInRange(
+            input, 11000, 45, 10, osrm::engine::Approach::UNRESTRICTED);
         BOOST_CHECK_EQUAL(results.size(), 2);
 
         BOOST_CHECK(results[0].phantom_node.forward_segment_id.enabled);

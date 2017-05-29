@@ -95,11 +95,11 @@ class BaseDataFacade
                                const float max_distance,
                                const int bearing,
                                const int bearing_range,
-                               const engine::Approach approach) const = 0;
+                               const Approach approach) const = 0;
     virtual std::vector<PhantomNodeWithDistance>
     NearestPhantomNodesInRange(const util::Coordinate input_coordinate,
                                const float max_distance,
-                               const engine::Approach approach) const = 0;
+                               const Approach approach) const = 0;
 
     virtual std::vector<PhantomNodeWithDistance>
     NearestPhantomNodes(const util::Coordinate input_coordinate,
@@ -107,41 +107,41 @@ class BaseDataFacade
                         const double max_distance,
                         const int bearing,
                         const int bearing_range,
-                        const engine::Approach approach) const = 0;
+                        const Approach approach) const = 0;
     virtual std::vector<PhantomNodeWithDistance>
     NearestPhantomNodes(const util::Coordinate input_coordinate,
                         const unsigned max_results,
                         const int bearing,
                         const int bearing_range,
-                        const engine::Approach approach) const = 0;
+                        const Approach approach) const = 0;
     virtual std::vector<PhantomNodeWithDistance>
     NearestPhantomNodes(const util::Coordinate input_coordinate,
                         const unsigned max_results,
-                        const engine::Approach approach) const = 0;
+                        const Approach approach) const = 0;
     virtual std::vector<PhantomNodeWithDistance>
     NearestPhantomNodes(const util::Coordinate input_coordinate,
                         const unsigned max_results,
                         const double max_distance,
-                        const engine::Approach approach) const = 0;
+                        const Approach approach) const = 0;
 
     virtual std::pair<PhantomNode, PhantomNode>
     NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
-                                                      const engine::Approach approach) const = 0;
+                                                      const Approach approach) const = 0;
     virtual std::pair<PhantomNode, PhantomNode>
     NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
                                                       const double max_distance,
-                                                      const engine::Approach approach) const = 0;
+                                                      const Approach approach) const = 0;
     virtual std::pair<PhantomNode, PhantomNode>
     NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
                                                       const double max_distance,
                                                       const int bearing,
                                                       const int bearing_range,
-                                                      const engine::Approach approach) const = 0;
+                                                      const Approach approach) const = 0;
     virtual std::pair<PhantomNode, PhantomNode>
     NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
                                                       const int bearing,
                                                       const int bearing_range,
-                                                      const engine::Approach approach) const = 0;
+                                                      const Approach approach) const = 0;
 
     virtual bool HasLaneData(const EdgeID id) const = 0;
     virtual util::guidance::LaneTupleIdPair GetLaneData(const EdgeID id) const = 0;

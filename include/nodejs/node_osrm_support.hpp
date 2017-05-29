@@ -306,7 +306,7 @@ inline bool argumentsToParameter(const Nan::FunctionCallbackInfo<v8::Value> &arg
 
         if (!approaches->IsArray())
         {
-            Nan::ThrowError("Approaches must be an array of arrays of numbers");
+            Nan::ThrowError("Approaches must be an arrays of strings");
             return false;
         }
 
@@ -326,7 +326,7 @@ inline bool argumentsToParameter(const Nan::FunctionCallbackInfo<v8::Value> &arg
 
             if (approach_raw->IsNull())
             {
-                params->bearings.emplace_back();
+                params->approaches.emplace_back();
             }
             else if (approach_raw->IsString())
             {
@@ -343,7 +343,7 @@ inline bool argumentsToParameter(const Nan::FunctionCallbackInfo<v8::Value> &arg
                 }
                 else
                 {
-                    Nan::ThrowError("'approach' param must be one of [curb, unrestricted]");
+                    Nan::ThrowError("'approaches' param must be one of [curb, unrestricted]");
                     return false;
                 }
             }
