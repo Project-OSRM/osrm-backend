@@ -11,6 +11,32 @@ namespace engine
 namespace routing_algorithms
 {
 
+namespace detail
+{
+template <typename Facade, typename Heap>
+void relaxSourceEdges(const Facade &facade, Heap &heap, const NodeID node, const EdgeWeight weight)
+{
+    for (auto edge : facade.GetAdjacentEdgeRange(node))
+    {
+        const auto &edge_data = facade.GetEdgeData(edge);
+        if (edge_data.forward)
+        {
+            const auto to = facade.GetTarget(edge);
+            const auto to_weight = weight + getEdgeInternalWeight(facade, node, edge);
+            if (!heap.WasInserted(to))
+            {
+                heap.Insert(facade.GetTarget(edge), to_weight, node);
+            }
+            else if (to_weight < heap.GetKey(to))
+            {
+                heap.GetData(to).parent = node;
+                heap.DecreaseKey(to, to_weight);
+            }
+        }
+    }
+}
+}
+
 template <typename Iterator> bool areSegmentsValid(Iterator first, const Iterator last)
 {
     return std::find(first, last, INVALID_SEGMENT_WEIGHT) == last;
@@ -68,16 +94,7 @@ auto insertNodesInHeaps(const Facade &facade,
                                                  weights.end(),
                                                  source.fwd_segment_ratio,
                                                  1.);
-            for (auto edge : facade.GetAdjacentEdgeRange(node_id))
-            {
-                const auto &edge_data = facade.GetEdgeData(edge);
-                if (edge_data.forward)
-                {
-                    forward_heap.Insert(facade.GetTarget(edge),
-                                        weight + getEdgeInternalWeight(facade, node_id, edge),
-                                        node_id);
-                }
-            }
+            detail::relaxSourceEdges(facade, forward_heap, node_id, weight);
         }
     }
 
@@ -93,16 +110,7 @@ auto insertNodesInHeaps(const Facade &facade,
                                                  weights.end(),
                                                  1. - source.fwd_segment_ratio,
                                                  1.);
-            for (auto edge : facade.GetAdjacentEdgeRange(node_id))
-            {
-                const auto &edge_data = facade.GetEdgeData(edge);
-                if (edge_data.forward)
-                {
-                    forward_heap.Insert(facade.GetTarget(edge),
-                                        weight + getEdgeInternalWeight(facade, node_id, edge),
-                                        node_id);
-                }
-            }
+            detail::relaxSourceEdges(facade, forward_heap, node_id, weight);
         }
     }
 

@@ -71,7 +71,7 @@ void relaxOutgoingEdges(const datafacade::ContiguousInternalMemoryDataFacade<Alg
                 heap.Insert(to, to_weight, node);
             }
             // Found a shorter Path -> Update weight
-            else if (to_weight < heap.GetKey(to))
+            else if (!heap.WasRemoved(to) && to_weight < heap.GetKey(to))
             {
                 // new parent
                 heap.GetData(to).parent = node;
