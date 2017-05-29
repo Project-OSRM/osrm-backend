@@ -3,6 +3,7 @@
 
 #include "util/log.hpp"
 
+#include <boost/filesystem/path.hpp>
 #include <boost/geometry.hpp>
 #include <boost/geometry/index/rtree.hpp>
 
@@ -31,13 +32,14 @@ class Timezoner
   public:
     Timezoner() = default;
 
-    Timezoner(std::string tz_filename, std::time_t utc_time_now);
+    Timezoner(const char geojson[], std::time_t utc_time_now);
+    Timezoner(const boost::filesystem::path &tz_shapes_filename, std::time_t utc_time_now);
 
     struct tm operator()(const point_t &point) const;
-
   private:
-    void LoadLocalTimesRTree(const std::string &tz_shapes_filename, std::time_t utc_time);
-    void ValidateFeature(const rapidjson::Value &feature, const std::string &filename);
+    void ValidateFeature(const rapidjson::Value &feature);
+    void ValidateCoordinate(const rapidjson::Value &coordinate);
+    void LoadLocalTimesRTree(rapidjson::Document &geojson, std::time_t utc_time);
 
     struct tm default_time;
     rtree_t rtree;

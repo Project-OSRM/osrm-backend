@@ -2,6 +2,8 @@
 #include "util/log.hpp"
 #include "util/timezones.hpp"
 
+#include <boost/filesystem/fstream.hpp>
+#include <boost/filesystem/path.hpp>
 #include <boost/scope_exit.hpp>
 
 #include "rapidjson/document.h"
@@ -19,73 +21,29 @@ namespace osrm
 namespace updater
 {
 
-Timezoner::Timezoner(std::string tz_filename, std::time_t utc_time_now)
+Timezoner::Timezoner(const char geojson[], std::time_t utc_time_now)
 {
     util::Log() << "Time zone validation based on UTC time : " << utc_time_now;
     // Thread safety: MT-Unsafe const:env
     default_time = *gmtime(&utc_time_now);
-    LoadLocalTimesRTree(tz_filename, utc_time_now);
+    rapidjson::Document doc;
+    doc.Parse(geojson);
+    LoadLocalTimesRTree(doc, utc_time_now);
 }
 
-void Timezoner::ValidateFeature(const rapidjson::Value &feature, const std::string &filename)
+Timezoner::Timezoner(const boost::filesystem::path &tz_shapes_filename, std::time_t utc_time_now)
 {
-    if (!feature.HasMember("type"))
-    {
-        throw osrm::util::exception("Failed to parse " + filename +
-                                    ". Feature is missing type member.");
-    } else if (!feature["type"].IsString())
-    {
-        throw osrm::util::exception("Failed to parse " + filename +
-                                    ". Feature non-string type member.");
-    }
-    if (!feature.HasMember("properties"))
-    {
-        throw osrm::util::exception("Failed to parse " + filename +
-                                    ". Feature is missing properties member.");
-    }
-    else if (!feature.GetObject()["properties"].IsObject())
-    {
-        throw osrm::util::exception("Failed to parse " + filename +
-                                    ". Feature has non-object properties member.");
-    }
-    if (!feature["properties"].GetObject().HasMember("TZID"))
-    {
-        throw osrm::util::exception("Failed to parse " + filename +
-                                    ". Feature is missing TZID member in properties.");
-    }
-    else if (!feature["properties"].GetObject()["TZID"].IsString())
-    {
-        throw osrm::util::exception("Failed to parse " + filename +
-                                    ". Feature has non-string TZID value.");
-    }
-    if (!feature.HasMember("geometry"))
-    {
-        throw osrm::util::exception("Failed to parse " + filename +
-                                    ". Feature is missing geometry member.");
-    }
-    else if (!feature.GetObject()["geometry"].IsObject())
-    {
-        throw osrm::util::exception("Failed to parse " + filename +
-                                    ". Feature non-object geometry member.");
-    }
+    util::Log() << "Time zone validation based on UTC time : " << utc_time_now;
+    // Thread safety: MT-Unsafe const:env
+    default_time = *gmtime(&utc_time_now);
 
-    if (!feature["geometry"].GetObject().HasMember("type"))
-        throw osrm::util::exception("Failed to parse " + filename +
-                                    ". Feature geometry is missing type member.");
-    if (!feature["geometry"].GetObject().HasMember("coordinates"))
-        throw osrm::util::exception("Failed to parse " + filename +
-                                    ". Feature geometry is missing coordinates member.");
-}
-
-void Timezoner::LoadLocalTimesRTree(const std::string &tz_shapes_filename, std::time_t utc_time)
-{
     if (tz_shapes_filename.empty())
         throw osrm::util::exception("Missing time zone geojson file");
-    std::ifstream file(tz_shapes_filename.data());
+    boost::filesystem::ifstream file(tz_shapes_filename);
     if (!file.is_open())
-        throw osrm::util::exception("failed to open " + tz_shapes_filename);
+        throw osrm::util::exception("failed to open " + tz_shapes_filename.string());
 
-    util::Log() << "Parsing " + tz_shapes_filename;
+    util::Log() << "Parsing " + tz_shapes_filename.string();
     rapidjson::IStreamWrapper isw(file);
     rapidjson::Document geojson;
     geojson.ParseStream(isw);
@@ -93,15 +51,89 @@ void Timezoner::LoadLocalTimesRTree(const std::string &tz_shapes_filename, std::
     {
         auto error_code = geojson.GetParseError();
         auto error_offset = geojson.GetErrorOffset();
-        throw osrm::util::exception("Failed to parse " + tz_shapes_filename + " with error " +
+        throw osrm::util::exception("Failed to parse " + tz_shapes_filename.string() + " with error " +
                                     std::to_string(error_code) + ". JSON malformed at " + std::to_string(error_offset));
     }
-    if (!geojson.HasMember("FeatureCollection"))
-        throw osrm::util::exception("Failed to parse " + tz_shapes_filename +
-                                    ". Expecting a geojson feature collection.");
-    if (!geojson["FeatureCollection"].GetObject().HasMember("features"))
-        throw osrm::util::exception("Failed to parse " + tz_shapes_filename +
-                                    ". Missing features list.");
+    LoadLocalTimesRTree(geojson, utc_time_now);
+}
+
+void Timezoner::ValidateCoordinate(const rapidjson::Value &coordinate)
+{
+    if (!coordinate.IsArray())
+        throw osrm::util::exception("Failed to parse time zone file. Feature geometry has a non-array coordinate.");
+    if (coordinate.Capacity() != 2)
+    {
+        throw osrm::util::exception("Failed to parse time zone file. Feature geometry has a malformed coordinate with more than 2 values.");
+    } else {
+        for (rapidjson::SizeType i = 0; i < coordinate.Size(); i++)
+        {
+            if (!coordinate[i].IsNumber() && !coordinate[i].IsDouble())
+                throw osrm::util::exception("Failed to parse time zone file. Feature geometry has a non-number coordinate.");
+        }
+    }
+}
+
+void Timezoner::ValidateFeature(const rapidjson::Value &feature)
+{
+    if (!feature.HasMember("type"))
+    {
+        throw osrm::util::exception("Failed to parse time zone file. Feature is missing type member.");
+    } else if (!feature["type"].IsString())
+    {
+        throw osrm::util::exception("Failed to parse time zone file. Feature has non-string type member.");
+    }
+    if (!feature.HasMember("properties"))
+    {
+        throw osrm::util::exception("Failed to parse time zone file. Feature is missing properties member.");
+    }
+    else if (!feature.GetObject()["properties"].IsObject())
+    {
+        throw osrm::util::exception("Failed to parse time zone file. Feature has non-object properties member.");
+    }
+    if (!feature["properties"].GetObject().HasMember("TZID"))
+    {
+        throw osrm::util::exception("Failed to parse time zone file. Feature is missing TZID member in properties.");
+    }
+    else if (!feature["properties"].GetObject()["TZID"].IsString())
+    {
+        throw osrm::util::exception("Failed to parse time zone file. Feature has non-string TZID value.");
+    }
+    if (!feature.HasMember("geometry"))
+    {
+        throw osrm::util::exception("Failed to parse time zone file. Feature is missing geometry member.");
+    }
+    else if (!feature.GetObject()["geometry"].IsObject())
+    {
+        throw osrm::util::exception("Failed to parse time zone file. Feature non-object geometry member.");
+    }
+
+    if (!feature["geometry"].GetObject().HasMember("type"))
+    {
+        throw osrm::util::exception("Failed to parse time zone file. Feature geometry is missing type member.");
+    } else if (!feature["geometry"].GetObject()["type"].IsString()) {
+        throw osrm::util::exception("Failed to parse time zone file. Feature geometry has non-string type member.");
+    }
+    if (!feature["geometry"].GetObject().HasMember("coordinates"))
+    {
+        throw osrm::util::exception("Failed to parse time zone file. Feature geometry is missing coordinates member.");
+    } else if (!feature["geometry"].GetObject()["coordinates"].IsArray()) {
+        throw osrm::util::exception("Failed to parse time zone file. Feature geometry has a non-array coordinates member.");
+    }
+    const auto coord_array = feature["geometry"].GetObject()["coordinates"].GetArray();
+    if (coord_array.Empty())
+        throw osrm::util::exception("Failed to parse time zone file. Feature geometry coordinates member is empty.");
+    if (!coord_array[0].IsArray())
+        throw osrm::util::exception("Failed to parse time zone file. Feature geometry coordinates array has non-array outer ring.");
+}
+
+void Timezoner::LoadLocalTimesRTree(rapidjson::Document &geojson, std::time_t utc_time)
+{
+    if (!geojson.HasMember("type"))
+        throw osrm::util::exception("Failed to parse time zone file. Missing type member.");
+    if (!geojson["type"].IsString())
+        throw osrm::util::exception("Failed to parse time zone file. Missing string-based type member.");
+    if (!geojson.HasMember("features"))
+        throw osrm::util::exception("Failed to parse time zone file. Missing features list.");
 
     // Lambda function that returns local time in the tzname time zone
     // Thread safety: MT-Unsafe const:env
@@ -120,11 +152,11 @@ void Timezoner::LoadLocalTimesRTree(const std::string &tz_shapes_filename, std::
         return it->second;
     };
     BOOST_ASSERT(geojson["features"].IsArray());
-    const rapidjson::Value &features_array = geojson["features"].GetArray();
+    const auto &features_array = geojson["features"].GetArray();
     std::vector<rtree_t::value_type> polygons;
     for (rapidjson::SizeType i = 0; i < features_array.Size(); i++)
     {
-        ValidateFeature(features_array[i], tz_shapes_filename);
+        ValidateFeature(features_array[i]);
         const std::string &feat_type = features_array[i].GetObject()["geometry"].GetObject()["type"].GetString();
         if (feat_type == "polygon")
         {
@@ -137,7 +169,7 @@ void Timezoner::LoadLocalTimesRTree(const std::string &tz_shapes_filename, std::
                                           .GetArray();
             for (rapidjson::SizeType i = 0; i < coords_outer_array.Size(); ++i)
             {
-                // polygon.outer().emplace_back(object->padfX[vertex], object->padfY[vertex]);
+                ValidateCoordinate(coords_outer_array[i]);
                 const auto &coords = coords_outer_array[i].GetArray();
                 polygon.outer().emplace_back(coords[0].GetDouble(), coords[1].GetDouble());
             }
@@ -151,9 +183,10 @@ void Timezoner::LoadLocalTimesRTree(const std::string &tz_shapes_filename, std::
         }
         else
         {
-            util::Log() << "Skipping non-polygon shape in timezone file " + tz_shapes_filename;
+            util::Log(logDEBUG) << "Skipping non-polygon shape in timezone file";
         }
     }
+    util::Log() << "Parsed " << polygons.size() << "time zone polygons." << std::endl;
     // Create R-tree for collected shape polygons
     rtree = rtree_t(polygons);
 }

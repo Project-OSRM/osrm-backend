@@ -14,6 +14,10 @@ file(GLOB CustomizerTestsSources
     customizer_tests.cpp
     customizer/*.cpp)
 
+file(GLOB UpdaterTestsSources
+    updater_tests.cpp
+    updater/*.cpp)
+
 file(GLOB LibraryTestsSources
     library_tests.cpp
     library/*.cpp)
@@ -55,6 +59,11 @@ add_executable(customizer-tests
     ${CustomizerTestsSources}
     $<TARGET_OBJECTS:CUSTOMIZER> $<TARGET_OBJECTS:UPDATER> $<TARGET_OBJECTS:UTIL>)
 
+add_executable(updater-tests
+	EXCLUDE_FROM_ALL
+    ${UpdaterTestsSources}
+    $<TARGET_OBJECTS:UPDATER> $<TARGET_OBJECTS:UPDATER> $<TARGET_OBJECTS:UTIL>)
+
 add_executable(library-tests
 	EXCLUDE_FROM_ALL
 	${LibraryTestsSources})
@@ -82,6 +91,7 @@ if(NOT WIN32 AND NOT Boost_USE_STATIC_LIBS)
   add_definitions(-DBOOST_TEST_DYN_LINK)
 endif()
 
+set(UPDATER_TEST_DATA_DIR "${CMAKE_SOURCE_DIR}/unit_tests/updater")
 set(TEST_DATA_DIR "${CMAKE_SOURCE_DIR}/test/data")
 add_dependencies(library-tests osrm-extract osrm-contract osrm-partition)
 # We can't run this Makefile on windows
@@ -93,6 +103,7 @@ target_compile_definitions(extractor-tests PRIVATE COMPILE_DEFINITIONS OSRM_FIXT
 target_compile_definitions(library-tests PRIVATE COMPILE_DEFINITIONS OSRM_TEST_DATA_DIR="${TEST_DATA_DIR}")
 target_compile_definitions(library-extract-tests PRIVATE COMPILE_DEFINITIONS OSRM_TEST_DATA_DIR="${TEST_DATA_DIR}")
 target_compile_definitions(library-contract-tests PRIVATE COMPILE_DEFINITIONS OSRM_TEST_DATA_DIR="${TEST_DATA_DIR}")
+target_compile_definitions(updater-tests PRIVATE COMPILE_DEFINITIONS TEST_DATA_DIR="${UPDATER_TEST_DATA_DIR}")
 
 target_include_directories(engine-tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(library-tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
@@ -101,16 +112,18 @@ target_include_directories(library-contract-tests PUBLIC ${CMAKE_CURRENT_SOURCE_
 target_include_directories(util-tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(partition-tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(customizer-tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(updater-tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
-target_link_libraries(engine-tests ${ENGINE_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY} ${MAYBE_SHAPEFILE})
-target_link_libraries(extractor-tests ${EXTRACTOR_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY} ${MAYBE_SHAPEFILE})
-target_link_libraries(partition-tests ${PARTITIONER_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY} ${MAYBE_SHAPEFILE})
-target_link_libraries(customizer-tests ${CUSTOMIZER_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY} ${MAYBE_SHAPEFILE})
+target_link_libraries(engine-tests ${ENGINE_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+target_link_libraries(extractor-tests ${EXTRACTOR_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+target_link_libraries(partition-tests ${PARTITIONER_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+target_link_libraries(customizer-tests ${CUSTOMIZER_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+target_link_libraries(updater-tests ${UPDATER_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 target_link_libraries(library-tests osrm ${ENGINE_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 target_link_libraries(library-extract-tests osrm_extract ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 target_link_libraries(library-contract-tests osrm_contract ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
-target_link_libraries(server-tests osrm ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY} ${MAYBE_SHAPEFILE})
-target_link_libraries(util-tests ${UTIL_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY} ${MAYBE_SHAPEFILE})
+target_link_libraries(server-tests osrm ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+target_link_libraries(util-tests ${UTIL_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 
 add_custom_target(tests
-	DEPENDS engine-tests extractor-tests partition-tests customizer-tests library-tests library-extract-tests server-tests util-tests)
+	DEPENDS engine-tests extractor-tests partition-tests updater-tests customizer-tests library-tests library-extract-tests server-tests util-tests)
