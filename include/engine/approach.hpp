@@ -28,15 +28,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef OSRM_ENGINE_APPROACH_HPP
 #define OSRM_ENGINE_APPROACH_HPP
 
+#include <cstdint>
+
 namespace osrm
 {
 namespace engine
 {
 
-enum Approach
+enum class Approach : std::uint8_t
 {
-    CURB,
-    UNRESTRICTED
+    CURB = 0,
+    UNRESTRICTED = 1
 
 };
 }
