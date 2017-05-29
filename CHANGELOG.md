@@ -1,3 +1,8 @@
+# 5.7.3
+  - Changes from 5.7.2:
+   - Bug fixes:
+     - Fixes 4097: .ramIndex files was able to be truncated siliently
+
 # 5.7.2
   - Changes from 5.7.1:
    - Bug fixes:
