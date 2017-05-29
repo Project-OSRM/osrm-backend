@@ -26,8 +26,6 @@ using rtree_t =
     boost::geometry::index::rtree<std::pair<box_t, size_t>, boost::geometry::index::rstar<8>>;
 using local_time_t = std::pair<polygon_t, struct tm>;
 
-bool SupportsShapefiles();
-
 class Timezoner
 {
   public:

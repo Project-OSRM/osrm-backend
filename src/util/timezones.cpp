@@ -19,15 +19,6 @@ namespace osrm
 namespace updater
 {
 
-bool SupportsShapefiles()
-{
-#ifdef ENABLE_SHAPEFILE
-    return true;
-#else
-    return false;
-#endif
-}
-
 Timezoner::Timezoner(std::string tz_filename, std::time_t utc_time_now)
 {
     util::Log() << "Time zone validation based on UTC time : " << utc_time_now;
@@ -89,11 +80,12 @@ void Timezoner::ValidateFeature(const rapidjson::Value &feature, const std::stri
 void Timezoner::LoadLocalTimesRTree(const std::string &tz_shapes_filename, std::time_t utc_time)
 {
     if (tz_shapes_filename.empty())
-        return;
+        throw osrm::util::exception("Missing time zone geojson file");
     std::ifstream file(tz_shapes_filename.data());
     if (!file.is_open())
         throw osrm::util::exception("failed to open " + tz_shapes_filename);
 
+    util::Log() << "Parsing " + tz_shapes_filename;
     rapidjson::IStreamWrapper isw(file);
     rapidjson::Document geojson;
     geojson.ParseStream(isw);
@@ -137,7 +129,7 @@ void Timezoner::LoadLocalTimesRTree(const std::string &tz_shapes_filename, std::
         if (feat_type == "polygon")
         {
             polygon_t polygon;
-            // per geojson spec, the first array of polygon coords is the exterior ring
+            // per geojson spec, the first array of polygon coords is the exterior ring, we only want to access that
             auto coords_outer_array = features_array[i]
                                           .GetObject()["geometry"]
                                           .GetObject()["coordinates"]
