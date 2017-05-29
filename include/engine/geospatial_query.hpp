@@ -1,8 +1,8 @@
 #ifndef GEOSPATIAL_QUERY_HPP
 #define GEOSPATIAL_QUERY_HPP
 
-#include "engine/phantom_node.hpp"
 #include "engine/approach.hpp"
+#include "engine/phantom_node.hpp"
 #include "util/bearing.hpp"
 #include "util/coordinate_calculation.hpp"
 #include "util/rectangle.hpp"
@@ -56,15 +56,16 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
                                const double max_distance,
                                const engine::Approach approach) const
     {
-        auto results =
-            rtree.Nearest(input_coordinate,
-                          [this, approach, &input_coordinate](const CandidateSegment &segment) {
-                              return boolPairAnd(HasValidEdge(segment), approach_usage(input_coordinate, segment, approach));
-                          },
-                          [this, max_distance, input_coordinate](const std::size_t,
-                                                                 const CandidateSegment &segment) {
-                            return CheckSegmentDistance(input_coordinate, segment, max_distance);
-                          });
+        auto results = rtree.Nearest(
+            input_coordinate,
+            [this, approach, &input_coordinate](const CandidateSegment &segment) {
+                return boolPairAnd(HasValidEdge(segment),
+                                   approach_usage(input_coordinate, segment, approach));
+            },
+            [this, max_distance, input_coordinate](const std::size_t,
+                                                   const CandidateSegment &segment) {
+                return CheckSegmentDistance(input_coordinate, segment, max_distance);
+            });
 
         return MakePhantomNodes(input_coordinate, results);
     }
@@ -80,11 +81,12 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
     {
         auto results = rtree.Nearest(
             input_coordinate,
-            [this, approach, &input_coordinate, bearing, bearing_range, max_distance](const CandidateSegment &segment) {
-                auto use_direction = boolPairAnd(CheckSegmentBearing(segment, bearing, bearing_range),
-                          HasValidEdge(segment));
-                use_direction = boolPairAnd(use_direction,
-                                            approach_usage(input_coordinate, segment, approach));
+            [this, approach, &input_coordinate, bearing, bearing_range, max_distance](
+                const CandidateSegment &segment) {
+                auto use_direction = boolPairAnd(
+                    CheckSegmentBearing(segment, bearing, bearing_range), HasValidEdge(segment));
+                use_direction =
+                    boolPairAnd(use_direction, approach_usage(input_coordinate, segment, approach));
                 return use_direction;
             },
             [this, max_distance, input_coordinate](const std::size_t,
@@ -106,10 +108,12 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
     {
         auto results = rtree.Nearest(
             input_coordinate,
-            [this, approach, &input_coordinate, bearing, bearing_range](const CandidateSegment &segment) {
-                auto use_direction = boolPairAnd(CheckSegmentBearing(segment, bearing, bearing_range),
-                                   HasValidEdge(segment));
-                return boolPairAnd(use_direction, approach_usage(input_coordinate, segment, approach));
+            [this, approach, &input_coordinate, bearing, bearing_range](
+                const CandidateSegment &segment) {
+                auto use_direction = boolPairAnd(
+                    CheckSegmentBearing(segment, bearing, bearing_range), HasValidEdge(segment));
+                return boolPairAnd(use_direction,
+                                   approach_usage(input_coordinate, segment, approach));
             },
             [max_results](const std::size_t num_results, const CandidateSegment &) {
                 return num_results >= max_results;
@@ -131,10 +135,12 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
     {
         auto results = rtree.Nearest(
             input_coordinate,
-            [this, approach, &input_coordinate, bearing, bearing_range](const CandidateSegment &segment) {
-                auto use_direction = boolPairAnd(CheckSegmentBearing(segment, bearing, bearing_range),
-                                   HasValidEdge(segment));
-                return boolPairAnd(use_direction, approach_usage(input_coordinate, segment, approach));
+            [this, approach, &input_coordinate, bearing, bearing_range](
+                const CandidateSegment &segment) {
+                auto use_direction = boolPairAnd(
+                    CheckSegmentBearing(segment, bearing, bearing_range), HasValidEdge(segment));
+                return boolPairAnd(use_direction,
+                                   approach_usage(input_coordinate, segment, approach));
             },
             [this, max_distance, max_results, input_coordinate](const std::size_t num_results,
                                                                 const CandidateSegment &segment) {
@@ -152,14 +158,15 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
                         const unsigned max_results,
                         const engine::Approach approach) const
     {
-        auto results =
-            rtree.Nearest(input_coordinate,
-                          [this, approach, &input_coordinate](const CandidateSegment &segment) {
-                              return boolPairAnd(HasValidEdge(segment), approach_usage(input_coordinate, segment, approach));
-                          },
-                          [max_results](const std::size_t num_results, const CandidateSegment &) {
-                              return num_results >= max_results;
-                          });
+        auto results = rtree.Nearest(
+            input_coordinate,
+            [this, approach, &input_coordinate](const CandidateSegment &segment) {
+                return boolPairAnd(HasValidEdge(segment),
+                                   approach_usage(input_coordinate, segment, approach));
+            },
+            [max_results](const std::size_t num_results, const CandidateSegment &) {
+                return num_results >= max_results;
+            });
 
         return MakePhantomNodes(input_coordinate, results);
     }
@@ -172,16 +179,17 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
                         const double max_distance,
                         const engine::Approach approach) const
     {
-        auto results =
-            rtree.Nearest(input_coordinate,
-                          [this, approach, &input_coordinate](const CandidateSegment &segment) {
-                              return boolPairAnd(HasValidEdge(segment), approach_usage(input_coordinate, segment, approach));
-                          },
-                          [this, max_distance, max_results, input_coordinate](
-                              const std::size_t num_results, const CandidateSegment &segment) {
-                              return num_results >= max_results ||
-                                     CheckSegmentDistance(input_coordinate, segment, max_distance);
-                          });
+        auto results = rtree.Nearest(
+            input_coordinate,
+            [this, approach, &input_coordinate](const CandidateSegment &segment) {
+                return boolPairAnd(HasValidEdge(segment),
+                                   approach_usage(input_coordinate, segment, approach));
+            },
+            [this, max_distance, max_results, input_coordinate](const std::size_t num_results,
+                                                                const CandidateSegment &segment) {
+                return num_results >= max_results ||
+                       CheckSegmentDistance(input_coordinate, segment, max_distance);
+            });
 
         return MakePhantomNodes(input_coordinate, results);
     }
@@ -197,13 +205,15 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
         bool has_big_component = false;
         auto results = rtree.Nearest(
             input_coordinate,
-            [this, approach, &input_coordinate, &has_big_component, &has_small_component](const CandidateSegment &segment) {
+            [this, approach, &input_coordinate, &has_big_component, &has_small_component](
+                const CandidateSegment &segment) {
                 auto use_segment =
                     (!has_small_component || (!has_big_component && !IsTinyComponent(segment)));
                 auto use_directions = std::make_pair(use_segment, use_segment);
                 const auto valid_edges = HasValidEdge(segment);
                 use_directions = boolPairAnd(use_directions, valid_edges);
-                use_directions = boolPairAnd(use_directions, approach_usage(input_coordinate, segment, approach));
+                use_directions = boolPairAnd(use_directions,
+                                             approach_usage(input_coordinate, segment, approach));
 
                 if (use_directions.first || use_directions.second)
                 {
@@ -274,15 +284,23 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
 
     // Returns the nearest phantom node. If this phantom node is not from a big component
     // a second phantom node is return that is the nearest coordinate in a big component.
-    std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
-        const util::Coordinate input_coordinate, const int bearing, const int bearing_range, const engine::Approach approach) const
+    std::pair<PhantomNode, PhantomNode>
+    NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
+                                                      const int bearing,
+                                                      const int bearing_range,
+                                                      const engine::Approach approach) const
     {
         bool has_small_component = false;
         bool has_big_component = false;
         auto results = rtree.Nearest(
             input_coordinate,
-            [this, approach, &input_coordinate, bearing, bearing_range, &has_big_component, &has_small_component](
-                const CandidateSegment &segment) {
+            [this,
+             approach,
+             &input_coordinate,
+             bearing,
+             bearing_range,
+             &has_big_component,
+             &has_small_component](const CandidateSegment &segment) {
                 auto use_segment =
                     (!has_small_component || (!has_big_component && !IsTinyComponent(segment)));
                 auto use_directions = std::make_pair(use_segment, use_segment);
@@ -293,8 +311,8 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
                     use_directions =
                         boolPairAnd(CheckSegmentBearing(segment, bearing, bearing_range),
                                     HasValidEdge(segment));
-                    use_directions = boolPairAnd(use_directions,
-                                                 approach_usage(input_coordinate, segment, approach));
+                    use_directions = boolPairAnd(
+                        use_directions, approach_usage(input_coordinate, segment, approach));
 
                     if (use_directions.first || use_directions.second)
                     {
@@ -332,8 +350,13 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
         bool has_big_component = false;
         auto results = rtree.Nearest(
             input_coordinate,
-            [this, approach, &input_coordinate, bearing, bearing_range, &has_big_component, &has_small_component](
-                const CandidateSegment &segment) {
+            [this,
+             approach,
+             &input_coordinate,
+             bearing,
+             bearing_range,
+             &has_big_component,
+             &has_small_component](const CandidateSegment &segment) {
                 auto use_segment =
                     (!has_small_component || (!has_big_component && !IsTinyComponent(segment)));
                 auto use_directions = std::make_pair(use_segment, use_segment);
@@ -344,8 +367,8 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
                     use_directions =
                         boolPairAnd(CheckSegmentBearing(segment, bearing, bearing_range),
                                     HasValidEdge(segment));
-                    use_directions = boolPairAnd(use_directions,
-                                                 approach_usage(input_coordinate, segment, approach));
+                    use_directions = boolPairAnd(
+                        use_directions, approach_usage(input_coordinate, segment, approach));
 
                     if (use_directions.first || use_directions.second)
                     {
@@ -579,11 +602,11 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
     }
 
     std::pair<bool, bool> approach_usage(const util::Coordinate &input_coordinate,
-                             const CandidateSegment &segment,
-                             const engine::Approach approach) const
+                                         const CandidateSegment &segment,
+                                         const engine::Approach approach) const
     {
-        bool isOnewaySegment = !(segment.data.forward_segment_id.enabled &&
-                                  segment.data.reverse_segment_id.enabled);
+        bool isOnewaySegment =
+            !(segment.data.forward_segment_id.enabled && segment.data.reverse_segment_id.enabled);
         if (!isOnewaySegment && approach == CURB)
         {
             // Check the counter clockwise
@@ -596,7 +619,7 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
             bool input_coordinate_is_at_right = !util::coordinate_calculation::isCCW(
                 coordinates[segment.data.u], coordinates[segment.data.v], input_coordinate);
 
-            if(datafacade.IsLeftHandDriving())
+            if (datafacade.IsLeftHandDriving())
                 input_coordinate_is_at_right = !input_coordinate_is_at_right;
 
             return std::make_pair(input_coordinate_is_at_right, (!input_coordinate_is_at_right));

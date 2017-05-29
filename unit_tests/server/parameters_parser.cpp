@@ -400,7 +400,7 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
     BOOST_CHECK_EQUAL(result_17->annotations, true);
 
     std::vector<boost::optional<engine::Approach>> approaches_18 = {
-        boost::none, engine::Approach::CURB, engine::Approach::UNRESTRICTED,  engine::Approach::CURB,
+        boost::none, engine::Approach::CURB, engine::Approach::UNRESTRICTED, engine::Approach::CURB,
     };
     RouteParameters reference_18{false,
                                  false,
@@ -414,7 +414,8 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
                                  std::vector<boost::optional<engine::Bearing>>{},
                                  approaches_18};
 
-    auto result_18 = parseParameters<RouteParameters>("1,2;3,4;5,6;7,8?steps=false&approaches=;curb;unrestricted;curb");
+    auto result_18 = parseParameters<RouteParameters>(
+        "1,2;3,4;5,6;7,8?steps=false&approaches=;curb;unrestricted;curb");
     BOOST_CHECK(result_18);
     BOOST_CHECK_EQUAL(reference_18.steps, result_18->steps);
     BOOST_CHECK_EQUAL(reference_18.alternatives, result_18->alternatives);

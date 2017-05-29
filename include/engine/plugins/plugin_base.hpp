@@ -149,8 +149,8 @@ class BasePlugin
             }
             else
             {
-                phantom_nodes[i] =
-                    facade.NearestPhantomNodesInRange(parameters.coordinates[i], radiuses[i], approach);
+                phantom_nodes[i] = facade.NearestPhantomNodesInRange(
+                    parameters.coordinates[i], radiuses[i], approach);
             }
         }
 
@@ -212,13 +212,15 @@ class BasePlugin
             {
                 if (use_radiuses && parameters.radiuses[i])
                 {
-                    phantom_nodes[i] = facade.NearestPhantomNodes(
-                        parameters.coordinates[i], number_of_results, *parameters.radiuses[i], approach);
+                    phantom_nodes[i] = facade.NearestPhantomNodes(parameters.coordinates[i],
+                                                                  number_of_results,
+                                                                  *parameters.radiuses[i],
+                                                                  approach);
                 }
                 else
                 {
-                    phantom_nodes[i] =
-                        facade.NearestPhantomNodes(parameters.coordinates[i], number_of_results, approach);
+                    phantom_nodes[i] = facade.NearestPhantomNodes(
+                        parameters.coordinates[i], number_of_results, approach);
                 }
             }
 
@@ -275,8 +277,7 @@ class BasePlugin
                             parameters.coordinates[i],
                             parameters.bearings[i]->bearing,
                             parameters.bearings[i]->range,
-                            approach
-                                                                                );
+                            approach);
                 }
             }
             else

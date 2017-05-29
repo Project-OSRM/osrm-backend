@@ -3,8 +3,8 @@
 
 #include "nodejs/json_v8_renderer.hpp"
 
-#include "osrm/bearing.hpp"
 #include "osrm/approach.hpp"
+#include "osrm/bearing.hpp"
 #include "osrm/coordinate.hpp"
 #include "osrm/engine_config.hpp"
 #include "osrm/json_container.hpp"
@@ -332,7 +332,7 @@ inline bool argumentsToParameter(const Nan::FunctionCallbackInfo<v8::Value> &arg
             {
                 const Nan::Utf8String approach_utf8str(approach_raw);
                 std::string approach_str{*approach_utf8str,
-                  *approach_utf8str + approach_utf8str.length()};
+                                         *approach_utf8str + approach_utf8str.length()};
                 if (approach_str == "curb")
                 {
                     params->approaches.push_back(osrm::Approach::CURB);
@@ -344,7 +344,7 @@ inline bool argumentsToParameter(const Nan::FunctionCallbackInfo<v8::Value> &arg
                 else
                 {
                     Nan::ThrowError("'approach' param must be one of [curb, unrestricted]");
-                    return false; 
+                    return false;
                 }
             }
             else

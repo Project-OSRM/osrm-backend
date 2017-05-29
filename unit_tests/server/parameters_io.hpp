@@ -2,8 +2,8 @@
 #define OSRM_TEST_SERVER_PARAMETERS_IO
 
 #include "engine/api/route_parameters.hpp"
-#include "engine/bearing.hpp"
 #include "engine/approach.hpp"
+#include "engine/bearing.hpp"
 
 #include <ostream>
 
