@@ -1,6 +1,8 @@
 #include "util/indexed_data.hpp"
 #include "util/exception.hpp"
 
+#include <boost/filesystem.hpp>
+
 #include <boost/test/test_case_template.hpp>
 #include <boost/test/unit_test.hpp>
 
@@ -34,11 +36,18 @@ BOOST_AUTO_TEST_CASE(check_variable_group_block_bitops)
 template <typename IndexedData, typename Offsets, typename Data>
 void test_rw(const Offsets &offsets, const Data &data)
 {
-    std::stringstream sstr;
     IndexedData indexed_data;
-    indexed_data.write(sstr, offsets.begin(), offsets.end(), data.begin());
+    auto path = boost::filesystem::unique_path();
 
-    const std::string str = sstr.str();
+    {
+        storage::io::FileWriter writer(path, storage::io::FileWriter::HasNoFingerprint);
+        indexed_data.write(writer, offsets.begin(), offsets.end(), data.begin());
+    }
+
+    storage::io::FileReader reader(path, storage::io::FileReader::HasNoFingerprint);
+    auto length = reader.GetSize();
+    std::string str(length, '\0');
+    reader.ReadInto(const_cast<char *>(str.data()), length);
 
 #if 0
     std::cout << "\n" << typeid(IndexedData).name() << "\nsaved size = " << str.size() << "\n";
@@ -175,14 +184,21 @@ BOOST_AUTO_TEST_CASE(check_corrupted_memory)
 
 BOOST_AUTO_TEST_CASE(check_string_view)
 {
-    std::stringstream sstr;
+    auto path = boost::filesystem::unique_path();
     std::string name_data = "hellostringview";
     std::vector<std::uint32_t> name_offsets = {0, 5, 11, 15};
 
     IndexedData<VariableGroupBlock<16, StringView>> indexed_data;
-    indexed_data.write(sstr, name_offsets.begin(), name_offsets.end(), name_data.begin());
+    {
+        storage::io::FileWriter writer(path, storage::io::FileWriter::HasNoFingerprint);
+        indexed_data.write(writer, name_offsets.begin(), name_offsets.end(), name_data.begin());
+    }
 
-    const std::string str = sstr.str();
+    storage::io::FileReader reader(path, storage::io::FileReader::HasNoFingerprint);
+    auto length = reader.GetSize();
+    std::string str(length, '\0');
+    reader.ReadInto(const_cast<char *>(str.data()), length);
+
     indexed_data.reset(str.c_str(), str.c_str() + str.size());
 
     BOOST_CHECK_EQUAL(indexed_data.at(0), "hello");
