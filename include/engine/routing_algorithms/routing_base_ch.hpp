@@ -119,8 +119,8 @@ void routingStep(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm>
                  NodeID &middle_node_id,
                  EdgeWeight &upper_bound,
                  EdgeWeight min_edge_offset,
-                 const bool force_loop_forward,
-                 const bool force_loop_reverse)
+                 const bool /*force_loop_forward*/,
+                 const bool /*force_loop_reverse*/)
 {
     const NodeID node = forward_heap.DeleteMin();
     const EdgeWeight weight = forward_heap.GetKey(node);
@@ -130,34 +130,34 @@ void routingStep(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm>
         const EdgeWeight new_weight = reverse_heap.GetKey(node) + weight;
         if (new_weight < upper_bound)
         {
-        //     // if loops are forced, they are so at the source
-        //     if ((force_loop_forward && forward_heap.GetData(node).parent == node) ||
-        //         (force_loop_reverse && reverse_heap.GetData(node).parent == node) ||
-        //         // in this case we are looking at a bi-directional way where the source
-        //         // and target phantom are on the same edge based node
-        //         new_weight < 0)
-        //     {
-        //         // check whether there is a loop present at the node
-        //         for (const auto edge : facade.GetAdjacentEdgeRange(node))
-        //         {
-        //             const auto &data = facade.GetEdgeData(edge);
-        //             if (DIRECTION == FORWARD_DIRECTION ? data.forward : data.backward)
-        //             {
-        //                 const NodeID to = facade.GetTarget(edge);
-        //                 if (to == node)
-        //                 {
-        //                     const EdgeWeight edge_weight = data.weight;
-        //                     const EdgeWeight loop_weight = new_weight + edge_weight;
-        //                     if (loop_weight >= 0 && loop_weight < upper_bound)
-        //                     {
-        //                         middle_node_id = node;
-        //                         upper_bound = loop_weight;
-        //                     }
-        //                 }
-        //             }
-        //         }
-        //     }
-        //     else
+            //     // if loops are forced, they are so at the source
+            //     if ((force_loop_forward && forward_heap.GetData(node).parent == node) ||
+            //         (force_loop_reverse && reverse_heap.GetData(node).parent == node) ||
+            //         // in this case we are looking at a bi-directional way where the source
+            //         // and target phantom are on the same edge based node
+            //         new_weight < 0)
+            //     {
+            //         // check whether there is a loop present at the node
+            //         for (const auto edge : facade.GetAdjacentEdgeRange(node))
+            //         {
+            //             const auto &data = facade.GetEdgeData(edge);
+            //             if (DIRECTION == FORWARD_DIRECTION ? data.forward : data.backward)
+            //             {
+            //                 const NodeID to = facade.GetTarget(edge);
+            //                 if (to == node)
+            //                 {
+            //                     const EdgeWeight edge_weight = data.weight;
+            //                     const EdgeWeight loop_weight = new_weight + edge_weight;
+            //                     if (loop_weight >= 0 && loop_weight < upper_bound)
+            //                     {
+            //                         middle_node_id = node;
+            //                         upper_bound = loop_weight;
+            //                     }
+            //                 }
+            //             }
+            //         }
+            //     }
+            //     else
             {
                 BOOST_ASSERT(new_weight >= 0);
 
@@ -320,6 +320,23 @@ void unpackPath(const FacadeT &facade,
     annotatePath(facade, phantom_nodes, unpacked_nodes, unpacked_edges, unpacked_path);
 }
 
+template <typename Facade>
+EdgeWeight getEdgeInternalWeight(const Facade &facade, const NodeID start, const EdgeID edge_id)
+{
+    EdgeWeight weight = 0;
+    std::vector<NodeID> path = {start, facade.GetTarget(edge_id)};
+    unpackPath(facade,
+               path.begin(),
+               path.end(),
+               [&](std::pair<NodeID, NodeID> &edge, const auto &edge_id) {
+                   const auto &edge_data = facade.GetEdgeData(edge_id);
+                   weight += (edge.first == start)
+                                 ? facade.GetWeightPenaltyForEdgeID(edge_data.turn_id)
+                                 : edge_data.weight;
+               });
+    return weight;
+}
+
 /**
  * Unpacks a single edge (NodeID->NodeID) from the CH graph down to it's original non-shortcut
  * route.
@@ -420,6 +437,12 @@ void unpackPath(const FacadeT &facade,
                 std::vector<PathData> &unpacked_path)
 {
     return ch::unpackPath(facade, packed_path_begin, packed_path_end, phantom_nodes, unpacked_path);
+}
+
+template <typename Facade>
+EdgeWeight getEdgeInternalWeight(const Facade &facade, const NodeID start, const EdgeID edge_id)
+{
+    return ch::getEdgeInternalWeight(facade, start, edge_id);
 }
 
 } // namespace corech

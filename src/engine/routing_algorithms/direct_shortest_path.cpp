@@ -3,6 +3,7 @@
 #include "engine/routing_algorithms/routing_base.hpp"
 #include "engine/routing_algorithms/routing_base_ch.hpp"
 #include "engine/routing_algorithms/routing_base_mld.hpp"
+#include "engine/routing_algorithms/routing_init.hpp"
 
 namespace osrm
 {

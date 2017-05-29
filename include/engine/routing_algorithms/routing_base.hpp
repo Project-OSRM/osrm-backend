@@ -47,161 +47,6 @@ void insertSourceInHeap(SearchEngineData<ch::Algorithm>::ManyToManyQueryHeap &he
 void insertTargetInHeap(SearchEngineData<ch::Algorithm>::ManyToManyQueryHeap &heap,
                         const PhantomNode &phantom_node);
 
-template <typename Iterator> bool areSegmentsValid(Iterator first, const Iterator last)
-{
-    return std::find(first, last, INVALID_EDGE_WEIGHT) == last;
-}
-
-template <typename Iterator>
-typename Iterator::value_type
-sumSegmentValues(Iterator first, const Iterator last, float first_ratio, float last_ratio)
-{
-    if (first == last)
-        return typename Iterator::value_type{0};
-
-    // compute (s→next) + Σ(next→prev) + (prev→t)
-    // first--------s---------next-----...------prev-------t-------last
-    //   first_ratio                              last_ratio
-    auto prev = std::prev(last);
-    auto result = std::accumulate(first, prev, *prev * last_ratio - *first * first_ratio);
-    BOOST_ASSERT(result >= 0.);
-    return result;
-}
-
-template <typename Facade, typename Heap>
-auto insertNodesInHeaps(const Facade &facade,
-                        Heap &forward_heap,
-                        Heap &reverse_heap,
-                        const PhantomNodes &nodes)
-{
-    // TODO: generalize
-    const auto &source = nodes.source_phantom;
-    const auto &target = nodes.target_phantom;
-
-    //   0---1-s==2===3===4=t---5---6---end
-    const bool cross_forward = source.forward_segment_id.enabled &&
-                               target.forward_segment_id.enabled &&
-                               (source.forward_segment_id.id == target.forward_segment_id.id) &&
-                               !(std::tie(source.fwd_segment_position, source.fwd_segment_ratio) >
-                                 std::tie(target.fwd_segment_position, target.fwd_segment_ratio));
-
-    // end---6-t==5===4===3=s---2---1---0
-    const bool cross_reverse = source.reverse_segment_id.enabled &&
-                               target.reverse_segment_id.enabled &&
-                               (source.reverse_segment_id.id == target.reverse_segment_id.id) &&
-                               (std::tie(source.fwd_segment_position, source.fwd_segment_ratio) >
-                                std::tie(target.fwd_segment_position, target.fwd_segment_ratio));
-
-    if (source.forward_segment_id.enabled && !cross_forward)
-    { //   0---1---2---3---(4-s==)5===6===end
-        const auto node_id = source.forward_segment_id.id;
-        const auto geometry_index = facade.GetGeometryIndex(node_id);
-        const auto weights = facade.GetUncompressedForwardWeights(geometry_index.id);
-        if (areSegmentsValid(weights.begin() + source.fwd_segment_position, weights.end()))
-        {
-            forward_heap.InsertVisited(node_id, 0, node_id);
-            const auto weight = sumSegmentValues(weights.begin() + source.fwd_segment_position,
-                                                 weights.end(),
-                                                 source.fwd_segment_ratio,
-                                                 1.);
-            for (auto edge : facade.GetAdjacentEdgeRange(node_id))
-            {
-                const auto &edge_data = facade.GetEdgeData(edge);
-                if (edge_data.forward)
-                {
-                    forward_heap.Insert(facade.GetTarget(edge),
-                                        weight + facade.GetWeightPenaltyForEdgeID(edge_data.turn_id),
-                                        node_id);
-                }
-            }
-        }
-    }
-
-    if (source.reverse_segment_id.enabled && !cross_reverse)
-    { // end===6===5===4===3(=s--2)---1---0
-        const auto node_id = source.reverse_segment_id.id;
-        const auto geometry_index = facade.GetGeometryIndex(node_id);
-        const auto weights = facade.GetUncompressedReverseWeights(geometry_index.id);
-        if (areSegmentsValid(weights.end() - source.fwd_segment_position - 1, weights.end()))
-        {
-            forward_heap.InsertVisited(node_id, 0, node_id);
-            const auto weight = sumSegmentValues(weights.end() - source.fwd_segment_position - 1,
-                                                 weights.end(),
-                                                 1. - source.fwd_segment_ratio,
-                                                 1.);
-            for (auto edge : facade.GetAdjacentEdgeRange(node_id))
-            {
-                const auto &edge_data = facade.GetEdgeData(edge);
-                if (edge_data.forward)
-                {
-                    forward_heap.Insert(facade.GetTarget(edge),
-                                        weight + facade.GetWeightPenaltyForEdgeID(edge_data.turn_id),
-                                        node_id);
-                }
-            }
-        }
-    }
-
-    if (target.forward_segment_id.enabled && !cross_forward)
-    { //   0===1===2===3===(4=t--)5---6---end
-        const auto geometry_index = facade.GetGeometryIndex(target.forward_segment_id.id);
-        const auto weights = facade.GetUncompressedForwardWeights(geometry_index.id);
-        if (areSegmentsValid(weights.begin(), weights.begin() + target.fwd_segment_position + 1))
-        {
-            const auto weight = sumSegmentValues(weights.begin(),
-                                                 weights.begin() + target.fwd_segment_position + 1,
-                                                 0.,
-                                                 target.fwd_segment_ratio);
-            reverse_heap.Insert(target.forward_segment_id.id, weight, target.forward_segment_id.id);
-        }
-    }
-
-    if (target.reverse_segment_id.enabled && !cross_reverse)
-    { // end---6---5---4---3(-t==2)===1===0
-        const auto geometry_index = facade.GetGeometryIndex(target.reverse_segment_id.id);
-        const auto weights = facade.GetUncompressedReverseWeights(geometry_index.id);
-        if (areSegmentsValid(weights.begin(), weights.begin() + target.fwd_segment_position + 1))
-        {
-            const auto weight = sumSegmentValues(weights.begin(),
-                                                 weights.end() - target.fwd_segment_position,
-                                                 0.,
-                                                 1 - target.fwd_segment_ratio);
-            reverse_heap.Insert(target.reverse_segment_id.id, weight, target.reverse_segment_id.id);
-        }
-    }
-
-    std::pair<NodeID, EdgeWeight> cross_path{SPECIAL_NODEID, INVALID_EDGE_WEIGHT};
-    if (cross_forward)
-    { //   0---1-s==2===3===4=t---5---6---end
-        const auto geometry_index = facade.GetGeometryIndex(source.forward_segment_id.id);
-        const auto weights = facade.GetUncompressedForwardWeights(geometry_index.id);
-        const auto first = weights.begin() + source.fwd_segment_position;
-        const auto last = weights.begin() + target.fwd_segment_position + 1;
-
-        if (areSegmentsValid(first, last))
-        {
-            const auto weight =
-                sumSegmentValues(first, last, source.fwd_segment_ratio, target.fwd_segment_ratio);
-            cross_path = std::make_pair(source.forward_segment_id.id, weight);
-        }
-    }
-    else if (cross_reverse)
-    { // end---6-t==5===4===3=s---2---1---0
-        const auto geometry_index = facade.GetGeometryIndex(source.reverse_segment_id.id);
-        const auto weights = facade.GetUncompressedReverseWeights(geometry_index.id);
-        const auto first = weights.end() - source.fwd_segment_position - 1;
-        const auto last = weights.end() - target.fwd_segment_position;
-        if (areSegmentsValid(first, last))
-        {
-            const auto weight = sumSegmentValues(
-                first, last, 1. - source.fwd_segment_ratio, 1. - target.fwd_segment_ratio);
-            cross_path = std::make_pair(source.reverse_segment_id.id, weight);
-        }
-    }
-
-    return cross_path;
-}
-
 template <typename FacadeT>
 void annotatePath(const FacadeT &facade,
                   const PhantomNodes &phantom_node_pair,
@@ -345,18 +190,17 @@ void annotatePath(const FacadeT &facade,
     {
         BOOST_ASSERT(segment_idx < id_vector.size() - 1);
         BOOST_ASSERT(facade.GetTravelMode(target_node_id) > 0);
-        unpacked_path.push_back(
-            PathData{id_vector[segment_idx + 1],
-                     facade.GetNameIndex(target_node_id),
-                     weight_vector[segment_idx],
-                     duration_vector[segment_idx],
-                     extractor::guidance::TurnInstruction::NO_TURN(),
-                     {{0, INVALID_LANEID}, INVALID_LANE_DESCRIPTIONID},
-                     facade.GetTravelMode(target_node_id),
-                     INVALID_ENTRY_CLASSID,
-                     datasource_vector[segment_idx],
-                     util::guidance::TurnBearing(0),
-                     util::guidance::TurnBearing(0)});
+        unpacked_path.push_back(PathData{id_vector[segment_idx + 1],
+                                         facade.GetNameIndex(target_node_id),
+                                         weight_vector[segment_idx],
+                                         duration_vector[segment_idx],
+                                         extractor::guidance::TurnInstruction::NO_TURN(),
+                                         {{0, INVALID_LANEID}, INVALID_LANE_DESCRIPTIONID},
+                                         facade.GetTravelMode(target_node_id),
+                                         INVALID_ENTRY_CLASSID,
+                                         datasource_vector[segment_idx],
+                                         util::guidance::TurnBearing(0),
+                                         util::guidance::TurnBearing(0)});
     }
 
     if (unpacked_path.size() > 0)

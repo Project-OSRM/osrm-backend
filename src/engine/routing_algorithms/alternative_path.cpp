@@ -1,5 +1,6 @@
 #include "engine/routing_algorithms/alternative_path.hpp"
 #include "engine/routing_algorithms/routing_base_ch.hpp"
+#include "engine/routing_algorithms/routing_init.hpp"
 
 #include "util/integer_range.hpp"
 
