@@ -203,3 +203,8 @@ int main(int argc, char *argv[])
 
     util::Log() << "Total network distance: " << (total_network_length / 100 / 1000) << " km";
 }
+catch (const std::exception &e)
+{
+    osrm::util::SimpleLogger().Write(logWARNING) << "[exception] " << e.what();
+    return EXIT_FAILURE;
+}
