@@ -420,12 +420,14 @@ BOOST_AUTO_TEST_CASE(bearing_tests)
     }
 
     {
-        auto results = query.NearestPhantomNodesInRange(input, 11000, 270, 10, osrm::engine::UNRESTRICTED);
+        auto results =
+            query.NearestPhantomNodesInRange(input, 11000, 270, 10, osrm::engine::UNRESTRICTED);
         BOOST_CHECK_EQUAL(results.size(), 0);
     }
 
     {
-        auto results = query.NearestPhantomNodesInRange(input, 11000, 45, 10, osrm::engine::UNRESTRICTED);
+        auto results =
+            query.NearestPhantomNodesInRange(input, 11000, 45, 10, osrm::engine::UNRESTRICTED);
         BOOST_CHECK_EQUAL(results.size(), 2);
 
         BOOST_CHECK(results[0].phantom_node.forward_segment_id.enabled);

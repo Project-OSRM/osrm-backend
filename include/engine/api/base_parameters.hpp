@@ -28,9 +28,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef ENGINE_API_BASE_PARAMETERS_HPP
 #define ENGINE_API_BASE_PARAMETERS_HPP
 
+#include "engine/approach.hpp"
 #include "engine/bearing.hpp"
 #include "engine/hint.hpp"
-#include "engine/approach.hpp"
 #include "util/coordinate.hpp"
 
 #include <boost/optional.hpp>

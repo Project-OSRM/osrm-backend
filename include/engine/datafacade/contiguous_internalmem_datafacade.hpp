@@ -6,8 +6,8 @@
 #include "engine/datafacade/datafacade_base.hpp"
 
 #include "engine/algorithm.hpp"
-#include "engine/geospatial_query.hpp"
 #include "engine/approach.hpp"
+#include "engine/geospatial_query.hpp"
 
 #include "customizer/edge_based_graph.hpp"
 
@@ -656,7 +656,8 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     {
         BOOST_ASSERT(m_geospatial_query.get());
 
-        return m_geospatial_query->NearestPhantomNodesInRange(input_coordinate, max_distance, approach);
+        return m_geospatial_query->NearestPhantomNodesInRange(
+            input_coordinate, max_distance, approach);
     }
 
     std::vector<PhantomNodeWithDistance>
@@ -690,7 +691,8 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     {
         BOOST_ASSERT(m_geospatial_query.get());
 
-        return m_geospatial_query->NearestPhantomNodes(input_coordinate, max_results, max_distance, approach);
+        return m_geospatial_query->NearestPhantomNodes(
+            input_coordinate, max_results, max_distance, approach);
     }
 
     std::vector<PhantomNodeWithDistance>
@@ -720,9 +722,9 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
             input_coordinate, max_results, max_distance, bearing, bearing_range, approach);
     }
 
-    std::pair<PhantomNode, PhantomNode>
-    NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
-                                                      const engine::Approach approach) const override final
+    std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
+        const util::Coordinate input_coordinate,
+        const engine::Approach approach) const override final
     {
         BOOST_ASSERT(m_geospatial_query.get());
 
@@ -731,7 +733,9 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     }
 
     std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
-        const util::Coordinate input_coordinate, const double max_distance, const engine::Approach approach) const override final
+        const util::Coordinate input_coordinate,
+        const double max_distance,
+        const engine::Approach approach) const override final
     {
         BOOST_ASSERT(m_geospatial_query.get());
 
@@ -739,12 +743,12 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
             input_coordinate, max_distance, approach);
     }
 
-    std::pair<PhantomNode, PhantomNode>
-    NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
-                                                      const double max_distance,
-                                                      const int bearing,
-                                                      const int bearing_range,
-                                                      const engine::Approach approach) const override final
+    std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
+        const util::Coordinate input_coordinate,
+        const double max_distance,
+        const int bearing,
+        const int bearing_range,
+        const engine::Approach approach) const override final
     {
         BOOST_ASSERT(m_geospatial_query.get());
 
@@ -752,11 +756,11 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
             input_coordinate, max_distance, bearing, bearing_range, approach);
     }
 
-    std::pair<PhantomNode, PhantomNode>
-    NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
-                                                      const int bearing,
-                                                      const int bearing_range,
-                                                      const engine::Approach approach) const override final
+    std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
+        const util::Coordinate input_coordinate,
+        const int bearing,
+        const int bearing_range,
+        const engine::Approach approach) const override final
     {
         BOOST_ASSERT(m_geospatial_query.get());
 
@@ -894,7 +898,7 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
 
     bool IsLeftHandDriving() const override final
     {
-      return m_profile_properties->left_hand_driving;
+        return m_profile_properties->left_hand_driving;
     }
 };
 
