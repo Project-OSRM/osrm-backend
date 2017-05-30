@@ -816,3 +816,33 @@ Feature: Basic Roundabout
             |    1 | f  | abcda,df,df | depart,roundabout-exit-2,arrive |
             |    1 | g  | abcda,ag,ag | depart,roundabout-exit-3,arrive |
             |    1 | h  | abcda,bh,bh | depart,roundabout-exit-4,arrive |
+
+    Scenario: Collapsing a sliproad step after roundabouts
+        Given the node map
+            """
+                  a         r          j
+                ╱   ╲     ╱   ╲        │
+            e——b——1——d———s     u——f——g—h——l
+                ╲   ╱     ╲   ╱       `i
+                  c         t          │
+                  │         │          │
+                  m         v          k
+            """
+
+        And the ways
+            | nodes | highway  | junction   | oneway | #         |
+            | abcda | tertiary | roundabout |        | circle    |
+            | ebds  | tertiary |            |        | road      |
+            | cm    | tertiary |            |        |           |
+            | ds    | tertiary |            |        | road      |
+            | rstur | tertiary | roundabout |        | circle2   |
+            | ufghl | tertiary |            |        | road      |
+            | tv    | tertiary |            |        |           |
+            | gi    | tertiary |            | yes    | sliproad  |
+            | jhik  | tertiary |            |        | crossroad |
+
+
+        When I route I should get
+            | from | to | route                           | turns                                                                           | distance |
+            | e    | k  | ebds,ebds,ds,ufghl,gi,jhik,jhik | depart,rotary-exit-1,rotary-exit-1,rstur-exit-2,invalid right,turn right,arrive | 189.1m   |
+            | 1    | k  | ebds,ds,ufghl,gi,jhik,jhik      | depart,rotary-exit-1,rstur-exit-2,invalid right,turn right,arrive               | 159.1m   |
