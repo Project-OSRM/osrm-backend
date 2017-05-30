@@ -1,4 +1,5 @@
 #include "util/exception.hpp"
+#include "util/geojson_validation.hpp"
 #include "util/timezones.hpp"
 
 #include <boost/filesystem/path.hpp>
@@ -52,11 +53,5 @@ BOOST_AUTO_TEST_CASE(timezoner_test)
         "48.88277], [8.57757, 49.07206], [8.28369, "
         "49.07206], [8.28369, 48.88277]]] }} ]}";
     BOOST_CHECK_THROW(Timezoner tz(missing_featc, now), util::exception);
-
-    // missing features list
-    const char missing_features[] =
-        "{ \"type\" : \"FeatureCollection\", \"features\": null }";
-    BOOST_CHECK_THROW(Timezoner tz(missing_features, now), util::exception);
 }
-
 BOOST_AUTO_TEST_SUITE_END()

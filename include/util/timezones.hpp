@@ -37,8 +37,6 @@ class Timezoner
 
     struct tm operator()(const point_t &point) const;
   private:
-    void ValidateFeature(const rapidjson::Value &feature);
-    void ValidateCoordinate(const rapidjson::Value &coordinate);
     void LoadLocalTimesRTree(rapidjson::Document &geojson, std::time_t utc_time);
 
     struct tm default_time;
