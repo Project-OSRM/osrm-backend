@@ -1,5 +1,11 @@
 # 5.8.0
   - Changes from 5.7
+    - API:
+      - new parameter `approaches` for `route`, `table`, `trip` and `nearest` requests.  This parameter keep waypoints on the curb side.
+        'approaches' accepts both 'curb' and 'unrestricted' values.
+        Note : the curb side depend on the `ProfileProperties::left_hand_driving`, it's a global property set once by the profile. If you are working with a planet dataset, the api will be wrong in some countries, and right in others.
+    - NodeJs Bindings
+      - new parameter `approaches` for `route`, `table`, `trip` and `nearest` requests.
     - Features
       - Added conditional restriction support with `parse-conditional-restrictions=true|false` to osrm-extract. This option saves conditional turn restrictions to the .restrictions file for parsing by contract later. Added `parse-conditionals-from-now=utc time stamp` and `--time-zone-file=/path/to/file`  to osrm-contract
     - Files

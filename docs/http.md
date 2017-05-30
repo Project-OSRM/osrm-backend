@@ -30,6 +30,7 @@ To pass parameters to each location some options support an array like encoding:
 |radiuses        |`{radius};{radius}[;{radius} ...]`                      |Limits the search to given radius in meters.                                                           |
 |generate\_hints |`true` (default), `false`                               |Adds a Hint to the response which can be used in subsequent requests, see `hints` parameter.           |
 |hints           |`{hint};{hint}[;{hint} ...]`                            |Hint from previous request to derive position in street network.                                       |
+|approaches      |`{approach};{approach}[;{approach} ...]`                |Keep waypoints on curb side.                                                                           |
 
 Where the elements follow the following format:
 
@@ -38,6 +39,7 @@ Where the elements follow the following format:
 |bearing     |`{value},{range}` `integer 0 .. 360,integer 0 .. 180`   |
 |radius      |`double >= 0` or `unlimited` (default)                  |
 |hint        |Base64 `string`                                         |
+|approach    |`curb` or `unrestricted` (default)                      |
 
 ```
 {option}={element};{element}[;{element} ... ]
