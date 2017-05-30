@@ -498,3 +498,48 @@ test('route: throws on bad radiuses', function(assert) {
     }, function(err, route) {}) },
         /Radiuses array must have the same length as coordinates array/);
 });
+
+test('route: routes Monaco with valid approaches values', function(assert) {
+    assert.plan(3);
+    var osrm = new OSRM(monaco_path);
+    var options = {
+        coordinates: two_test_coordinates,
+        approaches: [null, 'curb']
+    };
+    osrm.route(options, function(err, route) {
+        assert.ifError(err);
+    });
+    options.approaches = [null, null];
+    osrm.route(options, function(err, route) {
+        assert.ifError(err);
+    });
+    options.approaches = ['unrestricted', null];
+    osrm.route(options, function(err, route) {
+        assert.ifError(err);
+    });
+});
+
+test('route: throws on bad approaches', function(assert) {
+    assert.plan(4);
+    var osrm = new OSRM(monaco_path);
+    assert.throws(function() { osrm.route({
+        coordinates: two_test_coordinates,
+        approaches: 10
+    }, function(err, route) {}) },
+        /Approaches must be an arrays of strings/);
+    assert.throws(function() { osrm.route({
+        coordinates: two_test_coordinates,
+        approaches: ['curb']
+    }, function(err, route) {}) },
+        /Approaches array must have the same length as coordinates array/);
+    assert.throws(function() { osrm.route({
+        coordinates: two_test_coordinates,
+        approaches: ['curb', 'test']
+    }, function(err, route) {}) },
+        /'approaches' param must be one of \[curb, unrestricted\]/);
+    assert.throws(function() { osrm.route({
+        coordinates: two_test_coordinates,
+        approaches: [10, 15]
+    }, function(err, route) {}) },
+        /Approach must be a string: \[curb, unrestricted\] or null/);
+});
