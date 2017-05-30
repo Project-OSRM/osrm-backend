@@ -1,11 +1,11 @@
-@routing @approach_param @testbot
+@routing @approach
 Feature: Approach parameter
 
     Background:
         Given the profile "car"
         And a grid size of 10 meters
 
-    Scenario: Testbot - Start End same approach, option unrestricted for Start and End
+    Scenario: Start End same approach, option unrestricted for Start and End
         Given the node map
             """
                s        e
@@ -21,7 +21,7 @@ Feature: Approach parameter
             | from | to | approaches                | route |
             | s    | e  | unrestricted unrestricted | ab,bc |
 
-    Scenario: Testbot - Start End same approach, option unrestricted for Start and curb for End
+    Scenario: Start End same approach, option unrestricted for Start and curb for End
         Given the node map
             """
                s        e
@@ -37,7 +37,7 @@ Feature: Approach parameter
             | from | to | approaches        | route    |
             | s    | e  | unrestricted curb | ab,bc,bc |
 
-    Scenario: Testbot - Start End opposite approach, option unrestricted for Start and End
+    Scenario: Start End opposite approach, option unrestricted for Start and End
         Given the node map
             """
                s
@@ -54,7 +54,7 @@ Feature: Approach parameter
             | from | to | approaches                | route |
             | s    | e  | unrestricted unrestricted | ab,bc |
 
-    Scenario: Testbot - Start End opposite approach, option unrestricted for Start and curb for End
+    Scenario: Start End opposite approach, option unrestricted for Start and curb for End
         Given the node map
             """
                s
@@ -76,7 +76,7 @@ Feature: Approach parameter
     ###############
 
 
-    Scenario: Testbot - Test on oneway segment, Start End same approach, option unrestricted for Start and End
+    Scenario: Test on oneway segment, Start End same approach, option unrestricted for Start and End
         Given the node map
             """
                s        e
@@ -92,7 +92,7 @@ Feature: Approach parameter
             | from | to | approaches                | route |
             | s    | e  | unrestricted unrestricted | ab,bc |
 
-    Scenario: Testbot - Test on oneway segment, Start End same approach, option unrestricted for Start and curb for End
+    Scenario: Test on oneway segment, Start End same approach, option unrestricted for Start and curb for End
         Given the node map
             """
                s        e
@@ -108,7 +108,7 @@ Feature: Approach parameter
             | from | to | approaches        | route    |
             | s    | e  | unrestricted curb | ab,bc |
 
-    Scenario: Testbot - Test on oneway segment, Start End opposite approach, option unrestricted for Start and End
+    Scenario: Test on oneway segment, Start End opposite approach, option unrestricted for Start and End
         Given the node map
             """
                s
@@ -125,7 +125,7 @@ Feature: Approach parameter
             | from | to | approaches                | route |
             | s    | e  | unrestricted unrestricted | ab,bc |
 
-    Scenario: Testbot - Test on oneway segment, Start End opposite approach, option unrestricted for Start and curb for End
+    Scenario: Test on oneway segment, Start End opposite approach, option unrestricted for Start and curb for End
         Given the node map
             """
                s
@@ -146,7 +146,7 @@ Feature: Approach parameter
     # UTurn Test #
     ##############
 
-    Scenario: Testbot - UTurn test, router can't found a route because uturn unauthorized on the segment selected
+    Scenario: UTurn test, router can't found a route because uturn unauthorized on the segment selected
         Given the node map
             """
                s        e
@@ -167,7 +167,7 @@ Feature: Approach parameter
             | s    | e  | unrestricted curb |       |
 
 
-    Scenario: Testbot - UTurn test, router can found a route because he can use the roundabout
+    Scenario: UTurn test, router can found a route because he can use the roundabout
         Given the node map
             """
                              h
