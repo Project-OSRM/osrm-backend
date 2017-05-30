@@ -47,6 +47,7 @@ Returns the fastest route between two or more coordinates while visiting the way
     -   `options.overview` **[String](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)** Add overview geometry either `full`, `simplified` according to highest zoom level it could be display on, or not at all (`false`). (optional, default `simplified`)
     -   `options.continue_straight` **[Boolean](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean)?** Forces the route to keep going straight at waypoints and don't do a uturn even if it would be faster. Default value depends on the profile.
                          `null`/`true`/`false`
+    -   `options.approaches` **[Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array)?** Keep waypoints on curb side. Can be `null` (unrestricted, default) or `curb`.
 -   `callback` **[Function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function)** 
 
 **Examples**
@@ -78,6 +79,7 @@ Note: `coordinates` in the general options only supports a single `{longitude},{
     -   `options.hints` **[Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array)?** Hints for the coordinate snapping. Array of base64 encoded strings.
     -   `options.number` **[Number](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number)** Number of nearest segments that should be returned.
         Must be an integer greater than or equal to `1`. (optional, default `1`)
+    -   `options.approaches` **[Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array)?** Keep waypoints on curb side. Can be `null` (unrestricted, default) or `curb`.
 -   `callback` **[Function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function)** 
 
 **Examples**
@@ -116,6 +118,7 @@ tables.
         location with given index as source. Default is to use all.
     -   `options.destinations` **[Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array)?** An array of `index` elements (`0 <= integer <
         #coordinates`) to use location with given index as destination. Default is to use all.
+    -   `options.approaches` **[Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array)?** Keep waypoints on curb side. Can be `null` (unrestricted, default) or `curb`.
 -   `callback` **[Function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function)** 
 
 **Examples**
@@ -254,6 +257,7 @@ Right now, the following combinations are possible:
     -   `options.roundtrip` **[Boolean](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean)** Return route is a roundtrip. (optional, default `true`)
     -   `options.source` **[String](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)** Return route starts at `any` or `first` coordinate. (optional, default `any`)
     -   `options.destination` **[String](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)** Return route ends at `any` or `last` coordinate. (optional, default `any`)
+    -   `options.approaches` **[Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array)?** Keep waypoints on curb side. Can be `null` (unrestricted, default) or `curb`.
 -   `callback` **[Function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function)** 
 
 **Examples**
