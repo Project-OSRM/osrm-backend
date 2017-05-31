@@ -53,7 +53,7 @@ double findTotalTurnAngle(const RouteStep &entry_step, const RouteStep &exit_ste
     // both angles are in the same direction, the total turn gets increased
     // 
     // a ---- b
-    //           \
+    //           \ 
     //              c
     //              |
     //              d
@@ -315,10 +315,21 @@ RouteSteps collapseTurnInstructions(RouteSteps steps)
         if (entersRoundabout(current_step->maneuver.instruction) ||
             staysOnRoundabout(current_step->maneuver.instruction))
         {
-            // Skip over all instructions within the roundabout
-            for (; current_step + 1 != steps.end(); ++current_step)
-                if (leavesRoundabout(current_step->maneuver.instruction))
-                    break;
+            // Skip over all instructions within the roundabout or check for
+            // special case from setUpRoundabout of a single Enter{Rotary,..} instruction
+            auto next_exit_or_enter =
+                std::find_if(current_step + 1, std::prev(steps.end()), [](const auto &step) {
+                    return leavesRoundabout(step.maneuver.instruction) ||
+                           entersRoundabout(step.maneuver.instruction);
+                });
+
+            bool is_touching_or_crossing_roundabout =
+                !leavesRoundabout(next_exit_or_enter->maneuver.instruction) &&
+                current_step->maneuver.exit == 1;
+
+            // If the instruction touches or crosses the roundabout then the current instruction
+            // is also an exit one otherwise move the current step to the corresponding exit
+            current_step = is_touching_or_crossing_roundabout ? current_step : next_exit_or_enter;
 
             // are we done for good?
             if (current_step + 1 == steps.end())
