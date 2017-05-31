@@ -843,6 +843,6 @@ Feature: Basic Roundabout
 
 
         When I route I should get
-            | from | to | route                           | turns                                                                           | distance |
-            | e    | k  | ebds,ebds,ds,ufghl,gi,jhik,jhik | depart,rotary-exit-1,rotary-exit-1,rstur-exit-2,invalid right,turn right,arrive | 189.1m   |
-            | 1    | k  | ebds,ds,ufghl,gi,jhik,jhik      | depart,rotary-exit-1,rstur-exit-2,invalid right,turn right,arrive               | 159.1m   |
+            | from | to | route                        | turns                                                             | distance |
+            | e    | k  | ebds,ebds,ds,ufghl,jhik,jhik | depart,rotary-exit-1,rotary-exit-1,rstur-exit-2,turn right,arrive | 189.1m   |
+            | 1    | k  | ebds,ds,ufghl,jhik,jhik      | depart,rotary-exit-1,rstur-exit-2,turn right,arrive               | 159.1m   |
