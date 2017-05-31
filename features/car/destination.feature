@@ -34,10 +34,10 @@ Feature: Car - Destination only, no passing through
     Scenario: Car - Destination only street
         Given the node map
             """
-            a       e
-              b c d
+            a         e
+               b c d
 
-            x       y
+            x         y
             """
 
         And the ways
