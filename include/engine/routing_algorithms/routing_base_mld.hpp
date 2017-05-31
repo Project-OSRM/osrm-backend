@@ -190,11 +190,6 @@ search(SearchEngineData<Algorithm> &engine_working_data,
        EdgeWeight weight_upper_bound,
        Args... args)
 {
-    if (forward_heap.Empty() || reverse_heap.Empty())
-    {
-        return std::make_tuple(INVALID_EDGE_WEIGHT, std::vector<NodeID>(), std::vector<EdgeID>());
-    }
-
     const auto &partition = facade.GetMultiLevelPartition();
 
     BOOST_ASSERT(!forward_heap.Empty() && forward_heap.MinKey() < INVALID_EDGE_WEIGHT);

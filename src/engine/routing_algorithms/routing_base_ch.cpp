@@ -83,20 +83,11 @@ void search(SearchEngineData<Algorithm> & /*engine_working_data*/,
             const PhantomNodes & /*phantom_nodes*/,
             const EdgeWeight weight_upper_bound)
 {
-    if (forward_heap.Empty() || reverse_heap.Empty())
-    {
-        weight = INVALID_EDGE_WEIGHT;
-        return;
-    }
-
     NodeID middle = SPECIAL_NODEID;
     weight = weight_upper_bound;
 
-    // get offset to account for offsets on phantom nodes on compressed edges
-    const auto min_edge_offset = std::min(0, forward_heap.MinKey());
-    BOOST_ASSERT(min_edge_offset <= 0);
-    // we only every insert negative offsets for nodes in the forward heap
-    BOOST_ASSERT(reverse_heap.MinKey() >= 0);
+    BOOST_ASSERT(forward_heap.Empty() || forward_heap.MinKey() >= 0);
+    BOOST_ASSERT(reverse_heap.Empty() || reverse_heap.MinKey() >= 0);
 
     // run two-Target Dijkstra routing step.
     while (0 < (forward_heap.Size() + reverse_heap.Size()))
@@ -108,7 +99,6 @@ void search(SearchEngineData<Algorithm> & /*engine_working_data*/,
                                            reverse_heap,
                                            middle,
                                            weight,
-                                           min_edge_offset,
                                            force_loop_forward,
                                            force_loop_reverse);
         }
@@ -119,7 +109,6 @@ void search(SearchEngineData<Algorithm> & /*engine_working_data*/,
                                            forward_heap,
                                            middle,
                                            weight,
-                                           min_edge_offset,
                                            force_loop_reverse,
                                            force_loop_forward);
         }
@@ -209,10 +198,8 @@ void search(SearchEngineData<Algorithm> &engine_working_data,
     std::vector<CoreEntryPoint> forward_entry_points;
     std::vector<CoreEntryPoint> reverse_entry_points;
 
-    // get offset to account for offsets on phantom nodes on compressed edges
-    const auto min_edge_offset = std::min(0, forward_heap.MinKey());
-    // we only every insert negative offsets for nodes in the forward heap
-    BOOST_ASSERT(reverse_heap.MinKey() >= 0);
+    BOOST_ASSERT(forward_heap.Empty() || forward_heap.MinKey() >= 0);
+    BOOST_ASSERT(reverse_heap.Empty() || reverse_heap.MinKey() >= 0);
 
     // run two-Target Dijkstra routing step.
     while (0 < (forward_heap.Size() + reverse_heap.Size()))
@@ -232,7 +219,6 @@ void search(SearchEngineData<Algorithm> &engine_working_data,
                                                    reverse_heap,
                                                    middle,
                                                    weight,
-                                                   min_edge_offset,
                                                    force_loop_forward,
                                                    force_loop_reverse);
             }
@@ -252,7 +238,6 @@ void search(SearchEngineData<Algorithm> &engine_working_data,
                                                    forward_heap,
                                                    middle,
                                                    weight,
-                                                   min_edge_offset,
                                                    force_loop_reverse,
                                                    force_loop_forward);
             }
@@ -283,18 +268,6 @@ void search(SearchEngineData<Algorithm> &engine_working_data,
         insertInCoreHeap(p, reverse_core_heap);
     }
 
-    // get offset to account for offsets on phantom nodes on compressed edges
-    EdgeWeight min_core_edge_offset = 0;
-    if (forward_core_heap.Size() > 0)
-    {
-        min_core_edge_offset = std::min(min_core_edge_offset, forward_core_heap.MinKey());
-    }
-    if (reverse_core_heap.Size() > 0 && reverse_core_heap.MinKey() < 0)
-    {
-        min_core_edge_offset = std::min(min_core_edge_offset, reverse_core_heap.MinKey());
-    }
-    BOOST_ASSERT(min_core_edge_offset <= 0);
-
     // run two-target Dijkstra routing step on core with termination criterion
     while (0 < forward_core_heap.Size() && 0 < reverse_core_heap.Size() &&
            weight > (forward_core_heap.MinKey() + reverse_core_heap.MinKey()))
@@ -304,7 +277,6 @@ void search(SearchEngineData<Algorithm> &engine_working_data,
                                                                  reverse_core_heap,
                                                                  middle,
                                                                  weight,
-                                                                 min_core_edge_offset,
                                                                  force_loop_forward,
                                                                  force_loop_reverse);
 
@@ -313,7 +285,6 @@ void search(SearchEngineData<Algorithm> &engine_working_data,
                                                                  forward_core_heap,
                                                                  middle,
                                                                  weight,
-                                                                 min_core_edge_offset,
                                                                  force_loop_reverse,
                                                                  force_loop_forward);
     }

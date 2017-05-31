@@ -81,35 +81,6 @@ void relaxOutgoingEdges(const datafacade::ContiguousInternalMemoryDataFacade<Alg
     }
 }
 
-/*
-min_edge_offset is needed in case we use multiple
-nodes as start/target nodes with different (even negative) offsets.
-In that case the termination criterion is not correct
-anymore.
-
-Example:
-forward heap: a(-100), b(0),
-reverse heap: c(0), d(100)
-
-a --- d
-  \ /
-  / \
-b --- c
-
-This is equivalent to running a bi-directional Dijkstra on the following graph:
-
-    a --- d
-   /  \ /  \
-  y    x    z
-   \  / \  /
-    b --- c
-
-The graph is constructed by inserting nodes y and z that are connected to the initial nodes
-using edges (y, a) with weight -100, (y, b) with weight 0 and,
-(d, z) with weight 100, (c, z) with weight 0 corresponding.
-Since we are dealing with a graph that contains _negative_ edges,
-we need to add an offset to the termination criterion.
-*/
 static constexpr bool ENABLE_STALLING = true;
 static constexpr bool DISABLE_STALLING = false;
 template <bool DIRECTION, bool STALLING = ENABLE_STALLING>
@@ -118,7 +89,6 @@ void routingStep(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm>
                  SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
                  NodeID &middle_node_id,
                  EdgeWeight &upper_bound,
-                 EdgeWeight min_edge_offset,
                  const bool /*force_loop_forward*/,
                  const bool /*force_loop_reverse*/)
 {
@@ -141,8 +111,7 @@ void routingStep(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm>
 
     // Make sure we don't terminate too early if we initialize the weight
     // for the nodes in the forward heap with the forward/reverse offset
-    BOOST_ASSERT(min_edge_offset <= 0);
-    if (weight + min_edge_offset > upper_bound)
+    if (weight > upper_bound)
     {
         return;
     }
