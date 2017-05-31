@@ -13,8 +13,8 @@ Feature: Car - Turn restrictions
     Scenario: Car - ignores unrecognized restriction
         Given the extract extra arguments "--parse-conditional-restrictions"
                                             # time stamp for 10am on Tues, 02 May 2017 GMT
-        Given the contract extra arguments "--parse-conditionals-from-now=1493719200"
-        Given the customize extra arguments "--parse-conditionals-from-now=1493719200"
+        Given the contract extra arguments "--time-zone-file=test/data/tz/guinea.geojson --parse-conditionals-from-now=1493719200"
+        Given the customize extra arguments "--time-zone-file=test/data/tz/guinea.geojson --parse-conditionals-from-now=1493719200"
         Given the node map
             """
               n
@@ -43,8 +43,8 @@ Feature: Car - Turn restrictions
     Scenario: Car - Restriction would be on, but the restriction was badly tagged
         Given the extract extra arguments "--parse-conditional-restrictions"
                                             # time stamp for 10am on Tues, 02 May 2017 GMT
-        Given the contract extra arguments "--parse-conditionals-from-now=1493719200"
-        Given the customize extra arguments "--parse-conditionals-from-now=1493719200"
+        Given the contract extra arguments "--time-zone-file=test/data/tz/guinea.geojson --parse-conditionals-from-now=1493719200"
+        Given the customize extra arguments "--time-zone-file=test/data/tz/guinea.geojson --parse-conditionals-from-now=1493719200"
 
         Given the node map
             """
@@ -76,8 +76,8 @@ Feature: Car - Turn restrictions
     Scenario: Car - ignores except restriction
         Given the extract extra arguments "--parse-conditional-restrictions"
                                             # time stamp for 10am on Tues, 02 May 2017 GMT
-        Given the contract extra arguments "--parse-conditionals-from-now=1493719200"
-        Given the customize extra arguments "--parse-conditionals-from-now=1493719200"
+        Given the contract extra arguments "--time-zone-file=test/data/tz/guinea.geojson --parse-conditionals-from-now=1493719200"
+        Given the customize extra arguments "--time-zone-file=test/data/tz/guinea.geojson --parse-conditionals-from-now=1493719200"
         Given the node map
             """
               n
@@ -108,8 +108,8 @@ Feature: Car - Turn restrictions
     Scenario: Car - only_right_turn
         Given the extract extra arguments "--parse-conditional-restrictions"
                                             # time stamp for 10am on Tues, 02 May 2017 GMT
-        Given the contract extra arguments "--parse-conditionals-from-now=1493719200"
-        Given the customize extra arguments "--parse-conditionals-from-now=1493719200"
+        Given the contract extra arguments "--time-zone-file=test/data/tz/guinea.geojson --parse-conditionals-from-now=1493719200"
+        Given the customize extra arguments "--time-zone-file=test/data/tz/guinea.geojson --parse-conditionals-from-now=1493719200"
         Given the node map
             """
               n
@@ -138,8 +138,8 @@ Feature: Car - Turn restrictions
     Scenario: Car - No right turn
         Given the extract extra arguments "--parse-conditional-restrictions"
                                             # time stamp for 10am on Tues, 02 May 2017 GMT
-        Given the contract extra arguments "--parse-conditionals-from-now=1493719200"
-        Given the customize extra arguments "--parse-conditionals-from-now=1493719200"
+        Given the contract extra arguments "--time-zone-file=test/data/tz/guinea.geojson --parse-conditionals-from-now=1493719200"
+        Given the customize extra arguments "--time-zone-file=test/data/tz/guinea.geojson --parse-conditionals-from-now=1493719200"
         Given the node map
             """
               n
@@ -168,8 +168,8 @@ Feature: Car - Turn restrictions
     Scenario: Car - only_left_turn
         Given the extract extra arguments "--parse-conditional-restrictions"
                                             # time stamp for 10am on Tues, 02 May 2017 GMT
-        Given the contract extra arguments "--parse-conditionals-from-now=1493719200"
-        Given the customize extra arguments "--parse-conditionals-from-now=1493719200"
+        Given the contract extra arguments "--time-zone-file=test/data/tz/guinea.geojson --parse-conditionals-from-now=1493719200"
+        Given the customize extra arguments "--time-zone-file=test/data/tz/guinea.geojson --parse-conditionals-from-now=1493719200"
         Given the node map
             """
               n
@@ -198,8 +198,8 @@ Feature: Car - Turn restrictions
     Scenario: Car - No left turn
         Given the extract extra arguments "--parse-conditional-restrictions"
                                             # time stamp for 10am on Tues, 02 May 2017 GMT
-        Given the contract extra arguments "--parse-conditionals-from-now=1493719200"
-        Given the customize extra arguments "--parse-conditionals-from-now=1493719200"
+        Given the contract extra arguments "--time-zone-file=test/data/tz/guinea.geojson --parse-conditionals-from-now=1493719200"
+        Given the customize extra arguments "--time-zone-file=test/data/tz/guinea.geojson --parse-conditionals-from-now=1493719200"
         Given the node map
             """
               n
@@ -228,8 +228,8 @@ Feature: Car - Turn restrictions
     Scenario: Car - Conditional restriction is off
         Given the extract extra arguments "--parse-conditional-restrictions"
                                             # time stamp for 10am on Tues, 02 May 2017 GMT
-        Given the contract extra arguments "--parse-conditionals-from-now=1493719200"
-        Given the customize extra arguments "--parse-conditionals-from-now=1493719200"
+        Given the contract extra arguments "--time-zone-file=test/data/tz/guinea.geojson --parse-conditionals-from-now=1493719200"
+        Given the customize extra arguments "--time-zone-file=test/data/tz/guinea.geojson --parse-conditionals-from-now=1493719200"
         Given the node map
             """
               n
@@ -258,8 +258,8 @@ Feature: Car - Turn restrictions
     Scenario: Car - Conditional restriction is on
         Given the extract extra arguments "--parse-conditional-restrictions"
         # 10am utc, wed
-        Given the contract extra arguments "--parse-conditionals-from-now=1493805600"
-        Given the customize extra arguments "--parse-conditionals-from-now=1493805600"
+        Given the contract extra arguments "--time-zone-file=test/data/tz/guinea.geojson --parse-conditionals-from-now=1493805600"
+        Given the customize extra arguments "--time-zone-file=test/data/tz/guinea.geojson --parse-conditionals-from-now=1493805600"
         Given the node map
             """
               n
@@ -288,8 +288,8 @@ Feature: Car - Turn restrictions
     Scenario: Car - Conditional restriction with multiple time windows
         Given the extract extra arguments "--parse-conditional-restrictions"
         # 5pm Wed 02 May, 2017 GMT
-        Given the contract extra arguments "--parse-conditionals-from-now=1493744400"
-        Given the customize extra arguments "--parse-conditionals-from-now=1493744400"
+        Given the contract extra arguments "--time-zone-file=test/data/tz/guinea.geojson --parse-conditionals-from-now=1493744400"
+        Given the customize extra arguments "--time-zone-file=test/data/tz/guinea.geojson --parse-conditionals-from-now=1493744400"
 
         Given the node map
             """
@@ -321,8 +321,8 @@ Feature: Car - Turn restrictions
     Scenario: Car - Somewhere in Liverpool, the UK, GMT timezone
         Given the extract extra arguments "--parse-conditional-restrictions=1"
         # 9am UTC, 10am BST
-        Given the contract extra arguments "--parse-conditionals-from-now=1493802000"
-        Given the customize extra arguments "--parse-conditionals-from-now=1493802000"
+        Given the contract extra arguments "--time-zone-file=test/data/tz/liverpool.geojson --parse-conditionals-from-now=1493802000"
+        Given the customize extra arguments "--time-zone-file=test/data/tz/liverpool.geojson --parse-conditionals-from-now=1493802000"
 
         #    """
         #     a
@@ -355,12 +355,12 @@ Feature: Car - Turn restrictions
             | a    | c  | albic,dobe,dobe,albic,albic | depart,turn left,continue uturn,turn left,arrive |
             | a    | e  | albic,dobe,dobe             | depart,turn left,arrive                          |
 
-    @shapelib @no_turning @conditionals
+    @no_turning @conditionals
     Scenario: Car - only_right_turn
         Given the extract extra arguments "--parse-conditional-restrictions"
                                             # time stamp for 10am on Tues, 02 May 2017 GMT
-        Given the contract extra arguments "--time-zone-file=test/data/tz/OGRGeoJSON.shp --parse-conditionals-from-now=1493719200"
-        Given the customize extra arguments "--time-zone-file=test/data/tz/OGRGeoJSON.shp --parse-conditionals-from-now=1493719200"
+        Given the contract extra arguments "--time-zone-file=test/data/tz/guinea.geojson --parse-conditionals-from-now=1493719200"
+        Given the customize extra arguments "--time-zone-file=test/data/tz/guinea.geojson --parse-conditionals-from-now=1493719200"
         Given the node map
             """
               n
@@ -385,12 +385,12 @@ Feature: Car - Turn restrictions
             | e    | n  | ej,nj,nj       |
             | e    | p  | ej,nj,nj,jp,jp |
 
-    @shapelib @no_turning @conditionals
+    @no_turning @conditionals
     Scenario: Car - No right turn
         Given the extract extra arguments "--parse-conditional-restrictions"
                                             # time stamp for 10am on Tues, 02 May 2017 GMT
-        Given the contract extra arguments "--time-zone-file=test/data/tz/OGRGeoJSON.shp --parse-conditionals-from-now=1493719200"
-        Given the customize extra arguments "--time-zone-file=test/data/tz/OGRGeoJSON.shp --parse-conditionals-from-now=1493719200"
+        Given the contract extra arguments "--time-zone-file=test/data/tz/guinea.geojson --parse-conditionals-from-now=1493719200"
+        Given the customize extra arguments "--time-zone-file=test/data/tz/guinea.geojson --parse-conditionals-from-now=1493719200"
         Given the node map
             """
               n
@@ -415,12 +415,12 @@ Feature: Car - Turn restrictions
             | e    | n  | ej,js,js,nj,nj | avoids right turn |
             | e    | p  | ej,jp,jp       | normal maneuver |
 
-    @shapelib @only_turning @conditionals
+    @only_turning @conditionals
     Scenario: Car - only_left_turn
         Given the extract extra arguments "--parse-conditional-restrictions"
                                             # time stamp for 10am on Tues, 02 May 2017 GMT
-        Given the contract extra arguments "--time-zone-file=test/data/tz/OGRGeoJSON.shp --parse-conditionals-from-now=1493719200"
-        Given the customize extra arguments "--time-zone-file=test/data/tz/OGRGeoJSON.shp --parse-conditionals-from-now=1493719200"
+        Given the contract extra arguments "--time-zone-file=test/data/tz/guinea.geojson --parse-conditionals-from-now=1493719200"
+        Given the customize extra arguments "--time-zone-file=test/data/tz/guinea.geojson --parse-conditionals-from-now=1493719200"
         Given the node map
             """
               n
@@ -445,12 +445,12 @@ Feature: Car - Turn restrictions
             | e    | n  | ej,js,js,nj,nj |
             | e    | p  | ej,js,js,jp,jp |
 
-    @shapelib @no_turning @conditionals
+    @no_turning @conditionals
     Scenario: Car - No left turn
         Given the extract extra arguments "--parse-conditional-restrictions"
                                             # time stamp for 10am on Tues, 02 May 2017 GMT
-        Given the contract extra arguments "--time-zone-file=test/data/tz/OGRGeoJSON.shp --parse-conditionals-from-now=1493719200"
-        Given the customize extra arguments "--time-zone-file=test/data/tz/OGRGeoJSON.shp --parse-conditionals-from-now=1493719200"
+        Given the contract extra arguments "--time-zone-file=test/data/tz/guinea.geojson --parse-conditionals-from-now=1493719200"
+        Given the customize extra arguments "--time-zone-file=test/data/tz/guinea.geojson --parse-conditionals-from-now=1493719200"
         Given the node map
             """
               n
@@ -475,12 +475,12 @@ Feature: Car - Turn restrictions
             | e    | n  | ej,nj,nj       |
             | e    | p  | ej,jp,jp       |
 
-    @shapelib @no_turning @conditionals
+    @no_turning @conditionals
     Scenario: Car - Conditional restriction is off
         Given the extract extra arguments "--parse-conditional-restrictions"
                                             # time stamp for 10am on Tues, 02 May 2017 GMT
-        Given the contract extra arguments "--time-zone-file=test/data/tz/OGRGeoJSON.shp --parse-conditionals-from-now=1493719200"
-        Given the customize extra arguments "--time-zone-file=test/data/tz/OGRGeoJSON.shp --parse-conditionals-from-now=1493719200"
+        Given the contract extra arguments "--time-zone-file=test/data/tz/guinea.geojson --parse-conditionals-from-now=1493719200"
+        Given the customize extra arguments "--time-zone-file=test/data/tz/guinea.geojson --parse-conditionals-from-now=1493719200"
         Given the node map
             """
               n
@@ -505,12 +505,12 @@ Feature: Car - Turn restrictions
             | e    | n  | ej,nj,nj |
             | e    | p  | ej,jp,jp |
 
-    @shapelib @no_turning @conditionals
+    @no_turning @conditionals
     Scenario: Car - Conditional restriction is on
         Given the extract extra arguments "--parse-conditional-restrictions"
         # 10am utc, wed
-        Given the contract extra arguments "--time-zone-file=test/data/tz/OGRGeoJSON.shp --parse-conditionals-from-now=1493805600"
-        Given the customize extra arguments "--time-zone-file=test/data/tz/OGRGeoJSON.shp --parse-conditionals-from-now=1493805600"
+        Given the contract extra arguments "--time-zone-file=test/data/tz/guinea.geojson --parse-conditionals-from-now=1493805600"
+        Given the customize extra arguments "--time-zone-file=test/data/tz/guinea.geojson --parse-conditionals-from-now=1493805600"
         Given the node map
             """
               n
@@ -535,12 +535,12 @@ Feature: Car - Turn restrictions
             | e    | n  | ej,js,js,nj,nj |
             | e    | p  | ej,jp,jp       |
 
-    @shapelib @no_turning @conditionals
+    @no_turning @conditionals
     Scenario: Car - Conditional restriction with multiple time windows
         Given the extract extra arguments "--parse-conditional-restrictions"
         # 5pm Wed 02 May, 2017 GMT
-        Given the contract extra arguments "--time-zone-file=test/data/tz/OGRGeoJSON.shp --parse-conditionals-from-now=1493744400"
-        Given the customize extra arguments "--time-zone-file=test/data/tz/OGRGeoJSON.shp --parse-conditionals-from-now=1493744400"
+        Given the contract extra arguments "--time-zone-file=test/data/tz/guinea.geojson --parse-conditionals-from-now=1493744400"
+        Given the customize extra arguments "--time-zone-file=test/data/tz/guinea.geojson --parse-conditionals-from-now=1493744400"
 
         Given the node map
             """
@@ -569,12 +569,12 @@ Feature: Car - Turn restrictions
             | m    | p  | mj,jp,jp       |
 
     # https://www.openstreetmap.org/#map=18/38.91099/-77.00888
-    @shapelib @no_turning @conditionals
+    @no_turning @conditionals
     Scenario: Car - DC North capitol situation, two on one off
         Given the extract extra arguments "--parse-conditional-restrictions=1"
         # 9pm Wed 02 May, 2017 UTC, 5pm EST
-        Given the contract extra arguments "--time-zone-file=test/data/tz/OGRGeoJSON.shp --parse-conditionals-from-now=1493845200"
-        Given the customize extra arguments "--time-zone-file=test/data/tz/OGRGeoJSON.shp --parse-conditionals-from-now=1493845200"
+        Given the contract extra arguments "--time-zone-file=test/data/tz/dc.geojson --parse-conditionals-from-now=1493845200"
+        Given the customize extra arguments "--time-zone-file=test/data/tz/dc.geojson --parse-conditionals-from-now=1493845200"
 
         #    """
         #      a h
@@ -616,12 +616,12 @@ Feature: Car - Turn restrictions
             | f    | d  | cap north,florida,florida nw               | depart,turn left,arrive                     |
             | e    | c  | florida ne,florida nw,cap south,cap south  | depart,continue uturn,turn right,arrive     |
 
-    @shapelib @no_turning @conditionals
+    @no_turning @conditionals
     Scenario: Car - DC North capitol situation, one on two off
         Given the extract extra arguments "--parse-conditional-restrictions=1"
         # 10:30am utc, wed, 6:30am est
-        Given the contract extra arguments "--time-zone-file=test/data/tz/OGRGeoJSON.shp --parse-conditionals-from-now=1493807400"
-        Given the customize extra arguments "--time-zone-file=test/data/tz/OGRGeoJSON.shp --parse-conditionals-from-now=1493807400"
+        Given the contract extra arguments "--time-zone-file=test/data/tz/dc.geojson --parse-conditionals-from-now=1493807400"
+        Given the customize extra arguments "--time-zone-file=test/data/tz/dc.geojson --parse-conditionals-from-now=1493807400"
 
         #    """
         #      a h
@@ -663,12 +663,12 @@ Feature: Car - Turn restrictions
             | f    | d  | cap north,florida ne,florida ne,florida nw | depart,turn sharp right,continue uturn,arrive |
             | e    | c  | florida ne,cap south,cap south             | depart,turn left,arrive                       |
 
-    @shapelib @only_turning @conditionals
+    @only_turning @conditionals
     Scenario: Car - Somewhere in Liverpool, the UK, GMT timezone
         Given the extract extra arguments "--parse-conditional-restrictions=1"
         # 9am UTC, 10am BST
-        Given the contract extra arguments "--time-zone-file=test/data/tz/OGRGeoJSON.shp --parse-conditionals-from-now=1493802000"
-        Given the customize extra arguments "--time-zone-file=test/data/tz/OGRGeoJSON.shp --parse-conditionals-from-now=1493802000"
+        Given the contract extra arguments "--time-zone-file=test/data/tz/liverpool.geojson --parse-conditionals-from-now=1493802000"
+        Given the customize extra arguments "--time-zone-file=test/data/tz/liverpool.geojson --parse-conditionals-from-now=1493802000"
 
         #    """
         #     a

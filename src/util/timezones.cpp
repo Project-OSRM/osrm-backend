@@ -97,6 +97,15 @@ void Timezoner::LoadLocalTimesRTree(rapidjson::Document &geojson, std::time_t ut
     for (rapidjson::SizeType i = 0; i < features_array.Size(); i++)
     {
         util::ValidateFeature(features_array[i]);
+        // time zone geojson specific checks
+        if (!features_array[i]["properties"].GetObject().HasMember("TZID") && !features_array[i]["properties"].GetObject().HasMember("tzid"))
+        {
+            throw osrm::util::exception("Feature is missing TZID member in properties.");
+        }
+        else if (!features_array[i]["properties"].GetObject()["tzid"].IsString())
+        {
+            throw osrm::util::exception("Feature has non-string TZID value.");
+        }
         const std::string &feat_type = features_array[i].GetObject()["geometry"].GetObject()["type"].GetString();
         if (feat_type == "polygon")
         {
@@ -141,7 +150,6 @@ struct tm Timezoner::operator()(const point_t &point) const
         if (boost::geometry::within(point, local_times[index].first))
             return local_times[index].second;
     }
-    return default_time;
 }
 }
 }
