@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+'use strict';
+
 const fs = require('fs');
 const http = require('http');
 const process = require('process');
@@ -7,12 +9,11 @@ const cla = require('command-line-args');
 const clu = require('command-line-usage');
 const ansi = require('ansi-escape-sequences');
 const turf = require('turf');
-const util = require('util');
 const jp = require('jsonpath');
 
 const run_query = (query_options, filters, callback) => {
     let tic = () => 0.;
-    let req = http.request(query_options, function (res) {
+    http.request(query_options, function (res) {
         let body = '', ttfb = tic();
         if (res.statusCode != 200)
             return callback(query_options.path, res.statusCode, ttfb);
@@ -27,12 +28,12 @@ const run_query = (query_options, filters, callback) => {
             Promise.all(filters.map(filter => jp.query(json, filter)))
                 .then(values => callback(query_options.path, res.statusCode, ttfb, elapsed, values));
         });
-    }).on('socket', function (res) {
+    }).on('socket', function (/*res*/) {
         tic = ((toc) => { return () => process.hrtime(toc)[1] / 1000000; })(process.hrtime());
     }).on('error', function (res) {
         callback(query_options.path, res.code);
     }).end();
-}
+};
 
 function generate_points(polygon, number) {
     let query_points = [];
