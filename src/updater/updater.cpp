@@ -868,7 +868,7 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
                           });
     }
 
-    if (update_turn_penalties)
+    if (update_turn_penalties || update_conditional_turns)
     {
         const auto save_penalties = [](const auto &filename, const auto &data) -> void {
             storage::io::FileWriter writer(filename, storage::io::FileWriter::GenerateFingerprint);
