@@ -24,7 +24,7 @@ namespace ch
 
 namespace
 {
-const double constexpr VIAPATH_ALPHA = 0.10;
+const double constexpr VIAPATH_ALPHA = 0.25;   // alternative is local optimum on 25% sub-paths
 const double constexpr VIAPATH_EPSILON = 0.15; // alternative at most 15% longer
 const double constexpr VIAPATH_GAMMA = 0.75;   // alternative shares at most 75% with the shortest.
 
@@ -398,8 +398,7 @@ bool viaNodeCandidatePassesTTest(
     {
         return false;
     }
-    const EdgeWeight T_threshold =
-        static_cast<EdgeWeight>(VIAPATH_EPSILON * weight_of_shortest_path);
+    const EdgeWeight T_threshold = static_cast<EdgeWeight>(VIAPATH_ALPHA * weight_of_shortest_path);
     EdgeWeight unpacked_until_weight = 0;
 
     std::stack<SearchSpaceEdge> unpack_stack;
@@ -732,7 +731,7 @@ alternativePathSearch(SearchEngineData<Algorithm> &engine_working_data,
             (approximated_sharing <= upper_bound_to_shortest_path_weight * VIAPATH_GAMMA);
         const bool stretch_passes =
             (approximated_weight - approximated_sharing) <
-            ((1. + VIAPATH_ALPHA) * (upper_bound_to_shortest_path_weight - approximated_sharing));
+            ((1. + VIAPATH_EPSILON) * (upper_bound_to_shortest_path_weight - approximated_sharing));
 
         if (weight_passes && sharing_passes && stretch_passes)
         {

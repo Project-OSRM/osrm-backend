@@ -55,8 +55,8 @@ Feature: Alternative route
 
         When I route I should get
             | from | to | route    | alternative       |
-            | b    | c  | bc,bc    |                   |
-            #| c    | b  | bc,bc    |                   | # alternative path depends on phantom snapping order
+            | b    | c  | bc,bc    | ab,ae,ef,fd,cd,cd |
+            #| c    | b  | bc,bc    | cd,fd,ef,ae,ab,ab | # alternative path depends on phantom snapping order
             | 1    | c  | ab,bc,bc | ab,ae,ef,fd,cd,cd |
             #| c    | 1  | bc,ab    | cd,fd,ef,ae,ab    | # alternative path depends on phantom snapping order
             | 2 | c | bc,bc          |                   |
