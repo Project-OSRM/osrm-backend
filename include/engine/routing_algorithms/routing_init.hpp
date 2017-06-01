@@ -25,9 +25,9 @@ void relaxSourceEdges(const Facade &facade, Heap &heap, const NodeID node, const
             const auto to_weight = weight + getEdgeInternalWeight(facade, node, edge);
             if (!heap.WasInserted(to))
             {
-                heap.Insert(facade.GetTarget(edge), to_weight, node);
+                heap.Insert(to, to_weight, node);
             }
-            else if (to_weight < heap.GetKey(to))
+            else if (!heap.WasRemoved(to) && to_weight < heap.GetKey(to))
             {
                 heap.GetData(to).parent = node;
                 heap.DecreaseKey(to, to_weight);
@@ -75,8 +75,8 @@ void insertForwardSourceNode(const Facade &facade,
     const auto last_segment = weights.end();
     if (areSegmentsValid(first_segment, last_segment))
     {
-        heap.InsertVisited(node_id, initial_weight, node_id);
         auto weight = sumSegmentValues(first_segment, last_segment, node.fwd_segment_ratio, 1.);
+        heap.InsertVisited(node_id, initial_weight + weight, node_id);
         detail::relaxSourceEdges(facade, heap, node_id, initial_weight + weight);
     }
 }
@@ -98,8 +98,8 @@ void insertReverseSourceNode(const Facade &facade,
     const auto last_segment = weights.end();
     if (areSegmentsValid(first_segment, last_segment))
     {
-        heap.InsertVisited(node_id, initial_weight, node_id);
         auto weight = sumSegmentValues(first_segment, last_segment, 1 - node.fwd_segment_ratio, 1.);
+        heap.InsertVisited(node_id, initial_weight + weight, node_id);
         detail::relaxSourceEdges(facade, heap, node_id, initial_weight + weight);
     }
 }

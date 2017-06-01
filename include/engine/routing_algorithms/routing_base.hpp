@@ -47,6 +47,16 @@ void insertSourceInHeap(SearchEngineData<ch::Algorithm>::ManyToManyQueryHeap &he
 void insertTargetInHeap(SearchEngineData<ch::Algorithm>::ManyToManyQueryHeap &heap,
                         const PhantomNode &phantom_node);
 
+template <typename Facade> EdgeWeight getNodeWeight(const Facade &facade, const NodeID node_id)
+{
+    const auto geometry_index = facade.GetGeometryIndex(node_id);
+    const auto weights = geometry_index.forward
+                             ? facade.GetUncompressedForwardWeights(geometry_index.id)
+                             : facade.GetUncompressedReverseWeights(geometry_index.id);
+    // TODO: assert that all segments are valid
+    return std::accumulate(weights.begin(), weights.end(), 0);
+}
+
 template <typename FacadeT>
 void annotatePath(const FacadeT &facade,
                   const PhantomNodes &phantom_node_pair,
