@@ -291,7 +291,7 @@ before_install:
   - CMAKE_URL="https://mason-binaries.s3.amazonaws.com/${TRAVIS_OS_NAME}-x86_64/cmake/${CMAKE_VERSION}.tar.gz"
   - CMAKE_DIR="mason_packages/${TRAVIS_OS_NAME}-x86_64/cmake/${CMAKE_VERSION}"
   - mkdir -p ${CMAKE_DIR}
-  - travis_retry wget --quiet -O - ${CMAKE_URL} | tar --strip-components=1 -xz -C ${CMAKE_DIR} || exit 1
+  - travis_retry wget --quiet -O - ${CMAKE_URL} | tar --strip-components=1 -xz -C ${CMAKE_DIR} || travis_terminate 1
   - export PATH=${CMAKE_DIR}/bin:${PATH}
   - ${MASON} install tbb 2017_20161128 && export LD_LIBRARY_PATH=$(${MASON} prefix tbb 2017_20161128)/lib/:${LD_LIBRARY_PATH}
   - ${MASON} install ccache ${CCACHE_VERSION} && export PATH=$(${MASON} prefix ccache ${CCACHE_VERSION})/bin:${PATH}
@@ -299,12 +299,12 @@ before_install:
     if [[ ! -z ${CLANG_VERSION} ]]; then
       export CCOMPILER='clang'
       export CXXCOMPILER='clang++'
-      ${MASON} install clang++ ${CLANG_VERSION} && export PATH=$(${MASON} prefix clang++ ${CLANG_VERSION})/bin:${PATH}
+      ${MASON} install clang++ ${CLANG_VERSION} && export PATH=$(${MASON} prefix clang++ ${CLANG_VERSION})/bin:${PATH} || travis_terminate 1
       # we only enable lto for release builds
       # and therefore don't need to us ld.gold or llvm tools for linking
       # for debug builds
       if [[ ${BUILD_TYPE} == 'Release' ]]; then
-        ${MASON} install binutils 2.27 && export PATH=$(${MASON} prefix binutils 2.27)/bin:${PATH}
+        ${MASON} install binutils 2.27 && export PATH=$(${MASON} prefix binutils 2.27)/bin:${PATH} || travis_terminate 1
       fi
     fi
   - ccache --max-size=256M  # limiting the cache's size to roughly the previous job's object sizes
