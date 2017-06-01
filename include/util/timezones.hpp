@@ -35,11 +35,10 @@ class Timezoner
     Timezoner(const char geojson[], std::time_t utc_time_now);
     Timezoner(const boost::filesystem::path &tz_shapes_filename, std::time_t utc_time_now);
 
-    struct tm operator()(const point_t &point) const;
+    boost::optional<struct tm> operator()(const point_t &point) const;
   private:
     void LoadLocalTimesRTree(rapidjson::Document &geojson, std::time_t utc_time);
 
-    struct tm default_time;
     rtree_t rtree;
     std::vector<local_time_t> local_times;
 };

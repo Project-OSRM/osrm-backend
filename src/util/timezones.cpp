@@ -6,12 +6,14 @@
 #include <boost/filesystem/fstream.hpp>
 #include <boost/filesystem/path.hpp>
 #include <boost/scope_exit.hpp>
+#include <boost/optional.hpp>
 
 #include "rapidjson/document.h"
 #include "rapidjson/istreamwrapper.h"
 
 #include <fstream>
 #include <string>
+#include <regex>
 #include <unordered_map>
 
 // Function loads time zone shape polygons, computes a zone local time for utc_time,
@@ -25,8 +27,6 @@ namespace updater
 Timezoner::Timezoner(const char geojson[], std::time_t utc_time_now)
 {
     util::Log() << "Time zone validation based on UTC time : " << utc_time_now;
-    // Thread safety: MT-Unsafe const:env
-    default_time = *gmtime(&utc_time_now);
     rapidjson::Document doc;
     rapidjson::ParseResult ok = doc.Parse(geojson);
     if (!ok)
@@ -41,8 +41,6 @@ Timezoner::Timezoner(const char geojson[], std::time_t utc_time_now)
 Timezoner::Timezoner(const boost::filesystem::path &tz_shapes_filename, std::time_t utc_time_now)
 {
     util::Log() << "Time zone validation based on UTC time : " << utc_time_now;
-    // Thread safety: MT-Unsafe const:env
-    default_time = *gmtime(&utc_time_now);
 
     if (tz_shapes_filename.empty())
         throw osrm::util::exception("Missing time zone geojson file");
@@ -107,7 +105,9 @@ void Timezoner::LoadLocalTimesRTree(rapidjson::Document &geojson, std::time_t ut
             throw osrm::util::exception("Feature has non-string TZID value.");
         }
         const std::string &feat_type = features_array[i].GetObject()["geometry"].GetObject()["type"].GetString();
-        if (feat_type == "polygon")
+        std::regex polygon_match("polygon", std::regex::icase);
+        std::smatch res;
+        if (std::regex_match(feat_type, res, polygon_match))
         {
             polygon_t polygon;
             // per geojson spec, the first array of polygon coords is the exterior ring, we only want to access that
@@ -127,7 +127,7 @@ void Timezoner::LoadLocalTimesRTree(rapidjson::Document &geojson, std::time_t ut
 
             // Get time zone name and emplace polygon and local time for the UTC input
             const auto tzname =
-                features_array[i].GetObject()["properties"].GetObject()["TZID"].GetString();
+                features_array[i].GetObject()["properties"].GetObject()["tzid"].GetString();
             local_times.push_back(local_time_t{polygon, get_local_time_in_tz(tzname)});
         }
         else
@@ -140,7 +140,7 @@ void Timezoner::LoadLocalTimesRTree(rapidjson::Document &geojson, std::time_t ut
     rtree = rtree_t(polygons);
 }
 
-struct tm Timezoner::operator()(const point_t &point) const
+boost::optional<struct tm> Timezoner::operator()(const point_t &point) const
 {
     std::vector<rtree_t::value_type> result;
     rtree.query(boost::geometry::index::intersects(point), std::back_inserter(result));
@@ -149,6 +149,7 @@ struct tm Timezoner::operator()(const point_t &point) const
         const auto index = v.second;
         if (boost::geometry::within(point, local_times[index].first))
             return local_times[index].second;
+
     }
 }
 }

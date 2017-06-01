@@ -318,11 +318,11 @@ Feature: Car - Turn restrictions
             | m    | p  | mj,jp,jp       |
 
     @only_turning @conditionals
-    Scenario: Car - Somewhere in Liverpool, the UK, GMT timezone
+    Scenario: Car - Somewhere in London, the UK, GMT timezone
         Given the extract extra arguments "--parse-conditional-restrictions=1"
         # 9am UTC, 10am BST
-        Given the contract extra arguments "--time-zone-file=test/data/tz/liverpool.geojson --parse-conditionals-from-now=1493802000"
-        Given the customize extra arguments "--time-zone-file=test/data/tz/liverpool.geojson --parse-conditionals-from-now=1493802000"
+        Given the contract extra arguments "--time-zone-file=test/data/tz/london.geojson --parse-conditionals-from-now=1493802000"
+        Given the customize extra arguments "--time-zone-file=test/data/tz/london.geojson --parse-conditionals-from-now=1493802000"
 
         #    """
         #     a
@@ -664,11 +664,11 @@ Feature: Car - Turn restrictions
             | e    | c  | florida ne,cap south,cap south             | depart,turn left,arrive                       |
 
     @only_turning @conditionals
-    Scenario: Car - Somewhere in Liverpool, the UK, GMT timezone
+    Scenario: Car - Somewhere in london, the UK, GMT timezone
         Given the extract extra arguments "--parse-conditional-restrictions=1"
         # 9am UTC, 10am BST
-        Given the contract extra arguments "--time-zone-file=test/data/tz/liverpool.geojson --parse-conditionals-from-now=1493802000"
-        Given the customize extra arguments "--time-zone-file=test/data/tz/liverpool.geojson --parse-conditionals-from-now=1493802000"
+        Given the contract extra arguments "--time-zone-file=test/data/tz/london.geojson --parse-conditionals-from-now=1493802000"
+        Given the customize extra arguments "--time-zone-file=test/data/tz/london.geojson --parse-conditionals-from-now=1493802000"
 
         #    """
         #     a

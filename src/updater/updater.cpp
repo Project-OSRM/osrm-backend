@@ -487,6 +487,8 @@ bool IsRestrictionValid(const Timezoner &tz_handler,
 
     // Get local time of the restriction
     const auto &local_time = tz_handler(point_t{lon, lat});
+    if (!local_time)
+        return false;
 
     // TODO: check restriction type [:<transportation mode>][:<direction>]
     // http://wiki.openstreetmap.org/wiki/Conditional_restrictions#Tagging
@@ -494,7 +496,7 @@ bool IsRestrictionValid(const Timezoner &tz_handler,
     // TODO: parsing will fail for combined conditions, e.g. Sa-Su AND weight>7
     // http://wiki.openstreetmap.org/wiki/Conditional_restrictions#Combined_conditions:_AND
 
-    if (osrm::util::CheckOpeningHours(condition, local_time))
+    if (osrm::util::CheckOpeningHours(condition, *local_time))
         return true;
 
     return false;
