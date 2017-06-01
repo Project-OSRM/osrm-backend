@@ -134,7 +134,7 @@ Feature: Turn Lane Guidance
             | a    | c  | 180,180 180,180 | in,straight,straight | depart,new name straight,arrive | ,left;uturn:false straight;right:true, | a,b,c     |
             | a    | d  | 180,180 180,180 | in,right,right       | depart,turn right,arrive        | ,left;uturn:false straight;right:true, | a,b,d     |
             | a    | e  | 180,180 180,180 | in,left,left         | depart,turn left,arrive         | ,left;uturn:true straight;right:false, | a,b,e     |
-            | 1    | a  | 90,2 270,2      | in,in,in             | depart,turn uturn,arrive        | ,left;uturn:true straight;right:false, | _,b,a     |
+            | 1    | a  | 90,2 270,2      | in,in,in             | depart,continue uturn,arrive    | ,left;uturn:true straight;right:false, | _,b,a     |
 
 
     #this next test requires decision on how to announce lanes for going straight if there is no turn
@@ -629,7 +629,7 @@ Feature: Turn Lane Guidance
         When I route I should get
             | waypoints | route                  | turns                           | lanes                                                           |
             | a,f       | road,left,left         | depart,turn left,arrive         | ,left:true left:true left:true straight:false straight:false,   |
-            | a,e       | road,road,road         | depart,turn uturn,arrive        | ,left:true left:false left:false straight:false straight:false, |
+            | a,e       | road,road,road         | depart,continue uturn,arrive    | ,left:true left:false left:false straight:false straight:false, |
             | a,g       | road,straight,straight | depart,new name straight,arrive | ,left:false left:false left:false straight:true straight:true,  |
 
     @todo @roundabout

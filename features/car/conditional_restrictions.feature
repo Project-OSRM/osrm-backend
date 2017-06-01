@@ -351,9 +351,9 @@ Feature: Car - Turn restrictions
             | restriction | ab        | be      | b        | only_left_turn @ (Mo-Fr 07:00-11:00)  |
 
         When I route I should get
-            | from | to | route                       | turns                                        |
-            | a    | c  | albic,dobe,dobe,albic,albic | depart,turn left,turn uturn,turn left,arrive |
-            | a    | e  | albic,dobe,dobe             | depart,turn left,arrive                      |
+            | from | to | route                       | turns                                            |
+            | a    | c  | albic,dobe,dobe,albic,albic | depart,turn left,continue uturn,turn left,arrive |
+            | a    | e  | albic,dobe,dobe             | depart,turn left,arrive                          |
 
     @shapelib @no_turning @conditionals
     Scenario: Car - only_right_turn
@@ -611,10 +611,10 @@ Feature: Car - Turn restrictions
             | restriction | bg        | bc      | b        | no_left_turn @ (Mo-Fr 07:00-09:30,16:00-18:30) |
 
         When I route I should get
-            | from | to | route                                      | turns                                   |
-            | a    | e  | cap south,florida nw,florida nw,florida ne | depart,turn right,turn uturn,arrive     |
-            | f    | d  | cap north,florida,florida nw               | depart,turn left,arrive                 |
-            | e    | c  | florida ne,florida nw,cap south,cap south  | depart,continue uturn,turn right,arrive |
+            | from | to | route                                      | turns                                       |
+            | a    | e  | cap south,florida nw,florida nw,florida ne | depart,turn right,continue uturn,arrive     |
+            | f    | d  | cap north,florida,florida nw               | depart,turn left,arrive                     |
+            | e    | c  | florida ne,florida nw,cap south,cap south  | depart,continue uturn,turn right,arrive     |
 
     @shapelib @no_turning @conditionals
     Scenario: Car - DC North capitol situation, one on two off
@@ -658,10 +658,10 @@ Feature: Car - Turn restrictions
             | restriction | bg        | bc      | b        | no_left_turn @ (Mo-Fr 07:00-09:30,16:00-18:30) |
 
         When I route I should get
-            | from | to | route                                      | turns                                     |
-            | a    | e  | cap south,florida,florida ne               | depart,turn left,arrive                   |
-            | f    | d  | cap north,florida ne,florida ne,florida nw | depart,turn sharp right,turn uturn,arrive |
-            | e    | c  | florida ne,cap south,cap south             | depart,turn left,arrive                   |
+            | from | to | route                                      | turns                                         |
+            | a    | e  | cap south,florida,florida ne               | depart,turn left,arrive                       |
+            | f    | d  | cap north,florida ne,florida ne,florida nw | depart,turn sharp right,continue uturn,arrive |
+            | e    | c  | florida ne,cap south,cap south             | depart,turn left,arrive                       |
 
     @shapelib @only_turning @conditionals
     Scenario: Car - Somewhere in Liverpool, the UK, GMT timezone
@@ -697,6 +697,6 @@ Feature: Car - Turn restrictions
             | restriction | ab        | be      | b        | only_left_turn @ (Mo-Fr 07:00-11:00)  |
 
         When I route I should get
-            | from | to | route                       | turns                                        |
-            | a    | c  | albic,dobe,dobe,albic,albic | depart,turn left,turn uturn,turn left,arrive |
-            | a    | e  | albic,dobe,dobe             | depart,turn left,arrive                      |
+            | from | to | route                       | turns                                            |
+            | a    | c  | albic,dobe,dobe,albic,albic | depart,turn left,continue uturn,turn left,arrive |
+            | a    | e  | albic,dobe,dobe             | depart,turn left,arrive                          |

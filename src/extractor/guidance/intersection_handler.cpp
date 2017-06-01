@@ -85,7 +85,7 @@ TurnInstruction IntersectionHandler::getInstructionForObvious(const std::size_t 
 
     if (angularDeviation(road.angle, 0) < 0.01)
     {
-        return {TurnType::Turn, DirectionModifier::UTurn};
+        return {TurnType::Continue, DirectionModifier::UTurn};
     }
     if (type == TurnType::Turn)
     {

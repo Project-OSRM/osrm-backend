@@ -239,7 +239,7 @@ Intersection triviallyMatchLanesToTurns(Intersection intersection,
                 road_index = 2;
             }
             intersection[u_turn].entry_allowed = true;
-            intersection[u_turn].instruction.type = TurnType::Turn;
+            intersection[u_turn].instruction.type = TurnType::Continue;
             intersection[u_turn].instruction.direction_modifier = DirectionModifier::UTurn;
 
             matchRoad(intersection[u_turn], lane_data.back());
@@ -283,7 +283,7 @@ Intersection triviallyMatchLanesToTurns(Intersection intersection,
             u_turn = intersection.size() - 1;
         }
         intersection[u_turn].entry_allowed = true;
-        intersection[u_turn].instruction.type = TurnType::Turn;
+        intersection[u_turn].instruction.type = TurnType::Continue;
         intersection[u_turn].instruction.direction_modifier = DirectionModifier::UTurn;
 
         matchRoad(intersection[u_turn], lane_data.back());
