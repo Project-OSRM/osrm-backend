@@ -59,119 +59,272 @@ sumSegmentValues(Iterator first, const Iterator last, float first_ratio, float l
 }
 
 template <typename Facade, typename Heap>
+void insertForwardSourceNode(const Facade &facade,
+                             Heap &heap,
+                             const PhantomNode &node,
+                             const EdgeWeight initial_weight)
+{ // Insert source node in forward direction into a forward heap
+    // For the weights vector of the phantom node and fwd_segment_position = 4:
+    //   0---1---2---3---(4-s==)5===6===end
+    //      first_segment ^              ^ last_segment
+    // source.fwd_segment_ratio = distance(4→s) / distance(4→5)
+    const auto node_id = node.forward_segment_id.id;
+    const auto geometry_index = facade.GetGeometryIndex(node_id);
+    const auto weights = facade.GetUncompressedForwardWeights(geometry_index.id);
+    const auto first_segment = weights.begin() + node.fwd_segment_position;
+    const auto last_segment = weights.end();
+    if (areSegmentsValid(first_segment, last_segment))
+    {
+        heap.InsertVisited(node_id, initial_weight, node_id);
+        auto weight = sumSegmentValues(first_segment, last_segment, node.fwd_segment_ratio, 1.);
+        detail::relaxSourceEdges(facade, heap, node_id, initial_weight + weight);
+    }
+}
+
+template <typename Facade, typename Heap>
+void insertReverseSourceNode(const Facade &facade,
+                             Heap &heap,
+                             const PhantomNode &node,
+                             const EdgeWeight initial_weight)
+{ // Insert source node in reverse direction into a forward heap
+    // For the weights vector of the phantom node and fwd_segment_position = 4:
+    // end===6===5===4===3(=s--2)---1---0
+    //  ^ last_segment         ^ first_segment
+    // source.fwd_segment_ratio = distance(s→3) / distance(2→3)
+    const auto node_id = node.reverse_segment_id.id;
+    const auto geometry_index = facade.GetGeometryIndex(node_id);
+    const auto weights = facade.GetUncompressedReverseWeights(geometry_index.id);
+    const auto first_segment = weights.end() - node.fwd_segment_position - 1;
+    const auto last_segment = weights.end();
+    if (areSegmentsValid(first_segment, last_segment))
+    {
+        heap.InsertVisited(node_id, initial_weight, node_id);
+        auto weight = sumSegmentValues(first_segment, last_segment, 1 - node.fwd_segment_ratio, 1.);
+        detail::relaxSourceEdges(facade, heap, node_id, initial_weight + weight);
+    }
+}
+
+template <typename Facade, typename Heap>
+void insertForwardTargetNode(const Facade &facade,
+                             Heap &heap,
+                             const PhantomNode &node,
+                             const EdgeWeight initial_weight)
+{ // Insert target node in forward direction into a backward heap
+    // For the weights vector of the phantom node and fwd_segment_position = 4:
+    //   0===1===2===3===(4=t--)5---6---end
+    //   ^ first_segment        ^ last_segment
+    // target.fwd_segment_ratio = distance(4→t) / distance(4→5)
+    const auto node_id = node.forward_segment_id.id;
+    const auto geometry_index = facade.GetGeometryIndex(node_id);
+    const auto weights = facade.GetUncompressedForwardWeights(geometry_index.id);
+    const auto first_segment = weights.begin();
+    const auto last_segment = weights.begin() + node.fwd_segment_position + 1;
+    if (areSegmentsValid(first_segment, last_segment))
+    {
+        auto weight = sumSegmentValues(first_segment, last_segment, 0., node.fwd_segment_ratio);
+        heap.Insert(node_id, initial_weight + weight, node_id);
+    }
+}
+
+template <typename Facade, typename Heap>
+void insertReverseTargetNode(const Facade &facade,
+                             Heap &heap,
+                             const PhantomNode &node,
+                             const EdgeWeight initial_weight)
+{ // Insert target node in forward direction into a backward heap
+    // For the weights vector of the phantom node and fwd_segment_position = 4:
+    // end---6---5---4---3(-t==2)===1===0
+    //      last_segment ^              ^ first_segment
+    // target.fwd_segment_ratio = distance(t→3) / distance(2→3)
+    const auto node_id = node.reverse_segment_id.id;
+    const auto geometry_index = facade.GetGeometryIndex(node_id);
+    const auto weights = facade.GetUncompressedReverseWeights(geometry_index.id);
+    const auto first_segment = weights.begin();
+    const auto last_segment = weights.end() - node.fwd_segment_position;
+    if (areSegmentsValid(first_segment, last_segment))
+    {
+        auto weight = sumSegmentValues(first_segment, last_segment, 0., 1 - node.fwd_segment_ratio);
+        heap.Insert(node_id, initial_weight + weight, node_id);
+    }
+}
+
+inline bool nodesOverlapInForwardDirection(const PhantomNode &source, const PhantomNode &target)
+{ // Check if source and target phantom nodes overlap in forward direction as
+    //   0---1-s==2===3===4=t---5---6---end
+    return source.forward_segment_id.enabled && target.forward_segment_id.enabled &&
+           (source.forward_segment_id.id == target.forward_segment_id.id) &&
+           !(std::tie(source.fwd_segment_position, source.fwd_segment_ratio) >
+             std::tie(target.fwd_segment_position, target.fwd_segment_ratio));
+}
+
+inline bool nodesOverlapInReverseDirection(const PhantomNode &source, const PhantomNode &target)
+{ // Check if source and target phantom nodes overlap in reverse direction as
+    // end---6-t==5===4===3=s---2---1---0
+    return source.reverse_segment_id.enabled && target.reverse_segment_id.enabled &&
+           (source.reverse_segment_id.id == target.reverse_segment_id.id) &&
+           (std::tie(source.fwd_segment_position, source.fwd_segment_ratio) >
+            std::tie(target.fwd_segment_position, target.fwd_segment_ratio));
+}
+
+template <typename Facade>
+auto getForwardSingleNodePath(const Facade &facade,
+                              const PhantomNode &source,
+                              const PhantomNode &target)
+{ // Compute a single node path case in forward direction
+    // for source.fwd_segment_position = 1 and target.fwd_segment_position = 4
+    //   0---1-s==2===3===4=t---5---6---end
+    //   ^ first_segment        ^ last_segment
+    const auto node_id = source.forward_segment_id.id;
+    const auto geometry_index = facade.GetGeometryIndex(node_id);
+    const auto weights = facade.GetUncompressedForwardWeights(geometry_index.id);
+    const auto first_segment = weights.begin() + source.fwd_segment_position;
+    const auto last_segment = weights.begin() + target.fwd_segment_position + 1;
+    if (areSegmentsValid(first_segment, last_segment))
+    {
+        const auto weight = sumSegmentValues(
+            first_segment, last_segment, source.fwd_segment_ratio, target.fwd_segment_ratio);
+        return std::make_pair(node_id, weight);
+    }
+    return std::pair<NodeID, EdgeWeight>{SPECIAL_NODEID, INVALID_EDGE_WEIGHT};
+}
+
+template <typename Facade>
+auto getReverseSingleNodePath(const Facade &facade,
+                              const PhantomNode &source,
+                              const PhantomNode &target)
+{ // Compute a single node path case in reverse direction
+    // for source.fwd_segment_position = 4 and target.fwd_segment_position = 1
+    // end---6-t==5===4===3=s---2---1---0
+    //       ^ last_segment     ^ first_segment
+    const auto node_id = source.reverse_segment_id.id;
+    const auto geometry_index = facade.GetGeometryIndex(node_id);
+    const auto weights = facade.GetUncompressedReverseWeights(geometry_index.id);
+    const auto first_segment = weights.end() - source.fwd_segment_position - 1;
+    const auto last_segment = weights.end() - target.fwd_segment_position;
+    if (areSegmentsValid(first_segment, last_segment))
+    {
+        const auto weight = sumSegmentValues(first_segment,
+                                             last_segment,
+                                             1. - source.fwd_segment_ratio,
+                                             1. - target.fwd_segment_ratio);
+        return std::make_pair(node_id, weight);
+    }
+    return std::pair<NodeID, EdgeWeight>{SPECIAL_NODEID, INVALID_EDGE_WEIGHT};
+}
+
+template <typename Facade, typename Heap>
 auto insertNodesInHeaps(const Facade &facade,
                         Heap &forward_heap,
                         Heap &reverse_heap,
                         const PhantomNodes &nodes)
 {
-    // TODO: generalize
     const auto &source = nodes.source_phantom;
     const auto &target = nodes.target_phantom;
-
-    //   0---1-s==2===3===4=t---5---6---end
-    const bool cross_forward = source.forward_segment_id.enabled &&
-                               target.forward_segment_id.enabled &&
-                               (source.forward_segment_id.id == target.forward_segment_id.id) &&
-                               !(std::tie(source.fwd_segment_position, source.fwd_segment_ratio) >
-                                 std::tie(target.fwd_segment_position, target.fwd_segment_ratio));
-
-    // end---6-t==5===4===3=s---2---1---0
-    const bool cross_reverse = source.reverse_segment_id.enabled &&
-                               target.reverse_segment_id.enabled &&
-                               (source.reverse_segment_id.id == target.reverse_segment_id.id) &&
-                               (std::tie(source.fwd_segment_position, source.fwd_segment_ratio) >
-                                std::tie(target.fwd_segment_position, target.fwd_segment_ratio));
+    const bool cross_forward = nodesOverlapInForwardDirection(source, target);
+    const bool cross_reverse = nodesOverlapInReverseDirection(source, target);
 
     if (source.forward_segment_id.enabled && !cross_forward)
-    { //   0---1---2---3---(4-s==)5===6===end
-        const auto node_id = source.forward_segment_id.id;
-        const auto geometry_index = facade.GetGeometryIndex(node_id);
-        const auto weights = facade.GetUncompressedForwardWeights(geometry_index.id);
-        if (areSegmentsValid(weights.begin() + source.fwd_segment_position, weights.end()))
-        {
-            forward_heap.InsertVisited(node_id, 0, node_id);
-            const auto weight = sumSegmentValues(weights.begin() + source.fwd_segment_position,
-                                                 weights.end(),
-                                                 source.fwd_segment_ratio,
-                                                 1.);
-            detail::relaxSourceEdges(facade, forward_heap, node_id, weight);
-        }
+    {
+        insertForwardSourceNode(facade, forward_heap, source, 0);
     }
 
     if (source.reverse_segment_id.enabled && !cross_reverse)
-    { // end===6===5===4===3(=s--2)---1---0
-        const auto node_id = source.reverse_segment_id.id;
-        const auto geometry_index = facade.GetGeometryIndex(node_id);
-        const auto weights = facade.GetUncompressedReverseWeights(geometry_index.id);
-        if (areSegmentsValid(weights.end() - source.fwd_segment_position - 1, weights.end()))
-        {
-            forward_heap.InsertVisited(node_id, 0, node_id);
-            const auto weight = sumSegmentValues(weights.end() - source.fwd_segment_position - 1,
-                                                 weights.end(),
-                                                 1. - source.fwd_segment_ratio,
-                                                 1.);
-            detail::relaxSourceEdges(facade, forward_heap, node_id, weight);
-        }
+    {
+        insertReverseSourceNode(facade, forward_heap, source, 0);
     }
 
     if (target.forward_segment_id.enabled && !cross_forward)
-    { //   0===1===2===3===(4=t--)5---6---end
-        const auto geometry_index = facade.GetGeometryIndex(target.forward_segment_id.id);
-        const auto weights = facade.GetUncompressedForwardWeights(geometry_index.id);
-        if (areSegmentsValid(weights.begin(), weights.begin() + target.fwd_segment_position + 1))
-        {
-            const auto weight = sumSegmentValues(weights.begin(),
-                                                 weights.begin() + target.fwd_segment_position + 1,
-                                                 0.,
-                                                 target.fwd_segment_ratio);
-            reverse_heap.Insert(target.forward_segment_id.id, weight, target.forward_segment_id.id);
-        }
+    {
+        insertForwardTargetNode(facade, reverse_heap, target, 0);
     }
 
     if (target.reverse_segment_id.enabled && !cross_reverse)
-    { // end---6---5---4---3(-t==2)===1===0
-        const auto geometry_index = facade.GetGeometryIndex(target.reverse_segment_id.id);
-        const auto weights = facade.GetUncompressedReverseWeights(geometry_index.id);
-        if (areSegmentsValid(weights.begin(), weights.begin() + target.fwd_segment_position + 1))
-        {
-            const auto weight = sumSegmentValues(weights.begin(),
-                                                 weights.end() - target.fwd_segment_position,
-                                                 0.,
-                                                 1 - target.fwd_segment_ratio);
-            reverse_heap.Insert(target.reverse_segment_id.id, weight, target.reverse_segment_id.id);
-        }
+    {
+        insertReverseTargetNode(facade, reverse_heap, target, 0);
     }
 
-    std::pair<NodeID, EdgeWeight> cross_path{SPECIAL_NODEID, INVALID_EDGE_WEIGHT};
     if (cross_forward)
-    { //   0---1-s==2===3===4=t---5---6---end
-        const auto geometry_index = facade.GetGeometryIndex(source.forward_segment_id.id);
-        const auto weights = facade.GetUncompressedForwardWeights(geometry_index.id);
-        const auto first = weights.begin() + source.fwd_segment_position;
-        const auto last = weights.begin() + target.fwd_segment_position + 1;
-
-        if (areSegmentsValid(first, last))
-        {
-            const auto weight =
-                sumSegmentValues(first, last, source.fwd_segment_ratio, target.fwd_segment_ratio);
-            cross_path = std::make_pair(source.forward_segment_id.id, weight);
-        }
+    {
+        return getForwardSingleNodePath(facade, source, target);
     }
     else if (cross_reverse)
-    { // end---6-t==5===4===3=s---2---1---0
-        const auto geometry_index = facade.GetGeometryIndex(source.reverse_segment_id.id);
-        const auto weights = facade.GetUncompressedReverseWeights(geometry_index.id);
-        const auto first = weights.end() - source.fwd_segment_position - 1;
-        const auto last = weights.end() - target.fwd_segment_position;
-        if (areSegmentsValid(first, last))
-        {
-            const auto weight = sumSegmentValues(
-                first, last, 1. - source.fwd_segment_ratio, 1. - target.fwd_segment_ratio);
-            cross_path = std::make_pair(source.reverse_segment_id.id, weight);
-        }
+    {
+        return getReverseSingleNodePath(facade, source, target);
     }
 
-    return cross_path;
+    return std::pair<NodeID, EdgeWeight>{SPECIAL_NODEID, INVALID_EDGE_WEIGHT};
+}
+
+template <typename Facade, typename Heap>
+auto insertNodesInHeapsToForwardTarget(const Facade &facade,
+                                       Heap &forward_heap,
+                                       Heap &reverse_heap,
+                                       const PhantomNode &source,
+                                       const PhantomNode &target,
+                                       EdgeWeight weight_to_forward_source,
+                                       EdgeWeight weight_to_reverse_source)
+{
+    const bool forward_valid = weight_to_forward_source != INVALID_EDGE_WEIGHT;
+    const bool reverse_valid = weight_to_reverse_source != INVALID_EDGE_WEIGHT;
+    const bool cross_forward = nodesOverlapInForwardDirection(source, target) && forward_valid;
+
+    if (source.forward_segment_id.enabled && forward_valid && !cross_forward)
+    {
+        insertForwardSourceNode(facade, forward_heap, source, weight_to_forward_source);
+    }
+
+    if (source.reverse_segment_id.enabled && reverse_valid)
+    {
+        insertReverseSourceNode(facade, forward_heap, source, weight_to_reverse_source);
+    }
+
+    if (target.forward_segment_id.enabled && !cross_forward)
+    {
+        insertForwardTargetNode(facade, reverse_heap, target, 0);
+    }
+
+    if (cross_forward)
+    {
+        return getForwardSingleNodePath(facade, source, target);
+    }
+
+    return std::pair<NodeID, EdgeWeight>{SPECIAL_NODEID, INVALID_EDGE_WEIGHT};
+}
+
+template <typename Facade, typename Heap>
+auto insertNodesInHeapsToReverseTarget(const Facade &facade,
+                                       Heap &forward_heap,
+                                       Heap &reverse_heap,
+                                       const PhantomNode &source,
+                                       const PhantomNode &target,
+                                       EdgeWeight weight_to_forward_source,
+                                       EdgeWeight weight_to_reverse_source)
+{
+    const bool forward_valid = weight_to_forward_source != INVALID_EDGE_WEIGHT;
+    const bool reverse_valid = weight_to_reverse_source != INVALID_EDGE_WEIGHT;
+    const bool cross_reverse = nodesOverlapInReverseDirection(source, target) && reverse_valid;
+
+    if (source.forward_segment_id.enabled && forward_valid)
+    {
+        insertForwardSourceNode(facade, forward_heap, source, weight_to_forward_source);
+    }
+
+    if (source.reverse_segment_id.enabled && reverse_valid && !cross_reverse)
+    {
+        insertReverseSourceNode(facade, forward_heap, source, weight_to_reverse_source);
+    }
+
+    if (target.reverse_segment_id.enabled && !cross_reverse)
+    {
+        insertReverseTargetNode(facade, reverse_heap, target, 0);
+    }
+
+    if (cross_reverse)
+    {
+        return getReverseSingleNodePath(facade, source, target);
+    }
+
+    return std::pair<NodeID, EdgeWeight>{SPECIAL_NODEID, INVALID_EDGE_WEIGHT};
 }
 
 } // namespace routing_algorithms

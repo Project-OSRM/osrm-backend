@@ -1,6 +1,7 @@
 #include "engine/routing_algorithms/shortest_path.hpp"
 #include "engine/routing_algorithms/routing_base_ch.hpp"
 #include "engine/routing_algorithms/routing_base_mld.hpp"
+#include "engine/routing_algorithms/routing_init.hpp"
 
 #include <boost/assert.hpp>
 #include <boost/optional.hpp>
@@ -109,28 +110,22 @@ void search(SearchEngineData<Algorithm> &engine_working_data,
             std::vector<NodeID> &leg_packed_path_forward,
             std::vector<NodeID> &leg_packed_path_reverse)
 {
+    auto weight_to_forward =
+        search_from_forward_node ? total_weight_to_forward : INVALID_EDGE_WEIGHT;
+    auto weight_to_reverse =
+        search_from_reverse_node ? total_weight_to_reverse : INVALID_EDGE_WEIGHT;
+
     if (search_to_forward_node)
     {
         forward_heap.Clear();
         reverse_heap.Clear();
-        reverse_heap.Insert(target_phantom.forward_segment_id.id,
-                            target_phantom.GetForwardWeightPlusOffset(),
-                            target_phantom.forward_segment_id.id);
-
-        if (search_from_forward_node)
-        {
-            forward_heap.Insert(source_phantom.forward_segment_id.id,
-                                total_weight_to_forward -
-                                    source_phantom.GetForwardWeightPlusOffset(),
-                                source_phantom.forward_segment_id.id);
-        }
-        if (search_from_reverse_node)
-        {
-            forward_heap.Insert(source_phantom.reverse_segment_id.id,
-                                total_weight_to_reverse -
-                                    source_phantom.GetReverseWeightPlusOffset(),
-                                source_phantom.reverse_segment_id.id);
-        }
+        insertNodesInHeapsToForwardTarget(facade,
+                                          forward_heap,
+                                          reverse_heap,
+                                          source_phantom,
+                                          target_phantom,
+                                          weight_to_forward,
+                                          weight_to_reverse);
 
         search(engine_working_data,
                facade,
@@ -147,23 +142,13 @@ void search(SearchEngineData<Algorithm> &engine_working_data,
     {
         forward_heap.Clear();
         reverse_heap.Clear();
-        reverse_heap.Insert(target_phantom.reverse_segment_id.id,
-                            target_phantom.GetReverseWeightPlusOffset(),
-                            target_phantom.reverse_segment_id.id);
-        if (search_from_forward_node)
-        {
-            forward_heap.Insert(source_phantom.forward_segment_id.id,
-                                total_weight_to_forward -
-                                    source_phantom.GetForwardWeightPlusOffset(),
-                                source_phantom.forward_segment_id.id);
-        }
-        if (search_from_reverse_node)
-        {
-            forward_heap.Insert(source_phantom.reverse_segment_id.id,
-                                total_weight_to_reverse -
-                                    source_phantom.GetReverseWeightPlusOffset(),
-                                source_phantom.reverse_segment_id.id);
-        }
+        insertNodesInHeapsToReverseTarget(facade,
+                                          forward_heap,
+                                          reverse_heap,
+                                          source_phantom,
+                                          target_phantom,
+                                          weight_to_forward,
+                                          weight_to_reverse);
 
         search(engine_working_data,
                facade,
