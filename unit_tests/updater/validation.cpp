@@ -39,11 +39,11 @@ BOOST_AUTO_TEST_CASE(timezone_validation_test)
     doc.Parse(json);
     BOOST_CHECK_NO_THROW(util::ValidateFeature(doc));
 
-    char missing_type[] =
-        "{\"properties\" : { \"TZID\" : \"Europe/Berlin\"}, \"geometry\" : { \"type\": \"polygon\", "
-        "\"coordinates\": [[[8.28369,48.88277], [8.57757, "
-        "48.88277], [8.57757, 49.07206], [8.28369, "
-        "49.07206], [8.28369, 48.88277]]] }}";
+    char missing_type[] = "{\"properties\" : { \"TZID\" : \"Europe/Berlin\"}, \"geometry\" : { "
+                          "\"type\": \"polygon\", "
+                          "\"coordinates\": [[[8.28369,48.88277], [8.57757, "
+                          "48.88277], [8.57757, 49.07206], [8.28369, "
+                          "49.07206], [8.28369, 48.88277]]] }}";
     doc.Parse(missing_type);
     BOOST_CHECK_THROW(util::ValidateFeature(doc), util::exception);
 
@@ -65,30 +65,28 @@ BOOST_AUTO_TEST_CASE(timezone_validation_test)
     doc.Parse(nonobj_props);
     BOOST_CHECK_THROW(util::ValidateFeature(doc), util::exception);
 
-    char missing_tzid[] =
-        "{ \"type\" : \"Feature\","
-        "\"properties\" : { }, \"geometry\" : { \"type\": \"polygon\", "
-        "\"coordinates\": [[[8.28369,48.88277], [8.57757, "
-        "48.88277], [8.57757, 49.07206], [8.28369, "
-        "49.07206], [8.28369, 48.88277]]] }}";
+    char missing_tzid[] = "{ \"type\" : \"Feature\","
+                          "\"properties\" : { }, \"geometry\" : { \"type\": \"polygon\", "
+                          "\"coordinates\": [[[8.28369,48.88277], [8.57757, "
+                          "48.88277], [8.57757, 49.07206], [8.28369, "
+                          "49.07206], [8.28369, 48.88277]]] }}";
     doc.Parse(missing_tzid);
     BOOST_CHECK_THROW(util::ValidateFeature(doc), util::exception);
 
-    char tzid_err[] =
-        "{ \"type\" : \"Feature\","
-        "\"properties\" : { \"TZID\" : []}, \"geometry\" : { \"type\": \"polygon\", "
-        "\"coordinates\": [[[8.28369,48.88277], [8.57757, "
-        "48.88277], [8.57757, 49.07206], [8.28369, "
-        "49.07206], [8.28369, 48.88277]]] }}";
+    char tzid_err[] = "{ \"type\" : \"Feature\","
+                      "\"properties\" : { \"TZID\" : []}, \"geometry\" : { \"type\": \"polygon\", "
+                      "\"coordinates\": [[[8.28369,48.88277], [8.57757, "
+                      "48.88277], [8.57757, 49.07206], [8.28369, "
+                      "49.07206], [8.28369, 48.88277]]] }}";
     doc.Parse(tzid_err);
     BOOST_CHECK_THROW(util::ValidateFeature(doc), util::exception);
 
-    char missing_geom[] =
-        "{ \"type\" : \"Feature\","
-        "\"properties\" : { \"TZID\" : \"Europe/Berlin\"}, \"geometries\" : { \"type\": \"polygon\", "
-        "\"coordinates\": [[[8.28369,48.88277], [8.57757, "
-        "48.88277], [8.57757, 49.07206], [8.28369, "
-        "49.07206], [8.28369, 48.88277]]] }}";
+    char missing_geom[] = "{ \"type\" : \"Feature\","
+                          "\"properties\" : { \"TZID\" : \"Europe/Berlin\"}, \"geometries\" : { "
+                          "\"type\": \"polygon\", "
+                          "\"coordinates\": [[[8.28369,48.88277], [8.57757, "
+                          "48.88277], [8.57757, 49.07206], [8.28369, "
+                          "49.07206], [8.28369, 48.88277]]] }}";
     doc.Parse(missing_geom);
     BOOST_CHECK_THROW(util::ValidateFeature(doc), util::exception);
 
@@ -101,21 +99,21 @@ BOOST_AUTO_TEST_CASE(timezone_validation_test)
     doc.Parse(nonobj_geom);
     BOOST_CHECK_THROW(util::ValidateFeature(doc), util::exception);
 
-    char missing_geom_type[] =
-        "{ \"type\" : \"Feature\","
-        "\"properties\" : { \"TZID\" : \"Europe/Berlin\"}, \"geometry\" : { \"no_type\": \"polygon\", "
-        "\"coordinates\": [[[8.28369,48.88277], [8.57757, "
-        "48.88277], [8.57757, 49.07206], [8.28369, "
-        "49.07206], [8.28369, 48.88277]]] }}";
+    char missing_geom_type[] = "{ \"type\" : \"Feature\","
+                               "\"properties\" : { \"TZID\" : \"Europe/Berlin\"}, \"geometry\" : { "
+                               "\"no_type\": \"polygon\", "
+                               "\"coordinates\": [[[8.28369,48.88277], [8.57757, "
+                               "48.88277], [8.57757, 49.07206], [8.28369, "
+                               "49.07206], [8.28369, 48.88277]]] }}";
     doc.Parse(missing_geom_type);
     BOOST_CHECK_THROW(util::ValidateFeature(doc), util::exception);
 
-    char nonstring_geom_type[] =
-        "{ \"type\" : \"Feature\","
-        "\"properties\" : { \"TZID\" : \"Europe/Berlin\"}, \"geometry\" : { \"type\": [\"polygon\"], "
-        "\"coordinates\": [[[8.28369,48.88277], [8.57757, "
-        "48.88277], [8.57757, 49.07206], [8.28369, "
-        "49.07206], [8.28369, 48.88277]]] }}";
+    char nonstring_geom_type[] = "{ \"type\" : \"Feature\","
+                                 "\"properties\" : { \"TZID\" : \"Europe/Berlin\"}, \"geometry\" : "
+                                 "{ \"type\": [\"polygon\"], "
+                                 "\"coordinates\": [[[8.28369,48.88277], [8.57757, "
+                                 "48.88277], [8.57757, 49.07206], [8.28369, "
+                                 "49.07206], [8.28369, 48.88277]]] }}";
     doc.Parse(nonstring_geom_type);
     BOOST_CHECK_THROW(util::ValidateFeature(doc), util::exception);
 
