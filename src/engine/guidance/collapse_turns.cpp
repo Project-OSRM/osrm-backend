@@ -315,6 +315,12 @@ RouteSteps collapseTurnInstructions(RouteSteps steps)
         if (entersRoundabout(current_step->maneuver.instruction) ||
             staysOnRoundabout(current_step->maneuver.instruction))
         {
+            // If postProcess is called before then all corresponding leavesRoundabout steps are
+            // removed and the current roundabout step can be ignored by directly proceeding to
+            // the next step.
+            // If postProcess is not called before then all steps till the next leavesRoundabout
+            // step must be skipped to prevent incorrect roundabouts post-processing.
+
             // are we done for good?
             if (current_step + 1 == steps.end())
                 break;
