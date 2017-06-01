@@ -321,9 +321,9 @@ Feature: Via points
             | ab    |
 
         When I route I should get
-            | waypoints | bearings   | route    | turns                    |
-            | 1,a       | 90,2 270,2 | ab,ab,ab | depart,turn uturn,arrive |
-            | 1,b       | 270,2 90,2 | ab,ab,ab | depart,turn uturn,arrive |
+            | waypoints | bearings   | route    | turns                        |
+            | 1,a       | 90,2 270,2 | ab,ab,ab | depart,continue uturn,arrive |
+            | 1,b       | 270,2 90,2 | ab,ab,ab | depart,continue uturn,arrive |
 
     Scenario: Continue Straight in presence of Bearings
         Given the node map

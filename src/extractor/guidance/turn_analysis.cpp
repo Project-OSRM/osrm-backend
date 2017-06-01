@@ -188,9 +188,10 @@ Intersection TurnAnalysis::setTurnTypes(const NodeID node_prior_to_intersection,
         const EdgeID onto_edge = road.eid;
         const NodeID to_nid = node_based_graph.GetTarget(onto_edge);
 
-        road.instruction = {TurnType::Turn,
-                            (node_prior_to_intersection == to_nid) ? DirectionModifier::UTurn
-                                                                   : getTurnDirection(road.angle)};
+        if (node_prior_to_intersection == to_nid)
+            road.instruction = {TurnType::Continue, DirectionModifier::UTurn};
+        else
+            road.instruction = {TurnType::Turn, getTurnDirection(road.angle)};
     }
     return intersection;
 }
