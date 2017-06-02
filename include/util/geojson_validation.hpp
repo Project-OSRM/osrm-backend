@@ -11,7 +11,7 @@ namespace osrm
 namespace util
 {
 
-inline void ValidateCoordinate(const rapidjson::Value &coordinate)
+inline void validateCoordinate(const rapidjson::Value &coordinate)
 {
     if (!coordinate.IsArray())
         throw osrm::util::exception("Feature geometry has a non-array coordinate.");
@@ -30,7 +30,7 @@ inline void ValidateCoordinate(const rapidjson::Value &coordinate)
     }
 }
 
-inline void ValidateFeature(const rapidjson::Value &feature)
+inline void validateFeature(const rapidjson::Value &feature)
 {
     if (!feature.HasMember("type"))
     {

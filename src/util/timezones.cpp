@@ -107,7 +107,7 @@ void Timezoner::LoadLocalTimesRTree(rapidjson::Document &geojson, std::time_t ut
     std::vector<rtree_t::value_type> polygons;
     for (rapidjson::SizeType i = 0; i < features_array.Size(); i++)
     {
-        util::ValidateFeature(features_array[i]);
+        util::validateFeature(features_array[i]);
         // time zone geojson specific checks
         if (!features_array[i]["properties"].GetObject().HasMember("TZID") &&
             !features_array[i]["properties"].GetObject().HasMember("tzid"))
@@ -134,7 +134,7 @@ void Timezoner::LoadLocalTimesRTree(rapidjson::Document &geojson, std::time_t ut
                                           .GetArray();
             for (rapidjson::SizeType i = 0; i < coords_outer_array.Size(); ++i)
             {
-                util::ValidateCoordinate(coords_outer_array[i]);
+                util::validateCoordinate(coords_outer_array[i]);
                 const auto &coords = coords_outer_array[i].GetArray();
                 polygon.outer().emplace_back(coords[0].GetDouble(), coords[1].GetDouble());
             }
@@ -142,7 +142,7 @@ void Timezoner::LoadLocalTimesRTree(rapidjson::Document &geojson, std::time_t ut
                                   local_times.size());
 
             // Get time zone name and emplace polygon and local time for the UTC input
-            const auto tzname =
+            const auto &tzname =
                 features_array[i].GetObject()["properties"].GetObject()["tzid"].GetString();
             local_times.push_back(local_time_t{polygon, get_local_time_in_tz(tzname)});
         }
