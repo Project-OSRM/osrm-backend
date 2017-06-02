@@ -317,44 +317,6 @@ Feature: Car - Turn restrictions
             | n    | p  | nj,js,js,jp,jp |
             | m    | p  | mj,jp,jp       |
 
-    @only_turning @conditionals
-    Scenario: Car - Somewhere in London, the UK, GMT timezone
-        Given the extract extra arguments "--parse-conditional-restrictions=1"
-        # 9am UTC, 10am BST
-        Given the contract extra arguments "--time-zone-file=test/data/tz/london.geojson --parse-conditionals-from-now=1493802000"
-        Given the customize extra arguments "--time-zone-file=test/data/tz/london.geojson --parse-conditionals-from-now=1493802000"
-
-        #    """
-        #     a
-        #          e
-        #      b
-        #   d
-        #       c
-        #    """
-        Given the node locations
-            | node | lat     | lon     |
-            | a    | 51.5250 | -0.1166 |
-            | b    | 51.5243 | -0.1159 |
-            | c    | 51.5238 | -0.1152 |
-            | d    | 51.5241 | -0.1167 |
-            | e    | 51.5247 | -0.1153 |
-
-        And the ways
-            | nodes | name  |
-            | ab    | albic |
-            | bc    | albic |
-            | db    | dobe |
-            | be    | dobe |
-
-        And the relations
-            | type        | way:from  | way:to  | node:via | restriction:conditional               |
-            | restriction | ab        | be      | b        | only_left_turn @ (Mo-Fr 07:00-11:00)  |
-
-        When I route I should get
-            | from | to | route                       | turns                                            |
-            | a    | c  | albic,dobe,dobe,albic,albic | depart,turn left,continue uturn,turn left,arrive |
-            | a    | e  | albic,dobe,dobe             | depart,turn left,arrive                          |
-
     @no_turning @conditionals
     Scenario: Car - only_right_turn
         Given the extract extra arguments "--parse-conditional-restrictions"
@@ -664,7 +626,84 @@ Feature: Car - Turn restrictions
             | e    | c  | florida ne,cap south,cap south             | depart,turn left,arrive                       |
 
     @only_turning @conditionals
+    Scenario: Car - Restriction is always off when point not found in timezone files
+        # same test as the following one, but given a different time zone file
+        Given the extract extra arguments "--parse-conditional-restrictions"
+        # 9am UTC, 10am BST
+        Given the contract extra arguments "--time-zone-file=test/data/tz/dc.geojson --parse-conditionals-from-now=1493802000"
+        Given the customize extra arguments "--time-zone-file=test/data/tz/dc.geojson --parse-conditionals-from-now=1493802000"
+
+        #    """
+        #     a
+        #          e
+        #      b
+        #   d
+        #       c
+        #    """
+        Given the node locations
+            | node | lat     | lon     |
+            | a    | 51.5250 | -0.1166 |
+            | b    | 51.5243 | -0.1159 |
+            | c    | 51.5238 | -0.1152 |
+            | d    | 51.5241 | -0.1167 |
+            | e    | 51.5247 | -0.1153 |
+
+        And the ways
+            | nodes | name  |
+            | ab    | albic |
+            | bc    | albic |
+            | db    | dobe |
+            | be    | dobe |
+
+        And the relations
+            | type        | way:from  | way:to  | node:via | restriction:conditional               |
+            | restriction | ab        | be      | b        | only_left_turn @ (Mo-Fr 07:00-11:00)  |
+
+        When I route I should get
+            | from | to | route           | turns                   |
+            | a    | c  | albic,albic     | depart,arrive           |
+            | a    | e  | albic,dobe,dobe | depart,turn left,arrive |
+
+    @only_turning @conditionals
     Scenario: Car - Somewhere in london, the UK, GMT timezone
+        Given the extract extra arguments "--parse-conditional-restrictions"
+        # 9am UTC, 10am BST
+        Given the contract extra arguments "--time-zone-file=test/data/tz/london.geojson --parse-conditionals-from-now=1493802000"
+        Given the customize extra arguments "--time-zone-file=test/data/tz/london.geojson --parse-conditionals-from-now=1493802000"
+
+        #    """
+        #     a
+        #          e
+        #      b
+        #   d
+        #       c
+        #    """
+        Given the node locations
+            | node | lat     | lon     |
+            | a    | 51.5250 | -0.1166 |
+            | b    | 51.5243 | -0.1159 |
+            | c    | 51.5238 | -0.1152 |
+            | d    | 51.5241 | -0.1167 |
+            | e    | 51.5247 | -0.1153 |
+
+        And the ways
+            | nodes | name  |
+            | ab    | albic |
+            | bc    | albic |
+            | db    | dobe |
+            | be    | dobe |
+
+        And the relations
+            | type        | way:from  | way:to  | node:via | restriction:conditional               |
+            | restriction | ab        | be      | b        | only_left_turn @ (Mo-Fr 07:00-11:00)  |
+
+        When I route I should get
+            | from | to | route                       | turns                                        |
+            | a    | c  | albic,dobe,dobe,albic,albic | depart,turn left,turn uturn,turn left,arrive |
+            | a    | e  | albic,dobe,dobe             | depart,turn left,arrive                      |
+
+    @only_turning @conditionals
+    Scenario: Car - Somewhere in London, the UK, GMT timezone
         Given the extract extra arguments "--parse-conditional-restrictions=1"
         # 9am UTC, 10am BST
         Given the contract extra arguments "--time-zone-file=test/data/tz/london.geojson --parse-conditionals-from-now=1493802000"
