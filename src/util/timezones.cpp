@@ -16,6 +16,8 @@
 #include <string>
 #include <unordered_map>
 
+#include <time.h>
+
 // Function loads time zone shape polygons, computes a zone local time for utc_time,
 // creates a lookup R-tree and returns a lambda function that maps a point
 // to the corresponding local time
@@ -86,9 +88,15 @@ void Timezoner::LoadLocalTimesRTree(rapidjson::Document &geojson, std::time_t ut
         if (it == local_time_memo.end())
         {
             struct tm timeinfo;
+#if defined(_WIN32)
+            _putenv_s("TZ", tzname);
+            _tzset();
+            localtime_s(&timeinfo, &utc_time);
+#else
             setenv("TZ", tzname, 1);
             tzset();
             localtime_r(&utc_time, &timeinfo);
+#endif
             it = local_time_memo.insert({tzname, timeinfo}).first;
         }
 
@@ -158,6 +166,7 @@ boost::optional<struct tm> Timezoner::operator()(const point_t &point) const
         if (boost::geometry::within(point, local_times[index].first))
             return local_times[index].second;
     }
+    return boost::none;
 }
 }
 }
