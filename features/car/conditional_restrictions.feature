@@ -698,9 +698,9 @@ Feature: Car - Turn restrictions
             | restriction | ab        | be      | b        | only_left_turn @ (Mo-Fr 07:00-11:00)  |
 
         When I route I should get
-            | from | to | route                       | turns                                        |
-            | a    | c  | albic,dobe,dobe,albic,albic | depart,turn left,turn uturn,turn left,arrive |
-            | a    | e  | albic,dobe,dobe             | depart,turn left,arrive                      |
+            | from | to | route                       | turns                                            |
+            | a    | c  | albic,dobe,dobe,albic,albic | depart,turn left,continue uturn,turn left,arrive |
+            | a    | e  | albic,dobe,dobe             | depart,turn left,arrive                          |
 
     @only_turning @conditionals
     Scenario: Car - Somewhere in London, the UK, GMT timezone
