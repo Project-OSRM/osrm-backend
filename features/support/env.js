@@ -40,6 +40,7 @@ module.exports = function () {
         this.DEFAULT_GRID_SIZE = 100; // meters
         // get algorithm name from the command line profile argument
         this.ROUTING_ALGORITHM = process.argv[process.argv.indexOf('-p') + 1].match('mld') ? 'MLD' : 'CH';
+        this.TIMEZONE_NAMES = this.PLATFORM_WINDOWS ? 'win' : 'iana';
 
         this.OSRM_PORT = process.env.OSRM_PORT && parseInt(process.env.OSRM_PORT) || 5000;
         this.HOST = 'http://127.0.0.1:' + this.OSRM_PORT;

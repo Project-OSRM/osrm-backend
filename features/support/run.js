@@ -15,7 +15,8 @@ module.exports = function () {
             '{profile_file}': this.profileFile,
             '{rastersource_file}': this.rasterCacheFile,
             '{speeds_file}': this.speedsCacheFile,
-            '{penalties_file}': this.penaltiesCacheFile
+            '{penalties_file}': this.penaltiesCacheFile,
+            '{timezone_names}': this.TIMEZONE_NAMES
         };
 
         for (let k in table) {
