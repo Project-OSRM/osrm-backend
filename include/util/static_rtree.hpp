@@ -203,7 +203,7 @@ class StaticRTree
     {
         QueryCandidate(std::uint64_t squared_min_dist, TreeIndex tree_index)
             : squared_min_dist(squared_min_dist), tree_index(tree_index),
-              segment_index(std::numeric_limits<std::uint64_t>::max())
+              segment_index(std::numeric_limits<std::uint32_t>::max())
         {
         }
 
@@ -212,13 +212,13 @@ class StaticRTree
                        std::uint32_t segment_index,
                        const Coordinate &coordinate)
             : squared_min_dist(squared_min_dist), tree_index(tree_index),
-              segment_index(segment_index), fixed_projected_coordinate(coordinate)
+              fixed_projected_coordinate(coordinate), segment_index(segment_index)
         {
         }
 
         inline bool is_segment() const
         {
-            return segment_index != std::numeric_limits<std::uint64_t>::max();
+            return segment_index != std::numeric_limits<std::uint32_t>::max();
         }
 
         inline bool operator<(const QueryCandidate &other) const
@@ -230,8 +230,8 @@ class StaticRTree
 
         std::uint64_t squared_min_dist;
         TreeIndex tree_index;
-        std::uint64_t segment_index;
         Coordinate fixed_projected_coordinate;
+        std::uint32_t segment_index;
     };
 
     // We use a const view type when we don't own the data, otherwise
@@ -385,19 +385,20 @@ class StaticRTree
             std::uint32_t nodes_in_current_level =
                 std::ceil(static_cast<double>(nodes_in_previous_level) / BRANCHING_FACTOR);
 
-            for (auto current_node_idx : irange(0u, nodes_in_current_level))
+            for (auto current_node_idx : irange<std::size_t>(0, nodes_in_current_level))
             {
                 TreeNode parent_node;
                 auto first_child_index =
                     current_node_idx * BRANCHING_FACTOR + previous_level_start_pos;
                 auto last_child_index =
                     first_child_index +
-                    std::min(BRANCHING_FACTOR,
-                             nodes_in_previous_level - current_node_idx * BRANCHING_FACTOR);
+                    std::min<std::size_t>(BRANCHING_FACTOR,
+                                          nodes_in_previous_level -
+                                              current_node_idx * BRANCHING_FACTOR);
 
                 // Calculate the bounding box for BRANCHING_FACTOR nodes in the previous
                 // level, then save that box as a new TreeNode in the new level.
-                for (auto child_node_idx : irange(first_child_index, last_child_index))
+                for (auto child_node_idx : irange<std::size_t>(first_child_index, last_child_index))
                 {
                     parent_node.minimum_bounding_rectangle.MergeBoundingBoxes(
                         m_search_tree[child_node_idx].minimum_bounding_rectangle);
@@ -435,7 +436,7 @@ class StaticRTree
         // 0 12 345 6789
         // This ordering keeps the position math easy to understand during later
         // searches
-        for (auto i : irange(0ul, m_tree_level_sizes.size()))
+        for (auto i : irange<std::size_t>(0, m_tree_level_sizes.size()))
         {
             std::reverse(m_search_tree.begin() + m_tree_level_starts[i],
                          m_search_tree.begin() + m_tree_level_starts[i] + m_tree_level_sizes[i]);
@@ -726,8 +727,11 @@ class StaticRTree
                 projected_input_coordinate_fixed, projected_nearest);
             // distance must be non-negative
             BOOST_ASSERT(0. <= squared_distance);
-            traversal_queue.push(
-                QueryCandidate{squared_distance, leaf_id, i, Coordinate{projected_nearest}});
+            BOOST_ASSERT(i < std::numeric_limits<std::uint32_t>::max());
+            traversal_queue.push(QueryCandidate{squared_distance,
+                                                leaf_id,
+                                                static_cast<std::uint32_t>(i),
+                                                Coordinate{projected_nearest}});
         }
     }
 
@@ -776,7 +780,7 @@ class StaticRTree
      * at the top of this class.  All nodes are fully filled except for the last
      * one in each level.
      */
-    range<std::uint32_t> child_indexes(const TreeIndex &parent) const
+    range<std::size_t> child_indexes(const TreeIndex &parent) const
     {
         // If we're looking at a leaf node, the index is from 0 to m_objects.size(),
         // there is only 1 level of object data in the m_objects array
@@ -790,8 +794,7 @@ class StaticRTree
             BOOST_ASSERT(end_child_index < std::numeric_limits<std::uint32_t>::max());
             BOOST_ASSERT(end_child_index <= m_objects.size());
 
-            return irange(static_cast<std::uint32_t>(first_child_index),
-                          static_cast<std::uint32_t>(end_child_index));
+            return irange<std::size_t>(first_child_index, end_child_index);
         }
         else
         {
@@ -806,8 +809,7 @@ class StaticRTree
             BOOST_ASSERT(end_child_index <= m_search_tree.size());
             BOOST_ASSERT(end_child_index <= m_tree_level_starts[parent.level + 1] +
                                                 m_tree_level_sizes[parent.level + 1]);
-            return irange(static_cast<std::uint32_t>(first_child_index),
-                          static_cast<std::uint32_t>(end_child_index));
+            return irange<std::size_t>(first_child_index, end_child_index);
         }
     }
 
