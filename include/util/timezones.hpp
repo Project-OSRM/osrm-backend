@@ -3,8 +3,12 @@
 
 #include "util/log.hpp"
 
+#include <boost/filesystem/path.hpp>
 #include <boost/geometry.hpp>
 #include <boost/geometry/index/rtree.hpp>
+#include <boost/optional.hpp>
+
+#include <rapidjson/document.h>
 
 #include <chrono>
 
@@ -24,21 +28,19 @@ using rtree_t =
     boost::geometry::index::rtree<std::pair<box_t, size_t>, boost::geometry::index::rstar<8>>;
 using local_time_t = std::pair<polygon_t, struct tm>;
 
-bool SupportsShapefiles();
-
 class Timezoner
 {
   public:
     Timezoner() = default;
 
-    Timezoner(std::string tz_filename, std::time_t utc_time_now);
+    Timezoner(const char geojson[], std::time_t utc_time_now);
+    Timezoner(const boost::filesystem::path &tz_shapes_filename, std::time_t utc_time_now);
 
-    struct tm operator()(const point_t &point) const;
+    boost::optional<struct tm> operator()(const point_t &point) const;
 
   private:
-    void LoadLocalTimesRTree(const std::string &tz_shapes_filename, std::time_t utc_time);
+    void LoadLocalTimesRTree(rapidjson::Document &geojson, std::time_t utc_time);
 
-    struct tm default_time;
     rtree_t rtree;
     std::vector<local_time_t> local_times;
 };

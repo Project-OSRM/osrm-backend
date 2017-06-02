@@ -361,8 +361,5 @@ script:
       npm run nodejs-tests
     fi
   - |
-    if [ "${ENABLE_MASON}" == "ON" ]; then
-      npm run test-conditionals
-    fi
   - popd
   - yarn test

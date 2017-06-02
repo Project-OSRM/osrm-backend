@@ -1,15 +1,22 @@
 #include "util/timezones.hpp"
 #include "util/exception.hpp"
+#include "util/geojson_validation.hpp"
 #include "util/log.hpp"
 
+#include <boost/filesystem/fstream.hpp>
+#include <boost/filesystem/path.hpp>
+#include <boost/optional.hpp>
 #include <boost/scope_exit.hpp>
 
-#ifdef ENABLE_SHAPEFILE
-#include <shapefil.h>
-#endif
+#include "rapidjson/document.h"
+#include "rapidjson/istreamwrapper.h"
 
+#include <fstream>
+#include <regex>
 #include <string>
 #include <unordered_map>
+
+#include <time.h>
 
 // Function loads time zone shape polygons, computes a zone local time for utc_time,
 // creates a lookup R-tree and returns a lambda function that maps a point
@@ -19,59 +26,59 @@ namespace osrm
 namespace updater
 {
 
-bool SupportsShapefiles()
-{
-#ifdef ENABLE_SHAPEFILE
-    return true;
-#else
-    return false;
-#endif
-}
-
-Timezoner::Timezoner(std::string tz_filename, std::time_t utc_time_now)
+Timezoner::Timezoner(const char geojson[], std::time_t utc_time_now)
 {
     util::Log() << "Time zone validation based on UTC time : " << utc_time_now;
-    // Thread safety: MT-Unsafe const:env
-    default_time = *gmtime(&utc_time_now);
-    LoadLocalTimesRTree(tz_filename, utc_time_now);
+    rapidjson::Document doc;
+    rapidjson::ParseResult ok = doc.Parse(geojson);
+    if (!ok)
+    {
+        auto code = ok.Code();
+        auto offset = ok.Offset();
+        throw osrm::util::exception("Failed to parse timezone geojson with error code " +
+                                    std::to_string(code) + " malformed at offset " +
+                                    std::to_string(offset));
+    }
+    LoadLocalTimesRTree(doc, utc_time_now);
 }
 
-void Timezoner::LoadLocalTimesRTree(const std::string &tz_shapes_filename, std::time_t utc_time)
+Timezoner::Timezoner(const boost::filesystem::path &tz_shapes_filename, std::time_t utc_time_now)
 {
+    util::Log() << "Time zone validation based on UTC time : " << utc_time_now;
+
     if (tz_shapes_filename.empty())
-        return;
-#ifdef ENABLE_SHAPEFILE
-    // Load time zones shapes and collect local times of utc_time
-    auto shphandle = SHPOpen(tz_shapes_filename.c_str(), "rb");
-    auto dbfhandle = DBFOpen(tz_shapes_filename.c_str(), "rb");
+        throw osrm::util::exception("Missing time zone geojson file");
+    boost::filesystem::ifstream file(tz_shapes_filename);
+    if (!file.is_open())
+        throw osrm::util::exception("failed to open " + tz_shapes_filename.string());
 
-    BOOST_SCOPE_EXIT(&shphandle, &dbfhandle)
+    util::Log() << "Parsing " + tz_shapes_filename.string();
+    rapidjson::IStreamWrapper isw(file);
+    rapidjson::Document geojson;
+    geojson.ParseStream(isw);
+    if (geojson.HasParseError())
     {
-        DBFClose(dbfhandle);
-        SHPClose(shphandle);
+        auto error_code = geojson.GetParseError();
+        auto error_offset = geojson.GetErrorOffset();
+        throw osrm::util::exception("Failed to parse " + tz_shapes_filename.string() +
+                                    " with error " + std::to_string(error_code) +
+                                    ". JSON malformed at " + std::to_string(error_offset));
     }
-    BOOST_SCOPE_EXIT_END
+    LoadLocalTimesRTree(geojson, utc_time_now);
+}
 
-    if (!shphandle || !dbfhandle)
-    {
-        throw osrm::util::exception("failed to open " + tz_shapes_filename + ".shp or " +
-                                    tz_shapes_filename + ".dbf file");
-    }
-
-    int num_entities, shape_type;
-    SHPGetInfo(shphandle, &num_entities, &shape_type, NULL, NULL);
-    if (num_entities != DBFGetRecordCount(dbfhandle))
-    {
-        throw osrm::util::exception("inconsistent " + tz_shapes_filename + ".shp and " +
-                                    tz_shapes_filename + ".dbf files");
-    }
-
-    const auto tzid = DBFGetFieldIndex(dbfhandle, "TZID");
-    if (tzid == -1)
-    {
-        throw osrm::util::exception("did not find field called 'TZID' in the " +
-                                    tz_shapes_filename + ".dbf file");
-    }
+void Timezoner::LoadLocalTimesRTree(rapidjson::Document &geojson, std::time_t utc_time)
+{
+    if (!geojson.HasMember("type"))
+        throw osrm::util::exception("Failed to parse time zone file. Missing type member.");
+    if (!geojson["type"].IsString())
+        throw osrm::util::exception(
+            "Failed to parse time zone file. Missing string-based type member.");
+    if (geojson["type"].GetString() != std::string("FeatureCollection"))
+        throw osrm::util::exception(
+            "Failed to parse time zone file. Geojson is not of FeatureCollection type");
+    if (!geojson.HasMember("features"))
+        throw osrm::util::exception("Failed to parse time zone file. Missing features list.");
 
     // Lambda function that returns local time in the tzname time zone
     // Thread safety: MT-Unsafe const:env
@@ -81,50 +88,75 @@ void Timezoner::LoadLocalTimesRTree(const std::string &tz_shapes_filename, std::
         if (it == local_time_memo.end())
         {
             struct tm timeinfo;
+#if defined(_WIN32)
+            _putenv_s("TZ", tzname);
+            _tzset();
+            localtime_s(&timeinfo, &utc_time);
+#else
             setenv("TZ", tzname, 1);
             tzset();
             localtime_r(&utc_time, &timeinfo);
+#endif
             it = local_time_memo.insert({tzname, timeinfo}).first;
         }
 
         return it->second;
     };
-
-    // Get all time zone shapes and save local times in a vector
+    BOOST_ASSERT(geojson["features"].IsArray());
+    const auto &features_array = geojson["features"].GetArray();
     std::vector<rtree_t::value_type> polygons;
-    for (int shape = 0; shape < num_entities; ++shape)
+    for (rapidjson::SizeType i = 0; i < features_array.Size(); i++)
     {
-        auto object = SHPReadObject(shphandle, shape);
-        BOOST_SCOPE_EXIT(&object) { SHPDestroyObject(object); }
-        BOOST_SCOPE_EXIT_END
-
-        if (object && object->nSHPType == SHPT_POLYGON)
+        util::validateFeature(features_array[i]);
+        // time zone geojson specific checks
+        if (!features_array[i]["properties"].GetObject().HasMember("TZID") &&
+            !features_array[i]["properties"].GetObject().HasMember("tzid"))
         {
-            // Find time zone polygon and place its bbox in into R-Tree
+            throw osrm::util::exception("Feature is missing TZID member in properties.");
+        }
+        else if (!features_array[i]["properties"].GetObject()["tzid"].IsString())
+        {
+            throw osrm::util::exception("Feature has non-string TZID value.");
+        }
+        const std::string &feat_type =
+            features_array[i].GetObject()["geometry"].GetObject()["type"].GetString();
+        std::regex polygon_match("polygon", std::regex::icase);
+        std::smatch res;
+        if (std::regex_match(feat_type, res, polygon_match))
+        {
             polygon_t polygon;
-            for (int vertex = 0; vertex < object->nVertices; ++vertex)
+            // per geojson spec, the first array of polygon coords is the exterior ring, we only
+            // want to access that
+            auto coords_outer_array = features_array[i]
+                                          .GetObject()["geometry"]
+                                          .GetObject()["coordinates"]
+                                          .GetArray()[0]
+                                          .GetArray();
+            for (rapidjson::SizeType i = 0; i < coords_outer_array.Size(); ++i)
             {
-                polygon.outer().emplace_back(object->padfX[vertex], object->padfY[vertex]);
+                util::validateCoordinate(coords_outer_array[i]);
+                const auto &coords = coords_outer_array[i].GetArray();
+                polygon.outer().emplace_back(coords[0].GetDouble(), coords[1].GetDouble());
             }
-
             polygons.emplace_back(boost::geometry::return_envelope<box_t>(polygon),
                                   local_times.size());
 
             // Get time zone name and emplace polygon and local time for the UTC input
-            const auto tzname = DBFReadStringAttribute(dbfhandle, shape, tzid);
-            local_times.emplace_back(local_time_t{polygon, get_local_time_in_tz(tzname)});
-
-            // std::cout << boost::geometry::dsv(boost::geometry::return_envelope<box_t>(polygon))
-            //           << " " << tzname << " " << asctime(&local_times.back().second);
+            const auto &tzname =
+                features_array[i].GetObject()["properties"].GetObject()["tzid"].GetString();
+            local_times.push_back(local_time_t{polygon, get_local_time_in_tz(tzname)});
+        }
+        else
+        {
+            util::Log(logDEBUG) << "Skipping non-polygon shape in timezone file";
         }
     }
-
+    util::Log() << "Parsed " << polygons.size() << "time zone polygons." << std::endl;
     // Create R-tree for collected shape polygons
     rtree = rtree_t(polygons);
-#endif
 }
 
-struct tm Timezoner::operator()(const point_t &point) const
+boost::optional<struct tm> Timezoner::operator()(const point_t &point) const
 {
     std::vector<rtree_t::value_type> result;
     rtree.query(boost::geometry::index::intersects(point), std::back_inserter(result));
@@ -134,7 +166,7 @@ struct tm Timezoner::operator()(const point_t &point) const
         if (boost::geometry::within(point, local_times[index].first))
             return local_times[index].second;
     }
-    return default_time;
+    return boost::none;
 }
 }
 }

@@ -447,11 +447,6 @@ if(ENABLE_MASON)
   add_dependency_includes(${MASON_PACKAGE_tbb_INCLUDE_DIRS})
   set(TBB_LIBRARIES ${MASON_PACKAGE_tbb_LDFLAGS})
 
-  mason_use(libshp2 VERSION ${MASON_LIBSHP_VERSION})
-  target_include_directories(UTIL PRIVATE ${MASON_PACKAGE_libshp2_INCLUDE_DIRS})
-  set(MAYBE_SHAPEFILE ${MASON_PACKAGE_libshp2_STATIC_LIBS})
-  target_compile_definitions(UTIL PRIVATE COMPILE_DEFINITIONS ENABLE_SHAPEFILE)
-
   if(NOT MASON_PACKAGE_tbb_LIBRARY_DIRS)
     message(FATAL_ERROR "MASON_PACKAGE_tbb_LIBRARY_DIRS is empty, rpath will not work")
   endif()
@@ -477,6 +472,8 @@ if(ENABLE_MASON)
   # note: we avoid calling find_package(Osmium ...) here to ensure that the
   # expat and bzip2 are used from mason rather than the system
   include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/include)
+
+  include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/rapidjson/include)
 
 else()
 
@@ -525,15 +522,6 @@ else()
     ENDIF()
   ENDIF()
 
-  find_package(Shapefile) # optional package libshp-dev
-  if (Shapefile_FOUND)
-    set(MAYBE_SHAPEFILE "${LIBSHAPEFILE_LIBRARY}")
-    target_include_directories(UTIL PRIVATE ${LIBSHAPEFILE_INCLUDE_DIR})
-    target_compile_definitions(UTIL PRIVATE COMPILE_DEFINITIONS ENABLE_SHAPEFILE)
-  else()
-    set(MAYBE_SHAPEFILE "")
-  endif()
-
   set(USED_LUA_LIBRARIES ${LUA_LIBRARIES})
   add_dependency_includes(${LUA_INCLUDE_DIR})
 
@@ -555,6 +543,9 @@ else()
   endif()
   find_package(Osmium REQUIRED COMPONENTS io)
   include_directories(SYSTEM ${OSMIUM_INCLUDE_DIR})
+
+  set(RAPIDJSON_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/rapidjson/include")
+  include_directories(SYSTEM ${RAPIDJSON_INCLUDE_DIR})
 
 endif()
 
@@ -610,12 +601,12 @@ set(BOOST_ENGINE_LIBRARIES
   ${BOOST_BASE_LIBRARIES})
 
 # Binaries
-target_link_libraries(osrm-datastore osrm_store ${Boost_PROGRAM_OPTIONS_LIBRARY} ${MAYBE_SHAPEFILE})
+target_link_libraries(osrm-datastore osrm_store ${Boost_PROGRAM_OPTIONS_LIBRARY})
 target_link_libraries(osrm-extract osrm_extract ${Boost_PROGRAM_OPTIONS_LIBRARY})
 target_link_libraries(osrm-partition osrm_partition ${Boost_PROGRAM_OPTIONS_LIBRARY})
 target_link_libraries(osrm-customize osrm_customize ${Boost_PROGRAM_OPTIONS_LIBRARY})
 target_link_libraries(osrm-contract osrm_contract ${Boost_PROGRAM_OPTIONS_LIBRARY})
-target_link_libraries(osrm-routed osrm ${Boost_PROGRAM_OPTIONS_LIBRARY} ${MAYBE_SHAPEFILE} ${OPTIONAL_SOCKET_LIBS} ${ZLIB_LIBRARY})
+target_link_libraries(osrm-routed osrm ${Boost_PROGRAM_OPTIONS_LIBRARY} ${OPTIONAL_SOCKET_LIBS} ${ZLIB_LIBRARY})
 
 set(EXTRACTOR_LIBRARIES
     ${BZIP2_LIBRARIES}
@@ -640,7 +631,6 @@ set(CUSTOMIZER_LIBRARIES
     ${BOOST_ENGINE_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
     ${TBB_LIBRARIES}
-    ${MAYBE_SHAPEFILE}
     ${MAYBE_RT_LIBRARY}
     ${MAYBE_COVERAGE_LIBRARIES})
 set(UPDATER_LIBRARIES
@@ -648,7 +638,6 @@ set(UPDATER_LIBRARIES
     ${CMAKE_THREAD_LIBS_INIT}
     ${TBB_LIBRARIES}
     ${MAYBE_RT_LIBRARY}
-    ${MAYBE_SHAPEFILE}
     ${MAYBE_COVERAGE_LIBRARIES}
     ${ZLIB_LIBRARY})
 set(CONTRACTOR_LIBRARIES
@@ -657,7 +646,6 @@ set(CONTRACTOR_LIBRARIES
     ${USED_LUA_LIBRARIES}
     ${STXXL_LIBRARY}
     ${TBB_LIBRARIES}
-    ${MAYBE_SHAPEFILE}
     ${MAYBE_RT_LIBRARY}
     ${MAYBE_COVERAGE_LIBRARIES})
 set(ENGINE_LIBRARIES
@@ -678,7 +666,6 @@ set(UTIL_LIBRARIES
     ${CMAKE_THREAD_LIBS_INIT}
     ${STXXL_LIBRARY}
     ${TBB_LIBRARIES}
-    ${MAYBE_SHAPEFILE}
     ${MAYBE_COVERAGE_LIBRARIES})
 
 # Libraries
@@ -698,10 +685,11 @@ install(TARGETS osrm-components DESTINATION bin)
 if(BUILD_TOOLS)
   message(STATUS "Activating OSRM internal tools")
   add_executable(osrm-io-benchmark src/tools/io-benchmark.cpp $<TARGET_OBJECTS:UTIL>)
-  target_link_libraries(osrm-io-benchmark ${BOOST_BASE_LIBRARIES} ${MAYBE_SHAPEFILE})
+  target_link_libraries(osrm-io-benchmark ${BOOST_BASE_LIBRARIES})
 
   install(TARGETS osrm-io-benchmark DESTINATION bin)
 
+  find_package(Shapefile)
   if(SHAPEFILE_FOUND AND (Boost_VERSION VERSION_GREATER 106000 OR ENABLE_MASON))
     add_executable(osrm-extract-conditionals src/tools/extract-conditionals.cpp $<TARGET_OBJECTS:UTIL>)
     target_include_directories(osrm-extract-conditionals PRIVATE ${LIBSHAPEFILE_INCLUDE_DIR})
