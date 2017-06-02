@@ -1,0 +1,9 @@
+#!/bin/bash
+#This script assumes you have your OSRM compiled on the /opt/Project-OSRM folder. You should change that path to adecuate it to your needs. 
+
+echo "Starting OSRM..."
+cd /opt/Project-OSRM/
+./osrm-routed &
+echo "OSRM started"
+cd $pwd
+
