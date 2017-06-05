@@ -42,12 +42,19 @@ namespace extractor
 
 struct ExtractorConfig final : storage::IOConfig
 {
-    ExtractorConfig() noexcept : requested_num_threads(0) {}
+    ExtractorConfig() noexcept : requested_num_threads(0),
+      IOConfig({"", }, {}, {".osrm", ".osrm.restrictions", ".osrm.names", ".osrm.tls", ".osrm.tld", ".osrm.timestamp", ".osrm.geometry"
+        , ".osrm.nbg_nodes", ".osrm.ebg_nodes", ".osrm.edges", ".osrm.ebg", ".osrm.ramIndex", ".osrm.fileIndex", ".osrm.turn_duration_penalties"
+        , ".osrm.turn_weight_penalties", ".osrm.turn_penalties_index", ".osrm.enw", ".osrm.properties", ".osrm.icd", ".osrm.cnbg"
+        , ".osrm.cnbg_to_ebg"})
+    {
+    }
 
     void UseDefaultOutputNames()
     {
         std::string basepath = input_path.string();
 
+        // TODO move the known_extensions to IsValid
         auto pos = std::string::npos;
         std::array<std::string, 5> known_extensions{
             {".osm.bz2", ".osm.pbf", ".osm.xml", ".pbf", ".osm"}};
