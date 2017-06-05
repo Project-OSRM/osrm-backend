@@ -19,6 +19,7 @@
     - Bugfixes
       - Fixed a copy/paste issue assigning wrong directions in similar turns (left over right)
       - #4074: fixed a bug that would announce entering highway ramps as u-turns
+      - #4122: osrm-routed/libosrm should throw exception when a dataset incompatible with the requested algorithm is loaded
 
 # 5.7.1
     - Bugfixes

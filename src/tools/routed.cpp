@@ -223,32 +223,16 @@ int main(int argc, const char *argv[]) try
     {
         config.storage_config = storage::StorageConfig(base_path);
     }
+    if (!config.use_shared_memory && !config.storage_config.IsValid())
+    {
+        util::Log(logERROR) << "Required files are missing, cannot continue";
+        return EXIT_FAILURE;
+    }
     if (!config.IsValid())
     {
         if (base_path.empty() != config.use_shared_memory)
         {
             util::Log(logWARNING) << "Path settings and shared memory conflicts.";
-        }
-        else
-        {
-            auto required_files = {config.storage_config.ram_index_path,
-                                   config.storage_config.file_index_path,
-                                   config.storage_config.hsgr_data_path,
-                                   config.storage_config.node_based_nodes_data_path,
-                                   config.storage_config.edge_based_nodes_data_path,
-                                   config.storage_config.edges_data_path,
-                                   config.storage_config.core_data_path,
-                                   config.storage_config.geometries_path,
-                                   config.storage_config.datasource_indexes_path,
-                                   config.storage_config.names_data_path,
-                                   config.storage_config.properties_path};
-            for (auto file : required_files)
-            {
-                if (!boost::filesystem::is_regular_file(file))
-                {
-                    util::Log(logWARNING) << file << " is not found";
-                }
-            }
         }
         return EXIT_FAILURE;
     }

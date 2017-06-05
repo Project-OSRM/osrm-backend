@@ -14,9 +14,9 @@ bool CheckFileList(const std::vector<boost::filesystem::path> &files)
     bool success = true;
     for (auto &path : files)
     {
-        if (!boost::filesystem::is_regular_file(path))
+        if (!boost::filesystem::exists(path))
         {
-            util::Log(logWARNING) << "Missing/Broken File: " << path.string();
+            util::Log(logERROR) << "Missing File: " << path.string();
             success = false;
         }
     }
@@ -61,14 +61,6 @@ bool StorageConfig::IsValid() const
     {
         return false;
     }
-
-    // TODO: add algorithm checks
-
-    // CH files
-    CheckFileList({hsgr_data_path, core_data_path});
-
-    // MLD files
-    CheckFileList({mld_partition_path, mld_storage_path, mld_graph_path});
 
     return true;
 }

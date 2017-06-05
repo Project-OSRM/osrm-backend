@@ -23,9 +23,12 @@ test('constructor: does not accept more than one parameter', function(assert) {
 });
 
 test('constructor: throws if necessary files do not exist', function(assert) {
-    assert.plan(1);
-    assert.throws(function() { new OSRM("missing.osrm"); },
-        /Problem opening file: missing.osrm.names/);
+    assert.plan(2);
+    assert.throws(function() { new OSRM('missing.osrm'); },
+        /Required files are missing, cannot continue/);
+
+    assert.throws(function() { new OSRM({path: 'missing.osrm', algorithm: 'MLD'}); },
+        /Required files are missing, cannot continue/);
 });
 
 test('constructor: takes a shared memory argument', function(assert) {
@@ -80,6 +83,19 @@ test('constructor: loads CoreCH if given as algorithm', function(assert) {
     assert.plan(1);
     var osrm = new OSRM({algorithm: 'CoreCH', path: monaco_corech_path});
     assert.ok(osrm);
+});
+
+test('constructor: autoswitches to CoreCH for a CH dataset if capable', function(assert) {
+    assert.plan(1);
+    var osrm = new OSRM({algorithm: 'CH', path: monaco_corech_path});
+    assert.ok(osrm);
+});
+
+test('constructor: throws if data doesn\'t match algorithm', function(assert) {
+    assert.plan(3);
+    assert.throws(function() { new OSRM({algorithm: 'CoreCH', path: monaco_mld_path}); });
+    assert.throws(function() { new OSRM({algorithm: 'CoreCH', path: monaco_path}); });
+    assert.throws(function() { new OSRM({algorithm: 'MLD', path: monaco_path}); });
 });
 
 require('./route.js');
