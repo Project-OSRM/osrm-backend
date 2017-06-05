@@ -44,7 +44,12 @@ namespace storage
  */
 struct StorageConfig final : IOConfig
 {
-    StorageConfig() = default;
+    StorageConfig() :
+      IOConfig({".osrm.ramIndex", ".osrm.fileIndex", ".osrm.hsgr", ".osrm.nodes", ".osrm.edges", ".osrm.core",
+        ".osrm.geometry", ".osrm.timestamp", ".osrm.turn_weight_penalties", ".osrm.turn_duration_penalties", ".osrm.turn_penalties_index", ".osrm.datasource_names",
+        ".osrm.names", ".osrm.properties", ".osrm.icd", ".osrm.tld", ".osrm.tls", ".osrm.partition", ".osrm.cells", ".osrm.mldgr"}, {}, {})
+    {
+    }
 
     /**
      * Constructs a storage configuration setting paths based on a base path.

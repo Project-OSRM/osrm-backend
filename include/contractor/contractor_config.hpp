@@ -44,7 +44,8 @@ struct ContractorConfig final : storage::IOConfig
 {
     ContractorConfig() : requested_num_threads(0) {}
 
-    ContractorConfig(const boost::filesystem::path &base) : requested_num_threads(0), IOConfig(base)
+    ContractorConfig(const boost::filesystem::path &base) : requested_num_threads(0),
+      IOConfig({".osrm", }, {}, {".osrm.level", ".osrm.core", ".osrm.hsgr", ".osrm.enw"})
     {
     }
 
@@ -55,6 +56,9 @@ struct ContractorConfig final : storage::IOConfig
         updater_config.osrm_path = osrm_path;
         updater_config.UseDefaultOutputNames();
     }
+
+    // TODO override IsValid to also check updater_config validity
+    // TODO remove direct access to osrm_path to allow passing osrm_path to underlying configs
 
     updater::UpdaterConfig updater_config;
 
