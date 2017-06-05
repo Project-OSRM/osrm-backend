@@ -14,5 +14,5 @@ Feature: osrm-routed command line options: invalid options
     Scenario: osrm-routed - Missing file
         When I try to run "osrm-routed over-the-rainbow.osrm"
         Then stderr should contain "over-the-rainbow.osrm"
-        And stderr should contain "not found"
+        And stderr should contain "Required files are missing"
         And it should exit with an error

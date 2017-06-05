@@ -22,10 +22,33 @@ OSRM::OSRM(engine::EngineConfig &config)
     using CoreCH = engine::routing_algorithms::corech::Algorithm;
     using MLD = engine::routing_algorithms::mld::Algorithm;
 
+    // First, check that necessary core data is available
+    if (!config.use_shared_memory && !config.storage_config.IsValid())
+    {
+        throw util::exception("Required files are missing, cannot continue.  Have all the "
+                              "pre-processing steps been run?");
+    }
+    else if (config.use_shared_memory)
+    {
+        storage::SharedMonitor<storage::SharedDataTimestamp> barrier;
+        using mutex_type = typename decltype(barrier)::mutex_type;
+        boost::interprocess::scoped_lock<mutex_type> current_region_lock(barrier.get_mutex());
+
+        auto mem = storage::makeSharedMemory(barrier.data().region);
+        auto layout = reinterpret_cast<storage::DataLayout *>(mem->Ptr());
+        if (layout->GetBlockSize(storage::DataLayout::NAME_CHAR_DATA) == 0)
+            throw util::exception(
+                "No name data loaded, cannot continue.  Have you run osrm-datastore to load data?");
+    }
+
+    // Now, check that the algorithm requested can be used with the data
+    // that's available.
+
     if (config.algorithm == EngineConfig::Algorithm::CoreCH ||
         config.algorithm == EngineConfig::Algorithm::CH)
     {
         bool corech_compatible = engine::Engine<CoreCH>::CheckCompability(config);
+        bool ch_compatible = engine::Engine<CH>::CheckCompability(config);
 
         // Activate CoreCH if we can because it is faster
         if (config.algorithm == EngineConfig::Algorithm::CH && corech_compatible)
@@ -33,12 +56,25 @@ OSRM::OSRM(engine::EngineConfig &config)
             config.algorithm = EngineConfig::Algorithm::CoreCH;
         }
 
-        // throw error if dataset is not usable with CoreCH
+        // throw error if dataset is not usable with CoreCH or CH
         if (config.algorithm == EngineConfig::Algorithm::CoreCH && !corech_compatible)
         {
             throw util::RuntimeError("Dataset is not compatible with CoreCH.",
                                      ErrorCode::IncompatibleDataset,
                                      SOURCE_REF);
+        }
+        else if (config.algorithm == EngineConfig::Algorithm::CH && !ch_compatible)
+        {
+            throw util::exception("Dataset is not compatible with CH");
+        }
+    }
+    else if (config.algorithm == EngineConfig::Algorithm::MLD)
+    {
+        bool mld_compatible = engine::Engine<MLD>::CheckCompability(config);
+        // throw error if dataset is not usable with MLD
+        if (!mld_compatible)
+        {
+            throw util::exception("Dataset is not compatible with MLD.");
         }
     }
 

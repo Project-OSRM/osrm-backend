@@ -159,12 +159,12 @@ bool Engine<routing_algorithms::ch::Algorithm>::CheckCompability(const EngineCon
     }
     else
     {
-        std::ifstream in(config.storage_config.hsgr_data_path.string().c_str());
-        if (!in)
+        if (!boost::filesystem::exists(config.storage_config.hsgr_data_path))
             return false;
+        storage::io::FileReader in(config.storage_config.hsgr_data_path,
+                                   storage::io::FileReader::VerifyFingerprint);
 
-        in.seekg(0, std::ios::end);
-        auto size = in.tellg();
+        auto size = in.GetSize();
         return size > 0;
     }
 }
@@ -190,14 +190,38 @@ bool Engine<routing_algorithms::corech::Algorithm>::CheckCompability(const Engin
     }
     else
     {
-        std::ifstream in(config.storage_config.core_data_path.string().c_str());
-        if (!in)
+        if (!boost::filesystem::exists(config.storage_config.core_data_path))
             return false;
+        storage::io::FileReader in(config.storage_config.core_data_path,
+                                   storage::io::FileReader::VerifyFingerprint);
 
-        in.seekg(0, std::ios::end);
-        std::size_t size = in.tellg();
-        // An empty core files is only the 8 byte size header plus the 8 byte Fingerprint.
-        return size > sizeof(std::uint64_t) + sizeof(util::FingerPrint);
+        auto size = in.GetSize();
+        return size > sizeof(std::uint64_t);
+    }
+}
+
+template <>
+bool Engine<routing_algorithms::mld::Algorithm>::CheckCompability(const EngineConfig &config)
+{
+    if (config.use_shared_memory)
+    {
+        storage::SharedMonitor<storage::SharedDataTimestamp> barrier;
+        using mutex_type = typename decltype(barrier)::mutex_type;
+        boost::interprocess::scoped_lock<mutex_type> current_region_lock(barrier.get_mutex());
+
+        auto mem = storage::makeSharedMemory(barrier.data().region);
+        auto layout = reinterpret_cast<storage::DataLayout *>(mem->Ptr());
+        return layout->GetBlockSize(storage::DataLayout::MLD_PARTITION) > 0;
+    }
+    else
+    {
+        if (!boost::filesystem::exists(config.storage_config.mld_partition_path))
+            return false;
+        storage::io::FileReader in(config.storage_config.mld_partition_path,
+                                   storage::io::FileReader::VerifyFingerprint);
+
+        auto size = in.GetSize();
+        return size > 0;
     }
 }
 }
