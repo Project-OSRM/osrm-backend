@@ -128,9 +128,16 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
                                           },
                                           qi::_1)];
 
+        polyline6_rule = qi::as_string[qi::lit("polyline6(") > +polyline_chars > ')']
+                                     [qi::_val = ph::bind(
+                                          [](const std::string &polyline) {
+                                              return engine::decodePolyline<1000000>(polyline);
+                                          },
+                                          qi::_1)];
+
         query_rule =
             ((location_rule % ';') |
-             polyline_rule)[ph::bind(&engine::api::BaseParameters::coordinates, qi::_r1) = qi::_1];
+             polyline_rule | polyline6_rule)[ph::bind(&engine::api::BaseParameters::coordinates, qi::_r1) = qi::_1];
 
         radiuses_rule = qi::lit("radiuses=") >
                         (-(qi::double_ | unlimited_rule) %
@@ -176,6 +183,7 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
     qi::rule<Iterator, osrm::engine::Bearing()> bearing_rule;
     qi::rule<Iterator, osrm::util::Coordinate()> location_rule;
     qi::rule<Iterator, std::vector<osrm::util::Coordinate>()> polyline_rule;
+    qi::rule<Iterator, std::vector<osrm::util::Coordinate>()> polyline6_rule;
 
     qi::rule<Iterator, unsigned char()> base64_char;
     qi::rule<Iterator, std::string()> polyline_chars;
