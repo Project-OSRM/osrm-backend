@@ -81,6 +81,62 @@ void relaxOutgoingEdges(const datafacade::ContiguousInternalMemoryDataFacade<Alg
     }
 }
 
+template <bool DIRECTION>
+void checkCandidatePath(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
+                        SearchEngineData<Algorithm>::QueryHeap &forward_heap,
+                        SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
+                        const NodeID node,
+                        const EdgeWeight weight,
+                        NodeID &middle_node_id,
+                        EdgeWeight &upper_bound)
+{
+    BOOST_ASSERT(forward_heap.WasInserted(node));
+    BOOST_ASSERT(reverse_heap.WasInserted(node));
+
+    // Check whether there is a loop edge (node->node) present in the source or target heap
+    EdgeWeight loop_weight = 0;
+    if (forward_heap.GetData(node).parent == node)
+    {
+        bool has_loop_edge = false;
+        for (const auto edge : facade.GetAdjacentEdgeRange(node))
+        {
+            const auto &data = facade.GetEdgeData(edge);
+            if ((DIRECTION == FORWARD_DIRECTION ? data.forward : data.backward) &&
+                facade.GetTarget(edge) == node)
+            { // The candidate path: source phantom → node ➰ node → target phantom
+                has_loop_edge = true;
+                loop_weight = data.weight;
+                break;
+            }
+        }
+
+        // Ignore single edge-based-node paths (middle node is both source and target one)
+        // as such paths are handled outside Dijkstra search,
+        // but allow paths with loop edges node → node
+        if (reverse_heap.GetData(node).parent == node && !has_loop_edge)
+            return;
+    }
+
+    // The candidate path: source → .. → node → .. → target
+    EdgeWeight new_weight = weight + loop_weight + reverse_heap.GetKey(node);
+
+    if (DIRECTION == REVERSE_DIRECTION && reverse_heap.GetData(node).parent == node)
+    { // If the rendez-vous node is a phantom source node with the projected key value `sb`
+        // for the path `a---s===b===t---c` with the backward edge `bc<-ab` that has
+        // weight `weight(ab)+turn(abc)+weight(bt)`
+        // then the new_weight must be corrected by the weight value of the node `ab`
+        const auto node_weight = getNodeWeight(facade, node);
+        BOOST_ASSERT(new_weight >= node_weight);
+        new_weight -= node_weight;
+    }
+
+    if (new_weight < upper_bound)
+    { // Update upper bound and the middle rendez-vous node if the new weight is better
+        middle_node_id = node;
+        upper_bound = new_weight;
+    }
+}
+
 static constexpr bool ENABLE_STALLING = true;
 static constexpr bool DISABLE_STALLING = false;
 template <bool DIRECTION, bool STALLING = ENABLE_STALLING>
@@ -98,41 +154,8 @@ void routingStep(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm>
     // Check if node is a rendez-vous node candidate in forward and reverse heaps
     if (reverse_heap.WasInserted(node))
     {
-        EdgeWeight new_weight = INVALID_EDGE_WEIGHT;
-
-        // Check whether there is a loop edge (node->node) present at the source or target heap
-        if (forward_heap.GetData(node).parent == node)
-        {
-            for (const auto edge : facade.GetAdjacentEdgeRange(node))
-            {
-                const auto &data = facade.GetEdgeData(edge);
-                if ((DIRECTION == FORWARD_DIRECTION ? data.forward : data.backward)
-                    && facade.GetTarget(edge) == node)
-                { // The candidate path: source phantom → node ➰ node → target phantom
-                    new_weight = weight + data.weight + reverse_heap.GetKey(node);
-                }
-            }
-        }
-        else
-        { // The candidate path: source → .. → node → .. → target
-            new_weight = weight + reverse_heap.GetKey(node);
-        }
-
-        if (new_weight != INVALID_EDGE_WEIGHT && DIRECTION == REVERSE_DIRECTION && reverse_heap.GetData(node).parent == node)
-        { // If the rendez-vous node is a phantom source node with the projected key value `sb`
-            // for the path `a---s===b===t---c` with the backward edge `bc<-ab` that has
-            // weight `weight(ab)+turn(abc)+weight(bt)`
-            // then the new_weight must be corrected by the weight value of the node `ab`
-            const auto node_weight = getNodeWeight(facade, node);
-            BOOST_ASSERT(new_weight >= node_weight);
-            new_weight -= node_weight;
-        }
-
-        if (new_weight < upper_bound)
-        { // Update upper bound and the middle rendez-vous node if the new weight is better
-            middle_node_id = node;
-            upper_bound = new_weight;
-        }
+        checkCandidatePath<DIRECTION>(
+            facade, forward_heap, reverse_heap, node, weight, middle_node_id, upper_bound);
     }
 
     // Make sure we don't terminate too early if we initialize the weight

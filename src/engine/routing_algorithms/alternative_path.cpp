@@ -54,8 +54,8 @@ template <bool DIRECTION>
 void alternativeRoutingStep(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
                             QueryHeap &heap1,
                             QueryHeap &heap2,
-                            NodeID *middle_node,
-                            EdgeWeight *upper_bound_to_shortest_path_weight,
+                            NodeID &middle_node,
+                            EdgeWeight &upper_bound_to_shortest_path_weight,
                             std::vector<NodeID> &search_space_intersection,
                             std::vector<SearchSpaceEdge> &search_space)
 {
@@ -66,8 +66,8 @@ void alternativeRoutingStep(const datafacade::ContiguousInternalMemoryDataFacade
     const EdgeWeight weight = forward_heap.GetKey(node);
 
     const auto scaled_weight = static_cast<EdgeWeight>(weight / (1. + VIAPATH_EPSILON));
-    if ((INVALID_EDGE_WEIGHT != *upper_bound_to_shortest_path_weight) &&
-        (scaled_weight > *upper_bound_to_shortest_path_weight))
+    if ((INVALID_EDGE_WEIGHT != upper_bound_to_shortest_path_weight) &&
+        (scaled_weight > upper_bound_to_shortest_path_weight))
     {
         forward_heap.DeleteAll();
         return;
@@ -78,27 +78,13 @@ void alternativeRoutingStep(const datafacade::ContiguousInternalMemoryDataFacade
     if (reverse_heap.WasInserted(node))
     {
         search_space_intersection.emplace_back(node);
-        const EdgeWeight new_weight = reverse_heap.GetKey(node) + weight;
-        if (new_weight < *upper_bound_to_shortest_path_weight)
-        {
-            if (new_weight >= 0)
-            {
-                *middle_node = node;
-                *upper_bound_to_shortest_path_weight = new_weight;
-            }
-            else
-            {
-                // check whether there is a loop present at the node
-                const auto loop_weight = ch::getLoopWeight<false>(facade, node);
-                const EdgeWeight new_weight_with_loop = new_weight + loop_weight;
-                if (loop_weight != INVALID_EDGE_WEIGHT &&
-                    new_weight_with_loop <= *upper_bound_to_shortest_path_weight)
-                {
-                    *middle_node = node;
-                    *upper_bound_to_shortest_path_weight = loop_weight;
-                }
-            }
-        }
+        checkCandidatePath<DIRECTION>(facade,
+                                      forward_heap,
+                                      reverse_heap,
+                                      node,
+                                      weight,
+                                      middle_node,
+                                      upper_bound_to_shortest_path_weight);
     }
 
     for (auto edge : facade.GetAdjacentEdgeRange(node))
@@ -584,6 +570,14 @@ alternativePathSearch(SearchEngineData<Algorithm> &engine_working_data,
 
     insertNodesInHeaps(facade, forward_heap1, reverse_heap1, phantom_node_pair);
 
+    // TODO: refine
+    if (phantom_node_pair.source_phantom.forward_segment_id.enabled)
+        forward_search_space.push_back({phantom_node_pair.source_phantom.forward_segment_id.id,
+                                        phantom_node_pair.source_phantom.forward_segment_id.id});
+    if (phantom_node_pair.source_phantom.reverse_segment_id.enabled)
+        forward_search_space.push_back({phantom_node_pair.source_phantom.reverse_segment_id.id,
+                                        phantom_node_pair.source_phantom.reverse_segment_id.id});
+
     // search from s and t till new_min/(1+epsilon) > weight_of_shortest_path
     while (0 < (forward_heap1.Size() + reverse_heap1.Size()))
     {
@@ -592,8 +586,8 @@ alternativePathSearch(SearchEngineData<Algorithm> &engine_working_data,
             alternativeRoutingStep<FORWARD_DIRECTION>(facade,
                                                       forward_heap1,
                                                       reverse_heap1,
-                                                      &middle_node,
-                                                      &upper_bound_to_shortest_path_weight,
+                                                      middle_node,
+                                                      upper_bound_to_shortest_path_weight,
                                                       via_node_candidate_list,
                                                       forward_search_space);
         }
@@ -602,8 +596,8 @@ alternativePathSearch(SearchEngineData<Algorithm> &engine_working_data,
             alternativeRoutingStep<REVERSE_DIRECTION>(facade,
                                                       forward_heap1,
                                                       reverse_heap1,
-                                                      &middle_node,
-                                                      &upper_bound_to_shortest_path_weight,
+                                                      middle_node,
+                                                      upper_bound_to_shortest_path_weight,
                                                       via_node_candidate_list,
                                                       reverse_search_space);
         }
