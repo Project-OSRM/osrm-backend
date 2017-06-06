@@ -121,7 +121,16 @@ void search(SearchEngineData<Algorithm> & /*engine_working_data*/,
         return;
     }
 
-    retrievePackedPathFromHeap(forward_heap, reverse_heap, middle, packed_leg);
+    if (forward_heap.GetData(middle).parent == middle &&
+        reverse_heap.GetData(middle).parent == middle)
+    { // Self-loop makes up the full path middle->middle
+        packed_leg.push_back(middle);
+        packed_leg.push_back(middle);
+    }
+    else
+    {
+        retrievePackedPathFromHeap(forward_heap, reverse_heap, middle, packed_leg);
+    }
 }
 
 // Requires the heaps for be empty

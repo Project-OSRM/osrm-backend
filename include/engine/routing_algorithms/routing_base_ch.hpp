@@ -95,14 +95,30 @@ void routingStep(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm>
     const NodeID node = forward_heap.DeleteMin();
     const EdgeWeight weight = forward_heap.GetKey(node);
 
-    // Check if node is a rendez-vous node candidate of forward and reverse heaps
-    // and not a edge-based nodes loop (node->node) and (node->node)
-    if (reverse_heap.WasInserted(node) &&
-        forward_heap.GetData(node).parent != reverse_heap.GetData(node).parent)
+    // Check if node is a rendez-vous node candidate in forward and reverse heaps
+    if (reverse_heap.WasInserted(node))
     {
-        EdgeWeight new_weight = reverse_heap.GetKey(node) + weight;
+        EdgeWeight new_weight = INVALID_EDGE_WEIGHT;
 
-        if (DIRECTION == REVERSE_DIRECTION && reverse_heap.GetData(node).parent == node)
+        // Check whether there is a loop edge (node->node) present at the source or target heap
+        if (forward_heap.GetData(node).parent == node)
+        {
+            for (const auto edge : facade.GetAdjacentEdgeRange(node))
+            {
+                const auto &data = facade.GetEdgeData(edge);
+                if ((DIRECTION == FORWARD_DIRECTION ? data.forward : data.backward)
+                    && facade.GetTarget(edge) == node)
+                { // The candidate path: source phantom → node ➰ node → target phantom
+                    new_weight = weight + data.weight + reverse_heap.GetKey(node);
+                }
+            }
+        }
+        else
+        { // The candidate path: source → .. → node → .. → target
+            new_weight = weight + reverse_heap.GetKey(node);
+        }
+
+        if (new_weight != INVALID_EDGE_WEIGHT && DIRECTION == REVERSE_DIRECTION && reverse_heap.GetData(node).parent == node)
         { // If the rendez-vous node is a phantom source node with the projected key value `sb`
             // for the path `a---s===b===t---c` with the backward edge `bc<-ab` that has
             // weight `weight(ab)+turn(abc)+weight(bt)`
@@ -113,7 +129,7 @@ void routingStep(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm>
         }
 
         if (new_weight < upper_bound)
-        {
+        { // Update upper bound and the middle rendez-vous node if the new weight is better
             middle_node_id = node;
             upper_bound = new_weight;
         }
