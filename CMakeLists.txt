@@ -286,11 +286,6 @@ if(CMAKE_BUILD_TYPE MATCHES Release OR CMAKE_BUILD_TYPE MATCHES MinRelSize OR CM
   endif()
 endif()
 
-if(UNIX AND NOT APPLE AND ENABLE_MASON AND (LTO_WORKS OR ENABLE_GOLD_LINKER))
-  message(WARNING "ENABLE_MASON and ENABLE_LTO/ENABLE_GOLD_LINKER may not work on all linux systems currently")
-  message(WARNING "For more details see: https://github.com/Project-OSRM/osrm-backend/issues/3202")
-endif()
-
 set(MAYBE_COVERAGE_LIBRARIES "")
 if (ENABLE_COVERAGE)
   if (NOT CMAKE_BUILD_TYPE MATCHES "Debug")
