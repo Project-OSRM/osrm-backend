@@ -65,12 +65,16 @@ const constexpr char *scenario_names[] = {"Simple",
 
 class TurnLaneHandler
 {
+    using UpgradableMutex = boost::interprocess::interprocess_upgradable_mutex;
+    using ScopedReaderLock = boost::interprocess::sharable_lock<UpgradableMutex>;
+    using ScopedWriterLock = boost::interprocess::scoped_lock<UpgradableMutex>;
+
   public:
     typedef std::vector<TurnLaneData> LaneDataVector;
 
     TurnLaneHandler(const util::NodeBasedDynamicGraph &node_based_graph,
-                    std::vector<std::uint32_t> &turn_lane_offsets,
-                    std::vector<TurnLaneType::Mask> &turn_lane_masks,
+                    const std::vector<std::uint32_t> &turn_lane_offsets,
+                    const std::vector<TurnLaneType::Mask> &turn_lane_masks,
                     LaneDescriptionMap &lane_description_map,
                     const TurnAnalysis &turn_analysis,
                     util::guidance::LaneDataIdMap &id_map);
@@ -86,8 +90,8 @@ class TurnLaneHandler
     // we need to be able to look at previous intersections to, in some cases, find the correct turn
     // lanes for a turn
     const util::NodeBasedDynamicGraph &node_based_graph;
-    std::vector<std::uint32_t> &turn_lane_offsets;
-    std::vector<TurnLaneType::Mask> &turn_lane_masks;
+    const std::vector<std::uint32_t> &turn_lane_offsets;
+    const std::vector<TurnLaneType::Mask> &turn_lane_masks;
     LaneDescriptionMap &lane_description_map;
     const TurnAnalysis &turn_analysis;
     util::guidance::LaneDataIdMap &id_map;

@@ -209,16 +209,7 @@ Intersection triviallyMatchLanesToTurns(Intersection intersection,
         util::guidance::LaneTupleIdPair key{{LaneID(data.to - data.from + 1), data.from},
                                             lane_string_id};
 
-        auto lane_data_id = boost::numeric_cast<LaneDataID>(lane_data_to_id.size());
-        const auto it = lane_data_to_id.find(key);
-
-        if (it == lane_data_to_id.end())
-            lane_data_to_id.insert({key, lane_data_id});
-        else
-            lane_data_id = it->second;
-
-        // set lane id instead after the switch:
-        road.lane_data_id = lane_data_id;
+        road.lane_data_id = lane_data_to_id.ConcurrentFindOrAdd(key);
     };
 
     if (!lane_data.empty() && lane_data.front().tag == TurnLaneType::uturn)

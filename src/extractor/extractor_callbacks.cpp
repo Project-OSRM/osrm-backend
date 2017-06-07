@@ -41,7 +41,7 @@ ExtractorCallbacks::ExtractorCallbacks(ExtractionContainers &extraction_containe
 {
     // we reserved 0, 1, 2, 3 for the empty case
     string_map[MapKey("", "", "", "")] = 0;
-    lane_description_map[TurnLaneDescription()] = 0;
+    lane_description_map.data[TurnLaneDescription()] = 0;
 }
 
 /**
@@ -251,18 +251,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
             return INVALID_LANE_DESCRIPTIONID;
         TurnLaneDescription lane_description = laneStringToDescription(std::move(lane_string));
 
-        const auto lane_description_itr = lane_description_map.find(lane_description);
-        if (lane_description_itr == lane_description_map.end())
-        {
-            const LaneDescriptionID new_id =
-                boost::numeric_cast<LaneDescriptionID>(lane_description_map.size());
-            lane_description_map[lane_description] = new_id;
-            return new_id;
-        }
-        else
-        {
-            return lane_description_itr->second;
-        }
+        return lane_description_map.ConcurrentFindOrAdd(lane_description);
     };
 
     // Deduplicates street names, refs, destinations, pronunciation based on the string_map.

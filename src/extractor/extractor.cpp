@@ -77,8 +77,9 @@ transformTurnLaneMapIntoArrays(const guidance::LaneDescriptionMap &turn_lane_map
     //
     // turn lane offsets points into the locations of the turn_lane_masks array. We use a standard
     // adjacency array like structure to store the turn lane masks.
-    std::vector<std::uint32_t> turn_lane_offsets(turn_lane_map.size() + 2); // empty ID + sentinel
-    for (auto entry = turn_lane_map.begin(); entry != turn_lane_map.end(); ++entry)
+    std::vector<std::uint32_t> turn_lane_offsets(turn_lane_map.data.size() +
+                                                 2); // empty ID + sentinel
+    for (auto entry = turn_lane_map.data.begin(); entry != turn_lane_map.data.end(); ++entry)
         turn_lane_offsets[entry->second + 1] = entry->first.size();
 
     // inplace prefix sum
@@ -86,7 +87,7 @@ transformTurnLaneMapIntoArrays(const guidance::LaneDescriptionMap &turn_lane_map
 
     // allocate the current masks
     std::vector<guidance::TurnLaneType::Mask> turn_lane_masks(turn_lane_offsets.back());
-    for (auto entry = turn_lane_map.begin(); entry != turn_lane_map.end(); ++entry)
+    for (auto entry = turn_lane_map.data.begin(); entry != turn_lane_map.data.end(); ++entry)
         std::copy(entry->first.begin(),
                   entry->first.end(),
                   turn_lane_masks.begin() + turn_lane_offsets[entry->second]);
@@ -331,7 +332,7 @@ std::vector<TurnRestriction> Extractor::ParseOSMData(ScriptingEnvironment &scrip
                 << " ways, and " << number_of_relations << " relations";
 
     // take control over the turn lane map
-    turn_lane_map = extractor_callbacks->moveOutLaneDescriptionMap();
+    turn_lane_map.data = extractor_callbacks->moveOutLaneDescriptionMap().data;
 
     extractor_callbacks.reset();
 
