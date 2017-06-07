@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "util/concurrent_id_map.hpp"
 #include "util/typedefs.hpp"
 
 #include <boost/functional/hash.hpp>
@@ -97,7 +98,7 @@ class LaneTupleIdPair
     }
 };
 
-using LaneDataIdMap = std::unordered_map<LaneTupleIdPair, LaneDataID, boost::hash<LaneTupleIdPair>>;
+using LaneDataIdMap = ConcurrentIDMap<LaneTupleIdPair, LaneDataID, boost::hash<LaneTupleIdPair>>;
 
 } // namespace guidance
 } // namespace util

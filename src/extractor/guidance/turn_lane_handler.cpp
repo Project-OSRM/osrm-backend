@@ -34,8 +34,8 @@ std::size_t getNumberOfTurns(const Intersection &intersection)
 } // namespace
 
 TurnLaneHandler::TurnLaneHandler(const util::NodeBasedDynamicGraph &node_based_graph,
-                                 std::vector<std::uint32_t> &turn_lane_offsets,
-                                 std::vector<TurnLaneType::Mask> &turn_lane_masks,
+                                 const std::vector<std::uint32_t> &turn_lane_offsets,
+                                 const std::vector<TurnLaneType::Mask> &turn_lane_masks,
                                  LaneDescriptionMap &lane_description_map,
                                  const TurnAnalysis &turn_analysis,
                                  util::guidance::LaneDataIdMap &id_map)
@@ -781,19 +781,8 @@ Intersection TurnLaneHandler::handleSliproadTurn(Intersection intersection,
         }
     }
 
-    const auto combined_id = [&]() {
-        auto itr = lane_description_map.find(combined_description);
-        if (lane_description_map.find(combined_description) == lane_description_map.end())
-        {
-            const auto new_id = boost::numeric_cast<LaneDescriptionID>(lane_description_map.size());
-            lane_description_map[combined_description] = new_id;
-            return new_id;
-        }
-        else
-        {
-            return itr->second;
-        }
-    }();
+    const auto combined_id = lane_description_map.ConcurrentFindOrAdd(combined_description);
+
     return simpleMatchTuplesToTurns(std::move(intersection), lane_data, combined_id);
 }
 

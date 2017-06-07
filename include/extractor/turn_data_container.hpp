@@ -31,6 +31,15 @@ void write(storage::io::FileWriter &writer,
            const detail::TurnDataContainerImpl<Ownership> &turn_data);
 }
 
+struct TurnData
+{
+    extractor::guidance::TurnInstruction turn_instruction;
+    LaneDataID lane_data_id;
+    EntryClassID entry_class_id;
+    util::guidance::TurnBearing pre_turn_bearing;
+    util::guidance::TurnBearing post_turn_bearing;
+};
+
 namespace detail
 {
 template <storage::Ownership Ownership> class TurnDataContainerImpl
@@ -75,17 +84,20 @@ template <storage::Ownership Ownership> class TurnDataContainerImpl
 
     // Used by EdgeBasedGraphFactory to fill data structure
     template <typename = std::enable_if<Ownership == storage::Ownership::Container>>
-    void push_back(extractor::guidance::TurnInstruction turn_instruction,
-                   LaneDataID lane_data_id,
-                   EntryClassID entry_class_id,
-                   util::guidance::TurnBearing pre_turn_bearing,
-                   util::guidance::TurnBearing post_turn_bearing)
+    void push_back(const TurnData &data)
     {
-        turn_instructions.push_back(turn_instruction);
-        lane_data_ids.push_back(lane_data_id);
-        entry_class_ids.push_back(entry_class_id);
-        pre_turn_bearings.push_back(pre_turn_bearing);
-        post_turn_bearings.push_back(post_turn_bearing);
+        turn_instructions.push_back(data.turn_instruction);
+        lane_data_ids.push_back(data.lane_data_id);
+        entry_class_ids.push_back(data.entry_class_id);
+        pre_turn_bearings.push_back(data.pre_turn_bearing);
+        post_turn_bearings.push_back(data.post_turn_bearing);
+    }
+
+    template <typename = std::enable_if<Ownership == storage::Ownership::Container>>
+    void append(const std::vector<TurnData> &others)
+    {
+        std::for_each(
+            others.begin(), others.end(), [this](const TurnData &other) { push_back(other); });
     }
 
     friend void serialization::read<Ownership>(storage::io::FileReader &reader,

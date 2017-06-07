@@ -10,6 +10,7 @@
 
 #include <boost/functional/hash.hpp>
 
+#include "util/concurrent_id_map.hpp"
 #include "util/json_container.hpp"
 #include "util/typedefs.hpp"
 
@@ -93,9 +94,9 @@ struct TurnLaneDescription_hash
     }
 };
 
-typedef std::unordered_map<guidance::TurnLaneDescription,
-                           LaneDescriptionID,
-                           guidance::TurnLaneDescription_hash>
+typedef util::ConcurrentIDMap<guidance::TurnLaneDescription,
+                              LaneDescriptionID,
+                              guidance::TurnLaneDescription_hash>
     LaneDescriptionMap;
 
 } // guidance

@@ -18,6 +18,7 @@
 #include "extractor/query_node.hpp"
 #include "extractor/restriction_map.hpp"
 
+#include "util/concurrent_id_map.hpp"
 #include "util/deallocating_vector.hpp"
 #include "util/guidance/bearing_class.hpp"
 #include "util/guidance/entry_class.hpp"
@@ -40,6 +41,9 @@
 #include <vector>
 
 #include <boost/filesystem/fstream.hpp>
+
+#include <tbb/concurrent_unordered_map.h>
+#include <tbb/concurrent_vector.h>
 
 namespace osrm
 {
@@ -167,9 +171,9 @@ class EdgeBasedGraphFactory
     std::size_t skipped_uturns_counter;
     std::size_t skipped_barrier_turns_counter;
 
-    std::unordered_map<util::guidance::BearingClass, BearingClassID> bearing_class_hash;
+    util::ConcurrentIDMap<util::guidance::BearingClass, BearingClassID> bearing_class_hash;
     std::vector<BearingClassID> bearing_class_by_node_based_node;
-    std::unordered_map<util::guidance::EntryClass, EntryClassID> entry_class_hash;
+    util::ConcurrentIDMap<util::guidance::EntryClass, EntryClassID> entry_class_hash;
 };
 } // namespace extractor
 } // namespace osrm
