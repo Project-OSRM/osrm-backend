@@ -93,9 +93,9 @@ BOOST_AUTO_TEST_CASE(valid_urls)
     CHECK_EQUAL_RANGE(reference_5.query, result_5->query);
     BOOST_CHECK_EQUAL(reference_5.prefix_length, result_5->prefix_length);
 
-    // tile
-    api::ParsedURL reference_6{"route", 1, "profile", "tile(1,2,3).mvt", 18UL};
-    auto result_6 = api::parseURL("/route/v1/profile/tile(1,2,3).mvt");
+    // polyline6
+    api::ParsedURL reference_6{"route", 1, "profile", "polyline6(_ibE?_seK_seK_seK_seK)?", 18UL};
+    auto result_6 = api::parseURL("/route/v1/profile/polyline6(_ibE?_seK_seK_seK_seK)?");
     BOOST_CHECK(result_6);
     BOOST_CHECK_EQUAL(reference_6.service, result_6->service);
     BOOST_CHECK_EQUAL(reference_6.version, result_6->version);
@@ -103,17 +103,27 @@ BOOST_AUTO_TEST_CASE(valid_urls)
     CHECK_EQUAL_RANGE(reference_6.query, result_6->query);
     BOOST_CHECK_EQUAL(reference_6.prefix_length, result_6->prefix_length);
 
-    // polyline with %HEX
-    api::ParsedURL reference_7{
-        "match", 1, "car", "polyline(}jmwFz~ubMyCa@`@yDJqE)?你好&\n \"%~", 14UL};
-    auto result_7 = api::parseURL(
-        "/match/v1/car/polyline(%7DjmwFz~ubMyCa@%60@yDJqE)?%e4%bd%a0%e5%a5%bd&%0A%20%22%25%7e");
+    // tile
+    api::ParsedURL reference_7{"route", 1, "profile", "tile(1,2,3).mvt", 18UL};
+    auto result_7 = api::parseURL("/route/v1/profile/tile(1,2,3).mvt");
     BOOST_CHECK(result_7);
     BOOST_CHECK_EQUAL(reference_7.service, result_7->service);
     BOOST_CHECK_EQUAL(reference_7.version, result_7->version);
     BOOST_CHECK_EQUAL(reference_7.profile, result_7->profile);
     CHECK_EQUAL_RANGE(reference_7.query, result_7->query);
     BOOST_CHECK_EQUAL(reference_7.prefix_length, result_7->prefix_length);
+
+    // polyline with %HEX
+    api::ParsedURL reference_8{
+        "match", 1, "car", "polyline(}jmwFz~ubMyCa@`@yDJqE)?你好&\n \"%~", 14UL};
+    auto result_8 = api::parseURL(
+        "/match/v1/car/polyline(%7DjmwFz~ubMyCa@%60@yDJqE)?%e4%bd%a0%e5%a5%bd&%0A%20%22%25%7e");
+    BOOST_CHECK(result_8);
+    BOOST_CHECK_EQUAL(reference_8.service, result_8->service);
+    BOOST_CHECK_EQUAL(reference_8.version, result_8->version);
+    BOOST_CHECK_EQUAL(reference_8.profile, result_8->profile);
+    CHECK_EQUAL_RANGE(reference_8.query, result_8->query);
+    BOOST_CHECK_EQUAL(reference_8.prefix_length, result_8->prefix_length);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
