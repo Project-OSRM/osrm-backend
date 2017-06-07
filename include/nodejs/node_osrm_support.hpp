@@ -500,6 +500,11 @@ inline bool argumentsToParameter(const Nan::FunctionCallbackInfo<v8::Value> &arg
             {
                 params->radiuses.emplace_back();
             }
+            else if (radius->IsString() &&
+                     *v8::String::Utf8Value(radius) == std::string("unlimited"))
+            {
+                params->radiuses.emplace_back();
+            }
             else if (radius->IsNumber() && radius->NumberValue() >= 0)
             {
                 params->radiuses.push_back(static_cast<double>(radius->NumberValue()));
