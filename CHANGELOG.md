@@ -1,6 +1,7 @@
 # 5.8.0
   - Changes from 5.7
     - API:
+      - polyline6 support in request string
       - new parameter `approaches` for `route`, `table`, `trip` and `nearest` requests.  This parameter keep waypoints on the curb side.
         'approaches' accepts both 'curb' and 'unrestricted' values.
         Note : the curb side depend on the `ProfileProperties::left_hand_driving`, it's a global property set once by the profile. If you are working with a planet dataset, the api will be wrong in some countries, and right in others.
