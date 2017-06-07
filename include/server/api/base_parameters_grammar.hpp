@@ -129,15 +129,15 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
                                           qi::_1)];
 
         polyline6_rule = qi::as_string[qi::lit("polyline6(") > +polyline_chars > ')']
-                                     [qi::_val = ph::bind(
-                                          [](const std::string &polyline) {
-                                              return engine::decodePolyline<1000000>(polyline);
-                                          },
-                                          qi::_1)];
+                                      [qi::_val = ph::bind(
+                                           [](const std::string &polyline) {
+                                               return engine::decodePolyline<1000000>(polyline);
+                                           },
+                                           qi::_1)];
 
         query_rule =
-            ((location_rule % ';') |
-             polyline_rule | polyline6_rule)[ph::bind(&engine::api::BaseParameters::coordinates, qi::_r1) = qi::_1];
+            ((location_rule % ';') | polyline_rule |
+             polyline6_rule)[ph::bind(&engine::api::BaseParameters::coordinates, qi::_r1) = qi::_1];
 
         radiuses_rule = qi::lit("radiuses=") >
                         (-(qi::double_ | unlimited_rule) %

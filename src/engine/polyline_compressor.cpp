@@ -53,8 +53,10 @@ std::string encode(std::vector<int> &numbers)
     return output;
 }
 
-    // https://developers.google.com/maps/documentation/utilities/polylinealgorithm
-std::int32_t decode_polyline_integer(std::string::const_iterator &first, std::string::const_iterator last) {
+// https://developers.google.com/maps/documentation/utilities/polylinealgorithm
+std::int32_t decode_polyline_integer(std::string::const_iterator &first,
+                                     std::string::const_iterator last)
+{
     // varint coding parameters
     const std::uint32_t bits_in_chunk = 5;
     const std::uint32_t continuation_bit = 1 << bits_in_chunk;
