@@ -368,7 +368,7 @@ void search(SearchEngineData<Algorithm> &engine_working_data,
             const bool force_loop_forward,
             const bool force_loop_reverse,
             const PhantomNodes &phantom_nodes,
-            const int duration_upper_bound = INVALID_EDGE_WEIGHT);
+            const EdgeWeight weight_upper_bound = INVALID_EDGE_WEIGHT);
 
 // Requires the heaps for be empty
 // If heaps should be adjusted to be initialized outside of this function,
@@ -404,7 +404,7 @@ void search(SearchEngineData<Algorithm> &engine_working_data,
             const bool force_loop_forward,
             const bool force_loop_reverse,
             const PhantomNodes &phantom_nodes,
-            int duration_upper_bound = INVALID_EDGE_WEIGHT);
+            EdgeWeight weight_upper_bound = INVALID_EDGE_WEIGHT);
 
 // Requires the heaps for be empty
 // If heaps should be adjusted to be initialized outside of this function,
