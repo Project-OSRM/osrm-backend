@@ -61,7 +61,7 @@ Feature: Basic Roundabout
            | waypoints | route          | turns                                                              |
            | a,d       | ab,cd,cd       | depart,roundabout turn left exit-1,arrive                          |
            | a,f       | ab,ef,ef,ef    | depart,roundabout turn left exit-1,notification right,arrive       |
-           | a,h       | ab,bgecb,gh,gh | depart,invalid right,notification right,arrive                     |
+           | a,h       | ab,bgecb,gh,gh | depart,roundabout turn right exit-1,notification right,arrive      |
            | d,f       | cd,ef,ef,ef    | depart,roundabout turn sharp left exit-2,notification right,arrive |
            | d,h       | cd,gh,gh,gh    | depart,roundabout turn left exit-2,notification right,arrive       |
            | d,a       | cd,ab,ab       | depart,roundabout turn right exit-1,arrive                         |
@@ -70,4 +70,4 @@ Feature: Basic Roundabout
            | f,d       | ef,cd,cd       | depart,roundabout turn right exit-1,arrive                         |
            | h,a       | gh,ab,ab       | depart,roundabout turn left exit-2,arrive                          |
            | h,d       | gh,cd,cd       | depart,roundabout turn straight exit-1,arrive                      |
-           | h,f       | gh,bgecb,ef,ef | depart,invalid right,notification right,arrive                     |
+           | h,f       | gh,bgecb,ef,ef | depart,roundabout turn right exit-1,notification right,arrive      |
