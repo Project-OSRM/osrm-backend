@@ -171,9 +171,11 @@ void closeOffRoundabout(const bool on_roundabout,
         if (!guidance::haveSameMode(exit_step, prev_step))
         {
             BOOST_ASSERT(leavesRoundabout(exit_step.maneuver.instruction));
-            prev_step.maneuver.instruction = exit_step.maneuver.instruction;
             if (!entersRoundabout(prev_step.maneuver.instruction))
-                prev_step.maneuver.exit = exit_step.maneuver.exit;
+            {
+                prev_step.maneuver.instruction = exit_step.maneuver.instruction;
+            }
+            prev_step.maneuver.exit = exit_step.maneuver.exit;
             exit_step.maneuver.instruction.type = TurnType::Notification;
             step_index--;
         }
@@ -198,9 +200,12 @@ void closeOffRoundabout(const bool on_roundabout,
         {
             auto &propagation_step = steps[propagation_index];
             auto &next_step = steps[propagation_index + 1];
-            propagation_step.ElongateBy(next_step);
-            propagation_step.maneuver.exit = next_step.maneuver.exit;
-            next_step.Invalidate();
+            if (guidance::haveSameMode(propagation_step, next_step))
+            {
+                propagation_step.ElongateBy(next_step);
+                propagation_step.maneuver.exit = next_step.maneuver.exit;
+                next_step.Invalidate();
+            }
 
             if (entersRoundabout(propagation_step.maneuver.instruction))
             {
