@@ -489,61 +489,54 @@ LuaScriptingContext &Sol2ScriptingEnvironment::GetSol2Context()
 }
 
 void Sol2ScriptingEnvironment::ProcessElements(
-    const std::vector<osmium::memory::Buffer::const_iterator> &osm_elements,
+    const osmium::memory::Buffer &buffer,
     const RestrictionParser &restriction_parser,
-    tbb::concurrent_vector<std::pair<std::size_t, ExtractionNode>> &resulting_nodes,
-    tbb::concurrent_vector<std::pair<std::size_t, ExtractionWay>> &resulting_ways,
-    tbb::concurrent_vector<boost::optional<InputRestrictionContainer>> &resulting_restrictions)
+    std::vector<std::pair<const osmium::Node &, ExtractionNode>> &resulting_nodes,
+    std::vector<std::pair<const osmium::Way &, ExtractionWay>> &resulting_ways,
+    std::vector<boost::optional<InputRestrictionContainer>> &resulting_restrictions)
 {
-    // parse OSM entities in parallel, store in resulting vectors
-    tbb::parallel_for(
-        tbb::blocked_range<std::size_t>(0, osm_elements.size()),
-        [&](const tbb::blocked_range<std::size_t> &range) {
-            ExtractionNode result_node;
-            ExtractionWay result_way;
-            std::vector<InputRestrictionContainer> result_res;
-            auto &local_context = this->GetSol2Context();
+    ExtractionNode result_node;
+    ExtractionWay result_way;
+    std::vector<InputRestrictionContainer> result_res;
+    auto &local_context = this->GetSol2Context();
 
-            for (auto x = range.begin(), end = range.end(); x != end; ++x)
+    for (auto entity = buffer.cbegin(), end = buffer.cend(); entity != end; ++entity)
+    {
+        switch (entity->type())
+        {
+        case osmium::item_type::node:
+            result_node.clear();
+            if (local_context.has_node_function &&
+                (!static_cast<const osmium::Node &>(*entity).tags().empty() ||
+                 local_context.properties.call_tagless_node_function))
             {
-                const auto entity = osm_elements[x];
-
-                switch (entity->type())
-                {
-                case osmium::item_type::node:
-                    result_node.clear();
-                    if (local_context.has_node_function &&
-                        (!static_cast<const osmium::Node &>(*entity).tags().empty() ||
-                         local_context.properties.call_tagless_node_function))
-                    {
-                        local_context.ProcessNode(static_cast<const osmium::Node &>(*entity),
-                                                  result_node);
-                    }
-                    resulting_nodes.push_back(std::make_pair(x, std::move(result_node)));
-                    break;
-                case osmium::item_type::way:
-                    result_way.clear();
-                    if (local_context.has_way_function)
-                    {
-                        local_context.ProcessWay(static_cast<const osmium::Way &>(*entity),
-                                                 result_way);
-                    }
-                    resulting_ways.push_back(std::make_pair(x, std::move(result_way)));
-                    break;
-                case osmium::item_type::relation:
-                    result_res.clear();
-                    result_res =
-                        restriction_parser.TryParse(static_cast<const osmium::Relation &>(*entity));
-                    for (const InputRestrictionContainer &r : result_res)
-                    {
-                        resulting_restrictions.push_back(r);
-                    }
-                    break;
-                default:
-                    break;
-                }
+                local_context.ProcessNode(static_cast<const osmium::Node &>(*entity), result_node);
             }
-        });
+            resulting_nodes.push_back(std::pair<const osmium::Node &, ExtractionNode>(
+                static_cast<const osmium::Node &>(*entity), std::move(result_node)));
+            break;
+        case osmium::item_type::way:
+            result_way.clear();
+            if (local_context.has_way_function)
+            {
+                local_context.ProcessWay(static_cast<const osmium::Way &>(*entity), result_way);
+            }
+            resulting_ways.push_back(std::pair<const osmium::Way &, ExtractionWay>(
+                static_cast<const osmium::Way &>(*entity), std::move(result_way)));
+            break;
+        case osmium::item_type::relation:
+            result_res.clear();
+            result_res =
+                restriction_parser.TryParse(static_cast<const osmium::Relation &>(*entity));
+            for (const InputRestrictionContainer &r : result_res)
+            {
+                resulting_restrictions.push_back(r);
+            }
+            break;
+        default:
+            break;
+        }
+    }
 }
 
 std::vector<std::string> Sol2ScriptingEnvironment::GetNameSuffixList()
