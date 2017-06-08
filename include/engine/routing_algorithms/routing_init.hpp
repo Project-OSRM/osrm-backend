@@ -153,8 +153,8 @@ inline bool nodesOverlapInForwardDirection(const PhantomNode &source, const Phan
     //   0---1-s==2===3===4=t---5---6---end
     return source.forward_segment_id.enabled && target.forward_segment_id.enabled &&
            (source.forward_segment_id.id == target.forward_segment_id.id) &&
-           !(std::tie(source.fwd_segment_position, source.fwd_segment_ratio) >
-             std::tie(target.fwd_segment_position, target.fwd_segment_ratio));
+           (std::tie(source.fwd_segment_position, source.fwd_segment_ratio) <=
+            std::tie(target.fwd_segment_position, target.fwd_segment_ratio));
 }
 
 inline bool nodesOverlapInReverseDirection(const PhantomNode &source, const PhantomNode &target)
@@ -162,7 +162,7 @@ inline bool nodesOverlapInReverseDirection(const PhantomNode &source, const Phan
     // end---6-t==5===4===3=s---2---1---0
     return source.reverse_segment_id.enabled && target.reverse_segment_id.enabled &&
            (source.reverse_segment_id.id == target.reverse_segment_id.id) &&
-           (std::tie(source.fwd_segment_position, source.fwd_segment_ratio) >
+           (std::tie(source.fwd_segment_position, source.fwd_segment_ratio) >=
             std::tie(target.fwd_segment_position, target.fwd_segment_ratio));
 }
 
@@ -280,6 +280,28 @@ auto insertNodesInHeaps(const Facade &facade,
                         const PhantomNodes &nodes)
 {
     return insertNodesInHeaps(facade, forward_heap, reverse_heap, nodes, 0, 0, true, true);
+}
+
+template <typename Facade, typename Heap>
+auto insertNodesInHeaps(const Facade &facade,
+                        Heap &forward_heap,
+                        Heap &reverse_heap,
+                        const NodeID source_node,
+                        const NodeID target_node)
+{
+    PhantomNode source_phantom, target_phantom;
+    const auto is_forward_source = facade.GetGeometryIndex(source_node).forward;
+    const auto is_forward_target = facade.GetGeometryIndex(target_node).forward;
+
+    if (source_node == target_node && is_forward_source == is_forward_target)
+    { // Single-node path of weight 0
+        return std::pair<NodeID, EdgeWeight>{source_node, 0};
+    }
+
+    forward_heap.Insert(source_node, 0, source_node);
+    reverse_heap.Insert(target_node, 0, target_node);
+
+    return std::pair<NodeID, EdgeWeight>{SPECIAL_NODEID, INVALID_EDGE_WEIGHT};
 }
 
 } // namespace routing_algorithms

@@ -82,13 +82,12 @@ void relaxOutgoingEdges(const datafacade::ContiguousInternalMemoryDataFacade<Alg
 }
 
 template <bool DIRECTION>
-void checkCandidatePath(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
-                        SearchEngineData<Algorithm>::QueryHeap &forward_heap,
-                        SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
-                        const NodeID node,
-                        const EdgeWeight weight,
-                        NodeID &middle_node_id,
-                        EdgeWeight &upper_bound)
+EdgeWeight
+getCandidatePathWeight(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
+                       SearchEngineData<Algorithm>::QueryHeap &forward_heap,
+                       SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
+                       const NodeID node,
+                       const EdgeWeight weight)
 {
     BOOST_ASSERT(forward_heap.WasInserted(node));
     BOOST_ASSERT(reverse_heap.WasInserted(node));
@@ -114,7 +113,7 @@ void checkCandidatePath(const datafacade::ContiguousInternalMemoryDataFacade<Alg
         // as such paths are handled outside Dijkstra search,
         // but allow paths with loop edges node → node
         if (reverse_heap.GetData(node).parent == node && !has_loop_edge)
-            return;
+            return INVALID_EDGE_WEIGHT;
     }
 
     // The candidate path: source → .. → node → .. → target
@@ -130,11 +129,7 @@ void checkCandidatePath(const datafacade::ContiguousInternalMemoryDataFacade<Alg
         new_weight -= node_weight;
     }
 
-    if (new_weight < upper_bound)
-    { // Update upper bound and the middle rendez-vous node if the new weight is better
-        middle_node_id = node;
-        upper_bound = new_weight;
-    }
+    return new_weight;
 }
 
 static constexpr bool ENABLE_STALLING = true;
@@ -154,8 +149,14 @@ void routingStep(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm>
     // Check if node is a rendez-vous node candidate in forward and reverse heaps
     if (reverse_heap.WasInserted(node))
     {
-        checkCandidatePath<DIRECTION>(
-            facade, forward_heap, reverse_heap, node, weight, middle_node_id, upper_bound);
+        const auto candidate_path_weight =
+            getCandidatePathWeight<DIRECTION>(facade, forward_heap, reverse_heap, node, weight);
+
+        if (candidate_path_weight < upper_bound)
+        { // Update upper bound and the middle rendez-vous node if the new weight is better
+            middle_node_id = node;
+            upper_bound = candidate_path_weight;
+        }
     }
 
     // Make sure we don't terminate too early if we initialize the weight
