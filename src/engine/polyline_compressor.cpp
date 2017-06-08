@@ -52,54 +52,29 @@ std::string encode(std::vector<int> &numbers)
     }
     return output;
 }
-}
 
-std::vector<util::Coordinate> decodePolyline(const std::string &geometry_string)
+// https://developers.google.com/maps/documentation/utilities/polylinealgorithm
+std::int32_t decode_polyline_integer(std::string::const_iterator &first,
+                                     std::string::const_iterator last)
 {
-    // https://developers.google.com/maps/documentation/utilities/polylinealgorithm
-    auto decode_polyline_integer = [](auto &first, auto last) {
-        // varint coding parameters
-        const std::uint32_t bits_in_chunk = 5;
-        const std::uint32_t continuation_bit = 1 << bits_in_chunk;
-        const std::uint32_t chunk_mask = (1 << bits_in_chunk) - 1;
+    // varint coding parameters
+    const std::uint32_t bits_in_chunk = 5;
+    const std::uint32_t continuation_bit = 1 << bits_in_chunk;
+    const std::uint32_t chunk_mask = (1 << bits_in_chunk) - 1;
 
-        std::uint32_t result = 0;
-        for (std::uint32_t value = continuation_bit, shift = 0;
-             (value & continuation_bit) && (shift < CHAR_BIT * sizeof(result) - 1) && first != last;
-             ++first, shift += bits_in_chunk)
-        {
-            value = *first - 63; // convert ASCII coding [?..~] to an integer [0..63]
-            result |= (value & chunk_mask) << shift;
-        }
-
-        // change "zig-zag" sign coding to two's complement
-        result = ((result & 1) == 1) ? ~(result >> 1) : (result >> 1);
-        return static_cast<std::int32_t>(result);
-    };
-
-    auto polyline_to_coordinate = [](auto value) {
-        return static_cast<std::int32_t>(value * detail::POLYLINE_TO_COORDINATE);
-    };
-
-    std::vector<util::Coordinate> coordinates;
-    std::int32_t latitude = 0, longitude = 0;
-
-    std::string::const_iterator first = geometry_string.begin();
-    const std::string::const_iterator last = geometry_string.end();
-    while (first != last)
+    std::uint32_t result = 0;
+    for (std::uint32_t value = continuation_bit, shift = 0;
+         (value & continuation_bit) && (shift < CHAR_BIT * sizeof(result) - 1) && first != last;
+         ++first, shift += bits_in_chunk)
     {
-        const auto dlat = decode_polyline_integer(first, last);
-        const auto dlon = decode_polyline_integer(first, last);
-
-        latitude += dlat;
-        longitude += dlon;
-
-        coordinates.emplace_back(
-            util::Coordinate{util::FixedLongitude{polyline_to_coordinate(longitude)},
-                             util::FixedLatitude{polyline_to_coordinate(latitude)}});
+        value = *first - 63; // convert ASCII coding [?..~] to an integer [0..63]
+        result |= (value & chunk_mask) << shift;
     }
 
-    return coordinates;
+    // change "zig-zag" sign coding to two's complement
+    result = ((result & 1) == 1) ? ~(result >> 1) : (result >> 1);
+    return static_cast<std::int32_t>(result);
+}
 }
 }
 }

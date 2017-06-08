@@ -14,10 +14,9 @@ namespace engine
 {
 namespace detail
 {
-constexpr double POLYLINE_DECODING_PRECISION = 1e5;
-constexpr double POLYLINE_TO_COORDINATE = COORDINATE_PRECISION / POLYLINE_DECODING_PRECISION;
-
 std::string encode(std::vector<int> &numbers);
+std::int32_t decode_polyline_integer(std::string::const_iterator &first,
+                                     std::string::const_iterator last);
 }
 using CoordVectorForwardIter = std::vector<util::Coordinate>::const_iterator;
 // Encodes geometry into polyline format.
@@ -57,7 +56,30 @@ std::string encodePolyline(CoordVectorForwardIter begin, CoordVectorForwardIter 
 
 // Decodes geometry from polyline format
 // See: https://developers.google.com/maps/documentation/utilities/polylinealgorithm
-std::vector<util::Coordinate> decodePolyline(const std::string &polyline);
+
+template <unsigned POLYLINE_PRECISION = 100000>
+std::vector<util::Coordinate> decodePolyline(const std::string &polyline)
+{
+    double polyline_to_coordinate = COORDINATE_PRECISION / POLYLINE_PRECISION;
+    std::vector<util::Coordinate> coordinates;
+    std::int32_t latitude = 0, longitude = 0;
+
+    std::string::const_iterator first = polyline.begin();
+    const std::string::const_iterator last = polyline.end();
+    while (first != last)
+    {
+        const auto dlat = detail::decode_polyline_integer(first, last);
+        const auto dlon = detail::decode_polyline_integer(first, last);
+
+        latitude += dlat;
+        longitude += dlon;
+
+        coordinates.emplace_back(util::Coordinate{
+            util::FixedLongitude{static_cast<std::int32_t>(longitude * polyline_to_coordinate)},
+            util::FixedLatitude{static_cast<std::int32_t>(latitude * polyline_to_coordinate)}});
+    }
+    return coordinates;
+}
 }
 }
 
