@@ -1,25 +1,27 @@
-FROM alpine:3.5
+FROM ubuntu:16.04
 
-RUN mkdir /opt
 WORKDIR /opt
 
 RUN NPROC=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || 1) && \
-    echo "@testing http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories && \
-    apk update && \
-    apk upgrade && \
-    apk add git cmake wget make libc-dev gcc g++ bzip2-dev boost-dev zlib-dev expat-dev lua5.1-dev libtbb@testing libtbb-dev@testing && \
-    \
-    echo "Building libstxxl" && \
-    cd /opt && \
-    git clone --depth 1 --branch 1.4.1 https://github.com/stxxl/stxxl.git && \
-    cd stxxl && \
-    mkdir build && \
-    cd build && \
-    cmake -DCMAKE_BUILD_TYPE=Release .. && \
-    make -j${NPROC} && \
-    make install
+    apt-get update -y && \
+    apt-get install -y \
+        build-essential \
+        git \
+        cmake \
+        pkg-config \
+        libbz2-dev \
+        libstxxl-dev \
+        libstxxl1v5 \
+        libxml2-dev \
+        libzip-dev \
+        libboost-all-dev \
+        lua5.2 \
+        liblua5.2-dev \
+        libtbb-dev \
+        libjemalloc-dev
 
 ARG DOCKER_TAG
+
 RUN mkdir /src
 COPY . /src
 WORKDIR /src
@@ -28,6 +30,7 @@ RUN NPROC=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || 1) && \
     echo "Building OSRM ${DOCKER_TAG}" && \
     git show --format="%H" | head -n1 > /opt/OSRM_GITSHA && \
     echo "Building OSRM gitsha $(cat /opt/OSRM_GITSHA)" && \
+    export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libjemalloc.so.1 && \
     mkdir build && \
     cd build && \
     BUILD_TYPE="Release" && \
@@ -40,14 +43,13 @@ RUN NPROC=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || 1) && \
     make -j${NPROC} install && \
     cd ../profiles && \
     cp -r * /opt && \
+    cd /opt && \
     \
     echo "Cleaning up" && \
     strip /usr/local/bin/* && \
-    rm /usr/local/lib/libstxxl* && \
-    cd /opt && \
-    apk del boost-dev && \
-    apk del g++ cmake libc-dev expat-dev zlib-dev bzip2-dev lua5.1-dev git make gcc && \
-    apk add boost-filesystem boost-program_options boost-regex boost-iostreams boost-thread libgomp lua5.1 expat && \
-    rm -rf /src /opt/stxxl /usr/local/bin/stxxl_tool /usr/local/lib/libosrm*
+    rm -rf /src && \
+    apt-get autoremove -y
+
+WORKDIR /opt
 
 EXPOSE 5000
