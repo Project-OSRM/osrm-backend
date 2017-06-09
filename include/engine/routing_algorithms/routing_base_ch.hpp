@@ -371,18 +371,6 @@ void search(SearchEngineData<Algorithm> &engine_working_data,
             const PhantomNodes &phantom_nodes,
             const EdgeWeight weight_upper_bound = INVALID_EDGE_WEIGHT);
 
-// Requires the heaps for be empty
-// If heaps should be adjusted to be initialized outside of this function,
-// the addition of force_loop parameters might be required
-double
-getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
-                   const datafacade::ContiguousInternalMemoryDataFacade<ch::Algorithm> &facade,
-                   SearchEngineData<Algorithm>::QueryHeap &forward_heap,
-                   SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
-                   const PhantomNode &source_phantom,
-                   const PhantomNode &target_phantom,
-                   int duration_upper_bound = INVALID_EDGE_WEIGHT);
-
 } // namespace ch
 
 namespace corech
@@ -406,18 +394,6 @@ void search(SearchEngineData<Algorithm> &engine_working_data,
             const bool force_loop_reverse,
             const PhantomNodes &phantom_nodes,
             EdgeWeight weight_upper_bound = INVALID_EDGE_WEIGHT);
-
-// Requires the heaps for be empty
-// If heaps should be adjusted to be initialized outside of this function,
-// the addition of force_loop parameters might be required
-double
-getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
-                   const datafacade::ContiguousInternalMemoryDataFacade<corech::Algorithm> &facade,
-                   SearchEngineData<ch::Algorithm>::QueryHeap &forward_heap,
-                   SearchEngineData<ch::Algorithm>::QueryHeap &reverse_heap,
-                   const PhantomNode &source_phantom,
-                   const PhantomNode &target_phantom,
-                   int duration_upper_bound = INVALID_EDGE_WEIGHT);
 
 template <typename RandomIter, typename FacadeT>
 void unpackPath(const FacadeT &facade,

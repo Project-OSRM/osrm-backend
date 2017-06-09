@@ -7,6 +7,7 @@ namespace engine
 {
 namespace routing_algorithms
 {
+
 namespace ch
 {
 
@@ -133,49 +134,6 @@ void search(SearchEngineData<Algorithm> & /*engine_working_data*/,
     }
 }
 
-// Requires the heaps for be empty
-// If heaps should be adjusted to be initialized outside of this function,
-// the addition of force_loop parameters might be required
-double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
-                          const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
-                          SearchEngineData<Algorithm>::QueryHeap &forward_heap,
-                          SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
-                          const PhantomNode &source_phantom,
-                          const PhantomNode &target_phantom,
-                          EdgeWeight weight_upper_bound)
-{
-    forward_heap.Clear();
-    reverse_heap.Clear();
-
-    insertNodesInHeaps(facade, forward_heap, reverse_heap, {source_phantom, target_phantom});
-
-    EdgeWeight weight = INVALID_EDGE_WEIGHT;
-    std::vector<NodeID> packed_path;
-    search(engine_working_data,
-           facade,
-           forward_heap,
-           reverse_heap,
-           weight,
-           packed_path,
-           DO_NOT_FORCE_LOOPS,
-           DO_NOT_FORCE_LOOPS,
-           {source_phantom, target_phantom},
-           weight_upper_bound);
-
-    if (weight == INVALID_EDGE_WEIGHT)
-    {
-        return std::numeric_limits<double>::max();
-    }
-
-    std::vector<PathData> unpacked_path;
-    unpackPath(facade,
-               packed_path.begin(),
-               packed_path.end(),
-               {source_phantom, target_phantom},
-               unpacked_path);
-
-    return getPathDistance(facade, unpacked_path, source_phantom, target_phantom);
-}
 } // namespace ch
 
 namespace corech
@@ -347,14 +305,16 @@ void search(SearchEngineData<Algorithm> &engine_working_data,
         }
     }
 }
+} // namespace corech
 
 // Requires the heaps for be empty
 // If heaps should be adjusted to be initialized outside of this function,
 // the addition of force_loop parameters might be required
+template <typename Algorithm>
 double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
                           const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
-                          SearchEngineData<Algorithm>::QueryHeap &forward_heap,
-                          SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
+                          typename SearchEngineData<Algorithm>::QueryHeap &forward_heap,
+                          typename SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
                           const PhantomNode &source_phantom,
                           const PhantomNode &target_phantom,
                           EdgeWeight weight_upper_bound)
@@ -362,7 +322,8 @@ double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
     forward_heap.Clear();
     reverse_heap.Clear();
 
-    insertNodesInHeaps(facade, forward_heap, reverse_heap, {source_phantom, target_phantom});
+    auto single_node_path =
+        insertNodesInHeaps(facade, forward_heap, reverse_heap, {source_phantom, target_phantom});
 
     EdgeWeight weight = INVALID_EDGE_WEIGHT;
     std::vector<NodeID> packed_path;
@@ -375,21 +336,46 @@ double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
            DO_NOT_FORCE_LOOPS,
            DO_NOT_FORCE_LOOPS,
            {source_phantom, target_phantom},
-           weight_upper_bound);
+           std::min(single_node_path.second, weight_upper_bound));
 
     if (weight == INVALID_EDGE_WEIGHT)
-        return std::numeric_limits<double>::max();
+    {
+        if (single_node_path.second == INVALID_EDGE_WEIGHT)
+        {
+            return std::numeric_limits<double>::max();
+        }
+
+        BOOST_ASSERT(packed_path.empty());
+        packed_path.push_back(single_node_path.first);
+    }
 
     std::vector<PathData> unpacked_path;
-    ch::unpackPath(facade,
-                   packed_path.begin(),
-                   packed_path.end(),
-                   {source_phantom, target_phantom},
-                   unpacked_path);
+    unpackPath(facade,
+               packed_path.begin(),
+               packed_path.end(),
+               {source_phantom, target_phantom},
+               unpacked_path);
 
     return getPathDistance(facade, unpacked_path, source_phantom, target_phantom);
 }
-} // namespace corech
+
+template double
+getNetworkDistance(SearchEngineData<ch::Algorithm> &engine_working_data,
+                   const datafacade::ContiguousInternalMemoryDataFacade<ch::Algorithm> &facade,
+                   SearchEngineData<ch::Algorithm>::QueryHeap &forward_heap,
+                   SearchEngineData<ch::Algorithm>::QueryHeap &reverse_heap,
+                   const PhantomNode &source_phantom,
+                   const PhantomNode &target_phantom,
+                   EdgeWeight duration_upper_bound);
+
+template double
+getNetworkDistance(SearchEngineData<corech::Algorithm> &engine_working_data,
+                   const datafacade::ContiguousInternalMemoryDataFacade<corech::Algorithm> &facade,
+                   SearchEngineData<corech::Algorithm>::QueryHeap &forward_heap,
+                   SearchEngineData<corech::Algorithm>::QueryHeap &reverse_heap,
+                   const PhantomNode &source_phantom,
+                   const PhantomNode &target_phantom,
+                   EdgeWeight duration_upper_bound);
 
 } // namespace routing_algorithms
 } // namespace engine

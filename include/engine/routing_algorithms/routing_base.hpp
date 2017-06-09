@@ -312,6 +312,15 @@ double getPathDistance(const datafacade::ContiguousInternalMemoryDataFacade<Algo
     return distance;
 }
 
+template <typename Algorithm>
+double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
+                          const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
+                          typename SearchEngineData<Algorithm>::QueryHeap &forward_heap,
+                          typename SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
+                          const PhantomNode &source_phantom,
+                          const PhantomNode &target_phantom,
+                          EdgeWeight duration_upper_bound = INVALID_EDGE_WEIGHT);
+
 } // namespace routing_algorithms
 } // namespace engine
 } // namespace osrm
