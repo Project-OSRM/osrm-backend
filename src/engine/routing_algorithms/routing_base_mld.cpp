@@ -8,21 +8,21 @@ namespace engine
 namespace routing_algorithms
 {
 
-template<>
-double getNetworkDistance<mld::Algorithm>(SearchEngineData<mld::Algorithm> &engine_working_data,
-                                          const datafacade::ContiguousInternalMemoryDataFacade<mld::Algorithm> &facade,
-                                          SearchEngineData<mld::Algorithm>::QueryHeap &forward_heap,
-                                          SearchEngineData<mld::Algorithm>::QueryHeap &reverse_heap,
-                                          const PhantomNode &source_phantom,
-                                          const PhantomNode &target_phantom,
-                                          EdgeWeight weight_upper_bound)
+template <>
+double getNetworkDistance<mld::Algorithm>(
+    SearchEngineData<mld::Algorithm> &engine_working_data,
+    const datafacade::ContiguousInternalMemoryDataFacade<mld::Algorithm> &facade,
+    SearchEngineData<mld::Algorithm>::QueryHeap &forward_heap,
+    SearchEngineData<mld::Algorithm>::QueryHeap &reverse_heap,
+    const PhantomNode &source_phantom,
+    const PhantomNode &target_phantom,
+    EdgeWeight weight_upper_bound)
 {
     forward_heap.Clear();
     reverse_heap.Clear();
 
     const PhantomNodes phantom_nodes{source_phantom, target_phantom};
-    auto single_node_path =
-        insertNodesInHeaps(facade, forward_heap, reverse_heap, phantom_nodes);
+    auto single_node_path = insertNodesInHeaps(facade, forward_heap, reverse_heap, phantom_nodes);
 
     EdgeWeight weight = INVALID_EDGE_WEIGHT;
     std::vector<NodeID> unpacked_nodes;
