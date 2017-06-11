@@ -1070,6 +1070,51 @@ argumentsToMatchParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
         }
     }
 
+    if (obj->Has(Nan::New("gaps").ToLocalChecked()))
+    {
+        v8::Local<v8::Value> gaps = obj->Get(Nan::New("gaps").ToLocalChecked());
+        if (gaps.IsEmpty())
+            return match_parameters_ptr();
+
+        if (!gaps->IsString())
+        {
+            Nan::ThrowError("Gaps must be a string: [split, ignore]");
+            return match_parameters_ptr();
+        }
+
+        const Nan::Utf8String gaps_utf8str(gaps);
+        std::string gaps_str{*gaps_utf8str, *gaps_utf8str + gaps_utf8str.length()};
+
+        if (gaps_str == "split")
+        {
+            params->gaps = osrm::MatchParameters::GapsType::Split;
+        }
+        else if (gaps_str == "ignore")
+        {
+            params->gaps = osrm::MatchParameters::GapsType::Ignore;
+        }
+        else
+        {
+            Nan::ThrowError("'gaps' param must be one of [split, ignore]");
+            return match_parameters_ptr();
+        }
+    }
+
+    if (obj->Has(Nan::New("tidy").ToLocalChecked()))
+    {
+        v8::Local<v8::Value> tidy = obj->Get(Nan::New("tidy").ToLocalChecked());
+        if (tidy.IsEmpty())
+            return match_parameters_ptr();
+
+        if (!tidy->IsBoolean())
+        {
+            Nan::ThrowError("tidy must be of type Boolean");
+            return match_parameters_ptr();
+        }
+
+        params->tidy = tidy->BooleanValue();
+    }
+
     bool parsedSuccessfully = parseCommonParameters(obj, params);
     if (!parsedSuccessfully)
     {
