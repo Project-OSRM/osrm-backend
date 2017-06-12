@@ -249,7 +249,9 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
         "max_turn_weight",
         sol::property(&ProfileProperties::GetMaxTurnWeight),
         "force_split_edges",
-        &ProfileProperties::force_split_edges);
+        &ProfileProperties::force_split_edges,
+        "call_tagless_node_function",
+        &ProfileProperties::call_tagless_node_function);
 
     context.state.new_usertype<std::vector<std::string>>(
         "vector",
@@ -510,7 +512,9 @@ void Sol2ScriptingEnvironment::ProcessElements(
                 {
                 case osmium::item_type::node:
                     result_node.clear();
-                    if (local_context.has_node_function)
+                    if (local_context.has_node_function &&
+                        (!static_cast<const osmium::Node &>(*entity).tags().empty() ||
+                         local_context.properties.call_tagless_node_function))
                     {
                         local_context.ProcessNode(static_cast<const osmium::Node &>(*entity),
                                                   result_node);
