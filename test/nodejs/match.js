@@ -133,7 +133,9 @@ test('match: match in Monaco with all options', function(assert) {
         steps: true,
         annotations: true,
         overview: 'false',
-        geometries: 'geojson'
+        geometries: 'geojson',
+        gaps: 'split',
+        tidy: false
     };
     osrm.match(options, function(err, response) {
         assert.ifError(err);
@@ -195,4 +197,29 @@ test('match: throws on invalid timestamps param', function(assert) {
     options.timestamps = [1424684612, 1424684616];
     assert.throws(function() { osrm.match(options, function(err, response) {}) },
         /Timestamp array must have the same size as the coordinates array/);
+});
+
+test('match: throws on invalid gaps param', function(assert) {
+    assert.plan(2);
+    var osrm = new OSRM(data_path);
+    var options = {
+        coordinates: three_test_coordinates,
+        gaps: ['invalid gaps param']
+    };
+    assert.throws(function() { osrm.match(options, function(err, response) {}) },
+        /Gaps must be a string: \[split, ignore\]/);
+    options.gaps = 'invalid gaps param';
+    assert.throws(function() { osrm.match(options, function(err, response) {}) },
+        /'gaps' param must be one of \[split, ignore\]/);
+});
+
+test('match: throws on invalid tidy param', function(assert) {
+    assert.plan(1);
+    var osrm = new OSRM(data_path);
+    var options = {
+        coordinates: three_test_coordinates,
+        tidy: 'invalid tidy param'
+    };
+    assert.throws(function() { osrm.match(options, function(err, response) {}) },
+        /tidy must be of type Boolean/);
 });
