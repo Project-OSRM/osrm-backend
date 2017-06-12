@@ -427,15 +427,16 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
 
     context.state.script_file(file_name);
 
-    sol::function turn_function = context.state["turn_function"];
-    sol::function node_function = context.state["node_function"];
-    sol::function way_function = context.state["way_function"];
-    sol::function segment_function = context.state["segment_function"];
+    // cache references to functions for faster execution
+    context.turn_function = context.state["turn_function"];
+    context.node_function = context.state["node_function"];
+    context.way_function = context.state["way_function"];
+    context.segment_function = context.state["segment_function"];
 
-    context.has_turn_penalty_function = turn_function.valid();
-    context.has_node_function = node_function.valid();
-    context.has_way_function = way_function.valid();
-    context.has_segment_function = segment_function.valid();
+    context.has_turn_penalty_function = context.turn_function.valid();
+    context.has_node_function = context.node_function.valid();
+    context.has_way_function = context.way_function.valid();
+    context.has_segment_function = context.segment_function.valid();
 
     // Check profile API version
     auto maybe_version = context.state.get<sol::optional<int>>("api_version");
@@ -590,13 +591,12 @@ void Sol2ScriptingEnvironment::ProcessTurn(ExtractionTurn &turn)
 {
     auto &context = GetSol2Context();
 
-    sol::function turn_function = context.state["turn_function"];
     switch (context.api_version)
     {
     case 1:
         if (context.has_turn_penalty_function)
         {
-            turn_function(turn);
+            context.turn_function(turn);
 
             // Turn weight falls back to the duration value in deciseconds
             // or uses the extracted unit-less weight value
@@ -611,7 +611,7 @@ void Sol2ScriptingEnvironment::ProcessTurn(ExtractionTurn &turn)
             if (turn.turn_type != guidance::TurnType::NoTurn)
             {
                 // Get turn duration and convert deci-seconds to seconds
-                turn.duration = static_cast<double>(turn_function(turn.angle)) / 10.;
+                turn.duration = static_cast<double>(context.turn_function(turn.angle)) / 10.;
                 BOOST_ASSERT(turn.weight == 0);
 
                 // add U-turn penalty
@@ -642,14 +642,14 @@ void Sol2ScriptingEnvironment::ProcessSegment(ExtractionSegment &segment)
 
     if (context.has_segment_function)
     {
-        sol::function segment_function = context.state["segment_function"];
         switch (context.api_version)
         {
         case 1:
-            segment_function(segment);
+            context.segment_function(segment);
             break;
         case 0:
-            segment_function(segment.source, segment.target, segment.distance, segment.duration);
+            context.segment_function(
+                segment.source, segment.target, segment.distance, segment.duration);
             segment.weight = segment.duration; // back-compatibility fallback to duration
             break;
         }
@@ -660,16 +660,12 @@ void LuaScriptingContext::ProcessNode(const osmium::Node &node, ExtractionNode &
 {
     BOOST_ASSERT(state.lua_state() != nullptr);
 
-    sol::function node_function = state["node_function"];
-
     node_function(node, result);
 }
 
 void LuaScriptingContext::ProcessWay(const osmium::Way &way, ExtractionWay &result)
 {
     BOOST_ASSERT(state.lua_state() != nullptr);
-
-    sol::function way_function = state["way_function"];
 
     way_function(way, result);
 }

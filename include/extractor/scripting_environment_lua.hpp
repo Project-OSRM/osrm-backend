@@ -31,6 +31,11 @@ struct LuaScriptingContext final
     bool has_way_function;
     bool has_segment_function;
 
+    sol::function turn_function;
+    sol::function way_function;
+    sol::function node_function;
+    sol::function segment_function;
+
     int api_version;
 };
 
