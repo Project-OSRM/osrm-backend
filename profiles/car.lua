@@ -20,6 +20,12 @@ properties.weight_name                     = 'routability'
 -- For shortest distance without penalties for accessibility
 --properties.weight_name                     = 'distance'
 
+-- Set to true if you need to call the node_function for every node.
+-- Generally can be left as false to avoid unnecessary Lua calls
+-- (which slow down pre-processing).
+properties.call_tagless_node_function      = false
+
+
 local profile = {
   default_mode      = mode.driving,
   default_speed     = 10,

@@ -3,6 +3,11 @@ api_version = 1
 
 properties.force_split_edges = true
 
+-- Set to true if you need to call the node_function for every node.
+-- Generally can be left as false to avoid unnecessary Lua calls
+-- (which slow down pre-processing).
+properties.call_tagless_node_function      = false
+
 -- Minimalist node_ and way_functions in order to test source_ and segment_functions
 
 function node_function (node, result)

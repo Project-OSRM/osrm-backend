@@ -22,6 +22,11 @@ properties.use_turn_restrictions         = true
 properties.max_speed_for_map_matching    = 30/3.6 --km -> m/s
 properties.weight_name                   = 'duration'
 
+-- Set to true if you need to call the node_function for every node.
+-- Generally can be left as false to avoid unnecessary Lua calls
+-- (which slow down pre-processing).
+properties.call_tagless_node_function      = false
+
 local uturn_penalty                      = 20
 local traffic_light_penalty              = 7     -- seconds
 
