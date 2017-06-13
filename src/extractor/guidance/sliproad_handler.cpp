@@ -473,17 +473,7 @@ operator()(const NodeID /*nid*/, const EdgeID source_edge_id, Intersection inter
     // In those cases the obvious non-Sliproad is now obvious and we discard the Fork turn type.
     if (sliproad_found && main_road.instruction.type == TurnType::Fork)
     {
-        const auto &source_edge_data = node_based_graph.GetEdgeData(source_edge_id);
-        const auto &main_road_data = node_based_graph.GetEdgeData(main_road.eid);
-
-        const auto same_name = source_edge_data.name_id != EMPTY_NAMEID && //
-                               main_road_data.name_id != EMPTY_NAMEID &&   //
-                               !util::guidance::requiresNameAnnounced(source_edge_data.name_id,
-                                                                      main_road_data.name_id,
-                                                                      name_table,
-                                                                      street_name_suffix_table); //
-
-        if (same_name)
+        if (isSameName(source_edge_id, main_road.eid))
         {
             if (angularDeviation(main_road.angle, STRAIGHT_ANGLE) < 5)
                 intersection[*obvious].instruction.type = TurnType::Suppressed;
@@ -492,7 +482,7 @@ operator()(const NodeID /*nid*/, const EdgeID source_edge_id, Intersection inter
             intersection[*obvious].instruction.direction_modifier =
                 getTurnDirection(intersection[*obvious].angle);
         }
-        else if (main_road_data.name_id != EMPTY_NAMEID)
+        else if (node_based_graph.GetEdgeData(main_road.eid).name_id != EMPTY_NAMEID)
         {
             intersection[*obvious].instruction.type = TurnType::NewName;
             intersection[*obvious].instruction.direction_modifier =

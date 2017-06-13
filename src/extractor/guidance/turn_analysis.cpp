@@ -68,7 +68,12 @@ TurnAnalysis::TurnAnalysis(const util::NodeBasedDynamicGraph &node_based_graph,
                             node_based_graph,
                             coordinates,
                             name_table,
-                            street_name_suffix_table)
+                            street_name_suffix_table),
+      driveway_handler(intersection_generator,
+                       node_based_graph,
+                       coordinates,
+                       name_table,
+                       street_name_suffix_table)
 {
 }
 
@@ -132,8 +137,14 @@ Intersection TurnAnalysis::AssignTurnTypes(const NodeID node_prior_to_intersecti
         // set initial defaults for normal turns and modifier based on angle
         intersection =
             setTurnTypes(node_prior_to_intersection, entering_via_edge, std::move(intersection));
-        if (motorway_handler.canProcess(
+        if (driveway_handler.canProcess(
                 node_prior_to_intersection, entering_via_edge, intersection))
+        {
+            intersection = driveway_handler(
+                node_prior_to_intersection, entering_via_edge, std::move(intersection));
+        }
+        else if (motorway_handler.canProcess(
+                     node_prior_to_intersection, entering_via_edge, intersection))
         {
             intersection = motorway_handler(
                 node_prior_to_intersection, entering_via_edge, std::move(intersection));
