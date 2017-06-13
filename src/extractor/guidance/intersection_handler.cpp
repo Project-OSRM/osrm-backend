@@ -436,6 +436,19 @@ IntersectionHandler::getNextIntersection(const NodeID at, const EdgeID via) cons
         IntersectionViewAndNode{std::move(intersection), intersection_node});
 }
 
+bool IntersectionHandler::isSameName(const EdgeID source_edge_id, const EdgeID target_edge_id) const
+{
+    const auto &source_edge_data = node_based_graph.GetEdgeData(source_edge_id);
+    const auto &target_edge_data = node_based_graph.GetEdgeData(target_edge_id);
+
+    return source_edge_data.name_id != EMPTY_NAMEID && //
+           target_edge_data.name_id != EMPTY_NAMEID && //
+           !util::guidance::requiresNameAnnounced(source_edge_data.name_id,
+                                                  target_edge_data.name_id,
+                                                  name_table,
+                                                  street_name_suffix_table); //
+}
+
 } // namespace guidance
 } // namespace extractor
 } // namespace osrm

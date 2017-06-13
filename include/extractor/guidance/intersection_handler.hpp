@@ -114,6 +114,8 @@ class IntersectionHandler
     // For this scenario returns intersection at `b` and `b`.
     boost::optional<IntersectionHandler::IntersectionViewAndNode>
     getNextIntersection(const NodeID at, const EdgeID via) const;
+
+    bool isSameName(const EdgeID source_edge_id, const EdgeID target_edge_id) const;
 };
 
 // Impl.
