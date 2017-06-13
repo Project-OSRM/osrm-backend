@@ -414,6 +414,10 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     // Three nested loop look super-linear, but we are dealing with a (kind of)
     // linear number of turns only.
     SuffixTable street_name_suffix_table(scripting_environment);
+
+    // TODO: toggle from cmdline
+    const auto validate_intersections = true;
+
     guidance::TurnAnalysis turn_analysis(m_node_based_graph,
                                          m_edge_based_node_container,
                                          m_coordinates,
@@ -421,7 +425,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                          m_barrier_nodes,
                                          m_compressed_edge_container,
                                          name_table,
-                                         street_name_suffix_table);
+                                         street_name_suffix_table,
+                                         validate_intersections);
 
     util::guidance::LaneDataIdMap lane_data_map;
     guidance::lanes::TurnLaneHandler turn_lane_handler(m_node_based_graph,
