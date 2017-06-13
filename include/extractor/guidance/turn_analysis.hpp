@@ -2,6 +2,7 @@
 #define OSRM_EXTRACTOR_TURN_ANALYSIS
 
 #include "extractor/compressed_edge_container.hpp"
+#include "extractor/guidance/driveway_handler.hpp"
 #include "extractor/guidance/intersection.hpp"
 #include "extractor/guidance/intersection_generator.hpp"
 #include "extractor/guidance/intersection_normalization_operation.hpp"
@@ -87,6 +88,7 @@ class TurnAnalysis
     const TurnHandler turn_handler;
     const SliproadHandler sliproad_handler;
     const SuppressModeHandler suppress_mode_handler;
+    const DrivewayHandler driveway_handler;
 
     // Utility function, setting basic turn types. Prepares for normal turn handling.
     Intersection
