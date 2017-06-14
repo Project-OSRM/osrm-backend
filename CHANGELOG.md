@@ -1,3 +1,9 @@
+# 5.7.4
+  - Changes from 5.7.3:
+   - Bug fixes:
+     - Fixes 4100: Fix steps collapsing after non-closed roundabouts
+     - Fixes 4129: Fix invalid roundabout instructions for different driving modes
+
 # 5.7.3
   - Changes from 5.7.2:
    - Bug fixes:
