@@ -221,15 +221,6 @@ RoutingAlgorithms<routing_algorithms::mld::Algorithm>::ManyToManySearch(
 {
     throw util::exception("ManyToManySearch is not implemented");
 }
-
-template <>
-inline std::vector<routing_algorithms::TurnData>
-RoutingAlgorithms<routing_algorithms::mld::Algorithm>::GetTileTurns(
-    const std::vector<datafacade::BaseDataFacade::RTreeLeaf> &,
-    const std::vector<std::size_t> &) const
-{
-    throw util::exception("GetTileTurns is not implemented");
-}
 }
 }
 

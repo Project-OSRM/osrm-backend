@@ -33,6 +33,11 @@ getTileTurns(const datafacade::ContiguousInternalMemoryDataFacade<ch::Algorithm>
              const std::vector<RTreeLeaf> &edges,
              const std::vector<std::size_t> &sorted_edge_indexes);
 
+std::vector<TurnData>
+getTileTurns(const datafacade::ContiguousInternalMemoryDataFacade<mld::Algorithm> &facade,
+             const std::vector<RTreeLeaf> &edges,
+             const std::vector<std::size_t> &sorted_edge_indexes);
+
 } // namespace routing_algorithms
 } // namespace engine
 } // namespace osrm

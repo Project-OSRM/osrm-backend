@@ -20,11 +20,9 @@
 
 BOOST_AUTO_TEST_SUITE(tile)
 
-BOOST_AUTO_TEST_CASE(test_tile)
+template <typename algorithm> void test_tile(algorithm &osrm)
 {
     using namespace osrm;
-
-    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm");
 
     // This tile should contain most of monaco
     TileParameters params{17059, 11948, 15};
@@ -211,11 +209,32 @@ BOOST_AUTO_TEST_CASE(test_tile)
     BOOST_CHECK(number_of_turns_found > 700);
 }
 
-BOOST_AUTO_TEST_CASE(test_tile_turns)
+BOOST_AUTO_TEST_CASE(test_tile_ch)
+{
+    using namespace osrm;
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm", osrm::EngineConfig::Algorithm::CH);
+    test_tile(osrm);
+}
+
+BOOST_AUTO_TEST_CASE(test_tile_corech)
+{
+    using namespace osrm;
+    auto osrm =
+        getOSRM(OSRM_TEST_DATA_DIR "/corech/monaco.osrm", osrm::EngineConfig::Algorithm::CoreCH);
+    test_tile(osrm);
+}
+
+BOOST_AUTO_TEST_CASE(test_tile_mld)
+{
+    using namespace osrm;
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/mld/monaco.osrm", osrm::EngineConfig::Algorithm::MLD);
+    test_tile(osrm);
+}
+
+template <typename algorithm> void test_tile_turns(algorithm &osrm)
 {
     using namespace osrm;
 
-    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm");
     // Small tile where we can test all the values
     TileParameters params{272953, 191177, 19};
 
@@ -359,11 +378,34 @@ BOOST_AUTO_TEST_CASE(test_tile_turns)
     CHECK_EQUAL_RANGE(actual_turn_bearings, expected_turn_bearings);
 }
 
-BOOST_AUTO_TEST_CASE(test_tile_speeds)
+BOOST_AUTO_TEST_CASE(test_tile_turns_ch)
 {
     using namespace osrm;
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm", osrm::EngineConfig::Algorithm::CH);
 
-    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm");
+    test_tile_turns(osrm);
+}
+
+BOOST_AUTO_TEST_CASE(test_tile_turns_corech)
+{
+    using namespace osrm;
+    auto osrm =
+        getOSRM(OSRM_TEST_DATA_DIR "/corech/monaco.osrm", osrm::EngineConfig::Algorithm::CoreCH);
+
+    test_tile_turns(osrm);
+}
+
+BOOST_AUTO_TEST_CASE(test_tile_turns_mld)
+{
+    using namespace osrm;
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/mld/monaco.osrm", osrm::EngineConfig::Algorithm::MLD);
+
+    test_tile_turns(osrm);
+}
+
+template <typename algorithm> void test_tile_speeds(algorithm &osrm)
+{
+    using namespace osrm;
 
     // Small tile so we can test all the values
     // TileParameters params{272953, 191177, 19};
@@ -520,6 +562,31 @@ BOOST_AUTO_TEST_CASE(test_tile_speeds)
                                                      "Rue Professeur Calmette",
                                                      "Rue Professeur Calmette"};
     BOOST_CHECK(actual_names == expected_names);
+}
+
+BOOST_AUTO_TEST_CASE(test_tile_speeds_ch)
+{
+    using namespace osrm;
+
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm", osrm::EngineConfig::Algorithm::CH);
+    test_tile_speeds(osrm);
+}
+
+BOOST_AUTO_TEST_CASE(test_tile_speeds_corech)
+{
+    using namespace osrm;
+
+    auto osrm =
+        getOSRM(OSRM_TEST_DATA_DIR "/corech/monaco.osrm", osrm::EngineConfig::Algorithm::CoreCH);
+    test_tile_speeds(osrm);
+}
+
+BOOST_AUTO_TEST_CASE(test_tile_speeds_mld)
+{
+    using namespace osrm;
+
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/mld/monaco.osrm", osrm::EngineConfig::Algorithm::MLD);
+    test_tile_speeds(osrm);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
