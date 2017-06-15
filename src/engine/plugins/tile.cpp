@@ -503,9 +503,9 @@ void encodeVectorTile(const datafacade::ContiguousInternalMemoryDataFacadeBase &
                     const auto reverse_duration =
                         reverse_duration_vector[reverse_duration_vector.size() -
                                                 edge.fwd_segment_position - 1];
-                    const auto forward_datasource =
+                    const auto forward_datasource_idx =
                         forward_datasource_vector[edge.fwd_segment_position];
-                    const auto reverse_datasource =
+                    const auto reverse_datasource_idx =
                         reverse_datasource_vector[reverse_datasource_vector.size() -
                                                   edge.fwd_segment_position - 1];
 
@@ -530,15 +530,16 @@ void encodeVectorTile(const datafacade::ContiguousInternalMemoryDataFacadeBase &
                                                    &component_id,
                                                    &id,
                                                    &max_datasource_id,
-                                                   &used_line_ints](const FixedLine &tile_line,
-                                                                    const std::uint32_t speed_kmh,
-                                                                    const std::uint32_t rate,
-                                                                    const std::size_t weight,
-                                                                    const std::size_t duration,
-                                                                    const DatasourceID datasource,
-                                                                    const std::size_t name_idx,
-                                                                    std::int32_t &start_x,
-                                                                    std::int32_t &start_y) {
+                                                   &used_line_ints](
+                        const FixedLine &tile_line,
+                        const std::uint32_t speed_kmh_idx,
+                        const std::uint32_t rate_idx,
+                        const std::size_t weight_idx,
+                        const std::size_t duration_idx,
+                        const DatasourceID datasource_idx,
+                        const std::size_t name_idx,
+                        std::int32_t &start_x,
+                        std::int32_t &start_y) {
                         // Here, we save the two attributes for our feature: the speed and
                         // the is_small boolean.  We only serve up speeds from 0-139, so all we
                         // do is save the first
@@ -562,27 +563,27 @@ void encodeVectorTile(const datafacade::ContiguousInternalMemoryDataFacadeBase &
                                 feature_writer, util::vector_tile::FEATURE_ATTRIBUTES_TAG);
 
                             field.add_element(0); // "speed" tag key offset
+                            field.add_element(std::min(
+                                speed_kmh_idx, 127u)); // save the speed value, capped at 127
+                            field.add_element(1);      // "is_small" tag key offset
                             field.add_element(
-                                std::min(speed_kmh, 127u)); // save the speed value, capped at 127
-                            field.add_element(1);           // "is_small" tag key offset
-                            field.add_element(128 +
-                                              (component_id.is_tiny ? 0 : 1)); // is_small feature
-                            field.add_element(2);                // "datasource" tag key offset
-                            field.add_element(130 + datasource); // datasource value offset
-                            field.add_element(3);                // "weight" tag key offset
+                                128 + (component_id.is_tiny ? 0 : 1)); // is_small feature offset
+                            field.add_element(2);                    // "datasource" tag key offset
+                            field.add_element(130 + datasource_idx); // datasource value offset
+                            field.add_element(3);                    // "weight" tag key offset
                             field.add_element(130 + max_datasource_id + 1 +
-                                              weight); // weight value offset
-                            field.add_element(4);      // "duration" tag key offset
+                                              weight_idx); // weight value offset
+                            field.add_element(4);          // "duration" tag key offset
                             field.add_element(130 + max_datasource_id + 1 +
-                                              duration); // duration value offset
-                            field.add_element(5);        // "name" tag key offset
+                                              duration_idx); // duration value offset
+                            field.add_element(5);            // "name" tag key offset
 
                             field.add_element(130 + max_datasource_id + 1 + used_line_ints.size() +
                                               name_idx); // name value offset
 
                             field.add_element(6); // rate tag key offset
                             field.add_element(130 + max_datasource_id + 1 +
-                                              rate); // rate goes in used_line_ints
+                                              rate_idx); // rate goes in used_line_ints
                         }
                         {
 
@@ -600,24 +601,26 @@ void encodeVectorTile(const datafacade::ContiguousInternalMemoryDataFacadeBase &
                         std::int32_t start_y = 0;
 
                         // Calculate the speed for this line
-                        std::uint32_t speed_kmh =
+                        // Speeds are looked up in a simple 1:1 table, so the speed value == lookup
+                        // table index
+                        std::uint32_t speed_kmh_idx =
                             static_cast<std::uint32_t>(round(length / forward_duration * 10 * 3.6));
 
                         // Rate values are in meters per weight-unit - and similar to speeds, we
                         // present 1 decimal place of precision (these values are added as
                         // double/10) lower down
-                        std::uint32_t rate =
+                        std::uint32_t forward_rate =
                             static_cast<std::uint32_t>(round(length / forward_weight * 10.));
 
                         auto tile_line = coordinatesToTileLine(a, b, tile_bbox);
                         if (!tile_line.empty())
                         {
                             encode_tile_line(tile_line,
-                                             speed_kmh,
-                                             rate,
+                                             speed_kmh_idx,
+                                             line_int_offsets[forward_rate],
                                              line_int_offsets[forward_weight],
                                              line_int_offsets[forward_duration],
-                                             forward_datasource,
+                                             forward_datasource_idx,
                                              name_offset,
                                              start_x,
                                              start_y);
@@ -632,24 +635,26 @@ void encodeVectorTile(const datafacade::ContiguousInternalMemoryDataFacadeBase &
                         std::int32_t start_y = 0;
 
                         // Calculate the speed for this line
-                        std::uint32_t speed_kmh =
+                        // Speeds are looked up in a simple 1:1 table, so the speed value == lookup
+                        // table index
+                        std::uint32_t speed_kmh_idx =
                             static_cast<std::uint32_t>(round(length / reverse_duration * 10 * 3.6));
 
                         // Rate values are in meters per weight-unit - and similar to speeds, we
                         // present 1 decimal place of precision (these values are added as
                         // double/10) lower down
-                        std::uint32_t rate =
+                        std::uint32_t reverse_rate =
                             static_cast<std::uint32_t>(round(length / reverse_weight * 10.));
 
                         auto tile_line = coordinatesToTileLine(b, a, tile_bbox);
                         if (!tile_line.empty())
                         {
                             encode_tile_line(tile_line,
-                                             speed_kmh,
-                                             rate,
+                                             speed_kmh_idx,
+                                             line_int_offsets[reverse_rate],
                                              line_int_offsets[reverse_weight],
                                              line_int_offsets[reverse_duration],
-                                             reverse_datasource,
+                                             reverse_datasource_idx,
                                              name_offset,
                                              start_x,
                                              start_y);
@@ -770,7 +775,7 @@ void encodeVectorTile(const datafacade::ContiguousInternalMemoryDataFacadeBase &
                         util::vector_tile::GEOMETRY_TYPE_POINT);                // geometry type
                     feature_writer.add_uint64(util::vector_tile::ID_TAG, id++); // id
                     {
-                        // Write out the 3 properties we want on the feature.  These
+                        // Write out the 4 properties we want on the feature.  These
                         // refer to indexes in the properties lookup table, which we
                         // add to the tile after we add all features.
                         protozero::packed_field_uint32 field(
