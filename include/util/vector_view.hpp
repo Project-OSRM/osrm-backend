@@ -143,8 +143,33 @@ template <> class vector_view<bool>
     unsigned *m_ptr;
     std::size_t m_size;
 
+    static constexpr std::size_t UNSIGNED_BITS = CHAR_BIT * sizeof(unsigned);
+
   public:
     using value_type = bool;
+    struct reference
+    {
+        reference &operator=(bool value)
+        {
+            *m_ptr = (*m_ptr & ~mask) | (static_cast<unsigned>(value) * mask);
+            return *this;
+        }
+
+        operator bool() const { return (*m_ptr) & mask; }
+
+        bool operator==(const reference &other) const
+        {
+            return other.m_ptr == m_ptr && other.mask == mask;
+        }
+
+        friend std::ostream &operator<<(std::ostream &os, const reference &rhs)
+        {
+            return os << static_cast<bool>(rhs);
+        }
+
+        unsigned *m_ptr;
+        const unsigned mask;
+    };
 
     vector_view() : m_ptr(nullptr), m_size(0) {}
 
@@ -153,8 +178,8 @@ template <> class vector_view<bool>
     bool at(const std::size_t index) const
     {
         BOOST_ASSERT_MSG(index < m_size, "invalid size");
-        const std::size_t bucket = index / (CHAR_BIT * sizeof(unsigned));
-        const unsigned offset = index % (CHAR_BIT * sizeof(unsigned));
+        const std::size_t bucket = index / UNSIGNED_BITS;
+        const unsigned offset = index % UNSIGNED_BITS;
         return m_ptr[bucket] & (1u << offset);
     }
 
@@ -165,6 +190,14 @@ template <> class vector_view<bool>
     bool empty() const { return 0 == size(); }
 
     bool operator[](const unsigned index) const { return at(index); }
+
+    reference operator[](const unsigned index)
+    {
+        BOOST_ASSERT(index < m_size);
+        const std::size_t bucket = index / UNSIGNED_BITS;
+        const unsigned offset = index % UNSIGNED_BITS;
+        return reference{m_ptr + bucket, 1u << offset};
+    }
 
     template <typename T> friend void swap(vector_view<T> &, vector_view<T> &) noexcept;
 };
@@ -186,6 +219,15 @@ template <typename DataT, storage::Ownership Ownership>
 using ViewOrVector = typename std::conditional<Ownership == storage::Ownership::View,
                                                vector_view<DataT>,
                                                InternalOrExternalVector<DataT, Ownership>>::type;
+
+// We can use this for compile time assertions
+template <typename ValueT, typename VectorT>
+struct is_view_or_vector
+    : std::integral_constant<bool,
+                             std::is_same<std::vector<ValueT>, VectorT>::value ||
+                                 std::is_same<util::vector_view<ValueT>, VectorT>::value>
+{
+};
 }
 }
 

@@ -65,16 +65,9 @@ class Contractor
                        std::vector<EdgeWeight> &&node_weights,
                        std::vector<bool> &is_core_node,
                        std::vector<float> &inout_node_levels) const;
-    void WriteCoreNodeMarker(std::vector<bool> &&is_core_node) const;
-    void WriteContractedGraph(unsigned number_of_edge_based_nodes,
-                              util::DeallocatingVector<QueryEdge> contracted_edge_list);
 
   private:
     ContractorConfig config;
-
-    EdgeID LoadEdgeExpandedGraph(const ContractorConfig &config,
-                                 std::vector<extractor::EdgeBasedEdge> &edge_based_edge_list,
-                                 std::vector<EdgeWeight> &node_weights);
 };
 }
 }
