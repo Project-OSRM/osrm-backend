@@ -53,7 +53,7 @@ template <typename algorithm> void test_tile(algorithm &osrm)
         auto property_iter_pair = feature_message.get_packed_uint32();
         auto value_begin = property_iter_pair.begin();
         auto value_end = property_iter_pair.end();
-        BOOST_CHECK_EQUAL(std::distance(value_begin, value_end), 12);
+        BOOST_CHECK_EQUAL(std::distance(value_begin, value_end), 14);
         auto iter = value_begin;
         BOOST_CHECK_EQUAL(*iter++, 0); // speed key
         BOOST_CHECK_LT(*iter++, 128);  // speed value
@@ -70,6 +70,9 @@ template <typename algorithm> void test_tile(algorithm &osrm)
         BOOST_CHECK_GT(*iter++, 130);  // duration value
         // name
         BOOST_CHECK_EQUAL(*iter++, 5);
+        BOOST_CHECK_GT(*iter++, 130);
+        // rate
+        BOOST_CHECK_EQUAL(*iter++, 6);
         BOOST_CHECK_GT(*iter++, 130);
         BOOST_CHECK(iter == value_end);
         // geometry
@@ -138,7 +141,7 @@ template <typename algorithm> void test_tile(algorithm &osrm)
         }
     }
 
-    BOOST_CHECK_EQUAL(number_of_speed_keys, 6);
+    BOOST_CHECK_EQUAL(number_of_speed_keys, 7);
     BOOST_CHECK_GT(number_of_speed_values, 128); // speed value resolution
 
     tile_message.next();
@@ -425,8 +428,10 @@ template <typename algorithm> void test_tile_speeds(algorithm &osrm)
     std::vector<int> found_speed_indexes;
     std::vector<int> found_component_indexes;
     std::vector<int> found_datasource_indexes;
+    std::vector<int> found_weight_indexes;
     std::vector<int> found_duration_indexes;
     std::vector<int> found_name_indexes;
+    std::vector<int> found_rate_indexes;
 
     const auto check_feature = [&](protozero::pbf_reader feature_message) {
         feature_message.next(); // advance parser to first entry
@@ -443,7 +448,7 @@ template <typename algorithm> void test_tile_speeds(algorithm &osrm)
         auto property_iter_pair = feature_message.get_packed_uint32();
         auto value_begin = property_iter_pair.begin();
         auto value_end = property_iter_pair.end();
-        BOOST_CHECK_EQUAL(std::distance(value_begin, value_end), 12);
+        BOOST_CHECK_EQUAL(std::distance(value_begin, value_end), 14);
         auto iter = value_begin;
         BOOST_CHECK_EQUAL(*iter++, 0); // speed key
         found_speed_indexes.push_back(*iter++);
@@ -453,12 +458,14 @@ template <typename algorithm> void test_tile_speeds(algorithm &osrm)
         BOOST_CHECK_EQUAL(*iter++, 2); // data source key
         found_datasource_indexes.push_back(*iter++);
         BOOST_CHECK_EQUAL(*iter++, 3); // weight key
-        found_duration_indexes.push_back(*iter++);
+        found_weight_indexes.push_back(*iter++);
         BOOST_CHECK_EQUAL(*iter++, 4); // duration key
         found_duration_indexes.push_back(*iter++);
         // name
         BOOST_CHECK_EQUAL(*iter++, 5);
         found_name_indexes.push_back(*iter++);
+        BOOST_CHECK_EQUAL(*iter++, 6);
+        found_rate_indexes.push_back(*iter++);
         BOOST_CHECK(iter == value_end);
         // geometry
         feature_message.next();

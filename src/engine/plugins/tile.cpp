@@ -428,6 +428,12 @@ void encodeVectorTile(const datafacade::ContiguousInternalMemoryDataFacadeBase &
                 const auto &edge = edges[edge_index];
                 const auto geometry_id = get_geometry_id(edge);
 
+                // Get coordinates for start/end nodes of segment (NodeIDs u and v)
+                const auto a = facade.GetCoordinateOfNode(edge.u);
+                const auto b = facade.GetCoordinateOfNode(edge.v);
+                // Calculate the length in meters
+                const double length = osrm::util::coordinate_calculation::haversineDistance(a, b);
+
                 // Weight values
                 const auto forward_weight_vector =
                     facade.GetUncompressedForwardWeights(geometry_id);
@@ -438,6 +444,14 @@ void encodeVectorTile(const datafacade::ContiguousInternalMemoryDataFacadeBase &
                                                                   edge.fwd_segment_position - 1];
                 use_line_value(forward_weight);
                 use_line_value(reverse_weight);
+
+                std::uint32_t forward_rate =
+                    static_cast<std::uint32_t>(round(length / forward_weight * 10.));
+                std::uint32_t reverse_rate =
+                    static_cast<std::uint32_t>(round(length / reverse_weight * 10.));
+
+                use_line_value(forward_rate);
+                use_line_value(reverse_rate);
 
                 // Duration values
                 const auto forward_duration_vector =
@@ -518,6 +532,7 @@ void encodeVectorTile(const datafacade::ContiguousInternalMemoryDataFacadeBase &
                                                    &max_datasource_id,
                                                    &used_line_ints](const FixedLine &tile_line,
                                                                     const std::uint32_t speed_kmh,
+                                                                    const std::uint32_t rate,
                                                                     const std::size_t weight,
                                                                     const std::size_t duration,
                                                                     const DatasourceID datasource,
@@ -564,6 +579,10 @@ void encodeVectorTile(const datafacade::ContiguousInternalMemoryDataFacadeBase &
 
                             field.add_element(130 + max_datasource_id + 1 + used_line_ints.size() +
                                               name_idx); // name value offset
+
+                            field.add_element(6); // rate tag key offset
+                            field.add_element(130 + max_datasource_id + 1 +
+                                              rate); // rate goes in used_line_ints
                         }
                         {
 
@@ -584,11 +603,18 @@ void encodeVectorTile(const datafacade::ContiguousInternalMemoryDataFacadeBase &
                         std::uint32_t speed_kmh =
                             static_cast<std::uint32_t>(round(length / forward_duration * 10 * 3.6));
 
+                        // Rate values are in meters per weight-unit - and similar to speeds, we
+                        // present 1 decimal place of precision (these values are added as
+                        // double/10) lower down
+                        std::uint32_t rate =
+                            static_cast<std::uint32_t>(round(length / forward_weight * 10.));
+
                         auto tile_line = coordinatesToTileLine(a, b, tile_bbox);
                         if (!tile_line.empty())
                         {
                             encode_tile_line(tile_line,
                                              speed_kmh,
+                                             rate,
                                              line_int_offsets[forward_weight],
                                              line_int_offsets[forward_duration],
                                              forward_datasource,
@@ -609,11 +635,18 @@ void encodeVectorTile(const datafacade::ContiguousInternalMemoryDataFacadeBase &
                         std::uint32_t speed_kmh =
                             static_cast<std::uint32_t>(round(length / reverse_duration * 10 * 3.6));
 
+                        // Rate values are in meters per weight-unit - and similar to speeds, we
+                        // present 1 decimal place of precision (these values are added as
+                        // double/10) lower down
+                        std::uint32_t rate =
+                            static_cast<std::uint32_t>(round(length / reverse_weight * 10.));
+
                         auto tile_line = coordinatesToTileLine(b, a, tile_bbox);
                         if (!tile_line.empty())
                         {
                             encode_tile_line(tile_line,
                                              speed_kmh,
+                                             rate,
                                              line_int_offsets[reverse_weight],
                                              line_int_offsets[reverse_duration],
                                              reverse_datasource,
@@ -634,6 +667,7 @@ void encodeVectorTile(const datafacade::ContiguousInternalMemoryDataFacadeBase &
             line_layer_writer.add_string(util::vector_tile::KEY_TAG, "weight");
             line_layer_writer.add_string(util::vector_tile::KEY_TAG, "duration");
             line_layer_writer.add_string(util::vector_tile::KEY_TAG, "name");
+            line_layer_writer.add_string(util::vector_tile::KEY_TAG, "rate");
 
             // Now, we write out the possible speed value arrays and possible is_tiny
             // values.  Field type 4 is the "values" field.  It's a variable type field,
