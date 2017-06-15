@@ -160,13 +160,15 @@ template <typename algorithm> void test_tile(algorithm &osrm)
         BOOST_CHECK_EQUAL(feature_message.tag(), util::vector_tile::FEATURE_ATTRIBUTES_TAG);
         // properties
         auto feature_iter_pair = feature_message.get_packed_uint32();
-        BOOST_CHECK_EQUAL(std::distance(feature_iter_pair.begin(), feature_iter_pair.end()), 6);
+        BOOST_CHECK_EQUAL(std::distance(feature_iter_pair.begin(), feature_iter_pair.end()), 8);
         auto iter = feature_iter_pair.begin();
         BOOST_CHECK_EQUAL(*iter++, 0); // bearing_in key
         *iter++;
         BOOST_CHECK_EQUAL(*iter++, 1); // turn_angle key
         *iter++;
-        BOOST_CHECK_EQUAL(*iter++, 2); // cost key
+        BOOST_CHECK_EQUAL(*iter++, 2); // turn cost (duration) key
+        *iter++;                       // skip value check, can be valud uint32
+        BOOST_CHECK_EQUAL(*iter++, 3); // turn weight key
         *iter++;                       // skip value check, can be valud uint32
         BOOST_CHECK(iter == feature_iter_pair.end());
         // geometry
@@ -208,7 +210,7 @@ template <typename algorithm> void test_tile(algorithm &osrm)
         }
     }
 
-    BOOST_CHECK_EQUAL(number_of_turn_keys, 3);
+    BOOST_CHECK_EQUAL(number_of_turn_keys, 4);
     BOOST_CHECK(number_of_turns_found > 700);
 }
 
@@ -258,7 +260,8 @@ template <typename algorithm> void test_tile_turns(algorithm &osrm)
 
     std::vector<int> found_bearing_in_indexes;
     std::vector<int> found_turn_angles_indexes;
-    std::vector<int> found_penalties_indexes;
+    std::vector<int> found_time_penalties_indexes;
+    std::vector<int> found_weight_penalties_indexes;
 
     const auto check_turn_feature = [&](protozero::pbf_reader feature_message) {
         feature_message.next(); // advance parser to first entry
@@ -273,14 +276,16 @@ template <typename algorithm> void test_tile_turns(algorithm &osrm)
         BOOST_CHECK_EQUAL(feature_message.tag(), util::vector_tile::FEATURE_ATTRIBUTES_TAG);
         // properties
         auto feature_iter_pair = feature_message.get_packed_uint32();
-        BOOST_CHECK_EQUAL(std::distance(feature_iter_pair.begin(), feature_iter_pair.end()), 6);
+        BOOST_CHECK_EQUAL(std::distance(feature_iter_pair.begin(), feature_iter_pair.end()), 8);
         auto iter = feature_iter_pair.begin();
         BOOST_CHECK_EQUAL(*iter++, 0); // bearing_in key
         found_bearing_in_indexes.push_back(*iter++);
         BOOST_CHECK_EQUAL(*iter++, 1); // turn_angle key
         found_turn_angles_indexes.push_back(*iter++);
-        BOOST_CHECK_EQUAL(*iter++, 2);              // cost key
-        found_penalties_indexes.push_back(*iter++); // skip value check, can be valud uint32
+        BOOST_CHECK_EQUAL(*iter++, 2);                     // "cost" key (actually duration)
+        found_time_penalties_indexes.push_back(*iter++);   // skip value check, can be valud uint32
+        BOOST_CHECK_EQUAL(*iter++, 3);                     // "weight" key
+        found_weight_penalties_indexes.push_back(*iter++); // skip value check, can be valud uint32
         BOOST_CHECK(iter == feature_iter_pair.end());
         // geometry
         feature_message.next();
@@ -345,16 +350,28 @@ template <typename algorithm> void test_tile_turns(algorithm &osrm)
     }
 
     // Verify that we got the expected turn penalties
-    std::vector<float> actual_turn_penalties;
-    for (const auto &i : found_penalties_indexes)
+    std::vector<float> actual_time_turn_penalties;
+    for (const auto &i : found_time_penalties_indexes)
     {
         BOOST_CHECK(float_vals.count(i) == 1);
-        actual_turn_penalties.push_back(float_vals[i]);
+        actual_time_turn_penalties.push_back(float_vals[i]);
     }
-    std::sort(actual_turn_penalties.begin(), actual_turn_penalties.end());
-    const std::vector<float> expected_turn_penalties = {
+    std::sort(actual_time_turn_penalties.begin(), actual_time_turn_penalties.end());
+    const std::vector<float> expected_time_turn_penalties = {
         0, 0, 0, 0, 0, 0, .1f, .1f, .3f, .4f, 1.2f, 1.9f, 5.3f, 5.5f, 5.8f, 7.1f, 7.2f, 7.2f};
-    CHECK_EQUAL_RANGE(actual_turn_penalties, expected_turn_penalties);
+    CHECK_EQUAL_RANGE(actual_time_turn_penalties, expected_time_turn_penalties);
+
+    // Verify that we got the expected turn penalties
+    std::vector<float> actual_weight_turn_penalties;
+    for (const auto &i : found_weight_penalties_indexes)
+    {
+        BOOST_CHECK(float_vals.count(i) == 1);
+        actual_weight_turn_penalties.push_back(float_vals[i]);
+    }
+    std::sort(actual_weight_turn_penalties.begin(), actual_weight_turn_penalties.end());
+    const std::vector<float> expected_weight_turn_penalties = {
+        0, 0, 0, 0, 0, 0, .1f, .1f, .3f, .4f, 1.2f, 1.9f, 5.3f, 5.5f, 5.8f, 7.1f, 7.2f, 7.2f};
+    CHECK_EQUAL_RANGE(actual_weight_turn_penalties, expected_weight_turn_penalties);
 
     // Verify the expected turn angles
     std::vector<std::int64_t> actual_turn_angles;

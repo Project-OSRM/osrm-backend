@@ -729,19 +729,21 @@ void encodeVectorTile(const datafacade::ContiguousInternalMemoryDataFacadeBase &
         {
             // we need to pre-encode all values here because we need the full offsets later
             // for encoding the actual features.
-            std::vector<std::tuple<util::Coordinate, unsigned, unsigned, unsigned>>
+            std::vector<std::tuple<util::Coordinate, unsigned, unsigned, unsigned, unsigned>>
                 encoded_turn_data(all_turn_data.size());
-            std::transform(
-                all_turn_data.begin(),
-                all_turn_data.end(),
-                encoded_turn_data.begin(),
-                [&](const routing_algorithms::TurnData &t) {
-                    auto angle_idx = use_point_int_value(t.in_angle);
-                    auto turn_idx = use_point_int_value(t.turn_angle);
-                    auto duration_idx =
-                        use_point_float_value(t.duration / 10.0); // Note conversion to float here
-                    return std::make_tuple(t.coordinate, angle_idx, turn_idx, duration_idx);
-                });
+            std::transform(all_turn_data.begin(),
+                           all_turn_data.end(),
+                           encoded_turn_data.begin(),
+                           [&](const routing_algorithms::TurnData &t) {
+                               auto angle_idx = use_point_int_value(t.in_angle);
+                               auto turn_idx = use_point_int_value(t.turn_angle);
+                               auto duration_idx = use_point_float_value(
+                                   t.duration / 10.0); // Note conversion to float here
+                               auto weight_idx = use_point_float_value(
+                                   t.weight / 10.0); // Note conversion to float here
+                               return std::make_tuple(
+                                   t.coordinate, angle_idx, turn_idx, duration_idx, weight_idx);
+                           });
 
             // Now write the points layer for turn penalty data:
             // Add a layer object to the PBF stream.  3=='layer' from the vector tile spec
@@ -779,6 +781,8 @@ void encodeVectorTile(const datafacade::ContiguousInternalMemoryDataFacadeBase &
                         field.add_element(std::get<2>(point_turn_data));
                         field.add_element(2); // "cost" tag key offset
                         field.add_element(used_point_ints.size() + std::get<3>(point_turn_data));
+                        field.add_element(3); // "weight" tag key offset
+                        field.add_element(used_point_ints.size() + std::get<4>(point_turn_data));
                     }
                     {
                         // Add the geometry as the last field in this feature
@@ -806,6 +810,7 @@ void encodeVectorTile(const datafacade::ContiguousInternalMemoryDataFacadeBase &
             point_layer_writer.add_string(util::vector_tile::KEY_TAG, "bearing_in");
             point_layer_writer.add_string(util::vector_tile::KEY_TAG, "turn_angle");
             point_layer_writer.add_string(util::vector_tile::KEY_TAG, "cost");
+            point_layer_writer.add_string(util::vector_tile::KEY_TAG, "weight");
 
             // Now, save the lists of integers and floats that our features refer to.
             for (const auto &value : used_point_ints)
