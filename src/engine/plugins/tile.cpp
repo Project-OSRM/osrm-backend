@@ -428,6 +428,12 @@ void encodeVectorTile(const datafacade::ContiguousInternalMemoryDataFacadeBase &
                 const auto &edge = edges[edge_index];
                 const auto geometry_id = get_geometry_id(edge);
 
+                // Get coordinates for start/end nodes of segment (NodeIDs u and v)
+                const auto a = facade.GetCoordinateOfNode(edge.u);
+                const auto b = facade.GetCoordinateOfNode(edge.v);
+                // Calculate the length in meters
+                const double length = osrm::util::coordinate_calculation::haversineDistance(a, b);
+
                 // Weight values
                 const auto forward_weight_vector =
                     facade.GetUncompressedForwardWeights(geometry_id);
@@ -438,6 +444,14 @@ void encodeVectorTile(const datafacade::ContiguousInternalMemoryDataFacadeBase &
                                                                   edge.fwd_segment_position - 1];
                 use_line_value(forward_weight);
                 use_line_value(reverse_weight);
+
+                std::uint32_t forward_rate =
+                    static_cast<std::uint32_t>(round(length / forward_weight * 10.));
+                std::uint32_t reverse_rate =
+                    static_cast<std::uint32_t>(round(length / reverse_weight * 10.));
+
+                use_line_value(forward_rate);
+                use_line_value(reverse_rate);
 
                 // Duration values
                 const auto forward_duration_vector =
@@ -489,9 +503,9 @@ void encodeVectorTile(const datafacade::ContiguousInternalMemoryDataFacadeBase &
                     const auto reverse_duration =
                         reverse_duration_vector[reverse_duration_vector.size() -
                                                 edge.fwd_segment_position - 1];
-                    const auto forward_datasource =
+                    const auto forward_datasource_idx =
                         forward_datasource_vector[edge.fwd_segment_position];
-                    const auto reverse_datasource =
+                    const auto reverse_datasource_idx =
                         reverse_datasource_vector[reverse_datasource_vector.size() -
                                                   edge.fwd_segment_position - 1];
 
@@ -516,14 +530,16 @@ void encodeVectorTile(const datafacade::ContiguousInternalMemoryDataFacadeBase &
                                                    &component_id,
                                                    &id,
                                                    &max_datasource_id,
-                                                   &used_line_ints](const FixedLine &tile_line,
-                                                                    const std::uint32_t speed_kmh,
-                                                                    const std::size_t weight,
-                                                                    const std::size_t duration,
-                                                                    const DatasourceID datasource,
-                                                                    const std::size_t name_idx,
-                                                                    std::int32_t &start_x,
-                                                                    std::int32_t &start_y) {
+                                                   &used_line_ints](
+                        const FixedLine &tile_line,
+                        const std::uint32_t speed_kmh_idx,
+                        const std::uint32_t rate_idx,
+                        const std::size_t weight_idx,
+                        const std::size_t duration_idx,
+                        const DatasourceID datasource_idx,
+                        const std::size_t name_idx,
+                        std::int32_t &start_x,
+                        std::int32_t &start_y) {
                         // Here, we save the two attributes for our feature: the speed and
                         // the is_small boolean.  We only serve up speeds from 0-139, so all we
                         // do is save the first
@@ -547,23 +563,27 @@ void encodeVectorTile(const datafacade::ContiguousInternalMemoryDataFacadeBase &
                                 feature_writer, util::vector_tile::FEATURE_ATTRIBUTES_TAG);
 
                             field.add_element(0); // "speed" tag key offset
+                            field.add_element(std::min(
+                                speed_kmh_idx, 127u)); // save the speed value, capped at 127
+                            field.add_element(1);      // "is_small" tag key offset
                             field.add_element(
-                                std::min(speed_kmh, 127u)); // save the speed value, capped at 127
-                            field.add_element(1);           // "is_small" tag key offset
-                            field.add_element(128 +
-                                              (component_id.is_tiny ? 0 : 1)); // is_small feature
-                            field.add_element(2);                // "datasource" tag key offset
-                            field.add_element(130 + datasource); // datasource value offset
-                            field.add_element(3);                // "weight" tag key offset
+                                128 + (component_id.is_tiny ? 0 : 1)); // is_small feature offset
+                            field.add_element(2);                    // "datasource" tag key offset
+                            field.add_element(130 + datasource_idx); // datasource value offset
+                            field.add_element(3);                    // "weight" tag key offset
                             field.add_element(130 + max_datasource_id + 1 +
-                                              weight); // weight value offset
-                            field.add_element(4);      // "duration" tag key offset
+                                              weight_idx); // weight value offset
+                            field.add_element(4);          // "duration" tag key offset
                             field.add_element(130 + max_datasource_id + 1 +
-                                              duration); // duration value offset
-                            field.add_element(5);        // "name" tag key offset
+                                              duration_idx); // duration value offset
+                            field.add_element(5);            // "name" tag key offset
 
                             field.add_element(130 + max_datasource_id + 1 + used_line_ints.size() +
                                               name_idx); // name value offset
+
+                            field.add_element(6); // rate tag key offset
+                            field.add_element(130 + max_datasource_id + 1 +
+                                              rate_idx); // rate goes in used_line_ints
                         }
                         {
 
@@ -581,17 +601,26 @@ void encodeVectorTile(const datafacade::ContiguousInternalMemoryDataFacadeBase &
                         std::int32_t start_y = 0;
 
                         // Calculate the speed for this line
-                        std::uint32_t speed_kmh =
+                        // Speeds are looked up in a simple 1:1 table, so the speed value == lookup
+                        // table index
+                        std::uint32_t speed_kmh_idx =
                             static_cast<std::uint32_t>(round(length / forward_duration * 10 * 3.6));
+
+                        // Rate values are in meters per weight-unit - and similar to speeds, we
+                        // present 1 decimal place of precision (these values are added as
+                        // double/10) lower down
+                        std::uint32_t forward_rate =
+                            static_cast<std::uint32_t>(round(length / forward_weight * 10.));
 
                         auto tile_line = coordinatesToTileLine(a, b, tile_bbox);
                         if (!tile_line.empty())
                         {
                             encode_tile_line(tile_line,
-                                             speed_kmh,
+                                             speed_kmh_idx,
+                                             line_int_offsets[forward_rate],
                                              line_int_offsets[forward_weight],
                                              line_int_offsets[forward_duration],
-                                             forward_datasource,
+                                             forward_datasource_idx,
                                              name_offset,
                                              start_x,
                                              start_y);
@@ -606,17 +635,26 @@ void encodeVectorTile(const datafacade::ContiguousInternalMemoryDataFacadeBase &
                         std::int32_t start_y = 0;
 
                         // Calculate the speed for this line
-                        std::uint32_t speed_kmh =
+                        // Speeds are looked up in a simple 1:1 table, so the speed value == lookup
+                        // table index
+                        std::uint32_t speed_kmh_idx =
                             static_cast<std::uint32_t>(round(length / reverse_duration * 10 * 3.6));
+
+                        // Rate values are in meters per weight-unit - and similar to speeds, we
+                        // present 1 decimal place of precision (these values are added as
+                        // double/10) lower down
+                        std::uint32_t reverse_rate =
+                            static_cast<std::uint32_t>(round(length / reverse_weight * 10.));
 
                         auto tile_line = coordinatesToTileLine(b, a, tile_bbox);
                         if (!tile_line.empty())
                         {
                             encode_tile_line(tile_line,
-                                             speed_kmh,
+                                             speed_kmh_idx,
+                                             line_int_offsets[reverse_rate],
                                              line_int_offsets[reverse_weight],
                                              line_int_offsets[reverse_duration],
-                                             reverse_datasource,
+                                             reverse_datasource_idx,
                                              name_offset,
                                              start_x,
                                              start_y);
@@ -634,6 +672,7 @@ void encodeVectorTile(const datafacade::ContiguousInternalMemoryDataFacadeBase &
             line_layer_writer.add_string(util::vector_tile::KEY_TAG, "weight");
             line_layer_writer.add_string(util::vector_tile::KEY_TAG, "duration");
             line_layer_writer.add_string(util::vector_tile::KEY_TAG, "name");
+            line_layer_writer.add_string(util::vector_tile::KEY_TAG, "rate");
 
             // Now, we write out the possible speed value arrays and possible is_tiny
             // values.  Field type 4 is the "values" field.  It's a variable type field,
@@ -695,19 +734,21 @@ void encodeVectorTile(const datafacade::ContiguousInternalMemoryDataFacadeBase &
         {
             // we need to pre-encode all values here because we need the full offsets later
             // for encoding the actual features.
-            std::vector<std::tuple<util::Coordinate, unsigned, unsigned, unsigned>>
+            std::vector<std::tuple<util::Coordinate, unsigned, unsigned, unsigned, unsigned>>
                 encoded_turn_data(all_turn_data.size());
-            std::transform(
-                all_turn_data.begin(),
-                all_turn_data.end(),
-                encoded_turn_data.begin(),
-                [&](const routing_algorithms::TurnData &t) {
-                    auto angle_idx = use_point_int_value(t.in_angle);
-                    auto turn_idx = use_point_int_value(t.turn_angle);
-                    auto duration_idx =
-                        use_point_float_value(t.duration / 10.0); // Note conversion to float here
-                    return std::make_tuple(t.coordinate, angle_idx, turn_idx, duration_idx);
-                });
+            std::transform(all_turn_data.begin(),
+                           all_turn_data.end(),
+                           encoded_turn_data.begin(),
+                           [&](const routing_algorithms::TurnData &t) {
+                               auto angle_idx = use_point_int_value(t.in_angle);
+                               auto turn_idx = use_point_int_value(t.turn_angle);
+                               auto duration_idx = use_point_float_value(
+                                   t.duration / 10.0); // Note conversion to float here
+                               auto weight_idx = use_point_float_value(
+                                   t.weight / 10.0); // Note conversion to float here
+                               return std::make_tuple(
+                                   t.coordinate, angle_idx, turn_idx, duration_idx, weight_idx);
+                           });
 
             // Now write the points layer for turn penalty data:
             // Add a layer object to the PBF stream.  3=='layer' from the vector tile spec
@@ -734,7 +775,7 @@ void encodeVectorTile(const datafacade::ContiguousInternalMemoryDataFacadeBase &
                         util::vector_tile::GEOMETRY_TYPE_POINT);                // geometry type
                     feature_writer.add_uint64(util::vector_tile::ID_TAG, id++); // id
                     {
-                        // Write out the 3 properties we want on the feature.  These
+                        // Write out the 4 properties we want on the feature.  These
                         // refer to indexes in the properties lookup table, which we
                         // add to the tile after we add all features.
                         protozero::packed_field_uint32 field(
@@ -745,6 +786,8 @@ void encodeVectorTile(const datafacade::ContiguousInternalMemoryDataFacadeBase &
                         field.add_element(std::get<2>(point_turn_data));
                         field.add_element(2); // "cost" tag key offset
                         field.add_element(used_point_ints.size() + std::get<3>(point_turn_data));
+                        field.add_element(3); // "weight" tag key offset
+                        field.add_element(used_point_ints.size() + std::get<4>(point_turn_data));
                     }
                     {
                         // Add the geometry as the last field in this feature
@@ -772,6 +815,7 @@ void encodeVectorTile(const datafacade::ContiguousInternalMemoryDataFacadeBase &
             point_layer_writer.add_string(util::vector_tile::KEY_TAG, "bearing_in");
             point_layer_writer.add_string(util::vector_tile::KEY_TAG, "turn_angle");
             point_layer_writer.add_string(util::vector_tile::KEY_TAG, "cost");
+            point_layer_writer.add_string(util::vector_tile::KEY_TAG, "weight");
 
             // Now, save the lists of integers and floats that our features refer to.
             for (const auto &value : used_point_ints)

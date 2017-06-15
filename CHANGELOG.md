@@ -20,6 +20,8 @@
       - #4075 Changed counting of exits on service roundabouts
     - Debug Tiles
       - added support for visualising turn penalties to the MLD plugin
+      - added support for showing the rate (reciprocal of weight) on each edge when used
+      - added support for turn weights in addition to turn durations in debug tiles
     - Bugfixes
       - Fixed a copy/paste issue assigning wrong directions in similar turns (left over right)
       - #4074: fixed a bug that would announce entering highway ramps as u-turns
