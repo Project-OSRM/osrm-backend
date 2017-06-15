@@ -7,31 +7,33 @@ namespace engine
 namespace routing_algorithms
 {
 
-std::vector<TurnData>
-getTileTurns(const datafacade::ContiguousInternalMemoryDataFacade<ch::Algorithm> &facade,
-             const std::vector<RTreeLeaf> &edges,
-             const std::vector<std::size_t> &sorted_edge_indexes)
+namespace
 {
-    std::vector<TurnData> all_turn_data;
+// Struct to hold info on all the EdgeBasedNodes that are visible in our tile
+// When we create these, we insure that (source, target) and packed_geometry_id
+// are all pointed in the same direction.
+struct EdgeBasedNodeInfo
+{
+    bool is_geometry_forward; // Is the geometry forward or reverse?
+    unsigned packed_geometry_id;
+};
 
-    // Struct to hold info on all the EdgeBasedNodes that are visible in our tile
-    // When we create these, we insure that (source, target) and packed_geometry_id
-    // are all pointed in the same direction.
-    struct EdgeBasedNodeInfo
-    {
-        bool is_geometry_forward; // Is the geometry forward or reverse?
-        unsigned packed_geometry_id;
-    };
+struct SegmentData
+{
+    NodeID target_node;
+    EdgeID edge_based_node_id;
+};
+
+template <typename edge_extractor, typename datafacade>
+std::vector<TurnData> generateTurns(const datafacade &facade,
+                                    const std::vector<RTreeLeaf> &edges,
+                                    const std::vector<std::size_t> &sorted_edge_indexes,
+                                    edge_extractor const &find_edge)
+{
     // Lookup table for edge-based-nodes
     std::unordered_map<NodeID, EdgeBasedNodeInfo> edge_based_node_info;
-
-    struct SegmentData
-    {
-        NodeID target_node;
-        EdgeID edge_based_node_id;
-    };
-
     std::unordered_map<NodeID, std::vector<SegmentData>> directed_graph;
+
     // Reserve enough space for unique edge-based-nodes on every edge.
     // Only a tile with all unique edges will use this much, but
     // it saves us a bunch of re-allocations during iteration.
@@ -41,8 +43,10 @@ getTileTurns(const datafacade::ContiguousInternalMemoryDataFacade<ch::Algorithm>
         return facade.GetGeometryIndex(edge.forward_segment_id.id).id;
     };
 
-    // Build an adjacency list for all the road segments visible in
-    // the tile
+    // To build a tile, we can only rely on the r-tree to quickly find all data visible within the
+    // tile itself. The Rtree returns a series of segments that may or may not offer turns
+    // associated with them. To be able to extract turn penalties, we extract a node based graph
+    // from our edge based representation.
     for (const auto &edge_index : sorted_edge_indexes)
     {
         const auto &edge = edges[edge_index];
@@ -79,28 +83,32 @@ getTileTurns(const datafacade::ContiguousInternalMemoryDataFacade<ch::Algorithm>
         }
     }
 
+    // Make sure we traverse the startnodes in a consistent order
+    // to ensure identical PBF encoding on all platforms.
+    std::vector<NodeID> sorted_startnodes;
+    sorted_startnodes.reserve(directed_graph.size());
+    std::transform(directed_graph.begin(),
+                   directed_graph.end(),
+                   std::back_inserter(sorted_startnodes),
+                   [](auto const &node) { return node.first; });
+    std::sort(sorted_startnodes.begin(), sorted_startnodes.end());
+
+    std::vector<TurnData> all_turn_data;
+
     // Given a turn:
     //     u---v
     //         |
     //         w
     //  uv is the "approach"
     //  vw is the "exit"
-    std::vector<contractor::QueryEdge::EdgeData> unpacked_shortcut;
     std::vector<EdgeWeight> approach_weight_vector;
     std::vector<EdgeWeight> approach_duration_vector;
-
-    // Make sure we traverse the startnodes in a consistent order
-    // to ensure identical PBF encoding on all platforms.
-    std::vector<NodeID> sorted_startnodes;
-    sorted_startnodes.reserve(directed_graph.size());
-    for (const auto &startnode : directed_graph)
-        sorted_startnodes.push_back(startnode.first);
-    std::sort(sorted_startnodes.begin(), sorted_startnodes.end());
 
     // Look at every node in the directed graph we created
     for (const auto &startnode : sorted_startnodes)
     {
-        const auto &nodedata = directed_graph[startnode];
+        BOOST_ASSERT(directed_graph.find(startnode) != directed_graph.end());
+        const auto &nodedata = directed_graph.find(startnode)->second;
         // For all the outgoing edges from the node
         for (const auto &approachedge : nodedata)
         {
@@ -110,7 +118,7 @@ getTileTurns(const datafacade::ContiguousInternalMemoryDataFacade<ch::Algorithm>
                 continue;
 
             // For each of the outgoing edges from our target coordinate
-            for (const auto &exit_edge : directed_graph[approachedge.target_node])
+            for (const auto &exit_edge : directed_graph.find(approachedge.target_node)->second)
             {
                 // If the next edge has the same edge_based_node_id, then it's
                 // not a turn, so skip it
@@ -132,55 +140,32 @@ getTileTurns(const datafacade::ContiguousInternalMemoryDataFacade<ch::Algorithm>
                 //
                 // would offer a backward edge at `b` to `a` (due to the oneway from a to b)
                 // but could also offer a shortcut (b-c-a) from `b` to `a` which is longer.
-                EdgeID smaller_edge_id =
-                    facade.FindSmallestEdge(approachedge.edge_based_node_id,
-                                            exit_edge.edge_based_node_id,
-                                            [](const contractor::QueryEdge::EdgeData &data) {
-                                                return data.forward && !data.shortcut;
-                                            });
+                EdgeID edge_based_edge_id =
+                    find_edge(approachedge.edge_based_node_id, exit_edge.edge_based_node_id);
 
-                // Depending on how the graph is constructed, we might have to look for
-                // a backwards edge instead.  They're equivalent, just one is available for
-                // a forward routing search, and one is used for the backwards dijkstra
-                // steps.  Their weight should be the same, we can use either one.
-                // If we didn't find a forward edge, try for a backward one
-                if (SPECIAL_EDGEID == smaller_edge_id)
+                if (edge_based_edge_id != SPECIAL_EDGEID)
                 {
-                    smaller_edge_id =
-                        facade.FindSmallestEdge(exit_edge.edge_based_node_id,
-                                                approachedge.edge_based_node_id,
-                                                [](const contractor::QueryEdge::EdgeData &data) {
-                                                    return data.backward && !data.shortcut;
-                                                });
-                }
-
-                // If no edge was found, it means that there's no connection between these
-                // nodes, due to oneways or turn restrictions. Given the edge-based-nodes
-                // that we're examining here, we *should* only find directly-connected
-                // edges, not shortcuts
-                if (smaller_edge_id != SPECIAL_EDGEID)
-                {
-                    const auto &data = facade.GetEdgeData(smaller_edge_id);
-                    BOOST_ASSERT_MSG(!data.shortcut, "Connecting edge must not be a shortcut");
+                    const auto &data = facade.GetEdgeData(edge_based_edge_id);
 
                     // Now, calculate the sum of the weight of all the segments.
-                    if (edge_based_node_info[approachedge.edge_based_node_id].is_geometry_forward)
+                    if (edge_based_node_info.find(approachedge.edge_based_node_id)
+                            ->second.is_geometry_forward)
                     {
                         approach_weight_vector = facade.GetUncompressedForwardWeights(
-                            edge_based_node_info[approachedge.edge_based_node_id]
-                                .packed_geometry_id);
+                            edge_based_node_info.find(approachedge.edge_based_node_id)
+                                ->second.packed_geometry_id);
                         approach_duration_vector = facade.GetUncompressedForwardDurations(
-                            edge_based_node_info[approachedge.edge_based_node_id]
-                                .packed_geometry_id);
+                            edge_based_node_info.find(approachedge.edge_based_node_id)
+                                ->second.packed_geometry_id);
                     }
                     else
                     {
                         approach_weight_vector = facade.GetUncompressedReverseWeights(
-                            edge_based_node_info[approachedge.edge_based_node_id]
-                                .packed_geometry_id);
+                            edge_based_node_info.find(approachedge.edge_based_node_id)
+                                ->second.packed_geometry_id);
                         approach_duration_vector = facade.GetUncompressedReverseDurations(
-                            edge_based_node_info[approachedge.edge_based_node_id]
-                                .packed_geometry_id);
+                            edge_based_node_info.find(approachedge.edge_based_node_id)
+                                ->second.packed_geometry_id);
                     }
                     const auto sum_node_weight = std::accumulate(approach_weight_vector.begin(),
                                                                  approach_weight_vector.end(),
@@ -237,6 +222,90 @@ getTileTurns(const datafacade::ContiguousInternalMemoryDataFacade<ch::Algorithm>
     }
 
     return all_turn_data;
+}
+
+} // namespace
+
+// CH Version of finding all turn penalties. Here is where the actual work is happening
+std::vector<TurnData>
+getTileTurns(const datafacade::ContiguousInternalMemoryDataFacade<ch::Algorithm> &facade,
+             const std::vector<RTreeLeaf> &edges,
+             const std::vector<std::size_t> &sorted_edge_indexes)
+{
+    // Define how to find the representative edge between two edge based nodes for a CH
+    struct EdgeFinderCH
+    {
+        EdgeFinderCH(const datafacade::ContiguousInternalMemoryDataFacade<ch::Algorithm> &facade)
+            : facade(facade)
+        {
+        }
+        const datafacade::ContiguousInternalMemoryDataFacade<ch::Algorithm> &facade;
+
+        EdgeID operator()(const NodeID approach_node, const NodeID exit_node) const
+        {
+            // Find the connection between our source road and the target node
+            // Since we only want to find direct edges, we cannot check shortcut edges here.
+            // Otherwise we might find a forward edge even though a shorter backward edge
+            // exists (due to oneways).
+            //
+            // a > - > - > - b
+            // |             |
+            // |------ c ----|
+            //
+            // would offer a backward edge at `b` to `a` (due to the oneway from a to b)
+            // but could also offer a shortcut (b-c-a) from `b` to `a` which is longer.
+            EdgeID edge_id = facade.FindSmallestEdge(
+                approach_node, exit_node, [](const contractor::QueryEdge::EdgeData &data) {
+                    return data.forward && !data.shortcut;
+                });
+
+            // Depending on how the graph is constructed, we might have to look for
+            // a backwards edge instead.  They're equivalent, just one is available for
+            // a forward routing search, and one is used for the backwards dijkstra
+            // steps.  Their weight should be the same, we can use either one.
+            // If we didn't find a forward edge, try for a backward one
+            if (SPECIAL_EDGEID == edge_id)
+            {
+                edge_id = facade.FindSmallestEdge(
+                    exit_node, approach_node, [](const contractor::QueryEdge::EdgeData &data) {
+                        return data.backward && !data.shortcut;
+                    });
+            }
+
+            BOOST_ASSERT_MSG(edge_id == SPECIAL_EDGEID || !facade.GetEdgeData(edge_id).shortcut,
+                             "Connecting edge must not be a shortcut");
+            return edge_id;
+        }
+    };
+
+    EdgeFinderCH edge_finder(facade);
+    return generateTurns(facade, edges, sorted_edge_indexes, edge_finder);
+}
+
+// MLD version to find all turns
+std::vector<TurnData>
+getTileTurns(const datafacade::ContiguousInternalMemoryDataFacade<mld::Algorithm> &facade,
+             const std::vector<RTreeLeaf> &edges,
+             const std::vector<std::size_t> &sorted_edge_indexes)
+{
+    // Define how to find the representative edge between two edge-based-nodes for a MLD
+    struct EdgeFinderMLD
+    {
+        EdgeFinderMLD(const datafacade::ContiguousInternalMemoryDataFacade<mld::Algorithm> &facade)
+            : facade(facade)
+        {
+        }
+        const datafacade::ContiguousInternalMemoryDataFacade<mld::Algorithm> &facade;
+
+        EdgeID operator()(const NodeID approach_node, const NodeID exit_node) const
+        {
+            return facade.FindEdge(approach_node, exit_node);
+        }
+    };
+
+    EdgeFinderMLD edge_finder(facade);
+
+    return generateTurns(facade, edges, sorted_edge_indexes, edge_finder);
 }
 
 } // namespace routing_algorithms

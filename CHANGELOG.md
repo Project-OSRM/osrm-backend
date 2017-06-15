@@ -18,6 +18,8 @@
       - .osrm.nodes file was renamed to .nbg_nodes and .ebg_nodes was added
     - Guidance
       - #4075 Changed counting of exits on service roundabouts
+    - Debug Tiles
+      - added support for visualising turn penalties to the MLD plugin
     - Bugfixes
       - Fixed a copy/paste issue assigning wrong directions in similar turns (left over right)
       - #4074: fixed a bug that would announce entering highway ramps as u-turns
