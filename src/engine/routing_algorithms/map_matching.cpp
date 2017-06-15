@@ -145,7 +145,8 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
     for (auto t = initial_timestamp + 1; t < candidates_list.size(); ++t)
     {
 
-        const auto step_time = trace_timestamps[t] - trace_timestamps[prev_unbroken_timestamps.back()];
+        const auto step_time =
+            trace_timestamps[t] - trace_timestamps[prev_unbroken_timestamps.back()];
         const auto max_distance_delta = [&] {
             if (use_timestamps)
             {
