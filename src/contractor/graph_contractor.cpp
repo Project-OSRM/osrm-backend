@@ -12,8 +12,8 @@ GraphContractor::GraphContractor(int nodes, std::vector<ContractorEdge> input_ed
 
 GraphContractor::GraphContractor(int nodes,
                                  std::vector<ContractorEdge> edges,
-                                 std::vector<float> &&node_levels_,
-                                 std::vector<EdgeWeight> &&node_weights_)
+                                 std::vector<float> node_levels_,
+                                 std::vector<EdgeWeight> node_weights_)
     : node_levels(std::move(node_levels_)), node_weights(std::move(node_weights_))
 {
     tbb::parallel_sort(edges.begin(), edges.end());
@@ -427,15 +427,11 @@ void GraphContractor::Run(double core_factor)
     thread_data_list.data.clear();
 }
 
-void GraphContractor::GetCoreMarker(std::vector<bool> &out_is_core_node)
-{
-    out_is_core_node.swap(is_core_node);
-}
+// Can only be called once because it invalides the marker
+std::vector<bool> GraphContractor::GetCoreMarker() { return std::move(is_core_node); }
 
-void GraphContractor::GetNodeLevels(std::vector<float> &out_node_levels)
-{
-    out_node_levels.swap(node_levels);
-}
+// Can only be called once because it invalides the node levels
+std::vector<float> GraphContractor::GetNodeLevels() { return std::move(node_levels); }
 
 float GraphContractor::EvaluateNodePriority(ContractorThreadData *const data,
                                             const NodeDepth node_depth,

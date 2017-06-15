@@ -91,8 +91,8 @@ class GraphContractor
 
     GraphContractor(int nodes,
                     std::vector<ContractorEdge> edges,
-                    std::vector<float> &&node_levels_,
-                    std::vector<EdgeWeight> &&node_weights_);
+                    std::vector<float> node_levels_,
+                    std::vector<EdgeWeight> node_weights_);
 
     /* Flush all data from the contraction to disc and reorder stuff for better locality */
     void FlushDataAndRebuildContractorGraph(ThreadDataContainer &thread_data_list,
@@ -101,12 +101,14 @@ class GraphContractor
 
     void Run(double core_factor = 1.0);
 
-    void GetCoreMarker(std::vector<bool> &out_is_core_node);
+    std::vector<bool> GetCoreMarker();
 
-    void GetNodeLevels(std::vector<float> &out_node_levels);
+    std::vector<float> GetNodeLevels();
 
-    template <class Edge> inline void GetEdges(util::DeallocatingVector<Edge> &edges)
+    template <class Edge> inline util::DeallocatingVector<Edge> GetEdges()
     {
+        util::DeallocatingVector<Edge> edges;
+
         util::UnbufferedLog log;
         log << "Getting edges of minimized graph ";
         util::Percent p(log, contractor_graph->GetNumberOfNodes());
@@ -161,6 +163,13 @@ class GraphContractor
 
         edges.append(external_edge_list.begin(), external_edge_list.end());
         external_edge_list.clear();
+
+        // sort and remove duplicates
+        tbb::parallel_sort(edges.begin(), edges.end());
+        auto new_end = std::unique(edges.begin(), edges.end());
+        edges.resize(new_end - edges.begin());
+
+        return edges;
     }
 
   private:

@@ -809,36 +809,12 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
 
     if (boost::filesystem::exists(config.core_data_path))
     {
-        io::FileReader core_marker_file(config.core_data_path, io::FileReader::VerifyFingerprint);
-        const auto number_of_core_markers = core_marker_file.ReadElementCount64();
+        auto core_marker_ptr =
+            layout.GetBlockPtr<unsigned, true>(memory_ptr, storage::DataLayout::CH_CORE_MARKER);
+        util::vector_view<bool> is_core_node(
+            core_marker_ptr, layout.num_entries[storage::DataLayout::CH_CORE_MARKER]);
 
-        // load core markers
-        std::vector<char> unpacked_core_markers(number_of_core_markers);
-        core_marker_file.ReadInto(unpacked_core_markers.data(), number_of_core_markers);
-
-        const auto core_marker_ptr =
-            layout.GetBlockPtr<unsigned, true>(memory_ptr, DataLayout::CH_CORE_MARKER);
-
-        for (auto i = 0u; i < number_of_core_markers; ++i)
-        {
-            BOOST_ASSERT(unpacked_core_markers[i] == 0 || unpacked_core_markers[i] == 1);
-
-            if (unpacked_core_markers[i] == 1)
-            {
-                const unsigned bucket = i / 32;
-                const unsigned offset = i % 32;
-                const unsigned value = [&] {
-                    unsigned return_value = 0;
-                    if (0 != offset)
-                    {
-                        return_value = core_marker_ptr[bucket];
-                    }
-                    return return_value;
-                }();
-
-                core_marker_ptr[bucket] = (value | (1u << offset));
-            }
-        }
+        contractor::files::readCoreMarker(config.core_data_path, is_core_node);
     }
 
     // load profile properties
