@@ -23,6 +23,7 @@
 
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/restriction_map.hpp"
+#include "util/osmium_spp_map_index.hpp"
 #include "util/static_graph.hpp"
 #include "util/static_rtree.hpp"
 
@@ -37,7 +38,9 @@
 #include <boost/optional/optional.hpp>
 #include <boost/scope_exit.hpp>
 
+#include <osmium/handler/node_locations_for_ways.hpp>
 #include <osmium/io/any_input.hpp>
+#include <osmium/visitor.hpp>
 
 #include <tbb/pipeline.h>
 #include <tbb/task_scheduler_init.h>
@@ -256,7 +259,7 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
 
     std::mutex process_mutex;
 
-    using SharedBuffer = std::shared_ptr<const osmium::memory::Buffer>;
+    using SharedBuffer = std::shared_ptr<osmium::memory::Buffer>;
     struct ParsedBuffer
     {
         SharedBuffer buffer;
@@ -265,17 +268,29 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
         std::vector<boost::optional<InputRestrictionContainer>> resulting_restrictions;
     };
 
+    using osmium_index_type =
+        osrm::util::SparsePPMemMap<osmium::unsigned_object_id_type, osmium::Location>;
+    using osmium_location_handler_type = osmium::handler::NodeLocationsForWays<osmium_index_type>;
+
+    osmium_index_type location_cache;
+    osmium_location_handler_type location_handler(location_cache);
+
     tbb::filter_t<void, SharedBuffer> buffer_reader(
         tbb::filter::serial_in_order, [&](tbb::flow_control &fc) {
             if (auto buffer = reader.read())
             {
-                return std::make_shared<const osmium::memory::Buffer>(std::move(buffer));
+                return std::make_shared<osmium::memory::Buffer>(std::move(buffer));
             }
             else
             {
                 fc.stop();
                 return SharedBuffer{};
             }
+        });
+    tbb::filter_t<SharedBuffer, SharedBuffer> location_cacher(
+        tbb::filter::serial_in_order, [&](SharedBuffer buffer) {
+            osmium::apply(buffer->begin(), buffer->end(), location_handler);
+            return buffer;
         });
     tbb::filter_t<SharedBuffer, std::shared_ptr<ParsedBuffer>> buffer_transform(
         tbb::filter::parallel, [&](const SharedBuffer buffer) {

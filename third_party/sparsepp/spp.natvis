@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>  
+
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">  
+  <!-- VC 2015 -->
+  <Type Name="spp::sparse_hash_set&lt;*,*,*,*&gt;">  
+  <AlternativeType Name="spp::sparse_hash_map&lt;*,*,*,*,*&gt;" />  
+      <DisplayString>{{size = {rep.table._num_buckets}}}</DisplayString>  
+      <Expand>  
+        <CustomListItems MaxItemsPerView="1000" ExcludeView="Test">  
+          <Variable Name="grp" InitialValue="rep.table._first_group" />  
+          <Variable Name="last_grp" InitialValue="rep.table._last_group" />  
+          <Variable Name="item_ptr" InitialValue="rep.table._first_group-&gt;_group" />  
+          <Variable Name="cnt" InitialValue="-1" />  
+    
+          <Size>rep.table._num_buckets</Size>  
+          <Loop>  
+              <Break Condition="grp == last_grp" />  
+              <Exec>item_ptr = grp-&gt;_group</Exec>  
+              <Exec>cnt = grp-&gt;_num_buckets</Exec>  
+              <Loop>
+                <Break Condition="cnt == 0" />  
+                <Item>item_ptr,na</Item>  
+                <Exec>item_ptr++</Exec>  
+                <Exec>cnt--</Exec>  
+              </Loop>  
+              <Exec>++grp</Exec>  
+          </Loop>
+        </CustomListItems>  
+      </Expand>  
+  </Type>  
+
+</AutoVisualizer>  

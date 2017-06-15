@@ -475,6 +475,7 @@ if(ENABLE_MASON)
   include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/include)
 
   include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/rapidjson/include)
+  include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/sparsepp)
 
 else()
 
@@ -547,6 +548,9 @@ else()
 
   set(RAPIDJSON_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/rapidjson/include")
   include_directories(SYSTEM ${RAPIDJSON_INCLUDE_DIR})
+
+  set(SPARSEPP_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/sparsepp")
+  include_directories(SYSTEM ${SPARSEPP_INCLUDE_DIR})
 
 endif()
 
