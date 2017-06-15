@@ -358,8 +358,8 @@ Feature: Basic Map Matching
             | trace  | matchings | alternatives         |
             | abcdef | abcde     | 0,0,0,0,1,1          |
 
-    Scenario: Testbot - Speed greater than speed threshhold
-        Given a grid size of 10 meters
+    Scenario: Testbot - Speed greater than speed threshold
+        Given a grid size of 100 meters
         Given the query options
             | geometries | geojson  |
 
@@ -379,8 +379,8 @@ Feature: Basic Map Matching
             | trace | timestamps | matchings |
             | abcd  | 0 1 2 3    | ab,cd     |
 
-    Scenario: Testbot - Speed less than speed threshhold
-        Given a grid size of 10 meters
+    Scenario: Testbot - Speed less than speed threshold
+        Given a grid size of 100 meters
         Given the query options
             | geometries | geojson  |
 
@@ -396,6 +396,28 @@ Feature: Basic Map Matching
         When I match I should get
             | trace | timestamps | matchings |
             | abcd  | 0 1 2 3    | abcd      |
+
+    Scenario: Testbot - Huge gap in the coordinates
+        Given a grid size of 100 meters
+        Given the query options
+            | geometries | geojson  |
+            | gaps | ignore |
+
+        Given the node map
+            """
+            a b c d ---- x
+                         |
+                         |
+                         y ---- z ---- efjk
+            """
+
+        And the ways
+            | nodes   | oneway |
+            | abcdxyzefjk  | no     |
+
+        When I match I should get
+            | trace     | timestamps           | matchings  |
+            | abcdefjk  | 0 1 2 3 50 51 52 53  | abcdefjk   |
 
     # Regression test 1 for issue 3176
     Scenario: Testbot - multiple segments: properly expose OSM IDs

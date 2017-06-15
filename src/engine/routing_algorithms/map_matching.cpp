@@ -79,16 +79,6 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
         }
     }();
     const auto max_broken_time = median_sample_time * MAX_BROKEN_STATES;
-    const auto max_distance_delta = [&] {
-        if (use_timestamps)
-        {
-            return median_sample_time * facade.GetMapMatchingMaxSpeed();
-        }
-        else
-        {
-            return MAX_DISTANCE_DELTA;
-        }
-    }();
 
     std::vector<std::vector<double>> emission_log_probabilities(trace_coordinates.size());
     if (trace_gps_precision.empty())
@@ -155,13 +145,24 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
     for (auto t = initial_timestamp + 1; t < candidates_list.size(); ++t)
     {
 
+        const auto step_time = trace_timestamps[t] - trace_timestamps[prev_unbroken_timestamps.back()];
+        const auto max_distance_delta = [&] {
+            if (use_timestamps)
+            {
+                return step_time * facade.GetMapMatchingMaxSpeed();
+            }
+            else
+            {
+                return MAX_DISTANCE_DELTA;
+            }
+        }();
+
         const bool gap_in_trace = [&]() {
             // use temporal information if available to determine a split
             // but do not determine split by timestamps if wasn't asked about it
             if (use_timestamps && allow_splitting)
             {
-                return trace_timestamps[t] - trace_timestamps[prev_unbroken_timestamps.back()] >
-                       max_broken_time;
+                return step_time > max_broken_time;
             }
             else
             {
