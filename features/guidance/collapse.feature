@@ -399,7 +399,7 @@ Feature: Collapse
             | waypoints | route | turns         |
             | a,d       | ,     | depart,arrive |
 
-    # This scenario could be considered to require a `turn left`. The danger to create random/unwanted instructions 
+    # This scenario could be considered to require a `turn left`. The danger to create random/unwanted instructions
     # from a setting like this are just to big, though. Therefore I opted to use `depart,arrive` only
     Scenario: Crossing Bridge into Segregated Turn
         Given the node map
@@ -1055,3 +1055,22 @@ Feature: Collapse
        When I route I should get
          | waypoints | route                                            | turns                   | locations |
          | a,i       | President Avenue,Princes Highway,Princes Highway | depart,turn left,arrive | a,b,i     |
+
+
+    Scenario: Don't combine uturns
+        Given the node map
+            """
+              2   d
+            a - - b - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - c
+              1
+			"""
+
+        And the ways
+            | nodes | highway   |
+            | ab    | tertiary  |
+            | bc    | tertiary  |
+            | bd    | service   |
+
+        When I route I should get
+            | waypoints | bearings | route        | turns                                      | locations |
+            | 1,2       | 90 270   | ab,bd,ab,ab  | depart,turn right,end of road right,arrive | _,b,b,_   |
