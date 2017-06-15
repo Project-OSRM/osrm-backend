@@ -1072,5 +1072,5 @@ Feature: Collapse
             | bd    | service   |
 
         When I route I should get
-            | waypoints | bearings | route        | turns                                      | locations |
-            | 1,2       | 90 270   | ab,bd,ab,ab  | depart,turn right,end of road right,arrive | _,b,b,_   |
+            | waypoints | bearings | route          | turns                                             | locations |
+            | 1,2       | 90 270   | ab,bd,bd,ab,ab | depart,turn left,continue uturn,turn right,arrive | _,b,d,b,_ |
