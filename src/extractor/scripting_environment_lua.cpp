@@ -17,6 +17,7 @@
 #include "util/typedefs.hpp"
 
 #include <osmium/osm.hpp>
+#include <osmium/osm/location.hpp>
 
 #include <tbb/parallel_for.h>
 
@@ -286,7 +287,16 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
                                              "id",
                                              &osmium::Node::id,
                                              "version",
-                                             &osmium::Way::version);
+                                             &osmium::Node::version);
+
+    // Keep in mind .location is undefined since we're not using libosmium's location cache
+    context.state.new_usertype<osmium::NodeRef>("NodeRef",
+                                                "id",
+                                                &osmium::NodeRef::ref,
+                                                "lat",
+                                                &osmium::NodeRef::lat,
+                                                "lon",
+                                                &osmium::NodeRef::lon);
 
     context.state.new_usertype<ExtractionNode>("ResultNode",
                                                "traffic_lights",
@@ -397,9 +407,6 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
                                                &ExtractionTurn::source_restricted,
                                                "target_restricted",
                                                &ExtractionTurn::target_restricted);
-
-    // Keep in mind .location is undefined since we're not using libosmium's location cache
-    context.state.new_usertype<osmium::NodeRef>("NodeRef", "id", &osmium::NodeRef::ref);
 
     context.state.new_usertype<InternalExtractorEdge>("EdgeSource",
                                                       "source_coordinate",

@@ -331,7 +331,7 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
 
     // Number of pipeline tokens that yielded the best speedup was about 1.5 * num_cores
     tbb::parallel_pipeline(tbb::task_scheduler_init::default_num_threads() * 1.5,
-                           buffer_reader & buffer_transform & buffer_storage);
+                           buffer_reader & location_cacher & buffer_transform & buffer_storage);
 
     TIMER_STOP(parsing);
     util::Log() << "Parsing finished after " << TIMER_SEC(parsing) << " seconds";
