@@ -70,8 +70,6 @@ class Extractor
                            util::DeallocatingVector<EdgeBasedEdge> &edge_based_edge_list,
                            const std::string &intersection_class_output_file,
                            std::vector<TurnRestriction> &turn_restrictions);
-    void WriteProfileProperties(const std::string &output_path,
-                                const ProfileProperties &properties) const;
     void FindComponents(unsigned max_edge_id,
                         const util::DeallocatingVector<EdgeBasedEdge> &input_edge_list,
                         const std::vector<EdgeBasedNodeSegment> &input_node_segments,

@@ -7,6 +7,7 @@
 #include "extractor/restriction.hpp"
 #include "extractor/segment_data_container.hpp"
 #include "extractor/turn_data_container.hpp"
+#include "extractor/profile_properties.hpp"
 
 #include "storage/io.hpp"
 #include "storage/serialization.hpp"
@@ -19,6 +20,17 @@ namespace extractor
 {
 namespace serialization
 {
+
+// read/write for properties file
+inline void read(storage::io::FileReader &reader, ProfileProperties &properties)
+{
+    reader.ReadInto(properties);
+}
+
+inline void write(storage::io::FileWriter &writer, const ProfileProperties &properties)
+{
+    writer.WriteFrom(properties);
+}
 
 // read/write for datasources file
 inline void read(storage::io::FileReader &reader, Datasources &sources)
