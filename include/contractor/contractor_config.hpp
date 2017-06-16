@@ -42,23 +42,24 @@ namespace contractor
 
 struct ContractorConfig final : storage::IOConfig
 {
-    ContractorConfig() : requested_num_threads(0) {}
-
-    ContractorConfig(const boost::filesystem::path &base) : requested_num_threads(0),
-      IOConfig({".osrm", }, {}, {".osrm.level", ".osrm.core", ".osrm.hsgr", ".osrm.enw"})
+    ContractorConfig()
+        : requested_num_threads(0), IOConfig(
+                                        {
+                                            ".osrm",
+                                        },
+                                        {},
+                                        {".osrm.level", ".osrm.core", ".osrm.hsgr", ".osrm.enw"})
     {
     }
 
     // Infer the output names from the path of the .osrm file
-    void UseDefaultOutputNames()
+    void UseDefaultOutputNames(const boost::filesystem::path &base)
     {
-        IOConfig::UseDefaultOutputNames();
-        updater_config.osrm_path = osrm_path;
-        updater_config.UseDefaultOutputNames();
+        IOConfig::UseDefaultOutputNames(base);
+        updater_config.UseDefaultOutputNames(base);
     }
 
-    // TODO override IsValid to also check updater_config validity
-    // TODO remove direct access to osrm_path to allow passing osrm_path to underlying configs
+    bool IsValid() const { return IOConfig::IsValid() && updater_config.IsValid(); }
 
     updater::UpdaterConfig updater_config;
 

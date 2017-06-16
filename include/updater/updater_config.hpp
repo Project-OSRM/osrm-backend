@@ -43,11 +43,26 @@ namespace updater
 
 struct UpdaterConfig final : storage::IOConfig
 {
-    UpdaterConfig() {}
-    UpdaterConfig(const boost::filesystem::path &base) : IOConfig(
-      { ".osrm.ebg", ".osrm.turn_weight_penalties", ".osrm.turn_duration_penalties", ".osrm.turn_penalties_index", ".osrm.nbg_nodes", ".osrm.ebg_nodes",
-        ".osrm.edges", ".osrm.geometry", ".osrm.fileIndex", ".osrm.datasource_names", ".osrm.properties", ".osrm.restrictions", }, {}, {}
-    ) {}
+    UpdaterConfig()
+        : IOConfig(
+              {
+                  ".osrm.ebg",
+                  ".osrm.turn_weight_penalties",
+                  ".osrm.turn_duration_penalties",
+                  ".osrm.turn_penalties_index",
+                  ".osrm.nbg_nodes",
+                  ".osrm.ebg_nodes",
+                  ".osrm.edges",
+                  ".osrm.geometry",
+                  ".osrm.fileIndex",
+                  ".osrm.datasource_names",
+                  ".osrm.properties",
+                  ".osrm.restrictions",
+              },
+              {},
+              {})
+    {
+    }
 
     double log_edge_updates_factor;
     std::time_t valid_now;

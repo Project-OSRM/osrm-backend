@@ -98,7 +98,7 @@ void LogGeojson(const std::string &filename, const std::vector<std::uint32_t> &b
 auto getGraphBisection(const PartitionConfig &config)
 {
     auto compressed_node_based_graph =
-        LoadCompressedNodeBasedGraph(config.compressed_node_based_graph_path.string());
+        LoadCompressedNodeBasedGraph(config.GetPath(".osrm.cnbg").string());
 
     util::Log() << "Loaded compressed node based graph: "
                 << compressed_node_based_graph.edges.size() << " edges, "
@@ -137,10 +137,10 @@ int Partitioner::Run(const PartitionConfig &config)
     // For details see #3205
 
     std::vector<extractor::NBGToEBG> mapping;
-    extractor::files::readNBGMapping(config.cnbg_ebg_mapping_path.string(), mapping);
+    extractor::files::readNBGMapping(config.GetPath(".osrm.cnbg_to_ebg").string(), mapping);
     util::Log() << "Loaded node based graph to edge based graph mapping";
 
-    auto edge_based_graph = LoadEdgeBasedGraph(config.edge_based_graph_path);
+    auto edge_based_graph = LoadEdgeBasedGraph(config.GetPath(".osrm.ebg").string());
     util::Log() << "Loaded edge based graph for mapping partition ids: "
                 << edge_based_graph.GetNumberOfEdges() << " edges, "
                 << edge_based_graph.GetNumberOfNodes() << " nodes";
@@ -185,21 +185,21 @@ int Partitioner::Run(const PartitionConfig &config)
     renumber(partitions, permutation);
     {
         boost::iostreams::mapped_file segment_region;
-        auto segments =
-            util::mmapFile<extractor::EdgeBasedNodeSegment>(config.file_index_path, segment_region);
+        auto segments = util::mmapFile<extractor::EdgeBasedNodeSegment>(
+            config.GetPath(".osrm.fileIndex"), segment_region);
         renumber(segments, permutation);
     }
     {
         extractor::EdgeBasedNodeDataContainer node_data;
-        extractor::files::readNodeData(config.node_data_path, node_data);
+        extractor::files::readNodeData(config.GetPath(".osrm.ebg_nodes"), node_data);
         renumber(node_data, permutation);
-        extractor::files::writeNodeData(config.node_data_path, node_data);
+        extractor::files::writeNodeData(config.GetPath(".osrm.ebg_nodes"), node_data);
     }
-    if (boost::filesystem::exists(config.hsgr_path))
+    if (boost::filesystem::exists(config.GetPath(".osrm.hsgr")))
     {
         util::Log(logWARNING) << "Found existing .osrm.hsgr file, removing. You need to re-run "
                                  "osrm-contract after osrm-partition.";
-        boost::filesystem::remove(config.hsgr_path);
+        boost::filesystem::remove(config.GetPath(".osrm.hsgr"));
     }
     TIMER_STOP(renumber);
     util::Log() << "Renumbered data in " << TIMER_SEC(renumber) << " seconds";
@@ -215,9 +215,9 @@ int Partitioner::Run(const PartitionConfig &config)
     util::Log() << "CellStorage constructed in " << TIMER_SEC(cell_storage) << " seconds";
 
     TIMER_START(writing_mld_data);
-    files::writePartition(config.partition_path, mlp);
-    files::writeCells(config.storage_path, storage);
-    extractor::files::writeEdgeBasedGraph(config.edge_based_graph_path,
+    files::writePartition(config.GetPath(".osrm.partition"), mlp);
+    files::writeCells(config.GetPath(".osrm.cells"), storage);
+    extractor::files::writeEdgeBasedGraph(config.GetPath(".osrm.ebg"),
                                           edge_based_graph.GetNumberOfNodes() - 1,
                                           graphToEdges(edge_based_graph));
     TIMER_STOP(writing_mld_data);

@@ -105,13 +105,13 @@ void checkWeightsConsistency(
     const std::vector<osrm::extractor::EdgeBasedEdge> &edge_based_edge_list)
 {
     extractor::SegmentDataContainer segment_data;
-    extractor::files::readSegmentData(config.geometries_path, segment_data);
+    extractor::files::readSegmentData(config.GetPath(".osrm.geometry"), segment_data);
 
     extractor::EdgeBasedNodeDataContainer node_data;
-    extractor::files::readNodeData(config.edge_based_nodes_data_path, node_data);
+    extractor::files::readNodeData(config.GetPath(".osrm.ebg_nodes"), node_data);
 
     extractor::TurnDataContainer turn_data;
-    extractor::files::readTurnData(config.edges_data_path, turn_data);
+    extractor::files::readTurnData(config.GetPath(".osrm.edges"), turn_data);
 
     for (auto &edge : edge_based_edge_list)
     {
@@ -388,7 +388,7 @@ void saveDatasourcesNames(const UpdaterConfig &config)
         source++;
     }
 
-    extractor::files::writeDatasources(config.datasource_names_path, sources);
+    extractor::files::writeDatasources(config.GetPath(".osrm.datasource_names"), sources);
 }
 
 std::vector<std::uint64_t>
@@ -404,7 +404,7 @@ updateTurnPenalties(const UpdaterConfig &config,
     // Mapped file pointer for turn indices
     boost::iostreams::mapped_file_source turn_index_region;
     auto turn_index_blocks = util::mmapFile<extractor::lookup::TurnIndexBlock>(
-        config.turn_penalties_index_path, turn_index_region);
+        config.GetPath(".osrm.turn_penalties_index"), turn_index_region);
 
     // Get the turn penalty and update to the new value if required
     std::vector<std::uint64_t> updated_turns;
@@ -490,7 +490,7 @@ updateConditionalTurns(const UpdaterConfig &config,
     // Mapped file pointer for turn indices
     boost::iostreams::mapped_file_source turn_index_region;
     auto turn_index_blocks = util::mmapFile<extractor::lookup::TurnIndexBlock>(
-        config.turn_penalties_index_path, turn_index_region);
+        config.GetPath(".osrm.turn_penalties_index"), turn_index_region);
 
     std::vector<std::uint64_t> updated_turns;
     if (conditional_turns.size() == 0)
@@ -566,11 +566,11 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
     extractor::PackedOSMIDs osm_node_ids;
 
     extractor::files::readEdgeBasedGraph(
-        config.edge_based_graph_path, max_edge_id, edge_based_edge_list);
-    extractor::files::readNodes(config.node_based_nodes_data_path, coordinates, osm_node_ids);
+        config.GetPath(".osrm.ebg"), max_edge_id, edge_based_edge_list);
+    extractor::files::readNodes(config.GetPath(".osrm.nbg_nodes"), coordinates, osm_node_ids);
 
     const bool update_conditional_turns =
-        !config.turn_restrictions_path.empty() && config.valid_now;
+        !config.GetPath(".osrm.restrictions").empty() && config.valid_now;
     const bool update_edge_weights = !config.segment_speed_lookup_paths.empty();
     const bool update_turn_penalties = !config.turn_penalty_lookup_paths.empty();
 
@@ -593,33 +593,35 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
     if (update_edge_weights || update_turn_penalties || update_conditional_turns)
     {
         const auto load_segment_data = [&] {
-            extractor::files::readSegmentData(config.geometries_path, segment_data);
+            extractor::files::readSegmentData(config.GetPath(".osrm.geometry"), segment_data);
         };
 
         const auto load_node_data = [&] {
-            extractor::files::readNodeData(config.edge_based_nodes_data_path, node_data);
+            extractor::files::readNodeData(config.GetPath(".osrm.ebg_nodes"), node_data);
         };
 
         const auto load_edge_data = [&] {
-            extractor::files::readTurnData(config.edges_data_path, turn_data);
+            extractor::files::readTurnData(config.GetPath(".osrm.edges"), turn_data);
         };
 
         const auto load_turn_weight_penalties = [&] {
             using storage::io::FileReader;
-            FileReader reader(config.turn_weight_penalties_path, FileReader::VerifyFingerprint);
+            FileReader reader(config.GetPath(".osrm.turn_weight_penalties"),
+                              FileReader::VerifyFingerprint);
             storage::serialization::read(reader, turn_weight_penalties);
         };
 
         const auto load_turn_duration_penalties = [&] {
             using storage::io::FileReader;
-            FileReader reader(config.turn_duration_penalties_path, FileReader::VerifyFingerprint);
+            FileReader reader(config.GetPath(".osrm.turn_duration_penalties"),
+                              FileReader::VerifyFingerprint);
             storage::serialization::read(reader, turn_duration_penalties);
         };
 
         const auto load_profile_properties = [&] {
             // Propagate profile properties to contractor configuration structure
             storage::io::FileReader profile_properties_file(
-                config.properties_path, storage::io::FileReader::VerifyFingerprint);
+                config.GetPath(".osrm.properties"), storage::io::FileReader::VerifyFingerprint);
             profile_properties = profile_properties_file.ReadOne<extractor::ProfileProperties>();
         };
 
@@ -635,7 +637,7 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
     if (update_conditional_turns)
     {
         using storage::io::FileReader;
-        FileReader reader(config.turn_restrictions_path, FileReader::VerifyFingerprint);
+        FileReader reader(config.GetPath(".osrm.restrictions"), FileReader::VerifyFingerprint);
         extractor::serialization::read(reader, conditional_turns);
     }
 
@@ -652,7 +654,7 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
                                              coordinates,
                                              osm_node_ids);
         // Now save out the updated compressed geometries
-        extractor::files::writeSegmentData(config.geometries_path, segment_data);
+        extractor::files::writeSegmentData(config.GetPath(".osrm.geometry"), segment_data);
         TIMER_STOP(segment);
         util::Log() << "Updating segment data took " << TIMER_MSEC(segment) << "ms.";
     }
@@ -845,8 +847,14 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
         };
 
         tbb::parallel_invoke(
-            [&] { save_penalties(config.turn_weight_penalties_path, turn_weight_penalties); },
-            [&] { save_penalties(config.turn_duration_penalties_path, turn_duration_penalties); });
+            [&] {
+                save_penalties(config.GetPath(".osrm.turn_weight_penalties"),
+                               turn_weight_penalties);
+            },
+            [&] {
+                save_penalties(config.GetPath(".osrm.turn_duration_penalties"),
+                               turn_duration_penalties);
+            });
     }
 
 #if !defined(NDEBUG)

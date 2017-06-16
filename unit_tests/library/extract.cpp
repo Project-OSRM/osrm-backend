@@ -20,6 +20,7 @@ BOOST_AUTO_TEST_CASE(test_extract_with_valid_config)
 {
     osrm::ExtractorConfig config;
     config.input_path = OSRM_TEST_DATA_DIR "/monaco.osm.pbf";
+    config.UseDefaultOutputNames(OSRM_TEST_DATA_DIR "/monaco.osm.pbf");
     config.requested_num_threads = tbb::task_scheduler_init::default_num_threads();
     BOOST_CHECK_NO_THROW(osrm::extract(config));
 }

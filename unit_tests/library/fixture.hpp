@@ -14,7 +14,7 @@ getOSRM(const std::string &base_path,
         osrm::EngineConfig::Algorithm algorithm = osrm::EngineConfig::Algorithm::CH)
 {
     osrm::EngineConfig config;
-    config.storage_config = {base_path};
+    config.storage_config.UseDefaultOutputNames(base_path);
     config.use_shared_memory = false;
     config.algorithm = algorithm;
 

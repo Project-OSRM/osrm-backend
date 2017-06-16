@@ -134,7 +134,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
                                              node_is_startpoint,
                                              edge_based_node_weights,
                                              edge_based_edge_list,
-                                             config.intersection_class_path.string(),
+                                             config.GetPath(".osrm.icd").string(),
                                              turn_restrictions,
                                              turn_lane_map);
 
@@ -146,7 +146,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     util::Log() << "Saving edge-based node weights to file.";
     TIMER_START(timer_write_node_weights);
     {
-        storage::io::FileWriter writer(config.node_path,
+        storage::io::FileWriter writer(config.GetPath(".osrm.enw"),
                                        storage::io::FileWriter::GenerateFingerprint);
         storage::serialization::write(writer, edge_based_node_weights);
     }
@@ -164,12 +164,12 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     TIMER_STOP(rtree);
 
     util::Log() << "Writing nodes for nodes-based and edges-based graphs ...";
-    files::writeNodes(config.node_based_nodes_data_path, coordinates, osm_node_ids);
-    files::writeNodeData(config.edge_based_nodes_data_path, edge_based_nodes_container);
+    files::writeNodes(config.GetPath(".osrm.nbg_nodes"), coordinates, osm_node_ids);
+    files::writeNodeData(config.GetPath(".osrm.ebg_nodes"), edge_based_nodes_container);
 
     util::Log() << "Writing edge-based-graph edges       ... " << std::flush;
     TIMER_START(write_edges);
-    files::writeEdgeBasedGraph(config.edge_graph_output_path, max_edge_id, edge_based_edge_list);
+    files::writeEdgeBasedGraph(config.GetPath(".osrm.ebg"), max_edge_id, edge_based_edge_list);
     TIMER_STOP(write_edges);
     util::Log() << "ok, after " << TIMER_SEC(write_edges) << "s";
 
@@ -183,7 +183,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     util::Log() << "Expansion: " << nodes_per_second << " nodes/sec and " << edges_per_second
                 << " edges/sec";
     util::Log() << "To prepare the data for routing, run: "
-                << "./osrm-contract " << config.osrm_path;
+                << "./osrm-contract " << config.GetPath(".osrm");
 
     return 0;
 }
@@ -239,7 +239,7 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
     }
     util::Log() << "timestamp: " << timestamp;
 
-    storage::io::FileWriter timestamp_file(config.timestamp_path,
+    storage::io::FileWriter timestamp_file(config.GetPath(".osrm.timestamp"),
                                            storage::io::FileWriter::GenerateFingerprint);
 
     timestamp_file.WriteFrom(timestamp.c_str(), timestamp.length());
@@ -330,13 +330,13 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
     }
 
     extraction_containers.PrepareData(scripting_environment,
-                                      config.osrm_path.string(),
-                                      config.turn_restrictions_path.string(),
-                                      config.names_data_path.string());
+                                      config.GetPath(".osrm").string(),
+                                      config.GetPath(".osrm.restrictions").string(),
+                                      config.GetPath(".osrm.names").string());
 
     auto profile_properties = scripting_environment.GetProfileProperties();
     SetClassNames(classes_map, profile_properties);
-    files::writeProfileProperties(config.properties_path.string(), profile_properties);
+    files::writeProfileProperties(config.GetPath(".osrm.properties").string(), profile_properties);
 
     TIMER_STOP(extracting);
     util::Log() << "extraction finished after " << TIMER_SEC(extracting) << "s";
@@ -411,7 +411,7 @@ Extractor::LoadNodeBasedGraph(std::unordered_set<NodeID> &barriers,
                               std::vector<util::Coordinate> &coordiantes,
                               extractor::PackedOSMIDs &osm_node_ids)
 {
-    storage::io::FileReader file_reader(config.osrm_path,
+    storage::io::FileReader file_reader(config.GetPath(".osrm"),
                                         storage::io::FileReader::VerifyFingerprint);
 
     auto barriers_iter = inserter(barriers, end(barriers));
@@ -428,7 +428,7 @@ Extractor::LoadNodeBasedGraph(std::unordered_set<NodeID> &barriers,
 
     if (edge_list.empty())
     {
-        throw util::exception("Node-based-graph (" + config.osrm_path.string() +
+        throw util::exception("Node-based-graph (" + config.GetPath(".osrm").string() +
                               ") contains no edges." + SOURCE_REF);
     }
 
@@ -466,7 +466,7 @@ Extractor::BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
                               *node_based_graph,
                               compressed_edge_container);
 
-    util::NameTable name_table(config.names_data_path.string());
+    util::NameTable name_table(config.GetPath(".osrm.names").string());
 
     EdgeBasedGraphFactory edge_based_graph_factory(
         node_based_graph,
@@ -481,12 +481,12 @@ Extractor::BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
         turn_lane_map);
 
     edge_based_graph_factory.Run(scripting_environment,
-                                 config.edges_data_path.string(),
-                                 config.turn_lane_data_path.string(),
-                                 config.turn_weight_penalties_path.string(),
-                                 config.turn_duration_penalties_path.string(),
-                                 config.turn_penalties_index_path.string(),
-                                 config.cnbg_ebg_mapping_path.string());
+                                 config.GetPath(".osrm.edges").string(),
+                                 config.GetPath(".osrm.tld").string(),
+                                 config.GetPath(".osrm.turn_weight_penalties").string(),
+                                 config.GetPath(".osrm.turn_duration_penalties").string(),
+                                 config.GetPath(".osrm.turn_penalties_index").string(),
+                                 config.GetPath(".osrm.cnbg_to_ebg").string());
 
     compressed_edge_container.PrintStatistics();
 
@@ -509,7 +509,7 @@ Extractor::BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
 
     compressed_node_based_graph_writing = std::async(std::launch::async, [&] {
         WriteCompressedNodeBasedGraph(
-            config.compressed_node_based_graph_path.string(), *node_based_graph, coordinates);
+            config.GetPath(".osrm.cnbg").string(), *node_based_graph, coordinates);
     });
 
     {
@@ -518,9 +518,9 @@ Extractor::BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
         std::tie(turn_lane_offsets, turn_lane_masks) =
             guidance::transformTurnLaneMapIntoArrays(turn_lane_map);
         files::writeTurnLaneDescriptions(
-            config.turn_lane_description_path, turn_lane_offsets, turn_lane_masks);
+            config.GetPath(".osrm.tls"), turn_lane_offsets, turn_lane_masks);
     }
-    files::writeSegmentData(config.geometries_path,
+    files::writeSegmentData(config.GetPath(".osrm.geometry"),
                             *compressed_edge_container.ToSegmentData());
 
     edge_based_graph_factory.GetEdgeBasedEdges(edge_based_edge_list);
@@ -583,8 +583,8 @@ void Extractor::BuildRTree(std::vector<EdgeBasedNodeSegment> edge_based_node_seg
 
     TIMER_START(construction);
     util::StaticRTree<EdgeBasedNodeSegment> rtree(edge_based_node_segments,
-                                                  config.ram_index_path.string(),
-                                                  config.file_index_path.string(),
+                                                  config.GetPath(".osrm.ramIndex").string(),
+                                                  config.GetPath(".osrm.fileIndex").string(),
                                                   coordinates);
 
     TIMER_STOP(construction);
