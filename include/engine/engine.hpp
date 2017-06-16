@@ -158,9 +158,9 @@ bool Engine<routing_algorithms::ch::Algorithm>::CheckCompability(const EngineCon
     }
     else
     {
-        if (!boost::filesystem::exists(config.storage_config.hsgr_data_path))
+        if (!boost::filesystem::exists(config.storage_config.GetPath(".osrm.hsgr")))
             return false;
-        storage::io::FileReader in(config.storage_config.hsgr_data_path,
+        storage::io::FileReader in(config.storage_config.GetPath(".osrm.hsgr"),
                                    storage::io::FileReader::VerifyFingerprint);
 
         auto size = in.GetSize();
@@ -189,9 +189,9 @@ bool Engine<routing_algorithms::corech::Algorithm>::CheckCompability(const Engin
     }
     else
     {
-        if (!boost::filesystem::exists(config.storage_config.core_data_path))
+        if (!boost::filesystem::exists(config.storage_config.GetPath(".osrm.core")))
             return false;
-        storage::io::FileReader in(config.storage_config.core_data_path,
+        storage::io::FileReader in(config.storage_config.GetPath(".osrm.core"),
                                    storage::io::FileReader::VerifyFingerprint);
 
         auto size = in.GetSize();
@@ -214,9 +214,9 @@ bool Engine<routing_algorithms::mld::Algorithm>::CheckCompability(const EngineCo
     }
     else
     {
-        if (!boost::filesystem::exists(config.storage_config.mld_partition_path))
+        if (!boost::filesystem::exists(config.storage_config.GetPath(".osrm.partition")))
             return false;
-        storage::io::FileReader in(config.storage_config.mld_partition_path,
+        storage::io::FileReader in(config.storage_config.GetPath(".osrm.partition"),
                                    storage::io::FileReader::VerifyFingerprint);
 
         auto size = in.GetSize();

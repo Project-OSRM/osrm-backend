@@ -98,12 +98,12 @@ int Customizer::Run(const CustomizationConfig &config)
     TIMER_START(loading_data);
 
     partition::MultiLevelPartition mlp;
-    partition::files::readPartition(config.mld_partition_path, mlp);
+    partition::files::readPartition(config.GetPath(".osrm.partition"), mlp);
 
     auto edge_based_graph = LoadAndUpdateEdgeExpandedGraph(config, mlp);
 
     partition::CellStorage storage;
-    partition::files::readCells(config.mld_storage_path, storage);
+    partition::files::readCells(config.GetPath(".osrm.cells"), storage);
     TIMER_STOP(loading_data);
     util::Log() << "Loading partition data took " << TIMER_SEC(loading_data) << " seconds";
 
@@ -114,12 +114,12 @@ int Customizer::Run(const CustomizationConfig &config)
     util::Log() << "Cells customization took " << TIMER_SEC(cell_customize) << " seconds";
 
     TIMER_START(writing_mld_data);
-    partition::files::writeCells(config.mld_storage_path, storage);
+    partition::files::writeCells(config.GetPath(".osrm.cells"), storage);
     TIMER_STOP(writing_mld_data);
     util::Log() << "MLD customization writing took " << TIMER_SEC(writing_mld_data) << " seconds";
 
     TIMER_START(writing_graph);
-    partition::files::writeGraph(config.mld_graph_path, *edge_based_graph);
+    partition::files::writeGraph(config.GetPath(".osrm.mldgr"), *edge_based_graph);
     TIMER_STOP(writing_graph);
     util::Log() << "Graph writing took " << TIMER_SEC(writing_graph) << " seconds";
 

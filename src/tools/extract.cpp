@@ -140,7 +140,7 @@ int main(int argc, char *argv[]) try
         return EXIT_SUCCESS;
     }
 
-    extractor_config.UseDefaultOutputNames();
+    extractor_config.UseDefaultOutputNames(extractor_config.input_path);
 
     if (1 > extractor_config.requested_num_threads)
     {

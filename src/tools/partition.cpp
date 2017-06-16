@@ -114,7 +114,7 @@ return_code parseArguments(int argc, char *argv[], partition::PartitionConfig &c
     boost::program_options::options_description hidden_options("Hidden options");
     hidden_options.add_options()(
         "input,i",
-        boost::program_options::value<boost::filesystem::path>(&config.osrm_path),
+        boost::program_options::value<boost::filesystem::path>(&config.base_path),
         "Input file in .osrm format");
 
     // positional option
@@ -199,7 +199,7 @@ int main(int argc, char *argv[]) try
     }
 
     // set the default in/output names
-    partition_config.UseDefaultOutputNames();
+    partition_config.UseDefaultOutputNames(partition_config.base_path);
 
     if (1 > partition_config.requested_num_threads)
     {
@@ -219,9 +219,9 @@ int main(int argc, char *argv[]) try
         }
     };
 
-    if (!check_file(partition_config.edge_based_graph_path) ||
-        !check_file(partition_config.cnbg_ebg_mapping_path) ||
-        !check_file(partition_config.compressed_node_based_graph_path))
+    if (!check_file(partition_config.GetPath(".osrm.ebg")) ||
+        !check_file(partition_config.GetPath(".osrm.cnbg_to_ebg")) ||
+        !check_file(partition_config.GetPath(".osrm.cnbg")))
     {
         return EXIT_FAILURE;
     }

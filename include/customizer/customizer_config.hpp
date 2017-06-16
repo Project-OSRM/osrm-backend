@@ -16,16 +16,21 @@ namespace customizer
 
 struct CustomizationConfig final : storage::IOConfig
 {
-    CustomizationConfig() : requested_num_threads(0),
-      IOConfig({".osrm", }, {}, {".osrm.ebg", ".osrm.partition", ".osrm.cells", ".osrm.mldgr"})
+    CustomizationConfig()
+        : requested_num_threads(0),
+          IOConfig(
+              {
+                  ".osrm",
+              },
+              {},
+              {".osrm.ebg", ".osrm.partition", ".osrm.cells", ".osrm.mldgr"})
     {
     }
 
-    void UseDefaultOutputNames()
+    void UseDefaultOutputNames(const boost::filesystem::path &base)
     {
-        IOConfig::UseDefaultOutputNames();
-        updater_config.osrm_path = osrm_path;
-        updater_config.UseDefaultOutputNames();
+        IOConfig::UseDefaultOutputNames(base);
+        updater_config.UseDefaultOutputNames(base);
     }
 
     unsigned requested_num_threads;

@@ -79,7 +79,7 @@ return_code parseArguments(int argc, char *argv[], contractor::ContractorConfig 
     boost::program_options::options_description hidden_options("Hidden options");
     hidden_options.add_options()(
         "input,i",
-        boost::program_options::value<boost::filesystem::path>(&contractor_config.osrm_path),
+        boost::program_options::value<boost::filesystem::path>(&contractor_config.base_path),
         "Input file in .osm, .osm.bz2 or .osm.pbf format");
 
     // positional option
@@ -153,7 +153,7 @@ int main(int argc, char *argv[]) try
         return EXIT_SUCCESS;
     }
 
-    contractor_config.UseDefaultOutputNames();
+    contractor_config.UseDefaultOutputNames(contractor_config.base_path);
 
     if (1 > contractor_config.requested_num_threads)
     {
@@ -169,14 +169,14 @@ int main(int argc, char *argv[]) try
                               << "! This setting may have performance side-effects.";
     }
 
-    if (!boost::filesystem::is_regular_file(contractor_config.osrm_path))
+    if (!boost::filesystem::is_regular_file(contractor_config.GetPath(".osrm")))
     {
-        util::Log(logERROR) << "Input file " << contractor_config.osrm_path.string()
+        util::Log(logERROR) << "Input file " << contractor_config.GetPath(".osrm").string()
                             << " not found!";
         return EXIT_FAILURE;
     }
 
-    util::Log() << "Input file: " << contractor_config.osrm_path.filename().string();
+    util::Log() << "Input file: " << contractor_config.GetPath(".osrm").filename().string();
     util::Log() << "Threads: " << contractor_config.requested_num_threads;
 
     tbb::task_scheduler_init init(contractor_config.requested_num_threads);

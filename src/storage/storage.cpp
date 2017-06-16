@@ -206,21 +206,22 @@ int Storage::Run(int max_wait)
 void Storage::PopulateLayout(DataLayout &layout)
 {
     {
-        auto absolute_file_index_path = boost::filesystem::absolute(config.file_index_path);
+        auto absolute_file_index_path =
+            boost::filesystem::absolute(config.GetPath(".osrm.fileIndex"));
 
         layout.SetBlockSize<char>(DataLayout::FILE_INDEX_PATH,
                                   absolute_file_index_path.string().length() + 1);
     }
 
     {
-        util::Log() << "load names from: " << config.names_data_path;
+        util::Log() << "load names from: " << config.GetPath(".osrm.names");
         // number of entries in name index
-        io::FileReader name_file(config.names_data_path, io::FileReader::VerifyFingerprint);
+        io::FileReader name_file(config.GetPath(".osrm.names"), io::FileReader::VerifyFingerprint);
         layout.SetBlockSize<char>(DataLayout::NAME_CHAR_DATA, name_file.GetSize());
     }
 
     {
-        io::FileReader reader(config.turn_lane_description_path, io::FileReader::VerifyFingerprint);
+        io::FileReader reader(config.GetPath(".osrm.tls"), io::FileReader::VerifyFingerprint);
         auto num_offsets = reader.ReadVectorSize<std::uint32_t>();
         auto num_masks = reader.ReadVectorSize<extractor::guidance::TurnLaneType::Mask>();
 
@@ -231,7 +232,7 @@ void Storage::PopulateLayout(DataLayout &layout)
 
     // Loading information for original edges
     {
-        io::FileReader edges_file(config.edges_data_path, io::FileReader::VerifyFingerprint);
+        io::FileReader edges_file(config.GetPath(".osrm.edges"), io::FileReader::VerifyFingerprint);
         const auto number_of_original_edges = edges_file.ReadElementCount64();
 
         // note: settings this all to the same size is correct, we extract them from the same struct
@@ -246,7 +247,7 @@ void Storage::PopulateLayout(DataLayout &layout)
     }
 
     {
-        io::FileReader nodes_data_file(config.edge_based_nodes_data_path,
+        io::FileReader nodes_data_file(config.GetPath(".osrm.ebg_nodes"),
                                        io::FileReader::VerifyFingerprint);
         const auto nodes_number = nodes_data_file.ReadElementCount64();
 
@@ -257,9 +258,9 @@ void Storage::PopulateLayout(DataLayout &layout)
         layout.SetBlockSize<extractor::ClassData>(DataLayout::CLASSES_LIST, nodes_number);
     }
 
-    if (boost::filesystem::exists(config.hsgr_data_path))
+    if (boost::filesystem::exists(config.GetPath(".osrm.hsgr")))
     {
-        io::FileReader reader(config.hsgr_data_path, io::FileReader::VerifyFingerprint);
+        io::FileReader reader(config.GetPath(".osrm.hsgr"), io::FileReader::VerifyFingerprint);
 
         reader.Skip<std::uint32_t>(1); // checksum
         auto num_nodes = reader.ReadVectorSize<contractor::QueryGraph::NodeArrayEntry>();
@@ -282,7 +283,8 @@ void Storage::PopulateLayout(DataLayout &layout)
 
     // load rsearch tree size
     {
-        io::FileReader tree_node_file(config.ram_index_path, io::FileReader::VerifyFingerprint);
+        io::FileReader tree_node_file(config.GetPath(".osrm.ramIndex"),
+                                      io::FileReader::VerifyFingerprint);
 
         const auto tree_size = tree_node_file.ReadElementCount64();
         layout.SetBlockSize<RTreeNode>(DataLayout::R_SEARCH_TREE, tree_size);
@@ -297,15 +299,17 @@ void Storage::PopulateLayout(DataLayout &layout)
 
     // read timestampsize
     {
-        io::FileReader timestamp_file(config.timestamp_path, io::FileReader::VerifyFingerprint);
+        io::FileReader timestamp_file(config.GetPath(".osrm.timestamp"),
+                                      io::FileReader::VerifyFingerprint);
         const auto timestamp_size = timestamp_file.GetSize();
         layout.SetBlockSize<char>(DataLayout::TIMESTAMP, timestamp_size);
     }
 
     // load core marker size
-    if (boost::filesystem::exists(config.core_data_path))
+    if (boost::filesystem::exists(config.GetPath(".osrm.core")))
     {
-        io::FileReader core_marker_file(config.core_data_path, io::FileReader::VerifyFingerprint);
+        io::FileReader core_marker_file(config.GetPath(".osrm.core"),
+                                        io::FileReader::VerifyFingerprint);
         const auto number_of_core_markers = core_marker_file.ReadElementCount64();
         layout.SetBlockSize<unsigned>(DataLayout::CH_CORE_MARKER, number_of_core_markers);
     }
@@ -316,7 +320,7 @@ void Storage::PopulateLayout(DataLayout &layout)
 
     // load turn weight penalties
     {
-        io::FileReader turn_weight_penalties_file(config.turn_weight_penalties_path,
+        io::FileReader turn_weight_penalties_file(config.GetPath(".osrm.turn_weight_penalties"),
                                                   io::FileReader::VerifyFingerprint);
         const auto number_of_penalties = turn_weight_penalties_file.ReadElementCount64();
         layout.SetBlockSize<TurnPenalty>(DataLayout::TURN_WEIGHT_PENALTIES, number_of_penalties);
@@ -324,7 +328,7 @@ void Storage::PopulateLayout(DataLayout &layout)
 
     // load turn duration penalties
     {
-        io::FileReader turn_duration_penalties_file(config.turn_duration_penalties_path,
+        io::FileReader turn_duration_penalties_file(config.GetPath(".osrm.turn_duration_penalties"),
                                                     io::FileReader::VerifyFingerprint);
         const auto number_of_penalties = turn_duration_penalties_file.ReadElementCount64();
         layout.SetBlockSize<TurnPenalty>(DataLayout::TURN_DURATION_PENALTIES, number_of_penalties);
@@ -332,7 +336,7 @@ void Storage::PopulateLayout(DataLayout &layout)
 
     // load coordinate size
     {
-        io::FileReader node_file(config.node_based_nodes_data_path,
+        io::FileReader node_file(config.GetPath(".osrm.nbg_nodes"),
                                  io::FileReader::VerifyFingerprint);
         const auto coordinate_list_size = node_file.ReadElementCount64();
         layout.SetBlockSize<util::Coordinate>(DataLayout::COORDINATE_LIST, coordinate_list_size);
@@ -348,7 +352,7 @@ void Storage::PopulateLayout(DataLayout &layout)
 
     // load geometries sizes
     {
-        io::FileReader reader(config.geometries_path, io::FileReader::VerifyFingerprint);
+        io::FileReader reader(config.GetPath(".osrm.geometry"), io::FileReader::VerifyFingerprint);
 
         const auto number_of_geometries_indices = reader.ReadVectorSize<unsigned>();
         layout.SetBlockSize<unsigned>(DataLayout::GEOMETRIES_INDEX, number_of_geometries_indices);
@@ -389,7 +393,7 @@ void Storage::PopulateLayout(DataLayout &layout)
     }
 
     {
-        io::FileReader reader(config.intersection_class_path, io::FileReader::VerifyFingerprint);
+        io::FileReader reader(config.GetPath(".osrm.icd"), io::FileReader::VerifyFingerprint);
 
         auto num_discreate_bearings = reader.ReadVectorSize<DiscreteBearing>();
         layout.SetBlockSize<DiscreteBearing>(DataLayout::BEARING_VALUES, num_discreate_bearings);
@@ -413,7 +417,7 @@ void Storage::PopulateLayout(DataLayout &layout)
 
     {
         // Loading turn lane data
-        io::FileReader lane_data_file(config.turn_lane_data_path,
+        io::FileReader lane_data_file(config.GetPath(".osrm.tld"),
                                       io::FileReader::VerifyFingerprint);
         const auto lane_tuple_count = lane_data_file.ReadElementCount64();
         layout.SetBlockSize<util::guidance::LaneTupleIdPair>(DataLayout::TURN_LANE_DATA,
@@ -422,9 +426,10 @@ void Storage::PopulateLayout(DataLayout &layout)
 
     {
         // Loading MLD Data
-        if (boost::filesystem::exists(config.mld_partition_path))
+        if (boost::filesystem::exists(config.GetPath(".osrm.partition")))
         {
-            io::FileReader reader(config.mld_partition_path, io::FileReader::VerifyFingerprint);
+            io::FileReader reader(config.GetPath(".osrm.partition"),
+                                  io::FileReader::VerifyFingerprint);
 
             reader.Skip<partition::MultiLevelPartition::LevelData>(1);
             layout.SetBlockSize<partition::MultiLevelPartition::LevelData>(
@@ -442,9 +447,9 @@ void Storage::PopulateLayout(DataLayout &layout)
             layout.SetBlockSize<CellID>(DataLayout::MLD_CELL_TO_CHILDREN, 0);
         }
 
-        if (boost::filesystem::exists(config.mld_storage_path))
+        if (boost::filesystem::exists(config.GetPath(".osrm.cells")))
         {
-            io::FileReader reader(config.mld_storage_path, io::FileReader::VerifyFingerprint);
+            io::FileReader reader(config.GetPath(".osrm.cells"), io::FileReader::VerifyFingerprint);
 
             const auto weights_count = reader.ReadVectorSize<EdgeWeight>();
             layout.SetBlockSize<EdgeWeight>(DataLayout::MLD_CELL_WEIGHTS, weights_count);
@@ -472,9 +477,9 @@ void Storage::PopulateLayout(DataLayout &layout)
             layout.SetBlockSize<char>(DataLayout::MLD_CELL_LEVEL_OFFSETS, 0);
         }
 
-        if (boost::filesystem::exists(config.mld_graph_path))
+        if (boost::filesystem::exists(config.GetPath(".osrm.mldgr")))
         {
-            io::FileReader reader(config.mld_graph_path, io::FileReader::VerifyFingerprint);
+            io::FileReader reader(config.GetPath(".osrm.mldgr"), io::FileReader::VerifyFingerprint);
 
             const auto num_nodes =
                 reader.ReadVectorSize<customizer::MultiLevelEdgeBasedGraph::NodeArrayEntry>();
@@ -509,7 +514,7 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
     // read actual data into shared memory object //
 
     // Load the HSGR file
-    if (boost::filesystem::exists(config.hsgr_data_path))
+    if (boost::filesystem::exists(config.GetPath(".osrm.hsgr")))
     {
         auto graph_nodes_ptr = layout.GetBlockPtr<contractor::QueryGraphView::NodeArrayEntry, true>(
             memory_ptr, storage::DataLayout::CH_GRAPH_NODE_LIST);
@@ -523,7 +528,7 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
             graph_edges_ptr, layout.num_entries[storage::DataLayout::CH_GRAPH_EDGE_LIST]);
 
         contractor::QueryGraphView graph_view(std::move(node_list), std::move(edge_list));
-        contractor::files::readGraph(config.hsgr_data_path, *checksum, graph_view);
+        contractor::files::readGraph(config.GetPath(".osrm.hsgr"), *checksum, graph_view);
     }
     else
     {
@@ -543,7 +548,7 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
                   file_index_path_ptr + layout.GetBlockSize(DataLayout::FILE_INDEX_PATH),
                   0);
         const auto absolute_file_index_path =
-            boost::filesystem::absolute(config.file_index_path).string();
+            boost::filesystem::absolute(config.GetPath(".osrm.fileIndex")).string();
         BOOST_ASSERT(static_cast<std::size_t>(layout.GetBlockSize(DataLayout::FILE_INDEX_PATH)) >=
                      absolute_file_index_path.size());
         std::copy(
@@ -552,7 +557,7 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
 
     // Name data
     {
-        io::FileReader name_file(config.names_data_path, io::FileReader::VerifyFingerprint);
+        io::FileReader name_file(config.GetPath(".osrm.names"), io::FileReader::VerifyFingerprint);
         std::size_t name_file_size = name_file.GetSize();
 
         BOOST_ASSERT(name_file_size == layout.GetBlockSize(DataLayout::NAME_CHAR_DATA));
@@ -564,7 +569,7 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
 
     // Turn lane data
     {
-        io::FileReader lane_data_file(config.turn_lane_data_path,
+        io::FileReader lane_data_file(config.GetPath(".osrm.tld"),
                                       io::FileReader::VerifyFingerprint);
 
         const auto lane_tuple_count = lane_data_file.ReadElementCount64();
@@ -590,8 +595,7 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
         util::vector_view<extractor::guidance::TurnLaneType::Mask> masks(
             masks_ptr, layout.num_entries[storage::DataLayout::LANE_DESCRIPTION_MASKS]);
 
-        extractor::files::readTurnLaneDescriptions(
-            config.turn_lane_description_path, offsets, masks);
+        extractor::files::readTurnLaneDescriptions(config.GetPath(".osrm.tls"), offsets, masks);
     }
 
     // Load edge-based nodes data
@@ -627,7 +631,7 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
                                                    std::move(travel_modes),
                                                    std::move(classes));
 
-        extractor::files::readNodeData(config.edge_based_nodes_data_path, node_data);
+        extractor::files::readNodeData(config.GetPath(".osrm.ebg_nodes"), node_data);
     }
 
     // Load original edge data
@@ -664,7 +668,7 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
                                           std::move(pre_turn_bearings),
                                           std::move(post_turn_bearings));
 
-        extractor::files::readTurnData(config.edges_data_path, turn_data);
+        extractor::files::readTurnData(config.GetPath(".osrm.edges"), turn_data);
     }
 
     // load compressed geometry
@@ -729,13 +733,14 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
                                                 std::move(geometry_rev_duration_list),
                                                 std::move(datasources_list)};
 
-        extractor::files::readSegmentData(config.geometries_path, segment_data);
+        extractor::files::readSegmentData(config.GetPath(".osrm.geometry"), segment_data);
     }
 
     {
         const auto datasources_names_ptr = layout.GetBlockPtr<extractor::Datasources, true>(
             memory_ptr, DataLayout::DATASOURCES_NAMES);
-        extractor::files::readDatasources(config.datasource_names_path, *datasources_names_ptr);
+        extractor::files::readDatasources(config.GetPath(".osrm.datasource_names"),
+                                          *datasources_names_ptr);
     }
 
     // Loading list of coordinates
@@ -752,12 +757,12 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
                 osmnodeid_ptr, layout.num_entries[DataLayout::OSM_NODE_ID_LIST]),
             layout.num_entries[DataLayout::COORDINATE_LIST]);
 
-        extractor::files::readNodes(config.node_based_nodes_data_path, coordinates, osm_node_ids);
+        extractor::files::readNodes(config.GetPath(".osrm.nbg_nodes"), coordinates, osm_node_ids);
     }
 
     // load turn weight penalties
     {
-        io::FileReader turn_weight_penalties_file(config.turn_weight_penalties_path,
+        io::FileReader turn_weight_penalties_file(config.GetPath(".osrm.turn_weight_penalties"),
                                                   io::FileReader::VerifyFingerprint);
         const auto number_of_penalties = turn_weight_penalties_file.ReadElementCount64();
         const auto turn_weight_penalties_ptr =
@@ -767,7 +772,7 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
 
     // load turn duration penalties
     {
-        io::FileReader turn_duration_penalties_file(config.turn_duration_penalties_path,
+        io::FileReader turn_duration_penalties_file(config.GetPath(".osrm.turn_duration_penalties"),
                                                     io::FileReader::VerifyFingerprint);
         const auto number_of_penalties = turn_duration_penalties_file.ReadElementCount64();
         const auto turn_duration_penalties_ptr =
@@ -777,7 +782,8 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
 
     // store timestamp
     {
-        io::FileReader timestamp_file(config.timestamp_path, io::FileReader::VerifyFingerprint);
+        io::FileReader timestamp_file(config.GetPath(".osrm.timestamp"),
+                                      io::FileReader::VerifyFingerprint);
         const auto timestamp_size = timestamp_file.GetSize();
 
         const auto timestamp_ptr =
@@ -788,7 +794,8 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
 
     // store search tree portion of rtree
     {
-        io::FileReader tree_node_file(config.ram_index_path, io::FileReader::VerifyFingerprint);
+        io::FileReader tree_node_file(config.GetPath(".osrm.ramIndex"),
+                                      io::FileReader::VerifyFingerprint);
         // perform this read so that we're at the right stream position for the next
         // read.
         tree_node_file.Skip<std::uint64_t>(1);
@@ -805,21 +812,22 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
                                 layout.num_entries[DataLayout::R_SEARCH_TREE_LEVELS]);
     }
 
-    if (boost::filesystem::exists(config.core_data_path))
+    if (boost::filesystem::exists(config.GetPath(".osrm.core")))
     {
         auto core_marker_ptr =
             layout.GetBlockPtr<unsigned, true>(memory_ptr, storage::DataLayout::CH_CORE_MARKER);
         util::vector_view<bool> is_core_node(
             core_marker_ptr, layout.num_entries[storage::DataLayout::CH_CORE_MARKER]);
 
-        contractor::files::readCoreMarker(config.core_data_path, is_core_node);
+        contractor::files::readCoreMarker(config.GetPath(".osrm.core"), is_core_node);
     }
 
     // load profile properties
     {
         const auto profile_properties_ptr = layout.GetBlockPtr<extractor::ProfileProperties, true>(
             memory_ptr, DataLayout::PROPERTIES);
-        extractor::files::readProfileProperties(config.properties_path, *profile_properties_ptr);
+        extractor::files::readProfileProperties(config.GetPath(".osrm.properties"),
+                                                *profile_properties_ptr);
     }
 
     // Load intersection data
@@ -856,12 +864,12 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
             entry_class_ptr, layout.num_entries[storage::DataLayout::ENTRY_CLASS]);
 
         extractor::files::readIntersections(
-            config.intersection_class_path, intersection_bearings_view, entry_classes);
+            config.GetPath(".osrm.icd"), intersection_bearings_view, entry_classes);
     }
 
     {
         // Loading MLD Data
-        if (boost::filesystem::exists(config.mld_partition_path))
+        if (boost::filesystem::exists(config.GetPath(".osrm.partition")))
         {
             BOOST_ASSERT(layout.GetBlockSize(storage::DataLayout::MLD_LEVEL_DATA) > 0);
             BOOST_ASSERT(layout.GetBlockSize(storage::DataLayout::MLD_CELL_TO_CHILDREN) > 0);
@@ -885,10 +893,10 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
 
             partition::MultiLevelPartitionView mlp{
                 std::move(level_data), std::move(partition), std::move(cell_to_children)};
-            partition::files::readPartition(config.mld_partition_path, mlp);
+            partition::files::readPartition(config.GetPath(".osrm.partition"), mlp);
         }
 
-        if (boost::filesystem::exists(config.mld_storage_path))
+        if (boost::filesystem::exists(config.GetPath(".osrm.cells")))
         {
             BOOST_ASSERT(layout.GetBlockSize(storage::DataLayout::MLD_CELLS) > 0);
             BOOST_ASSERT(layout.GetBlockSize(storage::DataLayout::MLD_CELL_LEVEL_OFFSETS) > 0);
@@ -936,10 +944,10 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
                                                std::move(destination_boundary),
                                                std::move(cells),
                                                std::move(level_offsets)};
-            partition::files::readCells(config.mld_storage_path, storage);
+            partition::files::readCells(config.GetPath(".osrm.cells"), storage);
         }
 
-        if (boost::filesystem::exists(config.mld_graph_path))
+        if (boost::filesystem::exists(config.GetPath(".osrm.mldgr")))
         {
 
             auto graph_nodes_ptr =
@@ -962,7 +970,7 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
 
             customizer::MultiLevelEdgeBasedGraphView graph_view(
                 std::move(node_list), std::move(edge_list), std::move(node_to_offset));
-            partition::files::readGraph(config.mld_graph_path, graph_view);
+            partition::files::readGraph(config.GetPath(".osrm.mldgr"), graph_view);
         }
     }
 }

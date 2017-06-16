@@ -229,7 +229,7 @@ int main(int argc, const char *argv[]) try
     }
     if (!base_path.empty())
     {
-        config.storage_config = storage::StorageConfig(base_path);
+        config.storage_config.UseDefaultOutputNames(base_path);
     }
     if (!config.use_shared_memory && !config.storage_config.IsValid())
     {
