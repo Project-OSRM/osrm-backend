@@ -34,15 +34,13 @@ std::size_t getNumberOfTurns(const Intersection &intersection)
 } // namespace
 
 TurnLaneHandler::TurnLaneHandler(const util::NodeBasedDynamicGraph &node_based_graph,
-                                 const std::vector<std::uint32_t> &turn_lane_offsets,
-                                 const std::vector<TurnLaneType::Mask> &turn_lane_masks,
                                  LaneDescriptionMap &lane_description_map,
                                  const TurnAnalysis &turn_analysis,
                                  util::guidance::LaneDataIdMap &id_map)
-    : node_based_graph(node_based_graph), turn_lane_offsets(turn_lane_offsets),
-      turn_lane_masks(turn_lane_masks), lane_description_map(lane_description_map),
+    : node_based_graph(node_based_graph),  lane_description_map(lane_description_map),
       turn_analysis(turn_analysis), id_map(id_map)
 {
+    std::tie(turn_lane_offsets, turn_lane_masks) = transformTurnLaneMapIntoArrays(lane_description_map);
     count_handled = count_called = 0;
 }
 

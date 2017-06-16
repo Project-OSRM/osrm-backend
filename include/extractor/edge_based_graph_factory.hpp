@@ -83,8 +83,6 @@ class EdgeBasedGraphFactory
                                    const extractor::PackedOSMIDs &osm_node_ids,
                                    ProfileProperties profile_properties,
                                    const util::NameTable &name_table,
-                                   std::vector<std::uint32_t> &turn_lane_offsets,
-                                   std::vector<guidance::TurnLaneType::Mask> &turn_lane_masks,
                                    guidance::LaneDescriptionMap &lane_description_map);
 
     void Run(ScriptingEnvironment &scripting_environment,
@@ -150,8 +148,6 @@ class EdgeBasedGraphFactory
     ProfileProperties profile_properties;
 
     const util::NameTable &name_table;
-    std::vector<std::uint32_t> &turn_lane_offsets;
-    std::vector<guidance::TurnLaneType::Mask> &turn_lane_masks;
     guidance::LaneDescriptionMap &lane_description_map;
 
     unsigned RenumberEdges();
