@@ -252,7 +252,9 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
         "force_split_edges",
         &ProfileProperties::force_split_edges,
         "call_tagless_node_function",
-        &ProfileProperties::call_tagless_node_function);
+        &ProfileProperties::call_tagless_node_function,
+        "enable_way_coordinates",
+        &ProfileProperties::enable_way_coordinates);
 
     context.state.new_usertype<std::vector<std::string>>(
         "vector",

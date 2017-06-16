@@ -25,6 +25,8 @@ properties.weight_name                          = 'routability'
 -- (which slow down pre-processing).
 properties.call_tagless_node_function      = false
 
+properties.enable_way_coordinates          = true
+
 
 local profile = {
   default_mode      = mode.driving,
@@ -299,6 +301,7 @@ function node_function (node, result)
   if "traffic_signals" == tag then
     result.traffic_lights = true
   end
+
 end
 
 function way_function(way, result)
@@ -329,6 +332,12 @@ function way_function(way, result)
   then
     return
   end
+
+  local nodes = way:get_nodes()
+  for index,node in ipairs(nodes) do
+      print(node:lon(), node:lat())
+  end
+  print("------------")
 
   handlers = Sequence {
     -- set the default mode for this profile. if can be changed later

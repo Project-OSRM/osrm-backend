@@ -268,13 +268,6 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
         std::vector<boost::optional<InputRestrictionContainer>> resulting_restrictions;
     };
 
-    using osmium_index_type =
-        osrm::util::SparsePPMemMap<osmium::unsigned_object_id_type, osmium::Location>;
-    using osmium_location_handler_type = osmium::handler::NodeLocationsForWays<osmium_index_type>;
-
-    osmium_index_type location_cache;
-    osmium_location_handler_type location_handler(location_cache);
-
     tbb::filter_t<void, SharedBuffer> buffer_reader(
         tbb::filter::serial_in_order, [&](tbb::flow_control &fc) {
             if (auto buffer = reader.read())
@@ -286,11 +279,6 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
                 fc.stop();
                 return SharedBuffer{};
             }
-        });
-    tbb::filter_t<SharedBuffer, SharedBuffer> location_cacher(
-        tbb::filter::serial_in_order, [&](SharedBuffer buffer) {
-            osmium::apply(buffer->begin(), buffer->end(), location_handler);
-            return buffer;
         });
     tbb::filter_t<SharedBuffer, std::shared_ptr<ParsedBuffer>> buffer_transform(
         tbb::filter::parallel, [&](const SharedBuffer buffer) {
@@ -329,9 +317,37 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
             }
         });
 
-    // Number of pipeline tokens that yielded the best speedup was about 1.5 * num_cores
-    tbb::parallel_pipeline(tbb::task_scheduler_init::default_num_threads() * 1.5,
-                           buffer_reader & location_cacher & buffer_transform & buffer_storage);
+    // If the user wants coordinates in the way function, we can use
+    // libosmium's NodeLocationsForWays handler to annotate way objects
+    // with cached coordinate data
+    if (scripting_environment.GetProfileProperties().enable_way_coordinates)
+    {
+        using osmium_index_type =
+            osrm::util::SparsePPMemMap<osmium::unsigned_object_id_type, osmium::Location>;
+        using osmium_location_handler_type =
+            osmium::handler::NodeLocationsForWays<osmium_index_type>;
+
+        osmium_index_type location_cache;
+        osmium_location_handler_type location_handler(location_cache);
+
+        // TODO: I don't think that the location cache is thread-safe,
+        //       we probably need to synchronize insertion of nodes
+        tbb::filter_t<SharedBuffer, SharedBuffer> location_cacher(
+            tbb::filter::serial_in_order, [&](SharedBuffer buffer) {
+                osmium::apply(buffer->begin(), buffer->end(), location_handler);
+                return buffer;
+            });
+
+        const auto pipeline = buffer_reader & location_cacher & buffer_transform & buffer_storage;
+        tbb::parallel_pipeline(tbb::task_scheduler_init::default_num_threads() * 1.5, pipeline);
+    }
+    else
+    {
+        const auto pipeline = buffer_reader & buffer_transform & buffer_storage;
+
+        // Number of pipeline tokens that yielded the best speedup was about 1.5 * num_cores
+        tbb::parallel_pipeline(tbb::task_scheduler_init::default_num_threads() * 1.5, pipeline);
+    }
 
     TIMER_STOP(parsing);
     util::Log() << "Parsing finished after " << TIMER_SEC(parsing) << " seconds";
