@@ -51,15 +51,12 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(
     const extractor::PackedOSMIDs &osm_node_ids,
     ProfileProperties profile_properties,
     const util::NameTable &name_table,
-    std::vector<std::uint32_t> &turn_lane_offsets,
-    std::vector<guidance::TurnLaneType::Mask> &turn_lane_masks,
     guidance::LaneDescriptionMap &lane_description_map)
     : m_max_edge_id(0), m_coordinates(coordinates), m_osm_node_ids(osm_node_ids),
       m_node_based_graph(std::move(node_based_graph)),
       m_restriction_map(std::move(restriction_map)), m_barrier_nodes(barrier_nodes),
       m_traffic_lights(traffic_lights), m_compressed_edge_container(compressed_edge_container),
       profile_properties(std::move(profile_properties)), name_table(name_table),
-      turn_lane_offsets(turn_lane_offsets), turn_lane_masks(turn_lane_masks),
       lane_description_map(lane_description_map)
 {
 }
@@ -352,8 +349,6 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
     util::guidance::LaneDataIdMap lane_data_map;
     guidance::lanes::TurnLaneHandler turn_lane_handler(*m_node_based_graph,
-                                                       turn_lane_offsets,
-                                                       turn_lane_masks,
                                                        lane_description_map,
                                                        turn_analysis,
                                                        lane_data_map);

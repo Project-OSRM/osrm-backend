@@ -52,7 +52,6 @@
 #include <iostream>
 #include <iterator>
 #include <memory>
-#include <numeric> //partial_sum
 #include <thread>
 #include <tuple>
 #include <type_traits>
@@ -63,37 +62,6 @@ namespace osrm
 {
 namespace extractor
 {
-
-namespace
-{
-std::tuple<std::vector<std::uint32_t>, std::vector<guidance::TurnLaneType::Mask>>
-transformTurnLaneMapIntoArrays(const guidance::LaneDescriptionMap &turn_lane_map)
-{
-    // could use some additional capacity? To avoid a copy during processing, though small data so
-    // probably not that important.
-    //
-    // From the map, we construct an adjacency array that allows access from all IDs to the list of
-    // associated Turn Lane Masks.
-    //
-    // turn lane offsets points into the locations of the turn_lane_masks array. We use a standard
-    // adjacency array like structure to store the turn lane masks.
-    std::vector<std::uint32_t> turn_lane_offsets(turn_lane_map.data.size() +
-                                                 2); // empty ID + sentinel
-    for (auto entry = turn_lane_map.data.begin(); entry != turn_lane_map.data.end(); ++entry)
-        turn_lane_offsets[entry->second + 1] = entry->first.size();
-
-    // inplace prefix sum
-    std::partial_sum(turn_lane_offsets.begin(), turn_lane_offsets.end(), turn_lane_offsets.begin());
-
-    // allocate the current masks
-    std::vector<guidance::TurnLaneType::Mask> turn_lane_masks(turn_lane_offsets.back());
-    for (auto entry = turn_lane_map.data.begin(); entry != turn_lane_map.data.end(); ++entry)
-        std::copy(entry->first.begin(),
-                  entry->first.end(),
-                  turn_lane_masks.begin() + turn_lane_offsets[entry->second]);
-    return std::make_tuple(std::move(turn_lane_offsets), std::move(turn_lane_masks));
-}
-} // namespace
 
 /**
  * TODO: Refactor this function into smaller functions for better readability.
@@ -123,7 +91,10 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     tbb::task_scheduler_init init(number_of_threads ? number_of_threads
                                                     : tbb::task_scheduler_init::automatic);
 
-    auto turn_restrictions = ParseOSMData(scripting_environment, number_of_threads);
+    guidance::LaneDescriptionMap turn_lane_map;
+    std::vector<TurnRestriction> turn_restrictions;
+    std::tie(turn_lane_map, turn_restrictions) =
+        ParseOSMData(scripting_environment, number_of_threads);
 
     // Transform the node-based graph that OSM is based on into an edge-based graph
     // that is better for routing.  Every edge becomes a node, and every valid
@@ -149,7 +120,8 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
                                              edge_based_node_weights,
                                              edge_based_edge_list,
                                              config.intersection_class_data_output_path,
-                                             turn_restrictions);
+                                             turn_restrictions,
+                                             turn_lane_map);
 
     auto number_of_node_based_nodes = graph_size.first;
     auto max_edge_id = graph_size.second;
@@ -201,8 +173,9 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     return 0;
 }
 
-std::vector<TurnRestriction> Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
-                                                     const unsigned number_of_threads)
+std::tuple<guidance::LaneDescriptionMap, std::vector<TurnRestriction>>
+Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
+                        const unsigned number_of_threads)
 {
     TIMER_START(extracting);
 
@@ -332,6 +305,7 @@ std::vector<TurnRestriction> Extractor::ParseOSMData(ScriptingEnvironment &scrip
                 << " ways, and " << number_of_relations << " relations";
 
     // take control over the turn lane map
+    guidance::LaneDescriptionMap turn_lane_map;
     turn_lane_map.data = extractor_callbacks->moveOutLaneDescriptionMap().data;
 
     extractor_callbacks.reset();
@@ -348,12 +322,13 @@ std::vector<TurnRestriction> Extractor::ParseOSMData(ScriptingEnvironment &scrip
                                       config.names_file_name);
 
     files::writeProfileProperties(config.profile_properties_output_path,
-                           scripting_environment.GetProfileProperties());
+                                  scripting_environment.GetProfileProperties());
 
     TIMER_STOP(extracting);
     util::Log() << "extraction finished after " << TIMER_SEC(extracting) << "s";
 
-    return extraction_containers.unconditional_turn_restrictions;
+    return std::make_tuple(std::move(turn_lane_map),
+                           std::move(extraction_containers.unconditional_turn_restrictions));
 }
 
 void Extractor::FindComponents(unsigned max_edge_id,
@@ -459,7 +434,8 @@ Extractor::BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
                                   std::vector<EdgeWeight> &edge_based_node_weights,
                                   util::DeallocatingVector<EdgeBasedEdge> &edge_based_edge_list,
                                   const std::string &intersection_class_output_file,
-                                  std::vector<TurnRestriction> &turn_restrictions)
+                                  std::vector<TurnRestriction> &turn_restrictions,
+                                  guidance::LaneDescriptionMap &turn_lane_map)
 {
     std::unordered_set<NodeID> barrier_nodes;
     std::unordered_set<NodeID> traffic_lights;
@@ -478,12 +454,6 @@ Extractor::BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
 
     util::NameTable name_table(config.names_file_name);
 
-    // could use some additional capacity? To avoid a copy during processing, though small data so
-    // probably not that important.
-    std::vector<std::uint32_t> turn_lane_offsets;
-    std::vector<guidance::TurnLaneType::Mask> turn_lane_masks;
-    std::tie(turn_lane_offsets, turn_lane_masks) = transformTurnLaneMapIntoArrays(turn_lane_map);
-
     EdgeBasedGraphFactory edge_based_graph_factory(
         node_based_graph,
         compressed_edge_container,
@@ -494,8 +464,6 @@ Extractor::BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
         osm_node_ids,
         scripting_environment.GetProfileProperties(),
         name_table,
-        turn_lane_offsets,
-        turn_lane_masks,
         turn_lane_map);
 
     edge_based_graph_factory.Run(scripting_environment,
@@ -530,7 +498,14 @@ Extractor::BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
             config.compressed_node_based_graph_output_path, *node_based_graph, coordinates);
     });
 
-    WriteTurnLaneData(config.turn_lane_descriptions_file_name);
+    {
+        std::vector<std::uint32_t> turn_lane_offsets;
+        std::vector<guidance::TurnLaneType::Mask> turn_lane_masks;
+        std::tie(turn_lane_offsets, turn_lane_masks) =
+            guidance::transformTurnLaneMapIntoArrays(turn_lane_map);
+        files::writeTurnLaneDescriptions(
+            config.turn_lane_descriptions_file_name, turn_lane_offsets, turn_lane_masks);
+    }
     files::writeSegmentData(config.geometry_output_path,
                             *compressed_edge_container.ToSegmentData());
 
@@ -638,22 +613,6 @@ void Extractor::WriteIntersectionClassificationData(
                 << node_based_intersection_classes.size() << " Indices into "
                 << bearing_classes.size() << " bearing classes and " << entry_classes.size()
                 << " entry classes and " << total_bearings << " bearing values.";
-}
-
-void Extractor::WriteTurnLaneData(const std::string &turn_lane_file) const
-{
-    // Write the turn lane data to file
-    std::vector<std::uint32_t> turn_lane_offsets;
-    std::vector<guidance::TurnLaneType::Mask> turn_lane_masks;
-    std::tie(turn_lane_offsets, turn_lane_masks) = transformTurnLaneMapIntoArrays(turn_lane_map);
-
-    util::Log() << "Writing turn lane masks...";
-    TIMER_START(turn_lane_timer);
-
-    files::writeTurnLaneDescriptions(turn_lane_file, turn_lane_offsets, turn_lane_masks);
-
-    TIMER_STOP(turn_lane_timer);
-    util::Log() << "done (" << TIMER_SEC(turn_lane_timer) << ")";
 }
 
 void Extractor::WriteCompressedNodeBasedGraph(const std::string &path,

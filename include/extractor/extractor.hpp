@@ -56,8 +56,8 @@ class Extractor
   private:
     ExtractorConfig config;
 
-    std::vector<TurnRestriction> ParseOSMData(ScriptingEnvironment &scripting_environment,
-                                              const unsigned number_of_threads);
+    std::tuple<guidance::LaneDescriptionMap, std::vector<TurnRestriction>>
+    ParseOSMData(ScriptingEnvironment &scripting_environment, const unsigned number_of_threads);
 
     std::pair<std::size_t, EdgeID>
     BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
@@ -69,7 +69,8 @@ class Extractor
                            std::vector<EdgeWeight> &edge_based_node_weights,
                            util::DeallocatingVector<EdgeBasedEdge> &edge_based_edge_list,
                            const std::string &intersection_class_output_file,
-                           std::vector<TurnRestriction> &turn_restrictions);
+                           std::vector<TurnRestriction> &turn_restrictions,
+                           guidance::LaneDescriptionMap &turn_lane_map);
     void FindComponents(unsigned max_edge_id,
                         const util::DeallocatingVector<EdgeBasedEdge> &input_edge_list,
                         const std::vector<EdgeBasedNodeSegment> &input_node_segments,
@@ -90,20 +91,10 @@ class Extractor
         const std::vector<util::guidance::BearingClass> &bearing_classes,
         const std::vector<util::guidance::EntryClass> &entry_classes) const;
 
-    void WriteTurnLaneData(const std::string &turn_lane_file) const;
-
     // Writes compressed node based graph and its embedding into a file for osrm-partition to use.
     static void WriteCompressedNodeBasedGraph(const std::string &path,
                                               const util::NodeBasedDynamicGraph &graph,
                                               const std::vector<util::Coordinate> &coordiantes);
-
-    // globals persisting during the extraction process and the graph generation process
-
-    // during turn lane analysis, we might have to combine lanes for roads that are modelled as two
-    // but are more or less experienced as one. This can be due to solid lines in between lanes, for
-    // example, that genereate a small separation between them. As a result, we might have to
-    // augment the turn lane map during processing, further adding more types.
-    guidance::LaneDescriptionMap turn_lane_map;
 };
 }
 }

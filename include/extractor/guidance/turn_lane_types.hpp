@@ -7,6 +7,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <numeric> //partial_sum
 
 #include <boost/functional/hash.hpp>
 
@@ -98,6 +99,34 @@ typedef util::ConcurrentIDMap<guidance::TurnLaneDescription,
                               LaneDescriptionID,
                               guidance::TurnLaneDescription_hash>
     LaneDescriptionMap;
+
+inline std::tuple<std::vector<std::uint32_t>, std::vector<TurnLaneType::Mask>>
+transformTurnLaneMapIntoArrays(const LaneDescriptionMap &turn_lane_map)
+{
+    // could use some additional capacity? To avoid a copy during processing, though small data so
+    // probably not that important.
+    //
+    // From the map, we construct an adjacency array that allows access from all IDs to the list of
+    // associated Turn Lane Masks.
+    //
+    // turn lane offsets points into the locations of the turn_lane_masks array. We use a standard
+    // adjacency array like structure to store the turn lane masks.
+    std::vector<std::uint32_t> turn_lane_offsets(turn_lane_map.data.size() +
+                                                 2); // empty ID + sentinel
+    for (auto entry = turn_lane_map.data.begin(); entry != turn_lane_map.data.end(); ++entry)
+        turn_lane_offsets[entry->second + 1] = entry->first.size();
+
+    // inplace prefix sum
+    std::partial_sum(turn_lane_offsets.begin(), turn_lane_offsets.end(), turn_lane_offsets.begin());
+
+    // allocate the current masks
+    std::vector<guidance::TurnLaneType::Mask> turn_lane_masks(turn_lane_offsets.back());
+    for (auto entry = turn_lane_map.data.begin(); entry != turn_lane_map.data.end(); ++entry)
+        std::copy(entry->first.begin(),
+                  entry->first.end(),
+                  turn_lane_masks.begin() + turn_lane_offsets[entry->second]);
+    return std::make_tuple(std::move(turn_lane_offsets), std::move(turn_lane_masks));
+}
 
 } // guidance
 } // extractor
