@@ -347,21 +347,13 @@ std::vector<TurnRestriction> Extractor::ParseOSMData(ScriptingEnvironment &scrip
                                       config.restriction_file_name,
                                       config.names_file_name);
 
-    WriteProfileProperties(config.profile_properties_output_path,
+    files::writeProfileProperties(config.profile_properties_output_path,
                            scripting_environment.GetProfileProperties());
 
     TIMER_STOP(extracting);
     util::Log() << "extraction finished after " << TIMER_SEC(extracting) << "s";
 
     return extraction_containers.unconditional_turn_restrictions;
-}
-
-void Extractor::WriteProfileProperties(const std::string &output_path,
-                                       const ProfileProperties &properties) const
-{
-    storage::io::FileWriter file(output_path, storage::io::FileWriter::GenerateFingerprint);
-
-    file.WriteOne(properties);
 }
 
 void Extractor::FindComponents(unsigned max_edge_id,
