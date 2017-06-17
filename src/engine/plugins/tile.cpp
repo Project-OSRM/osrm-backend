@@ -831,6 +831,51 @@ void encodeVectorTile(const datafacade::ContiguousInternalMemoryDataFacadeBase &
                 values_writer.add_float(util::vector_tile::VARIANT_TYPE_FLOAT, value);
             }
         }
+
+        // OSM Node tile layer
+        {
+            protozero::pbf_writer point_layer_writer(tile_writer, util::vector_tile::LAYER_TAG);
+            point_layer_writer.add_uint32(util::vector_tile::VERSION_TAG, 2);       // version
+            point_layer_writer.add_string(util::vector_tile::NAME_TAG, "osmnodes"); // name
+            point_layer_writer.add_uint32(util::vector_tile::EXTENT_TAG,
+                                          util::vector_tile::EXTENT); // extent
+
+            std::vector<NodeID> internal_nodes;
+            internal_nodes.reserve(edges.size() * 2);
+            for (const auto &edge : edges)
+            {
+                internal_nodes.push_back(edge.u);
+                internal_nodes.push_back(edge.v);
+            }
+            std::sort(internal_nodes.begin(), internal_nodes.end());
+            auto new_end = std::unique(internal_nodes.begin(), internal_nodes.end());
+            internal_nodes.resize(new_end - internal_nodes.begin());
+
+            for (const auto &internal_node : internal_nodes)
+            {
+                const auto coord = facade.GetCoordinateOfNode(internal_node);
+                const auto tile_point = coordinatesToTilePoint(coord, tile_bbox);
+                if (!boost::geometry::within(point_t(tile_point.x, tile_point.y), clip_box))
+                {
+                    continue;
+                }
+                protozero::pbf_writer feature_writer(point_layer_writer,
+                                                     util::vector_tile::FEATURE_TAG);
+                // Field 3 is the "geometry type" field.  Value 1 is "point"
+                feature_writer.add_enum(util::vector_tile::GEOMETRY_TAG,
+                                        util::vector_tile::GEOMETRY_TYPE_POINT); // geometry type
+                const auto osmid =
+                    static_cast<OSMNodeID::value_type>(facade.GetOSMNodeIDOfNode(internal_node));
+                feature_writer.add_uint64(util::vector_tile::ID_TAG, osmid); // id
+                // There are no additional properties, just the ID and the geometry
+                {
+                    // Add the geometry as the last field in this feature
+                    protozero::packed_field_uint32 geometry(
+                        feature_writer, util::vector_tile::FEATURE_GEOMETRIES_TAG);
+                    encodePoint(tile_point, geometry);
+                }
+            }
+        }
     }
     // protozero serializes data during object destructors, so once the scope closes,
     // our result buffer will have all the tile data encoded into it.
