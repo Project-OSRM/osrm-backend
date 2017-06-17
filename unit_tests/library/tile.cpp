@@ -11,6 +11,7 @@
 #include "osrm/osrm.hpp"
 #include "osrm/status.hpp"
 
+#include "util/typedefs.hpp"
 #include "util/vector_tile.hpp"
 
 #include <protozero/pbf_reader.hpp>
@@ -212,6 +213,58 @@ template <typename algorithm> void test_tile(algorithm &osrm)
 
     BOOST_CHECK_EQUAL(number_of_turn_keys, 4);
     BOOST_CHECK(number_of_turns_found > 700);
+
+    tile_message.next();
+    layer_message = tile_message.get_message();
+
+    auto number_of_nodes_found = 0u;
+
+    const auto check_osmnode_feature = [](protozero::pbf_reader feature_message) {
+        feature_message.next(); // advance parser to first entry
+        BOOST_CHECK_EQUAL(feature_message.tag(), util::vector_tile::GEOMETRY_TAG);
+        BOOST_CHECK_EQUAL(feature_message.get_enum(), util::vector_tile::GEOMETRY_TYPE_POINT);
+
+        feature_message.next(); // advance to next entry
+        BOOST_CHECK_EQUAL(feature_message.tag(), util::vector_tile::ID_TAG);
+        feature_message.get_uint64(); // id
+
+        feature_message.next(); // advance to next entry
+        // Note - on this layer, there should be no feature attributes, the next thing
+        // we get should be the geometry
+        BOOST_CHECK_EQUAL(feature_message.tag(), util::vector_tile::FEATURE_GEOMETRIES_TAG);
+        auto geometry_iter_pair = feature_message.get_packed_uint32();
+        BOOST_CHECK_GT(std::distance(geometry_iter_pair.begin(), geometry_iter_pair.end()), 1);
+    };
+
+    while (layer_message.next())
+    {
+        switch (layer_message.tag())
+        {
+        case util::vector_tile::VERSION_TAG:
+            BOOST_CHECK_EQUAL(layer_message.get_uint32(), 2);
+            break;
+        case util::vector_tile::NAME_TAG:
+            BOOST_CHECK_EQUAL(layer_message.get_string(), "osmnodes");
+            break;
+        case util::vector_tile::EXTENT_TAG:
+            BOOST_CHECK_EQUAL(layer_message.get_uint32(), util::vector_tile::EXTENT);
+            break;
+        case util::vector_tile::FEATURE_TAG:
+            check_osmnode_feature(layer_message.get_message());
+            number_of_nodes_found++;
+            break;
+        case util::vector_tile::KEY_TAG:
+            BOOST_CHECK(false); // There should be no properties on node features
+            break;
+        case util::vector_tile::VARIANT_TAG:
+            BOOST_CHECK(false); // There should be no properties on node features
+            break;
+        default:
+            BOOST_CHECK(false); // invalid tag
+            break;
+        }
+    }
+    BOOST_CHECK_EQUAL(number_of_nodes_found, 1791);
 }
 
 BOOST_AUTO_TEST_CASE(test_tile_ch)
@@ -611,6 +664,111 @@ BOOST_AUTO_TEST_CASE(test_tile_speeds_mld)
 
     auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/mld/monaco.osrm", osrm::EngineConfig::Algorithm::MLD);
     test_tile_speeds(osrm);
+}
+
+template <typename algorithm> void test_tile_nodes(algorithm &osrm)
+{
+    using namespace osrm;
+
+    // Small tile so we can test all the values
+    // TileParameters params{272953, 191177, 19};
+    // TileParameters params{136477, 95580, 18};
+    // Small tile where we can test all the values
+    TileParameters params{272953, 191177, 19};
+
+    std::string result;
+    const auto rc = osrm.Tile(params, result);
+    BOOST_CHECK(rc == Status::Ok);
+
+    BOOST_CHECK_GT(result.size(), 128);
+
+    protozero::pbf_reader tile_message(result);
+    tile_message.next();
+    BOOST_CHECK_EQUAL(tile_message.tag(), util::vector_tile::LAYER_TAG); // must be a layer
+
+    // Skip the segments and turns layers
+    tile_message.skip();
+    tile_message.next();
+    tile_message.skip();
+
+    // Get the osmnodes layer
+    tile_message.next();
+    protozero::pbf_reader layer_message = tile_message.get_message();
+
+    std::vector<OSMNodeID::value_type> found_node_ids;
+
+    const auto check_feature = [&](protozero::pbf_reader feature_message) {
+        feature_message.next(); // advance parser to first entry
+        BOOST_CHECK_EQUAL(feature_message.tag(), util::vector_tile::GEOMETRY_TAG);
+        BOOST_CHECK_EQUAL(feature_message.get_enum(), util::vector_tile::GEOMETRY_TYPE_POINT);
+
+        feature_message.next(); // advance to next entry
+        BOOST_CHECK_EQUAL(feature_message.tag(), util::vector_tile::ID_TAG);
+        found_node_ids.push_back(feature_message.get_uint64()); // id
+
+        feature_message.next(); // advance to next entry
+        BOOST_CHECK_EQUAL(feature_message.tag(), util::vector_tile::FEATURE_GEOMETRIES_TAG);
+        auto geometry_iter_pair = feature_message.get_packed_uint32();
+        BOOST_CHECK_GT(std::distance(geometry_iter_pair.begin(), geometry_iter_pair.end()), 1);
+    };
+
+    while (layer_message.next())
+    {
+        switch (layer_message.tag())
+        {
+        case util::vector_tile::VERSION_TAG:
+            BOOST_CHECK_EQUAL(layer_message.get_uint32(), 2);
+            break;
+        case util::vector_tile::NAME_TAG:
+            BOOST_CHECK_EQUAL(layer_message.get_string(), "osmnodes");
+            break;
+        case util::vector_tile::EXTENT_TAG:
+            BOOST_CHECK_EQUAL(layer_message.get_uint32(), util::vector_tile::EXTENT);
+            break;
+        case util::vector_tile::FEATURE_TAG:
+            check_feature(layer_message.get_message());
+            break;
+        case util::vector_tile::KEY_TAG:
+            BOOST_CHECK(false); // There should be no keys
+            break;
+        case util::vector_tile::VARIANT_TAG:
+            BOOST_CHECK(false); // There should be no values
+            break;
+        default:
+            BOOST_CHECK(false); // invalid tag
+            break;
+        }
+    }
+
+    std::sort(found_node_ids.begin(), found_node_ids.end());
+    const std::vector<OSMNodeID::value_type> expected_node_ids = {
+        25191722, 25191725, 357300400, 1737389138, 1737389140, 2241375220};
+    BOOST_CHECK(found_node_ids == expected_node_ids);
+}
+
+BOOST_AUTO_TEST_CASE(test_tile_nodes_ch)
+{
+    using namespace osrm;
+
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm", osrm::EngineConfig::Algorithm::CH);
+    test_tile_nodes(osrm);
+}
+
+BOOST_AUTO_TEST_CASE(test_tile_nodes_corech)
+{
+    using namespace osrm;
+
+    auto osrm =
+        getOSRM(OSRM_TEST_DATA_DIR "/corech/monaco.osrm", osrm::EngineConfig::Algorithm::CoreCH);
+    test_tile_nodes(osrm);
+}
+
+BOOST_AUTO_TEST_CASE(test_tile_nodes_mld)
+{
+    using namespace osrm;
+
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/mld/monaco.osrm", osrm::EngineConfig::Algorithm::MLD);
+    test_tile_nodes(osrm);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
