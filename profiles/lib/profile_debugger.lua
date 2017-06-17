@@ -90,7 +90,7 @@ function Debug.report_tag_fetches()
 end
 
 function Debug.load_profile(profile)
-  require(profile)
+  return require(profile)
 end
 
 function Debug.reset_tag_fetch_counts()
@@ -101,6 +101,10 @@ function Debug.reset_tag_fetch_counts()
 end
 
 function Debug.register_tag_fetch(k)
+  if not k then
+    return nil
+  end
+  
   if Debug.tags.total then
     Debug.tags.total = Debug.tags.total + 1
   else
@@ -126,7 +130,11 @@ function Debug.way_function(way,result)
   -- intercept tag function normally provided via C++
   function way:get_value_by_key(k)
     Debug.register_tag_fetch(k)
-    return self[k]
+    if self[k] == '' then
+      return nil
+    else
+      return self[k]
+    end
   end
   
   -- reset tag counts

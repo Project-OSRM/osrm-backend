@@ -38,24 +38,44 @@ end
 
 function Tags.get_forward_backward_by_set(way,data,keys)
   local forward, backward
+  local forward_key, backward_key
+  local k
+  
   for i,key in ipairs(keys) do
     if not forward then
-      forward = way:get_value_by_key(key .. ':forward')
+      k = key .. ':forward'
+      forward = way:get_value_by_key(k)
+      if forward then
+        forward_key = k
+      end
+      
     end
     if not backward then
-      backward = way:get_value_by_key(key .. ':backward')
+      k = key .. ':backward'
+      backward = way:get_value_by_key(k)
+      if backward then
+        backward_key = k
+      end
     end
     if not forward or not backward then
       local common = way:get_value_by_key(key)
-      forward = forward or common
-      backward = backward or common
+      if common then
+        if not forward then
+          forward = common
+          forward_key = key
+        end
+        if not backward then
+          backward = common
+          backward_key = key
+        end
+      end
     end
     if forward and backward then
       break
     end
   end
 
-  return forward, backward
+  return forward, backward, forward_key, backward_key
 end
 
 -- look through a sequence of keys combined with a prefix

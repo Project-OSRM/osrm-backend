@@ -54,6 +54,6 @@ Feature: Bike - Surfaces
       When I route I should get
         | from | to | route | modes                     | speed   |
         | a    | b  | ab,ab | cycling,cycling           | 15 km/h |
-        | b    | a  | ab,ab | pushing bike,pushing bike | 6 km/h  |
-        | c    | d  | cd,cd | pushing bike,pushing bike | 6 km/h  |
-        | d    | c  | cd,cd | pushing bike,pushing bike | 6 km/h  |
+        | b    | a  | ab,ab | pushing bike,pushing bike | 5 km/h  |
+        | c    | d  | cd,cd | pushing bike,pushing bike | 5 km/h  |
+        | d    | c  | cd,cd | pushing bike,pushing bike | 5 km/h  |

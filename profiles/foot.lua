@@ -7,6 +7,7 @@ local Set = require('lib/set')
 local Sequence = require('lib/sequence')
 local Handlers = require("lib/handlers")
 local next = next       -- bind to local for speed
+local pprint = require('lib/pprint')
 
 properties.max_speed_for_map_matching    = 40/3.6 -- kmph -> m/s
 properties.use_turn_restrictions         = false
@@ -76,7 +77,9 @@ local profile = {
   },
 
   avoid = Set {
-    'impassable'
+    'building',
+    'impassable',
+    'construction'
   },
 
   speeds = Sequence {
@@ -104,6 +107,10 @@ local profile = {
       platform        = walking_speed
     },
 
+    public_transport = {
+      platform        = walking_speed
+    },
+
     amenity = {
       parking         = walking_speed,
       parking_entrance= walking_speed
@@ -118,11 +125,32 @@ local profile = {
     }
   },
 
-  route_speeds = {
-    ferry = 5
-  },
-
-  bridge_speeds = {
+  routes = {
+    ferry = {
+      keys = { 'route' },
+      speeds = {
+        ferry = 5
+      }
+    },
+    
+    train = {
+      keys = { 'route', 'railway' },
+      speeds = {
+        train = 10,
+        railway = 10,
+        subway = 10,
+        light_rail = 10,
+        monorail = 10,
+        tram = 10
+      }
+    },
+    
+    default = {
+      keys = { 'route' },
+      speeds = {
+        movable = 5
+      }
+    }
   },
 
   surface_speeds = {
@@ -184,6 +212,7 @@ function way_function(way, result)
   -- data table for storing intermediate values during processing
   local data = {
     -- prefetch tags
+    building = way:get_value_by_key('building'),
     highway = way:get_value_by_key('highway'),
     bridge = way:get_value_by_key('bridge'),
     route = way:get_value_by_key('route'),
@@ -200,46 +229,44 @@ function way_function(way, result)
   -- of the prefetched tags to be present, ie. the data table
   -- cannot be empty
   if next(data) == nil then     -- is the data table empty?
-    return
+    return false
   end
-
   local handlers = Sequence {
     -- set the default mode for this profile. if can be changed later
     -- in case it turns we're e.g. on a ferry
-    'handle_default_mode',
+    Handlers.handle_default_mode,
 
     -- check various tags that could indicate that the way is not
     -- routable. this includes things like status=impassable,
     -- toll=yes and oneway=reversible
-    'handle_blocked_ways',
+    Handlers.handle_blocked_ways,
 
     -- determine access status by checking our hierarchy of
     -- access tags, e.g: motorcar, motor_vehicle, vehicle
-    'handle_access',
+    Handlers.handle_access,
 
     -- check whether forward/backward directons are routable
-    'handle_oneway',
+    Handlers.handle_oneway,
 
     -- check whether forward/backward directons are routable
-    'handle_destinations',
+    Handlers.handle_destinations,
 
     -- check whether we're using a special transport mode
-    'handle_ferries',
-    'handle_movables',
+    Handlers.handle_routes,
 
     -- compute speed taking into account way type, maxspeed tags, etc.
-    'handle_speed',
-    'handle_surface',
+    Handlers.handle_speed,
+    Handlers.handle_surface,
 
     -- handle turn lanes and road classification, used for guidance
-    'handle_classification',
+    Handlers.handle_classification,
 
     -- handle various other flags
-    'handle_roundabouts',
-    'handle_startpoint',
+    Handlers.handle_roundabouts,
+    Handlers.handle_startpoint,
 
     -- set name, ref and pronunciation
-    'handle_names'
+    Handlers.handle_names
   }
 
   Handlers.run(handlers,way,result,data,profile)
@@ -262,3 +289,6 @@ function turn_function (turn)
       end
   end
 end
+
+profile.way_function = way_function
+return profile

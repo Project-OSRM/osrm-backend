@@ -105,12 +105,14 @@ local profile = {
   },
 
   avoid = Set {
+    'building',
     'area',
     -- 'toll',    -- uncomment this to avoid tolls
     'reversible',
     'impassable',
     'hov_lanes',
-    'steps'
+    'steps',
+    'construction'
   },
 
   speeds = Sequence {
@@ -156,14 +158,32 @@ local profile = {
       'living_street',
   },
 
-  route_speeds = {
-    ferry = 5,
-    shuttle_train = 10
+  routes = {
+    ferry = {
+      keys = { 'route' },
+      speeds = {
+        ferry = 5
+      }
+    },
+    
+    train = {
+      require_whitelisting = true,
+      keys = { 'route', 'railway' },
+      speeds = {
+        train = 10,
+        railway = 10,
+        shuttle_train = 10,
+      }
+    },
+    
+    default = {
+      keys = { 'bridge' },
+      speeds = {
+        movable = 5
+      }
+    }
   },
 
-  bridge_speeds = {
-    movable = 5
-  },
 
   -- surface/trackype/smoothness
   -- values were estimated from looking at the photos at the relevant wiki pages
@@ -224,6 +244,9 @@ local profile = {
     very_horrible   =  5,
     impassable      =  0
   },
+
+
+  maxspeed_increase = true,
 
   -- http://wiki.openstreetmap.org/wiki/Speed_limits
   maxspeed_table_default = {
@@ -333,52 +356,51 @@ function way_function(way, result)
   handlers = Sequence {
     -- set the default mode for this profile. if can be changed later
     -- in case it turns we're e.g. on a ferry
-    'handle_default_mode',
+    Handlers.handle_default_mode,
 
     -- check various tags that could indicate that the way is not
     -- routable. this includes things like status=impassable,
     -- toll=yes and oneway=reversible
-    'handle_blocked_ways',
+    Handlers.handle_blocked_ways,
 
     -- determine access status by checking our hierarchy of
     -- access tags, e.g: motorcar, motor_vehicle, vehicle
-    'handle_access',
+    Handlers.handle_access,
 
     -- check whether forward/backward directions are routable
-    'handle_oneway',
+    Handlers.handle_oneway,
 
     -- check whether forward/backward directions are routable
-    'handle_destinations',
+    Handlers.handle_destinations,
 
     -- check whether we're using a special transport mode
-    'handle_ferries',
-    'handle_movables',
+    Handlers.handle_routes,
 
     -- handle service road restrictions
-    'handle_service',
+    Handlers.handle_service,
 
     -- handle hov
-    'handle_hov',
+    Handlers.handle_hov,
 
     -- compute speed taking into account way type, maxspeed tags, etc.
-    'handle_speed',
-    'handle_surface',
-    'handle_maxspeed',
-    'handle_penalties',
+    Handlers.handle_speed,
+    Handlers.handle_surface,
+    Handlers.handle_maxspeed,
+    Handlers.handle_penalties,
 
     -- handle turn lanes and road classification, used for guidance
-    'handle_turn_lanes',
-    'handle_classification',
+    Handlers.handle_turn_lanes,
+    Handlers.handle_classification,
 
     -- handle various other flags
-    'handle_roundabouts',
-    'handle_startpoint',
+    Handlers.handle_roundabouts,
+    Handlers.handle_startpoint,
 
     -- set name, ref and pronunciation
-    'handle_names',
+    Handlers.handle_names,
 
     -- set weight properties of the way
-    'handle_weights'
+    Handlers.handle_weights
   }
 
   Handlers.run(handlers,way,result,data,profile)

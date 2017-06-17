@@ -11,6 +11,16 @@ local Tags = require('lib/tags')
 
 Handlers = {}
 
+function Handlers.handle_init(way,result,data,profile)
+  result.forward_speed = -1
+  result.backward_speed = -1
+  result.forward_mode = -1
+  result.backward_mode = -1
+  result.duration = -1
+  result.weight = -1
+  result.road_classification = {}
+end
+
 -- check that way has at least one tag that could imply routability-
 -- we store the checked tags in data, to avoid fetching again later
 function Handlers.handle_tag_prefetch(way,result,data,profile)
@@ -48,7 +58,7 @@ function Handlers.handle_names(way,result,data,profile)
 end
 
 -- junctions
-function Handlers.handle_roundabouts(way,result,data,profile)
+function Handlers.handle_roundabouts(way,result,data,profile)  
   local junction = way:get_value_by_key("junction");
 
   if junction == "roundabout" then
@@ -67,12 +77,14 @@ end
 function Handlers.handle_startpoint(way,result,data,profile)
   -- if profile specifies set of allowed start modes, then check for that
   -- otherwise require default mode
-  if profile.allowed_start_modes then
-    result.is_startpoint = profile.allowed_start_modes[result.forward_mode] == true or
-                           profile.allowed_start_modes[result.backward_mode] == true
-  else
-    result.is_startpoint = result.forward_mode == profile.default_mode or
-                           result.backward_mode == profile.default_mode
+  if not result.is_startpoint then
+    if profile.allowed_start_modes then
+      result.is_startpoint = profile.allowed_start_modes[result.forward_mode] == true or
+                             profile.allowed_start_modes[result.backward_mode] == true
+    else
+      result.is_startpoint = result.forward_mode == profile.default_mode or
+                             result.backward_mode == profile.default_mode
+    end
   end
 end
 
@@ -102,20 +114,60 @@ function Handlers.handle_destinations(way,result,data,profile)
   end
 end
 
--- handling ferries and piers
-function Handlers.handle_ferries(way,result,data,profile)
-  local route = data.route
-  if route then
-    local route_speed = profile.route_speeds[route]
-    if route_speed and route_speed > 0 then
-     local duration  = way:get_value_by_key("duration")
-     if duration and durationIsValid(duration) then
-       result.duration = math.max( parseDuration(duration), 1 )
-     end
-     result.forward_mode = mode.ferry
-     result.backward_mode = mode.ferry
-     result.forward_speed = route_speed
-     result.backward_speed = route_speed
+-- handling routes, eg. ferries, trains and subways
+function Handlers.handle_routes(way,result,data,profile)
+  -- loop modes
+  for mode_name,mode_settings in pairs(profile.routes) do
+    
+    local done = false
+    if mode_settings.require_whitelisting and 
+       data.forward_status ~= 'whitelisted' and
+       data.backward_status ~= 'whitelisted' then
+      -- skip: whitelisted required for this route type, but not fulfilled
+    else 
+      -- loop over keys
+      for i,key in ipairs(mode_settings.keys) do 
+        local tag_value = data[key]                       -- note: the tag must be prefetched
+        if tag_value then
+          local speed = mode_settings.speeds[tag_value]   -- is the tag value listed in the speed table?
+          if speed then
+
+            -- convert from mode name to mode id, using the global mode table
+            local out_mode
+            if mode_name == 'default' then
+              out_mode = profile.default_mode
+            else
+              out_mode = mode[mode_name]
+            end
+
+            -- if a duration is present, use it
+            -- otherwise use speed defined in the profile for the route type
+            local duration  = way:get_value_by_key("duration")
+            local durationValid = duration and durationIsValid(duration)
+            if durationValid then
+              result.duration = math.max( parseDuration(duration), 1 )
+            end
+            
+            if not mode_settings.require_whitelisting or data.forward_status == 'whitelisted' then
+              result.forward_mode = out_mode
+              if not durationValid then
+                result.forward_speed = speed
+              end
+            end
+            
+            if not mode_settings.require_whitelisting or data.backward_status == 'whitelisted' then
+              result.backward_mode = out_mode
+              if not durationValid then
+                result.backward_speed = speed
+              end
+            end
+            
+            result.is_startpoint = true
+
+            done = true
+          end
+        end
+      end
     end
   end
 end
@@ -209,25 +261,47 @@ end
 
 -- check accessibility by traversing our access tag hierarchy
 function Handlers.handle_access(way,result,data,profile)
-  data.forward_access, data.backward_access =
+  data.forward_access, data.backward_access,
+  data.forward_access_key, data.backward_access_key =
     Tags.get_forward_backward_by_set(way,data,profile.access_tags_hierarchy)
-
-  -- only allow a subset of roads that are marked as restricted
-  if profile.restricted_highway_whitelist[data.highway] then
-      if profile.restricted_access_tag_list[data.forward_access] then
-          result.forward_restricted = true
-      end
-
-      if profile.restricted_access_tag_list[data.backward_access] then
-          result.backward_restricted = true
-      end
+  
+  local restricted_whitelist = profile.restricted_highway_whitelist[data.highway]
+  
+  if profile.access_tag_whitelist[data.forward_access] then
+    data.forward_status = 'whitelisted'
+  elseif restricted_whitelist and profile.restricted_access_tag_list[data.forward_access] then
+    data.forward_status = 'restricted'
+    result.forward_restricted = true
+  elseif profile.access_tag_blacklist[data.forward_access] then
+    result.forward_mode = mode.inaccessible
+    data.forward_status = 'blacklisted'
   end
+  
+  if profile.access_tag_whitelist[data.backward_access] then
+    data.backward_status = 'whitelisted'
+  elseif restricted_whitelist and profile.restricted_access_tag_list[data.backward_access] then
+    data.backward_status = 'restricted'
+    result.backward_restricted = true
+  elseif profile.access_tag_blacklist[data.backward_access] then
+    result.backward_mode = mode.inaccessible
+    data.backward_status = 'blacklisted'
+  end
+ 
+  
+  if result.forward_mode == mode.inaccessible and result.backward_mode == mode.inaccessible then
+    return false
+  end
+end
 
-  if profile.access_tag_blacklist[data.forward_access] and not result.forward_restricted then
+-- check dismount, which mean you're only allowed to walk with your vehicle (typically a bike)
+function Handlers.handle_dismount(way,result,data,profile)
+  if data.forward_access == 'dismount' then
+    data.forward_status = 'dismount'
     result.forward_mode = mode.inaccessible
   end
-
-  if profile.access_tag_blacklist[data.backward_access] and not result.backward_restricted then
+  
+  if data.backward_access == 'dismount' then
+    data.backward_status = 'dismount'
     result.backward_mode = mode.inaccessible
   end
 
@@ -238,27 +312,30 @@ end
 
 -- handle speed (excluding maxspeed)
 function Handlers.handle_speed(way,result,data,profile)
-  if result.forward_speed ~= -1 then
-    return        -- abort if already set, eg. by a route
+  local forward_missing = result.duration <= 0 and result.forward_speed == -1 and result.forward_mode ~= mode.inaccessible
+  local backward_missing = result.duration <= 0 and result.backward_speed == -1 and result.backward_mode ~= mode.inaccessible
+  local key,value,speed
+  
+  if forward_missing or backward_missing then
+    key,value,speed = Tags.get_constant_by_key_value(way,profile.speeds)
   end
 
-  local key,value,speed = Tags.get_constant_by_key_value(way,profile.speeds)
-
-  if speed then
-    -- set speed by way type
-    result.forward_speed = speed
-    result.backward_speed = speed
-  else
-    -- Set the avg speed on ways that are marked accessible
-    if profile.access_tag_whitelist[data.forward_access] then
+  if forward_missing then
+    if speed then
+      result.forward_speed = speed
+    elseif profile.access_tag_whitelist[data.forward_access] then
       result.forward_speed = profile.default_speed
     elseif data.forward_access and not profile.access_tag_blacklist[data.forward_access] then
       result.forward_speed = profile.default_speed -- fallback to the avg speed if access tag is not blacklisted
     elseif not data.forward_access and data.backward_access then
        result.forward_mode = mode.inaccessible
     end
-
-    if profile.access_tag_whitelist[data.backward_access] then
+  end
+  
+  if backward_missing then 
+    if speed then
+      result.backward_speed = speed
+    elseif profile.access_tag_whitelist[data.backward_access] then
       result.backward_speed = profile.default_speed
     elseif data.backward_access and not profile.access_tag_blacklist[data.backward_access] then
       result.backward_speed = profile.default_speed -- fallback to the avg speed if access tag is not blacklisted
@@ -354,16 +431,24 @@ end
 -- maxspeed and advisory maxspeed
 function Handlers.handle_maxspeed(way,result,data,profile)
   local keys = Sequence { 'maxspeed:advisory', 'maxspeed' }
-  local forward, backward = Tags.get_forward_backward_by_set(way,data,keys)
+  local forward, backward, forward_key, backward_key = Tags.get_forward_backward_by_set(way,data,keys)
   forward = Handlers.parse_maxspeed(forward,profile)
   backward = Handlers.parse_maxspeed(backward,profile)
 
   if forward and forward > 0 then
-    result.forward_speed = forward * profile.speed_reduction
+    if profile.maxspeed_increase then
+      result.forward_speed = forward * profile.speed_reduction
+    else
+      result.forward_speed = math.min( result.forward_speed, forward * profile.speed_reduction )
+    end
   end
 
   if backward and backward > 0 then
-    result.backward_speed = backward * profile.speed_reduction
+    if profile.maxspeed_increase then
+      result.backward_speed = backward * profile.speed_reduction
+    else
+      result.backward_speed = math.min( result.backward_speed, backward * profile.speed_reduction )
+    end
   end
 end
 
@@ -409,14 +494,14 @@ function Handlers.handle_oneway(way,result,data,profile)
     -- oneway=no, oneway:conditional=yes @ (condition2)
     -- condition1 will be always true and condition2 will be always false.
     if way:get_value_by_key("oneway:conditional") then
-        oneway = "no"
+      oneway = "no"
     else
-        oneway = Tags.get_value_by_prefixed_sequence(way,profile.restrictions,'oneway') or way:get_value_by_key("oneway")
+      oneway = Tags.get_value_by_prefixed_sequence(way,profile.restrictions,'oneway') or way:get_value_by_key("oneway")
     end
   end
-
+  
   data.oneway = oneway
-
+  
   if oneway == "-1" then
     data.is_reverse_oneway = true
     result.forward_mode = mode.inaccessible
@@ -425,7 +510,7 @@ function Handlers.handle_oneway(way,result,data,profile)
          oneway == "true" then
     data.is_forward_oneway = true
     result.backward_mode = mode.inaccessible
-  elseif profile.oneway_handling == true then
+  elseif profile.oneway_handling == true or profile.oneway_handling == 'specific' then
     local junction = way:get_value_by_key("junction")
     if data.highway == "motorway" or
        junction == "roundabout" or
@@ -434,6 +519,7 @@ function Handlers.handle_oneway(way,result,data,profile)
         -- implied oneway
         data.is_forward_oneway = true
         result.backward_mode = mode.inaccessible
+        data.backward_status = 'blacklisted'
       end
     end
   end
@@ -457,6 +543,11 @@ function Handlers.handle_blocked_ways(way,result,data,profile)
 
   -- areas
   if profile.avoid.area and way:get_value_by_key("area") == "yes" then
+    return false
+  end
+
+  -- buildings
+  if profile.avoid.building and data.building == 'yes' then
     return false
   end
 
@@ -515,10 +606,90 @@ end
 
 function Handlers.run(handlers,way,result,data,profile)
   for i,handler in ipairs(handlers) do
-    if Handlers[handler](way,result,data,profile) == false then
+    if handler(way,result,data,profile) == false then
+      result.forward_mode = mode.inaccessible
+      result.backward_mode = mode.inaccessible      
       return false
     end
   end
 end
+
+function Handlers.both_directions_handled(data,result,profile)
+  -- forward_access=no means access is specifically forbidden. in that case
+  -- the direction is considered handled, even though it's not accessible
+  -- example: if bicycle=no then we don't have to check walking
+  
+  -- a diretion is handled if we have both mode and speed.
+  -- otherwise check if the most specific access key is blacklisted.
+  -- if this is the case then consider the direction handled.
+  -- for example in a bike profile, bicycle=no mean we don't need
+  -- to considering pushing bikes, whereas vehicle=no means
+  -- we should  consider pushing bikes.
+  
+  local forward_handled = 
+    (result.forward_mode ~= mode.inaccessible and (result.forward_speed > 0 or result.duration > 0)) or
+    (data.forward_status == 'blacklisted' and 
+      (data.forward_access_key == nil or data.forward_access_key == profile.access_tags_hierarchy[1]))
+
+  local backward_handled = 
+    (result.backward_mode ~= mode.inaccessible and (result.backward_speed > 0 or result.duration > 0)) or
+    (data.backward_status == 'blacklisted' and 
+      (data.backward_access_key == nil or data.backward_access_key == profile.access_tags_hierarchy[1]))
+  
+  return forward_handled and backward_handled
+end
+
+function Handlers.merge(from,to)
+  if to.forward_mode == mode.inaccessible or to.forward_speed <= 0 then
+    to.forward_mode = from.forward_mode
+    to.forward_speed = from.forward_speed
+    to.forward_rate = from.forward_rate
+  end
+  if to.backward_mode == mode.inaccessible or to.backward_speed <= 0 then
+    to.backward_mode = from.backward_mode
+    to.backward_speed = from.backward_speed
+    to.backward_rate = from.backward_rate
+  end
+
+  if to.duration <= 0 then
+    to.duration = from.duration
+  end
+  
+  to.name = to.name or from.name
+
+  to.is_startpoint = to.is_startpoint or from.is_startpoint
+  
+  to.road_classification.may_be_ignored = 
+    to.road_classification.may_be_ignored or from.road_classification.may_be_ignored
+  
+  to.road_classification.road_priority_class =
+    to.road_classification.road_priority_class or from.road_classification.road_priority_class
+end
+
+function Handlers.output(data,result)
+  result.forward_mode = data.forward_mode
+  result.backward_mode = data.backward_mode
+  
+  result.forward_speed = data.forward_speed
+  result.backward_speed = data.backward_speed
+
+  result.forward_rate = data.forward_rate
+  result.backward_rate = data.backward_rate
+  
+
+  result.weight = data.weight
+
+  result.name = data.name
+  result.ref = data.ref
+  result.pronunciation = data.pronunciation
+  
+  result.is_startpoint = data.is_startpoint
+  result.duration = data.duration
+  result.destinations = data.destinations
+  
+  result.road_classification.may_be_ignored = data.road_classification.may_be_ignored
+  result.road_classification.road_priority_class = data.road_classification.road_priority_class
+end
+
 
 return Handlers
