@@ -170,17 +170,12 @@ class BaseDataFacade
 
     virtual double GetWeightMultiplier() const = 0;
 
-    virtual BearingClassID GetBearingClassID(const NodeID id) const = 0;
-
     virtual util::guidance::TurnBearing PreTurnBearing(const EdgeID eid) const = 0;
     virtual util::guidance::TurnBearing PostTurnBearing(const EdgeID eid) const = 0;
 
-    virtual util::guidance::BearingClass
-    GetBearingClass(const BearingClassID bearing_class_id) const = 0;
+    virtual util::guidance::BearingClass GetBearingClass(const NodeID node) const = 0;
 
-    virtual EntryClassID GetEntryClassID(const EdgeID eid) const = 0;
-
-    virtual util::guidance::EntryClass GetEntryClass(const EntryClassID entry_class_id) const = 0;
+    virtual util::guidance::EntryClass GetEntryClass(const EdgeID turn_id) const = 0;
 
     virtual bool IsLeftHandDriving() const = 0;
 };

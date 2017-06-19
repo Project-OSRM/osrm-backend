@@ -518,10 +518,15 @@ Extractor::BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
 
     const std::size_t number_of_node_based_nodes = node_based_graph->GetNumberOfNodes();
 
-    WriteIntersectionClassificationData(intersection_class_output_file,
-                                        edge_based_graph_factory.GetBearingClassIds(),
-                                        edge_based_graph_factory.GetBearingClasses(),
-                                        edge_based_graph_factory.GetEntryClasses());
+    util::Log() << "Writing Intersection Classification Data";
+    TIMER_START(write_intersections);
+    files::writeIntersections(
+        intersection_class_output_file,
+        IntersectionBearingsContainer{edge_based_graph_factory.GetBearingClassIds(),
+                                      edge_based_graph_factory.GetBearingClasses()},
+        edge_based_graph_factory.GetEntryClasses());
+    TIMER_STOP(write_intersections);
+    util::Log() << "ok, after " << TIMER_SEC(write_intersections) << "s";
 
     return std::make_pair(number_of_node_based_nodes, max_edge_id);
 }
@@ -570,49 +575,6 @@ void Extractor::BuildRTree(std::vector<EdgeBasedNodeSegment> edge_based_node_seg
 
     TIMER_STOP(construction);
     util::Log() << "finished r-tree construction in " << TIMER_SEC(construction) << " seconds";
-}
-
-void Extractor::WriteIntersectionClassificationData(
-    const std::string &output_file_name,
-    const std::vector<BearingClassID> &node_based_intersection_classes,
-    const std::vector<util::guidance::BearingClass> &bearing_classes,
-    const std::vector<util::guidance::EntryClass> &entry_classes) const
-{
-    storage::io::FileWriter writer(output_file_name, storage::io::FileWriter::GenerateFingerprint);
-
-    util::Log() << "Writing Intersection Classification Data";
-    TIMER_START(write_edges);
-    storage::serialization::write(writer, node_based_intersection_classes);
-
-    // create range table for vectors:
-    std::vector<unsigned> bearing_counts;
-    bearing_counts.reserve(bearing_classes.size());
-    std::uint64_t total_bearings = 0;
-    for (const auto &bearing_class : bearing_classes)
-    {
-        bearing_counts.push_back(
-            static_cast<unsigned>(bearing_class.getAvailableBearings().size()));
-        total_bearings += bearing_class.getAvailableBearings().size();
-    }
-
-    util::RangeTable<> bearing_class_range_table(bearing_counts);
-    bearing_class_range_table.Write(writer);
-
-    writer.WriteOne(total_bearings);
-
-    for (const auto &bearing_class : bearing_classes)
-    {
-        const auto &bearings = bearing_class.getAvailableBearings();
-        writer.WriteFrom(bearings.data(), bearings.size());
-    }
-
-    storage::serialization::write(writer, entry_classes);
-
-    TIMER_STOP(write_edges);
-    util::Log() << "ok, after " << TIMER_SEC(write_edges) << "s for "
-                << node_based_intersection_classes.size() << " Indices into "
-                << bearing_classes.size() << " bearing classes and " << entry_classes.size()
-                << " entry classes and " << total_bearings << " bearing values.";
 }
 
 void Extractor::WriteCompressedNodeBasedGraph(const std::string &path,

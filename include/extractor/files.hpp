@@ -4,12 +4,15 @@
 #include "extractor/edge_based_edge.hpp"
 #include "extractor/guidance/turn_lane_types.hpp"
 #include "extractor/node_data_container.hpp"
+#include "extractor/profile_properties.hpp"
 #include "extractor/serialization.hpp"
 #include "extractor/turn_data_container.hpp"
-#include "extractor/profile_properties.hpp"
 
 #include "util/coordinate.hpp"
+#include "util/guidance/bearing_class.hpp"
+#include "util/guidance/entry_class.hpp"
 #include "util/packed_vector.hpp"
+#include "util/range_table.hpp"
 #include "util/serialization.hpp"
 
 #include <boost/assert.hpp>
@@ -21,8 +24,41 @@ namespace extractor
 namespace files
 {
 
+// writes the .osrm.icd file
+template <typename IntersectionBearingsT, typename EntryClassVectorT>
+inline void writeIntersections(const boost::filesystem::path &path,
+                               const IntersectionBearingsT &intersection_bearings,
+                               const EntryClassVectorT &entry_classes)
+{
+    static_assert(std::is_same<IntersectionBearingsContainer, IntersectionBearingsT>::value ||
+                      std::is_same<IntersectionBearingsView, IntersectionBearingsT>::value,
+                  "");
+
+    storage::io::FileWriter writer(path, storage::io::FileWriter::GenerateFingerprint);
+
+    serialization::write(writer, intersection_bearings);
+    storage::serialization::write(writer, entry_classes);
+}
+
+// read the .osrm.icd file
+template <typename IntersectionBearingsT, typename EntryClassVectorT>
+inline void readIntersections(const boost::filesystem::path &path,
+                              IntersectionBearingsT &intersection_bearings,
+                              EntryClassVectorT &entry_classes)
+{
+    static_assert(std::is_same<IntersectionBearingsContainer, IntersectionBearingsT>::value ||
+                      std::is_same<IntersectionBearingsView, IntersectionBearingsT>::value,
+                  "");
+
+    storage::io::FileReader reader(path, storage::io::FileReader::VerifyFingerprint);
+
+    serialization::read(reader, intersection_bearings);
+    storage::serialization::read(reader, entry_classes);
+}
+
 // reads .osrm.properties
-inline void readProfileProperties(const boost::filesystem::path &path, ProfileProperties &properties)
+inline void readProfileProperties(const boost::filesystem::path &path,
+                                  ProfileProperties &properties)
 {
     const auto fingerprint = storage::io::FileReader::VerifyFingerprint;
     storage::io::FileReader reader{path, fingerprint};
@@ -32,7 +68,7 @@ inline void readProfileProperties(const boost::filesystem::path &path, ProfilePr
 
 // writes .osrm.properties
 inline void writeProfileProperties(const boost::filesystem::path &path,
-                            const ProfileProperties &properties)
+                                   const ProfileProperties &properties)
 {
     const auto fingerprint = storage::io::FileWriter::GenerateFingerprint;
     storage::io::FileWriter writer{path, fingerprint};

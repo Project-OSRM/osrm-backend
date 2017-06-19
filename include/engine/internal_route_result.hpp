@@ -5,6 +5,7 @@
 #include "extractor/travel_mode.hpp"
 #include "engine/phantom_node.hpp"
 #include "osrm/coordinate.hpp"
+#include "util/guidance/entry_class.hpp"
 #include "util/guidance/turn_bearing.hpp"
 #include "util/guidance/turn_lanes.hpp"
 #include "util/typedefs.hpp"
@@ -33,7 +34,7 @@ struct PathData
     // travel mode of the street that leads to the turn
     extractor::TravelMode travel_mode : 4;
     // entry class of the turn, indicating possibility of turns
-    EntryClassID entry_classid;
+    util::guidance::EntryClass entry_class;
 
     // Source of the speed value on this road segment
     DatasourceID datasource_id;

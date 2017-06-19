@@ -208,8 +208,6 @@ class MockBaseDataFacade : public engine::datafacade::BaseDataFacade
     const char *GetWeightName() const override final { return "duration"; }
     unsigned GetWeightPrecision() const override final { return 1; }
     double GetWeightMultiplier() const override final { return 10.; }
-    BearingClassID GetBearingClassID(const NodeID /*id*/) const override { return 0; }
-    EntryClassID GetEntryClassID(const EdgeID /*id*/) const override { return 0; }
     bool IsLeftHandDriving() const override { return false; }
 
     util::guidance::TurnBearing PreTurnBearing(const EdgeID /*eid*/) const override final
@@ -232,8 +230,7 @@ class MockBaseDataFacade : public engine::datafacade::BaseDataFacade
         return {};
     }
 
-    util::guidance::BearingClass
-    GetBearingClass(const BearingClassID /*bearing_class_id*/) const override
+    util::guidance::BearingClass GetBearingClass(const NodeID /*node*/) const override
     {
         util::guidance::BearingClass result;
         result.add(0);
@@ -243,7 +240,7 @@ class MockBaseDataFacade : public engine::datafacade::BaseDataFacade
         return result;
     }
 
-    util::guidance::EntryClass GetEntryClass(const EntryClassID /*entry_class_id*/) const override
+    util::guidance::EntryClass GetEntryClass(const EdgeID /*id*/) const override
     {
         util::guidance::EntryClass result;
         result.activate(1);

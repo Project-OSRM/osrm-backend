@@ -348,10 +348,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                          profile_properties);
 
     util::guidance::LaneDataIdMap lane_data_map;
-    guidance::lanes::TurnLaneHandler turn_lane_handler(*m_node_based_graph,
-                                                       lane_description_map,
-                                                       turn_analysis,
-                                                       lane_data_map);
+    guidance::lanes::TurnLaneHandler turn_lane_handler(
+        *m_node_based_graph, lane_description_map, turn_analysis, lane_data_map);
 
     bearing_class_by_node_based_node.resize(m_node_based_graph->GetNumberOfNodes(),
                                             std::numeric_limits<std::uint32_t>::max());

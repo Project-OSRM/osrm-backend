@@ -387,39 +387,26 @@ void Storage::PopulateLayout(DataLayout &layout)
     }
 
     {
-        io::FileReader intersection_file(config.intersection_class_path,
-                                         io::FileReader::VerifyFingerprint);
+        io::FileReader reader(config.intersection_class_path, io::FileReader::VerifyFingerprint);
 
-        std::vector<BearingClassID> bearing_class_id_table;
-        serialization::read(intersection_file, bearing_class_id_table);
+        auto num_discreate_bearings = reader.ReadVectorSize<DiscreteBearing>();
+        layout.SetBlockSize<DiscreteBearing>(DataLayout::BEARING_VALUES, num_discreate_bearings);
 
-        layout.SetBlockSize<BearingClassID>(DataLayout::BEARING_CLASSID,
-                                            bearing_class_id_table.size());
+        auto num_bearing_classes = reader.ReadVectorSize<BearingClassID>();
+        layout.SetBlockSize<BearingClassID>(DataLayout::BEARING_CLASSID, num_bearing_classes);
 
-        const auto bearing_blocks = intersection_file.ReadElementCount64();
-        intersection_file.Skip<std::uint32_t>(1); // sum_lengths
+        reader.Skip<std::uint32_t>(1); // sum_lengths
+        const auto bearing_blocks = reader.ReadVectorSize<unsigned>();
+        const auto bearing_offsets =
+            reader
+                .ReadVectorSize<typename util::RangeTable<16, storage::Ownership::View>::BlockT>();
 
         layout.SetBlockSize<unsigned>(DataLayout::BEARING_OFFSETS, bearing_blocks);
         layout.SetBlockSize<typename util::RangeTable<16, storage::Ownership::View>::BlockT>(
-            DataLayout::BEARING_BLOCKS, bearing_blocks);
+            DataLayout::BEARING_BLOCKS, bearing_offsets);
 
-        // No need to read the data
-        intersection_file.Skip<unsigned>(bearing_blocks);
-        intersection_file.Skip<typename util::RangeTable<16, storage::Ownership::View>::BlockT>(
-            bearing_blocks);
-
-        const auto num_bearings = intersection_file.ReadElementCount64();
-
-        // Skip over the actual data
-        intersection_file.Skip<DiscreteBearing>(num_bearings);
-
-        layout.SetBlockSize<DiscreteBearing>(DataLayout::BEARING_VALUES, num_bearings);
-
-        std::vector<util::guidance::EntryClass> entry_class_table;
-        serialization::read(intersection_file, entry_class_table);
-
-        layout.SetBlockSize<util::guidance::EntryClass>(DataLayout::ENTRY_CLASS,
-                                                        entry_class_table.size());
+        auto num_entry_classes = reader.ReadVectorSize<util::guidance::EntryClass>();
+        layout.SetBlockSize<util::guidance::EntryClass>(DataLayout::ENTRY_CLASS, num_entry_classes);
     }
 
     {
@@ -850,86 +837,39 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
 
     // Load intersection data
     {
-        io::FileReader intersection_file(config.intersection_class_path,
-                                         io::FileReader::VerifyFingerprint);
+        auto bearing_class_id_ptr = layout.GetBlockPtr<BearingClassID, true>(
+            memory_ptr, storage::DataLayout::BEARING_CLASSID);
+        util::vector_view<BearingClassID> bearing_class_id(
+            bearing_class_id_ptr, layout.num_entries[storage::DataLayout::BEARING_CLASSID]);
 
-        std::vector<BearingClassID> bearing_class_id_table;
-        serialization::read(intersection_file, bearing_class_id_table);
+        auto bearing_values_ptr = layout.GetBlockPtr<DiscreteBearing, true>(
+            memory_ptr, storage::DataLayout::BEARING_VALUES);
+        util::vector_view<DiscreteBearing> bearing_values(
+            bearing_values_ptr, layout.num_entries[storage::DataLayout::BEARING_VALUES]);
 
-        const auto bearing_blocks = intersection_file.ReadElementCount64();
-        intersection_file.Skip<std::uint32_t>(1); // sum_lengths
+        auto offsets_ptr =
+            layout.GetBlockPtr<unsigned, true>(memory_ptr, storage::DataLayout::BEARING_OFFSETS);
+        auto blocks_ptr =
+            layout.GetBlockPtr<util::RangeTable<16, storage::Ownership::View>::BlockT, true>(
+                memory_ptr, storage::DataLayout::BEARING_BLOCKS);
+        util::vector_view<unsigned> bearing_offsets(
+            offsets_ptr, layout.num_entries[storage::DataLayout::BEARING_OFFSETS]);
+        util::vector_view<util::RangeTable<16, storage::Ownership::View>::BlockT> bearing_blocks(
+            blocks_ptr, layout.num_entries[storage::DataLayout::BEARING_BLOCKS]);
 
-        std::vector<unsigned> bearing_offsets_data(bearing_blocks);
-        std::vector<typename util::RangeTable<16, storage::Ownership::View>::BlockT>
-            bearing_blocks_data(bearing_blocks);
+        util::RangeTable<16, storage::Ownership::View> bearing_range_table(
+            bearing_offsets, bearing_blocks, static_cast<unsigned>(bearing_values.size()));
 
-        intersection_file.ReadInto(bearing_offsets_data.data(), bearing_blocks);
-        intersection_file.ReadInto(bearing_blocks_data.data(), bearing_blocks);
+        extractor::IntersectionBearingsView intersection_bearings_view{
+            std::move(bearing_values), std::move(bearing_class_id), std::move(bearing_range_table)};
 
-        const auto num_bearings = intersection_file.ReadElementCount64();
+        auto entry_class_ptr = layout.GetBlockPtr<util::guidance::EntryClass, true>(
+            memory_ptr, storage::DataLayout::ENTRY_CLASS);
+        util::vector_view<util::guidance::EntryClass> entry_classes(
+            entry_class_ptr, layout.num_entries[storage::DataLayout::ENTRY_CLASS]);
 
-        std::vector<DiscreteBearing> bearing_class_table(num_bearings);
-        intersection_file.ReadInto(bearing_class_table.data(), num_bearings);
-
-        std::vector<util::guidance::EntryClass> entry_class_table;
-        serialization::read(intersection_file, entry_class_table);
-
-        // load intersection classes
-        if (!bearing_class_id_table.empty())
-        {
-            const auto bearing_id_ptr =
-                layout.GetBlockPtr<BearingClassID, true>(memory_ptr, DataLayout::BEARING_CLASSID);
-            BOOST_ASSERT(
-                static_cast<std::size_t>(layout.GetBlockSize(DataLayout::BEARING_CLASSID)) >=
-                std::distance(bearing_class_id_table.begin(), bearing_class_id_table.end()) *
-                    sizeof(decltype(bearing_class_id_table)::value_type));
-            std::copy(bearing_class_id_table.begin(), bearing_class_id_table.end(), bearing_id_ptr);
-        }
-
-        if (layout.GetBlockSize(DataLayout::BEARING_OFFSETS) > 0)
-        {
-            const auto bearing_offsets_ptr =
-                layout.GetBlockPtr<unsigned, true>(memory_ptr, DataLayout::BEARING_OFFSETS);
-            BOOST_ASSERT(
-                static_cast<std::size_t>(layout.GetBlockSize(DataLayout::BEARING_OFFSETS)) >=
-                std::distance(bearing_offsets_data.begin(), bearing_offsets_data.end()) *
-                    sizeof(decltype(bearing_offsets_data)::value_type));
-            std::copy(
-                bearing_offsets_data.begin(), bearing_offsets_data.end(), bearing_offsets_ptr);
-        }
-
-        if (layout.GetBlockSize(DataLayout::BEARING_BLOCKS) > 0)
-        {
-            const auto bearing_blocks_ptr =
-                layout.GetBlockPtr<typename util::RangeTable<16, storage::Ownership::View>::BlockT,
-                                   true>(memory_ptr, DataLayout::BEARING_BLOCKS);
-            BOOST_ASSERT(
-                static_cast<std::size_t>(layout.GetBlockSize(DataLayout::BEARING_BLOCKS)) >=
-                std::distance(bearing_blocks_data.begin(), bearing_blocks_data.end()) *
-                    sizeof(decltype(bearing_blocks_data)::value_type));
-            std::copy(bearing_blocks_data.begin(), bearing_blocks_data.end(), bearing_blocks_ptr);
-        }
-
-        if (!bearing_class_table.empty())
-        {
-            const auto bearing_class_ptr =
-                layout.GetBlockPtr<DiscreteBearing, true>(memory_ptr, DataLayout::BEARING_VALUES);
-            BOOST_ASSERT(
-                static_cast<std::size_t>(layout.GetBlockSize(DataLayout::BEARING_VALUES)) >=
-                std::distance(bearing_class_table.begin(), bearing_class_table.end()) *
-                    sizeof(decltype(bearing_class_table)::value_type));
-            std::copy(bearing_class_table.begin(), bearing_class_table.end(), bearing_class_ptr);
-        }
-
-        if (!entry_class_table.empty())
-        {
-            const auto entry_class_ptr = layout.GetBlockPtr<util::guidance::EntryClass, true>(
-                memory_ptr, DataLayout::ENTRY_CLASS);
-            BOOST_ASSERT(static_cast<std::size_t>(layout.GetBlockSize(DataLayout::ENTRY_CLASS)) >=
-                         std::distance(entry_class_table.begin(), entry_class_table.end()) *
-                             sizeof(decltype(entry_class_table)::value_type));
-            std::copy(entry_class_table.begin(), entry_class_table.end(), entry_class_ptr);
-        }
+        extractor::files::readIntersections(
+            config.intersection_class_path, intersection_bearings_view, entry_classes);
     }
 
     {
