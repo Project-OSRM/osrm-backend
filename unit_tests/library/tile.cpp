@@ -21,23 +21,38 @@
 
 BOOST_AUTO_TEST_SUITE(tile)
 
-template <typename algorithm> void test_tile(algorithm &osrm)
+void validate_value(protozero::pbf_reader value)
 {
     using namespace osrm;
+    while (value.next())
+    {
+        switch (value.tag())
+        {
+        case util::vector_tile::VARIANT_TYPE_BOOL:
+            value.get_bool();
+            break;
+        case util::vector_tile::VARIANT_TYPE_DOUBLE:
+            value.get_double();
+            break;
+        case util::vector_tile::VARIANT_TYPE_FLOAT:
+            value.get_float();
+            break;
+        case util::vector_tile::VARIANT_TYPE_STRING:
+            value.get_string();
+            break;
+        case util::vector_tile::VARIANT_TYPE_UINT64:
+            value.get_uint64();
+            break;
+        case util::vector_tile::VARIANT_TYPE_SINT64:
+            value.get_sint64();
+            break;
+        }
+    }
+}
 
-    // This tile should contain most of monaco
-    TileParameters params{17059, 11948, 15};
-
-    std::string result;
-    const auto rc = osrm.Tile(params, result);
-    BOOST_CHECK(rc == Status::Ok);
-
-    BOOST_CHECK(result.size() > 114000);
-
-    protozero::pbf_reader tile_message(result);
-    tile_message.next();
-    BOOST_CHECK_EQUAL(tile_message.tag(), util::vector_tile::LAYER_TAG); // must be a layer
-    protozero::pbf_reader layer_message = tile_message.get_message();
+void validate_feature_layer(protozero::pbf_reader &layer_message)
+{
+    using namespace osrm;
 
     const auto check_feature = [](protozero::pbf_reader feature_message) {
         feature_message.next(); // advance parser to first entry
@@ -82,33 +97,6 @@ template <typename algorithm> void test_tile(algorithm &osrm)
         BOOST_CHECK_GT(std::distance(geometry_iter_pair.begin(), geometry_iter_pair.end()), 1);
     };
 
-    const auto check_value = [](protozero::pbf_reader value) {
-        while (value.next())
-        {
-            switch (value.tag())
-            {
-            case util::vector_tile::VARIANT_TYPE_BOOL:
-                value.get_bool();
-                break;
-            case util::vector_tile::VARIANT_TYPE_DOUBLE:
-                value.get_double();
-                break;
-            case util::vector_tile::VARIANT_TYPE_FLOAT:
-                value.get_float();
-                break;
-            case util::vector_tile::VARIANT_TYPE_STRING:
-                value.get_string();
-                break;
-            case util::vector_tile::VARIANT_TYPE_UINT64:
-                value.get_uint64();
-                break;
-            case util::vector_tile::VARIANT_TYPE_SINT64:
-                value.get_sint64();
-                break;
-            }
-        }
-    };
-
     auto number_of_speed_keys = 0u;
     auto number_of_speed_values = 0u;
 
@@ -133,7 +121,7 @@ template <typename algorithm> void test_tile(algorithm &osrm)
             number_of_speed_keys++;
             break;
         case util::vector_tile::VARIANT_TAG:
-            check_value(layer_message.get_message());
+            validate_value(layer_message.get_message());
             number_of_speed_values++;
             break;
         default:
@@ -144,9 +132,11 @@ template <typename algorithm> void test_tile(algorithm &osrm)
 
     BOOST_CHECK_EQUAL(number_of_speed_keys, 7);
     BOOST_CHECK_GT(number_of_speed_values, 128); // speed value resolution
+}
 
-    tile_message.next();
-    layer_message = tile_message.get_message();
+void validate_turn_layer(protozero::pbf_reader &layer_message)
+{
+    using namespace osrm;
 
     const auto check_turn_feature = [](protozero::pbf_reader feature_message) {
         feature_message.next(); // advance parser to first entry
@@ -203,7 +193,7 @@ template <typename algorithm> void test_tile(algorithm &osrm)
             number_of_turn_keys++;
             break;
         case util::vector_tile::VARIANT_TAG:
-            check_value(layer_message.get_message());
+            validate_value(layer_message.get_message());
             break;
         default:
             BOOST_CHECK(false); // invalid tag
@@ -213,10 +203,11 @@ template <typename algorithm> void test_tile(algorithm &osrm)
 
     BOOST_CHECK_EQUAL(number_of_turn_keys, 4);
     BOOST_CHECK(number_of_turns_found > 700);
+}
 
-    tile_message.next();
-    layer_message = tile_message.get_message();
-
+void validate_node_layer(protozero::pbf_reader &layer_message)
+{
+    using namespace osrm;
     auto number_of_nodes_found = 0u;
 
     const auto check_osmnode_feature = [](protozero::pbf_reader feature_message) {
@@ -267,11 +258,42 @@ template <typename algorithm> void test_tile(algorithm &osrm)
     BOOST_CHECK_EQUAL(number_of_nodes_found, 1791);
 }
 
+void validate_tile(const osrm::OSRM &osrm)
+{
+    using namespace osrm;
+
+    // This tile should contain most of monaco
+    TileParameters params{17059, 11948, 15};
+
+    std::string result;
+    const auto rc = osrm.Tile(params, result);
+    BOOST_CHECK(rc == Status::Ok);
+
+    BOOST_CHECK(result.size() > 114000);
+
+    protozero::pbf_reader tile_message(result);
+
+    tile_message.next();
+    BOOST_CHECK_EQUAL(tile_message.tag(), util::vector_tile::LAYER_TAG); // must be a layer
+    protozero::pbf_reader layer_message = tile_message.get_message();
+    validate_feature_layer(layer_message);
+
+    tile_message.next();
+    BOOST_CHECK_EQUAL(tile_message.tag(), util::vector_tile::LAYER_TAG); // must be a layer
+    layer_message = tile_message.get_message();
+    validate_turn_layer(layer_message);
+
+    tile_message.next();
+    BOOST_CHECK_EQUAL(tile_message.tag(), util::vector_tile::LAYER_TAG); // must be a layer
+    layer_message = tile_message.get_message();
+    validate_node_layer(layer_message);
+}
+
 BOOST_AUTO_TEST_CASE(test_tile_ch)
 {
     using namespace osrm;
     auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm", osrm::EngineConfig::Algorithm::CH);
-    test_tile(osrm);
+    validate_tile(osrm);
 }
 
 BOOST_AUTO_TEST_CASE(test_tile_corech)
@@ -279,17 +301,17 @@ BOOST_AUTO_TEST_CASE(test_tile_corech)
     using namespace osrm;
     auto osrm =
         getOSRM(OSRM_TEST_DATA_DIR "/corech/monaco.osrm", osrm::EngineConfig::Algorithm::CoreCH);
-    test_tile(osrm);
+    validate_tile(osrm);
 }
 
 BOOST_AUTO_TEST_CASE(test_tile_mld)
 {
     using namespace osrm;
     auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/mld/monaco.osrm", osrm::EngineConfig::Algorithm::MLD);
-    test_tile(osrm);
+    validate_tile(osrm);
 }
 
-template <typename algorithm> void test_tile_turns(algorithm &osrm)
+void test_tile_turns(const osrm::OSRM &osrm)
 {
     using namespace osrm;
 
@@ -476,7 +498,7 @@ BOOST_AUTO_TEST_CASE(test_tile_turns_mld)
     test_tile_turns(osrm);
 }
 
-template <typename algorithm> void test_tile_speeds(algorithm &osrm)
+void test_tile_speeds(const osrm::OSRM &osrm)
 {
     using namespace osrm;
 
@@ -666,7 +688,7 @@ BOOST_AUTO_TEST_CASE(test_tile_speeds_mld)
     test_tile_speeds(osrm);
 }
 
-template <typename algorithm> void test_tile_nodes(algorithm &osrm)
+void test_tile_nodes(const osrm::OSRM &osrm)
 {
     using namespace osrm;
 
