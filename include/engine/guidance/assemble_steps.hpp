@@ -144,9 +144,7 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
                 // extract bearings
                 bearings = std::make_pair<std::uint16_t, std::uint16_t>(
                     path_point.pre_turn_bearing.Get(), path_point.post_turn_bearing.Get());
-                const auto entry_class = facade.GetEntryClass(path_point.entry_classid);
-                const auto bearing_class =
-                    facade.GetBearingClass(facade.GetBearingClassID(path_point.turn_via_node));
+                const auto bearing_class = facade.GetBearingClass(path_point.turn_via_node);
                 auto bearing_data = bearing_class.getAvailableBearings();
                 intersection.in = bearing_class.findMatchingBearing(bearings.first);
                 intersection.out = bearing_class.findMatchingBearing(bearings.second);
@@ -174,7 +172,7 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
                 intersection.entry.clear();
                 for (auto idx : util::irange<std::size_t>(0, intersection.bearings.size()))
                 {
-                    intersection.entry.push_back(entry_class.allowsEntry(idx));
+                    intersection.entry.push_back(path_point.entry_class.allowsEntry(idx));
                 }
                 std::int16_t bearing_in_driving_direction =
                     util::bearing::reverse(std::round(bearings.first));

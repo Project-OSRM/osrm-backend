@@ -2,12 +2,13 @@
 #define OSRM_EXTRACTOR_IO_HPP
 
 #include "extractor/datasources.hpp"
+#include "extractor/intersection_bearings_container.hpp"
 #include "extractor/nbg_to_ebg.hpp"
 #include "extractor/node_data_container.hpp"
+#include "extractor/profile_properties.hpp"
 #include "extractor/restriction.hpp"
 #include "extractor/segment_data_container.hpp"
 #include "extractor/turn_data_container.hpp"
-#include "extractor/profile_properties.hpp"
 
 #include "storage/io.hpp"
 #include "storage/serialization.hpp"
@@ -20,6 +21,25 @@ namespace extractor
 {
 namespace serialization
 {
+
+// read/write for bearing data
+template <storage::Ownership Ownership>
+inline void read(storage::io::FileReader &reader,
+                 detail::IntersectionBearingsContainer<Ownership> &intersection_bearings)
+{
+    storage::serialization::read(reader, intersection_bearings.values);
+    storage::serialization::read(reader, intersection_bearings.node_to_class_id);
+    util::serialization::read(reader, intersection_bearings.class_id_to_ranges_table);
+}
+
+template <storage::Ownership Ownership>
+inline void write(storage::io::FileWriter &writer,
+                  const detail::IntersectionBearingsContainer<Ownership> &intersection_bearings)
+{
+    storage::serialization::write(writer, intersection_bearings.values);
+    storage::serialization::write(writer, intersection_bearings.node_to_class_id);
+    util::serialization::write(writer, intersection_bearings.class_id_to_ranges_table);
+}
 
 // read/write for properties file
 inline void read(storage::io::FileReader &reader, ProfileProperties &properties)

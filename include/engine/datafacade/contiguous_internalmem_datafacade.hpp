@@ -14,6 +14,7 @@
 #include "extractor/datasources.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
 #include "extractor/guidance/turn_lane_types.hpp"
+#include "extractor/intersection_bearings_container.hpp"
 #include "extractor/node_data_container.hpp"
 #include "extractor/packed_osm_ids.hpp"
 #include "extractor/profile_properties.hpp"
@@ -218,7 +219,6 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     unsigned m_check_sum;
     util::vector_view<util::Coordinate> m_coordinate_list;
     extractor::PackedOSMIDsView m_osmnodeid_list;
-    util::NameTable m_names_table;
     util::vector_view<std::uint32_t> m_lane_description_offsets;
     util::vector_view<extractor::guidance::TurnLaneType::Mask> m_lane_description_masks;
     util::vector_view<TurnPenalty> m_turn_weight_penalties;
@@ -236,19 +236,12 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     std::unique_ptr<SharedGeospatialQuery> m_geospatial_query;
     boost::filesystem::path file_index_path;
 
-    util::NameTable m_name_table;
-    // bearing classes by node based node
-    util::vector_view<BearingClassID> m_bearing_class_id_table;
-    // entry class IDs
-    util::vector_view<EntryClassID> m_entry_class_id_list;
+    extractor::IntersectionBearingsView intersection_bearings_view;
 
+    util::NameTable m_name_table;
     // the look-up table for entry classes. An entry class lists the possibility of entry for all
     // available turns. Such a class id is stored with every edge.
     util::vector_view<util::guidance::EntryClass> m_entry_class_table;
-    // the look-up table for distinct bearing classes. A bearing class lists the available bearings
-    // at an intersection
-    std::shared_ptr<util::RangeTable<16, storage::Ownership::View>> m_bearing_ranges_table;
-    util::vector_view<DiscreteBearing> m_bearing_values_table;
 
     // allocator that keeps the allocation data
     std::shared_ptr<ContiguousBlockAllocator> allocator;
@@ -502,15 +495,13 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     {
         auto bearing_class_id_ptr = data_layout.GetBlockPtr<BearingClassID>(
             memory_block, storage::DataLayout::BEARING_CLASSID);
-        typename util::vector_view<BearingClassID> bearing_class_id_table(
+        util::vector_view<BearingClassID> bearing_class_id(
             bearing_class_id_ptr, data_layout.num_entries[storage::DataLayout::BEARING_CLASSID]);
-        m_bearing_class_id_table = std::move(bearing_class_id_table);
 
-        auto bearing_class_ptr = data_layout.GetBlockPtr<DiscreteBearing>(
+        auto bearing_values_ptr = data_layout.GetBlockPtr<DiscreteBearing>(
             memory_block, storage::DataLayout::BEARING_VALUES);
-        typename util::vector_view<DiscreteBearing> bearing_class_table(
-            bearing_class_ptr, data_layout.num_entries[storage::DataLayout::BEARING_VALUES]);
-        m_bearing_values_table = std::move(bearing_class_table);
+        util::vector_view<DiscreteBearing> bearing_values(
+            bearing_values_ptr, data_layout.num_entries[storage::DataLayout::BEARING_VALUES]);
 
         auto offsets_ptr =
             data_layout.GetBlockPtr<unsigned>(memory_block, storage::DataLayout::BEARING_OFFSETS);
@@ -521,12 +512,15 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         util::vector_view<IndexBlock> bearing_blocks(
             blocks_ptr, data_layout.num_entries[storage::DataLayout::BEARING_BLOCKS]);
 
-        m_bearing_ranges_table = std::make_unique<util::RangeTable<16, storage::Ownership::View>>(
-            bearing_offsets, bearing_blocks, static_cast<unsigned>(m_bearing_values_table.size()));
+        util::RangeTable<16, storage::Ownership::View> bearing_range_table(
+            bearing_offsets, bearing_blocks, static_cast<unsigned>(bearing_values.size()));
+
+        intersection_bearings_view = extractor::IntersectionBearingsView{
+            std::move(bearing_values), std::move(bearing_class_id), std::move(bearing_range_table)};
 
         auto entry_class_ptr = data_layout.GetBlockPtr<util::guidance::EntryClass>(
             memory_block, storage::DataLayout::ENTRY_CLASS);
-        typename util::vector_view<util::guidance::EntryClass> entry_class_table(
+        util::vector_view<util::guidance::EntryClass> entry_class_table(
             entry_class_ptr, data_layout.num_entries[storage::DataLayout::ENTRY_CLASS]);
         m_entry_class_table = std::move(entry_class_table);
     }
@@ -843,27 +837,9 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         return m_profile_properties->GetWeightMultiplier();
     }
 
-    BearingClassID GetBearingClassID(const NodeID id) const override final
+    util::guidance::BearingClass GetBearingClass(const NodeID node) const override final
     {
-        return m_bearing_class_id_table.at(id);
-    }
-
-    util::guidance::BearingClass
-    GetBearingClass(const BearingClassID bearing_class_id) const override final
-    {
-        BOOST_ASSERT(bearing_class_id != INVALID_BEARING_CLASSID);
-        auto range = m_bearing_ranges_table->GetRange(bearing_class_id);
-        util::guidance::BearingClass result;
-        for (auto itr = m_bearing_values_table.begin() + range.front();
-             itr != m_bearing_values_table.begin() + range.back() + 1;
-             ++itr)
-            result.add(*itr);
-        return result;
-    }
-
-    EntryClassID GetEntryClassID(const EdgeID eid) const override final
-    {
-        return turn_data.GetEntryClassID(eid);
+        return intersection_bearings_view.GetBearingClass(node);
     }
 
     util::guidance::TurnBearing PreTurnBearing(const EdgeID eid) const override final
@@ -875,8 +851,9 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         return turn_data.GetPostTurnBearing(eid);
     }
 
-    util::guidance::EntryClass GetEntryClass(const EntryClassID entry_class_id) const override final
+    util::guidance::EntryClass GetEntryClass(const EdgeID turn_id) const override final
     {
+        auto entry_class_id = turn_data.GetEntryClassID(turn_id);
         return m_entry_class_table.at(entry_class_id);
     }
 

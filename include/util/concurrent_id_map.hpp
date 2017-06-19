@@ -35,7 +35,7 @@ struct ConcurrentIDMap
 
         data = std::move(other.data);
     }
-    ConcurrentIDMap& operator=(ConcurrentIDMap &&other)
+    ConcurrentIDMap &operator=(ConcurrentIDMap &&other)
     {
         ScopedWriterLock other_lock{other.mutex};
         ScopedWriterLock lock{mutex};

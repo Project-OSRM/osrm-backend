@@ -22,11 +22,14 @@ namespace util
 template <unsigned BLOCK_SIZE = 16, storage::Ownership Ownership = storage::Ownership::Container>
 class RangeTable;
 
-template <unsigned BLOCK_SIZE, storage::Ownership Ownership>
-std::ostream &operator<<(std::ostream &out, const RangeTable<BLOCK_SIZE, Ownership> &table);
+namespace serialization
+{
+template <unsigned BlockSize, storage::Ownership Ownership>
+void write(storage::io::FileWriter &writer, const util::RangeTable<BlockSize, Ownership> &table);
 
-template <unsigned BLOCK_SIZE, storage::Ownership Ownership>
-std::istream &operator>>(std::istream &in, RangeTable<BLOCK_SIZE, Ownership> &table);
+template <unsigned BlockSize, storage::Ownership Ownership>
+void read(storage::io::FileReader &reader, util::RangeTable<BlockSize, Ownership> &table);
+}
 
 /**
  * Stores adjacent ranges in a compressed format.
@@ -44,9 +47,6 @@ template <unsigned BLOCK_SIZE, storage::Ownership Ownership> class RangeTable
     using BlockContainerT = util::ViewOrVector<BlockT, Ownership>;
     using OffsetContainerT = util::ViewOrVector<unsigned, Ownership>;
     using RangeT = range<unsigned>;
-
-    friend std::ostream &operator<<<>(std::ostream &out, const RangeTable &table);
-    friend std::istream &operator>><>(std::istream &in, RangeTable &table);
 
     RangeTable() : sum_lengths(0) {}
 
@@ -141,33 +141,6 @@ template <unsigned BLOCK_SIZE, storage::Ownership Ownership> class RangeTable
         sum_lengths = lengths_prefix_sum;
     }
 
-    void Write(storage::io::FileWriter &filewriter)
-    {
-        auto number_of_blocks = diff_blocks.size();
-
-        filewriter.WriteElementCount64(number_of_blocks);
-
-        filewriter.WriteOne(sum_lengths);
-
-        filewriter.WriteFrom(block_offsets.data(), number_of_blocks);
-        filewriter.WriteFrom(diff_blocks.data(), number_of_blocks);
-    }
-
-    void Read(storage::io::FileReader &filereader)
-    {
-        auto number_of_blocks = filereader.ReadElementCount64();
-        // read total length
-        filereader.ReadInto(&sum_lengths, 1);
-
-        block_offsets.resize(number_of_blocks);
-        diff_blocks.resize(number_of_blocks);
-
-        // read block offsets
-        filereader.ReadInto(block_offsets.data(), number_of_blocks);
-        // read blocks
-        filereader.ReadInto(diff_blocks.data(), number_of_blocks);
-    }
-
     inline RangeT GetRange(const unsigned id) const
     {
         BOOST_ASSERT(id < block_offsets.size() + diff_blocks.size() * BLOCK_SIZE);
@@ -204,6 +177,11 @@ template <unsigned BLOCK_SIZE, storage::Ownership Ownership> class RangeTable
         return irange(begin_idx, end_idx);
     }
 
+    friend void serialization::write<BLOCK_SIZE, Ownership>(storage::io::FileWriter &writer,
+                                                            const RangeTable &table);
+    friend void serialization::read<BLOCK_SIZE, Ownership>(storage::io::FileReader &reader,
+                                                           RangeTable &table);
+
   private:
     inline unsigned PrefixSumAtIndex(int index, const BlockT &block) const;
 
@@ -226,41 +204,6 @@ unsigned RangeTable<BLOCK_SIZE, Ownership>::PrefixSumAtIndex(int index, const Bl
     }
 
     return sum;
-}
-
-template <unsigned BLOCK_SIZE, storage::Ownership Ownership>
-std::ostream &operator<<(std::ostream &out, const RangeTable<BLOCK_SIZE, Ownership> &table)
-{
-    // write number of block
-    const unsigned number_of_blocks = table.diff_blocks.size();
-    out.write((char *)&number_of_blocks, sizeof(unsigned));
-    // write total length
-    out.write((char *)&table.sum_lengths, sizeof(unsigned));
-    // write block offsets
-    out.write((char *)table.block_offsets.data(), sizeof(unsigned) * table.block_offsets.size());
-    // write blocks
-    out.write((char *)table.diff_blocks.data(), BLOCK_SIZE * table.diff_blocks.size());
-
-    return out;
-}
-
-template <unsigned BLOCK_SIZE, storage::Ownership Ownership>
-std::istream &operator>>(std::istream &in, RangeTable<BLOCK_SIZE, Ownership> &table)
-{
-    // read number of block
-    unsigned number_of_blocks;
-    in.read((char *)&number_of_blocks, sizeof(unsigned));
-    // read total length
-    in.read((char *)&table.sum_lengths, sizeof(unsigned));
-
-    table.block_offsets.resize(number_of_blocks);
-    table.diff_blocks.resize(number_of_blocks);
-
-    // read block offsets
-    in.read((char *)table.block_offsets.data(), sizeof(unsigned) * number_of_blocks);
-    // read blocks
-    in.read((char *)table.diff_blocks.data(), BLOCK_SIZE * number_of_blocks);
-    return in;
 }
 }
 }

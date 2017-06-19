@@ -158,7 +158,7 @@ void annotatePath(const FacadeT &facade,
                                              extractor::guidance::TurnInstruction::NO_TURN(),
                                              {{0, INVALID_LANEID}, INVALID_LANE_DESCRIPTIONID},
                                              travel_mode,
-                                             INVALID_ENTRY_CLASSID,
+                                             {},
                                              datasource_vector[segment_idx],
                                              util::guidance::TurnBearing(0),
                                              util::guidance::TurnBearing(0)});
@@ -167,7 +167,7 @@ void annotatePath(const FacadeT &facade,
         if (facade.HasLaneData(turn_id))
             unpacked_path.back().lane_data = facade.GetLaneData(turn_id);
 
-        unpacked_path.back().entry_classid = facade.GetEntryClassID(turn_id);
+        unpacked_path.back().entry_class = facade.GetEntryClass(turn_id);
         unpacked_path.back().turn_instruction = turn_instruction;
         unpacked_path.back().duration_until_turn += facade.GetDurationPenaltyForEdgeID(turn_id);
         unpacked_path.back().weight_until_turn += facade.GetWeightPenaltyForEdgeID(turn_id);
@@ -233,7 +233,7 @@ void annotatePath(const FacadeT &facade,
                      extractor::guidance::TurnInstruction::NO_TURN(),
                      {{0, INVALID_LANEID}, INVALID_LANE_DESCRIPTIONID},
                      facade.GetTravelMode(target_node_id),
-                     INVALID_ENTRY_CLASSID,
+                     {},
                      datasource_vector[segment_idx],
                      util::guidance::TurnBearing(0),
                      util::guidance::TurnBearing(0)});

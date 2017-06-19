@@ -4,10 +4,10 @@
 #include <bitset>
 #include <cstddef>
 #include <cstdint>
+#include <numeric> //partial_sum
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <numeric> //partial_sum
 
 #include <boost/functional/hash.hpp>
 
