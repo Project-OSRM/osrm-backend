@@ -1,4 +1,4 @@
-# 5.8.0 RC1
+# 5.8.0
   - Changes from 5.7
     - API:
       - polyline6 support in request string
