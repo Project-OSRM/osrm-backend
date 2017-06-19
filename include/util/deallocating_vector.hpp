@@ -258,8 +258,12 @@ template <typename ElementT> class DeallocatingVector
     DeallocatingVector(DeallocatingVector &other) = delete;
     DeallocatingVector &operator=(DeallocatingVector &other) = delete;
     // moving is fine
-    DeallocatingVector(DeallocatingVector &&other) = default;
-    DeallocatingVector &operator=(DeallocatingVector &&other) = default;
+    DeallocatingVector(DeallocatingVector &&other) { swap(other); }
+    DeallocatingVector &operator=(DeallocatingVector &&other)
+    {
+        swap(other);
+        return *this;
+    }
 
     ~DeallocatingVector() { clear(); }
 
