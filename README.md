@@ -17,7 +17,7 @@ The following services are available via HTTP API, C++ library interface and Nod
 To quickly try OSRM use our [demo server](http://map.project-osrm.org) which comes with both the backend and a frontend on top.
 
 Related [Project-OSRM](https://github.com/Project-OSRM) repositories:
-- [node-osrm](https://github.com/Project-OSRM/node-osrm) - Production-ready NodeJs bindings for the routing engine
+- [node-osrm](https://www.npmjs.com/package/osrm) - Production-ready NodeJs bindings for the routing engine
 - [osrm-frontend](https://github.com/Project-OSRM/osrm-frontend) - User-facing frontend with map. The demo server runs this on top of the backend
 - [osrm-text-instructions](https://github.com/Project-OSRM/osrm-text-instructions) - Text instructions from OSRM route response
 - [osrm-backend-docker](https://hub.docker.com/r/osrm/osrm-backend/) - Ready to use Docker images
@@ -130,6 +130,33 @@ Simple query with instructions and alternatives on Berlin:
 ```
 curl https://router.project-osrm.org/route/v1/driving/13.388860,52.517037;13.385983,52.496891?steps=true&alternatives=true
 ```
+
+### Using the Node.js Bindings
+
+The Node.js bindings provide read-only access to the routing engine.
+We provide API documentation and examples [here](docs/nodejs/api.md).
+
+You will need a modern `libstdc++` toolchain (`>= GLIBCXX_3.4.20`) for binary compatibility if you want to use the pre-built binaries.
+For older Ubuntu systems you can upgrade your standard library for example with:
+
+```
+sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+sudo apt-get update -y
+sudo apt-get install -y libstdc++-5-dev
+```
+
+You can install the Node.js bindings via `npm install osrm` or from this repository either via
+
+    npm install
+
+which will check and use pre-built binaries if they're available for this release and your Node version, or via
+
+    npm install --build-from-source
+
+to always force building the Node.js bindings from source.
+
+For usage details have a look [these API docs](docs/nodejs/api.md).
+
 
 ## References in publications
 
