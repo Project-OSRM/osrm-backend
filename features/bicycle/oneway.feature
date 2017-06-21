@@ -134,3 +134,12 @@ Feature: Bike - Oneway streets
         When I route I should get
             | from | to | route    |
             | a    | c  | ab,bc,bc |
+
+
+    Scenario: Bike - Left/right cycleways on oneways
+        Then routability should be
+            | highway     | oneway | cycleway:left  | cycleway:right | forw    | backw        |
+            | primary     | yes    |                |                | cycling | pushing bike |
+            | primary     | yes    |                | track          | cycling | pushing bike |
+            | primary     | yes    | track          |                | cycling | cycling      |
+            | primary     | yes    | track          | track          | cycling | cycling      |
