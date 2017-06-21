@@ -82,11 +82,11 @@ Feature: Bike - Cycle tracks/lanes
 
     Scenario: Bike - Cycleway on oneways, modes
         Then routability should be
-            | highway     | cycleway | oneway | forw         | backw        |
-            | motorway    | track    | yes    | cycling      |              |
-            | residential | track    | yes    | cycling      | pushing bike |
-            | cycleway    | track    | yes    | cycling      | pushing bike |
-            | footway     | track    | yes    | pushing bike | pushing bike |
+            | highway     | cycleway | oneway | forw    | backw        |
+            | motorway    | track    | yes    | cycling |              |
+            | residential | track    | yes    | cycling | pushing bike |
+            | cycleway    | track    | yes    | cycling | pushing bike |
+            | footway     | track    | yes    | cycling | pushing bike |
 
     Scenario: Bike - Cycleway on oneways, speeds
         Then routability should be
