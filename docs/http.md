@@ -173,7 +173,7 @@ In addition to the [general options](#general-options) the following options are
 |Option      |Values                                       |Description                                                                    |
 |------------|---------------------------------------------|-------------------------------------------------------------------------------|
 |alternatives|`true`, `false` (default)                    |Search for alternative routes and return as well.\*                            |
-|steps       |`true`, `false` (default)                    |Return route steps for each route leg                                          |
+|steps       |`true`, `false` (default)                    |Returned route steps for each route leg                                        |
 |annotations |`true`, `false` (default), `nodes`, `distance`, `duration`, `datasources`, `weight`, `speed`  |Returns additional metadata for each coordinate along the route geometry.      |
 |geometries  |`polyline` (default), `polyline6`, `geojson` |Returned route geometry format (influences overview and per step)              |
 |overview    |`simplified` (default), `full`, `false`      |Add overview geometry either full, simplified according to highest zoom level it could be display on, or not at all.|
@@ -275,7 +275,7 @@ In addition to the [general options](#general-options) the following options are
 
 |Option      |Values                                          |Description                                                                               |
 |------------|------------------------------------------------|------------------------------------------------------------------------------------------|
-|steps       |`true`, `false` (default)                       |Return route steps for each route                                                         |
+|steps       |`true`, `false` (default)                       |Returned route steps for each route                                                       |
 |geometries  |`polyline` (default), `polyline6`, `geojson`    |Returned route geometry format (influences overview and per step)                         |
 |annotations |`true`, `false` (default), `nodes`, `distance`, `duration`, `datasources`, `weight`, `speed`  |Returns additional metadata for each coordinate along the route geometry.                 |
 |overview    |`simplified` (default), `full`, `false`         |Add overview geometry either full, simplified according to highest zoom level it could be display on, or not at all.|
@@ -328,10 +328,10 @@ In addition to the [general options](#general-options) the following options are
 
 |Option      |Values                                          |Description                                                                |
 |------------|------------------------------------------------|---------------------------------------------------------------------------|
-|roundtrip   |`true` (default), `false`                       |Return route is a roundtrip (route returns to first location)              |
-|source      |`any` (default), `first`                        |Return route starts at `any` or `first` coordinate                         |
-|destination |`any` (default), `last`                         |Return route ends at `any` or `last` coordinate                            |
-|steps       |`true`, `false` (default)                       |Return route instructions for each trip                                    |
+|roundtrip   |`true` (default), `false`                       |Returned route is a roundtrip (route returns to first location)            |
+|source      |`any` (default), `first`                        |Returned route starts at `any` or `first` coordinate                       |
+|destination |`any` (default), `last`                         |Returned route ends at `any` or `last` coordinate                          |
+|steps       |`true`, `false` (default)                       |Returned route instructions for each trip                                  |
 |annotations |`true`, `false` (default), `nodes`, `distance`, `duration`, `datasources`, `weight`, `speed` |Returns additional metadata for each coordinate along the route geometry.  |
 |geometries  |`polyline` (default), `polyline6`, `geojson`    |Returned route geometry format (influences overview and per step)          |
 |overview    |`simplified` (default), `full`, `false`         |Add overview geometry either full, simplified according to highest zoom level it could be display on, or not at all.|
