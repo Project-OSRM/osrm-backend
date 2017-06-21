@@ -90,8 +90,8 @@ Feature: Bike - Cycle tracks/lanes
 
     Scenario: Bike - Cycleway on oneways, speeds
         Then routability should be
-            | highway     | cycleway | oneway | forw       | backw      |
-            | motorway    | track    | yes    | 15 km/h    |            |
-            | residential | track    | yes    | 15 km/h    | 6 km/h     |
-            | cycleway    | track    | yes    | 15 km/h    | 6 km/h     |
-            | footway     | track    | yes    | 6 km/h +-1 | 6 km/h +-1 |
+            | highway     | cycleway | oneway | forw    | backw      |
+            | motorway    | track    | yes    | 15 km/h |            |
+            | residential | track    | yes    | 15 km/h | 6 km/h +-1 |
+            | cycleway    | track    | yes    | 15 km/h | 6 km/h +-1 |
+            | footway     | track    | yes    | 15 km/h | 6 km/h +-1 |
