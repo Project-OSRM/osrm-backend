@@ -1215,3 +1215,32 @@ Feature: Turn Lane Guidance
             | waypoints | route            | turns                   | lanes                              |
             | a,d       | road,cross,cross | depart,turn left,arrive | ,none:true none:false right:false, |
             | a,c       | road,road        | depart,arrive           | ,                                  |
+
+    @4189
+    Scenario: U-turn after a traffic light
+        Given the node map
+            """
+                j k
+                : :
+            f---g-h-i
+                : :
+            a-b-c-d-e
+                : :
+                l m
+            """
+
+        And the nodes
+            | node | highway         |
+            | b    | traffic_signals |
+
+        And the ways
+            | nodes | name  | lanes | turn:lanes                   | oneway |
+            | ab    | road1 | 3     | left\|through\|through;right | yes    |
+            | bcde  | road1 | 2     |                              | yes    |
+            | ihgf  | road1 | 2     |                              | yes    |
+            | jgcl  | road2 | 2     |                              | yes    |
+            | mdhk  | road2 | 2     |                              | yes    |
+
+        When I route I should get
+            | waypoints | route             | turns                        | lanes | locations |
+            | a,f       | road1,road1,road1 | depart,continue uturn,arrive | ,,    | a,d,f     |
