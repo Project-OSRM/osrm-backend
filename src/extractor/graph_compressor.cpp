@@ -111,43 +111,6 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
                 BOOST_ASSERT(graph.GetEdgeData(forward_e2).name_id ==
                              graph.GetEdgeData(reverse_e2).name_id);
 
-                // Do not compress edge if it crosses a traffic signal.
-                // This can't be done in CanCombineWith, becase we only store the
-                // traffic signals in the `traffic_lights` list, which EdgeData
-                // doesn't have access to.
-                const bool has_node_penalty = traffic_lights.find(node_v) != traffic_lights.end();
-                if (has_node_penalty)
-                    continue;
-
-                // Get weights before graph is modified
-                const auto forward_weight1 = fwd_edge_data1.weight;
-                const auto forward_weight2 = fwd_edge_data2.weight;
-                const auto forward_duration1 = fwd_edge_data1.duration;
-                const auto forward_duration2 = fwd_edge_data2.duration;
-
-                BOOST_ASSERT(0 != forward_weight1);
-                BOOST_ASSERT(0 != forward_weight2);
-
-                const auto reverse_weight1 = rev_edge_data1.weight;
-                const auto reverse_weight2 = rev_edge_data2.weight;
-                const auto reverse_duration1 = rev_edge_data1.duration;
-                const auto reverse_duration2 = rev_edge_data2.duration;
-
-                BOOST_ASSERT(0 != reverse_weight1);
-                BOOST_ASSERT(0 != reverse_weight2);
-
-                // add weight of e2's to e1
-                graph.GetEdgeData(forward_e1).weight += forward_weight2;
-                graph.GetEdgeData(reverse_e1).weight += reverse_weight2;
-
-                // add duration of e2's to e1
-                graph.GetEdgeData(forward_e1).duration += forward_duration2;
-                graph.GetEdgeData(reverse_e1).duration += reverse_duration2;
-
-                // extend e1's to targets of e2's
-                graph.SetTarget(forward_e1, node_w);
-                graph.SetTarget(reverse_e1, node_u);
-
                 /*
                  * Remember Lane Data for compressed parts. This handles scenarios where lane-data
                  * is
@@ -185,12 +148,51 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
                         return front;
                     return back;
                 };
-                graph.GetEdgeData(forward_e1).lane_description_id =
-                    selectLaneID(graph.GetEdgeData(forward_e1).lane_description_id,
-                                 fwd_edge_data2.lane_description_id);
-                graph.GetEdgeData(reverse_e1).lane_description_id =
-                    selectLaneID(graph.GetEdgeData(reverse_e1).lane_description_id,
-                                 rev_edge_data2.lane_description_id);
+                graph.GetEdgeData(forward_e1).lane_description_id = selectLaneID(
+                    fwd_edge_data1.lane_description_id, fwd_edge_data2.lane_description_id);
+                graph.GetEdgeData(reverse_e1).lane_description_id = selectLaneID(
+                    rev_edge_data1.lane_description_id, rev_edge_data2.lane_description_id);
+                graph.GetEdgeData(forward_e2).lane_description_id = selectLaneID(
+                    fwd_edge_data2.lane_description_id, fwd_edge_data1.lane_description_id);
+                graph.GetEdgeData(reverse_e2).lane_description_id = selectLaneID(
+                    rev_edge_data2.lane_description_id, rev_edge_data1.lane_description_id);
+
+                // Do not compress edge if it crosses a traffic signal.
+                // This can't be done in CanCombineWith, becase we only store the
+                // traffic signals in the `traffic_lights` list, which EdgeData
+                // doesn't have access to.
+                const bool has_node_penalty = traffic_lights.find(node_v) != traffic_lights.end();
+                if (has_node_penalty)
+                    continue;
+
+                // Get weights before graph is modified
+                const auto forward_weight1 = fwd_edge_data1.weight;
+                const auto forward_weight2 = fwd_edge_data2.weight;
+                const auto forward_duration1 = fwd_edge_data1.duration;
+                const auto forward_duration2 = fwd_edge_data2.duration;
+
+                BOOST_ASSERT(0 != forward_weight1);
+                BOOST_ASSERT(0 != forward_weight2);
+
+                const auto reverse_weight1 = rev_edge_data1.weight;
+                const auto reverse_weight2 = rev_edge_data2.weight;
+                const auto reverse_duration1 = rev_edge_data1.duration;
+                const auto reverse_duration2 = rev_edge_data2.duration;
+
+                BOOST_ASSERT(0 != reverse_weight1);
+                BOOST_ASSERT(0 != reverse_weight2);
+
+                // add weight of e2's to e1
+                graph.GetEdgeData(forward_e1).weight += forward_weight2;
+                graph.GetEdgeData(reverse_e1).weight += reverse_weight2;
+
+                // add duration of e2's to e1
+                graph.GetEdgeData(forward_e1).duration += forward_duration2;
+                graph.GetEdgeData(reverse_e1).duration += reverse_duration2;
+
+                // extend e1's to targets of e2's
+                graph.SetTarget(forward_e1, node_w);
+                graph.SetTarget(reverse_e1, node_u);
 
                 // remove e2's (if bidir, otherwise only one)
                 graph.DeleteEdge(node_v, forward_e2);
