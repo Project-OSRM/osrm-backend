@@ -1242,5 +1242,5 @@ Feature: Turn Lane Guidance
             | mdhk  | road2 | 2     |                              | yes    |
 
         When I route I should get
-            | waypoints | route             | turns                        | lanes | locations |
-            | a,f       | road1,road1,road1 | depart,continue uturn,arrive | ,,    | a,d,f     |
+            | waypoints | route             | turns                        | lanes                                                | locations |
+            | a,f       | road1,road1,road1 | depart,continue uturn,arrive | ,left:true straight:false straight;right:false,      | a,d,f     |
