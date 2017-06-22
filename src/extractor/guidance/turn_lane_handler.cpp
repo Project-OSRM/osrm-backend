@@ -180,7 +180,7 @@ TurnLaneScenario TurnLaneHandler::deduceScenario(const NodeID at,
         (intersection.size() == 2 &&
          ((lane_description_id != INVALID_LANE_DESCRIPTIONID &&
            lane_description_id ==
-               node_based_graph.GetEdgeData(intersection[1].eid).lane_description_id) ||
+               node_based_graph.GetEdgeData(intersection[1].eid).lane_description_id) &&
           angularDeviation(intersection[1].angle, STRAIGHT_ANGLE) < FUZZY_ANGLE_DIFFERENCE));
 
     if (is_going_straight_and_turns_continue)
