@@ -51,27 +51,6 @@ void ComputeLengthsOffsets(stxxl::vector<unsigned> &lengths,
     BOOST_TEST_MESSAGE(o_ss.str());
 }
 
-BOOST_AUTO_TEST_CASE(serialization_test)
-{
-    stxxl::vector<unsigned> lengths;
-    std::vector<unsigned> offsets;
-    ComputeLengthsOffsets(lengths, offsets, (BLOCK_SIZE + 1) * 10);
-
-    TestRangeTable in_table(lengths);
-    TestRangeTable out_table;
-
-    std::stringstream ss;
-    ss << in_table;
-    ss >> out_table;
-
-    for (unsigned i = 0; i < lengths.size(); i++)
-    {
-        auto range = out_table.GetRange(i);
-        BOOST_CHECK_EQUAL(range.front(), offsets[i]);
-        BOOST_CHECK_EQUAL(range.back() + 1, offsets[i + 1]);
-    }
-}
-
 BOOST_AUTO_TEST_CASE(construction_test)
 {
     // only offset empty block
