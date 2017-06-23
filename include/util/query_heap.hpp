@@ -158,6 +158,13 @@ class QueryHeap
         node_index[node] = index;
     }
 
+    void InsertVisited(NodeID node, Weight weight, const Data &data)
+    {
+        const auto index = static_cast<Key>(inserted_nodes.size());
+        inserted_nodes.emplace_back(HeapNode{HeapHandle{}, node, weight, data});
+        node_index[node] = index;
+    }
+
     Data &GetData(NodeID node)
     {
         const auto index = node_index.peek_index(node);

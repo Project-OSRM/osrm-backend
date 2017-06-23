@@ -52,7 +52,7 @@ struct PhantomNode
           reverse_weight(INVALID_EDGE_WEIGHT), forward_weight_offset(0), reverse_weight_offset(0),
           forward_duration(MAXIMAL_EDGE_DURATION), reverse_duration(MAXIMAL_EDGE_DURATION),
           forward_duration_offset(0), reverse_duration_offset(0), fwd_segment_position(0),
-          is_valid_forward_source{false}, is_valid_forward_target{false},
+          fwd_segment_ratio{0.}, is_valid_forward_source{false}, is_valid_forward_target{false},
           is_valid_reverse_source{false}, is_valid_reverse_target{false}
     {
     }
@@ -123,6 +123,7 @@ struct PhantomNode
     template <class OtherT>
     explicit PhantomNode(const OtherT &other,
                          ComponentID component,
+                         double ratio,
                          EdgeWeight forward_weight,
                          EdgeWeight reverse_weight,
                          EdgeWeight forward_weight_offset,
@@ -145,6 +146,7 @@ struct PhantomNode
           reverse_duration_offset{reverse_duration_offset},
           component{component.id, component.is_tiny}, location{location},
           input_location{input_location}, fwd_segment_position{other.fwd_segment_position},
+          fwd_segment_ratio{static_cast<float>(ratio)},
           is_valid_forward_source{is_valid_forward_source},
           is_valid_forward_target{is_valid_forward_target},
           is_valid_reverse_source{is_valid_reverse_source},
@@ -167,6 +169,8 @@ struct PhantomNode
     util::Coordinate location;
     util::Coordinate input_location;
     unsigned short fwd_segment_position;
+    float fwd_segment_ratio;
+
     // is phantom node valid to be used as source or target
   private:
     unsigned short is_valid_forward_source : 1;
@@ -176,7 +180,7 @@ struct PhantomNode
     unsigned short : 12; // Unused padding out to 16 bits (2 bytes)
 };
 
-static_assert(sizeof(PhantomNode) == 64, "PhantomNode has more padding then expected");
+static_assert(sizeof(PhantomNode) == 72, "PhantomNode has more padding then expected");
 
 using PhantomNodePair = std::pair<PhantomNode, PhantomNode>;
 

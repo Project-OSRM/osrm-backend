@@ -66,8 +66,8 @@ Feature: Projection to nearest point on road
         When I route I should get
             | waypoints | route | distance | time | weight |
             | 1,4       | ef,ef | 0.4m     | 0.1s |    0.1 |
-            | 2,4       | ef,ef | 0.1m     | 0s   |      0 |
-            | 3,4       | ef,ef | 0.1m     | 0s   |      0 |
+            | 2,4       | ef,ef | 0.1m     | 0.1s |      0 |
+            | 3,4       | ef,ef | 0.1m     | 0.1s |      0 |
             | 4,4       | ef,ef | 0m       | 0s   |      0 |
             | 5,4       | ef,ef | 0.1m     | 0s   |    0.1 |
             | 6,4       | ef,ef | 0.6m     | 0.1s |    0.2 |

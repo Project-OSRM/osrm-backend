@@ -1,5 +1,6 @@
 #include "engine/routing_algorithms/alternative_path.hpp"
 #include "engine/routing_algorithms/routing_base_ch.hpp"
+#include "engine/routing_algorithms/routing_init.hpp"
 
 #include "util/integer_range.hpp"
 
@@ -51,55 +52,41 @@ struct RankedCandidateNode
 // todo: reorder parameters
 template <bool DIRECTION>
 void alternativeRoutingStep(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
-                            QueryHeap &heap1,
-                            QueryHeap &heap2,
-                            NodeID *middle_node,
-                            EdgeWeight *upper_bound_to_shortest_path_weight,
+                            QueryHeap &forward_heap,
+                            QueryHeap &reverse_heap,
+                            NodeID &middle_node,
+                            EdgeWeight &upper_bound_to_shortest_path_weight,
                             std::vector<NodeID> &search_space_intersection,
-                            std::vector<SearchSpaceEdge> &search_space,
-                            const EdgeWeight min_edge_offset)
+                            std::vector<SearchSpaceEdge> &search_space)
 {
-    QueryHeap &forward_heap = DIRECTION == FORWARD_DIRECTION ? heap1 : heap2;
-    QueryHeap &reverse_heap = DIRECTION == FORWARD_DIRECTION ? heap2 : heap1;
-
     const NodeID node = forward_heap.DeleteMin();
     const EdgeWeight weight = forward_heap.GetKey(node);
 
-    const auto scaled_weight =
-        static_cast<EdgeWeight>((weight + min_edge_offset) / (1. + VIAPATH_EPSILON));
-    if ((INVALID_EDGE_WEIGHT != *upper_bound_to_shortest_path_weight) &&
-        (scaled_weight > *upper_bound_to_shortest_path_weight))
-    {
-        forward_heap.DeleteAll();
-        return;
-    }
-
     search_space.emplace_back(forward_heap.GetData(node).parent, node);
 
+    auto scaled_weight = static_cast<EdgeWeight>(weight / (1. + VIAPATH_EPSILON));
     if (reverse_heap.WasInserted(node))
     {
         search_space_intersection.emplace_back(node);
-        const EdgeWeight new_weight = reverse_heap.GetKey(node) + weight;
-        if (new_weight < *upper_bound_to_shortest_path_weight)
+
+        const auto candidate_path_weight =
+            getCandidatePathWeight<DIRECTION>(facade, forward_heap, reverse_heap, node, weight);
+
+        if (candidate_path_weight < upper_bound_to_shortest_path_weight)
         {
-            if (new_weight >= 0)
-            {
-                *middle_node = node;
-                *upper_bound_to_shortest_path_weight = new_weight;
-            }
-            else
-            {
-                // check whether there is a loop present at the node
-                const auto loop_weight = ch::getLoopWeight<false>(facade, node);
-                const EdgeWeight new_weight_with_loop = new_weight + loop_weight;
-                if (loop_weight != INVALID_EDGE_WEIGHT &&
-                    new_weight_with_loop <= *upper_bound_to_shortest_path_weight)
-                {
-                    *middle_node = node;
-                    *upper_bound_to_shortest_path_weight = loop_weight;
-                }
-            }
+            middle_node = node;
+            upper_bound_to_shortest_path_weight = candidate_path_weight;
         }
+
+        if (candidate_path_weight != INVALID_EDGE_WEIGHT)
+        { // Update scaled weight if there is a candidate path
+            scaled_weight = static_cast<EdgeWeight>(candidate_path_weight / (1. + VIAPATH_EPSILON));
+        }
+    }
+
+    if (scaled_weight > upper_bound_to_shortest_path_weight)
+    { // Don't clean the heap as it may contain some alternative path candidates
+        return;
     }
 
     for (auto edge : facade.GetAdjacentEdgeRange(node))
@@ -159,8 +146,7 @@ void computeWeightAndSharingOfViaPath(
     const NodeID via_node,
     EdgeWeight *real_weight_of_via_path,
     EdgeWeight *sharing_of_via_path,
-    const std::vector<NodeID> &packed_shortest_path,
-    const EdgeWeight min_edge_offset)
+    const std::vector<NodeID> &packed_shortest_path)
 {
     engine_working_data.InitializeOrClearSecondThreadLocalStorage(facade.GetNumberOfNodes());
 
@@ -186,7 +172,6 @@ void computeWeightAndSharingOfViaPath(
                                            existing_forward_heap,
                                            s_v_middle,
                                            upper_bound_s_v_path_weight,
-                                           min_edge_offset,
                                            DO_NOT_FORCE_LOOPS,
                                            DO_NOT_FORCE_LOOPS);
     }
@@ -201,7 +186,6 @@ void computeWeightAndSharingOfViaPath(
                                            existing_reverse_heap,
                                            v_t_middle,
                                            upper_bound_of_v_t_path_weight,
-                                           min_edge_offset,
                                            DO_NOT_FORCE_LOOPS,
                                            DO_NOT_FORCE_LOOPS);
     }
@@ -329,8 +313,7 @@ bool viaNodeCandidatePassesTTest(
     const EdgeWeight weight_of_shortest_path,
     EdgeWeight *weight_of_via_path,
     NodeID *s_v_middle,
-    NodeID *v_t_middle,
-    const EdgeWeight min_edge_offset)
+    NodeID *v_t_middle)
 {
     new_forward_heap.Clear();
     new_reverse_heap.Clear();
@@ -348,7 +331,6 @@ bool viaNodeCandidatePassesTTest(
                                            existing_forward_heap,
                                            *s_v_middle,
                                            upper_bound_s_v_path_weight,
-                                           min_edge_offset,
                                            DO_NOT_FORCE_LOOPS,
                                            DO_NOT_FORCE_LOOPS);
     }
@@ -369,7 +351,6 @@ bool viaNodeCandidatePassesTTest(
                                            existing_reverse_heap,
                                            *v_t_middle,
                                            upper_bound_of_v_t_path_weight,
-                                           min_edge_offset,
                                            DO_NOT_FORCE_LOOPS,
                                            DO_NOT_FORCE_LOOPS);
     }
@@ -522,42 +503,43 @@ bool viaNodeCandidatePassesTTest(
     }
 
     t_test_path_weight += unpacked_until_weight;
+
     // Run actual T-Test query and compare if weight equal.
     engine_working_data.InitializeOrClearThirdThreadLocalStorage(facade.GetNumberOfNodes());
 
     QueryHeap &forward_heap3 = *engine_working_data.forward_heap_3;
     QueryHeap &reverse_heap3 = *engine_working_data.reverse_heap_3;
+
     EdgeWeight upper_bound = INVALID_EDGE_WEIGHT;
     NodeID middle = SPECIAL_NODEID;
+    std::tie(middle, upper_bound) =
+        insertNodesInHeaps(facade, forward_heap3, reverse_heap3, s_P, t_P);
 
-    forward_heap3.Insert(s_P, 0, s_P);
-    reverse_heap3.Insert(t_P, 0, t_P);
     // exploration from s and t until deletemin/(1+epsilon) > _lengt_oO_sShortest_path
     while ((forward_heap3.Size() + reverse_heap3.Size()) > 0)
     {
         if (!forward_heap3.Empty())
         {
-            ch::routingStep<FORWARD_DIRECTION>(facade,
-                                               forward_heap3,
-                                               reverse_heap3,
-                                               middle,
-                                               upper_bound,
-                                               min_edge_offset,
-                                               DO_NOT_FORCE_LOOPS,
-                                               DO_NOT_FORCE_LOOPS);
+            routingStep<FORWARD_DIRECTION>(facade,
+                                           forward_heap3,
+                                           reverse_heap3,
+                                           middle,
+                                           upper_bound,
+                                           DO_NOT_FORCE_LOOPS,
+                                           DO_NOT_FORCE_LOOPS);
         }
         if (!reverse_heap3.Empty())
         {
-            ch::routingStep<REVERSE_DIRECTION>(facade,
-                                               reverse_heap3,
-                                               forward_heap3,
-                                               middle,
-                                               upper_bound,
-                                               min_edge_offset,
-                                               DO_NOT_FORCE_LOOPS,
-                                               DO_NOT_FORCE_LOOPS);
+            routingStep<REVERSE_DIRECTION>(facade,
+                                           reverse_heap3,
+                                           forward_heap3,
+                                           middle,
+                                           upper_bound,
+                                           DO_NOT_FORCE_LOOPS,
+                                           DO_NOT_FORCE_LOOPS);
         }
     }
+
     return (upper_bound <= t_test_path_weight);
 }
 }
@@ -588,17 +570,19 @@ alternativePathSearch(SearchEngineData<Algorithm> &engine_working_data,
     auto &forward_heap2 = *engine_working_data.forward_heap_2;
     auto &reverse_heap2 = *engine_working_data.reverse_heap_2;
 
-    EdgeWeight upper_bound_to_shortest_path_weight = INVALID_EDGE_WEIGHT;
-    NodeID middle_node = SPECIAL_NODEID;
-    const EdgeWeight min_edge_offset =
-        std::min(phantom_node_pair.source_phantom.forward_segment_id.enabled
-                     ? -phantom_node_pair.source_phantom.GetForwardWeightPlusOffset()
-                     : 0,
-                 phantom_node_pair.source_phantom.reverse_segment_id.enabled
-                     ? -phantom_node_pair.source_phantom.GetReverseWeightPlusOffset()
-                     : 0);
+    auto single_node_path =
+        insertNodesInHeaps(facade, forward_heap1, reverse_heap1, phantom_node_pair);
+    // TODO: refine
+    if (phantom_node_pair.source_phantom.forward_segment_id.enabled)
+        forward_search_space.push_back({phantom_node_pair.source_phantom.forward_segment_id.id,
+                                        phantom_node_pair.source_phantom.forward_segment_id.id});
+    if (phantom_node_pair.source_phantom.reverse_segment_id.enabled)
+        forward_search_space.push_back({phantom_node_pair.source_phantom.reverse_segment_id.id,
+                                        phantom_node_pair.source_phantom.reverse_segment_id.id});
 
-    insertNodesInHeaps(forward_heap1, reverse_heap1, phantom_node_pair);
+    NodeID middle_node;
+    EdgeWeight upper_bound_to_shortest_path_weight;
+    std::tie(middle_node, upper_bound_to_shortest_path_weight) = single_node_path;
 
     // search from s and t till new_min/(1+epsilon) > weight_of_shortest_path
     while (0 < (forward_heap1.Size() + reverse_heap1.Size()))
@@ -608,22 +592,20 @@ alternativePathSearch(SearchEngineData<Algorithm> &engine_working_data,
             alternativeRoutingStep<FORWARD_DIRECTION>(facade,
                                                       forward_heap1,
                                                       reverse_heap1,
-                                                      &middle_node,
-                                                      &upper_bound_to_shortest_path_weight,
+                                                      middle_node,
+                                                      upper_bound_to_shortest_path_weight,
                                                       via_node_candidate_list,
-                                                      forward_search_space,
-                                                      min_edge_offset);
+                                                      forward_search_space);
         }
         if (0 < reverse_heap1.Size())
         {
             alternativeRoutingStep<REVERSE_DIRECTION>(facade,
-                                                      forward_heap1,
                                                       reverse_heap1,
-                                                      &middle_node,
-                                                      &upper_bound_to_shortest_path_weight,
+                                                      forward_heap1,
+                                                      middle_node,
+                                                      upper_bound_to_shortest_path_weight,
                                                       via_node_candidate_list,
-                                                      reverse_search_space,
-                                                      min_edge_offset);
+                                                      reverse_search_space);
         }
     }
 
@@ -639,18 +621,23 @@ alternativePathSearch(SearchEngineData<Algorithm> &engine_working_data,
     std::vector<NodeID> packed_forward_path;
     std::vector<NodeID> packed_reverse_path;
 
-    const bool path_is_a_loop =
-        upper_bound_to_shortest_path_weight !=
-        forward_heap1.GetKey(middle_node) + reverse_heap1.GetKey(middle_node);
-    if (path_is_a_loop)
-    {
-        // Self Loop
+    const bool path_is_a_single_node =
+        upper_bound_to_shortest_path_weight == single_node_path.second;
+    const bool path_is_a_loop = !path_is_a_single_node &&
+                                forward_heap1.GetData(middle_node).parent == middle_node &&
+                                reverse_heap1.GetData(middle_node).parent == middle_node;
+
+    if (path_is_a_single_node)
+    { // A single node path has only one node and no edges
+        packed_forward_path.push_back(middle_node);
+    }
+    else if (path_is_a_loop)
+    { // A self loop path contains two nodes and with a packed loop edge
         packed_forward_path.push_back(middle_node);
         packed_forward_path.push_back(middle_node);
     }
     else
     {
-
         ch::retrievePackedPathFromSingleHeap(forward_heap1, middle_node, packed_forward_path);
         ch::retrievePackedPathFromSingleHeap(reverse_heap1, middle_node, packed_reverse_path);
     }
@@ -658,9 +645,12 @@ alternativePathSearch(SearchEngineData<Algorithm> &engine_working_data,
     // this set is is used as an indicator if a node is on the shortest path
     std::unordered_set<NodeID> nodes_in_path(packed_forward_path.size() +
                                              packed_reverse_path.size());
-    nodes_in_path.insert(packed_forward_path.begin(), packed_forward_path.end());
-    nodes_in_path.insert(middle_node);
-    nodes_in_path.insert(packed_reverse_path.begin(), packed_reverse_path.end());
+    if (!path_is_a_single_node)
+    {
+        nodes_in_path.insert(packed_forward_path.begin(), packed_forward_path.end());
+        nodes_in_path.insert(middle_node);
+        nodes_in_path.insert(packed_reverse_path.begin(), packed_reverse_path.end());
+    }
 
     std::unordered_map<NodeID, EdgeWeight> approximated_forward_sharing;
     std::unordered_map<NodeID, EdgeWeight> approximated_reverse_sharing;
@@ -724,7 +714,8 @@ alternativePathSearch(SearchEngineData<Algorithm> &engine_working_data,
 
         const EdgeWeight approximated_sharing = fwd_sharing + rev_sharing;
         const EdgeWeight approximated_weight =
-            forward_heap1.GetKey(node) + reverse_heap1.GetKey(node);
+            forward_heap1.GetKey(node) + reverse_heap1.GetKey(node) -
+            (forward_heap1.GetData(node).parent == node ? getNodeWeight(facade, node) : 0);
         const bool weight_passes =
             (approximated_weight < upper_bound_to_shortest_path_weight * (1 + VIAPATH_EPSILON));
         const bool sharing_passes =
@@ -740,7 +731,7 @@ alternativePathSearch(SearchEngineData<Algorithm> &engine_working_data,
     }
 
     std::vector<NodeID> &packed_shortest_path = packed_forward_path;
-    if (!path_is_a_loop)
+    if (!path_is_a_single_node && !path_is_a_loop)
     {
         std::reverse(packed_shortest_path.begin(), packed_shortest_path.end());
         packed_shortest_path.emplace_back(middle_node);
@@ -758,8 +749,7 @@ alternativePathSearch(SearchEngineData<Algorithm> &engine_working_data,
                                          node,
                                          &weight_of_via_path,
                                          &sharing_of_via_path,
-                                         packed_shortest_path,
-                                         min_edge_offset);
+                                         packed_shortest_path);
         const EdgeWeight maximum_allowed_sharing =
             static_cast<EdgeWeight>(upper_bound_to_shortest_path_weight * VIAPATH_GAMMA);
         if (sharing_of_via_path <= maximum_allowed_sharing &&
@@ -785,8 +775,7 @@ alternativePathSearch(SearchEngineData<Algorithm> &engine_working_data,
                                         upper_bound_to_shortest_path_weight,
                                         &weight_of_via_path,
                                         &s_v_middle,
-                                        &v_t_middle,
-                                        min_edge_offset))
+                                        &v_t_middle))
         {
             // select first admissable
             selected_via_node = candidate.node;

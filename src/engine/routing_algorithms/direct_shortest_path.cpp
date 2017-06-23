@@ -3,6 +3,7 @@
 #include "engine/routing_algorithms/routing_base.hpp"
 #include "engine/routing_algorithms/routing_base_ch.hpp"
 #include "engine/routing_algorithms/routing_base_mld.hpp"
+#include "engine/routing_algorithms/routing_init.hpp"
 
 namespace osrm
 {
@@ -64,10 +65,10 @@ InternalRouteResult directShortestPathSearchImpl(
     forward_heap.Clear();
     reverse_heap.Clear();
 
+    auto single_node_path = insertNodesInHeaps(facade, forward_heap, reverse_heap, phantom_nodes);
+
     EdgeWeight weight = INVALID_EDGE_WEIGHT;
     std::vector<NodeID> packed_leg;
-    insertNodesInHeaps(forward_heap, reverse_heap, phantom_nodes);
-
     search(engine_working_data,
            facade,
            forward_heap,
@@ -76,13 +77,15 @@ InternalRouteResult directShortestPathSearchImpl(
            packed_leg,
            DO_NOT_FORCE_LOOPS,
            DO_NOT_FORCE_LOOPS,
-           phantom_nodes);
+           phantom_nodes,
+           single_node_path.second);
 
     std::vector<NodeID> unpacked_nodes;
     std::vector<EdgeID> unpacked_edges;
 
-    if (!packed_leg.empty())
+    if (weight != INVALID_EDGE_WEIGHT)
     {
+        BOOST_ASSERT(!packed_leg.empty());
         unpacked_nodes.reserve(packed_leg.size());
         unpacked_edges.reserve(packed_leg.size());
         unpacked_nodes.push_back(packed_leg.front());
@@ -95,6 +98,11 @@ InternalRouteResult directShortestPathSearchImpl(
                            unpacked_nodes.push_back(edge.second);
                            unpacked_edges.push_back(edge_id);
                        });
+    }
+    else if (single_node_path.second != INVALID_EDGE_WEIGHT)
+    {
+        weight = single_node_path.second;
+        unpacked_nodes.push_back(single_node_path.first);
     }
 
     return extractRoute(facade, weight, phantom_nodes, unpacked_nodes, unpacked_edges);
@@ -126,7 +134,7 @@ InternalRouteResult directShortestPathSearch(
     engine_working_data.InitializeOrClearFirstThreadLocalStorage(facade.GetNumberOfNodes());
     auto &forward_heap = *engine_working_data.forward_heap_1;
     auto &reverse_heap = *engine_working_data.reverse_heap_1;
-    insertNodesInHeaps(forward_heap, reverse_heap, phantom_nodes);
+    auto single_node_path = insertNodesInHeaps(facade, forward_heap, reverse_heap, phantom_nodes);
 
     // TODO: when structured bindings will be allowed change to
     // auto [weight, source_node, target_node, unpacked_edges] = ...
@@ -139,8 +147,14 @@ InternalRouteResult directShortestPathSearch(
                                                                    reverse_heap,
                                                                    DO_NOT_FORCE_LOOPS,
                                                                    DO_NOT_FORCE_LOOPS,
-                                                                   INVALID_EDGE_WEIGHT,
+                                                                   single_node_path.second,
                                                                    phantom_nodes);
+
+    if (weight == INVALID_EDGE_WEIGHT && single_node_path.second != INVALID_EDGE_WEIGHT)
+    {
+        weight = single_node_path.second;
+        unpacked_nodes.push_back(single_node_path.first);
+    }
 
     return extractRoute(facade, weight, phantom_nodes, unpacked_nodes, unpacked_edges);
 }

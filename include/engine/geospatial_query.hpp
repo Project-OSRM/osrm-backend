@@ -493,6 +493,7 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
 
         auto transformed = PhantomNodeWithDistance{PhantomNode{data,
                                                                component_id,
+                                                               ratio,
                                                                forward_weight,
                                                                reverse_weight,
                                                                forward_weight_offset,

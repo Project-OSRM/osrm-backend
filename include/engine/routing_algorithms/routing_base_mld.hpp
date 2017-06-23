@@ -60,6 +60,37 @@ inline bool checkParentCellRestriction(CellID cell, LevelID, CellID parent)
 }
 }
 
+template <bool DIRECTION>
+EdgeWeight
+getCandidatePathWeight(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
+                       SearchEngineData<Algorithm>::QueryHeap &forward_heap,
+                       SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
+                       const NodeID node,
+                       const EdgeWeight weight)
+{
+    BOOST_ASSERT(forward_heap.WasInserted(node));
+    BOOST_ASSERT(reverse_heap.WasInserted(node));
+
+    // Restrict single-node edges
+    if (forward_heap.GetData(node).parent == node && reverse_heap.GetData(node).parent == node)
+        return INVALID_EDGE_WEIGHT;
+
+    // The candidate path: source → .. → node → .. → target
+    EdgeWeight new_weight = weight + reverse_heap.GetKey(node);
+
+    if (DIRECTION == REVERSE_DIRECTION && reverse_heap.GetData(node).parent == node)
+    { // If the rendez-vous node is a phantom source node with the projected key value `sb`
+        // for the path `a---s===b===t---c` with the backward edge `bc<-ab` that has
+        // weight `weight(ab)+turn(abc)+weight(bt)`
+        // then the new_weight must be corrected by the weight value of the node `ab`
+        const auto node_weight = getNodeWeight(facade, node);
+        BOOST_ASSERT(new_weight >= node_weight);
+        new_weight -= node_weight;
+    }
+
+    return new_weight;
+}
+
 template <bool DIRECTION, typename... Args>
 void routingStep(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
                  SearchEngineData<Algorithm>::QueryHeap &forward_heap,
@@ -83,16 +114,13 @@ void routingStep(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm>
     // with weight(to -> target) = reverse_weight and all weights ≥ 0
     if (reverse_heap.WasInserted(node))
     {
-        auto reverse_weight = reverse_heap.GetKey(node);
-        auto path_weight = weight + reverse_weight;
+        const auto candidate_path_weight =
+            getCandidatePathWeight<DIRECTION>(facade, forward_heap, reverse_heap, node, weight);
 
-        // if loops are forced, they are so at the source
-        if (!(force_loop_forward && forward_heap.GetData(node).parent == node) &&
-            !(force_loop_reverse && reverse_heap.GetData(node).parent == node) &&
-            (path_weight >= 0) && (path_weight < path_upper_bound))
+        if (candidate_path_weight < path_upper_bound)
         {
             middle_node = node;
-            path_upper_bound = path_weight;
+            path_upper_bound = candidate_path_weight;
         }
     }
 
@@ -169,7 +197,7 @@ void routingStep(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm>
                 {
                     forward_heap.Insert(to, to_weight, {node, false});
                 }
-                else if (to_weight < forward_heap.GetKey(to))
+                else if (!forward_heap.WasRemoved(to) && to_weight < forward_heap.GetKey(to))
                 {
                     forward_heap.GetData(to) = {node, false};
                     forward_heap.DecreaseKey(to, to_weight);
@@ -190,21 +218,13 @@ search(SearchEngineData<Algorithm> &engine_working_data,
        EdgeWeight weight_upper_bound,
        Args... args)
 {
-    if (forward_heap.Empty() || reverse_heap.Empty())
-    {
-        return std::make_tuple(INVALID_EDGE_WEIGHT, std::vector<NodeID>(), std::vector<EdgeID>());
-    }
-
     const auto &partition = facade.GetMultiLevelPartition();
-
-    BOOST_ASSERT(!forward_heap.Empty() && forward_heap.MinKey() < INVALID_EDGE_WEIGHT);
-    BOOST_ASSERT(!reverse_heap.Empty() && reverse_heap.MinKey() < INVALID_EDGE_WEIGHT);
 
     // run two-Target Dijkstra routing step.
     NodeID middle = SPECIAL_NODEID;
     EdgeWeight weight = weight_upper_bound;
-    EdgeWeight forward_heap_min = forward_heap.MinKey();
-    EdgeWeight reverse_heap_min = reverse_heap.MinKey();
+    EdgeWeight forward_heap_min = forward_heap.Empty() ? 0 : forward_heap.MinKey();
+    EdgeWeight reverse_heap_min = reverse_heap.Empty() ? 0 : reverse_heap.MinKey();
     while (forward_heap.Size() + reverse_heap.Size() > 0 &&
            forward_heap_min + reverse_heap_min < weight)
     {
@@ -376,43 +396,13 @@ void unpackPath(const FacadeT &facade,
     annotatePath(facade, phantom_nodes, unpacked_nodes, unpacked_edges, unpacked_path);
 }
 
-inline double
-getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
-                   const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
-                   SearchEngineData<Algorithm>::QueryHeap &forward_heap,
-                   SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
-                   const PhantomNode &source_phantom,
-                   const PhantomNode &target_phantom,
-                   EdgeWeight weight_upper_bound = INVALID_EDGE_WEIGHT)
+inline EdgeWeight
+getEdgeInternalWeight(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
+                      const NodeID /*start*/,
+                      const EdgeID edge_id)
 {
-    forward_heap.Clear();
-    reverse_heap.Clear();
-
-    const PhantomNodes phantom_nodes{source_phantom, target_phantom};
-    insertNodesInHeaps(forward_heap, reverse_heap, phantom_nodes);
-
-    EdgeWeight weight = INVALID_EDGE_WEIGHT;
-    std::vector<NodeID> unpacked_nodes;
-    std::vector<EdgeID> unpacked_edges;
-    std::tie(weight, unpacked_nodes, unpacked_edges) = search(engine_working_data,
-                                                              facade,
-                                                              forward_heap,
-                                                              reverse_heap,
-                                                              DO_NOT_FORCE_LOOPS,
-                                                              DO_NOT_FORCE_LOOPS,
-                                                              weight_upper_bound,
-                                                              phantom_nodes);
-
-    if (weight == INVALID_EDGE_WEIGHT)
-    {
-        return std::numeric_limits<double>::max();
-    }
-
-    std::vector<PathData> unpacked_path;
-
-    annotatePath(facade, phantom_nodes, unpacked_nodes, unpacked_edges, unpacked_path);
-
-    return getPathDistance(facade, unpacked_path, source_phantom, target_phantom);
+    const auto &edge_data = facade.GetEdgeData(edge_id);
+    return facade.GetWeightPenaltyForEdgeID(edge_data.turn_id);
 }
 
 } // namespace mld

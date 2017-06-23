@@ -1,4 +1,5 @@
 #include "engine/routing_algorithms/routing_base_ch.hpp"
+#include "engine/routing_algorithms/routing_init.hpp"
 
 namespace osrm
 {
@@ -6,6 +7,7 @@ namespace engine
 {
 namespace routing_algorithms
 {
+
 namespace ch
 {
 
@@ -82,20 +84,11 @@ void search(SearchEngineData<Algorithm> & /*engine_working_data*/,
             const PhantomNodes & /*phantom_nodes*/,
             const EdgeWeight weight_upper_bound)
 {
-    if (forward_heap.Empty() || reverse_heap.Empty())
-    {
-        weight = INVALID_EDGE_WEIGHT;
-        return;
-    }
-
     NodeID middle = SPECIAL_NODEID;
     weight = weight_upper_bound;
 
-    // get offset to account for offsets on phantom nodes on compressed edges
-    const auto min_edge_offset = std::min(0, forward_heap.MinKey());
-    BOOST_ASSERT(min_edge_offset <= 0);
-    // we only every insert negative offsets for nodes in the forward heap
-    BOOST_ASSERT(reverse_heap.MinKey() >= 0);
+    BOOST_ASSERT(forward_heap.Empty() || forward_heap.MinKey() >= 0);
+    BOOST_ASSERT(reverse_heap.Empty() || reverse_heap.MinKey() >= 0);
 
     // run two-Target Dijkstra routing step.
     while (0 < (forward_heap.Size() + reverse_heap.Size()))
@@ -107,7 +100,6 @@ void search(SearchEngineData<Algorithm> & /*engine_working_data*/,
                                            reverse_heap,
                                            middle,
                                            weight,
-                                           min_edge_offset,
                                            force_loop_forward,
                                            force_loop_reverse);
         }
@@ -118,7 +110,6 @@ void search(SearchEngineData<Algorithm> & /*engine_working_data*/,
                                            forward_heap,
                                            middle,
                                            weight,
-                                           min_edge_offset,
                                            force_loop_reverse,
                                            force_loop_forward);
         }
@@ -131,13 +122,9 @@ void search(SearchEngineData<Algorithm> & /*engine_working_data*/,
         return;
     }
 
-    // Was a paths over one of the forward/reverse nodes not found?
-    BOOST_ASSERT_MSG((SPECIAL_NODEID != middle && INVALID_EDGE_WEIGHT != weight), "no path found");
-
-    // make sure to correctly unpack loops
-    if (weight != forward_heap.GetKey(middle) + reverse_heap.GetKey(middle))
-    {
-        // self loop makes up the full path
+    if (forward_heap.GetData(middle).parent == middle &&
+        reverse_heap.GetData(middle).parent == middle)
+    { // Self-loop makes up the full path middle->middle
         packed_leg.push_back(middle);
         packed_leg.push_back(middle);
     }
@@ -147,49 +134,6 @@ void search(SearchEngineData<Algorithm> & /*engine_working_data*/,
     }
 }
 
-// Requires the heaps for be empty
-// If heaps should be adjusted to be initialized outside of this function,
-// the addition of force_loop parameters might be required
-double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
-                          const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
-                          SearchEngineData<Algorithm>::QueryHeap &forward_heap,
-                          SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
-                          const PhantomNode &source_phantom,
-                          const PhantomNode &target_phantom,
-                          EdgeWeight weight_upper_bound)
-{
-    forward_heap.Clear();
-    reverse_heap.Clear();
-
-    insertNodesInHeaps(forward_heap, reverse_heap, {source_phantom, target_phantom});
-
-    EdgeWeight weight = INVALID_EDGE_WEIGHT;
-    std::vector<NodeID> packed_path;
-    search(engine_working_data,
-           facade,
-           forward_heap,
-           reverse_heap,
-           weight,
-           packed_path,
-           DO_NOT_FORCE_LOOPS,
-           DO_NOT_FORCE_LOOPS,
-           {source_phantom, target_phantom},
-           weight_upper_bound);
-
-    if (weight == INVALID_EDGE_WEIGHT)
-    {
-        return std::numeric_limits<double>::max();
-    }
-
-    std::vector<PathData> unpacked_path;
-    unpackPath(facade,
-               packed_path.begin(),
-               packed_path.end(),
-               {source_phantom, target_phantom},
-               unpacked_path);
-
-    return getPathDistance(facade, unpacked_path, source_phantom, target_phantom);
-}
 } // namespace ch
 
 namespace corech
@@ -221,10 +165,8 @@ void search(SearchEngineData<Algorithm> &engine_working_data,
     std::vector<CoreEntryPoint> forward_entry_points;
     std::vector<CoreEntryPoint> reverse_entry_points;
 
-    // get offset to account for offsets on phantom nodes on compressed edges
-    const auto min_edge_offset = std::min(0, forward_heap.MinKey());
-    // we only every insert negative offsets for nodes in the forward heap
-    BOOST_ASSERT(reverse_heap.MinKey() >= 0);
+    BOOST_ASSERT(forward_heap.Empty() || forward_heap.MinKey() >= 0);
+    BOOST_ASSERT(reverse_heap.Empty() || reverse_heap.MinKey() >= 0);
 
     // run two-Target Dijkstra routing step.
     while (0 < (forward_heap.Size() + reverse_heap.Size()))
@@ -244,7 +186,6 @@ void search(SearchEngineData<Algorithm> &engine_working_data,
                                                    reverse_heap,
                                                    middle,
                                                    weight,
-                                                   min_edge_offset,
                                                    force_loop_forward,
                                                    force_loop_reverse);
             }
@@ -264,7 +205,6 @@ void search(SearchEngineData<Algorithm> &engine_working_data,
                                                    forward_heap,
                                                    middle,
                                                    weight,
-                                                   min_edge_offset,
                                                    force_loop_reverse,
                                                    force_loop_forward);
             }
@@ -295,18 +235,6 @@ void search(SearchEngineData<Algorithm> &engine_working_data,
         insertInCoreHeap(p, reverse_core_heap);
     }
 
-    // get offset to account for offsets on phantom nodes on compressed edges
-    EdgeWeight min_core_edge_offset = 0;
-    if (forward_core_heap.Size() > 0)
-    {
-        min_core_edge_offset = std::min(min_core_edge_offset, forward_core_heap.MinKey());
-    }
-    if (reverse_core_heap.Size() > 0 && reverse_core_heap.MinKey() < 0)
-    {
-        min_core_edge_offset = std::min(min_core_edge_offset, reverse_core_heap.MinKey());
-    }
-    BOOST_ASSERT(min_core_edge_offset <= 0);
-
     // run two-target Dijkstra routing step on core with termination criterion
     while (0 < forward_core_heap.Size() && 0 < reverse_core_heap.Size() &&
            weight > (forward_core_heap.MinKey() + reverse_core_heap.MinKey()))
@@ -316,7 +244,6 @@ void search(SearchEngineData<Algorithm> &engine_working_data,
                                                                  reverse_core_heap,
                                                                  middle,
                                                                  weight,
-                                                                 min_core_edge_offset,
                                                                  force_loop_forward,
                                                                  force_loop_reverse);
 
@@ -325,7 +252,6 @@ void search(SearchEngineData<Algorithm> &engine_working_data,
                                                                  forward_core_heap,
                                                                  middle,
                                                                  weight,
-                                                                 min_core_edge_offset,
                                                                  force_loop_reverse,
                                                                  force_loop_forward);
     }
@@ -379,14 +305,16 @@ void search(SearchEngineData<Algorithm> &engine_working_data,
         }
     }
 }
+} // namespace corech
 
 // Requires the heaps for be empty
 // If heaps should be adjusted to be initialized outside of this function,
 // the addition of force_loop parameters might be required
+template <typename Algorithm>
 double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
                           const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
-                          SearchEngineData<Algorithm>::QueryHeap &forward_heap,
-                          SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
+                          typename SearchEngineData<Algorithm>::QueryHeap &forward_heap,
+                          typename SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
                           const PhantomNode &source_phantom,
                           const PhantomNode &target_phantom,
                           EdgeWeight weight_upper_bound)
@@ -394,7 +322,8 @@ double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
     forward_heap.Clear();
     reverse_heap.Clear();
 
-    insertNodesInHeaps(forward_heap, reverse_heap, {source_phantom, target_phantom});
+    auto single_node_path =
+        insertNodesInHeaps(facade, forward_heap, reverse_heap, {source_phantom, target_phantom});
 
     EdgeWeight weight = INVALID_EDGE_WEIGHT;
     std::vector<NodeID> packed_path;
@@ -407,21 +336,46 @@ double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
            DO_NOT_FORCE_LOOPS,
            DO_NOT_FORCE_LOOPS,
            {source_phantom, target_phantom},
-           weight_upper_bound);
+           std::min(single_node_path.second, weight_upper_bound));
 
     if (weight == INVALID_EDGE_WEIGHT)
-        return std::numeric_limits<double>::max();
+    {
+        if (single_node_path.second == INVALID_EDGE_WEIGHT)
+        {
+            return std::numeric_limits<double>::max();
+        }
+
+        BOOST_ASSERT(packed_path.empty());
+        packed_path.push_back(single_node_path.first);
+    }
 
     std::vector<PathData> unpacked_path;
-    ch::unpackPath(facade,
-                   packed_path.begin(),
-                   packed_path.end(),
-                   {source_phantom, target_phantom},
-                   unpacked_path);
+    unpackPath(facade,
+               packed_path.begin(),
+               packed_path.end(),
+               {source_phantom, target_phantom},
+               unpacked_path);
 
     return getPathDistance(facade, unpacked_path, source_phantom, target_phantom);
 }
-} // namespace corech
+
+template double
+getNetworkDistance(SearchEngineData<ch::Algorithm> &engine_working_data,
+                   const datafacade::ContiguousInternalMemoryDataFacade<ch::Algorithm> &facade,
+                   SearchEngineData<ch::Algorithm>::QueryHeap &forward_heap,
+                   SearchEngineData<ch::Algorithm>::QueryHeap &reverse_heap,
+                   const PhantomNode &source_phantom,
+                   const PhantomNode &target_phantom,
+                   EdgeWeight duration_upper_bound);
+
+template double
+getNetworkDistance(SearchEngineData<corech::Algorithm> &engine_working_data,
+                   const datafacade::ContiguousInternalMemoryDataFacade<corech::Algorithm> &facade,
+                   SearchEngineData<corech::Algorithm>::QueryHeap &forward_heap,
+                   SearchEngineData<corech::Algorithm>::QueryHeap &reverse_heap,
+                   const PhantomNode &source_phantom,
+                   const PhantomNode &target_phantom,
+                   EdgeWeight duration_upper_bound);
 
 } // namespace routing_algorithms
 } // namespace engine

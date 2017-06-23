@@ -71,7 +71,7 @@ void relaxOutgoingEdges(const datafacade::ContiguousInternalMemoryDataFacade<Alg
                 heap.Insert(to, to_weight, node);
             }
             // Found a shorter Path -> Update weight
-            else if (to_weight < heap.GetKey(to))
+            else if (!heap.WasRemoved(to) && to_weight < heap.GetKey(to))
             {
                 // new parent
                 heap.GetData(to).parent = node;
@@ -81,35 +81,57 @@ void relaxOutgoingEdges(const datafacade::ContiguousInternalMemoryDataFacade<Alg
     }
 }
 
-/*
-min_edge_offset is needed in case we use multiple
-nodes as start/target nodes with different (even negative) offsets.
-In that case the termination criterion is not correct
-anymore.
+template <bool DIRECTION>
+EdgeWeight
+getCandidatePathWeight(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
+                       SearchEngineData<Algorithm>::QueryHeap &forward_heap,
+                       SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
+                       const NodeID node,
+                       const EdgeWeight weight)
+{
+    BOOST_ASSERT(forward_heap.WasInserted(node));
+    BOOST_ASSERT(reverse_heap.WasInserted(node));
 
-Example:
-forward heap: a(-100), b(0),
-reverse heap: c(0), d(100)
+    // Check whether there is a loop edge (node->node) present in the source or target heap
+    EdgeWeight loop_weight = 0;
+    if (forward_heap.GetData(node).parent == node)
+    {
+        bool has_loop_edge = false;
+        for (const auto edge : facade.GetAdjacentEdgeRange(node))
+        {
+            const auto &data = facade.GetEdgeData(edge);
+            if ((DIRECTION == FORWARD_DIRECTION ? data.forward : data.backward) &&
+                facade.GetTarget(edge) == node)
+            { // The candidate path: source phantom → node ➰ node → target phantom
+                has_loop_edge = true;
+                loop_weight = data.weight;
+                break;
+            }
+        }
 
-a --- d
-  \ /
-  / \
-b --- c
+        // Ignore single edge-based-node paths (middle node is both source and target one)
+        // as such paths are handled outside Dijkstra search,
+        // but allow paths with loop edges node → node
+        if (reverse_heap.GetData(node).parent == node && !has_loop_edge)
+            return INVALID_EDGE_WEIGHT;
+    }
 
-This is equivalent to running a bi-directional Dijkstra on the following graph:
+    // The candidate path: source → .. → node → .. → target
+    EdgeWeight new_weight = weight + loop_weight + reverse_heap.GetKey(node);
 
-    a --- d
-   /  \ /  \
-  y    x    z
-   \  / \  /
-    b --- c
+    if (DIRECTION == REVERSE_DIRECTION && reverse_heap.GetData(node).parent == node)
+    { // If the rendez-vous node is a phantom source node with the projected key value `sb`
+        // for the path `a---s===b===t---c` with the backward edge `bc<-ab` that has
+        // weight `weight(ab)+turn(abc)+weight(bt)`
+        // then the new_weight must be corrected by the weight value of the node `ab`
+        const auto node_weight = getNodeWeight(facade, node);
+        BOOST_ASSERT(new_weight >= node_weight);
+        new_weight -= node_weight;
+    }
 
-The graph is constructed by inserting nodes y and z that are connected to the initial nodes
-using edges (y, a) with weight -100, (y, b) with weight 0 and,
-(d, z) with weight 100, (c, z) with weight 0 corresponding.
-Since we are dealing with a graph that contains _negative_ edges,
-we need to add an offset to the termination criterion.
-*/
+    return new_weight;
+}
+
 static constexpr bool ENABLE_STALLING = true;
 static constexpr bool DISABLE_STALLING = false;
 template <bool DIRECTION, bool STALLING = ENABLE_STALLING>
@@ -118,61 +140,29 @@ void routingStep(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm>
                  SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
                  NodeID &middle_node_id,
                  EdgeWeight &upper_bound,
-                 EdgeWeight min_edge_offset,
-                 const bool force_loop_forward,
-                 const bool force_loop_reverse)
+                 const bool /*force_loop_forward*/,
+                 const bool /*force_loop_reverse*/)
 {
     const NodeID node = forward_heap.DeleteMin();
     const EdgeWeight weight = forward_heap.GetKey(node);
 
+    // Check if node is a rendez-vous node candidate in forward and reverse heaps
     if (reverse_heap.WasInserted(node))
     {
-        const EdgeWeight new_weight = reverse_heap.GetKey(node) + weight;
-        if (new_weight < upper_bound)
-        {
-            // if loops are forced, they are so at the source
-            if ((force_loop_forward && forward_heap.GetData(node).parent == node) ||
-                (force_loop_reverse && reverse_heap.GetData(node).parent == node) ||
-                // in this case we are looking at a bi-directional way where the source
-                // and target phantom are on the same edge based node
-                new_weight < 0)
-            {
-                // check whether there is a loop present at the node
-                for (const auto edge : facade.GetAdjacentEdgeRange(node))
-                {
-                    const auto &data = facade.GetEdgeData(edge);
-                    if (DIRECTION == FORWARD_DIRECTION ? data.forward : data.backward)
-                    {
-                        const NodeID to = facade.GetTarget(edge);
-                        if (to == node)
-                        {
-                            const EdgeWeight edge_weight = data.weight;
-                            const EdgeWeight loop_weight = new_weight + edge_weight;
-                            if (loop_weight >= 0 && loop_weight < upper_bound)
-                            {
-                                middle_node_id = node;
-                                upper_bound = loop_weight;
-                            }
-                        }
-                    }
-                }
-            }
-            else
-            {
-                BOOST_ASSERT(new_weight >= 0);
+        const auto candidate_path_weight =
+            getCandidatePathWeight<DIRECTION>(facade, forward_heap, reverse_heap, node, weight);
 
-                middle_node_id = node;
-                upper_bound = new_weight;
-            }
+        if (candidate_path_weight < upper_bound)
+        { // Update upper bound and the middle rendez-vous node if the new weight is better
+            middle_node_id = node;
+            upper_bound = candidate_path_weight;
         }
     }
 
-    // make sure we don't terminate too early if we initialize the weight
+    // Make sure we don't terminate too early if we initialize the weight
     // for the nodes in the forward heap with the forward/reverse offset
-    BOOST_ASSERT(min_edge_offset <= 0);
-    if (weight + min_edge_offset > upper_bound)
+    if (weight > upper_bound)
     {
-        forward_heap.DeleteAll();
         return;
     }
 
@@ -320,6 +310,23 @@ void unpackPath(const FacadeT &facade,
     annotatePath(facade, phantom_nodes, unpacked_nodes, unpacked_edges, unpacked_path);
 }
 
+template <typename Facade>
+EdgeWeight getEdgeInternalWeight(const Facade &facade, const NodeID start, const EdgeID edge_id)
+{
+    EdgeWeight weight = 0;
+    std::vector<NodeID> path = {start, facade.GetTarget(edge_id)};
+    unpackPath(facade,
+               path.begin(),
+               path.end(),
+               [&](std::pair<NodeID, NodeID> &edge, const auto &edge_id) {
+                   const auto &edge_data = facade.GetEdgeData(edge_id);
+                   weight += (edge.first == start)
+                                 ? facade.GetWeightPenaltyForEdgeID(edge_data.turn_id)
+                                 : edge_data.weight;
+               });
+    return weight;
+}
+
 /**
  * Unpacks a single edge (NodeID->NodeID) from the CH graph down to it's original non-shortcut
  * route.
@@ -362,19 +369,7 @@ void search(SearchEngineData<Algorithm> &engine_working_data,
             const bool force_loop_forward,
             const bool force_loop_reverse,
             const PhantomNodes &phantom_nodes,
-            const int duration_upper_bound = INVALID_EDGE_WEIGHT);
-
-// Requires the heaps for be empty
-// If heaps should be adjusted to be initialized outside of this function,
-// the addition of force_loop parameters might be required
-double
-getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
-                   const datafacade::ContiguousInternalMemoryDataFacade<ch::Algorithm> &facade,
-                   SearchEngineData<Algorithm>::QueryHeap &forward_heap,
-                   SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
-                   const PhantomNode &source_phantom,
-                   const PhantomNode &target_phantom,
-                   int duration_upper_bound = INVALID_EDGE_WEIGHT);
+            const EdgeWeight weight_upper_bound = INVALID_EDGE_WEIGHT);
 
 } // namespace ch
 
@@ -398,19 +393,7 @@ void search(SearchEngineData<Algorithm> &engine_working_data,
             const bool force_loop_forward,
             const bool force_loop_reverse,
             const PhantomNodes &phantom_nodes,
-            int duration_upper_bound = INVALID_EDGE_WEIGHT);
-
-// Requires the heaps for be empty
-// If heaps should be adjusted to be initialized outside of this function,
-// the addition of force_loop parameters might be required
-double
-getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
-                   const datafacade::ContiguousInternalMemoryDataFacade<corech::Algorithm> &facade,
-                   SearchEngineData<ch::Algorithm>::QueryHeap &forward_heap,
-                   SearchEngineData<ch::Algorithm>::QueryHeap &reverse_heap,
-                   const PhantomNode &source_phantom,
-                   const PhantomNode &target_phantom,
-                   int duration_upper_bound = INVALID_EDGE_WEIGHT);
+            EdgeWeight weight_upper_bound = INVALID_EDGE_WEIGHT);
 
 template <typename RandomIter, typename FacadeT>
 void unpackPath(const FacadeT &facade,
@@ -420,6 +403,12 @@ void unpackPath(const FacadeT &facade,
                 std::vector<PathData> &unpacked_path)
 {
     return ch::unpackPath(facade, packed_path_begin, packed_path_end, phantom_nodes, unpacked_path);
+}
+
+template <typename Facade>
+EdgeWeight getEdgeInternalWeight(const Facade &facade, const NodeID start, const EdgeID edge_id)
+{
+    return ch::getEdgeInternalWeight(facade, start, edge_id);
 }
 
 } // namespace corech

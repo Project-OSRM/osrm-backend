@@ -89,8 +89,8 @@ Feature: Check zero speed updates
             """
 
         When I route I should get
-          | from | to | code    |
-          |    1 |  2 | NoRoute |
+          | from | to | code |
+          |    1 |  2 | Ok   |
 
 
     Scenario: Routing on restricted oneway
@@ -118,12 +118,13 @@ Feature: Check zero speed updates
     Scenario: Via routing on restricted oneway
         Given the node map
             """
-            a-1-b-2-c-3-d
+            a-1-b-2-c-3-d---e
             """
 
         And the ways
-            | nodes | oneway |
-            | abc   | no     |
+            | nodes | oneway | name  |
+            | abcd  | no     | road1 |
+            | de    | no     | road2 |
         And the contract extra arguments "--segment-speed-file {speeds_file}"
         And the customize extra arguments "--segment-speed-file {speeds_file}"
         And the speed file
@@ -136,6 +137,8 @@ Feature: Check zero speed updates
           | waypoints | code    |
           | 1,2,3     | NoRoute |
           | 3,2,1     | NoRoute |
+          | 3,d,e     | NoRoute |
+          | e,d,3     | Ok      |
 
 
     @trip
