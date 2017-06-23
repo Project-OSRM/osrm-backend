@@ -30,17 +30,23 @@ struct ConcurrentIDMap
     ConcurrentIDMap() = default;
     ConcurrentIDMap(ConcurrentIDMap &&other)
     {
-        ScopedWriterLock other_lock{other.mutex};
-        ScopedWriterLock lock{mutex};
+        if (this != &other)
+        {
+            ScopedWriterLock other_lock{other.mutex};
+            ScopedWriterLock lock{mutex};
 
-        data = std::move(other.data);
+            data = std::move(other.data);
+        }
     }
     ConcurrentIDMap &operator=(ConcurrentIDMap &&other)
     {
-        ScopedWriterLock other_lock{other.mutex};
-        ScopedWriterLock lock{mutex};
+        if (this != &other)
+        {
+            ScopedWriterLock other_lock{other.mutex};
+            ScopedWriterLock lock{mutex};
 
-        data = std::move(other.data);
+            data = std::move(other.data);
+        }
         return *this;
     }
 
