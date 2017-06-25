@@ -1,7 +1,6 @@
 #include "util/indexed_data.hpp"
+#include "common/temporary_file.hpp"
 #include "util/exception.hpp"
-
-#include <boost/filesystem.hpp>
 
 #include <boost/test/test_case_template.hpp>
 #include <boost/test/unit_test.hpp>
@@ -36,15 +35,16 @@ BOOST_AUTO_TEST_CASE(check_variable_group_block_bitops)
 template <typename IndexedData, typename Offsets, typename Data>
 void test_rw(const Offsets &offsets, const Data &data)
 {
+    TemporaryFile file;
+
     IndexedData indexed_data;
-    auto path = boost::filesystem::unique_path();
 
     {
-        storage::io::FileWriter writer(path, storage::io::FileWriter::HasNoFingerprint);
+        storage::io::FileWriter writer(file.path, storage::io::FileWriter::HasNoFingerprint);
         indexed_data.write(writer, offsets.begin(), offsets.end(), data.begin());
     }
 
-    storage::io::FileReader reader(path, storage::io::FileReader::HasNoFingerprint);
+    storage::io::FileReader reader(file.path, storage::io::FileReader::HasNoFingerprint);
     auto length = reader.GetSize();
     std::string str(length, '\0');
     reader.ReadInto(const_cast<char *>(str.data()), length);
@@ -184,17 +184,18 @@ BOOST_AUTO_TEST_CASE(check_corrupted_memory)
 
 BOOST_AUTO_TEST_CASE(check_string_view)
 {
-    auto path = boost::filesystem::unique_path();
+    TemporaryFile file;
+
     std::string name_data = "hellostringview";
     std::vector<std::uint32_t> name_offsets = {0, 5, 11, 15};
 
     IndexedData<VariableGroupBlock<16, StringView>> indexed_data;
     {
-        storage::io::FileWriter writer(path, storage::io::FileWriter::HasNoFingerprint);
+        storage::io::FileWriter writer(file.path, storage::io::FileWriter::HasNoFingerprint);
         indexed_data.write(writer, name_offsets.begin(), name_offsets.end(), name_data.begin());
     }
 
-    storage::io::FileReader reader(path, storage::io::FileReader::HasNoFingerprint);
+    storage::io::FileReader reader(file.path, storage::io::FileReader::HasNoFingerprint);
     auto length = reader.GetSize();
     std::string str(length, '\0');
     reader.ReadInto(const_cast<char *>(str.data()), length);

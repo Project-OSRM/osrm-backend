@@ -1,4 +1,5 @@
 #include "util/name_table.hpp"
+#include "common/temporary_file.hpp"
 #include "util/exception.hpp"
 
 #include <boost/filesystem.hpp>
@@ -54,14 +55,14 @@ std::string PrapareNameTableData(std::vector<std::string> &data, bool fill_all)
     }
     name_offsets.push_back(name_char_data.size());
 
-    auto path = boost::filesystem::unique_path();
+    TemporaryFile file;
     {
-        storage::io::FileWriter writer(path, storage::io::FileWriter::HasNoFingerprint);
+        storage::io::FileWriter writer(file.path, storage::io::FileWriter::HasNoFingerprint);
         indexed_data.write(
             writer, name_offsets.begin(), name_offsets.end(), name_char_data.begin());
     }
 
-    storage::io::FileReader reader(path, storage::io::FileReader::HasNoFingerprint);
+    storage::io::FileReader reader(file.path, storage::io::FileReader::HasNoFingerprint);
     auto length = reader.GetSize();
     std::string str(length, '\0');
     reader.ReadInto(const_cast<char *>(str.data()), length);
