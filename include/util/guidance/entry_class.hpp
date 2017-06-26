@@ -39,7 +39,7 @@ class EntryClass
     using FlagBaseType = std::uint32_t;
 
   public:
-    EntryClass();
+    constexpr EntryClass() : enabled_entries_flags(0) {}
 
     // we are hiding the access to the flags behind a protection wall, to make sure the bit logic
     // isn't tempered with. zero based indexing
@@ -72,6 +72,8 @@ static_assert(std::is_trivially_copyable<EntryClass>::value,
 
 } // namespace guidance
 } // namespace utilr
+
+constexpr const util::guidance::EntryClass EMPTY_ENTRY_CLASS{};
 } // namespace osrm
 
 // make Entry Class hasbable
