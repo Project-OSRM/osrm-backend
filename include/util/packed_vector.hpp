@@ -10,6 +10,7 @@
 
 #include <boost/iterator/iterator_facade.hpp>
 #include <boost/iterator/reverse_iterator.hpp>
+#include <tbb/atomic.h>
 
 #include <array>
 #include <cmath>
@@ -348,7 +349,7 @@ template <typename T, std::size_t Bits, storage::Ownership Ownership> class Pack
         fill(initial_value);
     }
 
-    PackedVector(util::ViewOrVector<std::uint64_t, Ownership> vec_, std::size_t num_elements)
+    PackedVector(util::ViewOrVector<WordT, Ownership> vec_, std::size_t num_elements)
         : vec(std::move(vec_)), num_elements(num_elements)
     {
         initialize();
@@ -497,20 +498,39 @@ template <typename T, std::size_t Bits, storage::Ownership Ownership> class Pack
 
     inline void set_value(const InternalIndex internal_index, const T value)
     {
+        // ⚠ The method uses CAS spinlocks to prevent data races in parallel calls
+        // TBB internal atomic's are used for CAS on non-atomic data
+        // Parallel read and write access is not allowed
+
         auto &lower_word = vec[internal_index.lower_word];
         auto &upper_word = vec[internal_index.lower_word + 1];
 
-        lower_word = set_lower_value<WordT, T>(lower_word,
-                                               lower_mask[internal_index.element],
-                                               lower_offset[internal_index.element],
-                                               value);
-        upper_word = set_upper_value<WordT, T>(upper_word,
-                                               upper_mask[internal_index.element],
-                                               upper_offset[internal_index.element],
-                                               value);
+        // Lock-free update of the lower word
+        WordT local_lower_word, new_lower_word;
+        do
+        {
+            local_lower_word = lower_word;
+            new_lower_word = set_lower_value<WordT, T>(local_lower_word,
+                                                       lower_mask[internal_index.element],
+                                                       lower_offset[internal_index.element],
+                                                       value);
+        } while (tbb::internal::as_atomic(lower_word)
+                     .compare_and_swap(new_lower_word, local_lower_word) != local_lower_word);
+
+        // Lock-free update of the upper word
+        WordT local_upper_word, new_upper_word;
+        do
+        {
+            local_upper_word = upper_word;
+            new_upper_word = set_upper_value<WordT, T>(local_upper_word,
+                                                       upper_mask[internal_index.element],
+                                                       upper_offset[internal_index.element],
+                                                       value);
+        } while (tbb::internal::as_atomic(upper_word)
+                     .compare_and_swap(new_upper_word, local_upper_word) != local_upper_word);
     }
 
-    util::ViewOrVector<std::uint64_t, Ownership> vec;
+    util::ViewOrVector<WordT, Ownership> vec;
     std::uint64_t num_elements = 0;
 };
 }
