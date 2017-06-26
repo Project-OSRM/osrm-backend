@@ -9,8 +9,6 @@ namespace util
 namespace guidance
 {
 
-EntryClass::EntryClass() : enabled_entries_flags(0) {}
-
 void EntryClass::activate(std::uint32_t index)
 {
     BOOST_ASSERT(index < 8 * sizeof(FlagBaseType));
