@@ -43,7 +43,8 @@ local profile = {
 
   -- a list of suffixes to suppress in name change instructions
   suffix_list = {
-    'N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW', 'North', 'South', 'West', 'East'
+    'N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW',
+    'North', 'Northeast', 'East', 'Southeast', 'South', 'Southwest', 'West', 'Northwest'
   },
 
   barrier_whitelist = Set {
