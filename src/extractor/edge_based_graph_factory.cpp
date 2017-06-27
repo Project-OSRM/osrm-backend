@@ -148,13 +148,15 @@ NBGToEBG EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const N
     m_edge_based_node_container.SetData(forward_data.edge_id,
                                         GeometryID{packed_geometry_id, true},
                                         forward_data.name_id,
-                                        forward_data.travel_mode);
+                                        forward_data.travel_mode,
+                                        forward_data.classes);
     if (reverse_data.edge_id != SPECIAL_EDGEID)
     {
         m_edge_based_node_container.SetData(reverse_data.edge_id,
                                             GeometryID{packed_geometry_id, false},
                                             reverse_data.name_id,
-                                            reverse_data.travel_mode);
+                                            reverse_data.travel_mode,
+                                            reverse_data.classes);
     }
 
     // Add segments of edge-based nodes

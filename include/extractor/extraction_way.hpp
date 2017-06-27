@@ -85,6 +85,10 @@ struct ExtractionWay
     }
     const char *GetTurnLanesBackward() const { return turn_lanes_backward.c_str(); }
 
+    // markers for determining user-defined classes for each way
+    std::unordered_map<std::string, bool> forward_classes;
+    std::unordered_map<std::string, bool> backward_classes;
+
     // speed in km/h
     double forward_speed;
     double backward_speed;

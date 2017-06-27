@@ -1,6 +1,8 @@
 #ifndef PROFILE_PROPERTIES_HPP
 #define PROFILE_PROPERTIES_HPP
 
+#include "extractor/class_data.hpp"
+
 #include "util/typedefs.hpp"
 
 #include <algorithm>
@@ -17,6 +19,7 @@ const constexpr auto DEFAULT_MAX_SPEED = 180 / 3.6; // 180kmph -> m/s
 struct ProfileProperties
 {
     static constexpr int MAX_WEIGHT_NAME_LENGTH = 255;
+    static constexpr int MAX_CLASS_NAME_LENGTH = 255;
 
     ProfileProperties()
         : traffic_signal_penalty(0), u_turn_penalty(0),
@@ -66,6 +69,22 @@ struct ProfileProperties
         return std::string(weight_name);
     }
 
+    void SetClassName(std::size_t index, const std::string &name)
+    {
+        char *name_ptr = class_names[index];
+        auto count = std::min<std::size_t>(name.length(), MAX_CLASS_NAME_LENGTH) + 1;
+        std::copy_n(name.c_str(), count, name_ptr);
+        // Make sure this is always zero terminated
+        BOOST_ASSERT(class_names[index][count - 1] == '\0');
+        BOOST_ASSERT(class_names[index][MAX_CLASS_NAME_LENGTH] == '\0');
+    }
+
+    std::string GetClassName(std::size_t index) const
+    {
+        BOOST_ASSERT(index <= MAX_CLASS_INDEX);
+        return std::string(class_names[index]);
+    }
+
     double GetWeightMultiplier() const { return std::pow(10., weight_precision); }
 
     double GetMaxTurnWeight() const
@@ -86,6 +105,8 @@ struct ProfileProperties
     bool fallback_to_duration;
     //! stores the name of the weight (e.g. 'duration', 'distance', 'safety')
     char weight_name[MAX_WEIGHT_NAME_LENGTH + 1];
+    //! stores the names of each class
+    std::array<char[MAX_CLASS_NAME_LENGTH + 1], MAX_CLASS_INDEX + 1> class_names;
     unsigned weight_precision = 1;
     bool force_split_edges = false;
 

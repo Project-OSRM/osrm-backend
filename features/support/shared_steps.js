@@ -34,7 +34,7 @@ module.exports = function () {
                 var afterRequest = (err, res, body) => {
                     if (err) return cb(err);
                     if (body && body.length) {
-                        let destinations, exits, pronunciations, instructions, refs, bearings, turns, modes, times,
+                        let destinations, exits, pronunciations, instructions, refs, bearings, turns, modes, times, classes,
                             distances, summary, intersections, lanes, locations, annotation, weight_name, weights, approaches;
 
                         let json = JSON.parse(body);
@@ -53,6 +53,7 @@ module.exports = function () {
                             turns = this.turnList(json.routes[0]);
                             intersections = this.intersectionList(json.routes[0]);
                             modes = this.modeList(json.routes[0]);
+                            classes = this.classesList(json.routes[0]);
                             times = this.timeList(json.routes[0]);
                             distances = this.distanceList(json.routes[0]);
                             lanes = this.lanesList(json.routes[0]);
@@ -174,6 +175,7 @@ module.exports = function () {
                         putValue('bearing', bearings);
                         putValue('turns', turns);
                         putValue('modes', modes);
+                        putValue('classes', classes);
                         putValue('times', times);
                         putValue('distances', distances);
                         putValue('pronunciations', pronunciations);

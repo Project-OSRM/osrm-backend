@@ -140,6 +140,7 @@ void annotatePath(const FacadeT &facade,
         const auto name_index = facade.GetNameIndex(node_id);
         const auto turn_instruction = facade.GetTurnInstructionForEdgeID(turn_id);
         const extractor::TravelMode travel_mode = facade.GetTravelMode(node_id);
+        const auto classes = facade.GetClassData(node_id);
 
         const auto geometry_index = facade.GetGeometryIndex(node_id);
         std::vector<NodeID> id_vector;
@@ -186,6 +187,7 @@ void annotatePath(const FacadeT &facade,
                                              extractor::guidance::TurnInstruction::NO_TURN(),
                                              {{0, INVALID_LANEID}, INVALID_LANE_DESCRIPTIONID},
                                              travel_mode,
+                                             classes,
                                              EMPTY_ENTRY_CLASS,
                                              datasource_vector[segment_idx],
                                              util::guidance::TurnBearing(0),
@@ -261,6 +263,7 @@ void annotatePath(const FacadeT &facade,
                      extractor::guidance::TurnInstruction::NO_TURN(),
                      {{0, INVALID_LANEID}, INVALID_LANE_DESCRIPTIONID},
                      facade.GetTravelMode(target_node_id),
+                     facade.GetClassData(target_node_id),
                      EMPTY_ENTRY_CLASS,
                      datasource_vector[segment_idx],
                      util::guidance::TurnBearing(0),

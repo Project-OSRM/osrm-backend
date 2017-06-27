@@ -56,6 +56,8 @@ forward_rate                            | Float    | Routing weight, expressed a
 backward_rate                           | Float    |  "   "
 forward_mode                            | Enum     | Mode of travel (e.g. `car`, `ferry`). Mandatory. Defined in `include/extractor/travel_mode.hpp`.
 backward_mode                           | Enum     |  "   "
+forward_classes                         | Table    | Mark this way as being of a specific class, e.g. `result.classes["toll"] = true`. This will be exposed in the API as `classes` on each `RouteStep`.
+backward_classes                        | Table    |  "   "
 duration                                | Float    | Alternative setter for duration of the whole way in both directions
 weight                                  | Float    | Alternative setter for weight of the whole way in both directions
 turn_lanes_forward                      | String   | Directions for individual lanes (normalised OSM `turn:lanes` value)

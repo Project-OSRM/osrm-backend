@@ -3,14 +3,19 @@
 
 // Exposes all data access interfaces to the algorithms via base class ptr
 
+#include "engine/approach.hpp"
+#include "engine/phantom_node.hpp"
+
 #include "contractor/query_edge.hpp"
+
+#include "extractor/class_data.hpp"
 #include "extractor/edge_based_node_segment.hpp"
 #include "extractor/external_memory_node.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
 #include "extractor/guidance/turn_lane_types.hpp"
 #include "extractor/original_edge_data.hpp"
-#include "engine/approach.hpp"
-#include "engine/phantom_node.hpp"
+#include "extractor/travel_mode.hpp"
+
 #include "util/exception.hpp"
 #include "util/guidance/bearing_class.hpp"
 #include "util/guidance/entry_class.hpp"
@@ -86,6 +91,10 @@ class BaseDataFacade
     GetTurnInstructionForEdgeID(const EdgeID id) const = 0;
 
     virtual extractor::TravelMode GetTravelMode(const NodeID id) const = 0;
+
+    virtual extractor::ClassData GetClassData(const NodeID id) const = 0;
+
+    virtual std::vector<std::string> GetClasses(const extractor::ClassData class_data) const = 0;
 
     virtual std::vector<RTreeLeaf> GetEdgesInBox(const util::Coordinate south_west,
                                                  const util::Coordinate north_east) const = 0;

@@ -33,6 +33,8 @@ struct PathData
     util::guidance::LaneTupleIdPair lane_data;
     // travel mode of the street that leads to the turn
     extractor::TravelMode travel_mode : 4;
+    // user defined classed of the street that leads to the turn
+    extractor::ClassData classes;
     // entry class of the turn, indicating possibility of turns
     util::guidance::EntryClass entry_class;
 

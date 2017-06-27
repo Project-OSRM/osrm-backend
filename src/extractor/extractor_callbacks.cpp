@@ -34,8 +34,11 @@ using TurnLaneDescription = guidance::TurnLaneDescription;
 namespace TurnLaneType = guidance::TurnLaneType;
 
 ExtractorCallbacks::ExtractorCallbacks(ExtractionContainers &extraction_containers_,
+                                       std::unordered_map<std::string, ClassData> &classes_map,
+                                       guidance::LaneDescriptionMap &lane_description_map,
                                        const ProfileProperties &properties)
-    : external_memory(extraction_containers_),
+    : external_memory(extraction_containers_), classes_map(classes_map),
+      lane_description_map(lane_description_map),
       fallback_to_duration(properties.fallback_to_duration),
       force_split_edges(properties.force_split_edges)
 {
@@ -174,6 +177,38 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                 toValueByEdgeOrByMeter(parsed_way.weight, parsed_way.backward_rate);
         }
     }
+
+    const auto classStringToMask = [this](const std::string &class_name) {
+        auto iter = classes_map.find(class_name);
+        if (iter == classes_map.end())
+        {
+            if (classes_map.size() > MAX_CLASS_INDEX)
+            {
+                throw util::exception("Maximum number of classes if " +
+                                      std::to_string(MAX_CLASS_INDEX + 1));
+            }
+            ClassData class_mask = 1u << classes_map.size();
+            classes_map[class_name] = class_mask;
+            return class_mask;
+        }
+        else
+        {
+            return iter->second;
+        }
+    };
+    const auto classesToMask = [&](const auto &classes) {
+        ClassData mask = 0;
+        for (const auto &name_and_flag : classes)
+        {
+            if (name_and_flag.second)
+            {
+                mask |= classStringToMask(name_and_flag.first);
+            }
+        }
+        return mask;
+    };
+    const ClassData forward_classes = classesToMask(parsed_way.forward_classes);
+    const ClassData backward_classes = classesToMask(parsed_way.backward_classes);
 
     const auto laneStringToDescription = [](const std::string &lane_string) -> TurnLaneDescription {
         if (lane_string.empty())
@@ -330,7 +365,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
         (force_split_edges || (parsed_way.forward_rate != parsed_way.backward_rate) ||
          (parsed_way.forward_speed != parsed_way.backward_speed) ||
          (parsed_way.forward_travel_mode != parsed_way.backward_travel_mode) ||
-         (turn_lane_id_forward != turn_lane_id_backward));
+         (turn_lane_id_forward != turn_lane_id_backward) || (forward_classes != backward_classes));
 
     if (in_forward_direction)
     { // add (forward) segments or (forward,backward) for non-split edges in backward direction
@@ -352,6 +387,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                                           parsed_way.forward_restricted,
                                           split_edge,
                                           parsed_way.forward_travel_mode,
+                                          forward_classes,
                                           turn_lane_id_forward,
                                           road_classification,
                                           {}));
@@ -378,6 +414,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                                           parsed_way.backward_restricted,
                                           split_edge,
                                           parsed_way.backward_travel_mode,
+                                          backward_classes,
                                           turn_lane_id_backward,
                                           road_classification,
                                           {}));
@@ -399,9 +436,5 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
          OSMNodeID{static_cast<std::uint64_t>(nodes.back().ref())}});
 }
 
-guidance::LaneDescriptionMap &&ExtractorCallbacks::moveOutLaneDescriptionMap()
-{
-    return std::move(lane_description_map);
-}
 } // namespace extractor
 } // namespace osrm
