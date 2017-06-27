@@ -1,5 +1,4 @@
-# Broken see issue #4065
-@contract @options @edge-weight-updates-over-factor @todo
+@contract @options @edge-weight-updates-over-factor
 Feature: osrm-contract command line option: edge-weight-updates-over-factor
 
     Background: Log edge weight updates over given factor
@@ -22,6 +21,7 @@ Feature: osrm-contract command line option: edge-weight-updates-over-factor
 
     Scenario: Logging weight with updates over factor of 2, long segment
         When I run "osrm-extract --profile {profile_file} {osm_file}"
+        And the data has been partitioned
         When I run "osrm-contract --edge-weight-updates-over-factor 2 --segment-speed-file {speeds_file} {processed_file}"
         Then stderr should not contain "Speed values were used to update 2 segment(s)"
         And stderr should contain "Segment: 1,2"
