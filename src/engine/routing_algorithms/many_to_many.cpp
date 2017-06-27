@@ -243,6 +243,31 @@ manyToManySearch(SearchEngineData<Algorithm> &engine_working_data,
 }
 
 } // namespace ch
+
+// TODO: generalize with CH version
+namespace mld
+{
+std::vector<EdgeWeight>
+manyToManySearch(SearchEngineData<Algorithm> &engine_working_data,
+                 const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
+                 const std::vector<PhantomNode> &phantom_nodes,
+                 const std::vector<std::size_t> &source_indices,
+                 const std::vector<std::size_t> &target_indices)
+{
+    const auto number_of_sources =
+        source_indices.empty() ? phantom_nodes.size() : source_indices.size();
+    const auto number_of_targets =
+        target_indices.empty() ? phantom_nodes.size() : target_indices.size();
+    const auto number_of_entries = number_of_sources * number_of_targets;
+
+    std::vector<EdgeWeight> weights_table(number_of_entries, INVALID_EDGE_WEIGHT);
+    std::vector<EdgeWeight> durations_table(number_of_entries, MAXIMAL_EDGE_DURATION);
+
+    return durations_table;
+}
+
+} // namespace mld
+
 } // namespace routing_algorithms
 } // namespace engine
 } // namespace osrm

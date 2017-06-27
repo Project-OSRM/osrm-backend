@@ -157,8 +157,7 @@ RoutingAlgorithms<Algorithm>::ManyToManySearch(const std::vector<PhantomNode> &p
                                                const std::vector<std::size_t> &source_indices,
                                                const std::vector<std::size_t> &target_indices) const
 {
-    return routing_algorithms::ch::manyToManySearch(
-        heaps, facade, phantom_nodes, source_indices, target_indices);
+    return manyToManySearch(heaps, facade, phantom_nodes, source_indices, target_indices);
 }
 
 template <typename Algorithm>
@@ -210,16 +209,6 @@ InternalManyRoutesResult inline RoutingAlgorithms<
     routing_algorithms::mld::Algorithm>::AlternativePathSearch(const PhantomNodes &) const
 {
     throw util::exception("AlternativePathSearch is not implemented");
-}
-
-template <>
-inline std::vector<EdgeWeight>
-RoutingAlgorithms<routing_algorithms::mld::Algorithm>::ManyToManySearch(
-    const std::vector<PhantomNode> &,
-    const std::vector<std::size_t> &,
-    const std::vector<std::size_t> &) const
-{
-    throw util::exception("ManyToManySearch is not implemented");
 }
 }
 }

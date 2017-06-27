@@ -42,7 +42,6 @@ class TableAPI final : public BaseAPI
     {
         auto number_of_sources = parameters.sources.size();
         auto number_of_destinations = parameters.destinations.size();
-        ;
 
         // symmetric case
         if (parameters.sources.empty())

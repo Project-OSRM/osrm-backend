@@ -102,6 +102,9 @@ template <> struct HasShortestPathSearch<mld::Algorithm> final : std::true_type
 template <> struct HasMapMatching<mld::Algorithm> final : std::true_type
 {
 };
+template <> struct HasManyToManySearch<mld::Algorithm> final : std::true_type
+{
+};
 template <> struct HasGetTileTurns<mld::Algorithm> final : std::true_type
 {
 };
