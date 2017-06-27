@@ -53,6 +53,7 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
                                                             : source_node.forward_segment_id.id;
     const auto source_name_id = facade.GetNameIndex(source_node_id);
     const auto source_mode = facade.GetTravelMode(source_node_id);
+    auto source_classes = facade.GetClasses(facade.GetClassData(source_node_id));
 
     const EdgeWeight target_duration =
         target_traversed_in_reverse ? target_node.reverse_duration : target_node.forward_duration;
@@ -62,6 +63,7 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
                                                             : target_node.forward_segment_id.id;
     const auto target_name_id = facade.GetNameIndex(target_node_id);
     const auto target_mode = facade.GetTravelMode(target_node_id);
+    auto target_classes = facade.GetClasses(facade.GetClassData(target_node_id));
 
     const auto number_of_segments = leg_geometry.GetNumberOfSegments();
 
@@ -116,6 +118,7 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
                 const auto destinations = facade.GetDestinationsForID(step_name_id);
                 const auto exits = facade.GetExitsForID(step_name_id);
                 const auto distance = leg_geometry.segment_distances[segment_index];
+                auto classes = facade.GetClasses(path_point.classes);
 
                 steps.push_back(RouteStep{step_name_id,
                                           name.to_string(),
@@ -132,7 +135,8 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
                                           maneuver,
                                           leg_geometry.FrontIndex(segment_index),
                                           leg_geometry.BackIndex(segment_index) + 1,
-                                          {intersection}});
+                                          {intersection},
+                                          std::move(classes)});
 
                 if (leg_data_index + 1 < leg_data.size())
                 {
@@ -208,7 +212,8 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
                                   maneuver,
                                   leg_geometry.FrontIndex(segment_index),
                                   leg_geometry.BackIndex(segment_index) + 1,
-                                  {intersection}});
+                                  {intersection},
+                                  std::move(target_classes)});
     }
     // In this case the source + target are on the same edge segment
     else
@@ -250,7 +255,8 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
                                   std::move(maneuver),
                                   leg_geometry.FrontIndex(segment_index),
                                   leg_geometry.BackIndex(segment_index) + 1,
-                                  {intersection}});
+                                  {intersection},
+                                  std::move(source_classes)});
     }
 
     BOOST_ASSERT(segment_index == number_of_segments - 1);
@@ -289,7 +295,8 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
                               std::move(maneuver),
                               leg_geometry.locations.size() - 1,
                               leg_geometry.locations.size(),
-                              {intersection}});
+                              {intersection},
+                              std::move(target_classes)});
 
     BOOST_ASSERT(steps.front().intersections.size() == 1);
     BOOST_ASSERT(steps.front().intersections.front().bearings.size() == 1);

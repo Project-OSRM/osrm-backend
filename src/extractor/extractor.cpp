@@ -63,6 +63,21 @@ namespace osrm
 namespace extractor
 {
 
+namespace
+{
+// Converts the class name map into a fixed mapping of index to name
+void SetClassNames(const ExtractorCallbacks::ClassesMap &classes_map,
+                   ProfileProperties &profile_properties)
+{
+    for (const auto &pair : classes_map)
+    {
+        auto range = getClassIndexes(pair.second);
+        BOOST_ASSERT(range.size() == 1);
+        profile_properties.SetClassName(range.front(), pair.first);
+    }
+}
+}
+
 /**
  * TODO: Refactor this function into smaller functions for better readability.
  *
@@ -201,8 +216,13 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
     TIMER_START(parsing);
 
     ExtractionContainers extraction_containers;
-    auto extractor_callbacks = std::make_unique<ExtractorCallbacks>(
-        extraction_containers, scripting_environment.GetProfileProperties());
+    ExtractorCallbacks::ClassesMap classes_map;
+    guidance::LaneDescriptionMap turn_lane_map;
+    auto extractor_callbacks =
+        std::make_unique<ExtractorCallbacks>(extraction_containers,
+                                             classes_map,
+                                             turn_lane_map,
+                                             scripting_environment.GetProfileProperties());
 
     // setup raster sources
     scripting_environment.SetupSources();
@@ -304,10 +324,6 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
     util::Log() << "Raw input contains " << number_of_nodes << " nodes, " << number_of_ways
                 << " ways, and " << number_of_relations << " relations";
 
-    // take control over the turn lane map
-    guidance::LaneDescriptionMap turn_lane_map;
-    turn_lane_map.data = extractor_callbacks->moveOutLaneDescriptionMap().data;
-
     extractor_callbacks.reset();
 
     if (extraction_containers.all_edges_list.empty())
@@ -321,8 +337,9 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
                                       config.restriction_file_name,
                                       config.names_file_name);
 
-    files::writeProfileProperties(config.profile_properties_output_path,
-                                  scripting_environment.GetProfileProperties());
+    auto profile_properties = scripting_environment.GetProfileProperties();
+    SetClassNames(classes_map, profile_properties);
+    files::writeProfileProperties(config.profile_properties_output_path, profile_properties);
 
     TIMER_STOP(extracting);
     util::Log() << "extraction finished after " << TIMER_SEC(extracting) << "s";

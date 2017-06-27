@@ -1,6 +1,7 @@
 #ifndef NODE_BASED_GRAPH_HPP
 #define NODE_BASED_GRAPH_HPP
 
+#include "extractor/class_data.hpp"
 #include "extractor/guidance/road_classification.hpp"
 #include "extractor/node_based_edge.hpp"
 #include "util/dynamic_graph.hpp"
@@ -35,10 +36,12 @@ struct NodeBasedEdgeData
                       bool startpoint,
                       bool restricted,
                       extractor::TravelMode travel_mode,
+                      extractor::ClassData classes,
                       const LaneDescriptionID lane_description_id)
         : weight(weight), duration(duration), edge_id(edge_id), name_id(name_id),
           reversed(reversed), roundabout(roundabout), circular(circular), startpoint(startpoint),
-          restricted(restricted), travel_mode(travel_mode), lane_description_id(lane_description_id)
+          restricted(restricted), travel_mode(travel_mode), classes(classes),
+          lane_description_id(lane_description_id)
     {
     }
 
@@ -52,6 +55,7 @@ struct NodeBasedEdgeData
     bool startpoint : 1;
     bool restricted : 1;
     extractor::TravelMode travel_mode : 4;
+    extractor::ClassData classes;
     LaneDescriptionID lane_description_id;
     extractor::guidance::RoadClassification road_classification;
 
@@ -59,7 +63,7 @@ struct NodeBasedEdgeData
     {
         return (reversed == other.reversed) && (roundabout == other.roundabout) &&
                (circular == other.circular) && (startpoint == other.startpoint) &&
-               (travel_mode == other.travel_mode) &&
+               (travel_mode == other.travel_mode) && (classes == other.classes) &&
                (road_classification == other.road_classification) &&
                (restricted == other.restricted);
     }
@@ -89,6 +93,7 @@ NodeBasedDynamicGraphFromEdges(NodeID number_of_nodes,
             output_edge.data.circular = input_edge.circular;
             output_edge.data.name_id = input_edge.name_id;
             output_edge.data.travel_mode = input_edge.travel_mode;
+            output_edge.data.classes = input_edge.classes;
             output_edge.data.startpoint = input_edge.startpoint;
             output_edge.data.restricted = input_edge.restricted;
             output_edge.data.road_classification = input_edge.road_classification;

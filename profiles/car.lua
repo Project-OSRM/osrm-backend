@@ -366,6 +366,9 @@ function way_function(way, result)
     'handle_maxspeed',
     'handle_penalties',
 
+    -- compute class labels
+    'handle_classes',
+
     -- handle turn lanes and road classification, used for guidance
     'handle_turn_lanes',
     'handle_classification',

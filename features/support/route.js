@@ -260,6 +260,10 @@ module.exports = function () {
         return this.extractInstructionList(instructions, s => s.mode);
     };
 
+    this.classesList = (instructions) => {
+        return this.extractInstructionList(instructions, s => s.classes ? s.classes.join(';') : '');
+    };
+
     this.timeList = (instructions) => {
         return this.extractInstructionList(instructions, s => s.duration + 's');
     };

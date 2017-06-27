@@ -11,6 +11,7 @@
 
 #include "customizer/edge_based_graph.hpp"
 
+#include "extractor/class_data.hpp"
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/edge_based_edge.hpp"
 #include "extractor/files.hpp"
@@ -253,6 +254,7 @@ void Storage::PopulateLayout(DataLayout &layout)
         layout.SetBlockSize<NameID>(DataLayout::NAME_ID_LIST, nodes_number);
         layout.SetBlockSize<ComponentID>(DataLayout::COMPONENT_ID_LIST, nodes_number);
         layout.SetBlockSize<extractor::TravelMode>(DataLayout::TRAVEL_MODE_LIST, nodes_number);
+        layout.SetBlockSize<extractor::ClassData>(DataLayout::CLASSES_LIST, nodes_number);
     }
 
     if (boost::filesystem::exists(config.hsgr_data_path))
@@ -614,10 +616,16 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
         util::vector_view<extractor::TravelMode> travel_modes(
             travel_mode_list_ptr, layout.num_entries[storage::DataLayout::TRAVEL_MODE_LIST]);
 
+        auto classes_list_ptr = layout.GetBlockPtr<extractor::ClassData, true>(
+            memory_ptr, storage::DataLayout::CLASSES_LIST);
+        util::vector_view<extractor::ClassData> classes(
+            classes_list_ptr, layout.num_entries[storage::DataLayout::CLASSES_LIST]);
+
         extractor::EdgeBasedNodeDataView node_data(std::move(geometry_ids),
                                                    std::move(name_ids),
                                                    std::move(component_ids),
-                                                   std::move(travel_modes));
+                                                   std::move(travel_modes),
+                                                   std::move(classes));
 
         extractor::files::readNodeData(config.edge_based_nodes_data_path, node_data);
     }

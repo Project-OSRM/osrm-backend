@@ -583,6 +583,7 @@ step.
 - `destinations`: The destinations of the way. Will be `undefined` if there are no destinations.
 - `exits`: The exit numbers or names of the way. Will be `undefined` if there are no exit numbers or names.
 - `mode`: A string signifying the mode of transportation.
+- `classes`: An array of strings signifying the classes of the road as specified in the profile.
 - `maneuver`: A `StepManeuver` object representing the maneuver.
 - `intersections`: A list of `Intersection` objects that are passed along the segment, the very first belonging to the StepManeuver
 - `rotary_name`: The name for the rotary. Optionally included, if the step is a rotary and a rotary name is available.
@@ -596,6 +597,7 @@ step.
    "mode" : "driving",
    "duration" : 15.6,
    "weight" : 15.6,
+   "classes": ["toll", "restricted"],
    "intersections" : [
       {  "bearings" : [ 10, 92, 184, 270 ],
          "lanes" : [
@@ -660,7 +662,7 @@ step.
 | `roundabout`     | traverse roundabout, has additional property `exit` with NR if the roundabout is left. The modifier specifies the direction of entering the roundabout. |
 | `rotary`         | a traffic circle. While very similar to a larger version of a roundabout, it does not necessarily follow roundabout rules for right of way. It can offer `rotary_name` and/or `rotary_pronunciation` parameters (located in the RouteStep object) in addition to the `exit` parameter (located on the StepManeuver object).  |
 | `roundabout turn`| Describes a turn at a small roundabout that should be treated as normal turn. The `modifier` indicates the turn direciton. Example instruction: `At the roundabout turn left`. |
-| `notification`   | not an actual turn but a change in the driving conditions. For example the travel mode.  If the road takes a turn itself, the `modifier` describes the direction |
+| `notification`   | not an actual turn but a change in the driving conditions. For example the travel mode or classes. If the road takes a turn itself, the `modifier` describes the direction |
 
   Please note that even though there are `new name` and `notification` instructions, the `mode` and `name` can change
   between all instructions. They only offer a fallback in case nothing else is to report.

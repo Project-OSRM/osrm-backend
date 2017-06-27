@@ -72,6 +72,7 @@ struct InternalExtractorEdge
                  false, // local access only
                  false, // split edge
                  TRAVEL_MODE_INACCESSIBLE,
+                 0,
                  guidance::TurnLaneType::empty,
                  guidance::RoadClassification()),
           weight_data(), duration_data()
@@ -91,6 +92,7 @@ struct InternalExtractorEdge
                                    bool restricted,
                                    bool is_split,
                                    TravelMode travel_mode,
+                                   ClassData classes,
                                    LaneDescriptionID lane_description,
                                    guidance::RoadClassification road_classification,
                                    util::Coordinate source_coordinate)
@@ -107,6 +109,7 @@ struct InternalExtractorEdge
                  restricted,
                  is_split,
                  travel_mode,
+                 classes,
                  lane_description,
                  std::move(road_classification)),
           weight_data(std::move(weight_data)), duration_data(std::move(duration_data)),
@@ -139,6 +142,7 @@ struct InternalExtractorEdge
                                      false, // local access only
                                      false, // split edge
                                      TRAVEL_MODE_INACCESSIBLE,
+                                     0,
                                      INVALID_LANE_DESCRIPTIONID,
                                      guidance::RoadClassification(),
                                      util::Coordinate());
@@ -158,6 +162,7 @@ struct InternalExtractorEdge
                                      false, // local access only
                                      false, // split edge
                                      TRAVEL_MODE_INACCESSIBLE,
+                                     0,
                                      INVALID_LANE_DESCRIPTIONID,
                                      guidance::RoadClassification(),
                                      util::Coordinate());

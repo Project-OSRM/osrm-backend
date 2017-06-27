@@ -4,11 +4,15 @@
 // implements all data storage when shared memory _IS_ used
 
 #include "contractor/query_edge.hpp"
+#include "extractor/class_data.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
 #include "extractor/guidance/turn_lane_types.hpp"
+#include "extractor/travel_mode.hpp"
+
 #include "engine/algorithm.hpp"
 #include "engine/datafacade/algorithm_datafacade.hpp"
 #include "engine/datafacade/datafacade_base.hpp"
+
 #include "util/guidance/bearing_class.hpp"
 #include "util/guidance/entry_class.hpp"
 #include "util/guidance/turn_bearing.hpp"
@@ -195,6 +199,14 @@ class MockBaseDataFacade : public engine::datafacade::BaseDataFacade
     {
         return TRAVEL_MODE_INACCESSIBLE;
     }
+
+    extractor::ClassData GetClassData(const NodeID /*id*/) const override final { return 0; }
+
+    std::vector<std::string> GetClasses(const extractor::ClassData /*data*/) const override final
+    {
+        return {};
+    }
+
     NameID GetNameIndex(const NodeID /* id */) const override { return 0; }
 
     StringView GetNameForID(const NameID) const override final { return {}; }

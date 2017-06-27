@@ -23,11 +23,11 @@ Feature: Car - Destination only, no passing through
         When I route I should get
             | from | to | route      |
             | a    | b  | ab,ab      |
-            | a    | c  | ab,bcd     |
+            | a    | c  | ab,bcd,bcd |
             | a    | d  | ab,bcd,bcd |
             | a    | e  | axye,axye  |
             | e    | d  | de,de      |
-            | e    | c  | de,bcd     |
+            | e    | c  | de,bcd,bcd |
             | e    | b  | de,bcd,bcd |
             | e    | a  | axye,axye  |
 
@@ -51,12 +51,12 @@ Feature: Car - Destination only, no passing through
         When I route I should get
             | from | to | route       |
             | a    | b  | ab,ab       |
-            | a    | c  | ab,bc       |
-            | a    | d  | ab,cd       |
+            | a    | c  | ab,bc,bc    |
+            | a    | d  | ab,bc,cd    |
             | a    | e  | axye,axye   |
             | e    | d  | de,de       |
-            | e    | c  | de,cd       |
-            | e    | b  | de,bc       |
+            | e    | c  | de,cd,cd    |
+            | e    | b  | de,cd,bc    |
             | e    | a  | axye,axye   |
 
     Scenario: Car - Routing inside a destination only area

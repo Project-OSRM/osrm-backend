@@ -36,6 +36,7 @@ inline InputEdge MakeUnitEdge(const NodeID from, const NodeID to)
             false,
             true,
             TRAVEL_MODE_INACCESSIBLE,
+            0,
             INVALID_LANE_DESCRIPTIONID};
 }
 

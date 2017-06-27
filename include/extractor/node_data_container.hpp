@@ -1,6 +1,7 @@
 #ifndef OSRM_EXTRACTOR_NODE_DATA_CONTAINER_HPP
 #define OSRM_EXTRACTOR_NODE_DATA_CONTAINER_HPP
 
+#include "extractor/class_data.hpp"
 #include "extractor/travel_mode.hpp"
 
 #include "storage/io_fwd.hpp"
@@ -41,16 +42,18 @@ template <storage::Ownership Ownership> class EdgeBasedNodeDataContainerImpl
     EdgeBasedNodeDataContainerImpl() = default;
 
     EdgeBasedNodeDataContainerImpl(std::size_t size)
-        : geometry_ids(size), name_ids(size), component_ids(size), travel_modes(size)
+        : geometry_ids(size), name_ids(size), component_ids(size), travel_modes(size), classes(size)
     {
     }
 
     EdgeBasedNodeDataContainerImpl(Vector<GeometryID> geometry_ids,
                                    Vector<NameID> name_ids,
                                    Vector<ComponentID> component_ids,
-                                   Vector<TravelMode> travel_modes)
+                                   Vector<TravelMode> travel_modes,
+                                   Vector<ClassData> classes)
         : geometry_ids(std::move(geometry_ids)), name_ids(std::move(name_ids)),
-          component_ids(std::move(component_ids)), travel_modes(std::move(travel_modes))
+          component_ids(std::move(component_ids)), travel_modes(std::move(travel_modes)),
+          classes(std::move(classes))
     {
     }
 
@@ -62,13 +65,20 @@ template <storage::Ownership Ownership> class EdgeBasedNodeDataContainerImpl
 
     ComponentID GetComponentID(const NodeID node_id) const { return component_ids[node_id]; }
 
+    ClassData GetClassData(const NodeID node_id) const { return classes[node_id]; }
+
     // Used by EdgeBasedGraphFactory to fill data structure
     template <typename = std::enable_if<Ownership == storage::Ownership::Container>>
-    void SetData(NodeID node_id, GeometryID geometry_id, NameID name_id, TravelMode travel_mode)
+    void SetData(NodeID node_id,
+                 GeometryID geometry_id,
+                 NameID name_id,
+                 TravelMode travel_mode,
+                 ClassData class_data)
     {
         geometry_ids[node_id] = geometry_id;
         name_ids[node_id] = name_id;
         travel_modes[node_id] = travel_mode;
+        classes[node_id] = class_data;
     }
 
     // Used by EdgeBasedGraphFactory to fill data structure
@@ -91,6 +101,7 @@ template <storage::Ownership Ownership> class EdgeBasedNodeDataContainerImpl
         util::inplacePermutation(name_ids.begin(), name_ids.end(), permutation);
         util::inplacePermutation(component_ids.begin(), component_ids.end(), permutation);
         util::inplacePermutation(travel_modes.begin(), travel_modes.end(), permutation);
+        util::inplacePermutation(classes.begin(), classes.end(), permutation);
     }
 
   private:
@@ -98,6 +109,7 @@ template <storage::Ownership Ownership> class EdgeBasedNodeDataContainerImpl
     Vector<NameID> name_ids;
     Vector<ComponentID> component_ids;
     Vector<TravelMode> travel_modes;
+    Vector<ClassData> classes;
 };
 }
 

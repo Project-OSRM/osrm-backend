@@ -75,9 +75,6 @@ TurnInstruction IntersectionHandler::getInstructionForObvious(const std::size_t 
                                                               const ConnectedRoad &road) const
 {
     const auto type = findBasicTurnType(via_edge, road);
-    // handle travel modes:
-    const auto in_mode = node_based_graph.GetEdgeData(via_edge).travel_mode;
-    const auto out_mode = node_based_graph.GetEdgeData(road.eid).travel_mode;
     if (type == TurnType::OnRamp)
     {
         return {TurnType::OnRamp, getTurnDirection(road.angle)};
@@ -87,6 +84,15 @@ TurnInstruction IntersectionHandler::getInstructionForObvious(const std::size_t 
     {
         return {TurnType::Continue, DirectionModifier::UTurn};
     }
+
+    // handle travel modes:
+    const auto in_mode = node_based_graph.GetEdgeData(via_edge).travel_mode;
+    const auto out_mode = node_based_graph.GetEdgeData(road.eid).travel_mode;
+    const auto in_classes = node_based_graph.GetEdgeData(via_edge).classes;
+    const auto out_classes = node_based_graph.GetEdgeData(road.eid).classes;
+    // if we just lose class flags we don't want to notify
+    const auto needs_notification = in_mode != out_mode || !isSubset(out_classes, in_classes);
+
     if (type == TurnType::Turn)
     {
         const auto &in_data = node_based_graph.GetEdgeData(via_edge);
@@ -141,14 +147,14 @@ TurnInstruction IntersectionHandler::getInstructionForObvious(const std::size_t 
             }
             else
             {
-                return {in_mode == out_mode ? TurnType::NewName : TurnType::Notification,
+                return {needs_notification ? TurnType::Notification : TurnType::NewName,
                         getTurnDirection(road.angle)};
             }
         }
         // name has not changed, suppress a turn here or indicate mode change
         else
         {
-            if (in_mode != out_mode)
+            if (needs_notification)
                 return {TurnType::Notification, getTurnDirection(road.angle)};
             else
                 return {num_roads == 2 ? TurnType::NoTurn : TurnType::Suppressed,
@@ -156,7 +162,7 @@ TurnInstruction IntersectionHandler::getInstructionForObvious(const std::size_t 
         }
     }
     BOOST_ASSERT(type == TurnType::Continue);
-    if (in_mode != out_mode)
+    if (needs_notification)
     {
         return {TurnType::Notification, getTurnDirection(road.angle)};
     }

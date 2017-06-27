@@ -3,6 +3,7 @@
 
 #include <boost/assert.hpp>
 
+#include <climits>
 #include <cstdint>
 #include <utility>
 
@@ -26,16 +27,24 @@ template <typename T> std::size_t msb(T value)
     return msb - 1;
 }
 
-#if (defined(__clang__) || defined(__GNUC__) || defined(__GNUG__)) && __x86_64__
-inline std::size_t msb(std::uint64_t v)
+#if (defined(__clang__) || defined(__GNUC__) || defined(__GNUG__))
+inline std::size_t msb(unsigned long long v)
 {
     BOOST_ASSERT(v > 0);
-    return 63UL - __builtin_clzl(v);
+    constexpr auto MSB_INDEX = CHAR_BIT * sizeof(unsigned long long) - 1;
+    return MSB_INDEX - __builtin_clzll(v);
 }
-inline std::size_t msb(std::uint32_t v)
+inline std::size_t msb(unsigned long v)
 {
     BOOST_ASSERT(v > 0);
-    return 31UL - __builtin_clz(v);
+    constexpr auto MSB_INDEX = CHAR_BIT * sizeof(unsigned long) - 1;
+    return MSB_INDEX - __builtin_clzl(v);
+}
+inline std::size_t msb(unsigned int v)
+{
+    BOOST_ASSERT(v > 0);
+    constexpr auto MSB_INDEX = CHAR_BIT * sizeof(unsigned int) - 1;
+    return MSB_INDEX - __builtin_clz(v);
 }
 #endif
 }

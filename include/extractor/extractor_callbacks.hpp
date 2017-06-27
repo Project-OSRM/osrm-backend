@@ -1,6 +1,7 @@
 #ifndef EXTRACTOR_CALLBACKS_HPP
 #define EXTRACTOR_CALLBACKS_HPP
 
+#include "extractor/class_data.hpp"
 #include "extractor/guidance/turn_lane_types.hpp"
 #include "util/typedefs.hpp"
 
@@ -61,13 +62,18 @@ class ExtractorCallbacks
     using MapKey = std::tuple<std::string, std::string, std::string, std::string, std::string>;
     using MapVal = unsigned;
     std::unordered_map<MapKey, MapVal> string_map;
-    guidance::LaneDescriptionMap lane_description_map;
     ExtractionContainers &external_memory;
+    std::unordered_map<std::string, ClassData> &classes_map;
+    guidance::LaneDescriptionMap &lane_description_map;
     bool fallback_to_duration;
     bool force_split_edges;
 
   public:
+    using ClassesMap = std::unordered_map<std::string, ClassData>;
+
     explicit ExtractorCallbacks(ExtractionContainers &extraction_containers,
+                                std::unordered_map<std::string, ClassData> &classes_map,
+                                guidance::LaneDescriptionMap &lane_description_map,
                                 const ProfileProperties &properties);
 
     ExtractorCallbacks(const ExtractorCallbacks &) = delete;
@@ -81,9 +87,6 @@ class ExtractorCallbacks
 
     // warning: caller needs to take care of synchronization!
     void ProcessWay(const osmium::Way &current_way, const ExtractionWay &result_way);
-
-    // destroys the internal laneDescriptionMap
-    guidance::LaneDescriptionMap &&moveOutLaneDescriptionMap();
 };
 }
 }
