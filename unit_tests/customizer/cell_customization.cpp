@@ -25,6 +25,7 @@ auto makeGraph(const MultiLevelPartition &mlp, const std::vector<MockEdge> &mock
     struct EdgeData
     {
         EdgeWeight weight;
+        EdgeDuration duration;
         bool forward;
         bool backward;
     };
@@ -34,8 +35,8 @@ auto makeGraph(const MultiLevelPartition &mlp, const std::vector<MockEdge> &mock
     for (const auto &m : mock_edges)
     {
         max_id = std::max<std::size_t>(max_id, std::max(m.start, m.target));
-        edges.push_back(Edge{m.start, m.target, m.weight, true, false});
-        edges.push_back(Edge{m.target, m.start, m.weight, false, true});
+        edges.push_back(Edge{m.start, m.target, m.weight, 2 * m.weight, true, false});
+        edges.push_back(Edge{m.target, m.start, m.weight, 2 * m.weight, false, true});
     }
     std::sort(edges.begin(), edges.end());
     return partition::MultiLevelGraph<EdgeData, osrm::storage::Ownership::Container>(
@@ -252,6 +253,12 @@ BOOST_AUTO_TEST_CASE(four_levels_test)
     CHECK_EQUAL_RANGE(cell_2_1.GetInWeight(8), 3, INVALID_EDGE_WEIGHT);
     CHECK_EQUAL_RANGE(cell_2_1.GetInWeight(9), 0, INVALID_EDGE_WEIGHT);
     CHECK_EQUAL_RANGE(cell_2_1.GetInWeight(12), INVALID_EDGE_WEIGHT, 10);
+
+    CHECK_EQUAL_RANGE(cell_2_1.GetOutDuration(9), 6, 0, INVALID_EDGE_WEIGHT);
+    CHECK_EQUAL_RANGE(cell_2_1.GetOutDuration(13), INVALID_EDGE_WEIGHT, INVALID_EDGE_WEIGHT, 20);
+    CHECK_EQUAL_RANGE(cell_2_1.GetInDuration(8), 6, INVALID_EDGE_WEIGHT);
+    CHECK_EQUAL_RANGE(cell_2_1.GetInDuration(9), 0, INVALID_EDGE_WEIGHT);
+    CHECK_EQUAL_RANGE(cell_2_1.GetInDuration(12), INVALID_EDGE_WEIGHT, 20);
 
     CellStorage storage_rec(mlp, graph);
     customizer.Customize(graph, storage_rec);

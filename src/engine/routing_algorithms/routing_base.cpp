@@ -23,40 +23,6 @@ bool needsLoopBackwards(const PhantomNode &source_phantom, const PhantomNode &ta
                target_phantom.GetReverseWeightPlusOffset();
 }
 
-void insertSourceInHeap(SearchEngineData<ch::Algorithm>::ManyToManyQueryHeap &heap,
-                        const PhantomNode &phantom_node)
-{
-    if (phantom_node.IsValidForwardSource())
-    {
-        heap.Insert(phantom_node.forward_segment_id.id,
-                    -phantom_node.GetForwardWeightPlusOffset(),
-                    {phantom_node.forward_segment_id.id, -phantom_node.GetForwardDuration()});
-    }
-    if (phantom_node.IsValidReverseSource())
-    {
-        heap.Insert(phantom_node.reverse_segment_id.id,
-                    -phantom_node.GetReverseWeightPlusOffset(),
-                    {phantom_node.reverse_segment_id.id, -phantom_node.GetReverseDuration()});
-    }
-}
-
-void insertTargetInHeap(SearchEngineData<ch::Algorithm>::ManyToManyQueryHeap &heap,
-                        const PhantomNode &phantom_node)
-{
-    if (phantom_node.IsValidForwardTarget())
-    {
-        heap.Insert(phantom_node.forward_segment_id.id,
-                    phantom_node.GetForwardWeightPlusOffset(),
-                    {phantom_node.forward_segment_id.id, phantom_node.GetForwardDuration()});
-    }
-    if (phantom_node.IsValidReverseTarget())
-    {
-        heap.Insert(phantom_node.reverse_segment_id.id,
-                    phantom_node.GetReverseWeightPlusOffset(),
-                    {phantom_node.reverse_segment_id.id, phantom_node.GetReverseDuration()});
-    }
-}
-
 } // namespace routing_algorithms
 } // namespace engine
 } // namespace osrm
