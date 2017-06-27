@@ -72,7 +72,8 @@ local profile = {
 
   -- list of suffixes to suppress in name change instructions
   suffix_list = Set {
-    'N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW', 'North', 'South', 'West', 'East'
+    'N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW',
+    'North', 'Northeast', 'East', 'Southeast', 'South', 'Southwest', 'West', 'Northwest'
   },
 
   avoid = Set {

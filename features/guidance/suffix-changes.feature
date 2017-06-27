@@ -128,3 +128,29 @@ Feature: Suppress New Names on dedicated Suffices
             | waypoints | route   | turns         |
             | a,c       | 42,42 S | depart,arrive |
 
+
+    # http://www.openstreetmap.org/edit#map=18/38.90361/-77.00814
+    Scenario: 45 Degree Granularity
+        Given a grid size of 5 meters
+        Given the node map
+            """
+            a  f
+
+            b  e
+
+            c  d
+
+            x  y
+
+            """
+
+        And the ways
+            | nodes  | highway | name                           | oneway |
+            | abcx   | primary | North Capitol Street Nortwest  | yes    |
+            | ydef   | primary | North Capitol Street Northeast | yes    |
+            | cd     | primary |                                |        |
+
+       When I route I should get
+            | waypoints | route                                                                                       | turns                    |
+            | a,f       | North Capitol Street Nortwest,North Capitol Street Northeast,North Capitol Street Northeast | depart,turn uturn,arrive |
+
