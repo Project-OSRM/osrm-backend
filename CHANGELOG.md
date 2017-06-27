@@ -1,3 +1,9 @@
+# 5.9.0
+  - Changes from 5.8
+  - Algorithm:
+      - Multi-Level Dijkstra:
+        - Plugins supported: `table`
+
 # 5.8.0
   - Changes from 5.7
     - API:

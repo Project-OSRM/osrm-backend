@@ -78,6 +78,20 @@ struct MultiLayerDijkstraHeapData
     MultiLayerDijkstraHeapData(NodeID p, bool from) : parent(p), from_clique_arc(from) {}
 };
 
+struct ManyToManyMultiLayerDijkstraHeapData : MultiLayerDijkstraHeapData
+{
+    LevelID level;
+    EdgeWeight duration;
+    ManyToManyMultiLayerDijkstraHeapData(NodeID p, EdgeWeight duration)
+        : MultiLayerDijkstraHeapData(p), level(0), duration(duration)
+    {
+    }
+    ManyToManyMultiLayerDijkstraHeapData(NodeID p, bool from, LevelID level, EdgeWeight duration)
+        : MultiLayerDijkstraHeapData(p, from), level(level), duration(duration)
+    {
+    }
+};
+
 template <> struct SearchEngineData<routing_algorithms::mld::Algorithm>
 {
     using QueryHeap = util::QueryHeap<NodeID,
@@ -86,12 +100,23 @@ template <> struct SearchEngineData<routing_algorithms::mld::Algorithm>
                                       MultiLayerDijkstraHeapData,
                                       util::UnorderedMapStorage<NodeID, int>>;
 
+    using ManyToManyQueryHeap = util::QueryHeap<NodeID,
+                                                NodeID,
+                                                EdgeWeight,
+                                                ManyToManyMultiLayerDijkstraHeapData,
+                                                util::UnorderedMapStorage<NodeID, int>>;
+
     using SearchEngineHeapPtr = boost::thread_specific_ptr<QueryHeap>;
+
+    using ManyToManyHeapPtr = boost::thread_specific_ptr<ManyToManyQueryHeap>;
 
     static SearchEngineHeapPtr forward_heap_1;
     static SearchEngineHeapPtr reverse_heap_1;
+    static ManyToManyHeapPtr many_to_many_heap;
 
     void InitializeOrClearFirstThreadLocalStorage(unsigned number_of_nodes);
+
+    void InitializeOrClearManyToManyThreadLocalStorage(unsigned number_of_nodes);
 };
 }
 }
