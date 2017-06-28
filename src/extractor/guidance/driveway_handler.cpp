@@ -35,7 +35,7 @@ bool DrivewayHandler::canProcess(const NodeID /*nid*/,
                                  const EdgeID /*via_eid*/,
                                  const Intersection &intersection) const
 {
-    const auto from_eid = intersection.front().eid;
+    const auto from_eid = intersection.getUTurnRoad().eid;
 
     if (intersection.size() <= 2 ||
         node_based_graph.GetEdgeData(from_eid).road_classification.IsLowPriorityRoadClass())
@@ -63,6 +63,11 @@ operator()(const NodeID nid, const EdgeID source_edge_id, Intersection intersect
 
     (void)nid;
     OSRM_ASSERT(road != intersection.end(), coordinates[nid]);
+
+    if (road->instruction == TurnInstruction::INVALID())
+        return intersection;
+
+    OSRM_ASSERT(road->instruction.type == TurnType::Turn, coordinates[nid]);
 
     road->instruction.type =
         isSameName(source_edge_id, road->eid) ? TurnType::NoTurn : TurnType::NewName;
