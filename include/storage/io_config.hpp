@@ -2,7 +2,6 @@
 #define OSRM_IO_CONFIG_HPP
 
 #include "util/exception.hpp"
-#include "util/log.hpp"
 
 #include <array>
 #include <boost/algorithm/string/predicate.hpp>
@@ -16,11 +15,11 @@ namespace storage
 {
 struct IOConfig
 {
-    IOConfig(std::vector<boost::filesystem::path> _required_input_files,
-             std::vector<boost::filesystem::path> _optional_input_files,
-             std::vector<boost::filesystem::path> _output_files)
-        : required_input_files(_required_input_files), optional_input_files(_optional_input_files),
-          output_files(_output_files)
+    IOConfig(std::vector<boost::filesystem::path> required_input_files_,
+             std::vector<boost::filesystem::path> optional_input_files_,
+             std::vector<boost::filesystem::path> output_files_)
+        : required_input_files(required_input_files_), optional_input_files(optional_input_files_),
+          output_files(output_files_)
     {
     }
 
@@ -46,27 +45,12 @@ struct IOConfig
         base_path = {path};
     }
 
-    bool IsValid() const
-    {
-        bool success = true;
-        for (auto &fileName : required_input_files)
-        {
-            if (!boost::filesystem::is_regular_file({base_path.string() + fileName.string()}))
-            {
-                util::Log(logWARNING) << "Missing/Broken File: " << base_path.string()
-                                      << fileName.string();
-                success = false;
-            }
-        }
-        return success;
-    }
-
+    bool IsValid() const;
     boost::filesystem::path GetPath(const std::string &fileName) const
     {
         if (!IsConfigured(fileName, required_input_files) &&
             !IsConfigured(fileName, optional_input_files) && !IsConfigured(fileName, output_files))
         {
-            util::Log(logERROR) << "Tried to access file which is not configured: " << fileName;
             throw util::exception("Tried to access file which is not configured: " + fileName);
         }
 

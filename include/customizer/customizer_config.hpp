@@ -17,13 +17,13 @@ namespace customizer
 struct CustomizationConfig final : storage::IOConfig
 {
     CustomizationConfig()
-        : requested_num_threads(0),
-          IOConfig(
+        : IOConfig(
               {
                   ".osrm",
               },
               {},
-              {".osrm.ebg", ".osrm.partition", ".osrm.cells", ".osrm.mldgr"})
+              {".osrm.ebg", ".osrm.partition", ".osrm.cells", ".osrm.mldgr"}),
+          requested_num_threads(0)
     {
     }
 
