@@ -29,7 +29,7 @@ const run_query = (query_options, filters, callback) => {
                 .then(values => callback(query_options.path, res.statusCode, ttfb, elapsed, values));
         });
     }).on('socket', function (/*res*/) {
-        tic = ((toc) => { return () => process.hrtime(toc)[1] / 1000000; })(process.hrtime());
+        tic = ((toc) => { return () => { const t = process.hrtime(toc); return t[0] * 1000 + t[1] / 1000000; }; })(process.hrtime());
     }).on('error', function (res) {
         callback(query_options.path, res.code);
     }).end();
@@ -89,7 +89,11 @@ const optionsList = [
      description: 'CSV file with queries in the first row', typeLabel: '[underline]{file}'}];
 const options = cla(optionsList);
 if (options.help) {
-    const banner = '╔═╗╔═╗╦═╗╔╦╗      \n║ ║╚═╗╠╦╝║║║      \n╚═╝╚═╝╩╚═╩ ╩      \n┬─┐┬ ┬┌┐┌┌┐┌┌─┐┬─┐\n├┬┘│ │││││││├┤ ├┬┘\n┴└─└─┘┘└┘┘└┘└─┘┴└─';
+    const banner =
+          String.raw`  ____  _______  __  ___  ___  __  ___  ___  _________  ` + '\n' +
+          String.raw` / __ \/ __/ _ \/  |/  / / _ \/ / / / |/ / |/ / __/ _ \ ` + '\n' +
+          String.raw`/ /_/ /\ \/ , _/ /|_/ / / , _/ /_/ /    /    / _// , _/ ` + '\n' +
+          String.raw`\____/___/_/|_/_/  /_/ /_/|_|\____/_/|_/_/|_/___/_/|_|  `;
     const usage = clu([
         { content: ansi.format(banner, 'green'), raw: true },
         { header: 'Run OSRM queries and collect results'/*, content: 'Generates something [italic]{very} important.'*/ },
@@ -105,7 +109,7 @@ if (options.hasOwnProperty('queries-files')) {
     queries = fs.readFileSync(options['queries-files'])
         .toString()
         .split('\n')
-        .map(r => { const match = /^"([^+]+)"/.exec(r); return match ? match[1] : null; })
+        .map(r => { const match = /^"([^\"]+)"/.exec(r); return match ? match[1] : null; })
         .filter(q => q);
 } else {
     const polygon = options['bounding-box'].map(x => x.poly).reduce((x,y) => turf.union(x, y));
