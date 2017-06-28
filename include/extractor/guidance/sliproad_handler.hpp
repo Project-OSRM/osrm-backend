@@ -21,7 +21,6 @@ namespace guidance
 {
 
 // Intersection handlers deal with all issues related to intersections.
-// They assign appropriate turn operations to the TurnOperations.
 class SliproadHandler final : public IntersectionHandler
 {
   public:
