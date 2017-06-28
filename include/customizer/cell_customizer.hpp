@@ -20,6 +20,7 @@ class CellCustomizer
     struct HeapData
     {
         bool from_clique;
+        EdgeDuration duration;
     };
 
   public:
@@ -41,31 +42,41 @@ class CellCustomizer
         {
             std::unordered_set<NodeID> destinations_set(destinations.begin(), destinations.end());
             heap.Clear();
-            heap.Insert(source, 0, {false});
+            heap.Insert(source, 0, {false, 0});
 
             // explore search space
             while (!heap.Empty() && !destinations_set.empty())
             {
                 const NodeID node = heap.DeleteMin();
                 const EdgeWeight weight = heap.GetKey(node);
+                const EdgeDuration duration = heap.GetData(node).duration;
 
                 if (level == 1)
-                    RelaxNode<true>(graph, cells, heap, level, node, weight);
+                    RelaxNode<true>(graph, cells, heap, level, node, weight, duration);
                 else
-                    RelaxNode<false>(graph, cells, heap, level, node, weight);
+                    RelaxNode<false>(graph, cells, heap, level, node, weight, duration);
 
                 destinations_set.erase(node);
             }
 
             // fill a map of destination nodes to placeholder pointers
-            auto destination_iter = destinations.begin();
-            for (auto &weight : cell.GetOutWeight(source))
+            auto weights = cell.GetOutWeight(source);
+            auto durations = cell.GetOutDuration(source);
+            for (auto &destination : destinations)
             {
-                BOOST_ASSERT(destination_iter != destinations.end());
-                const auto destination = *destination_iter++;
-                weight =
-                    heap.WasInserted(destination) ? heap.GetKey(destination) : INVALID_EDGE_WEIGHT;
+                BOOST_ASSERT(!weights.empty());
+                BOOST_ASSERT(!durations.empty());
+
+                const bool inserted = heap.WasInserted(destination);
+                weights.front() = inserted ? heap.GetKey(destination) : INVALID_EDGE_WEIGHT;
+                durations.front() =
+                    inserted ? heap.GetData(destination).duration : MAXIMAL_EDGE_DURATION;
+
+                weights.advance_begin(1);
+                durations.advance_begin(1);
             }
+            BOOST_ASSERT(weights.empty());
+            BOOST_ASSERT(durations.empty());
         }
     }
 
@@ -94,7 +105,8 @@ class CellCustomizer
                    Heap &heap,
                    LevelID level,
                    NodeID node,
-                   EdgeWeight weight) const
+                   EdgeWeight weight,
+                   EdgeDuration duration) const
     {
         BOOST_ASSERT(heap.WasInserted(node));
 
@@ -113,24 +125,26 @@ class CellCustomizer
                 auto subcell_id = partition.GetCell(level - 1, node);
                 auto subcell = cells.GetCell(level - 1, subcell_id);
                 auto subcell_destination = subcell.GetDestinationNodes().begin();
+                auto subcell_duration = subcell.GetOutDuration(node).begin();
                 for (auto subcell_weight : subcell.GetOutWeight(node))
                 {
                     if (subcell_weight != INVALID_EDGE_WEIGHT)
                     {
                         const NodeID to = *subcell_destination;
-                        const EdgeWeight to_weight = subcell_weight + weight;
+                        const EdgeWeight to_weight = weight + subcell_weight;
                         if (!heap.WasInserted(to))
                         {
-                            heap.Insert(to, to_weight, {true});
+                            heap.Insert(to, to_weight, {true, duration + *subcell_duration});
                         }
                         else if (to_weight < heap.GetKey(to))
                         {
                             heap.DecreaseKey(to, to_weight);
-                            heap.GetData(to).from_clique = true;
+                            heap.GetData(to) = {true, duration + *subcell_duration};
                         }
                     }
 
                     ++subcell_destination;
+                    ++subcell_duration;
                 }
             }
         }
@@ -144,15 +158,15 @@ class CellCustomizer
                 (first_level ||
                  partition.GetCell(level - 1, node) != partition.GetCell(level - 1, to)))
             {
-                const EdgeWeight to_weight = data.weight + weight;
+                const EdgeWeight to_weight = weight + data.weight;
                 if (!heap.WasInserted(to))
                 {
-                    heap.Insert(to, to_weight, {false});
+                    heap.Insert(to, to_weight, {false, duration + data.duration});
                 }
                 else if (to_weight < heap.GetKey(to))
                 {
                     heap.DecreaseKey(to, to_weight);
-                    heap.GetData(to).from_clique = false;
+                    heap.GetData(to) = {false, duration + data.duration};
                 }
             }
         }

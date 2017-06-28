@@ -964,6 +964,8 @@ template <> class ContiguousInternalMemoryAlgorithmDataFacade<MLD> : public Algo
 
             auto mld_cell_weights_ptr = data_layout.GetBlockPtr<EdgeWeight>(
                 memory_block, storage::DataLayout::MLD_CELL_WEIGHTS);
+            auto mld_cell_durations_ptr = data_layout.GetBlockPtr<EdgeDuration>(
+                memory_block, storage::DataLayout::MLD_CELL_DURATIONS);
             auto mld_source_boundary_ptr = data_layout.GetBlockPtr<NodeID>(
                 memory_block, storage::DataLayout::MLD_CELL_SOURCE_BOUNDARY);
             auto mld_destination_boundary_ptr = data_layout.GetBlockPtr<NodeID>(
@@ -975,6 +977,8 @@ template <> class ContiguousInternalMemoryAlgorithmDataFacade<MLD> : public Algo
 
             auto weight_entries_count =
                 data_layout.GetBlockEntries(storage::DataLayout::MLD_CELL_WEIGHTS);
+            auto duration_entries_count =
+                data_layout.GetBlockEntries(storage::DataLayout::MLD_CELL_DURATIONS);
             auto source_boundary_entries_count =
                 data_layout.GetBlockEntries(storage::DataLayout::MLD_CELL_SOURCE_BOUNDARY);
             auto destination_boundary_entries_count =
@@ -983,7 +987,11 @@ template <> class ContiguousInternalMemoryAlgorithmDataFacade<MLD> : public Algo
             auto cell_level_offsets_entries_count =
                 data_layout.GetBlockEntries(storage::DataLayout::MLD_CELL_LEVEL_OFFSETS);
 
+            BOOST_ASSERT(weight_entries_count == duration_entries_count);
+
             util::vector_view<EdgeWeight> weights(mld_cell_weights_ptr, weight_entries_count);
+            util::vector_view<EdgeDuration> durations(mld_cell_durations_ptr,
+                                                      duration_entries_count);
             util::vector_view<NodeID> source_boundary(mld_source_boundary_ptr,
                                                       source_boundary_entries_count);
             util::vector_view<NodeID> destination_boundary(mld_destination_boundary_ptr,
@@ -994,6 +1002,7 @@ template <> class ContiguousInternalMemoryAlgorithmDataFacade<MLD> : public Algo
                                                            cell_level_offsets_entries_count);
 
             mld_cell_storage = partition::CellStorageView{std::move(weights),
+                                                          std::move(durations),
                                                           std::move(source_boundary),
                                                           std::move(destination_boundary),
                                                           std::move(cells),

@@ -115,5 +115,6 @@ void SearchEngineData<MLD>::InitializeOrClearFirstThreadLocalStorage(unsigned nu
         reverse_heap_1.reset(new QueryHeap(number_of_nodes));
     }
 }
+
 }
 }
