@@ -46,7 +46,8 @@ class ValidationHandler final : public IntersectionHandler
                             const EdgeID via_eid,
                             Intersection intersection) const override final
     {
-        checkForSharpTurnsOntoRamps(nid, via_eid, intersection);
+        // checkForSharpTurnsOntoRamps(nid, via_eid, intersection);
+        checkForSharpTurnsBetweenRamps(nid, via_eid, intersection);
 
         return intersection;
     }
@@ -59,14 +60,44 @@ class ValidationHandler final : public IntersectionHandler
         // Index 0 is UTurn road
         for (std::size_t i = 1; i < intersection.size(); ++i)
         {
-            const auto road = intersection[i];
+            const auto &road = intersection[i];
 
             if (road.instruction.type != TurnType::OnRamp || !road.entry_allowed)
             {
                 continue;
             }
 
-            if (road.angle <= 2 * NARROW_TURN_ANGLE)
+            if (osrm::util::angularDeviation(0, road.angle) <= 2 * NARROW_TURN_ANGLE)
+            {
+                const auto intersection_node_id = node_based_graph.GetTarget(via_eid);
+                const auto where = coordinates[intersection_node_id];
+
+                std::cout << ">>> " << road.angle << "," << where << std::endl;
+            }
+        }
+    }
+
+  private:
+    void checkForSharpTurnsBetweenRamps(const NodeID,
+                                        const EdgeID via_eid,
+                                        const Intersection &intersection) const
+    {
+        bool edge_is_link = node_based_graph.GetEdgeData(via_eid).road_classification.IsLinkClass();
+
+        // Index 0 is UTurn road
+        for (std::size_t i = 1; i < intersection.size(); ++i)
+        {
+            const auto &road = intersection[i];
+
+            bool road_is_link = node_based_graph.GetEdgeData(road.eid).road_classification.IsLinkClass();
+
+            if (!road.entry_allowed)
+            {
+                continue;
+            }
+
+
+            if (osrm::util::angularDeviation(0, road.angle) <= 2 * NARROW_TURN_ANGLE && edge_is_link && road_is_link)
             {
                 const auto intersection_node_id = node_based_graph.GetTarget(via_eid);
                 const auto where = coordinates[intersection_node_id];
