@@ -57,7 +57,6 @@ struct StorageConfig final : IOConfig
                     ".osrm.properties",
                     ".osrm.icd"},
                    {".osrm.hsgr",
-                    ".osrm.nodes",
                     ".osrm.nbg_nodes",
                     ".osrm.ebg_nodes",
                     ".osrm.core",

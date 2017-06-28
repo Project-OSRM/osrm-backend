@@ -42,8 +42,7 @@ namespace extractor
 
 struct ExtractorConfig final : storage::IOConfig
 {
-    ExtractorConfig() noexcept : requested_num_threads(0),
-                                 IOConfig(
+    ExtractorConfig() noexcept : IOConfig(
                                      {
                                          "",
                                      },
@@ -68,7 +67,8 @@ struct ExtractorConfig final : storage::IOConfig
                                       ".osrm.properties",
                                       ".osrm.icd",
                                       ".osrm.cnbg",
-                                      ".osrm.cnbg_to_ebg"})
+                                      ".osrm.cnbg_to_ebg"}),
+                                 requested_num_threads(0)
     {
     }
 

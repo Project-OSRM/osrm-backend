@@ -43,12 +43,13 @@ namespace contractor
 struct ContractorConfig final : storage::IOConfig
 {
     ContractorConfig()
-        : requested_num_threads(0), IOConfig(
-                                        {
-                                            ".osrm",
-                                        },
-                                        {},
-                                        {".osrm.level", ".osrm.core", ".osrm.hsgr", ".osrm.enw"})
+        : IOConfig(
+              {
+                  ".osrm",
+              },
+              {},
+              {".osrm.level", ".osrm.core", ".osrm.hsgr", ".osrm.enw"}),
+          requested_num_threads(0)
     {
     }
 
