@@ -32,6 +32,7 @@ function Handlers.handle_names(way,result,data,profile)
   local name = way:get_value_by_key("name")
   local pronunciation = way:get_value_by_key("name:pronunciation")
   local ref = way:get_value_by_key("ref")
+  local exits = way:get_value_by_key("junction:ref")
 
   -- Set the name that will be used for instructions
   if name then
@@ -44,6 +45,10 @@ function Handlers.handle_names(way,result,data,profile)
 
   if pronunciation then
     result.pronunciation = pronunciation
+  end
+
+  if exits then
+    result.exits = exits
   end
 end
 

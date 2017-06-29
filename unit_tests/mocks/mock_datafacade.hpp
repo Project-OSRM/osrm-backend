@@ -201,6 +201,7 @@ class MockBaseDataFacade : public engine::datafacade::BaseDataFacade
     StringView GetRefForID(const NameID) const override final { return {}; }
     StringView GetPronunciationForID(const NameID) const override final { return {}; }
     StringView GetDestinationsForID(const NameID) const override final { return {}; }
+    StringView GetExitsForID(const NameID) const override final { return {}; }
 
     std::string GetTimestamp() const override { return ""; }
     bool GetContinueStraightDefault() const override { return true; }

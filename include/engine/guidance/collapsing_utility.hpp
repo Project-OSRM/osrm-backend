@@ -130,8 +130,14 @@ inline bool haveSameName(const RouteStep &lhs, const RouteStep &rhs)
 
     // ok, bite the sour grape and check the strings already
     else
-        return !util::guidance::requiresNameAnnounced(
-            lhs.name, lhs.ref, lhs.pronunciation, rhs.name, rhs.ref, rhs.pronunciation);
+        return !util::guidance::requiresNameAnnounced(lhs.name,
+                                                      lhs.ref,
+                                                      lhs.pronunciation,
+                                                      lhs.exits,
+                                                      rhs.name,
+                                                      rhs.ref,
+                                                      rhs.pronunciation,
+                                                      rhs.exits);
 }
 
 // alias for readability, both turn right | left

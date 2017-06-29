@@ -808,6 +808,11 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         return m_name_table.GetDestinationsForID(id);
     }
 
+    StringView GetExitsForID(const NameID id) const override final
+    {
+        return m_name_table.GetExitsForID(id);
+    }
+
     StringView GetDatasourceName(const DatasourceID id) const override final
     {
         return m_datasources->GetSourceName(id);

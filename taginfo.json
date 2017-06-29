@@ -351,6 +351,11 @@
             "description": "Destination and direction of road for oneways for navigation instructions, supplements name."
         },
         {
+            "key": "junction:ref",
+            "object_types": [ "way" ],
+            "description": "Exit number or exit name of road for navigation instructions. Not to be confused with destination."
+        },
+        {
             "key": "junction",
             "object_types": [ "way" ],
             "value": "roundabout"

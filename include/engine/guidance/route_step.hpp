@@ -62,6 +62,7 @@ struct RouteStep
     std::string ref;
     std::string pronunciation;
     std::string destinations;
+    std::string exits;
     std::string rotary_name;
     std::string rotary_pronunciation;
     double duration; // duration in seconds
@@ -114,6 +115,7 @@ inline void RouteStep::Invalidate()
     ref.clear();
     pronunciation.clear();
     destinations.clear();
+    exits.clear();
     rotary_name.clear();
     rotary_pronunciation.clear();
     duration = 0;
@@ -178,6 +180,7 @@ inline RouteStep &RouteStep::AdaptStepSignage(const RouteStep &origin)
     name = origin.name;
     pronunciation = origin.pronunciation;
     destinations = origin.destinations;
+    exits = origin.exits;
     ref = origin.ref;
 
     return *this;

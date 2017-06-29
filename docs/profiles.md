@@ -67,6 +67,8 @@ roundabout                              | Boolean  | Is this part of a roundabou
 circular                                | Boolean  | Is this part of a non-roundabout circular junction?
 name                                    | String   | Name of the way
 ref                                     | String   | Road number
+destinations                            | String   | The road's destinations
+exits                                   | String   | The ramp's exit numbers or names
 pronunciation                           | String   | Name pronunciation
 road_classification.motorway_class      | Boolean  | Guidance: way is a motorway
 road_classification.link_class          | Boolean  | Guidance: way is a slip/link road

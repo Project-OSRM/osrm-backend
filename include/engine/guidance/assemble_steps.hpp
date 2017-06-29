@@ -114,6 +114,7 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
                 const auto ref = facade.GetRefForID(step_name_id);
                 const auto pronunciation = facade.GetPronunciationForID(step_name_id);
                 const auto destinations = facade.GetDestinationsForID(step_name_id);
+                const auto exits = facade.GetExitsForID(step_name_id);
                 const auto distance = leg_geometry.segment_distances[segment_index];
 
                 steps.push_back(RouteStep{step_name_id,
@@ -121,6 +122,7 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
                                           ref.to_string(),
                                           pronunciation.to_string(),
                                           destinations.to_string(),
+                                          exits.to_string(),
                                           NO_ROTARY_NAME,
                                           NO_ROTARY_NAME,
                                           segment_duration / 10.,
@@ -196,6 +198,7 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
                                   facade.GetRefForID(step_name_id).to_string(),
                                   facade.GetPronunciationForID(step_name_id).to_string(),
                                   facade.GetDestinationsForID(step_name_id).to_string(),
+                                  facade.GetExitsForID(step_name_id).to_string(),
                                   NO_ROTARY_NAME,
                                   NO_ROTARY_NAME,
                                   duration / 10.,
@@ -237,6 +240,7 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
                                   facade.GetRefForID(source_name_id).to_string(),
                                   facade.GetPronunciationForID(source_name_id).to_string(),
                                   facade.GetDestinationsForID(source_name_id).to_string(),
+                                  facade.GetExitsForID(source_name_id).to_string(),
                                   NO_ROTARY_NAME,
                                   NO_ROTARY_NAME,
                                   duration / 10.,
@@ -275,6 +279,7 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
                               facade.GetRefForID(target_name_id).to_string(),
                               facade.GetPronunciationForID(target_name_id).to_string(),
                               facade.GetDestinationsForID(target_name_id).to_string(),
+                              facade.GetExitsForID(target_name_id).to_string(),
                               NO_ROTARY_NAME,
                               NO_ROTARY_NAME,
                               ZERO_DURATION,

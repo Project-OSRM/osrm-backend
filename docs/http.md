@@ -581,6 +581,7 @@ step.
 - `ref`: A reference number or code for the way. Optionally included, if ref data is available for the given way.
 - `pronunciation`: The pronunciation hint of the way name. Will be `undefined` if there is no pronunciation hit.
 - `destinations`: The destinations of the way. Will be `undefined` if there are no destinations.
+- `exits`: The exit numbers or names of the way. Will be `undefined` if there are no exit numbers or names.
 - `mode`: A string signifying the mode of transportation.
 - `maneuver`: A `StepManeuver` object representing the maneuver.
 - `intersections`: A list of `Intersection` objects that are passed along the segment, the very first belonging to the StepManeuver

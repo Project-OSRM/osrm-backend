@@ -44,9 +44,11 @@ template <typename SuffixTable>
 inline bool requiresNameAnnounced(const std::string &from_name,
                                   const std::string &from_ref,
                                   const std::string &from_pronunciation,
+                                  const std::string &from_exits,
                                   const std::string &to_name,
                                   const std::string &to_ref,
                                   const std::string &to_pronunciation,
+                                  const std::string &to_exits,
                                   const SuffixTable &suffix_table)
 {
     // first is empty and the second is not
@@ -128,17 +130,20 @@ inline bool requiresNameAnnounced(const std::string &from_name,
         (!from_name.empty() && from_ref.empty() && to_name.empty() && !to_ref.empty());
 
     const auto pronunciation_changes = from_pronunciation != to_pronunciation;
+    const auto exits_change = from_exits != to_exits;
 
-    return !obvious_change || needs_announce || pronunciation_changes;
+    return !obvious_change || needs_announce || pronunciation_changes || exits_change;
 }
 
 // Overload without suffix checking
 inline bool requiresNameAnnounced(const std::string &from_name,
                                   const std::string &from_ref,
                                   const std::string &from_pronunciation,
+                                  const std::string &from_exits,
                                   const std::string &to_name,
                                   const std::string &to_ref,
-                                  const std::string &to_pronunciation)
+                                  const std::string &to_pronunciation,
+                                  const std::string &to_exits)
 {
     // Dummy since we need to provide a SuffixTable but do not have the data for it.
     // (Guidance Post-Processing does not keep the suffix table around at the moment)
@@ -148,8 +153,15 @@ inline bool requiresNameAnnounced(const std::string &from_name,
         bool isSuffix(const std::string &) const { return false; }
     } static const table;
 
-    return requiresNameAnnounced(
-        from_name, from_ref, from_pronunciation, to_name, to_ref, to_pronunciation, table);
+    return requiresNameAnnounced(from_name,
+                                 from_ref,
+                                 from_pronunciation,
+                                 from_exits,
+                                 to_name,
+                                 to_ref,
+                                 to_pronunciation,
+                                 to_exits,
+                                 table);
 }
 
 inline bool requiresNameAnnounced(const NameID from_name_id,
@@ -163,9 +175,13 @@ inline bool requiresNameAnnounced(const NameID from_name_id,
         return requiresNameAnnounced(name_table.GetNameForID(from_name_id).to_string(),
                                      name_table.GetRefForID(from_name_id).to_string(),
                                      name_table.GetPronunciationForID(from_name_id).to_string(),
+                                     name_table.GetExitsForID(from_name_id).to_string(),
+                                     //
                                      name_table.GetNameForID(to_name_id).to_string(),
                                      name_table.GetRefForID(to_name_id).to_string(),
                                      name_table.GetPronunciationForID(to_name_id).to_string(),
+                                     name_table.GetExitsForID(to_name_id).to_string(),
+                                     //
                                      suffix_table);
     // FIXME: converts StringViews to strings since the name change heuristics mutates in place
 }
@@ -180,8 +196,11 @@ inline bool requiresNameAnnounced(const NameID from_name_id,
         return requiresNameAnnounced(name_table.GetNameForID(from_name_id).to_string(),
                                      name_table.GetRefForID(from_name_id).to_string(),
                                      name_table.GetPronunciationForID(from_name_id).to_string(),
+                                     name_table.GetExitsForID(from_name_id).to_string(),
+                                     //
                                      name_table.GetNameForID(to_name_id).to_string(),
                                      name_table.GetRefForID(to_name_id).to_string(),
+                                     name_table.GetExitsForID(to_name_id).to_string(),
                                      name_table.GetPronunciationForID(to_name_id).to_string());
     // FIXME: converts StringViews to strings since the name change heuristics mutates in place
 }
