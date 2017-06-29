@@ -62,7 +62,20 @@ Feature: Multi level routing
             | from | to | route                                 | time   |
             | a    | b  | abcda,abcda                           | 20s    |
             | a    | f  | abcda,cm,nmop,kp,ijkli,hj,efghe,efghe | 257.7s |
+            | a    | l  | abcda,cm,nmop,kp,ijkli,ijkli          | 173s   |
+            | a    | o  | abcda,cm,nmop,nmop                    | 113s   |
+            | f    | l  | efghe,hj,ijkli,ijkli                  | 124.7s |
+            | f    | o  | efghe,hj,ijkli,kp,nmop,nmop           | 144.7s |
+            | l    | o  | ijkli,kp,nmop,nmop                    | 60s    |
             | c    | m  | cm,cm                                 | 44.7s  |
+
+        When I request a travel time matrix I should get
+            |   |     a |     f |     l |     o |
+            | a |     0 | 257.7 |   173 |   113 |
+            | f | 257.7 |     0 | 124.7 | 144.7 |
+            | l |   173 | 124.7 |     0 |    60 |
+            | o |   113 | 144.7 |    60 |     0 |
+
 
     Scenario: Testbot - Multi level routing: horizontal road
         Given the node map
