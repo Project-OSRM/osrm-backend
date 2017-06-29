@@ -95,7 +95,7 @@ void LogGeojson(const std::string &filename, const std::vector<std::uint32_t> &b
     }
 }
 
-int Partitioner::Run(const PartitionConfig &config)
+auto getGraphBisection(const PartitionConfig &config)
 {
     auto compressed_node_based_graph =
         LoadCompressedNodeBasedGraph(config.compressed_node_based_graph_path.string());
@@ -122,6 +122,14 @@ int Partitioner::Run(const PartitionConfig &config)
                                            config.num_optimizing_cuts,
                                            config.small_component_size);
 
+    // Return bisection ids, keyed by node based graph nodes
+    return recursive_bisection.BisectionIDs();
+}
+
+int Partitioner::Run(const PartitionConfig &config)
+{
+    const std::vector<BisectionID> &node_based_partition_ids = getGraphBisection(config);
+
     // Up until now we worked on the compressed node based graph.
     // But what we actually need is a partition for the edge based graph to work on.
     // The following loads a mapping from node based graph to edge based graph.
@@ -136,11 +144,6 @@ int Partitioner::Run(const PartitionConfig &config)
     util::Log() << "Loaded edge based graph for mapping partition ids: "
                 << edge_based_graph.GetNumberOfEdges() << " edges, "
                 << edge_based_graph.GetNumberOfNodes() << " nodes";
-
-    // TODO: node based graph to edge based graph partition id mapping should be done split off.
-
-    // Partition ids, keyed by node based graph nodes
-    const auto &node_based_partition_ids = recursive_bisection.BisectionIDs();
 
     // Partition ids, keyed by edge based graph nodes
     std::vector<NodeID> edge_based_partition_ids(edge_based_graph.GetNumberOfNodes(),
