@@ -1,3 +1,11 @@
+# 5.8.1
+ - Changes from 5.8.0:
+    - Bugfixes:
+      - Fixes #4152: Superflous turn left instruction, when crossing a service-road.
+      - Fixes #4189: Fixes missing turn lane information after a traffic light.
+      - Fixes #4199: Data race-condition when updating segment speeds.
+      - Fixes #3987: Fixes obvious turn detection at T-intersections with slip-roads.
+
 # 5.8.0
   - Changes from 5.7
     - API:
