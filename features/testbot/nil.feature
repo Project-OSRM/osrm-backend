@@ -14,6 +14,7 @@ Feature: Testbot - Check assigning nil values
             result.name = nil
             result.ref = nil
             result.destinations = nil
+            result.exits = nil
             result.pronunciation = nil
             result.turn_lanes_forward = nil
             result.turn_lanes_backward = nil

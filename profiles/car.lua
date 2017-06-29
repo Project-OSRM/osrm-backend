@@ -347,7 +347,7 @@ function way_function(way, result)
     -- check whether forward/backward directions are routable
     'handle_oneway',
 
-    -- check whether forward/backward directions are routable
+    -- check a road's destination
     'handle_destinations',
 
     -- check whether we're using a special transport mode

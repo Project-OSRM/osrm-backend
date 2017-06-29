@@ -33,9 +33,9 @@ class NameTable
     // This class provides a limited view over all the string data we serialize out.
     // The following functions are a subset of what is available.
     // See the data facades for they provide full access to this serialized string data.
-    // (at time of writing this: get{Name,Ref,Pronunciation,Destinations}ForID(name_id);)
     util::StringView GetNameForID(const NameID id) const;
     util::StringView GetDestinationsForID(const NameID id) const;
+    util::StringView GetExitsForID(const NameID id) const;
     util::StringView GetRefForID(const NameID id) const;
     util::StringView GetPronunciationForID(const NameID id) const;
 

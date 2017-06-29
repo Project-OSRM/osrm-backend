@@ -330,6 +330,8 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
         sol::property(&ExtractionWay::GetPronunciation, &ExtractionWay::SetPronunciation),
         "destinations",
         sol::property(&ExtractionWay::GetDestinations, &ExtractionWay::SetDestinations),
+        "exits",
+        sol::property(&ExtractionWay::GetExits, &ExtractionWay::SetExits),
         "turn_lanes_forward",
         sol::property(&ExtractionWay::GetTurnLanesForward, &ExtractionWay::SetTurnLanesForward),
         "turn_lanes_backward",

@@ -155,6 +155,10 @@ module.exports = function () {
         return this.extractInstructionList(instructions, s => s.destinations || '');
     };
 
+    this.exitsList = (instructions) => {
+        return this.extractInstructionList(instructions, s => s.exits || '');
+    };
+
     this.reverseBearing = (bearing) => {
         if (bearing >= 180)
             return bearing - 180.;

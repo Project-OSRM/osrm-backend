@@ -45,9 +45,14 @@ std::string PrapareNameTableData(std::vector<std::string> &data, bool fill_all)
             tmp = s + "_ref";
             name_offsets.push_back(name_char_data.size());
             std::copy(tmp.begin(), tmp.end(), std::back_inserter(name_char_data));
+
+            tmp = s + "_ext";
+            name_offsets.push_back(name_char_data.size());
+            std::copy(tmp.begin(), tmp.end(), std::back_inserter(name_char_data));
         }
         else
         {
+            name_offsets.push_back(name_char_data.size());
             name_offsets.push_back(name_char_data.size());
             name_offsets.push_back(name_char_data.size());
             name_offsets.push_back(name_char_data.size());
@@ -89,6 +94,7 @@ BOOST_AUTO_TEST_CASE(check_name_table_fill)
         BOOST_CHECK_EQUAL(name_table.GetRefForID(id), expected_names[index] + "_ref");
         BOOST_CHECK_EQUAL(name_table.GetDestinationsForID(id), expected_names[index] + "_des");
         BOOST_CHECK_EQUAL(name_table.GetPronunciationForID(id), expected_names[index] + "_pro");
+        BOOST_CHECK_EQUAL(name_table.GetExitsForID(id), expected_names[index] + "_ext");
     }
 }
 
@@ -112,6 +118,7 @@ BOOST_AUTO_TEST_CASE(check_name_table_nofill)
         BOOST_CHECK(name_table.GetRefForID(id).empty());
         BOOST_CHECK(name_table.GetDestinationsForID(id).empty());
         BOOST_CHECK(name_table.GetPronunciationForID(id).empty());
+        BOOST_CHECK(name_table.GetExitsForID(id).empty());
     }
     // CALLGRIND_STOP_INSTRUMENTATION;
 }
@@ -123,6 +130,7 @@ BOOST_AUTO_TEST_CASE(check_invalid_ids)
     BOOST_CHECK_EQUAL(name_table.GetRefForID(INVALID_NAMEID), "");
     BOOST_CHECK_EQUAL(name_table.GetDestinationsForID(INVALID_NAMEID), "");
     BOOST_CHECK_EQUAL(name_table.GetPronunciationForID(INVALID_NAMEID), "");
+    BOOST_CHECK_EQUAL(name_table.GetExitsForID(INVALID_NAMEID), "");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -39,8 +39,8 @@ ExtractorCallbacks::ExtractorCallbacks(ExtractionContainers &extraction_containe
       fallback_to_duration(properties.fallback_to_duration),
       force_split_edges(properties.force_split_edges)
 {
-    // we reserved 0, 1, 2, 3 for the empty case
-    string_map[MapKey("", "", "", "")] = 0;
+    // we reserved 0, 1, 2, 3, 4 for the empty case
+    string_map[MapKey("", "", "", "", "")] = 0;
     lane_description_map.data[TurnLaneDescription()] = 0;
 }
 
@@ -254,7 +254,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
         return lane_description_map.ConcurrentFindOrAdd(lane_description);
     };
 
-    // Deduplicates street names, refs, destinations, pronunciation based on the string_map.
+    // Deduplicates street names, refs, destinations, pronunciation, exits.
     // In case we do not already store the key, inserts (key, id) tuple and return id.
     // Otherwise fetches the id based on the name and returns it without insertion.
     const auto turn_lane_id_forward = requestId(parsed_way.turn_lanes_forward);
@@ -263,14 +263,17 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
     const auto road_classification = parsed_way.road_classification;
 
     // Get the unique identifier for the street name, destination, and ref
-    const auto name_iterator = string_map.find(
-        MapKey(parsed_way.name, parsed_way.destinations, parsed_way.ref, parsed_way.pronunciation));
+    const auto name_iterator = string_map.find(MapKey(parsed_way.name,
+                                                      parsed_way.destinations,
+                                                      parsed_way.ref,
+                                                      parsed_way.pronunciation,
+                                                      parsed_way.exits));
     NameID name_id = EMPTY_NAMEID;
     if (string_map.end() == name_iterator)
     {
         // name_offsets has a sentinel element with the total name data size
         // take the sentinels index as the name id of the new name data pack
-        // (name [name_id], destination [+1], pronunciation [+2], ref [+3])
+        // (name [name_id], destination [+1], pronunciation [+2], ref [+3], exits [+4])
         name_id = external_memory.name_offsets.size() - 1;
 
         std::copy(parsed_way.name.begin(),
@@ -293,8 +296,16 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                   std::back_inserter(external_memory.name_char_data));
         external_memory.name_offsets.push_back(external_memory.name_char_data.size());
 
-        auto k = MapKey{
-            parsed_way.name, parsed_way.destinations, parsed_way.ref, parsed_way.pronunciation};
+        std::copy(parsed_way.exits.begin(),
+                  parsed_way.exits.end(),
+                  std::back_inserter(external_memory.name_char_data));
+        external_memory.name_offsets.push_back(external_memory.name_char_data.size());
+
+        auto k = MapKey{parsed_way.name,
+                        parsed_way.destinations,
+                        parsed_way.ref,
+                        parsed_way.pronunciation,
+                        parsed_way.exits};
         auto v = MapVal{name_id};
         string_map.emplace(std::move(k), std::move(v));
     }

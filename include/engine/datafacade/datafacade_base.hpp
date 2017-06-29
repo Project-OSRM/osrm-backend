@@ -158,6 +158,8 @@ class BaseDataFacade
 
     virtual StringView GetDestinationsForID(const NameID id) const = 0;
 
+    virtual StringView GetExitsForID(const NameID id) const = 0;
+
     virtual std::string GetTimestamp() const = 0;
 
     virtual bool GetContinueStraightDefault() const = 0;

@@ -53,6 +53,7 @@ struct ExtractionWay
         ref.clear();
         pronunciation.clear();
         destinations.clear();
+        exits.clear();
         forward_travel_mode = TRAVEL_MODE_INACCESSIBLE;
         backward_travel_mode = TRAVEL_MODE_INACCESSIBLE;
         turn_lanes_forward.clear();
@@ -69,6 +70,8 @@ struct ExtractionWay
     const char *GetRef() const { return ref.c_str(); }
     void SetDestinations(const char *value) { detail::maybeSetString(destinations, value); }
     const char *GetDestinations() const { return destinations.c_str(); }
+    void SetExits(const char *value) { detail::maybeSetString(exits, value); }
+    const char *GetExits() const { return exits.c_str(); }
     void SetPronunciation(const char *value) { detail::maybeSetString(pronunciation, value); }
     const char *GetPronunciation() const { return pronunciation.c_str(); }
     void SetTurnLanesForward(const char *value)
@@ -96,6 +99,7 @@ struct ExtractionWay
     std::string ref;
     std::string pronunciation;
     std::string destinations;
+    std::string exits;
     std::string turn_lanes_forward;
     std::string turn_lanes_backward;
     guidance::RoadClassification road_classification;
