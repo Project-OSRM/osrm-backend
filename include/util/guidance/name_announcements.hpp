@@ -130,9 +130,24 @@ inline bool requiresNameAnnounced(const std::string &from_name,
         (!from_name.empty() && from_ref.empty() && to_name.empty() && !to_ref.empty());
 
     const auto pronunciation_changes = from_pronunciation != to_pronunciation;
-    const auto exits_change = from_exits != to_exits;
 
-    return !obvious_change || needs_announce || pronunciation_changes || exits_change;
+    // when exiting onto ramps, we need to be careful about exit numbers. These can often be only
+    // assigned to the first part of the ramp
+    //
+    //  a . . b . c . . d
+    //         ` e . . f
+    //
+    // could assign the exit number to `be` when exiting `abcd` instead of the full ramp.
+    //
+    // Issuing a new-name instruction here would result in the turn assuming the short segment to be
+    // irrelevant and remove the exit number in a collapse scenario. We don't want to issue any
+    // instruction from be-ef, since we only loose the exit number. So we want to make sure that we
+    // don't just loose an exit number, when exits change
+    const auto exits_change = from_exits != to_exits;
+    const auto looses_exit = (names_are_equal && !from_exits.empty() && to_exits.empty());
+
+    return !obvious_change || needs_announce || pronunciation_changes ||
+           (exits_change && !looses_exit);
 }
 
 // Overload without suffix checking
