@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(check_name_table_fill)
 
     for (std::size_t index = 0; index < expected_names.size(); ++index)
     {
-        const NameID id = 4 * index;
+        const NameID id = 5 * index;
         BOOST_CHECK_EQUAL(name_table.GetNameForID(id), expected_names[index]);
         BOOST_CHECK_EQUAL(name_table.GetRefForID(id), expected_names[index] + "_ref");
         BOOST_CHECK_EQUAL(name_table.GetDestinationsForID(id), expected_names[index] + "_des");
@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_CASE(check_name_table_nofill)
     // CALLGRIND_START_INSTRUMENTATION;
     for (std::size_t index = 0; index < expected_names.size(); ++index)
     {
-        const NameID id = 4 * index;
+        const NameID id = 5 * index;
         BOOST_CHECK_EQUAL(name_table.GetNameForID(id), expected_names[index]);
         BOOST_CHECK(name_table.GetRefForID(id).empty());
         BOOST_CHECK(name_table.GetDestinationsForID(id).empty());
