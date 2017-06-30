@@ -1372,7 +1372,9 @@ Feature: Simple Turns
             | waypoints | route       |
             | g,e       | abcde,abcde |
 
-    Scenario: small ticks in roads
+    # 4205
+    # https://www.openstreetmap.org/node/36153635#map=19/51.97548/7.61795
+    Scenario: merging onto a through street
         Given the node map
             """
                           e
@@ -1439,7 +1441,6 @@ Feature: Simple Turns
             | fcde  | no     | jahn |
 
         When I route I should get
-            | waypoints | route         | turns                       |
-            | a,f       | fww,jahn,jahn | depart,turn straight,arrive |
-            | a,e       | fww,jahn,jahn | depart,turn left,arrive     |
-
+            | waypoints | route         | turns                    |
+            | a,f       | fww,jahn,jahn | depart,turn right,arrive |
+            | a,e       | fww,jahn,jahn | depart,turn left,arrive  |
