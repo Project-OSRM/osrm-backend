@@ -94,7 +94,8 @@ local profile = {
   	'opposite_track',
   	'share_busway',
   	'sharrow',
-  	'shared'
+  	'shared',
+    'shared_lane'
   },
 
   unsafe_highway_list = Set {
@@ -377,10 +378,7 @@ function way_function (way, result)
   end
 
   -- oneway
-  local implied_oneway = false
-  if junction == "roundabout" or junction == "circular" or data.highway == "motorway" then
-    implied_oneway = true
-  end
+  local implied_oneway = junction == "roundabout" or junction == "circular" or data.highway == "motorway"
   local reverse = false
 
   if oneway_bicycle == "yes" or oneway_bicycle == "1" or oneway_bicycle == "true" then
@@ -507,25 +505,33 @@ function way_function (way, result)
   -- convert duration into cyclability
   if properties.weight_name == 'cyclability' then
       local is_unsafe = profile.safety_penalty < 1 and profile.unsafe_highway_list[data.highway]
+      local forward_is_unsafe = is_unsafe and not has_cycleway_right
+      local backward_is_unsafe = is_unsafe and not has_cycleway_left
       local is_undesireable = data.highway == "service" and profile.service_penalties[service]
-      local penalty = 1.0
-      if is_unsafe then
-        penalty = math.min(penalty, profile.safety_penalty)
+      local forward_penalty = 1.
+      local backward_penalty = 1.
+      if forward_is_unsafe then
+        forward_penalty = math.min(forward_penalty, profile.safety_penalty)
       end
+      if backward_is_unsafe then
+         backward_penalty = math.min(backward_penalty, profile.safety_penalty)
+      end
+
       if is_undesireable then
-        penalty = math.min(penalty, profile.service_penalties[service])
+         forward_penalty = math.min(forward_penalty, profile.service_penalties[service])
+         backward_penalty = math.min(backward_penalty, profile.service_penalties[service])
       end
 
       if result.forward_speed > 0 then
         -- convert from km/h to m/s
-        result.forward_rate = result.forward_speed / 3.6 * penalty
+        result.forward_rate = result.forward_speed / 3.6 * forward_penalty
       end
       if result.backward_speed > 0 then
         -- convert from km/h to m/s
-        result.backward_rate = result.backward_speed / 3.6 * penalty
+        result.backward_rate = result.backward_speed / 3.6 * backward_penalty
       end
       if result.duration > 0 then
-        result.weight = result.duration / penalty
+        result.weight = result.duration / forward_penalty
       end
   end
 
