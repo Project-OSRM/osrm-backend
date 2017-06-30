@@ -34,7 +34,7 @@ module.exports = function () {
                                 outputRow[rate] = result[direction].status ?
                                     result[direction].status.toString() : '';
                                 break;
-                            case /^\d+$/.test(want):
+                            case /^\d+(\.\d+){0,1}$/.test(want):
                                 if (result[direction].rate !== undefined && !isNaN(result[direction].rate)) {
                                     outputRow[rate] = result[direction].rate.toString();
                                 } else {
@@ -135,7 +135,7 @@ module.exports = function () {
                     if (r.route.split(',')[0] === util.format('w%d', i)) {
                         r.time = r.json.routes[0].duration;
                         r.distance = r.json.routes[0].distance;
-                        r.rate = Math.round(r.distance / r.json.routes[0].weight);
+                        r.rate = Math.round(r.distance / r.json.routes[0].weight * 10) / 10.;
                         r.speed = r.time > 0 ? parseInt(3.6 * r.distance / r.time) : null;
 
                         // use the mode of the first step of the route

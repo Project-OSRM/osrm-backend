@@ -50,4 +50,4 @@ Feature: Car - speeds
         Then routability should be
 
             | highway | side_road | forw    | backw    | forw_rate | backw_rate |
-            | primary | yes       | 64 km/h | 64 km/h  | 14        | 14         |
+            | primary | yes       | 64 km/h | 64 km/h  | 14.4      | 14.4       |
