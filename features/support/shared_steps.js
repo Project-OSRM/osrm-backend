@@ -245,7 +245,7 @@ module.exports = function () {
                     } else if (row.waypoints) {
                         row.waypoints.split(',').forEach((n) => {
                             var node = this.findNodeByName(n.trim());
-                            if (!node) return cb(new Error('*** unknown waypoint node "%s"', n.trim()));
+                            if (!node) return cb(new Error(util.format('*** unknown waypoint node "%s"', n.trim())));
                             waypoints.push(node);
                         });
                         got.waypoints = row.waypoints;
