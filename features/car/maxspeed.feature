@@ -88,18 +88,18 @@ OSRM will use 4/5 of the projected free-flow speed.
             | highway | maxspeed | width | maxspeed:forward | maxspeed:backward | forw    | backw   | forw_rate | backw_rate |
             | primary |          |       |                  |                   | 64 km/h | 64 km/h | 18        | 18         |
             | primary |          |   3   |                  |                   | 64 km/h | 64 km/h | 9         | 9          |
-            | primary | 60       |       |                  |                   | 47 km/h | 47 km/h | 13        | 13         |
-            | primary | 60       |   3   |                  |                   | 47 km/h | 47 km/h | 7         | 7          |
-            | primary |          |       | 60               |                   | 47 km/h | 64 km/h | 13        | 18         |
-            | primary |          |   3   | 60               |                   | 47 km/h | 64 km/h | 7         | 9          |
-            | primary |          |       |                  | 60                | 64 km/h | 47 km/h | 18        | 13         |
-            | primary |          |   3   |                  | 60                | 64 km/h | 47 km/h | 9         | 7          |
-            | primary | 15       |       | 60               |                   | 47 km/h | 11 km/h | 13        | 3          |
-            | primary | 15       |   3   | 60               |                   | 48 km/h | 12 km/h | 7         | 2          |
-            | primary | 15       |       |                  | 60                | 12 km/h | 47 km/h | 3         | 13         |
-            | primary | 15       |   3   |                  | 60                | 12 km/h | 47 km/h | 2         | 7          |
-            | primary | 15       |       | 30               | 60                | 23 km/h | 47 km/h | 7         | 13         |
-            | primary | 15       |   3   | 30               | 60                | 23 km/h | 47 km/h | 3         | 7          |
+            | primary | 60       |       |                  |                   | 47 km/h | 47 km/h | 13.3      | 13.3       |
+            | primary | 60       |   3   |                  |                   | 47 km/h | 47 km/h | 6.7       | 6.7        |
+            | primary |          |       | 60               |                   | 47 km/h | 64 km/h | 13.3      | 18         |
+            | primary |          |   3   | 60               |                   | 47 km/h | 64 km/h | 6.7       | 9          |
+            | primary |          |       |                  | 60                | 64 km/h | 47 km/h | 18        | 13.3       |
+            | primary |          |   3   |                  | 60                | 64 km/h | 47 km/h | 9         | 6.7        |
+            | primary | 15       |       | 60               |                   | 47 km/h | 11 km/h | 13.3      | 3.3        |
+            | primary | 15       |   3   | 60               |                   | 48 km/h | 12 km/h | 6.7       | 1.7        |
+            | primary | 15       |       |                  | 60                | 12 km/h | 47 km/h | 3.3       | 13.3       |
+            | primary | 15       |   3   |                  | 60                | 12 km/h | 47 km/h | 1.7       | 6.7        |
+            | primary | 15       |       | 30               | 60                | 23 km/h | 47 km/h | 6.7       | 13.3       |
+            | primary | 15       |   3   | 30               | 60                | 23 km/h | 47 km/h | 3.3       | 6.7        |
 
     Scenario: Car - Single lane streets be ignored or incur a penalty
         Then routability should be
@@ -107,33 +107,33 @@ OSRM will use 4/5 of the projected free-flow speed.
             | highway | maxspeed | lanes | maxspeed:forward | maxspeed:backward | forw    | backw   | forw_rate | backw_rate |
             | primary |          |       |                  |                   | 64 km/h | 64 km/h | 18        | 18         |
             | primary |          |   1   |                  |                   | 64 km/h | 64 km/h | 9         | 9          |
-            | primary | 60       |       |                  |                   | 47 km/h | 47 km/h | 13        | 13         |
-            | primary | 60       |   1   |                  |                   | 47 km/h | 47 km/h | 7         | 7          |
-            | primary |          |       | 60               |                   | 47 km/h | 64 km/h | 13        | 18         |
-            | primary |          |   1   | 60               |                   | 47 km/h | 64 km/h | 7         | 9          |
-            | primary |          |       |                  | 60                | 64 km/h | 47 km/h | 18        | 13         |
-            | primary |          |   1   |                  | 60                | 64 km/h | 47 km/h | 9         | 7          |
-            | primary | 15       |       | 60               |                   | 47 km/h | 11 km/h | 13        | 3          |
-            | primary | 15       |   1   | 60               |                   | 48 km/h | 12 km/h | 7         | 2          |
-            | primary | 15       |       |                  | 60                | 12 km/h | 47 km/h | 3         | 13         |
-            | primary | 15       |   1   |                  | 60                | 12 km/h | 47 km/h | 2         | 7          |
-            | primary | 15       |       | 30               | 60                | 23 km/h | 47 km/h | 7         | 13         |
-            | primary | 15       |   1   | 30               | 60                | 23 km/h | 47 km/h | 3         | 7          |
+            | primary | 60       |       |                  |                   | 47 km/h | 47 km/h | 13.3      | 13.3       |
+            | primary | 60       |   1   |                  |                   | 47 km/h | 47 km/h | 6.7       | 6.7        |
+            | primary |          |       | 60               |                   | 47 km/h | 64 km/h | 13.3      | 18         |
+            | primary |          |   1   | 60               |                   | 47 km/h | 64 km/h | 6.7       | 9          |
+            | primary |          |       |                  | 60                | 64 km/h | 47 km/h | 18        | 13.3       |
+            | primary |          |   1   |                  | 60                | 64 km/h | 47 km/h | 9         | 6.7        |
+            | primary | 15       |       | 60               |                   | 47 km/h | 11 km/h | 13.3      | 3.3        |
+            | primary | 15       |   1   | 60               |                   | 48 km/h | 12 km/h | 6.7       | 1.7        |
+            | primary | 15       |       |                  | 60                | 12 km/h | 47 km/h | 3.3       | 13.3       |
+            | primary | 15       |   1   |                  | 60                | 12 km/h | 47 km/h | 1.7       | 6.7        |
+            | primary | 15       |       | 30               | 60                | 23 km/h | 47 km/h | 6.7       | 13.3       |
+            | primary | 15       |   1   | 30               | 60                | 23 km/h | 47 km/h | 3.3       | 6.7        |
 
     Scenario: Car - Single lane streets only incur a penalty for two-way streets
         Then routability should be
             | highway | maxspeed | lanes  | oneway | forw    | backw   | forw_rate | backw_rate |
-            | primary |   30     |   1    | yes    | 23 km/h |         | 7         |            |
-            | primary |   30     |   1    | -1     |         | 23 km/h |           | 7          |
-            | primary |   30     |   1    |        | 23 km/h | 23 km/h | 3         | 3          |
-            | primary |   30     |   2    |        | 23 km/h | 23 km/h | 7         | 7          |
+            | primary |   30     |   1    | yes    | 23 km/h |         | 6.7       |            |
+            | primary |   30     |   1    | -1     |         | 23 km/h |           | 6.7        |
+            | primary |   30     |   1    |        | 23 km/h | 23 km/h | 3.3       | 3.3        |
+            | primary |   30     |   2    |        | 23 km/h | 23 km/h | 6.7       | 6.7        |
 
     Scenario: Car - Forward/backward maxspeed on reverse oneways
         Then routability should be
             | highway | maxspeed | maxspeed:forward | maxspeed:backward | oneway | forw    | backw   | forw_rate | backw_rate |
             | primary |          |                  |                   | -1     |         | 64 km/h |           | 18         |
-            | primary | 30       |                  |                   | -1     |         | 23 km/h |           | 7          |
+            | primary | 30       |                  |                   | -1     |         | 23 km/h |           | 6.7        |
             | primary |          | 30               |                   | -1     |         | 64 km/h |           | 18         |
-            | primary |          |                  | 30                | -1     |         | 23 km/h |           | 7          |
-            | primary | 20       | 30               |                   | -1     |         | 15 km/h |           | 4          |
-            | primary | 20       |                  | 30                | -1     |         | 23 km/h |           | 7          |
+            | primary |          |                  | 30                | -1     |         | 23 km/h |           | 6.7        |
+            | primary | 20       | 30               |                   | -1     |         | 15 km/h |           | 4.4        |
+            | primary | 20       |                  | 30                | -1     |         | 23 km/h |           | 6.7        |
