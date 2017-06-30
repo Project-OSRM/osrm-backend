@@ -121,7 +121,7 @@ osrm-routed berlin-latest.osrm
 Running Queries
 
 ```
-curl http://127.0.0.1:5000/route/v1/driving/13.388860,52.517037;13.385983,52.496891?steps=true
+curl "http://127.0.0.1:5000/route/v1/driving/13.388860,52.517037;13.385983,52.496891?steps=true"
 ```
 
 ### Request Against the Demo Server
@@ -130,7 +130,7 @@ Read the [API usage policy](https://github.com/Project-OSRM/osrm-backend/wiki/Ap
 Simple query with instructions and alternatives on Berlin:
 
 ```
-curl https://router.project-osrm.org/route/v1/driving/13.388860,52.517037;13.385983,52.496891?steps=true&alternatives=true
+curl "https://router.project-osrm.org/route/v1/driving/13.388860,52.517037;13.385983,52.496891?steps=true&alternatives=true"
 ```
 
 ### Using the Node.js Bindings
