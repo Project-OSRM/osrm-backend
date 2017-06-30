@@ -1371,3 +1371,75 @@ Feature: Simple Turns
         When I route I should get
             | waypoints | route       |
             | g,e       | abcde,abcde |
+
+    Scenario: small ticks in roads
+        Given the node map
+            """
+                          e
+                           `
+                            `
+                             `
+                              `
+                               d
+                                c
+            a - - - - - - - b``
+                                  `
+
+                                     `
+
+                                        `
+
+                                           `
+
+                                              `
+
+                                                  `
+
+                                                      `
+
+                                                          `
+
+                                                              `
+
+                                                                  `
+
+                                                                      `
+
+                                                                          `
+
+                                                                              `
+
+                                                                                  `
+
+                                                                                      `
+
+                                                                                          `
+
+                                                                                              `
+
+                                                                                                 `
+                                                                                                   `
+
+                                                                                                       `
+
+
+                                                                                                            `
+
+
+                                                                                                                `
+
+
+                                                                                                                    f
+
+            """
+
+        And the ways
+            | nodes | oneway | name |
+            | abc   | yes    | fww  |
+            | fcde  | no     | jahn |
+
+        When I route I should get
+            | waypoints | route         | turns                       |
+            | a,f       | fww,jahn,jahn | depart,turn straight,arrive |
+            | a,e       | fww,jahn,jahn | depart,turn left,arrive     |
+
