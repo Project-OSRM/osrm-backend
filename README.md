@@ -16,6 +16,8 @@ The following services are available via HTTP API, C++ library interface and Nod
 
 To quickly try OSRM use our [demo server](http://map.project-osrm.org) which comes with both the backend and a frontend on top.
 
+For a quick introduction about how the road network is represented in OpenStreetMap and how to map specific road network features have a look at [this guide about mapping for navigation](https://www.mapbox.com/mapping/mapping-for-navigation/).
+
 Related [Project-OSRM](https://github.com/Project-OSRM) repositories:
 - [node-osrm](https://www.npmjs.com/package/osrm) - Production-ready NodeJs bindings for the routing engine
 - [osrm-frontend](https://github.com/Project-OSRM/osrm-frontend) - User-facing frontend with map. The demo server runs this on top of the backend
