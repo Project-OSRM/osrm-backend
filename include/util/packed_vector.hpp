@@ -108,7 +108,7 @@ template <typename T, std::size_t Bits, storage::Ownership Ownership> class Pack
     // C++14 does not allow operator[] to be constexpr, this is fixed in C++17.
     static /* constexpr */ std::array<WordT, BLOCK_ELEMENTS> initialize_lower_mask()
     {
-        std::array<WordT, BLOCK_ELEMENTS> lower_mask{};
+        std::array<WordT, BLOCK_ELEMENTS> lower_mask;
 
         const WordT mask = (1ULL << Bits) - 1;
         auto offset = 0;
@@ -124,7 +124,7 @@ template <typename T, std::size_t Bits, storage::Ownership Ownership> class Pack
 
     static /* constexpr */ std::array<WordT, BLOCK_ELEMENTS> initialize_upper_mask()
     {
-        std::array<WordT, BLOCK_ELEMENTS> upper_mask{};
+        std::array<WordT, BLOCK_ELEMENTS> upper_mask;
 
         const WordT mask = (1ULL << Bits) - 1;
         auto offset = 0;
@@ -148,7 +148,7 @@ template <typename T, std::size_t Bits, storage::Ownership Ownership> class Pack
 
     static /* constexpr */ std::array<std::uint8_t, BLOCK_ELEMENTS> initialize_lower_offset()
     {
-        std::array<std::uint8_t, WORD_BITS> lower_offset{};
+        std::array<std::uint8_t, WORD_BITS> lower_offset;
 
         auto offset = 0;
         for (auto element_index = 0u; element_index < BLOCK_ELEMENTS; element_index++)
@@ -163,7 +163,7 @@ template <typename T, std::size_t Bits, storage::Ownership Ownership> class Pack
 
     static /* constexpr */ std::array<std::uint8_t, BLOCK_ELEMENTS> initialize_upper_offset()
     {
-        std::array<std::uint8_t, BLOCK_ELEMENTS> upper_offset{};
+        std::array<std::uint8_t, BLOCK_ELEMENTS> upper_offset;
 
         auto offset = 0;
         for (auto element_index = 0u; element_index < BLOCK_ELEMENTS; element_index++)
@@ -186,7 +186,7 @@ template <typename T, std::size_t Bits, storage::Ownership Ownership> class Pack
 
     static /* constexpr */ std::array<std::uint8_t, BLOCK_ELEMENTS> initialize_word_offset()
     {
-        std::array<std::uint8_t, BLOCK_ELEMENTS> word_offset{};
+        std::array<std::uint8_t, BLOCK_ELEMENTS> word_offset;
 
         auto offset = 0;
         for (auto element_index = 0u; element_index < BLOCK_ELEMENTS; element_index++)
