@@ -44,8 +44,6 @@ extractRoute(const datafacade::ContiguousInternalMemoryDataFacade<AlgorithmT> &f
     return raw_route_data;
 }
 
-namespace detail
-{
 /// This is a striped down version of the general shortest path algorithm.
 /// The general algorithm always computes two queries for each leg. This is only
 /// necessary in case of vias, where the directions of the start node is constrainted
@@ -53,10 +51,10 @@ namespace detail
 /// This variation is only an optimazation for graphs with slow queries, for example
 /// not fully contracted graphs.
 template <typename Algorithm>
-InternalRouteResult directShortestPathSearchImpl(
-    SearchEngineData<Algorithm> &engine_working_data,
-    const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
-    const PhantomNodes &phantom_nodes)
+InternalRouteResult
+directShortestPathSearch(SearchEngineData<Algorithm> &engine_working_data,
+                         const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
+                         const PhantomNodes &phantom_nodes)
 {
     engine_working_data.InitializeOrClearFirstThreadLocalStorage(facade.GetNumberOfNodes());
     auto &forward_heap = *engine_working_data.forward_heap_1;
@@ -100,24 +98,17 @@ InternalRouteResult directShortestPathSearchImpl(
     return extractRoute(facade, weight, phantom_nodes, unpacked_nodes, unpacked_edges);
 }
 
-} // namespace ch
-
-InternalRouteResult directShortestPathSearch(
+template InternalRouteResult directShortestPathSearch(
     SearchEngineData<corech::Algorithm> &engine_working_data,
     const datafacade::ContiguousInternalMemoryDataFacade<corech::Algorithm> &facade,
-    const PhantomNodes &phantom_nodes)
-{
-    return detail::directShortestPathSearchImpl(engine_working_data, facade, phantom_nodes);
-}
+    const PhantomNodes &phantom_nodes);
 
-InternalRouteResult directShortestPathSearch(
+template InternalRouteResult directShortestPathSearch(
     SearchEngineData<ch::Algorithm> &engine_working_data,
     const datafacade::ContiguousInternalMemoryDataFacade<ch::Algorithm> &facade,
-    const PhantomNodes &phantom_nodes)
-{
-    return detail::directShortestPathSearchImpl(engine_working_data, facade, phantom_nodes);
-}
+    const PhantomNodes &phantom_nodes);
 
+template <>
 InternalRouteResult directShortestPathSearch(
     SearchEngineData<mld::Algorithm> &engine_working_data,
     const datafacade::ContiguousInternalMemoryDataFacade<mld::Algorithm> &facade,
