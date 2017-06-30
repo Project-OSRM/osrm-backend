@@ -119,7 +119,9 @@ TurnInstruction IntersectionHandler::getInstructionForObvious(const std::size_t 
                     const double constexpr MAX_COLLAPSE_DISTANCE = 30;
                     // in normal road condidtions, we check if the turn is nearly straight.
                     // Doing so, we widen the angle that a turn is considered straight, but since it
-                    // is obvious, the choice is arguably better.
+                    // is obvious, the choice is arguably better. We need the road to continue for a
+                    // bit though, until we assume this is safe to do. In addition, the angle cannot
+                    // get too wide, so we only allow narrow turn angles to begin with.
 
                     // FIXME this requires https://github.com/Project-OSRM/osrm-backend/pull/2399,
                     // since `distance` does not refer to an actual distance but rather to the
@@ -129,12 +131,12 @@ TurnInstruction IntersectionHandler::getInstructionForObvious(const std::size_t 
                     const auto distance = util::coordinate_calculation::haversineDistance(
                         coordinates[node_based_graph.GetTarget(via_edge)],
                         coordinates[node_based_graph.GetTarget(road.eid)]);
-                    return {
-                        TurnType::Turn,
-                        (angularDeviation(road.angle, STRAIGHT_ANGLE) < FUZZY_ANGLE_DIFFERENCE ||
-                         distance > 2 * MAX_COLLAPSE_DISTANCE)
-                            ? DirectionModifier::Straight
-                            : getTurnDirection(road.angle)};
+
+                    return {TurnType::Turn,
+                            (angularDeviation(road.angle, STRAIGHT_ANGLE) < NARROW_TURN_ANGLE &&
+                             distance > 2 * MAX_COLLAPSE_DISTANCE)
+                                ? DirectionModifier::Straight
+                                : getTurnDirection(road.angle)};
                 }
             }
             else
