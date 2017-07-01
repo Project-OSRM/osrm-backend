@@ -48,33 +48,39 @@ Feature: Multi level routing
             │   │   │   │
             l───k───p───o
             """
+
+        And the nodes
+            | node | highway         |
+            | i    | traffic_signals |
+            | n    | traffic_signals |
+
         And the ways
             | nodes | highway |
             | abcda | primary |
             | efghe | primary |
             | ijkli | primary |
-            | nmop  | primary |
+            | mnopm | primary |
             | cm    | primary |
             | hj    | primary |
             | kp    | primary |
 
         When I route I should get
-            | from | to | route                                 | time   |
-            | a    | b  | abcda,abcda                           | 20s    |
-            | a    | f  | abcda,cm,nmop,kp,ijkli,hj,efghe,efghe | 257.7s |
-            | a    | l  | abcda,cm,nmop,kp,ijkli,ijkli          | 173s   |
-            | a    | o  | abcda,cm,nmop,nmop                    | 113s   |
-            | f    | l  | efghe,hj,ijkli,ijkli                  | 124.7s |
-            | f    | o  | efghe,hj,ijkli,kp,nmop,nmop           | 144.7s |
-            | l    | o  | ijkli,kp,nmop,nmop                    | 60s    |
-            | c    | m  | cm,cm                                 | 44.7s  |
+            | from | to | route                                  | time   |
+            | a    | b  | abcda,abcda                            | 20s    |
+            | a    | f  | abcda,cm,mnopm,kp,ijkli,hj,efghe,efghe | 229.4s |
+            | a    | l  | abcda,cm,mnopm,kp,ijkli,ijkli          | 144.7s |
+            | a    | o  | abcda,cm,mnopm,mnopm,mnopm             | 124.7s |
+            | f    | l  | efghe,hj,ijkli,ijkli,ijkli             | 124.7s |
+            | f    | o  | efghe,hj,ijkli,kp,mnopm,mnopm          | 144.7s |
+            | l    | o  | ijkli,kp,mnopm,mnopm                   | 60s    |
+            | c    | m  | cm,cm                                  | 44.7s  |
 
         When I request a travel time matrix I should get
             |   |     a |     f |     l |     o |
-            | a |     0 | 257.7 |   173 |   113 |
-            | f | 257.7 |     0 | 124.7 | 144.7 |
-            | l |   173 | 124.7 |     0 |    60 |
-            | o |   113 | 144.7 |    60 |     0 |
+            | a |     0 | 229.4 | 144.7 | 124.7 |
+            | f | 229.4 |     0 | 124.7 | 144.7 |
+            | l | 144.7 | 124.7 |     0 |    60 |
+            | o | 124.7 | 144.7 |    60 |     0 |
 
 
     Scenario: Testbot - Multi level routing: horizontal road
