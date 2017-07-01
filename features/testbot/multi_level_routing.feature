@@ -146,3 +146,44 @@ Feature: Multi level routing
         When I route I should get
             | from | to | route                      | time   |
             | a    | k  | abcda,ch,hf,fi,ijkli,ijkli | 724.3s |
+
+
+    Scenario: Testbot - Edge case for matrix plugin with
+        Given the node map
+            """
+            a───b
+            │ ╳ │
+            d───c
+            │   │
+            e   f
+            │ ╱ │
+            h   g───i
+            """
+        And the partition extra arguments "--small-component-size 1 --max-cell-sizes 5,16,64"
+
+        And the nodes
+            | node | highway         |
+            | e    | traffic_signals |
+            | g    | traffic_signals |
+
+        And the ways
+            | nodes | highway | maxspeed |
+            | abcda | primary |          |
+            | ac    | primary |          |
+            | db    | primary |          |
+            | deh   | primary |          |
+            | cfg   | primary |          |
+            | ef    | primary |        1 |
+            | eg    | primary |        1 |
+            | hf    | primary |        1 |
+            | hg    | primary |        1 |
+            | gi    | primary |          |
+
+        When I route I should get
+            | from | to | route               | time |
+            | h    | i  | deh,abcda,cfg,gi,gi | 134s |
+
+        When I request a travel time matrix I should get
+            |   |   h |   i |
+            | h |   0 | 134 |
+            | i | 134 |   0 |
