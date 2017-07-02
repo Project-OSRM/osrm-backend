@@ -80,14 +80,13 @@ struct MultiLayerDijkstraHeapData
 
 struct ManyToManyMultiLayerDijkstraHeapData : MultiLayerDijkstraHeapData
 {
-    LevelID level;
     EdgeWeight duration;
     ManyToManyMultiLayerDijkstraHeapData(NodeID p, EdgeWeight duration)
-        : MultiLayerDijkstraHeapData(p), level(0), duration(duration)
+        : MultiLayerDijkstraHeapData(p), duration(duration)
     {
     }
-    ManyToManyMultiLayerDijkstraHeapData(NodeID p, bool from, LevelID level, EdgeWeight duration)
-        : MultiLayerDijkstraHeapData(p, from), level(level), duration(duration)
+    ManyToManyMultiLayerDijkstraHeapData(NodeID p, bool from, EdgeWeight duration)
+        : MultiLayerDijkstraHeapData(p, from), duration(duration)
     {
     }
 };

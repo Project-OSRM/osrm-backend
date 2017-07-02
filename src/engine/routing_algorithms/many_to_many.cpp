@@ -60,7 +60,8 @@ void relaxOutgoingEdges(const datafacade::ContiguousInternalMemoryDataFacade<ch:
                         const NodeID node,
                         const EdgeWeight weight,
                         const EdgeDuration duration,
-                        typename SearchEngineData<ch::Algorithm>::ManyToManyQueryHeap &query_heap)
+                        typename SearchEngineData<ch::Algorithm>::ManyToManyQueryHeap &query_heap,
+                        const PhantomNode &)
 {
     if (ch::stallAtNode<DIRECTION>(facade, node, weight, query_heap))
     {
@@ -96,7 +97,6 @@ void relaxOutgoingEdges(const datafacade::ContiguousInternalMemoryDataFacade<ch:
     }
 }
 
-
 inline bool addLoopWeight(const datafacade::ContiguousInternalMemoryDataFacade<mld::Algorithm> &,
                           const NodeID,
                           EdgeWeight &,
@@ -111,14 +111,21 @@ void relaxOutgoingEdges(
     const NodeID node,
     const EdgeWeight weight,
     const EdgeDuration duration,
-    typename SearchEngineData<mld::Algorithm>::ManyToManyQueryHeap &query_heap)
+    typename SearchEngineData<mld::Algorithm>::ManyToManyQueryHeap &query_heap,
+    const PhantomNode &phantom_node)
 {
     const auto &partition = facade.GetMultiLevelPartition();
     const auto &cells = facade.GetCellStorage();
 
+    auto highest_diffrent_level = [&partition, node](const SegmentID &phantom_node) {
+        if (phantom_node.enabled)
+            return partition.GetHighestDifferentLevel(phantom_node.id, node);
+        return INVALID_LEVEL_ID;
+    };
+    const auto level = std::min(highest_diffrent_level(phantom_node.forward_segment_id),
+                                highest_diffrent_level(phantom_node.reverse_segment_id));
+
     const auto &node_data = query_heap.GetData(node);
-    const auto level =
-        std::max(node_data.level, partition.GetHighestDifferentLevel(node_data.parent, node));
 
     if (level >= 1 && !node_data.from_clique_arc)
     {
@@ -138,11 +145,11 @@ void relaxOutgoingEdges(
                     const auto to_duration = duration + shortcut_durations.front();
                     if (!query_heap.WasInserted(to))
                     {
-                        query_heap.Insert(to, to_weight, {node, true, level, to_duration});
+                        query_heap.Insert(to, to_weight, {node, true, to_duration});
                     }
                     else if (to_weight < query_heap.GetKey(to))
                     {
-                        query_heap.GetData(to) = {node, true, level, to_duration};
+                        query_heap.GetData(to) = {node, true, to_duration};
                         query_heap.DecreaseKey(to, to_weight);
                     }
                 }
@@ -166,11 +173,11 @@ void relaxOutgoingEdges(
                     const auto to_duration = duration + shortcut_durations.front();
                     if (!query_heap.WasInserted(to))
                     {
-                        query_heap.Insert(to, to_weight, {node, true, level, to_duration});
+                        query_heap.Insert(to, to_weight, {node, true, to_duration});
                     }
                     else if (to_weight < query_heap.GetKey(to))
                     {
-                        query_heap.GetData(to) = {node, true, level, to_duration};
+                        query_heap.GetData(to) = {node, true, to_duration};
                         query_heap.DecreaseKey(to, to_weight);
                     }
                 }
@@ -197,13 +204,13 @@ void relaxOutgoingEdges(
             // New Node discovered -> Add to Heap + Node Info Storage
             if (!query_heap.WasInserted(to))
             {
-                query_heap.Insert(to, to_weight, {node, false, level, to_duration});
+                query_heap.Insert(to, to_weight, {node, false, to_duration});
             }
             // Found a shorter Path -> Update weight
             else if (to_weight < query_heap.GetKey(to))
             {
                 // new parent
-                query_heap.GetData(to) = {node, false, level, to_duration};
+                query_heap.GetData(to) = {node, false, to_duration};
                 query_heap.DecreaseKey(to, to_weight);
             }
         }
@@ -217,7 +224,8 @@ void forwardRoutingStep(const datafacade::ContiguousInternalMemoryDataFacade<Alg
                         typename SearchEngineData<Algorithm>::ManyToManyQueryHeap &query_heap,
                         const SearchSpaceWithBuckets &search_space_with_buckets,
                         std::vector<EdgeWeight> &weights_table,
-                        std::vector<EdgeWeight> &durations_table)
+                        std::vector<EdgeWeight> &durations_table,
+                        const PhantomNode &phantom_node)
 {
     const NodeID node = query_heap.DeleteMin();
     const EdgeWeight source_weight = query_heap.GetKey(node);
@@ -259,14 +267,16 @@ void forwardRoutingStep(const datafacade::ContiguousInternalMemoryDataFacade<Alg
         }
     }
 
-    relaxOutgoingEdges<FORWARD_DIRECTION>(facade, node, source_weight, source_duration, query_heap);
+    relaxOutgoingEdges<FORWARD_DIRECTION>(
+        facade, node, source_weight, source_duration, query_heap, phantom_node);
 }
 
 template <typename Algorithm>
 void backwardRoutingStep(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
                          const unsigned column_idx,
                          typename SearchEngineData<Algorithm>::ManyToManyQueryHeap &query_heap,
-                         SearchSpaceWithBuckets &search_space_with_buckets)
+                         SearchSpaceWithBuckets &search_space_with_buckets,
+                         const PhantomNode &phantom_node)
 {
     const NodeID node = query_heap.DeleteMin();
     const EdgeWeight target_weight = query_heap.GetKey(node);
@@ -275,7 +285,8 @@ void backwardRoutingStep(const datafacade::ContiguousInternalMemoryDataFacade<Al
     // store settled nodes in search space bucket
     search_space_with_buckets[node].emplace_back(column_idx, target_weight, target_duration);
 
-    relaxOutgoingEdges<REVERSE_DIRECTION>(facade, node, target_weight, target_duration, query_heap);
+    relaxOutgoingEdges<REVERSE_DIRECTION>(
+        facade, node, target_weight, target_duration, query_heap, phantom_node);
 }
 }
 
@@ -311,7 +322,7 @@ manyToManySearch(SearchEngineData<Algorithm> &engine_working_data,
         // explore search space
         while (!query_heap.Empty())
         {
-            backwardRoutingStep(facade, column_idx, query_heap, search_space_with_buckets);
+            backwardRoutingStep(facade, column_idx, query_heap, search_space_with_buckets, phantom);
         }
         ++column_idx;
     };
@@ -332,7 +343,8 @@ manyToManySearch(SearchEngineData<Algorithm> &engine_working_data,
                                query_heap,
                                search_space_with_buckets,
                                weights_table,
-                               durations_table);
+                               durations_table,
+                               phantom);
         }
         ++row_idx;
     };
