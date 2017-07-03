@@ -32,10 +32,6 @@ local profile = {
   u_turn_penalty            = 20,
   turn_penalty              = 6,
   turn_bias                 = 1.4,
-
-  -- reduce the driving speed by 30% for unsafe roads
-  -- only used for cyclability metric
-  safety_penalty            = 0.7,
   use_public_transport      = true,
 
   allowed_start_modes = Set {
@@ -59,17 +55,17 @@ local profile = {
   },
 
   access_tag_whitelist = Set {
-  	'yes',
-  	'permissive',
-   	'designated'
+    'yes',
+    'permissive',
+    'designated'
   },
 
   access_tag_blacklist = Set {
-  	'no',
-   	'private',
-   	'agricultural',
-   	'forestry',
-   	'delivery'
+    'no',
+    'private',
+    'agricultural',
+    'forestry',
+    'delivery'
   },
 
   restricted_access_tag_list = Set { },
@@ -77,34 +73,36 @@ local profile = {
   restricted_highway_whitelist = Set { },
 
   access_tags_hierarchy = Sequence {
-  	'bicycle',
-  	'vehicle',
-  	'access'
+    'bicycle',
+    'vehicle',
+    'access'
   },
 
   restrictions = Set {
-  	'bicycle'
+    'bicycle'
   },
 
   cycleway_tags = Set {
-  	'track',
-  	'lane',
-  	'opposite',
-  	'opposite_lane',
-  	'opposite_track',
-  	'share_busway',
-  	'sharrow',
-  	'shared',
+    'track',
+    'lane',
+    'opposite',
+    'opposite_lane',
+    'opposite_track',
+    'share_busway',
+    'sharrow',
+    'shared',
     'shared_lane'
   },
 
-  unsafe_highway_list = Set {
-  	'primary',
-   	'secondary',
-   	'tertiary',
-   	'primary_link',
-   	'secondary_link',
-   	'tertiary_link'
+  -- reduce the driving speed by 30% for unsafe roads
+  -- only used for cyclability metric
+  unsafe_highway_list = {
+    primary = 0.7,
+    secondary = 0.7,
+    tertiary = 0.7,
+    primary_link = 0.7,
+    secondary_link = 0.7,
+    tertiary_link = 0.7,
   },
 
   service_penalties = {
@@ -504,17 +502,18 @@ function way_function (way, result)
 
   -- convert duration into cyclability
   if properties.weight_name == 'cyclability' then
-      local is_unsafe = profile.safety_penalty < 1 and profile.unsafe_highway_list[data.highway]
+      local safety_penalty = profile.unsafe_highway_list[data.highway] or 1.
+      local is_unsafe = safety_penalty < 1
       local forward_is_unsafe = is_unsafe and not has_cycleway_right
       local backward_is_unsafe = is_unsafe and not has_cycleway_left
       local is_undesireable = data.highway == "service" and profile.service_penalties[service]
       local forward_penalty = 1.
       local backward_penalty = 1.
       if forward_is_unsafe then
-        forward_penalty = math.min(forward_penalty, profile.safety_penalty)
+        forward_penalty = math.min(forward_penalty, safety_penalty)
       end
       if backward_is_unsafe then
-         backward_penalty = math.min(backward_penalty, profile.safety_penalty)
+         backward_penalty = math.min(backward_penalty, safety_penalty)
       end
 
       if is_undesireable then
