@@ -322,7 +322,7 @@ function way_function(way, result)
   }
 
   -- perform an quick initial check and abort if the way is
-  -- obviously not routable. 
+  -- obviously not routable.
   -- highway or route tags must be in data table, bridge is optional
   if (not data.highway or data.highway == '') and
   (not data.route or data.route == '')
@@ -405,14 +405,15 @@ function turn_function (turn)
     if turn.direction_modifier == direction_modifier.u_turn then
       turn.duration = turn.duration + profile.u_turn_penalty
     end
-
-    -- for distance based routing we don't want to have penalties based on turn angle
-    if properties.weight_name == 'distance' then
-       turn.weight = 0
-    else
-       turn.weight = turn.duration
-    end
   end
+
+  -- for distance based routing we don't want to have penalties based on turn angle
+  if properties.weight_name == 'distance' then
+     turn.weight = 0
+  else
+     turn.weight = turn.duration
+  end
+
   if properties.weight_name == 'routability' then
       -- penalize turns from non-local access only segments onto local access only tags
       if not turn.source_restricted and turn.target_restricted then
