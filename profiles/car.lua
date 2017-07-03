@@ -27,6 +27,18 @@ properties.call_tagless_node_function      = false
 
 properties.enable_way_coordinates          = true
 
+-- If enabled, each way will be looked up in the geojson polygons
+-- described below, and the `regions` parameter to the `way_function`
+-- will contain data like:
+--    function way_function(way, result, regions)
+--      print regions.country -- will contain the value of the "name"
+--                            -- property in the .geojson file
+--    end
+properties.regions = {
+  country = { file = "data/world.geo.json/countries.geo.json", property = "name" },
+--  timezone = { file = "timezones.geojson", property = 'TZID' }
+}
+
 
 local profile = {
   default_mode      = mode.driving,
@@ -304,7 +316,7 @@ function node_function (node, result)
 
 end
 
-function way_function(way, result)
+function way_function(way, result, regions)
   -- the intial filtering of ways based on presence of tags
   -- affects processing times significantly, because all ways
   -- have to be checked.

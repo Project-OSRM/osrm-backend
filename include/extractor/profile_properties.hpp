@@ -9,6 +9,7 @@
 #include <boost/assert.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <cstdint>
+#include <unordered_map>
 
 namespace osrm
 {
@@ -113,6 +114,16 @@ struct ProfileProperties
     bool call_tagless_node_function = true;
     // If true, way:nodes() objects will have :lon() and :lat() values populated in the way_function
     bool enable_way_coordinates = false;
+
+    using CountryName = std::string;
+
+    struct RegionData
+    {
+        std::string filename;
+        std::string region_name_property;
+    };
+
+    std::unordered_map<CountryName, RegionData> regions;
 };
 }
 }

@@ -254,7 +254,30 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
         "call_tagless_node_function",
         &ProfileProperties::call_tagless_node_function,
         "enable_way_coordinates",
-        &ProfileProperties::enable_way_coordinates);
+        &ProfileProperties::enable_way_coordinates,
+        "regions",
+        sol::property([](ProfileProperties &profile, sol::table table) {
+
+            table.for_each([&](sol::object &region, sol::object &props) {
+
+                ProfileProperties::RegionData data;
+                props.as<sol::table>().for_each([&](sol::object &key, sol::object &value) {
+                    if (key.as<std::string>() == "file")
+                    {
+                        data.filename = value.as<std::string>();
+                    }
+                    else if (key.as<std::string>() == "property")
+                    {
+                        data.region_name_property = value.as<std::string>();
+                    }
+                    else
+                    {
+                        // TODO: error, unrecognized region property
+                    }
+                });
+                profile.regions[region.as<std::string>()] = data;
+            });
+        }));
 
     context.state.new_usertype<std::vector<std::string>>(
         "vector",
@@ -503,6 +526,7 @@ LuaScriptingContext &Sol2ScriptingEnvironment::GetSol2Context()
 void Sol2ScriptingEnvironment::ProcessElements(
     const osmium::memory::Buffer &buffer,
     const RestrictionParser &restriction_parser,
+    const std::unordered_map<std::string, util::CoordinateLocator> &locators,
     std::vector<std::pair<const osmium::Node &, ExtractionNode>> &resulting_nodes,
     std::vector<std::pair<const osmium::Way &, ExtractionWay>> &resulting_ways,
     std::vector<boost::optional<InputRestrictionContainer>> &resulting_restrictions)
@@ -528,14 +552,34 @@ void Sol2ScriptingEnvironment::ProcessElements(
                 static_cast<const osmium::Node &>(*entity), std::move(result_node)));
             break;
         case osmium::item_type::way:
+        {
             result_way.clear();
+            const auto &way = static_cast<const osmium::Way &>(*entity);
             if (local_context.has_way_function)
             {
-                local_context.ProcessWay(static_cast<const osmium::Way &>(*entity), result_way);
+                std::unordered_map<std::string, std::string> locations;
+                if (!locators.empty())
+                {
+                    for (const auto &locator : locators)
+                    {
+                        const auto firstnode = way.nodes().front();
+                        const auto lat = firstnode.lat();
+                        const auto lon = firstnode.lon();
+                        auto result =
+                            locator.second.find(util::CoordinateLocator::point_t{lon, lat});
+                        if (result)
+                        {
+                            locations[locator.first] = *result;
+                        }
+                    }
+                }
+                local_context.ProcessWay(way, result_way);
             }
+
             resulting_ways.push_back(std::pair<const osmium::Way &, ExtractionWay>(
                 static_cast<const osmium::Way &>(*entity), std::move(result_way)));
-            break;
+        }
+        break;
         case osmium::item_type::relation:
             result_res.clear();
             result_res =
