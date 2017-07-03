@@ -61,6 +61,11 @@ Thumbs.db
 .cproject
 .project
 
+# Visual Studio (Code) related files #
+######################################
+/.vs*
+/*.local.bat
+
 # stxxl related files #
 #######################
 .stxxl
