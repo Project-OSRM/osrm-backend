@@ -1,8 +1,12 @@
 # 5.9.0
-  - Changes from 5.8
-  - Algorithm:
+  - Changes from 5.8:
+    - Algorithm:
       - Multi-Level Dijkstra:
         - Plugins supported: `table`
+    - API:
+      - Support for exits numbers and names. New member `exits` in `RouteStep`, based on `junction:ref` on ways
+    - Profiles:
+        - `result.exits` allows you to set a way's exit numbers and names, see [`junction:ref`](http://wiki.openstreetmap.org/wiki/Proposed_features/junction_details)
 
 # 5.8.0
   - Changes from 5.7
@@ -11,9 +15,6 @@
       - new parameter `approaches` for `route`, `table`, `trip` and `nearest` requests.  This parameter keep waypoints on the curb side.
         'approaches' accepts both 'curb' and 'unrestricted' values.
         Note : the curb side depend on the `ProfileProperties::left_hand_driving`, it's a global property set once by the profile. If you are working with a planet dataset, the api will be wrong in some countries, and right in others.
-      - Support for exits numbers and names. New member `exits` in `RouteStep`, based on `junction:ref` on ways
-    - Profiles:
-      - `result.exits` allows you to set a way's exit numbers and names, see [`junction:ref`](http://wiki.openstreetmap.org/wiki/Proposed_features/junction_details)
     - NodeJs Bindings
       - new parameter `approaches` for `route`, `table`, `trip` and `nearest` requests.
     - Tools
