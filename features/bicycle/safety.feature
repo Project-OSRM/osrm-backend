@@ -25,6 +25,16 @@ Feature: Bicycle - Adds penalties to unsafe roads
     Scenario: Bike - Apply no penalties to ways with cycleways
         Then routability should be
             | highway        | cycleway    | forw    | backw   | forw_rate | backw_rate |
+            | motorway       | track       | 15 km/h |         |       4.2 |            |
+            | primary        | track       | 15 km/h | 15 km/h |       4.2 |        4.2 |
+            | secondary      | track       | 15 km/h | 15 km/h |       4.2 |        4.2 |
+            | tertiary       | track       | 15 km/h | 15 km/h |       4.2 |        4.2 |
+            | primary_link   | track       | 15 km/h | 15 km/h |       4.2 |        4.2 |
+            | secondary_link | track       | 15 km/h | 15 km/h |       4.2 |        4.2 |
+            | tertiary_link  | track       | 15 km/h | 15 km/h |       4.2 |        4.2 |
+            | residential    | track       | 15 km/h | 15 km/h |       4.2 |        4.2 |
+            | cycleway       | track       | 15 km/h | 15 km/h |       4.2 |        4.2 |
+            | footway        | track       | 15 km/h | 15 km/h |       4.2 |        4.2 |
             | motorway       | lane        | 15 km/h |         |       4.2 |            |
             | primary        | lane        | 15 km/h | 15 km/h |       4.2 |        4.2 |
             | secondary      | lane        | 15 km/h | 15 km/h |       4.2 |        4.2 |
@@ -40,31 +50,51 @@ Feature: Bicycle - Adds penalties to unsafe roads
 
     Scenario: Bike - Apply no penalties to ways in direction of cycleways
         Then routability should be
-            | highway       | cycleway:right | cycleway:left | forw       | backw      | forw_rate | backw_rate |
-            | motorway      | lane           |               | 15 km/h    |            | 4.2       |            |
-            | primary       | lane           |               | 15 km/h    | 15 km/h    | 4.2       | 2.9        |
-            | secondary     | lane           |               | 15 km/h    | 15 km/h    | 4.2       | 2.9        |
-            | tertiary      | lane           |               | 15 km/h    | 15 km/h    | 4.2       | 2.9        |
-            | primary_link  | lane           |               | 15 km/h    | 15 km/h    | 4.2       | 2.9        |
-            | secondary_link| lane           |               | 15 km/h    | 15 km/h    | 4.2       | 2.9        |
-            | tertiary_link | lane           |               | 15 km/h    | 15 km/h    | 4.2       | 2.9        |
-            | residential   | lane           |               | 15 km/h    | 15 km/h    | 4.2       | 4.2        |
-            | cycleway      | lane           |               | 15 km/h    | 15 km/h    | 4.2       | 4.2        |
-            | footway       | lane           |               | 15 km/h    | 6 km/h +-1 | 4.2       | 1.7        |
-            | motorway      |                | lane          |            | 15 km/h    |           | 4.2        |
-            | primary       |                | lane          | 15 km/h    | 15 km/h    | 2.9       | 4.2        |
-            | secondary     |                | lane          | 15 km/h    | 15 km/h    | 2.9       | 4.2        |
-            | tertiary      |                | lane          | 15 km/h    | 15 km/h    | 2.9       | 4.2        |
-            | primary_link  |                | lane          | 15 km/h    | 15 km/h    | 2.9       | 4.2        |
-            | secondary_link|                | lane          | 15 km/h    | 15 km/h    | 2.9       | 4.2        |
-            | tertiary_link |                | lane          | 15 km/h    | 15 km/h    | 2.9       | 4.2        |
-            | residential   |                | lane          | 15 km/h    | 15 km/h    | 4.2       | 4.2        |
-            | cycleway      |                | lane          | 15 km/h    | 15 km/h    | 4.2       | 4.2        |
-            | footway       |                | lane          | 6 km/h +-1 | 15 km/h    | 1.7       | 4.2        |
-            | motorway      | shared_lane    |               | 15 km/h    |            | 4.2       |            |
-            | primary       | shared_lane    |               | 15 km/h    | 15 km/h    | 4.2       | 2.9        |
-            | motorway      |                | shared_lane   |            | 15 km/h    |           | 4.2        |
-            | primary       |                | shared_lane   | 15 km/h    | 15 km/h    | 2.9       | 4.2        |
+            | highway        | cycleway:right | cycleway:left | forw        | backw       | forw_rate | backw_rate |
+            | motorway       | track          |               | 15 km/h     |             |       4.2 |            |
+            | primary        | track          |               | 15 km/h     | 15 km/h     |       4.2 |        2.9 |
+            | secondary      | track          |               | 15 km/h     | 15 km/h     |       4.2 |        2.9 |
+            | tertiary       | track          |               | 15 km/h     | 15 km/h     |       4.2 |        2.9 |
+            | primary_link   | track          |               | 15 km/h     | 15 km/h     |       4.2 |        2.9 |
+            | secondary_link | track          |               | 15 km/h     | 15 km/h     |       4.2 |        2.9 |
+            | tertiary_link  | track          |               | 15 km/h     | 15 km/h     |       4.2 |        2.9 |
+            | residential    | track          |               | 15 km/h     | 15 km/h     |       4.2 |        4.2 |
+            | cycleway       | track          |               | 15 km/h     | 15 km/h     |       4.2 |        4.2 |
+            | footway        | track          |               | 15 km/h     | 6 km/h +-1  |       4.2 |        1.7 |
+            | motorway       |                | track         |             | 15 km/h     |           |        4.2 |
+            | primary        |                | track         | 15 km/h     | 15 km/h     |       2.9 |        4.2 |
+            | secondary      |                | track         | 15 km/h     | 15 km/h     |       2.9 |        4.2 |
+            | tertiary       |                | track         | 15 km/h     | 15 km/h     |       2.9 |        4.2 |
+            | primary_link   |                | track         | 15 km/h     | 15 km/h     |       2.9 |        4.2 |
+            | secondary_link |                | track         | 15 km/h     | 15 km/h     |       2.9 |        4.2 |
+            | tertiary_link  |                | track         | 15 km/h     | 15 km/h     |       2.9 |        4.2 |
+            | residential    |                | track         | 15 km/h     | 15 km/h     |       4.2 |        4.2 |
+            | cycleway       |                | track         | 15 km/h     | 15 km/h     |       4.2 |        4.2 |
+            | footway        |                | track         | 6 km/h +-1  | 15 km/h     |       1.7 |        4.2 |
+            | motorway       | lane           |               | 15 km/h     |             |       4.2 |            |
+            | primary        | lane           |               | 15 km/h     | 15 km/h     |       4.2 |        2.9 |
+            | secondary      | lane           |               | 15 km/h     | 15 km/h     |       4.2 |        2.9 |
+            | tertiary       | lane           |               | 15 km/h     | 15 km/h     |       4.2 |        2.9 |
+            | primary_link   | lane           |               | 15 km/h     | 15 km/h     |       4.2 |        2.9 |
+            | secondary_link | lane           |               | 15 km/h     | 15 km/h     |       4.2 |        2.9 |
+            | tertiary_link  | lane           |               | 15 km/h     | 15 km/h     |       4.2 |        2.9 |
+            | residential    | lane           |               | 15 km/h +-1 | 15 km/h +-1 |       4.2 |        4.2 |
+            | cycleway       | lane           |               | 15 km/h     | 15 km/h     |       4.2 |        4.2 |
+            | footway        | lane           |               | 15 km/h     | 6 km/h +-1  |       4.2 |        1.7 |
+            | motorway       |                | lane          |             | 15 km/h     |           |        4.2 |
+            | primary        |                | lane          | 15 km/h     | 15 km/h     |       2.9 |        4.2 |
+            | secondary      |                | lane          | 15 km/h +-1 | 15 km/h +-1 |       2.9 |        4.2 |
+            | tertiary       |                | lane          | 15 km/h     | 15 km/h     |       2.9 |        4.2 |
+            | primary_link   |                | lane          | 15 km/h     | 15 km/h     |       2.9 |        4.2 |
+            | secondary_link |                | lane          | 15 km/h     | 15 km/h     |       2.9 |        4.2 |
+            | tertiary_link  |                | lane          | 15 km/h     | 15 km/h     |       2.9 |        4.2 |
+            | residential    |                | lane          | 15 km/h     | 15 km/h     |       4.2 |        4.2 |
+            | cycleway       |                | lane          | 15 km/h     | 15 km/h     |       4.2 |        4.2 |
+            | footway        |                | lane          | 6 km/h +-1  | 15 km/h     |       1.7 |        4.2 |
+            | motorway       | shared_lane    |               | 15 km/h     |             |       4.2 |            |
+            | primary        | shared_lane    |               | 15 km/h     | 15 km/h     |       4.2 |        2.9 |
+            | motorway       |                | shared_lane   |             | 15 km/h     |           |        4.2 |
+            | primary        |                | shared_lane   | 15 km/h     | 15 km/h     |       2.9 |        4.2 |
 
 
     Scenario: Bike - Don't apply penalties for all kind of cycleways
