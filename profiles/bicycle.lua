@@ -98,11 +98,11 @@ local profile = {
   -- only used for cyclability metric
   unsafe_highway_list = {
     primary = 0.7,
-    secondary = 0.7,
-    tertiary = 0.7,
+    secondary = 0.75,
+    tertiary = 0.8,
     primary_link = 0.7,
-    secondary_link = 0.7,
-    tertiary_link = 0.7,
+    secondary_link = 0.75,
+    tertiary_link = 0.8,
   },
 
   service_penalties = {
