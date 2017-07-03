@@ -4,9 +4,9 @@
 #include "extractor/guidance/intersection.hpp"
 #include "extractor/guidance/intersection_generator.hpp"
 #include "extractor/guidance/node_based_graph_walker.hpp"
-#include "extractor/query_node.hpp"
 #include "extractor/suffix_table.hpp"
 
+#include "util/coordinate.hpp"
 #include "util/coordinate_calculation.hpp"
 #include "util/guidance/name_announcements.hpp"
 #include "util/name_table.hpp"

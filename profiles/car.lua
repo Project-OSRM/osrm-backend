@@ -133,7 +133,7 @@ function setup()
         unclassified    = 25,
         residential     = 25,
         living_street   = 10,
-        service         = 15
+      --  service         = 15
       }
     },
 

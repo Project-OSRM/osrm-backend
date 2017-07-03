@@ -421,6 +421,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     guidance::TurnAnalysis turn_analysis(m_node_based_graph,
                                          m_edge_based_node_container,
                                          m_coordinates,
+                                         m_osm_node_ids,
                                          node_restriction_map,
                                          m_barrier_nodes,
                                          m_compressed_edge_container,
@@ -431,6 +432,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     util::guidance::LaneDataIdMap lane_data_map;
     guidance::lanes::TurnLaneHandler turn_lane_handler(m_node_based_graph,
                                                        m_edge_based_node_container,
+                                                       m_osm_node_ids,
                                                        lane_description_map,
                                                        turn_analysis,
                                                        lane_data_map);
