@@ -154,6 +154,7 @@ local profile = {
       'tertiary_link',
       'residential',
       'living_street',
+      'service'
   },
 
   route_speeds = {
