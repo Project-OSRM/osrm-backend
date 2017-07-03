@@ -46,7 +46,7 @@ class ValidationHandler final : public IntersectionHandler
                             const EdgeID via_eid,
                             Intersection intersection) const override final
     {
-        // checkForSharpTurnsOntoRamps(nid, via_eid, intersection);
+        checkForSharpTurnsOntoRamps(nid, via_eid, intersection);
         checkForSharpTurnsBetweenRamps(nid, via_eid, intersection);
 
         return intersection;
