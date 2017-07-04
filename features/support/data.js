@@ -238,9 +238,9 @@ module.exports = function () {
         // a shallow copy of scenario parameters to avoid data inconsistency
         // if a cucumber timeout occurs during deferred jobs
         let p = {extractArgs: this.extractArgs, contractArgs: this.contractArgs,
-                 partitionArgs: this.partitionArgs, customizeArgs: this.customizeArgs,
-                 profileFile: this.profileFile, inputCacheFile: this.inputCacheFile,
-                 processedCacheFile: this.processedCacheFile, environment: this.environment};
+            partitionArgs: this.partitionArgs, customizeArgs: this.customizeArgs,
+            profileFile: this.profileFile, inputCacheFile: this.inputCacheFile,
+            processedCacheFile: this.processedCacheFile, environment: this.environment};
         let queue = d3.queue(1);
         queue.defer(this.extractData.bind(this), p);
         queue.defer(this.partitionData.bind(this), p);
