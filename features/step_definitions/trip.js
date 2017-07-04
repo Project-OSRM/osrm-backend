@@ -85,8 +85,7 @@ module.exports = function () {
                     }
 
                     var ok = true,
-                        encodedResult = '',
-                        extendedTarget = '';
+                        encodedResult = '';
 
                     if (json.trips) row.trips.split(',').forEach((sub, si) => {
                         if (si >= subTrips.length) {
@@ -98,11 +97,9 @@ module.exports = function () {
                                     outNode = subTrips[si][ni];
                                 if (this.FuzzyMatch.matchLocation(outNode, node)) {
                                     encodedResult += sub[ni];
-                                    extendedTarget += sub[ni];
                                 } else {
                                     ok = false;
                                     encodedResult += util.format('? [%s,%s]', outNode[0], outNode[1]);
-                                    extendedTarget += util.format('%s [%d,%d]', sub[ni], node.lat, node.lon);
                                 }
                             }
                         }
