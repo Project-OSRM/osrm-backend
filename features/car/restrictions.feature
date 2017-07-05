@@ -506,3 +506,356 @@ Feature: Car - Turn restrictions
             | s    | n  | sj,nj,nj |
             | s    | e  | sj,ej,ej |
 
+    @restriction @compression
+    Scenario: Restriction On Compressed Geometry
+        Given the node map
+            """
+                        i
+                        |
+                    f - e
+                    |   |
+            a - b - c - d
+                    |
+                    g
+                    |
+                    h
+            """
+
+        And the ways
+            | nodes |
+            | abc   |
+            | cde   |
+            | efc   |
+            | cgh   |
+            | ei    |
+
+        And the relations
+            | type        | way:from | node:via | way:to | restriction   |
+            | restriction | abc      | c        | cgh    | no_right_turn |
+
+        When I route I should get
+            | from | to | route               |
+            | a    | h  | abc,cde,efc,cgh,cgh |
+
+    @restriction
+    Scenario: Car - prohibit turn
+        Given the node map
+            """
+            c
+            |
+            |   f
+            |   |
+            b---e
+            |   |
+            a   d
+            """
+
+        And the ways
+            | nodes |
+            | ab    |
+            | bc    |
+            | be    |
+            | de    |
+            | ef    |
+
+        And the relations
+            | type        | way:from | way:via | way:to | restriction   |
+            | restriction | ab       | be      | de     | no_right_turn |
+
+        When I route I should get
+            | from | to | route       |
+            | a    | d  | ab,be,de,de |
+            | a    | f  | ab,be,ef,ef |
+
+    @restriction @overlap
+    Scenario: Car - prohibit turn
+        Given the node map
+            """
+            c
+            |
+            |   f
+            |   |
+            b---e
+            |   |
+            |   d
+            |
+            a
+
+            """
+
+        And the ways
+            | nodes |
+            | ab    |
+            | bc    |
+            | be    |
+            | de    |
+            | ef    |
+
+        And the relations
+            | type        | way:from | way:via | way:to | restriction   |
+            | restriction | ab       | be      | de     | no_right_turn |
+            | restriction | bc       | be      | ef     | no_left_turn  |
+
+        When I route I should get
+            | from | to | route       |
+            | a    | d  | ab,be,de,de |
+            | a    | f  | ab,be,ef,ef |
+            | c    | d  | bc,be,de,de |
+            | c    | f  | bc,be,ef,ef |
+
+    @restriction-way @overlap
+    Scenario: Two times same way
+        Given the node map
+            """
+                h   g
+                |   |
+                |   |
+                |   |
+                |   |
+                |   |
+                |   |
+                |   |
+                |   |
+                |   |
+                |   |
+            a - b - c - f
+                |   | \ |
+                i - d - e
+            """
+
+        And the ways
+            | nodes | oneway |
+            | ab    | no     |
+            | bc    | no     |
+            | cd    | yes    |
+            | ce    | yes    |
+            | cf    | yes    |
+            | cg    | yes    |
+            | bh    | no     |
+            | fedib | yes    |
+
+       And the relations
+            | type        | way:from | way:via | way:to | restriction   |
+            | restriction | ab       | bc      | ce     | no_right_turn |
+            | restriction | ab       | bc      | cd     | no_right_turn |
+
+       When I route I should get
+            | from | to | route                |
+            | a    | i  | ab,bc,cd,fedib,fedib |
+
+
+    @restriction-way @overlap
+    Scenario: Car - prohibit turn
+        Given the node map
+            """
+            a   j
+            |   |
+            b---i
+            |   |
+            c---h
+            |   |
+            d---g
+            |   |
+            e   f
+            """
+
+        And the ways
+            | nodes | name   | oneway |
+            | ab    | left   | yes    |
+            | bc    | left   | yes    |
+            | cd    | left   | yes    |
+            | de    | left   | yes    |
+            | fg    | right  | yes    |
+            | gh    | right  | yes    |
+            | hi    | right  | yes    |
+            | ij    | right  | yes    |
+            | dg    | first  | no     |
+            | ch    | second | no     |
+            | bi    | third  | no     |
+
+        And the relations
+            | type        | way:from | way:via | way:to | restriction   |
+            | restriction | ab       | bi      | ij     | no_u_turn     |
+            | restriction | bc       | ch      | hi     | no_u_turn     |
+            | restriction | fg       | dg      | de     | no_u_turn     |
+            | restriction | gh       | ch      | cd     | no_u_turn     |
+
+        When I route I should get
+            | from | to | route                  |
+            | a    | j  | left,third,right,right |
+            | f    | e  | right,first,left,left  |
+
+    @restriction
+    Scenario: Car - allow only turn
+        Given the node map
+            """
+            c
+            |
+            |   f
+            |   |
+            b---e
+            |   |
+            a   d
+            """
+
+        And the ways
+            | nodes |
+            | ab    |
+            | bc    |
+            | be    |
+            | de    |
+            | ef    |
+
+        And the relations
+            | type        | way:from | way:via | way:to | restriction  |
+            | restriction | ab       | be      | ef     | only_left_on |
+
+        When I route I should get
+            | from | to | route       |
+            | a    | d  | ab,be,de,de |
+
+
+    @restriction
+    Scenario: Car - allow only turn
+        Given the node map
+            """
+            c
+            |
+            |   f
+            |   |
+            b---e
+            |   |
+            a   d
+            """
+
+        And the ways
+            | nodes |
+            | ab    |
+            | bc    |
+            | be    |
+            | de    |
+            | ef    |
+
+        And the relations
+            | type        | way:from | way:via | way:to | restriction   |
+            | restriction | ab       | be      | ed     | only_right_on |
+
+        When I route I should get
+            | from | to | route       |
+            | a    | d  | ab,be,de,de |
+
+    @restriction
+    Scenario: Multi Way restriction
+        Given the node map
+            """
+                  k   j
+                  |   |
+            h - - g - f - - e
+                  |   |
+                  |   |
+            a - - b - c - - d
+                  |   |
+                  l   i
+            """
+
+        And the ways
+            | nodes | name  | oneway |
+            | ab    | horiz | yes    |
+            | bc    | horiz | yes    |
+            | cd    | horiz | yes    |
+            | ef    | horiz | yes    |
+            | fg    | horiz | yes    |
+            | gh    | horiz | yes    |
+            | ic    | vert  | yes    |
+            | cf    | vert  | yes    |
+            | fj    | vert  | yes    |
+            | kg    | vert  | yes    |
+            | gb    | vert  | yes    |
+            | bl    | vert  | yes    |
+
+        And the relations
+            | type        | way:from | way:via  | way:to | restriction |
+            | restriction | ab       | bc,cf,fg | gh     | no_u_turn   |
+
+        When I route I should get
+            | from | to | route                  |
+            | a    | h  | horiz,vert,horiz,horiz |
+
+    @restriction
+    Scenario: Multi-Way overlapping single-way
+        Given the node map
+            """
+                    e
+                    |
+            a - b - c - d
+                |
+                f - g
+                |
+                h
+            """
+
+        And the ways
+            | nodes | name |
+            | ab    | abcd |
+            | bc    | abcd |
+            | cd    | abcd |
+            | hf    | hfb  |
+            | fb    | hfb  |
+            | gf    | gf   |
+            | ce    | ce   |
+
+        And the relations
+            | type        | way:from | way:via | way:to | restriction    |
+            | restriction | ab       | bc      | ce     | only_left_turn |
+            | restriction | gf       | fb,bc   | cd     | only_u_turn    |
+
+        When I route I should get
+            | from | to | route             |
+            | a    | d  | abcd,abcd         |
+            | a    | e  | abcd,ce,ce        |
+            | a    | f  | abcd,hfb,hfb      |
+            | g    | e  | gf,hfb,abcd,ce,ce |
+            | g    | d  | gf,hfb,abcd,abcd  |
+            | h    | e  | hfb,abcd,ce,ce    |
+            | h    | d  | hfb,abcd,abcd     |
+
+    @restriction
+    Scenario: Car - prohibit turn, traffic lights
+        Given the node map
+            """
+            c
+            |
+            |   f
+            |   |
+            b---e
+            |   |
+            a   d
+            |   |
+            g   i
+            |   |
+            h   j
+            """
+
+        And the ways
+            | nodes | name |
+            | hgab  | ab   |
+            | bc    | bc   |
+            | be    | be   |
+            | jide  | de   |
+            | ef    | ef   |
+
+        And the relations
+            | type        | way:from | way:via | way:to | restriction   |
+            | restriction | hgab     | be      | jide   | no_right_turn |
+
+        And the nodes
+            | node | highway         |
+            | g    | traffic_signals |
+            | i    | traffic_signals |
+
+
+        When I route I should get
+            | from | to | route       |
+            | h    | j  | ab,be,de,de |
+            | h    | f  | ab,be,ef,ef |
+
