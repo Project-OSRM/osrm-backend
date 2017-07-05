@@ -264,6 +264,15 @@ function setup()
       ["nl:rural"] = 80,
       ["nl:trunk"] = 100,
       ["none"] = 140
+    },
+
+    node_tags_requiring_processing = {
+      'barrier',
+      'highway',
+      'motorcar',
+      'motor_vehicle',
+      'vehicle',
+      'access'
     }
   }
 end

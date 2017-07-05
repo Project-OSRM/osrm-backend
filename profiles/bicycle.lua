@@ -194,6 +194,15 @@ function setup()
     avoid = Set {
       'impassable',
       'construction'
+    },
+
+    node_tags_requiring_processing = {
+      'barrier',
+      'highway',
+      'crossing',
+      'bicycle',
+      'vehicle',
+      'access'
     }
   }
 end

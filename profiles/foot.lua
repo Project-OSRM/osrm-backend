@@ -135,6 +135,14 @@ function setup()
     },
 
     smoothness_speeds = {
+    },
+
+    node_tags_requiring_processing = {
+      'barrier',
+      'highway',
+      'crossing',
+      'foot',
+      'access'
     }
   }
 end
