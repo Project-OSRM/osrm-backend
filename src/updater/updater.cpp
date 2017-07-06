@@ -444,22 +444,18 @@ updateTurnPenalties(const UpdaterConfig &config,
 }
 
 bool IsRestrictionValid(const Timezoner &tz_handler,
-                        const extractor::TurnRestriction &turn,
-                        const std::vector<util::Coordinate> &coordinates,
-                        const extractor::PackedOSMIDs &osm_node_ids)
+                        const extractor::ConditionalTurnRestriction &turn,
+                        const std::vector<util::Coordinate> &coordinates)
 {
-    const auto via_node = osm_node_ids[turn.via.node];
-    const auto from_node = osm_node_ids[turn.from.node];
-    const auto to_node = osm_node_ids[turn.to.node];
-    if (turn.condition.empty())
-    {
-        osrm::util::Log(logWARNING) << "Condition parsing failed for the turn " << from_node
-                                    << " -> " << via_node << " -> " << to_node;
-        return false;
-    }
+    BOOST_ASSERT(!turn.condition.empty());
 
-    const auto lon = static_cast<double>(toFloating(coordinates[turn.via.node].lon));
-    const auto lat = static_cast<double>(toFloating(coordinates[turn.via.node].lat));
+    // we utilize the via node (first on ways) to represent the turn restriction
+    auto const via = turn.Type() == extractor::RestrictionType::WAY_RESTRICTION
+                         ? turn.AsWayRestriction().in_restriction.to
+                         : turn.AsNodeRestriction().via;
+
+    const auto lon = static_cast<double>(toFloating(coordinates[via].lon));
+    const auto lat = static_cast<double>(toFloating(coordinates[via].lat));
     const auto &condition = turn.condition;
 
     // Get local time of the restriction
@@ -482,9 +478,8 @@ bool IsRestrictionValid(const Timezoner &tz_handler,
 std::vector<std::uint64_t>
 updateConditionalTurns(const UpdaterConfig &config,
                        std::vector<TurnPenalty> &turn_weight_penalties,
-                       const std::vector<extractor::TurnRestriction> &conditional_turns,
+                       const std::vector<extractor::ConditionalTurnRestriction> &conditional_turns,
                        std::vector<util::Coordinate> &coordinates,
-                       extractor::PackedOSMIDs &osm_node_ids,
                        Timezoner time_zone_handler)
 {
     // Mapped file pointer for turn indices
@@ -501,18 +496,28 @@ updateConditionalTurns(const UpdaterConfig &config,
     std::unordered_set<std::tuple<NodeID, NodeID, NodeID>,
                        std::hash<std::tuple<NodeID, NodeID, NodeID>>>
         is_no_set;
-    for (const auto &c : conditional_turns)
+    for (const auto &node_or_way : conditional_turns)
     {
-        // only add restrictions to the lookups if the restriction is valid now
-        if (!IsRestrictionValid(time_zone_handler, c, coordinates, osm_node_ids))
+        // TODO handle conditional turn restrictions for via-ways (look-up doesn't work here)
+        // https://github.com/Project-OSRM/osrm-backend/issues/2681#issuecomment-313376385
+        if (node_or_way.Type() == extractor::RestrictionType::WAY_RESTRICTION)
             continue;
-        if (c.flags.is_only)
+
+        if (!IsRestrictionValid(time_zone_handler, node_or_way, coordinates))
+            continue;
+
+        // TODO get rid of this, when we can handle way restrictions
+        const auto &c = node_or_way.AsNodeRestriction();
+
+        // only add restrictions to the lookups if the restriction is valid now
+
+        if (node_or_way.flags.is_only)
         {
-            is_only_lookup.lookup.push_back({std::make_tuple(c.from.node, c.via.node), c.to.node});
+            is_only_lookup.lookup.push_back({std::make_tuple(c.from, c.via), c.to});
         }
         else
         {
-            is_no_set.insert({std::make_tuple(c.from.node, c.via.node, c.to.node)});
+            is_no_set.insert({std::make_tuple(c.from, c.via, c.to)});
         }
     }
 
@@ -633,7 +638,7 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
                              load_profile_properties);
     }
 
-    std::vector<extractor::TurnRestriction> conditional_turns;
+    std::vector<extractor::ConditionalTurnRestriction> conditional_turns;
     if (update_conditional_turns)
     {
         using storage::io::FileReader;
@@ -691,12 +696,8 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
         }
         const Timezoner time_zone_handler = Timezoner(config.tz_file_path, config.valid_now);
 
-        auto updated_turn_penalties = updateConditionalTurns(config,
-                                                             turn_weight_penalties,
-                                                             conditional_turns,
-                                                             coordinates,
-                                                             osm_node_ids,
-                                                             time_zone_handler);
+        auto updated_turn_penalties = updateConditionalTurns(
+            config, turn_weight_penalties, conditional_turns, coordinates, time_zone_handler);
         const auto offset = updated_segments.size();
         updated_segments.resize(offset + updated_turn_penalties.size());
         // we need to re-compute all edges that have updated turn penalties.

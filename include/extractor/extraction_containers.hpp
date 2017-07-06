@@ -2,7 +2,6 @@
 #define EXTRACTION_CONTAINERS_HPP
 
 #include "extractor/first_and_last_segment_of_way.hpp"
-#include "extractor/guidance/turn_lane_types.hpp"
 #include "extractor/internal_extractor_edge.hpp"
 #include "extractor/query_node.hpp"
 #include "extractor/restriction.hpp"
@@ -28,7 +27,7 @@ class ExtractionContainers
     void PrepareEdges(ScriptingEnvironment &scripting_environment);
 
     void WriteNodes(storage::io::FileWriter &file_out) const;
-    void WriteRestrictions(const std::string &restrictions_file_name);
+    void WriteConditionalRestrictions(const std::string &restrictions_file_name);
     void WriteEdges(storage::io::FileWriter &file_out) const;
     void WriteCharData(const std::string &file_name);
 
@@ -36,7 +35,6 @@ class ExtractionContainers
     using NodeIDVector = std::vector<OSMNodeID>;
     using NodeVector = std::vector<QueryNode>;
     using EdgeVector = std::vector<InternalExtractorEdge>;
-    using RestrictionsVector = std::vector<InputRestrictionContainer>;
     using WayIDStartEndVector = std::vector<FirstAndLastSegmentOfWay>;
     using NameCharData = std::vector<unsigned char>;
     using NameOffsets = std::vector<unsigned>;
@@ -49,9 +47,15 @@ class ExtractionContainers
     NameCharData name_char_data;
     NameOffsets name_offsets;
     // an adjacency array containing all turn lane masks
-    RestrictionsVector restrictions_list;
     WayIDStartEndVector way_start_end_id_list;
+
     unsigned max_internal_node_id;
+
+    // list of restrictions before we transform them into the output types
+    std::vector<InputConditionalTurnRestriction> restrictions_list;
+
+    // turn restrictions split into conditional and unconditional turn restrictions
+    std::vector<ConditionalTurnRestriction> conditional_turn_restrictions;
     std::vector<TurnRestriction> unconditional_turn_restrictions;
 
     ExtractionContainers();

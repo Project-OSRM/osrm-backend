@@ -57,12 +57,12 @@ class ScriptingEnvironment
     virtual void ProcessTurn(ExtractionTurn &turn) = 0;
     virtual void ProcessSegment(ExtractionSegment &segment) = 0;
 
-    virtual void ProcessElements(
-        const osmium::memory::Buffer &buffer,
-        const RestrictionParser &restriction_parser,
-        std::vector<std::pair<const osmium::Node &, ExtractionNode>> &resulting_nodes,
-        std::vector<std::pair<const osmium::Way &, ExtractionWay>> &resulting_ways,
-        std::vector<boost::optional<InputRestrictionContainer>> &resulting_restrictions) = 0;
+    virtual void
+    ProcessElements(const osmium::memory::Buffer &buffer,
+                    const RestrictionParser &restriction_parser,
+                    std::vector<std::pair<const osmium::Node &, ExtractionNode>> &resulting_nodes,
+                    std::vector<std::pair<const osmium::Way &, ExtractionWay>> &resulting_ways,
+                    std::vector<InputConditionalTurnRestriction> &resulting_restrictions) = 0;
 };
 }
 }

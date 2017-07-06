@@ -1,12 +1,17 @@
 #include "extractor/graph_compressor.hpp"
 
 #include "extractor/compressed_edge_container.hpp"
-#include "extractor/restriction_map.hpp"
+#include "extractor/restriction.hpp"
+#include "extractor/restriction_compressor.hpp"
+
 #include "util/dynamic_graph.hpp"
 #include "util/node_based_graph.hpp"
 #include "util/percent.hpp"
 
 #include "util/log.hpp"
+
+#include <boost/assert.hpp>
+#include <unordered_set>
 
 namespace osrm
 {
@@ -15,12 +20,34 @@ namespace extractor
 
 void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
                                const std::unordered_set<NodeID> &traffic_lights,
-                               RestrictionMap &restriction_map,
+                               std::vector<TurnRestriction> &turn_restrictions,
                                util::NodeBasedDynamicGraph &graph,
                                CompressedEdgeContainer &geometry_compressor)
 {
     const unsigned original_number_of_nodes = graph.GetNumberOfNodes();
     const unsigned original_number_of_edges = graph.GetNumberOfEdges();
+
+    RestrictionCompressor restriction_compressor(turn_restrictions);
+
+    // we do not compress turn restrictions on degree two nodes. These nodes are usually used to
+    // indicated `directed` barriers
+    std::unordered_set<NodeID> restriction_via_nodes;
+
+    const auto remember_via_nodes = [&](const auto &restriction) {
+        if (restriction.Type() == RestrictionType::NODE_RESTRICTION)
+        {
+            const auto &node = restriction.AsNodeRestriction();
+            restriction_via_nodes.insert(node.via);
+        }
+        else
+        {
+            BOOST_ASSERT(restriction.Type() == RestrictionType::WAY_RESTRICTION);
+            const auto &way = restriction.AsWayRestriction();
+            restriction_via_nodes.insert(way.in_restriction.via);
+            restriction_via_nodes.insert(way.out_restriction.via);
+        }
+    };
+    std::for_each(turn_restrictions.begin(), turn_restrictions.end(), remember_via_nodes);
 
     {
         util::UnbufferedLog log;
@@ -43,7 +70,7 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
             }
 
             // check if v is a via node for a turn restriction, i.e. a 'directed' barrier node
-            if (restriction_map.IsViaNode(node_v))
+            if (restriction_via_nodes.count(node_v))
             {
                 continue;
             }
@@ -199,11 +226,7 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
                 graph.DeleteEdge(node_v, reverse_e2);
 
                 // update any involved turn restrictions
-                restriction_map.FixupStartingTurnRestriction(node_u, node_v, node_w);
-                restriction_map.FixupArrivingTurnRestriction(node_u, node_v, node_w, graph);
-
-                restriction_map.FixupStartingTurnRestriction(node_w, node_v, node_u);
-                restriction_map.FixupArrivingTurnRestriction(node_w, node_v, node_u, graph);
+                restriction_compressor.Compress(node_u, node_v, node_w);
 
                 // store compressed geometry in container
                 geometry_compressor.CompressEdge(forward_e1,

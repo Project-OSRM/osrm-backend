@@ -52,12 +52,12 @@ using OSMWayID = osrm::Alias<std::uint64_t, tag::osm_way_id>;
 static_assert(std::is_pod<OSMWayID>(), "OSMWayID is not a valid alias");
 
 static const OSMNodeID SPECIAL_OSM_NODEID = OSMNodeID{std::numeric_limits<std::uint64_t>::max()};
-static const OSMWayID SPECIAL_OSM_WAYID = OSMWayID{std::numeric_limits<std::uint32_t>::max()};
+static const OSMWayID SPECIAL_OSM_WAYID = OSMWayID{std::numeric_limits<std::uint64_t>::max()};
 
 static const OSMNodeID MAX_OSM_NODEID = OSMNodeID{std::numeric_limits<std::uint64_t>::max()};
 static const OSMNodeID MIN_OSM_NODEID = OSMNodeID{std::numeric_limits<std::uint64_t>::min()};
-static const OSMWayID MAX_OSM_WAYID = OSMWayID{std::numeric_limits<std::uint32_t>::max()};
-static const OSMWayID MIN_OSM_WAYID = OSMWayID{std::numeric_limits<std::uint32_t>::min()};
+static const OSMWayID MAX_OSM_WAYID = OSMWayID{std::numeric_limits<std::uint64_t>::max()};
+static const OSMWayID MIN_OSM_WAYID = OSMWayID{std::numeric_limits<std::uint64_t>::min()};
 
 using OSMNodeID_weak = std::uint64_t;
 using OSMEdgeID_weak = std::uint64_t;

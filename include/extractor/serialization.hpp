@@ -137,41 +137,67 @@ inline void write(storage::io::FileWriter &writer,
     storage::serialization::write(writer, node_data_container.classes);
 }
 
-// read/write for conditional turn restrictions file
-inline void read(storage::io::FileReader &reader, std::vector<TurnRestriction> &restrictions)
+inline void read(storage::io::FileReader &reader, NodeRestriction &restriction)
 {
-    auto num_indices = reader.ReadElementCount64();
-    restrictions.reserve(num_indices);
-    TurnRestriction restriction;
-    while (num_indices > 0)
-    {
-        bool is_only;
-        reader.ReadInto(restriction.via);
-        reader.ReadInto(restriction.from);
-        reader.ReadInto(restriction.to);
-        reader.ReadInto(is_only);
-        auto num_conditions = reader.ReadElementCount64();
-        restriction.condition.resize(num_conditions);
-        for (uint64_t i = 0; i < num_conditions; i++)
-        {
-            reader.ReadInto(restriction.condition[i].modifier);
-            storage::serialization::read(reader, restriction.condition[i].times);
-            storage::serialization::read(reader, restriction.condition[i].weekdays);
-            storage::serialization::read(reader, restriction.condition[i].monthdays);
-        }
-        restriction.flags.is_only = is_only;
+    reader.ReadInto(restriction.from);
+    reader.ReadInto(restriction.via);
+    reader.ReadInto(restriction.to);
+}
 
-        restrictions.push_back(std::move(restriction));
-        num_indices--;
+inline void write(storage::io::FileWriter &writer, const NodeRestriction &restriction)
+{
+    writer.WriteOne(restriction.from);
+    writer.WriteOne(restriction.via);
+    writer.WriteOne(restriction.to);
+}
+
+inline void read(storage::io::FileReader &reader, WayRestriction &restriction)
+{
+    read(reader, restriction.in_restriction);
+    read(reader, restriction.out_restriction);
+}
+
+inline void write(storage::io::FileWriter &writer, const WayRestriction &restriction)
+{
+    write(writer, restriction.in_restriction);
+    write(writer, restriction.out_restriction);
+}
+
+inline void read(storage::io::FileReader &reader, TurnRestriction &restriction)
+{
+    reader.ReadInto(restriction.flags);
+    if (restriction.Type() == RestrictionType::WAY_RESTRICTION)
+    {
+        WayRestriction way_restriction;
+        read(reader, way_restriction);
+        restriction.node_or_way = std::move(way_restriction);
+    }
+    else
+    {
+        BOOST_ASSERT(restriction.Type() == RestrictionType::NODE_RESTRICTION);
+        NodeRestriction node_restriction;
+        read(reader, node_restriction);
+        restriction.node_or_way = std::move(node_restriction);
     }
 }
 
 inline void write(storage::io::FileWriter &writer, const TurnRestriction &restriction)
 {
-    writer.WriteOne(restriction.via);
-    writer.WriteOne(restriction.from);
-    writer.WriteOne(restriction.to);
-    writer.WriteOne(restriction.flags.is_only);
+    writer.WriteOne(restriction.flags);
+    if (restriction.Type() == RestrictionType::WAY_RESTRICTION)
+    {
+        write(writer, boost::get<WayRestriction>(restriction.node_or_way));
+    }
+    else
+    {
+        BOOST_ASSERT(restriction.Type() == RestrictionType::NODE_RESTRICTION);
+        write(writer, boost::get<NodeRestriction>(restriction.node_or_way));
+    }
+}
+
+inline void write(storage::io::FileWriter &writer, const ConditionalTurnRestriction &restriction)
+{
+    write(writer, static_cast<TurnRestriction>(restriction));
     writer.WriteElementCount64(restriction.condition.size());
     for (const auto &c : restriction.condition)
     {
@@ -180,6 +206,72 @@ inline void write(storage::io::FileWriter &writer, const TurnRestriction &restri
         storage::serialization::write(writer, c.weekdays);
         storage::serialization::write(writer, c.monthdays);
     }
+}
+
+inline void read(storage::io::FileReader &reader, ConditionalTurnRestriction &restriction)
+{
+    TurnRestriction base;
+    read(reader, base);
+    reinterpret_cast<TurnRestriction &>(restriction) = std::move(base);
+    auto num_conditions = reader.ReadElementCount64();
+    restriction.condition.resize(num_conditions);
+    for (uint64_t i = 0; i < num_conditions; i++)
+    {
+        reader.ReadInto(restriction.condition[i].modifier);
+        storage::serialization::read(reader, restriction.condition[i].times);
+        storage::serialization::read(reader, restriction.condition[i].weekdays);
+        storage::serialization::read(reader, restriction.condition[i].monthdays);
+    }
+}
+
+// read/write for conditional turn restrictions file
+inline void read(storage::io::FileReader &reader, std::vector<TurnRestriction> &restrictions)
+{
+    auto num_indices = reader.ReadElementCount64();
+    restrictions.reserve(num_indices);
+    TurnRestriction restriction;
+    while (num_indices > 0)
+    {
+        read(reader, restriction);
+        restrictions.push_back(std::move(restriction));
+        num_indices--;
+    }
+}
+
+inline void write(storage::io::FileWriter &writer, const std::vector<TurnRestriction> &restrictions)
+{
+    std::uint64_t num_indices = restrictions.size();
+    writer.WriteElementCount64(num_indices);
+    auto const write_restriction = [&writer](const auto &restriction) {
+        write(writer, restriction);
+    };
+    std::for_each(restrictions.begin(), restrictions.end(), write_restriction);
+}
+
+// read/write for conditional turn restrictions file
+inline void read(storage::io::FileReader &reader,
+                 std::vector<ConditionalTurnRestriction> &restrictions)
+{
+    auto num_indices = reader.ReadElementCount64();
+    restrictions.reserve(num_indices);
+    ConditionalTurnRestriction restriction;
+    while (num_indices > 0)
+    {
+        read(reader, restriction);
+        restrictions.push_back(std::move(restriction));
+        num_indices--;
+    }
+}
+
+inline void write(storage::io::FileWriter &writer,
+                  const std::vector<ConditionalTurnRestriction> &restrictions)
+{
+    std::uint64_t num_indices = restrictions.size();
+    writer.WriteElementCount64(num_indices);
+    auto const write_restriction = [&writer](const auto &restriction) {
+        write(writer, restriction);
+    };
+    std::for_each(restrictions.begin(), restrictions.end(), write_restriction);
 }
 }
 }

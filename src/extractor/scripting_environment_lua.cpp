@@ -613,11 +613,10 @@ void Sol2ScriptingEnvironment::ProcessElements(
     const RestrictionParser &restriction_parser,
     std::vector<std::pair<const osmium::Node &, ExtractionNode>> &resulting_nodes,
     std::vector<std::pair<const osmium::Way &, ExtractionWay>> &resulting_ways,
-    std::vector<boost::optional<InputRestrictionContainer>> &resulting_restrictions)
+    std::vector<InputConditionalTurnRestriction> &resulting_restrictions)
 {
     ExtractionNode result_node;
     ExtractionWay result_way;
-    std::vector<InputRestrictionContainer> result_res;
     auto &local_context = this->GetSol2Context();
 
     for (auto entity = buffer.cbegin(), end = buffer.cend(); entity != end; ++entity)
@@ -645,14 +644,15 @@ void Sol2ScriptingEnvironment::ProcessElements(
                 static_cast<const osmium::Way &>(*entity), std::move(result_way)));
             break;
         case osmium::item_type::relation:
-            result_res.clear();
-            result_res =
+        {
+            auto result_res =
                 restriction_parser.TryParse(static_cast<const osmium::Relation &>(*entity));
-            for (const InputRestrictionContainer &r : result_res)
+            if (result_res)
             {
-                resulting_restrictions.push_back(r);
+                resulting_restrictions.push_back(*result_res);
             }
-            break;
+        }
+        break;
         default:
             break;
         }
