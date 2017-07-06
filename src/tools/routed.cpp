@@ -257,8 +257,8 @@ int main(int argc, const char *argv[]) try
     pthread_sigmask(SIG_BLOCK, &new_mask, &old_mask);
 #endif
 
-    auto routing_server = server::Server::CreateServer(ip_address, ip_port, requested_thread_num);
     auto service_handler = std::make_unique<server::ServiceHandler>(config);
+    auto routing_server = server::Server::CreateServer(ip_address, ip_port, requested_thread_num);
 
     routing_server->RegisterServiceHandler(std::move(service_handler));
 
