@@ -53,6 +53,8 @@
     "xmlbuilder": "^4.2.1"
   },
   "bundleDependencies": [
+    "nan",
+    "node-cmake",
     "node-pre-gyp"
   ],
   "main": "lib/index.js",
