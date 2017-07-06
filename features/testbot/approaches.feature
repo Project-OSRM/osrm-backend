@@ -1,8 +1,8 @@
-@routing @approach
+@routing @approach @testbot
 Feature: Approach parameter
 
     Background:
-        Given the profile "car"
+        Given the profile "testbot"
         And a grid size of 10 meters
 
     Scenario: Start End same approach, option unrestricted for Start and End
