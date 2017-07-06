@@ -543,7 +543,9 @@ function way_function (way, result)
 
     -- handle various other flags
     'handle_roundabouts',
-    --'handle_startpoint',
+    
+    -- handle allowed start/end modes
+    'handle_startpoint',
 
     -- set name, ref and pronunciation
     'handle_names'
