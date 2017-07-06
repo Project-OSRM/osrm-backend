@@ -1,6 +1,6 @@
 #include "extractor/graph_compressor.hpp"
 #include "extractor/compressed_edge_container.hpp"
-#include "extractor/restriction_map.hpp"
+#include "extractor/restriction.hpp"
 #include "util/node_based_graph.hpp"
 #include "util/typedefs.hpp"
 
@@ -8,6 +8,8 @@
 #include <boost/test/unit_test.hpp>
 
 #include <iostream>
+#include <unordered_set>
+#include <vector>
 
 BOOST_AUTO_TEST_SUITE(graph_compressor)
 
@@ -51,7 +53,7 @@ BOOST_AUTO_TEST_CASE(long_road_test)
 
     std::unordered_set<NodeID> barrier_nodes;
     std::unordered_set<NodeID> traffic_lights;
-    RestrictionMap map;
+    std::vector<TurnRestriction> restrictions;
     CompressedEdgeContainer container;
 
     std::vector<InputEdge> edges = {MakeUnitEdge(0, 1),
@@ -68,7 +70,7 @@ BOOST_AUTO_TEST_CASE(long_road_test)
     BOOST_ASSERT(edges[4].data.IsCompatibleTo(edges[6].data));
 
     Graph graph(5, edges);
-    compressor.Compress(barrier_nodes, traffic_lights, map, graph, container);
+    compressor.Compress(barrier_nodes, traffic_lights, restrictions, graph, container);
 
     BOOST_CHECK_EQUAL(graph.FindEdge(0, 1), SPECIAL_EDGEID);
     BOOST_CHECK_EQUAL(graph.FindEdge(1, 2), SPECIAL_EDGEID);
@@ -88,7 +90,7 @@ BOOST_AUTO_TEST_CASE(loop_test)
 
     std::unordered_set<NodeID> barrier_nodes;
     std::unordered_set<NodeID> traffic_lights;
-    RestrictionMap map;
+    std::vector<TurnRestriction> restrictions;
     CompressedEdgeContainer container;
 
     std::vector<InputEdge> edges = {MakeUnitEdge(0, 1),
@@ -118,7 +120,7 @@ BOOST_AUTO_TEST_CASE(loop_test)
     BOOST_ASSERT(edges[10].data.IsCompatibleTo(edges[11].data));
 
     Graph graph(6, edges);
-    compressor.Compress(barrier_nodes, traffic_lights, map, graph, container);
+    compressor.Compress(barrier_nodes, traffic_lights, restrictions, graph, container);
 
     BOOST_CHECK_EQUAL(graph.FindEdge(5, 0), SPECIAL_EDGEID);
     BOOST_CHECK_EQUAL(graph.FindEdge(0, 1), SPECIAL_EDGEID);
@@ -140,7 +142,7 @@ BOOST_AUTO_TEST_CASE(t_intersection)
 
     std::unordered_set<NodeID> barrier_nodes;
     std::unordered_set<NodeID> traffic_lights;
-    RestrictionMap map;
+    std::vector<TurnRestriction> restrictions;
     CompressedEdgeContainer container;
 
     std::vector<InputEdge> edges = {MakeUnitEdge(0, 1),
@@ -157,7 +159,7 @@ BOOST_AUTO_TEST_CASE(t_intersection)
     BOOST_ASSERT(edges[4].data.IsCompatibleTo(edges[5].data));
 
     Graph graph(4, edges);
-    compressor.Compress(barrier_nodes, traffic_lights, map, graph, container);
+    compressor.Compress(barrier_nodes, traffic_lights, restrictions, graph, container);
 
     BOOST_CHECK(graph.FindEdge(0, 1) != SPECIAL_EDGEID);
     BOOST_CHECK(graph.FindEdge(1, 2) != SPECIAL_EDGEID);
@@ -173,7 +175,7 @@ BOOST_AUTO_TEST_CASE(street_name_changes)
 
     std::unordered_set<NodeID> barrier_nodes;
     std::unordered_set<NodeID> traffic_lights;
-    RestrictionMap map;
+    std::vector<TurnRestriction> restrictions;
     CompressedEdgeContainer container;
 
     std::vector<InputEdge> edges = {
@@ -184,7 +186,7 @@ BOOST_AUTO_TEST_CASE(street_name_changes)
     BOOST_ASSERT(edges[2].data.IsCompatibleTo(edges[3].data));
 
     Graph graph(5, edges);
-    compressor.Compress(barrier_nodes, traffic_lights, map, graph, container);
+    compressor.Compress(barrier_nodes, traffic_lights, restrictions, graph, container);
 
     BOOST_CHECK(graph.FindEdge(0, 1) != SPECIAL_EDGEID);
     BOOST_CHECK(graph.FindEdge(1, 2) != SPECIAL_EDGEID);
@@ -199,7 +201,7 @@ BOOST_AUTO_TEST_CASE(direction_changes)
 
     std::unordered_set<NodeID> barrier_nodes;
     std::unordered_set<NodeID> traffic_lights;
-    RestrictionMap map;
+    std::vector<TurnRestriction> restrictions;
     CompressedEdgeContainer container;
 
     std::vector<InputEdge> edges = {
@@ -208,7 +210,7 @@ BOOST_AUTO_TEST_CASE(direction_changes)
     edges[1].data.reversed = true;
 
     Graph graph(5, edges);
-    compressor.Compress(barrier_nodes, traffic_lights, map, graph, container);
+    compressor.Compress(barrier_nodes, traffic_lights, restrictions, graph, container);
 
     BOOST_CHECK(graph.FindEdge(0, 1) != SPECIAL_EDGEID);
     BOOST_CHECK(graph.FindEdge(1, 2) != SPECIAL_EDGEID);

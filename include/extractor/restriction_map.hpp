@@ -69,6 +69,7 @@ namespace osrm
 {
 namespace extractor
 {
+
 /**
     \brief Efficent look up if an edge is the start + via node of a TurnRestriction
     EdgeBasedEdgeFactory decides by it if edges are inserted or geometry is compressed

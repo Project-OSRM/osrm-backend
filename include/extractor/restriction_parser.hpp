@@ -3,8 +3,7 @@
 
 #include "extractor/restriction.hpp"
 
-#include <boost/optional/optional.hpp>
-
+#include <boost/optional.hpp>
 #include <string>
 #include <vector>
 
@@ -38,13 +37,15 @@ class ScriptingEnvironment;
  * ...----(a)-----(via)------(b)----...
  * So it can be represented by the tripe (a, via, b).
  */
+
 class RestrictionParser
 {
   public:
     RestrictionParser(bool use_turn_restrictions,
                       bool parse_conditionals,
                       std::vector<std::string> &restrictions);
-    std::vector<InputRestrictionContainer> TryParse(const osmium::Relation &relation) const;
+    boost::optional<InputConditionalTurnRestriction>
+    TryParse(const osmium::Relation &relation) const;
 
   private:
     bool ShouldIgnoreRestriction(const std::string &except_tag_string) const;

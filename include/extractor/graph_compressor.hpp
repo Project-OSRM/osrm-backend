@@ -7,6 +7,7 @@
 
 #include <memory>
 #include <unordered_set>
+#include <vector>
 
 namespace osrm
 {
@@ -14,7 +15,7 @@ namespace extractor
 {
 
 class CompressedEdgeContainer;
-class RestrictionMap;
+struct TurnRestriction;
 
 class GraphCompressor
 {
@@ -23,7 +24,7 @@ class GraphCompressor
   public:
     void Compress(const std::unordered_set<NodeID> &barrier_nodes,
                   const std::unordered_set<NodeID> &traffic_lights,
-                  RestrictionMap &restriction_map,
+                  std::vector<TurnRestriction> &turn_restrictions,
                   util::NodeBasedDynamicGraph &graph,
                   CompressedEdgeContainer &geometry_compressor);
 

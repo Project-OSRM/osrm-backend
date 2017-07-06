@@ -259,7 +259,7 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
         SharedBuffer buffer;
         std::vector<std::pair<const osmium::Node &, ExtractionNode>> resulting_nodes;
         std::vector<std::pair<const osmium::Way &, ExtractionWay>> resulting_ways;
-        std::vector<boost::optional<InputRestrictionContainer>> resulting_restrictions;
+        std::vector<InputConditionalTurnRestriction> resulting_restrictions;
     };
 
     tbb::filter_t<void, SharedBuffer> buffer_reader(
@@ -454,7 +454,6 @@ Extractor::BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
     std::unordered_set<NodeID> barrier_nodes;
     std::unordered_set<NodeID> traffic_lights;
 
-    auto restriction_map = std::make_shared<RestrictionMap>(turn_restrictions);
     auto node_based_graph =
         LoadNodeBasedGraph(barrier_nodes, traffic_lights, coordinates, osm_node_ids);
 
@@ -462,12 +461,13 @@ Extractor::BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
     GraphCompressor graph_compressor;
     graph_compressor.Compress(barrier_nodes,
                               traffic_lights,
-                              *restriction_map,
+                              turn_restrictions,
                               *node_based_graph,
                               compressed_edge_container);
 
     util::NameTable name_table(config.GetPath(".osrm.names").string());
 
+    auto restriction_map = std::make_shared<RestrictionMap>(turn_restrictions);
     EdgeBasedGraphFactory edge_based_graph_factory(
         node_based_graph,
         compressed_edge_container,

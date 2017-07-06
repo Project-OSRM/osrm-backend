@@ -54,14 +54,13 @@ RestrictionParser::RestrictionParser(bool use_turn_restrictions_,
  * in the corresponding profile. We use it for both namespacing restrictions, as in
  * restriction:motorcar as well as whitelisting if its in except:motorcar.
  */
-std::vector<InputRestrictionContainer>
+boost::optional<InputConditionalTurnRestriction>
 RestrictionParser::TryParse(const osmium::Relation &relation) const
 {
-    std::vector<InputRestrictionContainer> parsed_restrictions;
     // return if turn restrictions should be ignored
     if (!use_turn_restrictions)
     {
-        return {};
+        return boost::none;
     }
 
     osmium::tags::KeyFilter filter(false);
@@ -90,14 +89,14 @@ RestrictionParser::TryParse(const osmium::Relation &relation) const
     // if it's not a restriction, continue;
     if (std::distance(fi_begin, fi_end) == 0)
     {
-        return {};
+        return boost::none;
     }
 
     // check if the restriction should be ignored
     const char *except = relation.get_value_by_key("except");
     if (except != nullptr && ShouldIgnoreRestriction(except))
     {
-        return {};
+        return boost::none;
     }
 
     bool is_only_restriction = false;
@@ -119,11 +118,17 @@ RestrictionParser::TryParse(const osmium::Relation &relation) const
         }
         else // unrecognized value type
         {
-            return {};
+            return boost::none;
         }
     }
 
-    InputRestrictionContainer restriction_container(is_only_restriction);
+    // we pretend every restriction is a conditional restriction. If we do not find any restriction,
+    // we can trim away the vector after parsing
+    InputConditionalTurnRestriction restriction_container;
+    restriction_container.flags.is_only = is_only_restriction;
+
+    boost::optional<std::uint64_t> from = boost::none, via = boost::none, to = boost::none;
+    bool is_node_restriction;
 
     for (const auto &member : relation.members())
     {
@@ -136,33 +141,35 @@ RestrictionParser::TryParse(const osmium::Relation &relation) const
         switch (member.type())
         {
         case osmium::item_type::node:
+        {
+
             // Make sure nodes appear only in the role if a via node
             if (0 == strcmp("from", role) || 0 == strcmp("to", role))
             {
                 continue;
             }
             BOOST_ASSERT(0 == strcmp("via", role));
-
+            via = static_cast<std::uint64_t>(member.ref());
+            is_node_restriction = true;
             // set via node id
-            restriction_container.restriction.via.node = member.ref();
             break;
-
+        }
         case osmium::item_type::way:
             BOOST_ASSERT(0 == strcmp("from", role) || 0 == strcmp("to", role) ||
                          0 == strcmp("via", role));
             if (0 == strcmp("from", role))
             {
-                restriction_container.restriction.from.way = member.ref();
+                from = static_cast<std::uint64_t>(member.ref());
             }
             else if (0 == strcmp("to", role))
             {
-                restriction_container.restriction.to.way = member.ref();
+                to = static_cast<std::uint64_t>(member.ref());
             }
-            // else if (0 == strcmp("via", role))
-            // {
-            //     not yet suppported
-            //     restriction_container.restriction.via.way = member.ref();
-            // }
+            else if (0 == strcmp("via", role))
+            {
+                via = static_cast<std::uint64_t>(member.ref());
+                is_node_restriction = false;
+            }
             break;
         case osmium::item_type::relation:
             // not yet supported, but who knows what the future holds...
@@ -194,20 +201,29 @@ RestrictionParser::TryParse(const osmium::Relation &relation) const
                 std::vector<util::OpeningHours> hours = util::ParseOpeningHours(p.condition);
                 // found unrecognized condition, continue
                 if (hours.empty())
-                    return {};
+                    return boost::none;
 
-                restriction_container.restriction.condition = std::move(hours);
+                restriction_container.condition = std::move(hours);
             }
         }
     }
 
-    // push back a copy of turn restriction
-    if (restriction_container.restriction.via.node != SPECIAL_NODEID &&
-        restriction_container.restriction.from.node != SPECIAL_NODEID &&
-        restriction_container.restriction.to.node != SPECIAL_NODEID)
-        parsed_restrictions.push_back(restriction_container);
-
-    return parsed_restrictions;
+    if (from && via && to)
+    {
+        if (is_node_restriction)
+        {
+            restriction_container.node_or_way = InputNodeRestriction{*from, *via, *to};
+        }
+        else
+        {
+            restriction_container.node_or_way = InputWayRestriction{*from, *via, *to};
+        }
+        return restriction_container;
+    }
+    else
+    {
+        return boost::none;
+    }
 }
 
 bool RestrictionParser::ShouldIgnoreRestriction(const std::string &except_tag_string) const

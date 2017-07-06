@@ -73,19 +73,12 @@ void ExtractorCallbacks::ProcessNode(const osmium::Node &input_node,
     }
 }
 
-void ExtractorCallbacks::ProcessRestriction(
-    const boost::optional<InputRestrictionContainer> &restriction)
+void ExtractorCallbacks::ProcessRestriction(const InputConditionalTurnRestriction &restriction)
 {
-    if (restriction)
-    {
-        external_memory.restrictions_list.push_back(restriction.get());
-        // util::Log() << "from: " << restriction.get().restriction.from.node <<
-        //                           ",via: " << restriction.get().restriction.via.node <<
-        //                           ", to: " << restriction.get().restriction.to.node <<
-        //                           ", only: " << (restriction.get().restriction.flags.is_only ?
-        //                           "y" : "n");
-    }
+    external_memory.restrictions_list.push_back(restriction);
+    // util::Log() << restriction.toString();
 }
+
 /**
  * Takes the geometry contained in the ```input_way``` and the tags computed
  * by the lua profile inside ```parsed_way``` and computes all edge segments.

@@ -42,10 +42,10 @@ namespace extractor
 {
 
 class ExtractionContainers;
-struct InputRestrictionContainer;
 struct ExtractionNode;
 struct ExtractionWay;
 struct ProfileProperties;
+struct InputConditionalTurnRestriction;
 
 /**
  * This class is used by the extractor with the results of the
@@ -83,7 +83,7 @@ class ExtractorCallbacks
     void ProcessNode(const osmium::Node &current_node, const ExtractionNode &result_node);
 
     // warning: caller needs to take care of synchronization!
-    void ProcessRestriction(const boost::optional<InputRestrictionContainer> &restriction);
+    void ProcessRestriction(const InputConditionalTurnRestriction &restriction);
 
     // warning: caller needs to take care of synchronization!
     void ProcessWay(const osmium::Way &current_way, const ExtractionWay &result_way);

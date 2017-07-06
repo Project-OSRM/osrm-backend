@@ -1,5 +1,7 @@
 #include "extractor/restriction_map.hpp"
 
+#include <boost/assert.hpp>
+
 namespace osrm
 {
 namespace extractor
@@ -11,17 +13,23 @@ RestrictionMap::RestrictionMap(const std::vector<TurnRestriction> &restriction_l
     // a pair of starting edge and a list of all end nodes
     for (auto &restriction : restriction_list)
     {
+        // only handle node restrictions here
+        if (restriction.Type() == RestrictionType::WAY_RESTRICTION)
+            continue;
+
+        const auto &node_restriction = restriction.AsNodeRestriction();
+        BOOST_ASSERT(node_restriction.Valid());
         // This downcasting is OK because when this is called, the node IDs have been
         // renumbered into internal values, which should be well under 2^32
         // This will be a problem if we have more than 2^32 actual restrictions
-        BOOST_ASSERT(restriction.from.node < std::numeric_limits<NodeID>::max());
-        BOOST_ASSERT(restriction.via.node < std::numeric_limits<NodeID>::max());
-        m_restriction_start_nodes.insert(restriction.from.node);
-        m_no_turn_via_node_set.insert(restriction.via.node);
+        BOOST_ASSERT(node_restriction.from < std::numeric_limits<NodeID>::max());
+        BOOST_ASSERT(node_restriction.via < std::numeric_limits<NodeID>::max());
+        m_restriction_start_nodes.insert(node_restriction.from);
+        m_no_turn_via_node_set.insert(node_restriction.via);
 
         // This explicit downcasting is also OK for the same reason.
-        RestrictionSource restriction_source = {static_cast<NodeID>(restriction.from.node),
-                                                static_cast<NodeID>(restriction.via.node)};
+        RestrictionSource restriction_source = {static_cast<NodeID>(node_restriction.from),
+                                                static_cast<NodeID>(node_restriction.via)};
 
         std::size_t index;
         auto restriction_iter = m_restriction_map.find(restriction_source);
@@ -47,8 +55,7 @@ RestrictionMap::RestrictionMap(const std::vector<TurnRestriction> &restriction_l
             }
         }
         ++m_count;
-        BOOST_ASSERT(restriction.to.node < std::numeric_limits<NodeID>::max());
-        m_restriction_bucket_list.at(index).emplace_back(restriction.to.node,
+        m_restriction_bucket_list.at(index).emplace_back(node_restriction.to,
                                                          restriction.flags.is_only);
     }
 }
