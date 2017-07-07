@@ -3,9 +3,12 @@
 
 #include "util/log.hpp"
 
-#include <stxxl/mng>
 #ifndef _WIN32
 #include <sys/resource.h>
+#endif
+
+#if USE_STXXL_LIBRARY
+#include <stxxl/mng>
 #endif
 
 namespace osrm
@@ -15,6 +18,7 @@ namespace util
 
 inline void DumpSTXXLStats()
 {
+#if USE_STXXL_LIBRARY
 #if STXXL_VERSION_MAJOR > 1 || (STXXL_VERSION_MAJOR == 1 && STXXL_VERSION_MINOR >= 4)
     auto manager = stxxl::block_manager::get_instance();
     util::Log() << "STXXL: peak bytes used: " << manager->get_maximum_allocation();
@@ -22,6 +26,7 @@ inline void DumpSTXXLStats()
 #else
 #warning STXXL 1.4+ recommended - STXXL memory summary will not be available
     util::Log() << "STXXL: memory summary not available, needs STXXL 1.4 or higher";
+#endif
 #endif
 }
 
