@@ -19,6 +19,7 @@ branches:
     - master
     # enable building tags
     - /^v\d+\.\d+(\.\d+)?(-\S*)?$/
+    - "5.9"
 
 cache:
   yarn: true
