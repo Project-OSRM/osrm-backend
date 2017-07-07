@@ -721,7 +721,7 @@ argumentsToRouteParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
         if (value->IsBoolean())
         {
             params->alternatives = value->BooleanValue();
-            params->number_of_alternatives = 1u;
+            params->number_of_alternatives = value->BooleanValue() ? 1u : 0u;
         }
         else if (value->IsNumber())
         {
