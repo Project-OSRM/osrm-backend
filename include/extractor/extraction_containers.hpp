@@ -1,10 +1,10 @@
 #ifndef EXTRACTION_CONTAINERS_HPP
 #define EXTRACTION_CONTAINERS_HPP
 
-#include "extractor/external_memory_node.hpp"
 #include "extractor/first_and_last_segment_of_way.hpp"
 #include "extractor/guidance/turn_lane_types.hpp"
 #include "extractor/internal_extractor_edge.hpp"
+#include "extractor/query_node.hpp"
 #include "extractor/restriction.hpp"
 #include "extractor/scripting_environment.hpp"
 
@@ -46,13 +46,15 @@ class ExtractionContainers
 
   public:
     using STXXLNodeIDVector = stxxl::vector<OSMNodeID>;
-    using STXXLNodeVector = stxxl::vector<ExternalMemoryNode>;
+    using STXXLNodeVector = stxxl::vector<QueryNode>;
     using STXXLEdgeVector = stxxl::vector<InternalExtractorEdge>;
     using RestrictionsVector = std::vector<InputRestrictionContainer>;
     using STXXLWayIDStartEndVector = stxxl::vector<FirstAndLastSegmentOfWay>;
     using STXXLNameCharData = stxxl::vector<unsigned char>;
     using STXXLNameOffsets = stxxl::vector<unsigned>;
 
+    std::vector<OSMNodeID> barrier_nodes;
+    std::vector<OSMNodeID> traffic_lights;
     STXXLNodeIDVector used_node_id_list;
     STXXLNodeVector all_nodes_list;
     STXXLEdgeVector all_edges_list;

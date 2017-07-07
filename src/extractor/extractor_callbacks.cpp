@@ -1,10 +1,10 @@
 #include "extractor/extractor_callbacks.hpp"
-#include "extractor/external_memory_node.hpp"
 #include "extractor/extraction_containers.hpp"
 #include "extractor/extraction_node.hpp"
 #include "extractor/extraction_way.hpp"
 #include "extractor/guidance/road_classification.hpp"
 #include "extractor/profile_properties.hpp"
+#include "extractor/query_node.hpp"
 #include "extractor/restriction.hpp"
 
 #include "util/for_each_pair.hpp"
@@ -56,12 +56,21 @@ ExtractorCallbacks::ExtractorCallbacks(ExtractionContainers &extraction_containe
 void ExtractorCallbacks::ProcessNode(const osmium::Node &input_node,
                                      const ExtractionNode &result_node)
 {
+    const auto id = OSMNodeID{static_cast<std::uint64_t>(input_node.id())};
+
     external_memory.all_nodes_list.push_back(
-        {util::toFixed(util::UnsafeFloatLongitude{input_node.location().lon()}),
-         util::toFixed(util::UnsafeFloatLatitude{input_node.location().lat()}),
-         OSMNodeID{static_cast<std::uint64_t>(input_node.id())},
-         result_node.barrier,
-         result_node.traffic_lights});
+        QueryNode{util::toFixed(util::UnsafeFloatLongitude{input_node.location().lon()}),
+                  util::toFixed(util::UnsafeFloatLatitude{input_node.location().lat()}),
+                  id});
+
+    if (result_node.barrier)
+    {
+        external_memory.barrier_nodes.push_back(id);
+    }
+    if (result_node.traffic_lights)
+    {
+        external_memory.traffic_lights.push_back(id);
+    }
 }
 
 void ExtractorCallbacks::ProcessRestriction(

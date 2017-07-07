@@ -10,10 +10,10 @@
 
 #include "extractor/class_data.hpp"
 #include "extractor/edge_based_node_segment.hpp"
-#include "extractor/external_memory_node.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
 #include "extractor/guidance/turn_lane_types.hpp"
 #include "extractor/original_edge_data.hpp"
+#include "extractor/query_node.hpp"
 #include "extractor/travel_mode.hpp"
 
 #include "util/exception.hpp"
