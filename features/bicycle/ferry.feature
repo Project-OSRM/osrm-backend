@@ -53,8 +53,7 @@ Feature: Bike - Handle ferry routes
     Scenario: Bike - Ferry duration, multiple nodes
         Given the node map
             """
-            x         y
-              a b c d
+            x a b c d y
             """
 
         And the ways
@@ -64,6 +63,6 @@ Feature: Bike - Handle ferry routes
             | abcd  |         | ferry | yes     | 1:00     |
 
         When I route I should get
-            | from | to | route     | time      |
-            | a    | d  | abcd,abcd | 3600s +-5 |
-            | d    | a  | abcd,abcd | 3600s +-5 |
+            | from | to | route     | time  |
+            | a    | d  | abcd,abcd | 3600s |
+            | d    | a  | abcd,abcd | 3600s |
