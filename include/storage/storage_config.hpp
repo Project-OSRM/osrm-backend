@@ -44,6 +44,11 @@ namespace storage
  */
 struct StorageConfig final : IOConfig
 {
+    StorageConfig(const boost::filesystem::path &base) : StorageConfig()
+    {
+        IOConfig::UseDefaultOutputNames(base);
+    }
+
     StorageConfig()
         : IOConfig({".osrm.ramIndex",
                     ".osrm.fileIndex",

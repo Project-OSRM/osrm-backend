@@ -64,6 +64,11 @@ struct UpdaterConfig final : storage::IOConfig
     {
     }
 
+    void UseDefaultOutputNames(const boost::filesystem::path &base)
+    {
+        IOConfig::UseDefaultOutputNames(base);
+    }
+
     double log_edge_updates_factor;
     std::time_t valid_now;
 

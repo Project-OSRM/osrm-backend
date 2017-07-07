@@ -23,6 +23,21 @@ struct IOConfig
     {
     }
 
+    bool IsValid() const;
+    boost::filesystem::path GetPath(const std::string &fileName) const
+    {
+        if (!IsConfigured(fileName, required_input_files) &&
+            !IsConfigured(fileName, optional_input_files) && !IsConfigured(fileName, output_files))
+        {
+            throw util::exception("Tried to access file which is not configured: " + fileName);
+        }
+
+        return {base_path.string() + fileName};
+    }
+
+    boost::filesystem::path base_path;
+
+  protected:
     // Infer the base path from the path of the .osrm file
     void UseDefaultOutputNames(const boost::filesystem::path &base)
     {
@@ -44,20 +59,6 @@ struct IOConfig
 
         base_path = {path};
     }
-
-    bool IsValid() const;
-    boost::filesystem::path GetPath(const std::string &fileName) const
-    {
-        if (!IsConfigured(fileName, required_input_files) &&
-            !IsConfigured(fileName, optional_input_files) && !IsConfigured(fileName, output_files))
-        {
-            throw util::exception("Tried to access file which is not configured: " + fileName);
-        }
-
-        return {base_path.string() + fileName};
-    }
-
-    boost::filesystem::path base_path;
 
   private:
     static bool IsConfigured(const std::string &fileName,

@@ -97,9 +97,8 @@ inline engine_config_ptr argumentsToEngineConfig(const Nan::FunctionCallbackInfo
 
     if (args[0]->IsString())
     {
-        std::string base_path(*v8::String::Utf8Value(args[0]->ToString()));
-        engine_config->storage_config = osrm::StorageConfig();
-        engine_config->storage_config.UseDefaultOutputNames(base_path);
+        engine_config->storage_config = osrm::StorageConfig(
+            *v8::String::Utf8Value(Nan::To<v8::String>(args[0]).ToLocalChecked()));
         engine_config->use_shared_memory = false;
         return engine_config;
     }
@@ -122,9 +121,8 @@ inline engine_config_ptr argumentsToEngineConfig(const Nan::FunctionCallbackInfo
 
     if (!path->IsUndefined())
     {
-        std::string base_path(*v8::String::Utf8Value(path->ToString()));
-        engine_config->storage_config = osrm::StorageConfig();
-        engine_config->storage_config.UseDefaultOutputNames(base_path);
+        engine_config->storage_config =
+            osrm::StorageConfig(*v8::String::Utf8Value(Nan::To<v8::String>(path).ToLocalChecked()));
         engine_config->use_shared_memory = false;
     }
     if (!shared_memory->IsUndefined())
