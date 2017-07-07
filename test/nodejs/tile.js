@@ -8,7 +8,7 @@ test.test('tile check size coarse', function(assert) {
     var osrm = new OSRM(data_path);
     osrm.tile(tile.at, function(err, result) {
         assert.ifError(err);
-        assert.ok(result.length > tile.size);
+        assert.equal(result.length, tile.size);
     });
 });
 
