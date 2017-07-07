@@ -163,8 +163,7 @@ int main(const int argc, const char *argv[]) try
     {
         return EXIT_SUCCESS;
     }
-    storage::StorageConfig config;
-    config.UseDefaultOutputNames(base_path);
+    storage::StorageConfig config(base_path);
     if (!config.IsValid())
     {
         util::Log(logERROR) << "Config contains invalid file paths. Exiting!";

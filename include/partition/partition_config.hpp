@@ -26,6 +26,11 @@ struct PartitionConfig final : storage::IOConfig
     {
     }
 
+    void UseDefaultOutputNames(const boost::filesystem::path &base)
+    {
+        IOConfig::UseDefaultOutputNames(base);
+    }
+
     unsigned requested_num_threads;
 
     double balance;
