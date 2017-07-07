@@ -21,12 +21,16 @@
 #include <boost/numeric/conversion/cast.hpp>
 #include <boost/ref.hpp>
 
-#include <stxxl/sort>
+#include <tbb/parallel_sort.h>
 
 #include <chrono>
 #include <limits>
 #include <mutex>
 #include <sstream>
+
+#if USE_STXXL_LIBRARY
+#include <stxxl/sort>
+#endif
 
 namespace
 {
@@ -34,12 +38,13 @@ namespace oe = osrm::extractor;
 
 // Needed for STXXL comparison - STXXL requires max_value(), min_value(), so we can not use
 // std::less<OSMNodeId>{}. Anonymous namespace to keep translation unit local.
-struct OSMNodeIDSTXXLLess
+struct OSMNodeIDLess
 {
-    OSMNodeIDSTXXLLess() {}
+    OSMNodeIDLess() {}
 
     using value_type = OSMNodeID;
     bool operator()(const value_type left, const value_type right) const { return left < right; }
+
     value_type max_value() { return MAX_OSM_NODEID; }
     value_type min_value() { return MIN_OSM_NODEID; }
 };
@@ -96,7 +101,7 @@ struct CmpEdgeByInternalSourceTargetAndName
 
         std::lock_guard<std::mutex> lock(mutex);
         BOOST_ASSERT(!name_offsets.empty() && name_offsets.back() == name_data.size());
-        const oe::ExtractionContainers::STXXLNameCharData::const_iterator data = name_data.begin();
+        const oe::ExtractionContainers::NameCharData::const_iterator data = name_data.begin();
         return std::lexicographical_compare(data + name_offsets[lhs.result.name_id],
                                             data + name_offsets[lhs.result.name_id + 1],
                                             data + name_offsets[rhs.result.name_id],
@@ -107,17 +112,33 @@ struct CmpEdgeByInternalSourceTargetAndName
     value_type min_value() { return value_type::min_internal_value(); }
 
     std::mutex &mutex;
-    const oe::ExtractionContainers::STXXLNameCharData &name_data;
-    const oe::ExtractionContainers::STXXLNameOffsets &name_offsets;
+    const oe::ExtractionContainers::NameCharData &name_data;
+    const oe::ExtractionContainers::NameOffsets &name_offsets;
 };
 
 template <typename Iter>
 inline NodeID mapExternalToInternalNodeID(Iter first, Iter last, const OSMNodeID value)
 {
-    const OSMNodeIDSTXXLLess compare;
+    const OSMNodeIDLess compare;
     const auto it = std::lower_bound(first, last, value, compare);
     return (it == last || compare(value, *it)) ? SPECIAL_NODEID
                                                : static_cast<NodeID>(std::distance(first, it));
+}
+
+template <typename T, typename Func> void sort_external_vector(T &vector, const Func &func)
+{
+#if USE_STXXL_LIBRARY
+#ifndef _MSC_VER
+    constexpr static unsigned stxxl_memory =
+        ((sizeof(std::size_t) == 4) ? std::numeric_limits<int>::max()
+                                    : std::numeric_limits<unsigned>::max());
+#else
+    const static unsigned stxxl_memory = ((sizeof(std::size_t) == 4) ? INT_MAX : UINT_MAX);
+#endif
+    stxxl::sort(vector.begin(), vector.end(), func, stxxl_memory);
+#else
+    tbb::parallel_sort(vector.begin(), vector.end(), func);
+#endif
 }
 }
 
@@ -128,8 +149,10 @@ namespace extractor
 
 ExtractionContainers::ExtractionContainers()
 {
+#if USE_STXXL_LIBRARY
     // Check if stxxl can be instantiated
     stxxl::vector<unsigned> dummy_vector;
+#endif
 
     // Insert four empty strings offsets for name, ref, destination, pronunciation, and exits
     name_offsets.push_back(0);
@@ -143,12 +166,14 @@ ExtractionContainers::ExtractionContainers()
 
 void ExtractionContainers::FlushVectors()
 {
+#if USE_STXXL_LIBRARY
     used_node_id_list.flush();
     all_nodes_list.flush();
     all_edges_list.flush();
     name_char_data.flush();
     name_offsets.flush();
     way_start_end_id_list.flush();
+#endif
 }
 
 /**
@@ -201,8 +226,7 @@ void ExtractionContainers::PrepareNodes()
         util::UnbufferedLog log;
         log << "Sorting used nodes        ... " << std::flush;
         TIMER_START(sorting_used_nodes);
-        stxxl::sort(
-            used_node_id_list.begin(), used_node_id_list.end(), OSMNodeIDSTXXLLess(), stxxl_memory);
+        sort_external_vector(used_node_id_list, OSMNodeIDLess());
         TIMER_STOP(sorting_used_nodes);
         log << "ok, after " << TIMER_SEC(sorting_used_nodes) << "s";
     }
@@ -218,7 +242,7 @@ void ExtractionContainers::PrepareNodes()
     }
 
     {
-        struct QueryNodeSTXXLCompare
+        struct QueryNodeCompare
         {
             using value_type = QueryNode;
             value_type max_value() { return value_type::max_value(); }
@@ -233,8 +257,7 @@ void ExtractionContainers::PrepareNodes()
         util::UnbufferedLog log;
         log << "Sorting all nodes         ... " << std::flush;
         TIMER_START(sorting_nodes);
-        stxxl::sort(
-            all_nodes_list.begin(), all_nodes_list.end(), QueryNodeSTXXLCompare(), stxxl_memory);
+        sort_external_vector(all_nodes_list, QueryNodeCompare());
         TIMER_STOP(sorting_nodes);
         log << "ok, after " << TIMER_SEC(sorting_nodes) << "s";
     }
@@ -290,8 +313,7 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
         util::UnbufferedLog log;
         log << "Sorting edges by start    ... " << std::flush;
         TIMER_START(sort_edges_by_start);
-        stxxl::sort(
-            all_edges_list.begin(), all_edges_list.end(), CmpEdgeByOSMStartID(), stxxl_memory);
+        sort_external_vector(all_edges_list, CmpEdgeByOSMStartID());
         TIMER_STOP(sort_edges_by_start);
         log << "ok, after " << TIMER_SEC(sort_edges_by_start) << "s";
     }
@@ -362,8 +384,7 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
         util::UnbufferedLog log;
         log << "Sorting edges by target   ... " << std::flush;
         TIMER_START(sort_edges_by_target);
-        stxxl::sort(
-            all_edges_list.begin(), all_edges_list.end(), CmpEdgeByOSMTargetID(), stxxl_memory);
+        sort_external_vector(all_edges_list, CmpEdgeByOSMTargetID());
         TIMER_STOP(sort_edges_by_target);
         log << "ok, after " << TIMER_SEC(sort_edges_by_target) << "s";
     }
@@ -466,11 +487,9 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
         log << "Sorting edges by renumbered start ... ";
         TIMER_START(sort_edges_by_renumbered_start);
         std::mutex name_data_mutex;
-        stxxl::sort(
-            all_edges_list.begin(),
-            all_edges_list.end(),
-            CmpEdgeByInternalSourceTargetAndName{name_data_mutex, name_char_data, name_offsets},
-            stxxl_memory);
+        sort_external_vector(
+            all_edges_list,
+            CmpEdgeByInternalSourceTargetAndName{name_data_mutex, name_char_data, name_offsets});
         TIMER_STOP(sort_edges_by_renumbered_start);
         log << "ok, after " << TIMER_SEC(sort_edges_by_renumbered_start) << "s";
     }
@@ -730,10 +749,7 @@ void ExtractionContainers::PrepareRestrictions()
         util::UnbufferedLog log;
         log << "Sorting used ways         ... ";
         TIMER_START(sort_ways);
-        stxxl::sort(way_start_end_id_list.begin(),
-                    way_start_end_id_list.end(),
-                    FirstAndLastSegmentOfWayStxxlCompare(),
-                    stxxl_memory);
+        sort_external_vector(way_start_end_id_list, FirstAndLastSegmentOfWayCompare());
         TIMER_STOP(sort_ways);
         log << "ok, after " << TIMER_SEC(sort_ways) << "s";
     }
@@ -742,7 +758,7 @@ void ExtractionContainers::PrepareRestrictions()
         util::UnbufferedLog log;
         log << "Sorting " << restrictions_list.size() << " restriction. by from... ";
         TIMER_START(sort_restrictions);
-        std::sort(
+        tbb::parallel_sort(
             restrictions_list.begin(), restrictions_list.end(), CmpRestrictionContainerByFrom());
         TIMER_STOP(sort_restrictions);
         log << "ok, after " << TIMER_SEC(sort_restrictions) << "s";
@@ -848,7 +864,7 @@ void ExtractionContainers::PrepareRestrictions()
         util::UnbufferedLog log;
         log << "Sorting restrictions. by to  ... " << std::flush;
         TIMER_START(sort_restrictions_to);
-        std::sort(
+        tbb::parallel_sort(
             restrictions_list.begin(), restrictions_list.end(), CmpRestrictionContainerByTo());
         TIMER_STOP(sort_restrictions_to);
         log << "ok, after " << TIMER_SEC(sort_restrictions_to) << "s";

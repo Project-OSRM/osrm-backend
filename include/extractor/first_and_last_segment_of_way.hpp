@@ -43,7 +43,7 @@ struct FirstAndLastSegmentOfWay
     }
 };
 
-struct FirstAndLastSegmentOfWayStxxlCompare
+struct FirstAndLastSegmentOfWayCompare
 {
     using value_type = FirstAndLastSegmentOfWay;
     bool operator()(const FirstAndLastSegmentOfWay &a, const FirstAndLastSegmentOfWay &b) const
