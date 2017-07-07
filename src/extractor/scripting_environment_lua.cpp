@@ -1,6 +1,5 @@
 #include "extractor/scripting_environment_lua.hpp"
 
-#include "extractor/external_memory_node.hpp"
 #include "extractor/extraction_helper_functions.hpp"
 #include "extractor/extraction_node.hpp"
 #include "extractor/extraction_segment.hpp"
@@ -8,6 +7,7 @@
 #include "extractor/extraction_way.hpp"
 #include "extractor/internal_extractor_edge.hpp"
 #include "extractor/profile_properties.hpp"
+#include "extractor/query_node.hpp"
 #include "extractor/raster_source.hpp"
 #include "extractor/restriction_parser.hpp"
 #include "util/coordinate.hpp"
@@ -409,11 +409,8 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
                                                       "duration",
                                                       &InternalExtractorEdge::duration_data);
 
-    context.state.new_usertype<ExternalMemoryNode>("EdgeTarget",
-                                                   "lon",
-                                                   &lonToDouble<ExternalMemoryNode>,
-                                                   "lat",
-                                                   &latToDouble<ExternalMemoryNode>);
+    context.state.new_usertype<QueryNode>(
+        "EdgeTarget", "lon", &lonToDouble<QueryNode>, "lat", &latToDouble<QueryNode>);
 
     context.state.new_usertype<util::Coordinate>("Coordinate",
                                                  "lon",

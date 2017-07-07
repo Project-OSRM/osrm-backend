@@ -1,7 +1,7 @@
 #ifndef OSRM_GEOJSON_DEBUG_POLICY_TOOLKIT_HPP
 #define OSRM_GEOJSON_DEBUG_POLICY_TOOLKIT_HPP
 
-#include "extractor/external_memory_node.hpp"
+#include "extractor/query_node.hpp"
 #include "util/coordinate.hpp"
 #include "util/json_container.hpp"
 

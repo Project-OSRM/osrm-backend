@@ -1,7 +1,6 @@
 #ifndef GRAPH_LOADER_HPP
 #define GRAPH_LOADER_HPP
 
-#include "extractor/external_memory_node.hpp"
 #include "extractor/node_based_edge.hpp"
 #include "extractor/packed_osm_ids.hpp"
 #include "extractor/query_node.hpp"
@@ -50,7 +49,7 @@ NodeID loadNodesFromFile(storage::io::FileReader &file_reader,
     coordinates.resize(number_of_nodes);
     osm_node_ids.reserve(number_of_nodes);
 
-    extractor::ExternalMemoryNode current_node;
+    extractor::QueryNode current_node;
     for (NodeID i = 0; i < number_of_nodes; ++i)
     {
         file_reader.ReadInto(&current_node, 1);
@@ -58,18 +57,18 @@ NodeID loadNodesFromFile(storage::io::FileReader &file_reader,
         coordinates[i].lon = current_node.lon;
         coordinates[i].lat = current_node.lat;
         osm_node_ids.push_back(current_node.node_id);
+    }
 
-        if (current_node.barrier)
-        {
-            *barriers = i;
-            ++barriers;
-        }
+    auto num_barriers = file_reader.ReadElementCount64();
+    for (auto index = 0UL; index < num_barriers; ++index)
+    {
+        *barriers++ = file_reader.ReadOne<NodeID>();
+    }
 
-        if (current_node.traffic_lights)
-        {
-            *traffic_signals = i;
-            ++traffic_signals;
-        }
+    auto num_lights = file_reader.ReadElementCount64();
+    for (auto index = 0UL; index < num_lights; ++index)
+    {
+        *traffic_signals++ = file_reader.ReadOne<NodeID>();
     }
 
     return number_of_nodes;

@@ -11,7 +11,6 @@
 #include "engine/datafacade/contiguous_block_allocator.hpp"
 #include "engine/datafacade_provider.hpp"
 #include "engine/engine_config.hpp"
-#include "engine/engine_config.hpp"
 #include "engine/plugins/match.hpp"
 #include "engine/plugins/nearest.hpp"
 #include "engine/plugins/table.hpp"

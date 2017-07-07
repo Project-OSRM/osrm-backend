@@ -207,13 +207,23 @@ void ExtractionContainers::PrepareNodes()
     }
 
     {
+        struct QueryNodeSTXXLCompare
+        {
+            using value_type = QueryNode;
+            value_type max_value() { return value_type::max_value(); }
+            value_type min_value() { return value_type::min_value(); }
+
+            bool operator()(const value_type &left, const value_type &right) const
+            {
+                return left.node_id < right.node_id;
+            }
+        };
+
         util::UnbufferedLog log;
         log << "Sorting all nodes         ... " << std::flush;
         TIMER_START(sorting_nodes);
-        stxxl::sort(all_nodes_list.begin(),
-                    all_nodes_list.end(),
-                    ExternalMemoryNodeSTXXLCompare(),
-                    stxxl_memory);
+        stxxl::sort(
+            all_nodes_list.begin(), all_nodes_list.end(), QueryNodeSTXXLCompare(), stxxl_memory);
         TIMER_STOP(sorting_nodes);
         log << "ok, after " << TIMER_SEC(sorting_nodes) << "s";
     }
@@ -622,6 +632,40 @@ void ExtractionContainers::WriteNodes(storage::io::FileWriter &file_out) const
             ++node_iterator;
         }
         TIMER_STOP(write_nodes);
+        log << "ok, after " << TIMER_SEC(write_nodes) << "s";
+    }
+
+    {
+        util::UnbufferedLog log;
+        log << "Writing barrier nodes     ... ";
+        TIMER_START(write_nodes);
+        std::vector<NodeID> internal_barrier_nodes;
+        for (const auto id : barrier_nodes)
+        {
+            auto iter = external_to_internal_node_id_map.find(id);
+            if (iter != external_to_internal_node_id_map.end())
+            {
+                internal_barrier_nodes.push_back(iter->second);
+            }
+        }
+        storage::serialization::write(file_out, internal_barrier_nodes);
+        log << "ok, after " << TIMER_SEC(write_nodes) << "s";
+    }
+
+    {
+        util::UnbufferedLog log;
+        log << "Writing traffic light nodes     ... ";
+        TIMER_START(write_nodes);
+        std::vector<NodeID> internal_traffic_lights;
+        for (const auto id : traffic_lights)
+        {
+            auto iter = external_to_internal_node_id_map.find(id);
+            if (iter != external_to_internal_node_id_map.end())
+            {
+                internal_traffic_lights.push_back(iter->second);
+            }
+        }
+        storage::serialization::write(file_out, internal_traffic_lights);
         log << "ok, after " << TIMER_SEC(write_nodes) << "s";
     }
 
