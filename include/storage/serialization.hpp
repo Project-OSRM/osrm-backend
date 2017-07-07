@@ -7,7 +7,12 @@
 
 #include "storage/io.hpp"
 
+#include <cmath>
 #include <cstdint>
+
+#if USE_STXXL_LIBRARY
+#include <stxxl/vector>
+#endif
 
 namespace osrm
 {
@@ -58,6 +63,7 @@ inline void write(storage::io::FileWriter &writer, const util::DeallocatingVecto
     writer.WriteFrom(vec.bucket_list.back(), last_block_size);
 }
 
+#if USE_STXXL_LIBRARY
 template <typename T> inline void read(storage::io::FileReader &reader, stxxl::vector<T> &vec)
 {
     auto size = reader.ReadOne<std::uint64_t>();
@@ -78,6 +84,7 @@ inline void write(storage::io::FileWriter &writer, const stxxl::vector<T> &vec)
         writer.WriteOne<T>(vec[idx]);
     }
 }
+#endif
 
 template <typename T> void read(io::FileReader &reader, std::vector<T> &data)
 {

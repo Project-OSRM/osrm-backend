@@ -6,8 +6,6 @@
 
 #include "storage/shared_memory_ownership.hpp"
 
-#include <stxxl/vector>
-
 #include <boost/assert.hpp>
 #include <boost/iterator/iterator_facade.hpp>
 #include <boost/iterator/reverse_iterator.hpp>
@@ -20,6 +18,10 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
+
+#if USE_STXXL_LIBRARY
+#include <stxxl/vector>
+#endif
 
 namespace osrm
 {
@@ -209,10 +211,16 @@ template <typename DataT> void swap(vector_view<DataT> &lhs, vector_view<DataT> 
     std::swap(lhs.m_size, rhs.m_size);
 }
 
+#if USE_STXXL_LIBRARY
+template <typename T> using ExternalVector = stxxl::vector<T>;
+#else
+template <typename T> using ExternalVector = std::vector<T>;
+#endif
+
 template <typename DataT, storage::Ownership Ownership>
 using InternalOrExternalVector =
     typename std::conditional<Ownership == storage::Ownership::External,
-                              stxxl::vector<DataT>,
+                              ExternalVector<DataT>,
                               std::vector<DataT>>::type;
 
 template <typename DataT, storage::Ownership Ownership>
