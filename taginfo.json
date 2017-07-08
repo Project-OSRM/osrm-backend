@@ -367,6 +367,16 @@
             "description": "A Roundabout where the traffic on the roundabout not always has right of way."
         },
         {
+            "key": "proposed",
+            "object_types": [ "way" ],
+            "description": "Proposed ways. Discarded for routing"
+        },
+        {
+            "key": "construction",
+            "object_types": [ "way" ],
+            "description": "Ways under construction. Discarded for routing except construction=no, construction=widening"
+        },
+        {
             "key": "type",
             "value": "restriction",
             "object_types": [ "relation" ]

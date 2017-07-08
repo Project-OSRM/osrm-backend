@@ -189,7 +189,8 @@ local profile = {
 
   avoid = Set {
     'impassable',
-    'construction'
+    'construction',
+    'proposed'
   }
 }
 
