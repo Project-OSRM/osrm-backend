@@ -513,6 +513,25 @@ function Handlers.handle_blocked_ways(way,result,data,profile)
     return false
   end
 
+  -- In addition to the highway=construction tag above handle the construction=* tag
+  -- http://wiki.openstreetmap.org/wiki/Key:construction
+  -- https://taginfo.openstreetmap.org/keys/construction#values
+  if profile.avoid.construction then
+    local construction = way:get_value_by_key('construction')
+
+    -- Of course there are negative tags to handle, too
+    if construction and construction ~= 'no' and construction ~= 'widening' then
+      return false
+    end
+  end
+
+  -- Not only are there multiple construction tags there is also a proposed=* tag.
+  -- http://wiki.openstreetmap.org/wiki/Key:proposed
+  -- https://taginfo.openstreetmap.org/keys/proposed#values
+  if profile.avoid.proposed and way:get_value_by_key('proposed') then
+    return false
+  end
+
   -- Reversible oneways change direction with low frequency (think twice a day):
   -- do not route over these at all at the moment because of time dependence.
   -- Note: alternating (high frequency) oneways are handled below with penalty.

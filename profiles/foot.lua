@@ -76,7 +76,9 @@ local profile = {
   },
 
   avoid = Set {
-    'impassable'
+    'impassable',
+    'construction',
+    'proposed'
   },
 
   speeds = Sequence {
