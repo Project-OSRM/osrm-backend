@@ -606,11 +606,11 @@ Feature: Basic Roundabout
             | ob    | trunk       | yes    | roundabout | Europaplatz   |                                        |
 
        When I route I should get
-           | waypoints | route                        | turns                            | lanes |
-           | a,d       | ,Europastrasse,Europastrasse | depart,Europaplatz-exit-1,arrive | ,,    |
-           | a,h       | ,Allee Cite,Allee Cite       | depart,Europaplatz-exit-2,arrive | ,,    |
-           | a,l       | ,Europastrasse,Europastrasse | depart,Europaplatz-exit-3,arrive | ,,    |
-           | a,p       | ,,                           | depart,Europaplatz-exit-4,arrive | ,,    |
+           | waypoints | route                        | turns                            |
+           | a,d       | ,Europastrasse,Europastrasse | depart,Europaplatz-exit-1,arrive |
+           | a,h       | ,Allee Cite,Allee Cite       | depart,Europaplatz-exit-2,arrive |
+           | a,l       | ,Europastrasse,Europastrasse | depart,Europaplatz-exit-3,arrive |
+           | a,p       | ,,                           | depart,Europaplatz-exit-4,arrive |
 
     @turboroundabout
     # http://www.openstreetmap.org/?mlat=50.180039&mlon=8.474939&zoom=16#map=19/50.17999/8.47506
@@ -658,14 +658,14 @@ Feature: Basic Roundabout
             | wb    | primary      | yes    | roundabout |                              | through\|through;right             |
 
        When I route I should get
-           | waypoints | route                                                                      | turns                                   | lanes |
-           | a,w       | Le-Cannet-Rocheville-Strasse,,                                             | depart,roundabout-exit-undefined,arrive | ,,    |
-           | a,r       | Le-Cannet-Rocheville-Strasse,,                                             | depart,roundabout-exit-4,arrive         | ,,    |
-           | a,f       | Le-Cannet-Rocheville-Strasse,Frankfurter Strasse,Frankfurter Strasse       | depart,roundabout-exit-1,arrive         | ,,    |
-           | a,h       | Le-Cannet-Rocheville-Strasse,Bischof-Kaller-Strasse,Bischof-Kaller-Strasse | depart,roundabout-exit-2,arrive         | ,,    |
-           | u,r       | ,,                                                                         | depart,roundabout-exit-5,arrive         | ,,    |
-           | j,h       | Bischof-Kaller-Strasse,Bischof-Kaller-Strasse,Bischof-Kaller-Strasse       | depart,roundabout-exit-5,arrive         | ,,    |
-           | n,m       | ,                                                                          | depart,arrive                           | ,     |
+           | waypoints | route                                                                      | turns                                   |
+           | a,w       | Le-Cannet-Rocheville-Strasse,,                                             | depart,roundabout-exit-undefined,arrive |
+           | a,r       | Le-Cannet-Rocheville-Strasse,,                                             | depart,roundabout-exit-4,arrive         |
+           | a,f       | Le-Cannet-Rocheville-Strasse,Frankfurter Strasse,Frankfurter Strasse       | depart,roundabout-exit-1,arrive         |
+           | a,h       | Le-Cannet-Rocheville-Strasse,Bischof-Kaller-Strasse,Bischof-Kaller-Strasse | depart,roundabout-exit-2,arrive         |
+           | u,r       | ,,                                                                         | depart,roundabout-exit-5,arrive         |
+           | j,h       | Bischof-Kaller-Strasse,Bischof-Kaller-Strasse,Bischof-Kaller-Strasse       | depart,roundabout-exit-5,arrive         |
+           | n,m       | ,                                                                          | depart,arrive                           |
 
     @turboroundabout
     # http://www.openstreetmap.org/?mlat=47.57723&mlon=7.796765&zoom=16#map=19/47.57720/7.79711
