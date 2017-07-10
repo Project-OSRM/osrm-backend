@@ -16,6 +16,8 @@
       - Exposes `alternatives=Number` parameter overload in addition to the boolean flag
     - Tools:
       - Exposes engine limit on number of alternatives to generate `--max-alternatives` in `osrm-routed` (3 by default)
+    - Infrastructure
+      - STXXL is not required to build OSRM and is an optional dependency for back-compatibility (ENABLE_STXXL=On)
 
 # 5.8.0
   - Changes from 5.7
