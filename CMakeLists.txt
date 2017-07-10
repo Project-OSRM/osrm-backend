@@ -21,6 +21,7 @@ option(BUILD_PACKAGE "Build OSRM package" OFF)
 option(ENABLE_ASSERTIONS "Use assertions in release mode" OFF)
 option(ENABLE_COVERAGE "Build with coverage instrumentalisation" OFF)
 option(ENABLE_SANITIZER "Use memory sanitizer for Debug build" OFF)
+option(ENABLE_STXXL "Use STXXL library" OFF)
 option(ENABLE_LTO "Use LTO if available" OFF)
 option(ENABLE_FUZZING "Fuzz testing using LLVM's libFuzzer" OFF)
 option(ENABLE_GOLD_LINKER "Use GNU gold linker if available" ON)
@@ -428,9 +429,12 @@ if(ENABLE_MASON)
   mason_use(boost_libsystem VERSION ${MASON_BOOST_VERSION})
   set(Boost_SYSTEM_LIBRARY ${MASON_PACKAGE_boost_libsystem_STATIC_LIBS})
 
-  mason_use(stxxl VERSION ${MASON_STXXL_VERSION})
-  add_dependency_includes(${MASON_PACKAGE_stxxl_INCLUDE_DIRS})
-  set(STXXL_LIBRARY ${MASON_PACKAGE_stxxl_STATIC_LIBS})
+  if (ENABLE_STXXL)
+    mason_use(stxxl VERSION ${MASON_STXXL_VERSION})
+    add_dependency_includes(${MASON_PACKAGE_stxxl_INCLUDE_DIRS})
+    set(MAYBE_STXXL_LIBRARY ${MASON_PACKAGE_stxxl_STATIC_LIBS})
+    add_definitions(-DUSE_STXXL_LIBRARY)
+  endif()
 
   mason_use(expat VERSION ${MASON_EXPAT_VERSION})
   add_dependency_includes(${MASON_PACKAGE_expat_INCLUDE_DIRS})
@@ -493,8 +497,16 @@ else()
   find_package(EXPAT REQUIRED)
   add_dependency_includes(${EXPAT_INCLUDE_DIRS})
 
-  find_package(STXXL REQUIRED)
-  add_dependency_includes(${STXXL_INCLUDE_DIR})
+  if (ENABLE_STXXL)
+    find_package(STXXL)
+    if (STXXL_FOUND)
+      add_dependency_includes(${STXXL_INCLUDE_DIR})
+      set(MAYBE_STXXL_LIBRARY ${STXXL_LIBRARY})
+      add_definitions(-DUSE_STXXL_LIBRARY)
+    else()
+      MESSAGE(STATUS "STXXL was requested but not found, default STL will be used")
+    endif()
+  endif()
 
   find_package(BZip2 REQUIRED)
   add_dependency_includes(${BZIP2_INCLUDE_DIR})
@@ -617,7 +629,7 @@ set(EXTRACTOR_LIBRARIES
     ${EXPAT_LIBRARIES}
     ${USED_LUA_LIBRARIES}
     ${OSMIUM_LIBRARIES}
-    ${STXXL_LIBRARY}
+    ${MAYBE_STXXL_LIBRARY}
     ${TBB_LIBRARIES}
     ${ZLIB_LIBRARY}
     ${MAYBE_COVERAGE_LIBRARIES})
@@ -645,7 +657,7 @@ set(CONTRACTOR_LIBRARIES
     ${BOOST_BASE_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
     ${USED_LUA_LIBRARIES}
-    ${STXXL_LIBRARY}
+    ${MAYBE_STXXL_LIBRARY}
     ${TBB_LIBRARIES}
     ${MAYBE_RT_LIBRARY}
     ${MAYBE_COVERAGE_LIBRARIES})
@@ -665,7 +677,7 @@ set(STORAGE_LIBRARIES
 set(UTIL_LIBRARIES
     ${BOOST_BASE_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
-    ${STXXL_LIBRARY}
+    ${MAYBE_STXXL_LIBRARY}
     ${TBB_LIBRARIES}
     ${MAYBE_COVERAGE_LIBRARIES})
 
