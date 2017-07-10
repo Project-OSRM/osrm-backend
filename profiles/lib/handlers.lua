@@ -48,7 +48,7 @@ function Handlers.handle_names(way,result,data,profile)
   end
 
   if exits then
-    result.exits = exits
+    result.exits = canonicalizeStringList(exits, ";")
   end
 end
 
