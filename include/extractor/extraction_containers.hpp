@@ -10,33 +10,19 @@
 
 #include "storage/io.hpp"
 
-#include <cstdint>
-#include <unordered_map>
-
-#if USE_STXXL_LIBRARY
-#include <stxxl/vector>
-#endif
-
 namespace osrm
 {
 namespace extractor
 {
 
 /**
- * Uses external memory containers from stxxl to store all the data that
+ * Uses  memory containers to store all the data that
  * is collected by the extractor callbacks.
  *
  * The data is the filtered, aggregated and finally written to disk.
  */
 class ExtractionContainers
 {
-#if USE_STXXL_LIBRARY
-    template <typename T> using ExternalVector = stxxl::vector<T>;
-#else
-    template <typename T> using ExternalVector = std::vector<T>;
-#endif
-
-    void FlushVectors();
     void PrepareNodes();
     void PrepareRestrictions();
     void PrepareEdges(ScriptingEnvironment &scripting_environment);
@@ -47,13 +33,13 @@ class ExtractionContainers
     void WriteCharData(const std::string &file_name);
 
   public:
-    using NodeIDVector = ExternalVector<OSMNodeID>;
-    using NodeVector = ExternalVector<QueryNode>;
-    using EdgeVector = ExternalVector<InternalExtractorEdge>;
+    using NodeIDVector = std::vector<OSMNodeID>;
+    using NodeVector = std::vector<QueryNode>;
+    using EdgeVector = std::vector<InternalExtractorEdge>;
     using RestrictionsVector = std::vector<InputRestrictionContainer>;
-    using WayIDStartEndVector = ExternalVector<FirstAndLastSegmentOfWay>;
-    using NameCharData = ExternalVector<unsigned char>;
-    using NameOffsets = ExternalVector<unsigned>;
+    using WayIDStartEndVector = std::vector<FirstAndLastSegmentOfWay>;
+    using NameCharData = std::vector<unsigned char>;
+    using NameOffsets = std::vector<unsigned>;
 
     std::vector<OSMNodeID> barrier_nodes;
     std::vector<OSMNodeID> traffic_lights;
