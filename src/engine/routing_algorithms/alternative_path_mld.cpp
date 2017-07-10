@@ -199,7 +199,9 @@ filterViaCandidatesByViaNotOnPath(const WeightedViaNodePackedPath &path, RandIt 
 // Filters packed paths with similar cells between each other. Mutates range in-place.
 // Returns an iterator to the filtered range's new end.
 template <typename RandIt>
-RandIt filterPackedPathsByCellSharing(RandIt first, RandIt last, const Partition &partition)
+RandIt filterPackedPathsByCellSharing(RandIt first,
+                                      RandIt last,
+                                      const datafacade::AlgorithmDataFacade<Algorithm> &facade)
 {
     util::static_assert_iter_category<RandIt, std::random_access_iterator_tag>();
     util::static_assert_iter_value<RandIt, WeightedViaNodePackedPath>();
@@ -212,14 +214,14 @@ RandIt filterPackedPathsByCellSharing(RandIt first, RandIt last, const Partition
     if (size < 2)
         return last;
 
-    const auto number_of_levels = partition.GetNumberOfLevels();
+    const auto number_of_levels = facade.GetNumberOfLevels();
     (void)number_of_levels;
     BOOST_ASSERT(number_of_levels >= 1);
 
     // Todo: sharing could be a linear combination based on level and sharing on each level.
     // Experimental evaluation shows using the lowest level works surprisingly well already.
     const auto level = 1;
-    const auto get_cell = [&](auto node) { return partition.GetCell(level, node); };
+    const auto get_cell = [&](auto node) { return facade.GetPartitionCell(level, node); };
 
     const auto shortest_path = *first;
 
@@ -459,8 +461,6 @@ void unpackPackedPaths(InputIt first,
     const bool force_loop_forward = needsLoopForward(phantom_node_pair);
     const bool force_loop_backward = needsLoopBackwards(phantom_node_pair);
 
-    const Partition &partition = facade.GetMultiLevelPartition();
-
     Heap &forward_heap = *search_engine_data.forward_heap_1;
     Heap &reverse_heap = *search_engine_data.reverse_heap_1;
 
@@ -506,9 +506,9 @@ void unpackPackedPaths(InputIt first,
             }
             else
             { // an overlay graph edge
-                LevelID level = getNodeQueryLevel(partition, source, phantom_node_pair); // XXX
-                CellID parent_cell_id = partition.GetCell(level, source);
-                BOOST_ASSERT(parent_cell_id == partition.GetCell(level, target));
+                LevelID level = getNodeQueryLevel(facade, source, phantom_node_pair); // XXX
+                CellID parent_cell_id = facade.GetPartitionCell(level, source);
+                BOOST_ASSERT(parent_cell_id == facade.GetPartitionCell(level, target));
 
                 LevelID sublevel = level - 1;
 
@@ -773,8 +773,6 @@ InternalManyRoutesResult alternativePathSearch(SearchEngineData<Algorithm> &sear
     BOOST_ASSERT(max_number_of_alternatives > 0);
     BOOST_ASSERT(max_number_of_alternatives_to_unpack >= max_number_of_alternatives);
 
-    const Partition &partition = facade.GetMultiLevelPartition();
-
     // Prepare heaps for usage below. The searches will modify them in-place.
     search_engine_data.InitializeOrClearFirstThreadLocalStorage(facade.GetNumberOfNodes());
 
@@ -859,7 +857,7 @@ InternalManyRoutesResult alternativePathSearch(SearchEngineData<Algorithm> &sear
 
     alternative_paths_last = filterPackedPathsByCellSharing(begin(weighted_packed_paths), //
                                                             end(weighted_packed_paths),   //
-                                                            partition);                   //
+                                                            facade);                      //
 
     BOOST_ASSERT(weighted_packed_paths.size() >= 1);
 

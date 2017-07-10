@@ -114,12 +114,9 @@ void relaxOutgoingEdges(
     typename SearchEngineData<mld::Algorithm>::ManyToManyQueryHeap &query_heap,
     const PhantomNode &phantom_node)
 {
-    const auto &partition = facade.GetMultiLevelPartition();
-    const auto &cells = facade.GetCellStorage();
-
-    auto highest_diffrent_level = [&partition, node](const SegmentID &phantom_node) {
+    auto highest_diffrent_level = [&facade, node](const SegmentID &phantom_node) {
         if (phantom_node.enabled)
-            return partition.GetHighestDifferentLevel(phantom_node.id, node);
+            return facade.GetHighestDifferentLevel(phantom_node.id, node);
         return INVALID_LEVEL_ID;
     };
     const auto level = std::min(highest_diffrent_level(phantom_node.forward_segment_id),
@@ -129,62 +126,53 @@ void relaxOutgoingEdges(
 
     if (level >= 1 && !node_data.from_clique_arc)
     {
-        const auto &cell = cells.GetCell(level, partition.GetCell(level, node));
         if (DIRECTION == FORWARD_DIRECTION)
         { // Shortcuts in forward direction
-            auto destination = cell.GetDestinationNodes().begin();
-            auto shortcut_durations = cell.GetOutDuration(node);
-            for (auto shortcut_weight : cell.GetOutWeight(node))
-            {
-                BOOST_ASSERT(destination != cell.GetDestinationNodes().end());
-                BOOST_ASSERT(!shortcut_durations.empty());
-                const NodeID to = *destination;
-                if (shortcut_weight != INVALID_EDGE_WEIGHT && node != to)
-                {
-                    const auto to_weight = weight + shortcut_weight;
-                    const auto to_duration = duration + shortcut_durations.front();
-                    if (!query_heap.WasInserted(to))
+            facade.ForEachDestinationNodes(
+                level,
+                node,
+                [&](NodeID destination,
+                    EdgeWeight shortcut_weight,
+                    EdgeDuration shortcut_duration) {
+                    const NodeID to = destination;
+                    if (shortcut_weight != INVALID_EDGE_WEIGHT && node != to)
                     {
-                        query_heap.Insert(to, to_weight, {node, true, to_duration});
+                        const auto to_weight = weight + shortcut_weight;
+                        const auto to_duration = duration + shortcut_duration;
+                        if (!query_heap.WasInserted(to))
+                        {
+                            query_heap.Insert(to, to_weight, {node, true, to_duration});
+                        }
+                        else if (to_weight < query_heap.GetKey(to))
+                        {
+                            query_heap.GetData(to) = {node, true, to_duration};
+                            query_heap.DecreaseKey(to, to_weight);
+                        }
                     }
-                    else if (to_weight < query_heap.GetKey(to))
-                    {
-                        query_heap.GetData(to) = {node, true, to_duration};
-                        query_heap.DecreaseKey(to, to_weight);
-                    }
-                }
-                ++destination;
-                shortcut_durations.advance_begin(1);
-            }
-            BOOST_ASSERT(shortcut_durations.empty());
+                });
         }
         else
         { // Shortcuts in backward direction
-            auto source = cell.GetSourceNodes().begin();
-            auto shortcut_durations = cell.GetInDuration(node);
-            for (auto shortcut_weight : cell.GetInWeight(node))
-            {
-                BOOST_ASSERT(source != cell.GetSourceNodes().end());
-                BOOST_ASSERT(!shortcut_durations.empty());
-                const NodeID to = *source;
-                if (shortcut_weight != INVALID_EDGE_WEIGHT && node != to)
-                {
-                    const auto to_weight = weight + shortcut_weight;
-                    const auto to_duration = duration + shortcut_durations.front();
-                    if (!query_heap.WasInserted(to))
+            facade.ForEachSourceNodes(
+                level,
+                node,
+                [&](NodeID source, EdgeWeight shortcut_weight, EdgeDuration shortcut_duration) {
+                    const NodeID to = source;
+                    if (shortcut_weight != INVALID_EDGE_WEIGHT && node != to)
                     {
-                        query_heap.Insert(to, to_weight, {node, true, to_duration});
+                        const auto to_weight = weight + shortcut_weight;
+                        const auto to_duration = duration + shortcut_duration;
+                        if (!query_heap.WasInserted(to))
+                        {
+                            query_heap.Insert(to, to_weight, {node, true, to_duration});
+                        }
+                        else if (to_weight < query_heap.GetKey(to))
+                        {
+                            query_heap.GetData(to) = {node, true, to_duration};
+                            query_heap.DecreaseKey(to, to_weight);
+                        }
                     }
-                    else if (to_weight < query_heap.GetKey(to))
-                    {
-                        query_heap.GetData(to) = {node, true, to_duration};
-                        query_heap.DecreaseKey(to, to_weight);
-                    }
-                }
-                ++source;
-                shortcut_durations.advance_begin(1);
-            }
-            BOOST_ASSERT(shortcut_durations.empty());
+                });
         }
     }
 
