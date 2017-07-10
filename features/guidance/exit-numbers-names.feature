@@ -41,8 +41,8 @@ Feature: Exit Numbers and Names
             | ef     | motorway_link | ExitRamp |              |
 
        When I route I should get
-            | waypoints | route                      | turns                               | exits   |
-            | a,f       | MainRoad,ExitRamp,ExitRamp | depart,off ramp slight right,arrive | ,10;12, |
+            | waypoints | route                      | turns                               | exits    |
+            | a,f       | MainRoad,ExitRamp,ExitRamp | depart,off ramp slight right,arrive | ,10; 12, |
 
 
     Scenario: Exit number on the ways after the motorway junction, multiple exits
