@@ -14,8 +14,6 @@
 
 #include <boost/assert.hpp>
 
-#include <stxxl/vector>
-
 #include <tbb/enumerable_thread_specific.h>
 #include <tbb/parallel_for.h>
 #include <tbb/parallel_sort.h>
@@ -25,6 +23,10 @@
 #include <memory>
 #include <vector>
 
+#if USE_STXXL_LIBRARY
+#include <stxxl/vector>
+#endif
+
 namespace osrm
 {
 namespace contractor
@@ -33,6 +35,12 @@ namespace contractor
 class GraphContractor
 {
   private:
+#if USE_STXXL_LIBRARY
+    template <typename T> using ExternalVector = stxxl::vector<T>;
+#else
+    template <typename T> using ExternalVector = std::vector<T>;
+#endif
+
     struct ContractorThreadData
     {
         ContractorDijkstra dijkstra;
@@ -401,7 +409,7 @@ class GraphContractor
     bool Bias(const NodeID a, const NodeID b) const;
 
     std::shared_ptr<ContractorGraph> contractor_graph;
-    stxxl::vector<QueryEdge> external_edge_list;
+    ExternalVector<QueryEdge> external_edge_list;
     std::vector<NodeID> orig_node_id_from_new_node_id_map;
     std::vector<float> node_levels;
 
