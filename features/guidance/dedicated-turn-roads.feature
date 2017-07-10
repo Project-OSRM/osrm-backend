@@ -34,9 +34,9 @@ Feature: Slipways and Dedicated Turn Lanes
             | restriction | bc       | cf     | c        | no_right_turn |
 
        When I route I should get
-            | waypoints | route               | turns                    | locations |
-            | a,g       | first,second,second | depart,turn right,arrive | a,b,g     |
-            | a,1       | first,,             | depart,turn right,arrive | a,b,_     |
+            | waypoints | route               | turns                           | locations |
+            | a,g       | first,second,second | depart,turn right,arrive        | a,b,g     |
+            | a,1       | first,,             | depart,turn slight right,arrive | a,b,_     |
 
     Scenario: Turn Instead of Ramp
         Given the node map
@@ -53,12 +53,12 @@ Feature: Slipways and Dedicated Turn Lanes
             """
 
         And the ways
-            | nodes | highway    | name   | oneway | route |
-            | abc   | trunk      | first  | yes    |       |
-            | cd    | trunk      | first  | yes    |       |
-            | bhf   | trunk_link |        | yes    | ferry |
-            | cfg   | primary    | second | yes    |       |
-            | ec    | primary    | second | yes    |       |
+            | nodes | highway       | name   | oneway | route |
+            | abc   | motorway      | first  | yes    |       |
+            | cd    | motorway      | first  | yes    |       |
+            | bhf   | motorway_link |        | yes    | ferry |
+            | cfg   | primary       | second | yes    |       |
+            | ec    | primary       | second | yes    |       |
 
         And the relations
             | type        | way:from | way:to | node:via | restriction   |
@@ -100,9 +100,9 @@ Feature: Slipways and Dedicated Turn Lanes
             | restriction | abc      | cf     | c        | no_right_turn |
 
        When I route I should get
-            | waypoints | route                       | turns                                                            |
-            | a,i       | first,,second,second,second | depart,off ramp right,turn straight,notification straight,arrive |
-            | a,1       | first,,                     | depart,off ramp right,arrive                                     |
+            | waypoints | route                       | turns                                                               |
+            | a,i       | first,,second,second,second | depart,turn slight right,turn straight,notification straight,arrive |
+            | a,1       | first,,                     | depart,turn slight right,arrive                                     |
 
     Scenario: Turn Instead of Ramp - Max-Speed
         Given the node map
@@ -133,9 +133,9 @@ Feature: Slipways and Dedicated Turn Lanes
             | restriction | bc       | cf     | c        | no_right_turn |
 
        When I route I should get
-            | waypoints | route               | turns                    | locations |
-            | a,g       | first,second,second | depart,turn right,arrive | a,b,g     |
-            | a,1       | first,,             | depart,turn right,arrive | a,b,_     |
+            | waypoints | route               | turns                           | locations |
+            | a,g       | first,second,second | depart,turn right,arrive        | a,b,g     |
+            | a,1       | first,,             | depart,turn slight right,arrive | a,b,_     |
 
 
     Scenario: Turn Instead of Ramp
@@ -905,8 +905,8 @@ Feature: Slipways and Dedicated Turn Lanes
             | restriction | yb       | be     | b        | only_straight |
 
         When I route I should get
-            | waypoints | route            | turns                                            | locations |
-            | z,t       | through,,out,out | depart,off ramp slight right,round-exit-3,arrive | z,s,c,t   |
+            | waypoints | route            | turns                                        | locations |
+            | z,t       | through,,out,out | depart,turn slight right,round-exit-3,arrive | z,s,c,t   |
 
     Scenario: Sliproad before a roundabout
         Given the node map
