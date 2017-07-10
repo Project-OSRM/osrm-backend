@@ -156,7 +156,7 @@ Feature: Turn Lane Guidance
         When I route I should get
             | waypoints | route          | turns                    | lanes                       |
             | a,d       | road,turn,turn | depart,turn right,arrive | ,straight:false right:true, |
-            | a,c       | road,road      | depart,arrive            | ,                           |
+            | a,c       | road,road      | depart,arrive            | ;straight:true right:false, |
 
     Scenario: Turn with Bus-Lane Left
         Given the node map
@@ -178,7 +178,7 @@ Feature: Turn Lane Guidance
         When I route I should get
             | waypoints | route          | turns                   | lanes                       |
             | a,d       | road,turn,turn | depart,turn left,arrive | ,left:true straight:false,  |
-            | a,c       | road,road      | depart,arrive           | ,                           |
+            | a,c       | road,road      | depart,arrive           | ;left:false straight:true,  |
 
     # This tests whether empty/invalid PSV tags cause osrm-extract to crash
     Scenario: Turn with Bus-Lane
@@ -248,23 +248,23 @@ Feature: Turn Lane Guidance
             | fl    | cross |                          | yes    |
 
         When I route I should get
-            | waypoints | route             | turns                           | lanes                                           |
-            | a,j       | road,cross,cross  | depart,turn right,arrive        | ,left:false straight:false right:true           |
-            | a,d       | road,road,road    | depart,use lane straight,arrive | ,left:false straight:true right:false,          |
-            | a,l       | road,cross,cross  | depart,turn left,arrive         | ,left:true straight:false right:false,          |
-            | a,h       | road,road,road    | depart,continue uturn,arrive    | ,left:true straight:false right:false,          |
-            | k,d       | cross,road,road   | depart,turn right,arrive        | ,left:false straight;right:true,                |
-            | k,l       | cross,cross,cross | depart,use lane straight,arrive | ,left:false straight;right:true,                |
-            | k,h       | cross,road,road   | depart,turn left,arrive         | ,left:true straight;right:false,                |
-            | k,j       | cross,cross,cross | depart,continue uturn,arrive    | ,left:true straight;right:false,                |
-            | e,l       | road,cross,cross  | depart,turn right,arrive        | ,none:false straight:false straight;right:true, |
-            | e,h       | road,road         | depart,arrive                   | ,none:false straight:true straight;right:true   |
-            | e,j       | road,cross,cross  | depart,turn left,arrive         | ,none:true straight:false straight;right:false, |
-            | e,d       | road,road,road    | depart,continue uturn,arrive    | ,none:true straight:false straight;right:false, |
-            | i,h       | cross,road,road   | depart,turn right,arrive        | ,,                                              |
-            | i,j       | cross,cross,cross | depart,use lane straight,arrive | ,left:false straight:true,                      |
-            | i,d       | cross,road,road   | depart,turn left,arrive         | ,left:true straight:false,                      |
-            | i,l       | cross,cross,cross | depart,continue uturn,arrive    | ,left:true straight:false,                      |
+            | waypoints | route             | turns                           | lanes                                           | intersection_lanes                              |
+            | a,j       | road,cross,cross  | depart,turn right,arrive        | ,left:false straight:false right:true           | ,left:false straight:false right:true           |
+            | a,d       | road,road         | depart,arrive                   | ,                                               | left:false straight:true right:false,           |
+            | a,l       | road,cross,cross  | depart,turn left,arrive         | ,left:true straight:false right:false,          | ,left:true straight:false right:false,          |
+            | a,h       | road,road,road    | depart,continue uturn,arrive    | ,left:true straight:false right:false,          | ,left:true straight:false right:false           |
+            | k,d       | cross,road,road   | depart,turn right,arrive        | ,left:false straight;right:true,                | ,left:false straight;right:true,                |
+            | k,l       | cross,cross       | depart,arrive                   | ,                                               | left:false straight;right:true,                 |
+            | k,h       | cross,road,road   | depart,turn left,arrive         | ,left:true straight;right:false,                | ,left:true straight;right:false,                |
+            | k,j       | cross,cross,cross | depart,continue uturn,arrive    | ,left:true straight;right:false,                | ,left:true straight;right:false,                |
+            | e,l       | road,cross,cross  | depart,turn right,arrive        | ,none:false straight:false straight;right:true, | ,none:false straight:false straight;right:true, |
+            | e,h       | road,road         | depart,arrive                   | ,                                               | none:false straight:true straight;right:true,   |
+            | e,j       | road,cross,cross  | depart,turn left,arrive         | ,none:true straight:false straight;right:false, | ,none:true straight:false straight;right:false, |
+            | e,d       | road,road,road    | depart,continue uturn,arrive    | ,none:true straight:false straight;right:false, | ,none:true straight:false straight;right:false, |
+            | i,h       | cross,road,road   | depart,turn right,arrive        | ,,                                              |                                                 |
+            | i,j       | cross,cross       | depart,arrive                   |                                                 | left:false straight:true,                       |
+            | i,d       | cross,road,road   | depart,turn left,arrive         | ,left:true straight:false,                      | ,left:true straight:false,                      |
+            | i,l       | cross,cross,cross | depart,continue uturn,arrive    | ,left:true straight:false,                      | ,left:true straight:false,                      |
 
     #copy of former case to prevent further regression
     @collapse @partition-lanes
@@ -295,13 +295,13 @@ Feature: Turn Lane Guidance
             | fl    | cross |                          | yes    |
 
         When I route I should get
-            | waypoints | route             | turns                        | lanes                                           |
-            | a,j       | road,cross,cross  | depart,turn right,arrive     | ,left:false straight:false right:true,          |
-            | k,d       | cross,road,road   | depart,turn right,arrive     | ,left:false straight;right:true,                |
-            | e,l       | road,cross,cross  | depart,turn right,arrive     | ,none:false straight:false straight;right:true, |
-            | i,h       | cross,road,road   | depart,turn right,arrive     | ,,                                              |
-            | i,j       | cross,cross       | depart,arrive                | ,                                               |
-            | i,l       | cross,cross,cross | depart,continue uturn,arrive | ,left:true straight:false,                      |
+            | waypoints | route             | turns                        | lanes                                                                         |
+            | a,j       | road,cross,cross  | depart,turn right,arrive     | ,left:false straight:false right:true,                                        |
+            | k,d       | cross,road,road   | depart,turn right,arrive     | ,left:false straight;right:true,                                              |
+            | e,l       | road,cross,cross  | depart,turn right,arrive     | ,none:false straight:false straight;right:true,                               |
+            | i,h       | cross,road,road   | depart,turn right,arrive     | ,,                                                                            |
+            | i,j       | cross,cross       | depart,arrive                | ;;left:false straight:true,                                                   |
+            | i,l       | cross,cross,cross | depart,continue uturn,arrive | ;,left:true straight:false;left:true straight:false;left:false straight:true, |
 
     @partition-lanes
     Scenario: Turn Lanes at Segregated Road
@@ -347,7 +347,7 @@ Feature: Turn Lane Guidance
         When I route I should get
             | waypoints | route          | turns                    | lanes                   |
             | a,e       | road,turn,turn | depart,turn right,arrive | ,none:false right:true, |
-            | a,d       | road,road      | depart,arrive            | ,                       |
+            | a,d       | road,road      | depart,arrive            | ;none:true right:false, |
 
     @2654 @previous-lanes
     Scenario: Turn Lanes Given earlier than actual turn
@@ -368,11 +368,11 @@ Feature: Turn Lane Guidance
             | hk    | second-turn |                    |                     |
 
         When I route I should get
-            | waypoints | route                        | turns                    | lanes                   |
-            | a,k       | road,second-turn,second-turn | depart,turn right,arrive | ,none:false right:true, |
-            | a,i       | road,road                    | depart,arrive            | ,                       |
-            | i,j       | road,first-turn,first-turn   | depart,turn left,arrive  | ,left:true none:false,  |
-            | i,a       | road,road                    | depart,arrive            | ,                       |
+            | waypoints | route                        | turns                    | lanes                    |
+            | a,k       | road,second-turn,second-turn | depart,turn right,arrive | ;,none:false right:true, |
+            | a,i       | road,road                    | depart,arrive            | ;;none:true right:false, |
+            | i,j       | road,first-turn,first-turn   | depart,turn left,arrive  | ;,left:true none:false,  |
+            | i,a       | road,road                    | depart,arrive            | ;;left:false none:true,  |
 
     @previous-lanes
     Scenario: Passing a one-way street
@@ -390,8 +390,8 @@ Feature: Turn Lane Guidance
             | cf    | turn |                    |        |
 
         When I route I should get
-            | waypoints | route          | turns                   | lanes                      |
-            | a,f       | road,turn,turn | depart,turn left,arrive | ,left:true straight:false, |
+            | waypoints | route          | turns                   | lanes                                               |
+            | a,f       | road,turn,turn | depart,turn left,arrive | ;left:true straight:false,left:true straight:false, |
 
     @partition-lanes
     Scenario: Passing a one-way street, partly pulled back lanes
@@ -411,10 +411,10 @@ Feature: Turn Lane Guidance
             | bg    | right |                     | no     |
 
         When I route I should get
-            | waypoints | route            | turns                    | lanes                            |
-            | a,f       | road,turn,turn   | depart,turn left,arrive  | ,left:true straight;right:false, |
-            | a,d       | road,road        | depart,arrive            | ,                                |
-            | a,g       | road,right,right | depart,turn right,arrive | ,left:false straight;right:true, |
+            | waypoints | route            | turns                    | lanes                                                           |
+            | a,f       | road,turn,turn   | depart,turn left,arrive  | ;left:true straight;right:false,left:true straight;right:false, |
+            | a,d       | road,road        | depart,arrive            | ;left:false straight;right:true;left:false straight;right:true, |
+            | a,g       | road,right,right | depart,turn right,arrive | ,left:false straight;right:true,                                |
 
     @partition-lanes @previous-lanes
     Scenario: Passing a one-way street, partly pulled back lanes, no through
@@ -434,9 +434,9 @@ Feature: Turn Lane Guidance
             | bg    | right |                     | no     |
 
         When I route I should get
-            | waypoints | route            | turns                    | lanes                   |
-            | a,f       | road,turn,turn   | depart,turn left,arrive  | ,left:true right:false, |
-            | a,g       | road,right,right | depart,turn right,arrive | ,left:false right:true, |
+            | waypoints | route            | turns                    | lanes                                         |
+            | a,f       | road,turn,turn   | depart,turn left,arrive  | ,left:true right:false;left:true right:false, |
+            | a,g       | road,right,right | depart,turn right,arrive | ,left:false right:true,                       |
 
     @todo @partition-lanes @previous-lanes
     Scenario: Narrowing Turn Lanes
@@ -484,7 +484,7 @@ Feature: Turn Lane Guidance
 
         When I route I should get
             | waypoints | route          | turns                    | lanes                       |
-            | a,d       | road,road      | depart,arrive            | ,                           |
+            | a,d       | road,road      | depart,arrive            | ;straight:true right:false, |
             | a,e       | road,turn,turn | depart,turn right,arrive | ,straight:false right:true, |
 
     @todo @roundabout
@@ -554,9 +554,9 @@ Feature: Turn Lane Guidance
             | restriction | bc       | dc     | c        | no_right_turn |
 
         When I route I should get
-            | waypoints | route            | turns                   | lanes                                                           |
-            | a,g       | road,cross,cross | depart,turn left,arrive | ,left:true left:true straight:false straight:false right:false, |
-            | a,e       | road,road        | depart,arrive           | ,                                                               |
+            | waypoints | route            | turns                   | lanes                                                                                                                          |
+            | a,g       | road,cross,cross | depart,turn left,arrive |  ,left:true left:true straight:false straight:false right:false;left:true left:true straight:false straight:false right:false, |
+            | a,e       | road,road        | depart,arrive           | ;left:false left:false straight:true straight:true right:false;left:false left:false straight:true straight:true right:false,  |
 
     #NEEDS TO BE INVESTIGATED. Turn restriction shouldn't be here. See #2867
     @reverse @previous-lanes
@@ -589,11 +589,11 @@ Feature: Turn Lane Guidance
             | restriction | de       | ef     | e        | no_left_turn  |
 
         When I route I should get
-            | from | to | bearings        | route            | turns                        | lanes                                  |
-            | a    | g  | 180,180 180,180 | road,cross,cross | depart,turn right,arrive     | ,none:false straight:false right:true, |
-            | a    | h  | 180,180 180,180 | road,cross,cross | depart,turn left,arrive      | ,none:true straight:false right:false, |
-            | a    | i  | 180,180 180,180 | road,road        | depart,arrive                | ,                                      |
-            | b    | a  | 90,2 270,2      | road,road,road   | depart,continue uturn,arrive | ,none:true straight:false right:false, |
+            | from | to | bearings        | route            | turns                        | lanes                                                                        |
+            | a    | g  | 180,180 180,180 | road,cross,cross | depart,turn right,arrive     | ;none:false straight:false right:true,none:false straight:false right:true,  |
+            | a    | h  | 180,180 180,180 | road,cross,cross | depart,turn left,arrive      | ;none:true straight:false right:false,none:true straight:false right:false;, |
+            | a    | i  | 180,180 180,180 | road,road        | depart,arrive                | ;none:true straight:true right:false;none:true straight:true right:false,    |
+            | b    | a  | 90,2 270,2      | road,road,road   | depart,continue uturn,arrive | ,none:true straight:false right:false;,                                      |
 
     @reverse
     Scenario: Segregated Intersection Merges With Lanes
@@ -681,7 +681,7 @@ Feature: Turn Lane Guidance
 
         When I route I should get
             | waypoints | route            | turns                           | lanes                                                                        |
-            | a,d       | road,road        | depart,arrive                   | ,                                                                            |
+            | a,d       | road,road        | depart,arrive                   |  ;straight:true straight:true straight;slight right:true slight right:false, |
             | a,e       | road,cross,cross | depart,turn slight right,arrive | ,straight:false straight:false straight;slight right:true slight right:true, |
 
     @ramp
@@ -700,7 +700,7 @@ Feature: Turn Lane Guidance
 
         When I route I should get
             | waypoints | route         | turns                               | lanes                                                                        |
-            | a,d       | hwy,hwy       | depart,arrive                       | ,                                                                            |
+            | a,d       | hwy,hwy       | depart,arrive                       | ;straight:true straight:true straight;slight right:true slight right:false,  |
             | a,e       | hwy,ramp,ramp | depart,off ramp slight right,arrive | ,straight:false straight:false straight;slight right:true slight right:true, |
 
     @todo
@@ -745,7 +745,7 @@ Feature: Turn Lane Guidance
 
         When I route I should get
             | waypoints | route         | turns                               | lanes                                             |
-            | a,c       | hwy,hwy       | depart,arrive                       | ,                                                 |
+            | a,c       | hwy,hwy       | depart,arrive                       | ;straight:true straight:true slight right:false,  |
             | a,d       | hwy,ramp,ramp | depart,off ramp slight right,arrive | ,straight:false straight:false slight right:true, |
 
     @reverse
@@ -766,8 +766,8 @@ Feature: Turn Lane Guidance
             | fgh   | road |                           | primary      | yes    |
 
         When I route I should get
-            | waypoints | route          | turns                        | lanes                                     |
-            | a,h       | road,road,road | depart,continue uturn,arrive | ,uturn:true straight:false straight:false,|
+            | waypoints | route          | turns                        | lanes                                      |
+            | a,h       | road,road,road | depart,continue uturn,arrive | ,uturn:true straight:false straight:false;,|
 
     @reverse
     Scenario: Reverse Lane in Segregated Road with none
@@ -787,8 +787,8 @@ Feature: Turn Lane Guidance
             | fgh   | road |                        | primary      | yes    |
 
         When I route I should get
-            | waypoints | route          | turns                        | lanes                                  |
-            | a,h       | road,road,road | depart,continue uturn,arrive | ,uturn:true straight:false none:false, |
+            | waypoints | route          | turns                        | lanes                                   |
+            | a,h       | road,road,road | depart,continue uturn,arrive | ,uturn:true straight:false none:false;, |
 
     @reverse
     Scenario: Reverse Lane in Segregated Road with none, Service Turn Prior
@@ -810,8 +810,8 @@ Feature: Turn Lane Guidance
             | ji    | park |                        | service      | no     |
 
         When I route I should get
-            | waypoints | route          | turns                        | lanes                                  |
-            | a,h       | road,road,road | depart,continue uturn,arrive | ,uturn:true straight:false none:false, |
+            | waypoints | route          | turns                        | lanes                                   |
+            | a,h       | road,road,road | depart,continue uturn,arrive | ,uturn:true straight:false none:false;, |
 
     @simple
     Scenario: Don't collapse everything to u-turn / too wide
@@ -873,9 +873,9 @@ Feature: Turn Lane Guidance
             | ab    | on   | motorway_link |                    |
 
         When I route I should get
-            | waypoints | route        | turns                    | lanes                          |
-            | a,j       | on,xbcj      | depart,arrive            | ,                              |
-            | a,i       | on,off,off   | depart,turn right,arrive | ,none:false slight right:true, |
+            | waypoints | route        | turns                    | lanes                           |
+            | a,j       | on,xbcj      | depart,arrive            | ;;none:true slight right:false, |
+            | a,i       | on,off,off   | depart,turn right,arrive | ;,none:false slight right:true, |
 
     #http://www.openstreetmap.org/#map=17/52.47414/13.35712
     @todo @ramp @2645
@@ -929,8 +929,8 @@ Feature: Turn Lane Guidance
             | cf    | turn | primary |                    |
 
         When I route I should get
-            | waypoints | route     | turns         | lanes |
-            | x,d       | road,road | depart,arrive | ,     |
+            | waypoints | route     | turns         | lanes                                     |
+            | x,d       | road,road | depart,arrive | ;straight;right:true;straight;right:true, |
 
     @partition-lanes
     Scenario: Partitioned turn, Slight Curve - maxspeed
@@ -952,9 +952,9 @@ Feature: Turn Lane Guidance
             | dce   | cross | primary | yes    |                    | 1        |
 
         When I route I should get
-            | waypoints | route            | turns                          | lanes                   | locations |
-            | a,g       | road,cross,cross | depart,turn right,arrive       | ,left:false right:true, | a,b,g     |
-            | a,e       | road,cross,cross | depart,end of road left,arrive | ,left:true right:false, | a,c,e     |
+            | waypoints | route            | turns                          | lanes                                         | locations |
+            | a,g       | road,cross,cross | depart,turn right,arrive       | ,left:false right:true,                       | a,b,g     |
+            | a,e       | road,cross,cross | depart,end of road left,arrive | ;left:true right:false,left:true right:false, | a,c,e     |
 
     Scenario: Partitioned turn, Slight Curve
         Given the node map
@@ -975,9 +975,9 @@ Feature: Turn Lane Guidance
             | dce   | cross | primary | yes    |                    |
 
         When I route I should get
-            | waypoints | route            | turns                          | lanes                   | locations |
-            | a,g       | road,cross,cross | depart,turn right,arrive       | ,left:false right:true, | a,b,g     |
-            | a,e       | road,cross,cross | depart,end of road left,arrive | ,left:true right:false, | a,c,e     |
+            | waypoints | route            | turns                          | lanes                                         | locations |
+            | a,g       | road,cross,cross | depart,turn right,arrive       | ,left:false right:true,                       | a,b,g     |
+            | a,e       | road,cross,cross | depart,end of road left,arrive | ;left:true right:false,left:true right:false, | a,c,e     |
 
     Scenario: Lane Parsing Issue #2694
         Given the node map
@@ -1193,7 +1193,7 @@ Feature: Turn Lane Guidance
         When I route I should get
             | waypoints | route            | turns                    | lanes                             |
             | a,e       | road,cross,cross | depart,turn right,arrive | ,left:false none:false none:true, |
-            | a,c       | road,road        | depart,arrive            | ,                                 |
+            | a,c       | road,road        | depart,arrive            | ;left:false none:true none:true,  |
 
     @3379
     Scenario: Don't Turn through potential through lanes
@@ -1214,7 +1214,7 @@ Feature: Turn Lane Guidance
         When I route I should get
             | waypoints | route            | turns                   | lanes                              |
             | a,d       | road,cross,cross | depart,turn left,arrive | ,none:true none:false right:false, |
-            | a,c       | road,road        | depart,arrive           | ,                                  |
+            | a,c       | road,road        | depart,arrive           |  ;none:true none:true right:false, |
 
     @4189
     Scenario: U-turn after a traffic light
@@ -1242,5 +1242,5 @@ Feature: Turn Lane Guidance
             | mdhk  | road2 | 2     |                              | yes    |
 
         When I route I should get
-            | waypoints | route             | turns                        | lanes                                                | locations |
-            | a,f       | road1,road1,road1 | depart,continue uturn,arrive | ,left:true straight:false straight;right:false,      | a,d,f     |
+            | waypoints | route             | turns                        | lanes                                                                                           | locations |
+            | a,f       | road1,road1,road1 | depart,continue uturn,arrive | ;left:false straight:true straight;right:false,left:true straight:false straight;right:false;;, | a,d,f     |

@@ -171,6 +171,22 @@ module.exports = function () {
                                                               ('out' in s.intersections[0] ? s.intersections[0].bearings[s.intersections[0].out] : 0));
     };
 
+    this.lanesList = (instructions) => {
+        return this.extractInstructionList(instructions, s => {
+            return s.intersections.map( i => {
+                if(i.lanes == undefined )
+                    return '';
+                else
+                {
+                    return i.lanes.map( l => {
+                        let indications = l.indications.join(';');
+                        return indications + ':' + (l.valid ? 'true' : 'false');
+                    }).join(' ');
+                }
+            }).join(';');
+        });
+    };
+
     this.approachList = (instructions) => {
         return this.extractInstructionList(instructions, s => s.approaches || '');
     };
@@ -195,17 +211,6 @@ module.exports = function () {
     this.alternativesList = (instructions) => {
         // alternatives_count come from tracepoints list
         return instructions.tracepoints.map(t => t.alternatives_count.toString()).join(',');
-    };
-
-    this.lanesList = (instructions) => {
-        return this.extractInstructionList(instructions, instruction => {
-            if( 'lanes' in instruction.intersections[0] )
-            {
-                return instruction.intersections[0].lanes.map( p => { return (p.indications).join(';') + ':' + p.valid; } ).join(' ');
-            } else
-            {
-                return '';
-            }});
     };
 
     this.turnList = (instructions) => {

@@ -207,7 +207,9 @@ inline bool isSilent(const extractor::guidance::TurnInstruction instruction)
 {
     return instruction.type == extractor::guidance::TurnType::NoTurn ||
            instruction.type == extractor::guidance::TurnType::Suppressed ||
-           instruction.type == extractor::guidance::TurnType::StayOnRoundabout;
+           instruction.type == extractor::guidance::TurnType::StayOnRoundabout ||
+           // it is enough to output them within the intersections array
+           instruction.type == extractor::guidance::TurnType::UseLane;
 }
 
 inline bool hasRampType(const extractor::guidance::TurnInstruction instruction)

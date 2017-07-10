@@ -174,14 +174,13 @@ class RouteAPI : public BaseAPI
                 guidance::trimShortSegments(steps, leg_geometry);
                 leg.steps = guidance::postProcess(std::move(steps));
                 leg.steps = guidance::collapseTurnInstructions(std::move(leg.steps));
+                leg.steps = guidance::anticipateLaneChange(std::move(leg.steps));
                 leg.steps = guidance::buildIntersections(std::move(leg.steps));
                 leg.steps = guidance::suppressShortNameSegments(std::move(leg.steps));
                 leg.steps = guidance::assignRelativeLocations(std::move(leg.steps),
                                                               leg_geometry,
                                                               phantoms.source_phantom,
                                                               phantoms.target_phantom);
-                leg.steps = guidance::anticipateLaneChange(std::move(leg.steps));
-                leg.steps = guidance::collapseUseLane(std::move(leg.steps));
                 leg_geometry = guidance::resyncGeometry(std::move(leg_geometry), leg.steps);
             }
 

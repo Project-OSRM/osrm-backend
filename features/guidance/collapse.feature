@@ -807,8 +807,8 @@ Feature: Collapse
             | di    |                                        | off  |
 
        When I route I should get
-            | waypoints | route          | turns                           | locations |
-            | a,e       | main,main,main | depart,use lane straight,arrive | a,c,e     |
+            | waypoints | route     | turns         | locations | lanes                                                                                                     |
+            | a,e       | main,main | depart,arrive | a,e       | ;left:false straight:false straight:true straight:false right:false;left:false straight:true right:false, |
 
     Scenario: But _do_ collapse UseLane step when lanes stay the same
         Given the node map
