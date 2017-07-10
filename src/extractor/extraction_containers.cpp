@@ -28,26 +28,9 @@
 #include <mutex>
 #include <sstream>
 
-#if USE_STXXL_LIBRARY
-#include <stxxl/sort>
-#endif
-
 namespace
 {
 namespace oe = osrm::extractor;
-
-// Needed for STXXL comparison - STXXL requires max_value(), min_value(), so we can not use
-// std::less<OSMNodeId>{}. Anonymous namespace to keep translation unit local.
-struct OSMNodeIDLess
-{
-    OSMNodeIDLess() {}
-
-    using value_type = OSMNodeID;
-    bool operator()(const value_type left, const value_type right) const { return left < right; }
-
-    value_type max_value() { return MAX_OSM_NODEID; }
-    value_type min_value() { return MIN_OSM_NODEID; }
-};
 
 struct CmpEdgeByOSMStartID
 {
@@ -56,9 +39,6 @@ struct CmpEdgeByOSMStartID
     {
         return lhs.result.osm_source_id < rhs.result.osm_source_id;
     }
-
-    value_type max_value() { return value_type::max_osm_value(); }
-    value_type min_value() { return value_type::min_osm_value(); }
 };
 
 struct CmpEdgeByOSMTargetID
@@ -68,9 +48,6 @@ struct CmpEdgeByOSMTargetID
     {
         return lhs.result.osm_target_id < rhs.result.osm_target_id;
     }
-
-    value_type max_value() { return value_type::max_osm_value(); }
-    value_type min_value() { return value_type::min_osm_value(); }
 };
 
 struct CmpEdgeByInternalSourceTargetAndName
@@ -99,7 +76,6 @@ struct CmpEdgeByInternalSourceTargetAndName
         if (rhs.result.name_id == EMPTY_NAMEID)
             return true;
 
-        std::lock_guard<std::mutex> lock(mutex);
         BOOST_ASSERT(!name_offsets.empty() && name_offsets.back() == name_data.size());
         const oe::ExtractionContainers::NameCharData::const_iterator data = name_data.begin();
         return std::lexicographical_compare(data + name_offsets[lhs.result.name_id],
@@ -108,10 +84,6 @@ struct CmpEdgeByInternalSourceTargetAndName
                                             data + name_offsets[rhs.result.name_id + 1]);
     }
 
-    value_type max_value() { return value_type::max_internal_value(); }
-    value_type min_value() { return value_type::min_internal_value(); }
-
-    std::mutex &mutex;
     const oe::ExtractionContainers::NameCharData &name_data;
     const oe::ExtractionContainers::NameOffsets &name_offsets;
 };
@@ -119,26 +91,9 @@ struct CmpEdgeByInternalSourceTargetAndName
 template <typename Iter>
 inline NodeID mapExternalToInternalNodeID(Iter first, Iter last, const OSMNodeID value)
 {
-    const OSMNodeIDLess compare;
-    const auto it = std::lower_bound(first, last, value, compare);
-    return (it == last || compare(value, *it)) ? SPECIAL_NODEID
-                                               : static_cast<NodeID>(std::distance(first, it));
-}
-
-template <typename T, typename Func> void sort_external_vector(T &vector, const Func &func)
-{
-#if USE_STXXL_LIBRARY
-#ifndef _MSC_VER
-    constexpr static unsigned stxxl_memory =
-        ((sizeof(std::size_t) == 4) ? std::numeric_limits<int>::max()
-                                    : std::numeric_limits<unsigned>::max());
-#else
-    const static unsigned stxxl_memory = ((sizeof(std::size_t) == 4) ? INT_MAX : UINT_MAX);
-#endif
-    stxxl::sort(vector.begin(), vector.end(), func, stxxl_memory);
-#else
-    tbb::parallel_sort(vector.begin(), vector.end(), func);
-#endif
+    const auto it = std::lower_bound(first, last, value);
+    return (it == last || value < *it) ? SPECIAL_NODEID
+                                       : static_cast<NodeID>(std::distance(first, it));
 }
 }
 
@@ -149,11 +104,6 @@ namespace extractor
 
 ExtractionContainers::ExtractionContainers()
 {
-#if USE_STXXL_LIBRARY
-    // Check if stxxl can be instantiated
-    stxxl::vector<unsigned> dummy_vector;
-#endif
-
     // Insert four empty strings offsets for name, ref, destination, pronunciation, and exits
     name_offsets.push_back(0);
     name_offsets.push_back(0);
@@ -162,18 +112,6 @@ ExtractionContainers::ExtractionContainers()
     name_offsets.push_back(0);
     // Insert the total length sentinel (corresponds to the next name string offset)
     name_offsets.push_back(0);
-}
-
-void ExtractionContainers::FlushVectors()
-{
-#if USE_STXXL_LIBRARY
-    used_node_id_list.flush();
-    all_nodes_list.flush();
-    all_edges_list.flush();
-    name_char_data.flush();
-    name_offsets.flush();
-    way_start_end_id_list.flush();
-#endif
 }
 
 /**
@@ -194,11 +132,11 @@ void ExtractionContainers::PrepareData(ScriptingEnvironment &scripting_environme
     storage::io::FileWriter file_out(output_file_name,
                                      storage::io::FileWriter::GenerateFingerprint);
 
-    FlushVectors();
-
     PrepareNodes();
     WriteNodes(file_out);
     PrepareEdges(scripting_environment);
+    all_nodes_list.clear(); // free all_nodes_list before allocation of normal_edges
+    all_nodes_list.shrink_to_fit();
     WriteEdges(file_out);
 
     PrepareRestrictions();
@@ -226,7 +164,7 @@ void ExtractionContainers::PrepareNodes()
         util::UnbufferedLog log;
         log << "Sorting used nodes        ... " << std::flush;
         TIMER_START(sorting_used_nodes);
-        sort_external_vector(used_node_id_list, OSMNodeIDLess());
+        tbb::parallel_sort(used_node_id_list.begin(), used_node_id_list.end());
         TIMER_STOP(sorting_used_nodes);
         log << "ok, after " << TIMER_SEC(sorting_used_nodes) << "s";
     }
@@ -242,22 +180,13 @@ void ExtractionContainers::PrepareNodes()
     }
 
     {
-        struct QueryNodeCompare
-        {
-            using value_type = QueryNode;
-            value_type max_value() { return value_type::max_value(); }
-            value_type min_value() { return value_type::min_value(); }
-
-            bool operator()(const value_type &left, const value_type &right) const
-            {
-                return left.node_id < right.node_id;
-            }
-        };
-
         util::UnbufferedLog log;
         log << "Sorting all nodes         ... " << std::flush;
         TIMER_START(sorting_nodes);
-        sort_external_vector(all_nodes_list, QueryNodeCompare());
+        tbb::parallel_sort(
+            all_nodes_list.begin(), all_nodes_list.end(), [](const auto &left, const auto &right) {
+                return left.node_id < right.node_id;
+            });
         TIMER_STOP(sorting_nodes);
         log << "ok, after " << TIMER_SEC(sorting_nodes) << "s";
     }
@@ -313,7 +242,7 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
         util::UnbufferedLog log;
         log << "Sorting edges by start    ... " << std::flush;
         TIMER_START(sort_edges_by_start);
-        sort_external_vector(all_edges_list, CmpEdgeByOSMStartID());
+        tbb::parallel_sort(all_edges_list.begin(), all_edges_list.end(), CmpEdgeByOSMStartID());
         TIMER_STOP(sort_edges_by_start);
         log << "ok, after " << TIMER_SEC(sort_edges_by_start) << "s";
     }
@@ -384,7 +313,7 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
         util::UnbufferedLog log;
         log << "Sorting edges by target   ... " << std::flush;
         TIMER_START(sort_edges_by_target);
-        sort_external_vector(all_edges_list, CmpEdgeByOSMTargetID());
+        tbb::parallel_sort(all_edges_list.begin(), all_edges_list.end(), CmpEdgeByOSMTargetID());
         TIMER_STOP(sort_edges_by_target);
         log << "ok, after " << TIMER_SEC(sort_edges_by_target) << "s";
     }
@@ -487,9 +416,9 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
         log << "Sorting edges by renumbered start ... ";
         TIMER_START(sort_edges_by_renumbered_start);
         std::mutex name_data_mutex;
-        sort_external_vector(
-            all_edges_list,
-            CmpEdgeByInternalSourceTargetAndName{name_data_mutex, name_char_data, name_offsets});
+        tbb::parallel_sort(all_edges_list.begin(),
+                           all_edges_list.end(),
+                           CmpEdgeByInternalSourceTargetAndName{name_char_data, name_offsets});
         TIMER_STOP(sort_edges_by_renumbered_start);
         log << "ok, after " << TIMER_SEC(sort_edges_by_renumbered_start) << "s";
     }
@@ -749,7 +678,9 @@ void ExtractionContainers::PrepareRestrictions()
         util::UnbufferedLog log;
         log << "Sorting used ways         ... ";
         TIMER_START(sort_ways);
-        sort_external_vector(way_start_end_id_list, FirstAndLastSegmentOfWayCompare());
+        tbb::parallel_sort(way_start_end_id_list.begin(),
+                           way_start_end_id_list.end(),
+                           FirstAndLastSegmentOfWayCompare());
         TIMER_STOP(sort_ways);
         log << "ok, after " << TIMER_SEC(sort_ways) << "s";
     }
