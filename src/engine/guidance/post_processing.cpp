@@ -608,7 +608,7 @@ std::vector<RouteStep> buildIntersections(std::vector<RouteStep> steps)
     {
         auto &step = steps[step_index];
         const auto instruction = step.maneuver.instruction;
-        if (instruction.type == TurnType::Suppressed)
+        if (instruction.type == TurnType::Suppressed || instruction.type == TurnType::UseLane)
         {
             BOOST_ASSERT(steps[last_valid_instruction].mode == step.mode);
             // count intersections. We cannot use exit, since intersections can follow directly

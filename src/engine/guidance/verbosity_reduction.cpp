@@ -82,52 +82,6 @@ std::vector<RouteStep> suppressShortNameSegments(std::vector<RouteStep> steps)
     return removeNoTurnInstructions(std::move(steps));
 }
 
-// `useLane` steps are only returned on `straight` maneuvers when there
-// are surrounding lanes also tagged as `straight`. If there are no other `straight`
-// lanes, it is not an ambiguous maneuver, and we can collapse the `useLane` step.
-std::vector<RouteStep> collapseUseLane(std::vector<RouteStep> steps)
-{
-    const auto containsTag = [](const extractor::guidance::TurnLaneType::Mask mask,
-                                const extractor::guidance::TurnLaneType::Mask tag) {
-        return (mask & tag) != extractor::guidance::TurnLaneType::empty;
-    };
-
-    const auto canCollapseUseLane = [containsTag](const RouteStep &step) {
-        // the lane description is given left to right, lanes are counted from the right.
-        // Therefore we access the lane description using the reverse iterator
-
-        auto right_most_lanes = step.LanesToTheRight();
-        if (!right_most_lanes.empty() && containsTag(right_most_lanes.front(),
-                                                     (extractor::guidance::TurnLaneType::straight |
-                                                      extractor::guidance::TurnLaneType::none)))
-            return false;
-
-        auto left_most_lanes = step.LanesToTheLeft();
-        if (!left_most_lanes.empty() && containsTag(left_most_lanes.back(),
-                                                    (extractor::guidance::TurnLaneType::straight |
-                                                     extractor::guidance::TurnLaneType::none)))
-            return false;
-
-        return true;
-    };
-
-    BOOST_ASSERT(steps.size() > 1);
-    for (auto step_itr = steps.begin() + 1; step_itr != steps.end(); ++step_itr)
-    {
-        if (step_itr->maneuver.instruction.type == TurnType::UseLane &&
-            canCollapseUseLane(*step_itr))
-        {
-            auto previous_turn_itr = findPreviousTurn(step_itr);
-            if (haveSameMode(*previous_turn_itr, *step_itr))
-            {
-                previous_turn_itr->ElongateBy(*step_itr);
-                step_itr->Invalidate();
-            }
-        }
-    }
-    return removeNoTurnInstructions(std::move(steps));
-}
-
 } // namespace guidance
 } // namespace engine
 } // namespace osrm
