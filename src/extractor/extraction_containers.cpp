@@ -36,6 +36,8 @@ namespace oe = osrm::extractor;
 // std::less<OSMNodeId>{}. Anonymous namespace to keep translation unit local.
 struct OSMNodeIDSTXXLLess
 {
+    OSMNodeIDSTXXLLess() {}
+
     using value_type = OSMNodeID;
     bool operator()(const value_type left, const value_type right) const { return left < right; }
     value_type max_value() { return MAX_OSM_NODEID; }
@@ -108,6 +110,15 @@ struct CmpEdgeByInternalSourceTargetAndName
     const oe::ExtractionContainers::STXXLNameCharData &name_data;
     const oe::ExtractionContainers::STXXLNameOffsets &name_offsets;
 };
+
+template <typename Iter>
+inline NodeID mapExternalToInternalNodeID(Iter first, Iter last, const OSMNodeID value)
+{
+    const OSMNodeIDSTXXLLess compare;
+    const auto it = std::lower_bound(first, last, value, compare);
+    return (it == last || compare(value, *it)) ? SPECIAL_NODEID
+                                               : static_cast<NodeID>(std::distance(first, it));
+}
 }
 
 namespace osrm
@@ -232,16 +243,11 @@ void ExtractionContainers::PrepareNodes()
         util::UnbufferedLog log;
         log << "Building node id map      ... " << std::flush;
         TIMER_START(id_map);
-        external_to_internal_node_id_map.reserve(used_node_id_list.size());
         auto node_iter = all_nodes_list.begin();
         auto ref_iter = used_node_id_list.begin();
+        auto used_nodes_iter = used_node_id_list.begin();
         const auto all_nodes_list_end = all_nodes_list.end();
         const auto used_node_id_list_end = used_node_id_list.end();
-        // Note: despite being able to handle 64 bit OSM node ids, we can't
-        // handle > uint32_t actual usable nodes.  This should be OK for a while
-        // because we usually route on a *lot* less than 2^32 of the OSM
-        // graph nodes.
-        std::uint64_t internal_id = 0;
 
         // compute the intersection of nodes that were referenced and nodes we actually have
         while (node_iter != all_nodes_list_end && ref_iter != used_node_id_list_end)
@@ -257,17 +263,21 @@ void ExtractionContainers::PrepareNodes()
                 continue;
             }
             BOOST_ASSERT(node_iter->node_id == *ref_iter);
-            external_to_internal_node_id_map[*ref_iter] = static_cast<NodeID>(internal_id++);
+            *used_nodes_iter = std::move(*ref_iter);
+            used_nodes_iter++;
             node_iter++;
             ref_iter++;
         }
-        if (internal_id > std::numeric_limits<NodeID>::max())
+
+        // Remove unused nodes and check maximal internal node id
+        used_node_id_list.resize(std::distance(used_node_id_list.begin(), used_nodes_iter));
+        if (used_node_id_list.size() > std::numeric_limits<NodeID>::max())
         {
             throw util::exception("There are too many nodes remaining after filtering, OSRM only "
                                   "supports 2^32 unique nodes, but there were " +
-                                  std::to_string(internal_id) + SOURCE_REF);
+                                  std::to_string(used_node_id_list.size()) + SOURCE_REF);
         }
-        max_internal_node_id = boost::numeric_cast<std::uint64_t>(internal_id);
+        max_internal_node_id = boost::numeric_cast<std::uint64_t>(used_node_id_list.size());
         TIMER_STOP(id_map);
         log << "ok, after " << TIMER_SEC(id_map) << "s";
     }
@@ -325,9 +335,10 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
             BOOST_ASSERT(edge_iterator->result.osm_source_id == node_iterator->node_id);
 
             // assign new node id
-            auto id_iter = external_to_internal_node_id_map.find(node_iterator->node_id);
-            BOOST_ASSERT(id_iter != external_to_internal_node_id_map.end());
-            edge_iterator->result.source = id_iter->second;
+            const auto node_id = mapExternalToInternalNodeID(
+                used_node_id_list.begin(), used_node_id_list.end(), node_iterator->node_id);
+            BOOST_ASSERT(node_id != SPECIAL_NODEID);
+            edge_iterator->result.source = node_id;
 
             edge_iterator->source_coordinate.lat = node_iterator->lat;
             edge_iterator->source_coordinate.lon = node_iterator->lon;
@@ -419,9 +430,10 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
             edge.duration = std::max<EdgeWeight>(1, std::round(segment.duration * 10.));
 
             // assign new node id
-            auto id_iter = external_to_internal_node_id_map.find(node_iterator->node_id);
-            BOOST_ASSERT(id_iter != external_to_internal_node_id_map.end());
-            edge.target = id_iter->second;
+            const auto node_id = mapExternalToInternalNodeID(
+                used_node_id_list.begin(), used_node_id_list.end(), node_iterator->node_id);
+            BOOST_ASSERT(node_id != SPECIAL_NODEID);
+            edge.target = node_id;
 
             // orient edges consistently: source id < target id
             // important for multi-edge removal
@@ -640,12 +652,13 @@ void ExtractionContainers::WriteNodes(storage::io::FileWriter &file_out) const
         log << "Writing barrier nodes     ... ";
         TIMER_START(write_nodes);
         std::vector<NodeID> internal_barrier_nodes;
-        for (const auto id : barrier_nodes)
+        for (const auto osm_id : barrier_nodes)
         {
-            auto iter = external_to_internal_node_id_map.find(id);
-            if (iter != external_to_internal_node_id_map.end())
+            const auto node_id = mapExternalToInternalNodeID(
+                used_node_id_list.begin(), used_node_id_list.end(), osm_id);
+            if (node_id != SPECIAL_NODEID)
             {
-                internal_barrier_nodes.push_back(iter->second);
+                internal_barrier_nodes.push_back(node_id);
             }
         }
         storage::serialization::write(file_out, internal_barrier_nodes);
@@ -657,12 +670,13 @@ void ExtractionContainers::WriteNodes(storage::io::FileWriter &file_out) const
         log << "Writing traffic light nodes     ... ";
         TIMER_START(write_nodes);
         std::vector<NodeID> internal_traffic_lights;
-        for (const auto id : traffic_lights)
+        for (const auto osm_id : traffic_lights)
         {
-            auto iter = external_to_internal_node_id_map.find(id);
-            if (iter != external_to_internal_node_id_map.end())
+            const auto node_id = mapExternalToInternalNodeID(
+                used_node_id_list.begin(), used_node_id_list.end(), osm_id);
+            if (node_id != SPECIAL_NODEID)
             {
-                internal_traffic_lights.push_back(iter->second);
+                internal_traffic_lights.push_back(node_id);
             }
         }
         storage::serialization::write(file_out, internal_traffic_lights);
@@ -766,26 +780,30 @@ void ExtractionContainers::PrepareRestrictions()
             BOOST_ASSERT(
                 way_start_and_end_iterator->way_id ==
                 OSMWayID{static_cast<std::uint32_t>(restrictions_iterator->restriction.from.way)});
+
             // we do not remap the via id yet, since we will need it for the to node as well
-            const OSMNodeID via_node_id = OSMNodeID{restrictions_iterator->restriction.via.node};
+            const OSMNodeID via_osm_node_id =
+                OSMNodeID{restrictions_iterator->restriction.via.node};
 
             // check if via is actually valid, if not invalidate
-            auto via_id_iter = external_to_internal_node_id_map.find(via_node_id);
-            if (via_id_iter == external_to_internal_node_id_map.end())
+            auto via_node_id = mapExternalToInternalNodeID(
+                used_node_id_list.begin(), used_node_id_list.end(), via_osm_node_id);
+            if (via_node_id == SPECIAL_NODEID)
             {
-                util::Log(logDEBUG) << "Restriction references invalid node: "
-                                    << restrictions_iterator->restriction.via.node;
+                util::Log(logDEBUG) << "Restriction references invalid node: " << via_osm_node_id;
                 restrictions_iterator->restriction.via.node = SPECIAL_NODEID;
                 ++restrictions_iterator;
                 continue;
             }
 
-            if (way_start_and_end_iterator->first_segment_source_id == via_node_id)
+            if (way_start_and_end_iterator->first_segment_source_id == via_osm_node_id)
             {
                 // assign new from node id
-                auto id_iter = external_to_internal_node_id_map.find(
+                const auto from_node_id = mapExternalToInternalNodeID(
+                    used_node_id_list.begin(),
+                    used_node_id_list.end(),
                     way_start_and_end_iterator->first_segment_target_id);
-                if (id_iter == external_to_internal_node_id_map.end())
+                if (from_node_id == SPECIAL_NODEID)
                 {
                     util::Log(logDEBUG) << "Way references invalid node: "
                                         << way_start_and_end_iterator->first_segment_target_id;
@@ -794,14 +812,16 @@ void ExtractionContainers::PrepareRestrictions()
                     ++way_start_and_end_iterator;
                     continue;
                 }
-                restrictions_iterator->restriction.from.node = id_iter->second;
+                restrictions_iterator->restriction.from.node = from_node_id;
             }
-            else if (way_start_and_end_iterator->last_segment_target_id == via_node_id)
+            else if (way_start_and_end_iterator->last_segment_target_id == via_osm_node_id)
             {
                 // assign new from node id
-                auto id_iter = external_to_internal_node_id_map.find(
-                    way_start_and_end_iterator->last_segment_source_id);
-                if (id_iter == external_to_internal_node_id_map.end())
+                const auto from_node_id =
+                    mapExternalToInternalNodeID(used_node_id_list.begin(),
+                                                used_node_id_list.end(),
+                                                way_start_and_end_iterator->last_segment_source_id);
+                if (from_node_id == SPECIAL_NODEID)
                 {
                     util::Log(logDEBUG) << "Way references invalid node: "
                                         << way_start_and_end_iterator->last_segment_target_id;
@@ -810,7 +830,7 @@ void ExtractionContainers::PrepareRestrictions()
                     ++way_start_and_end_iterator;
                     continue;
                 }
-                restrictions_iterator->restriction.from.node = id_iter->second;
+                restrictions_iterator->restriction.from.node = from_node_id;
             }
             else
             {
@@ -870,18 +890,22 @@ void ExtractionContainers::PrepareRestrictions()
             BOOST_ASSERT(
                 way_start_and_end_iterator->way_id ==
                 OSMWayID{static_cast<std::uint32_t>(restrictions_iterator->restriction.to.way)});
-            const OSMNodeID via_node_id = OSMNodeID{restrictions_iterator->restriction.via.node};
+            const OSMNodeID via_osm_node_id =
+                OSMNodeID{restrictions_iterator->restriction.via.node};
 
             // assign new via node id
-            auto via_id_iter = external_to_internal_node_id_map.find(via_node_id);
-            BOOST_ASSERT(via_id_iter != external_to_internal_node_id_map.end());
-            restrictions_iterator->restriction.via.node = via_id_iter->second;
+            const auto via_node_id = mapExternalToInternalNodeID(
+                used_node_id_list.begin(), used_node_id_list.end(), via_osm_node_id);
+            BOOST_ASSERT(via_node_id != SPECIAL_NODEID);
+            restrictions_iterator->restriction.via.node = via_node_id;
 
-            if (way_start_and_end_iterator->first_segment_source_id == via_node_id)
+            if (way_start_and_end_iterator->first_segment_source_id == via_osm_node_id)
             {
-                auto to_id_iter = external_to_internal_node_id_map.find(
+                const auto to_node_id = mapExternalToInternalNodeID(
+                    used_node_id_list.begin(),
+                    used_node_id_list.end(),
                     way_start_and_end_iterator->first_segment_target_id);
-                if (to_id_iter == external_to_internal_node_id_map.end())
+                if (to_node_id == SPECIAL_NODEID)
                 {
                     util::Log(logDEBUG) << "Way references invalid node: "
                                         << way_start_and_end_iterator->first_segment_source_id;
@@ -890,13 +914,15 @@ void ExtractionContainers::PrepareRestrictions()
                     ++way_start_and_end_iterator;
                     continue;
                 }
-                restrictions_iterator->restriction.to.node = to_id_iter->second;
+                restrictions_iterator->restriction.to.node = to_node_id;
             }
-            else if (way_start_and_end_iterator->last_segment_target_id == via_node_id)
+            else if (way_start_and_end_iterator->last_segment_target_id == via_osm_node_id)
             {
-                auto to_id_iter = external_to_internal_node_id_map.find(
-                    way_start_and_end_iterator->last_segment_source_id);
-                if (to_id_iter == external_to_internal_node_id_map.end())
+                const auto to_node_id =
+                    mapExternalToInternalNodeID(used_node_id_list.begin(),
+                                                used_node_id_list.end(),
+                                                way_start_and_end_iterator->last_segment_source_id);
+                if (to_node_id == SPECIAL_NODEID)
                 {
                     util::Log(logDEBUG) << "Way references invalid node: "
                                         << way_start_and_end_iterator->last_segment_source_id;
@@ -905,7 +931,7 @@ void ExtractionContainers::PrepareRestrictions()
                     ++way_start_and_end_iterator;
                     continue;
                 }
-                restrictions_iterator->restriction.to.node = to_id_iter->second;
+                restrictions_iterator->restriction.to.node = to_node_id;
             }
             else
             {
