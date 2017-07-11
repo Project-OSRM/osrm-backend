@@ -43,7 +43,8 @@ class EntryClass
 
     // we are hiding the access to the flags behind a protection wall, to make sure the bit logic
     // isn't tempered with. zero based indexing
-    void activate(std::uint32_t index);
+    // return true if was activated and false if activation failed
+    bool activate(std::uint32_t index);
 
     // check whether a certain turn allows entry
     bool allowsEntry(std::uint32_t index) const;

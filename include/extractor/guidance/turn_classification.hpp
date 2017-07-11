@@ -3,6 +3,7 @@
 
 #include "extractor/guidance/intersection.hpp"
 
+#include "util/coordinate.hpp"
 #include "util/guidance/bearing_class.hpp"
 #include "util/guidance/entry_class.hpp"
 
@@ -16,7 +17,7 @@ namespace guidance
 {
 
 std::pair<util::guidance::EntryClass, util::guidance::BearingClass>
-classifyIntersection(Intersection intersection);
+classifyIntersection(Intersection intersection, const osrm::util::Coordinate &location);
 
 } // namespace guidance
 } // namespace extractor
