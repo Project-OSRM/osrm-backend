@@ -85,12 +85,6 @@ class Extractor
                        std::vector<util::Coordinate> &coordinates,
                        extractor::PackedOSMIDs &osm_node_ids);
 
-    void WriteIntersectionClassificationData(
-        const std::string &output_file_name,
-        const std::vector<std::uint32_t> &node_based_intersection_classes,
-        const std::vector<util::guidance::BearingClass> &bearing_classes,
-        const std::vector<util::guidance::EntryClass> &entry_classes) const;
-
     // Writes compressed node based graph and its embedding into a file for osrm-partition to use.
     static void WriteCompressedNodeBasedGraph(const std::string &path,
                                               const util::NodeBasedDynamicGraph &graph,

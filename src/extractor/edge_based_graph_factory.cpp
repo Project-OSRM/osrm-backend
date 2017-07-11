@@ -499,7 +499,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                         // the entry class depends on the turn, so we have to classify the
                         // interesction for
                         // every edge
-                        const auto turn_classification = classifyIntersection(intersection);
+                        const auto turn_classification = classifyIntersection(
+                            intersection, m_coordinates[node_at_center_of_intersection]);
 
                         const auto entry_class_id =
                             entry_class_hash.ConcurrentFindOrAdd(turn_classification.first);

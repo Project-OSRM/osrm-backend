@@ -2,6 +2,8 @@
 
 #include <boost/assert.hpp>
 
+#include <climits>
+
 namespace osrm
 {
 namespace util
@@ -9,16 +11,19 @@ namespace util
 namespace guidance
 {
 
-void EntryClass::activate(std::uint32_t index)
+bool EntryClass::activate(std::uint32_t index)
 {
-    BOOST_ASSERT(index < 8 * sizeof(FlagBaseType));
-    enabled_entries_flags |= (1 << index);
+    if (index >= CHAR_BIT * sizeof(FlagBaseType))
+        return false;
+
+    enabled_entries_flags |= (FlagBaseType{1} << index);
+    return true;
 }
 
 bool EntryClass::allowsEntry(std::uint32_t index) const
 {
-    BOOST_ASSERT(index < 8 * sizeof(FlagBaseType));
-    return 0 != (enabled_entries_flags & (1 << index));
+    BOOST_ASSERT(index < CHAR_BIT * sizeof(FlagBaseType));
+    return 0 != (enabled_entries_flags & (FlagBaseType{1} << index));
 }
 
 bool EntryClass::operator==(const EntryClass &other) const

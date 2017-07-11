@@ -12,7 +12,7 @@ namespace guidance
 {
 
 std::pair<util::guidance::EntryClass, util::guidance::BearingClass>
-classifyIntersection(Intersection intersection)
+classifyIntersection(Intersection intersection, const osrm::util::Coordinate &location)
 {
     if (intersection.empty())
         return {};
@@ -56,7 +56,12 @@ classifyIntersection(Intersection intersection)
         for (const auto &road : intersection)
         {
             if (road.entry_allowed)
-                entry_class.activate(number);
+            {
+                if (!entry_class.activate(number))
+                    util::Log(logWARNING) << "Road " << number << " was not activated at "
+                                          << location;
+            }
+
             auto discrete_bearing_class =
                 util::guidance::BearingClass::getDiscreteBearing(std::round(road.bearing));
             bearing_class.add(std::round(discrete_bearing_class *
@@ -69,7 +74,11 @@ classifyIntersection(Intersection intersection)
         for (const auto &road : intersection)
         {
             if (road.entry_allowed)
-                entry_class.activate(number);
+            {
+                if (!entry_class.activate(number))
+                    util::Log(logWARNING) << "Road " << number << " was not activated at "
+                                          << location;
+            }
             bearing_class.add(std::round(road.bearing));
             ++number;
         }
