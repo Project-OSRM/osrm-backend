@@ -104,6 +104,16 @@ template <storage::Ownership Ownership> class EdgeBasedNodeDataContainerImpl
         util::inplacePermutation(classes.begin(), classes.end(), permutation);
     }
 
+    // all containers have the exact same size
+    std::size_t Size() const
+    {
+        BOOST_ASSERT(geometry_ids.size() == name_ids.size());
+        BOOST_ASSERT(geometry_ids.size() == component_ids.size());
+        BOOST_ASSERT(geometry_ids.size() == travel_modes.size());
+        BOOST_ASSERT(geometry_ids.size() == classes.size());
+        return geometry_ids.size();
+    }
+
   private:
     Vector<GeometryID> geometry_ids;
     Vector<NameID> name_ids;

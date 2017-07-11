@@ -668,16 +668,16 @@ void ExtractionContainers::PrepareRestrictions()
         if (turn_restriction.Type() == RestrictionType::WAY_RESTRICTION)
         {
             const auto &way = turn_restriction.AsWayRestriction();
-            referenced_ways[OSMWayID{way.from}] = dummy_segment;
-            referenced_ways[OSMWayID{way.to}] = dummy_segment;
-            referenced_ways[OSMWayID{way.via}] = dummy_segment;
+            referenced_ways[way.from] = dummy_segment;
+            referenced_ways[way.to] = dummy_segment;
+            referenced_ways[way.via] = dummy_segment;
         }
         else
         {
             BOOST_ASSERT(turn_restriction.Type() == RestrictionType::NODE_RESTRICTION);
             const auto &node = turn_restriction.AsNodeRestriction();
-            referenced_ways[OSMWayID{node.from}] = dummy_segment;
-            referenced_ways[OSMWayID{node.to}] = dummy_segment;
+            referenced_ways[node.from] = dummy_segment;
+            referenced_ways[node.to] = dummy_segment;
         }
     };
 
@@ -702,7 +702,7 @@ void ExtractionContainers::PrepareRestrictions()
 
     auto const to_internal = [&](auto const osm_node) {
         auto internal = mapExternalToInternalNodeID(
-            used_node_id_list.begin(), used_node_id_list.end(), OSMNodeID{osm_node});
+            used_node_id_list.begin(), used_node_id_list.end(), osm_node);
         if (internal == SPECIAL_NODEID)
         {
             util::Log(logDEBUG) << "Restriction references invalid node: " << osm_node;
@@ -763,15 +763,15 @@ void ExtractionContainers::PrepareRestrictions()
     // be connected at a single location)
     auto const get_node_restriction_from_OSM_ids = [&](
         auto const from_id, auto const to_id, const OSMNodeID via_node = MAX_OSM_NODEID) {
-        auto const from_segment_itr = referenced_ways.find(OSMWayID{from_id});
-        if (from_segment_itr->second.way_id != OSMWayID{from_id})
+        auto const from_segment_itr = referenced_ways.find(from_id);
+        if (from_segment_itr->second.way_id != from_id)
         {
             util::Log(logDEBUG) << "Restriction references invalid way: " << from_id;
             return NodeRestriction{SPECIAL_NODEID, SPECIAL_NODEID, SPECIAL_NODEID};
         }
 
-        auto const to_segment_itr = referenced_ways.find(OSMWayID{to_id});
-        if (to_segment_itr->second.way_id != OSMWayID{to_id})
+        auto const to_segment_itr = referenced_ways.find(to_id);
+        if (to_segment_itr->second.way_id != to_id)
         {
             util::Log(logDEBUG) << "Restriction references invalid way: " << to_id;
             return NodeRestriction{SPECIAL_NODEID, SPECIAL_NODEID, SPECIAL_NODEID};
@@ -781,7 +781,7 @@ void ExtractionContainers::PrepareRestrictions()
 
     // transform an OSMRestriction (based on WayIDs) into an OSRM restriction (base on NodeIDs)
     // returns true on successful transformation, false in case of invalid references
-    const auto transform = [&](auto const &external_type, auto &internal_type) {
+    const auto transform = [&](const auto &external_type, auto &internal_type) {
         if (external_type.Type() == RestrictionType::WAY_RESTRICTION)
         {
             auto const &external = external_type.AsWayRestriction();
@@ -808,12 +808,11 @@ void ExtractionContainers::PrepareRestrictions()
             auto const via_node = to_internal(external.via);
 
             // check if we were able to resolve all the involved ways
-            auto restriction = get_node_restriction_from_OSM_ids(
-                external.from, external.to, OSMNodeID{external.via});
+            auto restriction =
+                get_node_restriction_from_OSM_ids(external.from, external.to, external.via);
 
             if (!restriction.Valid())
             {
-                std::cout << " >>> Invalid" << std::endl;
                 return false;
             }
 
@@ -830,25 +829,26 @@ void ExtractionContainers::PrepareRestrictions()
 
     // wrapper function to handle distinction between conditional and unconditional turn
     // restrictions
-    const auto transform_into_internal_types = [&](auto &external_restriction) {
-        // unconditional restriction
-        if (external_restriction.condition.empty())
-        {
-            TurnRestriction restriction;
-            restriction.flags = external_restriction.flags;
-            if (transform(external_restriction, restriction))
-                unconditional_turn_restrictions.push_back(restriction);
-        }
-        // conditional turn restriction
-        else
-        {
-            ConditionalTurnRestriction restriction;
-            restriction.flags = external_restriction.flags;
-            restriction.condition = std::move(external_restriction.condition);
-            if (transform(external_restriction, restriction))
-                conditional_turn_restrictions.push_back(restriction);
-        }
-    };
+    const auto transform_into_internal_types =
+        [&](const InputConditionalTurnRestriction &external_restriction) {
+            // unconditional restriction
+            if (external_restriction.condition.empty())
+            {
+                TurnRestriction restriction;
+                restriction.is_only = external_restriction.is_only;
+                if (transform(external_restriction, restriction))
+                    unconditional_turn_restrictions.push_back(restriction);
+            }
+            // conditional turn restriction
+            else
+            {
+                ConditionalTurnRestriction restriction;
+                restriction.is_only = external_restriction.is_only;
+                restriction.condition = std::move(external_restriction.condition);
+                if (transform(external_restriction, restriction))
+                    conditional_turn_restrictions.push_back(restriction);
+            }
+        };
 
     // Transforming the restrictions into the dedicated internal types
     {

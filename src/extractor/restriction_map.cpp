@@ -47,7 +47,7 @@ RestrictionMap::RestrictionMap(const std::vector<TurnRestriction> &restriction_l
             {
                 continue;
             }
-            else if (restriction.flags.is_only)
+            else if (restriction.is_only)
             {
                 // We are going to insert an is_only_*-restriction. There can be only one.
                 m_count -= m_restriction_bucket_list.at(index).size();
@@ -55,41 +55,13 @@ RestrictionMap::RestrictionMap(const std::vector<TurnRestriction> &restriction_l
             }
         }
         ++m_count;
-        m_restriction_bucket_list.at(index).emplace_back(node_restriction.to,
-                                                         restriction.flags.is_only);
+        m_restriction_bucket_list.at(index).emplace_back(node_restriction.to, restriction.is_only);
     }
 }
 
 bool RestrictionMap::IsViaNode(const NodeID node) const
 {
     return m_no_turn_via_node_set.find(node) != m_no_turn_via_node_set.end();
-}
-
-// Replaces start edge (v, w) with (u, w). Only start node changes.
-void RestrictionMap::FixupStartingTurnRestriction(const NodeID node_u,
-                                                  const NodeID node_v,
-                                                  const NodeID node_w)
-{
-    BOOST_ASSERT(node_u != SPECIAL_NODEID);
-    BOOST_ASSERT(node_v != SPECIAL_NODEID);
-    BOOST_ASSERT(node_w != SPECIAL_NODEID);
-
-    if (!IsSourceNode(node_v))
-    {
-        return;
-    }
-
-    const auto restriction_iterator = m_restriction_map.find({node_v, node_w});
-    if (restriction_iterator != m_restriction_map.end())
-    {
-        const unsigned index = restriction_iterator->second;
-        // remove old restriction start (v,w)
-        m_restriction_map.erase(restriction_iterator);
-        m_restriction_start_nodes.emplace(node_u);
-        // insert new restriction start (u,w) (pointing to index)
-        RestrictionSource new_source = {node_u, node_w};
-        m_restriction_map.emplace(new_source, index);
-    }
 }
 
 // Check if edge (u, v) is the start of any turn restriction.

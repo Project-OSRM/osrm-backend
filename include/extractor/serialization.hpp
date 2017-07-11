@@ -165,7 +165,7 @@ inline void write(storage::io::FileWriter &writer, const WayRestriction &restric
 
 inline void read(storage::io::FileReader &reader, TurnRestriction &restriction)
 {
-    reader.ReadInto(restriction.flags);
+    reader.ReadInto(restriction.is_only);
     if (restriction.Type() == RestrictionType::WAY_RESTRICTION)
     {
         WayRestriction way_restriction;
@@ -183,7 +183,7 @@ inline void read(storage::io::FileReader &reader, TurnRestriction &restriction)
 
 inline void write(storage::io::FileWriter &writer, const TurnRestriction &restriction)
 {
-    writer.WriteOne(restriction.flags);
+    writer.WriteOne(restriction.is_only);
     if (restriction.Type() == RestrictionType::WAY_RESTRICTION)
     {
         write(writer, boost::get<WayRestriction>(restriction.node_or_way));
@@ -213,7 +213,7 @@ inline void read(storage::io::FileReader &reader, ConditionalTurnRestriction &re
     TurnRestriction base;
     read(reader, base);
     reinterpret_cast<TurnRestriction &>(restriction) = std::move(base);
-    auto num_conditions = reader.ReadElementCount64();
+    const auto num_conditions = reader.ReadElementCount64();
     restriction.condition.resize(num_conditions);
     for (uint64_t i = 0; i < num_conditions; i++)
     {
@@ -230,19 +230,18 @@ inline void read(storage::io::FileReader &reader, std::vector<TurnRestriction> &
     auto num_indices = reader.ReadElementCount64();
     restrictions.reserve(num_indices);
     TurnRestriction restriction;
-    while (num_indices > 0)
+    while (num_indices-- > 0)
     {
         read(reader, restriction);
         restrictions.push_back(std::move(restriction));
-        num_indices--;
     }
 }
 
 inline void write(storage::io::FileWriter &writer, const std::vector<TurnRestriction> &restrictions)
 {
-    std::uint64_t num_indices = restrictions.size();
+    const auto num_indices = restrictions.size();
     writer.WriteElementCount64(num_indices);
-    auto const write_restriction = [&writer](const auto &restriction) {
+    const auto write_restriction = [&writer](const auto &restriction) {
         write(writer, restriction);
     };
     std::for_each(restrictions.begin(), restrictions.end(), write_restriction);
@@ -255,20 +254,19 @@ inline void read(storage::io::FileReader &reader,
     auto num_indices = reader.ReadElementCount64();
     restrictions.reserve(num_indices);
     ConditionalTurnRestriction restriction;
-    while (num_indices > 0)
+    while (num_indices-- > 0)
     {
         read(reader, restriction);
         restrictions.push_back(std::move(restriction));
-        num_indices--;
     }
 }
 
 inline void write(storage::io::FileWriter &writer,
                   const std::vector<ConditionalTurnRestriction> &restrictions)
 {
-    std::uint64_t num_indices = restrictions.size();
+    const auto num_indices = restrictions.size();
     writer.WriteElementCount64(num_indices);
-    auto const write_restriction = [&writer](const auto &restriction) {
+    const auto write_restriction = [&writer](const auto &restriction) {
         write(writer, restriction);
     };
     std::for_each(restrictions.begin(), restrictions.end(), write_restriction);

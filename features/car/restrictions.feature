@@ -537,7 +537,7 @@ Feature: Car - Turn restrictions
             | from | to | route               |
             | a    | h  | abc,cde,efc,cgh,cgh |
 
-    @restriction
+    @restriction-way
     Scenario: Car - prohibit turn
         Given the node map
             """
@@ -563,9 +563,11 @@ Feature: Car - Turn restrictions
             | restriction | ab       | be      | de     | no_right_turn |
 
         When I route I should get
-            | from | to | route       |
-            | a    | d  | ab,be,de,de |
-            | a    | f  | ab,be,ef,ef |
+            | from | to | route             | turns                                                               | locations   |
+            | a    | d  | ab,be,ef,ef,de,de | depart,turn right,turn left,continue uturn,new name straight,arrive | a,b,e,f,e,d |
+            | a    | f  | ab,be,ef,ef       | depart,turn right,turn left,arrive                                  | a,b,e,f     |
+            | c    | d  | bc,be,de,de       | depart,turn left,turn right,arrive                                  | c,b,e,d     |
+            | c    | f  | bc,be,ef,ef       | depart,turn left,turn left,arrive                                   | c,b,e,f     |
 
     @restriction @overlap
     Scenario: Car - prohibit turn
@@ -597,11 +599,11 @@ Feature: Car - Turn restrictions
             | restriction | bc       | be      | ef     | no_left_turn  |
 
         When I route I should get
-            | from | to | route       |
-            | a    | d  | ab,be,de,de |
-            | a    | f  | ab,be,ef,ef |
-            | c    | d  | bc,be,de,de |
-            | c    | f  | bc,be,ef,ef |
+            | from | to | route             |
+            | a    | d  | ab,be,ef,ef,de,de |
+            | a    | f  | ab,be,ef,ef       |
+            | c    | d  | bc,be,de,de       |
+            | c    | f  | bc,be,de,de,ef,ef |
 
     @restriction-way @overlap
     Scenario: Two times same way
@@ -618,9 +620,25 @@ Feature: Car - Turn restrictions
                 |   |
                 |   |
                 |   |
-            a - b - c - f
-                |   | \ |
-                i - d - e
+                |   |
+                |   |
+                |   |
+                |   |
+                |   |
+                |   |
+                |   |
+                |   |
+                |   |
+                |   |
+                |   |
+                |   |
+                |   |
+                |   |
+                |   |
+                |   |
+            a - b - c - - - - - - - - - - - - - - - - - - - f
+                |   | \                                     /
+                i - d - e - - - - - - - - - - - - - - - - -
             """
 
         And the ways
@@ -641,7 +659,7 @@ Feature: Car - Turn restrictions
 
        When I route I should get
             | from | to | route                |
-            | a    | i  | ab,bc,cd,fedib,fedib |
+            | a    | i  | ab,bc,cf,fedib,fedib |
 
 
     @restriction-way @overlap
@@ -682,8 +700,8 @@ Feature: Car - Turn restrictions
 
         When I route I should get
             | from | to | route                  |
-            | a    | j  | left,third,right,right |
-            | f    | e  | right,first,left,left  |
+            | a    | j  | left,first,right,right |
+            | f    | e  | right,third,left,left  |
 
     @restriction
     Scenario: Car - allow only turn
@@ -711,9 +729,11 @@ Feature: Car - Turn restrictions
             | restriction | ab       | be      | ef     | only_left_on |
 
         When I route I should get
-            | from | to | route       |
-            | a    | d  | ab,be,de,de |
-
+            | from | to | route       | turns | locations |
+            | a    | d  | ab,be,ef,ef,de,de | depart,turn right,turn left,continue uturn,new name straight,arrive | a,b,e,f,e,d |
+            | a    | f  | ab,be,ef,ef       | depart,turn right,turn left,arrive                                  | a,b,e,f     |
+            | c    | d  | bc,be,de,de       | depart,turn left,turn right,arrive                                  | c,b,e,d     |
+            | c    | f  | bc,be,ef,ef       | depart,turn left,turn left,arrive                                   | c,b,e,f     |
 
     @restriction
     Scenario: Car - allow only turn
@@ -810,14 +830,15 @@ Feature: Car - Turn restrictions
             | restriction | gf       | fb,bc   | cd     | only_u_turn    |
 
         When I route I should get
-            | from | to | route             |
-            | a    | d  | abcd,abcd         |
-            | a    | e  | abcd,ce,ce        |
-            | a    | f  | abcd,hfb,hfb      |
-            | g    | e  | gf,hfb,abcd,ce,ce |
-            | g    | d  | gf,hfb,abcd,abcd  |
-            | h    | e  | hfb,abcd,ce,ce    |
-            | h    | d  | hfb,abcd,abcd     |
+            | from | to | route                | turns                                            | locations |
+            | a    | d  | abcd,ce,ce,abcd,abcd | depart,turn left,continue uturn,turn left,arrive | a,c,e,c,d |
+            | a    | e  | abcd,ce,ce           | depart,turn left,arrive                          | a,c,e     |
+            | a    | f  | abcd,hfb,hfb         | depart,turn right,arrive                         | a,b,f     |
+            | g    | e  | gf,hfb,abcd,ce,ce    | depart,turn right,turn right,turn left,arrive    | g,f,b,c,e |
+            | g    | d  | gf,hfb,abcd,abcd     | depart,turn right,turn right,arrive              | g,f,b,d   |
+            | h    | e  | hfb,abcd,ce,ce       | depart,end of road right,turn left,arrive        | h,b,c,e   |
+            | h    | d  | hfb,abcd,abcd        | depart,end of road right,arrive                  | h,b,d     |
+
 
     @restriction
     Scenario: Car - prohibit turn, traffic lights
@@ -855,7 +876,8 @@ Feature: Car - Turn restrictions
 
 
         When I route I should get
-            | from | to | route       |
-            | h    | j  | ab,be,de,de |
-            | h    | f  | ab,be,ef,ef |
-
+            | from | to | route             | turns                                                               | locations   |
+            | a    | d  | ab,be,ef,ef,de,de | depart,turn right,turn left,continue uturn,new name straight,arrive | a,b,e,f,e,d |
+            | a    | f  | ab,be,ef,ef       | depart,turn right,turn left,arrive                                  | a,b,e,f     |
+            | c    | d  | bc,be,de,de       | depart,turn left,turn right,arrive                                  | c,b,e,d     |
+            | c    | f  | bc,be,ef,ef       | depart,turn left,turn left,arrive                                   | c,b,e,f     |
