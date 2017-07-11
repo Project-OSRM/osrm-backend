@@ -1,6 +1,6 @@
 -- Car profile
 
-api_version = 1
+api_version = 2
 
 local find_access_tag = require("lib/access").find_access_tag
 local Set = require('lib/set')

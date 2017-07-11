@@ -257,6 +257,13 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
         &ProfileProperties::enable_way_coordinates,
         "regions",
         sol::property([](ProfileProperties &profile, sol::table table) {
+            // NOTE: this assumes that &profile refers to an object that has
+            // already had .api_version populated
+            if (profile.api_version < 2)
+            {
+                throw util::exception("Profile API version >= 2 required for region support" +
+                                      SOURCE_REF);
+            }
 
             table.for_each([&](sol::object & /* index */, sol::object &regionconfig) {
 
@@ -564,25 +571,31 @@ void Sol2ScriptingEnvironment::ProcessElements(
             const auto &way = static_cast<const osmium::Way &>(*entity);
             if (local_context.has_way_function)
             {
+                // Only do the region test if we're on a profile that
+                // supports that API version, otherwise don't waste time
                 std::unordered_map<std::string, std::string> locations;
-                if (!locators.empty())
+                if (local_context.api_version >= 2)
                 {
-                    for (const auto &locator : locators)
+                    if (!locators.empty())
                     {
-                        const auto firstnode = way.nodes().front();
-                        const auto lat = firstnode.lat();
-                        const auto lon = firstnode.lon();
-                        auto result =
-                            locator.second.find(util::CoordinateLocator::point_t{lon, lat});
-                        if (result.size() > 0)
+                        for (const auto &locator : locators)
                         {
-                            for (const auto &pair : result)
+                            const auto firstnode = way.nodes().front();
+                            const auto lat = firstnode.lat();
+                            const auto lon = firstnode.lon();
+                            auto result =
+                                locator.second.find(util::CoordinateLocator::point_t{lon, lat});
+                            if (result.size() > 0)
                             {
-                                locations[pair.first] = pair.second;
+                                for (const auto &pair : result)
+                                {
+                                    locations[pair.first] = pair.second;
+                                }
                             }
                         }
                     }
                 }
+
                 // TODO: actually pass the data to the way_function here
                 local_context.ProcessWay(way, locations, result_way);
             }
@@ -684,7 +697,8 @@ void Sol2ScriptingEnvironment::ProcessTurn(ExtractionTurn &turn)
             }
             else
             {
-                // Use zero turn penalty if it is not an actual turn. This heuristic is necessary
+                // Use zero turn penalty if it is not an actual turn. This heuristic is
+                // necessary
                 // since OSRM cannot handle looping roads/parallel roads
                 turn.duration = 0.;
             }
@@ -733,7 +747,14 @@ void LuaScriptingContext::ProcessWay(const osmium::Way &way,
 {
     BOOST_ASSERT(state.lua_state() != nullptr);
 
-    way_function(way, result, regiondata);
+    if (api_version >= 2)
+    {
+        way_function(way, result, regiondata);
+    }
+    else
+    {
+        way_function(way, result);
+    }
 }
 }
 }
