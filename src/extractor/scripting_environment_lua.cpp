@@ -258,24 +258,31 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
         "regions",
         sol::property([](ProfileProperties &profile, sol::table table) {
 
-            table.for_each([&](sol::object &region, sol::object &props) {
+            table.for_each([&](sol::object & /* index */, sol::object &regionconfig) {
 
                 ProfileProperties::RegionData data;
-                props.as<sol::table>().for_each([&](sol::object &key, sol::object &value) {
+                regionconfig.as<sol::table>().for_each([&](sol::object &key, sol::object &value) {
                     if (key.as<std::string>() == "file")
                     {
                         data.filename = value.as<std::string>();
                     }
                     else if (key.as<std::string>() == "property")
                     {
-                        data.region_name_property = value.as<std::string>();
+                        data.property_names.push_back(value.as<std::string>());
+                    }
+                    else if (key.as<std::string>() == "properties")
+                    {
+                        value.as<sol::table>().for_each(
+                            [&](sol::object & /* index */, sol::object &propname) {
+                                data.property_names.push_back(propname.as<std::string>());
+                            });
                     }
                     else
                     {
                         // TODO: error, unrecognized region property
                     }
                 });
-                profile.regions[region.as<std::string>()] = data;
+                profile.regions.push_back(data);
             });
         }));
 
@@ -567,13 +574,17 @@ void Sol2ScriptingEnvironment::ProcessElements(
                         const auto lon = firstnode.lon();
                         auto result =
                             locator.second.find(util::CoordinateLocator::point_t{lon, lat});
-                        if (result)
+                        if (result.size() > 0)
                         {
-                            locations[locator.first] = *result;
+                            for (const auto &pair : result)
+                            {
+                                locations[pair.first] = pair.second;
+                            }
                         }
                     }
                 }
-                local_context.ProcessWay(way, result_way);
+                // TODO: actually pass the data to the way_function here
+                local_context.ProcessWay(way, locations, result_way);
             }
 
             resulting_ways.push_back(std::pair<const osmium::Way &, ExtractionWay>(
@@ -716,11 +727,13 @@ void LuaScriptingContext::ProcessNode(const osmium::Node &node, ExtractionNode &
     node_function(node, result);
 }
 
-void LuaScriptingContext::ProcessWay(const osmium::Way &way, ExtractionWay &result)
+void LuaScriptingContext::ProcessWay(const osmium::Way &way,
+                                     std::unordered_map<std::string, std::string> &regiondata,
+                                     ExtractionWay &result)
 {
     BOOST_ASSERT(state.lua_state() != nullptr);
 
-    way_function(way, result);
+    way_function(way, result, regiondata);
 }
 }
 }

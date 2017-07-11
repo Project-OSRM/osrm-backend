@@ -20,7 +20,9 @@ namespace extractor
 struct LuaScriptingContext final
 {
     void ProcessNode(const osmium::Node &, ExtractionNode &result);
-    void ProcessWay(const osmium::Way &, ExtractionWay &result);
+    void ProcessWay(const osmium::Way &,
+                    std::unordered_map<std::string, std::string> &regiondata,
+                    ExtractionWay &result);
 
     ProfileProperties properties;
     SourceContainer sources;

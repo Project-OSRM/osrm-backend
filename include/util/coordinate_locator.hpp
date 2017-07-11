@@ -8,6 +8,8 @@
 
 #include <rapidjson/document.h>
 #include <string>
+#include <unordered_map>
+#include <vector>
 
 namespace osrm
 {
@@ -35,9 +37,12 @@ class CoordinateLocator
 
     // CoordinateLocator(const std::string &geojson, const std::string &property_to_index);
     CoordinateLocator(const boost::filesystem::path &geojson_filename,
-                      const std::string &property_to_index);
+                      const std::vector<std::string> &properties_to_index);
 
-    boost::optional<std::string> find(const point_t &point) const;
+    /**
+     * Returns a set of key,value pairs for the point if it hits a polygon
+     */
+    std::unordered_map<std::string, std::string> find(const point_t &point) const;
 
   private:
     using polygon_t = boost::geometry::model::polygon<point_t>;
@@ -47,9 +52,10 @@ class CoordinateLocator
     using rtree_t = boost::geometry::index::rtree<std::pair<box_t, polygon_position_t>,
                                                   boost::geometry::index::rstar<8>>;
 
-    using object_t = std::pair<polygon_t, std::string>;
+    using object_t = std::pair<polygon_t, std::unordered_map<std::string, std::string>>;
 
-    void ConstructRTree(rapidjson::Document &geojson, const std::string &property_to_index);
+    void ConstructRTree(rapidjson::Document &geojson,
+                        const std::vector<std::string> &properties_to_index);
 
     rtree_t rtree;
     std::vector<object_t> polygons;

@@ -262,7 +262,11 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
     std::unordered_map<std::string, util::CoordinateLocator> locators;
     if (scripting_environment.GetProfileProperties().enable_way_coordinates)
     {
-        locators["country"] = util::CoordinateLocator("test.geojson", "name");
+        for (const auto &region : scripting_environment.GetProfileProperties().regions)
+        {
+            locators[region.filename] =
+                util::CoordinateLocator(region.filename, region.property_names);
+        }
     }
 
     using SharedBuffer = std::shared_ptr<osmium::memory::Buffer>;

@@ -35,8 +35,9 @@ properties.enable_way_coordinates          = true
 --                            -- property in the .geojson file
 --    end
 properties.regions = {
-  country = { file = "data/world.geo.json/countries.geo.json", property = "name" },
---  timezone = { file = "timezones.geojson", property = 'TZID' }
+--  { file = "data/world.geo.json/countries.geo.json", property = "name" },
+--  { file = "timezones.geojson", property = 'TZID' }
+  { file = "area.geojson", properties = { "country", "timezone" } }
 }
 
 
@@ -345,11 +346,14 @@ function way_function(way, result, regions)
     return
   end
 
-  local nodes = way:get_nodes()
-  for index,node in ipairs(nodes) do
-      print(node:lon(), node:lat())
+  if #regions > 0 then
+    print("Region data detected on way "..way:id())
+    for key,value in ipairs(regions) do
+      print(key, value)
+    end
+  else
+    print("No region data detected on way "..way:id())
   end
-  print("------------")
 
   handlers = Sequence {
     -- set the default mode for this profile. if can be changed later

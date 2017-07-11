@@ -45,7 +45,7 @@ CoordinateLocator::CoordinateLocator(const std::string &geojson,
 */
 
 CoordinateLocator::CoordinateLocator(const boost::filesystem::path &geojson_filename,
-                                     const std::string &property_to_index)
+                                     const std::vector<std::string> &property_names_to_index)
 {
     if (geojson_filename.empty())
         throw osrm::util::exception(std::string("Missing geojson file: ") +
@@ -66,11 +66,11 @@ CoordinateLocator::CoordinateLocator(const boost::filesystem::path &geojson_file
                                     " with error " + std::to_string(error_code) +
                                     ". JSON malformed at " + std::to_string(error_offset));
     }
-    ConstructRTree(geojson, property_to_index);
+    ConstructRTree(geojson, property_names_to_index);
 }
 
 void CoordinateLocator::ConstructRTree(rapidjson::Document &geojson,
-                                       const std::string &property_name_to_index)
+                                       const std::vector<std::string> &property_names_to_index)
 {
     if (!geojson.HasMember("type"))
         throw osrm::util::exception("Failed to parse time zone file. Missing type member.");
@@ -91,19 +91,6 @@ void CoordinateLocator::ConstructRTree(rapidjson::Document &geojson,
     for (rapidjson::SizeType i = 0; i < features_array.Size(); i++)
     {
         util::validateFeature(features_array[i]);
-        // time zone geojson specific checks
-        if (!features_array[i]["properties"].GetObject().HasMember(property_name_to_index.c_str()))
-        {
-            throw osrm::util::exception("Feature is missing " + property_name_to_index +
-                                        " member in properties.");
-        }
-        else if (!features_array[i]["properties"]
-                      .GetObject()[property_name_to_index.c_str()]
-                      .IsString())
-        {
-            throw osrm::util::exception("Feature has non-string " + property_name_to_index +
-                                        " value.");
-        }
         const std::string &feat_type =
             features_array[i].GetObject()["geometry"].GetObject()["type"].GetString();
         std::regex polygon_match("polygon", std::regex::icase);
@@ -127,12 +114,29 @@ void CoordinateLocator::ConstructRTree(rapidjson::Document &geojson,
             bounding_boxes.emplace_back(boost::geometry::return_envelope<box_t>(polygon),
                                         polygons.size());
 
-            // Get time zone name and emplace polygon and local time for the UTC input
-            const auto &propertyvalue = features_array[i]
-                                            .GetObject()["properties"]
-                                            .GetObject()[property_name_to_index.c_str()]
-                                            .GetString();
-            polygons.push_back(make_pair(polygon, propertyvalue));
+            std::unordered_map<std::string, std::string> properties;
+            for (const auto &property_name_to_index : property_names_to_index)
+            {
+                // Only add the key if it exists
+                if (features_array[i]["properties"].GetObject().HasMember(
+                        property_name_to_index.c_str()))
+                {
+                    // We currently only index string types
+                    if (!features_array[i]["properties"]
+                             .GetObject()[property_name_to_index.c_str()]
+                             .IsString())
+                    {
+                        throw osrm::util::exception("Feature has non-string " +
+                                                    property_name_to_index + " value.");
+                    }
+                    properties[property_name_to_index] =
+                        features_array[i]
+                            .GetObject()["properties"]
+                            .GetObject()[property_name_to_index.c_str()]
+                            .GetString();
+                }
+            }
+            polygons.push_back(make_pair(polygon, properties));
         }
         else
         {
@@ -144,20 +148,35 @@ void CoordinateLocator::ConstructRTree(rapidjson::Document &geojson,
     rtree = rtree_t(bounding_boxes);
 }
 
-boost::optional<std::string> CoordinateLocator::find(const point_t &point) const
+std::unordered_map<std::string, std::string> CoordinateLocator::find(const point_t &point) const
 {
-    std::vector<rtree_t::value_type> results;
+    std::vector<rtree_t::value_type> hits;
     // Search the rtree, and return a list of all the polygons the point is inside
     rtree.query(boost::geometry::index::intersects(point) &&
                     boost::geometry::index::satisfies([&, this](const rtree_t::value_type &v) {
                         return boost::geometry::within(point, polygons[v.second].first);
                     }),
-                std::back_inserter(results));
+                std::back_inserter(hits));
 
-    if (results.empty())
-        return boost::none;
+    std::unordered_map<std::string, std::string> results;
 
-    return polygons[results.front().second].second;
+    if (hits.empty())
+        return results;
+
+    // Because we might hit multiple polygons, we merge the results.
+    // Note that the results come back in an undefined order, so in
+    // the case of conflicts, you don't know which value you will get.
+    // GeoJSON files should avoid conflicting properties in overlapping
+    // polygons.
+    for (const auto &hit : hits)
+    {
+        for (const auto &pair : polygons[hit.second].second)
+        {
+            results[pair.first] = pair.second;
+        }
+    }
+
+    return results;
 }
 }
 }
