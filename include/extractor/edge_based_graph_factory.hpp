@@ -17,6 +17,7 @@
 #include "extractor/profile_properties.hpp"
 #include "extractor/query_node.hpp"
 #include "extractor/restriction_map.hpp"
+#include "extractor/way_restriction_map.hpp"
 
 #include "util/concurrent_id_map.hpp"
 #include "util/deallocating_vector.hpp"
@@ -78,7 +79,6 @@ class EdgeBasedGraphFactory
                                    CompressedEdgeContainer &compressed_edge_container,
                                    const std::unordered_set<NodeID> &barrier_nodes,
                                    const std::unordered_set<NodeID> &traffic_lights,
-                                   std::shared_ptr<const RestrictionMap> restriction_map,
                                    const std::vector<util::Coordinate> &coordinates,
                                    const extractor::PackedOSMIDs &osm_node_ids,
                                    ProfileProperties profile_properties,
@@ -91,7 +91,9 @@ class EdgeBasedGraphFactory
              const std::string &turn_weight_penalties_filename,
              const std::string &turn_duration_penalties_filename,
              const std::string &turn_penalties_index_filename,
-             const std::string &cnbg_ebg_mapping_path);
+             const std::string &cnbg_ebg_mapping_path,
+             const RestrictionMap &restriction_map,
+             const WayRestrictionMap &way_restriction_map);
 
     // The following get access functions destroy the content in the factory
     void GetEdgeBasedEdges(util::DeallocatingVector<EdgeBasedEdge> &edges);
@@ -106,7 +108,7 @@ class EdgeBasedGraphFactory
     std::vector<util::guidance::BearingClass> GetBearingClasses() const;
     std::vector<util::guidance::EntryClass> GetEntryClasses() const;
 
-    unsigned GetHighestEdgeID();
+    std::uint64_t GetNumberOfEdgeBasedNodes() const;
 
     // Basic analysis of a turn (u --(e1)-- v --(e2)-- w)
     // with known angle.
@@ -134,12 +136,15 @@ class EdgeBasedGraphFactory
     std::vector<EdgeBasedNodeSegment> m_edge_based_node_segments;
     EdgeBasedNodeDataContainer m_edge_based_node_container;
     util::DeallocatingVector<EdgeBasedEdge> m_edge_based_edge_list;
-    EdgeID m_max_edge_id;
+
+    // the number of edge-based nodes is mostly made up out of the edges in the node-based graph.
+    // Any edge in the node-based graph represents a node in the edge-based graph. In addition, we
+    // add a set of artificial edge-based nodes into the mix to model via-way turn restrictions.
+    std::uint64_t m_number_of_edge_based_nodes;
 
     const std::vector<util::Coordinate> &m_coordinates;
     const extractor::PackedOSMIDs &m_osm_node_ids;
     std::shared_ptr<util::NodeBasedDynamicGraph> m_node_based_graph;
-    std::shared_ptr<RestrictionMap const> m_restriction_map;
 
     const std::unordered_set<NodeID> &m_barrier_nodes;
     const std::unordered_set<NodeID> &m_traffic_lights;
@@ -152,14 +157,16 @@ class EdgeBasedGraphFactory
 
     unsigned RenumberEdges();
 
-    std::vector<NBGToEBG> GenerateEdgeExpandedNodes();
+    std::vector<NBGToEBG> GenerateEdgeExpandedNodes(const WayRestrictionMap &way_restriction_map);
 
     void GenerateEdgeExpandedEdges(ScriptingEnvironment &scripting_environment,
                                    const std::string &original_edge_data_filename,
                                    const std::string &turn_lane_data_filename,
                                    const std::string &turn_weight_penalties_filename,
                                    const std::string &turn_duration_penalties_filename,
-                                   const std::string &turn_penalties_index_filename);
+                                   const std::string &turn_penalties_index_filename,
+                                   const RestrictionMap &restriction_map,
+                                   const WayRestrictionMap &way_restriction_map);
 
     NBGToEBG InsertEdgeBasedNode(const NodeID u, const NodeID v);
 

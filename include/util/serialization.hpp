@@ -66,7 +66,7 @@ template <typename EdgeDataT>
 inline void read(storage::io::FileReader &reader, DynamicGraph<EdgeDataT> &graph)
 {
     storage::serialization::read(reader, graph.node_array);
-    auto num_edges = reader.ReadElementCount64();
+    const auto num_edges = reader.ReadElementCount64();
     graph.edge_list.resize(num_edges);
     for (auto index : irange<std::size_t>(0, num_edges))
     {

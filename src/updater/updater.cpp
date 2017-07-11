@@ -511,7 +511,7 @@ updateConditionalTurns(const UpdaterConfig &config,
 
         // only add restrictions to the lookups if the restriction is valid now
 
-        if (node_or_way.flags.is_only)
+        if (node_or_way.is_only)
         {
             is_only_lookup.lookup.push_back({std::make_tuple(c.from, c.via), c.to});
         }

@@ -125,7 +125,7 @@ RestrictionParser::TryParse(const osmium::Relation &relation) const
     // we pretend every restriction is a conditional restriction. If we do not find any restriction,
     // we can trim away the vector after parsing
     InputConditionalTurnRestriction restriction_container;
-    restriction_container.flags.is_only = is_only_restriction;
+    restriction_container.is_only = is_only_restriction;
 
     boost::optional<std::uint64_t> from = boost::none, via = boost::none, to = boost::none;
     bool is_node_restriction;
@@ -212,11 +212,13 @@ RestrictionParser::TryParse(const osmium::Relation &relation) const
     {
         if (is_node_restriction)
         {
-            restriction_container.node_or_way = InputNodeRestriction{*from, *via, *to};
+            // template struct requires bracket for ID initialisation :(
+            restriction_container.node_or_way = InputNodeRestriction{{*from}, {*via}, {*to}};
         }
         else
         {
-            restriction_container.node_or_way = InputWayRestriction{*from, *via, *to};
+            // template struct requires bracket for ID initialisation :(
+            restriction_container.node_or_way = InputWayRestriction{{*from}, {*via}, {*to}};
         }
         return restriction_container;
     }

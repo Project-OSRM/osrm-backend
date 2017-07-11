@@ -3,7 +3,8 @@
 
 #include "extractor/restriction.hpp"
 
-#include <boost/optional.hpp>
+#include <boost/optional/optional.hpp>
+
 #include <string>
 #include <vector>
 
@@ -37,7 +38,6 @@ class ScriptingEnvironment;
  * ...----(a)-----(via)------(b)----...
  * So it can be represented by the tripe (a, via, b).
  */
-
 class RestrictionParser
 {
   public:

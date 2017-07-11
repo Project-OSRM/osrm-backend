@@ -25,9 +25,9 @@ namespace extractor
 // ab via b to bd
 struct InputNodeRestriction
 {
-    OSMEdgeID_weak from;
-    OSMNodeID_weak via;
-    OSMEdgeID_weak to;
+    OSMWayID from;
+    OSMNodeID via;
+    OSMWayID to;
 };
 
 // A restriction that uses a single via-way in between
@@ -39,9 +39,9 @@ struct InputNodeRestriction
 // ab via be to ef -- no u turn
 struct InputWayRestriction
 {
-    OSMEdgeID_weak from;
-    OSMEdgeID_weak via;
-    OSMEdgeID_weak to;
+    OSMWayID from;
+    OSMWayID via;
+    OSMWayID to;
 };
 
 // Outside view of the variant, these are equal to the `which()` results
@@ -52,35 +52,20 @@ enum RestrictionType
     NUM_RESTRICTION_TYPES = 2
 };
 
-namespace restriction_details
-{
-
-// currently these bits only hold an `is_only` value.
-struct Bits
-{ // mostly unused, initialised to false by default
-    Bits() : is_only(false) {}
-
-    bool is_only;
-    // when adding more bits, consider using bitfields just as in
-    // bool unused : 7;
-};
-
-} // namespace restriction
-
 struct InputTurnRestriction
 {
     // keep in the same order as the turn restrictions below
     boost::variant<InputNodeRestriction, InputWayRestriction> node_or_way;
-    restriction_details::Bits flags;
+    bool is_only;
 
-    OSMEdgeID_weak From() const
+    OSMWayID From() const
     {
         return node_or_way.which() == RestrictionType::NODE_RESTRICTION
                    ? boost::get<InputNodeRestriction>(node_or_way).from
                    : boost::get<InputWayRestriction>(node_or_way).from;
     }
 
-    OSMEdgeID_weak To() const
+    OSMWayID To() const
     {
         return node_or_way.which() == RestrictionType::NODE_RESTRICTION
                    ? boost::get<InputNodeRestriction>(node_or_way).to
@@ -141,6 +126,11 @@ struct NodeRestriction
         return "From " + std::to_string(from) + " via " + std::to_string(via) + " to " +
                std::to_string(to);
     }
+
+    bool operator==(const NodeRestriction &other) const
+    {
+        return std::tie(from, via, to) == std::tie(other.from, other.via, other.to);
+    }
 };
 
 // A way restriction in the context of OSRM requires translation into NodeIDs. This is due to the
@@ -165,6 +155,12 @@ struct WayRestriction
     // case a way restrction is not fully collapsed
     NodeRestriction in_restriction;
     NodeRestriction out_restriction;
+
+    bool operator==(const WayRestriction &other) const
+    {
+        return std::tie(in_restriction, out_restriction) ==
+               std::tie(other.in_restriction, other.out_restriction);
+    }
 };
 
 // Wrapper for turn restrictions that gives more information on its type / handles the switch
@@ -173,20 +169,18 @@ struct TurnRestriction
 {
     // keep in the same order as the turn restrictions above
     boost::variant<NodeRestriction, WayRestriction> node_or_way;
-    restriction_details::Bits flags;
+    bool is_only;
 
     // construction for NodeRestrictions
     explicit TurnRestriction(NodeRestriction node_restriction, bool is_only = false)
-        : node_or_way(node_restriction)
+        : node_or_way(node_restriction), is_only(is_only)
     {
-        flags.is_only = is_only;
     }
 
     // construction for WayRestrictions
     explicit TurnRestriction(WayRestriction way_restriction, bool is_only = false)
-        : node_or_way(way_restriction)
+        : node_or_way(way_restriction), is_only(is_only)
     {
-        flags.is_only = is_only;
     }
 
     explicit TurnRestriction()
@@ -239,6 +233,24 @@ struct TurnRestriction
         }
     }
 
+    bool operator==(const TurnRestriction &other) const
+    {
+        if (is_only != other.is_only)
+            return false;
+
+        if (Type() != other.Type())
+            return false;
+
+        if (Type() == RestrictionType::WAY_RESTRICTION)
+        {
+            return AsWayRestriction() == other.AsWayRestriction();
+        }
+        else
+        {
+            return AsNodeRestriction() == other.AsNodeRestriction();
+        }
+    }
+
     std::string ToString() const
     {
         std::string representation;
@@ -253,7 +265,7 @@ struct TurnRestriction
             auto const &node = AsNodeRestriction();
             representation = node.ToString();
         }
-        representation += " is_only: " + std::to_string(flags.is_only);
+        representation += " is_only: " + std::to_string(is_only);
         return representation;
     }
 };
