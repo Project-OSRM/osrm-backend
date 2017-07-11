@@ -113,7 +113,8 @@ void insertTargetInHeap(ManyToManyQueryHeap &heap, const PhantomNode &phantom_no
 }
 
 template <typename FacadeT>
-void annotatePath(const FacadeT &facade,
+void annotatePath(const FacadeT &alg_facade,
+                  const datafacade::BaseDataFacade &base_facade,
                   const PhantomNodes &phantom_node_pair,
                   const std::vector<NodeID> &unpacked_nodes,
                   const std::vector<EdgeID> &unpacked_edges,
@@ -137,15 +138,15 @@ void annotatePath(const FacadeT &facade,
     auto node_from = unpacked_nodes.begin(), node_last = std::prev(unpacked_nodes.end());
     for (auto edge = unpacked_edges.begin(); node_from != node_last; ++node_from, ++edge)
     {
-        const auto &edge_data = facade.GetEdgeData(*edge);
+        const auto &edge_data = alg_facade.GetEdgeData(*edge);
         const auto turn_id = edge_data.turn_id; // edge-based graph edge index
         const auto node_id = *node_from;        // edge-based graph node index
-        const auto name_index = facade.GetNameIndex(node_id);
-        const auto turn_instruction = facade.GetTurnInstructionForEdgeID(turn_id);
-        const extractor::TravelMode travel_mode = facade.GetTravelMode(node_id);
-        const auto classes = facade.GetClassData(node_id);
+        const auto name_index = base_facade.GetNameIndex(node_id);
+        const auto turn_instruction = base_facade.GetTurnInstructionForEdgeID(turn_id);
+        const extractor::TravelMode travel_mode = base_facade.GetTravelMode(node_id);
+        const auto classes = base_facade.GetClassData(node_id);
 
-        const auto geometry_index = facade.GetGeometryIndex(node_id);
+        const auto geometry_index = base_facade.GetGeometryIndex(node_id);
         std::vector<NodeID> id_vector;
 
         std::vector<EdgeWeight> weight_vector;
@@ -153,17 +154,17 @@ void annotatePath(const FacadeT &facade,
         std::vector<DatasourceID> datasource_vector;
         if (geometry_index.forward)
         {
-            id_vector = facade.GetUncompressedForwardGeometry(geometry_index.id);
-            weight_vector = facade.GetUncompressedForwardWeights(geometry_index.id);
-            duration_vector = facade.GetUncompressedForwardDurations(geometry_index.id);
-            datasource_vector = facade.GetUncompressedForwardDatasources(geometry_index.id);
+            id_vector = base_facade.GetUncompressedForwardGeometry(geometry_index.id);
+            weight_vector = base_facade.GetUncompressedForwardWeights(geometry_index.id);
+            duration_vector = base_facade.GetUncompressedForwardDurations(geometry_index.id);
+            datasource_vector = base_facade.GetUncompressedForwardDatasources(geometry_index.id);
         }
         else
         {
-            id_vector = facade.GetUncompressedReverseGeometry(geometry_index.id);
-            weight_vector = facade.GetUncompressedReverseWeights(geometry_index.id);
-            duration_vector = facade.GetUncompressedReverseDurations(geometry_index.id);
-            datasource_vector = facade.GetUncompressedReverseDatasources(geometry_index.id);
+            id_vector = base_facade.GetUncompressedReverseGeometry(geometry_index.id);
+            weight_vector = base_facade.GetUncompressedReverseWeights(geometry_index.id);
+            duration_vector = base_facade.GetUncompressedReverseDurations(geometry_index.id);
+            datasource_vector = base_facade.GetUncompressedReverseDatasources(geometry_index.id);
         }
         BOOST_ASSERT(id_vector.size() > 0);
         BOOST_ASSERT(datasource_vector.size() > 0);
@@ -197,15 +198,16 @@ void annotatePath(const FacadeT &facade,
                                              util::guidance::TurnBearing(0)});
         }
         BOOST_ASSERT(unpacked_path.size() > 0);
-        if (facade.HasLaneData(turn_id))
-            unpacked_path.back().lane_data = facade.GetLaneData(turn_id);
+        if (base_facade.HasLaneData(turn_id))
+            unpacked_path.back().lane_data = base_facade.GetLaneData(turn_id);
 
-        unpacked_path.back().entry_class = facade.GetEntryClass(turn_id);
+        unpacked_path.back().entry_class = base_facade.GetEntryClass(turn_id);
         unpacked_path.back().turn_instruction = turn_instruction;
-        unpacked_path.back().duration_until_turn += facade.GetDurationPenaltyForEdgeID(turn_id);
-        unpacked_path.back().weight_until_turn += facade.GetWeightPenaltyForEdgeID(turn_id);
-        unpacked_path.back().pre_turn_bearing = facade.PreTurnBearing(turn_id);
-        unpacked_path.back().post_turn_bearing = facade.PostTurnBearing(turn_id);
+        unpacked_path.back().duration_until_turn +=
+            base_facade.GetDurationPenaltyForEdgeID(turn_id);
+        unpacked_path.back().weight_until_turn += base_facade.GetWeightPenaltyForEdgeID(turn_id);
+        unpacked_path.back().pre_turn_bearing = base_facade.PreTurnBearing(turn_id);
+        unpacked_path.back().post_turn_bearing = base_facade.PostTurnBearing(turn_id);
     }
 
     std::size_t start_index = 0, end_index = 0;
@@ -213,16 +215,16 @@ void annotatePath(const FacadeT &facade,
     std::vector<EdgeWeight> weight_vector;
     std::vector<EdgeWeight> duration_vector;
     std::vector<DatasourceID> datasource_vector;
-    const auto source_geometry_id = facade.GetGeometryIndex(source_node_id).id;
-    const auto target_geometry_id = facade.GetGeometryIndex(target_node_id).id;
+    const auto source_geometry_id = base_facade.GetGeometryIndex(source_node_id).id;
+    const auto target_geometry_id = base_facade.GetGeometryIndex(target_node_id).id;
     const auto is_local_path = source_geometry_id == target_geometry_id && unpacked_path.empty();
 
     if (target_traversed_in_reverse)
     {
-        id_vector = facade.GetUncompressedReverseGeometry(target_geometry_id);
-        weight_vector = facade.GetUncompressedReverseWeights(target_geometry_id);
-        duration_vector = facade.GetUncompressedReverseDurations(target_geometry_id);
-        datasource_vector = facade.GetUncompressedReverseDatasources(target_geometry_id);
+        id_vector = base_facade.GetUncompressedReverseGeometry(target_geometry_id);
+        weight_vector = base_facade.GetUncompressedReverseWeights(target_geometry_id);
+        duration_vector = base_facade.GetUncompressedReverseDurations(target_geometry_id);
+        datasource_vector = base_facade.GetUncompressedReverseDatasources(target_geometry_id);
 
         if (is_local_path)
         {
@@ -240,10 +242,10 @@ void annotatePath(const FacadeT &facade,
         }
         end_index = phantom_node_pair.target_phantom.fwd_segment_position;
 
-        id_vector = facade.GetUncompressedForwardGeometry(target_geometry_id);
-        weight_vector = facade.GetUncompressedForwardWeights(target_geometry_id);
-        duration_vector = facade.GetUncompressedForwardDurations(target_geometry_id);
-        datasource_vector = facade.GetUncompressedForwardDatasources(target_geometry_id);
+        id_vector = base_facade.GetUncompressedForwardGeometry(target_geometry_id);
+        weight_vector = base_facade.GetUncompressedForwardWeights(target_geometry_id);
+        duration_vector = base_facade.GetUncompressedForwardDurations(target_geometry_id);
+        datasource_vector = base_facade.GetUncompressedForwardDatasources(target_geometry_id);
     }
 
     // Given the following compressed geometry:
@@ -257,16 +259,16 @@ void annotatePath(const FacadeT &facade,
          (start_index < end_index ? ++segment_idx : --segment_idx))
     {
         BOOST_ASSERT(segment_idx < id_vector.size() - 1);
-        BOOST_ASSERT(facade.GetTravelMode(target_node_id) > 0);
+        BOOST_ASSERT(base_facade.GetTravelMode(target_node_id) > 0);
         unpacked_path.push_back(
             PathData{id_vector[start_index < end_index ? segment_idx + 1 : segment_idx - 1],
-                     facade.GetNameIndex(target_node_id),
+                     base_facade.GetNameIndex(target_node_id),
                      weight_vector[segment_idx],
                      duration_vector[segment_idx],
                      extractor::guidance::TurnInstruction::NO_TURN(),
                      {{0, INVALID_LANEID}, INVALID_LANE_DESCRIPTIONID},
-                     facade.GetTravelMode(target_node_id),
-                     facade.GetClassData(target_node_id),
+                     base_facade.GetTravelMode(target_node_id),
+                     base_facade.GetClassData(target_node_id),
                      EMPTY_ENTRY_CLASS,
                      datasource_vector[segment_idx],
                      util::guidance::TurnBearing(0),
@@ -319,11 +321,10 @@ void annotatePath(const FacadeT &facade,
     }
 }
 
-template <typename Algorithm>
-double getPathDistance(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
-                       const std::vector<PathData> unpacked_path,
-                       const PhantomNode &source_phantom,
-                       const PhantomNode &target_phantom)
+inline double getPathDistance(const datafacade::BaseDataFacade &base_facade,
+                              const std::vector<PathData> &unpacked_path,
+                              const PhantomNode &source_phantom,
+                              const PhantomNode &target_phantom)
 {
     using util::coordinate_calculation::detail::DEGREE_TO_RAD;
     using util::coordinate_calculation::detail::EARTH_RADIUS;
@@ -336,7 +337,7 @@ double getPathDistance(const datafacade::ContiguousInternalMemoryDataFacade<Algo
     double prev_cos = std::cos(prev_lat);
     for (const auto &p : unpacked_path)
     {
-        const auto current_coordinate = facade.GetCoordinateOfNode(p.turn_via_node);
+        const auto current_coordinate = base_facade.GetCoordinateOfNode(p.turn_via_node);
 
         const double current_lat =
             static_cast<double>(util::toFloating(current_coordinate.lat)) * DEGREE_TO_RAD;
@@ -373,12 +374,12 @@ double getPathDistance(const datafacade::ContiguousInternalMemoryDataFacade<Algo
 }
 
 template <typename AlgorithmT>
-InternalRouteResult
-extractRoute(const datafacade::ContiguousInternalMemoryDataFacade<AlgorithmT> &facade,
-             const EdgeWeight weight,
-             const PhantomNodes &phantom_nodes,
-             const std::vector<NodeID> &unpacked_nodes,
-             const std::vector<EdgeID> &unpacked_edges)
+InternalRouteResult extractRoute(const datafacade::AlgorithmDataFacade<AlgorithmT> &alg_facade,
+                                 const datafacade::BaseDataFacade &base_facade,
+                                 const EdgeWeight weight,
+                                 const PhantomNodes &phantom_nodes,
+                                 const std::vector<NodeID> &unpacked_nodes,
+                                 const std::vector<EdgeID> &unpacked_edges)
 {
     InternalRouteResult raw_route_data;
     raw_route_data.segment_end_coordinates = {phantom_nodes};
@@ -396,7 +397,8 @@ extractRoute(const datafacade::ContiguousInternalMemoryDataFacade<AlgorithmT> &f
     raw_route_data.target_traversed_in_reverse.push_back(
         (unpacked_nodes.back() != phantom_nodes.target_phantom.forward_segment_id.id));
 
-    annotatePath(facade,
+    annotatePath(alg_facade,
+                 base_facade,
                  phantom_nodes,
                  unpacked_nodes,
                  unpacked_edges,

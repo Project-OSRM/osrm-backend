@@ -13,10 +13,11 @@ namespace engine
 namespace routing_algorithms
 {
 
-template <typename Algorithm>
+template <typename AlgorithmT>
 InternalRouteResult
-shortestPathSearch(SearchEngineData<Algorithm> &engine_working_data,
-                   const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
+shortestPathSearch(SearchEngineData<AlgorithmT> &engine_working_data,
+                   const datafacade::AlgorithmDataFacade<AlgorithmT> &alg_facade,
+                   const datafacade::BaseDataFacade &base_facade,
                    const std::vector<PhantomNodes> &phantom_nodes_vector,
                    const boost::optional<bool> continue_straight_at_waypoint);
 

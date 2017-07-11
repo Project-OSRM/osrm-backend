@@ -23,17 +23,17 @@ namespace ch
 
 // Stalling
 template <bool DIRECTION, typename HeapT>
-bool stallAtNode(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
+bool stallAtNode(const datafacade::AlgorithmDataFacade<Algorithm> &alg_facade,
                  const NodeID node,
                  const EdgeWeight weight,
                  const HeapT &query_heap)
 {
-    for (auto edge : facade.GetAdjacentEdgeRange(node))
+    for (auto edge : alg_facade.GetAdjacentEdgeRange(node))
     {
-        const auto &data = facade.GetEdgeData(edge);
+        const auto &data = alg_facade.GetEdgeData(edge);
         if (DIRECTION == REVERSE_DIRECTION ? data.forward : data.backward)
         {
-            const NodeID to = facade.GetTarget(edge);
+            const NodeID to = alg_facade.GetTarget(edge);
             const EdgeWeight edge_weight = data.weight;
             BOOST_ASSERT_MSG(edge_weight > 0, "edge_weight invalid");
             if (query_heap.WasInserted(to))
@@ -49,17 +49,17 @@ bool stallAtNode(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm>
 }
 
 template <bool DIRECTION>
-void relaxOutgoingEdges(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
+void relaxOutgoingEdges(const datafacade::AlgorithmDataFacade<Algorithm> &alg_facade,
                         const NodeID node,
                         const EdgeWeight weight,
                         SearchEngineData<Algorithm>::QueryHeap &heap)
 {
-    for (const auto edge : facade.GetAdjacentEdgeRange(node))
+    for (const auto edge : alg_facade.GetAdjacentEdgeRange(node))
     {
-        const auto &data = facade.GetEdgeData(edge);
+        const auto &data = alg_facade.GetEdgeData(edge);
         if (DIRECTION == FORWARD_DIRECTION ? data.forward : data.backward)
         {
-            const NodeID to = facade.GetTarget(edge);
+            const NodeID to = alg_facade.GetTarget(edge);
             const EdgeWeight edge_weight = data.weight;
 
             BOOST_ASSERT_MSG(edge_weight > 0, "edge_weight invalid");
@@ -113,7 +113,7 @@ we need to add an offset to the termination criterion.
 static constexpr bool ENABLE_STALLING = true;
 static constexpr bool DISABLE_STALLING = false;
 template <bool DIRECTION, bool STALLING = ENABLE_STALLING>
-void routingStep(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
+void routingStep(const datafacade::AlgorithmDataFacade<Algorithm> &alg_facade,
                  SearchEngineData<Algorithm>::QueryHeap &forward_heap,
                  SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
                  NodeID &middle_node_id,
@@ -138,12 +138,12 @@ void routingStep(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm>
                 new_weight < 0)
             {
                 // check whether there is a loop present at the node
-                for (const auto edge : facade.GetAdjacentEdgeRange(node))
+                for (const auto edge : alg_facade.GetAdjacentEdgeRange(node))
                 {
-                    const auto &data = facade.GetEdgeData(edge);
+                    const auto &data = alg_facade.GetEdgeData(edge);
                     if (DIRECTION == FORWARD_DIRECTION ? data.forward : data.backward)
                     {
-                        const NodeID to = facade.GetTarget(edge);
+                        const NodeID to = alg_facade.GetTarget(edge);
                         if (to == node)
                         {
                             const EdgeWeight edge_weight = data.weight;
@@ -177,25 +177,24 @@ void routingStep(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm>
     }
 
     // Stalling
-    if (STALLING && stallAtNode<DIRECTION>(facade, node, weight, forward_heap))
+    if (STALLING && stallAtNode<DIRECTION>(alg_facade, node, weight, forward_heap))
     {
         return;
     }
 
-    relaxOutgoingEdges<DIRECTION>(facade, node, weight, forward_heap);
+    relaxOutgoingEdges<DIRECTION>(alg_facade, node, weight, forward_heap);
 }
 
 template <bool UseDuration>
-EdgeWeight getLoopWeight(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
-                         NodeID node)
+EdgeWeight getLoopWeight(const datafacade::AlgorithmDataFacade<Algorithm> &alg_facade, NodeID node)
 {
     EdgeWeight loop_weight = UseDuration ? MAXIMAL_EDGE_DURATION : INVALID_EDGE_WEIGHT;
-    for (auto edge : facade.GetAdjacentEdgeRange(node))
+    for (auto edge : alg_facade.GetAdjacentEdgeRange(node))
     {
-        const auto &data = facade.GetEdgeData(edge);
+        const auto &data = alg_facade.GetEdgeData(edge);
         if (data.forward)
         {
-            const NodeID to = facade.GetTarget(edge);
+            const NodeID to = alg_facade.GetTarget(edge);
             if (to == node)
             {
                 const auto value = UseDuration ? data.duration : data.weight;
@@ -227,7 +226,8 @@ EdgeWeight getLoopWeight(const datafacade::ContiguousInternalMemoryDataFacade<Al
  * original edge found.
  */
 template <typename BidirectionalIterator, typename Callback>
-void unpackPath(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
+void unpackPath(const datafacade::AlgorithmDataFacade<Algorithm> &alg_facade,
+                const datafacade::BaseDataFacade &,
                 BidirectionalIterator packed_path_begin,
                 BidirectionalIterator packed_path_end,
                 Callback &&callback)
@@ -252,7 +252,7 @@ void unpackPath(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> 
         recursion_stack.pop();
 
         // Look for an edge on the forward CH graph (.forward)
-        EdgeID smaller_edge_id = facade.FindSmallestEdge(
+        EdgeID smaller_edge_id = alg_facade.FindSmallestEdge(
             edge.first, edge.second, [](const auto &data) { return data.forward; });
 
         // If we didn't find one there, the we might be looking at a part of the path that
@@ -260,7 +260,7 @@ void unpackPath(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> 
         // and only consider edges with the `.backward` flag.
         if (SPECIAL_EDGEID == smaller_edge_id)
         {
-            smaller_edge_id = facade.FindSmallestEdge(
+            smaller_edge_id = alg_facade.FindSmallestEdge(
                 edge.second, edge.first, [](const auto &data) { return data.backward; });
         }
 
@@ -268,7 +268,7 @@ void unpackPath(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> 
         // called this function with bad values.
         BOOST_ASSERT_MSG(smaller_edge_id != SPECIAL_EDGEID, "Invalid smaller edge ID");
 
-        const auto &data = facade.GetEdgeData(smaller_edge_id);
+        const auto &data = alg_facade.GetEdgeData(smaller_edge_id);
         BOOST_ASSERT_MSG(data.weight != std::numeric_limits<EdgeWeight>::max(),
                          "edge weight invalid");
 
@@ -289,8 +289,9 @@ void unpackPath(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> 
     }
 }
 
-template <typename RandomIter, typename FacadeT>
-void unpackPath(const FacadeT &facade,
+template <typename RandomIter, typename AlgFacadeT>
+void unpackPath(const AlgFacadeT &alg_facade,
+                const datafacade::BaseDataFacade &base_facade,
                 RandomIter packed_path_begin,
                 RandomIter packed_path_end,
                 const PhantomNodes &phantom_nodes,
@@ -307,7 +308,8 @@ void unpackPath(const FacadeT &facade,
     unpacked_nodes.push_back(*packed_path_begin);
     if (nodes_number > 1)
     {
-        unpackPath(facade,
+        unpackPath(alg_facade,
+                   base_facade,
                    packed_path_begin,
                    packed_path_end,
                    [&](std::pair<NodeID, NodeID> &edge, const auto &edge_id) {
@@ -317,7 +319,8 @@ void unpackPath(const FacadeT &facade,
                    });
     }
 
-    annotatePath(facade, phantom_nodes, unpacked_nodes, unpacked_edges, unpacked_path);
+    annotatePath(
+        alg_facade, base_facade, phantom_nodes, unpacked_nodes, unpacked_edges, unpacked_path);
 }
 
 /**
@@ -327,7 +330,8 @@ void unpackPath(const FacadeT &facade,
  * @param to the node the CH edge finishes at
  * @param unpacked_path the sequence of original NodeIDs that make up the expanded CH edge
  */
-void unpackEdge(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
+void unpackEdge(const datafacade::AlgorithmDataFacade<Algorithm> &alg_facade,
+                const datafacade::BaseDataFacade &base_facade,
                 const NodeID from,
                 const NodeID to,
                 std::vector<NodeID> &unpacked_path);
@@ -354,7 +358,7 @@ void retrievePackedPathFromSingleHeap(const SearchEngineData<Algorithm>::QueryHe
 // requires
 // a force loop, if the heaps have been initialized with positive offsets.
 void search(SearchEngineData<Algorithm> &engine_working_data,
-            const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
+            const datafacade::AlgorithmDataFacade<Algorithm> &alg_facade,
             SearchEngineData<Algorithm>::QueryHeap &forward_heap,
             SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
             std::int32_t &weight,
@@ -367,14 +371,14 @@ void search(SearchEngineData<Algorithm> &engine_working_data,
 // Requires the heaps for be empty
 // If heaps should be adjusted to be initialized outside of this function,
 // the addition of force_loop parameters might be required
-double
-getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
-                   const datafacade::ContiguousInternalMemoryDataFacade<ch::Algorithm> &facade,
-                   SearchEngineData<Algorithm>::QueryHeap &forward_heap,
-                   SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
-                   const PhantomNode &source_phantom,
-                   const PhantomNode &target_phantom,
-                   int duration_upper_bound = INVALID_EDGE_WEIGHT);
+double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
+                          const datafacade::AlgorithmDataFacade<ch::Algorithm> &alg_facade,
+                          const datafacade::BaseDataFacade &base_facade,
+                          SearchEngineData<Algorithm>::QueryHeap &forward_heap,
+                          SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
+                          const PhantomNode &source_phantom,
+                          const PhantomNode &target_phantom,
+                          int duration_upper_bound = INVALID_EDGE_WEIGHT);
 
 } // namespace ch
 
@@ -390,7 +394,7 @@ namespace corech
 // requires
 // a force loop, if the heaps have been initialized with positive offsets.
 void search(SearchEngineData<Algorithm> &engine_working_data,
-            const datafacade::ContiguousInternalMemoryDataFacade<corech::Algorithm> &facade,
+            const datafacade::AlgorithmDataFacade<corech::Algorithm> &alg_facade,
             SearchEngineData<ch::Algorithm>::QueryHeap &forward_heap,
             SearchEngineData<ch::Algorithm>::QueryHeap &reverse_heap,
             int &weight,
@@ -403,23 +407,25 @@ void search(SearchEngineData<Algorithm> &engine_working_data,
 // Requires the heaps for be empty
 // If heaps should be adjusted to be initialized outside of this function,
 // the addition of force_loop parameters might be required
-double
-getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
-                   const datafacade::ContiguousInternalMemoryDataFacade<corech::Algorithm> &facade,
-                   SearchEngineData<ch::Algorithm>::QueryHeap &forward_heap,
-                   SearchEngineData<ch::Algorithm>::QueryHeap &reverse_heap,
-                   const PhantomNode &source_phantom,
-                   const PhantomNode &target_phantom,
-                   int duration_upper_bound = INVALID_EDGE_WEIGHT);
+double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
+                          const datafacade::AlgorithmDataFacade<corech::Algorithm> &alg_facade,
+                          const datafacade::BaseDataFacade &base_facade,
+                          SearchEngineData<ch::Algorithm>::QueryHeap &forward_heap,
+                          SearchEngineData<ch::Algorithm>::QueryHeap &reverse_heap,
+                          const PhantomNode &source_phantom,
+                          const PhantomNode &target_phantom,
+                          int duration_upper_bound = INVALID_EDGE_WEIGHT);
 
 template <typename RandomIter, typename FacadeT>
-void unpackPath(const FacadeT &facade,
+void unpackPath(const FacadeT &alg_facade,
+                const datafacade::BaseDataFacade &base_facade,
                 RandomIter packed_path_begin,
                 RandomIter packed_path_end,
                 const PhantomNodes &phantom_nodes,
                 std::vector<PathData> &unpacked_path)
 {
-    return ch::unpackPath(facade, packed_path_begin, packed_path_end, phantom_nodes, unpacked_path);
+    return ch::unpackPath(
+        alg_facade, base_facade, packed_path_begin, packed_path_end, phantom_nodes, unpacked_path);
 }
 
 } // namespace corech

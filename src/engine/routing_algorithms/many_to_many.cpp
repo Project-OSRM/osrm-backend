@@ -31,22 +31,21 @@ struct NodeBucket
 // FIXME This should be replaced by an std::unordered_multimap, though this needs benchmarking
 using SearchSpaceWithBuckets = std::unordered_map<NodeID, std::vector<NodeBucket>>;
 
-inline bool
-addLoopWeight(const datafacade::ContiguousInternalMemoryDataFacade<ch::Algorithm> &facade,
-              const NodeID node,
-              EdgeWeight &weight,
-              EdgeDuration &duration)
+inline bool addLoopWeight(const datafacade::AlgorithmDataFacade<ch::Algorithm> &alg_facade,
+                          const NodeID node,
+                          EdgeWeight &weight,
+                          EdgeDuration &duration)
 { // Special case for CH when contractor creates a loop edge node->node
     BOOST_ASSERT(weight < 0);
 
-    const auto loop_weight = ch::getLoopWeight<false>(facade, node);
+    const auto loop_weight = ch::getLoopWeight<false>(alg_facade, node);
     if (loop_weight != INVALID_EDGE_WEIGHT)
     {
         const auto new_weight_with_loop = weight + loop_weight;
         if (new_weight_with_loop >= 0)
         {
             weight = new_weight_with_loop;
-            duration += ch::getLoopWeight<true>(facade, node);
+            duration += ch::getLoopWeight<true>(alg_facade, node);
             return true;
         }
     }
@@ -56,24 +55,24 @@ addLoopWeight(const datafacade::ContiguousInternalMemoryDataFacade<ch::Algorithm
 }
 
 template <bool DIRECTION>
-void relaxOutgoingEdges(const datafacade::ContiguousInternalMemoryDataFacade<ch::Algorithm> &facade,
+void relaxOutgoingEdges(const datafacade::AlgorithmDataFacade<ch::Algorithm> &alg_facade,
                         const NodeID node,
                         const EdgeWeight weight,
                         const EdgeDuration duration,
                         typename SearchEngineData<ch::Algorithm>::ManyToManyQueryHeap &query_heap,
                         const PhantomNode &)
 {
-    if (ch::stallAtNode<DIRECTION>(facade, node, weight, query_heap))
+    if (ch::stallAtNode<DIRECTION>(alg_facade, node, weight, query_heap))
     {
         return;
     }
 
-    for (auto edge : facade.GetAdjacentEdgeRange(node))
+    for (auto edge : alg_facade.GetAdjacentEdgeRange(node))
     {
-        const auto &data = facade.GetEdgeData(edge);
+        const auto &data = alg_facade.GetEdgeData(edge);
         if (DIRECTION == FORWARD_DIRECTION ? data.forward : data.backward)
         {
-            const NodeID to = facade.GetTarget(edge);
+            const NodeID to = alg_facade.GetTarget(edge);
             const EdgeWeight edge_weight = data.weight;
             const EdgeWeight edge_duration = data.duration;
 
@@ -97,7 +96,7 @@ void relaxOutgoingEdges(const datafacade::ContiguousInternalMemoryDataFacade<ch:
     }
 }
 
-inline bool addLoopWeight(const datafacade::ContiguousInternalMemoryDataFacade<mld::Algorithm> &,
+inline bool addLoopWeight(const datafacade::AlgorithmDataFacade<mld::Algorithm> &,
                           const NodeID,
                           EdgeWeight &,
                           EdgeDuration &)
@@ -106,16 +105,15 @@ inline bool addLoopWeight(const datafacade::ContiguousInternalMemoryDataFacade<m
 }
 
 template <bool DIRECTION>
-void relaxOutgoingEdges(
-    const datafacade::ContiguousInternalMemoryDataFacade<mld::Algorithm> &facade,
-    const NodeID node,
-    const EdgeWeight weight,
-    const EdgeDuration duration,
-    typename SearchEngineData<mld::Algorithm>::ManyToManyQueryHeap &query_heap,
-    const PhantomNode &phantom_node)
+void relaxOutgoingEdges(const datafacade::AlgorithmDataFacade<mld::Algorithm> &alg_facade,
+                        const NodeID node,
+                        const EdgeWeight weight,
+                        const EdgeDuration duration,
+                        typename SearchEngineData<mld::Algorithm>::ManyToManyQueryHeap &query_heap,
+                        const PhantomNode &phantom_node)
 {
-    const auto &partition = facade.GetMultiLevelPartition();
-    const auto &cells = facade.GetCellStorage();
+    const auto &partition = alg_facade.GetMultiLevelPartition();
+    const auto &cells = alg_facade.GetCellStorage();
 
     auto highest_diffrent_level = [&partition, node](const SegmentID &phantom_node) {
         if (phantom_node.enabled)
@@ -188,12 +186,12 @@ void relaxOutgoingEdges(
         }
     }
 
-    for (const auto edge : facade.GetBorderEdgeRange(level, node))
+    for (const auto edge : alg_facade.GetBorderEdgeRange(level, node))
     {
-        const auto &data = facade.GetEdgeData(edge);
+        const auto &data = alg_facade.GetEdgeData(edge);
         if (DIRECTION == FORWARD_DIRECTION ? data.forward : data.backward)
         {
-            const NodeID to = facade.GetTarget(edge);
+            const NodeID to = alg_facade.GetTarget(edge);
             const EdgeWeight edge_weight = data.weight;
             const EdgeWeight edge_duration = data.duration;
 
@@ -218,7 +216,7 @@ void relaxOutgoingEdges(
 }
 
 template <typename Algorithm>
-void forwardRoutingStep(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
+void forwardRoutingStep(const datafacade::AlgorithmDataFacade<Algorithm> &alg_facade,
                         const unsigned row_idx,
                         const unsigned number_of_targets,
                         typename SearchEngineData<Algorithm>::ManyToManyQueryHeap &query_heap,
@@ -253,7 +251,7 @@ void forwardRoutingStep(const datafacade::ContiguousInternalMemoryDataFacade<Alg
 
             if (new_weight < 0)
             {
-                if (addLoopWeight(facade, node, new_weight, new_duration))
+                if (addLoopWeight(alg_facade, node, new_weight, new_duration))
                 {
                     current_weight = std::min(current_weight, new_weight);
                     current_duration = std::min(current_duration, new_duration);
@@ -268,11 +266,11 @@ void forwardRoutingStep(const datafacade::ContiguousInternalMemoryDataFacade<Alg
     }
 
     relaxOutgoingEdges<FORWARD_DIRECTION>(
-        facade, node, source_weight, source_duration, query_heap, phantom_node);
+        alg_facade, node, source_weight, source_duration, query_heap, phantom_node);
 }
 
 template <typename Algorithm>
-void backwardRoutingStep(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
+void backwardRoutingStep(const datafacade::AlgorithmDataFacade<Algorithm> &alg_facade,
                          const unsigned column_idx,
                          typename SearchEngineData<Algorithm>::ManyToManyQueryHeap &query_heap,
                          SearchSpaceWithBuckets &search_space_with_buckets,
@@ -286,14 +284,15 @@ void backwardRoutingStep(const datafacade::ContiguousInternalMemoryDataFacade<Al
     search_space_with_buckets[node].emplace_back(column_idx, target_weight, target_duration);
 
     relaxOutgoingEdges<REVERSE_DIRECTION>(
-        facade, node, target_weight, target_duration, query_heap, phantom_node);
+        alg_facade, node, target_weight, target_duration, query_heap, phantom_node);
 }
 }
 
 template <typename Algorithm>
 std::vector<EdgeWeight>
 manyToManySearch(SearchEngineData<Algorithm> &engine_working_data,
-                 const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
+                 const datafacade::AlgorithmDataFacade<Algorithm> &alg_facade,
+                 const datafacade::BaseDataFacade &,
                  const std::vector<PhantomNode> &phantom_nodes,
                  const std::vector<std::size_t> &source_indices,
                  const std::vector<std::size_t> &target_indices)
@@ -307,7 +306,8 @@ manyToManySearch(SearchEngineData<Algorithm> &engine_working_data,
     std::vector<EdgeWeight> weights_table(number_of_entries, INVALID_EDGE_WEIGHT);
     std::vector<EdgeWeight> durations_table(number_of_entries, MAXIMAL_EDGE_DURATION);
 
-    engine_working_data.InitializeOrClearManyToManyThreadLocalStorage(facade.GetNumberOfNodes());
+    engine_working_data.InitializeOrClearManyToManyThreadLocalStorage(
+        alg_facade.GetNumberOfNodes());
 
     auto &query_heap = *(engine_working_data.many_to_many_heap);
 
@@ -322,7 +322,8 @@ manyToManySearch(SearchEngineData<Algorithm> &engine_working_data,
         // explore search space
         while (!query_heap.Empty())
         {
-            backwardRoutingStep(facade, column_idx, query_heap, search_space_with_buckets, phantom);
+            backwardRoutingStep(
+                alg_facade, column_idx, query_heap, search_space_with_buckets, phantom);
         }
         ++column_idx;
     };
@@ -337,7 +338,7 @@ manyToManySearch(SearchEngineData<Algorithm> &engine_working_data,
         // explore search space
         while (!query_heap.Empty())
         {
-            forwardRoutingStep(facade,
+            forwardRoutingStep(alg_facade,
                                row_idx,
                                number_of_targets,
                                query_heap,
@@ -386,14 +387,16 @@ manyToManySearch(SearchEngineData<Algorithm> &engine_working_data,
 
 template std::vector<EdgeWeight>
 manyToManySearch(SearchEngineData<ch::Algorithm> &engine_working_data,
-                 const datafacade::ContiguousInternalMemoryDataFacade<ch::Algorithm> &facade,
+                 const datafacade::AlgorithmDataFacade<ch::Algorithm> &alg_facade,
+                 const datafacade::BaseDataFacade &base_facade,
                  const std::vector<PhantomNode> &phantom_nodes,
                  const std::vector<std::size_t> &source_indices,
                  const std::vector<std::size_t> &target_indices);
 
 template std::vector<EdgeWeight>
 manyToManySearch(SearchEngineData<mld::Algorithm> &engine_working_data,
-                 const datafacade::ContiguousInternalMemoryDataFacade<mld::Algorithm> &facade,
+                 const datafacade::AlgorithmDataFacade<mld::Algorithm> &alg_facade,
+                 const datafacade::BaseDataFacade &base_facade,
                  const std::vector<PhantomNode> &phantom_nodes,
                  const std::vector<std::size_t> &source_indices,
                  const std::vector<std::size_t> &target_indices);

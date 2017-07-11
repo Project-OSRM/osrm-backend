@@ -24,8 +24,9 @@ struct SegmentData
     EdgeID edge_based_node_id;
 };
 
-template <typename edge_extractor, typename datafacade>
-std::vector<TurnData> generateTurns(const datafacade &facade,
+template <typename edge_extractor, typename AlgFacadeT>
+std::vector<TurnData> generateTurns(const AlgFacadeT &alg_facade,
+                                    const datafacade::BaseDataFacade &base_facade,
                                     const std::vector<RTreeLeaf> &edges,
                                     const std::vector<std::size_t> &sorted_edge_indexes,
                                     edge_extractor const &find_edge)
@@ -39,8 +40,8 @@ std::vector<TurnData> generateTurns(const datafacade &facade,
     // it saves us a bunch of re-allocations during iteration.
     directed_graph.reserve(edges.size() * 2);
 
-    const auto get_geometry_id = [&facade](auto edge) {
-        return facade.GetGeometryIndex(edge.forward_segment_id.id).id;
+    const auto get_geometry_id = [&base_facade](auto edge) {
+        return base_facade.GetGeometryIndex(edge.forward_segment_id.id).id;
     };
 
     // To build a tile, we can only rely on the r-tree to quickly find all data visible within the
@@ -145,25 +146,25 @@ std::vector<TurnData> generateTurns(const datafacade &facade,
 
                 if (edge_based_edge_id != SPECIAL_EDGEID)
                 {
-                    const auto &data = facade.GetEdgeData(edge_based_edge_id);
+                    const auto &data = alg_facade.GetEdgeData(edge_based_edge_id);
 
                     // Now, calculate the sum of the weight of all the segments.
                     if (edge_based_node_info.find(approachedge.edge_based_node_id)
                             ->second.is_geometry_forward)
                     {
-                        approach_weight_vector = facade.GetUncompressedForwardWeights(
+                        approach_weight_vector = base_facade.GetUncompressedForwardWeights(
                             edge_based_node_info.find(approachedge.edge_based_node_id)
                                 ->second.packed_geometry_id);
-                        approach_duration_vector = facade.GetUncompressedForwardDurations(
+                        approach_duration_vector = base_facade.GetUncompressedForwardDurations(
                             edge_based_node_info.find(approachedge.edge_based_node_id)
                                 ->second.packed_geometry_id);
                     }
                     else
                     {
-                        approach_weight_vector = facade.GetUncompressedReverseWeights(
+                        approach_weight_vector = base_facade.GetUncompressedReverseWeights(
                             edge_based_node_info.find(approachedge.edge_based_node_id)
                                 ->second.packed_geometry_id);
-                        approach_duration_vector = facade.GetUncompressedReverseDurations(
+                        approach_duration_vector = base_facade.GetUncompressedReverseDurations(
                             edge_based_node_info.find(approachedge.edge_based_node_id)
                                 ->second.packed_geometry_id);
                     }
@@ -189,9 +190,9 @@ std::vector<TurnData> generateTurns(const datafacade &facade,
                     const auto node_via = approachedge.target_node;
                     const auto node_to = exit_edge.target_node;
 
-                    const auto coord_from = facade.GetCoordinateOfNode(node_from);
-                    const auto coord_via = facade.GetCoordinateOfNode(node_via);
-                    const auto coord_to = facade.GetCoordinateOfNode(node_to);
+                    const auto coord_from = base_facade.GetCoordinateOfNode(node_from);
+                    const auto coord_via = base_facade.GetCoordinateOfNode(node_via);
+                    const auto coord_to = base_facade.GetCoordinateOfNode(node_to);
 
                     // Calculate the bearing that we approach the intersection at
                     const auto angle_in = static_cast<int>(
@@ -227,19 +228,18 @@ std::vector<TurnData> generateTurns(const datafacade &facade,
 } // namespace
 
 // CH Version of finding all turn penalties. Here is where the actual work is happening
-std::vector<TurnData>
-getTileTurns(const datafacade::ContiguousInternalMemoryDataFacade<ch::Algorithm> &facade,
-             const std::vector<RTreeLeaf> &edges,
-             const std::vector<std::size_t> &sorted_edge_indexes)
+std::vector<TurnData> getTileTurns(const datafacade::AlgorithmDataFacade<ch::Algorithm> &alg_facade,
+                                   const datafacade::BaseDataFacade &base_facade,
+                                   const std::vector<RTreeLeaf> &edges,
+                                   const std::vector<std::size_t> &sorted_edge_indexes)
 {
     // Define how to find the representative edge between two edge based nodes for a CH
     struct EdgeFinderCH
     {
-        EdgeFinderCH(const datafacade::ContiguousInternalMemoryDataFacade<ch::Algorithm> &facade)
-            : facade(facade)
+        EdgeFinderCH(const datafacade::AlgorithmDataFacade<ch::Algorithm> &facade) : facade(facade)
         {
         }
-        const datafacade::ContiguousInternalMemoryDataFacade<ch::Algorithm> &facade;
+        const datafacade::AlgorithmDataFacade<ch::Algorithm> &facade;
 
         EdgeID operator()(const NodeID approach_node, const NodeID exit_node) const
         {
@@ -278,24 +278,25 @@ getTileTurns(const datafacade::ContiguousInternalMemoryDataFacade<ch::Algorithm>
         }
     };
 
-    EdgeFinderCH edge_finder(facade);
-    return generateTurns(facade, edges, sorted_edge_indexes, edge_finder);
+    EdgeFinderCH edge_finder(alg_facade);
+    return generateTurns(alg_facade, base_facade, edges, sorted_edge_indexes, edge_finder);
 }
 
 // MLD version to find all turns
 std::vector<TurnData>
-getTileTurns(const datafacade::ContiguousInternalMemoryDataFacade<mld::Algorithm> &facade,
+getTileTurns(const datafacade::AlgorithmDataFacade<mld::Algorithm> &alg_facade,
+             const datafacade::BaseDataFacade &base_facade,
              const std::vector<RTreeLeaf> &edges,
              const std::vector<std::size_t> &sorted_edge_indexes)
 {
     // Define how to find the representative edge between two edge-based-nodes for a MLD
     struct EdgeFinderMLD
     {
-        EdgeFinderMLD(const datafacade::ContiguousInternalMemoryDataFacade<mld::Algorithm> &facade)
+        EdgeFinderMLD(const datafacade::AlgorithmDataFacade<mld::Algorithm> &facade)
             : facade(facade)
         {
         }
-        const datafacade::ContiguousInternalMemoryDataFacade<mld::Algorithm> &facade;
+        const datafacade::AlgorithmDataFacade<mld::Algorithm> &facade;
 
         EdgeID operator()(const NodeID approach_node, const NodeID exit_node) const
         {
@@ -303,9 +304,9 @@ getTileTurns(const datafacade::ContiguousInternalMemoryDataFacade<mld::Algorithm
         }
     };
 
-    EdgeFinderMLD edge_finder(facade);
+    EdgeFinderMLD edge_finder(alg_facade);
 
-    return generateTurns(facade, edges, sorted_edge_indexes, edge_finder);
+    return generateTurns(alg_facade, base_facade, edges, sorted_edge_indexes, edge_finder);
 }
 
 } // namespace routing_algorithms

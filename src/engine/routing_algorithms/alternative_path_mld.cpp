@@ -28,7 +28,6 @@ using namespace mld;
 
 using Heap = SearchEngineData<Algorithm>::QueryHeap;
 using Partition = partition::MultiLevelPartitionView;
-using Facade = datafacade::ContiguousInternalMemoryDataFacade<Algorithm>;
 
 // Implementation details
 namespace
@@ -92,7 +91,8 @@ template <typename RandIt> RandIt filterViaCandidatesByUniqueNodeIds(RandIt firs
 // Filters candidates which are on un-important roads.
 // Returns an iterator to the filtered range's new end.
 template <typename RandIt>
-RandIt filterViaCandidatesByRoadImportance(RandIt first, RandIt last, const Facade &facade)
+RandIt filterViaCandidatesByRoadImportance(
+    RandIt first, RandIt last, const datafacade::AlgorithmDataFacade<mld::Algorithm> &alg_facade)
 {
     util::static_assert_iter_category<RandIt, std::random_access_iterator_tag>();
     util::static_assert_iter_value<RandIt, WeightedViaNode>();
@@ -106,7 +106,7 @@ RandIt filterViaCandidatesByRoadImportance(RandIt first, RandIt last, const Faca
     // Note: serialize out bit vector keyed by node id with 0/1 <=> unimportant/important.
     (void)first;
     (void)last;
-    (void)facade;
+    (void)alg_facade;
 
     return last;
 }
@@ -449,7 +449,7 @@ void unpackPackedPaths(InputIt first,
                        InputIt last,
                        OutIt out,
                        SearchEngineData<Algorithm> &search_engine_data,
-                       const Facade &facade,
+                       const datafacade::AlgorithmDataFacade<Algorithm> &alg_facade,
                        const PhantomNodes &phantom_node_pair)
 {
     util::static_assert_iter_category<InputIt, std::input_iterator_tag>();
@@ -459,7 +459,7 @@ void unpackPackedPaths(InputIt first,
     const bool force_loop_forward = needsLoopForward(phantom_node_pair);
     const bool force_loop_backward = needsLoopBackwards(phantom_node_pair);
 
-    const Partition &partition = facade.GetMultiLevelPartition();
+    const Partition &partition = alg_facade.GetMultiLevelPartition();
 
     Heap &forward_heap = *search_engine_data.forward_heap_1;
     Heap &reverse_heap = *search_engine_data.reverse_heap_1;
@@ -502,7 +502,7 @@ void unpackPackedPaths(InputIt first,
             if (!overlay_edge)
             { // a base graph edge
                 unpacked_nodes.push_back(target);
-                unpacked_edges.push_back(facade.FindEdge(source, target));
+                unpacked_edges.push_back(alg_facade.FindEdge(source, target));
             }
             else
             { // an overlay graph edge
@@ -524,7 +524,7 @@ void unpackPackedPaths(InputIt first,
                 std::vector<NodeID> subpath_nodes;
                 std::vector<EdgeID> subpath_edges;
                 std::tie(subpath_weight, subpath_nodes, subpath_edges) = search(search_engine_data,
-                                                                                facade,
+                                                                                alg_facade,
                                                                                 forward_heap,
                                                                                 reverse_heap,
                                                                                 force_loop_forward,
@@ -557,7 +557,7 @@ void unpackPackedPaths(InputIt first,
 // Note: heaps are modified in-place, after the function returns they're valid and can be used.
 inline std::vector<WeightedViaNode>
 makeCandidateVias(SearchEngineData<Algorithm> &search_engine_data,
-                  const Facade &facade,
+                  const datafacade::AlgorithmDataFacade<Algorithm> &alg_facade,
                   const PhantomNodes &phantom_node_pair)
 {
     Heap &forward_heap = *search_engine_data.forward_heap_1;
@@ -607,7 +607,7 @@ makeCandidateVias(SearchEngineData<Algorithm> &search_engine_data,
 
         if (!forward_heap.Empty())
         {
-            routingStep<FORWARD_DIRECTION>(facade,
+            routingStep<FORWARD_DIRECTION>(alg_facade,
                                            forward_heap,
                                            reverse_heap,
                                            overlap_via,
@@ -633,7 +633,7 @@ makeCandidateVias(SearchEngineData<Algorithm> &search_engine_data,
 
         if (!reverse_heap.Empty())
         {
-            routingStep<REVERSE_DIRECTION>(facade,
+            routingStep<REVERSE_DIRECTION>(alg_facade,
                                            reverse_heap,
                                            forward_heap,
                                            overlap_via,
@@ -762,10 +762,12 @@ inline std::vector<EdgeWeight> retrievePackedPathWeightsFromHeap(const Heap &for
 //   Prune based on vertex cell id
 //
 // https://github.com/Project-OSRM/osrm-backend/issues/3905
-InternalManyRoutesResult alternativePathSearch(SearchEngineData<Algorithm> &search_engine_data,
-                                               const Facade &facade,
-                                               const PhantomNodes &phantom_node_pair,
-                                               unsigned number_of_alternatives)
+InternalManyRoutesResult
+alternativePathSearch(SearchEngineData<Algorithm> &search_engine_data,
+                      const datafacade::AlgorithmDataFacade<Algorithm> &alg_facade,
+                      const datafacade::BaseDataFacade &base_facade,
+                      const PhantomNodes &phantom_node_pair,
+                      unsigned number_of_alternatives)
 {
     const auto max_number_of_alternatives = number_of_alternatives;
     const auto max_number_of_alternatives_to_unpack =
@@ -773,16 +775,16 @@ InternalManyRoutesResult alternativePathSearch(SearchEngineData<Algorithm> &sear
     BOOST_ASSERT(max_number_of_alternatives > 0);
     BOOST_ASSERT(max_number_of_alternatives_to_unpack >= max_number_of_alternatives);
 
-    const Partition &partition = facade.GetMultiLevelPartition();
+    const Partition &partition = alg_facade.GetMultiLevelPartition();
 
     // Prepare heaps for usage below. The searches will modify them in-place.
-    search_engine_data.InitializeOrClearFirstThreadLocalStorage(facade.GetNumberOfNodes());
+    search_engine_data.InitializeOrClearFirstThreadLocalStorage(alg_facade.GetNumberOfNodes());
 
     Heap &forward_heap = *search_engine_data.forward_heap_1;
     Heap &reverse_heap = *search_engine_data.reverse_heap_1;
 
     // Do forward and backward search, save search space overlap as via candidates.
-    auto candidate_vias = makeCandidateVias(search_engine_data, facade, phantom_node_pair);
+    auto candidate_vias = makeCandidateVias(search_engine_data, alg_facade, phantom_node_pair);
 
     const auto by_weight = [](const auto &lhs, const auto &rhs) { return lhs.weight < rhs.weight; };
     auto shortest_path_via_it =
@@ -805,9 +807,9 @@ InternalManyRoutesResult alternativePathSearch(SearchEngineData<Algorithm> &sear
     auto it = end(candidate_vias);
 
     it = filterViaCandidatesByUniqueNodeIds(begin(candidate_vias), it);
-    it = filterViaCandidatesByRoadImportance(begin(candidate_vias), it, facade);
+    it = filterViaCandidatesByRoadImportance(begin(candidate_vias), it, alg_facade);
     it = filterViaCandidatesByStretch(
-        begin(candidate_vias), it, shortest_path_weight, facade.GetWeightMultiplier());
+        begin(candidate_vias), it, shortest_path_weight, base_facade.GetWeightMultiplier());
 
     // Pre-rank by weight; sharing filtering below then discards by similarity.
     std::sort(begin(candidate_vias), it, [](const auto lhs, const auto rhs) {
@@ -879,7 +881,7 @@ InternalManyRoutesResult alternativePathSearch(SearchEngineData<Algorithm> &sear
                       paths_last,
                       std::back_inserter(unpacked_paths),
                       search_engine_data,
-                      facade,
+                      alg_facade,
                       phantom_node_pair);
 
     //
@@ -906,7 +908,8 @@ InternalManyRoutesResult alternativePathSearch(SearchEngineData<Algorithm> &sear
     routes.reserve(number_of_unpacked_paths);
 
     const auto unpacked_path_to_route = [&](const WeightedViaNodeUnpackedPath &path) {
-        return extractRoute(facade, path.via.weight, phantom_node_pair, path.nodes, path.edges);
+        return extractRoute(
+            alg_facade, base_facade, path.via.weight, phantom_node_pair, path.nodes, path.edges);
     };
 
     std::transform(unpacked_paths_first,

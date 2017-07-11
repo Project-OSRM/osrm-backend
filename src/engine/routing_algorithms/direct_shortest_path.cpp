@@ -17,13 +17,14 @@ namespace routing_algorithms
 /// by the previous route.
 /// This variation is only an optimazation for graphs with slow queries, for example
 /// not fully contracted graphs.
-template <typename Algorithm>
+template <typename AlgorithmT>
 InternalRouteResult
-directShortestPathSearch(SearchEngineData<Algorithm> &engine_working_data,
-                         const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
+directShortestPathSearch(SearchEngineData<AlgorithmT> &engine_working_data,
+                         const datafacade::AlgorithmDataFacade<AlgorithmT> &alg_facade,
+                         const datafacade::BaseDataFacade &base_facade,
                          const PhantomNodes &phantom_nodes)
 {
-    engine_working_data.InitializeOrClearFirstThreadLocalStorage(facade.GetNumberOfNodes());
+    engine_working_data.InitializeOrClearFirstThreadLocalStorage(alg_facade.GetNumberOfNodes());
     auto &forward_heap = *engine_working_data.forward_heap_1;
     auto &reverse_heap = *engine_working_data.reverse_heap_1;
     forward_heap.Clear();
@@ -34,7 +35,7 @@ directShortestPathSearch(SearchEngineData<Algorithm> &engine_working_data,
     insertNodesInHeaps(forward_heap, reverse_heap, phantom_nodes);
 
     search(engine_working_data,
-           facade,
+           alg_facade,
            forward_heap,
            reverse_heap,
            weight,
@@ -51,7 +52,8 @@ directShortestPathSearch(SearchEngineData<Algorithm> &engine_working_data,
         unpacked_nodes.reserve(packed_leg.size());
         unpacked_edges.reserve(packed_leg.size());
         unpacked_nodes.push_back(packed_leg.front());
-        ch::unpackPath(facade,
+        ch::unpackPath(alg_facade,
+                       base_facade,
                        packed_leg.begin(),
                        packed_leg.end(),
                        [&unpacked_nodes, &unpacked_edges](std::pair<NodeID, NodeID> &edge,
@@ -62,26 +64,30 @@ directShortestPathSearch(SearchEngineData<Algorithm> &engine_working_data,
                        });
     }
 
-    return extractRoute(facade, weight, phantom_nodes, unpacked_nodes, unpacked_edges);
+    return extractRoute(
+        alg_facade, base_facade, weight, phantom_nodes, unpacked_nodes, unpacked_edges);
 }
 
-template InternalRouteResult directShortestPathSearch(
-    SearchEngineData<corech::Algorithm> &engine_working_data,
-    const datafacade::ContiguousInternalMemoryDataFacade<corech::Algorithm> &facade,
-    const PhantomNodes &phantom_nodes);
+template InternalRouteResult
+directShortestPathSearch(SearchEngineData<corech::Algorithm> &engine_working_data,
+                         const datafacade::AlgorithmDataFacade<corech::Algorithm> &alg_facade,
+                         const datafacade::BaseDataFacade &base_facade,
+                         const PhantomNodes &phantom_nodes);
 
-template InternalRouteResult directShortestPathSearch(
-    SearchEngineData<ch::Algorithm> &engine_working_data,
-    const datafacade::ContiguousInternalMemoryDataFacade<ch::Algorithm> &facade,
-    const PhantomNodes &phantom_nodes);
+template InternalRouteResult
+directShortestPathSearch(SearchEngineData<ch::Algorithm> &engine_working_data,
+                         const datafacade::AlgorithmDataFacade<ch::Algorithm> &alg_facade,
+                         const datafacade::BaseDataFacade &base_facade,
+                         const PhantomNodes &phantom_nodes);
 
 template <>
-InternalRouteResult directShortestPathSearch(
-    SearchEngineData<mld::Algorithm> &engine_working_data,
-    const datafacade::ContiguousInternalMemoryDataFacade<mld::Algorithm> &facade,
-    const PhantomNodes &phantom_nodes)
+InternalRouteResult
+directShortestPathSearch(SearchEngineData<mld::Algorithm> &engine_working_data,
+                         const datafacade::AlgorithmDataFacade<mld::Algorithm> &alg_facade,
+                         const datafacade::BaseDataFacade &base_facade,
+                         const PhantomNodes &phantom_nodes)
 {
-    engine_working_data.InitializeOrClearFirstThreadLocalStorage(facade.GetNumberOfNodes());
+    engine_working_data.InitializeOrClearFirstThreadLocalStorage(alg_facade.GetNumberOfNodes());
     auto &forward_heap = *engine_working_data.forward_heap_1;
     auto &reverse_heap = *engine_working_data.reverse_heap_1;
     insertNodesInHeaps(forward_heap, reverse_heap, phantom_nodes);
@@ -92,7 +98,7 @@ InternalRouteResult directShortestPathSearch(
     std::vector<NodeID> unpacked_nodes;
     std::vector<EdgeID> unpacked_edges;
     std::tie(weight, unpacked_nodes, unpacked_edges) = mld::search(engine_working_data,
-                                                                   facade,
+                                                                   alg_facade,
                                                                    forward_heap,
                                                                    reverse_heap,
                                                                    DO_NOT_FORCE_LOOPS,
@@ -100,7 +106,8 @@ InternalRouteResult directShortestPathSearch(
                                                                    INVALID_EDGE_WEIGHT,
                                                                    phantom_nodes);
 
-    return extractRoute(facade, weight, phantom_nodes, unpacked_nodes, unpacked_edges);
+    return extractRoute(
+        alg_facade, base_facade, weight, phantom_nodes, unpacked_nodes, unpacked_edges);
 }
 
 } // namespace routing_algorithms
