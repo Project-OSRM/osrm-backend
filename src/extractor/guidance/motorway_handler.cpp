@@ -118,6 +118,9 @@ Intersection MotorwayHandler::fromMotorway(const EdgeID via_eid, Intersection in
     const auto getContinueAngle = [this, in_data](const Intersection &intersection) {
         for (const auto &road : intersection)
         {
+            if (!road.entry_allowed)
+                continue;
+
             const auto &out_data = node_based_graph.GetEdgeData(road.eid);
 
             const auto same_name = !util::guidance::requiresNameAnnounced(
