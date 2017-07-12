@@ -261,3 +261,23 @@ Feature: Motorway Guidance
        When I route I should get
             | waypoints | route               | turns                                           |
             | a,d       | On,Hwy,Off,Off      | depart,merge slight right,off ramp right,arrive |
+
+    #http://0.0.0.0:9966/?z=18&center=38.893323%2C-77.055117&loc=38.893551%2C-77.054833&loc=38.893112%2C-77.055536&hl=en&alt=0
+    Scenario: Merging with same name
+        Given the node map
+            """
+            a - - -
+                    > c - d
+                 b
+            """
+
+        And the ways
+            | nodes | name | ref         | highway  | oneway |
+            | ac    |      | US 50       | motorway | yes    |
+            | bc    |      | I 66        | motorway | yes    |
+            | cd    |      | US 50; I 66 | motorway | yes    |
+
+        When I route I should get
+            | waypoints | route | turns                          |
+            | a,d       | ,     | depart,turn slight left,arrive |
+            | b,d       | ,     | depart,arrive                  |
