@@ -278,6 +278,6 @@ Feature: Motorway Guidance
             | cd    |      | US 50; I 66 | motorway | yes    |
 
         When I route I should get
-            | waypoints | route | turns                          |
-            | a,d       | ,     | depart,turn slight left,arrive |
-            | b,d       | ,     | depart,arrive                  |
+            | waypoints | route | turns         |
+            | a,d       | ,     | depart,arrive |
+            | b,d       | ,     | depart,arrive |
