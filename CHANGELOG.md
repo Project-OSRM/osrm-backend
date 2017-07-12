@@ -1,4 +1,4 @@
-# 5.9.0 RC1
+# 5.9.0 RC2
   - Changes from 5.8:
     - Algorithm:
       - Multi-Level Dijkstra:
