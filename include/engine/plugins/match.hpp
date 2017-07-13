@@ -32,8 +32,7 @@ class MatchPlugin : public BasePlugin
     {
     }
 
-    Status HandleRequest(const datafacade::ContiguousInternalMemoryDataFacadeBase &facade,
-                         const RoutingAlgorithmsInterface &algorithms,
+    Status HandleRequest(const RoutingAlgorithmsInterface &algorithms,
                          const api::MatchParameters &parameters,
                          util::json::Object &json_result) const;
 

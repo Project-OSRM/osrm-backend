@@ -50,7 +50,7 @@ struct RankedCandidateNode
 
 // todo: reorder parameters
 template <bool DIRECTION>
-void alternativeRoutingStep(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
+void alternativeRoutingStep(const DataFacade<Algorithm> &facade,
                             QueryHeap &heap1,
                             QueryHeap &heap2,
                             NodeID *middle_node,
@@ -153,14 +153,13 @@ void retrievePackedAlternatePath(const QueryHeap &forward_heap1,
 // compute and unpack <s,..,v> and <v,..,t> by exploring search spaces
 // from v and intersecting against queues. only half-searches have to be
 // done at this stage
-void computeWeightAndSharingOfViaPath(
-    SearchEngineData<Algorithm> &engine_working_data,
-    const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
-    const NodeID via_node,
-    EdgeWeight *real_weight_of_via_path,
-    EdgeWeight *sharing_of_via_path,
-    const std::vector<NodeID> &packed_shortest_path,
-    const EdgeWeight min_edge_offset)
+void computeWeightAndSharingOfViaPath(SearchEngineData<Algorithm> &engine_working_data,
+                                      const DataFacade<Algorithm> &facade,
+                                      const NodeID via_node,
+                                      EdgeWeight *real_weight_of_via_path,
+                                      EdgeWeight *sharing_of_via_path,
+                                      const std::vector<NodeID> &packed_shortest_path,
+                                      const EdgeWeight min_edge_offset)
 {
     engine_working_data.InitializeOrClearSecondThreadLocalStorage(facade.GetNumberOfNodes());
 
@@ -318,19 +317,18 @@ void computeWeightAndSharingOfViaPath(
 }
 
 // conduct T-Test
-bool viaNodeCandidatePassesTTest(
-    SearchEngineData<Algorithm> &engine_working_data,
-    const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
-    QueryHeap &existing_forward_heap,
-    QueryHeap &existing_reverse_heap,
-    QueryHeap &new_forward_heap,
-    QueryHeap &new_reverse_heap,
-    const RankedCandidateNode &candidate,
-    const EdgeWeight weight_of_shortest_path,
-    EdgeWeight *weight_of_via_path,
-    NodeID *s_v_middle,
-    NodeID *v_t_middle,
-    const EdgeWeight min_edge_offset)
+bool viaNodeCandidatePassesTTest(SearchEngineData<Algorithm> &engine_working_data,
+                                 const DataFacade<Algorithm> &facade,
+                                 QueryHeap &existing_forward_heap,
+                                 QueryHeap &existing_reverse_heap,
+                                 QueryHeap &new_forward_heap,
+                                 QueryHeap &new_reverse_heap,
+                                 const RankedCandidateNode &candidate,
+                                 const EdgeWeight weight_of_shortest_path,
+                                 EdgeWeight *weight_of_via_path,
+                                 NodeID *s_v_middle,
+                                 NodeID *v_t_middle,
+                                 const EdgeWeight min_edge_offset)
 {
     new_forward_heap.Clear();
     new_reverse_heap.Clear();
@@ -562,11 +560,10 @@ bool viaNodeCandidatePassesTTest(
 }
 } // anon. namespace
 
-InternalManyRoutesResult
-alternativePathSearch(SearchEngineData<Algorithm> &engine_working_data,
-                      const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
-                      const PhantomNodes &phantom_node_pair,
-                      unsigned /*number_of_alternatives*/)
+InternalManyRoutesResult alternativePathSearch(SearchEngineData<Algorithm> &engine_working_data,
+                                               const DataFacade<Algorithm> &facade,
+                                               const PhantomNodes &phantom_node_pair,
+                                               unsigned /*number_of_alternatives*/)
 {
     InternalRouteResult primary_route;
     InternalRouteResult secondary_route;

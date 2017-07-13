@@ -19,8 +19,7 @@ class NearestPlugin final : public BasePlugin
   public:
     explicit NearestPlugin(const int max_results);
 
-    Status HandleRequest(const datafacade::ContiguousInternalMemoryDataFacadeBase &facade,
-                         const RoutingAlgorithmsInterface &algorithms,
+    Status HandleRequest(const RoutingAlgorithmsInterface &algorithms,
                          const api::NearestParameters &params,
                          util::json::Object &result) const;
 

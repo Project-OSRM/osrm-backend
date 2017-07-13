@@ -50,7 +50,7 @@ unsigned getMedianSampleTime(const std::vector<unsigned> &timestamps)
 
 template <typename Algorithm>
 SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
-                            const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
+                            const DataFacade<Algorithm> &facade,
                             const CandidateLists &candidates_list,
                             const std::vector<util::Coordinate> &trace_coordinates,
                             const std::vector<unsigned> &trace_timestamps,
@@ -422,7 +422,7 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
 
 template SubMatchingList
 mapMatching(SearchEngineData<ch::Algorithm> &engine_working_data,
-            const datafacade::ContiguousInternalMemoryDataFacade<ch::Algorithm> &facade,
+            const DataFacade<ch::Algorithm> &facade,
             const CandidateLists &candidates_list,
             const std::vector<util::Coordinate> &trace_coordinates,
             const std::vector<unsigned> &trace_timestamps,
@@ -431,7 +431,7 @@ mapMatching(SearchEngineData<ch::Algorithm> &engine_working_data,
 
 template SubMatchingList
 mapMatching(SearchEngineData<corech::Algorithm> &engine_working_data,
-            const datafacade::ContiguousInternalMemoryDataFacade<corech::Algorithm> &facade,
+            const DataFacade<corech::Algorithm> &facade,
             const CandidateLists &candidates_list,
             const std::vector<util::Coordinate> &trace_coordinates,
             const std::vector<unsigned> &trace_timestamps,
@@ -440,7 +440,7 @@ mapMatching(SearchEngineData<corech::Algorithm> &engine_working_data,
 
 template SubMatchingList
 mapMatching(SearchEngineData<mld::Algorithm> &engine_working_data,
-            const datafacade::ContiguousInternalMemoryDataFacade<mld::Algorithm> &facade,
+            const DataFacade<mld::Algorithm> &facade,
             const CandidateLists &candidates_list,
             const std::vector<util::Coordinate> &trace_coordinates,
             const std::vector<unsigned> &trace_timestamps,

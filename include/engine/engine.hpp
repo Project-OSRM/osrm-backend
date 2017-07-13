@@ -85,47 +85,41 @@ template <typename Algorithm> class Engine final : public EngineInterface
     Status Route(const api::RouteParameters &params,
                  util::json::Object &result) const override final
     {
-        auto facade = facade_provider->Get();
-        auto algorithms = RoutingAlgorithms<Algorithm>{heaps, *facade};
-        return route_plugin.HandleRequest(*facade, algorithms, params, result);
+        auto algorithms = RoutingAlgorithms<Algorithm>{heaps, facade_provider->Get()};
+        return route_plugin.HandleRequest(algorithms, params, result);
     }
 
     Status Table(const api::TableParameters &params,
                  util::json::Object &result) const override final
     {
-        auto facade = facade_provider->Get();
-        auto algorithms = RoutingAlgorithms<Algorithm>{heaps, *facade};
-        return table_plugin.HandleRequest(*facade, algorithms, params, result);
+        auto algorithms = RoutingAlgorithms<Algorithm>{heaps, facade_provider->Get()};
+        return table_plugin.HandleRequest(algorithms, params, result);
     }
 
     Status Nearest(const api::NearestParameters &params,
                    util::json::Object &result) const override final
     {
-        auto facade = facade_provider->Get();
-        auto algorithms = RoutingAlgorithms<Algorithm>{heaps, *facade};
-        return nearest_plugin.HandleRequest(*facade, algorithms, params, result);
+        auto algorithms = RoutingAlgorithms<Algorithm>{heaps, facade_provider->Get()};
+        return nearest_plugin.HandleRequest(algorithms, params, result);
     }
 
     Status Trip(const api::TripParameters &params, util::json::Object &result) const override final
     {
-        auto facade = facade_provider->Get();
-        auto algorithms = RoutingAlgorithms<Algorithm>{heaps, *facade};
-        return trip_plugin.HandleRequest(*facade, algorithms, params, result);
+        auto algorithms = RoutingAlgorithms<Algorithm>{heaps, facade_provider->Get()};
+        return trip_plugin.HandleRequest(algorithms, params, result);
     }
 
     Status Match(const api::MatchParameters &params,
                  util::json::Object &result) const override final
     {
-        auto facade = facade_provider->Get();
-        auto algorithms = RoutingAlgorithms<Algorithm>{heaps, *facade};
-        return match_plugin.HandleRequest(*facade, algorithms, params, result);
+        auto algorithms = RoutingAlgorithms<Algorithm>{heaps, facade_provider->Get()};
+        return match_plugin.HandleRequest(algorithms, params, result);
     }
 
     Status Tile(const api::TileParameters &params, std::string &result) const override final
     {
-        auto facade = facade_provider->Get();
-        auto algorithms = RoutingAlgorithms<Algorithm>{heaps, *facade};
-        return tile_plugin.HandleRequest(*facade, algorithms, params, result);
+        auto algorithms = RoutingAlgorithms<Algorithm>{heaps, facade_provider->Get()};
+        return tile_plugin.HandleRequest(algorithms, params, result);
     }
 
     static bool CheckCompability(const EngineConfig &config);

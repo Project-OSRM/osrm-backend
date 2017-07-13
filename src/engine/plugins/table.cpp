@@ -28,8 +28,7 @@ TablePlugin::TablePlugin(const int max_locations_distance_table)
 {
 }
 
-Status TablePlugin::HandleRequest(const datafacade::ContiguousInternalMemoryDataFacadeBase &facade,
-                                  const RoutingAlgorithmsInterface &algorithms,
+Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
                                   const api::TableParameters &params,
                                   util::json::Object &result) const
 {
@@ -67,6 +66,7 @@ Status TablePlugin::HandleRequest(const datafacade::ContiguousInternalMemoryData
         return Error("TooBig", "Too many table coordinates", result);
     }
 
+    const auto &facade = algorithms.GetFacade();
     auto phantom_nodes = GetPhantomNodes(facade, params);
 
     if (phantom_nodes.size() != params.coordinates.size())

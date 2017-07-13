@@ -230,10 +230,7 @@ FixedPoint coordinatesToTilePoint(const util::Coordinate point, const BBox &tile
     return FixedPoint{px, py};
 }
 
-std::vector<RTreeLeaf> getEdges(const datafacade::ContiguousInternalMemoryDataFacadeBase &facade,
-                                unsigned x,
-                                unsigned y,
-                                unsigned z)
+std::vector<RTreeLeaf> getEdges(const DataFacadeBase &facade, unsigned x, unsigned y, unsigned z)
 {
     double min_lon, min_lat, max_lon, max_lat;
 
@@ -274,7 +271,7 @@ std::vector<std::size_t> getEdgeIndex(const std::vector<RTreeLeaf> &edges)
     return sorted_edge_indexes;
 }
 
-void encodeVectorTile(const datafacade::ContiguousInternalMemoryDataFacadeBase &facade,
+void encodeVectorTile(const DataFacadeBase &facade,
                       unsigned x,
                       unsigned y,
                       unsigned z,
@@ -882,13 +879,13 @@ void encodeVectorTile(const datafacade::ContiguousInternalMemoryDataFacadeBase &
 }
 }
 
-Status TilePlugin::HandleRequest(const datafacade::ContiguousInternalMemoryDataFacadeBase &facade,
-                                 const RoutingAlgorithmsInterface &algorithms,
+Status TilePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
                                  const api::TileParameters &parameters,
                                  std::string &pbf_buffer) const
 {
     BOOST_ASSERT(parameters.IsValid());
 
+    const auto &facade = algorithms.GetFacade();
     auto edges = getEdges(facade, parameters.x, parameters.y, parameters.z);
 
     auto edge_index = getEdgeIndex(edges);

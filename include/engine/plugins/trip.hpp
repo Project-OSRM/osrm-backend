@@ -38,8 +38,7 @@ class TripPlugin final : public BasePlugin
   public:
     explicit TripPlugin(const int max_locations_trip_) : max_locations_trip(max_locations_trip_) {}
 
-    Status HandleRequest(const datafacade::ContiguousInternalMemoryDataFacadeBase &facade,
-                         const RoutingAlgorithmsInterface &algorithms,
+    Status HandleRequest(const RoutingAlgorithmsInterface &algorithms,
                          const api::TripParameters &parameters,
                          util::json::Object &json_result) const;
 };

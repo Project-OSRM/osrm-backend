@@ -109,8 +109,7 @@ void filterCandidates(const std::vector<util::Coordinate> &coordinates,
     }
 }
 
-Status MatchPlugin::HandleRequest(const datafacade::ContiguousInternalMemoryDataFacadeBase &facade,
-                                  const RoutingAlgorithmsInterface &algorithms,
+Status MatchPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
                                   const api::MatchParameters &parameters,
                                   util::json::Object &json_result) const
 {
@@ -120,6 +119,8 @@ Status MatchPlugin::HandleRequest(const datafacade::ContiguousInternalMemoryData
                      "Map matching is not implemented for the chosen search algorithm.",
                      json_result);
     }
+
+    const auto &facade = algorithms.GetFacade();
 
     BOOST_ASSERT(parameters.IsValid());
 

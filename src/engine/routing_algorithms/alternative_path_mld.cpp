@@ -28,7 +28,7 @@ using namespace mld;
 
 using Heap = SearchEngineData<Algorithm>::QueryHeap;
 using Partition = partition::MultiLevelPartitionView;
-using Facade = datafacade::ContiguousInternalMemoryDataFacade<Algorithm>;
+using Facade = DataFacade<Algorithm>;
 
 // Implementation details
 namespace

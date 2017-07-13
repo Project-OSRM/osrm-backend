@@ -19,13 +19,13 @@ namespace plugins
 
 NearestPlugin::NearestPlugin(const int max_results_) : max_results{max_results_} {}
 
-Status
-NearestPlugin::HandleRequest(const datafacade::ContiguousInternalMemoryDataFacadeBase &facade,
-                             const RoutingAlgorithmsInterface & /*algorithms*/,
-                             const api::NearestParameters &params,
-                             util::json::Object &json_result) const
+Status NearestPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
+                                    const api::NearestParameters &params,
+                                    util::json::Object &json_result) const
 {
     BOOST_ASSERT(params.IsValid());
+
+    const auto &facade = algorithms.GetFacade();
 
     if (max_results > 0 &&
         (boost::numeric_cast<std::int64_t>(params.number_of_results) > max_results))

@@ -2,7 +2,7 @@
 #define MAP_MATCHING_HPP
 
 #include "engine/algorithm.hpp"
-#include "engine/datafacade/contiguous_internalmem_datafacade.hpp"
+#include "engine/datafacade.hpp"
 #include "engine/map_matching/sub_matching.hpp"
 #include "engine/search_engine_data.hpp"
 
@@ -24,7 +24,7 @@ static const constexpr double DEFAULT_GPS_PRECISION = 5;
 //     P. Newson and J. Krumm; 2009; ACM GIS
 template <typename Algorithm>
 SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
-                            const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
+                            const DataFacade<Algorithm> &facade,
                             const CandidateLists &candidates_list,
                             const std::vector<util::Coordinate> &trace_coordinates,
                             const std::vector<unsigned> &trace_timestamps,
