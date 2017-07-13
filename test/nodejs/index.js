@@ -98,6 +98,37 @@ test('constructor: throws if data doesn\'t match algorithm', function(assert) {
     assert.throws(function() { new OSRM({algorithm: 'MLD', path: monaco_path}); });
 });
 
+test('constructor: parses custom limits', function(assert) {
+    assert.plan(1);
+    var osrm = new OSRM({
+        path: monaco_mld_path,
+        algorithm: 'MLD',
+        max_locations_trip: 1,
+        max_locations_viaroute: 1,
+        max_locations_distance_table: 1,
+        max_locations_map_matching: 1,
+        max_results_nearest: 1,
+        max_alternatives: 1,
+    });
+    assert.ok(osrm);
+});
+
+test('constructor: throws on invalid custom limits', function(assert) {
+    assert.plan(1);
+    assert.throws(function() {
+        var osrm = new OSRM({
+            path: monaco_mld_path,
+            algorithm: 'MLD',
+            max_locations_trip: 'unlimited',
+            max_locations_viaroute: true,
+            max_locations_distance_table: false,
+            max_locations_map_matching: 'a lot',
+            max_results_nearest: null,
+            max_alternatives: '10'
+        })
+    });
+});
+
 require('./route.js');
 require('./trip.js');
 require('./match.js');
