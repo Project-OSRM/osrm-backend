@@ -227,19 +227,15 @@ std::vector<TurnData> generateTurns(const datafacade &facade,
 } // namespace
 
 // CH Version of finding all turn penalties. Here is where the actual work is happening
-std::vector<TurnData>
-getTileTurns(const datafacade::ContiguousInternalMemoryDataFacade<ch::Algorithm> &facade,
-             const std::vector<RTreeLeaf> &edges,
-             const std::vector<std::size_t> &sorted_edge_indexes)
+std::vector<TurnData> getTileTurns(const DataFacade<ch::Algorithm> &facade,
+                                   const std::vector<RTreeLeaf> &edges,
+                                   const std::vector<std::size_t> &sorted_edge_indexes)
 {
     // Define how to find the representative edge between two edge based nodes for a CH
     struct EdgeFinderCH
     {
-        EdgeFinderCH(const datafacade::ContiguousInternalMemoryDataFacade<ch::Algorithm> &facade)
-            : facade(facade)
-        {
-        }
-        const datafacade::ContiguousInternalMemoryDataFacade<ch::Algorithm> &facade;
+        EdgeFinderCH(const DataFacade<ch::Algorithm> &facade) : facade(facade) {}
+        const DataFacade<ch::Algorithm> &facade;
 
         EdgeID operator()(const NodeID approach_node, const NodeID exit_node) const
         {
@@ -283,19 +279,15 @@ getTileTurns(const datafacade::ContiguousInternalMemoryDataFacade<ch::Algorithm>
 }
 
 // MLD version to find all turns
-std::vector<TurnData>
-getTileTurns(const datafacade::ContiguousInternalMemoryDataFacade<mld::Algorithm> &facade,
-             const std::vector<RTreeLeaf> &edges,
-             const std::vector<std::size_t> &sorted_edge_indexes)
+std::vector<TurnData> getTileTurns(const DataFacade<mld::Algorithm> &facade,
+                                   const std::vector<RTreeLeaf> &edges,
+                                   const std::vector<std::size_t> &sorted_edge_indexes)
 {
     // Define how to find the representative edge between two edge-based-nodes for a MLD
     struct EdgeFinderMLD
     {
-        EdgeFinderMLD(const datafacade::ContiguousInternalMemoryDataFacade<mld::Algorithm> &facade)
-            : facade(facade)
-        {
-        }
-        const datafacade::ContiguousInternalMemoryDataFacade<mld::Algorithm> &facade;
+        EdgeFinderMLD(const DataFacade<mld::Algorithm> &facade) : facade(facade) {}
+        const DataFacade<mld::Algorithm> &facade;
 
         EdgeID operator()(const NodeID approach_node, const NodeID exit_node) const
         {

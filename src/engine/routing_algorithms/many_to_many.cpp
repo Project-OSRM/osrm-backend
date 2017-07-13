@@ -31,11 +31,10 @@ struct NodeBucket
 // FIXME This should be replaced by an std::unordered_multimap, though this needs benchmarking
 using SearchSpaceWithBuckets = std::unordered_map<NodeID, std::vector<NodeBucket>>;
 
-inline bool
-addLoopWeight(const datafacade::ContiguousInternalMemoryDataFacade<ch::Algorithm> &facade,
-              const NodeID node,
-              EdgeWeight &weight,
-              EdgeDuration &duration)
+inline bool addLoopWeight(const DataFacade<ch::Algorithm> &facade,
+                          const NodeID node,
+                          EdgeWeight &weight,
+                          EdgeDuration &duration)
 { // Special case for CH when contractor creates a loop edge node->node
     BOOST_ASSERT(weight < 0);
 
@@ -56,7 +55,7 @@ addLoopWeight(const datafacade::ContiguousInternalMemoryDataFacade<ch::Algorithm
 }
 
 template <bool DIRECTION>
-void relaxOutgoingEdges(const datafacade::ContiguousInternalMemoryDataFacade<ch::Algorithm> &facade,
+void relaxOutgoingEdges(const DataFacade<ch::Algorithm> &facade,
                         const NodeID node,
                         const EdgeWeight weight,
                         const EdgeDuration duration,
@@ -97,22 +96,19 @@ void relaxOutgoingEdges(const datafacade::ContiguousInternalMemoryDataFacade<ch:
     }
 }
 
-inline bool addLoopWeight(const datafacade::ContiguousInternalMemoryDataFacade<mld::Algorithm> &,
-                          const NodeID,
-                          EdgeWeight &,
-                          EdgeDuration &)
+inline bool
+addLoopWeight(const DataFacade<mld::Algorithm> &, const NodeID, EdgeWeight &, EdgeDuration &)
 { // MLD overlay does not introduce loop edges
     return false;
 }
 
 template <bool DIRECTION>
-void relaxOutgoingEdges(
-    const datafacade::ContiguousInternalMemoryDataFacade<mld::Algorithm> &facade,
-    const NodeID node,
-    const EdgeWeight weight,
-    const EdgeDuration duration,
-    typename SearchEngineData<mld::Algorithm>::ManyToManyQueryHeap &query_heap,
-    const PhantomNode &phantom_node)
+void relaxOutgoingEdges(const DataFacade<mld::Algorithm> &facade,
+                        const NodeID node,
+                        const EdgeWeight weight,
+                        const EdgeDuration duration,
+                        typename SearchEngineData<mld::Algorithm>::ManyToManyQueryHeap &query_heap,
+                        const PhantomNode &phantom_node)
 {
     const auto &partition = facade.GetMultiLevelPartition();
     const auto &cells = facade.GetCellStorage();
@@ -218,7 +214,7 @@ void relaxOutgoingEdges(
 }
 
 template <typename Algorithm>
-void forwardRoutingStep(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
+void forwardRoutingStep(const DataFacade<Algorithm> &facade,
                         const unsigned row_idx,
                         const unsigned number_of_targets,
                         typename SearchEngineData<Algorithm>::ManyToManyQueryHeap &query_heap,
@@ -272,7 +268,7 @@ void forwardRoutingStep(const datafacade::ContiguousInternalMemoryDataFacade<Alg
 }
 
 template <typename Algorithm>
-void backwardRoutingStep(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
+void backwardRoutingStep(const DataFacade<Algorithm> &facade,
                          const unsigned column_idx,
                          typename SearchEngineData<Algorithm>::ManyToManyQueryHeap &query_heap,
                          SearchSpaceWithBuckets &search_space_with_buckets,
@@ -291,12 +287,11 @@ void backwardRoutingStep(const datafacade::ContiguousInternalMemoryDataFacade<Al
 }
 
 template <typename Algorithm>
-std::vector<EdgeWeight>
-manyToManySearch(SearchEngineData<Algorithm> &engine_working_data,
-                 const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
-                 const std::vector<PhantomNode> &phantom_nodes,
-                 const std::vector<std::size_t> &source_indices,
-                 const std::vector<std::size_t> &target_indices)
+std::vector<EdgeWeight> manyToManySearch(SearchEngineData<Algorithm> &engine_working_data,
+                                         const DataFacade<Algorithm> &facade,
+                                         const std::vector<PhantomNode> &phantom_nodes,
+                                         const std::vector<std::size_t> &source_indices,
+                                         const std::vector<std::size_t> &target_indices)
 {
     const auto number_of_sources =
         source_indices.empty() ? phantom_nodes.size() : source_indices.size();
@@ -386,14 +381,14 @@ manyToManySearch(SearchEngineData<Algorithm> &engine_working_data,
 
 template std::vector<EdgeWeight>
 manyToManySearch(SearchEngineData<ch::Algorithm> &engine_working_data,
-                 const datafacade::ContiguousInternalMemoryDataFacade<ch::Algorithm> &facade,
+                 const DataFacade<ch::Algorithm> &facade,
                  const std::vector<PhantomNode> &phantom_nodes,
                  const std::vector<std::size_t> &source_indices,
                  const std::vector<std::size_t> &target_indices);
 
 template std::vector<EdgeWeight>
 manyToManySearch(SearchEngineData<mld::Algorithm> &engine_working_data,
-                 const datafacade::ContiguousInternalMemoryDataFacade<mld::Algorithm> &facade,
+                 const DataFacade<mld::Algorithm> &facade,
                  const std::vector<PhantomNode> &phantom_nodes,
                  const std::vector<std::size_t> &source_indices,
                  const std::vector<std::size_t> &target_indices);

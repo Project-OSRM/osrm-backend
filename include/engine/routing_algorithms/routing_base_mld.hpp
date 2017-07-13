@@ -2,7 +2,7 @@
 #define OSRM_ENGINE_ROUTING_BASE_MLD_HPP
 
 #include "engine/algorithm.hpp"
-#include "engine/datafacade/contiguous_internalmem_datafacade.hpp"
+#include "engine/datafacade.hpp"
 #include "engine/routing_algorithms/routing_base.hpp"
 #include "engine/search_engine_data.hpp"
 
@@ -131,7 +131,7 @@ retrievePackedPathFromHeap(const SearchEngineData<Algorithm>::QueryHeap &forward
 }
 
 template <bool DIRECTION, typename... Args>
-void routingStep(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
+void routingStep(const DataFacade<Algorithm> &facade,
                  SearchEngineData<Algorithm>::QueryHeap &forward_heap,
                  SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
                  NodeID &middle_node,
@@ -262,7 +262,7 @@ using UnpackedPath = std::tuple<EdgeWeight, UnpackedNodes, UnpackedEdges>;
 
 template <typename... Args>
 UnpackedPath search(SearchEngineData<Algorithm> &engine_working_data,
-                    const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
+                    const DataFacade<Algorithm> &facade,
                     SearchEngineData<Algorithm>::QueryHeap &forward_heap,
                     SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
                     const bool force_loop_forward,
@@ -390,7 +390,7 @@ UnpackedPath search(SearchEngineData<Algorithm> &engine_working_data,
 
 // Alias to be compatible with the CH-based search
 inline void search(SearchEngineData<Algorithm> &engine_working_data,
-                   const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
+                   const DataFacade<Algorithm> &facade,
                    SearchEngineData<Algorithm>::QueryHeap &forward_heap,
                    SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
                    EdgeWeight &weight,
@@ -442,14 +442,13 @@ void unpackPath(const FacadeT &facade,
     annotatePath(facade, phantom_nodes, unpacked_nodes, unpacked_edges, unpacked_path);
 }
 
-inline double
-getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
-                   const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
-                   SearchEngineData<Algorithm>::QueryHeap &forward_heap,
-                   SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
-                   const PhantomNode &source_phantom,
-                   const PhantomNode &target_phantom,
-                   EdgeWeight weight_upper_bound = INVALID_EDGE_WEIGHT)
+inline double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
+                                 const DataFacade<Algorithm> &facade,
+                                 SearchEngineData<Algorithm>::QueryHeap &forward_heap,
+                                 SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
+                                 const PhantomNode &source_phantom,
+                                 const PhantomNode &target_phantom,
+                                 EdgeWeight weight_upper_bound = INVALID_EDGE_WEIGHT)
 {
     forward_heap.Clear();
     reverse_heap.Clear();

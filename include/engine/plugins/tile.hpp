@@ -26,8 +26,7 @@ namespace plugins
 class TilePlugin final : public BasePlugin
 {
   public:
-    Status HandleRequest(const datafacade::ContiguousInternalMemoryDataFacadeBase &facade,
-                         const RoutingAlgorithmsInterface &algorithms,
+    Status HandleRequest(const RoutingAlgorithmsInterface &algorithms,
                          const api::TileParameters &parameters,
                          std::string &pbf_buffer) const;
 };

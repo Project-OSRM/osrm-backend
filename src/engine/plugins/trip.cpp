@@ -142,8 +142,7 @@ void ManipulateTableForFSE(const std::size_t source_id,
     //*********  End of changes to table  *************************************
 }
 
-Status TripPlugin::HandleRequest(const datafacade::ContiguousInternalMemoryDataFacadeBase &facade,
-                                 const RoutingAlgorithmsInterface &algorithms,
+Status TripPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
                                  const api::TripParameters &parameters,
                                  util::json::Object &json_result) const
 {
@@ -192,6 +191,7 @@ Status TripPlugin::HandleRequest(const datafacade::ContiguousInternalMemoryDataF
         return Error("InvalidValue", "Invalid coordinate value.", json_result);
     }
 
+    const auto &facade = algorithms.GetFacade();
     auto phantom_node_pairs = GetPhantomNodes(facade, parameters);
     if (phantom_node_pairs.size() != number_of_locations)
     {

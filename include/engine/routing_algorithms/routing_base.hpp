@@ -4,7 +4,7 @@
 #include "extractor/guidance/turn_instruction.hpp"
 
 #include "engine/algorithm.hpp"
-#include "engine/datafacade/contiguous_internalmem_datafacade.hpp"
+#include "engine/datafacade.hpp"
 #include "engine/internal_route_result.hpp"
 #include "engine/phantom_node.hpp"
 #include "engine/search_engine_data.hpp"
@@ -320,7 +320,7 @@ void annotatePath(const FacadeT &facade,
 }
 
 template <typename Algorithm>
-double getPathDistance(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
+double getPathDistance(const DataFacade<Algorithm> &facade,
                        const std::vector<PathData> unpacked_path,
                        const PhantomNode &source_phantom,
                        const PhantomNode &target_phantom)
@@ -373,12 +373,11 @@ double getPathDistance(const datafacade::ContiguousInternalMemoryDataFacade<Algo
 }
 
 template <typename AlgorithmT>
-InternalRouteResult
-extractRoute(const datafacade::ContiguousInternalMemoryDataFacade<AlgorithmT> &facade,
-             const EdgeWeight weight,
-             const PhantomNodes &phantom_nodes,
-             const std::vector<NodeID> &unpacked_nodes,
-             const std::vector<EdgeID> &unpacked_edges)
+InternalRouteResult extractRoute(const DataFacade<AlgorithmT> &facade,
+                                 const EdgeWeight weight,
+                                 const PhantomNodes &phantom_nodes,
+                                 const std::vector<NodeID> &unpacked_nodes,
+                                 const std::vector<EdgeID> &unpacked_edges)
 {
     InternalRouteResult raw_route_data;
     raw_route_data.segment_end_coordinates = {phantom_nodes};

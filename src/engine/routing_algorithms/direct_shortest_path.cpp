@@ -18,10 +18,9 @@ namespace routing_algorithms
 /// This variation is only an optimazation for graphs with slow queries, for example
 /// not fully contracted graphs.
 template <typename Algorithm>
-InternalRouteResult
-directShortestPathSearch(SearchEngineData<Algorithm> &engine_working_data,
-                         const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
-                         const PhantomNodes &phantom_nodes)
+InternalRouteResult directShortestPathSearch(SearchEngineData<Algorithm> &engine_working_data,
+                                             const DataFacade<Algorithm> &facade,
+                                             const PhantomNodes &phantom_nodes)
 {
     engine_working_data.InitializeOrClearFirstThreadLocalStorage(facade.GetNumberOfNodes());
     auto &forward_heap = *engine_working_data.forward_heap_1;
@@ -65,21 +64,20 @@ directShortestPathSearch(SearchEngineData<Algorithm> &engine_working_data,
     return extractRoute(facade, weight, phantom_nodes, unpacked_nodes, unpacked_edges);
 }
 
-template InternalRouteResult directShortestPathSearch(
-    SearchEngineData<corech::Algorithm> &engine_working_data,
-    const datafacade::ContiguousInternalMemoryDataFacade<corech::Algorithm> &facade,
-    const PhantomNodes &phantom_nodes);
+template InternalRouteResult
+directShortestPathSearch(SearchEngineData<corech::Algorithm> &engine_working_data,
+                         const DataFacade<corech::Algorithm> &facade,
+                         const PhantomNodes &phantom_nodes);
 
-template InternalRouteResult directShortestPathSearch(
-    SearchEngineData<ch::Algorithm> &engine_working_data,
-    const datafacade::ContiguousInternalMemoryDataFacade<ch::Algorithm> &facade,
-    const PhantomNodes &phantom_nodes);
+template InternalRouteResult
+directShortestPathSearch(SearchEngineData<ch::Algorithm> &engine_working_data,
+                         const DataFacade<ch::Algorithm> &facade,
+                         const PhantomNodes &phantom_nodes);
 
 template <>
-InternalRouteResult directShortestPathSearch(
-    SearchEngineData<mld::Algorithm> &engine_working_data,
-    const datafacade::ContiguousInternalMemoryDataFacade<mld::Algorithm> &facade,
-    const PhantomNodes &phantom_nodes)
+InternalRouteResult directShortestPathSearch(SearchEngineData<mld::Algorithm> &engine_working_data,
+                                             const DataFacade<mld::Algorithm> &facade,
+                                             const PhantomNodes &phantom_nodes)
 {
     engine_working_data.InitializeOrClearFirstThreadLocalStorage(facade.GetNumberOfNodes());
     auto &forward_heap = *engine_working_data.forward_heap_1;

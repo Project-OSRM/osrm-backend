@@ -22,7 +22,7 @@ const static constexpr bool DO_NOT_FORCE_LOOP = false;
 // searches source forward/reverse -> target forward/reverse
 template <typename Algorithm>
 void searchWithUTurn(SearchEngineData<Algorithm> &engine_working_data,
-                     const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
+                     const DataFacade<Algorithm> &facade,
                      typename SearchEngineData<Algorithm>::QueryHeap &forward_heap,
                      typename SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
                      const bool search_from_forward_node,
@@ -93,7 +93,7 @@ void searchWithUTurn(SearchEngineData<Algorithm> &engine_working_data,
 // source forward/reverse -> target reverse
 template <typename Algorithm>
 void search(SearchEngineData<Algorithm> &engine_working_data,
-            const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
+            const DataFacade<Algorithm> &facade,
             typename SearchEngineData<Algorithm>::QueryHeap &forward_heap,
             typename SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
             const bool search_from_forward_node,
@@ -178,7 +178,7 @@ void search(SearchEngineData<Algorithm> &engine_working_data,
 }
 
 template <typename Algorithm>
-void unpackLegs(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
+void unpackLegs(const DataFacade<Algorithm> &facade,
                 const std::vector<PhantomNodes> &phantom_nodes_vector,
                 const std::vector<NodeID> &total_packed_path,
                 const std::vector<std::size_t> &packed_leg_begin,
@@ -210,11 +210,10 @@ void unpackLegs(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> 
 }
 
 template <typename Algorithm>
-InternalRouteResult
-shortestPathSearch(SearchEngineData<Algorithm> &engine_working_data,
-                   const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
-                   const std::vector<PhantomNodes> &phantom_nodes_vector,
-                   const boost::optional<bool> continue_straight_at_waypoint)
+InternalRouteResult shortestPathSearch(SearchEngineData<Algorithm> &engine_working_data,
+                                       const DataFacade<Algorithm> &facade,
+                                       const std::vector<PhantomNodes> &phantom_nodes_vector,
+                                       const boost::optional<bool> continue_straight_at_waypoint)
 {
     InternalRouteResult raw_route_data;
     raw_route_data.segment_end_coordinates = phantom_nodes_vector;
@@ -459,19 +458,19 @@ shortestPathSearch(SearchEngineData<Algorithm> &engine_working_data,
 
 template InternalRouteResult
 shortestPathSearch(SearchEngineData<ch::Algorithm> &engine_working_data,
-                   const datafacade::ContiguousInternalMemoryDataFacade<ch::Algorithm> &facade,
+                   const DataFacade<ch::Algorithm> &facade,
                    const std::vector<PhantomNodes> &phantom_nodes_vector,
                    const boost::optional<bool> continue_straight_at_waypoint);
 
 template InternalRouteResult
 shortestPathSearch(SearchEngineData<corech::Algorithm> &engine_working_data,
-                   const datafacade::ContiguousInternalMemoryDataFacade<corech::Algorithm> &facade,
+                   const DataFacade<corech::Algorithm> &facade,
                    const std::vector<PhantomNodes> &phantom_nodes_vector,
                    const boost::optional<bool> continue_straight_at_waypoint);
 
 template InternalRouteResult
 shortestPathSearch(SearchEngineData<mld::Algorithm> &engine_working_data,
-                   const datafacade::ContiguousInternalMemoryDataFacade<mld::Algorithm> &facade,
+                   const DataFacade<mld::Algorithm> &facade,
                    const std::vector<PhantomNodes> &phantom_nodes_vector,
                    const boost::optional<bool> continue_straight_at_waypoint);
 

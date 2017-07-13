@@ -2,7 +2,7 @@
 #define DIRECT_SHORTEST_PATH_HPP
 
 #include "engine/algorithm.hpp"
-#include "engine/datafacade/contiguous_internalmem_datafacade.hpp"
+#include "engine/datafacade.hpp"
 #include "engine/internal_route_result.hpp"
 #include "engine/search_engine_data.hpp"
 
@@ -22,10 +22,9 @@ namespace routing_algorithms
 /// This variation is only an optimazation for graphs with slow queries, for example
 /// not fully contracted graphs.
 template <typename Algorithm>
-InternalRouteResult
-directShortestPathSearch(SearchEngineData<Algorithm> &engine_working_data,
-                         const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
-                         const PhantomNodes &phantom_nodes);
+InternalRouteResult directShortestPathSearch(SearchEngineData<Algorithm> &engine_working_data,
+                                             const DataFacade<Algorithm> &facade,
+                                             const PhantomNodes &phantom_nodes);
 
 } // namespace routing_algorithms
 } // namespace engine
