@@ -14,6 +14,7 @@
          The maximum number of classes is 8.
     - Node.js Bindings:
       - Exposes `alternatives=Number` parameter overload in addition to the boolean flag
+      - Expose `EngineConfig` options in the node bindings
     - Tools:
       - Exposes engine limit on number of alternatives to generate `--max-alternatives` in `osrm-routed` (3 by default)
     - Infrastructure
