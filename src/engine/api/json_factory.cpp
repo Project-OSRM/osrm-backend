@@ -234,6 +234,18 @@ util::json::Object makeIntersection(const guidance::IntermediateIntersection &in
     if (detail::hasValidLanes(intersection))
         result.values["lanes"] = detail::lanesFromIntersection(intersection);
 
+    if (!intersection.classes.empty())
+    {
+        util::json::Array classes;
+        classes.values.reserve(intersection.classes.size());
+        std::transform(
+            intersection.classes.begin(),
+            intersection.classes.end(),
+            std::back_inserter(classes.values),
+            [](const std::string &class_name) { return util::json::String{class_name}; });
+        result.values["classes"] = std::move(classes);
+    }
+
     return result;
 }
 
@@ -264,18 +276,6 @@ util::json::Object makeRouteStep(guidance::RouteStep step, util::json::Value geo
     route_step.values["mode"] = detail::modeToString(std::move(step.mode));
     route_step.values["maneuver"] = makeStepManeuver(std::move(step.maneuver));
     route_step.values["geometry"] = std::move(geometry);
-
-    if (!step.classes.empty())
-    {
-        util::json::Array classes;
-        classes.values.reserve(step.classes.size());
-        std::transform(
-            step.classes.begin(),
-            step.classes.end(),
-            std::back_inserter(classes.values),
-            [](const std::string &class_name) { return util::json::String{class_name}; });
-        route_step.values["classes"] = std::move(classes);
-    }
 
     util::json::Array intersections;
     intersections.values.reserve(step.intersections.size());

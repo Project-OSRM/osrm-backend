@@ -23,6 +23,7 @@ BOOST_AUTO_TEST_CASE(trim_short_segments)
                                            IntermediateIntersection::NO_INDEX,
                                            0,
                                            {0, 255},
+                                           {},
                                            {}};
     IntermediateIntersection intersection2{{FloatLongitude{-73.981495}, FloatLatitude{40.768275}},
                                            {180},
@@ -30,6 +31,7 @@ BOOST_AUTO_TEST_CASE(trim_short_segments)
                                            0,
                                            IntermediateIntersection::NO_INDEX,
                                            {0, 255},
+                                           {},
                                            {}};
 
     // Check that duplicated coordinate in the end is removed
@@ -53,8 +55,7 @@ BOOST_AUTO_TEST_CASE(trim_short_segments)
                                       0},
                                      0,
                                      3,
-                                     {intersection1},
-                                     {}},
+                                     {intersection1}},
                                     {324,
                                      "Central Park West",
                                      "",
@@ -75,8 +76,7 @@ BOOST_AUTO_TEST_CASE(trim_short_segments)
                                       0},
                                      2,
                                      3,
-                                     {intersection2},
-                                     {}}};
+                                     {intersection2}}};
 
     LegGeometry geometry;
     geometry.locations = {{FloatLongitude{-73.981492}, FloatLatitude{40.768258}},

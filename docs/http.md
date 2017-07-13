@@ -583,7 +583,6 @@ step.
 - `destinations`: The destinations of the way. Will be `undefined` if there are no destinations.
 - `exits`: The exit numbers or names of the way. Will be `undefined` if there are no exit numbers or names.
 - `mode`: A string signifying the mode of transportation.
-- `classes`: An array of strings signifying the classes of the road as specified in the profile.
 - `maneuver`: A `StepManeuver` object representing the maneuver.
 - `intersections`: A list of `Intersection` objects that are passed along the segment, the very first belonging to the StepManeuver
 - `rotary_name`: The name for the rotary. Optionally included, if the step is a rotary and a rotary name is available.
@@ -597,7 +596,6 @@ step.
    "mode" : "driving",
    "duration" : 15.6,
    "weight" : 15.6,
-   "classes": ["toll", "restricted"],
    "intersections" : [
       {  "bearings" : [ 10, 92, 184, 270 ],
          "lanes" : [
@@ -735,6 +733,7 @@ location of the StepManeuver. Further intersections are listed for every cross-w
 
 - `location`: A `[longitude, latitude]` pair describing the location of the turn.
 - `bearings`: A list of bearing values (e.g. [0,90,180,270]) that are available at the intersection. The bearings describe all available roads at the intersection.  Values are between 0-359 (0=true north)
+- `classes`: An array of strings signifying the classes (as specified in the profile) of the road exiting the intersection.
 - `entry`: A list of entry flags, corresponding in a 1:1 relationship to the bearings. A value of `true` indicates that the respective road could be entered on a valid route.
   `false` indicates that the turn onto the respective road would violate a restriction.
 - `in`: index into bearings/entry array. Used to calculate the bearing just before the turn. Namely, the clockwise angle from true north to the
@@ -753,6 +752,7 @@ location of the StepManeuver. Further intersections are listed for every cross-w
     "out":2,
     "bearings":[60,150,240,330],
     "entry":["false","true","true","true"],
+    "classes": ["toll", "restricted"],
     "lanes":{
         "indications": ["left", "straight"],
         "valid": "false"
