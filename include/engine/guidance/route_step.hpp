@@ -42,6 +42,7 @@ struct IntermediateIntersection
     // turn lane information
     util::guidance::LaneTuple lanes;
     extractor::guidance::TurnLaneDescription lane_description;
+    std::vector<std::string> classes;
 };
 
 inline IntermediateIntersection getInvalidIntersection()
@@ -52,6 +53,7 @@ inline IntermediateIntersection getInvalidIntersection()
             IntermediateIntersection::NO_INDEX,
             IntermediateIntersection::NO_INDEX,
             util::guidance::LaneTuple(),
+            {},
             {}};
 }
 
@@ -74,7 +76,6 @@ struct RouteStep
     std::size_t geometry_begin;
     std::size_t geometry_end;
     std::vector<IntermediateIntersection> intersections;
-    std::vector<std::string> classes;
 
     // remove all information from the route step, marking it as invalid (used to indicate empty
     // steps to be removed).
@@ -128,7 +129,6 @@ inline void RouteStep::Invalidate()
     geometry_end = 0;
     intersections.clear();
     intersections.push_back(getInvalidIntersection());
-    classes.clear();
 }
 
 // Elongate by another step in front

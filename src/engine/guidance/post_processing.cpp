@@ -485,7 +485,6 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
         auto &new_next_to_last = *(steps.end() - 2);
         next_to_last_step.AdaptStepSignage(new_next_to_last);
         next_to_last_step.mode = new_next_to_last.mode;
-        next_to_last_step.classes = new_next_to_last.classes;
         // the geometry indices of the last step are already correct;
     }
     else if (util::coordinate_calculation::haversineDistance(
