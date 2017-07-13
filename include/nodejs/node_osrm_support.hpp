@@ -176,6 +176,64 @@ inline engine_config_ptr argumentsToEngineConfig(const Nan::FunctionCallbackInfo
         return engine_config_ptr();
     }
 
+    // Set EngineConfig system-wide limits on construction, if requested
+
+    auto max_locations_trip = params->Get(Nan::New("max_locations_trip").ToLocalChecked());
+    auto max_locations_viaroute = params->Get(Nan::New("max_locations_viaroute").ToLocalChecked());
+    auto max_locations_distance_table =
+        params->Get(Nan::New("max_locations_distance_table").ToLocalChecked());
+    auto max_locations_map_matching =
+        params->Get(Nan::New("max_locations_map_matching").ToLocalChecked());
+    auto max_results_nearest = params->Get(Nan::New("max_results_nearest").ToLocalChecked());
+    auto max_alternatives = params->Get(Nan::New("max_alternatives").ToLocalChecked());
+
+    if (!max_locations_trip->IsUndefined() && !max_locations_trip->IsNumber())
+    {
+        Nan::ThrowError("max_locations_trip must be an integral number");
+        return engine_config_ptr();
+    }
+    if (!max_locations_viaroute->IsUndefined() && !max_locations_viaroute->IsNumber())
+    {
+        Nan::ThrowError("max_locations_viaroute must be an integral number");
+        return engine_config_ptr();
+    }
+    if (!max_locations_distance_table->IsUndefined() && !max_locations_distance_table->IsNumber())
+    {
+        Nan::ThrowError("max_locations_distance_table must be an integral number");
+        return engine_config_ptr();
+    }
+    if (!max_locations_map_matching->IsUndefined() && !max_locations_map_matching->IsNumber())
+    {
+        Nan::ThrowError("max_locations_map_matching must be an integral number");
+        return engine_config_ptr();
+    }
+    if (!max_results_nearest->IsUndefined() && !max_results_nearest->IsNumber())
+    {
+        Nan::ThrowError("max_results_nearest must be an integral number");
+        return engine_config_ptr();
+    }
+    if (!max_alternatives->IsUndefined() && !max_alternatives->IsNumber())
+    {
+        Nan::ThrowError("max_alternatives must be an integral number");
+        return engine_config_ptr();
+    }
+
+    if (max_locations_trip->IsNumber())
+        engine_config->max_locations_trip = static_cast<int>(max_locations_trip->NumberValue());
+    if (max_locations_viaroute->IsNumber())
+        engine_config->max_locations_viaroute =
+            static_cast<int>(max_locations_viaroute->NumberValue());
+    if (max_locations_distance_table->IsNumber())
+        engine_config->max_locations_distance_table =
+            static_cast<int>(max_locations_distance_table->NumberValue());
+    if (max_locations_map_matching->IsNumber())
+        engine_config->max_locations_map_matching =
+            static_cast<int>(max_locations_map_matching->NumberValue());
+    if (max_results_nearest->IsNumber())
+        engine_config->max_results_nearest = static_cast<int>(max_results_nearest->NumberValue());
+    if (max_alternatives->IsNumber())
+        engine_config->max_alternatives = static_cast<int>(max_alternatives->NumberValue());
+
     return engine_config;
 }
 

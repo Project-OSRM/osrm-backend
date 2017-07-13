@@ -549,3 +549,30 @@ test('route: throws on bad approaches', function(assert) {
     }, function(err, route) {}) },
         /Approach must be a string: \[curb, unrestricted\] or null/);
 });
+
+test('route: routes Monaco with custom limits on MLD', function(assert) {
+    assert.plan(2);
+    var osrm = new OSRM({
+        path: monaco_mld_path,
+        algorithm: 'MLD',
+        max_alternatives: 10,
+    });
+    osrm.route({coordinates: two_test_coordinates, alternatives: 10}, function(err, route) {
+        assert.ifError(err);
+        assert.ok(Array.isArray(route.routes));
+    });
+});
+
+test('route:  in Monaco with custom limits on MLD', function(assert) {
+    assert.plan(1);
+    var osrm = new OSRM({
+        path: monaco_mld_path,
+        algorithm: 'MLD',
+        max_alternatives: 10,
+    });
+    osrm.route({coordinates: two_test_coordinates, alternatives: 11}, function(err, route) {
+        console.log(err)
+        assert.equal(err.message, 'TooBig');
+    });
+});
+
