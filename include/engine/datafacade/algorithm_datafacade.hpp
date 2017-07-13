@@ -73,6 +73,7 @@ template <> class AlgorithmDataFacade<MLD>
 {
   public:
     using EdgeData = extractor::EdgeBasedEdge::EdgeData;
+    using NodeFnT = std::function<void(NodeID, EdgeWeight, EdgeDuration)>;
 
     // search graph access
     virtual unsigned GetNumberOfNodes() const = 0;
@@ -91,9 +92,14 @@ template <> class AlgorithmDataFacade<MLD>
 
     virtual EdgeRange GetAdjacentEdgeRange(const NodeID node) const = 0;
 
-    virtual const partition::MultiLevelPartitionView &GetMultiLevelPartition() const = 0;
+    virtual LevelID GetQueryLevel(NodeID source, NodeID target, NodeID node) const = 0;
+    virtual LevelID GetHighestDifferentLevel(NodeID first, NodeID second) const = 0;
 
-    virtual const partition::CellStorageView &GetCellStorage() const = 0;
+    virtual void ForEachSourceNodes(LevelID level, NodeID node, NodeFnT const &fn) const = 0;
+    virtual void ForEachDestinationNodes(LevelID level, NodeID node, NodeFnT const &fn) const = 0;
+
+    virtual CellID GetPartitionCell(LevelID level, NodeID node) const = 0;
+    virtual uint8_t GetNumberOfLevels() const = 0;
 
     virtual EdgeRange GetBorderEdgeRange(const LevelID level, const NodeID node) const = 0;
 

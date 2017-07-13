@@ -30,13 +30,14 @@ namespace
 // Unrestricted search (Args is const PhantomNodes &):
 //   * use partition.GetQueryLevel to find the node query level based on source and target phantoms
 //   * allow to traverse all cells
-inline LevelID getNodeQueryLevel(const partition::MultiLevelPartitionView &partition,
-                                 NodeID node,
-                                 const PhantomNodes &phantom_nodes)
+inline LevelID
+getNodeQueryLevel(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
+                  NodeID node,
+                  const PhantomNodes &phantom_nodes)
 {
-    auto level = [&partition, node](const SegmentID &source, const SegmentID &target) {
+    auto level = [&facade, node](const SegmentID &source, const SegmentID &target) {
         if (source.enabled && target.enabled)
-            return partition.GetQueryLevel(source.id, target.id, node);
+            return facade.GetQueryLevel(source.id, target.id, node);
         return INVALID_LEVEL_ID;
     };
     return std::min(std::min(level(phantom_nodes.source_phantom.forward_segment_id,
@@ -54,8 +55,10 @@ inline bool checkParentCellRestriction(CellID, const PhantomNodes &) { return tr
 // Restricted search (Args is LevelID, CellID):
 //   * use the fixed level for queries
 //   * check if the node cell is the same as the specified parent onr
-inline LevelID
-getNodeQueryLevel(const partition::MultiLevelPartitionView &, NodeID, LevelID level, CellID)
+inline LevelID getNodeQueryLevel(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &,
+                                 NodeID,
+                                 LevelID level,
+                                 CellID)
 {
     return level;
 }
@@ -140,9 +143,6 @@ void routingStep(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm>
                  const bool force_loop_reverse,
                  Args... args)
 {
-    const auto &partition = facade.GetMultiLevelPartition();
-    const auto &cells = facade.GetCellStorage();
-
     const auto node = forward_heap.DeleteMin();
     const auto weight = forward_heap.GetKey(node);
 
@@ -166,61 +166,53 @@ void routingStep(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm>
         }
     }
 
-    const auto level = getNodeQueryLevel(partition, node, args...);
+    const auto level = getNodeQueryLevel(facade, node, args...);
 
     if (level >= 1 && !forward_heap.GetData(node).from_clique_arc)
     {
         if (DIRECTION == FORWARD_DIRECTION)
         {
             // Shortcuts in forward direction
-            const auto &cell = cells.GetCell(level, partition.GetCell(level, node));
-            auto destination = cell.GetDestinationNodes().begin();
-            for (auto shortcut_weight : cell.GetOutWeight(node))
-            {
-                BOOST_ASSERT(destination != cell.GetDestinationNodes().end());
-                const NodeID to = *destination;
-                if (shortcut_weight != INVALID_EDGE_WEIGHT && node != to)
-                {
-                    const EdgeWeight to_weight = weight + shortcut_weight;
-                    BOOST_ASSERT(to_weight >= weight);
-                    if (!forward_heap.WasInserted(to))
+            facade.ForEachDestinationNodes(
+                level, node, [&](NodeID destination, EdgeWeight shortcut_weight, EdgeDuration) {
+                    const NodeID to = destination;
+                    if (shortcut_weight != INVALID_EDGE_WEIGHT && node != to)
                     {
-                        forward_heap.Insert(to, to_weight, {node, true});
+                        const EdgeWeight to_weight = weight + shortcut_weight;
+                        BOOST_ASSERT(to_weight >= weight);
+                        if (!forward_heap.WasInserted(to))
+                        {
+                            forward_heap.Insert(to, to_weight, {node, true});
+                        }
+                        else if (to_weight < forward_heap.GetKey(to))
+                        {
+                            forward_heap.GetData(to) = {node, true};
+                            forward_heap.DecreaseKey(to, to_weight);
+                        }
                     }
-                    else if (to_weight < forward_heap.GetKey(to))
-                    {
-                        forward_heap.GetData(to) = {node, true};
-                        forward_heap.DecreaseKey(to, to_weight);
-                    }
-                }
-                ++destination;
-            }
+                });
         }
         else
         {
             // Shortcuts in backward direction
-            const auto &cell = cells.GetCell(level, partition.GetCell(level, node));
-            auto source = cell.GetSourceNodes().begin();
-            for (auto shortcut_weight : cell.GetInWeight(node))
-            {
-                BOOST_ASSERT(source != cell.GetSourceNodes().end());
-                const NodeID to = *source;
-                if (shortcut_weight != INVALID_EDGE_WEIGHT && node != to)
-                {
-                    const EdgeWeight to_weight = weight + shortcut_weight;
-                    BOOST_ASSERT(to_weight >= weight);
-                    if (!forward_heap.WasInserted(to))
+            facade.ForEachSourceNodes(
+                level, node, [&](NodeID source, EdgeWeight shortcut_weight, EdgeDuration) {
+                    const NodeID to = source;
+                    if (shortcut_weight != INVALID_EDGE_WEIGHT && node != to)
                     {
-                        forward_heap.Insert(to, to_weight, {node, true});
+                        const EdgeWeight to_weight = weight + shortcut_weight;
+                        BOOST_ASSERT(to_weight >= weight);
+                        if (!forward_heap.WasInserted(to))
+                        {
+                            forward_heap.Insert(to, to_weight, {node, true});
+                        }
+                        else if (to_weight < forward_heap.GetKey(to))
+                        {
+                            forward_heap.GetData(to) = {node, true};
+                            forward_heap.DecreaseKey(to, to_weight);
+                        }
                     }
-                    else if (to_weight < forward_heap.GetKey(to))
-                    {
-                        forward_heap.GetData(to) = {node, true};
-                        forward_heap.DecreaseKey(to, to_weight);
-                    }
-                }
-                ++source;
-            }
+                });
         }
     }
 
@@ -232,7 +224,7 @@ void routingStep(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm>
         {
             const NodeID to = facade.GetTarget(edge);
 
-            if (checkParentCellRestriction(partition.GetCell(level + 1, to), args...))
+            if (checkParentCellRestriction(facade.GetPartitionCell(level + 1, to), args...))
             {
                 BOOST_ASSERT_MSG(edge_data.weight > 0, "edge_weight invalid");
                 const EdgeWeight to_weight = weight + edge_data.weight;
@@ -274,8 +266,6 @@ UnpackedPath search(SearchEngineData<Algorithm> &engine_working_data,
     {
         return std::make_tuple(INVALID_EDGE_WEIGHT, std::vector<NodeID>(), std::vector<EdgeID>());
     }
-
-    const auto &partition = facade.GetMultiLevelPartition();
 
     BOOST_ASSERT(!forward_heap.Empty() && forward_heap.MinKey() < INVALID_EDGE_WEIGHT);
     BOOST_ASSERT(!reverse_heap.Empty() && reverse_heap.MinKey() < INVALID_EDGE_WEIGHT);
@@ -349,9 +339,9 @@ UnpackedPath search(SearchEngineData<Algorithm> &engine_working_data,
         }
         else
         { // an overlay graph edge
-            LevelID level = getNodeQueryLevel(partition, source, args...);
-            CellID parent_cell_id = partition.GetCell(level, source);
-            BOOST_ASSERT(parent_cell_id == partition.GetCell(level, target));
+            LevelID level = getNodeQueryLevel(facade, source, args...);
+            CellID parent_cell_id = facade.GetPartitionCell(level, source);
+            BOOST_ASSERT(parent_cell_id == facade.GetPartitionCell(level, target));
 
             LevelID sublevel = level - 1;
 

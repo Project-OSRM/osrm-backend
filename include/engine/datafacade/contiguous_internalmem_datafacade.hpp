@@ -1070,12 +1070,46 @@ template <> class ContiguousInternalMemoryAlgorithmDataFacade<MLD> : public Algo
         InitializeInternalPointers(allocator->GetLayout(), allocator->GetMemory());
     }
 
-    const partition::MultiLevelPartitionView &GetMultiLevelPartition() const override
+    LevelID GetQueryLevel(NodeID source, NodeID target, NodeID node) const override
     {
-        return mld_partition;
+        return mld_partition.GetQueryLevel(source, target, node);
     }
 
-    const partition::CellStorageView &GetCellStorage() const override { return mld_cell_storage; }
+    LevelID GetHighestDifferentLevel(NodeID first, NodeID second) const override
+    {
+        return mld_partition.GetHighestDifferentLevel(first, second);
+    }
+
+    void ForEachSourceNodes(LevelID level, NodeID node, NodeFnT const &fn) const override
+    {
+        const auto &cell = mld_cell_storage.GetCell(level, mld_partition.GetCell(level, node));
+        auto source = cell.GetSourceNodes().begin();
+        auto durations = cell.GetInDuration(node).begin();
+
+        BOOST_ASSERT(cell.GetInDuration(node).size() == cell.GetInWeight(node).size());
+
+        for (auto shortcut_weight : cell.GetInWeight(node))
+            fn(*source++, shortcut_weight, *durations++);
+    }
+
+    void ForEachDestinationNodes(LevelID level, NodeID node, NodeFnT const &fn) const override
+    {
+        const auto &cell = mld_cell_storage.GetCell(level, mld_partition.GetCell(level, node));
+        auto destination = cell.GetDestinationNodes().begin();
+        auto durations = cell.GetOutDuration(node).begin();
+
+        BOOST_ASSERT(cell.GetOutDuration(node).size() == cell.GetOutWeight(node).size());
+
+        for (auto shortcut_weight : cell.GetOutWeight(node))
+            fn(*destination++, shortcut_weight, *durations++);
+    }
+
+    CellID GetPartitionCell(LevelID level, NodeID node) const override
+    {
+        return mld_partition.GetCell(level, node);
+    }
+
+    virtual uint8_t GetNumberOfLevels() const override { return mld_partition.GetNumberOfLevels(); }
 
     // search graph access
     unsigned GetNumberOfNodes() const override final { return query_graph.GetNumberOfNodes(); }
