@@ -24,7 +24,8 @@ namespace routing_algorithms
 template <typename Algorithm>
 InternalRouteResult
 directShortestPathSearch(SearchEngineData<Algorithm> &engine_working_data,
-                         const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
+                         const datafacade::AlgorithmDataFacade<Algorithm> &alg_facade,
+                         const datafacade::BaseDataFacade &base_facade,
                          const PhantomNodes &phantom_nodes);
 
 } // namespace routing_algorithms

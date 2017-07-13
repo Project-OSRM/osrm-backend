@@ -19,7 +19,8 @@ namespace routing_algorithms
 template <typename Algorithm>
 std::vector<EdgeWeight>
 manyToManySearch(SearchEngineData<Algorithm> &engine_working_data,
-                 const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
+                 const datafacade::AlgorithmDataFacade<Algorithm> &alg_facade,
+                 const datafacade::BaseDataFacade &base_facade,
                  const std::vector<PhantomNode> &phantom_nodes,
                  const std::vector<std::size_t> &source_indices,
                  const std::vector<std::size_t> &target_indices);

@@ -50,7 +50,8 @@ unsigned getMedianSampleTime(const std::vector<unsigned> &timestamps)
 
 template <typename Algorithm>
 SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
-                            const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
+                            const datafacade::AlgorithmDataFacade<Algorithm> &alg_facade,
+                            const datafacade::BaseDataFacade &base_facade,
                             const CandidateLists &candidates_list,
                             const std::vector<util::Coordinate> &trace_coordinates,
                             const std::vector<unsigned> &trace_timestamps,
@@ -131,7 +132,7 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
         return sub_matchings;
     }
 
-    const auto nodes_number = facade.GetNumberOfNodes();
+    const auto nodes_number = alg_facade.GetNumberOfNodes();
     engine_working_data.InitializeOrClearFirstThreadLocalStorage(nodes_number);
 
     auto &forward_heap = *engine_working_data.forward_heap_1;
@@ -159,7 +160,7 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
         const auto max_distance_delta = [&] {
             if (use_timestamps)
             {
-                return step_time * facade.GetMapMatchingMaxSpeed();
+                return step_time * base_facade.GetMapMatchingMaxSpeed();
             }
             else
             {
@@ -200,8 +201,8 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
             const auto haversine_distance = util::coordinate_calculation::haversineDistance(
                 prev_coordinate, current_coordinate);
             // assumes minumum of 4 m/s
-            const EdgeWeight weight_upper_bound =
-                ((haversine_distance + max_distance_delta) / 4.) * facade.GetWeightMultiplier();
+            const EdgeWeight weight_upper_bound = ((haversine_distance + max_distance_delta) / 4.) *
+                                                  base_facade.GetWeightMultiplier();
 
             // compute d_t for this timestamp and the next one
             for (const auto s : util::irange<std::size_t>(0UL, prev_viterbi.size()))
@@ -222,7 +223,8 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
 
                     double network_distance =
                         getNetworkDistance(engine_working_data,
-                                           facade,
+                                           alg_facade,
+                                           base_facade,
                                            forward_heap,
                                            reverse_heap,
                                            prev_unbroken_timestamps_list[s].phantom_node,
@@ -422,7 +424,8 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
 
 template SubMatchingList
 mapMatching(SearchEngineData<ch::Algorithm> &engine_working_data,
-            const datafacade::ContiguousInternalMemoryDataFacade<ch::Algorithm> &facade,
+            const datafacade::AlgorithmDataFacade<ch::Algorithm> &alg_facade,
+            const datafacade::BaseDataFacade &base_facade,
             const CandidateLists &candidates_list,
             const std::vector<util::Coordinate> &trace_coordinates,
             const std::vector<unsigned> &trace_timestamps,
@@ -431,7 +434,8 @@ mapMatching(SearchEngineData<ch::Algorithm> &engine_working_data,
 
 template SubMatchingList
 mapMatching(SearchEngineData<corech::Algorithm> &engine_working_data,
-            const datafacade::ContiguousInternalMemoryDataFacade<corech::Algorithm> &facade,
+            const datafacade::AlgorithmDataFacade<corech::Algorithm> &facade,
+            const datafacade::BaseDataFacade &base_facade,
             const CandidateLists &candidates_list,
             const std::vector<util::Coordinate> &trace_coordinates,
             const std::vector<unsigned> &trace_timestamps,
@@ -440,7 +444,8 @@ mapMatching(SearchEngineData<corech::Algorithm> &engine_working_data,
 
 template SubMatchingList
 mapMatching(SearchEngineData<mld::Algorithm> &engine_working_data,
-            const datafacade::ContiguousInternalMemoryDataFacade<mld::Algorithm> &facade,
+            const datafacade::AlgorithmDataFacade<mld::Algorithm> &facade,
+            const datafacade::BaseDataFacade &base_facade,
             const CandidateLists &candidates_list,
             const std::vector<util::Coordinate> &trace_coordinates,
             const std::vector<unsigned> &trace_timestamps,

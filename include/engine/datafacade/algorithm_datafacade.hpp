@@ -61,7 +61,7 @@ template <> class AlgorithmDataFacade<CH>
                                     const std::function<bool(EdgeData)> filter) const = 0;
 };
 
-template <> class AlgorithmDataFacade<CoreCH>
+template <> class AlgorithmDataFacade<CoreCH> : public AlgorithmDataFacade<CH>
 {
   public:
     using EdgeData = contractor::QueryEdge::EdgeData;

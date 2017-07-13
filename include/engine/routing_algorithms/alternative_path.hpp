@@ -18,13 +18,15 @@ namespace routing_algorithms
 
 InternalManyRoutesResult
 alternativePathSearch(SearchEngineData<ch::Algorithm> &search_engine_data,
-                      const datafacade::ContiguousInternalMemoryDataFacade<ch::Algorithm> &facade,
+                      const datafacade::AlgorithmDataFacade<ch::Algorithm> &alg_facade,
+                      const datafacade::BaseDataFacade &base_facade,
                       const PhantomNodes &phantom_node_pair,
                       unsigned number_of_alternatives);
 
 InternalManyRoutesResult
 alternativePathSearch(SearchEngineData<mld::Algorithm> &search_engine_data,
-                      const datafacade::ContiguousInternalMemoryDataFacade<mld::Algorithm> &facade,
+                      const datafacade::AlgorithmDataFacade<mld::Algorithm> &alg_facade,
+                      const datafacade::BaseDataFacade &base_facade,
                       const PhantomNodes &phantom_node_pair,
                       unsigned number_of_alternatives);
 

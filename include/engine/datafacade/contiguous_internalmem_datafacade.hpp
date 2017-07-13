@@ -64,13 +64,15 @@ namespace datafacade
 
 template <typename AlgorithmT> class ContiguousInternalMemoryAlgorithmDataFacade;
 
-template <>
-class ContiguousInternalMemoryAlgorithmDataFacade<CH> : public datafacade::AlgorithmDataFacade<CH>
+template <class AlgorithmT>
+class ContiguousInternalMemoryAlgorithmDataFacadeT
+    : public datafacade::AlgorithmDataFacade<AlgorithmT>
 {
   private:
     using QueryGraph = contractor::QueryGraphView;
     using GraphNode = QueryGraph::NodeArrayEntry;
     using GraphEdge = QueryGraph::EdgeArrayEntry;
+    using EdgeData = typename datafacade::AlgorithmDataFacade<AlgorithmT>::EdgeData;
 
     QueryGraph m_query_graph;
 
@@ -93,7 +95,7 @@ class ContiguousInternalMemoryAlgorithmDataFacade<CH> : public datafacade::Algor
     }
 
   public:
-    ContiguousInternalMemoryAlgorithmDataFacade(
+    ContiguousInternalMemoryAlgorithmDataFacadeT(
         std::shared_ptr<ContiguousBlockAllocator> allocator_)
         : allocator(std::move(allocator_))
     {
@@ -157,8 +159,20 @@ class ContiguousInternalMemoryAlgorithmDataFacade<CH> : public datafacade::Algor
 };
 
 template <>
+class ContiguousInternalMemoryAlgorithmDataFacade<CH>
+    : public ContiguousInternalMemoryAlgorithmDataFacadeT<CH>
+{
+  public:
+    ContiguousInternalMemoryAlgorithmDataFacade(
+        std::shared_ptr<ContiguousBlockAllocator> allocator_)
+        : ContiguousInternalMemoryAlgorithmDataFacadeT<CH>(std::move(allocator_))
+    {
+    }
+};
+
+template <>
 class ContiguousInternalMemoryAlgorithmDataFacade<CoreCH>
-    : public datafacade::AlgorithmDataFacade<CoreCH>
+    : public ContiguousInternalMemoryAlgorithmDataFacadeT<CoreCH>
 {
   private:
     util::vector_view<bool> m_is_core_node;
@@ -178,7 +192,8 @@ class ContiguousInternalMemoryAlgorithmDataFacade<CoreCH>
   public:
     ContiguousInternalMemoryAlgorithmDataFacade(
         std::shared_ptr<ContiguousBlockAllocator> allocator_)
-        : allocator(std::move(allocator_))
+        : ContiguousInternalMemoryAlgorithmDataFacadeT<CoreCH>(allocator_),
+          allocator(std::move(allocator_))
     {
         InitializeInternalPointers(allocator->GetLayout(), allocator->GetMemory());
     }
@@ -927,13 +942,13 @@ class ContiguousInternalMemoryDataFacade<CH>
 };
 
 template <>
-class ContiguousInternalMemoryDataFacade<CoreCH> final
-    : public ContiguousInternalMemoryDataFacade<CH>,
+class ContiguousInternalMemoryDataFacade<CoreCH>
+    : public ContiguousInternalMemoryDataFacadeBase,
       public ContiguousInternalMemoryAlgorithmDataFacade<CoreCH>
 {
   public:
     ContiguousInternalMemoryDataFacade(std::shared_ptr<ContiguousBlockAllocator> allocator)
-        : ContiguousInternalMemoryDataFacade<CH>(allocator),
+        : ContiguousInternalMemoryDataFacadeBase(allocator),
           ContiguousInternalMemoryAlgorithmDataFacade<CoreCH>(allocator)
 
     {

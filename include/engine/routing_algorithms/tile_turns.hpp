@@ -28,13 +28,14 @@ struct TurnData final
 
 using RTreeLeaf = datafacade::BaseDataFacade::RTreeLeaf;
 
-std::vector<TurnData>
-getTileTurns(const datafacade::ContiguousInternalMemoryDataFacade<ch::Algorithm> &facade,
-             const std::vector<RTreeLeaf> &edges,
-             const std::vector<std::size_t> &sorted_edge_indexes);
+std::vector<TurnData> getTileTurns(const datafacade::AlgorithmDataFacade<ch::Algorithm> &alg_facade,
+                                   const datafacade::BaseDataFacade &base_facade,
+                                   const std::vector<RTreeLeaf> &edges,
+                                   const std::vector<std::size_t> &sorted_edge_indexes);
 
 std::vector<TurnData>
-getTileTurns(const datafacade::ContiguousInternalMemoryDataFacade<mld::Algorithm> &facade,
+getTileTurns(const datafacade::AlgorithmDataFacade<mld::Algorithm> &alg_facade,
+             const datafacade::BaseDataFacade &base_facade,
              const std::vector<RTreeLeaf> &edges,
              const std::vector<std::size_t> &sorted_edge_indexes);
 

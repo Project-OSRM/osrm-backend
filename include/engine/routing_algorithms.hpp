@@ -59,8 +59,9 @@ template <typename Algorithm> class RoutingAlgorithms final : public RoutingAlgo
 {
   public:
     RoutingAlgorithms(SearchEngineData<Algorithm> &heaps,
-                      const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade)
-        : heaps(heaps), facade(facade)
+                      const datafacade::AlgorithmDataFacade<Algorithm> &alg_facade,
+                      const datafacade::BaseDataFacade &base_facade)
+        : heaps(heaps), alg_facade(alg_facade), base_facade(base_facade)
     {
     }
 
@@ -127,7 +128,8 @@ template <typename Algorithm> class RoutingAlgorithms final : public RoutingAlgo
     SearchEngineData<Algorithm> &heaps;
 
     // Owned by shared-ptr passed to the query
-    const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade;
+    const datafacade::AlgorithmDataFacade<Algorithm> &alg_facade;
+    const datafacade::BaseDataFacade &base_facade;
 };
 
 template <typename Algorithm>
@@ -136,7 +138,7 @@ RoutingAlgorithms<Algorithm>::AlternativePathSearch(const PhantomNodes &phantom_
                                                     unsigned number_of_alternatives) const
 {
     return routing_algorithms::alternativePathSearch(
-        heaps, facade, phantom_node_pair, number_of_alternatives);
+        heaps, alg_facade, base_facade, phantom_node_pair, number_of_alternatives);
 }
 
 template <typename Algorithm>
@@ -145,14 +147,15 @@ InternalRouteResult RoutingAlgorithms<Algorithm>::ShortestPathSearch(
     const boost::optional<bool> continue_straight_at_waypoint) const
 {
     return routing_algorithms::shortestPathSearch(
-        heaps, facade, phantom_node_pair, continue_straight_at_waypoint);
+        heaps, alg_facade, base_facade, phantom_node_pair, continue_straight_at_waypoint);
 }
 
 template <typename Algorithm>
 InternalRouteResult
 RoutingAlgorithms<Algorithm>::DirectShortestPathSearch(const PhantomNodes &phantom_nodes) const
 {
-    return routing_algorithms::directShortestPathSearch(heaps, facade, phantom_nodes);
+    return routing_algorithms::directShortestPathSearch(
+        heaps, alg_facade, base_facade, phantom_nodes);
 }
 
 template <typename Algorithm>
@@ -162,7 +165,7 @@ RoutingAlgorithms<Algorithm>::ManyToManySearch(const std::vector<PhantomNode> &p
                                                const std::vector<std::size_t> &target_indices) const
 {
     return routing_algorithms::manyToManySearch(
-        heaps, facade, phantom_nodes, source_indices, target_indices);
+        heaps, alg_facade, base_facade, phantom_nodes, source_indices, target_indices);
 }
 
 template <typename Algorithm>
@@ -174,7 +177,8 @@ inline routing_algorithms::SubMatchingList RoutingAlgorithms<Algorithm>::MapMatc
     const bool allow_splitting) const
 {
     return routing_algorithms::mapMatching(heaps,
-                                           facade,
+                                           alg_facade,
+                                           base_facade,
                                            candidates_list,
                                            trace_coordinates,
                                            trace_timestamps,
@@ -187,7 +191,7 @@ inline std::vector<routing_algorithms::TurnData> RoutingAlgorithms<Algorithm>::G
     const std::vector<datafacade::BaseDataFacade::RTreeLeaf> &edges,
     const std::vector<std::size_t> &sorted_edge_indexes) const
 {
-    return routing_algorithms::getTileTurns(facade, edges, sorted_edge_indexes);
+    return routing_algorithms::getTileTurns(alg_facade, base_facade, edges, sorted_edge_indexes);
 }
 
 // CoreCH overrides
