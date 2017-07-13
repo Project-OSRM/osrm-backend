@@ -261,7 +261,7 @@ module.exports = function () {
     };
 
     this.classesList = (instructions) => {
-        return this.extractInstructionList(instructions, s => s.classes ? s.classes.join(';') : '');
+        return this.extractInstructionList(instructions, s => '[' + s.intersections.map(i => '(' + (i.classes ? i.classes.join(',') : '') + ')').join(',') + ']');
     };
 
     this.timeList = (instructions) => {

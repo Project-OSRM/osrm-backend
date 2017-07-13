@@ -88,10 +88,7 @@ TurnInstruction IntersectionHandler::getInstructionForObvious(const std::size_t 
     // handle travel modes:
     const auto in_mode = node_based_graph.GetEdgeData(via_edge).travel_mode;
     const auto out_mode = node_based_graph.GetEdgeData(road.eid).travel_mode;
-    const auto in_classes = node_based_graph.GetEdgeData(via_edge).classes;
-    const auto out_classes = node_based_graph.GetEdgeData(road.eid).classes;
-    // if we just lose class flags we don't want to notify
-    const auto needs_notification = in_mode != out_mode || !isSubset(out_classes, in_classes);
+    const auto needs_notification = in_mode != out_mode;
 
     if (type == TurnType::Turn)
     {

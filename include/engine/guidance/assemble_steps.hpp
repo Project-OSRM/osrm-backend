@@ -63,7 +63,6 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
                                                             : target_node.forward_segment_id.id;
     const auto target_name_id = facade.GetNameIndex(target_node_id);
     const auto target_mode = facade.GetTravelMode(target_node_id);
-    auto target_classes = facade.GetClasses(facade.GetClassData(target_node_id));
 
     const auto number_of_segments = leg_geometry.GetNumberOfSegments();
 
@@ -88,7 +87,8 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
                                           IntermediateIntersection::NO_INDEX,
                                           0,
                                           util::guidance::LaneTuple(),
-                                          {}};
+                                          {},
+                                          source_classes};
 
     if (leg_data.size() > 0)
     {
@@ -118,7 +118,8 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
                 const auto destinations = facade.GetDestinationsForID(step_name_id);
                 const auto exits = facade.GetExitsForID(step_name_id);
                 const auto distance = leg_geometry.segment_distances[segment_index];
-                auto classes = facade.GetClasses(path_point.classes);
+                // intersections contain the classes of exiting road
+                intersection.classes = facade.GetClasses(path_point.classes);
 
                 steps.push_back(RouteStep{step_name_id,
                                           name.to_string(),
@@ -135,8 +136,7 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
                                           maneuver,
                                           leg_geometry.FrontIndex(segment_index),
                                           leg_geometry.BackIndex(segment_index) + 1,
-                                          {intersection},
-                                          std::move(classes)});
+                                          {intersection}});
 
                 if (leg_data_index + 1 < leg_data.size())
                 {
@@ -196,6 +196,8 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
         const auto distance = leg_geometry.segment_distances[segment_index];
         const EdgeWeight duration = segment_duration + target_duration;
         const EdgeWeight weight = segment_weight + target_weight;
+        // intersections contain the classes of exiting road
+        intersection.classes = facade.GetClasses(facade.GetClassData(target_node_id));
         BOOST_ASSERT(duration >= 0);
         steps.push_back(RouteStep{step_name_id,
                                   facade.GetNameForID(step_name_id).to_string(),
@@ -212,8 +214,7 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
                                   maneuver,
                                   leg_geometry.FrontIndex(segment_index),
                                   leg_geometry.BackIndex(segment_index) + 1,
-                                  {intersection},
-                                  std::move(target_classes)});
+                                  {intersection}});
     }
     // In this case the source + target are on the same edge segment
     else
@@ -255,8 +256,7 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
                                   std::move(maneuver),
                                   leg_geometry.FrontIndex(segment_index),
                                   leg_geometry.BackIndex(segment_index) + 1,
-                                  {intersection},
-                                  std::move(source_classes)});
+                                  {intersection}});
     }
 
     BOOST_ASSERT(segment_index == number_of_segments - 1);
@@ -269,6 +269,7 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
         0,
         IntermediateIntersection::NO_INDEX,
         util::guidance::LaneTuple(),
+        {},
         {}};
 
     // This step has length zero, the only reason we need it is the target location
@@ -295,8 +296,7 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
                               std::move(maneuver),
                               leg_geometry.locations.size() - 1,
                               leg_geometry.locations.size(),
-                              {intersection},
-                              std::move(target_classes)});
+                              {intersection}});
 
     BOOST_ASSERT(steps.front().intersections.size() == 1);
     BOOST_ASSERT(steps.front().intersections.front().bearings.size() == 1);
