@@ -24,7 +24,6 @@ struct TurnLaneData
     // a temporary data entry that does not need to be assigned to an entry.
     // This is the case in situations that use partition and require the entry to perform the
     // one-to-one mapping.
-    bool suppress_assignment;
     bool operator<(const TurnLaneData &other) const;
 };
 typedef std::vector<TurnLaneData> LaneDataVector;

@@ -96,7 +96,7 @@ std::vector<RouteStep> anticipateLaneChange(std::vector<RouteStep> steps,
 
             // only prevent use lanes due to making all turns. don't make turns during curvy
             // segments
-            if (previous_inst.type == TurnType::UseLane)
+            if (previous_inst.type == TurnType::Suppressed)
                 time_to_constrained += previous.duration;
             else
                 time_to_constrained = 0;
@@ -193,8 +193,9 @@ std::vector<RouteStep> anticipateLaneChange(std::vector<RouteStep> steps,
                     anticipate_for_right_turn();
             }
 
-            if (previous_inst.type == TurnType::UseLane && current_inst.type == TurnType::UseLane &&
-                previous.mode == current.mode && previous_lanes == current_lanes)
+            if (previous_inst.type == TurnType::Suppressed &&
+                current_inst.type == TurnType::Suppressed && previous.mode == current.mode &&
+                previous_lanes == current_lanes)
             {
                 previous.ElongateBy(current);
                 current.Invalidate();

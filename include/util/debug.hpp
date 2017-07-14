@@ -90,9 +90,7 @@ inline void print(const extractor::guidance::lanes::LaneDataVector &turn_lane_da
         std::cout << "\t" << entry.tag << "("
                   << extractor::guidance::TurnLaneType::toString(entry.tag)
                   << ") from: " << static_cast<int>(entry.from)
-                  << " to: " << static_cast<int>(entry.to)
-                  << " Can Be Suppresssed: " << (entry.suppress_assignment ? "true" : "false")
-                  << "\n";
+                  << " to: " << static_cast<int>(entry.to) << "\n";
     std::cout << std::flush;
 }
 

@@ -174,14 +174,16 @@ module.exports = function () {
     this.lanesList = (instructions) => {
         return this.extractInstructionList(instructions, s => {
             return s.intersections.map( i => {
-                if(i.lanes == undefined )
-                    return '';
-                else
+                if(i.lanes)
                 {
                     return i.lanes.map( l => {
                         let indications = l.indications.join(';');
                         return indications + ':' + (l.valid ? 'true' : 'false');
                     }).join(' ');
+                }
+                else
+                {
+                    return '';
                 }
             }).join(';');
         });
