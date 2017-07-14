@@ -49,7 +49,7 @@ const constexpr Enum EnterRotary = 12;                 // Enter a rotary
 const constexpr Enum EnterAndExitRotary = 13;          // Touching a rotary
 const constexpr Enum EnterRoundaboutIntersection = 14; // Entering a small Roundabout
 const constexpr Enum EnterAndExitRoundaboutIntersection = 15; // Touching a roundabout
-const constexpr Enum UseLane = 16; // No Turn, but you need to stay on a given lane!
+// depreacted: const constexpr Enum UseLane = 16; // No Turn, but you need to stay on a given lane!
 
 // Values below here are silent instructions
 const constexpr Enum NoTurn = 17;                // end of segment without turn/middle of a segment
@@ -207,9 +207,7 @@ inline bool isSilent(const extractor::guidance::TurnInstruction instruction)
 {
     return instruction.type == extractor::guidance::TurnType::NoTurn ||
            instruction.type == extractor::guidance::TurnType::Suppressed ||
-           instruction.type == extractor::guidance::TurnType::StayOnRoundabout ||
-           // it is enough to output them within the intersections array
-           instruction.type == extractor::guidance::TurnType::UseLane;
+           instruction.type == extractor::guidance::TurnType::StayOnRoundabout;
 }
 
 inline bool hasRampType(const extractor::guidance::TurnInstruction instruction)

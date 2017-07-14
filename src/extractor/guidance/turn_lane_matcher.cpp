@@ -87,7 +87,7 @@ bool isValidMatch(const TurnLaneType::Mask tag, const TurnInstruction instructio
                     TurnType::Continue && // Forks can be experienced, even for straight segments
                 (instruction.direction_modifier == DirectionModifier::SlightLeft ||
                  instruction.direction_modifier == DirectionModifier::SlightRight)) ||
-               instruction.type == TurnType::UseLane;
+               instruction.type == TurnType::Suppressed;
     }
     else if (tag == TurnLaneType::slight_left || tag == TurnLaneType::left ||
              tag == TurnLaneType::sharp_left)
@@ -249,10 +249,6 @@ Intersection triviallyMatchLanesToTurns(Intersection intersection,
             BOOST_ASSERT(isValidMatch(lane_data[lane].tag, intersection[road_index].instruction));
             BOOST_ASSERT(findBestMatch(lane_data[lane].tag, intersection) ==
                          intersection.begin() + road_index);
-
-            if (TurnType::Suppressed == intersection[road_index].instruction.type &&
-                !lane_data[lane].suppress_assignment)
-                intersection[road_index].instruction.type = TurnType::UseLane;
 
             matchRoad(intersection[road_index], lane_data[lane]);
             ++lane;
