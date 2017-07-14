@@ -107,7 +107,7 @@ LaneDataVector laneDataFromDescription(TurnLaneDescription turn_lane_description
     LaneDataVector lane_data;
     lane_data.reserve(lane_map.size());
     for (const auto &tag : lane_map)
-        lane_data.push_back({tag.first, tag.second.first, tag.second.second, false});
+        lane_data.push_back({tag.first, tag.second.first, tag.second.second});
 
     std::sort(lane_data.begin(), lane_data.end());
 

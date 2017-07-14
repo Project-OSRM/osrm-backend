@@ -176,7 +176,7 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
                            "enter_and_exit_roundabout_intersection",
                            extractor::guidance::TurnType::EnterAndExitRoundaboutIntersection,
                            "use_lane",
-                           extractor::guidance::TurnType::UseLane,
+                           extractor::guidance::TurnType::Suppressed,
                            "no_turn",
                            extractor::guidance::TurnType::NoTurn,
                            "suppressed",
