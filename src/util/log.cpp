@@ -27,7 +27,14 @@ void LogPolicy::Unmute() { m_is_mute = false; }
 
 void LogPolicy::Mute() { m_is_mute = true; }
 
-bool LogPolicy::IsMute() const { return m_is_mute; }
+bool LogPolicy::IsMute() const
+{
+#ifdef OSRM_LOGGING_DISABLED
+    return true;
+#else
+    return m_is_mute;
+#endif
+}
 
 LogPolicy &LogPolicy::GetInstance()
 {
@@ -35,7 +42,8 @@ LogPolicy &LogPolicy::GetInstance()
     return runningInstance;
 }
 
-Log::Log(LogLevel level_, std::ostream &ostream) : level(level_), stream(ostream)
+Log::Log(LogLevel level_, std::ostream &ostream) : level(level_), stream(ostream),
+    saved_buffer(LogPolicy::GetInstance().IsMute() ? ostream.rdbuf(&null_buffer) : nullptr)
 {
     const bool is_terminal = IsStdoutATTY();
     std::lock_guard<std::mutex> lock(get_mutex());
@@ -108,6 +116,9 @@ Log::~Log()
             stream << std::endl;
         }
     }
+
+    if (saved_buffer)
+        stream.rdbuf(saved_buffer);
 }
 
 UnbufferedLog::UnbufferedLog(LogLevel level_)

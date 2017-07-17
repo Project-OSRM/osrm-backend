@@ -52,6 +52,13 @@ class Log
     LogLevel level;
     std::ostringstream buffer;
     std::ostream &stream;
+
+    struct null_streambuf : public std::streambuf
+    {
+        virtual std::streamsize xsputn (const char*, std::streamsize n) { return n; }
+        virtual int overflow (int) { return 1; }
+    } null_buffer;
+    std::streambuf* saved_buffer;
 };
 
 /**
