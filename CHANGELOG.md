@@ -19,6 +19,7 @@
       - Exposes engine limit on number of alternatives to generate `--max-alternatives` in `osrm-routed` (3 by default)
     - Infrastructure
       - STXXL is not required to build OSRM and is an optional dependency for back-compatibility (ENABLE_STXXL=On)
+      - OpenMP is only required when the optional STXXL dependency is used
     - Bug fixes:
       - #4278: Remove superflous continious instruction on a motorway.
 
