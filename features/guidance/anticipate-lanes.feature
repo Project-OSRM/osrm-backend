@@ -3,7 +3,7 @@ Feature: Turn Lane Guidance
 
     Background:
         Given the profile "car"
-        Given a grid size of 20 meters
+        Given a grid size of 100 meters
 
     @anticipate
     Scenario: Anticipate Lane Change for subsequent multi-lane intersections
@@ -371,9 +371,9 @@ Feature: Turn Lane Guidance
        Scenario: Anticipate Lanes for through with turn before / after
            Given the node map
                """
-               c       g       l
-               b – d – e – h - i
-               a       f       j
+               c   g   l
+               b d e h i
+               a   f   j
                """
 
            And the ways
@@ -625,38 +625,9 @@ Feature: Turn Lane Guidance
             x – b   d – y
                 |   |
                 |   |
-                |   |
-                |   |
-                |   |
-                |   |
-                |   |
-                |   |
-                |   |
-                |   |
                  | |
                  | |
-                 | |
-                 | |
-                 | |
-                 | |
-                 | |
-                 | |
-                 | |
-                 | |
-                 | |
-                 | |
-                  |
-                  |
-                  |
-                  |
-                  |
-                  |
-                  |
-                  |
-                  |
-                  |
-                  |
-                  |
+                 \ /
                   c
             """
 
@@ -792,13 +763,6 @@ Feature: Turn Lane Guidance
                 |
                 |
                 |
-                |
-                |
-                |
-                |
-                |
-                |
-                |
                 c
                 |
             e – d – y
@@ -823,11 +787,9 @@ Feature: Turn Lane Guidance
     Scenario: Don't Overdo It
         Given the node map
             """
-                                  q                     r                     s                     t                     u                     v
-                                  |                     |                     |                     |                     |                     |
-            a - - - - - - - - - - b - - - - - - - - - - c - - - - - - - - - - d - - - - - - - - - - e - - - - - - - - - - f - - - - - - - - - - g - h - i
-                                  |                     |                     |                     |                     |                     |   |
-                                  p                     o                     n                     m                     l                     k   j
+                  q     r     s     t     u   v
+            a - - b - - c - - d - - e - - f - g - h - i
+                  p     o     n     m     l   k   j
             """
 
         And the ways
