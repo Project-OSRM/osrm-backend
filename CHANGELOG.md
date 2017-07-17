@@ -11,6 +11,7 @@
       - Exposes `alternatives=Number` parameter overload in addition to the boolean flag.
       - Support for exits numbers and names. New member `exits` in `RouteStep`, based on `junction:ref` on ways
       - `RouteStep` now has new parameter `classes` that can be set in the profile on each way.
+      - Deprecated `UseLane`. Use the intersections array if you require lanes between steps
     - Profiles:
       - `result.exits` allows you to set a way's exit numbers and names, see [`junction:ref`](http://wiki.openstreetmap.org/wiki/Proposed_features/junction_details)
       - `ExtractionWay` now as new property `forward_classes` and `backward_classes` that can set in the `way_function`.
