@@ -1,3 +1,7 @@
+# 5.9.1
+  - Changes from 5.9.0:
+      - Deprecated `UseLane`. Use the intersections array if you require lanes between steps
+
 # 5.9.0
   - Changes from 5.8:
     - Algorithm:

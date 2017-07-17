@@ -655,7 +655,7 @@ step.
 | `off ramp`       | take a ramp to exit a highway (direction given my `modifier`)  |
 | `fork`           | take the left/right side at a fork depending on `modifier`   |
 | `end of road`    | road ends in a T intersection turn in direction of `modifier`|
-| `use lane`       | going straight on a specific lane -- deprecated, use the intersections information |
+| `use lane`       | **Deprecated** replaced by lanes on all intersection entries |
 | `continue`       | Turn in direction of `modifier` to stay on the same road     |
 | `roundabout`     | traverse roundabout, has additional property `exit` with NR if the roundabout is left. The modifier specifies the direction of entering the roundabout. |
 | `rotary`         | a traffic circle. While very similar to a larger version of a roundabout, it does not necessarily follow roundabout rules for right of way. It can offer `rotary_name` and/or `rotary_pronunciation` parameters (located in the RouteStep object) in addition to the `exit` parameter (located on the StepManeuver object).  |
