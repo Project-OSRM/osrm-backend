@@ -21,10 +21,10 @@ namespace guidance
 {
 
 std::vector<RouteStep> anticipateLaneChange(std::vector<RouteStep> steps,
-                                            const double min_duration_needed_for_lane_change)
+                                            const double min_distance_needed_for_lane_change)
 {
-    // Lane anticipation works on contiguous ranges of quick steps that have lane information
-    const auto is_quick_has_lanes = [&](const RouteStep &step) {
+    // Lane anticipation works on contiguous ranges of short steps that have lane information
+    const auto is_short_has_lanes = [&](const RouteStep &step) {
         const auto has_lanes = step.intersections.front().lanes.lanes_in_turn > 0;
 
         if (!has_lanes)
@@ -41,10 +41,10 @@ std::vector<RouteStep> anticipateLaneChange(std::vector<RouteStep> steps,
         // We do not have a source-target lane mapping, assume worst case for lanes to cross.
         const auto to_cross = std::max(step.NumLanesToTheRight(), step.NumLanesToTheLeft());
         const auto scale = 1 + to_cross;
-        const auto threshold = scale * min_duration_needed_for_lane_change;
+        const auto threshold = scale * min_distance_needed_for_lane_change;
 
-        const auto is_quick = step.duration < threshold;
-        return is_quick;
+        const auto is_short = step.distance < threshold;
+        return is_short;
     };
 
     using StepIter = decltype(steps)::iterator;
@@ -57,7 +57,7 @@ std::vector<RouteStep> anticipateLaneChange(std::vector<RouteStep> steps,
             quick_lanes_ranges.push_back(std::move(range));
     };
 
-    util::group_by(begin(steps), end(steps), is_quick_has_lanes, range_back_inserter);
+    util::group_by(begin(steps), end(steps), is_short_has_lanes, range_back_inserter);
 
     // The lanes for a keep straight depend on the next left/right turn. Tag them in advance.
     std::unordered_set<const RouteStep *> is_straight_left;
@@ -75,10 +75,11 @@ std::vector<RouteStep> anticipateLaneChange(std::vector<RouteStep> steps,
         // state for the lamda
         // the number of lanes we have to change depends on the number of lanes that are allowed for
         // a turn (in general) and the set of lanes which would allow for us to do the turn without
-        // a problem. In a sequence of turns, we have to look at how much time we need to switch the
+        // a problem. In a sequence of turns, we have to look at how much distance we need to switch
+        // the
         // sequence. Given the turns in between, we would expect a bit longer than on a straight
-        // segment for a lane switch, but the total time shouldn't be unlimited.
-        double time_to_constrained = 0.0;
+        // segment for a lane switch, but the total distance shouldn't be unlimited.
+        double distance_to_constrained = 0.0;
 
         util::for_each_pair(rev_first, rev_last, [&](RouteStep &current, RouteStep &previous) {
             const auto current_inst = current.maneuver.instruction;
@@ -97,13 +98,13 @@ std::vector<RouteStep> anticipateLaneChange(std::vector<RouteStep> steps,
             // only prevent use lanes due to making all turns. don't make turns during curvy
             // segments
             if (previous_inst.type == TurnType::Suppressed)
-                time_to_constrained += previous.duration;
+                distance_to_constrained += previous.distance;
             else
-                time_to_constrained = 0;
+                distance_to_constrained = 0.;
 
             const auto lane_delta = previous_lanes.lanes_in_turn - current_lanes.lanes_in_turn;
             const auto can_make_all_turns =
-                time_to_constrained > lane_delta * min_duration_needed_for_lane_change;
+                distance_to_constrained > lane_delta * min_distance_needed_for_lane_change;
 
             if (!lanes_to_constrain || !lanes_fan_in || can_make_all_turns)
                 return;
