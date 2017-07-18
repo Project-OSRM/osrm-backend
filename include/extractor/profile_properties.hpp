@@ -5,9 +5,11 @@
 
 #include "util/typedefs.hpp"
 
-#include <algorithm>
 #include <boost/assert.hpp>
+#include <boost/optional.hpp>
 #include <boost/numeric/conversion/cast.hpp>
+
+#include <algorithm>
 #include <cstdint>
 
 namespace osrm
@@ -70,6 +72,24 @@ struct ProfileProperties
         return std::string(weight_name);
     }
 
+    // Mark this combination of classes as avoidable
+    void SetAvoidableClasses(std::size_t index, ClassData classes)
+    {
+        avoidable_classes[index] = classes;
+    }
+
+    // Check if this classes are avoidable
+    boost::optional<std::size_t> ClassesAreAvoidable(ClassData classes)
+    {
+        auto iter = std::find(avoidable_classes.begin(), avoidable_classes.end(), classes);
+        if (iter != avoidable_classes.end())
+        {
+            return std::distance(avoidable_classes.begin(), iter);
+        }
+
+        return {};
+    }
+
     void SetClassName(std::size_t index, const std::string &name)
     {
         char *name_ptr = class_names[index];
@@ -109,6 +129,8 @@ struct ProfileProperties
     char weight_name[MAX_WEIGHT_NAME_LENGTH + 1];
     //! stores the names of each class
     std::array<char[MAX_CLASS_NAME_LENGTH + 1], MAX_CLASS_INDEX + 1> class_names;
+    //! stores the masks of avoidable class combinations
+    std::array<ClassData, MAX_AVOIDABLE_CLASSES> avoidable_classes;
     unsigned weight_precision = 1;
     bool force_split_edges = false;
     bool call_tagless_node_function = true;

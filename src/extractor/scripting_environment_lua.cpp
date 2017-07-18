@@ -689,9 +689,53 @@ Sol2ScriptingEnvironment::GetStringListFromTable(const std::string &table_name)
         for (auto &&pair : table)
         {
             strings.push_back(pair.second.as<std::string>());
-        };
+        }
     }
     return strings;
+}
+
+std::vector<std::vector<std::string>>
+Sol2ScriptingEnvironment::GetStringListsFromTable(const std::string &table_name)
+{
+    std::vector<std::vector<std::string>> string_lists;
+
+    auto &context = GetSol2Context();
+    BOOST_ASSERT(context.state.lua_state() != nullptr);
+    sol::table table = context.profile_table[table_name];
+    if (!table.valid())
+    {
+        return string_lists;
+    }
+
+    for (const auto &pair : table)
+    {
+        sol::table inner_table = pair.second;
+        if (!inner_table.valid())
+        {
+            throw util::exception("Expected a sub-table at " + table_name + "[" + pair.first.as<std::string>() + "]");
+        }
+
+        std::vector<std::string> inner_vector;
+        for (const auto &inner_pair : inner_table)
+        {
+            inner_vector.push_back(inner_pair.first.as<std::string>());
+        }
+        string_lists.push_back(std::move(inner_vector));
+    }
+
+    return string_lists;
+}
+
+std::vector<std::vector<std::string>> Sol2ScriptingEnvironment::GetAvoidableClasses()
+{
+    auto &context = GetSol2Context();
+    switch (context.api_version)
+    {
+    case 2:
+        return Sol2ScriptingEnvironment::GetStringListsFromTable("avoidable");
+    default:
+        return {};
+    }
 }
 
 std::vector<std::string> Sol2ScriptingEnvironment::GetNameSuffixList()

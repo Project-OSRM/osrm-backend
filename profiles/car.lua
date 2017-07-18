@@ -100,6 +100,13 @@ function setup()
       'vehicle'
     },
 
+    -- classes to support for avoid flags
+    avoidable = Sequence {
+        Set {"toll"},
+        Set {"motorway"},
+        Set {"ferry"}
+    },
+
     avoid = Set {
       'area',
       -- 'toll',    -- uncomment this to avoid tolls
