@@ -26,6 +26,24 @@ namespace osrm
 namespace updater
 {
 
+namespace
+{
+inline struct tm getLocalTimeinfo(const char *tzname, const std::time_t utc_time)
+{ // Thread safety: MT-Unsafe const:env
+    struct tm timeinfo;
+#if defined(_WIN32)
+    _putenv_s("TZ", tzname);
+    _tzset();
+    localtime_s(&timeinfo, &utc_time);
+#else
+    setenv("TZ", tzname, 1);
+    tzset();
+    localtime_r(&utc_time, &timeinfo);
+#endif
+    return timeinfo;
+}
+}
+
 Timezoner::Timezoner(const char geojson[], std::time_t utc_time_now)
 {
     util::Log() << "Time zone validation based on UTC time : " << utc_time_now;
@@ -39,6 +57,13 @@ Timezoner::Timezoner(const char geojson[], std::time_t utc_time_now)
                                     std::to_string(code) + " malformed at offset " +
                                     std::to_string(offset));
     }
+
+    // Run-time check for time zones data: 1500000000 ↔ 'Thu Jul 13 22:40:00 EDT 2017'
+    if (getLocalTimeinfo("EST+5EDT", 1500000000).tm_hour != 22)
+    {
+        throw osrm::util::exception("Failed to get correct local time.");
+    }
+
     LoadLocalTimesRTree(doc, utc_time_now);
 }
 
@@ -87,17 +112,7 @@ void Timezoner::LoadLocalTimesRTree(rapidjson::Document &geojson, std::time_t ut
         auto it = local_time_memo.find(tzname);
         if (it == local_time_memo.end())
         {
-            struct tm timeinfo;
-#if defined(_WIN32)
-            _putenv_s("TZ", tzname);
-            _tzset();
-            localtime_s(&timeinfo, &utc_time);
-#else
-            setenv("TZ", tzname, 1);
-            tzset();
-            localtime_r(&utc_time, &timeinfo);
-#endif
-            it = local_time_memo.insert({tzname, timeinfo}).first;
+            it = local_time_memo.insert({tzname, getLocalTimeinfo(tzname, utc_time)}).first;
         }
 
         return it->second;
