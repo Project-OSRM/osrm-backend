@@ -131,3 +131,22 @@ Feature: Car - Destination only, no passing through
             | e    | a  | acbe,acbe     |
             | d    | a  | de,acbe,acbe  |
             | c    | d  | cd,cd         |
+
+    Scenario: Car - Routing onto service roads
+        Given the node map
+            """
+               a---b---c---d----e
+                    \     /
+                     f---g
+            """
+
+        And the ways
+            | nodes | access      | highway   | oneway |
+            | abcde |             | motorway  | yes    |
+            | bfgd  | destination | service   | yes    |
+
+        When I route I should get
+            | from | to | route            |
+            | a    | e  | abcde,abcde      |
+            | a    | g  | abcde,bfgd,bfgd  |
+            | f    | e  | bfgd,abcde,abcde |
