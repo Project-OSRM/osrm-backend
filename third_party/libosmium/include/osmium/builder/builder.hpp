@@ -168,6 +168,20 @@ namespace osmium {
             }
 
             /**
+             * Append data to buffer and append an additional \0.
+             *
+             * @param data Pointer to data.
+             * @param length Length of data in bytes.
+             * @returns The number of bytes appended (length + 1).
+             */
+            osmium::memory::item_size_type append_with_zero(const char* data, const osmium::memory::item_size_type length) {
+                unsigned char* target = reserve_space(length + 1);
+                std::copy_n(reinterpret_cast<const unsigned char*>(data), length, target);
+                target[length] = '\0';
+                return length + 1;
+            }
+
+            /**
              * Append \0-terminated string to buffer.
              *
              * @param str \0-terminated string.
@@ -180,9 +194,11 @@ namespace osmium {
             /**
              * Append '\0' to the buffer.
              *
+             * @deprecated Use append_with_zero() instead.
+             *
              * @returns The number of bytes appended (always 1).
              */
-            osmium::memory::item_size_type append_zero() {
+            OSMIUM_DEPRECATED osmium::memory::item_size_type append_zero() {
                 *reserve_space(1) = '\0';
                 return 1;
             }

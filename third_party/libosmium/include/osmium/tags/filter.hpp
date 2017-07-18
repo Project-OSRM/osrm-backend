@@ -140,7 +140,7 @@ namespace osmium {
              * Return the number of rules in this filter.
              */
             size_t count() const {
-                return m_rules.count();
+                return m_rules.size();
             }
 
             /**

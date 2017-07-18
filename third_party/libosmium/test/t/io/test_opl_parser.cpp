@@ -3,8 +3,10 @@
 #include <cstring>
 
 #include "catch.hpp"
+#include "utils.hpp"
 
 #include <osmium/io/detail/opl_input_format.hpp>
+#include <osmium/io/opl_input.hpp>
 #include <osmium/opl.hpp>
 
 namespace oid = osmium::io::detail;
@@ -1071,5 +1073,25 @@ TEST_CASE("Parse line with external interface") {
         REQUIRE(buffer.committed() == 0);
     }
 
+}
+
+TEST_CASE("Parse OPL using Reader") {
+    osmium::io::File file{with_data_dir("t/io/data.opl")};
+    osmium::io::Reader reader{file};
+
+    const auto buffer = reader.read();
+    REQUIRE(buffer);
+    const auto& node = buffer.get<osmium::Node>(0);
+    REQUIRE(node.id() == 1);
+}
+
+TEST_CASE("Parse OPL with missing newline using Reader") {
+    osmium::io::File file{with_data_dir("t/io/data-nonl.opl")};
+    osmium::io::Reader reader{file};
+
+    const auto buffer = reader.read();
+    REQUIRE(buffer);
+    const auto& node = buffer.get<osmium::Node>(0);
+    REQUIRE(node.id() == 1);
 }
 

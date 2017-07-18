@@ -123,6 +123,11 @@ namespace osmium {
                         rest = input.substr(ppos);
                     }
 
+                    if (!rest.empty()) {
+                        m_data = rest.data();
+                        parse_line();
+                    }
+
                     if (m_buffer.committed() > 0) {
                         send_to_output_queue(std::move(m_buffer));
                     }
