@@ -99,7 +99,8 @@ namespace osmium {
                 if (std::strlen(value) > osmium::max_osm_string_length) {
                     throw std::length_error("OSM tag value is too long");
                 }
-                add_size(append(key) + append(value));
+                add_size(append(key));
+                add_size(append(value));
             }
 
             /**
@@ -117,8 +118,8 @@ namespace osmium {
                 if (value_length > osmium::max_osm_string_length) {
                     throw std::length_error("OSM tag value is too long");
                 }
-                add_size(append(key,   osmium::memory::item_size_type(key_length))   + append_zero() +
-                         append(value, osmium::memory::item_size_type(value_length)) + append_zero());
+                add_size(append_with_zero(key,   osmium::memory::item_size_type(key_length)));
+                add_size(append_with_zero(value, osmium::memory::item_size_type(value_length)));
             }
 
             /**
@@ -134,8 +135,8 @@ namespace osmium {
                 if (value.size() > osmium::max_osm_string_length) {
                     throw std::length_error("OSM tag value is too long");
                 }
-                add_size(append(key.data(),   osmium::memory::item_size_type(key.size())   + 1) +
-                         append(value.data(), osmium::memory::item_size_type(value.size()) + 1));
+                add_size(append(key.data(),   osmium::memory::item_size_type(key.size())   + 1));
+                add_size(append(value.data(), osmium::memory::item_size_type(value.size()) + 1));
             }
 
             /**
@@ -144,7 +145,8 @@ namespace osmium {
              * @param tag Tag.
              */
             void add_tag(const osmium::Tag& tag) {
-                add_size(append(tag.key()) + append(tag.value()));
+                add_size(append(tag.key()));
+                add_size(append(tag.value()));
             }
 
             /**
@@ -226,7 +228,7 @@ namespace osmium {
                     throw std::length_error("OSM relation member role is too long");
                 }
                 member.set_role_size(osmium::string_size_type(length) + 1);
-                add_size(append(role, osmium::memory::item_size_type(length)) + append_zero());
+                add_size(append_with_zero(role, osmium::memory::item_size_type(length)));
                 add_padding(true);
             }
 
@@ -310,7 +312,7 @@ namespace osmium {
                     throw std::length_error("OSM user name is too long");
                 }
                 comment.set_user_size(osmium::string_size_type(length) + 1);
-                add_size(append(user, osmium::memory::item_size_type(length)) + append_zero());
+                add_size(append_with_zero(user, osmium::memory::item_size_type(length)));
             }
 
             void add_text(osmium::ChangesetComment& comment, const char* text, const size_t length) {
@@ -322,7 +324,7 @@ namespace osmium {
                     throw std::length_error("OSM changeset comment is too long");
                 }
                 comment.set_text_size(osmium::string_size_type(length) + 1);
-                add_size(append(text, osmium::memory::item_size_type(length)) + append_zero());
+                add_size(append_with_zero(text, osmium::memory::item_size_type(length)));
                 add_padding(true);
             }
 

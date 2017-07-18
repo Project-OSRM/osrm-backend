@@ -474,17 +474,17 @@ namespace osmium {
 
             class rings_stack_element {
 
-                int32_t m_y;
+                double m_y;
                 detail::ProtoRing* m_ring_ptr;
 
             public:
 
-                rings_stack_element(int32_t y, detail::ProtoRing* ring_ptr) :
+                rings_stack_element(double y, detail::ProtoRing* ring_ptr) :
                     m_y(y),
                     m_ring_ptr(ring_ptr) {
                 }
 
-                int32_t y() const noexcept {
+                double y() const noexcept {
                     return m_y;
                 }
 
@@ -504,7 +504,7 @@ namespace osmium {
                     return m_y < rhs.m_y;
                 }
 
-            }; // class ring_stack_element
+            }; // class rings_stack_element
 
             using rings_stack = std::vector<rings_stack_element>;
 
@@ -592,7 +592,7 @@ namespace osmium {
                                 if (debug()) {
                                     std::cerr << "        Segment belongs to outer ring\n";
                                 }
-                                const int32_t y = int32_t(ay + (by - ay) * (lx - ax) / (bx - ax));
+                                const double y = ay + (by - ay) * (lx - ax) / double(bx - ax);
                                 outer_rings.emplace_back(y, segment->ring());
                             }
                         }
@@ -859,8 +859,8 @@ namespace osmium {
             }
 
             void merge_two_rings(open_ring_its_type& open_ring_its, const location_to_ring_map& m1, const location_to_ring_map& m2) {
-                auto& r1 = *m1.ring_it;
-                auto& r2 = *m2.ring_it;
+                std::list<detail::ProtoRing>::iterator r1 = *m1.ring_it;
+                std::list<detail::ProtoRing>::iterator r2 = *m2.ring_it;
 
                 if (r1->get_node_ref_stop().location() == r2->get_node_ref_start().location()) {
                     r1->join_forward(*r2);
@@ -876,11 +876,11 @@ namespace osmium {
                     assert(false);
                 }
 
+                open_ring_its.erase(std::find(open_ring_its.begin(), open_ring_its.end(), r2));
                 m_rings.erase(r2);
-                open_ring_its.remove(r2);
 
                 if (r1->closed()) {
-                    open_ring_its.remove(r1);
+                    open_ring_its.erase(std::find(open_ring_its.begin(), open_ring_its.end(), r1));
                 }
             }
 
@@ -988,6 +988,7 @@ namespace osmium {
                             }
                             loc_done.insert(c.stop_location);
                             find_candidates(candidates, loc_done, xrings, c);
+                            loc_done.erase(c.stop_location);
                             if (debug()) {
                                 std::cerr << "          ...back\n";
                             }
@@ -1085,12 +1086,13 @@ namespace osmium {
                 // Join all (open) rings in the candidate to get one closed ring.
                 assert(chosen_cand->rings.size() > 1);
                 const auto& first_ring = chosen_cand->rings.front().first;
-                for (auto it = chosen_cand->rings.begin() + 1; it != chosen_cand->rings.end(); ++it) {
+                const detail::ProtoRing& remaining_ring = first_ring.ring();
+                for (auto it = std::next(chosen_cand->rings.begin()); it != chosen_cand->rings.end(); ++it) {
                     merge_two_rings(open_ring_its, first_ring, it->first);
                 }
 
                 if (debug()) {
-                    std::cerr << "    Merged to " << first_ring.ring() << "\n";
+                    std::cerr << "    Merged to " << remaining_ring << "\n";
                 }
 
                 return true;
