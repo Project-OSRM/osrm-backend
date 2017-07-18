@@ -28,11 +28,11 @@ highway_classes = {
 
 default_highway_class = road_priority_class.connectivity;
 
+-- motorway types by default are divided. Trunk roads can be, but we cannot assume them to be by default,
+-- since many trunk roads actually run throuhg cities. Motorway types will exhibit `on/off` ramps
 motorway_types = Set {
   'motorway',
-  'motorway_link',
-  'trunk',
-  'trunk_link'
+  'motorway_link'
 }
 
 -- these road types are set with a car in mind. For bicycle/walk we probably need different ones

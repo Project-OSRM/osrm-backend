@@ -62,7 +62,7 @@ bool MotorwayHandler::canProcess(const NodeID,
     for (const auto &road : intersection)
     {
         // not merging or forking?
-        if (road.entry_allowed && angularDeviation(road.angle, STRAIGHT_ANGLE) > 60)
+        if (road.entry_allowed && angularDeviation(road.angle, STRAIGHT_ANGLE) > 91)
             return false;
         else if (isMotorwayClass(road.eid, node_based_graph))
         {
@@ -74,7 +74,9 @@ bool MotorwayHandler::canProcess(const NodeID,
     }
 
     if (has_normal_roads)
+    {
         return false;
+    }
 
     return has_motorway || isMotorwayClass(via_eid, node_based_graph);
 }

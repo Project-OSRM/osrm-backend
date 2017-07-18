@@ -40,10 +40,10 @@ Feature: Car - Mode flag
             | cd    | primary |
 
         When I route I should get
-            | from | to | route    | turns                            | classes            | #                                           |
-            | a    | d  | ab,bc,cd | depart,notification right,arrive | ,motorway,         |                                             |
-            | a    | c  | ab,bc,bc | depart,notification right,arrive | ,motorway,motorway |                                             |
-            | b    | d  | bc,cd    | depart,arrive                    | motorway,          | we don't announce when we leave the highway |
+            | from | to | route    | turns                       | classes            | #                                           |
+            | a    | d  | ab,bc,cd | depart,on ramp right,arrive | ,motorway,         |                                             |
+            | a    | c  | ab,bc,bc | depart,on ramp right,arrive | ,motorway,motorway |                                             |
+            | b    | d  | bc,cd    | depart,arrive               | motorway,          | we don't announce when we leave the highway |
 
     Scenario: Car - We tag motorway_link with a class
         Given the node map
@@ -73,16 +73,16 @@ Feature: Car - Mode flag
             """
 
         And the ways
-            | nodes | highway | access   |
-            | ab    | primary | private  |
-            | bc    | motorway| private  |
-            | cd    | primary |          |
+            | nodes | highway  | access   |
+            | ab    | primary  | private  |
+            | bc    | motorway | private  |
+            | cd    | primary  |          |
 
         When I route I should get
-            | from | to | route    | turns                           | classes                         |
-            | a    | d  | ab,bc,cd | depart,notification right,arrive| restricted,motorway;restricted, |
+            | from | to | route    | turns                       | classes                         |
+            | a    | d  | ab,bc,cd | depart,on ramp right,arrive | restricted,motorway;restricted, |
 
-    Scenario: Car - We toll restricted with a class
+    Scenario: Car - We tag toll with a class
         Given the node map
             """
             a b
@@ -96,6 +96,6 @@ Feature: Car - Mode flag
             | cd    | primary |          |
 
         When I route I should get
-            | from | to | route    | turns                            | classes             |
-            | a    | d  | ab,bc,cd | depart,notification right,arrive | toll,motorway;toll, |
+            | from | to | route    | turns                       | classes             |
+            | a    | d  | ab,bc,cd | depart,on ramp right,arrive | toll,motorway;toll, |
 

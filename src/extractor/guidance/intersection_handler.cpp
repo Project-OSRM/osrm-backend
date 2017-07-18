@@ -52,10 +52,11 @@ TurnType::Enum IntersectionHandler::findBasicTurnType(const EdgeID via_edge,
     const auto &out_data = node_based_graph.GetEdgeData(road.eid);
 
     bool on_ramp = in_data.road_classification.IsRampClass();
-
+    bool on_motorway = in_data.road_classification.IsMotorwayClass();
     bool onto_ramp = out_data.road_classification.IsRampClass();
+    bool onto_motorway = out_data.road_classification.IsMotorwayClass();
 
-    if (!on_ramp && onto_ramp)
+    if (!on_ramp && !on_motorway && (onto_motorway || onto_ramp))
         return TurnType::OnRamp;
 
     const auto same_name = !util::guidance::requiresNameAnnounced(
