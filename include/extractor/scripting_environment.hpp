@@ -6,6 +6,8 @@
 #include "extractor/profile_properties.hpp"
 #include "extractor/restriction.hpp"
 
+#include "util/coordinate_locator.hpp"
+
 #include <osmium/memory/buffer.hpp>
 
 #include <boost/optional/optional.hpp>
@@ -13,6 +15,7 @@
 #include <tbb/concurrent_vector.h>
 
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace osmium
@@ -61,6 +64,7 @@ class ScriptingEnvironment
     virtual void ProcessElements(
         const osmium::memory::Buffer &buffer,
         const RestrictionParser &restriction_parser,
+        const std::unordered_map<std::string, util::CoordinateLocator> &locators,
         std::vector<std::pair<const osmium::Node &, ExtractionNode>> &resulting_nodes,
         std::vector<std::pair<const osmium::Way &, ExtractionWay>> &resulting_ways,
         std::vector<boost::optional<InputRestrictionContainer>> &resulting_restrictions) = 0;

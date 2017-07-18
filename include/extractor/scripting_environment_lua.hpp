@@ -20,7 +20,9 @@ namespace extractor
 struct LuaScriptingContext final
 {
     void ProcessNode(const osmium::Node &, ExtractionNode &result);
-    void ProcessWay(const osmium::Way &, ExtractionWay &result);
+    void ProcessWay(const osmium::Way &,
+                    std::unordered_map<std::string, std::string> &regiondata,
+                    ExtractionWay &result);
 
     ProfileProperties properties;
     SourceContainer sources;
@@ -68,6 +70,7 @@ class Sol2ScriptingEnvironment final : public ScriptingEnvironment
     void ProcessElements(
         const osmium::memory::Buffer &buffer,
         const RestrictionParser &restriction_parser,
+        const std::unordered_map<std::string, util::CoordinateLocator> &locators,
         std::vector<std::pair<const osmium::Node &, ExtractionNode>> &resulting_nodes,
         std::vector<std::pair<const osmium::Way &, ExtractionWay>> &resulting_ways,
         std::vector<boost::optional<InputRestrictionContainer>> &resulting_restrictions) override;

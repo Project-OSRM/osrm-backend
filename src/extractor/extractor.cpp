@@ -23,6 +23,7 @@
 
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/restriction_map.hpp"
+#include "util/osmium_spp_map_index.hpp"
 #include "util/static_graph.hpp"
 #include "util/static_rtree.hpp"
 
@@ -37,7 +38,9 @@
 #include <boost/optional/optional.hpp>
 #include <boost/scope_exit.hpp>
 
+#include <osmium/handler/node_locations_for_ways.hpp>
 #include <osmium/io/any_input.hpp>
+#include <osmium/visitor.hpp>
 
 #include <tbb/pipeline.h>
 #include <tbb/task_scheduler_init.h>
@@ -256,7 +259,17 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
 
     std::mutex process_mutex;
 
-    using SharedBuffer = std::shared_ptr<const osmium::memory::Buffer>;
+    std::unordered_map<std::string, util::CoordinateLocator> locators;
+    if (scripting_environment.GetProfileProperties().enable_way_coordinates)
+    {
+        for (const auto &region : scripting_environment.GetProfileProperties().regions)
+        {
+            locators[region.filename] =
+                util::CoordinateLocator(region.filename, region.property_names);
+        }
+    }
+
+    using SharedBuffer = std::shared_ptr<osmium::memory::Buffer>;
     struct ParsedBuffer
     {
         SharedBuffer buffer;
@@ -269,7 +282,7 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
         tbb::filter::serial_in_order, [&](tbb::flow_control &fc) {
             if (auto buffer = reader.read())
             {
-                return std::make_shared<const osmium::memory::Buffer>(std::move(buffer));
+                return std::make_shared<osmium::memory::Buffer>(std::move(buffer));
             }
             else
             {
@@ -286,6 +299,7 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
             parsed_buffer->buffer = buffer;
             scripting_environment.ProcessElements(*buffer,
                                                   restriction_parser,
+                                                  locators,
                                                   parsed_buffer->resulting_nodes,
                                                   parsed_buffer->resulting_ways,
                                                   parsed_buffer->resulting_restrictions);
@@ -314,9 +328,37 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
             }
         });
 
-    // Number of pipeline tokens that yielded the best speedup was about 1.5 * num_cores
-    tbb::parallel_pipeline(tbb::task_scheduler_init::default_num_threads() * 1.5,
-                           buffer_reader & buffer_transform & buffer_storage);
+    // If the user wants coordinates in the way function, we can use
+    // libosmium's NodeLocationsForWays handler to annotate way objects
+    // with cached coordinate data
+    if (scripting_environment.GetProfileProperties().enable_way_coordinates)
+    {
+        using osmium_index_type =
+            osrm::util::SparsePPMemMap<osmium::unsigned_object_id_type, osmium::Location>;
+        using osmium_location_handler_type =
+            osmium::handler::NodeLocationsForWays<osmium_index_type>;
+
+        osmium_index_type location_cache;
+        osmium_location_handler_type location_handler(location_cache);
+
+        // TODO: I don't think that the location cache is thread-safe,
+        //       we probably need to synchronize insertion of nodes
+        tbb::filter_t<SharedBuffer, SharedBuffer> location_cacher(
+            tbb::filter::serial_in_order, [&](SharedBuffer buffer) {
+                osmium::apply(buffer->begin(), buffer->end(), location_handler);
+                return buffer;
+            });
+
+        const auto pipeline = buffer_reader & location_cacher & buffer_transform & buffer_storage;
+        tbb::parallel_pipeline(tbb::task_scheduler_init::default_num_threads() * 1.5, pipeline);
+    }
+    else
+    {
+        const auto pipeline = buffer_reader & buffer_transform & buffer_storage;
+
+        // Number of pipeline tokens that yielded the best speedup was about 1.5 * num_cores
+        tbb::parallel_pipeline(tbb::task_scheduler_init::default_num_threads() * 1.5, pipeline);
+    }
 
     TIMER_STOP(parsing);
     util::Log() << "Parsing finished after " << TIMER_SEC(parsing) << " seconds";

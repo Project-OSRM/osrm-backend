@@ -1,6 +1,6 @@
 -- Car profile
 
-api_version = 1
+api_version = 2
 
 local find_access_tag = require("lib/access").find_access_tag
 local Set = require('lib/set')
@@ -24,6 +24,21 @@ properties.weight_name                          = 'routability'
 -- Generally can be left as false to avoid unnecessary Lua calls
 -- (which slow down pre-processing).
 properties.call_tagless_node_function      = false
+
+properties.enable_way_coordinates          = true
+
+-- If enabled, each way will be looked up in the geojson polygons
+-- described below, and the `regions` parameter to the `way_function`
+-- will contain data like:
+--    function way_function(way, result, regions)
+--      print regions.country -- will contain the value of the "name"
+--                            -- property in the .geojson file
+--    end
+properties.regions = {
+--  { file = "data/world.geo.json/countries.geo.json", property = "name" },
+--  { file = "timezones.geojson", property = 'TZID' }
+  { file = "area.geojson", properties = { "country", "timezone" } }
+}
 
 
 local profile = {
@@ -301,9 +316,10 @@ function node_function (node, result)
   if "traffic_signals" == tag then
     result.traffic_lights = true
   end
+
 end
 
-function way_function(way, result)
+function way_function(way, result, regions)
   -- the intial filtering of ways based on presence of tags
   -- affects processing times significantly, because all ways
   -- have to be checked.
@@ -330,6 +346,15 @@ function way_function(way, result)
   (not data.route or data.route == '')
   then
     return
+  end
+
+  if #regions > 0 then
+    print("Region data detected on way "..way:id())
+    for key,value in ipairs(regions) do
+      print(key, value)
+    end
+  else
+    print("No region data detected on way "..way:id())
   end
 
   handlers = Sequence {

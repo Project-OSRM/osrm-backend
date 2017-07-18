@@ -17,6 +17,7 @@
 #include "util/typedefs.hpp"
 
 #include <osmium/osm.hpp>
+#include <osmium/osm/location.hpp>
 
 #include <tbb/parallel_for.h>
 
@@ -251,7 +252,46 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
         "force_split_edges",
         &ProfileProperties::force_split_edges,
         "call_tagless_node_function",
-        &ProfileProperties::call_tagless_node_function);
+        &ProfileProperties::call_tagless_node_function,
+        "enable_way_coordinates",
+        &ProfileProperties::enable_way_coordinates,
+        "regions",
+        sol::property([](ProfileProperties &profile, sol::table table) {
+            // NOTE: this assumes that &profile refers to an object that has
+            // already had .api_version populated
+            if (profile.api_version < 2)
+            {
+                throw util::exception("Profile API version >= 2 required for region support" +
+                                      SOURCE_REF);
+            }
+
+            table.for_each([&](sol::object & /* index */, sol::object &regionconfig) {
+
+                ProfileProperties::RegionData data;
+                regionconfig.as<sol::table>().for_each([&](sol::object &key, sol::object &value) {
+                    if (key.as<std::string>() == "file")
+                    {
+                        data.filename = value.as<std::string>();
+                    }
+                    else if (key.as<std::string>() == "property")
+                    {
+                        data.property_names.push_back(value.as<std::string>());
+                    }
+                    else if (key.as<std::string>() == "properties")
+                    {
+                        value.as<sol::table>().for_each(
+                            [&](sol::object & /* index */, sol::object &propname) {
+                                data.property_names.push_back(propname.as<std::string>());
+                            });
+                    }
+                    else
+                    {
+                        // TODO: error, unrecognized region property
+                    }
+                });
+                profile.regions.push_back(data);
+            });
+        }));
 
     context.state.new_usertype<std::vector<std::string>>(
         "vector",
@@ -286,7 +326,16 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
                                              "id",
                                              &osmium::Node::id,
                                              "version",
-                                             &osmium::Way::version);
+                                             &osmium::Node::version);
+
+    // Keep in mind .location is undefined since we're not using libosmium's location cache
+    context.state.new_usertype<osmium::NodeRef>("NodeRef",
+                                                "id",
+                                                &osmium::NodeRef::ref,
+                                                "lat",
+                                                &osmium::NodeRef::lat,
+                                                "lon",
+                                                &osmium::NodeRef::lon);
 
     context.state.new_usertype<ExtractionNode>("ResultNode",
                                                "traffic_lights",
@@ -398,9 +447,6 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
                                                "target_restricted",
                                                &ExtractionTurn::target_restricted);
 
-    // Keep in mind .location is undefined since we're not using libosmium's location cache
-    context.state.new_usertype<osmium::NodeRef>("NodeRef", "id", &osmium::NodeRef::ref);
-
     context.state.new_usertype<InternalExtractorEdge>("EdgeSource",
                                                       "source_coordinate",
                                                       &InternalExtractorEdge::source_coordinate,
@@ -494,6 +540,7 @@ LuaScriptingContext &Sol2ScriptingEnvironment::GetSol2Context()
 void Sol2ScriptingEnvironment::ProcessElements(
     const osmium::memory::Buffer &buffer,
     const RestrictionParser &restriction_parser,
+    const std::unordered_map<std::string, util::CoordinateLocator> &locators,
     std::vector<std::pair<const osmium::Node &, ExtractionNode>> &resulting_nodes,
     std::vector<std::pair<const osmium::Way &, ExtractionWay>> &resulting_ways,
     std::vector<boost::optional<InputRestrictionContainer>> &resulting_restrictions)
@@ -519,14 +566,44 @@ void Sol2ScriptingEnvironment::ProcessElements(
                 static_cast<const osmium::Node &>(*entity), std::move(result_node)));
             break;
         case osmium::item_type::way:
+        {
             result_way.clear();
+            const auto &way = static_cast<const osmium::Way &>(*entity);
             if (local_context.has_way_function)
             {
-                local_context.ProcessWay(static_cast<const osmium::Way &>(*entity), result_way);
+                // Only do the region test if we're on a profile that
+                // supports that API version, otherwise don't waste time
+                std::unordered_map<std::string, std::string> locations;
+                if (local_context.api_version >= 2)
+                {
+                    if (!locators.empty())
+                    {
+                        for (const auto &locator : locators)
+                        {
+                            const auto firstnode = way.nodes().front();
+                            const auto lat = firstnode.lat();
+                            const auto lon = firstnode.lon();
+                            auto result =
+                                locator.second.find(util::CoordinateLocator::point_t{lon, lat});
+                            if (result.size() > 0)
+                            {
+                                for (const auto &pair : result)
+                                {
+                                    locations[pair.first] = pair.second;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // TODO: actually pass the data to the way_function here
+                local_context.ProcessWay(way, locations, result_way);
             }
+
             resulting_ways.push_back(std::pair<const osmium::Way &, ExtractionWay>(
                 static_cast<const osmium::Way &>(*entity), std::move(result_way)));
-            break;
+        }
+        break;
         case osmium::item_type::relation:
             result_res.clear();
             result_res =
@@ -620,7 +697,8 @@ void Sol2ScriptingEnvironment::ProcessTurn(ExtractionTurn &turn)
             }
             else
             {
-                // Use zero turn penalty if it is not an actual turn. This heuristic is necessary
+                // Use zero turn penalty if it is not an actual turn. This heuristic is
+                // necessary
                 // since OSRM cannot handle looping roads/parallel roads
                 turn.duration = 0.;
             }
@@ -663,11 +741,20 @@ void LuaScriptingContext::ProcessNode(const osmium::Node &node, ExtractionNode &
     node_function(node, result);
 }
 
-void LuaScriptingContext::ProcessWay(const osmium::Way &way, ExtractionWay &result)
+void LuaScriptingContext::ProcessWay(const osmium::Way &way,
+                                     std::unordered_map<std::string, std::string> &regiondata,
+                                     ExtractionWay &result)
 {
     BOOST_ASSERT(state.lua_state() != nullptr);
 
-    way_function(way, result);
+    if (api_version >= 2)
+    {
+        way_function(way, result, regiondata);
+    }
+    else
+    {
+        way_function(way, result);
+    }
 }
 }
 }

@@ -1,0 +1,14 @@
+language: cpp
+
+os:
+  - linux
+  - osx
+
+compiler:
+  - clang
+  - gcc
+
+dist: trusty
+sudo: false
+
+script: cd tests && make && make test
