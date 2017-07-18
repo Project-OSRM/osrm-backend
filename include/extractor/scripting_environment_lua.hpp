@@ -58,10 +58,7 @@ class Sol2ScriptingEnvironment final : public ScriptingEnvironment
 
     const ProfileProperties &GetProfileProperties() override;
 
-    LuaScriptingContext &GetSol2Context();
-
-    std::vector<std::string> GetStringListFromTable(const std::string &table_name);
-    std::vector<std::string> GetStringListFromFunction(const std::string &function_name);
+    std::vector<std::vector<std::string>> GetAvoidableClasses() override;
     std::vector<std::string> GetNameSuffixList() override;
     std::vector<std::string> GetRestrictions() override;
     void ProcessTurn(ExtractionTurn &turn) override;
@@ -75,6 +72,12 @@ class Sol2ScriptingEnvironment final : public ScriptingEnvironment
                     std::vector<InputConditionalTurnRestriction> &resulting_restrictions) override;
 
   private:
+    LuaScriptingContext &GetSol2Context();
+
+    std::vector<std::string> GetStringListFromTable(const std::string &table_name);
+    std::vector<std::vector<std::string>> GetStringListsFromTable(const std::string &table_name);
+    std::vector<std::string> GetStringListFromFunction(const std::string &function_name);
+
     void InitContext(LuaScriptingContext &context);
     std::mutex init_mutex;
     std::string file_name;

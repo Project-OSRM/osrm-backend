@@ -78,6 +78,41 @@ void SetClassNames(const ExtractorCallbacks::ClassesMap &classes_map,
         profile_properties.SetClassName(range.front(), pair.first);
     }
 }
+
+// Converts the class name list to a mask list
+void SetAvoidableClasses(const ExtractorCallbacks::ClassesMap &classes_map,
+                         const std::vector<std::vector<std::string>> &avoidable_classes,
+                         ProfileProperties &profile_properties)
+{
+    if (avoidable_classes.size() > MAX_AVOIDABLE_CLASSES)
+    {
+        throw util::exception("Only " + std::to_string(MAX_AVOIDABLE_CLASSES) + " avoidable combinations allowed.");
+    }
+
+    std::size_t combination_index = 0;
+    for (const auto &combination : avoidable_classes)
+    {
+        ClassData mask = 0;
+        for (const auto &name : combination)
+        {
+            auto iter = classes_map.find(name);
+            if (iter == classes_map.end())
+            {
+                util::Log(logWARNING)
+                    << "Unknown class name " + name + " in avoidable combination. Ignoring.";
+            }
+            else
+            {
+                mask |= iter->second;
+            }
+        }
+
+        if (mask > 0)
+        {
+            profile_properties.SetAvoidableClasses(combination_index++, mask);
+        }
+    }
+}
 }
 
 /**
@@ -341,6 +376,8 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
 
     auto profile_properties = scripting_environment.GetProfileProperties();
     SetClassNames(classes_map, profile_properties);
+    auto avoidable_classes = scripting_environment.GetAvoidableClasses();
+    SetAvoidableClasses(classes_map, avoidable_classes, profile_properties);
     files::writeProfileProperties(config.GetPath(".osrm.properties").string(), profile_properties);
 
     TIMER_STOP(extracting);

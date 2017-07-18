@@ -12,6 +12,7 @@ namespace extractor
 
 using ClassData = std::uint8_t;
 static const std::uint8_t MAX_CLASS_INDEX = 8 - 1;
+static const std::uint8_t MAX_AVOIDABLE_CLASSES = 8;
 
 inline bool isSubset(const ClassData lhs, const ClassData rhs) { return (lhs & rhs) == lhs; }
 
