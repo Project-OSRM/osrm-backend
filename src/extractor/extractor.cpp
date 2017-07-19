@@ -7,6 +7,7 @@
 #include "extractor/extractor_callbacks.hpp"
 #include "extractor/files.hpp"
 #include "extractor/raster_source.hpp"
+#include "extractor/restriction_filter.hpp"
 #include "extractor/restriction_parser.hpp"
 #include "extractor/scripting_environment.hpp"
 
@@ -464,6 +465,8 @@ Extractor::BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
                               turn_restrictions,
                               *node_based_graph,
                               compressed_edge_container);
+
+    turn_restrictions = removeInvalidRestrictions(std::move(turn_restrictions), *node_based_graph);
 
     util::NameTable name_table(config.GetPath(".osrm.names").string());
 
