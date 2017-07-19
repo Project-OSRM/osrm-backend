@@ -405,13 +405,8 @@ IntersectionGenerator::GetOnlyAllowedTurnIfExistent(const NodeID coming_from_nod
     const auto only_restriction_to_node =
         restriction_map.CheckForEmanatingIsOnlyTurn(coming_from_node, node_at_intersection);
     if (only_restriction_to_node != SPECIAL_NODEID)
-    {
-        // if the mentioned node does not exist anymore, we don't return it. This checks for broken
-        // turn restrictions
-        for (const auto onto_edge : node_based_graph.GetAdjacentEdgeRange(node_at_intersection))
-            if (only_restriction_to_node == node_based_graph.GetTarget(onto_edge))
-                return only_restriction_to_node;
-    }
+        return only_restriction_to_node;
+
     // Ignore broken only restrictions.
     return boost::none;
 }
