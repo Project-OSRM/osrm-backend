@@ -137,7 +137,7 @@ function setup()
   }
 end
 
-function process_node (profile, node, result)
+function process_node(profile, node, result)
   -- parse access and barrier tags
   local access = find_access_tag(node, profile.access_tags_hierarchy)
   if access then

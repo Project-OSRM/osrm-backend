@@ -26,7 +26,7 @@ function setup()
       use_turn_restrictions          = true,
       traffic_light_penalty          = 2,
     },
-    
+
     default_mode              = mode.driving,
     default_speed             = 10,
     oneway_handling           = true,
@@ -140,19 +140,19 @@ function setup()
       ["drive-thru"] = 0.5
     },
 
-   restricted_highway_whitelist = Set {
-        'motorway',
-        'motorway_link',
-        'trunk',
-        'trunk_link',
-        'primary',
-        'primary_link',
-        'secondary',
-        'secondary_link',
-        'tertiary',
-        'tertiary_link',
-        'residential',
-        'living_street',
+    restricted_highway_whitelist = Set {
+      'motorway',
+      'motorway_link',
+      'trunk',
+      'trunk_link',
+      'primary',
+      'primary_link',
+      'secondary',
+      'secondary_link',
+      'tertiary',
+      'tertiary_link',
+      'residential',
+      'living_street',
     },
 
     route_speeds = {
@@ -262,7 +262,7 @@ function setup()
   }
 end
 
-function process_node (profile, node, result)
+function process_node(profile, node, result)
   -- parse access and barrier tags
   local access = find_access_tag(node, profile.access_tags_hierarchy)
   if access then
@@ -375,7 +375,7 @@ function process_way(profile, way, result)
   WayHandlers.run(profile,way,result,data,handlers)
 end
 
-function process_turn (profile, turn)
+function process_turn(profile, turn)
   -- Use a sigmoid function to return a penalty that maxes out at turn_penalty
   -- over the space of 0-180 degrees.  Values here were chosen by fitting
   -- the function to some turn penalty samples from real driving.
@@ -404,7 +404,7 @@ function process_turn (profile, turn)
   else
      turn.weight = turn.duration
   end
-  
+
   if profile.properties.weight_name == 'routability' then
       -- penalize turns from non-local access only segments onto local access only tags
       if not turn.source_restricted and turn.target_restricted then
