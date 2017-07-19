@@ -14,3 +14,4 @@ Feature: Car - all construction tags the OpenStreetMap community could think of 
             | primary      |              |     yes  |       |
             | primary      |           no |          | x     |
             | primary      |     widening |          | x     |
+            | primary      |        minor |          | x     |
