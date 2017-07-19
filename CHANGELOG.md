@@ -1,4 +1,4 @@
-# 5.9.0 RC3
+# 5.9.0
   - Changes from 5.8:
     - Algorithm:
       - Multi-Level Dijkstra:
@@ -12,6 +12,7 @@
       - `result.exits` allows you to set a way's exit numbers and names, see [`junction:ref`](http://wiki.openstreetmap.org/wiki/Proposed_features/junction_details)
       - `ExtractionWay` now as new property `forward_classes` and `backward_classes` that can set in the `way_function`.
          The maximum number of classes is 8.
+      - We now respect the `construction` tag. If the `construction` tag value is not on our whitelist (`minor`, `widening`, `no`) we will exclude the road.
     - Node.js Bindings:
       - Exposes `alternatives=Number` parameter overload in addition to the boolean flag
       - Expose `EngineConfig` options in the node bindings
