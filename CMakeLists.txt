@@ -14,6 +14,11 @@ if(BUILD_AS_SUBPROJECT)
   message(STATUS "Building libosrm as subproject.")
 endif()
 
+# set OSRM_BUILD_DIR location (might be used in various scripts)
+if (NOT WIN32 AND NOT DEFINED ENV{OSRM_BUILD_DIR})
+  set(ENV{OSRM_BUILD_DIR} ${CMAKE_CURRENT_BINARY_DIR})
+endif()
+
 option(ENABLE_MASON "Use mason for dependencies" OFF)
 option(ENABLE_CCACHE "Speed up incremental rebuilds via ccache" ON)
 option(BUILD_TOOLS "Build OSRM tools" OFF)
