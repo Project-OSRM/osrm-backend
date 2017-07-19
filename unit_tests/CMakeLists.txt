@@ -96,7 +96,7 @@ set(TEST_DATA_DIR "${CMAKE_SOURCE_DIR}/test/data")
 add_dependencies(library-tests osrm-extract osrm-contract osrm-partition)
 # We can't run this Makefile on windows
 if (NOT WIN32)
-  add_custom_command(TARGET library-tests POST_BUILD COMMAND make -C ${TEST_DATA_DIR})
+  add_custom_command(TARGET library-tests POST_BUILD COMMAND make -C ${TEST_DATA_DIR} OSRM_BUILD_DIR=$ENV{OSRM_BUILD_DIR})
 endif()
 
 target_compile_definitions(extractor-tests PRIVATE COMPILE_DEFINITIONS OSRM_FIXTURES_DIR="${CMAKE_SOURCE_DIR}/unit_tests/fixtures")
