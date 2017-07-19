@@ -53,17 +53,17 @@ function setup()
     },
 
     access_tag_whitelist = Set {
-    	'yes',
-    	'permissive',
-     	'designated'
+      'yes',
+      'permissive',
+      'designated'
     },
 
     access_tag_blacklist = Set {
-    	'no',
-     	'private',
-     	'agricultural',
-     	'forestry',
-     	'delivery'
+      'no',
+      'private',
+      'agricultural',
+      'forestry',
+      'delivery'
     },
 
     restricted_access_tag_list = Set { },
@@ -71,24 +71,24 @@ function setup()
     restricted_highway_whitelist = Set { },
 
     access_tags_hierarchy = Sequence {
-    	'bicycle',
-    	'vehicle',
-    	'access'
+      'bicycle',
+      'vehicle',
+      'access'
     },
 
     restrictions = Set {
-    	'bicycle'
+      'bicycle'
     },
 
     cycleway_tags = Set {
-    	'track',
-    	'lane',
-    	'opposite',
-    	'opposite_lane',
-    	'opposite_track',
-    	'share_busway',
-    	'sharrow',
-    	'shared',
+      'track',
+      'lane',
+      'opposite',
+      'opposite_lane',
+      'opposite_track',
+      'share_busway',
+      'sharrow',
+      'shared',
       'shared_lane'
     },
 
@@ -206,7 +206,7 @@ local function parse_maxspeed(source)
     return n
 end
 
-function process_node (profile, node, result)
+function process_node(profile, node, result)
   -- parse access and barrier tags
   local highway = node:get_value_by_key("highway")
   local is_crossing = highway and highway == "crossing"
@@ -493,7 +493,7 @@ function handle_bicycle_tags(profile,way,result,data)
       end
   end
 end
-function process_way (profile, way, result)
+function process_way(profile, way, result)
   -- the initial filtering of ways based on presence of tags
   -- affects processing times significantly, because all ways
   -- have to be checked.
