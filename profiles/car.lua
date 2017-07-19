@@ -155,6 +155,12 @@ function setup()
       'living_street',
     },
 
+    construction_whitelist = Set {
+      'no',
+      'widening',
+      'minor',
+    },
+
     route_speeds = {
       ferry = 5,
       shuttle_train = 10
