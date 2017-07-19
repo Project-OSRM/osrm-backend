@@ -94,6 +94,13 @@ local profile = {
     'access'
   },
 
+  construction_whitelist = Set {
+    'no',
+    'widening',
+    'minor',
+  },
+
+
   service_tag_forbidden = Set {
     'emergency_access'
   },

@@ -520,7 +520,7 @@ function Handlers.handle_blocked_ways(way,result,data,profile)
     local construction = way:get_value_by_key('construction')
 
     -- Of course there are negative tags to handle, too
-    if construction and construction ~= 'no' and construction ~= 'widening' and construction ~= 'minor' then
+    if construction and not profile.construction_whitelist[construction] then
       return false
     end
   end

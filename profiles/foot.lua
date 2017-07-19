@@ -61,6 +61,8 @@ local profile = {
 
   restricted_highway_whitelist = Set { },
 
+  construction_whitelist = Set {},
+
   access_tags_hierarchy = Sequence {
     'foot',
     'access'
