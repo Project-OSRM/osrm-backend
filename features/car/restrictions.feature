@@ -582,7 +582,6 @@ Feature: Car - Turn restrictions
             |   d
             |
             a
-
             """
 
         And the ways
@@ -881,3 +880,112 @@ Feature: Car - Turn restrictions
             | a    | f  | ab,be,ef,ef       | depart,turn right,turn left,arrive                                  | a,b,e,f     |
             | c    | d  | bc,be,de,de       | depart,turn left,turn right,arrive                                  | c,b,e,d     |
             | c    | f  | bc,be,ef,ef       | depart,turn left,turn left,arrive                                   | c,b,e,f     |
+
+
+      @restriction @overlap @geometry
+      Scenario: Geometry
+        Given the node map
+            """
+            c
+            |
+            |   f
+            |   |
+            b-g-e
+            |   |
+            |   d
+            |
+            a
+            """
+
+        And the ways
+            | nodes |
+            | ab    |
+            | bc    |
+            | bge   |
+            | de    |
+            | ef    |
+
+        And the relations
+            | type        | way:from | way:via | way:to | restriction   |
+            | restriction | ab       | bge     | de     | no_right_turn |
+            | restriction | bc       | bge     | ef     | no_left_turn  |
+
+        When I route I should get
+            | from | to | route              |
+            | a    | d  | ab,bge,ef,ef,de,de |
+            | a    | f  | ab,bge,ef,ef       |
+            | c    | d  | bc,bge,de,de       |
+            | c    | f  | bc,bge,de,de,ef,ef |
+
+      @restriction @overlap @geometry @traffic-signals
+      Scenario: Geometry
+        Given the node map
+            """
+            c
+            |
+            |   f
+            |   |
+            b-g-e
+            |   |
+            |   d
+            |
+            a
+            """
+
+        And the ways
+            | nodes |
+            | ab    |
+            | bc    |
+            | bge   |
+            | de    |
+            | ef    |
+
+        And the nodes
+            | node | highway         |
+            | g    | traffic_signals |
+
+        And the relations
+            | type        | way:from | way:via | way:to | restriction   |
+            | restriction | ab       | bge     | de     | no_right_turn |
+            | restriction | bc       | bge     | ef     | no_left_turn  |
+
+        # this case is currently not handling the via-way restrictions and we need support for looking across traffic signals.
+        # It is mainly included to show limitations and to prove that we don't crash hard here
+        When I route I should get
+            | from | to | route        |
+            | a    | d  | ab,bge,de,de |
+            | a    | f  | ab,bge,ef,ef |
+            | c    | d  | bc,bge,de,de |
+            | c    | f  | bc,bge,ef,ef |
+
+      # don't crash hard on invalid restrictions
+      @restriction @invalid
+      Scenario: Geometry
+        Given the node map
+            """
+            c
+            |
+            |   f
+            |   |
+            b---e
+            |   |
+            |   d
+            |
+            a
+            """
+
+        And the ways
+            | nodes | oneway |
+            | ab    |        |
+            | bc    |        |
+            | be    | yes    |
+            | de    |        |
+            | ef    |        |
+
+        And the relations
+            | type        | way:from | way:via | way:to | restriction   |
+            | restriction | de       | be      | ab     | no_left_turn  |
+
+        When I route I should get
+            | from | to | route       |
+            | a    | f  | ab,be,ef,ef |
