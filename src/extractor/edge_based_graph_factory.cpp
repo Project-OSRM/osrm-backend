@@ -168,6 +168,11 @@ NBGToEBG EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const N
             m_compressed_edge_container.GetBucketReference(edge_id_2)[segment_count - 1 - i]
                 .node_id);
         const NodeID current_edge_target_coordinate_id = forward_geometry[i].node_id;
+
+        // don't add node-segments for penalties
+        if (current_edge_target_coordinate_id == current_edge_source_coordinate_id)
+            continue;
+
         BOOST_ASSERT(current_edge_target_coordinate_id != current_edge_source_coordinate_id);
 
         // build edges

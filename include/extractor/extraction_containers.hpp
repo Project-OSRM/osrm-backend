@@ -40,7 +40,7 @@ class ExtractionContainers
     using NameOffsets = std::vector<unsigned>;
 
     std::vector<OSMNodeID> barrier_nodes;
-    std::vector<OSMNodeID> traffic_lights;
+    std::vector<OSMNodeID> traffic_signals;
     NodeIDVector used_node_id_list;
     NodeVector all_nodes_list;
     EdgeVector all_edges_list;

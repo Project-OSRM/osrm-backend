@@ -454,15 +454,16 @@ Extractor::BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
                                   guidance::LaneDescriptionMap &turn_lane_map)
 {
     std::unordered_set<NodeID> barrier_nodes;
-    std::unordered_set<NodeID> traffic_lights;
+    std::unordered_set<NodeID> traffic_signals;
 
     auto node_based_graph =
-        LoadNodeBasedGraph(barrier_nodes, traffic_lights, coordinates, osm_node_ids);
+        LoadNodeBasedGraph(barrier_nodes, traffic_signals, coordinates, osm_node_ids);
 
     CompressedEdgeContainer compressed_edge_container;
     GraphCompressor graph_compressor;
     graph_compressor.Compress(barrier_nodes,
-                              traffic_lights,
+                              traffic_signals,
+                              scripting_environment,
                               turn_restrictions,
                               *node_based_graph,
                               compressed_edge_container);
@@ -474,7 +475,7 @@ Extractor::BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
     EdgeBasedGraphFactory edge_based_graph_factory(node_based_graph,
                                                    compressed_edge_container,
                                                    barrier_nodes,
-                                                   traffic_lights,
+                                                   traffic_signals,
                                                    coordinates,
                                                    osm_node_ids,
                                                    scripting_environment.GetProfileProperties(),

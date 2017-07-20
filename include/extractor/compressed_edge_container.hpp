@@ -10,6 +10,8 @@
 #include <string>
 #include <vector>
 
+#include <boost/optional.hpp>
+
 namespace osrm
 {
 namespace extractor
@@ -36,7 +38,11 @@ class CompressedEdgeContainer
                       const EdgeWeight weight1,
                       const EdgeWeight weight2,
                       const EdgeDuration duration1,
-                      const EdgeDuration duration2);
+                      const EdgeDuration duration2,
+                      // node-penalties can be added before/or after the traversal of an edge which
+                      // depends on whether we traverse the link forwards or backwards.
+                      const boost::optional<EdgeWeight> node_weight_penalty = boost::none,
+                      const boost::optional<EdgeDuration> node_duration_penalty = boost::none);
 
     void AddUncompressedEdge(const EdgeID edge_id,
                              const NodeID target_node,
