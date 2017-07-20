@@ -8,11 +8,13 @@ Feature: Car - Oneway streets
     Scenario: Car - Simple oneway
         Then routability should be
             | highway | oneway | forw | backw |
+            | primary |        | x    | x     |
             | primary | yes    | x    |       |
 
     Scenario: Car - Simple reverse oneway
         Then routability should be
             | highway | oneway | forw | backw |
+            | primary |        | x    | x     |
             | primary | -1     |      | x     |
 
     Scenario: Car - Mode specific oneway
@@ -40,6 +42,9 @@ Feature: Car - Oneway streets
             | motorway        | roundabout | x    |       |                       |
             | motorway_link   | roundabout | x    |       |                       |
             | primary         | roundabout | x    |       |                       |
+            | motorway        | circular   | x    |       |                       |
+            | motorway_link   | circular   | x    |       |                       |
+            | primary         | circular   | x    |       |                       |
 
     Scenario: Car - Overrule implied oneway
         Then routability should be

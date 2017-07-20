@@ -8,11 +8,13 @@ Handlers = require("lib/way_handlers")
 find_access_tag = require("lib/access").find_access_tag
 limit = require("lib/maxspeed").limit
 
+
+local foot = require('foot')
 function setup()
   local default_speed = 15
   local walking_speed = 6
 
-  return {
+  local profile = {
     properties = {
       u_turn_penalty                = 20,
       traffic_light_penalty         = 2,
@@ -35,6 +37,16 @@ function setup()
     allowed_start_modes = Set {
       mode.cycling,
       mode.pushing_bike
+    },
+
+    implied_oneways = {
+      highway = { 'motorway' },
+      junction = { 'roundabout', 'circular' }
+    },
+
+    -- a list of suffixes to suppress in name change instructions
+    suffix_list = {
+      'N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW', 'North', 'South', 'West', 'East'
     },
 
     barrier_whitelist = Set {
@@ -196,6 +208,16 @@ function setup()
       'construction'
     }
   }
+
+  -- setup foot profile, used for determining where we can push bikes
+  profile.foot_functions = require('foot')
+  profile.foot_profile = profile.foot_functions.setup()
+
+  -- adjust foot profile for our needs
+  profile.foot_profile.default_mode = mode.pushing_bike
+  profile.foot_profile.implied_oneways = profile.implied_oneways
+
+  return profile
 end
 
 local function parse_maxspeed(source)
@@ -285,8 +307,6 @@ function handle_bicycle_tags(profile,way,result,data)
   local bicycle = way:get_value_by_key("bicycle")
 
 
-  local way_type_allows_pushing = false
-
   -- speed
   local bridge_speed = profile.bridge_speeds[bridge]
   if (bridge_speed and bridge_speed > 0) then
@@ -307,17 +327,6 @@ function handle_bicycle_tags(profile,way,result,data)
        result.forward_speed = profile.route_speeds[route]
        result.backward_speed = profile.route_speeds[route]
     end
-  -- railway platforms (old tagging scheme)
-  elseif railway and profile.platform_speeds[railway] then
-    result.forward_speed = profile.platform_speeds[railway]
-    result.backward_speed = profile.platform_speeds[railway]
-    way_type_allows_pushing = true
-  -- public_transport platforms (new tagging platform)
-  elseif public_transport and profile.platform_speeds[public_transport] then
-    result.forward_speed = profile.platform_speeds[public_transport]
-    result.backward_speed = profile.platform_speeds[public_transport]
-    way_type_allows_pushing = true
-  -- railways
   elseif profile.use_public_transport and railway and profile.railway_speeds[railway] and profile.access_tag_whitelist[access] then
     result.forward_mode = mode.train
     result.backward_mode = mode.train
@@ -327,17 +336,14 @@ function handle_bicycle_tags(profile,way,result,data)
     -- parking areas
     result.forward_speed = profile.amenity_speeds[amenity]
     result.backward_speed = profile.amenity_speeds[amenity]
-    way_type_allows_pushing = true
   elseif profile.bicycle_speeds[data.highway] then
     -- regular ways
     result.forward_speed = profile.bicycle_speeds[data.highway]
     result.backward_speed = profile.bicycle_speeds[data.highway]
-    way_type_allows_pushing = true
   elseif access and profile.access_tag_whitelist[access]  then
     -- unknown way, but valid access tag
     result.forward_speed = profile.default_speed
     result.backward_speed = profile.default_speed
-    way_type_allows_pushing = true
   end
 
   -- oneway
@@ -396,51 +402,6 @@ function handle_bicycle_tags(profile,way,result,data)
     result.forward_speed = profile.bicycle_speeds["cycleway"]
   end
 
-  -- pushing bikes - if no other mode found
-  if result.forward_mode == mode.inaccessible or result.backward_mode == mode.inaccessible or
-    result.forward_speed == -1 or result.backward_speed == -1 then
-    if foot ~= 'no' then
-      local push_forward_speed = nil
-      local push_backward_speed = nil
-
-      if profile.pedestrian_speeds[data.highway] then
-        push_forward_speed = profile.pedestrian_speeds[data.highway]
-        push_backward_speed = profile.pedestrian_speeds[data.highway]
-      elseif man_made and profile.man_made_speeds[man_made] then
-        push_forward_speed = profile.man_made_speeds[man_made]
-        push_backward_speed = profile.man_made_speeds[man_made]
-      else
-        if foot == 'yes' then
-          push_forward_speed = profile.walking_speed
-          if not implied_oneway then
-            push_backward_speed = profile.walking_speed
-          end
-        elseif foot_forward == 'yes' then
-          push_forward_speed = profile.walking_speed
-        elseif foot_backward == 'yes' then
-          push_backward_speed = profile.walking_speed
-        elseif way_type_allows_pushing then
-          push_forward_speed = profile.walking_speed
-          if not implied_oneway then
-            push_backward_speed = profile.walking_speed
-          end
-        end
-      end
-
-      if push_forward_speed and (result.forward_mode == mode.inaccessible or result.forward_speed == -1) then
-        result.forward_mode = mode.pushing_bike
-        result.forward_speed = push_forward_speed
-      end
-      if push_backward_speed and (result.backward_mode == mode.inaccessible or result.backward_speed == -1)then
-        result.backward_mode = mode.pushing_bike
-        result.backward_speed = push_backward_speed
-      end
-
-    end
-
-  end
-
-
   -- dismount
   if bicycle == "dismount" then
     result.forward_mode = mode.pushing_bike
@@ -449,11 +410,15 @@ function handle_bicycle_tags(profile,way,result,data)
     result.backward_speed = profile.walking_speed
   end
 
-
-
   -- maxspeed
   limit( result, maxspeed, maxspeed_forward, maxspeed_backward )
 
+  -- try pushing bike if no other mode found
+  if not WayHandlers.is_bidirectional(result) then
+    local foot_result = WayHandlers.new_result()
+    profile.foot_functions.process_way(profile.foot_profile, way, foot_result)
+    WayHandlers.merge_results(foot_result,result)
+  end
 
   -- not routable if no speed assigned
   -- this avoid assertions in debug builds
@@ -499,6 +464,7 @@ function handle_bicycle_tags(profile,way,result,data)
       end
   end
 end
+
 function process_way(profile, way, result)
   -- the initial filtering of ways based on presence of tags
   -- affects processing times significantly, because all ways

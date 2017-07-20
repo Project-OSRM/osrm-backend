@@ -102,6 +102,10 @@ function setup()
         platform        = walking_speed
       },
 
+      public_transport = {
+        platform        = walking_speed
+      },
+
       amenity = {
         parking         = walking_speed,
         parking_entrance= walking_speed

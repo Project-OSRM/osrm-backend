@@ -61,28 +61,28 @@ Feature: Bike - Accessability of different way types
             | runway   |      |              |              |
             | runway   | yes  | pushing bike | pushing bike |
 
-    @todo
     Scenario: Bike - Pushing bikes on ways with foot=yes in one direction
         Then routability should be
-            | highway  | foot:forward | foot:backward | forw         | backw        |
-            | motorway |              |               |              |              |
-            | motorway | yes          |               | pushing bike |              |
-            | motorway |              | yes           |              | pushing bike |
+            | highway | foot:forward | foot:backward | forw         | backw        |
+            | primary |              |               | cycling      | cycling      |
+            | runway  |              |               |              |              |
+            | runway  | yes          |               | pushing bike |              |
+            | runway  |              | yes           |              | pushing bike |
 
     @construction
     Scenario: Bike - Don't allow routing on ways still under construction
         Then routability should be
-            | highway      | foot | bicycle | bothw |
-            | primary      |      |         | x     |
-            | construction |      |         |       |
-            | construction | yes  |         |       |
-            | construction |      | yes     |       |
+            | highway      | foot | bicycle | bothw   |
+            | primary      |      |         | cycling |
+            | construction |      |         |         |
+            | construction | yes  |         |         |
+            | construction |      | yes     |         |
 
     @roundabout
     Scenario: Bike - Don't push bikes against oneway flow on roundabouts
         Then routability should be
-            | junction   | forw | backw |
-            | roundabout | x    |       |
+            | junction   | forw    | backw |
+            | roundabout | cycling |       |
 
     Scenario: Bike - Instructions when pushing bike on oneways
         Given the node map
@@ -125,3 +125,18 @@ Feature: Bike - Accessability of different way types
             | d    | a  | cd,bc,ab,ab | cycling,pushing bike,cycling,cycling |
             | c    | a  | bc,ab,ab    | pushing bike,cycling,cycling         |
             | d    | b  | cd,bc,bc    | cycling,pushing bike,pushing bike    |
+
+    Scenario: Bike - Pushing bikes on man_made=*
+        Then routability should be
+            | highway | man_made | forw         | backw        |
+            | (nil)   | pier     | pushing bike | pushing bike |
+
+    Scenario: Bike - Pushing bikes on railway=*
+        Then routability should be
+            | highway | railway  | forw         | backw        |
+            | (nil)   | platform | pushing bike | pushing bike |
+
+    Scenario: Bike - Pushing bikes on public_transport=*
+        Then routability should be
+            | highway | public_transport | forw         | backw        |
+            | (nil)   | platform         | pushing bike | pushing bike |

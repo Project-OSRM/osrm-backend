@@ -121,4 +121,39 @@ function Tags.get_constant_by_key_value(way,lookup)
   end
 end
 
+-- check if key-value pairs are set in a way and return
+-- true if it is. e.g. for this input:
+--
+-- local speeds = Set {
+--  highway = Set {
+--    'residential',
+--    'primary'
+--  },
+--  amenity = Set {
+--    'parking'
+--  }
+-- }
+--
+-- we would check whether the following key-value combinations
+-- are set, and return true is so:
+--
+-- highway = residential
+-- highway = primary
+-- amenity = parking
+
+function Tags.has_key_value_combination(way,lookup)
+  if not lookup then
+    return false
+  end
+  for key,set in pairs(lookup) do
+    local got = way:get_value_by_key(key)
+    for i,want in ipairs(set) do
+      if got == want then
+        print(key,got)
+        return true
+      end
+    end
+  end
+end
+
 return Tags

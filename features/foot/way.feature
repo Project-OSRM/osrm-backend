@@ -4,35 +4,29 @@ Feature: Foot - Accessability of different way types
     Background:
         Given the profile "foot"
 
-    Scenario: Foot - Basic access
+    Scenario: Foot - Routing on highway=*
         Then routability should be
-            | highway        | forw |
-            | motorway       |      |
-            | motorway_link  |      |
-            | trunk          |      |
-            | trunk_link     |      |
-            | primary        | x    |
-            | primary_link   | x    |
-            | secondary      | x    |
-            | secondary_link | x    |
-            | tertiary       | x    |
-            | tertiary_link  | x    |
-            | residential    | x    |
-            | service        | x    |
-            | unclassified   | x    |
-            | living_street  | x    |
-            | road           | x    |
-            | track          | x    |
-            | path           | x    |
-            | footway        | x    |
-            | pedestrian     | x    |
-            | steps          | x    |
-            | pier           | x    |
-            | cycleway       |      |
-            | bridleway      |      |
-
-    Scenario: Foot - Basic access
-        Then routability should be
-            | highway | leisure  | forw |
-            | (nil)   | track    |   x  |
-
+            | highway        | bothw   |
+            | motorway       |         |
+            | motorway_link  |         |
+            | trunk          |         |
+            | trunk_link     |         |
+            | primary        | walking |
+            | primary_link   | walking |
+            | secondary      | walking |
+            | secondary_link | walking |
+            | tertiary       | walking |
+            | tertiary_link  | walking |
+            | residential    | walking |
+            | service        | walking |
+            | unclassified   | walking |
+            | living_street  | walking |
+            | road           | walking |
+            | track          | walking |
+            | path           | walking |
+            | footway        | walking |
+            | pedestrian     | walking |
+            | steps          | walking |
+            | pier           | walking |
+            | cycleway       |         |
+            | bridleway      |         |

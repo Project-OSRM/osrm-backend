@@ -38,6 +38,11 @@ function setup()
     -- Should be inverted for left-driving countries.
     turn_bias   = use_left_hand_driving and 1/1.075 or 1.075,
 
+    implied_oneways = {
+      highway = { 'motorway' },
+      junction = { 'roundabout', 'circular' }
+    },
+
     -- a list of suffixes to suppress in name change instructions
     suffix_list = {
       'N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW', 'North', 'South', 'West', 'East'

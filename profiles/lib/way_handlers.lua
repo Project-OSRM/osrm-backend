@@ -11,6 +11,35 @@ local Tags = require('lib/tags')
 
 WayHandlers = {}
 
+function WayHandlers.new_result()
+  return {
+    road_classification = {},
+    forward_speed = -1,
+    backward_speed = -1,
+    forward_mode = 0,
+    backward_mode = 0,
+    duration = 0
+  }
+end
+
+function WayHandlers.is_bidirectional(result)
+  return (result.forward_mode ~= 0 and result.forward_speed > 0) and
+         (result.backward_mode ~= 0 and result.backward_speed > 0)
+end
+-- merges results from a into b, considering each direction
+-- separately. if a direction in b is not routable, then copy
+-- the corresponding direction from a
+function WayHandlers.merge_results(a,b)
+  if (b.forward_mode == 0 or b.forward_speed <= 0) then
+    b.forward_mode = a.forward_mode
+    b.forward_speed = a.forward_speed
+  end
+
+  if (b.backward_mode == 0 or b.backward_speed <= 0) then
+    b.backward_mode = a.backward_mode
+    b.backward_speed = a.backward_speed
+  end
+end
 -- check that way has at least one tag that could imply routability-
 -- we store the checked tags in data, to avoid fetching again later
 function WayHandlers.tag_prefetch(profile,way,result,data)
@@ -463,17 +492,11 @@ function WayHandlers.oneway(profile,way,result,data)
          oneway == "true" then
     data.is_forward_oneway = true
     result.backward_mode = mode.inaccessible
-  elseif profile.oneway_handling == true then
-    local junction = way:get_value_by_key("junction")
-    if data.highway == "motorway" or
-       junction == "roundabout" or
-       junction == "circular" then
-      if oneway ~= "no" then
-        -- implied oneway
-        data.is_forward_oneway = true
-        result.backward_mode = mode.inaccessible
-      end
-    end
+  elseif oneway ~= "no" and Tags.has_key_value_combination(way, profile.implied_oneways) then
+    -- implied oneway
+    print('implied')
+    data.is_forward_oneway = true
+    result.backward_mode = mode.inaccessible
   end
 end
 

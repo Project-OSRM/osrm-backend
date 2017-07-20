@@ -85,13 +85,21 @@ Feature: Bike - Cycle tracks/lanes
             | highway     | cycleway | oneway | forw    | backw        |
             | motorway    | track    | yes    | cycling |              |
             | residential | track    | yes    | cycling | pushing bike |
-            | cycleway    | track    | yes    | cycling | pushing bike |
+            | cycleway    | track    | yes    | cycling |              |
             | footway     | track    | yes    | cycling | pushing bike |
 
     Scenario: Bike - Cycleway on oneways, speeds
         Then routability should be
             | highway     | cycleway | oneway | forw    | backw      |
             | motorway    | track    | yes    | 15 km/h |            |
-            | residential | track    | yes    | 15 km/h | 6 km/h +-1 |
-            | cycleway    | track    | yes    | 15 km/h | 6 km/h +-1 |
-            | footway     | track    | yes    | 15 km/h | 6 km/h +-1 |
+            | residential | track    | yes    | 15 km/h | 5 km/h +-1 |
+            | cycleway    | track    | yes    | 15 km/h |            |
+            | footway     | track    | yes    | 15 km/h | 5 km/h +-1 |
+
+    Scenario: Bike - Directional sideways and oneway
+        Then routability should be
+            | highway     | oneway | cycleway:right | cycleway:left | forw         | backw        |
+            | primary     | yes    | track          |               | cycling      | pushing bike |
+            | primary     | yes    |                | track         | cycling      | cycling      |
+            | primary     | -1     | track          |               | cycling      | cycling      |
+            | primary     | -1     |                | track         | pushing bike | cycling      |
