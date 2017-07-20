@@ -69,7 +69,7 @@ void ExtractorCallbacks::ProcessNode(const osmium::Node &input_node,
     }
     if (result_node.traffic_lights)
     {
-        external_memory.traffic_lights.push_back(id);
+        external_memory.traffic_signals.push_back(id);
     }
 }
 

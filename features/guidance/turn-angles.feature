@@ -809,14 +809,14 @@ Feature: Simple Turns
 
         When I route I should get
             | waypoints | route               | turns                    | intersections                                         |
-            | a,g       | Perle,Heide,Heide   | depart,turn right,arrive | true:90;true:90 true:180 false:270 true:345;true:18   |
-            | a,k       | Perle,Friede,Friede | depart,turn left,arrive  | true:90;true:90 true:180 false:270 true:345;true:153  |
-            | a,e       | Perle,Perle         | depart,arrive            | true:90,true:90 true:180 false:270 true:345;true:270  |
-            | e,k       | Perle,Friede,Friede | depart,turn right,arrive | true:270;false:90 true:180 true:270 true:345;true:153 |
-            | e,g       | Perle,Heide,Heide   | depart,turn left,arrive  | true:270;false:90 true:180 true:270 true:345;true:18  |
-            | h,k       | Heide,Friede        | depart,arrive            | true:16,true:90 true:180 true:270 true:345;true:153   |
-            | h,e       | Heide,Perle,Perle   | depart,turn right,arrive | true:16;true:90 true:180 true:270 true:345;true:270   |
-            | h,a       | Heide,Perle,Perle   | depart,turn left,arrive  | true:16;true:90 true:180 true:270 true:345;true:90    |
+            | a,g       | Perle,Heide,Heide   | depart,turn right,arrive | true:90;true:90 true:195 false:270 true:345;true:18   |
+            | a,k       | Perle,Friede,Friede | depart,turn left,arrive  | true:90;true:90 true:195 false:270 true:345;true:153  |
+            | a,e       | Perle,Perle         | depart,arrive            | true:90,true:90 true:195 false:270 true:345;true:270  |
+            | e,k       | Perle,Friede,Friede | depart,turn right,arrive | true:270;false:90 true:195 true:270 true:345;true:153 |
+            | e,g       | Perle,Heide,Heide   | depart,turn left,arrive  | true:270;false:90 true:195 true:270 true:345;true:18  |
+            | h,k       | Heide,Friede        | depart,arrive            | true:16,true:90 true:195 true:270 true:345;true:153   |
+            | h,e       | Heide,Perle,Perle   | depart,turn right,arrive | true:16;true:90 true:195 true:270 true:345;true:270   |
+            | h,a       | Heide,Perle,Perle   | depart,turn left,arrive  | true:16;true:90 true:195 true:270 true:345;true:90    |
 
     #http://www.openstreetmap.org/#map=19/52.53293/13.32956
     Scenario: Curved Exit from Curved Road
@@ -1006,8 +1006,8 @@ Feature: Simple Turns
             | waypoints | route               | turns                          |
             | a,e       | Heide,Heide,Heide   | depart,continue uturn,arrive   |
             | a,g       | Heide,Fenn,Fenn     | depart,turn right,arrive       |
-            | a,h       | Heide,Friede,Friede | depart,turn slight left,arrive |
-            | i,e       | Perle,Heide,Heide   | depart,turn right,arrive       |
+            | a,h       | Heide,Friede,Friede | depart,turn left,arrive        |
+            | i,e       | Perle,Heide,Heide   | depart,turn sharp right,arrive |
             | i,h       | Perle,Friede,Friede | depart,turn left,arrive        |
 
     #http://www.openstreetmap.org/#map=19/52.48630/13.36017

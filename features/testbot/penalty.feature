@@ -26,6 +26,33 @@ Feature: Penalties
             | a    | c  | abc,abc | 20s +-1 | 200m +-1 |
             | d    | f  | def,def | 27s +-1 | 200m +-1 |
 
+    # Penalties not on the phantom nodes
+    Scenario: Traffic signals should incur a delay, without changing distance
+        Given the node map
+            """
+            a b c d e
+            f g h i j
+            """
+
+        And the nodes
+            | node | highway         |
+            | c    | traffic_signals |
+
+        And the ways
+            | nodes |
+            | ab    |
+            | bcd   |
+            | de    |
+            | fg    |
+            | ghi   |
+            | ij    |
+
+        When I route I should get
+            | from | to | route     | time    | distance |
+            | a    | e  | ab,bcd,de | 47s +-1 | 400m +-1 |
+            | f    | j  | fg,ghi,ij | 40s +-1 | 400m +-1 |
+
+
     Scenario: Signal penalty should not depend on way type
         Given the node map
             """

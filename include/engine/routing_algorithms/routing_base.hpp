@@ -151,6 +151,7 @@ void annotatePath(const FacadeT &facade,
         std::vector<EdgeWeight> weight_vector;
         std::vector<EdgeWeight> duration_vector;
         std::vector<DatasourceID> datasource_vector;
+
         if (geometry_index.forward)
         {
             id_vector = facade.GetUncompressedForwardGeometry(geometry_index.id);
@@ -165,6 +166,7 @@ void annotatePath(const FacadeT &facade,
             duration_vector = facade.GetUncompressedReverseDurations(geometry_index.id);
             datasource_vector = facade.GetUncompressedReverseDatasources(geometry_index.id);
         }
+
         BOOST_ASSERT(id_vector.size() > 0);
         BOOST_ASSERT(datasource_vector.size() > 0);
         BOOST_ASSERT(weight_vector.size() == id_vector.size() - 1);
@@ -307,24 +309,6 @@ void annotatePath(const FacadeT &facade,
             std::max(unpacked_path.front().weight_until_turn - source_weight, 0);
         unpacked_path.front().duration_until_turn =
             std::max(unpacked_path.front().duration_until_turn - source_duration, 0);
-    }
-
-    // there is no equivalent to a node-based node in an edge-expanded graph.
-    // two equivalent routes may start (or end) at different node-based edges
-    // as they are added with the offset how much "weight" on the edge
-    // has already been traversed. Depending on offset one needs to remove
-    // the last node.
-    if (unpacked_path.size() > 1)
-    {
-        const std::size_t last_index = unpacked_path.size() - 1;
-        const std::size_t second_to_last_index = last_index - 1;
-
-        if (unpacked_path[last_index].turn_via_node ==
-            unpacked_path[second_to_last_index].turn_via_node)
-        {
-            unpacked_path.pop_back();
-        }
-        BOOST_ASSERT(!unpacked_path.empty());
     }
 }
 

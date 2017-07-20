@@ -1,6 +1,8 @@
 #include "extractor/graph_compressor.hpp"
 
 #include "extractor/compressed_edge_container.hpp"
+#include "extractor/extraction_turn.hpp"
+#include "extractor/guidance/intersection.hpp"
 #include "extractor/restriction.hpp"
 #include "extractor/restriction_compressor.hpp"
 
@@ -19,7 +21,8 @@ namespace extractor
 {
 
 void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
-                               const std::unordered_set<NodeID> &traffic_lights,
+                               const std::unordered_set<NodeID> &traffic_signals,
+                               ScriptingEnvironment &scripting_environment,
                                std::vector<TurnRestriction> &turn_restrictions,
                                util::NodeBasedDynamicGraph &graph,
                                CompressedEdgeContainer &geometry_compressor)
@@ -50,6 +53,8 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
     std::for_each(turn_restrictions.begin(), turn_restrictions.end(), remember_via_nodes);
 
     {
+        const auto weight_multiplier =
+            scripting_environment.GetProfileProperties().GetWeightMultiplier();
         util::UnbufferedLog log;
         util::Percent progress(log, original_number_of_nodes);
 
@@ -184,13 +189,31 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
                 graph.GetEdgeData(reverse_e2).lane_description_id = selectLaneID(
                     rev_edge_data2.lane_description_id, rev_edge_data1.lane_description_id);
 
+                /*
                 // Do not compress edge if it crosses a traffic signal.
                 // This can't be done in CanCombineWith, becase we only store the
-                // traffic signals in the `traffic_lights` list, which EdgeData
+                // traffic signals in the `traffic signal` list, which EdgeData
                 // doesn't have access to.
-                const bool has_node_penalty = traffic_lights.find(node_v) != traffic_lights.end();
+                */
+                const bool has_node_penalty = traffic_signals.find(node_v) != traffic_signals.end();
+                boost::optional<EdgeDuration> node_duration_penalty = boost::none;
+                boost::optional<EdgeWeight> node_weight_penalty = boost::none;
                 if (has_node_penalty)
-                    continue;
+                {
+                    // generate an artifical turn for the turn penalty generation
+                    ExtractionTurn extraction_turn(true);
+
+                    extraction_turn.source_restricted = fwd_edge_data1.restricted;
+                    extraction_turn.target_restricted = fwd_edge_data2.restricted;
+
+                    // we cannot handle this as node penalty, if it depends on turn direction
+                    if (extraction_turn.source_restricted != extraction_turn.target_restricted)
+                        continue;
+
+                    scripting_environment.ProcessTurn(extraction_turn);
+                    node_duration_penalty = extraction_turn.duration * 10;
+                    node_weight_penalty = extraction_turn.weight * weight_multiplier;
+                }
 
                 // Get weights before graph is modified
                 const auto forward_weight1 = fwd_edge_data1.weight;
@@ -217,6 +240,14 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
                 graph.GetEdgeData(forward_e1).duration += forward_duration2;
                 graph.GetEdgeData(reverse_e1).duration += reverse_duration2;
 
+                if (node_weight_penalty && node_duration_penalty)
+                {
+                    graph.GetEdgeData(forward_e1).weight += *node_weight_penalty;
+                    graph.GetEdgeData(reverse_e1).weight += *node_weight_penalty;
+                    graph.GetEdgeData(forward_e1).duration += *node_duration_penalty;
+                    graph.GetEdgeData(reverse_e1).duration += *node_duration_penalty;
+                }
+
                 // extend e1's to targets of e2's
                 graph.SetTarget(forward_e1, node_w);
                 graph.SetTarget(reverse_e1, node_u);
@@ -236,7 +267,9 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
                                                  forward_weight1,
                                                  forward_weight2,
                                                  forward_duration1,
-                                                 forward_duration2);
+                                                 forward_duration2,
+                                                 node_weight_penalty,
+                                                 node_duration_penalty);
                 geometry_compressor.CompressEdge(reverse_e1,
                                                  reverse_e2,
                                                  node_v,
@@ -244,7 +277,9 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
                                                  reverse_weight1,
                                                  reverse_weight2,
                                                  reverse_duration1,
-                                                 reverse_duration2);
+                                                 reverse_duration2,
+                                                 node_weight_penalty,
+                                                 node_duration_penalty);
             }
         }
     }

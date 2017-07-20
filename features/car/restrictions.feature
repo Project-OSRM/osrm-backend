@@ -954,11 +954,11 @@ Feature: Car - Turn restrictions
         # this case is currently not handling the via-way restrictions and we need support for looking across traffic signals.
         # It is mainly included to show limitations and to prove that we don't crash hard here
         When I route I should get
-            | from | to | route        |
-            | a    | d  | ab,bge,de,de |
-            | a    | f  | ab,bge,ef,ef |
-            | c    | d  | bc,bge,de,de |
-            | c    | f  | bc,bge,ef,ef |
+            | from | to | route              |
+            | a    | d  | ab,bge,ef,ef,de,de |
+            | a    | f  | ab,bge,ef,ef       |
+            | c    | d  | bc,bge,de,de       |
+            | c    | f  | bc,bge,de,de,ef,ef |
 
       # don't crash hard on invalid restrictions
       @restriction @invalid

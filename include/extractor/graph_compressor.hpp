@@ -1,6 +1,7 @@
 #ifndef GEOMETRY_COMPRESSOR_HPP
 #define GEOMETRY_COMPRESSOR_HPP
 
+#include "extractor/scripting_environment.hpp"
 #include "util/typedefs.hpp"
 
 #include "util/node_based_graph.hpp"
@@ -24,6 +25,7 @@ class GraphCompressor
   public:
     void Compress(const std::unordered_set<NodeID> &barrier_nodes,
                   const std::unordered_set<NodeID> &traffic_lights,
+                  ScriptingEnvironment &scripting_environment,
                   std::vector<TurnRestriction> &turn_restrictions,
                   util::NodeBasedDynamicGraph &graph,
                   CompressedEdgeContainer &geometry_compressor);

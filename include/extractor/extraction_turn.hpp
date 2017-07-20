@@ -22,6 +22,14 @@ struct ExtractionTurn
     {
     }
 
+    ExtractionTurn(const bool has_traffic_light = false)
+        : angle(0), turn_type(guidance::TurnType::NoTurn),
+          direction_modifier(guidance::DirectionModifier::Straight),
+          has_traffic_light(has_traffic_light), weight(0.), duration(0.), source_restricted(false),
+          target_restricted(false)
+    {
+    }
+
     const double angle;
     const guidance::TurnType::Enum turn_type;
     const guidance::DirectionModifier::Enum direction_modifier;

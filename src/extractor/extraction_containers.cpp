@@ -616,17 +616,17 @@ void ExtractionContainers::WriteNodes(storage::io::FileWriter &file_out) const
         util::UnbufferedLog log;
         log << "Writing traffic light nodes     ... ";
         TIMER_START(write_nodes);
-        std::vector<NodeID> internal_traffic_lights;
-        for (const auto osm_id : traffic_lights)
+        std::vector<NodeID> internal_traffic_signals;
+        for (const auto osm_id : traffic_signals)
         {
             const auto node_id = mapExternalToInternalNodeID(
                 used_node_id_list.begin(), used_node_id_list.end(), osm_id);
             if (node_id != SPECIAL_NODEID)
             {
-                internal_traffic_lights.push_back(node_id);
+                internal_traffic_signals.push_back(node_id);
             }
         }
-        storage::serialization::write(file_out, internal_traffic_lights);
+        storage::serialization::write(file_out, internal_traffic_signals);
         log << "ok, after " << TIMER_SEC(write_nodes) << "s";
     }
 
