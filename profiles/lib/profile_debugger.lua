@@ -10,9 +10,6 @@ local pprint = require('lib/pprint')
 
 -- globals that are normally set from C++
 
--- profiles code modifies this table
-properties = {}
-
 -- should match values defined in include/extractor/guidance/road_classification.hpp
 road_priority_class = {
   motorway = 0,
@@ -122,6 +119,8 @@ function Debug.way_function(way,result)
   result.forward_speed = -1
   result.backward_speed = -1
   result.duration = 0
+  result.forward_classes = {}
+  result.backward_classes = {}
   
   -- intercept tag function normally provided via C++
   function way:get_value_by_key(k)
