@@ -18,7 +18,9 @@ function WayHandlers.new_result()
     backward_speed = -1,
     forward_mode = 0,
     backward_mode = 0,
-    duration = 0
+    duration = 0,
+    forward_classes = {},
+    backward_classes = {}
   }
 end
 
@@ -494,7 +496,6 @@ function WayHandlers.oneway(profile,way,result,data)
     result.backward_mode = mode.inaccessible
   elseif oneway ~= "no" and Tags.has_key_value_combination(way, profile.implied_oneways) then
     -- implied oneway
-    print('implied')
     data.is_forward_oneway = true
     result.backward_mode = mode.inaccessible
   end
