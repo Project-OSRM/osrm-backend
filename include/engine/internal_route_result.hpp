@@ -1,10 +1,14 @@
 #ifndef RAW_ROUTE_DATA_H
 #define RAW_ROUTE_DATA_H
 
+#include "extractor/class_data.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
 #include "extractor/travel_mode.hpp"
+
 #include "engine/phantom_node.hpp"
+
 #include "osrm/coordinate.hpp"
+
 #include "util/guidance/entry_class.hpp"
 #include "util/guidance/turn_bearing.hpp"
 #include "util/guidance/turn_lanes.hpp"
