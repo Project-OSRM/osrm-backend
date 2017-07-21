@@ -992,15 +992,15 @@ template <> class ContiguousInternalMemoryAlgorithmDataFacade<MLD> : public Algo
                 partition::MultiLevelPartitionView{level_data, partition, cell_to_children};
         }
 
-        if (data_layout.GetBlockSize(storage::DataLayout::MLD_CELL_WEIGHTS) > 0)
+        if (data_layout.GetBlockSize(storage::DataLayout::MLD_CELL_WEIGHTS_0) > 0)
         {
             BOOST_ASSERT(data_layout.GetBlockSize(storage::DataLayout::MLD_CELLS) > 0);
             BOOST_ASSERT(data_layout.GetBlockSize(storage::DataLayout::MLD_CELL_LEVEL_OFFSETS) > 0);
 
             auto mld_cell_weights_ptr = data_layout.GetBlockPtr<EdgeWeight>(
-                memory_block, storage::DataLayout::MLD_CELL_WEIGHTS);
+                memory_block, storage::DataLayout::MLD_CELL_WEIGHTS_0);
             auto mld_cell_durations_ptr = data_layout.GetBlockPtr<EdgeDuration>(
-                memory_block, storage::DataLayout::MLD_CELL_DURATIONS);
+                memory_block, storage::DataLayout::MLD_CELL_DURATIONS_0);
             auto mld_source_boundary_ptr = data_layout.GetBlockPtr<NodeID>(
                 memory_block, storage::DataLayout::MLD_CELL_SOURCE_BOUNDARY);
             auto mld_destination_boundary_ptr = data_layout.GetBlockPtr<NodeID>(
@@ -1011,9 +1011,9 @@ template <> class ContiguousInternalMemoryAlgorithmDataFacade<MLD> : public Algo
                 memory_block, storage::DataLayout::MLD_CELL_LEVEL_OFFSETS);
 
             auto weight_entries_count =
-                data_layout.GetBlockEntries(storage::DataLayout::MLD_CELL_WEIGHTS);
+                data_layout.GetBlockEntries(storage::DataLayout::MLD_CELL_WEIGHTS_0);
             auto duration_entries_count =
-                data_layout.GetBlockEntries(storage::DataLayout::MLD_CELL_DURATIONS);
+                data_layout.GetBlockEntries(storage::DataLayout::MLD_CELL_DURATIONS_0);
             auto source_boundary_entries_count =
                 data_layout.GetBlockEntries(storage::DataLayout::MLD_CELL_SOURCE_BOUNDARY);
             auto destination_boundary_entries_count =
