@@ -824,7 +824,7 @@ InternalManyRoutesResult alternativePathSearch(SearchEngineData<Algorithm> &sear
     // We need to save all packed paths from the heaps upfront.
 
     const auto extract_packed_path_from_heaps = [&](WeightedViaNode via) {
-        auto packed_path = retrievePackedPathFromHeap(forward_heap, reverse_heap, via.node);
+        auto packed_path = retrievePackedPathFromHeap<Algorithm>(forward_heap, reverse_heap, via.node);
         auto path_weights =
             retrievePackedPathWeightsFromHeap(forward_heap, reverse_heap, packed_path, via);
 
