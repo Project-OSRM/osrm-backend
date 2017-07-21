@@ -2,6 +2,7 @@
 #define TILEPLUGIN_HPP
 
 #include "engine/api/tile_parameters.hpp"
+#include "engine/datafacade/contiguous_internalmem_datafacade.hpp"
 #include "engine/plugins/plugin_base.hpp"
 #include "engine/routing_algorithms.hpp"
 

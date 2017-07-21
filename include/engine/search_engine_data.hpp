@@ -4,6 +4,8 @@
 #include <boost/thread/tss.hpp>
 
 #include "engine/algorithm.hpp"
+#include "engine/search_engine_data_fwd.hpp"
+
 #include "util/query_heap.hpp"
 #include "util/typedefs.hpp"
 
@@ -68,27 +70,6 @@ template <>
 struct SearchEngineData<routing_algorithms::corech::Algorithm>
     : public SearchEngineData<routing_algorithms::ch::Algorithm>
 {
-};
-
-struct MultiLayerDijkstraHeapData
-{
-    NodeID parent;
-    bool from_clique_arc;
-    MultiLayerDijkstraHeapData(NodeID p) : parent(p), from_clique_arc(false) {}
-    MultiLayerDijkstraHeapData(NodeID p, bool from) : parent(p), from_clique_arc(from) {}
-};
-
-struct ManyToManyMultiLayerDijkstraHeapData : MultiLayerDijkstraHeapData
-{
-    EdgeWeight duration;
-    ManyToManyMultiLayerDijkstraHeapData(NodeID p, EdgeWeight duration)
-        : MultiLayerDijkstraHeapData(p), duration(duration)
-    {
-    }
-    ManyToManyMultiLayerDijkstraHeapData(NodeID p, bool from, EdgeWeight duration)
-        : MultiLayerDijkstraHeapData(p, from), duration(duration)
-    {
-    }
 };
 
 template <> struct SearchEngineData<routing_algorithms::mld::Algorithm>

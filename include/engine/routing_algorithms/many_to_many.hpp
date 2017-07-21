@@ -3,7 +3,7 @@
 
 #include "engine/algorithm.hpp"
 #include "engine/datafacade.hpp"
-#include "engine/search_engine_data.hpp"
+#include "engine/phantom_node.hpp"
 
 #include "util/typedefs.hpp"
 

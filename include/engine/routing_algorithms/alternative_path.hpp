@@ -1,11 +1,9 @@
 #ifndef ALTERNATIVE_PATH_ROUTING_HPP
 #define ALTERNATIVE_PATH_ROUTING_HPP
 
+#include "engine/algorithm.hpp"
 #include "engine/datafacade.hpp"
 #include "engine/internal_route_result.hpp"
-
-#include "engine/algorithm.hpp"
-#include "engine/search_engine_data.hpp"
 
 #include "util/exception.hpp"
 

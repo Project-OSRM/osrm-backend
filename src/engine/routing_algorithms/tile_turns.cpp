@@ -1,5 +1,7 @@
 #include "engine/routing_algorithms/tile_turns.hpp"
 
+#include "engine/datafacade/contiguous_internalmem_datafacade.hpp"
+
 namespace osrm
 {
 namespace engine

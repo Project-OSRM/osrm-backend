@@ -4,8 +4,8 @@
 #include "engine/algorithm.hpp"
 #include "engine/datafacade.hpp"
 #include "engine/routing_algorithms/routing_base.hpp"
-#include "engine/search_engine_data.hpp"
 
+#include "util/for_each_pair.hpp"
 #include "util/typedefs.hpp"
 
 #include <boost/assert.hpp>
