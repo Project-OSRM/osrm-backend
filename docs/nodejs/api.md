@@ -26,6 +26,12 @@ var osrm = new OSRM('network.osrm');
     -   `options.shared_memory` **[Boolean](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean)?** Connects to the persistent shared memory datastore.
                This requires you to run `osrm-datastore` prior to creating an `OSRM` object.
     -   `options.path` **[String](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)?** The path to the `.osrm` files. This is mutually exclusive with setting {options.shared_memory} to true.
+    -   `options.max_locations_trip` **[Number](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number)?** Max. locations supported in trip query (default: unlimited).
+    -   `options.max_locations_viaroute` **[Number](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number)?** Max. locations supported in viaroute query 9default: unlimited).
+    -   `options.max_locations_distance_table` **[Number](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number)?** Max. locations supported in distance table query (default: unlimited).
+    -   `options.max_locations_map_matching` **[Number](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number)?** Max. locations supported in map matching query (default: unlimited).
+    -   `options.max_results_nearest` **[Number](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number)?** Max. results supported in nearest query (default: unlimited).
+    -   `options.max_alternatives` **[Number](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number)?** Max. number of alternative routes supported (default: 3).
 
 ### route
 
