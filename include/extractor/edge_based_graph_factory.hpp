@@ -40,11 +40,6 @@
 #include <unordered_set>
 #include <vector>
 
-#include <boost/filesystem/fstream.hpp>
-
-#include <tbb/concurrent_unordered_map.h>
-#include <tbb/concurrent_vector.h>
-
 namespace osrm
 {
 namespace extractor
