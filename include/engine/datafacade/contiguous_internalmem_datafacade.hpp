@@ -1129,6 +1129,27 @@ class ContiguousInternalMemoryDataFacade<MLD> final
     {
     }
 };
+
+template <typename Callback>
+void ForEachSourceNodes(ContiguousInternalMemoryDataFacade<MLD> const & facade,
+                        LevelID level, NodeID node, Callback const & fn)
+{
+    const auto & cell = facade.GetCellStorage().GetCell(level, facade.GetMultiLevelPartition().GetCell(level, node));
+    auto source = cell.GetSourceNodes().begin();
+    for (auto shortcut_weight : cell.GetInWeight(node))
+        fn(shortcut_weight, *source++);
+}
+
+template <typename Callback>
+void ForEachDestinationNodes(ContiguousInternalMemoryDataFacade<MLD> const & facade,
+                             LevelID level, NodeID node, Callback const & fn)
+{
+    const auto & cell = facade.GetCellStorage().GetCell(level, facade.GetMultiLevelPartition().GetCell(level, node));
+    auto destination = cell.GetDestinationNodes().begin();
+    for (auto shortcut_weight : cell.GetOutWeight(node))
+        fn(shortcut_weight, *destination++);
+}
+
 }
 }
 }
