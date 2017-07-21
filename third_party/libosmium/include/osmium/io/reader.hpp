@@ -92,6 +92,8 @@ namespace osmium {
 
             osmium::io::File m_file;
 
+            detail::ParserFactory::create_parser_type m_creator;
+
             enum class status {
                 okay   = 0, // normal reading
                 error  = 1, // some error occurred while reading
@@ -128,13 +130,12 @@ namespace osmium {
             }
 
             // This function will run in a separate thread.
-            static void parser_thread(const osmium::io::File& file,
+            static void parser_thread(const detail::ParserFactory::create_parser_type& creator,
                                       detail::future_string_queue_type& input_queue,
                                       detail::future_buffer_queue_type& osmdata_queue,
                                       std::promise<osmium::io::Header>&& header_promise,
                                       osmium::io::detail::reader_options options) {
                 std::promise<osmium::io::Header> promise = std::move(header_promise);
-                const auto creator = detail::ParserFactory::instance().get_creator_function(file);
                 const auto parser = creator(input_queue, osmdata_queue, promise, options);
                 parser->parse();
             }
@@ -236,6 +237,7 @@ namespace osmium {
             template <typename... TArgs>
             explicit Reader(const osmium::io::File& file, TArgs&&... args) :
                 m_file(file.check()),
+                m_creator(detail::ParserFactory::instance().get_creator_function(m_file)),
                 m_status(status::okay),
                 m_childpid(0),
                 m_input_queue(detail::get_input_queue_size(), "raw_input"),
@@ -256,7 +258,7 @@ namespace osmium {
 
                 std::promise<osmium::io::Header> header_promise;
                 m_header_future = header_promise.get_future();
-                m_thread = osmium::thread::thread_handler{parser_thread, std::ref(m_file), std::ref(m_input_queue), std::ref(m_osmdata_queue), std::move(header_promise), m_options};
+                m_thread = osmium::thread::thread_handler{parser_thread, std::ref(m_creator), std::ref(m_input_queue), std::ref(m_osmdata_queue), std::move(header_promise), m_options};
             }
 
             template <typename... TArgs>

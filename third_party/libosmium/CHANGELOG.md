@@ -6,11 +6,35 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased] -
 
-### Added
+### Fixed
 
-### Changed
+## [2.11.3] - 2017-05-03
 
 ### Fixed
+
+- Two bugs in area assembler affecting very complex multipolygons and
+  multipolygons with overlapping or nearly overlapping lines.
+- Invalid use of iterators leading to undefined behaviour in area assembler
+  code.
+- Read OPL file correctly even if trailing newline in file is missing.
+
+
+## [2.11.2] - 2017-04-10
+
+### Fixed
+
+- Use minimum size of 64 bytes for buffers. This fixes an infinite loop
+  when buffer size is zero.
+
+
+## [2.11.1] - 2017-03-07
+
+### Fixed
+
+- Terminate called on full non-auto-growing buffer. (Issue #189.)
+- When file formats were used that were not compiled into the binary, it
+  terminated instead of throwing. (Issue #197.)
+- The `Filter::count()` method didn't compile at all.
 
 
 ## [2.11.0] - 2017-01-14
@@ -525,7 +549,11 @@ This project adheres to [Semantic Versioning](http://semver.org/).
   Doxygen (up to version 1.8.8). This version contains a workaround to fix
   this.
 
-[unreleased]: https://github.com/osmcode/libosmium/compare/v2.10.3...HEAD
+[unreleased]: https://github.com/osmcode/libosmium/compare/v2.11.3...HEAD
+[2.11.3]: https://github.com/osmcode/libosmium/compare/v2.11.2...v2.11.3
+[2.11.2]: https://github.com/osmcode/libosmium/compare/v2.11.1...v2.11.2
+[2.11.1]: https://github.com/osmcode/libosmium/compare/v2.11.0...v2.11.1
+[2.11.0]: https://github.com/osmcode/libosmium/compare/v2.10.3...v2.11.0
 [2.10.3]: https://github.com/osmcode/libosmium/compare/v2.10.2...v2.10.3
 [2.10.2]: https://github.com/osmcode/libosmium/compare/v2.10.1...v2.10.2
 [2.10.1]: https://github.com/osmcode/libosmium/compare/v2.10.0...v2.10.1
