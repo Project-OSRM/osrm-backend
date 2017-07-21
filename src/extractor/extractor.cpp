@@ -89,7 +89,10 @@ void SetAvoidableClasses(const ExtractorCallbacks::ClassesMap &classes_map,
         throw util::exception("Only " + std::to_string(MAX_AVOIDABLE_CLASSES) + " avoidable combinations allowed.");
     }
 
-    std::size_t combination_index = 0;
+    // The avoid index 0 is reserve for not avoiding anything
+    profile_properties.SetAvoidableClasses(0, 0);
+
+    std::size_t combination_index = 1;
     for (const auto &combination : avoidable_classes)
     {
         ClassData mask = 0;

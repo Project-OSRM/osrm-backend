@@ -87,24 +87,8 @@ struct RouteParameters : public BaseParameters
                     const GeometriesType geometries_,
                     const OverviewType overview_,
                     const boost::optional<bool> continue_straight_,
-                    std::vector<std::string> avoid_,
                     Args... args_)
-        : BaseParameters{std::forward<Args>(args_)...}, steps{steps_}, alternatives{alternatives_},
-          number_of_alternatives{alternatives_ ? 1u : 0u}, annotations{false},
-          annotations_type{AnnotationsType::None}, geometries{geometries_}, overview{overview_},
-          continue_straight{continue_straight_}, avoid{std::move(avoid_)}
     // Once we perfectly-forward `args` (see #2990) this constructor can delegate to the one below.
-    {
-    }
-
-    // Without avoid flags
-    template <typename... Args>
-    RouteParameters(const bool steps_,
-                    const bool alternatives_,
-                    const GeometriesType geometries_,
-                    const OverviewType overview_,
-                    const boost::optional<bool> continue_straight_,
-                    Args... args_)
         : BaseParameters{std::forward<Args>(args_)...}, steps{steps_}, alternatives{alternatives_},
           number_of_alternatives{alternatives_ ? 1u : 0u}, annotations{false},
           annotations_type{AnnotationsType::None}, geometries{geometries_}, overview{overview_},
@@ -154,7 +138,6 @@ struct RouteParameters : public BaseParameters
     GeometriesType geometries = GeometriesType::Polyline;
     OverviewType overview = OverviewType::Simplified;
     boost::optional<bool> continue_straight;
-    std::vector<std::string> avoid;
 
     bool IsValid() const
     {

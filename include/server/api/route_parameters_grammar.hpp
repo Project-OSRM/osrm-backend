@@ -70,8 +70,6 @@ struct RouteParametersGrammar : public BaseParametersGrammar<Iterator, Signature
             "distance", AnnotationsType::Distance)("weight", AnnotationsType::Weight)(
             "datasources", AnnotationsType::Datasources)("speed", AnnotationsType::Speed);
 
-        avoid_rule = qi::lit("avoid=") > (qi::as_string[+qi::char_("a-zA-Z")] % ',');
-
         base_rule =
             BaseGrammar::base_rule(qi::_r1) |
             (qi::lit("steps=") >
@@ -84,8 +82,7 @@ struct RouteParametersGrammar : public BaseParametersGrammar<Iterator, Signature
             (qi::lit("annotations=") >
              (qi::lit("true")[ph::bind(add_annotation, qi::_r1, AnnotationsType::All)] |
               qi::lit("false")[ph::bind(add_annotation, qi::_r1, AnnotationsType::None)] |
-              (annotations_type[ph::bind(add_annotation, qi::_r1, qi::_1)] % ','))) |
-            avoid_rule[ph::bind(&engine::api::RouteParameters::avoid, qi::_r1) = qi::_1];
+              (annotations_type[ph::bind(add_annotation, qi::_r1, qi::_1)] % ',')));
 
         query_rule = BaseGrammar::query_rule(qi::_r1);
     }
@@ -97,7 +94,6 @@ struct RouteParametersGrammar : public BaseParametersGrammar<Iterator, Signature
   private:
     qi::rule<Iterator, Signature> root_rule;
     qi::rule<Iterator, Signature> route_rule;
-    qi::rule<Iterator, std::vector<std::string>()> avoid_rule;
 
     qi::symbols<char, engine::api::RouteParameters::GeometriesType> geometries_type;
     qi::symbols<char, engine::api::RouteParameters::OverviewType> overview_type;

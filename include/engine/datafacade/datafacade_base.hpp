@@ -94,6 +94,8 @@ class BaseDataFacade
 
     virtual extractor::ClassData GetClassData(const NodeID id) const = 0;
 
+    virtual bool AvoidNode(const NodeID id) const = 0;
+
     virtual std::vector<std::string> GetClasses(const extractor::ClassData class_data) const = 0;
 
     virtual std::vector<RTreeLeaf> GetEdgesInBox(const util::Coordinate south_west,

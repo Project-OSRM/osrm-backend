@@ -189,7 +189,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                 throw util::exception("Maximum number of classes if " +
                                       std::to_string(MAX_CLASS_INDEX + 1));
             }
-            ClassData class_mask = 1u << classes_map.size();
+            ClassData class_mask = getClassData(classes_map.size());
             classes_map[class_name] = class_mask;
             return class_mask;
         }

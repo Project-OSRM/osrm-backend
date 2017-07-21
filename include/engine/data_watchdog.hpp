@@ -3,6 +3,7 @@
 
 #include "engine/datafacade/contiguous_internalmem_datafacade.hpp"
 #include "engine/datafacade/shared_memory_allocator.hpp"
+#include "engine/datafacade_factory.hpp"
 
 #include "storage/shared_datatype.hpp"
 #include "storage/shared_memory.hpp"
@@ -36,8 +37,8 @@ template <typename AlgorithmT> class DataWatchdog final
         {
             boost::interprocess::scoped_lock<mutex_type> current_region_lock(barrier.get_mutex());
 
-            facade = std::make_shared<const FacadeT>(
-                std::make_unique<datafacade::SharedMemoryAllocator>(barrier.data().region));
+            facade_factory = DataFacadeFactory<const FacadeT>(
+                std::make_shared<datafacade::SharedMemoryAllocator>(barrier.data().region));
             timestamp = barrier.data().timestamp;
         }
 
@@ -51,7 +52,8 @@ template <typename AlgorithmT> class DataWatchdog final
         watcher.join();
     }
 
-    std::shared_ptr<const FacadeT> Get() const { return facade; }
+    std::shared_ptr<const FacadeT> Get(const api::BaseParameters &params) const { return facade_factory.Get(params); }
+    std::shared_ptr<const FacadeT> Get(const api::TileParameters &params) const { return facade_factory.Get(params); }
 
   private:
     void Run()
@@ -68,8 +70,8 @@ template <typename AlgorithmT> class DataWatchdog final
             if (timestamp != barrier.data().timestamp)
             {
                 auto region = barrier.data().region;
-                facade = std::make_shared<const FacadeT>(
-                    std::make_unique<datafacade::SharedMemoryAllocator>(region));
+                facade_factory = DataFacadeFactory<const FacadeT>(
+                    std::make_shared<datafacade::SharedMemoryAllocator>(region));
                 timestamp = barrier.data().timestamp;
                 util::Log() << "updated facade to region " << region << " with timestamp "
                             << timestamp;
@@ -83,7 +85,7 @@ template <typename AlgorithmT> class DataWatchdog final
     std::thread watcher;
     bool active;
     unsigned timestamp;
-    std::shared_ptr<const FacadeT> facade;
+    DataFacadeFactory<const FacadeT> facade_factory;
 };
 }
 }

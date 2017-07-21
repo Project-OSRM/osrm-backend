@@ -20,7 +20,8 @@ template <typename AlgorithmT, template <typename A> class FacadeT> class DataFa
 
     virtual ~DataFacadeProvider() = default;
 
-    virtual std::shared_ptr<const Facade> Get() const = 0;
+    virtual std::shared_ptr<const Facade> Get(const api::BaseParameters&) const = 0;
+    virtual std::shared_ptr<const Facade> Get(const api::TileParameters&) const = 0;
 };
 
 template <typename AlgorithmT, template <typename A> class FacadeT>
@@ -30,15 +31,15 @@ class ImmutableProvider final : public DataFacadeProvider<AlgorithmT, FacadeT>
     using Facade = typename DataFacadeProvider<AlgorithmT, FacadeT>::Facade;
 
     ImmutableProvider(const storage::StorageConfig &config)
-        : immutable_data_facade(std::make_shared<Facade>(
-              std::make_shared<datafacade::ProcessMemoryAllocator>(config)))
+        : facade_factory(std::make_shared<datafacade::ProcessMemoryAllocator>(config))
     {
     }
 
-    std::shared_ptr<const Facade> Get() const override final { return immutable_data_facade; }
+    std::shared_ptr<const Facade> Get(const api::TileParameters &params) const override final { return facade_factory.Get(params); }
+    std::shared_ptr<const Facade> Get(const api::BaseParameters &params) const override final { return facade_factory.Get(params); }
 
   private:
-    std::shared_ptr<const Facade> immutable_data_facade;
+    DataFacadeFactory<const Facade> facade_factory;
 };
 
 template <typename AlgorithmT, template <typename A> class FacadeT>
@@ -49,7 +50,8 @@ class WatchingProvider : public DataFacadeProvider<AlgorithmT, FacadeT>
   public:
     using Facade = typename DataFacadeProvider<AlgorithmT, FacadeT>::Facade;
 
-    std::shared_ptr<const Facade> Get() const override final { return watchdog.Get(); }
+    std::shared_ptr<const Facade> Get(const api::TileParameters &params) const override final { return watchdog.Get(params); }
+    std::shared_ptr<const Facade> Get(const api::BaseParameters &params) const override final { return watchdog.Get(params); }
 };
 }
 
