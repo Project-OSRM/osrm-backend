@@ -17,6 +17,12 @@ static const std::uint8_t MAX_AVOIDABLE_CLASSES = 8;
 inline bool isSubset(const ClassData lhs, const ClassData rhs) { return (lhs & rhs) == lhs; }
 
 inline auto getClassIndexes(const ClassData data) { return util::makeBitRange<ClassData>(data); }
+
+inline auto getClassData(const std::size_t index)
+{
+    BOOST_ASSERT(index <= MAX_CLASS_INDEX);
+    return uint8_t{1} << index;
+}
 }
 }
 

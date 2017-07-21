@@ -79,7 +79,7 @@ struct ProfileProperties
     }
 
     // Check if this classes are avoidable
-    boost::optional<std::size_t> ClassesAreAvoidable(ClassData classes)
+    boost::optional<std::size_t> ClassesAreAvoidable(ClassData classes) const
     {
         auto iter = std::find(avoidable_classes.begin(), avoidable_classes.end(), classes);
         if (iter != avoidable_classes.end())

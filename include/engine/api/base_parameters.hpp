@@ -68,6 +68,7 @@ struct BaseParameters
     std::vector<boost::optional<double>> radiuses;
     std::vector<boost::optional<Bearing>> bearings;
     std::vector<boost::optional<Approach>> approaches;
+    std::vector<std::string> avoid;
 
     // Adds hints to response which can be included in subsequent requests, see `hints` above.
     bool generate_hints = true;
@@ -77,9 +78,10 @@ struct BaseParameters
                    std::vector<boost::optional<double>> radiuses_ = {},
                    std::vector<boost::optional<Bearing>> bearings_ = {},
                    std::vector<boost::optional<Approach>> approaches_ = {},
-                   bool generate_hints_ = true)
+                   bool generate_hints_ = true,
+                   std::vector<std::string> avoid = {})
         : coordinates(coordinates_), hints(hints_), radiuses(radiuses_), bearings(bearings_),
-          approaches(approaches_), generate_hints(generate_hints_)
+          approaches(approaches_), avoid(std::move(avoid)), generate_hints(generate_hints_)
     {
     }
 
