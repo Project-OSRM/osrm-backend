@@ -120,9 +120,12 @@ Status ViaRoutePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithm
         routes = algorithms.ShortestPathSearch(start_end_nodes, route_parameters.continue_straight);
     }
 
+    // The post condition for all path searches is we have at least one route in our result.
+    // This route might be invalid by means of INVALID_EDGE_WEIGHT as shortest path weight.
+    BOOST_ASSERT(!routes.routes.empty());
+
     // we can only know this after the fact, different SCC ids still
     // allow for connection in one direction.
-    BOOST_ASSERT(!routes.routes.empty());
 
     if (routes.routes[0].is_valid())
     {
