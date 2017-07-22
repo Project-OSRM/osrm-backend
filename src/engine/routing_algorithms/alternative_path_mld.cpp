@@ -792,8 +792,15 @@ InternalManyRoutesResult alternativePathSearch(SearchEngineData<Algorithm> &sear
                                    shortest_path_via_it->node != SPECIAL_NODEID &&
                                    shortest_path_via_it->weight != INVALID_EDGE_WEIGHT;
 
+    // Care needs to be taken to meet the call sites post condition.
+    // We must return at least one route, even if it's an invalid one.
     if (!has_shortest_path)
-        return InternalManyRoutesResult{};
+    {
+        InternalRouteResult invalid;
+        invalid.shortest_path_weight = INVALID_EDGE_WEIGHT;
+        invalid.segment_end_coordinates = {phantom_node_pair};
+        return invalid;
+    }
 
     NodeID shortest_path_via = shortest_path_via_it->node;
     EdgeWeight shortest_path_weight = shortest_path_via_it->weight;
