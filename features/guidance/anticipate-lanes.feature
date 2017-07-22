@@ -814,3 +814,32 @@ Feature: Turn Lane Guidance
             | waypoints | route        | turns                    | locations | lanes                                                                                                                                                                                                                                                                                        |
             | a,i       | road,road    | depart,arrive            | a,i       | ;left:false none:true none:true none:true;left:false none:true none:true none:true;left:false none:true none:true none:true;left:false none:true none:true none:true;left:false none:true none:true none:true;left:false none:true none:true none:false;none:true none:true right:false,     |
             | a,j       | road,7th,7th | depart,turn right,arrive | a,h,j     | ;left:false none:true none:true none:true;left:false none:true none:true none:true;left:false none:true none:true none:true;left:false none:true none:true none:true;left:false none:false none:false none:true;left:false none:false none:false none:true,none:false none:false right:true, |
+
+    @anticipate
+    Scenario: Oak St, Franklin St
+        Given a grid size of 10 meters
+        Given the node map
+            """
+                   g
+                   .     . f
+                 . d `
+            e `    .
+                   .
+                   .
+                   .     . c
+                 . b `
+            a `
+
+            """
+
+        And the ways
+            | nodes | name        | turn:lanes                                  | oneway | highway   |
+            | ab    | Oak St      | left\|left\|left                            | yes    | secondary |
+            | cb    | Oak St      | right                                       | yes    | tertiary  |
+            | bd    | Franklin St | left;through\|through\|through;right\|right | yes    | secondary |
+            | dg    | Franklin St |                                             | yes    | secondary |
+            | edf   | Fell St     |                                             |        | secondary |
+
+        When I route I should get
+            | waypoints | route                              | turns                               | lanes                                                                                              |
+            | a,f       | Oak St,Franklin St,Fell St,Fell St | depart,turn left,turn right,arrive  | ,left:false left:true left:true,straight;left:false straight:false straight;right:true right:true, |
