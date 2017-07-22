@@ -6,7 +6,7 @@
   "dependencies": {
     "nan": "^2.6.2",
     "node-cmake": "^2.3.2",
-    "node-pre-gyp": "^0.6.34"
+    "node-pre-gyp": "^0.6.36"
   },
   "browserify": {
     "transform": [
@@ -49,7 +49,7 @@
     "polyline": "^0.2.0",
     "request": "^2.69.0",
     "rimraf": "^2.5.4",
-    "tape": "^4.2.2",
+    "tape": "^4.7.0",
     "xmlbuilder": "^4.2.1"
   },
   "bundleDependencies": [
