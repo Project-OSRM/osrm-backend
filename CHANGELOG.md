@@ -15,6 +15,10 @@
       - Reorders arguments to `WayHandlers` functions to match `process_way()`.
       - Profiles must return a hash of profile functions. This makes it easier for profiles to include each other.
 
+# 5.9.1
+    - Infrastructure
+      - STXXL is not required by default
+
 # 5.9.0
   - Changes from 5.8:
     - Algorithm:
