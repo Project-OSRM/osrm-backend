@@ -38,8 +38,12 @@ struct LegGeometry
     struct Annotation
     {
         double distance; // distance in meters
-        double duration; // duration in seconds
-        double weight;   // weight value
+
+        // Total duration of a segment, in seconds, NOT including
+        // the turn penalty if the segment preceeds a turn
+        double duration;
+        double weight; // weight value, NOT including the turn weight
+
         DatasourceID datasource;
     };
     std::vector<Annotation> annotations;

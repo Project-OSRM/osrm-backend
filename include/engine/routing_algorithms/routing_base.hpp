@@ -186,7 +186,9 @@ void annotatePath(const FacadeT &facade,
             unpacked_path.push_back(PathData{id_vector[segment_idx + 1],
                                              name_index,
                                              weight_vector[segment_idx],
+                                             0,
                                              duration_vector[segment_idx],
+                                             0,
                                              extractor::guidance::TurnInstruction::NO_TURN(),
                                              {{0, INVALID_LANEID}, INVALID_LANE_DESCRIPTIONID},
                                              travel_mode,
@@ -200,10 +202,15 @@ void annotatePath(const FacadeT &facade,
         if (facade.HasLaneData(turn_id))
             unpacked_path.back().lane_data = facade.GetLaneData(turn_id);
 
+        const auto turn_duration = facade.GetDurationPenaltyForEdgeID(turn_id);
+        const auto turn_weight = facade.GetWeightPenaltyForEdgeID(turn_id);
+
         unpacked_path.back().entry_class = facade.GetEntryClass(turn_id);
         unpacked_path.back().turn_instruction = turn_instruction;
-        unpacked_path.back().duration_until_turn += facade.GetDurationPenaltyForEdgeID(turn_id);
-        unpacked_path.back().weight_until_turn += facade.GetWeightPenaltyForEdgeID(turn_id);
+        unpacked_path.back().duration_until_turn += turn_duration;
+        unpacked_path.back().duration_of_turn = turn_duration;
+        unpacked_path.back().weight_until_turn += turn_weight;
+        unpacked_path.back().weight_of_turn = turn_weight;
         unpacked_path.back().pre_turn_bearing = facade.PreTurnBearing(turn_id);
         unpacked_path.back().post_turn_bearing = facade.PostTurnBearing(turn_id);
     }
@@ -262,7 +269,9 @@ void annotatePath(const FacadeT &facade,
             PathData{id_vector[start_index < end_index ? segment_idx + 1 : segment_idx - 1],
                      facade.GetNameIndex(target_node_id),
                      weight_vector[segment_idx],
+                     0,
                      duration_vector[segment_idx],
+                     0,
                      extractor::guidance::TurnInstruction::NO_TURN(),
                      {{0, INVALID_LANEID}, INVALID_LANE_DESCRIPTIONID},
                      facade.GetTravelMode(target_node_id),
