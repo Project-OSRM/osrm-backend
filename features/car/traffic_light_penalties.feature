@@ -37,3 +37,26 @@ Feature: Car - Handle traffic lights
             | 3    | 4  |  13.1s | no turn with traffic light    |
             | g    | j  |  18.7s | turn with no traffic light    |
             | k    | n  |  20.7s | turn with traffic light       |
+
+
+    Scenario: Tarrif Signal Geometry
+        Given the query options
+            | overview   | full      |
+            | geometries | polyline  |
+
+        Given the node map
+            """
+            a - b - c
+            """
+
+        And the ways
+            | nodes | highway |
+            | abc   | primary |
+
+        And the nodes
+            | node | highway         |
+            | b    | traffic_signals |
+
+        When I route I should get
+            | from | to | route   | geometry       |
+            | a    | c  | abc,abc | _ibE_ibE?gJ?gJ |
