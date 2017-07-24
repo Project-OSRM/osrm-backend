@@ -27,11 +27,11 @@ var osrm = new OSRM('network.osrm');
                This requires you to run `osrm-datastore` prior to creating an `OSRM` object.
     -   `options.path` **[String](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)?** The path to the `.osrm` files. This is mutually exclusive with setting {options.shared_memory} to true.
     -   `options.max_locations_trip` **[Number](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number)?** Max. locations supported in trip query (default: unlimited).
-    -   `options.max_locations_viaroute` **[Number](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number)?** Max. locations supported in viaroute query 9default: unlimited).
+    -   `options.max_locations_viaroute` **[Number](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number)?** Max. locations supported in viaroute query (default: unlimited).
     -   `options.max_locations_distance_table` **[Number](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number)?** Max. locations supported in distance table query (default: unlimited).
-    -   `options.max_locations_map_matching` **[Number](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number)?** Max. locations supported in map matching query (default: unlimited).
+    -   `options.max_locations_map_matching` **[Number](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number)?** Max. locations supported in map-matching query (default: unlimited).
     -   `options.max_results_nearest` **[Number](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number)?** Max. results supported in nearest query (default: unlimited).
-    -   `options.max_alternatives` **[Number](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number)?** Max. number of alternative routes supported (default: 3).
+    -   `options.max_alternatives` **[Number](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number)?** Max.number of alternatives supported in alternative routes query (default: 3).
 
 ### route
 
@@ -45,15 +45,16 @@ Returns the fastest route between two or more coordinates while visiting the way
                                           Can be `null` or an array of `[{value},{range}]` with `integer 0 .. 360,integer 0 .. 180`.
     -   `options.radiuses` **[Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array)?** Limits the coordinate snapping to streets in the given radius in meters. Can be `null` (unlimited, default) or `double >= 0`.
     -   `options.hints` **[Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array)?** Hints for the coordinate snapping. Array of base64 encoded strings.
-    -   `options.alternatives` **[Boolean](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean)** Search for alternative routes and return as well.
-        _Please note that even if an alternative route is requested, a result cannot be guaranteed._ (optional, default `false`)
-    -   `options.steps` **[Boolean](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean)** Returned route steps for each route leg. (optional, default `false`)
+    -   `options.alternatives` **[Boolean](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean)** Search for alternative routes. (optional, default `false`)
+    -   `options.alternatives` **[Number](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number)** Search for up to this many alternative routes.
+        _Please note that even if alternative routes are requested, a result cannot be guaranteed._ (optional, default `0`)
+    -   `options.steps` **[Boolean](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean)** Return route steps for each route leg. (optional, default `false`)
     -   `options.annotations` **([Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array) \| [Boolean](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean))** An array with strings of `duration`, `nodes`, `distance`, `weight`, `datasources`, `speed` or boolean for enabling/disabling all. (optional, default `false`)
     -   `options.geometries` **[String](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)** Returned route geometry format (influences overview and per step). Can also be `geojson`. (optional, default `polyline`)
     -   `options.overview` **[String](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)** Add overview geometry either `full`, `simplified` according to highest zoom level it could be display on, or not at all (`false`). (optional, default `simplified`)
     -   `options.continue_straight` **[Boolean](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean)?** Forces the route to keep going straight at waypoints and don't do a uturn even if it would be faster. Default value depends on the profile.
-                         `null`/`true`/`false`
     -   `options.approaches` **[Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array)?** Keep waypoints on curb side. Can be `null` (unrestricted, default) or `curb`.
+                         `null`/`true`/`false`
 -   `callback` **[Function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function)** 
 
 **Examples**
@@ -194,14 +195,14 @@ if they can not be matched successfully.
     -   `options.bearings` **[Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array)?** Limits the search to segments with given bearing in degrees towards true north in clockwise direction.
                                           Can be `null` or an array of `[{value},{range}]` with `integer 0 .. 360,integer 0 .. 180`.
     -   `options.hints` **[Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array)?** Hints for the coordinate snapping. Array of base64 encoded strings.
-    -   `options.steps` **[Boolean](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean)** Returned route steps for each route. (optional, default `false`)
+    -   `options.steps` **[Boolean](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean)** Return route steps for each route. (optional, default `false`)
     -   `options.annotations` **([Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array) \| [Boolean](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean))** An array with strings of `duration`, `nodes`, `distance`, `weight`, `datasources`, `speed` or boolean for enabling/disabling all. (optional, default `false`)
     -   `options.geometries` **[String](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)** Returned route geometry format (influences overview and per step). Can also be `geojson`. (optional, default `polyline`)
     -   `options.overview` **[String](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)** Add overview geometry either `full`, `simplified` according to highest zoom level it could be display on, or not at all (`false`). (optional, default `simplified`)
     -   `options.timestamps` **[Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array)&lt;[Number](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number)>?** Timestamp of the input location (integers, UNIX-like timestamp).
     -   `options.radiuses` **[Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array)?** Standard deviation of GPS precision used for map matching. If applicable use GPS accuracy. Can be `null` for default value `5` meters or `double >= 0`.
-    -   `options.gaps` **[String](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)** Allows the input track splitting based on huge timestamp gaps between points. Either `split` or `ignore`. (optional, default `split`)
-    -   `options.tidy` **[Boolean](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean)** Allows the input track modification to obtain better matching quality for noisy tracks. (optional, default `false`)
+    -   `options.gaps` **[String](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)?** Allows the input track splitting based on huge timestamp gaps between points. Either `split` or `ignore` (optional, default `split`).
+    -   `options.tidy` **[Boolean](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean)?** Allows the input track modification to obtain better matching quality for noisy tracks (optional, default `false`).
 -   `callback` **[Function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function)** 
 
 **Examples**
@@ -235,25 +236,7 @@ The trip plugin solves the Traveling Salesman Problem using a greedy heuristic
 waypoints. The returned path does not have to be the shortest path, _ as TSP is NP-hard it is
 only an approximation.
 
-**Parameters**
-
--   `options` **[Object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object)** Object literal containing parameters for the trip query.
-    -   `options.coordinates` **[Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array)?** The coordinates this request will use, coordinates as `[{lon},{lat}]` values, in decimal degrees.
-    -   `options.bearings` **[Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array)?** Limits the search to segments with given bearing in degrees towards true north in clockwise direction.
-                                          Can be `null` or an array of `[{value},{range}]` with `integer 0 .. 360,integer 0 .. 180`.
-    -   `options.radiuses` **[Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array)?** Limits the coordinate snapping to streets in the given radius in meters. Can be `double >= 0` or `null` (unlimited, default).
-    -   `options.hints` **[Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array)?** Hints for the coordinate snapping. Array of base64 encoded strings.
-    -   `options.steps` **[Boolean](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean)** Returned route steps for each route. (optional, default `false`)
-    -   `options.annotations` **([Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array) \| [Boolean](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean))** An array with strings of `duration`, `nodes`, `distance`, `weight`, `datasources`, `speed` or boolean for enabling/disabling all. (optional, default `false`)
-    -   `options.geometries` **[String](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)** Returned route geometry format (influences overview and per step). Can also be `geojson`. (optional, default `polyline`)
-    -   `options.overview` **[String](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)** Add overview geometry either `full`, `simplified` (optional, default `simplified`)
-    -   `options.roundtrip` **[Boolean](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean)** Returned route is a roundtrip (route returns to first location). (optional, default `true`)
-    -   `options.source` **[String](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)** Returned route starts at `any` or `first` coordinate. (optional, default `any`)
-    -   `options.destination` **[String](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)** Returned route ends at `any` or `last` coordinate. (optional, default `any`)
-    -   `options.approaches` **[Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array)?** Keep waypoints on curb side. Can be `null` (unrestricted, default) or `curb`.
--   `callback` **[Function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function)** 
-
-A requirement for computing trips is that all input coordinates are connected.
+Note that all input coordinates have to be connected for the trip service to work.
 Currently, not all combinations of `roundtrip`, `source` and `destination` are supported.
 Right now, the following combinations are possible:
 
@@ -267,6 +250,24 @@ Right now, the following combinations are possible:
 | false     | first  | any         | no        |
 | false     | any    | last        | no        |
 | false     | any    | any         | no        |
+
+**Parameters**
+
+-   `options` **[Object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object)** Object literal containing parameters for the trip query.
+    -   `options.coordinates` **[Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array)?** The coordinates this request will use, coordinates as `[{lon},{lat}]` values, in decimal degrees.
+    -   `options.bearings` **[Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array)?** Limits the search to segments with given bearing in degrees towards true north in clockwise direction.
+                                          Can be `null` or an array of `[{value},{range}]` with `integer 0 .. 360,integer 0 .. 180`.
+    -   `options.radiuses` **[Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array)?** Limits the coordinate snapping to streets in the given radius in meters. Can be `double >= 0` or `null` (unlimited, default).
+    -   `options.hints` **[Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array)?** Hints for the coordinate snapping. Array of base64 encoded strings.
+    -   `options.steps` **[Boolean](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean)** Return route steps for each route. (optional, default `false`)
+    -   `options.annotations` **([Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array) \| [Boolean](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean))** An array with strings of `duration`, `nodes`, `distance`, `weight`, `datasources`, `speed` or boolean for enabling/disabling all. (optional, default `false`)
+    -   `options.geometries` **[String](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)** Returned route geometry format (influences overview and per step). Can also be `geojson`. (optional, default `polyline`)
+    -   `options.overview` **[String](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)** Add overview geometry either `full`, `simplified` (optional, default `simplified`)
+    -   `options.roundtrip` **[Boolean](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean)** Return route is a roundtrip. (optional, default `true`)
+    -   `options.source` **[String](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)** Return route starts at `any` or `first` coordinate. (optional, default `any`)
+    -   `options.destination` **[String](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)** Return route ends at `any` or `last` coordinate. (optional, default `any`)
+    -   `options.approaches` **[Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array)?** Keep waypoints on curb side. Can be `null` (unrestricted, default) or `curb`.
+-   `callback` **[Function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function)** 
 
 **Examples**
 
