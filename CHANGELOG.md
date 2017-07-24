@@ -2,10 +2,7 @@
   - Changes from 5.9.0:
       - #4322: Deprecated `UseLane`. Use the intersections array if you require lanes between steps
       - #4321: Fixes a potential crash in the MLD alternative code path when not even a shortest path can be found
-
-# 5.9.1
-    - Infrastructure
-      - STXXL is not required by default
+      - #4324: STXXL is not required by default
 
 # 5.9.0
   - Changes from 5.8:
