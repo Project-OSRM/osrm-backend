@@ -72,6 +72,12 @@ NAN_MODULE_INIT(Engine::Init)
  * @param {Boolean} [options.shared_memory] Connects to the persistent shared memory datastore.
  *        This requires you to run `osrm-datastore` prior to creating an `OSRM` object.
  * @param {String} [options.path] The path to the `.osrm` files. This is mutually exclusive with setting {options.shared_memory} to true.
+ * @param {Number} [options.max_locations_trip] Max. locations supported in trip query (default: unlimited).
+ * @param {Number} [options.max_locations_viaroute] Max. locations supported in viaroute query (default: unlimited).
+ * @param {Number} [options.max_locations_distance_table] Max. locations supported in distance table query (default: unlimited).
+ * @param {Number} [options.max_locations_map_matching] Max. locations supported in map-matching query (default: unlimited).
+ * @param {Number} [options.max_results_nearest] Max. results supported in nearest query (default: unlimited).
+ * @param {Number} [options.max_alternatives] Max.number of alternatives supported in alternative routes query (default: 3).
  *
  * @class OSRM
  *
@@ -193,6 +199,7 @@ inline void async(const Nan::FunctionCallbackInfo<v8::Value> &info,
  * @param {String} [options.geometries=polyline] Returned route geometry format (influences overview and per step). Can also be `geojson`.
  * @param {String} [options.overview=simplified] Add overview geometry either `full`, `simplified` according to highest zoom level it could be display on, or not at all (`false`).
  * @param {Boolean} [options.continue_straight] Forces the route to keep going straight at waypoints and don't do a uturn even if it would be faster. Default value depends on the profile.
+ * @param {Array} [options.approaches] Keep waypoints on curb side. Can be `null` (unrestricted, default) or `curb`.
  *                  `null`/`true`/`false`
  * @param {Function} callback
  *
@@ -228,6 +235,7 @@ NAN_METHOD(Engine::route) //
  * @param {Array} [options.hints] Hints for the coordinate snapping. Array of base64 encoded strings.
  * @param {Number} [options.number=1] Number of nearest segments that should be returned.
  * Must be an integer greater than or equal to `1`.
+ * @param {Array} [options.approaches] Keep waypoints on curb side. Can be `null` (unrestricted, default) or `curb`.
  * @param {Function} callback
  *
  * @returns {Object} containing `waypoints`.
@@ -269,6 +277,7 @@ NAN_METHOD(Engine::nearest) //
  * location with given index as source. Default is to use all.
  * @param {Array} [options.destinations] An array of `index` elements (`0 <= integer <
  * #coordinates`) to use location with given index as destination. Default is to use all.
+ * @param {Array} [options.approaches] Keep waypoints on curb side. Can be `null` (unrestricted, default) or `curb`.
  * @param {Function} callback
  *
  * @returns {Object} containing `durations`, `sources`, and `destinations`.
@@ -350,6 +359,9 @@ NAN_METHOD(Engine::tile)
  * @param {String} [options.overview=simplified] Add overview geometry either `full`, `simplified` according to highest zoom level it could be display on, or not at all (`false`).
  * @param {Array<Number>} [options.timestamps] Timestamp of the input location (integers, UNIX-like timestamp).
  * @param {Array} [options.radiuses] Standard deviation of GPS precision used for map matching. If applicable use GPS accuracy. Can be `null` for default value `5` meters or `double >= 0`.
+ * @param {String} [options.gaps] Allows the input track splitting based on huge timestamp gaps between points. Either `split` or `ignore` (optional, default `split`).
+ * @param {Boolean} [options.tidy] Allows the input track modification to obtain better matching quality for noisy tracks (optional, default `false`).
+ *
  * @param {Function} callback
  *
  * @returns {Object} containing `tracepoints` and `matchings`.
@@ -418,6 +430,7 @@ NAN_METHOD(Engine::match) //
  * @param {Boolean} [options.roundtrip=true] Return route is a roundtrip.
  * @param {String} [options.source=any] Return route starts at `any` or `first` coordinate.
  * @param {String} [options.destination=any] Return route ends at `any` or `last` coordinate.
+ * @param {Array} [options.approaches] Keep waypoints on curb side. Can be `null` (unrestricted, default) or `curb`.
  *
  * @returns {Object} containing `waypoints` and `trips`.
  * **`waypoints`**: an array of [`Waypoint`](#waypoint) objects representing all waypoints in input order.
