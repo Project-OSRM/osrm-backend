@@ -1,6 +1,7 @@
 # 5.9.1
   - Changes from 5.9.0:
-      - Deprecated `UseLane`. Use the intersections array if you require lanes between steps
+      - #4322: Deprecated `UseLane`. Use the intersections array if you require lanes between steps
+      - #4321: Fixes a potential crash in the MLD alternative code path when not even a shortest path can be found
 
 # 5.9.0
   - Changes from 5.8:
