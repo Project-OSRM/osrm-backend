@@ -134,24 +134,13 @@ void annotatePath(const FacadeT &facade,
     BOOST_ASSERT(phantom_node_pair.target_phantom.forward_segment_id.id == target_node_id ||
                  phantom_node_pair.target_phantom.reverse_segment_id.id == target_node_id);
 
-    auto node_from = unpacked_nodes.begin(), node_last = std::prev(unpacked_nodes.end());
-    for (auto edge = unpacked_edges.begin(); node_from != node_last; ++node_from, ++edge)
-    {
-        const auto &edge_data = facade.GetEdgeData(*edge);
-        const auto turn_id = edge_data.turn_id; // edge-based graph edge index
-        const auto node_id = *node_from;        // edge-based graph node index
-        const auto name_index = facade.GetNameIndex(node_id);
-        const auto turn_instruction = facade.GetTurnInstructionForEdgeID(turn_id);
-        const extractor::TravelMode travel_mode = facade.GetTravelMode(node_id);
-        const auto classes = facade.GetClassData(node_id);
+    // datastructures to hold extracted data from geometry
+    std::vector<NodeID> id_vector;
+    std::vector<EdgeWeight> weight_vector;
+    std::vector<EdgeWeight> duration_vector;
+    std::vector<DatasourceID> datasource_vector;
 
-        const auto geometry_index = facade.GetGeometryIndex(node_id);
-        std::vector<NodeID> id_vector;
-
-        std::vector<EdgeWeight> weight_vector;
-        std::vector<EdgeWeight> duration_vector;
-        std::vector<DatasourceID> datasource_vector;
-
+    const auto get_segment_geometry = [&](const auto geometry_index) {
         if (geometry_index.forward)
         {
             id_vector = facade.GetUncompressedForwardGeometry(geometry_index.id);
@@ -166,6 +155,21 @@ void annotatePath(const FacadeT &facade,
             duration_vector = facade.GetUncompressedReverseDurations(geometry_index.id);
             datasource_vector = facade.GetUncompressedReverseDatasources(geometry_index.id);
         }
+    };
+
+    auto node_from = unpacked_nodes.begin(), node_last = std::prev(unpacked_nodes.end());
+    for (auto edge = unpacked_edges.begin(); node_from != node_last; ++node_from, ++edge)
+    {
+        const auto &edge_data = facade.GetEdgeData(*edge);
+        const auto turn_id = edge_data.turn_id; // edge-based graph edge index
+        const auto node_id = *node_from;        // edge-based graph node index
+        const auto name_index = facade.GetNameIndex(node_id);
+        const auto turn_instruction = facade.GetTurnInstructionForEdgeID(turn_id);
+        const extractor::TravelMode travel_mode = facade.GetTravelMode(node_id);
+        const auto classes = facade.GetClassData(node_id);
+
+        const auto geometry_index = facade.GetGeometryIndex(node_id);
+        get_segment_geometry(geometry_index);
 
         BOOST_ASSERT(id_vector.size() > 0);
         BOOST_ASSERT(datasource_vector.size() > 0);
@@ -218,21 +222,14 @@ void annotatePath(const FacadeT &facade,
     }
 
     std::size_t start_index = 0, end_index = 0;
-    std::vector<unsigned> id_vector;
-    std::vector<EdgeWeight> weight_vector;
-    std::vector<EdgeWeight> duration_vector;
-    std::vector<DatasourceID> datasource_vector;
     const auto source_geometry_id = facade.GetGeometryIndex(source_node_id).id;
-    const auto target_geometry_id = facade.GetGeometryIndex(target_node_id).id;
-    const auto is_local_path = source_geometry_id == target_geometry_id && unpacked_path.empty();
+    const auto target_geometry = facade.GetGeometryIndex(target_node_id);
+    const auto is_local_path = source_geometry_id == target_geometry.id && unpacked_path.empty();
+
+    get_segment_geometry(target_geometry);
 
     if (target_traversed_in_reverse)
     {
-        id_vector = facade.GetUncompressedReverseGeometry(target_geometry_id);
-        weight_vector = facade.GetUncompressedReverseWeights(target_geometry_id);
-        duration_vector = facade.GetUncompressedReverseDurations(target_geometry_id);
-        datasource_vector = facade.GetUncompressedReverseDatasources(target_geometry_id);
-
         if (is_local_path)
         {
             start_index =
@@ -248,11 +245,6 @@ void annotatePath(const FacadeT &facade,
             start_index = phantom_node_pair.source_phantom.fwd_segment_position;
         }
         end_index = phantom_node_pair.target_phantom.fwd_segment_position;
-
-        id_vector = facade.GetUncompressedForwardGeometry(target_geometry_id);
-        weight_vector = facade.GetUncompressedForwardWeights(target_geometry_id);
-        duration_vector = facade.GetUncompressedForwardDurations(target_geometry_id);
-        datasource_vector = facade.GetUncompressedForwardDatasources(target_geometry_id);
     }
 
     // Given the following compressed geometry:

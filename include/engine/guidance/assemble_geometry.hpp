@@ -11,6 +11,7 @@
 #include "util/coordinate.hpp"
 #include "util/coordinate_calculation.hpp"
 
+#include <algorithm>
 #include <utility>
 #include <vector>
 
@@ -20,7 +21,6 @@ namespace engine
 {
 namespace guidance
 {
-
 // Extracts the geometry for each segment and calculates the traveled distance
 // Combines the geometry form the phantom node with the PathData
 // to the full route geometry.
@@ -54,8 +54,8 @@ inline LegGeometry assembleGeometry(const datafacade::BaseDataFacade &facade,
     const auto source_node_id =
         reversed_source ? source_node.reverse_segment_id.id : source_node.forward_segment_id.id;
     const auto source_geometry_id = facade.GetGeometryIndex(source_node_id).id;
-    const std::vector<NodeID> source_geometry =
-        facade.GetUncompressedForwardGeometry(source_geometry_id);
+    std::vector<NodeID> source_geometry = facade.GetUncompressedForwardGeometry(source_geometry_id);
+
     geometry.osm_node_ids.push_back(
         facade.GetOSMNodeIDOfNode(source_geometry[source_segment_start_coordinate]));
 
@@ -78,21 +78,26 @@ inline LegGeometry assembleGeometry(const datafacade::BaseDataFacade &facade,
         }
 
         prev_coordinate = coordinate;
-        geometry.annotations.emplace_back(LegGeometry::Annotation{
-            current_distance,
-            // NOTE: we want annotations to include only the duration/weight
-            //       of the segment itself.  For segments immediately before
-            //       a turn, the duration_until_turn/weight_until_turn values
-            //       include the turn cost.  To counter this, we subtract
-            //       the duration_of_turn/weight_of_turn value, which is 0 for
-            //       non-preceeding-turn segments, but contains the turn value
-            //       for segments before a turn.
-            (path_point.duration_until_turn - path_point.duration_of_turn) / 10.,
-            (path_point.weight_until_turn - path_point.weight_of_turn) /
-                facade.GetWeightMultiplier(),
-            path_point.datasource_id});
-        geometry.locations.push_back(std::move(coordinate));
-        geometry.osm_node_ids.push_back(facade.GetOSMNodeIDOfNode(path_point.turn_via_node));
+
+        const auto osm_node_id = facade.GetOSMNodeIDOfNode(path_point.turn_via_node);
+        if (osm_node_id != geometry.osm_node_ids.back())
+        {
+            geometry.annotations.emplace_back(LegGeometry::Annotation{
+                current_distance,
+                // NOTE: we want annotations to include only the duration/weight
+                //       of the segment itself.  For segments immediately before
+                //       a turn, the duration_until_turn/weight_until_turn values
+                //       include the turn cost.  To counter this, we subtract
+                //       the duration_of_turn/weight_of_turn value, which is 0 for
+                //       non-preceeding-turn segments, but contains the turn value
+                //       for segments before a turn.
+                (path_point.duration_until_turn - path_point.duration_of_turn) / 10.,
+                (path_point.weight_until_turn - path_point.weight_of_turn) /
+                    facade.GetWeightMultiplier(),
+                path_point.datasource_id});
+            geometry.locations.push_back(std::move(coordinate));
+            geometry.osm_node_ids.push_back(osm_node_id);
+        }
     }
     current_distance =
         util::coordinate_calculation::haversineDistance(prev_coordinate, target_node.location);
