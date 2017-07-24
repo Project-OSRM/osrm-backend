@@ -78,11 +78,19 @@ inline LegGeometry assembleGeometry(const datafacade::BaseDataFacade &facade,
         }
 
         prev_coordinate = coordinate;
-        geometry.annotations.emplace_back(
-            LegGeometry::Annotation{current_distance,
-                                    path_point.duration_until_turn / 10.,
-                                    path_point.weight_until_turn / facade.GetWeightMultiplier(),
-                                    path_point.datasource_id});
+        geometry.annotations.emplace_back(LegGeometry::Annotation{
+            current_distance,
+            // NOTE: we want annotations to include only the duration/weight
+            //       of the segment itself.  For segments immediately before
+            //       a turn, the duration_until_turn/weight_until_turn values
+            //       include the turn cost.  To counter this, we subtract
+            //       the duration_of_turn/weight_of_turn value, which is 0 for
+            //       non-preceeding-turn segments, but contains the turn value
+            //       for segments before a turn.
+            (path_point.duration_until_turn - path_point.duration_of_turn) / 10.,
+            (path_point.weight_until_turn - path_point.weight_of_turn) /
+                facade.GetWeightMultiplier(),
+            path_point.datasource_id});
         geometry.locations.push_back(std::move(coordinate));
         geometry.osm_node_ids.push_back(facade.GetOSMNodeIDOfNode(path_point.turn_via_node));
     }
