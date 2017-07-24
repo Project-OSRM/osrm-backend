@@ -4,6 +4,7 @@
   "private": false,
   "description": "The Open Source Routing Machine is a high performance routing engine written in C++14 designed to run on OpenStreetMap data.",
   "dependencies": {
+    "babel-plugin-transform-class-properties": "^6.24.1",
     "nan": "^2.6.2",
     "node-cmake": "^2.3.2",
     "node-pre-gyp": "^0.6.36"
