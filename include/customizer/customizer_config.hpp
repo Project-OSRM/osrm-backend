@@ -17,12 +17,9 @@ namespace customizer
 struct CustomizationConfig final : storage::IOConfig
 {
     CustomizationConfig()
-        : IOConfig(
-              {
-                  ".osrm",
-              },
-              {},
-              {".osrm.ebg", ".osrm.partition", ".osrm.cells", ".osrm.mldgr"}),
+        : IOConfig({".osrm.ebg", ".osrm.partition", ".osrm.cells"},
+                   {},
+                   {".osrm.cell_metrics", ".osrm.mldgr"}),
           requested_num_threads(0)
     {
     }

@@ -59,11 +59,12 @@ BOOST_AUTO_TEST_CASE(two_level_test)
     auto graph = makeGraph(mlp, edges);
 
     CellStorage storage(mlp, graph);
+    auto metric = storage.MakeMetric();
     CellCustomizer customizer(mlp);
     CellCustomizer::Heap heap(graph.GetNumberOfNodes());
 
-    auto cell_1_0 = storage.GetCell(1, 0);
-    auto cell_1_1 = storage.GetCell(1, 1);
+    auto cell_1_0 = storage.GetCell(metric, 1, 0);
+    auto cell_1_1 = storage.GetCell(metric, 1, 1);
 
     REQUIRE_SIZE_RANGE(cell_1_0.GetSourceNodes(), 1);
     REQUIRE_SIZE_RANGE(cell_1_0.GetDestinationNodes(), 1);
@@ -82,8 +83,8 @@ BOOST_AUTO_TEST_CASE(two_level_test)
     REQUIRE_SIZE_RANGE(cell_1_1.GetOutWeight(2), 2);
     REQUIRE_SIZE_RANGE(cell_1_1.GetInWeight(3), 2);
 
-    customizer.Customize(graph, heap, storage, 1, 0);
-    customizer.Customize(graph, heap, storage, 1, 1);
+    customizer.Customize(graph, heap, storage, metric, 1, 0);
+    customizer.Customize(graph, heap, storage, metric, 1, 1);
 
     // cell 0
     // check row source -> destination
@@ -137,14 +138,15 @@ BOOST_AUTO_TEST_CASE(four_levels_test)
     auto graph = makeGraph(mlp, edges);
 
     CellStorage storage(mlp, graph);
+    auto metric = storage.MakeMetric();
 
-    auto cell_1_0 = storage.GetCell(1, 0);
-    auto cell_1_1 = storage.GetCell(1, 1);
-    auto cell_1_2 = storage.GetCell(1, 2);
-    auto cell_1_3 = storage.GetCell(1, 3);
-    auto cell_2_0 = storage.GetCell(2, 0);
-    auto cell_2_1 = storage.GetCell(2, 1);
-    auto cell_3_0 = storage.GetCell(3, 0);
+    auto cell_1_0 = storage.GetCell(metric, 1, 0);
+    auto cell_1_1 = storage.GetCell(metric, 1, 1);
+    auto cell_1_2 = storage.GetCell(metric, 1, 2);
+    auto cell_1_3 = storage.GetCell(metric, 1, 3);
+    auto cell_2_0 = storage.GetCell(metric, 2, 0);
+    auto cell_2_1 = storage.GetCell(metric, 2, 1);
+    auto cell_3_0 = storage.GetCell(metric, 3, 0);
 
     REQUIRE_SIZE_RANGE(cell_1_0.GetSourceNodes(), 1);
     REQUIRE_SIZE_RANGE(cell_1_0.GetDestinationNodes(), 1);
@@ -207,13 +209,13 @@ BOOST_AUTO_TEST_CASE(four_levels_test)
     CellCustomizer customizer(mlp);
     CellCustomizer::Heap heap(graph.GetNumberOfNodes());
 
-    customizer.Customize(graph, heap, storage, 1, 0);
-    customizer.Customize(graph, heap, storage, 1, 1);
-    customizer.Customize(graph, heap, storage, 1, 2);
-    customizer.Customize(graph, heap, storage, 1, 3);
+    customizer.Customize(graph, heap, storage, metric, 1, 0);
+    customizer.Customize(graph, heap, storage, metric, 1, 1);
+    customizer.Customize(graph, heap, storage, metric, 1, 2);
+    customizer.Customize(graph, heap, storage, metric, 1, 3);
 
-    customizer.Customize(graph, heap, storage, 2, 0);
-    customizer.Customize(graph, heap, storage, 2, 1);
+    customizer.Customize(graph, heap, storage, metric, 2, 0);
+    customizer.Customize(graph, heap, storage, metric, 2, 1);
 
     // level 1
     // cell 0
@@ -261,13 +263,19 @@ BOOST_AUTO_TEST_CASE(four_levels_test)
     CHECK_EQUAL_RANGE(cell_2_1.GetInDuration(12), INVALID_EDGE_WEIGHT, 20);
 
     CellStorage storage_rec(mlp, graph);
-    customizer.Customize(graph, storage_rec);
+    auto metric_rec = storage_rec.MakeMetric();
+    customizer.Customize(graph, storage_rec, metric_rec);
 
-    CHECK_EQUAL_COLLECTIONS(cell_2_1.GetOutWeight(9), storage_rec.GetCell(2, 1).GetOutWeight(9));
-    CHECK_EQUAL_COLLECTIONS(cell_2_1.GetOutWeight(13), storage_rec.GetCell(2, 1).GetOutWeight(13));
-    CHECK_EQUAL_COLLECTIONS(cell_2_1.GetInWeight(8), storage_rec.GetCell(2, 1).GetInWeight(8));
-    CHECK_EQUAL_COLLECTIONS(cell_2_1.GetInWeight(9), storage_rec.GetCell(2, 1).GetInWeight(9));
-    CHECK_EQUAL_COLLECTIONS(cell_2_1.GetInWeight(12), storage_rec.GetCell(2, 1).GetInWeight(12));
+    CHECK_EQUAL_COLLECTIONS(cell_2_1.GetOutWeight(9),
+                            storage_rec.GetCell(metric_rec, 2, 1).GetOutWeight(9));
+    CHECK_EQUAL_COLLECTIONS(cell_2_1.GetOutWeight(13),
+                            storage_rec.GetCell(metric_rec, 2, 1).GetOutWeight(13));
+    CHECK_EQUAL_COLLECTIONS(cell_2_1.GetInWeight(8),
+                            storage_rec.GetCell(metric_rec, 2, 1).GetInWeight(8));
+    CHECK_EQUAL_COLLECTIONS(cell_2_1.GetInWeight(9),
+                            storage_rec.GetCell(metric_rec, 2, 1).GetInWeight(9));
+    CHECK_EQUAL_COLLECTIONS(cell_2_1.GetInWeight(12),
+                            storage_rec.GetCell(metric_rec, 2, 1).GetInWeight(12));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -18,5 +18,5 @@ Feature: osrm-contract command line options: files
     Scenario: osrm-contract - Missing input file
         When I try to run "osrm-contract over-the-rainbow.osrm"
         And stderr should contain "over-the-rainbow.osrm"
-        And stderr should contain "not found"
+        And stderr should contain "Missing/Broken"
         And it should exit with an error

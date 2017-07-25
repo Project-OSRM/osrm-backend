@@ -76,14 +76,15 @@ BOOST_AUTO_TEST_CASE(mutable_cell_storage)
 
     // test non-const storage
     CellStorage storage(mlp, graph);
+    auto metric = storage.MakeMetric();
 
     // Level 1
-    auto cell_1_0 = storage.GetCell(1, 0);
-    auto cell_1_1 = storage.GetCell(1, 1);
-    auto cell_1_2 = storage.GetCell(1, 2);
-    auto cell_1_3 = storage.GetCell(1, 3);
-    auto cell_1_4 = storage.GetCell(1, 4);
-    auto cell_1_5 = storage.GetCell(1, 5);
+    auto cell_1_0 = storage.GetCell(metric, 1, 0);
+    auto cell_1_1 = storage.GetCell(metric, 1, 1);
+    auto cell_1_2 = storage.GetCell(metric, 1, 2);
+    auto cell_1_3 = storage.GetCell(metric, 1, 3);
+    auto cell_1_4 = storage.GetCell(metric, 1, 4);
+    auto cell_1_5 = storage.GetCell(metric, 1, 5);
 
     (void)cell_1_4; // does not have border nodes
 
@@ -108,10 +109,10 @@ BOOST_AUTO_TEST_CASE(mutable_cell_storage)
     CHECK_EQUAL_RANGE(in_range_1_5_11, 3);
 
     // Level 2
-    auto cell_2_0 = storage.GetCell(2, 0);
-    auto cell_2_1 = storage.GetCell(2, 1);
-    auto cell_2_2 = storage.GetCell(2, 2);
-    auto cell_2_3 = storage.GetCell(2, 3);
+    auto cell_2_0 = storage.GetCell(metric, 2, 0);
+    auto cell_2_1 = storage.GetCell(metric, 2, 1);
+    auto cell_2_2 = storage.GetCell(metric, 2, 2);
+    auto cell_2_3 = storage.GetCell(metric, 2, 3);
 
     (void)cell_2_2; // does not have border nodes
 
@@ -134,8 +135,8 @@ BOOST_AUTO_TEST_CASE(mutable_cell_storage)
     CHECK_EQUAL_RANGE(in_range_2_3_11, 4);
 
     // Level 3
-    auto cell_3_0 = storage.GetCell(3, 0);
-    auto cell_3_1 = storage.GetCell(3, 1);
+    auto cell_3_0 = storage.GetCell(metric, 3, 0);
+    auto cell_3_1 = storage.GetCell(metric, 3, 1);
 
     auto out_range_3_0_0 = cell_3_0.GetOutWeight(0);
     auto out_range_3_1_4 = cell_3_1.GetOutWeight(4);
@@ -219,13 +220,14 @@ BOOST_AUTO_TEST_CASE(immutable_cell_storage)
 
     // test const storage
     const CellStorage const_storage(mlp, graph);
+    const auto metric =const_storage.MakeMetric();
 
-    auto const_cell_1_0 = const_storage.GetCell(1, 0);
-    auto const_cell_1_1 = const_storage.GetCell(1, 1);
-    auto const_cell_1_2 = const_storage.GetCell(1, 2);
-    auto const_cell_1_3 = const_storage.GetCell(1, 3);
-    auto const_cell_1_4 = const_storage.GetCell(1, 4);
-    auto const_cell_1_5 = const_storage.GetCell(1, 5);
+    auto const_cell_1_0 = const_storage.GetCell(metric, 1, 0);
+    auto const_cell_1_1 = const_storage.GetCell(metric, 1, 1);
+    auto const_cell_1_2 = const_storage.GetCell(metric, 1, 2);
+    auto const_cell_1_3 = const_storage.GetCell(metric, 1, 3);
+    auto const_cell_1_4 = const_storage.GetCell(metric, 1, 4);
+    auto const_cell_1_5 = const_storage.GetCell(metric, 1, 5);
 
     CHECK_EQUAL_RANGE(const_cell_1_0.GetSourceNodes(), 0);
     CHECK_EQUAL_COLLECTIONS(const_cell_1_1.GetSourceNodes(), std::vector<EdgeWeight>{});
@@ -262,10 +264,10 @@ BOOST_AUTO_TEST_CASE(immutable_cell_storage)
     REQUIRE_SIZE_RANGE(in_const_range_1_5_11, 1);
 
     // Level 2
-    auto const_cell_2_0 = const_storage.GetCell(2, 0);
-    auto const_cell_2_1 = const_storage.GetCell(2, 1);
-    auto const_cell_2_2 = const_storage.GetCell(2, 2);
-    auto const_cell_2_3 = const_storage.GetCell(2, 3);
+    auto const_cell_2_0 = const_storage.GetCell(metric, 2, 0);
+    auto const_cell_2_1 = const_storage.GetCell(metric, 2, 1);
+    auto const_cell_2_2 = const_storage.GetCell(metric, 2, 2);
+    auto const_cell_2_3 = const_storage.GetCell(metric, 2, 3);
 
     CHECK_EQUAL_RANGE(const_cell_2_0.GetSourceNodes(), 0);
     CHECK_EQUAL_RANGE(const_cell_2_1.GetSourceNodes(), 4);
@@ -296,8 +298,8 @@ BOOST_AUTO_TEST_CASE(immutable_cell_storage)
     REQUIRE_SIZE_RANGE(in_const_range_2_3_7, 1);
 
     // Level 3
-    auto const_cell_3_0 = const_storage.GetCell(3, 0);
-    auto const_cell_3_1 = const_storage.GetCell(3, 1);
+    auto const_cell_3_0 = const_storage.GetCell(metric, 3, 0);
+    auto const_cell_3_1 = const_storage.GetCell(metric, 3, 1);
 
     CHECK_EQUAL_RANGE(const_cell_3_0.GetSourceNodes(), 0);
     CHECK_EQUAL_RANGE(const_cell_3_1.GetSourceNodes(), 4, 7);
@@ -321,7 +323,8 @@ BOOST_AUTO_TEST_CASE(immutable_cell_storage)
     REQUIRE_SIZE_RANGE(in_const_range_3_1_4, 2);
     REQUIRE_SIZE_RANGE(in_const_range_3_1_7, 2);
 
-    auto const_cell_4_0 = const_storage.GetCell(4, 0);
+    // Level 4
+    auto const_cell_4_0 = const_storage.GetCell(metric, 4, 0);
     CHECK_EQUAL_COLLECTIONS(const_cell_4_0.GetSourceNodes(), std::vector<EdgeWeight>{});
     CHECK_EQUAL_COLLECTIONS(const_cell_4_0.GetDestinationNodes(), std::vector<EdgeWeight>{});
 }

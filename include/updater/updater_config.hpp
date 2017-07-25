@@ -55,12 +55,11 @@ struct UpdaterConfig final : storage::IOConfig
                   ".osrm.edges",
                   ".osrm.geometry",
                   ".osrm.fileIndex",
-                  ".osrm.datasource_names",
                   ".osrm.properties",
                   ".osrm.restrictions",
               },
               {},
-              {})
+              {".osrm.datasource_names"})
     {
     }
 

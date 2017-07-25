@@ -169,14 +169,12 @@ int main(int argc, char *argv[]) try
                               << "! This setting may have performance side-effects.";
     }
 
-    if (!boost::filesystem::is_regular_file(contractor_config.GetPath(".osrm")))
+    if (!contractor_config.IsValid())
     {
-        util::Log(logERROR) << "Input file " << contractor_config.GetPath(".osrm").string()
-                            << " not found!";
         return EXIT_FAILURE;
     }
 
-    util::Log() << "Input file: " << contractor_config.GetPath(".osrm").filename().string();
+    util::Log() << "Input file: " << contractor_config.base_path.string() << ".osrm";
     util::Log() << "Threads: " << contractor_config.requested_num_threads;
 
     tbb::task_scheduler_init init(contractor_config.requested_num_threads);

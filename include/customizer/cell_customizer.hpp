@@ -32,9 +32,9 @@ class CellCustomizer
 
     template <typename GraphT>
     void Customize(
-        const GraphT &graph, Heap &heap, partition::CellStorage &cells, LevelID level, CellID id)
+        const GraphT &graph, Heap &heap, const partition::CellStorage &cells, CellMetric &metric, LevelID level, CellID id)
     {
-        auto cell = cells.GetCell(level, id);
+        auto cell = cells.GetCell(metric, level, id);
         auto destinations = cell.GetDestinationNodes();
 
         // for each source do forward search
@@ -52,9 +52,9 @@ class CellCustomizer
                 const EdgeDuration duration = heap.GetData(node).duration;
 
                 if (level == 1)
-                    RelaxNode<true>(graph, cells, heap, level, node, weight, duration);
+                    RelaxNode<true>(graph, cells, metric, heap, level, node, weight, duration);
                 else
-                    RelaxNode<false>(graph, cells, heap, level, node, weight, duration);
+                    RelaxNode<false>(graph, cells, metric, heap, level, node, weight, duration);
 
                 destinations_set.erase(node);
             }
@@ -80,7 +80,7 @@ class CellCustomizer
         }
     }
 
-    template <typename GraphT> void Customize(const GraphT &graph, partition::CellStorage &cells)
+    template <typename GraphT> void Customize(const GraphT &graph, const partition::CellStorage &cells, CellMetric &metric)
     {
         Heap heap_exemplar(graph.GetNumberOfNodes());
         HeapPtr heaps(heap_exemplar);
@@ -92,7 +92,7 @@ class CellCustomizer
                                   auto &heap = heaps.local();
                                   for (auto id = range.begin(), end = range.end(); id != end; ++id)
                                   {
-                                      Customize(graph, heap, cells, level, id);
+                                      Customize(graph, heap, cells, metric, level, id);
                                   }
                               });
         }
@@ -102,6 +102,7 @@ class CellCustomizer
     template <bool first_level, typename GraphT>
     void RelaxNode(const GraphT &graph,
                    const partition::CellStorage &cells,
+                   const CellMetric &metric,
                    Heap &heap,
                    LevelID level,
                    NodeID node,
@@ -123,7 +124,7 @@ class CellCustomizer
             {
                 // Relax sub-cell nodes
                 auto subcell_id = partition.GetCell(level - 1, node);
-                auto subcell = cells.GetCell(level - 1, subcell_id);
+                auto subcell = cells.GetCell(metric, level - 1, subcell_id);
                 auto subcell_destination = subcell.GetDestinationNodes().begin();
                 auto subcell_duration = subcell.GetOutDuration(node).begin();
                 for (auto subcell_weight : subcell.GetOutWeight(node))

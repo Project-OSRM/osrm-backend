@@ -45,7 +45,7 @@ struct ContractorConfig final : storage::IOConfig
     ContractorConfig()
         : IOConfig(
               {
-                  ".osrm",
+                  ".osrm.ebg",
               },
               {},
               {".osrm.level", ".osrm.core", ".osrm.hsgr", ".osrm.enw"}),

@@ -12,6 +12,8 @@
 #include "storage/io_fwd.hpp"
 #include "storage/shared_memory_ownership.hpp"
 
+#include "customizer/cell_metric.hpp"
+
 #include <boost/iterator/iterator_facade.hpp>
 #include <boost/range/iterator_range.hpp>
 #include <tbb/parallel_sort.h>
@@ -89,10 +91,9 @@ template <storage::Ownership Ownership> class CellStorageImpl
                                                              WeightValueT,
                                                              boost::random_access_traversal_tag>
         {
-            typedef boost::iterator_facade<ColumnIterator,
-                                           WeightValueT,
-                                           boost::random_access_traversal_tag>
-                base_t;
+            typedef boost::
+                iterator_facade<ColumnIterator, WeightValueT, boost::random_access_traversal_tag>
+                    base_t;
 
           public:
             typedef typename base_t::value_type value_type;
@@ -177,8 +178,8 @@ template <storage::Ownership Ownership> class CellStorageImpl
                  const NodeID *const all_destinations)
             : num_source_nodes{data.num_source_nodes},
               num_destination_nodes{data.num_destination_nodes},
-              weights{all_weights + data.value_offset},
-              durations{all_durations + data.value_offset},
+              weights{all_weights + data.value_offset}, durations{all_durations +
+                                                                  data.value_offset},
               source_boundary{all_sources + data.source_boundary_offset},
               destination_boundary{all_destinations + data.destination_boundary_offset}
         {
@@ -323,26 +324,42 @@ template <storage::Ownership Ownership> class CellStorageImpl
             cell.value_offset = value_offset;
             value_offset += cell.num_source_nodes * cell.num_destination_nodes;
         }
+    }
 
-        weights.resize(value_offset + 1, INVALID_EDGE_WEIGHT);
-        durations.resize(value_offset + 1, MAXIMAL_EDGE_DURATION);
+    // Returns a new metric that can be used with this container
+    customizer::CellMetric MakeMetric() const
+    {
+        customizer::CellMetric metric;
+
+        if (cells.empty())
+        {
+            return metric;
+        }
+
+        const auto &last_cell = cells.back();
+        ValueOffset total_size = cells.back().value_offset +
+                                   last_cell.num_source_nodes * last_cell.num_destination_nodes;
+
+        metric.weights.resize(total_size + 1, INVALID_EDGE_WEIGHT);
+        metric.durations.resize(total_size + 1, MAXIMAL_EDGE_DURATION);
+
+        return metric;
     }
 
     template <typename = std::enable_if<Ownership == storage::Ownership::View>>
-    CellStorageImpl(Vector<EdgeWeight> weights_,
-                    Vector<EdgeDuration> durations_,
-                    Vector<NodeID> source_boundary_,
+    CellStorageImpl(Vector<NodeID> source_boundary_,
                     Vector<NodeID> destination_boundary_,
                     Vector<CellData> cells_,
                     Vector<std::uint64_t> level_to_cell_offset_)
-        : weights(std::move(weights_)), durations(std::move(durations_)),
-          source_boundary(std::move(source_boundary_)),
+        : source_boundary(std::move(source_boundary_)),
           destination_boundary(std::move(destination_boundary_)), cells(std::move(cells_)),
           level_to_cell_offset(std::move(level_to_cell_offset_))
     {
     }
 
-    ConstCell GetCell(LevelID level, CellID id) const
+    ConstCell GetCell(const customizer::detail::CellMetricImpl<Ownership> &metric,
+                      LevelID level,
+                      CellID id) const
     {
         const auto level_index = LevelIDToIndex(level);
         BOOST_ASSERT(level_index < level_to_cell_offset.size());
@@ -350,14 +367,14 @@ template <storage::Ownership Ownership> class CellStorageImpl
         const auto cell_index = offset + id;
         BOOST_ASSERT(cell_index < cells.size());
         return ConstCell{cells[cell_index],
-                         weights.data(),
-                         durations.data(),
+                         metric.weights.data(),
+                         metric.durations.data(),
                          source_boundary.empty() ? nullptr : source_boundary.data(),
                          destination_boundary.empty() ? nullptr : destination_boundary.data()};
     }
 
     template <typename = std::enable_if<Ownership == storage::Ownership::Container>>
-    Cell GetCell(LevelID level, CellID id)
+    Cell GetCell(customizer::CellMetric &metric, LevelID level, CellID id) const
     {
         const auto level_index = LevelIDToIndex(level);
         BOOST_ASSERT(level_index < level_to_cell_offset.size());
@@ -365,8 +382,8 @@ template <storage::Ownership Ownership> class CellStorageImpl
         const auto cell_index = offset + id;
         BOOST_ASSERT(cell_index < cells.size());
         return Cell{cells[cell_index],
-                    weights.data(),
-                    durations.data(),
+                    metric.weights.data(),
+                    metric.durations.data(),
                     source_boundary.data(),
                     destination_boundary.data()};
     }
@@ -377,8 +394,6 @@ template <storage::Ownership Ownership> class CellStorageImpl
                                                 const detail::CellStorageImpl<Ownership> &storage);
 
   private:
-    Vector<EdgeWeight> weights;
-    Vector<EdgeDuration> durations;
     Vector<NodeID> source_boundary;
     Vector<NodeID> destination_boundary;
     Vector<CellData> cells;
