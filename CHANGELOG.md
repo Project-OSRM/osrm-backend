@@ -14,6 +14,7 @@
       - Pass functions instead of strings to `WayHandlers.run()`, so it's possible to mix in your own functions.
       - Reorders arguments to `WayHandlers` functions to match `process_way()`.
       - Profiles must return a hash of profile functions. This makes it easier for profiles to include each other.
+      - BREAKING: Traffic signals will no longer be represented as turns internally. This requires re-processing of data but enables via-way turn restrictions across highway=traffic_signals
       - Guidance: add support for throughabouts
     - Bugfixes
       - Properly save/retrieve datasource annotations for road segments ([#4346](https://github.com/Project-OSRM/osrm-backend/issues/4346)
