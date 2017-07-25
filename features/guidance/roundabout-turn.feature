@@ -567,5 +567,5 @@ Feature: Basic Roundabout
             | ab    | residential   | in      |            |        |
 
         When I route I should get
-            | waypoints | turns                                                    | route                      |
-            | a,f       | depart,turn right,roundabout turn straight exit-1,arrive | in,through,through,through |
+            | waypoints | turns                    | route              |
+            | a,f       | depart,turn right,arrive | in,through,through |

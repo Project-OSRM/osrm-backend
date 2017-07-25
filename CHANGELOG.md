@@ -14,6 +14,7 @@
       - Pass functions instead of strings to `WayHandlers.run()`, so it's possible to mix in your own functions.
       - Reorders arguments to `WayHandlers` functions to match `process_way()`.
       - Profiles must return a hash of profile functions. This makes it easier for profiles to include each other.
+      - Guidance: add support for throughabouts
 
 # 5.9.2
     - API:

@@ -504,15 +504,23 @@ Intersection RoundaboutHandler::handleRoundabouts(const RoundaboutType roundabou
     }
     else
     {
+        bool crossing_roundabout = false;
         for (std::size_t cnt = 0, idx = lhs ? intersection.size() - 1 : 0;
              cnt < intersection.size();
              ++cnt, idx += step)
         {
-            auto &road = intersection[idx];
-            if (!road.entry_allowed)
-                continue;
-            auto &turn = road;
+            auto &turn = intersection[idx];
             const auto &out_data = node_based_graph.GetEdgeData(turn.eid);
+
+            // A roundabout consists of exactly two roads at an intersection. by toggeling this
+            // flag, we can switch between roads crossing the roundabout and roads that are on the
+            // same side as via_eid.
+            if (out_data.roundabout || out_data.circular)
+                crossing_roundabout = !crossing_roundabout;
+
+            if (!turn.entry_allowed)
+                continue;
+
             if (out_data.roundabout || out_data.circular)
             {
                 if (can_exit_roundabout_separately)
@@ -524,8 +532,21 @@ Intersection RoundaboutHandler::handleRoundabouts(const RoundaboutType roundabou
             }
             else
             {
-                turn.instruction = TurnInstruction::ENTER_AND_EXIT_ROUNDABOUT(
-                    roundabout_type, getTurnDirection(turn.angle));
+                // Distinguish between throughabouts and entering a roundabout to directly exit: In
+                // case of a throughabout, both enter and exit do not show roundabout tags (as we
+                // already have checked, when arriving here) and the enter/exit are nearly straight
+                // and on different sides of the roundabouts
+                if (util::angularDeviation(turn.angle, STRAIGHT_ANGLE) < FUZZY_ANGLE_DIFFERENCE &&
+                    crossing_roundabout)
+                {
+                    turn.instruction = getInstructionForObvious(
+                        intersection.size(), via_eid, isThroughStreet(idx, intersection), turn);
+                }
+                else
+                {
+                    turn.instruction = TurnInstruction::ENTER_AND_EXIT_ROUNDABOUT(
+                        roundabout_type, getTurnDirection(turn.angle));
+                }
             }
         }
     }
