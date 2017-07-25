@@ -89,7 +89,13 @@ Feature: Profile API version 2
     Scenario: Process only nodes with relevant tags
         Given the profile file
             """
-            functions = require('lib/profile_v2')
+            api_version = 2
+
+            Set = require('lib/set')
+            Sequence = require('lib/sequence')
+            Handlers = require("lib/way_handlers")
+            find_access_tag = require("lib/access").find_access_tag
+            limit = require("lib/maxspeed").limit
 
             function setup()
               return {
@@ -142,7 +148,13 @@ Feature: Profile API version 2
     Scenario: Process all nodes if profile.node_tags_requiring_processing is empty
         Given the profile file
             """
-            functions = require('lib/profile_v2')
+            api_version = 2
+
+            Set = require('lib/set')
+            Sequence = require('lib/sequence')
+            Handlers = require("lib/way_handlers")
+            find_access_tag = require("lib/access").find_access_tag
+            limit = require("lib/maxspeed").limit
 
             function setup()
               return {
@@ -195,7 +207,13 @@ Feature: Profile API version 2
     Scenario: Process all nodes if profile.node_tags_requiring_processing is missing
         Given the profile file
             """
-            functions = require('lib/profile_v2')
+            api_version = 2
+
+            Set = require('lib/set')
+            Sequence = require('lib/sequence')
+            Handlers = require("lib/way_handlers")
+            find_access_tag = require("lib/access").find_access_tag
+            limit = require("lib/maxspeed").limit
 
             function setup()
               return {
