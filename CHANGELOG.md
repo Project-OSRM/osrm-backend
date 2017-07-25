@@ -1,3 +1,7 @@
+# 5.9.2
+    - API:
+      - `annotations=durations,weights,speeds` values no longer include turn penalty values ([#4330](https://github.com/Project-OSRM/osrm-backend/issues/4330))
+
 # 5.9.1
   - Changes from 5.9.0:
       - #4322: Deprecated `UseLane`. Use the intersections array if you require lanes between steps
