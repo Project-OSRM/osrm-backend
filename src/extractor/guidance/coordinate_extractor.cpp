@@ -122,15 +122,6 @@ util::Coordinate CoordinateExtractor::ExtractRepresentativeCoordinate(
     // coordinate set to add a small level of fault tolerance
     const constexpr double skipping_inaccuracies_distance = 2;
 
-    // fallback, mostly necessary for dead ends
-    if (intersection_node == to_node)
-    {
-        const auto result = ExtractCoordinateAtLength(skipping_inaccuracies_distance, coordinates);
-        // TODO: possibly re-enable with https://github.com/Project-OSRM/osrm-backend/issues/3470
-        // BOOST_ASSERT(not_same_as_start(result));
-        return result;
-    }
-
     const auto &turn_edge_data = node_based_graph.GetEdgeData(turn_edge);
 
     // roundabouts, check early to avoid other costly checks
@@ -377,14 +368,14 @@ util::Coordinate CoordinateExtractor::ExtractRepresentativeCoordinate(
          * destination lanes and the ones that performa a larger turn.
          */
         coordinates = TrimCoordinatesToLength(
-            std::move(coordinates), 2 * skipping_inaccuracies_distance, segment_distances);
+            std::move(coordinates), 3 * skipping_inaccuracies_distance, segment_distances);
         BOOST_ASSERT(coordinates.size() >= 2);
         segment_distances.resize(coordinates.size());
         segment_distances.back() = util::coordinate_calculation::haversineDistance(
             *(coordinates.end() - 2), coordinates.back());
         const auto vector_head = coordinates.back();
         coordinates = TrimCoordinatesToLength(
-            std::move(coordinates), skipping_inaccuracies_distance, segment_distances);
+            std::move(coordinates), 2 * skipping_inaccuracies_distance, segment_distances);
         BOOST_ASSERT(coordinates.size() >= 2);
         const auto result =
             GetCorrectedCoordinate(turn_coordinate, coordinates.back(), vector_head);
