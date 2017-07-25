@@ -1,6 +1,7 @@
 #include "customizer/customizer.hpp"
 #include "customizer/cell_customizer.hpp"
 #include "customizer/edge_based_graph.hpp"
+#include "customizer/files.hpp"
 
 #include "partition/cell_storage.hpp"
 #include "partition/edge_based_graph_reader.hpp"
@@ -22,7 +23,8 @@ namespace customizer
 template <typename Graph, typename Partition, typename CellStorage>
 void CellStorageStatistics(const Graph &graph,
                            const Partition &partition,
-                           const CellStorage &storage)
+                           const CellStorage &storage,
+                           const CellMetric &metric)
 {
     util::Log() << "Cells statistics per level";
 
@@ -38,7 +40,7 @@ void CellStorageStatistics(const Graph &graph,
         std::size_t invalid_sources = 0, invalid_destinations = 0;
         for (std::uint32_t cell_id = 0; cell_id < partition.GetNumberOfCells(level); ++cell_id)
         {
-            const auto &cell = storage.GetCell(level, cell_id);
+            const auto &cell = storage.GetCell(metric, level, cell_id);
             source += cell.GetSourceNodes().size();
             destination += cell.GetDestinationNodes().size();
             total += cell_nodes[cell_id];
@@ -109,12 +111,13 @@ int Customizer::Run(const CustomizationConfig &config)
 
     TIMER_START(cell_customize);
     CellCustomizer customizer(mlp);
-    customizer.Customize(*edge_based_graph, storage);
+    auto metric = storage.MakeMetric();
+    customizer.Customize(*edge_based_graph, storage, metric);
     TIMER_STOP(cell_customize);
     util::Log() << "Cells customization took " << TIMER_SEC(cell_customize) << " seconds";
 
     TIMER_START(writing_mld_data);
-    partition::files::writeCells(config.GetPath(".osrm.cells"), storage);
+    files::writeCellMetrics(config.GetPath(".osrm.cell_metrics"), std::vector<CellMetric>{metric});
     TIMER_STOP(writing_mld_data);
     util::Log() << "MLD customization writing took " << TIMER_SEC(writing_mld_data) << " seconds";
 
@@ -123,7 +126,7 @@ int Customizer::Run(const CustomizationConfig &config)
     TIMER_STOP(writing_graph);
     util::Log() << "Graph writing took " << TIMER_SEC(writing_graph) << " seconds";
 
-    CellStorageStatistics(*edge_based_graph, mlp, storage);
+    CellStorageStatistics(*edge_based_graph, mlp, storage, metric);
 
     return 0;
 }

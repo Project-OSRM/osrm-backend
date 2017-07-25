@@ -112,6 +112,7 @@ void relaxOutgoingEdges(const DataFacade<mld::Algorithm> &facade,
 {
     const auto &partition = facade.GetMultiLevelPartition();
     const auto &cells = facade.GetCellStorage();
+    const auto &metric = facade.GetCellMetric();
 
     auto highest_diffrent_level = [&partition, node](const SegmentID &phantom_node) {
         if (phantom_node.enabled)
@@ -125,7 +126,7 @@ void relaxOutgoingEdges(const DataFacade<mld::Algorithm> &facade,
 
     if (level >= 1 && !node_data.from_clique_arc)
     {
-        const auto &cell = cells.GetCell(level, partition.GetCell(level, node));
+        const auto &cell = cells.GetCell(metric, level, partition.GetCell(level, node));
         if (DIRECTION == FORWARD_DIRECTION)
         { // Shortcuts in forward direction
             auto destination = cell.GetDestinationNodes().begin();

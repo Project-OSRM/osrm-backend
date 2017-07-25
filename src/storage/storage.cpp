@@ -10,6 +10,7 @@
 #include "contractor/query_graph.hpp"
 
 #include "customizer/edge_based_graph.hpp"
+#include "customizer/files.hpp"
 
 #include "extractor/class_data.hpp"
 #include "extractor/compressed_edge_container.hpp"
@@ -63,6 +64,8 @@ namespace osrm
 {
 namespace storage
 {
+
+static constexpr std::size_t NUM_METRICS = 8;
 
 using RTreeLeaf = engine::datafacade::BaseDataFacade::RTreeLeaf;
 using RTreeNode = util::StaticRTree<RTreeLeaf, storage::Ownership::View>::TreeNode;
@@ -453,10 +456,6 @@ void Storage::PopulateLayout(DataLayout &layout)
         {
             io::FileReader reader(config.GetPath(".osrm.cells"), io::FileReader::VerifyFingerprint);
 
-            const auto weights_count = reader.ReadVectorSize<EdgeWeight>();
-            layout.SetBlockSize<EdgeWeight>(DataLayout::MLD_CELL_WEIGHTS_0, weights_count);
-            const auto durations_count = reader.ReadVectorSize<EdgeDuration>();
-            layout.SetBlockSize<EdgeDuration>(DataLayout::MLD_CELL_DURATIONS_0, durations_count);
             const auto source_node_count = reader.ReadVectorSize<NodeID>();
             layout.SetBlockSize<NodeID>(DataLayout::MLD_CELL_SOURCE_BOUNDARY, source_node_count);
             const auto destination_node_count = reader.ReadVectorSize<NodeID>();
@@ -468,22 +467,45 @@ void Storage::PopulateLayout(DataLayout &layout)
             const auto level_offsets_count = reader.ReadVectorSize<std::uint64_t>();
             layout.SetBlockSize<std::uint64_t>(DataLayout::MLD_CELL_LEVEL_OFFSETS,
                                                level_offsets_count);
+        }
+        else
+        {
+            layout.SetBlockSize<char>(DataLayout::MLD_CELL_SOURCE_BOUNDARY, 0);
+            layout.SetBlockSize<char>(DataLayout::MLD_CELL_DESTINATION_BOUNDARY, 0);
+            layout.SetBlockSize<char>(DataLayout::MLD_CELLS, 0);
+            layout.SetBlockSize<char>(DataLayout::MLD_CELL_LEVEL_OFFSETS, 0);
+        }
 
-            // FIXME these need to be filled with actual weight values
-            layout.SetBlockSize<char>(DataLayout::MLD_CELL_WEIGHTS_1, 0);
-            layout.SetBlockSize<char>(DataLayout::MLD_CELL_WEIGHTS_2, 0);
-            layout.SetBlockSize<char>(DataLayout::MLD_CELL_WEIGHTS_3, 0);
-            layout.SetBlockSize<char>(DataLayout::MLD_CELL_WEIGHTS_4, 0);
-            layout.SetBlockSize<char>(DataLayout::MLD_CELL_WEIGHTS_5, 0);
-            layout.SetBlockSize<char>(DataLayout::MLD_CELL_WEIGHTS_6, 0);
-            layout.SetBlockSize<char>(DataLayout::MLD_CELL_WEIGHTS_7, 0);
-            layout.SetBlockSize<char>(DataLayout::MLD_CELL_DURATIONS_1, 0);
-            layout.SetBlockSize<char>(DataLayout::MLD_CELL_DURATIONS_2, 0);
-            layout.SetBlockSize<char>(DataLayout::MLD_CELL_DURATIONS_3, 0);
-            layout.SetBlockSize<char>(DataLayout::MLD_CELL_DURATIONS_4, 0);
-            layout.SetBlockSize<char>(DataLayout::MLD_CELL_DURATIONS_5, 0);
-            layout.SetBlockSize<char>(DataLayout::MLD_CELL_DURATIONS_6, 0);
-            layout.SetBlockSize<char>(DataLayout::MLD_CELL_DURATIONS_7, 0);
+        if (boost::filesystem::exists(config.GetPath(".osrm.cell_metrics")))
+        {
+            io::FileReader reader(config.GetPath(".osrm.cell_metrics"),
+                                  io::FileReader::VerifyFingerprint);
+            auto num_metric = reader.ReadElementCount64();
+
+            if (num_metric > NUM_METRICS)
+            {
+                throw util::exception("Only " + std::to_string(NUM_METRICS) +
+                                      " metrics are supported at the same time.");
+            }
+
+            for (const auto index : util::irange<std::size_t>(0, num_metric))
+            {
+                const auto weights_count = reader.ReadVectorSize<EdgeWeight>();
+                layout.SetBlockSize<EdgeWeight>(
+                    static_cast<DataLayout::BlockID>(DataLayout::MLD_CELL_WEIGHTS_0 + index),
+                    weights_count);
+                const auto durations_count = reader.ReadVectorSize<EdgeDuration>();
+                layout.SetBlockSize<EdgeDuration>(
+                    static_cast<DataLayout::BlockID>(DataLayout::MLD_CELL_DURATIONS_0 + index),
+                    durations_count);
+            }
+            for (const auto index : util::irange<std::size_t>(num_metric, NUM_METRICS))
+            {
+                layout.SetBlockSize<EdgeWeight>(
+                    static_cast<DataLayout::BlockID>(DataLayout::MLD_CELL_WEIGHTS_0 + index), 0);
+                layout.SetBlockSize<EdgeDuration>(
+                    static_cast<DataLayout::BlockID>(DataLayout::MLD_CELL_DURATIONS_0 + index), 0);
+            }
         }
         else
         {
@@ -503,10 +525,6 @@ void Storage::PopulateLayout(DataLayout &layout)
             layout.SetBlockSize<char>(DataLayout::MLD_CELL_DURATIONS_5, 0);
             layout.SetBlockSize<char>(DataLayout::MLD_CELL_DURATIONS_6, 0);
             layout.SetBlockSize<char>(DataLayout::MLD_CELL_DURATIONS_7, 0);
-            layout.SetBlockSize<char>(DataLayout::MLD_CELL_SOURCE_BOUNDARY, 0);
-            layout.SetBlockSize<char>(DataLayout::MLD_CELL_DESTINATION_BOUNDARY, 0);
-            layout.SetBlockSize<char>(DataLayout::MLD_CELLS, 0);
-            layout.SetBlockSize<char>(DataLayout::MLD_CELL_LEVEL_OFFSETS, 0);
         }
 
         if (boost::filesystem::exists(config.GetPath(".osrm.mldgr")))
@@ -941,10 +959,6 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
             BOOST_ASSERT(layout.GetBlockSize(storage::DataLayout::MLD_CELLS) > 0);
             BOOST_ASSERT(layout.GetBlockSize(storage::DataLayout::MLD_CELL_LEVEL_OFFSETS) > 0);
 
-            auto mld_cell_weights_ptr = layout.GetBlockPtr<EdgeWeight, true>(
-                memory_ptr, storage::DataLayout::MLD_CELL_WEIGHTS_0);
-            auto mld_cell_duration_ptr = layout.GetBlockPtr<EdgeDuration, true>(
-                memory_ptr, storage::DataLayout::MLD_CELL_DURATIONS_0);
             auto mld_source_boundary_ptr = layout.GetBlockPtr<NodeID, true>(
                 memory_ptr, storage::DataLayout::MLD_CELL_SOURCE_BOUNDARY);
             auto mld_destination_boundary_ptr = layout.GetBlockPtr<NodeID, true>(
@@ -954,10 +968,6 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
             auto mld_cell_level_offsets_ptr = layout.GetBlockPtr<std::uint64_t, true>(
                 memory_ptr, storage::DataLayout::MLD_CELL_LEVEL_OFFSETS);
 
-            auto weight_entries_count =
-                layout.GetBlockEntries(storage::DataLayout::MLD_CELL_WEIGHTS_0);
-            auto duration_entries_count =
-                layout.GetBlockEntries(storage::DataLayout::MLD_CELL_DURATIONS_0);
             auto source_boundary_entries_count =
                 layout.GetBlockEntries(storage::DataLayout::MLD_CELL_SOURCE_BOUNDARY);
             auto destination_boundary_entries_count =
@@ -966,9 +976,6 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
             auto cell_level_offsets_entries_count =
                 layout.GetBlockEntries(storage::DataLayout::MLD_CELL_LEVEL_OFFSETS);
 
-            util::vector_view<EdgeWeight> weights(mld_cell_weights_ptr, weight_entries_count);
-            util::vector_view<EdgeDuration> durations(mld_cell_duration_ptr,
-                                                      duration_entries_count);
             util::vector_view<NodeID> source_boundary(mld_source_boundary_ptr,
                                                       source_boundary_entries_count);
             util::vector_view<NodeID> destination_boundary(mld_destination_boundary_ptr,
@@ -978,13 +985,42 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
             util::vector_view<std::uint64_t> level_offsets(mld_cell_level_offsets_ptr,
                                                            cell_level_offsets_entries_count);
 
-            partition::CellStorageView storage{std::move(weights),
-                                               std::move(durations),
-                                               std::move(source_boundary),
+            partition::CellStorageView storage{std::move(source_boundary),
                                                std::move(destination_boundary),
                                                std::move(cells),
                                                std::move(level_offsets)};
             partition::files::readCells(config.GetPath(".osrm.cells"), storage);
+        }
+
+        if (boost::filesystem::exists(config.GetPath(".osrm.cell_metrics")))
+        {
+            BOOST_ASSERT(layout.GetBlockSize(storage::DataLayout::MLD_CELLS) > 0);
+            BOOST_ASSERT(layout.GetBlockSize(storage::DataLayout::MLD_CELL_LEVEL_OFFSETS) > 0);
+
+            std::vector<customizer::CellMetricView> metrics;
+
+            for (auto index : util::irange<std::size_t>(0, NUM_METRICS))
+            {
+                auto weights_block_id = static_cast<DataLayout::BlockID>(
+                    storage::DataLayout::MLD_CELL_WEIGHTS_0 + index);
+                auto durations_block_id = static_cast<DataLayout::BlockID>(
+                    storage::DataLayout::MLD_CELL_DURATIONS_0 + index);
+
+                auto weight_entries_count = layout.GetBlockEntries(weights_block_id);
+                auto duration_entries_count = layout.GetBlockEntries(durations_block_id);
+                auto mld_cell_weights_ptr =
+                    layout.GetBlockPtr<EdgeWeight, true>(memory_ptr, weights_block_id);
+                auto mld_cell_duration_ptr =
+                    layout.GetBlockPtr<EdgeDuration, true>(memory_ptr, durations_block_id);
+                util::vector_view<EdgeWeight> weights(mld_cell_weights_ptr, weight_entries_count);
+                util::vector_view<EdgeDuration> durations(mld_cell_duration_ptr,
+                                                          duration_entries_count);
+
+                metrics.push_back(
+                    customizer::CellMetricView{std::move(weights), std::move(durations)});
+            }
+
+            customizer::files::readCellMetrics(config.GetPath(".osrm.cell_metrics"), metrics);
         }
 
         if (boost::filesystem::exists(config.GetPath(".osrm.mldgr")))

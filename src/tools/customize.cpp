@@ -153,10 +153,8 @@ int main(int argc, char *argv[]) try
         return EXIT_FAILURE;
     }
 
-    if (!boost::filesystem::is_regular_file(customization_config.GetPath(".osrm")))
+    if (!customization_config.IsValid())
     {
-        util::Log(logERROR) << "Input file " << customization_config.GetPath(".osrm").string()
-                            << " not found!";
         return EXIT_FAILURE;
     }
 

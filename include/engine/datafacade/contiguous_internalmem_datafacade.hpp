@@ -964,6 +964,7 @@ template <> class ContiguousInternalMemoryAlgorithmDataFacade<MLD> : public Algo
     // MLD data
     partition::MultiLevelPartitionView mld_partition;
     partition::CellStorageView mld_cell_storage;
+    customizer::CellMetricView mld_cell_metric;
     using QueryGraph = customizer::MultiLevelEdgeBasedGraphView;
     using GraphNode = QueryGraph::NodeArrayEntry;
     using GraphEdge = QueryGraph::EdgeArrayEntry;
@@ -982,11 +983,6 @@ template <> class ContiguousInternalMemoryAlgorithmDataFacade<MLD> : public Algo
                                    char *memory_block,
                                    const std::size_t avoid_index)
     {
-        const auto weights_block_id = static_cast<storage::DataLayout::BlockID>(
-            storage::DataLayout::MLD_CELL_WEIGHTS_0 + avoid_index);
-        const auto durations_block_id = static_cast<storage::DataLayout::BlockID>(
-            storage::DataLayout::MLD_CELL_DURATIONS_0 + avoid_index);
-
         if (data_layout.GetBlockSize(storage::DataLayout::MLD_PARTITION) > 0)
         {
             BOOST_ASSERT(data_layout.GetBlockSize(storage::DataLayout::MLD_LEVEL_DATA) > 0);
@@ -1012,15 +1008,32 @@ template <> class ContiguousInternalMemoryAlgorithmDataFacade<MLD> : public Algo
                 partition::MultiLevelPartitionView{level_data, partition, cell_to_children};
         }
 
+        const auto weights_block_id = static_cast<storage::DataLayout::BlockID>(
+            storage::DataLayout::MLD_CELL_WEIGHTS_0 + avoid_index);
+        const auto durations_block_id = static_cast<storage::DataLayout::BlockID>(
+            storage::DataLayout::MLD_CELL_DURATIONS_0 + avoid_index);
+
         if (data_layout.GetBlockSize(weights_block_id) > 0)
         {
-            BOOST_ASSERT(data_layout.GetBlockSize(storage::DataLayout::MLD_CELLS) > 0);
-            BOOST_ASSERT(data_layout.GetBlockSize(storage::DataLayout::MLD_CELL_LEVEL_OFFSETS) > 0);
-
             auto mld_cell_weights_ptr =
                 data_layout.GetBlockPtr<EdgeWeight>(memory_block, weights_block_id);
             auto mld_cell_durations_ptr =
                 data_layout.GetBlockPtr<EdgeDuration>(memory_block, durations_block_id);
+            auto weight_entries_count =
+                data_layout.GetBlockEntries(storage::DataLayout::MLD_CELL_WEIGHTS_0);
+            auto duration_entries_count =
+                data_layout.GetBlockEntries(storage::DataLayout::MLD_CELL_DURATIONS_0);
+            BOOST_ASSERT(weight_entries_count == duration_entries_count);
+            util::vector_view<EdgeWeight> weights(mld_cell_weights_ptr, weight_entries_count);
+            util::vector_view<EdgeDuration> durations(mld_cell_durations_ptr,
+                                                      duration_entries_count);
+
+            mld_cell_metric = customizer::CellMetricView {std::move(weights), std::move(durations)};
+        }
+
+        if (data_layout.GetBlockSize(storage::DataLayout::MLD_CELLS) > 0)
+        {
+
             auto mld_source_boundary_ptr = data_layout.GetBlockPtr<NodeID>(
                 memory_block, storage::DataLayout::MLD_CELL_SOURCE_BOUNDARY);
             auto mld_destination_boundary_ptr = data_layout.GetBlockPtr<NodeID>(
@@ -1030,10 +1043,6 @@ template <> class ContiguousInternalMemoryAlgorithmDataFacade<MLD> : public Algo
             auto mld_cell_level_offsets_ptr = data_layout.GetBlockPtr<std::uint64_t>(
                 memory_block, storage::DataLayout::MLD_CELL_LEVEL_OFFSETS);
 
-            auto weight_entries_count =
-                data_layout.GetBlockEntries(storage::DataLayout::MLD_CELL_WEIGHTS_0);
-            auto duration_entries_count =
-                data_layout.GetBlockEntries(storage::DataLayout::MLD_CELL_DURATIONS_0);
             auto source_boundary_entries_count =
                 data_layout.GetBlockEntries(storage::DataLayout::MLD_CELL_SOURCE_BOUNDARY);
             auto destination_boundary_entries_count =
@@ -1042,11 +1051,6 @@ template <> class ContiguousInternalMemoryAlgorithmDataFacade<MLD> : public Algo
             auto cell_level_offsets_entries_count =
                 data_layout.GetBlockEntries(storage::DataLayout::MLD_CELL_LEVEL_OFFSETS);
 
-            BOOST_ASSERT(weight_entries_count == duration_entries_count);
-
-            util::vector_view<EdgeWeight> weights(mld_cell_weights_ptr, weight_entries_count);
-            util::vector_view<EdgeDuration> durations(mld_cell_durations_ptr,
-                                                      duration_entries_count);
             util::vector_view<NodeID> source_boundary(mld_source_boundary_ptr,
                                                       source_boundary_entries_count);
             util::vector_view<NodeID> destination_boundary(mld_destination_boundary_ptr,
@@ -1056,9 +1060,7 @@ template <> class ContiguousInternalMemoryAlgorithmDataFacade<MLD> : public Algo
             util::vector_view<std::uint64_t> level_offsets(mld_cell_level_offsets_ptr,
                                                            cell_level_offsets_entries_count);
 
-            mld_cell_storage = partition::CellStorageView{std::move(weights),
-                                                          std::move(durations),
-                                                          std::move(source_boundary),
+            mld_cell_storage = partition::CellStorageView{std::move(source_boundary),
                                                           std::move(destination_boundary),
                                                           std::move(cells),
                                                           std::move(level_offsets)};
@@ -1104,6 +1106,8 @@ template <> class ContiguousInternalMemoryAlgorithmDataFacade<MLD> : public Algo
     }
 
     const partition::CellStorageView &GetCellStorage() const override { return mld_cell_storage; }
+
+    const customizer::CellMetricView &GetCellMetric() const override { return mld_cell_metric; }
 
     // search graph access
     unsigned GetNumberOfNodes() const override final { return query_graph.GetNumberOfNodes(); }

@@ -143,6 +143,7 @@ void routingStep(const DataFacade<Algorithm> &facade,
 {
     const auto &partition = facade.GetMultiLevelPartition();
     const auto &cells = facade.GetCellStorage();
+    const auto &metric = facade.GetCellMetric();
 
     const auto node = forward_heap.DeleteMin();
     const auto weight = forward_heap.GetKey(node);
@@ -174,7 +175,7 @@ void routingStep(const DataFacade<Algorithm> &facade,
         if (DIRECTION == FORWARD_DIRECTION)
         {
             // Shortcuts in forward direction
-            const auto &cell = cells.GetCell(level, partition.GetCell(level, node));
+            const auto &cell = cells.GetCell(metric, level, partition.GetCell(level, node));
             auto destination = cell.GetDestinationNodes().begin();
             for (auto shortcut_weight : cell.GetOutWeight(node))
             {
@@ -200,7 +201,7 @@ void routingStep(const DataFacade<Algorithm> &facade,
         else
         {
             // Shortcuts in backward direction
-            const auto &cell = cells.GetCell(level, partition.GetCell(level, node));
+            const auto &cell = cells.GetCell(metric, level, partition.GetCell(level, node));
             auto source = cell.GetSourceNodes().begin();
             for (auto shortcut_weight : cell.GetInWeight(node))
             {
