@@ -763,7 +763,7 @@ Feature: Basic Roundabout
 
         When I route I should get
            | waypoints | bearings | route       | turns                           |
-           | e,f       | 90 90    | edf,edf,edf | depart,roundabout-exit-1,arrive |
+           | e,f       | 90 90    | edf,edf     | depart,arrive                   |
            | e,h       | 90 135   | edf,gch,gch | depart,roundabout-exit-2,arrive |
            | g,f       | 45 90    | gch,edf,edf | depart,roundabout-exit-2,arrive |
            | g,h       | 45 135   | gch,gch,gch | depart,roundabout-exit-1,arrive |
@@ -843,6 +843,6 @@ Feature: Basic Roundabout
 
 
         When I route I should get
-            | from | to | route                        | turns                                                             | distance |
-            | e    | k  | ebds,ebds,ds,ufghl,jhik,jhik | depart,rotary-exit-1,rotary-exit-1,rstur-exit-2,turn right,arrive | 189.1m   |
-            | 1    | k  | ebds,ds,ufghl,jhik,jhik      | depart,rotary-exit-1,rstur-exit-2,turn right,arrive               | 159.1m   |
+            | from | to | route                | turns                                 | distance |
+            | e    | k  | ebds,ufghl,jhik,jhik | depart,rstur-exit-2,turn right,arrive | 189.1m   |
+            | 1    | k  | ebds,ufghl,jhik,jhik | depart,rstur-exit-2,turn right,arrive | 159.1m   |
