@@ -10,6 +10,9 @@
 
 #include <boost/assert.hpp>
 
+#include "util/geojson_debug_logger.hpp"
+#include "util/geojson_debug_policies.hpp"
+
 using osrm::util::angularDeviation;
 using osrm::extractor::guidance::getTurnDirection;
 
@@ -233,33 +236,101 @@ Intersection MotorwayHandler::fromMotorway(const EdgeID via_eid, Intersection in
             }
             else
             {
-                // Normal Highway exit or merge
-                for (auto &road : intersection)
-                {
-                    // ignore invalid uturns/other
-                    if (!road.entry_allowed)
-                        continue;
+                // check whether multi-lane ramps split off a highway. In case of
+                //
+                // ---------------------------
+                // ---------------------------
+                // ---------------------------
+                // ------------------  '
+                // ------------------ `  '----
+                //                   `  '-----
+                //                    `-------
+                //
+                // We want to inform the driver to stay on the left lanes to continue on the
+                // highway, even if the highway exit is a normal ramp.
+                const auto is_continue = [continue_angle](const auto &road) {
+                    return road.angle == continue_angle;
+                };
+                const auto continue_index = std::distance(
+                    intersection.begin(),
+                    std::find_if(intersection.begin() + 1, intersection.end(), is_continue));
+                BOOST_ASSERT(static_cast<std::size_t>(continue_index) != intersection.size());
 
-                    if (road.angle == continue_angle)
+                // since the intersection size is 3, we know that 0 is the uturn, and 1/2 are
+                // continue and ramp. The ramp has to be the other one next to the continue
+                const auto lane_extractor = makeExtractLanesForRoad(node_based_graph);
+
+                // check whether the number of lanes prior / post of the turn match in total
+                const auto requires_continue = [&]() {
+                    const auto in_lanes = lane_extractor(intersection[0]);
+                    const auto continue_lanes = lane_extractor(intersection[continue_index]);
+
+                    const auto ramp_lanes = std::accumulate(intersection.begin() + 1,
+                                                            intersection.end(),
+                                                            0,
+                                                            [&](const auto sum, const auto &road) {
+                                                                return sum + lane_extractor(road);
+                                                            }) -
+                                            continue_lanes;
+
+                    // safe-guard to not overdo it with single lanes splitting. We assume that it is
+                    // easy to do a single lane switch when passing an exit. Comparing for 0/1 we
+                    // also account for cases without lane information present
+                    if (ramp_lanes <= 1)
+                        return false;
+
+                    // we need to pass a ramp that we can enter
+                    if (std::any_of(intersection.begin() + 1,
+                                    intersection.end(),
+                                    [](const auto &road) { return !road.entry_allowed; }))
+                        return false;
+
+                    return in_lanes == continue_lanes + ramp_lanes;
+                };
+
+                BOOST_ASSERT(intersection[continue_index].entry_allowed);
+                if (requires_continue())
+                {
+                    intersection[continue_index].instruction = {
+                        TurnType::Continue, getTurnDirection(intersection[continue_index].angle)};
+                }
+                else
+                {
+                    intersection[continue_index].instruction =
+                        getInstructionForObvious(intersection.size(),
+                                                 via_eid,
+                                                 isThroughStreet(1, intersection),
+                                                 intersection[continue_index]);
+                }
+
+                BOOST_ASSERT(intersection[0].entry_allowed == false);
+
+                for (std::size_t ramp_index = 1; ramp_index < intersection.size(); ++ramp_index)
+                {
+                    if (ramp_index == static_cast<std::size_t>(continue_index))
+                        continue;
+                    if (intersection[ramp_index].entry_allowed)
                     {
-                        road.instruction = getInstructionForObvious(
-                            intersection.size(), via_eid, isThroughStreet(1, intersection), road);
-                    }
-                    else if (road.angle < continue_angle)
-                    {
-                        road.instruction = {isRampClass(road.eid, node_based_graph)
-                                                ? TurnType::OffRamp
-                                                : TurnType::Turn,
-                                            (road.angle < 145) ? DirectionModifier::Right
-                                                               : DirectionModifier::SlightRight};
-                    }
-                    else if (road.angle > continue_angle)
-                    {
-                        road.instruction = {isRampClass(road.eid, node_based_graph)
-                                                ? TurnType::OffRamp
-                                                : TurnType::Turn,
-                                            (road.angle > 215) ? DirectionModifier::Left
-                                                               : DirectionModifier::SlightLeft};
+                        if (intersection[ramp_index].angle < continue_angle)
+                        {
+                            intersection[ramp_index].instruction = {
+                                isRampClass(intersection[ramp_index].eid, node_based_graph)
+                                    ? TurnType::OffRamp
+                                    : TurnType::Turn,
+                                (intersection[ramp_index].angle < 145)
+                                    ? DirectionModifier::Right
+                                    : DirectionModifier::SlightRight};
+                        }
+                        else
+                        {
+                            intersection[ramp_index].instruction = {
+                                isRampClass(intersection[ramp_index].eid, node_based_graph)
+                                    ? TurnType::OffRamp
+                                    : TurnType::Turn,
+                                (intersection[ramp_index].angle > 215)
+                                    ? DirectionModifier::Left
+                                    : DirectionModifier::SlightLeft};
+                        }
                     }
                 }
             }

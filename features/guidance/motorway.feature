@@ -297,5 +297,5 @@ Feature: Motorway Guidance
 
         When I route I should get
             | waypoints | route | turns                               |
-            | a,c       | ,     | depart,arrive                       |
+            | a,c       | ,,    | depart,continue straight,arrive     |
             | a,f       | ,,    | depart,off ramp slight right,arrive |
