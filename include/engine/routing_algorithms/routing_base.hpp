@@ -7,7 +7,6 @@
 #include "engine/datafacade.hpp"
 #include "engine/internal_route_result.hpp"
 #include "engine/phantom_node.hpp"
-#include "engine/search_engine_data.hpp"
 
 #include "util/coordinate_calculation.hpp"
 #include "util/guidance/turn_bearing.hpp"

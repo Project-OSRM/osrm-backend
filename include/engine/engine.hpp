@@ -18,6 +18,8 @@
 #include "engine/plugins/trip.hpp"
 #include "engine/plugins/viaroute.hpp"
 #include "engine/routing_algorithms.hpp"
+#include "engine/routing_algorithms/routing_base_ch.hpp"
+#include "engine/routing_algorithms/routing_base_mld.hpp"
 #include "engine/status.hpp"
 #include "util/exception.hpp"
 #include "util/exception_utils.hpp"

@@ -4,7 +4,6 @@
 #include "engine/algorithm.hpp"
 #include "engine/datafacade.hpp"
 #include "engine/internal_route_result.hpp"
-#include "engine/search_engine_data.hpp"
 
 #include "util/typedefs.hpp"
 

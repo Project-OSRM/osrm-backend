@@ -4,7 +4,8 @@
 #include "engine/algorithm.hpp"
 #include "engine/datafacade.hpp"
 #include "engine/map_matching/sub_matching.hpp"
-#include "engine/search_engine_data.hpp"
+
+#include <boost/optional.hpp>
 
 #include <vector>
 

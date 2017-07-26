@@ -4,9 +4,9 @@
 #include "engine/plugins/plugin_base.hpp"
 
 #include "engine/api/table_parameters.hpp"
+#include "engine/datafacade/contiguous_internalmem_datafacade.hpp"
 #include "engine/routing_algorithms.hpp"
-#include "engine/routing_algorithms/many_to_many.hpp"
-#include "engine/search_engine_data.hpp"
+
 #include "util/json_container.hpp"
 
 namespace osrm
