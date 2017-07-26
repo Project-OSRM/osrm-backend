@@ -1,6 +1,11 @@
 #include "engine/routing_algorithms/shortest_path.hpp"
+
+#ifdef OSRM_EXTERNAL_MEMORY
+#include "routing/routing_base_offline.hpp"
+#else
 #include "engine/routing_algorithms/routing_base_ch.hpp"
 #include "engine/routing_algorithms/routing_base_mld.hpp"
+#endif
 
 #include <boost/assert.hpp>
 #include <boost/optional.hpp>
@@ -456,6 +461,16 @@ InternalRouteResult shortestPathSearch(SearchEngineData<Algorithm> &engine_worki
     return raw_route_data;
 }
 
+#ifdef OSRM_EXTERNAL_MEMORY
+
+template InternalRouteResult
+shortestPathSearch(SearchEngineData<offline::Algorithm> &engine_working_data,
+                   const DataFacade<offline::Algorithm> &facade,
+                   const std::vector<PhantomNodes> &phantom_nodes_vector,
+                   const boost::optional<bool> continue_straight_at_waypoint);
+
+#else
+
 template InternalRouteResult
 shortestPathSearch(SearchEngineData<ch::Algorithm> &engine_working_data,
                    const DataFacade<ch::Algorithm> &facade,
@@ -473,6 +488,8 @@ shortestPathSearch(SearchEngineData<mld::Algorithm> &engine_working_data,
                    const DataFacade<mld::Algorithm> &facade,
                    const std::vector<PhantomNodes> &phantom_nodes_vector,
                    const boost::optional<bool> continue_straight_at_waypoint);
+
+#endif
 
 } // namespace routing_algorithms
 } // namespace engine

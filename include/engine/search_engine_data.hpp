@@ -1,7 +1,9 @@
 #ifndef SEARCH_ENGINE_DATA_HPP
 #define SEARCH_ENGINE_DATA_HPP
 
+#ifndef OSRM_EXTERNAL_MEMORY
 #include <boost/thread/tss.hpp>
+#endif
 
 #include "engine/algorithm.hpp"
 #include "util/query_heap.hpp"
@@ -37,7 +39,6 @@ template <> struct SearchEngineData<routing_algorithms::ch::Algorithm>
 {
     using QueryHeap = util::
         QueryHeap<NodeID, NodeID, EdgeWeight, HeapData, util::UnorderedMapStorage<NodeID, int>>;
-    using SearchEngineHeapPtr = boost::thread_specific_ptr<QueryHeap>;
 
     using ManyToManyQueryHeap = util::QueryHeap<NodeID,
                                                 NodeID,
@@ -45,7 +46,13 @@ template <> struct SearchEngineData<routing_algorithms::ch::Algorithm>
                                                 ManyToManyHeapData,
                                                 util::UnorderedMapStorage<NodeID, int>>;
 
+#ifdef OSRM_EXTERNAL_MEMORY
+    using SearchEngineHeapPtr = std::unique_ptr<QueryHeap>;
+    using ManyToManyHeapPtr = std::unique_ptr<ManyToManyQueryHeap>;
+#else
+    using SearchEngineHeapPtr = boost::thread_specific_ptr<QueryHeap>;
     using ManyToManyHeapPtr = boost::thread_specific_ptr<ManyToManyQueryHeap>;
+#endif
 
     static SearchEngineHeapPtr forward_heap_1;
     static SearchEngineHeapPtr reverse_heap_1;
@@ -105,9 +112,13 @@ template <> struct SearchEngineData<routing_algorithms::mld::Algorithm>
                                                 ManyToManyMultiLayerDijkstraHeapData,
                                                 util::UnorderedMapStorage<NodeID, int>>;
 
+#ifdef OSRM_EXTERNAL_MEMORY
+    using SearchEngineHeapPtr = std::unique_ptr<QueryHeap>;
+    using ManyToManyHeapPtr = std::unique_ptr<ManyToManyQueryHeap>;
+#else
     using SearchEngineHeapPtr = boost::thread_specific_ptr<QueryHeap>;
-
     using ManyToManyHeapPtr = boost::thread_specific_ptr<ManyToManyQueryHeap>;
+#endif
 
     static SearchEngineHeapPtr forward_heap_1;
     static SearchEngineHeapPtr reverse_heap_1;
