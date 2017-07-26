@@ -168,7 +168,6 @@ struct PhantomNode
     util::Coordinate input_location;
     unsigned short fwd_segment_position;
     // is phantom node valid to be used as source or target
-  private:
     unsigned short is_valid_forward_source : 1;
     unsigned short is_valid_forward_target : 1;
     unsigned short is_valid_reverse_source : 1;
