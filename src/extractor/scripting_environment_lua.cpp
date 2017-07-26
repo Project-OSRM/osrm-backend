@@ -396,8 +396,12 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
                                                "target_restricted",
                                                &ExtractionTurn::target_restricted);
 
-    // Keep in mind .location is undefined since we're not using libosmium's location cache
-    context.state.new_usertype<osmium::NodeRef>("NodeRef", "id", &osmium::NodeRef::ref);
+    // Keep in mind .location is available only if .pbf is preprocessed to set the location with the
+    // ref using osmium command "osmium add-locations-to-ways"
+    context.state.new_usertype<osmium::NodeRef>(
+        "NodeRef", "id", &osmium::NodeRef::ref, "location", [](const osmium::NodeRef &nref) {
+            return nref.location();
+        });
 
     context.state.new_usertype<InternalExtractorEdge>("EdgeSource",
                                                       "source_coordinate",
