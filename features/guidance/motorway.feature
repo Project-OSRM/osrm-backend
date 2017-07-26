@@ -281,3 +281,21 @@ Feature: Motorway Guidance
             | waypoints | route | turns         |
             | a,d       | ,     | depart,arrive |
             | b,d       | ,     | depart,arrive |
+
+     Scenario: Multi Lane highway splitting
+        Given the node map
+            """
+            a - - - - b - - - - - c
+                          e - - - f
+            """
+
+        And the ways
+            | nodes | name | ref    | highway       | oneway | lanes |
+            | ab    |      | US 101 | motorway      | yes    | 5     |
+            | bc    |      | US 101 | motorway      | yes    | 3     |
+            | bef   |      |        | motorway_link | yes    | 2     |
+
+        When I route I should get
+            | waypoints | route | turns                               |
+            | a,c       | ,     | depart,arrive                       |
+            | a,f       | ,,    | depart,off ramp slight right,arrive |
