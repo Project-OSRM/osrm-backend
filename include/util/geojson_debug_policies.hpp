@@ -18,13 +18,13 @@ namespace util
 
 struct NodeIdVectorToLineString
 {
-    NodeIdVectorToLineString(const std::vector<extractor::QueryNode> &node_coordinates);
+    NodeIdVectorToLineString(const std::vector<util::Coordinate> &node_coordinates);
 
     // converts a vector of node ids into a linestring geojson feature
     util::json::Object operator()(const std::vector<NodeID> &node_ids,
                                   const boost::optional<json::Object> &properties = {}) const;
 
-    const std::vector<extractor::QueryNode> &node_coordinates;
+    const std::vector<util::Coordinate> &node_coordinates;
 };
 
 struct CoordinateVectorToLineString
@@ -36,13 +36,13 @@ struct CoordinateVectorToLineString
 
 struct NodeIdVectorToMultiPoint
 {
-    NodeIdVectorToMultiPoint(const std::vector<extractor::QueryNode> &node_coordinates);
+    NodeIdVectorToMultiPoint(const std::vector<util::Coordinate> &node_coordinates);
 
     // converts a vector of node ids into a linestring geojson feature
     util::json::Object operator()(const std::vector<NodeID> &node_ids,
                                   const boost::optional<json::Object> &properties = {}) const;
 
-    const std::vector<extractor::QueryNode> &node_coordinates;
+    const std::vector<util::Coordinate> &node_coordinates;
 };
 
 struct CoordinateVectorToMultiPoint

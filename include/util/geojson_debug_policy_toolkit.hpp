@@ -69,12 +69,12 @@ struct CoordinateToJsonArray
 
 struct NodeIdToCoordinate
 {
-    NodeIdToCoordinate(const std::vector<extractor::QueryNode> &node_coordinates)
+    NodeIdToCoordinate(const std::vector<util::Coordinate> &node_coordinates)
         : node_coordinates(node_coordinates)
     {
     }
 
-    const std::vector<extractor::QueryNode> &node_coordinates;
+    const std::vector<util::Coordinate> &node_coordinates;
 
     util::json::Array operator()(const NodeID nid)
     {
