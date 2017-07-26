@@ -11,7 +11,7 @@ namespace util
 
 //----------------------------------------------------------------
 NodeIdVectorToLineString::NodeIdVectorToLineString(
-    const std::vector<extractor::QueryNode> &node_coordinates)
+    const std::vector<util::Coordinate> &node_coordinates)
     : node_coordinates(node_coordinates)
 {
 }
@@ -32,7 +32,7 @@ operator()(const std::vector<NodeID> &node_ids,
 
 //----------------------------------------------------------------
 NodeIdVectorToMultiPoint::NodeIdVectorToMultiPoint(
-    const std::vector<extractor::QueryNode> &node_coordinates)
+    const std::vector<util::Coordinate> &node_coordinates)
     : node_coordinates(node_coordinates)
 {
 }
