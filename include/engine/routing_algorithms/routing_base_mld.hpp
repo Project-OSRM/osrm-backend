@@ -30,7 +30,8 @@ namespace
 // Unrestricted search (Args is const PhantomNodes &):
 //   * use partition.GetQueryLevel to find the node query level based on source and target phantoms
 //   * allow to traverse all cells
-inline LevelID getNodeQueryLevel(const partition::MultiLevelPartitionView &partition,
+template <typename MultiLevelPartition>
+inline LevelID getNodeQueryLevel(const MultiLevelPartition &partition,
                                  NodeID node,
                                  const PhantomNodes &phantom_nodes)
 {
@@ -54,8 +55,8 @@ inline bool checkParentCellRestriction(CellID, const PhantomNodes &) { return tr
 // Restricted search (Args is LevelID, CellID):
 //   * use the fixed level for queries
 //   * check if the node cell is the same as the specified parent onr
-inline LevelID
-getNodeQueryLevel(const partition::MultiLevelPartitionView &, NodeID, LevelID level, CellID)
+template <typename MultiLevelPartition>
+inline LevelID getNodeQueryLevel(const MultiLevelPartition &, NodeID, LevelID level, CellID)
 {
     return level;
 }
@@ -130,10 +131,10 @@ retrievePackedPathFromHeap(const SearchEngineData<Algorithm>::QueryHeap &forward
     return packed_path;
 }
 
-template <bool DIRECTION, typename... Args>
+template <bool DIRECTION, typename Algorithm, typename... Args>
 void routingStep(const DataFacade<Algorithm> &facade,
-                 SearchEngineData<Algorithm>::QueryHeap &forward_heap,
-                 SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
+                 typename SearchEngineData<Algorithm>::QueryHeap &forward_heap,
+                 typename SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
                  NodeID &middle_node,
                  EdgeWeight &path_upper_bound,
                  const bool force_loop_forward,
@@ -260,11 +261,11 @@ using UnpackedNodes = std::vector<NodeID>;
 using UnpackedEdges = std::vector<EdgeID>;
 using UnpackedPath = std::tuple<EdgeWeight, UnpackedNodes, UnpackedEdges>;
 
-template <typename... Args>
+template <typename Algorithm, typename... Args>
 UnpackedPath search(SearchEngineData<Algorithm> &engine_working_data,
                     const DataFacade<Algorithm> &facade,
-                    SearchEngineData<Algorithm>::QueryHeap &forward_heap,
-                    SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
+                    typename SearchEngineData<Algorithm>::QueryHeap &forward_heap,
+                    typename SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
                     const bool force_loop_forward,
                     const bool force_loop_reverse,
                     EdgeWeight weight_upper_bound,
@@ -389,10 +390,11 @@ UnpackedPath search(SearchEngineData<Algorithm> &engine_working_data,
 }
 
 // Alias to be compatible with the CH-based search
+template <typename Algorithm>
 inline void search(SearchEngineData<Algorithm> &engine_working_data,
                    const DataFacade<Algorithm> &facade,
-                   SearchEngineData<Algorithm>::QueryHeap &forward_heap,
-                   SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
+                   typename SearchEngineData<Algorithm>::QueryHeap &forward_heap,
+                   typename SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
                    EdgeWeight &weight,
                    std::vector<NodeID> &unpacked_nodes,
                    const bool force_loop_forward,
@@ -442,13 +444,14 @@ void unpackPath(const FacadeT &facade,
     annotatePath(facade, phantom_nodes, unpacked_nodes, unpacked_edges, unpacked_path);
 }
 
-inline double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
-                                 const DataFacade<Algorithm> &facade,
-                                 SearchEngineData<Algorithm>::QueryHeap &forward_heap,
-                                 SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
-                                 const PhantomNode &source_phantom,
-                                 const PhantomNode &target_phantom,
-                                 EdgeWeight weight_upper_bound = INVALID_EDGE_WEIGHT)
+template <typename Algorithm>
+double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
+                          const DataFacade<Algorithm> &facade,
+                          typename SearchEngineData<Algorithm>::QueryHeap &forward_heap,
+                          typename SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
+                          const PhantomNode &source_phantom,
+                          const PhantomNode &target_phantom,
+                          EdgeWeight weight_upper_bound = INVALID_EDGE_WEIGHT)
 {
     forward_heap.Clear();
     reverse_heap.Clear();
