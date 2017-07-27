@@ -23,30 +23,30 @@ class WayRestrictionMap
   public:
     struct ViaWay
     {
-        std::size_t id;
         NodeID from;
         NodeID to;
     };
     WayRestrictionMap(const std::vector<TurnRestriction> &turn_restrictions);
 
-    // check if an edge between two nodes is a restricted turn. The check needs to be performed
+    // Check if an edge between two nodes is a restricted turn. The check needs to be performed to
+    // find duplicated nodes during the creation of edge-based-edges
     bool IsViaWay(const NodeID from, const NodeID to) const;
 
-    // number of duplicated nodes
+    // Every via-way results in a duplicated node that is required in the edge-based-graph. This
+    // count is essentially the same as the number of valid via-way restrictions (except for
+    // non-only restrictions that share the same in/via combination)
     std::size_t NumberOfDuplicatedNodes() const;
 
-    // returns a representative for the duplicated way, consisting of the representative ID (first
+    // Returns a representative for each duplicated node, consisting of the representative ID (first
     // ID of the nodes restrictions) and the from/to vertices of the via-way
     // This is used to construct edge based nodes that act as intermediate nodes.
     std::vector<ViaWay> DuplicatedNodeRepresentatives() const;
 
     // Access all duplicated NodeIDs for a set of nodes indicating a via way
-    util::range<std::size_t> DuplicatedNodeIDs(const NodeID from, const NodeID to) const;
+    util::range<DuplicatedNodeID> DuplicatedNodeIDs(const NodeID from, const NodeID to) const;
 
     // check whether a turn onto a given node is restricted, when coming from a duplicated node
-    bool IsRestricted(std::size_t duplicated_node, const NodeID to) const;
-
-    TurnRestriction const &GetRestriction(std::size_t) const;
+    bool IsRestricted(DuplicatedNodeID duplicated_node, const NodeID to) const;
 
     // changes edge_based_node to the correct duplicated_node_id in case node_based_from,
     // node_based_via, node_based_to can be identified with a restriction group
@@ -57,7 +57,7 @@ class WayRestrictionMap
                              const NodeID number_of_edge_based_nodes) const;
 
   private:
-    std::size_t AsDuplicatedNodeID(const std::size_t restriction_id) const;
+    DuplicatedNodeID AsDuplicatedNodeID(const RestrictionID restriction_id) const;
 
     // access all restrictions that have the same starting way and via way. Any duplicated node
     // represents the same in-way + via-way combination. This vector contains data about all
@@ -75,10 +75,10 @@ class WayRestrictionMap
     //
     //                    EBN: 0 . | 2 | 3 | 4 ...
     // duplicated node groups: ... | 5 | 7 | ...
-    std::vector<std::size_t> duplicated_node_groups;
+    std::vector<DuplicatedNodeID> duplicated_node_groups;
 
-    boost::unordered_multimap<std::pair<NodeID, NodeID>, std::size_t> restriction_starts;
-    boost::unordered_multimap<std::pair<NodeID, NodeID>, std::size_t> restriction_ends;
+    boost::unordered_multimap<std::pair<NodeID, NodeID>, RestrictionID> restriction_starts;
+    boost::unordered_multimap<std::pair<NodeID, NodeID>, RestrictionID> restriction_ends;
 
     std::vector<TurnRestriction> restriction_data;
 };

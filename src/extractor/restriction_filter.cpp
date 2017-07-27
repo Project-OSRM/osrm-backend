@@ -78,8 +78,9 @@ removeInvalidRestrictions(std::vector<TurnRestriction> restrictions,
         }
     };
 
-    restrictions.erase(std::remove_if(restrictions.begin(), restrictions.end(), is_invalid),
-                       restrictions.end());
+    const auto end_valid_restrictions =
+        std::remove_if(restrictions.begin(), restrictions.end(), is_invalid);
+    restrictions.erase(end_valid_restrictions, restrictions.end());
 
     return restrictions;
 }

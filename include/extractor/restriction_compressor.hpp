@@ -32,12 +32,12 @@ class RestrictionCompressor
     void Compress(const NodeID from, const NodeID via, const NodeID to);
 
   private:
-    // a turn restriction is given as `from head via node to tail`. Edges ending at `head` being
+    // a turn restriction is given as `from star via node to end`. Edges ending at `head` being
     // contracted move the head pointer to their respective head. Edges starting at tail move the
     // tail values to their respective tails. Way turn restrictions are represented by two
     // node-restrictions, so we can focus on them alone
-    boost::unordered_multimap<NodeID, NodeRestriction *> heads;
-    boost::unordered_multimap<NodeID, NodeRestriction *> tails;
+    boost::unordered_multimap<NodeID, NodeRestriction *> starts;
+    boost::unordered_multimap<NodeID, NodeRestriction *> ends;
 };
 
 } // namespace extractor

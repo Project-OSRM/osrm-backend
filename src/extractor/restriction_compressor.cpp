@@ -12,13 +12,13 @@ namespace extractor
 
 RestrictionCompressor::RestrictionCompressor(std::vector<TurnRestriction> &restrictions)
 {
-    // add a node restriction ptr to the heads/tails maps, needs to be a reference!
+    // add a node restriction ptr to the starts/ends maps, needs to be a reference!
     auto index = [&](auto &element) {
-        heads.insert(std::make_pair(element.from, &element));
-        tails.insert(std::make_pair(element.to, &element));
+        starts.insert(std::make_pair(element.from, &element));
+        ends.insert(std::make_pair(element.to, &element));
     };
     // !needs to be reference, so we can get the correct address
-    const auto index_heads_and_tails = [&](auto &restriction) {
+    const auto index_starts_and_ends = [&](auto &restriction) {
         if (restriction.Type() == RestrictionType::WAY_RESTRICTION)
         {
             auto &way_restriction = restriction.AsWayRestriction();
@@ -33,21 +33,21 @@ RestrictionCompressor::RestrictionCompressor(std::vector<TurnRestriction> &restr
         }
     };
 
-    // add all restrictions as their respective head-tail pointers
-    std::for_each(restrictions.begin(), restrictions.end(), index_heads_and_tails);
+    // add all restrictions as their respective startend pointers
+    std::for_each(restrictions.begin(), restrictions.end(), index_starts_and_ends);
 }
 
 void RestrictionCompressor::Compress(const NodeID from, const NodeID via, const NodeID to)
 {
-    const auto get_value = [](const auto pair) { return pair.second; };
+    // extract all startptrs and move them from via to from.
+    auto all_starts_range = starts.equal_range(via);
+    std::vector<NodeRestriction *> start_ptrs;
+    std::transform(all_starts_range.first,
+                   all_starts_range.second,
+                   std::back_inserter(start_ptrs),
+                   [](const auto pair) { return pair.second; });
 
-    // extract all head ptrs and move them from via to from.
-    auto all_heads_range = heads.equal_range(via);
-    std::vector<NodeRestriction *> head_ptrs;
-    std::transform(
-        all_heads_range.first, all_heads_range.second, std::back_inserter(head_ptrs), get_value);
-
-    const auto update_head = [&](auto ptr) {
+    const auto update_start = [&](auto ptr) {
         // ____ | from - p.from | via - p.via | to - p.to | ____
         BOOST_ASSERT(ptr->from == via);
         if (ptr->via == to)
@@ -62,21 +62,23 @@ void RestrictionCompressor::Compress(const NodeID from, const NodeID via, const 
         }
     };
 
-    std::for_each(head_ptrs.begin(), head_ptrs.end(), update_head);
-
-    const auto reinsert_head = [&](auto ptr) { heads.insert(std::make_pair(ptr->from, ptr)); };
+    std::for_each(start_ptrs.begin(), start_ptrs.end(), update_start);
 
     // update the ptrs in our mapping
-    heads.erase(via);
-    std::for_each(head_ptrs.begin(), head_ptrs.end(), reinsert_head);
+    starts.erase(via);
 
-    // extract all tail ptrs and move them from via to to
-    auto all_tails_range = tails.equal_range(via);
-    std::vector<NodeRestriction *> tail_ptrs;
-    std::transform(
-        all_tails_range.first, all_tails_range.second, std::back_inserter(tail_ptrs), get_value);
+    const auto reinsert_start = [&](auto ptr) { starts.insert(std::make_pair(ptr->from, ptr)); };
+    std::for_each(start_ptrs.begin(), start_ptrs.end(), reinsert_start);
 
-    const auto update_tail = [&](auto ptr) {
+    // extract all end ptrs and move them from via to to
+    auto all_ends_range = ends.equal_range(via);
+    std::vector<NodeRestriction *> end_ptrs;
+    std::transform(all_ends_range.first,
+                   all_ends_range.second,
+                   std::back_inserter(end_ptrs),
+                   [](const auto pair) { return pair.second; });
+
+    const auto update_end = [&](auto ptr) {
         BOOST_ASSERT(ptr->to == via);
         // p.from | ____ - p.via | from - p.to | via - ____ | to
         if (ptr->via == from)
@@ -90,14 +92,13 @@ void RestrictionCompressor::Compress(const NodeID from, const NodeID via, const 
             ptr->to = from;
         }
     };
+    std::for_each(end_ptrs.begin(), end_ptrs.end(), update_end);
 
-    const auto reinsert_tail = [&](auto ptr) { tails.insert(std::make_pair(ptr->to, ptr)); };
+    // update end ptrs in mapping
+    ends.erase(via);
 
-    std::for_each(tail_ptrs.begin(), tail_ptrs.end(), update_tail);
-
-    // update tail ptrs in mapping
-    tails.erase(via);
-    std::for_each(tail_ptrs.begin(), tail_ptrs.end(), reinsert_tail);
+    const auto reinsert_end = [&](auto ptr) { ends.insert(std::make_pair(ptr->to, ptr)); };
+    std::for_each(end_ptrs.begin(), end_ptrs.end(), reinsert_end);
 }
 
 } // namespace extractor
