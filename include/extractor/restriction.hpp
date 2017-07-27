@@ -5,7 +5,7 @@
 #include "util/opening_hours.hpp"
 #include "util/typedefs.hpp"
 
-#include <boost/variant.hpp>
+#include "mapbox/variant.hpp"
 #include <limits>
 
 namespace osrm
@@ -55,21 +55,21 @@ enum RestrictionType
 struct InputTurnRestriction
 {
     // keep in the same order as the turn restrictions below
-    boost::variant<InputNodeRestriction, InputWayRestriction> node_or_way;
+    mapbox::util::variant<InputNodeRestriction, InputWayRestriction> node_or_way;
     bool is_only;
 
     OSMWayID From() const
     {
         return node_or_way.which() == RestrictionType::NODE_RESTRICTION
-                   ? boost::get<InputNodeRestriction>(node_or_way).from
-                   : boost::get<InputWayRestriction>(node_or_way).from;
+                   ? mapbox::util::get<InputNodeRestriction>(node_or_way).from
+                   : mapbox::util::get<InputWayRestriction>(node_or_way).from;
     }
 
     OSMWayID To() const
     {
         return node_or_way.which() == RestrictionType::NODE_RESTRICTION
-                   ? boost::get<InputNodeRestriction>(node_or_way).to
-                   : boost::get<InputWayRestriction>(node_or_way).to;
+                   ? mapbox::util::get<InputNodeRestriction>(node_or_way).to
+                   : mapbox::util::get<InputWayRestriction>(node_or_way).to;
     }
 
     RestrictionType Type() const
@@ -81,25 +81,25 @@ struct InputTurnRestriction
     InputWayRestriction &AsWayRestriction()
     {
         BOOST_ASSERT(node_or_way.which() == RestrictionType::WAY_RESTRICTION);
-        return boost::get<InputWayRestriction>(node_or_way);
+        return mapbox::util::get<InputWayRestriction>(node_or_way);
     }
 
     const InputWayRestriction &AsWayRestriction() const
     {
         BOOST_ASSERT(node_or_way.which() == RestrictionType::WAY_RESTRICTION);
-        return boost::get<InputWayRestriction>(node_or_way);
+        return mapbox::util::get<InputWayRestriction>(node_or_way);
     }
 
     InputNodeRestriction &AsNodeRestriction()
     {
         BOOST_ASSERT(node_or_way.which() == RestrictionType::NODE_RESTRICTION);
-        return boost::get<InputNodeRestriction>(node_or_way);
+        return mapbox::util::get<InputNodeRestriction>(node_or_way);
     }
 
     const InputNodeRestriction &AsNodeRestriction() const
     {
         BOOST_ASSERT(node_or_way.which() == RestrictionType::NODE_RESTRICTION);
-        return boost::get<InputNodeRestriction>(node_or_way);
+        return mapbox::util::get<InputNodeRestriction>(node_or_way);
     }
 };
 struct InputConditionalTurnRestriction : InputTurnRestriction
@@ -120,12 +120,6 @@ struct NodeRestriction
     {
         return from != SPECIAL_NODEID && to != SPECIAL_NODEID && via != SPECIAL_NODEID;
     };
-
-    std::string ToString() const
-    {
-        return "From " + std::to_string(from) + " via " + std::to_string(via) + " to " +
-               std::to_string(to);
-    }
 
     bool operator==(const NodeRestriction &other) const
     {
@@ -168,7 +162,7 @@ struct WayRestriction
 struct TurnRestriction
 {
     // keep in the same order as the turn restrictions above
-    boost::variant<NodeRestriction, WayRestriction> node_or_way;
+    mapbox::util::variant<NodeRestriction, WayRestriction> node_or_way;
     bool is_only;
 
     // construction for NodeRestrictions
@@ -191,25 +185,25 @@ struct TurnRestriction
     WayRestriction &AsWayRestriction()
     {
         BOOST_ASSERT(node_or_way.which() == RestrictionType::WAY_RESTRICTION);
-        return boost::get<WayRestriction>(node_or_way);
+        return mapbox::util::get<WayRestriction>(node_or_way);
     }
 
     const WayRestriction &AsWayRestriction() const
     {
         BOOST_ASSERT(node_or_way.which() == RestrictionType::WAY_RESTRICTION);
-        return boost::get<WayRestriction>(node_or_way);
+        return mapbox::util::get<WayRestriction>(node_or_way);
     }
 
     NodeRestriction &AsNodeRestriction()
     {
         BOOST_ASSERT(node_or_way.which() == RestrictionType::NODE_RESTRICTION);
-        return boost::get<NodeRestriction>(node_or_way);
+        return mapbox::util::get<NodeRestriction>(node_or_way);
     }
 
     const NodeRestriction &AsNodeRestriction() const
     {
         BOOST_ASSERT(node_or_way.which() == RestrictionType::NODE_RESTRICTION);
-        return boost::get<NodeRestriction>(node_or_way);
+        return mapbox::util::get<NodeRestriction>(node_or_way);
     }
 
     RestrictionType Type() const
@@ -249,24 +243,6 @@ struct TurnRestriction
         {
             return AsNodeRestriction() == other.AsNodeRestriction();
         }
-    }
-
-    std::string ToString() const
-    {
-        std::string representation;
-        if (node_or_way.which() == RestrictionType::WAY_RESTRICTION)
-        {
-            auto const &way = AsWayRestriction();
-            representation =
-                "In: " + way.in_restriction.ToString() + " Out: " + way.out_restriction.ToString();
-        }
-        else
-        {
-            auto const &node = AsNodeRestriction();
-            representation = node.ToString();
-        }
-        representation += " is_only: " + std::to_string(is_only);
-        return representation;
     }
 };
 

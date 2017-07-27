@@ -639,6 +639,8 @@ Feature: Car - Turn restrictions
                 |   | \                                     /
                 i - d - e - - - - - - - - - - - - - - - - -
             """
+        # The long distances here are required to make other turns undesriable in comparison to the restricted turns.
+        # Otherwise they might just be picked without the actual turns being restricted
 
         And the ways
             | nodes | oneway |

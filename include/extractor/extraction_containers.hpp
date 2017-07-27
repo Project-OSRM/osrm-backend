@@ -51,7 +51,10 @@ class ExtractionContainers
 
     unsigned max_internal_node_id;
 
-    // list of restrictions before we transform them into the output types
+    // list of restrictions before we transform them into the output types. Input containers
+    // reference OSMNodeIDs. We can only transform them to the correct internal IDs after we've read
+    // everything. Without a multi-parse approach, we have to remember the output restrictions
+    // before converting them to the internal formats
     std::vector<InputConditionalTurnRestriction> restrictions_list;
 
     // turn restrictions split into conditional and unconditional turn restrictions

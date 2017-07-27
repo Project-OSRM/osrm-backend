@@ -186,18 +186,18 @@ inline void write(storage::io::FileWriter &writer, const TurnRestriction &restri
     writer.WriteOne(restriction.is_only);
     if (restriction.Type() == RestrictionType::WAY_RESTRICTION)
     {
-        write(writer, boost::get<WayRestriction>(restriction.node_or_way));
+        write(writer, mapbox::util::get<WayRestriction>(restriction.node_or_way));
     }
     else
     {
         BOOST_ASSERT(restriction.Type() == RestrictionType::NODE_RESTRICTION);
-        write(writer, boost::get<NodeRestriction>(restriction.node_or_way));
+        write(writer, mapbox::util::get<NodeRestriction>(restriction.node_or_way));
     }
 }
 
 inline void write(storage::io::FileWriter &writer, const ConditionalTurnRestriction &restriction)
 {
-    write(writer, static_cast<TurnRestriction>(restriction));
+    write(writer, static_cast<const TurnRestriction &>(restriction));
     writer.WriteElementCount64(restriction.condition.size());
     for (const auto &c : restriction.condition)
     {
@@ -210,9 +210,7 @@ inline void write(storage::io::FileWriter &writer, const ConditionalTurnRestrict
 
 inline void read(storage::io::FileReader &reader, ConditionalTurnRestriction &restriction)
 {
-    TurnRestriction base;
-    read(reader, base);
-    reinterpret_cast<TurnRestriction &>(restriction) = std::move(base);
+    read(reader, static_cast<TurnRestriction &>(restriction));
     const auto num_conditions = reader.ReadElementCount64();
     restriction.condition.resize(num_conditions);
     for (uint64_t i = 0; i < num_conditions; i++)

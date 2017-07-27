@@ -660,41 +660,44 @@ void ExtractionContainers::PrepareRestrictions()
     // contain the start/end nodes of each way that is part of an restriction
     std::unordered_map<OSMWayID, FirstAndLastSegmentOfWay> referenced_ways;
 
-    // enter invalid IDs into the above maps to indicate that we want to find out about start/end
-    // nodes of these ways
-    const auto mark_ids = [&](auto const &turn_restriction) {
-        FirstAndLastSegmentOfWay dummy_segment{
-            MAX_OSM_WAYID, MAX_OSM_NODEID, MAX_OSM_NODEID, MAX_OSM_NODEID, MAX_OSM_NODEID};
-        if (turn_restriction.Type() == RestrictionType::WAY_RESTRICTION)
-        {
-            const auto &way = turn_restriction.AsWayRestriction();
-            referenced_ways[way.from] = dummy_segment;
-            referenced_ways[way.to] = dummy_segment;
-            referenced_ways[way.via] = dummy_segment;
-        }
-        else
-        {
-            BOOST_ASSERT(turn_restriction.Type() == RestrictionType::NODE_RESTRICTION);
-            const auto &node = turn_restriction.AsNodeRestriction();
-            referenced_ways[node.from] = dummy_segment;
-            referenced_ways[node.to] = dummy_segment;
-        }
-    };
-
-    // update the values for all edges already sporting SPECIAL_NODEID
-    const auto set_ids = [&](auto const &start_end) {
-        auto itr = referenced_ways.find(start_end.way_id);
-        if (itr != referenced_ways.end())
-            itr->second = start_end;
-    };
-
     // prepare for extracting source/destination nodes for all restrictions
     {
         util::UnbufferedLog log;
         log << "Collecting start/end information on " << restrictions_list.size()
             << " restrictions...";
         TIMER_START(prepare_restrictions);
+
+        const auto mark_ids = [&](auto const &turn_restriction) {
+            FirstAndLastSegmentOfWay dummy_segment{
+                MAX_OSM_WAYID, MAX_OSM_NODEID, MAX_OSM_NODEID, MAX_OSM_NODEID, MAX_OSM_NODEID};
+            if (turn_restriction.Type() == RestrictionType::WAY_RESTRICTION)
+            {
+                const auto &way = turn_restriction.AsWayRestriction();
+                referenced_ways[way.from] = dummy_segment;
+                referenced_ways[way.to] = dummy_segment;
+                referenced_ways[way.via] = dummy_segment;
+            }
+            else
+            {
+                BOOST_ASSERT(turn_restriction.Type() == RestrictionType::NODE_RESTRICTION);
+                const auto &node = turn_restriction.AsNodeRestriction();
+                referenced_ways[node.from] = dummy_segment;
+                referenced_ways[node.to] = dummy_segment;
+            }
+        };
+
         std::for_each(restrictions_list.begin(), restrictions_list.end(), mark_ids);
+
+        // enter invalid IDs into the above maps to indicate that we want to find out about
+        // start/end
+        // nodes of these ways
+        // update the values for all edges already sporting SPECIAL_NODEID
+        const auto set_ids = [&](auto const &start_end) {
+            auto itr = referenced_ways.find(start_end.way_id);
+            if (itr != referenced_ways.end())
+                itr->second = start_end;
+        };
+
         std::for_each(way_start_end_id_list.cbegin(), way_start_end_id_list.cend(), set_ids);
         TIMER_STOP(prepare_restrictions);
         log << "ok, after " << TIMER_SEC(prepare_restrictions) << "s";
@@ -710,8 +713,6 @@ void ExtractionContainers::PrepareRestrictions()
         return internal;
     };
 
-    // Given:
-    // a -- b - ????????? - c -- d
     // Given
     // a -- b - ????????? - c -- d as via segment
     // and either
@@ -720,6 +721,8 @@ void ExtractionContainers::PrepareRestrictions()
     // (d,e) or (j,a) as entry-segment
     auto const find_node_restriction =
         [&](auto const &segment, auto const &via_segment, auto const via_node) {
+            // In case of way-restrictions, via-node will be set to MAX_OSM_NODEID to signal that
+            // the node is not present.
             // connected at the front of the segment
             if (via_node == MAX_OSM_NODEID || segment.first_segment_source_id == via_node)
             {
@@ -779,8 +782,10 @@ void ExtractionContainers::PrepareRestrictions()
         return find_node_restriction(from_segment_itr->second, to_segment_itr->second, via_node);
     };
 
-    // transform an OSMRestriction (based on WayIDs) into an OSRM restriction (base on NodeIDs)
-    // returns true on successful transformation, false in case of invalid references
+    // Transform an OSMRestriction (based on WayIDs) into an OSRM restriction (base on NodeIDs).
+    // Returns true on successful transformation, false in case of invalid references.
+    // Based on the auto type deduction, this transfor handles both conditional and unconditional
+    // turn restrictions.
     const auto transform = [&](const auto &external_type, auto &internal_type) {
         if (external_type.Type() == RestrictionType::WAY_RESTRICTION)
         {
@@ -837,7 +842,7 @@ void ExtractionContainers::PrepareRestrictions()
                 TurnRestriction restriction;
                 restriction.is_only = external_restriction.is_only;
                 if (transform(external_restriction, restriction))
-                    unconditional_turn_restrictions.push_back(restriction);
+                    unconditional_turn_restrictions.push_back(std::move(restriction));
             }
             // conditional turn restriction
             else
@@ -846,7 +851,7 @@ void ExtractionContainers::PrepareRestrictions()
                 restriction.is_only = external_restriction.is_only;
                 restriction.condition = std::move(external_restriction.condition);
                 if (transform(external_restriction, restriction))
-                    conditional_turn_restrictions.push_back(restriction);
+                    conditional_turn_restrictions.push_back(std::move(restriction));
             }
         };
 

@@ -92,7 +92,7 @@ class EdgeBasedGraphFactory
              const std::string &turn_duration_penalties_filename,
              const std::string &turn_penalties_index_filename,
              const std::string &cnbg_ebg_mapping_path,
-             const RestrictionMap &restriction_map,
+             const RestrictionMap &node_restriction_map,
              const WayRestrictionMap &way_restriction_map);
 
     // The following get access functions destroy the content in the factory
@@ -137,9 +137,11 @@ class EdgeBasedGraphFactory
     EdgeBasedNodeDataContainer m_edge_based_node_container;
     util::DeallocatingVector<EdgeBasedEdge> m_edge_based_edge_list;
 
-    // the number of edge-based nodes is mostly made up out of the edges in the node-based graph.
+    // The number of edge-based nodes is mostly made up out of the edges in the node-based graph.
     // Any edge in the node-based graph represents a node in the edge-based graph. In addition, we
     // add a set of artificial edge-based nodes into the mix to model via-way turn restrictions.
+    // See https://github.com/Project-OSRM/osrm-backend/issues/2681#issuecomment-313080353 for
+    // reference
     std::uint64_t m_number_of_edge_based_nodes;
 
     const std::vector<util::Coordinate> &m_coordinates;
@@ -157,15 +159,21 @@ class EdgeBasedGraphFactory
 
     unsigned RenumberEdges();
 
+    // During the generation of the edge-expanded nodes, we need to also generate duplicates that
+    // represent state during via-way restrictions (see
+    // https://github.com/Project-OSRM/osrm-backend/issues/2681#issuecomment-313080353). Access to
+    // the information on what to duplicate and how is provided via the way_restriction_map
     std::vector<NBGToEBG> GenerateEdgeExpandedNodes(const WayRestrictionMap &way_restriction_map);
 
+    // Edge-expanded edges are generate for all valid turns. The validity can be checked via the
+    // restriction maps
     void GenerateEdgeExpandedEdges(ScriptingEnvironment &scripting_environment,
                                    const std::string &original_edge_data_filename,
                                    const std::string &turn_lane_data_filename,
                                    const std::string &turn_weight_penalties_filename,
                                    const std::string &turn_duration_penalties_filename,
                                    const std::string &turn_penalties_index_filename,
-                                   const RestrictionMap &restriction_map,
+                                   const RestrictionMap &node_restriction_map,
                                    const WayRestrictionMap &way_restriction_map);
 
     NBGToEBG InsertEdgeBasedNode(const NodeID u, const NodeID v);

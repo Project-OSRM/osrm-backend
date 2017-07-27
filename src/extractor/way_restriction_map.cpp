@@ -1,4 +1,5 @@
 #include "extractor/way_restriction_map.hpp"
+#include "util/for_each_pair.hpp"
 
 #include <iterator>
 #include <tuple>
@@ -45,12 +46,10 @@ WayRestrictionMap::WayRestrictionMap(const std::vector<TurnRestriction> &turn_re
     };
     std::for_each(turn_restrictions.begin(), turn_restrictions.end(), extract_restrictions);
 
-    const auto as_duplicated_node =
-        [](auto const &restriction) -> std::tuple<NodeID, NodeID, NodeID> {
+    const auto as_duplicated_node = [](auto const &restriction) {
         auto &way = restriction.AsWayRestriction();
         // group restrictions by the via-way. On same via-ways group by from
-        return std::make_tuple(
-            way.in_restriction.via, way.out_restriction.via, way.in_restriction.from);
+        return std::tie(way.in_restriction.via, way.out_restriction.via, way.in_restriction.from);
     };
 
     const auto by_duplicated_node = [&](auto const &lhs, auto const &rhs) {
@@ -59,16 +58,14 @@ WayRestrictionMap::WayRestrictionMap(const std::vector<TurnRestriction> &turn_re
 
     std::sort(restriction_data.begin(), restriction_data.end(), by_duplicated_node);
 
-    std::size_t index = 0, duplication_id = 0;
     // map all way restrictions into access containers
-    const auto prepare_way_restriction = [this, &index, &duplication_id, as_duplicated_node](
-        const auto &restriction) {
+    for (RestrictionID index = 0; index < restriction_data.size(); ++index)
+    {
+        const auto &restriction = restriction_data[index];
         const auto &way = restriction.AsWayRestriction();
         restriction_starts.insert(
             std::make_pair(std::make_pair(way.in_restriction.from, way.in_restriction.via), index));
-        ++index;
     };
-    std::for_each(restriction_data.begin(), restriction_data.end(), prepare_way_restriction);
 
     std::size_t offset = 1;
     // the first group starts at 0
@@ -81,9 +78,8 @@ WayRestrictionMap::WayRestrictionMap(const std::vector<TurnRestriction> &turn_re
         if (as_duplicated_node(lhs) != as_duplicated_node(rhs))
             duplicated_node_groups.push_back(offset);
         ++offset;
-        return false; // continue until the end
     };
-    std::adjacent_find(restriction_data.begin(), restriction_data.end(), add_offset_on_new_groups);
+    util::for_each_pair(restriction_data.begin(), restriction_data.end(), add_offset_on_new_groups);
     duplicated_node_groups.push_back(restriction_data.size());
 }
 
@@ -110,17 +106,17 @@ bool WayRestrictionMap::IsViaWay(const NodeID from, const NodeID to) const
     return way.out_restriction.from == from && way.out_restriction.via == to;
 }
 
-std::size_t WayRestrictionMap::AsDuplicatedNodeID(const std::size_t restriction_id) const
+DuplicatedNodeID WayRestrictionMap::AsDuplicatedNodeID(const RestrictionID restriction_id) const
 {
-    return std::distance(duplicated_node_groups.begin(),
-                         std::upper_bound(duplicated_node_groups.begin(),
-                                          duplicated_node_groups.end(),
-                                          restriction_id)) -
-           1;
+    const auto upper_bound_restriction = std::upper_bound(
+        duplicated_node_groups.begin(), duplicated_node_groups.end(), restriction_id);
+    const auto distance_to_upper_bound =
+        std::distance(duplicated_node_groups.begin(), upper_bound_restriction);
+    return distance_to_upper_bound - 1;
 }
 
-util::range<std::size_t> WayRestrictionMap::DuplicatedNodeIDs(const NodeID from,
-                                                              const NodeID to) const
+util::range<DuplicatedNodeID> WayRestrictionMap::DuplicatedNodeIDs(const NodeID from,
+                                                                   const NodeID to) const
 {
     const auto duplicated_node_range_itr = std::equal_range(
         restriction_data.begin(), restriction_data.end(), std::make_tuple(from, to), FindViaWay());
@@ -129,16 +125,16 @@ util::range<std::size_t> WayRestrictionMap::DuplicatedNodeIDs(const NodeID from,
         return std::distance(restriction_data.begin(), itr);
     };
 
-    return util::irange<std::size_t>(
+    return util::irange<DuplicatedNodeID>(
         AsDuplicatedNodeID(as_restriction_id(duplicated_node_range_itr.first)),
         AsDuplicatedNodeID(as_restriction_id(duplicated_node_range_itr.second)));
 }
 
-bool WayRestrictionMap::IsRestricted(std::size_t duplicated_node, const NodeID to) const
+bool WayRestrictionMap::IsRestricted(DuplicatedNodeID duplicated_node, const NodeID to) const
 {
     // loop over all restrictions associated with the node. Mark as restricted based on
     // is_only/restricted targets
-    for (std::size_t restriction_index = duplicated_node_groups[duplicated_node];
+    for (RestrictionID restriction_index = duplicated_node_groups[duplicated_node];
          restriction_index != duplicated_node_groups[duplicated_node + 1];
          ++restriction_index)
     {
@@ -153,11 +149,6 @@ bool WayRestrictionMap::IsRestricted(std::size_t duplicated_node, const NodeID t
     return false;
 }
 
-TurnRestriction const &WayRestrictionMap::GetRestriction(const std::size_t id) const
-{
-    return restriction_data[id];
-}
-
 std::vector<WayRestrictionMap::ViaWay> WayRestrictionMap::DuplicatedNodeRepresentatives() const
 {
     std::vector<ViaWay> result;
@@ -167,7 +158,7 @@ std::vector<WayRestrictionMap::ViaWay> WayRestrictionMap::DuplicatedNodeRepresen
                    std::back_inserter(result),
                    [&](auto const representative_id) -> ViaWay {
                        auto &way = restriction_data[representative_id].AsWayRestriction();
-                       return {representative_id, way.in_restriction.via, way.out_restriction.via};
+                       return {way.in_restriction.via, way.out_restriction.via};
                    });
     return result;
 }
