@@ -480,10 +480,17 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
                 data_layout.num_entries[storage::DataLayout::GEOMETRIES_REV_DURATION_LIST]),
             num_entries);
 
-        auto datasources_list_ptr = data_layout.GetBlockPtr<DatasourceID>(
-            memory_block, storage::DataLayout::DATASOURCES_LIST);
-        util::vector_view<DatasourceID> datasources_list(
-            datasources_list_ptr, data_layout.num_entries[storage::DataLayout::DATASOURCES_LIST]);
+        auto geometries_fwd_datasources_list_ptr = data_layout.GetBlockPtr<DatasourceID>(
+            memory_block, storage::DataLayout::GEOMETRIES_FWD_DATASOURCES_LIST);
+        util::vector_view<DatasourceID> geometry_fwd_datasources_list(
+            geometries_fwd_datasources_list_ptr,
+            data_layout.num_entries[storage::DataLayout::GEOMETRIES_FWD_DATASOURCES_LIST]);
+
+        auto geometries_rev_datasources_list_ptr = data_layout.GetBlockPtr<DatasourceID>(
+            memory_block, storage::DataLayout::GEOMETRIES_REV_DATASOURCES_LIST);
+        util::vector_view<DatasourceID> geometry_rev_datasources_list(
+            geometries_rev_datasources_list_ptr,
+            data_layout.num_entries[storage::DataLayout::GEOMETRIES_REV_DATASOURCES_LIST]);
 
         segment_data = extractor::SegmentDataView{std::move(geometry_begin_indices),
                                                   std::move(geometry_node_list),
@@ -491,7 +498,8 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
                                                   std::move(geometry_rev_weight_list),
                                                   std::move(geometry_fwd_duration_list),
                                                   std::move(geometry_rev_duration_list),
-                                                  std::move(datasources_list)};
+                                                  std::move(geometry_fwd_datasources_list),
+                                                  std::move(geometry_rev_datasources_list)};
 
         m_datasources = data_layout.GetBlockPtr<extractor::Datasources>(
             memory_block, storage::DataLayout::DATASOURCES_NAMES);

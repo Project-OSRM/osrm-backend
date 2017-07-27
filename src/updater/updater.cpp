@@ -320,7 +320,7 @@ updateSegmentData(const UpdaterConfig &config,
             auto new_fwd_datasources_range = segment_data.GetForwardDatasources(geometry_id);
             auto new_rev_durations_range =
                 boost::adaptors::reverse(segment_data.GetReverseDurations(geometry_id));
-            auto new_rev_datasources_range = segment_data.GetForwardDatasources(geometry_id);
+            auto new_rev_datasources_range = segment_data.GetReverseDatasources(geometry_id);
             auto old_fwd_durations_range = segment_data_backup->GetForwardDurations(geometry_id);
             auto old_rev_durations_range =
                 boost::adaptors::reverse(segment_data_backup->GetReverseDurations(geometry_id));

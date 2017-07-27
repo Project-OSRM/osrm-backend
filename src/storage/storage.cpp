@@ -383,7 +383,9 @@ void Storage::PopulateLayout(DataLayout &layout)
             DataLayout::GEOMETRIES_FWD_DURATION_LIST, number_of_segment_duration_blocks);
         layout.SetBlockSize<extractor::SegmentDataView::SegmentDurationVector::block_type>(
             DataLayout::GEOMETRIES_REV_DURATION_LIST, number_of_segment_duration_blocks);
-        layout.SetBlockSize<DatasourceID>(DataLayout::DATASOURCES_LIST,
+        layout.SetBlockSize<DatasourceID>(DataLayout::GEOMETRIES_FWD_DATASOURCES_LIST,
+                                          number_of_compressed_geometries);
+        layout.SetBlockSize<DatasourceID>(DataLayout::GEOMETRIES_REV_DATASOURCES_LIST,
                                           number_of_compressed_geometries);
     }
 
@@ -720,10 +722,17 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
                 layout.num_entries[storage::DataLayout::GEOMETRIES_REV_DURATION_LIST]),
             num_entries);
 
-        auto datasources_list_ptr = layout.GetBlockPtr<DatasourceID, true>(
-            memory_ptr, storage::DataLayout::DATASOURCES_LIST);
-        util::vector_view<DatasourceID> datasources_list(
-            datasources_list_ptr, layout.num_entries[storage::DataLayout::DATASOURCES_LIST]);
+        auto geometries_fwd_datasources_list_ptr = layout.GetBlockPtr<DatasourceID, true>(
+            memory_ptr, storage::DataLayout::GEOMETRIES_FWD_DATASOURCES_LIST);
+        util::vector_view<DatasourceID> geometry_fwd_datasources_list(
+            geometries_fwd_datasources_list_ptr,
+            layout.num_entries[storage::DataLayout::GEOMETRIES_FWD_DATASOURCES_LIST]);
+
+        auto geometries_rev_datasources_list_ptr = layout.GetBlockPtr<DatasourceID, true>(
+            memory_ptr, storage::DataLayout::GEOMETRIES_REV_DATASOURCES_LIST);
+        util::vector_view<DatasourceID> geometry_rev_datasources_list(
+            geometries_rev_datasources_list_ptr,
+            layout.num_entries[storage::DataLayout::GEOMETRIES_REV_DATASOURCES_LIST]);
 
         extractor::SegmentDataView segment_data{std::move(geometry_begin_indices),
                                                 std::move(geometry_node_list),
@@ -731,7 +740,8 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
                                                 std::move(geometry_rev_weight_list),
                                                 std::move(geometry_fwd_duration_list),
                                                 std::move(geometry_rev_duration_list),
-                                                std::move(datasources_list)};
+                                                std::move(geometry_fwd_datasources_list),
+                                                std::move(geometry_rev_datasources_list)};
 
         extractor::files::readSegmentData(config.GetPath(".osrm.geometry"), segment_data);
     }
