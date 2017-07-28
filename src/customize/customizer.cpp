@@ -1,5 +1,7 @@
-#include "customizer/customizer.hpp"
+#include "extractor/node_data_container.hpp"
+
 #include "customizer/cell_customizer.hpp"
+#include "customizer/customizer.hpp"
 #include "customizer/edge_based_graph.hpp"
 #include "customizer/files.hpp"
 
@@ -85,14 +87,48 @@ auto LoadAndUpdateEdgeExpandedGraph(const CustomizationConfig &config,
     auto directed = partition::splitBidirectionalEdges(edge_based_edge_list);
     auto tidied =
         partition::prepareEdgesForUsageInGraph<StaticEdgeBasedGraphEdge>(std::move(directed));
-    auto edge_based_graph =
-        std::make_unique<customizer::MultiLevelEdgeBasedGraph>(mlp, num_nodes, std::move(tidied));
-
-    util::Log() << "Loaded edge based graph for mapping partition ids: "
-                << edge_based_graph->GetNumberOfEdges() << " edges, "
-                << edge_based_graph->GetNumberOfNodes() << " nodes";
+    auto edge_based_graph = customizer::MultiLevelEdgeBasedGraph(mlp, num_nodes, std::move(tidied));
 
     return edge_based_graph;
+}
+
+std::vector<std::vector<bool>>
+avoidFlagsToNodeFilter(const MultiLevelEdgeBasedGraph &graph,
+                       const extractor::EdgeBasedNodeDataContainer &node_data,
+                       const extractor::ProfileProperties &properties)
+{
+    std::vector<std::vector<bool>> filters;
+    for (auto mask : properties.avoidable_classes)
+    {
+        if (mask != extractor::INAVLID_CLASS_DATA)
+        {
+            std::vector<bool> allowed_nodes(true, graph.GetNumberOfNodes());
+            for (const auto node : util::irange<NodeID>(0, graph.GetNumberOfNodes()))
+            {
+                allowed_nodes[node] = (node_data.GetClassData(node) & mask) == 0;
+            }
+            filters.push_back(std::move(allowed_nodes));
+        }
+    }
+    return filters;
+}
+
+std::vector<CellMetric> filterToMetrics(const MultiLevelEdgeBasedGraph &graph,
+                                        const partition::CellStorage &storage,
+                                        const partition::MultiLevelPartition &mlp,
+                                        const std::vector<std::vector<bool>> &node_filters)
+{
+    CellCustomizer customizer(mlp);
+    std::vector<CellMetric> metrics;
+
+    for (auto filter : node_filters)
+    {
+        auto metric = storage.MakeMetric();
+        customizer.Customize(graph, storage, filter, metric);
+        metrics.push_back(std::move(metric));
+    }
+
+    return metrics;
 }
 
 int Customizer::Run(const CustomizationConfig &config)
@@ -102,31 +138,42 @@ int Customizer::Run(const CustomizationConfig &config)
     partition::MultiLevelPartition mlp;
     partition::files::readPartition(config.GetPath(".osrm.partition"), mlp);
 
-    auto edge_based_graph = LoadAndUpdateEdgeExpandedGraph(config, mlp);
+    auto graph = LoadAndUpdateEdgeExpandedGraph(config, mlp);
+    util::Log() << "Loaded edge based graph: " << graph.GetNumberOfEdges() << " edges, "
+                << graph.GetNumberOfNodes() << " nodes";
 
     partition::CellStorage storage;
     partition::files::readCells(config.GetPath(".osrm.cells"), storage);
     TIMER_STOP(loading_data);
+
+    extractor::EdgeBasedNodeDataContainer node_data;
+    extractor::files::readNodeData(config.GetPath(".osrm.ebg_nodes"), node_data);
+
+    extractor::ProfileProperties properties;
+    extractor::files::readProfileProperties(config.GetPath(".osrm.properties"), properties);
+
     util::Log() << "Loading partition data took " << TIMER_SEC(loading_data) << " seconds";
 
     TIMER_START(cell_customize);
-    CellCustomizer customizer(mlp);
-    auto metric = storage.MakeMetric();
-    customizer.Customize(*edge_based_graph, storage, metric);
+    auto filter = avoidFlagsToNodeFilter(graph, node_data, properties);
+    auto metrics = filterToMetrics(graph, storage, mlp, filter);
     TIMER_STOP(cell_customize);
     util::Log() << "Cells customization took " << TIMER_SEC(cell_customize) << " seconds";
 
     TIMER_START(writing_mld_data);
-    files::writeCellMetrics(config.GetPath(".osrm.cell_metrics"), std::vector<CellMetric>{metric});
+    files::writeCellMetrics(config.GetPath(".osrm.cell_metrics"), metrics);
     TIMER_STOP(writing_mld_data);
     util::Log() << "MLD customization writing took " << TIMER_SEC(writing_mld_data) << " seconds";
 
     TIMER_START(writing_graph);
-    partition::files::writeGraph(config.GetPath(".osrm.mldgr"), *edge_based_graph);
+    partition::files::writeGraph(config.GetPath(".osrm.mldgr"), graph);
     TIMER_STOP(writing_graph);
     util::Log() << "Graph writing took " << TIMER_SEC(writing_graph) << " seconds";
 
-    CellStorageStatistics(*edge_based_graph, mlp, storage, metric);
+    for (const auto &metric : metrics)
+    {
+        CellStorageStatistics(graph, mlp, storage, metric);
+    }
 
     return 0;
 }

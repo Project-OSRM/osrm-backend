@@ -1,10 +1,11 @@
 #include "common/range_tools.hpp"
-#include <boost/test/unit_test.hpp>
 
 #include "customizer/cell_customizer.hpp"
 #include "partition/multi_level_graph.hpp"
 #include "partition/multi_level_partition.hpp"
 #include "util/static_graph.hpp"
+
+#include <boost/test/unit_test.hpp>
 
 using namespace osrm;
 using namespace osrm::customizer;
@@ -48,6 +49,9 @@ BOOST_AUTO_TEST_SUITE(cell_customization_tests)
 
 BOOST_AUTO_TEST_CASE(two_level_test)
 {
+    // 0 --- 1
+    // |     |
+    // 2 --- 3
     // node:                0  1  2  3
     std::vector<CellID> l1{{0, 0, 1, 1}};
     MultiLevelPartition mlp{{l1}, {2}};
@@ -57,6 +61,7 @@ BOOST_AUTO_TEST_CASE(two_level_test)
     std::vector<MockEdge> edges = {{0, 1, 1}, {0, 2, 1}, {2, 3, 1}, {3, 1, 1}, {3, 2, 1}};
 
     auto graph = makeGraph(mlp, edges);
+    std::vector<bool> node_filter(true, graph.GetNumberOfNodes());
 
     CellStorage storage(mlp, graph);
     auto metric = storage.MakeMetric();
@@ -83,8 +88,8 @@ BOOST_AUTO_TEST_CASE(two_level_test)
     REQUIRE_SIZE_RANGE(cell_1_1.GetOutWeight(2), 2);
     REQUIRE_SIZE_RANGE(cell_1_1.GetInWeight(3), 2);
 
-    customizer.Customize(graph, heap, storage, metric, 1, 0);
-    customizer.Customize(graph, heap, storage, metric, 1, 1);
+    customizer.Customize(graph, heap, storage, node_filter, metric, 1, 0);
+    customizer.Customize(graph, heap, storage, node_filter, metric, 1, 1);
 
     // cell 0
     // check row source -> destination
@@ -136,6 +141,7 @@ BOOST_AUTO_TEST_CASE(four_levels_test)
     };
 
     auto graph = makeGraph(mlp, edges);
+    std::vector<bool> node_filter(true, graph.GetNumberOfNodes());
 
     CellStorage storage(mlp, graph);
     auto metric = storage.MakeMetric();
@@ -209,13 +215,13 @@ BOOST_AUTO_TEST_CASE(four_levels_test)
     CellCustomizer customizer(mlp);
     CellCustomizer::Heap heap(graph.GetNumberOfNodes());
 
-    customizer.Customize(graph, heap, storage, metric, 1, 0);
-    customizer.Customize(graph, heap, storage, metric, 1, 1);
-    customizer.Customize(graph, heap, storage, metric, 1, 2);
-    customizer.Customize(graph, heap, storage, metric, 1, 3);
+    customizer.Customize(graph, heap, storage, node_filter, metric, 1, 0);
+    customizer.Customize(graph, heap, storage, node_filter, metric, 1, 1);
+    customizer.Customize(graph, heap, storage, node_filter, metric, 1, 2);
+    customizer.Customize(graph, heap, storage, node_filter, metric, 1, 3);
 
-    customizer.Customize(graph, heap, storage, metric, 2, 0);
-    customizer.Customize(graph, heap, storage, metric, 2, 1);
+    customizer.Customize(graph, heap, storage, node_filter, metric, 2, 0);
+    customizer.Customize(graph, heap, storage, node_filter, metric, 2, 1);
 
     // level 1
     // cell 0
@@ -264,7 +270,7 @@ BOOST_AUTO_TEST_CASE(four_levels_test)
 
     CellStorage storage_rec(mlp, graph);
     auto metric_rec = storage_rec.MakeMetric();
-    customizer.Customize(graph, storage_rec, metric_rec);
+    customizer.Customize(graph, storage_rec, node_filter, metric_rec);
 
     CHECK_EQUAL_COLLECTIONS(cell_2_1.GetOutWeight(9),
                             storage_rec.GetCell(metric_rec, 2, 1).GetOutWeight(9));
@@ -276,6 +282,150 @@ BOOST_AUTO_TEST_CASE(four_levels_test)
                             storage_rec.GetCell(metric_rec, 2, 1).GetInWeight(9));
     CHECK_EQUAL_COLLECTIONS(cell_2_1.GetInWeight(12),
                             storage_rec.GetCell(metric_rec, 2, 1).GetInWeight(12));
+}
+
+BOOST_AUTO_TEST_CASE(avoid_test)
+{
+    // 0 --- 1 --- 5 --- 6
+    // |  /  |     |     |
+    // 2 ----3 --- 4 --- 7
+    // \__________/
+    std::vector<MockEdge> edges = {
+        {0, 1, 1},
+        {0, 2, 1},
+        {1, 0, 1},
+        {1, 2, 10},
+        {1, 3, 1},
+        {1, 5, 1},
+        {2, 0, 1},
+        {2, 1, 10},
+        {2, 3, 1},
+        {2, 4, 1},
+        {3, 1, 1},
+        {3, 2, 1},
+        {3, 4, 1},
+        {4, 2, 1},
+        {4, 3, 1},
+        {4, 5, 1},
+        {4, 7, 1},
+        {5, 1, 1},
+        {5, 4, 1},
+        {5, 6, 1},
+        {6, 5, 1},
+        {6, 7, 1},
+        {7, 4, 1},
+        {7, 6, 1},
+    };
+
+    // node:                0  1  2  3  4  5  6  7
+    std::vector<CellID> l1{{0, 0, 1, 1, 3, 2, 2, 3}};
+    std::vector<CellID> l2{{0, 0, 0, 0, 1, 1, 1, 1}};
+    std::vector<CellID> l3{{0, 0, 0, 0, 0, 0, 0, 0}};
+    MultiLevelPartition mlp{{l1, l2, l3}, {4, 2, 1}};
+
+    BOOST_REQUIRE_EQUAL(mlp.GetNumberOfLevels(), 4);
+
+    auto graph = makeGraph(mlp, edges);
+    // avoid node 0, 3 and 7
+    std::vector<bool> node_filter = {false, true, true, false, true, true, true, false};
+
+    CellCustomizer customizer(mlp);
+    CellStorage storage(mlp, graph);
+    auto metric = storage.MakeMetric();
+    customizer.Customize(graph, storage, node_filter, metric);
+
+    auto cell_1_0 = storage.GetCell(metric, 1, 0);
+    auto cell_1_1 = storage.GetCell(metric, 1, 1);
+    auto cell_1_2 = storage.GetCell(metric, 1, 2);
+    auto cell_1_3 = storage.GetCell(metric, 1, 3);
+
+    REQUIRE_SIZE_RANGE(cell_1_0.GetSourceNodes(), 2);
+    REQUIRE_SIZE_RANGE(cell_1_0.GetDestinationNodes(), 2);
+    REQUIRE_SIZE_RANGE(cell_1_1.GetSourceNodes(), 2);
+    REQUIRE_SIZE_RANGE(cell_1_1.GetDestinationNodes(), 2);
+    REQUIRE_SIZE_RANGE(cell_1_2.GetSourceNodes(), 2);
+    REQUIRE_SIZE_RANGE(cell_1_2.GetDestinationNodes(), 2);
+    REQUIRE_SIZE_RANGE(cell_1_3.GetSourceNodes(), 2);
+    REQUIRE_SIZE_RANGE(cell_1_3.GetDestinationNodes(), 2);
+
+    CHECK_EQUAL_RANGE(cell_1_0.GetSourceNodes(), 0, 1);
+    CHECK_EQUAL_RANGE(cell_1_0.GetDestinationNodes(), 0, 1);
+    CHECK_EQUAL_RANGE(cell_1_1.GetSourceNodes(), 2, 3);
+    CHECK_EQUAL_RANGE(cell_1_1.GetDestinationNodes(), 2, 3);
+    CHECK_EQUAL_RANGE(cell_1_2.GetSourceNodes(), 5, 6);
+    CHECK_EQUAL_RANGE(cell_1_2.GetDestinationNodes(), 5, 6);
+    CHECK_EQUAL_RANGE(cell_1_3.GetSourceNodes(), 4, 7);
+    CHECK_EQUAL_RANGE(cell_1_3.GetDestinationNodes(), 4, 7);
+
+    REQUIRE_SIZE_RANGE(cell_1_0.GetOutWeight(0), 2);
+    REQUIRE_SIZE_RANGE(cell_1_0.GetOutWeight(1), 2);
+    REQUIRE_SIZE_RANGE(cell_1_0.GetInWeight(0), 2);
+    REQUIRE_SIZE_RANGE(cell_1_0.GetInWeight(1), 2);
+    REQUIRE_SIZE_RANGE(cell_1_1.GetOutWeight(2), 2);
+    REQUIRE_SIZE_RANGE(cell_1_1.GetOutWeight(3), 2);
+    REQUIRE_SIZE_RANGE(cell_1_1.GetInWeight(2), 2);
+    REQUIRE_SIZE_RANGE(cell_1_1.GetInWeight(3), 2);
+    REQUIRE_SIZE_RANGE(cell_1_2.GetOutWeight(5), 2);
+    REQUIRE_SIZE_RANGE(cell_1_2.GetOutWeight(6), 2);
+    REQUIRE_SIZE_RANGE(cell_1_2.GetInWeight(5), 2);
+    REQUIRE_SIZE_RANGE(cell_1_2.GetInWeight(6), 2);
+    REQUIRE_SIZE_RANGE(cell_1_3.GetOutWeight(4), 2);
+    REQUIRE_SIZE_RANGE(cell_1_3.GetOutWeight(7), 2);
+    REQUIRE_SIZE_RANGE(cell_1_3.GetInWeight(4), 2);
+    REQUIRE_SIZE_RANGE(cell_1_3.GetInWeight(7), 2);
+
+    CHECK_EQUAL_RANGE(cell_1_0.GetOutWeight(0), INVALID_EDGE_WEIGHT, INVALID_EDGE_WEIGHT);
+    CHECK_EQUAL_RANGE(cell_1_0.GetOutWeight(1), INVALID_EDGE_WEIGHT, 0);
+    CHECK_EQUAL_RANGE(cell_1_0.GetInWeight(0), INVALID_EDGE_WEIGHT, INVALID_EDGE_WEIGHT);
+    CHECK_EQUAL_RANGE(cell_1_0.GetInWeight(1), INVALID_EDGE_WEIGHT, 0);
+    CHECK_EQUAL_RANGE(cell_1_1.GetOutWeight(2), 0, INVALID_EDGE_WEIGHT);
+    CHECK_EQUAL_RANGE(cell_1_1.GetOutWeight(3), INVALID_EDGE_WEIGHT, INVALID_EDGE_WEIGHT);
+    CHECK_EQUAL_RANGE(cell_1_1.GetInWeight(2), 0, INVALID_EDGE_WEIGHT);
+    CHECK_EQUAL_RANGE(cell_1_1.GetInWeight(3), INVALID_EDGE_WEIGHT, INVALID_EDGE_WEIGHT);
+    CHECK_EQUAL_RANGE(cell_1_2.GetOutWeight(5), 0, 1);
+    CHECK_EQUAL_RANGE(cell_1_2.GetOutWeight(6), 1, 0);
+    CHECK_EQUAL_RANGE(cell_1_2.GetInWeight(5), 0, 1);
+    CHECK_EQUAL_RANGE(cell_1_2.GetInWeight(6), 1, 0);
+    CHECK_EQUAL_RANGE(cell_1_3.GetOutWeight(4), 0, INVALID_EDGE_WEIGHT);
+    CHECK_EQUAL_RANGE(cell_1_3.GetOutWeight(7), INVALID_EDGE_WEIGHT, INVALID_EDGE_WEIGHT);
+    CHECK_EQUAL_RANGE(cell_1_3.GetInWeight(4), 0, INVALID_EDGE_WEIGHT);
+    CHECK_EQUAL_RANGE(cell_1_3.GetInWeight(7), INVALID_EDGE_WEIGHT, INVALID_EDGE_WEIGHT);
+
+    auto cell_2_0 = storage.GetCell(metric, 2, 0);
+    auto cell_2_1 = storage.GetCell(metric, 2, 1);
+
+    REQUIRE_SIZE_RANGE(cell_2_0.GetSourceNodes(), 3);
+    REQUIRE_SIZE_RANGE(cell_2_0.GetDestinationNodes(), 3);
+    REQUIRE_SIZE_RANGE(cell_2_1.GetSourceNodes(), 2);
+    REQUIRE_SIZE_RANGE(cell_2_1.GetDestinationNodes(), 2);
+
+    CHECK_EQUAL_RANGE(cell_2_0.GetSourceNodes(), 1, 2, 3);
+    CHECK_EQUAL_RANGE(cell_2_0.GetDestinationNodes(), 1, 2, 3);
+    CHECK_EQUAL_RANGE(cell_2_1.GetSourceNodes(), 4, 5);
+    CHECK_EQUAL_RANGE(cell_2_1.GetDestinationNodes(), 4, 5);
+
+    REQUIRE_SIZE_RANGE(cell_2_0.GetOutWeight(1), 3);
+    REQUIRE_SIZE_RANGE(cell_2_0.GetOutWeight(2), 3);
+    REQUIRE_SIZE_RANGE(cell_2_0.GetOutWeight(3), 3);
+    REQUIRE_SIZE_RANGE(cell_2_0.GetInWeight(1), 3);
+    REQUIRE_SIZE_RANGE(cell_2_0.GetInWeight(2), 3);
+    REQUIRE_SIZE_RANGE(cell_2_0.GetInWeight(3), 3);
+    REQUIRE_SIZE_RANGE(cell_2_1.GetOutWeight(4), 2);
+    REQUIRE_SIZE_RANGE(cell_2_1.GetOutWeight(5), 2);
+    REQUIRE_SIZE_RANGE(cell_2_1.GetInWeight(4), 2);
+    REQUIRE_SIZE_RANGE(cell_2_1.GetInWeight(5), 2);
+
+    CHECK_EQUAL_RANGE(cell_2_0.GetOutWeight(1), 0, 10, INVALID_EDGE_WEIGHT);
+    CHECK_EQUAL_RANGE(cell_2_0.GetOutWeight(2), 10, 0, INVALID_EDGE_WEIGHT);
+    CHECK_EQUAL_RANGE(cell_2_0.GetOutWeight(3), INVALID_EDGE_WEIGHT, INVALID_EDGE_WEIGHT, INVALID_EDGE_WEIGHT);
+    CHECK_EQUAL_RANGE(cell_2_0.GetInWeight(1), 0, 10, INVALID_EDGE_WEIGHT);
+    CHECK_EQUAL_RANGE(cell_2_0.GetInWeight(2), 10, 0, INVALID_EDGE_WEIGHT);
+    CHECK_EQUAL_RANGE(cell_2_0.GetInWeight(3), INVALID_EDGE_WEIGHT, INVALID_EDGE_WEIGHT, INVALID_EDGE_WEIGHT);
+
+    CHECK_EQUAL_RANGE(cell_2_1.GetOutWeight(4), 0, 1);
+    CHECK_EQUAL_RANGE(cell_2_1.GetOutWeight(5), 1, 0);
+    CHECK_EQUAL_RANGE(cell_2_1.GetInWeight(4), 0, 1);
+    CHECK_EQUAL_RANGE(cell_2_1.GetInWeight(5), 1, 0);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
