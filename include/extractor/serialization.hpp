@@ -74,7 +74,8 @@ inline void read(storage::io::FileReader &reader,
     util::serialization::read(reader, segment_data.rev_weights);
     util::serialization::read(reader, segment_data.fwd_durations);
     util::serialization::read(reader, segment_data.rev_durations);
-    storage::serialization::read(reader, segment_data.datasources);
+    storage::serialization::read(reader, segment_data.fwd_datasources);
+    storage::serialization::read(reader, segment_data.rev_datasources);
 }
 
 template <storage::Ownership Ownership>
@@ -87,7 +88,8 @@ inline void write(storage::io::FileWriter &writer,
     util::serialization::write(writer, segment_data.rev_weights);
     util::serialization::write(writer, segment_data.fwd_durations);
     util::serialization::write(writer, segment_data.rev_durations);
-    storage::serialization::write(writer, segment_data.datasources);
+    storage::serialization::write(writer, segment_data.fwd_datasources);
+    storage::serialization::write(writer, segment_data.rev_datasources);
 }
 
 // read/write for turn data file

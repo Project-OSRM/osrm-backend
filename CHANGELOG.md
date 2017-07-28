@@ -15,6 +15,8 @@
       - Reorders arguments to `WayHandlers` functions to match `process_way()`.
       - Profiles must return a hash of profile functions. This makes it easier for profiles to include each other.
       - Guidance: add support for throughabouts
+    - Bugfixes
+      - Properly save/retrieve datasource annotations for road segments ([#4346](https://github.com/Project-OSRM/osrm-backend/issues/4346))
 
 # 5.9.2
     - API:
