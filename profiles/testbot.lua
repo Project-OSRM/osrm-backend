@@ -19,6 +19,12 @@ function setup()
       use_turn_restrictions         = true
     },
 
+    avoidable = {
+        [1] = {["motorway"] = true},
+        [2] = {["toll"] = true},
+        [3] = {["motorway"] = true, ["toll"] = true}
+    },
+
     default_speed  = 24,
     speeds = {
       primary = 36,
@@ -40,6 +46,7 @@ end
 
 function process_way (profile, way, result)
   local highway = way:get_value_by_key("highway")
+  local toll = way:get_value_by_key("toll")
   local name = way:get_value_by_key("name")
   local oneway = way:get_value_by_key("oneway")
   local route = way:get_value_by_key("route")
@@ -101,6 +108,16 @@ function process_way (profile, way, result)
     result.forward_mode = mode.inaccessible
   elseif oneway == "yes" or oneway == "1" or oneway == "true" or junction == "roundabout" then
     result.backward_mode = mode.inaccessible
+  end
+
+  if highway == 'motorway' then
+      result.forward_classes["motorway"] = true
+      result.backward_classes["motorway"] = true
+  end
+
+  if toll == "yes" then
+      result.forward_classes["toll"] = true
+      result.backward_classes["toll"] = true
   end
 
   if junction == 'roundabout' then
