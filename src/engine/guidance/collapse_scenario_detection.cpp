@@ -17,7 +17,7 @@ namespace
 {
 
 // check bearings for u-turns.
-// since bearings are wrapped around at 0 (we only support 0,360), we need to do some minor math to
+// since bearings are wrapped around at 0 (we only support 0,360), we need to do some minor math to
 // check if bearings `a` and `b` go in opposite directions. In general we accept some minor
 // deviations for u-turns.
 bool bearingsAreReversed(const double bearing_in, const double bearing_out)
@@ -123,7 +123,7 @@ bool isStaggeredIntersection(const RouteStepIterator step_prior_to_intersection,
 
     const auto angle = [](const RouteStep &step) {
         const auto &intersection = step.intersections.front();
-        const auto entry_bearing = intersection.bearings[intersection.in];
+        const auto entry_bearing = util::bearing::reverse(intersection.bearings[intersection.in]);
         const auto exit_bearing = intersection.bearings[intersection.out];
         return util::bearing::angleBetween(entry_bearing, exit_bearing);
     };
