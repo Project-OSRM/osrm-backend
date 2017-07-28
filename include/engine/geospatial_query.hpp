@@ -57,7 +57,7 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
         auto results = rtree.Nearest(
             input_coordinate,
             [this, approach, &input_coordinate](const CandidateSegment &segment) {
-                return boolPairAnd(HasValidEdge(segment),
+                return boolPairAnd(boolPairAnd(HasValidEdge(segment), CheckSegmentAvoid(segment)),
                                    CheckApproach(input_coordinate, segment, approach));
             },
             [this, max_distance, input_coordinate](const std::size_t,
@@ -81,8 +81,9 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
             input_coordinate,
             [this, approach, &input_coordinate, bearing, bearing_range, max_distance](
                 const CandidateSegment &segment) {
-                auto use_direction = boolPairAnd(
-                    CheckSegmentBearing(segment, bearing, bearing_range), HasValidEdge(segment));
+                auto use_direction =
+                    boolPairAnd(CheckSegmentBearing(segment, bearing, bearing_range),
+                                boolPairAnd(HasValidEdge(segment), CheckSegmentAvoid(segment)));
                 use_direction =
                     boolPairAnd(use_direction, CheckApproach(input_coordinate, segment, approach));
                 return use_direction;
@@ -108,8 +109,9 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
             input_coordinate,
             [this, approach, &input_coordinate, bearing, bearing_range](
                 const CandidateSegment &segment) {
-                auto use_direction = boolPairAnd(
-                    CheckSegmentBearing(segment, bearing, bearing_range), HasValidEdge(segment));
+                auto use_direction =
+                    boolPairAnd(CheckSegmentBearing(segment, bearing, bearing_range),
+                                boolPairAnd(HasValidEdge(segment), CheckSegmentAvoid(segment)));
                 return boolPairAnd(use_direction,
                                    CheckApproach(input_coordinate, segment, approach));
             },
@@ -135,8 +137,9 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
             input_coordinate,
             [this, approach, &input_coordinate, bearing, bearing_range](
                 const CandidateSegment &segment) {
-                auto use_direction = boolPairAnd(
-                    CheckSegmentBearing(segment, bearing, bearing_range), HasValidEdge(segment));
+                auto use_direction =
+                    boolPairAnd(CheckSegmentBearing(segment, bearing, bearing_range),
+                                boolPairAnd(HasValidEdge(segment), CheckSegmentAvoid(segment)));
                 return boolPairAnd(use_direction,
                                    CheckApproach(input_coordinate, segment, approach));
             },
@@ -159,7 +162,7 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
         auto results = rtree.Nearest(
             input_coordinate,
             [this, approach, &input_coordinate](const CandidateSegment &segment) {
-                return boolPairAnd(HasValidEdge(segment),
+                return boolPairAnd(boolPairAnd(HasValidEdge(segment), CheckSegmentAvoid(segment)),
                                    CheckApproach(input_coordinate, segment, approach));
             },
             [max_results](const std::size_t num_results, const CandidateSegment &) {
@@ -180,7 +183,7 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
         auto results = rtree.Nearest(
             input_coordinate,
             [this, approach, &input_coordinate](const CandidateSegment &segment) {
-                return boolPairAnd(HasValidEdge(segment),
+                return boolPairAnd(boolPairAnd(HasValidEdge(segment), CheckSegmentAvoid(segment)),
                                    CheckApproach(input_coordinate, segment, approach));
             },
             [this, max_distance, max_results, input_coordinate](const std::size_t num_results,
@@ -209,6 +212,8 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
                     (!has_small_component || (!has_big_component && !IsTinyComponent(segment)));
                 auto use_directions = std::make_pair(use_segment, use_segment);
                 const auto valid_edges = HasValidEdge(segment);
+                const auto admissible_segments = CheckSegmentAvoid(segment);
+                use_directions = boolPairAnd(use_directions, admissible_segments);
                 use_directions = boolPairAnd(use_directions, valid_edges);
                 use_directions =
                     boolPairAnd(use_directions, CheckApproach(input_coordinate, segment, approach));
@@ -254,6 +259,8 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
                 auto use_directions = std::make_pair(use_segment, use_segment);
 
                 const auto valid_edges = HasValidEdge(segment);
+                const auto admissible_segments = CheckSegmentAvoid(segment);
+                use_directions = boolPairAnd(use_directions, admissible_segments);
                 use_directions = boolPairAnd(use_directions, valid_edges);
                 use_directions =
                     boolPairAnd(use_directions, CheckApproach(input_coordinate, segment, approach));
@@ -302,6 +309,7 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
                 auto use_segment =
                     (!has_small_component || (!has_big_component && !IsTinyComponent(segment)));
                 auto use_directions = std::make_pair(use_segment, use_segment);
+                const auto admissible_segments = CheckSegmentAvoid(segment);
                 use_directions = boolPairAnd(use_directions, HasValidEdge(segment));
 
                 if (use_segment)
@@ -309,6 +317,7 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
                     use_directions =
                         boolPairAnd(CheckSegmentBearing(segment, bearing, bearing_range),
                                     HasValidEdge(segment));
+                    use_directions = boolPairAnd(use_directions, admissible_segments);
                     use_directions = boolPairAnd(
                         use_directions, CheckApproach(input_coordinate, segment, approach));
 
@@ -358,6 +367,7 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
                 auto use_segment =
                     (!has_small_component || (!has_big_component && !IsTinyComponent(segment)));
                 auto use_directions = std::make_pair(use_segment, use_segment);
+                const auto admissible_segments = CheckSegmentAvoid(segment);
                 use_directions = boolPairAnd(use_directions, HasValidEdge(segment));
 
                 if (use_segment)
@@ -365,6 +375,7 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
                     use_directions =
                         boolPairAnd(CheckSegmentBearing(segment, bearing, bearing_range),
                                     HasValidEdge(segment));
+                    use_directions = boolPairAnd(use_directions, admissible_segments);
                     use_directions = boolPairAnd(
                         use_directions, CheckApproach(input_coordinate, segment, approach));
 
@@ -526,6 +537,25 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
 
         return util::coordinate_calculation::haversineDistance(input_coordinate, wsg84_coordinate) >
                max_distance;
+    }
+
+    std::pair<bool, bool> CheckSegmentAvoid(const CandidateSegment &segment) const
+    {
+        std::pair<bool, bool> valid = {true, true};
+
+        if (segment.data.forward_segment_id.enabled &&
+            datafacade.AvoidNode(segment.data.forward_segment_id.id))
+        {
+            valid.first = false;
+        }
+
+        if (segment.data.reverse_segment_id.enabled &&
+            datafacade.AvoidNode(segment.data.reverse_segment_id.id))
+        {
+            valid.second = false;
+        }
+
+        return valid;
     }
 
     std::pair<bool, bool> CheckSegmentBearing(const CandidateSegment &segment,
