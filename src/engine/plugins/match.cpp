@@ -120,6 +120,9 @@ Status MatchPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
                      json_result);
     }
 
+    if (!CheckAlgorithms(parameters, algorithms, json_result))
+        return Status::Error;
+
     const auto &facade = algorithms.GetFacade();
 
     BOOST_ASSERT(parameters.IsValid());

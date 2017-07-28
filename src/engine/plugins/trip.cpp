@@ -191,6 +191,9 @@ Status TripPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
         return Error("InvalidValue", "Invalid coordinate value.", json_result);
     }
 
+    if (!CheckAlgorithms(parameters, algorithms, json_result))
+        return Status::Error;
+
     const auto &facade = algorithms.GetFacade();
     auto phantom_node_pairs = GetPhantomNodes(facade, parameters);
     if (phantom_node_pairs.size() != number_of_locations)

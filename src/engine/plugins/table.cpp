@@ -66,6 +66,9 @@ Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
         return Error("TooBig", "Too many table coordinates", result);
     }
 
+    if (!CheckAlgorithms(params, algorithms, result))
+        return Status::Error;
+
     const auto &facade = algorithms.GetFacade();
     auto phantom_nodes = GetPhantomNodes(facade, params);
 

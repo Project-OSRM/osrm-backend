@@ -54,6 +54,8 @@ class RoutingAlgorithmsInterface
     virtual bool HasMapMatching() const = 0;
     virtual bool HasManyToManySearch() const = 0;
     virtual bool HasGetTileTurns() const = 0;
+    virtual bool HasAvoidFlags() const = 0;
+    virtual bool IsValid() const = 0;
 };
 
 // Short-lived object passed to each plugin in request to wrap routing algorithms
@@ -125,6 +127,16 @@ template <typename Algorithm> class RoutingAlgorithms final : public RoutingAlgo
     bool HasGetTileTurns() const final override
     {
         return routing_algorithms::HasGetTileTurns<Algorithm>::value;
+    }
+
+    bool HasAvoidFlags() const final override
+    {
+        return routing_algorithms::HasAvoidFlags<Algorithm>::value;
+    }
+
+    bool IsValid() const final override
+    {
+        return static_cast<bool>(facade);
     }
 
   private:

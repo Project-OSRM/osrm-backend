@@ -4,6 +4,7 @@
 #include "engine/api/base_parameters.hpp"
 #include "engine/datafacade/datafacade_base.hpp"
 #include "engine/phantom_node.hpp"
+#include "engine/routing_algorithms.hpp"
 #include "engine/status.hpp"
 
 #include "util/coordinate.hpp"
@@ -34,6 +35,28 @@ class BasePlugin
             std::begin(coordinates), std::end(coordinates), [](const util::Coordinate coordinate) {
                 return !coordinate.IsValid();
             });
+    }
+
+    bool CheckAlgorithms(const api::BaseParameters &params, const RoutingAlgorithmsInterface& algorithms, util::json::Object &result) const
+    {
+        if (algorithms.IsValid())
+        {
+            return true;
+        }
+
+        if (!algorithms.HasAvoidFlags() && !params.avoid.empty())
+        {
+            Error("NotImplemented", "This algorithm does not support avoid flags.", result);
+            return false;
+        }
+        if (algorithms.HasAvoidFlags() && !params.avoid.empty())
+        {
+            Error("InvalidValue", "Avoid flag combination is not supported.", result);
+            return false;
+        }
+
+        BOOST_ASSERT_MSG(false, "There are only two reasons why the algorithm interface can be invalid.");
+        return false;
     }
 
     Status Error(const std::string &code,

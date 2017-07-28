@@ -4,6 +4,7 @@
 #include "extractor/class_data.hpp"
 #include "extractor/profile_properties.hpp"
 
+#include "engine/algorithm.hpp"
 #include "engine/api/base_parameters.hpp"
 #include "engine/api/tile_parameters.hpp"
 
@@ -20,16 +21,33 @@ namespace osrm
 namespace engine
 {
 // This class selects the right facade for
-template <typename FacadeT> class DataFacadeFactory
+template <template <typename A> class FacadeT, typename AlgorithmT> class DataFacadeFactory
 {
+    static constexpr auto has_avoid_flags = routing_algorithms::HasAvoidFlags<AlgorithmT>{};
+
   public:
+    using Facade = FacadeT<AlgorithmT>;
     DataFacadeFactory() = default;
 
-    template <typename AllocatorT> DataFacadeFactory(std::shared_ptr<AllocatorT> allocator)
+    template <typename AllocatorT>
+    DataFacadeFactory(std::shared_ptr<AllocatorT> allocator)
+        : DataFacadeFactory(allocator, has_avoid_flags)
+    {
+    }
+
+    template <typename ParameterT> std::shared_ptr<const Facade> Get(const ParameterT &params) const
+    {
+        return Get(params, has_avoid_flags);
+    }
+
+  private:
+    // Algorithm with avoid flags
+    template <typename AllocatorT>
+    DataFacadeFactory(std::shared_ptr<AllocatorT> allocator, std::true_type)
     {
         for (const auto index : util::irange<std::size_t>(0, facades.size()))
         {
-            facades[index] = std::make_shared<FacadeT>(allocator, index);
+            facades[index] = std::make_shared<const Facade>(allocator, index);
         }
 
         properties = allocator->GetLayout().template GetBlockPtr<extractor::ProfileProperties>(
@@ -45,12 +63,37 @@ template <typename FacadeT> class DataFacadeFactory
         }
     }
 
-    std::shared_ptr<FacadeT> Get(const api::TileParameters &) const
+    // Algorithm without avoid flags
+    template <typename AllocatorT>
+    DataFacadeFactory(std::shared_ptr<AllocatorT> allocator, std::false_type)
+    {
+        facades[0] = std::make_shared<const Facade>(allocator, 0);
+    }
+
+    std::shared_ptr<const Facade> Get(const api::TileParameters &, std::false_type) const
     {
         return facades[0];
     }
 
-    std::shared_ptr<FacadeT> Get(const api::BaseParameters &params) const
+    // Default for non-avoid flags: return only facade
+    std::shared_ptr<const Facade> Get(const api::BaseParameters &params, std::false_type) const
+    {
+        if (!params.avoid.empty())
+        {
+            return {};
+        }
+
+        return facades[0];
+    }
+
+    // TileParameters don't drive from BaseParameters and generally don't have use for avoid flags
+    std::shared_ptr<const Facade> Get(const api::TileParameters &, std::true_type) const
+    {
+        return facades[0];
+    }
+
+    // Selection logic for finding the corresponding datafacade for the given parameters
+    std::shared_ptr<const Facade> Get(const api::BaseParameters &params, std::true_type) const
     {
         if (params.avoid.empty())
             return facades[0];
@@ -73,12 +116,10 @@ template <typename FacadeT> class DataFacadeFactory
             return facades[avoid_index];
         }
 
-        // FIXME We need proper error handling here
         return {};
     }
 
-  private:
-    std::array<std::shared_ptr<FacadeT>, extractor::MAX_AVOIDABLE_CLASSES> facades;
+    std::array<std::shared_ptr<const Facade>, extractor::MAX_AVOIDABLE_CLASSES> facades;
     std::unordered_map<std::string, extractor::ClassData> name_to_class;
     const extractor::ProfileProperties *properties = nullptr;
 };

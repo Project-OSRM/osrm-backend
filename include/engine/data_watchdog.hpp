@@ -25,10 +25,12 @@ namespace engine
 // This class monitors the shared memory region that contains the pointers to
 // the data and layout regions that should be used. This region is updated
 // once a new dataset arrives.
-template <typename AlgorithmT> class DataWatchdog final
+template <template<typename A> class FacadeT, typename AlgorithmT> class DataWatchdog;
+
+template <typename AlgorithmT> class DataWatchdog<datafacade::ContiguousInternalMemoryDataFacade,AlgorithmT> final
 {
     using mutex_type = typename storage::SharedMonitor<storage::SharedDataTimestamp>::mutex_type;
-    using FacadeT = datafacade::ContiguousInternalMemoryDataFacade<AlgorithmT>;
+    using Facade = datafacade::ContiguousInternalMemoryDataFacade<AlgorithmT>;
 
   public:
     DataWatchdog() : active(true), timestamp(0)
@@ -37,7 +39,7 @@ template <typename AlgorithmT> class DataWatchdog final
         {
             boost::interprocess::scoped_lock<mutex_type> current_region_lock(barrier.get_mutex());
 
-            facade_factory = DataFacadeFactory<const FacadeT>(
+            facade_factory = DataFacadeFactory<datafacade::ContiguousInternalMemoryDataFacade, AlgorithmT>(
                 std::make_shared<datafacade::SharedMemoryAllocator>(barrier.data().region));
             timestamp = barrier.data().timestamp;
         }
@@ -52,8 +54,8 @@ template <typename AlgorithmT> class DataWatchdog final
         watcher.join();
     }
 
-    std::shared_ptr<const FacadeT> Get(const api::BaseParameters &params) const { return facade_factory.Get(params); }
-    std::shared_ptr<const FacadeT> Get(const api::TileParameters &params) const { return facade_factory.Get(params); }
+    std::shared_ptr<const Facade> Get(const api::BaseParameters &params) const { return facade_factory.Get(params); }
+    std::shared_ptr<const Facade> Get(const api::TileParameters &params) const { return facade_factory.Get(params); }
 
   private:
     void Run()
@@ -70,7 +72,7 @@ template <typename AlgorithmT> class DataWatchdog final
             if (timestamp != barrier.data().timestamp)
             {
                 auto region = barrier.data().region;
-                facade_factory = DataFacadeFactory<const FacadeT>(
+                facade_factory = DataFacadeFactory<datafacade::ContiguousInternalMemoryDataFacade, AlgorithmT>(
                     std::make_shared<datafacade::SharedMemoryAllocator>(region));
                 timestamp = barrier.data().timestamp;
                 util::Log() << "updated facade to region " << region << " with timestamp "
@@ -85,7 +87,7 @@ template <typename AlgorithmT> class DataWatchdog final
     std::thread watcher;
     bool active;
     unsigned timestamp;
-    DataFacadeFactory<const FacadeT> facade_factory;
+    DataFacadeFactory<datafacade::ContiguousInternalMemoryDataFacade, AlgorithmT> facade_factory;
 };
 }
 }

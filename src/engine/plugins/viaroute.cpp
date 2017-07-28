@@ -73,6 +73,9 @@ Status ViaRoutePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithm
         return Error("InvalidValue", "Invalid coordinate value.", json_result);
     }
 
+    if (!CheckAlgorithms(route_parameters, algorithms, json_result))
+        return Status::Error;
+
     const auto &facade = algorithms.GetFacade();
     auto phantom_node_pairs = GetPhantomNodes(facade, route_parameters);
     if (phantom_node_pairs.size() != route_parameters.coordinates.size())
