@@ -73,6 +73,7 @@ void relaxOutgoingEdges(const DataFacade<ch::Algorithm> &facade,
         if (DIRECTION == FORWARD_DIRECTION ? data.forward : data.backward)
         {
             const NodeID to = facade.GetTarget(edge);
+
             const EdgeWeight edge_weight = data.weight;
             const EdgeWeight edge_duration = data.duration;
 
@@ -110,6 +111,8 @@ void relaxOutgoingEdges(const DataFacade<mld::Algorithm> &facade,
                         typename SearchEngineData<mld::Algorithm>::ManyToManyQueryHeap &query_heap,
                         const PhantomNode &phantom_node)
 {
+    BOOST_ASSERT(!facade.AvoidNode(node));
+
     const auto &partition = facade.GetMultiLevelPartition();
     const auto &cells = facade.GetCellStorage();
     const auto &metric = facade.GetCellMetric();
@@ -136,6 +139,12 @@ void relaxOutgoingEdges(const DataFacade<mld::Algorithm> &facade,
                 BOOST_ASSERT(destination != cell.GetDestinationNodes().end());
                 BOOST_ASSERT(!shortcut_durations.empty());
                 const NodeID to = *destination;
+
+                if (facade.AvoidNode(to))
+                {
+                    continue;
+                }
+
                 if (shortcut_weight != INVALID_EDGE_WEIGHT && node != to)
                 {
                     const auto to_weight = weight + shortcut_weight;
@@ -164,6 +173,12 @@ void relaxOutgoingEdges(const DataFacade<mld::Algorithm> &facade,
                 BOOST_ASSERT(source != cell.GetSourceNodes().end());
                 BOOST_ASSERT(!shortcut_durations.empty());
                 const NodeID to = *source;
+
+                if (facade.AvoidNode(to))
+                {
+                    continue;
+                }
+
                 if (shortcut_weight != INVALID_EDGE_WEIGHT && node != to)
                 {
                     const auto to_weight = weight + shortcut_weight;
@@ -191,6 +206,11 @@ void relaxOutgoingEdges(const DataFacade<mld::Algorithm> &facade,
         if (DIRECTION == FORWARD_DIRECTION ? data.forward : data.backward)
         {
             const NodeID to = facade.GetTarget(edge);
+            if (facade.AvoidNode(to))
+            {
+                continue;
+            }
+
             const EdgeWeight edge_weight = data.weight;
             const EdgeWeight edge_duration = data.duration;
 

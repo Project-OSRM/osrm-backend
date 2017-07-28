@@ -148,6 +148,8 @@ void routingStep(const DataFacade<Algorithm> &facade,
     const auto node = forward_heap.DeleteMin();
     const auto weight = forward_heap.GetKey(node);
 
+    BOOST_ASSERT(!facade.AvoidNode(node));
+
     // Upper bound for the path source -> target with
     // weight(source -> node) = weight weight(to -> target) ≤ reverse_weight
     // is weight + reverse_weight
@@ -181,6 +183,12 @@ void routingStep(const DataFacade<Algorithm> &facade,
             {
                 BOOST_ASSERT(destination != cell.GetDestinationNodes().end());
                 const NodeID to = *destination;
+
+                if (facade.AvoidNode(to))
+                {
+                    continue;
+                }
+
                 if (shortcut_weight != INVALID_EDGE_WEIGHT && node != to)
                 {
                     const EdgeWeight to_weight = weight + shortcut_weight;
@@ -207,6 +215,12 @@ void routingStep(const DataFacade<Algorithm> &facade,
             {
                 BOOST_ASSERT(source != cell.GetSourceNodes().end());
                 const NodeID to = *source;
+
+                if (facade.AvoidNode(to))
+                {
+                    continue;
+                }
+
                 if (shortcut_weight != INVALID_EDGE_WEIGHT && node != to)
                 {
                     const EdgeWeight to_weight = weight + shortcut_weight;
@@ -233,6 +247,10 @@ void routingStep(const DataFacade<Algorithm> &facade,
         if (DIRECTION == FORWARD_DIRECTION ? edge_data.forward : edge_data.backward)
         {
             const NodeID to = facade.GetTarget(edge);
+            if (facade.AvoidNode(to))
+            {
+                continue;
+            }
 
             if (checkParentCellRestriction(partition.GetCell(level + 1, to), args...))
             {
