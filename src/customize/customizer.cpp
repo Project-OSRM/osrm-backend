@@ -102,7 +102,7 @@ avoidFlagsToNodeFilter(const MultiLevelEdgeBasedGraph &graph,
     {
         if (mask != extractor::INAVLID_CLASS_DATA)
         {
-            std::vector<bool> allowed_nodes(true, graph.GetNumberOfNodes());
+            std::vector<bool> allowed_nodes(graph.GetNumberOfNodes(), true);
             for (const auto node : util::irange<NodeID>(0, graph.GetNumberOfNodes()))
             {
                 allowed_nodes[node] = (node_data.GetClassData(node) & mask) == 0;

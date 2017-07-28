@@ -43,6 +43,10 @@ class MultiLevelGraph : public util::StaticGraph<EdgeDataT, Ownership>
     using EdgeOffset = std::uint8_t;
 
     MultiLevelGraph() = default;
+    MultiLevelGraph(MultiLevelGraph&&) = default;
+    MultiLevelGraph(const MultiLevelGraph&) = default;
+    MultiLevelGraph& operator=(MultiLevelGraph&&) = default;
+    MultiLevelGraph& operator=(const MultiLevelGraph&) = default;
 
     MultiLevelGraph(Vector<typename SuperT::NodeArrayEntry> node_array_,
                     Vector<typename SuperT::EdgeArrayEntry> edge_array_,

@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(two_level_test)
     std::vector<MockEdge> edges = {{0, 1, 1}, {0, 2, 1}, {2, 3, 1}, {3, 1, 1}, {3, 2, 1}};
 
     auto graph = makeGraph(mlp, edges);
-    std::vector<bool> node_filter(true, graph.GetNumberOfNodes());
+    std::vector<bool> node_filter(graph.GetNumberOfNodes(), true);
 
     CellStorage storage(mlp, graph);
     auto metric = storage.MakeMetric();
