@@ -30,6 +30,7 @@ struct ProfileProperties
           use_turn_restrictions(false), left_hand_driving(false), fallback_to_duration(true),
           weight_name{"duration"}, call_tagless_node_function(true)
     {
+        std::fill(avoidable_classes.begin(), avoidable_classes.end(), INAVLID_CLASS_DATA);
         BOOST_ASSERT(weight_name[MAX_WEIGHT_NAME_LENGTH] == '\0');
     }
 

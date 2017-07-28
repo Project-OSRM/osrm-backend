@@ -31,8 +31,13 @@ class CellCustomizer
     CellCustomizer(const partition::MultiLevelPartition &partition) : partition(partition) {}
 
     template <typename GraphT>
-    void Customize(
-        const GraphT &graph, Heap &heap, const partition::CellStorage &cells, CellMetric &metric, LevelID level, CellID id)
+    void Customize(const GraphT &graph,
+                   Heap &heap,
+                   const partition::CellStorage &cells,
+                   const std::vector<bool> &allowed_nodes,
+                   CellMetric &metric,
+                   LevelID level,
+                   CellID id)
     {
         auto cell = cells.GetCell(metric, level, id);
         auto destinations = cell.GetDestinationNodes();
@@ -40,7 +45,19 @@ class CellCustomizer
         // for each source do forward search
         for (auto source : cell.GetSourceNodes())
         {
-            std::unordered_set<NodeID> destinations_set(destinations.begin(), destinations.end());
+            if (!allowed_nodes[source])
+            {
+                continue;
+            }
+
+            std::unordered_set<NodeID> destinations_set;
+            for (const auto destination : destinations)
+            {
+                if (allowed_nodes[destination])
+                {
+                    destinations_set.insert(destination);
+                }
+            }
             heap.Clear();
             heap.Insert(source, 0, {false, 0});
 
@@ -52,9 +69,11 @@ class CellCustomizer
                 const EdgeDuration duration = heap.GetData(node).duration;
 
                 if (level == 1)
-                    RelaxNode<true>(graph, cells, metric, heap, level, node, weight, duration);
+                    RelaxNode<true>(
+                        graph, cells, allowed_nodes, metric, heap, level, node, weight, duration);
                 else
-                    RelaxNode<false>(graph, cells, metric, heap, level, node, weight, duration);
+                    RelaxNode<false>(
+                        graph, cells, allowed_nodes, metric, heap, level, node, weight, duration);
 
                 destinations_set.erase(node);
             }
@@ -80,7 +99,11 @@ class CellCustomizer
         }
     }
 
-    template <typename GraphT> void Customize(const GraphT &graph, const partition::CellStorage &cells, CellMetric &metric)
+    template <typename GraphT>
+    void Customize(const GraphT &graph,
+                   const partition::CellStorage &cells,
+                   const std::vector<bool> &allowed_nodes,
+                   CellMetric &metric)
     {
         Heap heap_exemplar(graph.GetNumberOfNodes());
         HeapPtr heaps(heap_exemplar);
@@ -92,7 +115,8 @@ class CellCustomizer
                                   auto &heap = heaps.local();
                                   for (auto id = range.begin(), end = range.end(); id != end; ++id)
                                   {
-                                      Customize(graph, heap, cells, metric, level, id);
+                                      Customize(
+                                          graph, heap, cells, allowed_nodes, metric, level, id);
                                   }
                               });
         }
@@ -102,6 +126,7 @@ class CellCustomizer
     template <bool first_level, typename GraphT>
     void RelaxNode(const GraphT &graph,
                    const partition::CellStorage &cells,
+                   const std::vector<bool> &allowed_nodes,
                    const CellMetric &metric,
                    Heap &heap,
                    LevelID level,
@@ -132,6 +157,11 @@ class CellCustomizer
                     if (subcell_weight != INVALID_EDGE_WEIGHT)
                     {
                         const NodeID to = *subcell_destination;
+                        if (!allowed_nodes[to])
+                        {
+                            continue;
+                        }
+
                         const EdgeWeight to_weight = weight + subcell_weight;
                         if (!heap.WasInserted(to))
                         {
@@ -154,6 +184,11 @@ class CellCustomizer
         for (auto edge : graph.GetInternalEdgeRange(level, node))
         {
             const NodeID to = graph.GetTarget(edge);
+            if (!allowed_nodes[to])
+            {
+                continue;
+            }
+
             const auto &data = graph.GetEdgeData(edge);
             if (data.forward &&
                 (first_level ||
