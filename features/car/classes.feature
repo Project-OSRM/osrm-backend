@@ -122,6 +122,6 @@ Feature: Car - Mode flag
             | df    | yes    | motorway|            | yes      |
 
         When I route I should get
-            | from | to | route    | turns                           | classes                                   |
-            | a    | f  | ab,df,df | depart,roundabout-exit-2,arrive | [()],[(),(motorway),(toll,motorway)],[()] |
+            | from | to | route       | turns                                                        | classes                                     |
+            | a    | f  | ab,df,df,df | depart,roundabout-exit-2,exit roundabout slight right,arrive | [()],[(),(motorway)],[(toll,motorway)],[()] |
 

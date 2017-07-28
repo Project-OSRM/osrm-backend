@@ -24,19 +24,19 @@ Feature: Rotary
             | bgecb  | roundabout |
 
        When I route I should get
-           | waypoints | route    | turns                      |
-           | a,d       | ab,cd,cd | depart,bgecb-exit-3,arrive |
-           | a,f       | ab,ef,ef | depart,bgecb-exit-2,arrive |
-           | a,h       | ab,gh,gh | depart,bgecb-exit-1,arrive |
-           | d,f       | cd,ef,ef | depart,bgecb-exit-3,arrive |
-           | d,h       | cd,gh,gh | depart,bgecb-exit-2,arrive |
-           | d,a       | cd,ab,ab | depart,bgecb-exit-1,arrive |
-           | f,h       | ef,gh,gh | depart,bgecb-exit-3,arrive |
-           | f,a       | ef,ab,ab | depart,bgecb-exit-2,arrive |
-           | f,d       | ef,cd,cd | depart,bgecb-exit-1,arrive |
-           | h,a       | gh,ab,ab | depart,bgecb-exit-3,arrive |
-           | h,d       | gh,cd,cd | depart,bgecb-exit-2,arrive |
-           | h,f       | gh,ef,ef | depart,bgecb-exit-1,arrive |
+           | waypoints | route       | turns                                        |
+           | a,d       | ab,cd,cd,cd | depart,bgecb-exit-3,exit rotary right,arrive |
+           | a,f       | ab,ef,ef,ef | depart,bgecb-exit-2,exit rotary right,arrive |
+           | a,h       | ab,gh,gh,gh | depart,bgecb-exit-1,exit rotary right,arrive |
+           | d,f       | cd,ef,ef,ef | depart,bgecb-exit-3,exit rotary right,arrive |
+           | d,h       | cd,gh,gh,gh | depart,bgecb-exit-2,exit rotary right,arrive |
+           | d,a       | cd,ab,ab,ab | depart,bgecb-exit-1,exit rotary right,arrive |
+           | f,h       | ef,gh,gh,gh | depart,bgecb-exit-3,exit rotary right,arrive |
+           | f,a       | ef,ab,ab,ab | depart,bgecb-exit-2,exit rotary right,arrive |
+           | f,d       | ef,cd,cd,cd | depart,bgecb-exit-1,exit rotary right,arrive |
+           | h,a       | gh,ab,ab,ab | depart,bgecb-exit-3,exit rotary right,arrive |
+           | h,d       | gh,cd,cd,cd | depart,bgecb-exit-2,exit rotary right,arrive |
+           | h,f       | gh,ef,ef,ef | depart,bgecb-exit-1,exit rotary right,arrive |
 
     Scenario: Only Enter
         Given the node map
@@ -90,19 +90,19 @@ Feature: Rotary
             | bcegb  | roundabout |
 
        When I route I should get
-           | waypoints | route       | turns                      |
-           | b,d       | bcegb,cd,cd | depart,bcegb-exit-1,arrive |
-           | b,f       | bcegb,ef,ef | depart,bcegb-exit-2,arrive |
-           | b,h       | bcegb,gh,gh | depart,bcegb-exit-3,arrive |
-           | c,f       | bcegb,ef,ef | depart,bcegb-exit-1,arrive |
-           | c,h       | bcegb,gh,gh | depart,bcegb-exit-2,arrive |
-           | c,a       | bcegb,ab,ab | depart,bcegb-exit-3,arrive |
-           | e,h       | bcegb,gh,gh | depart,bcegb-exit-1,arrive |
-           | e,a       | bcegb,ab,ab | depart,bcegb-exit-2,arrive |
-           | e,d       | bcegb,cd,cd | depart,bcegb-exit-3,arrive |
-           | g,a       | bcegb,ab,ab | depart,bcegb-exit-1,arrive |
-           | g,d       | bcegb,cd,cd | depart,bcegb-exit-2,arrive |
-           | g,f       | bcegb,ef,ef | depart,bcegb-exit-3,arrive |
+           | waypoints | route       | turns                           |
+           | b,d       | bcegb,cd,cd | depart,exit rotary right,arrive |
+           | b,f       | bcegb,ef,ef | depart,exit rotary right,arrive |
+           | b,h       | bcegb,gh,gh | depart,exit rotary right,arrive |
+           | c,f       | bcegb,ef,ef | depart,exit rotary right,arrive |
+           | c,h       | bcegb,gh,gh | depart,exit rotary right,arrive |
+           | c,a       | bcegb,ab,ab | depart,exit rotary right,arrive |
+           | e,h       | bcegb,gh,gh | depart,exit rotary right,arrive |
+           | e,a       | bcegb,ab,ab | depart,exit rotary right,arrive |
+           | e,d       | bcegb,cd,cd | depart,exit rotary right,arrive |
+           | g,a       | bcegb,ab,ab | depart,exit rotary right,arrive |
+           | g,d       | bcegb,cd,cd | depart,exit rotary right,arrive |
+           | g,f       | bcegb,ef,ef | depart,exit rotary right,arrive |
       #phantom node snapping can result in a full round-trip here, therefore we cannot test b->a and the other direct exits
 
     Scenario: Drive Around
@@ -158,23 +158,23 @@ Feature: Rotary
            | bkheb | roundabout | yes    |
 
         When I route I should get
-           | waypoints | route       | turns                       |
-           | a,c       | abc,abc,abc | depart,rotary-exit-1,arrive |
-           | a,l       | abc,jkl,jkl | depart,bkheb-exit-2,arrive  |
-           | a,i       | abc,ghi,ghi | depart,bkheb-exit-3,arrive  |
-           | a,f       | abc,def,def | depart,bkheb-exit-4,arrive  |
-           | d,f       | def,def,def | depart,rotary-exit-1,arrive |
-           | d,c       | def,abc,abc | depart,bkheb-exit-2,arrive  |
-           | d,l       | def,jkl,jkl | depart,bkheb-exit-3,arrive  |
-           | d,i       | def,ghi,ghi | depart,bkheb-exit-4,arrive  |
-           | g,i       | ghi,ghi,ghi | depart,rotary-exit-1,arrive |
-           | g,f       | ghi,def,def | depart,bkheb-exit-2,arrive  |
-           | g,c       | ghi,abc,abc | depart,bkheb-exit-3,arrive  |
-           | g,l       | ghi,jkl,jkl | depart,bkheb-exit-4,arrive  |
-           | j,l       | jkl,jkl,jkl | depart,rotary-exit-1,arrive |
-           | j,i       | jkl,ghi,ghi | depart,bkheb-exit-2,arrive  |
-           | j,f       | jkl,def,def | depart,bkheb-exit-3,arrive  |
-           | j,c       | jkl,abc,abc | depart,bkheb-exit-4,arrive  |
+           | waypoints | route       	 | turns                       					   |
+		   | a,c       | abc,abc,abc 	 | depart,rotary and exit right,arrive 			   |
+		   | a,l       | abc,jkl,jkl,jkl | depart,bkheb-exit-2,exit rotary straight,arrive |
+		   | a,i       | abc,ghi,ghi,ghi | depart,bkheb-exit-3,exit rotary straight,arrive |
+		   | a,f       | abc,def,def,def | depart,bkheb-exit-4,exit rotary straight,arrive |
+		   | d,f       | def,def,def 	 | depart,rotary and exit right,arrive 			   |
+		   | d,c       | def,abc,abc,abc | depart,bkheb-exit-2,exit rotary straight,arrive |
+		   | d,l       | def,jkl,jkl,jkl | depart,bkheb-exit-3,exit rotary straight,arrive |
+		   | d,i       | def,ghi,ghi,ghi | depart,bkheb-exit-4,exit rotary straight,arrive |
+		   | g,i       | ghi,ghi,ghi 	 | depart,rotary and exit right,arrive 			   |
+		   | g,f       | ghi,def,def,def | depart,bkheb-exit-2,exit rotary straight,arrive |
+		   | g,c       | ghi,abc,abc,abc | depart,bkheb-exit-3,exit rotary straight,arrive |
+		   | g,l       | ghi,jkl,jkl,jkl | depart,bkheb-exit-4,exit rotary straight,arrive |
+		   | j,l       | jkl,jkl,jkl 	 | depart,rotary and exit right,arrive 			   |
+		   | j,i       | jkl,ghi,ghi,ghi | depart,bkheb-exit-2,exit rotary straight,arrive |
+		   | j,f       | jkl,def,def,def | depart,bkheb-exit-3,exit rotary straight,arrive |
+		   | j,c       | jkl,abc,abc,abc | depart,bkheb-exit-4,exit rotary straight,arrive |
 
        Scenario: Collinear in X,Y
         Given the node map
@@ -193,9 +193,9 @@ Feature: Rotary
             | df    |            |
 
         When I route I should get
-            | waypoints | route    | turns                     |
-            | a,e       | ab,ce,ce | depart,bcdb-exit-1,arrive |
-            | a,f       | ab,df,df | depart,bcdb-exit-2,arrive |
+            | waypoints | route       | turns                     					   |
+            | a,e       | ab,ce,ce,ce | depart,bcdb-exit-1,exit rotary straight,arrive |
+            | a,f       | ab,df,df,df | depart,bcdb-exit-2,exit rotary straight,arrive |
 
        Scenario: Collinear in X,Y
         Given the node map
@@ -214,9 +214,9 @@ Feature: Rotary
             | cf    |            |
 
         When I route I should get
-            | waypoints | route    | turns                     |
-            | a,e       | ad,be,be | depart,bcdb-exit-1,arrive |
-            | a,f       | ad,cf,cf | depart,bcdb-exit-2,arrive |
+            | waypoints | route    	  | turns                     					   |
+            | a,e       | ad,be,be,be | depart,bcdb-exit-1,exit rotary straight,arrive |
+            | a,f       | ad,cf,cf,cf | depart,bcdb-exit-2,exit rotary straight,arrive |
 
        Scenario: Collinear in X,Y
         Given the node map
@@ -235,9 +235,9 @@ Feature: Rotary
             | bf    |            |
 
         When I route I should get
-            | waypoints | route    | turns                     |
-            | a,e       | ac,de,de | depart,bcdb-exit-1,arrive |
-            | a,f       | ac,bf,bf | depart,bcdb-exit-2,arrive |
+            | waypoints | route    	  | turns                     					   |
+            | a,e       | ac,de,de,de | depart,bcdb-exit-1,exit rotary straight,arrive |
+            | a,f       | ac,bf,bf,bf | depart,bcdb-exit-2,exit rotary straight,arrive |
 
        Scenario: Collinear in X,Y
         Given the node map
@@ -256,9 +256,9 @@ Feature: Rotary
             | df    |            |
 
         When I route I should get
-            | waypoints | route    | turns                     |
-            | a,e       | ab,ce,ce | depart,bcdb-exit-1,arrive |
-            | a,f       | ab,df,df | depart,bcdb-exit-2,arrive |
+            | waypoints | route    	  | turns                     					|
+            | a,e       | ab,ce,ce,ce | depart,bcdb-exit-1,exit rotary right,arrive |
+            | a,f       | ab,df,df,df | depart,bcdb-exit-2,exit rotary right,arrive |
 
        Scenario: Collinear in X,Y
         Given the node map
@@ -277,6 +277,6 @@ Feature: Rotary
             | df    |            |
 
         When I route I should get
-            | waypoints | route    | turns                     |
-            | a,e       | ab,ce,ce | depart,bcdb-exit-1,arrive |
-            | a,f       | ab,df,df | depart,bcdb-exit-2,arrive |
+            | waypoints | route    	  | turns                     					|
+            | a,e       | ab,ce,ce,ce | depart,bcdb-exit-1,exit rotary right,arrive |
+            | a,f       | ab,df,df,df | depart,bcdb-exit-2,exit rotary right,arrive |

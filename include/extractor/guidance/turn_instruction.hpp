@@ -199,7 +199,10 @@ inline bool leavesRoundabout(const extractor::guidance::TurnInstruction instruct
 
 inline bool staysOnRoundabout(const extractor::guidance::TurnInstruction instruction)
 {
-    return instruction.type == extractor::guidance::TurnType::StayOnRoundabout;
+    return instruction.type == extractor::guidance::TurnType::StayOnRoundabout ||
+           instruction.type == extractor::guidance::TurnType::EnterRoundaboutAtExit ||
+           instruction.type == extractor::guidance::TurnType::EnterRotaryAtExit ||
+           instruction.type == extractor::guidance::TurnType::EnterRoundaboutIntersectionAtExit;
 }
 
 // Silent Turn Instructions are not to be mentioned to the outside world but

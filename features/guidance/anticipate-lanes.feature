@@ -553,8 +553,8 @@ Feature: Turn Lane Guidance
             | fy    |                            | primary |            |
 
         When I route I should get
-            | waypoints | route    | turns                           | lanes    |
-            | a,h       | ab,gh,gh | depart,roundabout-exit-5,arrive |  ,;;;;;, |
+            | waypoints | route       | turns                                                 | lanes    |
+            | a,h       | ab,gh,gh,gh | depart,roundabout-exit-5,exit roundabout right,arrive |  ,;;;;,, |
 
     @anticipate
     Scenario: No Lanes for Roundabouts, see #2626
@@ -569,16 +569,16 @@ Feature: Turn Lane Guidance
             | nodes | turn:lanes:forward         | highway | junction   | name       |
             | xb    | slight_right\|slight_right | primary |            | xb         |
             | dy    |                            | primary |            | dy         |
-            | ab    |                            | primary | roundabout | roundabout |
-            | bc    |                            | primary | roundabout | roundabout |
-            | cd    | left\|slight_right         | primary | roundabout | roundabout |
-            | da    |                            | primary | roundabout | roundabout |
+            | ab    |                            | primary | roundabout | rotary     |
+            | bc    |                            | primary | roundabout | rotary     |
+            | cd    | left\|slight_right         | primary | roundabout | rotary     |
+            | da    |                            | primary | roundabout | rotary     |
 
         When I route I should get
-            | waypoints | route                    | turns                                   | lanes |
-            | x,y       | xb,dy,dy                 | depart,roundabout-exit-1,arrive         | ,;,   |
-            | x,c       | xb,roundabout,roundabout | depart,roundabout-exit-undefined,arrive | ,,    |
-            | x,a       | xb,roundabout,roundabout | depart,roundabout-exit-undefined,arrive | ,;,   |
+            | waypoints | route            | turns                                         | lanes |
+            | x,y       | xb,dy,dy,dy      | depart,rotary-exit-1,exit rotary right,arrive | ,,,   |
+            | x,c       | xb,rotary,rotary | depart,rotary-exit-undefined,arrive           | ,,    |
+            | x,a       | xb,rotary,rotary | depart,rotary-exit-undefined,arrive           | ,;,   |
 
     @anticipate
     Scenario: No Lanes for Roundabouts, see #2626
@@ -614,8 +614,8 @@ Feature: Turn Lane Guidance
             | fy    |                            | primary |            |
 
         When I route I should get
-            | waypoints | route      | turns                           | lanes      |
-            | a,h       | ab,ch,ch   | depart,roundabout-exit-5,arrive | ,;;;;;,    |
+            | waypoints | route       | turns                                                | lanes      |
+            | a,h       | ab,ch,ch,ch | depart,roundabout-exit-5,exit roundabout left,arrive | ,;;;;,,    |
 
     @anticipate
     Scenario: No Lanes for Roundabouts, see #2626
@@ -635,16 +635,16 @@ Feature: Turn Lane Guidance
             | nodes | turn:lanes:forward         | highway | junction   | name       |
             | xb    | slight_right\|slight_right | primary |            | xb         |
             | dy    |                            | primary |            | dy         |
-            | ab    |                            | primary | roundabout | roundabout |
-            | bc    |                            | primary | roundabout | roundabout |
-            | cd    | left\|slight_right         | primary | roundabout | roundabout |
-            | da    |                            | primary | roundabout | roundabout |
+            | ab    |                            | primary | roundabout | rotary     |
+            | bc    |                            | primary | roundabout | rotary     |
+            | cd    | left\|slight_right         | primary | roundabout | rotary     |
+            | da    |                            | primary | roundabout | rotary     |
 
         When I route I should get
-            | waypoints | route                    | turns                                   | lanes |
-            | x,y       | xb,dy,dy                 | depart,roundabout-exit-1,arrive         | ,;,   |
-            | x,c       | xb,roundabout,roundabout | depart,roundabout-exit-undefined,arrive | ,,    |
-            | x,a       | xb,roundabout,roundabout | depart,roundabout-exit-undefined,arrive | ,;,   |
+            | waypoints | route            | turns                                         | lanes |
+            | x,y       | xb,dy,dy,dy      | depart,rotary-exit-1,exit rotary right,arrive | ,,,   |
+            | x,c       | xb,rotary,rotary | depart,rotary-exit-undefined,arrive           | ,,    |
+            | x,a       | xb,rotary,rotary | depart,rotary-exit-undefined,arrive           | ,;,   |
 
     @anticipate @todo @2032
     Scenario: No Lanes for Roundabouts, see #2626

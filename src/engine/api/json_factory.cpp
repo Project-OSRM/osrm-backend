@@ -44,12 +44,13 @@ const constexpr char *modifier_names[] = {"uturn",
 // translations of TurnTypes. Not all types are exposed to the outside world.
 // invalid types should never be returned as part of the API
 const constexpr char *turn_type_names[] = {
-    "invalid",         "new name",   "continue", "turn",        "merge",
-    "on ramp",         "off ramp",   "fork",     "end of road", "notification",
-    "roundabout",      "roundabout", "rotary",   "rotary",      "roundabout turn",
-    "roundabout turn", "use lane",   "invalid",  "invalid",     "invalid",
-    "invalid",         "invalid",    "invalid",  "invalid",     "invalid",
-    "invalid",         "invalid"};
+    "invalid",     "new name",     "continue",        "turn",
+    "merge",       "on ramp",      "off ramp",        "fork",
+    "end of road", "notification", "roundabout",      "roundabout and exit",
+    "rotary",      "rotary and exit",       "roundabout turn", "roundabout turn and exit",
+    "use lane",    "invalid",      "invalid",         "roundabout", "exit roundabout",
+    "rotary",     "exit rotary",  "roundabout turn",         "exit roundabout turn",
+    "invalid",     "invalid"};
 
 const constexpr char *waypoint_type_names[] = {"invalid", "arrive", "depart"};
 
@@ -67,8 +68,9 @@ inline bool hasValidLanes(const guidance::IntermediateIntersection &intersection
 
 std::string instructionTypeToString(const TurnType::Enum type)
 {
+    std::cout << "Type: " << (int)type << std::endl;
     static_assert(sizeof(turn_type_names) / sizeof(turn_type_names[0]) >= TurnType::MaxTurnType,
-                  "Some turn types has not string representation.");
+                  "Some turn types doesn't have a string representation.");
     return turn_type_names[static_cast<std::size_t>(type)];
 }
 

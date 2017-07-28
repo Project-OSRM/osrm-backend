@@ -167,12 +167,12 @@ class RouteAPI : public BaseAPI
                  * the overall response consistent.
                  *
                  * ⚠ CAUTION: order of post-processing steps is important
-                 *    - postProcess must be called before collapseTurnInstructions that expects
+                 *    - handleRoundabouts must be called before collapseTurnInstructions that expects
                  *      post-processed roundabouts without Exit instructions
                  */
 
                 guidance::trimShortSegments(steps, leg_geometry);
-                leg.steps = guidance::postProcess(std::move(steps));
+                leg.steps = guidance::handleRoundabouts(std::move(steps));
                 leg.steps = guidance::collapseTurnInstructions(std::move(leg.steps));
                 leg.steps = guidance::anticipateLaneChange(std::move(leg.steps));
                 leg.steps = guidance::buildIntersections(std::move(leg.steps));

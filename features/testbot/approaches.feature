@@ -167,7 +167,7 @@ Feature: Approach parameter
             | s    | e  | unrestricted curb |       |
 
 
-    Scenario: UTurn test, router can found a route because he can use the roundabout
+    Scenario: UTurn test, router can find a route because he can use the roundabout
         Given the node map
             """
                              h
@@ -188,5 +188,5 @@ Feature: Approach parameter
             | restriction | bc       | bc     | c        | no_u_turn   |
 
         When I route I should get
-            | from | to | approaches        | route    |
-            | s    | e  | unrestricted curb | ab,bc,bc |
+            | from | to | approaches        | route       |
+            | s    | e  | unrestricted curb | ab,bc,bc,bc |

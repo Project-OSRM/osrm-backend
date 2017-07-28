@@ -27,10 +27,10 @@ Feature: Basic Roundabout
             | bcegb  | roundabout |
 
         When I route I should get
-           | waypoints | route    | turns                                         |
-           | a,d       | ab,cd,cd | depart,roundabout turn left exit-1,arrive     |
-           | a,f       | ab,ef,ef | depart,roundabout turn straight exit-2,arrive |
-           | a,h       | ab,gh,gh | depart,roundabout turn right exit-3,arrive    |
+           | waypoints | route       | turns                                                                   |
+           | a,d       | ab,cd,cd,cd | depart,roundabout turn left exit-1,exit roundabout turn left,arrive     |
+           | a,f       | ab,ef,ef,ef | depart,roundabout turn straight exit-2,exit roundabout turn left,arrive |
+           | a,h       | ab,gh,gh,gh | depart,roundabout turn right exit-3,exit roundabout turn left,arrive    |
 
     Scenario: Mixed Entry and Exit
         And a grid size of 10 meters
@@ -52,7 +52,7 @@ Feature: Basic Roundabout
            | behkb | roundabout | yes    |
 
         When I route I should get
-           | waypoints | route       | turns                           |
-           | c,a       | cba,cba,cba | depart,roundabout-exit-1,arrive |
-           | l,a       | lkj,cba,cba | depart,roundabout-exit-2,arrive |
-           | i,a       | ihg,cba,cba | depart,roundabout-exit-3,arrive |
+           | waypoints | route           | turns                                                    |
+           | c,a       | cba,cba,cba     | depart,roundabout and exit left,arrive                   |
+           | l,a       | lkj,cba,cba,cba | depart,roundabout-exit-2,exit roundabout straight,arrive |
+           | i,a       | ihg,cba,cba,cba | depart,roundabout-exit-3,exit roundabout straight,arrive |

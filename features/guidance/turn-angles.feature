@@ -248,8 +248,8 @@ Feature: Simple Turns
             | bcdefghijklmnob | residential | road | 1     | yes    | roundabout |
 
        When I route I should get
-            | waypoints | route               | turns                                         | intersections                                                            |
-            | a,p       | road,road,road      | depart,roundabout turn straight exit-1,arrive | true:90;true:165 false:270 false:345,true:90 false:180 true:345;true:270 |
+            | waypoints | route               | turns                                                                    | intersections                                                            |
+            | a,p       | road,road,road,road | depart,roundabout turn straight exit-1,exit roundabout turn right,arrive | true:90;true:165 false:270 false:345;true:90 false:180 true:345;true:270 |
 
     Scenario: Splitting Road with many lanes
         Given the node map
@@ -1317,11 +1317,11 @@ Feature: Simple Turns
 
     #https://github.com/Project-OSRM/osrm-backend/pull/3469#issuecomment-270806580
     Scenario: Oszillating Lower Priority Road
-		#Given the node map
-	#		"""
-	#		a -db    c
+        #Given the node map
+    #       """
+    #       a -db    c
     #           f
-    #   	"""
+    #       """
         Given the node locations
             | node | lat                | lon                | #          |
             | a    | 1.0                | 1.0                |            |
