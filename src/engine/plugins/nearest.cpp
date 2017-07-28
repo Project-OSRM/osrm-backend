@@ -25,6 +25,9 @@ Status NearestPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms
 {
     BOOST_ASSERT(params.IsValid());
 
+    if (!CheckAlgorithms(params, algorithms, json_result))
+        return Status::Error;
+
     const auto &facade = algorithms.GetFacade();
 
     if (max_results > 0 &&

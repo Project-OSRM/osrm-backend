@@ -39,13 +39,13 @@ class ImmutableProvider final : public DataFacadeProvider<AlgorithmT, FacadeT>
     std::shared_ptr<const Facade> Get(const api::BaseParameters &params) const override final { return facade_factory.Get(params); }
 
   private:
-    DataFacadeFactory<const Facade> facade_factory;
+    DataFacadeFactory<FacadeT, AlgorithmT> facade_factory;
 };
 
 template <typename AlgorithmT, template <typename A> class FacadeT>
 class WatchingProvider : public DataFacadeProvider<AlgorithmT, FacadeT>
 {
-    DataWatchdog<AlgorithmT> watchdog;
+    DataWatchdog<FacadeT, AlgorithmT> watchdog;
 
   public:
     using Facade = typename DataFacadeProvider<AlgorithmT, FacadeT>::Facade;
