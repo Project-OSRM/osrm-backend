@@ -59,7 +59,7 @@ Feature: Testbot - Avoid flags
             | from | to | route    |
             | a    | d  |          |
             | a    | g  |          |
-            | a    | c  | ab,bc,bc |
+            | a    | c  |          |
             | a    | f  |          |
             | f    | d  | fg,gd,gd |
 
