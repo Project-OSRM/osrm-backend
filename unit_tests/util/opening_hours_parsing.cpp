@@ -6,6 +6,11 @@
 
 BOOST_AUTO_TEST_SUITE(opening_hours)
 
+// Some tests from https://www.netzwolf.info/en/cartography/osm/time_domain/explanation
+
+using osrm::util::ParseOpeningHours;
+using osrm::util::CheckOpeningHours;
+
 // convert a string representation of time to a tm structure
 struct tm time(const char *str)
 {
@@ -21,8 +26,6 @@ struct tm time(const char *str)
 
 BOOST_AUTO_TEST_CASE(check_opening_hours_grammar)
 {
-    using osrm::util::ParseOpeningHours;
-
     const std::string opening_hours[] = {
         "Apr 10-Jun 15",
         "Apr 10-15 off",
@@ -45,7 +48,9 @@ BOOST_AUTO_TEST_CASE(check_opening_hours_grammar)
         "Tu,Th 16:00-20:00",
         "2016 Feb-2017 Dec",
         "2016-2017",
-        "Mo,Tu,Th,Fr 12:00-18:00;Sa 12:00-17:00; Th[3] off; Th[-1] off"};
+        "Mo,Tu,Th,Fr 12:00-18:00;Sa 12:00-17:00; Th[3] off; Th[-1] off",
+        "Sep 15+Sa-Oct Su[1]; Oct 01-03" // Oktoberfest
+    };
 
     for (auto &input : opening_hours)
     {
@@ -55,8 +60,6 @@ BOOST_AUTO_TEST_CASE(check_opening_hours_grammar)
 
 BOOST_AUTO_TEST_CASE(check_opening_hours_grammar_incorrect_correct)
 {
-    using osrm::util::ParseOpeningHours;
-
     const std::pair<std::string, std::string> opening_hours[] = {
         {"7/8-23", "Mo-Su 08:00-23:00"},
         {"0600-1800", "06:00-18:00"},
@@ -88,8 +91,6 @@ BOOST_AUTO_TEST_CASE(check_opening_hours_grammar_incorrect_correct)
 
 BOOST_AUTO_TEST_CASE(check_rules_grouping)
 {
-    using osrm::util::ParseOpeningHours;
-
     const auto &result1 = ParseOpeningHours("Su-Th 11:00-03:00, Fr-Sa 11:00-05:00");
     BOOST_REQUIRE_EQUAL(result1.size(), 2);
     BOOST_CHECK_EQUAL(result1.at(0).times.size(), 1);
@@ -108,9 +109,6 @@ BOOST_AUTO_TEST_CASE(check_rules_grouping)
 
 BOOST_AUTO_TEST_CASE(check_opening_hours_time_and_weekday)
 {
-    using osrm::util::ParseOpeningHours;
-    using osrm::util::CheckOpeningHours;
-
     const auto &opening_hours = ParseOpeningHours("Mo-Fr 08:30-20:00");
     BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours, time("Wed, 14 Dec 2016 12:32:00")), true);
     BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours, time("Wed, 14 Dec 2016 21:32:00")), false);
@@ -120,13 +118,56 @@ BOOST_AUTO_TEST_CASE(check_opening_hours_time_and_weekday)
     BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours, time("Mon, 19 Dec 2016 08:29:59")), false);
     BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours, time("Fri, 23 Dec 2016 19:59:59")), true);
     BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours, time("Fri, 23 Dec 2016 20:00:00")), false);
+
+    const auto &opening_hours2 = ParseOpeningHours("Su 00:00-23:59");
+    BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours2, time("Sat, 29 Jul 2017 12:57:51")), false);
+    BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours2, time("Sun, 30 Jul 2017 19:47:51")), true);
+    BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours2, time("Sun, 30 Jul 2017 23:59:30")), false);
+    BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours2, time("Mon, 31 Jul 2017 05:52:22")), false);
+    BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours2, time("Mon, 31 Jul 2017 00:00:00")), false);
+
+    const auto &opening_hours3 = ParseOpeningHours("Su 00:00-24:00");
+    BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours3, time("Sat, 29 Jul 2017 23:59:59")), false);
+    BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours3, time("Sun, 30 Jul 2017 19:47:51")), true);
+    BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours3, time("Sun, 30 Jul 2017 23:59:30")), true);
+    BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours3, time("Mon, 31 Jul 2017 00:00:00")), false);
+}
+
+BOOST_AUTO_TEST_CASE(check_opening_hours_only_weekdays)
+{
+    const auto &opening_hours = ParseOpeningHours("Su");
+    BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours, time("Sat, 29 Jul 2017 23:59:59")), false);
+    BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours, time("Sun, 30 Jul 2017 19:47:51")), true);
+    BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours, time("Sun, 30 Jul 2017 23:59:30")), true);
+    BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours, time("Mon, 31 Jul 2017 00:00:00")), false);
+
+    const auto &opening_hours2 = ParseOpeningHours("Mo-Sa");
+    BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours2, time("Fri, 28 Jul 2017 09:11:11")), true);
+    BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours2, time("Sat, 29 Jul 2017 23:59:59")), true);
+    BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours2, time("Sun, 30 Jul 2017 19:47:51")), false);
+    BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours2, time("Sun, 30 Jul 2017 23:59:30")), false);
+    BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours2, time("Mon, 31 Jul 2017 00:00:00")), true);
+    BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours2, time("Tue, 01 Aug 2017 10:24:31")), true);
+
+    const auto &opening_hours3 = ParseOpeningHours("Sa-Mo");
+    BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours3, time("Fri, 28 Jul 2017 09:11:11")), false);
+    BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours3, time("Sat, 29 Jul 2017 23:59:59")), true);
+    BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours3, time("Sun, 30 Jul 2017 19:47:51")), true);
+    BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours3, time("Sun, 30 Jul 2017 23:59:30")), true);
+    BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours3, time("Mon, 31 Jul 2017 00:00:00")), true);
+    BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours3, time("Tue, 01 Aug 2017 10:24:31")), false);
+
+    const auto &opening_hours4 = ParseOpeningHours("Mo-We,Sa");
+    BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours4, time("Fri, 28 Jul 2017 09:11:11")), false);
+    BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours4, time("Sat, 29 Jul 2017 23:59:59")), true);
+    BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours4, time("Sun, 30 Jul 2017 19:47:51")), false);
+    BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours4, time("Sun, 30 Jul 2017 23:59:30")), false);
+    BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours4, time("Mon, 31 Jul 2017 00:00:00")), true);
+    BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours4, time("Tue, 01 Aug 2017 10:24:31")), true);
 }
 
 BOOST_AUTO_TEST_CASE(check_opening_hours_year_month)
 {
-    using osrm::util::ParseOpeningHours;
-    using osrm::util::CheckOpeningHours;
-
     const auto &opening_hours = ParseOpeningHours("2016 Feb-2017 Dec");
     BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours, time("Sun, 31 Jan 2016 12:00:00")), false);
     BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours, time("Wed, 14 Dec 2016 12:32:00")), true);
@@ -136,9 +177,6 @@ BOOST_AUTO_TEST_CASE(check_opening_hours_year_month)
 
 BOOST_AUTO_TEST_CASE(check_opening_hours_year_monthday)
 {
-    using osrm::util::ParseOpeningHours;
-    using osrm::util::CheckOpeningHours;
-
     const auto &opening_hours = ParseOpeningHours("2019 Apr 10-Jun 15");
     BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours, time("Sun, 16 Apr 2017 17:59:00")), false);
     BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours, time("Tue, 09 Apr 2019 23:59:00")), false);
@@ -150,9 +188,6 @@ BOOST_AUTO_TEST_CASE(check_opening_hours_year_monthday)
 
 BOOST_AUTO_TEST_CASE(check_opening_hours_year_monthday_time_and_weekday)
 {
-    using osrm::util::ParseOpeningHours;
-    using osrm::util::CheckOpeningHours;
-
     const auto &opening_hours = ParseOpeningHours("2017 Feb-May Sa-Tu 08:00-18:00");
     BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours, time("Mon, 12 Dec 2016 12:32:00")), false);
     BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours, time("Tue, 31 Jan 2017 23:59:00")), false);
@@ -167,9 +202,6 @@ BOOST_AUTO_TEST_CASE(check_opening_hours_year_monthday_time_and_weekday)
 
 BOOST_AUTO_TEST_CASE(check_opening_hours_time_plus)
 {
-    using osrm::util::ParseOpeningHours;
-    using osrm::util::CheckOpeningHours;
-
     const auto &opening_hours = ParseOpeningHours("08:00+");
     BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours, time("Mon, 12 Dec 2016 07:59:00")), false);
     BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours, time("Mon, 12 Dec 2016 08:00:00")), true);
@@ -178,9 +210,6 @@ BOOST_AUTO_TEST_CASE(check_opening_hours_time_plus)
 
 BOOST_AUTO_TEST_CASE(check_opening_hours_off)
 {
-    using osrm::util::ParseOpeningHours;
-    using osrm::util::CheckOpeningHours;
-
     const auto &opening_hours = ParseOpeningHours("08:00-20:00; 12:00-14:30 off; 12:30-13:30 open");
     BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours, time("Mon, 12 Dec 2016 07:00:00")), false);
     BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours, time("Mon, 12 Dec 2016 08:00:00")), true);
@@ -193,9 +222,6 @@ BOOST_AUTO_TEST_CASE(check_opening_hours_off)
 
 BOOST_AUTO_TEST_CASE(check_opening_hours_overnight_multiple_times)
 {
-    using osrm::util::ParseOpeningHours;
-    using osrm::util::CheckOpeningHours;
-
     const auto &opening_hours = ParseOpeningHours("20 08:00-10:00,20:00-03:00");
     BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours, time("Tue, 20 Dec 2016 02:00:00")), false);
     BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours, time("Tue, 20 Dec 2016 07:00:00")), false);
@@ -210,9 +236,6 @@ BOOST_AUTO_TEST_CASE(check_opening_hours_overnight_multiple_times)
 
 BOOST_AUTO_TEST_CASE(check_opening_hours_overnight_weekdays)
 {
-    using osrm::util::ParseOpeningHours;
-    using osrm::util::CheckOpeningHours;
-
     const auto &opening_hours = ParseOpeningHours("Mo-Fr 20:00-03:00");
     BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours, time("Mon, 12 Dec 2016 02:00:00")), false);
     BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours, time("Sat, 17 Dec 2016 02:00:00")), true);
@@ -220,9 +243,6 @@ BOOST_AUTO_TEST_CASE(check_opening_hours_overnight_weekdays)
 
 BOOST_AUTO_TEST_CASE(check_opening_hours_overnight_days)
 {
-    using osrm::util::ParseOpeningHours;
-    using osrm::util::CheckOpeningHours;
-
     const auto &opening_hours = ParseOpeningHours("Dec 12-17 20:00-03:00");
     BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours, time("Mon, 12 Dec 2016 02:00:00")), false);
     BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours, time("Mon, 12 Dec 2016 20:00:00")), true);
@@ -234,9 +254,6 @@ BOOST_AUTO_TEST_CASE(check_opening_hours_overnight_days)
 
 BOOST_AUTO_TEST_CASE(check_opening_hours_extended_hours_overlapping)
 {
-    using osrm::util::ParseOpeningHours;
-    using osrm::util::CheckOpeningHours;
-
     const auto &opening_hours = ParseOpeningHours("Dec 20 08:00-44:00");
     BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours, time("Mon, 19 Dec 2016 07:00:00")), false);
     BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours, time("Tue, 20 Dec 2016 07:00:00")), false);
@@ -256,9 +273,6 @@ BOOST_AUTO_TEST_CASE(check_opening_hours_extended_hours_overlapping)
 
 BOOST_AUTO_TEST_CASE(check_opening_hours_extended_hours_nonoverlapping)
 {
-    using osrm::util::ParseOpeningHours;
-    using osrm::util::CheckOpeningHours;
-
     const auto &opening_hours = ParseOpeningHours("Dec 20 20:00-32:00");
     BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours, time("Mon, 19 Dec 2016 07:00:00")), false);
     BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours, time("Tue, 20 Dec 2016 07:00:00")), false);
