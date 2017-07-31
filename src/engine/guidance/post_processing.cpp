@@ -96,7 +96,7 @@ void processRoundaboutExits(const RouteStepIterator begin, const RouteStepIterat
     const auto exit = std::count_if(begin, end, passes_exit_or_leaves_roundabout);
 
     // removes all intermediate instructions, assigns names and exit numbers
-    BOOST_ASSERT(leavesRoundabout((end-1)->maneuver.instruction));
+    BOOST_ASSERT(leavesRoundabout((end - 1)->maneuver.instruction));
     BOOST_ASSERT(std::distance(begin, end) >= 1);
     (end - 1)->maneuver.exit = exit;
 

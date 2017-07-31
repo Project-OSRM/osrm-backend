@@ -167,7 +167,8 @@ class RouteAPI : public BaseAPI
                  * the overall response consistent.
                  *
                  * ⚠ CAUTION: order of post-processing steps is important
-                 *    - handleRoundabouts must be called before collapseTurnInstructions that expects
+                 *    - handleRoundabouts must be called before collapseTurnInstructions that
+                 *expects
                  *      post-processed roundabouts without Exit instructions
                  */
 
