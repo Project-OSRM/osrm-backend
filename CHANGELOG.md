@@ -17,6 +17,7 @@
       - Guidance: add support for throughabouts
     - Bugfixes
       - Properly save/retrieve datasource annotations for road segments ([#4346](https://github.com/Project-OSRM/osrm-backend/issues/4346)
+      - Fix conditional restriction grammer parsing so it works for single-day-of-week restrictions ([#4357](https://github.com/Project-OSRM/osrm-backend/pull/4357))
     - Algorithm)
       - BREAKING: the file format requires re-processing due to the changes on via-ways
       - Added support for via-way restrictions
