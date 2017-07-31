@@ -12,6 +12,7 @@ namespace util
 {
 
 // Helper classes for "opening hours" format http://wiki.openstreetmap.org/wiki/Key:opening_hours
+// Grammar https://wiki.openstreetmap.org/wiki/Key:opening_hours/specification
 // Supported simplified features in CheckOpeningHours:
 // - Year/Month/Day ranges
 // - Weekday ranges

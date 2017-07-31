@@ -218,9 +218,9 @@ struct opening_hours_grammar : qi::grammar<Iterator, Skipper, std::vector<Openin
         weekday_sequence = (weekday_range % ',')[ph::bind(&OpeningHours::weekdays, _r1) = _1];
 
         weekday_range
-            = wday[_a = _1, _b = _1]
-            >> -(('-' >> wday[_b = _1])
-                 | ('[' >> (nth_entry % ',') >> ']' >> -day_offset))
+            = (wday[_a = _1, _b = _1]
+               >> -(('-' >> wday[_b = _1])
+                    | ('[' >> (nth_entry % ',') >> ']' >> -day_offset)))
             [_val = ph::construct<OpeningHours::WeekdayRange>(_a, _b)]
             ;
 
