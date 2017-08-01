@@ -27,7 +27,6 @@ class ExtractionContainers
     void PrepareEdges(ScriptingEnvironment &scripting_environment);
 
     void WriteNodes(storage::io::FileWriter &file_out) const;
-    void WriteConditionalRestrictions(const std::string &restrictions_file_name);
     void WriteEdges(storage::io::FileWriter &file_out) const;
     void WriteCharData(const std::string &file_name);
 
@@ -65,7 +64,6 @@ class ExtractionContainers
 
     void PrepareData(ScriptingEnvironment &scripting_environment,
                      const std::string &osrm_path,
-                     const std::string &restrictions_file_name,
                      const std::string &names_data_path);
 };
 }

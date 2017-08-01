@@ -1,6 +1,7 @@
 #ifndef OSRM_EXTRACTOR_IO_HPP
 #define OSRM_EXTRACTOR_IO_HPP
 
+#include "conditional_turn_penalty.hpp"
 #include "extractor/datasources.hpp"
 #include "extractor/intersection_bearings_container.hpp"
 #include "extractor/nbg_to_ebg.hpp"
@@ -272,6 +273,54 @@ inline void write(storage::io::FileWriter &writer,
         write(writer, restriction);
     };
     std::for_each(restrictions.begin(), restrictions.end(), write_restriction);
+}
+
+inline void read(storage::io::FileReader &reader, ConditionalTurnPenalty &turn_penalty)
+{
+    reader.ReadInto(turn_penalty.turn_offset);
+    reader.ReadInto(turn_penalty.location.lat);
+    reader.ReadInto(turn_penalty.location.lon);
+    auto const num_conditions = reader.ReadElementCount64();
+    turn_penalty.conditions.resize(num_conditions);
+    for (auto &condition : turn_penalty.conditions)
+    {
+        reader.ReadInto(condition.modifier);
+        storage::serialization::read(reader, condition.times);
+        storage::serialization::read(reader, condition.weekdays);
+        storage::serialization::read(reader, condition.monthdays);
+    }
+}
+
+inline void write(storage::io::FileWriter &writer, const ConditionalTurnPenalty &turn_penalty)
+{
+    writer.WriteOne(turn_penalty.turn_offset);
+    writer.WriteOne(static_cast<util::FixedLatitude::value_type>(turn_penalty.location.lat));
+    writer.WriteOne(static_cast<util::FixedLongitude::value_type>(turn_penalty.location.lon));
+    writer.WriteElementCount64(turn_penalty.conditions.size());
+    for (const auto &c : turn_penalty.conditions)
+    {
+        writer.WriteOne(c.modifier);
+        storage::serialization::write(writer, c.times);
+        storage::serialization::write(writer, c.weekdays);
+        storage::serialization::write(writer, c.monthdays);
+    }
+}
+
+inline void write(storage::io::FileWriter &writer,
+                  const std::vector<ConditionalTurnPenalty> &conditional_penalties)
+{
+    writer.WriteElementCount64(conditional_penalties.size());
+    for (const auto &penalty : conditional_penalties)
+        write(writer, penalty);
+}
+
+inline void read(storage::io::FileReader &reader,
+                 std::vector<ConditionalTurnPenalty> &conditional_penalties)
+{
+    auto const num_elements = reader.ReadElementCount64();
+    conditional_penalties.resize(num_elements);
+    for (auto &penalty : conditional_penalties)
+        read(reader, penalty);
 }
 }
 }

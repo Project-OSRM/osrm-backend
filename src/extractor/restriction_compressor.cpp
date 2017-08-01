@@ -10,7 +10,9 @@ namespace osrm
 namespace extractor
 {
 
-RestrictionCompressor::RestrictionCompressor(std::vector<TurnRestriction> &restrictions)
+RestrictionCompressor::RestrictionCompressor(
+    std::vector<TurnRestriction> &restrictions,
+    std::vector<ConditionalTurnRestriction> &conditional_turn_restrictions)
 {
     // add a node restriction ptr to the starts/ends maps, needs to be a reference!
     auto index = [&](auto &element) {
@@ -35,6 +37,9 @@ RestrictionCompressor::RestrictionCompressor(std::vector<TurnRestriction> &restr
 
     // add all restrictions as their respective startend pointers
     std::for_each(restrictions.begin(), restrictions.end(), index_starts_and_ends);
+    std::for_each(conditional_turn_restrictions.begin(),
+                  conditional_turn_restrictions.end(),
+                  index_starts_and_ends);
 }
 
 void RestrictionCompressor::Compress(const NodeID from, const NodeID via, const NodeID to)

@@ -73,6 +73,75 @@ Feature: Car - Turn restrictions
             | s    | m  | js,pjm,pjm |
 
     @no_turning @conditionals
+    Scenario: Car - Restriction With Compressed Geometry
+        Given the extract extra arguments "--parse-conditional-restrictions"
+                                            # time stamp for 10am on Tues, 02 May 2017 GMT
+        Given the contract extra arguments "--time-zone-file=test/data/tz/{timezone_names}/guinea.geojson --parse-conditionals-from-now=1493719200"
+        Given the customize extra arguments "--time-zone-file=test/data/tz/{timezone_names}/guinea.geojson --parse-conditionals-from-now=1493719200"
+
+        Given the node map
+            """
+            n
+            |
+            i
+            |
+            j-k-l-m
+            |
+            s
+            """
+
+        And the ways
+            | nodes |
+            | nij   |
+            | js    |
+            | jklm  |
+
+        And the relations
+            | type        | way:from | way:to | node:via | restriction:conditional             |
+            | restriction | nij      | jklm   | j        | no_left_turn @ (Mo-Fr 07:00-10:30)  |
+
+        When I route I should get
+            | from | to | route               |
+            | n    | m  | nij,js,js,jklm,jklm |
+
+    @no_turning @conditionals
+    Scenario: Car - Restriction With Compressed Geometry and Traffic Signal
+        Given the extract extra arguments "--parse-conditional-restrictions"
+                                            # time stamp for 10am on Tues, 02 May 2017 GMT
+        Given the contract extra arguments "--time-zone-file=test/data/tz/{timezone_names}/guinea.geojson --parse-conditionals-from-now=1493719200"
+        Given the customize extra arguments "--time-zone-file=test/data/tz/{timezone_names}/guinea.geojson --parse-conditionals-from-now=1493719200"
+
+        Given the node map
+            """
+            n
+            |
+            i
+            |
+            j-k-l-m
+            |
+            s
+            """
+
+        And the ways
+            | nodes |
+            | nij   |
+            | js    |
+            | jklm  |
+
+        And the nodes
+            | node | highway        |
+            | i    | traffic_signal |
+            | k    | traffic_signal |
+
+        And the relations
+            | type        | way:from | way:to | node:via | restriction:conditional             |
+            | restriction | nij      | jklm   | j        | no_left_turn @ (Mo-Fr 07:00-10:30)  |
+
+        When I route I should get
+            | from | to | route               |
+            | n    | m  | nij,js,js,jklm,jklm |
+
+    @no_turning @conditionals
     Scenario: Car - ignores except restriction
         Given the extract extra arguments "--parse-conditional-restrictions"
                                             # time stamp for 10am on Tues, 02 May 2017 GMT
@@ -530,6 +599,81 @@ Feature: Car - Turn restrictions
             | n    | p  | nj,js,js,jp,jp |
             | m    | p  | mj,jp,jp       |
 
+    @restriction-way
+    Scenario: Car - prohibit turn
+        Given the extract extra arguments "--parse-conditional-restrictions"
+        # 5pm Wed 02 May, 2017 GMT
+        Given the contract extra arguments "--time-zone-file=test/data/tz/{timezone_names}/guinea.geojson --parse-conditionals-from-now=1493744400"
+        Given the customize extra arguments "--time-zone-file=test/data/tz/{timezone_names}/guinea.geojson --parse-conditionals-from-now=1493744400"
+
+        Given the node map
+            """
+            c
+            |
+            |   f
+            |   |
+            b---e
+            |   |
+            a   d
+            """
+
+        And the ways
+            | nodes |
+            | ab    |
+            | bc    |
+            | be    |
+            | de    |
+            | ef    |
+
+        And the relations
+            | type        | way:from | way:via | way:to | restriction:conditional                         |
+            | restriction | ab       | be      | de     | no_right_turn @ (Mo-Fr 07:00-11:00,16:00-18:30) |
+
+        When I route I should get
+            | from | to | route             | turns                                                               | locations   |
+            | a    | d  | ab,be,ef,ef,de,de | depart,turn right,turn left,continue uturn,new name straight,arrive | a,b,e,f,e,d |
+            | a    | f  | ab,be,ef,ef       | depart,turn right,turn left,arrive                                  | a,b,e,f     |
+            | c    | d  | bc,be,de,de       | depart,turn left,turn right,arrive                                  | c,b,e,d     |
+            | c    | f  | bc,be,ef,ef       | depart,turn left,turn left,arrive                                   | c,b,e,f     |
+
+    # condition is off
+    @restriction-way
+    Scenario: Car - prohibit turn
+        Given the extract extra arguments "--parse-conditional-restrictions"
+        # time stamp for 12am on Tues, 02 May 2017 GMT
+        Given the contract extra arguments "--time-zone-file=test/data/tz/{timezone_names}/guinea.geojson --parse-conditionals-from-now=1493726400"
+        Given the customize extra arguments "--time-zone-file=test/data/tz/{timezone_names}/guinea.geojson --parse-conditionals-from-now=1493726400"
+
+        Given the node map
+            """
+            c
+            |
+            |   f
+            |   |
+            b---e
+            |   |
+            a   d
+            """
+
+        And the ways
+            | nodes |
+            | ab    |
+            | bc    |
+            | be    |
+            | de    |
+            | ef    |
+
+        And the relations
+            | type        | way:from | way:via | way:to | restriction:conditional                         |
+            | restriction | ab       | be      | de     | no_right_turn @ (Mo-Fr 07:00-11:00,16:00-18:30) |
+
+        When I route I should get
+            | from | to | route       |
+            | a    | d  | ab,be,de,de |
+            | a    | f  | ab,be,ef,ef |
+            | c    | d  | bc,be,de,de |
+            | c    | f  | bc,be,ef,ef |
+
     # https://www.openstreetmap.org/#map=18/38.91099/-77.00888
     @no_turning @conditionals
     Scenario: Car - DC North capitol situation, two on one off
@@ -769,15 +913,145 @@ Feature: Car - Turn restrictions
             | dg    |
 
         And the relations
-            | type        | way:from | way:to | way:via | restriction:conditional                    |
-            | restriction | ab       | be     | ef      | no_uturn @ (Mo-Fr 07:00-11:00,16:00-18:30) |
+            | type        | way:from | way:via | way:to | restriction:conditional                    |
+            | restriction | ab       | be      | ef     | no_uturn @ (Mo-Fr 07:00-11:00,16:00-18:30) |
 
         And the relations
             | type        | way:from | way:to | node:via | restriction:conditional                    |
             | restriction | ed       | dg     | d        | no_uturn @ (Mo-Fr 07:00-11:00,16:00-18:30) |
 
         When I route I should get
-            | from | to | route          | #                                                                                         |
-            | a    | f  | ab,be,ef,ef    | currently we do not handle conditional via-ways, this test will have to change when we do |
-            | f    | 1  | ef,eh,gh,dg,dg |                                                                                           |
+            | from | to | route             |
+            | a    | f  | ab,bc,bc,be,ef,ef |
+            | f    | 1  | ef,eh,gh,dg,dg    |
+
+    @restriction-way @overlap
+    Scenario: Car - prohibit turn
+        Given the extract extra arguments "--parse-conditional-restrictions"
+        # 5pm Wed 02 May, 2017 GMT
+        Given the contract extra arguments "--time-zone-file=test/data/tz/{timezone_names}/guinea.geojson --parse-conditionals-from-now=1493744400"
+        Given the customize extra arguments "--time-zone-file=test/data/tz/{timezone_names}/guinea.geojson --parse-conditionals-from-now=1493744400"
+
+        Given the node map
+            """
+            c
+            |
+            |   f
+            |   |
+            b---e
+            |   |
+            a   d
+            """
+
+        And the ways
+            | nodes |
+            | ab    |
+            | bc    |
+            | be    |
+            | de    |
+            | ef    |
+
+        And the relations
+            | type        | way:from | way:via | way:to | restriction:conditional             |
+            | restriction | ab       | be      | de     | no_right_turn @ (Mo-Fr 07:00-11:00) |
+
+        And the relations
+            | type        | way:from | way:via | way:to | restriction   |
+            | restriction | ab       | be      | de     | no_right_turn |
+
+        # condition is off, but the general restriction should take precedence
+        When I route I should get
+            | from | to | route             | turns                                                               | locations   |
+            | a    | d  | ab,be,ef,ef,de,de | depart,turn right,turn left,continue uturn,new name straight,arrive | a,b,e,f,e,d |
+            | a    | f  | ab,be,ef,ef       | depart,turn right,turn left,arrive                                  | a,b,e,f     |
+            | c    | d  | bc,be,de,de       | depart,turn left,turn right,arrive                                  | c,b,e,d     |
+            | c    | f  | bc,be,ef,ef       | depart,turn left,turn left,arrive                                   | c,b,e,f     |
+
+    @restriction-way @overlap
+    Scenario: Car - prohibit turn
+        Given the extract extra arguments "--parse-conditional-restrictions"
+        # 5pm Wed 02 May, 2017 GMT
+        Given the contract extra arguments "--time-zone-file=test/data/tz/{timezone_names}/guinea.geojson --parse-conditionals-from-now=1493744400"
+        Given the customize extra arguments "--time-zone-file=test/data/tz/{timezone_names}/guinea.geojson --parse-conditionals-from-now=1493744400"
+
+        Given the node map
+            """
+            c
+            |
+            |   f
+            |   |
+            b---e
+            |   |
+            |   d
+            |
+            a
+            """
+
+        And the ways
+            | nodes |
+            | ab    |
+            | bc    |
+            | be    |
+            | de    |
+            | ef    |
+
+        And the relations
+            | type        | way:from | way:via | way:to | restriction:conditional             |
+            | restriction | ab       | be      | de     | no_right_turn @ (Mo-Fr 07:00-11:00) |
+
+        And the relations
+            | type        | way:from | node:via | way:to | restriction:conditional             |
+            | restriction | be       | e        | de     | no_right_turn @ (Mo-Fr 16:00-18:00) |
+
+        # way restriction is off, node-restriction is on
+        When I route I should get
+            | from | to | route             | turns                                                               | locations   |
+            | a    | d  | ab,be,ef,ef,de,de | depart,turn right,turn left,continue uturn,new name straight,arrive | a,b,e,f,e,d |
+            | a    | f  | ab,be,ef,ef       | depart,turn right,turn left,arrive                                  | a,b,e,f     |
+            | c    | d  | bc,be,ef,ef,de,de | depart,turn left,turn left,continue uturn,new name straight,arrive  | c,b,e,f,e,d |
+            | c    | f  | bc,be,ef,ef       | depart,turn left,turn left,arrive                                   | c,b,e,f     |
+
+    @restriction-way @overlap
+    Scenario: Car - prohibit turn
+        Given the extract extra arguments "--parse-conditional-restrictions"
+        # 5pm Wed 02 May, 2017 GMT
+        Given the contract extra arguments "--time-zone-file=test/data/tz/{timezone_names}/guinea.geojson --parse-conditionals-from-now=1493744400"
+        Given the customize extra arguments "--time-zone-file=test/data/tz/{timezone_names}/guinea.geojson --parse-conditionals-from-now=1493744400"
+
+        Given the node map
+            """
+            c
+            |
+            |   f
+            |   |
+            b---e
+            |   |
+            |   d
+            |
+            a
+            """
+
+        And the ways
+            | nodes |
+            | ab    |
+            | bc    |
+            | be    |
+            | de    |
+            | ef    |
+
+        And the relations
+            | type        | way:from | way:via | way:to | restriction:conditional             |
+            | restriction | ab       | be      | de     | no_right_turn @ (Mo-Fr 16:00-18:00) |
+
+        And the relations
+            | type        | way:from | node:via | way:to | restriction:conditional             |
+            | restriction | be       | e        | de     | no_right_turn @ (Mo-Fr 07:00-11:00) |
+
+        # node restrictino is off, way restriction is on
+        When I route I should get
+            | from | to | route             | turns                                                               | locations   |
+            | a    | d  | ab,be,ef,ef,de,de | depart,turn right,turn left,continue uturn,new name straight,arrive | a,b,e,f,e,d |
+            | a    | f  | ab,be,ef,ef       | depart,turn right,turn left,arrive                                  | a,b,e,f     |
+            | c    | d  | bc,be,de,de       | depart,turn left,turn right,arrive                                  | c,b,e,d     |
+            | c    | f  | bc,be,ef,ef       | depart,turn left,turn left,arrive                                   | c,b,e,f     |
 

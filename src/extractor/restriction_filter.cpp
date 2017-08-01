@@ -10,8 +10,8 @@ namespace osrm
 namespace extractor
 {
 
-std::vector<TurnRestriction>
-removeInvalidRestrictions(std::vector<TurnRestriction> restrictions,
+std::vector<ConditionalTurnRestriction>
+removeInvalidRestrictions(std::vector<ConditionalTurnRestriction> restrictions,
                           const util::NodeBasedDynamicGraph &node_based_graph)
 {
     // definition of what we presume to be a valid via-node restriction

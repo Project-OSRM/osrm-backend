@@ -14,8 +14,9 @@ namespace extractor
 // To avoid handling invalid restrictions / creating unnecessary duplicate nodes for via-ways, we do
 // a pre-flight check for restrictions and remove all invalid restrictions from the data. Use as
 // `restrictions = removeInvalidRestrictions(std::move(restrictions))`
-std::vector<TurnRestriction> removeInvalidRestrictions(std::vector<TurnRestriction>,
-                                                       const util::NodeBasedDynamicGraph &);
+std::vector<ConditionalTurnRestriction>
+removeInvalidRestrictions(std::vector<ConditionalTurnRestriction>,
+                          const util::NodeBasedDynamicGraph &);
 
 } // namespace extractor
 } // namespace osrm

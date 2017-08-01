@@ -6,7 +6,7 @@
 #include "extractor/guidance/intersection.hpp"
 #include "extractor/guidance/intersection_normalization_operation.hpp"
 #include "extractor/query_node.hpp"
-#include "extractor/restriction_map.hpp"
+#include "extractor/restriction_index.hpp"
 #include "util/attributes.hpp"
 #include "util/node_based_graph.hpp"
 #include "util/typedefs.hpp"
@@ -116,14 +116,6 @@ class IntersectionGenerator
 
     // own state, used to find the correct coordinates along a road
     const CoordinateExtractor coordinate_extractor;
-
-    // check turn restrictions to find a node that is the only allowed target when coming from a
-    // node to an intersection
-    //     d
-    //     |
-    // a - b - c  and `only_straight_on ab | bc would return `c` for `a,b`
-    boost::optional<NodeID> GetOnlyAllowedTurnIfExistent(const NodeID coming_from_node,
-                                                         const NodeID node_at_intersection) const;
 };
 
 } // namespace guidance

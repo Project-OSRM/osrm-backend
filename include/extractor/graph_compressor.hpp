@@ -27,6 +27,7 @@ class GraphCompressor
                   const std::unordered_set<NodeID> &traffic_lights,
                   ScriptingEnvironment &scripting_environment,
                   std::vector<TurnRestriction> &turn_restrictions,
+                  std::vector<ConditionalTurnRestriction> &conditional_turn_restrictions,
                   util::NodeBasedDynamicGraph &graph,
                   CompressedEdgeContainer &geometry_compressor);
 
