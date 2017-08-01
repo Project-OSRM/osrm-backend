@@ -344,7 +344,6 @@ int RestrictionsCheckCommand(const char *executable, const std::vector<std::stri
     for (auto &value : conditional_restrictions)
     {
 
-        std::cout << value << std::endl;
         const auto &location = value.location;
         const auto &restriction = value.restriction;
 
