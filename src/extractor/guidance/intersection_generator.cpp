@@ -236,8 +236,25 @@ IntersectionView IntersectionGenerator::TransformIntersectionShapeIntoView(
 {
     const auto node_at_intersection = node_based_graph.GetTarget(entering_via_edge);
 
-    // check if there is a single valid turn entering the current intersection
-    const auto only_valid_turn = GetOnlyAllowedTurnIfExistent(previous_node, node_at_intersection);
+    // request all turn restrictions
+    auto const restrictions = restriction_map.Restrictions(previous_node, node_at_intersection);
+
+    // check turn restrictions to find a node that is the only allowed target when coming from a
+    // node to an intersection
+    //     d
+    //     |
+    // a - b - c  and `only_straight_on ab | bc would return `c` for `a,b`
+    const auto find_only_valid_turn = [&]() -> boost::optional<NodeID> {
+        const auto itr = std::find_if(restrictions.first, restrictions.second, [](auto pair) {
+            return pair.second->is_only;
+        });
+        if (itr != restrictions.second)
+            return {itr->second->AsNodeRestriction().to};
+        else
+            return boost::none;
+    };
+
+    const auto only_valid_turn = find_only_valid_turn();
 
     // barriers change our behaviour regarding u-turns
     const bool is_barrier_node = barrier_nodes.find(node_at_intersection) != barrier_nodes.end();
@@ -258,12 +275,14 @@ IntersectionView IntersectionGenerator::TransformIntersectionShapeIntoView(
 
     const auto is_restricted = [&](const NodeID destination) {
         // check if we have a dedicated destination
-        if (only_valid_turn && *only_valid_turn != destination)
-            return true;
+        if (only_valid_turn)
+            return *only_valid_turn != destination;
 
-        // not explicitly forbidden
-        return restriction_map.CheckIfTurnIsRestricted(
-            previous_node, node_at_intersection, destination);
+        // check if explicitly forbidden
+        return restrictions.second !=
+               std::find_if(restrictions.first, restrictions.second, [&](const auto &restriction) {
+                   return restriction.second->AsNodeRestriction().to == destination;
+               });
     };
 
     const auto is_allowed_turn = [&](const IntersectionShapeData &road) {
@@ -394,21 +413,6 @@ IntersectionView IntersectionGenerator::TransformIntersectionShapeIntoView(
     }
 
     return intersection_view;
-}
-
-boost::optional<NodeID>
-IntersectionGenerator::GetOnlyAllowedTurnIfExistent(const NodeID coming_from_node,
-                                                    const NodeID node_at_intersection) const
-{
-    // If only restrictions refer to invalid ways somewhere far away, we rather ignore the
-    // restriction than to not route over the intersection at all.
-    const auto only_restriction_to_node =
-        restriction_map.CheckForEmanatingIsOnlyTurn(coming_from_node, node_at_intersection);
-    if (only_restriction_to_node != SPECIAL_NODEID)
-        return only_restriction_to_node;
-
-    // Ignore broken only restrictions.
-    return boost::none;
 }
 
 const CoordinateExtractor &IntersectionGenerator::GetCoordinateExtractor() const

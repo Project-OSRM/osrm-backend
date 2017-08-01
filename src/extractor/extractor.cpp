@@ -23,7 +23,7 @@
 #include "util/timing_util.hpp"
 
 #include "extractor/compressed_edge_container.hpp"
-#include "extractor/restriction_map.hpp"
+#include "extractor/restriction_index.hpp"
 #include "extractor/way_restriction_map.hpp"
 #include "util/static_graph.hpp"
 #include "util/static_rtree.hpp"
@@ -110,7 +110,8 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
 
     guidance::LaneDescriptionMap turn_lane_map;
     std::vector<TurnRestriction> turn_restrictions;
-    std::tie(turn_lane_map, turn_restrictions) =
+    std::vector<ConditionalTurnRestriction> conditional_turn_restrictions;
+    std::tie(turn_lane_map, turn_restrictions, conditional_turn_restrictions) =
         ParseOSMData(scripting_environment, number_of_threads);
 
     // Transform the node-based graph that OSM is based on into an edge-based graph
@@ -138,6 +139,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
                                              edge_based_edge_list,
                                              config.GetPath(".osrm.icd").string(),
                                              turn_restrictions,
+                                             conditional_turn_restrictions,
                                              turn_lane_map);
 
     auto number_of_node_based_nodes = graph_size.first;
@@ -190,7 +192,9 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     return 0;
 }
 
-std::tuple<guidance::LaneDescriptionMap, std::vector<TurnRestriction>>
+std::tuple<guidance::LaneDescriptionMap,
+           std::vector<TurnRestriction>,
+           std::vector<ConditionalTurnRestriction>>
 Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
                         const unsigned number_of_threads)
 {
@@ -333,7 +337,6 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
 
     extraction_containers.PrepareData(scripting_environment,
                                       config.GetPath(".osrm").string(),
-                                      config.GetPath(".osrm.restrictions").string(),
                                       config.GetPath(".osrm.names").string());
 
     auto profile_properties = scripting_environment.GetProfileProperties();
@@ -344,7 +347,8 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
     util::Log() << "extraction finished after " << TIMER_SEC(extracting) << "s";
 
     return std::make_tuple(std::move(turn_lane_map),
-                           std::move(extraction_containers.unconditional_turn_restrictions));
+                           std::move(extraction_containers.unconditional_turn_restrictions),
+                           std::move(extraction_containers.conditional_turn_restrictions));
 }
 
 void Extractor::FindComponents(unsigned max_edge_id,
@@ -440,18 +444,19 @@ Extractor::LoadNodeBasedGraph(std::unordered_set<NodeID> &barriers,
 /**
  \brief Building an edge-expanded graph from node-based input and turn restrictions
 */
-std::pair<std::size_t, EdgeID>
-Extractor::BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
-                                  std::vector<util::Coordinate> &coordinates,
-                                  extractor::PackedOSMIDs &osm_node_ids,
-                                  EdgeBasedNodeDataContainer &edge_based_nodes_container,
-                                  std::vector<EdgeBasedNodeSegment> &edge_based_node_segments,
-                                  std::vector<bool> &node_is_startpoint,
-                                  std::vector<EdgeWeight> &edge_based_node_weights,
-                                  util::DeallocatingVector<EdgeBasedEdge> &edge_based_edge_list,
-                                  const std::string &intersection_class_output_file,
-                                  std::vector<TurnRestriction> &turn_restrictions,
-                                  guidance::LaneDescriptionMap &turn_lane_map)
+std::pair<std::size_t, EdgeID> Extractor::BuildEdgeExpandedGraph(
+    ScriptingEnvironment &scripting_environment,
+    std::vector<util::Coordinate> &coordinates,
+    extractor::PackedOSMIDs &osm_node_ids,
+    EdgeBasedNodeDataContainer &edge_based_nodes_container,
+    std::vector<EdgeBasedNodeSegment> &edge_based_node_segments,
+    std::vector<bool> &node_is_startpoint,
+    std::vector<EdgeWeight> &edge_based_node_weights,
+    util::DeallocatingVector<EdgeBasedEdge> &edge_based_edge_list,
+    const std::string &intersection_class_output_file,
+    std::vector<TurnRestriction> &turn_restrictions,
+    std::vector<ConditionalTurnRestriction> &conditional_turn_restrictions,
+    guidance::LaneDescriptionMap &turn_lane_map)
 {
     std::unordered_set<NodeID> barrier_nodes;
     std::unordered_set<NodeID> traffic_signals;
@@ -465,10 +470,12 @@ Extractor::BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
                               traffic_signals,
                               scripting_environment,
                               turn_restrictions,
+                              conditional_turn_restrictions,
                               *node_based_graph,
                               compressed_edge_container);
 
-    turn_restrictions = removeInvalidRestrictions(std::move(turn_restrictions), *node_based_graph);
+    conditional_turn_restrictions =
+        removeInvalidRestrictions(std::move(conditional_turn_restrictions), *node_based_graph);
 
     util::NameTable name_table(config.GetPath(".osrm.names").string());
 
@@ -484,8 +491,20 @@ Extractor::BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
 
     const auto create_edge_based_edges = [&]() {
         // scoped to relase intermediate datastructures right after the call
-        RestrictionMap via_node_restriction_map(turn_restrictions);
-        WayRestrictionMap via_way_restriction_map(turn_restrictions);
+        std::vector<TurnRestriction> node_restrictions;
+        for (auto const &t : turn_restrictions)
+            if (t.Type() == RestrictionType::NODE_RESTRICTION)
+                node_restrictions.push_back(t);
+
+        std::vector<ConditionalTurnRestriction> conditional_node_restrictions;
+        for (auto const &t : conditional_turn_restrictions)
+            if (t.Type() == RestrictionType::NODE_RESTRICTION)
+                conditional_node_restrictions.push_back(t);
+
+        RestrictionMap via_node_restriction_map(node_restrictions, IndexNodeByFromAndVia());
+        WayRestrictionMap via_way_restriction_map(conditional_turn_restrictions);
+        ConditionalRestrictionMap conditional_node_restriction_map(conditional_node_restrictions,
+                                                                   IndexNodeByFromAndVia());
         turn_restrictions.clear();
         turn_restrictions.shrink_to_fit();
 
@@ -496,13 +515,14 @@ Extractor::BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
                                      config.GetPath(".osrm.turn_duration_penalties").string(),
                                      config.GetPath(".osrm.turn_penalties_index").string(),
                                      config.GetPath(".osrm.cnbg_to_ebg").string(),
+                                     config.GetPath(".osrm.restrictions").string(),
                                      via_node_restriction_map,
+                                     conditional_node_restriction_map,
                                      via_way_restriction_map);
         return edge_based_graph_factory.GetNumberOfEdgeBasedNodes();
     };
 
     const auto number_of_edge_based_nodes = create_edge_based_edges();
-
     compressed_edge_container.PrintStatistics();
 
     // The osrm-partition tool requires the compressed node based graph with an embedding.

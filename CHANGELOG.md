@@ -1,5 +1,7 @@
 # 5.11.0
   - Changes from 5.10:
+    - Features
+      - BREAKING: Added support for conditional via-way instructions. This features changes the file format of osrm.restrictions and requires re-extraction
 
 # 5.10.0
   - Changes from 5.9:

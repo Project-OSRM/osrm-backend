@@ -8,6 +8,7 @@
 #include <boost/unordered_map.hpp>
 
 #include "extractor/restriction.hpp"
+#include "extractor/restriction_index.hpp"
 #include "util/integer_range.hpp"
 #include "util/typedefs.hpp"
 
@@ -18,6 +19,8 @@ namespace osrm
 namespace extractor
 {
 
+// The WayRestrictionMap uses ConditionalTurnRestrictions in general. Most restrictions will have
+// empty conditions, though.
 class WayRestrictionMap
 {
   public:
@@ -26,7 +29,7 @@ class WayRestrictionMap
         NodeID from;
         NodeID to;
     };
-    WayRestrictionMap(const std::vector<TurnRestriction> &turn_restrictions);
+    WayRestrictionMap(const std::vector<ConditionalTurnRestriction> &conditional_restrictions);
 
     // Check if an edge between two nodes is a restricted turn. The check needs to be performed to
     // find duplicated nodes during the creation of edge-based-edges
@@ -43,10 +46,13 @@ class WayRestrictionMap
     std::vector<ViaWay> DuplicatedNodeRepresentatives() const;
 
     // Access all duplicated NodeIDs for a set of nodes indicating a via way
-    util::range<DuplicatedNodeID> DuplicatedNodeIDs(const NodeID from, const NodeID to) const;
+    std::vector<DuplicatedNodeID> DuplicatedNodeIDs(const NodeID from, const NodeID to) const;
 
     // check whether a turn onto a given node is restricted, when coming from a duplicated node
     bool IsRestricted(DuplicatedNodeID duplicated_node, const NodeID to) const;
+    // Get the restriction resulting in ^ IsRestricted. Requires IsRestricted to evaluate to true
+    const ConditionalTurnRestriction &GetRestriction(DuplicatedNodeID duplicated_node,
+                                                     const NodeID to) const;
 
     // changes edge_based_node to the correct duplicated_node_id in case node_based_from,
     // node_based_via, node_based_to can be identified with a restriction group
@@ -76,11 +82,8 @@ class WayRestrictionMap
     //                    EBN: 0 . | 2 | 3 | 4 ...
     // duplicated node groups: ... | 5 | 7 | ...
     std::vector<DuplicatedNodeID> duplicated_node_groups;
-
-    boost::unordered_multimap<std::pair<NodeID, NodeID>, RestrictionID> restriction_starts;
-    boost::unordered_multimap<std::pair<NodeID, NodeID>, RestrictionID> restriction_ends;
-
-    std::vector<TurnRestriction> restriction_data;
+    std::vector<ConditionalTurnRestriction> restriction_data;
+    RestrictionIndex<ConditionalTurnRestriction> restriction_starts;
 };
 
 } // namespace extractor

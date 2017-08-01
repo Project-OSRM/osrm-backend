@@ -97,7 +97,7 @@ template <typename T> void write(io::FileWriter &writer, const std::vector<T> &d
 {
     const auto count = data.size();
     writer.WriteElementCount64(count);
-    return writer.WriteFrom(data.data(), count);
+    writer.WriteFrom(data.data(), count);
 }
 
 template <typename T> void read(io::FileReader &reader, util::vector_view<T> &data)

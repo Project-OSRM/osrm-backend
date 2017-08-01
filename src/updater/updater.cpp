@@ -7,6 +7,7 @@
 #include "extractor/node_based_edge.hpp"
 #include "extractor/packed_osm_ids.hpp"
 #include "extractor/restriction.hpp"
+#include "extractor/serialization.hpp"
 
 #include "storage/io.hpp"
 
@@ -443,20 +444,16 @@ updateTurnPenalties(const UpdaterConfig &config,
     return updated_turns;
 }
 
-bool IsRestrictionValid(const Timezoner &tz_handler,
-                        const extractor::ConditionalTurnRestriction &turn,
-                        const std::vector<util::Coordinate> &coordinates)
+bool IsRestrictionValid(const Timezoner &tz_handler, const extractor::ConditionalTurnPenalty &turn)
 {
-    BOOST_ASSERT(!turn.condition.empty());
+    BOOST_ASSERT(!turn.conditions.empty());
 
     // we utilize the via node (first on ways) to represent the turn restriction
-    auto const via = turn.Type() == extractor::RestrictionType::WAY_RESTRICTION
-                         ? turn.AsWayRestriction().in_restriction.to
-                         : turn.AsNodeRestriction().via;
+    auto const via = turn.location;
 
-    const auto lon = static_cast<double>(toFloating(coordinates[via].lon));
-    const auto lat = static_cast<double>(toFloating(coordinates[via].lat));
-    const auto &condition = turn.condition;
+    const auto lon = static_cast<double>(toFloating(via.lon));
+    const auto lat = static_cast<double>(toFloating(via.lat));
+    const auto &conditions = turn.conditions;
 
     // Get local time of the restriction
     const auto &local_time = tz_handler(point_t{lon, lat});
@@ -469,85 +466,27 @@ bool IsRestrictionValid(const Timezoner &tz_handler,
     // TODO: parsing will fail for combined conditions, e.g. Sa-Su AND weight>7
     // http://wiki.openstreetmap.org/wiki/Conditional_restrictions#Combined_conditions:_AND
 
-    if (osrm::util::CheckOpeningHours(condition, *local_time))
-        return true;
-
-    return false;
+    return osrm::util::CheckOpeningHours(conditions, *local_time);
 }
 
 std::vector<std::uint64_t>
-updateConditionalTurns(const UpdaterConfig &config,
-                       std::vector<TurnPenalty> &turn_weight_penalties,
-                       const std::vector<extractor::ConditionalTurnRestriction> &conditional_turns,
-                       std::vector<util::Coordinate> &coordinates,
+updateConditionalTurns(std::vector<TurnPenalty> &turn_weight_penalties,
+                       const std::vector<extractor::ConditionalTurnPenalty> &conditional_turns,
                        Timezoner time_zone_handler)
 {
-    // Mapped file pointer for turn indices
-    boost::iostreams::mapped_file_source turn_index_region;
-    auto turn_index_blocks = util::mmapFile<extractor::lookup::TurnIndexBlock>(
-        config.GetPath(".osrm.turn_penalties_index"), turn_index_region);
-
     std::vector<std::uint64_t> updated_turns;
     if (conditional_turns.size() == 0)
         return updated_turns;
 
-    // TODO make this into a function
-    LookupTable<std::tuple<NodeID, NodeID>, NodeID> is_only_lookup;
-    std::unordered_set<std::tuple<NodeID, NodeID, NodeID>,
-                       std::hash<std::tuple<NodeID, NodeID, NodeID>>>
-        is_no_set;
-    for (const auto &node_or_way : conditional_turns)
+    for (const auto &penalty : conditional_turns)
     {
-        // TODO handle conditional turn restrictions for via-ways (look-up doesn't work here)
-        // https://github.com/Project-OSRM/osrm-backend/issues/2681#issuecomment-313376385
-        if (node_or_way.Type() == extractor::RestrictionType::WAY_RESTRICTION)
-            continue;
-
-        if (!IsRestrictionValid(time_zone_handler, node_or_way, coordinates))
-            continue;
-
-        // TODO get rid of this, when we can handle way restrictions
-        const auto &c = node_or_way.AsNodeRestriction();
-
-        // only add restrictions to the lookups if the restriction is valid now
-
-        if (node_or_way.is_only)
+        if (IsRestrictionValid(time_zone_handler, penalty))
         {
-            is_only_lookup.lookup.push_back({std::make_tuple(c.from, c.via), c.to});
-        }
-        else
-        {
-            is_no_set.insert({std::make_tuple(c.from, c.via, c.to)});
+            std::cout << "Disabling: " << penalty.turn_offset << std::endl;
+            turn_weight_penalties[penalty.turn_offset] = INVALID_TURN_PENALTY;
+            updated_turns.push_back(penalty.turn_offset);
         }
     }
-
-    for (std::uint64_t edge_index = 0; edge_index < turn_weight_penalties.size(); ++edge_index)
-    {
-        const extractor::lookup::TurnIndexBlock internal_turn = turn_index_blocks[edge_index];
-
-        const auto is_no_tuple =
-            std::make_tuple(internal_turn.from_id, internal_turn.via_id, internal_turn.to_id);
-        const auto is_only_tuple = std::make_tuple(internal_turn.from_id, internal_turn.via_id);
-        // turn has a no_* restriction
-        if (is_no_set.find(is_no_tuple) != is_no_set.end())
-        {
-            util::Log(logDEBUG) << "Conditional penalty set on edge: " << edge_index;
-            turn_weight_penalties[edge_index] = INVALID_TURN_PENALTY;
-            updated_turns.push_back(edge_index);
-        }
-        // turn has an only_* restriction
-        else if (is_only_lookup(is_only_tuple))
-        {
-            // with only_* restrictions, the turn on which the restriction is tagged is valid
-            if (*is_only_lookup(is_only_tuple) == internal_turn.to_id)
-                continue;
-
-            util::Log(logDEBUG) << "Conditional penalty set on edge: " << edge_index;
-            turn_weight_penalties[edge_index] = INVALID_TURN_PENALTY;
-            updated_turns.push_back(edge_index);
-        }
-    }
-
     return updated_turns;
 }
 }
@@ -638,7 +577,7 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
                              load_profile_properties);
     }
 
-    std::vector<extractor::ConditionalTurnRestriction> conditional_turns;
+    std::vector<extractor::ConditionalTurnPenalty> conditional_turns;
     if (update_conditional_turns)
     {
         using storage::io::FileReader;
@@ -696,8 +635,8 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
         }
         const Timezoner time_zone_handler = Timezoner(config.tz_file_path, config.valid_now);
 
-        auto updated_turn_penalties = updateConditionalTurns(
-            config, turn_weight_penalties, conditional_turns, coordinates, time_zone_handler);
+        auto updated_turn_penalties =
+            updateConditionalTurns(turn_weight_penalties, conditional_turns, time_zone_handler);
         const auto offset = updated_segments.size();
         updated_segments.resize(offset + updated_turn_penalties.size());
         // we need to re-compute all edges that have updated turn penalties.

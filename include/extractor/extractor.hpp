@@ -56,7 +56,9 @@ class Extractor
   private:
     ExtractorConfig config;
 
-    std::tuple<guidance::LaneDescriptionMap, std::vector<TurnRestriction>>
+    std::tuple<guidance::LaneDescriptionMap,
+               std::vector<TurnRestriction>,
+               std::vector<ConditionalTurnRestriction>>
     ParseOSMData(ScriptingEnvironment &scripting_environment, const unsigned number_of_threads);
 
     std::pair<std::size_t, EdgeID>
@@ -70,6 +72,7 @@ class Extractor
                            util::DeallocatingVector<EdgeBasedEdge> &edge_based_edge_list,
                            const std::string &intersection_class_output_file,
                            std::vector<TurnRestriction> &turn_restrictions,
+                           std::vector<ConditionalTurnRestriction> &conditional_turn_restrictions,
                            guidance::LaneDescriptionMap &turn_lane_map);
     void FindComponents(unsigned max_edge_id,
                         const util::DeallocatingVector<EdgeBasedEdge> &input_edge_list,
@@ -89,6 +92,10 @@ class Extractor
     static void WriteCompressedNodeBasedGraph(const std::string &path,
                                               const util::NodeBasedDynamicGraph &graph,
                                               const std::vector<util::Coordinate> &coordiantes);
+
+    void WriteConditionalRestrictions(
+        const std::string &path,
+        std::vector<ConditionalTurnRestriction> &conditional_turn_restrictions);
 };
 }
 }

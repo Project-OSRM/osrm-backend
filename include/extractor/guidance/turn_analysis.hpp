@@ -14,7 +14,7 @@
 #include "extractor/guidance/turn_classification.hpp"
 #include "extractor/guidance/turn_handler.hpp"
 #include "extractor/query_node.hpp"
-#include "extractor/restriction_map.hpp"
+#include "extractor/restriction_index.hpp"
 #include "extractor/suffix_table.hpp"
 
 #include "util/attributes.hpp"

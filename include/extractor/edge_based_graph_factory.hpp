@@ -4,6 +4,7 @@
 #define EDGE_BASED_GRAPH_FACTORY_HPP_
 
 #include "extractor/compressed_edge_container.hpp"
+#include "extractor/conditional_turn_penalty.hpp"
 #include "extractor/edge_based_edge.hpp"
 #include "extractor/edge_based_node_segment.hpp"
 #include "extractor/extraction_turn.hpp"
@@ -16,7 +17,7 @@
 #include "extractor/packed_osm_ids.hpp"
 #include "extractor/profile_properties.hpp"
 #include "extractor/query_node.hpp"
-#include "extractor/restriction_map.hpp"
+#include "extractor/restriction_index.hpp"
 #include "extractor/way_restriction_map.hpp"
 
 #include "util/concurrent_id_map.hpp"
@@ -92,7 +93,9 @@ class EdgeBasedGraphFactory
              const std::string &turn_duration_penalties_filename,
              const std::string &turn_penalties_index_filename,
              const std::string &cnbg_ebg_mapping_path,
+             const std::string &conditional_penalties_filename,
              const RestrictionMap &node_restriction_map,
+             const ConditionalRestrictionMap &conditional_restriction_map,
              const WayRestrictionMap &way_restriction_map);
 
     // The following get access functions destroy the content in the factory
@@ -123,6 +126,18 @@ class EdgeBasedGraphFactory
 
   private:
     using EdgeData = util::NodeBasedDynamicGraph::EdgeData;
+
+    struct Conditional
+    {
+        // the edge based nodes allow for a unique identification of conditionals
+        NodeID from_node;
+        NodeID to_node;
+        ConditionalTurnPenalty penalty;
+    };
+
+    // assign the correct index to the penalty value stored in the conditional
+    std::vector<ConditionalTurnPenalty>
+    IndexConditionals(std::vector<Conditional> &&conditionals) const;
 
     //! maps index from m_edge_based_node_list to ture/false if the node is an entry point to the
     //! graph
@@ -173,7 +188,9 @@ class EdgeBasedGraphFactory
                                    const std::string &turn_weight_penalties_filename,
                                    const std::string &turn_duration_penalties_filename,
                                    const std::string &turn_penalties_index_filename,
+                                   const std::string &conditional_turn_penalties_filename,
                                    const RestrictionMap &node_restriction_map,
+                                   const ConditionalRestrictionMap &conditional_restriction_map,
                                    const WayRestrictionMap &way_restriction_map);
 
     NBGToEBG InsertEdgeBasedNode(const NodeID u, const NodeID v);
