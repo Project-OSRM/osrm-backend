@@ -263,8 +263,9 @@ operator()(const NodeID /*nid*/, const EdgeID source_edge_id, Intersection inter
         if (!allSameMode(source_edge_id, sliproad.eid, find_valid(target_intersection)->eid))
             continue;
 
-        // Constrain the Sliproad's target to sliproad, outgoing, incoming from main intersection
-        if (target_intersection.size() != 3)
+        // Constrain the sliproad's target intersection to 1 or 2 sliproads, outgoing road
+        // and incoming one from the main intersection
+        if (target_intersection.size() < 3 || target_intersection.size() > 4)
         {
             continue;
         }
@@ -277,6 +278,51 @@ operator()(const NodeID /*nid*/, const EdgeID source_edge_id, Intersection inter
             main_road_intersection->node == sliproad_edge_target)
         {
             continue;
+        }
+
+        if (target_intersection.size() == 4)
+        {
+            // Handle target intersections at `d` with 4 roads
+            //
+            //              | `main_road_intersection` is intersection at `c`
+            //              v
+            // a ... b .... c .... e  <- fo
+            //        `     .     '
+            //          `   .   '
+            //            ` . '
+            //              d     < `target_intersection` is intersection at `d`
+            //              |
+            // Conditions for road `bd` to be a sliproad:
+            //  - target_intersection at `d` has 4 roads
+            //  - main_road_intersection at `c` has at least 3 roads
+            //  - target nodes of `db` and `cd` roads is the same node `d`
+            //  - target nodes of `ce` and `de` roads is the same node `e`
+            //  - angle `bde` is sharp
+
+            // Check `c` has at least 3 roads at `c` and roads `bd` and `cd` share the node `d`
+            if (main_road_intersection->intersection.size() < 3 ||
+                sliproad_edge_target != node_based_graph.GetTarget(crossing_road.eid))
+            {
+                continue;
+            }
+
+            // Find a road at `d` that shares the same node `e` with `ce` and ∠ `bde` is sharp
+            auto next_to_crossing_idx =
+                is_left_sliproad_turn ? main_road_intersection->intersection.size() - 2 : 2;
+            auto next_to_crossing_road = main_road_intersection->intersection[next_to_crossing_idx];
+            auto next_to_crossing_node = node_based_graph.GetTarget(next_to_crossing_road.eid);
+            auto found_common_node = std::find_if(
+                begin(target_intersection), end(target_intersection), [&](const auto &road) {
+                    if (next_to_crossing_node == node_based_graph.GetTarget(road.eid))
+                    {
+                        auto direction = getTurnDirection(road.angle);
+                        return direction == DirectionModifier::SharpRight ||
+                               direction == DirectionModifier::SharpLeft;
+                    }
+                    return false;
+                });
+            if (found_common_node == target_intersection.end())
+                continue;
         }
 
         // If the sliproad candidate is a through street, we cannot handle it as a sliproad.
