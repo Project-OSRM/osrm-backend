@@ -968,6 +968,6 @@ Feature: Slipways and Dedicated Turn Lanes
             | ec    | primary_link | ec    | yes    |
 
        When I route I should get
-            | waypoints | route              | turns                                      | locations |
-            | s,f       | sabct,ae,dbef,dbef | depart,turn right,turn slight right,arrive | s,a,e,f   |
-            | f,t       | dbef,sabct,sabct   | depart,turn right,arrive                   | f,e,t     |
+            | waypoints | route            | turns                    | locations |
+            | s,f       | sabct,dbef,dbef  | depart,turn right,arrive | s,a,f     |
+            | f,t       | dbef,sabct,sabct | depart,turn right,arrive | f,e,t     |
