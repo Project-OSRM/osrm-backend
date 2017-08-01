@@ -804,6 +804,12 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
 
             // Get the turn penalty and update to the new value if required
             auto turn_weight_penalty = turn_weight_penalties[edge.data.turn_id];
+            if (turn_weight_penalty == INVALID_TURN_PENALTY)
+            {
+                edge.data.weight = INVALID_EDGE_WEIGHT;
+                return;
+            }
+
             auto turn_duration_penalty = turn_duration_penalties[edge.data.turn_id];
             const auto num_nodes = segment_data.GetForwardGeometry(geometry_id.id).size();
             const auto weight_min_value = static_cast<EdgeWeight>(num_nodes);

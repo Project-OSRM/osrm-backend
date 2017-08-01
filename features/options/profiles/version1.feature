@@ -15,7 +15,7 @@ Feature: Profile API version 1
           properties.weight_name                     = 'test_version1'
           properties.weight_precision                = 2
 
-          assert(properties.max_turn_weight == 327.67)
+          assert(properties.max_turn_weight == 327.66)
 
           function node_function (node, result)
             print(node, result)
@@ -81,7 +81,7 @@ Feature: Profile API version 1
           properties.weight_name                     = 'test_version1'
           properties.weight_precision                = 2
 
-          assert(properties.max_turn_weight == 327.67)
+          assert(properties.max_turn_weight == 327.66)
 
           function node_function (node, result)
             print(node, result)
