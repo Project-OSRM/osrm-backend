@@ -991,3 +991,40 @@ Feature: Car - Turn restrictions
         When I route I should get
             | from | to | route       |
             | a    | f  | ab,be,ef,ef |
+
+
+    @restriction @overlap @geometry
+    Scenario: Duplicated restriction
+        Given the node map
+            """
+            c
+            |
+            |   f
+            |   |
+            b-g-e
+            |   |
+            |   d
+            |
+            a
+            """
+
+        And the ways
+            | nodes |
+            | ab    |
+            | bc    |
+            | bge   |
+            | de    |
+            | ef    |
+
+        And the relations
+            | type        | way:from | way:to | node:via | restriction  |
+            | restriction | bge      | ef     | e        | no_left_turn |
+
+        And the relations
+            | type        | way:from | way:via | way:to | restriction   |
+            | restriction | ab       | bge     | de     | no_right_turn |
+            | restriction | bc       | bge     | ef     | no_left_turn  |
+
+        When I route I should get
+            | from | to | route              |
+            | a    | d  | ab,bc,bc,bge,de,de |
