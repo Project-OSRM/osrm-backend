@@ -749,40 +749,36 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                 // next to the normal restrictions tracked in `entry_allowed`, via
                                 // ways might introduce additional restrictions. These are handled
                                 // here when turning off a via-way
-                                const auto add_unrestricted_turns =
-                                    [&](const auto duplicated_node_id) {
-                                        const auto from_id =
-                                            m_number_of_edge_based_nodes -
-                                            way_restriction_map.NumberOfDuplicatedNodes() +
-                                            duplicated_node_id;
+                                for (auto duplicated_node_id : duplicated_nodes)
+                                {
+                                    const auto from_id =
+                                        m_number_of_edge_based_nodes -
+                                        way_restriction_map.NumberOfDuplicatedNodes() +
+                                        duplicated_node_id;
 
-                                        auto const node_at_end_of_turn =
-                                            m_node_based_graph->GetTarget(turn.eid);
+                                    auto const node_at_end_of_turn =
+                                        m_node_based_graph->GetTarget(turn.eid);
 
-                                        const auto is_restricted = way_restriction_map.IsRestricted(
-                                            duplicated_node_id, node_at_end_of_turn);
+                                    const auto is_restricted = way_restriction_map.IsRestricted(
+                                        duplicated_node_id, node_at_end_of_turn);
 
-                                        if (is_restricted)
-                                            return;
+                                    if (is_restricted)
+                                        continue;
 
-                                        // add into delayed data
-                                        auto edge_with_data = generate_edge(
-                                            NodeID(from_id),
-                                            m_node_based_graph->GetEdgeData(turn.eid).edge_id,
-                                            node_along_road_entering,
-                                            incoming_edge,
-                                            node_at_center_of_intersection,
-                                            turn.eid,
-                                            intersection,
-                                            turn,
-                                            entry_class_id);
+                                    // add into delayed data
+                                    auto edge_with_data = generate_edge(
+                                        NodeID(from_id),
+                                        m_node_based_graph->GetEdgeData(turn.eid).edge_id,
+                                        node_along_road_entering,
+                                        incoming_edge,
+                                        node_at_center_of_intersection,
+                                        turn.eid,
+                                        intersection,
+                                        turn,
+                                        entry_class_id);
 
-                                        buffer->delayed_data.push_back(std::move(edge_with_data));
-                                    };
-
-                                std::for_each(duplicated_nodes.begin(),
-                                              duplicated_nodes.end(),
-                                              add_unrestricted_turns);
+                                    buffer->delayed_data.push_back(std::move(edge_with_data));
+                                }
                             }
                         }
                     }
