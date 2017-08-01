@@ -128,7 +128,7 @@ RestrictionParser::TryParse(const osmium::Relation &relation) const
     restriction_container.is_only = is_only_restriction;
 
     boost::optional<std::uint64_t> from = boost::none, via = boost::none, to = boost::none;
-    bool is_node_restriction;
+    bool is_node_restriction = true;
 
     for (const auto &member : relation.members())
     {

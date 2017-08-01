@@ -765,7 +765,7 @@ void ExtractionContainers::PrepareRestrictions()
     // translate the turn from one segment onto another into a node restriction (the ways can only
     // be connected at a single location)
     auto const get_node_restriction_from_OSM_ids = [&](
-        auto const from_id, auto const to_id, const OSMNodeID via_node = MAX_OSM_NODEID) {
+        auto const from_id, auto const to_id, const OSMNodeID via_node) {
         auto const from_segment_itr = referenced_ways.find(from_id);
         if (from_segment_itr->second.way_id != from_id)
         {
@@ -792,9 +792,9 @@ void ExtractionContainers::PrepareRestrictions()
             auto const &external = external_type.AsWayRestriction();
             // check if we were able to resolve all the involved ways
             auto const from_restriction =
-                get_node_restriction_from_OSM_ids(external.from, external.via);
+                get_node_restriction_from_OSM_ids(external.from, external.via, MAX_OSM_NODEID);
             auto const to_restriction =
-                get_node_restriction_from_OSM_ids(external.via, external.to);
+                get_node_restriction_from_OSM_ids(external.via, external.to, MAX_OSM_NODEID);
 
             // failed to translate either of the involved nodes?
             if (!from_restriction.Valid() || !to_restriction.Valid())
