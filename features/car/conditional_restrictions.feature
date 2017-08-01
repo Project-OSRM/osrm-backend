@@ -739,3 +739,45 @@ Feature: Car - Turn restrictions
             | from | to | route                       | turns                                            |
             | a    | c  | albic,dobe,dobe,albic,albic | depart,turn left,continue uturn,turn left,arrive |
             | a    | e  | albic,dobe,dobe             | depart,turn left,arrive                          |
+
+    @no_turning @conditionals
+    Scenario: Car - Conditional restriction with multiple time windows
+        Given the extract extra arguments "--parse-conditional-restrictions"
+        # 5pm Wed 02 May, 2017 GMT
+        Given the contract extra arguments "--time-zone-file=test/data/tz/{timezone_names}/guinea.geojson --parse-conditionals-from-now=1493744400"
+        Given the customize extra arguments "--time-zone-file=test/data/tz/{timezone_names}/guinea.geojson --parse-conditionals-from-now=1493744400"
+
+        Given the node map
+            """
+            a   f
+            |   |
+            b - e - h
+            |   |   |
+            c   d - g
+                  1
+            """
+
+        And the ways
+            | nodes |
+            | ab    |
+            | bc    |
+            | de    |
+            | ef    |
+            | be    |
+            | eh    |
+            | gh    |
+            | dg    |
+
+        And the relations
+            | type        | way:from | way:to | way:via | restriction:conditional                    |
+            | restriction | ab       | be     | ef      | no_uturn @ (Mo-Fr 07:00-11:00,16:00-18:30) |
+
+        And the relations
+            | type        | way:from | way:to | node:via | restriction:conditional                    |
+            | restriction | ed       | dg     | d        | no_uturn @ (Mo-Fr 07:00-11:00,16:00-18:30) |
+
+        When I route I should get
+            | from | to | route          | #                                                                                         |
+            | a    | f  | ab,be,ef,ef    | currently we do not handle conditional via-ways, this test will have to change when we do |
+            | f    | 1  | ef,eh,gh,dg,dg |                                                                                           |
+
