@@ -47,7 +47,7 @@ We may introduce forward-compatible changes: query parameters and response prope
 4. Make sure the `package.json` is up to date.
 5. Make sure all tests are passing (e.g. Travis CI gives you a :thumbs_up:)
 6. Use an annotated tag to mark the release: `git tag vx.y.z -a` Body of the tag description should be the changelog entries.
-7. Use `npm run build-api-docs` to generate the API documentation.  Copy `build/docs/*` to `https://github.com/Project-OSRM/project-osrm.github.com` in the `docs/vN.N.N/api` directory
+7. Use `npm run docs` to generate the API documentation.  Copy `build/docs/*` to `https://github.com/Project-OSRM/project-osrm.github.com` in the `docs/vN.N.N/api` directory
 8. Push tags and commits: `git push; git push --tags`
 9. If not a release-candidate: Write a mailing-list post to osrm-talk@openstreetmap.org to announce the release
 10. Wait until the travis build has been completed and check if the node binaries were published by doing:
