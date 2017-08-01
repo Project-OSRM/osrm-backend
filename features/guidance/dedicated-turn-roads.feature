@@ -944,3 +944,30 @@ Feature: Slipways and Dedicated Turn Lanes
         When I route I should get
             | waypoints | route     | turns                                                 | locations |
             | a,k       | road,,,   | depart,turn right,roundabout turn right exit-1,arrive | a,b,h,k   |
+
+    @sliproads
+    Scenario: Sliproad with 4 roads at target
+        Given the node map
+            """
+                    d
+                    .
+            s . a . b  . c . t
+                 `  .   '
+                  ` .  '
+                   '.'
+                    e
+                    .
+                    f
+            """
+
+        And the ways
+            | nodes | highway      | name  | oneway |
+            | sabct | primary      | sabct |        |
+            | dbef  | primary      | dbef  |        |
+            | ae    | primary_link | ae    | yes    |
+            | ec    | primary_link | ec    | yes    |
+
+       When I route I should get
+            | waypoints | route              | turns                                      | locations |
+            | s,f       | sabct,ae,dbef,dbef | depart,turn right,turn slight right,arrive | s,a,e,f   |
+            | f,t       | dbef,sabct,sabct   | depart,turn right,arrive                   | f,e,t     |
