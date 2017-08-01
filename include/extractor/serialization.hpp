@@ -166,7 +166,9 @@ inline void write(storage::io::FileWriter &writer, const WayRestriction &restric
 inline void read(storage::io::FileReader &reader, TurnRestriction &restriction)
 {
     reader.ReadInto(restriction.is_only);
-    if (restriction.Type() == RestrictionType::WAY_RESTRICTION)
+    std::uint32_t restriction_type;
+    reader.ReadInto(restriction_type);
+    if (restriction_type == RestrictionType::WAY_RESTRICTION)
     {
         WayRestriction way_restriction;
         read(reader, way_restriction);
@@ -174,7 +176,7 @@ inline void read(storage::io::FileReader &reader, TurnRestriction &restriction)
     }
     else
     {
-        BOOST_ASSERT(restriction.Type() == RestrictionType::NODE_RESTRICTION);
+        BOOST_ASSERT(restriction_type == RestrictionType::NODE_RESTRICTION);
         NodeRestriction node_restriction;
         read(reader, node_restriction);
         restriction.node_or_way = std::move(node_restriction);
@@ -184,6 +186,8 @@ inline void read(storage::io::FileReader &reader, TurnRestriction &restriction)
 inline void write(storage::io::FileWriter &writer, const TurnRestriction &restriction)
 {
     writer.WriteOne(restriction.is_only);
+    const std::uint32_t restriction_type = restriction.Type();
+    writer.WriteOne(restriction_type);
     if (restriction.Type() == RestrictionType::WAY_RESTRICTION)
     {
         write(writer, mapbox::util::get<WayRestriction>(restriction.node_or_way));
