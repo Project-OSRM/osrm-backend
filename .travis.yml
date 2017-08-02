@@ -301,7 +301,7 @@ before_install:
   - mkdir -p ${CMAKE_DIR}
   - travis_retry wget --quiet -O - ${CMAKE_URL} | tar --strip-components=1 -xz -C ${CMAKE_DIR} || travis_terminate 1
   - export PATH=${CMAKE_DIR}/bin:${PATH}
-  - ${MASON} install tbb 2017_20161128 && export LD_LIBRARY_PATH=$(${MASON} prefix tbb 2017_20161128)/lib/:${LD_LIBRARY_PATH}
+  - ${MASON} install tbb 2017_U7 && export LD_LIBRARY_PATH=$(${MASON} prefix tbb 2017_U7)/lib/:${LD_LIBRARY_PATH}
   - ${MASON} install ccache ${CCACHE_VERSION} && export PATH=$(${MASON} prefix ccache ${CCACHE_VERSION})/bin:${PATH}
   - |
     if [[ ! -z ${CLANG_VERSION} ]]; then
