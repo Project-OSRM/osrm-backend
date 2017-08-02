@@ -87,7 +87,6 @@ inline bool hasValidLanes(const guidance::IntermediateIntersection &intersection
 
 std::string instructionTypeToString(const TurnType::Enum type)
 {
-    std::cout << "Type: " << (int)type << std::endl;
     static_assert(sizeof(turn_type_names) / sizeof(turn_type_names[0]) >= TurnType::MaxTurnType,
                   "Some turn types doesn't have a string representation.");
     return turn_type_names[static_cast<std::size_t>(type)];
