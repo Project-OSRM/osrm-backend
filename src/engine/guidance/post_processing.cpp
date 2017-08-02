@@ -63,7 +63,7 @@ void compressRange(const RouteStepIterator begin, const RouteStepIterator end)
 // might be missing as well)
 void processRoundaboutExits(const RouteStepIterator begin, const RouteStepIterator end)
 {
-    auto const last = end-1;
+    auto const last = end - 1;
     // If we do not exit the roundabout, there is no exit to report. All good here
     if (!leavesRoundabout(last->maneuver.instruction))
     {
@@ -137,10 +137,10 @@ void processRoundaboutExits(const RouteStepIterator begin, const RouteStepIterat
 
     // in case of a roundabout turn, we do not emit an exit as long as the mode remains the same
     if ((begin->maneuver.instruction.type == TurnType::EnterRoundaboutIntersection ||
-        begin->maneuver.instruction.type == TurnType::EnterRoundaboutIntersectionAtExit)
-        && begin->mode == last->mode )
+         begin->maneuver.instruction.type == TurnType::EnterRoundaboutIntersectionAtExit) &&
+        begin->mode == last->mode)
     {
-        compressRange(begin,end);
+        compressRange(begin, end);
     }
     else
     {
