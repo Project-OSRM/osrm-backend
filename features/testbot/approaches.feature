@@ -188,5 +188,5 @@ Feature: Approach parameter
             | restriction | bc       | bc     | c        | no_u_turn   |
 
         When I route I should get
-            | from | to | approaches        | route       |
-            | s    | e  | unrestricted curb | ab,bc,bc,bc |
+            | from | to | approaches        | route    |
+            | s    | e  | unrestricted curb | ab,bc,bc |

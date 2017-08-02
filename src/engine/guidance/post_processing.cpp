@@ -63,8 +63,9 @@ void compressRange(const RouteStepIterator begin, const RouteStepIterator end)
 // might be missing as well)
 void processRoundaboutExits(const RouteStepIterator begin, const RouteStepIterator end)
 {
+    auto const last = end-1;
     // If we do not exit the roundabout, there is no exit to report. All good here
-    if (!leavesRoundabout((end - 1)->maneuver.instruction))
+    if (!leavesRoundabout(last->maneuver.instruction))
     {
         // first we do some clean-up
         if (begin->maneuver.instruction.type == TurnType::EnterRotary ||
@@ -96,9 +97,9 @@ void processRoundaboutExits(const RouteStepIterator begin, const RouteStepIterat
     const auto exit = std::count_if(begin, end, passes_exit_or_leaves_roundabout);
 
     // removes all intermediate instructions, assigns names and exit numbers
-    BOOST_ASSERT(leavesRoundabout((end - 1)->maneuver.instruction));
+    BOOST_ASSERT(leavesRoundabout(last->maneuver.instruction));
     BOOST_ASSERT(std::distance(begin, end) >= 1);
-    (end - 1)->maneuver.exit = exit;
+    last->maneuver.exit = exit;
 
     // when we actually have an enter instruction, we can store all the information on it that we
     // need, otherwise we only provide the exit instruciton. In case of re-routing on the
@@ -121,7 +122,7 @@ void processRoundaboutExits(const RouteStepIterator begin, const RouteStepIterat
         {
             const auto entry_intersection = begin->intersections.front();
 
-            const auto exit_intersection = (end - 1)->intersections.front();
+            const auto exit_intersection = last->intersections.front();
             const auto exit_bearing = exit_intersection.bearings[exit_intersection.out];
 
             BOOST_ASSERT(!begin->intersections.empty());
@@ -131,10 +132,21 @@ void processRoundaboutExits(const RouteStepIterator begin, const RouteStepIterat
 
             begin->maneuver.instruction.direction_modifier = getTurnDirection(angle);
         }
-        begin->AdaptStepSignage(*(end - 1));
+        begin->AdaptStepSignage(*last);
     }
-    // do not remove the exit instruction
-    compressRange(begin, end - 1);
+
+    // in case of a roundabout turn, we do not emit an exit as long as the mode remains the same
+    if ((begin->maneuver.instruction.type == TurnType::EnterRoundaboutIntersection ||
+        begin->maneuver.instruction.type == TurnType::EnterRoundaboutIntersectionAtExit)
+        && begin->mode == last->mode )
+    {
+        compressRange(begin,end);
+    }
+    else
+    {
+        // do not remove last (the exit instruction)
+        compressRange(begin, last);
+    }
 }
 
 // roundabout groups are a sequence of roundabout instructions. This can contain enter/exit
@@ -208,7 +220,6 @@ std::vector<RouteStep> handleRoundabouts(std::vector<RouteStep> steps)
             if (currently_on_roundabout)
                 currently_on_roundabout = !leavesRoundabout(step.maneuver.instruction);
             return result;
-            ;
         }
     };
 

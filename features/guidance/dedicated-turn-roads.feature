@@ -942,8 +942,8 @@ Feature: Slipways and Dedicated Turn Lanes
             | restriction | bc       | cd     | c        | only_straight |
 
         When I route I should get
-            | waypoints | route     | turns                                                                            | locations |
-            | a,k       | road,,,,  | depart,turn right,roundabout turn right exit-1,exit roundabout turn right,arrive | a,b,h,i,k |
+            | waypoints | route    | turns                                                 | locations |
+            | a,k       | road,,,  | depart,turn right,roundabout turn right exit-1,arrive | a,b,h,k   |
 
     @sliproads
     Scenario: Sliproad with 4 roads at target

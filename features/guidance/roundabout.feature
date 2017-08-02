@@ -98,19 +98,19 @@ Feature: Basic Roundabout
             | bcegb  | roundabout |
 
        When I route I should get
-           | waypoints | route       | turns                                    |
-           | b,d       | bcegb,cd,cd | depart,exit roundabout turn right,arrive |
-           | b,f       | bcegb,ef,ef | depart,exit roundabout turn right,arrive |
-           | b,h       | bcegb,gh,gh | depart,exit roundabout turn right,arrive |
-           | c,f       | bcegb,ef,ef | depart,exit roundabout turn right,arrive |
-           | c,h       | bcegb,gh,gh | depart,exit roundabout turn right,arrive |
-           | c,a       | bcegb,ab,ab | depart,exit roundabout turn right,arrive |
-           | e,h       | bcegb,gh,gh | depart,exit roundabout turn right,arrive |
-           | e,a       | bcegb,ab,ab | depart,exit roundabout turn right,arrive |
-           | e,d       | bcegb,cd,cd | depart,exit roundabout turn right,arrive |
-           | g,a       | bcegb,ab,ab | depart,exit roundabout turn right,arrive |
-           | g,d       | bcegb,cd,cd | depart,exit roundabout turn right,arrive |
-           | g,f       | bcegb,ef,ef | depart,exit roundabout turn right,arrive |
+           | waypoints | route       | turns                               |
+           | b,d       | bcegb,cd,cd | depart,exit roundabout right,arrive |
+           | b,f       | bcegb,ef,ef | depart,exit roundabout right,arrive |
+           | b,h       | bcegb,gh,gh | depart,exit roundabout right,arrive |
+           | c,f       | bcegb,ef,ef | depart,exit roundabout right,arrive |
+           | c,h       | bcegb,gh,gh | depart,exit roundabout right,arrive |
+           | c,a       | bcegb,ab,ab | depart,exit roundabout right,arrive |
+           | e,h       | bcegb,gh,gh | depart,exit roundabout right,arrive |
+           | e,a       | bcegb,ab,ab | depart,exit roundabout right,arrive |
+           | e,d       | bcegb,cd,cd | depart,exit roundabout right,arrive |
+           | g,a       | bcegb,ab,ab | depart,exit roundabout right,arrive |
+           | g,d       | bcegb,cd,cd | depart,exit roundabout right,arrive |
+           | g,f       | bcegb,ef,ef | depart,exit roundabout right,arrive |
       #phantom node snapping can result in a full round-trip here, therefore we cannot test b->a and the other direct exits
 
     Scenario: Drive Around
@@ -166,19 +166,19 @@ Feature: Basic Roundabout
 
         When I route I should get
            | waypoints | route           | turns                                                    |
-           | a,c       | abc,abc,abc     | depart,roundabout and exit right,arrive                  |
+           | a,c       | abc,abc,abc     | depart,exit roundabout right,arrive                      |
            | a,l       | abc,jkl,jkl,jkl | depart,roundabout-exit-2,exit roundabout straight,arrive |
            | a,i       | abc,ghi,ghi,ghi | depart,roundabout-exit-3,exit roundabout straight,arrive |
            | a,f       | abc,def,def,def | depart,roundabout-exit-4,exit roundabout straight,arrive |
-           | d,f       | def,def,def     | depart,roundabout and exit right,arrive                  |
+           | d,f       | def,def,def     | depart,exit roundabout right,arrive                      |
            | d,c       | def,abc,abc,abc | depart,roundabout-exit-2,exit roundabout straight,arrive |
            | d,l       | def,jkl,jkl,jkl | depart,roundabout-exit-3,exit roundabout straight,arrive |
            | d,i       | def,ghi,ghi,ghi | depart,roundabout-exit-4,exit roundabout straight,arrive |
-           | g,i       | ghi,ghi,ghi     | depart,roundabout and exit right,arrive                  |
+           | g,i       | ghi,ghi,ghi     | depart,exit roundabout right,arrive                      |
            | g,f       | ghi,def,def,def | depart,roundabout-exit-2,exit roundabout straight,arrive |
            | g,c       | ghi,abc,abc,abc | depart,roundabout-exit-3,exit roundabout straight,arrive |
            | g,l       | ghi,jkl,jkl,jkl | depart,roundabout-exit-4,exit roundabout straight,arrive |
-           | j,l       | jkl,jkl,jkl     | depart,roundabout and exit right,arrive                  |
+           | j,l       | jkl,jkl,jkl     | depart,exit roundabout right,arrive                      |
            | j,i       | jkl,ghi,ghi,ghi | depart,roundabout-exit-2,exit roundabout straight,arrive |
            | j,f       | jkl,def,def,def | depart,roundabout-exit-3,exit roundabout straight,arrive |
            | j,c       | jkl,abc,abc,abc | depart,roundabout-exit-4,exit roundabout straight,arrive |
@@ -764,7 +764,7 @@ Feature: Basic Roundabout
            | e,f       | 90 90    | edf,edf         | depart,arrive                                              |
            | e,h       | 90 135   | edf,gch,gch,gch | depart,roundabout-exit-2,exit roundabout straight,arrive   |
            | g,f       | 45 90    | gch,edf,edf,edf | depart,roundabout-exit-2,exit roundabout right,arrive      |
-           | g,h       | 45 135   | gch,gch,gch | depart,roundabout and exit right,arrive                    |
+           | g,h       | 45 135   | gch,gch,gch     | depart,exit roundabout right,arrive                        |
            | e,e       | 90 270   | edf,edf,edf,edf | depart,roundabout-exit-3,exit roundabout sharp left,arrive |
 
     Scenario: CCW and CW roundabouts with overlaps

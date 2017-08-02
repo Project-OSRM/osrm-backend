@@ -168,8 +168,7 @@ class RouteAPI : public BaseAPI
                  *
                  * ⚠ CAUTION: order of post-processing steps is important
                  *    - handleRoundabouts must be called before collapseTurnInstructions that
-                 *expects
-                 *      post-processed roundabouts without Exit instructions
+                 *      expects post-processed roundabouts
                  */
 
                 guidance::trimShortSegments(steps, leg_geometry);
