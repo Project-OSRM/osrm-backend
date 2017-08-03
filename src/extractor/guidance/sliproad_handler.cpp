@@ -432,7 +432,9 @@ operator()(const NodeID /*nid*/, const EdgeID source_edge_id, Intersection inter
                     continue;
                 }
 
-                if (deviation_from_straight > perpendicular_angle)
+                // Check sliproads with skew main intersections
+                if (deviation_from_straight > perpendicular_angle &&
+                    !node_based_graph.GetEdgeData(sliproad.eid).road_classification.IsLinkClass())
                 {
                     continue;
                 }
