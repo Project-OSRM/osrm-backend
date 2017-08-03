@@ -17,6 +17,7 @@ notifications:
 branches:
   only:
     - master
+    - "5.10"
     # enable building tags
     - /^v\d+\.\d+(\.\d+)?(-\S*)?$/
 
