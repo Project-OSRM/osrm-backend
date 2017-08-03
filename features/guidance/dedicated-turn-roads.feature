@@ -971,3 +971,28 @@ Feature: Slipways and Dedicated Turn Lanes
             | waypoints | route            | turns                    | locations |
             | s,f       | sabct,dbef,dbef  | depart,turn right,arrive | s,a,f     |
             | f,t       | dbef,sabct,sabct | depart,turn right,arrive | f,e,t     |
+
+    @sliproads
+    Scenario: Sliproad and acute angle (50°) at the main intersection
+        Given the node map
+            """
+                          d
+                         /
+            s . a . .  b  . c
+                 `    /
+                  ' /
+                  e
+                 /
+                f
+            """
+
+        And the ways
+            | nodes | highway      | name  | oneway |
+            | sabc  | primary      | sabc  |        |
+            | dbef  | primary      | dbef  |        |
+            | ae    | primary_link | ae    | yes    |
+
+
+       When I route I should get
+            | waypoints | route             | turns                                      | locations |
+            | s,f       | sabc,ae,dbef,dbef | depart,turn right,turn slight right,arrive | s,a,e,f   |
