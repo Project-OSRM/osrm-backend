@@ -1189,7 +1189,7 @@ Feature: Simple Turns
 
         When I route I should get
             | waypoints | route             | turns                           |
-            | a,c       | rose,trift        | depart,arrive                   |
+            | a,c       | rose,trift,trift  | depart,turn slight left,arrive  |
             | a,k       | rose,muhle,muhle  | depart,turn slight right,arrive |
             | d,f       | trift,rose        | depart,arrive                   |
             | d,k       | trift,muhle,muhle | depart,turn sharp left,arrive   |
