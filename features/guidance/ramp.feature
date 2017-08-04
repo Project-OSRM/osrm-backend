@@ -293,6 +293,6 @@ Feature: Ramp Guidance
             | bd    | motorway_link |      | yes    | San Francisco;San Jose;San Bruno | US 101 South; US 101 North;I 380 West |
 
        When I route I should get
-            | waypoints | route | turns                              |
-            | a,c       | ,     | depart,arrive                      |
-            | a,d       | ,,    | depart,on ramp slight right,arrive |
+            | waypoints | route | turns                           |
+            | a,c       | ,,    | depart,continue straight,arrive |
+            | a,d       | ,,    | depart,on ramp straight,arrive  |
