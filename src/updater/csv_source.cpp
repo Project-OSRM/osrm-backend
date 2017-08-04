@@ -48,7 +48,7 @@ SegmentLookupTable readSegmentValues(const std::vector<std::string> &paths)
                               std::to_string(found_inconsistency->first.from) + " " + SOURCE_REF);
     }
 
-    return std::move(result);
+    return result;
 }
 
 TurnLookupTable readTurnValues(const std::vector<std::string> &paths)
