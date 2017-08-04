@@ -90,7 +90,7 @@ struct ProfileProperties
 
     double GetMaxTurnWeight() const
     {
-        return std::numeric_limits<TurnPenalty>::max() / GetWeightMultiplier();
+        return (std::numeric_limits<TurnPenalty>::max() - 1) / GetWeightMultiplier();
     }
 
     //! penalty to cross a traffic light in deci-seconds
