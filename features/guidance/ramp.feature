@@ -276,3 +276,23 @@ Feature: Ramp Guidance
         When I route I should get
             | waypoints | route                        |
             | a,e       | boarding,boaty mc boatface,, |
+
+
+    # https://www.openstreetmap.org/way/392513452
+    Scenario: Fork with destinations
+        Given the node map
+            """
+                    ..---c
+            a.b..--------d
+            """
+
+        And the ways
+            | nodes | highway       | name | oneway | destination                      | destination:ref                       |
+            | ab    | unclassified  |      | yes    | San Jose;San Francisco           | US 101 South; US 101 North;I 380 West |
+            | bc    | unclassified  |      | yes    | Terminals                        |                                       |
+            | bd    | motorway_link |      | yes    | San Francisco;San Jose;San Bruno | US 101 South; US 101 North;I 380 West |
+
+       When I route I should get
+            | waypoints | route | turns                              |
+            | a,c       | ,     | depart,arrive                      |
+            | a,d       | ,,    | depart,on ramp slight right,arrive |
