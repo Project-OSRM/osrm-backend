@@ -391,6 +391,7 @@ Intersection TurnHandler::handleComplexTurn(const EdgeID via_edge, Intersection 
     {
         assignTrivialTurns(via_edge, intersection, 1, intersection.size());
     }
+
     return intersection;
 }
 
@@ -744,7 +745,7 @@ void TurnHandler::handleDistinctConflict(const EdgeID via_edge,
         right.instruction = {right_type, DirectionModifier::Right};
         return;
     }
-    // Two Right Turns
+    // Two Left Turns
     if (angularDeviation(left.angle, 270) < MAXIMAL_ALLOWED_NO_TURN_DEVIATION)
     {
         // Keep left perfect, shift right
@@ -773,17 +774,18 @@ void TurnHandler::handleDistinctConflict(const EdgeID via_edge,
         return;
     }
 
-    if (getTurnDirection(left.angle) == DirectionModifier::Right)
+    // turn to the right
+    if (getTurnDirection(left.angle) <= 180)
     {
         if (angularDeviation(left.angle, 85) >= angularDeviation(right.angle, 85))
         {
-            left.instruction = {left_type, DirectionModifier::Right};
-            right.instruction = {right_type, DirectionModifier::SharpRight};
+            left.instruction = {left_type, DirectionModifier::SlightRight};
+            right.instruction = {right_type, DirectionModifier::Right};
         }
         else
         {
-            left.instruction = {left_type, DirectionModifier::SlightRight};
-            right.instruction = {right_type, DirectionModifier::Right};
+            left.instruction = {left_type, DirectionModifier::Right};
+            right.instruction = {right_type, DirectionModifier::SharpRight};
         }
     }
     else
