@@ -46,6 +46,7 @@ Thumbs.db
 
 # build related files #
 #######################
+/_build*
 /build/
 /example/build/
 /test/data/monaco*
