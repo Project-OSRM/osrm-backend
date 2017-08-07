@@ -269,6 +269,11 @@
             "description": "Name of road for navigation instructions."
         },
         {
+            "key": "driving_side",
+            "object_types": [ "way" ],
+            "description": "Driving side in all bidirectional traffic."
+        },
+        {
             "key": "turn:lanes",
             "object_types": [ "way" ],
             "description": "Turn Lanes for lane guidance."

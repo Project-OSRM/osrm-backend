@@ -28,20 +28,23 @@ inline InputEdge MakeUnitEdge(const NodeID from, const NodeID to)
 {
     // src, tgt, dist, edge_id, name_id, fwd, bkwd, roundabout, circular, startpoint, local access,
     // split edge, travel_mode
-    return {from,
-            to,
-            1,
-            SPECIAL_EDGEID,
-            0,
-            0,
-            false,
-            false,
-            false,
-            false,
-            true,
-            TRAVEL_MODE_INACCESSIBLE,
-            0,
-            INVALID_LANE_DESCRIPTIONID};
+    return {
+        from,                      // source
+        to,                        // target
+        1,                         // weight
+        1,                         // duration
+        SPECIAL_EDGEID,            // edge_id
+        0,                         // name_id
+        false,                     // reversed
+        false,                     // roundabout
+        false,                     // circular
+        false,                     // startpoint
+        false,                     // is_left_hand_driving
+        true,                      // split edge
+        TRAVEL_MODE_INACCESSIBLE,  // travel_mode
+        0,                         // classes
+        INVALID_LANE_DESCRIPTIONID // lane_description_id
+    };
 }
 
 } // namespace

@@ -27,6 +27,7 @@ struct NodeBasedEdge
                   bool circular,
                   bool startpoint,
                   bool restricted,
+                  bool is_left_hand_driving,
                   bool is_split,
                   TravelMode travel_mode,
                   ClassData classes,
@@ -46,6 +47,7 @@ struct NodeBasedEdge
     std::uint8_t circular : 1;                        // 1
     std::uint8_t startpoint : 1;                      // 1
     std::uint8_t restricted : 1;                      // 1
+    std::uint8_t is_left_hand_driving : 1;            // 1
     std::uint8_t is_split : 1;                        // 1
     TravelMode travel_mode : 4;                       // 4
     ClassData classes;                                // 8  1
@@ -66,6 +68,7 @@ struct NodeBasedEdgeWithOSM : NodeBasedEdge
                          bool circular,
                          bool startpoint,
                          bool restricted,
+                         bool is_left_hand_driving,
                          bool is_split,
                          TravelMode travel_mode,
                          ClassData classes,
@@ -81,8 +84,8 @@ struct NodeBasedEdgeWithOSM : NodeBasedEdge
 inline NodeBasedEdge::NodeBasedEdge()
     : source(SPECIAL_NODEID), target(SPECIAL_NODEID), name_id(0), weight(0), duration(0),
       forward(false), backward(false), roundabout(false), circular(false), startpoint(true),
-      restricted(false), is_split(false), travel_mode(TRAVEL_MODE_INACCESSIBLE),
-      lane_description_id(INVALID_LANE_DESCRIPTIONID)
+      restricted(false), is_left_hand_driving(false), is_split(false),
+      travel_mode(TRAVEL_MODE_INACCESSIBLE), lane_description_id(INVALID_LANE_DESCRIPTIONID)
 {
 }
 
@@ -97,6 +100,7 @@ inline NodeBasedEdge::NodeBasedEdge(NodeID source,
                                     bool circular,
                                     bool startpoint,
                                     bool restricted,
+                                    bool is_left_hand_driving,
                                     bool is_split,
                                     TravelMode travel_mode,
                                     ClassData classes,
@@ -104,9 +108,9 @@ inline NodeBasedEdge::NodeBasedEdge(NodeID source,
                                     guidance::RoadClassification road_classification)
     : source(source), target(target), name_id(name_id), weight(weight), duration(duration),
       forward(forward), backward(backward), roundabout(roundabout), circular(circular),
-      startpoint(startpoint), restricted(restricted), is_split(is_split), travel_mode(travel_mode),
-      classes(classes), lane_description_id(lane_description_id),
-      road_classification(std::move(road_classification))
+      startpoint(startpoint), restricted(restricted), is_left_hand_driving(is_left_hand_driving),
+      is_split(is_split), travel_mode(travel_mode), classes(classes),
+      lane_description_id(lane_description_id), road_classification(std::move(road_classification))
 {
 }
 
@@ -138,6 +142,7 @@ inline NodeBasedEdgeWithOSM::NodeBasedEdgeWithOSM(OSMNodeID source,
                                                   bool circular,
                                                   bool startpoint,
                                                   bool restricted,
+                                                  bool is_left_hand_driving,
                                                   bool is_split,
                                                   TravelMode travel_mode,
                                                   ClassData classes,
@@ -154,6 +159,7 @@ inline NodeBasedEdgeWithOSM::NodeBasedEdgeWithOSM(OSMNodeID source,
                     circular,
                     startpoint,
                     restricted,
+                    is_left_hand_driving,
                     is_split,
                     travel_mode,
                     classes,

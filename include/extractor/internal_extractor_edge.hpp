@@ -70,6 +70,7 @@ struct InternalExtractorEdge
                  false, // circular
                  true,  // can be startpoint
                  false, // local access only
+                 false, // is_left_hand_driving
                  false, // split edge
                  TRAVEL_MODE_INACCESSIBLE,
                  0,
@@ -90,6 +91,7 @@ struct InternalExtractorEdge
                                    bool circular,
                                    bool startpoint,
                                    bool restricted,
+                                   bool is_left_hand_driving,
                                    bool is_split,
                                    TravelMode travel_mode,
                                    ClassData classes,
@@ -107,6 +109,7 @@ struct InternalExtractorEdge
                  circular,
                  startpoint,
                  restricted,
+                 is_left_hand_driving,
                  is_split,
                  travel_mode,
                  classes,
@@ -140,6 +143,7 @@ struct InternalExtractorEdge
                                      false, // circular
                                      true,  // can be startpoint
                                      false, // local access only
+                                     false, // is_left_hand_driving
                                      false, // split edge
                                      TRAVEL_MODE_INACCESSIBLE,
                                      0,
@@ -160,6 +164,7 @@ struct InternalExtractorEdge
                                      false, // circular
                                      true,  // can be startpoint
                                      false, // local access only
+                                     false, // is_left_hand_driving
                                      false, // split edge
                                      TRAVEL_MODE_INACCESSIBLE,
                                      0,
