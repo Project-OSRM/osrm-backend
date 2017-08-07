@@ -82,6 +82,14 @@ function WayHandlers.startpoint(profile,way,result,data)
   end
 end
 
+-- determine if this way has the indicated direction in which a way will lead
+function WayHandlers.turn(profile,way,result,data)
+  local turn = way:get_value_by_key("turn")
+  if turn == "left" or turn == "right" then
+    result.is_turn = true
+  end
+end
+
 -- handle turn lanes
 function WayHandlers.turn_lanes(profile,way,result,data)
   local forward, backward = get_turn_lanes(way,data)

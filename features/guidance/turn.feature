@@ -1237,7 +1237,7 @@ Feature: Simple Turns
             | a,d       | depart,arrive | Stralauer Str,Holzmarktstr |
 
     #http://www.openstreetmap.org/#map=19/49.48761/8.47618
-    @todo @3365
+    @3365
     Scenario: Turning Road - Segregated
         Given the node map
             """
@@ -1249,12 +1249,12 @@ Feature: Simple Turns
                     g   e
             """
         And the ways
-            | nodes | name   | ref  | oneway |
-            | ab    | Goethe | B 38 | yes    |
-            | bc    |        | B 38 | yes    |
-            | ec    | Fried  |      | yes    |
-            | cd    | Fried  | B 38 | yes    |
-            | fbg   | Fried  |      | yes    |
+            | nodes | name   | ref  | oneway | turn |
+            | ab    | Goethe | B 38 | yes    |      |
+            | bc    |        | B 38 | yes    | left |
+            | ec    | Fried  |      | yes    |      |
+            | cd    | Fried  | B 38 | yes    |      |
+            | fbg   | Fried  |      | yes    |      |
 
         When I route I should get
             | waypoints | route              | turns                       |
