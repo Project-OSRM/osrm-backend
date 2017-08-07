@@ -863,8 +863,8 @@ Feature: Slipways and Dedicated Turn Lanes
             | af    | primary | sliproad | yes    |
 
        When I route I should get
-            | waypoints | route                         | turns                              | locations |
-            | s,g       | main,sliproad,another,another | depart,turn right,turn left,arrive | s,a,f,g   |
+            | waypoints | route                         | turns                                     | locations |
+            | s,g       | main,sliproad,another,another | depart,turn right,turn slight left,arrive | s,a,f,g   |
 
     @sliproads:
     Scenario: Throughabout-Sliproad

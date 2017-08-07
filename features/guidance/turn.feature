@@ -788,9 +788,9 @@ Feature: Simple Turns
             | bg    | primary | yes    |
 
         When I route I should get
-            | waypoints | route     | turns                          |
-            | a,d       | abc,bd,bd | depart,turn sharp right,arrive |
-            | a,f       | abc,bf,bf | depart,turn right,arrive       |
+            | waypoints | route     | turns                           |
+            | a,d       | abc,bd,bd | depart,turn right,arrive        |
+            | a,f       | abc,bf,bf | depart,turn slight right,arrive |
 
     Scenario: Right Turn Assignment Three Conflicting Turns with invalid - 3
         Given the node map
