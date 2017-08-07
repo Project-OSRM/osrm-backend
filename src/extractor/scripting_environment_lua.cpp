@@ -401,7 +401,10 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
                       [](ExtractionWay &way, bool flag) { way.forward_restricted = flag; }),
         "backward_restricted",
         sol::property([](const ExtractionWay &way) { return way.backward_restricted; },
-                      [](ExtractionWay &way, bool flag) { way.backward_restricted = flag; }));
+                      [](ExtractionWay &way, bool flag) { way.backward_restricted = flag; }),
+        "is_left_hand_driving",
+        sol::property([](const ExtractionWay &way) { return way.is_left_hand_driving; },
+                      [](ExtractionWay &way, bool flag) { way.is_left_hand_driving = flag; }));
 
     context.state.new_usertype<ExtractionRelation>(
         "ExtractionRelation",

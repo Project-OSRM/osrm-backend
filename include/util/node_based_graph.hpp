@@ -21,8 +21,8 @@ struct NodeBasedEdgeData
     NodeBasedEdgeData()
         : weight(INVALID_EDGE_WEIGHT), duration(INVALID_EDGE_WEIGHT), edge_id(SPECIAL_NODEID),
           name_id(std::numeric_limits<unsigned>::max()), reversed(false), roundabout(false),
-          circular(false), travel_mode(TRAVEL_MODE_INACCESSIBLE),
-          lane_description_id(INVALID_LANE_DESCRIPTIONID)
+          circular(false), startpoint(false), restricted(false), is_left_hand_driving(false),
+          travel_mode(TRAVEL_MODE_INACCESSIBLE), lane_description_id(INVALID_LANE_DESCRIPTIONID)
     {
     }
 
@@ -35,13 +35,14 @@ struct NodeBasedEdgeData
                       bool circular,
                       bool startpoint,
                       bool restricted,
+                      bool is_left_hand_driving,
                       extractor::TravelMode travel_mode,
                       extractor::ClassData classes,
                       const LaneDescriptionID lane_description_id)
         : weight(weight), duration(duration), edge_id(edge_id), name_id(name_id),
           reversed(reversed), roundabout(roundabout), circular(circular), startpoint(startpoint),
-          restricted(restricted), travel_mode(travel_mode), classes(classes),
-          lane_description_id(lane_description_id)
+          restricted(restricted), is_left_hand_driving(is_left_hand_driving),
+          travel_mode(travel_mode), classes(classes), lane_description_id(lane_description_id)
     {
     }
 
@@ -54,6 +55,7 @@ struct NodeBasedEdgeData
     bool circular : 1;
     bool startpoint : 1;
     bool restricted : 1;
+    bool is_left_hand_driving : 1;
     extractor::TravelMode travel_mode : 4;
     extractor::ClassData classes;
     LaneDescriptionID lane_description_id;
@@ -65,7 +67,8 @@ struct NodeBasedEdgeData
                (circular == other.circular) && (startpoint == other.startpoint) &&
                (travel_mode == other.travel_mode) && (classes == other.classes) &&
                (road_classification == other.road_classification) &&
-               (restricted == other.restricted);
+               (restricted == other.restricted) &&
+               (is_left_hand_driving == other.is_left_hand_driving);
     }
 
     bool CanCombineWith(const NodeBasedEdgeData &other) const
@@ -96,6 +99,7 @@ NodeBasedDynamicGraphFromEdges(NodeID number_of_nodes,
             output_edge.data.classes = input_edge.classes;
             output_edge.data.startpoint = input_edge.startpoint;
             output_edge.data.restricted = input_edge.restricted;
+            output_edge.data.is_left_hand_driving = input_edge.is_left_hand_driving;
             output_edge.data.road_classification = input_edge.road_classification;
             output_edge.data.lane_description_id = input_edge.lane_description_id;
 
