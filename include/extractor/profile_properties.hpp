@@ -83,7 +83,8 @@ struct ProfileProperties
     std::string GetClassName(std::size_t index) const
     {
         BOOST_ASSERT(index <= MAX_CLASS_INDEX);
-        return std::string(class_names[index]);
+        const auto &name_it = std::begin(class_names) + index;
+        return std::string(*name_it);
     }
 
     double GetWeightMultiplier() const { return std::pow(10., weight_precision); }
