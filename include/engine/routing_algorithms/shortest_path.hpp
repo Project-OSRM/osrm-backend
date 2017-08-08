@@ -1,5 +1,5 @@
-#ifndef SHORTEST_PATH_HPP
-#define SHORTEST_PATH_HPP
+#ifndef OSRM_SHORTEST_PATH_HPP
+#define OSRM_SHORTEST_PATH_HPP
 
 #include "engine/algorithm.hpp"
 #include "engine/routing_algorithms/routing_base.hpp"
@@ -23,4 +23,4 @@ InternalRouteResult shortestPathSearch(SearchEngineData<Algorithm> &engine_worki
 } // namespace engine
 } // namespace osrm
 
-#endif /* SHORTEST_PATH_HPP */
+#endif /* OSRM_SHORTEST_PATH_HPP */
