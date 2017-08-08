@@ -1,0 +1,15 @@
+*
+!README.md
+!CHANGELOG.md
+!CONTRIBUTING.MD
+!LICENCE.TXT
+!package.json
+!package-lock.json
+!yarn.lock
+!docs
+!example
+!taginfo.json
+!lib/*.js
+!profiles/*
+!profiles/lib/*
+!profiles/examples/*
