@@ -59,6 +59,7 @@
     "node-pre-gyp"
   ],
   "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "binary": {
     "module_name": "node_osrm",
     "module_path": "./lib/binding/",
