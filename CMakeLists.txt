@@ -102,11 +102,11 @@ if(WIN32 AND MSVC_VERSION LESS 1900)
 endif()
 
 # Strictly require GCC>=4.9 and Clang>=3.4 - GCC 4.8 is already too old for C++14.
-if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
   if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.9)
     message(FATAL_ERROR "GCC>=4.9 required. In case you are on Ubuntu upgrade via ppa:ubuntu-toolchain-r/test")
   endif()
-elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 3.4)
     message(FATAL_ERROR "Clang>=3.4 required. In case you are on Ubuntu upgrade via http://apt.llvm.org")
   endif()
@@ -182,7 +182,7 @@ endif()
 
 # Disable LTO when mason+gcc is detected before testing for / setting any flags.
 # Mason builds libraries with Clang, mixing does not work in the context of lto.
-if(ENABLE_MASON AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND ENABLE_LTO)
+if(ENABLE_MASON AND CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND ENABLE_LTO)
   set(ENABLE_LTO OFF)
   message(WARNING "Mason and GCC's LTO not work together. Disabling LTO.")
 endif()
@@ -211,9 +211,9 @@ endif()
 if(CMAKE_BUILD_TYPE MATCHES Debug OR CMAKE_BUILD_TYPE MATCHES RelWithDebInfo)
   message(STATUS "Configuring debug mode flags")
   set(ENABLE_ASSERTIONS ON)
-  if(NOT ${CMAKE_CXX_COMPILER_ID} STREQUAL "MSVC")
+  if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-inline -fno-omit-frame-pointer")
-    if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
       if (CMAKE_BUILD_TYPE MATCHES Debug)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Og -ggdb")
       else()
@@ -232,7 +232,7 @@ if(CMAKE_BUILD_TYPE MATCHES Release OR CMAKE_BUILD_TYPE MATCHES MinRelSize OR CM
   if(ENABLE_LTO AND LTO_AVAILABLE)
     set(OLD_CXX_FLAGS ${CMAKE_CXX_FLAGS})
     # GCC in addition allows parallelizing LTO
-    if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
       include(ProcessorCount)
       ProcessorCount(NPROC)
       set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto=${NPROC}")
@@ -255,7 +255,7 @@ if(CMAKE_BUILD_TYPE MATCHES Release OR CMAKE_BUILD_TYPE MATCHES MinRelSize OR CM
     endif()
 
     # Since gcc 4.9 the LTO format is non-standart ('slim'), so we need to use the build-in tools
-    if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND
+    if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND
         NOT "${CMAKE_CXX_COMPILER_VERSION}" VERSION_LESS "4.9.0" AND NOT MINGW)
       find_program(GCC_AR gcc-ar)
       find_program(GCC_RANLIB gcc-ranlib)
@@ -271,7 +271,7 @@ if(CMAKE_BUILD_TYPE MATCHES Release OR CMAKE_BUILD_TYPE MATCHES MinRelSize OR CM
     endif()
 
     # Same for clang LTO requires their own toolchain
-    if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
       find_program(LLVM_AR llvm-ar)
       find_program(LLVM_RANLIB llvm-ranlib)
       if ("${LLVM_AR}" STREQUAL "LLVM_AR-NOTFOUND" OR "${LLVM_RANLIB}" STREQUAL "LLVM_RANLIB-NOTFOUND")
@@ -285,7 +285,7 @@ if(CMAKE_BUILD_TYPE MATCHES Release OR CMAKE_BUILD_TYPE MATCHES MinRelSize OR CM
       endif()
     endif()
 
-    if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND "${CMAKE_CXX_COMPILER_VERSION}" VERSION_LESS "4.9.0")
+    if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND "${CMAKE_CXX_COMPILER_VERSION}" VERSION_LESS "4.9.0")
       message(STATUS "Disabling LTO on GCC < 4.9.0 since it is broken, see: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=57038")
       set(CMAKE_CXX_FLAGS "${OLD_CXX_FLAGS}")
       set(ENABLE_LTO Off)
@@ -315,9 +315,9 @@ if (ENABLE_SANITIZER)
 endif()
 
 # Configuring compilers
-if(${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -Wuninitialized -Wunreachable-code -Wstrict-overflow=2 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fPIC -fcolor-diagnostics -ftemplate-depth=1024 -Wno-unused-command-line-argument")
-elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
   set(COLOR_FLAG "-fdiagnostics-color=auto")
   check_cxx_compiler_flag("-fdiagnostics-color=auto" HAS_COLOR_FLAG)
   if(NOT HAS_COLOR_FLAG)
@@ -337,10 +337,10 @@ elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpermissive")
   endif()
 
-elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel")
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "Intel")
   # using Intel C++
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-intel -wd10237 -Wall -ipo -fPIC")
-elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "MSVC")
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
   # using Visual Studio C++
   set(BOOST_COMPONENTS ${BOOST_COMPONENTS} zlib)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj") # avoid compiler error C1128 from scripting_environment_lua.cpp
@@ -360,7 +360,7 @@ execute_process(COMMAND ${CMAKE_CXX_COMPILER} "-Wl,--version" ERROR_QUIET OUTPUT
 # For ld.gold and ld.bfs (the GNU linkers) we optimize hard
 if("${LINKER_VERSION}" MATCHES "GNU gold" OR "${LINKER_VERSION}" MATCHES "GNU ld")
   message(STATUS "Setting linker optimizations")
-  if(NOT (${CMAKE_CXX_COMPILER_ID} STREQUAL "MSVC" OR "${LD_AVOID_GC_SECTIONS}"))
+  if(NOT (CMAKE_CXX_COMPILER_ID MATCHES "MSVC" OR "${LD_AVOID_GC_SECTIONS}"))
     # Tell compiler to put every function in separate section, linker can then match sections and functions
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffunction-sections -fdata-sections")
     # Tell linker to do dead code and data eminination during link time discarding sections
@@ -378,7 +378,7 @@ set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${LINKER_FLAGS}")
 set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} ${LINKER_FLAGS}")
 
 # Activate C++1y
-if(NOT ${CMAKE_CXX_COMPILER_ID} STREQUAL "MSVC")
+if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1y")
   set(OSRM_CXXFLAGS "${OSRM_CXXFLAGS} -std=c++1y")
 endif()
@@ -569,7 +569,7 @@ else()
 endif()
 
 # prefix compilation with ccache by default if available and on clang or gcc
-if(ENABLE_CCACHE AND (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" OR ${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU"))
+if(ENABLE_CCACHE AND (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU"))
   find_program(CCACHE_FOUND ccache)
   if(CCACHE_FOUND)
     message(STATUS "Using ccache to speed up incremental builds")
