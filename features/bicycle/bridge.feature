@@ -21,13 +21,6 @@ Feature: Bicycle - Handle cycling
         When I route I should get
             | from | to | route           | modes                           |
             | a    | g  | abc,cde,efg,efg | cycling,cycling,cycling,cycling |
-            | b    | f  | abc,cde,efg,efg | cycling,cycling,cycling,cycling |
-            | e    | c  | cde,cde         | cycling,cycling                 |
-            | e    | b  | cde,abc,abc     | cycling,cycling,cycling         |
-            | e    | a  | cde,abc,abc     | cycling,cycling,cycling         |
-            | c    | e  | cde,cde         | cycling,cycling                 |
-            | c    | f  | cde,efg,efg     | cycling,cycling,cycling         |
-            | c    | g  | cde,efg,efg     | cycling,cycling,cycling         |
 
     Scenario: Bicycle - Properly handle durations
         Given the node map

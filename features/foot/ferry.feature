@@ -21,13 +21,7 @@ Feature: Foot - Handle ferry routes
         When I route I should get
             | from | to | route           | modes                         |
             | a    | g  | abc,cde,efg,efg | walking,ferry,walking,walking |
-            | b    | f  | abc,cde,efg,efg | walking,ferry,walking,walking |
-            | e    | c  | cde,cde         | ferry,ferry                   |
-            | e    | b  | cde,abc,abc     | ferry,walking,walking         |
             | e    | a  | cde,abc,abc     | ferry,walking,walking         |
-            | c    | e  | cde,cde         | ferry,ferry                   |
-            | c    | f  | cde,efg,efg     | ferry,walking,walking         |
-            | c    | g  | cde,efg,efg     | ferry,walking,walking         |
 
     Scenario: Foot - Ferry duration, single node
         Given the node map
