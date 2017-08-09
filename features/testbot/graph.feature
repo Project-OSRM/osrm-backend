@@ -40,5 +40,5 @@ Feature: Basic Routing
             | fy     | last  |
 
         When I route I should get
-            | from | to | route                 |
-            | x    | y  | first,compr,last,last |
+            | from | to | route      |
+            | x    | y  | first,last |

@@ -48,9 +48,9 @@ Feature: Penalties
             | ij    |
 
         When I route I should get
-            | from | to | route     | time    | distance |
-            | a    | e  | ab,bcd,de | 47s +-1 | 400m +-1 |
-            | f    | j  | fg,ghi,ij | 40s +-1 | 400m +-1 |
+            | from | to | route | time    | distance |
+            | a    | e  | ab,de | 47s +-1 | 400m +-1 |
+            | f    | j  | fg,ij | 40s +-1 | 400m +-1 |
 
 
     Scenario: Signal penalty should not depend on way type

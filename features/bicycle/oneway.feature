@@ -132,8 +132,8 @@ Feature: Bike - Oneway streets
 
 
         When I route I should get
-            | from | to | route    |
-            | a    | c  | ab,bc,bc |
+            | from | to | route |
+            | a    | c  | ab,bc |
 
 
     Scenario: Bike - Left/right cycleways on oneways

@@ -23,8 +23,8 @@ Feature: U-turns at via points
             | fg    |
 
         When I route I should get
-            | waypoints | route                   |
-            | a,e,c     | ab,be,be,ef,fg,dg,cd,cd |
+            | waypoints | route          |
+            | a,e,c     | ab,be,be,ef,cd |
 
     Scenario: Query parameter to disallow changing direction at all waypoints
         Given the node map
@@ -96,6 +96,6 @@ Feature: U-turns at via points
             | fg    | no     |
 
         When I route I should get
-            | waypoints | route                                           |
-            | 1,2,3,4,5 | ab,be,be,be,ef,fg,dg,cd,bc,bc,bc,cd,dg,dg,dg,cd,cd |
+            | waypoints | route                      |
+            | 1,2,3,4,5 | ab,be,be,be,bc,bc,dg,dg,cd |
 

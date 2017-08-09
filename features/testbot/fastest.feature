@@ -21,9 +21,9 @@ Feature: Choosing fastest route
             | asb   | primary |
 
         When I route I should get
-            | from | to | route        |
-            | x    | y  | xa,atb,by,by |
-            | y    | x  | by,atb,xa,xa |
+            | from | to | route     |
+            | x    | y  | xa,atb,by |
+            | y    | x  | by,atb,xa |
 
     Scenario: Pick the fastest route, even when it's longer
         Given the node map

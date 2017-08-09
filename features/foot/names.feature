@@ -18,5 +18,5 @@ Feature: Foot - Street names in instructions
             | bc    |          | A7  |
 
         When I route I should get
-            | from | to | route    | ref    |
-            | a    | c  | My Way,, | ,A7,A7 |
+            | from | to | route   | ref |
+            | a    | c  | My Way, | ,A7 |

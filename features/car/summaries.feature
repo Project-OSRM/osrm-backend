@@ -60,8 +60,8 @@ Feature: Basic Routing
             | bc    |      | 101 |
 
         When I route I should get
-            | waypoints | route  | summary   |
-            | a,c       | road,, | road, 101 |
+            | waypoints | route | summary   |
+            | a,c       | road, | road, 101 |
 
      Scenario: Only Refs
         Given the node map
@@ -91,7 +91,7 @@ Feature: Basic Routing
 
         When I route I should get
             | waypoints | route | summary |
-            | a,c       | ,,    | 101     |
+            | a,c       | ,     | 101     |
 
      Scenario: Nothing
         Given the node map

@@ -120,8 +120,8 @@ Feature: Merge Segregated Roads
             | dcb   | merge | yes    |
 
         When I route I should get
-            | waypoints | route          | intersections                                         |
-            | a,e       | in,merge,merge | true:90;false:60 true:90 false:120 false:270;true:270 |
+            | waypoints | route    | intersections                                         |
+            | a,e       | in,merge | true:90,false:60 true:90 false:120 false:270;true:270 |
 
     Scenario: Tripple Merge should not be possible
         Given the node map

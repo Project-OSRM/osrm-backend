@@ -65,15 +65,15 @@ Feature: Multi level routing
             | kp    | primary |
 
         When I route I should get
-            | from | to | route                                  | time   |
-            | a    | b  | abcda,abcda                            | 20s    |
-            | a    | f  | abcda,cm,mnopm,kp,ijkli,hj,efghe,efghe | 229.4s |
-            | a    | l  | abcda,cm,mnopm,kp,ijkli,ijkli          | 144.7s |
-            | a    | o  | abcda,cm,mnopm,mnopm,mnopm             | 124.7s |
-            | f    | l  | efghe,hj,ijkli,ijkli,ijkli             | 124.7s |
-            | f    | o  | efghe,hj,ijkli,kp,mnopm,mnopm          | 144.7s |
-            | l    | o  | ijkli,kp,mnopm,mnopm                   | 60s    |
-            | c    | m  | cm,cm                                  | 44.7s  |
+            | from | to | route                            | time   |
+            | a    | b  | abcda,abcda                      | 20s    |
+            | a    | f  | abcda,cm,kp,ijkli,hj,efghe,efghe | 229.4s |
+            | a    | l  | abcda,cm,kp,ijkli                | 144.7s |
+            | a    | o  | abcda,cm,mnopm,mnopm             | 124.7s |
+            | f    | l  | efghe,hj,ijkli,ijkli             | 124.7s |
+            | f    | o  | efghe,hj,kp,mnopm                | 144.7s |
+            | l    | o  | ijkli,kp,mnopm                   | 60s    |
+            | c    | m  | cm,cm                            | 44.7s  |
 
         When I request a travel time matrix I should get
             |   |     a |     f |     l |     o |
@@ -108,15 +108,15 @@ Feature: Multi level routing
             | ot    | secondary |
 
         When I route I should get
-            | from | to | route                          | time |
-            | a    | b  | abcda,abcda                    | 20s  |
-            | a    | d  | abcda,abcda                    | 20s  |
-            | a    | l  | abcda,dim,ijkl,ijkl            | 100s |
-            | a    | p  | abcda,dim,mnopm,mnopm          | 80s  |
-            | a    | o  | abcda,dim,mnopm,mnopm          | 100s |
-            | a    | t  | abcda,dim,mnopm,ot,ot          | 140s |
-            | a    | s  | abcda,dim,ijkl,glr,qrstq,qrstq | 140s |
-            | a    | f  | abcda,dim,ijkl,glr,efghe,efghe | 140s |
+            | from | to | route                    | time |
+            | a    | b  | abcda,abcda              | 20s  |
+            | a    | d  | abcda,abcda              | 20s  |
+            | a    | l  | abcda,dim,ijkl,ijkl      | 100s |
+            | a    | p  | abcda,dim,mnopm          | 80s  |
+            | a    | o  | abcda,dim,mnopm          | 100s |
+            | a    | t  | abcda,dim,ot,ot          | 140s |
+            | a    | s  | abcda,dim,ijkl,glr,qrstq | 140s |
+            | a    | f  | abcda,dim,ijkl,glr,efghe | 140s |
 
 
     Scenario: Testbot - Multi level routing: route over internal cell edge hf

@@ -215,14 +215,14 @@ Feature: Testbot - Travel mode
             | ef    | primary |       |          |
 
        When I route I should get
-            | from | to | route             | modes                                         |
-            | a    | d  | ab,bc,cd,cd       | driving,route,driving,driving                 |
-            | d    | a  | cd,bc,ab,ab       | driving,route,driving,driving                 |
-            | c    | a  | bc,ab,ab          | route,driving,driving                         |
-            | d    | b  | cd,bc,bc          | driving,route,route                           |
-            | a    | c  | ab,bc,bc          | driving,route,route                           |
-            | b    | d  | bc,cd,cd          | route,driving,driving                         |
-            | a    | f  | ab,bc,cd,de,ef,ef | driving,route,driving,driving,driving,driving |
+            | from | to | route       | modes                         |
+            | a    | d  | ab,bc,cd,cd | driving,route,driving,driving |
+            | d    | a  | cd,bc,ab,ab | driving,route,driving,driving |
+            | c    | a  | bc,ab,ab    | route,driving,driving         |
+            | d    | b  | cd,bc,bc    | driving,route,route           |
+            | a    | c  | ab,bc,bc    | driving,route,route           |
+            | b    | d  | bc,cd,cd    | route,driving,driving         |
+            | a    | f  | ab,bc,cd,ef | driving,route,driving,driving |
 
     Scenario: Testbot - Modes, triangle map
         Given the node map
@@ -244,21 +244,21 @@ Feature: Testbot - Travel mode
             | de    | primary |        |
 
        When I route I should get
-            | from | to | route            | modes                                          |
-            | 0    | 1  | abc,ce,de,de     | driving,river downstream,driving,driving       |
-            | 1    | 0  | de,ce,abc,abc    | driving,river upstream,driving,driving         |
-            | 0    | 2  | abc,cd,cd        | driving,driving,driving                        |
-            | 2    | 0  | cd,de,ce,abc,abc | driving,driving,river upstream,driving,driving |
-            | 0    | 3  | abc,ce,ce        | driving,river downstream,river downstream      |
-            | 3    | 0  | ce,abc,abc       | river upstream,driving,driving                 |
-            | 4    | 3  | ce,ce            | river downstream,river downstream              |
-            | 3    | 4  | ce,ce            | river upstream,river upstream                  |
-            | 3    | 1  | ce,de,de         | river downstream,driving,driving               |
-            | 1    | 3  | de,ce,ce         | driving,river upstream,river upstream          |
-            | a    | e  | abc,ce,ce        | driving,river downstream,river downstream      |
-            | e    | a  | ce,abc,abc       | river upstream,driving,driving                 |
-            | a    | d  | abc,cd,cd        | driving,driving,driving                        |
-            | d    | a  | de,ce,abc,abc    | driving,river upstream,driving,driving         |
+            | from | to | route         | modes                                     |
+            | 0    | 1  | abc,ce,de,de  | driving,river downstream,driving,driving  |
+            | 1    | 0  | de,ce,abc,abc | driving,river upstream,driving,driving    |
+            | 0    | 2  | abc,cd,cd     | driving,driving,driving                   |
+            | 2    | 0  | cd,ce,abc,abc | driving,river upstream,driving,driving    |
+            | 0    | 3  | abc,ce,ce     | driving,river downstream,river downstream |
+            | 3    | 0  | ce,abc,abc    | river upstream,driving,driving            |
+            | 4    | 3  | ce,ce         | river downstream,river downstream         |
+            | 3    | 4  | ce,ce         | river upstream,river upstream             |
+            | 3    | 1  | ce,de,de      | river downstream,driving,driving          |
+            | 1    | 3  | de,ce,ce      | driving,river upstream,river upstream     |
+            | a    | e  | abc,ce,ce     | driving,river downstream,river downstream |
+            | e    | a  | ce,abc,abc    | river upstream,driving,driving            |
+            | a    | d  | abc,cd,cd     | driving,driving,driving                   |
+            | d    | a  | de,ce,abc,abc | driving,river upstream,driving,driving    |
 
     Scenario: Testbot - River in the middle
         Given the node map

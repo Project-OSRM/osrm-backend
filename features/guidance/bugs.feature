@@ -65,5 +65,5 @@ Feature: Features related to bugs
             | bc    | Merritt to Apricot | residential |
 
         When I route I should get
-            | waypoints | route | intersections  |
-            | a,c       | Pear to Merrit,Merritt to Apricot,Merritt to Apricot | true:0;true:0 false:180;true:180  |
+            | waypoints | route                             | intersections                    |
+            | a,c       | Pear to Merrit,Merritt to Apricot | true:0,true:0 false:180;true:180  |
