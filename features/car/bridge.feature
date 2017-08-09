@@ -22,13 +22,7 @@ Feature: Car - Handle driving
         When I route I should get
             | from | to | route           | modes                           |
             | a    | g  | abc,cde,efg,efg | driving,driving,driving,driving |
-            | b    | f  | abc,cde,efg,efg | driving,driving,driving,driving |
-            | e    | c  | cde,cde         | driving,driving                 |
-            | e    | b  | cde,abc,abc     | driving,driving,driving         |
             | e    | a  | cde,abc,abc     | driving,driving,driving         |
-            | c    | e  | cde,cde         | driving,driving                 |
-            | c    | f  | cde,efg,efg     | driving,driving,driving         |
-            | c    | g  | cde,efg,efg     | driving,driving,driving         |
 
     Scenario: Car - Control test without durations, osrm uses movable bridge speed to calculate duration
         Given the node map
@@ -47,8 +41,6 @@ Feature: Car - Handle driving
         When I route I should get
             | from | to | route           | modes                           | speed   | time     |
             | a    | g  | abc,cde,efg,efg | driving,driving,driving,driving | 13 km/h | 340s +-1 |
-            | b    | f  | abc,cde,efg,efg | driving,driving,driving,driving | 9 km/h  | 318s +-1 |
-            | c    | e  | cde,cde         | driving,driving                 | 5 km/h  | 295s +-1 |
             | e    | c  | cde,cde         | driving,driving                 | 5 km/h  | 295s +-1 |
 
     Scenario: Car - Properly handle durations
@@ -68,6 +60,5 @@ Feature: Car - Handle driving
         When I route I should get
             | from | to | route           | modes                           | speed  |
             | a    | g  | abc,cde,efg,efg | driving,driving,driving,driving | 7 km/h |
-            | b    | f  | abc,cde,efg,efg | driving,driving,driving,driving | 5 km/h |
             | c    | e  | cde,cde         | driving,driving                 | 2 km/h |
             | e    | c  | cde,cde         | driving,driving                 | 2 km/h |

@@ -32,84 +32,6 @@ Feature: Foot - Turn restrictions
             | s    | n  | sj,nj,nj |
             | s    | e  | sj,ej,ej |
 
-    @no_turning
-    Scenario: Foot - No right turn
-        Given the node map
-            """
-              n
-            w j e
-              s
-            """
-
-        And the ways
-            | nodes | oneway |
-            | sj    | yes    |
-            | nj    | -1     |
-            | wj    | -1     |
-            | ej    | -1     |
-
-        And the relations
-            | type        | way:from | way:to | node:via | restriction   |
-            | restriction | sj       | ej     | j        | no_right_turn |
-
-        When I route I should get
-            | from | to | route    |
-            | s    | w  | sj,wj,wj |
-            | s    | n  | sj,nj,nj |
-            | s    | e  | sj,ej,ej |
-
-    @no_turning
-    Scenario: Foot - No u-turn
-        Given the node map
-            """
-              n
-            w j e
-              s
-            """
-
-        And the ways
-            | nodes | oneway |
-            | sj    | yes    |
-            | nj    | -1     |
-            | wj    | -1     |
-            | ej    | -1     |
-
-        And the relations
-            | type        | way:from | way:to | node:via | restriction |
-            | restriction | sj       | wj     | j        | no_u_turn   |
-
-        When I route I should get
-            | from | to | route    |
-            | s    | w  | sj,wj,wj |
-            | s    | n  | sj,nj,nj |
-            | s    | e  | sj,ej,ej |
-
-    @no_turning
-    Scenario: Foot - Handle any no_* relation
-        Given the node map
-            """
-              n
-            w j e
-              s
-            """
-
-        And the ways
-            | nodes | oneway |
-            | sj    | yes    |
-            | nj    | -1     |
-            | wj    | -1     |
-            | ej    | -1     |
-
-        And the relations
-            | type        | way:from | way:to | node:via | restriction      |
-            | restriction | sj       | wj     | j        | no_weird_zigzags |
-
-        When I route I should get
-            | from | to | route    |
-            | s    | w  | sj,wj,wj |
-            | s    | n  | sj,nj,nj |
-            | s    | e  | sj,ej,ej |
-
     @only_turning
     Scenario: Foot - Only left turn
         Given the node map
@@ -129,84 +51,6 @@ Feature: Foot - Turn restrictions
         And the relations
             | type        | way:from | way:to | node:via | restriction    |
             | restriction | sj       | wj     | j        | only_left_turn |
-
-        When I route I should get
-            | from | to | route    |
-            | s    | w  | sj,wj,wj |
-            | s    | n  | sj,nj,nj |
-            | s    | e  | sj,ej,ej |
-
-    @only_turning
-    Scenario: Foot - Only right turn
-        Given the node map
-            """
-              n
-            w j e
-              s
-            """
-
-        And the ways
-            | nodes | oneway |
-            | sj    | yes    |
-            | nj    | -1     |
-            | wj    | -1     |
-            | ej    | -1     |
-
-        And the relations
-            | type        | way:from | way:to | node:via | restriction     |
-            | restriction | sj       | ej     | j        | only_right_turn |
-
-        When I route I should get
-            | from | to | route    |
-            | s    | w  | sj,wj,wj |
-            | s    | n  | sj,nj,nj |
-            | s    | e  | sj,ej,ej |
-
-    @only_turning
-    Scenario: Foot - Only straight on
-        Given the node map
-            """
-              n
-            w j e
-              s
-            """
-
-        And the ways
-            | nodes | oneway |
-            | sj    | yes    |
-            | nj    | -1     |
-            | wj    | -1     |
-            | ej    | -1     |
-
-        And the relations
-            | type        | way:from | way:to | node:via | restriction      |
-            | restriction | sj       | nj     | j        | only_straight_on |
-
-        When I route I should get
-            | from | to | route    |
-            | s    | w  | sj,wj,wj |
-            | s    | n  | sj,nj,nj |
-            | s    | e  | sj,ej,ej |
-
-    @no_turning
-    Scenario: Foot - Handle any only_* restriction
-        Given the node map
-            """
-              n
-            w j e
-              s
-            """
-
-        And the ways
-            | nodes | oneway |
-            | sj    | yes    |
-            | nj    | -1     |
-            | wj    | -1     |
-            | ej    | -1     |
-
-        And the relations
-            | type        | way:from | way:to | node:via | restriction        |
-            | restriction | sj       | nj     | j        | only_weird_zigzags |
 
         When I route I should get
             | from | to | route    |
@@ -245,30 +89,6 @@ Feature: Foot - Turn restrictions
             | s    | b  | sj,bj,bj |
             | s    | c  | sj,cj,cj |
             | s    | d  | sj,dj,dj |
-
-    @except
-    Scenario: Foot - Except tag and on only_ restrictions
-        Given the node map
-            """
-            a   b
-              j
-              s
-            """
-
-        And the ways
-            | nodes | oneway |
-            | sj    | yes    |
-            | aj    | no     |
-            | bj    | no     |
-
-        And the relations
-            | type        | way:from | way:to | node:via | restriction      | except |
-            | restriction | sj       | aj     | j        | only_straight_on | foot   |
-
-        When I route I should get
-            | from | to | route    |
-            | s    | a  | sj,aj,aj |
-            | s    | b  | sj,bj,bj |
 
     @except
     Scenario: Foot - Multiple except tag values
