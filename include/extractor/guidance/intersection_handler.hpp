@@ -8,6 +8,7 @@
 #include "extractor/suffix_table.hpp"
 
 #include "util/coordinate_calculation.hpp"
+#include "util/guidance/destinations_similarity.hpp"
 #include "util/guidance/name_announcements.hpp"
 #include "util/name_table.hpp"
 #include "util/node_based_graph.hpp"
@@ -529,6 +530,35 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
                             FUZZY_ANGLE_DIFFERENCE &&
                         !turn_data.reversed && continue_data.CanCombineWith(turn_data))
                         return 0;
+                }
+            }
+        }
+
+        // If all roads have destination tags ...
+        const auto all_roads_have_destinations =
+            std::all_of(begin(intersection), end(intersection), [this](const auto &road) {
+                auto name_id = node_based_graph.GetEdgeData(road.eid).name_id;
+                return !name_table.GetDestinationsForID(name_id).empty();
+            });
+        if (all_roads_have_destinations)
+        { // ... and direction of the obvious turn
+            using namespace util::guidance;
+            auto best_turn_direction = getTurnDirection(intersection[best_continue].angle);
+            const auto &in_way_tokens =
+                getDestinationTokens(name_table.GetDestinationsForID(in_way_data.name_id));
+            const auto &continue_tokens =
+                getDestinationTokens(name_table.GetDestinationsForID(continue_data.name_id));
+            const auto best_continue_score = getSetsSimilarity(in_way_tokens, continue_tokens);
+            for (std::size_t index = 1; index < intersection.size(); ++index)
+            { // .. matches direction of any other turn
+                const auto name_id = node_based_graph.GetEdgeData(intersection[index].eid).name_id;
+                if (index != best_continue &&
+                    getTurnDirection(intersection[index].angle) == best_turn_direction)
+                { // ... and destinations tags are less similar to the in_way tags
+                    const auto &turn_tokens =
+                        getDestinationTokens(name_table.GetDestinationsForID(name_id));
+                    if (best_continue_score < getSetsSimilarity(in_way_tokens, turn_tokens))
+                        return 0; // .. then don't consider the best turn as obvious
                 }
             }
         }
