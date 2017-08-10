@@ -180,7 +180,16 @@ class QueryHeap
     {
         BOOST_ASSERT(WasInserted(node));
         const Key index = node_index.peek_index(node);
-        return inserted_nodes[index].handle == HeapHandle{};
+
+        // Use end iterator as a reliable "non-existent" handle.
+        // Default-constructed handles are singular and
+        // can only be checked-compared to another singular instance.
+        // Behaviour investigated at https://lists.boost.org/boost-users/2017/08/87787.php,
+        // eventually confirmation at https://stackoverflow.com/a/45622940/151641.
+        // Corrected in https://github.com/Project-OSRM/osrm-backend/pull/4396
+        auto const end_it = const_cast<HeapContainer &>(heap).end();  // non-const iterator
+        auto const none_handle = heap.s_handle_from_iterator(end_it); // from non-const iterator
+        return inserted_nodes[index].handle == none_handle;
     }
 
     bool WasInserted(const NodeID node) const
@@ -210,14 +219,15 @@ class QueryHeap
         BOOST_ASSERT(!heap.empty());
         const Key removedIndex = heap.top().second;
         heap.pop();
-        inserted_nodes[removedIndex].handle = HeapHandle{};
+        inserted_nodes[removedIndex].handle = heap.s_handle_from_iterator(heap.end());
         return inserted_nodes[removedIndex].node;
     }
 
     void DeleteAll()
     {
-        std::for_each(inserted_nodes.begin(), inserted_nodes.end(), [](auto &node) {
-            node.handle = HeapHandle();
+        auto const none_handle = heap.s_handle_from_iterator(heap.end());
+        std::for_each(inserted_nodes.begin(), inserted_nodes.end(), [&none_handle](auto &node) {
+            node.handle = none_handle;
         });
         heap.clear();
     }
