@@ -249,7 +249,7 @@ IntersectionView IntersectionGenerator::TransformIntersectionShapeIntoView(
             return pair.second->is_only;
         });
         if (itr != restrictions.second)
-            return {itr->second->AsNodeRestriction().to};
+            return itr->second->AsNodeRestriction().to;
         else
             return boost::none;
     };
