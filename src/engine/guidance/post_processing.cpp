@@ -629,7 +629,21 @@ std::vector<RouteStep> buildIntersections(std::vector<RouteStep> steps)
                 BOOST_ASSERT(step_index > 0);
                 const auto &previous_step = steps[last_valid_instruction];
                 if (previous_step.intersections.size() < MIN_END_OF_ROAD_INTERSECTIONS)
-                    step.maneuver.instruction.type = TurnType::Turn;
+                {
+                    bool same_name =
+                        !(step.name.empty() && step.ref.empty()) &&
+                        !util::guidance::requiresNameAnnounced(previous_step.name,
+                                                               previous_step.ref,
+                                                               previous_step.pronunciation,
+                                                               previous_step.exits,
+                                                               step.name,
+                                                               step.ref,
+                                                               step.pronunciation,
+                                                               step.exits);
+
+                    step.maneuver.instruction.type =
+                        same_name ? TurnType::Continue : TurnType::Turn;
+                }
             }
 
             // Remember the last non silent instruction

@@ -52,9 +52,9 @@ Feature: Turn Lane Guidance
             | dy    |                       |                     | YSt  |
 
        When I route I should get
-            | waypoints | route               | turns                                   | lanes                                                         |
-            | a,e       | MySt,MySt,MySt,MySt | depart,continue right,turn right,arrive | ,straight:false right:false right:true,left:false right:true, |
-            | e,a       | MySt,MySt,MySt,MySt | depart,continue left,turn left,arrive   | ,left:true left:false straight:false,left:true right:false,   |
+            | waypoints | route               | turns                                       | lanes                                                         |
+            | a,e       | MySt,MySt,MySt,MySt | depart,continue right,continue right,arrive | ,straight:false right:false right:true,left:false right:true, |
+            | e,a       | MySt,MySt,MySt,MySt | depart,continue left,continue left,arrive   | ,left:true left:false straight:false,left:true right:false,   |
 
     @anticipate
     Scenario: Anticipate Lane Change for quick same direction turns, changing between streets
@@ -780,8 +780,8 @@ Feature: Turn Lane Guidance
             | dy    |                                | YSt  |
 
        When I route I should get
-            | waypoints | route               | turns                                   | lanes                                                                        |
-            | a,e       | MySt,MySt,MySt,MySt | depart,continue right,turn right,arrive | ,straight:false straight:false right:false right:true,left:false right:true, |
+            | waypoints | route               | turns                                       | lanes                                                                        |
+            | a,e       | MySt,MySt,MySt,MySt | depart,continue right,continue right,arrive | ,straight:false straight:false right:false right:true,left:false right:true, |
 
     @anticipate
     Scenario: Don't Overdo It
