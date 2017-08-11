@@ -3,8 +3,17 @@
 
 #ifdef OSRM_EXTERNAL_MEMORY
 
-// Register your own data backend here
-#error "No external memory implementation found"
+#include "routing/compressed_datafacade.hpp"
+
+namespace osrm
+{
+namespace engine
+{
+
+using DataFacadeBase = datafacade::BaseDataFacade;
+template <typename AlgorithmT> using DataFacade = datafacade::CompressedDataFacadeT<AlgorithmT>;
+}
+}
 
 #else
 

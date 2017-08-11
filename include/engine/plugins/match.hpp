@@ -5,9 +5,6 @@
 #include "engine/plugins/plugin_base.hpp"
 #include "engine/routing_algorithms.hpp"
 
-#include "engine/map_matching/bayes_classifier.hpp"
-#include "engine/routing_algorithms/map_matching.hpp"
-#include "engine/routing_algorithms/shortest_path.hpp"
 #include "util/json_util.hpp"
 
 #include <vector>
