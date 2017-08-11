@@ -835,9 +835,9 @@ Feature: Turn Lane Guidance
             | cf    | secondary | bottom |                    |
 
         When I route I should get
-            | waypoints | turns                                   | route               | lanes                        |
-            | a,d       | depart,continue right,turn right,arrive | road,road,road,road | ,straight:false right:true,, |
-            | d,a       | depart,continue left,turn left,arrive   | road,road,road,road | ,left:true straight:false,,  |
+            | waypoints | turns                                       | route               | lanes                        |
+            | a,d       | depart,continue right,continue right,arrive | road,road,road,road | ,straight:false right:true,, |
+            | d,a       | depart,continue left,continue left,arrive   | road,road,road,road | ,left:true straight:false,,  |
 
     @simple
     Scenario: Merge Lanes Onto Freeway

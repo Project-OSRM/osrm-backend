@@ -136,3 +136,24 @@ Feature: Continue Instructions
           | a,d       | abcdefb,abcdefb,abcdefb | depart,continue right,arrive |
           # continuing right here, since the turn to the left is more expensive
           | a,e       | abcdefb,abcdefb,abcdefb | depart,continue right,arrive |
+
+    Scenario: End-Of-Road Continue
+        Given the node map
+            """
+            a - b - c
+                |
+                d - e
+                |
+                f
+            """
+
+        And the ways
+            | nodes | highway | name |
+            | abc   | primary | road |
+            | bdf   | primary | road |
+            | ed    | primary | turn |
+
+
+        When I route I should get
+            | waypoints | route               | turns                                  |
+            | e,a       | turn,road,road,road | depart,turn right,continue left,arrive |
