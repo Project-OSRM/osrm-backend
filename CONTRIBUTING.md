@@ -18,7 +18,7 @@ if [ x"$remote" = xorigin  ] ; then
         echo "Rejected push to $remote/master" ; exit 1
     fi
 
-    ./scripts/format.sh
+    ./scripts/format.sh && ./scripts/error_on_dirty.sh
     if [ $? -ne 0 ] ; then
         echo "Unstaged format changes" ; exit 1
     fi
