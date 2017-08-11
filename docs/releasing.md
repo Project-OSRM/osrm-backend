@@ -53,4 +53,4 @@ We may introduce forward-compatible changes: query parameters and response prope
 10. Wait until the travis build has been completed and check if the node binaries were published by doing:
     `rm -rf node_modules && npm install` locally.
 11. For final releases run `npm publish` or `npm publish --tag next` for release candidates.
-
+12. Bump version in `package.json` to `{MAJOR}.{MINOR+1}.0-latest.1` on the `master` branch after the release.
