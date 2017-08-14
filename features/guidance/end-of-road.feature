@@ -24,6 +24,25 @@ Feature: End Of Road Instructions
             | a,c       | aeb,cbd,cbd | depart,end of road left,arrive  |
             | a,d       | aeb,cbd,cbd | depart,end of road right,arrive |
 
+    # http://map.project-osrm.org/?z=18&center=38.906632%2C-77.008265&loc=38.906463%2C-77.007621&loc=38.906822%2C-77.008860&hl=en&alt=0
+    Scenario: End of Road, unnamed oneway
+        Given the node map
+            """
+                c
+            a e b
+              f d
+            """
+
+        And the ways
+            | nodes  | highway | name | oneway |
+            | aeb    | primary | road | yes    |
+            | cbd    | primary |      | yes    |
+            | ef     | primary | turn | yes    |
+
+       When I route I should get
+            | waypoints | route | turns         |
+            | a,d       | road, | depart,arrive |
+
     @3605
     Scenario: End of Road with oneway through street
         Given the node map
