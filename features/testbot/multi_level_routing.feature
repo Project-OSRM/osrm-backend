@@ -67,7 +67,7 @@ Feature: Multi level routing
         When I route I should get
             | from | to | route                            | time   |
             | a    | b  | abcda,abcda                      | 20s    |
-            | a    | f  | abcda,cm,kp,ijkli,hj,efghe,efghe | 229.4s |
+            | a    | g  | abcda,cm,kp,ijkli,hj,efghe,efghe | 209.4s |
             | a    | l  | abcda,cm,kp,ijkli                | 144.7s |
             | a    | o  | abcda,cm,mnopm,mnopm             | 124.7s |
             | f    | l  | efghe,hj,ijkli,ijkli             | 124.7s |
@@ -92,8 +92,8 @@ Feature: Multi level routing
             │           │
             i═══j═══k═══l
             │           │
-            m───n   q───r
-            │   │   │   │
+            m─────n q───r
+            │    /  │   │
             p───o───t───s
             """
         And the ways
