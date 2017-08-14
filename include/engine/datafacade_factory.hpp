@@ -102,7 +102,11 @@ template <template <typename A> class FacadeT, typename AlgorithmT> class DataFa
         for (const auto &name : params.avoid)
         {
             auto class_mask_iter = name_to_class.find(name);
-            if (class_mask_iter != name_to_class.end())
+            if (class_mask_iter == name_to_class.end())
+            {
+                return {};
+            }
+            else
             {
                 mask |= class_mask_iter->second;
             }

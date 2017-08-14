@@ -60,6 +60,7 @@ class Sol2ScriptingEnvironment final : public ScriptingEnvironment
 
     std::vector<std::vector<std::string>> GetAvoidableClasses() override;
     std::vector<std::string> GetNameSuffixList() override;
+    std::vector<std::string> GetClassNames() override;
     std::vector<std::string> GetRestrictions() override;
     void ProcessTurn(ExtractionTurn &turn) override;
     void ProcessSegment(ExtractionSegment &segment) override;

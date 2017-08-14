@@ -68,9 +68,43 @@ namespace extractor
 namespace
 {
 // Converts the class name map into a fixed mapping of index to name
-void SetClassNames(const ExtractorCallbacks::ClassesMap &classes_map,
+void SetClassNames(const std::vector<std::string> &class_names,
+                   ExtractorCallbacks::ClassesMap &classes_map,
                    ProfileProperties &profile_properties)
 {
+    // if we get a list of class names we can validate if we set invalid classes
+    // and add classes that were never reference
+    if (!class_names.empty())
+    {
+        // add class names that were never used explicitly on a way
+        // this makes sure we can correctly validate unkown class names later
+        for (const auto &name : class_names)
+        {
+            auto iter = classes_map.find(name);
+            if (iter == classes_map.end())
+            {
+                auto index = classes_map.size();
+                if (index > MAX_CLASS_INDEX)
+                {
+                    throw util::exception("Maximum number of classes if " +
+                                          std::to_string(MAX_CLASS_INDEX + 1));
+                }
+
+                classes_map[name] = getClassData(index);
+            }
+        }
+
+        // check if class names are only from the list supplied by the user
+        for (const auto &pair : classes_map)
+        {
+            auto iter = std::find(class_names.begin(), class_names.end(), pair.first);
+            if (iter == class_names.end())
+            {
+                throw util::exception("Profile used unknown class name: " + pair.first);
+            }
+        }
+    }
+
     for (const auto &pair : classes_map)
     {
         auto range = getClassIndexes(pair.second);
@@ -379,7 +413,7 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
                                       config.GetPath(".osrm.names").string());
 
     auto profile_properties = scripting_environment.GetProfileProperties();
-    SetClassNames(classes_map, profile_properties);
+    SetClassNames(scripting_environment.GetClassNames(), classes_map, profile_properties);
     auto avoidable_classes = scripting_environment.GetAvoidableClasses();
     SetAvoidableClasses(classes_map, avoidable_classes, profile_properties);
     files::writeProfileProperties(config.GetPath(".osrm.properties").string(), profile_properties);
