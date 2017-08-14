@@ -9,6 +9,8 @@ local set_classification = require("lib/guidance").set_classification
 local get_destination = require("lib/destination").get_destination
 local Tags = require('lib/tags')
 
+local pprint = require('lib/pprint')
+
 WayHandlers = {}
 
 function WayHandlers.new_result()
@@ -28,10 +30,26 @@ function WayHandlers.is_bidirectional(result)
   return (result.forward_mode ~= 0 and result.forward_speed > 0) and
          (result.backward_mode ~= 0 and result.backward_speed > 0)
 end
+
+function WayHandlers.is_denied(data)
+  return data.forward_denied and data.backward_denied
+end
+
+function WayHandlers.is_done(result,data)
+  return WayHandlers.is_denied(data) or
+         WayHandlers.is_bidirectional(result)
+end
 -- merges results from a into b, considering each direction
 -- separately. if a direction in b is not routable, then copy
--- the corresponding direction from a
+-- the corresponding direction from a.
+-- if none of the directions in b are routable, then also copy
+-- common settings like name
 function WayHandlers.merge_results(a,b)
+  if (b.forward_mode == 0 or b.forward_speed <= 0) and (b.backward_mode == 0 or b.backward_speed <= 0) then
+    b.name = a.name
+    b.is_startpoint = a.is_startpoint
+  end
+
   if (b.forward_mode == 0 or b.forward_speed <= 0) then
     b.forward_mode = a.forward_mode
     b.forward_speed = a.forward_speed
@@ -139,7 +157,27 @@ function WayHandlers.destinations(profile,way,result,data)
   end
 end
 
--- handling ferries and piers
+-- handling routes with durations, including ferries and railway
+function WayHandlers.routes(profile,way,result,data)
+  for key,route_type in pairs(profile.routes) do
+    local speed = route_type.speed[data[key]]
+    if speed and speed > 0 then
+      local duration  = way:get_value_by_key("duration")
+      if duration and durationIsValid(duration) then
+        result.duration = math.max( parseDuration(duration), 1 )
+        speed = 0
+      end
+      result.forward_mode = route_type.mode
+      result.backward_mode = route_type.mode
+      result.forward_speed = speed
+      result.backward_speed = speed
+      return true
+    end
+
+  end
+end
+
+-- handling ferries
 function WayHandlers.ferries(profile,way,result,data)
   local route = data.route
   if route then
@@ -153,6 +191,26 @@ function WayHandlers.ferries(profile,way,result,data)
      result.backward_mode = mode.ferry
      result.forward_speed = route_speed
      result.backward_speed = route_speed
+     return true
+    end
+  end
+end
+
+-- handling railways
+function WayHandlers.railways(profile,way,result,data)
+  if data.railway then
+    local speed = profile.railway_speeds[data.railway]
+    if speed and speed > 0 then
+     local duration  = way:get_value_by_key("duration")
+     if duration and durationIsValid(duration) then
+       result.duration = math.max( parseDuration(duration), 1 )
+     end
+     result.forward_mode = mode.train
+     result.backward_mode = mode.train
+     result.forward_speed = speed
+     result.backward_speed = speed
+     print('rail!')
+     return true
     end
   end
 end
@@ -251,32 +309,34 @@ function WayHandlers.access(profile,way,result,data)
 
   -- only allow a subset of roads that are marked as restricted
   if profile.restricted_highway_whitelist[data.highway] then
-      if profile.restricted_access_tag_list[data.forward_access] then
-          result.forward_restricted = true
-      end
+    if profile.restricted_access_tag_list[data.forward_access] then
+      result.forward_restricted = true
+    end
 
-      if profile.restricted_access_tag_list[data.backward_access] then
-          result.backward_restricted = true
-      end
+    if profile.restricted_access_tag_list[data.backward_access] then
+      result.backward_restricted = true
+    end
   end
 
   if profile.access_tag_blacklist[data.forward_access] and not result.forward_restricted then
     result.forward_mode = mode.inaccessible
+    data.forward_denied = true
   end
 
   if profile.access_tag_blacklist[data.backward_access] and not result.backward_restricted then
     result.backward_mode = mode.inaccessible
+    data.backward_denied = true
   end
 
-  if result.forward_mode == mode.inaccessible and result.backward_mode == mode.inaccessible then
+  if data.forward_denied and data.backward_denied then
     return false
   end
 end
 
 -- handle speed (excluding maxspeed)
 function WayHandlers.speed(profile,way,result,data)
-  if result.forward_speed ~= -1 then
-    return        -- abort if already set, eg. by a route
+  if result.forward_speed > 0 and result.forward_speed > 0 then
+    return        -- abort if already set
   end
 
   local key,value,speed = Tags.get_constant_by_key_value(way,profile.speeds)
@@ -302,6 +362,13 @@ function WayHandlers.speed(profile,way,result,data)
     elseif not data.backward_access and data.forward_access then
        result.backward_mode = mode.inaccessible
     end
+  end
+
+  if result.forward_speed > 0 then
+    result.forward_mode = profile.default_mode
+  end
+  if result.backward_speed > 0 then
+    result.backward_mode = profile.default_mode
   end
 
   if result.forward_speed == -1 and result.backward_speed == -1 and result.duration <= 0 then
@@ -428,11 +495,11 @@ function WayHandlers.maxspeed(profile,way,result,data)
   backward = WayHandlers.parse_maxspeed(backward,profile)
 
   if forward and forward > 0 then
-    result.forward_speed = forward * profile.speed_reduction
+    result.forward_speed = forward * (profile.speed_reduction or 1)
   end
 
   if backward and backward > 0 then
-    result.backward_speed = backward * profile.speed_reduction
+    result.backward_speed = backward * (profile.speed_reduction or 1)
   end
 end
 
@@ -466,7 +533,8 @@ function WayHandlers.oneway(profile,way,result,data)
     return
   end
 
-  local oneway
+  local oneway = nil
+
   if profile.oneway_handling == true then
     oneway = Tags.get_value_by_prefixed_sequence(way,profile.restrictions,'oneway') or way:get_value_by_key("oneway")
   elseif profile.oneway_handling == 'specific' then
@@ -573,6 +641,17 @@ function WayHandlers.blocked_ways(profile,way,result,data)
     if way:get_value_by_key("status") == "impassable" then
       return false
     end
+  end
+end
+
+-- clear mode if no speed assigned
+-- this avoid assertions in debug builds
+function WayHandlers.cleanup(profile,way,result,data)
+  if result.forward_speed <= 0 and result.duration <= 0 then
+    result.forward_mode = mode.inaccessible
+  end
+  if result.backward_speed <= 0 and result.duration <= 0 then
+    result.backward_mode = mode.inaccessible
   end
 end
 

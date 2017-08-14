@@ -117,6 +117,8 @@ function Debug.process_way(way,result)
   
   -- setup result table
   result.road_classification = {}
+  result.forward_mode = 0
+  result.backward_mode = 0
   result.forward_speed = -1
   result.backward_speed = -1
   result.duration = 0

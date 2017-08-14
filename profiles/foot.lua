@@ -74,7 +74,8 @@ function setup()
     },
 
     avoid = Set {
-      'impassable'
+      'impassable',
+      'construction'
     },
 
     speeds = Sequence {
@@ -120,8 +121,24 @@ function setup()
       }
     },
 
-    route_speeds = {
-      ferry = 5
+    routes = {
+      railway = {
+        access_required = true,
+        speed = {
+          train = 10,
+          railway = 10,
+          subway = 10,
+          light_rail = 10,
+          monorail = 10,
+          tram = 10
+        }
+      },
+      route = {
+        access_required = true,   
+        speed = {
+          ferry = 5
+        }
+      }
     },
 
     bridge_speeds = {
@@ -226,7 +243,7 @@ function process_way(profile, way, result)
     WayHandlers.destinations,
 
     -- check whether we're using a special transport mode
-    WayHandlers.ferries,
+    WayHandlers.routes,
     WayHandlers.movables,
 
     -- compute speed taking into account way type, maxspeed tags, etc.

@@ -149,7 +149,6 @@ function Tags.has_key_value_combination(way,lookup)
     local got = way:get_value_by_key(key)
     for i,want in ipairs(set) do
       if got == want then
-        print(key,got)
         return true
       end
     end

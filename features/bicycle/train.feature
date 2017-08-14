@@ -26,10 +26,10 @@ Feature: Bike - Handle ferry routes
             | fg    |         | train   | no      |
 
         When I route I should get
-            | from | to | route       |
-            | 1    | 2  |             |
-            | 2    | 3  | cd,de,ef,ef |
-            | 3    | 4  |             |
+            | from | to | route       | modes                         |
+            | 1    | 2  |             |                               |
+            | 2    | 3  | cd,de,ef,ef | cycling,train,cycling,cycling |
+            | 3    | 4  |             |                               |
 
     Scenario: Bike - Bringing bikes on trains, invalid railway tag is accepted if access specified
         Given the node map
@@ -48,10 +48,10 @@ Feature: Bike - Handle ferry routes
             | fg    |         | invalid_tag | no      |
 
         When I route I should get
-            | from | to | route |
-            | 1    | 2  |       |
-            | 2    | 3  | cd,de,ef|
-            | 3    | 4  |       |
+            | from | to | route    |                     |
+            | 1    | 2  |          |                     |
+            | 2    | 3  | cd,de,ef | train, train, train | 
+            | 3    | 4  |          |                     |
 
     @construction
     Scenario: Bike - Don't route on railways under construction
