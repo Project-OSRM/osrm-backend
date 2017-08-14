@@ -8,6 +8,7 @@ local get_turn_lanes = require("lib/guidance").get_turn_lanes
 local set_classification = require("lib/guidance").set_classification
 local get_destination = require("lib/destination").get_destination
 local Tags = require('lib/tags')
+local Measure = require("lib/measure")
 
 WayHandlers = {}
 
@@ -427,6 +428,47 @@ function WayHandlers.parse_maxspeed(source,profile)
     end
   end
   return n
+end
+
+-- handle maxheight tags
+function WayHandlers.handle_height(profile,way,result,data)
+  local keys = Sequence { 'maxheight:physical', 'maxheight' }
+  local forward, backward = Tags.get_forward_backward_by_set(way,data,keys)
+  forward = Measure.get_max_height(forward)
+  backward = Measure.get_max_height(backward)
+
+  if forward and forward < profile.vehicle_height then
+    result.forward_mode = mode.inaccessible
+  end
+
+  if backward and backward < profile.vehicle_height then
+    result.backward_mode = mode.inaccessible
+  end
+end
+
+-- handle maxwidth tags
+function WayHandlers.handle_width(profile,way,result,data)
+  local keys = Sequence { 'maxwidth:physical', 'maxwidth', 'width', 'est_width' }
+  local forward, backward = Tags.get_forward_backward_by_set(way,data,keys)
+  local narrow = way:get_value_by_key('narrow')
+
+  if ((forward and forward == 'narrow') or (narrow and narrow == 'yes')) and profile.vehicle_width > 2.2 then
+    result.forward_mode = mode.inaccessible
+  elseif forward then
+    forward = Measure.get_max_width(forward)
+    if forward and forward <= profile.vehicle_width then
+      result.forward_mode = mode.inaccessible
+    end
+  end
+
+  if ((backward and backward == 'narrow') or (narrow and narrow == 'yes')) and profile.vehicle_width > 2.2 then
+    result.backward_mode = mode.inaccessible
+  elseif backward then
+    backward = Measure.get_max_width(backward)
+    if backward and backward <= profile.vehicle_width then
+      result.backward_mode = mode.inaccessible
+    end
+  end
 end
 
 -- handle oneways tags
