@@ -27,6 +27,7 @@ class MockScriptingEnvironment : public extractor::ScriptingEnvironment
     }
 
     std::vector<std::string> GetNameSuffixList() override final { return {}; }
+    std::vector<std::vector<std::string>> GetAvoidableClasses() override final { return {}; };
 
     std::vector<std::string> GetRestrictions() override final { return {}; }
     void ProcessTurn(extractor::ExtractionTurn &) override final {}
