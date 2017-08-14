@@ -37,7 +37,9 @@ class BasePlugin
             });
     }
 
-    bool CheckAlgorithms(const api::BaseParameters &params, const RoutingAlgorithmsInterface& algorithms, util::json::Object &result) const
+    bool CheckAlgorithms(const api::BaseParameters &params,
+                         const RoutingAlgorithmsInterface &algorithms,
+                         util::json::Object &result) const
     {
         if (algorithms.IsValid())
         {
@@ -55,7 +57,8 @@ class BasePlugin
             return false;
         }
 
-        BOOST_ASSERT_MSG(false, "There are only two reasons why the algorithm interface can be invalid.");
+        BOOST_ASSERT_MSG(false,
+                         "There are only two reasons why the algorithm interface can be invalid.");
         return false;
     }
 

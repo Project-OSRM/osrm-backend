@@ -291,30 +291,9 @@ BOOST_AUTO_TEST_CASE(avoid_test)
     // 2 ----3 --- 4 --- 7
     // \__________/
     std::vector<MockEdge> edges = {
-        {0, 1, 1},
-        {0, 2, 1},
-        {1, 0, 1},
-        {1, 2, 10},
-        {1, 3, 1},
-        {1, 5, 1},
-        {2, 0, 1},
-        {2, 1, 10},
-        {2, 3, 1},
-        {2, 4, 1},
-        {3, 1, 1},
-        {3, 2, 1},
-        {3, 4, 1},
-        {4, 2, 1},
-        {4, 3, 1},
-        {4, 5, 1},
-        {4, 7, 1},
-        {5, 1, 1},
-        {5, 4, 1},
-        {5, 6, 1},
-        {6, 5, 1},
-        {6, 7, 1},
-        {7, 4, 1},
-        {7, 6, 1},
+        {0, 1, 1}, {0, 2, 1}, {1, 0, 1}, {1, 2, 10}, {1, 3, 1}, {1, 5, 1}, {2, 0, 1}, {2, 1, 10},
+        {2, 3, 1}, {2, 4, 1}, {3, 1, 1}, {3, 2, 1},  {3, 4, 1}, {4, 2, 1}, {4, 3, 1}, {4, 5, 1},
+        {4, 7, 1}, {5, 1, 1}, {5, 4, 1}, {5, 6, 1},  {6, 5, 1}, {6, 7, 1}, {7, 4, 1}, {7, 6, 1},
     };
 
     // node:                0  1  2  3  4  5  6  7
@@ -417,10 +396,12 @@ BOOST_AUTO_TEST_CASE(avoid_test)
 
     CHECK_EQUAL_RANGE(cell_2_0.GetOutWeight(1), 0, 10, INVALID_EDGE_WEIGHT);
     CHECK_EQUAL_RANGE(cell_2_0.GetOutWeight(2), 10, 0, INVALID_EDGE_WEIGHT);
-    CHECK_EQUAL_RANGE(cell_2_0.GetOutWeight(3), INVALID_EDGE_WEIGHT, INVALID_EDGE_WEIGHT, INVALID_EDGE_WEIGHT);
+    CHECK_EQUAL_RANGE(
+        cell_2_0.GetOutWeight(3), INVALID_EDGE_WEIGHT, INVALID_EDGE_WEIGHT, INVALID_EDGE_WEIGHT);
     CHECK_EQUAL_RANGE(cell_2_0.GetInWeight(1), 0, 10, INVALID_EDGE_WEIGHT);
     CHECK_EQUAL_RANGE(cell_2_0.GetInWeight(2), 10, 0, INVALID_EDGE_WEIGHT);
-    CHECK_EQUAL_RANGE(cell_2_0.GetInWeight(3), INVALID_EDGE_WEIGHT, INVALID_EDGE_WEIGHT, INVALID_EDGE_WEIGHT);
+    CHECK_EQUAL_RANGE(
+        cell_2_0.GetInWeight(3), INVALID_EDGE_WEIGHT, INVALID_EDGE_WEIGHT, INVALID_EDGE_WEIGHT);
 
     CHECK_EQUAL_RANGE(cell_2_1.GetOutWeight(4), 0, 1);
     CHECK_EQUAL_RANGE(cell_2_1.GetOutWeight(5), 1, 0);

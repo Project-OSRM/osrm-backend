@@ -220,7 +220,7 @@ BOOST_AUTO_TEST_CASE(immutable_cell_storage)
 
     // test const storage
     const CellStorage const_storage(mlp, graph);
-    const auto metric =const_storage.MakeMetric();
+    const auto metric = const_storage.MakeMetric();
 
     auto const_cell_1_0 = const_storage.GetCell(metric, 1, 0);
     auto const_cell_1_1 = const_storage.GetCell(metric, 1, 1);
