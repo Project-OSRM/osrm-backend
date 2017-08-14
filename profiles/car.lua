@@ -46,7 +46,6 @@ function setup()
     barrier_whitelist = Set {
       'cattle_grid',
       'border_control',
-      'checkpoint',
       'toll_booth',
       'sally_port',
       'gate',
