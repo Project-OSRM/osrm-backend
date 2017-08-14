@@ -119,8 +119,7 @@ template <typename Algorithm> class Engine final : public EngineInterface
     static bool CheckCompability(const EngineConfig &config);
 
   private:
-    template<typename ParametersT>
-    auto GetAlgorithms(const ParametersT &params) const
+    template <typename ParametersT> auto GetAlgorithms(const ParametersT &params) const
     {
         return RoutingAlgorithms<Algorithm>{heaps, facade_provider->Get(params)};
     }

@@ -134,10 +134,7 @@ template <typename Algorithm> class RoutingAlgorithms final : public RoutingAlgo
         return routing_algorithms::HasAvoidFlags<Algorithm>::value;
     }
 
-    bool IsValid() const final override
-    {
-        return static_cast<bool>(facade);
-    }
+    bool IsValid() const final override { return static_cast<bool>(facade); }
 
   private:
     SearchEngineData<Algorithm> &heaps;

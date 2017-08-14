@@ -104,7 +104,6 @@ struct ExternalCellStorage
     ConstCell GetCell(ExternalCellMetric, LevelID /*level*/, CellID /*id*/) const { return Cell{}; }
 };
 
-
 // Define external data facade
 template <>
 class ContiguousInternalMemoryDataFacade<routing_algorithms::offline::Algorithm> final

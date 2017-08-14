@@ -28,7 +28,7 @@ inline void readCellMetrics(const boost::filesystem::path &path, std::vector<Cel
     auto num_metrics = reader.ReadElementCount64();
     metrics.resize(num_metrics);
 
-    for (auto& metric : metrics)
+    for (auto &metric : metrics)
     {
         serialization::read(reader, metric);
     }
@@ -36,7 +36,8 @@ inline void readCellMetrics(const boost::filesystem::path &path, std::vector<Cel
 
 // writes .osrm.cell_metrics file
 template <typename CellMetricT>
-inline void writeCellMetrics(const boost::filesystem::path &path, const std::vector<CellMetricT> &metrics)
+inline void writeCellMetrics(const boost::filesystem::path &path,
+                             const std::vector<CellMetricT> &metrics)
 {
     static_assert(std::is_same<CellMetricView, CellMetricT>::value ||
                       std::is_same<CellMetric, CellMetricT>::value,
@@ -46,12 +47,11 @@ inline void writeCellMetrics(const boost::filesystem::path &path, const std::vec
     storage::io::FileWriter writer{path, fingerprint};
 
     writer.WriteElementCount64(metrics.size());
-    for (const auto& metric : metrics)
+    for (const auto &metric : metrics)
     {
         serialization::write(writer, metric);
     }
 }
-
 }
 }
 }

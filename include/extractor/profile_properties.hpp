@@ -6,8 +6,8 @@
 #include "util/typedefs.hpp"
 
 #include <boost/assert.hpp>
-#include <boost/optional.hpp>
 #include <boost/numeric/conversion/cast.hpp>
+#include <boost/optional.hpp>
 
 #include <algorithm>
 #include <cstdint>

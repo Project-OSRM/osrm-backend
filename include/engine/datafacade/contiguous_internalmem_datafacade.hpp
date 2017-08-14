@@ -247,7 +247,9 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     // allocator that keeps the allocation data
     std::shared_ptr<ContiguousBlockAllocator> allocator;
 
-    void InitializeProfilePropertiesPointer(storage::DataLayout &data_layout, char *memory_block, const std::size_t avoid_index)
+    void InitializeProfilePropertiesPointer(storage::DataLayout &data_layout,
+                                            char *memory_block,
+                                            const std::size_t avoid_index)
     {
         m_profile_properties = data_layout.GetBlockPtr<extractor::ProfileProperties>(
             memory_block, storage::DataLayout::PROPERTIES);
@@ -542,7 +544,9 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         m_entry_class_table = std::move(entry_class_table);
     }
 
-    void InitializeInternalPointers(storage::DataLayout &data_layout, char *memory_block, const std::size_t avoid_index)
+    void InitializeInternalPointers(storage::DataLayout &data_layout,
+                                    char *memory_block,
+                                    const std::size_t avoid_index)
     {
         InitializeChecksumPointer(data_layout, memory_block);
         InitializeNodeInformationPointers(data_layout, memory_block);
@@ -561,7 +565,8 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
   public:
     // allows switching between process_memory/shared_memory datafacade, based on the type of
     // allocator
-    ContiguousInternalMemoryDataFacadeBase(std::shared_ptr<ContiguousBlockAllocator> allocator_, const std::size_t avoid_index)
+    ContiguousInternalMemoryDataFacadeBase(std::shared_ptr<ContiguousBlockAllocator> allocator_,
+                                           const std::size_t avoid_index)
         : allocator(std::move(allocator_))
     {
         InitializeInternalPointers(allocator->GetLayout(), allocator->GetMemory(), avoid_index);
@@ -924,7 +929,6 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     {
         return m_profile_properties->left_hand_driving;
     }
-
 };
 
 template <typename AlgorithmT> class ContiguousInternalMemoryDataFacade;
@@ -1028,7 +1032,7 @@ template <> class ContiguousInternalMemoryAlgorithmDataFacade<MLD> : public Algo
             util::vector_view<EdgeDuration> durations(mld_cell_durations_ptr,
                                                       duration_entries_count);
 
-            mld_cell_metric = customizer::CellMetricView {std::move(weights), std::move(durations)};
+            mld_cell_metric = customizer::CellMetricView{std::move(weights), std::move(durations)};
         }
 
         if (data_layout.GetBlockSize(storage::DataLayout::MLD_CELLS) > 0)

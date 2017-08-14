@@ -69,7 +69,6 @@ inline void write(storage::io::FileWriter &writer,
     storage::serialization::write(writer, storage.cells);
     storage::serialization::write(writer, storage.level_to_cell_offset);
 }
-
 }
 }
 }

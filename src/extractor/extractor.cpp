@@ -86,7 +86,8 @@ void SetAvoidableClasses(const ExtractorCallbacks::ClassesMap &classes_map,
 {
     if (avoidable_classes.size() > MAX_AVOIDABLE_CLASSES)
     {
-        throw util::exception("Only " + std::to_string(MAX_AVOIDABLE_CLASSES) + " avoidable combinations allowed.");
+        throw util::exception("Only " + std::to_string(MAX_AVOIDABLE_CLASSES) +
+                              " avoidable combinations allowed.");
     }
 
     // The avoid index 0 is reserve for not avoiding anything

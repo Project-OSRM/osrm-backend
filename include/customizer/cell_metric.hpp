@@ -4,8 +4,8 @@
 #include "storage/io_fwd.hpp"
 #include "storage/shared_memory_ownership.hpp"
 
-#include "util/vector_view.hpp"
 #include "util/typedefs.hpp"
+#include "util/vector_view.hpp"
 
 namespace osrm
 {
@@ -25,7 +25,6 @@ template <storage::Ownership Ownership> struct CellMetricImpl
 
 using CellMetric = detail::CellMetricImpl<storage::Ownership::Container>;
 using CellMetricView = detail::CellMetricImpl<storage::Ownership::View>;
-
 }
 }
 
