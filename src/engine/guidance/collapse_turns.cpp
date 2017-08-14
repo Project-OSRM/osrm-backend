@@ -158,6 +158,18 @@ void TransferTurnTypeStrategy::operator()(RouteStep &step_at_turn_location,
 void AdjustToCombinedTurnAngleStrategy::operator()(RouteStep &step_at_turn_location,
                                                    const RouteStep &transfer_from_step) const
 {
+    // Forks point to left/right. By doing a combined angle, we would risk ending up with
+    // unreasonable fork instrucitons. The direction of a fork only depends on the forking location,
+    // not further angles coming up
+    //
+    //          d
+    //       .  c
+    // a - b
+    //
+    // could end up as `fork left` for `a-b-c`, instead of fork-right
+    if (hasTurnType(step_at_turn_location, TurnType::Fork))
+        return;
+
     // TODO assert transfer_from_step == step_at_turn_location + 1
     const auto angle = findTotalTurnAngle(step_at_turn_location, transfer_from_step);
     step_at_turn_location.maneuver.instruction.direction_modifier = getTurnDirection(angle);
@@ -173,7 +185,19 @@ void AdjustToCombinedTurnStrategy::operator()(RouteStep &step_at_turn_location,
                                               const RouteStep &transfer_from_step) const
 {
     const auto angle = findTotalTurnAngle(step_at_turn_location, transfer_from_step);
-    const auto new_modifier = getTurnDirection(angle);
+
+    // Forks point to left/right. By doing a combined angle, we would risk ending up with
+    // unreasonable fork instrucitons. The direction of a fork only depends on the forking location,
+    // not further angles coming up
+    //
+    //          d
+    //       .  c
+    // a - b
+    //
+    // could end up as `fork left` for `a-b-c`, instead of fork-right
+    const auto new_modifier = hasTurnType(step_at_turn_location, TurnType::Fork)
+                                  ? step_at_turn_location.maneuver.instruction.direction_modifier
+                                  : getTurnDirection(angle);
 
     // a turn that is a new name or straight (turn/continue)
     const auto is_non_turn = [](const RouteStep &step) {
