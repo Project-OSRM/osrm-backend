@@ -739,6 +739,18 @@ std::vector<std::vector<std::string>> Sol2ScriptingEnvironment::GetAvoidableClas
     }
 }
 
+std::vector<std::string> Sol2ScriptingEnvironment::GetClassNames()
+{
+    auto &context = GetSol2Context();
+    switch (context.api_version)
+    {
+    case 2:
+        return Sol2ScriptingEnvironment::GetStringListFromTable("classes");
+    default:
+        return {};
+    }
+}
+
 std::vector<std::string> Sol2ScriptingEnvironment::GetNameSuffixList()
 {
     auto &context = GetSol2Context();
