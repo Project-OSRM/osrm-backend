@@ -68,6 +68,10 @@ struct ExternalMultiLevelPartition
     CellID EndChildren(LevelID /*level*/, CellID /*cell*/) const { return 0; }
 };
 
+struct ExternalCellMetric
+{
+};
+
 // Define external cell storage
 struct ExternalCellStorage
 {
@@ -97,9 +101,9 @@ struct ExternalCellStorage
     using Cell = CellImpl;
     using ConstCell = const CellImpl;
 
-    ConstCell GetCell(LevelID /*level*/, CellID /*id*/) const { return Cell{}; }
-    Cell GetCell(LevelID /*level*/, CellID /*id*/) { return Cell{}; }
+    ConstCell GetCell(ExternalCellMetric, LevelID /*level*/, CellID /*id*/) const { return Cell{}; }
 };
+
 
 // Define external data facade
 template <>
@@ -108,6 +112,7 @@ class ContiguousInternalMemoryDataFacade<routing_algorithms::offline::Algorithm>
 {
     ExternalMultiLevelPartition external_partition;
     ExternalCellStorage external_cell_storage;
+    ExternalCellMetric external_cell_metric;
 
   public:
     using EdgeData = extractor::EdgeBasedEdge::EdgeData;
@@ -130,6 +135,8 @@ class ContiguousInternalMemoryDataFacade<routing_algorithms::offline::Algorithm>
     const auto &GetMultiLevelPartition() const { return external_partition; }
 
     const auto &GetCellStorage() const { return external_cell_storage; }
+
+    const auto &GetCellMetric() const { return external_cell_metric; }
 
     auto GetBorderEdgeRange(const LevelID /*level*/, const NodeID /*node*/) const
     {
@@ -321,7 +328,7 @@ class ContiguousInternalMemoryDataFacade<routing_algorithms::offline::Algorithm>
     }
 
     bool HasLaneData(const EdgeID /*id*/) const override { return false; }
-    NameID GetNameIndex(const NodeID /*nodeID*/) const { return EMPTY_NAMEID; }
+    NameID GetNameIndex(const NodeID /*nodeID*/) const override { return EMPTY_NAMEID; }
     StringView GetNameForID(const NameID /*id*/) const override { return StringView{}; }
     StringView GetRefForID(const NameID /*id*/) const override { return StringView{}; }
     StringView GetPronunciationForID(const NameID /*id*/) const override { return StringView{}; }
@@ -334,6 +341,7 @@ class ContiguousInternalMemoryDataFacade<routing_algorithms::offline::Algorithm>
     unsigned GetWeightPrecision() const override { return 0; }
     double GetWeightMultiplier() const override { return 1; }
     ComponentID GetComponentID(NodeID) const override { return ComponentID{}; }
+    bool AvoidNode(const NodeID) const override { return false; }
 
     util::guidance::TurnBearing PreTurnBearing(const EdgeID /*eid*/) const override
     {

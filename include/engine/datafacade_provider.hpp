@@ -1,6 +1,7 @@
 #ifndef OSRM_ENGINE_DATAFACADE_PROVIDER_HPP
 #define OSRM_ENGINE_DATAFACADE_PROVIDER_HPP
 
+#include "engine/datafacade_factory.hpp"
 #include "engine/data_watchdog.hpp"
 #include "engine/datafacade.hpp"
 #include "engine/datafacade/contiguous_internalmem_datafacade.hpp"
@@ -45,7 +46,7 @@ class ImmutableProvider final : public DataFacadeProvider<AlgorithmT, FacadeT>
 template <typename AlgorithmT, template <typename A> class FacadeT>
 class WatchingProvider : public DataFacadeProvider<AlgorithmT, FacadeT>
 {
-    DataWatchdog<FacadeT, AlgorithmT> watchdog;
+    DataWatchdog<AlgorithmT, FacadeT> watchdog;
 
   public:
     using Facade = typename DataFacadeProvider<AlgorithmT, FacadeT>::Facade;

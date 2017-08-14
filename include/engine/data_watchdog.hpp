@@ -22,18 +22,21 @@ namespace osrm
 namespace engine
 {
 
-// This class monitors the shared memory region that contains the pointers to
-// the data and layout regions that should be used. This region is updated
-// once a new dataset arrives.
-template <template<typename A> class FacadeT, typename AlgorithmT> class DataWatchdog;
 
-template <typename AlgorithmT> class DataWatchdog<datafacade::ContiguousInternalMemoryDataFacade,AlgorithmT> final
+namespace detail
+{
+// We need this wrapper type since template-template specilization of FacadeT is broken on clang
+// when it is combined with an templated alias (DataFacade in this case).
+// See https://godbolt.org/g/ZS6Xmt for an example.
+template <typename AlgorithmT, typename FacadeT> class DataWatchdogImpl;
+
+template <typename AlgorithmT> class DataWatchdogImpl<AlgorithmT, datafacade::ContiguousInternalMemoryDataFacade<AlgorithmT>> final
 {
     using mutex_type = typename storage::SharedMonitor<storage::SharedDataTimestamp>::mutex_type;
     using Facade = datafacade::ContiguousInternalMemoryDataFacade<AlgorithmT>;
 
   public:
-    DataWatchdog() : active(true), timestamp(0)
+    DataWatchdogImpl() : active(true), timestamp(0)
     {
         // create the initial facade before launching the watchdog thread
         {
@@ -44,10 +47,10 @@ template <typename AlgorithmT> class DataWatchdog<datafacade::ContiguousInternal
             timestamp = barrier.data().timestamp;
         }
 
-        watcher = std::thread(&DataWatchdog::Run, this);
+        watcher = std::thread(&DataWatchdogImpl::Run, this);
     }
 
-    ~DataWatchdog()
+    ~DataWatchdogImpl()
     {
         active = false;
         barrier.notify_all();
@@ -89,6 +92,13 @@ template <typename AlgorithmT> class DataWatchdog<datafacade::ContiguousInternal
     unsigned timestamp;
     DataFacadeFactory<datafacade::ContiguousInternalMemoryDataFacade, AlgorithmT> facade_factory;
 };
+}
+
+// This class monitors the shared memory region that contains the pointers to
+// the data and layout regions that should be used. This region is updated
+// once a new dataset arrives.
+template <typename AlgorithmT, template<typename A> class FacadeT> using DataWatchdog = detail::DataWatchdogImpl<AlgorithmT, FacadeT<AlgorithmT>>;
+
 }
 }
 

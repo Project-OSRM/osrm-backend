@@ -11,6 +11,7 @@ namespace engine
 using DataFacadeBase = datafacade::ContiguousInternalMemoryDataFacadeBase;
 template <typename AlgorithmT>
 using DataFacade = datafacade::ContiguousInternalMemoryDataFacade<AlgorithmT>;
+
 }
 }
 
