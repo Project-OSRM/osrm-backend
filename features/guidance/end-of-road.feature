@@ -40,8 +40,8 @@ Feature: End Of Road Instructions
             | ef     | primary | turn | yes    |
 
        When I route I should get
-            | waypoints | route | turns         |
-            | a,d       | road, | depart,arrive |
+            | waypoints | route  | turns                           |
+            | a,d       | road,, | depart,end of road right,arrive |
 
     @3605
     Scenario: End of Road with oneway through street
