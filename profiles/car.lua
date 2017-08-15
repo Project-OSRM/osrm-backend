@@ -9,11 +9,9 @@ find_access_tag = require("lib/access").find_access_tag
 limit = require("lib/maxspeed").limit
 
 function setup()
-  local use_left_hand_driving = false
   return {
     properties = {
       max_speed_for_map_matching      = 180/3.6, -- 180kmph -> m/s
-      left_hand_driving               = use_left_hand_driving,
       -- For routing based on duration, but weighted for preferring certain roads
       weight_name                     = 'routability',
       -- For shortest duration without penalties for accessibility
@@ -27,16 +25,14 @@ function setup()
       traffic_light_penalty          = 2,
     },
 
+    left_hand_driving         = false,
     default_mode              = mode.driving,
     default_speed             = 10,
     oneway_handling           = true,
     side_road_multiplier      = 0.8,
     turn_penalty              = 7.5,
     speed_reduction           = 0.8,
-
-    -- Note: this biases right-side driving.
-    -- Should be inverted for left-driving countries.
-    turn_bias   = use_left_hand_driving and 1/1.075 or 1.075,
+    turn_bias                 = 1.075,
 
     -- a list of suffixes to suppress in name change instructions
     suffix_list = {
@@ -307,7 +303,7 @@ function process_node(profile, node, result)
   end
 end
 
-function process_way(profile, way, result)
+function process_way(profile, way, result, location_data)
   -- the intial filtering of ways based on presence of tags
   -- affects processing times significantly, because all ways
   -- have to be checked.
@@ -382,6 +378,7 @@ function process_way(profile, way, result)
     -- handle various other flags
     WayHandlers.roundabouts,
     WayHandlers.startpoint,
+    WayHandlers.driving_side,
 
     -- set name, ref and pronunciation
     WayHandlers.names,
@@ -390,7 +387,7 @@ function process_way(profile, way, result)
     WayHandlers.weights
   }
 
-  WayHandlers.run(profile,way,result,data,handlers)
+  WayHandlers.run(profile, way, result, data, handlers, location_data)
 end
 
 function process_turn(profile, turn)
@@ -398,7 +395,7 @@ function process_turn(profile, turn)
   -- over the space of 0-180 degrees.  Values here were chosen by fitting
   -- the function to some turn penalty samples from real driving.
   local turn_penalty = profile.turn_penalty
-  local turn_bias = profile.turn_bias
+  local turn_bias = turn.is_left_hand_driving and 1. / profile.turn_bias or profile.turn_bias
 
   if turn.has_traffic_light then
       turn.duration = profile.properties.traffic_light_penalty

@@ -205,15 +205,15 @@ void GraphCompressor::Compress(
                 boost::optional<EdgeWeight> node_weight_penalty = boost::none;
                 if (has_node_penalty)
                 {
-                    // generate an artifical turn for the turn penalty generation
-                    ExtractionTurn extraction_turn(true);
-
-                    extraction_turn.source_restricted = fwd_edge_data1.restricted;
-                    extraction_turn.target_restricted = fwd_edge_data2.restricted;
-
                     // we cannot handle this as node penalty, if it depends on turn direction
-                    if (extraction_turn.source_restricted != extraction_turn.target_restricted)
+                    if (fwd_edge_data1.restricted != fwd_edge_data2.restricted)
                         continue;
+
+                    // generate an artifical turn for the turn penalty generation
+                    ExtractionTurn extraction_turn(true,
+                                                   fwd_edge_data1.restricted,
+                                                   fwd_edge_data2.restricted,
+                                                   fwd_edge_data1.is_left_hand_driving);
 
                     scripting_environment.ProcessTurn(extraction_turn);
                     node_duration_penalty = extraction_turn.duration * 10;

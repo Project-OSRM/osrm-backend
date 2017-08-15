@@ -5,7 +5,7 @@ Feature: Basic Roundabout
         Given a grid size of 10 meters
         Given the profile file "car" initialized with
             """
-            profile.properties.left_hand_driving = true
+            profile.left_hand_driving = true
             """
 
     Scenario: Roundabout exit counting for left sided driving
