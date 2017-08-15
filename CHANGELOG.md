@@ -42,8 +42,6 @@
     - Algorithm)
       - BREAKING: the file format requires re-processing due to the changes on via-ways
       - Added support for via-way restrictions
-    - Node.js Bindings:
-      - Include binaries in the `node_modules/.bin` directory so they're in the PATH when running inside Node
 
 # 5.9.2
     - API:
