@@ -941,7 +941,7 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
 
     bool IsLeftHandDriving() const override final
     {
-        return m_profile_properties->left_hand_driving;
+        return m_profile_properties->left_hand_driving; // TODO: remove
     }
 };
 

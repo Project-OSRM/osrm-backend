@@ -124,7 +124,7 @@ struct ProfileProperties
     bool continue_straight_at_waypoint;
     //! flag used for restriction parser (e.g. used for the walk profile)
     bool use_turn_restrictions;
-    bool left_hand_driving;
+    bool left_hand_driving; // DEPRECATED: property value is local to edges from API version 2
     bool fallback_to_duration;
     //! stores the name of the weight (e.g. 'duration', 'distance', 'safety')
     char weight_name[MAX_WEIGHT_NAME_LENGTH + 1];

@@ -578,9 +578,11 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
             // compute weight and duration penalties
             auto is_traffic_light = m_traffic_lights.count(node_at_center_of_intersection);
-            ExtractionTurn extracted_turn(turn, is_traffic_light);
-            extracted_turn.source_restricted = edge_data1.restricted;
-            extracted_turn.target_restricted = edge_data2.restricted;
+            ExtractionTurn extracted_turn(turn,
+                                          is_traffic_light,
+                                          edge_data1.restricted,
+                                          edge_data2.restricted,
+                                          edge_data1.is_left_hand_driving);
             scripting_environment.ProcessTurn(extracted_turn);
 
             // turn penalties are limited to [-2^15, 2^15) which roughly

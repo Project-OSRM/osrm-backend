@@ -74,7 +74,7 @@ detail::RoundaboutFlags RoundaboutHandler::getRoundaboutFlags(
     bool can_enter_roundabout = false;
     bool can_exit_roundabout_separately = false;
 
-    const bool lhs = profile_properties.left_hand_driving;
+    const bool lhs = in_edge_data.is_left_hand_driving;
     const int step = lhs ? -1 : 1;
     for (std::size_t cnt = 0, idx = lhs ? intersection.size() - 1 : 0; cnt < intersection.size();
          ++cnt, idx += step)
@@ -433,8 +433,9 @@ Intersection RoundaboutHandler::handleRoundabouts(const RoundaboutType roundabou
                                                   Intersection intersection) const
 {
     NodeID node_at_center_of_intersection = node_based_graph.GetTarget(via_eid);
+    const auto &in_edge_data = node_based_graph.GetEdgeData(via_eid);
 
-    const bool lhs = profile_properties.left_hand_driving;
+    const bool lhs = in_edge_data.is_left_hand_driving;
     const int step = lhs ? -1 : 1;
 
     if (on_roundabout)

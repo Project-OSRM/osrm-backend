@@ -237,7 +237,7 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
                                                 "interpolate",
                                                 &RasterContainer::GetRasterInterpolateFromSource);
 
-    context.state.new_usertype<ProfileProperties>(
+    auto registration_ProfileProperties = context.state.new_usertype<ProfileProperties>(
         "ProfileProperties",
         "traffic_signal_penalty",
         sol::property(&ProfileProperties::GetTrafficSignalPenalty,
@@ -446,7 +446,9 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
                                                "source_restricted",
                                                &ExtractionTurn::source_restricted,
                                                "target_restricted",
-                                               &ExtractionTurn::target_restricted);
+                                               &ExtractionTurn::target_restricted,
+                                               "is_left_hand_driving",
+                                               &ExtractionTurn::is_left_hand_driving);
 
     // Keep in mind .location is available only if .pbf is preprocessed to set the location with the
     // ref using osmium command "osmium add-locations-to-ways"
@@ -580,6 +582,7 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
             if (use_turn_restrictions != sol::nullopt)
                 context.properties.use_turn_restrictions = use_turn_restrictions.value();
 
+            // DEPRECATED: global left_hand_driving will be removed in the next profile API
             sol::optional<bool> left_hand_driving = properties["left_hand_driving"];
             if (left_hand_driving != sol::nullopt)
                 context.properties.left_hand_driving = left_hand_driving.value();
@@ -992,6 +995,7 @@ void LuaScriptingContext::ProcessWay(const osmium::Way &way,
     case 1:
     case 0:
         way_function(way, result);
+        result.is_left_hand_driving = properties.left_hand_driving;
         break;
     }
 }
