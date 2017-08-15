@@ -51,6 +51,10 @@
       - Fix a pre-processing bug where incorrect directions could be issued when two turns would have similar instructions and we tried to give them distinct values (https://github.com/Project-OSRM/osrm-backend/pull/4375)
       - The entry bearing for correct the cardinality of a direction value (https://github.com/Project-OSRM/osrm-backend/pull/4353
       - Change timezones in West Africa to the WAT zone so they're recognized on the Windows platform
+  - Profiles
+    - Added an optional argument `location_data` to `process_way`function that is a table containing OSM tags in a GeoJSON file specified by `--location-dependent-data` command line argument of `osrm-extract` (the option requires `osmium add-locations-to-ways` preparation step)
+    - `left_hand_driving` flag is no more global but a local Boolean flag `is_left_hand_driving` in `ExtractionWay` and `ExtractionTurn`
+
 
 # 5.10.0
   - Changes from 5.9:
