@@ -327,6 +327,42 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
         return false;
     }();
 
+    // check whether we turn onto a oneway through street. These typically happen at the end of
+    // roads and might not seem obvious, since it isn't always as visible that you cannot turn
+    // left/right. To be on the safe side, we announce these as non-obvious
+    const auto turns_onto_through_street = [&](const auto &road) {
+        // find edge opposite to the one we are checking (in-road)
+        const auto in_through_candidate =
+            intersection.FindClosestBearing(util::bearing::reverse(road.bearing));
+
+        const auto &in_data = node_based_graph.GetEdgeData(in_through_candidate->eid);
+        const auto &out_data = node_based_graph.GetEdgeData(road.eid);
+
+        // by asking for the same class, we ensure that we do not overrule obvious by road-class
+        // decisions
+        const auto same_class = in_data.road_classification == out_data.road_classification;
+
+        // only if the entry is allowed for one of the two, but not the other, we need to check.
+        // Otherwise other handlers do it better
+        const bool is_oneway = !in_through_candidate->entry_allowed && road.entry_allowed;
+
+        const bool not_roundabout =
+            !(in_data.roundabout || in_data.circular || out_data.roundabout || out_data.circular);
+
+        // for the purpose of this check, we do not care about low-priority roads (parking lots,
+        // mostly). Since we postulate both classes to be the same, checking one of the two is
+        // enough
+        const bool not_low_priority = !in_data.road_classification.IsLowPriorityRoadClass();
+
+        const auto in_deviation = angularDeviation(in_through_candidate->angle, STRAIGHT_ANGLE);
+        const auto out_deviaiton = angularDeviation(road.angle, STRAIGHT_ANGLE);
+        // in case the deviation isn't considerably lower for the road we are turning onto,
+        // consider it non-obvious. The threshold here requires a slight (60) vs sharp (120)
+        // degree variation, at lest (120/60 == 2)
+        return is_oneway && same_class && not_roundabout && not_low_priority &&
+               (in_deviation / (std::max(out_deviaiton, 0.5)) <= 2);
+    };
+
     if (best_over_best_continue)
     {
         // Find left/right deviation
@@ -366,8 +402,7 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
             angularDeviation(intersection[right_index].angle, STRAIGHT_ANGLE);
 
         // return best_option candidate if it is nearly straight and distinct from the nearest other
-        // out
-        // way
+        // out way
         if (best_option_deviation < MAXIMAL_ALLOWED_NO_TURN_DEVIATION &&
             std::min(left_deviation, right_deviation) > FUZZY_ANGLE_DIFFERENCE)
             return best_option;
@@ -385,8 +420,7 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
                                                    right_data.road_classification);
 
         // if the best_option turn isn't narrow, but there is a nearly straight turn, we don't
-        // consider the
-        // turn obvious
+        // consider the turn obvious
         const auto check_narrow = [&intersection, best_option_deviation](const std::size_t index) {
             return angularDeviation(intersection[index].angle, STRAIGHT_ANGLE) <=
                        FUZZY_ANGLE_DIFFERENCE &&
@@ -398,6 +432,11 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
             return 0;
 
         if (check_narrow(left_index) && !obvious_to_left)
+            return 0;
+
+        // we are turning onto a through street (possibly at the end of the road). Ensure that we
+        // announce a turn, if it isn't a slight merge
+        if (turns_onto_through_street(intersection[best_option]))
             return 0;
 
         // checks if a given way in the intersection is distinct enough from the best_option
@@ -436,6 +475,11 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
         const auto &continue_data = node_based_graph.GetEdgeData(intersection[best_continue].eid);
         if (std::abs(best_continue_deviation) < 1)
             return best_continue;
+
+        // we are turning onto a through street (possibly at the end of the road). Ensure that we
+        // announce a turn, if it isn't a slight merge
+        if (turns_onto_through_street(intersection[best_continue]))
+            return 0;
 
         // check if any other similar best continues exist
         std::size_t i, last = intersection.size();
