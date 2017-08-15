@@ -65,14 +65,5 @@
     "host": "https://mapbox-node-binary.s3.amazonaws.com",
     "remote_path": "./{name}/v{version}/{configuration}/",
     "package_name": "{node_abi}-{platform}-{arch}.tar.gz"
-  },
-  "bin": {
-    "osrm-extract": "./lib/binding/osrm-extract",
-    "osrm-contract": "./lib/binding/osrm-contract",
-    "osrm-partition": "./lib/binding/osrm-partition",
-    "osrm-customize": "./lib/binding/osrm-customize",
-    "osrm-routed": "./lib/binding/osrm-routed",
-    "osrm-components": "./lib/binding/osrm-components",
-    "osrm-datastore": "./lib/binding/osrm-datastore"
   }
 }
