@@ -2,6 +2,22 @@
   - Changes from 5.10:
     - Features
       - BREAKING: Added support for conditional via-way instructions. This features changes the file format of osrm.restrictions and requires re-extraction
+    - Internals
+      - BREAKING: Traffic signals will no longer be represented as turns internally. This requires re-processing of data but enables via-way turn restrictions across highway=traffic_signals
+      - Additional checks for empty segments when loading traffic data files
+      - Tunes the constants for turns in sharp curves just a tiny bit to circumvent a mix-up in fork directions at a specific intersection (https://github.com/Project-OSRM/osrm-backend/issues/4331)
+    - Infrastructure
+      - Refactor datafacade to make implementing additional DataFacades simpler
+    - Bugfixes
+      - API docs are now buildable again
+      - Suppress unnecessary extra turn instruction when exiting a motorway via a motorway_link onto a primary road (https://github.com/Project-OSRM/osrm-backend/issues/4348 scenario 4)
+      - Suppress unnecessary extra turn instruction when taking a tertiary_link road from a teritary onto a residential road (https://github.com/Project-OSRM/osrm-backend/issues/4348 scenario 2)
+      - Various MSVC++ build environment fixes
+      - Avoid a bug that crashes GCC6
+      - Re-include .npmignore to slim down published modules
+      - Fix a pre-processing bug where incorrect directions could be issued when two turns would have similar instructions and we tried to give them distinct values (https://github.com/Project-OSRM/osrm-backend/pull/4375)
+      - The entry bearing for correct the cardinality of a direction value (https://github.com/Project-OSRM/osrm-backend/pull/4353
+      - Change timezones in West Africa to the WAT zone so they're recognized on the Windows platform
 
 # 5.10.0
   - Changes from 5.9:
@@ -19,7 +35,6 @@
       - Pass functions instead of strings to `WayHandlers.run()`, so it's possible to mix in your own functions.
       - Reorders arguments to `WayHandlers` functions to match `process_way()`.
       - Profiles must return a hash of profile functions. This makes it easier for profiles to include each other.
-      - BREAKING: Traffic signals will no longer be represented as turns internally. This requires re-processing of data but enables via-way turn restrictions across highway=traffic_signals
       - Guidance: add support for throughabouts
     - Bugfixes
       - Properly save/retrieve datasource annotations for road segments ([#4346](https://github.com/Project-OSRM/osrm-backend/issues/4346)
@@ -27,6 +42,8 @@
     - Algorithm)
       - BREAKING: the file format requires re-processing due to the changes on via-ways
       - Added support for via-way restrictions
+    - Node.js Bindings:
+      - Include binaries in the `node_modules/.bin` directory so they're in the PATH when running inside Node
 
 # 5.9.2
     - API:
