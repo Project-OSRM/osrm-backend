@@ -2,6 +2,7 @@
 #define SCRIPTING_ENVIRONMENT_LUA_HPP
 
 #include "extractor/extraction_relation.hpp"
+#include "extractor/location_dependent_data.hpp"
 #include "extractor/raster_source.hpp"
 #include "extractor/scripting_environment.hpp"
 
@@ -20,6 +21,11 @@ namespace extractor
 
 struct LuaScriptingContext final
 {
+    LuaScriptingContext(const LocationDependentData &location_dependent_data)
+        : location_dependent_data(location_dependent_data)
+    {
+    }
+
     void ProcessNode(const osmium::Node &,
                      ExtractionNode &result,
                      const ExtractionRelationContainer::RelationList &relations);
@@ -46,6 +52,7 @@ struct LuaScriptingContext final
 
     int api_version;
     sol::table profile_table;
+    const LocationDependentData &location_dependent_data;
 };
 
 /**
@@ -61,7 +68,8 @@ class Sol2ScriptingEnvironment final : public ScriptingEnvironment
     static const constexpr int SUPPORTED_MIN_API_VERSION = 0;
     static const constexpr int SUPPORTED_MAX_API_VERSION = 3;
 
-    explicit Sol2ScriptingEnvironment(const std::string &file_name);
+    explicit Sol2ScriptingEnvironment(const std::string &file_name,
+                                      const boost::filesystem::path &location_dependent_data_path);
     ~Sol2ScriptingEnvironment() override = default;
 
     const ProfileProperties &GetProfileProperties() override;
@@ -93,6 +101,7 @@ class Sol2ScriptingEnvironment final : public ScriptingEnvironment
     std::mutex init_mutex;
     std::string file_name;
     tbb::enumerable_thread_specific<std::unique_ptr<LuaScriptingContext>> script_contexts;
+    const LocationDependentData location_dependent_data;
 };
 }
 }

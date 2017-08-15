@@ -80,8 +80,9 @@ template <class T> double lonToDouble(T const &object)
     return static_cast<double>(util::toFloating(object.lon));
 }
 
-Sol2ScriptingEnvironment::Sol2ScriptingEnvironment(const std::string &file_name)
-    : file_name(file_name)
+Sol2ScriptingEnvironment::Sol2ScriptingEnvironment(
+    const std::string &file_name, const boost::filesystem::path &location_dependent_data_path)
+    : file_name(file_name), location_dependent_data(location_dependent_data_path)
 {
     util::Log() << "Using script " << file_name;
 }
@@ -666,7 +667,7 @@ LuaScriptingContext &Sol2ScriptingEnvironment::GetSol2Context()
     auto &ref = script_contexts.local(initialized);
     if (!initialized)
     {
-        ref = std::make_unique<LuaScriptingContext>();
+        ref = std::make_unique<LuaScriptingContext>(location_dependent_data);
         InitContext(*ref);
     }
 
@@ -983,7 +984,7 @@ void LuaScriptingContext::ProcessWay(const osmium::Way &way,
         way_function(profile_table, way, result, relations);
         break;
     case 2:
-        way_function(profile_table, way, result);
+        way_function(profile_table, way, result, location_dependent_data(state, way));
         break;
     case 1:
     case 0:

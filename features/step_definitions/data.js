@@ -129,13 +129,13 @@ module.exports = function () {
         q.awaitAll(callback);
     });
 
-    this.Given(/^the ways$/, (table, callback) => {
+    this.Given(/^the ways( with locations)?$/, (add_locations, table, callback) => {
         if (this.osm_str) throw new Error('*** Map data already defined - did you pass an input file in this scenario?');
 
         let q = d3.queue();
 
         let addWay = (row, cb) => {
-            let way = new OSM.Way(this.makeOSMId(), this.OSM_USER, this.OSM_TIMESTAMP, this.OSM_UID);
+            let way = new OSM.Way(this.makeOSMId(), this.OSM_USER, this.OSM_TIMESTAMP, this.OSM_UID, !!add_locations);
 
             let nodes = row.nodes;
             if (this.nameWayHash.nodes) throw new Error(util.format('*** duplicate way %s', nodes));
