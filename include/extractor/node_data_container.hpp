@@ -42,7 +42,8 @@ template <storage::Ownership Ownership> class EdgeBasedNodeDataContainerImpl
     EdgeBasedNodeDataContainerImpl() = default;
 
     EdgeBasedNodeDataContainerImpl(std::size_t size)
-        : geometry_ids(size), name_ids(size), component_ids(size), travel_modes(size), classes(size)
+        : geometry_ids(size), name_ids(size), component_ids(size), travel_modes(size),
+          classes(size), is_left_hand_driving(size)
     {
     }
 
@@ -50,10 +51,11 @@ template <storage::Ownership Ownership> class EdgeBasedNodeDataContainerImpl
                                    Vector<NameID> name_ids,
                                    Vector<ComponentID> component_ids,
                                    Vector<TravelMode> travel_modes,
-                                   Vector<ClassData> classes)
+                                   Vector<ClassData> classes,
+                                   Vector<bool> is_left_hand_driving)
         : geometry_ids(std::move(geometry_ids)), name_ids(std::move(name_ids)),
           component_ids(std::move(component_ids)), travel_modes(std::move(travel_modes)),
-          classes(std::move(classes))
+          classes(std::move(classes)), is_left_hand_driving(std::move(is_left_hand_driving))
     {
     }
 
@@ -67,18 +69,25 @@ template <storage::Ownership Ownership> class EdgeBasedNodeDataContainerImpl
 
     ClassData GetClassData(const NodeID node_id) const { return classes[node_id]; }
 
+    ClassData IsLeftHandDriving(const NodeID node_id) const
+    {
+        return is_left_hand_driving[node_id];
+    }
+
     // Used by EdgeBasedGraphFactory to fill data structure
     template <typename = std::enable_if<Ownership == storage::Ownership::Container>>
     void SetData(NodeID node_id,
                  GeometryID geometry_id,
                  NameID name_id,
                  TravelMode travel_mode,
-                 ClassData class_data)
+                 ClassData class_data,
+                 bool is_left_hand_driving_flag)
     {
         geometry_ids[node_id] = geometry_id;
         name_ids[node_id] = name_id;
         travel_modes[node_id] = travel_mode;
         classes[node_id] = class_data;
+        is_left_hand_driving[node_id] = is_left_hand_driving_flag;
     }
 
     // Used by EdgeBasedGraphFactory to fill data structure
@@ -102,6 +111,8 @@ template <storage::Ownership Ownership> class EdgeBasedNodeDataContainerImpl
         util::inplacePermutation(component_ids.begin(), component_ids.end(), permutation);
         util::inplacePermutation(travel_modes.begin(), travel_modes.end(), permutation);
         util::inplacePermutation(classes.begin(), classes.end(), permutation);
+        util::inplacePermutation(
+            is_left_hand_driving.begin(), is_left_hand_driving.end(), permutation);
     }
 
     // all containers have the exact same size
@@ -111,6 +122,7 @@ template <storage::Ownership Ownership> class EdgeBasedNodeDataContainerImpl
         BOOST_ASSERT(geometry_ids.size() == component_ids.size());
         BOOST_ASSERT(geometry_ids.size() == travel_modes.size());
         BOOST_ASSERT(geometry_ids.size() == classes.size());
+        BOOST_ASSERT(geometry_ids.size() == is_left_hand_driving.size());
         return geometry_ids.size();
     }
 
@@ -120,6 +132,7 @@ template <storage::Ownership Ownership> class EdgeBasedNodeDataContainerImpl
     Vector<ComponentID> component_ids;
     Vector<TravelMode> travel_modes;
     Vector<ClassData> classes;
+    Vector<bool> is_left_hand_driving;
 };
 }
 

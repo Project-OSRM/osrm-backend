@@ -202,9 +202,15 @@ Feature: Approach parameter
 
 
     Scenario: Start End same approach, option unrestricted for Start and curb for End, left-hand driving
-        Given the profile file "testbot" initialized with
+        Given the profile file
         """
-        profile.properties.left_hand_driving = true
+        local functions = require('testbot')
+        local testbot_process_way = functions.process_way
+        functions.process_way = function(profile, way, result)
+          testbot_process_way(profile, way, result)
+          result.is_left_hand_driving = true
+        end
+        return functions
         """
         And the node map
             """

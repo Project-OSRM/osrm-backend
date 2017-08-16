@@ -137,7 +137,7 @@ template <> inline void write<bool>(io::FileWriter &writer, const util::vector_v
 template <> inline void read<bool>(io::FileReader &reader, std::vector<bool> &data)
 {
     const auto count = reader.ReadElementCount64();
-    BOOST_ASSERT(data.size() == count);
+    data.resize(count);
     for (const auto index : util::irange<std::uint64_t>(0, count))
     {
         data[index] = reader.ReadOne<bool>();

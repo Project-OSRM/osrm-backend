@@ -168,14 +168,16 @@ NBGToEBG EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const N
                                         GeometryID{packed_geometry_id, true},
                                         forward_data.name_id,
                                         forward_data.travel_mode,
-                                        forward_data.classes);
+                                        forward_data.classes,
+                                        forward_data.is_left_hand_driving);
     if (reverse_data.edge_id != SPECIAL_EDGEID)
     {
         m_edge_based_node_container.SetData(reverse_data.edge_id,
                                             GeometryID{packed_geometry_id, false},
                                             reverse_data.name_id,
                                             reverse_data.travel_mode,
-                                            reverse_data.classes);
+                                            reverse_data.classes,
+                                            reverse_data.is_left_hand_driving);
     }
 
     // Add segments of edge-based nodes
@@ -378,7 +380,8 @@ EdgeBasedGraphFactory::GenerateEdgeExpandedNodes(const WayRestrictionMap &way_re
                 m_edge_based_node_container.GetGeometryID(static_cast<NodeID>(edge_data.edge_id)),
                 edge_data.name_id,
                 edge_data.travel_mode,
-                edge_data.classes);
+                edge_data.classes,
+                edge_data.is_left_hand_driving);
 
             m_edge_based_node_weights.push_back(m_edge_based_node_weights[eid]);
 
