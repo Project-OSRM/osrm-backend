@@ -18,6 +18,8 @@
       - Fix a pre-processing bug where incorrect directions could be issued when two turns would have similar instructions and we tried to give them distinct values (https://github.com/Project-OSRM/osrm-backend/pull/4375)
       - The entry bearing for correct the cardinality of a direction value (https://github.com/Project-OSRM/osrm-backend/pull/4353
       - Change timezones in West Africa to the WAT zone so they're recognized on the Windows platform
+      - Use the correct angle modifier at forks
+      - Issue a `continue` instead of a `turn` when an end-of-road situation (e.g. T-intersection) puts you on the same-named road
 
 # 5.10.0
   - Changes from 5.9:
