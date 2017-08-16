@@ -8,7 +8,9 @@
 #include <rapidjson/istreamwrapper.h>
 
 #include <boost/filesystem.hpp>
+#include <boost/function_output_iterator.hpp>
 
+#include <fstream>
 #include <string>
 
 namespace osrm
@@ -125,21 +127,19 @@ sol::table LocationDependentData::operator()(sol::state &state, const osmium::Wa
     const point_t point(location.lon(), location.lat());
 
     auto table = sol::table(state, sol::create);
+    auto merger = [this, &table](const rtree_t::value_type &rtree_entry) {
+        for (const auto &key_value : polygons[rtree_entry.second].second)
+        {
+            boost::apply_visitor(table_setter(table, key_value.first), key_value.second);
+        }
+    };
 
     // Search the R-tree and collect a Lua table of tags that correspond to the location
-    for (auto it = rtree.qbegin(
-             boost::geometry::index::intersects(point) &&
-             boost::geometry::index::satisfies([this, &point](const rtree_t::value_type &v) {
-                 return boost::geometry::within(point, polygons[v.second].first);
-             }));
-         it != rtree.qend();
-         ++it)
-    {
-        for (const auto &pair : polygons[it->second].second)
-        {
-            boost::apply_visitor(table_setter(table, pair.first), pair.second);
-        }
-    }
+    rtree.query(boost::geometry::index::intersects(point) &&
+                    boost::geometry::index::satisfies([this, &point](const rtree_t::value_type &v) {
+                        return boost::geometry::within(point, polygons[v.second].first);
+                    }),
+                boost::make_function_output_iterator(std::ref(merger)));
 
     return table;
 }
