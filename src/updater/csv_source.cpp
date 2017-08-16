@@ -44,8 +44,8 @@ SegmentLookupTable readSegmentValues(const std::vector<std::string> &paths)
         });
     if (found_inconsistency != std::end(result.lookup))
     {
-        throw util::exception("empty segment in CSV with node " +
-                              std::to_string(found_inconsistency->first.from) + " " + SOURCE_REF);
+        util::Log(logWARNING) << "Empty segment in CSV with node " +
+                                     std::to_string(found_inconsistency->first.from);
     }
 
     return result;
