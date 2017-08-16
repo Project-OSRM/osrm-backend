@@ -1,7 +1,7 @@
 # 5.11.0
   - Changes from 5.10:
     - Features
-      - BREAKING: Added support for conditional via-way instructions. This features changes the file format of osrm.restrictions and requires re-extraction
+      - BREAKING: Added support for conditional via-way restrictions. This features changes the file format of osrm.restrictions and requires re-extraction
     - Internals
       - BREAKING: Traffic signals will no longer be represented as turns internally. This requires re-processing of data but enables via-way turn restrictions across highway=traffic_signals
       - Additional checks for empty segments when loading traffic data files
