@@ -31,6 +31,7 @@ To pass parameters to each location some options support an array like encoding:
 |generate\_hints |`true` (default), `false`                               |Adds a Hint to the response which can be used in subsequent requests, see `hints` parameter.           |
 |hints           |`{hint};{hint}[;{hint} ...]`                            |Hint from previous request to derive position in street network.                                       |
 |approaches      |`{approach};{approach}[;{approach} ...]`                |Keep waypoints on curb side.                                                                           |
+|exclude         |`{class}[,{class}]`                                     |Additive list of classes to avoid, order does not matter.                                              |
 
 Where the elements follow the following format:
 
@@ -40,12 +41,13 @@ Where the elements follow the following format:
 |radius      |`double >= 0` or `unlimited` (default)                  |
 |hint        |Base64 `string`                                         |
 |approach    |`curb` or `unrestricted` (default)                      |
+|class       |A class name determined by the profile or `none`.       |
 
 ```
 {option}={element};{element}[;{element} ... ]
 ```
 
-The number of elements must match exactly the number of locations. If you don't want to pass a value but instead use the default you can pass an empty `element`.
+The number of elements must match exactly the number of locations (except for `generate_hints` and `exclude`). If you don't want to pass a value but instead use the default you can pass an empty `element`.
 
 Example: 2nd location use the default value for `option`:
 
@@ -58,6 +60,9 @@ Example: 2nd location use the default value for `option`:
 ```curl
 # Query on Berlin with three coordinates:
 curl 'http://router.project-osrm.org/route/v1/driving/13.388860,52.517037;13.397634,52.529407;13.428555,52.523219?overview=false'
+
+# Query on Berlin excluding the usage of motorways:
+curl 'http://router.project-osrm.org/route/v1/driving/13.388860,52.517037;13.397634,52.529407?exclude=motorway'
 
 # Using polyline:
 curl 'http://router.project-osrm.org/route/v1/driving/polyline(ofp_Ik_vpAilAyu@te@g`E)?overview=false'
