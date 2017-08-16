@@ -362,11 +362,18 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         util::vector_view<extractor::ClassData> classes(
             classes_list_ptr, layout.num_entries[storage::DataLayout::CLASSES_LIST]);
 
+        auto is_left_hand_driving_ptr = layout.GetBlockPtr<unsigned>(
+            memory_ptr, storage::DataLayout::IS_LEFT_HAND_DRIVING_LIST);
+        util::vector_view<bool> is_left_hand_driving(
+            is_left_hand_driving_ptr,
+            layout.num_entries[storage::DataLayout::IS_LEFT_HAND_DRIVING_LIST]);
+
         edge_based_node_data = extractor::EdgeBasedNodeDataView(std::move(geometry_ids),
                                                                 std::move(name_ids),
                                                                 std::move(component_ids),
                                                                 std::move(travel_modes),
-                                                                std::move(classes));
+                                                                std::move(classes),
+                                                                std::move(is_left_hand_driving));
     }
 
     void InitializeEdgeInformationPointers(storage::DataLayout &layout, char *memory_ptr)
@@ -939,9 +946,10 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
                     m_lane_description_offsets[lane_description_id + 1]);
     }
 
-    bool IsLeftHandDriving() const override final
+    bool IsLeftHandDriving(const NodeID id) const override final
     {
-        return m_profile_properties->left_hand_driving; // TODO: remove
+        // TODO: can be moved to a data block indexed by GeometryID
+        return edge_based_node_data.IsLeftHandDriving(id);
     }
 };
 

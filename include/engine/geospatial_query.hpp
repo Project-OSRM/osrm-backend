@@ -650,7 +650,7 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
             bool input_coordinate_is_at_right = !util::coordinate_calculation::isCCW(
                 coordinates[segment.data.u], coordinates[segment.data.v], input_coordinate);
 
-            if (datafacade.IsLeftHandDriving())
+            if (datafacade.IsLeftHandDriving(segment.data.forward_segment_id.id))
                 input_coordinate_is_at_right = !input_coordinate_is_at_right;
 
             return std::make_pair(input_coordinate_is_at_right, (!input_coordinate_is_at_right));

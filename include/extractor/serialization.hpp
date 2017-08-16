@@ -125,6 +125,7 @@ inline void read(storage::io::FileReader &reader,
     storage::serialization::read(reader, node_data_container.component_ids);
     storage::serialization::read(reader, node_data_container.travel_modes);
     storage::serialization::read(reader, node_data_container.classes);
+    storage::serialization::read(reader, node_data_container.is_left_hand_driving);
 }
 
 template <storage::Ownership Ownership>
@@ -136,6 +137,7 @@ inline void write(storage::io::FileWriter &writer,
     storage::serialization::write(writer, node_data_container.component_ids);
     storage::serialization::write(writer, node_data_container.travel_modes);
     storage::serialization::write(writer, node_data_container.classes);
+    storage::serialization::write(writer, node_data_container.is_left_hand_driving);
 }
 
 inline void read(storage::io::FileReader &reader, NodeRestriction &restriction)

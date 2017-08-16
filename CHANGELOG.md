@@ -39,6 +39,7 @@
       - BREAKING: Traffic signals will no longer be represented as turns internally. This requires re-processing of data but enables via-way turn restrictions across highway=traffic_signals
       - Additional checks for empty segments when loading traffic data files
       - Tunes the constants for turns in sharp curves just a tiny bit to circumvent a mix-up in fork directions at a specific intersection (https://github.com/Project-OSRM/osrm-backend/issues/4331)
+      - BREAKING: added `is_left_hand_driving` vector to `.ebg_nodes` file
     - Infrastructure
       - Refactor datafacade to make implementing additional DataFacades simpler
     - Bugfixes

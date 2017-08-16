@@ -259,6 +259,7 @@ void Storage::PopulateLayout(DataLayout &layout)
         layout.SetBlockSize<ComponentID>(DataLayout::COMPONENT_ID_LIST, nodes_number);
         layout.SetBlockSize<extractor::TravelMode>(DataLayout::TRAVEL_MODE_LIST, nodes_number);
         layout.SetBlockSize<extractor::ClassData>(DataLayout::CLASSES_LIST, nodes_number);
+        layout.SetBlockSize<unsigned>(DataLayout::IS_LEFT_HAND_DRIVING_LIST, nodes_number);
     }
 
     if (boost::filesystem::exists(config.GetPath(".osrm.hsgr")))
@@ -733,11 +734,18 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
         util::vector_view<extractor::ClassData> classes(
             classes_list_ptr, layout.num_entries[storage::DataLayout::CLASSES_LIST]);
 
+        auto is_left_hand_driving_ptr = layout.GetBlockPtr<unsigned, true>(
+            memory_ptr, storage::DataLayout::IS_LEFT_HAND_DRIVING_LIST);
+        util::vector_view<bool> is_left_hand_driving(
+            is_left_hand_driving_ptr,
+            layout.num_entries[storage::DataLayout::IS_LEFT_HAND_DRIVING_LIST]);
+
         extractor::EdgeBasedNodeDataView node_data(std::move(geometry_ids),
                                                    std::move(name_ids),
                                                    std::move(component_ids),
                                                    std::move(travel_modes),
-                                                   std::move(classes));
+                                                   std::move(classes),
+                                                   std::move(is_left_hand_driving));
 
         extractor::files::readNodeData(config.GetPath(".osrm.ebg_nodes"), node_data);
     }
