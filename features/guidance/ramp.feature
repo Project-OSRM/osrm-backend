@@ -18,7 +18,7 @@ Feature: Ramp Guidance
             | bd    | motorway_link |
 
        When I route I should get
-            | waypoints | route     | turns                          |
+            | waypoints | route     | turns                       |
             | a,d       | abc,bd,bd | depart,on ramp right,arrive |
 
     Scenario: Ramp On Through Street Left
@@ -34,7 +34,7 @@ Feature: Ramp Guidance
             | bd    | motorway_link |
 
        When I route I should get
-            | waypoints | route     | turns                         |
+            | waypoints | route     | turns                      |
             | a,d       | abc,bd,bd | depart,on ramp left,arrive |
 
     Scenario: Ramp On Through Street Left and Right
@@ -52,7 +52,7 @@ Feature: Ramp Guidance
             | bd    | motorway_link |
 
        When I route I should get
-            | waypoints | route     | turns                          |
+            | waypoints | route     | turns                       |
             | a,d       | abc,bd,bd | depart,on ramp right,arrive |
             | a,e       | abc,be,be | depart,on ramp left,arrive  |
 
@@ -70,7 +70,7 @@ Feature: Ramp Guidance
             | bd    | motorway_link |
 
        When I route I should get
-            | waypoints | route    | turns                          |
+            | waypoints | route    | turns                       |
             | a,d       | ab,bd,bd | depart,on ramp right,arrive |
 
     Scenario: Ramp On Three Way Intersection Right
@@ -88,7 +88,7 @@ Feature: Ramp Guidance
             | bd    | motorway_link |
 
        When I route I should get
-            | waypoints | route    | turns                          |
+            | waypoints | route    | turns                       |
             | a,d       | ab,bd,bd | depart,on ramp right,arrive |
 
     Scenario: Ramp Off Though Street
@@ -105,9 +105,9 @@ Feature: Ramp Guidance
             | bd    | motorway_link | yes    |
 
        When I route I should get
-            | waypoints | route     | turns                          |
+            | waypoints | route     | turns                       |
             | a,d       | abc,bd,bd | depart,on ramp right,arrive |
-            | a,c       | abc,abc   | depart,arrive                  |
+            | a,c       | abc,abc   | depart,arrive               |
 
     Scenario: Straight Ramp Off Turning Though Street
         Given the node map
@@ -214,9 +214,9 @@ Feature: Ramp Guidance
             | bd    | motorway_link |
 
        When I route I should get
-            | waypoints | route     | turns                                 |
+            | waypoints | route     | turns                              |
             | a,d       | abc,bd,bd | depart,on ramp slight right,arrive |
-            | a,c       | abc,abc   | depart,arrive                         |
+            | a,c       | abc,abc   | depart,arrive                      |
 
     Scenario: Two Ramps Joining into common Motorway
         Given the node map

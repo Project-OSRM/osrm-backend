@@ -108,7 +108,7 @@ Feature: Continue Instructions
        When I route I should get
             | waypoints | route       | turns                        |
             | a,c       | abc,abc,abc | depart,continue right,arrive |
-            | a,d       | abc,bd,bd   | depart,turn straight,arrive  |
+            | a,d       | abc,bd      | depart,arrive                |
 
     Scenario: Road turning slight left
         Given the node map

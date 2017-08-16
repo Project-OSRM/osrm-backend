@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <string>
+#include <algorithm>
 
 #include "extractor/guidance/constants.hpp"
 
@@ -24,15 +25,22 @@ namespace RoadPriorityClass
 typedef std::uint8_t Enum;
 // Top priority Road
 const constexpr Enum MOTORWAY = 0;
+const constexpr Enum MOTORWAY_LINK = 1;
 // Second highest priority
 const constexpr Enum TRUNK = 2;
-// Main roads
+const constexpr Enum TRUNK_LINK = 3;
+// Main roads and their links
 const constexpr Enum PRIMARY = 4;
+const constexpr Enum PRIMARY_LINK = 5;
 const constexpr Enum SECONDARY = 6;
+const constexpr Enum SECONDARY_LINK = 7;
 const constexpr Enum TERTIARY = 8;
+const constexpr Enum TERTIARY_LINK = 9;
 // Residential Categories
 const constexpr Enum MAIN_RESIDENTIAL = 10;
 const constexpr Enum SIDE_RESIDENTIAL = 11;
+const constexpr Enum ALLEY = 12;
+const constexpr Enum PARKING = 13;
 // Link Category
 const constexpr Enum LINK_ROAD = 14;
 // Bike Accessible
@@ -80,7 +88,7 @@ class RoadClassification
     {
     }
 
-    bool IsMotorwayClass() const { return (0 != motorway_class) && (0 == link_class); }
+    bool IsMotorwayClass() const { return motorway_class != 0; }
     void SetMotorwayFlag(const bool new_value) { motorway_class = new_value; }
 
     bool IsRampClass() const { return (0 != motorway_class) && (0 != link_class); }
@@ -127,15 +135,113 @@ inline bool canBeSeenAsFork(const RoadClassification first, const RoadClassifica
                     static_cast<int>(second.GetPriority())) <= 1;
 }
 
+
+// priority groups are road classes that can be categoriesed as somewhat similar
+inline std::uint32_t getRoadGroup(const RoadClassification classification)
+{
+    // a list of dividers (inclusive) specifying the end of a class
+    const auto constexpr num_dividers = 6;
+    // dividers point one past the entry we want, so motorways will be pre-primary
+    const constexpr RoadPriorityClass::Enum dividers[num_dividers] = {
+        RoadPriorityClass::PRIMARY,
+        RoadPriorityClass::TERTIARY_LINK,
+        RoadPriorityClass::ALLEY,
+        RoadPriorityClass::LINK_ROAD,
+        RoadPriorityClass::BIKE_PATH,
+        RoadPriorityClass::CONNECTIVITY+1};
+
+    const auto upper = std::upper_bound(dividers, dividers + num_dividers, classification.GetPriority());
+    return upper - dividers;
+}
+
+
+// a road classification is strictly less, if it belongs to a lower general category of roads. E.g.
+// normal city roads are strictly less of a priority than a motorway and alleys are strictly less
+// than inner-city roads
+inline bool strictlyLess(const RoadClassification lhs, const RoadClassification rhs)
+{
+    const auto lhs_class = getRoadGroup(lhs);
+    const auto rhs_class = getRoadGroup(rhs);
+    // different class, not neighbors
+    return lhs_class > rhs_class && ((lhs.GetPriority() - rhs.GetPriority() > 4) || lhs.IsLowPriorityRoadClass());
+}
+
+// check whether a link class is the fitting link class to a road
+inline bool isLinkTo(const RoadClassification link, const RoadClassification road)
+{
+    // needs to be a link/non-link combination
+    if (!link.IsLinkClass() || road.IsLinkClass())
+        return false;
+
+    switch (link.GetPriority())
+    {
+    case RoadPriorityClass::MOTORWAY_LINK:
+        return road.GetPriority() == RoadPriorityClass::MOTORWAY;
+
+    case RoadPriorityClass::TRUNK_LINK:
+        return road.GetPriority() == RoadPriorityClass::TRUNK;
+
+    case RoadPriorityClass::PRIMARY_LINK:
+        return road.GetPriority() == RoadPriorityClass::PRIMARY;
+
+    case RoadPriorityClass::SECONDARY_LINK:
+        return road.GetPriority() == RoadPriorityClass::SECONDARY;
+
+    case RoadPriorityClass::TERTIARY_LINK:
+        return road.GetPriority() == RoadPriorityClass::TERTIARY;
+
+    default:
+        return false;
+    }
+}
+
 inline bool obviousByRoadClass(const RoadClassification in_classification,
                                const RoadClassification obvious_candidate,
                                const RoadClassification compare_candidate)
 {
-    // lower numbers are of higher priority
-    const bool has_high_priority = PRIORITY_DISTINCTION_FACTOR * obvious_candidate.GetPriority() <
-                                   compare_candidate.GetPriority();
+    // passing a motorway ramp on a motorway
+    if (in_classification.IsMotorwayClass() && obvious_candidate.IsMotorwayClass() &&
+        compare_candidate.IsRampClass())
+        return true;
+
+    bool passing_ramp = (compare_candidate.IsRampClass() && !in_classification.IsMotorwayClass() &&
+                         !in_classification.IsRampClass());
+
+    // passing a link class, other than motorway
+    if (!in_classification.IsMotorwayClass() && !obvious_candidate.IsMotorwayClass() &&
+        !in_classification.IsLinkClass() && !obvious_candidate.IsLinkClass() &&
+        !compare_candidate.IsRampClass() && compare_candidate.IsLinkClass())
+        return true;
+
+    // lower numbers are of higher priority, except for motorway links which are links in general
+    // but also quite high priority roads
+    const bool has_high_priority = (PRIORITY_DISTINCTION_FACTOR * obvious_candidate.GetPriority() <
+                                    compare_candidate.GetPriority()) &&
+                                   !compare_candidate.IsRampClass();
 
     const bool continues_on_same_class = in_classification == obvious_candidate;
+
+    return (has_high_priority && continues_on_same_class && !passing_ramp) ||
+           (!obvious_candidate.IsLowPriorityRoadClass() &&
+            !in_classification.IsLowPriorityRoadClass() &&
+            compare_candidate.IsLowPriorityRoadClass());
+}
+
+inline bool obviousByRoadClassOld(const RoadClassification in_classification,
+                                  const RoadClassification obvious_candidate,
+                                  const RoadClassification compare_candidate)
+{
+    // lower numbers are of higher priority, except for motorway links which are links in general
+    // but also quite high priority roads
+    auto first_priority = obvious_candidate.IsLinkClass() ? RoadPriorityClass::LINK_ROAD
+                                                          : obvious_candidate.GetPriority();
+    auto second_priority = compare_candidate.IsLinkClass() ? RoadPriorityClass::LINK_ROAD
+                                                           : compare_candidate.GetPriority();
+
+    const bool has_high_priority = (PRIORITY_DISTINCTION_FACTOR * first_priority < second_priority);
+
+    const bool continues_on_same_class = in_classification == obvious_candidate;
+
     return (has_high_priority && continues_on_same_class) ||
            (!obvious_candidate.IsLowPriorityRoadClass() &&
             !in_classification.IsLowPriorityRoadClass() &&

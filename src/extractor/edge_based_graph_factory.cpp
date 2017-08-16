@@ -39,6 +39,9 @@
 #include <tbb/pipeline.h>
 #include <tbb/task_scheduler_init.h>
 
+#include "util/geojson_debug_logger.hpp"
+#include "util/geojson_debug_policies.hpp"
+
 namespace std
 {
 template <> struct hash<std::pair<NodeID, NodeID>>
@@ -144,9 +147,6 @@ NBGToEBG EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const N
     // There should always be some geometry
     BOOST_ASSERT(0 != segment_count);
 
-    // const unsigned packed_geometry_id = m_compressed_edge_container.ZipEdges(edge_id_1,
-    // edge_id_2);
-
     NodeID current_edge_source_coordinate_id = node_u;
 
     const auto edge_id_to_segment_id = [](const NodeID edge_based_node_id) {
@@ -216,6 +216,9 @@ void EdgeBasedGraphFactory::Run(ScriptingEnvironment &scripting_environment,
                                 const ConditionalRestrictionMap &conditional_node_restriction_map,
                                 const WayRestrictionMap &way_restriction_map)
 {
+    util::ScopedGeojsonLoggerGuard<util::CoordinateVectorToLineString,osrm::util::LoggingScenario(0)> old_guard("old_obvious.geojson");
+    util::ScopedGeojsonLoggerGuard<util::CoordinateVectorToLineString,osrm::util::LoggingScenario(1)> guard("new_obvious.geojson");
+
     TIMER_START(renumber);
     m_number_of_edge_based_nodes =
         LabelEdgeBasedNodes() + way_restriction_map.NumberOfDuplicatedNodes();

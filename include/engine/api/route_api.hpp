@@ -26,6 +26,8 @@
 #include <iterator>
 #include <vector>
 
+#include "util/debug.hpp"
+
 namespace osrm
 {
 namespace engine
@@ -171,6 +173,8 @@ class RouteAPI : public BaseAPI
                  *      expects post-processed roundabouts
                  */
 
+                std::cout << "[route]" << std::endl;
+                util::guidance::print(steps);
                 guidance::trimShortSegments(steps, leg_geometry);
                 leg.steps = guidance::handleRoundabouts(std::move(steps));
                 leg.steps = guidance::collapseTurnInstructions(std::move(leg.steps));

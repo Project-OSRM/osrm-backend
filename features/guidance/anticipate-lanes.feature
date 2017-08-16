@@ -137,9 +137,9 @@ Feature: Turn Lane Guidance
     # https://www.openstreetmap.org/way/4484007#map=18/52.70439/13.20269
         Given the node map
             """
-            i               a
-              ' .       . '
-            j – – c – b – – x
+            x - - b - c - - j
+                .       .
+            a '           ' i
             """
 
         And the ways
@@ -363,9 +363,9 @@ Feature: Turn Lane Guidance
                | ci    |                                                 | off   |
 
           When I route I should get
-               | waypoints | route            | turns                           | lanes                                                                                                                                                         |
-               | a,d       | main,left,left   | depart,end of road left,arrive  | ;left:false straight:false straight:true straight:false straight:false right:false;left:false straight:true straight:false right:false,left:true right:false, |
-               | a,e       | main,right,right | depart,end of road right,arrive | ;left:false straight:false straight:false straight:true straight:false right:false;left:false straight:false straight:true right:false,left:false right:true, |
+               | waypoints | route            | turns                    | lanes                                                                                                                                                         |
+               | a,d       | main,left,left   | depart,turn left,arrive  | ;left:false straight:false straight:true straight:false straight:false right:false;left:false straight:true straight:false right:false,left:true right:false, |
+               | a,e       | main,right,right | depart,turn right,arrive | ;left:false straight:false straight:false straight:true straight:false right:false;left:false straight:false straight:true right:false,left:false right:true, |
 
        @anticipate
        Scenario: Anticipate Lanes for through with turn before / after

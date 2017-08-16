@@ -964,13 +964,13 @@ Feature: Simple Turns
         Given the node map
             """
                   g
-
-                  f     y
-            i
-            j k a   b   x
-                  e   c
-                    d
-
+                  |
+               _--f-----y
+            i-'   |
+            j-k-a]|[b---x
+                  e  'c
+                  |'d'
+                  |
                   h
             """
 
@@ -1350,7 +1350,6 @@ Feature: Simple Turns
             | waypoints | route    | turns                   |
             | a,d       | ab,dc,dc | depart,turn left,arrive |
 
-
     # https://www.openstreetmap.org/node/1332083066
     Scenario: Turns ordering must respect initial bearings
         Given the node map
@@ -1370,3 +1369,33 @@ Feature: Simple Turns
             | waypoints | route        | turns                           |
             | a,d       | ab,bcd,bcd   | depart,fork slight right,arrive |
             | a,g       | ab,befg,befg | depart,fork slight left,arrive  |
+
+	@routing @car
+    Scenario: No turn instruction when turning from unnamed onto unnamed
+        Given the node map
+            """
+            a
+            |
+            |
+            |
+            |
+            b----------------c
+            |
+            |
+            |
+            |
+            |
+            |
+            d
+            """
+
+        And the ways
+            | nodes | highway     | name | ref   |
+            | ab    | trunk_link  |      |       |
+            | db    | secondary   |      | L 460 |
+            | bc    | secondary   |      |       |
+
+        When I route I should get
+            | from | to | route | ref          | turns                    |
+            | d    | c  | ,,    | L 460,,      | depart,turn right,arrive |
+            | c    | d  | ,,    | ,L 460,L 460 | depart,turn left,arrive  |

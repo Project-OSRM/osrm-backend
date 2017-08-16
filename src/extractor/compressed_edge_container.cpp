@@ -203,6 +203,7 @@ void CompressedEdgeContainer::CompressEdge(
         edge_bucket_list1.emplace_back(
             OnewayCompressedEdge{target_node_id, ClipWeight(weight2), ClipDuration(duration2)});
     }
+    BOOST_ASSERT(edge_bucket_list1.size()>=2 + ((node_weight_penalty && node_duration_penalty) ? 1 : 0));
 }
 
 void CompressedEdgeContainer::AddUncompressedEdge(const EdgeID edge_id,

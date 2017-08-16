@@ -104,13 +104,18 @@ bool basicCollapsePreconditions(const RouteStepIterator first,
         !noBadUTurnCombination(first, second) && !noBadUTurnCombination(second, third);
 
     // require modes to match up
-    return !has_roundabout_type && haveSameMode(*first, *second, *third) && !contains_bad_uturn;
+    return !has_roundabout_type && haveSameMode(*first, *second, *third) && !contains_bad_uturn &&
+           !hasWaypointType(*third);
 }
 
 bool isStaggeredIntersection(const RouteStepIterator step_prior_to_intersection,
                              const RouteStepIterator step_entering_intersection,
                              const RouteStepIterator step_leaving_intersection)
 {
+    if (!basicCollapsePreconditions(
+            step_prior_to_intersection, step_entering_intersection, step_leaving_intersection))
+        return false;
+
     BOOST_ASSERT(!hasWaypointType(*step_entering_intersection) &&
                  !(hasWaypointType(*step_leaving_intersection)));
     // don't touch roundabouts
@@ -344,6 +349,33 @@ bool maneuverSucceededByNameChange(const RouteStepIterator step_entering_interse
 
     return (short_and_undisturbed || is_strong_name_change || is_choiceless_name_change) &&
            followed_by_name_change && is_maneuver;
+}
+
+bool closeContinueAfterTurn(const RouteStepIterator step_entering_intersection,
+                            const RouteStepIterator step_leaving_intersection)
+{
+    if (!basicCollapsePreconditions(step_entering_intersection, step_leaving_intersection))
+        return false;
+
+    const auto has_correct_types = hasTurnType(*step_entering_intersection, TurnType::Turn) &&
+                                   hasTurnType(*step_leaving_intersection, TurnType::Continue);
+
+    const auto both_left =
+        (hasModifier(*step_entering_intersection, DirectionModifier::Left) ||
+         hasModifier(*step_entering_intersection, DirectionModifier::SlightLeft)) &&
+        (hasModifier(*step_leaving_intersection, DirectionModifier::Left) ||
+         hasModifier(*step_leaving_intersection, DirectionModifier::SlightLeft));
+    const auto both_right =
+        (hasModifier(*step_entering_intersection, DirectionModifier::Right) ||
+         hasModifier(*step_entering_intersection, DirectionModifier::SlightRight)) &&
+        (hasModifier(*step_leaving_intersection, DirectionModifier::Right) ||
+         hasModifier(*step_leaving_intersection, DirectionModifier::SlightRight));
+
+    const auto both_same_direction = both_left || both_right;
+
+    const auto short_and_undisturbed = isShortAndUndisturbed(*step_entering_intersection);
+
+    return has_correct_types && both_same_direction && short_and_undisturbed;
 }
 
 bool maneuverSucceededBySuppressedDirection(const RouteStepIterator step_entering_intersection,

@@ -127,6 +127,10 @@ void NodeBasedGraphFactory::CompressGeometry()
             const EdgeID edge_id_2 = compressed_output_graph.FindEdge(to, from);
             BOOST_ASSERT(edge_id_2 != SPECIAL_EDGEID);
 
+            BOOST_ASSERT(compressed_edge_container.HasEntryForID(edge_id_1) ==
+                     compressed_edge_container.HasEntryForID(edge_id_2));
+            BOOST_ASSERT(compressed_edge_container.HasEntryForID(edge_id_1));
+            BOOST_ASSERT(compressed_edge_container.HasEntryForID(edge_id_2));
             auto packed_geometry_id = compressed_edge_container.ZipEdges(edge_id_1, edge_id_2);
 
             // remember the geometry ID for both edges in the node-based graph
@@ -191,7 +195,7 @@ void NodeBasedGraphFactory::CompressAnnotationData()
     const auto old_size = annotation_data.size();
     // remove all remaining elements
     annotation_data.erase(new_end, annotation_data.end());
-    util::Log() << " graoh compression removed " << (old_size - annotation_data.size())
+    util::Log() << " graph compression removed " << (old_size - annotation_data.size())
                 << " annotations of " << old_size;
 }
 
