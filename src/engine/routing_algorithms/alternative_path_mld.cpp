@@ -518,8 +518,8 @@ void unpackPackedPaths(InputIt first,
                 forward_heap.Insert(source, 0, {source});
                 reverse_heap.Insert(target, 0, {target});
 
-                BOOST_ASSERT(!facade.AvoidNode(source));
-                BOOST_ASSERT(!facade.AvoidNode(target));
+                BOOST_ASSERT(!facade.ExcludeNode(source));
+                BOOST_ASSERT(!facade.ExcludeNode(target));
 
                 // TODO: when structured bindings will be allowed change to
                 // auto [subpath_weight, subpath_source, subpath_target, subpath] = ...

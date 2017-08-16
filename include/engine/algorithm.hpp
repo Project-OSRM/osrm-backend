@@ -56,7 +56,7 @@ template <typename AlgorithmT> struct HasManyToManySearch final : std::false_typ
 template <typename AlgorithmT> struct HasGetTileTurns final : std::false_type
 {
 };
-template <typename AlgorithmT> struct HasAvoidFlags final : std::false_type
+template <typename AlgorithmT> struct HasExcludeFlags final : std::false_type
 {
 };
 
@@ -114,7 +114,7 @@ template <> struct HasManyToManySearch<mld::Algorithm> final : std::true_type
 template <> struct HasGetTileTurns<mld::Algorithm> final : std::true_type
 {
 };
-template <> struct HasAvoidFlags<mld::Algorithm> final : std::true_type
+template <> struct HasExcludeFlags<mld::Algorithm> final : std::true_type
 {
 };
 }

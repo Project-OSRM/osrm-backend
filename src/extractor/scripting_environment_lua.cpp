@@ -727,13 +727,13 @@ Sol2ScriptingEnvironment::GetStringListsFromTable(const std::string &table_name)
     return string_lists;
 }
 
-std::vector<std::vector<std::string>> Sol2ScriptingEnvironment::GetAvoidableClasses()
+std::vector<std::vector<std::string>> Sol2ScriptingEnvironment::GetExcludableClasses()
 {
     auto &context = GetSol2Context();
     switch (context.api_version)
     {
     case 2:
-        return Sol2ScriptingEnvironment::GetStringListsFromTable("avoidable");
+        return Sol2ScriptingEnvironment::GetStringListsFromTable("excludable");
     default:
         return {};
     }

@@ -23,7 +23,7 @@ namespace engine
 // This class selects the right facade for
 template <template <typename A> class FacadeT, typename AlgorithmT> class DataFacadeFactory
 {
-    static constexpr auto has_avoid_flags = routing_algorithms::HasAvoidFlags<AlgorithmT>{};
+    static constexpr auto has_exclude_flags = routing_algorithms::HasExcludeFlags<AlgorithmT>{};
 
   public:
     using Facade = FacadeT<AlgorithmT>;
@@ -31,17 +31,17 @@ template <template <typename A> class FacadeT, typename AlgorithmT> class DataFa
 
     template <typename AllocatorT>
     DataFacadeFactory(std::shared_ptr<AllocatorT> allocator)
-        : DataFacadeFactory(allocator, has_avoid_flags)
+        : DataFacadeFactory(allocator, has_exclude_flags)
     {
     }
 
     template <typename ParameterT> std::shared_ptr<const Facade> Get(const ParameterT &params) const
     {
-        return Get(params, has_avoid_flags);
+        return Get(params, has_exclude_flags);
     }
 
   private:
-    // Algorithm with avoid flags
+    // Algorithm with exclude flags
     template <typename AllocatorT>
     DataFacadeFactory(std::shared_ptr<AllocatorT> allocator, std::true_type)
     {
@@ -63,7 +63,7 @@ template <template <typename A> class FacadeT, typename AlgorithmT> class DataFa
         }
     }
 
-    // Algorithm without avoid flags
+    // Algorithm without exclude flags
     template <typename AllocatorT>
     DataFacadeFactory(std::shared_ptr<AllocatorT> allocator, std::false_type)
     {
@@ -75,10 +75,10 @@ template <template <typename A> class FacadeT, typename AlgorithmT> class DataFa
         return facades[0];
     }
 
-    // Default for non-avoid flags: return only facade
+    // Default for non-exclude flags: return only facade
     std::shared_ptr<const Facade> Get(const api::BaseParameters &params, std::false_type) const
     {
-        if (!params.avoid.empty())
+        if (!params.exclude.empty())
         {
             return {};
         }
@@ -86,7 +86,7 @@ template <template <typename A> class FacadeT, typename AlgorithmT> class DataFa
         return facades[0];
     }
 
-    // TileParameters don't drive from BaseParameters and generally don't have use for avoid flags
+    // TileParameters don't drive from BaseParameters and generally don't have use for exclude flags
     std::shared_ptr<const Facade> Get(const api::TileParameters &, std::true_type) const
     {
         return facades[0];
@@ -95,11 +95,11 @@ template <template <typename A> class FacadeT, typename AlgorithmT> class DataFa
     // Selection logic for finding the corresponding datafacade for the given parameters
     std::shared_ptr<const Facade> Get(const api::BaseParameters &params, std::true_type) const
     {
-        if (params.avoid.empty())
+        if (params.exclude.empty())
             return facades[0];
 
         extractor::ClassData mask = 0;
-        for (const auto &name : params.avoid)
+        for (const auto &name : params.exclude)
         {
             auto class_mask_iter = name_to_class.find(name);
             if (class_mask_iter == name_to_class.end())
@@ -112,18 +112,19 @@ template <template <typename A> class FacadeT, typename AlgorithmT> class DataFa
             }
         }
 
-        auto avoid_iter = std::find(
-            properties->avoidable_classes.begin(), properties->avoidable_classes.end(), mask);
-        if (avoid_iter != properties->avoidable_classes.end())
+        auto exclude_iter = std::find(
+            properties->excludable_classes.begin(), properties->excludable_classes.end(), mask);
+        if (exclude_iter != properties->excludable_classes.end())
         {
-            auto avoid_index = std::distance(properties->avoidable_classes.begin(), avoid_iter);
-            return facades[avoid_index];
+            auto exclude_index =
+                std::distance(properties->excludable_classes.begin(), exclude_iter);
+            return facades[exclude_index];
         }
 
         return {};
     }
 
-    std::array<std::shared_ptr<const Facade>, extractor::MAX_AVOIDABLE_CLASSES> facades;
+    std::array<std::shared_ptr<const Facade>, extractor::MAX_EXCLUDABLE_CLASSES> facades;
     std::unordered_map<std::string, extractor::ClassData> name_to_class;
     const extractor::ProfileProperties *properties = nullptr;
 };

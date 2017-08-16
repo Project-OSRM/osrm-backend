@@ -19,7 +19,9 @@ function setup()
       use_turn_restrictions         = true
     },
 
-    avoidable = {
+    classes = {["motorway"] = true, ["toll"] = true},
+
+    excludable = {
         [1] = {["motorway"] = true},
         [2] = {["toll"] = true},
         [3] = {["motorway"] = true, ["toll"] = true}

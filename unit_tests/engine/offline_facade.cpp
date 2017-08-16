@@ -340,7 +340,7 @@ class ContiguousInternalMemoryDataFacade<routing_algorithms::offline::Algorithm>
     unsigned GetWeightPrecision() const override { return 0; }
     double GetWeightMultiplier() const override { return 1; }
     ComponentID GetComponentID(NodeID) const override { return ComponentID{}; }
-    bool AvoidNode(const NodeID) const override { return false; }
+    bool ExcludeNode(const NodeID) const override { return false; }
 
     util::guidance::TurnBearing PreTurnBearing(const EdgeID /*eid*/) const override
     {

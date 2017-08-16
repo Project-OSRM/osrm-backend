@@ -93,12 +93,12 @@ auto LoadAndUpdateEdgeExpandedGraph(const CustomizationConfig &config,
 }
 
 std::vector<std::vector<bool>>
-avoidFlagsToNodeFilter(const MultiLevelEdgeBasedGraph &graph,
-                       const extractor::EdgeBasedNodeDataContainer &node_data,
-                       const extractor::ProfileProperties &properties)
+excludeFlagsToNodeFilter(const MultiLevelEdgeBasedGraph &graph,
+                         const extractor::EdgeBasedNodeDataContainer &node_data,
+                         const extractor::ProfileProperties &properties)
 {
     std::vector<std::vector<bool>> filters;
-    for (auto mask : properties.avoidable_classes)
+    for (auto mask : properties.excludable_classes)
     {
         if (mask != extractor::INAVLID_CLASS_DATA)
         {
@@ -155,7 +155,7 @@ int Customizer::Run(const CustomizationConfig &config)
     util::Log() << "Loading partition data took " << TIMER_SEC(loading_data) << " seconds";
 
     TIMER_START(cell_customize);
-    auto filter = avoidFlagsToNodeFilter(graph, node_data, properties);
+    auto filter = excludeFlagsToNodeFilter(graph, node_data, properties);
     auto metrics = filterToMetrics(graph, storage, mlp, filter);
     TIMER_STOP(cell_customize);
     util::Log() << "Cells customization took " << TIMER_SEC(cell_customize) << " seconds";

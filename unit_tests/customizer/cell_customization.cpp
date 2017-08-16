@@ -284,7 +284,7 @@ BOOST_AUTO_TEST_CASE(four_levels_test)
                             storage_rec.GetCell(metric_rec, 2, 1).GetInWeight(12));
 }
 
-BOOST_AUTO_TEST_CASE(avoid_test)
+BOOST_AUTO_TEST_CASE(exclude_test)
 {
     // 0 --- 1 --- 5 --- 6
     // |  /  |     |     |
@@ -305,7 +305,7 @@ BOOST_AUTO_TEST_CASE(avoid_test)
     BOOST_REQUIRE_EQUAL(mlp.GetNumberOfLevels(), 4);
 
     auto graph = makeGraph(mlp, edges);
-    // avoid node 0, 3 and 7
+    // exclude node 0, 3 and 7
     std::vector<bool> node_filter = {false, true, true, false, true, true, true, false};
 
     CellCustomizer customizer(mlp);

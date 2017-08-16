@@ -472,11 +472,11 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
     CHECK_EQUAL_RANGE(reference_20.coordinates, result_20->coordinates);
     CHECK_EQUAL_RANGE(reference_20.hints, result_20->hints);
 
-    // avoid flags
+    // exclude flags
     RouteParameters reference_21{};
-    reference_21.avoid = {"ferry", "motorway"};
+    reference_21.exclude = {"ferry", "motorway"};
     reference_21.coordinates = coords_1;
-    auto result_21 = parseParameters<RouteParameters>("1,2;3,4?avoid=ferry,motorway");
+    auto result_21 = parseParameters<RouteParameters>("1,2;3,4?exclude=ferry,motorway");
     BOOST_CHECK(result_21);
     BOOST_CHECK_EQUAL(reference_21.steps, result_21->steps);
     BOOST_CHECK_EQUAL(reference_21.alternatives, result_21->alternatives);
@@ -490,7 +490,7 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
     CHECK_EQUAL_RANGE(reference_21.approaches, result_21->approaches);
     CHECK_EQUAL_RANGE(reference_21.coordinates, result_21->coordinates);
     CHECK_EQUAL_RANGE(reference_21.hints, result_21->hints);
-    CHECK_EQUAL_RANGE(reference_21.avoid, result_21->avoid);
+    CHECK_EQUAL_RANGE(reference_21.exclude, result_21->exclude);
 }
 
 BOOST_AUTO_TEST_CASE(valid_table_urls)
