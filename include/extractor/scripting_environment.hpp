@@ -52,7 +52,7 @@ class ScriptingEnvironment
 
     virtual const ProfileProperties &GetProfileProperties() = 0;
 
-    virtual std::vector<std::vector<std::string>> GetAvoidableClasses() = 0;
+    virtual std::vector<std::vector<std::string>> GetExcludableClasses() = 0;
     virtual std::vector<std::string> GetClassNames() = 0;
     virtual std::vector<std::string> GetNameSuffixList() = 0;
     virtual std::vector<std::string> GetRestrictions() = 0;

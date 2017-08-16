@@ -54,7 +54,7 @@ class RoutingAlgorithmsInterface
     virtual bool HasMapMatching() const = 0;
     virtual bool HasManyToManySearch() const = 0;
     virtual bool HasGetTileTurns() const = 0;
-    virtual bool HasAvoidFlags() const = 0;
+    virtual bool HasExcludeFlags() const = 0;
     virtual bool IsValid() const = 0;
 };
 
@@ -129,9 +129,9 @@ template <typename Algorithm> class RoutingAlgorithms final : public RoutingAlgo
         return routing_algorithms::HasGetTileTurns<Algorithm>::value;
     }
 
-    bool HasAvoidFlags() const final override
+    bool HasExcludeFlags() const final override
     {
-        return routing_algorithms::HasAvoidFlags<Algorithm>::value;
+        return routing_algorithms::HasExcludeFlags<Algorithm>::value;
     }
 
     bool IsValid() const final override { return static_cast<bool>(facade); }

@@ -30,7 +30,7 @@ struct ProfileProperties
           use_turn_restrictions(false), left_hand_driving(false), fallback_to_duration(true),
           weight_name{"duration"}, call_tagless_node_function(true)
     {
-        std::fill(avoidable_classes.begin(), avoidable_classes.end(), INAVLID_CLASS_DATA);
+        std::fill(excludable_classes.begin(), excludable_classes.end(), INAVLID_CLASS_DATA);
         BOOST_ASSERT(weight_name[MAX_WEIGHT_NAME_LENGTH] == '\0');
     }
 
@@ -73,19 +73,19 @@ struct ProfileProperties
         return std::string(weight_name);
     }
 
-    // Mark this combination of classes as avoidable
-    void SetAvoidableClasses(std::size_t index, ClassData classes)
+    // Mark this combination of classes as excludable
+    void SetExcludableClasses(std::size_t index, ClassData classes)
     {
-        avoidable_classes[index] = classes;
+        excludable_classes[index] = classes;
     }
 
-    // Check if this classes are avoidable
-    boost::optional<std::size_t> ClassesAreAvoidable(ClassData classes) const
+    // Check if this classes are excludable
+    boost::optional<std::size_t> ClassesAreExcludable(ClassData classes) const
     {
-        auto iter = std::find(avoidable_classes.begin(), avoidable_classes.end(), classes);
-        if (iter != avoidable_classes.end())
+        auto iter = std::find(excludable_classes.begin(), excludable_classes.end(), classes);
+        if (iter != excludable_classes.end())
         {
-            return std::distance(avoidable_classes.begin(), iter);
+            return std::distance(excludable_classes.begin(), iter);
         }
 
         return {};
@@ -130,8 +130,8 @@ struct ProfileProperties
     char weight_name[MAX_WEIGHT_NAME_LENGTH + 1];
     //! stores the names of each class
     std::array<char[MAX_CLASS_NAME_LENGTH + 1], MAX_CLASS_INDEX + 1> class_names;
-    //! stores the masks of avoidable class combinations
-    std::array<ClassData, MAX_AVOIDABLE_CLASSES> avoidable_classes;
+    //! stores the masks of excludable class combinations
+    std::array<ClassData, MAX_EXCLUDABLE_CLASSES> excludable_classes;
     unsigned weight_precision = 1;
     bool force_split_edges = false;
     bool call_tagless_node_function = true;

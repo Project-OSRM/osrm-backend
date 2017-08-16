@@ -111,7 +111,7 @@ void relaxOutgoingEdges(const DataFacade<mld::Algorithm> &facade,
                         typename SearchEngineData<mld::Algorithm>::ManyToManyQueryHeap &query_heap,
                         const PhantomNode &phantom_node)
 {
-    BOOST_ASSERT(!facade.AvoidNode(node));
+    BOOST_ASSERT(!facade.ExcludeNode(node));
 
     const auto &partition = facade.GetMultiLevelPartition();
     const auto &cells = facade.GetCellStorage();
@@ -140,7 +140,7 @@ void relaxOutgoingEdges(const DataFacade<mld::Algorithm> &facade,
                 BOOST_ASSERT(!shortcut_durations.empty());
                 const NodeID to = *destination;
 
-                if (facade.AvoidNode(to))
+                if (facade.ExcludeNode(to))
                 {
                     continue;
                 }
@@ -174,7 +174,7 @@ void relaxOutgoingEdges(const DataFacade<mld::Algorithm> &facade,
                 BOOST_ASSERT(!shortcut_durations.empty());
                 const NodeID to = *source;
 
-                if (facade.AvoidNode(to))
+                if (facade.ExcludeNode(to))
                 {
                     continue;
                 }
@@ -206,7 +206,7 @@ void relaxOutgoingEdges(const DataFacade<mld::Algorithm> &facade,
         if (DIRECTION == FORWARD_DIRECTION ? data.forward : data.backward)
         {
             const NodeID to = facade.GetTarget(edge);
-            if (facade.AvoidNode(to))
+            if (facade.ExcludeNode(to))
             {
                 continue;
             }

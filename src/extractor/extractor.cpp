@@ -114,21 +114,21 @@ void SetClassNames(const std::vector<std::string> &class_names,
 }
 
 // Converts the class name list to a mask list
-void SetAvoidableClasses(const ExtractorCallbacks::ClassesMap &classes_map,
-                         const std::vector<std::vector<std::string>> &avoidable_classes,
-                         ProfileProperties &profile_properties)
+void SetExcludableClasses(const ExtractorCallbacks::ClassesMap &classes_map,
+                          const std::vector<std::vector<std::string>> &excludable_classes,
+                          ProfileProperties &profile_properties)
 {
-    if (avoidable_classes.size() > MAX_AVOIDABLE_CLASSES)
+    if (excludable_classes.size() > MAX_EXCLUDABLE_CLASSES)
     {
-        throw util::exception("Only " + std::to_string(MAX_AVOIDABLE_CLASSES) +
-                              " avoidable combinations allowed.");
+        throw util::exception("Only " + std::to_string(MAX_EXCLUDABLE_CLASSES) +
+                              " excludable combinations allowed.");
     }
 
-    // The avoid index 0 is reserve for not avoiding anything
-    profile_properties.SetAvoidableClasses(0, 0);
+    // The exclude index 0 is reserve for not excludeing anything
+    profile_properties.SetExcludableClasses(0, 0);
 
     std::size_t combination_index = 1;
-    for (const auto &combination : avoidable_classes)
+    for (const auto &combination : excludable_classes)
     {
         ClassData mask = 0;
         for (const auto &name : combination)
@@ -137,7 +137,7 @@ void SetAvoidableClasses(const ExtractorCallbacks::ClassesMap &classes_map,
             if (iter == classes_map.end())
             {
                 util::Log(logWARNING)
-                    << "Unknown class name " + name + " in avoidable combination. Ignoring.";
+                    << "Unknown class name " + name + " in excludable combination. Ignoring.";
             }
             else
             {
@@ -147,7 +147,7 @@ void SetAvoidableClasses(const ExtractorCallbacks::ClassesMap &classes_map,
 
         if (mask > 0)
         {
-            profile_properties.SetAvoidableClasses(combination_index++, mask);
+            profile_properties.SetExcludableClasses(combination_index++, mask);
         }
     }
 }
@@ -414,8 +414,8 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
 
     auto profile_properties = scripting_environment.GetProfileProperties();
     SetClassNames(scripting_environment.GetClassNames(), classes_map, profile_properties);
-    auto avoidable_classes = scripting_environment.GetAvoidableClasses();
-    SetAvoidableClasses(classes_map, avoidable_classes, profile_properties);
+    auto excludable_classes = scripting_environment.GetExcludableClasses();
+    SetExcludableClasses(classes_map, excludable_classes, profile_properties);
     files::writeProfileProperties(config.GetPath(".osrm.properties").string(), profile_properties);
 
     TIMER_STOP(extracting);

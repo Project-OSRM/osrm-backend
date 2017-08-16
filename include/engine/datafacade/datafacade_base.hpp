@@ -94,7 +94,7 @@ class BaseDataFacade
 
     virtual extractor::ClassData GetClassData(const NodeID id) const = 0;
 
-    virtual bool AvoidNode(const NodeID id) const = 0;
+    virtual bool ExcludeNode(const NodeID id) const = 0;
 
     virtual std::vector<std::string> GetClasses(const extractor::ClassData class_data) const = 0;
 

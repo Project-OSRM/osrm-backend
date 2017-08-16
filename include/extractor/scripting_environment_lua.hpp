@@ -58,7 +58,7 @@ class Sol2ScriptingEnvironment final : public ScriptingEnvironment
 
     const ProfileProperties &GetProfileProperties() override;
 
-    std::vector<std::vector<std::string>> GetAvoidableClasses() override;
+    std::vector<std::vector<std::string>> GetExcludableClasses() override;
     std::vector<std::string> GetNameSuffixList() override;
     std::vector<std::string> GetClassNames() override;
     std::vector<std::string> GetRestrictions() override;

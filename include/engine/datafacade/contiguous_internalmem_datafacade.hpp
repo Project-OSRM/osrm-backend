@@ -212,7 +212,7 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     using SharedGeospatialQuery = GeospatialQuery<SharedRTree, BaseDataFacade>;
     using RTreeNode = SharedRTree::TreeNode;
 
-    extractor::ClassData avoid_mask;
+    extractor::ClassData exclude_mask;
     std::string m_timestamp;
     extractor::ProfileProperties *m_profile_properties;
     extractor::Datasources *m_datasources;
@@ -249,12 +249,12 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
 
     void InitializeProfilePropertiesPointer(storage::DataLayout &data_layout,
                                             char *memory_block,
-                                            const std::size_t avoid_index)
+                                            const std::size_t exclude_index)
     {
         m_profile_properties = data_layout.GetBlockPtr<extractor::ProfileProperties>(
             memory_block, storage::DataLayout::PROPERTIES);
 
-        avoid_mask = m_profile_properties->avoidable_classes[avoid_index];
+        exclude_mask = m_profile_properties->excludable_classes[exclude_index];
     }
 
     void InitializeTimestampPointer(storage::DataLayout &data_layout, char *memory_block)
@@ -546,7 +546,7 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
 
     void InitializeInternalPointers(storage::DataLayout &data_layout,
                                     char *memory_block,
-                                    const std::size_t avoid_index)
+                                    const std::size_t exclude_index)
     {
         InitializeChecksumPointer(data_layout, memory_block);
         InitializeNodeInformationPointers(data_layout, memory_block);
@@ -557,7 +557,7 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         InitializeTimestampPointer(data_layout, memory_block);
         InitializeNamePointers(data_layout, memory_block);
         InitializeTurnLaneDescriptionsPointers(data_layout, memory_block);
-        InitializeProfilePropertiesPointer(data_layout, memory_block, avoid_index);
+        InitializeProfilePropertiesPointer(data_layout, memory_block, exclude_index);
         InitializeRTreePointers(data_layout, memory_block);
         InitializeIntersectionClassPointers(data_layout, memory_block);
     }
@@ -566,10 +566,10 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     // allows switching between process_memory/shared_memory datafacade, based on the type of
     // allocator
     ContiguousInternalMemoryDataFacadeBase(std::shared_ptr<ContiguousBlockAllocator> allocator_,
-                                           const std::size_t avoid_index)
+                                           const std::size_t exclude_index)
         : allocator(std::move(allocator_))
     {
-        InitializeInternalPointers(allocator->GetLayout(), allocator->GetMemory(), avoid_index);
+        InitializeInternalPointers(allocator->GetLayout(), allocator->GetMemory(), exclude_index);
     }
 
     // node and edge information access
@@ -810,9 +810,9 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         return edge_based_node_data.GetClassData(id);
     }
 
-    bool AvoidNode(const NodeID id) const override final
+    bool ExcludeNode(const NodeID id) const override final
     {
-        return (edge_based_node_data.GetClassData(id) & avoid_mask) > 0;
+        return (edge_based_node_data.GetClassData(id) & exclude_mask) > 0;
     }
 
     std::vector<std::string> GetClasses(const extractor::ClassData class_data) const override final
@@ -940,8 +940,8 @@ class ContiguousInternalMemoryDataFacade<CH>
 {
   public:
     ContiguousInternalMemoryDataFacade(std::shared_ptr<ContiguousBlockAllocator> allocator,
-                                       const std::size_t avoid_index)
-        : ContiguousInternalMemoryDataFacadeBase(allocator, avoid_index),
+                                       const std::size_t exclude_index)
+        : ContiguousInternalMemoryDataFacadeBase(allocator, exclude_index),
           ContiguousInternalMemoryAlgorithmDataFacade<CH>(allocator)
 
     {
@@ -955,8 +955,8 @@ class ContiguousInternalMemoryDataFacade<CoreCH> final
 {
   public:
     ContiguousInternalMemoryDataFacade(std::shared_ptr<ContiguousBlockAllocator> allocator,
-                                       const std::size_t avoid_index)
-        : ContiguousInternalMemoryDataFacade<CH>(allocator, avoid_index),
+                                       const std::size_t exclude_index)
+        : ContiguousInternalMemoryDataFacade<CH>(allocator, exclude_index),
           ContiguousInternalMemoryAlgorithmDataFacade<CoreCH>(allocator)
 
     {
@@ -977,15 +977,15 @@ template <> class ContiguousInternalMemoryAlgorithmDataFacade<MLD> : public Algo
 
     void InitializeInternalPointers(storage::DataLayout &data_layout,
                                     char *memory_block,
-                                    const std::size_t avoid_index)
+                                    const std::size_t exclude_index)
     {
-        InitializeMLDDataPointers(data_layout, memory_block, avoid_index);
+        InitializeMLDDataPointers(data_layout, memory_block, exclude_index);
         InitializeGraphPointer(data_layout, memory_block);
     }
 
     void InitializeMLDDataPointers(storage::DataLayout &data_layout,
                                    char *memory_block,
-                                   const std::size_t avoid_index)
+                                   const std::size_t exclude_index)
     {
         if (data_layout.GetBlockSize(storage::DataLayout::MLD_PARTITION) > 0)
         {
@@ -1013,9 +1013,9 @@ template <> class ContiguousInternalMemoryAlgorithmDataFacade<MLD> : public Algo
         }
 
         const auto weights_block_id = static_cast<storage::DataLayout::BlockID>(
-            storage::DataLayout::MLD_CELL_WEIGHTS_0 + avoid_index);
+            storage::DataLayout::MLD_CELL_WEIGHTS_0 + exclude_index);
         const auto durations_block_id = static_cast<storage::DataLayout::BlockID>(
-            storage::DataLayout::MLD_CELL_DURATIONS_0 + avoid_index);
+            storage::DataLayout::MLD_CELL_DURATIONS_0 + exclude_index);
 
         if (data_layout.GetBlockSize(weights_block_id) > 0)
         {
@@ -1098,10 +1098,10 @@ template <> class ContiguousInternalMemoryAlgorithmDataFacade<MLD> : public Algo
 
   public:
     ContiguousInternalMemoryAlgorithmDataFacade(
-        std::shared_ptr<ContiguousBlockAllocator> allocator_, const std::size_t avoid_index)
+        std::shared_ptr<ContiguousBlockAllocator> allocator_, const std::size_t exclude_index)
         : allocator(std::move(allocator_))
     {
-        InitializeInternalPointers(allocator->GetLayout(), allocator->GetMemory(), avoid_index);
+        InitializeInternalPointers(allocator->GetLayout(), allocator->GetMemory(), exclude_index);
     }
 
     const partition::MultiLevelPartitionView &GetMultiLevelPartition() const override
@@ -1159,9 +1159,9 @@ class ContiguousInternalMemoryDataFacade<MLD> final
   private:
   public:
     ContiguousInternalMemoryDataFacade(std::shared_ptr<ContiguousBlockAllocator> allocator,
-                                       const std::size_t avoid_index)
-        : ContiguousInternalMemoryDataFacadeBase(allocator, avoid_index),
-          ContiguousInternalMemoryAlgorithmDataFacade<MLD>(allocator, avoid_index)
+                                       const std::size_t exclude_index)
+        : ContiguousInternalMemoryDataFacadeBase(allocator, exclude_index),
+          ContiguousInternalMemoryAlgorithmDataFacade<MLD>(allocator, exclude_index)
 
     {
     }

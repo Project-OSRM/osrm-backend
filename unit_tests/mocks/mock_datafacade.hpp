@@ -28,7 +28,7 @@ class MockBaseDataFacade : public engine::datafacade::BaseDataFacade
     using StringView = util::StringView;
 
   public:
-    bool AvoidNode(const NodeID) const override { return false; };
+    bool ExcludeNode(const NodeID) const override { return false; };
 
     util::Coordinate GetCoordinateOfNode(const NodeID /* id */) const override
     {

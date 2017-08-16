@@ -46,14 +46,14 @@ class BasePlugin
             return true;
         }
 
-        if (!algorithms.HasAvoidFlags() && !params.avoid.empty())
+        if (!algorithms.HasExcludeFlags() && !params.exclude.empty())
         {
-            Error("NotImplemented", "This algorithm does not support avoid flags.", result);
+            Error("NotImplemented", "This algorithm does not support exclude flags.", result);
             return false;
         }
-        if (algorithms.HasAvoidFlags() && !params.avoid.empty())
+        if (algorithms.HasExcludeFlags() && !params.exclude.empty())
         {
-            Error("InvalidValue", "Avoid flag combination is not supported.", result);
+            Error("InvalidValue", "Exclude flag combination is not supported.", result);
             return false;
         }
 
