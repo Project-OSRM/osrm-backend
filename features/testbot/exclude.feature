@@ -28,9 +28,18 @@ Feature: Testbot - Exclude flags
             | a    | c  | ab,bc,bc       |
             | a    | f  | ab,be,ef,ef    |
 
+        When I match I should get
+            | trace | matchings | duration |
+            | ad    | ad        | 115      |
+
+        When I request a travel time matrix I should get
+            |   | a   | d   |
+            | a | 0   | 115 |
+            | d | 115 | 0   |
+
     Scenario: Testbot - exclude motorway
         Given the query options
-            | exclude | motorway |
+            | exclude  | motorway        |
 
         When I route I should get
             | from | to | route             |
@@ -38,6 +47,15 @@ Feature: Testbot - Exclude flags
             | a    | g  | ab,be,ef,fg,fg    |
             | a    | c  | ab,be,ef,fc,fc    |
             | a    | f  | ab,be,ef,ef       |
+
+        When I match I should get
+            | trace | matchings | duration |
+            | ad    | ad        | 125      |
+
+        When I request a travel time matrix I should get
+            |   | a   | d  |
+            | a | 0   | 125 |
+            | d | 125 | 0  |
 
     Scenario: Testbot - exclude toll
         Given the query options
