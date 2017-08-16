@@ -140,11 +140,6 @@ void relaxOutgoingEdges(const DataFacade<mld::Algorithm> &facade,
                 BOOST_ASSERT(!shortcut_durations.empty());
                 const NodeID to = *destination;
 
-                if (facade.ExcludeNode(to))
-                {
-                    continue;
-                }
-
                 if (shortcut_weight != INVALID_EDGE_WEIGHT && node != to)
                 {
                     const auto to_weight = weight + shortcut_weight;
@@ -173,11 +168,6 @@ void relaxOutgoingEdges(const DataFacade<mld::Algorithm> &facade,
                 BOOST_ASSERT(source != cell.GetSourceNodes().end());
                 BOOST_ASSERT(!shortcut_durations.empty());
                 const NodeID to = *source;
-
-                if (facade.ExcludeNode(to))
-                {
-                    continue;
-                }
 
                 if (shortcut_weight != INVALID_EDGE_WEIGHT && node != to)
                 {
