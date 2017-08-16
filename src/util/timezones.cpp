@@ -6,10 +6,10 @@
 #include <boost/filesystem/fstream.hpp>
 #include <boost/filesystem/path.hpp>
 #include <boost/optional.hpp>
-#include <boost/scope_exit.hpp>
 
-#include "rapidjson/document.h"
-#include "rapidjson/istreamwrapper.h"
+#include <rapidjson/document.h>
+#include <rapidjson/error/en.h>
+#include <rapidjson/istreamwrapper.h>
 
 #include <fstream>
 #include <regex>
@@ -48,7 +48,7 @@ Timezoner::Timezoner(const boost::filesystem::path &tz_shapes_filename, std::tim
 
     if (tz_shapes_filename.empty())
         throw osrm::util::exception("Missing time zone geojson file");
-    boost::filesystem::ifstream file(tz_shapes_filename);
+    std::ifstream file(tz_shapes_filename.string());
     if (!file.is_open())
         throw osrm::util::exception("failed to open " + tz_shapes_filename.string());
 
@@ -58,11 +58,9 @@ Timezoner::Timezoner(const boost::filesystem::path &tz_shapes_filename, std::tim
     geojson.ParseStream(isw);
     if (geojson.HasParseError())
     {
-        auto error_code = geojson.GetParseError();
-        auto error_offset = geojson.GetErrorOffset();
-        throw osrm::util::exception("Failed to parse " + tz_shapes_filename.string() +
-                                    " with error " + std::to_string(error_code) +
-                                    ". JSON malformed at " + std::to_string(error_offset));
+        throw osrm::util::exception(std::string("Failed to parse ") + tz_shapes_filename.string() +
+                                    ":" + std::to_string(geojson.GetErrorOffset()) + " error: " +
+                                    rapidjson::GetParseError_En(geojson.GetParseError()));
     }
     LoadLocalTimesRTree(geojson, utc_time_now);
 }
@@ -74,7 +72,7 @@ void Timezoner::LoadLocalTimesRTree(rapidjson::Document &geojson, std::time_t ut
     if (!geojson["type"].IsString())
         throw osrm::util::exception(
             "Failed to parse time zone file. Missing string-based type member.");
-    if (geojson["type"].GetString() != std::string("FeatureCollection"))
+    if (std::strcmp(geojson["type"].GetString(), "FeatureCollection") != 0)
         throw osrm::util::exception(
             "Failed to parse time zone file. Geojson is not of FeatureCollection type");
     if (!geojson.HasMember("features"))
@@ -108,30 +106,27 @@ void Timezoner::LoadLocalTimesRTree(rapidjson::Document &geojson, std::time_t ut
     for (rapidjson::SizeType i = 0; i < features_array.Size(); i++)
     {
         util::validateFeature(features_array[i]);
+
         // time zone geojson specific checks
-        if (!features_array[i]["properties"].GetObject().HasMember("TZID") &&
-            !features_array[i]["properties"].GetObject().HasMember("tzid"))
+        const auto &feature = features_array[i].GetObject();
+        const auto &properties = feature["properties"].GetObject();
+        if (!properties.HasMember("tzid"))
         {
-            throw osrm::util::exception("Feature is missing TZID member in properties.");
+            throw osrm::util::exception("Feature is missing 'tzid' member in properties.");
         }
-        else if (!features_array[i]["properties"].GetObject()["tzid"].IsString())
+        else if (!properties["tzid"].IsString())
         {
-            throw osrm::util::exception("Feature has non-string TZID value.");
+            throw osrm::util::exception("Feature has non-string 'tzid' value.");
         }
-        const std::string &feat_type =
-            features_array[i].GetObject()["geometry"].GetObject()["type"].GetString();
-        std::regex polygon_match("polygon", std::regex::icase);
-        std::smatch res;
-        if (std::regex_match(feat_type, res, polygon_match))
+
+        // Case-sensitive check of type https://tools.ietf.org/html/rfc7946#section-1.4
+        const auto &geometry = feature["geometry"].GetObject();
+        if (std::strcmp(geometry["type"].GetString(), "Polygon") == 0)
         {
+            // The first array of polygon coords is the exterior ring, we only want to access that
+            // https://tools.ietf.org/html/rfc7946#section-3.1.6
             polygon_t polygon;
-            // per geojson spec, the first array of polygon coords is the exterior ring, we only
-            // want to access that
-            auto coords_outer_array = features_array[i]
-                                          .GetObject()["geometry"]
-                                          .GetObject()["coordinates"]
-                                          .GetArray()[0]
-                                          .GetArray();
+            const auto &coords_outer_array = geometry["coordinates"].GetArray()[0].GetArray();
             for (rapidjson::SizeType i = 0; i < coords_outer_array.Size(); ++i)
             {
                 util::validateCoordinate(coords_outer_array[i]);
@@ -142,8 +137,7 @@ void Timezoner::LoadLocalTimesRTree(rapidjson::Document &geojson, std::time_t ut
                                   local_times.size());
 
             // Get time zone name and emplace polygon and local time for the UTC input
-            const auto &tzname =
-                features_array[i].GetObject()["properties"].GetObject()["tzid"].GetString();
+            const auto &tzname = properties["tzid"].GetString();
             local_times.push_back(local_time_t{polygon, get_local_time_in_tz(tzname)});
         }
         else
