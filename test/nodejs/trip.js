@@ -1,6 +1,7 @@
 var OSRM = require('../../');
 var test = require('tape');
 var data_path = require('./constants').data_path;
+var mld_data_path = require('./constants').mld_data_path;
 var three_test_coordinates = require('./constants').three_test_coordinates;
 var two_test_coordinates = require('./constants').two_test_coordinates;
 
@@ -325,3 +326,18 @@ test('trip: fixed start and end combinations', function(assert) {
 
     assert.end();
 });
+
+test('trip: trip in Monaco without motorways', function(assert) {
+    assert.plan(3);
+    var osrm = new OSRM({path: mld_data_path, algorithm: 'MLD'});
+    var options = {
+        coordinates: two_test_coordinates,
+        exclude: ['motorway']
+    };
+    osrm.trip(options, function(err, response) {
+        assert.ifError(err);
+        assert.equal(response.waypoints.length, 2);
+        assert.equal(response.trips.length, 1);
+    });
+});
+

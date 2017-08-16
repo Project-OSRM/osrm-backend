@@ -585,6 +585,39 @@ inline bool argumentsToParameter(const Nan::FunctionCallbackInfo<v8::Value> &arg
         params->generate_hints = generate_hints->BooleanValue();
     }
 
+    if (obj->Has(Nan::New("exclude").ToLocalChecked()))
+    {
+        v8::Local<v8::Value> exclude = obj->Get(Nan::New("exclude").ToLocalChecked());
+        if (exclude.IsEmpty())
+            return false;
+
+        if (!exclude->IsArray())
+        {
+            Nan::ThrowError("Exclude must be an array of strings or empty");
+            return false;
+        }
+
+        v8::Local<v8::Array> exclude_array = v8::Local<v8::Array>::Cast(exclude);
+
+        for (uint32_t i = 0; i < exclude_array->Length(); ++i)
+        {
+            v8::Local<v8::Value> class_name = exclude_array->Get(i);
+            if (class_name.IsEmpty())
+                return false;
+
+            if (class_name->IsString())
+            {
+                std::string class_name_str = *v8::String::Utf8Value(class_name);
+                params->exclude.emplace_back(class_name_str);
+            }
+            else
+            {
+                Nan::ThrowError("Exclude must be an array of strings or empty");
+                return false;
+            }
+        }
+    }
+
     return true;
 }
 

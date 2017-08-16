@@ -1,6 +1,7 @@
 var OSRM = require('../../');
 var test = require('tape');
 var data_path = require('./constants').data_path;
+var mld_data_path = require('./constants').mld_data_path;
 var three_test_coordinates = require('./constants').three_test_coordinates;
 var two_test_coordinates = require('./constants').two_test_coordinates;
 
@@ -222,4 +223,18 @@ test('match: throws on invalid tidy param', function(assert) {
     };
     assert.throws(function() { osrm.match(options, function(err, response) {}) },
         /tidy must be of type Boolean/);
+});
+
+test('match: match in Monaco without motorways', function(assert) {
+    assert.plan(3);
+    var osrm = new OSRM({path: mld_data_path, algorithm: 'MLD'});
+    var options = {
+        coordinates: three_test_coordinates,
+        exclude: ['motorway']
+    };
+    osrm.match(options, function(err, response) {
+        assert.ifError(err);
+        assert.equal(response.tracepoints.length, 3);
+        assert.equal(response.matchings.length, 1);
+    });
 });
