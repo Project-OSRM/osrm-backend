@@ -1,6 +1,7 @@
 var OSRM = require('../../');
 var test = require('tape');
 var data_path = require('./constants').data_path;
+var mld_data_path = require('./constants').mld_data_path;
 var three_test_coordinates = require('./constants').three_test_coordinates;
 var two_test_coordinates = require('./constants').two_test_coordinates;
 
@@ -51,4 +52,17 @@ test('nearest: throws on invalid args', function(assert) {
     options.number = 0;
     assert.throws(function() { osrm.nearest(options, function(err, res) {}); },
         /Number must be an integer greater than or equal to 1/);
+});
+
+test('nearest: nearest in Monaco without motorways', function(assert) {
+    assert.plan(2);
+    var osrm = new OSRM({path: mld_data_path, algorithm: 'MLD'});
+    var options = {
+        coordinates: [two_test_coordinates[0]],
+        exclude: ['motorway']
+    };
+    osrm.nearest(options, function(err, response) {
+        assert.ifError(err);
+        assert.equal(response.waypoints.length, 1);
+    });
 });
