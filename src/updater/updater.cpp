@@ -221,6 +221,12 @@ updateSegmentData(const UpdaterConfig &config,
             {
                 auto u = osm_node_ids[nodes_range[segment_offset]];
                 auto v = osm_node_ids[nodes_range[segment_offset + 1]];
+
+                // Self-loops are artifical segments (e.g. traffic light nodes), do not
+                // waste time updating them with traffic data
+                if (u == v)
+                    continue;
+
                 if (auto value = segment_speed_lookup({u, v}))
                 {
                     auto segment_length = segment_lengths[segment_offset];
@@ -254,6 +260,12 @@ updateSegmentData(const UpdaterConfig &config,
             {
                 auto u = osm_node_ids[nodes_range[segment_offset]];
                 auto v = osm_node_ids[nodes_range[segment_offset + 1]];
+
+                // Self-loops are artifical segments (e.g. traffic light nodes), do not
+                // waste time updating them with traffic data
+                if (u == v)
+                    continue;
+
                 if (auto value = segment_speed_lookup({v, u}))
                 {
                     auto segment_length = segment_lengths[segment_offset];
