@@ -110,8 +110,8 @@ Attribute                            | Type             | Notes
 -------------------------------------|------------------|----------------------------------------------------------------------------
 excludable                           | Sequence of Sets | Determines which class-combinations are supported by the `exclude` option at query time.
                                      |                  | E.g. `Sequence{Set{"ferry", "motorway"}, Set{"motorway"}}` will allow you to exclude ferries and motorways, or only motorways.
-classes                              | Set              | Determines the allowed classes that can be referenced using `{forward,backward}_classes` on the way in the `process_way` function.
-restrictions                         | Set              | Determines which turn restrictions will be used for this profile.
+classes                              | Sequence         | Determines the allowed classes that can be referenced using `{forward,backward}_classes` on the way in the `process_way` function.
+restrictions                         | Sequence         | Determines which turn restrictions will be used for this profile.
 suffix_list                          | Set              | List of name suffixes needed for determining if "Highway 101 NW" the same road as "Highway 101 ES".
 
 ### process_node(profile, node, result)
