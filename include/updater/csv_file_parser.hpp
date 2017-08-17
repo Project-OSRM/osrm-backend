@@ -8,6 +8,7 @@
 #include "util/log.hpp"
 
 #include <tbb/parallel_for.h>
+#include <tbb/parallel_sort.h>
 #include <tbb/spin_mutex.h>
 
 #include <boost/exception/diagnostic_information.hpp>
@@ -62,9 +63,9 @@ template <typename Key, typename Value> struct CSVFilesParser
             // and unique them on key to keep only the value with the largest file index
             // and the largest line number in a file.
             // The operands order is swapped to make descending ordering on (key, source)
-            std::stable_sort(begin(lookup), end(lookup), [](const auto &lhs, const auto &rhs) {
-                return rhs.first < lhs.first ||
-                       (rhs.first == lhs.first && rhs.second.source < lhs.second.source);
+            tbb::parallel_sort(begin(lookup), end(lookup), [](const auto &lhs, const auto &rhs) {
+                return std::tie(rhs.first, rhs.second.source) <
+                       std::tie(lhs.first, lhs.second.source);
             });
 
             // Unique only on key to take the source precedence into account and remove duplicates.

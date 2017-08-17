@@ -167,4 +167,3 @@ Feature: Traffic - speeds
         And the data has been extracted
         When I try to run "osrm-contract --segment-speed-file {speeds_file} {processed_file}"
         And it should exit successfully
-
