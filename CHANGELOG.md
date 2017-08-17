@@ -15,6 +15,8 @@
     - Guidance
       - Fixed some cases of sliproads pre-processing (https://github.com/Project-OSRM/osrm-backend/issues/4348)
       - don't suppress name announcements via sliproad handler
+    - Bugfixes
+      - Fixed a bug that would result in unnecessary instructions, due to problems in suffix/prefix detection
 
 # 5.12.0
   - Changes from 5.11:

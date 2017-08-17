@@ -34,9 +34,9 @@ function setup()
     speed_reduction           = 0.8,
     turn_bias                 = 1.075,
 
-    -- a list of suffixes to suppress in name change instructions
+    -- a list of suffixes to suppress in name change instructions. The suffixes also include common substrings of each other
     suffix_list = {
-      'N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW', 'North', 'South', 'West', 'East'
+      'N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW', 'North', 'South', 'West', 'East', 'Nor', 'Sou', 'We', 'Ea'
     },
 
     barrier_whitelist = Set {
