@@ -163,13 +163,6 @@ class GraphContractor
             }
         }
         graph = ContractorGraph{};
-        orig_node_id_from_new_node_id_map.clear();
-        orig_node_id_from_new_node_id_map.shrink_to_fit();
-
-        BOOST_ASSERT(0 == orig_node_id_from_new_node_id_map.capacity());
-
-        edges.append(external_edge_list.begin(), external_edge_list.end());
-        external_edge_list.clear();
 
         // sort and remove duplicates
         tbb::parallel_sort(edges.begin(), edges.end());
@@ -408,7 +401,6 @@ class GraphContractor
     bool Bias(const NodeID a, const NodeID b) const;
 
     ContractorGraph graph;
-    ExternalVector<QueryEdge> external_edge_list;
     std::vector<NodeID> orig_node_id_from_new_node_id_map;
     std::vector<float> node_levels;
 
