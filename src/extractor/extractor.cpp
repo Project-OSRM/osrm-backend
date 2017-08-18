@@ -82,8 +82,7 @@ void SetClassNames(const std::vector<std::string> &class_names,
         {
             if (!isValidClassName(name))
             {
-                throw util::exception("Invalid class name " + name +
-                                      " only [a-Z0-9] allowed.");
+                throw util::exception("Invalid class name " + name + " only [a-Z0-9] allowed.");
             }
 
             auto iter = classes_map.find(name);

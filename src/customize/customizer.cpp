@@ -22,6 +22,8 @@ namespace osrm
 namespace customizer
 {
 
+namespace
+{
 template <typename Graph, typename Partition, typename CellStorage>
 void CellStorageStatistics(const Graph &graph,
                            const Partition &partition,
@@ -113,12 +115,11 @@ excludeFlagsToNodeFilter(const MultiLevelEdgeBasedGraph &graph,
     return filters;
 }
 
-std::vector<CellMetric> filterToMetrics(const MultiLevelEdgeBasedGraph &graph,
-                                        const partition::CellStorage &storage,
-                                        const partition::MultiLevelPartition &mlp,
-                                        const std::vector<std::vector<bool>> &node_filters)
+std::vector<CellMetric> customizeFilteredMetrics(const MultiLevelEdgeBasedGraph &graph,
+                                                 const partition::CellStorage &storage,
+                                                 const CellCustomizer &customizer,
+                                                 const std::vector<std::vector<bool>> &node_filters)
 {
-    CellCustomizer customizer(mlp);
     std::vector<CellMetric> metrics;
 
     for (auto filter : node_filters)
@@ -129,6 +130,7 @@ std::vector<CellMetric> filterToMetrics(const MultiLevelEdgeBasedGraph &graph,
     }
 
     return metrics;
+}
 }
 
 int Customizer::Run(const CustomizationConfig &config)
@@ -156,7 +158,7 @@ int Customizer::Run(const CustomizationConfig &config)
 
     TIMER_START(cell_customize);
     auto filter = excludeFlagsToNodeFilter(graph, node_data, properties);
-    auto metrics = filterToMetrics(graph, storage, mlp, filter);
+    auto metrics = customizeFilteredMetrics(graph, storage, CellCustomizer{mlp}, filter);
     TIMER_STOP(cell_customize);
     util::Log() << "Cells customization took " << TIMER_SEC(cell_customize) << " seconds";
 

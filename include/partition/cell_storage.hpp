@@ -338,8 +338,8 @@ template <storage::Ownership Ownership> class CellStorageImpl
         }
 
         const auto &last_cell = cells.back();
-        ValueOffset total_size = cells.back().value_offset +
-                                 last_cell.num_source_nodes * last_cell.num_destination_nodes;
+        ValueOffset total_size =
+            last_cell.value_offset + last_cell.num_source_nodes * last_cell.num_destination_nodes;
 
         metric.weights.resize(total_size + 1, INVALID_EDGE_WEIGHT);
         metric.durations.resize(total_size + 1, MAXIMAL_EDGE_DURATION);

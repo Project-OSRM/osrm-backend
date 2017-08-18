@@ -19,12 +19,12 @@ function setup()
       use_turn_restrictions         = true
     },
 
-    classes = {[0] = "motorway", [1] = "toll", [2] = "TooWords2"},
+    classes = {"motorway", "toll", "TooWords2"},
 
     excludable = {
-        [1] = {["motorway"] = true},
-        [2] = {["toll"] = true},
-        [3] = {["motorway"] = true, ["toll"] = true}
+        {["motorway"] = true},
+        {["toll"] = true},
+        {["motorway"] = true, ["toll"] = true}
     },
 
     default_speed  = 24,
