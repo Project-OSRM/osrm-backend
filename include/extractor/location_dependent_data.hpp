@@ -38,7 +38,8 @@ struct LocationDependentData
     void loadLocationDependentData(const boost::filesystem::path &file_path);
 
     rtree_t rtree;
-    std::vector<std::pair<polygon_t, properties_t>> polygons;
+    std::vector<std::pair<polygon_t, std::size_t>> polygons;
+    std::vector<properties_t> properties;
 };
 }
 }
