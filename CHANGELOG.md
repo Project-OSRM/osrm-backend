@@ -1,4 +1,5 @@
 # UNRELEASED
+  - Adds new instruction types at the exit of roundabouts and rotaries `exit roundabout` and `exit rotary`.
 
 # 5.11.0
   - Changes from 5.10:
