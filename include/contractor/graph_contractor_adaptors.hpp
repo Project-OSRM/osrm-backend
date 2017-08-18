@@ -4,6 +4,8 @@
 #include "contractor/contractor_graph.hpp"
 #include "util/log.hpp"
 
+#include <tbb/parallel_sort.h>
+
 #include <vector>
 
 namespace osrm
@@ -13,15 +15,14 @@ namespace contractor
 
 // Make sure to move in the input edge list!
 template <typename InputEdgeContainer>
-std::vector<ContractorEdge> adaptToContractorInput(InputEdgeContainer input_edge_list)
+ContractorGraph toContractorGraph(NodeID number_of_nodes, InputEdgeContainer input_edge_list)
 {
     std::vector<ContractorEdge> edges;
     edges.reserve(input_edge_list.size() * 2);
 
     for (const auto &input_edge : input_edge_list)
     {
-        if (input_edge.data.weight == INVALID_EDGE_WEIGHT)
-            continue;
+        BOOST_ASSERT(input_edge.data.weight < INVALID_EDGE_WEIGHT);
 
 #ifndef NDEBUG
         const unsigned int constexpr DAY_IN_DECI_SECONDS = 24 * 60 * 60 * 10;
@@ -52,10 +53,74 @@ std::vector<ContractorEdge> adaptToContractorInput(InputEdgeContainer input_edge
                            false,
                            input_edge.data.backward ? true : false,
                            input_edge.data.forward ? true : false);
+    };
+    tbb::parallel_sort(edges.begin(), edges.end());
+
+    NodeID edge = 0;
+    for (NodeID i = 0; i < edges.size();)
+    {
+        const NodeID source = edges[i].source;
+        const NodeID target = edges[i].target;
+        const NodeID id = edges[i].data.id;
+        // remove eigenloops
+        if (source == target)
+        {
+            ++i;
+            continue;
+        }
+        ContractorEdge forward_edge;
+        ContractorEdge reverse_edge;
+        forward_edge.source = reverse_edge.source = source;
+        forward_edge.target = reverse_edge.target = target;
+        forward_edge.data.forward = reverse_edge.data.backward = true;
+        forward_edge.data.backward = reverse_edge.data.forward = false;
+        forward_edge.data.shortcut = reverse_edge.data.shortcut = false;
+        forward_edge.data.id = reverse_edge.data.id = id;
+        forward_edge.data.originalEdges = reverse_edge.data.originalEdges = 1;
+        forward_edge.data.weight = reverse_edge.data.weight = INVALID_EDGE_WEIGHT;
+        forward_edge.data.duration = reverse_edge.data.duration = MAXIMAL_EDGE_DURATION;
+        // remove parallel edges
+        while (i < edges.size() && edges[i].source == source && edges[i].target == target)
+        {
+            if (edges[i].data.forward)
+            {
+                forward_edge.data.weight = std::min(edges[i].data.weight, forward_edge.data.weight);
+                forward_edge.data.duration =
+                    std::min(edges[i].data.duration, forward_edge.data.duration);
+            }
+            if (edges[i].data.backward)
+            {
+                reverse_edge.data.weight = std::min(edges[i].data.weight, reverse_edge.data.weight);
+                reverse_edge.data.duration =
+                    std::min(edges[i].data.duration, reverse_edge.data.duration);
+            }
+            ++i;
+        }
+        // merge edges (s,t) and (t,s) into bidirectional edge
+        if (forward_edge.data.weight == reverse_edge.data.weight)
+        {
+            if ((int)forward_edge.data.weight != INVALID_EDGE_WEIGHT)
+            {
+                forward_edge.data.backward = true;
+                edges[edge++] = forward_edge;
+            }
+        }
+        else
+        { // insert seperate edges
+            if (((int)forward_edge.data.weight) != INVALID_EDGE_WEIGHT)
+            {
+                edges[edge++] = forward_edge;
+            }
+            if ((int)reverse_edge.data.weight != INVALID_EDGE_WEIGHT)
+            {
+                edges[edge++] = reverse_edge;
+            }
+        }
     }
-    // FIXME not sure if we need this
-    edges.shrink_to_fit();
-    return edges;
+    util::Log() << "merged " << edges.size() - edge << " edges out of " << edges.size();
+    edges.resize(edge);
+
+    return ContractorGraph{number_of_nodes, edges};
 }
 
 } // namespace contractor

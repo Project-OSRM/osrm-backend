@@ -72,8 +72,7 @@ int Contractor::Run()
 
     util::DeallocatingVector<QueryEdge> contracted_edge_list;
     { // own scope to not keep the contractor around
-        GraphContractor graph_contractor(max_edge_id + 1,
-                                         adaptToContractorInput(std::move(edge_based_edge_list)),
+        GraphContractor graph_contractor(toContractorGraph(max_edge_id+1, std::move(edge_based_edge_list)),
                                          std::move(node_levels),
                                          std::move(node_weights));
         graph_contractor.Run(config.core_factor);
