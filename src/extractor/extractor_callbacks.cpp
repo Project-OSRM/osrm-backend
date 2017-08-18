@@ -202,6 +202,12 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
         ClassData mask = 0;
         for (const auto &name_and_flag : classes)
         {
+            if (!isValidClassName(name_and_flag.first))
+            {
+                throw util::exception("Invalid class name " + name_and_flag.first +
+                                      " only [a-Z0-9] allowed.");
+            }
+
             if (name_and_flag.second)
             {
                 mask |= classStringToMask(name_and_flag.first);

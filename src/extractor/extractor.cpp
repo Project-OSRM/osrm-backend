@@ -80,6 +80,12 @@ void SetClassNames(const std::vector<std::string> &class_names,
         // this makes sure we can correctly validate unkown class names later
         for (const auto &name : class_names)
         {
+            if (!isValidClassName(name))
+            {
+                throw util::exception("Invalid class name " + name +
+                                      " only [a-Z0-9] allowed.");
+            }
+
             auto iter = classes_map.find(name);
             if (iter == classes_map.end())
             {

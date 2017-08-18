@@ -163,7 +163,7 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
                          ';')[ph::bind(&engine::api::BaseParameters::approaches, qi::_r1) = qi::_1];
 
         exclude_rule = qi::lit("exclude=") >
-                       (qi::as_string[+qi::char_("a-zA-Z")] %
+                       (qi::as_string[+qi::char_("a-zA-Z0-9")] %
                         ',')[ph::bind(&engine::api::BaseParameters::exclude, qi::_r1) = qi::_1];
 
         base_rule = radiuses_rule(qi::_r1)         //

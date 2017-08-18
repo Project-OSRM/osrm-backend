@@ -3,6 +3,8 @@
 
 #include "util/bit_range.hpp"
 
+#include <algorithm>
+#include <cctype>
 #include <cstdint>
 
 namespace osrm
@@ -23,6 +25,13 @@ inline auto getClassData(const std::size_t index)
 {
     BOOST_ASSERT(index <= MAX_CLASS_INDEX);
     return uint8_t{1} << index;
+}
+
+inline bool isValidClassName(const std::string &name)
+{
+    return std::find_if_not(name.begin(), name.end(), [](const auto c) {
+               return std::isalnum(c);
+           }) == name.end();
 }
 }
 }
