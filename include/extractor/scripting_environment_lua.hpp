@@ -68,8 +68,9 @@ class Sol2ScriptingEnvironment final : public ScriptingEnvironment
     static const constexpr int SUPPORTED_MIN_API_VERSION = 0;
     static const constexpr int SUPPORTED_MAX_API_VERSION = 3;
 
-    explicit Sol2ScriptingEnvironment(const std::string &file_name,
-                                      const boost::filesystem::path &location_dependent_data_path);
+    explicit Sol2ScriptingEnvironment(
+        const std::string &file_name,
+        const std::vector<boost::filesystem::path> &location_dependent_data_paths);
     ~Sol2ScriptingEnvironment() override = default;
 
     const ProfileProperties &GetProfileProperties() override;
