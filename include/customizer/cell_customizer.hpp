@@ -68,12 +68,7 @@ class CellCustomizer
                 const EdgeWeight weight = heap.GetKey(node);
                 const EdgeDuration duration = heap.GetData(node).duration;
 
-                if (level == 1)
-                    RelaxNode<true>(
-                        graph, cells, allowed_nodes, metric, heap, level, node, weight, duration);
-                else
-                    RelaxNode<false>(
-                        graph, cells, allowed_nodes, metric, heap, level, node, weight, duration);
+                RelaxNode(graph, cells, allowed_nodes, metric, heap, level, node, weight, duration);
 
                 destinations_set.erase(node);
             }
@@ -123,7 +118,7 @@ class CellCustomizer
     }
 
   private:
-    template <bool first_level, typename GraphT>
+    template <typename GraphT>
     void RelaxNode(const GraphT &graph,
                    const partition::CellStorage &cells,
                    const std::vector<bool> &allowed_nodes,
@@ -134,6 +129,7 @@ class CellCustomizer
                    EdgeWeight weight,
                    EdgeDuration duration) const
     {
+        auto first_level = level == 1;
         BOOST_ASSERT(heap.WasInserted(node));
 
         if (!first_level)
