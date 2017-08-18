@@ -351,17 +351,25 @@ template <typename EdgeDataT> class DynamicGraph
                 edge_list[edge].target = old_to_new_node[edge_list[edge].target];
                 old_to_new_edge[edge] = new_edge_index++;
             }
-            // and all adjacent empty edges
-            for (auto edge = EndEdges(node); edge < number_of_edges && isDummy(edge); edge++)
+            node_array[node].first_edge = new_first_edge;
+        }
+        auto number_of_valid_edges = new_edge_index;
+
+        // move all dummy edges to the end of the renumbered range
+        for (auto edge : util::irange<NodeID>(0, edge_list.size()))
+        {
+            if (old_to_new_edge[edge] == SPECIAL_EDGEID)
             {
+                BOOST_ASSERT(isDummy(edge));
                 old_to_new_edge[edge] = new_edge_index++;
             }
-            node_array[node].first_edge = new_first_edge;
         }
         BOOST_ASSERT(std::find(old_to_new_edge.begin(), old_to_new_edge.end(), SPECIAL_EDGEID) ==
                      old_to_new_edge.end());
-
         util::inplacePermutation(edge_list.begin(), edge_list.end(), old_to_new_edge);
+        // Remove useless dummy nodes at the end
+        edge_list.resize(number_of_valid_edges);
+        number_of_edges = number_of_valid_edges;
     }
 
   protected:
