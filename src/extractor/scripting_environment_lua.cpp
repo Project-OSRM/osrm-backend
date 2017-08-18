@@ -81,8 +81,9 @@ template <class T> double lonToDouble(T const &object)
 }
 
 Sol2ScriptingEnvironment::Sol2ScriptingEnvironment(
-    const std::string &file_name, const boost::filesystem::path &location_dependent_data_path)
-    : file_name(file_name), location_dependent_data(location_dependent_data_path)
+    const std::string &file_name,
+    const std::vector<boost::filesystem::path> &location_dependent_data_paths)
+    : file_name(file_name), location_dependent_data(location_dependent_data_paths)
 {
     util::Log() << "Using script " << file_name;
 }

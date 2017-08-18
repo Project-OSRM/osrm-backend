@@ -63,8 +63,8 @@ return_code parseArguments(int argc,
             ->default_value(false),
         "Save conditional restrictions found during extraction to disk for use "
         "during contraction")("location-dependent-data",
-                              boost::program_options::value<boost::filesystem::path>(
-                                  &extractor_config.location_dependent_data_path)
+                              boost::program_options::value<std::vector<boost::filesystem::path>>(
+                                  &extractor_config.location_dependent_data_paths)
                                   ->composing(),
                               "GeoJSON files with location-dependent data");
 

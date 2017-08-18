@@ -79,7 +79,7 @@ struct ExtractorConfig final : storage::IOConfig
 
     boost::filesystem::path input_path;
     boost::filesystem::path profile_path;
-    boost::filesystem::path location_dependent_data_path;
+    std::vector<boost::filesystem::path> location_dependent_data_paths;
 
     unsigned requested_num_threads;
     unsigned small_component_size;

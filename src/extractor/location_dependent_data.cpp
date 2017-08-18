@@ -18,7 +18,15 @@ namespace osrm
 namespace extractor
 {
 
-LocationDependentData::LocationDependentData(const boost::filesystem::path &file_path)
+LocationDependentData::LocationDependentData(const std::vector<boost::filesystem::path> &file_paths)
+{
+    for (const auto &path : file_paths)
+    {
+        loadLocationDependentData(path);
+    }
+}
+
+void LocationDependentData::loadLocationDependentData(const boost::filesystem::path &file_path)
 {
     if (file_path.empty())
         return;
