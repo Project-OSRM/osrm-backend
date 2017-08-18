@@ -34,7 +34,7 @@ template <typename restriction_type> auto asDuplicatedNode(const restriction_typ
     auto &way = restriction.AsWayRestriction();
     // group restrictions by the via-way. On same via-ways group by from
     return std::tie(way.in_restriction.via, way.out_restriction.via, way.in_restriction.from);
-};
+}
 
 template <typename restriction_type> struct CompareByDuplicatedNode
 {
