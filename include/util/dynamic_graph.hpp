@@ -66,6 +66,8 @@ template <typename EdgeDataT> class DynamicGraph
         }
     };
 
+    DynamicGraph() : DynamicGraph(0) {}
+
     // Constructs an empty graph with a given number of nodes.
     explicit DynamicGraph(NodeIterator nodes) : number_of_nodes(nodes), number_of_edges(0)
     {

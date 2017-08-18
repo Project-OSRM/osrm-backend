@@ -5,87 +5,17 @@ namespace osrm
 namespace contractor
 {
 
-GraphContractor::GraphContractor(int nodes, std::vector<ContractorEdge> input_edge_list)
-    : GraphContractor(nodes, std::move(input_edge_list), {}, {})
+GraphContractor::GraphContractor(ContractorGraph graph_)
+    : GraphContractor(std::move(graph_), {}, {})
 {
 }
 
-GraphContractor::GraphContractor(int nodes,
-                                 std::vector<ContractorEdge> edges,
+GraphContractor::GraphContractor(ContractorGraph graph_,
                                  std::vector<float> node_levels_,
                                  std::vector<EdgeWeight> node_weights_)
-    : node_levels(std::move(node_levels_)), node_weights(std::move(node_weights_))
+    : graph(std::move(graph_)), node_levels(std::move(node_levels_)),
+      node_weights(std::move(node_weights_))
 {
-    tbb::parallel_sort(edges.begin(), edges.end());
-    NodeID edge = 0;
-    for (NodeID i = 0; i < edges.size();)
-    {
-        const NodeID source = edges[i].source;
-        const NodeID target = edges[i].target;
-        const NodeID id = edges[i].data.id;
-        // remove eigenloops
-        if (source == target)
-        {
-            ++i;
-            continue;
-        }
-        ContractorEdge forward_edge;
-        ContractorEdge reverse_edge;
-        forward_edge.source = reverse_edge.source = source;
-        forward_edge.target = reverse_edge.target = target;
-        forward_edge.data.forward = reverse_edge.data.backward = true;
-        forward_edge.data.backward = reverse_edge.data.forward = false;
-        forward_edge.data.shortcut = reverse_edge.data.shortcut = false;
-        forward_edge.data.id = reverse_edge.data.id = id;
-        forward_edge.data.originalEdges = reverse_edge.data.originalEdges = 1;
-        forward_edge.data.weight = reverse_edge.data.weight = INVALID_EDGE_WEIGHT;
-        forward_edge.data.duration = reverse_edge.data.duration = MAXIMAL_EDGE_DURATION;
-        // remove parallel edges
-        while (i < edges.size() && edges[i].source == source && edges[i].target == target)
-        {
-            if (edges[i].data.forward)
-            {
-                forward_edge.data.weight = std::min(edges[i].data.weight, forward_edge.data.weight);
-                forward_edge.data.duration =
-                    std::min(edges[i].data.duration, forward_edge.data.duration);
-            }
-            if (edges[i].data.backward)
-            {
-                reverse_edge.data.weight = std::min(edges[i].data.weight, reverse_edge.data.weight);
-                reverse_edge.data.duration =
-                    std::min(edges[i].data.duration, reverse_edge.data.duration);
-            }
-            ++i;
-        }
-        // merge edges (s,t) and (t,s) into bidirectional edge
-        if (forward_edge.data.weight == reverse_edge.data.weight)
-        {
-            if ((int)forward_edge.data.weight != INVALID_EDGE_WEIGHT)
-            {
-                forward_edge.data.backward = true;
-                edges[edge++] = forward_edge;
-            }
-        }
-        else
-        { // insert seperate edges
-            if (((int)forward_edge.data.weight) != INVALID_EDGE_WEIGHT)
-            {
-                edges[edge++] = forward_edge;
-            }
-            if ((int)reverse_edge.data.weight != INVALID_EDGE_WEIGHT)
-            {
-                edges[edge++] = reverse_edge;
-            }
-        }
-    }
-    util::Log() << "merged " << edges.size() - edge << " edges out of " << edges.size();
-    edges.resize(edge);
-    contractor_graph = std::make_shared<ContractorGraph>(nodes, edges);
-    edges.clear();
-    edges.shrink_to_fit();
-
-    BOOST_ASSERT(0 == edges.capacity());
-    util::Log() << "contractor finished initalization";
 }
 
 /* Flush all data from the contraction to disc and reorder stuff for better locality */
@@ -107,7 +37,7 @@ void GraphContractor::FlushDataAndRebuildContractorGraph(
     orig_node_id_from_new_node_id_map.resize(remaining_nodes.size());
     // this map gives the new IDs from the old ones, necessary to remap targets from the
     // remaining graph
-    const auto number_of_nodes = contractor_graph->GetNumberOfNodes();
+    const auto number_of_nodes = graph.GetNumberOfNodes();
     std::vector<NodeID> new_node_id_from_orig_id_map(number_of_nodes, SPECIAL_NODEID);
     for (const auto new_node_id : util::irange<std::size_t>(0UL, remaining_nodes.size()))
     {
@@ -127,12 +57,12 @@ void GraphContractor::FlushDataAndRebuildContractorGraph(
         node.id = new_node_id;
     }
     // walk over all nodes
-    for (const auto source : util::irange<NodeID>(0UL, contractor_graph->GetNumberOfNodes()))
+    for (const auto source : util::irange<NodeID>(0UL, graph.GetNumberOfNodes()))
     {
-        for (auto current_edge : contractor_graph->GetAdjacentEdgeRange(source))
+        for (auto current_edge : graph.GetAdjacentEdgeRange(source))
         {
-            ContractorGraph::EdgeData &data = contractor_graph->GetEdgeData(current_edge);
-            const NodeID target = contractor_graph->GetTarget(current_edge);
+            ContractorGraph::EdgeData &data = graph.GetEdgeData(current_edge);
+            const NodeID target = graph.GetTarget(current_edge);
             if (SPECIAL_NODEID == new_node_id_from_orig_id_map[source])
             {
                 external_edge_list.push_back({source, target, data});
@@ -158,14 +88,14 @@ void GraphContractor::FlushDataAndRebuildContractorGraph(
     // Delete old node_priorities vector
     node_weights.swap(new_node_weights);
     // old Graph is removed
-    contractor_graph.reset();
+    graph = ContractorGraph{};
     // create new graph
     tbb::parallel_sort(new_edge_set.begin(), new_edge_set.end());
-    contractor_graph = std::make_shared<ContractorGraph>(remaining_nodes.size(), new_edge_set);
+    graph = ContractorGraph{static_cast<NodeID>(remaining_nodes.size()), new_edge_set};
     new_edge_set.clear();
     // INFO: MAKE SURE THIS IS THE LAST OPERATION OF THE FLUSH!
     // reinitialize heaps and ThreadData objects with appropriate size
-    thread_data_list.number_of_nodes = contractor_graph->GetNumberOfNodes();
+    thread_data_list.number_of_nodes = graph.GetNumberOfNodes();
 }
 
 void GraphContractor::Run(double core_factor)
@@ -181,7 +111,7 @@ void GraphContractor::Run(double core_factor)
     const constexpr size_t NeighboursGrainSize = 1;
     const constexpr size_t DeleteGrainSize = 1;
 
-    const NodeID number_of_nodes = contractor_graph->GetNumberOfNodes();
+    const NodeID number_of_nodes = graph.GetNumberOfNodes();
 
     ThreadDataContainer thread_data_list(number_of_nodes);
 
@@ -340,11 +270,10 @@ void GraphContractor::Run(double core_factor)
         {
             for (const ContractorEdge &edge : data->inserted_edges)
             {
-                const EdgeID current_edge_ID = contractor_graph->FindEdge(edge.source, edge.target);
+                const EdgeID current_edge_ID = graph.FindEdge(edge.source, edge.target);
                 if (current_edge_ID != SPECIAL_EDGEID)
                 {
-                    ContractorGraph::EdgeData &current_data =
-                        contractor_graph->GetEdgeData(current_edge_ID);
+                    ContractorGraph::EdgeData &current_data = graph.GetEdgeData(current_edge_ID);
                     if (current_data.shortcut && edge.data.forward == current_data.forward &&
                         edge.data.backward == current_data.backward)
                     {
@@ -357,7 +286,7 @@ void GraphContractor::Run(double core_factor)
                         continue;
                     }
                 }
-                contractor_graph->InsertEdge(edge.source, edge.target, edge.data);
+                graph.InsertEdge(edge.source, edge.target, edge.data);
             }
             data->inserted_edges.clear();
         }
@@ -421,8 +350,8 @@ void GraphContractor::Run(double core_factor)
         is_core_node.clear();
     }
 
-    util::Log() << "[core] " << remaining_nodes.size() << " nodes "
-                << contractor_graph->GetNumberOfEdges() << " edges.";
+    util::Log() << "[core] " << remaining_nodes.size() << " nodes " << graph.GetNumberOfEdges()
+                << " edges.";
 
     thread_data_list.data.clear();
 }
@@ -465,9 +394,9 @@ void GraphContractor::DeleteIncomingEdges(ContractorThreadData *data, const Node
     neighbours.clear();
 
     // find all neighbours
-    for (auto e : contractor_graph->GetAdjacentEdgeRange(node))
+    for (auto e : graph.GetAdjacentEdgeRange(node))
     {
-        const NodeID u = contractor_graph->GetTarget(e);
+        const NodeID u = graph.GetTarget(e);
         if (u != node)
         {
             neighbours.push_back(u);
@@ -479,7 +408,7 @@ void GraphContractor::DeleteIncomingEdges(ContractorThreadData *data, const Node
 
     for (const auto i : util::irange<std::size_t>(0, neighbours.size()))
     {
-        contractor_graph->DeleteEdgesTo(neighbours[i], node);
+        graph.DeleteEdgesTo(neighbours[i], node);
     }
 }
 
@@ -492,9 +421,9 @@ bool GraphContractor::UpdateNodeNeighbours(std::vector<float> &priorities,
     neighbours.clear();
 
     // find all neighbours
-    for (auto e : contractor_graph->GetAdjacentEdgeRange(node))
+    for (auto e : graph.GetAdjacentEdgeRange(node))
     {
-        const NodeID u = contractor_graph->GetTarget(e);
+        const NodeID u = graph.GetTarget(e);
         if (u == node)
         {
             continue;
@@ -523,9 +452,9 @@ bool GraphContractor::IsNodeIndependent(const std::vector<float> &priorities,
     std::vector<NodeID> &neighbours = data->neighbours;
     neighbours.clear();
 
-    for (auto e : contractor_graph->GetAdjacentEdgeRange(node))
+    for (auto e : graph.GetAdjacentEdgeRange(node))
     {
-        const NodeID target = contractor_graph->GetTarget(e);
+        const NodeID target = graph.GetTarget(e);
         if (node == target)
         {
             continue;
@@ -552,9 +481,9 @@ bool GraphContractor::IsNodeIndependent(const std::vector<float> &priorities,
     // examine all neighbours that are at most 2 hops away
     for (const NodeID u : neighbours)
     {
-        for (auto e : contractor_graph->GetAdjacentEdgeRange(u))
+        for (auto e : graph.GetAdjacentEdgeRange(u))
         {
-            const NodeID target = contractor_graph->GetTarget(e);
+            const NodeID target = graph.GetTarget(e);
             if (node == target)
             {
                 continue;

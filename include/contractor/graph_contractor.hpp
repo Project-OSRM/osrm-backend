@@ -95,10 +95,9 @@ class GraphContractor
     };
 
   public:
-    GraphContractor(int nodes, std::vector<ContractorEdge> input_edge_list);
+    GraphContractor(ContractorGraph graph);
 
-    GraphContractor(int nodes,
-                    std::vector<ContractorEdge> edges,
+    GraphContractor(ContractorGraph graph,
                     std::vector<float> node_levels_,
                     std::vector<EdgeWeight> node_weights_);
 
@@ -119,18 +118,18 @@ class GraphContractor
 
         util::UnbufferedLog log;
         log << "Getting edges of minimized graph ";
-        util::Percent p(log, contractor_graph->GetNumberOfNodes());
-        const NodeID number_of_nodes = contractor_graph->GetNumberOfNodes();
-        if (contractor_graph->GetNumberOfNodes())
+        util::Percent p(log, graph.GetNumberOfNodes());
+        const NodeID number_of_nodes = graph.GetNumberOfNodes();
+        if (graph.GetNumberOfNodes())
         {
             Edge new_edge;
             for (const auto node : util::irange(0u, number_of_nodes))
             {
                 p.PrintStatus(node);
-                for (auto edge : contractor_graph->GetAdjacentEdgeRange(node))
+                for (auto edge : graph.GetAdjacentEdgeRange(node))
                 {
-                    const NodeID target = contractor_graph->GetTarget(edge);
-                    const ContractorGraph::EdgeData &data = contractor_graph->GetEdgeData(edge);
+                    const NodeID target = graph.GetTarget(edge);
+                    const ContractorGraph::EdgeData &data = graph.GetEdgeData(edge);
                     if (!orig_node_id_from_new_node_id_map.empty())
                     {
                         new_edge.source = orig_node_id_from_new_node_id_map[node];
@@ -163,7 +162,7 @@ class GraphContractor
                 }
             }
         }
-        contractor_graph.reset();
+        graph = ContractorGraph{};
         orig_node_id_from_new_node_id_map.clear();
         orig_node_id_from_new_node_id_map.shrink_to_fit();
 
@@ -198,10 +197,10 @@ class GraphContractor
         constexpr bool REVERSE_DIRECTION_ENABLED = true;
         constexpr bool REVERSE_DIRECTION_DISABLED = false;
 
-        for (auto in_edge : contractor_graph->GetAdjacentEdgeRange(node))
+        for (auto in_edge : graph.GetAdjacentEdgeRange(node))
         {
-            const ContractorEdgeData &in_data = contractor_graph->GetEdgeData(in_edge);
-            const NodeID source = contractor_graph->GetTarget(in_edge);
+            const ContractorEdgeData &in_data = graph.GetEdgeData(in_edge);
+            const NodeID source = graph.GetTarget(in_edge);
             if (source == node)
                 continue;
 
@@ -221,14 +220,14 @@ class GraphContractor
             EdgeWeight max_weight = 0;
             unsigned number_of_targets = 0;
 
-            for (auto out_edge : contractor_graph->GetAdjacentEdgeRange(node))
+            for (auto out_edge : graph.GetAdjacentEdgeRange(node))
             {
-                const ContractorEdgeData &out_data = contractor_graph->GetEdgeData(out_edge);
+                const ContractorEdgeData &out_data = graph.GetEdgeData(out_edge);
                 if (!out_data.forward)
                 {
                     continue;
                 }
-                const NodeID target = contractor_graph->GetTarget(out_edge);
+                const NodeID target = graph.GetTarget(out_edge);
                 if (node == target)
                 {
                     continue;
@@ -298,22 +297,22 @@ class GraphContractor
                              SIMULATION_SEARCH_SPACE_SIZE,
                              max_weight,
                              node,
-                             *contractor_graph);
+                             graph);
             }
             else
             {
                 const int constexpr FULL_SEARCH_SPACE_SIZE = 2000;
                 dijkstra.Run(
-                    number_of_targets, FULL_SEARCH_SPACE_SIZE, max_weight, node, *contractor_graph);
+                    number_of_targets, FULL_SEARCH_SPACE_SIZE, max_weight, node, graph);
             }
-            for (auto out_edge : contractor_graph->GetAdjacentEdgeRange(node))
+            for (auto out_edge : graph.GetAdjacentEdgeRange(node))
             {
-                const ContractorEdgeData &out_data = contractor_graph->GetEdgeData(out_edge);
+                const ContractorEdgeData &out_data = graph.GetEdgeData(out_edge);
                 if (!out_data.forward)
                 {
                     continue;
                 }
-                const NodeID target = contractor_graph->GetTarget(out_edge);
+                const NodeID target = graph.GetTarget(out_edge);
                 if (target == node)
                     continue;
 
@@ -408,7 +407,7 @@ class GraphContractor
     // This bias function takes up 22 assembly instructions in total on X86
     bool Bias(const NodeID a, const NodeID b) const;
 
-    std::shared_ptr<ContractorGraph> contractor_graph;
+    ContractorGraph graph;
     ExternalVector<QueryEdge> external_edge_list;
     std::vector<NodeID> orig_node_id_from_new_node_id_map;
     std::vector<float> node_levels;
