@@ -37,7 +37,7 @@ class CellCustomizer
                    const std::vector<bool> &allowed_nodes,
                    CellMetric &metric,
                    LevelID level,
-                   CellID id)
+                   CellID id) const
     {
         auto cell = cells.GetCell(metric, level, id);
         auto destinations = cell.GetDestinationNodes();
@@ -98,7 +98,7 @@ class CellCustomizer
     void Customize(const GraphT &graph,
                    const partition::CellStorage &cells,
                    const std::vector<bool> &allowed_nodes,
-                   CellMetric &metric)
+                   CellMetric &metric) const
     {
         Heap heap_exemplar(graph.GetNumberOfNodes());
         HeapPtr heaps(heap_exemplar);
