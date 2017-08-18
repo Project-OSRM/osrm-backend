@@ -1,12 +1,6 @@
 @extract
 Feature: osrm-extract lua ways:get_nodes()
 
-    Background:
-        Given the node map
-            """
-            a b
-            """
-
     Scenario: osrm-extract - Passing base file
         Given the profile file
         """
@@ -23,6 +17,10 @@ Feature: osrm-extract lua ways:get_nodes()
         functions.process_way = way_function
         return functions
         """
+        And the node map
+            """
+            a b
+            """
         And the ways
             | nodes |
             | ab    |
@@ -36,6 +34,10 @@ Feature: osrm-extract lua ways:get_nodes()
 
     Scenario: osrm-extract location-dependent data without add-locations-to-ways preprocessing
         Given the profile "testbot"
+        And the node map
+            """
+            a b
+            """
         And the ways
             | nodes |
             | ab    |
@@ -61,6 +63,10 @@ Feature: osrm-extract lua ways:get_nodes()
         functions.process_way = way_function
         return functions
         """
+        And the node map
+            """
+            a b
+            """
         And the ways with locations
             | nodes |
             | ab    |
@@ -70,3 +76,38 @@ Feature: osrm-extract lua ways:get_nodes()
         Then it should exit successfully
         And stdout should contain "answer 42"
         And stdout should not contain "array"
+
+
+    Scenario: osrm-extract location-dependent data with multi-polygons
+        Given the profile file
+        """
+        functions = require('testbot')
+
+        function way_function(profile, way, result, location_data)
+           assert(location_data)
+           print('ISO3166-1 ' .. (location_data['ISO3166-1'] or 'none'))
+           result.forward_mode = mode.driving
+           result.forward_speed = 1
+        end
+
+        functions.process_way = way_function
+        return functions
+        """
+        And the node locations
+            | node |        lat |         lon | id |
+            | a    | 22.4903670 | 113.9455227 |  1 |
+            | b    | 22.4901701 | 113.9455899 |  2 |
+            | c    | 22.4901852 | 113.9458608 |  3 |
+            | d    | 22.4904033 | 113.9456999 |  4 |
+        And the ways with locations
+            | nodes | #              |
+            | ab    | Hong Kong      |
+            | cd    | China Mainland |
+        And the data has been saved to disk
+
+        When I run "osrm-extract --profile {profile_file} {osm_file} --location-dependent-data test/data/regions/null-island.geojson --location-dependent-data test/data/regions/hong-kong.geojson"
+        Then it should exit successfully
+        And stdout should contain "1 GeoJSON polygon"
+        And stdout should contain "2 GeoJSON polygons"
+        And stdout should contain "ISO3166-1 HK"
+        And stdout should contain "ISO3166-1 none"

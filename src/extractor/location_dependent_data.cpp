@@ -59,54 +59,84 @@ void LocationDependentData::loadLocationDependentData(const boost::filesystem::p
 
     const auto &features_array = geojson["features"].GetArray();
     std::vector<rtree_t::value_type> bounding_boxes;
-    for (rapidjson::SizeType i = 0; i < features_array.Size(); i++)
+
+    auto convert_value = [](const auto &property) -> property_t {
+        if (property.IsString())
+            return std::string(property.GetString());
+        if (property.IsNumber())
+            return property.GetDouble();
+        if (property.IsBool())
+            return property.GetBool();
+        return {};
+    };
+
+    auto collect_properties = [this, &convert_value](const auto &object) -> std::size_t {
+        properties_t object_properties;
+        for (const auto &property : object)
+        {
+            object_properties.insert({property.name.GetString(), convert_value(property.value)});
+        }
+        const std::size_t index = properties.size();
+        properties.emplace_back(object_properties);
+        return index;
+    };
+
+    auto convert_to_ring = [](const auto &coordinates_array) -> polygon_t::ring_type {
+        polygon_t::ring_type ring;
+        for (rapidjson::SizeType i = 0; i < coordinates_array.Size(); ++i)
+        {
+            util::validateCoordinate(coordinates_array[i]);
+            const auto &coords = coordinates_array[i].GetArray();
+            ring.emplace_back(coords[0].GetDouble(), coords[1].GetDouble());
+        }
+        return ring;
+    };
+
+    auto index_polygon = [this, &bounding_boxes, &convert_to_ring](const auto &rings,
+                                                                   auto properties_index) {
+        // https://tools.ietf.org/html/rfc7946#section-3.1.6
+        BOOST_ASSERT(rings.Size() > 0);
+        polygon_t polygon;
+        polygon.outer() = convert_to_ring(rings[0].GetArray());
+        for (rapidjson::SizeType iring = 1; iring < rings.Size(); ++iring)
+        {
+            polygon.inners().emplace_back(convert_to_ring(rings[iring].GetArray()));
+        }
+        auto envelop = boost::geometry::return_envelope<box_t>(polygon);
+        bounding_boxes.emplace_back(envelop, polygons.size());
+        polygons.emplace_back(std::make_pair(polygon, properties_index));
+    };
+
+    for (rapidjson::SizeType ifeature = 0; ifeature < features_array.Size(); ifeature++)
     {
-        util::validateFeature(features_array[i]);
-        const auto &feature = features_array[i].GetObject();
+        util::validateFeature(features_array[ifeature]);
+        const auto &feature = features_array[ifeature].GetObject();
         const auto &geometry = feature["geometry"].GetObject();
         BOOST_ASSERT(geometry.HasMember("type"));
 
         // Case-sensitive check of type https://tools.ietf.org/html/rfc7946#section-1.4
-        if (std::strcmp(geometry["type"].GetString(), "Polygon"))
+        if (std::strcmp(geometry["type"].GetString(), "Polygon") == 0)
         {
-            util::Log(logDEBUG) << "Skipping non-polygon shape in geojson file";
-            continue;
+            // Collect feature properties and store in polygons vector
+            auto properties_index = collect_properties(feature["properties"].GetObject());
+            const auto &coordinates = geometry["coordinates"].GetArray();
+            index_polygon(coordinates, properties_index);
         }
-
-        // The first array of polygon coords is the exterior ring
-        // https://tools.ietf.org/html/rfc7946#section-3.1.6
-        polygon_t polygon;
-        const auto &coords_outer_array = geometry["coordinates"].GetArray()[0].GetArray();
-        for (rapidjson::SizeType i = 0; i < coords_outer_array.Size(); ++i)
+        else if (std::strcmp(geometry["type"].GetString(), "MultiPolygon") == 0)
         {
-            util::validateCoordinate(coords_outer_array[i]);
-            const auto &coords = coords_outer_array[i].GetArray();
-            polygon.outer().emplace_back(coords[0].GetDouble(), coords[1].GetDouble());
+            auto properties_index = collect_properties(feature["properties"].GetObject());
+            const auto &polygons = geometry["coordinates"].GetArray();
+            for (rapidjson::SizeType ipolygon = 0; ipolygon < polygons.Size(); ++ipolygon)
+            {
+                index_polygon(polygons[ipolygon].GetArray(), properties_index);
+            }
         }
-        bounding_boxes.emplace_back(boost::geometry::return_envelope<box_t>(polygon),
-                                    polygons.size());
-
-        // Collect feature properties and store in polygons vector
-        auto convert_value = [](const auto &property) -> property_t {
-            if (property.IsString())
-                return std::string(property.GetString());
-            if (property.IsNumber())
-                return property.GetDouble();
-            if (property.IsBool())
-                return property.GetBool();
-            return {};
-        };
-        properties_t properties;
-        for (const auto &property : feature["properties"].GetObject())
-        {
-            properties.insert({property.name.GetString(), convert_value(property.value)});
-        }
-        polygons.push_back(std::make_pair(polygon, properties));
     }
 
     // Create R-tree for bounding boxes of collected polygons
     rtree = rtree_t(bounding_boxes);
-    util::Log() << "Parsed " << polygons.size() << " geojson polygons with location-dependent data";
+    util::Log() << "Parsed " << properties.size() << " location-dependent features with "
+                << polygons.size() << " GeoJSON polygons";
 }
 
 namespace
@@ -136,7 +166,7 @@ sol::table LocationDependentData::operator()(sol::state &state, const osmium::Wa
 
     auto table = sol::table(state, sol::create);
     auto merger = [this, &table](const rtree_t::value_type &rtree_entry) {
-        for (const auto &key_value : polygons[rtree_entry.second].second)
+        for (const auto &key_value : properties[polygons[rtree_entry.second].second])
         {
             boost::apply_visitor(table_setter(table, key_value.first), key_value.second);
         }

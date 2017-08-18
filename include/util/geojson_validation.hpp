@@ -76,8 +76,6 @@ inline void validateFeature(const rapidjson::Value &feature)
     const auto coord_array = feature["geometry"].GetObject()["coordinates"].GetArray();
     if (coord_array.Empty())
         throw osrm::util::exception("Feature geometry coordinates member is empty.");
-    if (!coord_array[0].GetArray()[0].IsArray())
-        throw osrm::util::exception("Feature geometry coordinates array has non-array outer ring.");
 }
 }
 }
