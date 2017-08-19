@@ -95,15 +95,11 @@ class GraphContractor
     };
 
   public:
-    GraphContractor(ContractorGraph graph);
+    GraphContractor(ContractorGraph &graph);
 
-    GraphContractor(ContractorGraph graph,
+    GraphContractor(ContractorGraph &graph,
                     std::vector<float> node_levels_,
                     std::vector<EdgeWeight> node_weights_);
-
-    void RenumberGraph(ThreadDataContainer &thread_data_list,
-                       std::vector<RemainingNodeData> &remaining_nodes,
-                       std::vector<float> &node_priorities);
 
     void Run(double core_factor = 1.0);
 
@@ -111,58 +107,12 @@ class GraphContractor
 
     std::vector<float> GetNodeLevels();
 
-    template <class Edge> inline util::DeallocatingVector<Edge> GetEdges()
-    {
-        util::DeallocatingVector<Edge> edges;
-
-        util::UnbufferedLog log;
-        log << "Getting edges of minimized graph ";
-        util::Percent p(log, graph.GetNumberOfNodes());
-        const NodeID number_of_nodes = graph.GetNumberOfNodes();
-        if (graph.GetNumberOfNodes())
-        {
-            Edge new_edge;
-            for (const auto node : util::irange(0u, number_of_nodes))
-            {
-                p.PrintStatus(node);
-                for (auto edge : graph.GetAdjacentEdgeRange(node))
-                {
-                    const NodeID target = graph.GetTarget(edge);
-                    const ContractorGraph::EdgeData &data = graph.GetEdgeData(edge);
-                    new_edge.source = orig_node_id_from_new_node_id_map[node];
-                    new_edge.target = orig_node_id_from_new_node_id_map[target];
-                    BOOST_ASSERT_MSG(SPECIAL_NODEID != new_edge.target, "Target id invalid");
-                    new_edge.data.weight = data.weight;
-                    new_edge.data.duration = data.duration;
-                    new_edge.data.shortcut = data.shortcut;
-                    if (data.shortcut)
-                    {
-                        // tranlate the _node id_ of the shortcutted node
-                        new_edge.data.turn_id = orig_node_id_from_new_node_id_map[data.id];
-                    }
-                    else
-                    {
-                        new_edge.data.turn_id = data.id;
-                    }
-                    BOOST_ASSERT_MSG(new_edge.data.turn_id != INT_MAX, // 2^31
-                                     "edge id invalid");
-                    new_edge.data.forward = data.forward;
-                    new_edge.data.backward = data.backward;
-                    edges.push_back(new_edge);
-                }
-            }
-        }
-        graph = ContractorGraph{};
-
-        // sort and remove duplicates
-        tbb::parallel_sort(edges.begin(), edges.end());
-        auto new_end = std::unique(edges.begin(), edges.end());
-        edges.resize(new_end - edges.begin());
-
-        return edges;
-    }
 
   private:
+    void RenumberGraph(ThreadDataContainer &thread_data_list,
+                       std::vector<RemainingNodeData> &remaining_nodes,
+                       std::vector<float> &node_priorities);
+
     float EvaluateNodePriority(ContractorThreadData *const data,
                                const NodeDepth node_depth,
                                const NodeID node);
@@ -386,7 +336,7 @@ class GraphContractor
     // This bias function takes up 22 assembly instructions in total on X86
     bool Bias(const NodeID a, const NodeID b) const;
 
-    ContractorGraph graph;
+    ContractorGraph &graph;
     std::vector<NodeID> orig_node_id_from_new_node_id_map;
     std::vector<float> node_levels;
 
