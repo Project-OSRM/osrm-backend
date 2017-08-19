@@ -3,6 +3,7 @@
 
 #include "contractor/contractor_graph.hpp"
 #include "util/log.hpp"
+#include "util/percent.hpp"
 
 #include <tbb/parallel_sort.h>
 
@@ -121,6 +122,48 @@ ContractorGraph toContractorGraph(NodeID number_of_nodes, InputEdgeContainer inp
     edges.resize(edge);
 
     return ContractorGraph{number_of_nodes, edges};
+}
+
+template <class Edge> inline util::DeallocatingVector<Edge> toEdges(ContractorGraph graph)
+{
+    util::DeallocatingVector<Edge> edges;
+
+    util::UnbufferedLog log;
+    log << "Getting edges of minimized graph ";
+    util::Percent p(log, graph.GetNumberOfNodes());
+    const NodeID number_of_nodes = graph.GetNumberOfNodes();
+    if (graph.GetNumberOfNodes())
+    {
+        Edge new_edge;
+        for (const auto node : util::irange(0u, number_of_nodes))
+        {
+            p.PrintStatus(node);
+            for (auto edge : graph.GetAdjacentEdgeRange(node))
+            {
+                const NodeID target = graph.GetTarget(edge);
+                const ContractorGraph::EdgeData &data = graph.GetEdgeData(edge);
+                new_edge.source = node;
+                new_edge.target = target;
+                BOOST_ASSERT_MSG(SPECIAL_NODEID != new_edge.target, "Target id invalid");
+                new_edge.data.weight = data.weight;
+                new_edge.data.duration = data.duration;
+                new_edge.data.shortcut = data.shortcut;
+                new_edge.data.turn_id = data.id;
+                BOOST_ASSERT_MSG(new_edge.data.turn_id != INT_MAX, // 2^31
+                                 "edge id invalid");
+                new_edge.data.forward = data.forward;
+                new_edge.data.backward = data.backward;
+                edges.push_back(new_edge);
+            }
+        }
+    }
+
+    // sort and remove duplicates
+    tbb::parallel_sort(edges.begin(), edges.end());
+    auto new_end = std::unique(edges.begin(), edges.end());
+    edges.resize(new_end - edges.begin());
+
+    return edges;
 }
 
 } // namespace contractor

@@ -5,15 +5,15 @@ namespace osrm
 namespace contractor
 {
 
-GraphContractor::GraphContractor(ContractorGraph graph_)
-    : GraphContractor(std::move(graph_), {}, {})
+GraphContractor::GraphContractor(ContractorGraph &graph)
+    : GraphContractor(graph, {}, {})
 {
 }
 
-GraphContractor::GraphContractor(ContractorGraph graph_,
+GraphContractor::GraphContractor(ContractorGraph &graph,
                                  std::vector<float> node_levels_,
                                  std::vector<EdgeWeight> node_weights_)
-    : graph(std::move(graph_)), orig_node_id_from_new_node_id_map(graph.GetNumberOfNodes()),
+    : graph(graph), orig_node_id_from_new_node_id_map(graph.GetNumberOfNodes()),
       node_levels(std::move(node_levels_)), node_weights(std::move(node_weights_))
 {
     // Fill the map with an identiy mapping
@@ -307,6 +307,7 @@ void GraphContractor::Run(double core_factor)
 
     util::inplacePermutation(node_levels.begin(), node_levels.end(), orig_node_id_from_new_node_id_map);
     util::inplacePermutation(is_core_node.begin(), is_core_node.end(), orig_node_id_from_new_node_id_map);
+    graph.Renumber(orig_node_id_from_new_node_id_map);
 
     thread_data_list.data.clear();
 }
