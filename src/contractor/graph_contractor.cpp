@@ -13,21 +13,25 @@ GraphContractor::GraphContractor(ContractorGraph graph_)
 GraphContractor::GraphContractor(ContractorGraph graph_,
                                  std::vector<float> node_levels_,
                                  std::vector<EdgeWeight> node_weights_)
-    : graph(std::move(graph_)), node_levels(std::move(node_levels_)),
-      node_weights(std::move(node_weights_))
+    : graph(std::move(graph_)), orig_node_id_from_new_node_id_map(graph.GetNumberOfNodes()),
+      node_levels(std::move(node_levels_)), node_weights(std::move(node_weights_))
 {
+    // Fill the map with an identiy mapping
+    std::iota(
+        orig_node_id_from_new_node_id_map.begin(), orig_node_id_from_new_node_id_map.end(), 0);
 }
 
-/* Reorder nodes for better locality */
-void GraphContractor::FlushDataAndRebuildContractorGraph(
-    ThreadDataContainer &thread_data_list,
-    std::vector<RemainingNodeData> &remaining_nodes,
-    std::vector<float> &node_priorities)
+/* Reorder nodes for better locality during contraction */
+void GraphContractor::RenumberGraph(ThreadDataContainer &thread_data_list,
+                                    std::vector<RemainingNodeData> &remaining_nodes,
+                                    std::vector<float> &node_priorities)
 {
     // Delete old heap data to free memory that we need for the coming operations
     thread_data_list.data.clear();
-    orig_node_id_from_new_node_id_map.resize(graph.GetNumberOfNodes(), SPECIAL_NODEID);
-    std::vector<NodeID> new_node_id_from_orig_node_id(graph.GetNumberOfNodes(), SPECIAL_NODEID);
+    std::vector<NodeID> new_node_id_from_current_node_id(graph.GetNumberOfNodes(), SPECIAL_NODEID);
+
+    // we need to make a copy here because we are going to modify it
+    auto to_orig = orig_node_id_from_new_node_id_map;
 
     auto new_node_id = 0;
 
@@ -35,35 +39,43 @@ void GraphContractor::FlushDataAndRebuildContractorGraph(
     for (auto &remaining : remaining_nodes)
     {
         auto id = new_node_id++;
-        new_node_id_from_orig_node_id[remaining.id] = id;
-        orig_node_id_from_new_node_id_map[id] = remaining.id;
+        new_node_id_from_current_node_id[remaining.id] = id;
+        orig_node_id_from_new_node_id_map[id] = to_orig[remaining.id];
         remaining.id = id;
     }
 
     // Already contracted nodes get the high IDs
-    for (const auto orig_id : util::irange<std::size_t>(0, graph.GetNumberOfNodes()))
+    for (const auto current_id : util::irange<std::size_t>(0, graph.GetNumberOfNodes()))
     {
-        if (new_node_id_from_orig_node_id[orig_id] == SPECIAL_NODEID)
+        if (new_node_id_from_current_node_id[current_id] == SPECIAL_NODEID)
         {
             auto id = new_node_id++;
-            new_node_id_from_orig_node_id[orig_id] = id;
-            orig_node_id_from_new_node_id_map[id] = orig_id;
+            new_node_id_from_current_node_id[current_id] = id;
+            orig_node_id_from_new_node_id_map[id] = to_orig[current_id];
         }
     }
     BOOST_ASSERT(new_node_id == graph.GetNumberOfNodes());
 
     util::inplacePermutation(
-        node_priorities.begin(), node_priorities.end(), new_node_id_from_orig_node_id);
+        node_priorities.begin(), node_priorities.end(), new_node_id_from_current_node_id);
     util::inplacePermutation(
-        node_weights.begin(), node_weights.end(), new_node_id_from_orig_node_id);
-    graph.Renumber(new_node_id_from_orig_node_id);
+        node_weights.begin(), node_weights.end(), new_node_id_from_current_node_id);
+    util::inplacePermutation(
+        node_levels.begin(), node_levels.end(), new_node_id_from_current_node_id);
+    util::inplacePermutation(
+        is_core_node.begin(), is_core_node.end(), new_node_id_from_current_node_id);
+    graph.Renumber(new_node_id_from_current_node_id);
 
-    // Mark all existing edges to reference old via IDs
+    // Renumber all shortcut node IDs
     for (const auto node : util::irange<NodeID>(0, graph.GetNumberOfNodes()))
     {
         for (const auto edge : graph.GetAdjacentEdgeRange(node))
         {
-            graph.GetEdgeData(edge).is_original_via_node_ID = true;
+            auto &data = graph.GetEdgeData(edge);
+            if (data.shortcut)
+            {
+                data.id = new_node_id_from_current_node_id[data.id];
+            }
         }
     }
 }
@@ -136,18 +148,16 @@ void GraphContractor::Run(double core_factor)
     util::Percent p(log, number_of_nodes);
 
     unsigned current_level = 0;
-    bool flushed_contractor = false;
+    std::size_t next_renumbering = number_of_nodes * 0.65 * core_factor;
     while (remaining_nodes.size() > 1 &&
            number_of_contracted_nodes < static_cast<NodeID>(number_of_nodes * core_factor))
     {
-        if (!flushed_contractor && (number_of_contracted_nodes >
-                                    static_cast<NodeID>(number_of_nodes * 0.65 * core_factor)))
+        if (number_of_contracted_nodes > next_renumbering)
         {
-            log << " [flush " << number_of_contracted_nodes << " nodes] ";
-
-            FlushDataAndRebuildContractorGraph(thread_data_list, remaining_nodes, node_priorities);
-
-            flushed_contractor = true;
+            RenumberGraph(thread_data_list, remaining_nodes, node_priorities);
+            log << "[renumbered]";
+            // only one renumbering for now
+            next_renumbering = number_of_nodes;
         }
 
         tbb::parallel_for(
@@ -179,25 +189,11 @@ void GraphContractor::Run(double core_factor)
             tbb::parallel_for(
                 tbb::blocked_range<NodeID>(
                     begin_independent_nodes_idx, end_independent_nodes_idx, ContractGrainSize),
-                [this, remaining_nodes, flushed_contractor, current_level](
-                    const tbb::blocked_range<NodeID> &range) {
-                    if (flushed_contractor)
+                [this, remaining_nodes, current_level](const tbb::blocked_range<NodeID> &range) {
+                    for (auto position = range.begin(), end = range.end(); position != end;
+                         ++position)
                     {
-                        for (auto position = range.begin(), end = range.end(); position != end;
-                             ++position)
-                        {
-                            const NodeID x = remaining_nodes[position].id;
-                            node_levels[orig_node_id_from_new_node_id_map[x]] = current_level;
-                        }
-                    }
-                    else
-                    {
-                        for (auto position = range.begin(), end = range.end(); position != end;
-                             ++position)
-                        {
-                            const NodeID x = remaining_nodes[position].id;
-                            node_levels[x] = current_level;
-                        }
+                        node_levels[remaining_nodes[position].id] = current_level;
                     }
                 });
         }
@@ -289,29 +285,13 @@ void GraphContractor::Run(double core_factor)
 
     if (remaining_nodes.size() > 2)
     {
-        if (flushed_contractor)
-        {
-            tbb::parallel_for(tbb::blocked_range<NodeID>(0, remaining_nodes.size(), InitGrainSize),
-                              [this, &remaining_nodes](const tbb::blocked_range<NodeID> &range) {
-                                  for (auto x = range.begin(), end = range.end(); x != end; ++x)
-                                  {
-                                      const auto orig_id = remaining_nodes[x].id;
-                                      is_core_node[orig_node_id_from_new_node_id_map[orig_id]] =
-                                          true;
-                                  }
-                              });
-        }
-        else
-        {
-            tbb::parallel_for(tbb::blocked_range<NodeID>(0, remaining_nodes.size(), InitGrainSize),
-                              [this, &remaining_nodes](const tbb::blocked_range<NodeID> &range) {
-                                  for (auto x = range.begin(), end = range.end(); x != end; ++x)
-                                  {
-                                      const auto orig_id = remaining_nodes[x].id;
-                                      is_core_node[orig_id] = true;
-                                  }
-                              });
-        }
+        tbb::parallel_for(tbb::blocked_range<NodeID>(0, remaining_nodes.size(), InitGrainSize),
+                          [this, &remaining_nodes](const tbb::blocked_range<NodeID> &range) {
+                              for (auto x = range.begin(), end = range.end(); x != end; ++x)
+                              {
+                                  is_core_node[remaining_nodes[x].id] = true;
+                              }
+                          });
     }
     else
     {
@@ -320,8 +300,13 @@ void GraphContractor::Run(double core_factor)
         is_core_node.clear();
     }
 
+    log << "\n";
+
     util::Log() << "[core] " << remaining_nodes.size() << " nodes " << graph.GetNumberOfEdges()
                 << " edges.";
+
+    util::inplacePermutation(node_levels.begin(), node_levels.end(), orig_node_id_from_new_node_id_map);
+    util::inplacePermutation(is_core_node.begin(), is_core_node.end(), orig_node_id_from_new_node_id_map);
 
     thread_data_list.data.clear();
 }

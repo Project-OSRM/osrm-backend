@@ -12,8 +12,7 @@ namespace contractor
 struct ContractorEdgeData
 {
     ContractorEdgeData()
-        : weight(0), duration(0), id(0), originalEdges(0), shortcut(0), forward(0), backward(0),
-          is_original_via_node_ID(false)
+        : weight(0), duration(0), id(0), originalEdges(0), shortcut(0), forward(0), backward(0)
     {
     }
     ContractorEdgeData(EdgeWeight weight,
@@ -24,18 +23,17 @@ struct ContractorEdgeData
                        bool forward,
                        bool backward)
         : weight(weight), duration(duration), id(id),
-          originalEdges(std::min((1u << 28) - 1u, original_edges)), shortcut(shortcut),
-          forward(forward), backward(backward), is_original_via_node_ID(false)
+          originalEdges(std::min((1u << 29) - 1u, original_edges)), shortcut(shortcut),
+          forward(forward), backward(backward)
     {
     }
     EdgeWeight weight;
     EdgeWeight duration;
     unsigned id;
-    unsigned originalEdges : 28;
+    unsigned originalEdges : 29;
     bool shortcut : 1;
     bool forward : 1;
     bool backward : 1;
-    bool is_original_via_node_ID : 1;
 };
 
 using ContractorGraph = util::DynamicGraph<ContractorEdgeData>;

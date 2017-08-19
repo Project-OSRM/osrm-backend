@@ -101,10 +101,9 @@ class GraphContractor
                     std::vector<float> node_levels_,
                     std::vector<EdgeWeight> node_weights_);
 
-    /* Flush all data from the contraction to disc and reorder stuff for better locality */
-    void FlushDataAndRebuildContractorGraph(ThreadDataContainer &thread_data_list,
-                                            std::vector<RemainingNodeData> &remaining_nodes,
-                                            std::vector<float> &node_priorities);
+    void RenumberGraph(ThreadDataContainer &thread_data_list,
+                       std::vector<RemainingNodeData> &remaining_nodes,
+                       std::vector<float> &node_priorities);
 
     void Run(double core_factor = 1.0);
 
@@ -130,22 +129,13 @@ class GraphContractor
                 {
                     const NodeID target = graph.GetTarget(edge);
                     const ContractorGraph::EdgeData &data = graph.GetEdgeData(edge);
-                    if (!orig_node_id_from_new_node_id_map.empty())
-                    {
-                        new_edge.source = orig_node_id_from_new_node_id_map[node];
-                        new_edge.target = orig_node_id_from_new_node_id_map[target];
-                    }
-                    else
-                    {
-                        new_edge.source = node;
-                        new_edge.target = target;
-                    }
-                    BOOST_ASSERT_MSG(SPECIAL_NODEID != new_edge.source, "Source id invalid");
+                    new_edge.source = orig_node_id_from_new_node_id_map[node];
+                    new_edge.target = orig_node_id_from_new_node_id_map[target];
                     BOOST_ASSERT_MSG(SPECIAL_NODEID != new_edge.target, "Target id invalid");
                     new_edge.data.weight = data.weight;
                     new_edge.data.duration = data.duration;
                     new_edge.data.shortcut = data.shortcut;
-                    if (!data.is_original_via_node_ID && !orig_node_id_from_new_node_id_map.empty())
+                    if (data.shortcut)
                     {
                         // tranlate the _node id_ of the shortcutted node
                         new_edge.data.turn_id = orig_node_id_from_new_node_id_map[data.id];
@@ -286,17 +276,13 @@ class GraphContractor
             if (RUNSIMULATION)
             {
                 const int constexpr SIMULATION_SEARCH_SPACE_SIZE = 1000;
-                dijkstra.Run(number_of_targets,
-                             SIMULATION_SEARCH_SPACE_SIZE,
-                             max_weight,
-                             node,
-                             graph);
+                dijkstra.Run(
+                    number_of_targets, SIMULATION_SEARCH_SPACE_SIZE, max_weight, node, graph);
             }
             else
             {
                 const int constexpr FULL_SEARCH_SPACE_SIZE = 2000;
-                dijkstra.Run(
-                    number_of_targets, FULL_SEARCH_SPACE_SIZE, max_weight, node, graph);
+                dijkstra.Run(number_of_targets, FULL_SEARCH_SPACE_SIZE, max_weight, node, graph);
             }
             for (auto out_edge : graph.GetAdjacentEdgeRange(node))
             {
