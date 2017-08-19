@@ -1,71 +1,360 @@
 #include "contractor/graph_contractor.hpp"
+#include "contractor/contractor_dijkstra.hpp"
+#include "contractor/contractor_graph.hpp"
+#include "contractor/query_edge.hpp"
+#include "util/deallocating_vector.hpp"
+#include "util/integer_range.hpp"
+#include "util/log.hpp"
+#include "util/percent.hpp"
+#include "util/timing_util.hpp"
+#include "util/typedefs.hpp"
+#include "util/xor_fast_hash.hpp"
+
+#include <boost/assert.hpp>
+
+#include <tbb/enumerable_thread_specific.h>
+#include <tbb/parallel_for.h>
+#include <tbb/parallel_sort.h>
+
+#include <algorithm>
+#include <limits>
+#include <memory>
+#include <vector>
 
 namespace osrm
 {
 namespace contractor
 {
-
-GraphContractor::GraphContractor(ContractorGraph &graph)
-    : GraphContractor(graph, {}, {})
+namespace
 {
-}
-
-GraphContractor::GraphContractor(ContractorGraph &graph,
-                                 std::vector<float> node_levels_,
-                                 std::vector<EdgeWeight> node_weights_)
-    : graph(graph), orig_node_id_from_new_node_id_map(graph.GetNumberOfNodes()),
-      node_levels(std::move(node_levels_)), node_weights(std::move(node_weights_))
+struct ContractorThreadData
 {
-    // Fill the map with an identiy mapping
-    std::iota(
-        orig_node_id_from_new_node_id_map.begin(), orig_node_id_from_new_node_id_map.end(), 0);
-}
+    ContractorDijkstra dijkstra;
+    std::vector<ContractorEdge> inserted_edges;
+    std::vector<NodeID> neighbours;
+    explicit ContractorThreadData(NodeID nodes) : dijkstra(nodes) {}
+};
 
-/* Reorder nodes for better locality during contraction */
-void GraphContractor::RenumberGraph(ThreadDataContainer &thread_data_list,
-                                    std::vector<RemainingNodeData> &remaining_nodes,
-                                    std::vector<float> &node_priorities)
+struct ContractorNodeData
 {
-    // Delete old heap data to free memory that we need for the coming operations
-    thread_data_list.data.clear();
-    std::vector<NodeID> new_node_id_from_current_node_id(graph.GetNumberOfNodes(), SPECIAL_NODEID);
+    using NodeDepth = int;
+    using NodePriority = float;
+    using NodeLevel = float;
 
-    // we need to make a copy here because we are going to modify it
-    auto to_orig = orig_node_id_from_new_node_id_map;
-
-    auto new_node_id = 0;
-
-    // All remaining nodes get the low IDs
-    for (auto &remaining : remaining_nodes)
+    ContractorNodeData(std::size_t number_of_nodes,
+                       std::vector<NodePriority> priorities_,
+                       std::vector<EdgeWeight> weights_)
+        : is_core(number_of_nodes, true), priorities(std::move(priorities_)),
+          weights(std::move(weights_))
     {
-        auto id = new_node_id++;
-        new_node_id_from_current_node_id[remaining.id] = id;
-        orig_node_id_from_new_node_id_map[id] = to_orig[remaining.id];
-        remaining.id = id;
-    }
-
-    // Already contracted nodes get the high IDs
-    for (const auto current_id : util::irange<std::size_t>(0, graph.GetNumberOfNodes()))
-    {
-        if (new_node_id_from_current_node_id[current_id] == SPECIAL_NODEID)
+        // no cached priorities
+        if (priorities.empty())
         {
-            auto id = new_node_id++;
-            new_node_id_from_current_node_id[current_id] = id;
-            orig_node_id_from_new_node_id_map[id] = to_orig[current_id];
+            depths.resize(number_of_nodes, 0);
+            levels.resize(number_of_nodes);
+            priorities.resize(number_of_nodes);
         }
     }
-    BOOST_ASSERT(new_node_id == graph.GetNumberOfNodes());
 
-    util::inplacePermutation(
-        node_priorities.begin(), node_priorities.end(), new_node_id_from_current_node_id);
-    util::inplacePermutation(
-        node_weights.begin(), node_weights.end(), new_node_id_from_current_node_id);
-    util::inplacePermutation(
-        node_levels.begin(), node_levels.end(), new_node_id_from_current_node_id);
-    util::inplacePermutation(
-        is_core_node.begin(), is_core_node.end(), new_node_id_from_current_node_id);
-    graph.Renumber(new_node_id_from_current_node_id);
+    void Renumber(const std::vector<NodeID> &old_to_new)
+    {
+        util::inplacePermutation(priorities.begin(), priorities.end(), old_to_new);
+        util::inplacePermutation(weights.begin(), weights.end(), old_to_new);
+        util::inplacePermutation(levels.begin(), levels.end(), old_to_new);
+        util::inplacePermutation(is_core.begin(), is_core.end(), old_to_new);
+        util::inplacePermutation(depths.begin(), depths.end(), old_to_new);
+    }
 
+    std::vector<bool> is_core;
+    std::vector<NodePriority> priorities;
+    std::vector<EdgeWeight> weights;
+    std::vector<NodeDepth> depths;
+    std::vector<NodeLevel> levels;
+};
+
+struct ContractionStats
+{
+    int edges_deleted_count;
+    int edges_added_count;
+    int original_edges_deleted_count;
+    int original_edges_added_count;
+    ContractionStats()
+        : edges_deleted_count(0), edges_added_count(0), original_edges_deleted_count(0),
+          original_edges_added_count(0)
+    {
+    }
+};
+
+struct RemainingNodeData
+{
+    RemainingNodeData() : id(0), is_independent(false) {}
+    NodeID id : 31;
+    bool is_independent : 1;
+};
+
+struct ThreadDataContainer
+{
+    explicit ThreadDataContainer(int number_of_nodes) : number_of_nodes(number_of_nodes) {}
+
+    inline ContractorThreadData *GetThreadData()
+    {
+        bool exists = false;
+        auto &ref = data.local(exists);
+        if (!exists)
+        {
+            // ref = std::make_shared<ContractorThreadData>(number_of_nodes);
+            ref = std::make_shared<ContractorThreadData>(4000);
+        }
+
+        return ref.get();
+    }
+
+    int number_of_nodes;
+    using EnumerableThreadData =
+        tbb::enumerable_thread_specific<std::shared_ptr<ContractorThreadData>>;
+    EnumerableThreadData data;
+};
+
+// This bias function takes up 22 assembly instructions in total on X86
+inline bool Bias(const util::XORFastHash<> &fast_hash, const NodeID a, const NodeID b)
+{
+    const unsigned short hasha = fast_hash(a);
+    const unsigned short hashb = fast_hash(b);
+
+    // The compiler optimizes that to conditional register flags but without branching
+    // statements!
+    if (hasha != hashb)
+    {
+        return hasha < hashb;
+    }
+    return a < b;
+}
+
+template <bool RUNSIMULATION>
+void ContractNode(ContractorThreadData *data,
+                  const ContractorGraph &graph,
+                  const NodeID node,
+                  std::vector<EdgeWeight> &node_weights,
+                  ContractionStats *stats = nullptr)
+{
+    auto &dijkstra = data->dijkstra;
+    std::size_t inserted_edges_size = data->inserted_edges.size();
+    std::vector<ContractorEdge> &inserted_edges = data->inserted_edges;
+    constexpr bool SHORTCUT_ARC = true;
+    constexpr bool FORWARD_DIRECTION_ENABLED = true;
+    constexpr bool FORWARD_DIRECTION_DISABLED = false;
+    constexpr bool REVERSE_DIRECTION_ENABLED = true;
+    constexpr bool REVERSE_DIRECTION_DISABLED = false;
+
+    for (auto in_edge : graph.GetAdjacentEdgeRange(node))
+    {
+        const ContractorEdgeData &in_data = graph.GetEdgeData(in_edge);
+        const NodeID source = graph.GetTarget(in_edge);
+        if (source == node)
+            continue;
+
+        if (RUNSIMULATION)
+        {
+            BOOST_ASSERT(stats != nullptr);
+            ++stats->edges_deleted_count;
+            stats->original_edges_deleted_count += in_data.originalEdges;
+        }
+        if (!in_data.backward)
+        {
+            continue;
+        }
+
+        dijkstra.Clear();
+        dijkstra.Insert(source, 0, ContractorHeapData{});
+        EdgeWeight max_weight = 0;
+        unsigned number_of_targets = 0;
+
+        for (auto out_edge : graph.GetAdjacentEdgeRange(node))
+        {
+            const ContractorEdgeData &out_data = graph.GetEdgeData(out_edge);
+            if (!out_data.forward)
+            {
+                continue;
+            }
+            const NodeID target = graph.GetTarget(out_edge);
+            if (node == target)
+            {
+                continue;
+            }
+
+            const EdgeWeight path_weight = in_data.weight + out_data.weight;
+            if (target == source)
+            {
+                if (path_weight < node_weights[node])
+                {
+                    if (RUNSIMULATION)
+                    {
+                        // make sure to prune better, but keep inserting this loop if it should
+                        // still be the best
+                        // CAREFUL: This only works due to the independent node-setting. This
+                        // guarantees that source is not connected to another node that is
+                        // contracted
+                        node_weights[source] = path_weight + 1;
+                        BOOST_ASSERT(stats != nullptr);
+                        stats->edges_added_count += 2;
+                        stats->original_edges_added_count +=
+                            2 * (out_data.originalEdges + in_data.originalEdges);
+                    }
+                    else
+                    {
+                        // CAREFUL: This only works due to the independent node-setting. This
+                        // guarantees that source is not connected to another node that is
+                        // contracted
+                        node_weights[source] = path_weight; // make sure to prune better
+                        inserted_edges.emplace_back(source,
+                                                    target,
+                                                    path_weight,
+                                                    in_data.duration + out_data.duration,
+                                                    out_data.originalEdges + in_data.originalEdges,
+                                                    node,
+                                                    SHORTCUT_ARC,
+                                                    FORWARD_DIRECTION_ENABLED,
+                                                    REVERSE_DIRECTION_DISABLED);
+
+                        inserted_edges.emplace_back(target,
+                                                    source,
+                                                    path_weight,
+                                                    in_data.duration + out_data.duration,
+                                                    out_data.originalEdges + in_data.originalEdges,
+                                                    node,
+                                                    SHORTCUT_ARC,
+                                                    FORWARD_DIRECTION_DISABLED,
+                                                    REVERSE_DIRECTION_ENABLED);
+                    }
+                }
+                continue;
+            }
+            max_weight = std::max(max_weight, path_weight);
+            if (!dijkstra.WasInserted(target))
+            {
+                dijkstra.Insert(target, INVALID_EDGE_WEIGHT, ContractorHeapData{0, true});
+                ++number_of_targets;
+            }
+        }
+
+        if (RUNSIMULATION)
+        {
+            const int constexpr SIMULATION_SEARCH_SPACE_SIZE = 1000;
+            dijkstra.Run(number_of_targets, SIMULATION_SEARCH_SPACE_SIZE, max_weight, node, graph);
+        }
+        else
+        {
+            const int constexpr FULL_SEARCH_SPACE_SIZE = 2000;
+            dijkstra.Run(number_of_targets, FULL_SEARCH_SPACE_SIZE, max_weight, node, graph);
+        }
+        for (auto out_edge : graph.GetAdjacentEdgeRange(node))
+        {
+            const ContractorEdgeData &out_data = graph.GetEdgeData(out_edge);
+            if (!out_data.forward)
+            {
+                continue;
+            }
+            const NodeID target = graph.GetTarget(out_edge);
+            if (target == node)
+                continue;
+
+            const EdgeWeight path_weight = in_data.weight + out_data.weight;
+            const EdgeWeight weight = dijkstra.GetKey(target);
+            if (path_weight < weight)
+            {
+                if (RUNSIMULATION)
+                {
+                    BOOST_ASSERT(stats != nullptr);
+                    stats->edges_added_count += 2;
+                    stats->original_edges_added_count +=
+                        2 * (out_data.originalEdges + in_data.originalEdges);
+                }
+                else
+                {
+                    inserted_edges.emplace_back(source,
+                                                target,
+                                                path_weight,
+                                                in_data.duration + out_data.duration,
+                                                out_data.originalEdges + in_data.originalEdges,
+                                                node,
+                                                SHORTCUT_ARC,
+                                                FORWARD_DIRECTION_ENABLED,
+                                                REVERSE_DIRECTION_DISABLED);
+
+                    inserted_edges.emplace_back(target,
+                                                source,
+                                                path_weight,
+                                                in_data.duration + out_data.duration,
+                                                out_data.originalEdges + in_data.originalEdges,
+                                                node,
+                                                SHORTCUT_ARC,
+                                                FORWARD_DIRECTION_DISABLED,
+                                                REVERSE_DIRECTION_ENABLED);
+                }
+            }
+        }
+    }
+
+    // Check For One-Way Streets to decide on the creation of self-loops
+    if (!RUNSIMULATION)
+    {
+        std::size_t iend = inserted_edges.size();
+        for (std::size_t i = inserted_edges_size; i < iend; ++i)
+        {
+            bool found = false;
+            for (std::size_t other = i + 1; other < iend; ++other)
+            {
+                if (inserted_edges[other].source != inserted_edges[i].source)
+                {
+                    continue;
+                }
+                if (inserted_edges[other].target != inserted_edges[i].target)
+                {
+                    continue;
+                }
+                if (inserted_edges[other].data.weight != inserted_edges[i].data.weight)
+                {
+                    continue;
+                }
+                if (inserted_edges[other].data.shortcut != inserted_edges[i].data.shortcut)
+                {
+                    continue;
+                }
+                inserted_edges[other].data.forward |= inserted_edges[i].data.forward;
+                inserted_edges[other].data.backward |= inserted_edges[i].data.backward;
+                found = true;
+                break;
+            }
+            if (!found)
+            {
+                inserted_edges[inserted_edges_size++] = inserted_edges[i];
+            }
+        }
+        inserted_edges.resize(inserted_edges_size);
+    }
+}
+
+void ContractNode(ContractorThreadData *data,
+                  const ContractorGraph &graph,
+                  const NodeID node,
+                  std::vector<EdgeWeight> &node_weights)
+{
+    ContractNode<false>(data, graph, node, node_weights, nullptr);
+}
+
+ContractionStats SimulateNodeContraction(ContractorThreadData *data,
+                                         const ContractorGraph &graph,
+                                         const NodeID node,
+                                         std::vector<EdgeWeight> &node_weights)
+{
+    ContractionStats stats;
+    ContractNode<true>(data, graph, node, node_weights, &stats);
+    return stats;
+}
+
+void RenumberGraph(ContractorGraph &graph, const std::vector<NodeID> &old_to_new)
+{
+    graph.Renumber(old_to_new);
     // Renumber all shortcut node IDs
     for (const auto node : util::irange<NodeID>(0, graph.GetNumberOfNodes()))
     {
@@ -74,14 +363,198 @@ void GraphContractor::RenumberGraph(ThreadDataContainer &thread_data_list,
             auto &data = graph.GetEdgeData(edge);
             if (data.shortcut)
             {
-                data.id = new_node_id_from_current_node_id[data.id];
+                data.id = old_to_new[data.id];
             }
         }
     }
 }
 
-void GraphContractor::Run(double core_factor)
+/* Reorder nodes for better locality during contraction */
+void RenumberData(std::vector<RemainingNodeData> &remaining_nodes,
+                   std::vector<NodeID> &new_to_old_node_id,
+                   ContractorNodeData &node_data,
+                   ContractorGraph &graph)
 {
+    std::vector<NodeID> current_to_new_node_id(graph.GetNumberOfNodes(), SPECIAL_NODEID);
+
+    // we need to make a copy here because we are going to modify it
+    auto to_orig = new_to_old_node_id;
+
+    auto new_node_id = 0;
+
+    // All remaining nodes get the low IDs
+    for (auto &remaining : remaining_nodes)
+    {
+        auto id = new_node_id++;
+        current_to_new_node_id[remaining.id] = id;
+        new_to_old_node_id[id] = to_orig[remaining.id];
+        remaining.id = id;
+    }
+
+    // Already contracted nodes get the high IDs
+    for (const auto current_id : util::irange<std::size_t>(0, graph.GetNumberOfNodes()))
+    {
+        if (current_to_new_node_id[current_id] == SPECIAL_NODEID)
+        {
+            auto id = new_node_id++;
+            current_to_new_node_id[current_id] = id;
+            new_to_old_node_id[id] = to_orig[current_id];
+        }
+    }
+    BOOST_ASSERT(new_node_id == graph.GetNumberOfNodes());
+
+    node_data.Renumber(current_to_new_node_id);
+    RenumberGraph(graph, current_to_new_node_id);
+}
+
+float EvaluateNodePriority(const ContractionStats &stats, const ContractorNodeData::NodeDepth node_depth)
+{
+    // Result will contain the priority
+    float result;
+    if (0 == (stats.edges_deleted_count * stats.original_edges_deleted_count))
+    {
+        result = 1.f * node_depth;
+    }
+    else
+    {
+        result =
+            2.f * (((float)stats.edges_added_count) / stats.edges_deleted_count) +
+            4.f * (((float)stats.original_edges_added_count) / stats.original_edges_deleted_count) +
+            1.f * node_depth;
+    }
+    BOOST_ASSERT(result >= 0);
+    return result;
+}
+
+void DeleteIncomingEdges(ContractorThreadData *data, ContractorGraph &graph, const NodeID node)
+{
+    std::vector<NodeID> &neighbours = data->neighbours;
+    neighbours.clear();
+
+    // find all neighbours
+    for (auto e : graph.GetAdjacentEdgeRange(node))
+    {
+        const NodeID u = graph.GetTarget(e);
+        if (u != node)
+        {
+            neighbours.push_back(u);
+        }
+    }
+    // eliminate duplicate entries ( forward + backward edges )
+    std::sort(neighbours.begin(), neighbours.end());
+    neighbours.resize(std::unique(neighbours.begin(), neighbours.end()) - neighbours.begin());
+
+    for (const auto i : util::irange<std::size_t>(0, neighbours.size()))
+    {
+        graph.DeleteEdgesTo(neighbours[i], node);
+    }
+}
+
+bool UpdateNodeNeighbours(ContractorNodeData &node_data,
+                          ContractorThreadData *data,
+                          const ContractorGraph &graph,
+                          const NodeID node)
+{
+    std::vector<NodeID> &neighbours = data->neighbours;
+    neighbours.clear();
+
+    // find all neighbours
+    for (auto e : graph.GetAdjacentEdgeRange(node))
+    {
+        const NodeID u = graph.GetTarget(e);
+        if (u == node)
+        {
+            continue;
+        }
+        neighbours.push_back(u);
+        node_data.depths[u] = std::max(node_data.depths[node] + 1, node_data.depths[u]);
+    }
+    // eliminate duplicate entries ( forward + backward edges )
+    std::sort(neighbours.begin(), neighbours.end());
+    neighbours.resize(std::unique(neighbours.begin(), neighbours.end()) - neighbours.begin());
+
+    // re-evaluate priorities of neighboring nodes
+    for (const NodeID u : neighbours)
+    {
+        node_data.priorities[u] = EvaluateNodePriority(
+            SimulateNodeContraction(data, graph, u, node_data.weights), node_data.depths[u]);
+    }
+    return true;
+}
+
+bool IsNodeIndependent(const util::XORFastHash<> &hash,
+                       const std::vector<float> &priorities,
+                       const ContractorGraph &graph,
+                       ContractorThreadData *const data,
+                       const NodeID node)
+{
+    const float priority = priorities[node];
+
+    std::vector<NodeID> &neighbours = data->neighbours;
+    neighbours.clear();
+
+    for (auto e : graph.GetAdjacentEdgeRange(node))
+    {
+        const NodeID target = graph.GetTarget(e);
+        if (node == target)
+        {
+            continue;
+        }
+        const float target_priority = priorities[target];
+        BOOST_ASSERT(target_priority >= 0);
+        // found a neighbour with lower priority?
+        if (priority > target_priority)
+        {
+            return false;
+        }
+        // tie breaking
+        if (std::abs(priority - target_priority) < std::numeric_limits<float>::epsilon() &&
+            Bias(hash, node, target))
+        {
+            return false;
+        }
+        neighbours.push_back(target);
+    }
+
+    std::sort(neighbours.begin(), neighbours.end());
+    neighbours.resize(std::unique(neighbours.begin(), neighbours.end()) - neighbours.begin());
+
+    // examine all neighbours that are at most 2 hops away
+    for (const NodeID u : neighbours)
+    {
+        for (auto e : graph.GetAdjacentEdgeRange(u))
+        {
+            const NodeID target = graph.GetTarget(e);
+            if (node == target)
+            {
+                continue;
+            }
+            const float target_priority = priorities[target];
+            BOOST_ASSERT(target_priority >= 0);
+            // found a neighbour with lower priority?
+            if (priority > target_priority)
+            {
+                return false;
+            }
+            // tie breaking
+            if (std::abs(priority - target_priority) < std::numeric_limits<float>::epsilon() &&
+                Bias(hash, node, target))
+            {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+}
+
+LevelAndCore contractGraph(ContractorGraph &graph,
+                           std::vector<float> cached_node_levels_,
+                           std::vector<EdgeWeight> node_weights_,
+                           double core_factor)
+{
+    util::XORFastHash<> fast_hash;
+
     // for the preperation we can use a big grain size, which is much faster (probably cache)
     const constexpr size_t InitGrainSize = 100000;
     const constexpr size_t PQGrainSize = 100000;
@@ -98,54 +571,48 @@ void GraphContractor::Run(double core_factor)
     ThreadDataContainer thread_data_list(number_of_nodes);
 
     NodeID number_of_contracted_nodes = 0;
-    std::vector<NodeDepth> node_depth;
-    std::vector<float> node_priorities;
-    is_core_node.resize(number_of_nodes, false);
+    std::vector<NodeID> new_to_old_node_id(number_of_nodes);
+    // Fill the map with an identiy mapping
+    std::iota(new_to_old_node_id.begin(), new_to_old_node_id.end(), 0);
+
+    bool use_cached_node_priorities = !cached_node_levels_.empty();
+    ContractorNodeData node_data{
+        graph.GetNumberOfNodes(), std::move(cached_node_levels_), std::move(node_weights_)};
 
     std::vector<RemainingNodeData> remaining_nodes(number_of_nodes);
     // initialize priorities in parallel
     tbb::parallel_for(tbb::blocked_range<NodeID>(0, number_of_nodes, InitGrainSize),
-                      [this, &remaining_nodes](const tbb::blocked_range<NodeID> &range) {
+                      [&remaining_nodes](const tbb::blocked_range<NodeID> &range) {
                           for (auto x = range.begin(), end = range.end(); x != end; ++x)
                           {
                               remaining_nodes[x].id = x;
                           }
                       });
 
-    bool use_cached_node_priorities = !node_levels.empty();
-    if (use_cached_node_priorities)
+    if (!use_cached_node_priorities)
     {
         util::UnbufferedLog log;
-        log << "using cached node priorities ...";
-        node_priorities.swap(node_levels);
-        log << "ok";
+        log << "initializing node priorities...";
+        tbb::parallel_for(
+            tbb::blocked_range<NodeID>(0, number_of_nodes, PQGrainSize),
+            [&node_data, &graph, &thread_data_list](const tbb::blocked_range<NodeID> &range) {
+                ContractorThreadData *data = thread_data_list.GetThreadData();
+                for (auto x = range.begin(), end = range.end(); x != end; ++x)
+                {
+                    node_data.priorities[x] = EvaluateNodePriority(
+                        SimulateNodeContraction(data, graph, x, node_data.weights),
+                        node_data.depths[x]);
+                }
+            });
+        log << " ok.";
     }
-    else
-    {
-        node_depth.resize(number_of_nodes, 0);
-        node_priorities.resize(number_of_nodes);
-        node_levels.resize(number_of_nodes);
 
-        util::UnbufferedLog log;
-        log << "initializing elimination PQ ...";
-        tbb::parallel_for(tbb::blocked_range<NodeID>(0, number_of_nodes, PQGrainSize),
-                          [this, &node_priorities, &node_depth, &thread_data_list](
-                              const tbb::blocked_range<NodeID> &range) {
-                              ContractorThreadData *data = thread_data_list.GetThreadData();
-                              for (auto x = range.begin(), end = range.end(); x != end; ++x)
-                              {
-                                  node_priorities[x] =
-                                      this->EvaluateNodePriority(data, node_depth[x], x);
-                              }
-                          });
-        log << "ok";
-    }
-    BOOST_ASSERT(node_priorities.size() == number_of_nodes);
-
-    util::Log() << "preprocessing " << number_of_nodes << " nodes ...";
+    util::Log() << "preprocessing " << number_of_nodes << " nodes...";
 
     util::UnbufferedLog log;
     util::Percent p(log, number_of_nodes);
+
+    const util::XORFastHash<> hash;
 
     unsigned current_level = 0;
     std::size_t next_renumbering = number_of_nodes * 0.65 * core_factor;
@@ -154,7 +621,7 @@ void GraphContractor::Run(double core_factor)
     {
         if (number_of_contracted_nodes > next_renumbering)
         {
-            RenumberGraph(thread_data_list, remaining_nodes, node_priorities);
+            RenumberData(remaining_nodes, new_to_old_node_id, node_data, graph);
             log << "[renumbered]";
             // only one renumbering for now
             next_renumbering = number_of_nodes;
@@ -162,15 +629,14 @@ void GraphContractor::Run(double core_factor)
 
         tbb::parallel_for(
             tbb::blocked_range<NodeID>(0, remaining_nodes.size(), IndependentGrainSize),
-            [this, &node_priorities, &remaining_nodes, &thread_data_list](
-                const tbb::blocked_range<NodeID> &range) {
+            [&](const auto &range) {
                 ContractorThreadData *data = thread_data_list.GetThreadData();
                 // determine independent node set
                 for (auto i = range.begin(), end = range.end(); i != end; ++i)
                 {
                     const NodeID node = remaining_nodes[i].id;
                     remaining_nodes[i].is_independent =
-                        this->IsNodeIndependent(node_priorities, data, node);
+                        IsNodeIndependent(hash, node_data.priorities, graph, data, node);
                 }
             });
 
@@ -189,11 +655,11 @@ void GraphContractor::Run(double core_factor)
             tbb::parallel_for(
                 tbb::blocked_range<NodeID>(
                     begin_independent_nodes_idx, end_independent_nodes_idx, ContractGrainSize),
-                [this, remaining_nodes, current_level](const tbb::blocked_range<NodeID> &range) {
+                [&](const auto &range) {
                     for (auto position = range.begin(), end = range.end(); position != end;
                          ++position)
                     {
-                        node_levels[remaining_nodes[position].id] = current_level;
+                        node_data.levels[remaining_nodes[position].id] = current_level;
                     }
                 });
         }
@@ -202,30 +668,31 @@ void GraphContractor::Run(double core_factor)
         tbb::parallel_for(
             tbb::blocked_range<NodeID>(
                 begin_independent_nodes_idx, end_independent_nodes_idx, ContractGrainSize),
-            [this, &remaining_nodes, &thread_data_list](const tbb::blocked_range<NodeID> &range) {
+            [&](const auto &range) {
                 ContractorThreadData *data = thread_data_list.GetThreadData();
                 for (auto position = range.begin(), end = range.end(); position != end; ++position)
                 {
-                    const NodeID x = remaining_nodes[position].id;
-                    this->ContractNode<false>(data, x);
+                    const NodeID node = remaining_nodes[position].id;
+                    node_data.is_core[node] = false;
+                    ContractNode(data, graph, node, node_data.weights);
                 }
             });
 
         tbb::parallel_for(
             tbb::blocked_range<NodeID>(
                 begin_independent_nodes_idx, end_independent_nodes_idx, DeleteGrainSize),
-            [this, &remaining_nodes, &thread_data_list](const tbb::blocked_range<NodeID> &range) {
+            [&](const auto &range) {
                 ContractorThreadData *data = thread_data_list.GetThreadData();
                 for (auto position = range.begin(), end = range.end(); position != end; ++position)
                 {
-                    const NodeID x = remaining_nodes[position].id;
-                    this->DeleteIncomingEdges(data, x);
+                    const NodeID node = remaining_nodes[position].id;
+                    DeleteIncomingEdges(data, graph, node);
                 }
             });
 
         // make sure we really sort each block
         tbb::parallel_for(thread_data_list.data.range(),
-                          [&](const ThreadDataContainer::EnumerableThreadData::range_type &range) {
+                          [&](const auto &range) {
                               for (auto &data : range)
                                   tbb::parallel_sort(data->inserted_edges.begin(),
                                                      data->inserted_edges.end());
@@ -262,14 +729,14 @@ void GraphContractor::Run(double core_factor)
             tbb::parallel_for(
                 tbb::blocked_range<NodeID>(
                     begin_independent_nodes_idx, end_independent_nodes_idx, NeighboursGrainSize),
-                [this, &node_priorities, &remaining_nodes, &node_depth, &thread_data_list](
-                    const tbb::blocked_range<NodeID> &range) {
+                [&](
+                    const auto &range) {
                     ContractorThreadData *data = thread_data_list.GetThreadData();
                     for (auto position = range.begin(), end = range.end(); position != end;
                          ++position)
                     {
-                        NodeID x = remaining_nodes[position].id;
-                        this->UpdateNodeNeighbours(node_priorities, node_depth, data, x);
+                        NodeID node = remaining_nodes[position].id;
+                        UpdateNodeNeighbours(node_data, data, graph, node);
                     }
                 });
         }
@@ -282,199 +749,21 @@ void GraphContractor::Run(double core_factor)
         p.PrintStatus(number_of_contracted_nodes);
         ++current_level;
     }
-
-    if (remaining_nodes.size() > 2)
-    {
-        tbb::parallel_for(tbb::blocked_range<NodeID>(0, remaining_nodes.size(), InitGrainSize),
-                          [this, &remaining_nodes](const tbb::blocked_range<NodeID> &range) {
-                              for (auto x = range.begin(), end = range.end(); x != end; ++x)
-                              {
-                                  is_core_node[remaining_nodes[x].id] = true;
-                              }
-                          });
-    }
-    else
-    {
-        // in this case we don't need core markers since we fully contracted
-        // the graph
-        is_core_node.clear();
-    }
-
     log << "\n";
 
     util::Log() << "[core] " << remaining_nodes.size() << " nodes " << graph.GetNumberOfEdges()
                 << " edges.";
 
-    util::inplacePermutation(node_levels.begin(), node_levels.end(), orig_node_id_from_new_node_id_map);
-    util::inplacePermutation(is_core_node.begin(), is_core_node.end(), orig_node_id_from_new_node_id_map);
-    graph.Renumber(orig_node_id_from_new_node_id_map);
+    node_data.Renumber(new_to_old_node_id);
+    RenumberGraph(graph, new_to_old_node_id);
 
-    thread_data_list.data.clear();
-}
-
-// Can only be called once because it invalides the marker
-std::vector<bool> GraphContractor::GetCoreMarker() { return std::move(is_core_node); }
-
-// Can only be called once because it invalides the node levels
-std::vector<float> GraphContractor::GetNodeLevels() { return std::move(node_levels); }
-
-float GraphContractor::EvaluateNodePriority(ContractorThreadData *const data,
-                                            const NodeDepth node_depth,
-                                            const NodeID node)
-{
-    ContractionStats stats;
-
-    // perform simulated contraction
-    ContractNode<true>(data, node, &stats);
-
-    // Result will contain the priority
-    float result;
-    if (0 == (stats.edges_deleted_count * stats.original_edges_deleted_count))
+    if (remaining_nodes.size() <= 2)
     {
-        result = 1.f * node_depth;
-    }
-    else
-    {
-        result =
-            2.f * (((float)stats.edges_added_count) / stats.edges_deleted_count) +
-            4.f * (((float)stats.original_edges_added_count) / stats.original_edges_deleted_count) +
-            1.f * node_depth;
-    }
-    BOOST_ASSERT(result >= 0);
-    return result;
-}
-
-void GraphContractor::DeleteIncomingEdges(ContractorThreadData *data, const NodeID node)
-{
-    std::vector<NodeID> &neighbours = data->neighbours;
-    neighbours.clear();
-
-    // find all neighbours
-    for (auto e : graph.GetAdjacentEdgeRange(node))
-    {
-        const NodeID u = graph.GetTarget(e);
-        if (u != node)
-        {
-            neighbours.push_back(u);
-        }
-    }
-    // eliminate duplicate entries ( forward + backward edges )
-    std::sort(neighbours.begin(), neighbours.end());
-    neighbours.resize(std::unique(neighbours.begin(), neighbours.end()) - neighbours.begin());
-
-    for (const auto i : util::irange<std::size_t>(0, neighbours.size()))
-    {
-        graph.DeleteEdgesTo(neighbours[i], node);
-    }
-}
-
-bool GraphContractor::UpdateNodeNeighbours(std::vector<float> &priorities,
-                                           std::vector<NodeDepth> &node_depth,
-                                           ContractorThreadData *const data,
-                                           const NodeID node)
-{
-    std::vector<NodeID> &neighbours = data->neighbours;
-    neighbours.clear();
-
-    // find all neighbours
-    for (auto e : graph.GetAdjacentEdgeRange(node))
-    {
-        const NodeID u = graph.GetTarget(e);
-        if (u == node)
-        {
-            continue;
-        }
-        neighbours.push_back(u);
-        node_depth[u] = std::max(node_depth[node] + 1, node_depth[u]);
-    }
-    // eliminate duplicate entries ( forward + backward edges )
-    std::sort(neighbours.begin(), neighbours.end());
-    neighbours.resize(std::unique(neighbours.begin(), neighbours.end()) - neighbours.begin());
-
-    // re-evaluate priorities of neighboring nodes
-    for (const NodeID u : neighbours)
-    {
-        priorities[u] = EvaluateNodePriority(data, node_depth[u], u);
-    }
-    return true;
-}
-
-bool GraphContractor::IsNodeIndependent(const std::vector<float> &priorities,
-                                        ContractorThreadData *const data,
-                                        NodeID node) const
-{
-    const float priority = priorities[node];
-
-    std::vector<NodeID> &neighbours = data->neighbours;
-    neighbours.clear();
-
-    for (auto e : graph.GetAdjacentEdgeRange(node))
-    {
-        const NodeID target = graph.GetTarget(e);
-        if (node == target)
-        {
-            continue;
-        }
-        const float target_priority = priorities[target];
-        BOOST_ASSERT(target_priority >= 0);
-        // found a neighbour with lower priority?
-        if (priority > target_priority)
-        {
-            return false;
-        }
-        // tie breaking
-        if (std::abs(priority - target_priority) < std::numeric_limits<float>::epsilon() &&
-            Bias(node, target))
-        {
-            return false;
-        }
-        neighbours.push_back(target);
+        // in this case we don't need core markers since we fully contracted the graph
+        node_data.is_core.clear();
     }
 
-    std::sort(neighbours.begin(), neighbours.end());
-    neighbours.resize(std::unique(neighbours.begin(), neighbours.end()) - neighbours.begin());
-
-    // examine all neighbours that are at most 2 hops away
-    for (const NodeID u : neighbours)
-    {
-        for (auto e : graph.GetAdjacentEdgeRange(u))
-        {
-            const NodeID target = graph.GetTarget(e);
-            if (node == target)
-            {
-                continue;
-            }
-            const float target_priority = priorities[target];
-            BOOST_ASSERT(target_priority >= 0);
-            // found a neighbour with lower priority?
-            if (priority > target_priority)
-            {
-                return false;
-            }
-            // tie breaking
-            if (std::abs(priority - target_priority) < std::numeric_limits<float>::epsilon() &&
-                Bias(node, target))
-            {
-                return false;
-            }
-        }
-    }
-    return true;
-}
-
-// This bias function takes up 22 assembly instructions in total on X86
-bool GraphContractor::Bias(const NodeID a, const NodeID b) const
-{
-    const unsigned short hasha = fast_hash(a);
-    const unsigned short hashb = fast_hash(b);
-
-    // The compiler optimizes that to conditional register flags but without branching
-    // statements!
-    if (hasha != hashb)
-    {
-        return hasha < hashb;
-    }
-    return a < b;
+    return LevelAndCore {std::move(node_data.levels), std::move(node_data.is_core)};
 }
 
 } // namespace contractor
