@@ -23,7 +23,8 @@ ContractorGraph toContractorGraph(NodeID number_of_nodes, InputEdgeContainer inp
 
     for (const auto &input_edge : input_edge_list)
     {
-        BOOST_ASSERT(input_edge.data.weight < INVALID_EDGE_WEIGHT);
+        if (input_edge.data.weight == INVALID_EDGE_WEIGHT)
+            continue;
 
 #ifndef NDEBUG
         const unsigned int constexpr DAY_IN_DECI_SECONDS = 24 * 60 * 60 * 10;
@@ -124,7 +125,7 @@ ContractorGraph toContractorGraph(NodeID number_of_nodes, InputEdgeContainer inp
     return ContractorGraph{number_of_nodes, edges};
 }
 
-template <class Edge> inline util::DeallocatingVector<Edge> toEdges(ContractorGraph graph)
+template <class Edge, typename GraphT> inline util::DeallocatingVector<Edge> toEdges(GraphT graph)
 {
     util::DeallocatingVector<Edge> edges;
 

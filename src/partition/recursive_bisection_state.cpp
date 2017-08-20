@@ -149,7 +149,8 @@ RecursiveBisectionState::PrePartitionWithSCC(const std::size_t small_component_s
     }();
 
     if (!has_small_component)
-        views.push_back(BisectionGraphView(bisection_graph, bisection_graph.CEnd(), bisection_graph.CEnd()));
+        views.push_back(
+            BisectionGraphView(bisection_graph, bisection_graph.CEnd(), bisection_graph.CEnd()));
 
     // apply scc as bisections, we need scc_level bits for this with scc_levels =
     // ceil(log_2(components))

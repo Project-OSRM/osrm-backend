@@ -1,5 +1,5 @@
-#include "partition/graph_generator.hpp"
 #include "partition/bisection_graph_view.hpp"
+#include "partition/graph_generator.hpp"
 #include "partition/recursive_bisection_state.hpp"
 
 #include <algorithm>

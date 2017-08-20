@@ -8,6 +8,7 @@
 #include "partition/cell_storage.hpp"
 #include "partition/multi_level_partition.hpp"
 
+#include "util/filtered_graph.hpp"
 #include "util/integer_range.hpp"
 
 namespace osrm
@@ -22,14 +23,13 @@ using CH = routing_algorithms::ch::Algorithm;
 using CoreCH = routing_algorithms::corech::Algorithm;
 using MLD = routing_algorithms::mld::Algorithm;
 
-using EdgeRange = util::range<EdgeID>;
-
 template <typename AlgorithmT> class AlgorithmDataFacade;
 
 template <> class AlgorithmDataFacade<CH>
 {
   public:
     using EdgeData = contractor::QueryEdge::EdgeData;
+    using EdgeRange = util::filtered_range<EdgeID, util::vector_view<bool>>;
 
     // search graph access
     virtual unsigned GetNumberOfNodes() const = 0;
@@ -41,10 +41,6 @@ template <> class AlgorithmDataFacade<CH>
     virtual NodeID GetTarget(const EdgeID e) const = 0;
 
     virtual const EdgeData &GetEdgeData(const EdgeID e) const = 0;
-
-    virtual EdgeID BeginEdges(const NodeID n) const = 0;
-
-    virtual EdgeID EndEdges(const NodeID n) const = 0;
 
     virtual EdgeRange GetAdjacentEdgeRange(const NodeID node) const = 0;
 
@@ -73,6 +69,7 @@ template <> class AlgorithmDataFacade<MLD>
 {
   public:
     using EdgeData = extractor::EdgeBasedEdge::EdgeData;
+    using EdgeRange = util::range<EdgeID>;
 
     // search graph access
     virtual unsigned GetNumberOfNodes() const = 0;
@@ -84,10 +81,6 @@ template <> class AlgorithmDataFacade<MLD>
     virtual NodeID GetTarget(const EdgeID e) const = 0;
 
     virtual const EdgeData &GetEdgeData(const EdgeID e) const = 0;
-
-    virtual EdgeID BeginEdges(const NodeID n) const = 0;
-
-    virtual EdgeID EndEdges(const NodeID n) const = 0;
 
     virtual EdgeRange GetAdjacentEdgeRange(const NodeID node) const = 0;
 

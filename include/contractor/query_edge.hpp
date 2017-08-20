@@ -21,6 +21,17 @@ struct QueryEdge
         {
         }
 
+        EdgeData(const NodeID turn_id,
+                 const bool shortcut,
+                 const EdgeWeight weight,
+                 const EdgeWeight duration,
+                 const bool forward,
+                 const bool backward)
+            : turn_id(turn_id), shortcut(shortcut), weight(weight), duration(duration),
+              forward(forward), backward(backward)
+        {
+        }
+
         template <class OtherT> EdgeData(const OtherT &other)
         {
             weight = other.weight;

@@ -14,6 +14,7 @@
 
 #include "updater/updater.hpp"
 
+#include "util/exclude_flag.hpp"
 #include "util/log.hpp"
 #include "util/timing_util.hpp"
 
@@ -94,27 +95,6 @@ auto LoadAndUpdateEdgeExpandedGraph(const CustomizationConfig &config,
     return edge_based_graph;
 }
 
-std::vector<std::vector<bool>>
-excludeFlagsToNodeFilter(const MultiLevelEdgeBasedGraph &graph,
-                         const extractor::EdgeBasedNodeDataContainer &node_data,
-                         const extractor::ProfileProperties &properties)
-{
-    std::vector<std::vector<bool>> filters;
-    for (auto mask : properties.excludable_classes)
-    {
-        if (mask != extractor::INAVLID_CLASS_DATA)
-        {
-            std::vector<bool> allowed_nodes(graph.GetNumberOfNodes(), true);
-            for (const auto node : util::irange<NodeID>(0, graph.GetNumberOfNodes()))
-            {
-                allowed_nodes[node] = (node_data.GetClassData(node) & mask) == 0;
-            }
-            filters.push_back(std::move(allowed_nodes));
-        }
-    }
-    return filters;
-}
-
 std::vector<CellMetric> customizeFilteredMetrics(const MultiLevelEdgeBasedGraph &graph,
                                                  const partition::CellStorage &storage,
                                                  const CellCustomizer &customizer,
@@ -157,7 +137,7 @@ int Customizer::Run(const CustomizationConfig &config)
     util::Log() << "Loading partition data took " << TIMER_SEC(loading_data) << " seconds";
 
     TIMER_START(cell_customize);
-    auto filter = excludeFlagsToNodeFilter(graph, node_data, properties);
+    auto filter = util::excludeFlagsToNodeFilter(graph.GetNumberOfNodes(), node_data, properties);
     auto metrics = customizeFilteredMetrics(graph, storage, CellCustomizer{mlp}, filter);
     TIMER_STOP(cell_customize);
     util::Log() << "Cells customization took " << TIMER_SEC(cell_customize) << " seconds";

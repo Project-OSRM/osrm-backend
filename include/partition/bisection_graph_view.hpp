@@ -28,11 +28,13 @@ class BisectionGraphView
     // Construction either for a subrange, or for a full range
     BisectionGraphView(const BisectionGraph &graph);
     BisectionGraphView(const BisectionGraph &graph,
-              const ConstNodeIterator begin,
-              const ConstNodeIterator end);
+                       const ConstNodeIterator begin,
+                       const ConstNodeIterator end);
 
     // construction from a different view, no need to keep the graph around
-    BisectionGraphView(const BisectionGraphView &view, const ConstNodeIterator begin, const ConstNodeIterator end);
+    BisectionGraphView(const BisectionGraphView &view,
+                       const ConstNodeIterator begin,
+                       const ConstNodeIterator end);
 
     // Number of nodes _in this sub-graph.
     std::size_t NumberOfNodes() const;

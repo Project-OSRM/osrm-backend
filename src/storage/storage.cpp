@@ -268,12 +268,30 @@ void Storage::PopulateLayout(DataLayout &layout)
         reader.Skip<std::uint32_t>(1); // checksum
         auto num_nodes = reader.ReadVectorSize<contractor::QueryGraph::NodeArrayEntry>();
         auto num_edges = reader.ReadVectorSize<contractor::QueryGraph::EdgeArrayEntry>();
+        auto num_metrics = reader.ReadElementCount64();
+
+        if (num_metrics > NUM_METRICS)
+        {
+            throw util::exception("Only " + std::to_string(NUM_METRICS) +
+                                  " metrics are supported at the same time.");
+        }
 
         layout.SetBlockSize<unsigned>(DataLayout::HSGR_CHECKSUM, 1);
         layout.SetBlockSize<contractor::QueryGraph::NodeArrayEntry>(DataLayout::CH_GRAPH_NODE_LIST,
                                                                     num_nodes);
         layout.SetBlockSize<contractor::QueryGraph::EdgeArrayEntry>(DataLayout::CH_GRAPH_EDGE_LIST,
                                                                     num_edges);
+
+        for (const auto index : util::irange<std::size_t>(0, num_metrics))
+        {
+            layout.SetBlockSize<unsigned>(
+                static_cast<DataLayout::BlockID>(DataLayout::CH_EDGE_FILTER_0 + index), num_edges);
+        }
+        for (const auto index : util::irange<std::size_t>(num_metrics, NUM_METRICS))
+        {
+            layout.SetBlockSize<unsigned>(
+                static_cast<DataLayout::BlockID>(DataLayout::CH_EDGE_FILTER_0 + index), 0);
+        }
     }
     else
     {
@@ -282,6 +300,11 @@ void Storage::PopulateLayout(DataLayout &layout)
                                                                     0);
         layout.SetBlockSize<contractor::QueryGraph::EdgeArrayEntry>(DataLayout::CH_GRAPH_EDGE_LIST,
                                                                     0);
+        for (const auto index : util::irange<std::size_t>(0, NUM_METRICS))
+        {
+            layout.SetBlockSize<unsigned>(
+                static_cast<DataLayout::BlockID>(DataLayout::CH_EDGE_FILTER_0 + index), 0);
+        }
     }
 
     // load rsearch tree size
@@ -313,12 +336,36 @@ void Storage::PopulateLayout(DataLayout &layout)
     {
         io::FileReader core_marker_file(config.GetPath(".osrm.core"),
                                         io::FileReader::VerifyFingerprint);
+        const auto num_metrics = core_marker_file.ReadElementCount64();
+        if (num_metrics > NUM_METRICS)
+        {
+            throw util::exception("Only " + std::to_string(NUM_METRICS) +
+                                  " metrics are supported at the same time.");
+        }
+
         const auto number_of_core_markers = core_marker_file.ReadElementCount64();
-        layout.SetBlockSize<unsigned>(DataLayout::CH_CORE_MARKER, number_of_core_markers);
+        for (const auto index : util::irange<std::size_t>(0, num_metrics))
+        {
+            layout.SetBlockSize<unsigned>(
+                static_cast<DataLayout::BlockID>(DataLayout::CH_CORE_MARKER_0 + index),
+                number_of_core_markers);
+        }
+        for (const auto index : util::irange<std::size_t>(num_metrics, NUM_METRICS))
+        {
+            layout.SetBlockSize<unsigned>(
+                static_cast<DataLayout::BlockID>(DataLayout::CH_CORE_MARKER_0 + index), 0);
+        }
     }
     else
     {
-        layout.SetBlockSize<unsigned>(DataLayout::CH_CORE_MARKER, 0);
+        layout.SetBlockSize<unsigned>(DataLayout::CH_CORE_MARKER_0, 0);
+        layout.SetBlockSize<unsigned>(DataLayout::CH_CORE_MARKER_1, 0);
+        layout.SetBlockSize<unsigned>(DataLayout::CH_CORE_MARKER_2, 0);
+        layout.SetBlockSize<unsigned>(DataLayout::CH_CORE_MARKER_3, 0);
+        layout.SetBlockSize<unsigned>(DataLayout::CH_CORE_MARKER_4, 0);
+        layout.SetBlockSize<unsigned>(DataLayout::CH_CORE_MARKER_5, 0);
+        layout.SetBlockSize<unsigned>(DataLayout::CH_CORE_MARKER_6, 0);
+        layout.SetBlockSize<unsigned>(DataLayout::CH_CORE_MARKER_7, 0);
     }
 
     // load turn weight penalties
@@ -577,8 +624,19 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
         util::vector_view<contractor::QueryGraphView::EdgeArrayEntry> edge_list(
             graph_edges_ptr, layout.num_entries[storage::DataLayout::CH_GRAPH_EDGE_LIST]);
 
+        std::vector<util::vector_view<bool>> edge_filter;
+        for (auto index : util::irange<std::size_t>(0, NUM_METRICS))
+        {
+            auto block_id =
+                static_cast<DataLayout::BlockID>(storage::DataLayout::CH_EDGE_FILTER_0 + index);
+            auto data_ptr = layout.GetBlockPtr<unsigned, true>(memory_ptr, block_id);
+            auto num_entries = layout.num_entries[block_id];
+            edge_filter.emplace_back(data_ptr, num_entries);
+        }
+
         contractor::QueryGraphView graph_view(std::move(node_list), std::move(edge_list));
-        contractor::files::readGraph(config.GetPath(".osrm.hsgr"), *checksum, graph_view);
+        contractor::files::readGraph(
+            config.GetPath(".osrm.hsgr"), *checksum, graph_view, edge_filter);
     }
     else
     {
@@ -872,12 +930,17 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
 
     if (boost::filesystem::exists(config.GetPath(".osrm.core")))
     {
-        auto core_marker_ptr =
-            layout.GetBlockPtr<unsigned, true>(memory_ptr, storage::DataLayout::CH_CORE_MARKER);
-        util::vector_view<bool> is_core_node(
-            core_marker_ptr, layout.num_entries[storage::DataLayout::CH_CORE_MARKER]);
+        std::vector<util::vector_view<bool>> cores;
+        for (auto index : util::irange<std::size_t>(0, NUM_METRICS))
+        {
+            auto block_id =
+                static_cast<DataLayout::BlockID>(storage::DataLayout::CH_CORE_MARKER_0 + index);
+            auto data_ptr = layout.GetBlockPtr<unsigned, true>(memory_ptr, block_id);
+            auto num_entries = layout.num_entries[block_id];
+            cores.emplace_back(data_ptr, num_entries);
+        }
 
-        contractor::files::readCoreMarker(config.GetPath(".osrm.core"), is_core_node);
+        contractor::files::readCoreMarker(config.GetPath(".osrm.core"), cores);
     }
 
     // load profile properties

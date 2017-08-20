@@ -365,6 +365,7 @@ script:
   - pushd ${OSRM_BUILD_DIR}
   - ./unit_tests/library-tests
   - ./unit_tests/extractor-tests
+  - ./unit_tests/contractor-tests
   - ./unit_tests/engine-tests
   - ./unit_tests/util-tests
   - ./unit_tests/server-tests

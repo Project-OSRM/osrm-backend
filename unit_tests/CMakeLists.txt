@@ -2,6 +2,10 @@ file(GLOB EngineTestsSources
     engine_tests.cpp
     engine/*.cpp)
 
+file(GLOB ContractorTestsSources
+    contractor_tests.cpp
+    contractor/*.cpp)
+
 file(GLOB ExtractorTestsSources
     extractor_tests.cpp
     extractor/*.cpp)
@@ -43,6 +47,11 @@ add_executable(engine-tests
 	EXCLUDE_FROM_ALL
 	${EngineTestsSources}
 	$<TARGET_OBJECTS:ENGINE> $<TARGET_OBJECTS:STORAGE> $<TARGET_OBJECTS:UTIL>)
+
+add_executable(contractor-tests
+	EXCLUDE_FROM_ALL
+    ${ContractorTestsSources}
+    $<TARGET_OBJECTS:CONTRACTOR> $<TARGET_OBJECTS:UPDATER> $<TARGET_OBJECTS:UTIL>)
 
 add_executable(extractor-tests
 	EXCLUDE_FROM_ALL
@@ -104,6 +113,7 @@ target_compile_definitions(library-tests PRIVATE COMPILE_DEFINITIONS OSRM_TEST_D
 target_compile_definitions(library-extract-tests PRIVATE COMPILE_DEFINITIONS OSRM_TEST_DATA_DIR="${TEST_DATA_DIR}")
 target_compile_definitions(library-contract-tests PRIVATE COMPILE_DEFINITIONS OSRM_TEST_DATA_DIR="${TEST_DATA_DIR}")
 target_compile_definitions(updater-tests PRIVATE COMPILE_DEFINITIONS TEST_DATA_DIR="${UPDATER_TEST_DATA_DIR}")
+target_compile_definitions(contractor-tests PRIVATE COMPILE_DEFINITIONS TEST_DATA_DIR="${TEST_DATA_DIR}")
 
 target_include_directories(engine-tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(library-tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
@@ -113,6 +123,7 @@ target_include_directories(util-tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(partition-tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(customizer-tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(updater-tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(contractor-tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_link_libraries(engine-tests ${ENGINE_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 target_link_libraries(extractor-tests ${EXTRACTOR_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
@@ -124,6 +135,7 @@ target_link_libraries(library-extract-tests osrm_extract ${Boost_UNIT_TEST_FRAME
 target_link_libraries(library-contract-tests osrm_contract ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 target_link_libraries(server-tests osrm ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 target_link_libraries(util-tests ${UTIL_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+target_link_libraries(contractor-tests ${CONTRACTOR_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 
 add_custom_target(tests
-	DEPENDS engine-tests extractor-tests partition-tests updater-tests customizer-tests library-tests library-extract-tests server-tests util-tests)
+	DEPENDS engine-tests extractor-tests contractor-tests partition-tests updater-tests customizer-tests library-tests library-extract-tests server-tests util-tests)

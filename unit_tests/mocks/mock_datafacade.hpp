@@ -280,11 +280,9 @@ class MockAlgorithmDataFacade<engine::datafacade::CH>
     unsigned GetOutDegree(const NodeID /* n */) const override { return 0; }
     NodeID GetTarget(const EdgeID /* e */) const override { return SPECIAL_NODEID; }
     const EdgeData &GetEdgeData(const EdgeID /* e */) const override { return foo; }
-    EdgeID BeginEdges(const NodeID /* n */) const override { return SPECIAL_EDGEID; }
-    EdgeID EndEdges(const NodeID /* n */) const override { return SPECIAL_EDGEID; }
-    osrm::engine::datafacade::EdgeRange GetAdjacentEdgeRange(const NodeID /* node */) const override
+    EdgeRange GetAdjacentEdgeRange(const NodeID /* node */) const override
     {
-        return util::irange(static_cast<EdgeID>(0), static_cast<EdgeID>(0));
+        return EdgeRange(static_cast<EdgeID>(0), static_cast<EdgeID>(0), {});
     }
     EdgeID FindEdge(const NodeID /* from */, const NodeID /* to */) const override
     {

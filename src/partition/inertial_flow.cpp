@@ -33,7 +33,8 @@ struct SpatialOrder
 
 // Creates a spatial order of n * sources "first" and n * sink "last" node ids.
 // The slope determines the spatial order for sorting node coordinates.
-SpatialOrder makeSpatialOrder(const BisectionGraphView &view, const double ratio, const double slope)
+SpatialOrder
+makeSpatialOrder(const BisectionGraphView &view, const double ratio, const double slope)
 {
     struct NodeWithCoordinate
     {
@@ -89,8 +90,10 @@ SpatialOrder makeSpatialOrder(const BisectionGraphView &view, const double ratio
 }
 
 // Makes n cuts with different spatial orders and returns the best.
-DinicMaxFlow::MinCut
-bestMinCut(const BisectionGraphView &view, const std::size_t n, const double ratio, const double balance)
+DinicMaxFlow::MinCut bestMinCut(const BisectionGraphView &view,
+                                const std::size_t n,
+                                const double ratio,
+                                const double balance)
 {
     DinicMaxFlow::MinCut best;
     best.num_edges = -1;

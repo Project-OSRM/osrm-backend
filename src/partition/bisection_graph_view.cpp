@@ -16,15 +16,15 @@ BisectionGraphView::BisectionGraphView(const BisectionGraph &bisection_graph_)
 }
 
 BisectionGraphView::BisectionGraphView(const BisectionGraph &bisection_graph_,
-                     const BisectionGraph::ConstNodeIterator begin_,
-                     const BisectionGraph::ConstNodeIterator end_)
+                                       const BisectionGraph::ConstNodeIterator begin_,
+                                       const BisectionGraph::ConstNodeIterator end_)
     : bisection_graph(bisection_graph_), begin(begin_), end(end_)
 {
 }
 
 BisectionGraphView::BisectionGraphView(const BisectionGraphView &other_view,
-                     const BisectionGraph::ConstNodeIterator begin_,
-                     const BisectionGraph::ConstNodeIterator end_)
+                                       const BisectionGraph::ConstNodeIterator begin_,
+                                       const BisectionGraph::ConstNodeIterator end_)
     : BisectionGraphView(other_view.bisection_graph, begin_, end_)
 {
 }
@@ -42,7 +42,10 @@ BisectionGraph::ConstNodeIterator BisectionGraphView::Begin() const { return beg
 
 BisectionGraph::ConstNodeIterator BisectionGraphView::End() const { return end; }
 
-const BisectionGraphView::NodeT &BisectionGraphView::Node(const NodeID nid) const { return *(begin + nid); }
+const BisectionGraphView::NodeT &BisectionGraphView::Node(const NodeID nid) const
+{
+    return *(begin + nid);
+}
 
 const BisectionGraphView::EdgeT &BisectionGraphView::Edge(const EdgeID eid) const
 {

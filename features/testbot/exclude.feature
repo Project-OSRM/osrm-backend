@@ -20,7 +20,6 @@ Feature: Testbot - Exclude flags
             | fg    | primary  |      | always drivable                                                          |
             | gd    | primary  |      | always drivable                                                          |
 
-    @mld
     Scenario: Testbot - exclude nothing
         When I route I should get
             | from | to | route          |
@@ -38,7 +37,6 @@ Feature: Testbot - Exclude flags
             | a | 0   | 115 |
             | d | 115 | 0   |
 
-    @mld
     Scenario: Testbot - exclude motorway
         Given the query options
             | exclude  | motorway        |
@@ -59,7 +57,6 @@ Feature: Testbot - Exclude flags
             | a | 0   | 125 |
             | d | 125 | 0  |
 
-    @mld
     Scenario: Testbot - exclude toll
         Given the query options
             | exclude | toll |
@@ -72,7 +69,6 @@ Feature: Testbot - Exclude flags
             | a    | f  |          |
             | f    | d  | fg,gd,gd |
 
-    @mld
     Scenario: Testbot - exclude motorway and toll
         Given the query options
             | exclude | motorway,toll |
@@ -85,7 +81,6 @@ Feature: Testbot - Exclude flags
             | a    | f  |          |
             | f    | d  | fg,gd,gd |
 
-    @mld
     Scenario: Testbot - exclude with unsupported exclude combination
         Given the query options
             | exclude | TwoWords2 |
@@ -94,7 +89,6 @@ Feature: Testbot - Exclude flags
             | from | to | status | message   |
             | a    | d  | 400    | Exclude flag combination is not supported. |
 
-    @mld
     Scenario: Testbot - exclude with invalid exclude class name
         Given the query options
             | exclude | foo |
@@ -102,13 +96,4 @@ Feature: Testbot - Exclude flags
         When I route I should get
             | from | to | status | message   |
             | a    | d  | 400    | Exclude flag combination is not supported. |
-
-    @ch
-    Scenario: Testbot - Check error message for exclude on non-MLD
-        Given the query options
-            | exclude | motorway |
-
-        When I route I should get
-            | from | to | status | message   |
-            | a    | d  | 400    | This algorithm does not support exclude flags. |
 

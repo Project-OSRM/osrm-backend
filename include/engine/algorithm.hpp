@@ -79,6 +79,9 @@ template <> struct HasManyToManySearch<ch::Algorithm> final : std::true_type
 template <> struct HasGetTileTurns<ch::Algorithm> final : std::true_type
 {
 };
+template <> struct HasExcludeFlags<ch::Algorithm> final : std::true_type
+{
+};
 
 // Algorithms supported by Contraction Hierarchies with core
 // the rest is disabled because of performance reasons
@@ -92,6 +95,9 @@ template <> struct HasMapMatching<corech::Algorithm> final : std::true_type
 {
 };
 template <> struct HasGetTileTurns<corech::Algorithm> final : std::true_type
+{
+};
+template <> struct HasExcludeFlags<corech::Algorithm> final : std::true_type
 {
 };
 

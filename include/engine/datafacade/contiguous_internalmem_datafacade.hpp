@@ -31,6 +31,7 @@
 
 #include "util/exception.hpp"
 #include "util/exception_utils.hpp"
+#include "util/filtered_graph.hpp"
 #include "util/guidance/bearing_class.hpp"
 #include "util/guidance/entry_class.hpp"
 #include "util/guidance/turn_bearing.hpp"
@@ -68,7 +69,7 @@ template <>
 class ContiguousInternalMemoryAlgorithmDataFacade<CH> : public datafacade::AlgorithmDataFacade<CH>
 {
   private:
-    using QueryGraph = contractor::QueryGraphView;
+    using QueryGraph = util::FilteredGraphView<contractor::QueryGraphView>;
     using GraphNode = QueryGraph::NodeArrayEntry;
     using GraphEdge = QueryGraph::EdgeArrayEntry;
 
@@ -77,7 +78,9 @@ class ContiguousInternalMemoryAlgorithmDataFacade<CH> : public datafacade::Algor
     // allocator that keeps the allocation data
     std::shared_ptr<ContiguousBlockAllocator> allocator;
 
-    void InitializeGraphPointer(storage::DataLayout &data_layout, char *memory_block)
+    void InitializeGraphPointer(storage::DataLayout &data_layout,
+                                char *memory_block,
+                                const std::size_t exclude_index)
     {
         auto graph_nodes_ptr = data_layout.GetBlockPtr<GraphNode>(
             memory_block, storage::DataLayout::CH_GRAPH_NODE_LIST);
@@ -85,24 +88,34 @@ class ContiguousInternalMemoryAlgorithmDataFacade<CH> : public datafacade::Algor
         auto graph_edges_ptr = data_layout.GetBlockPtr<GraphEdge>(
             memory_block, storage::DataLayout::CH_GRAPH_EDGE_LIST);
 
+        auto filter_block_id = static_cast<storage::DataLayout::BlockID>(
+            storage::DataLayout::CH_EDGE_FILTER_0 + exclude_index);
+
+        auto edge_filter_ptr = data_layout.GetBlockPtr<unsigned>(memory_block, filter_block_id);
+
         util::vector_view<GraphNode> node_list(
             graph_nodes_ptr, data_layout.num_entries[storage::DataLayout::CH_GRAPH_NODE_LIST]);
         util::vector_view<GraphEdge> edge_list(
             graph_edges_ptr, data_layout.num_entries[storage::DataLayout::CH_GRAPH_EDGE_LIST]);
-        m_query_graph = QueryGraph(node_list, edge_list);
+
+        util::vector_view<bool> edge_filter(edge_filter_ptr,
+                                            data_layout.num_entries[filter_block_id]);
+        m_query_graph = QueryGraph({node_list, edge_list}, edge_filter);
     }
 
   public:
     ContiguousInternalMemoryAlgorithmDataFacade(
-        std::shared_ptr<ContiguousBlockAllocator> allocator_)
+        std::shared_ptr<ContiguousBlockAllocator> allocator_, std::size_t exclude_index)
         : allocator(std::move(allocator_))
     {
-        InitializeInternalPointers(allocator->GetLayout(), allocator->GetMemory());
+        InitializeInternalPointers(allocator->GetLayout(), allocator->GetMemory(), exclude_index);
     }
 
-    void InitializeInternalPointers(storage::DataLayout &data_layout, char *memory_block)
+    void InitializeInternalPointers(storage::DataLayout &data_layout,
+                                    char *memory_block,
+                                    const std::size_t exclude_index)
     {
-        InitializeGraphPointer(data_layout, memory_block);
+        InitializeGraphPointer(data_layout, memory_block, exclude_index);
     }
 
     // search graph access
@@ -121,10 +134,6 @@ class ContiguousInternalMemoryAlgorithmDataFacade<CH> : public datafacade::Algor
     {
         return m_query_graph.GetEdgeData(e);
     }
-
-    EdgeID BeginEdges(const NodeID n) const override final { return m_query_graph.BeginEdges(n); }
-
-    EdgeID EndEdges(const NodeID n) const override final { return m_query_graph.EndEdges(n); }
 
     EdgeRange GetAdjacentEdgeRange(const NodeID node) const override final
     {
@@ -166,32 +175,37 @@ class ContiguousInternalMemoryAlgorithmDataFacade<CoreCH>
     // allocator that keeps the allocation data
     std::shared_ptr<ContiguousBlockAllocator> allocator;
 
-    void InitializeCoreInformationPointer(storage::DataLayout &data_layout, char *memory_block)
+    void InitializeCoreInformationPointer(storage::DataLayout &data_layout,
+                                          char *memory_block,
+                                          const std::size_t exclude_index)
     {
-        auto core_marker_ptr =
-            data_layout.GetBlockPtr<unsigned>(memory_block, storage::DataLayout::CH_CORE_MARKER);
-        util::vector_view<bool> is_core_node(
-            core_marker_ptr, data_layout.num_entries[storage::DataLayout::CH_CORE_MARKER]);
+        auto core_block_id = static_cast<storage::DataLayout::BlockID>(
+            storage::DataLayout::CH_CORE_MARKER_0 + exclude_index);
+        auto core_marker_ptr = data_layout.GetBlockPtr<unsigned>(memory_block, core_block_id);
+        util::vector_view<bool> is_core_node(core_marker_ptr,
+                                             data_layout.num_entries[core_block_id]);
         m_is_core_node = std::move(is_core_node);
     }
 
   public:
     ContiguousInternalMemoryAlgorithmDataFacade(
-        std::shared_ptr<ContiguousBlockAllocator> allocator_)
+        std::shared_ptr<ContiguousBlockAllocator> allocator_, const std::size_t exclude_index)
         : allocator(std::move(allocator_))
     {
-        InitializeInternalPointers(allocator->GetLayout(), allocator->GetMemory());
+        InitializeInternalPointers(allocator->GetLayout(), allocator->GetMemory(), exclude_index);
     }
 
-    void InitializeInternalPointers(storage::DataLayout &data_layout, char *memory_block)
+    void InitializeInternalPointers(storage::DataLayout &data_layout,
+                                    char *memory_block,
+                                    const std::size_t exclude_index)
     {
-        InitializeCoreInformationPointer(data_layout, memory_block);
+        InitializeCoreInformationPointer(data_layout, memory_block, exclude_index);
     }
 
     bool IsCoreNode(const NodeID id) const override final
     {
-        BOOST_ASSERT(id < m_is_core_node.size());
-        return m_is_core_node[id];
+        BOOST_ASSERT(m_is_core_node.empty() || id < m_is_core_node.size());
+        return !m_is_core_node.empty() || m_is_core_node[id];
     }
 };
 
@@ -942,7 +956,7 @@ class ContiguousInternalMemoryDataFacade<CH>
     ContiguousInternalMemoryDataFacade(std::shared_ptr<ContiguousBlockAllocator> allocator,
                                        const std::size_t exclude_index)
         : ContiguousInternalMemoryDataFacadeBase(allocator, exclude_index),
-          ContiguousInternalMemoryAlgorithmDataFacade<CH>(allocator)
+          ContiguousInternalMemoryAlgorithmDataFacade<CH>(allocator, exclude_index)
 
     {
     }
@@ -957,7 +971,7 @@ class ContiguousInternalMemoryDataFacade<CoreCH> final
     ContiguousInternalMemoryDataFacade(std::shared_ptr<ContiguousBlockAllocator> allocator,
                                        const std::size_t exclude_index)
         : ContiguousInternalMemoryDataFacade<CH>(allocator, exclude_index),
-          ContiguousInternalMemoryAlgorithmDataFacade<CoreCH>(allocator)
+          ContiguousInternalMemoryAlgorithmDataFacade<CoreCH>(allocator, exclude_index)
 
     {
     }
@@ -1129,10 +1143,6 @@ template <> class ContiguousInternalMemoryAlgorithmDataFacade<MLD> : public Algo
     {
         return query_graph.GetEdgeData(e);
     }
-
-    EdgeID BeginEdges(const NodeID n) const override final { return query_graph.BeginEdges(n); }
-
-    EdgeID EndEdges(const NodeID n) const override final { return query_graph.EndEdges(n); }
 
     EdgeRange GetAdjacentEdgeRange(const NodeID node) const override final
     {
