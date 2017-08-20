@@ -1,8 +1,8 @@
 #ifndef OSRM_PARTITION_INERTIAL_FLOW_HPP_
 #define OSRM_PARTITION_INERTIAL_FLOW_HPP_
 
-#include "partition/dinic_max_flow.hpp"
 #include "partition/bisection_graph_view.hpp"
+#include "partition/dinic_max_flow.hpp"
 
 namespace osrm
 {

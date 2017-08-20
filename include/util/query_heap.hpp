@@ -152,6 +152,7 @@ class QueryHeap
 
     void Insert(NodeID node, Weight weight, const Data &data)
     {
+        BOOST_ASSERT(node < std::numeric_limits<NodeID>::max());
         const auto index = static_cast<Key>(inserted_nodes.size());
         const auto handle = heap.push(std::make_pair(weight, index));
         inserted_nodes.emplace_back(HeapNode{handle, node, weight, data});

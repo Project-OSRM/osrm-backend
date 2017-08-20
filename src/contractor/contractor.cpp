@@ -1,4 +1,6 @@
 #include "contractor/contractor.hpp"
+#include "contractor/contract_excludable_graph.hpp"
+#include "contractor/contracted_edge_container.hpp"
 #include "contractor/crc32_processor.hpp"
 #include "contractor/files.hpp"
 #include "contractor/graph_contractor.hpp"
@@ -6,6 +8,7 @@
 
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/edge_based_graph_factory.hpp"
+#include "extractor/files.hpp"
 #include "extractor/node_based_edge.hpp"
 
 #include "storage/io.hpp"
@@ -14,6 +17,8 @@
 
 #include "util/exception.hpp"
 #include "util/exception_utils.hpp"
+#include "util/exclude_flag.hpp"
+#include "util/filtered_graph.hpp"
 #include "util/graph_loader.hpp"
 #include "util/integer_range.hpp"
 #include "util/log.hpp"
@@ -42,6 +47,11 @@ int Contractor::Run()
         throw util::exception("Core factor must be between 0.0 to 1.0 (inclusive)" + SOURCE_REF);
     }
 
+    if (config.use_cached_priority)
+    {
+        util::Log(logWARNING) << "Using cached priorities is deprecated and they will be ignored.";
+    }
+
     TIMER_START(preparing);
 
     util::Log() << "Reading node weights.";
@@ -63,41 +73,36 @@ int Contractor::Run()
     // Contracting the edge-expanded graph
 
     TIMER_START(contraction);
-    std::vector<bool> is_core_node;
-    std::vector<float> node_levels;
-    if (config.use_cached_priority)
+
+    std::vector<std::vector<bool>> node_filters;
     {
-        files::readLevels(config.GetPath(".osrm.level"), node_levels);
+        extractor::EdgeBasedNodeDataContainer node_data;
+        extractor::files::readNodeData(config.GetPath(".osrm.ebg_nodes"), node_data);
+
+        extractor::ProfileProperties properties;
+        extractor::files::readProfileProperties(config.GetPath(".osrm.properties"), properties);
+
+        node_filters = util::excludeFlagsToNodeFilter(max_edge_id + 1, node_data, properties);
     }
 
-    util::DeallocatingVector<QueryEdge> contracted_edge_list;
-    { // own scope to not keep the contractor around
-        auto contractor_graph = toContractorGraph(max_edge_id+1, std::move(edge_based_edge_list));
-        std::tie(node_levels, is_core_node) = contractGraph(contractor_graph,
-                                         std::move(node_levels),
-                                         std::move(node_weights),
-                                         config.core_factor);
+    RangebasedCRC32 crc32_calculator;
+    const unsigned checksum = crc32_calculator(edge_based_edge_list);
 
-        contracted_edge_list = toEdges<QueryEdge>(std::move(contractor_graph));
-    }
+    QueryGraph query_graph;
+    std::vector<std::vector<bool>> edge_filters;
+    std::vector<std::vector<bool>> cores;
+    std::tie(query_graph, edge_filters, cores) =
+        contractExcludableGraph(toContractorGraph(max_edge_id + 1, std::move(edge_based_edge_list)),
+                                std::move(node_weights),
+                                std::move(node_filters),
+                                config.core_factor);
     TIMER_STOP(contraction);
-
+    util::Log() << "Contracted graph has " << query_graph.GetNumberOfEdges() << " edges.";
     util::Log() << "Contraction took " << TIMER_SEC(contraction) << " sec";
 
-    {
-        RangebasedCRC32 crc32_calculator;
-        const unsigned checksum = crc32_calculator(contracted_edge_list);
+    files::writeGraph(config.GetPath(".osrm.hsgr"), checksum, query_graph, edge_filters);
 
-        files::writeGraph(config.GetPath(".osrm.hsgr"),
-                          checksum,
-                          QueryGraph{max_edge_id + 1, std::move(contracted_edge_list)});
-    }
-
-    files::writeCoreMarker(config.GetPath(".osrm.core"), is_core_node);
-    if (!config.use_cached_priority)
-    {
-        files::writeLevels(config.GetPath(".osrm.level"), node_levels);
-    }
+    files::writeCoreMarker(config.GetPath(".osrm.core"), cores);
 
     TIMER_STOP(preparing);
 

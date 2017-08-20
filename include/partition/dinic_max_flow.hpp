@@ -83,8 +83,9 @@ class DinicMaxFlow
                                           const SourceSinkNodes &source_nodes) const;
 
     // Builds an actual cut result from a level graph
-    MinCut
-    MakeCut(const BisectionGraphView &view, const LevelGraph &levels, const std::size_t flow_value) const;
+    MinCut MakeCut(const BisectionGraphView &view,
+                   const LevelGraph &levels,
+                   const std::size_t flow_value) const;
 };
 
 } // namespace partition

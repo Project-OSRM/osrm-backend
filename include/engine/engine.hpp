@@ -176,7 +176,7 @@ bool Engine<routing_algorithms::corech::Algorithm>::CheckCompability(const Engin
 
         auto mem = storage::makeSharedMemory(barrier.data().region);
         auto layout = reinterpret_cast<storage::DataLayout *>(mem->Ptr());
-        return layout->GetBlockSize(storage::DataLayout::CH_CORE_MARKER) >
+        return layout->GetBlockSize(storage::DataLayout::CH_CORE_MARKER_0) >
                sizeof(std::uint64_t) + sizeof(util::FingerPrint);
     }
     else
@@ -185,9 +185,10 @@ bool Engine<routing_algorithms::corech::Algorithm>::CheckCompability(const Engin
             return false;
         storage::io::FileReader in(config.storage_config.GetPath(".osrm.core"),
                                    storage::io::FileReader::VerifyFingerprint);
+        in.ReadElementCount64(); // number of core markers
+        const auto number_of_core_markers = in.ReadElementCount64();
 
-        auto size = in.GetSize();
-        return size > sizeof(std::uint64_t);
+        return number_of_core_markers > 0;
     }
 }
 

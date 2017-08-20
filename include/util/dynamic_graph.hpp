@@ -33,6 +33,27 @@ template <typename EdgeDataT, bool UseSharedMemory>
 void write(storage::io::FileWriter &writer, const DynamicGraph<EdgeDataT> &graph);
 }
 
+namespace detail
+{
+// These types need to live outside of DynamicGraph
+// to be not dependable. We need this for transforming graphs
+// with different data.
+
+template <typename EdgeIterator> struct DynamicNode
+{
+    // index of the first edge
+    EdgeIterator first_edge;
+    // amount of edges
+    unsigned edges;
+};
+
+template <typename NodeIterator, typename EdgeDataT> struct DynamicEdge
+{
+    NodeIterator target;
+    EdgeDataT data;
+};
+}
+
 template <typename EdgeDataT> class DynamicGraph
 {
   public:
@@ -40,6 +61,11 @@ template <typename EdgeDataT> class DynamicGraph
     using NodeIterator = std::uint32_t;
     using EdgeIterator = std::uint32_t;
     using EdgeRange = range<EdgeIterator>;
+
+    using Node = detail::DynamicNode<EdgeIterator>;
+    using Edge = detail::DynamicEdge<NodeIterator, EdgeDataT>;
+
+    template <typename E> friend class DynamicGraph;
 
     class InputEdge
     {
@@ -120,6 +146,9 @@ template <typename EdgeDataT> class DynamicGraph
         }
     }
 
+    // Copy&move for the same data
+    //
+
     DynamicGraph(const DynamicGraph &other)
     {
         number_of_nodes = other.number_of_nodes;
@@ -130,7 +159,7 @@ template <typename EdgeDataT> class DynamicGraph
         edge_list = other.edge_list;
     }
 
-    DynamicGraph&operator=(const DynamicGraph &other)
+    DynamicGraph &operator=(const DynamicGraph &other)
     {
         auto copy_other = other;
         *this = std::move(other);
@@ -157,6 +186,38 @@ template <typename EdgeDataT> class DynamicGraph
         edge_list = std::move(other.edge_list);
 
         return *this;
+    }
+
+    // Removes all edges to and from nodes for which filter(node_id) returns false
+    template <typename Pred> auto Filter(Pred filter) const &
+    {
+        DynamicGraph other;
+
+        other.number_of_nodes = number_of_nodes;
+        other.number_of_edges = static_cast<std::uint32_t>(number_of_edges);
+        other.edge_list.reserve(edge_list.size());
+        other.node_array.resize(node_array.size());
+
+        NodeID node_id = 0;
+        std::transform(
+            node_array.begin(), node_array.end(), other.node_array.begin(), [&](const Node &node) {
+                const EdgeIterator first_edge = other.edge_list.size();
+                if (filter(node_id++))
+                {
+                    std::copy_if(edge_list.begin() + node.first_edge,
+                                 edge_list.begin() + node.first_edge + node.edges,
+                                 std::back_inserter(other.edge_list),
+                                 [&](const auto &edge) { return filter(edge.target); });
+                    const unsigned num_edges = other.edge_list.size() - first_edge;
+                    return Node{first_edge, num_edges};
+                }
+                else
+                {
+                    return Node{first_edge, 0};
+                }
+            });
+
+        return other;
     }
 
     unsigned GetNumberOfNodes() const { return number_of_nodes; }
@@ -366,6 +427,7 @@ template <typename EdgeDataT> class DynamicGraph
             for (auto edge : GetAdjacentEdgeRange(node))
             {
                 edge_list[edge].target = old_to_new_node[edge_list[edge].target];
+                BOOST_ASSERT(edge_list[edge].target != SPECIAL_NODEID);
                 old_to_new_edge[edge] = new_edge_index++;
             }
             node_array[node].first_edge = new_first_edge;
@@ -399,20 +461,6 @@ template <typename EdgeDataT> class DynamicGraph
     {
         edge_list[edge].target = (std::numeric_limits<NodeIterator>::max)();
     }
-
-    struct Node
-    {
-        // index of the first edge
-        EdgeIterator first_edge;
-        // amount of edges
-        unsigned edges;
-    };
-
-    struct Edge
-    {
-        NodeIterator target;
-        EdgeDataT data;
-    };
 
     NodeIterator number_of_nodes;
     std::atomic_uint number_of_edges;

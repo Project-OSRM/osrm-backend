@@ -18,7 +18,8 @@ namespace
 
 const auto constexpr INVALID_LEVEL = std::numeric_limits<DinicMaxFlow::Level>::max();
 
-auto makeHasNeighborNotInCheck(const DinicMaxFlow::SourceSinkNodes &set, const BisectionGraphView &view)
+auto makeHasNeighborNotInCheck(const DinicMaxFlow::SourceSinkNodes &set,
+                               const BisectionGraphView &view)
 {
     return [&](const NodeID nid) {
         const auto is_not_contained = [&set](const BisectionEdge &edge) {

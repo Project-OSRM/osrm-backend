@@ -1,6 +1,6 @@
+#include "partition/bisection_graph_view.hpp"
 #include "partition/dinic_max_flow.hpp"
 #include "partition/graph_generator.hpp"
-#include "partition/bisection_graph_view.hpp"
 #include "partition/recursive_bisection_state.hpp"
 
 #include <algorithm>

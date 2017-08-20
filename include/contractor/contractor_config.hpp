@@ -43,12 +43,9 @@ namespace contractor
 struct ContractorConfig final : storage::IOConfig
 {
     ContractorConfig()
-        : IOConfig(
-              {
-                  ".osrm.ebg",
-              },
-              {},
-              {".osrm.level", ".osrm.core", ".osrm.hsgr", ".osrm.enw"}),
+        : IOConfig({".osrm.ebg", ".osrm.ebg_nodes", ".osrm.properties"},
+                   {},
+                   {".osrm.level", ".osrm.core", ".osrm.hsgr", ".osrm.enw"}),
           requested_num_threads(0)
     {
     }

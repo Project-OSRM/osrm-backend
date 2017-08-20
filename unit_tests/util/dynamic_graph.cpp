@@ -1,6 +1,8 @@
 #include "util/dynamic_graph.hpp"
 #include "util/typedefs.hpp"
 
+#include "../common/range_tools.hpp"
+
 #include <boost/test/test_case_template.hpp>
 #include <boost/test/unit_test.hpp>
 
@@ -118,6 +120,43 @@ BOOST_AUTO_TEST_CASE(renumber_test)
 
     eit = simple_graph.FindEdge(0, 1);
     BOOST_CHECK_EQUAL(simple_graph.GetEdgeData(eit).id, 2);
+}
+
+BOOST_AUTO_TEST_CASE(filter_test)
+{
+    /*
+     *  (0) -1-> (1)
+     *  ^ ^       ^
+     *  2 5       1
+     *  | |       |
+     *  (3) -3-> (4)
+     *      <-4-
+     */
+    std::vector<TestInputEdge> input_edges = {TestInputEdge{0, 1, TestData{1}},
+                                              TestInputEdge{3, 0, TestData{2}},
+                                              TestInputEdge{3, 0, TestData{5}},
+                                              TestInputEdge{3, 4, TestData{3}},
+                                              TestInputEdge{4, 1, TestData{1}},
+                                              TestInputEdge{4, 3, TestData{4}}};
+    TestDynamicGraph simple_graph(5, input_edges);
+
+    // only keep 0, 1, 4 -> filter out all edges from/to 3
+    auto filtered_simple_graph =
+        simple_graph.Filter([](const NodeID node) { return node == 0 || node == 1 || node == 4; });
+
+    REQUIRE_SIZE_RANGE(filtered_simple_graph.GetAdjacentEdgeRange(0), 1);
+    CHECK_EQUAL_RANGE(filtered_simple_graph.GetAdjacentEdgeRange(0),
+                      filtered_simple_graph.FindEdge(0, 1));
+
+    REQUIRE_SIZE_RANGE(filtered_simple_graph.GetAdjacentEdgeRange(1), 0);
+
+    REQUIRE_SIZE_RANGE(filtered_simple_graph.GetAdjacentEdgeRange(2), 0);
+
+    REQUIRE_SIZE_RANGE(filtered_simple_graph.GetAdjacentEdgeRange(3), 0);
+
+    REQUIRE_SIZE_RANGE(filtered_simple_graph.GetAdjacentEdgeRange(4), 1);
+    CHECK_EQUAL_RANGE(filtered_simple_graph.GetAdjacentEdgeRange(4),
+                      filtered_simple_graph.FindEdge(4, 1));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
