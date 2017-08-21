@@ -2,6 +2,8 @@
     - Profile:
       - New function to support relations: `process_relation`. Read more in profiles documentation.
       - Support of `distance` weight in foot and bicycle profiles
+      - Added an optional argument `location_data` to `process_way`function that is a table containing OSM tags in a GeoJSON file specified by `--location-dependent-data` command line argument of `osrm-extract` (the option requires `osmium add-locations-to-ways` preparation step)
+      - left-side driving mode is specified by a local Boolean flag `is_left_hand_driving` in `ExtractionWay` and `ExtractionTurn`
     - Infrastructure:
       - Lua 5.1 support is removed due to lack of support in sol2 https://github.com/ThePhD/sol2/issues/302
     - Node.js Bindings:
@@ -39,7 +41,6 @@
       - BREAKING: Traffic signals will no longer be represented as turns internally. This requires re-processing of data but enables via-way turn restrictions across highway=traffic_signals
       - Additional checks for empty segments when loading traffic data files
       - Tunes the constants for turns in sharp curves just a tiny bit to circumvent a mix-up in fork directions at a specific intersection (https://github.com/Project-OSRM/osrm-backend/issues/4331)
-      - BREAKING: added `is_left_hand_driving` vector to `.ebg_nodes` file
     - Infrastructure
       - Refactor datafacade to make implementing additional DataFacades simpler
     - Bugfixes
@@ -52,10 +53,6 @@
       - Fix a pre-processing bug where incorrect directions could be issued when two turns would have similar instructions and we tried to give them distinct values (https://github.com/Project-OSRM/osrm-backend/pull/4375)
       - The entry bearing for correct the cardinality of a direction value (https://github.com/Project-OSRM/osrm-backend/pull/4353
       - Change timezones in West Africa to the WAT zone so they're recognized on the Windows platform
-  - Profiles
-    - Added an optional argument `location_data` to `process_way`function that is a table containing OSM tags in a GeoJSON file specified by `--location-dependent-data` command line argument of `osrm-extract` (the option requires `osmium add-locations-to-ways` preparation step)
-    - `left_hand_driving` flag is no more global but a local Boolean flag `is_left_hand_driving` in `ExtractionWay` and `ExtractionTurn`
-
 
 # 5.10.0
   - Changes from 5.9:

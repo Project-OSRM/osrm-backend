@@ -22,10 +22,10 @@ function setup()
       u_turn_penalty                 = 20,
       continue_straight_at_waypoint  = true,
       use_turn_restrictions          = true,
+      left_hand_driving              = false,
       traffic_light_penalty          = 2,
     },
 
-    left_hand_driving         = false,
     default_mode              = mode.driving,
     default_speed             = 10,
     oneway_handling           = true,

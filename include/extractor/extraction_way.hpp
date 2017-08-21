@@ -46,21 +46,21 @@ struct ExtractionWay
         backward_rate = -1;
         duration = -1;
         weight = -1;
-        roundabout = false;
-        circular = false;
-        is_startpoint = true;
         name.clear();
         ref.clear();
         pronunciation.clear();
         destinations.clear();
         exits.clear();
-        forward_travel_mode = TRAVEL_MODE_INACCESSIBLE;
-        backward_travel_mode = TRAVEL_MODE_INACCESSIBLE;
         turn_lanes_forward.clear();
         turn_lanes_backward.clear();
         road_classification = guidance::RoadClassification();
-        backward_restricted = false;
+        forward_travel_mode = TRAVEL_MODE_INACCESSIBLE;
+        backward_travel_mode = TRAVEL_MODE_INACCESSIBLE;
+        roundabout = false;
+        circular = false;
+        is_startpoint = true;
         forward_restricted = false;
+        backward_restricted = false;
         is_left_hand_driving = false;
     }
 
@@ -110,12 +110,15 @@ struct ExtractionWay
     guidance::RoadClassification road_classification;
     TravelMode forward_travel_mode : 4;
     TravelMode backward_travel_mode : 4;
+
+    // Boolean flags
     bool roundabout : 1;
     bool circular : 1;
     bool is_startpoint : 1;
     bool forward_restricted : 1;
     bool backward_restricted : 1;
     bool is_left_hand_driving : 1;
+    bool : 2;
 };
 }
 }
