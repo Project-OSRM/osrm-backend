@@ -26,7 +26,7 @@ namespace partition
 {
 
 // Bidirectional (s,t) to (s,t) and (t,s)
-std::vector<extractor::EdgeBasedEdge>
+inline std::vector<extractor::EdgeBasedEdge>
 splitBidirectionalEdges(const std::vector<extractor::EdgeBasedEdge> &edges)
 {
     std::vector<extractor::EdgeBasedEdge> directed;
@@ -136,7 +136,8 @@ std::vector<OutputEdgeT> prepareEdgesForUsageInGraph(std::vector<extractor::Edge
     return output_edges;
 }
 
-std::vector<extractor::EdgeBasedEdge> graphToEdges(const DynamicEdgeBasedGraph &edge_based_graph)
+inline std::vector<extractor::EdgeBasedEdge>
+graphToEdges(const DynamicEdgeBasedGraph &edge_based_graph)
 {
     auto range = tbb::blocked_range<NodeID>(0, edge_based_graph.GetNumberOfNodes());
     auto max_turn_id =
