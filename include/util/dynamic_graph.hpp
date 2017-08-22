@@ -120,6 +120,23 @@ template <typename EdgeDataT> class DynamicGraph
         }
     }
 
+    DynamicGraph(const DynamicGraph &other)
+    {
+        number_of_nodes = other.number_of_nodes;
+        // atomics can't be moved this is why we need an own constructor
+        number_of_edges = static_cast<std::uint32_t>(other.number_of_edges);
+
+        node_array = other.node_array;
+        edge_list = other.edge_list;
+    }
+
+    DynamicGraph&operator=(const DynamicGraph &other)
+    {
+        auto copy_other = other;
+        *this = std::move(other);
+        return *this;
+    }
+
     DynamicGraph(DynamicGraph &&other)
     {
         number_of_nodes = other.number_of_nodes;

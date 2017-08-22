@@ -6,6 +6,7 @@
 
 #include <boost/iterator/iterator_facade.hpp>
 
+#include <algorithm>
 #include <limits>
 #include <utility>
 #include <vector>
@@ -254,9 +255,25 @@ template <typename ElementT> class DeallocatingVector
         bucket_list.emplace_back(new ElementT[ELEMENTS_PER_BLOCK]);
     }
 
-    // copying is not safe since this would only do a shallow copy
-    DeallocatingVector(DeallocatingVector &other) = delete;
-    DeallocatingVector &operator=(DeallocatingVector &other) = delete;
+    // Performs a deep copy of the buckets
+    DeallocatingVector(const DeallocatingVector &other)
+    {
+        bucket_list.resize(other.bucket_list.size());
+        for (const auto index : util::irange<std::size_t>(0, bucket_list.size()))
+        {
+            bucket_list[index] = new ElementT[ELEMENTS_PER_BLOCK];
+            std::copy_n(other.bucket_list[index], ELEMENTS_PER_BLOCK, bucket_list[index]);
+        }
+        current_size = other.current_size;
+    }
+    // Note we capture other by value
+    DeallocatingVector &operator=(const DeallocatingVector &other)
+    {
+        auto copy_other = other;
+        swap(copy_other);
+        return *this;
+    }
+
     // moving is fine
     DeallocatingVector(DeallocatingVector &&other) { swap(other); }
     DeallocatingVector &operator=(DeallocatingVector &&other)
