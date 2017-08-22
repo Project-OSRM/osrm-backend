@@ -1,5 +1,6 @@
 #include "partition/inertial_flow.hpp"
 #include "partition/bisection_graph.hpp"
+#include "partition/bisection_graph_view.hpp"
 #include "partition/reorder_first_last.hpp"
 
 #include <algorithm>
@@ -32,7 +33,7 @@ struct SpatialOrder
 
 // Creates a spatial order of n * sources "first" and n * sink "last" node ids.
 // The slope determines the spatial order for sorting node coordinates.
-SpatialOrder makeSpatialOrder(const GraphView &view, const double ratio, const double slope)
+SpatialOrder makeSpatialOrder(const BisectionGraphView &view, const double ratio, const double slope)
 {
     struct NodeWithCoordinate
     {
@@ -89,7 +90,7 @@ SpatialOrder makeSpatialOrder(const GraphView &view, const double ratio, const d
 
 // Makes n cuts with different spatial orders and returns the best.
 DinicMaxFlow::MinCut
-bestMinCut(const GraphView &view, const std::size_t n, const double ratio, const double balance)
+bestMinCut(const BisectionGraphView &view, const std::size_t n, const double ratio, const double balance)
 {
     DinicMaxFlow::MinCut best;
     best.num_edges = -1;
@@ -147,7 +148,7 @@ bestMinCut(const GraphView &view, const std::size_t n, const double ratio, const
 }
 }
 
-DinicMaxFlow::MinCut computeInertialFlowCut(const GraphView &view,
+DinicMaxFlow::MinCut computeInertialFlowCut(const BisectionGraphView &view,
                                             const std::size_t num_slopes,
                                             const double balance,
                                             const double source_sink_rate)

@@ -18,7 +18,7 @@ namespace
 
 const auto constexpr INVALID_LEVEL = std::numeric_limits<DinicMaxFlow::Level>::max();
 
-auto makeHasNeighborNotInCheck(const DinicMaxFlow::SourceSinkNodes &set, const GraphView &view)
+auto makeHasNeighborNotInCheck(const DinicMaxFlow::SourceSinkNodes &set, const BisectionGraphView &view)
 {
     return [&](const NodeID nid) {
         const auto is_not_contained = [&set](const BisectionEdge &edge) {
@@ -31,7 +31,7 @@ auto makeHasNeighborNotInCheck(const DinicMaxFlow::SourceSinkNodes &set, const G
 
 } // end namespace
 
-DinicMaxFlow::MinCut DinicMaxFlow::operator()(const GraphView &view,
+DinicMaxFlow::MinCut DinicMaxFlow::operator()(const BisectionGraphView &view,
                                               const SourceSinkNodes &source_nodes,
                                               const SourceSinkNodes &sink_nodes) const
 {
@@ -93,7 +93,7 @@ DinicMaxFlow::MinCut DinicMaxFlow::operator()(const GraphView &view,
     } while (true);
 }
 
-DinicMaxFlow::MinCut DinicMaxFlow::MakeCut(const GraphView &view,
+DinicMaxFlow::MinCut DinicMaxFlow::MakeCut(const BisectionGraphView &view,
                                            const LevelGraph &levels,
                                            const std::size_t flow_value) const
 {
@@ -112,7 +112,7 @@ DinicMaxFlow::MinCut DinicMaxFlow::MakeCut(const GraphView &view,
 }
 
 DinicMaxFlow::LevelGraph
-DinicMaxFlow::ComputeLevelGraph(const GraphView &view,
+DinicMaxFlow::ComputeLevelGraph(const BisectionGraphView &view,
                                 const std::vector<NodeID> &border_source_nodes,
                                 const SourceSinkNodes &source_nodes,
                                 const SourceSinkNodes &sink_nodes,
@@ -172,7 +172,7 @@ DinicMaxFlow::ComputeLevelGraph(const GraphView &view,
 
 std::size_t DinicMaxFlow::BlockingFlow(FlowEdges &flow,
                                        LevelGraph &levels,
-                                       const GraphView &view,
+                                       const BisectionGraphView &view,
                                        const SourceSinkNodes &source_nodes,
                                        const std::vector<NodeID> &border_sink_nodes) const
 {
@@ -228,7 +228,7 @@ std::size_t DinicMaxFlow::BlockingFlow(FlowEdges &flow,
 // INVALID_LEVEL and by following the level graph, this looks at every edge at most `c` times (O(E))
 std::vector<NodeID> DinicMaxFlow::GetAugmentingPath(LevelGraph &levels,
                                                     const NodeID node_id,
-                                                    const GraphView &view,
+                                                    const BisectionGraphView &view,
                                                     const FlowEdges &flow,
                                                     const SourceSinkNodes &source_nodes) const
 {
@@ -290,7 +290,7 @@ std::vector<NodeID> DinicMaxFlow::GetAugmentingPath(LevelGraph &levels,
     return path;
 }
 
-bool DinicMaxFlow::Validate(const GraphView &view,
+bool DinicMaxFlow::Validate(const BisectionGraphView &view,
                             const SourceSinkNodes &source_nodes,
                             const SourceSinkNodes &sink_nodes) const
 {

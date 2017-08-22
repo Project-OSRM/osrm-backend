@@ -1,4 +1,4 @@
-#include "partition/graph_view.hpp"
+#include "partition/bisection_graph_view.hpp"
 #include "partition/graph_generator.hpp"
 #include "partition/recursive_bisection_state.hpp"
 
@@ -33,8 +33,8 @@ BOOST_AUTO_TEST_CASE(separate_top_bottom)
     partition[4] = partition[5] = partition[6] = partition[7] = true;
 
     const auto center = bisection_state.ApplyBisection(graph.Begin(), graph.End(), 0, partition);
-    GraphView left(graph, graph.Begin(), center);
-    GraphView right(graph, center, graph.End());
+    BisectionGraphView left(graph, graph.Begin(), center);
+    BisectionGraphView right(graph, center, graph.End());
 
     BOOST_CHECK_EQUAL(left.NumberOfNodes(), 4);
     for (const auto &node : left.Nodes())
@@ -82,10 +82,10 @@ BOOST_AUTO_TEST_CASE(separate_top_bottom_copy)
     partition[4] = partition[5] = partition[6] = partition[7] = true;
 
     const auto center = bisection_state.ApplyBisection(graph.Begin(), graph.End(), 0, partition);
-    GraphView total(graph, graph.Begin(), graph.End());
+    BisectionGraphView total(graph, graph.Begin(), graph.End());
 
-    GraphView left(total, total.Begin(), center);
-    GraphView right(total, center, total.End());
+    BisectionGraphView left(total, total.Begin(), center);
+    BisectionGraphView right(total, center, total.End());
 
     BOOST_CHECK_EQUAL(left.NumberOfNodes(), 4);
     for (const auto &node : left.Nodes())
@@ -134,8 +134,8 @@ BOOST_AUTO_TEST_CASE(separate_left_right)
     partition[0] = partition[4] = false;
 
     const auto center = bisection_state.ApplyBisection(graph.Begin(), graph.End(), 0, partition);
-    GraphView left(graph, graph.Begin(), center);
-    GraphView right(graph, center, graph.End());
+    BisectionGraphView left(graph, graph.Begin(), center);
+    BisectionGraphView right(graph, center, graph.End());
 
     BOOST_CHECK_EQUAL(left.NumberOfNodes(), 2);
     std::vector<Coordinate> left_coordinates;

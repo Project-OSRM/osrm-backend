@@ -1,7 +1,7 @@
 #include "partition/recursive_bisection.hpp"
 #include "partition/inertial_flow.hpp"
 
-#include "partition/graph_view.hpp"
+#include "partition/bisection_graph_view.hpp"
 #include "partition/recursive_bisection_state.hpp"
 
 #include "util/log.hpp"
@@ -46,7 +46,7 @@ RecursiveBisection::RecursiveBisection(BisectionGraph &bisection_graph_,
 
     struct TreeNode
     {
-        GraphView graph;
+        BisectionGraphView graph;
         std::uint64_t depth;
     };
 
@@ -82,13 +82,13 @@ RecursiveBisection::RecursiveBisection(BisectionGraph &bisection_graph_,
             return too_small || too_deep;
         };
 
-        GraphView left_graph{bisection_graph, node.graph.Begin(), center};
+        BisectionGraphView left_graph{bisection_graph, node.graph.Begin(), center};
         TreeNode left_node{std::move(left_graph), node.depth + 1};
 
         if (!terminal(left_node))
             feeder.add(std::move(left_node));
 
-        GraphView right_graph{bisection_graph, center, node.graph.End()};
+        BisectionGraphView right_graph{bisection_graph, center, node.graph.End()};
         TreeNode right_node{std::move(right_graph), node.depth + 1};
 
         if (!terminal(right_node))

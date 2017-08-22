@@ -85,7 +85,7 @@ RecursiveBisectionState::ApplyBisection(const NodeIterator const_begin,
     return const_begin + std::distance(begin, center);
 }
 
-std::vector<GraphView>
+std::vector<BisectionGraphView>
 RecursiveBisectionState::PrePartitionWithSCC(const std::size_t small_component_size)
 {
     // since our graphs are unidirectional, we don't realy need the scc. But tarjan is so nice and
@@ -124,7 +124,7 @@ RecursiveBisectionState::PrePartitionWithSCC(const std::size_t small_component_s
             edge.target = mapping[edge.target];
     });
 
-    std::vector<GraphView> views;
+    std::vector<BisectionGraphView> views;
     auto last = bisection_graph.CBegin();
     auto last_id = transform_id(bisection_graph.Begin()->original_id);
     std::set<std::size_t> ordered_component_ids;
@@ -134,12 +134,12 @@ RecursiveBisectionState::PrePartitionWithSCC(const std::size_t small_component_s
         ordered_component_ids.insert(itr_id);
         if (last_id != itr_id)
         {
-            views.push_back(GraphView(bisection_graph, last, itr));
+            views.push_back(BisectionGraphView(bisection_graph, last, itr));
             last_id = itr_id;
             last = itr;
         }
     }
-    views.push_back(GraphView(bisection_graph, last, bisection_graph.CEnd()));
+    views.push_back(BisectionGraphView(bisection_graph, last, bisection_graph.CEnd()));
 
     bool has_small_component = [&]() {
         for (std::size_t i = 0; i < scc_algo.GetNumberOfComponents(); ++i)
@@ -149,7 +149,7 @@ RecursiveBisectionState::PrePartitionWithSCC(const std::size_t small_component_s
     }();
 
     if (!has_small_component)
-        views.push_back(GraphView(bisection_graph, bisection_graph.CEnd(), bisection_graph.CEnd()));
+        views.push_back(BisectionGraphView(bisection_graph, bisection_graph.CEnd(), bisection_graph.CEnd()));
 
     // apply scc as bisections, we need scc_level bits for this with scc_levels =
     // ceil(log_2(components))
