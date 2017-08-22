@@ -1,7 +1,7 @@
 #ifndef OSRM_PARTITION_DINIC_MAX_FLOW_HPP_
 #define OSRM_PARTITION_DINIC_MAX_FLOW_HPP_
 
-#include "partition/graph_view.hpp"
+#include "partition/bisection_graph_view.hpp"
 
 #include <cstdint>
 #include <functional>
@@ -31,12 +31,12 @@ class DinicMaxFlow
     // input parameter storing the set o
     using SourceSinkNodes = std::unordered_set<NodeID>;
 
-    MinCut operator()(const GraphView &view,
+    MinCut operator()(const BisectionGraphView &view,
                       const SourceSinkNodes &source_nodes,
                       const SourceSinkNodes &sink_nodes) const;
 
     // validates the inpiut parameters to the flow algorithm (e.g. not intersecting)
-    bool Validate(const GraphView &view,
+    bool Validate(const BisectionGraphView &view,
                   const SourceSinkNodes &source_nodes,
                   const SourceSinkNodes &sink_nodes) const;
 
@@ -57,7 +57,7 @@ class DinicMaxFlow
     //  \   /
     //    b
     // would assign s = 0, a,b = 1, t=2
-    LevelGraph ComputeLevelGraph(const GraphView &view,
+    LevelGraph ComputeLevelGraph(const BisectionGraphView &view,
                                  const std::vector<NodeID> &border_source_nodes,
                                  const SourceSinkNodes &source_nodes,
                                  const SourceSinkNodes &sink_nodes,
@@ -68,7 +68,7 @@ class DinicMaxFlow
     // with increasing level exists from `s` to `t`).
     std::size_t BlockingFlow(FlowEdges &flow,
                              LevelGraph &levels,
-                             const GraphView &view,
+                             const BisectionGraphView &view,
                              const SourceSinkNodes &source_nodes,
                              const std::vector<NodeID> &border_sink_nodes) const;
 
@@ -78,13 +78,13 @@ class DinicMaxFlow
     // sink nodes, instead of the source, so we can save a few dfs runs
     std::vector<NodeID> GetAugmentingPath(LevelGraph &levels,
                                           const NodeID from,
-                                          const GraphView &view,
+                                          const BisectionGraphView &view,
                                           const FlowEdges &flow,
                                           const SourceSinkNodes &source_nodes) const;
 
     // Builds an actual cut result from a level graph
     MinCut
-    MakeCut(const GraphView &view, const LevelGraph &levels, const std::size_t flow_value) const;
+    MakeCut(const BisectionGraphView &view, const LevelGraph &levels, const std::size_t flow_value) const;
 };
 
 } // namespace partition

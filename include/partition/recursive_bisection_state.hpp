@@ -6,7 +6,7 @@
 #include <vector>
 
 #include "partition/bisection_graph.hpp"
-#include "partition/graph_view.hpp"
+#include "partition/bisection_graph_view.hpp"
 #include "util/typedefs.hpp"
 
 namespace osrm
@@ -37,7 +37,7 @@ class RecursiveBisectionState
     // perform an initial pre-partitioning into small components
     // on larger graphs, SCCs give perfect cuts (think Amerika vs Europe)
     // This function performs an initial pre-partitioning using these sccs.
-    std::vector<GraphView> PrePartitionWithSCC(const std::size_t small_component_size);
+    std::vector<BisectionGraphView> PrePartitionWithSCC(const std::size_t small_component_size);
 
     const std::vector<BisectionID> &BisectionIDs() const;
 

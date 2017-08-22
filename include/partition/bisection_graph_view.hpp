@@ -1,5 +1,5 @@
-#ifndef OSRM_PARTITION_GRAPHVIEW_HPP_
-#define OSRM_PARTITION_GRAPHVIEW_HPP_
+#ifndef OSRM_PARTITION_BISECTION_GRAPHVIEW_HPP_
+#define OSRM_PARTITION_BISECTION_GRAPHVIEW_HPP_
 
 #include "partition/bisection_graph.hpp"
 
@@ -17,7 +17,7 @@ namespace partition
 
 // Non-owning immutable sub-graph view into a base graph.
 // The part of the graph to select is determined by the recursive bisection state.
-class GraphView
+class BisectionGraphView
 {
   public:
     using ConstNodeIterator = BisectionGraph::ConstNodeIterator;
@@ -26,13 +26,13 @@ class GraphView
     using EdgeT = BisectionGraph::EdgeT;
 
     // Construction either for a subrange, or for a full range
-    GraphView(const BisectionGraph &graph);
-    GraphView(const BisectionGraph &graph,
+    BisectionGraphView(const BisectionGraph &graph);
+    BisectionGraphView(const BisectionGraph &graph,
               const ConstNodeIterator begin,
               const ConstNodeIterator end);
 
     // construction from a different view, no need to keep the graph around
-    GraphView(const GraphView &view, const ConstNodeIterator begin, const ConstNodeIterator end);
+    BisectionGraphView(const BisectionGraphView &view, const ConstNodeIterator begin, const ConstNodeIterator end);
 
     // Number of nodes _in this sub-graph.
     std::size_t NumberOfNodes() const;

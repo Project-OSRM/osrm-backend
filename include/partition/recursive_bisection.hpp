@@ -2,7 +2,6 @@
 #define OSRM_PARTITION_RECURSIVE_BISECTION_HPP_
 
 #include "partition/bisection_graph.hpp"
-#include "partition/graph_view.hpp"
 #include "partition/recursive_bisection_state.hpp"
 #include "util/typedefs.hpp"
 

@@ -1,6 +1,6 @@
 #include "partition/dinic_max_flow.hpp"
 #include "partition/graph_generator.hpp"
-#include "partition/graph_view.hpp"
+#include "partition/bisection_graph_view.hpp"
 #include "partition/recursive_bisection_state.hpp"
 
 #include <algorithm>
@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(horizontal_cut_between_two_grids)
     }();
 
     RecursiveBisectionState bisection_state(graph);
-    GraphView view(graph);
+    BisectionGraphView view(graph);
 
     DinicMaxFlow::SourceSinkNodes sources, sinks;
 
