@@ -13,3 +13,4 @@
 !profiles/*
 !profiles/lib/*
 !profiles/examples/*
+!scripts/node_install.sh
