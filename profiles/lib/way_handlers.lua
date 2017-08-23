@@ -159,8 +159,8 @@ end
 
 -- handling routes with durations, including ferries and railway
 function WayHandlers.routes(profile,way,result,data)
-  for key,route_type in pairs(profile.routes) do
-    local speed = route_type.speed[data[key]]
+  for key,key_settings in pairs(profile.routes) do
+    local speed = key_settings.speed[data[key]]
     if speed and speed > 0 then
       local duration  = way:get_value_by_key("duration")
       if duration and durationIsValid(duration) then
@@ -209,7 +209,6 @@ function WayHandlers.railways(profile,way,result,data)
      result.backward_mode = mode.train
      result.forward_speed = speed
      result.backward_speed = speed
-     print('rail!')
      return true
     end
   end

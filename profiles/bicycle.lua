@@ -153,26 +153,28 @@ function setup()
 
     routes = {
       railway = {
-        mode = mode.train,
         access_required = true,
-        speed = {
-          train = 10,
-          railway = 10,
-          subway = 10,
-          light_rail = 10,
-          monorail = 10,
-          tram = 10
+        mode = mode.train,
+        speed = 10,
+        types = {
+          train = {},
+          railway = {},
+          subway = {},
+          light_rail = {},
+          monorail = {},
+          tram = {}
         }
       },
       route = {
-        mode = mode.ferry,
-        access_required = true,   
-        speed = {
-          ferry = 5
+        types = {
+          ferry = {
+            access_required = true,
+            speed = 5
+            mode = mode.ferry,
+          }
         }
       }
-    },
-
+    }
 
     bridge_speeds = {
       movable = 5
