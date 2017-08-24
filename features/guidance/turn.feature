@@ -1368,5 +1368,5 @@ Feature: Simple Turns
 
        When I route I should get
             | waypoints | route        | turns                           |
-            | a,d       | ab,bcd,bcd   | depart,fork slight left,arrive  |
-            | a,g       | ab,befg,befg | depart,fork slight right,arrive |
+            | a,d       | ab,bcd,bcd   | depart,fork slight right,arrive |
+            | a,g       | ab,befg,befg | depart,fork slight left,arrive  |
