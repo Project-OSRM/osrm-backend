@@ -1349,3 +1349,24 @@ Feature: Simple Turns
        When I route I should get
             | waypoints | route    | turns                   |
             | a,d       | ab,dc,dc | depart,turn left,arrive |
+
+
+    # https://www.openstreetmap.org/node/1332083066
+    Scenario: Turns ordering must respect initial bearings
+        Given the node map
+            """
+            a . be .
+                  \ c.
+                 d/    .f . g
+            """
+
+        And the ways
+            | nodes | highway | oneway |
+            | ab    | primary | yes    |
+            | bcd   | primary | yes    |
+            | befg  | primary | yes    |
+
+       When I route I should get
+            | waypoints | route        | turns                           |
+            | a,d       | ab,bcd,bcd   | depart,fork slight left,arrive  |
+            | a,g       | ab,befg,befg | depart,fork slight right,arrive |
