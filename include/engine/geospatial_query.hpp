@@ -247,14 +247,18 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
     std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
         const util::Coordinate input_coordinate,
         const Approach approach,
-        const boost::optional<std::string> name_hint) const
+        const boost::optional<std::string> &name_hint) const
     {
         bool has_small_component = false;
         bool has_big_component = false;
         auto results = rtree.Nearest(
             input_coordinate,
-            [this, approach, &input_coordinate, &has_big_component, &has_small_component](
-                const CandidateSegment &segment) {
+            [this,
+             approach,
+             &input_coordinate,
+             &has_big_component,
+             &has_small_component,
+             &name_hint](const CandidateSegment &segment) {
                 auto use_segment =
                     (!has_small_component || (!has_big_component && !IsTinyComponent(segment)));
                 auto use_directions = std::make_pair(use_segment, use_segment);
@@ -623,24 +627,27 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
                                            const boost::optional<std::string> &name_hint) const
     {
         if (!name_hint)
-            return std::make_pair<true, true>;
+            return std::make_pair(true, true);
 
         const auto name =
             datafacade.GetNameForID(datafacade.GetNameIndex(segment.data.forward_segment_id.id));
 
-        util::Log(logDEBUG) << "Hint = " << name_hint << " name = " << name;
+        auto dist = std::abs(levenshtein_distance(name, *name_hint));
 
-        auto dist = std::abs(levenshtein_distance(name, name_hint)) < 3)
+        util::Log(logDEBUG) << "Hint = " << *name_hint << " name = " << name
+                            << " distance = " << dist;
 
         // If the hint is a substring of the name, or the name is a substring of the hint,
         // or the edit distance is less than 3, consider it an OK match
-        if (name.find(name_hint) != std::string::npos ||
-            name_hint.find(name.data(), name.size()) != std::string::npos ||
-            std::abs(levenshtein_distance(name, name_hint)) < 3)
+        if (name.find(*name_hint) != std::string::npos ||
+            name_hint->find(name.data(), name.size()) != std::string::npos || dist < 3)
         {
             return std::make_pair(true, true);
         }
-        else { return std::make_pair(false, false); }
+        else
+        {
+            return std::make_pair(false, false);
+        }
     }
 
     /**

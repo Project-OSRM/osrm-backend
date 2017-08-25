@@ -167,11 +167,11 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
                         (-approach_type %
                          ';')[ph::bind(&engine::api::BaseParameters::approaches, qi::_r1) = qi::_1];
 
+        // TODO: limit name length, allow more chars, strip spaces, remove doublespaces, etc
         name_hints_rule =
             qi::lit("name_hints=") >
-            (qi_as_string[+qi::char_(
-                 "a-zA-Z,' ")] % // TODO: be more sophisticated about accepting name strings
-             ';')[ph::bind(add_name_hint, qi::_r1, qi::_1)];
+            (-qi::as_string[+qi::char_("a-zA-Z,' ")])[ph::bind(add_name_hint, qi::_r1, qi::_1)] %
+                ';';
 
         exclude_rule = qi::lit("exclude=") >
                        (qi::as_string[+qi::char_("a-zA-Z0-9")] %

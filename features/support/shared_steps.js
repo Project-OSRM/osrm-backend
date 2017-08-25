@@ -220,7 +220,8 @@ module.exports = function () {
                     var params = this.overwriteParams(defaultParams, userParams),
                         waypoints = [],
                         bearings = [],
-                        approaches = [];
+                        approaches = [],
+                        namehints = [];
 
                     if (row.bearings) {
                         got.bearings = row.bearings;
@@ -230,6 +231,11 @@ module.exports = function () {
                     if (row.approaches) {
                         got.approaches = row.approaches;
                         approaches = row.approaches.split(' ').filter(b => !!b);
+                    }
+
+                    if (row.name_hints) {
+                        got.name_hints = row.name_hints;
+                        namehints = row.name_hints.split(',').filter(b => !!b);
                     }
 
                     if (row.from && row.to) {
@@ -243,7 +249,7 @@ module.exports = function () {
 
                         got.from = row.from;
                         got.to = row.to;
-                        this.requestRoute(waypoints, bearings, approaches, params, afterRequest);
+                        this.requestRoute(waypoints, bearings, approaches, namehints, params, afterRequest);
                     } else if (row.waypoints) {
                         row.waypoints.split(',').forEach((n) => {
                             var node = this.findNodeByName(n.trim());
@@ -251,7 +257,7 @@ module.exports = function () {
                             waypoints.push(node);
                         });
                         got.waypoints = row.waypoints;
-                        this.requestRoute(waypoints, bearings, approaches, params, afterRequest);
+                        this.requestRoute(waypoints, bearings, approaches, namehints, params, afterRequest);
                     } else {
                         return cb(new Error('*** no waypoints'));
                     }
