@@ -144,7 +144,15 @@ matrix:
       osx_image: xcode8.2
       compiler: "mason-osx-release"
       # we use the xcode provides clang and don't install our own
-      env: ENABLE_MASON=ON BUILD_TYPE='Release' CUCUMBER_TIMEOUT=60000 CCOMPILER='clang' CXXCOMPILER='clang++' ENABLE_ASSERTIONS=ON ENABLE_LTO=ON
+      env: ENABLE_MASON=ON BUILD_TYPE='Release' CUCUMBER_TIMEOUT=60000 CCOMPILER='clang' CXXCOMPILER='clang++' ENABLE_ASSERTIONS=ON ENABLE_LTO=ON NODE="4"
+      after_success:
+        - ./scripts/travis/publish.sh
+
+    - os: osx
+      osx_image: xcode8.2
+      compiler: "mason-osx-release"
+      # we use the xcode provides clang and don't install our own
+      env: ENABLE_MASON=ON BUILD_TYPE='Release' CUCUMBER_TIMEOUT=60000 CCOMPILER='clang' CXXCOMPILER='clang++' ENABLE_ASSERTIONS=ON ENABLE_LTO=ON NODE="6"
       after_success:
         - ./scripts/travis/publish.sh
 
