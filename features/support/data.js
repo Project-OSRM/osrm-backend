@@ -162,9 +162,13 @@ module.exports = function () {
         fs.exists(this.scenarioCacheFile, (exists) => {
             if (exists) callback();
             else {
-                this.OSMDB.toXML((xml) => {
-                    fs.writeFile(this.scenarioCacheFile, xml, callback);
-                });
+                if (this.osm_str) {
+                    fs.writeFile(this.scenarioCacheFile, this.osm_str, callback);
+                } else {
+                    this.OSMDB.toXML((xml) => {
+                        fs.writeFile(this.scenarioCacheFile, xml, callback);
+                    });
+                }
             }
         });
     };

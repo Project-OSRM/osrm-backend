@@ -2,6 +2,7 @@
 
 var util = require('util');
 var assert = require('assert');
+const OSM = require('../lib/osm');
 
 module.exports = function () {
     this.ShouldGetAResponse = () => {
@@ -233,12 +234,24 @@ module.exports = function () {
                     }
 
                     if (row.from && row.to) {
-                        var fromNode = this.findNodeByName(row.from);
-                        if (!fromNode) return cb(new Error(util.format('*** unknown from-node "%s"', row.from)));
+                        var match = row.from.match(/^ *(-?[0-9]+(\.[0-9]+)?),(-?[0-9]+(\.[0-9]+)?) *$/);
+                        var fromNode;
+                        if (match) {
+                            fromNode = new OSM.Node(1, this.OSM_USER, this.OSM_TIMESTAMP, this.OSM_UID, parseFloat(match[1]), parseFloat(match[2]), {});
+                        } else {
+                            fromNode = this.findNodeByName(row.from);
+                            if (!fromNode) return cb(new Error(util.format('*** unknown from-node "%s"', row.from)));
+                        }
                         waypoints.push(fromNode);
 
-                        var toNode = this.findNodeByName(row.to);
-                        if (!toNode) return cb(new Error(util.format('*** unknown to-node "%s"', row.to)));
+                        match = row.to.match(/^ *(-?[0-9]+(\.[0-9]+)?),(-?[0-9]+(\.[0-9]+)?) *$/);
+                        var toNode;
+                        if (match) {
+                            toNode = new OSM.Node(2, this.OSM_USER, this.OSM_TIMESTAMP, this.OSM_UID, parseFloat(match[1]), parseFloat(match[2]), {});
+                        } else {
+                            toNode = this.findNodeByName(row.to);
+                            if (!toNode) return cb(new Error(util.format('*** unknown to-node "%s"', row.to)));
+                        }
                         waypoints.push(toNode);
 
                         got.from = row.from;
