@@ -592,6 +592,8 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
         return std::make_pair(forward_bearing_valid, backward_bearing_valid);
     }
 
+    // Implementation from
+    // https://en.wikibooks.org/wiki/Algorithm_Implementation/Strings/Levenshtein_distance#C.2B.2B
     int levenshtein_distance(const util::StringView &s1, const std::string &s2) const
     {
         // To change the type this function manipulates and returns, change
@@ -634,8 +636,8 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
 
         auto dist = std::abs(levenshtein_distance(name, *name_hint));
 
-        util::Log(logDEBUG) << "Hint = " << *name_hint << " name = " << name
-                            << " distance = " << dist;
+        util::Log(logDEBUG) << "Hint = '" << *name_hint << "' name = '" << name
+                            << "' distance = " << dist;
 
         // If the hint is a substring of the name, or the name is a substring of the hint,
         // or the edit distance is less than 3, consider it an OK match
