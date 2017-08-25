@@ -8,5 +8,5 @@ Feature: Real test scenarios from OSM
         Given the input file test/data/extracts/untagged_roundabout.osm
 
         When I route I should get
-            | from                | to                 | turns                    | route                                                      |
-            | -77.016381,38.91594 | 38.91591,-77.01524 | depart,turn right,arrive | 3rd Street Northwest,T Street Northwest,T Street Northwest |
+            | from                | to                 | turns         | route                                     |
+            | -77.016381,38.91594 | -77.01524,38.91591 | depart,arrive | 3rd Street Northwest,3rd Street Northwest |
