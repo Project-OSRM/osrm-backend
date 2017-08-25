@@ -87,6 +87,11 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
             }
         };
 
+        const auto add_name_hint = [](engine::api::BaseParameters &base_parameters,
+                                      const boost::optional<std::string> &hint_string) {
+            base_parameters.name_hints.emplace_back(hint_string);
+        };
+
         const auto add_bearing =
             [](engine::api::BaseParameters &base_parameters,
                boost::optional<boost::fusion::vector2<short, short>> bearing_range) {
@@ -162,6 +167,12 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
                         (-approach_type %
                          ';')[ph::bind(&engine::api::BaseParameters::approaches, qi::_r1) = qi::_1];
 
+        name_hints_rule =
+            qi::lit("name_hints=") >
+            (qi_as_string[+qi::char_(
+                 "a-zA-Z,' ")] % // TODO: be more sophisticated about accepting name strings
+             ';')[ph::bind(add_name_hint, qi::_r1, qi::_1)];
+
         exclude_rule = qi::lit("exclude=") >
                        (qi::as_string[+qi::char_("a-zA-Z0-9")] %
                         ',')[ph::bind(&engine::api::BaseParameters::exclude, qi::_r1) = qi::_1];
@@ -171,6 +182,7 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
                     | bearings_rule(qi::_r1)       //
                     | generate_hints_rule(qi::_r1) //
                     | approach_rule(qi::_r1)       //
+                    | name_hints_rule(qi::_r1)     //
                     | exclude_rule(qi::_r1);
     }
 
@@ -185,6 +197,7 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
 
     qi::rule<Iterator, Signature> generate_hints_rule;
     qi::rule<Iterator, Signature> approach_rule;
+    qi::rule<Iterator, Signature> name_hints_rule;
     qi::rule<Iterator, Signature> exclude_rule;
 
     qi::rule<Iterator, osrm::engine::Bearing()> bearing_rule;

@@ -68,6 +68,7 @@ struct BaseParameters
     std::vector<boost::optional<double>> radiuses;
     std::vector<boost::optional<Bearing>> bearings;
     std::vector<boost::optional<Approach>> approaches;
+    std::vector<boost::optional<std::string>> name_hints;
     std::vector<std::string> exclude;
 
     // Adds hints to response which can be included in subsequent requests, see `hints` above.
@@ -78,10 +79,12 @@ struct BaseParameters
                    std::vector<boost::optional<double>> radiuses_ = {},
                    std::vector<boost::optional<Bearing>> bearings_ = {},
                    std::vector<boost::optional<Approach>> approaches_ = {},
+                   std::vector<boost::optional<std::string>> name_hints_ = {},
                    bool generate_hints_ = true,
                    std::vector<std::string> exclude = {})
         : coordinates(coordinates_), hints(hints_), radiuses(radiuses_), bearings(bearings_),
-          approaches(approaches_), exclude(std::move(exclude)), generate_hints(generate_hints_)
+          approaches(approaches_), name_hints(name_hints_), exclude(std::move(exclude)),
+          generate_hints(generate_hints_)
     {
     }
 
@@ -92,6 +95,7 @@ struct BaseParameters
                (bearings.empty() || bearings.size() == coordinates.size()) &&
                (radiuses.empty() || radiuses.size() == coordinates.size()) &&
                (approaches.empty() || approaches.size() == coordinates.size()) &&
+               (name_hints.empty() || name_hints.size() == coordinates.size()) &&
                std::all_of(bearings.begin(),
                            bearings.end(),
                            [](const boost::optional<Bearing> bearing_and_range) {

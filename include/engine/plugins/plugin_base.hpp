@@ -268,6 +268,7 @@ class BasePlugin
         const bool use_bearings = !parameters.bearings.empty();
         const bool use_radiuses = !parameters.radiuses.empty();
         const bool use_approaches = !parameters.approaches.empty();
+        const bool use_name_hints = !parameters.name_hints.empty();
 
         BOOST_ASSERT(parameters.IsValid());
         for (const auto i : util::irange<std::size_t>(0UL, parameters.coordinates.size()))
@@ -275,6 +276,10 @@ class BasePlugin
             Approach approach = engine::Approach::UNRESTRICTED;
             if (use_approaches && parameters.approaches[i])
                 approach = parameters.approaches[i].get();
+
+            boost::optional<std::string> name_hint;
+            if (use_name_hints && parameters.name_hints[i])
+                name_hint = parameters.name_hints[i].get();
 
             if (use_hints && parameters.hints[i] &&
                 parameters.hints[i]->IsValid(parameters.coordinates[i], facade))
@@ -318,7 +323,7 @@ class BasePlugin
                 {
                     phantom_node_pairs[i] =
                         facade.NearestPhantomNodeWithAlternativeFromBigComponent(
-                            parameters.coordinates[i], approach);
+                            parameters.coordinates[i], approach, name_hint);
                 }
             }
 

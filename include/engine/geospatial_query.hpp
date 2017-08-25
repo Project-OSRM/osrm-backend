@@ -244,9 +244,10 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
 
     // Returns the nearest phantom node. If this phantom node is not from a big component
     // a second phantom node is return that is the nearest coordinate in a big component.
-    std::pair<PhantomNode, PhantomNode>
-    NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
-                                                      const Approach approach) const
+    std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
+        const util::Coordinate input_coordinate,
+        const Approach approach,
+        const boost::optional<std::string> name_hint) const
     {
         bool has_small_component = false;
         bool has_big_component = false;
@@ -264,6 +265,8 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
                 use_directions = boolPairAnd(use_directions, valid_edges);
                 use_directions =
                     boolPairAnd(use_directions, CheckApproach(input_coordinate, segment, approach));
+
+                use_directions = boolPairAnd(use_directions, CheckSegmentName(segment, name_hint));
 
                 if (use_directions.first || use_directions.second)
                 {
@@ -583,6 +586,61 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
                 std::round(backward_edge_bearing), filter_bearing, filter_bearing_range) &&
             segment.data.reverse_segment_id.enabled;
         return std::make_pair(forward_bearing_valid, backward_bearing_valid);
+    }
+
+    int levenshtein_distance(const util::StringView &s1, const std::string &s2) const
+    {
+        // To change the type this function manipulates and returns, change
+        // the return type and the types of the two variables below.
+        int s1len = s1.size();
+        int s2len = s2.size();
+
+        auto column_start = (decltype(s1len))1;
+
+        auto column = new decltype(s1len)[s1len + 1];
+        std::iota(column + column_start, column + s1len + 1, column_start);
+
+        for (auto x = column_start; x <= s2len; x++)
+        {
+            column[0] = x;
+            auto last_diagonal = x - column_start;
+            for (auto y = column_start; y <= s1len; y++)
+            {
+                auto old_diagonal = column[y];
+                auto possibilities = {column[y] + 1,
+                                      column[y - 1] + 1,
+                                      last_diagonal + (s1[y - 1] == s2[x - 1] ? 0 : 1)};
+                column[y] = std::min(possibilities);
+                last_diagonal = old_diagonal;
+            }
+        }
+        auto result = column[s1len];
+        delete[] column;
+        return result;
+    }
+
+    std::pair<bool, bool> CheckSegmentName(const CandidateSegment &segment,
+                                           const boost::optional<std::string> &name_hint) const
+    {
+        if (!name_hint)
+            return std::make_pair<true, true>;
+
+        const auto name =
+            datafacade.GetNameForID(datafacade.GetNameIndex(segment.data.forward_segment_id.id));
+
+        util::Log(logDEBUG) << "Hint = " << name_hint << " name = " << name;
+
+        auto dist = std::abs(levenshtein_distance(name, name_hint)) < 3)
+
+        // If the hint is a substring of the name, or the name is a substring of the hint,
+        // or the edit distance is less than 3, consider it an OK match
+        if (name.find(name_hint) != std::string::npos ||
+            name_hint.find(name.data(), name.size()) != std::string::npos ||
+            std::abs(levenshtein_distance(name, name_hint)) < 3)
+        {
+            return std::make_pair(true, true);
+        }
+        else { return std::make_pair(false, false); }
     }
 
     /**
