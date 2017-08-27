@@ -523,3 +523,42 @@ Feature: Merge Segregated Roads
             | a,d       | horiz,horiz      | true:90,false:0 true:60 true:90 true:180 false:270,false:0 true:90 false:180 false:270 true:300;true:270									    |
             | j,h       | vert,horiz,horiz | true:0;true:0 true:90 false:180 false:270 true:300,false:60 false:120 false:240 true:300,false:0 false:90 false:120 true:180 true:270;true:90  |
             | j,l       | vert,vert        | true:0,true:0 true:90 false:180 false:270 true:300,true:0 false:90 false:180 true:240 false:270;true:180									    |
+
+
+    Scenario: Square Area - Don't merge almost circular roads
+        Given a grid size of 2 meters
+        Given the node map
+            """
+                                 i
+                                /
+                               /
+                              /
+                       b---- g .
+                            /     p .
+                  a        /          \           f
+                   \      /             o        /
+                     \   /               \     /
+                       c                  n   /
+                     /  \                  \/
+                    /    k                  e
+                   /     \               /
+                  h       l            /
+                            \        /
+                              m  . d
+                                 /
+                                j
+            """
+
+        And the ways
+            | nodes       | name           | oneway |
+            | ac          | Halenseestraße | yes    |
+            | gb          | Halenseestraße | yes    |
+            | cklmdenopgc | Rathenauplatz  | yes    |
+            | ig          | Kurfürstendamm | yes    |
+            | ef          | Kurfürstendamm | yes    |
+            | ch          | Hubertusallee  | yes    |
+            | jd          | Hubertusallee  | yes    |
+
+        When I route I should get
+            | waypoints | route                                                    | turns                                            |
+            | i,h       | Kurfürstendamm,Rathenauplatz,Hubertusallee,Hubertusallee | depart,turn slight left,turn slight right,arrive |
