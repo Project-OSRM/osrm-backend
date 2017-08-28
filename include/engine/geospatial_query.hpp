@@ -502,23 +502,26 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
         bool is_reverse_valid_target = areSegmentsValid(
             reverse_weight_vector.begin(), reverse_weight_vector.end() - data.fwd_segment_position);
 
-        auto transformed = PhantomNodeWithDistance{PhantomNode{data,
-                                                               component_id,
-                                                               forward_weight,
-                                                               reverse_weight,
-                                                               forward_weight_offset,
-                                                               reverse_weight_offset,
-                                                               forward_duration,
-                                                               reverse_duration,
-                                                               forward_duration_offset,
-                                                               reverse_duration_offset,
-                                                               is_forward_valid_source,
-                                                               is_forward_valid_target,
-                                                               is_reverse_valid_source,
-                                                               is_reverse_valid_target,
-                                                               point_on_segment,
-                                                               input_coordinate},
-                                                   current_perpendicular_distance};
+        auto transformed = PhantomNodeWithDistance{
+            PhantomNode{data,
+                        component_id,
+                        forward_weight,
+                        reverse_weight,
+                        forward_weight_offset,
+                        reverse_weight_offset,
+                        forward_duration,
+                        reverse_duration,
+                        forward_duration_offset,
+                        reverse_duration_offset,
+                        is_forward_valid_source,
+                        is_forward_valid_target,
+                        is_reverse_valid_source,
+                        is_reverse_valid_target,
+                        point_on_segment,
+                        input_coordinate,
+                        static_cast<unsigned short>(util::coordinate_calculation::bearing(
+                            coordinates[data.u], coordinates[data.v]))},
+            current_perpendicular_distance};
 
         return transformed;
     }

@@ -29,8 +29,12 @@ namespace guidance
 {
 namespace detail
 {
-std::pair<short, short> getDepartBearings(const LegGeometry &leg_geometry);
-std::pair<short, short> getArriveBearings(const LegGeometry &leg_geometry);
+std::pair<short, short> getDepartBearings(const LegGeometry &leg_geometry,
+                                          const PhantomNode &source_node,
+                                          const bool traversed_in_reverse);
+std::pair<short, short> getArriveBearings(const LegGeometry &leg_geometry,
+                                          const PhantomNode &target_node,
+                                          const bool traversed_in_reverse);
 } // ns detail
 
 inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &facade,
@@ -72,7 +76,8 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
     std::size_t segment_index = 0;
     BOOST_ASSERT(leg_geometry.locations.size() >= 2);
 
-    auto bearings = detail::getDepartBearings(leg_geometry);
+    auto bearings =
+        detail::getDepartBearings(leg_geometry, source_node, source_traversed_in_reverse);
 
     StepManeuver maneuver{source_node.location,
                           bearings.first,
@@ -260,7 +265,7 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
     }
 
     BOOST_ASSERT(segment_index == number_of_segments - 1);
-    bearings = detail::getArriveBearings(leg_geometry);
+    bearings = detail::getArriveBearings(leg_geometry, target_node, target_traversed_in_reverse);
 
     intersection = {
         target_node.location,
