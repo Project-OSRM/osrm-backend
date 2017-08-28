@@ -7,9 +7,10 @@
 
 enum LogLevel
 {
-    logINFO,
-    logWARNING,
+    logNONE,
     logERROR,
+    logWARNING,
+    logINFO,
     logDEBUG
 };
 
@@ -27,14 +28,20 @@ class LogPolicy
 
     bool IsMute() const;
 
+    LogLevel GetLevel() const;
+    void SetLevel(LogLevel level);
+    void SetLevel(std::string const &level);
+
     static LogPolicy &GetInstance();
+    static std::string GetLevels();
 
     LogPolicy(const LogPolicy &) = delete;
     LogPolicy &operator=(const LogPolicy &) = delete;
 
   private:
-    LogPolicy() : m_is_mute(true) {}
+    LogPolicy() : m_is_mute(true), m_level(logINFO) {}
     std::atomic<bool> m_is_mute;
+    LogLevel m_level;
 };
 
 class Log

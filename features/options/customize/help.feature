@@ -8,6 +8,7 @@ Feature: osrm-customize command line options: help
         And stdout should contain "Options:"
         And stdout should contain "--version"
         And stdout should contain "--help"
+        And stdout should contain "--verbosity"
         And stdout should contain "Configuration:"
         And stdout should contain "--threads"
         And it should exit with an error
@@ -19,6 +20,7 @@ Feature: osrm-customize command line options: help
         And stdout should contain "Options:"
         And stdout should contain "--version"
         And stdout should contain "--help"
+        And stdout should contain "--verbosity"
         And stdout should contain "Configuration:"
         And stdout should contain "--threads"
         And it should exit successfully
@@ -30,6 +32,7 @@ Feature: osrm-customize command line options: help
         And stdout should contain "Options:"
         And stdout should contain "--version"
         And stdout should contain "--help"
+        And stdout should contain "--verbosity"
         And stdout should contain "Configuration:"
         And stdout should contain "--threads"
         And it should exit successfully

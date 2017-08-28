@@ -1,5 +1,6 @@
 #include "util/log.hpp"
 #include "util/isatty.hpp"
+#include <boost/algorithm/string/predicate.hpp>
 #include <cstdio>
 #include <iostream>
 #include <mutex>
@@ -29,32 +30,64 @@ void LogPolicy::Mute() { m_is_mute = true; }
 
 bool LogPolicy::IsMute() const { return m_is_mute; }
 
+LogLevel LogPolicy::GetLevel() const { return m_level; }
+
+void LogPolicy::SetLevel(LogLevel level) { m_level = level; }
+
+void LogPolicy::SetLevel(std::string const &level)
+{
+    // Keep in sync with LogLevel definition
+    if (boost::iequals(level, "NONE"))
+        m_level = logNONE;
+    else if (boost::iequals(level, "ERROR"))
+        m_level = logERROR;
+    else if (boost::iequals(level, "WARNING"))
+        m_level = logWARNING;
+    else if (boost::iequals(level, "INFO"))
+        m_level = logINFO;
+    else if (boost::iequals(level, "DEBUG"))
+        m_level = logDEBUG;
+    else
+        ;
+}
+
 LogPolicy &LogPolicy::GetInstance()
 {
     static LogPolicy runningInstance;
     return runningInstance;
 }
 
+std::string LogPolicy::GetLevels()
+{
+    // Keep in sync with LogLevel definition
+    return "NONE, ERROR, WARNING, INFO, DEBUG";
+}
+
 Log::Log(LogLevel level_, std::ostream &ostream) : level(level_), stream(ostream)
 {
-    const bool is_terminal = IsStdoutATTY();
     std::lock_guard<std::mutex> lock(get_mutex());
-    switch (level)
+    if (!LogPolicy::GetInstance().IsMute() && level <= LogPolicy::GetInstance().GetLevel())
     {
-    case logWARNING:
-        stream << (is_terminal ? YELLOW : "") << "[warn] ";
-        break;
-    case logERROR:
-        stream << (is_terminal ? RED : "") << "[error] ";
-        break;
-    case logDEBUG:
+        const bool is_terminal = IsStdoutATTY();
+        switch (level)
+        {
+        case logNONE:
+            break;
+        case logWARNING:
+            stream << (is_terminal ? YELLOW : "") << "[warn] ";
+            break;
+        case logERROR:
+            stream << (is_terminal ? RED : "") << "[error] ";
+            break;
+        case logDEBUG:
 #ifndef NDEBUG
-        stream << (is_terminal ? MAGENTA : "") << "[debug] ";
+            stream << (is_terminal ? MAGENTA : "") << "[debug] ";
 #endif
-        break;
-    default: // logINFO:
-        stream << "[info] ";
-        break;
+            break;
+        default: // logINFO:
+            stream << "[info] ";
+            break;
+        }
     }
 }
 
@@ -76,14 +109,16 @@ std::mutex &Log::get_mutex()
 Log::~Log()
 {
     std::lock_guard<std::mutex> lock(get_mutex());
-    const bool usestd = (&stream == &buffer);
-    if (!LogPolicy::GetInstance().IsMute())
+    if (!LogPolicy::GetInstance().IsMute() && level <= LogPolicy::GetInstance().GetLevel())
     {
+        const bool usestd = (&stream == &buffer);
         const bool is_terminal = IsStdoutATTY();
         if (usestd)
         {
             switch (level)
             {
+            case logNONE:
+                break;
             case logWARNING:
             case logERROR:
                 std::cerr << buffer.str();

@@ -21,12 +21,17 @@ enum class return_code : unsigned
     exit
 };
 
-return_code
-parseArguments(int argc, char *argv[], customizer::CustomizationConfig &customization_config)
+return_code parseArguments(int argc,
+                           char *argv[],
+                           std::string &verbosity,
+                           customizer::CustomizationConfig &customization_config)
 {
     // declare a group of options that will be allowed only on command line
     boost::program_options::options_description generic_options("Options");
-    generic_options.add_options()("version,v", "Show version")("help,h", "Show this help message");
+    generic_options.add_options()("version,v", "Show version")("help,h", "Show this help message")(
+        "verbosity,l",
+        boost::program_options::value<std::string>(&verbosity)->default_value("INFO"),
+        std::string("Log verbosity level: " + util::LogPolicy::GetLevels()).c_str());
 
     // declare a group of options that will be allowed both on command line
     boost::program_options::options_description config_options("Configuration");
@@ -130,9 +135,10 @@ parseArguments(int argc, char *argv[], customizer::CustomizationConfig &customiz
 int main(int argc, char *argv[]) try
 {
     util::LogPolicy::GetInstance().Unmute();
+    std::string verbosity;
     customizer::CustomizationConfig customization_config;
 
-    const auto result = parseArguments(argc, argv, customization_config);
+    const auto result = parseArguments(argc, argv, verbosity, customization_config);
 
     if (return_code::fail == result)
     {
@@ -143,6 +149,8 @@ int main(int argc, char *argv[]) try
     {
         return EXIT_SUCCESS;
     }
+
+    util::LogPolicy::GetInstance().SetLevel(verbosity);
 
     // set the default in/output names
     customization_config.UseDefaultOutputNames(customization_config.base_path);
