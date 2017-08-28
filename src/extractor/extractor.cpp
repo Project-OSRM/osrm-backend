@@ -40,6 +40,7 @@
 #include <boost/scope_exit.hpp>
 
 #include <osmium/io/any_input.hpp>
+#include <osmium/thread/pool.hpp>
 
 #include <tbb/pipeline.h>
 #include <tbb/task_scheduler_init.h>
@@ -286,9 +287,11 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
     util::Log() << "Threads: " << number_of_threads;
 
     const osmium::io::File input_file(config.input_path.string());
-
+    osmium::thread::Pool pool(number_of_threads);
     osmium::io::Reader reader(
-        input_file, (config.use_metadata ? osmium::io::read_meta::yes : osmium::io::read_meta::no));
+        input_file,
+        pool,
+        (config.use_metadata ? osmium::io::read_meta::yes : osmium::io::read_meta::no));
 
     const osmium::io::Header header = reader.header();
 
