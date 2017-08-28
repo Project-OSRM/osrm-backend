@@ -28,11 +28,17 @@ enum class return_code : unsigned
     exit
 };
 
-return_code parseArguments(int argc, char *argv[], contractor::ContractorConfig &contractor_config)
+return_code parseArguments(int argc,
+                           char *argv[],
+                           std::string &verbosity,
+                           contractor::ContractorConfig &contractor_config)
 {
     // declare a group of options that will be allowed only on command line
     boost::program_options::options_description generic_options("Options");
-    generic_options.add_options()("version,v", "Show version")("help,h", "Show this help message");
+    generic_options.add_options()("version,v", "Show version")("help,h", "Show this help message")(
+        "verbosity,l",
+        boost::program_options::value<std::string>(&verbosity)->default_value("INFO"),
+        std::string("Log verbosity level: " + util::LogPolicy::GetLevels()).c_str());
 
     // declare a group of options that will be allowed on command line
     boost::program_options::options_description config_options("Configuration");
@@ -137,11 +143,11 @@ return_code parseArguments(int argc, char *argv[], contractor::ContractorConfig 
 
 int main(int argc, char *argv[]) try
 {
-
     util::LogPolicy::GetInstance().Unmute();
+    std::string verbosity;
     contractor::ContractorConfig contractor_config;
 
-    const return_code result = parseArguments(argc, argv, contractor_config);
+    const return_code result = parseArguments(argc, argv, verbosity, contractor_config);
 
     if (return_code::fail == result)
     {
@@ -152,6 +158,8 @@ int main(int argc, char *argv[]) try
     {
         return EXIT_SUCCESS;
     }
+
+    util::LogPolicy::GetInstance().SetLevel(verbosity);
 
     contractor_config.UseDefaultOutputNames(contractor_config.base_path);
 
