@@ -2,6 +2,7 @@
 #include "engine/routing_algorithms/routing_base_ch.hpp"
 
 #include <boost/assert.hpp>
+#include <boost/range/iterator_range_core.hpp>
 
 #include <limits>
 #include <memory>
@@ -19,17 +20,34 @@ namespace
 {
 struct NodeBucket
 {
-    unsigned target_id; // essentially a row in the weight matrix
+    NodeID middle_node;
+    unsigned column_index; // a column in the weight/duration matrix
     EdgeWeight weight;
-    EdgeWeight duration;
-    NodeBucket(const unsigned target_id, const EdgeWeight weight, const EdgeWeight duration)
-        : target_id(target_id), weight(weight), duration(duration)
-    {
-    }
-};
+    EdgeDuration duration;
 
-// FIXME This should be replaced by an std::unordered_multimap, though this needs benchmarking
-using SearchSpaceWithBuckets = std::unordered_map<NodeID, std::vector<NodeBucket>>;
+    NodeBucket(NodeID middle_node, unsigned column_index,  EdgeWeight weight,  EdgeDuration duration)
+        : middle_node(middle_node), column_index(column_index), weight(weight),  duration(duration) {}
+
+    // partial order comparison
+    bool operator<(const NodeBucket& rhs) const
+    {
+        return middle_node < rhs.middle_node;
+    }
+
+    // functor for equal_range
+    struct Compare
+    {
+        bool operator() (const NodeBucket &lhs, const NodeID& rhs) const
+        {
+           return lhs.middle_node < rhs;
+        }
+
+        bool operator() (const NodeID &lhs, const NodeBucket& rhs) const
+        {
+           return lhs < rhs.middle_node;
+        }
+    };
+};
 
 inline bool addLoopWeight(const DataFacade<ch::Algorithm> &facade,
                           const NodeID node,
@@ -74,12 +92,12 @@ void relaxOutgoingEdges(const DataFacade<ch::Algorithm> &facade,
         {
             const NodeID to = facade.GetTarget(edge);
 
-            const EdgeWeight edge_weight = data.weight;
-            const EdgeWeight edge_duration = data.duration;
+            const auto edge_weight = data.weight;
+            const auto edge_duration = data.duration;
 
             BOOST_ASSERT_MSG(edge_weight > 0, "edge_weight invalid");
-            const EdgeWeight to_weight = weight + edge_weight;
-            const EdgeWeight to_duration = duration + edge_duration;
+            const auto to_weight = weight + edge_weight;
+            const auto to_duration = duration + edge_duration;
 
             // New Node discovered -> Add to Heap + Node Info Storage
             if (!query_heap.WasInserted(to))
@@ -201,12 +219,12 @@ void relaxOutgoingEdges(const DataFacade<mld::Algorithm> &facade,
                 continue;
             }
 
-            const EdgeWeight edge_weight = data.weight;
-            const EdgeWeight edge_duration = data.duration;
+            const auto edge_weight = data.weight;
+            const auto edge_duration = data.duration;
 
             BOOST_ASSERT_MSG(edge_weight > 0, "edge_weight invalid");
-            const EdgeWeight to_weight = weight + edge_weight;
-            const EdgeWeight to_duration = duration + edge_duration;
+            const auto to_weight = weight + edge_weight;
+            const auto to_duration = duration + edge_duration;
 
             // New Node discovered -> Add to Heap + Node Info Storage
             if (!query_heap.WasInserted(to))
@@ -229,48 +247,43 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
                         const unsigned row_idx,
                         const unsigned number_of_targets,
                         typename SearchEngineData<Algorithm>::ManyToManyQueryHeap &query_heap,
-                        const SearchSpaceWithBuckets &search_space_with_buckets,
+                        const std::vector<NodeBucket> &search_space_with_buckets,
                         std::vector<EdgeWeight> &weights_table,
-                        std::vector<EdgeWeight> &durations_table,
+                        std::vector<EdgeDuration> &durations_table,
                         const PhantomNode &phantom_node)
 {
-    const NodeID node = query_heap.DeleteMin();
-    const EdgeWeight source_weight = query_heap.GetKey(node);
-    const EdgeWeight source_duration = query_heap.GetData(node).duration;
+    const auto node = query_heap.DeleteMin();
+    const auto source_weight = query_heap.GetKey(node);
+    const auto source_duration = query_heap.GetData(node).duration;
 
     // check if each encountered node has an entry
-    const auto bucket_iterator = search_space_with_buckets.find(node);
-    // iterate bucket if there exists one
-    if (bucket_iterator != search_space_with_buckets.end())
+    const auto &bucket_list = std::equal_range(search_space_with_buckets.begin(), search_space_with_buckets.end(), node, NodeBucket::Compare());
+    for (const auto &current_bucket : boost::make_iterator_range(bucket_list))
     {
-        const std::vector<NodeBucket> &bucket_list = bucket_iterator->second;
-        for (const NodeBucket &current_bucket : bucket_list)
+        // get target id from bucket entry
+        const auto column_idx = current_bucket.column_index;
+        const auto target_weight = current_bucket.weight;
+        const auto target_duration = current_bucket.duration;
+
+        auto &current_weight = weights_table[row_idx * number_of_targets + column_idx];
+        auto &current_duration = durations_table[row_idx * number_of_targets + column_idx];
+
+        // check if new weight is better
+        auto new_weight = source_weight + target_weight;
+        auto new_duration = source_duration + target_duration;
+
+        if (new_weight < 0)
         {
-            // get target id from bucket entry
-            const unsigned column_idx = current_bucket.target_id;
-            const EdgeWeight target_weight = current_bucket.weight;
-            const EdgeWeight target_duration = current_bucket.duration;
-
-            auto &current_weight = weights_table[row_idx * number_of_targets + column_idx];
-            auto &current_duration = durations_table[row_idx * number_of_targets + column_idx];
-
-            // check if new weight is better
-            auto new_weight = source_weight + target_weight;
-            auto new_duration = source_duration + target_duration;
-
-            if (new_weight < 0)
+            if (addLoopWeight(facade, node, new_weight, new_duration))
             {
-                if (addLoopWeight(facade, node, new_weight, new_duration))
-                {
-                    current_weight = std::min(current_weight, new_weight);
-                    current_duration = std::min(current_duration, new_duration);
-                }
+                current_weight = std::min(current_weight, new_weight);
+                current_duration = std::min(current_duration, new_duration);
             }
-            else if (new_weight < current_weight)
-            {
-                current_weight = new_weight;
-                current_duration = new_duration;
-            }
+        }
+        else if (new_weight < current_weight)
+        {
+            current_weight = new_weight;
+            current_duration = new_duration;
         }
     }
 
@@ -282,15 +295,15 @@ template <typename Algorithm>
 void backwardRoutingStep(const DataFacade<Algorithm> &facade,
                          const unsigned column_idx,
                          typename SearchEngineData<Algorithm>::ManyToManyQueryHeap &query_heap,
-                         SearchSpaceWithBuckets &search_space_with_buckets,
+                         std::vector<NodeBucket> &search_space_with_buckets,
                          const PhantomNode &phantom_node)
 {
-    const NodeID node = query_heap.DeleteMin();
-    const EdgeWeight target_weight = query_heap.GetKey(node);
-    const EdgeWeight target_duration = query_heap.GetData(node).duration;
+    const auto node = query_heap.DeleteMin();
+    const auto target_weight = query_heap.GetKey(node);
+    const auto target_duration = query_heap.GetData(node).duration;
 
     // store settled nodes in search space bucket
-    search_space_with_buckets[node].emplace_back(column_idx, target_weight, target_duration);
+    search_space_with_buckets.emplace_back(node, column_idx, target_weight, target_duration);
 
     relaxOutgoingEdges<REVERSE_DIRECTION>(
         facade, node, target_weight, target_duration, query_heap, phantom_node);
@@ -320,9 +333,9 @@ std::vector<EdgeWeight> manyToManySearch(SearchEngineData<Algorithm> &engine_wor
     const auto number_of_entries = number_of_sources * number_of_targets;
 
     std::vector<EdgeWeight> weights_table(number_of_entries, INVALID_EDGE_WEIGHT);
-    std::vector<EdgeWeight> durations_table(number_of_entries, MAXIMAL_EDGE_DURATION);
+    std::vector<EdgeDuration> durations_table(number_of_entries, MAXIMAL_EDGE_DURATION);
 
-    SearchSpaceWithBuckets search_space_with_buckets;
+    std::vector<NodeBucket> search_space_with_buckets;
 
     engine_working_data.InitializeOrClearManyToManyThreadLocalStorage(facade.GetNumberOfNodes());
     auto &query_heap = *(engine_working_data.many_to_many_heap);
@@ -342,6 +355,8 @@ std::vector<EdgeWeight> manyToManySearch(SearchEngineData<Algorithm> &engine_wor
             backwardRoutingStep(facade, column_idx, query_heap, search_space_with_buckets, phantom);
         }
     }
+
+    std::sort(search_space_with_buckets.begin(), search_space_with_buckets.end());
 
     // For each source do forward search
     for (const auto row_idx : util::irange<std::size_t>(0, source_indices.size()))
