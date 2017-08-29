@@ -52,36 +52,37 @@ const static unsigned INIT_OK_START_ENGINE = 0;
 const static unsigned INIT_OK_DO_NOT_START_ENGINE = 1;
 const static unsigned INIT_FAILED = -1;
 
-static EngineConfig::Algorithm stringToAlgorithm(std::string algorithm)
+namespace osrm
 {
-    boost::to_lower(algorithm);
+namespace engine
+{
+std::istream &operator>>(std::istream &in, EngineConfig::Algorithm &algorithm)
+{
+    std::string token;
+    in >> token;
+    boost::to_lower(token);
 
-    if (algorithm == "ch")
-        return EngineConfig::Algorithm::CH;
-    if (algorithm == "corech")
-        return EngineConfig::Algorithm::CoreCH;
-    if (algorithm == "mld")
-        return EngineConfig::Algorithm::MLD;
-    throw util::RuntimeError(algorithm, ErrorCode::UnknownAlgorithm, SOURCE_REF);
+    if (token == "ch")
+        algorithm = EngineConfig::Algorithm::CH;
+    else if (token == "corech")
+        algorithm = EngineConfig::Algorithm::CoreCH;
+    else if (token == "mld")
+        algorithm = EngineConfig::Algorithm::MLD;
+    else
+        throw util::RuntimeError(token, ErrorCode::UnknownAlgorithm, SOURCE_REF);
+    return in;
+}
+}
 }
 
 // generate boost::program_options object for the routing part
 inline unsigned generateServerProgramOptions(const int argc,
                                              const char *argv[],
-                                             std::string verbosity,
                                              boost::filesystem::path &base_path,
                                              std::string &ip_address,
                                              int &ip_port,
-                                             int &requested_num_threads,
-                                             bool &use_shared_memory,
-                                             std::string &algorithm,
                                              bool &trial,
-                                             int &max_locations_trip,
-                                             int &max_locations_viaroute,
-                                             int &max_locations_distance_table,
-                                             int &max_locations_map_matching,
-                                             int &max_results_nearest,
-                                             int &max_alternatives)
+                                             EngineConfig &config)
 {
     using boost::program_options::value;
     using boost::filesystem::path;
@@ -91,7 +92,7 @@ inline unsigned generateServerProgramOptions(const int argc,
     generic_options.add_options() //
         ("version,v", "Show version")("help,h", "Show this help message")(
             "verbosity,l",
-            boost::program_options::value<std::string>(&verbosity)->default_value("INFO"),
+            boost::program_options::value<std::string>(&config.verbosity)->default_value("INFO"),
             std::string("Log verbosity level: " + util::LogPolicy::GetLevels()).c_str())(
             "trial", value<bool>(&trial)->implicit_value(true), "Quit after initialization");
 
@@ -105,31 +106,32 @@ inline unsigned generateServerProgramOptions(const int argc,
          value<int>(&ip_port)->default_value(5000),
          "TCP/IP port") //
         ("threads,t",
-         value<int>(&requested_num_threads)->default_value(8),
+         value<int>(&config.use_threads_number)->default_value(8),
          "Number of threads to use") //
         ("shared-memory,s",
-         value<bool>(&use_shared_memory)->implicit_value(true)->default_value(false),
+         value<bool>(&config.use_shared_memory)->implicit_value(true)->default_value(false),
          "Load data from shared memory") //
         ("algorithm,a",
-         value<std::string>(&algorithm)->default_value("CH"),
+         value<EngineConfig::Algorithm>(&config.algorithm)
+             ->default_value(EngineConfig::Algorithm::CH, "CH"),
          "Algorithm to use for the data. Can be CH, CoreCH, MLD.") //
         ("max-viaroute-size",
-         value<int>(&max_locations_viaroute)->default_value(500),
+         value<int>(&config.max_locations_viaroute)->default_value(500),
          "Max. locations supported in viaroute query") //
         ("max-trip-size",
-         value<int>(&max_locations_trip)->default_value(100),
+         value<int>(&config.max_locations_trip)->default_value(100),
          "Max. locations supported in trip query") //
         ("max-table-size",
-         value<int>(&max_locations_distance_table)->default_value(100),
+         value<int>(&config.max_locations_distance_table)->default_value(100),
          "Max. locations supported in distance table query") //
         ("max-matching-size",
-         value<int>(&max_locations_map_matching)->default_value(100),
+         value<int>(&config.max_locations_map_matching)->default_value(100),
          "Max. locations supported in map matching query") //
         ("max-nearest-size",
-         value<int>(&max_results_nearest)->default_value(100),
+         value<int>(&config.max_results_nearest)->default_value(100),
          "Max. results supported in nearest query") //
         ("max-alternatives",
-         value<int>(&max_alternatives)->default_value(3),
+         value<int>(&config.max_alternatives)->default_value(3),
          "Max. number of alternatives supported in the MLD route query");
 
     // hidden options, will be allowed on command line, but will not be shown to the user
@@ -180,15 +182,15 @@ inline unsigned generateServerProgramOptions(const int argc,
 
     boost::program_options::notify(option_variables);
 
-    if (!use_shared_memory && option_variables.count("base"))
+    if (!config.use_shared_memory && option_variables.count("base"))
     {
         return INIT_OK_START_ENGINE;
     }
-    else if (use_shared_memory && !option_variables.count("base"))
+    else if (config.use_shared_memory && !option_variables.count("base"))
     {
         return INIT_OK_START_ENGINE;
     }
-    else if (use_shared_memory && option_variables.count("base"))
+    else if (config.use_shared_memory && option_variables.count("base"))
     {
         util::Log(logWARNING) << "Shared memory settings conflict with path settings.";
     }
@@ -203,28 +205,13 @@ int main(int argc, const char *argv[]) try
 
     bool trial_run = false;
     std::string ip_address;
-    int ip_port, requested_thread_num;
+    int ip_port;
 
     EngineConfig config;
-    std::string verbosity;
     boost::filesystem::path base_path;
-    std::string algorithm;
-    const unsigned init_result = generateServerProgramOptions(argc,
-                                                              argv,
-                                                              verbosity,
-                                                              base_path,
-                                                              ip_address,
-                                                              ip_port,
-                                                              requested_thread_num,
-                                                              config.use_shared_memory,
-                                                              algorithm,
-                                                              trial_run,
-                                                              config.max_locations_trip,
-                                                              config.max_locations_viaroute,
-                                                              config.max_locations_distance_table,
-                                                              config.max_locations_map_matching,
-                                                              config.max_results_nearest,
-                                                              config.max_alternatives);
+
+    const unsigned init_result =
+        generateServerProgramOptions(argc, argv, base_path, ip_address, ip_port, trial_run, config);
     if (init_result == INIT_OK_DO_NOT_START_ENGINE)
     {
         return EXIT_SUCCESS;
@@ -234,7 +221,7 @@ int main(int argc, const char *argv[]) try
         return EXIT_FAILURE;
     }
 
-    util::LogPolicy::GetInstance().SetLevel(verbosity);
+    util::LogPolicy::GetInstance().SetLevel(config.verbosity);
 
     if (!base_path.empty())
     {
@@ -253,7 +240,6 @@ int main(int argc, const char *argv[]) try
         }
         return EXIT_FAILURE;
     }
-    config.algorithm = stringToAlgorithm(algorithm);
 
     util::Log() << "starting up engines, " << OSRM_VERSION;
 
@@ -261,6 +247,10 @@ int main(int argc, const char *argv[]) try
     {
         util::Log() << "Loading from shared memory";
     }
+
+    // Use the same number of threads for Server and TBB threads pools
+    // It doubles number of used threads
+    auto requested_thread_num = config.use_threads_number;
 
     util::Log() << "Threads: " << requested_thread_num;
     util::Log() << "IP address: " << ip_address;

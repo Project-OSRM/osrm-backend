@@ -186,6 +186,7 @@ inline engine_config_ptr argumentsToEngineConfig(const Nan::FunctionCallbackInfo
         params->Get(Nan::New("max_locations_map_matching").ToLocalChecked());
     auto max_results_nearest = params->Get(Nan::New("max_results_nearest").ToLocalChecked());
     auto max_alternatives = params->Get(Nan::New("max_alternatives").ToLocalChecked());
+    auto use_threads_number = params->Get(Nan::New("use_threads_number").ToLocalChecked());
 
     if (!max_locations_trip->IsUndefined() && !max_locations_trip->IsNumber())
     {
@@ -217,6 +218,11 @@ inline engine_config_ptr argumentsToEngineConfig(const Nan::FunctionCallbackInfo
         Nan::ThrowError("max_alternatives must be an integral number");
         return engine_config_ptr();
     }
+    if (!use_threads_number->IsUndefined() && !use_threads_number->IsNumber())
+    {
+        Nan::ThrowError("use_threads_number must be an integral number");
+        return engine_config_ptr();
+    }
 
     if (max_locations_trip->IsNumber())
         engine_config->max_locations_trip = static_cast<int>(max_locations_trip->NumberValue());
@@ -233,6 +239,8 @@ inline engine_config_ptr argumentsToEngineConfig(const Nan::FunctionCallbackInfo
         engine_config->max_results_nearest = static_cast<int>(max_results_nearest->NumberValue());
     if (max_alternatives->IsNumber())
         engine_config->max_alternatives = static_cast<int>(max_alternatives->NumberValue());
+    if (use_threads_number->IsNumber())
+        engine_config->use_threads_number = static_cast<int>(use_threads_number->NumberValue());
 
     return engine_config;
 }
