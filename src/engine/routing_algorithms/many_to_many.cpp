@@ -301,27 +301,38 @@ template <typename Algorithm>
 std::vector<EdgeWeight> manyToManySearch(SearchEngineData<Algorithm> &engine_working_data,
                                          const DataFacade<Algorithm> &facade,
                                          const std::vector<PhantomNode> &phantom_nodes,
-                                         const std::vector<std::size_t> &source_indices,
-                                         const std::vector<std::size_t> &target_indices)
+                                         std::vector<std::size_t> source_indices,
+                                         std::vector<std::size_t> target_indices)
 {
-    const auto number_of_sources =
-        source_indices.empty() ? phantom_nodes.size() : source_indices.size();
-    const auto number_of_targets =
-        target_indices.empty() ? phantom_nodes.size() : target_indices.size();
+    if (source_indices.empty())
+    {
+        source_indices.resize(phantom_nodes.size());
+        std::iota(source_indices.begin(), source_indices.end(), 0);
+    }
+    if (target_indices.empty())
+    {
+        target_indices.resize(phantom_nodes.size());
+        std::iota(target_indices.begin(), target_indices.end(), 0);
+    }
+
+    const auto number_of_sources = source_indices.size();
+    const auto number_of_targets = target_indices.size();
     const auto number_of_entries = number_of_sources * number_of_targets;
 
     std::vector<EdgeWeight> weights_table(number_of_entries, INVALID_EDGE_WEIGHT);
     std::vector<EdgeWeight> durations_table(number_of_entries, MAXIMAL_EDGE_DURATION);
 
-    engine_working_data.InitializeOrClearManyToManyThreadLocalStorage(facade.GetNumberOfNodes());
-
-    auto &query_heap = *(engine_working_data.many_to_many_heap);
-
     SearchSpaceWithBuckets search_space_with_buckets;
 
-    unsigned column_idx = 0;
-    const auto search_target_phantom = [&](const PhantomNode &phantom) {
-        // clear heap and insert target nodes
+    engine_working_data.InitializeOrClearManyToManyThreadLocalStorage(facade.GetNumberOfNodes());
+    auto &query_heap = *(engine_working_data.many_to_many_heap);
+
+    // Backward search for target phantoms
+    for (const auto column_idx : util::irange<std::size_t>(0u, target_indices.size()))
+    {
+        const auto index = target_indices[column_idx];
+        const auto &phantom = phantom_nodes[index];
+
         query_heap.Clear();
         insertTargetInHeap(query_heap, phantom);
 
@@ -330,12 +341,14 @@ std::vector<EdgeWeight> manyToManySearch(SearchEngineData<Algorithm> &engine_wor
         {
             backwardRoutingStep(facade, column_idx, query_heap, search_space_with_buckets, phantom);
         }
-        ++column_idx;
-    };
+    }
 
-    // for each source do forward search
-    unsigned row_idx = 0;
-    const auto search_source_phantom = [&](const PhantomNode &phantom) {
+    // For each source do forward search
+    for (const auto row_idx : util::irange<std::size_t>(0, source_indices.size()))
+    {
+        const auto index = source_indices[row_idx];
+        const auto &phantom = phantom_nodes[index];
+
         // clear heap and insert source nodes
         query_heap.Clear();
         insertSourceInHeap(query_heap, phantom);
@@ -352,39 +365,6 @@ std::vector<EdgeWeight> manyToManySearch(SearchEngineData<Algorithm> &engine_wor
                                durations_table,
                                phantom);
         }
-        ++row_idx;
-    };
-
-    if (target_indices.empty())
-    {
-        for (const auto &phantom : phantom_nodes)
-        {
-            search_target_phantom(phantom);
-        }
-    }
-    else
-    {
-        for (const auto index : target_indices)
-        {
-            const auto &phantom = phantom_nodes[index];
-            search_target_phantom(phantom);
-        }
-    }
-
-    if (source_indices.empty())
-    {
-        for (const auto &phantom : phantom_nodes)
-        {
-            search_source_phantom(phantom);
-        }
-    }
-    else
-    {
-        for (const auto index : source_indices)
-        {
-            const auto &phantom = phantom_nodes[index];
-            search_source_phantom(phantom);
-        }
     }
 
     return durations_table;
@@ -394,15 +374,15 @@ template std::vector<EdgeWeight>
 manyToManySearch(SearchEngineData<ch::Algorithm> &engine_working_data,
                  const DataFacade<ch::Algorithm> &facade,
                  const std::vector<PhantomNode> &phantom_nodes,
-                 const std::vector<std::size_t> &source_indices,
-                 const std::vector<std::size_t> &target_indices);
+                 std::vector<std::size_t> source_indices,
+                 std::vector<std::size_t> target_indices);
 
 template std::vector<EdgeWeight>
 manyToManySearch(SearchEngineData<mld::Algorithm> &engine_working_data,
                  const DataFacade<mld::Algorithm> &facade,
                  const std::vector<PhantomNode> &phantom_nodes,
-                 const std::vector<std::size_t> &source_indices,
-                 const std::vector<std::size_t> &target_indices);
+                 std::vector<std::size_t> source_indices,
+                 std::vector<std::size_t> target_indices);
 
 } // namespace routing_algorithms
 } // namespace engine
