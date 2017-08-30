@@ -3,6 +3,7 @@
 
 #include <boost/filesystem/path.hpp>
 #include <boost/geometry.hpp>
+#include <boost/geometry/geometries/point_xy.hpp>
 #include <boost/geometry/index/rtree.hpp>
 
 #include <osmium/osm/way.hpp>
@@ -14,11 +15,14 @@ namespace osrm
 {
 namespace extractor
 {
+
 struct LocationDependentData
 {
-    using point_t = boost::geometry::model::
-        point<double, 2, boost::geometry::cs::spherical_equatorial<boost::geometry::degree>>;
+    using point_t = boost::geometry::model::d2::
+        point_xy<double, boost::geometry::cs::spherical_equatorial<boost::geometry::degree>>;
+    using segment_t = std::pair<point_t, point_t>;
     using polygon_t = boost::geometry::model::polygon<point_t>;
+    using polygon_bands_t = std::vector<std::vector<segment_t>>;
     using box_t = boost::geometry::model::box<point_t>;
 
     using polygon_position_t = std::size_t;
@@ -42,7 +46,7 @@ struct LocationDependentData
     void loadLocationDependentData(const boost::filesystem::path &file_path);
 
     rtree_t rtree;
-    std::vector<std::pair<polygon_t, std::size_t>> polygons;
+    std::vector<std::pair<polygon_bands_t, std::size_t>> polygons;
     std::vector<properties_t> properties;
 };
 }

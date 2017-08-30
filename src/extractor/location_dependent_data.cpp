@@ -9,6 +9,7 @@
 
 #include <boost/filesystem.hpp>
 #include <boost/function_output_iterator.hpp>
+#include <boost/geometry/algorithms/equals.hpp>
 
 #include <fstream>
 #include <string>
@@ -109,7 +110,62 @@ void LocationDependentData::loadLocationDependentData(const boost::filesystem::p
         }
         auto envelop = boost::geometry::return_envelope<box_t>(polygon);
         bounding_boxes.emplace_back(envelop, polygons.size());
-        polygons.emplace_back(std::make_pair(polygon, properties_index));
+
+        // here is a part of ExtractPolygon::ExtractPolygon code
+        // TODO: remove copy overhead
+        constexpr const int32_t segments_per_band = 10;
+        constexpr const int32_t max_bands = 10000;
+        const auto y_min = envelop.min_corner().y();
+        const auto y_max = envelop.max_corner().y();
+
+        std::vector<segment_t> segments;
+        auto add_ring = [&segments](const auto &ring) {
+            auto it = ring.begin();
+            const auto end = ring.end();
+
+            BOOST_ASSERT(it != end);
+            auto last_it = it++;
+            while (it != end)
+            {
+                segments.emplace_back(*last_it, *it);
+                last_it = it++;
+            }
+        };
+
+        add_ring(polygon.outer());
+        for (const auto &ring : polygon.inners())
+            add_ring(ring);
+
+        int32_t num_bands = static_cast<int32_t>(segments.size()) / segments_per_band;
+        if (num_bands < 1)
+        {
+            num_bands = 1;
+        }
+        else if (num_bands > max_bands)
+        {
+            num_bands = max_bands;
+        }
+
+        polygon_bands_t bands(num_bands);
+        const auto dy = (y_max - y_min) / num_bands;
+
+        for (const auto &segment : segments)
+        {
+            using coord_t = boost::geometry::traits::coordinate_type<point_t>::type;
+            const std::pair<coord_t, coord_t> mm =
+                std::minmax(segment.first.y(), segment.second.y());
+            const auto band_min = std::min<coord_t>(num_bands - 1, (mm.first - y_min) / dy);
+            const auto band_max = std::min<coord_t>(
+                num_bands, ((mm.second - y_min) / dy) + 1); // TODO: use integer coordinates
+
+            for (auto band = band_min; band < band_max; ++band)
+            {
+                bands[band].push_back(segment);
+            }
+        }
+        // EOC
+
+        polygons.emplace_back(std::make_pair(bands, properties_index));
     };
 
     for (rapidjson::SizeType ifeature = 0; ifeature < features_array.Size(); ifeature++)
@@ -156,7 +212,59 @@ LocationDependentData::properties_t LocationDependentData::operator()(const poin
     // Search the R-tree and collect a Lua table of tags that correspond to the location
     rtree.query(boost::geometry::index::intersects(point) &&
                     boost::geometry::index::satisfies([this, &point](const rtree_t::value_type &v) {
-                        return boost::geometry::within(point, polygons[v.second].first);
+
+                        // Simple point-in-polygon algorithm adapted from
+                        // https://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
+
+                        const auto &envelop = v.first;
+                        const auto &bands = polygons[v.second].first;
+
+                        const auto y_min = envelop.min_corner().y();
+                        const auto y_max = envelop.max_corner().y();
+                        auto dy = (y_max - y_min) / bands.size();
+
+                        std::size_t band = (point.y() - y_min) / dy;
+                        if (band >= bands.size())
+                        {
+                            band = bands.size() - 1;
+                        }
+
+                        bool inside = false;
+
+                        for (const auto &segment : bands[band])
+                        {
+                            const auto point_x = point.x(), point_y = point.y();
+                            const auto from_x = segment.first.x(), from_y = segment.first.y();
+                            const auto to_x = segment.second.x(), to_y = segment.second.y();
+
+                            if (to_y == from_y)
+                            { // handle horizontal segments: check if on boundary or skip
+                                if ((to_y == point_y) &&
+                                    (from_x == point_x || (to_x > point_x) != (from_x > point_x)))
+                                    return true;
+                                continue;
+                            }
+
+                            if ((to_y > point_y) != (from_y > point_y))
+                            {
+                                const auto ax = to_x - from_x;
+                                const auto ay = to_y - from_y;
+                                const auto tx = point_x - from_x;
+                                const auto ty = point_y - from_y;
+
+                                const auto cross_product = tx * ay - ax * ty;
+
+                                if (cross_product == 0)
+                                    return true;
+
+                                if ((ay > 0) == (cross_product > 0))
+                                {
+                                    inside = !inside;
+                                }
+                            }
+                        }
+
+                        return inside;
                     }),
                 boost::make_function_output_iterator(std::ref(merger)));
 
