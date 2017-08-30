@@ -54,12 +54,14 @@ module.exports = function () {
 
     this.Then(/^stdout should( not)? contain "(.*?)"$/, (not, str) => {
         const contains = this.stdout.indexOf(str) > -1;
-        assert.ok(typeof not === 'undefined' ? contains : !contains);
+        assert.ok(typeof not === 'undefined' ? contains : !contains,
+                  'stdout ' + (typeof not === 'undefined' ? 'does not contain' : 'contains') + ' "' + str + '"');
     });
 
     this.Then(/^stderr should( not)? contain "(.*?)"$/, (not, str) => {
         const contains = this.stderr.indexOf(str) > -1;
-        assert.ok(typeof not === 'undefined' ? contains : !contains);
+        assert.ok(typeof not === 'undefined' ? contains : !contains,
+                 'stderr ' + (typeof not === 'undefined' ? 'does not contain' : 'contains') + ' "' + str + '"');
     });
 
     this.Then(/^stdout should contain \/(.*)\/$/, (regexStr) => {
