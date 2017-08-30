@@ -36,9 +36,10 @@ class MockScriptingEnvironment : public extractor::ScriptingEnvironment
 
     void ProcessElements(const osmium::memory::Buffer &,
                          const extractor::RestrictionParser &,
+                         const extractor::ExtractionRelationContainer &,
                          std::vector<std::pair<const osmium::Node &, extractor::ExtractionNode>> &,
                          std::vector<std::pair<const osmium::Way &, extractor::ExtractionWay>> &,
-                         std::vector<std::pair<const osmium::Relation &, extractor::ExtractionRelation>> &resulting_relations,
+                         std::vector<std::pair<const osmium::Relation &, extractor::ExtractionRelation>> &,
                          std::vector<extractor::InputConditionalTurnRestriction> &) override final
     {
     }
