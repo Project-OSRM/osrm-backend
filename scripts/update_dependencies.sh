@@ -10,7 +10,7 @@ set -o nounset
 # http://git.661346.n2.nabble.com/subtree-merges-lose-prefix-after-rebase-td7332850.html
 
 OSMIUM_REPO="https://github.com/osmcode/libosmium.git"
-OSMIUM_TAG=v2.11.3
+OSMIUM_TAG=v2.13.1
 
 VARIANT_REPO="https://github.com/mapbox/variant.git"
 VARIANT_TAG=v1.1.3
