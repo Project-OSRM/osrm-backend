@@ -51,10 +51,10 @@ BOOST_AUTO_TEST_CASE(polygon_tests)
 
     LocationDependentData data(fixture.temporary_file);
     BOOST_CHECK(data(point_t(0, 0)).empty());
-    BOOST_CHECK(data(point_t(1, 1)).empty());
-    BOOST_CHECK(data(point_t(0, 1)).empty());
-    BOOST_CHECK(data(point_t(0.5, -0.5)).empty());
-    BOOST_CHECK(data(point_t(0, -3)).empty());
+    BOOST_CHECK(!data(point_t(1, 1)).empty());
+    BOOST_CHECK(!data(point_t(0, 1)).empty());
+    BOOST_CHECK(!data(point_t(0.5, -0.5)).empty());
+    BOOST_CHECK(!data(point_t(0, -3)).empty());
     BOOST_CHECK(!data(point_t(-0.75, 0.75)).empty());
     BOOST_CHECK(!data(point_t(-2, 6)).empty());
     BOOST_CHECK_EQUAL(boost::get<double>(data(point_t(2, 0))["answer"]), 42.);
@@ -110,13 +110,61 @@ BOOST_AUTO_TEST_CASE(polygon_merging_tests)
 ]})json");
 
     LocationDependentData data(fixture.temporary_file);
-    BOOST_CHECK_EQUAL(boost::get<std::string>(data(point_t(0, 0))["answer"]), "a");
+    BOOST_CHECK_EQUAL(boost::get<std::string>(data(point_t(-3, 3))["answer"]), "a");
+    BOOST_CHECK_EQUAL(boost::get<std::string>(data(point_t(-3, 1))["answer"]), "a");
+    BOOST_CHECK_EQUAL(boost::get<std::string>(data(point_t(-3, -3))["answer"]), "a");
+    BOOST_CHECK_EQUAL(boost::get<std::string>(data(point_t(0, 3))["answer"]), "a");
     BOOST_CHECK_EQUAL(boost::get<std::string>(data(point_t(1, 0))["answer"]), "a");
-    BOOST_CHECK_EQUAL(boost::get<std::string>(data(point_t(2, 0))["answer"]), "a");
-    BOOST_CHECK_EQUAL(boost::get<std::string>(data(point_t(3, 0))["answer"]), "b");
-    BOOST_CHECK_EQUAL(boost::get<std::string>(data(point_t(4, 0))["answer"]), "b");
-    BOOST_CHECK_EQUAL(boost::get<std::string>(data(point_t(6, 0))["answer"]), "b");
-    BOOST_CHECK_EQUAL(boost::get<std::string>(data(point_t(7, 0))["answer"]), "c");
+    BOOST_CHECK_EQUAL(boost::get<std::string>(data(point_t(2, -3))["answer"]), "a");
+    BOOST_CHECK_EQUAL(boost::get<std::string>(data(point_t(3, 0))["answer"]), "a");
+    BOOST_CHECK_EQUAL(boost::get<std::string>(data(point_t(4, 3))["answer"]), "b");
+    BOOST_CHECK_EQUAL(boost::get<std::string>(data(point_t(6, 1))["answer"]), "b");
+    BOOST_CHECK_EQUAL(boost::get<std::string>(data(point_t(7, 0))["answer"]), "b");
+    BOOST_CHECK_EQUAL(boost::get<std::string>(data(point_t(8, 3))["answer"]), "c");
+    BOOST_CHECK_EQUAL(boost::get<std::string>(data(point_t(8, -1))["answer"]), "c");
+    BOOST_CHECK_EQUAL(boost::get<std::string>(data(point_t(8, -3))["answer"]), "c");
+}
+
+BOOST_AUTO_TEST_CASE(staircase_polygon)
+{
+    LocationDataFixture fixture(R"json({
+"type": "FeatureCollection",
+"features": [
+{
+    "type": "Feature",
+    "properties": { "answer": "a" },
+    "geometry": { "type": "Polygon", "coordinates": [ [ [0, 0], [3, 0], [3, 3], [2, 3], [2, 2], [1, 2], [1, 1], [0, 1], [0, 0] ] ] }
+}
+]})json");
+
+    LocationDependentData data(fixture.temporary_file);
+
+    // all corners
+    BOOST_CHECK(!data(point_t(0, 0)).empty());
+    BOOST_CHECK(!data(point_t(0, 1)).empty());
+    BOOST_CHECK(!data(point_t(1, 1)).empty());
+    BOOST_CHECK(!data(point_t(1, 2)).empty());
+    BOOST_CHECK(!data(point_t(2, 2)).empty());
+    BOOST_CHECK(!data(point_t(2, 3)).empty());
+    BOOST_CHECK(!data(point_t(3, 3)).empty());
+    BOOST_CHECK(!data(point_t(3, 0)).empty());
+
+    // at x = 1
+    BOOST_CHECK(data(point_t(1, -0.5)).empty());
+    BOOST_CHECK(!data(point_t(1, 0)).empty());
+    BOOST_CHECK(!data(point_t(1, 0.5)).empty());
+    BOOST_CHECK(!data(point_t(1, 1.5)).empty());
+    BOOST_CHECK(data(point_t(1, 2.5)).empty());
+    BOOST_CHECK(data(point_t(3.5, 2)).empty());
+
+    // at y = 2
+    BOOST_CHECK(data(point_t(0.5, 2)).empty());
+    BOOST_CHECK(!data(point_t(1, 2)).empty());
+    BOOST_CHECK(!data(point_t(1.5, 2)).empty());
+    BOOST_CHECK(!data(point_t(2, 2)).empty());
+    BOOST_CHECK(!data(point_t(2.5, 2)).empty());
+    BOOST_CHECK(!data(point_t(3, 2)).empty());
+    BOOST_CHECK(data(point_t(3.5, 2)).empty());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
