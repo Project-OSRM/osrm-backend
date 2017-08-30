@@ -3,6 +3,7 @@
 
 #include "extractor/raster_source.hpp"
 #include "extractor/scripting_environment.hpp"
+#include "extractor/extraction_relation.hpp"
 
 #include <tbb/enumerable_thread_specific.h>
 
@@ -19,8 +20,8 @@ namespace extractor
 
 struct LuaScriptingContext final
 {
-    void ProcessNode(const osmium::Node &, ExtractionNode &result);
-    void ProcessWay(const osmium::Way &, ExtractionWay &result);
+    void ProcessNode(const osmium::Node &, ExtractionNode &result, const ExtractionRelationContainer::RelationList &relations);
+    void ProcessWay(const osmium::Way &, ExtractionWay &result, const ExtractionRelationContainer::RelationList &relations);
     void ProcessRelation(const osmium::Relation &, ExtractionRelation &result);
 
     ProfileProperties properties;
@@ -71,6 +72,7 @@ class Sol2ScriptingEnvironment final : public ScriptingEnvironment
     void
     ProcessElements(const osmium::memory::Buffer &buffer,
                     const RestrictionParser &restriction_parser,
+                    const ExtractionRelationContainer &relations,
                     std::vector<std::pair<const osmium::Node &, ExtractionNode>> &resulting_nodes,
                     std::vector<std::pair<const osmium::Way &, ExtractionWay>> &resulting_ways,
                     std::vector<std::pair<const osmium::Relation &, ExtractionRelation>> &resulting_relations,

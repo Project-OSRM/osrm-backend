@@ -34,6 +34,7 @@ namespace extractor
 {
 
 class RestrictionParser;
+class ExtractionRelationContainer;
 struct ExtractionNode;
 struct ExtractionWay;
 struct ExtractionRelation;
@@ -64,6 +65,7 @@ class ScriptingEnvironment
     virtual void
     ProcessElements(const osmium::memory::Buffer &buffer,
                     const RestrictionParser &restriction_parser,
+                    const ExtractionRelationContainer &relations,
                     std::vector<std::pair<const osmium::Node &, ExtractionNode>> &resulting_nodes,
                     std::vector<std::pair<const osmium::Way &, ExtractionWay>> &resulting_ways,
                     std::vector<std::pair<const osmium::Relation &, ExtractionRelation>> &resulting_relations,

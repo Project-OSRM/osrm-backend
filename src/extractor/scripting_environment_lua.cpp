@@ -737,6 +737,7 @@ LuaScriptingContext &Sol2ScriptingEnvironment::GetSol2Context()
 void Sol2ScriptingEnvironment::ProcessElements(
     const osmium::memory::Buffer &buffer,
     const RestrictionParser &restriction_parser,
+    const ExtractionRelationContainer &relations,
     std::vector<std::pair<const osmium::Node &, ExtractionNode>> &resulting_nodes,
     std::vector<std::pair<const osmium::Way &, ExtractionWay>> &resulting_ways,
     std::vector<std::pair<const osmium::Relation &, ExtractionRelation>> &resulting_relations,
@@ -757,7 +758,9 @@ void Sol2ScriptingEnvironment::ProcessElements(
                 (!static_cast<const osmium::Node &>(*entity).tags().empty() ||
                  local_context.properties.call_tagless_node_function))
             {
-                local_context.ProcessNode(static_cast<const osmium::Node &>(*entity), result_node);
+                const osmium::Node & node = static_cast<const osmium::Node &>(*entity);
+                const util::OsmIDTyped id(node.id(), std::uint8_t(node.type()));
+                local_context.ProcessNode(node, result_node, relations.Get(id));
             }
             resulting_nodes.push_back(std::pair<const osmium::Node &, ExtractionNode>(
                 static_cast<const osmium::Node &>(*entity), std::move(result_node)));
@@ -766,7 +769,9 @@ void Sol2ScriptingEnvironment::ProcessElements(
             result_way.clear();
             if (local_context.has_way_function)
             {
-                local_context.ProcessWay(static_cast<const osmium::Way &>(*entity), result_way);
+                const osmium::Way & way = static_cast<const osmium::Way &>(*entity);
+                const util::OsmIDTyped id(way.id(), std::uint8_t(way.type()));
+                local_context.ProcessWay(way, result_way, relations.Get(id));
             }
             resulting_ways.push_back(std::pair<const osmium::Way &, ExtractionWay>(
                 static_cast<const osmium::Way &>(*entity), std::move(result_way)));
@@ -1007,15 +1012,15 @@ void Sol2ScriptingEnvironment::ProcessSegment(ExtractionSegment &segment)
     }
 }
 
-void LuaScriptingContext::ProcessNode(const osmium::Node &node, ExtractionNode &result)
+void LuaScriptingContext::ProcessNode(const osmium::Node &node, ExtractionNode &result, const ExtractionRelationContainer::RelationList &relations)
 {
     BOOST_ASSERT(state.lua_state() != nullptr);
 
     switch (api_version)
     {
     case 3:
-//        BOOST_ASSERT(false); // TODO: implement me
-//        break;
+        node_function(profile_table, node, result, relations);
+        break;
     case 2:
         node_function(profile_table, node, result);
         break;
@@ -1026,15 +1031,15 @@ void LuaScriptingContext::ProcessNode(const osmium::Node &node, ExtractionNode &
     }
 }
 
-void LuaScriptingContext::ProcessWay(const osmium::Way &way, ExtractionWay &result)
+void LuaScriptingContext::ProcessWay(const osmium::Way &way, ExtractionWay &result, const ExtractionRelationContainer::RelationList &relations)
 {
     BOOST_ASSERT(state.lua_state() != nullptr);
 
     switch (api_version)
     {
     case 3:
-//        BOOST_ASSERT(false); // TODO: implement me
-//        break;
+        way_function(profile_table, way, result, relations);
+        break;
     case 2:
         way_function(profile_table, way, result);
         break;

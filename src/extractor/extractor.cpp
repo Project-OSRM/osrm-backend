@@ -289,12 +289,12 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
 
     const osmium::io::File input_file(config.input_path.string());
     osmium::thread::Pool pool(number_of_threads);
-    osmium::io::Reader reader(
-        input_file,
-        pool,
-        (config.use_metadata ? osmium::io::read_meta::yes : osmium::io::read_meta::no));
 
-    const osmium::io::Header header = reader.header();
+    std::unique_ptr<osmium::io::Reader> reader(
+        new osmium::io::Reader(input_file, osmium::osm_entity_bits::relation,
+                               (config.use_metadata ? osmium::io::read_meta::yes : osmium::io::read_meta::no)));
+
+    osmium::io::Header header = reader->header();
 
     unsigned number_of_nodes = 0;
     unsigned number_of_ways = 0;
@@ -332,14 +332,13 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
 
     timestamp_file.WriteFrom(timestamp.c_str(), timestamp.length());
 
+    ExtractionRelationContainer relations;
     std::vector<std::string> restrictions = scripting_environment.GetRestrictions();
     // setup restriction parser
     const RestrictionParser restriction_parser(
         scripting_environment.GetProfileProperties().use_turn_restrictions,
         config.parse_conditionals,
         restrictions);
-
-    std::mutex process_mutex;
 
     using SharedBuffer = std::shared_ptr<const osmium::memory::Buffer>;
     struct ParsedBuffer
@@ -353,7 +352,7 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
 
     tbb::filter_t<void, SharedBuffer> buffer_reader(
         tbb::filter::serial_in_order, [&](tbb::flow_control &fc) {
-            if (auto buffer = reader.read())
+            if (auto buffer = reader->read())
             {
                 return std::make_shared<const osmium::memory::Buffer>(std::move(buffer));
             }
@@ -372,6 +371,7 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
             parsed_buffer->buffer = buffer;
             scripting_environment.ProcessElements(*buffer,
                                                   restriction_parser,
+                                                  relations,
                                                   parsed_buffer->resulting_nodes,
                                                   parsed_buffer->resulting_ways,
                                                   parsed_buffer->resulting_relations,
@@ -394,12 +394,43 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
             {
                 extractor_callbacks->ProcessWay(result.first, result.second);
             }
-            number_of_relations += parsed_buffer->resulting_restrictions.size();
+        });
+
+     tbb::filter_t<std::shared_ptr<ParsedBuffer>, void> buffer_storage_relation(
+        tbb::filter::serial_in_order, [&](const std::shared_ptr<ParsedBuffer> parsed_buffer) {
+            if (!parsed_buffer)
+                return;
+
+            number_of_relations += parsed_buffer->resulting_relations.size();
+            for (const auto &result : parsed_buffer->resulting_relations)
+            {
+                /// TODO: add restriction processing
+                if (result.second.is_restriction)
+                    continue;
+
+                relations.AddRelation(result.second);
+            }
+
             for (const auto &result : parsed_buffer->resulting_restrictions)
             {
                 extractor_callbacks->ProcessRestriction(result);
             }
         });
+
+    /* Main trick that we can use the same pipeline. It just receive relation objects
+     * from osmium. So other containers would be empty and doesn't process anything
+     */
+    util::Log() << "Parse relations ...";
+    tbb::parallel_pipeline(tbb::task_scheduler_init::default_num_threads() * 1.5,
+                           buffer_reader & buffer_transform & buffer_storage_relation);
+    reader->close();
+
+    /* At this step we just filter ways and nodes from osmium, so any relation wouldn't be
+     * processed there.
+     */
+    util::Log() << "Parse ways and nodes ...";
+    reader.reset(new osmium::io::Reader(input_file, osmium::osm_entity_bits::node | osmium::osm_entity_bits::way,
+                                        (config.use_metadata ? osmium::io::read_meta::yes : osmium::io::read_meta::no)));
 
     // Number of pipeline tokens that yielded the best speedup was about 1.5 * num_cores
     tbb::parallel_pipeline(tbb::task_scheduler_init::default_num_threads() * 1.5,
