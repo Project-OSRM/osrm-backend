@@ -86,8 +86,7 @@ bool isValidMatch(const TurnLaneType::Mask tag, const TurnInstruction instructio
                (instruction.type ==
                     TurnType::Continue && // Forks can be experienced, even for straight segments
                 (instruction.direction_modifier == DirectionModifier::SlightLeft ||
-                 instruction.direction_modifier == DirectionModifier::SlightRight)) ||
-               instruction.type == TurnType::Suppressed;
+                 instruction.direction_modifier == DirectionModifier::SlightRight));
     }
     else if (tag == TurnLaneType::slight_left || tag == TurnLaneType::left ||
              tag == TurnLaneType::sharp_left)
