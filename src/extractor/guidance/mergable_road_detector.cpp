@@ -80,7 +80,7 @@ bool MergableRoadDetector::CanMergeRoad(const NodeID intersection_node,
     };
 
     // TODO might have to skip over trivial intersections
-    if (road_target(lhs) == intersection_node || road_target(lhs) == intersection_node)
+    if (road_target(lhs) == intersection_node || road_target(rhs) == intersection_node)
         return false;
 
     // Don't merge turning circles/traffic loops
