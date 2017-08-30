@@ -56,7 +56,7 @@ namespace osmium {
                     handler.relation(static_cast<const osmium::DiffRelation&>(diff));
                     break;
                 default:
-                    throw osmium::unknown_type();
+                    throw osmium::unknown_type{};
             }
         }
 
@@ -72,8 +72,8 @@ namespace osmium {
     inline void apply_diff(TIterator it, TIterator end, THandlers&... handlers) {
         using diff_iterator = osmium::DiffIterator<TIterator>;
 
-        diff_iterator dit(it, end);
-        diff_iterator dend(end, end);
+        diff_iterator dit{it, end};
+        diff_iterator dend{end, end};
 
         for (; dit != dend; ++dit) {
             detail::apply_diff_iterator_recurse(*dit, handlers...);

@@ -35,10 +35,11 @@ DEALINGS IN THE SOFTWARE.
 
 #include <algorithm>
 #include <cassert>
+#include <cstddef>
 #include <cstring>
+#include <iterator>
 #include <memory>
 #include <type_traits>
-#include <unordered_set>
 #include <vector>
 
 #include <osmium/osm/item_type.hpp>
@@ -57,8 +58,7 @@ namespace osmium {
 
         public:
 
-            virtual ~IdSet() {
-            }
+            virtual ~IdSet() = default;
 
             /**
              * Add the given Id to the set.
@@ -79,6 +79,11 @@ namespace osmium {
              * Clear the set.
              */
             virtual void clear() = 0;
+
+            /**
+             * Get an estimate of the amount of memory used for the set.
+             */
+            virtual std::size_t used_memory() const noexcept = 0;
 
         }; // class IdSet
 
@@ -139,7 +144,7 @@ namespace osmium {
             }
 
             IdSetDenseIterator<T> operator++(int) noexcept {
-                IdSetDenseIterator<T> tmp(*this);
+                IdSetDenseIterator<T> tmp{*this};
                 operator++();
                 return tmp;
             }
@@ -178,17 +183,17 @@ namespace osmium {
             // which would mean less (but larger) memory allocations. For
             // relations Ids it could be smaller, because they would all fit
             // into a smaller allocation.
-            constexpr static const size_t chunk_bits = 22;
-            constexpr static const size_t chunk_size = 1 << chunk_bits;
+            constexpr static const std::size_t chunk_bits = 22;
+            constexpr static const std::size_t chunk_size = 1 << chunk_bits;
 
             std::vector<std::unique_ptr<unsigned char[]>> m_data;
             T m_size = 0;
 
-            static size_t chunk_id(T id) noexcept {
+            static std::size_t chunk_id(T id) noexcept {
                 return id >> (chunk_bits + 3);
             }
 
-            static size_t offset(T id) noexcept {
+            static std::size_t offset(T id) noexcept {
                 return (id >> 3) & ((1 << chunk_bits) - 1);
             }
 
@@ -244,7 +249,7 @@ namespace osmium {
              *
              * @param id The Id to set.
              */
-            void set(T id) override final {
+            void set(T id) final {
                 (void)check_and_set(id);
             }
 
@@ -267,7 +272,7 @@ namespace osmium {
              *
              * @param id The Id to check.
              */
-            bool get(T id) const noexcept override final {
+            bool get(T id) const noexcept final {
                 if (chunk_id(id) >= m_data.size()) {
                     return false;
                 }
@@ -281,7 +286,7 @@ namespace osmium {
             /**
              * Is the set empty?
              */
-            bool empty() const noexcept override final {
+            bool empty() const noexcept final {
                 return m_size == 0;
             }
 
@@ -295,17 +300,21 @@ namespace osmium {
             /**
              * Clear the set.
              */
-            void clear() override final {
+            void clear() final {
                 m_data.clear();
                 m_size = 0;
             }
 
+            std::size_t used_memory() const noexcept final {
+                return m_data.size() * chunk_size;
+            }
+
             IdSetDenseIterator<T> begin() const {
-                return IdSetDenseIterator<T>{this, 0, last()};
+                return {this, 0, last()};
             }
 
             IdSetDenseIterator<T> end() const {
-                return IdSetDenseIterator<T>{this, last(), last()};
+                return {this, last(), last()};
             }
 
         }; // class IdSetDense
@@ -324,7 +333,7 @@ namespace osmium {
             /**
              * Add the given Id to the set.
              */
-            void set(T id) override final {
+            void set(T id) final {
                 m_data.push_back(id);
             }
 
@@ -333,7 +342,7 @@ namespace osmium {
              *
              * @param id The Id to check.
              */
-            bool get(T id) const noexcept override final {
+            bool get(T id) const noexcept final {
                 const auto it = std::find(m_data.cbegin(), m_data.cend(), id);
                 return it != m_data.cend();
             }
@@ -355,14 +364,14 @@ namespace osmium {
             /**
              * Is the set empty?
              */
-            bool empty() const noexcept override final {
+            bool empty() const noexcept final {
                 return m_data.empty();
             }
 
             /**
              * Clear the set.
              */
-            void clear() override final {
+            void clear() final {
                 m_data.clear();
             }
 
@@ -383,8 +392,12 @@ namespace osmium {
              * @pre You must have called sort_unique() before calling this
              *      or be sure there are no duplicates.
              */
-            size_t size() const noexcept {
+            std::size_t size() const noexcept {
                 return m_data.size();
+            }
+
+            std::size_t used_memory() const noexcept final {
+                return m_data.capacity() * sizeof(T);
             }
 
             /// Iterator type. There is no non-const iterator.
@@ -408,6 +421,7 @@ namespace osmium {
 
         }; // class IdSetSmall
 
+        /// @deprecated Use nwr_array helper class instead.
         template <template<typename> class IdSetType>
         class NWRIdSet {
 

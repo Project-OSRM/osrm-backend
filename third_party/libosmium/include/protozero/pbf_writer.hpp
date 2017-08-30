@@ -502,6 +502,17 @@ public:
     }
 
     /**
+     * Add "bytes" field to data. Bytes from the value are written until
+     * a null byte is encountered. The null byte is not added.
+     *
+     * @param tag Tag (field number) of the field
+     * @param value Pointer to zero-delimited value to be written
+     */
+    void add_bytes(pbf_tag_type tag, const char* value) {
+        add_bytes(tag, value, std::strlen(value));
+    }
+
+    /**
      * Add "bytes" field to data using vectored input. All the data in the
      * 2nd and further arguments is "concatenated" with only a single copy
      * into the final buffer.

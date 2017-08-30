@@ -58,6 +58,13 @@ namespace osmium {
      */
     using string_size_type = uint16_t;
 
+    /**
+     * This is the size type for the text in a changeset discussion comment.
+     * There is no official limit for this. 16 bit is not enough for existing
+     * OSM changesets, hopefully 32 bit is.
+     */
+    using changeset_comment_size_type = uint32_t;
+
     // maximum of 256 characters of max 4 bytes each (in UTF-8 encoding)
     constexpr const int max_osm_string_length = 256 * 4;
 

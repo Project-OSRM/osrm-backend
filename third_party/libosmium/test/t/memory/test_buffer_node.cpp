@@ -36,7 +36,7 @@ void check_node_2(const osmium::Node& node) {
         REQUIRE(osmium::item_type::tag_list == item.type());
     }
 
-    REQUIRE(!node.tags().empty());
+    REQUIRE_FALSE(node.tags().empty());
     REQUIRE(2 == std::distance(node.tags().begin(), node.tags().end()));
 
     int n = 0;

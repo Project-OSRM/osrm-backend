@@ -105,7 +105,7 @@ namespace osmium {
         private:
 
             /// The size of the mapping
-            size_t m_size;
+            std::size_t m_size;
 
             /// Offset into the file
             off_t m_offset;
@@ -137,9 +137,9 @@ namespace osmium {
 
             flag_type get_flags() const noexcept;
 
-            static size_t check_size(size_t size) {
+            static std::size_t check_size(std::size_t size) {
                 if (size == 0) {
-                    throw std::runtime_error("Zero-sized mapping is not allowed.");
+                    return osmium::util::get_pagesize();
                 }
                 return size;
             }
@@ -181,14 +181,14 @@ namespace osmium {
              * @param offset Offset into the file where the mapping should start
              * @throws std::system_error if the mapping fails
              */
-            MemoryMapping(size_t size, mapping_mode mode, int fd=-1, off_t offset=0);
+            MemoryMapping(std::size_t size, mapping_mode mode, int fd=-1, off_t offset=0);
 
             /**
              * @deprecated
              * For backwards compatibility only. Use the constructor taking
              * a mapping_mode as second argument instead.
              */
-            OSMIUM_DEPRECATED MemoryMapping(size_t size, bool writable=true, int fd=-1, off_t offset=0) :
+            OSMIUM_DEPRECATED MemoryMapping(std::size_t size, bool writable=true, int fd=-1, off_t offset=0) :
                 MemoryMapping(size, writable ? mapping_mode::write_shared : mapping_mode::readonly, fd, offset)  {
             }
 
@@ -240,7 +240,7 @@ namespace osmium {
              *
              * @throws std::system_error if the remapping fails.
              */
-            void resize(size_t new_size);
+            void resize(std::size_t new_size);
 
             /**
              * In a boolean context a MemoryMapping is true when it is a valid
@@ -255,7 +255,7 @@ namespace osmium {
              * the mapping with. The actual mapping will probably be larger
              * because the system will round it to the page size.
              */
-            size_t size() const noexcept {
+            std::size_t size() const noexcept {
                 return m_size;
             }
 
@@ -285,7 +285,7 @@ namespace osmium {
                 if (is_valid()) {
                     return reinterpret_cast<T*>(m_addr);
                 }
-                throw std::runtime_error("invalid memory mapping");
+                throw std::runtime_error{"invalid memory mapping"};
             }
 
         }; // class MemoryMapping
@@ -304,7 +304,7 @@ namespace osmium {
 
         public:
 
-            explicit AnonymousMemoryMapping(size_t size) :
+            explicit AnonymousMemoryMapping(std::size_t size) :
                 MemoryMapping(size, mapping_mode::write_private) {
             }
 
@@ -313,7 +313,7 @@ namespace osmium {
              * On systems other than Linux anonymous mappings can not be
              * resized!
              */
-            void resize(size_t) = delete;
+            void resize(std::size_t) = delete;
 #endif
 
         }; // class AnonymousMemoryMapping
@@ -340,7 +340,7 @@ namespace osmium {
              * @param size Number of objects of type T to be mapped
              * @throws std::system_error if the mapping fails
              */
-            explicit TypedMemoryMapping(size_t size) :
+            explicit TypedMemoryMapping(std::size_t size) :
                 m_mapping(sizeof(T) * size, MemoryMapping::mapping_mode::write_private) {
             }
 
@@ -354,7 +354,7 @@ namespace osmium {
              * @param offset Offset into the file where the mapping should start
              * @throws std::system_error if the mapping fails
              */
-            TypedMemoryMapping(size_t size, MemoryMapping::mapping_mode mode, int fd, off_t offset = 0) :
+            TypedMemoryMapping(std::size_t size, MemoryMapping::mapping_mode mode, int fd, off_t offset = 0) :
                 m_mapping(sizeof(T) * size, mode, fd, sizeof(T) * offset) {
             }
 
@@ -363,8 +363,11 @@ namespace osmium {
              * For backwards compatibility only. Use the constructor taking
              * a mapping_mode as second argument instead.
              */
-            OSMIUM_DEPRECATED TypedMemoryMapping(size_t size, bool writable, int fd, off_t offset = 0) :
-                m_mapping(sizeof(T) * size, writable ? MemoryMapping::mapping_mode::write_shared : MemoryMapping::mapping_mode::readonly, fd, sizeof(T) * offset) {
+            OSMIUM_DEPRECATED TypedMemoryMapping(std::size_t size, bool writable, int fd, off_t offset = 0) :
+                m_mapping(sizeof(T) * size,
+                          writable ? MemoryMapping::mapping_mode::write_shared : MemoryMapping::mapping_mode::readonly,
+                          fd,
+                          sizeof(T) * offset) {
             }
 
             /// You can not copy construct a TypedMemoryMapping.
@@ -410,7 +413,7 @@ namespace osmium {
              * @param new_size Number of objects of type T to resize to
              * @throws std::system_error if the remapping fails
              */
-            void resize(size_t new_size) {
+            void resize(std::size_t new_size) {
                 m_mapping.resize(sizeof(T) * new_size);
             }
 
@@ -427,7 +430,7 @@ namespace osmium {
              * you created the mapping with. The actual mapping will probably
              * be larger because the system will round it to the page size.
              */
-            size_t size() const noexcept {
+            std::size_t size() const noexcept {
                 assert(m_mapping.size() % sizeof(T) == 0);
                 return m_mapping.size() / sizeof(T);
             }
@@ -489,7 +492,7 @@ namespace osmium {
 
         public:
 
-            explicit AnonymousTypedMemoryMapping(size_t size) :
+            explicit AnonymousTypedMemoryMapping(std::size_t size) :
                 TypedMemoryMapping<T>(size) {
             }
 
@@ -498,7 +501,7 @@ namespace osmium {
              * On systems other than Linux anonymous mappings can not be
              * resized!
              */
-            void resize(size_t) = delete;
+            void resize(std::size_t) = delete;
 #endif
 
         }; // class AnonymousTypedMemoryMapping
@@ -547,7 +550,7 @@ inline int osmium::util::MemoryMapping::get_flags() const noexcept {
     return MAP_PRIVATE;
 }
 
-inline osmium::util::MemoryMapping::MemoryMapping(size_t size, mapping_mode mode, int fd, off_t offset) :
+inline osmium::util::MemoryMapping::MemoryMapping(std::size_t size, mapping_mode mode, int fd, off_t offset) :
     m_size(check_size(size)),
     m_offset(offset),
     m_fd(resize_fd(fd)),
@@ -555,7 +558,7 @@ inline osmium::util::MemoryMapping::MemoryMapping(size_t size, mapping_mode mode
     m_addr(::mmap(nullptr, m_size, get_protection(), get_flags(), m_fd, m_offset)) {
     assert(!(fd == -1 && mode == mapping_mode::readonly));
     if (!is_valid()) {
-        throw std::system_error(errno, std::system_category(), "mmap failed");
+        throw std::system_error{errno, std::system_category(), "mmap failed"};
     }
 }
 
@@ -582,19 +585,19 @@ inline osmium::util::MemoryMapping& osmium::util::MemoryMapping::operator=(osmiu
 inline void osmium::util::MemoryMapping::unmap() {
     if (is_valid()) {
         if (::munmap(m_addr, m_size) != 0) {
-            throw std::system_error(errno, std::system_category(), "munmap failed");
+            throw std::system_error{errno, std::system_category(), "munmap failed"};
         }
         make_invalid();
     }
 }
 
-inline void osmium::util::MemoryMapping::resize(size_t new_size) {
+inline void osmium::util::MemoryMapping::resize(std::size_t new_size) {
     assert(new_size > 0 && "can not resize to zero size");
     if (m_fd == -1) { // anonymous mapping
 #ifdef __linux__
         m_addr = ::mremap(m_addr, m_size, new_size, MREMAP_MAYMOVE);
         if (!is_valid()) {
-            throw std::system_error(errno, std::system_category(), "mremap failed");
+            throw std::system_error{errno, std::system_category(), "mremap failed"};
         }
         m_size = new_size;
 #else
@@ -606,7 +609,7 @@ inline void osmium::util::MemoryMapping::resize(size_t new_size) {
         resize_fd(m_fd);
         m_addr = ::mmap(nullptr, new_size, get_protection(), get_flags(), m_fd, m_offset);
         if (!is_valid()) {
-            throw std::system_error(errno, std::system_category(), "mmap (remap) failed");
+            throw std::system_error{errno, std::system_category(), "mmap (remap) failed"};
         }
     }
 }
@@ -644,9 +647,10 @@ inline DWORD osmium::util::MemoryMapping::get_protection() const noexcept {
             return PAGE_READONLY;
         case mapping_mode::write_private:
             return PAGE_WRITECOPY;
-        case mapping_mode::write_shared:
-            return PAGE_READWRITE;
+        default: // mapping_mode::write_shared
+            break;
     }
+    return PAGE_READWRITE;
 }
 
 inline DWORD osmium::util::MemoryMapping::get_flags() const noexcept {
@@ -655,9 +659,10 @@ inline DWORD osmium::util::MemoryMapping::get_flags() const noexcept {
             return FILE_MAP_READ;
         case mapping_mode::write_private:
             return FILE_MAP_COPY;
-        case mapping_mode::write_shared:
-            return FILE_MAP_WRITE;
+        default: // mapping_mode::write_shared
+            break;
     }
+    return FILE_MAP_WRITE;
 }
 
 inline HANDLE osmium::util::MemoryMapping::get_handle() const noexcept {
@@ -671,11 +676,20 @@ inline HANDLE osmium::util::MemoryMapping::create_file_mapping() const noexcept 
     if (m_fd != -1) {
         _setmode(m_fd, _O_BINARY);
     }
-    return CreateFileMapping(get_handle(), nullptr, get_protection(), osmium::util::dword_hi(static_cast<uint64_t>(m_size) + m_offset), osmium::util::dword_lo(static_cast<uint64_t>(m_size) + m_offset), nullptr);
+    return CreateFileMapping(get_handle(),
+                             nullptr,
+                             get_protection(),
+                             osmium::util::dword_hi(static_cast<uint64_t>(m_size) + m_offset),
+                             osmium::util::dword_lo(static_cast<uint64_t>(m_size) + m_offset),
+                             nullptr);
 }
 
 inline void* osmium::util::MemoryMapping::map_view_of_file() const noexcept {
-    return MapViewOfFile(m_handle, get_flags(), osmium::util::dword_hi(m_offset), osmium::util::dword_lo(m_offset), m_size);
+    return MapViewOfFile(m_handle,
+                         get_flags(),
+                         osmium::util::dword_hi(m_offset),
+                         osmium::util::dword_lo(m_offset),
+                         m_size);
 }
 
 inline bool osmium::util::MemoryMapping::is_valid() const noexcept {
@@ -686,7 +700,14 @@ inline void osmium::util::MemoryMapping::make_invalid() noexcept {
     m_addr = nullptr;
 }
 
-inline osmium::util::MemoryMapping::MemoryMapping(size_t size, MemoryMapping::mapping_mode mode, int fd, off_t offset) :
+// GetLastError() returns a DWORD (A 32-bit unsigned integer), but the error
+// code for std::system_error is an int. So we convert this here and hope
+// it all works.
+inline int last_error() noexcept {
+    return static_cast<int>(GetLastError());
+}
+
+inline osmium::util::MemoryMapping::MemoryMapping(std::size_t size, MemoryMapping::mapping_mode mode, int fd, off_t offset) :
     m_size(check_size(size)),
     m_offset(offset),
     m_fd(resize_fd(fd)),
@@ -695,12 +716,12 @@ inline osmium::util::MemoryMapping::MemoryMapping(size_t size, MemoryMapping::ma
     m_addr(nullptr) {
 
     if (!m_handle) {
-        throw std::system_error(GetLastError(), std::system_category(), "CreateFileMapping failed");
+        throw std::system_error{last_error(), std::system_category(), "CreateFileMapping failed"};
     }
 
     m_addr = map_view_of_file();
     if (!is_valid()) {
-        throw std::system_error(GetLastError(), std::system_category(), "MapViewOfFile failed");
+        throw std::system_error{last_error(), std::system_category(), "MapViewOfFile failed"};
     }
 }
 
@@ -730,21 +751,21 @@ inline osmium::util::MemoryMapping& osmium::util::MemoryMapping::operator=(osmiu
 
 inline void osmium::util::MemoryMapping::unmap() {
     if (is_valid()) {
-        if (! UnmapViewOfFile(m_addr)) {
-            throw std::system_error(GetLastError(), std::system_category(), "UnmapViewOfFile failed");
+        if (!UnmapViewOfFile(m_addr)) {
+            throw std::system_error{last_error(), std::system_category(), "UnmapViewOfFile failed"};
         }
         make_invalid();
     }
 
     if (m_handle) {
-        if (! CloseHandle(m_handle)) {
-            throw std::system_error(GetLastError(), std::system_category(), "CloseHandle failed");
+        if (!CloseHandle(m_handle)) {
+            throw std::system_error{last_error(), std::system_category(), "CloseHandle failed"};
         }
         m_handle = nullptr;
     }
 }
 
-inline void osmium::util::MemoryMapping::resize(size_t new_size) {
+inline void osmium::util::MemoryMapping::resize(std::size_t new_size) {
     unmap();
 
     m_size = new_size;
@@ -752,12 +773,12 @@ inline void osmium::util::MemoryMapping::resize(size_t new_size) {
 
     m_handle = create_file_mapping();
     if (!m_handle) {
-        throw std::system_error(GetLastError(), std::system_category(), "CreateFileMapping failed");
+        throw std::system_error{last_error(), std::system_category(), "CreateFileMapping failed"};
     }
 
     m_addr = map_view_of_file();
     if (!is_valid()) {
-        throw std::system_error(GetLastError(), std::system_category(), "MapViewOfFile failed");
+        throw std::system_error{last_error(), std::system_category(), "MapViewOfFile failed"};
     }
 }
 

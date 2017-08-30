@@ -34,11 +34,10 @@ DEALINGS IN THE SOFTWARE.
 */
 
 #include <cstddef>
+#include <cstdint>
 #include <limits>
 #include <stdexcept>
 #include <string>
-
-#include <osmium/util/compatibility.hpp>
 
 namespace osmium {
 

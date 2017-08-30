@@ -61,12 +61,14 @@ namespace osmium {
         assert(input);
         if (*input != '\0' && !std::isspace(*input)) {
             char* end;
-            auto id = std::strtoll(input, &end, 10);
-            if (id != std::numeric_limits<long long>::min() && id != std::numeric_limits<long long>::max() && *end == '\0') {
+            const auto id = std::strtoll(input, &end, 10);
+            if (id != std::numeric_limits<long long>::min() &&
+                id != std::numeric_limits<long long>::max() &&
+                *end == '\0') {
                 return id;
             }
         }
-        throw std::range_error(std::string("illegal id: '") + input + "'");
+        throw std::range_error{std::string{"illegal id: '"} + input + "'"};
     }
 
     /**
@@ -95,12 +97,12 @@ namespace osmium {
             if (std::isdigit(*input)) {
                 return std::make_pair(default_type, string_to_object_id(input));
             }
-            osmium::item_type t = osmium::char_to_item_type(*input);
+            const osmium::item_type t = osmium::char_to_item_type(*input);
             if (osmium::osm_entity_bits::from_item_type(t) & types) {
                 return std::make_pair(t, string_to_object_id(input + 1));
             }
         }
-        throw std::range_error(std::string("not a valid id: '") + input + "'");
+        throw std::range_error{std::string{"not a valid id: '"} + input + "'"};
     }
 
     namespace detail {
@@ -108,12 +110,12 @@ namespace osmium {
         inline unsigned long string_to_ulong(const char* input, const char* name) {
             if (*input != '\0' && *input != '-' && !std::isspace(*input)) {
                 char* end;
-                auto value = std::strtoul(input, &end, 10);
+                const auto value = std::strtoul(input, &end, 10);
                 if (value != std::numeric_limits<unsigned long>::max() && *end == '\0') {
                     return value;
                 }
             }
-            throw std::range_error(std::string("illegal ") + name + ": '" + input + "'");
+            throw std::range_error{std::string{"illegal "} + name + ": '" + input + "'"};
         }
 
     } // namespace detail

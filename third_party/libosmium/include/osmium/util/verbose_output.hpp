@@ -88,7 +88,7 @@ namespace osmium {
         public:
 
             explicit VerboseOutput(bool verbose = false) noexcept :
-                m_start(time(NULL)),
+                m_start(time(nullptr)),
                 m_verbose(verbose),
                 m_newline(true) {
             }
@@ -101,7 +101,7 @@ namespace osmium {
             VerboseOutput& operator=(VerboseOutput&&) = default;
 
             time_t runtime() const noexcept {
-                return time(NULL) - m_start;
+                return time(nullptr) - m_start;
             }
 
             /// Get "verbose" setting.

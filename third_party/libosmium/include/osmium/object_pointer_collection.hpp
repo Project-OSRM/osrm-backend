@@ -84,20 +84,39 @@ namespace osmium {
         }
 
         /**
-         * Sort objects according to the given order functor.
+         * Sort objects according to the specified order functor.
          */
         template <typename TCompare>
         void sort(TCompare&& compare) {
             std::sort(m_objects.begin(), m_objects.end(), std::forward<TCompare>(compare));
         }
 
-        /// Is the collection empty?
+        /**
+         * Make objects unique according to the specified equality functor.
+         *
+         * Complexity: Linear in the number of items.
+         */
+        template <typename TEqual>
+        void unique(TEqual&& equal) {
+            const auto last = std::unique(m_objects.begin(), m_objects.end(), std::forward<TEqual>(equal));
+            m_objects.erase(last, m_objects.end());
+        }
+
+        /**
+         * Is the collection empty?
+         *
+         * Complexity: Constant.
+         */
         bool empty() const noexcept {
             return m_objects.empty();
         }
 
-        /// Return size of the collection.
-        size_t size() const noexcept {
+        /**
+         * Return size of the collection.
+         *
+         * Complexity: Constant.
+         */
+        std::size_t size() const noexcept {
             return m_objects.size();
         }
 
@@ -107,19 +126,19 @@ namespace osmium {
         }
 
         iterator begin() {
-            return iterator{m_objects.begin()};
+            return {m_objects.begin()};
         }
 
         iterator end() {
-            return iterator{m_objects.end()};
+            return {m_objects.end()};
         }
 
         const_iterator cbegin() const {
-            return const_iterator{m_objects.cbegin()};
+            return {m_objects.cbegin()};
         }
 
         const_iterator cend() const {
-            return const_iterator{m_objects.cend()};
+            return {m_objects.cend()};
         }
 
     }; // class ObjectPointerCollection

@@ -33,6 +33,7 @@ foreach(benchmark ${BENCHMARKS})
     target_link_libraries(osmium_benchmark_${benchmark}
                           ${OSMIUM_IO_LIBRARIES}
                           ${BENCHMARK_LIBS_${benchmark}})
+    set_pthread_on_target(osmium_benchmark_${benchmark})
     configure_file(run_benchmark_${benchmark}.sh
                    ${CMAKE_CURRENT_BINARY_DIR}/run_benchmark_${benchmark}.sh
                    @ONLY)

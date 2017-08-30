@@ -169,4 +169,4 @@ namespace osmium {
 
 } // namespace osmium
 
-#endif //  OSMIUM_IO_DETAIL_PROTOBUF_TAGS_HPP
+#endif // OSMIUM_IO_DETAIL_PROTOBUF_TAGS_HPP

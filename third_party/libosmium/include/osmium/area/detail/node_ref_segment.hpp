@@ -106,7 +106,7 @@ namespace osmium {
                     m_role(role_type::unknown) {
                 }
 
-                NodeRefSegment(const osmium::NodeRef& nr1, const osmium::NodeRef& nr2, role_type role = role_type::unknown, const osmium::Way* way = nullptr) noexcept :
+                NodeRefSegment(const osmium::NodeRef& nr1, const osmium::NodeRef& nr2, role_type role, const osmium::Way* way) noexcept :
                     m_first(nr1),
                     m_second(nr2),
                     m_way(way),
@@ -262,18 +262,6 @@ namespace osmium {
                 return lhs.first().location() < rhs.first().location();
             }
 
-            inline bool operator>(const NodeRefSegment& lhs, const NodeRefSegment& rhs) noexcept {
-                return rhs < lhs;
-            }
-
-            inline bool operator<=(const NodeRefSegment& lhs, const NodeRefSegment& rhs) noexcept {
-                return ! (rhs < lhs);
-            }
-
-            inline bool operator>=(const NodeRefSegment& lhs, const NodeRefSegment& rhs) noexcept {
-                return ! (lhs < rhs);
-            }
-
             template <typename TChar, typename TTraits>
             inline std::basic_ostream<TChar, TTraits>& operator<<(std::basic_ostream<TChar, TTraits>& out, const NodeRefSegment& segment) {
                 return out << segment.start() << "--" << segment.stop()
@@ -283,19 +271,13 @@ namespace osmium {
             }
 
             inline bool outside_x_range(const NodeRefSegment& s1, const NodeRefSegment& s2) noexcept {
-                if (s1.first().location().x() > s2.second().location().x()) {
-                    return true;
-                }
-                return false;
+                return s1.first().location().x() > s2.second().location().x();
             }
 
             inline bool y_range_overlap(const NodeRefSegment& s1, const NodeRefSegment& s2) noexcept {
                 const std::pair<int32_t, int32_t> m1 = std::minmax(s1.first().location().y(), s1.second().location().y());
                 const std::pair<int32_t, int32_t> m2 = std::minmax(s2.first().location().y(), s2.second().location().y());
-                if (m1.first > m2.second || m2.first > m1.second) {
-                    return false;
-                }
-                return true;
+                return !(m1.first > m2.second || m2.first > m1.second);
             }
 
             /**
@@ -331,7 +313,7 @@ namespace osmium {
                 if ((p0 == q0 && p1 == q1) ||
                     (p0 == q1 && p1 == q0)) {
                     // segments are the same
-                    return osmium::Location();
+                    return osmium::Location{};
                 }
 
                 const vec pd = p1 - p0;
@@ -342,7 +324,7 @@ namespace osmium {
 
                     if (p0 == q0 || p0 == q1 || p1 == q0 || p1 == q1) {
                         // touching at an end point
-                        return osmium::Location();
+                        return osmium::Location{};
                     }
 
                     // intersection in a point
@@ -357,10 +339,10 @@ namespace osmium {
                         (d < 0 && na <= 0 && na >= d && nb <= 0 && nb >= d)) {
                         const double ua = double(na) / d;
                         const vec i = p0 + ua * (p1 - p0);
-                        return osmium::Location(int32_t(i.x), int32_t(i.y));
+                        return osmium::Location{int32_t(i.x), int32_t(i.y)};
                     }
 
-                    return osmium::Location();
+                    return osmium::Location{};
                 }
 
                 // segments are collinear
@@ -390,13 +372,12 @@ namespace osmium {
                     if (sl[0].segment != sl[1].segment) {
                         if (sl[0].location == sl[1].location) {
                             return sl[2].location;
-                        } else {
-                            return sl[1].location;
                         }
+                        return sl[1].location;
                     }
                 }
 
-                return osmium::Location();
+                return osmium::Location{};
             }
 
         } // namespace detail

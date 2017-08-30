@@ -24,8 +24,8 @@ set(CMAKE_CONFIGURATION_TYPES "Debug;Release;RelWithDebInfo;MinSizeRel;Dev;Cover
 project(libosmium)
 
 set(LIBOSMIUM_VERSION_MAJOR 2)
-set(LIBOSMIUM_VERSION_MINOR 11)
-set(LIBOSMIUM_VERSION_PATCH 3)
+set(LIBOSMIUM_VERSION_MINOR 13)
+set(LIBOSMIUM_VERSION_PATCH 1)
 
 set(LIBOSMIUM_VERSION
     "${LIBOSMIUM_VERSION_MAJOR}.${LIBOSMIUM_VERSION_MINOR}.${LIBOSMIUM_VERSION_PATCH}")
@@ -43,8 +43,14 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Dev")
     set(dev_build ON)
+    set(data_test_build ON)
 else()
     set(dev_build OFF)
+    set(data_test_build OFF)
+endif()
+
+if(CMAKE_BUILD_TYPE STREQUAL "Coverage")
+    set(data_test_build ON)
 endif()
 
 option(BUILD_EXAMPLES   "compile example programs" ON)
@@ -52,7 +58,8 @@ option(BUILD_TESTING    "compile unit tests, please run them with ctest" ON)
 
 option(BUILD_HEADERS    "compile every header file on its own" ${dev_build})
 option(BUILD_BENCHMARKS "compile benchmark programs" ${dev_build})
-option(BUILD_DATA_TESTS "compile data tests, please run them with ctest" ${dev_build})
+
+option(BUILD_DATA_TESTS "compile data tests, please run them with ctest" ${data_test_build})
 
 option(INSTALL_GDALCPP   "also install gdalcpp headers" OFF)
 option(INSTALL_PROTOZERO "also install protozero headers" OFF)
@@ -88,11 +95,12 @@ endif()
 #
 #-----------------------------------------------------------------------------
 
-include(CheckCXXCompilerFlag)
-check_cxx_compiler_flag("-fkeep-inline-functions" HAS_KEEP_INLINE_FUNCTIONS)
-if(HAS_KEEP_INLINE_FUNCTIONS)
-    set(extra_coverage_flags_ "-fkeep-inline-functions")
-endif()
+## This leads to all sorts of compile problems, so disable for now
+#include(CheckCXXCompilerFlag)
+#check_cxx_compiler_flag("-fkeep-inline-functions" HAS_KEEP_INLINE_FUNCTIONS)
+#if(HAS_KEEP_INLINE_FUNCTIONS)
+#    set(extra_coverage_flags_ "-fkeep-inline-functions")
+#endif()
 
 set(CMAKE_CXX_FLAGS_COVERAGE
     "-g -O0 -fno-inline-functions -fno-inline --coverage ${extra_coverage_flags_}"
@@ -103,8 +111,8 @@ set(CMAKE_EXE_LINKER_FLAGS_COVERAGE
     CACHE STRING "Flags used by the linker during coverage builds.")
 
 if(CMAKE_BUILD_TYPE STREQUAL "Coverage")
-    if(BUILD_EXAMPLES OR BUILD_HEADERS OR BUILD_BENCHMARKS OR BUILD_DATA_TESTS)
-        message(WARNING "Coverage builds don't work for anything but the unit tests")
+    if(BUILD_EXAMPLES OR BUILD_HEADERS OR BUILD_BENCHMARKS)
+        message(WARNING "Coverage builds don't work for anything but the tests")
     endif()
 
     if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
@@ -184,7 +192,11 @@ endif()
 #-----------------------------------------------------------------------------
 if(NOT MSVC)
     if(NOT USE_CPP_VERSION)
-        set(USE_CPP_VERSION c++11)
+        if(CYGWIN)
+            set(USE_CPP_VERSION gnu++11)
+        else()
+            set(USE_CPP_VERSION c++11)
+        endif()
     endif()
     message(STATUS "Use C++ version: ${USE_CPP_VERSION}")
     # following only available from cmake 2.8.12:
@@ -201,15 +213,15 @@ endif()
 #-----------------------------------------------------------------------------
 if(MSVC)
     set(USUAL_COMPILE_OPTIONS "/Ox")
-    set(USUAL_LINK_OPTIONS "/debug")
+    # do not show warnings caused by missing .pdb files for libraries
+    set(USUAL_LINK_OPTIONS "/debug /ignore:4099")
 else()
     set(USUAL_COMPILE_OPTIONS "-O3 -g")
     set(USUAL_LINK_OPTIONS "")
 endif()
 
 if(WIN32)
-    add_definitions(-DWIN32 -D_WIN32 -DMSWIN32 -DBGDWIN32
-                    -DWINVER=0x0500 -D_WIN32_WINNT=0x0500 -D_WIN32_IE=0x0600)
+    add_definitions(-DWIN32 -D_WIN32 -DMSWIN32 -DBGDWIN32)
 endif()
 
 set(CMAKE_CXX_FLAGS_DEV "${USUAL_COMPILE_OPTIONS}"
@@ -227,6 +239,15 @@ mark_as_advanced(
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${USUAL_COMPILE_OPTIONS}"
     CACHE STRING "Flags used by the compiler during RELWITHDEBINFO builds."
     FORCE)
+
+set(CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO "${USUAL_LINK_OPTIONS}"
+    CACHE STRING "Flags used by the linker during RELWITHDEBINFO builds."
+    FORCE)
+
+mark_as_advanced(
+    CMAKE_CXX_FLAGS_RELWITHDEBINFO
+    CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO
+)
 
 if(WITH_PROFILING)
     add_definitions(-fno-omit-frame-pointer)
@@ -301,7 +322,13 @@ find_program(CPPCHECK cppcheck)
 if(CPPCHECK)
     message(STATUS "Looking for cppcheck - found")
     set(CPPCHECK_OPTIONS
-        --enable=warning,style,performance,portability,information,missingInclude --force -Uassert)
+        --language=c++
+        --quiet
+        -j4
+        --inline-suppr
+        --enable=warning,style,performance,portability,information,missingInclude
+        --force
+        -Uassert -DPROTOZERO_STRICT_API -DPROTOZERO_USE_BUILTIN_BSWAP -UPROTOZERO_USE_VIEW)
 
     # cpp doesn't find system includes for some reason, suppress that report
     set(CPPCHECK_OPTIONS ${CPPCHECK_OPTIONS} --suppress=missingIncludeSystem)
@@ -460,10 +487,12 @@ if(CLANG_TIDY)
     list(APPEND CT_CHECKS "misc-*"
                          "-misc-argument-comment")
 
-    list(APPEND CT_CHECKS "modernize-*")
+    list(APPEND CT_CHECKS "modernize-*"
+                          "-modernize-make-unique") # not available in C++11
 
     list(APPEND CT_CHECKS "readability-*"
                          "-readability-identifier-naming"
+                         "-readability-implicit-bool-cast"
                          "-readability-named-parameter")
 
     string(REPLACE ";" "," ALL_CHECKS "${CT_CHECKS}")

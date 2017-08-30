@@ -33,11 +33,11 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <algorithm>
 #include <exception>
 #include <future>
 #include <memory>
 #include <string>
+#include <utility>
 
 #include <osmium/io/compression.hpp>
 #include <osmium/io/detail/queue_util.hpp>
@@ -83,7 +83,7 @@ namespace osmium {
 
                     try {
                         while (true) {
-                            std::string data = m_queue.pop();
+                            const std::string data{m_queue.pop()};
                             if (at_end_of_data(data)) {
                                 break;
                             }

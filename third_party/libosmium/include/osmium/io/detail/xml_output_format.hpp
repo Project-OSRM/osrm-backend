@@ -33,7 +33,6 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <algorithm>
 #include <iterator>
 #include <memory>
 #include <string>
@@ -397,7 +396,8 @@ namespace osmium {
                         write_attribute("uid", changeset.uid());
                     }
 
-                    if (changeset.bounds()) {
+                    if (!changeset.bounds().bottom_left().is_undefined() ||
+                        !changeset.bounds().top_right().is_undefined()) {
                         detail::append_lat_lon_attributes(*m_out, "min_lat", "min_lon", changeset.bounds().bottom_left());
                         detail::append_lat_lon_attributes(*m_out, "max_lat", "max_lon", changeset.bounds().top_right());
                     }
@@ -431,8 +431,8 @@ namespace osmium {
 
             public:
 
-                XMLOutputFormat(const osmium::io::File& file, future_string_queue_type& output_queue) :
-                    OutputFormat(output_queue),
+                XMLOutputFormat(osmium::thread::Pool& pool, const osmium::io::File& file, future_string_queue_type& output_queue) :
+                    OutputFormat(pool, output_queue),
                     m_options() {
                     m_options.add_metadata      = file.is_not_false("add_metadata");
                     m_options.use_change_ops    = file.is_true("xml_change_format");
@@ -446,14 +446,14 @@ namespace osmium {
                 ~XMLOutputFormat() noexcept final = default;
 
                 void write_header(const osmium::io::Header& header) final {
-                    std::string out = "<?xml version='1.0' encoding='UTF-8'?>\n";
+                    std::string out{"<?xml version='1.0' encoding='UTF-8'?>\n"};
 
                     if (m_options.use_change_ops) {
                         out += "<osmChange version=\"0.6\" generator=\"";
                     } else {
                         out += "<osm version=\"0.6\"";
 
-                        std::string xml_josm_upload = header.get("xml_josm_upload");
+                        const std::string xml_josm_upload{header.get("xml_josm_upload")};
                         if (xml_josm_upload == "true" || xml_josm_upload == "false") {
                             out += " upload=\"";
                             out += xml_josm_upload;
@@ -475,7 +475,7 @@ namespace osmium {
                 }
 
                 void write_buffer(osmium::memory::Buffer&& buffer) final {
-                    m_output_queue.push(osmium::thread::Pool::instance().submit(XMLOutputBlock{std::move(buffer), m_options}));
+                    m_output_queue.push(m_pool.submit(XMLOutputBlock{std::move(buffer), m_options}));
                 }
 
                 void write_end() final {
@@ -495,8 +495,8 @@ namespace osmium {
             // we want the register_output_format() function to run, setting
             // the variable is only a side-effect, it will never be used
             const bool registered_xml_output = osmium::io::detail::OutputFormatFactory::instance().register_output_format(osmium::io::file_format::xml,
-                [](const osmium::io::File& file, future_string_queue_type& output_queue) {
-                    return new osmium::io::detail::XMLOutputFormat(file, output_queue);
+                [](osmium::thread::Pool& pool, const osmium::io::File& file, future_string_queue_type& output_queue) {
+                    return new osmium::io::detail::XMLOutputFormat(pool, file, output_queue);
             });
 
             // dummy function to silence the unused variable warning from above

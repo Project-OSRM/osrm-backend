@@ -61,7 +61,7 @@ namespace osmium {
         object_id_type   m_ref;
         item_type        m_type;
         uint16_t         m_flags;
-        string_size_type m_role_size {0};
+        string_size_type m_role_size = 0;
 
         RelationMember(const RelationMember&) = delete;
         RelationMember(RelationMember&&) = delete;
@@ -183,11 +183,18 @@ namespace osmium {
             return t == itemtype;
         }
 
+        /// Get a reference to the member list.
         RelationMemberList& members() {
             return osmium::detail::subitem_of_type<RelationMemberList>(begin(), end());
         }
 
+        /// Get a const reference to the member list.
         const RelationMemberList& members() const {
+            return osmium::detail::subitem_of_type<const RelationMemberList>(cbegin(), cend());
+        }
+
+        /// Get a const reference to the member list.
+        const RelationMemberList& cmembers() const {
             return osmium::detail::subitem_of_type<const RelationMemberList>(cbegin(), cend());
         }
 

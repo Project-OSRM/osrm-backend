@@ -13,7 +13,7 @@
 
 TEST_CASE("File based index") {
 
-    int fd = osmium::detail::create_tmp_file();
+    const int fd = osmium::detail::create_tmp_file();
 
     REQUIRE(osmium::util::file_size(fd) == 0);
 
@@ -27,17 +27,17 @@ TEST_CASE("File based index") {
         constexpr const size_t S = sizeof(index_type::element_type);
 
         {
-            index_type index(fd);
+            index_type index{fd};
 
             REQUIRE(index.size() == 0);
 
-            REQUIRE_THROWS_AS(index.get(  0), osmium::not_found);
-            REQUIRE_THROWS_AS(index.get(  1), osmium::not_found);
-            REQUIRE_THROWS_AS(index.get(  3), osmium::not_found);
-            REQUIRE_THROWS_AS(index.get(  5), osmium::not_found);
-            REQUIRE_THROWS_AS(index.get(  6), osmium::not_found);
-            REQUIRE_THROWS_AS(index.get(  7), osmium::not_found);
-            REQUIRE_THROWS_AS(index.get(100), osmium::not_found);
+            REQUIRE_THROWS_AS(index.get(  0), const osmium::not_found&);
+            REQUIRE_THROWS_AS(index.get(  1), const osmium::not_found&);
+            REQUIRE_THROWS_AS(index.get(  3), const osmium::not_found&);
+            REQUIRE_THROWS_AS(index.get(  5), const osmium::not_found&);
+            REQUIRE_THROWS_AS(index.get(  6), const osmium::not_found&);
+            REQUIRE_THROWS_AS(index.get(  7), const osmium::not_found&);
+            REQUIRE_THROWS_AS(index.get(100), const osmium::not_found&);
 
             index.set(id1, loc1);
             REQUIRE(index.size() == 7);
@@ -50,11 +50,11 @@ TEST_CASE("File based index") {
             REQUIRE(loc1 == index.get(id1));
             REQUIRE(loc2 == index.get(id2));
 
-            REQUIRE_THROWS_AS(index.get(  0), osmium::not_found);
-            REQUIRE_THROWS_AS(index.get(  1), osmium::not_found);
-            REQUIRE_THROWS_AS(index.get(  5), osmium::not_found);
-            REQUIRE_THROWS_AS(index.get(  7), osmium::not_found);
-            REQUIRE_THROWS_AS(index.get(100), osmium::not_found);
+            REQUIRE_THROWS_AS(index.get(  0), const osmium::not_found&);
+            REQUIRE_THROWS_AS(index.get(  1), const osmium::not_found&);
+            REQUIRE_THROWS_AS(index.get(  5), const osmium::not_found&);
+            REQUIRE_THROWS_AS(index.get(  7), const osmium::not_found&);
+            REQUIRE_THROWS_AS(index.get(100), const osmium::not_found&);
 
             REQUIRE(index.size() == 7);
             REQUIRE(std::distance(index.cbegin(), index.cend()) == 7);
@@ -63,7 +63,7 @@ TEST_CASE("File based index") {
         }
 
         {
-            index_type index(fd);
+            index_type index{fd};
             REQUIRE(osmium::util::file_size(fd) >= (6 * S));
 
             REQUIRE(index.size() == 7);
@@ -71,11 +71,11 @@ TEST_CASE("File based index") {
             REQUIRE(loc1 == index.get(id1));
             REQUIRE(loc2 == index.get(id2));
 
-            REQUIRE_THROWS_AS(index.get(  0), osmium::not_found);
-            REQUIRE_THROWS_AS(index.get(  1), osmium::not_found);
-            REQUIRE_THROWS_AS(index.get(  5), osmium::not_found);
-            REQUIRE_THROWS_AS(index.get(  7), osmium::not_found);
-            REQUIRE_THROWS_AS(index.get(100), osmium::not_found);
+            REQUIRE_THROWS_AS(index.get(  0), const osmium::not_found&);
+            REQUIRE_THROWS_AS(index.get(  1), const osmium::not_found&);
+            REQUIRE_THROWS_AS(index.get(  5), const osmium::not_found&);
+            REQUIRE_THROWS_AS(index.get(  7), const osmium::not_found&);
+            REQUIRE_THROWS_AS(index.get(100), const osmium::not_found&);
 
             REQUIRE(index.size() == 7);
             REQUIRE(std::distance(index.cbegin(), index.cend()) == 7);
@@ -97,17 +97,17 @@ TEST_CASE("File based index") {
         constexpr const size_t S = sizeof(index_type::element_type);
 
         {
-            index_type index(fd);
+            index_type index{fd};
 
             REQUIRE(index.size() == 0);
 
-            REQUIRE_THROWS_AS(index.get(  0), osmium::not_found);
-            REQUIRE_THROWS_AS(index.get(  1), osmium::not_found);
-            REQUIRE_THROWS_AS(index.get(  3), osmium::not_found);
-            REQUIRE_THROWS_AS(index.get(  5), osmium::not_found);
-            REQUIRE_THROWS_AS(index.get(  6), osmium::not_found);
-            REQUIRE_THROWS_AS(index.get(  7), osmium::not_found);
-            REQUIRE_THROWS_AS(index.get(100), osmium::not_found);
+            REQUIRE_THROWS_AS(index.get(  0), const osmium::not_found&);
+            REQUIRE_THROWS_AS(index.get(  1), const osmium::not_found&);
+            REQUIRE_THROWS_AS(index.get(  3), const osmium::not_found&);
+            REQUIRE_THROWS_AS(index.get(  5), const osmium::not_found&);
+            REQUIRE_THROWS_AS(index.get(  6), const osmium::not_found&);
+            REQUIRE_THROWS_AS(index.get(  7), const osmium::not_found&);
+            REQUIRE_THROWS_AS(index.get(100), const osmium::not_found&);
 
             index.set(id1, loc1);
             REQUIRE(index.size() == 1);
@@ -120,11 +120,11 @@ TEST_CASE("File based index") {
             REQUIRE(loc1 == index.get(id1));
             REQUIRE(loc2 == index.get(id2));
 
-            REQUIRE_THROWS_AS(index.get(  0), osmium::not_found);
-            REQUIRE_THROWS_AS(index.get(  1), osmium::not_found);
-            REQUIRE_THROWS_AS(index.get(  5), osmium::not_found);
-            REQUIRE_THROWS_AS(index.get(  7), osmium::not_found);
-            REQUIRE_THROWS_AS(index.get(100), osmium::not_found);
+            REQUIRE_THROWS_AS(index.get(  0), const osmium::not_found&);
+            REQUIRE_THROWS_AS(index.get(  1), const osmium::not_found&);
+            REQUIRE_THROWS_AS(index.get(  5), const osmium::not_found&);
+            REQUIRE_THROWS_AS(index.get(  7), const osmium::not_found&);
+            REQUIRE_THROWS_AS(index.get(100), const osmium::not_found&);
 
             REQUIRE(index.size() == 2);
             REQUIRE(std::distance(index.cbegin(), index.cend()) == 2);
@@ -133,7 +133,7 @@ TEST_CASE("File based index") {
         }
 
         {
-            index_type index(fd);
+            index_type index{fd};
             REQUIRE(osmium::util::file_size(fd) >= (2 * S));
 
             REQUIRE(index.size() == 2);
@@ -141,11 +141,11 @@ TEST_CASE("File based index") {
             REQUIRE(loc1 == index.get(id1));
             REQUIRE(loc2 == index.get(id2));
 
-            REQUIRE_THROWS_AS(index.get(  0), osmium::not_found);
-            REQUIRE_THROWS_AS(index.get(  1), osmium::not_found);
-            REQUIRE_THROWS_AS(index.get(  5), osmium::not_found);
-            REQUIRE_THROWS_AS(index.get(  7), osmium::not_found);
-            REQUIRE_THROWS_AS(index.get(100), osmium::not_found);
+            REQUIRE_THROWS_AS(index.get(  0), const osmium::not_found&);
+            REQUIRE_THROWS_AS(index.get(  1), const osmium::not_found&);
+            REQUIRE_THROWS_AS(index.get(  5), const osmium::not_found&);
+            REQUIRE_THROWS_AS(index.get(  7), const osmium::not_found&);
+            REQUIRE_THROWS_AS(index.get(100), const osmium::not_found&);
 
             REQUIRE(index.size() == 2);
             REQUIRE(std::distance(index.cbegin(), index.cend()) == 2);

@@ -1,4 +1,8 @@
 
+#include <cmath>
+#include <cstring>
+#include <stdexcept>
+
 #include "common.hpp"
 
 class TestHandler110 : public osmium::handler::Handler {
@@ -10,14 +14,15 @@ public:
     }
 
     void node(const osmium::Node& node) {
+        constexpr const double epsilon = 0.00000001;
         if (node.id() == 110000) {
-            REQUIRE(node.location().lon() == 1.02);
-            REQUIRE(node.location().lat() == 1.12);
+            REQUIRE(std::abs(node.location().lon() - 1.02) < epsilon);
+            REQUIRE(std::abs(node.location().lat() - 1.12) < epsilon);
         } else if (node.id() == 110001) {
-            REQUIRE(node.location().lon() == 1.07);
-            REQUIRE(node.location().lat() == 1.13);
+            REQUIRE(std::abs(node.location().lon() - 1.07) < epsilon);
+            REQUIRE(std::abs(node.location().lat() - 1.13) < epsilon);
         } else {
-            throw std::runtime_error("Unknown ID");
+            throw std::runtime_error{"Unknown ID"};
         }
     }
 
@@ -29,9 +34,9 @@ public:
 
             const char *test_id = way.tags().get_value_by_key("test:id");
             REQUIRE(test_id);
-            REQUIRE(!strcmp(test_id, "110"));
+            REQUIRE(!std::strcmp(test_id, "110"));
         } else {
-            throw std::runtime_error("Unknown ID");
+            throw std::runtime_error{"Unknown ID"};
         }
     }
 

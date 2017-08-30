@@ -144,6 +144,18 @@ namespace osmium {
             }
 
             /**
+             * Report a duplicate segments. Two or more segments are directly
+             * on top of each other. This can be a problem, if there is a
+             * spike for instance, or it could be okay, if there are touching
+             * inner rings.
+             *
+             * @param nr1  NodeRef of one end of the segment.
+             * @param nr2  NodeRef of the other end of the segment.
+             */
+            virtual void report_overlapping_segment(const osmium::NodeRef& nr1, const osmium::NodeRef& nr2) {
+            }
+
+            /**
              * Report an open ring.
              *
              * @param nr   NodeRef of one end of the ring.
@@ -187,6 +199,23 @@ namespace osmium {
              * @param way The way.
              */
             virtual void report_inner_with_same_tags(const osmium::Way& way) {
+            }
+
+            /**
+             * Report an invalid location in a way.
+             *
+             * @param way_id  ID of the way the node is in.
+             * @param node_id ID of the node with the invalid location.
+             */
+            virtual void report_invalid_location(osmium::object_id_type way_id, osmium::object_id_type node_id) {
+            }
+
+            /**
+             * Report a way that is more than once in a relation.
+             *
+             * @param way The way
+             */
+            virtual void report_duplicate_way(const osmium::Way& way) {
             }
 
             /**

@@ -108,7 +108,7 @@ namespace osmium {
                        << (object.visible() ? "yes" : "no")
                        << "\n";
 
-                Dump dump(*m_out, m_with_size, m_prefix + "  ");
+                Dump dump{*m_out, m_with_size, m_prefix + "  "};
                 osmium::apply(object.cbegin(), object.cend(), dump);
             }
 
@@ -281,7 +281,7 @@ namespace osmium {
 
                 *m_out << "\n";
 
-                Dump dump(*m_out, m_with_size, m_prefix + "  ");
+                Dump dump{*m_out, m_with_size, m_prefix + "  "};
                 osmium::apply(changeset.cbegin(), changeset.cend(), dump);
             }
 

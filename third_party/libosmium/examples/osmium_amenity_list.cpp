@@ -9,7 +9,7 @@
   DEMONSTRATES USE OF:
   * file input
   * location indexes and the NodeLocationsForWays handler
-  * the MultipolygonCollector and Assembler to assemble areas (multipolygons)
+  * the MultipolygonManager and Assembler to assemble areas (multipolygons)
   * your own handler that works with areas (multipolygons)
   * accessing tags
   * osmium::geom::Coordinates
@@ -29,17 +29,22 @@
 #include <iostream> // for std::cerr
 #include <string>   // for std::string
 
-// For memory based sparse index
-#include <osmium/index/map/sparse_mem_array.hpp>
+// For the location index. There are different types of indexes available.
+// This will work for all input files keeping the index in memory.
+#include <osmium/index/map/flex_mem.hpp>
 
 // For the NodeLocationForWays handler
 #include <osmium/handler/node_locations_for_ways.hpp>
-using index_type = osmium::index::map::SparseMemArray<osmium::unsigned_object_id_type, osmium::Location>;
+
+// The type of index used. This must match the include file above
+using index_type = osmium::index::map::FlexMem<osmium::unsigned_object_id_type, osmium::Location>;
+
+// The location handler always depends on the index type
 using location_handler_type = osmium::handler::NodeLocationsForWays<index_type>;
 
 // For assembling multipolygons
 #include <osmium/area/assembler.hpp>
-#include <osmium/area/multipolygon_collector.hpp>
+#include <osmium/area/multipolygon_manager.hpp>
 
 // Allow any format of input files (XML, PBF, ...)
 #include <osmium/io/any_input.hpp>
@@ -108,8 +113,8 @@ int main(int argc, char* argv[]) {
         std::exit(1);
     }
 
-    // The input file name
-    const std::string input_file_name{argv[1]};
+    // The input file
+    const osmium::io::File input_file{argv[1]};
 
     // Configuration for the multipolygon assembler. We disable the option to
     // create empty areas when invalid multipolygons are encountered. This
@@ -118,21 +123,16 @@ int main(int argc, char* argv[]) {
     osmium::area::Assembler::config_type assembler_config;
     assembler_config.create_empty_areas = false;
 
-    // Initialize the MultipolygonCollector. Its job is to collect all
+    // Initialize the MultipolygonManager. Its job is to collect all
     // relations and member ways needed for each area. It then calls an
     // instance of the osmium::area::Assembler class (with the given config)
     // to actually assemble one area.
-    osmium::area::MultipolygonCollector<osmium::area::Assembler> collector{assembler_config};
+    osmium::area::MultipolygonManager<osmium::area::Assembler> mp_manager{assembler_config};
 
     // We read the input file twice. In the first pass, only relations are
-    // read and fed into the multipolygon collector. The read_meta::no option
-    // disables reading of meta data (such as version numbers, timestamps, etc.)
-    // which are not needed in this case. Disabling this can speed up your
-    // program.
+    // read and fed into the multipolygon manager.
     std::cerr << "Pass 1...\n";
-    osmium::io::Reader reader1{input_file_name, osmium::osm_entity_bits::relation, osmium::io::read_meta::no};
-    collector.read_relations(reader1);
-    reader1.close();
+    osmium::relations::read_relations(input_file, mp_manager);
     std::cerr << "Pass 1 done\n";
 
     // The index storing all node locations.
@@ -151,17 +151,21 @@ int main(int argc, char* argv[]) {
     AmenityHandler data_handler;
 
     // On the second pass we read all objects and run them first through the
-    // node location handler and then the multipolygon collector. The collector
+    // node location handler and then the multipolygon manager. The manager
     // will put the areas it has created into the "buffer" which are then
     // fed through our handler.
+    //
+    // The read_meta::no option disables reading of meta data (such as version
+    // numbers, timestamps, etc.) which are not needed in this case. Disabling
+    // this can speed up your program.
     std::cerr << "Pass 2...\n";
-    osmium::io::Reader reader2{input_file_name, osmium::io::read_meta::no};
+    osmium::io::Reader reader{input_file, osmium::io::read_meta::no};
 
-    osmium::apply(reader2, location_handler, data_handler, collector.handler([&data_handler](const osmium::memory::Buffer& area_buffer) {
+    osmium::apply(reader, location_handler, data_handler, mp_manager.handler([&data_handler](const osmium::memory::Buffer& area_buffer) {
         osmium::apply(area_buffer, data_handler);
     }));
 
-    reader2.close();
+    reader.close();
     std::cerr << "Pass 2 done\n";
 }
 

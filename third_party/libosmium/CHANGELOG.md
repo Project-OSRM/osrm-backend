@@ -6,9 +6,130 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased] -
 
+### Added
+
+### Changed
+
 ### Fixed
 
-## [2.11.3] - 2017-05-03
+
+## [2.13.1] - 2017-08-25
+
+### Added
+
+- New "blackhole" file format which throws away all data written into it.
+  Used for benchmarking.
+
+### Changed
+
+- When reading OPL files, CRLF file endings are now handled correctly.
+- Reduce the max number of threads allowed for the `Pool` to 32. This should
+  still be plenty and might help with test failures on some architectures.
+
+### Fixed
+
+- Tests now run correctly independent of git `core.autocrlf` setting.
+- Set binary mode for all files on Windows in example code.
+- Low-level file functions now set an invalid parameter handler on Windows
+  to properly handle errors.
+- Restore earlier behaviour allowing zero-length mmap. It is important to
+  allow zero-length memory mapping, because it is possible that such an index
+  is empty, for instance when one type of object is missing from an input
+  file as in https://github.com/osmcode/osmium-tool/issues/65. Drawback is
+  that files must be opened read-write for this to work, even if we only
+  want to read from them.
+- Use Approx() to compare floating point values in tests.
+- Fix broken `Item` test on 32 bit platforms.
+
+
+## [2.13.0] - 2017-08-15
+
+### Added
+
+- New `RelationsManager` class superseeds the `relations::Collector` class.
+  The new class is much more modular and easier to extend. If you are using
+  the Collector class, you are encouraged to switch.
+- New `MultipolygonManager` based on the `RelationsManager` class superseeds
+  the `MultipolygonCollector` class. The examples have been changed to use the
+  new class and all users are encouraged to switch. There is also a
+  `MultipolygonManagerLegacy` class if you still need old-style multipolygon
+  support (see below).
+- New `FlexMem` index class that works with input files of any size and
+  stores the index in memory. This should now be used as the default index
+  for node location stores. Several example programs now use this index.
+- New `CallbackBuffer` class, basically a convenient wrapper around the
+  `Buffer` class with an additional callback function that is called whenever
+  the buffer is full.
+- Introduce new `ItemStash` class for storing OSM objects in memory.
+- New `osmium::geom::overlaps()` function to check if two `Box` objects
+  overlap.
+- Add function `IdSet::used_memory()` to get estimate of memory used in the
+  set.
+- New `is_defined()` and `is_undefined()` methods on `Location` class.
+- Tests for all provided example programs. (Some tests currently fail
+  on Windows for the `osmium_index_lookup` program.)
+
+### Changed
+
+- The area `Assembler` now doesn't work with old-style multipolygons (those
+  are multipolygon relations with the tags on the outer ways(s) instead of
+  on the relation) any more. Because old-style multipolygons are now (mostly)
+  gone from the OSM database this is usually what you want. The new
+  `AssemblerLegacy` class can be used if you actually need support for
+  old-style multipolygons, for instance if you are working with historical
+  data. (In that case you also need to use the `MultipolygonManagerLegacy`
+  class instead of the `MultipolygonManager` class.)
+- Changes for consistent ordering of OSM data: OSM data can come in any order,
+  but usual OSM files are ordered by type, ID, and version. These changes
+  extend this ordering to negative IDs which are sometimes used for objects
+  that have not been uploaded to the OSM server yet. The negative IDs are
+  ordered now before the positive ones, both in order of their absolute value.
+  This is the same ordering as JOSM uses.
+- Multipolygon assembler now checks for three or more overlapping segments
+  which are always an error and can report them.
+- Enable use of user-provided `thread::Pool` instances in `Reader` and
+  `Writer` for special use cases.
+- Growing a `Buffer` will now work with any capacity parameter, it is
+  always rounded up for proper alignment. Buffer constructor with three
+  arguments will now check that commmitted is not larger than capacity.
+- Updated embedded protozero to 1.5.2.
+- Update version of Catch unit test framework to 1.9.7.
+- And, as always, lots of small code cleanups and more tests.
+
+### Fixed
+
+- Buffers larger than 2^32 bytes do now work.
+- Output coordinate with value of -2^31 correctly.
+- Changeset comments with more than 2^16 characters are now allowed. The new
+  maximum size is 2^32.
+- `ChangesetDiscussionBuilder::add_comment_text()` could fail silently instead
+  of throwing an exception.
+- Changeset bounding boxes are now always output to OSM files (any format)
+  if at least one of the corners is defined. This is needed to handle broken
+  data from the main OSM database which contains such cases. The OPL reader
+  has also been fixed to handle this case.
+- In the example `osmium_location_cache_create`, the index file written is
+  always truncated first.
+
+
+## [2.12.2] - 2017-05-03
+
+### Added
+
+- Add two argument (key, value) overload of `TagMatcher::operator()`.
+
+### Changed
+
+- Detect, report, and remove duplicate ways in multipolygon relations.
+- Change EOF behaviour of Reader: The `Reader::read()` function will now
+  always return an invalid buffer exactly once to signal EOF.
+- Update QGIS multipolygon project that is part of the test suite to show
+  more problem types.
+- Copy multipolygon QGIS file for tests to build dir in cmake step.
+- Some code cleanups and improved debug output in multipolygon code.
+- Refactor I/O code to simplify code.
+- Disable some warnings on MSVC.
+- Various small code and build script changes.
 
 ### Fixed
 
@@ -16,25 +137,94 @@ This project adheres to [Semantic Versioning](http://semver.org/).
   multipolygons with overlapping or nearly overlapping lines.
 - Invalid use of iterators leading to undefined behaviour in area assembler
   code.
+- Area assembler stats were not correctly counting inner rings that are
+  areas in their own right.
+- Fix a thread problem valgrind found that might or might not be real.
 - Read OPL file correctly even if trailing newline in file is missing.
+- Include order for `osmium/index/map` headers and
+  `osmium/index/node_locations_map.hpp` (or
+  `osmium/handler/node_locations_for_ways.hpp`) doesn't matter any more.
 
 
-## [2.11.2] - 2017-04-10
+## [2.12.1] - 2017-04-10
+
+### Added
+
+- New `TagsFilter::set_default_result()` function.
+
+### Changed
+
+- Use larger capacity for `Buffer` if necessary for alignment instead of
+  throwing an exception. Minimum buffer size is now 64 bytes.
+- Check order of input data in relations collector. The relations collector
+  can not deal with history data or a changes file. This was documented as a
+  requirement, but often lead to problems, because this was ignored by users.
+  So it now checks that the input data it gets is ordered and throws an
+  exception otherwise.
+- When writing an OSM file, set generator to libosmium if not set by app.
 
 ### Fixed
 
-- Use minimum size of 64 bytes for buffers. This fixes an infinite loop
-  when buffer size is zero.
+- Infinite loop in `Buffer::reserve_space()`. (Issue #202.)
+- `ObjectPointerCollection::unique()` now removes elements at end.
+- Tests comparing double using `==` operator.
+- Build on Cygwin.
 
 
-## [2.11.1] - 2017-03-07
+## [2.12.0] - 2017-03-07
+
+### Added
+
+- `TagMatcher` and `TagsFilter` classes for more flexibly matching tags and
+  selecting objects based on tags. This obsoletes the less flexible classes
+  based on `osmium::tags::Filter` classes.
+- Extended `index::RelationsMap(Stash|Index)` classes to also allow
+  parent-to-member lookups.
+- New `nrw_array` helper class.
+- `ObjectPointerCollection::unique()` function.
+
+### Changed
+
+- Area assembler can now detect invalid locations and report them in the
+  stats and through the problem reporter. If the new config option
+  `ignore_invalid_locations` is set, the Assembler will pretend they weren't
+  even referenced in the ways. (Issue #195.)
+- `osmium::area::Assembler::operator()` will now return a boolean reporting
+  whether building of the area(s) was successful.
+- Split up area `Assembler` class into three classes: The
+  `detail::BasicAssembler` is now the parent class. `Assembler` is the child
+  class for usual use. The new `GeomAssembler` also derives from
+  `BasicAssembler` and builds areas without taking tags into account at all.
+  This is to support osm2pgsql which does tag handling itself. (Issue #194.)
+- The `Projection` class can do any projection supported by the Proj.4
+  library. As a special case it now uses our own Mercator projection
+  functions when the web mercator projection (EPSG 3857) is used. This is
+  much faster than going through Proj.4.
+- Better error messages for low-level file utility functions.
+- Mark `build_tag_list*` functions in `builder_helper.hpp` as deprecated. You
+  should use the functions from `osmium/builder/attr.hpp` instead.
+- Improved performance of the `osmium::tags::match_(any|all|none)_of`
+  functions.
+- Improved performance of string comparison in `tags::Filter`.
+- Update version of Catch unit test framework to 1.8.1. This meant some
+  tests had to be updated.
+- Use `get_noexcept()` in `NodeLocationsForWays` handler.
+- And lots of code and test cleanups...
 
 ### Fixed
 
 - Terminate called on full non-auto-growing buffer. (Issue #189.)
 - When file formats were used that were not compiled into the binary, it
   terminated instead of throwing. (Issue #197.)
+- Windows build problem related to including two different winsock versions.
+- Windows build problem related to forced build for old Windows versions.
+  (Issue #196.)
+- Clear stream contents in ProblemReporterException correctly.
+- Add `-pthread` compiler and linker options on Linux/OSX. This should fix
+  a problem where some linker versions will not link binaries correctly when
+  the `--as-needed` option is used.
 - The `Filter::count()` method didn't compile at all.
+- XML reader doesn't fail on relation member ref=0 any more.
 
 
 ## [2.11.0] - 2017-01-14
@@ -549,10 +739,12 @@ This project adheres to [Semantic Versioning](http://semver.org/).
   Doxygen (up to version 1.8.8). This version contains a workaround to fix
   this.
 
-[unreleased]: https://github.com/osmcode/libosmium/compare/v2.11.3...HEAD
-[2.11.3]: https://github.com/osmcode/libosmium/compare/v2.11.2...v2.11.3
-[2.11.2]: https://github.com/osmcode/libosmium/compare/v2.11.1...v2.11.2
-[2.11.1]: https://github.com/osmcode/libosmium/compare/v2.11.0...v2.11.1
+[unreleased]: https://github.com/osmcode/libosmium/compare/v2.13.1...HEAD
+[2.13.1]: https://github.com/osmcode/libosmium/compare/v2.13.0...v2.13.1
+[2.13.0]: https://github.com/osmcode/libosmium/compare/v2.12.2...v2.13.0
+[2.12.2]: https://github.com/osmcode/libosmium/compare/v2.12.1...v2.12.2
+[2.12.1]: https://github.com/osmcode/libosmium/compare/v2.12.0...v2.12.1
+[2.12.0]: https://github.com/osmcode/libosmium/compare/v2.11.0...v2.12.0
 [2.11.0]: https://github.com/osmcode/libosmium/compare/v2.10.3...v2.11.0
 [2.10.3]: https://github.com/osmcode/libosmium/compare/v2.10.2...v2.10.3
 [2.10.2]: https://github.com/osmcode/libosmium/compare/v2.10.1...v2.10.2

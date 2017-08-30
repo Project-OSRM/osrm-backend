@@ -60,9 +60,9 @@ namespace osmium {
          */
         class DiskStore : public osmium::handler::Handler {
 
-            using offset_index_type = osmium::index::map::Map<unsigned_object_id_type, size_t>;
+            using offset_index_type = osmium::index::map::Map<unsigned_object_id_type, std::size_t>;
 
-            size_t m_offset = 0;
+            std::size_t m_offset = 0;
             int m_data_fd;
 
             offset_index_type& m_node_index;

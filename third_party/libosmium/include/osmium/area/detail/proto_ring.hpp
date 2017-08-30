@@ -77,6 +77,15 @@ namespace osmium {
                 // If this is an inner ring, points to the outer ring.
                 ProtoRing* m_outer_ring;
 
+#ifdef OSMIUM_DEBUG_RING_NO
+                static int64_t next_num() noexcept {
+                    static int64_t counter = 0;
+                    return ++counter;
+                }
+
+                int64_t m_num;
+#endif
+
                 int64_t m_sum;
 
             public:
@@ -86,6 +95,9 @@ namespace osmium {
                     m_inner(),
                     m_min_segment(segment),
                     m_outer_ring(nullptr),
+#ifdef OSMIUM_DEBUG_RING_NO
+                    m_num(next_num()),
+#endif
                     m_sum(0) {
                     add_segment_back(segment);
                 }
@@ -200,7 +212,11 @@ namespace osmium {
                 }
 
                 void print(std::ostream& out) const {
-                    out << "[";
+#ifdef OSMIUM_DEBUG_RING_NO
+                    out << "Ring #" << m_num << " [";
+#else
+                    out << "Ring [";
+#endif
                     if (!m_segments.empty()) {
                         out << m_segments.front()->start().ref();
                     }

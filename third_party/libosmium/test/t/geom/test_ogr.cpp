@@ -15,7 +15,7 @@ TEST_CASE("OGR point geometry") {
     }
 
     SECTION("empty_point") {
-        REQUIRE_THROWS_AS(factory.create_point(osmium::Location()), osmium::invalid_location);
+        REQUIRE_THROWS_AS(factory.create_point(osmium::Location()), const osmium::invalid_location&);
     }
 
 }

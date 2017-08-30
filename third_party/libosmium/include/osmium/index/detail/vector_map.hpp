@@ -35,7 +35,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include <algorithm>
 #include <cstddef>
-#include <stdexcept>
 #include <utility>
 
 #include <osmium/index/index.hpp>
@@ -70,7 +69,7 @@ namespace osmium {
 
                 ~VectorBasedDenseMap() noexcept final = default;
 
-                void reserve(const size_t size) final {
+                void reserve(const std::size_t size) final {
                     m_vector.reserve(size);
                 }
 
@@ -99,15 +98,15 @@ namespace osmium {
                     return m_vector[id];
                 }
 
-                size_t size() const final {
+                std::size_t size() const final {
                     return m_vector.size();
                 }
 
-                size_t byte_size() const {
+                std::size_t byte_size() const {
                     return m_vector.size() * sizeof(element_type);
                 }
 
-                size_t used_memory() const final {
+                std::size_t used_memory() const final {
                     return sizeof(TValue) * size();
                 }
 
@@ -205,15 +204,15 @@ namespace osmium {
                     return result->second;
                 }
 
-                size_t size() const final {
+                std::size_t size() const final {
                     return m_vector.size();
                 }
 
-                size_t byte_size() const {
+                std::size_t byte_size() const {
                     return m_vector.size() * sizeof(element_type);
                 }
 
-                size_t used_memory() const final {
+                std::size_t used_memory() const final {
                     return sizeof(element_type) * size();
                 }
 

@@ -8,7 +8,7 @@
 #include <osmium/io/bzip2_compression.hpp>
 
 TEST_CASE("Read bzip2-compressed file") {
-    std::string input_file = with_data_dir("t/io/data_bzip2.txt.bz2");
+    const std::string input_file = with_data_dir("t/io/data_bzip2.txt.bz2");
 
     const int fd = ::open(input_file.c_str(), O_RDONLY);
     REQUIRE(fd > 0);

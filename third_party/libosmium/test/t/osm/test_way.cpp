@@ -42,7 +42,7 @@ TEST_CASE("Build way") {
     REQUIRE(1 == way.nodes()[0].ref());
     REQUIRE(3 == way.nodes()[1].ref());
     REQUIRE(2 == way.nodes()[2].ref());
-    REQUIRE(! way.is_closed());
+    REQUIRE_FALSE(way.is_closed());
 
     osmium::CRC<boost::crc_32_type> crc32;
     crc32.update(way);
@@ -92,7 +92,7 @@ TEST_CASE("build way with helpers") {
     REQUIRE(22 == way.nodes()[0].ref());
     REQUIRE(4.1 == Approx(way.nodes()[1].location().lon()));
 
-    osmium::Box envelope = way.envelope();
+    const osmium::Box envelope = way.envelope();
     REQUIRE(envelope.bottom_left().lon() == Approx(3.5));
     REQUIRE(envelope.bottom_left().lat() == Approx(2.2));
     REQUIRE(envelope.top_right().lon() == Approx(4.1));

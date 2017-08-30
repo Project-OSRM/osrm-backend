@@ -33,11 +33,11 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <algorithm>
 #include <cstddef>
 #include <future>
 #include <thread>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 #include <osmium/thread/function_wrapper.hpp>
@@ -56,7 +56,7 @@ namespace osmium {
 
             // Maximum number of allowed pool threads (just to keep the user
             // from setting something silly).
-            constexpr const int max_pool_threads = 256;
+            constexpr const int max_pool_threads = 32;
 
             inline int get_pool_size(int num_threads, int user_setting, unsigned hardware_concurrency) {
                 if (num_threads == 0) {
@@ -76,8 +76,8 @@ namespace osmium {
                 return num_threads;
             }
 
-            inline size_t get_work_queue_size() noexcept {
-                const size_t n = osmium::config::get_max_queue_size("WORK", 10);
+            inline std::size_t get_work_queue_size() noexcept {
+                const std::size_t n = osmium::config::get_max_queue_size("WORK", 10);
                 return n > 2 ? n : 2;
             }
 
@@ -130,6 +130,11 @@ namespace osmium {
                 }
             }
 
+        public:
+
+            static constexpr int default_num_threads = 0;
+            static constexpr int default_queue_size = 0;
+
             /**
              * Create thread pool with the given number of threads. If
              * num_threads is 0, the number of threads is read from
@@ -141,9 +146,12 @@ namespace osmium {
              * given number, ie it will leave a number of cores unused.
              *
              * In all cases the minimum number of threads in the pool is 1.
+             *
+             * If max_queue_size is 0, the queue size is read from
+             * the environment variable OSMIUM_MAX_WORK_QUEUE_SIZE.
              */
-            explicit Pool(int num_threads, size_t max_queue_size) :
-                m_work_queue(max_queue_size, "work"),
+            explicit Pool(int num_threads = default_num_threads, std::size_t max_queue_size = default_queue_size) :
+                m_work_queue(max_queue_size > 0 ? max_queue_size : detail::get_work_queue_size(), "work"),
                 m_threads(),
                 m_joiner(m_threads),
                 m_num_threads(detail::get_pool_size(num_threads, osmium::config::get_pool_threads(), std::thread::hardware_concurrency())) {
@@ -158,12 +166,8 @@ namespace osmium {
                 }
             }
 
-        public:
-
-            static constexpr int default_num_threads = 0;
-
-            static Pool& instance() {
-                static Pool pool(default_num_threads, detail::get_work_queue_size());
+            static Pool& default_instance() {
+                static Pool pool{};
                 return pool;
             }
 
@@ -178,7 +182,11 @@ namespace osmium {
                 shutdown_all_workers();
             }
 
-            size_t queue_size() const {
+            int num_threads() const noexcept {
+                return m_num_threads;
+            }
+
+            std::size_t queue_size() const {
                 return m_work_queue.size();
             }
 
@@ -188,11 +196,10 @@ namespace osmium {
 
             template <typename TFunction>
             std::future<typename std::result_of<TFunction()>::type> submit(TFunction&& func) {
-
                 using result_type = typename std::result_of<TFunction()>::type;
 
-                std::packaged_task<result_type()> task(std::forward<TFunction>(func));
-                std::future<result_type> future_result(task.get_future());
+                std::packaged_task<result_type()> task{std::forward<TFunction>(func)};
+                std::future<result_type> future_result{task.get_future()};
                 m_work_queue.push(std::move(task));
 
                 return future_result;

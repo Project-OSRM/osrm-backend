@@ -1,71 +1,51 @@
 #include "catch.hpp"
+#include "utils.hpp"
 
+#include <osmium/io/detail/read_write.hpp>
 #include <osmium/util/file.hpp>
 
-#ifdef _WIN32
-#include <crtdbg.h>
-// https://msdn.microsoft.com/en-us/library/ksazx244.aspx
-// https://msdn.microsoft.com/en-us/library/a9yf33zb.aspx
-class DoNothingInvalidParameterHandler {
-
-    static void invalid_parameter_handler(
-                    const wchar_t* expression,
-                    const wchar_t* function,
-                    const wchar_t* file,
-                    unsigned int line,
-                    uintptr_t pReserved
-                ) {
-        // do nothing
-    }
-
-    _invalid_parameter_handler old_handler;
-
-public:
-
-    DoNothingInvalidParameterHandler() :
-        old_handler(_set_invalid_parameter_handler(invalid_parameter_handler)) {
-        _CrtSetReportMode(_CRT_ASSERT, 0);
-    }
-
-    ~DoNothingInvalidParameterHandler() {
-        _set_invalid_parameter_handler(old_handler);
-    }
-
-}; // class InvalidParameterHandler
-#endif
-
-
-TEST_CASE("file_size") {
-
-#ifdef _WIN32
-    DoNothingInvalidParameterHandler handler;
-#endif
-
-    SECTION("illegal fd should throw") {
-        REQUIRE_THROWS_AS(osmium::util::file_size(-1), std::system_error);
-    }
-
-    SECTION("unused fd should throw") {
-        // its unlikely that fd 1000 is open...
-        REQUIRE_THROWS_AS(osmium::util::file_size(1000), std::system_error);
-    }
-
+TEST_CASE("file_size(int) and file_offset() of known file") {
+    std::string file_name{with_data_dir("t/util/known_file_size")};
+    const int fd = osmium::io::detail::open_for_reading(file_name);
+    REQUIRE(fd > 0);
+    REQUIRE(osmium::util::file_size(fd) == 22);
+    REQUIRE(osmium::util::file_offset(fd) == 0);
+    REQUIRE_FALSE(osmium::util::isatty(fd));
 }
 
-TEST_CASE("resize_file") {
+TEST_CASE("file_size(std::string) of known file") {
+    std::string file_name{with_data_dir("t/util/known_file_size")};
+    REQUIRE(osmium::util::file_size(file_name) == 22);
+}
 
-#ifdef _WIN32
-    DoNothingInvalidParameterHandler handler;
-#endif
+TEST_CASE("file_size(const char*) of known file") {
+    std::string file_name{with_data_dir("t/util/known_file_size")};
+    REQUIRE(osmium::util::file_size(file_name.c_str()) == 22);
+}
 
-    SECTION("illegal fd should throw") {
-        REQUIRE_THROWS_AS(osmium::util::resize_file(-1, 10), std::system_error);
-    }
+TEST_CASE("file_size() with illegal fd should throw") {
+    REQUIRE_THROWS_AS(osmium::util::file_size(-1), const std::system_error&);
+}
 
-    SECTION("unused fd should throw") {
-        // its unlikely that fd 1000 is open...
-        REQUIRE_THROWS_AS(osmium::util::resize_file(1000, 10), std::system_error);
-    }
+TEST_CASE("file_size() with unused fd should throw") {
+    // its unlikely that fd 1000 is open...
+    REQUIRE_THROWS_AS(osmium::util::file_size(1000), const std::system_error&);
+}
 
+TEST_CASE("file_size() of unknown file should throw") {
+    REQUIRE_THROWS_AS(osmium::util::file_size("unknown file"), const std::system_error&);
+}
+
+TEST_CASE("resize_file() with illegal fd should throw") {
+    REQUIRE_THROWS_AS(osmium::util::resize_file(-1, 10), const std::system_error&);
+}
+
+TEST_CASE("resize_file() with unused fd should throw") {
+    // its unlikely that fd 1000 is open...
+    REQUIRE_THROWS_AS(osmium::util::resize_file(1000, 10), const std::system_error&);
+}
+
+TEST_CASE("get_pagesize()") {
+    REQUIRE(osmium::util::get_pagesize() > 0);
 }
 

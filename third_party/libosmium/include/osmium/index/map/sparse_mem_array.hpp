@@ -57,4 +57,8 @@ namespace osmium {
 
 } // namespace osmium
 
+#ifdef OSMIUM_WANT_NODE_LOCATION_MAPS
+    REGISTER_MAP(osmium::unsigned_object_id_type, osmium::Location, osmium::index::map::SparseMemArray, sparse_mem_array)
+#endif
+
 #endif // OSMIUM_INDEX_MAP_SPARSE_MEM_ARRAY_HPP

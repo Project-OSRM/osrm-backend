@@ -39,7 +39,6 @@ DEALINGS IN THE SOFTWARE.
 #include <mutex>
 #include <queue>
 #include <string>
-#include <thread>
 #include <utility> // IWYU pragma: keep
 
 #ifdef OSMIUM_DEBUG_QUEUE_SIZE
@@ -61,7 +60,7 @@ namespace osmium {
 
             /// Maximum size of this queue. If the queue is full pushing to
             /// the queue will block.
-            const size_t m_max_size;
+            const std::size_t m_max_size;
 
             /// Name of this queue (for debugging only).
             const std::string m_name;
@@ -78,7 +77,7 @@ namespace osmium {
 
 #ifdef OSMIUM_DEBUG_QUEUE_SIZE
             /// The largest size the queue has been so far.
-            size_t m_largest_size;
+            std::size_t m_largest_size;
 
             /// The number of times push() was called on the queue.
             std::atomic<int> m_push_counter;
@@ -107,7 +106,7 @@ namespace osmium {
              *                 0 for an unlimited size.
              * @param name Optional name for this queue. (Used for debugging.)
              */
-            explicit Queue(size_t max_size = 0, const std::string& name = "") :
+            explicit Queue(std::size_t max_size = 0, const std::string& name = "") :
                 m_max_size(max_size),
                 m_name(name),
                 m_mutex(),
@@ -216,7 +215,7 @@ namespace osmium {
                 return m_queue.empty();
             }
 
-            size_t size() const {
+            std::size_t size() const {
                 std::lock_guard<std::mutex> lock{m_mutex};
                 return m_queue.size();
             }

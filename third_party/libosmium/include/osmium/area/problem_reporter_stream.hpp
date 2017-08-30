@@ -85,6 +85,12 @@ namespace osmium {
                        << " node_id2=" << nr2.ref() << " location2=" << nr2.location() << "\n";
             }
 
+            void report_overlapping_segment(const osmium::NodeRef& nr1, const osmium::NodeRef& nr2) override {
+                header("overlapping segment");
+                *m_out << "node_id1=" << nr1.ref() << " location1=" << nr1.location()
+                       << " node_id2=" << nr2.ref() << " location2=" << nr2.location() << "\n";
+            }
+
             void report_ring_not_closed(const osmium::NodeRef& nr, const osmium::Way* way = nullptr) override {
                 header("ring not closed");
                 *m_out << "node_id=" << nr.ref() << " location=" << nr.location();
@@ -111,6 +117,16 @@ namespace osmium {
 
             void report_inner_with_same_tags(const osmium::Way& way) override {
                 header("inner way with same tags as relation or outer");
+                *m_out << "way_id=" << way.id() << '\n';
+            }
+
+            void report_invalid_location(osmium::object_id_type way_id, osmium::object_id_type node_id) override {
+                header("invalid location");
+                *m_out << "way_id=" << way_id << " node_id=" << node_id << '\n';
+            }
+
+            void report_duplicate_way(const osmium::Way& way) override {
+                header("duplicate way");
                 *m_out << "way_id=" << way.id() << '\n';
             }
 

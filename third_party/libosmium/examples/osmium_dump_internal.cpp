@@ -6,7 +6,7 @@
   indexes to find objects and object relations.
 
   Note that this example programm will only work with small and medium sized
-  OSM file, not with the planet.
+  OSM files, not with the planet.
 
   You can use the osmium_index example program to inspect the indexes.
 
@@ -35,6 +35,10 @@
 #include <string>      // for std::string
 #include <sys/stat.h>  // for open
 #include <sys/types.h> // for open
+
+#ifdef _WIN32
+# include <io.h>       // for _setmode
+#endif
 
 #ifdef _MSC_VER
 # include <direct.h>
@@ -66,12 +70,15 @@ class IndexFile {
 
 public:
 
-    IndexFile(const std::string& filename) :
+    explicit IndexFile(const std::string& filename) :
         m_fd(::open(filename.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0666)) {
         if (m_fd < 0) {
             std::cerr << "Can't open index file '" << filename << "': " << std::strerror(errno) << "\n";
             std::exit(2);
         }
+#ifdef _WIN32
+        _setmode(m_fd, _O_BINARY);
+#endif
     }
 
     ~IndexFile() {
@@ -113,6 +120,10 @@ int main(int argc, char* argv[]) {
         std::cerr << "Can't open data file '" << data_file << "': " << std::strerror(errno) << "\n";
         std::exit(2);
     }
+
+#ifdef _WIN32
+    _setmode(data_fd, _O_BINARY);
+#endif
 
     // These indexes store the offset in the data file where each node, way,
     // or relation is stored.

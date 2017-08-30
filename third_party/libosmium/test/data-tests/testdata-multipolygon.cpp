@@ -9,7 +9,7 @@
 
 #include <osmium/index/map/sparse_mem_array.hpp>
 
-#include <osmium/area/assembler.hpp>
+#include <osmium/area/assembler_legacy.hpp>
 #include <osmium/area/multipolygon_collector.hpp>
 #include <osmium/area/problem_reporter_ogr.hpp>
 #include <osmium/geom/ogr.hpp>
@@ -156,12 +156,12 @@ int main(int argc, char* argv[]) {
     gdalcpp::Dataset dataset{output_format, output_filename, gdalcpp::SRS{}, {"SPATIALITE=TRUE"}};
 
     osmium::area::ProblemReporterOGR problem_reporter{dataset};
-    osmium::area::Assembler::config_type assembler_config;
+    osmium::area::AssemblerLegacy::config_type assembler_config;
     assembler_config.problem_reporter = &problem_reporter;
     assembler_config.check_roles = true;
     assembler_config.create_empty_areas = true;
     assembler_config.debug_level = 2;
-    osmium::area::MultipolygonCollector<osmium::area::Assembler> collector{assembler_config};
+    osmium::area::MultipolygonCollector<osmium::area::AssemblerLegacy> collector{assembler_config};
 
     std::cerr << "Pass 1...\n";
     osmium::io::Reader reader1{input_filename};

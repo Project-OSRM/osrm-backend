@@ -62,7 +62,7 @@ namespace osmium {
         }
 
         /**
-         * Returns the width or hight of a tile in web mercator coordinates for
+         * Returns the width or height of a tile in web mercator coordinates for
          * the given zoom level.
          */
         inline constexpr double tile_extent_in_zoom(uint32_t zoom) noexcept {
@@ -108,7 +108,7 @@ namespace osmium {
             uint32_t z;
 
             /**
-             * Create a tile with the given zoom level and x any y tile
+             * Create a tile with the given zoom level and x and y tile
              * coordinates.
              *
              * The values are not checked for validity.
@@ -172,22 +172,30 @@ namespace osmium {
         }; // struct Tile
 
         /// Tiles are equal if all their attributes are equal.
-        inline bool operator==(const Tile& lhs, const Tile& rhs) {
+        inline bool operator==(const Tile& lhs, const Tile& rhs) noexcept {
             return lhs.z == rhs.z && lhs.x == rhs.x && lhs.y == rhs.y;
         }
 
-        inline bool operator!=(const Tile& lhs, const Tile& rhs) {
+        inline bool operator!=(const Tile& lhs, const Tile& rhs) noexcept {
             return ! (lhs == rhs);
         }
 
         /**
          * This defines an arbitrary order on tiles for use in std::map etc.
          */
-        inline bool operator<(const Tile& lhs, const Tile& rhs) {
-            if (lhs.z < rhs.z) return true;
-            if (lhs.z > rhs.z) return false;
-            if (lhs.x < rhs.x) return true;
-            if (lhs.x > rhs.x) return false;
+        inline bool operator<(const Tile& lhs, const Tile& rhs) noexcept {
+            if (lhs.z < rhs.z) {
+                return true;
+            }
+            if (lhs.z > rhs.z) {
+                return false;
+            }
+            if (lhs.x < rhs.x) {
+                return true;
+            }
+            if (lhs.x > rhs.x) {
+                return false;
+            }
             return lhs.y < rhs.y;
         }
 

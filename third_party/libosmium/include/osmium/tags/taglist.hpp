@@ -34,6 +34,7 @@ DEALINGS IN THE SOFTWARE.
 */
 
 #include <algorithm>
+#include <functional>
 #include <utility> // IWYU pragma: keep
 
 #include <osmium/osm/tag.hpp>
@@ -46,18 +47,18 @@ namespace osmium {
     namespace tags {
 
         template <typename TFilter>
-        inline bool match_any_of(const osmium::TagList& tag_list, TFilter&& filter) {
-            return std::any_of(tag_list.cbegin(), tag_list.cend(), std::forward<TFilter>(filter));
+        inline bool match_any_of(const osmium::TagList& tag_list, const TFilter& filter) {
+            return std::any_of(tag_list.cbegin(), tag_list.cend(), std::cref(filter));
         }
 
         template <typename TFilter>
-        inline bool match_all_of(const osmium::TagList& tag_list, TFilter&& filter) {
-            return std::all_of(tag_list.cbegin(), tag_list.cend(), std::forward<TFilter>(filter));
+        inline bool match_all_of(const osmium::TagList& tag_list, const TFilter& filter) {
+            return std::all_of(tag_list.cbegin(), tag_list.cend(), std::cref(filter));
         }
 
         template <typename TFilter>
-        inline bool match_none_of(const osmium::TagList& tag_list, TFilter&& filter) {
-            return std::none_of(tag_list.cbegin(), tag_list.cend(), std::forward<TFilter>(filter));
+        inline bool match_none_of(const osmium::TagList& tag_list, const TFilter& filter) {
+            return std::none_of(tag_list.cbegin(), tag_list.cend(), std::cref(filter));
         }
 
     } // namespace tags

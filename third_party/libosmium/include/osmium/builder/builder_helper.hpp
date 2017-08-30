@@ -71,7 +71,7 @@ namespace osmium {
          * @deprecated
          * Use osmium::builder::add_tag_list() instead.
          */
-        inline const osmium::TagList& build_tag_list(osmium::memory::Buffer& buffer, const std::initializer_list<std::pair<const char*, const char*>>& tags) {
+        OSMIUM_DEPRECATED inline const osmium::TagList& build_tag_list(osmium::memory::Buffer& buffer, const std::initializer_list<std::pair<const char*, const char*>>& tags) {
             const size_t pos = buffer.committed();
             {
                 osmium::builder::TagListBuilder tl_builder(buffer);
@@ -87,7 +87,7 @@ namespace osmium {
          * @deprecated
          * Use osmium::builder::add_tag_list() instead.
          */
-        inline const osmium::TagList& build_tag_list_from_map(osmium::memory::Buffer& buffer, const std::map<const char*, const char*>& tags) {
+        OSMIUM_DEPRECATED inline const osmium::TagList& build_tag_list_from_map(osmium::memory::Buffer& buffer, const std::map<const char*, const char*>& tags) {
             const size_t pos = buffer.committed();
             {
                 osmium::builder::TagListBuilder tl_builder(buffer);
@@ -103,7 +103,7 @@ namespace osmium {
          * @deprecated
          * Use osmium::builder::add_tag_list() instead.
          */
-        inline const osmium::TagList& build_tag_list_from_func(osmium::memory::Buffer& buffer, std::function<void(osmium::builder::TagListBuilder&)> func) {
+        OSMIUM_DEPRECATED inline const osmium::TagList& build_tag_list_from_func(osmium::memory::Buffer& buffer, std::function<void(osmium::builder::TagListBuilder&)> func) {
             const size_t pos = buffer.committed();
             {
                 osmium::builder::TagListBuilder tl_builder(buffer);

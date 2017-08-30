@@ -165,6 +165,11 @@ namespace osmium {
 
         public:
 
+            GeometryFactory<TGeomImpl, TProjection>() :
+                m_projection(),
+                m_impl(m_projection.epsg()) {
+            }
+
             /**
              * Constructor for default initialized projection.
              */
@@ -192,7 +197,7 @@ namespace osmium {
             using multipolygon_type = typename TGeomImpl::multipolygon_type;
             using ring_type         = typename TGeomImpl::ring_type;
 
-            int epsg() const {
+            int epsg() const noexcept {
                 return m_projection.epsg();
             }
 
@@ -380,9 +385,9 @@ namespace osmium {
                     size_t num_rings = 0;
                     m_impl.multipolygon_start();
 
-                    for (auto it = area.cbegin(); it != area.cend(); ++it) {
-                        if (it->type() == osmium::item_type::outer_ring) {
-                            auto& ring = static_cast<const osmium::OuterRing&>(*it);
+                    for (const auto& item : area) {
+                        if (item.type() == osmium::item_type::outer_ring) {
+                            auto& ring = static_cast<const osmium::OuterRing&>(item);
                             if (num_polygons > 0) {
                                 m_impl.multipolygon_polygon_finish();
                             }
@@ -392,8 +397,8 @@ namespace osmium {
                             m_impl.multipolygon_outer_ring_finish();
                             ++num_rings;
                             ++num_polygons;
-                        } else if (it->type() == osmium::item_type::inner_ring) {
-                            auto& ring = static_cast<const osmium::InnerRing&>(*it);
+                        } else if (item.type() == osmium::item_type::inner_ring) {
+                            auto& ring = static_cast<const osmium::InnerRing&>(item);
                             m_impl.multipolygon_inner_ring_start();
                             add_points(ring);
                             m_impl.multipolygon_inner_ring_finish();

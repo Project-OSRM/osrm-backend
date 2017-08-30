@@ -48,13 +48,13 @@ namespace osmium {
 
             DiffHandler() = default;
 
-            void node(const osmium::DiffNode&) const {
+            void node(const osmium::DiffNode&) const noexcept {
             }
 
-            void way(const osmium::DiffWay&) const {
+            void way(const osmium::DiffWay&) const noexcept {
             }
 
-            void relation(const osmium::DiffRelation&) const {
+            void relation(const osmium::DiffRelation&) const noexcept {
             }
 
         }; // class DiffHandler

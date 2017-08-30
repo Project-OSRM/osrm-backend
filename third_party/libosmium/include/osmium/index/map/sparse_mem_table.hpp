@@ -54,16 +54,16 @@ namespace osmium {
         namespace map {
 
             /**
-            * The SparseMemTable index stores elements in a Google sparsetable,
-            * a data structure that can hold sparsly filled tables in a
-            * space efficient way. It will resize automatically.
-            *
-            * Use this index if the ID space is only sparsly
-            * populated, such as when working with smaller OSM files (like
-            * country extracts).
-            *
-            * This will only work on 64 bit machines.
-            */
+             * The SparseMemTable index stores elements in a Google sparsetable,
+             * a data structure that can hold sparsly filled tables in a
+             * space efficient way. It will resize automatically.
+             *
+             * Use this index if the ID space is only sparsly
+             * populated, such as when working with smaller OSM files (like
+             * country extracts).
+             *
+             * This will only work on 64 bit machines.
+             */
             template <typename TId, typename TValue>
             class SparseMemTable : public osmium::index::map::Map<TId, TValue> {
 
@@ -150,6 +150,10 @@ namespace osmium {
 
 } // namespace osmium
 
+#ifdef OSMIUM_WANT_NODE_LOCATION_MAPS
+    REGISTER_MAP(osmium::unsigned_object_id_type, osmium::Location, osmium::index::map::SparseMemTable, sparse_mem_table)
+#endif
+
 #endif // OSMIUM_WITH_SPARSEHASH
 
-#endif // OSMIUM_INDEX_BYID_SPARSE_MEM_TABLE_HPP
+#endif // OSMIUM_INDEX_MAP_SPARSE_MEM_TABLE_HPP

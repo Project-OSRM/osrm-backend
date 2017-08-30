@@ -48,6 +48,7 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/osm/relation.hpp>
 #include <osmium/osm/types.hpp>
 #include <osmium/handler.hpp>
+#include <osmium/handler/check_order.hpp>
 #include <osmium/memory/buffer.hpp>
 #include <osmium/util/iterator.hpp>
 #include <osmium/visitor.hpp>
@@ -124,6 +125,7 @@ namespace osmium {
              */
             class HandlerPass2 : public osmium::handler::Handler {
 
+                osmium::handler::CheckOrder m_check_order;
                 TCollector& m_collector;
 
             public:
@@ -134,6 +136,7 @@ namespace osmium {
 
                 void node(const osmium::Node& node) {
                     if (TNodes) {
+                        m_check_order.node(node);
                         if (! m_collector.find_and_add_object(node)) {
                             m_collector.node_not_in_any_relation(node);
                         }
@@ -142,6 +145,7 @@ namespace osmium {
 
                 void way(const osmium::Way& way) {
                     if (TWays) {
+                        m_check_order.way(way);
                         if (! m_collector.find_and_add_object(way)) {
                             m_collector.way_not_in_any_relation(way);
                         }
@@ -150,6 +154,7 @@ namespace osmium {
 
                 void relation(const osmium::Relation& relation) {
                     if (TRelations) {
+                        m_check_order.relation(relation);
                         if (! m_collector.find_and_add_object(relation)) {
                             m_collector.relation_not_in_any_relation(relation);
                         }
@@ -245,7 +250,7 @@ namespace osmium {
              * this is for instance used to only keep members of type way and
              * ignore all others.
              */
-            bool keep_member(const osmium::relations::RelationMeta& /*relation_meta*/, const osmium::RelationMember& /*member*/) const {
+            bool keep_member(const RelationMeta& /*relation_meta*/, const osmium::RelationMember& /*member*/) const {
                 return true;
             }
 
@@ -291,17 +296,6 @@ namespace osmium {
              * case.
              */
             void flush() {
-            }
-
-            /**
-             * This removes all relations that have already been assembled
-             * from the m_relations vector.
-             */
-            void clean_assembled_relations() {
-                m_relations.erase(
-                    std::remove_if(m_relations.begin(), m_relations.end(), has_all_members()),
-                    m_relations.end()
-                );
             }
 
             const osmium::Relation& get_relation(size_t offset) const {
@@ -425,7 +419,7 @@ namespace osmium {
                 return true;
             }
 
-            void clear_member_metas(const osmium::relations::RelationMeta& relation_meta) {
+            void clear_member_metas(const RelationMeta& relation_meta) {
                 const osmium::Relation& relation = get_relation(relation_meta);
                 for (const auto& member : relation.members()) {
                     if (member.ref() != 0) {
@@ -545,9 +539,8 @@ namespace osmium {
                 assert(!range.empty());
                 if (range.begin()->is_available()) {
                     return std::make_pair(true, range.begin()->buffer_offset());
-                } else {
-                    return std::make_pair(false, 0);
                 }
+                return std::make_pair(false, 0);
             }
 
             template <typename TIter>

@@ -33,19 +33,16 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <cstdlib>
-#include <future>
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <utility>
 
 #include <osmium/io/detail/input_format.hpp>
 #include <osmium/io/detail/opl_parser_functions.hpp>
-#include <osmium/io/detail/queue_util.hpp>
 #include <osmium/io/file_format.hpp>
 #include <osmium/io/header.hpp>
 #include <osmium/memory/buffer.hpp>
-#include <osmium/osm/entity_bits.hpp>
 #include <osmium/thread/util.hpp>
 
 namespace osmium {
@@ -54,10 +51,56 @@ namespace osmium {
 
         namespace detail {
 
+            // Feed data coming in blocks line by line to the OPL parser
+            // function. This has been broken out of the OPLParser class
+            // where it belongs into a standalone template function to be
+            // better testable.
+            template <typename T>
+            void line_by_line(T& worker) {
+                std::string rest;
+
+                while (!worker.input_done()) {
+                    std::string input{worker.get_input()};
+                    std::string::size_type ppos = 0;
+
+                    if (!rest.empty()) {
+                        ppos = input.find_first_of("\n\r");
+                        if (ppos == std::string::npos) {
+                            rest.append(input);
+                            continue;
+                        }
+                        rest.append(input, 0, ppos);
+                        if (!rest.empty()) {
+                            worker.parse_line(rest.data());
+                            rest.clear();
+                        }
+                        ++ppos;
+                    }
+
+                    for (auto pos = input.find_first_of("\n\r", ppos);
+                         pos != std::string::npos;
+                         pos = input.find_first_of("\n\r", ppos)) {
+                        const char* data = &input[ppos];
+                        input[pos] = '\0';
+                        if (data[0] != '\0') {
+                            worker.parse_line(data);
+                        }
+                        ppos = pos + 1;
+                        if (ppos >= input.size()) {
+                            break;
+                        }
+                    }
+                    rest.assign(input, ppos, std::string::npos);
+                }
+
+                if (!rest.empty()) {
+                    worker.parse_line(rest.data());
+                }
+            }
+
             class OPLParser : public Parser {
 
                 osmium::memory::Buffer m_buffer{1024*1024};
-                const char* m_data = nullptr;
                 uint64_t m_line_count = 0;
 
                 void maybe_flush() {
@@ -70,63 +113,26 @@ namespace osmium {
                     }
                 }
 
-                void parse_line() {
-                    if (opl_parse_line(m_line_count, m_data, m_buffer, read_types())) {
-                        maybe_flush();
-                    }
-                    ++m_line_count;
-                }
-
             public:
 
-                OPLParser(future_string_queue_type& input_queue,
-                          future_buffer_queue_type& output_queue,
-                          std::promise<osmium::io::Header>& header_promise,
-                          osmium::io::detail::reader_options options) :
-                    Parser(input_queue, output_queue, header_promise, options) {
+                explicit OPLParser(parser_arguments& args) :
+                    Parser(args) {
                     set_header_value(osmium::io::Header{});
                 }
 
                 ~OPLParser() noexcept final = default;
 
+                void parse_line(const char* data) {
+                    if (opl_parse_line(m_line_count, data, m_buffer, read_types())) {
+                        maybe_flush();
+                    }
+                    ++m_line_count;
+                }
+
                 void run() final {
                     osmium::thread::set_thread_name("_osmium_opl_in");
 
-                    std::string rest;
-                    while (!input_done()) {
-                        std::string input = get_input();
-                        std::string::size_type ppos = 0;
-
-                        if (!rest.empty()) {
-                            ppos = input.find('\n');
-                            if (ppos == std::string::npos) {
-                                rest.append(input);
-                                continue;
-                            }
-                            rest.append(input.substr(0, ppos));
-                            m_data = rest.data();
-                            parse_line();
-                            rest.clear();
-                        }
-
-                        std::string::size_type pos = input.find('\n', ppos);
-                        while (pos != std::string::npos) {
-                            m_data = &input[ppos];
-                            input[pos] = '\0';
-                            parse_line();
-                            ppos = pos + 1;
-                            if (ppos >= input.size()) {
-                                break;
-                            }
-                            pos = input.find('\n', ppos);
-                        }
-                        rest = input.substr(ppos);
-                    }
-
-                    if (!rest.empty()) {
-                        m_data = rest.data();
-                        parse_line();
-                    }
+                    line_by_line(*this);
 
                     if (m_buffer.committed() > 0) {
                         send_to_output_queue(std::move(m_buffer));
@@ -139,11 +145,8 @@ namespace osmium {
             // the variable is only a side-effect, it will never be used
             const bool registered_opl_parser = ParserFactory::instance().register_parser(
                 file_format::opl,
-                [](future_string_queue_type& input_queue,
-                    future_buffer_queue_type& output_queue,
-                    std::promise<osmium::io::Header>& header_promise,
-                    osmium::io::detail::reader_options options) {
-                    return std::unique_ptr<Parser>(new OPLParser(input_queue, output_queue, header_promise, options));
+                [](parser_arguments& args) {
+                    return std::unique_ptr<Parser>(new OPLParser{args});
             });
 
             // dummy function to silence the unused variable warning from above

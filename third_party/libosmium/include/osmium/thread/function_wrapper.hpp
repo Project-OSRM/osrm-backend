@@ -33,8 +33,8 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <algorithm>
 #include <memory>
+#include <utility>
 
 namespace osmium {
 
@@ -79,6 +79,7 @@ namespace osmium {
             // Constructor must not be "explicit" for wrapper
             // to work seemlessly.
             template <typename TFunction>
+            // cppcheck-suppress noExplicitConstructor
             function_wrapper(TFunction&& f) :
                 impl(new impl_type<TFunction>(std::forward<TFunction>(f))) {
             }
@@ -86,7 +87,7 @@ namespace osmium {
             // The integer parameter is only used to signal that we want
             // the special function wrapper that makes the worker thread
             // shut down.
-            function_wrapper(int) :
+            explicit function_wrapper(int) :
                 impl(new impl_base()) {
             }
 

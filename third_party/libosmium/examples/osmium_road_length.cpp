@@ -33,14 +33,14 @@
 #include <osmium/visitor.hpp>
 
 // For the location index. There are different types of indexes available.
-// This will work for small and medium sized input files.
-#include <osmium/index/map/sparse_mem_array.hpp>
+// This will work for all input files keeping the index in memory.
+#include <osmium/index/map/flex_mem.hpp>
 
 // For the NodeLocationForWays handler
 #include <osmium/handler/node_locations_for_ways.hpp>
 
 // The type of index used. This must match the include file above
-using index_type = osmium::index::map::SparseMemArray<osmium::unsigned_object_id_type, osmium::Location>;
+using index_type = osmium::index::map::FlexMem<osmium::unsigned_object_id_type, osmium::Location>;
 
 // The location handler always depends on the index type
 using location_handler_type = osmium::handler::NodeLocationsForWays<index_type>;

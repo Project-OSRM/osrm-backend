@@ -33,15 +33,14 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <algorithm>
 #include <cassert>
 #include <cmath>
 #include <cstdint>
 #include <cstdlib>
-#include <iterator>
 #include <memory>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include <protozero/pbf_builder.hpp>
 #include <protozero/pbf_writer.hpp>
@@ -171,7 +170,7 @@ namespace osmium {
                     assert(m_msg.size() <= max_uncompressed_blob_size);
 
                     std::string blob_data;
-                    protozero::pbf_builder<FileFormat::Blob> pbf_blob(blob_data);
+                    protozero::pbf_builder<FileFormat::Blob> pbf_blob{blob_data};
 
                     if (m_use_compression) {
                         pbf_blob.add_int32(FileFormat::Blob::optional_int32_raw_size, int32_t(m_msg.size()));
@@ -181,12 +180,12 @@ namespace osmium {
                     }
 
                     std::string blob_header_data;
-                    protozero::pbf_builder<FileFormat::BlobHeader> pbf_blob_header(blob_header_data);
+                    protozero::pbf_builder<FileFormat::BlobHeader> pbf_blob_header{blob_header_data};
 
                     pbf_blob_header.add_string(FileFormat::BlobHeader::required_string_type, m_blob_type == pbf_blob_type::data ? "OSMData" : "OSMHeader");
                     pbf_blob_header.add_int32(FileFormat::BlobHeader::required_int32_datasize, static_cast_with_assert<int32_t>(blob_data.size()));
 
-                    uint32_t sz = htonl(static_cast_with_assert<uint32_t>(blob_header_data.size()));
+                    const uint32_t sz = htonl(static_cast_with_assert<uint32_t>(blob_header_data.size()));
 
                     // write to output: the 4-byte BlobHeader-Size followed by the BlobHeader followed by the Blob
                     std::string output;
@@ -270,7 +269,7 @@ namespace osmium {
                     m_delta_lon.clear();
                 }
 
-                size_t size() const {
+                std::size_t size() const {
                     return m_ids.size() * 3 * sizeof(int64_t);
                 }
 
@@ -300,12 +299,12 @@ namespace osmium {
 
                 std::string serialize() const {
                     std::string data;
-                    protozero::pbf_builder<OSMFormat::DenseNodes> pbf_dense_nodes(data);
+                    protozero::pbf_builder<OSMFormat::DenseNodes> pbf_dense_nodes{data};
 
                     pbf_dense_nodes.add_packed_sint64(OSMFormat::DenseNodes::packed_sint64_id, m_ids.cbegin(), m_ids.cend());
 
                     if (m_options.add_metadata) {
-                        protozero::pbf_builder<OSMFormat::DenseInfo> pbf_dense_info(pbf_dense_nodes, OSMFormat::DenseNodes::optional_DenseInfo_denseinfo);
+                        protozero::pbf_builder<OSMFormat::DenseInfo> pbf_dense_info{pbf_dense_nodes, OSMFormat::DenseNodes::optional_DenseInfo_denseinfo};
                         pbf_dense_info.add_packed_int32(OSMFormat::DenseInfo::packed_int32_version, m_versions.cbegin(), m_versions.cend());
                         pbf_dense_info.add_packed_sint64(OSMFormat::DenseInfo::packed_sint64_timestamp, m_timestamps.cbegin(), m_timestamps.cend());
                         pbf_dense_info.add_packed_sint64(OSMFormat::DenseInfo::packed_sint64_changeset, m_changesets.cbegin(), m_changesets.cend());
@@ -390,7 +389,7 @@ namespace osmium {
                     return m_type;
                 }
 
-                size_t size() const {
+                std::size_t size() const {
                     return m_pbf_primitive_group_data.size() + m_stringtable.size() + m_dense_nodes.size();
                 }
 
@@ -400,7 +399,7 @@ namespace osmium {
                  * enough space for the string table (which typically
                  * needs about 0.1 to 0.3% of the block size).
                  */
-                constexpr static size_t max_used_blob_size = max_uncompressed_blob_size * 95 / 100;
+                constexpr static std::size_t max_used_blob_size = max_uncompressed_blob_size * 95 / 100;
 
                 bool can_add(OSMFormat::PrimitiveGroup type) const {
                     if (type != m_type) {
@@ -426,16 +425,16 @@ namespace osmium {
                     }
 
                     std::string primitive_block_data;
-                    protozero::pbf_builder<OSMFormat::PrimitiveBlock> primitive_block(primitive_block_data);
+                    protozero::pbf_builder<OSMFormat::PrimitiveBlock> primitive_block{primitive_block_data};
 
                     {
-                        protozero::pbf_builder<OSMFormat::StringTable> pbf_string_table(primitive_block, OSMFormat::PrimitiveBlock::required_StringTable_stringtable);
+                        protozero::pbf_builder<OSMFormat::StringTable> pbf_string_table{primitive_block, OSMFormat::PrimitiveBlock::required_StringTable_stringtable};
                         m_primitive_block.write_stringtable(pbf_string_table);
                     }
 
                     primitive_block.add_message(OSMFormat::PrimitiveBlock::repeated_PrimitiveGroup_primitivegroup, m_primitive_block.group_data());
 
-                    m_output_queue.push(osmium::thread::Pool::instance().submit(
+                    m_output_queue.push(m_pool.submit(
                         SerializeBlob{std::move(primitive_block_data),
                                       pbf_blob_type::data,
                                       m_options.use_compression}
@@ -459,7 +458,7 @@ namespace osmium {
                     }
 
                     if (m_options.add_metadata) {
-                        protozero::pbf_builder<OSMFormat::Info> pbf_info(pbf_object, T::enum_type::optional_Info_info);
+                        protozero::pbf_builder<OSMFormat::Info> pbf_info{pbf_object, T::enum_type::optional_Info_info};
 
                         pbf_info.add_int32(OSMFormat::Info::optional_int32_version, static_cast_with_assert<int32_t>(object.version()));
                         pbf_info.add_int64(OSMFormat::Info::optional_int64_timestamp, uint32_t(object.timestamp()));
@@ -481,8 +480,8 @@ namespace osmium {
 
             public:
 
-                PBFOutputFormat(const osmium::io::File& file, future_string_queue_type& output_queue) :
-                    OutputFormat(output_queue),
+                PBFOutputFormat(osmium::thread::Pool& pool, const osmium::io::File& file, future_string_queue_type& output_queue) :
+                    OutputFormat(pool, output_queue),
                     m_options(),
                     m_primitive_block(m_options) {
                     m_options.use_dense_nodes = file.is_not_false("pbf_dense_nodes");
@@ -500,10 +499,10 @@ namespace osmium {
 
                 void write_header(const osmium::io::Header& header) final {
                     std::string data;
-                    protozero::pbf_builder<OSMFormat::HeaderBlock> pbf_header_block(data);
+                    protozero::pbf_builder<OSMFormat::HeaderBlock> pbf_header_block{data};
 
                     if (!header.boxes().empty()) {
-                        protozero::pbf_builder<OSMFormat::HeaderBBox> pbf_header_bbox(pbf_header_block, OSMFormat::HeaderBlock::optional_HeaderBBox_bbox);
+                        protozero::pbf_builder<OSMFormat::HeaderBBox> pbf_header_bbox{pbf_header_block, OSMFormat::HeaderBlock::optional_HeaderBBox_bbox};
 
                         osmium::Box box = header.joined_boxes();
                         pbf_header_bbox.add_sint64(OSMFormat::HeaderBBox::required_sint64_left,   int64_t(box.bottom_left().lon() * lonlat_resolution));
@@ -528,23 +527,23 @@ namespace osmium {
 
                     pbf_header_block.add_string(OSMFormat::HeaderBlock::optional_string_writingprogram, header.get("generator"));
 
-                    const std::string osmosis_replication_timestamp = header.get("osmosis_replication_timestamp");
+                    const std::string osmosis_replication_timestamp{header.get("osmosis_replication_timestamp")};
                     if (!osmosis_replication_timestamp.empty()) {
-                        osmium::Timestamp ts(osmosis_replication_timestamp.c_str());
+                        osmium::Timestamp ts{osmosis_replication_timestamp.c_str()};
                         pbf_header_block.add_int64(OSMFormat::HeaderBlock::optional_int64_osmosis_replication_timestamp, uint32_t(ts));
                     }
 
-                    const std::string osmosis_replication_sequence_number = header.get("osmosis_replication_sequence_number");
+                    const std::string osmosis_replication_sequence_number{header.get("osmosis_replication_sequence_number")};
                     if (!osmosis_replication_sequence_number.empty()) {
                         pbf_header_block.add_int64(OSMFormat::HeaderBlock::optional_int64_osmosis_replication_sequence_number, std::atoll(osmosis_replication_sequence_number.c_str()));
                     }
 
-                    const std::string osmosis_replication_base_url = header.get("osmosis_replication_base_url");
+                    const std::string osmosis_replication_base_url{header.get("osmosis_replication_base_url")};
                     if (!osmosis_replication_base_url.empty()) {
                         pbf_header_block.add_string(OSMFormat::HeaderBlock::optional_string_osmosis_replication_base_url, osmosis_replication_base_url);
                     }
 
-                    m_output_queue.push(osmium::thread::Pool::instance().submit(
+                    m_output_queue.push(m_pool.submit(
                         SerializeBlob{std::move(data),
                                       pbf_blob_type::header,
                                       m_options.use_compression}
@@ -567,7 +566,7 @@ namespace osmium {
                     }
 
                     switch_primitive_block_type(OSMFormat::PrimitiveGroup::repeated_Node_nodes);
-                    protozero::pbf_builder<OSMFormat::Node> pbf_node{ m_primitive_block.group(), OSMFormat::PrimitiveGroup::repeated_Node_nodes };
+                    protozero::pbf_builder<OSMFormat::Node> pbf_node{m_primitive_block.group(), OSMFormat::PrimitiveGroup::repeated_Node_nodes};
 
                     pbf_node.add_sint64(OSMFormat::Node::required_sint64_id, node.id());
                     add_meta(node, pbf_node);
@@ -578,7 +577,7 @@ namespace osmium {
 
                 void way(const osmium::Way& way) {
                     switch_primitive_block_type(OSMFormat::PrimitiveGroup::repeated_Way_ways);
-                    protozero::pbf_builder<OSMFormat::Way> pbf_way{ m_primitive_block.group(), OSMFormat::PrimitiveGroup::repeated_Way_ways };
+                    protozero::pbf_builder<OSMFormat::Way> pbf_way{m_primitive_block.group(), OSMFormat::PrimitiveGroup::repeated_Way_ways};
 
                     pbf_way.add_int64(OSMFormat::Way::required_int64_id, way.id());
                     add_meta(way, pbf_way);
@@ -611,7 +610,7 @@ namespace osmium {
 
                 void relation(const osmium::Relation& relation) {
                     switch_primitive_block_type(OSMFormat::PrimitiveGroup::repeated_Relation_relations);
-                    protozero::pbf_builder<OSMFormat::Relation> pbf_relation { m_primitive_block.group(), OSMFormat::PrimitiveGroup::repeated_Relation_relations };
+                    protozero::pbf_builder<OSMFormat::Relation> pbf_relation{m_primitive_block.group(), OSMFormat::PrimitiveGroup::repeated_Relation_relations};
 
                     pbf_relation.add_int64(OSMFormat::Relation::required_int64_id, relation.id());
                     add_meta(relation, pbf_relation);
@@ -644,8 +643,8 @@ namespace osmium {
             // we want the register_output_format() function to run, setting
             // the variable is only a side-effect, it will never be used
             const bool registered_pbf_output = osmium::io::detail::OutputFormatFactory::instance().register_output_format(osmium::io::file_format::pbf,
-                [](const osmium::io::File& file, future_string_queue_type& output_queue) {
-                    return new osmium::io::detail::PBFOutputFormat(file, output_queue);
+                [](osmium::thread::Pool& pool, const osmium::io::File& file, future_string_queue_type& output_queue) {
+                    return new osmium::io::detail::PBFOutputFormat{pool, file, output_queue};
             });
 
             // dummy function to silence the unused variable warning from above

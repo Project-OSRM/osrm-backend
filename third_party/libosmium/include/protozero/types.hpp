@@ -16,6 +16,7 @@ documentation.
  * @brief Contains the declaration of low-level types used in the pbf format.
  */
 
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -138,6 +139,11 @@ public:
         return m_size;
     }
 
+    /// Returns true if size is 0.
+    constexpr bool empty() const noexcept {
+        return m_size == 0;
+    }
+
     /**
      * Convert data view to string.
      *
@@ -178,7 +184,7 @@ inline void swap(data_view& lhs, data_view& rhs) noexcept {
  * @param rhs Second object.
  */
 inline bool operator==(const data_view& lhs, const data_view& rhs) noexcept {
-    return lhs.size() == rhs.size() && !std::strcmp(lhs.data(), rhs.data());
+    return lhs.size() == rhs.size() && std::equal(lhs.data(), lhs.data() + lhs.size(), rhs.data());
 }
 
 /**

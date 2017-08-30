@@ -136,8 +136,12 @@ namespace osmium {
                     const_iterator& operator++() {
                         assert(m_it != m_last);
                         const auto last_pos = m_it->c_str() + m_it->size();
-                        while (m_pos != last_pos && *m_pos) ++m_pos;
-                        if (m_pos != last_pos) ++m_pos;
+                        while (m_pos != last_pos && *m_pos) {
+                            ++m_pos;
+                        }
+                        if (m_pos != last_pos) {
+                            ++m_pos;
+                        }
                         if (m_pos == last_pos) {
                             ++m_it;
                             if (m_it != m_last) {
@@ -150,7 +154,7 @@ namespace osmium {
                     }
 
                     const_iterator operator++(int) {
-                        const_iterator tmp(*this);
+                        const_iterator tmp{*this};
                         operator++();
                         return tmp;
                     }
@@ -175,11 +179,11 @@ namespace osmium {
                     if (m_chunks.front().empty()) {
                         return end();
                     }
-                    return const_iterator(m_chunks.begin(), m_chunks.end());
+                    return {m_chunks.begin(), m_chunks.end()};
                 }
 
                 const_iterator end() const {
-                    return const_iterator(m_chunks.end(), m_chunks.end());
+                    return {m_chunks.end(), m_chunks.end()};
                 }
 
                 // These functions get you some idea how much memory was
@@ -273,7 +277,7 @@ namespace osmium {
                     m_index[cs] = ++m_size;
 
                     if (m_size > max_entries) {
-                        throw osmium::pbf_error("string table has too many entries");
+                        throw osmium::pbf_error{"string table has too many entries"};
                     }
 
                     return m_size;

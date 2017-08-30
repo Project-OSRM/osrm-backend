@@ -11,7 +11,7 @@
 using namespace osmium::builder::attr;
 
 TEST_CASE("create tag list") {
-    osmium::memory::Buffer buffer(10240);
+    osmium::memory::Buffer buffer{10240};
 
     SECTION("with TagListBuilder from char*") {
         {
@@ -160,13 +160,6 @@ TEST_CASE("create tag list") {
         osmium::builder::add_tag_list(buffer, _tags(m));
     }
 
-    SECTION("with build_tag_list_from_func") {
-        osmium::builder::build_tag_list_from_func(buffer, [](osmium::builder::TagListBuilder& tlb) {
-            tlb.add_tag("highway", "primary");
-            tlb.add_tag("name", "Main Street");
-        });
-    }
-
     const osmium::TagList& tl = *buffer.select<osmium::TagList>().cbegin();
     REQUIRE(osmium::item_type::tag_list == tl.type());
     REQUIRE(2 == tl.size());
@@ -194,9 +187,9 @@ TEST_CASE("create tag list") {
 }
 
 TEST_CASE("empty keys and values are okay") {
-    osmium::memory::Buffer buffer(10240);
+    osmium::memory::Buffer buffer{10240};
 
-    auto pos = osmium::builder::add_tag_list(buffer,
+    const auto pos = osmium::builder::add_tag_list(buffer,
         _tag("empty value", ""),
         _tag("", "empty key")
     );
@@ -219,8 +212,8 @@ TEST_CASE("empty keys and values are okay") {
 }
 
 TEST_CASE("tag key or value is too long") {
-    osmium::memory::Buffer buffer(10240);
-    osmium::builder::TagListBuilder builder(buffer);
+    osmium::memory::Buffer buffer{10240};
+    osmium::builder::TagListBuilder builder{buffer};
 
     const char kv[2000] = "";
     builder.add_tag(kv, 1, kv, 1000);

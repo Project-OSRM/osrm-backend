@@ -21,12 +21,9 @@ class MockParser : public osmium::io::detail::Parser {
 
 public:
 
-    MockParser(osmium::io::detail::future_string_queue_type& input_queue,
-               osmium::io::detail::future_buffer_queue_type& output_queue,
-               std::promise<osmium::io::Header>& header_promise,
-               osmium::io::detail::reader_options options,
+    MockParser(osmium::io::detail::parser_arguments& args,
                const std::string& fail_in) :
-        Parser(input_queue, output_queue, header_promise, options),
+        Parser(args),
         m_fail_in(fail_in) {
     }
 
@@ -56,11 +53,8 @@ TEST_CASE("Test Reader using MockParser") {
 
     osmium::io::detail::ParserFactory::instance().register_parser(
         osmium::io::file_format::xml,
-        [&](osmium::io::detail::future_string_queue_type& input_queue,
-            osmium::io::detail::future_buffer_queue_type& output_queue,
-            std::promise<osmium::io::Header>& header_promise,
-            osmium::io::detail::reader_options options) {
-        return std::unique_ptr<osmium::io::detail::Parser>(new MockParser(input_queue, output_queue, header_promise, options, fail_in));
+        [&](osmium::io::detail::parser_arguments& args) {
+        return std::unique_ptr<osmium::io::detail::Parser>(new MockParser(args, fail_in));
     });
 
     SECTION("no failure") {
@@ -68,7 +62,7 @@ TEST_CASE("Test Reader using MockParser") {
         osmium::io::Reader reader{with_data_dir("t/io/data.osm")};
         auto header = reader.header();
         REQUIRE(reader.read());
-        REQUIRE(!reader.read());
+        REQUIRE_FALSE(reader.read());
         REQUIRE(reader.eof());
         reader.close();
     }
@@ -105,7 +99,7 @@ TEST_CASE("Test Reader using MockParser") {
             REQUIRE(std::string{e.what()} == "error in user code");
         }
         REQUIRE(reader.read());
-        REQUIRE(!reader.read());
+        REQUIRE_FALSE(reader.read());
         REQUIRE(reader.eof());
         reader.close();
     }

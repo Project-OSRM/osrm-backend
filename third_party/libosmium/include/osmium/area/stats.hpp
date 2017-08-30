@@ -52,6 +52,7 @@ namespace osmium {
             uint64_t area_touching_rings_case = 0; ///< More difficult case with touching rings
             uint64_t duplicate_nodes = 0; ///< Consecutive identical nodes or consecutive nodes with same location
             uint64_t duplicate_segments = 0; ///< Segments duplicated (going back and forth)
+            uint64_t duplicate_ways = 0; ///< Ways that are in relation more than once
             uint64_t from_relations = 0; ///< Area created from multipolygon relation
             uint64_t from_ways = 0; ///< Area created from way
             uint64_t inner_rings = 0; ///< Number of inner rings
@@ -63,11 +64,13 @@ namespace osmium {
             uint64_t nodes = 0; ///< Number of nodes in the area
             uint64_t open_rings = 0; ///< Number of open rings in the area
             uint64_t outer_rings = 0; ///< Number of outer rings in the area
+            uint64_t overlapping_segments = 0; ///< Three or more segments with same end points
             uint64_t short_ways = 0; ///< Number of ways with less than two nodes
             uint64_t single_way_in_mp_relation = 0; ///< Multipolygon relation containing a single way
             uint64_t touching_rings = 0; ///< Rings touching in a node
             uint64_t ways_in_multiple_rings = 0; ///< Different segments of a way ended up in different rings
             uint64_t wrong_role = 0; ///< Member has wrong role (not "outer", "inner", or empty)
+            uint64_t invalid_locations = 0; ///< Invalid location found
 
             area_stats& operator+=(const area_stats& other) noexcept {
                 area_really_complex_case += other.area_really_complex_case;
@@ -75,6 +78,7 @@ namespace osmium {
                 area_touching_rings_case += other.area_touching_rings_case;
                 duplicate_nodes += other.duplicate_nodes;
                 duplicate_segments += other.duplicate_segments;
+                duplicate_ways += other.duplicate_ways;
                 from_relations += other.from_relations;
                 from_ways += other.from_ways;
                 inner_rings += other.inner_rings;
@@ -91,6 +95,7 @@ namespace osmium {
                 touching_rings += other.touching_rings;
                 ways_in_multiple_rings += other.ways_in_multiple_rings;
                 wrong_role += other.wrong_role;
+                invalid_locations += invalid_locations;
                 return *this;
             }
 
@@ -103,6 +108,7 @@ namespace osmium {
                        << " area_touching_rings_case=" << s.area_touching_rings_case
                        << " duplicate_nodes=" << s.duplicate_nodes
                        << " duplicate_segments=" << s.duplicate_segments
+                       << " duplicate_ways=" << s.duplicate_ways
                        << " from_relations=" << s.from_relations
                        << " from_ways=" << s.from_ways
                        << " inner_rings=" << s.inner_rings
@@ -118,7 +124,8 @@ namespace osmium {
                        << " single_way_in_mp_relation=" << s.single_way_in_mp_relation
                        << " touching_rings=" << s.touching_rings
                        << " ways_in_multiple_rings=" << s.ways_in_multiple_rings
-                       << " wrong_role=" << s.wrong_role;
+                       << " wrong_role=" << s.wrong_role
+                       << " invalid_locations=" << s.invalid_locations;
         }
 
     } // namespace area

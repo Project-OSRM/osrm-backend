@@ -12,7 +12,7 @@
 namespace oid = osmium::io::detail;
 
 TEST_CASE("Parse OPL: base exception") {
-    osmium::opl_error e{"foo"};
+    const osmium::opl_error e{"foo"};
     REQUIRE(e.data == nullptr);
     REQUIRE(e.line == 0);
     REQUIRE(e.column == 0);
@@ -32,20 +32,16 @@ TEST_CASE("Parse OPL: exception with line and column") {
 }
 
 TEST_CASE("Parse OPL: space") {
-    std::string d{"a b \t c"};
+    const std::string d{"a b \t c"};
 
     const char* s = d.data();
-    REQUIRE_THROWS_AS({
-        oid::opl_parse_space(&s);
-    }, osmium::opl_error);
+    REQUIRE_THROWS_AS(oid::opl_parse_space(&s), const osmium::opl_error&);
 
     s = d.data() + 1;
     oid::opl_parse_space(&s);
     REQUIRE(*s == 'b');
 
-    REQUIRE_THROWS_AS({
-        oid::opl_parse_space(&s);
-    }, osmium::opl_error);
+    REQUIRE_THROWS_AS(oid::opl_parse_space(&s), const osmium::opl_error&);
 
     ++s;
     oid::opl_parse_space(&s);
@@ -62,7 +58,7 @@ TEST_CASE("Parse OPL: check for space") {
 }
 
 TEST_CASE("Parse OPL: skip section") {
-    std::string d{"abcd efgh"};
+    const std::string d{"abcd efgh"};
     const char* skip1 = d.data() + 4;
     const char* skip2 = d.data() + 9;
     const char* s = d.data();
@@ -78,30 +74,26 @@ TEST_CASE("Parse OPL: parse escaped") {
 
     SECTION("Empty string") {
         const char* s = "";
-        REQUIRE_THROWS_WITH({
-            oid::opl_parse_escaped(&s, result);
-        }, "OPL error: eol");
+        REQUIRE_THROWS_WITH(oid::opl_parse_escaped(&s, result),
+                            "OPL error: eol");
     }
 
     SECTION("Illegal character for hex") {
         const char* s = "x";
-        REQUIRE_THROWS_WITH({
-            oid::opl_parse_escaped(&s, result);
-        }, "OPL error: not a hex char");
+        REQUIRE_THROWS_WITH(oid::opl_parse_escaped(&s, result),
+                            "OPL error: not a hex char");
     }
 
     SECTION("Illegal character for hex after legal hex characters") {
         const char* s = "0123x";
-        REQUIRE_THROWS_WITH({
-            oid::opl_parse_escaped(&s, result);
-        }, "OPL error: not a hex char");
+        REQUIRE_THROWS_WITH(oid::opl_parse_escaped(&s, result),
+                            "OPL error: not a hex char");
     }
 
     SECTION("Too long") {
         const char* s = "123456780";
-        REQUIRE_THROWS_WITH({
-            oid::opl_parse_escaped(&s, result);
-        }, "OPL error: hex escape too long");
+        REQUIRE_THROWS_WITH(oid::opl_parse_escaped(&s, result),
+                            "OPL error: hex escape too long");
     }
 
     SECTION("No data") {
@@ -239,23 +231,21 @@ TEST_CASE("Parse OPL: parse string") {
 
     SECTION("string with invalid escaping") {
         const char* s = "foo%";
-        REQUIRE_THROWS_WITH({
-            oid::opl_parse_string(&s, result);
-        }, "OPL error: eol");
+        REQUIRE_THROWS_WITH(oid::opl_parse_string(&s, result),
+                            "OPL error: eol");
     }
 
     SECTION("string with invalid escaped characters") {
         const char* s = "foo%x%";
-        REQUIRE_THROWS_WITH({
-            oid::opl_parse_string(&s, result);
-        }, "OPL error: not a hex char");
+        REQUIRE_THROWS_WITH(oid::opl_parse_string(&s, result),
+                            "OPL error: not a hex char");
     }
 
 }
 
 template <typename T = int64_t>
 T test_parse_int(const char* s) {
-    auto r = oid::opl_parse_int<T>(&s);
+    const auto r = oid::opl_parse_int<T>(&s);
     REQUIRE(*s == 'x');
     return r;
 }
@@ -269,25 +259,20 @@ TEST_CASE("Parse OPL: integer") {
     REQUIRE(test_parse_int("1234567890123x") == 1234567890123);
     REQUIRE(test_parse_int("-1234567890123x") == -1234567890123);
 
-    REQUIRE_THROWS_WITH({
-        test_parse_int("");
-    }, "OPL error: expected integer");
+    REQUIRE_THROWS_WITH(test_parse_int(""),
+                        "OPL error: expected integer");
 
-    REQUIRE_THROWS_WITH({
-        test_parse_int("-x");
-    }, "OPL error: expected integer");
+    REQUIRE_THROWS_WITH(test_parse_int("-x"),
+                        "OPL error: expected integer");
 
-    REQUIRE_THROWS_WITH({
-        test_parse_int(" 1");
-    }, "OPL error: expected integer");
+    REQUIRE_THROWS_WITH(test_parse_int(" 1"),
+                        "OPL error: expected integer");
 
-    REQUIRE_THROWS_WITH({
-        test_parse_int("x");
-    }, "OPL error: expected integer");
+    REQUIRE_THROWS_WITH(test_parse_int("x"),
+                        "OPL error: expected integer");
 
-    REQUIRE_THROWS_WITH({
-        test_parse_int("99999999999999999999999x");
-    }, "OPL error: integer too long");
+    REQUIRE_THROWS_WITH(test_parse_int("99999999999999999999999x"),
+                        "OPL error: integer too long");
 }
 
 TEST_CASE("Parse OPL: int32_t") {
@@ -295,29 +280,24 @@ TEST_CASE("Parse OPL: int32_t") {
     REQUIRE(test_parse_int<int32_t>("123x") == 123);
     REQUIRE(test_parse_int<int32_t>("-123x") == -123);
 
-    REQUIRE_THROWS_WITH({
-        test_parse_int<int32_t>("12345678901x");
-    }, "OPL error: integer too long");
-    REQUIRE_THROWS_WITH({
-        test_parse_int<int32_t>("-12345678901x");
-    }, "OPL error: integer too long");
+    REQUIRE_THROWS_WITH(test_parse_int<int32_t>("12345678901x"),
+                        "OPL error: integer too long");
+    REQUIRE_THROWS_WITH(test_parse_int<int32_t>("-12345678901x"),
+                        "OPL error: integer too long");
 }
 
 TEST_CASE("Parse OPL: uint32_t") {
     REQUIRE(test_parse_int<uint32_t>("0x") == 0);
     REQUIRE(test_parse_int<uint32_t>("123x") == 123);
 
-    REQUIRE_THROWS_WITH({
-        test_parse_int<uint32_t>("-123x");
-    }, "OPL error: integer too long");
+    REQUIRE_THROWS_WITH(test_parse_int<uint32_t>("-123x"),
+                        "OPL error: integer too long");
 
-    REQUIRE_THROWS_WITH({
-        test_parse_int<uint32_t>("12345678901x");
-    }, "OPL error: integer too long");
+    REQUIRE_THROWS_WITH(test_parse_int<uint32_t>("12345678901x"),
+                        "OPL error: integer too long");
 
-    REQUIRE_THROWS_WITH({
-        test_parse_int<uint32_t>("-12345678901x");
-    }, "OPL error: integer too long");
+    REQUIRE_THROWS_WITH(test_parse_int<uint32_t>("-12345678901x"),
+                        "OPL error: integer too long");
 }
 
 TEST_CASE("Parse OPL: visible flag") {
@@ -337,9 +317,8 @@ TEST_CASE("Parse OPL: deleted flag") {
 
 TEST_CASE("Parse OPL: invalid visible flag") {
     const char* data = "x";
-    REQUIRE_THROWS_WITH({
-        oid::opl_parse_visible(&data);
-    }, "OPL error: invalid visible flag");
+    REQUIRE_THROWS_WITH(oid::opl_parse_visible(&data),
+                        "OPL error: invalid visible flag");
 }
 
 TEST_CASE("Parse OPL: timestamp (empty)") {
@@ -365,9 +344,8 @@ TEST_CASE("Parse OPL: timestamp (tab)") {
 
 TEST_CASE("Parse OPL: timestamp (invalid)") {
     const char* data = "abc";
-    REQUIRE_THROWS_WITH({
-        oid::opl_parse_timestamp(&data);
-    }, "OPL error: can not parse timestamp");
+    REQUIRE_THROWS_WITH(oid::opl_parse_timestamp(&data),
+                        "OPL error: can not parse timestamp");
 }
 
 TEST_CASE("Parse OPL: timestamp (valid)") {
@@ -388,9 +366,8 @@ TEST_CASE("Parse OPL: tags") {
 
     SECTION("Empty") {
         const char* data = "";
-        REQUIRE_THROWS_WITH({
-            oid::opl_parse_tags(data, buffer);
-        }, "OPL error: expected '='");
+        REQUIRE_THROWS_WITH(oid::opl_parse_tags(data, buffer),
+                            "OPL error: expected '='");
     }
 
     SECTION("One tag") {
@@ -431,16 +408,14 @@ TEST_CASE("Parse OPL: tags") {
 
     SECTION("No equal signs") {
         const char* data = "a";
-        REQUIRE_THROWS_WITH({
-            oid::opl_parse_tags(data, buffer);
-        }, "OPL error: expected '='");
+        REQUIRE_THROWS_WITH(oid::opl_parse_tags(data, buffer),
+                            "OPL error: expected '='");
     }
 
     SECTION("Two equal signs") {
         const char* data = "a=b=c";
-        REQUIRE_THROWS_WITH({
-            oid::opl_parse_tags(data, buffer);
-        }, "OPL error: expected ','");
+        REQUIRE_THROWS_WITH(oid::opl_parse_tags(data, buffer),
+                            "OPL error: expected ','");
     }
 
 }
@@ -456,16 +431,14 @@ TEST_CASE("Parse OPL: nodes") {
 
     SECTION("Invalid format, missing n") {
         const char* const s = "xyz";
-        REQUIRE_THROWS_WITH({
-            oid::opl_parse_way_nodes(s, s + std::strlen(s), buffer);
-        }, "OPL error: expected 'n'");
+        REQUIRE_THROWS_WITH(oid::opl_parse_way_nodes(s, s + std::strlen(s), buffer),
+                            "OPL error: expected 'n'");
     }
 
     SECTION("Invalid format, missing ID") {
         const char* const s = "nx";
-        REQUIRE_THROWS_WITH({
-            oid::opl_parse_way_nodes(s, s + std::strlen(s), buffer);
-        }, "OPL error: expected integer");
+        REQUIRE_THROWS_WITH(oid::opl_parse_way_nodes(s, s + std::strlen(s), buffer),
+                            "OPL error: expected integer");
     }
 
     SECTION("Valid format: one node") {
@@ -536,23 +509,20 @@ TEST_CASE("Parse OPL: members") {
 
     SECTION("Invalid: unknown object type") {
         const char* const s = "x123@foo";
-        REQUIRE_THROWS_WITH({
-            oid::opl_parse_relation_members(s, s + std::strlen(s), buffer);
-        }, "OPL error: unknown object type");
+        REQUIRE_THROWS_WITH(oid::opl_parse_relation_members(s, s + std::strlen(s), buffer),
+                            "OPL error: unknown object type");
     }
 
     SECTION("Invalid: illegal ref") {
         const char* const s = "wx";
-        REQUIRE_THROWS_WITH({
-            oid::opl_parse_relation_members(s, s + std::strlen(s), buffer);
-        }, "OPL error: expected integer");
+        REQUIRE_THROWS_WITH(oid::opl_parse_relation_members(s, s + std::strlen(s), buffer),
+                            "OPL error: expected integer");
     }
 
     SECTION("Invalid: missing @") {
         const char* const s = "n123foo";
-        REQUIRE_THROWS_WITH({
-            oid::opl_parse_relation_members(s, s + std::strlen(s), buffer);
-        }, "OPL error: expected '@'");
+        REQUIRE_THROWS_WITH(oid::opl_parse_relation_members(s, s + std::strlen(s), buffer),
+                            "OPL error: expected '@'");
     }
 
     SECTION("Valid format: one member") {
@@ -928,16 +898,14 @@ TEST_CASE("Parse line") {
     }
 
     SECTION("Fail") {
-        REQUIRE_THROWS_WITH({
-            oid::opl_parse_line(0, "X", buffer);
-        }, "OPL error: unknown type on line 0 column 0");
+        REQUIRE_THROWS_WITH(oid::opl_parse_line(0, "X", buffer),
+                            "OPL error: unknown type on line 0 column 0");
         REQUIRE(buffer.written() == 0);
     }
 
     SECTION("New line at end not allowed") {
-        REQUIRE_THROWS_WITH({
-            oid::opl_parse_line(0, "n12 v3\n", buffer);
-        }, "OPL error: expected space or tab character on line 0 column 6");
+        REQUIRE_THROWS_WITH(oid::opl_parse_line(0, "n12 v3\n", buffer),
+                            "OPL error: expected space or tab character on line 0 column 6");
     }
 
     SECTION("Node, but not asking for nodes") {
@@ -948,28 +916,28 @@ TEST_CASE("Parse line") {
     SECTION("Node") {
         REQUIRE(oid::opl_parse_line(0, "n12 v3", buffer));
         REQUIRE(buffer.written() > 0);
-        auto& item = buffer.get<osmium::memory::Item>(0);
+        const auto& item = buffer.get<osmium::memory::Item>(0);
         REQUIRE(item.type() == osmium::item_type::node);
     }
 
     SECTION("Way") {
         REQUIRE(oid::opl_parse_line(0, "w12 v3", buffer));
         REQUIRE(buffer.written() > 0);
-        auto& item = buffer.get<osmium::memory::Item>(0);
+        const auto& item = buffer.get<osmium::memory::Item>(0);
         REQUIRE(item.type() == osmium::item_type::way);
     }
 
     SECTION("Relation") {
         REQUIRE(oid::opl_parse_line(0, "r12 v3", buffer));
         REQUIRE(buffer.written() > 0);
-        auto& item = buffer.get<osmium::memory::Item>(0);
+        const auto& item = buffer.get<osmium::memory::Item>(0);
         REQUIRE(item.type() == osmium::item_type::relation);
     }
 
     SECTION("Changeset") {
         REQUIRE(oid::opl_parse_line(0, "c12", buffer));
         REQUIRE(buffer.written() > 0);
-        auto& item = buffer.get<osmium::memory::Item>(0);
+        const auto& item = buffer.get<osmium::memory::Item>(0);
         REQUIRE(item.type() == osmium::item_type::changeset);
     }
 
@@ -1066,9 +1034,8 @@ TEST_CASE("Parse line with external interface") {
     }
 
     SECTION("Failure") {
-        REQUIRE_THROWS_WITH({
-            osmium::opl_parse("x", buffer);
-        }, "OPL error: unknown type on line 0 column 0");
+        REQUIRE_THROWS_WITH(osmium::opl_parse("x", buffer),
+                            "OPL error: unknown type on line 0 column 0");
         REQUIRE(buffer.written() == 0);
         REQUIRE(buffer.committed() == 0);
     }
@@ -1085,6 +1052,16 @@ TEST_CASE("Parse OPL using Reader") {
     REQUIRE(node.id() == 1);
 }
 
+TEST_CASE("Parse OPL with CRLF line ending using Reader") {
+    osmium::io::File file{with_data_dir("t/io/data-cr.opl")};
+    osmium::io::Reader reader{file};
+
+    const auto buffer = reader.read();
+    REQUIRE(buffer);
+    const auto& node = buffer.get<osmium::Node>(0);
+    REQUIRE(node.id() == 1);
+}
+
 TEST_CASE("Parse OPL with missing newline using Reader") {
     osmium::io::File file{with_data_dir("t/io/data-nonl.opl")};
     osmium::io::Reader reader{file};
@@ -1093,5 +1070,161 @@ TEST_CASE("Parse OPL with missing newline using Reader") {
     REQUIRE(buffer);
     const auto& node = buffer.get<osmium::Node>(0);
     REQUIRE(node.id() == 1);
+}
+
+class lbl_tester {
+
+    std::vector<std::string> m_inputs;
+    std::vector<std::string> m_outputs;
+
+public:
+
+    lbl_tester(const std::initializer_list<std::string>& inputs,
+               const std::initializer_list<std::string>& outputs) :
+        m_inputs(inputs),
+        m_outputs(outputs) {
+    }
+
+    bool input_done() {
+        return m_inputs.empty();
+    }
+
+    std::string get_input() {
+        REQUIRE_FALSE(m_inputs.empty());
+        std::string data = std::move(m_inputs.front());
+        m_inputs.erase(m_inputs.begin());
+        return data;
+    }
+
+    void parse_line(const char *data) {
+        REQUIRE_FALSE(m_outputs.empty());
+        REQUIRE(m_outputs.front() == data);
+        m_outputs.erase(m_outputs.begin());
+    }
+
+    void check() {
+        REQUIRE(m_inputs.empty());
+        REQUIRE(m_outputs.empty());
+    }
+
+}; // class lbl_tester
+
+void check_lbl(const std::initializer_list<std::string>& in,
+               const std::initializer_list<std::string>& out) {
+    lbl_tester tester{in, out};
+    osmium::io::detail::line_by_line(tester);
+    tester.check();
+}
+
+TEST_CASE("line_by_line for OPL parser 1") {
+    check_lbl({""}, {});
+}
+
+TEST_CASE("line_by_line for OPL parser 2") {
+    check_lbl({"\n"}, {});
+}
+
+TEST_CASE("line_by_line for OPL parser 3") {
+    check_lbl({"foo\n"}, {"foo"});
+}
+
+TEST_CASE("line_by_line for OPL parser 4") {
+    check_lbl({"foo"}, {"foo"});
+}
+
+TEST_CASE("line_by_line for OPL parser 5") {
+    check_lbl({"foo\nbar\n"}, {"foo", "bar"});
+}
+
+TEST_CASE("line_by_line for OPL parser 6") {
+    check_lbl({"foo\nbar"}, {"foo", "bar"});
+}
+
+TEST_CASE("line_by_line for OPL parser 7") {
+    check_lbl({"foo\nbar\nbaz\n"}, {"foo", "bar", "baz"});
+}
+
+TEST_CASE("line_by_line for OPL parser 8") {
+    check_lbl({"foo\n", "bar\n"}, {"foo", "bar"});
+}
+
+TEST_CASE("line_by_line for OPL parser 9") {
+    check_lbl({"foo\nb", "ar\n"}, {"foo", "bar"});
+}
+
+TEST_CASE("line_by_line for OPL parser 10") {
+    check_lbl({"foo\nb", "ar\n", "baz\n"}, {"foo", "bar", "baz"});
+}
+
+TEST_CASE("line_by_line for OPL parser 11") {
+    check_lbl({"foo", "\nbar\n"}, {"foo", "bar"});
+}
+
+TEST_CASE("line_by_line for OPL parser 12") {
+    check_lbl({"foo", "\nbar"}, {"foo", "bar"});
+}
+
+TEST_CASE("line_by_line for OPL parser 13") {
+    check_lbl({"foo", "\nbar", "\n"}, {"foo", "bar"});
+}
+
+TEST_CASE("line_by_line for OPL parser 14") {
+    check_lbl({"foo\n", "b", "ar\n"}, {"foo", "bar"});
+}
+
+TEST_CASE("line_by_line for OPL parser 15") {
+    check_lbl({"foo\n", "ba", "r\n"}, {"foo", "bar"});
+}
+
+TEST_CASE("line_by_line for OPL parser 16") {
+    check_lbl({"foo", "\n", "bar\n"}, {"foo", "bar"});
+}
+
+TEST_CASE("line_by_line for OPL parser 17") {
+    check_lbl({"foo\r\nbar\r\n"}, {"foo", "bar"});
+}
+
+TEST_CASE("line_by_line for OPL parser 18") {
+    check_lbl({"foo\r\nb", "ar\r\n"}, {"foo", "bar"});
+}
+
+TEST_CASE("line_by_line for OPL parser 19") {
+    check_lbl({"foo\r\nb", "ar\n", "baz\r\n"}, {"foo", "bar", "baz"});
+}
+
+TEST_CASE("line_by_line for OPL parser 20") {
+    check_lbl({"foo", "\r\nbar\r\n"}, {"foo", "bar"});
+}
+
+TEST_CASE("line_by_line for OPL parser 21") {
+    check_lbl({"foo\r", "\nbar"}, {"foo", "bar"});
+}
+
+TEST_CASE("line_by_line for OPL parser 22") {
+    check_lbl({"foo", "\r\nbar\r", "\n"}, {"foo", "bar"});
+}
+
+TEST_CASE("line_by_line for OPL parser 23") {
+    check_lbl({"foo\r\n", "b", "ar\r\n"}, {"foo", "bar"});
+}
+
+TEST_CASE("line_by_line for OPL parser 24") {
+    check_lbl({"foo\n", "ba", "r\r\n"}, {"foo", "bar"});
+}
+
+TEST_CASE("line_by_line for OPL parser 25") {
+    check_lbl({"foo", "\n", "bar\r\n"}, {"foo", "bar"});
+}
+
+TEST_CASE("line_by_line for OPL parser 26") {
+    check_lbl({"foo", "\n\r", "bar\r"}, {"foo", "bar"});
+}
+
+TEST_CASE("line_by_line for OPL parser 27") {
+    check_lbl({"foo\r", "bar\n\r"}, {"foo", "bar"});
+}
+
+TEST_CASE("line_by_line for OPL parser 28") {
+    check_lbl({"foo\nb", "ar"}, {"foo", "bar"});
 }
 

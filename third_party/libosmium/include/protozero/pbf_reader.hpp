@@ -179,7 +179,7 @@ public:
      *
      * @post There is no current field.
      */
-    pbf_reader(const std::pair<const char*, std::size_t>& data) noexcept
+    explicit pbf_reader(const std::pair<const char*, std::size_t>& data) noexcept
         : m_data(data.first),
           m_end(data.first + data.second),
           m_wire_type(pbf_wire_type::unknown),
@@ -196,7 +196,7 @@ public:
      *
      * @post There is no current field.
      */
-    pbf_reader(const std::string& data) noexcept
+    explicit pbf_reader(const std::string& data) noexcept
         : m_data(data.data()),
           m_end(data.data() + data.size()),
           m_wire_type(pbf_wire_type::unknown),
@@ -367,9 +367,9 @@ public:
      * @pre There must be no current field.
      * @post If it returns `true` there is a current field now with the given tag.
      */
-    bool next(pbf_tag_type next_tag, pbf_wire_type wire_type) {
+    bool next(pbf_tag_type next_tag, pbf_wire_type type) {
         while (next()) {
-            if (m_tag == next_tag && m_wire_type == wire_type) {
+            if (m_tag == next_tag && m_wire_type == type) {
                 return true;
             } else {
                 skip();

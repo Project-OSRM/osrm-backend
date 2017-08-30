@@ -12,7 +12,7 @@ All Osmium code MUST be in the `osmium` namespace or one of its sub-namespaces.
 ## Include-Only
 
 Osmium is a include-only library. You can't compile the library itself. There
-is no libosmium.so.
+is no `libosmium.so` or `libosmium.dll`.
 
 One drawback ist that you can't have static data in classes, because there
 is no place to put this data.
@@ -69,7 +69,7 @@ different.
 * Template parameters are single uppercase letters or start with uppercase `T`
   and use CamelCase.
 * Always use `typename` in templates, not `class`: `template <typename T>`.
-* The ellipsis in variadic template never has a space to the left of it and
+* The ellipsis in a variadic template never has a space to the left of it and
   always has a space to the right: `template <typename... TArgs>` etc.
 
 Keep to the indentation and other styles used in the code.
@@ -91,6 +91,19 @@ between compilers due to different C++11 support.
 
 Usually all code must work on Linux, OSX, and Windows. Execptions are allowed
 for some minor functionality, but please discuss this first.
+
+When writing code and tests, care must be taken that everything works with the
+CR line ending convention used on Linux and OSX and the CRLF line ending used
+on Windows. Note that `git` can be run with different settings regarding line
+ending rewritings on different machines making things more difficult. Some
+files have been "forced" to LF line endings using `.gitattributes` files.
+
+
+## 32bit systems
+
+Libosmium tries to work on 32bit systems whereever possible. But there are
+some parts which will not work on 32bit systems, mainly because the amount
+of main memory available is not enough for it to work anyway.
 
 
 ## Checking your code
@@ -118,9 +131,20 @@ used to define mappings for iwyu. See the IWYU tool at
 
 ## Testing
 
-There are a unit tests using the Catch Unit Test Framework in the `test`
-directory and some data tests in `test/osm-testdata`. They are built by the
-default cmake config. Run `ctest` to run them. Many more tests are needed.
+There are unit tests using the Catch Unit Test Framework in the `test`
+directory, some data tests in `test/osm-testdata` and tests of the examples in
+`test/examples`. They are built by the default cmake config. Run `ctest` to
+run them. We can always use more tests.
+
+Tests are run automatically using the Travis (Linux/Mac) and Appveyor (Windows)
+services. We automatically create coverage reports on Codevoc.io. Note that
+the coverage percentages reported are not always accurate, because code that
+is not used in tests at all will not necessarily end up in the binary and
+the code coverage tool will not know it is there.
+
+[![Travis Build Status](https://secure.travis-ci.org/osmcode/libosmium.svg)](https://travis-ci.org/osmcode/libosmium)
+[![Appveyor Build Status](https://ci.appveyor.com/api/projects/status/github/osmcode/libosmium?svg=true)](https://ci.appveyor.com/project/Mapbox/libosmium)
+[![Coverage Status](https://codecov.io/gh/osmcode/libosmium/branch/master/graph/badge.svg)](https://codecov.io/gh/osmcode/libosmium)
 
 
 ## Documenting the code

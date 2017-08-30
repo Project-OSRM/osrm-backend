@@ -34,6 +34,7 @@ DEALINGS IN THE SOFTWARE.
 */
 
 #include <cstddef>
+#include <cstring>
 #include <string>
 #include <type_traits>
 #include <vector>
@@ -49,31 +50,46 @@ namespace osmium {
 
         template <typename TKey>
         struct match_key {
-            bool operator()(const TKey& rule_key, const char* tag_key) {
+            bool operator()(const TKey& rule_key, const char* tag_key) const {
                 return rule_key == tag_key;
             }
         }; // struct match_key
 
+        template <>
+        struct match_key<std::string> {
+            bool operator()(const std::string& rule_key, const char* tag_key) const {
+                return !std::strcmp(rule_key.c_str(), tag_key);
+            }
+        }; // struct match_key
+
         struct match_key_prefix {
-            bool operator()(const std::string& rule_key, const char* tag_key) {
+            bool operator()(const std::string& rule_key, const char* tag_key) const {
                 return rule_key.compare(0, std::string::npos, tag_key, 0, rule_key.size()) == 0;
             }
         }; // struct match_key_prefix
 
         template <typename TValue>
         struct match_value {
-            bool operator()(const TValue& rule_value, const char* tag_value) {
+            bool operator()(const TValue& rule_value, const char* tag_value) const {
                 return rule_value == tag_value;
             }
         }; // struct match_value
 
         template <>
+        struct match_value<std::string> {
+            bool operator()(const std::string& rule_value, const char* tag_value) const {
+                return !std::strcmp(rule_value.c_str(), tag_value);
+            }
+        }; // struct match_value
+
+        template <>
         struct match_value<void> {
-            bool operator()(const bool, const char*) {
+            bool operator()(const bool, const char*) const noexcept {
                 return true;
             }
         }; // struct match_value<void>
 
+        /// @deprecated Use osmium::TagsFilter instead.
         template <typename TKey, typename TValue=void, typename TKeyComp=match_key<TKey>, typename TValueComp=match_value<TValue>>
         class Filter {
 
@@ -138,22 +154,31 @@ namespace osmium {
 
             /**
              * Return the number of rules in this filter.
+             *
+             * Complexity: Constant.
              */
-            size_t count() const {
+            size_t count() const noexcept {
                 return m_rules.size();
             }
 
             /**
              * Is this filter empty, ie are there no rules defined?
+             *
+             * Complexity: Constant.
              */
-            bool empty() const {
+            bool empty() const noexcept {
                 return m_rules.empty();
             }
 
         }; // class Filter
 
+        /// @deprecated Use osmium::TagsFilter instead.
         using KeyValueFilter  = Filter<std::string, std::string>;
+
+        /// @deprecated Use osmium::TagsFilter instead.
         using KeyFilter       = Filter<std::string>;
+
+        /// @deprecated Use osmium::TagsFilter instead.
         using KeyPrefixFilter = Filter<std::string, void, match_key_prefix>;
 
     } // namespace tags

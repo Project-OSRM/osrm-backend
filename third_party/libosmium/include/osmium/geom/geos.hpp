@@ -129,13 +129,13 @@ namespace osmium {
                  */
                 OSMIUM_DEPRECATED explicit GEOSFactoryImpl(int /* srid */, int srid) :
                     m_precision_model(new geos::geom::PrecisionModel),
-                    m_our_geos_factory(new geos::geom::GeometryFactory(m_precision_model.get(), srid)),
+                    m_our_geos_factory(new geos::geom::GeometryFactory{m_precision_model.get(), srid}),
                     m_geos_factory(m_our_geos_factory.get()) {
                 }
 
                 explicit GEOSFactoryImpl(int srid) :
                     m_precision_model(new geos::geom::PrecisionModel),
-                    m_our_geos_factory(new geos::geom::GeometryFactory(m_precision_model.get(), srid)),
+                    m_our_geos_factory(new geos::geom::GeometryFactory{m_precision_model.get(), srid}),
                     m_geos_factory(m_our_geos_factory.get()) {
                 }
 
@@ -143,7 +143,7 @@ namespace osmium {
 
                 point_type make_point(const osmium::geom::Coordinates& xy) const {
                     try {
-                        return point_type(m_geos_factory->createPoint(geos::geom::Coordinate(xy.x, xy.y)));
+                        return point_type{m_geos_factory->createPoint(geos::geom::Coordinate{xy.x, xy.y})};
                     } catch (const geos::util::GEOSException& e) {
                         THROW(osmium::geos_geometry_error(e.what()));
                     }
@@ -153,7 +153,7 @@ namespace osmium {
 
                 void linestring_start() {
                     try {
-                        m_coordinate_sequence.reset(m_geos_factory->getCoordinateSequenceFactory()->create(static_cast<size_t>(0), 2));
+                        m_coordinate_sequence.reset(m_geos_factory->getCoordinateSequenceFactory()->create(static_cast<std::size_t>(0), 2));
                     } catch (const geos::util::GEOSException& e) {
                         THROW(osmium::geos_geometry_error(e.what()));
                     }
@@ -161,15 +161,15 @@ namespace osmium {
 
                 void linestring_add_location(const osmium::geom::Coordinates& xy) {
                     try {
-                        m_coordinate_sequence->add(geos::geom::Coordinate(xy.x, xy.y));
+                        m_coordinate_sequence->add(geos::geom::Coordinate{xy.x, xy.y});
                     } catch (const geos::util::GEOSException& e) {
                         THROW(osmium::geos_geometry_error(e.what()));
                     }
                 }
 
-                linestring_type linestring_finish(size_t /* num_points */) {
+                linestring_type linestring_finish(std::size_t /* num_points */) {
                     try {
-                        return linestring_type(m_geos_factory->createLineString(m_coordinate_sequence.release()));
+                        return linestring_type{m_geos_factory->createLineString(m_coordinate_sequence.release())};
                     } catch (const geos::util::GEOSException& e) {
                         THROW(osmium::geos_geometry_error(e.what()));
                     }
@@ -201,7 +201,7 @@ namespace osmium {
 
                 void multipolygon_outer_ring_start() {
                     try {
-                        m_coordinate_sequence.reset(m_geos_factory->getCoordinateSequenceFactory()->create(static_cast<size_t>(0), 2));
+                        m_coordinate_sequence.reset(m_geos_factory->getCoordinateSequenceFactory()->create(static_cast<std::size_t>(0), 2));
                     } catch (const geos::util::GEOSException& e) {
                         THROW(osmium::geos_geometry_error(e.what()));
                     }
@@ -217,7 +217,7 @@ namespace osmium {
 
                 void multipolygon_inner_ring_start() {
                     try {
-                        m_coordinate_sequence.reset(m_geos_factory->getCoordinateSequenceFactory()->create(static_cast<size_t>(0), 2));
+                        m_coordinate_sequence.reset(m_geos_factory->getCoordinateSequenceFactory()->create(static_cast<std::size_t>(0), 2));
                     } catch (const geos::util::GEOSException& e) {
                         THROW(osmium::geos_geometry_error(e.what()));
                     }
@@ -233,7 +233,7 @@ namespace osmium {
 
                 void multipolygon_add_location(const osmium::geom::Coordinates& xy) {
                     try {
-                        m_coordinate_sequence->add(geos::geom::Coordinate(xy.x, xy.y));
+                        m_coordinate_sequence->add(geos::geom::Coordinate{xy.x, xy.y});
                     } catch (const geos::util::GEOSException& e) {
                         THROW(osmium::geos_geometry_error(e.what()));
                     }
@@ -246,7 +246,7 @@ namespace osmium {
                             return p.release();
                         });
                         m_polygons.clear();
-                        return multipolygon_type(m_geos_factory->createMultiPolygon(polygons));
+                        return multipolygon_type{m_geos_factory->createMultiPolygon(polygons)};
                     } catch (const geos::util::GEOSException& e) {
                         THROW(osmium::geos_geometry_error(e.what()));
                     }

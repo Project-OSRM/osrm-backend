@@ -50,7 +50,7 @@ namespace osmium {
         inline int create_tmp_file() {
             FILE* file = ::tmpfile();
             if (!file) {
-                throw std::system_error(errno, std::system_category(), "tempfile failed");
+                throw std::system_error{errno, std::system_category(), "tempfile failed"};
             }
             return fileno(file);
         }

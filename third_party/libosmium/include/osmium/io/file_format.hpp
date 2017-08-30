@@ -40,13 +40,14 @@ namespace osmium {
     namespace io {
 
         enum class file_format {
-            unknown = 0,
-            xml     = 1,
-            pbf     = 2,
-            opl     = 3,
-            json    = 4,
-            o5m     = 5,
-            debug   = 6
+            unknown   = 0,
+            xml       = 1,
+            pbf       = 2,
+            opl       = 3,
+            json      = 4,
+            o5m       = 5,
+            debug     = 6,
+            blackhole = 7
         };
 
         enum class read_meta {
@@ -54,13 +55,8 @@ namespace osmium {
             yes = 1
         };
 
-// avoid g++ false positive
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wreturn-type"
         inline const char* as_string(file_format format) {
             switch (format) {
-                case file_format::unknown:
-                    return "unknown";
                 case file_format::xml:
                     return "XML";
                 case file_format::pbf:
@@ -73,9 +69,13 @@ namespace osmium {
                     return "O5M";
                 case file_format::debug:
                     return "DEBUG";
+                case file_format::blackhole:
+                    return "BLACKHOLE";
+                default: // file_format::unknown
+                    break;
             }
+            return "unknown";
         }
-#pragma GCC diagnostic pop
 
         template <typename TChar, typename TTraits>
         inline std::basic_ostream<TChar, TTraits>& operator<<(std::basic_ostream<TChar, TTraits>& out, const file_format format) {

@@ -87,11 +87,11 @@ TEST_CASE("WKB geometry factory (byte-order-dependant)") {
         const auto& wnl = create_test_wnl_same_location(buffer);
 
         SECTION("unique forwards (default)") {
-            REQUIRE_THROWS_AS(factory.create_linestring(wnl), osmium::geometry_error);
+            REQUIRE_THROWS_AS(factory.create_linestring(wnl), const osmium::geometry_error&);
         }
 
         SECTION("unique backwards") {
-            REQUIRE_THROWS_AS(factory.create_linestring(wnl, osmium::geom::use_nodes::unique, osmium::geom::direction::backward), osmium::geometry_error);
+            REQUIRE_THROWS_AS(factory.create_linestring(wnl, osmium::geom::use_nodes::unique, osmium::geom::direction::backward), const osmium::geometry_error&);
         }
 
         SECTION("all forwards") {
@@ -110,7 +110,7 @@ TEST_CASE("WKB geometry factory (byte-order-dependant)") {
 
         const auto& wnl = create_test_wnl_undefined_location(buffer);
 
-        REQUIRE_THROWS_AS(factory.create_linestring(wnl), osmium::invalid_location);
+        REQUIRE_THROWS_AS(factory.create_linestring(wnl), const osmium::invalid_location&);
     }
 
 }
@@ -122,17 +122,17 @@ TEST_CASE("WKB geometry (byte-order-independent)") {
     osmium::geom::WKBFactory<> factory{osmium::geom::wkb_type::wkb, osmium::geom::out_type::hex};
 
     SECTION("empty point") {
-        REQUIRE_THROWS_AS(factory.create_point(osmium::Location{}), osmium::invalid_location);
+        REQUIRE_THROWS_AS(factory.create_point(osmium::Location{}), const osmium::invalid_location&);
     }
 
     SECTION("empty linestring") {
         osmium::memory::Buffer buffer{10000};
         const auto& wnl = create_test_wnl_empty(buffer);
 
-        REQUIRE_THROWS_AS(factory.create_linestring(wnl), osmium::geometry_error);
-        REQUIRE_THROWS_AS(factory.create_linestring(wnl, osmium::geom::use_nodes::unique, osmium::geom::direction::backward), osmium::geometry_error);
-        REQUIRE_THROWS_AS(factory.create_linestring(wnl, osmium::geom::use_nodes::all), osmium::geometry_error);
-        REQUIRE_THROWS_AS(factory.create_linestring(wnl, osmium::geom::use_nodes::all, osmium::geom::direction::backward), osmium::geometry_error);
+        REQUIRE_THROWS_AS(factory.create_linestring(wnl), const osmium::geometry_error&);
+        REQUIRE_THROWS_AS(factory.create_linestring(wnl, osmium::geom::use_nodes::unique, osmium::geom::direction::backward), const osmium::geometry_error&);
+        REQUIRE_THROWS_AS(factory.create_linestring(wnl, osmium::geom::use_nodes::all), const osmium::geometry_error&);
+        REQUIRE_THROWS_AS(factory.create_linestring(wnl, osmium::geom::use_nodes::all, osmium::geom::direction::backward), const osmium::geometry_error&);
     }
 
 }

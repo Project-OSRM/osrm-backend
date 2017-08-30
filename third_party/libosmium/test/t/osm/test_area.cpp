@@ -75,7 +75,7 @@ TEST_CASE("Build area") {
     crc32.update(area);
     REQUIRE(crc32().checksum() == 0x2b2b7fa0);
 
-    osmium::Box envelope = area.envelope();
+    const osmium::Box envelope = area.envelope();
     REQUIRE(envelope.bottom_left().lon() == Approx(3.2));
     REQUIRE(envelope.bottom_left().lat() == Approx(4.2));
     REQUIRE(envelope.top_right().lon() == Approx(3.6));

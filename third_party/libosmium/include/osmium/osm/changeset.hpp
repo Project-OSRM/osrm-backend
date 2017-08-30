@@ -61,9 +61,9 @@ namespace osmium {
         friend class osmium::builder::ChangesetDiscussionBuilder;
 
         osmium::Timestamp m_date;
-        osmium::user_id_type m_uid {0};
+        osmium::user_id_type m_uid = 0;
+        changeset_comment_size_type m_text_size;
         string_size_type m_user_size;
-        string_size_type m_text_size;
 
         ChangesetComment(const ChangesetComment&) = delete;
         ChangesetComment(ChangesetComment&&) = delete;
@@ -94,7 +94,7 @@ namespace osmium {
             m_user_size = size;
         }
 
-        void set_text_size(string_size_type size) noexcept {
+        void set_text_size(changeset_comment_size_type size) noexcept {
             m_text_size = size;
         }
 
@@ -105,8 +105,8 @@ namespace osmium {
         ChangesetComment(osmium::Timestamp date, osmium::user_id_type uid) noexcept :
             m_date(date),
             m_uid(uid),
-            m_user_size(0),
-            m_text_size(0) {
+            m_text_size(0),
+            m_user_size(0) {
         }
 
         osmium::Timestamp date() const noexcept {
@@ -153,13 +153,13 @@ namespace osmium {
         osmium::Box       m_bounds;
         osmium::Timestamp m_created_at;
         osmium::Timestamp m_closed_at;
-        changeset_id_type m_id {0};
-        num_changes_type  m_num_changes {0};
-        num_comments_type m_num_comments {0};
-        user_id_type      m_uid {0};
-        string_size_type  m_user_size;
-        int16_t           m_padding1 {0};
-        int32_t           m_padding2 {0};
+        changeset_id_type m_id = 0;
+        num_changes_type  m_num_changes = 0;
+        num_comments_type m_num_comments = 0;
+        user_id_type      m_uid = 0;
+        string_size_type  m_user_size = 0;
+        int16_t           m_padding1 = 0;
+        int32_t           m_padding2 = 0;
 
         Changeset() :
             OSMEntity(sizeof(Changeset), osmium::item_type::changeset) {

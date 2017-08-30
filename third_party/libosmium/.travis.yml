@@ -141,6 +141,14 @@ matrix:
           packages: ['g++-6', 'libboost1.55-all-dev', 'libgdal-dev', 'libgeos++-dev', 'libproj-dev', 'libsparsehash-dev', 'spatialite-bin']
       env: COMPILER='g++-6' BUILD_TYPE='Dev'
 
+    - os: linux
+      compiler: linux-gcc6-coverage
+      addons:
+        apt:
+          sources: ['ubuntu-toolchain-r-test', 'boost-latest']
+          packages: ['g++-6', 'libboost1.55-all-dev', 'libgdal-dev', 'libgeos++-dev', 'libproj-dev', 'libsparsehash-dev', 'spatialite-bin']
+      env: COMPILER='g++-6' BUILD_TYPE='Coverage'
+
 
     # 3/ OSX Clang Builds
     - os: osx
@@ -166,12 +174,12 @@ matrix:
 
 
     - os: osx
-      osx_image: xcode8
+      osx_image: xcode8.3
       compiler: xcode8-clang-release
       env: COMPILER='clang++' BUILD_TYPE='Release'
 
     - os: osx
-      osx_image: xcode8
+      osx_image: xcode8.3
       compiler: xcode8-clang-dev
       env: COMPILER='clang++' BUILD_TYPE='Dev'
 
@@ -194,4 +202,17 @@ before_script:
 
 script:
   - make VERBOSE=1 && ctest --output-on-failure
+
+after_success:
+  - |
+    if [ "${BUILD_TYPE}" = "Coverage" ]; then
+      curl -S -f https://codecov.io/bash -o codecov
+      chmod +x codecov
+      gcov-${COMPILER#g++-} -p $(find test/CMakeFiles -name '*.o')
+      ./codecov -Z -c -F unit_tests
+      gcov-${COMPILER#g++-} -p $(find test/data-tests -name '*.o')
+      ./codecov -Z -c -F data_tests
+      gcov-${COMPILER#g++-} -p $(find examples -name '*.o')
+      ./codecov -Z -c -F examples
+    fi
 

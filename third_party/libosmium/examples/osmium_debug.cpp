@@ -44,10 +44,18 @@ int main(int argc, char* argv[]) {
     if (argc == 3) {
         read_types = osmium::osm_entity_bits::nothing;
         std::string types = argv[2];
-        if (types.find('n') != std::string::npos) read_types |= osmium::osm_entity_bits::node;
-        if (types.find('w') != std::string::npos) read_types |= osmium::osm_entity_bits::way;
-        if (types.find('r') != std::string::npos) read_types |= osmium::osm_entity_bits::relation;
-        if (types.find('c') != std::string::npos) read_types |= osmium::osm_entity_bits::changeset;
+        if (types.find('n') != std::string::npos) {
+            read_types |= osmium::osm_entity_bits::node;
+        }
+        if (types.find('w') != std::string::npos) {
+            read_types |= osmium::osm_entity_bits::way;
+        }
+        if (types.find('r') != std::string::npos) {
+            read_types |= osmium::osm_entity_bits::relation;
+        }
+        if (types.find('c') != std::string::npos) {
+            read_types |= osmium::osm_entity_bits::changeset;
+        }
     }
 
     // Initialize Reader with file name and the types of entities we want to

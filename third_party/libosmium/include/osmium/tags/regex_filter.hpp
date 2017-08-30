@@ -44,18 +44,19 @@ namespace osmium {
 
         template <>
         struct match_key<std::regex> {
-            bool operator()(const std::regex& rule_key, const char* tag_key) {
+            bool operator()(const std::regex& rule_key, const char* tag_key) const {
                 return std::regex_match(tag_key, rule_key);
             }
         }; // struct match_key<std::regex>
 
         template <>
         struct match_value<std::regex> {
-            bool operator()(const std::regex& rule_value, const char* tag_value) {
+            bool operator()(const std::regex& rule_value, const char* tag_value) const {
                 return std::regex_match(tag_value, rule_value);
             }
         }; // struct match_value<std::regex>
 
+        /// @deprecated Use osmium::TagsFilter instead.
         using RegexFilter = Filter<std::string, std::regex>;
 
     } // namespace tags

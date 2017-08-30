@@ -35,16 +35,12 @@ DEALINGS IN THE SOFTWARE.
 
 #include <algorithm>
 #include <cassert>
+#include <cstddef>
 #include <cstdint>
 #include <cstring>
-#include <new>
-#include <string>
-#include <type_traits>
 
 #include <osmium/memory/buffer.hpp>
 #include <osmium/memory/item.hpp>
-#include <osmium/osm/types.hpp>
-#include <osmium/util/cast.hpp>
 #include <osmium/util/compatibility.hpp>
 
 namespace osmium {
@@ -62,7 +58,7 @@ namespace osmium {
 
             osmium::memory::Buffer& m_buffer;
             Builder* m_parent;
-            size_t m_item_offset;
+            std::size_t m_item_offset;
 
             Builder(const Builder&) = delete;
             Builder(Builder&&) = delete;
@@ -101,7 +97,7 @@ namespace osmium {
                 return *reinterpret_cast<osmium::memory::Item*>(m_buffer.data() + m_item_offset);
             }
 
-            unsigned char* reserve_space(size_t size) {
+            unsigned char* reserve_space(std::size_t size) {
                 return m_buffer.reserve_space(size);
             }
 
@@ -119,7 +115,9 @@ namespace osmium {
              *
              */
             void add_padding(bool self = false) {
-                const auto padding = osmium::memory::align_bytes - (size() % osmium::memory::align_bytes);
+                // We know the padding is only a very small number, so it will
+                // always fit.
+                const auto padding = static_cast<osmium::memory::item_size_type>(osmium::memory::align_bytes - (size() % osmium::memory::align_bytes));
                 if (padding != osmium::memory::align_bytes) {
                     std::fill_n(reserve_space(padding), padding, 0);
                     if (self) {
@@ -131,7 +129,7 @@ namespace osmium {
                 }
             }
 
-            void add_size(uint32_t size) {
+            void add_size(osmium::memory::item_size_type size) {
                 item().add_size(size);
                 if (m_parent) {
                     m_parent->add_size(size);

@@ -35,6 +35,8 @@ DEALINGS IN THE SOFTWARE.
 
 #include <osmium/index/map.hpp> // IWYU pragma: keep
 
+#define OSMIUM_WANT_NODE_LOCATION_MAPS
+
 #ifdef OSMIUM_HAS_INDEX_MAP_DENSE_FILE_ARRAY
     REGISTER_MAP(osmium::unsigned_object_id_type, osmium::Location, osmium::index::map::DenseFileArray, dense_file_array)
 #endif
@@ -65,6 +67,10 @@ DEALINGS IN THE SOFTWARE.
 
 #ifdef OSMIUM_HAS_INDEX_MAP_SPARSE_MMAP_ARRAY
     REGISTER_MAP(osmium::unsigned_object_id_type, osmium::Location, osmium::index::map::SparseMmapArray, sparse_mmap_array)
+#endif
+
+#ifdef OSMIUM_HAS_INDEX_MAP_FLEX_MEM
+    REGISTER_MAP(osmium::unsigned_object_id_type, osmium::Location, osmium::index::map::FlexMem, flex_mem)
 #endif
 
 #endif // OSMIUM_INDEX_NODE_LOCATIONS_MAP_HPP

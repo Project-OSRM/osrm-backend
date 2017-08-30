@@ -78,7 +78,7 @@ namespace osmium {
             {
                 m_location_handler.ignore_errors();
                 if (m_with_areas) {
-                    osmium::io::Reader reader(file, osmium::osm_entity_bits::relation);
+                    osmium::io::Reader reader{file, osmium::osm_entity_bits::relation};
                     m_collector.read_relations(reader);
                     reader.close();
                 }

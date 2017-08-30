@@ -87,8 +87,6 @@ namespace osmium {
 
     inline item_type char_to_item_type(const char c) noexcept {
         switch (c) {
-            case 'X':
-                return item_type::undefined;
             case 'n':
                 return item_type::node;
             case 'w':
@@ -113,18 +111,14 @@ namespace osmium {
                 return item_type::inner_ring;
             case 'D':
                 return item_type::changeset_discussion;
-            default:
-                return item_type::undefined;
+            default: // 'X'
+                break;
         }
+        return item_type::undefined;
     }
 
-// avoid g++ false positive
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wreturn-type"
     inline char item_type_to_char(const item_type type) noexcept {
         switch (type) {
-            case item_type::undefined:
-                return 'X';
             case item_type::node:
                 return 'n';
             case item_type::way:
@@ -149,13 +143,14 @@ namespace osmium {
                 return 'I';
             case item_type::changeset_discussion:
                 return 'D';
+            default: // item_type::undefined
+                break;
         }
+        return 'X';
     }
 
     inline const char* item_type_to_name(const item_type type) noexcept {
         switch (type) {
-            case item_type::undefined:
-                return "undefined";
             case item_type::node:
                 return "node";
             case item_type::way:
@@ -180,9 +175,11 @@ namespace osmium {
                 return "inner_ring";
             case item_type::changeset_discussion:
                 return "changeset_discussion";
+            default: // item_type::undefined
+                break;
         }
+        return "undefined";
     }
-#pragma GCC diagnostic pop
 
     template <typename TChar, typename TTraits>
     inline std::basic_ostream<TChar, TTraits>& operator<<(std::basic_ostream<TChar, TTraits>& out, const item_type item_type) {

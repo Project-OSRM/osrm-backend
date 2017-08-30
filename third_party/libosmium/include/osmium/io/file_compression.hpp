@@ -45,20 +45,17 @@ namespace osmium {
             bzip2 = 2
         };
 
-// avoid g++ false positive
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wreturn-type"
         inline const char* as_string(file_compression compression) {
             switch (compression) {
-                case file_compression::none:
-                    return "none";
                 case file_compression::gzip:
                     return "gzip";
                 case file_compression::bzip2:
                     return "bzip2";
+                default: // file_compression::none:
+                    break;
             }
+            return "none";
         }
-#pragma GCC diagnostic pop
 
         template <typename TChar, typename TTraits>
         inline std::basic_ostream<TChar, TTraits>& operator<<(std::basic_ostream<TChar, TTraits>& out, const file_compression compression) {

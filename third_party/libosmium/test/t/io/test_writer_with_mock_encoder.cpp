@@ -17,8 +17,8 @@ class MockOutputFormat : public osmium::io::detail::OutputFormat {
 
 public:
 
-    MockOutputFormat(const osmium::io::File&, osmium::io::detail::future_string_queue_type& output_queue, const std::string& fail_in) :
-        OutputFormat(output_queue),
+    MockOutputFormat(osmium::thread::Pool& pool, const osmium::io::File&, osmium::io::detail::future_string_queue_type& output_queue, const std::string& fail_in) :
+        OutputFormat(pool, output_queue),
         m_fail_in(fail_in) {
     }
 
@@ -51,8 +51,8 @@ TEST_CASE("Test Writer with MockOutputFormat") {
 
     osmium::io::detail::OutputFormatFactory::instance().register_output_format(
         osmium::io::file_format::xml,
-        [&](const osmium::io::File& file, osmium::io::detail::future_string_queue_type& output_queue) {
-            return new MockOutputFormat(file, output_queue, fail_in);
+        [&](osmium::thread::Pool& pool, const osmium::io::File& file, osmium::io::detail::future_string_queue_type& output_queue) {
+            return new MockOutputFormat{pool, file, output_queue, fail_in};
     });
 
     osmium::io::Header header;
@@ -68,11 +68,11 @@ TEST_CASE("Test Writer with MockOutputFormat") {
 
         fail_in = "header";
 
-        REQUIRE_THROWS_AS({
+        REQUIRE_THROWS_AS([&](){
             osmium::io::Writer writer("test-writer-mock-fail-on-construction.osm", header, osmium::io::overwrite::allow);
             writer(std::move(buffer));
             writer.close();
-        }, std::logic_error);
+        }(), const std::logic_error&);
 
     }
 
@@ -80,11 +80,11 @@ TEST_CASE("Test Writer with MockOutputFormat") {
 
         fail_in = "write";
 
-        REQUIRE_THROWS_AS({
+        REQUIRE_THROWS_AS([&](){
             osmium::io::Writer writer("test-writer-mock-fail-on-construction.osm", header, osmium::io::overwrite::allow);
             writer(std::move(buffer));
             writer.close();
-        }, std::logic_error);
+        }(), const std::logic_error&);
 
     }
 
@@ -92,11 +92,11 @@ TEST_CASE("Test Writer with MockOutputFormat") {
 
         fail_in = "write_end";
 
-        REQUIRE_THROWS_AS({
+        REQUIRE_THROWS_AS([&](){
             osmium::io::Writer writer("test-writer-mock-fail-on-construction.osm", header, osmium::io::overwrite::allow);
             writer(std::move(buffer));
             writer.close();
-        }, std::logic_error);
+        }(), const std::logic_error&);
 
     }
 

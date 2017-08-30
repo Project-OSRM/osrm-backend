@@ -33,7 +33,10 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <algorithm>
 #include <cassert>
+#include <cstdint>
+#include <cstddef>
 #include <cstring>
 #include <initializer_list>
 #include <limits>
@@ -43,24 +46,24 @@ DEALINGS IN THE SOFTWARE.
 #include <utility>
 
 #include <osmium/builder/builder.hpp>
+#include <osmium/memory/item.hpp>
+#include <osmium/osm/area.hpp>
+#include <osmium/osm/box.hpp>
+#include <osmium/osm/changeset.hpp>
 #include <osmium/osm/item_type.hpp>
 #include <osmium/osm/location.hpp>
 #include <osmium/osm/node.hpp>
 #include <osmium/osm/node_ref.hpp>
 #include <osmium/osm/object.hpp>
-#include <osmium/osm/tag.hpp>
-#include <osmium/osm/types.hpp>
-#include <osmium/memory/item.hpp>
-#include <osmium/osm/area.hpp>
-#include <osmium/osm/changeset.hpp>
 #include <osmium/osm/relation.hpp>
+#include <osmium/osm/tag.hpp>
 #include <osmium/osm/timestamp.hpp>
+#include <osmium/osm/types.hpp>
 #include <osmium/osm/way.hpp>
+#include <osmium/util/cast.hpp>
 #include <osmium/util/compatibility.hpp>
 
 namespace osmium {
-
-    class Node;
 
     namespace memory {
         class Buffer;
@@ -74,12 +77,12 @@ namespace osmium {
 
             explicit TagListBuilder(osmium::memory::Buffer& buffer, Builder* parent = nullptr) :
                 Builder(buffer, parent, sizeof(TagList)) {
-                new (&item()) TagList();
+                new (&item()) TagList{};
             }
 
             explicit TagListBuilder(Builder& parent) :
                 Builder(parent.buffer(), &parent, sizeof(TagList)) {
-                new (&item()) TagList();
+                new (&item()) TagList{};
             }
 
             ~TagListBuilder() {
@@ -94,10 +97,10 @@ namespace osmium {
              */
             void add_tag(const char* key, const char* value) {
                 if (std::strlen(key) > osmium::max_osm_string_length) {
-                    throw std::length_error("OSM tag key is too long");
+                    throw std::length_error{"OSM tag key is too long"};
                 }
                 if (std::strlen(value) > osmium::max_osm_string_length) {
-                    throw std::length_error("OSM tag value is too long");
+                    throw std::length_error{"OSM tag value is too long"};
                 }
                 add_size(append(key));
                 add_size(append(value));
@@ -111,12 +114,12 @@ namespace osmium {
              * @param value Pointer to tag value.
              * @param value_length Length of value (not including the \0 byte).
              */
-            void add_tag(const char* key, const size_t key_length, const char* value, const size_t value_length) {
+            void add_tag(const char* key, const std::size_t key_length, const char* value, const std::size_t value_length) {
                 if (key_length > osmium::max_osm_string_length) {
-                    throw std::length_error("OSM tag key is too long");
+                    throw std::length_error{"OSM tag key is too long"};
                 }
                 if (value_length > osmium::max_osm_string_length) {
-                    throw std::length_error("OSM tag value is too long");
+                    throw std::length_error{"OSM tag value is too long"};
                 }
                 add_size(append_with_zero(key,   osmium::memory::item_size_type(key_length)));
                 add_size(append_with_zero(value, osmium::memory::item_size_type(value_length)));
@@ -130,10 +133,10 @@ namespace osmium {
              */
             void add_tag(const std::string& key, const std::string& value) {
                 if (key.size() > osmium::max_osm_string_length) {
-                    throw std::length_error("OSM tag key is too long");
+                    throw std::length_error{"OSM tag key is too long"};
                 }
                 if (value.size() > osmium::max_osm_string_length) {
-                    throw std::length_error("OSM tag value is too long");
+                    throw std::length_error{"OSM tag value is too long"};
                 }
                 add_size(append(key.data(),   osmium::memory::item_size_type(key.size())   + 1));
                 add_size(append(value.data(), osmium::memory::item_size_type(value.size()) + 1));
@@ -185,12 +188,12 @@ namespace osmium {
 
             explicit NodeRefListBuilder(osmium::memory::Buffer& buffer, Builder* parent = nullptr) :
                 Builder(buffer, parent, sizeof(T)) {
-                new (&item()) T();
+                new (&item()) T{};
             }
 
             explicit NodeRefListBuilder(Builder& parent) :
                 Builder(parent.buffer(), &parent, sizeof(T)) {
-                new (&item()) T();
+                new (&item()) T{};
             }
 
             ~NodeRefListBuilder() {
@@ -198,12 +201,12 @@ namespace osmium {
             }
 
             void add_node_ref(const NodeRef& node_ref) {
-                new (reserve_space_for<osmium::NodeRef>()) osmium::NodeRef(node_ref);
+                new (reserve_space_for<osmium::NodeRef>()) osmium::NodeRef{node_ref};
                 add_size(sizeof(osmium::NodeRef));
             }
 
             void add_node_ref(const object_id_type ref, const osmium::Location& location = Location{}) {
-                add_node_ref(NodeRef(ref, location));
+                add_node_ref(NodeRef{ref, location});
             }
 
         }; // class NodeRefListBuilder
@@ -223,9 +226,9 @@ namespace osmium {
              * @param length Length of role (without \0 termination).
              * @throws std:length_error If role is longer than osmium::max_osm_string_length
              */
-            void add_role(osmium::RelationMember& member, const char* role, const size_t length) {
+            void add_role(osmium::RelationMember& member, const char* role, const std::size_t length) {
                 if (length > osmium::max_osm_string_length) {
-                    throw std::length_error("OSM relation member role is too long");
+                    throw std::length_error{"OSM relation member role is too long"};
                 }
                 member.set_role_size(osmium::string_size_type(length) + 1);
                 add_size(append_with_zero(role, osmium::memory::item_size_type(length)));
@@ -236,12 +239,12 @@ namespace osmium {
 
             explicit RelationMemberListBuilder(osmium::memory::Buffer& buffer, Builder* parent = nullptr) :
                 Builder(buffer, parent, sizeof(RelationMemberList)) {
-                new (&item()) RelationMemberList();
+                new (&item()) RelationMemberList{};
             }
 
             explicit RelationMemberListBuilder(Builder& parent) :
                 Builder(parent.buffer(), &parent, sizeof(RelationMemberList)) {
-                new (&item()) RelationMemberList();
+                new (&item()) RelationMemberList{};
             }
 
             ~RelationMemberListBuilder() {
@@ -261,9 +264,9 @@ namespace osmium {
              * @throws std:length_error If role_length is greater than
              *         osmium::max_osm_string_length
              */
-            void add_member(osmium::item_type type, object_id_type ref, const char* role, const size_t role_length, const osmium::OSMObject* full_member = nullptr) {
+            void add_member(osmium::item_type type, object_id_type ref, const char* role, const std::size_t role_length, const osmium::OSMObject* full_member = nullptr) {
                 osmium::RelationMember* member = reserve_space_for<osmium::RelationMember>();
-                new (member) osmium::RelationMember(ref, type, full_member != nullptr);
+                new (member) osmium::RelationMember{ref, type, full_member != nullptr};
                 add_size(sizeof(RelationMember));
                 add_role(*member, role, role_length);
                 if (full_member) {
@@ -307,23 +310,19 @@ namespace osmium {
 
             osmium::ChangesetComment* m_comment = nullptr;
 
-            void add_user(osmium::ChangesetComment& comment, const char* user, const size_t length) {
+            void add_user(osmium::ChangesetComment& comment, const char* user, const std::size_t length) {
                 if (length > osmium::max_osm_string_length) {
-                    throw std::length_error("OSM user name is too long");
+                    throw std::length_error{"OSM user name is too long"};
                 }
                 comment.set_user_size(osmium::string_size_type(length) + 1);
                 add_size(append_with_zero(user, osmium::memory::item_size_type(length)));
             }
 
-            void add_text(osmium::ChangesetComment& comment, const char* text, const size_t length) {
-                // XXX There is no limit on the length of a comment text. We
-                // limit it here to 2^16-2 characters, because that's all that
-                // will fit into our internal data structure. This is not ideal,
-                // and will have to be discussed and cleared up.
-                if (length > std::numeric_limits<osmium::string_size_type>::max() - 1) {
-                    throw std::length_error("OSM changeset comment is too long");
+            void add_text(osmium::ChangesetComment& comment, const char* text, const std::size_t length) {
+                if (length > std::numeric_limits<osmium::changeset_comment_size_type>::max() - 1) {
+                    throw std::length_error{"OSM changeset comment is too long"};
                 }
-                comment.set_text_size(osmium::string_size_type(length) + 1);
+                comment.set_text_size(osmium::changeset_comment_size_type(length) + 1);
                 add_size(append_with_zero(text, osmium::memory::item_size_type(length)));
                 add_padding(true);
             }
@@ -332,12 +331,12 @@ namespace osmium {
 
             explicit ChangesetDiscussionBuilder(osmium::memory::Buffer& buffer, Builder* parent = nullptr) :
                 Builder(buffer, parent, sizeof(ChangesetDiscussion)) {
-                new (&item()) ChangesetDiscussion();
+                new (&item()) ChangesetDiscussion{};
             }
 
             explicit ChangesetDiscussionBuilder(Builder& parent) :
                 Builder(parent.buffer(), &parent, sizeof(ChangesetDiscussion)) {
-                new (&item()) ChangesetDiscussion();
+                new (&item()) ChangesetDiscussion{};
             }
 
             ~ChangesetDiscussionBuilder() {
@@ -348,21 +347,23 @@ namespace osmium {
             void add_comment(osmium::Timestamp date, osmium::user_id_type uid, const char* user) {
                 assert(!m_comment && "You have to always call both add_comment() and then add_comment_text() in that order for each comment!");
                 m_comment = reserve_space_for<osmium::ChangesetComment>();
-                new (m_comment) osmium::ChangesetComment(date, uid);
+                new (m_comment) osmium::ChangesetComment{date, uid};
                 add_size(sizeof(ChangesetComment));
                 add_user(*m_comment, user, std::strlen(user));
             }
 
             void add_comment_text(const char* text) {
                 assert(m_comment && "You have to always call both add_comment() and then add_comment_text() in that order for each comment!");
-                add_text(*m_comment, text, std::strlen(text));
+                osmium::ChangesetComment& comment = *m_comment;
                 m_comment = nullptr;
+                add_text(comment, text, std::strlen(text));
             }
 
             void add_comment_text(const std::string& text) {
                 assert(m_comment && "You have to always call both add_comment() and then add_comment_text() in that order for each comment!");
-                add_text(*m_comment, text.c_str(), text.size());
+                osmium::ChangesetComment& comment = *m_comment;
                 m_comment = nullptr;
+                add_text(comment, text.c_str(), text.size());
             }
 
         }; // class ChangesetDiscussionBuilder
@@ -379,13 +380,13 @@ namespace osmium {
 
             using type = TDerived;
 
-            constexpr static const size_t min_size_for_user = osmium::memory::padded_length(sizeof(string_size_type) + 1);
+            constexpr static const std::size_t min_size_for_user = osmium::memory::padded_length(sizeof(string_size_type) + 1);
 
         public:
 
             explicit OSMObjectBuilder(osmium::memory::Buffer& buffer, Builder* parent = nullptr) :
                 Builder(buffer, parent, sizeof(T) + min_size_for_user) {
-                new (&item()) T();
+                new (&item()) T{};
                 add_size(min_size_for_user);
                 std::fill_n(object().data() + sizeof(T), min_size_for_user, 0);
                 object().set_user_size(1);
@@ -403,6 +404,17 @@ namespace osmium {
             }
 
             /**
+             * Get a const reference to the object buing built.
+             *
+             * Note that this reference will be invalidated by every action
+             * on the builder that might make the buffer grow. This includes
+             * calls to set_user() and any time a new sub-builder is created.
+             */
+            const T& cobject() const noexcept {
+                return static_cast<const T&>(item());
+            }
+
+            /**
              * Set user name.
              *
              * @param user Pointer to user name.
@@ -410,7 +422,7 @@ namespace osmium {
              */
             TDerived& set_user(const char* user, const string_size_type length) {
                 const auto size_of_object = sizeof(T) + sizeof(string_size_type);
-                assert(object().user_size() == 1 && (size() <= size_of_object + osmium::memory::padded_length(1))
+                assert(cobject().user_size() == 1 && (size() <= size_of_object + osmium::memory::padded_length(1))
                        && "set_user() must be called at most once and before any sub-builders");
                 const auto available_space = min_size_for_user - sizeof(string_size_type) - 1;
                 if (length > available_space) {
@@ -558,13 +570,13 @@ namespace osmium {
 
             using type = ChangesetBuilder;
 
-            constexpr static const size_t min_size_for_user = osmium::memory::padded_length(1);
+            constexpr static const std::size_t min_size_for_user = osmium::memory::padded_length(1);
 
         public:
 
             explicit ChangesetBuilder(osmium::memory::Buffer& buffer, Builder* parent = nullptr) :
                 Builder(buffer, parent, sizeof(Changeset) + min_size_for_user) {
-                new (&item()) Changeset();
+                new (&item()) Changeset{};
                 add_size(min_size_for_user);
                 std::fill_n(object().data() + sizeof(Changeset), min_size_for_user, 0);
                 object().set_user_size(1);
@@ -579,6 +591,17 @@ namespace osmium {
              */
             Changeset& object() noexcept {
                 return static_cast<Changeset&>(item());
+            }
+
+            /**
+             * Get a const reference to the changeset buing built.
+             *
+             * Note that this reference will be invalidated by every action
+             * on the builder that might make the buffer grow. This includes
+             * calls to set_user() and any time a new sub-builder is created.
+             */
+            const Changeset& cobject() const noexcept {
+                return static_cast<const Changeset&>(item());
             }
 
             OSMIUM_FORWARD(set_id)
@@ -608,7 +631,7 @@ namespace osmium {
              * @param length Length of user name (without \0 termination).
              */
             ChangesetBuilder& set_user(const char* user, const string_size_type length) {
-                assert(object().user_size() == 1 && (size() <= sizeof(Changeset) + osmium::memory::padded_length(1))
+                assert(cobject().user_size() == 1 && (size() <= sizeof(Changeset) + osmium::memory::padded_length(1))
                        && "set_user() must be called at most once and before any sub-builders");
                 const auto available_space = min_size_for_user - 1;
                 if (length > available_space) {

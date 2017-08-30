@@ -11,6 +11,72 @@
 
 using namespace osmium::builder::attr;
 
+TEST_CASE("Object ID comparisons") {
+    osmium::object_id_type a =   0;
+    osmium::object_id_type b =  -1;
+    osmium::object_id_type c = -10;
+    osmium::object_id_type d = -11;
+    osmium::object_id_type e =   1;
+    osmium::object_id_type f =  11;
+    osmium::object_id_type g =  12;
+
+    REQUIRE_FALSE(osmium::id_order{}(a, a));
+    REQUIRE(osmium::id_order{}(a, b));
+    REQUIRE(osmium::id_order{}(a, c));
+    REQUIRE(osmium::id_order{}(a, d));
+    REQUIRE(osmium::id_order{}(a, e));
+    REQUIRE(osmium::id_order{}(a, f));
+    REQUIRE(osmium::id_order{}(a, g));
+
+    REQUIRE_FALSE(osmium::id_order{}(b, a));
+    REQUIRE_FALSE(osmium::id_order{}(b, b));
+    REQUIRE(osmium::id_order{}(b, c));
+    REQUIRE(osmium::id_order{}(b, d));
+    REQUIRE(osmium::id_order{}(b, e));
+    REQUIRE(osmium::id_order{}(b, f));
+    REQUIRE(osmium::id_order{}(b, g));
+
+    REQUIRE_FALSE(osmium::id_order{}(c, a));
+    REQUIRE_FALSE(osmium::id_order{}(c, b));
+    REQUIRE_FALSE(osmium::id_order{}(c, c));
+    REQUIRE(osmium::id_order{}(c, d));
+    REQUIRE(osmium::id_order{}(c, e));
+    REQUIRE(osmium::id_order{}(c, f));
+    REQUIRE(osmium::id_order{}(c, g));
+
+    REQUIRE_FALSE(osmium::id_order{}(d, a));
+    REQUIRE_FALSE(osmium::id_order{}(d, b));
+    REQUIRE_FALSE(osmium::id_order{}(d, c));
+    REQUIRE_FALSE(osmium::id_order{}(d, d));
+    REQUIRE(osmium::id_order{}(d, e));
+    REQUIRE(osmium::id_order{}(d, f));
+    REQUIRE(osmium::id_order{}(d, g));
+
+    REQUIRE_FALSE(osmium::id_order{}(e, a));
+    REQUIRE_FALSE(osmium::id_order{}(e, b));
+    REQUIRE_FALSE(osmium::id_order{}(e, c));
+    REQUIRE_FALSE(osmium::id_order{}(e, d));
+    REQUIRE_FALSE(osmium::id_order{}(e, e));
+    REQUIRE(osmium::id_order{}(e, f));
+    REQUIRE(osmium::id_order{}(e, g));
+
+    REQUIRE_FALSE(osmium::id_order{}(f, a));
+    REQUIRE_FALSE(osmium::id_order{}(f, b));
+    REQUIRE_FALSE(osmium::id_order{}(f, c));
+    REQUIRE_FALSE(osmium::id_order{}(f, d));
+    REQUIRE_FALSE(osmium::id_order{}(f, e));
+    REQUIRE_FALSE(osmium::id_order{}(f, f));
+    REQUIRE(osmium::id_order{}(f, g));
+
+    REQUIRE_FALSE(osmium::id_order{}(g, a));
+    REQUIRE_FALSE(osmium::id_order{}(g, b));
+    REQUIRE_FALSE(osmium::id_order{}(g, c));
+    REQUIRE_FALSE(osmium::id_order{}(g, d));
+    REQUIRE_FALSE(osmium::id_order{}(g, e));
+    REQUIRE_FALSE(osmium::id_order{}(g, f));
+    REQUIRE_FALSE(osmium::id_order{}(g, g));
+}
+
 TEST_CASE("Node comparisons") {
 
     osmium::memory::Buffer buffer(10 * 1000);
@@ -38,12 +104,12 @@ TEST_CASE("Node comparisons") {
         REQUIRE_FALSE(nodes[0] > nodes[1]);
     }
 
-    SECTION("IDs are ordered by absolute value") {
+    SECTION("IDs are ordered by sign and then absolute value") {
         nodes.emplace_back(buffer.get<osmium::Node>(osmium::builder::add_node(buffer, _id(  0))));
-        nodes.emplace_back(buffer.get<osmium::Node>(osmium::builder::add_node(buffer, _id(  1))));
         nodes.emplace_back(buffer.get<osmium::Node>(osmium::builder::add_node(buffer, _id( -1))));
-        nodes.emplace_back(buffer.get<osmium::Node>(osmium::builder::add_node(buffer, _id( 10))));
         nodes.emplace_back(buffer.get<osmium::Node>(osmium::builder::add_node(buffer, _id(-10))));
+        nodes.emplace_back(buffer.get<osmium::Node>(osmium::builder::add_node(buffer, _id(  1))));
+        nodes.emplace_back(buffer.get<osmium::Node>(osmium::builder::add_node(buffer, _id( 10))));
 
         REQUIRE(std::is_sorted(nodes.cbegin(), nodes.cend()));
     }

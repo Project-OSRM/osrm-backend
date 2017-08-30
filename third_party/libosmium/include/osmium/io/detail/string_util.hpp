@@ -134,10 +134,10 @@ namespace osmium {
             // Write out the value with four or more hex digits.
             inline void append_min_4_hex_digits(std::string& out, uint32_t value, const char* const hex_digits) {
                 auto
-                v = value & 0xf0000000; if (v) out += hex_digits[v >> 28];
-                v = value & 0x0f000000; if (v) out += hex_digits[v >> 24];
-                v = value & 0x00f00000; if (v) out += hex_digits[v >> 20];
-                v = value & 0x000f0000; if (v) out += hex_digits[v >> 16];
+                v = value & 0xf0000000; if (v) { out += hex_digits[v >> 28]; }
+                v = value & 0x0f000000; if (v) { out += hex_digits[v >> 24]; }
+                v = value & 0x00f00000; if (v) { out += hex_digits[v >> 20]; }
+                v = value & 0x000f0000; if (v) { out += hex_digits[v >> 16]; }
 
                 out += hex_digits[(value >> 12) & 0xf];
                 out += hex_digits[(value >>  8) & 0xf];
@@ -181,7 +181,7 @@ namespace osmium {
 
             inline void append_xml_encoded_string(std::string& out, const char* data) {
                 for (; *data != '\0'; ++data) {
-                    switch(*data) {
+                    switch (*data) {
                         case '&':  out += "&amp;";  break;
                         case '\"': out += "&quot;"; break;
                         case '\'': out += "&apos;"; break;

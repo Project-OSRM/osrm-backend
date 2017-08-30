@@ -141,14 +141,15 @@ namespace osmium {
                 }
 
                 void write_location(const osmium::Location& location, const char x, const char y) {
+                    const bool not_undefined = !location.is_undefined();
                     *m_out += ' ';
                     *m_out += x;
-                    if (location) {
+                    if (not_undefined) {
                         osmium::detail::append_location_coordinate_to_string(std::back_inserter(*m_out), location.x());
                     }
                     *m_out += ' ';
                     *m_out += y;
-                    if (location) {
+                    if (not_undefined) {
                         osmium::detail::append_location_coordinate_to_string(std::back_inserter(*m_out), location.y());
                     }
                 }
@@ -283,8 +284,8 @@ namespace osmium {
 
             public:
 
-                OPLOutputFormat(const osmium::io::File& file, future_string_queue_type& output_queue) :
-                    OutputFormat(output_queue),
+                OPLOutputFormat(osmium::thread::Pool& pool, const osmium::io::File& file, future_string_queue_type& output_queue) :
+                    OutputFormat(pool, output_queue),
                     m_options() {
                     m_options.add_metadata      = file.is_not_false("add_metadata");
                     m_options.locations_on_ways = file.is_true("locations_on_ways");
@@ -297,7 +298,7 @@ namespace osmium {
                 ~OPLOutputFormat() noexcept final = default;
 
                 void write_buffer(osmium::memory::Buffer&& buffer) final {
-                    m_output_queue.push(osmium::thread::Pool::instance().submit(OPLOutputBlock{std::move(buffer), m_options}));
+                    m_output_queue.push(m_pool.submit(OPLOutputBlock{std::move(buffer), m_options}));
                 }
 
             }; // class OPLOutputFormat
@@ -305,8 +306,8 @@ namespace osmium {
             // we want the register_output_format() function to run, setting
             // the variable is only a side-effect, it will never be used
             const bool registered_opl_output = osmium::io::detail::OutputFormatFactory::instance().register_output_format(osmium::io::file_format::opl,
-                [](const osmium::io::File& file, future_string_queue_type& output_queue) {
-                    return new osmium::io::detail::OPLOutputFormat(file, output_queue);
+                [](osmium::thread::Pool& pool, const osmium::io::File& file, future_string_queue_type& output_queue) {
+                    return new osmium::io::detail::OPLOutputFormat(pool, file, output_queue);
             });
 
             // dummy function to silence the unused variable warning from above

@@ -55,6 +55,10 @@ namespace osmium {
 
 } // namespace osmium
 
+#ifdef OSMIUM_WANT_NODE_LOCATION_MAPS
+    REGISTER_MAP(osmium::unsigned_object_id_type, osmium::Location, osmium::index::map::DenseMmapArray, dense_mmap_array)
+#endif
+
 #endif // __linux__
 
 #endif // OSMIUM_INDEX_MAP_DENSE_MMAP_ARRAY_HPP

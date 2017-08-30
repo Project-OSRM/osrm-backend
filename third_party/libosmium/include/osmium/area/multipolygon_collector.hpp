@@ -81,7 +81,7 @@ namespace osmium {
 
             osmium::memory::Buffer m_output_buffer;
 
-            osmium::area::area_stats m_stats;
+            area_stats m_stats;
 
             static constexpr size_t initial_output_buffer_size = 1024 * 1024;
             static constexpr size_t max_buffer_size_for_flush = 100 * 1024;
@@ -109,7 +109,7 @@ namespace osmium {
                 m_output_buffer(initial_output_buffer_size, osmium::memory::Buffer::auto_grow::yes) {
             }
 
-            const osmium::area::area_stats& stats() const noexcept {
+            const area_stats& stats() const noexcept {
                 return m_stats;
             }
 
@@ -127,11 +127,7 @@ namespace osmium {
                     return false;
                 }
 
-                if ((!std::strcmp(type, "multipolygon")) || (!std::strcmp(type, "boundary"))) {
-                    return true;
-                }
-
-                return false;
+                return (!std::strcmp(type, "multipolygon")) || (!std::strcmp(type, "boundary"));
             }
 
             /**
@@ -155,11 +151,11 @@ namespace osmium {
                 }
                 try {
                     if (!way.nodes().front().location() || !way.nodes().back().location()) {
-                        throw osmium::invalid_location("invalid location");
+                        throw osmium::invalid_location{"invalid location"};
                     }
                     if (way.ends_have_same_location()) {
                         // way is closed and has enough nodes, build simple multipolygon
-                        TAssembler assembler(m_assembler_config);
+                        TAssembler assembler{m_assembler_config};
                         assembler(way, m_output_buffer);
                         m_stats += assembler.stats();
                         possibly_flush_output_buffer();
@@ -174,6 +170,7 @@ namespace osmium {
                 const osmium::memory::Buffer& buffer = this->members_buffer();
 
                 std::vector<const osmium::Way*> ways;
+                ways.reserve(relation.members().size());
                 for (const auto& member : relation.members()) {
                     if (member.ref() != 0) {
                         const size_t offset = this->get_offset(member.type(), member.ref());
@@ -182,7 +179,7 @@ namespace osmium {
                 }
 
                 try {
-                    TAssembler assembler(m_assembler_config);
+                    TAssembler assembler{m_assembler_config};
                     assembler(relation, ways, m_output_buffer);
                     m_stats += assembler.stats();
                     possibly_flush_output_buffer();

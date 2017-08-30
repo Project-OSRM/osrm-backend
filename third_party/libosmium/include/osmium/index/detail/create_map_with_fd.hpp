@@ -50,15 +50,15 @@ namespace osmium {
             template <typename T>
             inline T* create_map_with_fd(const std::vector<std::string>& config) {
                 if (config.size() == 1) {
-                    return new T();
+                    return new T{};
                 }
                 assert(config.size() > 1);
                 const std::string& filename = config[1];
                 const int fd = ::open(filename.c_str(), O_CREAT | O_RDWR, 0644);
                 if (fd == -1) {
-                    throw std::runtime_error(std::string("can't open file '") + filename + "': " + std::strerror(errno));
+                    throw std::runtime_error{std::string{"can't open file '"} + filename + "': " + std::strerror(errno)};
                 }
-                return new T(fd);
+                return new T{fd};
             }
 
         } // namespace detail

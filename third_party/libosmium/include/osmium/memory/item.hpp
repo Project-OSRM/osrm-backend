@@ -59,7 +59,7 @@ namespace osmium {
         using item_size_type = uint32_t;
 
         // align datastructures to this many bytes
-        constexpr const item_size_type align_bytes = 8;
+        constexpr const std::size_t align_bytes = 8;
 
         inline constexpr std::size_t padded_length(std::size_t length) noexcept {
             return (length + align_bytes - 1) & ~(align_bytes - 1);

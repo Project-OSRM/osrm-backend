@@ -33,8 +33,8 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <osmium/memory/buffer.hpp>
 #include <osmium/io/detail/opl_parser_functions.hpp>
+#include <osmium/memory/buffer.hpp>
 
 namespace osmium {
 

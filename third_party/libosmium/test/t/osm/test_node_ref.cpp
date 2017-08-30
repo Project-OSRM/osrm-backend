@@ -6,30 +6,30 @@
 #include <osmium/osm/node_ref_list.hpp>
 
 TEST_CASE("Default construct a NodeRef") {
-    osmium::NodeRef node_ref;
+    const osmium::NodeRef node_ref;
     REQUIRE(node_ref.ref() == 0);
     REQUIRE(node_ref.location() == osmium::Location{});
 }
 
 TEST_CASE("Construct a NodeRef with an id") {
-    osmium::NodeRef node_ref{7};
+    const osmium::NodeRef node_ref{7};
     REQUIRE(node_ref.ref() == 7);
 }
 
 TEST_CASE("Equality comparison fo NodeRefs") {
-    osmium::NodeRef node_ref1{7, {1.2, 3.4}};
-    osmium::NodeRef node_ref2{7, {1.4, 3.1}};
-    osmium::NodeRef node_ref3{9, {1.2, 3.4}};
+    const osmium::NodeRef node_ref1{7, {1.2, 3.4}};
+    const osmium::NodeRef node_ref2{7, {1.4, 3.1}};
+    const osmium::NodeRef node_ref3{9, {1.2, 3.4}};
     REQUIRE(node_ref1 == node_ref2);
     REQUIRE(node_ref1 != node_ref3);
-    REQUIRE(!osmium::location_equal()(node_ref1, node_ref2));
-    REQUIRE(!osmium::location_equal()(node_ref2, node_ref3));
-    REQUIRE(osmium::location_equal()(node_ref1, node_ref3));
+    REQUIRE_FALSE(osmium::location_equal()(node_ref1, node_ref2));
+    REQUIRE_FALSE(osmium::location_equal()(node_ref2, node_ref3));
+    REQUIRE(      osmium::location_equal()(node_ref1, node_ref3));
 }
 
 TEST_CASE("Set location on a NodeRef") {
     osmium::NodeRef node_ref{7};
-    REQUIRE(!node_ref.location().valid());
+    REQUIRE_FALSE(node_ref.location().valid());
     REQUIRE(node_ref.location() == osmium::Location());
     node_ref.set_location(osmium::Location(13.5, -7.2));
     REQUIRE(node_ref.location().lon() == 13.5);
@@ -37,10 +37,10 @@ TEST_CASE("Set location on a NodeRef") {
 }
 
 TEST_CASE("Ordering of NodeRefs") {
-    osmium::NodeRef node_ref1{1, {1.0, 3.0}};
-    osmium::NodeRef node_ref2{2, {1.4, 2.9}};
-    osmium::NodeRef node_ref3{3, {1.2, 3.0}};
-    osmium::NodeRef node_ref4{4, {1.2, 3.3}};
+    const osmium::NodeRef node_ref1{1, {1.0, 3.0}};
+    const osmium::NodeRef node_ref2{2, {1.4, 2.9}};
+    const osmium::NodeRef node_ref3{3, {1.2, 3.0}};
+    const osmium::NodeRef node_ref4{4, {1.2, 3.3}};
 
     REQUIRE(node_ref1 < node_ref2);
     REQUIRE(node_ref2 < node_ref3);
@@ -48,10 +48,10 @@ TEST_CASE("Ordering of NodeRefs") {
     REQUIRE(node_ref1 >= node_ref1);
 
     REQUIRE(osmium::location_less()(node_ref1, node_ref2));
-    REQUIRE(!osmium::location_less()(node_ref2, node_ref3));
+    REQUIRE_FALSE(osmium::location_less()(node_ref2, node_ref3));
     REQUIRE(osmium::location_less()(node_ref1, node_ref3));
     REQUIRE(osmium::location_less()(node_ref3, node_ref4));
-    REQUIRE(!osmium::location_less()(node_ref1, node_ref1));
+    REQUIRE_FALSE(osmium::location_less()(node_ref1, node_ref1));
 }
 
 TEST_CASE("WayNodeList") {
@@ -80,7 +80,7 @@ TEST_CASE("WayNodeList") {
         REQUIRE(nrl.size() == 3);
 
         REQUIRE(nrl[1].location() == osmium::Location(0.0, 1.0));
-        nrl[1].set_location(osmium::Location(13.5, -7.2));
+        nrl[1].set_location(osmium::Location{13.5, -7.2});
         REQUIRE(nrl[1].location() == osmium::Location(13.5, -7.2));
     }
 
@@ -100,7 +100,7 @@ TEST_CASE("WayNodeList") {
         REQUIRE(nrl.ends_have_same_id());
         REQUIRE(nrl.ends_have_same_location());
 
-        osmium::Box envelope = nrl.envelope();
+        const osmium::Box envelope = nrl.envelope();
         REQUIRE(envelope.bottom_left().lon() == Approx(0));
         REQUIRE(envelope.bottom_left().lat() == Approx(0));
         REQUIRE(envelope.top_right().lon() == Approx(1));

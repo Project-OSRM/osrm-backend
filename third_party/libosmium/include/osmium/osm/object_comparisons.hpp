@@ -34,6 +34,7 @@ DEALINGS IN THE SOFTWARE.
 */
 
 #include <cassert>
+#include <cstdlib>
 #include <tuple>
 
 #include <osmium/osm/object.hpp>
@@ -44,7 +45,7 @@ namespace osmium {
 
     /**
      * Function object class for comparing OSM objects for equality by type,
-     * id, and version.
+     * ID, and version.
      */
     struct object_equal_type_id_version {
 
@@ -62,7 +63,7 @@ namespace osmium {
 
     /**
      * Function object class for comparing OSM objects for equality by type
-     * and id, ignoring the version.
+     * and ID, ignoring the version.
      */
     struct object_equal_type_id {
 
@@ -78,6 +79,19 @@ namespace osmium {
         }
 
     }; // struct object_equal_type_id
+
+    /**
+     * Compare two objects IDs. Order is as follows: 0 first, then negative
+     * IDs, then positive IDs, both ordered by their absolute values.
+     */
+    struct id_order {
+
+        bool operator()(const object_id_type lhs, const object_id_type rhs) const noexcept {
+            return const_tie(lhs > 0, std::abs(lhs)) <
+                   const_tie(rhs > 0, std::abs(rhs));
+        }
+
+    }; // struct id_order
 
     /**
      * Function object class for ordering OSM objects by type, id, version,
@@ -98,17 +112,18 @@ namespace osmium {
     }; // struct object_order_type_id_version
 
     /**
-     * Function object class for ordering OSM objects by type, id, and
-     * reverse version, timestamp. So objects are ordered by type and id, but
-     * later versions of an object are ordered before earlier versions of the
-     * same object. This is useful when the last version of an object needs
-     * to be used.
+     * Function object class for ordering OSM objects by type, ID, and
+     * reverse version, timestamp. So objects are ordered by type and ID
+     * (negative IDs first, then positive IDs, both in the order of their
+     * absolute values), but later versions of an object are ordered before
+     * earlier versions of the same object. This is useful when the last
+     * version of an object needs to be used.
      */
     struct object_order_type_id_reverse_version {
 
         bool operator()(const osmium::OSMObject& lhs, const osmium::OSMObject& rhs) const noexcept {
-            return const_tie(lhs.type(), lhs.id() < 0, lhs.positive_id(), rhs.version(), rhs.timestamp()) <
-                   const_tie(rhs.type(), rhs.id() < 0, rhs.positive_id(), lhs.version(), lhs.timestamp());
+            return const_tie(lhs.type(), lhs.id() > 0, lhs.positive_id(), rhs.version(), rhs.timestamp()) <
+                   const_tie(rhs.type(), rhs.id() > 0, rhs.positive_id(), lhs.version(), lhs.timestamp());
         }
 
         /// @pre lhs and rhs must not be nullptr

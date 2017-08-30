@@ -54,8 +54,7 @@ namespace osmium {
 
             public:
 
-                virtual ~HandlerWrapperBase() {
-                }
+                virtual ~HandlerWrapperBase() = default;
 
                 virtual void node(const osmium::Node&) {
                 }
@@ -115,7 +114,7 @@ auto _name_##_dispatch(THandler& handler, const osmium::_type_& object, long) ->
             public:
 
                 template <typename... TArgs>
-                HandlerWrapper(TArgs&&... args) :
+                explicit HandlerWrapper(TArgs&&... args) :
                     m_handler(std::forward<TArgs>(args)...) {
                 }
 
@@ -155,12 +154,12 @@ auto _name_##_dispatch(THandler& handler, const osmium::_type_& object, long) ->
         public:
 
             DynamicHandler() :
-                m_impl(impl_ptr(new osmium::handler::detail::HandlerWrapperBase)) {
+                m_impl(new osmium::handler::detail::HandlerWrapperBase) {
             }
 
             template <typename THandler, typename... TArgs>
             void set(TArgs&&... args) {
-                m_impl = impl_ptr(new osmium::handler::detail::HandlerWrapper<THandler>(std::forward<TArgs>(args)...));
+                m_impl.reset(new osmium::handler::detail::HandlerWrapper<THandler>{std::forward<TArgs>(args)...});
             }
 
             void node(const osmium::Node& node) {

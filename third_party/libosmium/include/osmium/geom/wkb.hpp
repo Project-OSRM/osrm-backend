@@ -108,19 +108,19 @@ namespace osmium {
                 }; // enum class wkb_byte_order_type
 
                 std::string m_data;
-                uint32_t m_points {0};
+                uint32_t m_points = 0;
                 int m_srid;
                 wkb_type m_wkb_type;
                 out_type m_out_type;
 
-                size_t m_linestring_size_offset = 0;
-                size_t m_polygons = 0;
-                size_t m_rings = 0;
-                size_t m_multipolygon_size_offset = 0;
-                size_t m_polygon_size_offset = 0;
-                size_t m_ring_size_offset = 0;
+                std::size_t m_linestring_size_offset = 0;
+                std::size_t m_polygons = 0;
+                std::size_t m_rings = 0;
+                std::size_t m_multipolygon_size_offset = 0;
+                std::size_t m_polygon_size_offset = 0;
+                std::size_t m_ring_size_offset = 0;
 
-                size_t header(std::string& str, wkbGeometryType type, bool add_length) const {
+                std::size_t header(std::string& str, wkbGeometryType type, bool add_length) const {
 #if __BYTE_ORDER == __LITTLE_ENDIAN
                     str_push(str, wkb_byte_order_type::NDR);
 #else
@@ -132,14 +132,14 @@ namespace osmium {
                     } else {
                         str_push(str, type);
                     }
-                    const size_t offset = str.size();
+                    const std::size_t offset = str.size();
                     if (add_length) {
                         str_push(str, static_cast<uint32_t>(0));
                     }
                     return offset;
                 }
 
-                void set_size(const size_t offset, const size_t size) {
+                void set_size(const std::size_t offset, const std::size_t size) {
                     uint32_t s = static_cast_with_assert<uint32_t>(size);
                     std::copy_n(reinterpret_cast<char*>(&s), sizeof(uint32_t), &m_data[offset]);
                 }
@@ -185,7 +185,7 @@ namespace osmium {
                     str_push(m_data, xy.y);
                 }
 
-                linestring_type linestring_finish(size_t num_points) {
+                linestring_type linestring_finish(std::size_t num_points) {
                     set_size(m_linestring_size_offset, num_points);
                     std::string data;
 

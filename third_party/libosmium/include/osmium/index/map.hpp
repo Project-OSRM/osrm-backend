@@ -43,7 +43,6 @@ DEALINGS IN THE SOFTWARE.
 #include <type_traits>
 #include <vector>
 
-#include <osmium/util/compatibility.hpp>
 #include <osmium/util/string.hpp>
 
 namespace osmium {
@@ -181,14 +180,14 @@ namespace osmium {
                 // but not always. It could, for instance, sort internal data.
                 // This is why it is not declared const here.
                 virtual void dump_as_list(const int /*fd*/) {
-                    throw std::runtime_error("can't dump as list");
+                    throw std::runtime_error{"can't dump as list"};
                 }
 
                 // This function can usually be const in derived classes,
                 // but not always. It could, for instance, sort internal data.
                 // This is why it is not declared const here.
                 virtual void dump_as_array(const int /*fd*/) {
-                    throw std::runtime_error("can't dump as array");
+                    throw std::runtime_error{"can't dump as array"};
                 }
 
             }; // class Map
@@ -245,13 +244,13 @@ namespace osmium {
             }
 
             std::unique_ptr<map_type> create_map(const std::string& config_string) const {
-                std::vector<std::string> config = osmium::split_string(config_string, ',');
+                std::vector<std::string> config{osmium::split_string(config_string, ',')};
 
                 if (config.empty()) {
                     throw map_factory_error{"Need non-empty map type name"};
                 }
 
-                auto it = m_callbacks.find(config[0]);
+                const auto it = m_callbacks.find(config[0]);
                 if (it != m_callbacks.end()) {
                     return std::unique_ptr<map_type>((it->second)(config));
                 }

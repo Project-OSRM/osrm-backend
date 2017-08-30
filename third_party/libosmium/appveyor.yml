@@ -7,7 +7,13 @@
 environment:
   matrix:
   - config: Dev
+    autocrlf: true
+  - config: Dev
+    autocrlf: false
   - config: RelWithDebInfo
+    autocrlf: true
+  - config: RelWithDebInfo
+    autocrlf: false
 
 shallow_clone: true
 
@@ -16,6 +22,8 @@ os: Visual Studio 2015
 
 # scripts that are called at very beginning, before repo cloning
 init:
+  - git config --global core.autocrlf %autocrlf%
+  - git config --get core.autocrlf
 
 # clone directory
 clone_folder: c:\projects\libosmium
@@ -24,3 +32,8 @@ platform: x64
 
 build_script:
   - build-appveyor.bat
+
+# remove garbage VS messages
+# http://help.appveyor.com/discussions/problems/4569-the-target-_convertpdbfiles-listed-in-a-beforetargets-attribute-at-c-does-not-exist-in-the-project-and-will-be-ignored
+before_build:
+  - del "C:\Program Files (x86)\MSBuild\14.0\Microsoft.Common.targets\ImportAfter\Xamarin.Common.targets"

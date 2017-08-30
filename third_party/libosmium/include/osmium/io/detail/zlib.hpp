@@ -70,7 +70,7 @@ namespace osmium {
                 );
 
                 if (result != Z_OK) {
-                    throw io_error(std::string("failed to compress data: ") + zError(result));
+                    throw io_error{std::string{"failed to compress data: "} + zError(result)};
                 }
 
                 output.resize(output_size);
@@ -100,7 +100,7 @@ namespace osmium {
                 );
 
                 if (result != Z_OK) {
-                    throw io_error(std::string("failed to uncompress data: ") + zError(result));
+                    throw io_error{std::string{"failed to uncompress data: "} + zError(result)};
                 }
 
                 return protozero::data_view{output.data(), output.size()};

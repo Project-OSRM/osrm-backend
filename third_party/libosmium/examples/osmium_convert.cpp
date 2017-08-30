@@ -53,10 +53,10 @@ void print_help() {
 
 int main(int argc, char* argv[]) {
     static struct option long_options[] = {
-        {"help",        no_argument, 0, 'h'},
-        {"from-format", required_argument, 0, 'f'},
-        {"to-format",   required_argument, 0, 't'},
-        {0, 0, 0, 0}
+        {"help",              no_argument, nullptr, 'h'},
+        {"from-format", required_argument, nullptr, 'f'},
+        {"to-format",   required_argument, nullptr, 't'},
+        {nullptr, 0, nullptr, 0}
     };
 
     // Input and output format are empty by default. Later this will mean that
@@ -67,7 +67,7 @@ int main(int argc, char* argv[]) {
 
     // Read options from command line.
     while (true) {
-        const int c = getopt_long(argc, argv, "dhf:t:", long_options, 0);
+        const int c = getopt_long(argc, argv, "dhf:t:", long_options, nullptr);
         if (c == -1) {
             break;
         }
@@ -88,7 +88,7 @@ int main(int argc, char* argv[]) {
     }
 
     const int remaining_args = argc - optind;
-    if (remaining_args > 2) {
+    if (remaining_args == 0 || remaining_args > 2) {
         std::cerr << "Usage: " << argv[0] << " [OPTIONS] [INFILE [OUTFILE]]\n";
         std::exit(1);
     }
@@ -108,8 +108,8 @@ int main(int argc, char* argv[]) {
     // This declares the input and output files using either the suffix of
     // the file names or the format in the 2nd argument. It does not yet open
     // the files.
-    osmium::io::File input_file{input_file_name, input_format};
-    osmium::io::File output_file{output_file_name, output_format};
+    const osmium::io::File input_file{input_file_name, input_format};
+    const osmium::io::File output_file{output_file_name, output_format};
 
     // Input and output files can be OSM data files (without history) or
     // OSM history files. History files are detected if they use the '.osh'

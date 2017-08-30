@@ -33,6 +33,10 @@
 #include <sys/stat.h>  // for open
 #include <sys/types.h> // for open
 
+#ifdef _WIN32
+# include <io.h>       // for _setmode
+#endif
+
 // Allow any format of input files (XML, PBF, ...)
 #include <osmium/io/any_input.hpp>
 
@@ -68,11 +72,14 @@ int main(int argc, char* argv[]) {
     osmium::io::Reader reader{input_filename, osmium::osm_entity_bits::node};
 
     // Initialize location index on disk creating a new file.
-    const int fd = open(cache_filename.c_str(), O_RDWR | O_CREAT, 0666);
+    const int fd = ::open(cache_filename.c_str(), O_RDWR | O_CREAT | O_TRUNC, 0666);
     if (fd == -1) {
         std::cerr << "Can not open location cache file '" << cache_filename << "': " << std::strerror(errno) << "\n";
         std::exit(1);
     }
+#ifdef _WIN32
+    _setmode(fd, _O_BINARY);
+#endif
     index_type index{fd};
 
     // The handler that stores all node locations in the index.

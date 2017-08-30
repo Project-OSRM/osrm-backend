@@ -298,6 +298,20 @@ unset(OSMIUM_EXTRA_FIND_VARS)
 
 #----------------------------------------------------------------------
 #
+#  A function for setting the -pthread option in compilers/linkers
+#
+#----------------------------------------------------------------------
+function(set_pthread_on_target _target)
+    if(NOT MSVC)
+        set_target_properties(${_target} PROPERTIES COMPILE_FLAGS "-pthread")
+        if(NOT APPLE)
+            set_target_properties(${_target} PROPERTIES LINK_FLAGS "-pthread")
+        endif()
+    endif()
+endfunction()
+
+#----------------------------------------------------------------------
+#
 #  Add compiler flags
 #
 #----------------------------------------------------------------------
@@ -318,6 +332,10 @@ if(MSVC)
     # default initialized. The new behaviour is correct and we don't support
     # old compilers anyway.
     add_definitions(-wd4351)
+
+    # Disable warning C4503: "decorated name length exceeded, name was truncated"
+    # there are more than 150 of generated names in libosmium longer than 4096 symbols supported in MSVC
+    add_definitions(-wd4503)
 
     add_definitions(-DNOMINMAX -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS)
 endif()

@@ -282,15 +282,16 @@ namespace osmium {
 
                 void write_box(const osmium::Box& box) {
                     write_fieldname("box l/b/r/t");
-                    if (!box) {
+                    if (box.bottom_left().is_undefined() &&
+                        box.top_right().is_undefined()) {
                         write_error("BOX NOT SET!\n");
                         return;
                     }
                     const auto& bl = box.bottom_left();
                     const auto& tr = box.top_right();
-                    bl.as_string(std::back_inserter(*m_out));
+                    bl.as_string_without_check(std::back_inserter(*m_out));
                     *m_out += ' ';
-                    tr.as_string(std::back_inserter(*m_out));
+                    tr.as_string_without_check(std::back_inserter(*m_out));
                     if (!box.valid()) {
                         write_error(" INVALID BOX!");
                     }
@@ -520,8 +521,8 @@ namespace osmium {
 
             public:
 
-                DebugOutputFormat(const osmium::io::File& file, future_string_queue_type& output_queue) :
-                    OutputFormat(output_queue),
+                DebugOutputFormat(osmium::thread::Pool& pool, const osmium::io::File& file, future_string_queue_type& output_queue) :
+                    OutputFormat(pool, output_queue),
                     m_options() {
                     m_options.add_metadata   = file.is_not_false("add_metadata");
                     m_options.use_color      = file.is_true("color");
@@ -576,7 +577,7 @@ namespace osmium {
                 }
 
                 void write_buffer(osmium::memory::Buffer&& buffer) final {
-                    m_output_queue.push(osmium::thread::Pool::instance().submit(DebugOutputBlock{std::move(buffer), m_options}));
+                    m_output_queue.push(m_pool.submit(DebugOutputBlock{std::move(buffer), m_options}));
                 }
 
             }; // class DebugOutputFormat
@@ -584,8 +585,8 @@ namespace osmium {
             // we want the register_output_format() function to run, setting
             // the variable is only a side-effect, it will never be used
             const bool registered_debug_output = osmium::io::detail::OutputFormatFactory::instance().register_output_format(osmium::io::file_format::debug,
-                [](const osmium::io::File& file, future_string_queue_type& output_queue) {
-                    return new osmium::io::detail::DebugOutputFormat(file, output_queue);
+                [](osmium::thread::Pool& pool, const osmium::io::File& file, future_string_queue_type& output_queue) {
+                    return new osmium::io::detail::DebugOutputFormat(pool, file, output_queue);
             });
 
             // dummy function to silence the unused variable warning from above

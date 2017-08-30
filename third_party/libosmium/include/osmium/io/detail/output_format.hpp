@@ -46,6 +46,7 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/io/file.hpp>
 #include <osmium/io/file_format.hpp>
 #include <osmium/memory/buffer.hpp>
+#include <osmium/thread/pool.hpp>
 
 namespace osmium {
 
@@ -107,6 +108,7 @@ namespace osmium {
 
             protected:
 
+                osmium::thread::Pool& m_pool;
                 future_string_queue_type& m_output_queue;
 
                 /**
@@ -119,7 +121,8 @@ namespace osmium {
 
             public:
 
-                explicit OutputFormat(future_string_queue_type& output_queue) :
+                OutputFormat(osmium::thread::Pool& pool, future_string_queue_type& output_queue) :
+                    m_pool(pool),
                     m_output_queue(output_queue) {
                 }
 
@@ -152,7 +155,7 @@ namespace osmium {
 
             public:
 
-                using create_output_type = std::function<osmium::io::detail::OutputFormat*(const osmium::io::File&, future_string_queue_type&)>;
+                using create_output_type = std::function<osmium::io::detail::OutputFormat*(osmium::thread::Pool&, const osmium::io::File&, future_string_queue_type&)>;
 
             private:
 
@@ -178,21 +181,51 @@ namespace osmium {
                     return true;
                 }
 
-                std::unique_ptr<osmium::io::detail::OutputFormat> create_output(const osmium::io::File& file, future_string_queue_type& output_queue) {
-                    auto it = m_callbacks.find(file.format());
+                std::unique_ptr<osmium::io::detail::OutputFormat> create_output(osmium::thread::Pool& pool, const osmium::io::File& file, future_string_queue_type& output_queue) {
+                    const auto it = m_callbacks.find(file.format());
                     if (it != m_callbacks.end()) {
-                        return std::unique_ptr<osmium::io::detail::OutputFormat>((it->second)(file, output_queue));
+                        return std::unique_ptr<osmium::io::detail::OutputFormat>((it->second)(pool, file, output_queue));
                     }
 
-                    throw unsupported_file_format_error(
-                                std::string("Can not open file '") +
+                    throw unsupported_file_format_error{
+                                std::string{"Can not open file '"} +
                                 file.filename() +
                                 "' with type '" +
                                 as_string(file.format()) +
-                                "'. No support for writing this format in this program.");
+                                "'. No support for writing this format in this program."};
                 }
 
             }; // class OutputFormatFactory
+
+            class BlackholeOutputFormat : public osmium::io::detail::OutputFormat {
+
+            public:
+
+                BlackholeOutputFormat(osmium::thread::Pool& pool, const osmium::io::File& /*file*/, future_string_queue_type& output_queue) :
+                    OutputFormat(pool, output_queue) {
+                }
+
+                BlackholeOutputFormat(const BlackholeOutputFormat&) = delete;
+                BlackholeOutputFormat& operator=(const BlackholeOutputFormat&) = delete;
+
+                ~BlackholeOutputFormat() noexcept final = default;
+
+                void write_buffer(osmium::memory::Buffer&& /*buffer*/) final {
+                }
+
+            }; // class BlackholeOutputFormat
+
+            // we want the register_output_format() function to run, setting
+            // the variable is only a side-effect, it will never be used
+            const bool registered_blackhole_output = osmium::io::detail::OutputFormatFactory::instance().register_output_format(osmium::io::file_format::blackhole,
+                [](osmium::thread::Pool& pool, const osmium::io::File& file, future_string_queue_type& output_queue) {
+                    return new osmium::io::detail::BlackholeOutputFormat(pool, file, output_queue);
+            });
+
+            // dummy function to silence the unused variable warning from above
+            inline bool get_registered_blackhole_output() noexcept {
+                return registered_blackhole_output;
+            }
 
         } // namespace detail
 

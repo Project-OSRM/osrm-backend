@@ -33,6 +33,10 @@
 #include <sys/types.h> // for open
 #include <vector>      // for std::vector
 
+#ifdef _WIN32
+# include <io.h>       // for _setmode
+#endif
+
 // Disk-based indexes
 #include <osmium/index/map/dense_file_array.hpp>
 #include <osmium/index/map/sparse_file_array.hpp>
@@ -52,7 +56,7 @@ class IndexAccess {
 
 public:
 
-    IndexAccess(int fd) :
+    explicit IndexAccess(int fd) :
         m_fd(fd) {
     }
 
@@ -83,7 +87,7 @@ class IndexAccessDense : public IndexAccess<TValue> {
 
 public:
 
-    IndexAccessDense(int fd) :
+    explicit IndexAccessDense(int fd) :
         IndexAccess<TValue>(fd) {
     }
 
@@ -122,7 +126,7 @@ class IndexAccessSparse : public IndexAccess<TValue> {
 
 public:
 
-    IndexAccessSparse(int fd) :
+    explicit IndexAccessSparse(int fd) :
         IndexAccess<TValue>(fd) {
     }
 
@@ -192,17 +196,17 @@ public:
         }
 
         static struct option long_options[] = {
-            {"array",  required_argument, 0, 'a'},
-            {"dump",         no_argument, 0, 'd'},
-            {"help",         no_argument, 0, 'h'},
-            {"list",   required_argument, 0, 'l'},
-            {"search", required_argument, 0, 's'},
-            {"type",   required_argument, 0, 't'},
-            {0, 0, 0, 0}
+            {"array",  required_argument, nullptr, 'a'},
+            {"dump",         no_argument, nullptr, 'd'},
+            {"help",         no_argument, nullptr, 'h'},
+            {"list",   required_argument, nullptr, 'l'},
+            {"search", required_argument, nullptr, 's'},
+            {"type",   required_argument, nullptr, 't'},
+            {nullptr, 0, nullptr, 0}
         };
 
         while (true) {
-            const int c = getopt_long(argc, argv, "a:dhl:s:t:", long_options, 0);
+            const int c = getopt_long(argc, argv, "a:dhl:s:t:", long_options, nullptr);
             if (c == -1) {
                 break;
             }
@@ -243,7 +247,7 @@ public:
             std::exit(2);
         }
 
-        if (m_dump && !m_ids.empty()) {
+        if (m_dump == !m_ids.empty()) {
             std::cerr << "Need option --dump or --search, but not both\n";
             std::exit(2);
         }
@@ -308,26 +312,35 @@ int main(int argc, char* argv[]) {
     Options options{argc, argv};
 
     // Open the index file.
-    const int fd = open(options.filename(), O_RDWR);
+    const int fd = ::open(options.filename(), O_RDWR);
     if (fd < 0) {
         std::cerr << "Can not open file '" << options.filename()
                   << "': " << std::strerror(errno) << '\n';
         std::exit(2);
     }
 
-    // Depending on the type of index, we have different implementations.
-    if (options.type_is("location")) {
-        // index id -> location
-        const auto index = create<osmium::Location>(options.dense_format(), fd);
-        return run(*index, options);
-    } else if (options.type_is("id")) {
-        // index id -> id
-        const auto index = create<osmium::unsigned_object_id_type>(options.dense_format(), fd);
-        return run(*index, options);
-    } else {
-        // index id -> offset
-        const auto index = create<std::size_t>(options.dense_format(), fd);
-        return run(*index, options);
+#ifdef _WIN32
+    _setmode(fd, _O_BINARY);
+#endif
+
+    try {
+        // Depending on the type of index, we have different implementations.
+        if (options.type_is("location")) {
+            // index id -> location
+            const auto index = create<osmium::Location>(options.dense_format(), fd);
+            return run(*index, options);
+        } else if (options.type_is("id")) {
+            // index id -> id
+            const auto index = create<osmium::unsigned_object_id_type>(options.dense_format(), fd);
+            return run(*index, options);
+        } else {
+            // index id -> offset
+            const auto index = create<std::size_t>(options.dense_format(), fd);
+            return run(*index, options);
+        }
+    } catch(const std::exception& e) {
+        std::cerr << "Error: " << e.what() << '\n';
+        std::exit(1);
     }
 }
 

@@ -171,8 +171,8 @@ namespace osmium {
         std::pair<size_t, size_t> num_rings() const {
             std::pair<size_t, size_t> counter{0, 0};
 
-            for (auto it = cbegin(); it != cend(); ++it) {
-                switch (it->type()) {
+            for (const auto& item : *this) {
+                switch (item.type()) {
                     case osmium::item_type::outer_ring:
                         ++counter.first;
                         break;

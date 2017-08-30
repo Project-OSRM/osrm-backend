@@ -66,8 +66,8 @@ namespace osmium {
         void set_diff() const noexcept {
             assert(m_curr != m_end);
 
-            bool use_curr_for_prev =                    m_prev->type() != m_curr->type() || m_prev->id() != m_curr->id();
-            bool use_curr_for_next = m_next == m_end || m_next->type() != m_curr->type() || m_next->id() != m_curr->id();
+            const bool use_curr_for_prev =                    m_prev->type() != m_curr->type() || m_prev->id() != m_curr->id();
+            const bool use_curr_for_next = m_next == m_end || m_next->type() != m_curr->type() || m_next->id() != m_curr->id();
 
             m_diff = std::move(osmium::DiffObject{
                 *(use_curr_for_prev ? m_curr : m_prev),
@@ -104,7 +104,7 @@ namespace osmium {
         }
 
         DiffIterator operator++(int) {
-            DiffIterator tmp(*this);
+            DiffIterator tmp{*this};
             operator++();
             return tmp;
         }

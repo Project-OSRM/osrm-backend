@@ -115,4 +115,4 @@ namespace osmium {
 
 } // namespace osmium
 
-#endif //  OSMIUM_THREAD_UTIL_HPP
+#endif // OSMIUM_THREAD_UTIL_HPP

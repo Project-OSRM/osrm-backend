@@ -75,14 +75,20 @@ namespace osmium {
              * this stream of objects? This should be true for history files
              * and for change files, but not for normal OSM data files.
              */
-            bool m_has_multiple_object_versions = false;
+            bool m_has_multiple_object_versions;
 
         public:
 
-            Header() = default;
+            Header() :
+                Options(),
+                m_boxes(),
+                m_has_multiple_object_versions(false) {
+            }
 
             explicit Header(const std::initializer_list<osmium::util::Options::value_type>& values) :
-                Options(values) {
+                Options(values),
+                m_boxes(),
+                m_has_multiple_object_versions(false) {
             }
 
             /**

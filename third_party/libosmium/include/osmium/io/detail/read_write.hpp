@@ -85,7 +85,7 @@ namespace osmium {
 #endif
                 const int fd = ::open(filename.c_str(), flags, 0666);
                 if (fd < 0) {
-                    throw std::system_error(errno, std::system_category(), std::string("Open failed for '") + filename + "'");
+                    throw std::system_error{errno, std::system_category(), std::string("Open failed for '") + filename + "'"};
                 }
                 return fd;
             }
@@ -109,7 +109,7 @@ namespace osmium {
 #endif
                 const int fd = ::open(filename.c_str(), flags);
                 if (fd < 0) {
-                    throw std::system_error(errno, std::system_category(), std::string("Open failed for '") + filename + "'");
+                    throw std::system_error{errno, std::system_category(), std::string("Open failed for '") + filename + "'"};
                 }
                 return fd;
             }
@@ -134,7 +134,7 @@ namespace osmium {
                     }
                     const auto length = ::write(fd, output_buffer + offset, static_cast<unsigned int>(write_count));
                     if (length < 0) {
-                        throw std::system_error(errno, std::system_category(), "Write failed");
+                        throw std::system_error{errno, std::system_category(), "Write failed"};
                     }
                     offset += static_cast<size_t>(length);
                 } while (offset < size);
@@ -160,13 +160,13 @@ namespace osmium {
 #else
                 if (::fsync(fd) != 0) {
 #endif
-                    throw std::system_error(errno, std::system_category(), "Fsync failed");
+                    throw std::system_error{errno, std::system_category(), "Fsync failed"};
                 }
             }
 
             inline void reliable_close(const int fd) {
                 if (::close(fd) != 0) {
-                    throw std::system_error(errno, std::system_category(), "Close failed");
+                    throw std::system_error{errno, std::system_category(), "Close failed"};
                 }
             }
 

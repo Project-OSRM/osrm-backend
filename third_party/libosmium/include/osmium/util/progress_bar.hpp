@@ -33,6 +33,7 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <cstddef>
 #include <iostream>
 
 namespace osmium {
@@ -51,23 +52,23 @@ namespace osmium {
             return "                                                                     ";
         }
 
-        static constexpr const size_t length = 70;
+        static constexpr const std::size_t length = 70;
 
         // The max size is the file size if there is a single file and the
         // sum of all file sizes if there are multiple files. It corresponds
         // to 100%.
-        size_t m_max_size;
+        std::size_t m_max_size;
 
         // The sum of the file sizes already done.
-        size_t m_done_size = 0;
+        std::size_t m_done_size = 0;
 
         // The currently read size in the current file.
-        size_t m_current_size = 0;
+        std::size_t m_current_size = 0;
 
         // The percentage calculated when it was last displayed. Used to decide
         // whether we need to update the display. Start setting is one that
         // will always be different from any legal setting.
-        size_t m_prev_percent = 100 + 1;
+        std::size_t m_prev_percent = 100 + 1;
 
         // Is the progress bar enabled at all?
         bool m_enable;
@@ -77,13 +78,13 @@ namespace osmium {
         bool m_do_cleanup = true;
 
         void display() {
-            const size_t percent = 100 * (m_done_size + m_current_size) / m_max_size;
+            const std::size_t percent = 100 * (m_done_size + m_current_size) / m_max_size;
             if (m_prev_percent == percent) {
                 return;
             }
             m_prev_percent = percent;
 
-            const size_t num = size_t(percent * (length / 100.0));
+            const auto num = static_cast<std::size_t>(percent * (length / 100.0));
             std::cerr << '[';
             if (num >= length) {
                 std::cerr << bar();
@@ -109,7 +110,7 @@ namespace osmium {
          * @param enable Set to false to disable (for instance if stderr is
          *               not a TTY).
          */
-        ProgressBar(size_t max_size, bool enable) noexcept :
+        ProgressBar(std::size_t max_size, bool enable) noexcept :
             m_max_size(max_size),
             m_enable(max_size > 0 && enable) {
         }
@@ -133,7 +134,7 @@ namespace osmium {
          * @param current_size Current size. Used together with the max_size
          *                     from constructor to calculate the percentage.
          */
-        void update(size_t current_size) {
+        void update(std::size_t current_size) {
             if (!m_enable) {
                 return;
             }
@@ -149,7 +150,7 @@ namespace osmium {
          *
          * @param file_size The size of the file just finished.
          */
-        void file_done(size_t file_size) {
+        void file_done(std::size_t file_size) {
             if (m_enable) {
                 m_done_size += file_size;
                 m_current_size = 0;

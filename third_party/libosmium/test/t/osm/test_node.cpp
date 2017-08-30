@@ -133,7 +133,7 @@ TEST_CASE("Setting attributes from bad data on strings should fail") {
 TEST_CASE("set large id") {
     osmium::memory::Buffer buffer{10000};
 
-    int64_t id = 3000000000l;
+    const int64_t id = 3000000000l;
     osmium::builder::add_node(buffer, _id(id));
 
     osmium::Node& node = buffer.get<osmium::Node>(0);
@@ -162,5 +162,28 @@ TEST_CASE("set tags on node") {
     REQUIRE(std::string{"default"} == node.tags().get_value_by_key("fail", "default"));
     REQUIRE(std::string{"pub"} == node.tags().get_value_by_key("amenity", "default"));
     REQUIRE(std::string{"pub"} == node.get_value_by_key("amenity", "default"));
+}
+
+TEST_CASE("Setting diff flags on node") {
+    osmium::memory::Buffer buffer{1000};
+
+    osmium::builder::add_node(buffer, _id(17));
+
+    osmium::Node& node = buffer.get<osmium::Node>(0);
+
+    REQUIRE(node.diff() == osmium::diff_indicator_type::none);
+    REQUIRE(node.diff_as_char() == '*');
+
+    node.set_diff(osmium::diff_indicator_type::left);
+    REQUIRE(node.diff() == osmium::diff_indicator_type::left);
+    REQUIRE(node.diff_as_char() == '-');
+
+    node.set_diff(osmium::diff_indicator_type::right);
+    REQUIRE(node.diff() == osmium::diff_indicator_type::right);
+    REQUIRE(node.diff_as_char() == '+');
+
+    node.set_diff(osmium::diff_indicator_type::both);
+    REQUIRE(node.diff() == osmium::diff_indicator_type::both);
+    REQUIRE(node.diff_as_char() == ' ');
 }
 

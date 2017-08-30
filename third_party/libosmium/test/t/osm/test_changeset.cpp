@@ -38,7 +38,7 @@ TEST_CASE("Build changeset") {
     crc32.update(cs1);
     REQUIRE(crc32().checksum() == 0x502e8c0e);
 
-    auto pos = osmium::builder::add_changeset(buffer,
+    const auto pos = osmium::builder::add_changeset(buffer,
         _cid(43),
         _created_at(time_t(120)),
         _num_changes(21),

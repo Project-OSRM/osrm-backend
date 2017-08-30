@@ -97,11 +97,14 @@ ECHO calling^: %CMAKE_CMD%
 %CMAKE_CMD%
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
+SET avlogger=
+IF /I "%APPVEYOR%"=="True" SET avlogger=/logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
+
 msbuild libosmium.sln ^
 /p:Configuration=%config% ^
 /toolsversion:14.0 ^
 /p:Platform=x64 ^
-/p:PlatformToolset=v140
+/p:PlatformToolset=v140 %avlogger%
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
 ctest --output-on-failure ^

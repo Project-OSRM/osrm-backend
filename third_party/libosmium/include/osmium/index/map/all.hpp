@@ -37,6 +37,7 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/index/map/dense_mem_array.hpp>   // IWYU pragma: keep
 #include <osmium/index/map/dense_mmap_array.hpp>  // IWYU pragma: keep
 #include <osmium/index/map/dummy.hpp>             // IWYU pragma: keep
+#include <osmium/index/map/flex_mem.hpp>          // IWYU pragma: keep
 #include <osmium/index/map/sparse_file_array.hpp> // IWYU pragma: keep
 #include <osmium/index/map/sparse_mem_array.hpp>  // IWYU pragma: keep
 #include <osmium/index/map/sparse_mem_map.hpp>    // IWYU pragma: keep

@@ -121,7 +121,7 @@ namespace osmium {
                     current_entry = 0;
                 }
 
-                void add(const char* string, size_t size) {
+                void add(const char* string, std::size_t size) {
                     if (m_table.empty()) {
                         m_table.resize(entry_size * number_of_entries);
                     }
@@ -162,7 +162,7 @@ namespace osmium {
                     return protozero::decode_zigzag64(protozero::decode_varint(data, end));
                 }
 
-                bool ensure_bytes_available(size_t need_bytes) {
+                bool ensure_bytes_available(std::size_t need_bytes) {
                     if ((m_end - m_data) >= long(need_bytes)) {
                         return true;
                     }
@@ -174,7 +174,7 @@ namespace osmium {
                     m_input.erase(0, m_data - m_input.data());
 
                     while (m_input.size() < need_bytes) {
-                        std::string data = get_input();
+                        const std::string data{get_input()};
                         if (input_done()) {
                             return false;
                         }
@@ -589,11 +589,8 @@ namespace osmium {
 
             public:
 
-                O5mParser(future_string_queue_type& input_queue,
-                          future_buffer_queue_type& output_queue,
-                          std::promise<osmium::io::Header>& header_promise,
-                          osmium::io::detail::reader_options options) :
-                    Parser(input_queue, output_queue, header_promise, options),
+                explicit O5mParser(parser_arguments& args) :
+                    Parser(args),
                     m_header(),
                     m_buffer(buffer_size),
                     m_input(),
@@ -616,11 +613,8 @@ namespace osmium {
             // the variable is only a side-effect, it will never be used
             const bool registered_o5m_parser = ParserFactory::instance().register_parser(
                 file_format::o5m,
-                [](future_string_queue_type& input_queue,
-                    future_buffer_queue_type& output_queue,
-                    std::promise<osmium::io::Header>& header_promise,
-                    osmium::io::detail::reader_options options) {
-                    return std::unique_ptr<Parser>(new O5mParser(input_queue, output_queue, header_promise, options));
+                [](parser_arguments& args) {
+                    return std::unique_ptr<Parser>(new O5mParser{args});
             });
 
             // dummy function to silence the unused variable warning from above

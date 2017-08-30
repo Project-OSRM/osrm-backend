@@ -118,7 +118,7 @@ namespace osmium {
          * @pre @code c.valid() @endcode
          */
         inline Coordinates lonlat_to_mercator(const Coordinates& c) {
-            return Coordinates(detail::lon_to_x(c.x), detail::lat_to_y(c.y));
+            return Coordinates{detail::lon_to_x(c.x), detail::lat_to_y(c.y)};
         }
 
         /**
@@ -127,7 +127,7 @@ namespace osmium {
          * @pre @code c.valid() @endcode
          */
         inline Coordinates mercator_to_lonlat(const Coordinates& c) {
-            return Coordinates(detail::x_to_lon(c.x), detail::y_to_lat(c.y));
+            return Coordinates{detail::x_to_lon(c.x), detail::y_to_lat(c.y)};
         }
 
         /**
@@ -138,8 +138,11 @@ namespace osmium {
 
         public:
 
+            MercatorProjection() {
+            }
+
             Coordinates operator()(osmium::Location location) const {
-                return Coordinates {detail::lon_to_x(location.lon()), detail::lat_to_y(location.lat())};
+                return Coordinates{detail::lon_to_x(location.lon()), detail::lat_to_y(location.lat())};
             }
 
             int epsg() const noexcept {

@@ -246,4 +246,4 @@ namespace osmium {
 
 } // namespace osmium
 
-#endif // OSMIUM_OSM_CRC
+#endif // OSMIUM_OSM_CRC_HPP

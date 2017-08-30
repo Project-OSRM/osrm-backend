@@ -118,4 +118,4 @@ namespace osmium {
 
 } // namespace osmium
 
-#endif //  OSMIUM_AREA_DETAIL_VECTOR_HPP
+#endif // OSMIUM_AREA_DETAIL_VECTOR_HPP
