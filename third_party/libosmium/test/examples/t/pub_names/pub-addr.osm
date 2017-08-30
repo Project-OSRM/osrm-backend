@@ -1,0 +1,10 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<osm version="0.6">
+  <node id="167199652" version="3" timestamp="2010-12-27T13:15:02Z" uid="57645" user="KartoGrapHiti" changeset="6777507" lat="53.0526516" lon="8.8919477">
+    <tag k="addr:city" v="Bremen"/>
+    <tag k="addr:housenumber" v="28"/>
+    <tag k="addr:street" v="Kleine Westerholzstraße"/>
+    <tag k="amenity" v="pub"/>
+    <tag k="name" v="Im Holze"/>
+  </node>
+</osm>
