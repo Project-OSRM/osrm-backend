@@ -1,7 +1,0 @@
-<?xml version='1.0' encoding='UTF-8'?>
-<osm version="0.6">
-  <node id="24960505" version="5" timestamp="2013-02-28T23:26:39Z" uid="715371" user="cracklinrain" changeset="15203542" lat="53.096629" lon="8.8720536">
-    <tag k="amenity" v="post_office"/>
-    <tag k="wheelchair" v="yes"/>
-  </node>
-</osm>
