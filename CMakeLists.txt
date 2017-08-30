@@ -24,6 +24,7 @@ option(ENABLE_CCACHE "Speed up incremental rebuilds via ccache" ON)
 option(BUILD_TOOLS "Build OSRM tools" OFF)
 option(BUILD_PACKAGE "Build OSRM package" OFF)
 option(ENABLE_ASSERTIONS "Use assertions in release mode" OFF)
+option(ENABLE_LOGGING "Output log messages" ON)
 option(ENABLE_COVERAGE "Build with coverage instrumentalisation" OFF)
 option(ENABLE_SANITIZER "Use memory sanitizer for Debug build" OFF)
 option(ENABLE_STXXL "Use STXXL library" OFF)
@@ -724,6 +725,12 @@ if (ENABLE_ASSERTIONS)
   message(STATUS "Enabling assertions")
   add_definitions(-DBOOST_ENABLE_ASSERT_HANDLER)
 endif()
+
+if (NOT ENABLE_LOGGING)
+  message(STATUS "Disabling logging")
+  add_definitions(-DOSRM_LOGGING_DISABLED)
+endif()
+
 
 # Add RPATH info to executables so that when they are run after being installed
 # (i.e., from /usr/local/bin/) the linker can find library dependencies. For
