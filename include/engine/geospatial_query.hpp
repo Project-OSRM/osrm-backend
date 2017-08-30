@@ -16,6 +16,8 @@
 #include <memory>
 #include <vector>
 
+#include <util/log.hpp>
+
 namespace osrm
 {
 namespace engine
@@ -248,6 +250,44 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
     NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
                                                       const Approach approach) const
     {
+        util::Coordinate snap_coordinate = input_coordinate;
+        bool has_small_component = false;
+        bool has_big_component = false;
+        auto results = rtree.Nearest(
+            snap_coordinate,
+            [this, approach, &snap_coordinate, &has_big_component, &has_small_component](
+                const CandidateSegment &segment) {
+                auto use_segment =
+                    (!has_small_component || (!has_big_component && !IsTinyComponent(segment)));
+                auto use_directions = std::make_pair(use_segment, use_segment);
+
+                const auto valid_edges = HasValidEdge(segment);
+                use_directions = boolPairAnd(use_directions, valid_edges);
+                use_directions =
+                    boolPairAnd(use_directions, CheckApproach(snap_coordinate, segment, approach));
+
+                if (use_directions.first || use_directions.second)
+                {
+                    has_big_component = has_big_component || !IsTinyComponent(segment);
+                    has_small_component = has_small_component || IsTinyComponent(segment);
+                }
+
+                return use_directions;
+            },
+            [&has_big_component](const std::size_t num_results, const CandidateSegment &) {
+                return num_results > 0 && has_big_component;
+            });
+        BOOST_ASSERT(results_2.size() == 1 || results_2.size() == 2);
+
+        return std::make_pair(MakeSnapedPhantomNode(input_coordinate, results.front(), 50).phantom_node,
+                              MakeSnapedPhantomNode(input_coordinate, results.back(), 50).phantom_node);
+    }
+
+    // Returns the nearest phantom node. If this phantom node is not from a big component
+    // a second phantom node is return that is the nearest coordinate in a big component.
+    std::pair<PhantomNode, PhantomNode>
+    NearestPhantomNodeWithAlternativeFromBigComponentForSnap(const util::Coordinate input_coordinate, const util::Coordinate real_coordinate, const Approach approach) const
+    {
         bool has_small_component = false;
         bool has_big_component = false;
         auto results = rtree.Nearest(
@@ -276,15 +316,84 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
             [&has_big_component](const std::size_t num_results, const CandidateSegment &) {
                 return num_results > 0 && has_big_component;
             });
-
-        if (results.size() == 0)
-        {
-            return std::make_pair(PhantomNode{}, PhantomNode{});
-        }
-
-        BOOST_ASSERT(results.size() == 1 || results.size() == 2);
+        BOOST_ASSERT(results_2.size() == 1 || results_2.size() == 2);
+        //return SnapPhantomNode(results.front(), 50, input_coordinate);
         return std::make_pair(MakePhantomNode(input_coordinate, results.front()).phantom_node,
                               MakePhantomNode(input_coordinate, results.back()).phantom_node);
+    }
+
+    std::pair<PhantomNode, PhantomNode> SnapPhantomNode(const EdgeData &edge_data, const EdgeDuration duration, const util::Coordinate input_coordinate) const
+    {
+        bool has_small_component = false;
+        bool has_big_component = false;
+        PhantomNode phantom = MakePhantomNode(input_coordinate, edge_data).phantom_node;
+        util::Log(logINFO) << "-----------";
+        util::Log(logINFO) << phantom.forward_duration;
+        util::Log(logINFO) << phantom.reverse_duration;
+        util::Log(logINFO) << phantom.forward_duration_offset;
+        util::Log(logINFO) << phantom.reverse_duration_offset;
+        util::Log(logINFO) << "-----------";
+
+        const auto geometry_id = datafacade.GetGeometryIndex(edge_data.forward_segment_id.id).id;
+        const std::vector<EdgeWeight> forward_duration_vector = datafacade.GetUncompressedForwardDurations(geometry_id);
+        EdgeDuration full_forward_duration = forward_duration_vector[edge_data.fwd_segment_position];
+        EdgeDuration reverse_duration = full_forward_duration - std::abs(phantom.forward_duration);
+        util::Log(logINFO) << "full_forward_duration : " << full_forward_duration;
+        util::Log(logINFO) << "phantom.forward_duration_offset : " << phantom.forward_duration;
+        util::Log(logINFO) << "reverse_duration : " << reverse_duration;
+
+        EdgeDuration full_forw_off = phantom.forward_duration_offset + phantom.forward_duration;
+        EdgeDuration full_reve_off = phantom.reverse_duration_offset + reverse_duration;
+        std::vector<EdgeData> results_2;
+
+
+        if(full_forw_off < duration || full_reve_off < duration)
+        {
+            std::vector<NodeID> geom = datafacade.GetUncompressedForwardGeometry(datafacade.GetGeometryIndex(phantom.forward_segment_id.id).id);
+
+            if(full_forw_off < full_reve_off)
+            {
+                util::Log(logINFO) << "lat : " << util::FloatCoordinate(datafacade.GetCoordinateOfNode(geom.front())).lat;
+                util::Log(logINFO) << "lon : " << util::FloatCoordinate(datafacade.GetCoordinateOfNode(geom.front())).lon;
+                return NearestPhantomNodeWithAlternativeFromBigComponentForSnap(datafacade.GetCoordinateOfNode(geom.front()), input_coordinate);
+            }
+            else
+            {
+                util::Log(logINFO) << "lat : " << util::FloatCoordinate(datafacade.GetCoordinateOfNode(geom.back())).lat;
+                util::Log(logINFO) << "lon : " << util::FloatCoordinate(datafacade.GetCoordinateOfNode(geom.back())).lon;
+                return NearestPhantomNodeWithAlternativeFromBigComponentForSnap(datafacade.GetCoordinateOfNode(geom.back()), input_coordinate);
+            }
+        }
+        else
+        {
+            results_2 = rtree.Nearest(input_coordinate,
+                                      [this, &has_big_component, &has_small_component](const CandidateSegment &segment) {
+                                          auto use_segment =
+                                              (!has_small_component || (!has_big_component && !IsTinyComponent(segment)));
+                                          auto use_directions = std::make_pair(use_segment, use_segment);
+                                          if (!use_directions.first && !use_directions.second)
+                                              return use_directions;
+                                          const auto valid_edges = HasValidEdge(segment);
+
+                                          if (valid_edges.first || valid_edges.second)
+                                          {
+
+                                              has_big_component = has_big_component || !IsTinyComponent(segment);
+                                              has_small_component = has_small_component || IsTinyComponent(segment);
+                                          }
+
+                                          use_directions = boolPairAnd(use_directions, valid_edges);
+                                          return use_directions;
+                                      },
+                                      [&has_big_component](const std::size_t num_results, const CandidateSegment &) {
+                                          return num_results > 0 && has_big_component;
+                                      });
+            BOOST_ASSERT(results.size() == 1 || results.size() == 2);
+            PhantomNodeWithDistance res_1 = MakePhantomNode(input_coordinate, results_2.front());
+            PhantomNodeWithDistance res_2 = MakePhantomNode(input_coordinate, results_2.back());
+            return std::make_pair(res_1.phantom_node,
+                                  res_2.phantom_node);
+        }
     }
 
     // Returns the nearest phantom node. If this phantom node is not from a big component
@@ -521,6 +630,67 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
                                                    current_perpendicular_distance};
 
         return transformed;
+    }
+
+    PhantomNodeWithDistance MakeSnapedPhantomNode(const util::Coordinate input_coordinate,
+                                                  const EdgeData &data,
+                                                  const EdgeDuration duration
+                                                 ) const
+    {
+        PhantomNodeWithDistance phantomWithDistance = MakePhantomNode(input_coordinate, data);
+        util::Log(logINFO) << "-----------";
+        util::Log(logINFO) << phantomWithDistance.phantom_node.forward_duration;
+        util::Log(logINFO) << phantomWithDistance.phantom_node.reverse_duration;
+        util::Log(logINFO) << phantomWithDistance.phantom_node.forward_duration_offset;
+        util::Log(logINFO) << phantomWithDistance.phantom_node.reverse_duration_offset;
+        util::Log(logINFO) << "-----------";
+
+        const auto geometry_id = datafacade.GetGeometryIndex(data.forward_segment_id.id).id;
+        const std::vector<EdgeWeight> forward_duration_vector = datafacade.GetUncompressedForwardDurations(geometry_id);
+        EdgeDuration full_forward_duration = forward_duration_vector[data.fwd_segment_position];
+        EdgeDuration reverse_duration = full_forward_duration - std::abs(phantomWithDistance.phantom_node.forward_duration);
+        util::Log(logINFO) << "full_forward_duration : " << full_forward_duration;
+        util::Log(logINFO) << "phantomWithDistance.phantom_node.forward_duration_offset : " << phantomWithDistance.phantom_node.forward_duration;
+        util::Log(logINFO) << "reverse_duration : " << reverse_duration;
+
+        EdgeDuration full_forw_off = phantomWithDistance.phantom_node.forward_duration_offset + phantomWithDistance.phantom_node.forward_duration;
+        EdgeDuration full_reve_off = phantomWithDistance.phantom_node.reverse_duration_offset + reverse_duration;
+
+        if(full_forw_off < duration || full_reve_off < duration)
+        {
+          std::vector<NodeID> geom = datafacade.GetUncompressedForwardGeometry(datafacade.GetGeometryIndex(phantomWithDistance.phantom_node.forward_segment_id.id).id);
+
+          const auto geometry_id = datafacade.GetGeometryIndex(data.forward_segment_id.id).id;
+          const auto component_id = datafacade.GetComponentID(data.forward_segment_id.id);
+
+          const std::vector<EdgeWeight> forward_weight_vector =
+              datafacade.GetUncompressedForwardWeights(geometry_id);
+          const std::vector<EdgeWeight> reverse_weight_vector =
+              datafacade.GetUncompressedReverseWeights(geometry_id);
+          const std::vector<EdgeWeight> forward_duration_vector =
+              datafacade.GetUncompressedForwardDurations(geometry_id);
+          const std::vector<EdgeWeight> reverse_duration_vector =
+              datafacade.GetUncompressedReverseDurations(geometry_id);
+          // check phantom node segments validity
+          auto areSegmentsValid = [](auto first, auto last) -> bool {
+              return std::find(first, last, INVALID_SEGMENT_WEIGHT) == last;
+          };
+
+          if(full_forw_off < full_reve_off)
+          {
+			PhantomNodeWithDistance transformed = MakePhantomNode(datafacade.GetCoordinateOfNode(geom.front()), data);
+            return transformed;
+          }
+          else
+          {
+			PhantomNodeWithDistance transformed = MakePhantomNode(datafacade.GetCoordinateOfNode(geom.back()), data);
+            return transformed;
+          }
+        }
+        else
+        {
+            return phantomWithDistance;
+        }
     }
 
     bool CheckSegmentDistance(const Coordinate input_coordinate,
