@@ -7,8 +7,6 @@
 
 #include <osmium/osm/way.hpp>
 
-#include <sol2/sol.hpp>
-
 #include <string>
 #include <unordered_map>
 
@@ -30,9 +28,15 @@ struct LocationDependentData
     using property_t = boost::variant<boost::blank, double, std::string, bool>;
     using properties_t = std::unordered_map<std::string, property_t>;
 
+    LocationDependentData(const boost::filesystem::path &path);
+
     LocationDependentData(const std::vector<boost::filesystem::path> &file_paths);
 
-    sol::table operator()(sol::state &state, const osmium::Way &way) const;
+    bool empty() const { return rtree.empty(); }
+
+    properties_t operator()(const point_t &point) const;
+
+    properties_t operator()(const osmium::Way &way) const;
 
   private:
     void loadLocationDependentData(const boost::filesystem::path &file_path);

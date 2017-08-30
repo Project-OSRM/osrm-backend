@@ -18,6 +18,11 @@ namespace osrm
 namespace extractor
 {
 
+LocationDependentData::LocationDependentData(const boost::filesystem::path &path)
+{
+    loadLocationDependentData(path);
+}
+
 LocationDependentData::LocationDependentData(const std::vector<boost::filesystem::path> &file_paths)
 {
     for (const auto &path : file_paths)
@@ -139,37 +144,13 @@ void LocationDependentData::loadLocationDependentData(const boost::filesystem::p
                 << polygons.size() << " GeoJSON polygons";
 }
 
-namespace
+LocationDependentData::properties_t LocationDependentData::operator()(const point_t &point) const
 {
-struct table_setter : public boost::static_visitor<>
-{
-    table_setter(sol::table &table, const std::string &key) : table(table), key(key) {}
-    template <typename T> void operator()(const T &value) const { table.set(key, value); }
-    void operator()(const boost::blank &) const { /* ignore */}
+    properties_t result;
 
-    sol::table &table;
-    const std::string &key;
-};
-}
-
-sol::table LocationDependentData::operator()(sol::state &state, const osmium::Way &way) const
-{
-    if (rtree.empty())
-        return sol::make_object(state, sol::nil);
-
-    // HEURISTIC: use a single node (last) of the way to localize the way
-    // For more complicated scenarios a proper merging of multiple tags
-    // at one or many locations must be provided
-    const auto &nodes = way.nodes();
-    const auto &location = nodes.back().location();
-    const point_t point(location.lon(), location.lat());
-
-    auto table = sol::table(state, sol::create);
-    auto merger = [this, &table](const rtree_t::value_type &rtree_entry) {
-        for (const auto &key_value : properties[polygons[rtree_entry.second].second])
-        {
-            boost::apply_visitor(table_setter(table, key_value.first), key_value.second);
-        }
+    auto merger = [this, &result](const rtree_t::value_type &rtree_entry) {
+        const auto &polygon_properties = properties[polygons[rtree_entry.second].second];
+        result.insert(polygon_properties.begin(), polygon_properties.end());
     };
 
     // Search the R-tree and collect a Lua table of tags that correspond to the location
@@ -179,7 +160,19 @@ sol::table LocationDependentData::operator()(sol::state &state, const osmium::Wa
                     }),
                 boost::make_function_output_iterator(std::ref(merger)));
 
-    return table;
+    return result;
+}
+
+LocationDependentData::properties_t LocationDependentData::operator()(const osmium::Way &way) const
+{
+    // HEURISTIC: use a single node (last) of the way to localize the way
+    // For more complicated scenarios a proper merging of multiple tags
+    // at one or many locations must be provided
+    const auto &nodes = way.nodes();
+    const auto &location = nodes.back().location();
+    const point_t point(location.lon(), location.lat());
+
+    return operator()(point);
 }
 }
 }
