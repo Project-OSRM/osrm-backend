@@ -1,0 +1,6 @@
+*.swp
+.ycm_extra_conf.pyc
+/_build*
+/build
+/libosmium-deps
+/.vs*

@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<osm version="0.6">
+  <node id="167199652" version="3" timestamp="2010-12-27T13:15:02Z" uid="57645" user="KartoGrapHiti" changeset="6777507" lat="53.0526516" lon="8.8919477">
+    <tag k="amenity" v="pub"/>
+  </node>
+</osm>

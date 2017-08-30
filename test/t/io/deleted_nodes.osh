@@ -1,0 +1,5 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<osm version="0.6" generator="osmium/1.2.1">
+  <node id="1" version="1" timestamp="2015-09-17T11:52:00Z" uid="1" user="user_1" changeset="1" visible="false"/>
+  <node id="2" version="1" timestamp="2015-09-17T11:52:00Z" uid="1" user="user_1" changeset="1" visible="true" lat="1" lon="1"/>
+</osm>

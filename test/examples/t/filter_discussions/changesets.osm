@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<osm version="0.6" generator="Osmosis 0.41">
+  <changeset id="402757" created_at="2008-12-15T12:57:57Z" closed_at="2008-12-15T14:00:54Z" open="false" user="mrettig" uid="38842" min_lat="50.8899870" min_lon="8.0981539" max_lat="50.9508652" max_lon="8.1665031" num_changes="33" comments_count="0"/>
+  <changeset id="402758" created_at="2008-07-05T11:17:12Z" closed_at="2008-07-05T12:17:12Z" open="false" user="Jaycos" uid="45048" min_lat="51.7305590" min_lon="6.5904108" max_lat="51.7305590" max_lon="6.5904108" num_changes="1" comments_count="1">
+    <discussion>
+      <comment uid="123" user="foobar" date="2008-07-05T11:17:13Z">
+        <text>fake comment</text>
+      </comment>
+    </discussion>
+  </changeset>
+</osm>
