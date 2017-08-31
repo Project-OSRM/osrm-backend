@@ -39,6 +39,41 @@ constexpr const static int MIN_ZOOM_FOR_TURNS = 15;
 namespace
 {
 
+// This list is equivalent to the values returned by api::json::detail::instructionTypeToString,
+// but includes the internal instruction type names (in braces)
+const constexpr char *internal_turn_type_names[] = {"(not set)",
+                                                    "new name",
+                                                    "continue",
+                                                    "turn",
+                                                    "merge",
+                                                    "on ramp",
+                                                    "off ramp",
+                                                    "fork",
+                                                    "end of road",
+                                                    "notification",
+                                                    "roundabout",
+                                                    "roundabout",
+                                                    "rotary",
+                                                    "rotary",
+                                                    "roundabout turn",
+                                                    "roundabout turn",
+                                                    "use lane", // deprecated, should never appear
+                                                    "(noturn)", // internal types only below here
+                                                    "(suppressed)",
+                                                    "(enter roundabout at exit)",
+                                                    "(exit roundabout)",
+                                                    "(enter rotary at exit)",
+                                                    "(exit rotary)",
+                                                    "(enter roundabout intersection at exit)",
+                                                    "(exit roundabout intersection)",
+                                                    "(stay on roundabout)",
+                                                    "(sliproad)"};
+
+// Verify that we've got the same number of strings as there are TurnTypes
+static_assert(sizeof(internal_turn_type_names) / sizeof(internal_turn_type_names[0]) >=
+                  extractor::guidance::TurnType::MaxTurnType,
+              "Some turn types has not string representation.");
+
 using RTreeLeaf = datafacade::BaseDataFacade::RTreeLeaf;
 // TODO: Port all this encoding logic to https://github.com/mapbox/vector-tile, which wasn't
 // available when this code was originally written.
@@ -776,8 +811,8 @@ void encodeVectorTile(const DataFacadeBase &facade,
                     auto weight_idx =
                         use_point_float_value(t.weight / 10.0); // Note conversion to float here
 
-                    auto turntype_idx = use_point_string_value(
-                        api::json::detail::instructionTypeToString(t.turn_instruction.type));
+                    auto turntype_idx =
+                        use_point_string_value(internal_turn_type_names[t.turn_instruction.type]);
                     auto turnmodifier_idx =
                         use_point_string_value(api::json::detail::instructionModifierToString(
                             t.turn_instruction.direction_modifier));
