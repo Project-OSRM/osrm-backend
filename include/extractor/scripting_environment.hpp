@@ -19,6 +19,7 @@ namespace osmium
 {
 class Node;
 class Way;
+class Relation;
 }
 
 namespace osrm
@@ -35,6 +36,7 @@ namespace extractor
 class RestrictionParser;
 struct ExtractionNode;
 struct ExtractionWay;
+struct ExtractionRelation;
 struct ExtractionTurn;
 struct ExtractionSegment;
 
@@ -64,6 +66,7 @@ class ScriptingEnvironment
                     const RestrictionParser &restriction_parser,
                     std::vector<std::pair<const osmium::Node &, ExtractionNode>> &resulting_nodes,
                     std::vector<std::pair<const osmium::Way &, ExtractionWay>> &resulting_ways,
+                    std::vector<std::pair<const osmium::Relation &, ExtractionRelation>> &resulting_relations,
                     std::vector<InputConditionalTurnRestriction> &resulting_restrictions) = 0;
 };
 }
