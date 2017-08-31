@@ -379,3 +379,36 @@ Feature: Weight tests
             | a,d       | abcd,abcd  | 59.9m    | 6.996,0       | 7s,0s    |
             | a,e       | abcd,ce,ce | 60.1m    | 6.005,2.002,0 | 6s,2s,0s |
             | d,e       | abcd,ce,ce | 39.9m    | 1.991,2.002,0 | 2s,2s,0s |
+
+    @traffic @speed
+    Scenario: Updating speeds without affecting weights.
+        Given the profile file "testbot" initialized with
+        """
+        profile.properties.weight_precision = 3
+        """
+
+        And the node map
+            """
+            a-----------b
+             \         /
+                c----d
+            """
+        And the ways
+            | nodes | highway       | maxspeed |
+            | ab    | living_street | 5        |
+            | acdb  | motorway      | 100      |
+
+        # Note the comma on the last column - this indicates 'keep existing weight value'
+        And the speed file
+            """
+            1,2,100,
+            1,3,5,
+            3,4,5,
+            4,2,5,
+            """
+        And the contract extra arguments "--segment-speed-file {speeds_file}"
+        And the customize extra arguments "--segment-speed-file {speeds_file}"
+
+        When I route I should get
+            | waypoints | route      | distance | weights       | times    |
+            | a,b       | acdb,acdb  | 78.3m    | 11.744,0      | 56.4s,0s  |
