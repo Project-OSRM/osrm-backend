@@ -20,7 +20,7 @@ struct LocationDependentData
 {
     using point_t = boost::geometry::model::d2::
         point_xy<double, boost::geometry::cs::spherical_equatorial<boost::geometry::degree>>;
-    using segment_t = std::pair<point_t, point_t>;
+    using segment_t = boost::geometry::model::segment<point_t>;
     using polygon_t = boost::geometry::model::polygon<point_t>;
     using polygon_bands_t = std::vector<std::vector<segment_t>>;
     using box_t = boost::geometry::model::box<point_t>;

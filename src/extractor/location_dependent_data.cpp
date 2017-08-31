@@ -87,56 +87,42 @@ void LocationDependentData::loadLocationDependentData(const boost::filesystem::p
         return index;
     };
 
-    auto convert_to_ring = [](const auto &coordinates_array) -> polygon_t::ring_type {
-        polygon_t::ring_type ring;
-        for (rapidjson::SizeType i = 0; i < coordinates_array.Size(); ++i)
-        {
-            util::validateCoordinate(coordinates_array[i]);
-            const auto &coords = coordinates_array[i].GetArray();
-            ring.emplace_back(coords[0].GetDouble(), coords[1].GetDouble());
-        }
-        return ring;
-    };
-
-    auto index_polygon = [this, &bounding_boxes, &convert_to_ring](const auto &rings,
-                                                                   auto properties_index) {
-        // https://tools.ietf.org/html/rfc7946#section-3.1.6
+    auto index_polygon = [this, &bounding_boxes](const auto &rings, auto properties_index) {
+        // At least an outer ring in polygon https://tools.ietf.org/html/rfc7946#section-3.1.6
         BOOST_ASSERT(rings.Size() > 0);
-        polygon_t polygon;
-        polygon.outer() = convert_to_ring(rings[0].GetArray());
-        for (rapidjson::SizeType iring = 1; iring < rings.Size(); ++iring)
-        {
-            polygon.inners().emplace_back(convert_to_ring(rings[iring].GetArray()));
-        }
-        auto envelop = boost::geometry::return_envelope<box_t>(polygon);
-        bounding_boxes.emplace_back(envelop, polygons.size());
 
-        // here is a part of ExtractPolygon::ExtractPolygon code
-        // TODO: remove copy overhead
-        constexpr const int32_t segments_per_band = 10;
-        constexpr const int32_t max_bands = 10000;
-        const auto y_min = envelop.min_corner().y();
-        const auto y_max = envelop.max_corner().y();
-
-        std::vector<segment_t> segments;
-        auto add_ring = [&segments](const auto &ring) {
-            auto it = ring.begin();
-            const auto end = ring.end();
-
-            BOOST_ASSERT(it != end);
-            auto last_it = it++;
-            while (it != end)
-            {
-                segments.emplace_back(*last_it, *it);
-                last_it = it++;
-            }
+        auto to_point = [](const auto &json) -> point_t {
+            util::validateCoordinate(json);
+            const auto &coords = json.GetArray();
+            return {coords[0].GetDouble(), coords[1].GetDouble()};
         };
 
-        add_ring(polygon.outer());
-        for (const auto &ring : polygon.inners())
-            add_ring(ring);
+        std::vector<segment_t> segments;
+        auto append_ring_segments = [&segments, &to_point](const auto &coordinates_array) -> box_t {
+            box_t envelop;
+            if (!coordinates_array.Empty())
+            {
+                point_t curr = to_point(coordinates_array[0]), next;
+                for (rapidjson::SizeType i = 1; i < coordinates_array.Size(); ++i, curr = next)
+                {
+                    next = to_point(coordinates_array[i]);
+                    segments.emplace_back(curr, next);
+                    boost::geometry::expand(envelop, next);
+                }
+            }
+            return envelop;
+        };
 
-        int32_t num_bands = static_cast<int32_t>(segments.size()) / segments_per_band;
+        auto envelop = append_ring_segments(rings[0].GetArray());
+        bounding_boxes.emplace_back(envelop, polygons.size());
+        for (rapidjson::SizeType iring = 1; iring < rings.Size(); ++iring)
+        {
+            append_ring_segments(rings[iring].GetArray());
+        }
+
+        constexpr const std::size_t segments_per_band = 10;
+        constexpr const std::size_t max_bands = 10000;
+        auto num_bands = segments.size() / segments_per_band;
         if (num_bands < 1)
         {
             num_bands = 1;
@@ -147,6 +133,9 @@ void LocationDependentData::loadLocationDependentData(const boost::filesystem::p
         }
 
         polygon_bands_t bands(num_bands);
+
+        const auto y_min = envelop.min_corner().y();
+        const auto y_max = envelop.max_corner().y();
         const auto dy = (y_max - y_min) / num_bands;
 
         for (const auto &segment : segments)
@@ -155,15 +144,13 @@ void LocationDependentData::loadLocationDependentData(const boost::filesystem::p
             const std::pair<coord_t, coord_t> mm =
                 std::minmax(segment.first.y(), segment.second.y());
             const auto band_min = std::min<coord_t>(num_bands - 1, (mm.first - y_min) / dy);
-            const auto band_max = std::min<coord_t>(
-                num_bands, ((mm.second - y_min) / dy) + 1); // TODO: use integer coordinates
+            const auto band_max = std::min<coord_t>(num_bands, ((mm.second - y_min) / dy) + 1);
 
             for (auto band = band_min; band < band_max; ++band)
             {
                 bands[band].push_back(segment);
             }
         }
-        // EOC
 
         polygons.emplace_back(std::make_pair(bands, properties_index));
     };
@@ -221,7 +208,7 @@ LocationDependentData::properties_t LocationDependentData::operator()(const poin
 
                         const auto y_min = envelop.min_corner().y();
                         const auto y_max = envelop.max_corner().y();
-                        auto dy = (y_max - y_min) / bands.size();
+                        const auto dy = (y_max - y_min) / bands.size();
 
                         std::size_t band = (point.y() - y_min) / dy;
                         if (band >= bands.size())
@@ -277,6 +264,9 @@ LocationDependentData::properties_t LocationDependentData::operator()(const osmi
     // For more complicated scenarios a proper merging of multiple tags
     // at one or many locations must be provided
     const auto &nodes = way.nodes();
+
+    // TODO: the next call requires an OSM file preprocessed with a command
+    //   osmium add-locations-to-ways --keep-untagged-nodes
     const auto &location = nodes.back().location();
     const point_t point(location.lon(), location.lat());
 
