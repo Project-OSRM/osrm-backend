@@ -99,7 +99,11 @@ void LocationDependentData::loadLocationDependentData(const boost::filesystem::p
 
         std::vector<segment_t> segments;
         auto append_ring_segments = [&segments, &to_point](const auto &coordinates_array) -> box_t {
-            box_t envelop;
+            using coord_t = boost::geometry::traits::coordinate_type<point_t>::type;
+            auto x_min = std::numeric_limits<coord_t>::max();
+            auto y_min = std::numeric_limits<coord_t>::max();
+            auto x_max = std::numeric_limits<coord_t>::min();
+            auto y_max = std::numeric_limits<coord_t>::min();
             if (!coordinates_array.Empty())
             {
                 point_t curr = to_point(coordinates_array[0]), next;
@@ -107,10 +111,14 @@ void LocationDependentData::loadLocationDependentData(const boost::filesystem::p
                 {
                     next = to_point(coordinates_array[i]);
                     segments.emplace_back(curr, next);
-                    boost::geometry::expand(envelop, next);
+                    x_min = std::min(x_min, next.x());
+                    x_max = std::max(x_max, next.x());
+                    y_min = std::min(y_min, next.y());
+                    y_max = std::max(y_max, next.y());
                 }
             }
-            return envelop;
+
+            return box_t{{x_min, y_min}, {x_max, y_max}};
         };
 
         auto envelop = append_ring_segments(rings[0].GetArray());
@@ -121,7 +129,7 @@ void LocationDependentData::loadLocationDependentData(const boost::filesystem::p
         }
 
         constexpr const std::size_t segments_per_band = 10;
-        constexpr const std::size_t max_bands = 10000;
+        constexpr const std::size_t max_bands = 100000;
         auto num_bands = segments.size() / segments_per_band;
         if (num_bands < 1)
         {
