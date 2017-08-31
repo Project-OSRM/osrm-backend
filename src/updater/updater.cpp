@@ -162,12 +162,27 @@ updateSegmentData(const UpdaterConfig &config,
     // closure to convert SpeedSource value to weight and count fallbacks to durations
     std::atomic<std::uint32_t> fallbacks_to_duration{0};
     auto convertToWeight = [&profile_properties, &fallbacks_to_duration](
-        const SpeedSource &value, double distance_in_meters) {
-        double rate = value.rate;
-        if (!std::isfinite(rate))
-        { // use speed value in meters per second as the rate
+        const SegmentWeight &existing_weight, const SpeedSource &value, double distance_in_meters) {
+
+        double rate = std::numeric_limits<double>::quiet_NaN();
+
+        // if value.rate is not set, we fall back to duration
+        //    this happens when there is no 4th column in the input CSV
+        // if value.rate is set but NaN, we keep the existing weight
+        //    this happens when there is an empty 4th column in the input CSV
+        // otherwise, we use the value as the new rate
+        if (!value.rate)
+        {
             ++fallbacks_to_duration;
             rate = value.speed / 3.6;
+        }
+        else
+        {
+            rate = *value.rate;
+            if (!std::isfinite(rate))
+            {
+                return existing_weight;
+            }
         }
 
         if (rate <= 0.)
@@ -231,7 +246,8 @@ updateSegmentData(const UpdaterConfig &config,
                 {
                     auto segment_length = segment_lengths[segment_offset];
                     auto new_duration = convertToDuration(value->speed, segment_length);
-                    auto new_weight = convertToWeight(*value, segment_length);
+                    auto new_weight =
+                        convertToWeight(fwd_weights_range[segment_offset], *value, segment_length);
                     fwd_was_updated = true;
 
                     fwd_weights_range[segment_offset] = new_weight;
@@ -270,7 +286,8 @@ updateSegmentData(const UpdaterConfig &config,
                 {
                     auto segment_length = segment_lengths[segment_offset];
                     auto new_duration = convertToDuration(value->speed, segment_length);
-                    auto new_weight = convertToWeight(*value, segment_length);
+                    auto new_weight =
+                        convertToWeight(rev_weights_range[segment_offset], *value, segment_length);
                     rev_was_updated = true;
 
                     rev_weights_range[segment_offset] = new_weight;

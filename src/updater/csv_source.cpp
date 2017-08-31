@@ -34,7 +34,9 @@ namespace csv
 SegmentLookupTable readSegmentValues(const std::vector<std::string> &paths)
 {
     CSVFilesParser<Segment, SpeedSource> parser(
-        1, qi::ulong_long >> ',' >> qi::ulong_long, qi::uint_ >> -(',' >> qi::double_));
+        1,
+        qi::ulong_long >> ',' >> qi::ulong_long,
+        qi::uint_ >> -(',' >> (qi::double_ | qi::attr(std::numeric_limits<double>::quiet_NaN()))));
 
     // Check consistency of keys in the result lookup table
     auto result = parser(paths);
