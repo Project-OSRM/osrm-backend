@@ -6,6 +6,8 @@
 #include "util/vector_tile.hpp"
 #include "util/web_mercator.hpp"
 
+#include "engine/api/json_factory.hpp"
+
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/geometries.hpp>
 #include <boost/geometry/geometries/point_xy.hpp>
@@ -305,6 +307,9 @@ void encodeVectorTile(const DataFacadeBase &facade,
     std::vector<float> used_point_floats;
     std::unordered_map<float, std::size_t> point_float_offsets;
 
+    std::vector<std::string> used_point_strings;
+    std::unordered_map<std::string, std::size_t> point_string_offsets;
+
     std::uint8_t max_datasource_id = 0;
 
     // This is where we accumulate information on turns
@@ -354,6 +359,26 @@ void encodeVectorTile(const DataFacadeBase &facade,
             used_point_floats.push_back(value);
             offset = used_point_floats.size() - 1;
             point_float_offsets[value] = offset;
+        }
+        else
+        {
+            offset = found->second;
+        }
+
+        return offset;
+    };
+
+    // And a third time, should probably template this....
+    const auto use_point_string_value = [&used_point_strings,
+                                         &point_string_offsets](const std::string &value) {
+        const auto found = point_string_offsets.find(value);
+        std::size_t offset;
+
+        if (found == point_string_offsets.end())
+        {
+            used_point_strings.push_back(value);
+            offset = used_point_strings.size() - 1;
+            point_string_offsets[value] = offset;
         }
         else
         {
@@ -731,21 +756,39 @@ void encodeVectorTile(const DataFacadeBase &facade,
         {
             // we need to pre-encode all values here because we need the full offsets later
             // for encoding the actual features.
-            std::vector<std::tuple<util::Coordinate, unsigned, unsigned, unsigned, unsigned>>
+            std::vector<std::tuple<util::Coordinate,
+                                   unsigned,
+                                   unsigned,
+                                   unsigned,
+                                   unsigned,
+                                   unsigned,
+                                   unsigned>>
                 encoded_turn_data(all_turn_data.size());
-            std::transform(all_turn_data.begin(),
-                           all_turn_data.end(),
-                           encoded_turn_data.begin(),
-                           [&](const routing_algorithms::TurnData &t) {
-                               auto angle_idx = use_point_int_value(t.in_angle);
-                               auto turn_idx = use_point_int_value(t.turn_angle);
-                               auto duration_idx = use_point_float_value(
-                                   t.duration / 10.0); // Note conversion to float here
-                               auto weight_idx = use_point_float_value(
-                                   t.weight / 10.0); // Note conversion to float here
-                               return std::make_tuple(
-                                   t.coordinate, angle_idx, turn_idx, duration_idx, weight_idx);
-                           });
+            std::transform(
+                all_turn_data.begin(),
+                all_turn_data.end(),
+                encoded_turn_data.begin(),
+                [&](const routing_algorithms::TurnData &t) {
+                    auto angle_idx = use_point_int_value(t.in_angle);
+                    auto turn_idx = use_point_int_value(t.turn_angle);
+                    auto duration_idx =
+                        use_point_float_value(t.duration / 10.0); // Note conversion to float here
+                    auto weight_idx =
+                        use_point_float_value(t.weight / 10.0); // Note conversion to float here
+
+                    auto turntype_idx = use_point_string_value(
+                        api::json::detail::instructionTypeToString(t.turn_instruction.type));
+                    auto turnmodifier_idx =
+                        use_point_string_value(api::json::detail::instructionModifierToString(
+                            t.turn_instruction.direction_modifier));
+                    return std::make_tuple(t.coordinate,
+                                           angle_idx,
+                                           turn_idx,
+                                           duration_idx,
+                                           weight_idx,
+                                           turntype_idx,
+                                           turnmodifier_idx);
+                });
 
             // Now write the points layer for turn penalty data:
             // Add a layer object to the PBF stream.  3=='layer' from the vector tile spec
@@ -785,6 +828,12 @@ void encodeVectorTile(const DataFacadeBase &facade,
                         field.add_element(used_point_ints.size() + std::get<3>(point_turn_data));
                         field.add_element(3); // "weight" tag key offset
                         field.add_element(used_point_ints.size() + std::get<4>(point_turn_data));
+                        field.add_element(4); // "type" tag key offset
+                        field.add_element(used_point_ints.size() + used_point_floats.size() +
+                                          std::get<5>(point_turn_data));
+                        field.add_element(5); // "modifier" tag key offset
+                        field.add_element(used_point_ints.size() + used_point_floats.size() +
+                                          std::get<6>(point_turn_data));
                     }
                     {
                         // Add the geometry as the last field in this feature
@@ -813,6 +862,8 @@ void encodeVectorTile(const DataFacadeBase &facade,
             point_layer_writer.add_string(util::vector_tile::KEY_TAG, "turn_angle");
             point_layer_writer.add_string(util::vector_tile::KEY_TAG, "cost");
             point_layer_writer.add_string(util::vector_tile::KEY_TAG, "weight");
+            point_layer_writer.add_string(util::vector_tile::KEY_TAG, "type");
+            point_layer_writer.add_string(util::vector_tile::KEY_TAG, "modifier");
 
             // Now, save the lists of integers and floats that our features refer to.
             for (const auto &value : used_point_ints)
@@ -826,6 +877,12 @@ void encodeVectorTile(const DataFacadeBase &facade,
                 protozero::pbf_writer values_writer(point_layer_writer,
                                                     util::vector_tile::VARIANT_TAG);
                 values_writer.add_float(util::vector_tile::VARIANT_TYPE_FLOAT, value);
+            }
+            for (const auto &value : used_point_strings)
+            {
+                protozero::pbf_writer values_writer(point_layer_writer,
+                                                    util::vector_tile::VARIANT_TAG);
+                values_writer.add_string(util::vector_tile::VARIANT_TYPE_STRING, value);
             }
         }
 

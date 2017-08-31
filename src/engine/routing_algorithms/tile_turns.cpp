@@ -183,6 +183,7 @@ std::vector<TurnData> generateTurns(const datafacade &facade,
                     // treat the whole lot as the "turn cost" that we'll stick on the map.
                     const auto turn_weight = data.weight - sum_node_weight;
                     const auto turn_duration = data.duration - sum_node_duration;
+                    const auto turn_instruction = facade.GetTurnInstructionForEdgeID(data.turn_id);
 
                     // Find the three nodes that make up the turn movement)
                     const auto node_from = startnode;
@@ -214,8 +215,12 @@ std::vector<TurnData> generateTurns(const datafacade &facade,
                     // Save everything we need to later add all the points to the tile.
                     // We need the coordinate of the intersection, the angle in, the turn
                     // angle and the turn cost.
-                    all_turn_data.push_back(
-                        TurnData{coord_via, angle_in, turn_angle, turn_weight, turn_duration});
+                    all_turn_data.push_back(TurnData{coord_via,
+                                                     angle_in,
+                                                     turn_angle,
+                                                     turn_weight,
+                                                     turn_duration,
+                                                     turn_instruction});
                 }
             }
         }
