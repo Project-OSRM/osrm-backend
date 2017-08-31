@@ -4,6 +4,7 @@
 #include "extractor/extraction_containers.hpp"
 #include "extractor/extraction_node.hpp"
 #include "extractor/extraction_way.hpp"
+#include "extractor/extraction_relation.hpp"
 #include "extractor/extractor_callbacks.hpp"
 #include "extractor/files.hpp"
 #include "extractor/raster_source.hpp"
@@ -346,6 +347,7 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
         SharedBuffer buffer;
         std::vector<std::pair<const osmium::Node &, ExtractionNode>> resulting_nodes;
         std::vector<std::pair<const osmium::Way &, ExtractionWay>> resulting_ways;
+        std::vector<std::pair<const osmium::Relation &, ExtractionRelation>> resulting_relations;
         std::vector<InputConditionalTurnRestriction> resulting_restrictions;
     };
 
@@ -372,6 +374,7 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
                                                   restriction_parser,
                                                   parsed_buffer->resulting_nodes,
                                                   parsed_buffer->resulting_ways,
+                                                  parsed_buffer->resulting_relations,
                                                   parsed_buffer->resulting_restrictions);
             return parsed_buffer;
         });

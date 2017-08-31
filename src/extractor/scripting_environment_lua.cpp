@@ -2,6 +2,7 @@
 
 #include "extractor/extraction_helper_functions.hpp"
 #include "extractor/extraction_node.hpp"
+#include "extractor/extraction_relation.hpp"
 #include "extractor/extraction_segment.hpp"
 #include "extractor/extraction_turn.hpp"
 #include "extractor/extraction_way.hpp"
@@ -29,6 +30,9 @@ template <> struct is_container<osmium::Node> : std::false_type
 {
 };
 template <> struct is_container<osmium::Way> : std::false_type
+{
+};
+template <> struct is_container<osmium::Relation> : std::false_type
 {
 };
 }
@@ -216,6 +220,14 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
                            "sharp_left",
                            extractor::guidance::DirectionModifier::SharpLeft);
 
+    context.state.new_enum("item_type",
+                           "node",
+                           osmium::item_type::node,
+                           "way",
+                           osmium::item_type::way,
+                           "relation",
+                           osmium::item_type::relation);
+
     context.state.new_usertype<RasterContainer>("raster",
                                                 "load",
                                                 &RasterContainer::LoadRasterSource,
@@ -276,6 +288,71 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
         "version",
         &osmium::Way::version);
 
+    struct RelationMemberWrap
+    {
+        explicit RelationMemberWrap(const osmium::RelationMember & member)
+        {
+            init(member);
+        }
+
+        RelationMemberWrap()
+            : item_type(osmium::item_type::undefined)
+        {
+        }
+
+        void init(const osmium::RelationMember & member)
+        {
+            role = member.role();
+            item_type = member.type();
+            id = member.ref();
+        }
+
+        const char* GetRole() const { return role.c_str(); }
+        osmium::item_type GetItemType() const { return item_type; }
+        osmium::object_id_type GetId() const { return id; }
+
+        util::OsmIDTyped ref() const { return util::OsmIDTyped(id, std::uint8_t(item_type)); }
+
+        std::string role;
+        osmium::item_type item_type;
+        osmium::object_id_type id;
+    };
+
+    context.state.new_usertype<util::OsmIDTyped>(
+        "OsmIDTypes",
+        "id",
+        &util::OsmIDTyped::GetID,
+        "type",
+        &util::OsmIDTyped::GetType
+    );
+
+    context.state.new_usertype<RelationMemberWrap>(
+        "RelationMember",
+        "role",
+        &RelationMemberWrap::GetRole,
+        "item_type",
+        &RelationMemberWrap::GetItemType
+    );
+
+    /** TODO: make better solution with members iteration.
+     *  For this moment, just make vector of RelationMember wrappers
+     */
+    context.state.new_usertype<osmium::Relation>("Relation",
+                                                 "get_value_by_key",
+                                                 &get_value_by_key<osmium::Relation>,
+                                                 "id",
+                                                 &osmium::Relation::id,
+                                                 "version",
+                                                 &osmium::Relation::version,
+                                                 "members", [](const osmium::Relation &rel)
+    {
+        std::vector<RelationMemberWrap> members(rel.members().size());
+        size_t i = 0;
+        for (const auto & m : rel.members())
+            members[i++].init(m);
+        return sol::as_table(std::move(members));
+    });
+
     context.state.new_usertype<osmium::Node>("Node",
                                              "location",
                                              &osmium::Node::location,
@@ -284,7 +361,7 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
                                              "id",
                                              &osmium::Node::id,
                                              "version",
-                                             &osmium::Way::version);
+                                             &osmium::Node::version);
 
     context.state.new_usertype<ExtractionNode>("ResultNode",
                                                "traffic_lights",
@@ -365,6 +442,37 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
         "backward_restricted",
         sol::property([](const ExtractionWay &way) { return way.backward_restricted; },
                       [](ExtractionWay &way, bool flag) { way.backward_restricted = flag; }));
+
+    struct ExtractionRelationData
+    {
+        explicit ExtractionRelationData(ExtractionRelation::AttributesMap & attrs_)
+            : attrs(attrs_)
+        {
+        }
+
+        ExtractionRelation::AttributesMap & attrs;
+    };
+
+    context.state.new_usertype<ExtractionRelationData>(
+        "ExtractionRelationData",
+        "size",
+        [](const ExtractionRelationData & data) { return data.attrs.size(); },
+        sol::meta_function::new_index,
+        [](ExtractionRelationData & data, const std::string & key, sol::stack_object object) { return data.attrs[key] = object.as<std::string>(); },
+        sol::meta_function::index,
+        [](ExtractionRelationData & data, const std::string & key) { return data.attrs[key]; }
+    );
+
+    context.state.new_usertype<ExtractionRelation>(
+        "ExtractionRelation",
+        sol::meta_function::new_index,
+        [](ExtractionRelation & rel, const RelationMemberWrap & member) { return ExtractionRelationData(rel.GetMember(member.ref())); },
+        sol::meta_function::index,
+        [](ExtractionRelation & rel, const RelationMemberWrap & member) { return ExtractionRelationData(rel.GetMember(member.ref())); },
+        "restriction",
+        sol::property([](const ExtractionRelation & rel) { return rel.is_restriction; },
+                      [](ExtractionRelation & rel, bool flag) { rel.is_restriction = flag; })
+    );
 
     context.state.new_usertype<ExtractionSegment>("ExtractionSegment",
                                                   "source",
@@ -457,9 +565,7 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
     util::Log() << "Using profile api version " << context.api_version;
 
     // version-dependent parts of the api
-    switch (context.api_version)
-    {
-    case 2:
+    auto initV2Context = [&]()
     {
         // clear global not used in v2
         context.state["properties"] = sol::nullopt;
@@ -543,6 +649,22 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
             if (force_split_edges != sol::nullopt)
                 context.properties.force_split_edges = force_split_edges.value();
         }
+    };
+
+    switch (context.api_version)
+    {
+    case 3:
+    {
+        initV2Context();
+        context.relation_function = function_table.value()["process_relation"];
+
+        context.has_relation_function = context.relation_function.valid();
+        break;
+    }
+
+    case 2:
+    {
+        initV2Context();
         break;
     }
     case 1:
@@ -617,10 +739,12 @@ void Sol2ScriptingEnvironment::ProcessElements(
     const RestrictionParser &restriction_parser,
     std::vector<std::pair<const osmium::Node &, ExtractionNode>> &resulting_nodes,
     std::vector<std::pair<const osmium::Way &, ExtractionWay>> &resulting_ways,
+    std::vector<std::pair<const osmium::Relation &, ExtractionRelation>> &resulting_relations,
     std::vector<InputConditionalTurnRestriction> &resulting_restrictions)
 {
     ExtractionNode result_node;
     ExtractionWay result_way;
+    ExtractionRelation result_relation;
     auto &local_context = this->GetSol2Context();
 
     for (auto entity = buffer.cbegin(), end = buffer.cend(); entity != end; ++entity)
@@ -654,6 +778,17 @@ void Sol2ScriptingEnvironment::ProcessElements(
             if (result_res)
             {
                 resulting_restrictions.push_back(*result_res);
+            }
+
+            if (local_context.api_version > 2)
+            {
+                result_relation.clear();
+                if (local_context.has_relation_function)
+                {
+                    local_context.ProcessRelation(static_cast<const osmium::Relation &>(*entity), result_relation);
+                }
+                resulting_relations.push_back(std::pair<const osmium::Relation &, ExtractionRelation>(
+                    static_cast<const osmium::Relation &>(*entity), std::move(result_relation)));
             }
         }
         break;
@@ -732,6 +867,7 @@ std::vector<std::vector<std::string>> Sol2ScriptingEnvironment::GetExcludableCla
     auto &context = GetSol2Context();
     switch (context.api_version)
     {
+    case 3:
     case 2:
         return Sol2ScriptingEnvironment::GetStringListsFromTable("excludable");
     default:
@@ -744,6 +880,7 @@ std::vector<std::string> Sol2ScriptingEnvironment::GetClassNames()
     auto &context = GetSol2Context();
     switch (context.api_version)
     {
+    case 3:
     case 2:
         return Sol2ScriptingEnvironment::GetStringListFromTable("classes");
     default:
@@ -756,6 +893,7 @@ std::vector<std::string> Sol2ScriptingEnvironment::GetNameSuffixList()
     auto &context = GetSol2Context();
     switch (context.api_version)
     {
+    case 3:
     case 2:
         return Sol2ScriptingEnvironment::GetStringListFromTable("suffix_list");
     case 1:
@@ -770,6 +908,7 @@ std::vector<std::string> Sol2ScriptingEnvironment::GetRestrictions()
     auto &context = GetSol2Context();
     switch (context.api_version)
     {
+    case 3:
     case 2:
         return Sol2ScriptingEnvironment::GetStringListFromTable("restrictions");
     case 1:
@@ -785,6 +924,7 @@ void Sol2ScriptingEnvironment::ProcessTurn(ExtractionTurn &turn)
 
     switch (context.api_version)
     {
+    case 3:
     case 2:
         if (context.has_turn_penalty_function)
         {
@@ -851,6 +991,7 @@ void Sol2ScriptingEnvironment::ProcessSegment(ExtractionSegment &segment)
     {
         switch (context.api_version)
         {
+        case 3:
         case 2:
             context.segment_function(context.profile_table, segment);
             break;
@@ -872,6 +1013,9 @@ void LuaScriptingContext::ProcessNode(const osmium::Node &node, ExtractionNode &
 
     switch (api_version)
     {
+    case 3:
+//        BOOST_ASSERT(false); // TODO: implement me
+//        break;
     case 2:
         node_function(profile_table, node, result);
         break;
@@ -888,6 +1032,9 @@ void LuaScriptingContext::ProcessWay(const osmium::Way &way, ExtractionWay &resu
 
     switch (api_version)
     {
+    case 3:
+//        BOOST_ASSERT(false); // TODO: implement me
+//        break;
     case 2:
         way_function(profile_table, way, result);
         break;
@@ -897,5 +1044,14 @@ void LuaScriptingContext::ProcessWay(const osmium::Way &way, ExtractionWay &resu
         break;
     }
 }
+
+void LuaScriptingContext::ProcessRelation(const osmium::Relation &relation, ExtractionRelation &result)
+{
+    BOOST_ASSERT(state.lua_state() != nullptr);
+    BOOST_ASSERT(api_version > 2);
+
+    relation_function(profile_table, relation, result);
 }
-}
+
+} // namespace extractor
+} // namespace osrm
