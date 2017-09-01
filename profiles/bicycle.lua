@@ -11,7 +11,6 @@ pprint = require('lib/pprint')
 
 Bicycle = {}
 
-local foot = require('foot')
 function setup()
   local default_speed = 15
   local walking_speed = 6
@@ -152,29 +151,31 @@ function setup()
     },
 
     routes = {
-      railway = {
-        access_required = true,
-        mode = mode.train,
-        speed = 10,
-        types = {
-          train = {},
-          railway = {},
-          subway = {},
-          light_rail = {},
-          monorail = {},
-          tram = {}
-        }
-      },
-      route = {
-        types = {
-          ferry = {
-            access_required = true,
-            speed = 5
-            mode = mode.ferry,
+      access_required = true,
+      speed = 10,
+      keys = {
+        railway = {
+          mode = mode.train,
+          values = Set {
+            'train',
+            'railway',
+            'subway',
+            'light_rail',
+            'monorail',
+            'tram'
+          }
+        },
+        route = {
+          values = {
+            ferry = {
+              speed = 5,
+              mode = mode.ferry,
+              access_required = false
+            }
           }
         }
       }
-    }
+    },
 
     bridge_speeds = {
       movable = 5
@@ -358,15 +359,6 @@ function Bicycle.weight(profile,way,result,data)
   end
 end
 
-function Bicycle.try_bicycle(profile, way, result, data)
-end
-
-function Bicycle.try_foot(profile, way, result, data)
-  local foot_result = WayHandlers.new_result()
-  profile.foot_functions.process_way(profile.foot_profile, way, foot_result)
-  WayHandlers.merge_results(foot_result,result)
-end
-
 function process_way(profile, way, result)
   -- the initial filtering of ways based on presence of tags
   -- affects processing times significantly, because all ways
@@ -386,6 +378,7 @@ function process_way(profile, way, result)
     highway = way:get_value_by_key('highway'),
     route = way:get_value_by_key('route'),
     railway = way:get_value_by_key('railway'),
+    bridge = way:get_value_by_key('bridge')
   }
 
 
@@ -395,7 +388,6 @@ function process_way(profile, way, result)
   local railway = way:get_value_by_key("railway")
   local amenity = way:get_value_by_key("amenity")
   local public_transport = way:get_value_by_key("public_transport")
-  local bridge = way:get_value_by_key("bridge")
 
   if (not data.highway or data.highway == '') and
   (not data.route or data.route == '') and
@@ -403,16 +395,10 @@ function process_way(profile, way, result)
   (not amenity or amenity=='') and
   (not man_made or man_made=='') and
   (not public_transport or public_transport=='') and
-  (not bridge or bridge=='')
+  (not data.bridge or data.bridge=='')
   then
     return false
   end
-
-  -- access
-  --local access = find_access_tag(way, profile.access_tags_hierarchy)
-  --if access and profile.access_tag_blacklist[access] then
-  --  return false
-  --end
 
   -- other tags
   local maxspeed = parse_maxspeed(way:get_value_by_key ( "maxspeed") )
@@ -431,13 +417,8 @@ function process_way(profile, way, result)
     return false
   end
 
-
-  if WayHandlers.routes(profile,way,result,data) == true then
-  --if WayHandlers.ferries(profile,way,result,data) == true then
-  --  --
-  --elseif WayHandlers.railways(profile,way,result,data) == true then
-    -- 
-  else
+  if WayHandlers.routes(profile,way,result,data) == false then
+    WayHandlers.movables(profile,way,result,data)
     WayHandlers.speed(profile,way,result,data)
     WayHandlers.maxspeed(profile,way,result,data)
     WayHandlers.oneway(profile,way,result,data)
@@ -467,6 +448,7 @@ function process_way(profile, way, result)
   -- handle remaining stuff
   handlers = Sequence {
     WayHandlers.roundabouts,
+    WayHandlers.penalties,
     Bicycle.weight,
     WayHandlers.classification,
     WayHandlers.startpoint,

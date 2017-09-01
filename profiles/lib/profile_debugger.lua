@@ -121,6 +121,9 @@ function Debug.process_way(way,result)
   result.backward_mode = 0
   result.forward_speed = -1
   result.backward_speed = -1
+  result.forward_rate = -1
+  result.backward_rate = -1
+  result.weight = -1
   result.duration = 0
   result.forward_classes = {}
   result.backward_classes = {}

@@ -24,6 +24,44 @@ Feature: Bike - Handle ferry routes
             | c    | e  | cde,cde         |
             | c    | g  | cde,efg,efg     |
 
+    Scenario: Bike - Ferry route, access denied
+        Given the node map
+            """
+            a b c
+                d
+                e f g
+            """
+
+        And the ways
+            | nodes | highway | route | bicycle |
+            | abc   | primary |       |         |
+            | cde   |         | ferry | no      |
+            | efg   | primary |       |         |
+
+        When I route I should get
+            | from | to | route |
+            | a    | g  |       |  
+            | c    | e  |       |
+            | c    | g  |       |
+
+    @todo
+    Scenario: Bike - Ferry route should be unattractive, even when fast
+        Given the node map
+            """
+            c---------------d
+            |               |
+            b-----a ~ f-----e
+            """
+
+        And the ways
+            | nodes  | highway | route | bicycle | duration |
+            | abcdef | primary |       |         |          |
+            | af     |         | ferry | yes     | 00:01    |
+
+        When I route I should get
+            | from | to | route         | time |
+            | a    | f  | abcdef,abcdef | 432s |
+
     Scenario: Bike - Ferry duration, single node
         Given the node map
             """
@@ -44,6 +82,13 @@ Feature: Bike - Handle ferry routes
             | be    |         | ferry | yes     | 0:10     |
             | bg    |         | ferry | yes     | 1:00     |
             | bi    |         | ferry | yes     | 10:00    |
+
+        When I route I should get
+            | from | to | route | time    |
+            | b    | c  | bc,bc | 60s     |
+            | b    | e  | be,be | 603.1s  |
+            | b    | g  | bg,bg | 3606.2s |
+            | b    | i  | bi,bi | 36008s  |
 
     Scenario: Bike - Ferry duration, multiple nodes
         Given the node map

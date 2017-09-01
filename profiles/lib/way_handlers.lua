@@ -157,24 +157,68 @@ function WayHandlers.destinations(profile,way,result,data)
   end
 end
 
+function select_first_value(values)
+  for i=1,#values, 1
+  do
+    local v = values[i]
+     if v ~= nil then
+      return v
+    end
+  end
+end
+
 -- handling routes with durations, including ferries and railway
 function WayHandlers.routes(profile,way,result,data)
-  for key,key_settings in pairs(profile.routes) do
-    local speed = key_settings.speed[data[key]]
-    if speed and speed > 0 then
-      local duration  = way:get_value_by_key("duration")
-      if duration and durationIsValid(duration) then
-        result.duration = math.max( parseDuration(duration), 1 )
-        speed = 0
-      end
-      result.forward_mode = route_type.mode
-      result.backward_mode = route_type.mode
-      result.forward_speed = speed
-      result.backward_speed = speed
-      return true
-    end
+  local default_mode = profile.routes.mode or profile.default_mode
+  local default_speed = profile.routes.speed or profile.default_speed
+  local default_access_required = profile.routes.access_required or false
 
+  for k,k_settings in pairs(profile.routes.keys) do
+    local k_speed = k_settings.speed
+    local k_mode = k_settings.mode
+    local k_access_required = k_settings.access_required
+
+    for v,v_settings in pairs(k_settings.values) do
+      local v_speed
+      local v_mode
+      local v_access_required
+      if type(v_settings) == "table" then
+        v_speed = v_settings.speed
+        v_mode = v_settings.mode
+        v_access_required = v_settings.access_required
+      end
+
+      if way:get_value_by_key(k) == v then
+        local access_required = select_first_value( {v_access_required, k_access_required, default_access_required} )
+
+        if access_required then
+          if data.backward_access ~= "yes" or data.backward_access ~= "yes" then
+            return false
+          end
+        end
+
+        local speed
+
+        local duration  = way:get_value_by_key("duration")
+        if duration and durationIsValid(duration) then
+          result.duration = math.max( parseDuration(duration), 1 )
+          speed = 0
+        else
+          speed = select_first_value( {v_speed, k_speed, default_speed } )
+        end
+
+        local mode = select_first_value( {v_mode, k_mode, default_mode} )
+        
+        result.forward_mode = mode
+        result.backward_mode = mode
+        
+        result.forward_speed = speed
+        result.backward_speed = speed
+        return true
+      end
+    end
   end
+  return false
 end
 
 -- handling ferries
@@ -216,6 +260,7 @@ end
 
 -- handling movable bridges
 function WayHandlers.movables(profile,way,result,data)
+  print('x')
   local bridge = data.bridge
   if bridge then
     local bridge_speed = profile.bridge_speeds[bridge]
@@ -472,6 +517,8 @@ function WayHandlers.penalties(profile,way,result,data)
 
   local forward_penalty = math.min(service_penalty, width_penalty, alternating_penalty, sideroad_penalty)
   local backward_penalty = math.min(service_penalty, width_penalty, alternating_penalty, sideroad_penalty)
+
+    print(profile.properties.weight_name)
 
   if profile.properties.weight_name == 'routability' then
     if result.forward_speed > 0 then
