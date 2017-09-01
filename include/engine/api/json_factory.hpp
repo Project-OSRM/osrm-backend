@@ -36,6 +36,15 @@ namespace detail
 std::string instructionTypeToString(extractor::guidance::TurnType::Enum type);
 std::string instructionModifierToString(extractor::guidance::DirectionModifier::Enum modifier);
 
+/**
+ * Returns a string representing all instruction types (including internal types that
+ * are normally not exposed in route responses)
+ *
+ * @param type the TurnType value to convert into a string
+ * @return a string representing the turn type (e.g. `turn` or `continue`)
+ */
+std::string internalInstructionTypeToString(extractor::guidance::TurnType::Enum type);
+
 util::json::Array coordinateToLonLat(const util::Coordinate coordinate);
 
 std::string modeToString(const extractor::TravelMode mode);
