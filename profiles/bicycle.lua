@@ -6,7 +6,6 @@ Set = require('lib/set')
 Sequence = require('lib/sequence')
 Handlers = require("lib/way_handlers")
 find_access_tag = require("lib/access").find_access_tag
-limit = require("lib/maxspeed").limit
 pprint = require('lib/pprint')
 
 Bicycle = {}
@@ -233,20 +232,6 @@ function setup()
   profile.foot_profile.implied_oneways = profile.implied_oneways
 
   return profile
-end
-
-local function parse_maxspeed(source)
-    if not source then
-        return 0
-    end
-    local n = tonumber(source:match("%d*"))
-    if not n then
-        n = 0
-    end
-    if string.match(source, "mph") or string.match(source, "mp/h") then
-        n = (n*1609)/1000
-    end
-    return n
 end
 
 function process_node(profile, node, result)

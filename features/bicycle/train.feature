@@ -21,9 +21,9 @@ Feature: Bike - Handle ferry routes
             | cd    | primary |         |         |
             | ef    | primary |         |         |
             | gh    | primary |         |         |
-            | bc    |         | train   |         |
-            | de    |         | train   | yes     |
-            | fg    |         | train   | no      |
+            | bc    | (nil)   | train   |         |
+            | de    | (nil)   | train   | yes     |
+            | fg    | (nil)   | train   | no      |
 
         When I route I should get
             | from | to | route       | modes                         |
@@ -31,7 +31,7 @@ Feature: Bike - Handle ferry routes
             | 2    | 3  | cd,de,ef,ef | cycling,train,cycling,cycling |
             | 3    | 4  |             |                               |
 
-    Scenario: Bike - Ingore invalid railway tag is accepted if access specified
+    Scenario: Bike - Ignore invalid railway tag is accepted if access specified
         Given the node map
             """
             a 1 b   c 2 d   e 3 f   g 4 h

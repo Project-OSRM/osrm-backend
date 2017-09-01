@@ -33,6 +33,7 @@ function setup()
     side_road_multiplier      = 0.8,
     turn_penalty              = 7.5,
     speed_reduction           = 0.8,
+    increase_speed_to_max     = true,
 
     -- Note: this biases right-side driving.
     -- Should be inverted for left-driving countries.

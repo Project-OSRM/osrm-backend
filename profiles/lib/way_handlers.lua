@@ -193,7 +193,9 @@ function WayHandlers.routes(profile,way,result,data)
         local access_required = select_first_value( {v_access_required, k_access_required, default_access_required} )
 
         if access_required then
+          pprint(data)
           if data.backward_access ~= "yes" or data.backward_access ~= "yes" then
+            return
           end
         end
 
@@ -378,9 +380,11 @@ end
 
 -- handle speed (excluding maxspeed)
 function WayHandlers.speed(profile,way,result,data)
+  -- abort if already set
   if result.forward_speed > 0 and result.forward_speed > 0 then
-    return        -- abort if already set
+    return
   end
+
 
   local key,value,speed = Tags.get_constant_by_key_value(way,profile.speeds)
 
@@ -537,12 +541,26 @@ function WayHandlers.maxspeed(profile,way,result,data)
   forward = WayHandlers.parse_maxspeed(forward,profile)
   backward = WayHandlers.parse_maxspeed(backward,profile)
 
+  -- if profile.increase_speed_to_max is set, then we increase the speed if
+  -- it's lower that maxspeed. otherwise the maxspeed can only result
+  -- in the speed being lowered
+
   if forward and forward > 0 then
-    result.forward_speed = forward * (profile.speed_reduction or 1)
+    local forward  = forward * (profile.speed_reduction or 1)
+    if profile.increase_speed_to_max then
+      result.forward_speed = forward
+    else
+      result.forward_speed = math.min( forward, result.forward_speed )
+    end
   end
 
   if backward and backward > 0 then
-    result.backward_speed = backward * (profile.speed_reduction or 1)
+    local backward = backward * (profile.speed_reduction or 1)
+    if profile.increase_speed_to_max then
+      result.backward_speed = forward
+    else
+      result.backward_speed = math.min( backward, result.backward_speed )
+    end
   end
 end
 
