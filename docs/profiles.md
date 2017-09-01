@@ -114,7 +114,7 @@ classes                              | Sequence         | Determines the allowed
 restrictions                         | Sequence         | Determines which turn restrictions will be used for this profile.
 suffix_list                          | Set              | List of name suffixes needed for determining if "Highway 101 NW" the same road as "Highway 101 ES".
 
-### process_node(profile, node, result)
+### process_node(profile, node, result, relations)
 Process an OSM node to determine whether this node is a barrier or can be passed and whether passing it incurs a delay.
 
 Argument | Description
@@ -122,6 +122,7 @@ Argument | Description
 profile  | The configuration table you returned in `setup`.
 node     | The input node to process (read-only).
 result   | The output that you will modify.
+relations| The list of relation attributes passed from `process_relation` function for this node.
 
 The following attributes can be set on `result`:
 
@@ -130,7 +131,7 @@ Attribute       | Type    | Notes
 barrier         | Boolean | Is it an impassable barrier?
 traffic_lights  | Boolean | Is it a traffic light (incurs delay in `process_turn`)?
 
-### process_way(profile, way, result)
+### process_way(profile, way, result, relations)
 Given an OpenStreetMap way, the `process_way` function will either return nothing (meaning we are not going to route over this way at all), or it will set up a result hash.
 
 Argument | Description
@@ -138,6 +139,7 @@ Argument | Description
 profile  | The configuration table you returned in `setup`.
 node     | The input way to process (read-only).
 result   | The output that you will modify.
+relations| The list of relation attributes passed from `process_relation` function for this way.
 
 Importantly it will set `result.forward_mode` and `result.backward_mode` to indicate the travel mode in each direction, as well as set `result.forward_speed` and `result.backward_speed` to integer values representing the speed for traversing the way.
 
@@ -215,7 +217,7 @@ function process_relation(profile, relation, result)
   local t = relation:get_value_by_key("type")
   if t == "route" then
     for _, m in ipairs(relation:members()) do
-      if m:role() == "north" then
+      if m:role == "north" then
         result[m]['direction'] = 'north'
         print('direction_north')
       end
