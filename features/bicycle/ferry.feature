@@ -65,30 +65,25 @@ Feature: Bike - Handle ferry routes
     Scenario: Bike - Ferry duration, single node
         Given the node map
             """
-            a b c d
-                e f
-                g h
-                i j
+            b c
+              e
+              g
+              i
             """
 
         And the ways
             | nodes | highway | route | bicycle | duration |
-            | ab    | primary |       |         |          |
-            | cd    | primary |       |         |          |
-            | ef    | primary |       |         |          |
-            | gh    | primary |       |         |          |
-            | ij    | primary |       |         |          |
             | bc    |         | ferry | yes     | 0:01     |
             | be    |         | ferry | yes     | 0:10     |
             | bg    |         | ferry | yes     | 1:00     |
             | bi    |         | ferry | yes     | 10:00    |
 
         When I route I should get
-            | from | to | route | time    |
-            | b    | c  | bc,bc | 60s     |
-            | b    | e  | be,be | 603.1s  |
-            | b    | g  | bg,bg | 3606.2s |
-            | b    | i  | bi,bi | 36008s  |
+            | from | to | route | time     |
+            | b    | c  | bc,bc | 67.1s    |
+            | b    | e  | be,be | 613.8s   |
+            | b    | g  | bg,bg | 3600s    |
+            | b    | i  | bi,bi | 36030.6s |
 
     Scenario: Bike - Ferry duration, multiple nodes
         Given the node map
