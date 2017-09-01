@@ -31,7 +31,10 @@ Feature: Alternative route
             | 5    | 6  | dc,ca,ab,bd,dc,dc |             |
             | 7    | 8  | ca,ab,bd,dc,ca,ca |             |
 
-    @4111
+    # This test case does not work in a platform independent way
+    # since it depends on a specific CH structure that is only
+    # present on linux it seems.
+    @4111 @todo
     Scenario: Alternative Loop Paths with single node path
         Given the node map
             """
