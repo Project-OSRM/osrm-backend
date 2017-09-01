@@ -151,7 +151,7 @@ void validate_turn_layer(protozero::pbf_reader &layer_message)
         BOOST_CHECK_EQUAL(feature_message.tag(), util::vector_tile::FEATURE_ATTRIBUTES_TAG);
         // properties
         auto feature_iter_pair = feature_message.get_packed_uint32();
-        BOOST_CHECK_EQUAL(std::distance(feature_iter_pair.begin(), feature_iter_pair.end()), 8);
+        BOOST_CHECK_EQUAL(std::distance(feature_iter_pair.begin(), feature_iter_pair.end()), 12);
         auto iter = feature_iter_pair.begin();
         BOOST_CHECK_EQUAL(*iter++, 0); // bearing_in key
         *iter++;
@@ -160,6 +160,10 @@ void validate_turn_layer(protozero::pbf_reader &layer_message)
         BOOST_CHECK_EQUAL(*iter++, 2); // turn cost (duration) key
         *iter++;                       // skip value check, can be valud uint32
         BOOST_CHECK_EQUAL(*iter++, 3); // turn weight key
+        *iter++;                       // skip value check, can be valud uint32
+        BOOST_CHECK_EQUAL(*iter++, 4); // turn type key
+        *iter++;                       // skip value check, can be valud uint32
+        BOOST_CHECK_EQUAL(*iter++, 5); // turn modifier
         *iter++;                       // skip value check, can be valud uint32
         BOOST_CHECK(iter == feature_iter_pair.end());
         // geometry
@@ -201,7 +205,7 @@ void validate_turn_layer(protozero::pbf_reader &layer_message)
         }
     }
 
-    BOOST_CHECK_EQUAL(number_of_turn_keys, 4);
+    BOOST_CHECK_EQUAL(number_of_turn_keys, 6);
     BOOST_CHECK(number_of_turns_found > 700);
 }
 
@@ -337,6 +341,8 @@ void test_tile_turns(const osrm::OSRM &osrm)
     std::vector<int> found_turn_angles_indexes;
     std::vector<int> found_time_penalties_indexes;
     std::vector<int> found_weight_penalties_indexes;
+    std::vector<int> found_turn_type_indexes;
+    std::vector<int> found_turn_modifier_indexes;
 
     const auto check_turn_feature = [&](protozero::pbf_reader feature_message) {
         feature_message.next(); // advance parser to first entry
@@ -351,7 +357,7 @@ void test_tile_turns(const osrm::OSRM &osrm)
         BOOST_CHECK_EQUAL(feature_message.tag(), util::vector_tile::FEATURE_ATTRIBUTES_TAG);
         // properties
         auto feature_iter_pair = feature_message.get_packed_uint32();
-        BOOST_CHECK_EQUAL(std::distance(feature_iter_pair.begin(), feature_iter_pair.end()), 8);
+        BOOST_CHECK_EQUAL(std::distance(feature_iter_pair.begin(), feature_iter_pair.end()), 12);
         auto iter = feature_iter_pair.begin();
         BOOST_CHECK_EQUAL(*iter++, 0); // bearing_in key
         found_bearing_in_indexes.push_back(*iter++);
@@ -361,6 +367,10 @@ void test_tile_turns(const osrm::OSRM &osrm)
         found_time_penalties_indexes.push_back(*iter++);   // skip value check, can be valud uint32
         BOOST_CHECK_EQUAL(*iter++, 3);                     // "weight" key
         found_weight_penalties_indexes.push_back(*iter++); // skip value check, can be valud uint32
+        BOOST_CHECK_EQUAL(*iter++, 4);                     // "weight" key
+        found_turn_type_indexes.push_back(*iter++);        // skip value check, can be valud uint32
+        BOOST_CHECK_EQUAL(*iter++, 5);                     // "weight" key
+        found_turn_modifier_indexes.push_back(*iter++);    // skip value check, can be valud uint32
         BOOST_CHECK(iter == feature_iter_pair.end());
         // geometry
         feature_message.next();
@@ -370,6 +380,7 @@ void test_tile_turns(const osrm::OSRM &osrm)
 
     std::unordered_map<int, float> float_vals;
     std::unordered_map<int, std::int64_t> sint64_vals;
+    std::unordered_map<int, std::string> string_vals;
 
     int kv_index = 0;
 
@@ -383,6 +394,9 @@ void test_tile_turns(const osrm::OSRM &osrm)
                 break;
             case util::vector_tile::VARIANT_TYPE_SINT64:
                 sint64_vals[kv_index] = value.get_sint64();
+                break;
+            case util::vector_tile::VARIANT_TYPE_STRING:
+                string_vals[kv_index] = value.get_string();
                 break;
             default:
                 BOOST_CHECK(false);
@@ -447,6 +461,62 @@ void test_tile_turns(const osrm::OSRM &osrm)
     const std::vector<float> expected_weight_turn_penalties = {
         0, 0, 0, 0, 0, 0, .1f, .1f, .3f, .4f, 1.2f, 1.9f, 5.3f, 5.5f, 5.8f, 7.1f, 7.2f, 7.2f};
     CHECK_EQUAL_RANGE(actual_weight_turn_penalties, expected_weight_turn_penalties);
+
+    // Verify that we got the expected turn types
+    std::vector<std::string> actual_turn_types;
+    for (const auto &i : found_turn_type_indexes)
+    {
+        BOOST_CHECK(string_vals.count(i) == 1);
+        actual_turn_types.push_back(string_vals[i]);
+    }
+    std::sort(actual_turn_types.begin(), actual_turn_types.end());
+    const std::vector<std::string> expected_turn_types = {"(noturn)",
+                                                          "(noturn)",
+                                                          "(noturn)",
+                                                          "(noturn)",
+                                                          "(suppressed)",
+                                                          "(suppressed)",
+                                                          "end of road",
+                                                          "end of road",
+                                                          "fork",
+                                                          "fork",
+                                                          "turn",
+                                                          "turn",
+                                                          "turn",
+                                                          "turn",
+                                                          "turn",
+                                                          "turn",
+                                                          "turn",
+                                                          "turn"};
+    CHECK_EQUAL_RANGE(actual_turn_types, expected_turn_types);
+
+    // Verify that we got the expected turn modifiers
+    std::vector<std::string> actual_turn_modifiers;
+    for (const auto &i : found_turn_modifier_indexes)
+    {
+        BOOST_CHECK(string_vals.count(i) == 1);
+        actual_turn_modifiers.push_back(string_vals[i]);
+    }
+    std::sort(actual_turn_modifiers.begin(), actual_turn_modifiers.end());
+    const std::vector<std::string> expected_turn_modifiers = {"left",
+                                                              "left",
+                                                              "left",
+                                                              "left",
+                                                              "right",
+                                                              "right",
+                                                              "right",
+                                                              "right",
+                                                              "sharp left",
+                                                              "sharp right",
+                                                              "slight left",
+                                                              "slight left",
+                                                              "slight right",
+                                                              "slight right",
+                                                              "straight",
+                                                              "straight",
+                                                              "straight",
+                                                              "straight"};
+    CHECK_EQUAL_RANGE(actual_turn_modifiers, expected_turn_modifiers);
 
     // Verify the expected turn angles
     std::vector<std::int64_t> actual_turn_angles;

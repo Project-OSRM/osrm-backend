@@ -17,6 +17,8 @@
         updating ETAs returned, without changing route selection (for example, in a distance-based profile with traffic data loaded).
     - Infrastructure:
       - New file `.osrm.cell_metrics` created by `osrm-customize`.
+    - Debug tiles:
+      - Added new properties `type` and `modifier` to `turns` layer, useful for viewing guidance calculated turn types on the map
 
 # 5.11.0
   - Changes from 5.10:

@@ -437,6 +437,8 @@ Vector tiles contain two layers:
 | `turn_angle` | `integer` | the angle of the turn, relative to the `bearing_in`.  -180 to +180, 0 = straight ahead, 90 = 90-degrees to the right |
 | `cost`       | `float`   | the time we think it takes to make that turn, in seconds.  May be negative, depending on how the data model is constructed (some turns get a "bonus"). |
 | `weight`     | `float`   | the weight we think it takes to make that turn.  May be negative, depending on how the data model is constructed (some turns get a "bonus"). ACTUAL ROUTING USES THIS VALUE |
+| `type`       | `string`  | the type of this turn - values like `turn`, `continue`, etc.  See the `StepManeuver` for a partial list, this field also exposes internal turn types that are never returned with an API response |
+| `modifier`   | `string`  | the direction modifier of the turn (`left`, `sharp left`, etc) |
 
 
 ## Result objects

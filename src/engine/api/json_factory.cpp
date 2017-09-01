@@ -41,15 +41,47 @@ const constexpr char *modifier_names[] = {"uturn",
                                           "left",
                                           "sharp left"};
 
-// translations of TurnTypes. Not all types are exposed to the outside world.
-// invalid types should never be returned as part of the API
-const constexpr char *turn_type_names[] = {
-    "invalid",         "new name",   "continue", "turn",        "merge",
-    "on ramp",         "off ramp",   "fork",     "end of road", "notification",
-    "roundabout",      "roundabout", "rotary",   "rotary",      "roundabout turn",
-    "roundabout turn", "use lane",   "invalid",  "invalid",     "invalid",
-    "invalid",         "invalid",    "invalid",  "invalid",     "invalid",
-    "invalid",         "invalid"};
+/**
+ * Human readable values for TurnType enum values
+ */
+struct TurnTypeName
+{
+    // String value we return with our API
+    const char *external_name;
+    // Internal only string name for the turn type - useful for debugging
+    // and used by debug tiles for visualizing hidden turn types
+    const char *internal_name;
+};
+
+// Indexes in this list correspond to the Enum values of osrm::extractor::guidance::TurnType
+const constexpr TurnTypeName turn_type_names[] = {
+    {"invalid", "(not set)"},
+    {"new name", "new name"},
+    {"continue", "continue"},
+    {"turn", "turn"},
+    {"merge", "merge"},
+    {"on ramp", "on ramp"},
+    {"off ramp", "off ramp"},
+    {"fork", "fork"},
+    {"end of road", "end of road"},
+    {"notification", "notification"},
+    {"roundabout", "enter roundabout"},
+    {"roundabout", "enter and exit roundabout"},
+    {"rotary", "enter rotary"},
+    {"rotary", "enter and exit rotary"},
+    {"roundabout turn", "enter roundabout turn"},
+    {"roundabout turn", "enter and exit roundabout turn"},
+    {"use lane", "use lane"},
+    {"invalid", "(noturn)"},
+    {"invalid", "(suppressed)"},
+    {"invalid", "(enter roundabout at exit)"},
+    {"invalid", "(exit roundabout)"},
+    {"invalid", "(enter rotary at exit)"},
+    {"invalid", "(exit rotary)"},
+    {"invalid", "(enter roundabout intersection at exit)"},
+    {"invalid", "(exit roundabout intersection)"},
+    {"invalid", "(stay on roundabout)"},
+    {"invalid", "(sliproad)"}};
 
 const constexpr char *waypoint_type_names[] = {"invalid", "arrive", "depart"};
 
@@ -69,7 +101,14 @@ std::string instructionTypeToString(const TurnType::Enum type)
 {
     static_assert(sizeof(turn_type_names) / sizeof(turn_type_names[0]) >= TurnType::MaxTurnType,
                   "Some turn types has not string representation.");
-    return turn_type_names[static_cast<std::size_t>(type)];
+    return turn_type_names[static_cast<std::size_t>(type)].external_name;
+}
+
+std::string internalInstructionTypeToString(const TurnType::Enum type)
+{
+    static_assert(sizeof(turn_type_names) / sizeof(turn_type_names[0]) >= TurnType::MaxTurnType,
+                  "Some turn types has not string representation.");
+    return turn_type_names[static_cast<std::size_t>(type)].internal_name;
 }
 
 util::json::Array lanesFromIntersection(const guidance::IntermediateIntersection &intersection)
