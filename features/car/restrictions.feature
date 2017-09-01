@@ -30,7 +30,7 @@ Feature: Car - Turn restrictions
         When I route I should get
             | from | to | route    |
             | s    | w  |          |
-            | s    | n  | sj,nj,nj |
+            | s    | n  | sj,nj    |
             | s    | e  | sj,ej,ej |
 
     @no_turning
@@ -39,7 +39,7 @@ Feature: Car - Turn restrictions
             """
             a b j d e
             v       z
-              w x y
+              w x y q
             """
 
         And the ways
@@ -54,14 +54,15 @@ Feature: Car - Turn restrictions
             | xy    | yes    |
             | yz    | yes    |
             | ze    | yes    |
+            | yq    | yes    |
 
         And the relations
             | type        | way:from | way:to | node:via | restriction    |
             | restriction | bj       | jd     | j        | no_straight_on |
 
         When I route I should get
-            | from | to | route                |
-            | a    | e  | av,vw,wx,xy,yz,ze,ze |
+            | from | to | route    |
+            | a    | e  | av,yz,ze |
 
     @no_turning
     Scenario: Car - No right turn
@@ -86,7 +87,7 @@ Feature: Car - Turn restrictions
         When I route I should get
             | from | to | route    |
             | s    | w  | sj,wj,wj |
-            | s    | n  | sj,nj,nj |
+            | s    | n  | sj,nj    |
             | s    | e  |          |
 
     @no_turning
@@ -112,7 +113,7 @@ Feature: Car - Turn restrictions
         When I route I should get
             | from | to | route    |
             | s    | w  |          |
-            | s    | n  | sj,nj,nj |
+            | s    | n  | sj,nj    |
             | s    | e  | sj,ej,ej |
 
     @no_turning
@@ -138,7 +139,7 @@ Feature: Car - Turn restrictions
         When I route I should get
             | from | to | route    |
             | s    | w  |          |
-            | s    | n  | sj,nj,nj |
+            | s    | n  | sj,nj    |
             | s    | e  | sj,ej,ej |
 
     @only_turning
@@ -182,8 +183,8 @@ Feature: Car - Turn restrictions
             | restriction | sj       | er     | j        | only_right_on |
 
         When I route I should get
-            | from | to | route       |
-            | s    | r  | sj,ej,re,re |
+            | from | to | route    |
+            | s    | r  | sj,ej,re |
 
     @only_turning
     Scenario: Car - Only right turn
@@ -232,10 +233,10 @@ Feature: Car - Turn restrictions
             | restriction | sj       | nj     | j        | only_straight_on |
 
         When I route I should get
-            | from | to | route    |
-            | s    | w  |          |
-            | s    | n  | sj,nj,nj |
-            | s    | e  |          |
+            | from | to | route |
+            | s    | w  |       |
+            | s    | n  | sj,nj |
+            | s    | e  |       |
 
     @no_turning
     Scenario: Car - Handle any only_* restriction
@@ -258,10 +259,10 @@ Feature: Car - Turn restrictions
             | restriction | sj       | nj     | j        | only_weird_zigzags |
 
         When I route I should get
-            | from | to | route    |
-            | s    | w  |          |
-            | s    | n  | sj,nj,nj |
-            | s    | e  |          |
+            | from | to | route |
+            | s    | w  |       |
+            | s    | n  | sj,nj |
+            | s    | e  |       |
 
     @specific
     Scenario: Car - :hgv-qualified on a standard turn restriction
@@ -286,7 +287,7 @@ Feature: Car - Turn restrictions
         When I route I should get
             | from | to | route    |
             | s    | w  | sj,wj,wj |
-            | s    | n  | sj,nj,nj |
+            | s    | n  | sj,nj    |
             | s    | e  | sj,ej,ej |
 
     @specific
@@ -403,10 +404,10 @@ Feature: Car - Turn restrictions
             | restriction | da       | ae     | a        | only_right_turn  |
 
         When I route I should get
-            | from | to | route                               |
-            | e    | f  | ae,xa,bx,fb,fb                      |
-            | c    | f  | dc,da,ae,ge,hg,hg,ge,ae,xa,bx,fb,fb |
-            | d    | f  | da,ae,ge,hg,hg,ge,ae,xa,bx,fb,fb    |
+            | from | to | route       |
+            | e    | f  | ae,fb       |
+            | c    | f  | dc,ae,hg,fb |
+            | d    | f  | da,ae,hg,fb |
 
     @except
     Scenario: Car - two only_ restrictions share same to-way
@@ -440,9 +441,9 @@ Feature: Car - Turn restrictions
             | restriction | by       | xy     | y        | only_straight_on |
 
         When I route I should get
-            | from | to | route       |
-            | a    | b  | ax,xy,yb,yb |
-            | b    | a  | yb,xy,ax,ax |
+            | from | to | route |
+            | a    | b  | ax,yb |
+            | b    | a  | yb,ax |
 
     @except
     Scenario: Car - two only_ restrictions share same from-way
@@ -476,9 +477,9 @@ Feature: Car - Turn restrictions
             | restriction | xy       | yb     | y        | only_straight_on |
 
         When I route I should get
-            | from | to | route       |
-            | a    | b  | ax,xy,yb,yb |
-            | b    | a  | yb,xy,ax,ax |
+            | from | to | route |
+            | a    | b  | ax,yb |
+            | b    | a  | yb,ax |
 
     @specific
     Scenario: Car - Ignore unrecognized restriction
@@ -503,7 +504,7 @@ Feature: Car - Turn restrictions
         When I route I should get
             | from | to | route    |
             | s    | w  | sj,wj,wj |
-            | s    | n  | sj,nj,nj |
+            | s    | n  | sj,nj    |
             | s    | e  | sj,ej,ej |
 
     @restriction @compression
@@ -534,8 +535,8 @@ Feature: Car - Turn restrictions
             | restriction | abc      | c        | cgh    | no_right_turn |
 
         When I route I should get
-            | from | to | route               |
-            | a    | h  | abc,cde,efc,cgh,cgh |
+            | from | to | route       |
+            | a    | h  | abc,efc,cgh |
 
     @restriction-way
     Scenario: Car - prohibit turn
@@ -563,11 +564,11 @@ Feature: Car - Turn restrictions
             | restriction | ab       | be      | de     | no_right_turn |
 
         When I route I should get
-            | from | to | route             | turns                                                               | locations   |
-            | a    | d  | ab,be,ef,ef,de,de | depart,turn right,turn left,continue uturn,new name straight,arrive | a,b,e,f,e,d |
-            | a    | f  | ab,be,ef,ef       | depart,turn right,turn left,arrive                                  | a,b,e,f     |
-            | c    | d  | bc,be,de,de       | depart,turn left,turn right,arrive                                  | c,b,e,d     |
-            | c    | f  | bc,be,ef,ef       | depart,turn left,turn left,arrive                                   | c,b,e,f     |
+            | from | to | route          | turns                                             | locations |
+            | a    | d  | ab,be,ef,ef,de | depart,turn right,turn left,continue uturn,arrive | a,b,e,f,d |
+            | a    | f  | ab,be,ef,ef    | depart,turn right,turn left,arrive                | a,b,e,f   |
+            | c    | d  | bc,be,de,de    | depart,turn left,turn right,arrive                | c,b,e,d   |
+            | c    | f  | bc,be,ef,ef    | depart,turn left,turn left,arrive                 | c,b,e,f   |
 
     @restriction @overlap
     Scenario: Car - prohibit turn
@@ -598,11 +599,11 @@ Feature: Car - Turn restrictions
             | restriction | bc       | be      | ef     | no_left_turn  |
 
         When I route I should get
-            | from | to | route             |
-            | a    | d  | ab,be,ef,ef,de,de |
-            | a    | f  | ab,be,ef,ef       |
-            | c    | d  | bc,be,de,de       |
-            | c    | f  | bc,be,de,de,ef,ef |
+            | from | to | route          |
+            | a    | d  | ab,be,ef,ef,de |
+            | a    | f  | ab,be,ef,ef    |
+            | c    | d  | bc,be,de,de    |
+            | c    | f  | bc,be,de,de,ef |
 
     @restriction-way @overlap
     Scenario: Two times same way
@@ -659,8 +660,8 @@ Feature: Car - Turn restrictions
             | restriction | ab       | bc      | cd     | no_right_turn |
 
        When I route I should get
-            | from | to | route                |
-            | a    | i  | ab,bc,cf,fedib,fedib |
+            | from | to | route    |
+            | a    | i  | ab,fedib |
 
 
     @restriction-way @overlap
@@ -730,11 +731,11 @@ Feature: Car - Turn restrictions
             | restriction | ab       | be      | ef     | only_left_on |
 
         When I route I should get
-            | from | to | route       | turns | locations |
-            | a    | d  | ab,be,ef,ef,de,de | depart,turn right,turn left,continue uturn,new name straight,arrive | a,b,e,f,e,d |
-            | a    | f  | ab,be,ef,ef       | depart,turn right,turn left,arrive                                  | a,b,e,f     |
-            | c    | d  | bc,be,de,de       | depart,turn left,turn right,arrive                                  | c,b,e,d     |
-            | c    | f  | bc,be,ef,ef       | depart,turn left,turn left,arrive                                   | c,b,e,f     |
+            | from | to | route          | turns                                             | locations |
+            | a    | d  | ab,be,ef,ef,de | depart,turn right,turn left,continue uturn,arrive | a,b,e,f,d |
+            | a    | f  | ab,be,ef,ef    | depart,turn right,turn left,arrive                | a,b,e,f   |
+            | c    | d  | bc,be,de,de    | depart,turn left,turn right,arrive                | c,b,e,d   |
+            | c    | f  | bc,be,ef,ef    | depart,turn left,turn left,arrive                 | c,b,e,f   |
 
     @restriction
     Scenario: Car - allow only turn
@@ -877,11 +878,11 @@ Feature: Car - Turn restrictions
 
 
         When I route I should get
-            | from | to | route             | turns                                                               | locations   |
-            | a    | d  | ab,be,ef,ef,de,de | depart,turn right,turn left,continue uturn,new name straight,arrive | a,b,e,f,e,d |
-            | a    | f  | ab,be,ef,ef       | depart,turn right,turn left,arrive                                  | a,b,e,f     |
-            | c    | d  | bc,be,de,de       | depart,turn left,turn right,arrive                                  | c,b,e,d     |
-            | c    | f  | bc,be,ef,ef       | depart,turn left,turn left,arrive                                   | c,b,e,f     |
+            | from | to | route          | turns                                             | locations |
+            | a    | d  | ab,be,ef,ef,de | depart,turn right,turn left,continue uturn,arrive | a,b,e,f,d |
+            | a    | f  | ab,be,ef,ef    | depart,turn right,turn left,arrive                | a,b,e,f   |
+            | c    | d  | bc,be,de,de    | depart,turn left,turn right,arrive                | c,b,e,d   |
+            | c    | f  | bc,be,ef,ef    | depart,turn left,turn left,arrive                 | c,b,e,f   |
 
 
       @restriction @overlap @geometry
@@ -913,11 +914,11 @@ Feature: Car - Turn restrictions
             | restriction | bc       | bge     | ef     | no_left_turn  |
 
         When I route I should get
-            | from | to | route              |
-            | a    | d  | ab,bge,ef,ef,de,de |
-            | a    | f  | ab,bge,ef,ef       |
-            | c    | d  | bc,bge,de,de       |
-            | c    | f  | bc,bge,de,de,ef,ef |
+            | from | to | route           |
+            | a    | d  | ab,bge,ef,ef,de |
+            | a    | f  | ab,bge,ef,ef    |
+            | c    | d  | bc,bge,de,de    |
+            | c    | f  | bc,bge,de,de,ef |
 
       @restriction @overlap @geometry @traffic-signals
       Scenario: Geometry
@@ -954,11 +955,11 @@ Feature: Car - Turn restrictions
         # this case is currently not handling the via-way restrictions and we need support for looking across traffic signals.
         # It is mainly included to show limitations and to prove that we don't crash hard here
         When I route I should get
-            | from | to | route              |
-            | a    | d  | ab,bge,ef,ef,de,de |
-            | a    | f  | ab,bge,ef,ef       |
-            | c    | d  | bc,bge,de,de       |
-            | c    | f  | bc,bge,de,de,ef,ef |
+            | from | to | route           |
+            | a    | d  | ab,bge,ef,ef,de |
+            | a    | f  | ab,bge,ef,ef    |
+            | c    | d  | bc,bge,de,de    |
+            | c    | f  | bc,bge,de,de,ef |
 
       # don't crash hard on invalid restrictions
       @restriction @invalid
@@ -1026,5 +1027,5 @@ Feature: Car - Turn restrictions
             | restriction | bc       | bge     | ef     | no_left_turn  |
 
         When I route I should get
-            | from | to | route              |
-            | a    | d  | ab,bc,bc,bge,de,de |
+            | from | to | route           |
+            | a    | d  | ab,bc,bge,de,de |

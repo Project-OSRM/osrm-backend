@@ -31,13 +31,13 @@ Feature: Alternative route
             | alternatives | true |
 
         When I route I should get
-            | from | to | route          | alternative       |
-            | a    | z  | ab,bc,cd,dz,dz | ag,gh,hi,ij,jz,jz |
+            | from | to | route | alternative |
+            | a    | z  | ab,dz | ag,jz       |
 
     Scenario: Disabled alternative
         Given the query options
             | alternatives | false |
 
         When I route I should get
-            | from | to | route          | alternative |
-            | a    | z  | ab,bc,cd,dz,dz |             |
+            | from | to | route | alternative |
+            | a    | z  | ab,dz |             |

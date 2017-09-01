@@ -21,15 +21,15 @@ Feature: Car - Destination only, no passing through
             | axye  |             |
 
         When I route I should get
-            | from | to | route      |
-            | a    | b  | ab,ab      |
-            | a    | c  | ab,bcd     |
-            | a    | d  | ab,bcd,bcd |
-            | a    | e  | axye,axye  |
-            | e    | d  | de,de      |
-            | e    | c  | de,bcd     |
-            | e    | b  | de,bcd,bcd |
-            | e    | a  | axye,axye  |
+            | from | to | route     |
+            | a    | b  | ab,ab     |
+            | a    | c  | ab,bcd    |
+            | a    | d  | ab,bcd    |
+            | a    | e  | axye,axye |
+            | e    | d  | de,de     |
+            | e    | c  | de,bcd    |
+            | e    | b  | de,bcd    |
+            | e    | a  | axye,axye |
 
     Scenario: Car - Destination only street
         Given the node map
@@ -76,11 +76,11 @@ Feature: Car - Destination only, no passing through
             | axye  |             |
 
         When I route I should get
-            | from | to | route          |
-            | a    | e  | ab,bc,cd,de,de |
-            | e    | a  | de,cd,bc,ab,ab |
-            | b    | d  | bc,cd,cd       |
-            | d    | b  | cd,bc,bc       |
+            | from | to | route |
+            | a    | e  | ab,de |
+            | e    | a  | de,ab |
+            | b    | d  | bc,cd |
+            | d    | b  | cd,bc |
 
     Scenario: Car - Routing around a way that becomes destination only
         Given the node map
@@ -105,10 +105,10 @@ Feature: Car - Destination only, no passing through
             | eb    |             | no     |
 
         When I route I should get
-            | from | to | route           | # |
-            | i    | b  | ihg,eg,eb,eb    | # goes around access=destination, though restricted way starts at two node intersection |
-            | b    | d  | eb,cde,cde      | # ends in restricted way correctly     |
-            | b    | i  | eb,eg,ihg,ihg   | # goes around restricted way correctly |
+            | from | to | route        | # |
+            | i    | b  | ihg,eb       | # goes around access=destination, though restricted way starts at two node intersection |
+            | b    | d  | eb,cde,cde   | # ends in restricted way correctly     |
+            | b    | i  | eb,eg,ihg    | # goes around restricted way correctly |
 
     Scenario: Car - Routing around a way that becomes destination only
         Given the node map
@@ -127,7 +127,7 @@ Feature: Car - Destination only, no passing through
             | de    |             | no     |
 
         When I route I should get
-            | from | to | route         |
-            | e    | a  | acbe,acbe     |
-            | d    | a  | de,acbe,acbe  |
-            | c    | d  | cd,cd         |
+            | from | to | route     |
+            | e    | a  | acbe,acbe |
+            | d    | a  | de,acbe   |
+            | c    | d  | cd,cd     |

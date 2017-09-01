@@ -27,7 +27,7 @@ Feature: Turn Penalties
             | s    | a  | sj,ja,ja | 63s +-1 | 483m +-1 |
             | s    | b  | sj,jb,jb | 50s +-1 | 400m +-1 |
             | s    | c  | sj,jc,jc | 54s +-1 | 483m +-1 |
-            | s    | d  | sj,jd,jd | 40s +-1 | 400m +-1 |
+            | s    | d  | sj,jd    | 40s +-1 | 400m +-1 |
             | s    | e  | sj,je,je | 53s +-1 | 483m +-1 |
             | s    | f  | sj,jf,jf | 50s +-1 | 400m +-1 |
             | s    | g  | sj,jg,jg | 63s +-1 | 483m +-1 |

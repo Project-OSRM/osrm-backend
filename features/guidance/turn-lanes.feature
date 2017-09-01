@@ -20,11 +20,11 @@ Feature: Turn Lane Guidance
             | bd     |                |                    | left\|right         | right    |
 
        When I route I should get
-            | waypoints | route                | turns                           | lanes                                            |
-            | a,c       | in,straight,straight | depart,new name straight,arrive | ,straight:true right:false,                      |
-            | a,d       | in,right,right       | depart,turn right,arrive        | ,straight:false right:true,                      |
-            | c,a       | straight,in,in       | depart,new name straight,arrive | ,left:false straight:true none:true none:true,   |
-            | c,d       | straight,right,right | depart,turn left,arrive         | ,left:true straight:false none:false none:false, |
+            | waypoints | route                | turns                    | lanes                                            |
+            | a,c       | in,straight          | depart,arrive            | ;straight:true right:false,                      |
+            | a,d       | in,right,right       | depart,turn right,arrive | ,straight:false right:true,                      |
+            | c,a       | straight,in          | depart,arrive            | ;left:false straight:true none:true none:true,   |
+            | c,d       | straight,right,right | depart,turn left,arrive  | ,left:true straight:false none:false none:false, |
 
     Scenario: Basic Turn Lane 3-way Turn with designated lane
         Given the node map
@@ -40,9 +40,9 @@ Feature: Turn Lane Guidance
             | bd     |                |                         | right    |                       |
 
        When I route I should get
-            | waypoints | route                | turns                           | lanes                       |
-            | a,c       | in,straight,straight | depart,new name straight,arrive | ,straight:true right:false, |
-            | a,d       | in,right,right       | depart,turn right,arrive        | ,straight:false right:true, |
+            | waypoints | route          | turns                    | lanes                       |
+            | a,c       | in,straight    | depart,arrive            | ;straight:true right:false, |
+            | a,d       | in,right,right | depart,turn right,arrive | ,straight:false right:true, |
 
     # Turn Lane onto a ferry could end up breaking in intersection generation
     Scenario: Basic Turn Lane 3-way Turn with designated lane
@@ -82,13 +82,13 @@ Feature: Turn Lane Guidance
             | be     |                |                    |                     | left     |
 
        When I route I should get
-            | waypoints | route                   | turns                           | lanes                   |
-            | a,c       | in,straight,straight    | depart,new name straight,arrive | ,none:true right:false, |
-            | a,d       | in,right,right          | depart,turn right,arrive        | ,none:false right:true, |
-            | a,e       | in,left,left            | depart,turn left,arrive         | ,none:true right:false, |
-            | d,a       | right,in,in             | depart,turn left,arrive         | ,left:true none:false,  |
-            | d,e       | right,left,left         | depart,new name straight,arrive | ,left:false none:true,  |
-            | d,c       | right,straight,straight | depart,turn right,arrive        | ,left:false none:true,  |
+            | waypoints | route                   | turns                    | lanes                   |
+            | a,c       | in,straight             | depart,arrive            | ;none:true right:false, |
+            | a,d       | in,right,right          | depart,turn right,arrive | ,none:false right:true, |
+            | a,e       | in,left,left            | depart,turn left,arrive  | ,none:true right:false, |
+            | d,a       | right,in,in             | depart,turn left,arrive  | ,left:true none:false,  |
+            | d,e       | right,left              | depart,arrive            | ;left:false none:true,  |
+            | d,c       | right,straight,straight | depart,turn right,arrive | ,left:false none:true,  |
 
     @simple @none
     Scenario: Basic Turn Lane 4-Way Turn using none
@@ -107,10 +107,10 @@ Feature: Turn Lane Guidance
             | be     |                |                    |                     | left     |
 
        When I route I should get
-            | waypoints | route                | turns                           | lanes                   |
-            | a,c       | in,straight,straight | depart,new name straight,arrive | ,none:true right:false, |
-            | a,d       | in,right,right       | depart,turn right,arrive        | ,none:false right:true, |
-            | a,e       | in,left,left         | depart,turn left,arrive         | ,none:true right:false, |
+            | waypoints | route          | turns                    | lanes                   |
+            | a,c       | in,straight    | depart,arrive            | ;none:true right:false, |
+            | a,d       | in,right,right | depart,turn right,arrive | ,none:false right:true, |
+            | a,e       | in,left,left   | depart,turn left,arrive  | ,none:true right:false, |
 
     @simple @reverse
     Scenario: Basic Turn Lane 4-Way With U-Turn Lane
@@ -130,11 +130,11 @@ Feature: Turn Lane Guidance
             | fa     |                |                             | uturn-avoider | #due to https://github.com/Project-OSRM/osrm-backend/issues/3359 |
 
        When I route I should get
-            | from | to | bearings        | route                | turns                           | lanes                                  | locations |
-            | a    | c  | 180,180 180,180 | in,straight,straight | depart,new name straight,arrive | ,left;uturn:false straight;right:true, | a,b,c     |
-            | a    | d  | 180,180 180,180 | in,right,right       | depart,turn right,arrive        | ,left;uturn:false straight;right:true, | a,b,d     |
-            | a    | e  | 180,180 180,180 | in,left,left         | depart,turn left,arrive         | ,left;uturn:true straight;right:false, | a,b,e     |
-            | 1    | a  | 90,2 270,2      | in,in,in             | depart,continue uturn,arrive    | ,left;uturn:true straight;right:false, | _,b,a     |
+            | from | to | bearings        | route           | turns                        | lanes                                  | locations |
+            | a    | c  | 180,180 180,180 | in,straight     | depart,arrive                | ;left;uturn:false straight;right:true, | a,c       |
+            | a    | d  | 180,180 180,180 | in,right,right  | depart,turn right,arrive     | ,left;uturn:false straight;right:true, | a,b,d     |
+            | a    | e  | 180,180 180,180 | in,left,left    | depart,turn left,arrive      | ,left;uturn:true straight;right:false, | a,b,e     |
+            | 1    | a  | 90,2 270,2      | in,in,in        | depart,continue uturn,arrive | ,left;uturn:true straight;right:false, | _,b,a     |
 
 
     #this next test requires decision on how to announce lanes for going straight if there is no turn
@@ -458,10 +458,10 @@ Feature: Turn Lane Guidance
             | cf    | right   |                      |
 
         When I route I should get
-            | waypoints | route                | turns                           | lanes                                  |
-            | a,g       | road,left,left       | depart,turn left,arrive         | ,left:true straight:false right:false, |
-            | a,e       | road,through,through | depart,new name straight,arrive | ,left:false straight:true right:false, |
-            | a,f       | road,right,right     | depart,turn right,arrive        | ,left:false straight:false right:true, |
+            | waypoints | route            | turns                    | lanes                                  |
+            | a,g       | road,left,left   | depart,turn left,arrive  | ,left:true straight:false right:false, |
+            | a,e       | road,through     | depart,arrive            | ;left:false straight:true right:false, |
+            | a,f       | road,right,right | depart,turn right,arrive | ,left:false straight:false right:true, |
 
     @previous-lanes
     Scenario: Turn at a traffic light
@@ -627,10 +627,10 @@ Feature: Turn Lane Guidance
             | cf    | left     |                                    | yes    | primary   |       |
 
         When I route I should get
-            | waypoints | route                  | turns                           | lanes                                                           |
-            | a,f       | road,left,left         | depart,turn left,arrive         | ,left:true left:true left:true straight:false straight:false,   |
-            | a,e       | road,road,road         | depart,continue uturn,arrive    | ,left:true left:false left:false straight:false straight:false, |
-            | a,g       | road,straight,straight | depart,new name straight,arrive | ,left:false left:false left:false straight:true straight:true,  |
+            | waypoints | route          | turns                        | lanes                                                           |
+            | a,f       | road,left,left | depart,turn left,arrive      | ,left:true left:true left:true straight:false straight:false,   |
+            | a,e       | road,road,road | depart,continue uturn,arrive | ,left:true left:false left:false straight:false straight:false, |
+            | a,g       | road,straight  | depart,arrive                | ;left:false left:false left:false straight:true straight:true,  |
 
     @todo @roundabout
     Scenario: Passing Through a Roundabout
@@ -1116,10 +1116,10 @@ Feature: Turn Lane Guidance
             | bf    | primary | in      |                              | yes    |
 
         When I route I should get
-            | waypoints | route              | turns                           | lanes                                        |
-            | a,c       | in,left,left       | depart,turn left,arrive         | ,left:true straight:false right;uturn:false, |
-            | a,d       | in,through,through | depart,new name straight,arrive | ,left:false straight:true right;uturn:false, |
-            | a,e       | in,right,right     | depart,turn right,arrive        | ,left:false straight:false right;uturn:true, |
+            | waypoints | route          | turns                    | lanes                                        |
+            | a,c       | in,left,left   | depart,turn left,arrive  | ,left:true straight:false right;uturn:false, |
+            | a,d       | in,through     | depart,arrive            | ;left:false straight:true right;uturn:false, |
+            | a,e       | in,right,right | depart,turn right,arrive | ,left:false straight:false right;uturn:true, |
 
     @todo @2654
     #https://github.com/Project-OSRM/osrm-backend/issues/2645

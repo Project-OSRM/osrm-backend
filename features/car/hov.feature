@@ -31,6 +31,6 @@ Feature: Car - Handle driving
             | fm    | secondary     |               |
 
         When I route I should get
-            | from | to | route                |
-            | a    | m  | ag,ghkn,kl,lf,fm,fm  |
-            | c    | m  | bcej,ef,fm,fm        |
+            | from | to | route         |
+            | a    | m  | ag,kl,fm      |
+            | c    | m  | bcej,ef,fm,fm |

@@ -73,13 +73,13 @@ Feature: Basic Routing
             | bc    |
 
         When I route I should get
-            | from | to | route    |
-            | a    | c  | ab,bc,bc |
-            | c    | a  | bc,ab,ab |
-            | a    | b  | ab,ab    |
-            | b    | a  | ab,ab    |
-            | b    | c  | bc,bc    |
-            | c    | b  | bc,bc    |
+            | from | to | route |
+            | a    | c  | ab,bc |
+            | c    | a  | bc,ab |
+            | a    | b  | ab,ab |
+            | b    | a  | ab,ab |
+            | b    | c  | bc,bc |
+            | c    | b  | bc,bc |
 
     Scenario: 2 unconnected parallel ways
         Given the node map
@@ -194,13 +194,13 @@ Feature: Basic Routing
             | cde   |
 
         When I route I should get
-            | from | to | route       |
-            | b    | d  | abc,cde,cde |
-            | a    | e  | abc,cde,cde |
-            | a    | c  | abc,abc     |
-            | c    | a  | abc,abc     |
-            | c    | e  | cde,cde     |
-            | e    | c  | cde,cde     |
+            | from | to | route   |
+            | b    | d  | abc,cde |
+            | a    | e  | abc,cde |
+            | a    | c  | abc,abc |
+            | c    | a  | abc,abc |
+            | c    | e  | cde,cde |
+            | e    | c  | cde,cde |
 
     Scenario: Grid city center
         Given the node map
@@ -313,5 +313,5 @@ Feature: Basic Routing
 
         When I route I should get
             | from | to | route       |
-            | a    | c  | Abc,Δεζ,Δεζ |
-            | c    | a  | Δεζ,Abc,Abc |
+            | a    | c  | Abc,Δεζ |
+            | c    | a  | Δεζ,Abc |

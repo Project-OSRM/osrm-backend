@@ -93,9 +93,9 @@ Feature: Compass bearing
             | cj    | no     |
 
         When I route I should get
-            | from | to | route                   | bearing                                                     |
-            | c    | b  | cd,de,ef,fg,gh,ha,ab,ab | 0->270,270->225,225->180,180->135,135->90,90->45,45->0,0->0 |
-            | g    | f  | gh,ha,ab,bc,cd,de,ef,ef | 0->90,90->45,45->0,0->315,315->270,270->225,225->180,180->0 |
+            | from | to | route                   | bearing                              |
+            | c    | b  | cd,de,fg,ha,ab          | 0->270,270->225,180->135,90->45,0->0 |
+            | g    | f  | gh,ha,bc,de,ef          | 0->90,90->45,0->315,270->225,180->0  |
 
     Scenario: Bearing should stay constant when zig-zagging
         Given the node map

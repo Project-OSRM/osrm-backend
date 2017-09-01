@@ -2,6 +2,7 @@
 Feature: Bike - Turn restrictions
 # Ignore turn restrictions on bicycle, since you always become a temporary pedestrian.
 # Note that if u-turns are allowed, turn restrictions can lead to suprising, but correct, routes.
+# These tests here are only to verify that the bicycle profile handles restrictions. Main tests are in the car profile
 
     Background:
         Given the profile "bicycle"
@@ -32,7 +33,7 @@ Feature: Bike - Turn restrictions
         When I route I should get
             | from | to | route    |
             | s    | w  | sj,wj,wj |
-            | s    | n  | sj,nj,nj |
+            | s    | n  | sj,nj    |
             | s    | e  | sj,ej,ej |
 
     ## exceptions are different for bike over car and need to be tested here
@@ -125,7 +126,7 @@ Feature: Bike - Turn restrictions
 
         When I route I should get
             | from | to | route    |
-            | s    | a  | sj,ja,ja |
+            | s    | a  | sj,ja    |
             | s    | b  | sj,jb,jb |
             | s    | c  | sj,jc,jc |
             | s    | d  | sj,jd,jd |

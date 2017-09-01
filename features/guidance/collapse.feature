@@ -455,9 +455,9 @@ Feature: Collapse
             | fi    | primary | cross   | no     |       |
 
        When I route I should get
-            | waypoints | route                  | turns                           | locations |
-            | a,g       | inroad,outroad,outroad | depart,new name straight,arrive | a,d,g     |
-            | a,i       | inroad,cross,cross     | depart,turn left,arrive         | a,f,i     |
+            | waypoints | route              | turns                   | locations |
+            | a,g       | inroad,outroad     | depart,arrive           | a,g       |
+            | a,i       | inroad,cross,cross | depart,turn left,arrive | a,f,i     |
 
      Scenario: Close Turns - Don't Collapse
         Given the node map

@@ -152,9 +152,9 @@ Feature: Testbot - Handle ferry routes
             | defg  |         | ferry | 0:30     |
 
         When I route I should get
-            | from | to | route          | time      |
-            | a    | g  | abcd,defg,defg | 3600s +-1 |
-            | g    | a  | defg,abcd,abcd | 3600s +-1 |
+            | from | to | route     | time      |
+            | a    | g  | abcd,defg | 3600s +-1 |
+            | g    | a  | defg,abcd | 3600s +-1 |
 
     Scenario: Testbot - Prefer road when faster than ferry
         Given the node map
@@ -173,9 +173,9 @@ Feature: Testbot - Handle ferry routes
             | defg  |         | ferry | 0:02     |
 
         When I route I should get
-            | from | to | route    | time      |
-            | a    | g  | xa,xy,yg | 60s +-25% |
-            | g    | a  | yg,xy,xa | 60s +-25% |
+            | from | to | route | time      |
+            | a    | g  | xa,yg | 60s +-25% |
+            | g    | a  | yg,xa | 60s +-25% |
 
     Scenario: Testbot - Long winding ferry route
         Given the node map

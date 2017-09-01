@@ -73,17 +73,17 @@ Feature: Snap start/end point to the nearest way
             | jkla  |
 
         When I route I should get
-            | from | to | route          |
-            | a    | b  | abcd,abcd      |
-            | a    | c  | abcd,abcd      |
-            | a    | d  | abcd,abcd      |
-            | a    | e  | abcd,defg,defg |
-            | a    | f  | abcd,defg,defg |
-            | a    | h  | jkla,ghij,ghij |
-            | a    | i  | jkla,ghij,ghij |
-            | a    | j  | jkla,jkla      |
-            | a    | k  | jkla,jkla      |
-            | a    | l  | jkla,jkla      |
+            | from | to | route     |
+            | a    | b  | abcd,abcd |
+            | a    | c  | abcd,abcd |
+            | a    | d  | abcd,abcd |
+            | a    | e  | abcd,defg |
+            | a    | f  | abcd,defg |
+            | a    | h  | jkla,ghij |
+            | a    | i  | jkla,ghij |
+            | a    | j  | jkla,jkla |
+            | a    | k  | jkla,jkla |
+            | a    | l  | jkla,jkla |
 
     Scenario: Snapping in viaroute
         Given the extract extra arguments "--small-component-size 4"

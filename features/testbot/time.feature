@@ -206,11 +206,11 @@ Feature: Estimation of travel time
             | cde   | tertiary |
 
         When I route I should get
-            | from | to | route       | time    |
-            | b    | c  | abc,abc     | 10s +-1 |
-            | c    | e  | cde,cde     | 60s +-1 |
-            | b    | d  | abc,cde     | 40s +-1 |
-            | a    | e  | abc,cde,cde | 80s +-1 |
+            | from | to | route   | time    |
+            | b    | c  | abc,abc | 10s +-1 |
+            | c    | e  | cde,cde | 60s +-1 |
+            | b    | d  | abc,cde | 40s +-1 |
+            | a    | e  | abc,cde | 80s +-1 |
 
     Scenario: Time of travel on part of a way
         Given the node map
@@ -238,16 +238,20 @@ Feature: Estimation of travel time
         Given a grid size of 1000 meters
         And the node map
             """
-            a b
-
-              c     d
+            a b - e
+              |
+              c - - d
+              |
+              f
             """
 
         And the ways
-            | nodes | highway |
-            | ab    | primary |
-            | bc    | primary |
-            | cd    | primary |
+            | nodes |
+            | ab    |
+            | bc    |
+            | cd    |
+            | be    |
+            | cf    |
 
         When I route I should get
             | from | to | route       | distances             | distance  | times              | time     |

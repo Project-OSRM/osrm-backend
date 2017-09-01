@@ -37,7 +37,7 @@ Feature: Car - Turn restrictions
             | from | to | route    |
             | e    | s  | ej,js,js |
             | e    | n  | ej,nj,nj |
-            | e    | p  | ej,jp,jp |
+            | e    | p  | ej,jp    |
 
     @no_turning @conditionals
     Scenario: Car - Restriction would be on, but the restriction was badly tagged
@@ -101,8 +101,8 @@ Feature: Car - Turn restrictions
             | restriction | nij      | jklm   | j        | no_left_turn @ (Mo-Fr 07:00-10:30)  |
 
         When I route I should get
-            | from | to | route               |
-            | n    | m  | nij,js,js,jklm,jklm |
+            | from | to | route            |
+            | n    | m  | nij,js,jklm,jklm |
 
     @no_turning @conditionals
     Scenario: Car - Restriction With Compressed Geometry and Traffic Signal
@@ -138,8 +138,8 @@ Feature: Car - Turn restrictions
             | restriction | nij      | jklm   | j        | no_left_turn @ (Mo-Fr 07:00-10:30)  |
 
         When I route I should get
-            | from | to | route               |
-            | n    | m  | nij,js,js,jklm,jklm |
+            | from | to | route            |
+            | n    | m  | nij,js,jklm,jklm |
 
     @no_turning @conditionals
     Scenario: Car - ignores except restriction
@@ -170,8 +170,8 @@ Feature: Car - Turn restrictions
             | from | to | route          | # |
             | e    | s  | ej,js,js       |   |
             | e    | n  | ej,nj,nj       | restriction does not apply to cars |
-            | e    | p  | ej,jp,jp       |   |
-            | p    | s  | jp,nj,nj,js,js | restriction excepting busses still applies to cars  |
+            | e    | p  | ej,jp          |   |
+            | p    | s  | jp,nj,nj,js    | restriction excepting busses still applies to cars  |
 
     @no_turning @conditionals
     Scenario: Car - only_right_turn
@@ -199,7 +199,7 @@ Feature: Car - Turn restrictions
 
         When I route I should get
             | from | to | route          |
-            | e    | s  | ej,nj,nj,js,js |
+            | e    | s  | ej,nj,nj,js    |
             | e    | n  | ej,nj,nj       |
             | e    | p  | ej,nj,nj,jp,jp |
 
@@ -228,10 +228,10 @@ Feature: Car - Turn restrictions
             | restriction | ej       | nj     | j        | no_right_turn @ (Mo-Fr 07:00-13:00)   |
 
         When I route I should get
-            | from | to | route          | # |
-            | e    | s  | ej,js,js       | normal turn |
-            | e    | n  | ej,js,js,nj,nj | avoids right turn |
-            | e    | p  | ej,jp,jp       | normal maneuver |
+            | from | to | route       | # |
+            | e    | s  | ej,js,js    | normal turn |
+            | e    | n  | ej,js,js,nj | avoids right turn |
+            | e    | p  | ej,jp       | normal maneuver |
 
     @only_turning @conditionals
     Scenario: Car - only_left_turn
@@ -260,7 +260,7 @@ Feature: Car - Turn restrictions
         When I route I should get
             | from | to | route          |
             | e    | s  | ej,js,js       |
-            | e    | n  | ej,js,js,nj,nj |
+            | e    | n  | ej,js,js,nj    |
             | e    | p  | ej,js,js,jp,jp |
 
     @no_turning @conditionals
@@ -288,10 +288,10 @@ Feature: Car - Turn restrictions
             | restriction | ej       | js     | j        | no_left_turn @ (Mo-Su 00:00-23:59) |
 
         When I route I should get
-            | from | to | route          |
-            | e    | s  | ej,nj,nj,js,js |
-            | e    | n  | ej,nj,nj       |
-            | e    | p  | ej,jp,jp       |
+            | from | to | route       |
+            | e    | s  | ej,nj,nj,js |
+            | e    | n  | ej,nj,nj    |
+            | e    | p  | ej,jp       |
 
     @no_turning @conditionals
     Scenario: Car - Conditional restriction is off
@@ -321,7 +321,7 @@ Feature: Car - Turn restrictions
             | from | to | route    |
             | e    | s  | ej,js,js |
             | e    | n  | ej,nj,nj |
-            | e    | p  | ej,jp,jp |
+            | e    | p  | ej,jp    |
 
     @no_turning @conditionals
     Scenario: Car - Conditional restriction is on
@@ -348,10 +348,10 @@ Feature: Car - Turn restrictions
             | restriction | ej       | nj     | j        | no_right_turn @ (Mo-Fr 07:00-14:00) |
 
         When I route I should get
-            | from | to | route          |
-            | e    | s  | ej,js,js       |
-            | e    | n  | ej,js,js,nj,nj |
-            | e    | p  | ej,jp,jp       |
+            | from | to | route       |
+            | e    | s  | ej,js,js    |
+            | e    | n  | ej,js,js,nj |
+            | e    | p  | ej,jp       |
 
     @no_turning @conditionals
     Scenario: Car - Conditional restriction with multiple time windows
@@ -382,9 +382,9 @@ Feature: Car - Turn restrictions
             | restriction | nj       | jp     | j        | no_right_turn @ (Mo-Fr 07:00-11:00,16:00-18:30) |
 
         When I route I should get
-            | from | to | route          |
-            | n    | p  | nj,js,js,jp,jp |
-            | m    | p  | mj,jp,jp       |
+            | from | to | route       |
+            | n    | p  | nj,js,jp,jp |
+            | m    | p  | mj,jp       |
 
     @no_turning @conditionals
     Scenario: Car - only_right_turn
@@ -412,7 +412,7 @@ Feature: Car - Turn restrictions
 
         When I route I should get
             | from | to | route          |
-            | e    | s  | ej,nj,nj,js,js |
+            | e    | s  | ej,nj,nj,js    |
             | e    | n  | ej,nj,nj       |
             | e    | p  | ej,nj,nj,jp,jp |
 
@@ -441,10 +441,10 @@ Feature: Car - Turn restrictions
             | restriction | ej       | nj     | j        | no_right_turn @ (Mo-Fr 07:00-13:00)   |
 
         When I route I should get
-            | from | to | route          | # |
-            | e    | s  | ej,js,js       | normal turn |
-            | e    | n  | ej,js,js,nj,nj | avoids right turn |
-            | e    | p  | ej,jp,jp       | normal maneuver |
+            | from | to | route       | # |
+            | e    | s  | ej,js,js    | normal turn |
+            | e    | n  | ej,js,js,nj | avoids right turn |
+            | e    | p  | ej,jp       | normal maneuver |
 
     @only_turning @conditionals
     Scenario: Car - only_left_turn
@@ -473,7 +473,7 @@ Feature: Car - Turn restrictions
         When I route I should get
             | from | to | route          |
             | e    | s  | ej,js,js       |
-            | e    | n  | ej,js,js,nj,nj |
+            | e    | n  | ej,js,js,nj    |
             | e    | p  | ej,js,js,jp,jp |
 
     @no_turning @conditionals
@@ -501,10 +501,10 @@ Feature: Car - Turn restrictions
             | restriction | ej       | js     | j        | no_left_turn @ (Mo-Su 00:00-23:59) |
 
         When I route I should get
-            | from | to | route          |
-            | e    | s  | ej,nj,nj,js,js |
-            | e    | n  | ej,nj,nj       |
-            | e    | p  | ej,jp,jp       |
+            | from | to | route       |
+            | e    | s  | ej,nj,nj,js |
+            | e    | n  | ej,nj,nj    |
+            | e    | p  | ej,jp       |
 
     @no_turning @conditionals
     Scenario: Car - Conditional restriction is off
@@ -534,7 +534,7 @@ Feature: Car - Turn restrictions
             | from | to | route    |
             | e    | s  | ej,js,js |
             | e    | n  | ej,nj,nj |
-            | e    | p  | ej,jp,jp |
+            | e    | p  | ej,jp    |
 
     @no_turning @conditionals
     Scenario: Car - Conditional restriction is on
@@ -561,10 +561,10 @@ Feature: Car - Turn restrictions
             | restriction | ej       | nj     | j        | no_right_turn @ (Mo-Fr 07:00-14:00) |
 
         When I route I should get
-            | from | to | route          |
-            | e    | s  | ej,js,js       |
-            | e    | n  | ej,js,js,nj,nj |
-            | e    | p  | ej,jp,jp       |
+            | from | to | route       |
+            | e    | s  | ej,js,js    |
+            | e    | n  | ej,js,js,nj |
+            | e    | p  | ej,jp       |
 
     @no_turning @conditionals
     Scenario: Car - Conditional restriction with multiple time windows
@@ -595,9 +595,9 @@ Feature: Car - Turn restrictions
             | restriction | nj       | jp     | j        | no_right_turn @ (Mo-Fr 07:00-11:00,16:00-18:30) |
 
         When I route I should get
-            | from | to | route          |
-            | n    | p  | nj,js,js,jp,jp |
-            | m    | p  | mj,jp,jp       |
+            | from | to | route       |
+            | n    | p  | nj,js,jp,jp |
+            | m    | p  | mj,jp       |
 
     @restriction-way
     Scenario: Car - prohibit turn
@@ -630,11 +630,11 @@ Feature: Car - Turn restrictions
             | restriction | ab       | be      | de     | no_right_turn @ (Mo-Fr 07:00-11:00,16:00-18:30) |
 
         When I route I should get
-            | from | to | route             | turns                                                               | locations   |
-            | a    | d  | ab,be,ef,ef,de,de | depart,turn right,turn left,continue uturn,new name straight,arrive | a,b,e,f,e,d |
-            | a    | f  | ab,be,ef,ef       | depart,turn right,turn left,arrive                                  | a,b,e,f     |
-            | c    | d  | bc,be,de,de       | depart,turn left,turn right,arrive                                  | c,b,e,d     |
-            | c    | f  | bc,be,ef,ef       | depart,turn left,turn left,arrive                                   | c,b,e,f     |
+            | from | to | route          | turns                                             | locations   |
+            | a    | d  | ab,be,ef,ef,de | depart,turn right,turn left,continue uturn,arrive | a,b,e,f,d   |
+            | a    | f  | ab,be,ef,ef    | depart,turn right,turn left,arrive                | a,b,e,f     |
+            | c    | d  | bc,be,de,de    | depart,turn left,turn right,arrive                | c,b,e,d     |
+            | c    | f  | bc,be,ef,ef    | depart,turn left,turn left,arrive                 | c,b,e,f     |
 
     # condition is off
     @restriction-way
@@ -921,9 +921,9 @@ Feature: Car - Turn restrictions
             | restriction | ed       | dg     | d        | no_uturn @ (Mo-Fr 07:00-11:00,16:00-18:30) |
 
         When I route I should get
-            | from | to | route             |
-            | a    | f  | ab,bc,bc,be,ef,ef |
-            | f    | 1  | ef,eh,gh,dg,dg    |
+            | from | to | route          |
+            | a    | f  | ab,bc,be,ef,ef |
+            | f    | 1  | ef,eh,dg       |
 
     @restriction-way @overlap
     Scenario: Car - prohibit turn
@@ -961,11 +961,11 @@ Feature: Car - Turn restrictions
 
         # condition is off, but the general restriction should take precedence
         When I route I should get
-            | from | to | route             | turns                                                               | locations   |
-            | a    | d  | ab,be,ef,ef,de,de | depart,turn right,turn left,continue uturn,new name straight,arrive | a,b,e,f,e,d |
-            | a    | f  | ab,be,ef,ef       | depart,turn right,turn left,arrive                                  | a,b,e,f     |
-            | c    | d  | bc,be,de,de       | depart,turn left,turn right,arrive                                  | c,b,e,d     |
-            | c    | f  | bc,be,ef,ef       | depart,turn left,turn left,arrive                                   | c,b,e,f     |
+            | from | to | route          | turns                                             | locations |
+            | a    | d  | ab,be,ef,ef,de | depart,turn right,turn left,continue uturn,arrive | a,b,e,f,d |
+            | a    | f  | ab,be,ef,ef    | depart,turn right,turn left,arrive                | a,b,e,f   |
+            | c    | d  | bc,be,de,de    | depart,turn left,turn right,arrive                | c,b,e,d   |
+            | c    | f  | bc,be,ef,ef    | depart,turn left,turn left,arrive                 | c,b,e,f   |
 
     @restriction-way @overlap
     Scenario: Car - prohibit turn
@@ -1005,11 +1005,11 @@ Feature: Car - Turn restrictions
 
         # way restriction is off, node-restriction is on
         When I route I should get
-            | from | to | route             | turns                                                               | locations   |
-            | a    | d  | ab,be,ef,ef,de,de | depart,turn right,turn left,continue uturn,new name straight,arrive | a,b,e,f,e,d |
-            | a    | f  | ab,be,ef,ef       | depart,turn right,turn left,arrive                                  | a,b,e,f     |
-            | c    | d  | bc,be,ef,ef,de,de | depart,turn left,turn left,continue uturn,new name straight,arrive  | c,b,e,f,e,d |
-            | c    | f  | bc,be,ef,ef       | depart,turn left,turn left,arrive                                   | c,b,e,f     |
+            | from | to | route          | turns                                             | locations |
+            | a    | d  | ab,be,ef,ef,de | depart,turn right,turn left,continue uturn,arrive | a,b,e,f,d |
+            | a    | f  | ab,be,ef,ef    | depart,turn right,turn left,arrive                | a,b,e,f   |
+            | c    | d  | bc,be,ef,ef,de | depart,turn left,turn left,continue uturn,arrive  | c,b,e,f,d |
+            | c    | f  | bc,be,ef,ef    | depart,turn left,turn left,arrive                 | c,b,e,f   |
 
     @restriction-way @overlap
     Scenario: Car - prohibit turn
@@ -1049,9 +1049,9 @@ Feature: Car - Turn restrictions
 
         # node restrictino is off, way restriction is on
         When I route I should get
-            | from | to | route             | turns                                                               | locations   |
-            | a    | d  | ab,be,ef,ef,de,de | depart,turn right,turn left,continue uturn,new name straight,arrive | a,b,e,f,e,d |
-            | a    | f  | ab,be,ef,ef       | depart,turn right,turn left,arrive                                  | a,b,e,f     |
-            | c    | d  | bc,be,de,de       | depart,turn left,turn right,arrive                                  | c,b,e,d     |
-            | c    | f  | bc,be,ef,ef       | depart,turn left,turn left,arrive                                   | c,b,e,f     |
+            | from | to | route          | turns                                             | locations |
+            | a    | d  | ab,be,ef,ef,de | depart,turn right,turn left,continue uturn,arrive | a,b,e,f,d |
+            | a    | f  | ab,be,ef,ef    | depart,turn right,turn left,arrive                | a,b,e,f   |
+            | c    | d  | bc,be,de,de    | depart,turn left,turn right,arrive                | c,b,e,d   |
+            | c    | f  | bc,be,ef,ef    | depart,turn left,turn left,arrive                 | c,b,e,f   |
 

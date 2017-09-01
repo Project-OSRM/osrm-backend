@@ -33,28 +33,28 @@ Feature: Raster - weights
     Scenario: Weighting not based on raster sources
         Given the profile "testbot"
         When I route I should get
-            | from | to | route    | speed   |
-            | a    | b  | ab,ab    | 36 km/h |
-            | a    | c  | ab,bc,bc | 36 km/h |
-            | b    | c  | bc,bc    | 36 km/h |
-            | a    | d  | ad,ad    | 36 km/h |
-            | d    | c  | dc,dc    | 36 km/h |
+            | from | to | route | speed   |
+            | a    | b  | ab,ab | 36 km/h |
+            | a    | c  | ab,bc | 36 km/h |
+            | b    | c  | bc,bc | 36 km/h |
+            | a    | d  | ad,ad | 36 km/h |
+            | d    | c  | dc,dc | 36 km/h |
 
     Scenario: Weighting based on raster sources
         Given the profile "rasterbot"
         When I route I should get
-            | from | to | route    | speed   |
-            | a    | b  | ab,ab    | 8 km/h  |
-            | b    | a  | ab,ab    | 22 km/h |
-            | a    | c  | ab,bc,bc | 12 km/h |
-            | b    | c  | bc,bc    | 22 km/h |
-            | a    | d  | ad,ad    | 15 km/h |
-            | d    | c  | dc,dc    | 15 km/h |
-            | d    | e  | de,de    | 10 km/h |
-            | e    | b  | eb,eb    | 10 km/h |
-            | d    | f  | df,df    | 15 km/h |
-            | f    | b  | fb,fb    | 7 km/h  |
-            | d    | b  | de,eb,eb | 10 km/h |
+            | from | to | route | speed   |
+            | a    | b  | ab,ab | 8 km/h  |
+            | b    | a  | ab,ab | 22 km/h |
+            | a    | c  | ab,bc | 12 km/h |
+            | b    | c  | bc,bc | 22 km/h |
+            | a    | d  | ad,ad | 15 km/h |
+            | d    | c  | dc,dc | 15 km/h |
+            | d    | e  | de,de | 10 km/h |
+            | e    | b  | eb,eb | 10 km/h |
+            | d    | f  | df,df | 15 km/h |
+            | f    | b  | fb,fb | 7 km/h  |
+            | d    | b  | de,eb | 10 km/h |
 
     Scenario: Weighting based on raster sources
         Given the profile "rasterbotinterp"
@@ -69,4 +69,4 @@ Feature: Raster - weights
             | e    | b  | eb,eb    | 10 km/h |
             | d    | f  | df,df    | 15 km/h |
             | f    | b  | fb,fb    | 7 km/h  |
-            | d    | b  | de,eb,eb | 10 km/h |
+            | d    | b  | de,eb    | 10 km/h |

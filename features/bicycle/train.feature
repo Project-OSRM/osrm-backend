@@ -50,7 +50,7 @@ Feature: Bike - Handle ferry routes
         When I route I should get
             | from | to | route |
             | 1    | 2  |       |
-            | 2    | 3  | cd,de,ef|
+            | 2    | 3  | cd,ef |
             | 3    | 4  |       |
 
     @construction

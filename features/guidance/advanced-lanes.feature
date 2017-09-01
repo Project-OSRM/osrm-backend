@@ -35,10 +35,10 @@ Feature: Turn Lane Guidance
             | restriction | bc       | cd     | c        | no_right_turn |
 
        When I route I should get
-            | waypoints | route                | turns                           | lanes                       |
-            | a,e       | in,cross,cross       | depart,turn left,arrive         | ;,left:true straight:false, |
-            | a,g       | in,straight,straight | depart,new name straight,arrive | ;,left:false straight:true, |
-            | a,f       | in,cross,cross       | depart,continue right,arrive    | ,;right:true,               |
+            | waypoints | route          | turns                        | lanes                       |
+            | a,e       | in,cross,cross | depart,turn left,arrive      | ;,left:true straight:false, |
+            | a,g       | in,straight    | depart,arrive                | ;;left:false straight:true, |
+            | a,f       | in,cross,cross | depart,continue right,arrive | ,;right:true,               |
 
     @sliproads
     Scenario: Separate Turn Lanes
@@ -68,10 +68,10 @@ Feature: Turn Lane Guidance
             | restriction | bc       | cd     | c        | no_right_turn |
 
        When I route I should get
-            | waypoints | route                | turns                           | lanes                                                                       |
-            | a,e       | in,cross,cross       | depart,turn left,arrive         | ;,left:true straight:false right:false,                                     |
-            | a,g       | in,straight,straight | depart,new name straight,arrive | ;,left:false straight:true right:false,                                     |
-            | a,f       | in,cross,cross       | depart,turn right,arrive        | ,left:false straight:false right:true;left:false straight:false right:true, |
+            | waypoints | route          | turns                    | lanes                                                                       |
+            | a,e       | in,cross,cross | depart,turn left,arrive  | ;,left:true straight:false right:false,                                     |
+            | a,g       | in,straight    | depart,arrive            | ;;left:false straight:true right:false,                                     |
+            | a,f       | in,cross,cross | depart,turn right,arrive | ,left:false straight:false right:true;left:false straight:false right:true, |
 
 
     @sliproads
@@ -109,12 +109,12 @@ Feature: Turn Lane Guidance
             | restriction | bc       | cd     | c        | no_right_turn |
 
        When I route I should get
-            | waypoints | route                | turns                               | lanes                                                                       |
-            | a,e       | in,cross,cross       | depart,turn left,arrive             | ;,left:true straight:false right:false,                                     |
-            | a,g       | in,straight,straight | depart,new name straight,arrive     | ;,left:false straight:true right:false,                                     |
-            | a,f       | in,cross,cross       | depart,turn right,arrive            | ,left:false straight:false right:true;left:false straight:false right:true, |
-            | a,j       | in,turn,other,other  | depart,turn right,turn left,arrive  | ,,left:true right:false,                                                    |
-            | a,i       | in,turn,other,other  | depart,turn right,turn right,arrive | ,,left:false right:true,                                                    |
+            | waypoints | route               | turns                               | lanes                                                                       |
+            | a,e       | in,cross,cross      | depart,turn left,arrive             | ;,left:true straight:false right:false,                                     |
+            | a,g       | in,straight         | depart,arrive                       | ;;left:false straight:true right:false,                                     |
+            | a,f       | in,cross,cross      | depart,turn right,arrive            | ,left:false straight:false right:true;left:false straight:false right:true, |
+            | a,j       | in,turn,other,other | depart,turn right,turn left,arrive  | ,,left:true right:false,                                                    |
+            | a,i       | in,turn,other,other | depart,turn right,turn right,arrive | ,,left:false right:true,                                                    |
 
 
     @todo @2654 @none

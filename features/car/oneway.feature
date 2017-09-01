@@ -99,8 +99,8 @@ Feature: Car - Oneway streets
 
 
         When I route I should get
-            | from | to | route    |
-            | a    | c  | ab,bc,bc |
+            | from | to | route |
+            | a    | c  | ab,bc |
 
 
     # Reversible oneways (low frequency) vs alternating oneways (high frequency).

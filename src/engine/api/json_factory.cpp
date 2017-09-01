@@ -44,11 +44,11 @@ const constexpr char *modifier_names[] = {"uturn",
 // translations of TurnTypes. Not all types are exposed to the outside world.
 // invalid types should never be returned as part of the API
 const constexpr char *turn_type_names[] = {
-    "invalid",         "new name",   "continue", "turn",        "merge",
-    "on ramp",         "off ramp",   "fork",     "end of road", "notification",
-    "roundabout",      "roundabout", "rotary",   "rotary",      "roundabout turn",
-    "roundabout turn", "use lane",   "invalid",  "invalid",     "invalid",
-    "invalid",         "invalid",    "invalid",  "invalid",     "invalid",
+    "invalid",         "notification", "continue", "turn",        "merge",
+    "on ramp",         "off ramp",     "fork",     "end of road", "notification",
+    "roundabout",      "roundabout",   "rotary",   "rotary",      "roundabout turn",
+    "roundabout turn", "use lane",     "invalid",  "invalid",     "invalid",
+    "invalid",         "invalid",      "invalid",  "invalid",     "invalid",
     "invalid",         "invalid"};
 
 const constexpr char *waypoint_type_names[] = {"invalid", "arrive", "depart"};
