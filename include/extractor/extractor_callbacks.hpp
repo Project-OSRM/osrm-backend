@@ -90,7 +90,6 @@ class ExtractorCallbacks
     // warning: caller needs to take care of synchronization!
     void ProcessWay(const osmium::Way &current_way, const ExtractionWay &result_way);
 };
-
 }
 }
 
