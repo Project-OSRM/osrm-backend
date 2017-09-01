@@ -789,16 +789,20 @@ void encodeVectorTile(const DataFacadeBase &facade,
         // for tiles of z<16, and tiles that don't show any intersections)
         if (!all_turn_data.empty())
         {
+
+            struct EncodedTurnData
+            {
+                util::Coordinate coordinate;
+                std::size_t angle_index;
+                std::size_t turn_index;
+                std::size_t duration_index;
+                std::size_t weight_index;
+                std::size_t turntype_index;
+                std::size_t turnmodifier_index;
+            };
             // we need to pre-encode all values here because we need the full offsets later
             // for encoding the actual features.
-            std::vector<std::tuple<util::Coordinate,
-                                   unsigned,
-                                   unsigned,
-                                   unsigned,
-                                   unsigned,
-                                   unsigned,
-                                   unsigned>>
-                encoded_turn_data(all_turn_data.size());
+            std::vector<EncodedTurnData> encoded_turn_data(all_turn_data.size());
             std::transform(
                 all_turn_data.begin(),
                 all_turn_data.end(),
@@ -816,13 +820,13 @@ void encodeVectorTile(const DataFacadeBase &facade,
                     auto turnmodifier_idx =
                         use_point_string_value(api::json::detail::instructionModifierToString(
                             t.turn_instruction.direction_modifier));
-                    return std::make_tuple(t.coordinate,
+                    return EncodedTurnData{t.coordinate,
                                            angle_idx,
                                            turn_idx,
                                            duration_idx,
                                            weight_idx,
                                            turntype_idx,
-                                           turnmodifier_idx);
+                                           turnmodifier_idx};
                 });
 
             // Now write the points layer for turn penalty data:
@@ -856,19 +860,19 @@ void encodeVectorTile(const DataFacadeBase &facade,
                         protozero::packed_field_uint32 field(
                             feature_writer, util::vector_tile::FEATURE_ATTRIBUTES_TAG);
                         field.add_element(0); // "bearing_in" tag key offset
-                        field.add_element(std::get<1>(point_turn_data));
+                        field.add_element(point_turn_data.angle_index);
                         field.add_element(1); // "turn_angle" tag key offset
-                        field.add_element(std::get<2>(point_turn_data));
+                        field.add_element(point_turn_data.turn_index);
                         field.add_element(2); // "cost" tag key offset
-                        field.add_element(used_point_ints.size() + std::get<3>(point_turn_data));
+                        field.add_element(used_point_ints.size() + point_turn_data.duration_index);
                         field.add_element(3); // "weight" tag key offset
-                        field.add_element(used_point_ints.size() + std::get<4>(point_turn_data));
+                        field.add_element(used_point_ints.size() + point_turn_data.weight_index);
                         field.add_element(4); // "type" tag key offset
                         field.add_element(used_point_ints.size() + used_point_floats.size() +
-                                          std::get<5>(point_turn_data));
+                                          point_turn_data.turntype_index);
                         field.add_element(5); // "modifier" tag key offset
                         field.add_element(used_point_ints.size() + used_point_floats.size() +
-                                          std::get<6>(point_turn_data));
+                                          point_turn_data.turnmodifier_index);
                     }
                     {
                         // Add the geometry as the last field in this feature
@@ -881,8 +885,7 @@ void encodeVectorTile(const DataFacadeBase &facade,
                 // Loop over all the turns we found and add them as features to the layer
                 for (const auto &turndata : encoded_turn_data)
                 {
-                    const auto tile_point =
-                        coordinatesToTilePoint(std::get<0>(turndata), tile_bbox);
+                    const auto tile_point = coordinatesToTilePoint(turndata.coordinate, tile_bbox);
                     if (!boost::geometry::within(point_t(tile_point.x, tile_point.y), clip_box))
                     {
                         continue;
