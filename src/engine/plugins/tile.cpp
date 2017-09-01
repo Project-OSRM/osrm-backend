@@ -43,15 +43,11 @@ namespace
 // which uses a lookup table and index pointers for encoding
 template <typename T> struct ValueIndexer
 {
+  private:
+    std::vector<T> used_values;
+    std::unordered_map<T, std::size_t> value_offsets;
+
   public:
-    std::vector<T> &used_values;
-    std::unordered_map<T, std::size_t> &value_offsets;
-
-    ValueIndexer(std::vector<T> &used_values_, std::unordered_map<T, std::size_t> &value_offsets_)
-        : used_values{used_values_}, value_offsets{value_offsets_}
-    {
-    }
-
     std::size_t add(const T &value)
     {
         const auto found = value_offsets.find(value);
@@ -70,6 +66,12 @@ template <typename T> struct ValueIndexer
 
         return offset;
     }
+
+    std::size_t indexOf(const T &value) { return value_offsets[value]; };
+
+    const std::vector<T> &values() { return used_values; }
+
+    std::size_t size() const { return used_values.size(); }
 };
 
 using RTreeLeaf = datafacade::BaseDataFacade::RTreeLeaf;
@@ -316,45 +318,17 @@ void encodeVectorTile(const DataFacadeBase &facade,
                       std::string &pbf_buffer)
 {
 
-    // Vector tiles encode properties as references to a common lookup table.
-    // When we add a property to a "feature", we actually attach the index of the value
-    // rather than the value itself.  Thus, we need to keep a list of the unique
-    // values we need, and we add this list to the tile as a lookup table.  This
-    // vector holds all the actual used values, the feature refernce offsets in
-    // this vector.
-    // for integer values
-    std::vector<int> used_line_ints;
-    // While constructing the tile, we keep track of which integers we have in our table
-    // and their offsets, so multiple features can re-use the same values
-    std::unordered_map<int, std::size_t> line_int_offsets;
-
-    // Same idea for street names - one lookup table for names for all features
-    std::vector<util::StringView> names;
-    std::unordered_map<util::StringView, std::size_t> name_offsets;
-
-    // And again for integer values used by points.
-    std::vector<int> used_point_ints;
-    std::unordered_map<int, std::size_t> point_int_offsets;
-
-    // And again for float values used by points
-    std::vector<float> used_point_floats;
-    std::unordered_map<float, std::size_t> point_float_offsets;
-
-    std::vector<std::string> used_point_strings;
-    std::unordered_map<std::string, std::size_t> point_string_offsets;
-
     std::uint8_t max_datasource_id = 0;
 
-    // This is where we accumulate information on turns
-
-    // Helper function for adding a new value to the line_ints lookup table.  Returns
-    // the index of the value in the table, adding the value if it doesn't already
-    // exist
-
-    ValueIndexer<int> line_int_index(used_line_ints, line_int_offsets);
-    ValueIndexer<int> point_int_index(used_point_ints, point_int_offsets);
-    ValueIndexer<float> point_float_index(used_point_floats, point_float_offsets);
-    ValueIndexer<std::string> point_string_index(used_point_strings, point_string_offsets);
+    // Vector tiles encode properties on features as indexes into a layer-specific
+    // lookup table.  These ValueIndexer's act as memoizers for values as we discover
+    // them during edge explioration, and are then used to generate the lookup
+    // tables for each tile layer.
+    ValueIndexer<int> line_int_index;
+    ValueIndexer<util::StringView> line_string_index;
+    ValueIndexer<int> point_int_index;
+    ValueIndexer<float> point_float_index;
+    ValueIndexer<std::string> point_string_index;
 
     const auto get_geometry_id = [&facade](auto edge) {
         return facade.GetGeometryIndex(edge.forward_segment_id.id).id;
@@ -503,24 +477,14 @@ void encodeVectorTile(const DataFacadeBase &facade,
                     const auto name_id = facade.GetNameIndex(edge.forward_segment_id.id);
                     auto name = facade.GetNameForID(name_id);
 
-                    const auto name_offset = [&name, &names, &name_offsets]() {
-                        auto iter = name_offsets.find(name);
-                        if (iter == name_offsets.end())
-                        {
-                            auto offset = names.size();
-                            name_offsets[name] = offset;
-                            names.push_back(name);
-                            return offset;
-                        }
-                        return iter->second;
-                    }();
+                    line_string_index.add(name);
 
                     const auto encode_tile_line = [&line_layer_writer,
                                                    &edge,
                                                    &component_id,
                                                    &id,
                                                    &max_datasource_id,
-                                                   &used_line_ints](
+                                                   &line_int_index](
                         const FixedLine &tile_line,
                         const std::uint32_t speed_kmh_idx,
                         const std::uint32_t rate_idx,
@@ -568,12 +532,11 @@ void encodeVectorTile(const DataFacadeBase &facade,
                                               duration_idx); // duration value offset
                             field.add_element(5);            // "name" tag key offset
 
-                            field.add_element(130 + max_datasource_id + 1 + used_line_ints.size() +
-                                              name_idx); // name value offset
+                            field.add_element(130 + max_datasource_id + 1 +
+                                              line_int_index.values().size() + name_idx);
 
                             field.add_element(6); // rate tag key offset
-                            field.add_element(130 + max_datasource_id + 1 +
-                                              rate_idx); // rate goes in used_line_ints
+                            field.add_element(130 + max_datasource_id + 1 + rate_idx);
                         }
                         {
 
@@ -607,11 +570,11 @@ void encodeVectorTile(const DataFacadeBase &facade,
                         {
                             encode_tile_line(tile_line,
                                              speed_kmh_idx,
-                                             line_int_offsets[forward_rate],
-                                             line_int_offsets[forward_weight],
-                                             line_int_offsets[forward_duration],
+                                             line_int_index.indexOf(forward_rate),
+                                             line_int_index.indexOf(forward_weight),
+                                             line_int_index.indexOf(forward_duration),
                                              forward_datasource_idx,
-                                             name_offset,
+                                             line_string_index.indexOf(name),
                                              start_x,
                                              start_y);
                         }
@@ -641,11 +604,11 @@ void encodeVectorTile(const DataFacadeBase &facade,
                         {
                             encode_tile_line(tile_line,
                                              speed_kmh_idx,
-                                             line_int_offsets[reverse_rate],
-                                             line_int_offsets[reverse_weight],
-                                             line_int_offsets[reverse_duration],
+                                             line_int_index.indexOf(reverse_rate),
+                                             line_int_index.indexOf(reverse_weight),
+                                             line_int_index.indexOf(reverse_duration),
                                              reverse_datasource_idx,
-                                             name_offset,
+                                             line_string_index.indexOf(name),
                                              start_x,
                                              start_y);
                         }
@@ -696,7 +659,7 @@ void encodeVectorTile(const DataFacadeBase &facade,
                 values_writer.add_string(util::vector_tile::VARIANT_TYPE_STRING,
                                          facade.GetDatasourceName(i).to_string());
             }
-            for (auto value : used_line_ints)
+            for (auto value : line_int_index.values())
             {
                 // Writing field type 4 == variant type
                 protozero::pbf_writer values_writer(line_layer_writer,
@@ -707,7 +670,7 @@ void encodeVectorTile(const DataFacadeBase &facade,
                 values_writer.add_double(util::vector_tile::VARIANT_TYPE_DOUBLE, value / 10.);
             }
 
-            for (const auto &name : names)
+            for (const auto &name : line_string_index.values())
             {
                 // Writing field type 4 == variant type
                 protozero::pbf_writer values_writer(line_layer_writer,
@@ -798,14 +761,14 @@ void encodeVectorTile(const DataFacadeBase &facade,
                         field.add_element(1); // "turn_angle" tag key offset
                         field.add_element(point_turn_data.turn_index);
                         field.add_element(2); // "cost" tag key offset
-                        field.add_element(used_point_ints.size() + point_turn_data.duration_index);
+                        field.add_element(point_int_index.size() + point_turn_data.duration_index);
                         field.add_element(3); // "weight" tag key offset
-                        field.add_element(used_point_ints.size() + point_turn_data.weight_index);
+                        field.add_element(point_int_index.size() + point_turn_data.weight_index);
                         field.add_element(4); // "type" tag key offset
-                        field.add_element(used_point_ints.size() + used_point_floats.size() +
+                        field.add_element(point_int_index.size() + point_float_index.size() +
                                           point_turn_data.turntype_index);
                         field.add_element(5); // "modifier" tag key offset
-                        field.add_element(used_point_ints.size() + used_point_floats.size() +
+                        field.add_element(point_int_index.size() + point_float_index.size() +
                                           point_turn_data.turnmodifier_index);
                     }
                     {
@@ -838,19 +801,19 @@ void encodeVectorTile(const DataFacadeBase &facade,
             point_layer_writer.add_string(util::vector_tile::KEY_TAG, "modifier");
 
             // Now, save the lists of integers and floats that our features refer to.
-            for (const auto &value : used_point_ints)
+            for (const auto &value : point_int_index.values())
             {
                 protozero::pbf_writer values_writer(point_layer_writer,
                                                     util::vector_tile::VARIANT_TAG);
                 values_writer.add_sint64(util::vector_tile::VARIANT_TYPE_SINT64, value);
             }
-            for (const auto &value : used_point_floats)
+            for (const auto &value : point_float_index.values())
             {
                 protozero::pbf_writer values_writer(point_layer_writer,
                                                     util::vector_tile::VARIANT_TAG);
                 values_writer.add_float(util::vector_tile::VARIANT_TYPE_FLOAT, value);
             }
-            for (const auto &value : used_point_strings)
+            for (const auto &value : point_string_index.values())
             {
                 protozero::pbf_writer values_writer(point_layer_writer,
                                                     util::vector_tile::VARIANT_TAG);

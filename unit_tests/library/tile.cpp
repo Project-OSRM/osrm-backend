@@ -498,7 +498,6 @@ void test_tile_turns(const osrm::OSRM &osrm)
         actual_turn_modifiers.push_back(string_vals[i]);
     }
     std::sort(actual_turn_modifiers.begin(), actual_turn_modifiers.end());
-    std::cout << std::endl;
     const std::vector<std::string> expected_turn_modifiers = {"left",
                                                               "left",
                                                               "left",
