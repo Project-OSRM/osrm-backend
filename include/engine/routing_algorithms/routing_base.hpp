@@ -168,7 +168,6 @@ void annotatePath(const FacadeT &facade,
         const extractor::TravelMode travel_mode = facade.GetTravelMode(node_id);
         const auto classes = facade.GetClassData(node_id);
 
-
         const auto geometry_index = facade.GetGeometryIndex(node_id);
         get_segment_geometry(geometry_index);
 
