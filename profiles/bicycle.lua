@@ -209,6 +209,18 @@ function setup()
     avoid = Set {
       'impassable',
       'construction'
+    },
+
+    prefetch = Set {
+      'highway',
+      'route',
+      'railway',
+      'bridge',
+      'route',
+      'man_made',
+      'railway',
+      'amenity',
+      'public_transport',
     }
   }
 
@@ -286,11 +298,6 @@ function Bicycle.cycleway(profile,way,result,data)
       has_cycleway_left = true
     end
   elseif cycleway and profile.cycleway_tags[cycleway] then
-    -- "cycleway" tag without left/right should not affect a direction
-    -- already forbidden by oneway tags or access tag
-  print('cycleway?',data.forward_denied,data.backward_denied)
-
-
     has_cycleway_left = not (data.backward_denied or data.is_forward_oneway)
     has_cycleway_right = not (data.forward_access or data.is_backward_oneway)
   end
@@ -317,11 +324,6 @@ function Bicycle.dismount(profile,way,result,data)
     result.backward_speed = profile.walking_speed
   end
 end
-
-function Bicycle.maxspeed(profile,way,result,data)
-  limit( result, maxspeed, maxspeed_forward, maxspeed_backward )
-end
-
 
 function Bicycle.weight(profile,way,result,data)
   -- convert duration into cyclability
@@ -360,88 +362,48 @@ function Bicycle.weight(profile,way,result,data)
 end
 
 function process_way(profile, way, result)
-  -- the initial filtering of ways based on presence of tags
-  -- affects processing times significantly, because all ways
-  -- have to be checked.
-  -- to increase performance, prefetching and initial tag check
-  -- is done directly instead of via a handler.
+  local data = {}
+  local handlers
 
-  -- in general we should try to abort as soon as
-  -- possible if the way is not routable, to avoid doing
-  -- unnecessary work. this implies we should check things that
-  -- commonly forbids access early, and handle edge cases later.
-
-  -- data table for storing intermediate values during processing
-
-  local data = {
-    -- prefetch tags
-    highway = way:get_value_by_key('highway'),
-    route = way:get_value_by_key('route'),
-    railway = way:get_value_by_key('railway'),
-    bridge = way:get_value_by_key('bridge')
-  }
-
-
-    -- initial routability check, filters out buildings, boundaries, etc
-  local route = way:get_value_by_key("route")
-  local man_made = way:get_value_by_key("man_made")
-  local railway = way:get_value_by_key("railway")
-  local amenity = way:get_value_by_key("amenity")
-  local public_transport = way:get_value_by_key("public_transport")
-
-  if (not data.highway or data.highway == '') and
-  (not data.route or data.route == '') and
-  (not profile.use_public_transport or not railway or railway=='') and
-  (not amenity or amenity=='') and
-  (not man_made or man_made=='') and
-  (not public_transport or public_transport=='') and
-  (not data.bridge or data.bridge=='')
-  then
-    return false
-  end
-
-  -- other tags
-  local maxspeed = parse_maxspeed(way:get_value_by_key ( "maxspeed") )
-  local maxspeed_forward = parse_maxspeed(way:get_value_by_key( "maxspeed:forward"))
-  local maxspeed_backward = parse_maxspeed(way:get_value_by_key( "maxspeed:backward"))
-  local barrier = way:get_value_by_key("barrier")
-  local duration = way:get_value_by_key("duration")
-  local service = way:get_value_by_key("service")
-
-
-  local handlers = Sequence {
+  handlers = Sequence {
+    WayHandlers.prefetch,
     WayHandlers.blocked_ways,
     WayHandlers.access
   }
   if WayHandlers.run(profile,way,result,data,handlers) == false then
+    -- if blocked or access denied, we can abort now.
+    -- there's no need to check for ferries, trains or pushing of bikes
     return false
   end
 
-  if WayHandlers.routes(profile,way,result,data) == false then
-    WayHandlers.movables(profile,way,result,data)
-    WayHandlers.speed(profile,way,result,data)
-    WayHandlers.maxspeed(profile,way,result,data)
-    WayHandlers.oneway(profile,way,result,data)
-    Bicycle.cycleway(profile,way,result,data)
-    Bicycle.dismount(profile,way,result,data)
-    WayHandlers.surface(profile,way,result,data)
+  -- run these, but don't about if a handler returns false,
+  -- in that case we then check if pushing is possible
+  handlers = Sequence {
+    WayHandlers.routes,
+    WayHandlers.movables,
+    WayHandlers.speed,
+    WayHandlers.maxspeed,
+    WayHandlers.oneway,
+    Bicycle.cycleway,
+    Bicycle.dismount,
+    WayHandlers.surface
+  }
+  WayHandlers.run( profile,way,result,data,handlers, { no_abort = true } )
 
-    -- if one or both directions is not routable on bike
-    -- then try pushing bike
-    if not WayHandlers.is_done(result,data) then
-      handlers = Sequence {
-        WayHandlers.blocked_ways,
-        WayHandlers.access,
-        WayHandlers.speed,
-        WayHandlers.maxspeed,
-        WayHandlers.oneway
-      }
+  -- try pushing if at least one directions is inaccessible on bike
+  if not WayHandlers.is_done(result,data) then
+    handlers = Sequence {
+      WayHandlers.blocked_ways,
+      WayHandlers.access,
+      WayHandlers.speed,
+      WayHandlers.maxspeed,
+      WayHandlers.oneway
+    }
 
-      -- store foot result in separate table, then merge
-      local foot_result = WayHandlers.new_result()
-      if WayHandlers.run(profile.foot_profile,way,foot_result,data,handlers) ~= false then
-        WayHandlers.merge_results(foot_result,result)
-      end
+    -- store foot result in separate table, then merge
+    local foot_result = WayHandlers.new_result()
+    if WayHandlers.run(profile.foot_profile,way,foot_result,data,handlers) ~= false then
+      WayHandlers.merge_results(foot_result,result)
     end
   end
 
@@ -456,8 +418,6 @@ function process_way(profile, way, result)
     WayHandlers.cleanup
   }
   WayHandlers.run(profile,way,result,data,handlers)
-
-
 end
 
 function process_turn(profile, turn)

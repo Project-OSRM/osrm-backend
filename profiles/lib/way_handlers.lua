@@ -60,13 +60,14 @@ function WayHandlers.merge_results(a,b)
     b.backward_speed = a.backward_speed
   end
 end
--- check that way has at least one tag that could imply routability-
--- we store the checked tags in data, to avoid fetching again later
-function WayHandlers.tag_prefetch(profile,way,result,data)
+
+-- fetch for later use and store in data,
+-- return false if none of the tags are is present
+function WayHandlers.prefetch(profile,way,result,data)
   for key,v in pairs(profile.prefetch) do
     data[key] = way:get_value_by_key( key )
   end
-
+  -- return false if data is still empty
   return next(data) ~= nil
 end
 
@@ -193,7 +194,6 @@ function WayHandlers.routes(profile,way,result,data)
 
         if access_required then
           if data.backward_access ~= "yes" or data.backward_access ~= "yes" then
-            return false
           end
         end
 
@@ -218,7 +218,6 @@ function WayHandlers.routes(profile,way,result,data)
       end
     end
   end
-  return false
 end
 
 -- handling ferries
@@ -260,7 +259,6 @@ end
 
 -- handling movable bridges
 function WayHandlers.movables(profile,way,result,data)
-  print('x')
   local bridge = data.bridge
   if bridge then
     local bridge_speed = profile.bridge_speeds[bridge]
@@ -277,6 +275,7 @@ function WayHandlers.movables(profile,way,result,data)
           result.backward_speed = bridge_speed
         end
       end
+      return true
     end
   end
 end
@@ -518,8 +517,6 @@ function WayHandlers.penalties(profile,way,result,data)
   local forward_penalty = math.min(service_penalty, width_penalty, alternating_penalty, sideroad_penalty)
   local backward_penalty = math.min(service_penalty, width_penalty, alternating_penalty, sideroad_penalty)
 
-    print(profile.properties.weight_name)
-
   if profile.properties.weight_name == 'routability' then
     if result.forward_speed > 0 then
       result.forward_rate = (result.forward_speed * forward_penalty) / 3.6
@@ -719,10 +716,16 @@ end
 -- if the handler chain should be aborted.
 -- To ensure the correct order of method calls, use a Sequence of handler names.
 
-function WayHandlers.run(profile,way,result,data,handlers)
-  for i,handler in ipairs(handlers) do
-    if handler(profile,way,result,data) == false then
-      return false
+function WayHandlers.run(profile,way,result,data,handlers, options)
+  if options and options['no_abort'] then
+    for i,handler in ipairs(handlers) do
+      handler(profile,way,result,data) 
+    end
+  else
+    for i,handler in ipairs(handlers) do
+      if handler(profile,way,result,data) == false then
+        return false
+      end
     end
   end
 end
