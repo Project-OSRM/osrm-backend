@@ -69,6 +69,39 @@ const constexpr char *internal_turn_type_names[] = {"(not set)",
                                                     "(stay on roundabout)",
                                                     "(sliproad)"};
 
+// Creates an indexed lookup table for values - used to encoded the vector tile
+// which uses a lookup table and index pointers for encoding
+template <typename T> struct ValueIndexer
+{
+  public:
+    std::vector<T> &used_values;
+    std::unordered_map<T, std::size_t> &value_offsets;
+
+    ValueIndexer(std::vector<T> &used_values_, std::unordered_map<T, std::size_t> &value_offsets_)
+        : used_values{used_values_}, value_offsets{value_offsets_}
+    {
+    }
+
+    std::size_t add(const T &value)
+    {
+        const auto found = value_offsets.find(value);
+        std::size_t offset;
+
+        if (found == value_offsets.end())
+        {
+            used_values.push_back(value);
+            offset = used_values.size() - 1;
+            value_offsets[value] = offset;
+        }
+        else
+        {
+            offset = found->second;
+        }
+
+        return offset;
+    }
+};
+
 // Verify that we've got the same number of strings as there are TurnTypes
 static_assert(sizeof(internal_turn_type_names) / sizeof(internal_turn_type_names[0]) >=
                   extractor::guidance::TurnType::MaxTurnType,
@@ -352,76 +385,11 @@ void encodeVectorTile(const DataFacadeBase &facade,
     // Helper function for adding a new value to the line_ints lookup table.  Returns
     // the index of the value in the table, adding the value if it doesn't already
     // exist
-    const auto use_line_value = [&used_line_ints, &line_int_offsets](const int value) {
-        const auto found = line_int_offsets.find(value);
 
-        if (found == line_int_offsets.end())
-        {
-            used_line_ints.push_back(value);
-            line_int_offsets[value] = used_line_ints.size() - 1;
-        }
-
-        return;
-    };
-
-    // Same again
-    const auto use_point_int_value = [&used_point_ints, &point_int_offsets](const int value) {
-        const auto found = point_int_offsets.find(value);
-        std::size_t offset;
-
-        if (found == point_int_offsets.end())
-        {
-            used_point_ints.push_back(value);
-            offset = used_point_ints.size() - 1;
-            point_int_offsets[value] = offset;
-        }
-        else
-        {
-            offset = found->second;
-        }
-
-        return offset;
-    };
-
-    // And a third time, should probably template this....
-    const auto use_point_float_value = [&used_point_floats,
-                                        &point_float_offsets](const float value) {
-        const auto found = point_float_offsets.find(value);
-        std::size_t offset;
-
-        if (found == point_float_offsets.end())
-        {
-            used_point_floats.push_back(value);
-            offset = used_point_floats.size() - 1;
-            point_float_offsets[value] = offset;
-        }
-        else
-        {
-            offset = found->second;
-        }
-
-        return offset;
-    };
-
-    // And a third time, should probably template this....
-    const auto use_point_string_value = [&used_point_strings,
-                                         &point_string_offsets](const std::string &value) {
-        const auto found = point_string_offsets.find(value);
-        std::size_t offset;
-
-        if (found == point_string_offsets.end())
-        {
-            used_point_strings.push_back(value);
-            offset = used_point_strings.size() - 1;
-            point_string_offsets[value] = offset;
-        }
-        else
-        {
-            offset = found->second;
-        }
-
-        return offset;
-    };
+    ValueIndexer<int> line_int_index(used_line_ints, line_int_offsets);
+    ValueIndexer<int> point_int_index(used_point_ints, point_int_offsets);
+    ValueIndexer<float> point_float_index(used_point_floats, point_float_offsets);
+    ValueIndexer<std::string> point_string_index(used_point_strings, point_string_offsets);
 
     const auto get_geometry_id = [&facade](auto edge) {
         return facade.GetGeometryIndex(edge.forward_segment_id.id).id;
@@ -499,16 +467,16 @@ void encodeVectorTile(const DataFacadeBase &facade,
                 const auto forward_weight = forward_weight_vector[edge.fwd_segment_position];
                 const auto reverse_weight = reverse_weight_vector[reverse_weight_vector.size() -
                                                                   edge.fwd_segment_position - 1];
-                use_line_value(forward_weight);
-                use_line_value(reverse_weight);
+                line_int_index.add(forward_weight);
+                line_int_index.add(reverse_weight);
 
                 std::uint32_t forward_rate =
                     static_cast<std::uint32_t>(round(length / forward_weight * 10.));
                 std::uint32_t reverse_rate =
                     static_cast<std::uint32_t>(round(length / reverse_weight * 10.));
 
-                use_line_value(forward_rate);
-                use_line_value(reverse_rate);
+                line_int_index.add(forward_rate);
+                line_int_index.add(reverse_rate);
 
                 // Duration values
                 const auto forward_duration_vector =
@@ -519,8 +487,8 @@ void encodeVectorTile(const DataFacadeBase &facade,
                 const auto reverse_duration =
                     reverse_duration_vector[reverse_duration_vector.size() -
                                             edge.fwd_segment_position - 1];
-                use_line_value(forward_duration);
-                use_line_value(reverse_duration);
+                line_int_index.add(forward_duration);
+                line_int_index.add(reverse_duration);
             }
 
             // Begin the layer features block
@@ -808,17 +776,17 @@ void encodeVectorTile(const DataFacadeBase &facade,
                 all_turn_data.end(),
                 encoded_turn_data.begin(),
                 [&](const routing_algorithms::TurnData &t) {
-                    auto angle_idx = use_point_int_value(t.in_angle);
-                    auto turn_idx = use_point_int_value(t.turn_angle);
+                    auto angle_idx = point_int_index.add(t.in_angle);
+                    auto turn_idx = point_int_index.add(t.turn_angle);
                     auto duration_idx =
-                        use_point_float_value(t.duration / 10.0); // Note conversion to float here
+                        point_float_index.add(t.duration / 10.0); // Note conversion to float here
                     auto weight_idx =
-                        use_point_float_value(t.weight / 10.0); // Note conversion to float here
+                        point_float_index.add(t.weight / 10.0); // Note conversion to float here
 
                     auto turntype_idx =
-                        use_point_string_value(internal_turn_type_names[t.turn_instruction.type]);
+                        point_string_index.add(internal_turn_type_names[t.turn_instruction.type]);
                     auto turnmodifier_idx =
-                        use_point_string_value(api::json::detail::instructionModifierToString(
+                        point_string_index.add(api::json::detail::instructionModifierToString(
                             t.turn_instruction.direction_modifier));
                     return EncodedTurnData{t.coordinate,
                                            angle_idx,
