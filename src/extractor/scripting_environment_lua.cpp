@@ -42,6 +42,54 @@ namespace osrm
 namespace extractor
 {
 
+class RelationsContainerWrap
+{
+  private:
+    class Iterator
+    {
+        using BaseT = ExtractionRelationContainer::RelationList;
+
+      public:
+        explicit Iterator(BaseT::const_iterator it_) : it(it_) {}
+
+        auto operator*() const { return sol::as_table(*it); }
+
+        bool operator==(const Iterator &other) const { return it == other.it; }
+        bool operator!=(const Iterator &other) const { return it != other.it; }
+
+        Iterator &operator++()
+        {
+            ++it;
+            return *this;
+        }
+        Iterator &operator--()
+        {
+            --it;
+            return *this;
+        }
+
+      private:
+        BaseT::const_iterator it;
+    };
+
+  public:
+    explicit RelationsContainerWrap(const ExtractionRelationContainer::RelationList &relations_)
+        : relations(relations_)
+    {
+    }
+
+    auto GetAttributes(size_t index) const { return sol::as_table(relations[index]); }
+
+    auto begin() const { return Iterator(relations.begin()); }
+
+    auto end() const { return Iterator(relations.end()); }
+
+    size_t size() const { return relations.size(); }
+
+  private:
+    const ExtractionRelationContainer::RelationList &relations;
+};
+
 template <class T>
 auto get_value_by_key(T const &object, const char *key) -> decltype(object.get_value_by_key(key))
 {
@@ -441,6 +489,11 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
 
         ExtractionRelation::AttributesMap &attrs;
     };
+
+    context.state.new_usertype<RelationsContainerWrap>(
+        "RelationsContainerWrap",
+        sol::meta_function::index,
+        [](const RelationsContainerWrap &rel, size_t index) { return rel.GetAttributes(index); });
 
     context.state.new_usertype<ExtractionRelationData>(
         "ExtractionRelationData",
@@ -1016,7 +1069,8 @@ void LuaScriptingContext::ProcessNode(const osmium::Node &node,
     switch (api_version)
     {
     case 3:
-        node_function(profile_table, node, result, relations);
+        node_function(
+            profile_table, node, result, sol::as_table(RelationsContainerWrap(relations)));
         break;
     case 2:
         node_function(profile_table, node, result);
@@ -1037,7 +1091,7 @@ void LuaScriptingContext::ProcessWay(const osmium::Way &way,
     switch (api_version)
     {
     case 3:
-        way_function(profile_table, way, result, relations);
+        way_function(profile_table, way, result, sol::as_table(RelationsContainerWrap(relations)));
         break;
     case 2:
         way_function(profile_table, way, result);
