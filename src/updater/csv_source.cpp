@@ -33,10 +33,11 @@ namespace csv
 {
 SegmentLookupTable readSegmentValues(const std::vector<std::string> &paths)
 {
+    static const auto value_if_blank = std::numeric_limits<double>::quiet_NaN();
     CSVFilesParser<Segment, SpeedSource> parser(
         1,
         qi::ulong_long >> ',' >> qi::ulong_long,
-        qi::uint_ >> -(',' >> (qi::double_ | qi::attr(std::numeric_limits<double>::quiet_NaN()))));
+        qi::uint_ >> -(',' >> (qi::double_ | qi::attr(value_if_blank))));
 
     // Check consistency of keys in the result lookup table
     auto result = parser(paths);

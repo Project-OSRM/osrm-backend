@@ -402,8 +402,8 @@ Feature: Weight tests
         And the speed file
             """
             1,2,100,
-            1,3,5,
-            3,4,5,
+            1,3,5,,junk
+            3,4,5,,
             4,2,5,
             """
         And the contract extra arguments "--segment-speed-file {speeds_file}"
