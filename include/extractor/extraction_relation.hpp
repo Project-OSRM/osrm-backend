@@ -11,12 +11,6 @@ namespace osrm
 {
 namespace extractor
 {
-namespace detail
-{
-
-inline const char *checkedString(const char *str) { return str ? str : ""; }
-
-} // namespace detail
 
 struct ExtractionRelation
 {

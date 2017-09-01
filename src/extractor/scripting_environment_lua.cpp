@@ -319,7 +319,9 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
                                                    "role",
                                                    &RelationMemberWrap::GetRole,
                                                    "item_type",
-                                                   &RelationMemberWrap::GetItemType);
+                                                   &RelationMemberWrap::GetItemType,
+                                                   "id",
+                                                   &RelationMemberWrap::GetId);
 
     /** TODO: make better solution with members iteration.
      *  For this moment, just make vector of RelationMember wrappers
