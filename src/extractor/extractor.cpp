@@ -3,8 +3,8 @@
 #include "extractor/edge_based_edge.hpp"
 #include "extractor/extraction_containers.hpp"
 #include "extractor/extraction_node.hpp"
-#include "extractor/extraction_way.hpp"
 #include "extractor/extraction_relation.hpp"
+#include "extractor/extraction_way.hpp"
 #include "extractor/extractor_callbacks.hpp"
 #include "extractor/files.hpp"
 #include "extractor/raster_source.hpp"
@@ -290,9 +290,10 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
     const osmium::io::File input_file(config.input_path.string());
     osmium::thread::Pool pool(number_of_threads);
 
-    std::unique_ptr<osmium::io::Reader> reader(
-        new osmium::io::Reader(input_file, osmium::osm_entity_bits::relation,
-                               (config.use_metadata ? osmium::io::read_meta::yes : osmium::io::read_meta::no)));
+    std::unique_ptr<osmium::io::Reader> reader(new osmium::io::Reader(
+        input_file,
+        osmium::osm_entity_bits::relation,
+        (config.use_metadata ? osmium::io::read_meta::yes : osmium::io::read_meta::no)));
 
     osmium::io::Header header = reader->header();
 
@@ -396,7 +397,7 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
             }
         });
 
-     tbb::filter_t<std::shared_ptr<ParsedBuffer>, void> buffer_storage_relation(
+    tbb::filter_t<std::shared_ptr<ParsedBuffer>, void> buffer_storage_relation(
         tbb::filter::serial_in_order, [&](const std::shared_ptr<ParsedBuffer> parsed_buffer) {
             if (!parsed_buffer)
                 return;
@@ -429,8 +430,10 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
      * processed there.
      */
     util::Log() << "Parse ways and nodes ...";
-    reader.reset(new osmium::io::Reader(input_file, osmium::osm_entity_bits::node | osmium::osm_entity_bits::way,
-                                        (config.use_metadata ? osmium::io::read_meta::yes : osmium::io::read_meta::no)));
+    reader.reset(new osmium::io::Reader(
+        input_file,
+        osmium::osm_entity_bits::node | osmium::osm_entity_bits::way,
+        (config.use_metadata ? osmium::io::read_meta::yes : osmium::io::read_meta::no)));
 
     // Number of pipeline tokens that yielded the best speedup was about 1.5 * num_cores
     tbb::parallel_pipeline(tbb::task_scheduler_init::default_num_threads() * 1.5,
