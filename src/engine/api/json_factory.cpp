@@ -66,20 +66,20 @@ const constexpr TurnTypeName turn_type_names[] = {
     {"end of road", "end of road"},
     {"notification", "notification"},
     {"roundabout", "enter roundabout"},
-    {"roundabout", "enter and exit roundabout"},
+    {"exit roundabout", "enter and exit roundabout"},
     {"rotary", "enter rotary"},
-    {"rotary", "enter and exit rotary"},
+    {"exit rotary", "enter and exit rotary"},
     {"roundabout turn", "enter roundabout turn"},
     {"roundabout turn", "enter and exit roundabout turn"},
     {"use lane", "use lane"},
     {"invalid", "(noturn)"},
     {"invalid", "(suppressed)"},
-    {"invalid", "(enter roundabout at exit)"},
-    {"invalid", "(exit roundabout)"},
-    {"invalid", "(enter rotary at exit)"},
-    {"invalid", "(exit rotary)"},
-    {"invalid", "(enter roundabout intersection at exit)"},
-    {"invalid", "(exit roundabout intersection)"},
+    {"roundabout", "roundabout"},
+    {"exit roundabout", "exit roundabout"},
+    {"rotary", "rotary"},
+    {"exit rotary", "exit rotary"},
+    {"roundabout turn", "roundabout turn"},
+    {"exit roundabout", "exit roundabout turn"},
     {"invalid", "(stay on roundabout)"},
     {"invalid", "(sliproad)"}};
 
@@ -100,14 +100,14 @@ inline bool hasValidLanes(const guidance::IntermediateIntersection &intersection
 std::string instructionTypeToString(const TurnType::Enum type)
 {
     static_assert(sizeof(turn_type_names) / sizeof(turn_type_names[0]) >= TurnType::MaxTurnType,
-                  "Some turn types has not string representation.");
+                  "Some turn types have no string representation.");
     return turn_type_names[static_cast<std::size_t>(type)].external_name;
 }
 
 std::string internalInstructionTypeToString(const TurnType::Enum type)
 {
     static_assert(sizeof(turn_type_names) / sizeof(turn_type_names[0]) >= TurnType::MaxTurnType,
-                  "Some turn types has not string representation.");
+                  "Some turn types have no string representation.");
     return turn_type_names[static_cast<std::size_t>(type)].internal_name;
 }
 

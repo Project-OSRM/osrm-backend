@@ -17,7 +17,7 @@ namespace guidance
 
 // passed as none-reference to modify in-place and move out again
 OSRM_ATTR_WARN_UNUSED
-std::vector<RouteStep> postProcess(std::vector<RouteStep> steps);
+std::vector<RouteStep> handleRoundabouts(std::vector<RouteStep> steps);
 
 // trim initial/final segment of very short length.
 // This function uses in/out parameter passing to modify both steps and geometry in place.
