@@ -287,23 +287,36 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
         return lane_description;
     };
 
-    // convert the lane description into an ID and, if necessary, remember the description in the
-    // description_map
-    const auto requestId = [&](const std::string &lane_string) {
-        if (lane_string.empty())
-            return INVALID_LANE_DESCRIPTIONID;
-        TurnLaneDescription lane_description = laneStringToDescription(std::move(lane_string));
-
-        return lane_description_map.ConcurrentFindOrAdd(lane_description);
-    };
+    // If we could parse turn lanes but could not parse number of lanes,
+    // count the turn lanes and use them for the way's number of lanes.
+    auto road_classification = parsed_way.road_classification;
+    std::uint8_t road_deduced_num_lanes = 0;
 
     // Deduplicates street names, refs, destinations, pronunciation, exits.
     // In case we do not already store the key, inserts (key, id) tuple and return id.
     // Otherwise fetches the id based on the name and returns it without insertion.
-    const auto turn_lane_id_forward = requestId(parsed_way.turn_lanes_forward);
-    const auto turn_lane_id_backward = requestId(parsed_way.turn_lanes_backward);
+    auto turn_lane_id_forward = INVALID_LANE_DESCRIPTIONID;
+    auto turn_lane_id_backward = INVALID_LANE_DESCRIPTIONID;
 
-    const auto road_classification = parsed_way.road_classification;
+    // RoadClassification represents a the class for unidirectional ways,
+    // therefore we need to add up deduced forward and backward lane counts.
+
+    if (!parsed_way.turn_lanes_forward.empty())
+    {
+        auto desc = laneStringToDescription(parsed_way.turn_lanes_forward);
+        turn_lane_id_forward = lane_description_map.ConcurrentFindOrAdd(desc);
+        road_deduced_num_lanes += desc.size();
+    }
+
+    if (!parsed_way.turn_lanes_backward.empty())
+    {
+        auto desc = laneStringToDescription(parsed_way.turn_lanes_backward);
+        turn_lane_id_backward = lane_description_map.ConcurrentFindOrAdd(desc);
+        road_deduced_num_lanes += desc.size();
+    }
+
+    road_classification.SetNumberOfLanes(std::max(road_deduced_num_lanes, // len(turn:lanes)
+                                                  road_classification.GetNumberOfLanes()));
 
     // Get the unique identifier for the street name, destination, and ref
     const auto name_iterator = string_map.find(MapKey(parsed_way.name,
