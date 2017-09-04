@@ -280,6 +280,35 @@ Feature: Simple Turns
             | a,d       | road,road | depart,arrive |
             | e,a       | road,road | depart,arrive |
 
+    Scenario: Splitting Road with many lanes; same as above makes sure len(turn:lanes) work as expected
+        Given the node map
+            """
+                              f - - - - - - - - - - - - - - - - - - - - e
+                             '
+                            '
+                           '
+                          '
+                         '
+            a - - - - - b
+                         '
+                          '
+                           '
+                            '
+                             '
+                              c - - - - - - - - - - - - - - - - - - - - d
+            """
+
+        And the ways
+            | nodes | highway | name | turn:lanes               | oneway |
+            | ab    | primary | road | left\|left\|right\|right | no     |
+            | bcd   | primary | road | through\|through         | yes    |
+            | efb   | primary | road | through\|through         | yes    |
+
+        When I route I should get
+            | waypoints | route     | turns         |
+            | a,d       | road,road | depart,arrive |
+            | e,a       | road,road | depart,arrive |
+
     @todo
     # currently the intersections don't match up do to the `merging` process.
     # The intermediate intersection is technically no-turn at all, since the road continues.
