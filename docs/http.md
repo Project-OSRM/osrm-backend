@@ -668,6 +668,8 @@ step.
 | `rotary`         | a traffic circle. While very similar to a larger version of a roundabout, it does not necessarily follow roundabout rules for right of way. It can offer `rotary_name` and/or `rotary_pronunciation` parameters (located in the RouteStep object) in addition to the `exit` parameter (located on the StepManeuver object).  |
 | `roundabout turn`| Describes a turn at a small roundabout that should be treated as normal turn. The `modifier` indicates the turn direciton. Example instruction: `At the roundabout turn left`. |
 | `notification`   | not an actual turn but a change in the driving conditions. For example the travel mode or classes. If the road takes a turn itself, the `modifier` describes the direction |
+| `exit roundabout`| Describes a maneuver exiting a roundabout (usually preceeded by a `roundabout` instruction) |
+| `exit rotary`    | Describes the maneuver exiting a rotary (large named roundabout) |
 
   Please note that even though there are `new name` and `notification` instructions, the `mode` and `name` can change
   between all instructions. They only offer a fallback in case nothing else is to report.
