@@ -1,10 +1,11 @@
 -- Car profile
 
-api_version = 2
+api_version = 3
 
 Set = require('lib/set')
 Sequence = require('lib/sequence')
 Handlers = require("lib/way_handlers")
+Relations = require("lib/relations")
 find_access_tag = require("lib/access").find_access_tag
 limit = require("lib/maxspeed").limit
 
@@ -279,7 +280,7 @@ function setup()
   }
 end
 
-function process_node(profile, node, result)
+function process_node(profile, node, result, relations)
   -- parse access and barrier tags
   local access = find_access_tag(node, profile.access_tags_hierarchy)
   if access then
@@ -306,7 +307,7 @@ function process_node(profile, node, result)
   end
 end
 
-function process_way(profile, way, result)
+function process_way(profile, way, result, relations)
   -- the intial filtering of ways based on presence of tags
   -- affects processing times significantly, because all ways
   -- have to be checked.
@@ -390,6 +391,51 @@ function process_way(profile, way, result)
   }
 
   WayHandlers.run(profile,way,result,data,handlers)
+
+  -- now process relations data
+  local data = Relations.Merge(relations)
+  local direction = data["route_direction"]
+  if direction then
+    if result.ref then
+      if result.ref:len() > 0 then
+        result.ref = result.ref .. ' ' .. direction
+      else
+        result.ref = direction
+      end
+    end
+  end
+end
+
+function process_relation(profile, relation, result)
+  local t = relation:get_value_by_key("type")
+
+  if t == "route" then
+    local route = relation:get_value_by_key("route")
+    if route == "road" then
+      for _, m in ipairs(relation:members()) do
+        -- process case, where directions set as role
+        local role = string.lower(m:role())
+        if role == "north" or role == "south" or role == "west" or role == "east" then
+          result[m]["route_direction"] = role
+        end
+      end
+    end
+
+    local direction = relation:get_value_by_key("direction")
+    if direction then
+      direction = string.lower(direction)
+      if direction == "north" or direction == "south" or direction == "west" or direction == "east" then
+        for _, m in ipairs(relation:members()) do
+          if m:role() == "forward" then
+            result[m]["route_direction"] = direction
+          end
+        end
+      end
+    end
+  end
+
+  
+
 end
 
 function process_turn(profile, turn)
@@ -434,5 +480,6 @@ return {
   setup = setup,
   process_way = process_way,
   process_node = process_node,
+  process_relation = process_relation,
   process_turn = process_turn
 }
