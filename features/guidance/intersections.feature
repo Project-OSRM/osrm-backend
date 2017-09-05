@@ -140,9 +140,9 @@ Feature: Intersections Data
 
         When I route I should get
             | waypoints | route          | intersections                                                                                                                 |
-            | e,f       | ea,fb,fb       | true:180;false:0 false:150 true:210,false:30 true:150 true:270;true:90                                                        |
-            | e,g       | ea,gc,gc       | true:180;false:0 false:150 true:210,false:30 true:150 true:270,true:30 true:180 false:330;true:0                              |
-            | e,h       | ea,hd,hd       | true:180;false:0 false:150 true:210,false:30 true:150 true:270,true:30 true:180 false:330,true:90 false:210 true:330;true:270 |
+            | e,f       | ea,fb,fb,fb    | true:180;false:0 false:150 true:210;false:30 true:150 true:270;true:90                                                        |
+            | e,g       | ea,gc,gc,gc    | true:180;false:0 false:150 true:210,false:30 true:150 true:270;true:30 true:180 false:330;true:0                              |
+            | e,h       | ea,hd,hd,hd    | true:180;false:0 false:150 true:210,false:30 true:150 true:270,true:30 true:180 false:330;true:90 false:210 true:330;true:270 |
             | e,2       | ea,abcda,abcda | true:180;false:0 false:150 true:210,false:30 true:150 true:270;true:327 +-1                                                   |
-            | 1,g       | abcda,gc,gc    | true:214;false:30 true:150 true:270,true:30 true:180 false:330;true:0                                                         |
+            | 1,g       | abcda,gc,gc    | true:214,false:30 true:150 true:270;true:30 true:180 false:330;true:0                                                         |
             | 1,3       | abcda,abcda    | true:214,false:30 true:150 true:270,true:30 true:180 false:330;true:214                                                       |

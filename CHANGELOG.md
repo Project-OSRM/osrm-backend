@@ -1,7 +1,7 @@
 # UNRELEASED
-  - Changes from 5.11:
     - Guidance
       - now announcing turning onto oneways at the end of a road (e.g. onto dual carriageways)
+      - Adds new instruction types at the exit of roundabouts and rotaries `exit roundabout` and `exit rotary`.
     - HTTP:
       - New query parameter for route/table/match/trip plugings:
         `exclude=` that can be used to exclude certain classes (e.g. exclude=motorway, exclude=toll).

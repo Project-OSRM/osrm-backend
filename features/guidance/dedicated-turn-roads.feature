@@ -905,8 +905,8 @@ Feature: Slipways and Dedicated Turn Lanes
             | restriction | yb       | be     | b        | only_straight |
 
         When I route I should get
-            | waypoints | route            | turns                                            | locations |
-            | z,t       | through,,out,out | depart,off ramp slight right,round-exit-3,arrive | z,s,c,t   |
+            | waypoints | route                | turns                                                              | locations |
+            | z,t       | through,,out,out,out | depart,off ramp slight right,round-exit-3,exit rotary right,arrive | z,s,c,e,t |
 
     Scenario: Sliproad before a roundabout
         Given the node map
@@ -942,8 +942,8 @@ Feature: Slipways and Dedicated Turn Lanes
             | restriction | bc       | cd     | c        | only_straight |
 
         When I route I should get
-            | waypoints | route     | turns                                                 | locations |
-            | a,k       | road,,,   | depart,turn right,roundabout turn right exit-1,arrive | a,b,h,k   |
+            | waypoints | route    | turns                                                 | locations |
+            | a,k       | road,,,  | depart,turn right,roundabout turn right exit-1,arrive | a,b,h,k   |
 
     @sliproads
     Scenario: Sliproad with 4 roads at target
