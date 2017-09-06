@@ -119,7 +119,7 @@ template <typename Algorithm> class Engine final : public EngineInterface
         return tile_plugin.HandleRequest(GetAlgorithms(params), params, result);
     }
 
-    static bool CheckCompability(const EngineConfig &config);
+    static bool CheckCompatibility(const EngineConfig &config);
 
   private:
     template <typename ParametersT> auto GetAlgorithms(const ParametersT &params) const
@@ -139,7 +139,7 @@ template <typename Algorithm> class Engine final : public EngineInterface
 };
 
 template <>
-bool Engine<routing_algorithms::ch::Algorithm>::CheckCompability(const EngineConfig &config)
+bool Engine<routing_algorithms::ch::Algorithm>::CheckCompatibility(const EngineConfig &config)
 {
     if (config.use_shared_memory)
     {
@@ -165,9 +165,9 @@ bool Engine<routing_algorithms::ch::Algorithm>::CheckCompability(const EngineCon
 }
 
 template <>
-bool Engine<routing_algorithms::corech::Algorithm>::CheckCompability(const EngineConfig &config)
+bool Engine<routing_algorithms::corech::Algorithm>::CheckCompatibility(const EngineConfig &config)
 {
-    if (!Engine<routing_algorithms::ch::Algorithm>::CheckCompability(config))
+    if (!Engine<routing_algorithms::ch::Algorithm>::CheckCompatibility(config))
     {
         return false;
     }
@@ -197,7 +197,7 @@ bool Engine<routing_algorithms::corech::Algorithm>::CheckCompability(const Engin
 }
 
 template <>
-bool Engine<routing_algorithms::mld::Algorithm>::CheckCompability(const EngineConfig &config)
+bool Engine<routing_algorithms::mld::Algorithm>::CheckCompatibility(const EngineConfig &config)
 {
     if (config.use_shared_memory)
     {
@@ -207,11 +207,28 @@ bool Engine<routing_algorithms::mld::Algorithm>::CheckCompability(const EngineCo
 
         auto mem = storage::makeSharedMemory(barrier.data().region);
         auto layout = reinterpret_cast<storage::DataLayout *>(mem->Ptr());
-        return layout->GetBlockSize(storage::DataLayout::MLD_PARTITION) > 0;
+        // checks that all the needed memory blocks are populated
+        // DataLayout::MLD_CELL_SOURCE_BOUNDARY and DataLayout::MLD_CELL_DESTINATION_BOUNDARY
+        // are not checked, because in situations where there are so few nodes in the graph that
+        // they all fit into one cell, they can be empty.
+        bool empty_data = layout->GetBlockSize(storage::DataLayout::MLD_LEVEL_DATA) > 0 &&
+                          layout->GetBlockSize(storage::DataLayout::MLD_PARTITION) > 0 &&
+                          layout->GetBlockSize(storage::DataLayout::MLD_CELL_TO_CHILDREN) > 0 &&
+                          layout->GetBlockSize(storage::DataLayout::MLD_CELLS) > 0 &&
+                          layout->GetBlockSize(storage::DataLayout::MLD_CELL_LEVEL_OFFSETS) > 0 &&
+                          layout->GetBlockSize(storage::DataLayout::MLD_GRAPH_NODE_LIST) > 0 &&
+                          layout->GetBlockSize(storage::DataLayout::MLD_GRAPH_EDGE_LIST) > 0 &&
+                          layout->GetBlockSize(storage::DataLayout::MLD_CELL_WEIGHTS_0) > 0 &&
+                          layout->GetBlockSize(storage::DataLayout::MLD_CELL_DURATIONS_0) > 0 &&
+                          layout->GetBlockSize(storage::DataLayout::MLD_GRAPH_NODE_TO_OFFSET) > 0;
+        return empty_data;
     }
     else
     {
-        if (!boost::filesystem::exists(config.storage_config.GetPath(".osrm.partition")))
+        if (!boost::filesystem::exists(config.storage_config.GetPath(".osrm.partition")) ||
+            !boost::filesystem::exists(config.storage_config.GetPath(".osrm.cells")) ||
+            !boost::filesystem::exists(config.storage_config.GetPath(".osrm.mldgr")) ||
+            !boost::filesystem::exists(config.storage_config.GetPath(".osrm.cell_metrics")))
             return false;
         storage::io::FileReader in(config.storage_config.GetPath(".osrm.partition"),
                                    storage::io::FileReader::VerifyFingerprint);

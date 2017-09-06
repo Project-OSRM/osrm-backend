@@ -47,8 +47,8 @@ OSRM::OSRM(engine::EngineConfig &config)
     if (config.algorithm == EngineConfig::Algorithm::CoreCH ||
         config.algorithm == EngineConfig::Algorithm::CH)
     {
-        bool corech_compatible = engine::Engine<CoreCH>::CheckCompability(config);
-        bool ch_compatible = engine::Engine<CH>::CheckCompability(config);
+        bool corech_compatible = engine::Engine<CoreCH>::CheckCompatibility(config);
+        bool ch_compatible = engine::Engine<CH>::CheckCompatibility(config);
 
         // Activate CoreCH if we can because it is faster
         if (config.algorithm == EngineConfig::Algorithm::CH && corech_compatible)
@@ -70,7 +70,7 @@ OSRM::OSRM(engine::EngineConfig &config)
     }
     else if (config.algorithm == EngineConfig::Algorithm::MLD)
     {
-        bool mld_compatible = engine::Engine<MLD>::CheckCompability(config);
+        bool mld_compatible = engine::Engine<MLD>::CheckCompatibility(config);
         // throw error if dataset is not usable with MLD
         if (!mld_compatible)
         {
