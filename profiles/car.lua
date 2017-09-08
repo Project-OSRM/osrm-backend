@@ -254,6 +254,7 @@ function setup()
       ["ch:trunk"] = 100,
       ["ch:motorway"] = 120,
       ["de:living_street"] = 7,
+      ["dk:rural"] = 80,
       ["ru:living_street"] = 20,
       ["ru:urban"] = 60,
       ["ua:urban"] = 60,
