@@ -11,10 +11,10 @@ Feature: Car - Mode flag
             """
 
         And the ways
-            | nodes | highway | route |
-            | ab    | primary |       |
-            | bc    |         | ferry |
-            | cd    | primary |       |
+            | nodes | highway | route | motorcar |
+            | ab    | primary |       |          |
+            | bc    |         | ferry |  yes     |
+            | cd    | primary |       |          |
 
         When I route I should get
             | from | to | route       | turns                                              | classes                  |

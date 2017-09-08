@@ -267,32 +267,32 @@ function Bicycle.cycleway(profile,way,result,data)
   local cycleway_left = way:get_value_by_key("cycleway:left")
   local cycleway_right = way:get_value_by_key("cycleway:right")
 
-  local has_cycleway_left = false
-  local has_cycleway_right = false
+  data.has_cycleway_left = false
+  data.has_cycleway_right = false
 
   if cycleway_left and profile.cycleway_tags[cycleway_left] then
-    has_cycleway_left = true
+    data.has_cycleway_left = true
   end
   if cycleway_right and profile.cycleway_tags[cycleway_right] then
-    has_cycleway_right = true
+    data.has_cycleway_right = true
   end
   if cycleway and string.find(cycleway, "opposite") == 1 then
     if data.is_reverse_oneway then
-      has_cycleway_right = true
+      data.has_cycleway_right = true
     else
-      has_cycleway_left = true
+      data.has_cycleway_left = true
     end
   elseif cycleway and profile.cycleway_tags[cycleway] then
-    has_cycleway_left = not (data.backward_denied or data.is_forward_oneway)
-    has_cycleway_right = not (data.forward_access or data.is_backward_oneway)
+    data.has_cycleway_left = not (data.backward_denied or data.is_forward_oneway)
+    data.has_cycleway_right = not (data.forward_access or data.is_backward_oneway)
   end
 
-  if has_cycleway_left then
+  if data.has_cycleway_left then
     result.backward_mode = profile.default_mode
     result.backward_speed = profile.speeds['highway']['cycleway']
   end
 
-  if has_cycleway_right then
+  if data.has_cycleway_right then
     result.forward_mode = profile.default_mode
     result.forward_speed = profile.speeds['highway']['cycleway']
   end
@@ -313,36 +313,38 @@ end
 function Bicycle.weight(profile,way,result,data)
   -- convert duration into cyclability
   if profile.properties.weight_name == 'cyclability' then
-      local safety_penalty = profile.unsafe_highway_list[data.highway] or 1.
-      local is_unsafe = safety_penalty < 1
-      local forward_is_unsafe = is_unsafe and not has_cycleway_right
-      local backward_is_unsafe = is_unsafe and not has_cycleway_left
-      local is_undesireable = data.highway == "service" and profile.service_penalties[service]
-      local forward_penalty = 1.
-      local backward_penalty = 1.
-      if forward_is_unsafe then
-        forward_penalty = math.min(forward_penalty, safety_penalty)
-      end
-      if backward_is_unsafe then
-         backward_penalty = math.min(backward_penalty, safety_penalty)
-      end
+    local safety_penalty = profile.unsafe_highway_list[data.highway] or 1.
+    local is_unsafe = safety_penalty < 1
+    local forward_is_unsafe = is_unsafe and not data.has_cycleway_right
+    local backward_is_unsafe = is_unsafe and not data.has_cycleway_left
+    local is_undesireable = data.highway == "service" and profile.service_penalties[service]
+    local forward_penalty = 1.
+    local backward_penalty = 1.
 
-      if is_undesireable then
-         forward_penalty = math.min(forward_penalty, profile.service_penalties[service])
-         backward_penalty = math.min(backward_penalty, profile.service_penalties[service])
-      end
+    if forward_is_unsafe then
+      forward_penalty = math.min(forward_penalty, safety_penalty)
+    end
+    if backward_is_unsafe then
+       backward_penalty = math.min(backward_penalty, safety_penalty)
+    end
 
+    if is_undesireable then
+       forward_penalty = math.min(forward_penalty, profile.service_penalties[service])
+       backward_penalty = math.min(backward_penalty, profile.service_penalties[service])
+    end
+
+    if result.duration > 0 then
+      result.weight = result.weight * forward_penalty
+    else
       if result.forward_speed > 0 then
         -- convert from km/h to m/s
-        result.forward_rate = result.forward_speed / 3.6 * forward_penalty
+        result.forward_rate = result.forward_rate * forward_penalty
       end
       if result.backward_speed > 0 then
         -- convert from km/h to m/s
-        result.backward_rate = result.backward_speed / 3.6 * backward_penalty
+        result.backward_rate = result.backward_rate * backward_penalty
       end
-      if result.duration > 0 then
-        result.weight = result.duration / forward_penalty
-      end
+    end
   end
 end
 

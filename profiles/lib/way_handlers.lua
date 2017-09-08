@@ -39,6 +39,7 @@ function WayHandlers.is_done(result,data)
   return WayHandlers.is_denied(data) or
          WayHandlers.is_bidirectional(result)
 end
+
 -- merges results from a into b, considering each direction
 -- separately. if a direction in b is not routable, then copy
 -- the corresponding direction from a.
@@ -193,7 +194,6 @@ function WayHandlers.routes(profile,way,result,data)
         local access_required = select_first_value( {v_access_required, k_access_required, default_access_required} )
 
         if access_required then
-          pprint(data)
           if data.backward_access ~= "yes" or data.backward_access ~= "yes" then
             return
           end
@@ -204,9 +204,12 @@ function WayHandlers.routes(profile,way,result,data)
         local duration  = way:get_value_by_key("duration")
         if duration and durationIsValid(duration) then
           result.duration = math.max( parseDuration(duration), 1 )
+          result.weight = result.duration
           speed = 0
         else
           speed = select_first_value( {v_speed, k_speed, default_speed } )
+          result.forward_rate = 1
+          result.backward_rate = 1
         end
 
         local mode = select_first_value( {v_mode, k_mode, default_mode} )
@@ -215,7 +218,8 @@ function WayHandlers.routes(profile,way,result,data)
         result.backward_mode = mode
         
         result.forward_speed = speed
-        result.backward_speed = speed
+        result.backward_speed = speed        
+
         return true
       end
     end
@@ -272,6 +276,7 @@ function WayHandlers.movables(profile,way,result,data)
         local duration  = way:get_value_by_key("duration")
         if duration and durationIsValid(duration) then
           result.duration = math.max( parseDuration(duration), 1 )
+          result.weight = result.duration
         else
           result.forward_speed = bridge_speed
           result.backward_speed = bridge_speed
@@ -381,18 +386,17 @@ end
 -- handle speed (excluding maxspeed)
 function WayHandlers.speed(profile,way,result,data)
   -- abort if already set
-  if result.forward_speed > 0 and result.forward_speed > 0 then
+  if result.forward_speed > 0 and result.backward_speed > 0 then
     return
   end
 
-
   local key,value,speed = Tags.get_constant_by_key_value(way,profile.speeds)
 
-  if speed then
-    -- set speed by way type
-    result.forward_speed = speed
-    result.backward_speed = speed
-  else
+  if not data.forward_denied then
+    if speed then
+      result.forward_speed = speed
+    end
+
     -- Set the avg speed on ways that are marked accessible
     if profile.access_tag_whitelist[data.forward_access] then
       result.forward_speed = profile.default_speed
@@ -402,6 +406,16 @@ function WayHandlers.speed(profile,way,result,data)
        result.forward_mode = mode.inaccessible
     end
 
+    if result.forward_speed > 0 then
+      result.forward_mode = profile.default_mode
+    end
+  end
+
+  if not data.backward_denied then
+    if speed then
+      result.backward_speed = speed
+    end
+  
     if profile.access_tag_whitelist[data.backward_access] then
       result.backward_speed = profile.default_speed
     elseif data.backward_access and not profile.access_tag_blacklist[data.backward_access] then
@@ -409,14 +423,12 @@ function WayHandlers.speed(profile,way,result,data)
     elseif not data.backward_access and data.forward_access then
        result.backward_mode = mode.inaccessible
     end
+
+    if result.backward_speed > 0 then
+      result.backward_mode = profile.default_mode
+    end
   end
 
-  if result.forward_speed > 0 then
-    result.forward_mode = profile.default_mode
-  end
-  if result.backward_speed > 0 then
-    result.backward_mode = profile.default_mode
-  end
 
   if result.forward_speed == -1 and result.backward_speed == -1 and result.duration <= 0 then
     return false
@@ -475,10 +487,13 @@ function WayHandlers.surface(profile,way,result,data)
   end
 end
 
--- scale speeds to get better average driving times
+-- make certain way types less attractive by adjusting the rate
 function WayHandlers.penalties(profile,way,result,data)
-  -- heavily penalize a way tagged with all HOV lanes
-  -- in order to only route over them if there is no other option
+
+  if not profile.properties.weight_name == 'routability' then
+    return
+  end
+
   local service_penalty = 1.0
   local service = way:get_value_by_key("service")
   if service and profile.service_penalties[service] then
@@ -500,7 +515,9 @@ function WayHandlers.penalties(profile,way,result,data)
 
   local is_bidirectional = result.forward_mode ~= mode.inaccessible and
                            result.backward_mode ~= mode.inaccessible
-
+  
+  pprint(data)
+  print(is_bidirectional, lanes)
   if width <= 3 or (lanes <= 1 and is_bidirectional) then
     width_penalty = 0.5
   end
@@ -518,18 +535,22 @@ function WayHandlers.penalties(profile,way,result,data)
     sideroad_penalty = profile.side_road_multiplier
   end
 
-  local forward_penalty = math.min(service_penalty, width_penalty, alternating_penalty, sideroad_penalty)
-  local backward_penalty = math.min(service_penalty, width_penalty, alternating_penalty, sideroad_penalty)
+  -- compute penalty as the minimum of the various elements
+  local penalty = math.min(service_penalty, width_penalty, alternating_penalty, sideroad_penalty)
 
-  if profile.properties.weight_name == 'routability' then
+  print(width_penalty, penalty)
+  if result.duration > 0 then
+    if result.weight > 0 then
+     result.weight = result.duration / penalty
+    end
+  else
     if result.forward_speed > 0 then
-      result.forward_rate = (result.forward_speed * forward_penalty) / 3.6
+      -- convert from km/h to m/s
+      result.forward_rate = result.forward_speed / 3.6 * penalty
     end
     if result.backward_speed > 0 then
-      result.backward_rate = (result.backward_speed * backward_penalty) / 3.6
-    end
-    if result.duration > 0 then
-      result.weight = result.duration / forward_penalty
+      result.backward_rate = result.backward_speed / 3.6 * penalty
+
     end
   end
 end
@@ -557,12 +578,13 @@ function WayHandlers.maxspeed(profile,way,result,data)
   if backward and backward > 0 then
     local backward = backward * (profile.speed_reduction or 1)
     if profile.increase_speed_to_max then
-      result.backward_speed = forward
+      result.backward_speed = backward
     else
       result.backward_speed = math.min( backward, result.backward_speed )
     end
   end
 end
+
 
 function WayHandlers.parse_maxspeed(source,profile)
   if not source then
@@ -734,7 +756,7 @@ end
 -- if the handler chain should be aborted.
 -- To ensure the correct order of method calls, use a Sequence of handler names.
 
-function WayHandlers.run(profile,way,result,data,handlers, options)
+function WayHandlers.run(profile,way,result,data,handlers,options)
   if options and options['no_abort'] then
     for i,handler in ipairs(handlers) do
       handler(profile,way,result,data) 

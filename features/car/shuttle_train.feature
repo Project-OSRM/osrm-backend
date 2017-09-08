@@ -4,30 +4,40 @@ Feature: Car - Handle ferryshuttle train routes
     Background:
         Given the profile "car"
 
-    Scenario: Car - Use a ferry route
+    Scenario: Car - Use a shuttle train without duration
         Given the node map
             """
-            a b c
-                d
-                e f g h
+            a b
+              :
+              c d
             """
 
         And the ways
-            | nodes | highway | route         | bicycle |
-            | abc   | primary |               |         |
-            | cde   |         | shuttle_train | yes     |
-            | ef    | primary |               |         |
-            | fg    |         | ferry_man     |         |
-            | gh    | primary |               | no      |
+            | nodes | highway | route         | motorcar |
+            | ab    | primary |               |          |
+            | bc    |         | shuttle_train | yes      |
+            | cd    | primary |               |          |
 
         When I route I should get
-            | from | to | route         |
-            | a    | f  | abc,cde,ef,ef |
-            | b    | f  | abc,cde,ef,ef |
-            | e    | c  | cde,cde       |
-            | e    | b  | cde,abc,abc   |
-            | e    | a  | cde,abc,abc   |
-            | c    | e  | cde,cde       |
-            | c    | f  | cde,ef,ef     |
-            | f    | g  |               |
-            | g    | h  | gh,gh         |
+            | from | to | route       | modes                         |
+            | a    | d  | ab,bc,cd,cd | driving,train,driving,driving |
+            | d    | a  | cd,bc,ab,ab | driving,train,driving,driving |
+
+    Scenario: Car - Use a shuttle train with duration
+        Given the node map
+            """
+            a b
+              :
+              c d
+            """
+
+        And the ways
+            | nodes | highway | route         | motorcar | duration |
+            | ab    | primary |               |          |          |
+            | bc    |         | shuttle_train | yes      | 00:00:15 |
+            | cd    | primary |               |          |          |
+
+        When I route I should get
+            | from | to | route       | modes                         |
+            | a    | d  | ab,bc,cd,cd | driving,train,driving,driving |
+            | d    | a  | cd,bc,ab,ab | driving,train,driving,driving |

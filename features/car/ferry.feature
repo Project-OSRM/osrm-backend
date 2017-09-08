@@ -7,105 +7,89 @@ Feature: Car - Handle ferry routes
     Scenario: Car - Use a ferry route
         Given the node map
             """
-            a b c
-                d
-                e f g
+            a b---c d
             """
 
         And the ways
-            | nodes | highway | route | bicycle |
-            | abc   | primary |       |         |
-            | cde   |         | ferry | yes     |
-            | efg   | primary |       |         |
+            | nodes | highway | route | motorcar |
+            | ab    | primary |       |          |
+            | bc    |         | ferry | yes      |
+            | cd    | primary |       |          |
 
         When I route I should get
-            | from | to | route           | modes                         |
-            | a    | g  | abc,cde,efg,efg | driving,ferry,driving,driving |
-            | b    | f  | abc,cde,efg,efg | driving,ferry,driving,driving |
-            | e    | c  | cde,cde         | ferry,ferry                   |
-            | e    | b  | cde,abc,abc     | ferry,driving,driving         |
-            | e    | a  | cde,abc,abc     | ferry,driving,driving         |
-            | c    | e  | cde,cde         | ferry,ferry                   |
-            | c    | f  | cde,efg,efg     | ferry,driving,driving         |
-            | c    | g  | cde,efg,efg     | ferry,driving,driving         |
+            | from | to | route       | modes                         |
+            | a    | c  | ab,bc,bc    | driving,ferry,ferry           |
+            | a    | d  | ab,bc,cd,cd | driving,ferry,driving,driving |
+            | b    | c  | bc,bc       | ferry,ferry                   |
+            | b    | d  | bc,cd,cd    | ferry,driving,driving         |
 
 
-    Scenario: Car - Use default speeds to calculate duration if no duration given
+    Scenario: Car - Ferry with no duration, use default speed
         Given the node map
             """
-            a b c
-                d
-                e f g
+            a b---c d
             """
 
         And the ways
-            | nodes | highway | route |
-            | abc   | primary |       |
-            | cde   |         | ferry |
-            | efg   | primary |       |
+            | nodes | highway | route | motorcar |
+            | ab    | primary |       |          |
+            | bc    |         | ferry | yes      |
+            | cd    | primary |       |          |
 
         When I route I should get
-            | from | to | route           | modes                         | speed   | time    |
-            | a    | g  | abc,cde,efg,efg | driving,ferry,driving,driving | 12 km/h | 173.4s  |
-            | b    | f  | abc,cde,efg,efg | driving,ferry,driving,driving | 9 km/h  | 162.4s  |
-            | c    | e  | cde,cde         | ferry,ferry                   | 5 km/h  | 151.4s  |
-            | e    | c  | cde,cde         | ferry,ferry                   | 5 km/h  | 151.4s  |
+            | from | to | route | modes       | speed  | time |
+            | b    | c  | bc,bc | ferry,ferry | 5 km/h | 144s |
+            | c    | b  | bc,bc | ferry,ferry | 5 km/h | 144s |
 
-    Scenario: Car - Properly handle simple durations
+    Scenario: Car - Ferry with simple durations
         Given the node map
             """
-            a b c
-                d
-                e f g
+            a b---c d
             """
 
         And the ways
-            | nodes | highway | route | duration |
-            | abc   | primary |       |          |
-            | cde   |         | ferry | 00:01:00 |
-            | efg   | primary |       |          |
+            | nodes | highway | route | motorcar | duration |
+            | ab    | primary |       |          |          |
+            | bc    |         | ferry | yes      | 00:01:00 |
+            | cd    | primary |       |          |          |
 
         When I route I should get
-            | from | to | route           | modes                         | speed   | time  |
-            | a    | g  | abc,cde,efg,efg | driving,ferry,driving,driving | 24 km/h | 89.4s |
-            | b    | f  | abc,cde,efg,efg | driving,ferry,driving,driving | 18 km/h | 78.4s |
-            | c    | e  | cde,cde         | ferry,ferry                   | 11 km/h | 67.4s |
-            | e    | c  | cde,cde         | ferry,ferry                   | 11 km/h | 67.4s |
+            | from | to | route | modes       | speed   | time |
+            | b    | c  | bc,bc | ferry,ferry | 12 km/h | 60s  |
+            | c    | b  | bc,bc | ferry,ferry | 12 km/h | 60s  |
 
-    Scenario: Car - Properly handle ISO 8601 durations
+    Scenario: Car - Ferry with ISO 8601 durations
         Given the node map
             """
-            a b c
-                d
-                e f g
+            a b---c d
             """
 
         And the ways
-            | nodes | highway | route | duration |
-            | abc   | primary |       |          |
-            | cde   |         | ferry | PT1M     |
-            | efg   | primary |       |          |
+            | nodes | highway | route | motorcar | duration |
+            | ab    | primary |       |          |          |
+            | bc    |         | ferry | yes      | PT1M     |
+            | cd    | primary |       |          |          |
 
         When I route I should get
-            | from | to | route           | modes                         | speed   | time  |
-            | a    | g  | abc,cde,efg,efg | driving,ferry,driving,driving | 24 km/h | 89.4s |
-            | b    | f  | abc,cde,efg,efg | driving,ferry,driving,driving | 18 km/h | 78.4s |
-            | c    | e  | cde,cde         | ferry,ferry                   | 11 km/h | 67.4s |
-            | e    | c  | cde,cde         | ferry,ferry                   | 11 km/h | 67.4s |
+            | from | to | route | modes       | speed   | time |
+            | b    | c  | bc,bc | ferry,ferry | 12 km/h | 60s  |
+            | c    | b  | bc,bc | ferry,ferry | 12 km/h | 60s  |
 
 	@snapping
     Scenario: Car - Snapping when using a ferry
         Given the node map
             """
-            a b   c d   e f
+            a
+            b-1-2-e 
+                  f
             """
 
         And the ways
-            | nodes | highway | route | duration |
-            | ab    | primary |       |          |
-            | bcde  |         | ferry | 0:10     |
-            | ef    | primary |       |          |
+            | nodes | highway | route | motorcar | duration |
+            | ab    | primary |       |          |          |
+            | be  |           | ferry | yes      | 0:30:00  |
+            | ef    | primary |       |          |          |
 
         When I route I should get
-            | from | to | route     | modes       | time  |
-            | c    | d  | bcde,bcde | ferry,ferry | 600s  |
+            | from | to | route | modes       | time  |
+            | 1    | 2  | be,be | ferry,ferry | 600s  |
