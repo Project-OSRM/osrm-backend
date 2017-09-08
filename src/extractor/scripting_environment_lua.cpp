@@ -353,7 +353,25 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
         osmium::item_type GetItemType() const { return item_type; }
         osmium::object_id_type GetId() const { return id; }
 
-        util::OsmIDTyped ref() const { return util::OsmIDTyped(id, std::uint8_t(item_type)); }
+        util::OsmIDTyped ref() const
+        {
+            switch (item_type)
+            {
+            case osmium::item_type::node:
+                return util::OsmIDTyped(id, util::OsmIDTyped::Type::Node);
+
+            case osmium::item_type::way:
+                return util::OsmIDTyped(id, util::OsmIDTyped::Type::Way);
+
+            case osmium::item_type::relation:
+                return util::OsmIDTyped(id, util::OsmIDTyped::Type::Relation);
+
+            default:
+                break;
+            }
+
+            return util::OsmIDTyped(id, util::OsmIDTyped::Type::Unknown);
+        }
 
         std::string role;
         osmium::item_type item_type;
@@ -804,7 +822,7 @@ void Sol2ScriptingEnvironment::ProcessElements(
                  local_context.properties.call_tagless_node_function))
             {
                 const osmium::Node &node = static_cast<const osmium::Node &>(*entity);
-                const util::OsmIDTyped id(node.id(), std::uint8_t(node.type()));
+                const util::OsmIDTyped id(node.id(), util::OsmIDTyped::Type::Node);
                 local_context.ProcessNode(node, result_node, relations.Get(id));
             }
             resulting_nodes.push_back(std::pair<const osmium::Node &, ExtractionNode>(
@@ -815,7 +833,7 @@ void Sol2ScriptingEnvironment::ProcessElements(
             if (local_context.has_way_function)
             {
                 const osmium::Way &way = static_cast<const osmium::Way &>(*entity);
-                const util::OsmIDTyped id(way.id(), std::uint8_t(way.type()));
+                const util::OsmIDTyped id(way.id(), util::OsmIDTyped::Type::Way);
                 local_context.ProcessWay(way, result_way, relations.Get(id));
             }
             resulting_ways.push_back(std::pair<const osmium::Way &, ExtractionWay>(
