@@ -1,4 +1,6 @@
 # UNRELEASED
+
+# 5.12.0
     - Guidance
       - now announcing turning onto oneways at the end of a road (e.g. onto dual carriageways)
       - Adds new instruction types at the exit of roundabouts and rotaries `exit roundabout` and `exit rotary`.
