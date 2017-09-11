@@ -379,8 +379,8 @@ set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} ${LINKER_FLAGS}")
 
 # Activate C++1y
 if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1y")
-  set(OSRM_CXXFLAGS "${OSRM_CXXFLAGS} -std=c++1y")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
+  set(OSRM_CXXFLAGS "${OSRM_CXXFLAGS} -std=c++14")
 endif()
 
 # Configuring other platform dependencies
