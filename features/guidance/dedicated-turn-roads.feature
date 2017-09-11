@@ -1049,5 +1049,5 @@ Feature: Slipways and Dedicated Turn Lanes
 
 
        When I route I should get
-            | waypoints | route              | turns                                      | locations |
-            | s,f       | sab,ae,dbcef,dbcef | depart,turn right,turn slight right,arrive | s,a,e,f   |
+            | waypoints | route           | turns                    | locations |
+            | s,f       | sab,dbcef,dbcef | depart,turn right,arrive | s,a,f     |
