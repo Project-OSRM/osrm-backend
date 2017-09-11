@@ -394,7 +394,7 @@ operator()(const NodeID /*nid*/, const EdgeID source_edge_id, Intersection inter
             using namespace util::coordinate_calculation;
 
             // In addition, if it's a right/left turn we expect the rightmost/leftmost
-            // turn at `c` to be more or less ~90 degree for a Sliproad scenario.
+            // turn at `c` to be more than a minimal angle (40°) for a Sliproad scenario.
             double deviation_from_straight = 0;
 
             if (is_right_sliproad_turn)
@@ -423,7 +423,7 @@ operator()(const NodeID /*nid*/, const EdgeID source_edge_id, Intersection inter
             const auto length = haversineDistance(coordinates[intersection_node_id],
                                                   coordinates[main_road_intersection->node]);
 
-            const double perpendicular_angle = 90 + FUZZY_ANGLE_DIFFERENCE;
+            const double minimal_crossroad_angle_of_intersection = 40.;
 
             if (length >= MIN_LENGTH)
             {
@@ -433,7 +433,7 @@ operator()(const NodeID /*nid*/, const EdgeID source_edge_id, Intersection inter
                 }
 
                 // Check sliproads with skew main intersections
-                if (deviation_from_straight > perpendicular_angle &&
+                if (deviation_from_straight > 180. - minimal_crossroad_angle_of_intersection &&
                     !node_based_graph.GetEdgeData(sliproad.eid).road_classification.IsLinkClass())
                 {
                     continue;
