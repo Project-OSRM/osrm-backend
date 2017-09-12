@@ -153,6 +153,7 @@
         {"key": "maxspeed", "value": "ua:urban"},
         {"key": "maxspeed", "value": "at:rural"},
         {"key": "maxspeed", "value": "de:rural"},
+        {"key": "maxspeed", "value": "dk:rural"},
         {"key": "maxspeed", "value": "at:trunk"},
         {"key": "maxspeed", "value": "cz:trunk"},
         {"key": "maxspeed", "value": "ro:trunk"},
