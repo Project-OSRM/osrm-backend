@@ -829,16 +829,16 @@ Feature: Basic Roundabout
             """
 
         And the ways
-            | nodes | highway  | junction   | oneway | #         |
-            | abcda | tertiary | roundabout |        | circle    |
-            | ebds  | tertiary |            |        | road      |
-            | cm    | tertiary |            |        |           |
-            | ds    | tertiary |            |        | road      |
-            | rstur | tertiary | roundabout |        | circle2   |
-            | ufghl | tertiary |            |        | road      |
-            | tv    | tertiary |            |        |           |
-            | gi    | tertiary |            | yes    | sliproad  |
-            | jhik  | tertiary |            |        | crossroad |
+            | nodes | highway       | junction   | oneway | #         |
+            | abcda | tertiary      | roundabout |        | circle    |
+            | ebds  | tertiary      |            |        | road      |
+            | cm    | tertiary      |            |        |           |
+            | ds    | tertiary      |            |        | road      |
+            | rstur | tertiary      | roundabout |        | circle2   |
+            | ufghl | tertiary      |            |        | road      |
+            | tv    | tertiary      |            |        |           |
+            | gi    | tertiary_link |            | yes    | sliproad  |
+            | jhik  | tertiary      |            |        | crossroad |
 
 
         When I route I should get

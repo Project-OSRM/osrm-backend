@@ -13,6 +13,7 @@
       - MLD uses a unidirectional Dijkstra for 1-to-N and N-to-1 matrices
     - Guidance
       - Fixed some cases of sliproads pre-processing (https://github.com/Project-OSRM/osrm-backend/issues/4348)
+      - don't suppress name announcements via sliproad handler
 
 # 5.12.0
   - Changes from 5.11:
