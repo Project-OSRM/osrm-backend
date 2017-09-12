@@ -1044,7 +1044,7 @@ Feature: Slipways and Dedicated Turn Lanes
             | nodes | highway      | name  | oneway |
             | sab   | primary      | sab   |        |
             | dbcef | primary      | dbcef |        |
-            | ae    | primary_link | ae    | yes    |
+            | ae    | primary_link | sab   | yes    |
             | cg    | primary      | cg    |        |
 
 

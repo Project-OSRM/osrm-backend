@@ -487,6 +487,24 @@ operator()(const NodeID /*nid*/, const EdgeID source_edge_id, Intersection inter
                 continue;
             }
 
+            // Check if main road -> sliproad (non-link) -> candidate road requires two name
+            // announcements then don't suppress one announcement via sliproad handler
+            const auto main_road_name_id = node_based_graph.GetEdgeData(main_road.eid).name_id;
+            if (!sliproad_data.road_classification.IsLinkClass() &&
+                sliproad_data.name_id != EMPTY_NAMEID && main_road_name_id != EMPTY_NAMEID &&
+                candidate_data.name_id != EMPTY_NAMEID &&
+                util::guidance::requiresNameAnnounced(main_road_name_id,
+                                                      sliproad_data.name_id,
+                                                      name_table,
+                                                      street_name_suffix_table) &&
+                util::guidance::requiresNameAnnounced(sliproad_data.name_id,
+                                                      candidate_data.name_id,
+                                                      name_table,
+                                                      street_name_suffix_table))
+            {
+                continue;
+            }
+
             // If the Sliproad `bd` is a link, `bc` and `cd` must not be links.
             if (!isValidSliproadLink(sliproad, main_road, candidate_road))
             {
