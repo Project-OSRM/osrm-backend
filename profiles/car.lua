@@ -8,6 +8,7 @@ Handlers = require("lib/way_handlers")
 Relations = require("lib/relations")
 find_access_tag = require("lib/access").find_access_tag
 limit = require("lib/maxspeed").limit
+Utils = require("lib/utils")
 
 function setup()
   local use_left_hand_driving = false
@@ -393,21 +394,54 @@ function process_way(profile, way, result, relations)
   WayHandlers.run(profile,way,result,data,handlers)
 
   -- now process relations data
-  local data = Relations.Merge(relations)
-  local direction = data["route_direction"]
-  if direction then
-    if result.ref then
-      if result.ref:len() > 0 then
-        result.ref = result.ref .. ' ' .. direction
+  local matched_refs = nil;
+  if result.ref then
+    matched_refs = Relations.MatchToRef(relations, result.ref)
+
+    local ref = ''
+    for k ,v in pairs(matched_refs) do
+      if ref ~= '' then
+        ref = ref .. '; '
+      end
+
+      if v then
+        ref = ref .. k .. ' $' .. v
       else
-        result.ref = direction
+        print(ref)
+        ref = ref .. k
       end
     end
+
+    result.ref = ref
+    -- count = 0
+    -- for k, v in pairs(matched_refs) do
+    --   count = count + 1
+    -- end
+    -- if count > 1 then
+    --   print('---', way:id())
+    --   for k, v in pairs(matched_refs) do
+    --     print(k, v)
+    --   end
+    -- end
   end
+
+
 end
 
 function process_relation(profile, relation, result)
   local t = relation:get_value_by_key("type")
+
+  function add_extra_data(m)
+    local name = relation:get_value_by_key("name")
+    if name then
+      result[m]["route_name"] = name
+    end
+
+    local ref = relation:get_value_by_key("ref")
+    if ref then
+      result[m]["route_ref"] = ref
+    end
+  end
 
   if t == "route" then
     local route = relation:get_value_by_key("route")
@@ -417,6 +451,7 @@ function process_relation(profile, relation, result)
         local role = string.lower(m:role())
         if role == "north" or role == "south" or role == "west" or role == "east" then
           result[m]["route_direction"] = role
+          add_extra_data(m)
         end
       end
     end
@@ -428,6 +463,7 @@ function process_relation(profile, relation, result)
         for _, m in ipairs(relation:members()) do
           if m:role() == "forward" then
             result[m]["route_direction"] = direction
+            add_extra_data(m)
           end
         end
       end
