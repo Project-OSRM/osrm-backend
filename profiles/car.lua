@@ -399,7 +399,7 @@ function process_way(profile, way, result, relations)
     matched_refs = Relations.MatchToRef(relations, result.ref)
 
     local ref = ''
-    for k ,v in pairs(matched_refs) do
+    for k, v in pairs(matched_refs) do
       if ref ~= '' then
         ref = ref .. '; '
       end
@@ -407,24 +407,12 @@ function process_way(profile, way, result, relations)
       if v then
         ref = ref .. k .. ' $' .. v
       else
-        print(ref)
         ref = ref .. k
       end
     end
 
     result.ref = ref
-    -- count = 0
-    -- for k, v in pairs(matched_refs) do
-    --   count = count + 1
-    -- end
-    -- if count > 1 then
-    --   print('---', way:id())
-    --   for k, v in pairs(matched_refs) do
-    --     print(k, v)
-    --   end
-    -- end
   end
-
 
 end
 
