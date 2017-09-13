@@ -42,6 +42,10 @@ namespace osrm
 namespace extractor
 {
 
+// The wrapper is neede for Lua 5.1 support with sol2 to have the table interface
+// on attributes via sol::as_table(relations[index])
+// For Lua 5.2 with the wrapping unordered_map by sol2
+// RelationsContainerWrap and ExtractionRelationAttributes can be removed
 class RelationsContainerWrap
 {
   private:
@@ -499,40 +503,31 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
         sol::property([](const ExtractionWay &way) { return way.backward_restricted; },
                       [](ExtractionWay &way, bool flag) { way.backward_restricted = flag; }));
 
-    struct ExtractionRelationData
-    {
-        explicit ExtractionRelationData(ExtractionRelation::AttributesMap &attrs_) : attrs(attrs_)
-        {
-        }
-
-        ExtractionRelation::AttributesMap &attrs;
-    };
-
     context.state.new_usertype<RelationsContainerWrap>(
         "RelationsContainerWrap",
         sol::meta_function::index,
         [](const RelationsContainerWrap &rel, size_t index) { return rel.GetAttributes(index); });
 
-    context.state.new_usertype<ExtractionRelationData>(
-        "ExtractionRelationData",
+    context.state.new_usertype<ExtractionRelation::AttributesMap>(
+        "ExtractionRelationAttributes",
         "size",
-        [](const ExtractionRelationData &data) { return data.attrs.size(); },
+        [](const ExtractionRelation::AttributesMap &data) { return data.size(); },
         sol::meta_function::new_index,
-        [](ExtractionRelationData &data, const std::string &key, sol::stack_object object) {
-            return data.attrs[key] = object.as<std::string>();
+        [](ExtractionRelation::AttributesMap &data, const std::string &key, sol::stack_object object) {
+            return data[key] = object.as<std::string>();
         },
         sol::meta_function::index,
-        [](ExtractionRelationData &data, const std::string &key) { return data.attrs[key]; });
+        [](ExtractionRelation::AttributesMap &data, const std::string &key) { return data[key]; });
 
     context.state.new_usertype<ExtractionRelation>(
         "ExtractionRelation",
         sol::meta_function::new_index,
-        [](ExtractionRelation &rel, const RelationMemberWrap &member) {
-            return ExtractionRelationData(rel.GetMember(member.ref()));
+        [](ExtractionRelation &rel, const RelationMemberWrap &member) -> ExtractionRelation::AttributesMap& {
+            return rel.GetMember(member.ref());
         },
         sol::meta_function::index,
-        [](ExtractionRelation &rel, const RelationMemberWrap &member) {
-            return ExtractionRelationData(rel.GetMember(member.ref()));
+        [](ExtractionRelation &rel, const RelationMemberWrap &member) -> ExtractionRelation::AttributesMap& {
+            return rel.GetMember(member.ref());
         },
         "restriction",
         sol::property([](const ExtractionRelation &rel) { return rel.is_restriction; },
