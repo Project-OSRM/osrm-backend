@@ -385,3 +385,21 @@ Feature: Fork Instructions
             | waypoints | route      | turns                    |
             | a,j       | on,xbcj    | depart,arrive            |
             | a,i       | on,off,off | depart,turn right,arrive |
+
+     # https://www.openstreetmap.org/node/619615462
+     Scenario: Fork on links - don't suppress as obvious turns
+        Given the node map
+            """
+            a . . . . . b . . . . . c
+                          `  .   .  d
+            """
+
+        And the ways
+            | nodes | highway       |
+            | abc   | motorway_link |
+            | bd    | motorway_link |
+
+        When I route I should get
+            | waypoints | route     | turns                           |
+            | a,c       | abc,abc   | depart,arrive                   |
+            | a,d       | abc,bd,bd | depart,turn slight right,arrive |
