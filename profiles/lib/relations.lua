@@ -49,7 +49,7 @@ function Relations.MatchToRef(relations, ref)
   local result_match = {}
 
   for _, r in ipairs(references) do
-    result_match[r] = nil
+    result_match[r] = false
   end
 
   for _, rel in ipairs(relations) do
