@@ -230,27 +230,29 @@ Intersection TurnHandler::handleThreeWayTurn(const EdgeID via_edge, Intersection
     BOOST_ASSERT(intersection.size() == 3);
     const auto obvious_index = findObviousTurn(via_edge, intersection);
     BOOST_ASSERT(intersection[0].angle < 0.001);
-    /* Two nearly straight turns -> FORK
-               OOOOOOO
-             /
-      IIIIII
-             \
-               OOOOOOO
-     */
 
+    // Two nearly straight turns -> FORK
+    //            OOOOOOO
+    //          /
+    //   IIIIII
+    //          \
+    //            OOOOOOO
+    //
+    // If a fork has no obvious direction or is from a link (IIIIII)
+    // then don't suppress instructions as for a T-intersection or a turn
     auto fork = findFork(via_edge, intersection);
-    if (fork && obvious_index == 0)
+    if (fork && (obvious_index == 0 ||
+                 node_based_graph.GetEdgeData(via_edge).road_classification.IsLinkClass()))
     {
         assignFork(via_edge, fork->getLeft(), fork->getRight());
     }
 
-    /*  T Intersection
-
-        OOOOOOO T OOOOOOOO
-                I
-                I
-                I
-     */
+    // T Intersection
+    //
+    //   OOOOOOO T OOOOOOOO
+    //           I
+    //           I
+    //           I
     else if (isEndOfRoad(intersection[0], intersection[1], intersection[2]) && obvious_index == 0)
     {
         if (intersection[1].entry_allowed)

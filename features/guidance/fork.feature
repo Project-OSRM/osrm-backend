@@ -400,6 +400,6 @@ Feature: Fork Instructions
             | bd    | motorway_link |
 
         When I route I should get
-            | waypoints | route     | turns                           |
-            | a,c       | abc,abc   | depart,arrive                   |
-            | a,d       | abc,bd,bd | depart,turn slight right,arrive |
+            | waypoints | route       | turns                           |
+            | a,c       | abc,abc,abc | depart,fork slight left,arrive  |
+            | a,d       | abc,bd,bd   | depart,fork slight right,arrive |
