@@ -13,7 +13,7 @@ function Utils.string_list_tokens(str)
   for s in str.gmatch(str, "([^;]*)") do
     if s ~= nil and s ~= '' then
       idx = idx + 1
-      table.insert(result, idx, (s:gsub("^%s*(.-)%s*$", "%1")))
+      result[idx] = s:gsub("^%s*(.-)%s*$", "%1")
     end
   end
 
@@ -28,7 +28,7 @@ function Utils.tokenize_common(str)
   for s in str.gmatch(str, "%S+") do
     if s ~= nil and s ~= '' then
       idx = idx + 1
-      table.insert(result, idx, (s:gsub("^%s*(.-)%s*$", "%1")))
+      result[idx] = s:gsub("^%s*(.-)%s*$", "%1")
     end
   end
 
