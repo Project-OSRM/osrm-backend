@@ -403,20 +403,16 @@ function process_way(profile, way, result, relations)
   if result.ref then
     local match_res = Relations.match_to_ref(relations, result.ref)
 
-    order = match_res['order']
-    matched_refs = match_res['match']
-
     local ref = ''
-    for _, k in pairs(order) do
-      local v = matched_refs[k]
+    for _, m in pairs(match_res) do
       if ref ~= '' then
         ref = ref .. '; '
       end
 
-      if v then
-        ref = ref .. k .. ' $' .. v
+      if m.dir then
+        ref = ref .. m.ref .. ' $' .. m.dir
       else
-        ref = ref .. k
+        ref = ref .. m.ref
       end
     end
 
@@ -431,35 +427,35 @@ function process_relation(profile, relation, result)
   function add_extra_data(m)
     local name = relation:get_value_by_key("name")
     if name then
-      result[m]["route_name"] = name
+      result[m]['route_name'] = name
     end
 
     local ref = relation:get_value_by_key("ref")
     if ref then
-      result[m]["route_ref"] = ref
+      result[m]['route_ref'] = ref
     end
   end
 
-  if t == "route" then
+  if t == 'route' then
     local route = relation:get_value_by_key("route")
-    if route == "road" then
+    if route == 'road' then
       for _, m in ipairs(relation:members()) do
         -- process case, where directions set as role
         local role = string.lower(m:role())
-        if role == "north" or role == "south" or role == "west" or role == "east" then
-          result[m]["route_direction"] = role
+        if role == 'north' or role == 'south' or role == 'west' or role == 'east' then
+          result[m]['route_direction'] = role
           add_extra_data(m)
         end
       end
     end
 
-    local direction = relation:get_value_by_key("direction")
+    local direction = relation:get_value_by_key('direction')
     if direction then
       direction = string.lower(direction)
-      if direction == "north" or direction == "south" or direction == "west" or direction == "east" then
+      if direction == 'north' or direction == 'south' or direction == 'west' or direction == 'east' then
         for _, m in ipairs(relation:members()) do
-          if m:role() == "forward" then
-            result[m]["route_direction"] = direction
+          if m:role() == 'forward' then
+            result[m]['route_direction'] = direction
             add_extra_data(m)
           end
         end
