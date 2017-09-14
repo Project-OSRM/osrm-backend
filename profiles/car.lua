@@ -396,10 +396,14 @@ function process_way(profile, way, result, relations)
   -- now process relations data
   local matched_refs = nil;
   if result.ref then
-    matched_refs = Relations.MatchToRef(relations, result.ref)
+    local match_res = Relations.match_to_ref(relations, result.ref)
+
+    order = match_res['order']
+    matched_refs = match_res['match']
 
     local ref = ''
-    for k, v in pairs(matched_refs) do
+    for _, k in pairs(order) do
+      local v = matched_refs[k]
       if ref ~= '' then
         ref = ref .. '; '
       end
