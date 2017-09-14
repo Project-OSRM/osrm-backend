@@ -288,24 +288,29 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
         "version",
         &osmium::Way::version);
 
-    context.state.new_usertype<osmium::RelationMember>("RelationMember",
-                                                       "role", &osmium::RelationMember::role,
-                                                       "type", &osmium::RelationMember::type,
-                                                       "id", [](const osmium::RelationMember &member) -> osmium::object_id_type {
-                                                                 return member.ref();
-                                                             });
+    context.state.new_usertype<osmium::RelationMember>(
+        "RelationMember",
+        "role",
+        &osmium::RelationMember::role,
+        "type",
+        &osmium::RelationMember::type,
+        "id",
+        [](const osmium::RelationMember &member) -> osmium::object_id_type {
+            return member.ref();
+        });
 
-    context.state.new_usertype<osmium::Relation>("Relation",
-                                                 "get_value_by_key",
-                                                 &get_value_by_key<osmium::Relation>,
-                                                 "id",
-                                                 &osmium::Relation::id,
-                                                 "version",
-                                                 &osmium::Relation::version,
-                                                 "members",
-                                                 [](const osmium::Relation &rel) -> const osmium::RelationMemberList& {
-                                                     return rel.members();
-                                                 });
+    context.state.new_usertype<osmium::Relation>(
+        "Relation",
+        "get_value_by_key",
+        &get_value_by_key<osmium::Relation>,
+        "id",
+        &osmium::Relation::id,
+        "version",
+        &osmium::Relation::version,
+        "members",
+        [](const osmium::Relation &rel) -> const osmium::RelationMemberList & {
+            return rel.members();
+        });
 
     context.state.new_usertype<osmium::Node>("Node",
                                              "location",
@@ -400,13 +405,11 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
     context.state.new_usertype<ExtractionRelation>(
         "ExtractionRelation",
         sol::meta_function::new_index,
-        [](ExtractionRelation &rel, const osmium::RelationMember &member) -> ExtractionRelation::AttributesMap& {
-            return rel.GetMember(member);
-        },
+        [](ExtractionRelation &rel, const osmium::RelationMember &member)
+            -> ExtractionRelation::AttributesMap & { return rel.GetMember(member); },
         sol::meta_function::index,
-        [](ExtractionRelation &rel, const osmium::RelationMember &member) -> ExtractionRelation::AttributesMap& {
-            return rel.GetMember(member);
-        },
+        [](ExtractionRelation &rel, const osmium::RelationMember &member)
+            -> ExtractionRelation::AttributesMap & { return rel.GetMember(member); },
         "restriction",
         sol::property([](const ExtractionRelation &rel) { return rel.is_restriction; },
                       [](ExtractionRelation &rel, bool flag) { rel.is_restriction = flag; }));
@@ -689,34 +692,34 @@ void Sol2ScriptingEnvironment::ProcessElements(
         switch (entity->type())
         {
         case osmium::item_type::node:
+        {
+            const auto &node = static_cast<const osmium::Node &>(*entity);
             result_node.clear();
             if (local_context.has_node_function &&
-                (!static_cast<const osmium::Node &>(*entity).tags().empty() ||
-                 local_context.properties.call_tagless_node_function))
+                (!node.tags().empty() || local_context.properties.call_tagless_node_function))
             {
-                const osmium::Node &node = static_cast<const osmium::Node &>(*entity);
                 const auto &id = ExtractionRelation::OsmIDTyped(node.id(), osmium::item_type::node);
                 local_context.ProcessNode(node, result_node, relations.Get(id));
             }
-            resulting_nodes.push_back(std::pair<const osmium::Node &, ExtractionNode>(
-                static_cast<const osmium::Node &>(*entity), std::move(result_node)));
-            break;
+            resulting_nodes.push_back({node, std::move(result_node)});
+        }
+        break;
         case osmium::item_type::way:
+        {
+            const osmium::Way &way = static_cast<const osmium::Way &>(*entity);
             result_way.clear();
             if (local_context.has_way_function)
             {
-                const osmium::Way &way = static_cast<const osmium::Way &>(*entity);
                 const auto &id = ExtractionRelation::OsmIDTyped(way.id(), osmium::item_type::way);
                 local_context.ProcessWay(way, result_way, relations.Get(id));
             }
-            resulting_ways.push_back(std::pair<const osmium::Way &, ExtractionWay>(
-                static_cast<const osmium::Way &>(*entity), std::move(result_way)));
-            break;
+            resulting_ways.push_back({way, std::move(result_way)});
+        }
+        break;
         case osmium::item_type::relation:
         {
-            auto result_res =
-                restriction_parser.TryParse(static_cast<const osmium::Relation &>(*entity));
-            if (result_res)
+            const auto &relation = static_cast<const osmium::Relation &>(*entity);
+            if (auto result_res = restriction_parser.TryParse(relation))
             {
                 resulting_restrictions.push_back(*result_res);
             }
@@ -726,13 +729,9 @@ void Sol2ScriptingEnvironment::ProcessElements(
                 result_relation.clear();
                 if (local_context.has_relation_function)
                 {
-                    local_context.ProcessRelation(static_cast<const osmium::Relation &>(*entity),
-                                                  result_relation);
+                    local_context.ProcessRelation(relation, result_relation);
                 }
-                resulting_relations.push_back(
-                    std::pair<const osmium::Relation &, ExtractionRelation>(
-                        static_cast<const osmium::Relation &>(*entity),
-                        std::move(result_relation)));
+                resulting_relations.push_back({relation, std::move(result_relation)});
             }
         }
         break;
