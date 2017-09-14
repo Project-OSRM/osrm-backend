@@ -7,18 +7,6 @@ Utils = require('lib/utils')
 
 Relations = {}
 
-function Relations.Merge(relations)
-  local result = {}
-
-  for _, r in ipairs(relations) do
-    for k, v in pairs(r) do
-      result[k] = v
-    end
-  end
-
-  return result
-end
-
 -- match ref values to relations data
 function Relations.match_to_ref(relations, ref)
 
@@ -96,8 +84,9 @@ function Relations.match_to_ref(relations, ref)
   end
 
   local result = {}
-  result['order'] = order
-  result['match'] = result_match
+  for i, r in ipairs(order) do
+    result[i] = { ref = r, dir = result_match[r] };
+  end
 
   return result
 end
