@@ -3,6 +3,8 @@
       - New function to support relations: `process_relation`. Read more in profiles documentation.
     - Infrastructure:
       - Lua 5.1 support is removed due to lack of support in sol2 https://github.com/ThePhD/sol2/issues/302
+    - Guidance
+      - treat forks from link-typed roads as forks to avoid turn-like instructions suppression
 
 # 5.12.0
     - Guidance
