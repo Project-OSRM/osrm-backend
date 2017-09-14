@@ -340,62 +340,13 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
         "version",
         &osmium::Way::version);
 
-    struct RelationMemberWrap
-    {
-        explicit RelationMemberWrap(const osmium::RelationMember &member) { init(member); }
+    context.state.new_usertype<osmium::RelationMember>("RelationMember",
+                                                       "role", &osmium::RelationMember::role,
+                                                       "type", &osmium::RelationMember::type,
+                                                       "id", [](const osmium::RelationMember &member) -> osmium::object_id_type {
+                                                                 return member.ref();
+                                                             });
 
-        RelationMemberWrap() : item_type(osmium::item_type::undefined) {}
-
-        void init(const osmium::RelationMember &member)
-        {
-            role = member.role();
-            item_type = member.type();
-            id = member.ref();
-        }
-
-        const char *GetRole() const { return role.c_str(); }
-        osmium::item_type GetItemType() const { return item_type; }
-        osmium::object_id_type GetId() const { return id; }
-
-        util::OsmIDTyped ref() const
-        {
-            switch (item_type)
-            {
-            case osmium::item_type::node:
-                return util::OsmIDTyped(id, util::OsmIDTyped::Type::Node);
-
-            case osmium::item_type::way:
-                return util::OsmIDTyped(id, util::OsmIDTyped::Type::Way);
-
-            case osmium::item_type::relation:
-                return util::OsmIDTyped(id, util::OsmIDTyped::Type::Relation);
-
-            default:
-                break;
-            }
-
-            return util::OsmIDTyped(id, util::OsmIDTyped::Type::Unknown);
-        }
-
-        std::string role;
-        osmium::item_type item_type;
-        osmium::object_id_type id;
-    };
-
-    context.state.new_usertype<util::OsmIDTyped>(
-        "OsmIDTypes", "id", &util::OsmIDTyped::GetID, "type", &util::OsmIDTyped::GetType);
-
-    context.state.new_usertype<RelationMemberWrap>("RelationMember",
-                                                   "role",
-                                                   &RelationMemberWrap::GetRole,
-                                                   "item_type",
-                                                   &RelationMemberWrap::GetItemType,
-                                                   "id",
-                                                   &RelationMemberWrap::GetId);
-
-    /** TODO: make better solution with members iteration.
-     *  For this moment, just make vector of RelationMember wrappers
-     */
     context.state.new_usertype<osmium::Relation>("Relation",
                                                  "get_value_by_key",
                                                  &get_value_by_key<osmium::Relation>,
@@ -404,13 +355,8 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
                                                  "version",
                                                  &osmium::Relation::version,
                                                  "members",
-                                                 [](const osmium::Relation &rel) {
-                                                     std::vector<RelationMemberWrap> members(
-                                                         rel.members().size());
-                                                     size_t i = 0;
-                                                     for (const auto &m : rel.members())
-                                                         members[i++].init(m);
-                                                     return sol::as_table(std::move(members));
+                                                 [](const osmium::Relation &rel) -> const osmium::RelationMemberList& {
+                                                     return rel.members();
                                                  });
 
     context.state.new_usertype<osmium::Node>("Node",
@@ -522,12 +468,12 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
     context.state.new_usertype<ExtractionRelation>(
         "ExtractionRelation",
         sol::meta_function::new_index,
-        [](ExtractionRelation &rel, const RelationMemberWrap &member) -> ExtractionRelation::AttributesMap& {
-            return rel.GetMember(member.ref());
+        [](ExtractionRelation &rel, const osmium::RelationMember &member) -> ExtractionRelation::AttributesMap& {
+            return rel.GetMember(member);
         },
         sol::meta_function::index,
-        [](ExtractionRelation &rel, const RelationMemberWrap &member) -> ExtractionRelation::AttributesMap& {
-            return rel.GetMember(member.ref());
+        [](ExtractionRelation &rel, const osmium::RelationMember &member) -> ExtractionRelation::AttributesMap& {
+            return rel.GetMember(member);
         },
         "restriction",
         sol::property([](const ExtractionRelation &rel) { return rel.is_restriction; },
@@ -817,7 +763,7 @@ void Sol2ScriptingEnvironment::ProcessElements(
                  local_context.properties.call_tagless_node_function))
             {
                 const osmium::Node &node = static_cast<const osmium::Node &>(*entity);
-                const util::OsmIDTyped id(node.id(), util::OsmIDTyped::Type::Node);
+                const auto &id = ExtractionRelation::OsmIDTyped(node.id(), osmium::item_type::node);
                 local_context.ProcessNode(node, result_node, relations.Get(id));
             }
             resulting_nodes.push_back(std::pair<const osmium::Node &, ExtractionNode>(
@@ -828,7 +774,7 @@ void Sol2ScriptingEnvironment::ProcessElements(
             if (local_context.has_way_function)
             {
                 const osmium::Way &way = static_cast<const osmium::Way &>(*entity);
-                const util::OsmIDTyped id(way.id(), util::OsmIDTyped::Type::Way);
+                const auto &id = ExtractionRelation::OsmIDTyped(way.id(), osmium::item_type::way);
                 local_context.ProcessWay(way, result_way, relations.Get(id));
             }
             resulting_ways.push_back(std::pair<const osmium::Way &, ExtractionWay>(
