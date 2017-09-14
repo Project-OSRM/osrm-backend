@@ -1,4 +1,6 @@
 # UNRELEASED
+    - Profile:
+      - New function to support relations: `process_relation`. Read more in profiles documentation.
     - Infrastructure:
       - Lua 5.1 support is removed due to lack of support in sol2 https://github.com/ThePhD/sol2/issues/302
 
@@ -16,7 +18,6 @@
       - New property for profile table: `excludable` that can be used to configure which classes are excludable at query time.
       - New optional property for profile table: `classes` that allows you to specify which classes you expect to be used.
         We recommend this for better error messages around classes, otherwise the possible class names are infered automatically.
-      - New function to support relations: `process_relation`. Read more in profiles documentation.
     - Traffic:
       - If traffic data files contain an empty 4th column, they will update edge durations but not modify the edge weight.  This is useful for
         updating ETAs returned, without changing route selection (for example, in a distance-based profile with traffic data loaded).
