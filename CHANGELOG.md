@@ -1,4 +1,6 @@
 # UNRELEASED
+    - Infrastructure:
+      - Lua 5.1 support is removed due to lack of support in sol2 https://github.com/ThePhD/sol2/issues/302
 
 # 5.12.0
     - Guidance

@@ -68,7 +68,7 @@ matrix:
       addons: &gcc6
         apt:
           sources: ['ubuntu-toolchain-r-test']
-          packages: ['g++-6', 'libbz2-dev', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libboost-all-dev']
+          packages: ['g++-6', 'libbz2-dev', 'libxml2-dev', 'libzip-dev', 'liblua5.2-dev', 'libtbb-dev', 'libgdal-dev', 'libboost-all-dev']
       env: CCOMPILER='gcc-6' CXXCOMPILER='g++-6' BUILD_TYPE='Debug' ENABLE_COVERAGE=ON CUCUMBER_TIMEOUT=20000
       after_success:
         - bash <(curl -s https://codecov.io/bash)
@@ -78,7 +78,7 @@ matrix:
       addons: &gcc6
         apt:
           sources: ['ubuntu-toolchain-r-test']
-          packages: ['g++-6', 'libbz2-dev', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libboost-all-dev']
+          packages: ['g++-6', 'libbz2-dev', 'libxml2-dev', 'libzip-dev', 'liblua5.2-dev', 'libtbb-dev', 'libgdal-dev', 'libboost-all-dev']
       env: CCOMPILER='gcc-6' CXXCOMPILER='g++-6' BUILD_TYPE='Debug' TARGET_ARCH='x86_64-asan' ENABLE_SANITIZER=ON CUCUMBER_TIMEOUT=20000
 
     - os: linux
@@ -86,7 +86,7 @@ matrix:
       addons: &clang40
         apt:
           sources: ['ubuntu-toolchain-r-test']
-          packages: ['libstdc++-5-dev', 'libbz2-dev', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libboost-all-dev']
+          packages: ['libstdc++-5-dev', 'libbz2-dev', 'libxml2-dev', 'libzip-dev', 'liblua5.2-dev', 'libtbb-dev', 'libgdal-dev', 'libboost-all-dev']
       env: CLANG_VERSION='4.0.0' BUILD_TYPE='Debug' CUCUMBER_TIMEOUT=60000
 
     - os: linux
@@ -111,7 +111,7 @@ matrix:
       addons: &gcc6
         apt:
           sources: ['ubuntu-toolchain-r-test']
-          packages: ['g++-6', 'libbz2-dev', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libboost-all-dev']
+          packages: ['g++-6', 'libbz2-dev', 'libxml2-dev', 'libzip-dev', 'liblua5.2-dev', 'libtbb-dev', 'libgdal-dev', 'libboost-all-dev']
       env: CCOMPILER='gcc-6' CXXCOMPILER='g++-6' BUILD_TYPE='Release'
 
     - os: linux
@@ -125,7 +125,7 @@ matrix:
       addons: &gcc6
         apt:
           sources: ['ubuntu-toolchain-r-test']
-          packages: ['g++-6', 'libbz2-dev', 'libstxxl-dev', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libboost-all-dev']
+          packages: ['g++-6', 'libbz2-dev', 'libstxxl-dev', 'libxml2-dev', 'libzip-dev', 'liblua5.2-dev', 'libtbb-dev', 'libgdal-dev', 'libboost-all-dev']
       env: CCOMPILER='gcc-6' CXXCOMPILER='g++-6' BUILD_TYPE='Release' ENABLE_STXXL=On
 
     - os: linux
@@ -133,7 +133,7 @@ matrix:
       addons: &gcc49
         apt:
           sources: ['ubuntu-toolchain-r-test']
-          packages: ['g++-4.9', 'libbz2-dev', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev', 'ccache']
+          packages: ['g++-4.9', 'libbz2-dev', 'libxml2-dev', 'libzip-dev', 'liblua5.2-dev', 'libtbb-dev', 'libgdal-dev', 'libboost-all-dev', 'ccache']
       env: CCOMPILER='gcc-4.9' CXXCOMPILER='g++-4.9' BUILD_TYPE='Release'
 
     - os: osx
@@ -158,7 +158,7 @@ matrix:
       #- addons: &clang40
       #-   apt:
       #-     sources: ['llvm-toolchain-trusty-4.0', 'ubuntu-toolchain-r-test']
-      #-     packages: ['clang-4.0', 'libbz2-dev', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libboost-all-dev']
+      #-     packages: ['clang-4.0', 'libbz2-dev', 'libxml2-dev', 'libzip-dev', 'liblua5.2-dev', 'libtbb-dev', 'libgdal-dev', 'libboost-all-dev']
       #- env: CCOMPILER='clang-4.0' CXXCOMPILER='clang++-4.0' BUILD_TYPE='Release'
 
     # Shared Library
@@ -167,7 +167,7 @@ matrix:
       addons: &gcc6
         apt:
           sources: ['ubuntu-toolchain-r-test']
-          packages: ['g++-6', 'libbz2-dev', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libboost-all-dev']
+          packages: ['g++-6', 'libbz2-dev', 'libxml2-dev', 'libzip-dev', 'liblua5.2-dev', 'libtbb-dev', 'libgdal-dev', 'libboost-all-dev']
       env: CCOMPILER='gcc-6' CXXCOMPILER='g++-6' BUILD_TYPE='Release' BUILD_SHARED_LIBS=ON
 
       # Disabled because CI slowness
@@ -176,7 +176,7 @@ matrix:
       #- addons: &clang40
       #-   apt:
       #-     sources: ['llvm-toolchain-trusty-4.0', 'ubuntu-toolchain-r-test']
-      #-     packages: ['clang-4.0', 'libbz2-dev', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libboost-all-dev']
+      #-     packages: ['clang-4.0', 'libbz2-dev', 'libxml2-dev', 'libzip-dev', 'liblua5.2-dev', 'libtbb-dev', 'libgdal-dev', 'libboost-all-dev']
       #- env: CCOMPILER='clang-4.0' CXXCOMPILER='clang++-4.0' BUILD_TYPE='Release' BUILD_SHARED_LIBS=ON
 
     # Node build jobs. These skip running the tests.
