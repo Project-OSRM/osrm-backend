@@ -42,58 +42,6 @@ namespace osrm
 namespace extractor
 {
 
-// The wrapper is neede for Lua 5.1 support with sol2 to have the table interface
-// on attributes via sol::as_table(relations[index])
-// For Lua 5.2 with the wrapping unordered_map by sol2
-// RelationsContainerWrap and ExtractionRelationAttributes can be removed
-class RelationsContainerWrap
-{
-  private:
-    class Iterator
-    {
-        using BaseT = ExtractionRelationContainer::RelationList;
-
-      public:
-        explicit Iterator(BaseT::const_iterator it_) : it(it_) {}
-
-        auto operator*() const { return sol::as_table(*it); }
-
-        bool operator==(const Iterator &other) const { return it == other.it; }
-        bool operator!=(const Iterator &other) const { return it != other.it; }
-
-        Iterator &operator++()
-        {
-            ++it;
-            return *this;
-        }
-        Iterator &operator--()
-        {
-            --it;
-            return *this;
-        }
-
-      private:
-        BaseT::const_iterator it;
-    };
-
-  public:
-    explicit RelationsContainerWrap(const ExtractionRelationContainer::RelationList &relations_)
-        : relations(relations_)
-    {
-    }
-
-    auto GetAttributes(size_t index) const { return sol::as_table(relations[index]); }
-
-    auto begin() const { return Iterator(relations.begin()); }
-
-    auto end() const { return Iterator(relations.end()); }
-
-    size_t size() const { return relations.size(); }
-
-  private:
-    const ExtractionRelationContainer::RelationList &relations;
-};
-
 template <class T>
 auto get_value_by_key(T const &object, const char *key) -> decltype(object.get_value_by_key(key))
 {
@@ -448,22 +396,6 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
         "backward_restricted",
         sol::property([](const ExtractionWay &way) { return way.backward_restricted; },
                       [](ExtractionWay &way, bool flag) { way.backward_restricted = flag; }));
-
-    context.state.new_usertype<RelationsContainerWrap>(
-        "RelationsContainerWrap",
-        sol::meta_function::index,
-        [](const RelationsContainerWrap &rel, size_t index) { return rel.GetAttributes(index); });
-
-    context.state.new_usertype<ExtractionRelation::AttributesMap>(
-        "ExtractionRelationAttributes",
-        "size",
-        [](const ExtractionRelation::AttributesMap &data) { return data.size(); },
-        sol::meta_function::new_index,
-        [](ExtractionRelation::AttributesMap &data, const std::string &key, sol::stack_object object) {
-            return data[key] = object.as<std::string>();
-        },
-        sol::meta_function::index,
-        [](ExtractionRelation::AttributesMap &data, const std::string &key) { return data[key]; });
 
     context.state.new_usertype<ExtractionRelation>(
         "ExtractionRelation",
@@ -1028,8 +960,7 @@ void LuaScriptingContext::ProcessNode(const osmium::Node &node,
     switch (api_version)
     {
     case 3:
-        node_function(
-            profile_table, node, result, sol::as_table(RelationsContainerWrap(relations)));
+        node_function(profile_table, node, result, relations);
         break;
     case 2:
         node_function(profile_table, node, result);
@@ -1050,7 +981,7 @@ void LuaScriptingContext::ProcessWay(const osmium::Way &way,
     switch (api_version)
     {
     case 3:
-        way_function(profile_table, way, result, sol::as_table(RelationsContainerWrap(relations)));
+        way_function(profile_table, way, result, relations);
         break;
     case 2:
         way_function(profile_table, way, result);
