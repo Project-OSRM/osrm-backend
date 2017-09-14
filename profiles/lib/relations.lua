@@ -20,7 +20,7 @@ function Relations.Merge(relations)
 end
 
 -- match ref values to relations data
-function Relations.MatchToRef(relations, ref)
+function Relations.match_to_ref(relations, ref)
 
   function calculate_scores(refs, tag_value)
     local tag_tokens = Set(Utils.tokenize_common(tag_value))
@@ -47,12 +47,13 @@ function Relations.MatchToRef(relations, ref)
 
   local references = Utils.string_list_tokens(ref)
   local result_match = {}
-
-  for _, r in ipairs(references) do
+  local order = {}
+  for i, r in ipairs(references) do
     result_match[r] = false
+    order[i] = r
   end
 
-  for _, rel in ipairs(relations) do
+  for i, rel in ipairs(relations) do
     local name_scores = nil
     local name_tokens = {}
     local route_name = rel["route_name"]
@@ -94,7 +95,11 @@ function Relations.MatchToRef(relations, ref)
 
   end
 
-  return result_match
+  local result = {}
+  result['order'] = order
+  result['match'] = result_match
+
+  return result
 end
 
 return Relations
