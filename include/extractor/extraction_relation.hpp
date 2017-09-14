@@ -1,7 +1,9 @@
 #ifndef EXTRACTION_RELATION_HPP
 #define EXTRACTION_RELATION_HPP
 
-#include "util/osm_id_typed.hpp"
+#include <osmium/osm/relation.hpp>
+
+#include <boost/assert.hpp>
 
 #include <string>
 #include <unordered_map>
@@ -15,6 +17,15 @@ namespace extractor
 struct ExtractionRelation
 {
     using AttributesMap = std::unordered_map<std::string, std::string>;
+    using OsmIDTyped = std::pair<osmium::object_id_type, osmium::item_type>;
+
+    struct OsmIDTypedHash
+    {
+        std::size_t operator()(const OsmIDTyped &id) const
+        {
+            return id.first ^ (static_cast<std::uint64_t>(id.second) << 56);
+        }
+    };
 
     ExtractionRelation() : is_restriction(false) {}
 
@@ -26,10 +37,13 @@ struct ExtractionRelation
 
     bool IsRestriction() const { return is_restriction; }
 
-    AttributesMap &GetMember(util::OsmIDTyped id) { return values[id.Hash()]; }
+    AttributesMap &GetMember(const osmium::RelationMember &member)
+    {
+        return values[OsmIDTyped(member.ref(), member.type())];
+    }
 
     bool is_restriction;
-    std::unordered_map<util::OsmIDTyped::HashType, AttributesMap> values;
+    std::unordered_map<OsmIDTyped, AttributesMap, OsmIDTypedHash> values;
 };
 
 // It contains data of all parsed relations for each node/way element
@@ -37,6 +51,7 @@ class ExtractionRelationContainer
 {
   public:
     using AttributesMap = ExtractionRelation::AttributesMap;
+    using OsmIDTyped = ExtractionRelation::OsmIDTyped;
     using RelationList = std::vector<AttributesMap>;
 
     void AddRelation(const ExtractionRelation &rel)
@@ -46,9 +61,9 @@ class ExtractionRelationContainer
             data[it.first].push_back(it.second);
     }
 
-    const RelationList &Get(const util::OsmIDTyped &id) const
+    const RelationList &Get(const OsmIDTyped &id) const
     {
-        const auto it = data.find(id.Hash());
+        const auto it = data.find(id);
         if (it != data.end())
             return it->second;
 
@@ -57,8 +72,7 @@ class ExtractionRelationContainer
     }
 
   private:
-    // TODO: need to store more common data
-    std::unordered_map<util::OsmIDTyped::HashType, RelationList> data;
+    std::unordered_map<OsmIDTyped, RelationList, ExtractionRelation::OsmIDTypedHash> data;
 };
 
 } // namespace extractor
