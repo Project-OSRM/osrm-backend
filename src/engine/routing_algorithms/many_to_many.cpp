@@ -343,7 +343,7 @@ std::vector<EdgeWeight> manyToManySearch(SearchEngineData<Algorithm> &engine_wor
     // Backward search for target phantoms
     tbb::parallel_for(
         tbb::blocked_range<std::size_t>{0, target_indices.size()},
-        [&](const auto &chunk) {
+        [&](const tbb::blocked_range<std::size_t> &chunk) {
             for (auto column_idx = chunk.begin(), end = chunk.end(); column_idx != end;
                  ++column_idx)
             {
@@ -375,7 +375,7 @@ std::vector<EdgeWeight> manyToManySearch(SearchEngineData<Algorithm> &engine_wor
 
     // For each source do forward search
     tbb::parallel_for(tbb::blocked_range<std::size_t>{0, source_indices.size()},
-                      [&](const auto &chunk) {
+                      [&](const tbb::blocked_range<std::size_t> &chunk) {
                           for (auto row_idx = chunk.begin(), end = chunk.end(); row_idx != end;
                                ++row_idx)
                           {
