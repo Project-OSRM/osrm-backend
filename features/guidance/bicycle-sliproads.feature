@@ -24,9 +24,9 @@ Feature: Bike - Mode flag
         And the ways
             | nodes | highway   | name   | oneway:bicycle |
             | abcd  | cycleway  | street |                |
-            | eb    | path      |        | yes            |
+            | be    | path      |        | yes            |
             | icef  | tertiary  | road   |                |
-            | geh   | secondary | street |                |
+            | geh   | secondary | cross  |                |
 
         When I route I should get
             | waypoints | route             | turns                               |

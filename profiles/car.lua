@@ -33,10 +33,24 @@ function setup()
     side_road_multiplier      = 0.8,
     turn_penalty              = 7.5,
     speed_reduction           = 0.8,
+    increase_speed_to_max     = true,
 
     -- Note: this biases right-side driving.
     -- Should be inverted for left-driving countries.
     turn_bias   = use_left_hand_driving and 1/1.075 or 1.075,
+
+    implied_oneways = {
+      highway = { 'motorway' },
+      junction = { 'roundabout', 'circular' }
+    },
+
+    -- tags to prefetch
+    prefetch = Set {
+      'highway',
+      'route',
+      'railway',
+      'bridge',
+    },
 
     -- a list of suffixes to suppress in name change instructions
     suffix_list = {
@@ -171,11 +185,6 @@ function setup()
       'minor',
     },
 
-    route_speeds = {
-      ferry = 5,
-      shuttle_train = 10
-    },
-
     bridge_speeds = {
       movable = 5
     },
@@ -275,6 +284,24 @@ function setup()
       ["nl:rural"] = 80,
       ["nl:trunk"] = 100,
       ["none"] = 140
+    },
+
+    routes = {
+      access_required = true,
+      keys = {
+        route = {
+          values = {
+            ferry = {
+              speed = 5,
+              mode = mode.ferry,
+            },
+            shuttle_train = {
+              speed = 10,
+              mode = mode.train,
+            }
+          }
+        }
+      }
     }
   }
 end
@@ -319,23 +346,13 @@ function process_way(profile, way, result)
   -- commonly forbids access early, and handle edge cases later.
 
   -- data table for storing intermediate values during processing
-  local data = {
-    -- prefetch tags
-    highway = way:get_value_by_key('highway'),
-    bridge = way:get_value_by_key('bridge'),
-    route = way:get_value_by_key('route')
-  }
-
-  -- perform an quick initial check and abort if the way is
-  -- obviously not routable.
-  -- highway or route tags must be in data table, bridge is optional
-  if (not data.highway or data.highway == '') and
-  (not data.route or data.route == '')
-  then
-    return
-  end
+  local data = {}
+  local handlers
 
   handlers = Sequence {
+    -- fetch initial set of tags, abort if not is present
+    WayHandlers.prefetch,
+
     -- set the default mode for this profile. if can be changed later
     -- in case it turns we're e.g. on a ferry
     WayHandlers.default_mode,
@@ -348,15 +365,16 @@ function process_way(profile, way, result)
     -- determine access status by checking our hierarchy of
     -- access tags, e.g: motorcar, motor_vehicle, vehicle
     WayHandlers.access,
+  }
 
-    -- check whether forward/backward directions are routable
-    WayHandlers.oneway,
+  if WayHandlers.run(profile,way,result,data,handlers) == false then
+    return false
+  end
 
-    -- check a road's destination
-    WayHandlers.destinations,
-
-    -- check whether we're using a special transport mode
-    WayHandlers.ferries,
+  -- check whether we're using a special transport mode
+  if WayHandlers.routes(profile,way,result,data ) ~= true then
+    handlers = {
+    -- check movable bridges
     WayHandlers.movables,
 
     -- handle service road restrictions
@@ -367,8 +385,26 @@ function process_way(profile, way, result)
 
     -- compute speed taking into account way type, maxspeed tags, etc.
     WayHandlers.speed,
-    WayHandlers.surface,
     WayHandlers.maxspeed,
+
+    -- adjust speed and rate
+    WayHandlers.surface,
+
+    -- handle turn lanes and road classification, used for guidance
+    WayHandlers.turn_lanes,
+
+    }
+    if WayHandlers.run(profile,way,result,data,handlers) == false then
+      return false
+    end
+  end
+
+
+  handlers = {
+    -- check whether forward/backward directions are routable
+    WayHandlers.oneway,
+    
+    -- penalties 
     WayHandlers.penalties,
 
     -- compute class labels
@@ -380,7 +416,7 @@ function process_way(profile, way, result)
 
     -- handle various other flags
     WayHandlers.roundabouts,
-    WayHandlers.startpoint,
+    --WayHandlers.startpoint,
 
     -- set name, ref and pronunciation
     WayHandlers.names,

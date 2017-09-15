@@ -99,14 +99,41 @@ Feature: Bike - Squares and other areas
             | abcda | (nil)   | platform |
 
         When I route I should get
-            | from | to | route       |
-            | x    | y  | xa,abcda,by |
-            | y    | x  | by,abcda,xa |
-            | a    | b  | abcda,abcda |
-            | a    | d  | abcda,abcda |
-            | b    | c  | abcda,abcda |
-            | c    | b  | abcda,abcda |
-            | c    | d  | abcda,abcda |
-            | d    | c  | abcda,abcda |
-            | d    | a  | abcda,abcda |
-            | a    | d  | abcda,abcda |
+            | from | to | route          |
+            | x    | y  | xa,abcda,by,by |
+            | y    | x  | by,abcda,xa,xa |
+            | a    | b  | abcda,abcda    |
+            | a    | d  | abcda,abcda    |
+            | b    | c  | abcda,abcda    |
+            | c    | b  | abcda,abcda    |
+            | c    | d  | abcda,abcda    |
+            | d    | c  | abcda,abcda    |
+            | d    | a  | abcda,abcda    |
+            | a    | d  | abcda,abcda    |
+
+    @train @platform
+    Scenario: Bike - public transport platforms
+        Given the node map
+            """
+            x a b y
+              d c
+            """
+
+        And the ways
+            | nodes | highway | public_transport |
+            | xa    | primary |                  |
+            | by    | primary |                  |
+            | abcda | (nil)   | platform         |
+
+        When I route I should get
+            | from | to | route          |
+            | x    | y  | xa,abcda,by,by |
+            | y    | x  | by,abcda,xa,xa |
+            | a    | b  | abcda,abcda    |
+            | a    | d  | abcda,abcda    |
+            | b    | c  | abcda,abcda    |
+            | c    | b  | abcda,abcda    |
+            | c    | d  | abcda,abcda    |
+            | d    | c  | abcda,abcda    |
+            | d    | a  | abcda,abcda    |
+            | a    | d  | abcda,abcda    |

@@ -74,7 +74,8 @@ function setup()
     },
 
     avoid = Set {
-      'impassable'
+      'impassable',
+      'construction'
     },
 
     speeds = Sequence {
@@ -102,6 +103,10 @@ function setup()
         platform        = walking_speed
       },
 
+      public_transport = {
+        platform        = walking_speed
+      },
+
       amenity = {
         parking         = walking_speed,
         parking_entrance= walking_speed
@@ -116,8 +121,30 @@ function setup()
       }
     },
 
-    route_speeds = {
-      ferry = 5
+    routes = {
+      access_required = false,
+      speed = 10,
+      keys = {
+        railway = {
+          mode = mode.train,
+          values = Set {
+            'train',
+            'railway',
+            'subway',
+            'light_rail',
+            'monorail',
+            'tram'
+          }
+        },
+        route = {
+          values = {
+            ferry = {
+              speed = 5,
+              mode = mode.ferry,
+            }
+          }
+        }
+      }
     },
 
     bridge_speeds = {
@@ -215,6 +242,9 @@ function process_way(profile, way, result)
     -- access tags, e.g: motorcar, motor_vehicle, vehicle
     WayHandlers.access,
 
+    -- compute speed taking into account way type, maxspeed tags, etc.
+    WayHandlers.speed,
+
     -- check whether forward/backward directons are routable
     WayHandlers.oneway,
 
@@ -222,11 +252,10 @@ function process_way(profile, way, result)
     WayHandlers.destinations,
 
     -- check whether we're using a special transport mode
-    WayHandlers.ferries,
+    WayHandlers.routes,
     WayHandlers.movables,
 
-    -- compute speed taking into account way type, maxspeed tags, etc.
-    WayHandlers.speed,
+    -- handle surfaces
     WayHandlers.surface,
 
     -- handle turn lanes and road classification, used for guidance

@@ -110,3 +110,30 @@ Feature: Foot - Squares and other areas
             | d    | c  | abcda,abcda    |
             | d    | a  | abcda,abcda    |
             | a    | d  | abcda,abcda    |
+
+    @train @platform
+    Scenario: Foot - public transport platforms
+        Given the node map
+            """
+            x a b y
+              d c
+            """
+
+        And the ways
+            | nodes | highway | public_transport |
+            | xa    | primary |                  |
+            | by    | primary |                  |
+            | abcda | (nil)   | platform         |
+
+        When I route I should get
+            | from | to | route          |
+            | x    | y  | xa,abcda,by,by |
+            | y    | x  | by,abcda,xa,xa |
+            | a    | b  | abcda,abcda    |
+            | a    | d  | abcda,abcda    |
+            | b    | c  | abcda,abcda    |
+            | c    | b  | abcda,abcda    |
+            | c    | d  | abcda,abcda    |
+            | d    | c  | abcda,abcda    |
+            | d    | a  | abcda,abcda    |
+            | a    | d  | abcda,abcda    |

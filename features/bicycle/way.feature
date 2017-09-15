@@ -9,31 +9,31 @@ Feature: Bike - Accessability of different way types
     # Pier is not allowed, since it's tagged using man_made=pier.
 
         Then routability should be
-            | highway        | bothw |
-            | (nil)          |       |
-            | motorway       |       |
-            | motorway_link  |       |
-            | trunk          |       |
-            | trunk_link     |       |
-            | primary        | x     |
-            | primary_link   | x     |
-            | secondary      | x     |
-            | secondary_link | x     |
-            | tertiary       | x     |
-            | tertiary_link  | x     |
-            | residential    | x     |
-            | service        | x     |
-            | unclassified   | x     |
-            | living_street  | x     |
-            | road           | x     |
-            | track          | x     |
-            | path           | x     |
-            | footway        | x     |
-            | pedestrian     | x     |
-            | steps          | x     |
-            | cycleway       | x     |
-            | bridleway      |       |
-            | pier           |       |
+            | highway        | bothw        |
+            | (nil)          |              |
+            | motorway       |              |
+            | motorway_link  |              |
+            | trunk          |              |
+            | trunk_link     |              |
+            | primary        | cycling      |
+            | primary_link   | cycling      |
+            | secondary      | cycling      |
+            | secondary_link | cycling      |
+            | tertiary       | cycling      |
+            | tertiary_link  | cycling      |
+            | residential    | cycling      |
+            | service        | cycling      |
+            | unclassified   | cycling      |
+            | living_street  | cycling      |
+            | road           | cycling      |
+            | track          | cycling      |
+            | path           | cycling      |
+            | footway        | pushing bike |
+            | pedestrian     | pushing bike |
+            | steps          | pushing bike |
+            | cycleway       | cycling      |
+            | bridleway      |              |
+            | pier           | pushing bike |
 
     Scenario: Bike - Routability of man_made structures
         Then routability should be

@@ -7,57 +7,57 @@ Feature: Car - Restricted access
 
     Scenario: Car - Access tag hierarchy on ways
         Then routability should be
-            | access | vehicle | motor_vehicle | motorcar | bothw |
-            |        |         |               |          | x     |
-            | yes    |         |               |          | x     |
-            | no     |         |               |          |       |
-            |        | yes     |               |          | x     |
-            |        | no      |               |          |       |
-            | no     | yes     |               |          | x     |
-            | yes    | no      |               |          |       |
-            |        |         | yes           |          | x     |
-            |        |         | no            |          |       |
-            | no     |         | yes           |          | x     |
-            | yes    |         | no            |          |       |
-            |        | no      | yes           |          | x     |
-            |        | yes     | no            |          |       |
-            |        |         |               | yes      | x     |
-            |        |         |               | no       |       |
-            | no     |         |               | yes      | x     |
-            | yes    |         |               | no       |       |
-            |        | no      |               | yes      | x     |
-            |        | yes     |               | no       |       |
-            |        |         | no            | yes      | x     |
-            |        |         | yes           | no       |       |
+            | access | vehicle | motor_vehicle | motorcar | bothw   |  
+            |        |         |               |          | driving |  
+            | yes    |         |               |          | driving |  
+            | no     |         |               |          |         |  
+            |        | yes     |               |          | driving |  
+            |        | no      |               |          |         |  
+            | no     | yes     |               |          | driving |  
+            | yes    | no      |               |          |         |  
+            |        |         | yes           |          | driving |  
+            |        |         | no            |          |         |  
+            | no     |         | yes           |          | driving |  
+            | yes    |         | no            |          |         |  
+            |        | no      | yes           |          | driving |  
+            |        | yes     | no            |          |         |  
+            |        |         |               | yes      | driving |  
+            |        |         |               | no       |         |  
+            | no     |         |               | yes      | driving |  
+            | yes    |         |               | no       |         |  
+            |        | no      |               | yes      | driving |  
+            |        | yes     |               | no       |         |  
+            |        |         | no            | yes      | driving |  
+            |        |         | yes           | no       |         |  
 
     Scenario: Car - Access tag hierarchy and forward/backward
         Then routability should be
-            | access | access:forward | access:backward | motorcar | motorcar:forward | motorcar:backward | forw | backw |
-            |        |                |                 |          |                  |                   | x    | x     |
-            | yes    |                |                 |          |                  |                   | x    | x     |
-            | yes    | no             |                 |          |                  |                   |      | x     |
-            | yes    | yes            |                 | no       |                  |                   |      |       |
-            | yes    | yes            |                 | yes      | no               |                   |      | x     |
-            | yes    |                |                 |          |                  |                   | x    | x     |
-            | yes    |                | no              |          |                  |                   | x    |       |
-            | yes    |                | yes             | no       |                  |                   |      |       |
-            | yes    |                | yes             | yes      |                  | no                | x    |       |
-            | no     |                |                 |          |                  |                   |      |       |
-            | no     | yes            |                 |          |                  |                   | x    |       |
-            | no     | no             |                 | yes      |                  |                   | x    | x     |
-            | no     | no             |                 | no       | yes              |                   | x    |       |
-            | no     |                |                 |          |                  |                   |      |       |
-            | no     |                | yes             |          |                  |                   |      | x     |
-            | no     |                | no              | yes      |                  |                   | x    | x     |
-            | no     |                | no              | no       |                  | yes               |      | x     |
-            |        | no             |                 |          | no               |                   |      | x     |
-            |        |                | no              |          |                  | no                | x    |       |
-            |        | no             |                 |          |                  | no                |      |       |
-            |        |                | no              | no       |                  |                   |      |       |
-            |        | no             |                 |          | yes              |                   | x    | x     |
-            |        |                | no              |          |                  | yes               | x    | x     |
-            |        | yes            |                 |          | no               |                   |      | x     |
-            |        |                | yes             |          |                  | no                | x    |       |
+            | access | access:forward | access:backward | motorcar | motorcar:forward | motorcar:backward | forw    | backw   |  
+            |        |                |                 |          |                  |                   | driving | driving |  
+            | yes    |                |                 |          |                  |                   | driving | driving |  
+            | yes    | no             |                 |          |                  |                   |         | driving |  
+            | yes    | yes            |                 | no       |                  |                   |         |         |  
+            | yes    | yes            |                 | yes      | no               |                   |         | driving |  
+            | yes    |                |                 |          |                  |                   | driving | driving |  
+            | yes    |                | no              |          |                  |                   | driving |         |  
+            | yes    |                | yes             | no       |                  |                   |         |         |  
+            | yes    |                | yes             | yes      |                  | no                | driving |         |  
+            | no     |                |                 |          |                  |                   |         |         |  
+            | no     | yes            |                 |          |                  |                   | driving |         |  
+            | no     | no             |                 | yes      |                  |                   | driving | driving |  
+            | no     | no             |                 | no       | yes              |                   | driving |         |  
+            | no     |                |                 |          |                  |                   |         |         |  
+            | no     |                | yes             |          |                  |                   |         | driving |  
+            | no     |                | no              | yes      |                  |                   | driving | driving |  
+            | no     |                | no              | no       |                  | yes               |         | driving |  
+            |        | no             |                 |          | no               |                   |         | driving |  
+            |        |                | no              |          |                  | no                | driving |         |  
+            |        | no             |                 |          |                  | no                |         |         |  
+            |        |                | no              | no       |                  |                   |         |         |  
+            |        | no             |                 |          | yes              |                   | driving | driving |  
+            |        |                | no              |          |                  | yes               | driving | driving |  
+            |        | yes            |                 |          | no               |                   |         | driving |  
+            |        |                | yes             |          |                  | no                | driving |         |  
 
     Scenario: Car - Access tag hierarchy on nodes
         Then routability should be
@@ -193,9 +193,10 @@ Feature: Car - Restricted access
     @hov
     Scenario: Car - I-66 use HOV-only roads with heavy penalty
         Then routability should be
-            | highway  | hov         | hov:lanes                          | lanes | access     | oneway | forw | backw | forw_rate  |
-            | motorway | designated  | designated\|designated\|designated | 3     | hov        | yes    | x    |       | 25         |
-            | motorway | lane        |                                    | 3     | designated | yes    | x    |       | 25         |
+            | highway  | hov         | hov:lanes                          | lanes | access     | forw | backw | forw_rate  |
+            | primary  |             |                                    |       |            | x    | x     | 25         |
+            | motorway | designated  | designated\|designated\|designated | 3     | hov        | x    |       | 25         |
+            | motorway | lane        |                                    | 3     | designated | x    |       | 25         |
 
     @hov
     Scenario: Car - a way with all lanes HOV-designated is highly penalized by default (similar to hov=designated)

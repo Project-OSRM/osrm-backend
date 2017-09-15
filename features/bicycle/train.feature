@@ -21,17 +21,17 @@ Feature: Bike - Handle ferry routes
             | cd    | primary |         |         |
             | ef    | primary |         |         |
             | gh    | primary |         |         |
-            | bc    |         | train   |         |
-            | de    |         | train   | yes     |
-            | fg    |         | train   | no      |
+            | bc    | (nil)   | train   |         |
+            | de    | (nil)   | train   | yes     |
+            | fg    | (nil)   | train   | no      |
 
         When I route I should get
-            | from | to | route       |
-            | 1    | 2  |             |
-            | 2    | 3  | cd,de,ef,ef |
-            | 3    | 4  |             |
+            | from | to | route       | modes                         |
+            | 1    | 2  |             |                               |
+            | 2    | 3  | cd,de,ef,ef | cycling,train,cycling,cycling |
+            | 3    | 4  |             |                               |
 
-    Scenario: Bike - Bringing bikes on trains, invalid railway tag is accepted if access specified
+    Scenario: Bike - Ignore invalid railway tag is accepted if access specified
         Given the node map
             """
             a 1 b   c 2 d   e 3 f   g 4 h
@@ -48,10 +48,10 @@ Feature: Bike - Handle ferry routes
             | fg    |         | invalid_tag | no      |
 
         When I route I should get
-            | from | to | route |
-            | 1    | 2  |       |
-            | 2    | 3  | cd,de,ef|
-            | 3    | 4  |       |
+            | from | to | route    |
+            | 1    | 2  |          |
+            | 2    | 3  | cd,de,ef | 
+            | 3    | 4  |          |
 
     @construction
     Scenario: Bike - Don't route on railways under construction

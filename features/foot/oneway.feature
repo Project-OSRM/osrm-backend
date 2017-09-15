@@ -43,6 +43,8 @@ Feature: Foot - Oneway streets
     Scenario: Foot - Walking should respect oneway:foot
         Then routability should be
             | oneway:foot | oneway | junction   | forw | backw |
+            |             |        |            | x    | x     |
+            |             | yes    |            | x    | x     |
             | yes         |        |            | x    |       |
             | yes         | yes    |            | x    |       |
             | yes         | no     |            | x    |       |
