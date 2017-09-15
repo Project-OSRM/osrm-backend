@@ -87,6 +87,8 @@ inline unsigned generateServerProgramOptions(const int argc,
     using boost::program_options::value;
     using boost::filesystem::path;
 
+    const auto hardware_threads = std::max<int>(1, std::thread::hardware_concurrency());
+
     // declare a group of options that will be allowed only on command line
     boost::program_options::options_description generic_options("Options");
     generic_options.add_options() //
@@ -106,7 +108,7 @@ inline unsigned generateServerProgramOptions(const int argc,
          value<int>(&ip_port)->default_value(5000),
          "TCP/IP port") //
         ("threads,t",
-         value<int>(&config.use_threads_number)->default_value(8),
+         value<int>(&config.use_threads_number)->default_value(hardware_threads),
          "Number of threads to use") //
         ("shared-memory,s",
          value<bool>(&config.use_shared_memory)->implicit_value(true)->default_value(false),
@@ -194,6 +196,9 @@ inline unsigned generateServerProgramOptions(const int argc,
     {
         util::Log(logWARNING) << "Shared memory settings conflict with path settings.";
     }
+
+    // Adjust number of threads to hardware concurrency
+    config.use_threads_number = std::min(hardware_threads, config.use_threads_number);
 
     std::cout << visible_options;
     return INIT_OK_DO_NOT_START_ENGINE;
