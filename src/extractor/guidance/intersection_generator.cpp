@@ -192,10 +192,11 @@ IntersectionGenerator::ComputeIntersectionShape(const NodeID node_at_center_of_i
                  next != intersection.end();
                  ++curr, ++next)
             {
-                if (!bearings_order(*curr, *next))
-                { // If the true bearing is out of the initial order then adjust to keep the order.
-                    // The adjustment angle is at most 0.5 degree or a half-angle
-                    // between the current bearing and the base bearing to prevent overlaps.
+                if (bearings_order(*next, *curr))
+                { // If the true bearing is out of the initial order (next before current) then
+                    // adjust the next bearing to keep the order. The adjustment angle is at most
+                    // 0.5° or a half-angle between the current bearing and the base bearing.
+                    // to prevent overlapping over base bearing + 360°.
                     const auto angle_adjustment = std::min(
                         .5, util::restrictAngleToValidRange(base_bearing - curr->bearing) / 2.);
                     next->bearing =
