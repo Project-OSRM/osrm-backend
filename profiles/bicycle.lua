@@ -536,7 +536,7 @@ function process_way(profile, way, result)
 
     -- handle turn lanes and road classification, used for guidance
     WayHandlers.classification,
-    
+
     -- handle allowed start/end modes
     WayHandlers.startpoint,
 
@@ -544,7 +544,10 @@ function process_way(profile, way, result)
     WayHandlers.roundabouts,
 
     -- set name, ref and pronunciation
-    WayHandlers.names
+    WayHandlers.names,
+
+    -- set weight properties of the way
+    WayHandlers.weights
   }
 
   WayHandlers.run(profile,way,result,data,handlers)
