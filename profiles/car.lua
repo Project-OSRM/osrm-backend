@@ -1,12 +1,14 @@
 -- Car profile
 
-api_version = 2
+api_version = 3
 
 Set = require('lib/set')
 Sequence = require('lib/sequence')
 Handlers = require("lib/way_handlers")
+Relations = require("lib/relations")
 find_access_tag = require("lib/access").find_access_tag
 limit = require("lib/maxspeed").limit
+Utils = require("lib/utils")
 
 function setup()
   local use_left_hand_driving = false
@@ -279,7 +281,7 @@ function setup()
   }
 end
 
-function process_node(profile, node, result)
+function process_node(profile, node, result, relations)
   -- parse access and barrier tags
   local access = find_access_tag(node, profile.access_tags_hierarchy)
   if access then
@@ -306,7 +308,7 @@ function process_node(profile, node, result)
   end
 end
 
-function process_way(profile, way, result)
+function process_way(profile, way, result, relations)
   -- the intial filtering of ways based on presence of tags
   -- affects processing times significantly, because all ways
   -- have to be checked.
@@ -390,6 +392,74 @@ function process_way(profile, way, result)
   }
 
   WayHandlers.run(profile,way,result,data,handlers)
+
+  -- now process relations data
+  local matched_refs = nil;
+  if result.ref then
+    local match_res = Relations.match_to_ref(relations, result.ref)
+
+    local ref = ''
+    for _, m in pairs(match_res) do
+      if ref ~= '' then
+        ref = ref .. '; '
+      end
+
+      if m.dir then
+        ref = ref .. m.ref .. ' $' .. m.dir
+      else
+        ref = ref .. m.ref
+      end
+    end
+
+    result.ref = ref
+  end
+
+end
+
+function process_relation(profile, relation, result)
+  local t = relation:get_value_by_key("type")
+
+  function add_extra_data(m)
+    local name = relation:get_value_by_key("name")
+    if name then
+      result[m]['route_name'] = name
+    end
+
+    local ref = relation:get_value_by_key("ref")
+    if ref then
+      result[m]['route_ref'] = ref
+    end
+  end
+
+  if t == 'route' then
+    local route = relation:get_value_by_key("route")
+    if route == 'road' then
+      for _, m in ipairs(relation:members()) do
+        -- process case, where directions set as role
+        local role = string.lower(m:role())
+        if role == 'north' or role == 'south' or role == 'west' or role == 'east' then
+          result[m]['route_direction'] = role
+          add_extra_data(m)
+        end
+      end
+    end
+
+    local direction = relation:get_value_by_key('direction')
+    if direction then
+      direction = string.lower(direction)
+      if direction == 'north' or direction == 'south' or direction == 'west' or direction == 'east' then
+        for _, m in ipairs(relation:members()) do
+          if m:role() == 'forward' then
+            result[m]['route_direction'] = direction
+            add_extra_data(m)
+          end
+        end
+      end
+    end
+  end
+
+  
+
 end
 
 function process_turn(profile, turn)
@@ -434,5 +504,6 @@ return {
   setup = setup,
   process_way = process_way,
   process_node = process_node,
+  process_relation = process_relation,
   process_turn = process_turn
 }
