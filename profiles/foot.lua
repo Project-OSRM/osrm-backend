@@ -237,7 +237,10 @@ function process_way(profile, way, result)
     WayHandlers.startpoint,
 
     -- set name, ref and pronunciation
-    WayHandlers.names
+    WayHandlers.names,
+
+    -- set weight properties of the way
+    WayHandlers.weights
   }
 
   WayHandlers.run(profile,way,result,data,handlers)

@@ -1,6 +1,7 @@
 # UNRELEASED
     - Profile:
       - New function to support relations: `process_relation`. Read more in profiles documentation.
+      - Support of `distance` weight in foot and bicycle profiles
     - Infrastructure:
       - Lua 5.1 support is removed due to lack of support in sol2 https://github.com/ThePhD/sol2/issues/302
     - Node.js Bindings:
