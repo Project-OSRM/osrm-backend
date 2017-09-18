@@ -8,7 +8,7 @@ var OSM = require('../lib/osm');
 
 module.exports = function () {
     this.Given(/^the profile "([^"]*)"$/, (profile, callback) => {
-        this.profile = profile;
+        this.profile = this.OSRM_PROFILE || profile;
         this.profileFile = path.join(this.PROFILES_PATH, this.profile + '.lua');
         callback();
     });

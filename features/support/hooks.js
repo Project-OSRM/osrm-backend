@@ -22,7 +22,7 @@ module.exports = function () {
     });
 
     this.BeforeFeature((feature, callback) => {
-        this.profile = this.DEFAULT_PROFILE;
+        this.profile = this.OSRM_PROFILE || this.DEFAULT_PROFILE;
         this.profileFile = path.join(this.PROFILES_PATH, this.profile + '.lua');
         this.setupFeatureCache(feature);
         callback();
