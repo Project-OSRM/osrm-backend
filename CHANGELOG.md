@@ -2,6 +2,7 @@
   - Changes from 5.12:
     - Profile:
       - New function to support relations: `process_relation`. Read more in profiles documentation.
+      - Append cardinal directions from route relations to ref fields to improve instructions
       - Support of `distance` weight in foot and bicycle profiles
       - Added `way:get_location_tag(key)` method to get location-dependent tags https://github.com/Project-OSRM/osrm-backend/wiki/Using-location-dependent-data-in-profiles
       - left-side driving mode is specified by a local Boolean flag `is_left_hand_driving` in `ExtractionWay` and `ExtractionTurn`
