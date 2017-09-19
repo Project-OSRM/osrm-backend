@@ -182,6 +182,61 @@ inline void encodePoint(const FixedPoint &pt, protozero::packed_field_uint32 &ge
     geometry.add_element(protozero::encode_zigzag32(dy));
 }
 
+std::vector<FixedLine> coordinatesToTileLine(const std::vector<util::Coordinate> &points,
+                                             const BBox &tile_bbox)
+{
+    FloatLine geo_line;
+    for (auto const & c : points)
+    {
+        geo_line.emplace_back(static_cast<double>(util::toFloating(c.lon)),
+                              static_cast<double>(util::toFloating(c.lat)));
+    }
+
+    linestring_t unclipped_line;
+
+    for (auto const &pt : geo_line)
+    {
+        double px_merc = pt.x * util::web_mercator::DEGREE_TO_PX;
+        double py_merc = util::web_mercator::latToY(util::FloatLatitude{pt.y}) *
+                         util::web_mercator::DEGREE_TO_PX;
+        // convert lon/lat to tile coordinates
+        const auto px = std::round(
+            ((px_merc - tile_bbox.minx) * util::web_mercator::TILE_SIZE / tile_bbox.width()) *
+            util::vector_tile::EXTENT / util::web_mercator::TILE_SIZE);
+        const auto py = std::round(
+            ((tile_bbox.maxy - py_merc) * util::web_mercator::TILE_SIZE / tile_bbox.height()) *
+            util::vector_tile::EXTENT / util::web_mercator::TILE_SIZE);
+
+        boost::geometry::append(unclipped_line, point_t(px, py));
+    }
+
+    multi_linestring_t clipped_line;
+
+    boost::geometry::intersection(clip_box, unclipped_line, clipped_line);
+
+    std::vector<FixedLine> result;
+
+    // b::g::intersection might return a line with one point if the
+    // original line was very short and coords were dupes
+    if (!clipped_line.empty())
+    {
+        for (auto const & cl : clipped_line)
+        {
+            if (cl.size() < 2)
+                continue;
+
+            FixedLine tile_line;
+            for (const auto &p : cl)
+                tile_line.emplace_back(p.get<0>(), p.get<1>());
+
+            result.emplace_back(std::move(tile_line));
+        }
+
+    }
+
+    return result;
+}
+
 /**
  * Returnx the x1,y1,x2,y2 pixel coordinates of a line in a given
  * tile.
@@ -308,6 +363,50 @@ std::vector<std::size_t> getEdgeIndex(const std::vector<RTreeLeaf> &edges)
     return sorted_edge_indexes;
 }
 
+std::vector<NodeID> getSegregatedNodes(const DataFacadeBase &facade, const std::vector<RTreeLeaf> &edges)
+{
+    const double kDist = 50.f;
+
+    auto calcNodeLength = [&facade](NodeID nodeID)
+    {
+        double length = 0.f;
+        std::vector<NodeID> geometry;
+        auto const geomIndex = facade.GetGeometryIndex(nodeID);
+        if (geomIndex.forward)
+            geometry = facade.GetUncompressedForwardGeometry(geomIndex.id);
+        else
+            geometry = facade.GetUncompressedReverseGeometry(geomIndex.id);
+
+        if (geometry.size() > 1)
+        {
+            for (auto i = 1; i < geometry.size(); ++i)
+            {
+                length += osrm::util::coordinate_calculation::haversineDistance(
+                            facade.GetCoordinateOfNode(geometry[i - 1]),
+                            facade.GetCoordinateOfNode(geometry[i]));
+            }
+        }
+
+        return length;
+    };
+
+    std::vector<NodeID> result;
+    for (RTreeLeaf const & e : edges)
+    {
+        auto const addId = [&result, &calcNodeLength, &kDist](NodeID nodeID)
+        {
+            if (calcNodeLength(nodeID) < kDist)
+                result.push_back(nodeID);
+        };
+
+        if (e.forward_segment_id.enabled)
+            addId(e.forward_segment_id.id);
+        if (e.reverse_segment_id.enabled)
+            addId(e.reverse_segment_id.id);
+    }
+    return result;
+}
+
 void encodeVectorTile(const DataFacadeBase &facade,
                       unsigned x,
                       unsigned y,
@@ -315,6 +414,7 @@ void encodeVectorTile(const DataFacadeBase &facade,
                       const std::vector<RTreeLeaf> &edges,
                       const std::vector<std::size_t> &sorted_edge_indexes,
                       const std::vector<routing_algorithms::TurnData> &all_turn_data,
+                      const std::vector<NodeID> &segregated_nodes,
                       std::string &pbf_buffer)
 {
 
@@ -863,6 +963,73 @@ void encodeVectorTile(const DataFacadeBase &facade,
                         feature_writer, util::vector_tile::FEATURE_GEOMETRIES_TAG);
                     encodePoint(tile_point, geometry);
                 }
+
+
+            }
+        }
+
+        {
+            protozero::pbf_writer line_layer_writer(tile_writer, util::vector_tile::LAYER_TAG);
+            line_layer_writer.add_uint32(util::vector_tile::VERSION_TAG, 2);       // version
+            line_layer_writer.add_string(util::vector_tile::NAME_TAG, "internal-nodes"); // name
+            line_layer_writer.add_uint32(util::vector_tile::EXTENT_TAG,
+                                          util::vector_tile::EXTENT); // extent
+
+            unsigned id = 0;
+            for (auto edgeNodeID : segregated_nodes)
+            {
+                auto const geomIndex = facade.GetGeometryIndex(edgeNodeID);
+                std::vector<NodeID> geometry;
+
+                if (geomIndex.forward)
+                    geometry = facade.GetUncompressedForwardGeometry(geomIndex.id);
+                else
+                    geometry = facade.GetUncompressedReverseGeometry(geomIndex.id);
+
+                std::vector<util::Coordinate> points;
+                for (auto const nodeID : geometry)
+                    points.push_back(facade.GetCoordinateOfNode(nodeID));
+
+                const auto encode_tile_line = [&line_layer_writer, &id](
+                    const FixedLine &tile_line,
+                    std::int32_t &start_x,
+                    std::int32_t &start_y) {
+
+                    protozero::pbf_writer feature_writer(line_layer_writer,
+                                                         util::vector_tile::FEATURE_TAG);
+
+                    feature_writer.add_enum(
+                        util::vector_tile::GEOMETRY_TAG,
+                        util::vector_tile::GEOMETRY_TYPE_LINE); // geometry type
+
+                    feature_writer.add_uint64(util::vector_tile::ID_TAG, id++); // id
+                    {
+
+                        protozero::packed_field_uint32 field(
+                            feature_writer, util::vector_tile::FEATURE_ATTRIBUTES_TAG);
+                    }
+                    {
+
+                        // Encode the geometry for the feature
+                        protozero::packed_field_uint32 geometry(
+                            feature_writer, util::vector_tile::FEATURE_GEOMETRIES_TAG);
+                        encodeLinestring(tile_line, geometry, start_x, start_y);
+                    }
+                };
+
+                std::int32_t start_x = 0;
+                std::int32_t start_y = 0;
+
+                auto tile_lines = coordinatesToTileLine(points, tile_bbox);
+                if (!tile_lines.empty())
+                {
+                    for (auto const & tl : tile_lines)
+                    {
+                        encode_tile_line(tl,
+                                         start_x,
+                                         start_y);
+                    }
+                }
             }
         }
     }
@@ -879,6 +1046,7 @@ Status TilePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
 
     const auto &facade = algorithms.GetFacade();
     auto edges = getEdges(facade, parameters.x, parameters.y, parameters.z);
+    auto segregated_nodes = getSegregatedNodes(facade, edges);
 
     auto edge_index = getEdgeIndex(edges);
 
@@ -892,7 +1060,7 @@ Status TilePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
     }
 
     encodeVectorTile(
-        facade, parameters.x, parameters.y, parameters.z, edges, edge_index, turns, pbf_buffer);
+        facade, parameters.x, parameters.y, parameters.z, edges, edge_index, turns, segregated_nodes, pbf_buffer);
 
     return Status::Ok;
 }
