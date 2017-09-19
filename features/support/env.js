@@ -45,7 +45,7 @@ module.exports = function () {
         this.OSRM_PORT = process.env.OSRM_PORT && parseInt(process.env.OSRM_PORT) || 5000;
         this.HOST = 'http://127.0.0.1:' + this.OSRM_PORT;
         
-        this.OSRM_PROFILE = process.env.PROFILE
+        this.OSRM_PROFILE = process.env.OSRM_PROFILE
 
         if (this.PLATFORM_WINDOWS) {
             this.TERMSIGNAL = 9;

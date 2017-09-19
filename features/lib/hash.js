@@ -20,11 +20,11 @@ module.exports =  {
         });
     },
 
-     hashOfFile: (path, cb) => {
+     hashOfFile: (path, additional_content, cb) => {
         fs.readFile(path, (err, result) => {
             if (err) return cb(err);
             let checksum = crypto.createHash('md5');
-            checksum.update(result);
+            checksum.update(result + (additional_content || "") );
             cb(null, checksum.digest('hex'));
         });
     }
