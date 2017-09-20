@@ -322,11 +322,11 @@ void backwardRoutingStep(const DataFacade<Algorithm> &facade,
 }
 
 template <typename Algorithm>
-std::vector<EdgeWeight> manyToManySearch(SearchEngineData<Algorithm> &engine_working_data,
-                                         const DataFacade<Algorithm> &facade,
-                                         const std::vector<PhantomNode> &phantom_nodes,
-                                         std::vector<std::size_t> source_indices,
-                                         std::vector<std::size_t> target_indices)
+std::vector<EdgeDuration> manyToManySearch(SearchEngineData<Algorithm> &engine_working_data,
+                                           const DataFacade<Algorithm> &facade,
+                                           const std::vector<PhantomNode> &phantom_nodes,
+                                           std::vector<std::size_t> source_indices,
+                                           std::vector<std::size_t> target_indices)
 {
     if (source_indices.empty())
     {
@@ -415,19 +415,56 @@ std::vector<EdgeWeight> manyToManySearch(SearchEngineData<Algorithm> &engine_wor
     return durations_table;
 }
 
-template std::vector<EdgeWeight>
+template std::vector<EdgeDuration>
 manyToManySearch(SearchEngineData<ch::Algorithm> &engine_working_data,
                  const DataFacade<ch::Algorithm> &facade,
                  const std::vector<PhantomNode> &phantom_nodes,
                  std::vector<std::size_t> source_indices,
                  std::vector<std::size_t> target_indices);
 
-template std::vector<EdgeWeight>
+template std::vector<EdgeDuration>
 manyToManySearch(SearchEngineData<mld::Algorithm> &engine_working_data,
                  const DataFacade<mld::Algorithm> &facade,
                  const std::vector<PhantomNode> &phantom_nodes,
                  std::vector<std::size_t> source_indices,
                  std::vector<std::size_t> target_indices);
+
+namespace mld
+{
+
+template <bool DIRECTION>
+std::vector<EdgeDuration> oneToManySearch(SearchEngineData<Algorithm> &engine_working_data,
+                                          const DataFacade<Algorithm> &facade,
+                                          const std::vector<PhantomNode> &phantom_nodes,
+                                          std::size_t phantom_index,
+                                          std::vector<std::size_t> phantom_indices)
+{
+    if (phantom_indices.empty())
+    {
+        phantom_indices.resize(phantom_nodes.size());
+        std::iota(phantom_indices.begin(), phantom_indices.end(), 0);
+    }
+
+    std::vector<EdgeWeight> weights(phantom_nodes.size(), INVALID_EDGE_WEIGHT);
+    std::vector<EdgeDuration> durations(phantom_nodes.size(), MAXIMAL_EDGE_DURATION);
+
+    return durations;
+}
+
+template std::vector<EdgeDuration>
+oneToManySearch<FORWARD_DIRECTION>(SearchEngineData<Algorithm> &engine_working_data,
+                                   const DataFacade<Algorithm> &facade,
+                                   const std::vector<PhantomNode> &phantom_nodes,
+                                   std::size_t phantom_index,
+                                   std::vector<std::size_t> phantom_indices);
+
+template std::vector<EdgeDuration>
+oneToManySearch<REVERSE_DIRECTION>(SearchEngineData<Algorithm> &engine_working_data,
+                                   const DataFacade<Algorithm> &facade,
+                                   const std::vector<PhantomNode> &phantom_nodes,
+                                   std::size_t phantom_index,
+                                   std::vector<std::size_t> phantom_indices);
+} // mld
 
 } // namespace routing_algorithms
 } // namespace engine
