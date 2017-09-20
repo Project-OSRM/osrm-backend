@@ -41,6 +41,17 @@ Feature: Basic Distance Matrix
             | c | 30 | 20 | 0  | 30 |
             | d | 60 | 50 | 30 | 0  |
 
+        When I request a travel time matrix I should get
+            |   | a  | b  | c  | d  |
+            | a | 0  | 10 | 30 | 60 |
+
+        When I request a travel time matrix I should get
+            |   |  a |
+            | a |  0 |
+            | b | 10 |
+            | c | 30 |
+            | d | 60 |
+
     Scenario: Testbot - Travel time matrix with fuzzy match
         Given the node map
             """
@@ -131,6 +142,13 @@ Feature: Basic Distance Matrix
         When I request a travel time matrix I should get
             |   | a | b  | e  | f  |
             | a | 0 | 10 | 20 | 30 |
+
+        When I request a travel time matrix I should get
+            |   |  a |
+            | a |  0 |
+            | b | 10 |
+            | e | 20 |
+            | f | 30 |
 
      Scenario: Testbot - Travel time 3x2 matrix
         Given the node map

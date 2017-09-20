@@ -11,7 +11,7 @@ module.exports = function () {
         var waypoints = [],
             columnHeaders = tableRows[0].slice(1),
             rowHeaders = tableRows.map((h) => h[0]).slice(1),
-            symmetric = columnHeaders.every((ele, i) => ele === rowHeaders[i]);
+            symmetric = columnHeaders.length == rowHeaders.length && columnHeaders.every((ele, i) => ele === rowHeaders[i]);
 
         if (symmetric) {
             columnHeaders.forEach((nodeName) => {
