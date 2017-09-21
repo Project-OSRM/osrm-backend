@@ -1074,3 +1074,22 @@ Feature: Collapse
         When I route I should get
             | waypoints | bearings | route          | turns                                             | locations |
             | 1,2       | 90 270   | ab,bd,bd,ab,ab | depart,turn left,continue uturn,turn right,arrive | _,b,d,b,_ |
+
+
+    Scenario: Correct bearings after collapsing u-turns
+        Given the node map
+            """
+            a--------------------b--------------c
+                                 |               
+            d--------------------e--------------f
+            """
+
+        And the ways
+            | nodes | highway   | name    | oneway |
+            | cba   | secondary | Main St | yes    |
+            | def   | secondary | Main St | yes    |
+            | eb    | secondary | Main St |        |
+
+        When I route I should get
+            | waypoints | bearing_before | bearing_after | turns                        |
+            | c,f       | 0,268,90        | 270,90,0     | depart,continue uturn,arrive |

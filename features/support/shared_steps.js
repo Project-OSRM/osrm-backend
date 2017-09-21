@@ -35,7 +35,8 @@ module.exports = function () {
                     if (err) return cb(err);
                     if (body && body.length) {
                         let destinations, exits, pronunciations, instructions, refs, bearings, turns, modes, times, classes,
-                            distances, summary, intersections, lanes, locations, annotation, weight_name, weights, approaches;
+                            distances, summary, intersections, lanes, locations, annotation, weight_name, weights, approaches,
+                            bearing_befores, bearing_afters;
 
                         let json = JSON.parse(body);
 
@@ -63,6 +64,8 @@ module.exports = function () {
                             weight_name = this.weightName(json.routes[0]);
                             weights = this.weightList(json.routes[0]);
                             approaches = this.approachList(json.routes[0]);
+                            bearing_befores = this.step_bearing_befores(json.routes[0]);
+                            bearing_afters = this.step_bearing_afters(json.routes[0]);
                         }
 
                         if (headers.has('status')) {
@@ -185,6 +188,8 @@ module.exports = function () {
                         putValue('weights', weights);
                         putValue('weight', weight);
                         putValue('approach', approaches);
+                        putValue('bearing_before', bearing_befores);
+                        putValue('bearing_after', bearing_afters);
 
                         for (var key in row) {
                             if (this.FuzzyMatch.match(got[key], row[key])) {

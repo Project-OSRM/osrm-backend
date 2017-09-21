@@ -250,6 +250,18 @@ module.exports = function () {
             .join(',');
     };
 
+    this.step_bearing_befores = (instructions) => {
+        return instructions.legs.reduce((allsteps,leg) => allsteps.concat(leg.steps), [])
+            .map(step => step.maneuver.bearing_before)
+            .join(',');
+    };
+
+    this.step_bearing_afters = (instructions) => {
+        return instructions.legs.reduce((allsteps,leg) => allsteps.concat(leg.steps), [])
+            .map(step => step.maneuver.bearing_after)
+            .join(',');
+    };
+
     this.intersectionList = (instructions) => {
         return instructions.legs.reduce((m, v) => m.concat(v.steps), [])
             .map( v => {
