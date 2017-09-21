@@ -40,8 +40,11 @@
 #include <boost/optional/optional.hpp>
 #include <boost/scope_exit.hpp>
 
+#include <osmium/handler/node_locations_for_ways.hpp>
+#include <osmium/index/map/sparse_mem_map.hpp>
 #include <osmium/io/any_input.hpp>
 #include <osmium/thread/pool.hpp>
+#include <osmium/visitor.hpp>
 
 #include <tbb/pipeline.h>
 #include <tbb/task_scheduler_init.h>
@@ -341,7 +344,7 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
         config.parse_conditionals,
         restrictions);
 
-    using SharedBuffer = std::shared_ptr<const osmium::memory::Buffer>;
+    using SharedBuffer = std::shared_ptr<osmium::memory::Buffer>;
     struct ParsedBuffer
     {
         SharedBuffer buffer;
@@ -351,11 +354,12 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
         std::vector<InputConditionalTurnRestriction> resulting_restrictions;
     };
 
+    // Read OSM data
     tbb::filter_t<void, SharedBuffer> buffer_reader(
         tbb::filter::serial_in_order, [&](tbb::flow_control &fc) {
             if (auto buffer = reader->read())
             {
-                return std::make_shared<const osmium::memory::Buffer>(std::move(buffer));
+                return std::make_shared<osmium::memory::Buffer>(std::move(buffer));
             }
             else
             {
@@ -363,6 +367,22 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
                 return SharedBuffer{};
             }
         });
+
+    // Cache node locations (assumes nodes are placed before ways)
+    using osmium_index_type =
+        osmium::index::map::SparseMemMap<osmium::unsigned_object_id_type, osmium::Location>;
+    using osmium_location_handler_type = osmium::handler::NodeLocationsForWays<osmium_index_type>;
+
+    osmium_index_type location_cache;
+    osmium_location_handler_type location_handler(location_cache);
+
+    tbb::filter_t<SharedBuffer, SharedBuffer> location_cacher(
+        tbb::filter::serial_in_order, [&location_handler](SharedBuffer buffer) {
+            osmium::apply(buffer->begin(), buffer->end(), location_handler);
+            return buffer;
+        });
+
+    // Process OSM elements
     tbb::filter_t<SharedBuffer, std::shared_ptr<ParsedBuffer>> buffer_transform(
         tbb::filter::parallel, [&](const SharedBuffer buffer) {
             if (!buffer)
@@ -379,6 +399,8 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
                                                   parsed_buffer->resulting_restrictions);
             return parsed_buffer;
         });
+
+    //
     tbb::filter_t<std::shared_ptr<ParsedBuffer>, void> buffer_storage(
         tbb::filter::serial_in_order, [&](const std::shared_ptr<ParsedBuffer> parsed_buffer) {
             if (!parsed_buffer)
@@ -436,8 +458,9 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
         (config.use_metadata ? osmium::io::read_meta::yes : osmium::io::read_meta::no)));
 
     // Number of pipeline tokens that yielded the best speedup was about 1.5 * num_cores
+    // TODO: make location_cacher conditional
     tbb::parallel_pipeline(tbb::task_scheduler_init::default_num_threads() * 1.5,
-                           buffer_reader & buffer_transform & buffer_storage);
+                           buffer_reader & location_cacher & buffer_transform & buffer_storage);
 
     TIMER_STOP(parsing);
     util::Log() << "Parsing finished after " << TIMER_SEC(parsing) << " seconds";
