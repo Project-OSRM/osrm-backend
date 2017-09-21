@@ -1,5 +1,6 @@
 #include "engine/plugins/tile.hpp"
 #include "engine/plugins/plugin_base.hpp"
+#include "engine/plugins/crossing_check.hpp"
 
 #include "util/coordinate_calculation.hpp"
 #include "util/string_view.hpp"
@@ -365,46 +366,17 @@ std::vector<std::size_t> getEdgeIndex(const std::vector<RTreeLeaf> &edges)
 
 std::vector<NodeID> getSegregatedNodes(const DataFacadeBase &facade, const std::vector<RTreeLeaf> &edges)
 {
-    const double kDist = 50.f;
+  CrossingCheck doCheck(dynamic_cast<CrossingCheck::DataFacadeT const &>(facade), 30.0);
 
-    auto calcNodeLength = [&facade](NodeID nodeID)
-    {
-        double length = 0.f;
-        std::vector<NodeID> geometry;
-        auto const geomIndex = facade.GetGeometryIndex(nodeID);
-        if (geomIndex.forward)
-            geometry = facade.GetUncompressedForwardGeometry(geomIndex.id);
-        else
-            geometry = facade.GetUncompressedReverseGeometry(geomIndex.id);
+  for (RTreeLeaf const & e : edges)
+  {
+    if (e.forward_segment_id.enabled)
+      doCheck.ProcessNode(e.forward_segment_id.id);
+//  if (e.reverse_segment_id.enabled)
+//    addId(e.reverse_segment_id.id);
+  }
 
-        if (geometry.size() > 1)
-        {
-            for (auto i = 1; i < geometry.size(); ++i)
-            {
-                length += osrm::util::coordinate_calculation::haversineDistance(
-                            facade.GetCoordinateOfNode(geometry[i - 1]),
-                            facade.GetCoordinateOfNode(geometry[i]));
-            }
-        }
-
-        return length;
-    };
-
-    std::vector<NodeID> result;
-    for (RTreeLeaf const & e : edges)
-    {
-        auto const addId = [&result, &calcNodeLength, &kDist](NodeID nodeID)
-        {
-            if (calcNodeLength(nodeID) < kDist)
-                result.push_back(nodeID);
-        };
-
-        if (e.forward_segment_id.enabled)
-            addId(e.forward_segment_id.id);
-        if (e.reverse_segment_id.enabled)
-            addId(e.reverse_segment_id.id);
-    }
-    return result;
+  return doCheck.GetResult();
 }
 
 void encodeVectorTile(const DataFacadeBase &facade,
