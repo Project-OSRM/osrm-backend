@@ -1,6 +1,6 @@
 -- Car profile
 
-api_version = 2
+api_version = 3
 
 Set = require('lib/set')
 Sequence = require('lib/sequence')
@@ -303,7 +303,7 @@ function process_node(profile, node, result)
   end
 end
 
-function process_way(profile, way, result, location_data)
+function process_way(profile, way, result, relations, location_data)
   -- the intial filtering of ways based on presence of tags
   -- affects processing times significantly, because all ways
   -- have to be checked.
@@ -387,7 +387,8 @@ function process_way(profile, way, result, location_data)
     WayHandlers.weights
   }
 
-  WayHandlers.run(profile, way, result, data, handlers, location_data)
+  print (profile, way, result, data, handlers, relations, location_data)
+  WayHandlers.run(profile, way, result, data, handlers, relations, location_data)
 end
 
 function process_turn(profile, turn)
