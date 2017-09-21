@@ -978,7 +978,6 @@ void LuaScriptingContext::ProcessNode(const osmium::Node &node,
     }
 }
 
-
 namespace
 {
 // boost::variant visitor that inserts a key-value pair in a Lua table
@@ -1018,7 +1017,8 @@ void LuaScriptingContext::ProcessWay(const osmium::Way &way,
         }
         else
         {
-            way_function(profile_table, way, result, relations, toLua(state, location_dependent_data(way)));
+            way_function(
+                profile_table, way, result, relations, toLua(state, location_dependent_data(way)));
         }
         break;
     case 2:
