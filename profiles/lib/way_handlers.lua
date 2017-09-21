@@ -552,7 +552,7 @@ function WayHandlers.blocked_ways(profile,way,result,data)
   end
 end
 
-function WayHandlers.driving_side(profile, way, result, data, location_data)
+function WayHandlers.driving_side(profile, way, result, data, relations, location_data)
    local driving_side = way:get_value_by_key("driving_side")
    if driving_side == 'left' then
       result.is_left_hand_driving = true
@@ -584,9 +584,9 @@ end
 -- if the handler chain should be aborted.
 -- To ensure the correct order of method calls, use a Sequence of handler names.
 
-function WayHandlers.run(profile, way, result, data, handlers, location_data)
+function WayHandlers.run(profile, way, result, data, handlers, relatons, location_data)
   for i,handler in ipairs(handlers) do
-    if handler(profile, way, result, data, location_data) == false then
+    if handler(profile, way, result, data, relatons, location_data) == false then
       return false
     end
   end

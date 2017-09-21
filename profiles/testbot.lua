@@ -5,7 +5,7 @@
 -- Secondary road:  18km/h = 18000m/3600s = 100m/20s
 -- Tertiary road:  12km/h = 12000m/3600s = 100m/30s
 
-api_version = 2
+api_version = 3
 
 function setup()
   return {
