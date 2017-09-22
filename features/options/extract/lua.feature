@@ -6,7 +6,7 @@ Feature: osrm-extract lua ways:get_nodes()
         """
         functions = require('testbot')
 
-        function way_function(profile, way, result)
+        functions.process_way = function(profile, way, result)
           for _, node in ipairs(way:get_nodes()) do
             print('node id ' .. node:id())
           end
@@ -14,7 +14,6 @@ Feature: osrm-extract lua ways:get_nodes()
           result.forward_speed = 1
         end
 
-        functions.process_way = way_function
         return functions
         """
         And the node map
@@ -32,12 +31,36 @@ Feature: osrm-extract lua ways:get_nodes()
         And stdout should contain "node id 2"
 
 
+    Scenario: osrm-extract location-dependent data without add-locations-to-ways preprocessing and node locations cache
+        Given the profile file
+        """
+        functions = require('testbot')
+
+        functions.process_way = function(profile, way, result, relations)
+           print(way:get_location_tag('driving_side'))
+        end
+
+        return functions
+        """
+        And the node map
+            """
+            a b
+            """
+        And the ways
+            | nodes |
+            | ab    |
+        And the data has been saved to disk
+
+        When I try to run "osrm-extract --profile {profile_file} {osm_file} --location-dependent-data test/data/regions/null-island.geojson --use-locations-cache=false"
+        Then it should exit with an error
+        And stderr should contain "invalid location"
+
     Scenario: osrm-extract location-dependent data
         Given the profile file
         """
         functions = require('testbot')
 
-        function way_function(profile, way, result, relations)
+        functions.process_way = function(profile, way, result, relations)
            for _, key in ipairs({'answer', 'boolean', 'object', 'array'}) do
              print (key .. ' ' .. tostring(way:get_location_tag(key)))
            end
@@ -45,7 +68,6 @@ Feature: osrm-extract lua ways:get_nodes()
            result.forward_speed = 1
         end
 
-        functions.process_way = way_function
         return functions
         """
         And the node map
@@ -57,7 +79,7 @@ Feature: osrm-extract lua ways:get_nodes()
             | ab    |
         And the data has been saved to disk
 
-        When I run "osrm-extract --profile {profile_file} {osm_file} --location-dependent-data test/data/regions/null-island.geojson"
+        When I run "osrm-extract --profile {profile_file} {osm_file} --location-dependent-data test/data/regions/null-island.geojson  --use-locations-cache=false"
         Then it should exit successfully
         And stdout should contain "answer 42"
         And stdout should contain "boolean true"
@@ -70,14 +92,13 @@ Feature: osrm-extract lua ways:get_nodes()
         """
         functions = require('testbot')
 
-        function way_function(profile, way, result, relations)
+        functions.process_way = function(profile, way, result, relations)
            print('ISO3166-1 ' .. (way:get_location_tag('ISO3166-1') or 'none'))
            print('answer ' .. (way:get_location_tag('answer') or 'none'))
            result.forward_mode = mode.driving
            result.forward_speed = 1
         end
 
-        functions.process_way = way_function
         return functions
         """
         And the node locations
@@ -95,7 +116,7 @@ Feature: osrm-extract lua ways:get_nodes()
             | ef    | Null Island    |
         And the data has been saved to disk
 
-        When I run "osrm-extract --profile {profile_file} {osm_file} --location-dependent-data test/data/regions/null-island.geojson --location-dependent-data test/data/regions/hong-kong.geojson"
+        When I run "osrm-extract --profile {profile_file} {osm_file} --location-dependent-data test/data/regions/null-island.geojson --location-dependent-data test/data/regions/hong-kong.geojson --use-locations-cache=false"
         Then it should exit successfully
         And stdout should not contain "1 GeoJSON polygon"
         And stdout should contain "2 GeoJSON polygons"
@@ -108,13 +129,12 @@ Feature: osrm-extract lua ways:get_nodes()
         """
         functions = require('testbot')
 
-        function way_function(profile, way, result, relations)
+        functions.process_way = function(profile, way, result, relations)
            print ('answer ' .. tostring(way:get_location_tag('answer')))
            result.forward_mode = mode.driving
            result.forward_speed = 1
         end
 
-        functions.process_way = way_function
         return functions
         """
         And the node map

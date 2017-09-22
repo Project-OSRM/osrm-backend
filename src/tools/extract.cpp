@@ -66,7 +66,12 @@ return_code parseArguments(int argc,
                               boost::program_options::value<std::vector<boost::filesystem::path>>(
                                   &extractor_config.location_dependent_data_paths)
                                   ->composing(),
-                              "GeoJSON files with location-dependent data");
+                              "GeoJSON files with location-dependent data")(
+        "use-locations-cache",
+        boost::program_options::value<bool>(&extractor_config.use_locations_cache)
+            ->implicit_value(true)
+            ->default_value(extractor_config.use_locations_cache),
+        "Use internal nodes locations cache for location-dependent data lookups");
 
     bool dummy;
     // hidden options, will be allowed on command line, but will not be

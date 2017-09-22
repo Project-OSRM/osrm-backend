@@ -68,7 +68,8 @@ struct ExtractorConfig final : storage::IOConfig
                                       ".osrm.icd",
                                       ".osrm.cnbg",
                                       ".osrm.cnbg_to_ebg"}),
-                                 requested_num_threads(0)
+                                 requested_num_threads(0),
+                                 use_locations_cache(true)
     {
     }
 
@@ -88,6 +89,7 @@ struct ExtractorConfig final : storage::IOConfig
 
     bool use_metadata;
     bool parse_conditionals;
+    bool use_locations_cache;
 };
 }
 }
