@@ -121,21 +121,22 @@ private:
 
       for (auto edge : m_facade.GetAdjacentEdgeRange(e.m_id))
       {
-        auto const & data = m_facade.GetEdgeData(edge);
-        if (!data.forward)
-          continue;
+//        auto const & data = m_facade.GetEdgeData(edge);
+//        if (!data.forward)
+//          continue;
 
         NodeID const target = m_facade.GetTarget(edge);
         auto const targetGeometry = ReadGeometry(target);
 
         if (sourceGeometry.size() == targetGeometry.size() &&
-            std::equal(sourceGeometry.begin(), sourceGeometry.end(), targetGeometry.rbegin()))
+            (std::equal(sourceGeometry.begin(), sourceGeometry.end(), targetGeometry.begin()) ||
+             std::equal(sourceGeometry.begin(), sourceGeometry.end(), targetGeometry.rbegin())))
         {
           // skip UTurn on same node geometry
           continue;
         }
 
-        if (targetGeometry.front() == n.m_id)
+        if (targetGeometry.front() == n.m_id || targetGeometry.back() == n.m_id)
           fn(ConstructEdge(target, targetGeometry));
       }
     }

@@ -149,13 +149,17 @@ void CrossingCheck::ProcessNode(NodeID nodeID)
   DataFacadeSource source(m_facade);
 
   EdgeT const edge = source.ConstructEdge(nodeID, source.ReadGeometry(nodeID));
+  NodeT nodes[] = { edge.m_n1, edge.m_n2 };
 
-  auto const candidates = GetCrossEdges(edge, edge.m_n2, source);
-  Reconsider(candidates);
+  for (auto const & n : nodes)
+  {
+    auto const candidates = GetCrossEdges(edge, n, source);
+    Reconsider(candidates);
 
-  for (auto const & e : candidates)
-    if (e.m_internal)
-      m_results.push_back(e.m_id);
+    for (auto const & e : candidates)
+      if (e.m_internal)
+        m_results.push_back(e.m_id);
+  }
 }
 
 }
