@@ -453,9 +453,10 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
         osmium::io::Reader reader(
             input_file, osmium::osm_entity_bits::node | osmium::osm_entity_bits::way, read_meta);
 
-        // TODO: make location_cacher conditional
         const auto pipeline =
-            buffer_reader(reader) & location_cacher & buffer_transformer & buffer_storage;
+            scripting_environment.HasLocationDependentData() && config.use_locations_cache
+                ? buffer_reader(reader) & location_cacher & buffer_transformer & buffer_storage
+                : buffer_reader(reader) & buffer_transformer & buffer_storage;
         tbb::parallel_pipeline(num_threads, pipeline);
     }
 

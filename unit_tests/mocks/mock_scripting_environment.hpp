@@ -44,6 +44,8 @@ class MockScriptingEnvironment : public extractor::ScriptingEnvironment
         std::vector<extractor::InputConditionalTurnRestriction> &) override final
     {
     }
+
+    bool HasLocationDependentData() const { return false; };
 };
 
 } // namespace test

@@ -91,6 +91,8 @@ class Sol2ScriptingEnvironment final : public ScriptingEnvironment
         std::vector<std::pair<const osmium::Relation &, ExtractionRelation>> &resulting_relations,
         std::vector<InputConditionalTurnRestriction> &resulting_restrictions) override;
 
+    bool HasLocationDependentData() const { return !location_dependent_data.empty(); }
+
   private:
     LuaScriptingContext &GetSol2Context();
 

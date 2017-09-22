@@ -70,6 +70,8 @@ class ScriptingEnvironment
         std::vector<std::pair<const osmium::Way &, ExtractionWay>> &resulting_ways,
         std::vector<std::pair<const osmium::Relation &, ExtractionRelation>> &resulting_relations,
         std::vector<InputConditionalTurnRestriction> &resulting_restrictions) = 0;
+
+    virtual bool HasLocationDependentData() const = 0;
 };
 }
 }
