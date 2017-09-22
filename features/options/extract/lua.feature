@@ -37,7 +37,8 @@ Feature: osrm-extract lua ways:get_nodes()
         """
         functions = require('testbot')
 
-        function way_function(profile, way, result, relations, location_data)
+        function way_function(profile, way, result, relations)
+           location_data = way:get_location_tags()
            assert(location_data)
            for k, v in pairs(location_data) do print (k .. ' ' .. tostring(v)) end
            result.forward_mode = mode.driving
@@ -67,7 +68,8 @@ Feature: osrm-extract lua ways:get_nodes()
         """
         functions = require('testbot')
 
-        function way_function(profile, way, result, relations, location_data)
+        function way_function(profile, way, result, relations)
+           location_data = way:get_location_tags()
            assert(location_data)
            print('ISO3166-1 ' .. (location_data['ISO3166-1'] or 'none'))
            result.forward_mode = mode.driving
@@ -101,7 +103,8 @@ Feature: osrm-extract lua ways:get_nodes()
         """
         functions = require('testbot')
 
-        function way_function(profile, way, result, relations, location_data)
+        function way_function(profile, way, result, relations)
+           location_data = way:get_location_tags()
            assert(location_data)
            for k, v in pairs(location_data) do print (k .. ' ' .. tostring(v)) end
            result.forward_mode = mode.driving

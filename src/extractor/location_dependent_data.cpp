@@ -265,20 +265,5 @@ LocationDependentData::properties_t LocationDependentData::operator()(const poin
 
     return result;
 }
-
-LocationDependentData::properties_t LocationDependentData::operator()(const osmium::Way &way) const
-{
-    // HEURISTIC: use a single node (last) of the way to localize the way
-    // For more complicated scenarios a proper merging of multiple tags
-    // at one or many locations must be provided
-    const auto &nodes = way.nodes();
-
-    // TODO: the next call requires an OSM file preprocessed with a command
-    //   osmium add-locations-to-ways --keep-untagged-nodes
-    const auto &location = nodes.back().location();
-    const point_t point(location.lon(), location.lat());
-
-    return operator()(point);
-}
 }
 }
