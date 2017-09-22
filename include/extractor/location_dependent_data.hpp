@@ -40,8 +40,6 @@ struct LocationDependentData
 
     properties_t operator()(const point_t &point) const;
 
-    properties_t operator()(const osmium::Way &way) const;
-
   private:
     void loadLocationDependentData(const boost::filesystem::path &file_path);
 

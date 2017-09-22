@@ -552,16 +552,19 @@ function WayHandlers.blocked_ways(profile,way,result,data)
   end
 end
 
-function WayHandlers.driving_side(profile, way, result, data, relations, location_data)
+function WayHandlers.driving_side(profile, way, result, data)
    local driving_side = way:get_value_by_key("driving_side")
    if driving_side == 'left' then
       result.is_left_hand_driving = true
    elseif driving_side == 'right' then
       result.is_left_hand_driving = false
-   elseif location_data then
-      result.is_left_hand_driving = location_data['driving_side'] == 'left'
-   elseif profile.left_hand_driving then
-      result.is_left_hand_driving = true
+   else
+      location_data = way:get_location_tags()
+      if location_data and location_data['driving_side'] then
+         result.is_left_hand_driving = location_data['driving_side'] == 'left'
+      else
+         result.is_left_hand_driving = profile.left_hand_driving
+      end
    end
 end
 
@@ -580,13 +583,13 @@ end
 -- WayHandlers.run(handlers,way,result,data,profile)
 --
 -- Each method in the list will be called on the WayHandlers object.
--- All handlers must accept the parameteres (profile, way, result, data[, location_data]) and return false
+-- All handlers must accept the parameteres (profile, way, result, data, relations) and return false
 -- if the handler chain should be aborted.
 -- To ensure the correct order of method calls, use a Sequence of handler names.
 
-function WayHandlers.run(profile, way, result, data, handlers, relatons, location_data)
+function WayHandlers.run(profile, way, result, data, handlers, relations)
   for i,handler in ipairs(handlers) do
-    if handler(profile, way, result, data, relatons, location_data) == false then
+    if handler(profile, way, result, data, relations) == false then
       return false
     end
   end

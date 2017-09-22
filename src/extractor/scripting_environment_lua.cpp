@@ -42,6 +42,8 @@ namespace osrm
 namespace extractor
 {
 
+namespace
+{
 template <class T>
 auto get_value_by_key(T const &object, const char *key) -> decltype(object.get_value_by_key(key))
 {
@@ -78,6 +80,28 @@ template <class T> double latToDouble(T const &object)
 template <class T> double lonToDouble(T const &object)
 {
     return static_cast<double>(util::toFloating(object.lon));
+}
+
+// boost::variant visitor that inserts a key-value pair in a Lua table
+struct table_setter : public boost::static_visitor<>
+{
+    table_setter(sol::table &table, const std::string &key) : table(table), key(key) {}
+    template <typename T> void operator()(const T &value) const { table.set(key, value); }
+    void operator()(const boost::blank &) const { /* ignore */}
+
+    sol::table &table;
+    const std::string &key;
+};
+
+// Converts a properties map into a Lua table
+sol::table toLua(sol::state &state, const LocationDependentData::properties_t &properties)
+{
+    auto table = sol::table(state, sol::create);
+    std::for_each(properties.begin(), properties.end(), [&table](const auto &property) {
+        boost::apply_visitor(table_setter(table, property.first), property.second);
+    });
+    return table;
+}
 }
 
 Sol2ScriptingEnvironment::Sol2ScriptingEnvironment(
@@ -285,10 +309,20 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
         &get_value_by_key<osmium::Way>,
         "id",
         &osmium::Way::id,
+        "version",
+        &osmium::Way::version,
         "get_nodes",
         [](const osmium::Way &way) { return sol::as_table(way.nodes()); },
-        "version",
-        &osmium::Way::version);
+        "get_location_tags",
+        [&context](const osmium::Way &way) {
+            // HEURISTIC: use a single node (last) of the way to localize the way
+            // For more complicated scenarios a proper merging of multiple tags
+            // at one or many locations must be provided
+            const auto &nodes = way.nodes();
+            const auto &location = nodes.back().location();
+            return toLua(context.state,
+                         context.location_dependent_data({location.lon(), location.lat()}));
+        });
 
     context.state.new_usertype<osmium::RelationMember>(
         "RelationMember",
@@ -978,30 +1012,6 @@ void LuaScriptingContext::ProcessNode(const osmium::Node &node,
     }
 }
 
-namespace
-{
-// boost::variant visitor that inserts a key-value pair in a Lua table
-struct table_setter : public boost::static_visitor<>
-{
-    table_setter(sol::table &table, const std::string &key) : table(table), key(key) {}
-    template <typename T> void operator()(const T &value) const { table.set(key, value); }
-    void operator()(const boost::blank &) const { /* ignore */}
-
-    sol::table &table;
-    const std::string &key;
-};
-
-// Converts a properties map into a Lua table
-sol::table toLua(sol::state &state, const LocationDependentData::properties_t properties)
-{
-    auto table = sol::table(state, sol::create);
-    std::for_each(properties.begin(), properties.end(), [&table](const auto &property) {
-        boost::apply_visitor(table_setter(table, property.first), property.second);
-    });
-    return table;
-}
-}
-
 void LuaScriptingContext::ProcessWay(const osmium::Way &way,
                                      ExtractionWay &result,
                                      const ExtractionRelationContainer::RelationList &relations)
@@ -1011,15 +1021,7 @@ void LuaScriptingContext::ProcessWay(const osmium::Way &way,
     switch (api_version)
     {
     case 3:
-        if (location_dependent_data.empty())
-        {
-            way_function(profile_table, way, result, relations);
-        }
-        else
-        {
-            way_function(
-                profile_table, way, result, relations, toLua(state, location_dependent_data(way)));
-        }
+        way_function(profile_table, way, result, relations);
         break;
     case 2:
         way_function(profile_table, way, result);

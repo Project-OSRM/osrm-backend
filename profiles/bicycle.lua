@@ -550,7 +550,7 @@ function process_way(profile, way, result)
     WayHandlers.weights
   }
 
-  WayHandlers.run(profile,way,result,data,handlers)
+  WayHandlers.run(profile, way, result, data, handlers)
 end
 
 function process_turn(profile, turn)
