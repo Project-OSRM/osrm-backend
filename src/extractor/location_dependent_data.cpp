@@ -195,17 +195,25 @@ void LocationDependentData::loadLocationDependentData(const boost::filesystem::p
                 << polygons.size() << " GeoJSON polygons";
 }
 
-LocationDependentData::properties_t LocationDependentData::operator()(const point_t &point) const
+LocationDependentData::property_t LocationDependentData::operator()(const point_t &point,
+                                                                    const char *key) const
 {
-    properties_t result;
+    property_t result;
 
-    auto merger = [this, &result](const rtree_t::value_type &rtree_entry) {
-        const auto &polygon_properties = properties[polygons[rtree_entry.second].second];
-        result.insert(polygon_properties.begin(), polygon_properties.end());
+    auto setter = [this, &result, &key](const rtree_t::value_type &rtree_entry) {
+        const auto properties_index = polygons[rtree_entry.second].second;
+        const auto &polygon_properties = properties[properties_index];
+        const auto it = polygon_properties.find(key);
+        if (it != polygon_properties.end())
+        {
+            result = it->second;
+        }
     };
 
     // Search the R-tree and collect a Lua table of tags that correspond to the location
-    rtree.query(boost::geometry::index::intersects(point) &&
+    rtree.query(boost::geometry::index::satisfies(
+                    [&result](const rtree_t::value_type &) { return result.which() == 0; }) &&
+                    boost::geometry::index::intersects(point) &&
                     boost::geometry::index::satisfies([this, &point](const rtree_t::value_type &v) {
 
                         // Simple point-in-polygon algorithm adapted from
@@ -261,7 +269,7 @@ LocationDependentData::properties_t LocationDependentData::operator()(const poin
 
                         return inside;
                     }),
-                boost::make_function_output_iterator(std::ref(merger)));
+                boost::make_function_output_iterator(std::ref(setter)));
 
     return result;
 }

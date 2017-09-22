@@ -82,26 +82,13 @@ template <class T> double lonToDouble(T const &object)
     return static_cast<double>(util::toFloating(object.lon));
 }
 
-// boost::variant visitor that inserts a key-value pair in a Lua table
-struct table_setter : public boost::static_visitor<>
+struct to_lua_object : public boost::static_visitor<sol::object>
 {
-    table_setter(sol::table &table, const std::string &key) : table(table), key(key) {}
-    template <typename T> void operator()(const T &value) const { table.set(key, value); }
-    void operator()(const boost::blank &) const { /* ignore */}
-
-    sol::table &table;
-    const std::string &key;
+    to_lua_object(sol::state &state) : state(state) {}
+    template <typename T> auto operator()(T &v) const { return sol::make_object(state, v); }
+    auto operator()(boost::blank &) const { return sol::nil; }
+    sol::state &state;
 };
-
-// Converts a properties map into a Lua table
-sol::table toLua(sol::state &state, const LocationDependentData::properties_t &properties)
-{
-    auto table = sol::table(state, sol::create);
-    std::for_each(properties.begin(), properties.end(), [&table](const auto &property) {
-        boost::apply_visitor(table_setter(table, property.first), property.second);
-    });
-    return table;
-}
 }
 
 Sol2ScriptingEnvironment::Sol2ScriptingEnvironment(
@@ -313,15 +300,15 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
         &osmium::Way::version,
         "get_nodes",
         [](const osmium::Way &way) { return sol::as_table(way.nodes()); },
-        "get_location_tags",
-        [&context](const osmium::Way &way) {
+        "get_location_tag",
+        [&context](const osmium::Way &way, const char *key) {
             // HEURISTIC: use a single node (last) of the way to localize the way
             // For more complicated scenarios a proper merging of multiple tags
             // at one or many locations must be provided
             const auto &nodes = way.nodes();
             const auto &location = nodes.back().location();
-            return toLua(context.state,
-                         context.location_dependent_data({location.lon(), location.lat()}));
+            auto value = context.location_dependent_data({location.lon(), location.lat()}, key);
+            return boost::apply_visitor(to_lua_object(context.state), value);
         });
 
     context.state.new_usertype<osmium::RelationMember>(
