@@ -38,9 +38,9 @@ Feature: osrm-extract lua ways:get_nodes()
         functions = require('testbot')
 
         function way_function(profile, way, result, relations)
-           location_data = way:get_location_tags()
-           assert(location_data)
-           for k, v in pairs(location_data) do print (k .. ' ' .. tostring(v)) end
+           for _, key in ipairs({'answer', 'boolean', 'object', 'array'}) do
+             print (key .. ' ' .. tostring(way:get_location_tag(key)))
+           end
            result.forward_mode = mode.driving
            result.forward_speed = 1
         end
@@ -60,7 +60,9 @@ Feature: osrm-extract lua ways:get_nodes()
         When I run "osrm-extract --profile {profile_file} {osm_file} --location-dependent-data test/data/regions/null-island.geojson"
         Then it should exit successfully
         And stdout should contain "answer 42"
-        And stdout should not contain "array"
+        And stdout should contain "boolean true"
+        And stdout should contain "array nil"
+        And stdout should contain "object nil"
 
 
     Scenario: osrm-extract location-dependent data with multi-polygons
@@ -69,9 +71,7 @@ Feature: osrm-extract lua ways:get_nodes()
         functions = require('testbot')
 
         function way_function(profile, way, result, relations)
-           location_data = way:get_location_tags()
-           assert(location_data)
-           print('ISO3166-1 ' .. (location_data['ISO3166-1'] or 'none'))
+           print('ISO3166-1 ' .. (way:get_location_tag('ISO3166-1') or 'none'))
            result.forward_mode = mode.driving
            result.forward_speed = 1
         end
@@ -104,9 +104,7 @@ Feature: osrm-extract lua ways:get_nodes()
         functions = require('testbot')
 
         function way_function(profile, way, result, relations)
-           location_data = way:get_location_tags()
-           assert(location_data)
-           for k, v in pairs(location_data) do print (k .. ' ' .. tostring(v)) end
+           print ('answer ' .. tostring(way:get_location_tag('answer')))
            result.forward_mode = mode.driving
            result.forward_speed = 1
         end
@@ -126,4 +124,3 @@ Feature: osrm-extract lua ways:get_nodes()
         When I run "osrm-extract --profile {profile_file} {osm_file} --location-dependent-data test/data/regions/null-island.geojson"
         Then it should exit successfully
         And stdout should contain "answer 42"
-        And stdout should not contain "array"

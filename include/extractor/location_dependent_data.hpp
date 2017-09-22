@@ -38,7 +38,7 @@ struct LocationDependentData
 
     bool empty() const { return rtree.empty(); }
 
-    properties_t operator()(const point_t &point) const;
+    property_t operator()(const point_t &point, const char *key) const;
 
   private:
     void loadLocationDependentData(const boost::filesystem::path &file_path);

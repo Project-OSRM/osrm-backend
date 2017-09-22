@@ -553,18 +553,17 @@ function WayHandlers.blocked_ways(profile,way,result,data)
 end
 
 function WayHandlers.driving_side(profile, way, result, data)
-   local driving_side = way:get_value_by_key("driving_side")
+   local driving_side = way:get_value_by_key('driving_side')
+   if driving_side == nil then
+      driving_side = way:get_location_tag('driving_side')
+   end
+
    if driving_side == 'left' then
       result.is_left_hand_driving = true
    elseif driving_side == 'right' then
       result.is_left_hand_driving = false
    else
-      location_data = way:get_location_tags()
-      if location_data and location_data['driving_side'] then
-         result.is_left_hand_driving = location_data['driving_side'] == 'left'
-      else
-         result.is_left_hand_driving = profile.left_hand_driving
-      end
+      result.is_left_hand_driving = profile.left_hand_driving
    end
 end
 
