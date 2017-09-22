@@ -32,8 +32,6 @@ struct LocationDependentData
     using property_t = boost::variant<boost::blank, double, std::string, bool>;
     using properties_t = std::unordered_map<std::string, property_t>;
 
-    LocationDependentData(const boost::filesystem::path &path);
-
     LocationDependentData(const std::vector<boost::filesystem::path> &file_paths);
 
     bool empty() const { return rtree.empty(); }
@@ -41,7 +39,8 @@ struct LocationDependentData
     property_t operator()(const point_t &point, const char *key) const;
 
   private:
-    void loadLocationDependentData(const boost::filesystem::path &file_path);
+    void loadLocationDependentData(const boost::filesystem::path &file_path,
+                                   std::vector<rtree_t::value_type> &bounding_boxes);
 
     rtree_t rtree;
     std::vector<std::pair<polygon_bands_t, std::size_t>> polygons;

@@ -19,20 +19,22 @@ namespace osrm
 namespace extractor
 {
 
-LocationDependentData::LocationDependentData(const boost::filesystem::path &path)
-{
-    loadLocationDependentData(path);
-}
-
 LocationDependentData::LocationDependentData(const std::vector<boost::filesystem::path> &file_paths)
 {
+    std::vector<rtree_t::value_type> bounding_boxes;
     for (const auto &path : file_paths)
     {
-        loadLocationDependentData(path);
+        loadLocationDependentData(path, bounding_boxes);
     }
+
+    // Create R-tree for bounding boxes of collected polygons
+    rtree = rtree_t(bounding_boxes);
+    util::Log() << "Parsed " << properties.size() << " location-dependent features with "
+                << polygons.size() << " GeoJSON polygons";
 }
 
-void LocationDependentData::loadLocationDependentData(const boost::filesystem::path &file_path)
+void LocationDependentData::loadLocationDependentData(
+    const boost::filesystem::path &file_path, std::vector<rtree_t::value_type> &bounding_boxes)
 {
     if (file_path.empty())
         return;
@@ -64,7 +66,6 @@ void LocationDependentData::loadLocationDependentData(const boost::filesystem::p
     BOOST_ASSERT(geojson["features"].IsArray());
 
     const auto &features_array = geojson["features"].GetArray();
-    std::vector<rtree_t::value_type> bounding_boxes;
 
     auto convert_value = [](const auto &property) -> property_t {
         if (property.IsString())
@@ -188,11 +189,6 @@ void LocationDependentData::loadLocationDependentData(const boost::filesystem::p
             }
         }
     }
-
-    // Create R-tree for bounding boxes of collected polygons
-    rtree = rtree_t(bounding_boxes);
-    util::Log() << "Parsed " << properties.size() << " location-dependent features with "
-                << polygons.size() << " GeoJSON polygons";
 }
 
 LocationDependentData::property_t LocationDependentData::operator()(const point_t &point,
