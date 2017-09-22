@@ -49,7 +49,8 @@ BOOST_AUTO_TEST_CASE(polygon_tests)
 }
 ]})json");
 
-    LocationDependentData data(fixture.temporary_file);
+    LocationDependentData data({fixture.temporary_file});
+
     BOOST_CHECK_EQUAL(data(point_t(0, 0), "answer").which(), 0);
     BOOST_CHECK_EQUAL(boost::get<double>(data(point_t(1, 1), "answer")), 42);
     BOOST_CHECK_EQUAL(boost::get<double>(data(point_t(0, 1), "answer")), 42);
@@ -79,7 +80,8 @@ BOOST_AUTO_TEST_CASE(multy_polygon_tests)
 }
 ]})json");
 
-    LocationDependentData data(fixture.temporary_file);
+    LocationDependentData data({fixture.temporary_file});
+
     BOOST_CHECK_EQUAL(data(point_t(0, 2), "answer").which(), 0);
     BOOST_CHECK_EQUAL(data(point_t(0, -3), "answer").which(), 0);
     BOOST_CHECK_EQUAL(boost::get<double>(data(point_t(0, 0), "answer")), 42.);
@@ -109,7 +111,8 @@ BOOST_AUTO_TEST_CASE(polygon_merging_tests)
 }
 ]})json");
 
-    LocationDependentData data(fixture.temporary_file);
+    LocationDependentData data({fixture.temporary_file});
+
     BOOST_CHECK_EQUAL(boost::get<std::string>(data(point_t(-3, 3), "answer")), "a");
     BOOST_CHECK_EQUAL(boost::get<std::string>(data(point_t(-3, 1), "answer")), "a");
     BOOST_CHECK_EQUAL(boost::get<std::string>(data(point_t(-3, -3), "answer")), "a");
@@ -137,7 +140,7 @@ BOOST_AUTO_TEST_CASE(staircase_polygon)
 }
 ]})json");
 
-    LocationDependentData data(fixture.temporary_file);
+    LocationDependentData data({fixture.temporary_file});
 
     // all corners
     BOOST_CHECK_NE(data(point_t(0, 0), "answer").which(), 0);

@@ -72,6 +72,7 @@ Feature: osrm-extract lua ways:get_nodes()
 
         function way_function(profile, way, result, relations)
            print('ISO3166-1 ' .. (way:get_location_tag('ISO3166-1') or 'none'))
+           print('answer ' .. (way:get_location_tag('answer') or 'none'))
            result.forward_mode = mode.driving
            result.forward_speed = 1
         end
@@ -85,18 +86,22 @@ Feature: osrm-extract lua ways:get_nodes()
             | b    | 22.4901701 | 113.9455899 |  2 |
             | c    | 22.4901852 | 113.9458608 |  3 |
             | d    | 22.4904033 | 113.9456999 |  4 |
+            | e    |        1.1 |           1 |  5 |
+            | f    |        1.2 |           1 |  6 |
         And the ways with locations
             | nodes | #              |
             | ab    | Hong Kong      |
             | cd    | China Mainland |
+            | ef    | Null Island    |
         And the data has been saved to disk
 
         When I run "osrm-extract --profile {profile_file} {osm_file} --location-dependent-data test/data/regions/null-island.geojson --location-dependent-data test/data/regions/hong-kong.geojson"
         Then it should exit successfully
-        And stdout should contain "1 GeoJSON polygon"
+        And stdout should not contain "1 GeoJSON polygon"
         And stdout should contain "2 GeoJSON polygons"
         And stdout should contain "ISO3166-1 HK"
         And stdout should contain "ISO3166-1 none"
+        And stdout should contain "answer 42"
 
     Scenario: osrm-extract location-dependent data via locations cache
         Given the profile file
