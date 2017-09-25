@@ -40,7 +40,7 @@ ECHO msbuild version
 msbuild /version
 
 :: HARDCODE "x64" as it is uppercase on AppVeyor and download from S3 is case sensitive
-SET DEPSPKG=osrm-deps-win-x64-14.0.7z
+SET DEPSPKG=osrm-deps-win-x64-14.0-2017.09.7z
 
 :: local development
 ECHO.
