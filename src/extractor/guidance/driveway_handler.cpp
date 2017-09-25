@@ -14,10 +14,12 @@ namespace guidance
 
 DrivewayHandler::DrivewayHandler(const IntersectionGenerator &intersection_generator,
                                  const util::NodeBasedDynamicGraph &node_based_graph,
+                                 const EdgeBasedNodeDataContainer &node_data_container,
                                  const std::vector<util::Coordinate> &coordinates,
                                  const util::NameTable &name_table,
                                  const SuffixTable &street_name_suffix_table)
     : IntersectionHandler(node_based_graph,
+                          node_data_container,
                           coordinates,
                           name_table,
                           street_name_suffix_table,
@@ -38,13 +40,13 @@ bool DrivewayHandler::canProcess(const NodeID /*nid*/,
     const auto from_eid = intersection.getUTurnRoad().eid;
 
     if (intersection.size() <= 2 ||
-        node_based_graph.GetEdgeData(from_eid).road_classification.IsLowPriorityRoadClass())
+        node_based_graph.GetEdgeData(from_eid).flags.road_classification.IsLowPriorityRoadClass())
         return false;
 
     auto low_priority_count =
         std::count_if(intersection.begin(), intersection.end(), [this](const auto &road) {
             return node_based_graph.GetEdgeData(road.eid)
-                .road_classification.IsLowPriorityRoadClass();
+                .flags.road_classification.IsLowPriorityRoadClass();
         });
 
     // Process intersection if it has two edges with normal priority and one is the entry edge,
@@ -58,7 +60,7 @@ operator()(const NodeID nid, const EdgeID source_edge_id, Intersection intersect
     auto road =
         std::find_if(intersection.begin() + 1, intersection.end(), [this](const auto &road) {
             return !node_based_graph.GetEdgeData(road.eid)
-                        .road_classification.IsLowPriorityRoadClass();
+                        .flags.road_classification.IsLowPriorityRoadClass();
         });
 
     (void)nid;

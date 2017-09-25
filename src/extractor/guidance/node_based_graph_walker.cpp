@@ -15,8 +15,10 @@ namespace guidance
 
 // ---------------------------------------------------------------------------------
 NodeBasedGraphWalker::NodeBasedGraphWalker(const util::NodeBasedDynamicGraph &node_based_graph,
+                                           const EdgeBasedNodeDataContainer &node_data_container,
                                            const IntersectionGenerator &intersection_generator)
-    : node_based_graph(node_based_graph), intersection_generator(intersection_generator)
+    : node_based_graph(node_based_graph), node_data_container(node_data_container),
+      intersection_generator(intersection_generator)
 {
 }
 
@@ -64,21 +66,24 @@ boost::optional<EdgeID> SelectRoadByNameOnlyChoiceAndStraightness::
 operator()(const NodeID /*nid*/,
            const EdgeID /*via_edge_id*/,
            const IntersectionView &intersection,
-           const util::NodeBasedDynamicGraph &node_based_graph) const
+           const util::NodeBasedDynamicGraph &node_based_graph,
+           const EdgeBasedNodeDataContainer &node_data_container) const
 {
     BOOST_ASSERT(!intersection.empty());
-    const auto comparator = [this, &node_based_graph](const IntersectionViewData &lhs,
-                                                      const IntersectionViewData &rhs) {
+    const auto comparator = [&](const IntersectionViewData &lhs, const IntersectionViewData &rhs) {
         // the score of an elemnt results in an ranking preferring valid entries, if required over
         // invalid requested name_ids over non-requested narrow deviations over non-narrow
-        const auto score = [this, &node_based_graph](const IntersectionViewData &road) {
+        const auto score = [&](const IntersectionViewData &road) {
             double result_score = 0;
             // since angular deviation is limited by 0-180, we add 360 for invalid
             if (requires_entry && !road.entry_allowed)
                 result_score += 360.;
 
             // 180 for undesired name-ids
-            if (desired_name_id != node_based_graph.GetEdgeData(road.eid).name_id)
+            if (desired_name_id !=
+                node_data_container
+                    .GetAnnotation(node_based_graph.GetEdgeData(road.eid).annotation_data)
+                    .name_id)
                 result_score += 180;
 
             return result_score + angularDeviation(road.angle, STRAIGHT_ANGLE);
@@ -108,24 +113,27 @@ boost::optional<EdgeID> SelectStraightmostRoadByNameAndOnlyChoice::
 operator()(const NodeID /*nid*/,
            const EdgeID /*via_edge_id*/,
            const IntersectionView &intersection,
-           const util::NodeBasedDynamicGraph &node_based_graph) const
+           const util::NodeBasedDynamicGraph &node_based_graph,
+           const EdgeBasedNodeDataContainer &node_data_container) const
 {
     BOOST_ASSERT(!intersection.empty());
     if (intersection.size() == 1)
         return {};
 
-    const auto comparator = [this, &node_based_graph](const IntersectionViewData &lhs,
-                                                      const IntersectionViewData &rhs) {
+    const auto comparator = [&](const IntersectionViewData &lhs, const IntersectionViewData &rhs) {
         // the score of an elemnt results in an ranking preferring valid entries, if required over
         // invalid requested name_ids over non-requested narrow deviations over non-narrow
-        const auto score = [this, &node_based_graph](const IntersectionViewData &road) {
+        const auto score = [&](const IntersectionViewData &road) {
             double result_score = 0;
             // since angular deviation is limited by 0-180, we add 360 for invalid
             if (requires_entry && !road.entry_allowed)
                 result_score += 360.;
 
             // 180 for undesired name-ids
-            if (desired_name_id != node_based_graph.GetEdgeData(road.eid).name_id)
+            if (desired_name_id !=
+                node_data_container
+                    .GetAnnotation(node_based_graph.GetEdgeData(road.eid).annotation_data)
+                    .name_id)
                 result_score += 180;
 
             return result_score + angularDeviation(road.angle, STRAIGHT_ANGLE);
@@ -135,11 +143,11 @@ operator()(const NodeID /*nid*/,
     };
 
     const auto count_desired_name =
-        std::count_if(std::begin(intersection),
-                      std::end(intersection),
-                      [this, &node_based_graph](const auto &road) {
-                          return node_based_graph.GetEdgeData(road.eid).name_id == desired_name_id;
-                      });
+        std::count_if(std::begin(intersection), std::end(intersection), [&](const auto &road) {
+            return node_data_container
+                       .GetAnnotation(node_based_graph.GetEdgeData(road.eid).annotation_data)
+                       .name_id == desired_name_id;
+        });
     if (count_desired_name > 2)
         return {};
 
@@ -149,7 +157,9 @@ operator()(const NodeID /*nid*/,
     const auto is_valid_choice = !requires_entry || min_element->entry_allowed;
     const auto is_only_choice_with_same_name =
         count_desired_name <= 2 && // <= in case we come from a bridge
-        node_based_graph.GetEdgeData(min_element->eid).name_id == desired_name_id &&
+        node_data_container
+                .GetAnnotation(node_based_graph.GetEdgeData(min_element->eid).annotation_data)
+                .name_id == desired_name_id &&
         angularDeviation(min_element->angle, STRAIGHT_ANGLE) < 100; // don't do crazy turns
     const auto has_valid_angle =
         ((intersection.size() == 2 ||

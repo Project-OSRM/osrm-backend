@@ -11,6 +11,7 @@
       - Exposes `use_threads_number=Number` parameter of `EngineConfig` to limit a number of threads in a TBB internal pool
     - Internals
       - MLD uses a unidirectional Dijkstra for 1-to-N and N-to-1 matrices
+      - BREAKING: Internal file formats have changed, requiring a new pre-processing run
     - Guidance
       - Fixed some cases of sliproads pre-processing (https://github.com/Project-OSRM/osrm-backend/issues/4348)
       - don't suppress name announcements via sliproad handler

@@ -55,12 +55,12 @@ std::size_t loadGraph(const std::string &path,
             continue;
         }
 
-        if (input_edge.forward)
+        if (input_edge.flags.forward)
         {
             graph_edge_list.emplace_back(input_edge.source, input_edge.target);
         }
 
-        if (input_edge.backward)
+        if (input_edge.flags.backward)
         {
             graph_edge_list.emplace_back(input_edge.target, input_edge.source);
         }

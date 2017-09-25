@@ -12,6 +12,7 @@
 #include "customizer/edge_based_graph.hpp"
 
 #include "extractor/datasources.hpp"
+#include "extractor/edge_based_node.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
 #include "extractor/guidance/turn_lane_types.hpp"
 #include "extractor/intersection_bearings_container.hpp"
@@ -337,43 +338,21 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     void InitializeEdgeBasedNodeDataInformationPointers(storage::DataLayout &layout,
                                                         char *memory_ptr)
     {
-        const auto via_geometry_list_ptr =
-            layout.GetBlockPtr<GeometryID>(memory_ptr, storage::DataLayout::GEOMETRY_ID_LIST);
-        util::vector_view<GeometryID> geometry_ids(
-            via_geometry_list_ptr, layout.num_entries[storage::DataLayout::GEOMETRY_ID_LIST]);
+        const auto edge_based_node_list_ptr = layout.GetBlockPtr<extractor::EdgeBasedNode>(
+            memory_ptr, storage::DataLayout::EDGE_BASED_NODE_DATA_LIST);
+        util::vector_view<extractor::EdgeBasedNode> edge_based_node_data_list(
+            edge_based_node_list_ptr,
+            layout.num_entries[storage::DataLayout::EDGE_BASED_NODE_DATA_LIST]);
 
-        const auto name_id_list_ptr =
-            layout.GetBlockPtr<NameID>(memory_ptr, storage::DataLayout::NAME_ID_LIST);
-        util::vector_view<NameID> name_ids(name_id_list_ptr,
-                                           layout.num_entries[storage::DataLayout::NAME_ID_LIST]);
+        const auto annotation_data_list_ptr =
+            layout.GetBlockPtr<extractor::NodeBasedEdgeAnnotation>(
+                memory_ptr, storage::DataLayout::ANNOTATION_DATA_LIST);
+        util::vector_view<extractor::NodeBasedEdgeAnnotation> annotation_data(
+            annotation_data_list_ptr,
+            layout.num_entries[storage::DataLayout::ANNOTATION_DATA_LIST]);
 
-        const auto component_id_list_ptr =
-            layout.GetBlockPtr<ComponentID>(memory_ptr, storage::DataLayout::COMPONENT_ID_LIST);
-        util::vector_view<ComponentID> component_ids(
-            component_id_list_ptr, layout.num_entries[storage::DataLayout::COMPONENT_ID_LIST]);
-
-        const auto travel_mode_list_ptr = layout.GetBlockPtr<extractor::TravelMode>(
-            memory_ptr, storage::DataLayout::TRAVEL_MODE_LIST);
-        util::vector_view<extractor::TravelMode> travel_modes(
-            travel_mode_list_ptr, layout.num_entries[storage::DataLayout::TRAVEL_MODE_LIST]);
-
-        const auto classes_list_ptr =
-            layout.GetBlockPtr<extractor::ClassData>(memory_ptr, storage::DataLayout::CLASSES_LIST);
-        util::vector_view<extractor::ClassData> classes(
-            classes_list_ptr, layout.num_entries[storage::DataLayout::CLASSES_LIST]);
-
-        auto is_left_hand_driving_ptr = layout.GetBlockPtr<unsigned>(
-            memory_ptr, storage::DataLayout::IS_LEFT_HAND_DRIVING_LIST);
-        util::vector_view<bool> is_left_hand_driving(
-            is_left_hand_driving_ptr,
-            layout.num_entries[storage::DataLayout::IS_LEFT_HAND_DRIVING_LIST]);
-
-        edge_based_node_data = extractor::EdgeBasedNodeDataView(std::move(geometry_ids),
-                                                                std::move(name_ids),
-                                                                std::move(component_ids),
-                                                                std::move(travel_modes),
-                                                                std::move(classes),
-                                                                std::move(is_left_hand_driving));
+        edge_based_node_data = extractor::EdgeBasedNodeDataView(
+            std::move(edge_based_node_data_list), std::move(annotation_data));
     }
 
     void InitializeEdgeInformationPointers(storage::DataLayout &layout, char *memory_ptr)
@@ -465,7 +444,6 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
             geometries_index_ptr, data_layout.num_entries[storage::DataLayout::GEOMETRIES_INDEX]);
 
         auto num_entries = data_layout.num_entries[storage::DataLayout::GEOMETRIES_NODE_LIST];
-
         auto geometries_node_list_ptr = data_layout.GetBlockPtr<NodeID>(
             memory_block, storage::DataLayout::GEOMETRIES_NODE_LIST);
         util::vector_view<NodeID> geometry_node_list(geometries_node_list_ptr, num_entries);

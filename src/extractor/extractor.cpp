@@ -7,6 +7,7 @@
 #include "extractor/extraction_way.hpp"
 #include "extractor/extractor_callbacks.hpp"
 #include "extractor/files.hpp"
+#include "extractor/node_based_graph_factory.hpp"
 #include "extractor/raster_source.hpp"
 #include "extractor/restriction_filter.hpp"
 #include "extractor/restriction_parser.hpp"
@@ -209,26 +210,79 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     util::DeallocatingVector<EdgeBasedEdge> edge_based_edge_list;
     std::vector<bool> node_is_startpoint;
     std::vector<EdgeWeight> edge_based_node_weights;
-    std::vector<util::Coordinate> coordinates;
-    extractor::PackedOSMIDs osm_node_ids;
 
-    auto graph_size = BuildEdgeExpandedGraph(scripting_environment,
-                                             coordinates,
-                                             osm_node_ids,
-                                             edge_based_nodes_container,
-                                             edge_based_node_segments,
-                                             node_is_startpoint,
-                                             edge_based_node_weights,
-                                             edge_based_edge_list,
-                                             config.GetPath(".osrm.icd").string(),
-                                             turn_restrictions,
-                                             conditional_turn_restrictions,
-                                             turn_lane_map);
+    // Create a node-based graph from the OSRM file
+    NodeBasedGraphFactory node_based_graph_factory(config.GetPath(".osrm"),
+                                                   scripting_environment,
+                                                   turn_restrictions,
+                                                   conditional_turn_restrictions);
 
-    auto number_of_node_based_nodes = graph_size.first;
-    auto max_edge_id = graph_size.second - 1;
+    util::Log() << "Writing nodes for nodes-based and edges-based graphs ...";
+    auto const &coordinates = node_based_graph_factory.GetCoordinates();
+    files::writeNodes(
+        config.GetPath(".osrm.nbg_nodes"), coordinates, node_based_graph_factory.GetOsmNodes());
+    node_based_graph_factory.ReleaseOsmNodes();
+
+    auto const &node_based_graph = node_based_graph_factory.GetGraph();
+
+    // The osrm-partition tool requires the compressed node based graph with an embedding.
+    //
+    // The `Run` function above re-numbers non-reverse compressed node based graph edges
+    // to a continuous range so that the nodes in the edge based graph are continuous.
+    //
+    // Luckily node based node ids still coincide with the coordinate array.
+    // That's the reason we can only here write out the final compressed node based graph.
+
+    // Dumps to file asynchronously and makes sure we wait for its completion.
+    std::future<void> compressed_node_based_graph_writing;
+
+    BOOST_SCOPE_EXIT_ALL(&)
+    {
+        if (compressed_node_based_graph_writing.valid())
+            compressed_node_based_graph_writing.wait();
+    };
+
+    compressed_node_based_graph_writing = std::async(std::launch::async, [&] {
+        WriteCompressedNodeBasedGraph(
+            config.GetPath(".osrm.cnbg").string(), node_based_graph, coordinates);
+    });
+
+    node_based_graph_factory.GetCompressedEdges().PrintStatistics();
+
+    const auto &barrier_nodes = node_based_graph_factory.GetBarriers();
+    const auto &traffic_signals = node_based_graph_factory.GetTrafficSignals();
+    // stealing the annotation data from the node-based graph
+    edge_based_nodes_container =
+        EdgeBasedNodeDataContainer({}, std::move(node_based_graph_factory.GetAnnotationData()));
+
+    conditional_turn_restrictions =
+        removeInvalidRestrictions(std::move(conditional_turn_restrictions), node_based_graph);
+
+    const auto number_of_node_based_nodes = node_based_graph.GetNumberOfNodes();
+
+    const auto number_of_edge_based_nodes =
+        BuildEdgeExpandedGraph(node_based_graph,
+                               coordinates,
+                               node_based_graph_factory.GetCompressedEdges(),
+                               barrier_nodes,
+                               traffic_signals,
+                               turn_restrictions,
+                               conditional_turn_restrictions,
+                               turn_lane_map,
+                               scripting_environment,
+                               edge_based_nodes_container,
+                               edge_based_node_segments,
+                               node_is_startpoint,
+                               edge_based_node_weights,
+                               edge_based_edge_list,
+                               config.GetPath(".osrm.icd").string());
 
     TIMER_STOP(expansion);
+
+    // output the geometry of the node-based graph, needs to be done after the last usage, since it
+    // destroys internal containers
+    files::writeSegmentData(config.GetPath(".osrm.geometry"),
+                            *node_based_graph_factory.GetCompressedEdges().ToSegmentData());
 
     util::Log() << "Saving edge-based node weights to file.";
     TIMER_START(timer_write_node_weights);
@@ -241,8 +295,10 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     util::Log() << "Done writing. (" << TIMER_SEC(timer_write_node_weights) << ")";
 
     util::Log() << "Computing strictly connected components ...";
-    FindComponents(
-        max_edge_id, edge_based_edge_list, edge_based_node_segments, edge_based_nodes_container);
+    FindComponents(number_of_edge_based_nodes,
+                   edge_based_edge_list,
+                   edge_based_node_segments,
+                   edge_based_nodes_container);
 
     util::Log() << "Building r-tree ...";
     TIMER_START(rtree);
@@ -250,13 +306,12 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
 
     TIMER_STOP(rtree);
 
-    util::Log() << "Writing nodes for nodes-based and edges-based graphs ...";
-    files::writeNodes(config.GetPath(".osrm.nbg_nodes"), coordinates, osm_node_ids);
     files::writeNodeData(config.GetPath(".osrm.ebg_nodes"), edge_based_nodes_container);
 
     util::Log() << "Writing edge-based-graph edges       ... " << std::flush;
     TIMER_START(write_edges);
-    files::writeEdgeBasedGraph(config.GetPath(".osrm.ebg"), max_edge_id, edge_based_edge_list);
+    files::writeEdgeBasedGraph(
+        config.GetPath(".osrm.ebg"), number_of_edge_based_nodes, edge_based_edge_list);
     TIMER_STOP(write_edges);
     util::Log() << "ok, after " << TIMER_SEC(write_edges) << "s";
 
@@ -265,7 +320,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     const auto nodes_per_second =
         static_cast<std::uint64_t>(number_of_node_based_nodes / TIMER_SEC(expansion));
     const auto edges_per_second =
-        static_cast<std::uint64_t>((max_edge_id + 1) / TIMER_SEC(expansion));
+        static_cast<std::uint64_t>((number_of_edge_based_nodes) / TIMER_SEC(expansion));
 
     util::Log() << "Expansion: " << nodes_per_second << " nodes/sec and " << edges_per_second
                 << " edges/sec";
@@ -492,7 +547,7 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
                            std::move(extraction_containers.conditional_turn_restrictions));
 }
 
-void Extractor::FindComponents(unsigned max_edge_id,
+void Extractor::FindComponents(unsigned number_of_edge_based_nodes,
                                const util::DeallocatingVector<EdgeBasedEdge> &input_edge_list,
                                const std::vector<EdgeBasedNodeSegment> &input_node_segments,
                                EdgeBasedNodeDataContainer &nodes_container) const
@@ -506,8 +561,8 @@ void Extractor::FindComponents(unsigned max_edge_id,
     {
         BOOST_ASSERT_MSG(static_cast<unsigned int>(std::max(edge.data.weight, 1)) > 0,
                          "edge distance < 1");
-        BOOST_ASSERT(edge.source <= max_edge_id);
-        BOOST_ASSERT(edge.target <= max_edge_id);
+        BOOST_ASSERT(edge.source < number_of_edge_based_nodes);
+        BOOST_ASSERT(edge.target < number_of_edge_based_nodes);
         if (edge.data.forward)
         {
             edges.push_back({edge.source, edge.target});
@@ -525,8 +580,8 @@ void Extractor::FindComponents(unsigned max_edge_id,
     {
         if (segment.reverse_segment_id.enabled)
         {
-            BOOST_ASSERT(segment.forward_segment_id.id <= max_edge_id);
-            BOOST_ASSERT(segment.reverse_segment_id.id <= max_edge_id);
+            BOOST_ASSERT(segment.forward_segment_id.id < number_of_edge_based_nodes);
+            BOOST_ASSERT(segment.reverse_segment_id.id < number_of_edge_based_nodes);
             edges.push_back({segment.forward_segment_id.id, segment.reverse_segment_id.id});
             edges.push_back({segment.reverse_segment_id.id, segment.forward_segment_id.id});
         }
@@ -535,98 +590,54 @@ void Extractor::FindComponents(unsigned max_edge_id,
     tbb::parallel_sort(edges.begin(), edges.end());
     edges.erase(std::unique(edges.begin(), edges.end()), edges.end());
 
-    auto uncontracted_graph = UncontractedGraph(max_edge_id + 1, edges);
+    auto uncontracted_graph = UncontractedGraph(number_of_edge_based_nodes, edges);
 
     TarjanSCC<UncontractedGraph> component_search(uncontracted_graph);
     component_search.Run();
 
-    for (NodeID node_id = 0; node_id <= max_edge_id; ++node_id)
+    for (NodeID node_id = 0; node_id < number_of_edge_based_nodes; ++node_id)
     {
         const auto forward_component = component_search.GetComponentID(node_id);
         const auto component_size = component_search.GetComponentSize(forward_component);
         const auto is_tiny = component_size < config.small_component_size;
-        nodes_container.SetComponentID(node_id, {1 + forward_component, is_tiny});
+        BOOST_ASSERT(node_id < nodes_container.NumberOfNodes());
+        nodes_container.nodes[node_id].component_id = {1 + forward_component, is_tiny};
     }
-}
-
-/**
-  \brief Load node based graph from .osrm file
-  */
-std::shared_ptr<util::NodeBasedDynamicGraph>
-Extractor::LoadNodeBasedGraph(std::unordered_set<NodeID> &barriers,
-                              std::unordered_set<NodeID> &traffic_signals,
-                              std::vector<util::Coordinate> &coordiantes,
-                              extractor::PackedOSMIDs &osm_node_ids)
-{
-    storage::io::FileReader file_reader(config.GetPath(".osrm"),
-                                        storage::io::FileReader::VerifyFingerprint);
-
-    auto barriers_iter = inserter(barriers, end(barriers));
-    auto traffic_signals_iter = inserter(traffic_signals, end(traffic_signals));
-
-    NodeID number_of_node_based_nodes = util::loadNodesFromFile(
-        file_reader, barriers_iter, traffic_signals_iter, coordiantes, osm_node_ids);
-
-    util::Log() << " - " << barriers.size() << " bollard nodes, " << traffic_signals.size()
-                << " traffic lights";
-
-    std::vector<NodeBasedEdge> edge_list;
-    util::loadEdgesFromFile(file_reader, edge_list);
-
-    if (edge_list.empty())
-    {
-        throw util::exception("Node-based-graph (" + config.GetPath(".osrm").string() +
-                              ") contains no edges." + SOURCE_REF);
-    }
-
-    return util::NodeBasedDynamicGraphFromEdges(number_of_node_based_nodes, edge_list);
 }
 
 /**
  \brief Building an edge-expanded graph from node-based input and turn restrictions
 */
-std::pair<std::size_t, EdgeID> Extractor::BuildEdgeExpandedGraph(
+
+EdgeID Extractor::BuildEdgeExpandedGraph(
+    // input data
+    const util::NodeBasedDynamicGraph &node_based_graph,
+    const std::vector<util::Coordinate> &coordinates,
+    const CompressedEdgeContainer &compressed_edge_container,
+    const std::unordered_set<NodeID> &barrier_nodes,
+    const std::unordered_set<NodeID> &traffic_signals,
+    const std::vector<TurnRestriction> &turn_restrictions,
+    const std::vector<ConditionalTurnRestriction> &conditional_turn_restrictions,
+    // might have to be updated to add new lane combinations
+    guidance::LaneDescriptionMap &turn_lane_map,
+    // for calculating turn penalties
     ScriptingEnvironment &scripting_environment,
-    std::vector<util::Coordinate> &coordinates,
-    extractor::PackedOSMIDs &osm_node_ids,
+    // output data
     EdgeBasedNodeDataContainer &edge_based_nodes_container,
     std::vector<EdgeBasedNodeSegment> &edge_based_node_segments,
     std::vector<bool> &node_is_startpoint,
     std::vector<EdgeWeight> &edge_based_node_weights,
     util::DeallocatingVector<EdgeBasedEdge> &edge_based_edge_list,
-    const std::string &intersection_class_output_file,
-    std::vector<TurnRestriction> &turn_restrictions,
-    std::vector<ConditionalTurnRestriction> &conditional_turn_restrictions,
-    guidance::LaneDescriptionMap &turn_lane_map)
+    const std::string &intersection_class_output_file)
 {
-    std::unordered_set<NodeID> barrier_nodes;
-    std::unordered_set<NodeID> traffic_signals;
-
-    auto node_based_graph =
-        LoadNodeBasedGraph(barrier_nodes, traffic_signals, coordinates, osm_node_ids);
-
-    CompressedEdgeContainer compressed_edge_container;
-    GraphCompressor graph_compressor;
-    graph_compressor.Compress(barrier_nodes,
-                              traffic_signals,
-                              scripting_environment,
-                              turn_restrictions,
-                              conditional_turn_restrictions,
-                              *node_based_graph,
-                              compressed_edge_container);
-
-    conditional_turn_restrictions =
-        removeInvalidRestrictions(std::move(conditional_turn_restrictions), *node_based_graph);
-
     util::NameTable name_table(config.GetPath(".osrm.names").string());
 
     EdgeBasedGraphFactory edge_based_graph_factory(node_based_graph,
+                                                   edge_based_nodes_container,
                                                    compressed_edge_container,
                                                    barrier_nodes,
                                                    traffic_signals,
                                                    coordinates,
-                                                   osm_node_ids,
-                                                   scripting_environment.GetProfileProperties(),
                                                    name_table,
                                                    turn_lane_map);
 
@@ -646,8 +657,6 @@ std::pair<std::size_t, EdgeID> Extractor::BuildEdgeExpandedGraph(
         WayRestrictionMap via_way_restriction_map(conditional_turn_restrictions);
         ConditionalRestrictionMap conditional_node_restriction_map(conditional_node_restrictions,
                                                                    IndexNodeByFromAndVia());
-        turn_restrictions.clear();
-        turn_restrictions.shrink_to_fit();
 
         edge_based_graph_factory.Run(scripting_environment,
                                      config.GetPath(".osrm.edges").string(),
@@ -664,29 +673,6 @@ std::pair<std::size_t, EdgeID> Extractor::BuildEdgeExpandedGraph(
     };
 
     const auto number_of_edge_based_nodes = create_edge_based_edges();
-    compressed_edge_container.PrintStatistics();
-
-    // The osrm-partition tool requires the compressed node based graph with an embedding.
-    //
-    // The `Run` function above re-numbers non-reverse compressed node based graph edges
-    // to a continuous range so that the nodes in the edge based graph are continuous.
-    //
-    // Luckily node based node ids still coincide with the coordinate array.
-    // That's the reason we can only here write out the final compressed node based graph.
-
-    // Dumps to file asynchronously and makes sure we wait for its completion.
-    std::future<void> compressed_node_based_graph_writing;
-
-    BOOST_SCOPE_EXIT_ALL(&)
-    {
-        if (compressed_node_based_graph_writing.valid())
-            compressed_node_based_graph_writing.wait();
-    };
-
-    compressed_node_based_graph_writing = std::async(std::launch::async, [&] {
-        WriteCompressedNodeBasedGraph(
-            config.GetPath(".osrm.cnbg").string(), *node_based_graph, coordinates);
-    });
 
     {
         std::vector<std::uint32_t> turn_lane_offsets;
@@ -696,16 +682,11 @@ std::pair<std::size_t, EdgeID> Extractor::BuildEdgeExpandedGraph(
         files::writeTurnLaneDescriptions(
             config.GetPath(".osrm.tls"), turn_lane_offsets, turn_lane_masks);
     }
-    files::writeSegmentData(config.GetPath(".osrm.geometry"),
-                            *compressed_edge_container.ToSegmentData());
 
     edge_based_graph_factory.GetEdgeBasedEdges(edge_based_edge_list);
-    edge_based_graph_factory.GetEdgeBasedNodes(edge_based_nodes_container);
     edge_based_graph_factory.GetEdgeBasedNodeSegments(edge_based_node_segments);
     edge_based_graph_factory.GetStartPointMarkers(node_is_startpoint);
     edge_based_graph_factory.GetEdgeBasedNodeWeights(edge_based_node_weights);
-
-    const std::size_t number_of_node_based_nodes = node_based_graph->GetNumberOfNodes();
 
     util::Log() << "Writing Intersection Classification Data";
     TIMER_START(write_intersections);
@@ -717,7 +698,7 @@ std::pair<std::size_t, EdgeID> Extractor::BuildEdgeExpandedGraph(
     TIMER_STOP(write_intersections);
     util::Log() << "ok, after " << TIMER_SEC(write_intersections) << "s";
 
-    return std::make_pair(number_of_node_based_nodes, number_of_edge_based_nodes);
+    return number_of_edge_based_nodes;
 }
 
 /**

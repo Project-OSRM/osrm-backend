@@ -14,8 +14,6 @@
 #include "extractor/nbg_to_ebg.hpp"
 #include "extractor/node_data_container.hpp"
 #include "extractor/original_edge_data.hpp"
-#include "extractor/packed_osm_ids.hpp"
-#include "extractor/profile_properties.hpp"
 #include "extractor/query_node.hpp"
 #include "extractor/restriction_index.hpp"
 #include "extractor/way_restriction_map.hpp"
@@ -26,7 +24,6 @@
 #include "util/guidance/entry_class.hpp"
 #include "util/name_table.hpp"
 #include "util/node_based_graph.hpp"
-#include "util/packed_vector.hpp"
 #include "util/typedefs.hpp"
 
 #include "storage/io.hpp"
@@ -71,13 +68,12 @@ class EdgeBasedGraphFactory
     EdgeBasedGraphFactory(const EdgeBasedGraphFactory &) = delete;
     EdgeBasedGraphFactory &operator=(const EdgeBasedGraphFactory &) = delete;
 
-    explicit EdgeBasedGraphFactory(std::shared_ptr<util::NodeBasedDynamicGraph> node_based_graph,
-                                   CompressedEdgeContainer &compressed_edge_container,
+    explicit EdgeBasedGraphFactory(const util::NodeBasedDynamicGraph &node_based_graph,
+                                   EdgeBasedNodeDataContainer &node_data_container,
+                                   const CompressedEdgeContainer &compressed_edge_container,
                                    const std::unordered_set<NodeID> &barrier_nodes,
                                    const std::unordered_set<NodeID> &traffic_lights,
                                    const std::vector<util::Coordinate> &coordinates,
-                                   const extractor::PackedOSMIDs &osm_node_ids,
-                                   ProfileProperties profile_properties,
                                    const util::NameTable &name_table,
                                    guidance::LaneDescriptionMap &lane_description_map);
 
@@ -95,7 +91,6 @@ class EdgeBasedGraphFactory
 
     // The following get access functions destroy the content in the factory
     void GetEdgeBasedEdges(util::DeallocatingVector<EdgeBasedEdge> &edges);
-    void GetEdgeBasedNodes(EdgeBasedNodeDataContainer &data_container);
     void GetEdgeBasedNodeSegments(std::vector<EdgeBasedNodeSegment> &nodes);
     void GetStartPointMarkers(std::vector<bool> &node_is_startpoint);
     void GetEdgeBasedNodeWeights(std::vector<EdgeWeight> &output_node_weights);
@@ -144,7 +139,7 @@ class EdgeBasedGraphFactory
 
     //! list of edge based nodes (compressed segments)
     std::vector<EdgeBasedNodeSegment> m_edge_based_node_segments;
-    EdgeBasedNodeDataContainer m_edge_based_node_container;
+    EdgeBasedNodeDataContainer &m_edge_based_node_container;
     util::DeallocatingVector<EdgeBasedEdge> m_edge_based_edge_list;
 
     // The number of edge-based nodes is mostly made up out of the edges in the node-based graph.
@@ -155,19 +150,20 @@ class EdgeBasedGraphFactory
     std::uint64_t m_number_of_edge_based_nodes;
 
     const std::vector<util::Coordinate> &m_coordinates;
-    const extractor::PackedOSMIDs &m_osm_node_ids;
-    std::shared_ptr<util::NodeBasedDynamicGraph> m_node_based_graph;
+    const util::NodeBasedDynamicGraph &m_node_based_graph;
 
     const std::unordered_set<NodeID> &m_barrier_nodes;
     const std::unordered_set<NodeID> &m_traffic_lights;
-    CompressedEdgeContainer &m_compressed_edge_container;
-
-    ProfileProperties profile_properties;
+    const CompressedEdgeContainer &m_compressed_edge_container;
 
     const util::NameTable &name_table;
     guidance::LaneDescriptionMap &lane_description_map;
 
-    unsigned RenumberEdges();
+    // In the edge based graph, any traversable (non reversed) edge of the node-based graph forms a
+    // node of the edge-based graph. To be able to name these nodes, we loop over the node-based
+    // graph and create a mapping from edges (node-based) to nodes (edge-based). The mapping is
+    // essentially a prefix-sum over all previous non-reversed edges of the node-based graph.
+    unsigned LabelEdgeBasedNodes();
 
     // During the generation of the edge-expanded nodes, we need to also generate duplicates that
     // represent state during via-way restrictions (see
@@ -194,6 +190,8 @@ class EdgeBasedGraphFactory
     std::size_t skipped_uturns_counter;
     std::size_t skipped_barrier_turns_counter;
 
+    // mapping of node-based edges to edge-based nodes
+    std::vector<NodeID> nbe_to_ebn_mapping;
     util::ConcurrentIDMap<util::guidance::BearingClass, BearingClassID> bearing_class_hash;
     std::vector<BearingClassID> bearing_class_by_node_based_node;
     util::ConcurrentIDMap<util::guidance::EntryClass, EntryClassID> entry_class_hash;

@@ -218,7 +218,7 @@ int Partitioner::Run(const PartitionConfig &config)
     files::writePartition(config.GetPath(".osrm.partition"), mlp);
     files::writeCells(config.GetPath(".osrm.cells"), storage);
     extractor::files::writeEdgeBasedGraph(config.GetPath(".osrm.ebg"),
-                                          edge_based_graph.GetNumberOfNodes() - 1,
+                                          edge_based_graph.GetNumberOfNodes(),
                                           graphToEdges(edge_based_graph));
     TIMER_STOP(writing_mld_data);
     util::Log() << "MLD data writing took " << TIMER_SEC(writing_mld_data) << " seconds";

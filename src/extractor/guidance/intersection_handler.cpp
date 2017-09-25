@@ -24,21 +24,38 @@ namespace guidance
 
 namespace detail
 {
-inline bool requiresAnnouncement(const EdgeData &from, const EdgeData &to)
+// TODO check flags!
+inline bool requiresAnnouncement(const util::NodeBasedDynamicGraph &node_based_graph,
+                                 const EdgeBasedNodeDataContainer &node_data_container,
+                                 const EdgeID from,
+                                 const EdgeID to)
 {
-    return !from.CanCombineWith(to);
+    const auto &from_edge = node_based_graph.GetEdgeData(from);
+    const auto &to_edge = node_based_graph.GetEdgeData(to);
+
+    if (from_edge.reversed != to_edge.reversed)
+        return true;
+
+    if (!(from_edge.flags == to_edge.flags))
+        return true;
+
+    const auto &annotation_from = node_data_container.GetAnnotation(from_edge.annotation_data);
+    const auto &annotation_to = node_data_container.GetAnnotation(to_edge.annotation_data);
+    return !annotation_from.CanCombineWith(annotation_to);
 }
-}
+} // namespace detail
 
 IntersectionHandler::IntersectionHandler(const util::NodeBasedDynamicGraph &node_based_graph,
+                                         const EdgeBasedNodeDataContainer &node_data_container,
                                          const std::vector<util::Coordinate> &coordinates,
                                          const util::NameTable &name_table,
                                          const SuffixTable &street_name_suffix_table,
                                          const IntersectionGenerator &intersection_generator)
-    : node_based_graph(node_based_graph), coordinates(coordinates), name_table(name_table),
+    : node_based_graph(node_based_graph), node_data_container(node_data_container),
+      coordinates(coordinates), name_table(name_table),
       street_name_suffix_table(street_name_suffix_table),
       intersection_generator(intersection_generator),
-      graph_walker(node_based_graph, intersection_generator)
+      graph_walker(node_based_graph, node_data_container, intersection_generator)
 {
 }
 
@@ -48,20 +65,23 @@ TurnType::Enum IntersectionHandler::findBasicTurnType(const EdgeID via_edge,
                                                       const ConnectedRoad &road) const
 {
 
-    const auto &in_data = node_based_graph.GetEdgeData(via_edge);
-    const auto &out_data = node_based_graph.GetEdgeData(road.eid);
-
-    bool on_ramp = in_data.road_classification.IsRampClass();
-
-    bool onto_ramp = out_data.road_classification.IsRampClass();
+    bool on_ramp = node_based_graph.GetEdgeData(via_edge).flags.road_classification.IsRampClass();
+    bool onto_ramp = node_based_graph.GetEdgeData(road.eid).flags.road_classification.IsRampClass();
 
     if (!on_ramp && onto_ramp)
         return TurnType::OnRamp;
 
-    const auto same_name = !util::guidance::requiresNameAnnounced(
-        in_data.name_id, out_data.name_id, name_table, street_name_suffix_table);
+    const auto &in_name =
+        node_data_container.GetAnnotation(node_based_graph.GetEdgeData(via_edge).annotation_data)
+            .name_id;
+    const auto &out_name =
+        node_data_container.GetAnnotation(node_based_graph.GetEdgeData(road.eid).annotation_data)
+            .name_id;
 
-    if (in_data.name_id != EMPTY_NAMEID && out_data.name_id != EMPTY_NAMEID && same_name)
+    const auto same_name = !util::guidance::requiresNameAnnounced(
+        in_name, out_name, name_table, street_name_suffix_table);
+
+    if (in_name != EMPTY_NAMEID && out_name != EMPTY_NAMEID && same_name)
     {
         return TurnType::Continue;
     }
@@ -86,14 +106,22 @@ TurnInstruction IntersectionHandler::getInstructionForObvious(const std::size_t 
     }
 
     // handle travel modes:
-    const auto in_mode = node_based_graph.GetEdgeData(via_edge).travel_mode;
-    const auto out_mode = node_based_graph.GetEdgeData(road.eid).travel_mode;
+    const auto in_mode =
+        node_data_container.GetAnnotation(node_based_graph.GetEdgeData(via_edge).annotation_data)
+            .travel_mode;
+    const auto out_mode =
+        node_data_container.GetAnnotation(node_based_graph.GetEdgeData(road.eid).annotation_data)
+            .travel_mode;
     const auto needs_notification = in_mode != out_mode;
 
     if (type == TurnType::Turn)
     {
-        const auto &in_data = node_based_graph.GetEdgeData(via_edge);
-        const auto &out_data = node_based_graph.GetEdgeData(road.eid);
+        const auto &in_classification = node_based_graph.GetEdgeData(via_edge).flags;
+        const auto &in_data = node_data_container.GetAnnotation(
+            node_based_graph.GetEdgeData(via_edge).annotation_data);
+        const auto &out_classification = node_based_graph.GetEdgeData(road.eid).flags;
+        const auto &out_data = node_data_container.GetAnnotation(
+            node_based_graph.GetEdgeData(road.eid).annotation_data);
 
         if (util::guidance::requiresNameAnnounced(
                 in_data.name_id, out_data.name_id, name_table, street_name_suffix_table))
@@ -104,12 +132,12 @@ TurnInstruction IntersectionHandler::getInstructionForObvious(const std::size_t 
                 // We reserve merges for motorway types. All others are considered for simply going
                 // straight onto a road. This avoids confusion about merge directions on streets
                 // that could potentially also offer different choices
-                if (out_data.road_classification.IsMotorwayClass())
+                if (out_classification.road_classification.IsMotorwayClass())
                     return {TurnType::Merge,
                             road.angle > STRAIGHT_ANGLE ? DirectionModifier::SlightRight
                                                         : DirectionModifier::SlightLeft};
-                else if (in_data.road_classification.IsRampClass() &&
-                         out_data.road_classification.IsRampClass())
+                else if (in_classification.road_classification.IsRampClass() &&
+                         out_classification.road_classification.IsRampClass())
                 {
                     // This check is more a precaution than anything else. Our current travel modes
                     // cannot reach this, since all ramps are exposing the same travel type. But we
@@ -177,15 +205,20 @@ void IntersectionHandler::assignFork(const EdgeID via_edge,
                                      ConnectedRoad &left,
                                      ConnectedRoad &right) const
 {
-    const auto &in_data = node_based_graph.GetEdgeData(via_edge);
-    const bool low_priority_left =
-        node_based_graph.GetEdgeData(left.eid).road_classification.IsLowPriorityRoadClass();
-    const bool low_priority_right =
-        node_based_graph.GetEdgeData(right.eid).road_classification.IsLowPriorityRoadClass();
-    const auto same_mode_left =
-        in_data.travel_mode == node_based_graph.GetEdgeData(left.eid).travel_mode;
-    const auto same_mode_right =
-        in_data.travel_mode == node_based_graph.GetEdgeData(right.eid).travel_mode;
+    const auto &in_data =
+        node_data_container.GetAnnotation(node_based_graph.GetEdgeData(via_edge).annotation_data);
+    const auto &lhs_classification =
+        node_based_graph.GetEdgeData(left.eid).flags.road_classification;
+    const auto &lhs_data =
+        node_data_container.GetAnnotation(node_based_graph.GetEdgeData(left.eid).annotation_data);
+    const auto &rhs_classification =
+        node_based_graph.GetEdgeData(right.eid).flags.road_classification;
+    const auto &rhs_data =
+        node_data_container.GetAnnotation(node_based_graph.GetEdgeData(right.eid).annotation_data);
+    const bool low_priority_left = lhs_classification.IsLowPriorityRoadClass();
+    const bool low_priority_right = rhs_classification.IsLowPriorityRoadClass();
+    const auto same_mode_left = in_data.travel_mode == lhs_data.travel_mode;
+    const auto same_mode_right = in_data.travel_mode == rhs_data.travel_mode;
     const auto suppressed_left_type =
         same_mode_left ? TurnType::Suppressed : TurnType::Notification;
     const auto suppressed_right_type =
@@ -194,8 +227,7 @@ void IntersectionHandler::assignFork(const EdgeID via_edge,
          angularDeviation(right.angle, STRAIGHT_ANGLE) > FUZZY_ANGLE_DIFFERENCE))
     {
         // left side is actually straight
-        const auto &out_data = node_based_graph.GetEdgeData(left.eid);
-        if (detail::requiresAnnouncement(in_data, out_data))
+        if (detail::requiresAnnouncement(node_based_graph, node_data_container, via_edge, left.eid))
         {
             if (low_priority_right && !low_priority_left)
             {
@@ -230,11 +262,11 @@ void IntersectionHandler::assignFork(const EdgeID via_edge,
              angularDeviation(left.angle, STRAIGHT_ANGLE) > FUZZY_ANGLE_DIFFERENCE)
     {
         // right side is actually straight
-        const auto &out_data = node_based_graph.GetEdgeData(right.eid);
         if (angularDeviation(right.angle, STRAIGHT_ANGLE) < MAXIMAL_ALLOWED_NO_TURN_DEVIATION &&
             angularDeviation(left.angle, STRAIGHT_ANGLE) > FUZZY_ANGLE_DIFFERENCE)
         {
-            if (detail::requiresAnnouncement(in_data, out_data))
+            if (detail::requiresAnnouncement(
+                    node_based_graph, node_data_container, via_edge, right.eid))
             {
                 if (low_priority_left && !low_priority_right)
                 {
@@ -304,8 +336,14 @@ void IntersectionHandler::assignFork(const EdgeID via_edge,
 {
     // TODO handle low priority road classes in a reasonable way
     const auto suppressed_type = [&](const ConnectedRoad &road) {
-        const auto in_mode = node_based_graph.GetEdgeData(via_edge).travel_mode;
-        const auto out_mode = node_based_graph.GetEdgeData(road.eid).travel_mode;
+        const auto in_mode =
+            node_data_container
+                .GetAnnotation(node_based_graph.GetEdgeData(via_edge).annotation_data)
+                .travel_mode;
+        const auto out_mode =
+            node_data_container
+                .GetAnnotation(node_based_graph.GetEdgeData(road.eid).annotation_data)
+                .travel_mode;
         return in_mode == out_mode ? TurnType::Suppressed : TurnType::Notification;
     };
 
@@ -314,9 +352,8 @@ void IntersectionHandler::assignFork(const EdgeID via_edge,
         left.instruction = {TurnType::Fork, DirectionModifier::SlightLeft};
         if (angularDeviation(center.angle, 180) < MAXIMAL_ALLOWED_NO_TURN_DEVIATION)
         {
-            const auto &in_data = node_based_graph.GetEdgeData(via_edge);
-            const auto &out_data = node_based_graph.GetEdgeData(center.eid);
-            if (detail::requiresAnnouncement(in_data, out_data))
+            if (detail::requiresAnnouncement(
+                    node_based_graph, node_data_container, via_edge, center.eid))
             {
                 center.instruction = {TurnType::Fork, DirectionModifier::Straight};
             }
@@ -371,7 +408,8 @@ void IntersectionHandler::assignTrivialTurns(const EdgeID via_eid,
 bool IntersectionHandler::isThroughStreet(const std::size_t index,
                                           const Intersection &intersection) const
 {
-    const auto &data_at_index = node_based_graph.GetEdgeData(intersection[index].eid);
+    const auto &data_at_index = node_data_container.GetAnnotation(
+        node_based_graph.GetEdgeData(intersection[index].eid).annotation_data);
 
     if (data_at_index.name_id == EMPTY_NAMEID)
         return false;
@@ -383,7 +421,8 @@ bool IntersectionHandler::isThroughStreet(const std::size_t index,
             continue;
 
         const auto &road = intersection[road_index];
-        const auto &road_data = node_based_graph.GetEdgeData(road.eid);
+        const auto &road_data = node_data_container.GetAnnotation(
+            node_based_graph.GetEdgeData(road.eid).annotation_data);
 
         // roads have a near straight angle (180 degree)
         const bool is_nearly_straight = angularDeviation(road.angle, intersection[index].angle) >
@@ -395,7 +434,8 @@ bool IntersectionHandler::isThroughStreet(const std::size_t index,
                 data_at_index.name_id, road_data.name_id, name_table, street_name_suffix_table);
 
         const bool have_same_category =
-            data_at_index.road_classification == road_data.road_classification;
+            node_based_graph.GetEdgeData(intersection[index].eid).flags.road_classification ==
+            node_based_graph.GetEdgeData(road.eid).flags.road_classification;
 
         if (is_nearly_straight && have_same_name && have_same_category)
             return true;
@@ -443,8 +483,10 @@ IntersectionHandler::getNextIntersection(const NodeID at, const EdgeID via) cons
 
 bool IntersectionHandler::isSameName(const EdgeID source_edge_id, const EdgeID target_edge_id) const
 {
-    const auto &source_edge_data = node_based_graph.GetEdgeData(source_edge_id);
-    const auto &target_edge_data = node_based_graph.GetEdgeData(target_edge_id);
+    const auto &source_edge_data = node_data_container.GetAnnotation(
+        node_based_graph.GetEdgeData(source_edge_id).annotation_data);
+    const auto &target_edge_data = node_data_container.GetAnnotation(
+        node_based_graph.GetEdgeData(target_edge_id).annotation_data);
 
     return source_edge_data.name_id != EMPTY_NAMEID && //
            target_edge_data.name_id != EMPTY_NAMEID && //

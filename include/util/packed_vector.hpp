@@ -450,6 +450,11 @@ template <typename T, std::size_t Bits, storage::Ownership Ownership> class Pack
 
     friend void serialization::write<T, Bits, Ownership>(storage::io::FileWriter &writer,
                                                          const PackedVector &vec);
+    inline void swap(PackedVector &other) noexcept
+    {
+        std::swap(vec, other.vec);
+        std::swap(num_elements, other.num_elements);
+    }
 
   private:
     void allocate_blocks(std::size_t num_blocks)

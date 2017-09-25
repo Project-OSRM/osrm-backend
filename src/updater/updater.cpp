@@ -524,8 +524,9 @@ Updater::NumNodesAndEdges Updater::LoadAndUpdateEdgeExpandedGraph() const
 {
     std::vector<EdgeWeight> node_weights;
     std::vector<extractor::EdgeBasedEdge> edge_based_edge_list;
-    auto max_edge_id = Updater::LoadAndUpdateEdgeExpandedGraph(edge_based_edge_list, node_weights);
-    return std::make_tuple(max_edge_id + 1, std::move(edge_based_edge_list));
+    auto number_of_edge_based_nodes =
+        Updater::LoadAndUpdateEdgeExpandedGraph(edge_based_edge_list, node_weights);
+    return std::make_tuple(number_of_edge_based_nodes, std::move(edge_based_edge_list));
 }
 
 EdgeID
@@ -534,12 +535,12 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
 {
     TIMER_START(load_edges);
 
-    EdgeID max_edge_id = 0;
+    EdgeID number_of_edge_based_nodes = 0;
     std::vector<util::Coordinate> coordinates;
     extractor::PackedOSMIDs osm_node_ids;
 
     extractor::files::readEdgeBasedGraph(
-        config.GetPath(".osrm.ebg"), max_edge_id, edge_based_edge_list);
+        config.GetPath(".osrm.ebg"), number_of_edge_based_nodes, edge_based_edge_list);
     extractor::files::readNodes(config.GetPath(".osrm.nbg_nodes"), coordinates, osm_node_ids);
 
     const bool update_conditional_turns =
@@ -550,7 +551,7 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
     if (!update_edge_weights && !update_turn_penalties && !update_conditional_turns)
     {
         saveDatasourcesNames(config);
-        return max_edge_id;
+        return number_of_edge_based_nodes;
     }
 
     if (config.segment_speed_lookup_paths.size() + config.turn_penalty_lookup_paths.size() > 255)
@@ -838,7 +839,7 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
 
     TIMER_STOP(load_edges);
     util::Log() << "Done reading edges in " << TIMER_MSEC(load_edges) << "ms.";
-    return max_edge_id;
+    return number_of_edge_based_nodes;
 }
 }
 }

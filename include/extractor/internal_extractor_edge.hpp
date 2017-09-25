@@ -58,65 +58,24 @@ struct InternalExtractorEdge
     using WeightData = detail::ByEdgeOrByMeterValue;
     using DurationData = detail::ByEdgeOrByMeterValue;
 
-    explicit InternalExtractorEdge()
-        : result(MIN_OSM_NODEID,
-                 MIN_OSM_NODEID,
-                 SPECIAL_NODEID,
-                 0,
-                 0,
-                 false, // forward
-                 false, // backward
-                 false, // roundabout
-                 false, // circular
-                 true,  // can be startpoint
-                 false, // local access only
-                 false, // is_left_hand_driving
-                 false, // split edge
-                 TRAVEL_MODE_INACCESSIBLE,
-                 0,
-                 guidance::TurnLaneType::empty,
-                 guidance::RoadClassification()),
-          weight_data(), duration_data()
-    {
-    }
+    explicit InternalExtractorEdge() : weight_data(), duration_data() {}
 
     explicit InternalExtractorEdge(OSMNodeID source,
                                    OSMNodeID target,
-                                   NodeID name_id,
                                    WeightData weight_data,
                                    DurationData duration_data,
-                                   bool forward,
-                                   bool backward,
-                                   bool roundabout,
-                                   bool circular,
-                                   bool startpoint,
-                                   bool restricted,
-                                   bool is_left_hand_driving,
-                                   bool is_split,
-                                   TravelMode travel_mode,
-                                   ClassData classes,
-                                   LaneDescriptionID lane_description,
-                                   guidance::RoadClassification road_classification,
                                    util::Coordinate source_coordinate)
-        : result(source,
-                 target,
-                 name_id,
-                 0,
-                 0,
-                 forward,
-                 backward,
-                 roundabout,
-                 circular,
-                 startpoint,
-                 restricted,
-                 is_left_hand_driving,
-                 is_split,
-                 travel_mode,
-                 classes,
-                 lane_description,
-                 std::move(road_classification)),
-          weight_data(std::move(weight_data)), duration_data(std::move(duration_data)),
-          source_coordinate(std::move(source_coordinate))
+        : result(source, target, 0, 0, {}, -1, {}), weight_data(std::move(weight_data)),
+          duration_data(std::move(duration_data)), source_coordinate(std::move(source_coordinate))
+    {
+    }
+
+    explicit InternalExtractorEdge(NodeBasedEdgeWithOSM edge,
+                                   WeightData weight_data,
+                                   DurationData duration_data,
+                                   util::Coordinate source_coordinate)
+        : result(std::move(edge)), weight_data(weight_data), duration_data(duration_data),
+          source_coordinate(source_coordinate)
     {
     }
 
@@ -132,45 +91,13 @@ struct InternalExtractorEdge
     // necessary static util functions for stxxl's sorting
     static InternalExtractorEdge min_osm_value()
     {
-        return InternalExtractorEdge(MIN_OSM_NODEID,
-                                     MIN_OSM_NODEID,
-                                     SPECIAL_NODEID,
-                                     WeightData(),
-                                     DurationData(),
-                                     false, // forward
-                                     false, // backward
-                                     false, // roundabout
-                                     false, // circular
-                                     true,  // can be startpoint
-                                     false, // local access only
-                                     false, // is_left_hand_driving
-                                     false, // split edge
-                                     TRAVEL_MODE_INACCESSIBLE,
-                                     0,
-                                     INVALID_LANE_DESCRIPTIONID,
-                                     guidance::RoadClassification(),
-                                     util::Coordinate());
+        return InternalExtractorEdge(
+            MIN_OSM_NODEID, MIN_OSM_NODEID, WeightData(), DurationData(), util::Coordinate());
     }
     static InternalExtractorEdge max_osm_value()
     {
-        return InternalExtractorEdge(MAX_OSM_NODEID,
-                                     MAX_OSM_NODEID,
-                                     SPECIAL_NODEID,
-                                     WeightData(),
-                                     DurationData(),
-                                     false, // forward
-                                     false, // backward
-                                     false, // roundabout
-                                     false, // circular
-                                     true,  // can be startpoint
-                                     false, // local access only
-                                     false, // is_left_hand_driving
-                                     false, // split edge
-                                     TRAVEL_MODE_INACCESSIBLE,
-                                     0,
-                                     INVALID_LANE_DESCRIPTIONID,
-                                     guidance::RoadClassification(),
-                                     util::Coordinate());
+        return InternalExtractorEdge(
+            MAX_OSM_NODEID, MAX_OSM_NODEID, WeightData(), DurationData(), util::Coordinate());
     }
 
     static InternalExtractorEdge min_internal_value()

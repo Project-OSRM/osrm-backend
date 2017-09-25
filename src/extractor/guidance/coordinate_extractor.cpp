@@ -122,7 +122,7 @@ util::Coordinate CoordinateExtractor::ExtractRepresentativeCoordinate(
     // coordinate set to add a small level of fault tolerance
     const constexpr double skipping_inaccuracies_distance = 2;
 
-    const auto &turn_edge_data = node_based_graph.GetEdgeData(turn_edge);
+    const auto &turn_edge_data = node_based_graph.GetEdgeData(turn_edge).flags;
 
     // roundabouts, check early to avoid other costly checks
     if (turn_edge_data.roundabout || turn_edge_data.circular)
@@ -175,7 +175,7 @@ util::Coordinate CoordinateExtractor::ExtractRepresentativeCoordinate(
     // the lane count might not always be set. We need to assume a positive number, though. Here we
     // select the number of lanes to operate on
     const auto considered_lanes =
-        GetOffsetCorrectionFactor(node_based_graph.GetEdgeData(turn_edge).road_classification) *
+        GetOffsetCorrectionFactor(turn_edge_data.road_classification) *
         ((intersection_lanes == 0) ? ASSUMED_LANE_COUNT : intersection_lanes);
 
     /* if the very first coordinate along the road is reasonably far away from the road, we assume
@@ -644,7 +644,7 @@ bool CoordinateExtractor::IsCurve(const std::vector<util::Coordinate> &coordinat
                                   const std::vector<double> &segment_distances,
                                   const double segment_length,
                                   const double considered_lane_width,
-                                  const util::NodeBasedEdgeData &edge_data) const
+                                  const extractor::NodeBasedEdgeClassification &edge_data) const
 {
     BOOST_ASSERT(coordinates.size() > 2);
 

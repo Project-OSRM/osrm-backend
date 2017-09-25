@@ -33,12 +33,13 @@ const constexpr bool USE_HIGH_PRECISION_MODE = !USE_LOW_PRECISION_MODE;
 
 IntersectionGenerator::IntersectionGenerator(
     const util::NodeBasedDynamicGraph &node_based_graph,
+    const EdgeBasedNodeDataContainer &node_data_container,
     const RestrictionMap &restriction_map,
     const std::unordered_set<NodeID> &barrier_nodes,
     const std::vector<util::Coordinate> &coordinates,
     const CompressedEdgeContainer &compressed_edge_container)
-    : node_based_graph(node_based_graph), restriction_map(restriction_map),
-      barrier_nodes(barrier_nodes), coordinates(coordinates),
+    : node_based_graph(node_based_graph), node_data_container(node_data_container),
+      restriction_map(restriction_map), barrier_nodes(barrier_nodes), coordinates(coordinates),
       coordinate_extractor(node_based_graph, compressed_edge_container, coordinates)
 {
 }
@@ -69,15 +70,15 @@ IntersectionGenerator::ComputeIntersectionShape(const NodeID node_at_center_of_i
 
     // number of lanes at the intersection changes how far we look down the road
     const auto edge_range = node_based_graph.GetAdjacentEdgeRange(node_at_center_of_intersection);
-    const auto max_lanes_intersection = std::accumulate(
-        edge_range.begin(),
-        edge_range.end(),
-        std::uint8_t{0},
-        [this](const auto current_max, const auto current_eid) {
-            return std::max(
-                current_max,
-                node_based_graph.GetEdgeData(current_eid).road_classification.GetNumberOfLanes());
-        });
+    const auto max_lanes_intersection =
+        std::accumulate(edge_range.begin(),
+                        edge_range.end(),
+                        std::uint8_t{0},
+                        [this](const auto current_max, const auto current_eid) {
+                            return std::max(current_max,
+                                            node_based_graph.GetEdgeData(current_eid)
+                                                .flags.road_classification.GetNumberOfLanes());
+                        });
 
     for (const EdgeID edge_connected_to_intersection :
          node_based_graph.GetAdjacentEdgeRange(node_at_center_of_intersection))
@@ -265,9 +266,11 @@ IntersectionGenerator::SkipDegreeTwoNodes(const NodeID starting_node, const Edge
         query_node = next_node;
         query_edge = next_edge;
 
-        if (!node_based_graph.GetEdgeData(query_edge)
-                 .IsCompatibleTo(node_based_graph.GetEdgeData(next_edge)) ||
-            node_based_graph.GetTarget(next_edge) == starting_node)
+        // check if there is a relevant change in the graph
+        if (!CanBeCompressed(node_based_graph.GetEdgeData(query_edge),
+                             node_based_graph.GetEdgeData(next_edge),
+                             node_data_container) ||
+            (node_based_graph.GetTarget(next_edge) == starting_node))
             break;
     }
 

@@ -13,10 +13,12 @@ namespace guidance
 
 SuppressModeHandler::SuppressModeHandler(const IntersectionGenerator &intersection_generator,
                                          const util::NodeBasedDynamicGraph &node_based_graph,
+                                         const EdgeBasedNodeDataContainer &node_data_container,
                                          const std::vector<util::Coordinate> &coordinates,
                                          const util::NameTable &name_table,
                                          const SuffixTable &street_name_suffix_table)
     : IntersectionHandler(node_based_graph,
+                          node_data_container,
                           coordinates,
                           name_table,
                           street_name_suffix_table,
@@ -36,14 +38,18 @@ bool SuppressModeHandler::canProcess(const NodeID,
 
     // If the approach way is not on the suppression blacklist, and not all the exit ways share that
     // mode, there are no ways to suppress by this criteria.
-    const auto in_mode = node_based_graph.GetEdgeData(via_eid).travel_mode;
+    const auto in_mode =
+        node_data_container.GetAnnotation(node_based_graph.GetEdgeData(via_eid).annotation_data)
+            .travel_mode;
     const auto suppress_in_mode = std::find(begin(suppressed), end(suppressed), in_mode);
 
     const auto first = begin(intersection);
     const auto last = end(intersection);
 
     const auto all_share_mode = std::all_of(first, last, [this, &in_mode](const auto &road) {
-        return node_based_graph.GetEdgeData(road.eid).travel_mode == in_mode;
+        return node_data_container
+                   .GetAnnotation(node_based_graph.GetEdgeData(road.eid).annotation_data)
+                   .travel_mode == in_mode;
     });
 
     return (suppress_in_mode != end(suppressed)) && all_share_mode;

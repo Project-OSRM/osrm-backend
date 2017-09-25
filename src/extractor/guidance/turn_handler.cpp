@@ -111,11 +111,13 @@ std::size_t TurnHandler::Fork::getLeftIndex() const
 }
 
 TurnHandler::TurnHandler(const util::NodeBasedDynamicGraph &node_based_graph,
+                         const EdgeBasedNodeDataContainer &node_data_container,
                          const std::vector<util::Coordinate> &coordinates,
                          const util::NameTable &name_table,
                          const SuffixTable &street_name_suffix_table,
                          const IntersectionGenerator &intersection_generator)
     : IntersectionHandler(node_based_graph,
+                          node_data_container,
                           coordinates,
                           name_table,
                           street_name_suffix_table,
@@ -174,12 +176,16 @@ bool TurnHandler::isObviousOfTwo(const EdgeID via_edge,
                                  const ConnectedRoad &road,
                                  const ConnectedRoad &other) const
 {
-    const auto &via_data = node_based_graph.GetEdgeData(via_edge);
-    const auto &road_data = node_based_graph.GetEdgeData(road.eid);
-    const auto &other_data = node_based_graph.GetEdgeData(other.eid);
-    const auto &via_classification = via_data.road_classification;
-    const auto &road_classification = road_data.road_classification;
-    const auto &other_classification = other_data.road_classification;
+    const auto &via_data =
+        node_data_container.GetAnnotation(node_based_graph.GetEdgeData(via_edge).annotation_data);
+    const auto &road_data =
+        node_data_container.GetAnnotation(node_based_graph.GetEdgeData(road.eid).annotation_data);
+    const auto &via_classification =
+        node_based_graph.GetEdgeData(via_edge).flags.road_classification;
+    const auto &road_classification =
+        node_based_graph.GetEdgeData(road.eid).flags.road_classification;
+    const auto &other_classification =
+        node_based_graph.GetEdgeData(other.eid).flags.road_classification;
 
     // if one of the given roads is obvious by class, obviousness is trivial
     if (obviousByRoadClass(via_classification, road_classification, other_classification))
@@ -335,9 +341,9 @@ Intersection TurnHandler::handleComplexTurn(const EdgeID via_edge, Intersection 
         if (fork->size == 2)
         {
             const auto left_classification =
-                node_based_graph.GetEdgeData(fork->getLeft().eid).road_classification;
+                node_based_graph.GetEdgeData(fork->getLeft().eid).flags.road_classification;
             const auto right_classification =
-                node_based_graph.GetEdgeData(fork->getRight().eid).road_classification;
+                node_based_graph.GetEdgeData(fork->getRight().eid).flags.road_classification;
             if (canBeSeenAsFork(left_classification, right_classification))
             {
                 assignFork(via_edge, fork->getLeft(), fork->getRight());
@@ -615,26 +621,27 @@ TurnHandler::findForkCandidatesByGeometry(Intersection &intersection) const
 // incoming edge are compatible by class
 bool TurnHandler::isCompatibleByRoadClass(const Intersection &intersection, const Fork fork) const
 {
-    const auto via_class = node_based_graph.GetEdgeData(intersection[0].eid).road_classification;
+    const auto via_class =
+        node_based_graph.GetEdgeData(intersection[0].eid).flags.road_classification;
 
     // if any of the considered roads is a link road, it cannot be a fork
     // except if rightmost fork candidate is also a link road
     const auto is_right_link_class =
-        node_based_graph.GetEdgeData(fork.getRight().eid).road_classification.IsLinkClass();
+        node_based_graph.GetEdgeData(fork.getRight().eid).flags.road_classification.IsLinkClass();
     if (!std::all_of(fork.begin + 1, fork.end, [&](ConnectedRoad &road) {
             return is_right_link_class ==
-                   node_based_graph.GetEdgeData(road.eid).road_classification.IsLinkClass();
+                   node_based_graph.GetEdgeData(road.eid).flags.road_classification.IsLinkClass();
         }))
     {
         return false;
     }
 
     return std::all_of(fork.begin, fork.end, [&](ConnectedRoad &base) {
-        const auto base_class = node_based_graph.GetEdgeData(base.eid).road_classification;
+        const auto base_class = node_based_graph.GetEdgeData(base.eid).flags.road_classification;
         // check that there is no turn obvious == check that all turns are non-onvious
         return std::all_of(fork.begin, fork.end, [&](ConnectedRoad &compare) {
             const auto compare_class =
-                node_based_graph.GetEdgeData(compare.eid).road_classification;
+                node_based_graph.GetEdgeData(compare.eid).flags.road_classification;
             return compare.eid == base.eid ||
                    !(obviousByRoadClass(via_class, base_class, compare_class));
         });
@@ -670,8 +677,12 @@ boost::optional<TurnHandler::Fork> TurnHandler::findFork(const EdgeID via_edge,
 
         const auto has_compatible_modes =
             std::all_of(fork->begin, fork->end, [&](const auto &road) {
-                return node_based_graph.GetEdgeData(road.eid).travel_mode ==
-                       node_based_graph.GetEdgeData(via_edge).travel_mode;
+                return node_data_container
+                           .GetAnnotation(node_based_graph.GetEdgeData(road.eid).annotation_data)
+                           .travel_mode ==
+                       node_data_container
+                           .GetAnnotation(node_based_graph.GetEdgeData(via_edge).annotation_data)
+                           .travel_mode;
             });
 
         if (separated_at_left_side && separated_at_right_side && !has_obvious &&
@@ -703,9 +714,10 @@ void TurnHandler::handleDistinctConflict(const EdgeID via_edge,
         getTurnDirection(left.angle) == DirectionModifier::SlightLeft ||
         getTurnDirection(right.angle) == DirectionModifier::SlightRight)
     {
-        const auto left_classification = node_based_graph.GetEdgeData(left.eid).road_classification;
+        const auto left_classification =
+            node_based_graph.GetEdgeData(left.eid).flags.road_classification;
         const auto right_classification =
-            node_based_graph.GetEdgeData(right.eid).road_classification;
+            node_based_graph.GetEdgeData(right.eid).flags.road_classification;
 
         if (left_classification.GetPriority() > right_classification.GetPriority())
         {

@@ -78,27 +78,27 @@ inline void writeProfileProperties(const boost::filesystem::path &path,
 
 template <typename EdgeBasedEdgeVector>
 void writeEdgeBasedGraph(const boost::filesystem::path &path,
-                         EdgeID const max_edge_id,
+                         EdgeID const number_of_edge_based_nodes,
                          const EdgeBasedEdgeVector &edge_based_edge_list)
 {
     static_assert(std::is_same<typename EdgeBasedEdgeVector::value_type, EdgeBasedEdge>::value, "");
 
     storage::io::FileWriter writer(path, storage::io::FileWriter::GenerateFingerprint);
 
-    writer.WriteElementCount64(max_edge_id);
+    writer.WriteElementCount64(number_of_edge_based_nodes);
     storage::serialization::write(writer, edge_based_edge_list);
 }
 
 template <typename EdgeBasedEdgeVector>
 void readEdgeBasedGraph(const boost::filesystem::path &path,
-                        EdgeID &max_edge_id,
+                        EdgeID &number_of_edge_based_nodes,
                         EdgeBasedEdgeVector &edge_based_edge_list)
 {
     static_assert(std::is_same<typename EdgeBasedEdgeVector::value_type, EdgeBasedEdge>::value, "");
 
     storage::io::FileReader reader(path, storage::io::FileReader::VerifyFingerprint);
 
-    max_edge_id = reader.ReadElementCount64();
+    number_of_edge_based_nodes = reader.ReadElementCount64();
     storage::serialization::read(reader, edge_based_edge_list);
 }
 
