@@ -171,13 +171,41 @@ function setup()
       'minor',
     },
 
-    route_speeds = {
-      ferry = 5,
-      shuttle_train = 10
-    },
-
-    bridge_speeds = {
-      movable = 5
+    routes = {
+      access_required = false,
+      keys = {
+        railway = {
+          mode = mode.train,
+          speed = 10,
+          values = Set {
+            'train',
+            'railway',
+            'subway',
+            'light_rail',
+            'monorail',
+            'tram'
+          }
+        },
+        route = {
+          values = {
+            ferry = {
+            speed = 5,
+            mode = mode.ferry
+            },
+            shuttle_train = {
+              mode = mode.train,
+              speed = 10
+           }
+          }
+        },
+        bridge = {
+          values = {
+            movable = {
+              speed = 5
+            }
+          }
+        }
+      }
     },
 
     -- surface/trackype/smoothness
@@ -356,8 +384,7 @@ function process_way(profile, way, result)
     WayHandlers.destinations,
 
     -- check whether we're using a special transport mode
-    WayHandlers.ferries,
-    WayHandlers.movables,
+    WayHandlers.routes,
 
     -- handle service road restrictions
     WayHandlers.service,
