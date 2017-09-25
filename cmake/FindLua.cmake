@@ -36,6 +36,8 @@
 # This is because, the lua location is not standardized and may exist in
 # locations other than lua/
 
+include(FindPkgConfig)
+
 unset(_lua_include_subdirs)
 unset(_lua_library_names)
 unset(_lua_append_versions)
@@ -81,6 +83,7 @@ function(_lua_set_version_vars)
              lua-${CMAKE_MATCH_1}.${CMAKE_MATCH_2}
              lua.${CMAKE_MATCH_1}.${CMAKE_MATCH_2}
         )
+        pkg_check_modules(LUA QUIET "lua${ver}")
     endforeach ()
 
     set(_lua_include_subdirs "${_lua_include_subdirs}" PARENT_SCOPE)
