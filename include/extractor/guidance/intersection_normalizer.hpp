@@ -43,6 +43,7 @@ class IntersectionNormalizer
         std::vector<IntersectionNormalizationOperation> performed_merges;
     };
     IntersectionNormalizer(const util::NodeBasedDynamicGraph &node_based_graph,
+                           const EdgeBasedNodeDataContainer &node_data_container,
                            const std::vector<util::Coordinate> &node_coordinates,
                            const util::NameTable &name_table,
                            const SuffixTable &street_name_suffix_table,

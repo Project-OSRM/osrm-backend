@@ -74,7 +74,7 @@ std::vector<OutputEdgeT> directedEdgesFromCompressed(const std::vector<InputEdge
     for (const auto &input_edge : input_edge_list)
     {
         // edges that are not forward get converted by flipping the end points
-        BOOST_ASSERT(input_edge.forward);
+        BOOST_ASSERT(input_edge.flags.forward);
 
         edge.source = input_edge.source;
         edge.target = input_edge.target;
@@ -86,10 +86,10 @@ std::vector<OutputEdgeT> directedEdgesFromCompressed(const std::vector<InputEdge
 
         output_edge_list.push_back(edge);
 
-        if (!input_edge.is_split)
+        if (!input_edge.flags.is_split)
         {
             std::swap(edge.source, edge.target);
-            edge.data.reversed = !input_edge.backward;
+            edge.data.reversed = !input_edge.flags.backward;
             output_edge_list.push_back(edge);
         }
     }

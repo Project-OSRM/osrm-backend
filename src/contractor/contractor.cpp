@@ -68,7 +68,8 @@ int Contractor::Run()
     std::vector<extractor::EdgeBasedEdge> edge_based_edge_list;
 
     updater::Updater updater(config.updater_config);
-    EdgeID max_edge_id = updater.LoadAndUpdateEdgeExpandedGraph(edge_based_edge_list, node_weights);
+    EdgeID number_of_edge_based_nodes =
+        updater.LoadAndUpdateEdgeExpandedGraph(edge_based_edge_list, node_weights);
 
     // Contracting the edge-expanded graph
 
@@ -82,7 +83,8 @@ int Contractor::Run()
         extractor::ProfileProperties properties;
         extractor::files::readProfileProperties(config.GetPath(".osrm.properties"), properties);
 
-        node_filters = util::excludeFlagsToNodeFilter(max_edge_id + 1, node_data, properties);
+        node_filters =
+            util::excludeFlagsToNodeFilter(number_of_edge_based_nodes, node_data, properties);
     }
 
     RangebasedCRC32 crc32_calculator;
@@ -91,11 +93,11 @@ int Contractor::Run()
     QueryGraph query_graph;
     std::vector<std::vector<bool>> edge_filters;
     std::vector<std::vector<bool>> cores;
-    std::tie(query_graph, edge_filters, cores) =
-        contractExcludableGraph(toContractorGraph(max_edge_id + 1, std::move(edge_based_edge_list)),
-                                std::move(node_weights),
-                                std::move(node_filters),
-                                config.core_factor);
+    std::tie(query_graph, edge_filters, cores) = contractExcludableGraph(
+        toContractorGraph(number_of_edge_based_nodes, std::move(edge_based_edge_list)),
+        std::move(node_weights),
+        std::move(node_filters),
+        config.core_factor);
     TIMER_STOP(contraction);
     util::Log() << "Contracted graph has " << query_graph.GetNumberOfEdges() << " edges.";
     util::Log() << "Contraction took " << TIMER_SEC(contraction) << " sec";

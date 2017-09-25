@@ -28,6 +28,7 @@ class NodeBasedGraphWalker
 {
   public:
     NodeBasedGraphWalker(const util::NodeBasedDynamicGraph &node_based_graph,
+                         const EdgeBasedNodeDataContainer &node_data_container,
                          const IntersectionGenerator &intersection_generator);
 
     /*
@@ -46,6 +47,7 @@ class NodeBasedGraphWalker
 
   private:
     const util::NodeBasedDynamicGraph &node_based_graph;
+    const EdgeBasedNodeDataContainer &node_data_container;
     const IntersectionGenerator &intersection_generator;
 };
 
@@ -106,7 +108,8 @@ struct SelectRoadByNameOnlyChoiceAndStraightness
     boost::optional<EdgeID> operator()(const NodeID nid,
                                        const EdgeID via_edge_id,
                                        const IntersectionView &intersection,
-                                       const util::NodeBasedDynamicGraph &node_based_graph) const;
+                                       const util::NodeBasedDynamicGraph &node_based_graph,
+                                       const EdgeBasedNodeDataContainer &node_data_container) const;
 
   private:
     const NameID desired_name_id;
@@ -131,7 +134,8 @@ struct SelectStraightmostRoadByNameAndOnlyChoice
     boost::optional<EdgeID> operator()(const NodeID nid,
                                        const EdgeID via_edge_id,
                                        const IntersectionView &intersection,
-                                       const util::NodeBasedDynamicGraph &node_based_graph) const;
+                                       const util::NodeBasedDynamicGraph &node_based_graph,
+                                       const EdgeBasedNodeDataContainer &node_data_container) const;
 
   private:
     const NameID desired_name_id;
@@ -201,8 +205,11 @@ NodeBasedGraphWalker::TraverseRoad(NodeID current_node_id,
         if (next_intersection.size() <= 1)
             return {};
 
-        auto next_edge_id =
-            selector(current_node_id, current_edge_id, next_intersection, node_based_graph);
+        auto next_edge_id = selector(current_node_id,
+                                     current_edge_id,
+                                     next_intersection,
+                                     node_based_graph,
+                                     node_data_container);
 
         if (!next_edge_id)
             return {};
@@ -224,7 +231,8 @@ struct SkipTrafficSignalBarrierRoadSelector
     boost::optional<EdgeID> operator()(const NodeID,
                                        const EdgeID,
                                        const IntersectionView &intersection,
-                                       const util::NodeBasedDynamicGraph &) const
+                                       const util::NodeBasedDynamicGraph &,
+                                       const EdgeBasedNodeDataContainer &) const
     {
         if (intersection.isTrafficSignalOrBarrier())
         {

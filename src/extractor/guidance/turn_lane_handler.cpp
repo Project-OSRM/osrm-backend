@@ -34,11 +34,12 @@ std::size_t getNumberOfTurns(const Intersection &intersection)
 } // namespace
 
 TurnLaneHandler::TurnLaneHandler(const util::NodeBasedDynamicGraph &node_based_graph,
+                                 const EdgeBasedNodeDataContainer &node_data_container,
                                  LaneDescriptionMap &lane_description_map,
                                  const TurnAnalysis &turn_analysis,
                                  util::guidance::LaneDataIdMap &id_map)
-    : node_based_graph(node_based_graph), lane_description_map(lane_description_map),
-      turn_analysis(turn_analysis), id_map(id_map)
+    : node_based_graph(node_based_graph), node_data_container(node_data_container),
+      lane_description_map(lane_description_map), turn_analysis(turn_analysis), id_map(id_map)
 {
     std::tie(turn_lane_offsets, turn_lane_masks) =
         transformTurnLaneMapIntoArrays(lane_description_map);
@@ -149,7 +150,7 @@ TurnLaneScenario TurnLaneHandler::deduceScenario(const NodeID at,
                                                  LaneDescriptionID &previous_description_id)
 {
     // as long as we don't want to emit lanes on roundabout, don't assign them
-    if (node_based_graph.GetEdgeData(via_edge).roundabout)
+    if (node_based_graph.GetEdgeData(via_edge).flags.roundabout)
         return TurnLaneScenario::NONE;
 
     // really don't touch roundabouts (#2626)
@@ -179,7 +180,9 @@ TurnLaneScenario TurnLaneHandler::deduceScenario(const NodeID at,
         (intersection.size() == 2 &&
          ((lane_description_id != INVALID_LANE_DESCRIPTIONID &&
            lane_description_id ==
-               node_based_graph.GetEdgeData(intersection[1].eid).lane_description_id) &&
+               node_data_container
+                   .GetAnnotation(node_based_graph.GetEdgeData(intersection[1].eid).annotation_data)
+                   .lane_description_id) &&
           angularDeviation(intersection[1].angle, STRAIGHT_ANGLE) < FUZZY_ANGLE_DIFFERENCE));
 
     if (is_going_straight_and_turns_continue)
@@ -367,7 +370,8 @@ void TurnLaneHandler::extractLaneData(const EdgeID via_edge,
                                       LaneDescriptionID &lane_description_id,
                                       LaneDataVector &lane_data) const
 {
-    const auto &edge_data = node_based_graph.GetEdgeData(via_edge);
+    const auto &edge_data =
+        node_data_container.GetAnnotation(node_based_graph.GetEdgeData(via_edge).annotation_data);
     lane_description_id = edge_data.lane_description_id;
     // create an empty lane data
     if (INVALID_LANE_DESCRIPTIONID != lane_description_id)
@@ -719,9 +723,13 @@ Intersection TurnLaneHandler::handleSliproadTurn(Intersection intersection,
             return previous_intersection[sliproad_index + 1];
     }();
     const auto main_description_id =
-        node_based_graph.GetEdgeData(main_road.eid).lane_description_id;
+        node_data_container
+            .GetAnnotation(node_based_graph.GetEdgeData(main_road.eid).annotation_data)
+            .lane_description_id;
     const auto sliproad_description_id =
-        node_based_graph.GetEdgeData(sliproad.eid).lane_description_id;
+        node_data_container
+            .GetAnnotation(node_based_graph.GetEdgeData(sliproad.eid).annotation_data)
+            .lane_description_id;
 
     if (main_description_id == INVALID_LANE_DESCRIPTIONID ||
         sliproad_description_id == INVALID_LANE_DESCRIPTIONID)

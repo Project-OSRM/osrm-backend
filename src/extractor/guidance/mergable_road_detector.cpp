@@ -25,13 +25,17 @@ namespace
 // check a connected road for equality of a name
 inline auto makeCheckRoadForName(const NameID name_id,
                                  const util::NodeBasedDynamicGraph &node_based_graph,
+                                 const EdgeBasedNodeDataContainer &node_data_container,
                                  const util::NameTable &name_table,
                                  const SuffixTable &suffix_table)
 {
-    return [name_id, &node_based_graph, &name_table, &suffix_table](
+    return [name_id, &node_based_graph, &node_data_container, &name_table, &suffix_table](
         const MergableRoadDetector::MergableRoadData &road) {
         // since we filter here, we don't want any other name than the one we are looking for
-        const auto road_name = node_based_graph.GetEdgeData(road.eid).name_id;
+        const auto road_name =
+            node_data_container
+                .GetAnnotation(node_based_graph.GetEdgeData(road.eid).annotation_data)
+                .name_id;
         if (name_id == EMPTY_NAMEID || road_name == EMPTY_NAMEID)
             return true;
         const auto requires_announcement =
@@ -44,14 +48,16 @@ inline auto makeCheckRoadForName(const NameID name_id,
 }
 
 MergableRoadDetector::MergableRoadDetector(const util::NodeBasedDynamicGraph &node_based_graph,
+                                           const EdgeBasedNodeDataContainer &node_data_container,
                                            const std::vector<util::Coordinate> &node_coordinates,
                                            const IntersectionGenerator &intersection_generator,
                                            const CoordinateExtractor &coordinate_extractor,
                                            const util::NameTable &name_table,
                                            const SuffixTable &street_name_suffix_table)
-    : node_based_graph(node_based_graph), node_coordinates(node_coordinates),
-      intersection_generator(intersection_generator), coordinate_extractor(coordinate_extractor),
-      name_table(name_table), street_name_suffix_table(street_name_suffix_table)
+    : node_based_graph(node_based_graph), node_data_container(node_data_container),
+      node_coordinates(node_coordinates), intersection_generator(intersection_generator),
+      coordinate_extractor(coordinate_extractor), name_table(name_table),
+      street_name_suffix_table(street_name_suffix_table)
 {
 }
 
@@ -63,11 +69,14 @@ bool MergableRoadDetector::CanMergeRoad(const NodeID intersection_node,
     if (angularDeviation(lhs.bearing, rhs.bearing) > MERGABLE_ANGLE_DIFFERENCE)
         return false;
 
-    const auto &lhs_edge_data = node_based_graph.GetEdgeData(lhs.eid);
-    const auto &rhs_edge_data = node_based_graph.GetEdgeData(rhs.eid);
+    const auto &lhs_edge = node_based_graph.GetEdgeData(lhs.eid);
+    const auto &rhs_edge = node_based_graph.GetEdgeData(rhs.eid);
+    const auto &lhs_edge_data = node_data_container.GetAnnotation(lhs_edge.annotation_data);
+    const auto &rhs_edge_data = node_data_container.GetAnnotation(rhs_edge.annotation_data);
 
     // and they need to describe the same road
-    if (!EdgeDataSupportsMerge(lhs_edge_data, rhs_edge_data))
+    if ((lhs_edge.reversed == rhs_edge.reversed) ||
+        !EdgeDataSupportsMerge(lhs_edge.flags, rhs_edge.flags, lhs_edge_data, rhs_edge_data))
         return false;
 
     /* don't use any circular links, since they mess up detection we jump out early.
@@ -120,36 +129,36 @@ bool MergableRoadDetector::IsDistinctFrom(const MergableRoadData &lhs,
     if (angularDeviation(lhs.bearing, rhs.bearing) > MERGABLE_ANGLE_DIFFERENCE)
         return true;
     else // or it cannot have the same name
-        return !HaveIdenticalNames(node_based_graph.GetEdgeData(lhs.eid).name_id,
-                                   node_based_graph.GetEdgeData(rhs.eid).name_id);
+        return !HaveIdenticalNames(
+            node_data_container.GetAnnotation(node_based_graph.GetEdgeData(lhs.eid).annotation_data)
+                .name_id,
+            node_data_container.GetAnnotation(node_based_graph.GetEdgeData(rhs.eid).annotation_data)
+                .name_id);
 }
 
-bool MergableRoadDetector::EdgeDataSupportsMerge(const util::NodeBasedEdgeData &lhs_edge_data,
-                                                 const util::NodeBasedEdgeData &rhs_edge_data) const
+bool MergableRoadDetector::EdgeDataSupportsMerge(
+    const NodeBasedEdgeClassification &lhs_flags,
+    const NodeBasedEdgeClassification &rhs_flags,
+    const NodeBasedEdgeAnnotation &lhs_annotation,
+    const NodeBasedEdgeAnnotation &rhs_annotation) const
 {
     // roundabouts are special, simply don't hurt them. We might not want to bear the
     // consequences
-    if (lhs_edge_data.roundabout || rhs_edge_data.roundabout)
-        return false;
-
-    /* to describe the same road, but in opposite directions (which is what we require for a
-     * merge), the roads have to feature one reversed and one non-reversed edge
-     */
-    if (lhs_edge_data.reversed == rhs_edge_data.reversed)
+    if (lhs_flags.roundabout || rhs_flags.roundabout)
         return false;
 
     /* The travel mode should be the same for both roads. If we were to merge different travel
      * modes, we would hide information/run the risk of loosing valid choices (e.g. short period
      * of pushing)
      */
-    if (lhs_edge_data.travel_mode != rhs_edge_data.travel_mode)
+    if (lhs_annotation.travel_mode != rhs_annotation.travel_mode)
         return false;
 
     // we require valid names
-    if (!HaveIdenticalNames(lhs_edge_data.name_id, rhs_edge_data.name_id))
+    if (!HaveIdenticalNames(lhs_annotation.name_id, rhs_annotation.name_id))
         return false;
 
-    return lhs_edge_data.road_classification == rhs_edge_data.road_classification;
+    return lhs_flags.road_classification == rhs_flags.road_classification;
 }
 
 bool MergableRoadDetector::IsTrafficLoop(const NodeID intersection_node,
@@ -172,9 +181,13 @@ bool MergableRoadDetector::IsNarrowTriangle(const NodeID intersection_node,
      * Since both items have the same id, we can `select` based on any setup
      */
     SelectStraightmostRoadByNameAndOnlyChoice selector(
-        node_based_graph.GetEdgeData(lhs.eid).name_id, lhs.bearing, /*requires entry=*/false);
+        node_data_container.GetAnnotation(node_based_graph.GetEdgeData(lhs.eid).annotation_data)
+            .name_id,
+        lhs.bearing,
+        /*requires entry=*/false);
 
-    NodeBasedGraphWalker graph_walker(node_based_graph, intersection_generator);
+    NodeBasedGraphWalker graph_walker(
+        node_based_graph, node_data_container, intersection_generator);
     graph_walker.TraverseRoad(intersection_node, lhs.eid, left_accumulator, selector);
     /* if the intersection does not have a right turn, we continue onto the next one once
      * (skipping over a single small side street)
@@ -231,7 +244,7 @@ bool MergableRoadDetector::IsNarrowTriangle(const NodeID intersection_node,
 
     const auto num_lanes = [this](const MergableRoadData &road) {
         return std::max<std::uint8_t>(
-            node_based_graph.GetEdgeData(road.eid).road_classification.GetNumberOfLanes(), 1);
+            node_based_graph.GetEdgeData(road.eid).flags.road_classification.GetNumberOfLanes(), 1);
     };
 
     // the width we can bridge at the intersection
@@ -265,11 +278,15 @@ bool MergableRoadDetector::HaveSameDirection(const NodeID intersection_node,
         return false;
 
     // Find a coordinate following a road that is far away
-    NodeBasedGraphWalker graph_walker(node_based_graph, intersection_generator);
+    NodeBasedGraphWalker graph_walker(
+        node_based_graph, node_data_container, intersection_generator);
     const auto getCoordinatesAlongWay = [&](const EdgeID edge_id, const double max_length) {
         LengthLimitedCoordinateAccumulator accumulator(coordinate_extractor, max_length);
         SelectStraightmostRoadByNameAndOnlyChoice selector(
-            node_based_graph.GetEdgeData(edge_id).name_id, lhs.bearing, /*requires_entry=*/false);
+            node_data_container.GetAnnotation(node_based_graph.GetEdgeData(edge_id).annotation_data)
+                .name_id,
+            lhs.bearing,
+            /*requires_entry=*/false);
         graph_walker.TraverseRoad(intersection_node, edge_id, accumulator, selector);
 
         return std::make_pair(accumulator.accumulated_length, accumulator.coordinates);
@@ -342,9 +359,9 @@ bool MergableRoadDetector::HaveSameDirection(const NodeID intersection_node,
         coordinates_to_the_right.end());
 
     const auto lane_count_lhs = std::max<int>(
-        1, node_based_graph.GetEdgeData(lhs.eid).road_classification.GetNumberOfLanes());
+        1, node_based_graph.GetEdgeData(lhs.eid).flags.road_classification.GetNumberOfLanes());
     const auto lane_count_rhs = std::max<int>(
-        1, node_based_graph.GetEdgeData(rhs.eid).road_classification.GetNumberOfLanes());
+        1, node_based_graph.GetEdgeData(rhs.eid).flags.road_classification.GetNumberOfLanes());
 
     const auto combined_road_width = 0.5 * (lane_count_lhs + lane_count_rhs) * ASSUMED_LANE_WIDTH;
     const auto constexpr MAXIMAL_ALLOWED_SEPARATION_WIDTH = 8;
@@ -380,10 +397,16 @@ bool MergableRoadDetector::IsTrafficIsland(const NodeID intersection_node,
 
         // check if all items share a name
         const auto range = node_based_graph.GetAdjacentEdgeRange(nid);
-        const auto required_name_id = node_based_graph.GetEdgeData(range.front()).name_id;
+        const auto required_name_id =
+            node_data_container
+                .GetAnnotation(node_based_graph.GetEdgeData(range.front()).annotation_data)
+                .name_id;
 
         const auto has_required_name = [this, required_name_id](const auto edge_id) {
-            const auto road_name = node_based_graph.GetEdgeData(edge_id).name_id;
+            const auto road_name =
+                node_data_container
+                    .GetAnnotation(node_based_graph.GetEdgeData(edge_id).annotation_data)
+                    .name_id;
             if (required_name_id == EMPTY_NAMEID || road_name == EMPTY_NAMEID)
                 return false;
             return !util::guidance::requiresNameAnnounced(
@@ -428,14 +451,19 @@ bool MergableRoadDetector::IsLinkRoad(const NodeID intersection_node,
     const auto next_intersection_along_road = intersection_generator.GetConnectedRoads(
         next_intersection_parameters.nid, next_intersection_parameters.via_eid);
     const auto extract_name_id = [this](const MergableRoadData &road) {
-        return node_based_graph.GetEdgeData(road.eid).name_id;
+        return node_data_container
+            .GetAnnotation(node_based_graph.GetEdgeData(road.eid).annotation_data)
+            .name_id;
     };
 
     const auto requested_name_id = extract_name_id(road);
     const auto next_road_along_path = next_intersection_along_road.findClosestTurn(
         STRAIGHT_ANGLE,
-        makeCheckRoadForName(
-            requested_name_id, node_based_graph, name_table, street_name_suffix_table));
+        makeCheckRoadForName(requested_name_id,
+                             node_based_graph,
+                             node_data_container,
+                             name_table,
+                             street_name_suffix_table));
 
     // we need to have a continuing road to successfully detect a link road
     if (next_road_along_path == next_intersection_along_road.end())
@@ -460,9 +488,16 @@ bool MergableRoadDetector::IsLinkRoad(const NodeID intersection_node,
     // near straight road that continues
     return angularDeviation(opposite_of_next_road_along_path->angle, next_road_along_path->angle) >=
                (STRAIGHT_ANGLE - FUZZY_ANGLE_DIFFERENCE) &&
+           (node_based_graph.GetEdgeData(next_road_along_path->eid).reversed ==
+            node_based_graph.GetEdgeData(opposite_of_next_road_along_path->eid).reversed) &&
            EdgeDataSupportsMerge(
-               node_based_graph.GetEdgeData(next_road_along_path->eid),
-               node_based_graph.GetEdgeData(opposite_of_next_road_along_path->eid));
+               node_based_graph.GetEdgeData(next_road_along_path->eid).flags,
+               node_based_graph.GetEdgeData(opposite_of_next_road_along_path->eid).flags,
+               node_data_container.GetAnnotation(
+                   node_based_graph.GetEdgeData(next_road_along_path->eid).annotation_data),
+               node_data_container.GetAnnotation(
+                   node_based_graph.GetEdgeData(opposite_of_next_road_along_path->eid)
+                       .annotation_data));
 }
 
 } // namespace guidance

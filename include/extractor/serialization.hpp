@@ -120,24 +120,22 @@ template <storage::Ownership Ownership>
 inline void read(storage::io::FileReader &reader,
                  detail::EdgeBasedNodeDataContainerImpl<Ownership> &node_data_container)
 {
-    storage::serialization::read(reader, node_data_container.geometry_ids);
-    storage::serialization::read(reader, node_data_container.name_ids);
-    storage::serialization::read(reader, node_data_container.component_ids);
-    storage::serialization::read(reader, node_data_container.travel_modes);
-    storage::serialization::read(reader, node_data_container.classes);
-    storage::serialization::read(reader, node_data_container.is_left_hand_driving);
+    // read header (separate sizes for both vectors)
+    reader.ReadElementCount64();
+    reader.ReadElementCount64();
+    // read actual data
+    storage::serialization::read(reader, node_data_container.nodes);
+    storage::serialization::read(reader, node_data_container.annotation_data);
 }
 
 template <storage::Ownership Ownership>
 inline void write(storage::io::FileWriter &writer,
                   const detail::EdgeBasedNodeDataContainerImpl<Ownership> &node_data_container)
 {
-    storage::serialization::write(writer, node_data_container.geometry_ids);
-    storage::serialization::write(writer, node_data_container.name_ids);
-    storage::serialization::write(writer, node_data_container.component_ids);
-    storage::serialization::write(writer, node_data_container.travel_modes);
-    storage::serialization::write(writer, node_data_container.classes);
-    storage::serialization::write(writer, node_data_container.is_left_hand_driving);
+    writer.WriteElementCount64(node_data_container.NumberOfNodes());
+    writer.WriteElementCount64(node_data_container.NumberOfAnnotations());
+    storage::serialization::write(writer, node_data_container.nodes);
+    storage::serialization::write(writer, node_data_container.annotation_data);
 }
 
 inline void read(storage::io::FileReader &reader, NodeRestriction &restriction)

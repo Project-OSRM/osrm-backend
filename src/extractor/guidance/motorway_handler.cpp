@@ -24,27 +24,29 @@ namespace
 
 inline bool isMotorwayClass(EdgeID eid, const util::NodeBasedDynamicGraph &node_based_graph)
 {
-    return node_based_graph.GetEdgeData(eid).road_classification.IsMotorwayClass();
+    return node_based_graph.GetEdgeData(eid).flags.road_classification.IsMotorwayClass();
 }
 inline RoadClassification roadClass(const ConnectedRoad &road,
                                     const util::NodeBasedDynamicGraph &graph)
 {
-    return graph.GetEdgeData(road.eid).road_classification;
+    return graph.GetEdgeData(road.eid).flags.road_classification;
 }
 
 inline bool isRampClass(EdgeID eid, const util::NodeBasedDynamicGraph &node_based_graph)
 {
-    return node_based_graph.GetEdgeData(eid).road_classification.IsRampClass();
+    return node_based_graph.GetEdgeData(eid).flags.road_classification.IsRampClass();
 }
 
 } // namespace
 
 MotorwayHandler::MotorwayHandler(const util::NodeBasedDynamicGraph &node_based_graph,
+                                 const EdgeBasedNodeDataContainer &node_data_container,
                                  const std::vector<util::Coordinate> &coordinates,
                                  const util::NameTable &name_table,
                                  const SuffixTable &street_name_suffix_table,
                                  const IntersectionGenerator &intersection_generator)
     : IntersectionHandler(node_based_graph,
+                          node_data_container,
                           coordinates,
                           name_table,
                           street_name_suffix_table,
@@ -101,7 +103,8 @@ operator()(const NodeID, const EdgeID via_eid, Intersection intersection) const
 
 Intersection MotorwayHandler::fromMotorway(const EdgeID via_eid, Intersection intersection) const
 {
-    const auto &in_data = node_based_graph.GetEdgeData(via_eid);
+    const auto &in_data =
+        node_data_container.GetAnnotation(node_based_graph.GetEdgeData(via_eid).annotation_data);
     BOOST_ASSERT(isMotorwayClass(via_eid, node_based_graph));
 
     const auto countExitingMotorways = [this](const Intersection &intersection) {
@@ -121,7 +124,8 @@ Intersection MotorwayHandler::fromMotorway(const EdgeID via_eid, Intersection in
             if (!road.entry_allowed)
                 continue;
 
-            const auto &out_data = node_based_graph.GetEdgeData(road.eid);
+            const auto &out_data = node_data_container.GetAnnotation(
+                node_based_graph.GetEdgeData(road.eid).annotation_data);
 
             const auto same_name = !util::guidance::requiresNameAnnounced(
                 in_data.name_id, out_data.name_id, name_table, street_name_suffix_table);
@@ -353,8 +357,10 @@ Intersection MotorwayHandler::fromRamp(const EdgeID via_eid, Intersection inters
     }
     else if (intersection.size() == 3)
     {
-        const auto &second_intersection_data = node_based_graph.GetEdgeData(intersection[2].eid);
-        const auto &first_intersection_data = node_based_graph.GetEdgeData(intersection[1].eid);
+        const auto &second_intersection_data = node_data_container.GetAnnotation(
+            node_based_graph.GetEdgeData(intersection[2].eid).annotation_data);
+        const auto &first_intersection_data = node_data_container.GetAnnotation(
+            node_based_graph.GetEdgeData(intersection[1].eid).annotation_data);
         const auto first_second_same_name =
             !util::guidance::requiresNameAnnounced(second_intersection_data.name_id,
                                                    first_intersection_data.name_id,

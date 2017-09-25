@@ -7,7 +7,6 @@
 #include "extractor/guidance/intersection_generator.hpp"
 #include "extractor/guidance/intersection_handler.hpp"
 #include "extractor/guidance/roundabout_type.hpp"
-#include "extractor/profile_properties.hpp"
 #include "extractor/query_node.hpp"
 
 #include "util/name_table.hpp"
@@ -41,11 +40,11 @@ class RoundaboutHandler : public IntersectionHandler
 {
   public:
     RoundaboutHandler(const util::NodeBasedDynamicGraph &node_based_graph,
+                      const EdgeBasedNodeDataContainer &node_data_container,
                       const std::vector<util::Coordinate> &coordinates,
                       const CompressedEdgeContainer &compressed_edge_container,
                       const util::NameTable &name_table,
                       const SuffixTable &street_name_suffix_table,
-                      const ProfileProperties &profile_properties,
                       const IntersectionGenerator &intersection_generator);
 
     ~RoundaboutHandler() override final = default;
@@ -86,8 +85,6 @@ class RoundaboutHandler : public IntersectionHandler
     qualifiesAsRoundaboutIntersection(const std::unordered_set<NodeID> &roundabout_nodes) const;
 
     const CompressedEdgeContainer &compressed_edge_container;
-    const ProfileProperties &profile_properties;
-
     const CoordinateExtractor coordinate_extractor;
 };
 

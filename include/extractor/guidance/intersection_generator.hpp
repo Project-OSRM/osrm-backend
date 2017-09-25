@@ -38,6 +38,7 @@ class IntersectionGenerator
 {
   public:
     IntersectionGenerator(const util::NodeBasedDynamicGraph &node_based_graph,
+                          const EdgeBasedNodeDataContainer &node_data_container,
                           const RestrictionMap &restriction_map,
                           const std::unordered_set<NodeID> &barrier_nodes,
                           const std::vector<util::Coordinate> &coordinates,
@@ -110,6 +111,7 @@ class IntersectionGenerator
 
   private:
     const util::NodeBasedDynamicGraph &node_based_graph;
+    const EdgeBasedNodeDataContainer &node_data_container;
     const RestrictionMap &restriction_map;
     const std::unordered_set<NodeID> &barrier_nodes;
     const std::vector<util::Coordinate> &coordinates;

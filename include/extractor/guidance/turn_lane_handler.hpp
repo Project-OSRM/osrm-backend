@@ -73,6 +73,7 @@ class TurnLaneHandler
     typedef std::vector<TurnLaneData> LaneDataVector;
 
     TurnLaneHandler(const util::NodeBasedDynamicGraph &node_based_graph,
+                    const EdgeBasedNodeDataContainer &node_data_container,
                     LaneDescriptionMap &lane_description_map,
                     const TurnAnalysis &turn_analysis,
                     util::guidance::LaneDataIdMap &id_map);
@@ -88,6 +89,7 @@ class TurnLaneHandler
     // we need to be able to look at previous intersections to, in some cases, find the correct turn
     // lanes for a turn
     const util::NodeBasedDynamicGraph &node_based_graph;
+    const EdgeBasedNodeDataContainer &node_data_container;
     std::vector<std::uint32_t> turn_lane_offsets;
     std::vector<TurnLaneType::Mask> turn_lane_masks;
     LaneDescriptionMap &lane_description_map;
