@@ -157,7 +157,9 @@ which will check and use pre-built binaries if they're available for this releas
 
 to always force building the Node.js bindings from source.
 
-For usage details have a look [these API docs](docs/nodejs/api.md).
+For usage details have a look [these API docs](docs/nodejs/api.md). 
+
+An exemplary implementation by a 3rd party with Docker and Node.js can be found [here](https://github.com/door2door-io/osrm-express-server-demo).
 
 
 ## References in publications
