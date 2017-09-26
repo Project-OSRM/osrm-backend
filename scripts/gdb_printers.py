@@ -145,7 +145,8 @@ class SVGPrinter (gdb.Command):
         self.to_svg = {
             'const osrm::engine::datafacade::ContiguousInternalMemoryDataFacade<osrm::engine::routing_algorithms::ch::Algorithm> &': self.Facade,
             'const osrm::engine::datafacade::ContiguousInternalMemoryDataFacade<osrm::engine::routing_algorithms::corech::Algorithm> &': self.Facade,
-            'const osrm::engine::datafacade::ContiguousInternalMemoryDataFacade<osrm::engine::routing_algorithms::mld::Algorithm> &': self.Facade}
+            'const osrm::engine::datafacade::ContiguousInternalMemoryDataFacade<osrm::engine::routing_algorithms::mld::Algorithm> &': self.Facade,
+            'osrm::engine::DataFacade': self.Facade}
 
 
     @staticmethod
@@ -258,17 +259,27 @@ class SVGPrinter (gdb.Command):
             geometry_first = geometry['_M_impl']['_M_start']
             for segment, weight in enumerate(iterate(weights)):
                 ref = 's' + str(node) + '.' + str(segment)
-                result += '<path id="' + ref + '" class="segment" d="'  \
-                                + 'M' + t(lonlat(call(facade, 'GetCoordinateOfNode', geometry_first.dereference()))) + ' ' \
-                                + 'L' + t(lonlat(call(facade, 'GetCoordinateOfNode', (geometry_first+1).dereference()))) + '" />'\
-                                + '<text class="segment weight ' + direction + '">'\
-                                + '<textPath xlink:href="#' + ref + '" startOffset="50%">' \
-                                + segment_weight(weight) + '</textPath></text>\n'
+                fr = lonlat(call(facade, 'GetCoordinateOfNode', geometry_first.dereference()))
+                to = lonlat(call(facade, 'GetCoordinateOfNode', (geometry_first+1).dereference()))
+                if fr == to:
+                    ## node penalty on zero length segment (traffic light)
+                    result += '<text class="segment weight ' + direction \
+                           + '" x="' + str(tx(fr[0])) + '" y="' + str(ty(fr[1])) \
+                           + '" font="Arial" font-size="32" rotate="0" text-anchor="middle" >' \
+                           + '&#x1F6A6; ' + segment_weight(weight) + '</text>\n'
+                else:
+                    ## normal segment
+                    result += '<path id="' + ref + '" class="segment" d="'  \
+                           + 'M' + t(fr) + ' ' \
+                           + 'L' + t(to) + '" />'\
+                           + '<text class="segment weight ' + direction + '">'\
+                           + '<textPath xlink:href="#' + ref + '" startOffset="50%">' \
+                           + segment_weight(weight) + '</textPath></text>\n'
                 geometry_first += 1
 
             ## add edge-based edges
             s0, s1 = geometry['_M_impl']['_M_start'].dereference(), (geometry['_M_impl']['_M_start'] + 1).dereference()
-            for edge in range(call(facade, 'BeginEdges', node), call(facade, 'EndEdges', node)):
+            for edge in []: # range(call(facade, 'BeginEdges', node), call(facade, 'EndEdges', node)): adjust to GetAdjacentEdgeRange
                 target, edge_data = call(facade, 'GetTarget', edge), call(facade, 'GetEdgeData', edge)
                 direction = 'both' if edge_data['forward'] and edge_data['backward'] else 'forward' if edge_data['forward'] else 'backward'
                 target_geometry = SVGPrinter.getByGeometryId(facade, call(facade, 'GetGeometryIndex', target), 'Geometry')
@@ -323,7 +334,8 @@ class SVGPrinter (gdb.Command):
             re_float = '[-+]?[0-9]*\.?[0-9]+'
             bbox = re.search('(' + re_float + '),(' + re_float + ');(' + re_float + '),(' + re_float +')', arg)
             bbox = [float(x) for x in bbox.groups()] if bbox else [-180, -90, 180, 90]
-            svg = self.to_svg[str(val.type)](val, width, height, bbox)
+            type = val.type.target().unqualified() if val.type.code == gdb.TYPE_CODE_REF else val.type
+            svg = self.to_svg[str(type)](val, width, height, bbox)
             self.show_svg(svg, width, height)
         except KeyError as e:
             print ('no SVG printer for: ' + str(e))
