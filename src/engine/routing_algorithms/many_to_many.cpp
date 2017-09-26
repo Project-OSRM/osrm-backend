@@ -120,13 +120,28 @@ addLoopWeight(const DataFacade<mld::Algorithm> &, const NodeID, EdgeWeight &, Ed
     return false;
 }
 
-template <bool DIRECTION>
+template <typename MultiLevelPartition>
+inline LevelID getNodeQueryLevel(const MultiLevelPartition &partition,
+                                 NodeID node,
+                                 const PhantomNode &phantom_node)
+{
+    auto highest_diffrent_level = [&partition, node](const SegmentID &phantom_node) {
+        if (phantom_node.enabled)
+            return partition.GetHighestDifferentLevel(phantom_node.id, node);
+        return INVALID_LEVEL_ID;
+    };
+
+    return std::min(highest_diffrent_level(phantom_node.forward_segment_id),
+                    highest_diffrent_level(phantom_node.reverse_segment_id));
+}
+
+template <bool DIRECTION, typename... Args>
 void relaxOutgoingEdges(const DataFacade<mld::Algorithm> &facade,
                         const NodeID node,
                         const EdgeWeight weight,
                         const EdgeDuration duration,
                         typename SearchEngineData<mld::Algorithm>::ManyToManyQueryHeap &query_heap,
-                        const PhantomNode &phantom_node)
+                        Args... args)
 {
     BOOST_ASSERT(!facade.ExcludeNode(node));
 
@@ -134,13 +149,7 @@ void relaxOutgoingEdges(const DataFacade<mld::Algorithm> &facade,
     const auto &cells = facade.GetCellStorage();
     const auto &metric = facade.GetCellMetric();
 
-    auto highest_diffrent_level = [&partition, node](const SegmentID &phantom_node) {
-        if (phantom_node.enabled)
-            return partition.GetHighestDifferentLevel(phantom_node.id, node);
-        return INVALID_LEVEL_ID;
-    };
-    const auto level = std::min(highest_diffrent_level(phantom_node.forward_segment_id),
-                                highest_diffrent_level(phantom_node.reverse_segment_id));
+    const auto level = getNodeQueryLevel(partition, node, args...);
 
     const auto &node_data = query_heap.GetData(node);
 
