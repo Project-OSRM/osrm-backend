@@ -135,6 +135,35 @@ inline LevelID getNodeQueryLevel(const MultiLevelPartition &partition,
                     highest_diffrent_level(phantom_node.reverse_segment_id));
 }
 
+template <typename MultiLevelPartition>
+inline LevelID getNodeQueryLevel(const MultiLevelPartition &partition,
+                                 NodeID node,
+                                 const std::vector<PhantomNode> &phantom_nodes,
+                                 const std::size_t phantom_index,
+                                 const std::vector<std::size_t> &phantom_indices)
+{
+    auto level = [&partition, node](const SegmentID &source, const SegmentID &target) {
+        if (source.enabled && target.enabled)
+            return partition.GetQueryLevel(source.id, target.id, node);
+        return INVALID_LEVEL_ID;
+    };
+
+    const auto &source_phantom = phantom_nodes[phantom_index];
+
+    auto result = INVALID_LEVEL_ID;
+    for (const auto &index : phantom_indices)
+    {
+        const auto &target_phantom = phantom_nodes[index];
+        auto min_level = std::min(
+            std::min(level(source_phantom.forward_segment_id, target_phantom.forward_segment_id),
+                     level(source_phantom.forward_segment_id, target_phantom.reverse_segment_id)),
+            std::min(level(source_phantom.reverse_segment_id, target_phantom.forward_segment_id),
+                     level(source_phantom.reverse_segment_id, target_phantom.reverse_segment_id)));
+        result = std::min(result, min_level);
+    }
+    return result;
+}
+
 template <bool DIRECTION, typename... Args>
 void relaxOutgoingEdges(const DataFacade<mld::Algorithm> &facade,
                         const NodeID node,
@@ -445,8 +474,193 @@ std::vector<EdgeDuration> oneToManySearch(SearchEngineData<Algorithm> &engine_wo
         std::iota(phantom_indices.begin(), phantom_indices.end(), 0);
     }
 
-    std::vector<EdgeWeight> weights(phantom_nodes.size(), INVALID_EDGE_WEIGHT);
-    std::vector<EdgeDuration> durations(phantom_nodes.size(), MAXIMAL_EDGE_DURATION);
+    std::vector<EdgeWeight> weights(phantom_indices.size(), INVALID_EDGE_WEIGHT);
+    std::vector<EdgeDuration> durations(phantom_indices.size(), MAXIMAL_EDGE_DURATION);
+
+    // Collect destination (source) nodes into a map
+    std::unordered_multimap<NodeID, std::tuple<std::size_t, EdgeWeight, EdgeDuration>>
+        target_nodes_index;
+    target_nodes_index.reserve(phantom_indices.size());
+    for (std::size_t index = 0; index < phantom_indices.size(); ++index)
+    {
+        const auto &phantom_index = phantom_indices[index];
+        const auto &phantom_node = phantom_nodes[phantom_index];
+
+        if (DIRECTION == FORWARD_DIRECTION)
+        {
+            if (phantom_node.IsValidForwardTarget())
+                target_nodes_index.insert({phantom_node.forward_segment_id.id,
+                                           {index,
+                                            phantom_node.GetForwardWeightPlusOffset(),
+                                            phantom_node.GetForwardDuration()}});
+            if (phantom_node.IsValidReverseTarget())
+                target_nodes_index.insert({phantom_node.reverse_segment_id.id,
+                                           {index,
+                                            phantom_node.GetReverseWeightPlusOffset(),
+                                            phantom_node.GetReverseDuration()}});
+        }
+        else if (DIRECTION == REVERSE_DIRECTION)
+        {
+            if (phantom_node.IsValidForwardSource())
+                target_nodes_index.insert({phantom_node.forward_segment_id.id,
+                                           {index,
+                                            -phantom_node.GetForwardWeightPlusOffset(),
+                                            -phantom_node.GetForwardDuration()}});
+            if (phantom_node.IsValidReverseSource())
+                target_nodes_index.insert({phantom_node.reverse_segment_id.id,
+                                           {index,
+                                            -phantom_node.GetReverseWeightPlusOffset(),
+                                            -phantom_node.GetReverseDuration()}});
+        }
+    }
+
+    // Handler if node is in the destinations list and update weights/durations
+    auto update_values = [&](NodeID node, EdgeWeight weight, EdgeDuration duration) {
+        auto candidates = target_nodes_index.equal_range(node);
+        for (auto it = candidates.first; it != candidates.second;)
+        {
+            std::size_t index;
+            EdgeWeight target_weight;
+            EdgeDuration target_duration;
+            std::tie(index, target_weight, target_duration) = it->second;
+
+            const auto path_weight = weight + target_weight;
+            if (path_weight >= 0 &&
+                path_weight < weights[index]) // TODO: check if path_weight < weights[index] needed
+            {
+                weights[index] = path_weight;
+                durations[index] = duration + target_duration;
+            }
+
+            if (path_weight >= 0)
+            { // Remove node from destinations list
+                it = target_nodes_index.erase(it);
+            }
+            else
+            {
+                ++it;
+            }
+        }
+    };
+
+    // Place source (destination) adjacent nodes into the heap
+    engine_working_data.InitializeOrClearManyToManyThreadLocalStorage(facade.GetNumberOfNodes());
+    auto &query_heap = *(engine_working_data.many_to_many_heap);
+
+    { // Update single node paths
+        const auto &phantom_node = phantom_nodes[phantom_index];
+
+        if (DIRECTION == FORWARD_DIRECTION)
+        {
+            if (phantom_node.IsValidForwardSource())
+                update_values(phantom_node.forward_segment_id.id,
+                              -phantom_node.GetForwardWeightPlusOffset(),
+                              -phantom_node.GetForwardDuration());
+            if (phantom_node.IsValidReverseSource())
+                update_values(phantom_node.reverse_segment_id.id,
+                              -phantom_node.GetReverseWeightPlusOffset(),
+                              -phantom_node.GetReverseDuration());
+        }
+        else if (DIRECTION == REVERSE_DIRECTION)
+        {
+            if (phantom_node.IsValidForwardTarget())
+                update_values(phantom_node.forward_segment_id.id,
+                              phantom_node.GetForwardWeightPlusOffset(),
+                              phantom_node.GetForwardDuration());
+            if (phantom_node.IsValidReverseTarget())
+                update_values(phantom_node.reverse_segment_id.id,
+                              phantom_node.GetReverseWeightPlusOffset(),
+                              phantom_node.GetReverseDuration());
+        }
+
+        if (DIRECTION == FORWARD_DIRECTION)
+        {
+            if (phantom_node.IsValidForwardSource())
+            {
+                const auto parent = phantom_node.forward_segment_id.id;
+                for (auto edge : facade.GetAdjacentEdgeRange(parent))
+                {
+                    const auto &data = facade.GetEdgeData(edge);
+                    if (DIRECTION == FORWARD_DIRECTION ? data.forward : data.backward)
+                    {
+                        query_heap.Insert(
+                            facade.GetTarget(edge),
+                            data.weight - phantom_node.GetForwardWeightPlusOffset(),
+                            {parent, data.duration - phantom_node.GetForwardDuration()});
+                    }
+                }
+            }
+            if (phantom_node.IsValidReverseSource())
+            {
+                const auto parent = phantom_node.reverse_segment_id.id;
+                for (auto edge : facade.GetAdjacentEdgeRange(parent))
+                {
+                    const auto &data = facade.GetEdgeData(edge);
+                    if (DIRECTION == FORWARD_DIRECTION ? data.forward : data.backward)
+                    {
+                        query_heap.Insert(
+                            facade.GetTarget(edge),
+                            data.weight - phantom_node.GetReverseWeightPlusOffset(),
+                            {parent, data.duration - phantom_node.GetReverseDuration()});
+                    }
+                }
+            }
+        }
+        else if (DIRECTION == REVERSE_DIRECTION)
+        {
+            if (phantom_node.IsValidForwardTarget())
+            {
+                const auto parent = phantom_node.forward_segment_id.id;
+                for (auto edge : facade.GetAdjacentEdgeRange(parent))
+                {
+                    const auto &data = facade.GetEdgeData(edge);
+                    if (DIRECTION == FORWARD_DIRECTION ? data.forward : data.backward)
+                    {
+                        query_heap.Insert(
+                            facade.GetTarget(edge),
+                            data.weight + phantom_node.GetForwardWeightPlusOffset(),
+                            {parent, data.duration + phantom_node.GetForwardDuration()});
+                    }
+                }
+            }
+            if (phantom_node.IsValidReverseTarget())
+            {
+                const auto parent = phantom_node.reverse_segment_id.id;
+                for (auto edge : facade.GetAdjacentEdgeRange(parent))
+                {
+                    const auto &data = facade.GetEdgeData(edge);
+                    if (DIRECTION == FORWARD_DIRECTION ? data.forward : data.backward)
+                    {
+                        query_heap.Insert(
+                            facade.GetTarget(edge),
+                            data.weight + phantom_node.GetReverseWeightPlusOffset(),
+                            {parent, data.duration + phantom_node.GetReverseDuration()});
+                    }
+                }
+            }
+        }
+    }
+
+    while (!query_heap.Empty() && !target_nodes_index.empty())
+    {
+        // Extract node from the heap
+        const auto node = query_heap.DeleteMin();
+        const auto weight = query_heap.GetKey(node);
+        const auto duration = query_heap.GetData(node).duration;
+
+        // Update values
+        update_values(node, weight, duration);
+
+        // Relax outgoing edges
+        relaxOutgoingEdges<DIRECTION>(facade,
+                                      node,
+                                      weight,
+                                      duration,
+                                      query_heap,
+                                      phantom_nodes,
+                                      phantom_index,
+                                      phantom_indices);
+    }
 
     return durations;
 }
