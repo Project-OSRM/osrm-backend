@@ -105,8 +105,18 @@ void CrossingCheck::Reconsider(std::set<EdgeT> const & edges)
         continue;
       }
 
+      size_t const countNE1 = countNEqFn(r1);
+      size_t const countNE2 = countNEqFn(r2);
+
+      // This hard check allows to avoid setting internal edge with connected "service" unnamed road.
+      if (countNE1 == 0 || countNE2 == 0)
+      {
+        e.m_internal = false;
+        continue;
+      }
+
       // Internal edge with the name should have >= 2 other turn options or U-turn.
-      if ((countNEqFn(r1) + countNEqFn(r2) < 2) && countEq < 3)
+      if ((countNE1 + countNE2 < 2) && countEq < 3)
       {
         e.m_internal = false;
         continue;
