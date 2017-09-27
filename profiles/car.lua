@@ -281,6 +281,10 @@ function setup()
       ['za:urban'] = 60,
       ['za:rural'] = 100,
       ["none"] = 140
+    },
+
+    relation_types = Sequence {
+      "route"
     }
   }
 end

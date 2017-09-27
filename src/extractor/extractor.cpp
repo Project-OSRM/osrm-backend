@@ -386,6 +386,10 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
                                              turn_lane_map,
                                              scripting_environment.GetProfileProperties());
 
+    // get list of supported relation types
+    auto relation_types = scripting_environment.GetRelations();
+    std::sort(relation_types.begin(), relation_types.end());
+
     ExtractionRelationContainer relations;
     std::vector<std::string> restrictions = scripting_environment.GetRestrictions();
     // setup restriction parser
@@ -445,7 +449,6 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
                                                   relations,
                                                   parsed_buffer.resulting_nodes,
                                                   parsed_buffer.resulting_ways,
-                                                  parsed_buffer.resulting_relations,
                                                   parsed_buffer.resulting_restrictions);
             return parsed_buffer;
         });
@@ -453,6 +456,7 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
     // Parsed nodes and ways handler
     unsigned number_of_nodes = 0;
     unsigned number_of_ways = 0;
+    unsigned number_of_restrictions = 0;
     tbb::filter_t<ParsedBuffer, void> buffer_storage(
         tbb::filter::serial_in_order, [&](const ParsedBuffer &parsed_buffer) {
 
@@ -467,27 +471,55 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
             {
                 extractor_callbacks->ProcessWay(result.first, result.second);
             }
-        });
 
-    // Parsed relations handler
-    unsigned number_of_relations = 0;
-    tbb::filter_t<ParsedBuffer, void> buffer_storage_relation(
-        tbb::filter::serial_in_order, [&](const ParsedBuffer &parsed_buffer) {
-
-            number_of_relations += parsed_buffer.resulting_relations.size();
-            for (const auto &result : parsed_buffer.resulting_relations)
-            {
-                /// TODO: add restriction processing
-                if (result.second.is_restriction)
-                    continue;
-
-                relations.AddRelation(result.second);
-            }
-
+            number_of_restrictions += parsed_buffer.resulting_restrictions.size();
             for (const auto &result : parsed_buffer.resulting_restrictions)
             {
                 extractor_callbacks->ProcessRestriction(result);
             }
+        });
+
+
+
+    tbb::filter_t<SharedBuffer, std::shared_ptr<ExtractionRelationContainer>> buffer_relation_cache(
+        tbb::filter::parallel, [&](const SharedBuffer buffer) {
+            if (!buffer)
+                return std::shared_ptr<ExtractionRelationContainer>{};
+
+            auto relations = std::make_shared<ExtractionRelationContainer>();
+            for (auto entity = buffer->cbegin(), end = buffer->cend(); entity != end; ++entity)
+            {
+                if (entity->type() != osmium::item_type::relation)
+                    continue;
+
+                const auto & rel = static_cast<const osmium::Relation &>(*entity);
+
+                const char * rel_type = rel.get_value_by_key("type");
+                if (!rel_type || !std::binary_search(relation_types.begin(), relation_types.end(), std::string(rel_type)))
+                    continue;
+
+                ExtractionRelation extracted_rel({rel.id(), osmium::item_type::relation});
+                for (auto const & t : rel.tags())
+                    extracted_rel.attributes.emplace_back(std::make_pair(t.key(), t.value()));
+
+                for (auto const & m : rel.members())
+                {
+                    ExtractionRelation::OsmIDTyped const mid(m.ref(), m.type());
+                    extracted_rel.AddMember(mid, m.role());
+                    relations->AddRelationMember(extracted_rel.id, mid);
+                }
+
+                relations->AddRelation(std::move(extracted_rel));
+            };
+            return relations;
+        });
+
+    unsigned number_of_relations = 0;
+    tbb::filter_t<std::shared_ptr<ExtractionRelationContainer>, void> buffer_storage_relation(
+        tbb::filter::serial_in_order, [&](const std::shared_ptr<ExtractionRelationContainer> parsed_relations) {
+
+            number_of_relations += parsed_relations->GetRelationsNum();
+            relations.Merge(std::move(*parsed_relations));
         });
 
     // Parse OSM elements with parallel transformer
@@ -500,13 +532,13 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
         util::Log() << "Parse relations ...";
         osmium::io::Reader reader(input_file, osmium::osm_entity_bits::relation, read_meta);
         tbb::parallel_pipeline(
-            num_threads, buffer_reader(reader) & buffer_transformer & buffer_storage_relation);
+            num_threads, buffer_reader(reader) & buffer_relation_cache & buffer_storage_relation);
     }
 
     { // Nodes and ways reading pipeline
         util::Log() << "Parse ways and nodes ...";
         osmium::io::Reader reader(
-            input_file, osmium::osm_entity_bits::node | osmium::osm_entity_bits::way, read_meta);
+            input_file, osmium::osm_entity_bits::node | osmium::osm_entity_bits::way | osmium::osm_entity_bits::relation, read_meta);
 
         const auto pipeline =
             scripting_environment.HasLocationDependentData() && config.use_locations_cache
@@ -519,7 +551,8 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
     util::Log() << "Parsing finished after " << TIMER_SEC(parsing) << " seconds";
 
     util::Log() << "Raw input contains " << number_of_nodes << " nodes, " << number_of_ways
-                << " ways, and " << number_of_relations << " relations";
+                << " ways, and " << number_of_relations << " relations, " << number_of_restrictions
+                << " restrictions";
 
     extractor_callbacks.reset();
 
