@@ -159,14 +159,16 @@ class CellCustomizer
                         }
 
                         const EdgeWeight to_weight = weight + subcell_weight;
+                        const EdgeDuration to_duration = duration + *subcell_duration;
                         if (!heap.WasInserted(to))
                         {
-                            heap.Insert(to, to_weight, {true, duration + *subcell_duration});
+                            heap.Insert(to, to_weight, {true, to_duration});
                         }
-                        else if (to_weight < heap.GetKey(to))
+                        else if (std::tie(to_weight, to_duration) <
+                                 std::tie(heap.GetKey(to), heap.GetData(to).duration))
                         {
                             heap.DecreaseKey(to, to_weight);
-                            heap.GetData(to) = {true, duration + *subcell_duration};
+                            heap.GetData(to) = {true, to_duration};
                         }
                     }
 
@@ -191,14 +193,16 @@ class CellCustomizer
                  partition.GetCell(level - 1, node) != partition.GetCell(level - 1, to)))
             {
                 const EdgeWeight to_weight = weight + data.weight;
+                const EdgeDuration to_duration = duration + data.duration;
                 if (!heap.WasInserted(to))
                 {
                     heap.Insert(to, to_weight, {false, duration + data.duration});
                 }
-                else if (to_weight < heap.GetKey(to))
+                else if (std::tie(to_weight, to_duration) <
+                         std::tie(heap.GetKey(to), heap.GetData(to).duration))
                 {
                     heap.DecreaseKey(to, to_weight);
-                    heap.GetData(to) = {false, duration + data.duration};
+                    heap.GetData(to) = {false, to_duration};
                 }
             }
         }
