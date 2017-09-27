@@ -104,7 +104,8 @@ void relaxOutgoingEdges(const DataFacade<ch::Algorithm> &facade,
                 query_heap.Insert(to, to_weight, {node, to_duration});
             }
             // Found a shorter Path -> Update weight
-            else if (to_weight < query_heap.GetKey(to))
+            else if (std::tie(to_weight, to_duration) <
+                     std::tie(query_heap.GetKey(to), query_heap.GetData(to).duration))
             {
                 // new parent
                 query_heap.GetData(to) = {node, to_duration};
@@ -203,7 +204,8 @@ void relaxOutgoingEdges(const DataFacade<mld::Algorithm> &facade,
                     {
                         query_heap.Insert(to, to_weight, {node, true, to_duration});
                     }
-                    else if (to_weight < query_heap.GetKey(to))
+                    else if (std::tie(to_weight, to_duration) <
+                             std::tie(query_heap.GetKey(to), query_heap.GetData(to).duration))
                     {
                         query_heap.GetData(to) = {node, true, to_duration};
                         query_heap.DecreaseKey(to, to_weight);
@@ -232,7 +234,8 @@ void relaxOutgoingEdges(const DataFacade<mld::Algorithm> &facade,
                     {
                         query_heap.Insert(to, to_weight, {node, true, to_duration});
                     }
-                    else if (to_weight < query_heap.GetKey(to))
+                    else if (std::tie(to_weight, to_duration) <
+                             std::tie(query_heap.GetKey(to), query_heap.GetData(to).duration))
                     {
                         query_heap.GetData(to) = {node, true, to_duration};
                         query_heap.DecreaseKey(to, to_weight);
@@ -269,7 +272,8 @@ void relaxOutgoingEdges(const DataFacade<mld::Algorithm> &facade,
                 query_heap.Insert(to, to_weight, {node, false, to_duration});
             }
             // Found a shorter Path -> Update weight
-            else if (to_weight < query_heap.GetKey(to))
+            else if (std::tie(to_weight, to_duration) <
+                     std::tie(query_heap.GetKey(to), query_heap.GetData(to).duration))
             {
                 // new parent
                 query_heap.GetData(to) = {node, false, to_duration};
@@ -320,7 +324,7 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
                 current_duration = std::min(current_duration, new_duration);
             }
         }
-        else if (new_weight < current_weight)
+        else if (std::tie(new_weight, new_duration) < std::tie(current_weight, current_duration))
         {
             current_weight = new_weight;
             current_duration = new_duration;
@@ -514,7 +518,7 @@ std::vector<EdgeDuration> oneToManySearch(SearchEngineData<Algorithm> &engine_wo
         }
     }
 
-    // Handler if node is in the destinations list and update weights/durations
+    // Check if node is in the destinations list and update weights/durations
     auto update_values = [&](NodeID node, EdgeWeight weight, EdgeDuration duration) {
         auto candidates = target_nodes_index.equal_range(node);
         for (auto it = candidates.first; it != candidates.second;)
@@ -525,15 +529,18 @@ std::vector<EdgeDuration> oneToManySearch(SearchEngineData<Algorithm> &engine_wo
             std::tie(index, target_weight, target_duration) = it->second;
 
             const auto path_weight = weight + target_weight;
-            if (path_weight >= 0 &&
-                path_weight < weights[index]) // TODO: check if path_weight < weights[index] needed
-            {
-                weights[index] = path_weight;
-                durations[index] = duration + target_duration;
-            }
-
             if (path_weight >= 0)
-            { // Remove node from destinations list
+            {
+                const auto path_duration = duration + target_duration;
+
+                if (std::tie(path_weight, path_duration) <
+                    std::tie(weights[index], durations[index]))
+                {
+                    weights[index] = path_weight;
+                    durations[index] = path_duration;
+                }
+
+                // Remove node from destinations list
                 it = target_nodes_index.erase(it);
             }
             else

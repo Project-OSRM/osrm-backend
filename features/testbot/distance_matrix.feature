@@ -326,3 +326,52 @@ Feature: Basic Distance Matrix
           | 6 |   7 |   6 |  10 |   9 |    1 |   0 | 3.9 | 2.9 |
           | 7 | 3.1 | 2.1 | 6.1 | 5.1 |  9.1 | 8.1 |   0 |  11 |
           | 8 | 4.1 | 3.1 | 7.1 | 6.1 | 10.1 | 9.1 |   1 | 0   |
+
+
+    Scenario: Testbot - Travel time matrix with ties
+        Given the profile file
+        """
+        local functions = require('testbot')
+        functions.process_segment = function(profile, segment)
+          segment.weight = 1
+          segment.duration = 1
+        end
+        functions.process_turn = function(profile, turn)
+          if turn.angle >= 0 then
+            turn.duration = 16
+          else
+            turn.duration = 4
+          end
+          turn.weight = 0
+        end
+        return functions
+        """
+        And the node map
+            """
+            a     b
+
+            c     d
+            """
+
+        And the ways
+          | nodes |
+          | ab    |
+          | ac    |
+          | bd    |
+          | dc    |
+
+
+        When I route I should get
+          | from | to | route | distance | time | weight |
+          | a    | c  | ac,ac | 200m     | 5s   |      5 |
+
+        When I request a travel time matrix I should get
+          |   | a | b | c |  d |
+          | a | 0 | 1 | 5 | 10 |
+
+        When I request a travel time matrix I should get
+          |   |  a |
+          | a |  0 |
+          | b |  1 |
+          | c | 15 |
+          | d | 10 |
