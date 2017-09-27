@@ -37,7 +37,6 @@ class RestrictionParser;
 class ExtractionRelationContainer;
 struct ExtractionNode;
 struct ExtractionWay;
-struct ExtractionRelation;
 struct ExtractionTurn;
 struct ExtractionSegment;
 
@@ -59,6 +58,7 @@ class ScriptingEnvironment
     virtual std::vector<std::string> GetClassNames() = 0;
     virtual std::vector<std::string> GetNameSuffixList() = 0;
     virtual std::vector<std::string> GetRestrictions() = 0;
+    virtual std::vector<std::string> GetRelations() = 0;
     virtual void ProcessTurn(ExtractionTurn &turn) = 0;
     virtual void ProcessSegment(ExtractionSegment &segment) = 0;
 
@@ -68,7 +68,6 @@ class ScriptingEnvironment
         const ExtractionRelationContainer &relations,
         std::vector<std::pair<const osmium::Node &, ExtractionNode>> &resulting_nodes,
         std::vector<std::pair<const osmium::Way &, ExtractionWay>> &resulting_ways,
-        std::vector<std::pair<const osmium::Relation &, ExtractionRelation>> &resulting_relations,
         std::vector<InputConditionalTurnRestriction> &resulting_restrictions) = 0;
 
     virtual bool HasLocationDependentData() const = 0;

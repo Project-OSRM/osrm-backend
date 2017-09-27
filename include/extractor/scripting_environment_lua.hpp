@@ -29,11 +29,10 @@ struct LuaScriptingContext final
 
     void ProcessNode(const osmium::Node &,
                      ExtractionNode &result,
-                     const ExtractionRelationContainer::RelationList &relations);
+                     const ExtractionRelationContainer &relations);
     void ProcessWay(const osmium::Way &,
                     ExtractionWay &result,
-                    const ExtractionRelationContainer::RelationList &relations);
-    void ProcessRelation(const osmium::Relation &, ExtractionRelation &result);
+                    const ExtractionRelationContainer &relations);
 
     ProfileProperties properties;
     RasterContainer raster_sources;
@@ -42,13 +41,11 @@ struct LuaScriptingContext final
     bool has_turn_penalty_function;
     bool has_node_function;
     bool has_way_function;
-    bool has_relation_function;
     bool has_segment_function;
 
     sol::function turn_function;
     sol::function way_function;
     sol::function node_function;
-    sol::function relation_function;
     sol::function segment_function;
 
     int api_version;
@@ -84,6 +81,7 @@ class Sol2ScriptingEnvironment final : public ScriptingEnvironment
     std::vector<std::string> GetNameSuffixList() override;
     std::vector<std::string> GetClassNames() override;
     std::vector<std::string> GetRestrictions() override;
+    std::vector<std::string> GetRelations() override;
     void ProcessTurn(ExtractionTurn &turn) override;
     void ProcessSegment(ExtractionSegment &segment) override;
 
@@ -93,7 +91,6 @@ class Sol2ScriptingEnvironment final : public ScriptingEnvironment
         const ExtractionRelationContainer &relations,
         std::vector<std::pair<const osmium::Node &, ExtractionNode>> &resulting_nodes,
         std::vector<std::pair<const osmium::Way &, ExtractionWay>> &resulting_ways,
-        std::vector<std::pair<const osmium::Relation &, ExtractionRelation>> &resulting_relations,
         std::vector<InputConditionalTurnRestriction> &resulting_restrictions) override;
 
     bool HasLocationDependentData() const override { return !location_dependent_data.empty(); }
