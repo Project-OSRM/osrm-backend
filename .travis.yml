@@ -79,7 +79,7 @@ matrix:
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['g++-6', 'libbz2-dev', 'libxml2-dev', 'libzip-dev', 'liblua5.2-dev', 'libtbb-dev', 'libgdal-dev', 'libboost-all-dev']
-      env: CCOMPILER='gcc-6' CXXCOMPILER='g++-6' BUILD_TYPE='Debug' TARGET_ARCH='x86_64-asan' ENABLE_SANITIZER=ON CUCUMBER_TIMEOUT=20000
+      env: CCOMPILER='gcc-6' CXXCOMPILER='g++-6' BUILD_TYPE='Debug' TARGET_ARCH='x86_64-asan' ENABLE_SANITIZER=ON CUCUMBER_TIMEOUT=20000 LSAN_OPTIONS="suppressions=$TRAVIS_BUILD_DIR/scripts/travis/leaksanitizer.conf"
 
     - os: linux
       compiler: "clang-4.0-debug"
@@ -95,7 +95,7 @@ matrix:
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['libstdc++-5-dev']
-      env: CLANG_VERSION='4.0.0' BUILD_TYPE='Release' ENABLE_MASON=ON ENABLE_SANITIZER=ON
+      env: CLANG_VERSION='4.0.0' BUILD_TYPE='Release' ENABLE_MASON=ON ENABLE_SANITIZER=ON LSAN_OPTIONS="suppressions=$TRAVIS_BUILD_DIR/scripts/travis/leaksanitizer.conf"
 
     # Release Builds
     - os: linux
