@@ -494,28 +494,32 @@ std::vector<EdgeDuration> oneToManySearch(SearchEngineData<Algorithm> &engine_wo
         if (DIRECTION == FORWARD_DIRECTION)
         {
             if (phantom_node.IsValidForwardTarget())
-                target_nodes_index.insert({phantom_node.forward_segment_id.id,
-                                           {index,
-                                            phantom_node.GetForwardWeightPlusOffset(),
-                                            phantom_node.GetForwardDuration()}});
+                target_nodes_index.insert(
+                    {phantom_node.forward_segment_id.id,
+                     std::make_tuple(index,
+                                     phantom_node.GetForwardWeightPlusOffset(),
+                                     phantom_node.GetForwardDuration())});
             if (phantom_node.IsValidReverseTarget())
-                target_nodes_index.insert({phantom_node.reverse_segment_id.id,
-                                           {index,
-                                            phantom_node.GetReverseWeightPlusOffset(),
-                                            phantom_node.GetReverseDuration()}});
+                target_nodes_index.insert(
+                    {phantom_node.reverse_segment_id.id,
+                     std::make_tuple(index,
+                                     phantom_node.GetReverseWeightPlusOffset(),
+                                     phantom_node.GetReverseDuration())});
         }
         else if (DIRECTION == REVERSE_DIRECTION)
         {
             if (phantom_node.IsValidForwardSource())
-                target_nodes_index.insert({phantom_node.forward_segment_id.id,
-                                           {index,
-                                            -phantom_node.GetForwardWeightPlusOffset(),
-                                            -phantom_node.GetForwardDuration()}});
+                target_nodes_index.insert(
+                    {phantom_node.forward_segment_id.id,
+                     std::make_tuple(index,
+                                     -phantom_node.GetForwardWeightPlusOffset(),
+                                     -phantom_node.GetForwardDuration())});
             if (phantom_node.IsValidReverseSource())
-                target_nodes_index.insert({phantom_node.reverse_segment_id.id,
-                                           {index,
-                                            -phantom_node.GetReverseWeightPlusOffset(),
-                                            -phantom_node.GetReverseDuration()}});
+                target_nodes_index.insert(
+                    {phantom_node.reverse_segment_id.id,
+                     std::make_tuple(index,
+                                     -phantom_node.GetReverseWeightPlusOffset(),
+                                     -phantom_node.GetReverseDuration())});
         }
     }
 
