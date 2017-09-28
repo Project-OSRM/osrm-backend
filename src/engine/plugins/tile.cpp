@@ -373,7 +373,7 @@ std::vector<NodeID> getSegregatedNodes(const DataFacadeBase &facade, const std::
     if (e.forward_segment_id.enabled)
       doCheck.ProcessNode(e.forward_segment_id.id);
 //  if (e.reverse_segment_id.enabled)
-//    addId(e.reverse_segment_id.id);
+//    doCheck.ProcessNode(e.reverse_segment_id.id);
   }
 
   return doCheck.GetResult();

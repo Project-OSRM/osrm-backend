@@ -2,6 +2,8 @@
 
 #include "engine/datafacade.hpp"
 
+#include <tuple>
+
 namespace osrm
 {
 namespace engine
@@ -115,29 +117,47 @@ private:
       return edge;
     }
 
+    /// Iterate through neibour edges for edge 'e' on point 'n'.
     template <class FnT> void ForEachEdge(EdgeT const & e, NodeT const & n, FnT && fn)
     {
-      auto const sourceGeometry = ReadGeometry(e.m_id);
+      // Use std::set and std::tuple key to avoid processing forward/reverse nodes with the same geometry.
+      /// @todo For sure, need to check equal geometry or advice how to skip reverse nodes ...
+      std::set<std::tuple<size_t, NodeID, NodeID>> processed;
 
-      for (auto edge : m_facade.GetAdjacentEdgeRange(e.m_id))
+      auto const makeGeometryKeyFn = [](auto const & g)
       {
-//        auto const & data = m_facade.GetEdgeData(edge);
-//        if (!data.forward)
-//          continue;
+        return std::make_tuple(g.size(), std::min(g.front(), g.back()),
+                                         std::max(g.front(), g.back()));
+      };
 
-        NodeID const target = m_facade.GetTarget(edge);
-        auto const targetGeometry = ReadGeometry(target);
+      processed.insert(makeGeometryKeyFn(ReadGeometry(e.m_id)));
 
-        if (sourceGeometry.size() == targetGeometry.size() &&
-            (std::equal(sourceGeometry.begin(), sourceGeometry.end(), targetGeometry.begin()) ||
-             std::equal(sourceGeometry.begin(), sourceGeometry.end(), targetGeometry.rbegin())))
+      std::queue<uint32_t> q;
+      q.push(e.m_id);
+
+      // For the current algorithm, we need to get all connected nodes despite the forbidden turns.
+      // Nothing better than iterating for all found edges in road graph around needed point.
+      while (!q.empty())
+      {
+        auto const eID = q.front();
+        q.pop();
+
+        for (auto edge : m_facade.GetAdjacentEdgeRange(eID))
         {
-          // skip UTurn on same node geometry
-          continue;
-        }
+          NodeID const target = m_facade.GetTarget(edge);
 
-        if (targetGeometry.front() == n.m_id || targetGeometry.back() == n.m_id)
-          fn(ConstructEdge(target, targetGeometry));
+          auto const geometry = ReadGeometry(target);
+
+          if ((geometry.front() == n.m_id || geometry.back() == n.m_id) &&
+              processed.count(makeGeometryKeyFn(geometry)) == 0)
+          {
+            processed.insert(makeGeometryKeyFn(geometry));
+
+            fn(ConstructEdge(target, geometry));
+
+            q.push(target);
+          }
+        }
       }
     }
   };
@@ -155,12 +175,7 @@ public:
 
   void ProcessNode(NodeID nodeID);
 
-  std::vector<NodeID> GetResult()
-  {
-    std::sort(m_results.begin(), m_results.end());
-    m_results.erase(std::unique(m_results.begin(), m_results.end()), m_results.end());
-    return m_results;
-  }
+  std::vector<NodeID> GetResult();
 
 private:
   template <class SourceT>
