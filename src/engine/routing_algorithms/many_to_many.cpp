@@ -465,6 +465,7 @@ manyToManySearch(SearchEngineData<mld::Algorithm> &engine_working_data,
 namespace mld
 {
 
+// Unidirectional multi-layer Dijkstra search for 1-to-N and N-to-1 matrices
 template <bool DIRECTION>
 std::vector<EdgeDuration> oneToManySearch(SearchEngineData<Algorithm> &engine_working_data,
                                           const DataFacade<Algorithm> &facade,
@@ -518,6 +519,10 @@ std::vector<EdgeDuration> oneToManySearch(SearchEngineData<Algorithm> &engine_wo
         }
     }
 
+    // Initialize query heap
+    engine_working_data.InitializeOrClearManyToManyThreadLocalStorage(facade.GetNumberOfNodes());
+    auto &query_heap = *(engine_working_data.many_to_many_heap);
+
     // Check if node is in the destinations list and update weights/durations
     auto update_values = [&](NodeID node, EdgeWeight weight, EdgeDuration duration) {
         auto candidates = target_nodes_index.equal_range(node);
@@ -550,101 +555,52 @@ std::vector<EdgeDuration> oneToManySearch(SearchEngineData<Algorithm> &engine_wo
         }
     };
 
-    // Place source (destination) adjacent nodes into the heap
-    engine_working_data.InitializeOrClearManyToManyThreadLocalStorage(facade.GetNumberOfNodes());
-    auto &query_heap = *(engine_working_data.many_to_many_heap);
+    // Check a single path result and insert adjacent nodes into heap
+    auto insert_node = [&](NodeID node, EdgeWeight initial_weight, EdgeDuration initial_duration) {
 
-    { // Update single node paths
+        // Update single node paths
+        update_values(node, initial_weight, initial_duration);
+
+        // Place adjacent nodes into heap
+        for (auto edge : facade.GetAdjacentEdgeRange(node))
+        {
+            const auto &data = facade.GetEdgeData(edge);
+            if (DIRECTION == FORWARD_DIRECTION ? data.forward : data.backward)
+            {
+                query_heap.Insert(facade.GetTarget(edge),
+                                  data.weight + initial_weight,
+                                  {node, data.duration + initial_duration});
+            }
+        }
+    };
+
+    { // Place source (destination) adjacent nodes into the heap
         const auto &phantom_node = phantom_nodes[phantom_index];
 
         if (DIRECTION == FORWARD_DIRECTION)
         {
-            if (phantom_node.IsValidForwardSource())
-                update_values(phantom_node.forward_segment_id.id,
-                              -phantom_node.GetForwardWeightPlusOffset(),
-                              -phantom_node.GetForwardDuration());
-            if (phantom_node.IsValidReverseSource())
-                update_values(phantom_node.reverse_segment_id.id,
-                              -phantom_node.GetReverseWeightPlusOffset(),
-                              -phantom_node.GetReverseDuration());
-        }
-        else if (DIRECTION == REVERSE_DIRECTION)
-        {
-            if (phantom_node.IsValidForwardTarget())
-                update_values(phantom_node.forward_segment_id.id,
-                              phantom_node.GetForwardWeightPlusOffset(),
-                              phantom_node.GetForwardDuration());
-            if (phantom_node.IsValidReverseTarget())
-                update_values(phantom_node.reverse_segment_id.id,
-                              phantom_node.GetReverseWeightPlusOffset(),
-                              phantom_node.GetReverseDuration());
-        }
 
-        if (DIRECTION == FORWARD_DIRECTION)
-        {
             if (phantom_node.IsValidForwardSource())
-            {
-                const auto parent = phantom_node.forward_segment_id.id;
-                for (auto edge : facade.GetAdjacentEdgeRange(parent))
-                {
-                    const auto &data = facade.GetEdgeData(edge);
-                    if (DIRECTION == FORWARD_DIRECTION ? data.forward : data.backward)
-                    {
-                        query_heap.Insert(
-                            facade.GetTarget(edge),
-                            data.weight - phantom_node.GetForwardWeightPlusOffset(),
-                            {parent, data.duration - phantom_node.GetForwardDuration()});
-                    }
-                }
-            }
+                insert_node(phantom_node.forward_segment_id.id,
+                            -phantom_node.GetForwardWeightPlusOffset(),
+                            -phantom_node.GetForwardDuration());
+
             if (phantom_node.IsValidReverseSource())
-            {
-                const auto parent = phantom_node.reverse_segment_id.id;
-                for (auto edge : facade.GetAdjacentEdgeRange(parent))
-                {
-                    const auto &data = facade.GetEdgeData(edge);
-                    if (DIRECTION == FORWARD_DIRECTION ? data.forward : data.backward)
-                    {
-                        query_heap.Insert(
-                            facade.GetTarget(edge),
-                            data.weight - phantom_node.GetReverseWeightPlusOffset(),
-                            {parent, data.duration - phantom_node.GetReverseDuration()});
-                    }
-                }
-            }
+                insert_node(phantom_node.reverse_segment_id.id,
+                            -phantom_node.GetReverseWeightPlusOffset(),
+                            -phantom_node.GetReverseDuration());
         }
         else if (DIRECTION == REVERSE_DIRECTION)
         {
             if (phantom_node.IsValidForwardTarget())
-            {
-                const auto parent = phantom_node.forward_segment_id.id;
-                for (auto edge : facade.GetAdjacentEdgeRange(parent))
-                {
-                    const auto &data = facade.GetEdgeData(edge);
-                    if (DIRECTION == FORWARD_DIRECTION ? data.forward : data.backward)
-                    {
-                        query_heap.Insert(
-                            facade.GetTarget(edge),
-                            data.weight + phantom_node.GetForwardWeightPlusOffset(),
-                            {parent, data.duration + phantom_node.GetForwardDuration()});
-                    }
-                }
-            }
+                insert_node(phantom_node.forward_segment_id.id,
+                            phantom_node.GetForwardWeightPlusOffset(),
+                            phantom_node.GetForwardDuration());
+
             if (phantom_node.IsValidReverseTarget())
-            {
-                const auto parent = phantom_node.reverse_segment_id.id;
-                for (auto edge : facade.GetAdjacentEdgeRange(parent))
-                {
-                    const auto &data = facade.GetEdgeData(edge);
-                    if (DIRECTION == FORWARD_DIRECTION ? data.forward : data.backward)
-                    {
-                        query_heap.Insert(
-                            facade.GetTarget(edge),
-                            data.weight + phantom_node.GetReverseWeightPlusOffset(),
-                            {parent, data.duration + phantom_node.GetReverseDuration()});
-                    }
-                }
-            }
+                insert_node(phantom_node.reverse_segment_id.id,
+                            phantom_node.GetReverseWeightPlusOffset(),
+                            phantom_node.GetReverseDuration());
         }
     }
 
