@@ -88,13 +88,66 @@ void processRoundaboutExits(const RouteStepIterator begin, const RouteStepIterat
         return;
     }
 
-    const auto passes_exit_or_leaves_roundabout = [](auto const &step) {
-        return staysOnRoundabout(step.maneuver.instruction) ||
-               leavesRoundabout(step.maneuver.instruction);
-    };
+    const auto exit = std::accumulate(begin, end, 0, [](const long a, const auto &step) {
+        if (staysOnRoundabout(step.maneuver.instruction))
+        {
+            // Count all the possible exits from from the step, minus one, which is the
+            // "continue on the roundabout" exit
+            const auto step_intersection = step.intersections.front();
+            const auto num_exits_from_step = std::count_if(std::begin(step_intersection.entry),
+                                                           std::end(step_intersection.entry),
+                                                           [](const auto &entry) { return entry; });
+            // minus 1, because the step actual exit will be included, but should not
+            // contribute to the tally (it's the one that follows the roundabout, as we're
+            // staying on)
+            return a + num_exits_from_step - 1;
+        }
+        else if (leavesRoundabout(step.maneuver.instruction))
+        {
+            // Count all the possible exits between the exit we want to take,
+            // and the entry angle:
+            //
+            //       f-----e
+            //      /       \
+            //  g--a         d-----h
+            //      \       /
+            //       b-----c---j
+            //              \
+            //               i
+            //
+            // If we exit the roundabout at "c", and head toward "j",
+            // we need to count "i" as an intersection we passed.
+            // However, if we exit at "c" and to go "i", "j" should
+            // not be included in the count.
+            const auto step_intersection = step.intersections.front();
 
-    // exit count
-    const auto exit = std::count_if(begin, end, passes_exit_or_leaves_roundabout);
+            auto num_exits_from_step_before_actual_exit = 0;
+            // TODO: how do we find the driving side for this location?
+            const auto right_side_driving = true;
+            // TODO: is it correct to reverse this for left-side-driving?
+            const int increment = (right_side_driving) ? -1 : 1;
+
+            // Look at each entry between the in and out positions,
+            // tallying them up if they're possible exits.  The
+            // "increment" here is to enable us to go clockwise/anticlockwise
+            // to support left or right-sided driving
+            for (int pos = step_intersection.in; pos != step_intersection.out;
+                 pos = (pos + increment < 0 ? step_intersection.entry.size() - 1
+                                            : ((pos + increment) % step_intersection.entry.size())))
+            {
+                num_exits_from_step_before_actual_exit += step_intersection.entry[pos] ? 1 : 0;
+            }
+
+            // Plus one, because in the above loop, we only count the exits *between*
+            // the entry and the exit we're actually taking, which needs to be included
+            // in the final tally.
+            return a + num_exits_from_step_before_actual_exit + 1;
+        }
+        else
+        {
+            return a;
+        }
+    });
 
     // removes all intermediate instructions, assigns names and exit numbers
     BOOST_ASSERT(leavesRoundabout(last->maneuver.instruction));

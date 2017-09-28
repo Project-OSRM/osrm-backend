@@ -845,3 +845,34 @@ Feature: Basic Roundabout
             | from | to | route                      | turns                                                   | distance |
             | e    | k  | ebds,ufghl,ufghl,jhik,jhik | depart,rstur-exit-2,exit rotary right,turn right,arrive | 189.1m   |
             | 1    | k  | ebds,ufghl,ufghl,jhik,jhik | depart,rstur-exit-2,exit rotary right,turn right,arrive | 159.1m   |
+
+
+    Scenario: count exit numbers properly when multiple exits from a single node
+        Given the node map
+            """
+                 f-----e
+                /       \
+            g--a     l   d-----h
+                \     \ /
+                 b-----c
+                        \\\
+                         ijk
+
+            """
+
+        And the ways
+            | nodes   | highway  | junction   | oneway |
+            | abcdefa | tertiary | roundabout | yes    |
+            | ga      | tertiary |            |        |
+            | ci      | tertiary |            |        |
+            | cj      | tertiary |            |        |
+            | ck      | tertiary |            |        |
+            | cl      | tertiary |            |        |
+            | dh      | tertiary |            |        |
+
+        When I route I should get
+            | from | to | route       | turns                                          |
+            | g    | i  | ga,ci,ci,ci | depart,abcdefa-exit-1,exit rotary right,arrive |
+            | g    | j  | ga,cj,cj,cj | depart,abcdefa-exit-2,exit rotary right,arrive |
+            | g    | k  | ga,ck,ck,ck | depart,abcdefa-exit-3,exit rotary right,arrive |
+            | g    | h  | ga,dh,dh,dh | depart,abcdefa-exit-5,exit rotary right,arrive |
