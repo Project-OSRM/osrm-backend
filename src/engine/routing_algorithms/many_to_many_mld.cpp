@@ -1,5 +1,5 @@
 #include "engine/routing_algorithms/many_to_many.hpp"
-#include "engine/routing_algorithms/routing_base_ch.hpp"
+#include "engine/routing_algorithms/routing_base.hpp"
 
 #include <boost/assert.hpp>
 #include <boost/range/iterator_range_core.hpp>
@@ -16,114 +16,12 @@ namespace engine
 namespace routing_algorithms
 {
 
-namespace
+namespace mld
 {
-struct NodeBucket
-{
-    NodeID middle_node;
-    unsigned column_index; // a column in the weight/duration matrix
-    EdgeWeight weight;
-    EdgeDuration duration;
 
-    NodeBucket(NodeID middle_node, unsigned column_index, EdgeWeight weight, EdgeDuration duration)
-        : middle_node(middle_node), column_index(column_index), weight(weight), duration(duration)
-    {
-    }
-
-    // partial order comparison
-    bool operator<(const NodeBucket &rhs) const { return middle_node < rhs.middle_node; }
-
-    // functor for equal_range
-    struct Compare
-    {
-        bool operator()(const NodeBucket &lhs, const NodeID &rhs) const
-        {
-            return lhs.middle_node < rhs;
-        }
-
-        bool operator()(const NodeID &lhs, const NodeBucket &rhs) const
-        {
-            return lhs < rhs.middle_node;
-        }
-    };
-};
-
-inline bool addLoopWeight(const DataFacade<ch::Algorithm> &facade,
-                          const NodeID node,
-                          EdgeWeight &weight,
-                          EdgeDuration &duration)
-{ // Special case for CH when contractor creates a loop edge node->node
-    BOOST_ASSERT(weight < 0);
-
-    const auto loop_weight = ch::getLoopWeight<false>(facade, node);
-    if (loop_weight != INVALID_EDGE_WEIGHT)
-    {
-        const auto new_weight_with_loop = weight + loop_weight;
-        if (new_weight_with_loop >= 0)
-        {
-            weight = new_weight_with_loop;
-            duration += ch::getLoopWeight<true>(facade, node);
-            return true;
-        }
-    }
-
-    // No loop found or adjusted weight is negative
-    return false;
-}
-
-template <bool DIRECTION>
-void relaxOutgoingEdges(const DataFacade<ch::Algorithm> &facade,
-                        const NodeID node,
-                        const EdgeWeight weight,
-                        const EdgeDuration duration,
-                        typename SearchEngineData<ch::Algorithm>::ManyToManyQueryHeap &query_heap,
-                        const PhantomNode &)
-{
-    if (ch::stallAtNode<DIRECTION>(facade, node, weight, query_heap))
-    {
-        return;
-    }
-
-    for (auto edge : facade.GetAdjacentEdgeRange(node))
-    {
-        const auto &data = facade.GetEdgeData(edge);
-        if (DIRECTION == FORWARD_DIRECTION ? data.forward : data.backward)
-        {
-            const NodeID to = facade.GetTarget(edge);
-
-            const auto edge_weight = data.weight;
-            const auto edge_duration = data.duration;
-
-            BOOST_ASSERT_MSG(edge_weight > 0, "edge_weight invalid");
-            const auto to_weight = weight + edge_weight;
-            const auto to_duration = duration + edge_duration;
-
-            // New Node discovered -> Add to Heap + Node Info Storage
-            if (!query_heap.WasInserted(to))
-            {
-                query_heap.Insert(to, to_weight, {node, to_duration});
-            }
-            // Found a shorter Path -> Update weight
-            else if (std::tie(to_weight, to_duration) <
-                     std::tie(query_heap.GetKey(to), query_heap.GetData(to).duration))
-            {
-                // new parent
-                query_heap.GetData(to) = {node, to_duration};
-                query_heap.DecreaseKey(to, to_weight);
-            }
-        }
-    }
-}
-
-inline bool
-addLoopWeight(const DataFacade<mld::Algorithm> &, const NodeID, EdgeWeight &, EdgeDuration &)
-{ // MLD overlay does not introduce loop edges
-    return false;
-}
-
-template <typename MultiLevelPartition>
+template <bool DIRECTION, typename MultiLevelPartition>
 inline LevelID getNodeQueryLevel(const MultiLevelPartition &partition,
-                                 NodeID node,
+                                 const NodeID node,
                                  const PhantomNode &phantom_node)
 {
     auto highest_diffrent_level = [&partition, node](const SegmentID &phantom_node) {
@@ -132,11 +30,13 @@ inline LevelID getNodeQueryLevel(const MultiLevelPartition &partition,
         return INVALID_LEVEL_ID;
     };
 
-    return std::min(highest_diffrent_level(phantom_node.forward_segment_id),
-                    highest_diffrent_level(phantom_node.reverse_segment_id));
+    const auto node_level = std::min(highest_diffrent_level(phantom_node.forward_segment_id),
+                                     highest_diffrent_level(phantom_node.reverse_segment_id));
+
+    return node_level;
 }
 
-template <typename MultiLevelPartition>
+template <bool DIRECTION, typename MultiLevelPartition>
 inline LevelID getNodeQueryLevel(const MultiLevelPartition &partition,
                                  NodeID node,
                                  const std::vector<PhantomNode> &phantom_nodes,
@@ -181,10 +81,9 @@ void relaxOutgoingEdges(const DataFacade<mld::Algorithm> &facade,
     const auto &partition = facade.GetMultiLevelPartition();
     const auto &cells = facade.GetCellStorage();
     const auto &metric = facade.GetCellMetric();
-
-    const auto level = getNodeQueryLevel(partition, node, args...);
-
     const auto &node_data = query_heap.GetData(node);
+
+    const auto level = getNodeQueryLevel<DIRECTION>(partition, node, args...);
 
     if (level >= 1 && !node_data.from_clique_arc)
     {
@@ -274,11 +173,10 @@ void relaxOutgoingEdges(const DataFacade<mld::Algorithm> &facade,
             {
                 query_heap.Insert(to, to_weight, {node, false, to_duration});
             }
-            // Found a shorter Path -> Update weight
+            // Found a shorter Path -> Update weight and set new parent
             else if (std::tie(to_weight, to_duration) <
                      std::tie(query_heap.GetKey(to), query_heap.GetData(to).duration))
             {
-                // new parent
                 query_heap.GetData(to) = {node, false, to_duration};
                 query_heap.DecreaseKey(to, to_weight);
             }
@@ -286,7 +184,6 @@ void relaxOutgoingEdges(const DataFacade<mld::Algorithm> &facade,
     }
 }
 
-template <typename Algorithm>
 void forwardRoutingStep(const DataFacade<Algorithm> &facade,
                         const unsigned row_idx,
                         const unsigned number_of_targets,
@@ -300,14 +197,14 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
     const auto source_weight = query_heap.GetKey(node);
     const auto source_duration = query_heap.GetData(node).duration;
 
-    // check if each encountered node has an entry
+    // Check if each encountered node has an entry
     const auto &bucket_list = std::equal_range(search_space_with_buckets.begin(),
                                                search_space_with_buckets.end(),
                                                node,
                                                NodeBucket::Compare());
     for (const auto &current_bucket : boost::make_iterator_range(bucket_list))
     {
-        // get target id from bucket entry
+        // Get target id from bucket entry
         const auto column_idx = current_bucket.column_index;
         const auto target_weight = current_bucket.weight;
         const auto target_duration = current_bucket.duration;
@@ -315,19 +212,12 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
         auto &current_weight = weights_table[row_idx * number_of_targets + column_idx];
         auto &current_duration = durations_table[row_idx * number_of_targets + column_idx];
 
-        // check if new weight is better
+        // Check if new weight is better
         auto new_weight = source_weight + target_weight;
         auto new_duration = source_duration + target_duration;
 
-        if (new_weight < 0)
-        {
-            if (addLoopWeight(facade, node, new_weight, new_duration))
-            {
-                current_weight = std::min(current_weight, new_weight);
-                current_duration = std::min(current_duration, new_duration);
-            }
-        }
-        else if (std::tie(new_weight, new_duration) < std::tie(current_weight, current_duration))
+        if (new_weight >= 0 &&
+            std::tie(new_weight, new_duration) < std::tie(current_weight, current_duration))
         {
             current_weight = new_weight;
             current_duration = new_duration;
@@ -338,7 +228,6 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
         facade, node, source_weight, source_duration, query_heap, phantom_node);
 }
 
-template <typename Algorithm>
 void backwardRoutingStep(const DataFacade<Algorithm> &facade,
                          const unsigned column_idx,
                          typename SearchEngineData<Algorithm>::ManyToManyQueryHeap &query_heap,
@@ -349,124 +238,12 @@ void backwardRoutingStep(const DataFacade<Algorithm> &facade,
     const auto target_weight = query_heap.GetKey(node);
     const auto target_duration = query_heap.GetData(node).duration;
 
-    // store settled nodes in search space bucket
+    // Store settled nodes in search space bucket
     search_space_with_buckets.emplace_back(node, column_idx, target_weight, target_duration);
 
     relaxOutgoingEdges<REVERSE_DIRECTION>(
         facade, node, target_weight, target_duration, query_heap, phantom_node);
 }
-}
-
-template <typename Algorithm>
-std::vector<EdgeDuration> manyToManySearch(SearchEngineData<Algorithm> &engine_working_data,
-                                           const DataFacade<Algorithm> &facade,
-                                           const std::vector<PhantomNode> &phantom_nodes,
-                                           std::vector<std::size_t> source_indices,
-                                           std::vector<std::size_t> target_indices)
-{
-    if (source_indices.empty())
-    {
-        source_indices.resize(phantom_nodes.size());
-        std::iota(source_indices.begin(), source_indices.end(), 0);
-    }
-    if (target_indices.empty())
-    {
-        target_indices.resize(phantom_nodes.size());
-        std::iota(target_indices.begin(), target_indices.end(), 0);
-    }
-
-    const auto number_of_sources = source_indices.size();
-    const auto number_of_targets = target_indices.size();
-    const auto number_of_entries = number_of_sources * number_of_targets;
-
-    std::vector<EdgeWeight> weights_table(number_of_entries, INVALID_EDGE_WEIGHT);
-    std::vector<EdgeDuration> durations_table(number_of_entries, MAXIMAL_EDGE_DURATION);
-
-    std::mutex lock;
-    std::vector<NodeBucket> search_space_with_buckets;
-
-    // Backward search for target phantoms
-    tbb::parallel_for(
-        tbb::blocked_range<std::size_t>{0, target_indices.size()},
-        [&](const tbb::blocked_range<std::size_t> &chunk) {
-            for (auto column_idx = chunk.begin(), end = chunk.end(); column_idx != end;
-                 ++column_idx)
-            {
-                const auto index = target_indices[column_idx];
-                const auto &phantom = phantom_nodes[index];
-
-                engine_working_data.InitializeOrClearManyToManyThreadLocalStorage(
-                    facade.GetNumberOfNodes());
-                auto &query_heap = *(engine_working_data.many_to_many_heap);
-                insertTargetInHeap(query_heap, phantom);
-
-                // explore search space
-                std::vector<NodeBucket> local_buckets;
-                while (!query_heap.Empty())
-                {
-                    backwardRoutingStep(facade, column_idx, query_heap, local_buckets, phantom);
-                }
-
-                { // Insert local buckets into the global search space
-                    std::lock_guard<std::mutex> guard{lock};
-                    search_space_with_buckets.insert(std::end(search_space_with_buckets),
-                                                     std::begin(local_buckets),
-                                                     std::end(local_buckets));
-                }
-            }
-        });
-
-    tbb::parallel_sort(search_space_with_buckets.begin(), search_space_with_buckets.end());
-
-    // For each source do forward search
-    tbb::parallel_for(tbb::blocked_range<std::size_t>{0, source_indices.size()},
-                      [&](const tbb::blocked_range<std::size_t> &chunk) {
-                          for (auto row_idx = chunk.begin(), end = chunk.end(); row_idx != end;
-                               ++row_idx)
-                          {
-                              const auto index = source_indices[row_idx];
-                              const auto &phantom = phantom_nodes[index];
-
-                              // clear heap and insert source nodes
-                              engine_working_data.InitializeOrClearManyToManyThreadLocalStorage(
-                                  facade.GetNumberOfNodes());
-                              auto &query_heap = *(engine_working_data.many_to_many_heap);
-                              insertSourceInHeap(query_heap, phantom);
-
-                              // explore search space
-                              while (!query_heap.Empty())
-                              {
-                                  forwardRoutingStep(facade,
-                                                     row_idx,
-                                                     number_of_targets,
-                                                     query_heap,
-                                                     search_space_with_buckets,
-                                                     weights_table,
-                                                     durations_table,
-                                                     phantom);
-                              }
-                          }
-                      });
-
-    return durations_table;
-}
-
-template std::vector<EdgeDuration>
-manyToManySearch(SearchEngineData<ch::Algorithm> &engine_working_data,
-                 const DataFacade<ch::Algorithm> &facade,
-                 const std::vector<PhantomNode> &phantom_nodes,
-                 std::vector<std::size_t> source_indices,
-                 std::vector<std::size_t> target_indices);
-
-template std::vector<EdgeDuration>
-manyToManySearch(SearchEngineData<mld::Algorithm> &engine_working_data,
-                 const DataFacade<mld::Algorithm> &facade,
-                 const std::vector<PhantomNode> &phantom_nodes,
-                 std::vector<std::size_t> source_indices,
-                 std::vector<std::size_t> target_indices);
-
-namespace mld
-{
 
 // Unidirectional multi-layer Dijkstra search for 1-to-N and N-to-1 matrices
 template <bool DIRECTION>
@@ -635,20 +412,114 @@ std::vector<EdgeDuration> oneToManySearch(SearchEngineData<Algorithm> &engine_wo
     return durations;
 }
 
-template std::vector<EdgeDuration>
-oneToManySearch<FORWARD_DIRECTION>(SearchEngineData<Algorithm> &engine_working_data,
-                                   const DataFacade<Algorithm> &facade,
-                                   const std::vector<PhantomNode> &phantom_nodes,
-                                   std::size_t phantom_index,
-                                   std::vector<std::size_t> phantom_indices);
+std::vector<EdgeDuration> manyToManySearch(SearchEngineData<Algorithm> &engine_working_data,
+                                           const DataFacade<Algorithm> &facade,
+                                           const std::vector<PhantomNode> &phantom_nodes,
+                                           std::vector<std::size_t> source_indices,
+                                           std::vector<std::size_t> target_indices)
+{
+    if (source_indices.empty())
+    {
+        source_indices.resize(phantom_nodes.size());
+        std::iota(source_indices.begin(), source_indices.end(), 0);
+    }
+    if (target_indices.empty())
+    {
+        target_indices.resize(phantom_nodes.size());
+        std::iota(target_indices.begin(), target_indices.end(), 0);
+    }
 
-template std::vector<EdgeDuration>
-oneToManySearch<REVERSE_DIRECTION>(SearchEngineData<Algorithm> &engine_working_data,
-                                   const DataFacade<Algorithm> &facade,
-                                   const std::vector<PhantomNode> &phantom_nodes,
-                                   std::size_t phantom_index,
-                                   std::vector<std::size_t> phantom_indices);
-} // mld
+    const auto number_of_sources = source_indices.size();
+    const auto number_of_targets = target_indices.size();
+    const auto number_of_entries = number_of_sources * number_of_targets;
+
+    std::vector<EdgeWeight> weights_table(number_of_entries, INVALID_EDGE_WEIGHT);
+    std::vector<EdgeDuration> durations_table(number_of_entries, MAXIMAL_EDGE_DURATION);
+
+    std::vector<NodeBucket> search_space_with_buckets;
+
+    // Populate buckets with paths from all accessible nodes to destinations via backward searches
+    for (std::uint32_t column_idx = 0; column_idx < target_indices.size(); ++column_idx)
+    {
+        const auto index = target_indices[column_idx];
+        const auto &phantom = phantom_nodes[index];
+
+        engine_working_data.InitializeOrClearManyToManyThreadLocalStorage(
+            facade.GetNumberOfNodes());
+        auto &query_heap = *(engine_working_data.many_to_many_heap);
+        insertTargetInHeap(query_heap, phantom);
+
+        // explore search space
+        while (!query_heap.Empty())
+        {
+            backwardRoutingStep(facade, column_idx, query_heap, search_space_with_buckets, phantom);
+        }
+    }
+
+    // Order lookup buckets
+    std::sort(search_space_with_buckets.begin(), search_space_with_buckets.end());
+
+    // Find shortest paths from sources to all accessible nodes
+    for (std::uint32_t row_idx = 0; row_idx < source_indices.size(); ++row_idx)
+    {
+        const auto index = source_indices[row_idx];
+        const auto &phantom = phantom_nodes[index];
+
+        // Clear heap and insert source nodes
+        engine_working_data.InitializeOrClearManyToManyThreadLocalStorage(
+            facade.GetNumberOfNodes());
+        auto &query_heap = *(engine_working_data.many_to_many_heap);
+        insertSourceInHeap(query_heap, phantom);
+
+        // Explore search space
+        while (!query_heap.Empty())
+        {
+            forwardRoutingStep(facade,
+                               row_idx,
+                               number_of_targets,
+                               query_heap,
+                               search_space_with_buckets,
+                               weights_table,
+                               durations_table,
+                               phantom);
+        }
+    }
+
+    return durations_table;
+}
+
+} // namespace mld
+
+// Dispatcher function for one-to-many and many-to-one tasks that can be handled by MLD differently:
+//
+// * one-to-many (many-to-one) tasks use a unidirectional forward (backward) Dijkstra search
+//   with the candidate node level `min(GetQueryLevel(phantom_node, node, phantom_nodes)`
+//   for all destination (source) phantom nodes
+//
+// * many-to-many search tasks use a bidirectional Dijkstra search
+//   with the candidate node level `min(GetHighestDifferentLevel(phantom_node, node))`
+template <>
+std::vector<EdgeDuration> manyToManySearch(SearchEngineData<mld::Algorithm> &engine_working_data,
+                                           const DataFacade<mld::Algorithm> &facade,
+                                           const std::vector<PhantomNode> &phantom_nodes,
+                                           std::vector<std::size_t> source_indices,
+                                           std::vector<std::size_t> target_indices)
+{
+    if (source_indices.size() == 1)
+    { // TODO: check if target_indices.size() == 1 and do a bi-directional search
+        return mld::oneToManySearch<FORWARD_DIRECTION>(
+            engine_working_data, facade, phantom_nodes, source_indices.front(), target_indices);
+    }
+
+    if (target_indices.size() == 1)
+    {
+        return mld::oneToManySearch<REVERSE_DIRECTION>(
+            engine_working_data, facade, phantom_nodes, target_indices.front(), source_indices);
+    }
+
+    return mld::manyToManySearch(
+        engine_working_data, facade, phantom_nodes, source_indices, target_indices);
+}
 
 } // namespace routing_algorithms
 } // namespace engine

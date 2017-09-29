@@ -24,8 +24,6 @@
 #include "util/fingerprint.hpp"
 #include "util/json_container.hpp"
 
-#include <tbb/task_scheduler_init.h>
-
 #include <memory>
 #include <string>
 
@@ -55,8 +53,7 @@ template <typename Algorithm> class Engine final : public EngineInterface
 {
   public:
     explicit Engine(const EngineConfig &config)
-        : task_scheduler(config.use_threads_number),
-          route_plugin(config.max_locations_viaroute, config.max_alternatives), //
+        : route_plugin(config.max_locations_viaroute, config.max_alternatives), //
           table_plugin(config.max_locations_distance_table),                    //
           nearest_plugin(config.max_results_nearest),                           //
           trip_plugin(config.max_locations_trip),                               //
@@ -128,7 +125,6 @@ template <typename Algorithm> class Engine final : public EngineInterface
     }
     std::unique_ptr<DataFacadeProvider<Algorithm>> facade_provider;
     mutable SearchEngineData<Algorithm> heaps;
-    tbb::task_scheduler_init task_scheduler;
 
     const plugins::ViaRoutePlugin route_plugin;
     const plugins::TablePlugin table_plugin;
