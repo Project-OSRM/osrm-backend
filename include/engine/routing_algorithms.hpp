@@ -184,6 +184,16 @@ inline routing_algorithms::SubMatchingList RoutingAlgorithms<Algorithm>::MapMatc
 }
 
 template <typename Algorithm>
+std::vector<EdgeDuration>
+RoutingAlgorithms<Algorithm>::ManyToManySearch(const std::vector<PhantomNode> &phantom_nodes,
+                                               const std::vector<std::size_t> &source_indices,
+                                               const std::vector<std::size_t> &target_indices) const
+{
+    return routing_algorithms::manyToManySearch(
+        heaps, *facade, phantom_nodes, source_indices, target_indices);
+}
+
+template <typename Algorithm>
 inline std::vector<routing_algorithms::TurnData> RoutingAlgorithms<Algorithm>::GetTileTurns(
     const std::vector<datafacade::BaseDataFacade::RTreeLeaf> &edges,
     const std::vector<std::size_t> &sorted_edge_indexes) const
