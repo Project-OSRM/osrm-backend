@@ -132,43 +132,15 @@ retrievePackedPathFromHeap(const SearchEngineData<Algorithm>::QueryHeap &forward
 }
 
 template <bool DIRECTION, typename Algorithm, typename... Args>
-void routingStep(const DataFacade<Algorithm> &facade,
-                 typename SearchEngineData<Algorithm>::QueryHeap &forward_heap,
-                 typename SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
-                 NodeID &middle_node,
-                 EdgeWeight &path_upper_bound,
-                 const bool force_loop_forward,
-                 const bool force_loop_reverse,
-                 Args... args)
+void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
+                        typename SearchEngineData<Algorithm>::QueryHeap &forward_heap,
+                        const NodeID node,
+                        const EdgeWeight weight,
+                        Args... args)
 {
     const auto &partition = facade.GetMultiLevelPartition();
     const auto &cells = facade.GetCellStorage();
     const auto &metric = facade.GetCellMetric();
-
-    const auto node = forward_heap.DeleteMin();
-    const auto weight = forward_heap.GetKey(node);
-
-    BOOST_ASSERT(!facade.ExcludeNode(node));
-
-    // Upper bound for the path source -> target with
-    // weight(source -> node) = weight weight(to -> target) ≤ reverse_weight
-    // is weight + reverse_weight
-    // More tighter upper bound requires additional condition reverse_heap.WasRemoved(to)
-    // with weight(to -> target) = reverse_weight and all weights ≥ 0
-    if (reverse_heap.WasInserted(node))
-    {
-        auto reverse_weight = reverse_heap.GetKey(node);
-        auto path_weight = weight + reverse_weight;
-
-        // if loops are forced, they are so at the source
-        if (!(force_loop_forward && forward_heap.GetData(node).parent == node) &&
-            !(force_loop_reverse && reverse_heap.GetData(node).parent == node) &&
-            (path_weight >= 0) && (path_weight < path_upper_bound))
-        {
-            middle_node = node;
-            path_upper_bound = path_weight;
-        }
-    }
 
     const auto level = getNodeQueryLevel(partition, node, args...);
 
@@ -256,6 +228,45 @@ void routingStep(const DataFacade<Algorithm> &facade,
             }
         }
     }
+}
+
+template <bool DIRECTION, typename Algorithm, typename... Args>
+void routingStep(const DataFacade<Algorithm> &facade,
+                 typename SearchEngineData<Algorithm>::QueryHeap &forward_heap,
+                 typename SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
+                 NodeID &middle_node,
+                 EdgeWeight &path_upper_bound,
+                 const bool force_loop_forward,
+                 const bool force_loop_reverse,
+                 Args... args)
+{
+    const auto node = forward_heap.DeleteMin();
+    const auto weight = forward_heap.GetKey(node);
+
+    BOOST_ASSERT(!facade.ExcludeNode(node));
+
+    // Upper bound for the path source -> target with
+    // weight(source -> node) = weight weight(to -> target) ≤ reverse_weight
+    // is weight + reverse_weight
+    // More tighter upper bound requires additional condition reverse_heap.WasRemoved(to)
+    // with weight(to -> target) = reverse_weight and all weights ≥ 0
+    if (reverse_heap.WasInserted(node))
+    {
+        auto reverse_weight = reverse_heap.GetKey(node);
+        auto path_weight = weight + reverse_weight;
+
+        // if loops are forced, they are so at the source
+        if (!(force_loop_forward && forward_heap.GetData(node).parent == node) &&
+            !(force_loop_reverse && reverse_heap.GetData(node).parent == node) &&
+            (path_weight >= 0) && (path_weight < path_upper_bound))
+        {
+            middle_node = node;
+            path_upper_bound = path_weight;
+        }
+    }
+
+    // Relax outgoing edges from node
+    relaxOutgoingEdges<DIRECTION>(facade, forward_heap, node, weight, args...);
 }
 
 // With (s, middle, t) we trace back the paths middle -> s and middle -> t.

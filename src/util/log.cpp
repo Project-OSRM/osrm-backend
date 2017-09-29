@@ -48,7 +48,7 @@ void LogPolicy::SetLevel(std::string const &level)
     else if (boost::iequals(level, "DEBUG"))
         m_level = logDEBUG;
     else
-        ;
+        m_level = logINFO;
 }
 
 LogPolicy &LogPolicy::GetInstance()

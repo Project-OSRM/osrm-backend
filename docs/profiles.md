@@ -47,7 +47,7 @@ Profiles can also define a `process_segment` function to handle differences in s
 
 At the end of the file, a table if returned with references to the setup and processing functions the profile has defined.
 
-## Understanding speed, weight and rate 
+## Understanding speed, weight and rate
 When computing a route from A to B there can be different measure of what is the best route. That's why there's a need for different profiles.
 
 Because speeds very on different types of roads, the shortest and the fastest route are typically different. But there are many other possible preferences. For example a user might prefer a bicycle route that follow parks or other green areas, even though both duration and distance are a bit longer.
@@ -91,7 +91,7 @@ The `setup` function is called once when the profile is loaded and must return a
 
 Note that processing of data is parallelized and several unconnected LUA interpreters will be running at the same time. The `setup` function will be called once for each. Each LUA iinterpreter will have it's own set of globals.
 
-The following global properties can be set under `properties` in the hash you return in the `setup` function: 
+The following global properties can be set under `properties` in the hash you return in the `setup` function:
 
 Attribute                            | Type     | Notes
 -------------------------------------|----------|----------------------------------------------------------------------------
@@ -114,7 +114,7 @@ classes                              | Sequence         | Determines the allowed
 restrictions                         | Sequence         | Determines which turn restrictions will be used for this profile.
 suffix_list                          | Set              | List of name suffixes needed for determining if "Highway 101 NW" the same road as "Highway 101 ES".
 
-### process_node(profile, node, result)
+### process_node(profile, node, result, relations)
 Process an OSM node to determine whether this node is a barrier or can be passed and whether passing it incurs a delay.
 
 Argument | Description
@@ -122,6 +122,7 @@ Argument | Description
 profile  | The configuration table you returned in `setup`.
 node     | The input node to process (read-only).
 result   | The output that you will modify.
+relations| The list of relation attributes passed from `process_relation` function for this node.
 
 The following attributes can be set on `result`:
 
@@ -130,7 +131,7 @@ Attribute       | Type    | Notes
 barrier         | Boolean | Is it an impassable barrier?
 traffic_lights  | Boolean | Is it a traffic light (incurs delay in `process_turn`)?
 
-## process_way(profile, way, result)
+### process_way(profile, way, result, relations)
 Given an OpenStreetMap way, the `process_way` function will either return nothing (meaning we are not going to route over this way at all), or it will set up a result hash.
 
 Argument | Description
@@ -138,6 +139,7 @@ Argument | Description
 profile  | The configuration table you returned in `setup`.
 node     | The input way to process (read-only).
 result   | The output that you will modify.
+relations| The list of relation attributes passed from `process_relation` function for this way.
 
 Importantly it will set `result.forward_mode` and `result.backward_mode` to indicate the travel mode in each direction, as well as set `result.forward_speed` and `result.backward_speed` to integer values representing the speed for traversing the way.
 
@@ -177,10 +179,60 @@ road_classification.road_priority_class | Enum     | Guidance: order in priority
 road_classification.may_be_ignored      | Boolean  | Guidance: way is non-highway
 road_classification.num_lanes           | Unsigned | Guidance: total number of lanes in way
 
-### process_segment(profile, segment)
-The `process_segment` function is called for every segment of OSM ways. A segment is a straight line between two OSM nodes. 
+### process_relation(profile, relation, result)
 
-On OpenStreetMap way cannot have different tags on different parts of a way. Instead you would split the way into several smaller ways. However many ways are long. For example, many ways pass hills without any change in tags. 
+Supported since API **version 3**.
+
+Given an OpenStreetMap relation, the `process_relation` function should setup values into result structure.
+
+Argument | Description
+---------|-------------------------------------------------------
+profile  | The configuration table you returned in `setup`.
+node     | The input relation to process (read-only).
+result   | The output that you will modify.
+
+Relation process work flow consist of next steps:
+1. Calls `process_relation` function for each relation. It should fill a `result` structure
+2. After that each data will be passed for each member of processed relation into `process_node` and `process_way` functions
+
+The following attributes can be set on that result in `process_relation`:
+
+Attribute                               | Type     | Notes
+----------------------------------------|----------|--------------------------------------------------------------------------
+is_restriction                          | Boolean  | Flag to determine if relation is a turn restriction
+
+Example processing code:
+```lua
+
+function process_way(profile, way, result, relations)
+  for _, r in ipairs(relations) do
+    for k, v in pairs(r) do
+      print('data_' .. k .. '_value_' .. v)
+    end
+  end
+  print ('process_way ' .. way:id() .. ' ' .. result.name)
+end
+
+function process_relation(profile, relation, result)
+  local t = relation:get_value_by_key("type")
+  if t == "route" then
+    for _, m in ipairs(relation:members()) do
+      if m:role == "north" then
+        result[m]['direction'] = 'north'
+        print('direction_north')
+      end
+    end
+
+    print('route_relation')
+  end
+end
+```
+
+
+### process_segment(profile, segment)
+The `process_segment` function is called for every segment of OSM ways. A segment is a straight line between two OSM nodes.
+
+On OpenStreetMap way cannot have different tags on different parts of a way. Instead you would split the way into several smaller ways. However many ways are long. For example, many ways pass hills without any change in tags.
 
 Processing each segment of an OSM way makes it possible to have different speeds on different parts of a way based on external data like data about elevation, pollution, noise or scenic value and adjust weight and duration of the segment.
 
@@ -265,7 +317,7 @@ Example:
 function process_segment (profile, segment)
   local sourceData = raster:query(profile.raster_source, segment.source.lon, segment.source.lat)
   local targetData = raster:query(profile.raster_source, segment.target.lon, segment.target.lat)
-  
+
   local invalid = sourceData.invalid_data()
   if sourceData.datum ~= invalid and targetData.datum ~= invalid then
       -- use values to adjust weight and duration

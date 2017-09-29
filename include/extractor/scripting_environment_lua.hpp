@@ -1,6 +1,7 @@
 #ifndef SCRIPTING_ENVIRONMENT_LUA_HPP
 #define SCRIPTING_ENVIRONMENT_LUA_HPP
 
+#include "extractor/extraction_relation.hpp"
 #include "extractor/raster_source.hpp"
 #include "extractor/scripting_environment.hpp"
 
@@ -19,8 +20,13 @@ namespace extractor
 
 struct LuaScriptingContext final
 {
-    void ProcessNode(const osmium::Node &, ExtractionNode &result);
-    void ProcessWay(const osmium::Way &, ExtractionWay &result);
+    void ProcessNode(const osmium::Node &,
+                     ExtractionNode &result,
+                     const ExtractionRelationContainer::RelationList &relations);
+    void ProcessWay(const osmium::Way &,
+                    ExtractionWay &result,
+                    const ExtractionRelationContainer::RelationList &relations);
+    void ProcessRelation(const osmium::Relation &, ExtractionRelation &result);
 
     ProfileProperties properties;
     RasterContainer raster_sources;
@@ -29,11 +35,13 @@ struct LuaScriptingContext final
     bool has_turn_penalty_function;
     bool has_node_function;
     bool has_way_function;
+    bool has_relation_function;
     bool has_segment_function;
 
     sol::function turn_function;
     sol::function way_function;
     sol::function node_function;
+    sol::function relation_function;
     sol::function segment_function;
 
     int api_version;
@@ -51,7 +59,7 @@ class Sol2ScriptingEnvironment final : public ScriptingEnvironment
 {
   public:
     static const constexpr int SUPPORTED_MIN_API_VERSION = 0;
-    static const constexpr int SUPPORTED_MAX_API_VERSION = 2;
+    static const constexpr int SUPPORTED_MAX_API_VERSION = 3;
 
     explicit Sol2ScriptingEnvironment(const std::string &file_name);
     ~Sol2ScriptingEnvironment() override = default;
@@ -65,12 +73,14 @@ class Sol2ScriptingEnvironment final : public ScriptingEnvironment
     void ProcessTurn(ExtractionTurn &turn) override;
     void ProcessSegment(ExtractionSegment &segment) override;
 
-    void
-    ProcessElements(const osmium::memory::Buffer &buffer,
-                    const RestrictionParser &restriction_parser,
-                    std::vector<std::pair<const osmium::Node &, ExtractionNode>> &resulting_nodes,
-                    std::vector<std::pair<const osmium::Way &, ExtractionWay>> &resulting_ways,
-                    std::vector<InputConditionalTurnRestriction> &resulting_restrictions) override;
+    void ProcessElements(
+        const osmium::memory::Buffer &buffer,
+        const RestrictionParser &restriction_parser,
+        const ExtractionRelationContainer &relations,
+        std::vector<std::pair<const osmium::Node &, ExtractionNode>> &resulting_nodes,
+        std::vector<std::pair<const osmium::Way &, ExtractionWay>> &resulting_ways,
+        std::vector<std::pair<const osmium::Relation &, ExtractionRelation>> &resulting_relations,
+        std::vector<InputConditionalTurnRestriction> &resulting_restrictions) override;
 
   private:
     LuaScriptingContext &GetSol2Context();

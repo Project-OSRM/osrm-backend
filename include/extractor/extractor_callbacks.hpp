@@ -15,6 +15,7 @@ namespace osmium
 {
 class Node;
 class Way;
+class Relation;
 }
 
 namespace std
@@ -44,6 +45,7 @@ namespace extractor
 class ExtractionContainers;
 struct ExtractionNode;
 struct ExtractionWay;
+struct ExtractionRelation;
 struct ProfileProperties;
 struct InputConditionalTurnRestriction;
 

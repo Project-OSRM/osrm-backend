@@ -1,4 +1,13 @@
 # UNRELEASED
+    - Profile:
+      - New function to support relations: `process_relation`. Read more in profiles documentation.
+      - Support of `distance` weight in foot and bicycle profiles
+    - Infrastructure:
+      - Lua 5.1 support is removed due to lack of support in sol2 https://github.com/ThePhD/sol2/issues/302
+    - Node.js Bindings:
+      - Exposes `use_threads_number=Number` parameter of `EngineConfig` to limit a number of threads in a TBB internal pool
+    - Internals
+      - MLD uses a unidirectional Dijkstra for 1-to-N and N-to-1 matrices
 
 # 5.12.0
     - Guidance
