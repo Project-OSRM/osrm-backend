@@ -143,24 +143,27 @@ inline LevelID getNodeQueryLevel(const MultiLevelPartition &partition,
                                  const std::size_t phantom_index,
                                  const std::vector<std::size_t> &phantom_indices)
 {
-    auto level = [&partition, node](const SegmentID &source, const SegmentID &target) {
-        if (source.enabled && target.enabled)
-            return partition.GetQueryLevel(source.id, target.id, node);
-        return INVALID_LEVEL_ID;
+    auto min_level = [&partition, node](const PhantomNode &phantom_node) {
+
+        const auto &forward_segment = phantom_node.forward_segment_id;
+        const auto forward_level =
+            forward_segment.enabled ? partition.GetHighestDifferentLevel(node, forward_segment.id)
+                                    : INVALID_LEVEL_ID;
+
+        const auto &reverse_segment = phantom_node.reverse_segment_id;
+        const auto reverse_level =
+            reverse_segment.enabled ? partition.GetHighestDifferentLevel(node, reverse_segment.id)
+                                    : INVALID_LEVEL_ID;
+
+        return std::min(forward_level, reverse_level);
     };
 
-    const auto &source_phantom = phantom_nodes[phantom_index];
-
-    auto result = INVALID_LEVEL_ID;
+    // Get minimum level over all phantoms of the highest different level with respect to node
+    // This is equivalent to min_{∀ source, target} partition.GetQueryLevel(source, node, target)
+    auto result = min_level(phantom_nodes[phantom_index]);
     for (const auto &index : phantom_indices)
     {
-        const auto &target_phantom = phantom_nodes[index];
-        auto min_level = std::min(
-            std::min(level(source_phantom.forward_segment_id, target_phantom.forward_segment_id),
-                     level(source_phantom.forward_segment_id, target_phantom.reverse_segment_id)),
-            std::min(level(source_phantom.reverse_segment_id, target_phantom.forward_segment_id),
-                     level(source_phantom.reverse_segment_id, target_phantom.reverse_segment_id)));
-        result = std::min(result, min_level);
+        result = std::min(result, min_level(phantom_nodes[index]));
     }
     return result;
 }
