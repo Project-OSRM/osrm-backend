@@ -316,48 +316,6 @@ function process_node(profile, node, result, relations)
   end
 end
 
-function parse_relation(relation, obj)
-  local t = relation:get_value_by_key("type")
-  local role = relation:get_role(obj)
-  local result = {}
-
-  function add_extra_data(m)
-    local name = relation:get_value_by_key("name")
-    if name then
-      result['route_name'] = name
-    end
-
-    local ref = relation:get_value_by_key("ref")
-    if ref then
-      result['route_ref'] = ref
-    end
-  end
-
-  if t == 'route' then
-    local route = relation:get_value_by_key("route")
-    if route == 'road' then
-      -- process case, where directions set as role
-      if role == 'north' or role == 'south' or role == 'west' or role == 'east' then
-        result['route_direction'] = role
-        add_extra_data(m)
-      end
-    end
-
-    local direction = relation:get_value_by_key('direction')
-    if direction then
-      direction = string.lower(direction)
-      if direction == 'north' or direction == 'south' or direction == 'west' or direction == 'east' then
-        if role == 'forward' then
-          result['route_direction'] = direction
-          add_extra_data(m)
-        end
-      end
-    end
-  end
-
-  return result
-end
-
 function process_way(profile, way, result, relations)
   -- the intial filtering of ways based on presence of tags
   -- affects processing times significantly, because all ways
@@ -448,7 +406,7 @@ function process_way(profile, way, result, relations)
   local rel_id_list = relations:get_relations(way)
   for i, r in ipairs(rel_id_list) do
     local rel_id = relations:relation(r)
-    parsed_rel_list[i] =  parse_relation(rel_id, way)
+    parsed_rel_list[i] = Relations.parse_route_relation(rel_id, way)
   end
 
   -- now process relations data

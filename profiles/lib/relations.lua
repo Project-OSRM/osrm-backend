@@ -91,4 +91,46 @@ function Relations.match_to_ref(relations, ref)
   return result
 end
 
+function Relations.parse_route_relation(relation, obj)
+  local t = relation:get_value_by_key("type")
+  local role = relation:get_role(obj)
+  local result = {}
+
+  function add_extra_data(m)
+    local name = relation:get_value_by_key("name")
+    if name then
+      result['route_name'] = name
+    end
+
+    local ref = relation:get_value_by_key("ref")
+    if ref then
+      result['route_ref'] = ref
+    end
+  end
+
+  if t == 'route' then
+    local route = relation:get_value_by_key("route")
+    if route == 'road' then
+      -- process case, where directions set as role
+      if role == 'north' or role == 'south' or role == 'west' or role == 'east' then
+        result['route_direction'] = role
+        add_extra_data(m)
+      end
+    end
+
+    local direction = relation:get_value_by_key('direction')
+    if direction then
+      direction = string.lower(direction)
+      if direction == 'north' or direction == 'south' or direction == 'west' or direction == 'east' then
+        if role == 'forward' then
+          result['route_direction'] = direction
+          add_extra_data(m)
+        end
+      end
+    end
+  end
+
+  return result
+end
+
 return Relations
