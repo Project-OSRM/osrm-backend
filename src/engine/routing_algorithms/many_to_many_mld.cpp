@@ -33,6 +33,9 @@ inline LevelID getNodeQueryLevel(const MultiLevelPartition &partition,
     const auto node_level = std::min(highest_diffrent_level(phantom_node.forward_segment_id),
                                      highest_diffrent_level(phantom_node.reverse_segment_id));
 
+    if (DIRECTION == REVERSE_DIRECTION && node_level >= partition.GetNumberOfLevels() - 1)
+        return INVALID_LEVEL_ID;
+
     return node_level;
 }
 
@@ -79,11 +82,16 @@ void relaxOutgoingEdges(const DataFacade<mld::Algorithm> &facade,
     BOOST_ASSERT(!facade.ExcludeNode(node));
 
     const auto &partition = facade.GetMultiLevelPartition();
+
+    const auto level = getNodeQueryLevel<DIRECTION>(partition, node, args...);
+
+    // Break outgoing edges relaxation if node at the restricted level
+    if (level == INVALID_LEVEL_ID)
+        return;
+
     const auto &cells = facade.GetCellStorage();
     const auto &metric = facade.GetCellMetric();
     const auto &node_data = query_heap.GetData(node);
-
-    const auto level = getNodeQueryLevel<DIRECTION>(partition, node, args...);
 
     if (level >= 1 && !node_data.from_clique_arc)
     {
