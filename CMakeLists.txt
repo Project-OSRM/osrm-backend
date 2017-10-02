@@ -31,12 +31,13 @@ option(ENABLE_LTO "Use LTO if available" OFF)
 option(ENABLE_FUZZING "Fuzz testing using LLVM's libFuzzer" OFF)
 option(ENABLE_GOLD_LINKER "Use GNU gold linker if available" ON)
 option(ENABLE_NODE_BINDINGS "Build NodeJs bindings" OFF)
+option(ENABLE_GLIBC_WORKAROUND "Workaround GLIBC symbol exports" OFF)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 if(ENABLE_MASON)
   # versions in use
-  set(MASON_BOOST_VERSION "1.63.0")
+  set(MASON_BOOST_VERSION "1.65.1")
   set(MASON_STXXL_VERSION "1.4.1-1")
   set(MASON_EXPAT_VERSION "2.2.0")
   set(MASON_LUA_VERSION "5.2.4")
@@ -60,7 +61,7 @@ if (POLICY CMP0048)
 endif()
 project(OSRM C CXX)
 set(OSRM_VERSION_MAJOR 5)
-set(OSRM_VERSION_MINOR 12)
+set(OSRM_VERSION_MINOR 13)
 set(OSRM_VERSION_PATCH 0)
 set(OSRM_VERSION "${OSRM_VERSION_MAJOR}.${OSRM_VERSION_MINOR}.${OSRM_VERSION_PATCH}")
 
@@ -809,6 +810,10 @@ add_custom_target(uninstall
 # Modular build system: each directory registered here provides its own CMakeLists.txt
 add_subdirectory(unit_tests)
 add_subdirectory(src/benchmarks)
+
+if (ENABLE_GLIBC_WORKAROUND)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGLIBC_WORKAROUND")
+endif()
 
 if (ENABLE_NODE_BINDINGS)
   add_subdirectory(src/nodejs)

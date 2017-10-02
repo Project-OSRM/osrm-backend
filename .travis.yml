@@ -94,7 +94,7 @@ matrix:
       addons:
         apt:
           sources: ['ubuntu-toolchain-r-test']
-          packages: ['libstdc++-5-dev']
+          packages: ['libstdc++-4.9-dev']
       env: CLANG_VERSION='4.0.0' BUILD_TYPE='Release' ENABLE_MASON=ON ENABLE_SANITIZER=ON LSAN_OPTIONS="suppressions=$TRAVIS_BUILD_DIR/scripts/travis/leaksanitizer.conf"
 
     # Release Builds
@@ -103,7 +103,7 @@ matrix:
       addons:
         apt:
           sources: ['ubuntu-toolchain-r-test']
-          packages: ['libstdc++-5-dev']
+          packages: ['libstdc++-4.9-dev']
       env: CLANG_VERSION='4.0.0' BUILD_TYPE='Release' ENABLE_MASON=ON RUN_CLANG_FORMAT=ON ENABLE_LTO=ON
 
     - os: linux
@@ -186,7 +186,7 @@ matrix:
       addons:
         apt:
           sources: ['ubuntu-toolchain-r-test']
-          packages: ['libstdc++-5-dev']
+          packages: ['libstdc++-4.9-dev']
       env: CLANG_VERSION='4.0.0' BUILD_TYPE='Release' ENABLE_MASON=ON ENABLE_LTO=ON JOBS=3
       install:
         - pushd ${OSRM_BUILD_DIR}
@@ -195,7 +195,8 @@ matrix:
               -DENABLE_MASON=${ENABLE_MASON:-OFF} \
               -DENABLE_NODE_BINDINGS=${ENABLE_NODE_BINDINGS:-OFF} \
               -DENABLE_CCACHE=ON \
-              -DCMAKE_INSTALL_PREFIX=${OSRM_INSTALL_DIR}
+              -DCMAKE_INSTALL_PREFIX=${OSRM_INSTALL_DIR} \
+              -DENABLE_GLIBC_WORKAROUND=ON
         - make --jobs=${JOBS}
         - popd
       script:
@@ -209,7 +210,7 @@ matrix:
       addons:
         apt:
           sources: ['ubuntu-toolchain-r-test']
-          packages: ['libstdc++-5-dev']
+          packages: ['libstdc++-4.9-dev']
       env: CLANG_VERSION='4.0.0' BUILD_TYPE='Debug' ENABLE_MASON=ON ENABLE_LTO=ON JOBS=3
       install:
         - pushd ${OSRM_BUILD_DIR}
@@ -218,7 +219,8 @@ matrix:
               -DENABLE_MASON=${ENABLE_MASON:-OFF} \
               -DENABLE_NODE_BINDINGS=${ENABLE_NODE_BINDINGS:-OFF} \
               -DENABLE_CCACHE=ON \
-              -DCMAKE_INSTALL_PREFIX=${OSRM_INSTALL_DIR}
+              -DCMAKE_INSTALL_PREFIX=${OSRM_INSTALL_DIR} \
+              -DENABLE_GLIBC_WORKAROUND=ON
         - make --jobs=${JOBS}
         - popd
       script:
@@ -232,7 +234,7 @@ matrix:
       addons:
         apt:
           sources: ['ubuntu-toolchain-r-test']
-          packages: ['libstdc++-5-dev']
+          packages: ['libstdc++-4.9-dev']
       env: CLANG_VERSION='4.0.0' BUILD_TYPE='Release' ENABLE_MASON=ON ENABLE_LTO=ON JOBS=3 NODE="6"
       install:
         - pushd ${OSRM_BUILD_DIR}
@@ -241,7 +243,8 @@ matrix:
               -DENABLE_MASON=${ENABLE_MASON:-OFF} \
               -DENABLE_NODE_BINDINGS=${ENABLE_NODE_BINDINGS:-OFF} \
               -DENABLE_CCACHE=ON \
-              -DCMAKE_INSTALL_PREFIX=${OSRM_INSTALL_DIR}
+              -DCMAKE_INSTALL_PREFIX=${OSRM_INSTALL_DIR} \
+              -DENABLE_GLIBC_WORKAROUND=ON
         - make --jobs=${JOBS}
         - popd
       script:
@@ -255,7 +258,7 @@ matrix:
       addons:
         apt:
           sources: ['ubuntu-toolchain-r-test']
-          packages: ['libstdc++-5-dev']
+          packages: ['libstdc++-4.9-dev']
       env: CLANG_VERSION='4.0.0' BUILD_TYPE='Debug' ENABLE_MASON=ON ENABLE_LTO=ON JOBS=3 NODE="6"
       install:
         - pushd ${OSRM_BUILD_DIR}
@@ -264,7 +267,8 @@ matrix:
               -DENABLE_MASON=${ENABLE_MASON:-OFF} \
               -DENABLE_NODE_BINDINGS=${ENABLE_NODE_BINDINGS:-OFF} \
               -DENABLE_CCACHE=ON \
-              -DCMAKE_INSTALL_PREFIX=${OSRM_INSTALL_DIR}
+              -DCMAKE_INSTALL_PREFIX=${OSRM_INSTALL_DIR} \
+              -DENABLE_GLIBC_WORKAROUND=ON
         - make --jobs=${JOBS}
         - popd
       script:
@@ -338,7 +342,8 @@ install:
              -DENABLE_STXXL=${ENABLE_STXXL:-OFF} \
              -DBUILD_TOOLS=ON \
              -DENABLE_CCACHE=ON \
-             -DCMAKE_INSTALL_PREFIX=${OSRM_INSTALL_DIR}
+             -DCMAKE_INSTALL_PREFIX=${OSRM_INSTALL_DIR} \
+             -DENABLE_GLIBC_WORKAROUND=${ENABLE_GLIBC_WORKAROUND:-OFF}
   - echo "travis_fold:start:MAKE"
   - make --jobs=${JOBS}
   - make tests --jobs=${JOBS}
