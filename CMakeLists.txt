@@ -31,6 +31,7 @@ option(ENABLE_LTO "Use LTO if available" OFF)
 option(ENABLE_FUZZING "Fuzz testing using LLVM's libFuzzer" OFF)
 option(ENABLE_GOLD_LINKER "Use GNU gold linker if available" ON)
 option(ENABLE_NODE_BINDINGS "Build NodeJs bindings" OFF)
+option(ENABLE_GLIBC_WORKAROUND "Workaround GLIBC symbol exports" OFF)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
@@ -402,8 +403,6 @@ endif()
 
 if(UNIX AND NOT APPLE)
   set(MAYBE_RT_LIBRARY -lrt)
-  # TODO: print some warnings, or make this test a bit more detailed
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -include ${CMAKE_CURRENT_SOURCE_DIR}/include/util/glibc_workaround.hpp")
 endif()
 
 # Disallow deprecated protozero APIs
@@ -811,6 +810,10 @@ add_custom_target(uninstall
 # Modular build system: each directory registered here provides its own CMakeLists.txt
 add_subdirectory(unit_tests)
 add_subdirectory(src/benchmarks)
+
+if (ENABLE_GLIBC_WORKAROUND)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGLIBC_WORKAROUND")
+endif()
 
 if (ENABLE_NODE_BINDINGS)
   add_subdirectory(src/nodejs)

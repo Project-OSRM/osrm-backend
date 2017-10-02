@@ -1,6 +1,4 @@
-#ifndef GLIBC_WORKAROUND_H
-#define GLIBC_WORKAROUND_H
-
+#ifdef GLIBC_WORKAROUND
 #include <stdexcept>
 
 // https://github.com/bitcoin/bitcoin/pull/4042
@@ -11,13 +9,13 @@
 
 // Note: only necessary on Linux
 #ifdef __linux__
-#define WORKAROUND
+#define _ENABLE_GLIBC_WORKAROUND
 #warning building with workaround
 #else
 #warning not building with workaround
 #endif
 
-#ifdef WORKAROUND
+#ifdef _ENABLE_GLIBC_WORKAROUND
 namespace std
 {
 
@@ -28,6 +26,6 @@ void __throw_out_of_range_fmt(const char *err, ...)
     __throw_out_of_range(err);
 }
 }
-#endif // WORKAROUND
+#endif // _ENABLE_GLIBC_WORKAROUND
 
-#endif // GLIBC_WORKAROUND_H
+#endif // GLIBC_WORKAROUND
