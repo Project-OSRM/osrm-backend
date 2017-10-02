@@ -456,9 +456,6 @@ void unpackPackedPaths(InputIt first,
     util::static_assert_iter_category<OutIt, std::output_iterator_tag>();
     util::static_assert_iter_value<InputIt, WeightedViaNodePackedPath>();
 
-    const bool force_loop_forward = needsLoopForward(phantom_node_pair);
-    const bool force_loop_backward = needsLoopBackwards(phantom_node_pair);
-
     const Partition &partition = facade.GetMultiLevelPartition();
 
     Heap &forward_heap = *search_engine_data.forward_heap_1;
@@ -530,8 +527,8 @@ void unpackPackedPaths(InputIt first,
                                                                                 facade,
                                                                                 forward_heap,
                                                                                 reverse_heap,
-                                                                                force_loop_forward,
-                                                                                force_loop_backward,
+                                                                                DO_NOT_FORCE_LOOPS,
+                                                                                DO_NOT_FORCE_LOOPS,
                                                                                 INVALID_EDGE_WEIGHT,
                                                                                 sublevel,
                                                                                 parent_cell_id);
@@ -587,9 +584,6 @@ makeCandidateVias(SearchEngineData<Algorithm> &search_engine_data,
     // we're over factor * weight. We have to set the weight for routingStep to INVALID_EDGE_WEIGHT
     // so that stepping will continue even after we reached the shortest path upper bound.
 
-    const bool force_loop_forward = needsLoopForward(phantom_node_pair);
-    const bool force_loop_backward = needsLoopBackwards(phantom_node_pair);
-
     EdgeWeight forward_heap_min = forward_heap.MinKey();
     EdgeWeight reverse_heap_min = reverse_heap.MinKey();
 
@@ -615,8 +609,8 @@ makeCandidateVias(SearchEngineData<Algorithm> &search_engine_data,
                                            reverse_heap,
                                            overlap_via,
                                            overlap_weight,
-                                           force_loop_forward,
-                                           force_loop_backward,
+                                           DO_NOT_FORCE_LOOPS,
+                                           DO_NOT_FORCE_LOOPS,
                                            phantom_node_pair);
 
             if (!forward_heap.Empty())
@@ -641,8 +635,8 @@ makeCandidateVias(SearchEngineData<Algorithm> &search_engine_data,
                                            forward_heap,
                                            overlap_via,
                                            overlap_weight,
-                                           force_loop_forward,
-                                           force_loop_backward,
+                                           DO_NOT_FORCE_LOOPS,
+                                           DO_NOT_FORCE_LOOPS,
                                            phantom_node_pair);
 
             if (!reverse_heap.Empty())

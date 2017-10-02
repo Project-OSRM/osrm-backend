@@ -255,7 +255,8 @@ void routingStep(const DataFacade<Algorithm> &facade,
         auto reverse_weight = reverse_heap.GetKey(node);
         auto path_weight = weight + reverse_weight;
 
-        // if loops are forced, they are so at the source
+        // MLD uses loops forcing only to prune single node paths in forward and/or
+        // backward direction (there is no need to force loops in MLD but in CH)
         if (!(force_loop_forward && forward_heap.GetData(node).parent == node) &&
             !(force_loop_reverse && reverse_heap.GetData(node).parent == node) &&
             (path_weight >= 0) && (path_weight < path_upper_bound))
