@@ -701,21 +701,18 @@ bool SliproadHandler::isValidSliproadLink(const IntersectionViewData &sliproad,
                                           const IntersectionViewData &first,
                                           const IntersectionViewData &second) const
 {
-    // If the Sliproad is not a link we don't care
+    // If the sliproad is not a link we don't care
     const auto &sliproad_data = node_based_graph.GetEdgeData(sliproad.eid);
     if (!sliproad_data.road_classification.IsLinkClass())
     {
         return true;
     }
 
-    // otherwise neither the first road leading to the intersection we shortcut
-    const auto &first_road_data = node_based_graph.GetEdgeData(first.eid);
-    if (first_road_data.road_classification.IsLinkClass())
-    {
-        return false;
-    }
+    // otherwise the first road leading to the intersection we shortcut
+    // can be a link or a usual road (ignore the check at this place)
+    (void)first;
 
-    // nor the second road coming from the intersection we shotcut must be links
+    // and the second road coming from the intersection we shortcut must be a non-link
     const auto &second_road_data = node_based_graph.GetEdgeData(second.eid);
     if (second_road_data.road_classification.IsLinkClass())
     {

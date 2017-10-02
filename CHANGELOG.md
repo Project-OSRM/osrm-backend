@@ -1,4 +1,5 @@
 # UNRELEASED
+  - Changes from 5.12:
     - Profile:
       - New function to support relations: `process_relation`. Read more in profiles documentation.
       - Support of `distance` weight in foot and bicycle profiles
@@ -10,8 +11,11 @@
       - Exposes `use_threads_number=Number` parameter of `EngineConfig` to limit a number of threads in a TBB internal pool
     - Internals
       - MLD uses a unidirectional Dijkstra for 1-to-N and N-to-1 matrices
+    - Guidance
+      - Fixed some cases of sliproads pre-processing (https://github.com/Project-OSRM/osrm-backend/issues/4348)
 
 # 5.12.0
+  - Changes from 5.11:
     - Guidance
       - now announcing turning onto oneways at the end of a road (e.g. onto dual carriageways)
       - Adds new instruction types at the exit of roundabouts and rotaries `exit roundabout` and `exit rotary`.
