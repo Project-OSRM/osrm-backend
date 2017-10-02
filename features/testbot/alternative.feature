@@ -12,6 +12,9 @@ Feature: Alternative route
               g h i j
             """
 
+        # enforce multiple cells for filterUnpackedPathsBySharing check
+        And the partition extra arguments "--small-component-size 1 --max-cell-sizes 2,4,8,16"
+
         And the ways
             | nodes |
             | ab    |
