@@ -86,7 +86,7 @@ matrix:
       addons: &clang40
         apt:
           sources: ['ubuntu-toolchain-r-test']
-          packages: ['libstdc++-5-dev', 'libbz2-dev', 'libxml2-dev', 'libzip-dev', 'liblua5.2-dev', 'libtbb-dev', 'libgdal-dev', 'libboost-all-dev']
+          packages: ['libstdc++-4.8-dev', 'libbz2-dev', 'libxml2-dev', 'libzip-dev', 'liblua5.2-dev', 'libtbb-dev', 'libgdal-dev', 'libboost-all-dev']
       env: CLANG_VERSION='4.0.0' BUILD_TYPE='Debug' CUCUMBER_TIMEOUT=60000
 
     - os: linux
@@ -94,7 +94,7 @@ matrix:
       addons:
         apt:
           sources: ['ubuntu-toolchain-r-test']
-          packages: ['libstdc++-5-dev']
+          packages: ['libstdc++-4.8-dev']
       env: CLANG_VERSION='4.0.0' BUILD_TYPE='Release' ENABLE_MASON=ON ENABLE_SANITIZER=ON LSAN_OPTIONS="suppressions=$TRAVIS_BUILD_DIR/scripts/travis/leaksanitizer.conf"
 
     # Release Builds
@@ -103,7 +103,7 @@ matrix:
       addons:
         apt:
           sources: ['ubuntu-toolchain-r-test']
-          packages: ['libstdc++-5-dev']
+          packages: ['libstdc++-4.8-dev']
       env: CLANG_VERSION='4.0.0' BUILD_TYPE='Release' ENABLE_MASON=ON RUN_CLANG_FORMAT=ON ENABLE_LTO=ON
 
     - os: linux
@@ -186,7 +186,7 @@ matrix:
       addons:
         apt:
           sources: ['ubuntu-toolchain-r-test']
-          packages: ['libstdc++-5-dev']
+          packages: ['libstdc++-4.8-dev']
       env: CLANG_VERSION='4.0.0' BUILD_TYPE='Release' ENABLE_MASON=ON ENABLE_LTO=ON JOBS=3
       install:
         - pushd ${OSRM_BUILD_DIR}
@@ -209,7 +209,7 @@ matrix:
       addons:
         apt:
           sources: ['ubuntu-toolchain-r-test']
-          packages: ['libstdc++-5-dev']
+          packages: ['libstdc++-4.8-dev']
       env: CLANG_VERSION='4.0.0' BUILD_TYPE='Debug' ENABLE_MASON=ON ENABLE_LTO=ON JOBS=3
       install:
         - pushd ${OSRM_BUILD_DIR}
@@ -232,7 +232,7 @@ matrix:
       addons:
         apt:
           sources: ['ubuntu-toolchain-r-test']
-          packages: ['libstdc++-5-dev']
+          packages: ['libstdc++-4.8-dev']
       env: CLANG_VERSION='4.0.0' BUILD_TYPE='Release' ENABLE_MASON=ON ENABLE_LTO=ON JOBS=3 NODE="6"
       install:
         - pushd ${OSRM_BUILD_DIR}
@@ -255,7 +255,7 @@ matrix:
       addons:
         apt:
           sources: ['ubuntu-toolchain-r-test']
-          packages: ['libstdc++-5-dev']
+          packages: ['libstdc++-4.8-dev']
       env: CLANG_VERSION='4.0.0' BUILD_TYPE='Debug' ENABLE_MASON=ON ENABLE_LTO=ON JOBS=3 NODE="6"
       install:
         - pushd ${OSRM_BUILD_DIR}
