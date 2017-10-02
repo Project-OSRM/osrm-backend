@@ -402,6 +402,8 @@ endif()
 
 if(UNIX AND NOT APPLE)
   set(MAYBE_RT_LIBRARY -lrt)
+  # TODO: print some warnings, or make this test a bit more detailed
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -include ${CMAKE_CURRENT_SOURCE_DIR}/include/util/glibc_workaround.hpp")
 endif()
 
 # Disallow deprecated protozero APIs
