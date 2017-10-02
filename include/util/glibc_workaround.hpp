@@ -1,6 +1,8 @@
 #ifndef GLIBC_WORKAROUND_H
 #define GLIBC_WORKAROUND_H
 
+#include <stdexcept>
+
 // https://github.com/bitcoin/bitcoin/pull/4042
 // allows building against libstdc++-dev-4.9 while avoiding
 // GLIBCXX_3.4.20 dep
