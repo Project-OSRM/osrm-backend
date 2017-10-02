@@ -65,7 +65,6 @@ struct WeightedViaNodePackedPath
 {
     WeightedViaNode via;
     PackedPath path;
-    std::vector<EdgeWeight> path_weights;
 };
 
 // Represents a high-detail unpacked path (s, .., via, .., t)
@@ -661,94 +660,6 @@ makeCandidateVias(SearchEngineData<Algorithm> &search_engine_data,
     return candidate_vias;
 }
 
-// Generates packed path edge weights based on a packed path, its total weight and the heaps.
-inline std::vector<EdgeWeight> retrievePackedPathWeightsFromHeap(const Heap &forward_heap,
-                                                                 const Heap &reverse_heap,
-                                                                 const PackedPath &packed_path,
-                                                                 const WeightedViaNode via)
-{
-    if (packed_path.empty())
-        return {};
-
-    std::vector<EdgeWeight> path_weights;
-    path_weights.reserve(packed_path.size());
-
-    // We need to retrieve edge weights either from the forward heap or the reverse heap.
-    // The heap depends on if we are on the s,via sub-path or on the via,t sub-path.
-    //
-    // There is an edge-case where the (from,to) has to==via. In this case the edge weight
-    // can only be retrieved by subtracting the heap weights from the total path weight.
-    //
-    // Note: heap.WasInserted(node) only guarantees that the search has seen the node,
-    // but does not guarantee for the node to be settled in the heap!
-
-    // The first edge could already be the edge-case with to==via as explained above.
-    bool after_via = std::get<0>(packed_path.front()) == via.node;
-
-    for (auto it = begin(packed_path), last = end(packed_path); it != last; ++it)
-    {
-        const auto from = std::get<0>(*it);
-        const auto to = std::get<1>(*it);
-
-        BOOST_ASSERT(forward_heap.WasInserted(from) || reverse_heap.WasInserted(from));
-        BOOST_ASSERT(forward_heap.WasInserted(to) || reverse_heap.WasInserted(to));
-
-        if (to != via.node && !after_via)
-        {
-            BOOST_ASSERT(forward_heap.WasInserted(from) && forward_heap.WasInserted(to));
-            const auto weight_from = forward_heap.GetKey(from);
-            const auto weight_to = forward_heap.GetKey(to);
-            BOOST_ASSERT(weight_to >= weight_from);
-            path_weights.push_back(weight_to - weight_from);
-        }
-
-        if (to != via.node && after_via)
-        {
-            BOOST_ASSERT(reverse_heap.WasInserted(from) && reverse_heap.WasInserted(to));
-            const auto weight_from = reverse_heap.GetKey(from);
-            const auto weight_to = reverse_heap.GetKey(to);
-            BOOST_ASSERT(weight_from >= weight_to);
-            path_weights.push_back(weight_from - weight_to);
-        }
-
-        if (to == via.node)
-        {
-            BOOST_ASSERT(forward_heap.WasInserted(from));
-            BOOST_ASSERT(reverse_heap.WasInserted(to));
-            const auto weight_from = forward_heap.GetKey(from);
-            const auto weight_to = reverse_heap.GetKey(to);
-            BOOST_ASSERT(via.weight >= (weight_from + weight_to));
-            path_weights.push_back(via.weight - (weight_from + weight_to));
-
-            after_via = true;
-        }
-    }
-
-    BOOST_ASSERT(path_weights.size() == packed_path.size());
-
-    // We inserted phantom nodes into the heaps, which means our start and target node
-    // already have weights in the heaps even without edges. The search we did to generate
-    // the total weight already includes these phantom node weights. Here we have to
-    // manually account for them by means of simply retrieving the inserted weights.
-    const auto assert_weights = [&] {
-        const auto s = std::get<0>(packed_path.front());
-        const auto t = std::get<1>(packed_path.back());
-        BOOST_ASSERT(forward_heap.WasInserted(s));
-        BOOST_ASSERT(reverse_heap.WasInserted(t));
-
-        const auto edge_weights =
-            std::accumulate(begin(path_weights), end(path_weights), EdgeWeight{0});
-        const auto phantom_node_weights = forward_heap.GetKey(s) + reverse_heap.GetKey(t);
-        (void)edge_weights;
-        (void)phantom_node_weights;
-        BOOST_ASSERT(via.weight == edge_weights + phantom_node_weights);
-    };
-    (void)assert_weights;
-    BOOST_ASSERT((assert_weights(), true));
-
-    return path_weights;
-}
-
 } // anon. ns
 
 // Alternative Routes for MLD.
@@ -835,12 +746,8 @@ InternalManyRoutesResult alternativePathSearch(SearchEngineData<Algorithm> &sear
 
     const auto extract_packed_path_from_heaps = [&](WeightedViaNode via) {
         auto packed_path = retrievePackedPathFromHeap(forward_heap, reverse_heap, via.node);
-        auto path_weights =
-            retrievePackedPathWeightsFromHeap(forward_heap, reverse_heap, packed_path, via);
 
-        return WeightedViaNodePackedPath{std::move(via),           //
-                                         std::move(packed_path),   //
-                                         std::move(path_weights)}; //
+        return WeightedViaNodePackedPath{std::move(via), std::move(packed_path)};
     };
 
     std::vector<WeightedViaNodePackedPath> weighted_packed_paths;
