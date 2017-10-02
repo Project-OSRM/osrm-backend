@@ -146,6 +146,7 @@ class SVGPrinter (gdb.Command):
             'const osrm::engine::datafacade::ContiguousInternalMemoryDataFacade<osrm::engine::routing_algorithms::ch::Algorithm> &': self.Facade,
             'const osrm::engine::datafacade::ContiguousInternalMemoryDataFacade<osrm::engine::routing_algorithms::corech::Algorithm> &': self.Facade,
             'const osrm::engine::datafacade::ContiguousInternalMemoryDataFacade<osrm::engine::routing_algorithms::mld::Algorithm> &': self.Facade,
+            'osrm::engine::routing_algorithms::Facade': self.Facade,
             'osrm::engine::DataFacade': self.Facade}
 
 
