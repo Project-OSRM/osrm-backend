@@ -22,7 +22,8 @@ namespace extractor
 struct LuaScriptingContext final
 {
     LuaScriptingContext(const LocationDependentData &location_dependent_data)
-        : location_dependent_data(location_dependent_data)
+        : location_dependent_data(location_dependent_data),
+          last_location_point(0., 180.) // assume (0,180) is invalid coordinate
     {
     }
 
@@ -52,7 +53,11 @@ struct LuaScriptingContext final
 
     int api_version;
     sol::table profile_table;
+
+    // Reference to immutable location dependent data and locations memo
     const LocationDependentData &location_dependent_data;
+    LocationDependentData::point_t last_location_point;
+    std::vector<std::size_t> last_location_indexes;
 };
 
 /**

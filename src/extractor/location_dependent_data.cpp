@@ -191,25 +191,32 @@ void LocationDependentData::loadLocationDependentData(
     }
 }
 
-LocationDependentData::property_t LocationDependentData::operator()(const point_t &point,
-                                                                    const char *key) const
+LocationDependentData::property_t
+LocationDependentData::FindByKey(const std::vector<std::size_t> &property_indexes,
+                                 const char *key) const
 {
-    property_t result;
-
-    auto setter = [this, &result, &key](const rtree_t::value_type &rtree_entry) {
-        const auto properties_index = polygons[rtree_entry.second].second;
-        const auto &polygon_properties = properties[properties_index];
+    for (auto index : property_indexes)
+    {
+        const auto &polygon_properties = properties[index];
         const auto it = polygon_properties.find(key);
         if (it != polygon_properties.end())
         {
-            result = it->second;
+            return it->second;
         }
+    }
+    return property_t{};
+}
+
+std::vector<std::size_t> LocationDependentData::GetPropertyIndexes(const point_t &point) const
+{
+    std::vector<std::size_t> result;
+    auto inserter = [this, &result](const rtree_t::value_type &rtree_entry) {
+        const auto properties_index = polygons[rtree_entry.second].second;
+        result.push_back(properties_index);
     };
 
     // Search the R-tree and collect a Lua table of tags that correspond to the location
-    rtree.query(boost::geometry::index::satisfies(
-                    [&result](const rtree_t::value_type &) { return result.which() == 0; }) &&
-                    boost::geometry::index::intersects(point) &&
+    rtree.query(boost::geometry::index::intersects(point) &&
                     boost::geometry::index::satisfies([this, &point](const rtree_t::value_type &v) {
 
                         // Simple point-in-polygon algorithm adapted from
@@ -265,7 +272,7 @@ LocationDependentData::property_t LocationDependentData::operator()(const point_
 
                         return inside;
                     }),
-                boost::make_function_output_iterator(std::ref(setter)));
+                boost::make_function_output_iterator(std::ref(inserter)));
 
     return result;
 }

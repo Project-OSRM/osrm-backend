@@ -309,7 +309,17 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
             // at one or many locations must be provided
             const auto &nodes = way.nodes();
             const auto &location = nodes.back().location();
-            auto value = context.location_dependent_data({location.lon(), location.lat()}, key);
+            const LocationDependentData::point_t point{location.lon(), location.lat()};
+
+            if (!boost::geometry::equals(context.last_location_point, point))
+            {
+                context.last_location_point = point;
+                context.last_location_indexes =
+                    context.location_dependent_data.GetPropertyIndexes(point);
+            }
+
+            auto value =
+                context.location_dependent_data.FindByKey(context.last_location_indexes, key);
             return boost::apply_visitor(to_lua_object(context.state), value);
         });
 
