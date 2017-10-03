@@ -404,9 +404,9 @@ function process_way(profile, way, result, relations)
 
   local parsed_rel_list = {}
   local rel_id_list = relations:get_relations(way)
-  for i, r in ipairs(rel_id_list) do
-    local rel_id = relations:relation(r)
-    parsed_rel_list[i] = Relations.parse_route_relation(rel_id, way)
+  for i, rel_id in ipairs(rel_id_list) do
+    local rel = relations:relation(rel_id)
+    parsed_rel_list[i] = Relations.parse_route_relation(rel, way)
   end
 
   -- now process relations data
