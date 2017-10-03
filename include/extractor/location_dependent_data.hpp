@@ -36,7 +36,9 @@ struct LocationDependentData
 
     bool empty() const { return rtree.empty(); }
 
-    property_t operator()(const point_t &point, const char *key) const;
+    std::vector<std::size_t> GetPropertyIndexes(const point_t &point) const;
+
+    property_t FindByKey(const std::vector<std::size_t> &property_indexes, const char *key) const;
 
   private:
     void loadLocationDependentData(const boost::filesystem::path &file_path,
