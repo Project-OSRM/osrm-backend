@@ -7,6 +7,10 @@ Utils = require('lib/utils')
 
 Relations = {}
 
+function is_direction(role)
+  return (role == 'north' or role == 'south' or role == 'west' or role == 'east')
+end
+
 -- match ref values to relations data
 function Relations.match_to_ref(relations, ref)
 
@@ -91,43 +95,91 @@ function Relations.match_to_ref(relations, ref)
   return result
 end
 
-function Relations.parse_route_relation(relation, obj)
-  local t = relation:get_value_by_key("type")
-  local role = relation:get_role(obj)
+function get_direction_from_superrel(rel, relations)
+  local result = nil
+  local result_id = nil
+  local rel_id_list = relations:get_relations(rel)
+
+  function set_result(direction, current_rel)
+    if (result ~= nil) and (direction ~= nil) then
+      print('WARNING: relation ' .. rel:id() .. ' is a part of more then one supperrelations ' .. result_id .. ' and ' .. current_rel:id())
+    else
+      result = direction
+      result_id = current_rel:id()
+    end
+  end
+
+  for i, rel_id in ipairs(rel_id_list) do
+    local parent_rel = relations:relation(rel_id)
+    if parent_rel:get_value_by_key('type') == 'route' then
+      local role = parent_rel:get_role(rel)
+
+      if is_direction(role) then
+        set_result(role, parent_rel)
+      else
+        local dir = parent_rel:get_value_by_key('direction')
+        if is_direction(dir) then
+          set_result(dir, parent_rel)
+        end
+      end
+    end
+    -- TODO: support forward/backward
+  end
+
+  return result
+end
+
+function Relations.parse_route_relation(rel, way, relations)
+  local t = rel:get_value_by_key("type")
+  local role = rel:get_role(way)
   local result = {}
 
   function add_extra_data(m)
-    local name = relation:get_value_by_key("name")
+    local name = rel:get_value_by_key("name")
     if name then
       result['route_name'] = name
     end
 
-    local ref = relation:get_value_by_key("ref")
+    local ref = rel:get_value_by_key("ref")
     if ref then
       result['route_ref'] = ref
     end
   end
 
   if t == 'route' then
-    local route = relation:get_value_by_key("route")
+    local route = rel:get_value_by_key("route")
     if route == 'road' then
       -- process case, where directions set as role
-      if role == 'north' or role == 'south' or role == 'west' or role == 'east' then
+      if is_direction(role) then
         result['route_direction'] = role
         add_extra_data(m)
       end
     end
 
-    local direction = relation:get_value_by_key('direction')
+    local direction = rel:get_value_by_key('direction')
     if direction then
       direction = string.lower(direction)
-      if direction == 'north' or direction == 'south' or direction == 'west' or direction == 'east' then
+      if is_direction(direction) then
         if role == 'forward' then
           result['route_direction'] = direction
           add_extra_data(m)
         end
       end
     end
+  end
+
+  -- process superrelations
+  local super_dir = get_direction_from_superrel(rel, relations)
+
+  -- check if there are data error
+  local dir = result['route_direction']
+  if (dir ~= nil) and (super_dir ~= nil) and (dir ~= super_dir) then
+    print('ERROR: conflicting relation directions found for way ' .. way:id() .. 
+          ' relation direction is ' .. dir .. ' superrelation direction is ' .. super_dir)
+  end
+
+  if (dir == nil) and (super_dir ~= nil) then
+    result['route_direction'] = super_dir
   end
 
   return result
