@@ -382,6 +382,7 @@ function process_way(profile, way, result)
     -- handle various other flags
     WayHandlers.roundabouts,
     WayHandlers.startpoint,
+    WayHandlers.turn,
 
     -- set name, ref and pronunciation
     WayHandlers.names,

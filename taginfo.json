@@ -289,6 +289,10 @@
             "description": "Access tags for turn lanes."
         },
         {
+            "key": "turn",
+            "object_types": [ "way" ]
+        },
+        {
             "key": "turn:lanes:backward",
             "object_types": [ "way" ],
             "description": "Turn Lanes for lane guidance."

@@ -165,7 +165,9 @@ TurnInstruction IntersectionHandler::getInstructionForObvious(const std::size_t 
     }
     if (num_roads > 2)
     {
-        return {TurnType::Suppressed, getTurnDirection(road.angle)};
+        const auto &in_data = node_based_graph.GetEdgeData(via_edge);
+        return {in_data.turn ? TurnType::Continue : TurnType::Suppressed,
+                getTurnDirection(road.angle)};
     }
     else
     {
