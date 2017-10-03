@@ -417,24 +417,23 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
         sol::property([](const ExtractionWay &way) { return way.is_left_hand_driving; },
                       [](ExtractionWay &way, bool flag) { way.is_left_hand_driving = flag; }));
 
-    auto getTypedRefBySol = [](const sol::object & obj) -> ExtractionRelation::OsmIDTyped
-    {
+    auto getTypedRefBySol = [](const sol::object &obj) -> ExtractionRelation::OsmIDTyped {
         if (obj.is<osmium::Way>())
         {
-            osmium::Way * way = obj.as<osmium::Way*>();
-            return { way->id(), osmium::item_type::way };
+            osmium::Way *way = obj.as<osmium::Way *>();
+            return {way->id(), osmium::item_type::way};
         }
 
-        if (obj.is<osmium::Relation>())
+        if (obj.is<ExtractionRelation>())
         {
-            osmium::Relation * rel = obj.as<osmium::Relation*>();
-            return { rel->id(), osmium::item_type::relation };
+            ExtractionRelation *rel = obj.as<ExtractionRelation *>();
+            return rel->id;
         }
 
         if (obj.is<osmium::Node>())
         {
-            osmium::Node * node = obj.as<osmium::Node*>();
-            return { node->id(), osmium::item_type::node };
+            osmium::Node *node = obj.as<osmium::Node *>();
+            return {node->id(), osmium::item_type::node};
         }
 
         return ExtractionRelation::OsmIDTyped(0, osmium::item_type::undefined);
@@ -449,27 +448,25 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
 
     context.state.new_usertype<ExtractionRelation>(
         "ExtractionRelation",
+        "id",
+        [](ExtractionRelation &rel) { return rel.id.GetID(); },
         "get_value_by_key",
-        [](ExtractionRelation &rel, const char * key) -> const char * { return rel.GetAttr(key); },
+        [](ExtractionRelation &rel, const char *key) -> const char * { return rel.GetAttr(key); },
         "get_role",
-        [&getTypedRefBySol](ExtractionRelation &rel, const sol::object & obj) -> const char *
-        {
+        [&getTypedRefBySol](ExtractionRelation &rel, const sol::object &obj) -> const char * {
             return rel.GetRole(getTypedRefBySol(obj));
         });
 
     context.state.new_usertype<ExtractionRelationContainer>(
         "ExtractionRelationContainer",
         "get_relations",
-        [&getTypedRefBySol](ExtractionRelationContainer &cont, const sol::object & obj)
-            -> const ExtractionRelationContainer::RelationIDList &
-        {
-            return cont.GetRelations(getTypedRefBySol(obj));
-        },
+        [&getTypedRefBySol](ExtractionRelationContainer &cont, const sol::object &obj)
+            -> const ExtractionRelationContainer::RelationIDList & {
+                return cont.GetRelations(getTypedRefBySol(obj));
+            },
         "relation",
-        [](ExtractionRelationContainer &cont, const ExtractionRelation::OsmIDTyped & rel_id) -> const ExtractionRelation &
-        {
-            return cont.GetRelationData(rel_id);
-        });
+        [](ExtractionRelationContainer &cont, const ExtractionRelation::OsmIDTyped &rel_id)
+            -> const ExtractionRelation & { return cont.GetRelationData(rel_id); });
 
     context.state.new_usertype<ExtractionSegment>("ExtractionSegment",
                                                   "source",
@@ -717,7 +714,7 @@ LuaScriptingContext &Sol2ScriptingEnvironment::GetSol2Context()
     auto &ref = script_contexts.local(initialized);
     if (!initialized)
     {
-        ref = std::make_unique<LuaScriptingContext>(location_dependent_data);
+        ref = std::make_unique<LuaScriptingContext>();
         InitContext(*ref);
     }
 
@@ -1037,7 +1034,6 @@ void LuaScriptingContext::ProcessWay(const osmium::Way &way,
     case 1:
     case 0:
         way_function(way, result);
-        result.is_left_hand_driving = properties.left_hand_driving;
         break;
     }
 }
