@@ -86,11 +86,12 @@ class DB {
             });
 
             r.members.forEach((m) => {
-                relation.ele('member', {
+                var d = {
                     type: m.type,
-                    ref: m.id,
-                    role: m.role
-                });
+                    ref: m.id
+                };
+                if (m.role) d.role = m.role;
+                relation.ele('member', d);
             });
 
             for (var k in r.tags) {

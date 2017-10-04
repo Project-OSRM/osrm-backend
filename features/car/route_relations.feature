@@ -3,66 +3,230 @@ Feature: Car - route relations
     Background:
         Given the profile "car"
 
-    @sliproads
-    Scenario: Cardinal direction assignment to refs
+    Scenario: Assignment using relation membership roles
         Given the node map
             """
-                     a  b
-                     |  |
-              c------+--+------d
-              e------+--+------f
-                     |  |
-                     g  h
-
-              i----------------j
-              k----------------l
-
-              x----------------y
-              z----------------w
+              a----------------b
+              c----------------d
             """
 
         And the ways
             | nodes | name        | highway  | ref         |
-            | ag    | southbound  | motorway | I 80        |
-            | hb    | northbound  | motorway | I 80        |
-            | dc    | westbound   | motorway | I 85;CO 93  |
-            | ef    | eastbound   | motorway | I 85;US 12  |
-            | ij    | westbound-2 | motorway | I 99        |
-            | ji    | eastbound-2 | motorway | I 99        |
-            | kl    | eastbound-2 | motorway | I 99        |
-            | lk    | eastbound-2 | motorway | I 99        |
-            | xy    | watermill   | motorway | I 45M; US 3 |
+            | ba    | westbound   | motorway | I 80        |
+            | cd    | eastbound   | motorway | I 80;CO 93  |
 
         And the relations
-            | type        | way:south | route | ref |
-            | route       | ag        | road  | 80  |
-            | route       | ef        | road  | 12  |
+            | type        | way:east | way:west | route | ref | network |
+            | route       | cd       | ba       | road  | 80  | US:I    |
+            | route       | cd       | ba       | road  | 93  | US:CO   |
 
-        And the relations
-            | type        | way:north | route | ref |
-            | route       | hb        | road  | 80  |
-            | route       | cd        | road  | 93  |
-
-        And the relations
-            | type        | way:west | route | ref  |
-            | route       | dc       | road  | 85   |
-            | route       | ij       | road  | 99   |
-            | route       | xy       | road  | I 45 |
-
-        And the relations
-            | type        | way:east | route | ref   |
-            | route       | lk       | road  | I 99  |
-
-        And the relations
-            | type        | way:east | route | ref   |
-            | route       | xy       | road  | US 3  |
 
         When I route I should get
-            | waypoints | route                   | ref                                               |
-            | a,g       | southbound,southbound   | I 80 $south,I 80 $south                           |
-            | h,b       | northbound,northbound   | I 80 $north,I 80 $north                           |
-            | d,c       | westbound,westbound     | I 85 $west; CO 93 $north,I 85 $west; CO 93 $north |
-            | e,f       | eastbound,eastbound     | I 85; US 12 $south,I 85; US 12 $south             |
-            | i,j       | westbound-2,westbound-2 | I 99 $west,I 99 $west                             |
-            | l,k       | eastbound-2,eastbound-2 | I 99 $east,I 99 $east                             |
-            | x,y       | watermill,watermill     | I 45M $west; US 3 $east,I 45M $west; US 3 $east   |
+            | waypoints | route                | ref                                            |
+            | b,a       | westbound,westbound  | I 80 $west,I 80 $west                          |
+            | c,d       | eastbound,eastbound  | I 80 $east; CO 93 $east,I 80 $east; CO 93 $east  |
+
+    Scenario: Assignment using relation direction property (no role on members)
+        Given the node map
+            """
+              a----------------b
+              c----------------d
+            """
+
+        And the ways
+            | nodes | name        | highway  | ref         |
+            | ba    | westbound   | motorway | I 80        |
+            | cd    | eastbound   | motorway | I 80;CO 93  |
+
+        And the relations
+            | type        | direction | way | route | ref | network |
+            | route       | west      | ba  | road  | 80  | US:I    |
+            | route       | east      | cd  | road  | 80  | US:I    |
+            | route       | east      | cd  | road  | 93  | US:CO   |
+
+        When I route I should get
+            | waypoints | route                | ref                                             |
+            | b,a       | westbound,westbound  | I 80 $west,I 80 $west                           |
+            | c,d       | eastbound,eastbound  | I 80 $east; CO 93 $east,I 80 $east; CO 93 $east |
+
+
+    Scenario: Forward assignment on one-way roads using relation direction property
+        Given the node map
+            """
+              a----------------b
+              c----------------d
+            """
+
+        And the ways
+            | nodes | name        | highway  | ref         |
+            | ba    | westbound   | motorway | I 80        |
+            | cd    | eastbound   | motorway | I 80;CO 93  |
+
+        And the relations
+            | type        | direction | way:forward | route | ref | network |
+            | route       | west      | ba          | road  | 80  | US:I    |
+            | route       | east      | cd          | road  | 80  | US:I    |
+            | route       | east      | cd          | road  | 93  | US:CO   |
+
+        When I route I should get
+            | waypoints | route                | ref                                             |
+            | b,a       | westbound,westbound  | I 80 $west,I 80 $west                           |
+            | c,d       | eastbound,eastbound  | I 80 $east; CO 93 $east,I 80 $east; CO 93 $east |
+
+
+    Scenario: Forward/backward assignment on non-divided roads with role direction tag
+        Given the node map
+            """
+              a----------------b
+            """
+
+        And the ways
+            | nodes | name      | highway  | ref   | oneway |
+            | ab    | mainroad  | motorway | I 80  | no     |
+
+        And the relations
+            | type        | direction | way:forward | route | ref | network |
+            | route       | west      | ab          | road  | 80  | US:I    |
+
+        And the relations
+            | type        | direction | way:backward | route | ref | network |
+            | route       | east      | ab           | road  | 80  | US:I    |
+
+        When I route I should get
+            | waypoints | route              | ref                    |
+            | b,a       | mainroad,mainroad  | I 80 $west,I 80 $west  |
+            | a,b       | mainroad,mainroad  | I 80 $east,I 80 $east  |
+
+
+    Scenario: Conflict between role and direction
+        Given the node map
+            """
+              a----------------b
+            """
+
+        And the ways
+            | nodes | name       | highway  | ref   |
+            | ab    | eastbound  | motorway | I 80  |
+
+        And the relations
+            | type        | direction | way:east | route | ref | network |
+            | route       | west      | ab       | road  | 80  | US:I    |
+
+        When I route I should get
+            | waypoints | route                | ref       |
+            | a,b       | eastbound,eastbound  | I 80,I 80 |
+
+
+    Scenario: Conflict between role and superrelation direction
+        Given the node map
+            """
+              a----------------b
+            """
+
+        And the ways
+            | nodes | name       | highway  | ref   |
+            | ab    | eastbound  | motorway | I 80  |
+
+        And the relations
+            | type        | way:east | route | ref | network | name         |
+            | route       | ab       | road  | 80  | US:I    | baserelation |
+
+        And the relations
+            | type        | direction | relation     | route | ref | network | name          |
+            | route       | east      | baserelation | road  | 80  | US:I    | superrelation |
+
+        When I route I should get
+            | waypoints | route               | ref       |
+            | a,b       | eastbound,eastbound | I 80,I 80 |
+
+    Scenario: Conflict between role and superrelation role
+        Given the node map
+            """
+              a----------------b
+            """
+
+        And the ways
+            | nodes | name       | highway  | ref   |
+            | ab    | eastbound  | motorway | I 80  |
+
+        And the relations
+            | type        | way:east | route | ref | network | name         |
+            | route       | ab       | road  | 80  | US:I    | baserelation |
+
+        And the relations
+            | type        | relation:west  | route | ref | network | name          |
+            | route       | baserelation   | road  | 80  | US:I    | superrelation |
+
+        When I route I should get
+            | waypoints | route                | ref       |
+            | a,b       | eastbound,eastbound  | I 80,I 80 |
+
+    Scenario: Direction only available via superrelation role
+        Given the node map
+            """
+              a----------------b
+            """
+
+        And the ways
+            | nodes | name       | highway  | ref   |
+            | ab    | eastbound  | motorway | I 80  |
+
+        And the relations
+            | type        | way:forward | route | ref | network | name         |
+            | route       | ab          | road  | 80  | US:I    | baserelation |
+
+        And the relations
+            | type        | relation:east  | route | ref | network | name          |
+            | route       | baserelation   | road  | 80  | US:I    | superrelation |
+
+        When I route I should get
+            | waypoints | route                | ref                   |
+            | a,b       | eastbound,eastbound  | I 80 $east,I 80 $east |
+
+    Scenario: Direction only available via superrelation direction
+        Given the node map
+            """
+              a----------------b
+            """
+
+        And the ways
+            | nodes | name       | highway  | ref   |
+            | ab    | eastbound  | motorway | I 80  |
+
+        And the relations
+            | type        | way:forward | route | ref | network | name         |
+            | route       | ab          | road  | 80  | US:I    | baserelation |
+
+        And the relations
+            | type        | direction | relation     | route | ref | network | name          |
+            | route       | east      | baserelation | road  | 80  | US:I    | superrelation |
+
+        When I route I should get
+            | waypoints | route                | ref                   |
+            | a,b       | eastbound,eastbound  | I 80 $east,I 80 $east |
+
+    Scenario: Three levels of indirection
+        Given the node map
+            """
+              a----------------b
+            """
+
+        And the ways
+            | nodes | name       | highway  | ref   |
+            | ab    | eastbound  | motorway | I 80  |
+
+        And the relations
+            | type        | way:forward | route | ref | network | name         |
+            | route       | ab          | road  | 80  | US:I    | baserelation |
+
+        And the relations
+            | type        | relation     | route | ref | network | name           |
+            | route       | baserelation | road  | 80  | US:I    | superrelation1 |
+
+        And the relations
+            | type        | direction | relation       | route | ref | network | name           |
+            | route       | east      | superrelation1 | road  | 80  | US:I    | superrelation2 |
+
+        When I route I should get
+            | waypoints | route                | ref                   |
+            | a,b       | eastbound,eastbound  | I 80 $east,I 80 $east |

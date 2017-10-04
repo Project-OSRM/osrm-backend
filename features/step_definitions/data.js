@@ -188,9 +188,12 @@ module.exports = function () {
         let addRelation = (row, cb) => {
             let relation = new OSM.Relation(this.makeOSMId(), this.OSM_USER, this.OSM_TIMESTAMP, this.OSM_UID);
 
+
+            var name = null;
             for (let key in row) {
-                let isNode = key.match(/^node:(.*)/),
-                    isWay = key.match(/^way:(.*)/),
+                let isNode = key.match(/^node:?(.*)/),
+                    isWay = key.match(/^way:?(.*)/),
+                    isRelation = key.match(/^relation:?(.*)/),
                     isColonSeparated = key.match(/^(.*):(.*)/);
                 if (isNode) {
                     row[key].split(',').map(function(v) { return v.trim(); }).forEach((nodeName) => {
@@ -205,13 +208,25 @@ module.exports = function () {
                         if (!way) throw new Error(util.format('*** unknown relation way member "%s"', wayName));
                         relation.addMember('way', way.id, isWay[1]);
                     });
+                } else if (isRelation) {
+                    row[key].split(',').map(function(v) { return v.trim(); }).forEach((relName) => {
+                        let otherrelation = this.findRelationByName(relName);
+                        if (!otherrelation) throw new Error(util.format('*** unknown relation relation member "%s"', relName));
+                        relation.addMember('relation', otherrelation.id, isRelation[1]);
+                    });
                 } else if (isColonSeparated && isColonSeparated[1] !== 'restriction') {
                     throw new Error(util.format('*** unknown relation member type "%s:%s", must be either "node" or "way"', isColonSeparated[1], isColonSeparated[2]));
                 } else {
                     relation.addTag(key, row[key]);
+                    if (key.match(/name/)) name = row[key];
                 }
             }
             relation.uid = this.OSM_UID;
+
+
+            if (name) {
+                this.nameRelationHash[name] = relation;
+            }
 
             this.OSMDB.addRelation(relation);
 
