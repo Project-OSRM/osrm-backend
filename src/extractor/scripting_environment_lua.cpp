@@ -714,7 +714,7 @@ LuaScriptingContext &Sol2ScriptingEnvironment::GetSol2Context()
     auto &ref = script_contexts.local(initialized);
     if (!initialized)
     {
-        ref = std::make_unique<LuaScriptingContext>();
+        ref = std::make_unique<LuaScriptingContext>(location_dependent_data);
         InitContext(*ref);
     }
 
