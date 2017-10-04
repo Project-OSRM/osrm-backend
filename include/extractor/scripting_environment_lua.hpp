@@ -85,13 +85,13 @@ class Sol2ScriptingEnvironment final : public ScriptingEnvironment
     void ProcessTurn(ExtractionTurn &turn) override;
     void ProcessSegment(ExtractionSegment &segment) override;
 
-    void ProcessElements(
-        const osmium::memory::Buffer &buffer,
-        const RestrictionParser &restriction_parser,
-        const ExtractionRelationContainer &relations,
-        std::vector<std::pair<const osmium::Node &, ExtractionNode>> &resulting_nodes,
-        std::vector<std::pair<const osmium::Way &, ExtractionWay>> &resulting_ways,
-        std::vector<InputConditionalTurnRestriction> &resulting_restrictions) override;
+    void
+    ProcessElements(const osmium::memory::Buffer &buffer,
+                    const RestrictionParser &restriction_parser,
+                    const ExtractionRelationContainer &relations,
+                    std::vector<std::pair<const osmium::Node &, ExtractionNode>> &resulting_nodes,
+                    std::vector<std::pair<const osmium::Way &, ExtractionWay>> &resulting_ways,
+                    std::vector<InputConditionalTurnRestriction> &resulting_restrictions) override;
 
     bool HasLocationDependentData() const override { return !location_dependent_data.empty(); }
 
