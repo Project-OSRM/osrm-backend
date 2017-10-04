@@ -323,7 +323,6 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
             return boost::apply_visitor(to_lua_object(context.state), value);
         });
 
-
     context.state.new_usertype<osmium::Node>("Node",
                                              "location",
                                              &osmium::Node::location,

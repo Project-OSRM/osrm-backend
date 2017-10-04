@@ -491,17 +491,19 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
                 if (entity->type() != osmium::item_type::relation)
                     continue;
 
-                const auto & rel = static_cast<const osmium::Relation &>(*entity);
+                const auto &rel = static_cast<const osmium::Relation &>(*entity);
 
-                const char * rel_type = rel.get_value_by_key("type");
-                if (!rel_type || !std::binary_search(relation_types.begin(), relation_types.end(), std::string(rel_type)))
+                const char *rel_type = rel.get_value_by_key("type");
+                if (!rel_type ||
+                    !std::binary_search(
+                        relation_types.begin(), relation_types.end(), std::string(rel_type)))
                     continue;
 
                 ExtractionRelation extracted_rel({rel.id(), osmium::item_type::relation});
-                for (auto const & t : rel.tags())
+                for (auto const &t : rel.tags())
                     extracted_rel.attributes.emplace_back(std::make_pair(t.key(), t.value()));
 
-                for (auto const & m : rel.members())
+                for (auto const &m : rel.members())
                 {
                     ExtractionRelation::OsmIDTyped const mid(m.ref(), m.type());
                     extracted_rel.AddMember(mid, m.role());
@@ -515,7 +517,8 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
 
     unsigned number_of_relations = 0;
     tbb::filter_t<std::shared_ptr<ExtractionRelationContainer>, void> buffer_storage_relation(
-        tbb::filter::serial_in_order, [&](const std::shared_ptr<ExtractionRelationContainer> parsed_relations) {
+        tbb::filter::serial_in_order,
+        [&](const std::shared_ptr<ExtractionRelationContainer> parsed_relations) {
 
             number_of_relations += parsed_relations->GetRelationsNum();
             relations.Merge(std::move(*parsed_relations));
@@ -536,8 +539,10 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
 
     { // Nodes and ways reading pipeline
         util::Log() << "Parse ways and nodes ...";
-        osmium::io::Reader reader(
-            input_file, osmium::osm_entity_bits::node | osmium::osm_entity_bits::way | osmium::osm_entity_bits::relation, read_meta);
+        osmium::io::Reader reader(input_file,
+                                  osmium::osm_entity_bits::node | osmium::osm_entity_bits::way |
+                                      osmium::osm_entity_bits::relation,
+                                  read_meta);
 
         const auto pipeline =
             scripting_environment.HasLocationDependentData() && config.use_locations_cache
