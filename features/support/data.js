@@ -144,6 +144,10 @@ module.exports = function () {
         return this.nameWayHash[s.toString()] || this.nameWayHash[s.toString().split('').reverse().join('')];
     };
 
+    this.findRelationByName = (s) => {
+        return this.nameRelationHash[s.toString()] || this.nameRelationHash[s.toString().split('').reverse().join('')];
+    };
+
     this.makeOSMId = () => {
         this.osmID = this.osmID + 1;
         return this.osmID;
@@ -155,6 +159,7 @@ module.exports = function () {
         this.locationHash = {};
         this.shortcutsHash = {};
         this.nameWayHash = {};
+        this.nameRelationHash = {};
         this.osmID = 0;
     };
 
