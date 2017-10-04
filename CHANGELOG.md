@@ -2,7 +2,7 @@
     - Profile:
       - New function to support relations: `process_relation`. Read more in profiles documentation.
       - Support of `distance` weight in foot and bicycle profiles
-      - Added an optional argument `location_data` to `process_way`function that is a table containing OSM tags in a GeoJSON file specified by `--location-dependent-data` command line argument of `osrm-extract` (the option requires `osmium add-locations-to-ways` preparation step)
+      - Added `way:get_location_tag(key)` method to get location-dependent tags https://github.com/Project-OSRM/osrm-backend/wiki/Using-location-dependent-data-in-profiles
       - left-side driving mode is specified by a local Boolean flag `is_left_hand_driving` in `ExtractionWay` and `ExtractionTurn`
     - Infrastructure:
       - Lua 5.1 support is removed due to lack of support in sol2 https://github.com/ThePhD/sol2/issues/302
