@@ -22,8 +22,8 @@ Feature: Car - route relations
 
 
         When I route I should get
-            | waypoints | route                | ref                                            |
-            | b,a       | westbound,westbound  | I 80 $west,I 80 $west                          |
+            | waypoints | route                | ref                                              |
+            | b,a       | westbound,westbound  | I 80 $west,I 80 $west                            |
             | c,d       | eastbound,eastbound  | I 80 $east; CO 93 $east,I 80 $east; CO 93 $east  |
 
     Scenario: Assignment using relation direction property (no role on members)
@@ -133,7 +133,7 @@ Feature: Car - route relations
 
         And the relations
             | type        | direction | relation     | route | ref | network | name          |
-            | route       | east      | baserelation | road  | 80  | US:I    | superrelation |
+            | route       | west      | baserelation | road  | 80  | US:I    | superrelation |
 
         When I route I should get
             | waypoints | route               | ref       |
