@@ -103,6 +103,7 @@ function get_direction_from_superrel(rel, relations)
   function set_result(direction, current_rel)
     if (result ~= nil) and (direction ~= nil) then
       print('WARNING: relation ' .. rel:id() .. ' is a part of more then one supperrelations ' .. result_id .. ' and ' .. current_rel:id())
+      result = nil
     else
       result = direction
       result_id = current_rel:id()
@@ -147,40 +148,53 @@ function Relations.parse_route_relation(rel, way, relations)
   end
 
   if t == 'route' then
+    local role_direction = nil
     local route = rel:get_value_by_key("route")
     if route == 'road' then
       -- process case, where directions set as role
       if is_direction(role) then
-        result['route_direction'] = role
-        add_extra_data(m)
+        role_direction = role
       end
     end
 
+    local tag_direction = nil
     local direction = rel:get_value_by_key('direction')
     if direction then
       direction = string.lower(direction)
       if is_direction(direction) then
-        if role == 'forward' then
-          result['route_direction'] = direction
-          add_extra_data(m)
-        end
+        tag_direction = direction
       end
     end
+
+    -- determine direction
+    local result_direction = role_direction
+    if result_direction == nil and tag_direction ~= '' then
+      result_direction = tag_direction
+    end
+
+    if role_direction ~= nil and tag_direction ~= nil and role_direction ~= tag_direction then
+      result_direction = nil
+      print('WARNING: conflict direction in role of way ' .. way:id() .. ' and direction tag in relation ' .. rel:id())
+    end
+
+
+    -- process superrelations
+    local super_dir = get_direction_from_superrel(rel, relations)
+
+    -- check if there are data error
+    
+    if (result_direction ~= nil) and (super_dir ~= nil) and (result_direction ~= super_dir) then
+      print('ERROR: conflicting relation directions found for way ' .. way:id() .. 
+            ' relation direction is ' .. result_direction .. ' superrelation direction is ' .. super_dir)
+      result_direction = nil
+    elseif result_direction == nil then
+      result_direction = super_dir
+    end
+
+    result['route_direction'] = result_direction
+    add_extra_data(m)
   end
 
-  -- process superrelations
-  local super_dir = get_direction_from_superrel(rel, relations)
-
-  -- check if there are data error
-  local dir = result['route_direction']
-  if (dir ~= nil) and (super_dir ~= nil) and (dir ~= super_dir) then
-    print('ERROR: conflicting relation directions found for way ' .. way:id() .. 
-          ' relation direction is ' .. dir .. ' superrelation direction is ' .. super_dir)
-  end
-
-  if (dir == nil) and (super_dir ~= nil) then
-    result['route_direction'] = super_dir
-  end
 
   return result
 end
