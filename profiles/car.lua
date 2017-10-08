@@ -263,6 +263,11 @@ function setup()
       ["gb:motorway"] = (70*1609)/1000,
       ["nl:rural"] = 80,
       ["nl:trunk"] = 100,
+      ['no:rural'] = 80,
+      ['no:motorway'] = 110,
+      ['pl:rural'] = 100,
+      ['pl:trunk'] = 120,
+      ['pl:motorway'] = 140,
       ["ro:trunk"] = 100,
       ["ru:living_street"] = 20,
       ["ru:urban"] = 60,
@@ -271,6 +276,8 @@ function setup()
       ["uk:nsl_single"] = (60*1609)/1000,
       ["uk:nsl_dual"] = (70*1609)/1000,
       ["uk:motorway"] = (70*1609)/1000,
+      ['za:urban'] = 60,
+      ['za:rural'] = 100,
       ["none"] = 140
     }
   }
