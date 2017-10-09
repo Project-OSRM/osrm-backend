@@ -181,8 +181,7 @@ struct PhantomNode
     unsigned short is_valid_forward_target : 1;
     unsigned short is_valid_reverse_source : 1;
     unsigned short is_valid_reverse_target : 1;
-    unsigned short bearing : 9;
-    unsigned short : 3; // Unused padding out to 16 bits (2 bytes)
+    unsigned short bearing : 12;
 };
 
 static_assert(sizeof(PhantomNode) == 64, "PhantomNode has more padding then expected");
