@@ -6,6 +6,7 @@ Feature: Basic Distance Matrix
 
     Background:
         Given the profile "testbot"
+        And the partition extra arguments "--small-component-size 1 --max-cell-sizes 2,4,8,16"
 
     Scenario: Testbot - Travel time matrix of minimal network
         Given the node map
@@ -124,7 +125,7 @@ Feature: Basic Distance Matrix
             | d | 20 | 30  | 0  | 30 |
             | e | 30 | 40  | 10 | 0  |
 
-    Scenario: Testbot - Travel time matrix and with only one source
+    Scenario: Testbot - Rectangular travel time matrix
         Given the node map
             """
             a b c
@@ -149,6 +150,39 @@ Feature: Basic Distance Matrix
             | b | 10 |
             | e | 20 |
             | f | 30 |
+
+        When I request a travel time matrix I should get
+            |   |  a |  b |  e |  f |
+            | a |  0 | 10 | 20 | 30 |
+            | b | 10 |  0 | 10 | 20 |
+
+        When I request a travel time matrix I should get
+            |   |  a |  b |
+            | a |  0 | 10 |
+            | b | 10 |  0 |
+            | e | 20 | 10 |
+            | f | 30 | 20 |
+
+        When I request a travel time matrix I should get
+            |   |  a |  b |  e |  f |
+            | a |  0 | 10 | 20 | 30 |
+            | b | 10 |  0 | 10 | 20 |
+            | e | 20 | 10 |  0 | 10 |
+
+        When I request a travel time matrix I should get
+            |   |  a |  b |  e |
+            | a |  0 | 10 | 20 |
+            | b | 10 |  0 | 10 |
+            | e | 20 | 10 |  0 |
+            | f | 30 | 20 | 10 |
+
+        When I request a travel time matrix I should get
+            |   |  a |  b |  e |  f |
+            | a |  0 | 10 | 20 | 30 |
+            | b | 10 |  0 | 10 | 20 |
+            | e | 20 | 10 |  0 | 10 |
+            | f | 30 | 20 | 10 |  0 |
+
 
      Scenario: Testbot - Travel time 3x2 matrix
         Given the node map
