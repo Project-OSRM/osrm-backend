@@ -53,8 +53,8 @@ template <typename Algorithm>
 std::vector<EdgeDuration> manyToManySearch(SearchEngineData<Algorithm> &engine_working_data,
                                            const DataFacade<Algorithm> &facade,
                                            const std::vector<PhantomNode> &phantom_nodes,
-                                           std::vector<std::size_t> source_indices,
-                                           std::vector<std::size_t> target_indices);
+                                           const std::vector<std::size_t> &source_indices,
+                                           const std::vector<std::size_t> &target_indices);
 
 } // namespace routing_algorithms
 } // namespace engine

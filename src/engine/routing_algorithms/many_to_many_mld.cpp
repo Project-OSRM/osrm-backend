@@ -251,14 +251,8 @@ std::vector<EdgeDuration> oneToManySearch(SearchEngineData<Algorithm> &engine_wo
                                           const DataFacade<Algorithm> &facade,
                                           const std::vector<PhantomNode> &phantom_nodes,
                                           std::size_t phantom_index,
-                                          std::vector<std::size_t> phantom_indices)
+                                          const std::vector<std::size_t> &phantom_indices)
 {
-    if (phantom_indices.empty())
-    {
-        phantom_indices.resize(phantom_nodes.size());
-        std::iota(phantom_indices.begin(), phantom_indices.end(), 0);
-    }
-
     std::vector<EdgeWeight> weights(phantom_indices.size(), INVALID_EDGE_WEIGHT);
     std::vector<EdgeDuration> durations(phantom_indices.size(), MAXIMAL_EDGE_DURATION);
 
@@ -415,20 +409,9 @@ std::vector<EdgeDuration> oneToManySearch(SearchEngineData<Algorithm> &engine_wo
 std::vector<EdgeDuration> manyToManySearch(SearchEngineData<Algorithm> &engine_working_data,
                                            const DataFacade<Algorithm> &facade,
                                            const std::vector<PhantomNode> &phantom_nodes,
-                                           std::vector<std::size_t> source_indices,
-                                           std::vector<std::size_t> target_indices)
+                                           const std::vector<std::size_t> &source_indices,
+                                           const std::vector<std::size_t> &target_indices)
 {
-    if (source_indices.empty())
-    {
-        source_indices.resize(phantom_nodes.size());
-        std::iota(source_indices.begin(), source_indices.end(), 0);
-    }
-    if (target_indices.empty())
-    {
-        target_indices.resize(phantom_nodes.size());
-        std::iota(target_indices.begin(), target_indices.end(), 0);
-    }
-
     const auto number_of_sources = source_indices.size();
     const auto number_of_targets = target_indices.size();
     const auto number_of_entries = number_of_sources * number_of_targets;
@@ -502,8 +485,8 @@ template <>
 std::vector<EdgeDuration> manyToManySearch(SearchEngineData<mld::Algorithm> &engine_working_data,
                                            const DataFacade<mld::Algorithm> &facade,
                                            const std::vector<PhantomNode> &phantom_nodes,
-                                           std::vector<std::size_t> source_indices,
-                                           std::vector<std::size_t> target_indices)
+                                           const std::vector<std::size_t> &source_indices,
+                                           const std::vector<std::size_t> &target_indices)
 {
     if (source_indices.size() == 1)
     { // TODO: check if target_indices.size() == 1 and do a bi-directional search
