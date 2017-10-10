@@ -158,20 +158,9 @@ template <>
 std::vector<EdgeDuration> manyToManySearch(SearchEngineData<ch::Algorithm> &engine_working_data,
                                            const DataFacade<ch::Algorithm> &facade,
                                            const std::vector<PhantomNode> &phantom_nodes,
-                                           std::vector<std::size_t> source_indices,
-                                           std::vector<std::size_t> target_indices)
+                                           const std::vector<std::size_t> &source_indices,
+                                           const std::vector<std::size_t> &target_indices)
 {
-    if (source_indices.empty())
-    {
-        source_indices.resize(phantom_nodes.size());
-        std::iota(source_indices.begin(), source_indices.end(), 0);
-    }
-    if (target_indices.empty())
-    {
-        target_indices.resize(phantom_nodes.size());
-        std::iota(target_indices.begin(), target_indices.end(), 0);
-    }
-
     const auto number_of_sources = source_indices.size();
     const auto number_of_targets = target_indices.size();
     const auto number_of_entries = number_of_sources * number_of_targets;

@@ -184,13 +184,29 @@ inline routing_algorithms::SubMatchingList RoutingAlgorithms<Algorithm>::MapMatc
 }
 
 template <typename Algorithm>
-std::vector<EdgeDuration>
-RoutingAlgorithms<Algorithm>::ManyToManySearch(const std::vector<PhantomNode> &phantom_nodes,
-                                               const std::vector<std::size_t> &source_indices,
-                                               const std::vector<std::size_t> &target_indices) const
+std::vector<EdgeDuration> RoutingAlgorithms<Algorithm>::ManyToManySearch(
+    const std::vector<PhantomNode> &phantom_nodes,
+    const std::vector<std::size_t> &_source_indices,
+    const std::vector<std::size_t> &_target_indices) const
 {
+    BOOST_ASSERT(!phantom_nodes.empty());
+
+    auto source_indices = _source_indices;
+    auto target_indices = _target_indices;
+
+    if (source_indices.empty())
+    {
+        source_indices.resize(phantom_nodes.size());
+        std::iota(source_indices.begin(), source_indices.end(), 0);
+    }
+    if (target_indices.empty())
+    {
+        target_indices.resize(phantom_nodes.size());
+        std::iota(target_indices.begin(), target_indices.end(), 0);
+    }
+
     return routing_algorithms::manyToManySearch(
-        heaps, *facade, phantom_nodes, source_indices, target_indices);
+        heaps, *facade, phantom_nodes, std::move(source_indices), std::move(target_indices));
 }
 
 template <typename Algorithm>
