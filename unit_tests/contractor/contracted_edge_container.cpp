@@ -35,7 +35,7 @@ BOOST_AUTO_TEST_CASE(merge_edge_of_multiple_graph)
 {
     ContractedEdgeContainer container;
 
-    util::DeallocatingVector<QueryEdge> edges;
+    std::vector<QueryEdge> edges;
     edges.push_back(QueryEdge{0, 1, {1, false, 3, 6, true, false}});
     edges.push_back(QueryEdge{1, 2, {2, false, 3, 6, true, false}});
     edges.push_back(QueryEdge{2, 0, {3, false, 3, 6, false, true}});
@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(merge_edge_of_multiple_graph)
     edges.push_back(QueryEdge{1, 4, {5, false, 3, 6, true, false}});
     container.Merge(edges);
 
-    util::DeallocatingVector<QueryEdge> reference_edges;
+    std::vector<QueryEdge> reference_edges;
     reference_edges.push_back(QueryEdge{0, 1, {1, false, 3, 6, true, false}});
     reference_edges.push_back(QueryEdge{1, 2, {2, false, 3, 6, true, false}});
     reference_edges.push_back(QueryEdge{1, 4, {5, false, 3, 6, true, false}});
@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(merge_edge_of_multiple_disjoint_graph)
 {
     ContractedEdgeContainer container;
 
-    util::DeallocatingVector<QueryEdge> edges;
+    std::vector<QueryEdge> edges;
     edges.push_back(QueryEdge{0, 1, {1, false, 3, 6, true, false}});
     edges.push_back(QueryEdge{1, 2, {2, false, 3, 6, true, false}});
     edges.push_back(QueryEdge{2, 0, {3, false, 12, 24, false, true}});
@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE(merge_edge_of_multiple_disjoint_graph)
     edges.push_back(QueryEdge{1, 4, {5, false, 3, 6, true, false}});
     container.Merge(edges);
 
-    util::DeallocatingVector<QueryEdge> reference_edges;
+    std::vector<QueryEdge> reference_edges;
     reference_edges.push_back(QueryEdge{0, 1, {1, false, 3, 6, true, false}});
     reference_edges.push_back(QueryEdge{1, 2, {2, false, 3, 6, true, false}});
     reference_edges.push_back(QueryEdge{1, 4, {5, false, 3, 6, true, false}});

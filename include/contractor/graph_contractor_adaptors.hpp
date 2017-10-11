@@ -2,6 +2,7 @@
 #define OSRM_CONTRACTOR_GRAPH_CONTRACTION_ADAPTORS_HPP_
 
 #include "contractor/contractor_graph.hpp"
+
 #include "util/log.hpp"
 #include "util/percent.hpp"
 
@@ -125,9 +126,10 @@ ContractorGraph toContractorGraph(NodeID number_of_nodes, InputEdgeContainer inp
     return ContractorGraph{number_of_nodes, edges};
 }
 
-template <class Edge, typename GraphT> inline util::DeallocatingVector<Edge> toEdges(GraphT graph)
+template <class Edge, typename GraphT> inline std::vector<Edge> toEdges(GraphT graph)
 {
-    util::DeallocatingVector<Edge> edges;
+    std::vector<Edge> edges;
+    edges.reserve(graph.GetNumberOfEdges());
 
     util::UnbufferedLog log;
     log << "Getting edges of minimized graph ";
@@ -163,6 +165,7 @@ template <class Edge, typename GraphT> inline util::DeallocatingVector<Edge> toE
     tbb::parallel_sort(edges.begin(), edges.end());
     auto new_end = std::unique(edges.begin(), edges.end());
     edges.resize(new_end - edges.begin());
+    edges.shrink_to_fit();
 
     return edges;
 }

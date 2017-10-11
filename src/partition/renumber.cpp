@@ -1,5 +1,7 @@
 #include "partition/renumber.hpp"
 
+#include "util/permutation.hpp"
+
 #include <tbb/parallel_sort.h>
 
 namespace osrm
@@ -64,11 +66,7 @@ std::vector<std::uint32_t> makePermutation(const DynamicEdgeBasedGraph &graph,
             return border_level[lhs] > border_level[rhs];
         });
 
-    std::vector<std::uint32_t> permutation(ordering.size());
-    for (auto index : util::irange<std::uint32_t>(0, ordering.size()))
-        permutation[ordering[index]] = index;
-
-    return permutation;
+    return util::orderingToPermutation(ordering);
 }
 }
 }
