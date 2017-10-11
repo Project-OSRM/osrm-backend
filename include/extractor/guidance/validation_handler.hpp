@@ -56,11 +56,13 @@ class ValidationHandler final : public IntersectionHandler
   public:
     ValidationHandler(const IntersectionGenerator &intersection_generator,
                       const util::NodeBasedDynamicGraph &node_based_graph,
+                      const EdgeBasedNodeDataContainer &node_data_container,
                       const std::vector<util::Coordinate> &coordinates,
                       const extractor::PackedOSMIDs &osm_node_ids,
                       const util::NameTable &name_table,
                       const SuffixTable &street_name_suffix_table)
         : IntersectionHandler(node_based_graph,
+                              node_data_container,
                               coordinates,
                               name_table,
                               street_name_suffix_table,
@@ -104,7 +106,7 @@ class ValidationHandler final : public IntersectionHandler
     // Assumed high speed on this edge
     bool isFastRoad(const EdgeID edge) const
     {
-        const auto road_class = node_based_graph.GetEdgeData(edge).road_classification.GetClass();
+        const auto road_priority = node_based_graph.GetEdgeData(edge).flags.road_classification.GetPriority();
 
         const RoadPriorityClass::Enum fast_classes[] = {
             RoadPriorityClass::MOTORWAY,
@@ -113,7 +115,7 @@ class ValidationHandler final : public IntersectionHandler
             RoadPriorityClass::SECONDARY,
         };
 
-        const auto it = std::find(std::begin(fast_classes), std::end(fast_classes), road_class);
+        const auto it = std::find(std::begin(fast_classes), std::end(fast_classes), road_priority);
         const auto is_fast_road = it != std::end(fast_classes);
 
         return is_fast_road;
@@ -175,7 +177,7 @@ class ValidationHandler final : public IntersectionHandler
                                         const EdgeID via_eid,
                                         const Intersection &intersection) const
     {
-        bool edge_is_link = node_based_graph.GetEdgeData(via_eid).road_classification.IsLinkClass();
+        bool edge_is_link = node_based_graph.GetEdgeData(via_eid).flags.road_classification.IsLinkClass();
 
         // Index 0 is UTurn road
         for (std::size_t i = 1; i < intersection.size(); ++i)
@@ -183,7 +185,7 @@ class ValidationHandler final : public IntersectionHandler
             const auto &road = intersection[i];
 
             bool road_is_link =
-                node_based_graph.GetEdgeData(road.eid).road_classification.IsLinkClass();
+                node_based_graph.GetEdgeData(road.eid).flags.road_classification.IsLinkClass();
 
             if (!road.entry_allowed)
             {
@@ -267,28 +269,31 @@ class ValidationHandler final : public IntersectionHandler
             return;
         }
 
-        const auto &via_road_data = node_based_graph.GetEdgeData(via_eid);
-        const auto &leftmost_road_data = node_based_graph.GetEdgeData(leftmost_road.eid);
-        const auto &rightmost_road_data = node_based_graph.GetEdgeData(rightmost_road.eid);
+        const auto &node_container = node_data_container;
+        const auto &via_name_id = node_container.GetNameID(via_eid);
+        const auto &leftmost_name_id = node_container.GetNameID(leftmost_road.eid);
+        const auto &rightmost_name_id = node_container.GetNameID(rightmost_road.eid);
 
-        if (via_road_data.name_id == EMPTY_NAMEID || leftmost_road_data.name_id == EMPTY_NAMEID ||
-            rightmost_road_data.name_id == EMPTY_NAMEID)
+        const auto &via_flags = node_based_graph.GetEdgeData(via_eid).flags;
+        const auto &rightmost_flags = node_based_graph.GetEdgeData(rightmost_road.eid).flags;
+        const auto &leftmost_flags = node_based_graph.GetEdgeData(leftmost_road.eid).flags;
+
+        if (via_name_id == EMPTY_NAMEID || leftmost_name_id == EMPTY_NAMEID || rightmost_name_id == EMPTY_NAMEID)
         {
             return;
         }
 
-        if (via_road_data.roundabout || leftmost_road_data.roundabout ||
-            rightmost_road_data.roundabout)
+        if (via_flags.roundabout || leftmost_flags.roundabout || rightmost_flags.roundabout)
         {
             return;
         }
 
         const auto via_road_low_prio_class =
-            via_road_data.road_classification.IsLowPriorityRoadClass();
+            via_flags.road_classification.IsLowPriorityRoadClass();
         const auto leftmost_road_low_prio_class =
-            leftmost_road_data.road_classification.IsLowPriorityRoadClass();
+            leftmost_flags.road_classification.IsLowPriorityRoadClass();
         const auto rightmost_road_low_prio_class =
-            rightmost_road_data.road_classification.IsLowPriorityRoadClass();
+            rightmost_flags.road_classification.IsLowPriorityRoadClass();
 
         if (via_road_low_prio_class || leftmost_road_low_prio_class ||
             rightmost_road_low_prio_class)
@@ -320,13 +325,13 @@ class ValidationHandler final : public IntersectionHandler
         }
 
         const auto same_name_left =
-            !util::guidance::requiresNameAnnounced(via_road_data.name_id,
-                                                   leftmost_road_data.name_id,
+            !util::guidance::requiresNameAnnounced(via_name_id,
+                                                   leftmost_name_id,
                                                    name_table,
                                                    street_name_suffix_table);
         const auto same_name_right =
-            !util::guidance::requiresNameAnnounced(via_road_data.name_id,
-                                                   rightmost_road_data.name_id,
+            !util::guidance::requiresNameAnnounced(via_name_id,
+                                                   rightmost_name_id,
                                                    name_table,
                                                    street_name_suffix_table);
 
@@ -372,7 +377,7 @@ class ValidationHandler final : public IntersectionHandler
                                          const EdgeID via_eid,
                                          const Intersection &intersection) const
     {
-        const bool via_is_roundabout = node_based_graph.GetEdgeData(via_eid).roundabout;
+        const bool via_is_roundabout = node_based_graph.GetEdgeData(via_eid).flags.roundabout;
 
         // Index 0 is UTurn road
         for (std::size_t i = 1; i < intersection.size(); ++i)
@@ -384,7 +389,7 @@ class ValidationHandler final : public IntersectionHandler
                 continue;
             }
 
-            const bool is_roundabout = node_based_graph.GetEdgeData(road.eid).roundabout;
+            const bool is_roundabout = node_based_graph.GetEdgeData(road.eid).flags.roundabout;
 
             if (osrm::util::angularDeviation(0, road.angle) <= 2 * NARROW_TURN_ANGLE &&
                 (is_roundabout || via_is_roundabout))

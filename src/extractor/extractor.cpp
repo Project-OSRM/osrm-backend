@@ -210,6 +210,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     util::DeallocatingVector<EdgeBasedEdge> edge_based_edge_list;
     std::vector<bool> node_is_startpoint;
     std::vector<EdgeWeight> edge_based_node_weights;
+    extractor::PackedOSMIDs osm_node_ids;
 
     // Create a node-based graph from the OSRM file
     NodeBasedGraphFactory node_based_graph_factory(config.GetPath(".osrm"),
@@ -270,6 +271,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
                                conditional_turn_restrictions,
                                turn_lane_map,
                                scripting_environment,
+                               osm_node_ids,
                                edge_based_nodes_container,
                                edge_based_node_segments,
                                node_is_startpoint,
@@ -622,6 +624,7 @@ EdgeID Extractor::BuildEdgeExpandedGraph(
     guidance::LaneDescriptionMap &turn_lane_map,
     // for calculating turn penalties
     ScriptingEnvironment &scripting_environment,
+    extractor::PackedOSMIDs osm_node_ids,
     // output data
     EdgeBasedNodeDataContainer &edge_based_nodes_container,
     std::vector<EdgeBasedNodeSegment> &edge_based_node_segments,
@@ -638,6 +641,7 @@ EdgeID Extractor::BuildEdgeExpandedGraph(
                                                    barrier_nodes,
                                                    traffic_signals,
                                                    coordinates,
+                                                   osm_node_ids,
                                                    name_table,
                                                    turn_lane_map);
 

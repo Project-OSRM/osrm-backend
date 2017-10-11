@@ -8,6 +8,7 @@
 #include "extractor/edge_based_edge.hpp"
 #include "extractor/edge_based_node_segment.hpp"
 #include "extractor/extraction_turn.hpp"
+#include "extractor/packed_osm_ids.hpp"
 #include "extractor/guidance/turn_analysis.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
 #include "extractor/guidance/turn_lane_types.hpp"
@@ -24,6 +25,7 @@
 #include "util/guidance/entry_class.hpp"
 #include "util/name_table.hpp"
 #include "util/node_based_graph.hpp"
+#include "util/packed_vector.hpp"
 #include "util/typedefs.hpp"
 
 #include "storage/io.hpp"
@@ -74,6 +76,7 @@ class EdgeBasedGraphFactory
                                    const std::unordered_set<NodeID> &barrier_nodes,
                                    const std::unordered_set<NodeID> &traffic_lights,
                                    const std::vector<util::Coordinate> &coordinates,
+                                   const extractor::PackedOSMIDs &osm_node_ids,
                                    const util::NameTable &name_table,
                                    guidance::LaneDescriptionMap &lane_description_map);
 
@@ -150,6 +153,7 @@ class EdgeBasedGraphFactory
     std::uint64_t m_number_of_edge_based_nodes;
 
     const std::vector<util::Coordinate> &m_coordinates;
+    const extractor::PackedOSMIDs &m_osm_node_ids;
     const util::NodeBasedDynamicGraph &m_node_based_graph;
 
     const std::unordered_set<NodeID> &m_barrier_nodes;
