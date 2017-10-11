@@ -32,38 +32,42 @@ inline std::string longest_common_substring(const std::string &lhs, const std::s
         return "";
 
     // array for dynamic programming
-    std::vector<std::vector<std::uint32_t>> dp(lhs.size(),
-                                               std::vector<std::uint32_t>(rhs.size(), 0));
+    std::vector<std::uint32_t> dp_previous(rhs.size(), 0), dp_current(rhs.size(), 0);
 
     // to remember the best location
     std::uint32_t best = 0;
     std::uint32_t best_pos = 0;
-
+    using std::swap;
     for (std::uint32_t i = 0; i < lhs.size(); ++i)
     {
         for (std::uint32_t j = 0; j < rhs.size(); ++j)
         {
             if (lhs[i] == rhs[j])
             {
-                dp[i][j] = (i == 0 || j == 0) ? 1 : (dp[i - 1][j - 1] + 1);
-                if (dp[i][j] > best)
+                dp_current[j] = (j == 0) ? 1 : (dp_previous[j - 1] + 1);
+                if (dp_current[j] > best)
                 {
-                    best = dp[i][j];
+                    best = dp_current[j];
                     best_pos = i + 1;
                 }
             }
         }
+        swap(dp_previous, dp_current);
     }
     // the best position marks the end of the string
     return lhs.substr(best_pos - best, best);
 }
 
+// TODO US-ASCII support only, no UTF-8 support
+// While UTF-8 might work in some cases, we do not guarantee full functionality
 inline auto decompose(const std::string &lhs, const std::string &rhs)
 {
     auto const lcs = longest_common_substring(lhs, rhs);
 
     // trim spaces, transform to lower
     const auto trim = [](auto str) {
+        // we compare suffixes based on this value, it might break UTF chars, but as long as we are
+        // consistent in handling, we do not create bad results
         boost::to_lower(str);
         auto front = str.find_first_not_of(" ");
 
@@ -136,10 +140,6 @@ inline bool requiresNameAnnounced(const std::string &from_name,
                 decompose(first, second);
 
             const auto checkTable = [&](const std::string &str) {
-                // workaround for cucumber tests:
-                if (str.length() == 1 && (first.length() == 2 || second.length() == 2))
-                    return false;
-
                 return str.empty() || suffix_table.isSuffix(str);
             };
 
