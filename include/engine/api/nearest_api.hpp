@@ -42,10 +42,12 @@ class NearestAPI final : public BaseAPI
                            auto waypoint = MakeWaypoint(phantom_node);
                            waypoint.values["distance"] = phantom_with_distance.distance;
 
+                           
+
                            util::json::Array nodes;
 
-                           std::uint64_t from_node = static_cast<std::uint64_t>(SPECIAL_OSM_NODEID);
-                           std::uint64_t to_node = static_cast<std::uint64_t>(SPECIAL_OSM_NODEID);
+                           std::uint64_t from_node = 0;
+                           std::uint64_t to_node = 0;
 
                            std::vector<NodeID> forward_geometry;
                            if (phantom_node.forward_segment_id.enabled )
