@@ -104,6 +104,7 @@ max_speed_for_map_matching           | Float    | Maximum vehicle speed to be as
 max_turn_weight                      | Float    | Maximum turn penalty weight
 force_split_edges                    | Boolean  | True value forces a split of forward and backward edges of extracted ways and guarantees that `process_segment` will be called for all segments (default `false`)
 
+
 The following additional global properties can be set in the hash you return in the `setup` function:
 
 Attribute                            | Type             | Notes
@@ -113,6 +114,7 @@ excludable                           | Sequence of Sets | Determines which class
 classes                              | Sequence         | Determines the allowed classes that can be referenced using `{forward,backward}_classes` on the way in the `process_way` function.
 restrictions                         | Sequence         | Determines which turn restrictions will be used for this profile.
 suffix_list                          | Set              | List of name suffixes needed for determining if "Highway 101 NW" the same road as "Highway 101 ES".
+relation_types                       | Sequence         | Determines wich relations should be cached for processing in this profile. It contains relations types
 
 ### process_node(profile, node, result, relations)
 Process an OSM node to determine whether this node is a barrier or can be passed and whether passing it incurs a delay.
@@ -122,7 +124,7 @@ Argument | Description
 profile  | The configuration table you returned in `setup`.
 node     | The input node to process (read-only).
 result   | The output that you will modify.
-relations| The list of relation attributes passed from `process_relation` function for this node.
+relations| Storage of relations to access relations, where `node` is a member.
 
 The following attributes can be set on `result`:
 
@@ -139,7 +141,7 @@ Argument | Description
 profile  | The configuration table you returned in `setup`.
 node     | The input way to process (read-only).
 result   | The output that you will modify.
-relations| The list of relation attributes passed from `process_relation` function for this way.
+relations| Storage of relations to access relations, where `way` is a member.
 
 Importantly it will set `result.forward_mode` and `result.backward_mode` to indicate the travel mode in each direction, as well as set `result.forward_speed` and `result.backward_speed` to integer values representing the speed for traversing the way.
 
@@ -178,56 +180,6 @@ road_classification.link_class          | Boolean  | Guidance: way is a slip/lin
 road_classification.road_priority_class | Enum     | Guidance: order in priority list. Defined in `include/extractor/guidance/road_classification.hpp`
 road_classification.may_be_ignored      | Boolean  | Guidance: way is non-highway
 road_classification.num_lanes           | Unsigned | Guidance: total number of lanes in way
-
-### process_relation(profile, relation, result)
-
-Supported since API **version 3**.
-
-Given an OpenStreetMap relation, the `process_relation` function should setup values into result structure.
-
-Argument | Description
----------|-------------------------------------------------------
-profile  | The configuration table you returned in `setup`.
-node     | The input relation to process (read-only).
-result   | The output that you will modify.
-
-Relation process work flow consist of next steps:
-1. Calls `process_relation` function for each relation. It should fill a `result` structure
-2. After that each data will be passed for each member of processed relation into `process_node` and `process_way` functions
-
-The following attributes can be set on that result in `process_relation`:
-
-Attribute                               | Type     | Notes
-----------------------------------------|----------|--------------------------------------------------------------------------
-is_restriction                          | Boolean  | Flag to determine if relation is a turn restriction
-
-Example processing code:
-```lua
-
-function process_way(profile, way, result, relations)
-  for _, r in ipairs(relations) do
-    for k, v in pairs(r) do
-      print('data_' .. k .. '_value_' .. v)
-    end
-  end
-  print ('process_way ' .. way:id() .. ' ' .. result.name)
-end
-
-function process_relation(profile, relation, result)
-  local t = relation:get_value_by_key("type")
-  if t == "route" then
-    for _, m in ipairs(relation:members()) do
-      if m:role == "north" then
-        result[m]['direction'] = 'north'
-        print('direction_north')
-      end
-    end
-
-    print('route_relation')
-  end
-end
-```
-
 
 ### process_segment(profile, segment)
 The `process_segment` function is called for every segment of OSM ways. A segment is a straight line between two OSM nodes.
