@@ -68,10 +68,19 @@ matrix:
       addons: &gcc6
         apt:
           sources: ['ubuntu-toolchain-r-test']
-          packages: ['g++-6', 'libbz2-dev', 'libxml2-dev', 'libzip-dev', 'liblua5.2-dev', 'libtbb-dev', 'libgdal-dev', 'libboost-all-dev']
+          packages: ['g++-6', 'libbz2-dev', 'libxml2-dev', 'libzip-dev', 'liblua5.2-dev', 'libtbb-dev', 'libgdal-dev', 'libboost-all-dev', 'lcov']
       env: CCOMPILER='gcc-6' CXXCOMPILER='g++-6' BUILD_TYPE='Debug' ENABLE_COVERAGE=ON CUCUMBER_TIMEOUT=20000
+      before_script:
+        - cd ${TRAVIS_BUILD_DIR}
+        - lcov --directory . --zerocounters # clean cached da files
       after_success:
-        - bash <(curl -s https://codecov.io/bash)
+        # Creating report
+        - cd ${TRAVIS_BUILD_DIR}
+        - lcov --directory . --capture --output-file coverage.info # capture coverage info
+        - lcov --remove coverage.info '/usr/*' --output-file coverage.info # filter out system
+        - lcov --list coverage.info #debug info
+        # Uploading report to CodeCov
+        - bash <(curl -s https://codecov.io/bash) || echo "Codecov did not collect coverage reports"
 
     - os: linux
       compiler: "gcc-6-debug-asan"
