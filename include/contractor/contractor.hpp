@@ -29,16 +29,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define CONTRACTOR_CONTRACTOR_HPP
 
 #include "contractor/contractor_config.hpp"
-#include "contractor/query_edge.hpp"
-#include "extractor/edge_based_edge.hpp"
-#include "extractor/edge_based_node_segment.hpp"
-#include "util/deallocating_vector.hpp"
-#include "util/typedefs.hpp"
-
-#include <string>
-#include <vector>
-
-#include <cstddef>
 
 namespace osrm
 {
@@ -49,22 +39,12 @@ namespace contractor
 class Contractor
 {
   public:
-    using EdgeData = QueryEdge::EdgeData;
-
     explicit Contractor(const ContractorConfig &config_) : config{config_} {}
 
     Contractor(const Contractor &) = delete;
     Contractor &operator=(const Contractor &) = delete;
 
     int Run();
-
-  protected:
-    void ContractGraph(const unsigned max_edge_id,
-                       util::DeallocatingVector<extractor::EdgeBasedEdge> &edge_based_edge_list,
-                       util::DeallocatingVector<QueryEdge> &contracted_edge_list,
-                       std::vector<EdgeWeight> &&node_weights,
-                       std::vector<bool> &is_core_node,
-                       std::vector<float> &inout_node_levels) const;
 
   private:
     ContractorConfig config;
