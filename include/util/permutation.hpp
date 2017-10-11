@@ -23,7 +23,15 @@ void inplacePermutation(RandomAccesIterator begin,
     for (auto index : util::irange<IndexT>(0, size))
     {
         if (was_replaced[index])
+        {
             continue;
+        }
+
+        if (old_to_new[index] == index)
+        {
+            was_replaced[index] = true;
+            continue;
+        }
 
         // iterate over a cycle in the permutation
         auto buffer = begin[index];
@@ -38,6 +46,18 @@ void inplacePermutation(RandomAccesIterator begin,
         std::swap(buffer, begin[index]);
     }
 }
+
+template <typename IndexT>
+std::vector<IndexT> orderingToPermutation(const std::vector<IndexT> &ordering)
+{
+    std::vector<std::uint32_t> permutation(ordering.size());
+    for (auto index : util::irange<std::uint32_t>(0, ordering.size()))
+        permutation[ordering[index]] = index;
+
+    return permutation;
+}
+
+
 }
 }
 
