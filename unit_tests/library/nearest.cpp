@@ -109,9 +109,9 @@ BOOST_AUTO_TEST_CASE(test_nearest_response_for_location_in_small_component)
         const auto &nodes = waypoint_object.values.at("nodes").get<json::Array>().values;
         BOOST_CHECK(nodes.size() == 2);
         BOOST_CHECK(nodes[0].get<util::json::Number>().value !=
-                    static_cast<std::uint64_t>(SPECIAL_OSM_NODEID));
+                    0);
         BOOST_CHECK(nodes[1].get<util::json::Number>().value !=
-                    static_cast<std::uint64_t>(SPECIAL_OSM_NODEID));
+                    0);
     }
 }
 
