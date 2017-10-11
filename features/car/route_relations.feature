@@ -74,28 +74,28 @@ Feature: Car - route relations
             | c,d       | eastbound,eastbound  | I 80 $east; CO 93 $east,I 80 $east; CO 93 $east |
 
 
-    Scenario: Forward/backward assignment on non-divided roads with role direction tag
-        Given the node map
-            """
-              a----------------b
-            """
-
-        And the ways
-            | nodes | name      | highway  | ref   | oneway |
-            | ab    | mainroad  | motorway | I 80  | no     |
-
-        And the relations
-            | type        | direction | way:forward | route | ref | network |
-            | route       | west      | ab          | road  | 80  | US:I    |
-
-        And the relations
-            | type        | direction | way:backward | route | ref | network |
-            | route       | east      | ab           | road  | 80  | US:I    |
-
-        When I route I should get
-            | waypoints | route              | ref                    |
-            | b,a       | mainroad,mainroad  | I 80 $west,I 80 $west  |
-            | a,b       | mainroad,mainroad  | I 80 $east,I 80 $east  |
+#    Scenario: Forward/backward assignment on non-divided roads with role direction tag
+#        Given the node map
+#            """
+#              a----------------b
+#            """
+#
+#        And the ways
+#            | nodes | name      | highway  | ref   | oneway |
+#            | ab    | mainroad  | motorway | I 80  | no     |
+#
+#        And the relations
+#            | type        | direction | way:forward | route | ref | network |
+#            | route       | west      | ab          | road  | 80  | US:I    |
+#
+#        And the relations
+#            | type        | direction | way:backward | route | ref | network |
+#            | route       | east      | ab           | road  | 80  | US:I    |
+#
+#        When I route I should get
+#            | waypoints | route              | ref                    |
+#            | b,a       | mainroad,mainroad  | I 80 $west,I 80 $west  |
+#            | a,b       | mainroad,mainroad  | I 80 $east,I 80 $east  |
 
 
     Scenario: Conflict between role and direction
@@ -205,28 +205,28 @@ Feature: Car - route relations
             | waypoints | route                | ref                   |
             | a,b       | eastbound,eastbound  | I 80 $east,I 80 $east |
 
-    Scenario: Three levels of indirection
-        Given the node map
-            """
-              a----------------b
-            """
-
-        And the ways
-            | nodes | name       | highway  | ref   |
-            | ab    | eastbound  | motorway | I 80  |
-
-        And the relations
-            | type        | way:forward | route | ref | network | name         |
-            | route       | ab          | road  | 80  | US:I    | baserelation |
-
-        And the relations
-            | type        | relation     | route | ref | network | name           |
-            | route       | baserelation | road  | 80  | US:I    | superrelation1 |
-
-        And the relations
-            | type        | direction | relation       | route | ref | network | name           |
-            | route       | east      | superrelation1 | road  | 80  | US:I    | superrelation2 |
-
-        When I route I should get
-            | waypoints | route                | ref                   |
-            | a,b       | eastbound,eastbound  | I 80 $east,I 80 $east |
+#    Scenario: Three levels of indirection
+#        Given the node map
+#            """
+#              a----------------b
+#            """
+#
+#        And the ways
+#            | nodes | name       | highway  | ref   |
+#            | ab    | eastbound  | motorway | I 80  |
+#
+#        And the relations
+#            | type        | way:forward | route | ref | network | name         |
+#            | route       | ab          | road  | 80  | US:I    | baserelation |
+#
+#        And the relations
+#            | type        | relation     | route | ref | network | name           |
+#            | route       | baserelation | road  | 80  | US:I    | superrelation1 |
+#
+#        And the relations
+#            | type        | direction | relation       | route | ref | network | name           |
+#            | route       | east      | superrelation1 | road  | 80  | US:I    | superrelation2 |
+#
+#        When I route I should get
+#            | waypoints | route                | ref                   |
+#            | a,b       | eastbound,eastbound  | I 80 $east,I 80 $east |
