@@ -1,7 +1,7 @@
 module.exports = {
-    default: '--strict --tags ~@stress --tags ~@mld --tags ~@todo --require features/support --require features/step_definitions',
-    verify: '--strict --tags ~@stress --tags ~@mld --tags ~@todo -f progress --require features/support --require features/step_definitions',
+    default: '--strict --tags ~@stress --tags ~@todo --require features/support --require features/step_definitions',
+    verify: '--strict --tags ~@stress --tags ~@todo -f progress --require features/support --require features/step_definitions',
     todo: '--strict --tags @todo --require features/support --require features/step_definitions',
     all: '--strict --require features/support --require features/step_definitions',
-    mld: '--strict --tags ~@stress --tags ~@todo --tags ~@ch --require features/support --require features/step_definitions -f progress'
+    mld: '--strict --tags ~@stress --tags ~@todo --require features/support --require features/step_definitions -f progress'
 };
