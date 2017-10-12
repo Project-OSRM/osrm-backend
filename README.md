@@ -41,6 +41,14 @@ Related [Project-OSRM](https://github.com/Project-OSRM) repositories:
 
 The easiest and quickest way to setup your own routing engine is to use Docker images we provide.
 
+There are two pre-processing pipelines available:
+- Contraction Hierarchies (CH)
+- Multi-Level Dijkstra (MLD)
+
+we recommend using MLD by default except for special use-cases such as very large distance matrices where CH is still a better fit for the time being.
+In the following we explain the MLD pipeline.
+If you want to use the CH pipeline instead replace `osrm-partition` and `osrm-customize` with a single `osrm-customize` and change the algorithm option for `osrm-routed`.
+
 ### Using Docker
 
 We base our Docker images ([backend](https://hub.docker.com/r/osrm/osrm-backend/), [frontend](https://hub.docker.com/r/osrm/osrm-frontend/)) on Alpine Linux and make sure they are as lightweight as possible.
@@ -52,9 +60,10 @@ Download OpenStreetMap extracts for example from [Geofabrik](http://download.geo
 Pre-process the extract with the car profile and start a routing engine HTTP server on port 5000
 
     docker run -t -v $(pwd):/data osrm/osrm-backend osrm-extract -p /opt/car.lua /data/berlin-latest.osm.pbf
-    docker run -t -v $(pwd):/data osrm/osrm-backend osrm-contract /data/berlin-latest.osrm
+    docker run -t -v $(pwd):/data osrm/osrm-backend osrm-partition /data/berlin-latest.osrm
+    docker run -t -v $(pwd):/data osrm/osrm-backend osrm-customize /data/berlin-latest.osrm
 
-    docker run -t -i -p 5000:5000 -v $(pwd):/data osrm/osrm-backend osrm-routed /data/berlin-latest.osrm
+    docker run -t -i -p 5000:5000 -v $(pwd):/data osrm/osrm-backend osrm-routed --algorithm mld /data/berlin-latest.osrm
 
 Make requests against the HTTP server
 
