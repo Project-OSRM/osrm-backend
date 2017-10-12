@@ -199,12 +199,6 @@ int Partitioner::Run(const PartitionConfig &config)
         renumber(node_data, permutation);
         extractor::files::writeNodeData(config.GetPath(".osrm.ebg_nodes"), node_data);
     }
-    if (boost::filesystem::exists(config.GetPath(".osrm.hsgr")))
-    {
-        util::Log(logWARNING) << "Found existing .osrm.hsgr file, removing. You need to re-run "
-                                 "osrm-contract after osrm-partition.";
-        boost::filesystem::remove(config.GetPath(".osrm.hsgr"));
-    }
     TIMER_STOP(renumber);
     util::Log() << "Renumbered data in " << TIMER_SEC(renumber) << " seconds";
 
