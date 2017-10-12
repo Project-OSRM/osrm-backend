@@ -144,7 +144,6 @@ class SVGPrinter (gdb.Command):
         self.re_bbox = None
         self.to_svg = {
             'const osrm::engine::datafacade::ContiguousInternalMemoryDataFacade<osrm::engine::routing_algorithms::ch::Algorithm> &': self.Facade,
-            'const osrm::engine::datafacade::ContiguousInternalMemoryDataFacade<osrm::engine::routing_algorithms::corech::Algorithm> &': self.Facade,
             'const osrm::engine::datafacade::ContiguousInternalMemoryDataFacade<osrm::engine::routing_algorithms::mld::Algorithm> &': self.Facade,
             'osrm::engine::routing_algorithms::Facade': self.Facade,
             'osrm::engine::DataFacade': self.Facade}

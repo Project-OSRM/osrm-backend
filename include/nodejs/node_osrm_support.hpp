@@ -158,7 +158,7 @@ inline engine_config_ptr argumentsToEngineConfig(const Nan::FunctionCallbackInfo
         }
         else if (*v8::String::Utf8Value(algorithm_str) == std::string("CoreCH"))
         {
-            engine_config->algorithm = osrm::EngineConfig::Algorithm::CoreCH;
+            engine_config->algorithm = osrm::EngineConfig::Algorithm::CH;
         }
         else if (*v8::String::Utf8Value(algorithm_str) == std::string("MLD"))
         {

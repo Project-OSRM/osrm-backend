@@ -62,10 +62,8 @@ std::istream &operator>>(std::istream &in, EngineConfig::Algorithm &algorithm)
     in >> token;
     boost::to_lower(token);
 
-    if (token == "ch")
+    if (token == "ch" || token == "corech")
         algorithm = EngineConfig::Algorithm::CH;
-    else if (token == "corech")
-        algorithm = EngineConfig::Algorithm::CoreCH;
     else if (token == "mld")
         algorithm = EngineConfig::Algorithm::MLD;
     else
