@@ -47,7 +47,7 @@ There are two pre-processing pipelines available:
 
 we recommend using MLD by default except for special use-cases such as very large distance matrices where CH is still a better fit for the time being.
 In the following we explain the MLD pipeline.
-If you want to use the CH pipeline instead replace `osrm-partition` and `osrm-customize` with a single `osrm-customize` and change the algorithm option for `osrm-routed`.
+If you want to use the CH pipeline instead replace `osrm-partition` and `osrm-customize` with a single `osrm-contract` and change the algorithm option for `osrm-routed` to `--algorithm ch`.
 
 ### Using Docker
 
