@@ -47,7 +47,7 @@ class OSRMBaseLoader{
           if (err) {
             if (retryCount < 10) {
               retryCount++;
-              setTimeout(() => { tryConnect(this.scope.OSRM_PORT, retry); }, 10);
+              setTimeout(() => { tryConnect(this.scope.OSRM_PORT, retry); }, 100);
             } else {
               callback(new Error("Could not connect to osrm-routed after ten retries."));
             }
@@ -75,13 +75,13 @@ class OSRMDirectLoader extends OSRMBaseLoader {
     }
 
     osrmUp (callback) {
-        if (this.osrmIsRunning()) return callback(new Error("osrm-routed already running!"));
+        if (this.osrmIsRunning()) return callback(new Error("osrm-routed.js already running!"));
 
         const command_arguments = util.format('%s -p %d -a %s', this.inputFile, this.scope.OSRM_PORT, this.scope.ROUTING_ALGORITHM);
-        this.child = this.scope.runBin('osrm-routed', command_arguments, this.scope.environment, (err) => {
+        this.child = this.scope.runBin('osrm-routed.js', command_arguments, this.scope.environment, (err) => {
             if (err && err.signal !== 'SIGINT') {
                 this.child = null;
-                throw new Error(util.format('osrm-routed %s: %s', errorReason(err), err.cmd));
+                throw new Error(util.format('osrm-routed.js %s: %s', errorReason(err), err.cmd));
             }
         });
         callback();
@@ -117,10 +117,10 @@ class OSRMDatastoreLoader extends OSRMBaseLoader {
         if (this.osrmIsRunning()) return callback();
 
         const command_arguments = util.format('--shared-memory=1 -p %d -a %s', this.scope.OSRM_PORT, this.scope.ROUTING_ALGORITHM);
-        this.child = this.scope.runBin('osrm-routed', command_arguments, this.scope.environment, (err) => {
+        this.child = this.scope.runBin('osrm-routed.js', command_arguments, this.scope.environment, (err) => {
             if (err && err.signal !== 'SIGINT') {
                 this.child = null;
-                throw new Error(util.format('osrm-routed %s: %s', errorReason(err), err.cmd));
+                throw new Error(util.format('osrm-routed.js %s: %s', errorReason(err), err.cmd));
             }
         });
 

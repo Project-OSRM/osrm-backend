@@ -52,22 +52,22 @@ Feature: Status messages
         When I route I should get
             | request                             | status | message                                           |
             | route/v1/driving/1,1;1,2            | 200    |                                                   |
-            | route/v1/driving/-74697224,5.191564 | 400    | Query string malformed close to position 18       |
-            | route/v1/driving/200,5.191564;44,5  | 400    | Invalid coordinate value.                         |
-            | nonsense                            | 400    | URL string malformed close to position 9: "nse"   |
-            | nonsense/v1/driving/1,1;1,2         | 400    | Service nonsense not found!                       |
-            |                                     | 400    | URL string malformed close to position 1: "/"     |
-            | /                                   | 400    | URL string malformed close to position 1: "//"    |
-            | ?                                   | 400    | URL string malformed close to position 1: "/?"    |
-            | route/v1/driving                    | 400    | URL string malformed close to position 17: "ing"  |
-            | route/v1/driving/                   | 400    | URL string malformed close to position 18: "ng/"  |
-            | route/v1/driving/1                  | 400    | Query string malformed close to position 19       |
-            | route/v1/driving/1,1                | 400    | Number of coordinates needs to be at least two.   |
-            | route/v1/driving/1,1,1              | 400    | Query string malformed close to position 21       |
-            | route/v1/driving/x                  | 400    | Query string malformed close to position 18       |
-            | route/v1/driving/x,y                | 400    | Query string malformed close to position 18       |
-            | route/v1/driving/1,1;               | 400    | Query string malformed close to position 21       |
-            | route/v1/driving/1,1;1              | 400    | Query string malformed close to position 23       |
-            | route/v1/driving/1,1;1,1,1          | 400    | Query string malformed close to position 25       |
-            | route/v1/driving/1,1;x              | 400    | Query string malformed close to position 21       |
-            | route/v1/driving/1,1;x,y            | 400    | Query string malformed close to position 21       |
+            | route/v1/driving/-74697224,5.191564 | 400    | At least two coordinates must be provided |
+            | route/v1/driving/200,5.191564;44,5  | 400    | Lng/Lat coordinates must be within world bounds (-180 < lng < 180, -90 < lat < 90) |
+            | nonsense                            | 404    | Path not found   |
+            | nonsense/v1/driving/1,1;1,2         | 404    | Path not found |
+            |                                     | 404    | Path not found |
+            | /                                   | 404    | Path not found |
+            | ?                                   | 404    | Path not found |
+            | route/v1/driving                    | 404    | Path not found |
+            | route/v1/driving/                   | 404    | Path not found |
+            | route/v1/driving/1                  | 400    | At least two coordinates must be provided |
+            | route/v1/driving/1,1                | 400    | At least two coordinates must be provided |
+            | route/v1/driving/1,1,1              | 400    | At least two coordinates must be provided |
+            | route/v1/driving/x                  | 400    | At least two coordinates must be provided |
+            | route/v1/driving/x,y                | 400    | At least two coordinates must be provided |
+            | route/v1/driving/1,1;               | 400    | Coordinates must be an array of (lon/lat) pairs |
+            | route/v1/driving/1,1;1              | 400    | Coordinates must be an array of (lon/lat) pairs |
+            | route/v1/driving/1,1;1,1,1          | 400    | Coordinates must be an array of (lon/lat) pairs |
+            | route/v1/driving/1,1;x              | 400    | Coordinates must be an array of (lon/lat) pairs |
+            | route/v1/driving/1,1;x,y            | 400    | Lng/Lat coordinates must be valid numbers |

@@ -56,6 +56,25 @@ template <> v8::Local<v8::Value> inline render(const osrm::json::Object &result)
     return value;
 }
 
+struct ResultException : public std::logic_error
+{
+    std::unique_ptr<char[]> messagebuf;
+
+  public:
+    ResultException(const char *code, const char *message) : std::logic_error(code)
+    {
+        messagebuf = std::make_unique<char[]>(std::strlen(message) + 1);
+        std::strcpy(messagebuf.get(), message);
+    }
+    ResultException(const char *code) : std::logic_error(code)
+    {
+        messagebuf = std::make_unique<char[]>(1);
+        messagebuf.get()[0] = 0;
+    }
+
+    const char *message() { return messagebuf.get(); }
+};
+
 inline void ParseResult(const osrm::Status &result_status, osrm::json::Object &result)
 {
     const auto code_iter = result.values.find("code");
@@ -65,7 +84,22 @@ inline void ParseResult(const osrm::Status &result_status, osrm::json::Object &r
 
     if (result_status == osrm::Status::Error)
     {
-        throw std::logic_error(code_iter->second.get<osrm::json::String>().value.c_str());
+        const auto message_iter = result.values.find("message");
+        if (message_iter != end_iter)
+        {
+            const auto code = code_iter->second.get<osrm::json::String>().value.c_str();
+            const auto message = message_iter->second.get<osrm::json::String>().value.c_str();
+            auto buffer =
+                std::make_unique<char[]>(std::strlen(code) + 2 + std::strlen(message) + 1);
+            std::strcpy(buffer.get(), code);
+            std::strcat(buffer.get(), ": ");
+            std::strcat(buffer.get(), message);
+            throw ResultException(buffer.get());
+        }
+        else
+        {
+            throw std::logic_error(code_iter->second.get<osrm::json::String>().value.c_str());
+        }
     }
 
     result.values.erase(code_iter);

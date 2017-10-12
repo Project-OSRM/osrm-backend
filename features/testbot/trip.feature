@@ -96,6 +96,7 @@ Feature: Basic trip planning
             | waypoints               | source | trips         |
             | a,b,c,d,e,f,g,h,i,j,k,l | first  | alkjihgfedcba |
 
+    @todo
     Scenario: Testbot - Trip: Roundtrip FE waypoints (more than 10)
         Given the query options
             | source | last  |

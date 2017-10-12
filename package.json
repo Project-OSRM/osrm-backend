@@ -4,6 +4,8 @@
   "private": false,
   "description": "The Open Source Routing Machine is a high performance routing engine written in C++14 designed to run on OpenStreetMap data.",
   "dependencies": {
+    "express": "^4.16.2",
+    "minimist": "^1.2.0",
     "nan": "^2.6.2",
     "node-cmake": "^2.3.2",
     "node-pre-gyp": "^0.6.36"
@@ -16,7 +18,7 @@
   },
   "scripts": {
     "lint": "node ./node_modules/eslint/bin/eslint.js -c ./.eslintrc features/step_definitions/ features/support/",
-    "test": "npm run lint && node ./node_modules/cucumber/bin/cucumber.js features/ -p verify && node ./node_modules/cucumber/bin/cucumber.js features/ -p mld",
+    "test": "cp lib/osrm-routed.js build/ && npm run lint && node ./node_modules/cucumber/bin/cucumber.js features/ -p verify && node ./node_modules/cucumber/bin/cucumber.js features/ -p mld",
     "clean": "rm -rf test/cache",
     "docs": "./scripts/build_api_docs.sh",
     "install": "node-pre-gyp install --fallback-to-build=false || ./scripts/node_install.sh",

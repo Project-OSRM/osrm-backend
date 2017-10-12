@@ -52,11 +52,11 @@ Feature: Weight tests
             | abc   |
 
         When I route I should get
-            | waypoints | route   | distances | weights | times   | a:distance          | a:duration | a:weight | a:speed |
-            | s,t       | abc,abc | 20m,0m    | 2.1,0   | 2.1s,0s | 20.017685           | 3          | 3        | 6.7     |
-            | t,s       | abc,abc | 20m,0m    | 2.1,0   | 2.1s,0s | 20.017685           | 3.1        | 3.1      | 6.5     |
-            | s,e       | abc,abc | 40m,0m    | 4.1,0   | 4.1s,0s | 30.026527:10.008842 | 3.1:1      | 3.1:1    | 9.7:10  |
-            | e,s       | abc,abc | 40m,0m    | 4.1,0   | 4.1s,0s | 10.008842:30.026527 | 1:3.1      | 1:3.1    | 10:9.7  |
+            | waypoints | route   | distances | weights | times   | a:distance                   | a:duration | a:weight | a:speed |
+            | s,t       | abc,abc | 20m,0m    | 2.1,0   | 2.1s,0s | 20.017685 ~0.001%            | 3          | 3        | 6.7     |
+            | t,s       | abc,abc | 20m,0m    | 2.1,0   | 2.1s,0s | 20.017685 ~0.001%            | 3.1        | 3.1      | 6.5     |
+            | s,e       | abc,abc | 40m,0m    | 4.1,0   | 4.1s,0s | 30.026527:10.008842 ~0.0001% | 3.1:1      | 3.1:1    | 9.7:10  |
+            | e,s       | abc,abc | 40m,0m    | 4.1,0   | 4.1s,0s | 10.008842:30.026527 ~0.0001% | 1:3.1      | 1:3.1    | 10:9.7  |
 
 
     Scenario: Step weights -- way_function: fail if no weight or weight_per_meter property

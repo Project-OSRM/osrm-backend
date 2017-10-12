@@ -70,7 +70,7 @@ module.exports = function () {
 
         this.OSRM_EXTRACT_PATH = path.resolve(util.format('%s/%s%s', this.BIN_PATH, 'osrm-extract', this.EXE));
         this.OSRM_CONTRACT_PATH = path.resolve(util.format('%s/%s%s', this.BIN_PATH, 'osrm-contract', this.EXE));
-        this.OSRM_ROUTED_PATH = path.resolve(util.format('%s/%s%s', this.BIN_PATH, 'osrm-routed', this.EXE));
+        this.OSRM_ROUTED_PATH = path.resolve(util.format('%s/%s%s', this.BIN_PATH, 'osrm-routed.js', this.EXE));
         this.LIB_OSRM_EXTRACT_PATH = util.format('%s/' + this.LIB, this.BIN_PATH, 'osrm_extract'),
         this.LIB_OSRM_CONTRACT_PATH = util.format('%s/' + this.LIB, this.BIN_PATH, 'osrm_contract'),
         this.LIB_OSRM_PATH = util.format('%s/' + this.LIB, this.BIN_PATH, 'osrm');
