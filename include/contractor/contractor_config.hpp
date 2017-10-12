@@ -65,7 +65,7 @@ struct ContractorConfig final : storage::IOConfig
 
     unsigned requested_num_threads;
 
-    // Deprecated
+    // DEPRECATED to be removed in v6.0
     // A percentage of vertices that will be contracted for the hierarchy.
     // Offers a trade-off between preprocessing and query time.
     // The remaining vertices form the core of the hierarchy

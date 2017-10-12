@@ -93,9 +93,9 @@ test('constructor: autoswitches to CoreCH for a CH dataset if capable', function
 
 test('constructor: throws if data doesn\'t match algorithm', function(assert) {
     assert.plan(3);
-    assert.throws(function() { new OSRM({algorithm: 'CoreCH', path: monaco_mld_path}); });
-    assert.throws(function() { new OSRM({algorithm: 'CoreCH', path: monaco_path}); });
-    assert.throws(function() { new OSRM({algorithm: 'MLD', path: monaco_path}); });
+    assert.throws(function() { new OSRM({algorithm: 'CoreCH', path: monaco_mld_path}); }, 'CoreCH with MLD data');
+    assert.ok(function() { new OSRM({algorithm: 'CoreCH', path: monaco_path}); }, 'CoreCH with CH data');
+    assert.throws(function() { new OSRM({algorithm: 'MLD', path: monaco_path}); }, 'MLD with CH data');
 });
 
 test('constructor: parses custom limits', function(assert) {
