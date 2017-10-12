@@ -158,11 +158,11 @@ class SVGPrinter (gdb.Command):
   <style>
     svg { background-color: beige; }
     .node { stroke: #000; stroke-width: 4; fill: none; marker-end: url(#forward) }
-    .node.forward { stroke-width: 2; stroke: #0c0; font-family: sans; font-size: 42px }
+    .node.forward { stroke-width: 2; stroke: #080; font-family: sans; font-size: 42px }
     .node.reverse { stroke-width: 2; stroke: #f00; font-family: sans; font-size: 42px }
     .segment { marker-start: url(#osm-node); marker-end: url(#osm-node); }
     .segment.weight { font-family: sans; font-size:24px; text-anchor:middle; stroke-width: 1;  }
-    .segment.weight.forward { stroke: #0c0; fill: #0c0; }
+    .segment.weight.forward { stroke: #080; fill: #080; }
     .segment.weight.reverse { stroke: #f00; fill: #f00; }
     .edge { stroke: #00f; stroke-width: 2; fill: none; }
     .edge.forward { stroke: #0c0; stroke-width: 1; marker-end: url(#forward) }
@@ -216,10 +216,39 @@ class SVGPrinter (gdb.Command):
         return nodes, longitudes, latitudes
 
     @staticmethod
-    def Facade(facade, width, height, bbox):
+    def Facade(facade, width, height, arg):
+
+        result = ''
+
+        ## parse additional facade arguments
+        re_float = '[-+]?[0-9]*\.?[0-9]+'
+        bbox = re.search('(' + re_float + '),(' + re_float + ');(' + re_float + '),(' + re_float +')', arg)
+        bbox = [float(x) for x in bbox.groups()] if bbox else [-180, -90, 180, 90]
+        mld_level = re.search('L:([0-9]+)', arg)
+        mld_level = int(mld_level.group(1)) if mld_level else 0
+
         marginx, marginy = 75, 75
         INVALID_SEGMENT_WEIGHT, MAX_SEGMENT_WEIGHT = gdb.parse_and_eval('INVALID_SEGMENT_WEIGHT'), gdb.parse_and_eval('INVALID_SEGMENT_WEIGHT')
         segment_weight = lambda x: str(x) + (' invalid' if x == INVALID_SEGMENT_WEIGHT else ' max' if x == MAX_SEGMENT_WEIGHT else '')
+
+        if mld_level > 0:
+            mld_facade = facade.cast(gdb.lookup_type('osrm::engine::datafacade::ContiguousInternalMemoryAlgorithmDataFacade<osrm::engine::routing_algorithms::mld::Algorithm>'))
+            mld_partition = mld_facade['mld_partition']
+            mld_levels = call(mld_partition, 'GetNumberOfLevels')
+            print (mld_level, mld_levels)
+            if mld_level < mld_levels:
+                sentinel_node = call(mld_partition['partition'], 'size') - 1 # GetSentinelNode
+                number_of_cells = call(mld_partition, 'GetCell', mld_level, sentinel_node) # GetNumberOfCells
+                result += "<defs>"
+                for cell in range(number_of_cells):
+                    result += """
+<filter x="0" y="0" width="1" height="1" id="cellid-{}"><feFlood flood-color="hsl({}, 100%, 82%)"/><feComposite in="SourceGraphic"/></filter>""" \
+                    .format(cell, int(256 * cell / number_of_cells))
+                result += "\n</defs>"
+            else:
+                mld_level = 0
+        else:
+            mld_levels = 0
 
         ## get nodes
         nodes, longitudes, latitudes = SVGPrinter.getNodesInBoundingBox(facade, bbox)
@@ -241,19 +270,21 @@ class SVGPrinter (gdb.Command):
         print ('Graph has {} nodes and {} edges and {} nodes in the input bounding box {},{};{},{} -> {},{};{},{}'
                .format(call(facade, 'GetNumberOfNodes'), call(facade, 'GetNumberOfEdges'), len(nodes), *bbox, minx, miny, maxx, maxy))
 
-        result = ''
         for node in nodes:
             geometry_id = call(facade, 'GetGeometryIndex', node)
             direction = 'forward' if geometry_id['forward'] else 'reverse'
             geometry = SVGPrinter.getByGeometryId(facade, geometry_id, 'Geometry')
             weights = SVGPrinter.getByGeometryId(facade, geometry_id, 'Weights')
 
+
+
             ## add the edge-based node
             ref = 'n' + str(node)
+            cell_background = ' filter="url(#cellid-{})"'.format(call(mld_partition, 'GetCell', mld_level, node)) if mld_level > 0 else ''
             result += '<path id="' + ref + '" class="node" d="M' \
                                  + ' L'.join([t(lonlat(call(facade, 'GetCoordinateOfNode', x))) for x in iterate(geometry)]) \
                                  + '" />'
-            result += '<text><textPath class="node ' + direction + '" xlink:href="#' + ref \
+            result += '<text' + cell_background + '><textPath class="node ' + direction + '" xlink:href="#' + ref \
                                  + '" startOffset="60%">' + str(node) + '</textPath></text>\n'
 
             ## add segments with weights
@@ -327,16 +358,13 @@ class SVGPrinter (gdb.Command):
         try:
             argv = arg.split(' ')
             if len(argv) == 0 or len(argv[0]) == 0:
-                print ('no argument specified\nsvg <varname> [BOUNDING BOX west,south;east,north] [SIZE width,height]')
+                print ('no argument specified\nsvg <varname> [BOUNDING BOX west,south;east,north] [SIZE width,height] [L:MLD level]')
                 return
             val = gdb.parse_and_eval(argv[0])
             dims = re.search('([0-9]+)x([0-9]+)', arg)
             width, height = [int(x) for x in dims.groups()] if dims else (2100, 1600)
-            re_float = '[-+]?[0-9]*\.?[0-9]+'
-            bbox = re.search('(' + re_float + '),(' + re_float + ');(' + re_float + '),(' + re_float +')', arg)
-            bbox = [float(x) for x in bbox.groups()] if bbox else [-180, -90, 180, 90]
             type = val.type.target().unqualified() if val.type.code == gdb.TYPE_CODE_REF else val.type
-            svg = self.to_svg[str(type)](val, width, height, bbox)
+            svg = self.to_svg[str(type)](val, width, height, arg)
             self.show_svg(svg, width, height)
         except KeyError as e:
             print ('no SVG printer for: ' + str(e))

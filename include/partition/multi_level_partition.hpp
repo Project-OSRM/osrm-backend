@@ -115,7 +115,7 @@ template <storage::Ownership Ownership> class MultiLevelPartitionImpl final
 
     std::uint32_t GetNumberOfCells(LevelID level) const
     {
-        return GetCell(level, GetSenitileNode());
+        return GetCell(level, GetSentinelNode());
     }
 
     // Returns the lowest cell id (at `level - 1`) of all children `cell` at `level`
@@ -156,7 +156,7 @@ template <storage::Ownership Ownership> class MultiLevelPartitionImpl final
     // We save the sentinel as last node in the partition information.
     // It has the highest cell id in each level so we can derived the range
     // of cell ids efficiently.
-    inline NodeID GetSenitileNode() const { return partition.size() - 1; }
+    inline NodeID GetSentinelNode() const { return partition.size() - 1; }
 
     void SetCellID(LevelID l, NodeID node, std::size_t cell_id)
     {
