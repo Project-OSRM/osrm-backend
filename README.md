@@ -113,26 +113,6 @@ cmake --build .
 sudo cmake --build . --target install
 ```
 
-Grab a `.osm.pbf` extract from [Geofabrik](http://download.geofabrik.de/index.html) or [Mapzen's Metro Extracts](https://mapzen.com/data/metro-extracts/)
-
-```bash
-wget http://download.geofabrik.de/europe/germany/berlin-latest.osm.pbf
-```
-
-Pre-process the extract and start the HTTP server
-
-```
-osrm-extract berlin-latest.osm.pbf -p profiles/car.lua
-osrm-contract berlin-latest.osrm
-osrm-routed berlin-latest.osrm
-```
-
-Running Queries
-
-```
-curl "http://127.0.0.1:5000/route/v1/driving/13.388860,52.517037;13.385983,52.496891?steps=true"
-```
-
 ### Request Against the Demo Server
 
 Read the [API usage policy](https://github.com/Project-OSRM/osrm-backend/wiki/Api-usage-policy).
