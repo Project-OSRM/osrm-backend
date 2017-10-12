@@ -11,11 +11,11 @@ namespace engine
 namespace routing_algorithms
 {
 
-/// This is a striped down version of the general shortest path algorithm.
+/// This is a stripped down version of the general shortest path algorithm.
 /// The general algorithm always computes two queries for each leg. This is only
-/// necessary in case of vias, where the directions of the start node is constrainted
+/// necessary in case of vias, where the directions of the start node is constrained
 /// by the previous route.
-/// This variation is only an optimazation for graphs with slow queries, for example
+/// This variation is only an optimization for graphs with slow queries, for example
 /// not fully contracted graphs.
 template <typename Algorithm>
 InternalRouteResult directShortestPathSearch(SearchEngineData<Algorithm> &engine_working_data,
@@ -63,11 +63,6 @@ InternalRouteResult directShortestPathSearch(SearchEngineData<Algorithm> &engine
 
     return extractRoute(facade, weight, phantom_nodes, unpacked_nodes, unpacked_edges);
 }
-
-template InternalRouteResult
-directShortestPathSearch(SearchEngineData<corech::Algorithm> &engine_working_data,
-                         const DataFacade<corech::Algorithm> &facade,
-                         const PhantomNodes &phantom_nodes);
 
 template InternalRouteResult
 directShortestPathSearch(SearchEngineData<ch::Algorithm> &engine_working_data,

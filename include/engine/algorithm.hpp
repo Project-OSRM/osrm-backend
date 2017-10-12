@@ -17,13 +17,6 @@ struct Algorithm final
 {
 };
 }
-// Contraction Hiearchy with core
-namespace corech
-{
-struct Algorithm final
-{
-};
-}
 // Multi-Level Dijkstra
 namespace mld
 {
@@ -35,7 +28,6 @@ struct Algorithm final
 // Algorithm names
 template <typename AlgorithmT> const char *name();
 template <> inline const char *name<ch::Algorithm>() { return "CH"; }
-template <> inline const char *name<corech::Algorithm>() { return "CoreCH"; }
 template <> inline const char *name<mld::Algorithm>() { return "MLD"; }
 
 template <typename AlgorithmT> struct HasAlternativePathSearch final : std::false_type
@@ -80,24 +72,6 @@ template <> struct HasGetTileTurns<ch::Algorithm> final : std::true_type
 {
 };
 template <> struct HasExcludeFlags<ch::Algorithm> final : std::true_type
-{
-};
-
-// Algorithms supported by Contraction Hierarchies with core
-// the rest is disabled because of performance reasons
-template <> struct HasShortestPathSearch<corech::Algorithm> final : std::true_type
-{
-};
-template <> struct HasDirectShortestPathSearch<corech::Algorithm> final : std::true_type
-{
-};
-template <> struct HasMapMatching<corech::Algorithm> final : std::true_type
-{
-};
-template <> struct HasGetTileTurns<corech::Algorithm> final : std::true_type
-{
-};
-template <> struct HasExcludeFlags<corech::Algorithm> final : std::true_type
 {
 };
 

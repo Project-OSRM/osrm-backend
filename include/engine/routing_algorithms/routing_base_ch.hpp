@@ -375,52 +375,6 @@ double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
                           int duration_upper_bound = INVALID_EDGE_WEIGHT);
 
 } // namespace ch
-
-namespace corech
-{
-// assumes that heaps are already setup correctly.
-// A forced loop might be necessary, if source and target are on the same segment.
-// If this is the case and the offsets of the respective direction are larger for the source
-// than the target
-// then a force loop is required (e.g. source_phantom.forward_segment_id ==
-// target_phantom.forward_segment_id
-// && source_phantom.GetForwardWeightPlusOffset() > target_phantom.GetForwardWeightPlusOffset())
-// requires
-// a force loop, if the heaps have been initialized with positive offsets.
-void search(SearchEngineData<Algorithm> &engine_working_data,
-            const DataFacade<corech::Algorithm> &facade,
-            SearchEngineData<ch::Algorithm>::QueryHeap &forward_heap,
-            SearchEngineData<ch::Algorithm>::QueryHeap &reverse_heap,
-            int &weight,
-            std::vector<NodeID> &packed_leg,
-            const bool force_loop_forward,
-            const bool force_loop_reverse,
-            const PhantomNodes &phantom_nodes,
-            int duration_upper_bound = INVALID_EDGE_WEIGHT);
-
-// Requires the heaps for be empty
-// If heaps should be adjusted to be initialized outside of this function,
-// the addition of force_loop parameters might be required
-double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
-                          const DataFacade<corech::Algorithm> &facade,
-                          SearchEngineData<ch::Algorithm>::QueryHeap &forward_heap,
-                          SearchEngineData<ch::Algorithm>::QueryHeap &reverse_heap,
-                          const PhantomNode &source_phantom,
-                          const PhantomNode &target_phantom,
-                          int duration_upper_bound = INVALID_EDGE_WEIGHT);
-
-template <typename RandomIter, typename FacadeT>
-void unpackPath(const FacadeT &facade,
-                RandomIter packed_path_begin,
-                RandomIter packed_path_end,
-                const PhantomNodes &phantom_nodes,
-                std::vector<PathData> &unpacked_path)
-{
-    return ch::unpackPath(facade, packed_path_begin, packed_path_end, phantom_nodes, unpacked_path);
-}
-
-} // namespace corech
-
 } // namespace routing_algorithms
 } // namespace engine
 } // namespace osrm

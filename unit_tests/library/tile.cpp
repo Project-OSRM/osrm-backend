@@ -300,14 +300,6 @@ BOOST_AUTO_TEST_CASE(test_tile_ch)
     validate_tile(osrm);
 }
 
-BOOST_AUTO_TEST_CASE(test_tile_corech)
-{
-    using namespace osrm;
-    auto osrm =
-        getOSRM(OSRM_TEST_DATA_DIR "/corech/monaco.osrm", osrm::EngineConfig::Algorithm::CoreCH);
-    validate_tile(osrm);
-}
-
 BOOST_AUTO_TEST_CASE(test_tile_mld)
 {
     using namespace osrm;
@@ -547,15 +539,6 @@ BOOST_AUTO_TEST_CASE(test_tile_turns_ch)
 {
     using namespace osrm;
     auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm", osrm::EngineConfig::Algorithm::CH);
-
-    test_tile_turns(osrm);
-}
-
-BOOST_AUTO_TEST_CASE(test_tile_turns_corech)
-{
-    using namespace osrm;
-    auto osrm =
-        getOSRM(OSRM_TEST_DATA_DIR "/corech/monaco.osrm", osrm::EngineConfig::Algorithm::CoreCH);
 
     test_tile_turns(osrm);
 }
