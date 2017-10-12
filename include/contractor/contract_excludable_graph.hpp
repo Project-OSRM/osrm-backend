@@ -13,12 +13,11 @@ namespace contractor
 {
 
 using GraphFilterAndCore =
-    std::tuple<QueryGraph, std::vector<std::vector<bool>>, std::vector<std::vector<bool>>>;
+    std::tuple<QueryGraph, std::vector<std::vector<bool>>>;
 
 inline auto contractExcludableGraph(ContractorGraph contractor_graph_,
                                     std::vector<EdgeWeight> node_weights,
-                                    const std::vector<std::vector<bool>> &filters,
-                                    const float core_factor = 1.0)
+                                    const std::vector<std::vector<bool>> &filters)
 {
     auto num_nodes = contractor_graph_.GetNumberOfNodes();
     ContractedEdgeContainer edge_container;
@@ -42,7 +41,7 @@ inline auto contractExcludableGraph(ContractorGraph contractor_graph_,
         is_shared_core = contractGraph(contractor_graph,
                                        std::move(always_allowed),
                                        node_weights,
-                                       std::min<float>(BASE_CORE, core_factor));
+                                       BASE_CORE);
 
         // Add all non-core edges to container
         {
@@ -60,26 +59,16 @@ inline auto contractExcludableGraph(ContractorGraph contractor_graph_,
             [&is_shared_core](const NodeID node) { return is_shared_core[node]; });
     }
 
-    std::vector<std::vector<bool>> cores;
     for (const auto &filter : filters)
     {
         auto filtered_core_graph =
             shared_core_graph.Filter([&filter](const NodeID node) { return filter[node]; });
 
-        auto core = contractGraph(
-            filtered_core_graph, is_shared_core, is_shared_core, node_weights, core_factor);
-        if (core_factor == 1.0)
-        {
-            core.clear();
-        }
-        cores.push_back(std::move(core));
-
         edge_container.Merge(toEdges<QueryEdge>(std::move(filtered_core_graph)));
     }
 
     return GraphFilterAndCore{QueryGraph{num_nodes, std::move(edge_container.edges)},
-                              edge_container.MakeEdgeFilters(),
-                              std::move(cores)};
+                              edge_container.MakeEdgeFilters()};
 }
 }
 }

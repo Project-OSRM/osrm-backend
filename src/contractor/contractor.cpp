@@ -95,11 +95,10 @@ int Contractor::Run()
     QueryGraph query_graph;
     std::vector<std::vector<bool>> edge_filters;
     std::vector<std::vector<bool>> cores;
-    std::tie(query_graph, edge_filters, cores) = contractExcludableGraph(
+    std::tie(query_graph, edge_filters) = contractExcludableGraph(
         toContractorGraph(number_of_edge_based_nodes, std::move(edge_based_edge_list)),
         std::move(node_weights),
-        std::move(node_filters),
-        config.core_factor);
+        std::move(node_filters));
     TIMER_STOP(contraction);
     util::Log() << "Contracted graph has " << query_graph.GetNumberOfEdges() << " edges.";
     util::Log() << "Contraction took " << TIMER_SEC(contraction) << " sec";

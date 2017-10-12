@@ -49,12 +49,12 @@ return_code parseArguments(int argc,
         "Number of threads to use")(
         "core,k",
         boost::program_options::value<double>(&contractor_config.core_factor)->default_value(1.0),
-        "DEPRECATED: Will always be 1.0. Percentage of the graph (in vertices) to contract [0..1].")(
-        "segment-speed-file",
-        boost::program_options::value<std::vector<std::string>>(
-            &contractor_config.updater_config.segment_speed_lookup_paths)
-            ->composing(),
-        "Lookup files containing nodeA, nodeB, speed data to adjust edge weights")(
+        "DEPRECATED: Will always be 1.0. Percentage of the graph (in vertices) to contract "
+        "[0..1].")("segment-speed-file",
+                   boost::program_options::value<std::vector<std::string>>(
+                       &contractor_config.updater_config.segment_speed_lookup_paths)
+                       ->composing(),
+                   "Lookup files containing nodeA, nodeB, speed data to adjust edge weights")(
         "turn-penalty-file",
         boost::program_options::value<std::vector<std::string>>(
             &contractor_config.updater_config.turn_penalty_lookup_paths)
