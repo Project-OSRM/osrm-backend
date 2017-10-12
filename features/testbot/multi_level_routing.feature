@@ -63,6 +63,7 @@ Feature: Multi level routing
             | cm    | primary |
             | hj    | primary |
             | kp    | primary |
+        And the partition extra arguments "--small-component-size 1 --max-cell-sizes 4,16"
 
         When I route I should get
             | from | to | route                                  | time   |
@@ -82,6 +83,28 @@ Feature: Multi level routing
             | l | 144.7 | 124.7 |     0 |    60 |
             | o | 124.7 | 144.7 |    60 |     0 |
 
+        When I request a travel time matrix I should get
+            |   |     a |     f |     l |     o |
+            | a |     0 | 229.4 | 144.7 | 124.7 |
+
+        When I request a travel time matrix I should get
+            |   |     a |
+            | a |     0 |
+            | f | 229.4 |
+            | l | 144.7 |
+            | o | 124.7 |
+
+        When I request a travel time matrix I should get
+            |   |     a |     f |     l |     o |
+            | a |     0 | 229.4 | 144.7 | 124.7 |
+            | o | 124.7 | 144.7 |    60 |     0 |
+
+        When I request a travel time matrix I should get
+            |   |     a |     o |
+            | a |     0 | 124.7 |
+            | f | 229.4 | 144.7 |
+            | l | 144.7 |    60 |
+            | o | 124.7 |     0 |
 
     Scenario: Testbot - Multi level routing: horizontal road
         Given the node map
