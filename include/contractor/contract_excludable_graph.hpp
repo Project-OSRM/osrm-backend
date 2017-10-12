@@ -12,12 +12,32 @@ namespace osrm
 namespace contractor
 {
 
-using GraphFilterAndCore = std::tuple<QueryGraph, std::vector<std::vector<bool>>>;
+using GraphAndFilter = std::tuple<QueryGraph, std::vector<std::vector<bool>>>;
+
+inline auto contractFullGraph(ContractorGraph contractor_graph,
+                              std::vector<EdgeWeight> node_weights)
+{
+    auto num_nodes = contractor_graph.GetNumberOfNodes();
+    contractGraph(contractor_graph, node_weights);
+
+    auto edges = toEdges<QueryEdge>(std::move(contractor_graph));
+    std::vector<bool> edge_filter(edges.size(), true);
+
+    return GraphAndFilter{QueryGraph{num_nodes, std::move(edges)}, {std::move(edge_filter)}};
+}
 
 inline auto contractExcludableGraph(ContractorGraph contractor_graph_,
                                     std::vector<EdgeWeight> node_weights,
                                     const std::vector<std::vector<bool>> &filters)
 {
+    if (filters.size() == 1)
+    {
+        if (std::all_of(filters.front().begin(), filters.front().end(), [](auto v) { return v; }))
+        {
+            return contractFullGraph(std::move(contractor_graph_), std::move(node_weights));
+        }
+    }
+
     auto num_nodes = contractor_graph_.GetNumberOfNodes();
     ContractedEdgeContainer edge_container;
     ContractorGraph shared_core_graph;
@@ -64,8 +84,8 @@ inline auto contractExcludableGraph(ContractorGraph contractor_graph_,
         edge_container.Merge(toEdges<QueryEdge>(std::move(filtered_core_graph)));
     }
 
-    return GraphFilterAndCore{QueryGraph{num_nodes, std::move(edge_container.edges)},
-                              edge_container.MakeEdgeFilters()};
+    return GraphAndFilter{QueryGraph{num_nodes, std::move(edge_container.edges)},
+                          edge_container.MakeEdgeFilters()};
 }
 }
 }
