@@ -913,21 +913,6 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
                                 layout.num_entries[DataLayout::R_SEARCH_TREE_LEVELS]);
     }
 
-    if (boost::filesystem::exists(config.GetPath(".osrm.core")))
-    {
-        std::vector<util::vector_view<bool>> cores;
-        for (auto index : util::irange<std::size_t>(0, NUM_METRICS))
-        {
-            auto block_id =
-                static_cast<DataLayout::BlockID>(storage::DataLayout::CH_CORE_MARKER_0 + index);
-            auto data_ptr = layout.GetBlockPtr<unsigned, true>(memory_ptr, block_id);
-            auto num_entries = layout.num_entries[block_id];
-            cores.emplace_back(data_ptr, num_entries);
-        }
-
-        contractor::files::readCoreMarker(config.GetPath(".osrm.core"), cores);
-    }
-
     // load profile properties
     {
         const auto profile_properties_ptr = layout.GetBlockPtr<extractor::ProfileProperties, true>(

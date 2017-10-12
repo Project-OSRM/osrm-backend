@@ -217,24 +217,6 @@ inline std::vector<routing_algorithms::TurnData> RoutingAlgorithms<Algorithm>::G
     return routing_algorithms::getTileTurns(*facade, edges, sorted_edge_indexes);
 }
 
-// CoreCH overrides
-template <>
-InternalManyRoutesResult inline RoutingAlgorithms<
-    routing_algorithms::corech::Algorithm>::AlternativePathSearch(const PhantomNodes &,
-                                                                  unsigned) const
-{
-    throw util::exception("AlternativePathSearch is disabled due to performance reasons");
-}
-
-template <>
-inline std::vector<EdgeDuration>
-RoutingAlgorithms<routing_algorithms::corech::Algorithm>::ManyToManySearch(
-    const std::vector<PhantomNode> &,
-    const std::vector<std::size_t> &,
-    const std::vector<std::size_t> &) const
-{
-    throw util::exception("ManyToManySearch is disabled due to performance reasons");
-}
 } // ns engine
 } // ns osrm
 

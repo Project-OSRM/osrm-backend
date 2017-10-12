@@ -161,38 +161,6 @@ bool Engine<routing_algorithms::ch::Algorithm>::CheckCompatibility(const EngineC
 }
 
 template <>
-bool Engine<routing_algorithms::corech::Algorithm>::CheckCompatibility(const EngineConfig &config)
-{
-    if (!Engine<routing_algorithms::ch::Algorithm>::CheckCompatibility(config))
-    {
-        return false;
-    }
-
-    if (config.use_shared_memory)
-    {
-        storage::SharedMonitor<storage::SharedDataTimestamp> barrier;
-        using mutex_type = typename decltype(barrier)::mutex_type;
-        boost::interprocess::scoped_lock<mutex_type> current_region_lock(barrier.get_mutex());
-
-        auto mem = storage::makeSharedMemory(barrier.data().region);
-        auto layout = reinterpret_cast<storage::DataLayout *>(mem->Ptr());
-        return layout->GetBlockSize(storage::DataLayout::CH_CORE_MARKER_0) >
-               sizeof(std::uint64_t) + sizeof(util::FingerPrint);
-    }
-    else
-    {
-        if (!boost::filesystem::exists(config.storage_config.GetPath(".osrm.core")))
-            return false;
-        storage::io::FileReader in(config.storage_config.GetPath(".osrm.core"),
-                                   storage::io::FileReader::VerifyFingerprint);
-        in.ReadElementCount64(); // number of core markers
-        const auto number_of_core_markers = in.ReadElementCount64();
-
-        return number_of_core_markers > 0;
-    }
-}
-
-template <>
 bool Engine<routing_algorithms::mld::Algorithm>::CheckCompatibility(const EngineConfig &config)
 {
     if (config.use_shared_memory)

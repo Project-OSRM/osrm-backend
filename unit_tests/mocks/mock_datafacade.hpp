@@ -308,27 +308,8 @@ class MockAlgorithmDataFacade<engine::datafacade::CH>
     }
 };
 
-template <>
-class MockAlgorithmDataFacade<engine::datafacade::CoreCH>
-    : public engine::datafacade::AlgorithmDataFacade<engine::datafacade::CoreCH>
-{
-  private:
-    EdgeData foo;
-
-  public:
-    bool IsCoreNode(const NodeID /* id */) const override { return false; }
-};
-
 template <typename AlgorithmT>
 class MockDataFacade final : public MockBaseDataFacade, public MockAlgorithmDataFacade<AlgorithmT>
-{
-};
-
-template <>
-class MockDataFacade<engine::datafacade::CoreCH> final
-    : public MockBaseDataFacade,
-      public MockAlgorithmDataFacade<engine::datafacade::CH>,
-      public MockAlgorithmDataFacade<engine::datafacade::CoreCH>
 {
 };
 

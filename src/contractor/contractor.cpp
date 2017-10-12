@@ -42,9 +42,10 @@ namespace contractor
 
 int Contractor::Run()
 {
-    if (config.core_factor > 1.0 || config.core_factor < 0)
+    if (config.core_factor)
     {
-        throw util::exception("Core factor must be between 0.0 to 1.0 (inclusive)" + SOURCE_REF);
+        util::Log(logWARNING) << "Using core factor is deprecated and will be ignored. Falling back to CH.";
+        config.core_factor = 1.0;
     }
 
     if (config.use_cached_priority)
@@ -103,8 +104,6 @@ int Contractor::Run()
     util::Log() << "Contraction took " << TIMER_SEC(contraction) << " sec";
 
     files::writeGraph(config.GetPath(".osrm.hsgr"), checksum, query_graph, edge_filters);
-
-    files::writeCoreMarker(config.GetPath(".osrm.core"), cores);
 
     TIMER_STOP(preparing);
 

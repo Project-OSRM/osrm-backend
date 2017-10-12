@@ -64,12 +64,6 @@ template <> struct SearchEngineData<routing_algorithms::ch::Algorithm>
     void InitializeOrClearManyToManyThreadLocalStorage(unsigned number_of_nodes);
 };
 
-template <>
-struct SearchEngineData<routing_algorithms::corech::Algorithm>
-    : public SearchEngineData<routing_algorithms::ch::Algorithm>
-{
-};
-
 struct MultiLayerDijkstraHeapData
 {
     NodeID parent;

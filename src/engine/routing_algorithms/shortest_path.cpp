@@ -16,12 +16,6 @@ shortestPathSearch(SearchEngineData<ch::Algorithm> &engine_working_data,
                    const boost::optional<bool> continue_straight_at_waypoint);
 
 template InternalRouteResult
-shortestPathSearch(SearchEngineData<corech::Algorithm> &engine_working_data,
-                   const DataFacade<corech::Algorithm> &facade,
-                   const std::vector<PhantomNodes> &phantom_nodes_vector,
-                   const boost::optional<bool> continue_straight_at_waypoint);
-
-template InternalRouteResult
 shortestPathSearch(SearchEngineData<mld::Algorithm> &engine_working_data,
                    const DataFacade<mld::Algorithm> &facade,
                    const std::vector<PhantomNodes> &phantom_nodes_vector,

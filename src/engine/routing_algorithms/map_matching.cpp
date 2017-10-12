@@ -420,6 +420,7 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
     return sub_matchings;
 }
 
+// CH
 template SubMatchingList
 mapMatching(SearchEngineData<ch::Algorithm> &engine_working_data,
             const DataFacade<ch::Algorithm> &facade,
@@ -429,15 +430,7 @@ mapMatching(SearchEngineData<ch::Algorithm> &engine_working_data,
             const std::vector<boost::optional<double>> &trace_gps_precision,
             const bool allow_splitting);
 
-template SubMatchingList
-mapMatching(SearchEngineData<corech::Algorithm> &engine_working_data,
-            const DataFacade<corech::Algorithm> &facade,
-            const CandidateLists &candidates_list,
-            const std::vector<util::Coordinate> &trace_coordinates,
-            const std::vector<unsigned> &trace_timestamps,
-            const std::vector<boost::optional<double>> &trace_gps_precision,
-            const bool allow_splitting);
-
+// MLD
 template SubMatchingList
 mapMatching(SearchEngineData<mld::Algorithm> &engine_working_data,
             const DataFacade<mld::Algorithm> &facade,

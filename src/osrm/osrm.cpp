@@ -19,7 +19,6 @@ namespace osrm
 OSRM::OSRM(engine::EngineConfig &config)
 {
     using CH = engine::routing_algorithms::ch::Algorithm;
-    using CoreCH = engine::routing_algorithms::corech::Algorithm;
     using MLD = engine::routing_algorithms::mld::Algorithm;
 
     // First, check that necessary core data is available
@@ -44,26 +43,12 @@ OSRM::OSRM(engine::EngineConfig &config)
     // Now, check that the algorithm requested can be used with the data
     // that's available.
 
-    if (config.algorithm == EngineConfig::Algorithm::CoreCH ||
-        config.algorithm == EngineConfig::Algorithm::CH)
+    if (config.algorithm == EngineConfig::Algorithm::CH)
     {
-        bool corech_compatible = engine::Engine<CoreCH>::CheckCompatibility(config);
         bool ch_compatible = engine::Engine<CH>::CheckCompatibility(config);
 
-        // Activate CoreCH if we can because it is faster
-        if (config.algorithm == EngineConfig::Algorithm::CH && corech_compatible)
-        {
-            config.algorithm = EngineConfig::Algorithm::CoreCH;
-        }
-
-        // throw error if dataset is not usable with CoreCH or CH
-        if (config.algorithm == EngineConfig::Algorithm::CoreCH && !corech_compatible)
-        {
-            throw util::RuntimeError("Dataset is not compatible with CoreCH.",
-                                     ErrorCode::IncompatibleDataset,
-                                     SOURCE_REF);
-        }
-        else if (config.algorithm == EngineConfig::Algorithm::CH && !ch_compatible)
+        // throw error if dataset is not usable with CH
+        if (config.algorithm == EngineConfig::Algorithm::CH && !ch_compatible)
         {
             throw util::exception("Dataset is not compatible with CH");
         }
@@ -82,9 +67,6 @@ OSRM::OSRM(engine::EngineConfig &config)
     {
     case EngineConfig::Algorithm::CH:
         engine_ = std::make_unique<engine::Engine<CH>>(config);
-        break;
-    case EngineConfig::Algorithm::CoreCH:
-        engine_ = std::make_unique<engine::Engine<CoreCH>>(config);
         break;
     case EngineConfig::Algorithm::MLD:
         engine_ = std::make_unique<engine::Engine<MLD>>(config);

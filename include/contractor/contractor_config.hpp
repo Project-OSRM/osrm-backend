@@ -45,7 +45,7 @@ struct ContractorConfig final : storage::IOConfig
     ContractorConfig()
         : IOConfig({".osrm.ebg", ".osrm.ebg_nodes", ".osrm.properties"},
                    {},
-                   {".osrm.level", ".osrm.core", ".osrm.hsgr", ".osrm.enw"}),
+                   {".osrm.hsgr", ".osrm.enw"}),
           requested_num_threads(0)
     {
     }
@@ -65,6 +65,7 @@ struct ContractorConfig final : storage::IOConfig
 
     unsigned requested_num_threads;
 
+    // Deprecated
     // A percentage of vertices that will be contracted for the hierarchy.
     // Offers a trade-off between preprocessing and query time.
     // The remaining vertices form the core of the hierarchy

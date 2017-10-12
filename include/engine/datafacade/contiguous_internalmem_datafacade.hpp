@@ -166,50 +166,6 @@ class ContiguousInternalMemoryAlgorithmDataFacade<CH> : public datafacade::Algor
     }
 };
 
-template <>
-class ContiguousInternalMemoryAlgorithmDataFacade<CoreCH>
-    : public datafacade::AlgorithmDataFacade<CoreCH>
-{
-  private:
-    util::vector_view<bool> m_is_core_node;
-
-    // allocator that keeps the allocation data
-    std::shared_ptr<ContiguousBlockAllocator> allocator;
-
-    void InitializeCoreInformationPointer(storage::DataLayout &data_layout,
-                                          char *memory_block,
-                                          const std::size_t exclude_index)
-    {
-        auto core_block_id = static_cast<storage::DataLayout::BlockID>(
-            storage::DataLayout::CH_CORE_MARKER_0 + exclude_index);
-        auto core_marker_ptr = data_layout.GetBlockPtr<unsigned>(memory_block, core_block_id);
-        util::vector_view<bool> is_core_node(core_marker_ptr,
-                                             data_layout.num_entries[core_block_id]);
-        m_is_core_node = std::move(is_core_node);
-    }
-
-  public:
-    ContiguousInternalMemoryAlgorithmDataFacade(
-        std::shared_ptr<ContiguousBlockAllocator> allocator_, const std::size_t exclude_index)
-        : allocator(std::move(allocator_))
-    {
-        InitializeInternalPointers(allocator->GetLayout(), allocator->GetMemory(), exclude_index);
-    }
-
-    void InitializeInternalPointers(storage::DataLayout &data_layout,
-                                    char *memory_block,
-                                    const std::size_t exclude_index)
-    {
-        InitializeCoreInformationPointer(data_layout, memory_block, exclude_index);
-    }
-
-    bool IsCoreNode(const NodeID id) const override final
-    {
-        BOOST_ASSERT(m_is_core_node.empty() || id < m_is_core_node.size());
-        return !m_is_core_node.empty() || m_is_core_node[id];
-    }
-};
-
 /**
  * This base class implements the Datafacade interface for accessing
  * data that's stored in a single large block of memory (RAM).
@@ -943,21 +899,6 @@ class ContiguousInternalMemoryDataFacade<CH>
                                        const std::size_t exclude_index)
         : ContiguousInternalMemoryDataFacadeBase(allocator, exclude_index),
           ContiguousInternalMemoryAlgorithmDataFacade<CH>(allocator, exclude_index)
-
-    {
-    }
-};
-
-template <>
-class ContiguousInternalMemoryDataFacade<CoreCH> final
-    : public ContiguousInternalMemoryDataFacade<CH>,
-      public ContiguousInternalMemoryAlgorithmDataFacade<CoreCH>
-{
-  public:
-    ContiguousInternalMemoryDataFacade(std::shared_ptr<ContiguousBlockAllocator> allocator,
-                                       const std::size_t exclude_index)
-        : ContiguousInternalMemoryDataFacade<CH>(allocator, exclude_index),
-          ContiguousInternalMemoryAlgorithmDataFacade<CoreCH>(allocator, exclude_index)
 
     {
     }
