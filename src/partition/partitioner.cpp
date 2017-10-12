@@ -184,6 +184,10 @@ int Partitioner::Run(const PartitionConfig &config)
     renumber(edge_based_graph, permutation);
     renumber(partitions, permutation);
     {
+        renumber(mapping, permutation);
+        extractor::files::writeNBGMapping(config.GetPath(".osrm.cnbg_to_ebg").string(), mapping);
+    }
+    {
         boost::iostreams::mapped_file segment_region;
         auto segments = util::mmapFile<extractor::EdgeBasedNodeSegment>(
             config.GetPath(".osrm.fileIndex"), segment_region);

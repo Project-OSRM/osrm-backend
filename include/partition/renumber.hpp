@@ -2,6 +2,7 @@
 #define OSRM_PARTITION_RENUMBER_HPP
 
 #include "extractor/edge_based_node_segment.hpp"
+#include "extractor/nbg_to_ebg.hpp"
 #include "extractor/node_data_container.hpp"
 
 #include "partition/bisection_to_partition.hpp"
@@ -59,7 +60,20 @@ inline void renumber(util::vector_view<extractor::EdgeBasedNodeSegment> &segment
             segment.reverse_segment_id.id = permutation[segment.reverse_segment_id.id];
     }
 }
+
+inline void renumber(std::vector<extractor::NBGToEBG> &mapping,
+                     const std::vector<std::uint32_t> &permutation)
+{
+    for (extractor::NBGToEBG &m : mapping)
+    {
+        if (m.backward_ebg_node != SPECIAL_NODEID)
+            m.backward_ebg_node = permutation[m.backward_ebg_node];
+        if (m.forward_ebg_node != SPECIAL_NODEID)
+            m.forward_ebg_node = permutation[m.forward_ebg_node];
+    }
 }
-}
+
+} // namespace partition
+} // namespace osrm
 
 #endif
