@@ -17,6 +17,8 @@
       - don't suppress name announcements via sliproad handler
     - Bugfixes
       - Fixed a bug that would result in unnecessary instructions, due to problems in suffix/prefix detection
+    - Algorithm
+      - Deprecate CoreCH functionality. Usage of CoreCH specific options will fall back to using CH with core_factor of 1.0
 
 # 5.12.0
   - Changes from 5.11:
@@ -82,7 +84,7 @@
     - Bugfixes
       - Properly save/retrieve datasource annotations for road segments ([#4346](https://github.com/Project-OSRM/osrm-backend/issues/4346)
       - Fix conditional restriction grammer parsing so it works for single-day-of-week restrictions ([#4357](https://github.com/Project-OSRM/osrm-backend/pull/4357))
-    - Algorithm)
+    - Algorithm
       - BREAKING: the file format requires re-processing due to the changes on via-ways
       - Added support for via-way restrictions
 
