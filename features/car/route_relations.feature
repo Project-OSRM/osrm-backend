@@ -74,28 +74,28 @@ Feature: Car - route relations
             | c,d       | eastbound,eastbound  | I 80 $east; CO 93 $east,I 80 $east; CO 93 $east |
 
 
-#    Scenario: Forward/backward assignment on non-divided roads with role direction tag
-#        Given the node map
-#            """
-#              a----------------b
-#            """
-#
-#        And the ways
-#            | nodes | name      | highway  | ref   | oneway |
-#            | ab    | mainroad  | motorway | I 80  | no     |
-#
-#        And the relations
-#            | type        | direction | way:forward | route | ref | network |
-#            | route       | west      | ab          | road  | 80  | US:I    |
-#
-#        And the relations
-#            | type        | direction | way:backward | route | ref | network |
-#            | route       | east      | ab           | road  | 80  | US:I    |
-#
-#        When I route I should get
-#            | waypoints | route              | ref                    |
-#            | b,a       | mainroad,mainroad  | I 80 $west,I 80 $west  |
-#            | a,b       | mainroad,mainroad  | I 80 $east,I 80 $east  |
+    Scenario: Forward/backward assignment on non-divided roads with role direction tag
+        Given the node map
+            """
+              a----------------b
+            """
+
+        And the ways
+            | nodes | name      | highway  | ref   | oneway |
+            | ab    | mainroad  | motorway | I 80  | no     |
+
+        And the relations
+            | type        | direction | way:forward | route | ref | network |
+            | route       | west      | ab          | road  | 80  | US:I    |
+
+        And the relations
+            | type        | direction | way:backward | route | ref | network |
+            | route       | east      | ab           | road  | 80  | US:I    |
+
+        When I route I should get
+            | waypoints | route              | ref                    |
+            | a,b       | mainroad,mainroad  | I 80 $west,I 80 $west  |
+            | b,a       | mainroad,mainroad  | I 80 $east,I 80 $east  |
 
 
     Scenario: Conflict between role and direction
