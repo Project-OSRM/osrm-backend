@@ -12,8 +12,7 @@ namespace osrm
 namespace contractor
 {
 
-using GraphFilterAndCore =
-    std::tuple<QueryGraph, std::vector<std::vector<bool>>>;
+using GraphFilterAndCore = std::tuple<QueryGraph, std::vector<std::vector<bool>>>;
 
 inline auto contractExcludableGraph(ContractorGraph contractor_graph_,
                                     std::vector<EdgeWeight> node_weights,
@@ -38,10 +37,8 @@ inline auto contractExcludableGraph(ContractorGraph contractor_graph_,
         // a very dense core. This increases the overall graph sizes a little bit
         // but increases the final CH quality and contraction speed.
         constexpr float BASE_CORE = 0.9;
-        is_shared_core = contractGraph(contractor_graph,
-                                       std::move(always_allowed),
-                                       node_weights,
-                                       BASE_CORE);
+        is_shared_core =
+            contractGraph(contractor_graph, std::move(always_allowed), node_weights, BASE_CORE);
 
         // Add all non-core edges to container
         {

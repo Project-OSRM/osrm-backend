@@ -61,6 +61,7 @@ struct ContractorConfig final : storage::IOConfig
 
     updater::UpdaterConfig updater_config;
 
+    // DEPRECATED to be removed in v6.0
     bool use_cached_priority;
 
     unsigned requested_num_threads;

@@ -60,6 +60,12 @@ return_code parseArguments(int argc,
             &contractor_config.updater_config.turn_penalty_lookup_paths)
             ->composing(),
         "Lookup files containing from_, to_, via_nodes, and turn penalties to adjust turn weights")(
+        "level-cache,o",
+        boost::program_options::value<bool>(&contractor_config.use_cached_priority)
+            ->default_value(false),
+        "DEPRECATED: Will always be false. Use .level file to retain the contraction level for "
+        "each "
+        "node from the last run.")(
         "edge-weight-updates-over-factor",
         boost::program_options::value<double>(
             &contractor_config.updater_config.log_edge_updates_factor)
