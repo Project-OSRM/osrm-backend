@@ -191,6 +191,8 @@ class BaseDataFacade
     virtual util::guidance::EntryClass GetEntryClass(const EdgeID turn_id) const = 0;
 
     virtual bool IsLeftHandDriving(const NodeID id) const = 0;
+
+    virtual bool IsSegregated(const NodeID) const { return false; }
 };
 }
 }
