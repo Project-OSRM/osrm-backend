@@ -4,6 +4,7 @@
 #include "extractor/guidance/turn_instruction.hpp"
 #include "engine/guidance/route_step.hpp"
 #include "util/attributes.hpp"
+#include "util/bearing.hpp"
 #include "util/guidance/name_announcements.hpp"
 
 #include <boost/range/algorithm_ext/erase.hpp>
@@ -187,6 +188,27 @@ inline std::vector<RouteStep> removeNoTurnInstructions(std::vector<RouteStep> st
     BOOST_ASSERT(steps.back().maneuver.waypoint_type == WaypointType::Arrive);
 
     return steps;
+}
+
+inline double totalTurnAngle(const RouteStep &entry_step, const RouteStep &exit_step)
+{
+    if (entry_step.geometry_begin > exit_step.geometry_begin)
+        return totalTurnAngle(exit_step, entry_step);
+
+    const auto exit_intersection = exit_step.intersections.front();
+    const auto entry_intersection = entry_step.intersections.front();
+    if ((exit_intersection.out >= exit_intersection.bearings.size()) ||
+        (entry_intersection.in >= entry_intersection.bearings.size()))
+        return entry_intersection.bearings[entry_intersection.out];
+
+    const auto exit_step_exit_bearing = exit_intersection.bearings[exit_intersection.out];
+    const auto entry_step_entry_bearing =
+        util::bearing::reverse(entry_intersection.bearings[entry_intersection.in]);
+
+    const double total_angle =
+        util::bearing::angleBetween(entry_step_entry_bearing, exit_step_exit_bearing);
+
+    return total_angle;
 }
 
 } /* namespace guidance */
