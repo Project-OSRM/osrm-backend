@@ -63,7 +63,8 @@ class ExtractorCallbacks
     // actually maps to name ids
     using MapKey = std::tuple<std::string, std::string, std::string, std::string, std::string>;
     using MapVal = unsigned;
-    std::unordered_map<MapKey, MapVal> string_map;
+    using StringMap = std::unordered_map<MapKey, MapVal>;
+    StringMap string_map;
     ExtractionContainers &external_memory;
     std::unordered_map<std::string, ClassData> &classes_map;
     guidance::LaneDescriptionMap &lane_description_map;

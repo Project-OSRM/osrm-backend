@@ -403,35 +403,7 @@ function process_way(profile, way, result, relations)
 
   WayHandlers.run(profile, way, result, data, handlers, relations)
 
-  local parsed_rel_list = {}
-  local rel_id_list = relations:get_relations(way)
-  for i, rel_id in ipairs(rel_id_list) do
-    local rel = relations:relation(rel_id)
-    parsed_rel_list[i] = Relations.parse_route_relation(rel, way, relations)
-  end
-
-  -- now process relations data
-  local matched_refs = nil;
-  if result.ref then
-    local match_res = Relations.match_to_ref(parsed_rel_list, result.ref)
- 
-    local ref = ''
-    for _, m in pairs(match_res) do
-      if ref ~= '' then
-        ref = ref .. '; '
-      end
-
-      if m.dir then
-        ref = ref .. m.ref .. ' $' .. m.dir
-      else
-        ref = ref .. m.ref
-      end
-    end
-
-    -- print(result.name, ref)
-
-    result.ref = ref
-  end
+  Relations.process_way_refs(way, relations, result)
 end
 
 function process_turn(profile, turn)
