@@ -114,9 +114,10 @@ struct ContractedEdgeContainer
         // enforce sorting for next merge step
         std::vector<unsigned> ordering(edges_size);
         std::iota(ordering.begin(), ordering.end(), 0);
-        tbb::parallel_sort(ordering.begin(), ordering.end(), [&](const auto lhs_idx, const auto rhs_idx) {
-            return mergeCompare(edges[lhs_idx], edges[rhs_idx]);
-        });
+        tbb::parallel_sort(
+            ordering.begin(), ordering.end(), [&](const auto lhs_idx, const auto rhs_idx) {
+                return mergeCompare(edges[lhs_idx], edges[rhs_idx]);
+            });
         auto permutation = util::orderingToPermutation(ordering);
 
         util::inplacePermutation(edges.begin(), edges.end(), permutation);
