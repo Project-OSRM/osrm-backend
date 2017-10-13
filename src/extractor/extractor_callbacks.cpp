@@ -318,57 +318,68 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
     road_classification.SetNumberOfLanes(std::max(road_deduced_num_lanes, // len(turn:lanes)
                                                   road_classification.GetNumberOfLanes()));
 
-    // Get the unique identifier for the street name, destination, and ref
-    const auto name_iterator = string_map.find(MapKey(parsed_way.name,
-                                                      parsed_way.destinations,
-                                                      parsed_way.ref,
-                                                      parsed_way.pronunciation,
-                                                      parsed_way.exits));
-    NameID name_id = EMPTY_NAMEID;
-    if (string_map.end() == name_iterator)
+    const auto GetNameID = [this, &parsed_way](bool is_forward) -> NameID
     {
-        // name_offsets has a sentinel element with the total name data size
-        // take the sentinels index as the name id of the new name data pack
-        // (name [name_id], destination [+1], pronunciation [+2], ref [+3], exits [+4])
-        name_id = external_memory.name_offsets.size() - 1;
+        const std::string & ref = is_forward ? parsed_way.forward_ref : parsed_way.backward_ref;
+        // Get the unique identifier for the street name, destination, and ref
+        const auto name_iterator = string_map.find(MapKey(parsed_way.name,
+                                                          parsed_way.destinations,
+                                                          ref,
+                                                          parsed_way.pronunciation,
+                                                          parsed_way.exits));
 
-        std::copy(parsed_way.name.begin(),
-                  parsed_way.name.end(),
-                  std::back_inserter(external_memory.name_char_data));
-        external_memory.name_offsets.push_back(external_memory.name_char_data.size());
+        NameID name_id = EMPTY_NAMEID;
+        if (string_map.end() == name_iterator)
+        {
+            // name_offsets has a sentinel element with the total name data size
+            // take the sentinels index as the name id of the new name data pack
+            // (name [name_id], destination [+1], pronunciation [+2], ref [+3], exits [+4])
+            name_id = external_memory.name_offsets.size() - 1;
 
-        std::copy(parsed_way.destinations.begin(),
-                  parsed_way.destinations.end(),
-                  std::back_inserter(external_memory.name_char_data));
-        external_memory.name_offsets.push_back(external_memory.name_char_data.size());
+            std::copy(parsed_way.name.begin(),
+                      parsed_way.name.end(),
+                      std::back_inserter(external_memory.name_char_data));
+            external_memory.name_offsets.push_back(external_memory.name_char_data.size());
 
-        std::copy(parsed_way.pronunciation.begin(),
-                  parsed_way.pronunciation.end(),
-                  std::back_inserter(external_memory.name_char_data));
-        external_memory.name_offsets.push_back(external_memory.name_char_data.size());
+            std::copy(parsed_way.destinations.begin(),
+                      parsed_way.destinations.end(),
+                      std::back_inserter(external_memory.name_char_data));
+            external_memory.name_offsets.push_back(external_memory.name_char_data.size());
 
-        std::copy(parsed_way.ref.begin(),
-                  parsed_way.ref.end(),
-                  std::back_inserter(external_memory.name_char_data));
-        external_memory.name_offsets.push_back(external_memory.name_char_data.size());
+            std::copy(parsed_way.pronunciation.begin(),
+                      parsed_way.pronunciation.end(),
+                      std::back_inserter(external_memory.name_char_data));
+            external_memory.name_offsets.push_back(external_memory.name_char_data.size());
 
-        std::copy(parsed_way.exits.begin(),
-                  parsed_way.exits.end(),
-                  std::back_inserter(external_memory.name_char_data));
-        external_memory.name_offsets.push_back(external_memory.name_char_data.size());
+            std::copy(ref.begin(),
+                      ref.end(),
+                      std::back_inserter(external_memory.name_char_data));
+            external_memory.name_offsets.push_back(external_memory.name_char_data.size());
 
-        auto k = MapKey{parsed_way.name,
-                        parsed_way.destinations,
-                        parsed_way.ref,
-                        parsed_way.pronunciation,
-                        parsed_way.exits};
-        auto v = MapVal{name_id};
-        string_map.emplace(std::move(k), std::move(v));
-    }
-    else
-    {
-        name_id = name_iterator->second;
-    }
+            std::copy(parsed_way.exits.begin(),
+                      parsed_way.exits.end(),
+                      std::back_inserter(external_memory.name_char_data));
+            external_memory.name_offsets.push_back(external_memory.name_char_data.size());
+
+            auto k = MapKey{parsed_way.name,
+                            parsed_way.destinations,
+                            ref,
+                            parsed_way.pronunciation,
+                            parsed_way.exits};
+            auto v = MapVal{name_id};
+            string_map.emplace(std::move(k), std::move(v));
+        }
+        else
+        {
+            name_id = name_iterator->second;
+        }
+
+        return name_id;
+    };
+
+
+    const NameID forward_name_id = GetNameID(true);
+    const NameID backward_name_id = GetNameID(false);
 
     const bool in_forward_direction =
         (parsed_way.forward_speed > 0 || parsed_way.forward_rate > 0 || parsed_way.duration > 0 ||
@@ -386,12 +397,13 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
         (force_split_edges || (parsed_way.forward_rate != parsed_way.backward_rate) ||
          (parsed_way.forward_speed != parsed_way.backward_speed) ||
          (parsed_way.forward_travel_mode != parsed_way.backward_travel_mode) ||
-         (turn_lane_id_forward != turn_lane_id_backward) || (forward_classes != backward_classes));
+         (turn_lane_id_forward != turn_lane_id_backward) || (forward_classes != backward_classes) ||
+         (parsed_way.forward_ref != parsed_way.backward_ref));
 
     if (in_forward_direction)
     { // add (forward) segments or (forward,backward) for non-split edges in backward direction
         const auto annotation_data_id = external_memory.all_edges_annotation_data_list.size();
-        external_memory.all_edges_annotation_data_list.push_back({name_id,
+        external_memory.all_edges_annotation_data_list.push_back({forward_name_id,
                                                                   turn_lane_id_forward,
                                                                   forward_classes,
                                                                   parsed_way.forward_travel_mode,
@@ -424,7 +436,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
     if (in_backward_direction && (!in_forward_direction || split_edge))
     { // add (backward) segments for split edges or not in forward direction
         const auto annotation_data_id = external_memory.all_edges_annotation_data_list.size();
-        external_memory.all_edges_annotation_data_list.push_back({name_id,
+        external_memory.all_edges_annotation_data_list.push_back({backward_name_id,
                                                                   turn_lane_id_backward,
                                                                   backward_classes,
                                                                   parsed_way.backward_travel_mode,

@@ -41,7 +41,7 @@ function Relations.match_to_ref(relations, ref)
   local result_match = {}
   local order = {}
   for i, r in ipairs(references) do
-    result_match[r] = false
+    result_match[r] = { forward = nil, backward = nil }
     order[i] = r
   end
 
@@ -81,7 +81,19 @@ function Relations.match_to_ref(relations, ref)
       find_best(ref_scores)
       
       if best_ref then
-        result_match[best_ref] = direction
+        local result_direction = result_match[best_ref]
+
+        local is_forward = rel["route_forward"]
+        if is_forward == nil then
+          result_direction.forward = direction
+          result_direction.backward = direction
+        elseif is_forward == true then
+          result_direction.forward = direction
+        else
+          result_direction.backward = direction
+        end
+
+        result_match[best_ref] = result_direction
       end
     end
 
@@ -182,7 +194,6 @@ function Relations.parse_route_relation(rel, way, relations)
     local super_dir = get_direction_from_superrel(rel, relations)
 
     -- check if there are data error
-    
     if (result_direction ~= nil) and (super_dir ~= nil) and (result_direction ~= super_dir) then
       print('ERROR: conflicting relation directions found for way ' .. way:id() .. 
             ' relation direction is ' .. result_direction .. ' superrelation direction is ' .. super_dir)
@@ -192,11 +203,59 @@ function Relations.parse_route_relation(rel, way, relations)
     end
 
     result['route_direction'] = result_direction
+
+    if role == 'forward' then
+      result['route_forward'] = true
+    elseif role == 'backward' then
+      result['route_forward'] = false
+    else
+      result['route_forward'] = nil
+    end
+
     add_extra_data(m)
   end
 
-
   return result
+end
+
+function Relations.process_way_refs(way, relations, result)
+  local parsed_rel_list = {}
+  local rel_id_list = relations:get_relations(way)
+  for i, rel_id in ipairs(rel_id_list) do
+    local rel = relations:relation(rel_id)
+    parsed_rel_list[i] = Relations.parse_route_relation(rel, way, relations)
+  end
+
+  -- now process relations data
+  local matched_refs = nil;
+  if result.ref then
+    local match_res = Relations.match_to_ref(parsed_rel_list, result.ref)
+ 
+    function gen_ref(is_forward)
+      local ref = ''
+      for _, m in pairs(match_res) do
+        if ref ~= '' then
+          ref = ref .. '; '
+        end
+
+        local dir = m.dir.forward
+        if is_forward == false then
+          dir = m.dir.backward
+        end
+
+        if dir then
+          ref = ref .. m.ref .. ' $' .. dir
+        else
+          ref = ref .. m.ref
+        end
+      end
+
+      return ref
+    end
+    
+    result.forward_ref = gen_ref(true)
+    result.backward_ref = gen_ref(false)
+  end
 end
 
 return Relations

@@ -47,7 +47,8 @@ struct ExtractionWay
         duration = -1;
         weight = -1;
         name.clear();
-        ref.clear();
+        forward_ref.clear();
+        backward_ref.clear();
         pronunciation.clear();
         destinations.clear();
         exits.clear();
@@ -67,8 +68,10 @@ struct ExtractionWay
     // wrappers to allow assigning nil (nullptr) to string values
     void SetName(const char *value) { detail::maybeSetString(name, value); }
     const char *GetName() const { return name.c_str(); }
-    void SetRef(const char *value) { detail::maybeSetString(ref, value); }
-    const char *GetRef() const { return ref.c_str(); }
+    void SetForwardRef(const char * value) { detail::maybeSetString(forward_ref, value); }
+    const char *GetForwardRef() const { return forward_ref.c_str(); }
+    void SetBackwardRef(const char *value) { detail::maybeSetString(backward_ref, value); }
+    const char *GetBackwardRef() const { return backward_ref.c_str(); }
     void SetDestinations(const char *value) { detail::maybeSetString(destinations, value); }
     const char *GetDestinations() const { return destinations.c_str(); }
     void SetExits(const char *value) { detail::maybeSetString(exits, value); }
@@ -101,7 +104,8 @@ struct ExtractionWay
     // weight of the whole way in both directions
     double weight;
     std::string name;
-    std::string ref;
+    std::string forward_ref;
+    std::string backward_ref;
     std::string pronunciation;
     std::string destinations;
     std::string exits;

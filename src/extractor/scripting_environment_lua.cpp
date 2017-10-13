@@ -369,8 +369,16 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
         &ExtractionWay::backward_rate,
         "name",
         sol::property(&ExtractionWay::GetName, &ExtractionWay::SetName),
-        "ref",
-        sol::property(&ExtractionWay::GetRef, &ExtractionWay::SetRef),
+        "ref", // backward compatibility
+        sol::property(&ExtractionWay::GetForwardRef, [](ExtractionWay & way, const char * ref)
+        {
+            way.SetForwardRef(ref);
+            way.SetBackwardRef(ref);
+        }),
+        "forward_ref",
+        sol::property(&ExtractionWay::GetForwardRef, &ExtractionWay::SetForwardRef),
+        "backward_ref",
+        sol::property(&ExtractionWay::GetBackwardRef, &ExtractionWay::SetBackwardRef),
         "pronunciation",
         sol::property(&ExtractionWay::GetPronunciation, &ExtractionWay::SetPronunciation),
         "destinations",
