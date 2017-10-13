@@ -43,8 +43,14 @@ OSRM::OSRM(engine::EngineConfig &config)
     // Now, check that the algorithm requested can be used with the data
     // that's available.
 
-    if (config.algorithm == EngineConfig::Algorithm::CH)
+    if (config.algorithm == EngineConfig::Algorithm::CH ||
+        config.algorithm == EngineConfig::Algorithm::CoreCH)
     {
+        if (config.algorithm == EngineConfig::Algorithm::CoreCH)
+        {
+            util::Log(logWARNING) << "Using CoreCH is deprecated. Falling back to CH";
+            config.algorithm = EngineConfig::Algorithm::CH;
+        }
         bool ch_compatible = engine::Engine<CH>::CheckCompatibility(config);
 
         // throw error if dataset is not usable with CH

@@ -300,6 +300,16 @@ BOOST_AUTO_TEST_CASE(test_tile_ch)
     validate_tile(osrm);
 }
 
+BOOST_AUTO_TEST_CASE(test_tile_corech)
+{
+    // Note: this tests that given the CoreCH algorithm config option, configuration falls back to
+    // CH and is compatible with CH data
+    using namespace osrm;
+    auto osrm =
+        getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm", osrm::EngineConfig::Algorithm::CoreCH);
+    validate_tile(osrm);
+}
+
 BOOST_AUTO_TEST_CASE(test_tile_mld)
 {
     using namespace osrm;
@@ -543,6 +553,17 @@ BOOST_AUTO_TEST_CASE(test_tile_turns_ch)
     test_tile_turns(osrm);
 }
 
+BOOST_AUTO_TEST_CASE(test_tile_turns_corech)
+{
+    // Note: this tests that given the CoreCH algorithm config option, configuration falls back to
+    // CH and is compatible with CH data
+    using namespace osrm;
+    auto osrm =
+        getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm", osrm::EngineConfig::Algorithm::CoreCH);
+
+    test_tile_turns(osrm);
+}
+
 BOOST_AUTO_TEST_CASE(test_tile_turns_mld)
 {
     using namespace osrm;
@@ -724,6 +745,17 @@ BOOST_AUTO_TEST_CASE(test_tile_speeds_ch)
     test_tile_speeds(osrm);
 }
 
+BOOST_AUTO_TEST_CASE(test_tile_speeds_corech)
+{
+    // Note: this tests that given the CoreCH algorithm config option, configuration falls back to
+    // CH and is compatible with CH data
+    using namespace osrm;
+
+    auto osrm =
+        getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm", osrm::EngineConfig::Algorithm::CoreCH);
+    test_tile_speeds(osrm);
+}
+
 BOOST_AUTO_TEST_CASE(test_tile_speeds_mld)
 {
     using namespace osrm;
@@ -817,6 +849,17 @@ BOOST_AUTO_TEST_CASE(test_tile_nodes_ch)
     using namespace osrm;
 
     auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm", osrm::EngineConfig::Algorithm::CH);
+    test_tile_nodes(osrm);
+}
+
+BOOST_AUTO_TEST_CASE(test_tile_nodes_corech)
+{
+    // Note: this tests that given the CoreCH algorithm config option, configuration falls back to
+    // CH and is compatible with CH data
+    using namespace osrm;
+
+    auto osrm =
+        getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm", osrm::EngineConfig::Algorithm::CoreCH);
     test_tile_nodes(osrm);
 }
 
