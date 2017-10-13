@@ -174,5 +174,5 @@ Feature: Collapse
             | fe    | service   |      |
 
         When I route I should get
-            | waypoints | route  | turns                    |
-            | c,e       | road,, | depart,turn uturn,arrive |
+            | waypoints | route   | turns                               |
+            | c,e       | road,,, | depart,turn right,turn right,arrive |
