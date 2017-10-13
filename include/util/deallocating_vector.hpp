@@ -183,57 +183,6 @@ class DeallocatingVectorIterator
     }
 };
 
-template <typename ElementT, std::size_t ELEMENTS_PER_BLOCK>
-class DeallocatingVectorRemoveIterator
-    : public boost::iterator_facade<DeallocatingVectorRemoveIterator<ElementT, ELEMENTS_PER_BLOCK>,
-                                    ElementT,
-                                    boost::forward_traversal_tag>
-{
-    DeallocatingVectorIteratorState<ElementT> current_state;
-
-  public:
-    DeallocatingVectorRemoveIterator(std::size_t idx, std::vector<ElementT *> *input_list)
-        : current_state(idx, input_list)
-    {
-    }
-
-    friend class boost::iterator_core_access;
-
-    void increment()
-    {
-        const std::size_t old_bucket = current_state.index / ELEMENTS_PER_BLOCK;
-
-        ++current_state.index;
-        const std::size_t new_bucket = current_state.index / ELEMENTS_PER_BLOCK;
-        if (old_bucket != new_bucket)
-        {
-            // delete old bucket entry
-            if (nullptr != current_state.bucket_list->at(old_bucket))
-            {
-                delete[] current_state.bucket_list->at(old_bucket);
-                current_state.bucket_list->at(old_bucket) = nullptr;
-            }
-        }
-    }
-
-    bool equal(DeallocatingVectorRemoveIterator const &other) const
-    {
-        return current_state.index == other.current_state.index;
-    }
-
-    std::ptrdiff_t distance_to(DeallocatingVectorRemoveIterator const &other) const
-    {
-        return other.current_state.index - current_state.index;
-    }
-
-    ElementT &dereference() const
-    {
-        const std::size_t current_bucket = current_state.index / ELEMENTS_PER_BLOCK;
-        const std::size_t current_index = current_state.index % ELEMENTS_PER_BLOCK;
-        return (current_state.bucket_list->at(current_bucket)[current_index]);
-    }
-};
-
 template <typename T> void swap(DeallocatingVector<T> &lhs, DeallocatingVector<T> &rhs);
 
 template <typename ElementT> class DeallocatingVector
@@ -246,9 +195,6 @@ template <typename ElementT> class DeallocatingVector
     using value_type = ElementT;
     using iterator = DeallocatingVectorIterator<ElementT, ELEMENTS_PER_BLOCK>;
     using const_iterator = ConstDeallocatingVectorIterator<ElementT, ELEMENTS_PER_BLOCK>;
-
-    // this forward-only iterator deallocates all buckets that have been visited
-    using deallocation_iterator = DeallocatingVectorRemoveIterator<ElementT, ELEMENTS_PER_BLOCK>;
 
     DeallocatingVector() : current_size(0)
     {
@@ -367,13 +313,6 @@ template <typename ElementT> class DeallocatingVector
     iterator begin() { return iterator(static_cast<std::size_t>(0), &bucket_list); }
 
     iterator end() { return iterator(size(), &bucket_list); }
-
-    deallocation_iterator dbegin()
-    {
-        return deallocation_iterator(static_cast<std::size_t>(0), &bucket_list);
-    }
-
-    deallocation_iterator dend() { return deallocation_iterator(size(), &bucket_list); }
 
     const_iterator begin() const
     {
