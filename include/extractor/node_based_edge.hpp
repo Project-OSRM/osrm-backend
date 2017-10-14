@@ -67,8 +67,9 @@ struct NodeBasedEdgeAnnotation
 
     bool CanCombineWith(const NodeBasedEdgeAnnotation &other) const
     {
-        return (std::tie(name_id, classes, travel_mode, is_left_hand_driving) ==
-                std::tie(other.name_id, other.classes, other.travel_mode, is_left_hand_driving));
+        return (
+            std::tie(name_id, classes, travel_mode, is_left_hand_driving) ==
+            std::tie(other.name_id, other.classes, other.travel_mode, other.is_left_hand_driving));
     }
 };
 
