@@ -47,6 +47,7 @@ namespace extractor
 
 class ScriptingEnvironment;
 struct ProfileProperties;
+class NodeBasedGraphFactory;
 
 class Extractor
 {
@@ -100,6 +101,8 @@ class Extractor
     void WriteConditionalRestrictions(
         const std::string &path,
         std::vector<ConditionalTurnRestriction> &conditional_turn_restrictions);
+
+    size_t FindSegregatedNodes(NodeBasedGraphFactory &factory);
 };
 }
 }

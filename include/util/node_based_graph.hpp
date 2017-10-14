@@ -22,7 +22,7 @@ struct NodeBasedEdgeData
 {
     NodeBasedEdgeData()
         : weight(INVALID_EDGE_WEIGHT), duration(INVALID_EDGE_WEIGHT), geometry_id({0, false}),
-          reversed(false), annotation_data(-1)
+          reversed(false), segregated(false), annotation_data(-1)
     {
     }
 
@@ -33,7 +33,7 @@ struct NodeBasedEdgeData
                       extractor::NodeBasedEdgeClassification flags,
                       AnnotationID annotation_data)
         : weight(weight), duration(duration), geometry_id(geometry_id), reversed(reversed),
-          flags(flags), annotation_data(annotation_data)
+          segregated(false), flags(flags), annotation_data(annotation_data)
     {
     }
 
@@ -41,6 +41,7 @@ struct NodeBasedEdgeData
     EdgeWeight duration;
     GeometryID geometry_id;
     bool reversed : 1;
+    bool segregated : 1;
     extractor::NodeBasedEdgeClassification flags;
     AnnotationID annotation_data;
 };

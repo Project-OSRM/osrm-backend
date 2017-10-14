@@ -36,12 +36,13 @@ class NodeBasedGraphFactory
     // node-based graph to represent the OSM network. This includes geometry compression, annotation
     // data optimisation and many other aspects. After this step, the edge-based graph factory can
     // turn the graph into the routing graph to be used with the navigation algorithms.
-    NodeBasedGraphFactory(const boost::filesystem::path &input_file,
-                          ScriptingEnvironment &scripting_environment,
-                          std::vector<TurnRestriction> &turn_restrictions,
-                          std::vector<ConditionalTurnRestriction> &conditional_turn_restrictions);
+    NodeBasedGraphFactory(const boost::filesystem::path &input_file);
 
-    auto const &GetGraph() const { return compressed_output_graph; }
+    void CompressAll(ScriptingEnvironment &scripting_environment,
+                     std::vector<TurnRestriction> &turn_restrictions,
+                     std::vector<ConditionalTurnRestriction> &conditional_turn_restrictions);
+
+    auto &GetGraph() { return compressed_output_graph; }
     auto const &GetBarriers() const { return barriers; }
     auto const &GetTrafficSignals() const { return traffic_signals; }
     auto &GetCompressedEdges() { return compressed_edge_container; }
