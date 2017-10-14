@@ -13,6 +13,7 @@ struct EdgeBasedNode
     GeometryID geometry_id;
     ComponentID component_id;
     AnnotationID annotation_id;
+    bool segregated;
 };
 
 } // namespace extractor
