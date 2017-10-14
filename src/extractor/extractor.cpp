@@ -212,10 +212,19 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     std::vector<EdgeWeight> edge_based_node_weights;
 
     // Create a node-based graph from the OSRM file
-    NodeBasedGraphFactory node_based_graph_factory(config.GetPath(".osrm"),
-                                                   scripting_environment,
-                                                   turn_restrictions,
-                                                   conditional_turn_restrictions);
+    NodeBasedGraphFactory node_based_graph_factory(config.GetPath(".osrm"));
+
+    util::Log() << "Find segregated edges in node-based graph ..." << std::flush;
+    TIMER_START(segregated);
+
+    const size_t segregated_count = FindSegregatedNodes(node_based_graph_factory);
+
+    TIMER_STOP(segregated);
+    util::Log() << "ok, after " << TIMER_SEC(segregated) << "s";
+    util::Log() << "Segregated edges count = " << segregated_count;
+
+    node_based_graph_factory.CompressAll(
+        scripting_environment, turn_restrictions, conditional_turn_restrictions);
 
     util::Log() << "Writing nodes for nodes-based and edges-based graphs ...";
     auto const &coordinates = node_based_graph_factory.GetCoordinates();
@@ -824,6 +833,215 @@ void Extractor::WriteCompressedNodeBasedGraph(const std::string &path,
         writer.WriteOne(qnode.lon);
         writer.WriteOne(qnode.lat);
     }
+}
+
+struct EdgeInfo
+{
+    NodeID node;
+
+    util::StringView name;
+
+    // 0 - outgoing (forward), 1 - incoming (reverse), 2 - both outgoing and incoming
+    int direction;
+
+    ClassData road_class;
+
+    struct LessName
+    {
+        bool operator()(EdgeInfo const &e1, EdgeInfo const &e2) const { return e1.name < e2.name; }
+    };
+};
+
+bool IsSegregated(std::vector<EdgeInfo> v1, std::vector<EdgeInfo> v2, EdgeInfo const &current)
+{
+    if (v1.size() < 2 || v2.size() < 2)
+        return false;
+
+    auto const sort_by_name_fn = [](std::vector<EdgeInfo> &v) {
+        std::sort(v.begin(), v.end(), EdgeInfo::LessName());
+    };
+
+    sort_by_name_fn(v1);
+    sort_by_name_fn(v2);
+
+    // Internal edge with the name should be connected with any other neibour edge with the same
+    // name, e.g. isolated edge with unique name is not segregated.
+    //              b - 'b' road continues here
+    //              |
+    //      - - a - |
+    //              b - segregated edge
+    //      - - a - |
+    if (!current.name.empty())
+    {
+        auto const findNameFn = [&current](std::vector<EdgeInfo> const &v) {
+            return std::binary_search(v.begin(), v.end(), current, EdgeInfo::LessName());
+        };
+
+        if (!findNameFn(v1) && !findNameFn(v2))
+            return false;
+    }
+
+    std::vector<EdgeInfo> intersect;
+    std::set_intersection(v1.begin(),
+                          v1.end(),
+                          v2.begin(),
+                          v2.end(),
+                          std::back_inserter(intersect),
+                          EdgeInfo::LessName());
+
+    intersect.erase(std::remove_if(intersect.begin(),
+                                   intersect.end(),
+                                   [](EdgeInfo const &info) { return info.name.empty(); }),
+                    intersect.end());
+
+    return intersect.size() >= 2;
+
+    /*
+    // set_intersection like routine to count equal name pairs, std function is
+    // not acceptable because of duplicates {a, a, b} ∩ {a, a, c} == {a, a}.
+    std::vector<std::pair<EdgeInfo const *, EdgeInfo const *>> commons;
+
+    auto i1 = v1.begin();
+    auto i2 = v2.begin();
+
+    while (i1 != v1.end() && i2 != v2.end())
+    {
+        if (i1->name_id == i2->name_id)
+        {
+            if (i1->name_id != EMPTY_NAMEID)
+                commons.push_back(std::make_pair(&(*i1), &(*i2)));
+
+            ++i1;
+            ++i2;
+        }
+        else if (i1->name_id < i2->name_id)
+            ++i1;
+        else
+            ++i2;
+    }
+
+    return (commons.size() >= 2);
+    */
+
+    /// @todo Process standalone U-turns.
+    /*
+    switch (commons.size())
+    {
+    case 0:
+      return false;
+    case 1:
+      // ingoing + outgoing edges
+      if (commons.front().first->direction + commons.front().second->direction != 1)
+        return false;
+    }
+
+    return true;
+    */
+}
+
+size_t Extractor::FindSegregatedNodes(NodeBasedGraphFactory &factory)
+{
+    util::NameTable names(config.GetPath(".osrm.names").string());
+
+    auto &graph = factory.GetGraph();
+    auto const &annotation = factory.GetAnnotationData();
+    auto const &coordinates = factory.GetCoordinates();
+
+    auto const get_edge_name = [&](auto const &data) {
+        /// @todo Make string normalization/lowercase/trim for comparison ...
+
+        auto const id = annotation[data.annotation_data].name_id;
+        BOOST_ASSERT(id != INVALID_NAMEID);
+        return names.GetNameForID(id);
+    };
+
+    auto const get_edge_classes = [&](auto const &data) {
+        return annotation[data.annotation_data].classes;
+    };
+
+    auto const collect_edge_info_fn = [&](auto const &edges1, NodeID node2) {
+        std::vector<EdgeInfo> info;
+
+        for (auto const &e : edges1)
+        {
+            NodeID const target = graph.GetTarget(e);
+            if (target == node2)
+                continue;
+
+            auto const &data = graph.GetEdgeData(e);
+            info.push_back(
+                {target, get_edge_name(data), data.reversed ? 1 : 0, get_edge_classes(data)});
+        }
+
+        if (info.empty())
+            return info;
+
+        std::sort(info.begin(), info.end(), [](EdgeInfo const &e1, EdgeInfo const &e2) {
+            return e1.node < e2.node;
+        });
+
+        // Merge equal infos with correct direction.
+        auto curr = info.begin();
+        auto next = curr;
+        while (++next != info.end())
+        {
+            if (curr->node == next->node)
+            {
+                BOOST_ASSERT(curr->name == next->name);
+                BOOST_ASSERT(curr->road_class == next->road_class);
+                BOOST_ASSERT(curr->direction != next->direction);
+                curr->direction = 2;
+            }
+            else
+                curr = next;
+        }
+
+        info.erase(
+            std::unique(info.begin(),
+                        info.end(),
+                        [](EdgeInfo const &e1, EdgeInfo const &e2) { return e1.node == e2.node; }),
+            info.end());
+
+        return info;
+    };
+
+    auto const isSegregatedFn = [&](
+        auto const &edgeData, auto const &edges1, NodeID node1, auto const &edges2, NodeID node2) {
+        return IsSegregated(collect_edge_info_fn(edges1, node2),
+                            collect_edge_info_fn(edges2, node1),
+                            {node1, get_edge_name(edgeData), 0, get_edge_classes(edgeData)});
+    };
+
+    std::unordered_set<EdgeID> processed;
+    size_t segregated_count = 0;
+
+    for (NodeID sourceID = 0; sourceID < graph.GetNumberOfNodes(); ++sourceID)
+    {
+        auto const sourceEdges = graph.GetAdjacentEdgeRange(sourceID);
+        for (EdgeID edgeID : sourceEdges)
+        {
+            auto &edgeData = graph.GetEdgeData(edgeID);
+
+            if (edgeData.reversed || edgeData.segregated || !processed.insert(edgeID).second)
+                continue;
+
+            NodeID const targetID = graph.GetTarget(edgeID);
+
+            if (osrm::util::coordinate_calculation::haversineDistance(coordinates[sourceID],
+                                                                      coordinates[targetID]) > 30.0)
+                continue;
+
+            auto const targetEdges = graph.GetAdjacentEdgeRange(targetID);
+
+            if (isSegregatedFn(edgeData, sourceEdges, sourceID, targetEdges, targetID))
+            {
+                ++segregated_count;
+                edgeData.segregated = true;
+            }
+        }
+    }
+
+    return segregated_count;
 }
 
 } // namespace extractor
