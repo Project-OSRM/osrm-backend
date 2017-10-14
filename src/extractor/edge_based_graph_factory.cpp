@@ -164,13 +164,19 @@ NBGToEBG EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const N
         forward_data.geometry_id;
     m_edge_based_node_container.nodes[nbe_to_ebn_mapping[edge_id_1]].annotation_id =
         forward_data.annotation_data;
+    m_edge_based_node_container.nodes[nbe_to_ebn_mapping[edge_id_1]].segregated =
+        forward_data.segregated;
+
     if (nbe_to_ebn_mapping[edge_id_2] != SPECIAL_EDGEID)
     {
         m_edge_based_node_container.nodes[nbe_to_ebn_mapping[edge_id_2]].geometry_id =
             reverse_data.geometry_id;
         m_edge_based_node_container.nodes[nbe_to_ebn_mapping[edge_id_2]].annotation_id =
             reverse_data.annotation_data;
+        m_edge_based_node_container.nodes[nbe_to_ebn_mapping[edge_id_2]].segregated =
+            reverse_data.segregated;
     }
+
     // Add segments of edge-based nodes
     for (const auto i : util::irange(std::size_t{0}, segment_count))
     {
@@ -365,6 +371,7 @@ EdgeBasedGraphFactory::GenerateEdgeExpandedNodes(const WayRestrictionMap &way_re
                 edge_data.geometry_id;
             m_edge_based_node_container.nodes[edge_based_node_id].annotation_id =
                 edge_data.annotation_data;
+            m_edge_based_node_container.nodes[edge_based_node_id].segregated = edge_data.segregated;
 
             m_edge_based_node_weights.push_back(m_edge_based_node_weights[eid]);
 

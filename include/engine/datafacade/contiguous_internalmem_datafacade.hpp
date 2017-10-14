@@ -885,6 +885,11 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         // TODO: can be moved to a data block indexed by GeometryID
         return edge_based_node_data.IsLeftHandDriving(id);
     }
+
+    bool IsSegregated(const NodeID id) const override final
+    {
+        return edge_based_node_data.IsSegregated(id);
+    }
 };
 
 template <typename AlgorithmT> class ContiguousInternalMemoryDataFacade;

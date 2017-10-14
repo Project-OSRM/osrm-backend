@@ -77,6 +77,8 @@ template <storage::Ownership Ownership> class EdgeBasedNodeDataContainerImpl
         return annotation_data[nodes[node_id].annotation_id].is_left_hand_driving;
     }
 
+    bool IsSegregated(const NodeID node_id) const { return nodes[node_id].segregated; }
+
     NameID GetNameID(const NodeID node_id) const
     {
         return annotation_data[nodes[node_id].annotation_id].name_id;
@@ -105,13 +107,8 @@ template <storage::Ownership Ownership> class EdgeBasedNodeDataContainerImpl
     // between a large set of nodes
     AnnotationID NumberOfAnnotations() const { return annotation_data.size(); }
 
-    EdgeBasedNode &GetNode(const NodeID node_id) { return nodes[node_id]; }
     EdgeBasedNode const &GetNode(const NodeID node_id) const { return nodes[node_id]; }
 
-    NodeBasedEdgeAnnotation &GetAnnotation(const AnnotationID annotation)
-    {
-        return annotation_data[annotation];
-    }
     NodeBasedEdgeAnnotation const &GetAnnotation(const AnnotationID annotation) const
     {
         return annotation_data[annotation];
