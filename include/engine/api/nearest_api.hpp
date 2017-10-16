@@ -3,8 +3,8 @@
 
 #include "engine/api/base_api.hpp"
 #include "engine/api/nearest_parameters.hpp"
+#include "engine/api/nearest_result.hpp"
 
-#include "engine/api/json_factory.hpp"
 #include "engine/phantom_node.hpp"
 
 #include <boost/assert.hpp>
@@ -26,25 +26,26 @@ class NearestAPI final : public BaseAPI
     {
     }
 
-    void MakeResponse(const std::vector<std::vector<PhantomNodeWithDistance>> &phantom_nodes,
-                      util::json::Object &response) const
+    NearestResult
+    MakeResponse(const std::vector<std::vector<PhantomNodeWithDistance>> &phantom_nodes) const
     {
         BOOST_ASSERT(phantom_nodes.size() == 1);
         BOOST_ASSERT(parameters.coordinates.size() == 1);
 
-        util::json::Array waypoints;
-        waypoints.values.resize(phantom_nodes.front().size());
+        NearestResult result;
+        result.waypoints.resize(phantom_nodes.size());
         std::transform(phantom_nodes.front().begin(),
                        phantom_nodes.front().end(),
-                       waypoints.values.begin(),
+                       result.waypoints.begin(),
                        [this](const PhantomNodeWithDistance &phantom_with_distance) {
-                           auto waypoint = MakeWaypoint(phantom_with_distance.phantom_node);
-                           waypoint.values["distance"] = phantom_with_distance.distance;
-                           return waypoint;
+                           auto name = facade.GetNameForID(facade.GetNameIndex(
+                               phantom_with_distance.phantom_node.forward_segment_id.id));
+                           return Waypoint{phantom_with_distance.distance,
+                                           name.data(),
+                                           phantom_with_distance.phantom_node.location};
                        });
 
-        response.values["code"] = "Ok";
-        response.values["waypoints"] = std::move(waypoints);
+        return result;
     }
 
     const NearestParameters &parameters;

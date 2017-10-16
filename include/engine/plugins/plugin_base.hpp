@@ -6,6 +6,7 @@
 #include "engine/phantom_node.hpp"
 #include "engine/routing_algorithms.hpp"
 #include "engine/status.hpp"
+#include "engine/error.hpp"
 
 #include "util/coordinate.hpp"
 #include "util/coordinate_calculation.hpp"
@@ -26,6 +27,7 @@ namespace engine
 namespace plugins
 {
 
+
 class BasePlugin
 {
   protected:
@@ -37,30 +39,44 @@ class BasePlugin
             });
     }
 
-    bool CheckAlgorithms(const api::BaseParameters &params,
-                         const RoutingAlgorithmsInterface &algorithms,
-                         util::json::Object &result) const
+    auto CheckAlgorithms(const api::BaseParameters &params,
+                         const RoutingAlgorithmsInterface &algorithms) const
     {
         if (algorithms.IsValid())
         {
-            return true;
+            return engine::Error { ErrorCode::NO_ERROR, {}};
         }
 
         if (!algorithms.HasExcludeFlags() && !params.exclude.empty())
         {
-            Error("NotImplemented", "This algorithm does not support exclude flags.", result);
-            return false;
+            return engine::Error { ErrorCode::NOT_IMPLEMENTED, "This algorithm does not support exclude flags." };
         }
+
         if (algorithms.HasExcludeFlags() && !params.exclude.empty())
         {
-            Error("InvalidValue", "Exclude flag combination is not supported.", result);
-            return false;
+            return engine::Error { ErrorCode::INVALID_VALUE, "Exclude flag combination is not supported." };
         }
 
         BOOST_ASSERT_MSG(false,
                          "There are only two reasons why the algorithm interface can be invalid.");
-        return false;
+        return engine::Error {};
     }
+
+    bool CheckAlgorithms(const api::BaseParameters &params,
+                         const RoutingAlgorithmsInterface &algorithms,
+                         util::json::Object &result) const
+    {
+        auto error = CheckAlgorithms(params, algorithms);
+        if (error.code == ErrorCode::NO_ERROR)
+        {
+            return false;
+        }
+        else
+        {
+            Error(codeToString(error.code), error.message, result);
+        }
+    }
+
 
     Status Error(const std::string &code,
                  const std::string &message,

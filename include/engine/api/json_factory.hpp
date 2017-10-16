@@ -9,6 +9,8 @@
 #include "engine/guidance/route_step.hpp"
 #include "engine/guidance/step_maneuver.hpp"
 #include "engine/polyline_compressor.hpp"
+#include "engine/api/nearest_result.hpp"
+#include "engine/error.hpp"
 #include "util/coordinate.hpp"
 #include "util/json_container.hpp"
 
@@ -111,6 +113,10 @@ util::json::Object makeRouteLeg(guidance::RouteLeg leg, util::json::Array steps)
 util::json::Array makeRouteLegs(std::vector<guidance::RouteLeg> legs,
                                 std::vector<util::json::Value> step_geometries,
                                 std::vector<util::json::Object> annotations);
+
+util::json::Object toJSON(const NearestResult&);
+
+util::json::Object toJSON(const Error&);
 }
 }
 } // namespace engine

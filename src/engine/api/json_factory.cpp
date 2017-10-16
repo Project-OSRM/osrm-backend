@@ -408,6 +408,37 @@ util::json::Array makeRouteLegs(std::vector<guidance::RouteLeg> legs,
     }
     return json_legs;
 }
+
+util::json::Object toJSON(const Waypoint &waypoint)
+{
+    util::json::Object json_waypoint;
+    json_waypoint.values["name"] = waypoint.name;
+    json_waypoint.values["distance"] = waypoint.distance;
+    json_waypoint.values["location"] = detail::coordinateToLonLat(waypoint.location);
+    return json_waypoint;
+}
+
+util::json::Object toJSON(const NearestResult &result)
+{
+    util::json::Object json_result;
+    util::json::Array json_waypoints;
+    json_waypoints.values.resize(result.waypoints.size());
+    std::transform(result.waypoints.begin(),
+                   result.waypoints.end(),
+                   json_waypoints.values.begin(),
+                   [](const auto &w) { return toJSON(w); });
+    json_result.values["waypoints"] = json_waypoints;
+    return json_result;
+}
+
+util::json::Object toJSON(const Error &error)
+{
+    util::json::Object json_error;
+    json_error.values["code"] = codeToString(error.code);
+    json_error.values["message"] = error.message;
+    return json_error;
+}
+
 } // namespace json
 } // namespace api
 } // namespace engine
