@@ -408,4 +408,29 @@ BOOST_AUTO_TEST_CASE(regression_test_3516)
     BOOST_CHECK_EQUAL(nearest_location, v);
 }
 
+BOOST_AUTO_TEST_CASE(computeArea)
+{
+    using osrm::util::coordinate_calculation::computeArea;
+
+    //
+    auto rhombus = std::vector<Coordinate>{{FloatLongitude{.00}, FloatLatitude{.00}},
+                                           {FloatLongitude{.01}, FloatLatitude{.01}},
+                                           {FloatLongitude{.02}, FloatLatitude{.00}},
+                                           {FloatLongitude{.01}, FloatLatitude{-.01}},
+                                           {FloatLongitude{.00}, FloatLatitude{.00}}};
+
+    BOOST_CHECK_CLOSE(2 * 1112.263 * 1112.263, computeArea(rhombus), 1e-3);
+
+    // edge cases
+    auto self_intersection = std::vector<Coordinate>{{FloatLongitude{.00}, FloatLatitude{.00}},
+                                                     {FloatLongitude{.00}, FloatLatitude{.02}},
+                                                     {FloatLongitude{.01}, FloatLatitude{.01}},
+                                                     {FloatLongitude{.02}, FloatLatitude{.00}},
+                                                     {FloatLongitude{.02}, FloatLatitude{.02}},
+                                                     {FloatLongitude{.01}, FloatLatitude{.01}},
+                                                     {FloatLongitude{.00}, FloatLatitude{.00}}};
+    BOOST_CHECK(computeArea(self_intersection) < 1e-3);
+    BOOST_CHECK_CLOSE(0, computeArea({}), 1e-3);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

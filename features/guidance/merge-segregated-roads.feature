@@ -560,5 +560,5 @@ Feature: Merge Segregated Roads
             | jd          | Hubertusallee  | yes    |
 
         When I route I should get
-            | waypoints | route                                                    | turns                                            |
-            | i,h       | Kurfürstendamm,Rathenauplatz,Hubertusallee,Hubertusallee | depart,turn slight left,turn slight right,arrive |
+            | waypoints | route                                      | turns                       |
+            | i,h       | Kurfürstendamm,Hubertusallee,Hubertusallee | depart,turn straight,arrive |

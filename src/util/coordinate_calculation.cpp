@@ -381,6 +381,48 @@ Coordinate difference(const Coordinate lhs, const Coordinate rhs)
     return {util::FixedLongitude{lon_diff_int}, util::FixedLatitude{lat_diff_int}};
 }
 
+double computeArea(const std::vector<Coordinate> &polygon)
+{
+    using util::coordinate_calculation::haversineDistance;
+
+    if (polygon.empty())
+        return 0.;
+
+    BOOST_ASSERT(polygon.front() == polygon.back());
+
+    // Take the reference point with the smallest latitude.
+    // ⚠ ref_latitude is the standard parallel for the equirectangular projection
+    // that is not an area-preserving projection
+    const auto ref_point =
+        std::min_element(polygon.begin(), polygon.end(), [](const auto &lhs, const auto &rhs) {
+            return lhs.lat < rhs.lat;
+        });
+    const auto ref_latitude = ref_point->lat;
+
+    // Compute area of under a curve and a line that is parallel the equator with ref_latitude
+    // For closed curves it corresponds to the shoelace algorithm for polygon areas
+    double area = 0.;
+    auto first = polygon.begin();
+    auto previous_base = util::Coordinate{first->lon, ref_latitude};
+    auto previous_y = haversineDistance(previous_base, *first);
+    for (++first; first != polygon.end(); ++first)
+    {
+        BOOST_ASSERT(first->lat >= ref_latitude);
+
+        const auto current_base = util::Coordinate{first->lon, ref_latitude};
+        const auto current_y = haversineDistance(current_base, *first);
+        const auto chunk_area =
+            haversineDistance(previous_base, current_base) * (previous_y + current_y);
+
+        area += (current_base.lon >= previous_base.lon) ? chunk_area : -chunk_area;
+
+        previous_base = current_base;
+        previous_y = current_y;
+    }
+
+    return area / 2.;
+}
+
 } // ns coordinate_calculation
 } // ns util
 } // ns osrm
