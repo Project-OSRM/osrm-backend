@@ -297,7 +297,7 @@ bool MergableRoadDetector::HaveSameDirection(const NodeID intersection_node,
 
     // many roads only do short parallel segments. To get a good impression of how `parallel` two
     // roads are, we look 100 meters down the road (wich can be quite short for very broad roads).
-    const double constexpr distance_to_extract = 100;
+    const double constexpr distance_to_extract = 150;
 
     std::tie(distance_traversed_to_the_left, coordinates_to_the_left) =
         getCoordinatesAlongWay(lhs.eid, distance_to_extract);
@@ -316,6 +316,36 @@ bool MergableRoadDetector::HaveSameDirection(const NodeID intersection_node,
         return false;
 
     const auto connect_again = (coordinates_to_the_left.back() == coordinates_to_the_right.back());
+
+    // Tuning parameter to detect and don't merge roads close to circular shapes
+    // if the area to squared circumference ratio is between the lower bound and 1/(4π)
+    // that correspond to isoperimetric inequality 4πA ≤ L² or lower bound ≤ A/L² ≤ 1/(4π).
+    // The lower bound must be larger enough to allow merging of square-shaped intersections
+    // with A/L² = 1/16 or 78.6%
+    // The condition suppresses roads merging for intersections like
+    //             .  .
+    //           .      .
+    //       ----        ----
+    //           .      .
+    //             .  .
+    // but will allow roads merging for intersections like
+    //           -------
+    //          /       \ 
+    //      ----         ----
+    //          \       /
+    //           -------
+    const auto constexpr CIRCULAR_POLYGON_ISOPERIMETRIC_LOWER_BOUND = 0.85 / (4 * M_PI);
+    if (connect_again && coordinates_to_the_left.front() == coordinates_to_the_left.back())
+    { // if the left and right roads connect again and are closed polygons ...
+        const auto area = util::coordinate_calculation::computeArea(coordinates_to_the_left);
+        const auto perimeter = distance_traversed_to_the_left;
+        const auto area_to_squared_perimeter_ratio = std::abs(area) / (perimeter * perimeter);
+
+        // then don't merge roads if A/L² is greater than the lower bound
+        BOOST_ASSERT(area_to_squared_perimeter_ratio <= 1. / (4 * M_PI));
+        if (area_to_squared_perimeter_ratio >= CIRCULAR_POLYGON_ISOPERIMETRIC_LOWER_BOUND)
+            return false;
+    }
 
     // sampling to correctly weight longer segments in regression calculations
     const auto constexpr SAMPLE_INTERVAL = 5;

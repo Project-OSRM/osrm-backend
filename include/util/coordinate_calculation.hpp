@@ -378,6 +378,8 @@ bool areParallel(const iterator_type lhs_begin,
     return std::abs(slope_rhs) < 0.20; // twenty percent incline at the most
 }
 
+double computeArea(const std::vector<Coordinate> &polygon);
+
 } // ns coordinate_calculation
 } // ns util
 } // ns osrm
