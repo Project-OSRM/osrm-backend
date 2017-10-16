@@ -11,6 +11,9 @@
 
 #include <boost/assert.hpp>
 
+#include "util/geojson_debug_logger.hpp"
+#include "util/geojson_debug_policies.hpp"
+
 using osrm::util::angularDeviation;
 using osrm::extractor::guidance::getTurnDirection;
 
@@ -101,6 +104,35 @@ Intersection MotorwayHandler::fromMotorway(const EdgeID via_eid, Intersection in
 
     // continue_pos == 0 if no continue
     auto const continue_pos = findObviousTurn(via_eid, intersection);
+
+    const auto obvious_index_old = findObviousTurnOld(via_eid, intersection);
+    auto const obvious_index = continue_pos;
+    if (obvious_index != obvious_index_old)
+    {
+        const auto &extractor = intersection_generator.GetCoordinateExtractor();
+        if (obvious_index_old != 0 && intersection[obvious_index_old].entry_allowed)
+        {
+            auto line = extractor.GetForwardCoordinatesAlongRoad(
+                node_based_graph.GetTarget(via_eid), intersection[obvious_index_old].eid);
+            if (line.size() >= 2)
+            {
+                line = extractor.TrimCoordinatesToLength(std::move(line), 30);
+                util::ScopedGeojsonLoggerGuard<util::CoordinateVectorToLineString,
+                                               osrm::util::LoggingScenario(0)>::Write(line);
+            }
+        }
+        if (obvious_index != 0)
+        {
+            auto line = extractor.GetForwardCoordinatesAlongRoad(
+                node_based_graph.GetTarget(via_eid), intersection[obvious_index].eid);
+            if (line.size() >= 2)
+            {
+                line = extractor.TrimCoordinatesToLength(std::move(line), 30);
+                util::ScopedGeojsonLoggerGuard<util::CoordinateVectorToLineString,
+                                               osrm::util::LoggingScenario(1)>::Write(line);
+            }
+        }
+    }
     auto continue_angle = intersection[continue_pos].angle;
 
     if (continue_pos == 0)
@@ -162,7 +194,8 @@ Intersection MotorwayHandler::fromMotorway(const EdgeID via_eid, Intersection in
             if (!road.entry_allowed)
                 return false;
 
-            auto const &road_class = node_based_graph.GetEdgeData(road.eid).flags.road_classification;
+            auto const &road_class =
+                node_based_graph.GetEdgeData(road.eid).flags.road_classification;
             return road_class.IsMotorwayClass() && !road_class.IsLinkClass();
         };
 
@@ -318,6 +351,36 @@ Intersection MotorwayHandler::fromRamp(const EdgeID via_eid, Intersection inters
                 valids.push_back(i);
 
         auto const obvious = findObviousTurn(via_eid, intersection);
+
+        const auto obvious_index_old = findObviousTurnOld(via_eid, intersection);
+        auto const obvious_index = obvious;
+        if (obvious_index != obvious_index_old)
+        {
+            const auto &extractor = intersection_generator.GetCoordinateExtractor();
+            if (obvious_index_old != 0 && intersection[obvious_index_old].entry_allowed)
+            {
+                auto line = extractor.GetForwardCoordinatesAlongRoad(
+                    node_based_graph.GetTarget(via_eid), intersection[obvious_index_old].eid);
+                if (line.size() >= 2)
+                {
+                    line = extractor.TrimCoordinatesToLength(std::move(line), 30);
+                    util::ScopedGeojsonLoggerGuard<util::CoordinateVectorToLineString,
+                                                   osrm::util::LoggingScenario(0)>::Write(line);
+                }
+            }
+            if (obvious_index != 0)
+            {
+                auto line = extractor.GetForwardCoordinatesAlongRoad(
+                    node_based_graph.GetTarget(via_eid), intersection[obvious_index].eid);
+                if (line.size() >= 2)
+                {
+                    line = extractor.TrimCoordinatesToLength(std::move(line), 30);
+                    util::ScopedGeojsonLoggerGuard<util::CoordinateVectorToLineString,
+                                                   osrm::util::LoggingScenario(1)>::Write(line);
+                }
+            }
+        }
+
         if (obvious != 0)
         {
             // if only two roads exit, we are looking at a ramp forking off from a different exit
@@ -380,8 +443,10 @@ Intersection MotorwayHandler::fromRamp(const EdgeID via_eid, Intersection inters
                 const constexpr auto DISTANCE_LIMIT = 100;
                 auto const coordinate_at_center = coordinates[node_based_graph.GetTarget(via_eid)];
 
-                if (util::coordinate_calculation::haversineDistance(coordinate_at_center,coordinates[left_node]) > DISTANCE_LIMIT ||
-                    util::coordinate_calculation::haversineDistance(coordinate_at_center,coordinates[right_node])> DISTANCE_LIMIT)
+                if (util::coordinate_calculation::haversineDistance(
+                        coordinate_at_center, coordinates[left_node]) > DISTANCE_LIMIT ||
+                    util::coordinate_calculation::haversineDistance(
+                        coordinate_at_center, coordinates[right_node]) > DISTANCE_LIMIT)
                     return false;
 
                 // forming a triangle

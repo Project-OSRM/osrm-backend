@@ -19,8 +19,8 @@
 
 #include <boost/optional.hpp>
 
-//#define PRINT false
-#define PRINT true
+#define PRINT false
+//#define PRINT true
 
 namespace osrm
 {
@@ -540,7 +540,7 @@ inline bool IntersectionHandler::IsDistinctContinue(const std::size_t index,
 
 // Impl.
 template <typename IntersectionType> // works with Intersection and IntersectionView
-std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
+std::size_t IntersectionHandler::findObviousTurnOld(const EdgeID via_edge,
                                                  const IntersectionType &intersection) const
 {
 #if PRINT
@@ -765,7 +765,7 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
 }
 
 template <typename IntersectionType> // works with Intersection and IntersectionView
-std::size_t IntersectionHandler::findObviousTurnOld(const EdgeID via_edge,
+std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
                                                     const IntersectionType &intersection) const
 {
     using Road = typename IntersectionType::value_type;

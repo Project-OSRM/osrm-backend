@@ -240,7 +240,11 @@ Intersection TurnHandler::handleThreeWayTurn(const EdgeID via_edge, Intersection
     const auto obvious_index = findObviousTurn(via_edge, intersection);
     const auto obvious_index_old = findObviousTurnOld(via_edge, intersection);
 
-    if (obvious_index != obvious_index_old)
+    if (obvious_index != obvious_index_old &&
+        !std::all_of(intersection.begin(), intersection.end(), [&](auto const &road) {
+            return node_based_graph.GetEdgeData(road.eid)
+                .flags.road_classification.IsLowPriorityRoadClass();
+        }))
     {
         const auto &extractor = intersection_generator.GetCoordinateExtractor();
         if (obvious_index_old != 0 && intersection[obvious_index_old].entry_allowed)
@@ -357,7 +361,11 @@ Intersection TurnHandler::handleComplexTurn(const EdgeID via_edge, Intersection 
     const std::size_t obvious_index = findObviousTurn(via_edge, intersection);
     const auto obvious_index_old = findObviousTurnOld(via_edge, intersection);
 
-    if (obvious_index != obvious_index_old)
+    if (obvious_index != obvious_index_old &&
+        !std::all_of(intersection.begin(), intersection.end(), [&](auto const &road) {
+            return node_based_graph.GetEdgeData(road.eid)
+                .flags.road_classification.IsLowPriorityRoadClass();
+        }))
     {
         const auto &extractor = intersection_generator.GetCoordinateExtractor();
         if (obvious_index_old != 0 && intersection[obvious_index_old].entry_allowed)
