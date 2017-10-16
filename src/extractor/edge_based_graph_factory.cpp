@@ -68,14 +68,14 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(
     const std::unordered_set<NodeID> &barrier_nodes,
     const std::unordered_set<NodeID> &traffic_lights,
     const std::vector<util::Coordinate> &coordinates,
-    const extractor::PackedOSMIDs &osm_node_ids,
     const util::NameTable &name_table,
-    guidance::LaneDescriptionMap &lane_description_map)
+    guidance::LaneDescriptionMap &lane_description_map,
+    const std::string &nbg_nodes_filepath)
     : m_edge_based_node_container(node_data_container), m_number_of_edge_based_nodes(0),
-      m_coordinates(coordinates), m_osm_node_ids(osm_node_ids), m_node_based_graph(std::move(node_based_graph)),
+      m_coordinates(coordinates), m_node_based_graph(std::move(node_based_graph)),
       m_barrier_nodes(barrier_nodes), m_traffic_lights(traffic_lights),
       m_compressed_edge_container(compressed_edge_container), name_table(name_table),
-      lane_description_map(lane_description_map)
+      lane_description_map(lane_description_map), m_nbg_nodes_filepath(nbg_nodes_filepath)
 {
 }
 
@@ -424,19 +424,18 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     guidance::TurnAnalysis turn_analysis(m_node_based_graph,
                                          m_edge_based_node_container,
                                          m_coordinates,
-                                         m_osm_node_ids,
                                          node_restriction_map,
                                          m_barrier_nodes,
                                          m_compressed_edge_container,
                                          name_table,
                                          street_name_suffix_table,
-                                         validate_intersections);
+                                         validate_intersections,
+                                         m_nbg_nodes_filepath);
 
     util::guidance::LaneDataIdMap lane_data_map;
     guidance::lanes::TurnLaneHandler turn_lane_handler(m_node_based_graph,
                                                        m_edge_based_node_container,
                                                        m_coordinates,
-                                                       m_osm_node_ids,
                                                        lane_description_map,
                                                        turn_analysis,
                                                        lane_data_map);

@@ -1,6 +1,7 @@
 #ifndef OSRM_EXTRACTOR_GUIDANCE_VALIDATION_HANDLER_HPP_
 #define OSRM_EXTRACTOR_GUIDANCE_VALIDATION_HANDLER_HPP_
 
+#include "extractor/files.hpp"
 #include "extractor/guidance/intersection.hpp"
 #include "extractor/guidance/intersection_generator.hpp"
 #include "extractor/guidance/intersection_handler.hpp"
@@ -11,6 +12,8 @@
 #include "util/guidance/name_announcements.hpp"
 #include "util/name_table.hpp"
 #include "util/node_based_graph.hpp"
+
+#include <boost/filesystem.hpp>
 
 #include <algorithm>
 #include <iostream>
@@ -29,8 +32,6 @@ namespace guidance
 // Runs sanity checks on intersections and dumps out suspicious ones.
 class ValidationHandler final : public IntersectionHandler
 {
-    const extractor::PackedOSMIDs &osm_node_ids;
-
     struct TurnDiagnostic
     {
         NodeID from, via, to;
@@ -52,23 +53,25 @@ class ValidationHandler final : public IntersectionHandler
 
     mutable std::vector<TurnDiagnostic> turn_diagnostics;
     mutable std::mutex turn_diagnostics_lock;
+    extractor::PackedOSMIDs osm_node_ids;
+    std::vector<util::Coordinate> coordinates;
 
   public:
     ValidationHandler(const IntersectionGenerator &intersection_generator,
                       const util::NodeBasedDynamicGraph &node_based_graph,
                       const EdgeBasedNodeDataContainer &node_data_container,
-                      const std::vector<util::Coordinate> &coordinates,
-                      const extractor::PackedOSMIDs &osm_node_ids,
                       const util::NameTable &name_table,
-                      const SuffixTable &street_name_suffix_table)
+                      const SuffixTable &street_name_suffix_table,
+                      const std::string &nbg_nodes_filepath)
         : IntersectionHandler(node_based_graph,
                               node_data_container,
                               coordinates,
                               name_table,
                               street_name_suffix_table,
-                              intersection_generator),
-          osm_node_ids(osm_node_ids)
+                              intersection_generator)
     {
+        // read osm ids from file
+        files::readNodes(nbg_nodes_filepath, coordinates, osm_node_ids);
     }
 
     ~ValidationHandler() override final
@@ -106,7 +109,8 @@ class ValidationHandler final : public IntersectionHandler
     // Assumed high speed on this edge
     bool isFastRoad(const EdgeID edge) const
     {
-        const auto road_priority = node_based_graph.GetEdgeData(edge).flags.road_classification.GetPriority();
+        const auto road_priority =
+            node_based_graph.GetEdgeData(edge).flags.road_classification.GetPriority();
 
         const RoadPriorityClass::Enum fast_classes[] = {
             RoadPriorityClass::MOTORWAY,
@@ -177,7 +181,8 @@ class ValidationHandler final : public IntersectionHandler
                                         const EdgeID via_eid,
                                         const Intersection &intersection) const
     {
-        bool edge_is_link = node_based_graph.GetEdgeData(via_eid).flags.road_classification.IsLinkClass();
+        bool edge_is_link =
+            node_based_graph.GetEdgeData(via_eid).flags.road_classification.IsLinkClass();
 
         // Index 0 is UTurn road
         for (std::size_t i = 1; i < intersection.size(); ++i)
@@ -269,16 +274,24 @@ class ValidationHandler final : public IntersectionHandler
             return;
         }
 
-        const auto &node_container = node_data_container;
-        const auto &via_name_id = node_container.GetNameID(via_eid);
-        const auto &leftmost_name_id = node_container.GetNameID(leftmost_road.eid);
-        const auto &rightmost_name_id = node_container.GetNameID(rightmost_road.eid);
+        const auto &via_name_id =
+            node_data_container.GetAnnotation(node_based_graph.GetEdgeData(via_eid).annotation_data)
+                .name_id;
+        const auto &leftmost_name_id =
+            node_data_container
+                .GetAnnotation(node_based_graph.GetEdgeData(leftmost_road.eid).annotation_data)
+                .name_id;
+        const auto &rightmost_name_id =
+            node_data_container
+                .GetAnnotation(node_based_graph.GetEdgeData(rightmost_road.eid).annotation_data)
+                .name_id;
 
         const auto &via_flags = node_based_graph.GetEdgeData(via_eid).flags;
         const auto &rightmost_flags = node_based_graph.GetEdgeData(rightmost_road.eid).flags;
         const auto &leftmost_flags = node_based_graph.GetEdgeData(leftmost_road.eid).flags;
 
-        if (via_name_id == EMPTY_NAMEID || leftmost_name_id == EMPTY_NAMEID || rightmost_name_id == EMPTY_NAMEID)
+        if (via_name_id == EMPTY_NAMEID || leftmost_name_id == EMPTY_NAMEID ||
+            rightmost_name_id == EMPTY_NAMEID)
         {
             return;
         }
@@ -288,8 +301,7 @@ class ValidationHandler final : public IntersectionHandler
             return;
         }
 
-        const auto via_road_low_prio_class =
-            via_flags.road_classification.IsLowPriorityRoadClass();
+        const auto via_road_low_prio_class = via_flags.road_classification.IsLowPriorityRoadClass();
         const auto leftmost_road_low_prio_class =
             leftmost_flags.road_classification.IsLowPriorityRoadClass();
         const auto rightmost_road_low_prio_class =
@@ -324,16 +336,10 @@ class ValidationHandler final : public IntersectionHandler
             return;
         }
 
-        const auto same_name_left =
-            !util::guidance::requiresNameAnnounced(via_name_id,
-                                                   leftmost_name_id,
-                                                   name_table,
-                                                   street_name_suffix_table);
-        const auto same_name_right =
-            !util::guidance::requiresNameAnnounced(via_name_id,
-                                                   rightmost_name_id,
-                                                   name_table,
-                                                   street_name_suffix_table);
+        const auto same_name_left = !util::guidance::requiresNameAnnounced(
+            via_name_id, leftmost_name_id, name_table, street_name_suffix_table);
+        const auto same_name_right = !util::guidance::requiresNameAnnounced(
+            via_name_id, rightmost_name_id, name_table, street_name_suffix_table);
 
         if (!same_name_left || !same_name_right)
         {

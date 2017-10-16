@@ -102,7 +102,7 @@ void readEdgeBasedGraph(const boost::filesystem::path &path,
     storage::serialization::read(reader, edge_based_edge_list);
 }
 
-// reads .osrm.nodes
+// reads .osrm.nbg_nodes
 template <typename CoordinatesT, typename PackedOSMIDsT>
 inline void readNodes(const boost::filesystem::path &path,
                       CoordinatesT &coordinates,

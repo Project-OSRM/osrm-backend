@@ -45,13 +45,13 @@ class TurnAnalysis
     TurnAnalysis(const util::NodeBasedDynamicGraph &node_based_graph,
                  const EdgeBasedNodeDataContainer &node_data_container,
                  const std::vector<util::Coordinate> &coordinates,
-                 const extractor::PackedOSMIDs &osm_node_ids,
                  const RestrictionMap &restriction_map,
                  const std::unordered_set<NodeID> &barrier_nodes,
                  const CompressedEdgeContainer &compressed_edge_container,
                  const util::NameTable &name_table,
                  const SuffixTable &street_name_suffix_table,
-                 bool validate_intersections);
+                 bool validate_intersections,
+                 const std::string &nbg_nodes_filepath);
 
     /* Full Analysis Process for a single node/edge combination. Use with caution, as the process is
      * relatively expensive */

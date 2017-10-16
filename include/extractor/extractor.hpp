@@ -75,7 +75,6 @@ class Extractor
         guidance::LaneDescriptionMap &turn_lane_map,
         // for calculating turn penalties
         ScriptingEnvironment &scripting_environment,
-        extractor::PackedOSMIDs osm_node_ids,
         // output data
         EdgeBasedNodeDataContainer &edge_based_nodes_container,
         std::vector<EdgeBasedNodeSegment> &edge_based_node_segments,

@@ -210,7 +210,6 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     util::DeallocatingVector<EdgeBasedEdge> edge_based_edge_list;
     std::vector<bool> node_is_startpoint;
     std::vector<EdgeWeight> edge_based_node_weights;
-    extractor::PackedOSMIDs osm_node_ids;
 
     // Create a node-based graph from the OSRM file
     NodeBasedGraphFactory node_based_graph_factory(config.GetPath(".osrm"),
@@ -271,7 +270,6 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
                                conditional_turn_restrictions,
                                turn_lane_map,
                                scripting_environment,
-                               osm_node_ids,
                                edge_based_nodes_container,
                                edge_based_node_segments,
                                node_is_startpoint,
@@ -624,7 +622,6 @@ EdgeID Extractor::BuildEdgeExpandedGraph(
     guidance::LaneDescriptionMap &turn_lane_map,
     // for calculating turn penalties
     ScriptingEnvironment &scripting_environment,
-    extractor::PackedOSMIDs osm_node_ids,
     // output data
     EdgeBasedNodeDataContainer &edge_based_nodes_container,
     std::vector<EdgeBasedNodeSegment> &edge_based_node_segments,
@@ -634,6 +631,7 @@ EdgeID Extractor::BuildEdgeExpandedGraph(
     const std::string &intersection_class_output_file)
 {
     util::NameTable name_table(config.GetPath(".osrm.names").string());
+    auto nbg_nodes_file = config.GetPath(".osrm.nbg_nodes").string();
 
     EdgeBasedGraphFactory edge_based_graph_factory(node_based_graph,
                                                    edge_based_nodes_container,
@@ -641,9 +639,9 @@ EdgeID Extractor::BuildEdgeExpandedGraph(
                                                    barrier_nodes,
                                                    traffic_signals,
                                                    coordinates,
-                                                   osm_node_ids,
                                                    name_table,
-                                                   turn_lane_map);
+                                                   turn_lane_map,
+                                                   nbg_nodes_file);
 
     const auto create_edge_based_edges = [&]() {
         // scoped to relase intermediate datastructures right after the call
