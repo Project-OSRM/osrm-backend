@@ -5,21 +5,23 @@
       - Support of `distance` weight in foot and bicycle profiles
       - Support of relations processing
       - Added `way:get_location_tag(key)` method to get location-dependent tags https://github.com/Project-OSRM/osrm-backend/wiki/Using-location-dependent-data-in-profiles
-      - left-side driving mode is specified by a local Boolean flag `is_left_hand_driving` in `ExtractionWay` and `ExtractionTurn`
+      - Left-side driving mode is specified by a local Boolean flag `is_left_hand_driving` in `ExtractionWay` and `ExtractionTurn`
+      - Support literal values for maxspeeds in NO, PL and ZA
     - Infrastructure:
       - Lua 5.1 support is removed due to lack of support in sol2 https://github.com/ThePhD/sol2/issues/302
+      - Fixed pkg-config version of OSRM
     - Node.js Bindings:
       - Exposes `use_threads_number=Number` parameter of `EngineConfig` to limit a number of threads in a TBB internal pool
-    - Internals
-      - MLD uses a unidirectional Dijkstra for 1-to-N and N-to-1 matrices
-      - BREAKING: Internal file formats have changed, requiring a new pre-processing run
-    - Guidance
-      - Fixed some cases of sliproads pre-processing (https://github.com/Project-OSRM/osrm-backend/issues/4348)
-      - don't suppress name announcements via sliproad handler
-    - Bugfixes
-      - Fixed a bug that would result in unnecessary instructions, due to problems in suffix/prefix detection
+    - Bugfixes:
+      - Fixed #4348: Some cases of sliproads pre-processing were broken
+      - Fixed #4331: Correctly compute left/right modifiers of forks in case the fork is curved.
+      - Fixed #4472: Correctly count the number of lanes using the delimter in `turn:lanes` tag.
+      - Fixed #4214: Multiple runs of `osrm-partition` lead to crash.
+      - Fixed #4348: Fix assorted problems around slip roads.
+      - Fixed #4420: A bug that would result in unnecessary instructions, due to problems in suffix/prefix detection
     - Algorithm
       - Deprecate CoreCH functionality. Usage of CoreCH specific options will fall back to using CH with core_factor of 1.0
+      - MLD uses a unidirectional Dijkstra for 1-to-N and N-to-1 matrices which yields speedup.
 
 # 5.12.0
   - Changes from 5.11:
