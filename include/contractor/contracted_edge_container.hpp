@@ -71,7 +71,7 @@ struct ContractedEdgeContainer
         auto flags_iter = flags.begin();
 
         // Remove all edges that are contained in the old set of edges and set the appropriate flag.
-        auto new_end = std::remove_if(new_edges.begin(), new_edges.end(), [&](const auto &edge) {
+        auto new_end = std::remove_if(new_edges.begin(), new_edges.end(), [&](const QueryEdge &edge) {
             // check if the new edge would be sorted before the currend old edge
             // if so it is not contained yet in the set of old edges
             if (edge_iter == edge_end || mergeCompare(edge, *edge_iter))
