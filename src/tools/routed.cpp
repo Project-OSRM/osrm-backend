@@ -80,7 +80,8 @@ inline unsigned generateServerProgramOptions(const int argc,
                                              std::string &ip_address,
                                              int &ip_port,
                                              bool &trial,
-                                             EngineConfig &config)
+                                             EngineConfig &config,
+                                             int &requested_thread_num)
 {
     using boost::program_options::value;
     using boost::filesystem::path;
@@ -106,7 +107,7 @@ inline unsigned generateServerProgramOptions(const int argc,
          value<int>(&ip_port)->default_value(5000),
          "TCP/IP port") //
         ("threads,t",
-         value<int>(&config.use_threads_number)->default_value(hardware_threads),
+         value<int>(&requested_thread_num)->default_value(hardware_threads),
          "Number of threads to use") //
         ("shared-memory,s",
          value<bool>(&config.use_shared_memory)->implicit_value(true)->default_value(false),
@@ -196,7 +197,7 @@ inline unsigned generateServerProgramOptions(const int argc,
     }
 
     // Adjust number of threads to hardware concurrency
-    config.use_threads_number = std::min(hardware_threads, config.use_threads_number);
+    requested_thread_num = std::min(hardware_threads, requested_thread_num);
 
     std::cout << visible_options;
     return INIT_OK_DO_NOT_START_ENGINE;
@@ -213,8 +214,9 @@ int main(int argc, const char *argv[]) try
     EngineConfig config;
     boost::filesystem::path base_path;
 
-    const unsigned init_result =
-        generateServerProgramOptions(argc, argv, base_path, ip_address, ip_port, trial_run, config);
+    int requested_thread_num = 1;
+    const unsigned init_result = generateServerProgramOptions(
+        argc, argv, base_path, ip_address, ip_port, trial_run, config, requested_thread_num);
     if (init_result == INIT_OK_DO_NOT_START_ENGINE)
     {
         return EXIT_SUCCESS;
@@ -250,10 +252,6 @@ int main(int argc, const char *argv[]) try
     {
         util::Log() << "Loading from shared memory";
     }
-
-    // Use the same number of threads for Server and TBB threads pools
-    // It doubles number of used threads
-    auto requested_thread_num = config.use_threads_number;
 
     util::Log() << "Threads: " << requested_thread_num;
     util::Log() << "IP address: " << ip_address;

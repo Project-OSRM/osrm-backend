@@ -10,8 +10,6 @@
     - Infrastructure:
       - Lua 5.1 support is removed due to lack of support in sol2 https://github.com/ThePhD/sol2/issues/302
       - Fixed pkg-config version of OSRM
-    - Node.js Bindings:
-      - Exposes `use_threads_number=Number` parameter of `EngineConfig` to limit a number of threads in a TBB internal pool
     - Bugfixes:
       - Fixed #4348: Some cases of sliproads pre-processing were broken
       - Fixed #4331: Correctly compute left/right modifiers of forks in case the fork is curved.

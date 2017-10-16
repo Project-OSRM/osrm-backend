@@ -88,7 +88,6 @@ struct EngineConfig final
     int max_alternatives = 3; // set an arbitrary upper bound; can be adjusted by user
     bool use_shared_memory = true;
     Algorithm algorithm = Algorithm::CH;
-    int use_threads_number = 1;
     std::string verbosity;
 };
 }
