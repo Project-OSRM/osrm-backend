@@ -71,37 +71,38 @@ struct ContractedEdgeContainer
         auto flags_iter = flags.begin();
 
         // Remove all edges that are contained in the old set of edges and set the appropriate flag.
-        auto new_end = std::remove_if(new_edges.begin(), new_edges.end(), [&](const auto &edge) {
-            // check if the new edge would be sorted before the currend old edge
-            // if so it is not contained yet in the set of old edges
-            if (edge_iter == edge_end || mergeCompare(edge, *edge_iter))
-            {
+        auto new_end =
+            std::remove_if(new_edges.begin(), new_edges.end(), [&](const QueryEdge &edge) {
+                // check if the new edge would be sorted before the currend old edge
+                // if so it is not contained yet in the set of old edges
+                if (edge_iter == edge_end || mergeCompare(edge, *edge_iter))
+                {
+                    return false;
+                }
+
+                // find the first old edge that is equal or greater then the new edge
+                while (edge_iter != edge_end && mergeCompare(*edge_iter, edge))
+                {
+                    BOOST_ASSERT(flags_iter != flags.end());
+                    edge_iter++;
+                    flags_iter++;
+                }
+
+                // all new edges will be sorted after the old edges
+                if (edge_iter == edge_end)
+                {
+                    return false;
+                }
+
+                BOOST_ASSERT(edge_iter != edge_end);
+                if (mergable(edge, *edge_iter))
+                {
+                    *flags_iter = *flags_iter | flag;
+                    return true;
+                }
+                BOOST_ASSERT(mergeCompare(edge, *edge_iter));
                 return false;
-            }
-
-            // find the first old edge that is equal or greater then the new edge
-            while (edge_iter != edge_end && mergeCompare(*edge_iter, edge))
-            {
-                BOOST_ASSERT(flags_iter != flags.end());
-                edge_iter++;
-                flags_iter++;
-            }
-
-            // all new edges will be sorted after the old edges
-            if (edge_iter == edge_end)
-            {
-                return false;
-            }
-
-            BOOST_ASSERT(edge_iter != edge_end);
-            if (mergable(edge, *edge_iter))
-            {
-                *flags_iter = *flags_iter | flag;
-                return true;
-            }
-            BOOST_ASSERT(mergeCompare(edge, *edge_iter));
-            return false;
-        });
+            });
 
         // append new edges
         edges.insert(edges.end(), new_edges.begin(), new_end);
