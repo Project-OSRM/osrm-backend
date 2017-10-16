@@ -42,15 +42,13 @@ class NearestAPI final : public BaseAPI
                            auto waypoint = MakeWaypoint(phantom_node);
                            waypoint.values["distance"] = phantom_with_distance.distance;
 
-                           
-
                            util::json::Array nodes;
 
                            std::uint64_t from_node = 0;
                            std::uint64_t to_node = 0;
 
                            std::vector<NodeID> forward_geometry;
-                           if (phantom_node.forward_segment_id.enabled )
+                           if (phantom_node.forward_segment_id.enabled)
                            {
                                auto segment_id = phantom_node.forward_segment_id.id;
                                const auto geometry_id = facade.GetGeometryIndex(segment_id).id;
@@ -72,7 +70,8 @@ class NearestAPI final : public BaseAPI
                                    geometry[phantom_node.fwd_segment_position + 1]);
                                from_node = static_cast<std::uint64_t>(osm_node_id);
                            }
-                           else if (phantom_node.forward_segment_id.enabled && phantom_node.fwd_segment_position > 0)
+                           else if (phantom_node.forward_segment_id.enabled &&
+                                    phantom_node.fwd_segment_position > 0)
                            {
                                // In the case of one way, rely on forward segment only
                                auto osm_node_id = facade.GetOSMNodeIDOfNode(
