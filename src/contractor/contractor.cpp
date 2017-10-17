@@ -42,7 +42,7 @@ namespace contractor
 
 int Contractor::Run()
 {
-    if (config.core_factor)
+    if (config.core_factor != 1.0)
     {
         util::Log(logWARNING)
             << "Using core factor is deprecated and will be ignored. Falling back to CH.";
