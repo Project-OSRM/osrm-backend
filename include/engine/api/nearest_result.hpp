@@ -16,7 +16,6 @@ struct NearestResult
 {
     std::vector<Waypoint> waypoints;
 };
-
 }
 }
 }

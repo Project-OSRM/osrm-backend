@@ -20,6 +20,7 @@ class NearestPlugin final : public BasePlugin
   public:
     explicit NearestPlugin(const int max_results);
 
+    // to remove in v6.0
     Status HandleRequest(const RoutingAlgorithmsInterface &algorithms,
                          const api::NearestParameters &params,
                          util::json::Object &result) const;

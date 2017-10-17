@@ -4,6 +4,7 @@
 #include "engine/api/base_api.hpp"
 #include "engine/api/json_factory.hpp"
 #include "engine/api/table_parameters.hpp"
+#include "engine/api/waypoint.hpp"
 
 #include "engine/datafacade/datafacade_base.hpp"
 
@@ -36,91 +37,64 @@ class TableAPI final : public BaseAPI
     {
     }
 
-    virtual void MakeResponse(const std::vector<EdgeWeight> &durations,
-                              const std::vector<PhantomNode> &phantoms,
-                              util::json::Object &response) const
+    virtual TableResult MakeResponse(const std::vector<EdgeWeight> &durations,
+                                     const std::vector<PhantomNode> &phantoms) const
     {
-        auto number_of_sources = parameters.sources.size();
-        auto number_of_destinations = parameters.destinations.size();
+        TableResult response;
 
         // symmetric case
         if (parameters.sources.empty())
         {
-            response.values["sources"] = MakeWaypoints(phantoms);
-            number_of_sources = phantoms.size();
+            response.sources = MakeWaypoints(phantoms);
         }
         else
         {
-            response.values["sources"] = MakeWaypoints(phantoms, parameters.sources);
+            response.sources = MakeWaypoints(phantoms, parameters.sources);
         }
 
+        // symmetric case
         if (parameters.destinations.empty())
         {
-            response.values["destinations"] = MakeWaypoints(phantoms);
-            number_of_destinations = phantoms.size();
+            response.destinations = MakeWaypoints(phantoms);
         }
         else
         {
-            response.values["destinations"] = MakeWaypoints(phantoms, parameters.destinations);
+            response.destinations = MakeWaypoints(phantoms, parameters.destinations);
         }
 
-        response.values["durations"] =
-            MakeTable(durations, number_of_sources, number_of_destinations);
-        response.values["code"] = "Ok";
+        response.durations = std::move(durations);
+        return response;
     }
 
   protected:
-    virtual util::json::Array MakeWaypoints(const std::vector<PhantomNode> &phantoms) const
+    virtual std::vector<Waypoint> MakeWaypoints(const std::vector<PhantomNode> &phantoms) const
     {
-        util::json::Array json_waypoints;
-        json_waypoints.values.reserve(phantoms.size());
+        std::vector<Waypoint> waypoints;
+        waypoints.reserve(phantoms.size());
         BOOST_ASSERT(phantoms.size() == parameters.coordinates.size());
 
         boost::range::transform(
-            phantoms,
-            std::back_inserter(json_waypoints.values),
-            [this](const PhantomNode &phantom) { return BaseAPI::MakeWaypoint(phantom); });
-        return json_waypoints;
+            phantoms, std::back_inserter(waypoints),
+            [this](const PhantomNode &phantom) {
+               auto name = facade.GetNameForID(facade.GetNameIndex(
+                   phantom.forward_segment_id.id));
+               return Waypoint{0, name.data(), phantom.location};
+            });
+        return waypoints;
     }
 
-    virtual util::json::Array MakeWaypoints(const std::vector<PhantomNode> &phantoms,
-                                            const std::vector<std::size_t> &indices) const
+    virtual std::vector<Waypoint> MakeWaypoints(const std::vector<PhantomNode> &phantoms,
+                                                const std::vector<std::size_t> &indices) const
     {
-        util::json::Array json_waypoints;
-        json_waypoints.values.reserve(indices.size());
-        boost::range::transform(indices,
-                                std::back_inserter(json_waypoints.values),
-                                [this, phantoms](const std::size_t idx) {
-                                    BOOST_ASSERT(idx < phantoms.size());
-                                    return BaseAPI::MakeWaypoint(phantoms[idx]);
-                                });
-        return json_waypoints;
-    }
-
-    virtual util::json::Array MakeTable(const std::vector<EdgeWeight> &values,
-                                        std::size_t number_of_rows,
-                                        std::size_t number_of_columns) const
-    {
-        util::json::Array json_table;
-        for (const auto row : util::irange<std::size_t>(0UL, number_of_rows))
-        {
-            util::json::Array json_row;
-            auto row_begin_iterator = values.begin() + (row * number_of_columns);
-            auto row_end_iterator = values.begin() + ((row + 1) * number_of_columns);
-            json_row.values.resize(number_of_columns);
-            std::transform(row_begin_iterator,
-                           row_end_iterator,
-                           json_row.values.begin(),
-                           [](const EdgeWeight duration) {
-                               if (duration == MAXIMAL_EDGE_DURATION)
-                               {
-                                   return util::json::Value(util::json::Null());
-                               }
-                               return util::json::Value(util::json::Number(duration / 10.));
-                           });
-            json_table.values.push_back(std::move(json_row));
-        }
-        return json_table;
+        std::vector<Waypoint> waypoints;
+        waypoints.reserve(indices.size());
+        boost::range::transform(
+            indices, std::back_inserter(waypoints), [this, phantoms](const std::size_t idx) {
+                BOOST_ASSERT(idx < phantoms.size());
+                auto name = facade.GetNameForID(facade.GetNameIndex(phantoms[idx].forward_segment_id.id));
+                return Waypoint{0, name.data(), phantoms[idx].location};
+            });
+        return waypoints;
     }
 
     const TableParameters &parameters;
