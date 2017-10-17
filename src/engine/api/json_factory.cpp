@@ -1,4 +1,5 @@
 #include "engine/api/json_factory.hpp"
+#include "engine/api/table_result.hpp"
 
 #include "engine/hint.hpp"
 #include "engine/polyline_compressor.hpp"
@@ -418,16 +419,59 @@ util::json::Object toJSON(const Waypoint &waypoint)
     return json_waypoint;
 }
 
+// convert a cpp vector of cpp Waypoints into a JSON array of JSON waypoints
+auto waypointsToJSON(const std::vector<Waypoint> &waypoints)
+{
+    util::json::Array json_waypoints;
+    json_waypoints.values.resize(waypoints.size());
+    std::transform(waypoints.begin(),
+                   waypoints.end(),
+                   json_waypoints.values.begin(),
+                   [](const auto &w) { return toJSON(w); });
+    return json_waypoints;
+}
+
 util::json::Object toJSON(const NearestResult &result)
 {
     util::json::Object json_result;
-    util::json::Array json_waypoints;
-    json_waypoints.values.resize(result.waypoints.size());
-    std::transform(result.waypoints.begin(),
-                   result.waypoints.end(),
-                   json_waypoints.values.begin(),
-                   [](const auto &w) { return toJSON(w); });
-    json_result.values["waypoints"] = json_waypoints;
+    json_result.values["code"] = "Ok";
+    json_result.values["waypoints"] = waypointsToJSON(result.waypoints);
+    return json_result;
+}
+
+util::json::Object toJSON(const TableResult &result)
+{
+    util::json::Object json_result;
+    json_result.values["code"] = "Ok";
+
+    // array of waypoints
+    json_result.values["sources"] = waypointsToJSON(result.sources);
+    json_result.values["destinations"] = waypointsToJSON(result.destinations);
+    // array of arrays, holding durations (int32)
+    util::json::Array json_durations;
+    const std::size_t number_of_rows = result.sources.size();
+    const std::size_t number_of_columns = result.destinations.size();
+    for (const auto row : util::irange<std::size_t>(0UL, number_of_rows))
+    {
+        util::json::Array json_row;
+        auto row_begin_iterator = result.durations.begin() + (row * number_of_columns);
+        auto row_end_iterator = result.durations.begin() + ((row + 1) * number_of_columns);
+        json_row.values.resize(number_of_columns);
+        std::transform(row_begin_iterator,
+                       row_end_iterator,
+                       json_row.values.begin(),
+                       [](const EdgeWeight duration) {
+                           // no route between source and destination
+                           if (duration == MAXIMAL_EDGE_DURATION)
+                           {
+                               return util::json::Value(util::json::Null());
+                           }
+                           // convert values from deciseconds to seconds
+                           return util::json::Value(util::json::Number(duration / 10.));
+                       });
+        json_durations.values.push_back(std::move(json_row));
+    }
+    json_result.values["durations"] = json_durations;
     return json_result;
 }
 
