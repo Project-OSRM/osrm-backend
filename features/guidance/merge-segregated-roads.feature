@@ -562,3 +562,142 @@ Feature: Merge Segregated Roads
         When I route I should get
             | waypoints | route                                      | turns                       |
             | i,h       | Kurfürstendamm,Hubertusallee,Hubertusallee | depart,turn straight,arrive |
+
+    # https://www.openstreetmap.org/#map=19/52.46339/13.40272
+    Scenario: Do not merge links between segregated roads
+        Given the node map
+            """
+            f
+              `````````` ..............
+                                        ` ` ` `  e - - - - - - - d
+            a                                    1
+             ```````````..............           |
+                                      `````````` b - - - - - - - c
+                                                 |
+                                                 |
+                                                 |
+                                                 |
+                                                 g
+            """
+
+        And the ways
+            | nodes | name | oneway |
+            | ab    | germ | yes    |
+            | bc    | ober | yes    |
+            | de    | ober | yes    |
+            | ef    | germ | yes    |
+            | eb    | germ | no     |
+            | gb    | germ | no     |
+
+        When I route I should get
+            | waypoints | route          | turns                         |
+            | a,c       | germ,ober,ober | depart,turn left,arrive       |
+            | a,g       | germ,germ      | depart,arrive                 |
+            | a,1       | germ,germ,germ | depart,continue uturn,arrive  |
+            | d,g       | ober,germ,germ | depart,turn sharp left,arrive |
+
+    # https://www.openstreetmap.org/#map=19/51.32888/6.57059
+    Scenario: Places in presence of oneways
+        Given the node map
+            """
+                    i                                                                                                           l
+                    |                                                                                                           |
+                    |                                                                                                           |
+                    g - - - - - - - - - - - - - - - - - - - - - - - - - 1 - - - - - - - - - - - - - - - - - - - - - - - - - - - f
+                    |                                                                                                           |
+                    |                                                                                                           |
+            a - - - b - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 2 - - - - - - - - - - - - - - - c - - - d
+                    |                                                                                                           |
+                    |                                                                                                           |
+                    j                                                                                                           k
+            """
+
+        And the ways
+            | nodes | name     | oneway |
+            | ab    | schwert  | yes    |
+            | cd    | schwert  | yes    |
+            | ig    | luise    | yes    |
+            | bj    | luise    | yes    |
+            | kc    | marianne | yes    |
+            | fl    | marianne | yes    |
+            | bc    | albrecht | no     |
+            | fg    | albrecht | no     |
+            | gb    | albrecht | yes    |
+            | cf    | albrecht | yes    |
+
+        When I route I should get
+            | waypoints | route                                       | turns                                                        |
+            | a,l       | schwert,albrecht,marianne,marianne          | depart,new name straight,turn left,arrive                    |
+            | a,j       | schwert,luise,luise                         | depart,turn right,arrive                                     |
+            | a,1       | schwert,albrecht,albrecht,albrecht,albrecht | depart,new name straight,continue left,continue uturn,arrive |
+            | k,l       | marianne,marianne,marianne                  | depart,continue right,arrive                                 |
+            | k,j       | marianne,albrecht,luise,luise               | depart,turn left,turn left,arrive                            |
+            | k,d       | marianne,schwert,schwert                    | depart,turn right,arrive                                     |
+            | i,j       | luise,luise,luise                           | depart,turn right,arrive                                     |
+            | i,d       | luise,albrecht,schwert,schwert              | depart,turn left,turn straight,arrive                        |
+            | i,l       | luise,albrecht,marianne                     | depart,turn left,arrive                                      |
+
+    # https://www.openstreetmap.org/#map=19/52.46339/13.40272
+    Scenario: Do not merge links between segregated roads
+        Given the node map
+            """
+                                                               d
+            f...............                                   |
+                            `````````` ..............          |
+            a...............                          ` ` ` `  e
+                            ``````````..............           1
+                                                    `````````` b
+                                                                    - - - - - - - c
+            """
+
+        And the ways
+            | nodes | name | oneway |
+            | ab    | otto | yes    |
+            | bc    | otto | no     |
+            | de    | neu  | no     |
+            | ef    | otto | yes    |
+            | eb    | otto | no     |
+
+        When I route I should get
+            | waypoints | route               | turns                                      |
+            | a,c       | otto,otto           | depart,arrive                              |
+            | a,f       | otto,otto,otto,otto | depart,continue uturn,continue left,arrive |
+            | a,1       | otto,otto,otto      | depart,continue uturn,arrive               |
+            | a,d       | otto,otto,neu,neu   | depart,continue uturn,turn right,arrive    |
+            | c,f       | otto,otto,otto      | depart,continue left,arrive                |
+            | c,1       | otto,otto           | depart,arrive                              |
+
+    # https://www.openstreetmap.org/#map=18/50.94608/7.02030
+    Scenario: Do not merge oneway places
+        Given the node map
+            """
+                                j
+                                |
+                                |
+            g - f - - - - - - - e
+                |               |
+                |               |
+                |               d
+                |                \
+                |                .c.
+                a - - - - - - b`    `
+                |                    `
+                |                      ` h
+                |
+                |
+                i
+            """
+
+        And the ways
+            | nodes | name | oneway |
+            | efabc | kobe | yes    |
+            | edc   | kobe | no     |
+            | fg    | arn  | no     |
+            | ia    | kobu | yes    |
+            | hc    | wei  | no     |
+            | ej    | wei  | no     |
+
+        When I route I should get
+            | waypoints | route          | turns                        |
+            | j,h       | wei,wei,wei    | depart,continue left,arrive  |
+            | a,d       | kobe,kobe,kobe | depart,continue uturn,arrive |
