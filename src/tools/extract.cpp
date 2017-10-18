@@ -58,7 +58,7 @@ return_code parseArguments(int argc,
             ->default_value(false),
         "Use metadata during osm parsing (This can affect the extraction performance).")(
         "parse-conditional-restrictions",
-        boost::program_options::value<bool>(&extractor_config.parse_conditionals)
+        boost::program_options::bool_switch(&extractor_config.parse_conditionals)
             ->implicit_value(true)
             ->default_value(false),
         "Save conditional restrictions found during extraction to disk for use "
@@ -68,7 +68,7 @@ return_code parseArguments(int argc,
                                   ->composing(),
                               "GeoJSON files with location-dependent data")(
         "use-locations-cache",
-        boost::program_options::value<bool>(&extractor_config.use_locations_cache)
+        boost::program_options::bool_switch(&extractor_config.use_locations_cache)
             ->implicit_value(true)
             ->default_value(extractor_config.use_locations_cache),
         "Use internal nodes locations cache for location-dependent data lookups");
@@ -82,7 +82,7 @@ return_code parseArguments(int argc,
         boost::program_options::value<boost::filesystem::path>(&extractor_config.input_path),
         "Input file in .osm, .osm.bz2 or .osm.pbf format")(
         "generate-edge-lookup",
-        boost::program_options::value<bool>(&dummy)->implicit_value(true)->default_value(false),
+        boost::program_options::bool_switch(&dummy)->implicit_value(true)->default_value(false),
         "Not used anymore");
 
     // positional option
