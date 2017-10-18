@@ -61,7 +61,7 @@ return_code parseArguments(int argc,
             ->composing(),
         "Lookup files containing from_, to_, via_nodes, and turn penalties to adjust turn weights")(
         "level-cache,o",
-        boost::program_options::value<bool>(&contractor_config.use_cached_priority)
+        boost::program_options::bool_switch(&contractor_config.use_cached_priority)
             ->default_value(false),
         "DEPRECATED: Will always be false. Use .level file to retain the contraction level for "
         "each "
