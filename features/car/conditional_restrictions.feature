@@ -677,7 +677,7 @@ Feature: Car - Turn restrictions
     # https://www.openstreetmap.org/#map=18/38.91099/-77.00888
     @no_turning @conditionals
     Scenario: Car - DC North capitol situation, two on one off
-        Given the extract extra arguments "--parse-conditional-restrictions=1"
+        Given the extract extra arguments "--parse-conditional-restrictions"
         # 9pm Wed 02 May, 2017 UTC, 5pm EDT
         Given the contract extra arguments "--time-zone-file=test/data/tz/{timezone_names}/dc.geojson --parse-conditionals-from-now=1493845200"
         Given the customize extra arguments "--time-zone-file=test/data/tz/{timezone_names}/dc.geojson --parse-conditionals-from-now=1493845200"
@@ -724,7 +724,7 @@ Feature: Car - Turn restrictions
 
     @no_turning @conditionals
     Scenario: Car - DC North capitol situation, one on two off
-        Given the extract extra arguments "--parse-conditional-restrictions=1"
+        Given the extract extra arguments "--parse-conditional-restrictions"
         # 10:30am utc, wed, 6:30am est
         Given the contract extra arguments "--time-zone-file=test/data/tz/{timezone_names}/dc.geojson --parse-conditionals-from-now=1493807400"
         Given the customize extra arguments "--time-zone-file=test/data/tz/{timezone_names}/dc.geojson --parse-conditionals-from-now=1493807400"
@@ -848,7 +848,7 @@ Feature: Car - Turn restrictions
 
     @only_turning @conditionals
     Scenario: Car - Somewhere in London, the UK, GMT timezone
-        Given the extract extra arguments "--parse-conditional-restrictions=1"
+        Given the extract extra arguments "--parse-conditional-restrictions"
         # 9am UTC, 10am BST
         Given the contract extra arguments "--time-zone-file=test/data/tz/{timezone_names}/london.geojson --parse-conditionals-from-now=1493802000"
         Given the customize extra arguments "--time-zone-file=test/data/tz/{timezone_names}/london.geojson --parse-conditionals-from-now=1493802000"
