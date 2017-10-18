@@ -156,7 +156,8 @@ operator()(const NodeID /*nid*/,
 
     const auto is_valid_choice = !requires_entry || min_element->entry_allowed;
     const auto is_only_choice_with_same_name =
-        count_desired_name <= 2 && // <= in case we come from a bridge
+        count_desired_name <= 2 && //  <= in case we come from a bridge, otherwise we have a u-turn
+                                   //  and the outgoing edge
         node_data_container
                 .GetAnnotation(node_based_graph.GetEdgeData(min_element->eid).annotation_data)
                 .name_id == desired_name_id &&
@@ -166,6 +167,37 @@ operator()(const NodeID /*nid*/,
           intersection.findClosestTurn(STRAIGHT_ANGLE) == min_element) &&
          angularDeviation(min_element->angle, STRAIGHT_ANGLE) < NARROW_TURN_ANGLE) &&
         angularDeviation(initial_bearing, min_element->bearing) < NARROW_TURN_ANGLE;
+
+    // do not allow major turns in the road, if other similar turns are present
+    // e.g.a turn at the end of the road:
+    //
+    // a - - a - - a - b - b
+    //             |
+    //       a - - a
+    //             |
+    //             c
+    //
+    // Such a turn can never be part of a merge
+    // We check if there is a similar turn to the other side. If such a turn exists, we consider the
+    // continuation of the road not possible
+    if (util::angularDeviation(STRAIGHT_ANGLE, min_element->angle) > GROUP_ANGLE)
+    {
+        auto deviation = util::angularDeviation(STRAIGHT_ANGLE, min_element->angle);
+        auto opposite_angle = min_element->angle >= STRAIGHT_ANGLE ? (STRAIGHT_ANGLE - deviation)
+                                                                   : (STRAIGHT_ANGLE + deviation);
+        auto opposite = intersection.findClosestTurn(opposite_angle);
+        auto opposite_deviation = util::angularDeviation(STRAIGHT_ANGLE, opposite->angle);
+        if (opposite_deviation <= deviation || (deviation / opposite_deviation) < 1.5)
+        {
+            return {};
+        }
+
+        auto const best = intersection.findClosestTurn(STRAIGHT_ANGLE);
+        if (util::angularDeviation(best->angle, STRAIGHT_ANGLE) < NARROW_TURN_ANGLE)
+        {
+            return {};
+        }
+    }
 
     // in cases where we have two edges between roads, we can have quite severe angles due to the
     // random split OSRM does to break up parallel edges at any coordinate
