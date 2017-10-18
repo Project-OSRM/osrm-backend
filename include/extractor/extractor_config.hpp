@@ -69,6 +69,7 @@ struct ExtractorConfig final : storage::IOConfig
                                       ".osrm.cnbg",
                                       ".osrm.cnbg_to_ebg"}),
                                  requested_num_threads(0),
+                                 parse_conditionals(false),
                                  use_locations_cache(true)
     {
     }
