@@ -354,9 +354,9 @@ Feature: Merge Segregated Roads
             | hb    | road   | yes    |
 
         When I route I should get
-            | waypoints | turns         | route       | intersections 									  |
+            | waypoints | turns         | route       | intersections									  |
             | a,f       | depart,arrive | road,road   | true:180,false:0 true:180,false:0 true:180;true:0 |
-            | c,f       | depart,arrive | bridge,road | true:180,false:0 true:180;true:0 				  |
+            | c,f       | depart,arrive | bridge,road | true:180,false:0 true:180;true:0				  |
             | 1,f       | depart,arrive | bridge,road | true:180,false:0 true:180;true:0                  |
             | f,a       | depart,arrive | road,road   | true:0,true:0 false:180,true:0 false:180;true:180 |
             | g,a       | depart,arrive | bridge,road | true:0,true:0 false:180;true:180                  |
@@ -518,11 +518,11 @@ Feature: Merge Segregated Roads
 
         # the goal here should be not to mention the intersection in the middle at all and also suppress the segregated parts
         When I route I should get
-            | waypoints | route            | intersections																																    |
+            | waypoints | route            | intersections																																	|
             | a,l       | horiz,vert,vert  | true:90;false:0 true:60 true:90 true:180 false:270,true:60 false:120 false:240 false:300,true:0 false:90 false:180 false:240 true:270;true:180 |
-            | a,d       | horiz,horiz      | true:90,false:0 true:60 true:90 true:180 false:270,false:0 true:90 false:180 false:270 true:300;true:270									    |
+            | a,d       | horiz,horiz      | true:90,false:0 true:60 true:90 true:180 false:270,false:0 true:90 false:180 false:270 true:300;true:270										|
             | j,h       | vert,horiz,horiz | true:0;true:0 true:90 false:180 false:270 true:300,false:60 false:120 false:240 true:300,false:0 false:90 false:120 true:180 true:270;true:90  |
-            | j,l       | vert,vert        | true:0,true:0 true:90 false:180 false:270 true:300,true:0 false:90 false:180 true:240 false:270;true:180									    |
+            | j,l       | vert,vert        | true:0,true:0 true:90 false:180 false:270 true:300,true:0 false:90 false:180 true:240 false:270;true:180										|
 
 
     Scenario: Square Area - Don't merge almost circular roads
@@ -590,11 +590,11 @@ Feature: Merge Segregated Roads
             | gb    | germ | no     |
 
         When I route I should get
-            | waypoints | route          | turns                         |
-            | a,c       | germ,ober,ober | depart,turn left,arrive       |
-            | a,g       | germ,germ      | depart,arrive                 |
-            | a,1       | germ,germ,germ | depart,continue uturn,arrive  |
-            | d,g       | ober,germ,germ | depart,turn sharp left,arrive |
+            | waypoints | route          | turns                        |
+			| a,c       | germ,ober      | depart,arrive                |
+			| a,g       | germ,germ,germ | depart,continue right,arrive |
+			| a,1       | germ,germ,germ | depart,continue left,arrive  |
+			| d,g       | ober,germ,germ | depart,turn left,arrive      |
 
     # https://www.openstreetmap.org/#map=19/51.32888/6.57059
     Scenario: Places in presence of oneways
@@ -629,13 +629,13 @@ Feature: Merge Segregated Roads
             | waypoints | route                                       | turns                                                        |
             | a,l       | schwert,albrecht,marianne,marianne          | depart,new name straight,turn left,arrive                    |
             | a,j       | schwert,luise,luise                         | depart,turn right,arrive                                     |
-            | a,1       | schwert,albrecht,albrecht,albrecht,albrecht | depart,new name straight,continue left,continue uturn,arrive |
-            | k,l       | marianne,marianne,marianne                  | depart,continue right,arrive                                 |
+			| a,1       | schwert,albrecht,albrecht,albrecht          | depart,new name straight,continue uturn,arrive               |
+			| k,l       | marianne,marianne                           | depart,arrive                                                |
             | k,j       | marianne,albrecht,luise,luise               | depart,turn left,turn left,arrive                            |
             | k,d       | marianne,schwert,schwert                    | depart,turn right,arrive                                     |
-            | i,j       | luise,luise,luise                           | depart,turn right,arrive                                     |
+			| i,j       | luise,luise                                 | depart,arrive                                                |
             | i,d       | luise,albrecht,schwert,schwert              | depart,turn left,turn straight,arrive                        |
-            | i,l       | luise,albrecht,marianne                     | depart,turn left,arrive                                      |
+			| i,l       | luise,albrecht,marianne,marianne            | depart,turn left,turn left,arrive                            |
 
     # https://www.openstreetmap.org/#map=19/52.46339/13.40272
     Scenario: Do not merge links between segregated roads
@@ -659,13 +659,13 @@ Feature: Merge Segregated Roads
             | eb    | otto | no     |
 
         When I route I should get
-            | waypoints | route               | turns                                      |
-            | a,c       | otto,otto           | depart,arrive                              |
-            | a,f       | otto,otto,otto,otto | depart,continue uturn,continue left,arrive |
-            | a,1       | otto,otto,otto      | depart,continue uturn,arrive               |
-            | a,d       | otto,otto,neu,neu   | depart,continue uturn,turn right,arrive    |
-            | c,f       | otto,otto,otto      | depart,continue left,arrive                |
-            | c,1       | otto,otto           | depart,arrive                              |
+            | waypoints | route               | turns                                      | #	|
+            | a,c       | otto,otto           | depart,arrive                              |	|
+			| a,f       | otto,otto,otto      | depart,continue uturn,arrive               |    |
+			| a,1       | otto,otto,otto      | depart,continue left,arrive                |    |
+			| a,d       | otto,neu,neu        | depart,turn left,arrive                    |    |
+            | c,1       | otto,otto           | depart,arrive                              |    |
+            | c,f       | otto,otto,otto      | depart,continue left,arrive                | Ideally, this would be depart,arrive, but the obvious discovery making the turn onto `1` from `c` obvious interferes here |
 
     # https://www.openstreetmap.org/#map=18/50.94608/7.02030
     Scenario: Do not merge oneway places
@@ -698,6 +698,6 @@ Feature: Merge Segregated Roads
             | ej    | wei  | no     |
 
         When I route I should get
-            | waypoints | route          | turns                        |
-            | j,h       | wei,wei,wei    | depart,continue left,arrive  |
-            | a,d       | kobe,kobe,kobe | depart,continue uturn,arrive |
+            | waypoints | route          | turns                       |
+            | j,h       | wei,wei		 | depart,arrive			   |
+            | a,d       | kobe,kobe,kobe | depart,continue left,arrive |
