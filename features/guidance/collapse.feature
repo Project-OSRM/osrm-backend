@@ -74,7 +74,7 @@ Feature: Collapse
 
         When I route I should get
             | waypoints | route                      | turns                                      | locations |
-            | a,i       | first,second,third,third   | depart,turn left,turn slight left,arrive   | a,b,e,i   |
+            | a,i       | first,third,third          | depart,turn sharp left,arrive              | a,b,i     |
 
     Scenario: Segregated Intersection, Cross Belonging to Correct Street
         Given the node map

@@ -60,6 +60,7 @@ inline IntermediateIntersection getInvalidIntersection()
 struct RouteStep
 {
     unsigned name_id;
+    bool is_segregated;
     std::string name;
     std::string ref;
     std::string pronunciation;
@@ -163,6 +164,8 @@ inline RouteStep &RouteStep::ElongateBy(const RouteStep &following_step)
     intersections.insert(intersections.end(),
                          following_step.intersections.begin(),
                          following_step.intersections.end());
+
+    is_segregated = false;
 
     return *this;
 }

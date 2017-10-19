@@ -164,6 +164,9 @@ void annotatePath(const FacadeT &facade,
         const auto turn_id = edge_data.turn_id; // edge-based graph edge index
         const auto node_id = *node_from;        // edge-based graph node index
         const auto name_index = facade.GetNameIndex(node_id);
+        const bool is_segregated = facade.IsSegregated(node_id);
+        if (is_segregated)
+            util::Log() << "111 Segregated node";
         const auto turn_instruction = facade.GetTurnInstructionForEdgeID(turn_id);
         const extractor::TravelMode travel_mode = facade.GetTravelMode(node_id);
         const auto classes = facade.GetClassData(node_id);
@@ -193,6 +196,7 @@ void annotatePath(const FacadeT &facade,
         {
             unpacked_path.push_back(PathData{id_vector[segment_idx + 1],
                                              name_index,
+                                             is_segregated,
                                              weight_vector[segment_idx],
                                              0,
                                              duration_vector[segment_idx],
@@ -266,6 +270,7 @@ void annotatePath(const FacadeT &facade,
         unpacked_path.push_back(
             PathData{id_vector[start_index < end_index ? segment_idx + 1 : segment_idx - 1],
                      facade.GetNameIndex(target_node_id),
+                     facade.IsSegregated(target_node_id),
                      weight_vector[segment_idx],
                      0,
                      duration_vector[segment_idx],

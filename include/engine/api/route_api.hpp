@@ -177,6 +177,7 @@ class RouteAPI : public BaseAPI
                 leg.steps = guidance::anticipateLaneChange(std::move(leg.steps));
                 leg.steps = guidance::buildIntersections(std::move(leg.steps));
                 leg.steps = guidance::suppressShortNameSegments(std::move(leg.steps));
+                leg.steps = guidance::suppressSegregated(std::move(leg.steps));
                 leg.steps = guidance::assignRelativeLocations(std::move(leg.steps),
                                                               leg_geometry,
                                                               phantoms.source_phantom,

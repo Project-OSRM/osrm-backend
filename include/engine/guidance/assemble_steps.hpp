@@ -56,6 +56,7 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
     const auto source_node_id = source_traversed_in_reverse ? source_node.reverse_segment_id.id
                                                             : source_node.forward_segment_id.id;
     const auto source_name_id = facade.GetNameIndex(source_node_id);
+    bool is_segregated = facade.IsSegregated(source_node_id);
     const auto source_mode = facade.GetTravelMode(source_node_id);
     auto source_classes = facade.GetClasses(facade.GetClassData(source_node_id));
 
@@ -127,6 +128,7 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
                 intersection.classes = facade.GetClasses(path_point.classes);
 
                 steps.push_back(RouteStep{step_name_id,
+                                          is_segregated,
                                           name.to_string(),
                                           ref.to_string(),
                                           pronunciation.to_string(),
@@ -147,10 +149,12 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
                 if (leg_data_index + 1 < leg_data.size())
                 {
                     step_name_id = leg_data[leg_data_index + 1].name_id;
+                    is_segregated = leg_data[leg_data_index + 1].is_segregated;
                 }
                 else
                 {
                     step_name_id = facade.GetNameIndex(target_node_id);
+                    is_segregated = facade.IsSegregated(target_node_id);
                 }
 
                 // extract bearings
@@ -206,6 +210,7 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
         intersection.classes = facade.GetClasses(facade.GetClassData(target_node_id));
         BOOST_ASSERT(duration >= 0);
         steps.push_back(RouteStep{step_name_id,
+                                  is_segregated,
                                   facade.GetNameForID(step_name_id).to_string(),
                                   facade.GetRefForID(step_name_id).to_string(),
                                   facade.GetPronunciationForID(step_name_id).to_string(),
@@ -249,6 +254,7 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
         const EdgeWeight duration = std::max(0, target_duration - source_duration);
 
         steps.push_back(RouteStep{source_name_id,
+                                  is_segregated,
                                   facade.GetNameForID(source_name_id).to_string(),
                                   facade.GetRefForID(source_name_id).to_string(),
                                   facade.GetPronunciationForID(source_name_id).to_string(),
@@ -290,6 +296,7 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
 
     BOOST_ASSERT(!leg_geometry.locations.empty());
     steps.push_back(RouteStep{target_name_id,
+                              facade.IsSegregated(target_node_id),
                               facade.GetNameForID(target_name_id).to_string(),
                               facade.GetRefForID(target_name_id).to_string(),
                               facade.GetPronunciationForID(target_name_id).to_string(),
