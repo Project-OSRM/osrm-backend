@@ -51,7 +51,7 @@ Feature: osrm-extract lua ways:get_nodes()
             | ab    |
         And the data has been saved to disk
 
-        When I try to run "osrm-extract --profile {profile_file} {osm_file} --location-dependent-data test/data/regions/null-island.geojson --disable-locations-cache"
+        When I try to run "osrm-extract --profile {profile_file} {osm_file} --location-dependent-data test/data/regions/null-island.geojson --disable-location-cache"
         Then it should exit with an error
         And stderr should contain "invalid location"
 
@@ -79,7 +79,7 @@ Feature: osrm-extract lua ways:get_nodes()
             | ab    |
         And the data has been saved to disk
 
-        When I run "osrm-extract --profile {profile_file} {osm_file} --location-dependent-data test/data/regions/null-island.geojson  --disable-locations-cache"
+        When I run "osrm-extract --profile {profile_file} {osm_file} --location-dependent-data test/data/regions/null-island.geojson  --disable-location-cache"
         Then it should exit successfully
         And stdout should contain "answer 42"
         And stdout should contain "boolean true"
@@ -116,7 +116,7 @@ Feature: osrm-extract lua ways:get_nodes()
             | ef    | Null Island    |
         And the data has been saved to disk
 
-        When I run "osrm-extract --profile {profile_file} {osm_file} --location-dependent-data test/data/regions/null-island.geojson --location-dependent-data test/data/regions/hong-kong.geojson --disable-locations-cache"
+        When I run "osrm-extract --profile {profile_file} {osm_file} --location-dependent-data test/data/regions/null-island.geojson --location-dependent-data test/data/regions/hong-kong.geojson --disable-location-cache"
         Then it should exit successfully
         And stdout should not contain "1 GeoJSON polygon"
         And stdout should contain "2 GeoJSON polygons"

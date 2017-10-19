@@ -67,7 +67,7 @@ return_code parseArguments(int argc,
                                   &extractor_config.location_dependent_data_paths)
                                   ->composing(),
                               "GeoJSON files with location-dependent data")(
-        "disable-locations-cache",
+        "disable-location-cache",
         boost::program_options::bool_switch(&extractor_config.use_locations_cache)
             ->implicit_value(false)
             ->default_value(true),
