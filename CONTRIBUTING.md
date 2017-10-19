@@ -1,8 +1,12 @@
+# Everyone
+
+Please take some time to review our [code of conduct](CODE_OF_CONDUCT.md) to help guide your interactions with others on this project.
+
 # User
 
 Before you open a new issue, please search for older ones that cover the same issue.
 In general "me too" comments/issues are frowned upon.
-You can add a :+1: emoji to the issue if you want to express interest in this.
+You can add a :+1: emoji reaction to the issue if you want to express interest in this.
 
 # Developer
 

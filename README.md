@@ -19,7 +19,6 @@ To quickly try OSRM use our [demo server](http://map.project-osrm.org) which com
 For a quick introduction about how the road network is represented in OpenStreetMap and how to map specific road network features have a look at [this guide about mapping for navigation](https://www.mapbox.com/mapping/mapping-for-navigation/).
 
 Related [Project-OSRM](https://github.com/Project-OSRM) repositories:
-- [node-osrm](https://www.npmjs.com/package/osrm) - Production-ready NodeJs bindings for the routing engine
 - [osrm-frontend](https://github.com/Project-OSRM/osrm-frontend) - User-facing frontend with map. The demo server runs this on top of the backend
 - [osrm-text-instructions](https://github.com/Project-OSRM/osrm-text-instructions) - Text instructions from OSRM route response
 - [osrm-backend-docker](https://hub.docker.com/r/osrm/osrm-backend/) - Ready to use Docker images
