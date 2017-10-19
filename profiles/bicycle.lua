@@ -48,6 +48,7 @@ function setup()
       'toll_booth',
       'sally_port',
       'gate',
+      'lift_gate',
       'no',
       'block'
     },
