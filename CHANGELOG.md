@@ -10,6 +10,11 @@
     - Infrastructure:
       - Lua 5.1 support is removed due to lack of support in sol2 https://github.com/ThePhD/sol2/issues/302
       - Fixed pkg-config version of OSRM
+    - Tools:
+      - Because of boost/program_options#32 with boost 1.65+ we needed to change the behavior of the following flags to not accept `={true|false}` anymore:
+        - `--use-location-cache=false` becomes `--disable-location-cache`
+        - `--parse-conditional-restrictions=true` becomes `--parse-conditional-restrictions`
+        - The deprecated options `--use-level-cache` and `--generate-edge-lookup`
     - Bugfixes:
       - Fixed #4348: Some cases of sliproads pre-processing were broken
       - Fixed #4331: Correctly compute left/right modifiers of forks in case the fork is curved.
