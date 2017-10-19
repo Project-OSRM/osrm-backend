@@ -50,6 +50,32 @@ Feature: Collapse
             | i,h       | second,first,first   | depart,turn left,arrive      | i,f,h     |
             | i,l       | second,second,second | depart,continue uturn,arrive | i,f,l     |
 
+   	Scenario: Segregated Intersection, Cross Belonging to Single Street
+        Given the node map
+            """
+                  g
+
+            c     b   a
+            d     e   f
+
+                  h   i
+            """
+
+        And the ways
+            | nodes | highway | name   | oneway |
+            | ab    | primary | first  | yes    |
+            | bc    | primary | first  | yes    |
+            | de    | primary | first  | yes    |
+            | ef    | primary | first  | yes    |
+            | gb    | primary | second | no     |
+            | be    | primary | second | no     |
+            | eh    | primary | second | yes    |
+            | ei    | primary | third  | yes    |
+
+        When I route I should get
+            | waypoints | route                      | turns                                      | locations |
+            | a,i       | first,second,third,third   | depart,turn left,turn slight left,arrive   | a,b,e,i   |
+
     Scenario: Segregated Intersection, Cross Belonging to Correct Street
         Given the node map
             """
