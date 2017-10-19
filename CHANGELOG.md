@@ -5,6 +5,7 @@
       - Support of `distance` weight in foot and bicycle profiles
       - Support of relations processing
       - Added `way:get_location_tag(key)` method to get location-dependent tags https://github.com/Project-OSRM/osrm-backend/wiki/Using-location-dependent-data-in-profiles
+      - Added `forward_ref` and `backward_ref` support
       - Left-side driving mode is specified by a local Boolean flag `is_left_hand_driving` in `ExtractionWay` and `ExtractionTurn`
       - Support literal values for maxspeeds in NO, PL and ZA
     - Infrastructure:

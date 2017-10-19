@@ -171,7 +171,9 @@ is_startpoint                           | Boolean  | Can a journey start on this
 roundabout                              | Boolean  | Is this part of a roundabout?
 circular                                | Boolean  | Is this part of a non-roundabout circular junction?
 name                                    | String   | Name of the way
-ref                                     | String   | Road number
+ref                                     | String   | Road number (equal to set `forward_ref` and `backward_ref` with one value)
+forward_ref                             | String   | Road number in forward way direction
+backward_ref                            | String   | Road number in backward way direction
 destinations                            | String   | The road's destinations
 exits                                   | String   | The ramp's exit numbers or names
 pronunciation                           | String   | Name pronunciation
