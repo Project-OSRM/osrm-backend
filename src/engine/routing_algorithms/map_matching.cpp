@@ -51,7 +51,7 @@ unsigned getMedianSampleTime(const std::vector<unsigned> &timestamps)
 template <typename Algorithm>
 SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
                             const DataFacade<Algorithm> &facade,
-                            const CandidateLists &candidates_list,
+                            CandidateLists &candidates_list,
                             const std::vector<util::Coordinate> &trace_coordinates,
                             const std::vector<unsigned> &trace_timestamps,
                             const std::vector<boost::optional<double>> &trace_gps_precision,
@@ -194,7 +194,7 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
             auto &current_pruned = model.pruned[t];
             auto &current_parents = model.parents[t];
             auto &current_lengths = model.path_distances[t];
-            const auto &current_timestamps_list = candidates_list[t];
+            auto &current_timestamps_list = candidates_list[t];
             const auto &current_coordinate = trace_coordinates[t];
 
             const auto haversine_distance = util::coordinate_calculation::haversineDistance(
@@ -250,6 +250,26 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
                         model.breakage[t] = false;
                     }
                 }
+                // Here we can add previous states to the current viterbi if we suppose, that user can stay
+                double precision = DEFAULT_GPS_PRECISION;
+                if (!trace_gps_precision.empty())
+                    precision = (*trace_gps_precision[t]);
+                auto distance = util::coordinate_calculation::haversineDistance(
+                                                                                candidates_list[prev_unbroken_timestamp][s].phantom_node.location,
+                                                                                trace_coordinates[t]
+                                                                                );
+                if (distance < 3 * precision)
+                                                                                    {
+                                                                                        candidates_list[t].push_back(candidates_list[prev_unbroken_timestamp][s]);
+                                                                                        candidates_list[t].back().phantom_node.input_location = trace_coordinates[t];
+                                                                                        candidates_list[t].back().distance = distance;
+                                                                                        map_matching::EmissionLogProbability emission_log_probability(precision);
+                                                                                        current_viterbi.push_back(emission_log_probability(distance) + prev_viterbi[s]);
+                                                                                        current_parents.push_back(std::make_pair(prev_unbroken_timestamp, s));
+                                                                                        current_lengths.push_back(0);
+                                                                                        current_pruned.push_back(false);
+                                                                                        model.breakage[t] = false;
+                                                                                    }
             }
 
             if (model.breakage[t])
@@ -424,7 +444,7 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
 template SubMatchingList
 mapMatching(SearchEngineData<ch::Algorithm> &engine_working_data,
             const DataFacade<ch::Algorithm> &facade,
-            const CandidateLists &candidates_list,
+            CandidateLists &candidates_list,
             const std::vector<util::Coordinate> &trace_coordinates,
             const std::vector<unsigned> &trace_timestamps,
             const std::vector<boost::optional<double>> &trace_gps_precision,
@@ -434,7 +454,7 @@ mapMatching(SearchEngineData<ch::Algorithm> &engine_working_data,
 template SubMatchingList
 mapMatching(SearchEngineData<mld::Algorithm> &engine_working_data,
             const DataFacade<mld::Algorithm> &facade,
-            const CandidateLists &candidates_list,
+            CandidateLists &candidates_list,
             const std::vector<util::Coordinate> &trace_coordinates,
             const std::vector<unsigned> &trace_timestamps,
             const std::vector<boost::optional<double>> &trace_gps_precision,

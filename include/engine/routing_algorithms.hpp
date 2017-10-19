@@ -36,7 +36,7 @@ class RoutingAlgorithmsInterface
                      const std::vector<std::size_t> &target_indices) const = 0;
 
     virtual routing_algorithms::SubMatchingList
-    MapMatching(const routing_algorithms::CandidateLists &candidates_list,
+    MapMatching(routing_algorithms::CandidateLists &candidates_list,
                 const std::vector<util::Coordinate> &trace_coordinates,
                 const std::vector<unsigned> &trace_timestamps,
                 const std::vector<boost::optional<double>> &trace_gps_precision,
@@ -87,7 +87,7 @@ template <typename Algorithm> class RoutingAlgorithms final : public RoutingAlgo
                      const std::vector<std::size_t> &target_indices) const final override;
 
     routing_algorithms::SubMatchingList
-    MapMatching(const routing_algorithms::CandidateLists &candidates_list,
+    MapMatching(routing_algorithms::CandidateLists &candidates_list,
                 const std::vector<util::Coordinate> &trace_coordinates,
                 const std::vector<unsigned> &trace_timestamps,
                 const std::vector<boost::optional<double>> &trace_gps_precision,
@@ -168,7 +168,7 @@ RoutingAlgorithms<Algorithm>::DirectShortestPathSearch(const PhantomNodes &phant
 
 template <typename Algorithm>
 inline routing_algorithms::SubMatchingList RoutingAlgorithms<Algorithm>::MapMatching(
-    const routing_algorithms::CandidateLists &candidates_list,
+    routing_algorithms::CandidateLists &candidates_list,
     const std::vector<util::Coordinate> &trace_coordinates,
     const std::vector<unsigned> &trace_timestamps,
     const std::vector<boost::optional<double>> &trace_gps_precision,
