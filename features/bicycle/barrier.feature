@@ -10,6 +10,7 @@ Feature: Barriers
             |                | x     |
             | bollard        | x     |
             | gate           | x     |
+            | lift_gate      | x     |
             | cycle_barrier  | x     |
             | cattle_grid    | x     |
             | border_control | x     |
