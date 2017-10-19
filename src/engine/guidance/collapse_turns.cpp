@@ -51,15 +51,15 @@ double findTotalTurnAngle(const RouteStep &entry_step, const RouteStep &exit_ste
         util::bearing::angleBetween(entry_step_entry_bearing, exit_step_exit_bearing);
 
     // both angles are in the same direction, the total turn gets increased
-    // 
+    //
     // a ---- b
-    //           \ 
+    //           \
     //              c
     //              |
     //              d
     //
     // Will be considered just like
-    // 
+    //
     // a -----b
     //        |
     //        c
@@ -89,11 +89,11 @@ double findTotalTurnAngle(const RouteStep &entry_step, const RouteStep &exit_ste
     else
     {
         // to prevent ignoring angles like
-        // 
+        //
         // a -- b
         //      |
         //      c -- d
-        // 
+        //
         // We don't combine both turn angles here but keep the very first turn angle.
         // We choose the first one, since we consider the first maneuver in a merge range the
         // important one
@@ -441,13 +441,14 @@ RouteSteps collapseTurnInstructions(RouteSteps steps)
                               TransferSignageStrategy(),
                               NoModificationStrategy());
         }
+
         // if the current collapsing triggers, we can check for advanced scenarios that only are
         // possible after an inital collapse step (e.g. name change right after a u-turn)
-        // 
+        //
         // f - e - d
         //     |   |
         // a - b - c
-        // 
+        //
         // In this scenario, bc and de might belong to a different road than a-b and f-e (since
         // there are no fix conventions how to label them in segregated intersections). These steps
         // might only become apparent after some initial collapsing
@@ -477,6 +478,64 @@ RouteSteps collapseTurnInstructions(RouteSteps steps)
         }
     }
     return steps;
+}
+
+std::vector<RouteStep> suppressSegregated(std::vector<RouteStep> steps)
+{
+    if (steps.size() <= 2)
+        return steps;
+
+    // start of with no-op
+    for (auto current_step = steps.begin() + 1; current_step + 1 != steps.end(); ++current_step)
+    {
+        /// @todo All the prologue checks are taken from the collapseTurnInstructions function.
+        /// Factor out to the separate routing when changes will be approved.
+
+        if (entersRoundabout(current_step->maneuver.instruction) ||
+            staysOnRoundabout(current_step->maneuver.instruction))
+        {
+            // If postProcess is called before then all corresponding leavesRoundabout steps are
+            // removed and the current roundabout step can be ignored by directly proceeding to
+            // the next step.
+            // If postProcess is not called before then all steps till the next leavesRoundabout
+            // step must be skipped to prevent incorrect roundabouts post-processing.
+
+            // are we done for good?
+            if (current_step + 1 == steps.end())
+                break;
+            else
+                continue;
+        }
+
+        // only operate on actual turns
+        if (!hasTurnType(*current_step))
+            continue;
+
+        // don't collapse next step if it is a waypoint alread
+        const auto next_step = findNextTurn(current_step);
+        if (hasWaypointType(*next_step))
+            break;
+
+        const auto previous_step = findPreviousTurn(current_step);
+
+        // don't collapse anything that does change modes
+        if (current_step->mode != next_step->mode)
+            continue;
+
+        if (current_step->is_segregated)
+        {
+            /// @todo Need to apply correct combine strategies.
+
+            util::Log() << "222 Segregated node";
+            combineRouteSteps(*current_step,
+                              *next_step,
+                              AdjustToCombinedTurnStrategy(*previous_step),
+                              TransferSignageStrategy(),
+                              NoModificationStrategy());
+        }
+    }
+
+    return removeNoTurnInstructions(std::move(steps));
 }
 
 } // namespace guidance

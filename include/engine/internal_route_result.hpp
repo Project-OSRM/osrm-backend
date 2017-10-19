@@ -27,6 +27,8 @@ struct PathData
     NodeID turn_via_node;
     // name of the street that leads to the turn
     unsigned name_id;
+    // segregated edge-based node that leads to the turn
+    bool is_segregated;
     // weight that is traveled on the segment until the turn is reached
     // including the turn weight, if one exists
     EdgeWeight weight_until_turn;

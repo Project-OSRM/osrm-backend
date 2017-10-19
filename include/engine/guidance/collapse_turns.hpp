@@ -140,6 +140,8 @@ void combineRouteSteps(RouteStep &step_at_turn_location,
 // alias for suppressing a step, using CombineRouteStep with NoModificationStrategy only
 void suppressStep(RouteStep &step_at_turn_location, RouteStep &step_after_turn_location);
 
+std::vector<RouteStep> suppressSegregated(std::vector<RouteStep> steps);
+
 } /* namespace guidance */
 } /* namespace osrm */
 } /* namespace osrm */
