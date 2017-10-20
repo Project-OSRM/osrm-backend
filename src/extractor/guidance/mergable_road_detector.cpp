@@ -109,7 +109,13 @@ bool MergableRoadDetector::CanMergeRoad(const NodeID intersection_node,
         return true;
 
     // finally check if two roads describe the direction
-    return HaveSameDirection(intersection_node, lhs, rhs);
+    if (HaveSameDirection(intersection_node, lhs, rhs))
+    {
+        // do not merge traffic circles and similar
+        return !IsCircularShape(intersection_node, lhs, rhs);
+    }
+    else
+        return false;
 }
 
 bool MergableRoadDetector::HaveIdenticalNames(const NameID lhs, const NameID rhs) const
@@ -184,7 +190,8 @@ bool MergableRoadDetector::IsNarrowTriangle(const NodeID intersection_node,
         node_data_container.GetAnnotation(node_based_graph.GetEdgeData(lhs.eid).annotation_data)
             .name_id,
         lhs.bearing,
-        /*requires entry=*/false);
+        /*requires entry=*/false,
+        false);
 
     NodeBasedGraphWalker graph_walker(
         node_based_graph, node_data_container, intersection_generator);
@@ -270,14 +277,10 @@ bool MergableRoadDetector::IsNarrowTriangle(const NodeID intersection_node,
            node_based_graph.GetTarget(right_accumulator.via_edge_id);
 }
 
-bool MergableRoadDetector::HaveSameDirection(const NodeID intersection_node,
-                                             const MergableRoadData &lhs,
-                                             const MergableRoadData &rhs) const
+bool MergableRoadDetector::IsCircularShape(const NodeID intersection_node,
+                                           const MergableRoadData &lhs,
+                                           const MergableRoadData &rhs) const
 {
-    if (angularDeviation(lhs.bearing, rhs.bearing) > MERGABLE_ANGLE_DIFFERENCE)
-        return false;
-
-    // Find a coordinate following a road that is far away
     NodeBasedGraphWalker graph_walker(
         node_based_graph, node_data_container, intersection_generator);
     const auto getCoordinatesAlongWay = [&](const EdgeID edge_id, const double max_length) {
@@ -286,7 +289,8 @@ bool MergableRoadDetector::HaveSameDirection(const NodeID intersection_node,
             node_data_container.GetAnnotation(node_based_graph.GetEdgeData(edge_id).annotation_data)
                 .name_id,
             lhs.bearing,
-            /*requires_entry=*/false);
+            /*requires_entry=*/false,
+            false);
         graph_walker.TraverseRoad(intersection_node, edge_id, accumulator, selector);
 
         return std::make_pair(accumulator.accumulated_length, accumulator.coordinates);
@@ -295,25 +299,11 @@ bool MergableRoadDetector::HaveSameDirection(const NodeID intersection_node,
     std::vector<util::Coordinate> coordinates_to_the_left, coordinates_to_the_right;
     double distance_traversed_to_the_left, distance_traversed_to_the_right;
 
-    // many roads only do short parallel segments. To get a good impression of how `parallel` two
-    // roads are, we look 100 meters down the road (wich can be quite short for very broad roads).
-    const double constexpr distance_to_extract = 150;
-
     std::tie(distance_traversed_to_the_left, coordinates_to_the_left) =
         getCoordinatesAlongWay(lhs.eid, distance_to_extract);
 
-    // tuned parameter, if we didn't get as far as 40 meters, we might barely look past an
-    // intersection.
-    const auto constexpr MINIMUM_LENGTH_FOR_PARALLEL_DETECTION = 40;
-    // quit early if the road is not very long
-    if (distance_traversed_to_the_left <= MINIMUM_LENGTH_FOR_PARALLEL_DETECTION)
-        return false;
-
     std::tie(distance_traversed_to_the_right, coordinates_to_the_right) =
         getCoordinatesAlongWay(rhs.eid, distance_to_extract);
-
-    if (distance_traversed_to_the_right <= MINIMUM_LENGTH_FOR_PARALLEL_DETECTION)
-        return false;
 
     const auto connect_again = (coordinates_to_the_left.back() == coordinates_to_the_right.back());
 
@@ -344,9 +334,55 @@ bool MergableRoadDetector::HaveSameDirection(const NodeID intersection_node,
         // then don't merge roads if A/L² is greater than the lower bound
         BOOST_ASSERT(area_to_squared_perimeter_ratio <= 1. / (4 * M_PI));
         if (area_to_squared_perimeter_ratio >= CIRCULAR_POLYGON_ISOPERIMETRIC_LOWER_BOUND)
-            return false;
+            return true;
     }
 
+    return false;
+}
+
+bool MergableRoadDetector::HaveSameDirection(const NodeID intersection_node,
+                                             const MergableRoadData &lhs,
+                                             const MergableRoadData &rhs) const
+{
+    if (angularDeviation(lhs.bearing, rhs.bearing) > MERGABLE_ANGLE_DIFFERENCE)
+        return false;
+
+    // Find a coordinate following a road that is far away
+    NodeBasedGraphWalker graph_walker(
+        node_based_graph, node_data_container, intersection_generator);
+    const auto getCoordinatesAlongWay = [&](const EdgeID edge_id, const double max_length) {
+        LengthLimitedCoordinateAccumulator accumulator(coordinate_extractor, max_length);
+        SelectStraightmostRoadByNameAndOnlyChoice selector(
+            node_data_container.GetAnnotation(node_based_graph.GetEdgeData(edge_id).annotation_data)
+                .name_id,
+            lhs.bearing,
+            /*requires_entry=*/false,
+            true);
+        graph_walker.TraverseRoad(intersection_node, edge_id, accumulator, selector);
+
+        return std::make_pair(accumulator.accumulated_length, accumulator.coordinates);
+    };
+
+    std::vector<util::Coordinate> coordinates_to_the_left, coordinates_to_the_right;
+    double distance_traversed_to_the_left, distance_traversed_to_the_right;
+
+    std::tie(distance_traversed_to_the_left, coordinates_to_the_left) =
+        getCoordinatesAlongWay(lhs.eid, distance_to_extract);
+
+    // tuned parameter, if we didn't get as far as 40 meters, we might barely look past an
+    // intersection.
+    const auto constexpr MINIMUM_LENGTH_FOR_PARALLEL_DETECTION = 40;
+    // quit early if the road is not very long
+    if (distance_traversed_to_the_left <= MINIMUM_LENGTH_FOR_PARALLEL_DETECTION)
+        return false;
+
+    std::tie(distance_traversed_to_the_right, coordinates_to_the_right) =
+        getCoordinatesAlongWay(rhs.eid, distance_to_extract);
+
+    if (distance_traversed_to_the_right <= MINIMUM_LENGTH_FOR_PARALLEL_DETECTION)
+        return false;
+
+    const auto connect_again = (coordinates_to_the_left.back() == coordinates_to_the_right.back());
     // sampling to correctly weight longer segments in regression calculations
     const auto constexpr SAMPLE_INTERVAL = 5;
     coordinates_to_the_left = coordinate_extractor.SampleCoordinates(
