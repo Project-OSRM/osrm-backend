@@ -2,6 +2,7 @@
 #define OSRM_GEOJSON_DEBUG_LOGGER_HPP
 
 #include <fstream>
+#include <iomanip>
 #include <mutex>
 #include <string>
 
@@ -104,6 +105,8 @@ class GeojsonLogger
         // and we don't want deadlocks
         std::lock_guard<std::mutex> guard(lock);
         ofs.open(logfile, std::ios::binary);
+
+        ofs << std::setprecision(12);
 
         // set up a feature collection
         ofs << "{\n\t\"type\": \"FeatureCollection\",\n\t\"features\": [\n\t";
