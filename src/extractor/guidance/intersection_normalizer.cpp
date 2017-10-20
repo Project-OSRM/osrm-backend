@@ -370,6 +370,17 @@ IntersectionNormalizer::AdjustBearingsForMergeAtDestination(const NodeID node_at
                                                                                : offset;
         };
 
+        // only if straighmost angles get smaller, we consider it an improvement
+        auto const improves_straightmost = [&](auto const index, auto const offset) {
+            const auto itr = next_intersection_along_road.FindClosestBearing(
+                util::bearing::reverse(next_intersection_along_road[index].bearing));
+            const auto angle = util::bearing::angleBetween(
+                util::bearing::reverse(itr->bearing), next_intersection_along_road[index].bearing);
+
+            return util::angularDeviation(angle, STRAIGHT_ANGLE) >
+                   util::angularDeviation(angle + offset, STRAIGHT_ANGLE);
+        };
+
         // check if the u-turn edge at the next intersection could be merged to the left/right. If
         // this is the case and the road is not far away (see previous distance check), if
         // influences the perceived angle.
@@ -378,13 +389,17 @@ IntersectionNormalizer::AdjustBearingsForMergeAtDestination(const NodeID node_at
             const auto offset =
                 get_offset(next_intersection_along_road[0], next_intersection_along_road[1]);
 
-            const auto corrected_offset = get_corrected_offset(
-                offset,
-                road,
-                intersection[(intersection.size() + index - 1) % intersection.size()]);
-            // at the target intersection, we merge to the right, so we need to shift the current
-            // angle to the left
-            road.bearing = adjustAngle(road.bearing, corrected_offset);
+            if (improves_straightmost(0, -offset) && improves_straightmost(1, offset))
+            {
+                const auto corrected_offset = get_corrected_offset(
+                    offset,
+                    road,
+                    intersection[(intersection.size() + index - 1) % intersection.size()]);
+                // at the target intersection, we merge to the right, so we need to shift the
+                // current
+                // angle to the left
+                road.bearing = adjustAngle(road.bearing, corrected_offset);
+            }
         }
         else if (CanMerge(node_at_next_intersection,
                           next_intersection_along_road,
@@ -395,13 +410,18 @@ IntersectionNormalizer::AdjustBearingsForMergeAtDestination(const NodeID node_at
                 get_offset(next_intersection_along_road[0],
                            next_intersection_along_road[next_intersection_along_road.size() - 1]);
 
-            const auto corrected_offset =
-                get_corrected_offset(offset, road, intersection[(index + 1) % intersection.size()]);
-            // at the target intersection, we merge to the left, so we need to shift the current
-            // angle to the right
-            road.bearing = adjustAngle(road.bearing, -corrected_offset);
+            if (improves_straightmost(0, offset) &&
+                improves_straightmost(next_intersection_along_road.size() - 1, -offset))
+            {
+                const auto corrected_offset = get_corrected_offset(
+                    offset, road, intersection[(index + 1) % intersection.size()]);
+                // at the target intersection, we merge to the left, so we need to shift the current
+                // angle to the right
+                road.bearing = adjustAngle(road.bearing, -corrected_offset);
+            }
         }
     }
+
     return intersection;
 }
 
