@@ -140,6 +140,22 @@ class MergableRoadDetector
     // The detector wants to prevent merges that are connected to `b-e`
     bool IsLinkRoad(const NodeID intersection_node, const MergableRoadData &road) const;
 
+    // The condition suppresses roads merging for intersections like
+    //             .  .
+    //           .      .
+    //       ----        ----
+    //           .      .
+    //             .  .
+    // but will allow roads merging for intersections like
+    //           -------
+    //          /       \ 
+    //      ----         ----
+    //          \       /
+    //           -------
+    bool IsCircularShape(const NodeID intersection_node,
+                         const MergableRoadData &lhs,
+                         const MergableRoadData &rhs) const;
+
     const util::NodeBasedDynamicGraph &node_based_graph;
     const EdgeBasedNodeDataContainer &node_data_container;
     const std::vector<util::Coordinate> &node_coordinates;
@@ -149,6 +165,9 @@ class MergableRoadDetector
     // name detection
     const util::NameTable &name_table;
     const SuffixTable &street_name_suffix_table;
+
+    // limit for detecting circles / parallel roads
+    const static double constexpr distance_to_extract = 150;
 };
 
 } // namespace guidance

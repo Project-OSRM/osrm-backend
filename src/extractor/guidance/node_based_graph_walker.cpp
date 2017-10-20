@@ -103,9 +103,12 @@ operator()(const NodeID /*nid*/,
 
 // ---------------------------------------------------------------------------------
 SelectStraightmostRoadByNameAndOnlyChoice::SelectStraightmostRoadByNameAndOnlyChoice(
-    const NameID desired_name_id, const double initial_bearing, const bool requires_entry)
+    const NameID desired_name_id,
+    const double initial_bearing,
+    const bool requires_entry,
+    const bool stop_on_ambiguous_turns)
     : desired_name_id(desired_name_id), initial_bearing(initial_bearing),
-      requires_entry(requires_entry)
+      requires_entry(requires_entry), stop_on_ambiguous_turns(stop_on_ambiguous_turns)
 {
 }
 
@@ -155,6 +158,36 @@ operator()(const NodeID /*nid*/,
         std::min_element(std::next(std::begin(intersection)), std::end(intersection), comparator);
 
     const auto is_valid_choice = !requires_entry || min_element->entry_allowed;
+
+    if (!is_valid_choice)
+        return {};
+
+    // only road exiting or continuing in the same general direction
+    const auto has_valid_angle =
+        ((intersection.size() == 2 ||
+          intersection.findClosestTurn(STRAIGHT_ANGLE) == min_element) &&
+         angularDeviation(min_element->angle, STRAIGHT_ANGLE) < NARROW_TURN_ANGLE) &&
+        angularDeviation(initial_bearing, min_element->bearing) < NARROW_TURN_ANGLE;
+
+    if (has_valid_angle)
+        return (*min_element).eid;
+
+    // in some cases, stronger turns are appropriate. We allow turns of just a bit over 90 degrees,
+    // if it's not a end of road situation. These angles come into play where roads split into dual
+    // carriage-ways.
+    //
+    //            e - - f
+    // a - - - - b
+    //            c - - d
+    //            |
+    //            g
+    //
+    // is technically
+    //
+    //
+    // a - - - - b (ce) - - (fg)
+    //              |
+    //              g
     const auto is_only_choice_with_same_name =
         count_desired_name <= 2 && //  <= in case we come from a bridge, otherwise we have a u-turn
                                    //  and the outgoing edge
@@ -162,11 +195,6 @@ operator()(const NodeID /*nid*/,
                 .GetAnnotation(node_based_graph.GetEdgeData(min_element->eid).annotation_data)
                 .name_id == desired_name_id &&
         angularDeviation(min_element->angle, STRAIGHT_ANGLE) < 100; // don't do crazy turns
-    const auto has_valid_angle =
-        ((intersection.size() == 2 ||
-          intersection.findClosestTurn(STRAIGHT_ANGLE) == min_element) &&
-         angularDeviation(min_element->angle, STRAIGHT_ANGLE) < NARROW_TURN_ANGLE) &&
-        angularDeviation(initial_bearing, min_element->bearing) < NARROW_TURN_ANGLE;
 
     // do not allow major turns in the road, if other similar turns are present
     // e.g.a turn at the end of the road:
@@ -180,31 +208,29 @@ operator()(const NodeID /*nid*/,
     // Such a turn can never be part of a merge
     // We check if there is a similar turn to the other side. If such a turn exists, we consider the
     // continuation of the road not possible
-    if (util::angularDeviation(STRAIGHT_ANGLE, min_element->angle) > GROUP_ANGLE)
+    if (stop_on_ambiguous_turns &&
+        util::angularDeviation(STRAIGHT_ANGLE, min_element->angle) > GROUP_ANGLE)
     {
-        auto deviation = util::angularDeviation(STRAIGHT_ANGLE, min_element->angle);
-        auto opposite_angle = min_element->angle >= STRAIGHT_ANGLE ? (STRAIGHT_ANGLE - deviation)
-                                                                   : (STRAIGHT_ANGLE + deviation);
-        auto opposite = intersection.findClosestTurn(opposite_angle);
-        auto opposite_deviation = util::angularDeviation(STRAIGHT_ANGLE, opposite->angle);
-        if (opposite_deviation <= deviation || (deviation / opposite_deviation) < 1.5)
-        {
+        auto opposite = intersection.findClosestTurn(util::bearing::reverse(min_element->angle));
+        auto opposite_deviation = util::angularDeviation(min_element->angle, opposite->angle);
+        // d - - - - c - - - -e
+        //           |
+        //           |
+        // a - - - - b
+        // from b-c onto min_element d with opposite side e
+        if (opposite_deviation > (180 - FUZZY_ANGLE_DIFFERENCE))
             return {};
-        }
 
+        //           e
+        //           |
+        // a - - - - b - - - - -d
+        // doing a left turn while straight is a choice
         auto const best = intersection.findClosestTurn(STRAIGHT_ANGLE);
-        if (util::angularDeviation(best->angle, STRAIGHT_ANGLE) < NARROW_TURN_ANGLE)
-        {
+        if (util::angularDeviation(best->angle, STRAIGHT_ANGLE) < FUZZY_ANGLE_DIFFERENCE)
             return {};
-        }
     }
 
-    // in cases where we have two edges between roads, we can have quite severe angles due to the
-    // random split OSRM does to break up parallel edges at any coordinate
-    if (!is_valid_choice || !(is_only_choice_with_same_name || has_valid_angle))
-        return {};
-    else
-        return (*min_element).eid;
+    return is_only_choice_with_same_name ? boost::optional<EdgeID>(min_element->eid) : boost::none;
 }
 
 // ---------------------------------------------------------------------------------

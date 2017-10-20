@@ -123,7 +123,8 @@ struct SelectStraightmostRoadByNameAndOnlyChoice
 {
     SelectStraightmostRoadByNameAndOnlyChoice(const NameID desired_name_id,
                                               const double initial_bearing,
-                                              const bool requires_entry);
+                                              const bool requires_entry,
+                                              const bool stop_on_ambiguous_turns);
 
     /*
      * !! REQUIRED - Function for the use of TraverseRoad in the graph walker.
@@ -141,6 +142,7 @@ struct SelectStraightmostRoadByNameAndOnlyChoice
     const NameID desired_name_id;
     const double initial_bearing;
     const bool requires_entry;
+    const bool stop_on_ambiguous_turns;
 };
 
 // find the next intersection given a hop limit
