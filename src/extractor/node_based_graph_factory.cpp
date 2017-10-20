@@ -4,8 +4,11 @@
 #include "util/graph_loader.hpp"
 
 #include "util/log.hpp"
+#include "util/timing_util.hpp"
 
 #include <boost/assert.hpp>
+
+#include <set>
 
 namespace osrm
 {
@@ -139,9 +142,38 @@ void NodeBasedGraphFactory::CompressGeometry()
 
 void NodeBasedGraphFactory::CompressAnnotationData()
 {
-    const constexpr AnnotationID INVALID_ANNOTATIONID = -1;
-    // remap all entries to find which are used
-    std::vector<AnnotationID> annotation_mapping(annotation_data.size(), INVALID_ANNOTATIONID);
+    TIMER_START(compress_annotation);
+    /** Main idea, that we need to remove duplicated and unreferenced data
+     * For that:
+     * 1. We create set, that contains indecies of unique data items. Just create
+     * comparator, that compare data from annotation_data vector by passed index.
+     * 2. Create cached id's unordered_map, where key - stored id in set,
+     * value - index of item in a set from begin. We need that map, because
+     * std::distance(set.begin(), it) is too slow O(N). So any words in that step we reorder
+     * annotation data to the order it stored in a set. Apply new id's to edge data.
+     * 3. Remove unused anootation_data items.
+     * 4. At final step just need to sort result annotation_data in the same order as set.
+     * That makes id's stored in edge data valid.
+     */
+    struct IndexComparator
+    {
+        IndexComparator(const std::vector<NodeBasedEdgeAnnotation> &annotation_data_)
+            : annotation_data(annotation_data_)
+        {
+        }
+
+        bool operator()(AnnotationID a, AnnotationID b) const
+        {
+            return annotation_data[a] < annotation_data[b];
+        }
+
+      private:
+        const std::vector<NodeBasedEdgeAnnotation> &annotation_data;
+    };
+
+    /** 1 */
+    IndexComparator comparator(annotation_data);
+    std::set<AnnotationID, IndexComparator> unique_annotations(comparator);
 
     // first we mark entries, by setting their mapping to 0
     for (const auto nbg_node_u : util::irange(0u, compressed_output_graph.GetNumberOfNodes()))
@@ -150,22 +182,17 @@ void NodeBasedGraphFactory::CompressAnnotationData()
         for (EdgeID nbg_edge_id : compressed_output_graph.GetAdjacentEdgeRange(nbg_node_u))
         {
             auto const &edge = compressed_output_graph.GetEdgeData(nbg_edge_id);
-            annotation_mapping[edge.annotation_data] = 0;
+            unique_annotations.insert(edge.annotation_data);
         }
     }
 
-    // now compute a prefix sum on all entries that are 0 to find the new mapping
-    AnnotationID prefix_sum = 0;
-    for (std::size_t i = 0; i < annotation_mapping.size(); ++i)
-    {
-        if (annotation_mapping[i] == 0)
-            annotation_mapping[i] = prefix_sum++;
-        else
-        {
-            // flag for removal
-            annotation_data[i].name_id = INVALID_NAMEID;
-        }
-    }
+    // make additional map, because std::distance of std::set seems is O(N)
+    // that very slow
+    /** 2 */
+    AnnotationID new_id = 0;
+    std::unordered_map<AnnotationID, AnnotationID> cached_ids;
+    for (auto id : unique_annotations)
+        cached_ids[id] = new_id++;
 
     // apply the mapping
     for (const auto nbg_node_u : util::irange(0u, compressed_output_graph.GetNumberOfNodes()))
@@ -174,9 +201,22 @@ void NodeBasedGraphFactory::CompressAnnotationData()
         for (EdgeID nbg_edge_id : compressed_output_graph.GetAdjacentEdgeRange(nbg_node_u))
         {
             auto &edge = compressed_output_graph.GetEdgeData(nbg_edge_id);
-            edge.annotation_data = annotation_mapping[edge.annotation_data];
-            BOOST_ASSERT(edge.annotation_data != INVALID_ANNOTATIONID);
+            auto const it = unique_annotations.find(edge.annotation_data);
+            BOOST_ASSERT(it != unique_annotations.end());
+            auto const it2 = cached_ids.find(*it);
+            BOOST_ASSERT(it2 != cached_ids.end());
+
+            edge.annotation_data = it2->second;
         }
+    }
+
+    /** 3 */
+    // mark unused references for remove
+    for (AnnotationID id = 0; id < annotation_data.size(); ++id)
+    {
+        auto const it = unique_annotations.find(id);
+        if (it == unique_annotations.end() || *it != id)
+            annotation_data[id].name_id = INVALID_NAMEID;
     }
 
     // remove unreferenced entries, shifting other entries to the front
@@ -191,8 +231,15 @@ void NodeBasedGraphFactory::CompressAnnotationData()
     const auto old_size = annotation_data.size();
     // remove all remaining elements
     annotation_data.erase(new_end, annotation_data.end());
-    util::Log() << " graoh compression removed " << (old_size - annotation_data.size())
-                << " annotations of " << old_size;
+
+    // reorder data in the same order
+    /** 4 */
+    std::sort(annotation_data.begin(), annotation_data.end());
+
+    TIMER_STOP(compress_annotation);
+    util::Log() << " graph compression removed " << (old_size - annotation_data.size())
+                << " annotations of " << old_size << " in " << TIMER_SEC(compress_annotation)
+                << " seconds";
 }
 
 void NodeBasedGraphFactory::ReleaseOsmNodes()
