@@ -71,6 +71,16 @@ struct NodeBasedEdgeAnnotation
             std::tie(name_id, classes, travel_mode, is_left_hand_driving) ==
             std::tie(other.name_id, other.classes, other.travel_mode, other.is_left_hand_driving));
     }
+
+    bool operator<(const NodeBasedEdgeAnnotation &other) const
+    {
+        return (std::tie(name_id, lane_description_id, classes, travel_mode, is_left_hand_driving) <
+                std::tie(other.name_id,
+                         other.lane_description_id,
+                         other.classes,
+                         other.travel_mode,
+                         other.is_left_hand_driving));
+    }
 };
 
 struct NodeBasedEdge
