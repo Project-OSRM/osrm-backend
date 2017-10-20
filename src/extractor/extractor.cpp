@@ -212,7 +212,10 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     std::vector<EdgeWeight> edge_based_node_weights;
 
     // Create a node-based graph from the OSRM file
-    NodeBasedGraphFactory node_based_graph_factory(config.GetPath(".osrm"));
+    NodeBasedGraphFactory node_based_graph_factory(config.GetPath(".osrm"),
+                                                   scripting_environment,
+                                                   turn_restrictions,
+                                                   conditional_turn_restrictions);
 
     util::Log() << "Find segregated edges in node-based graph ..." << std::flush;
     TIMER_START(segregated);
@@ -222,9 +225,6 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     TIMER_STOP(segregated);
     util::Log() << "ok, after " << TIMER_SEC(segregated) << "s";
     util::Log() << "Segregated edges count = " << segregated_count;
-
-    node_based_graph_factory.CompressAll(
-        scripting_environment, turn_restrictions, conditional_turn_restrictions);
 
     util::Log() << "Writing nodes for nodes-based and edges-based graphs ...";
     auto const &coordinates = node_based_graph_factory.GetCoordinates();
@@ -946,6 +946,7 @@ size_t Extractor::FindSegregatedNodes(NodeBasedGraphFactory &factory)
     auto &graph = factory.GetGraph();
     auto const &annotation = factory.GetAnnotationData();
     auto const &coordinates = factory.GetCoordinates();
+    auto const &edges = factory.GetCompressedEdges();
 
     auto const get_edge_name = [&](auto const &data) {
         /// @todo Make string normalization/lowercase/trim for comparison ...
@@ -953,6 +954,17 @@ size_t Extractor::FindSegregatedNodes(NodeBasedGraphFactory &factory)
         auto const id = annotation[data.annotation_data].name_id;
         BOOST_ASSERT(id != INVALID_NAMEID);
         return names.GetNameForID(id);
+    };
+
+    auto const get_edge_length = [&](EdgeID id) {
+        auto const geom = edges.GetBucketReference(id);
+        double length = 0.0;
+        for (size_t i = 1; i < geom.size(); ++i)
+        {
+            length += osrm::util::coordinate_calculation::haversineDistance(
+                coordinates[geom[i - 1].node_id], coordinates[geom[i].node_id]);
+        }
+        return length;
     };
 
     auto const get_edge_classes = [&](auto const &data) {
@@ -1027,8 +1039,7 @@ size_t Extractor::FindSegregatedNodes(NodeBasedGraphFactory &factory)
 
             NodeID const targetID = graph.GetTarget(edgeID);
 
-            if (osrm::util::coordinate_calculation::haversineDistance(coordinates[sourceID],
-                                                                      coordinates[targetID]) > 30.0)
+            if (get_edge_length(edgeID) > 30.0)
                 continue;
 
             auto const targetEdges = graph.GetAdjacentEdgeRange(targetID);
