@@ -1,4 +1,4 @@
-# 5.13.0 RC1
+# 5.13.0 RC2
   - Changes from 5.12:
     - Profile:
       - Append cardinal directions from route relations to ref fields to improve instructions
