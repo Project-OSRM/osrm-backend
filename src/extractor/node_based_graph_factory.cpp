@@ -15,16 +15,13 @@ namespace osrm
 namespace extractor
 {
 
-NodeBasedGraphFactory::NodeBasedGraphFactory(const boost::filesystem::path &input_file)
-{
-    LoadDataFromFile(input_file);
-}
-
-void NodeBasedGraphFactory::CompressAll(
+NodeBasedGraphFactory::NodeBasedGraphFactory(
+    const boost::filesystem::path &input_file,
     ScriptingEnvironment &scripting_environment,
     std::vector<TurnRestriction> &turn_restrictions,
     std::vector<ConditionalTurnRestriction> &conditional_turn_restrictions)
 {
+    LoadDataFromFile(input_file);
     Compress(scripting_environment, turn_restrictions, conditional_turn_restrictions);
     CompressGeometry();
     CompressAnnotationData();
