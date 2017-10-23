@@ -529,24 +529,21 @@ Feature: Merge Segregated Roads
         Given a grid size of 2 meters
         Given the node map
             """
-                                 i
-                                /
-                               /
-                              /
-                       b---- g .
-                            /     p .
-                  a        /          \           f
-                   \      /             o        /
-                     \   /               \     /
-                       c                  n   /
-                     /  \                  \/
-                    /    k                  e
-                   /     \               /
-                  h       l            /
+                           i
+                       b    `
+                         `   `    p .
+                  a        ` g` `     \         f
+                   \      /             o      /
+                     \   /               \    /
+                  h - - c                  n /
+                        \                  \/
+                         k                  e
+                         \               /
+                          l            /
                             \        /
                               m  . d
-                                 /
-                                j
+                                  /
+                                 j
             """
 
         And the ways
@@ -560,8 +557,8 @@ Feature: Merge Segregated Roads
             | jd          | Hubertusallee  | yes    |
 
         When I route I should get
-            | waypoints | route                                      | turns                       |
-            | i,h       | Kurfürstendamm,Hubertusallee,Hubertusallee | depart,turn straight,arrive |
+            | waypoints | route                                                    | turns                               |
+            | i,h       | Kurfürstendamm,Rathenauplatz,Hubertusallee,Hubertusallee | depart,turn right,turn right,arrive |
 
     # https://www.openstreetmap.org/#map=19/52.46339/13.40272
     Scenario: Do not merge links between segregated roads

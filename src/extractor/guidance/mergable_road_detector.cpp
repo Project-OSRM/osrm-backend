@@ -109,13 +109,8 @@ bool MergableRoadDetector::CanMergeRoad(const NodeID intersection_node,
         return true;
 
     // finally check if two roads describe the direction
-    if (HaveSameDirection(intersection_node, lhs, rhs))
-    {
-        // do not merge traffic circles and similar
-        return !IsCircularShape(intersection_node, lhs, rhs);
-    }
-    else
-        return false;
+    return HaveSameDirection(intersection_node, lhs, rhs) &&
+           !IsCircularShape(intersection_node, lhs, rhs);
 }
 
 bool MergableRoadDetector::HaveIdenticalNames(const NameID lhs, const NameID rhs) const
