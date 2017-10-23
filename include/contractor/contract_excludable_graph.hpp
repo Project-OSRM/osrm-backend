@@ -81,6 +81,8 @@ inline auto contractExcludableGraph(ContractorGraph contractor_graph_,
         auto filtered_core_graph =
             shared_core_graph.Filter([&filter](const NodeID node) { return filter[node]; });
 
+        contractGraph(filtered_core_graph, is_shared_core, is_shared_core, node_weights);
+
         edge_container.Merge(toEdges<QueryEdge>(std::move(filtered_core_graph)));
     }
 
