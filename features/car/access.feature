@@ -157,15 +157,16 @@ Feature: Car - Restricted access
 
     Scenario: Car - Access combinations
         Then routability should be
-            | highway     | access       | vehicle    | motor_vehicle | motorcar    | forw | backw | # |
-            | runway      | private      |            |               | permissive  | x    | x     |   |
-            | primary     | forestry     |            | yes           |             | x    | x     |   |
-            | cycleway    |              |            | designated    |             | x    | x     |   |
-            | residential |              | yes        | no            |             |      |       |   |
-            | motorway    | yes          | permissive |               | private     | x    |       | implied oneway  |
-            | trunk       | agricultural | designated | permissive    | no          |      |       |   |
-            | pedestrian  |              |            |               |             |      |       |   |
-            | pedestrian  |              |            |               | destination |      |       | temporary disabled #3773 |
+            | highway      | access       | vehicle    | motor_vehicle | motorcar    | forw | backw | # |
+            | runway       | private      |            |               | permissive  | x    | x     |   |
+            | primary      | forestry     |            | yes           |             | x    | x     |   |
+            | cycleway     |              |            | designated    |             | x    | x     |   |
+            | unclassified |              |            | destination   | destination | x    | x     |   |
+            | residential  |              | yes        | no            |             |      |       |   |
+            | motorway     | yes          | permissive |               | private     | x    |       | implied oneway  |
+            | trunk        | agricultural | designated | permissive    | no          |      |       |   |
+            | pedestrian   |              |            |               |             |      |       |   |
+            | pedestrian   |              |            |               | destination |      |       | temporary disabled #3773 |
 
     Scenario: Car - Ignore access tags for other modes
         Then routability should be

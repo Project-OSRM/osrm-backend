@@ -161,6 +161,7 @@ function setup()
       'tertiary_link',
       'residential',
       'living_street',
+      'unclassified'
     },
 
     construction_whitelist = Set {
