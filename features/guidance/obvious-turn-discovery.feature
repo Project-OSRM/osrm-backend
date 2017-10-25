@@ -1075,3 +1075,91 @@ Feature: Simple Turns
         | from | to | route          | turns                           |
         | a    | c  | dame,pase      | depart,arrive                   |
         | a    | e  | dame,feuc,feuc | depart,turn slight right,arrive |
+
+    # https://www.openstreetmap.org/#map=19/52.48468/13.34532
+    Scenario: Forking into Tertiary
+    Given the node map
+        """
+                             d
+                        . . `
+        a - - - - - b - - - - - c
+        """
+
+    And the ways
+        | nodes | highway  | name  | oneway | lanes |
+        | ab    | primary  | kenny | yes    | 4     |
+        | bc    | tertiary | kenny | yes    | 2     |
+        | bd    | primary  | domi  | yes    | 2     |
+
+    When I route I should get
+        | from | to | route             | turns                           |
+        | a    | c  | kenny,kenny,kenny | depart,fork slight right,arrive |
+        | a    | d  | kenny,domi,domi   | depart,fork slight left,arrie   |
+
+    # https://www.openstreetmap.org/#map=18/52.56960/13.43815
+    Scenario: Turn onto classified
+    Given the node map
+        """
+                       e  f
+                      |   |
+                     |    |
+        a - - - - - b - - c - - . .
+                                    `  ` ` d
+        """
+
+    And the ways
+        | nodes | highway      | name | oneway |
+        | abc   | secondary    | roma | no     |
+        | cd    | unclassified | roma | no     |
+        | eb    | secondary    | roth | yes    |
+        | cf    | secondary    | roth | yes    |
+
+    When I route I should get
+        | from | to | route          | turns                   |
+        | a    | d  | roma,roma      | depart,arrive           |
+        | a    | f  | roma,roth,roth | depart,turn left,arrive |
+
+    # https://www.openstreetmap.org/#map=18/52.50908/13.27312
+    Scenario: Merging onto a different street
+    Given the node map
+        """
+        d
+          `.`.`.`.`.`.b - - - - c
+        a`
+        """
+
+    And the ways
+        | nodes | highway   | name | oneway |
+        | ab    | secondary | masu | yes    |
+        | dbc   | primary   | theo | yes    |
+
+    When I route I should get
+        | from | to | route     | turns         |
+        | a    | c  | masu,theo | depart,arrive |
+        | d    | c  | theo,theo | depart,arrive |
+
+    # https://www.openstreetmap.org/#map=18/52.51299/13.28936
+    Scenario: Lanes override road classes
+    Given the node map
+        """
+                e
+                |
+                |
+        a - - - b - - - c
+                |
+                |
+                d
+        """
+
+    And the ways
+        | nodes | highway       | name | lanes |
+        | ab    | primary       | knob | 2     |
+        | bc    | unclassified  | knob |       |
+        | db    | primary       | soph | 3     |
+        | be    | living_street | soph | 3     |
+
+    When I route I should get
+        | from | to | route          | turns                   |
+        | a    | c  | knob,knob      | depart,arrive           |
+        | d    | e  | soph,soph      | depart,arrive           |
+        | d    | a  | soph,knob,knob | depart,turn left,arrive |
