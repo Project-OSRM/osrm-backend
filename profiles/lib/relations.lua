@@ -65,7 +65,7 @@ function Relations.match_to_ref(relations, ref)
     if direction then
       local best_score = -1
       local best_ref = nil
-      
+
       function find_best(scores)
         if scores then
           for k ,v in pairs(scores) do
@@ -79,7 +79,7 @@ function Relations.match_to_ref(relations, ref)
 
       find_best(name_scores)
       find_best(ref_scores)
-      
+
       if best_ref then
         local result_direction = result_match[best_ref]
 
@@ -230,7 +230,7 @@ function Relations.process_way_refs(way, relations, result)
   local matched_refs = nil;
   if result.ref then
     local match_res = Relations.match_to_ref(parsed_rel_list, result.ref)
- 
+
     function gen_ref(is_forward)
       local ref = ''
       for _, m in pairs(match_res) do
@@ -252,7 +252,7 @@ function Relations.process_way_refs(way, relations, result)
 
       return ref
     end
-    
+
     result.forward_ref = gen_ref(true)
     result.backward_ref = gen_ref(false)
   end
