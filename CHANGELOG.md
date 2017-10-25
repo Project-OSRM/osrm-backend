@@ -1,7 +1,7 @@
 # 5.13.0 RC3
   - Changes from 5.12:
     - Profile:
-      - Append cardinal directions from route relations to ref fields to improve instructions
+      - Append cardinal directions from route relations to ref fields to improve instructions; off by default see `profile.cardinal_directions`
       - Support of `distance` weight in foot and bicycle profiles
       - Support of relations processing
       - Added `way:get_location_tag(key)` method to get location-dependent tags https://github.com/Project-OSRM/osrm-backend/wiki/Using-location-dependent-data-in-profiles
