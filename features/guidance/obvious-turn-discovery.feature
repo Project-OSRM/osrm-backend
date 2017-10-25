@@ -937,3 +937,141 @@ Feature: Simple Turns
         | from | to | route     | turns         |
         | a    | e  | nord,nord | depart,arrive |
         | e    | a  | nord,nord | depart,arrive |
+
+    # https://www.openstreetmap.org/edit#map=17/52.57124/13.39892
+    Scenario: Primary road curved turn
+    Given the node map
+        """
+        m - - l....
+                   `k.
+        a - - b - .    ``- - - - p
+                   `c . \
+                     `. `j - - - o
+                       d  \
+                        \ i
+                        e  \
+                        |  h
+                        |  |
+                        f  g
+
+
+        """
+
+    And the ways
+        | nodes | highway        | name   | oneway |
+        | abc   | primary        | schoen | yes    |
+        | cdef  | primary        | grab   | yes    |
+        | klm   | primary        | schoen | yes    |
+        | ghijk | primary        | grab   | yes    |
+        | cj    | secondary_link | mann   | yes    |
+        | jo    | secondary      | mann   | yes    |
+        | pk    | secondary      | mann   | yes    |
+
+    When I route I should get
+        | from | to | route            | turns                          |
+        | a    | f  | schoen,grab,grab | depart,turn right,arrive       |
+        | g    | m  | grab,schoen      | depart,arrive                  |
+        | a    | o  | schoen,mann,mann | depart,turn slight left,arrive |
+
+    # https://www.openstreetmap.org/#map=18/52.55374/13.41462
+    Scenario: Turn Links as Straights
+    Given the node map
+        """
+                l    k
+                |    |
+        j - - - i -- hg- - - f
+                  /  /
+                /  /
+        a - - -bc -- d - - - e
+                |    |
+                m    n
+        """
+
+    And the ways
+        | nodes | highway      | oneway | name |
+        | abc   | primary      | yes    | born |
+        | ij    | primary      | yes    | born |
+        | cde   | primary      | yes    | wisb |
+        | fghi  | primary      | yes    | wisb |
+        | li    | primary      | yes    | berl |
+        | hk    | primary      | yes    | berl |
+        | icm   | primary      | yes    | scho |
+        | ndh   | primary      | yes    | scho |
+        | bh    | primary_link | yes    |      |
+        | gc    | primary_link | yes    |      |
+
+    When I route I should get
+        | from | to | route          | turns                   |
+        | a    | k  | born,berl,berl | depart,turn left,arrive |
+        | f    | m  | wisb,scho,scho | depart,turn left,arrive |
+
+    # https://www.openstreetmap.org/#map=19/52.56934/13.40131
+    Scenario: Crossing Segregated before a turn
+    Given the node map
+        """
+                         _-d
+        f - - - e -- ` `
+                |        _-c
+        a - - -.b -- ` `
+           . `
+        g`
+        """
+
+    And the ways
+        | nodes | highway        | oneway | name |
+        | ab    | primary        | yes    | scho |
+        | bc    | primary        | yes    | brei |
+        | de    | primary        | yes    | brei |
+        | ef    | primary        | yes    | scho |
+        | gb    | secondary      | no     | woll |
+        | be    | secondary_link | no     | woll |
+
+    When I route I should get
+        | from | to | route          | turns                         |
+        | g    | c  | woll,brei,brei | depart,turn right,arrive      |
+        | g    | f  | woll,scho,scho | depart,turn sharp left,arrive |
+        | a    | c  | scho,brei      | depart,arrive                 |
+        | d    | f  | brei,scho      | depart,arrive                 |
+
+
+    # https://www.openstreetmap.org/edit#map=19/52.58072/13.42985
+    Scenario: Trunk Turning into Motorway
+    Given the node map
+        """
+        a - - - - - b - - -
+                      ` .   ` ` ` c
+                          `d
+
+        """
+
+    And the ways
+        | nodes | highway    | name  | oneway |
+        | ab    | trunk      | prenz | yes    |
+        | bc    | motorway   |       | yes    |
+        | bd    | trunk_link |       | yes    |
+
+    When I route I should get
+        | from | to | route    | turns                           |
+        | a    | c  | prenz,   | depart,arrive                   |
+        | a    | d  | prenz,,, | depart,turn slight right,arrive |
+
+    # https://www.openstreetmap.org/edit#map=19/52.57800/13.42900
+    Scenario: Splitting Secondary
+    Given the node map
+        """
+                                  . . . . c
+        a - - - - - - - b ` ` ` `
+                          \
+                            \ d - - - - - - - - - e
+        """
+
+    And the ways
+        | nodes | highway   | name | lanes | oneway |
+        | ab    | secondary | dame | 2     | no     |
+        | bc    | secondary | pase | 2     | no     |
+        | bde   | seconday  | feuc | 1     | yes    |
+
+    When I route I should get
+        | from | to | route          | turns                           |
+        | a    | c  | dame,pase      | depart,arrive                   |
+        | a    | e  | dame,feuc,feuc | depart,turn slight right,arrive |
