@@ -104,7 +104,6 @@ Intersection MotorwayHandler::fromMotorway(const EdgeID via_eid, Intersection in
 
     // continue_pos == 0 if no continue
     auto const continue_pos = findObviousTurn(via_eid, intersection);
-
     const auto obvious_index_old = findObviousTurnOld(via_eid, intersection);
     auto const obvious_index = continue_pos;
     if (obvious_index != obvious_index_old)

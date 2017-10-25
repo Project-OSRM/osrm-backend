@@ -244,7 +244,7 @@ Intersection TurnHandler::handleThreeWayTurn(const EdgeID via_edge, Intersection
         !std::all_of(intersection.begin(), intersection.end(), [&](auto const &road) {
             return node_based_graph.GetEdgeData(road.eid)
                 .flags.road_classification.IsLowPriorityRoadClass();
-        }))
+        }) && !isEndOfRoad(intersection[0], intersection[1], intersection[2]))
     {
         const auto &extractor = intersection_generator.GetCoordinateExtractor();
         if (obvious_index_old != 0 && intersection[obvious_index_old].entry_allowed)
@@ -253,7 +253,7 @@ Intersection TurnHandler::handleThreeWayTurn(const EdgeID via_edge, Intersection
                 node_based_graph.GetTarget(via_edge), intersection[obvious_index_old].eid);
             if (line.size() >= 2)
             {
-                line = extractor.TrimCoordinatesToLength(std::move(line), 30);
+                line = extractor.TrimCoordinatesToLength(std::move(line), 15);
                 util::ScopedGeojsonLoggerGuard<util::CoordinateVectorToLineString,
                                                osrm::util::LoggingScenario(0)>::Write(line);
             }
@@ -264,7 +264,7 @@ Intersection TurnHandler::handleThreeWayTurn(const EdgeID via_edge, Intersection
                 node_based_graph.GetTarget(via_edge), intersection[obvious_index].eid);
             if (line.size() >= 2)
             {
-                line = extractor.TrimCoordinatesToLength(std::move(line), 30);
+                line = extractor.TrimCoordinatesToLength(std::move(line), 15);
                 util::ScopedGeojsonLoggerGuard<util::CoordinateVectorToLineString,
                                                osrm::util::LoggingScenario(1)>::Write(line);
             }
@@ -374,7 +374,7 @@ Intersection TurnHandler::handleComplexTurn(const EdgeID via_edge, Intersection 
                 node_based_graph.GetTarget(via_edge), intersection[obvious_index_old].eid);
             if (line.size() >= 2)
             {
-                line = extractor.TrimCoordinatesToLength(std::move(line), 30);
+                line = extractor.TrimCoordinatesToLength(std::move(line), 15);
                 util::ScopedGeojsonLoggerGuard<util::CoordinateVectorToLineString,
                                                osrm::util::LoggingScenario(0)>::Write(line);
             }
@@ -385,7 +385,7 @@ Intersection TurnHandler::handleComplexTurn(const EdgeID via_edge, Intersection 
                 node_based_graph.GetTarget(via_edge), intersection[obvious_index].eid);
             if (line.size() >= 2)
             {
-                line = extractor.TrimCoordinatesToLength(std::move(line), 30);
+                line = extractor.TrimCoordinatesToLength(std::move(line), 15);
                 util::ScopedGeojsonLoggerGuard<util::CoordinateVectorToLineString,
                                                osrm::util::LoggingScenario(1)>::Write(line);
             }

@@ -742,20 +742,46 @@ Feature: Simple Turns
     Given the node map
         """
         a - - - - - - - - - - b-----
-                                `    ```````````` c
-                                  `  ` ` ` .
-                                             ` d
+                                `    ````````````c
+                                   ` d
         """
 
     And the ways
         | nodes | highway       | name | ref    | oneway |
         | abc   | trunk         | sued | K 9652 | yes    |
-        | bd    | motorway_link |      | A 5    | no     |
+        | bd    | motorway_link |      | A 5    | yes    |
 
     When I route I should get
         | from | to | route     | turns                       |
         | a    | c  | sued,sued | depart,arrive               |
         | a    | d  | sued,,    | depart,on ramp right,arrive |
+
+    # https://www.openstreetmap.org/#map=19/48.98900/8.43800
+    Scenario: Splitting motorway links without names but with destinations
+    Given the node map
+        """
+                                           .... h
+                                     . .g.`
+                          ..... e..`............... f
+               ... d---```
+             c`
+            /
+          /
+         b
+        /
+        a
+        """
+
+    And the ways
+        | nodes | highway       | name | destination | oneway |
+        | abcde | motorway_link |      |             | yes    |
+        | ef    | motorway_link |      | right       | yes    |
+        | egh   | motorway_link |      | left        | yes    |
+
+    When I route I should get
+        | from | to | route | turns                           |
+        | a    | f  | ,,    | depart,fork slight right,arrive |
+        | a    | h  | ,,    | depart,fork slight left,arrive  |
 
     # https://www.openstreetmap.org/#map=19/49.01098/8.36052
     Scenario: Splitting Road at intersection (modelled turn)
@@ -783,3 +809,131 @@ Feature: Simple Turns
         | from | to | route            | turns                           |
         | a    | c  | ente,rhein,rhein | depart,new name straight,arrive |
         | a    | h  | ente,rhein,rhein | depart,turn left,arrive         |
+
+    # https://www.openstreetmap.org/#map=19/48.99776/8.47766
+    Scenario: Narrow cross
+    Given the node map
+        """
+        a       e
+         \     /
+          \   /
+           \ /
+            b
+           / \
+          /   \
+         /     \
+        d       c
+        """
+
+    And the ways
+        | nodes | highway   | name   |
+        | ab    | secondary | baden  |
+        | be    | primary   | gym    |
+        | bc    | tertiary  | ritter |
+        | db    | primary   | baden  |
+
+    When I route I should get
+        | from | to | route             | turns                         |
+        | a    | d  | baden,baden,baden | depart,continue right,arrive  |
+        | a    | c  | baden,ritter      | depart,arrive                 |
+        | a    | e  | baden,gym,gym     | depart,turn sharp left,arrive |
+
+    # https://www.openstreetmap.org/#map=19/48.99870/8.48122
+    Scenario: Residential Segregated
+    Given the node map
+        """
+              f     e
+              |     |
+              |     |
+              |     |
+              |     |
+              |     |
+              |     |
+              |     |
+        a - - b - - c - - d
+        """
+
+    And the ways
+        | nodes | highway     | name    | oneway |
+        | ab    | residential | possel  | no     |
+        | fb    | residential | berg    | yes    |
+        | bc    | residential | berg    | no     |
+        | ce    | residential | berg    | yes    |
+        | cd    | residential | kastell | no     |
+
+    When I route I should get
+        | from | to | route            | turns                   |
+        | a    | d  | possel,kastell   | depart,arrive           |
+        | a    | e  | possel,berg,berg | depart,turn left,arrive |
+
+    # https://www.openstreetmap.org/#map=19/48.99810/8.46749
+    Scenario: Slight End of Road
+    Given the node map
+        """
+                          d
+                         /
+                        /
+        a - - - - - - b - - - - - - - c
+        """
+
+    And the ways
+        | nodes | highway     | name    |
+        | abd   | residential | kanzler |
+        | bc    | residential | gartner |
+
+    When I route I should get
+        | from | to | route                   | turns                        |
+        | a    | c  | kanzler,gartner         | depart,arrive                |
+        | a    | d  | kanzler,kanzler,kanzler | depart,continue left,arrive  |
+        | d    | a  | kanzler,kanzler,kanzler | depart,continue right,arrive |
+
+    # https://www.openstreetmap.org/#map=18/52.46942/13.33159
+    Scenario: Curved crossing
+    Given the node map
+        """
+                                                                    f
+                                                                  .`
+                                     h                          .
+                                      `.                    e `
+                                        `.               . `
+                                          `.         . `
+                                            `.   . `
+                                              d
+                                        c - `   `.
+        a - - - - - - - - - b - - ` ` `           `.
+                                                    g
+        """
+
+    And the ways
+        | nodes | highway     | name  | oneway |
+        | abcd  | residential | hand  | no     |
+        | def   | residential | hand  | yes    |
+        | hdg   | secondary   | schmi | no     |
+
+    When I route I should get
+        | from | to | route       | turns         |
+        | a    | f  | hand,hand   | depart,arrive |
+        | h    | g  | schmi,schmi | depart,arrive |
+
+
+    # https://www.openstreetmap.org/#map=19/52.56562/13.39109
+    Scenario: Dented Straight
+    Given the node map
+        """
+        a - - - b.            . d - - - - e
+                   `        `
+                       `c`
+                        |
+                        |
+                        f
+        """
+
+    And the ways
+        | nodes | highway     | name  |
+        | abcde | residential | nord  |
+        | cf    | residential | stern |
+
+    When I route I should get
+        | from | to | route     | turns         |
+        | a    | e  | nord,nord | depart,arrive |
+        | e    | a  | nord,nord | depart,arrive |
