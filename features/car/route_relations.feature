@@ -4,6 +4,11 @@ Feature: Car - route relations
         Given the profile "car"
 
     Scenario: Assignment using relation membership roles
+        Given the profile file "car" initialized with
+        """
+        profile.cardinal_directions = true
+        """
+
         Given the node map
             """
               a----------------b
@@ -26,7 +31,63 @@ Feature: Car - route relations
             | b,a       | westbound,westbound  | I 80 $west,I 80 $west                            |
             | c,d       | eastbound,eastbound  | I 80 $east; CO 93 $east,I 80 $east; CO 93 $east  |
 
+    Scenario: No cardinal directions by default
+        Given the profile file "car" initialized with
+        """
+        profile.cardinal_directions = false
+        """
+        Given the node map
+            """
+              a----------------b
+              c----------------d
+            """
+
+        And the ways
+            | nodes | name        | highway  | ref         |
+            | ba    | westbound   | motorway | I 80        |
+            | cd    | eastbound   | motorway | I 80;CO 93  |
+
+        And the relations
+            | type        | way:east | way:west | route | ref | network |
+            | route       | cd       | ba       | road  | 80  | US:I    |
+            | route       | cd       | ba       | road  | 93  | US:CO   |
+
+
+        When I route I should get
+            | waypoints | route                | ref                     |
+            | b,a       | westbound,westbound  | I 80,I 80               |
+            | c,d       | eastbound,eastbound  | I 80; CO 93,I 80; CO 93 |
+
+    Scenario: No cardinal directions by default
+        Given the node map
+            """
+              a----------------b
+              c----------------d
+            """
+
+        And the ways
+            | nodes | name        | highway  | ref         |
+            | ba    | westbound   | motorway | I 80        |
+            | cd    | eastbound   | motorway | I 80;CO 93  |
+
+        And the relations
+            | type        | way:east | way:west | route | ref | network |
+            | route       | cd       | ba       | road  | 80  | US:I    |
+            | route       | cd       | ba       | road  | 93  | US:CO   |
+
+
+        When I route I should get
+            | waypoints | route                | ref                     |
+            | b,a       | westbound,westbound  | I 80,I 80               |
+            | c,d       | eastbound,eastbound  | I 80; CO 93,I 80; CO 93 |
+
+
     Scenario: Assignment using relation direction property (no role on members)
+        Given the profile file "car" initialized with
+        """
+        profile.cardinal_directions = true
+        """
+
         Given the node map
             """
               a----------------b
@@ -51,6 +112,11 @@ Feature: Car - route relations
 
 
     Scenario: Forward assignment on one-way roads using relation direction property
+        Given the profile file "car" initialized with
+        """
+        profile.cardinal_directions = true
+        """
+
         Given the node map
             """
               a----------------b
@@ -75,6 +141,11 @@ Feature: Car - route relations
 
 
     Scenario: Forward/backward assignment on non-divided roads with role direction tag
+        Given the profile file "car" initialized with
+        """
+        profile.cardinal_directions = true
+        """
+
         Given the node map
             """
               a----------------b
@@ -99,6 +170,11 @@ Feature: Car - route relations
 
 
     Scenario: Conflict between role and direction
+        Given the profile file "car" initialized with
+        """
+        profile.cardinal_directions = true
+        """
+
         Given the node map
             """
               a----------------b
@@ -118,6 +194,11 @@ Feature: Car - route relations
 
 
     Scenario: Conflict between role and superrelation direction
+        Given the profile file "car" initialized with
+        """
+        profile.cardinal_directions = true
+        """
+
         Given the node map
             """
               a----------------b
@@ -140,6 +221,11 @@ Feature: Car - route relations
             | a,b       | eastbound,eastbound | I 80,I 80 |
 
     Scenario: Conflict between role and superrelation role
+        Given the profile file "car" initialized with
+        """
+        profile.cardinal_directions = true
+        """
+
         Given the node map
             """
               a----------------b
@@ -162,6 +248,11 @@ Feature: Car - route relations
             | a,b       | eastbound,eastbound  | I 80,I 80 |
 
     Scenario: Direction only available via superrelation role
+        Given the profile file "car" initialized with
+        """
+        profile.cardinal_directions = true
+        """
+
         Given the node map
             """
               a----------------b
@@ -184,6 +275,11 @@ Feature: Car - route relations
             | a,b       | eastbound,eastbound  | I 80 $east,I 80 $east |
 
     Scenario: Direction only available via superrelation direction
+        Given the profile file "car" initialized with
+        """
+        profile.cardinal_directions = true
+        """
+
         Given the node map
             """
               a----------------b
@@ -204,6 +300,7 @@ Feature: Car - route relations
         When I route I should get
             | waypoints | route                | ref                   |
             | a,b       | eastbound,eastbound  | I 80 $east,I 80 $east |
+
 
 #    Scenario: Three levels of indirection
 #        Given the node map
