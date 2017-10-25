@@ -62,8 +62,8 @@ Feature: Turn Lane Guidance
             | cf     |                         | right       |       |
 
        When I route I should get
-            | waypoints | route                                           | turns                                                     |
-            | a,e       | ferry-route,ferry-route,ferry-route,ferry-route | depart,notification straight,notification straight,arrive |
+            | waypoints | route                                           | turns                                             |
+            | a,e       | ferry-route,ferry-route,ferry-route,ferry-route | depart,continue straight,continue straight,arrive |
 
     @simple
     Scenario: Basic Turn Lane 4-Way Turn
@@ -614,8 +614,9 @@ Feature: Turn Lane Guidance
                  | |
                  | |
                  b d
-            h     c
-             ' -- g - - f
+            h-----c
+                  | `-f
+                  g
             """
 
         And the ways

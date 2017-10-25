@@ -63,8 +63,8 @@ Feature: Merge Segregated Roads
             | jd    | bot  | no     |
 
         When I route I should get
-            | waypoints | route               | intersections                                                                                      |
-            | a,f       | road,road,road,road | true:90,false:45 true:135 false:270;true:45 true:180 false:315;true:90 false:225 true:315;true:270 |
+            | waypoints | route               | intersections                                                                                      | locations |
+            | a,f       | road,road,road,road | true:90,false:45 true:135 false:270;true:45 true:180 false:315;true:90 false:225 true:315;true:270 | a,d,e,f   |
 
     #https://www.openstreetmap.org/#map=19/52.50003/13.33915
     @negative
@@ -384,9 +384,9 @@ Feature: Merge Segregated Roads
             | cd    | right  | no     |
 
         When I route I should get
-            | waypoints | route                           | intersections                                                                                       |
-            | a,d       | left,circle,circle,right,right  | true:90;false:90 true:120 false:270;true:60 true:180 false:300;true:90 false:240 true:270;true:270  |
-            | g,d       | bottom,circle,right,right       | true:0;true:60 false:180 false:300;true:90 false:240 true:270;true:270                              |
+            | waypoints | route                     | intersections                                                                                      | locations | turns                          | #                                                                                           |
+            | a,d       | left,right,right          | true:90,false:90 true:120 false:270;true:60 true:180 false:300,true:90 false:240 true:270;true:270 | a,f,d     | depart,turn slight left,arrive | depart,arrive would be nicer, but the turn angles are just too similar for that distinction |
+            | g,d       | bottom,right,right        | true:0;true:60 false:180 false:300,true:90 false:240 true:270;true:270                             | g,f,d     | depart,turn right,arrive       |                                                                                             |
 
     Scenario: Middle Island
         Given the node map

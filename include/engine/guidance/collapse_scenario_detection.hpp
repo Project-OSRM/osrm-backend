@@ -58,6 +58,8 @@ bool maneuverPreceededByNameChange(const RouteStepIterator step_prior_to_interse
                                    const RouteStepIterator step_leaving_intersection);
 bool maneuverPreceededBySuppressedDirection(const RouteStepIterator step_entering_intersection,
                                             const RouteStepIterator step_leaving_intersection);
+bool closeContinueAfterTurn(const RouteStepIterator step_entering_intersection,
+                            const RouteStepIterator step_leaving_intersection);
 bool suppressedStraightBetweenTurns(const RouteStepIterator step_entering_intersection,
                                     const RouteStepIterator step_at_center_of_intersection,
                                     const RouteStepIterator step_leaving_intersection);

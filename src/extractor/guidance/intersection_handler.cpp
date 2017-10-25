@@ -132,7 +132,8 @@ TurnInstruction IntersectionHandler::getInstructionForObvious(const std::size_t 
                 // We reserve merges for motorway types. All others are considered for simply going
                 // straight onto a road. This avoids confusion about merge directions on streets
                 // that could potentially also offer different choices
-                if (out_classification.road_classification.IsMotorwayClass())
+                if (out_classification.road_classification.IsMotorwayClass() &&
+                    !out_classification.road_classification.IsLinkClass())
                     return {TurnType::Merge,
                             road.angle > STRAIGHT_ANGLE ? DirectionModifier::SlightRight
                                                         : DirectionModifier::SlightLeft};
@@ -495,6 +496,7 @@ bool IntersectionHandler::isSameName(const EdgeID source_edge_id, const EdgeID t
                                                   name_table,
                                                   street_name_suffix_table); //
 }
+
 
 } // namespace guidance
 } // namespace extractor

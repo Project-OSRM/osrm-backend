@@ -388,8 +388,8 @@ Feature: Basic Roundabout
             | restriction | pi       | ij     | i        | no_left_turn  |
 
         When I route I should get
-            | waypoints | route                                                   | turns                                                  |
-            | a,k       | massachusetts,massachusetts,massachusetts,massachusetts | depart,sheridan circle-exit-2,exit rotary right,arrive |
+            | waypoints | route                                                   | turns                                                  | locations |
+            | a,k       | massachusetts,massachusetts,massachusetts,massachusetts | depart,sheridan circle-exit-2,exit rotary right,arrive | a,b,r,k   |
 
     #2856 - http://www.openstreetmap.org/#map=19/47.23318/-1.56563
     Scenario: Linked Roundabouts

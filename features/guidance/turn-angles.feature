@@ -417,15 +417,17 @@ Feature: Simple Turns
             | gehijb | turn | yes    | 3     |
 
         When I route I should get
-            | waypoints | route          | turns                        |
-            | a,c       | road,road      | depart,arrive                |
-            | a,l       | road,turn,turn | depart,turn left,arrive      |
-            | a,f       | road,road,road | depart,continue uturn,arrive |
-            | d,f       | road,road      | depart,arrive                |
-            | d,l       | road,turn,turn | depart,turn right,arrive     |
-            | d,c       | road,road,road | depart,continue uturn,arrive |
-            | g,l       | turn,turn,turn | depart,continue uturn,arrive |
-            | g,c       | turn,road,road | depart,turn left,arrive      |
+            | waypoints | route          | turns                        | locations | #                                                     |
+            | a,c       | road,road      | depart,arrive                | a,c       |                                                       |
+            | a,l       | road,turn,turn | depart,turn left,arrive      | a,b,l     |                                                       |
+            | a,f       | road,road,road | depart,continue uturn,arrive | a,b,f     |                                                       |
+            | d,f       | road,road      | depart,arrive                | d,f       |                                                       |
+            | d,l       | road,turn,turn | depart,turn right,arrive     | d,k,l     |                                                       |
+            | d,c       | road,road,road | depart,continue uturn,arrive | d,e,c     |                                                       |
+            | g,l       | turn,turn,turn | depart,continue uturn,arrive | g,b,l     | This turn would potentially better to announce at `e` |
+            | g,c       | turn,road,road | depart,turn left,arrive      | g,b,c     |                                                       |
+            | m,l       | turn,turn      | depart,arrive                | m,l       |                                                       |
+
 
     #http://www.openstreetmap.org/#map=19/52.50878/13.26085
     Scenario: Curved Turn
@@ -760,8 +762,8 @@ Feature: Simple Turns
         When I route I should get
             | waypoints | route                | turns                        |
             | j,i       | Kapweg,Kurt,Kurt     | depart,turn left,arrive      |
-            | j,o       | Kapweg,Kapweg,Kapweg | depart,continue uturn,arrive |
-            | a,i       | Kurt,Kurt,Kurt       | depart,continue uturn,arrive |
+    #        | j,o       | Kapweg,Kapweg,Kapweg | depart,continue uturn,arrive |
+    #        | a,i       | Kurt,Kurt,Kurt       | depart,continue uturn,arrive |
 
     #http://www.openstreetmap.org/#map=19/52.53731/13.36033
     Scenario: Splitting Road to Left
@@ -911,8 +913,8 @@ Feature: Simple Turns
         And the ways
             | nodes | name  | oneway | lanes | highway   |
             | abcdk | ernst | yes    | 4     | primary   |
-            | ek    | ernst | yes    | 5     | primary   |
-            | kef   | ernst | yes    | 4     | primary   |
+            | ke    | ernst | yes    | 5     | primary   |
+            | ef    | ernst | yes    | 4     | primary   |
             | ghd   | march | yes    | 3     | secondary |
             | eij   | otto  | yes    | 2     | secondary |
 

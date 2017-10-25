@@ -23,8 +23,6 @@ namespace util
 {
 namespace guidance
 {
-// Name Change Logic
-// Used both during Extraction as well as during Post-Processing
 
 inline std::string longest_common_substring(const std::string &lhs, const std::string &rhs)
 {
