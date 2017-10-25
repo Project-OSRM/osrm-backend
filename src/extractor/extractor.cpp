@@ -846,13 +846,18 @@ struct EdgeInfo
 
     ClassData road_class;
 
+    guidance::RoadPriorityClass::Enum road_priority_class;
+
     struct LessName
     {
         bool operator()(EdgeInfo const &e1, EdgeInfo const &e2) const { return e1.name < e2.name; }
     };
 };
 
-bool IsSegregated(std::vector<EdgeInfo> v1, std::vector<EdgeInfo> v2, EdgeInfo const &current)
+bool IsSegregated(std::vector<EdgeInfo> v1,
+                  std::vector<EdgeInfo> v2,
+                  EdgeInfo const &current,
+                  double edgeLength)
 {
     if (v1.size() < 2 || v2.size() < 2)
         return false;
@@ -881,6 +886,7 @@ bool IsSegregated(std::vector<EdgeInfo> v1, std::vector<EdgeInfo> v2, EdgeInfo c
             return false;
     }
 
+    /*
     std::vector<EdgeInfo> intersect;
     std::set_intersection(v1.begin(),
                           v1.end(),
@@ -895,8 +901,8 @@ bool IsSegregated(std::vector<EdgeInfo> v1, std::vector<EdgeInfo> v2, EdgeInfo c
                     intersect.end());
 
     return intersect.size() >= 2;
+    */
 
-    /*
     // set_intersection like routine to count equal name pairs, std function is
     // not acceptable because of duplicates {a, a, b} ∩ {a, a, c} == {a, a}.
     std::vector<std::pair<EdgeInfo const *, EdgeInfo const *>> commons;
@@ -906,22 +912,58 @@ bool IsSegregated(std::vector<EdgeInfo> v1, std::vector<EdgeInfo> v2, EdgeInfo c
 
     while (i1 != v1.end() && i2 != v2.end())
     {
-        if (i1->name_id == i2->name_id)
+        if (i1->name == i2->name)
         {
-            if (i1->name_id != EMPTY_NAMEID)
+            if (!i1->name.empty())
                 commons.push_back(std::make_pair(&(*i1), &(*i2)));
 
             ++i1;
             ++i2;
         }
-        else if (i1->name_id < i2->name_id)
+        else if (i1->name < i2->name)
             ++i1;
         else
             ++i2;
     }
 
-    return (commons.size() >= 2);
-    */
+    if (commons.size() < 2)
+        return false;
+
+    auto const check_equal_class = [](std::pair<EdgeInfo const *, EdgeInfo const *> const &e) {
+        // Or (e.first->road_class & e.second->road_class != 0)
+        return e.first->road_class == e.second->road_class;
+    };
+
+    size_t equal_class_count = 0;
+    for (auto const &e : commons)
+        if (check_equal_class(e))
+            ++equal_class_count;
+
+    if (equal_class_count < 2)
+        return false;
+
+    auto const get_length_threshold = [](EdgeInfo const *e) {
+        switch (e->road_priority_class)
+        {
+        case guidance::RoadPriorityClass::MOTORWAY:
+        case guidance::RoadPriorityClass::TRUNK:
+            return 15.0;
+        case guidance::RoadPriorityClass::PRIMARY:
+            return 10.0;
+        case guidance::RoadPriorityClass::SECONDARY:
+        case guidance::RoadPriorityClass::TERTIARY:
+            return 5.0;
+        default:
+            return 2.5;
+        }
+    };
+
+    double threshold = std::numeric_limits<double>::max();
+    for (auto const &e : commons)
+        threshold =
+            std::min(threshold, get_length_threshold(e.first) + get_length_threshold(e.second));
+
+    return edgeLength <= threshold;
 
     /// @todo Process standalone U-turns.
     /*
@@ -945,30 +987,32 @@ size_t Extractor::FindSegregatedNodes(NodeBasedGraphFactory &factory)
 
     auto &graph = factory.GetGraph();
     auto const &annotation = factory.GetAnnotationData();
-    auto const &coordinates = factory.GetCoordinates();
-    auto const &edges = factory.GetCompressedEdges();
 
-    auto const get_edge_name = [&](auto const &data) {
-        /// @todo Make string normalization/lowercase/trim for comparison ...
+    guidance::CoordinateExtractor coordExtractor(
+        graph, factory.GetCompressedEdges(), factory.GetCoordinates());
 
-        auto const id = annotation[data.annotation_data].name_id;
-        BOOST_ASSERT(id != INVALID_NAMEID);
-        return names.GetNameForID(id);
-    };
-
-    auto const get_edge_length = [&](EdgeID id) {
-        auto const geom = edges.GetBucketReference(id);
+    auto const get_edge_length = [&](NodeID from_node, EdgeID edgeID, NodeID to_node) {
+        auto const geom = coordExtractor.GetCoordinatesAlongRoad(from_node, edgeID, false, to_node);
         double length = 0.0;
         for (size_t i = 1; i < geom.size(); ++i)
         {
-            length += osrm::util::coordinate_calculation::haversineDistance(
-                coordinates[geom[i - 1].node_id], coordinates[geom[i].node_id]);
+            length += osrm::util::coordinate_calculation::haversineDistance(geom[i - 1], geom[i]);
         }
         return length;
     };
 
-    auto const get_edge_classes = [&](auto const &data) {
-        return annotation[data.annotation_data].classes;
+    auto const get_edge_info = [&](NodeID node, auto const &edgeData) -> EdgeInfo {
+        /// @todo Make string normalization/lowercase/trim for comparison ...
+
+        auto const id = annotation[edgeData.annotation_data].name_id;
+        BOOST_ASSERT(id != INVALID_NAMEID);
+        auto const name = names.GetNameForID(id);
+
+        return {node,
+                name,
+                edgeData.reversed ? 1 : 0,
+                annotation[edgeData.annotation_data].classes,
+                edgeData.flags.road_classification.GetClass()};
     };
 
     auto const collect_edge_info_fn = [&](auto const &edges1, NodeID node2) {
@@ -980,9 +1024,7 @@ size_t Extractor::FindSegregatedNodes(NodeBasedGraphFactory &factory)
             if (target == node2)
                 continue;
 
-            auto const &data = graph.GetEdgeData(e);
-            info.push_back(
-                {target, get_edge_name(data), data.reversed ? 1 : 0, get_edge_classes(data)});
+            info.push_back(get_edge_info(target, graph.GetEdgeData(e)));
         }
 
         if (info.empty())
@@ -1017,11 +1059,16 @@ size_t Extractor::FindSegregatedNodes(NodeBasedGraphFactory &factory)
         return info;
     };
 
-    auto const isSegregatedFn = [&](
-        auto const &edgeData, auto const &edges1, NodeID node1, auto const &edges2, NodeID node2) {
+    auto const isSegregatedFn = [&](auto const &edgeData,
+                                    auto const &edges1,
+                                    NodeID node1,
+                                    auto const &edges2,
+                                    NodeID node2,
+                                    double edgeLength) {
         return IsSegregated(collect_edge_info_fn(edges1, node2),
                             collect_edge_info_fn(edges2, node1),
-                            {node1, get_edge_name(edgeData), 0, get_edge_classes(edgeData)});
+                            get_edge_info(node1, edgeData),
+                            edgeLength);
     };
 
     std::unordered_set<EdgeID> processed;
@@ -1038,13 +1085,10 @@ size_t Extractor::FindSegregatedNodes(NodeBasedGraphFactory &factory)
                 continue;
 
             NodeID const targetID = graph.GetTarget(edgeID);
-
-            if (get_edge_length(edgeID) > 30.0)
-                continue;
-
             auto const targetEdges = graph.GetAdjacentEdgeRange(targetID);
 
-            if (isSegregatedFn(edgeData, sourceEdges, sourceID, targetEdges, targetID))
+            double const length = get_edge_length(sourceID, edgeID, targetID);
+            if (isSegregatedFn(edgeData, sourceEdges, sourceID, targetEdges, targetID, length))
             {
                 ++segregated_count;
                 edgeData.segregated = true;
