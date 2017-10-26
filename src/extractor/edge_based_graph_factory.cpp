@@ -701,6 +701,10 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                                           incoming_edge,
                                                           intersection_with_flags_and_angles);
 
+                        std::cout << "Final" << std::endl;
+                        for( auto road : intersection )
+                            std::cout << "\t" << toString(road) << std::endl;
+
                         OSRM_ASSERT(intersection.valid(),
                                     m_coordinates[node_at_center_of_intersection]);
 

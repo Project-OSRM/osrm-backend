@@ -280,6 +280,7 @@ Intersection TurnHandler::handleThreeWayTurn(const EdgeID via_edge, Intersection
                OOOOOOO
      */
 
+    std::cout << "Threeway with obv: " << obvious_index << std::endl;
     auto fork = findFork(via_edge, intersection);
     if (fork && obvious_index == 0)
     {
@@ -329,8 +330,10 @@ Intersection TurnHandler::handleThreeWayTurn(const EdgeID via_edge, Intersection
         else
         {
             BOOST_ASSERT(obvious_index == 2);
+            std::cout << "Select obvious" << std::endl;
             intersection[2].instruction = getInstructionForObvious(
                 3, via_edge, isThroughStreet(2, intersection), intersection[2]);
+            std::cout << "Turn: " << (int)intersection[2].instruction.type << std::endl;
             const auto first_direction = (direction_at_one == direction_at_two &&
                                           direction_at_one == DirectionModifier::Straight)
                                              ? DirectionModifier::SlightRight
