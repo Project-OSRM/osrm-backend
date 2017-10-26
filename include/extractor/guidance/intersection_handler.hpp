@@ -19,8 +19,8 @@
 
 #include <boost/optional.hpp>
 
-#define PRINT false
-//#define PRINT true
+//#define PRINT false
+#define PRINT true
 
 namespace osrm
 {
@@ -148,6 +148,28 @@ inline bool IntersectionHandler::IsDistinctTurn(const std::size_t index,
     const auto &candidate = intersection[index];
     const auto &candidate_data = node_based_graph.GetEdgeData(candidate.eid);
 
+    auto const override_class_by_lanes = [&](auto const& compare_data) {
+        // sometimes roads of same size are tagged strangely within a neighborhood, combining
+        // primary roads with residential roads. If the road with can be deducted from lanes, we
+        // can override such a classification
+        if (compare_data.flags.road_classification.GetNumberOfLanes() > 0 &&
+            via_edge_data.flags.road_classification.GetNumberOfLanes() > 0)
+        {
+#if PRINT
+            std::cout << "Comparing lanes: "
+                      << (int)via_edge_data.flags.road_classification.GetNumberOfLanes() << " "
+                      << (int)compare_data.flags.road_classification.GetNumberOfLanes()
+                      << std::endl;
+#endif
+            // check if via-edge has more than one additional lane, relative to the compare data
+            if (via_edge_data.flags.road_classification.GetNumberOfLanes() -
+                    compare_data.flags.road_classification.GetNumberOfLanes() <=
+                1)
+                return true;
+        }
+        return false;
+    };
+
     // check if a road is distinct to the obvious turn candidate in its road class. This is the case
     // only if we pass by a lower road category class or a link to the same category
     auto const distinct_by_class = [&](auto const &road) {
@@ -166,11 +188,16 @@ inline bool IntersectionHandler::IsDistinctTurn(const std::size_t index,
                                          candidate_data.flags.road_classification)
                   << std::endl;
 #endif
+
+
         if (strictlyLess(compare_data.flags.road_classification,
                          via_edge_data.flags.road_classification) &&
             strictlyLess(compare_data.flags.road_classification,
-                         candidate_data.flags.road_classification))
+                         candidate_data.flags.road_classification) &&
+            override_class_by_lanes(compare_data))
+        {
             return true;
+        }
 
 // passing by a link of the same category
 #if PRINT
@@ -192,8 +219,12 @@ inline bool IntersectionHandler::IsDistinctTurn(const std::size_t index,
             (via_edge_data.flags.road_classification.GetPriority() ==
              candidate_data.flags.road_classification.GetPriority()) &&
             (std::abs(static_cast<int>(getRoadGroup(via_edge_data.flags.road_classification)) -
-                      static_cast<int>(getRoadGroup(compare_data.flags.road_classification))) > 4))
+                      static_cast<int>(getRoadGroup(compare_data.flags.road_classification))) >
+             4) &&
+            override_class_by_lanes(compare_data))
+        {
             return true;
+        }
 
         return false;
     };
@@ -209,7 +240,27 @@ inline bool IntersectionHandler::IsDistinctTurn(const std::size_t index,
     const auto &candidate_annotation =
         node_data_container.GetAnnotation(candidate_data.annotation_data);
 
-    if (candidate_deviation <= GROUP_ANGLE) // NARROW_TURN_ANGLE)
+    const auto constexpr max_narrow_deviation = GROUP_ANGLE;
+    // on cases where the candidate deviation is in a narrow range, we can consider the deviaiton of
+    // other turns as a distinction criteria
+    //
+    //             c
+    //           *
+    //         *
+    //        b - d
+    //        |
+    //        a
+    // for example can be considered obvious as goig straight, while
+    //
+    //             c
+    //  d        *
+    //     *   *
+    //        b
+    //        |
+    //        a
+    // should err on the side of caution (when only comparing deviations)
+
+    if (candidate_deviation <= max_narrow_deviation)
     {
 #if PRINT
         std::cout << "Narrow" << std::endl;
@@ -331,9 +382,18 @@ inline bool IntersectionHandler::IsDistinctTurn(const std::size_t index,
                     ? NARROW_TURN_ANGLE
                     : FUZZY_ANGLE_DIFFERENCE;
             */
-            auto const roads_deviation_is_distinct =
-                compare_deviation / std::max(0.1, candidate_deviation) > DISTINCTION_RATIO &&
-                std::abs(compare_deviation - candidate_deviation) > minimum_angle_difference;
+
+            // if a turn angle isn't remotely forward, we don't consider a deviation to be distinct
+            auto const both_turns_go_into_same_direction =
+                (candidate.angle >= STRAIGHT_ANGLE) ==
+                (road.angle >= STRAIGHT_ANGLE); // are both turns to the left?
+            auto const roads_deviation_is_distinct =  compare_deviation / std::max(0.1, candidate_deviation) > DISTINCTION_RATIO &&
+                            std::abs(compare_deviation - candidate_deviation) > minimum_angle_difference;
+/*
+((both_turns_go_into_same_direction ? 1.5 : 1.0) * compare_deviation /
+std::max(0.1, candidate_deviation) >
+DISTINCTION_RATIO);
+*/
 
 #if PRINT
             std::cout << "Deviation Check: " << !continuing_road_takes_a_turn << " && "
@@ -465,7 +525,7 @@ inline bool IntersectionHandler::IsDistinctTurn(const std::size_t index,
             */
 
             // if the class is just not on the same level
-            if (distinct_by_class(road))
+            if (distinct_by_class(road) && !override_class_by_lanes(compare_data))
             {
 #if PRINT
                 std::cout << "Distinct by class" << std::endl;
@@ -485,7 +545,7 @@ inline bool IntersectionHandler::IsDistinctTurn(const std::size_t index,
                 ((getRoadGroup(via_edge_data.flags.road_classification) !=
                   getRoadGroup(compare_data.flags.road_classification)) &&
                  (via_edge_data.flags.road_classification.GetPriority() ==
-                  candidate_data.flags.road_classification.GetPriority())))
+                  candidate_data.flags.road_classification.GetPriority())) && !override_class_by_lanes(compare_data))
             {
 #if PRINT
                 std::cout << "Distinct by group." << std::endl;
@@ -712,6 +772,13 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
               << std::endl;
     std::cout << "Angle: " << util::angularDeviation(STRAIGHT_ANGLE, straightmost_valid->angle)
               << " of a maximum of " << GROUP_ANGLE << std::endl;
+    std::cout << "Equation: " << (straightmost_valid != straightmost_turn_itr) << " && "
+              << (straightmost_valid != intersection.end()) << " && ("
+              << (util::angularDeviation(STRAIGHT_ANGLE, straightmost_valid->angle) <= GROUP_ANGLE)
+              << " || " << straight_is_only_non_sharp << ") && "
+              << !node_based_graph.GetEdgeData(straightmost_valid->eid)
+                      .flags.road_classification.IsLowPriorityRoadClass()
+              << std::endl;
 #endif
 
     if ((straightmost_valid != straightmost_turn_itr) &&
@@ -737,6 +804,10 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
         util::angularDeviation(straightmost_valid->angle, STRAIGHT_ANGLE) <= GROUP_ANGLE &&
         intersection.countEnterable() == 1)
     {
+#if PRINT
+        std::cout << "Selected " << to_index_if_valid(straightmost_valid) << " as obvious."
+                  << std::endl;
+#endif
         return to_index_if_valid(straightmost_valid);
     }
 
@@ -761,6 +832,9 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
         return to_index_if_valid(straightmost_valid);
     }
 
+#if PRINT
+    std::cout << "No obvious turn" << std::endl;
+#endif
     return 0;
 }
 
