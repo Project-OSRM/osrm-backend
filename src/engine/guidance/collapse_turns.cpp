@@ -480,64 +480,6 @@ RouteSteps collapseTurnInstructions(RouteSteps steps)
     return steps;
 }
 
-std::vector<RouteStep> suppressSegregated(std::vector<RouteStep> steps)
-{
-    if (steps.size() <= 2)
-        return steps;
-
-    // start of with no-op
-    for (auto current_step = steps.begin() + 1; current_step + 1 != steps.end(); ++current_step)
-    {
-        /// @todo All the prologue checks are taken from the collapseTurnInstructions function.
-        /// Factor out to the separate routing when changes will be approved.
-
-        if (entersRoundabout(current_step->maneuver.instruction) ||
-            staysOnRoundabout(current_step->maneuver.instruction))
-        {
-            // If postProcess is called before then all corresponding leavesRoundabout steps are
-            // removed and the current roundabout step can be ignored by directly proceeding to
-            // the next step.
-            // If postProcess is not called before then all steps till the next leavesRoundabout
-            // step must be skipped to prevent incorrect roundabouts post-processing.
-
-            // are we done for good?
-            if (current_step + 1 == steps.end())
-                break;
-            else
-                continue;
-        }
-
-        // only operate on actual turns
-        if (!hasTurnType(*current_step))
-            continue;
-
-        // don't collapse next step if it is a waypoint alread
-        const auto next_step = findNextTurn(current_step);
-        if (hasWaypointType(*next_step))
-            break;
-
-        const auto previous_step = findPreviousTurn(current_step);
-
-        // don't collapse anything that does change modes
-        if (current_step->mode != next_step->mode)
-            continue;
-
-        if (current_step->is_segregated)
-        {
-            /// @todo Need to apply correct combine strategies.
-
-            util::Log() << "222 Segregated node";
-            combineRouteSteps(*current_step,
-                              *next_step,
-                              AdjustToCombinedTurnStrategy(*previous_step),
-                              TransferSignageStrategy(),
-                              NoModificationStrategy());
-        }
-    }
-
-    return removeNoTurnInstructions(std::move(steps));
-}
-
 } // namespace guidance
 } // namespace engine
 } // namespace osrm

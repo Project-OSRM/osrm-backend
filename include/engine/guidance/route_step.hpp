@@ -165,7 +165,7 @@ inline RouteStep &RouteStep::ElongateBy(const RouteStep &following_step)
                          following_step.intersections.begin(),
                          following_step.intersections.end());
 
-    is_segregated = false;
+    /// @todo Process is_segregated flag
 
     return *this;
 }
