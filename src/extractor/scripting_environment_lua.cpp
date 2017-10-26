@@ -166,6 +166,8 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
                            extractor::guidance::RoadPriorityClass::PARKING,
                            "link_road",
                            extractor::guidance::RoadPriorityClass::LINK_ROAD,
+                           "unclassified",
+                           extractor::guidance::RoadPriorityClass::UNCLASSIFIED,
                            "bike_path",
                            extractor::guidance::RoadPriorityClass::BIKE_PATH,
                            "foot_path",

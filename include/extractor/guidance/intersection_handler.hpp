@@ -545,10 +545,12 @@ DISTINCTION_RATIO);
                 ((getRoadGroup(via_edge_data.flags.road_classification) !=
                   getRoadGroup(compare_data.flags.road_classification)) &&
                  (via_edge_data.flags.road_classification.GetPriority() ==
-                  candidate_data.flags.road_classification.GetPriority())) && !override_class_by_lanes(compare_data))
+                  candidate_data.flags.road_classification.GetPriority())) && !override_class_by_lanes(compare_data) &&
+                (via_edge_data.flags.road_classification.GetPriority() != RoadPriorityClass::UNCLASSIFIED) &&
+                (compare_data.flags.road_classification.GetPriority() != RoadPriorityClass::UNCLASSIFIED))
             {
 #if PRINT
-                std::cout << "Distinct by group." << std::endl;
+                std::cout << "Distinct by group. (" << (int)via_edge_data.flags.road_classification.GetPriority() << " " << (int)compare_data.flags.road_classification.GetPriority() << ")" << std::endl;
 #endif
                 return false;
             }

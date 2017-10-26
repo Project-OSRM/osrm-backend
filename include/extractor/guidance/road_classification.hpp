@@ -43,6 +43,8 @@ const constexpr Enum ALLEY = 12;
 const constexpr Enum PARKING = 13;
 // Link Category
 const constexpr Enum LINK_ROAD = 14;
+// unclassified roads are kind of a wild-card, since it can be anything
+const constexpr Enum UNCLASSIFIED = 15;
 // Bike Accessible
 const constexpr Enum BIKE_PATH = 16;
 // Walk Accessible
@@ -140,13 +142,14 @@ inline bool canBeSeenAsFork(const RoadClassification first, const RoadClassifica
 inline std::uint32_t getRoadGroup(const RoadClassification classification)
 {
     // a list of dividers (inclusive) specifying the end of a class
-    const auto constexpr num_dividers = 6;
+    const auto constexpr num_dividers = 7;
     // dividers point one past the entry we want, so motorways will be pre-primary
     const constexpr RoadPriorityClass::Enum dividers[num_dividers] = {
         RoadPriorityClass::PRIMARY,
         RoadPriorityClass::TERTIARY_LINK,
         RoadPriorityClass::ALLEY,
         RoadPriorityClass::LINK_ROAD,
+        RoadPriorityClass::UNCLASSIFIED,
         RoadPriorityClass::BIKE_PATH,
         RoadPriorityClass::CONNECTIVITY+1};
 

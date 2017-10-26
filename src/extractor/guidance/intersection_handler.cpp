@@ -164,7 +164,7 @@ TurnInstruction IntersectionHandler::getInstructionForObvious(const std::size_t 
                         coordinates[node_based_graph.GetTarget(via_edge)],
                         coordinates[node_based_graph.GetTarget(road.eid)]);
 
-                    return {TurnType::Suppressed,
+                    return {TurnType::NewName,
                             (angularDeviation(road.angle, STRAIGHT_ANGLE) < NARROW_TURN_ANGLE &&
                              distance > 2 * MAX_COLLAPSE_DISTANCE)
                                 ? DirectionModifier::Straight
