@@ -664,7 +664,7 @@ step.
 | `end of road`    | road ends in a T intersection turn in direction of `modifier`|
 | `use lane`       | **Deprecated** replaced by lanes on all intersection entries |
 | `continue`       | Turn in direction of `modifier` to stay on the same road     |
-| `roundabout`     | traverse roundabout, has additional property `exit` with NR if the roundabout is left. The modifier specifies the direction of entering the roundabout. |
+| `roundabout`     | traverse roundabout, if the route leaves the roundabout there will be an additional property `exit` for exit counting. The modifier specifies the direction of entering the roundabout. |
 | `rotary`         | a traffic circle. While very similar to a larger version of a roundabout, it does not necessarily follow roundabout rules for right of way. It can offer `rotary_name` and/or `rotary_pronunciation` parameters (located in the RouteStep object) in addition to the `exit` parameter (located on the StepManeuver object).  |
 | `roundabout turn`| Describes a turn at a small roundabout that should be treated as normal turn. The `modifier` indicates the turn direciton. Example instruction: `At the roundabout turn left`. |
 | `notification`   | not an actual turn but a change in the driving conditions. For example the travel mode or classes. If the road takes a turn itself, the `modifier` describes the direction |
