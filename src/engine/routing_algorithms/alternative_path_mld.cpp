@@ -429,13 +429,83 @@ filterAnnotatedRoutesByStretch(RandIt first, RandIt last, const InternalRouteRes
 
     BOOST_ASSERT(shortest_route.is_valid());
 
-    const auto shortest_route_duration = shortest_route.duration();
-    const auto scaled_at_most_longer_by =
-        scaledAtMostLongerByFactorBasedOnDuration(shortest_route_duration);
-    const auto stretch_duration_limit = (1. + scaled_at_most_longer_by) * shortest_route_duration;
+    static constexpr double kStretchScale = 1.2f;
 
-    const auto over_duration_limit = [=](const auto &route) {
-        return route.duration() > stretch_duration_limit;
+    //    const auto shortest_route_duration = shortest_route.duration();
+    //    const auto scaled_at_most_longer_by =
+    //        scaledAtMostLongerByFactorBasedOnDuration(shortest_route_duration);
+    //    const auto stretch_duration_limit = (1. + scaled_at_most_longer_by) *
+    //    shortest_route_duration;
+
+    const auto over_duration_limit = [&](const InternalRouteResult &route) {
+        bool passed = true;
+        BOOST_ASSERT(route.unpacked_path_segments.size() ==
+                     shortest_route.unpacked_path_segments.size());
+        for (size_t i = 0; i < shortest_route.unpacked_path_segments.size(); ++i)
+        {
+            const auto &short_seg = shortest_route.unpacked_path_segments[i];
+            const auto &alter_seg = route.unpacked_path_segments[i];
+
+            // find different parts of two segments
+            // algorithm use rule, that there are no difference at begin/end of segment
+            // also that there are just on different sequence
+            auto s_it_b = short_seg.begin();
+            auto a_it_b = alter_seg.begin();
+            while ((*s_it_b).turn_via_node == (*a_it_b).turn_via_node &&
+                   s_it_b != short_seg.end() && a_it_b != alter_seg.end())
+            {
+                ++s_it_b;
+                ++a_it_b;
+            }
+
+            if (s_it_b == short_seg.end() || a_it_b == alter_seg.end())
+            {
+                passed = false;
+                break;
+            }
+
+            auto s_it_e = short_seg.rbegin();
+            auto a_it_e = alter_seg.rbegin();
+            while ((*s_it_b).turn_via_node == (*a_it_b).turn_via_node &&
+                   s_it_e != short_seg.rend() && a_it_e != alter_seg.rend())
+            {
+                ++s_it_e;
+                ++a_it_e;
+            }
+
+            if (s_it_e == short_seg.rend() || a_it_e == alter_seg.rend())
+            {
+                passed = false;
+                break;
+            }
+
+            // now calculate duration of found parts
+            const auto calcDuration = [](auto it_begin, auto it_end) {
+                double duration = 0.0;
+                while (it_begin != it_end)
+                {
+                    duration += (*it_begin).duration_until_turn;
+                    ++it_begin;
+                }
+
+                return duration;
+            };
+
+            BOOST_ASSERT(std::distance(short_seg.begin(), s_it_b) <
+                         std::distance(short_seg.begin(), s_it_e.base()));
+            BOOST_ASSERT(std::distance(alter_seg.begin(), a_it_b) <
+                         std::distance(alter_seg.begin(), a_it_e.base()));
+
+            const double short_duration = calcDuration(s_it_b, s_it_e.base());
+            const double alter_duration = calcDuration(a_it_b, a_it_e.base());
+            if (short_duration * kStretchScale < alter_duration)
+            {
+                passed = false;
+                break;
+            }
+        }
+
+        return passed;
     };
 
     return std::remove_if(first, last, over_duration_limit);
