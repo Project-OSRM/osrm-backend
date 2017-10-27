@@ -290,6 +290,32 @@ inline bool IntersectionHandler::IsDistinctTurn(const std::size_t index,
                 return false;
             }
 
+
+            // detect link roads in segregated intersections
+            if( !road.entry_allowed && (intersection.size() == 5) && (std::count_if(intersection.begin(),intersection.end(),[](auto const& road){ return road.entry_allowed; }) <= 2))
+            {
+                // if we are on a link road and all other turns form a 4 way intersection, the angular differences of all other turns need to be near 90 degrees
+                bool all_close_to_90 = true;
+                for( std::size_t i = 1; i < 3; ++i )
+                {
+                    auto const deviation = util::angularDeviation(intersection[i].angle,intersection[i+1].angle);
+                    if( deviation < 75 || deviation > 105){
+#if PRINT
+                        std::cout << "Deviation between " << i << " and " << i+1 << " (" << deviation << ") does not fit the desired range" << std::endl;
+#endif
+                        all_close_to_90 = false;
+                        break;
+                    }
+                }
+                if( all_close_to_90 )
+                {
+#if PRINT
+                    std::cout << "Assuming road to be part of a segregated intersection, not similar" << std::endl;
+#endif
+                    return false;
+                }
+            }
+
             auto const compare_deviation = util::angularDeviation(road.angle, STRAIGHT_ANGLE);
             auto const &compare_data = node_based_graph.GetEdgeData(road.eid);
             auto const &compare_annotation =

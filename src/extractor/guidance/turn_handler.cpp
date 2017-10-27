@@ -407,7 +407,7 @@ Intersection TurnHandler::handleComplexTurn(const EdgeID via_edge, Intersection 
         intersection[obvious_index].instruction =
             getInstructionForObvious(intersection.size(),
                                      via_edge,
-                                     isThroughStreet(obvious_index, intersection),
+                                     false, // complex intersections are not considered a merge (too many other turns)
                                      intersection[obvious_index]);
 
         // assign left/right turns

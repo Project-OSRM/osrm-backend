@@ -981,14 +981,14 @@ Feature: Simple Turns
     Scenario: Turn Links as Straights
     Given the node map
         """
-                l    k
-                |    |
-        j - - - i -- hg- - - f
-                  /  /
-                /  /
-        a - - -bc -- d - - - e
-                |    |
-                m    n
+               l     k
+               |     |
+        j - - -i - - hg- - - f
+               |  /  |/
+              /|   / |
+        a - --bc - - d - - - e
+               |     |
+               m     n
         """
 
     And the ways
@@ -1005,9 +1005,9 @@ Feature: Simple Turns
         | gc    | primary_link | yes    |      |
 
     When I route I should get
-        | from | to | route          | turns                   |
-        | a    | k  | born,berl,berl | depart,turn left,arrive |
-        | f    | m  | wisb,scho,scho | depart,turn left,arrive |
+        | from | to | route      | turns                   | locations | #                                                    |
+        | a    | k  | born,,berl | depart,turn left,arrive | a,b,k     | On improved collapse, this should offer berl on turn |
+        | f    | m  | wisb,,scho | depart,turn left,arrive | f,g,m     | On improved collapse, this should offer scho on turn |
 
     # https://www.openstreetmap.org/#map=19/52.56934/13.40131
     Scenario: Crossing Segregated before a turn

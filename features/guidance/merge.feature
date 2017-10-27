@@ -21,9 +21,9 @@ Feature: Merging
             | eb    | primary |
 
        When I route I should get
-            | waypoints | route      | turns                       |
-            | d,c       | db,abc,abc | depart,turn straight,arrive |
-            | e,c       | eb,abc,abc | depart,turn straight,arrive |
+            | waypoints | route  | turns         |
+            | d,c       | db,abc | depart,arrive |
+            | e,c       | eb,abc | depart,arrive |
 
     @merge
     Scenario: Merge on Three Way Intersection Right
