@@ -1096,5 +1096,5 @@ Feature: Collapse
             | be    | residential   | cross | no     |                 |
 
         When I route I should get
-            | waypoints | route  | turns                        |
-            | a,f       | road,, | depart,continue uturn,arrive |
+            | waypoints | route        | turns                                |
+            | a,f       | road,cross,, | depart,turn left,on ramp left,arrive |
