@@ -1074,3 +1074,27 @@ Feature: Collapse
         When I route I should get
             | waypoints | bearings | route          | turns                                             | locations |
             | 1,2       | 90 270   | ab,bd,bd,ab,ab | depart,turn left,continue uturn,turn right,arrive | _,b,d,b,_ |
+
+
+    # https://www.openstreetmap.org/#map=18/37.74844/-122.40275
+    Scenario: Don't use destinations as names
+        Given the node map
+            """
+            f - - - - e - - - - d
+                      |
+                      |
+                      |
+                      |
+                      |
+            a - - - - b - - - - c
+            """
+
+        And the ways
+            | nodes | highway       | name  | oneway | destination:ref |
+            | abc   | residential   | road  | yes    |                 |
+            | def   | motorway_link |       | yes    | US 101          |
+            | be    | residential   | cross | no     |                 |
+
+        When I route I should get
+            | waypoints | route  | turns                        |
+            | a,f       | road,, | depart,continue uturn,arrive |
