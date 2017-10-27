@@ -121,7 +121,7 @@ module.exports = function () {
 
             r.which = dir;
 
-            this.requestRoute((dir === 'forw' ? [a, b] : [b, a]), [], [], this.queryParams, (err, res, body) => {
+            this.requestRoute((dir === 'forw' ? [a, b] : [b, a]), [], [], [], this.queryParams, (err, res, body) => {
                 if (err) return callback(err);
 
                 r.query = this.query;

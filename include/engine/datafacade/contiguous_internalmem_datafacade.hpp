@@ -697,14 +697,15 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
             input_coordinate, max_results, max_distance, bearing, bearing_range, approach);
     }
 
-    std::pair<PhantomNode, PhantomNode>
-    NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
-                                                      const Approach approach) const override final
+    std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
+        const util::Coordinate input_coordinate,
+        const Approach approach,
+        const boost::optional<std::string> &name_hint) const override final
     {
         BOOST_ASSERT(m_geospatial_query.get());
 
         return m_geospatial_query->NearestPhantomNodeWithAlternativeFromBigComponent(
-            input_coordinate, approach);
+            input_coordinate, approach, name_hint);
     }
 
     std::pair<PhantomNode, PhantomNode>

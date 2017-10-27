@@ -135,9 +135,11 @@ class BaseDataFacade
                         const double max_distance,
                         const Approach approach) const = 0;
 
-    virtual std::pair<PhantomNode, PhantomNode>
-    NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
-                                                      const Approach approach) const = 0;
+    virtual std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
+        const util::Coordinate input_coordinate,
+        const Approach approach,
+        const boost::optional<std::string> &name_hint) const = 0;
+
     virtual std::pair<PhantomNode, PhantomNode>
     NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
                                                       const double max_distance,

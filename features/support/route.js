@@ -46,9 +46,10 @@ module.exports = function () {
         return waypoints.map(w => [w.lon, w.lat].map(ensureDecimal).join(','));
     };
 
-    this.requestRoute = (waypoints, bearings, approaches, userParams, callback) => {
+    this.requestRoute = (waypoints, bearings, approaches, namehints, userParams, callback) => {
         if (bearings.length && bearings.length !== waypoints.length) throw new Error('*** number of bearings does not equal the number of waypoints');
         if (approaches.length && approaches.length !== waypoints.length) throw new Error('*** number of approaches does not equal the number of waypoints');
+        if (namehints.length && namehints.length !== waypoints.length) throw new Error('*** number of name hints does not equal the number of waypoints');
 
         var defaults = {
                 output: 'json',
@@ -70,6 +71,10 @@ module.exports = function () {
 
         if (approaches.length) {
             params.approaches = approaches.join(';');
+        }
+
+        if (namehints.length) {
+            params.name_hints = namehints.join(';');
         }
         return this.requestPath('route', params, callback);
     };
