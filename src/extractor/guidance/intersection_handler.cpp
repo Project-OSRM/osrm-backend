@@ -164,11 +164,18 @@ TurnInstruction IntersectionHandler::getInstructionForObvious(const std::size_t 
                         coordinates[node_based_graph.GetTarget(via_edge)],
                         coordinates[node_based_graph.GetTarget(road.eid)]);
 
-                    return {TurnType::NewName,
-                            (angularDeviation(road.angle, STRAIGHT_ANGLE) < NARROW_TURN_ANGLE &&
-                             distance > 2 * MAX_COLLAPSE_DISTANCE)
-                                ? DirectionModifier::Straight
-                                : getTurnDirection(road.angle)};
+                    auto const type =
+                        angularDeviation(road.angle, STRAIGHT_ANGLE) < FUZZY_ANGLE_DIFFERENCE
+                            ? TurnType::NewName
+                            : TurnType::Turn;
+
+                    auto const modifier =
+                        (angularDeviation(road.angle, STRAIGHT_ANGLE) < NARROW_TURN_ANGLE &&
+                         distance > 2 * MAX_COLLAPSE_DISTANCE)
+                            ? DirectionModifier::Straight
+                            : getTurnDirection(road.angle);
+
+                    return {type, modifier};
                 }
             }
             else
@@ -496,7 +503,6 @@ bool IntersectionHandler::isSameName(const EdgeID source_edge_id, const EdgeID t
                                                   name_table,
                                                   street_name_suffix_table); //
 }
-
 
 } // namespace guidance
 } // namespace extractor

@@ -741,7 +741,7 @@ Feature: Simple Turns
         | j    | d  | susan,,sky | depart,turn right,arrive |
 
 
-    # https://www.openstreetmap.org/edit#map=18/48.99155/8.43520
+    # https://www.openstreetmap.org/#map=18/48.99155/8.43520
     Scenario: Passing a motorway link on a trunk road
     Given the node map
         """
@@ -942,7 +942,7 @@ Feature: Simple Turns
         | a    | e  | nord,nord | depart,arrive |
         | e    | a  | nord,nord | depart,arrive |
 
-    # https://www.openstreetmap.org/edit#map=17/52.57124/13.39892
+    # https://www.openstreetmap.org/#map=17/52.57124/13.39892
     Scenario: Primary road curved turn
     Given the node map
         """
@@ -1038,13 +1038,13 @@ Feature: Simple Turns
         | d    | f  | brei,scho      | depart,arrive                 |
 
 
-    # https://www.openstreetmap.org/edit#map=19/52.58072/13.42985
+    # https://www.openstreetmap.org/#map=19/52.58072/13.42985
     Scenario: Trunk Turning into Motorway
     Given the node map
         """
         a - - - - - b - - -
-                      ` .   ` ` ` c
-                          `d
+                      ` .   ` ` ` ` ` ` ` ` c
+                          ` - - - - d
 
         """
 
@@ -1059,25 +1059,26 @@ Feature: Simple Turns
         | a    | c  | prenz,   | depart,arrive                   |
         | a    | d  | prenz,,, | depart,turn slight right,arrive |
 
-    # https://www.openstreetmap.org/edit#map=19/52.57800/13.42900
+    # https://www.openstreetmap.org/#map=19/52.57800/13.42900
     Scenario: Splitting Secondary
     Given the node map
         """
-                                  . . . . c
+                                         . . c
+                                  .. ``
         a - - - - - - - b ` ` ` `
                           \
-                            \ d - - - - - - - - - e
+                              \ d - - - - - - - - - e
         """
 
     And the ways
         | nodes | highway   | name | lanes | oneway |
         | ab    | secondary | dame | 2     | no     |
         | bc    | secondary | pase | 2     | no     |
-        | bde   | seconday  | feuc | 1     | yes    |
+        | bde   | secondary | feuc | 1     | yes    |
 
     When I route I should get
         | from | to | route          | turns                           |
-        | a    | c  | dame,pase      | depart,arrive                   |
+        | a    | c  | dame,pase,pase | depart,new name straight,arrive |
         | a    | e  | dame,feuc,feuc | depart,turn slight right,arrive |
 
     # https://www.openstreetmap.org/#map=19/52.48468/13.34532

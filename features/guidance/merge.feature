@@ -107,7 +107,7 @@ Feature: Merging
 
         When I route I should get
             | waypoints | turns                         | route        |
-            | f,e       | depart,turn straight,arrive   | in,road,road |
+            | f,e       | depart,arrive                 | in,road      |
             | f,a       | depart,turn sharp left,arrive | in,road,road |
 
     @merge

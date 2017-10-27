@@ -166,8 +166,8 @@ Feature: Slipways and Dedicated Turn Lanes
             | efg   | primary       | second |
 
        When I route I should get
-            | waypoints | route                | turns                                      | locations |
-            | a,g       | first,,second,second | depart,off ramp right,turn straight,arrive | a,b,f,g   |
+            | waypoints | route         | turns                        | locations |
+            | a,g       | first,,second | depart,off ramp right,arrive | a,b,g     |
 
     Scenario: Turn Instead of Ramp
         Given the node map
@@ -193,8 +193,8 @@ Feature: Slipways and Dedicated Turn Lanes
             | efg   | primary       | second |
 
         When I route I should get
-            | waypoints | route                | turns                                      | locations |
-            | a,g       | first,,second,second | depart,off ramp right,turn straight,arrive | a,b,f,g   |
+            | waypoints | route               | turns                        | locations |
+            | a,g       | first,second,second | depart,off ramp right,arrive | a,b,g     |
 
     Scenario: Inner city expressway with on road
         Given the node map

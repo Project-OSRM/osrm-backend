@@ -148,23 +148,22 @@ inline bool IntersectionHandler::IsDistinctTurn(const std::size_t index,
     const auto &candidate = intersection[index];
     const auto &candidate_data = node_based_graph.GetEdgeData(candidate.eid);
 
-    auto const override_class_by_lanes = [&](auto const& compare_data) {
+    auto const num_lanes = [](auto const &data) {
+        return data.flags.road_classification.GetNumberOfLanes();
+    };
+
+    auto const override_class_by_lanes = [&](auto const &compare_data) {
         // sometimes roads of same size are tagged strangely within a neighborhood, combining
         // primary roads with residential roads. If the road with can be deducted from lanes, we
         // can override such a classification
-        if (compare_data.flags.road_classification.GetNumberOfLanes() > 0 &&
-            via_edge_data.flags.road_classification.GetNumberOfLanes() > 0)
+        if (num_lanes(compare_data) > 0 && num_lanes(via_edge_data) > 0)
         {
 #if PRINT
-            std::cout << "Comparing lanes: "
-                      << (int)via_edge_data.flags.road_classification.GetNumberOfLanes() << " "
-                      << (int)compare_data.flags.road_classification.GetNumberOfLanes()
-                      << std::endl;
+            std::cout << "Comparing lanes: " << (int)num_lanes(via_edge_data) << " "
+                      << (int)num_lanes(compare_data) << std::endl;
 #endif
             // check if via-edge has more than one additional lane, relative to the compare data
-            if (via_edge_data.flags.road_classification.GetNumberOfLanes() -
-                    compare_data.flags.road_classification.GetNumberOfLanes() <=
-                1)
+            if (num_lanes(via_edge_data) - num_lanes(compare_data) > 1)
                 return true;
         }
         return false;
@@ -188,7 +187,6 @@ inline bool IntersectionHandler::IsDistinctTurn(const std::size_t index,
                                          candidate_data.flags.road_classification)
                   << std::endl;
 #endif
-
 
         if (strictlyLess(compare_data.flags.road_classification,
                          via_edge_data.flags.road_classification) &&
@@ -387,8 +385,9 @@ inline bool IntersectionHandler::IsDistinctTurn(const std::size_t index,
             auto const both_turns_go_into_same_direction =
                 (candidate.angle >= STRAIGHT_ANGLE) ==
                 (road.angle >= STRAIGHT_ANGLE); // are both turns to the left?
-            auto const roads_deviation_is_distinct =  compare_deviation / std::max(0.1, candidate_deviation) > DISTINCTION_RATIO &&
-                            std::abs(compare_deviation - candidate_deviation) > minimum_angle_difference;
+            auto const roads_deviation_is_distinct =
+                compare_deviation / std::max(0.1, candidate_deviation) > DISTINCTION_RATIO &&
+                std::abs(compare_deviation - candidate_deviation) > minimum_angle_difference;
 /*
 ((both_turns_go_into_same_direction ? 1.5 : 1.0) * compare_deviation /
 std::max(0.1, candidate_deviation) >
@@ -423,6 +422,33 @@ DISTINCTION_RATIO);
                           << " Distinct: " << roads_deviation_is_distinct << std::endl;
 #endif
                 return false;
+            }
+
+            // in case of slight turns, there can be exits that are also very narrow. If they are on
+            // a new lane though, we accept smaller distinction angles
+            //
+            // a - - - b - - - - c
+            //            ` ` ` `d
+            //
+            // A narrow exit lane can be present, but still be distinct from the road
+            if (num_lanes(via_edge_data) > 0 &&
+                num_lanes(candidate_data) == num_lanes(via_edge_data))
+            {
+#if PRINT
+                std::cout << "Comparing for FUZZY\n";
+                std::cout << "Comp/Cand: " << (compare_deviation > candidate_deviation) << " Cand Straight: " << (candidate_deviation <= FUZZY_ANGLE_DIFFERENCE) << " Comp Diff: " << ((compare_deviation - candidate_deviation) > FUZZY_ANGLE_DIFFERENCE) << std::endl;
+#endif
+                if (compare_deviation > candidate_deviation &&
+                    candidate_deviation <= FUZZY_ANGLE_DIFFERENCE &&
+                    (compare_deviation - candidate_deviation) > 0.5*FUZZY_ANGLE_DIFFERENCE)
+                {
+                    // very slight angle going straight on the exact same number of lanes as coming
+                    // in, one turn branching off in a slight angle with additional lanes
+#if PRINT
+                    std::cout << "Distinct by exit property" << std::endl;
+#endif
+                    return false;
+                }
             }
 
             // when crossing an intersection of a similar road category, lower deviations can also
@@ -545,12 +571,18 @@ DISTINCTION_RATIO);
                 ((getRoadGroup(via_edge_data.flags.road_classification) !=
                   getRoadGroup(compare_data.flags.road_classification)) &&
                  (via_edge_data.flags.road_classification.GetPriority() ==
-                  candidate_data.flags.road_classification.GetPriority())) && !override_class_by_lanes(compare_data) &&
-                (via_edge_data.flags.road_classification.GetPriority() != RoadPriorityClass::UNCLASSIFIED) &&
-                (compare_data.flags.road_classification.GetPriority() != RoadPriorityClass::UNCLASSIFIED))
+                  candidate_data.flags.road_classification.GetPriority())) &&
+                !override_class_by_lanes(compare_data) &&
+                (via_edge_data.flags.road_classification.GetPriority() !=
+                 RoadPriorityClass::UNCLASSIFIED) &&
+                (compare_data.flags.road_classification.GetPriority() !=
+                 RoadPriorityClass::UNCLASSIFIED))
             {
 #if PRINT
-                std::cout << "Distinct by group. (" << (int)via_edge_data.flags.road_classification.GetPriority() << " " << (int)compare_data.flags.road_classification.GetPriority() << ")" << std::endl;
+                std::cout << "Distinct by group. ("
+                          << (int)via_edge_data.flags.road_classification.GetPriority() << " "
+                          << (int)compare_data.flags.road_classification.GetPriority() << ")"
+                          << std::endl;
 #endif
                 return false;
             }

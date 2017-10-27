@@ -623,16 +623,16 @@ Feature: Merge Segregated Roads
             | cf    | albrecht | yes    |
 
         When I route I should get
-            | waypoints | route                                       | turns                                                        |
-            | a,l       | schwert,albrecht,marianne,marianne          | depart,new name straight,turn left,arrive                    |
-            | a,j       | schwert,luise,luise                         | depart,turn right,arrive                                     |
-			| a,1       | schwert,albrecht,albrecht,albrecht          | depart,new name straight,continue uturn,arrive               |
-			| k,l       | marianne,marianne                           | depart,arrive                                                |
-            | k,j       | marianne,albrecht,luise,luise               | depart,turn left,turn left,arrive                            |
-            | k,d       | marianne,schwert,schwert                    | depart,turn right,arrive                                     |
-			| i,j       | luise,luise                                 | depart,arrive                                                |
-            | i,d       | luise,albrecht,schwert,schwert              | depart,turn left,turn straight,arrive                        |
-			| i,l       | luise,albrecht,marianne,marianne            | depart,turn left,turn left,arrive                            |
+            | waypoints | route                              | turns                                          |
+            | a,l       | schwert,albrecht,marianne,marianne | depart,new name straight,turn left,arrive      |
+            | a,j       | schwert,luise,luise                | depart,turn right,arrive                       |
+			| a,1       | schwert,albrecht,albrecht,albrecht | depart,new name straight,continue uturn,arrive |
+			| k,l       | marianne,marianne                  | depart,arrive                                  |
+            | k,j       | marianne,albrecht,luise,luise      | depart,turn left,turn left,arrive              |
+            | k,d       | marianne,schwert,schwert           | depart,turn right,arrive                       |
+			| i,j       | luise,luise                        | depart,arrive                                  |
+            | i,d       | luise,albrecht,schwert             | depart,turn left,arrive                        |
+			| i,l       | luise,albrecht,marianne,marianne   | depart,turn left,turn left,arrive              |
 
     # https://www.openstreetmap.org/#map=19/52.46339/13.40272
     Scenario: Do not merge links between segregated roads
