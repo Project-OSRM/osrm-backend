@@ -260,15 +260,25 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
                                                                                 );
                 if (distance < 3 * precision)
                                                                                     {
-                                                                                        candidates_list[t].push_back(candidates_list[prev_unbroken_timestamp][s]);
+                                                                                        const PhantomNodeWithDistance& tmpNode = candidates_list[prev_unbroken_timestamp][s];
+											// Use only if we at the middle of the edge.
+                                                                                        if (tmpNode.phantom_node.forward_duration_offset == 0)
+                                                                                            continue;
+                                                                                        if (tmpNode.phantom_node.reverse_duration_offset == 0)
+                                                                                            continue;
+
+                                                                                        candidates_list[t].push_back(tmpNode);
                                                                                         candidates_list[t].back().phantom_node.input_location = trace_coordinates[t];
                                                                                         candidates_list[t].back().distance = distance;
                                                                                         map_matching::EmissionLogProbability emission_log_probability(precision);
+
+											// We don't add the transition probability because staying is prefered than movement.
                                                                                         current_viterbi.push_back(emission_log_probability(distance) + prev_viterbi[s]);
                                                                                         current_parents.push_back(std::make_pair(prev_unbroken_timestamp, s));
                                                                                         current_lengths.push_back(0);
                                                                                         current_pruned.push_back(false);
                                                                                         model.breakage[t] = false;
+                                                                                        model.viterbi_reachable[t].push_back(false);
                                                                                     }
             }
 
