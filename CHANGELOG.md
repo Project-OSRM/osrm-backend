@@ -1,4 +1,6 @@
 # UNRELEASED
+
+# 5.13.0
   - Changes from 5.12:
     - Profile:
       - Append cardinal directions from route relations to ref fields to improve instructions; off by default see `profile.cardinal_directions`
@@ -11,6 +13,7 @@
     - Infrastructure:
       - Lua 5.1 support is removed due to lack of support in sol2 https://github.com/ThePhD/sol2/issues/302
       - Fixed pkg-config version of OSRM
+      - Removed `.osrm.core` file since CoreCH is deprecated now.
     - Tools:
       - Because of boost/program_options#32 with boost 1.65+ we needed to change the behavior of the following flags to not accept `={true|false}` anymore:
         - `--use-locations-cache=false` becomes `--disable-location-cache`
