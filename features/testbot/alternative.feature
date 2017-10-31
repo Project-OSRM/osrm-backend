@@ -8,8 +8,8 @@ Feature: Alternative route
         And the node map
             """
               b c d
-            a   k     z
-              g h i j
+            a   k   z
+              g h i e
             """
 
         # enforce multiple cells for filterUnpackedPathsBySharing check
@@ -26,8 +26,8 @@ Feature: Alternative route
             | ck    |
             | kh    |
             | hi    |
-            | ij    |
-            | jz    |
+            | ie    |
+            | ez    |
 
     Scenario: Enabled alternative
         Given the query options
@@ -35,7 +35,7 @@ Feature: Alternative route
 
         When I route I should get
             | from | to | route          | alternative       |
-            | a    | z  | ab,bc,cd,dz,dz | ag,gh,hi,ij,jz,jz |
+            | a    | z  | ab,bc,cd,dz,dz | ag,gh,hi,ie,ez,ez |
 
     Scenario: Disabled alternative
         Given the query options

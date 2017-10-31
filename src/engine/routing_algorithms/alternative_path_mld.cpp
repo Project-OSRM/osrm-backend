@@ -429,16 +429,20 @@ filterAnnotatedRoutesByStretch(RandIt first, RandIt last, const InternalRouteRes
 
     BOOST_ASSERT(shortest_route.is_valid());
 
-    static constexpr double kStretchScale = 1.2f;
-
-    //    const auto shortest_route_duration = shortest_route.duration();
-    //    const auto scaled_at_most_longer_by =
-    //        scaledAtMostLongerByFactorBasedOnDuration(shortest_route_duration);
-    //    const auto stretch_duration_limit = (1. + scaled_at_most_longer_by) *
-    //    shortest_route_duration;
-
+    /* This function compare each alternative route with shortest one to check if
+     * different part of it no longer then shortes one by 25%.
+     * For example we have to ways:
+     *     c d e
+     * a b       f
+     *     k j l
+     *
+     * Shortest: a b c d e f
+     * Alternative: a b k j l f
+     *
+     * So this function ensure, that len(kjl) <= (1 + kAtMostLongerBy) * len(cde)
+     */
     const auto over_duration_limit = [&](const InternalRouteResult &route) {
-        bool passed = true;
+        bool over_limit = false;
         BOOST_ASSERT(route.unpacked_path_segments.size() ==
                      shortest_route.unpacked_path_segments.size());
         for (size_t i = 0; i < shortest_route.unpacked_path_segments.size(); ++i)
@@ -449,35 +453,45 @@ filterAnnotatedRoutesByStretch(RandIt first, RandIt last, const InternalRouteRes
             // find different parts of two segments
             // algorithm use rule, that there are no difference at begin/end of segment
             // also that there are just on different sequence
-            auto s_it_b = short_seg.begin();
-            auto a_it_b = alter_seg.begin();
-            while ((*s_it_b).turn_via_node == (*a_it_b).turn_via_node &&
-                   s_it_b != short_seg.end() && a_it_b != alter_seg.end())
+            auto short_it_begin = short_seg.begin();
+            auto alter_it_begin = alter_seg.begin();
+            while ((*short_it_begin).turn_via_node == (*alter_it_begin).turn_via_node &&
+                   short_it_begin != short_seg.end() && alter_it_begin != alter_seg.end())
             {
-                ++s_it_b;
-                ++a_it_b;
+                ++short_it_begin;
+                ++alter_it_begin;
             }
 
-            if (s_it_b == short_seg.end() || a_it_b == alter_seg.end())
+            if (short_it_begin == short_seg.end() || alter_it_begin == alter_seg.end())
             {
-                passed = false;
+                over_limit = true;
                 break;
             }
 
-            auto s_it_e = short_seg.rbegin();
-            auto a_it_e = alter_seg.rbegin();
-            while ((*s_it_b).turn_via_node == (*a_it_b).turn_via_node &&
-                   s_it_e != short_seg.rend() && a_it_e != alter_seg.rend())
+            if (short_it_begin != short_seg.begin())
+                short_it_begin--;
+            if (alter_it_begin != alter_seg.begin())
+                alter_it_begin--;
+
+            auto short_it_end = short_seg.rbegin();
+            auto alter_it_end = alter_seg.rbegin();
+            while ((*short_it_begin).turn_via_node == (*alter_it_begin).turn_via_node &&
+                   short_it_end != short_seg.rend() && alter_it_end != alter_seg.rend())
             {
-                ++s_it_e;
-                ++a_it_e;
+                ++short_it_end;
+                ++alter_it_end;
             }
 
-            if (s_it_e == short_seg.rend() || a_it_e == alter_seg.rend())
+            if (short_it_end == short_seg.rend() || alter_it_end == alter_seg.rend())
             {
-                passed = false;
+                over_limit = true;
                 break;
             }
+
+            if (short_it_end != short_seg.rbegin())
+                short_it_end--;
+            if (alter_it_end != alter_seg.rbegin())
+                alter_it_end--;
 
             // now calculate duration of found parts
             const auto calcDuration = [](auto it_begin, auto it_end) {
@@ -491,21 +505,21 @@ filterAnnotatedRoutesByStretch(RandIt first, RandIt last, const InternalRouteRes
                 return duration;
             };
 
-            BOOST_ASSERT(std::distance(short_seg.begin(), s_it_b) <
-                         std::distance(short_seg.begin(), s_it_e.base()));
-            BOOST_ASSERT(std::distance(alter_seg.begin(), a_it_b) <
-                         std::distance(alter_seg.begin(), a_it_e.base()));
+            BOOST_ASSERT(std::distance(short_seg.begin(), short_it_begin) <
+                         std::distance(short_seg.begin(), short_it_end.base()));
+            BOOST_ASSERT(std::distance(alter_seg.begin(), alter_it_begin) <
+                         std::distance(alter_seg.begin(), alter_it_end.base()));
 
-            const double short_duration = calcDuration(s_it_b, s_it_e.base());
-            const double alter_duration = calcDuration(a_it_b, a_it_e.base());
-            if (short_duration * kStretchScale < alter_duration)
+            const double short_duration = calcDuration(short_it_begin, short_it_end.base());
+            const double alter_duration = calcDuration(alter_it_begin, alter_it_end.base());
+            if (short_duration * (1 + kAtMostLongerBy) < alter_duration)
             {
-                passed = false;
+                over_limit = true;
                 break;
             }
         }
 
-        return passed;
+        return over_limit;
     };
 
     return std::remove_if(first, last, over_duration_limit);
