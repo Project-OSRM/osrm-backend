@@ -419,13 +419,22 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
         auto trace_distance = 0.0;
         matching.nodes.reserve(reconstructed_indices.size());
         matching.indices.reserve(reconstructed_indices.size());
+        const PhantomNode * last_node;
         for (const auto &idx : reconstructed_indices)
         {
             const auto timestamp_index = idx.first;
             const auto location_index = idx.second;
 
             matching.indices.push_back(timestamp_index);
-            matching.nodes.push_back(candidates_list[timestamp_index][location_index].phantom_node);
+
+            auto & current_node = candidates_list[timestamp_index][location_index].phantom_node;
+            if (last_node != nullptr and current_node.IsIndistinct(*last_node))
+            {
+                current_node.location = last_node->location;
+            }
+            last_node = &current_node;
+            matching.nodes.push_back(current_node);
+
             auto const routes_count =
                 std::accumulate(model.viterbi_reachable[timestamp_index].begin(),
                                 model.viterbi_reachable[timestamp_index].end(),
