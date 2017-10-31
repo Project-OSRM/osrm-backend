@@ -10,6 +10,7 @@
 #include "extractor/guidance/motorway_handler.hpp"
 #include "extractor/guidance/roundabout_handler.hpp"
 #include "extractor/guidance/sliproad_handler.hpp"
+#include "extractor/guidance/statistics_handler.hpp"
 #include "extractor/guidance/suppress_mode_handler.hpp"
 #include "extractor/guidance/turn_classification.hpp"
 #include "extractor/guidance/turn_handler.hpp"
@@ -89,6 +90,7 @@ class TurnAnalysis
     const SliproadHandler sliproad_handler;
     const SuppressModeHandler suppress_mode_handler;
     const DrivewayHandler driveway_handler;
+    const StatisticsHandler statistics_handler;
 
     // Utility function, setting basic turn types. Prepares for normal turn handling.
     Intersection
