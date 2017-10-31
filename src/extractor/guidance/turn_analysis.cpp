@@ -78,7 +78,13 @@ TurnAnalysis::TurnAnalysis(const util::NodeBasedDynamicGraph &node_based_graph,
                        node_data_container,
                        coordinates,
                        name_table,
-                       street_name_suffix_table)
+                       street_name_suffix_table),
+      statistics_handler(intersection_generator,
+                         node_based_graph,
+                         node_data_container,
+                         coordinates,
+                         name_table,
+                         street_name_suffix_table)
 {
 }
 
@@ -175,6 +181,13 @@ Intersection TurnAnalysis::AssignTurnTypes(const NodeID node_prior_to_intersecti
                 road.instruction.type = TurnType::OffRamp;
         });
     }
+
+    // After we ran all handlers and determined instruction type
+    // and direction modifier gather statistics about our decisions.
+    if (statistics_handler.canProcess(node_prior_to_intersection, entering_via_edge, intersection))
+        intersection = statistics_handler(
+            node_prior_to_intersection, entering_via_edge, std::move(intersection));
+
     return intersection;
 }
 
