@@ -84,11 +84,15 @@ function(_lua_set_version_vars)
              lua.${CMAKE_MATCH_1}.${CMAKE_MATCH_2}
         )
         pkg_check_modules(LUA QUIET "lua${ver}")
+        list(APPEND _lua_include_subdirs ${LUA_INCLUDE_DIRS})
+        list(APPEND _lua_library_names ${LUA_LIBRARIES})
+        list(APPEND _lua_library_dirs ${LUA_LIBRARY_DIRS})
     endforeach ()
 
     set(_lua_include_subdirs "${_lua_include_subdirs}" PARENT_SCOPE)
     set(_lua_library_names "${_lua_library_names}" PARENT_SCOPE)
     set(_lua_append_versions "${_lua_append_versions}" PARENT_SCOPE)
+    set(_lua_library_dirs "${_lua_library_dirs}" PARENT_SCOPE)
 endfunction(_lua_set_version_vars)
 
 function(_lua_check_header_version _hdr_file)
@@ -161,6 +165,7 @@ find_library(LUA_LIBRARY
     ENV LUA_DIR
   PATH_SUFFIXES lib
   PATHS
+  ${_lua_library_dirs}
   ~/Library/Frameworks
   /Library/Frameworks
   /sw
