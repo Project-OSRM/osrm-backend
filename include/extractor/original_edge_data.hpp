@@ -21,7 +21,7 @@ struct OriginalEdgeData
                               LaneDataID lane_data_id,
                               guidance::TurnInstruction turn_instruction,
                               EntryClassID entry_classid,
-                              TravelMode travel_mode,
+                              extractor::TravelMode travel_mode,
                               util::guidance::TurnBearing pre_turn_bearing,
                               util::guidance::TurnBearing post_turn_bearing)
         : via_geometry(via_geometry), name_id(name_id), entry_classid(entry_classid),
@@ -34,7 +34,8 @@ struct OriginalEdgeData
         : via_geometry{std::numeric_limits<unsigned>::max() >> 1, false},
           name_id(std::numeric_limits<unsigned>::max()), entry_classid(INVALID_ENTRY_CLASSID),
           lane_data_id(INVALID_LANE_DATAID), turn_instruction(guidance::TurnInstruction::INVALID()),
-          travel_mode(TRAVEL_MODE_INACCESSIBLE), pre_turn_bearing(0.0), post_turn_bearing(0.0)
+          travel_mode(extractor::TRAVEL_MODE_INACCESSIBLE), pre_turn_bearing(0.0),
+          post_turn_bearing(0.0)
     {
     }
 
@@ -43,7 +44,7 @@ struct OriginalEdgeData
     EntryClassID entry_classid;
     LaneDataID lane_data_id;
     guidance::TurnInstruction turn_instruction;
-    TravelMode travel_mode;
+    extractor::TravelMode travel_mode;
     util::guidance::TurnBearing pre_turn_bearing;
     util::guidance::TurnBearing post_turn_bearing;
 };

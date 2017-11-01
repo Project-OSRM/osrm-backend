@@ -1,5 +1,7 @@
-#include "engine/api/json_factory.hpp"
+#include "extractor/guidance/turn_instruction.hpp"
+#include "extractor/travel_mode.hpp"
 
+#include "engine/api/json_factory.hpp"
 #include "engine/hint.hpp"
 #include "engine/polyline_compressor.hpp"
 #include "util/integer_range.hpp"
@@ -32,59 +34,6 @@ namespace json
 namespace detail
 {
 
-const constexpr char *modifier_names[] = {"uturn",
-                                          "sharp right",
-                                          "right",
-                                          "slight right",
-                                          "straight",
-                                          "slight left",
-                                          "left",
-                                          "sharp left"};
-
-/**
- * Human readable values for TurnType enum values
- */
-struct TurnTypeName
-{
-    // String value we return with our API
-    const char *external_name;
-    // Internal only string name for the turn type - useful for debugging
-    // and used by debug tiles for visualizing hidden turn types
-    const char *internal_name;
-};
-
-// Indexes in this list correspond to the Enum values of osrm::extractor::guidance::TurnType
-const constexpr TurnTypeName turn_type_names[] = {
-    {"invalid", "(not set)"},
-    {"new name", "new name"},
-    {"continue", "continue"},
-    {"turn", "turn"},
-    {"merge", "merge"},
-    {"on ramp", "on ramp"},
-    {"off ramp", "off ramp"},
-    {"fork", "fork"},
-    {"end of road", "end of road"},
-    {"notification", "notification"},
-    {"roundabout", "enter roundabout"},
-    {"exit roundabout", "enter and exit roundabout"},
-    {"rotary", "enter rotary"},
-    {"exit rotary", "enter and exit rotary"},
-    {"roundabout turn", "enter roundabout turn"},
-    {"roundabout turn", "enter and exit roundabout turn"},
-    {"use lane", "use lane"},
-    {"invalid", "(noturn)"},
-    {"invalid", "(suppressed)"},
-    {"roundabout", "roundabout"},
-    {"exit roundabout", "exit roundabout"},
-    {"rotary", "rotary"},
-    {"exit rotary", "exit rotary"},
-    {"roundabout turn", "roundabout turn"},
-    {"exit roundabout", "exit roundabout turn"},
-    {"invalid", "(stay on roundabout)"},
-    {"invalid", "(sliproad)"}};
-
-const constexpr char *waypoint_type_names[] = {"invalid", "arrive", "depart"};
-
 // Check whether to include a modifier in the result of the API
 inline bool isValidModifier(const guidance::StepManeuver maneuver)
 {
@@ -95,20 +44,6 @@ inline bool isValidModifier(const guidance::StepManeuver maneuver)
 inline bool hasValidLanes(const guidance::IntermediateIntersection &intersection)
 {
     return intersection.lanes.lanes_in_turn > 0;
-}
-
-std::string instructionTypeToString(const TurnType::Enum type)
-{
-    static_assert(sizeof(turn_type_names) / sizeof(turn_type_names[0]) >= TurnType::MaxTurnType,
-                  "Some turn types have no string representation.");
-    return turn_type_names[static_cast<std::size_t>(type)].external_name;
-}
-
-std::string internalInstructionTypeToString(const TurnType::Enum type)
-{
-    static_assert(sizeof(turn_type_names) / sizeof(turn_type_names[0]) >= TurnType::MaxTurnType,
-                  "Some turn types have no string representation.");
-    return turn_type_names[static_cast<std::size_t>(type)].internal_name;
 }
 
 util::json::Array lanesFromIntersection(const guidance::IntermediateIntersection &intersection)
@@ -135,13 +70,7 @@ util::json::Array lanesFromIntersection(const guidance::IntermediateIntersection
     return result;
 }
 
-std::string instructionModifierToString(const DirectionModifier::Enum modifier)
-{
-    static_assert(sizeof(modifier_names) / sizeof(modifier_names[0]) >=
-                      DirectionModifier::MaxDirectionModifier,
-                  "Some direction modifiers has not string representation.");
-    return modifier_names[static_cast<std::size_t>(modifier)];
-}
+const constexpr char *waypoint_type_names[] = {"invalid", "arrive", "depart"};
 
 std::string waypointTypeToString(const guidance::WaypointType waypoint_type)
 {
@@ -159,55 +88,6 @@ util::json::Array coordinateToLonLat(const util::Coordinate coordinate)
     return array;
 }
 
-// FIXME this actually needs to be configurable from the profiles
-std::string modeToString(const extractor::TravelMode mode)
-{
-    std::string token;
-    switch (mode)
-    {
-    case TRAVEL_MODE_INACCESSIBLE:
-        token = "inaccessible";
-        break;
-    case TRAVEL_MODE_DRIVING:
-        token = "driving";
-        break;
-    case TRAVEL_MODE_CYCLING:
-        token = "cycling";
-        break;
-    case TRAVEL_MODE_WALKING:
-        token = "walking";
-        break;
-    case TRAVEL_MODE_FERRY:
-        token = "ferry";
-        break;
-    case TRAVEL_MODE_TRAIN:
-        token = "train";
-        break;
-    case TRAVEL_MODE_PUSHING_BIKE:
-        token = "pushing bike";
-        break;
-    case TRAVEL_MODE_STEPS_UP:
-        token = "steps up";
-        break;
-    case TRAVEL_MODE_STEPS_DOWN:
-        token = "steps down";
-        break;
-    case TRAVEL_MODE_RIVER_UP:
-        token = "river upstream";
-        break;
-    case TRAVEL_MODE_RIVER_DOWN:
-        token = "river downstream";
-        break;
-    case TRAVEL_MODE_ROUTE:
-        token = "route";
-        break;
-    default:
-        token = "other";
-        break;
-    }
-    return token;
-}
-
 } // namespace detail
 
 util::json::Object makeStepManeuver(const guidance::StepManeuver &maneuver)
@@ -217,7 +97,7 @@ util::json::Object makeStepManeuver(const guidance::StepManeuver &maneuver)
     std::string maneuver_type;
 
     if (maneuver.waypoint_type == guidance::WaypointType::None)
-        maneuver_type = detail::instructionTypeToString(maneuver.instruction.type);
+        maneuver_type = extractor::guidance::instructionTypeToString(maneuver.instruction.type);
     else
         maneuver_type = detail::waypointTypeToString(maneuver.waypoint_type);
 
@@ -227,8 +107,8 @@ util::json::Object makeStepManeuver(const guidance::StepManeuver &maneuver)
     step_maneuver.values["type"] = std::move(maneuver_type);
 
     if (detail::isValidModifier(maneuver))
-        step_maneuver.values["modifier"] =
-            detail::instructionModifierToString(maneuver.instruction.direction_modifier);
+        step_maneuver.values["modifier"] = extractor::guidance::instructionModifierToString(
+            maneuver.instruction.direction_modifier);
 
     step_maneuver.values["location"] = detail::coordinateToLonLat(maneuver.location);
     step_maneuver.values["bearing_before"] = detail::roundAndClampBearing(maneuver.bearing_before);
@@ -312,7 +192,7 @@ util::json::Object makeRouteStep(guidance::RouteStep step, util::json::Value geo
         }
     }
 
-    route_step.values["mode"] = detail::modeToString(std::move(step.mode));
+    route_step.values["mode"] = extractor::travelModeToString(std::move(step.mode));
     route_step.values["maneuver"] = makeStepManeuver(std::move(step.maneuver));
     route_step.values["geometry"] = std::move(geometry);
 

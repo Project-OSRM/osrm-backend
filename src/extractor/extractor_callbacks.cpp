@@ -90,18 +90,19 @@ void ExtractorCallbacks::ProcessRestriction(const InputConditionalTurnRestrictio
  */
 void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const ExtractionWay &parsed_way)
 {
-    if ((parsed_way.forward_travel_mode == TRAVEL_MODE_INACCESSIBLE ||
+    if ((parsed_way.forward_travel_mode == extractor::TRAVEL_MODE_INACCESSIBLE ||
          parsed_way.forward_speed <= 0) &&
-        (parsed_way.backward_travel_mode == TRAVEL_MODE_INACCESSIBLE ||
+        (parsed_way.backward_travel_mode == extractor::TRAVEL_MODE_INACCESSIBLE ||
          parsed_way.backward_speed <= 0) &&
         parsed_way.duration <= 0)
     { // Only true if the way is assigned a valid speed/duration
         return;
     }
 
-    if (!fallback_to_duration && (parsed_way.forward_travel_mode == TRAVEL_MODE_INACCESSIBLE ||
-                                  parsed_way.forward_rate <= 0) &&
-        (parsed_way.backward_travel_mode == TRAVEL_MODE_INACCESSIBLE ||
+    if (!fallback_to_duration &&
+        (parsed_way.forward_travel_mode == extractor::TRAVEL_MODE_INACCESSIBLE ||
+         parsed_way.forward_rate <= 0) &&
+        (parsed_way.backward_travel_mode == extractor::TRAVEL_MODE_INACCESSIBLE ||
          parsed_way.backward_rate <= 0) &&
         parsed_way.weight <= 0)
     { // Only true if the way is assigned a valid rate/weight and there is no duration fallback
@@ -145,7 +146,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
         }
     };
 
-    if (parsed_way.forward_travel_mode != TRAVEL_MODE_INACCESSIBLE)
+    if (parsed_way.forward_travel_mode != extractor::TRAVEL_MODE_INACCESSIBLE)
     {
         BOOST_ASSERT(parsed_way.duration > 0 || parsed_way.forward_speed > 0);
         forward_duration_data =
@@ -162,7 +163,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                 toValueByEdgeOrByMeter(parsed_way.weight, parsed_way.forward_rate);
         }
     }
-    if (parsed_way.backward_travel_mode != TRAVEL_MODE_INACCESSIBLE)
+    if (parsed_way.backward_travel_mode != extractor::TRAVEL_MODE_INACCESSIBLE)
     {
         BOOST_ASSERT(parsed_way.duration > 0 || parsed_way.backward_speed > 0);
         backward_duration_data =
@@ -380,12 +381,12 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
     const bool in_forward_direction =
         (parsed_way.forward_speed > 0 || parsed_way.forward_rate > 0 || parsed_way.duration > 0 ||
          parsed_way.weight > 0) &&
-        (parsed_way.forward_travel_mode != TRAVEL_MODE_INACCESSIBLE);
+        (parsed_way.forward_travel_mode != extractor::TRAVEL_MODE_INACCESSIBLE);
 
     const bool in_backward_direction =
         (parsed_way.backward_speed > 0 || parsed_way.backward_rate > 0 || parsed_way.duration > 0 ||
          parsed_way.weight > 0) &&
-        (parsed_way.backward_travel_mode != TRAVEL_MODE_INACCESSIBLE);
+        (parsed_way.backward_travel_mode != extractor::TRAVEL_MODE_INACCESSIBLE);
 
     // split an edge into two edges if forwards/backwards behavior differ
     const bool split_edge =

@@ -1,3 +1,5 @@
+#include "extractor/guidance/turn_instruction.hpp"
+
 #include "engine/plugins/tile.hpp"
 #include "engine/plugins/plugin_base.hpp"
 
@@ -712,10 +714,10 @@ void encodeVectorTile(const DataFacadeBase &facade,
                         point_float_index.add(t.weight / 10.0); // Note conversion to float here
 
                     auto turntype_idx =
-                        point_string_index.add(api::json::detail::internalInstructionTypeToString(
+                        point_string_index.add(extractor::guidance::internalInstructionTypeToString(
                             t.turn_instruction.type));
                     auto turnmodifier_idx =
-                        point_string_index.add(api::json::detail::instructionModifierToString(
+                        point_string_index.add(extractor::guidance::instructionModifierToString(
                             t.turn_instruction.direction_modifier));
                     return EncodedTurnData{t.coordinate,
                                            angle_idx,

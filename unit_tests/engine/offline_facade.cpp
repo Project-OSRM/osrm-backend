@@ -216,7 +216,7 @@ class ContiguousInternalMemoryDataFacade<routing_algorithms::offline::Algorithm>
 
     extractor::TravelMode GetTravelMode(const NodeID /*id*/) const override
     {
-        return TRAVEL_MODE_DRIVING;
+        return extractor::TRAVEL_MODE_DRIVING;
     }
 
     std::vector<RTreeLeaf> GetEdgesInBox(const util::Coordinate /*south_west*/,

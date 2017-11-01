@@ -3,6 +3,7 @@
 
 #include "extractor/guidance/intersection.hpp"
 #include "extractor/guidance/intersection_handler.hpp"
+#include "extractor/guidance/turn_instruction.hpp"
 
 #include "util/log.hpp"
 
@@ -45,12 +46,12 @@ class StatisticsHandler final : public IntersectionHandler
         util::Log() << "Assigned turn instruction types";
 
         for (const auto &kv : type_hist)
-            util::Log() << (int)kv.first << ": " << kv.second;
+            util::Log() << internalInstructionTypeToString(kv.first) << ": " << kv.second;
 
         util::Log() << "Assigned turn instruction modifiers";
 
         for (const auto &kv : modifier_hist)
-            util::Log() << (int)kv.first << ": " << kv.second;
+            util::Log() << instructionModifierToString(kv.first) << ": " << kv.second;
     }
 
     bool canProcess(const NodeID, const EdgeID, const Intersection &) const override final

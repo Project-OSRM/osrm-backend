@@ -199,7 +199,7 @@ class MockBaseDataFacade : public engine::datafacade::BaseDataFacade
 
     extractor::TravelMode GetTravelMode(const NodeID /* id */) const override
     {
-        return TRAVEL_MODE_INACCESSIBLE;
+        return extractor::TRAVEL_MODE_INACCESSIBLE;
     }
 
     extractor::ClassData GetClassData(const NodeID /*id*/) const override final { return 0; }
