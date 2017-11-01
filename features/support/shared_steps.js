@@ -35,7 +35,8 @@ module.exports = function () {
                     if (err) return cb(err);
                     if (body && body.length) {
                         let destinations, exits, pronunciations, instructions, refs, bearings, turns, modes, times, classes,
-                            distances, summary, intersections, lanes, locations, annotation, weight_name, weights, approaches;
+                            distances, summary, intersections, lanes, locations, annotation, weight_name, weights, approaches,
+                            driving_sides;
 
                         let json = JSON.parse(body);
 
@@ -53,6 +54,7 @@ module.exports = function () {
                             turns = this.turnList(json.routes[0]);
                             intersections = this.intersectionList(json.routes[0]);
                             modes = this.modeList(json.routes[0]);
+                            driving_sides = this.drivingSideList(json.routes[0]);
                             classes = this.classesList(json.routes[0]);
                             times = this.timeList(json.routes[0]);
                             distances = this.distanceList(json.routes[0]);
@@ -185,6 +187,10 @@ module.exports = function () {
                         putValue('weights', weights);
                         putValue('weight', weight);
                         putValue('approach', approaches);
+
+                        if (driving_sides) {
+                            putValue('driving_side', driving_sides);
+                        }
 
                         for (var key in row) {
                             if (this.FuzzyMatch.match(got[key], row[key])) {

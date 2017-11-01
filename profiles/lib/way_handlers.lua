@@ -563,7 +563,7 @@ function WayHandlers.driving_side(profile, way, result, data)
    elseif driving_side == 'right' then
       result.is_left_hand_driving = false
    else
-      result.is_left_hand_driving = profile.left_hand_driving
+      result.is_left_hand_driving = profile.properties.left_hand_driving
    end
 end
 

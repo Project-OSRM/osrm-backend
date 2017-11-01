@@ -57,6 +57,9 @@ struct PathData
     util::guidance::TurnBearing pre_turn_bearing;
     // bearing (as seen from the intersection) post-turn
     util::guidance::TurnBearing post_turn_bearing;
+
+    // Driving side of the turn
+    bool is_left_hand_driving;
 };
 
 struct InternalRouteResult

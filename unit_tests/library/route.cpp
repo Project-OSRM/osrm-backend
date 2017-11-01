@@ -64,6 +64,7 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates_fixture)
                                                   {"geometry", "yw_jGupkl@??"},
                                                   {"name", "Boulevard du Larvotto"},
                                                   {"mode", "driving"},
+                                                  {"driving_side", "right"},
                                                   {"maneuver",
                                                    json::Object{{
                                                        {"location", location},
@@ -84,6 +85,7 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates_fixture)
                                                  {"geometry", "yw_jGupkl@"},
                                                  {"name", "Boulevard du Larvotto"},
                                                  {"mode", "driving"},
+                                                 {"driving_side", "right"},
                                                  {"maneuver",
                                                   json::Object{{{"location", location},
                                                                 {"bearing_before", 58},

@@ -76,6 +76,7 @@ struct RouteStep
     std::size_t geometry_begin;
     std::size_t geometry_end;
     std::vector<IntermediateIntersection> intersections;
+    bool is_left_hand_driving;
 
     // remove all information from the route step, marking it as invalid (used to indicate empty
     // steps to be removed).
@@ -129,6 +130,7 @@ inline void RouteStep::Invalidate()
     geometry_end = 0;
     intersections.clear();
     intersections.push_back(getInvalidIntersection());
+    is_left_hand_driving = false;
 }
 
 // Elongate by another step in front
