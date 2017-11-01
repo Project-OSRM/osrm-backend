@@ -121,12 +121,13 @@ inline bool haveSameMode(const RouteStep &first, const RouteStep &second, const 
 // alias for readability
 inline bool haveSameName(const RouteStep &lhs, const RouteStep &rhs)
 {
-    const auto has_name_or_ref = [](auto const& step) {
+    const auto has_name_or_ref = [](auto const &step) {
         return !step.name.empty() || !step.ref.empty();
     };
 
     // make sure empty is not involved
-    if (!has_name_or_ref(lhs) || !has_name_or_ref(rhs)) {
+    if (!has_name_or_ref(lhs) || !has_name_or_ref(rhs))
+    {
         return false;
     }
 
