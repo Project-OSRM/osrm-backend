@@ -123,7 +123,7 @@ inline void RouteStep::Invalidate()
     duration = 0;
     distance = 0;
     weight = 0;
-    mode = TRAVEL_MODE_INACCESSIBLE;
+    mode = extractor::TRAVEL_MODE_INACCESSIBLE;
     maneuver = getInvalidStepManeuver();
     geometry_begin = 0;
     geometry_end = 0;

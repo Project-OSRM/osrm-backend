@@ -34,7 +34,8 @@ bool SuppressModeHandler::canProcess(const NodeID,
     using std::end;
 
     // travel modes for which navigation should be suppressed
-    static const constexpr char suppressed[] = {TRAVEL_MODE_TRAIN, TRAVEL_MODE_FERRY};
+    static const constexpr char suppressed[] = {extractor::TRAVEL_MODE_TRAIN,
+                                                extractor::TRAVEL_MODE_FERRY};
 
     // If the approach way is not on the suppression blacklist, and not all the exit ways share that
     // mode, there are no ways to suppress by this criteria.

@@ -55,8 +55,8 @@ struct ExtractionWay
         turn_lanes_forward.clear();
         turn_lanes_backward.clear();
         road_classification = guidance::RoadClassification();
-        forward_travel_mode = TRAVEL_MODE_INACCESSIBLE;
-        backward_travel_mode = TRAVEL_MODE_INACCESSIBLE;
+        forward_travel_mode = extractor::TRAVEL_MODE_INACCESSIBLE;
+        backward_travel_mode = extractor::TRAVEL_MODE_INACCESSIBLE;
         roundabout = false;
         circular = false;
         is_startpoint = true;
@@ -112,8 +112,8 @@ struct ExtractionWay
     std::string turn_lanes_forward;
     std::string turn_lanes_backward;
     guidance::RoadClassification road_classification;
-    TravelMode forward_travel_mode : 4;
-    TravelMode backward_travel_mode : 4;
+    extractor::TravelMode forward_travel_mode : 4;
+    extractor::TravelMode backward_travel_mode : 4;
 
     // Boolean flags
     bool roundabout : 1;

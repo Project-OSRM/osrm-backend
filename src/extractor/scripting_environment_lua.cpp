@@ -111,29 +111,29 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
 
     context.state.new_enum("mode",
                            "inaccessible",
-                           TRAVEL_MODE_INACCESSIBLE,
+                           extractor::TRAVEL_MODE_INACCESSIBLE,
                            "driving",
-                           TRAVEL_MODE_DRIVING,
+                           extractor::TRAVEL_MODE_DRIVING,
                            "cycling",
-                           TRAVEL_MODE_CYCLING,
+                           extractor::TRAVEL_MODE_CYCLING,
                            "walking",
-                           TRAVEL_MODE_WALKING,
+                           extractor::TRAVEL_MODE_WALKING,
                            "ferry",
-                           TRAVEL_MODE_FERRY,
+                           extractor::TRAVEL_MODE_FERRY,
                            "train",
-                           TRAVEL_MODE_TRAIN,
+                           extractor::TRAVEL_MODE_TRAIN,
                            "pushing_bike",
-                           TRAVEL_MODE_PUSHING_BIKE,
+                           extractor::TRAVEL_MODE_PUSHING_BIKE,
                            "steps_up",
-                           TRAVEL_MODE_STEPS_UP,
+                           extractor::TRAVEL_MODE_STEPS_UP,
                            "steps_down",
-                           TRAVEL_MODE_STEPS_DOWN,
+                           extractor::TRAVEL_MODE_STEPS_DOWN,
                            "river_up",
-                           TRAVEL_MODE_RIVER_UP,
+                           extractor::TRAVEL_MODE_RIVER_UP,
                            "river_down",
-                           TRAVEL_MODE_RIVER_DOWN,
+                           extractor::TRAVEL_MODE_RIVER_DOWN,
                            "route",
-                           TRAVEL_MODE_ROUTE);
+                           extractor::TRAVEL_MODE_ROUTE);
 
     context.state.new_enum("road_priority_class",
                            "motorway",
@@ -469,8 +469,8 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
         "get_relations",
         [&getTypedRefBySol](ExtractionRelationContainer &cont, const sol::object &obj)
             -> const ExtractionRelationContainer::RelationIDList & {
-                return cont.GetRelations(getTypedRefBySol(obj));
-            },
+            return cont.GetRelations(getTypedRefBySol(obj));
+        },
         "relation",
         [](ExtractionRelationContainer &cont, const ExtractionRelation::OsmIDTyped &rel_id)
             -> const ExtractionRelation & { return cont.GetRelationData(rel_id); });

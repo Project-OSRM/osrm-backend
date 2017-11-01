@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define TRAVEL_MODE_HPP
 
 #include <cstdint>
+#include <string>
 
 namespace osrm
 {
@@ -38,8 +39,6 @@ namespace extractor
 // This is a char instead of a typed enum, so that we can
 // pack it into e.g. a "TravelMode mode : 4" packed bitfield
 using TravelMode = std::uint8_t;
-}
-}
 
 const constexpr osrm::extractor::TravelMode TRAVEL_MODE_INACCESSIBLE = 0;
 const constexpr osrm::extractor::TravelMode TRAVEL_MODE_DRIVING = 1;
@@ -54,5 +53,57 @@ const constexpr osrm::extractor::TravelMode TRAVEL_MODE_STEPS_DOWN = 9;
 const constexpr osrm::extractor::TravelMode TRAVEL_MODE_RIVER_UP = 10;
 const constexpr osrm::extractor::TravelMode TRAVEL_MODE_RIVER_DOWN = 11;
 const constexpr osrm::extractor::TravelMode TRAVEL_MODE_ROUTE = 12;
+
+// FIXME this actually needs to be configurable from the profiles
+inline std::string travelModeToString(const TravelMode mode)
+{
+    std::string token;
+    switch (mode)
+    {
+    case TRAVEL_MODE_INACCESSIBLE:
+        token = "inaccessible";
+        break;
+    case TRAVEL_MODE_DRIVING:
+        token = "driving";
+        break;
+    case TRAVEL_MODE_CYCLING:
+        token = "cycling";
+        break;
+    case TRAVEL_MODE_WALKING:
+        token = "walking";
+        break;
+    case TRAVEL_MODE_FERRY:
+        token = "ferry";
+        break;
+    case TRAVEL_MODE_TRAIN:
+        token = "train";
+        break;
+    case TRAVEL_MODE_PUSHING_BIKE:
+        token = "pushing bike";
+        break;
+    case TRAVEL_MODE_STEPS_UP:
+        token = "steps up";
+        break;
+    case TRAVEL_MODE_STEPS_DOWN:
+        token = "steps down";
+        break;
+    case TRAVEL_MODE_RIVER_UP:
+        token = "river upstream";
+        break;
+    case TRAVEL_MODE_RIVER_DOWN:
+        token = "river downstream";
+        break;
+    case TRAVEL_MODE_ROUTE:
+        token = "route";
+        break;
+    default:
+        token = "other";
+        break;
+    }
+    return token;
+}
+
+} // ns extractor
+} // ns osrm
 
 #endif /* TRAVEL_MODE_HPP */
