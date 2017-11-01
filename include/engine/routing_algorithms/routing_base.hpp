@@ -185,6 +185,8 @@ void annotatePath(const FacadeT &facade,
                               : 0);
         const std::size_t end_index = weight_vector.size();
 
+        bool is_left_hand_driving = facade.IsLeftHandDriving(node_id);
+
         BOOST_ASSERT(start_index >= 0);
         BOOST_ASSERT(start_index < end_index);
         for (std::size_t segment_idx = start_index; segment_idx < end_index; ++segment_idx)
@@ -202,7 +204,8 @@ void annotatePath(const FacadeT &facade,
                                              EMPTY_ENTRY_CLASS,
                                              datasource_vector[segment_idx],
                                              util::guidance::TurnBearing(0),
-                                             util::guidance::TurnBearing(0)});
+                                             util::guidance::TurnBearing(0),
+                                             is_left_hand_driving});
         }
         BOOST_ASSERT(unpacked_path.size() > 0);
         if (facade.HasLaneData(turn_id))
@@ -254,6 +257,7 @@ void annotatePath(const FacadeT &facade,
     // t: fwd_segment 3
     // -> (U, v), (v, w), (w, x)
     // note that (x, t) is _not_ included but needs to be added later.
+    bool is_target_left_hand_driving = facade.IsLeftHandDriving(target_node_id);
     for (std::size_t segment_idx = start_index; segment_idx != end_index;
          (start_index < end_index ? ++segment_idx : --segment_idx))
     {
@@ -273,7 +277,8 @@ void annotatePath(const FacadeT &facade,
                      EMPTY_ENTRY_CLASS,
                      datasource_vector[segment_idx],
                      util::guidance::TurnBearing(0),
-                     util::guidance::TurnBearing(0)});
+                     util::guidance::TurnBearing(0),
+                     is_target_left_hand_driving});
     }
 
     if (unpacked_path.size() > 0)

@@ -195,6 +195,7 @@ util::json::Object makeRouteStep(guidance::RouteStep step, util::json::Value geo
     route_step.values["mode"] = extractor::travelModeToString(std::move(step.mode));
     route_step.values["maneuver"] = makeStepManeuver(std::move(step.maneuver));
     route_step.values["geometry"] = std::move(geometry);
+    route_step.values["driving_side"] = step.is_left_hand_driving ? "left" : "right";
 
     util::json::Array intersections;
     intersections.values.reserve(step.intersections.size());

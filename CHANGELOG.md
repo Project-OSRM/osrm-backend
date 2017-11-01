@@ -1,10 +1,14 @@
 # UNRELEASED
-
-  - Changes from 5.13:
+  - Changes from 5.13
+    - API:
+      - new RouteStep property `driving_side` that has either "left" or "right" for that step
+    - Misc:
+      - Bundles a rough (please improve!) driving-side GeoJSON file for use with `osrm-extract --location-dependent-data data/driving_side.geojson`
     - Profile:
       - Remove dependency on turn types and turn modifier in the process_turn function in the `car.lua` profile. Guidance instruction types are not used to influence turn penalty anymore so this will break backward compatibility between profile version 3 and 4.
     - Bugfixes:
       - Fixed #4670: Fix bug where merge instructions got the wrong direction modifier
+      - Properly use the `profile.properties.left_hand_driving` property, there was a typo that meant it had no effect
 
 # 5.13.0
   - Changes from 5.12:

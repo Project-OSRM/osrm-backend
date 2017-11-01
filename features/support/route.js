@@ -267,6 +267,10 @@ module.exports = function () {
         return this.extractInstructionList(instructions, s => s.mode);
     };
 
+    this.drivingSideList = (instructions) => {
+        return this.extractInstructionList(instructions, s => s.driving_side);
+    };
+
     this.classesList = (instructions) => {
         return this.extractInstructionList(instructions, s => '[' + s.intersections.map(i => '(' + (i.classes ? i.classes.join(',') : '') + ')').join(',') + ']');
     };

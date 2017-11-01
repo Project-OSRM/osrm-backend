@@ -594,6 +594,7 @@ step.
 - `intersections`: A list of `Intersection` objects that are passed along the segment, the very first belonging to the StepManeuver
 - `rotary_name`: The name for the rotary. Optionally included, if the step is a rotary and a rotary name is available.
 - `rotary_pronunciation`: The pronunciation hint of the rotary name. Optionally included, if the step is a rotary and a rotary pronunciation is available.
+- `driving_side`: The legal driving side at the location for this step.  Either `left` or `right`.
 
 #### Example
 
