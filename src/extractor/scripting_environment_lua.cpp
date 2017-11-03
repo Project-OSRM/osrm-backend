@@ -567,7 +567,8 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
             &ExtractionTurn::angle,
             "turn_type",
             sol::property([](const ExtractionTurn &turn) {
-                if (turn.number_of_roads > 2 || turn.source_mode != turn.target_mode || turn.is_u_turn)
+                if (turn.number_of_roads > 2 || turn.source_mode != turn.target_mode ||
+                    turn.is_u_turn)
                     return guidance::TurnType::Turn;
                 else
                     return guidance::TurnType::NoTurn;
