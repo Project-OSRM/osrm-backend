@@ -192,7 +192,7 @@ class BaseDataFacade
 
     virtual bool IsLeftHandDriving(const NodeID id) const = 0;
 
-    virtual bool IsSegregated(const NodeID) const { return false; }
+    virtual bool IsSegregated(const NodeID) const = 0;
 };
 }
 }

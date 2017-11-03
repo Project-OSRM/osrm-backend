@@ -366,6 +366,7 @@ class ContiguousInternalMemoryDataFacade<routing_algorithms::offline::Algorithm>
 
     util::guidance::EntryClass GetEntryClass(const EdgeID /*turn_id*/) const override { return {}; }
     bool IsLeftHandDriving(const NodeID /*id*/) const override { return false; }
+    bool IsSegregated(const NodeID /*id*/) const override { return false; }
 };
 
 } // datafacade

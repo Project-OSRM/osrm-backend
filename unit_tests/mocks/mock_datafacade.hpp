@@ -224,6 +224,7 @@ class MockBaseDataFacade : public engine::datafacade::BaseDataFacade
     unsigned GetWeightPrecision() const override final { return 1; }
     double GetWeightMultiplier() const override final { return 10.; }
     bool IsLeftHandDriving(const NodeID /*id*/) const override { return false; }
+    bool IsSegregated(const NodeID /*id*/) const override { return false; }
 
     util::guidance::TurnBearing PreTurnBearing(const EdgeID /*eid*/) const override final
     {
