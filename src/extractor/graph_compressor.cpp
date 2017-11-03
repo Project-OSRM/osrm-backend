@@ -221,10 +221,15 @@ void GraphCompressor::Compress(
 
                     // generate an artifical turn for the turn penalty generation
                     ExtractionTurn extraction_turn(
+                        0,
+                        2,
+                        false,
                         true,
                         fwd_edge_data1.flags.restricted,
                         fwd_edge_data2.flags.restricted,
-                        node_data_container[fwd_edge_data1.annotation_data].is_left_hand_driving);
+                        node_data_container[fwd_edge_data1.annotation_data].is_left_hand_driving,
+                        TRAVEL_MODE_DRIVING,
+                        TRAVEL_MODE_DRIVING);
 
                     scripting_environment.ProcessTurn(extraction_turn);
                     node_duration_penalty = extraction_turn.duration * 10;

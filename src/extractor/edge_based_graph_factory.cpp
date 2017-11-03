@@ -569,12 +569,16 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
             // compute weight and duration penalties
             auto is_traffic_light = m_traffic_lights.count(node_at_center_of_intersection);
             ExtractionTurn extracted_turn(
-                turn,
+                turn.angle,
+                m_node_based_graph.GetOutDegree(node_at_center_of_intersection),
+                turn.instruction.direction_modifier == guidance::DirectionModifier::UTurn,
                 is_traffic_light,
                 edge_data1.flags.restricted,
                 edge_data2.flags.restricted,
                 m_edge_based_node_container.GetAnnotation(edge_data1.annotation_data)
-                    .is_left_hand_driving);
+                    .is_left_hand_driving,
+                m_edge_based_node_container.GetAnnotation(edge_data1.annotation_data).travel_mode,
+                m_edge_based_node_container.GetAnnotation(edge_data2.annotation_data).travel_mode);
             scripting_environment.ProcessTurn(extracted_turn);
 
             // turn penalties are limited to [-2^15, 2^15) which roughly
