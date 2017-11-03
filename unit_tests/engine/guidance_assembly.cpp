@@ -1,3 +1,5 @@
+#include "extractor/travel_mode.hpp"
+
 #include "engine/guidance/assemble_geometry.hpp"
 #include "engine/guidance/assemble_leg.hpp"
 #include "engine/guidance/assemble_overview.hpp"
@@ -12,6 +14,7 @@ BOOST_AUTO_TEST_SUITE(guidance_assembly)
 
 BOOST_AUTO_TEST_CASE(trim_short_segments)
 {
+    using namespace osrm::extractor;
     using namespace osrm::extractor::guidance;
     using namespace osrm::engine::guidance;
     using namespace osrm::engine;
@@ -46,7 +49,7 @@ BOOST_AUTO_TEST_CASE(trim_short_segments)
                                      0.2,
                                      1.9076601161280742,
                                      0.2,
-                                     extractor::TRAVEL_MODE_DRIVING,
+                                     TRAVEL_MODE_DRIVING,
                                      {{FloatLongitude{-73.981492}, FloatLatitude{40.768258}},
                                       329,
                                       348,
@@ -67,7 +70,7 @@ BOOST_AUTO_TEST_CASE(trim_short_segments)
                                      0,
                                      0,
                                      0,
-                                     extractor::TRAVEL_MODE_DRIVING,
+                                     TRAVEL_MODE_DRIVING,
                                      {{FloatLongitude{-73.981495}, FloatLatitude{40.768275}},
                                       0,
                                       0,

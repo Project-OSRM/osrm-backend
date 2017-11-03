@@ -23,8 +23,6 @@ namespace util
 namespace guidance
 {
 
-
-
 inline void print(const engine::guidance::RouteStep &step)
 {
     std::cout << static_cast<int>(step.maneuver.instruction.type) << " "
