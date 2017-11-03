@@ -765,7 +765,7 @@ Feature: Basic Roundabout
            | e,h       | 90 135   | edf,gch,gch,gch | depart,roundabout-exit-2,exit roundabout straight,arrive   |
            | g,f       | 45 90    | gch,edf,edf,edf | depart,roundabout-exit-2,exit roundabout right,arrive      |
            | g,h       | 45 135   | gch,gch,gch     | depart,exit roundabout right,arrive                        |
-           | e,e       | 90 270   | edf,edf,edf,edf | depart,roundabout-exit-3,exit roundabout sharp left,arrive |
+           | e,e       | 90 270   | edf,edf,edf     | depart,continue uturn,arrive                               |
 
     Scenario: CCW and CW roundabouts with overlaps
         Given the node map

@@ -972,6 +972,8 @@ Feature: Simple Turns
                     d
 
                   h
+
+                  q
             """
 
         And the nodes
@@ -981,16 +983,16 @@ Feature: Simple Turns
         And the ways
             | nodes | name                           | highway     | oneway |
             | yf    | yf                             | trunk_link  | yes    |
-            | gfeh  | Centreville Road               | primary     |        |
+            | gfehq | Centreville Road               | primary     |        |
             | fi    | fi                             | trunk_link  | yes    |
             | ij    | Bloomingdale Road              | residential |        |
-            | jkabx | Blue Star Memorial Hwy         | trunk       |        |
+            | jkabx | Blue Star Memorial Hwy         | trunk       | yes    |
             | bcde  | bcde                           | trunk_link  | yes    |
             | kh    | kh                             | trunk_link  | yes    |
 
         When I route I should get
             | waypoints | turns                                        | route                                                         |
-            | a,h       | depart,off ramp right,turn sharp left,arrive | Blue Star Memorial Hwy,bcde,Centreville Road,Centreville Road |
+            | a,q       | depart,off ramp right,turn sharp left,arrive | Blue Star Memorial Hwy,bcde,Centreville Road,Centreville Road |
 
     @todo
     # https://www.openstreetmap.org/#map=20/52.51609/13.41080
