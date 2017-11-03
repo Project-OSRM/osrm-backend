@@ -69,7 +69,7 @@ template <typename T> struct ValueIndexer
         return offset;
     }
 
-    std::size_t indexOf(const T &value) { return value_offsets[value]; };
+    std::size_t indexOf(const T &value) { return value_offsets[value]; }
 
     const std::vector<T> &values() { return used_values; }
 
@@ -184,16 +184,8 @@ inline void encodePoint(const FixedPoint &pt, protozero::packed_field_uint32 &ge
     geometry.add_element(protozero::encode_zigzag32(dy));
 }
 
-std::vector<FixedLine> coordinatesToTileLine(const std::vector<util::Coordinate> &points,
-                                             const BBox &tile_bbox)
+linestring_t floatLineToTileLine(const FloatLine &geo_line, const BBox &tile_bbox)
 {
-    FloatLine geo_line;
-    for (auto const &c : points)
-    {
-        geo_line.emplace_back(static_cast<double>(util::toFloating(c.lon)),
-                              static_cast<double>(util::toFloating(c.lat)));
-    }
-
     linestring_t unclipped_line;
 
     for (auto const &pt : geo_line)
@@ -212,34 +204,45 @@ std::vector<FixedLine> coordinatesToTileLine(const std::vector<util::Coordinate>
         boost::geometry::append(unclipped_line, point_t(px, py));
     }
 
-    multi_linestring_t clipped_line;
+    return unclipped_line;
+}
 
+std::vector<FixedLine> coordinatesToTileLine(const std::vector<util::Coordinate> &points,
+                                             const BBox &tile_bbox)
+{
+    FloatLine geo_line;
+    for (auto const &c : points)
+    {
+        geo_line.emplace_back(static_cast<double>(util::toFloating(c.lon)),
+                              static_cast<double>(util::toFloating(c.lat)));
+    }
+
+    linestring_t unclipped_line = floatLineToTileLine(geo_line, tile_bbox);
+
+    multi_linestring_t clipped_line;
     boost::geometry::intersection(clip_box, unclipped_line, clipped_line);
 
     std::vector<FixedLine> result;
 
     // b::g::intersection might return a line with one point if the
     // original line was very short and coords were dupes
-    if (!clipped_line.empty())
+    for (auto const &cl : clipped_line)
     {
-        for (auto const &cl : clipped_line)
-        {
-            if (cl.size() < 2)
-                continue;
+        if (cl.size() < 2)
+            continue;
 
-            FixedLine tile_line;
-            for (const auto &p : cl)
-                tile_line.emplace_back(p.get<0>(), p.get<1>());
+        FixedLine tile_line;
+        for (const auto &p : cl)
+            tile_line.emplace_back(p.get<0>(), p.get<1>());
 
-            result.emplace_back(std::move(tile_line));
-        }
+        result.emplace_back(std::move(tile_line));
     }
 
     return result;
 }
 
 /**
- * Returnx the x1,y1,x2,y2 pixel coordinates of a line in a given
+ * Return the x1,y1,x2,y2 pixel coordinates of a line in a given
  * tile.
  *
  * @param start the first coordinate of the line
@@ -257,26 +260,9 @@ FixedLine coordinatesToTileLine(const util::Coordinate start,
     geo_line.emplace_back(static_cast<double>(util::toFloating(target.lon)),
                           static_cast<double>(util::toFloating(target.lat)));
 
-    linestring_t unclipped_line;
-
-    for (auto const &pt : geo_line)
-    {
-        double px_merc = pt.x * util::web_mercator::DEGREE_TO_PX;
-        double py_merc = util::web_mercator::latToY(util::FloatLatitude{pt.y}) *
-                         util::web_mercator::DEGREE_TO_PX;
-        // convert lon/lat to tile coordinates
-        const auto px = std::round(
-            ((px_merc - tile_bbox.minx) * util::web_mercator::TILE_SIZE / tile_bbox.width()) *
-            util::vector_tile::EXTENT / util::web_mercator::TILE_SIZE);
-        const auto py = std::round(
-            ((tile_bbox.maxy - py_merc) * util::web_mercator::TILE_SIZE / tile_bbox.height()) *
-            util::vector_tile::EXTENT / util::web_mercator::TILE_SIZE);
-
-        boost::geometry::append(unclipped_line, point_t(px, py));
-    }
+    linestring_t unclipped_line = floatLineToTileLine(geo_line, tile_bbox);
 
     multi_linestring_t clipped_line;
-
     boost::geometry::intersection(clip_box, unclipped_line, clipped_line);
 
     FixedLine tile_line;
@@ -285,12 +271,9 @@ FixedLine coordinatesToTileLine(const util::Coordinate start,
     // original line was very short and coords were dupes
     if (!clipped_line.empty() && clipped_line[0].size() == 2)
     {
-        if (clipped_line[0].size() == 2)
+        for (const auto &p : clipped_line[0])
         {
-            for (const auto &p : clipped_line[0])
-            {
-                tile_line.emplace_back(p.get<0>(), p.get<1>());
-            }
+            tile_line.emplace_back(p.get<0>(), p.get<1>());
         }
     }
 

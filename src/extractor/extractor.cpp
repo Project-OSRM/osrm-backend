@@ -886,23 +886,6 @@ bool IsSegregated(std::vector<EdgeInfo> v1,
             return false;
     }
 
-    /*
-    std::vector<EdgeInfo> intersect;
-    std::set_intersection(v1.begin(),
-                          v1.end(),
-                          v2.begin(),
-                          v2.end(),
-                          std::back_inserter(intersect),
-                          EdgeInfo::LessName());
-
-    intersect.erase(std::remove_if(intersect.begin(),
-                                   intersect.end(),
-                                   [](EdgeInfo const &info) { return info.name.empty(); }),
-                    intersect.end());
-
-    return intersect.size() >= 2;
-    */
-
     // set_intersection like routine to count equal name pairs, std function is
     // not acceptable because of duplicates {a, a, b} ∩ {a, a, c} == {a, a}.
     std::vector<std::pair<EdgeInfo const *, EdgeInfo const *>> commons;
@@ -964,21 +947,6 @@ bool IsSegregated(std::vector<EdgeInfo> v1,
             std::min(threshold, get_length_threshold(e.first) + get_length_threshold(e.second));
 
     return edgeLength <= threshold;
-
-    /// @todo Process standalone U-turns.
-    /*
-    switch (commons.size())
-    {
-    case 0:
-      return false;
-    case 1:
-      // ingoing + outgoing edges
-      if (commons.front().first->direction + commons.front().second->direction != 1)
-        return false;
-    }
-
-    return true;
-    */
 }
 
 size_t Extractor::FindSegregatedNodes(NodeBasedGraphFactory &factory)
@@ -1071,7 +1039,6 @@ size_t Extractor::FindSegregatedNodes(NodeBasedGraphFactory &factory)
                             edgeLength);
     };
 
-    std::unordered_set<EdgeID> processed;
     size_t segregated_count = 0;
 
     for (NodeID sourceID = 0; sourceID < graph.GetNumberOfNodes(); ++sourceID)
@@ -1081,7 +1048,7 @@ size_t Extractor::FindSegregatedNodes(NodeBasedGraphFactory &factory)
         {
             auto &edgeData = graph.GetEdgeData(edgeID);
 
-            if (edgeData.reversed || edgeData.segregated || !processed.insert(edgeID).second)
+            if (edgeData.reversed || edgeData.segregated)
                 continue;
 
             NodeID const targetID = graph.GetTarget(edgeID);
