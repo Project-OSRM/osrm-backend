@@ -1061,3 +1061,28 @@ Feature: Car - Turn restrictions
         When I route I should get
             | from | to | route              |
             | a    | d  | ab,bc,bc,bge,de,de |
+
+
+    Scenario: Ambiguous ways
+        Given the node map
+            """
+            x---a----b-----c---z
+                     |
+                     d
+            """
+
+        And the ways
+            | nodes |
+            | abc   |
+            | bd    |
+            | xa    |
+            | cz    |
+
+        And the relations
+            | type        | way:from | way:to | node:via | restriction  |
+            | restriction | bd       | abc    | b        | no_left_turn |
+
+        When I route I should get
+            | from | to | route        |
+            | d    | x  | bd,abc,xa,xa |
+            | d    | z  | bd,abc,cz,cz |

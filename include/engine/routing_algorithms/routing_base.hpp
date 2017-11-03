@@ -192,7 +192,8 @@ void annotatePath(const FacadeT &facade,
         BOOST_ASSERT(start_index < end_index);
         for (std::size_t segment_idx = start_index; segment_idx < end_index; ++segment_idx)
         {
-            unpacked_path.push_back(PathData{id_vector[segment_idx + 1],
+            unpacked_path.push_back(PathData{*node_from,
+                                             id_vector[segment_idx + 1],
                                              name_index,
                                              is_segregated,
                                              weight_vector[segment_idx],
@@ -266,7 +267,8 @@ void annotatePath(const FacadeT &facade,
         BOOST_ASSERT(segment_idx < id_vector.size() - 1);
         BOOST_ASSERT(facade.GetTravelMode(target_node_id) > 0);
         unpacked_path.push_back(
-            PathData{id_vector[start_index < end_index ? segment_idx + 1 : segment_idx - 1],
+            PathData{target_node_id,
+                     id_vector[start_index < end_index ? segment_idx + 1 : segment_idx - 1],
                      facade.GetNameIndex(target_node_id),
                      facade.IsSegregated(target_node_id),
                      weight_vector[segment_idx],

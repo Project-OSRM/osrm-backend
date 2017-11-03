@@ -566,6 +566,150 @@ std::vector<RouteStep> buildIntersections(std::vector<RouteStep> steps)
     return removeNoTurnInstructions(std::move(steps));
 }
 
+void applyOverrides(const datafacade::BaseDataFacade &facade,
+                    std::vector<RouteStep> &steps,
+                    const LegGeometry &leg_geometry)
+{
+    // Find overrides that match, and apply them
+    // The +/-1 here are to remove the depart and arrive steps, which
+    // we don't allow updates to
+    for (auto current_step_it = steps.begin(); current_step_it != steps.end(); ++current_step_it)
+    {
+        util::Log(logDEBUG) << "Searching for " << current_step_it->from_id << std::endl;
+        const auto overrides = facade.GetOverridesThatStartAt(current_step_it->from_id);
+        if (overrides.empty())
+            continue;
+        util::Log(logDEBUG) << "~~~~ GOT A HIT, checking the rest ~~~" << std::endl;
+        for (const extractor::ManeuverOverride &maneuver_relation : overrides)
+        {
+            util::Log(logDEBUG) << "Override sequence is ";
+            for (auto &n : maneuver_relation.node_sequence)
+            {
+                util::Log(logDEBUG) << n << " ";
+            }
+            util::Log(logDEBUG) << std::endl;
+            util::Log(logDEBUG) << "Override type is "
+                                << osrm::guidance::internalInstructionTypeToString(
+                                       maneuver_relation.override_type)
+                                << std::endl;
+            util::Log(logDEBUG) << "Override direction is "
+                                << osrm::guidance::instructionModifierToString(
+                                       maneuver_relation.direction)
+                                << std::endl;
+
+            util::Log(logDEBUG) << "Route sequence is ";
+            for (auto it = current_step_it; it != steps.end(); ++it)
+            {
+                util::Log(logDEBUG) << it->from_id << " ";
+            }
+            util::Log(logDEBUG) << std::endl;
+
+            auto search_iter = maneuver_relation.node_sequence.begin();
+            auto route_iter = current_step_it;
+            while (search_iter != maneuver_relation.node_sequence.end())
+            {
+                if (route_iter == steps.end())
+                    break;
+
+                if (*search_iter == route_iter->from_id)
+                {
+                    ++search_iter;
+                    ++route_iter;
+                    continue;
+                }
+                // Skip over duplicated EBNs in the step array
+                // EBNs are sometime duplicated because guidance code inserts
+                // "fake" steps that it later removes.  This hasn't happened yet
+                // at this point, but we can safely just skip past the dupes.
+                if ((route_iter - 1)->from_id == route_iter->from_id)
+                {
+                    ++route_iter;
+                    continue;
+                }
+                // If we get here, the values got out of sync so it's not
+                // a match.
+                break;
+            }
+
+            // We got a match, update using the instruction_node
+            if (search_iter == maneuver_relation.node_sequence.end())
+            {
+                util::Log(logDEBUG) << "Node sequence matched, looking for the step "
+                                    << "that has the via node" << std::endl;
+                const auto via_node_coords =
+                    facade.GetCoordinateOfNode(maneuver_relation.instruction_node);
+                // Find the step that has the instruction_node at the intersection point
+                auto step_to_update = std::find_if(
+                    current_step_it,
+                    route_iter,
+                    [&leg_geometry, &via_node_coords](const auto &step) {
+                        util::Log(logDEBUG) << "Leg geom from " << step.geometry_begin << " to  "
+                                            << step.geometry_end << std::endl;
+
+                        // iterators over geometry of current step
+                        auto begin = leg_geometry.locations.begin() + step.geometry_begin;
+                        auto end = leg_geometry.locations.begin() + step.geometry_end;
+                        auto via_match = std::find_if(begin, end, [&](const auto &location) {
+                            return location == via_node_coords;
+                        });
+                        if (via_match != end)
+                        {
+                            util::Log(logDEBUG)
+                                << "Found geometry match at "
+                                << (std::distance(begin, end) - std::distance(via_match, end))
+                                << std::endl;
+                        }
+                        util::Log(logDEBUG)
+                            << ((*(leg_geometry.locations.begin() + step.geometry_begin) ==
+                                 via_node_coords)
+                                    ? "true"
+                                    : "false")
+                            << std::endl;
+                        return *(leg_geometry.locations.begin() + step.geometry_begin) ==
+                               via_node_coords;
+                        // return via_match != end;
+                    });
+                // We found a step that had the intersection_node coordinate
+                // in its geometry
+                if (step_to_update != route_iter)
+                {
+                    // Don't update the last step (it's an arrive instruction)
+                    util::Log(logDEBUG) << "Updating step "
+                                        << std::distance(steps.begin(), steps.end()) -
+                                               std::distance(step_to_update, steps.end())
+                                        << std::endl;
+                    if (maneuver_relation.override_type != osrm::guidance::TurnType::MaxTurnType)
+                    {
+                        util::Log(logDEBUG) << "    instruction was "
+                                            << osrm::guidance::internalInstructionTypeToString(
+                                                   step_to_update->maneuver.instruction.type)
+                                            << " now "
+                                            << osrm::guidance::internalInstructionTypeToString(
+                                                   maneuver_relation.override_type)
+                                            << std::endl;
+                        step_to_update->maneuver.instruction.type = maneuver_relation.override_type;
+                    }
+                    if (maneuver_relation.direction !=
+                        osrm::guidance::DirectionModifier::MaxDirectionModifier)
+                    {
+                        util::Log(logDEBUG)
+                            << "    direction was "
+                            << osrm::guidance::instructionModifierToString(
+                                   step_to_update->maneuver.instruction.direction_modifier)
+                            << " now " << osrm::guidance::instructionModifierToString(
+                                              maneuver_relation.direction)
+                            << std::endl;
+                        step_to_update->maneuver.instruction.direction_modifier =
+                            maneuver_relation.direction;
+                    }
+                    // step_to_update->is_overridden = true;
+                }
+            }
+        }
+        util::Log(logDEBUG) << "Done tweaking steps" << std::endl;
+    }
+}
+
 } // namespace guidance
 } // namespace engine
 } // namespace osrm

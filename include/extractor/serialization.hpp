@@ -4,6 +4,7 @@
 #include "conditional_turn_penalty.hpp"
 #include "extractor/datasources.hpp"
 #include "extractor/intersection_bearings_container.hpp"
+#include "extractor/maneuver_override.hpp"
 #include "extractor/nbg_to_ebg.hpp"
 #include "extractor/node_data_container.hpp"
 #include "extractor/profile_properties.hpp"
@@ -297,6 +298,16 @@ inline void read(storage::io::FileReader &reader,
     conditional_penalties.resize(num_elements);
     for (auto &penalty : conditional_penalties)
         read(reader, penalty);
+}
+
+inline void write(storage::io::FileWriter &writer,
+                  const std::vector<StorageManeuverOverride> &maneuver_overrides,
+                  const std::vector<NodeID> &node_sequences)
+{
+    writer.WriteElementCount64(maneuver_overrides.size());
+    writer.WriteElementCount64(node_sequences.size());
+    writer.WriteFrom(maneuver_overrides);
+    writer.WriteFrom(node_sequences);
 }
 }
 }

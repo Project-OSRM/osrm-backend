@@ -67,7 +67,8 @@ struct ExtractorConfig final : storage::IOConfig
                                       ".osrm.properties",
                                       ".osrm.icd",
                                       ".osrm.cnbg",
-                                      ".osrm.cnbg_to_ebg"}),
+                                      ".osrm.cnbg_to_ebg",
+                                      ".osrm.maneuver_overrides"}),
                                  requested_num_threads(0),
                                  parse_conditionals(false),
                                  use_locations_cache(true)

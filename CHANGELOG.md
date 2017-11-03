@@ -1,6 +1,7 @@
 # UNRELEASED
   - Changes from 5.15.1:
     - Guidance
+      - ADDED #4676: Support for maneuver override relation, allowing data-driven overrides for turn-by-turn instructions [#4676](https://github.com/Project-OSRM/osrm-backend/pull/4676)
       - CHANGED #4830: Announce reference change if names are empty
       - CHANGED #4835: MAXIMAL_ALLOWED_SEPARATION_WIDTH increased to 12 meters
     - Profile:

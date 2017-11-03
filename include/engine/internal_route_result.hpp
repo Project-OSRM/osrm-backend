@@ -24,7 +24,9 @@ namespace engine
 
 struct PathData
 {
-    // id of via node of the turn
+    // from edge-based-node id
+    NodeID from_edge_based_node;
+    // the internal OSRM id of the OSM node id that is the via node of the turn
     NodeID turn_via_node;
     // name of the street that leads to the turn
     unsigned name_id;

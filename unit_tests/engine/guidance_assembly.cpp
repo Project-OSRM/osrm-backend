@@ -38,7 +38,8 @@ BOOST_AUTO_TEST_CASE(trim_short_segments)
                                            {}};
 
     // Check that duplicated coordinate in the end is removed
-    std::vector<RouteStep> steps = {{324,
+    std::vector<RouteStep> steps = {{0,
+                                     324,
                                      false,
                                      "Central Park West",
                                      "",
@@ -61,7 +62,8 @@ BOOST_AUTO_TEST_CASE(trim_short_segments)
                                      3,
                                      {intersection1},
                                      false},
-                                    {324,
+                                    {0,
+                                     324,
                                      false,
                                      "Central Park West",
                                      "",
