@@ -469,8 +469,8 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
         "get_relations",
         [&getTypedRefBySol](ExtractionRelationContainer &cont, const sol::object &obj)
             -> const ExtractionRelationContainer::RelationIDList & {
-            return cont.GetRelations(getTypedRefBySol(obj));
-        },
+                return cont.GetRelations(getTypedRefBySol(obj));
+            },
         "relation",
         [](ExtractionRelationContainer &cont, const ExtractionRelation::OsmIDTyped &rel_id)
             -> const ExtractionRelation & { return cont.GetRelationData(rel_id); });
