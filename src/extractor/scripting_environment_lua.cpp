@@ -159,80 +159,6 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
                            "connectivity",
                            extractor::guidance::RoadPriorityClass::CONNECTIVITY);
 
-    context.state.new_enum("turn_type",
-                           "invalid",
-                           extractor::guidance::TurnType::Invalid,
-                           "new_name",
-                           extractor::guidance::TurnType::NewName,
-                           "continue",
-                           extractor::guidance::TurnType::Continue,
-                           "turn",
-                           extractor::guidance::TurnType::Turn,
-                           "merge",
-                           extractor::guidance::TurnType::Merge,
-                           "on_ramp",
-                           extractor::guidance::TurnType::OnRamp,
-                           "off_ramp",
-                           extractor::guidance::TurnType::OffRamp,
-                           "fork",
-                           extractor::guidance::TurnType::Fork,
-                           "end_of_road",
-                           extractor::guidance::TurnType::EndOfRoad,
-                           "notification",
-                           extractor::guidance::TurnType::Notification,
-                           "enter_roundabout",
-                           extractor::guidance::TurnType::EnterRoundabout,
-                           "enter_and_exit_roundabout",
-                           extractor::guidance::TurnType::EnterAndExitRoundabout,
-                           "enter_rotary",
-                           extractor::guidance::TurnType::EnterRotary,
-                           "enter_and_exit_rotary",
-                           extractor::guidance::TurnType::EnterAndExitRotary,
-                           "enter_roundabout_intersection",
-                           extractor::guidance::TurnType::EnterRoundaboutIntersection,
-                           "enter_and_exit_roundabout_intersection",
-                           extractor::guidance::TurnType::EnterAndExitRoundaboutIntersection,
-                           "use_lane",
-                           extractor::guidance::TurnType::Suppressed,
-                           "no_turn",
-                           extractor::guidance::TurnType::NoTurn,
-                           "suppressed",
-                           extractor::guidance::TurnType::Suppressed,
-                           "enter_roundabout_at_exit",
-                           extractor::guidance::TurnType::EnterRoundaboutAtExit,
-                           "exit_roundabout",
-                           extractor::guidance::TurnType::ExitRoundabout,
-                           "enter_rotary_at_exit",
-                           extractor::guidance::TurnType::EnterRotaryAtExit,
-                           "exit_rotary",
-                           extractor::guidance::TurnType::ExitRotary,
-                           "enter_roundabout_intersection_at_exit",
-                           extractor::guidance::TurnType::EnterRoundaboutIntersectionAtExit,
-                           "exit_roundabout_intersection",
-                           extractor::guidance::TurnType::ExitRoundaboutIntersection,
-                           "stay_on_roundabout",
-                           extractor::guidance::TurnType::StayOnRoundabout,
-                           "sliproad",
-                           extractor::guidance::TurnType::Sliproad);
-
-    context.state.new_enum("direction_modifier",
-                           "u_turn",
-                           extractor::guidance::DirectionModifier::UTurn,
-                           "sharp_right",
-                           extractor::guidance::DirectionModifier::SharpRight,
-                           "right",
-                           extractor::guidance::DirectionModifier::Right,
-                           "slight_right",
-                           extractor::guidance::DirectionModifier::SlightRight,
-                           "straight",
-                           extractor::guidance::DirectionModifier::Straight,
-                           "slight_left",
-                           extractor::guidance::DirectionModifier::SlightLeft,
-                           "left",
-                           extractor::guidance::DirectionModifier::Left,
-                           "sharp_left",
-                           extractor::guidance::DirectionModifier::SharpLeft);
-
     context.state.new_enum("item_type",
                            "node",
                            osmium::item_type::node,
@@ -487,26 +413,6 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
                                                   "duration",
                                                   &ExtractionSegment::duration);
 
-    context.state.new_usertype<ExtractionTurn>("ExtractionTurn",
-                                               "angle",
-                                               &ExtractionTurn::angle,
-                                               "turn_type",
-                                               &ExtractionTurn::turn_type,
-                                               "direction_modifier",
-                                               &ExtractionTurn::direction_modifier,
-                                               "has_traffic_light",
-                                               &ExtractionTurn::has_traffic_light,
-                                               "weight",
-                                               &ExtractionTurn::weight,
-                                               "duration",
-                                               &ExtractionTurn::duration,
-                                               "source_restricted",
-                                               &ExtractionTurn::source_restricted,
-                                               "target_restricted",
-                                               &ExtractionTurn::target_restricted,
-                                               "is_left_hand_driving",
-                                               &ExtractionTurn::is_left_hand_driving);
-
     // Keep in mind .location is available only if .pbf is preprocessed to set the location with the
     // ref using osmium command "osmium add-locations-to-ways"
     context.state.new_usertype<osmium::NodeRef>(
@@ -653,16 +559,155 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
         }
     };
 
+    auto initialize_V3_extraction_turn = [&]() {
+
+        context.state.new_usertype<ExtractionTurn>(
+            "ExtractionTurn",
+            "angle",
+            &ExtractionTurn::angle,
+            "turn_type",
+            sol::property([](const ExtractionTurn &turn) {
+                if (turn.number_of_roads > 2 || turn.source_mode != turn.target_mode || turn.is_u_turn)
+                    return guidance::TurnType::Turn;
+                else
+                    return guidance::TurnType::NoTurn;
+            }),
+            "direction_modifier",
+            sol::property([](const ExtractionTurn &turn) {
+                if (turn.is_u_turn)
+                    return guidance::DirectionModifier::UTurn;
+                else
+                    return guidance::DirectionModifier::Straight;
+            }),
+            "has_traffic_light",
+            &ExtractionTurn::has_traffic_light,
+            "weight",
+            &ExtractionTurn::weight,
+            "duration",
+            &ExtractionTurn::duration,
+            "source_restricted",
+            &ExtractionTurn::source_restricted,
+            "target_restricted",
+            &ExtractionTurn::target_restricted,
+            "is_left_hand_driving",
+            &ExtractionTurn::is_left_hand_driving);
+
+        context.state.new_enum("turn_type",
+                               "invalid",
+                               extractor::guidance::TurnType::Invalid,
+                               "new_name",
+                               extractor::guidance::TurnType::NewName,
+                               "continue",
+                               extractor::guidance::TurnType::Continue,
+                               "turn",
+                               extractor::guidance::TurnType::Turn,
+                               "merge",
+                               extractor::guidance::TurnType::Merge,
+                               "on_ramp",
+                               extractor::guidance::TurnType::OnRamp,
+                               "off_ramp",
+                               extractor::guidance::TurnType::OffRamp,
+                               "fork",
+                               extractor::guidance::TurnType::Fork,
+                               "end_of_road",
+                               extractor::guidance::TurnType::EndOfRoad,
+                               "notification",
+                               extractor::guidance::TurnType::Notification,
+                               "enter_roundabout",
+                               extractor::guidance::TurnType::EnterRoundabout,
+                               "enter_and_exit_roundabout",
+                               extractor::guidance::TurnType::EnterAndExitRoundabout,
+                               "enter_rotary",
+                               extractor::guidance::TurnType::EnterRotary,
+                               "enter_and_exit_rotary",
+                               extractor::guidance::TurnType::EnterAndExitRotary,
+                               "enter_roundabout_intersection",
+                               extractor::guidance::TurnType::EnterRoundaboutIntersection,
+                               "enter_and_exit_roundabout_intersection",
+                               extractor::guidance::TurnType::EnterAndExitRoundaboutIntersection,
+                               "use_lane",
+                               extractor::guidance::TurnType::Suppressed,
+                               "no_turn",
+                               extractor::guidance::TurnType::NoTurn,
+                               "suppressed",
+                               extractor::guidance::TurnType::Suppressed,
+                               "enter_roundabout_at_exit",
+                               extractor::guidance::TurnType::EnterRoundaboutAtExit,
+                               "exit_roundabout",
+                               extractor::guidance::TurnType::ExitRoundabout,
+                               "enter_rotary_at_exit",
+                               extractor::guidance::TurnType::EnterRotaryAtExit,
+                               "exit_rotary",
+                               extractor::guidance::TurnType::ExitRotary,
+                               "enter_roundabout_intersection_at_exit",
+                               extractor::guidance::TurnType::EnterRoundaboutIntersectionAtExit,
+                               "exit_roundabout_intersection",
+                               extractor::guidance::TurnType::ExitRoundaboutIntersection,
+                               "stay_on_roundabout",
+                               extractor::guidance::TurnType::StayOnRoundabout,
+                               "sliproad",
+                               extractor::guidance::TurnType::Sliproad);
+
+        context.state.new_enum("direction_modifier",
+                               "u_turn",
+                               extractor::guidance::DirectionModifier::UTurn,
+                               "sharp_right",
+                               extractor::guidance::DirectionModifier::SharpRight,
+                               "right",
+                               extractor::guidance::DirectionModifier::Right,
+                               "slight_right",
+                               extractor::guidance::DirectionModifier::SlightRight,
+                               "straight",
+                               extractor::guidance::DirectionModifier::Straight,
+                               "slight_left",
+                               extractor::guidance::DirectionModifier::SlightLeft,
+                               "left",
+                               extractor::guidance::DirectionModifier::Left,
+                               "sharp_left",
+                               extractor::guidance::DirectionModifier::SharpLeft);
+    };
+
     switch (context.api_version)
     {
+    case 4:
+    {
+        context.state.new_usertype<ExtractionTurn>("ExtractionTurn",
+                                                   "angle",
+                                                   &ExtractionTurn::angle,
+                                                   "number_of_roads",
+                                                   &ExtractionTurn::number_of_roads,
+                                                   "is_u_turn",
+                                                   &ExtractionTurn::is_u_turn,
+                                                   "has_traffic_light",
+                                                   &ExtractionTurn::has_traffic_light,
+                                                   "weight",
+                                                   &ExtractionTurn::weight,
+                                                   "duration",
+                                                   &ExtractionTurn::duration,
+                                                   "source_restricted",
+                                                   &ExtractionTurn::source_restricted,
+                                                   "target_restricted",
+                                                   &ExtractionTurn::target_restricted,
+                                                   "is_left_hand_driving",
+                                                   &ExtractionTurn::is_left_hand_driving,
+                                                   "source_mode",
+                                                   &ExtractionTurn::source_mode,
+                                                   "target_mode",
+                                                   &ExtractionTurn::target_mode);
+        initV2Context();
+        break;
+    }
     case 3:
     case 2:
     {
+        initialize_V3_extraction_turn();
         initV2Context();
         break;
     }
     case 1:
     {
+        initialize_V3_extraction_turn();
+
         // cache references to functions for faster execution
         context.turn_function = context.state["turn_function"];
         context.node_function = context.state["node_function"];
@@ -693,6 +738,8 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
         break;
     }
     case 0:
+        initialize_V3_extraction_turn();
+
         // cache references to functions for faster execution
         context.turn_function = context.state["turn_function"];
         context.node_function = context.state["node_function"];
@@ -851,6 +898,7 @@ std::vector<std::vector<std::string>> Sol2ScriptingEnvironment::GetExcludableCla
     auto &context = GetSol2Context();
     switch (context.api_version)
     {
+    case 4:
     case 3:
     case 2:
         return Sol2ScriptingEnvironment::GetStringListsFromTable("excludable");
@@ -864,6 +912,7 @@ std::vector<std::string> Sol2ScriptingEnvironment::GetClassNames()
     auto &context = GetSol2Context();
     switch (context.api_version)
     {
+    case 4:
     case 3:
     case 2:
         return Sol2ScriptingEnvironment::GetStringListFromTable("classes");
@@ -877,6 +926,7 @@ std::vector<std::string> Sol2ScriptingEnvironment::GetNameSuffixList()
     auto &context = GetSol2Context();
     switch (context.api_version)
     {
+    case 4:
     case 3:
     case 2:
         return Sol2ScriptingEnvironment::GetStringListFromTable("suffix_list");
@@ -892,6 +942,7 @@ std::vector<std::string> Sol2ScriptingEnvironment::GetRestrictions()
     auto &context = GetSol2Context();
     switch (context.api_version)
     {
+    case 4:
     case 3:
     case 2:
         return Sol2ScriptingEnvironment::GetStringListFromTable("restrictions");
@@ -907,6 +958,7 @@ std::vector<std::string> Sol2ScriptingEnvironment::GetRelations()
     auto &context = GetSol2Context();
     switch (context.api_version)
     {
+    case 4:
     case 3:
         return Sol2ScriptingEnvironment::GetStringListFromTable("relation_types");
     default:
@@ -920,6 +972,7 @@ void Sol2ScriptingEnvironment::ProcessTurn(ExtractionTurn &turn)
 
     switch (context.api_version)
     {
+    case 4:
     case 3:
     case 2:
         if (context.has_turn_penalty_function)
@@ -951,14 +1004,14 @@ void Sol2ScriptingEnvironment::ProcessTurn(ExtractionTurn &turn)
     case 0:
         if (context.has_turn_penalty_function)
         {
-            if (turn.turn_type != guidance::TurnType::NoTurn)
+            if (turn.number_of_roads > 2)
             {
                 // Get turn duration and convert deci-seconds to seconds
                 turn.duration = static_cast<double>(context.turn_function(turn.angle)) / 10.;
                 BOOST_ASSERT(turn.weight == 0);
 
                 // add U-turn penalty
-                if (turn.direction_modifier == guidance::DirectionModifier::UTurn)
+                if (turn.is_u_turn)
                     turn.duration += context.properties.GetUturnPenalty();
             }
             else
@@ -987,6 +1040,7 @@ void Sol2ScriptingEnvironment::ProcessSegment(ExtractionSegment &segment)
     {
         switch (context.api_version)
         {
+        case 4:
         case 3:
         case 2:
             context.segment_function(context.profile_table, segment);
@@ -1011,6 +1065,7 @@ void LuaScriptingContext::ProcessNode(const osmium::Node &node,
 
     switch (api_version)
     {
+    case 4:
     case 3:
         node_function(profile_table, node, result, relations);
         break;
@@ -1032,6 +1087,7 @@ void LuaScriptingContext::ProcessWay(const osmium::Way &way,
 
     switch (api_version)
     {
+    case 4:
     case 3:
         way_function(profile_table, way, result, relations);
         break;
