@@ -1,5 +1,8 @@
 # UNRELEASED
 
+- Profile:
+  - Remove dependency on turn types and turn modifier in the process_turn function in the `car.lua` profile. Guidance instruction types are not used to influence turn penalty anymore so this will break backward compatibility between profile version 3 and 4.
+
 # 5.13.0
   - Changes from 5.12:
     - Profile:
