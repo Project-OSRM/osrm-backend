@@ -7,6 +7,9 @@
 
 #include "util/log.hpp"
 
+#include <algorithm>
+#include <iomanip>
+#include <iterator>
 #include <mutex>
 #include <unordered_map>
 
@@ -41,17 +44,28 @@ class StatisticsHandler final : public IntersectionHandler
 
     ~StatisticsHandler() override final
     {
-        // Todo: type and modifier to string
+        const auto add_second = [](const auto acc, const auto &kv) { return acc + kv.second; };
 
-        util::Log() << "Assigned turn instruction types";
+        const auto num_types =
+            std::accumulate(begin(type_hist), end(type_hist), std::uint64_t{0}, add_second);
+        const auto num_modifiers =
+            std::accumulate(begin(modifier_hist), end(modifier_hist), std::uint64_t{0}, add_second);
+
+        util::Log() << "Assigned " << num_types << " turn instruction types:";
 
         for (const auto &kv : type_hist)
-            util::Log() << internalInstructionTypeToString(kv.first) << ": " << kv.second;
+            if (kv.second > 0)
+                util::Log() << std::fixed << std::setprecision(2)
+                            << internalInstructionTypeToString(kv.first) << ": " << kv.second
+                            << " (" << (kv.second / static_cast<float>(num_types) * 100.) << "%)";
 
-        util::Log() << "Assigned turn instruction modifiers";
+        util::Log() << "Assigned " << num_modifiers << " turn instruction modifiers:";
 
         for (const auto &kv : modifier_hist)
-            util::Log() << instructionModifierToString(kv.first) << ": " << kv.second;
+            if (kv.second > 0)
+                util::Log() << std::fixed << std::setprecision(2)
+                            << instructionModifierToString(kv.first) << ": " << kv.second << " ("
+                            << (kv.second / static_cast<float>(num_modifiers) * 100.) << "%)";
     }
 
     bool canProcess(const NodeID, const EdgeID, const Intersection &) const override final
