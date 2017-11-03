@@ -1,6 +1,6 @@
 -- Car profile
 
-api_version = 3
+api_version = 4
 
 Set = require('lib/set')
 Sequence = require('lib/sequence')
@@ -420,14 +420,14 @@ function process_turn(profile, turn)
       turn.duration = profile.properties.traffic_light_penalty
   end
 
-  if turn.turn_type ~= turn_type.no_turn then
+  if turn.number_of_roads > 2 or turn.source_mode ~= turn.target_mode or turn.is_u_turn then
     if turn.angle >= 0 then
       turn.duration = turn.duration + turn_penalty / (1 + math.exp( -((13 / turn_bias) *  turn.angle/180 - 6.5*turn_bias)))
     else
       turn.duration = turn.duration + turn_penalty / (1 + math.exp( -((13 * turn_bias) * -turn.angle/180 - 6.5/turn_bias)))
     end
 
-    if turn.direction_modifier == direction_modifier.u_turn then
+    if turn.is_u_turn then
       turn.duration = turn.duration + profile.properties.u_turn_penalty
     end
   end
