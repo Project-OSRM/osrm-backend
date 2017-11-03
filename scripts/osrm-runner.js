@@ -89,11 +89,14 @@ const optionsList = [
      description: 'CSV file with queries in the first row', typeLabel: '[underline]{file}'}];
 const options = cla(optionsList);
 if (options.help) {
-    const banner =
-          String.raw`  ____  _______  __  ___  ___  __  ___  ___  _________  ` + '\n' +
-          String.raw` / __ \/ __/ _ \/  |/  / / _ \/ / / / |/ / |/ / __/ _ \ ` + '\n' +
-          String.raw`/ /_/ /\ \/ , _/ /|_/ / / , _/ /_/ /    /    / _// , _/ ` + '\n' +
-          String.raw`\____/___/_/|_/_/  /_/ /_/|_|\____/_/|_/_/|_/___/_/|_|  `;
+          String.raw`    )  (   (      *    (            )    )     (     ` + '\n' +
+          String.raw` ( /(  )\ ))\ ) (  \`   )\ )      ( /( ( /(     )\ )  ` + '\n' +
+          String.raw` )\())(()/(()/( )\))( (()/(   (  )\()))\())(  (()/(  ` + '\n' +
+          String.raw`((_)\  /(_))(_)|(_)()\ /(_))  )\((_)\((_)\ )\  /(_)) ` + '\n' +
+          String.raw`  ((_)(_))(_)) (_()((_|_)) _ ((_)_((_)_((_|(_)(_))   ` + '\n' +
+          String.raw` / _ \/ __| _ \|  \/  | _ \ | | | \| | \| | __| _ \  ` + '\n' +
+          String.raw`| (_) \__ \   /| |\/| |   / |_| | .' | .' | _||   /  ` + '\n' +
+          String.raw` \___/|___/_|_\|_|  |_|_|_\\___/|_|\_|_|\_|___|_|_\  `;
     const usage = clu([
         { content: ansi.format(banner, 'green'), raw: true },
         { header: 'Run OSRM queries and collect results'/*, content: 'Generates something [italic]{very} important.'*/ },
