@@ -26,7 +26,7 @@ const double constexpr DISTINCTION_RATIO = 2;
 const double constexpr MAX_ROUNDABOUT_RADIUS = 15;
 // Unnamed small roundabouts that look like intersections are announced as turns,
 // guard against data issues or such roundabout intersections getting too large.
-const double constexpr MAX_ROUNDABOUT_INTERSECTION_RADIUS = 25;
+const double constexpr MAX_ROUNDABOUT_INTERSECTION_RADIUS = 15;
 
 const double constexpr INCREASES_BY_FOURTY_PERCENT = 1.4;
 
