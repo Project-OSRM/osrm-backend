@@ -28,7 +28,9 @@ TurnAnalysis::TurnAnalysis(const util::NodeBasedDynamicGraph &node_based_graph,
                            const std::unordered_set<NodeID> &barrier_nodes,
                            const CompressedEdgeContainer &compressed_edge_container,
                            const util::NameTable &name_table,
-                           const SuffixTable &street_name_suffix_table)
+                           const SuffixTable &street_name_suffix_table,
+                           const bool validate_intersections_,
+                           const std::string &nbg_nodes_filepath)
     : node_based_graph(node_based_graph), intersection_generator(node_based_graph,
                                                                  node_data_container,
                                                                  restriction_map,
@@ -50,7 +52,6 @@ TurnAnalysis::TurnAnalysis(const util::NodeBasedDynamicGraph &node_based_graph,
                          intersection_generator),
       motorway_handler(node_based_graph,
                        node_data_container,
-
                        coordinates,
                        name_table,
                        street_name_suffix_table,
@@ -78,7 +79,14 @@ TurnAnalysis::TurnAnalysis(const util::NodeBasedDynamicGraph &node_based_graph,
                        node_data_container,
                        coordinates,
                        name_table,
-                       street_name_suffix_table)
+                       street_name_suffix_table),
+      validation_handler(intersection_generator,
+                         node_based_graph,
+                         node_data_container,
+                         name_table,
+                         street_name_suffix_table,
+                         nbg_nodes_filepath),
+      validate_intersections{validate_intersections_}
 {
 }
 
@@ -175,6 +183,12 @@ Intersection TurnAnalysis::AssignTurnTypes(const NodeID node_prior_to_intersecti
                 road.instruction.type = TurnType::OffRamp;
         });
     }
+
+    // The last pass should be the (optional) intersection validation pass
+    if (validation_handler.canProcess(node_prior_to_intersection, entering_via_edge, intersection))
+        intersection = validation_handler(
+            node_prior_to_intersection, entering_via_edge, std::move(intersection));
+
     return intersection;
 }
 

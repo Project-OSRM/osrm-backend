@@ -4,6 +4,7 @@
 #include "extractor/files.hpp"
 #include "extractor/guidance/turn_analysis.hpp"
 #include "extractor/guidance/turn_lane_handler.hpp"
+#include "extractor/packed_osm_ids.hpp"
 #include "extractor/scripting_environment.hpp"
 #include "extractor/suffix_table.hpp"
 
@@ -18,6 +19,7 @@
 #include "util/guidance/turn_bearing.hpp"
 #include "util/integer_range.hpp"
 #include "util/log.hpp"
+#include "util/packed_vector.hpp"
 #include "util/percent.hpp"
 #include "util/timing_util.hpp"
 
@@ -67,12 +69,13 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(
     const std::unordered_set<NodeID> &traffic_lights,
     const std::vector<util::Coordinate> &coordinates,
     const util::NameTable &name_table,
-    guidance::LaneDescriptionMap &lane_description_map)
+    guidance::LaneDescriptionMap &lane_description_map,
+    const std::string &nbg_nodes_filepath)
     : m_edge_based_node_container(node_data_container), m_number_of_edge_based_nodes(0),
       m_coordinates(coordinates), m_node_based_graph(std::move(node_based_graph)),
       m_barrier_nodes(barrier_nodes), m_traffic_lights(traffic_lights),
       m_compressed_edge_container(compressed_edge_container), name_table(name_table),
-      lane_description_map(lane_description_map)
+      lane_description_map(lane_description_map), m_nbg_nodes_filepath(nbg_nodes_filepath)
 {
 }
 
@@ -414,6 +417,10 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     // Three nested loop look super-linear, but we are dealing with a (kind of)
     // linear number of turns only.
     SuffixTable street_name_suffix_table(scripting_environment);
+
+    // TODO: toggle from cmdline
+    const auto validate_intersections = true;
+
     guidance::TurnAnalysis turn_analysis(m_node_based_graph,
                                          m_edge_based_node_container,
                                          m_coordinates,
@@ -421,11 +428,14 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                          m_barrier_nodes,
                                          m_compressed_edge_container,
                                          name_table,
-                                         street_name_suffix_table);
+                                         street_name_suffix_table,
+                                         validate_intersections,
+                                         m_nbg_nodes_filepath);
 
     util::guidance::LaneDataIdMap lane_data_map;
     guidance::lanes::TurnLaneHandler turn_lane_handler(m_node_based_graph,
                                                        m_edge_based_node_container,
+                                                       m_coordinates,
                                                        lane_description_map,
                                                        turn_analysis,
                                                        lane_data_map);

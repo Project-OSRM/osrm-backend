@@ -13,11 +13,13 @@
 #include "extractor/guidance/suppress_mode_handler.hpp"
 #include "extractor/guidance/turn_classification.hpp"
 #include "extractor/guidance/turn_handler.hpp"
-#include "extractor/query_node.hpp"
+#include "extractor/guidance/validation_handler.hpp"
+#include "extractor/packed_osm_ids.hpp"
 #include "extractor/restriction_index.hpp"
 #include "extractor/suffix_table.hpp"
 
 #include "util/attributes.hpp"
+#include "util/coordinate.hpp"
 #include "util/name_table.hpp"
 #include "util/node_based_graph.hpp"
 
@@ -47,7 +49,9 @@ class TurnAnalysis
                  const std::unordered_set<NodeID> &barrier_nodes,
                  const CompressedEdgeContainer &compressed_edge_container,
                  const util::NameTable &name_table,
-                 const SuffixTable &street_name_suffix_table);
+                 const SuffixTable &street_name_suffix_table,
+                 bool validate_intersections,
+                 const std::string &nbg_nodes_filepath);
 
     /* Full Analysis Process for a single node/edge combination. Use with caution, as the process is
      * relatively expensive */
@@ -89,6 +93,9 @@ class TurnAnalysis
     const SliproadHandler sliproad_handler;
     const SuppressModeHandler suppress_mode_handler;
     const DrivewayHandler driveway_handler;
+
+    const ValidationHandler validation_handler;
+    const bool validate_intersections;
 
     // Utility function, setting basic turn types. Prepares for normal turn handling.
     Intersection

@@ -668,6 +668,7 @@ EdgeID Extractor::BuildEdgeExpandedGraph(
     const std::string &intersection_class_output_file)
 {
     util::NameTable name_table(config.GetPath(".osrm.names").string());
+    auto nbg_nodes_file = config.GetPath(".osrm.nbg_nodes").string();
 
     EdgeBasedGraphFactory edge_based_graph_factory(node_based_graph,
                                                    edge_based_nodes_container,
@@ -676,7 +677,8 @@ EdgeID Extractor::BuildEdgeExpandedGraph(
                                                    traffic_signals,
                                                    coordinates,
                                                    name_table,
-                                                   turn_lane_map);
+                                                   turn_lane_map,
+                                                   nbg_nodes_file);
 
     const auto create_edge_based_edges = [&]() {
         // scoped to relase intermediate datastructures right after the call

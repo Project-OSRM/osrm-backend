@@ -14,6 +14,7 @@
 #include "extractor/nbg_to_ebg.hpp"
 #include "extractor/node_data_container.hpp"
 #include "extractor/original_edge_data.hpp"
+#include "extractor/packed_osm_ids.hpp"
 #include "extractor/query_node.hpp"
 #include "extractor/restriction_index.hpp"
 #include "extractor/way_restriction_map.hpp"
@@ -24,6 +25,7 @@
 #include "util/guidance/entry_class.hpp"
 #include "util/name_table.hpp"
 #include "util/node_based_graph.hpp"
+#include "util/packed_vector.hpp"
 #include "util/typedefs.hpp"
 
 #include "storage/io.hpp"
@@ -75,7 +77,8 @@ class EdgeBasedGraphFactory
                                    const std::unordered_set<NodeID> &traffic_lights,
                                    const std::vector<util::Coordinate> &coordinates,
                                    const util::NameTable &name_table,
-                                   guidance::LaneDescriptionMap &lane_description_map);
+                                   guidance::LaneDescriptionMap &lane_description_map,
+                                   const std::string &nbg_nodes_filepath);
 
     void Run(ScriptingEnvironment &scripting_environment,
              const std::string &turn_data_filename,
@@ -158,6 +161,7 @@ class EdgeBasedGraphFactory
 
     const util::NameTable &name_table;
     guidance::LaneDescriptionMap &lane_description_map;
+    const std::string &m_nbg_nodes_filepath;
 
     // In the edge based graph, any traversable (non reversed) edge of the node-based graph forms a
     // node of the edge-based graph. To be able to name these nodes, we loop over the node-based
