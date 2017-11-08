@@ -145,5 +145,5 @@ Feature: Merging
             | cf    |      | 1B           | motorway_link | yes    |
 
         When I route I should get
-            | waypoints | route      | turns                        |
-            | e,d       | ,A100,A100 | depart,merge straight,arrive |
+            | waypoints | route      | turns                           |
+            | e,d       | ,A100,A100 | depart,merge slight left,arrive |
