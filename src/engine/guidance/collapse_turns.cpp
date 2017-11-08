@@ -186,8 +186,9 @@ void AdjustToCombinedTurnStrategy::operator()(RouteStep &step_at_turn_location,
 {
     const auto angle = findTotalTurnAngle(step_at_turn_location, transfer_from_step);
 
-    // Forks point to left/right. By doing a combined angle, we would risk ending up with
-    // unreasonable fork instrucitons. The direction of a fork only depends on the forking location,
+    // Forks and merges point to left/right. By doing a combined angle, we would risk ending up with
+    // unreasonable fork instrucitons. The direction of a fork or a merge only depends on the
+    // location,
     // not further angles coming up
     //
     //          d
@@ -195,7 +196,8 @@ void AdjustToCombinedTurnStrategy::operator()(RouteStep &step_at_turn_location,
     // a - b
     //
     // could end up as `fork left` for `a-b-c`, instead of fork-right
-    const auto new_modifier = hasTurnType(step_at_turn_location, TurnType::Fork)
+    const auto new_modifier = hasTurnType(step_at_turn_location, TurnType::Fork) ||
+                                      hasTurnType(step_at_turn_location, TurnType::Merge)
                                   ? step_at_turn_location.maneuver.instruction.direction_modifier
                                   : getTurnDirection(angle);
 
