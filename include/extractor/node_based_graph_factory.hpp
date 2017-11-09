@@ -41,7 +41,7 @@ class NodeBasedGraphFactory
                           std::vector<TurnRestriction> &turn_restrictions,
                           std::vector<ConditionalTurnRestriction> &conditional_turn_restrictions);
 
-    auto &GetGraph() { return compressed_output_graph; }
+    auto const &GetGraph() { return compressed_output_graph; }
     auto const &GetBarriers() const { return barriers; }
     auto const &GetTrafficSignals() const { return traffic_signals; }
     auto &GetCompressedEdges() { return compressed_edge_container; }

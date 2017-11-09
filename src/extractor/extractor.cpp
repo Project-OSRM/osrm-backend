@@ -220,11 +220,11 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     util::Log() << "Find segregated edges in node-based graph ..." << std::flush;
     TIMER_START(segregated);
 
-    const size_t segregated_count = FindSegregatedNodes(node_based_graph_factory);
+    auto segregated_edges = FindSegregatedNodes(node_based_graph_factory);
 
     TIMER_STOP(segregated);
     util::Log() << "ok, after " << TIMER_SEC(segregated) << "s";
-    util::Log() << "Segregated edges count = " << segregated_count;
+    util::Log() << "Segregated edges count = " << segregated_edges.size();
 
     util::Log() << "Writing nodes for nodes-based and edges-based graphs ...";
     auto const &coordinates = node_based_graph_factory.GetCoordinates();
@@ -277,6 +277,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
                                traffic_signals,
                                turn_restrictions,
                                conditional_turn_restrictions,
+                               segregated_edges,
                                turn_lane_map,
                                scripting_environment,
                                edge_based_nodes_container,
@@ -664,6 +665,7 @@ EdgeID Extractor::BuildEdgeExpandedGraph(
     const std::unordered_set<NodeID> &traffic_signals,
     const std::vector<TurnRestriction> &turn_restrictions,
     const std::vector<ConditionalTurnRestriction> &conditional_turn_restrictions,
+    const std::unordered_set<EdgeID> &segregated_edges,
     // might have to be updated to add new lane combinations
     guidance::LaneDescriptionMap &turn_lane_map,
     // for calculating turn penalties
@@ -685,6 +687,7 @@ EdgeID Extractor::BuildEdgeExpandedGraph(
                                                    traffic_signals,
                                                    coordinates,
                                                    name_table,
+                                                   segregated_edges,
                                                    turn_lane_map);
 
     const auto create_edge_based_edges = [&]() {
@@ -949,11 +952,11 @@ bool IsSegregated(std::vector<EdgeInfo> v1,
     return edgeLength <= threshold;
 }
 
-size_t Extractor::FindSegregatedNodes(NodeBasedGraphFactory &factory)
+std::unordered_set<EdgeID> Extractor::FindSegregatedNodes(NodeBasedGraphFactory &factory)
 {
     util::NameTable names(config.GetPath(".osrm.names").string());
 
-    auto &graph = factory.GetGraph();
+    auto const &graph = factory.GetGraph();
     auto const &annotation = factory.GetAnnotationData();
 
     guidance::CoordinateExtractor coordExtractor(
@@ -1039,16 +1042,16 @@ size_t Extractor::FindSegregatedNodes(NodeBasedGraphFactory &factory)
                             edgeLength);
     };
 
-    size_t segregated_count = 0;
+    std::unordered_set<EdgeID> segregated_edges;
 
     for (NodeID sourceID = 0; sourceID < graph.GetNumberOfNodes(); ++sourceID)
     {
         auto const sourceEdges = graph.GetAdjacentEdgeRange(sourceID);
         for (EdgeID edgeID : sourceEdges)
         {
-            auto &edgeData = graph.GetEdgeData(edgeID);
+            auto const &edgeData = graph.GetEdgeData(edgeID);
 
-            if (edgeData.reversed || edgeData.segregated)
+            if (edgeData.reversed)
                 continue;
 
             NodeID const targetID = graph.GetTarget(edgeID);
@@ -1056,14 +1059,11 @@ size_t Extractor::FindSegregatedNodes(NodeBasedGraphFactory &factory)
 
             double const length = get_edge_length(sourceID, edgeID, targetID);
             if (isSegregatedFn(edgeData, sourceEdges, sourceID, targetEdges, targetID, length))
-            {
-                ++segregated_count;
-                edgeData.segregated = true;
-            }
+                segregated_edges.insert(edgeID);
         }
     }
 
-    return segregated_count;
+    return segregated_edges;
 }
 
 } // namespace extractor

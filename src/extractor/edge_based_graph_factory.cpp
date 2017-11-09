@@ -67,12 +67,13 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(
     const std::unordered_set<NodeID> &traffic_lights,
     const std::vector<util::Coordinate> &coordinates,
     const util::NameTable &name_table,
+    const std::unordered_set<EdgeID> &segregated_edges,
     guidance::LaneDescriptionMap &lane_description_map)
     : m_edge_based_node_container(node_data_container), m_number_of_edge_based_nodes(0),
       m_coordinates(coordinates), m_node_based_graph(std::move(node_based_graph)),
       m_barrier_nodes(barrier_nodes), m_traffic_lights(traffic_lights),
       m_compressed_edge_container(compressed_edge_container), name_table(name_table),
-      lane_description_map(lane_description_map)
+      segregated_edges(segregated_edges), lane_description_map(lane_description_map)
 {
 }
 
@@ -165,7 +166,7 @@ NBGToEBG EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const N
     m_edge_based_node_container.nodes[nbe_to_ebn_mapping[edge_id_1]].annotation_id =
         forward_data.annotation_data;
     m_edge_based_node_container.nodes[nbe_to_ebn_mapping[edge_id_1]].segregated =
-        forward_data.segregated;
+        segregated_edges.count(edge_id_1) > 0;
 
     if (nbe_to_ebn_mapping[edge_id_2] != SPECIAL_EDGEID)
     {
@@ -174,7 +175,7 @@ NBGToEBG EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const N
         m_edge_based_node_container.nodes[nbe_to_ebn_mapping[edge_id_2]].annotation_id =
             reverse_data.annotation_data;
         m_edge_based_node_container.nodes[nbe_to_ebn_mapping[edge_id_2]].segregated =
-            reverse_data.segregated;
+            segregated_edges.count(edge_id_2) > 0;
     }
 
     // Add segments of edge-based nodes
@@ -371,7 +372,8 @@ EdgeBasedGraphFactory::GenerateEdgeExpandedNodes(const WayRestrictionMap &way_re
                 edge_data.geometry_id;
             m_edge_based_node_container.nodes[edge_based_node_id].annotation_id =
                 edge_data.annotation_data;
-            m_edge_based_node_container.nodes[edge_based_node_id].segregated = edge_data.segregated;
+            m_edge_based_node_container.nodes[edge_based_node_id].segregated =
+                segregated_edges.count(eid) > 0;
 
             m_edge_based_node_weights.push_back(m_edge_based_node_weights[eid]);
 
