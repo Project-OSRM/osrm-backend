@@ -12,9 +12,11 @@ struct EdgeBasedNode
 {
     GeometryID geometry_id;
     ComponentID component_id;
-    AnnotationID annotation_id;
-    bool segregated;
+    AnnotationID annotation_id : 31;
+    bool segregated : 1;
 };
+
+static_assert(sizeof(EdgeBasedNode) == 3 * 4, "Should be 3 * sizeof(uint32_t)");
 
 } // namespace extractor
 } // namespace osrm
