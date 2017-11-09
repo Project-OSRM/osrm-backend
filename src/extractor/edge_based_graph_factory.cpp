@@ -519,8 +519,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
         {
             std::size_t nodes_processed = 0;
 
-            std::vector<EdgeWithData> continuous_data;
-            std::vector<EdgeWithData> delayed_data;
+            std::vector<EdgeWithData> continuous_data; // may need this
+            std::vector<EdgeWithData> delayed_data;    // may need this
             std::vector<Conditional> conditionals;
         };
         using EdgesPipelineBufferPtr = std::shared_ptr<EdgesPipelineBuffer>;
@@ -529,8 +529,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
         {
             std::size_t nodes_processed = 0;
 
-            std::vector<TurnData> continuous_turn_data;
-            std::vector<TurnData> delayed_turn_data;
+            std::vector<TurnData> continuous_turn_data; // populate answers from guidance
+            std::vector<TurnData> delayed_turn_data;    // populate answers from guidance
         };
         using TurnsPipelineBufferPtr = std::shared_ptr<TurnsPipelineBuffer>;
 
