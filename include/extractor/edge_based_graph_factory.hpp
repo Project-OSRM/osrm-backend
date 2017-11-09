@@ -75,6 +75,7 @@ class EdgeBasedGraphFactory
                                    const std::unordered_set<NodeID> &traffic_lights,
                                    const std::vector<util::Coordinate> &coordinates,
                                    const util::NameTable &name_table,
+                                   const std::unordered_set<EdgeID> &segregated_edges,
                                    guidance::LaneDescriptionMap &lane_description_map);
 
     void Run(ScriptingEnvironment &scripting_environment,
@@ -157,6 +158,7 @@ class EdgeBasedGraphFactory
     const CompressedEdgeContainer &m_compressed_edge_container;
 
     const util::NameTable &name_table;
+    const std::unordered_set<EdgeID> &segregated_edges;
     guidance::LaneDescriptionMap &lane_description_map;
 
     // In the edge based graph, any traversable (non reversed) edge of the node-based graph forms a

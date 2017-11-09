@@ -72,6 +72,7 @@ class Extractor
         const std::unordered_set<NodeID> &traffic_lights,
         const std::vector<TurnRestriction> &turn_restrictions,
         const std::vector<ConditionalTurnRestriction> &conditional_turn_restrictions,
+        const std::unordered_set<EdgeID> &segregated_edges,
         // might have to be updated to add new lane combinations
         guidance::LaneDescriptionMap &turn_lane_map,
         // for calculating turn penalties
@@ -102,7 +103,7 @@ class Extractor
         const std::string &path,
         std::vector<ConditionalTurnRestriction> &conditional_turn_restrictions);
 
-    size_t FindSegregatedNodes(NodeBasedGraphFactory &factory);
+    std::unordered_set<EdgeID> FindSegregatedNodes(NodeBasedGraphFactory &factory);
 };
 }
 }
