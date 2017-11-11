@@ -12,6 +12,10 @@ module.exports = {
 
     FuzzyMatch: class {
         match (got, want) {
+            // don't fail if bearings input and extected string is empty and actual result is undefined
+            if (want === '' && (got === '' || got === undefined))
+                return true;
+
             var matchPercent = want.match(/(.*)\s+~(.+)%$/),
                 matchAbs = want.match(/(.*)\s+\+\-(.+)$/),
                 matchRe = want.match(/^\/(.*)\/$/),
