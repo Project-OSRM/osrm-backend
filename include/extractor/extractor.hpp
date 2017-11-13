@@ -103,6 +103,11 @@ class Extractor
         const std::string &path,
         std::vector<ConditionalTurnRestriction> &conditional_turn_restrictions);
 
+    // Find all "segregated" edges, e.g. edges that can be skipped in turn instructions.
+    // The main cases are:
+    // - middle edges between two osm ways in one logic road (U-turn)
+    // - staggered intersections (X-cross)
+    // - square/circle intersections
     std::unordered_set<EdgeID> FindSegregatedNodes(NodeBasedGraphFactory &factory);
 };
 }
