@@ -889,8 +889,7 @@ bool IsSegregated(std::vector<EdgeInfo> v1,
             return false;
     }
 
-    // set_intersection like routine to count equal name pairs, std function is
-    // not acceptable because of duplicates {a, a, b} ∩ {a, a, c} == {a, a}.
+    // set_intersection like routine to get equal result pairs
     std::vector<std::pair<EdgeInfo const *, EdgeInfo const *>> commons;
 
     auto i1 = v1.begin();
@@ -933,14 +932,14 @@ bool IsSegregated(std::vector<EdgeInfo> v1,
         {
         case guidance::RoadPriorityClass::MOTORWAY:
         case guidance::RoadPriorityClass::TRUNK:
-            return 15.0;
+            return 30.0;
         case guidance::RoadPriorityClass::PRIMARY:
-            return 10.0;
+            return 20.0;
         case guidance::RoadPriorityClass::SECONDARY:
         case guidance::RoadPriorityClass::TERTIARY:
-            return 5.0;
+            return 10.0;
         default:
-            return 2.5;
+            return 5.0;
         }
     };
 
