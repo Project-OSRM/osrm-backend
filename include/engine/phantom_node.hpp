@@ -129,11 +129,15 @@ struct PhantomNode
 
     bool IsIndistinct(const PhantomNode &other) const
     {
-        if (forward_segment_id.enabled && other.forward_segment_id.enabled && forward_segment_id.id == other.forward_segment_id.id && forward_weight_offset == other.forward_weight_offset && forward_weight == other.forward_weight)
+        if (forward_segment_id.enabled && other.forward_segment_id.enabled &&
+            forward_segment_id.id == other.forward_segment_id.id &&
+            GetForwardWeightPlusOffset() == other.GetForwardWeightPlusOffset())
         {
             return true;
         }
-        if (reverse_segment_id.enabled && other.reverse_segment_id.enabled && reverse_segment_id.id == other.reverse_segment_id.id && reverse_weight_offset == other.reverse_weight_offset && reverse_weight == other.reverse_weight)
+        if (reverse_segment_id.enabled && other.reverse_segment_id.enabled &&
+            reverse_segment_id.id == other.reverse_segment_id.id &&
+            GetReverseWeightPlusOffset() == other.GetReverseWeightPlusOffset())
         {
             return true;
         }

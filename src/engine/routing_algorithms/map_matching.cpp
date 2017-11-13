@@ -144,7 +144,6 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
     prev_unbroken_timestamps.push_back(initial_timestamp);
     for (auto t = initial_timestamp + 1; t < candidates_list.size(); ++t)
     {
-
         const auto step_time = [&] {
             if (use_timestamps)
             {
@@ -220,6 +219,7 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
                         continue;
                     }
 
+                    NodeID lastId;
                     double network_distance =
                         getNetworkDistance(engine_working_data,
                                            facade,
@@ -227,7 +227,25 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
                                            reverse_heap,
                                            prev_unbroken_timestamps_list[s].phantom_node,
                                            current_timestamps_list[s_prime].phantom_node,
+                                           lastId,
                                            weight_upper_bound);
+
+                    // do not make a uturn at the middle of the trace => invalidate an edge at the
+                    // opposite direction
+                    if (network_distance < std::numeric_limits<double>::max())
+                    {
+                        if (lastId ==
+                            current_timestamps_list[s_prime].phantom_node.forward_segment_id.id)
+                        {
+                            current_timestamps_list[s_prime]
+                                .phantom_node.reverse_segment_id.enabled = false;
+                        }
+                        else
+                        {
+                            current_timestamps_list[s_prime]
+                                .phantom_node.forward_segment_id.enabled = false;
+                        }
+                    }
 
                     // get distance diff between loc1/2 and locs/s_prime
                     const auto d_t = std::abs(network_distance - haversine_distance);
@@ -262,10 +280,11 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
                 {
                     const PhantomNodeWithDistance &tmpNode =
                         candidates_list[prev_unbroken_timestamp][s];
-                    // Use only if we at the middle of the edge.
-                    if (tmpNode.phantom_node.forward_duration_offset == 0)
-                        continue;
-                    if (tmpNode.phantom_node.reverse_duration_offset == 0)
+                    if (std::any_of(candidates_list[t].begin(),
+                                    candidates_list[t].end(),
+                                    [&](const PhantomNodeWithDistance &node) {
+                                        return node.phantom_node.IsIndistinct(tmpNode.phantom_node);
+                                    }))
                         continue;
 
                     candidates_list[t].push_back(tmpNode);
@@ -419,7 +438,7 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
         auto trace_distance = 0.0;
         matching.nodes.reserve(reconstructed_indices.size());
         matching.indices.reserve(reconstructed_indices.size());
-        const PhantomNode * last_node;
+        const PhantomNode *last_node = nullptr;
         for (const auto &idx : reconstructed_indices)
         {
             const auto timestamp_index = idx.first;
@@ -427,7 +446,7 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
 
             matching.indices.push_back(timestamp_index);
 
-            auto & current_node = candidates_list[timestamp_index][location_index].phantom_node;
+            auto &current_node = candidates_list[timestamp_index][location_index].phantom_node;
             if (last_node != nullptr and current_node.IsIndistinct(*last_node))
             {
                 current_node.location = last_node->location;
