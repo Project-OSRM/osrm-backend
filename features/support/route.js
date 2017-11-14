@@ -123,7 +123,7 @@ module.exports = function () {
         }
 
         if (radiuses.length) {
-           params.radiuses = radiuses.join(';');
+            params.radiuses = radiuses.join(';');
         }
 
         return this.requestPath('match', params, callback);
