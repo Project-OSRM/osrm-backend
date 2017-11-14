@@ -1372,3 +1372,30 @@ Feature: Simple Turns
             | waypoints | route        | turns                           |
             | a,d       | ab,bcd,bcd   | depart,fork slight right,arrive |
             | a,g       | ab,befg,befg | depart,fork slight left,arrive  |
+
+    # https://www.openstreetmap.org/#map=18/52.25130/10.42545
+    Scenario: Turn for roads with no name, ref changes
+        Given the node map
+            """
+              d
+              .
+              .
+            e c . . f
+              .
+              .
+              b
+              .
+              .
+              a
+            """
+
+        And the ways
+            | nodes | highway     | ref  | name          |
+            | abc   | tertiary    | K 57 |               |
+            | cd    | tertiary    | K 56 |               |
+            | cf    | tertiary    | K 56 |               |
+            | ce    | residential |      | Heinrichshöhe |
+
+       When I route I should get
+            | waypoints | route     | turns                    |
+            | a,f       | abc,cf,cf | depart,turn right,arrive |
