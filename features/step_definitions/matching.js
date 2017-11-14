@@ -194,6 +194,10 @@ module.exports = function () {
                         if (headers.has('timestamps')) {
                             got.timestamps = row.timestamps;
                         }
+
+                        if (headers.has('radiuses')) {
+                            got.radiuses = row.radiuses;
+                        }
                     } else {
                         got.matchings = encodedResult;
                         row.matchings = extendedTarget;
@@ -222,6 +226,7 @@ module.exports = function () {
                     }
 
                     var trace = [],
+                        radiuses = [],
                         timestamps = [];
 
                     if (row.trace) {
@@ -230,12 +235,16 @@ module.exports = function () {
                                 node = this.findNodeByName(n);
                             if (!node) throw new Error(util.format('*** unknown waypoint node "%s"', n));
                             trace.push(node);
+                            radiuses.push(1);
                         }
                         if (row.timestamps) {
                             timestamps = row.timestamps.split(' ').filter(s => !!s).map(t => parseInt(t, 10));
                         }
+                        if (row.radiuses) {
+                            radiuses = row.radiuses.split(' ').filter(s => !!s).map(t => parseInt(t, 10));
+                        }
                         got.trace = row.trace;
-                        this.requestMatching(trace, timestamps, params, afterRequest);
+                        this.requestMatching(trace, timestamps, radiuses, params, afterRequest);
                     } else {
                         throw new Error('*** no trace');
                     }

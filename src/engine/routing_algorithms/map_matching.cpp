@@ -276,7 +276,10 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
                 auto distance = util::coordinate_calculation::haversineDistance(
                     candidates_list[prev_unbroken_timestamp][s].phantom_node.location,
                     trace_coordinates[t]);
-                if (distance < 3 * precision)
+
+                // We can use a previous state as one of possible states if it is inside the precision range.
+                // We don't use this logic at the last state to except using previous point at the last state, because it will be always preferable
+                if (distance < 3 * precision && t < candidates_list.size() - 1)
                 {
                     const PhantomNodeWithDistance &tmpNode =
                         candidates_list[prev_unbroken_timestamp][s];

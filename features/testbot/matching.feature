@@ -57,6 +57,24 @@ Feature: Basic Map Matching
             | trace | timestamps | matchings |
             | abcd  | 0 1 62 63  | abcd      |
 
+    Scenario: Testbot - Map matching with a location noise on parking
+        Given a grid size of 10 meters
+        Given the node map
+            """
+            a - b - 1 d - e - f
+                |     |
+                q - - w
+            """
+
+        And the ways
+            | nodes   | oneway |
+            | abdef   | yes    |
+            | dwqb    | yes     |
+
+        When I match I should get
+            | trace  | radiuses | matchings |
+            | abd1ef | 5 5 5 5 5 5 | abddef    |
+
     Scenario: Testbot - Map matching with trace tidying. Clean case.
         Given a grid size of 100 meters
 
@@ -136,32 +154,29 @@ Feature: Basic Map Matching
     Scenario: Testbot - Map matching with small distortion
         Given the node map
             """
-            a b c d e
-              f
+            a - b - c - d - e
+                f
 
 
 
-              h     k
+                h       k
             """
 
-        # The second way does not need to be a oneway
-        # but the grid spacing triggers the uturn
-        # detection on f
         And the ways
             | nodes | oneway |
             | abcde | no     |
-            | bfhke | yes    |
+            | bfhke | no     |
 
         When I match I should get
-            | trace  | matchings |
-            | afcde  | abcde     |
+            | trace  | radiuses  | matchings |
+            | afcde  | 5 5 5 5 5 | abcde     |
 
     Scenario: Testbot - Map matching with oneways
         Given a grid size of 10 meters
         Given the node map
             """
-            a b c d
-            e f g h
+            a - b - c - d
+            e - f - g - h
             """
 
         And the ways
@@ -170,15 +185,15 @@ Feature: Basic Map Matching
             | hgfe  | yes    |
 
         When I match I should get
-            | trace | matchings |
-            | dcba  | hgfe      |
+            | trace | radiuses | matchings |
+            | dcba  | 5 5 5 5  | hgfe      |
 
     Scenario: Testbot - Matching with oneway streets
         Given a grid size of 10 meters
         Given the node map
             """
-            a b c d
-            e f g h
+            a - b - c - d
+            e - f - g - h
             """
 
         And the ways
@@ -191,9 +206,9 @@ Feature: Basic Map Matching
             | fe    | yes    |
 
         When I match I should get
-            | trace | matchings   |
-            | dcba  | hgfe        |
-            | efgh  | abcd        |
+            | trace | radiuses | matchings   |
+            | dcba  |  5 5 5 5 | hgfe        |
+            | efgh  |  5 5 5 5 | abcd        |
 
     Scenario: Testbot - request duration annotations
         Given the query options
@@ -345,8 +360,8 @@ Feature: Basic Map Matching
     Scenario: Testbot - Matching alternatives count test
         Given the node map
             """
-            a b c d e f
-                  g h i
+            a - b - c - d - e - f
+                        g - h - i
             """
 
         And the ways
@@ -355,8 +370,8 @@ Feature: Basic Map Matching
             | dghi   | yes    |
 
         When I match I should get
-            | trace  | matchings | alternatives         |
-            | abcdef | abcde     | 0,0,0,0,1,1          |
+            | trace  | radiuses    | matchings | alternatives         |
+            | abcdef | 5 5 5 5 5 5 | abcdef    | 0,0,0,0,1,1          |
 
     Scenario: Testbot - Speed greater than speed threshold
         Given a grid size of 100 meters

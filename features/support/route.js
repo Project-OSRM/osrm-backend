@@ -110,7 +110,7 @@ module.exports = function () {
         return this.requestPath('trip', params, callback);
     };
 
-    this.requestMatching = (waypoints, timestamps, userParams, callback) => {
+    this.requestMatching = (waypoints, timestamps, radiuses, userParams, callback) => {
         var defaults = {
                 output: 'json'
             },
@@ -120,6 +120,10 @@ module.exports = function () {
 
         if (timestamps.length) {
             params.timestamps = timestamps.join(';');
+        }
+
+        if (radiuses.length) {
+           params.radiuses = radiuses.join(';');
         }
 
         return this.requestPath('match', params, callback);
