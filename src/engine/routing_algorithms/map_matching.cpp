@@ -278,9 +278,7 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
                     trace_coordinates[t]);
 
                 // We can use a previous state as one of possible states if it is inside the
-                // precision range
-                // We don't use this logic at the last state to except using previous point at the
-                // last state, because it will be always preferable
+                // precision range, except for the last state in trace
                 if (distance < 3 * precision && t < candidates_list.size() - 1)
                 {
                     const PhantomNodeWithDistance &tmpNode =
