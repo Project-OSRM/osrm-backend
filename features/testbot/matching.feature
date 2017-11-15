@@ -72,7 +72,7 @@ Feature: Basic Map Matching
             | dwqb    | yes     |
 
         When I match I should get
-            | trace  | radiuses | matchings |
+            | trace  | radiuses    | matchings |
             | abd1ef | 5 5 5 5 5 5 | abddef    |
 
     Scenario: Testbot - Map matching with trace tidying. Clean case.

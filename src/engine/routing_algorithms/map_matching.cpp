@@ -273,12 +273,12 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
                 double precision = DEFAULT_GPS_PRECISION;
                 if (!trace_gps_precision.empty())
                     precision = (*trace_gps_precision[t]);
-                auto distance = util::coordinate_calculation::haversineDistance(
+                const auto distance = util::coordinate_calculation::haversineDistance(
                     candidates_list[prev_unbroken_timestamp][s].phantom_node.location,
                     trace_coordinates[t]);
 
                 // We can use a previous state as one of possible states if it is inside the
-                // precision range.
+                // precision range
                 // We don't use this logic at the last state to except using previous point at the
                 // last state, because it will be always preferable
                 if (distance < 3 * precision && t < candidates_list.size() - 1)
@@ -299,7 +299,9 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
 
                     // We don't add the transition probability because staying is prefered than
                     // movement.
-                    current_viterbi.push_back(emission_log_probability(distance) + prev_viterbi[s]);
+                    const auto emission = emission_log_probability(distance);
+                    emission_log_probabilities[t].push_back(emission);
+                    current_viterbi.push_back(emission + prev_viterbi[s]);
                     current_parents.push_back(std::make_pair(prev_unbroken_timestamp, s));
                     current_lengths.push_back(0);
                     current_pruned.push_back(false);
