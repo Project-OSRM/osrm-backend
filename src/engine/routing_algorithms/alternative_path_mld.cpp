@@ -233,6 +233,12 @@ RandIt filterPackedPathsByCellSharing(RandIt first, RandIt last, const Partition
         cells.insert(get_cell(std::get<1>(edge)));
 
     const auto over_sharing_limit = [&](const auto &packed) {
+
+        if (packed.path.empty())
+        { // don't remove routes with single-node (empty) path
+            return false;
+        }
+
         const auto not_seen = [&](const PackedEdge edge) {
             const auto source_cell = get_cell(std::get<0>(edge));
             const auto target_cell = get_cell(std::get<1>(edge));
@@ -310,7 +316,7 @@ RandIt filterPackedPathsByLocalOptimality(const WeightedViaNodePackedPath &path,
         // Check plateaux edges towards the target. Terminates at the source / target
         // at the latest, since parent(target)==target for the reverse heap and
         // parent(target) != target in the forward heap (and vice versa).
-        while (has_plateaux_at_node(node, fst, snd))
+        while (node != fst.GetData(node).parent && has_plateaux_at_node(node, fst, snd))
             node = fst.GetData(node).parent;
 
         return node;
@@ -320,7 +326,11 @@ RandIt filterPackedPathsByLocalOptimality(const WeightedViaNodePackedPath &path,
         BOOST_ASSERT(packed.via.node != path.via.node);
         BOOST_ASSERT(packed.via.weight != INVALID_EDGE_WEIGHT);
         BOOST_ASSERT(packed.via.node != SPECIAL_NODEID);
-        BOOST_ASSERT(!packed.path.empty());
+
+        if (packed.path.empty())
+        { // the edge case when packed.via.node is both source and target node
+            return false;
+        }
 
         const NodeID via = packed.via.node;
 
@@ -395,6 +405,12 @@ template <typename RandIt> RandIt filterUnpackedPathsBySharing(RandIt first, Ran
     edges.insert(begin(shortest_path.edges), begin(shortest_path.edges));
 
     const auto over_sharing_limit = [&](const auto &unpacked) {
+
+        if (unpacked.edges.empty())
+        { // don't remove routes with single-node (empty) path
+            return false;
+        }
+
         const auto not_seen = [&](const EdgeID edge) { return edges.count(edge) < 1; };
         const auto different = std::count_if(begin(unpacked.edges), end(unpacked.edges), not_seen);
 
