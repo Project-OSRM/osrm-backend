@@ -100,8 +100,10 @@ typedef util::ConcurrentIDMap<guidance::TurnLaneDescription,
                               guidance::TurnLaneDescription_hash>
     LaneDescriptionMap;
 
-inline std::tuple<std::vector<std::uint32_t>, std::vector<TurnLaneType::Mask>>
-transformTurnLaneMapIntoArrays(const LaneDescriptionMap &turn_lane_map)
+using TurnLanesIndexedArray =
+    std::tuple<std::vector<std::uint32_t>, std::vector<TurnLaneType::Mask>>;
+
+inline TurnLanesIndexedArray transformTurnLaneMapIntoArrays(const LaneDescriptionMap &turn_lane_map)
 {
     // could use some additional capacity? To avoid a copy during processing, though small data so
     // probably not that important.
@@ -111,8 +113,7 @@ transformTurnLaneMapIntoArrays(const LaneDescriptionMap &turn_lane_map)
     //
     // turn lane offsets points into the locations of the turn_lane_masks array. We use a standard
     // adjacency array like structure to store the turn lane masks.
-    std::vector<std::uint32_t> turn_lane_offsets(turn_lane_map.data.size() +
-                                                 2); // empty ID + sentinel
+    std::vector<std::uint32_t> turn_lane_offsets(turn_lane_map.data.size() + 1); // + sentinel
     for (auto entry = turn_lane_map.data.begin(); entry != turn_lane_map.data.end(); ++entry)
         turn_lane_offsets[entry->second + 1] = entry->first.size();
 
@@ -125,6 +126,7 @@ transformTurnLaneMapIntoArrays(const LaneDescriptionMap &turn_lane_map)
         std::copy(entry->first.begin(),
                   entry->first.end(),
                   turn_lane_masks.begin() + turn_lane_offsets[entry->second]);
+
     return std::make_tuple(std::move(turn_lane_offsets), std::move(turn_lane_masks));
 }
 
