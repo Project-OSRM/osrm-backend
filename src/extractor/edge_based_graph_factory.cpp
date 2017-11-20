@@ -7,6 +7,8 @@
 #include "extractor/scripting_environment.hpp"
 #include "extractor/suffix_table.hpp"
 
+#include "extractor/intersection/intersection_analysis.hpp"
+
 #include "extractor/serialization.hpp"
 #include "storage/io.hpp"
 
@@ -442,6 +444,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     bearing_class_by_node_based_node.resize(m_node_based_graph.GetNumberOfNodes(),
                                             std::numeric_limits<std::uint32_t>::max());
 
+    const auto &turn_lanes_data = transformTurnLaneMapIntoArrays(lane_description_map);
+
     // FIXME these need to be tuned in pre-allocated size
     std::vector<TurnPenalty> turn_weight_penalties;
     std::vector<TurnPenalty> turn_duration_penalties;
@@ -659,6 +663,53 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                      ++node_at_center_of_intersection)
                 {
 
+                    int new_turns = 0, old_turns = 0;
+
+                    std::cout << "=== node_at_center_of_intersection "
+                              << node_at_center_of_intersection << "\n";
+                    const auto &incoming_edges = intersection::getIncomingEdges(
+                        m_node_based_graph, node_at_center_of_intersection);
+                    const auto &outgoing_edges = intersection::getOutgoingEdges(
+                        m_node_based_graph, node_at_center_of_intersection);
+                    const auto &edge_bearings =
+                        intersection::getIntersectionBearings(m_node_based_graph,
+                                                              m_compressed_edge_container,
+                                                              m_coordinates,
+                                                              node_at_center_of_intersection);
+
+                    std::cout << "=== new turns \n";
+                    for (const auto &incoming_edge : incoming_edges)
+                    {
+                        for (const auto &outgoing_edge : outgoing_edges)
+                        {
+                            const auto turn_angle = intersection::computeTurnAngle(
+                                edge_bearings, incoming_edge, outgoing_edge);
+
+                            std::cout << incoming_edge.node << "," << incoming_edge.edge << " -> "
+                                      << outgoing_edge.node << "," << outgoing_edge.edge << " -> "
+                                      << m_node_based_graph.GetTarget(outgoing_edge.edge)
+                                      << " is allowed "
+                                      << intersection::isTurnAllowed(m_node_based_graph,
+                                                                     m_edge_based_node_container,
+                                                                     node_restriction_map,
+                                                                     m_barrier_nodes,
+                                                                     edge_bearings,
+                                                                     turn_lanes_data,
+                                                                     incoming_edge,
+                                                                     outgoing_edge)
+                                      << " angle " << turn_angle << "\n";
+
+                            new_turns += intersection::isTurnAllowed(m_node_based_graph,
+                                                                     m_edge_based_node_container,
+                                                                     node_restriction_map,
+                                                                     m_barrier_nodes,
+                                                                     edge_bearings,
+                                                                     turn_lanes_data,
+                                                                     incoming_edge,
+                                                                     outgoing_edge);
+                        }
+                    }
+
                     // We capture the thread-local work in these objects, then flush
                     // them in a controlled manner at the end of the parallel range
 
@@ -683,6 +734,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                     // From the flags alone, we cannot determine which nodes are connected to
                     // `b` by an outgoing edge. Therefore, we have to search all connected edges for
                     // edges entering `b`
+                    std::cout << "=== old turns \n";
+
                     for (const EdgeID outgoing_edge :
                          m_node_based_graph.GetAdjacentEdgeRange(node_at_center_of_intersection))
                     {
@@ -744,6 +797,11 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                             // only keep valid turns
                             if (!turn.entry_allowed)
                                 continue;
+
+                            old_turns += 1;
+                            std::cout << node_along_road_entering << " -> "
+                                      << node_at_center_of_intersection << " -> "
+                                      << m_node_based_graph.GetTarget(turn.eid) << "\n";
 
                             // In case a way restriction starts at a given location, add a turn onto
                             // every artificial node eminating here.
@@ -893,6 +951,10 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                             }
                         }
                     }
+
+                    std::cout << "new_turns " << new_turns << " old_turns " << old_turns << "\n";
+                    OSRM_ASSERT(new_turns == old_turns,
+                                m_coordinates[node_at_center_of_intersection]);
                 }
 
                 return buffer;
