@@ -278,6 +278,7 @@ Intersection MotorwayHandler::fromMotorway(const EdgeID via_eid, Intersection in
                                              via_eid,
                                              isThroughStreet(1, intersection),
                                              intersection[1]);
+                // TODO: no coverage by feature test cases
                 intersection[0].entry_allowed = false; // UTURN on the freeway
             }
             else if (exiting_motorways == 2)
