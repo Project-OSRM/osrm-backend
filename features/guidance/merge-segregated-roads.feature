@@ -393,31 +393,44 @@ Feature: Merge Segregated Roads
             """
               a
               |
-              b
+              b-----z
+             / \
             c   h
             |   |
             |   |
             |   |
             |   |
+            |   |
+            |   |
+            |   |
+            |   |
+            |   |
             d   g
+             \ /
               e
               |
               f
             """
 
         And the ways
-            | nodes | name | oneway |
-            | ab    | road | no     |
-            | ef    | road | no     |
-            | bcde  | road | yes    |
-            | eghb  | road | yes    |
+            | nodes | name  | oneway |
+            | ab    | road  | no     |
+            | ef    | road  | no     |
+            | bcde  | road  | yes    |
+            | eghb  | road  | yes    |
+            | bz    | cross | no  |
+
+        And the relations
+            | type        | way:from | way:to | node:via | restriction  |
+            | restriction | bz       | bcde   | b        | no_left_turn |
 
         When I route I should get
-            | waypoints | turns         | route     |
-            | a,f       | depart,arrive | road,road |
-            | c,f       | depart,arrive | road,road |
-            | f,a       | depart,arrive | road,road |
-            | g,a       | depart,arrive | road,road |
+            | waypoints | turns                    | route           |
+            | a,f       | depart,arrive            | road,road       |
+            | c,f       | depart,arrive            | road,road       |
+            | f,a       | depart,arrive            | road,road       |
+            | g,a       | depart,arrive            | road,road       |
+            | z,a       | depart,turn right,arrive | cross,road,road |
 
     Scenario: Traffic Island
         Given the node map
@@ -588,10 +601,10 @@ Feature: Merge Segregated Roads
 
         When I route I should get
             | waypoints | route          | turns                        |
-			| a,c       | germ,ober      | depart,arrive                |
-			| a,g       | germ,germ,germ | depart,continue right,arrive |
-			| a,1       | germ,germ,germ | depart,continue left,arrive  |
-			| d,g       | ober,germ,germ | depart,turn left,arrive      |
+            | a,c       | germ,ober      | depart,arrive                |
+            | a,g       | germ,germ,germ | depart,continue right,arrive |
+            | a,1       | germ,germ,germ | depart,continue left,arrive  |
+            | d,g       | ober,germ,germ | depart,turn left,arrive      |
 
     # https://www.openstreetmap.org/#map=19/51.32888/6.57059
     Scenario: Places in presence of oneways
@@ -623,16 +636,16 @@ Feature: Merge Segregated Roads
             | cf    | albrecht | yes    |
 
         When I route I should get
-            | waypoints | route                                       | turns                                                        |
-            | a,l       | schwert,albrecht,marianne,marianne          | depart,new name straight,turn left,arrive                    |
-            | a,j       | schwert,luise,luise                         | depart,turn right,arrive                                     |
-			| a,1       | schwert,albrecht,albrecht,albrecht          | depart,new name straight,continue uturn,arrive               |
-			| k,l       | marianne,marianne                           | depart,arrive                                                |
-            | k,j       | marianne,albrecht,luise,luise               | depart,turn left,turn left,arrive                            |
-            | k,d       | marianne,schwert,schwert                    | depart,turn right,arrive                                     |
-			| i,j       | luise,luise                                 | depart,arrive                                                |
-            | i,d       | luise,albrecht,schwert,schwert              | depart,turn left,turn straight,arrive                        |
-			| i,l       | luise,albrecht,marianne,marianne            | depart,turn left,turn left,arrive                            |
+            | waypoints | route                              | turns                                          |
+            | a,l       | schwert,albrecht,marianne,marianne | depart,new name straight,turn left,arrive      |
+            | a,j       | schwert,luise,luise                | depart,turn right,arrive                       |
+            | a,1       | schwert,albrecht,albrecht,albrecht | depart,new name straight,continue uturn,arrive |
+            | k,l       | marianne,marianne                  | depart,arrive                                  |
+            | k,j       | marianne,albrecht,luise,luise      | depart,turn left,turn left,arrive              |
+            | k,d       | marianne,schwert,schwert           | depart,turn right,arrive                       |
+            | i,j       | luise,luise                        | depart,arrive                                  |
+            | i,d       | luise,albrecht,schwert,schwert     | depart,turn left,turn straight,arrive          |
+            | i,l       | luise,albrecht,marianne,marianne   | depart,turn left,turn left,arrive              |
 
     # https://www.openstreetmap.org/#map=19/52.46339/13.40272
     Scenario: Do not merge links between segregated roads
