@@ -35,12 +35,6 @@ TurnAnalysis::TurnAnalysis(const util::NodeBasedDynamicGraph &node_based_graph,
                                                                  barrier_nodes,
                                                                  coordinates,
                                                                  compressed_edge_container),
-      intersection_normalizer(node_based_graph,
-                              node_data_container,
-                              coordinates,
-                              name_table,
-                              street_name_suffix_table,
-                              intersection_generator),
       roundabout_handler(node_based_graph,
                          node_data_container,
                          coordinates,
@@ -86,24 +80,6 @@ TurnAnalysis::TurnAnalysis(const util::NodeBasedDynamicGraph &node_based_graph,
                          name_table,
                          street_name_suffix_table)
 {
-}
-
-Intersection TurnAnalysis::operator()(const NodeID node_prior_to_intersection,
-                                      const EdgeID entering_via_edge) const
-{
-    TurnAnalysis::ShapeResult shape_result =
-        ComputeIntersectionShapes(node_based_graph.GetTarget(entering_via_edge));
-
-    // assign valid flags to normalized_shape
-    const auto intersection_view = intersection_generator.TransformIntersectionShapeIntoView(
-        node_prior_to_intersection,
-        entering_via_edge,
-        shape_result.annotated_normalized_shape.normalized_shape,
-        shape_result.intersection_shape,
-        shape_result.annotated_normalized_shape.performed_merges);
-
-    // assign the turn types to the intersection
-    return AssignTurnTypes(node_prior_to_intersection, entering_via_edge, intersection_view);
 }
 
 Intersection TurnAnalysis::AssignTurnTypes(const NodeID node_prior_to_intersection,
@@ -189,19 +165,6 @@ Intersection TurnAnalysis::AssignTurnTypes(const NodeID node_prior_to_intersecti
             node_prior_to_intersection, entering_via_edge, std::move(intersection));
 
     return intersection;
-}
-
-TurnAnalysis::ShapeResult
-TurnAnalysis::ComputeIntersectionShapes(const NodeID node_at_center_of_intersection) const
-{
-    ShapeResult intersection_shape;
-    intersection_shape.intersection_shape =
-        intersection_generator.ComputeIntersectionShape(node_at_center_of_intersection);
-
-    intersection_shape.annotated_normalized_shape = intersection_normalizer(
-        node_at_center_of_intersection, intersection_shape.intersection_shape);
-
-    return intersection_shape;
 }
 
 // Sets basic turn types as fallback for otherwise unhandled turns

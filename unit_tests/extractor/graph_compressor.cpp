@@ -26,10 +26,8 @@ namespace
 // creates a default edge of unit weight
 inline InputEdge MakeUnitEdge(const NodeID from, const NodeID to)
 {
-    // src, tgt, dist, edge_id, name_id, fwd, bkwd, roundabout, circular, startpoint, local access,
-    // split edge, travel_mode
-    return {from,
-            to,
+    return {from,                          // source
+            to,                            // target
             1,                             // weight
             1,                             // duration
             GeometryID{0, false},          // geometry_id

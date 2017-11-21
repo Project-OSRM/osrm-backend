@@ -56,7 +56,6 @@ bool RoundaboutHandler::canProcess(const NodeID from_nid,
 Intersection RoundaboutHandler::
 operator()(const NodeID from_nid, const EdgeID via_eid, Intersection intersection) const
 {
-    invalidateExitAgainstDirection(from_nid, via_eid, intersection);
     const auto flags = getRoundaboutFlags(from_nid, via_eid, intersection);
     const auto roundabout_type = getRoundaboutType(node_based_graph.GetTarget(via_eid));
     // find the radius of the roundabout
@@ -105,77 +104,6 @@ detail::RoundaboutFlags RoundaboutHandler::getRoundaboutFlags(
         }
     }
     return {on_roundabout, can_enter_roundabout, can_exit_roundabout_separately};
-}
-
-void RoundaboutHandler::invalidateExitAgainstDirection(const NodeID from_nid,
-                                                       const EdgeID via_eid,
-                                                       Intersection &intersection) const
-{
-    const auto &in_edge_class = node_based_graph.GetEdgeData(via_eid).flags;
-    if (in_edge_class.roundabout || in_edge_class.circular)
-        return;
-
-    // Find range in which exits that must be invalidated (shaded areas):
-    //   exit..end   exit..end  begin..exit for ↺ roundabouts
-    // *************************************
-    // * <--.   ^    <--.   /     <--.     *
-    // *     | /         | /░         |    *
-    // *     |/          |v░░      -->|    *
-    // *     |^          |\ ░      ░░░|\   *
-    // *     |░\         |░\░      ░░░| \  *
-    // *  --'░░░\     --'░░░v      --'   v *
-    // *************************************
-    //
-    // begin..exit  begin..exit  exit..end for ↻ roundabouts
-    // *************************************
-    // *  --.░░░^     --.░░░/      --.   ^ *
-    // *     |░/░        |░/       ░░░| /  *
-    // *     |/░░        |v        ░░░|/   *
-    // *     |^░░        |\        -->|    *
-    // *     | \░        | \          |    *
-    // * <--'   \    <--'   v     <--'     *
-    // *************************************
-    bool roundabout_entry_first = false;
-    auto invalidate_from = intersection.end(), invalidate_to = intersection.end();
-    for (auto road = intersection.begin(); road != intersection.end(); ++road)
-    {
-        const auto &edge = node_based_graph.GetEdgeData(road->eid);
-        if (edge.flags.roundabout || edge.flags.circular)
-        {
-            if (edge.reversed)
-            {
-                if (roundabout_entry_first)
-                { // invalidate turns in range exit..end
-                    invalidate_from = road + 1;
-                    invalidate_to = intersection.end();
-                }
-                else
-                { // invalidate turns in range begin..exit
-                    invalidate_from = intersection.begin() + 1;
-                    invalidate_to = road;
-                }
-            }
-            else
-            {
-                roundabout_entry_first = true;
-            }
-        }
-    }
-
-    OSRM_ASSERT(invalidate_from <= invalidate_to, coordinates[from_nid]);
-
-    // Exiting roundabouts at an entry point is technically a data-modelling issue.
-    // This workaround handles cases in which an exit precedes and entry. The resulting
-    // u-turn against the roundabout direction is invalidated.
-    for (; invalidate_from != invalidate_to; ++invalidate_from)
-    {
-        const auto &edge = node_based_graph.GetEdgeData(invalidate_from->eid);
-        if (!edge.flags.roundabout && !edge.flags.circular &&
-            node_based_graph.GetTarget(invalidate_from->eid) != from_nid)
-        {
-            invalidate_from->entry_allowed = false;
-        }
-    }
 }
 
 // If we want to see a roundabout as a turn, the exits have to be distinct enough to be seen a
