@@ -884,7 +884,7 @@ Feature: Car - Turn restrictions
             | a    | c  | albic,dobe,dobe,albic,albic | depart,turn left,continue uturn,turn left,arrive |
             | a    | e  | albic,dobe,dobe             | depart,turn left,arrive                          |
 
-    @no_turning @conditionals
+    @no_turning @conditionals @restriction-way
     Scenario: Car - Conditional restriction with multiple time windows
         Given the extract extra arguments "--parse-conditional-restrictions"
         # 5pm Wed 02 May, 2017 GMT
@@ -1054,4 +1054,3 @@ Feature: Car - Turn restrictions
             | a    | f  | ab,be,ef,ef       | depart,turn right,turn left,arrive                                  | a,b,e,f     |
             | c    | d  | bc,be,de,de       | depart,turn left,turn right,arrive                                  | c,b,e,d     |
             | c    | f  | bc,be,ef,ef       | depart,turn left,turn left,arrive                                   | c,b,e,f     |
-

@@ -575,7 +575,7 @@ Feature: Car - Turn restrictions
             | c    | d  | bc,be,de,de       | depart,turn left,turn right,arrive                                  | c,b,e,d     |
             | c    | f  | bc,be,ef,ef       | depart,turn left,turn left,arrive                                   | c,b,e,f     |
 
-    @restriction @overlap
+    @restriction-way @overlap
     Scenario: Car - prohibit turn
         Given the node map
             """
@@ -710,7 +710,7 @@ Feature: Car - Turn restrictions
             | a    | j  | left,first,right,right |
             | f    | e  | right,third,left,left  |
 
-    @restriction
+    @restriction-way
     Scenario: Car - allow only turn
         Given the node map
             """
@@ -742,7 +742,7 @@ Feature: Car - Turn restrictions
             | c    | d  | bc,be,de,de       | depart,turn left,turn right,arrive                                  | c,b,e,d     |
             | c    | f  | bc,be,ef,ef       | depart,turn left,turn left,arrive                                   | c,b,e,f     |
 
-    @restriction
+    @restriction-way
     Scenario: Car - allow only turn
         Given the node map
             """
@@ -771,7 +771,7 @@ Feature: Car - Turn restrictions
             | from | to | route       |
             | a    | d  | ab,be,de,de |
 
-    @restriction
+    @restriction-way
     Scenario: Multi Way restriction
         Given the node map
             """
@@ -808,7 +808,7 @@ Feature: Car - Turn restrictions
             | from | to | route                  |
             | a    | h  | horiz,vert,horiz,horiz |
 
-    @restriction
+    @restriction-way
     Scenario: Multi-Way overlapping single-way
         Given the node map
             """
@@ -847,7 +847,7 @@ Feature: Car - Turn restrictions
             | h    | d  | hfb,abcd,abcd        | depart,end of road right,arrive                  | h,b,d     |
 
 
-    @restriction
+    @restriction-way
     Scenario: Car - prohibit turn, traffic lights
         Given the node map
             """
@@ -890,7 +890,7 @@ Feature: Car - Turn restrictions
             | c    | f  | bc,be,ef,ef       | depart,turn left,turn left,arrive                                   | c,b,e,f     |
 
 
-      @restriction @overlap @geometry
+      @restriction-way @overlap @geometry
       Scenario: Geometry
         Given the node map
             """
@@ -925,7 +925,7 @@ Feature: Car - Turn restrictions
             | c    | d  | bc,bge,de,de       |
             | c    | f  | bc,bge,de,de,ef,ef |
 
-      @restriction @overlap @geometry @traffic-signals
+      @restriction-way @overlap @geometry @traffic-signals
       Scenario: Geometry
         Given the node map
             """
@@ -967,7 +967,7 @@ Feature: Car - Turn restrictions
             | c    | f  | bc,bge,de,de,ef,ef |
 
       # don't crash hard on invalid restrictions
-      @restriction @invalid
+      @restriction-way @invalid
       Scenario: Geometry
         Given the node map
             """
@@ -999,7 +999,7 @@ Feature: Car - Turn restrictions
             | a    | f  | ab,be,ef,ef |
 
 
-    @restriction @overlap @geometry
+    @restriction @restriction-way @overlap @geometry
     Scenario: Duplicated restriction
         Given the node map
             """
