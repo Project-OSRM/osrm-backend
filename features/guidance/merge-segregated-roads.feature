@@ -394,12 +394,16 @@ Feature: Merge Segregated Roads
               a
               |
               b
+             / \
             c   h
             |   |
             |   |
             |   |
             |   |
+            |   |
+            |   |
             d   g
+             \ /
               e
               |
               f

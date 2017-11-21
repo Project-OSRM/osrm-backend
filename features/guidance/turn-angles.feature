@@ -961,12 +961,12 @@ Feature: Simple Turns
                                                             g
                                                           .
                                                         .
-                                                      .
-                                                    .
-                                                  f
-                            h                   .
-                               .              .
-                                  .         j
+                                                       .
+                                                     .
+                             h                     f
+                                                .
+                                 .            .
+                                   .        j
                                      .    .
                                         c
                                       . . .
