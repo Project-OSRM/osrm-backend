@@ -55,6 +55,7 @@ template <class CandidateLists> struct HiddenMarkovModel
     std::vector<std::vector<std::pair<unsigned, unsigned>>> parents;
     std::vector<std::vector<float>> path_distances;
     std::vector<std::vector<bool>> pruned;
+    std::vector<std::vector<NodeID>> working_segment_id;
     std::vector<bool> breakage;
 
     const CandidateLists &candidates_list;
@@ -71,6 +72,7 @@ template <class CandidateLists> struct HiddenMarkovModel
         path_distances.resize(candidates_list.size());
         pruned.resize(candidates_list.size());
         breakage.resize(candidates_list.size());
+        working_segment_id.resize(candidates_list.size());
         for (const auto i : util::irange<std::size_t>(0UL, candidates_list.size()))
         {
             const auto &num_candidates = candidates_list[i].size();
@@ -82,6 +84,7 @@ template <class CandidateLists> struct HiddenMarkovModel
                 parents[i].resize(num_candidates);
                 path_distances[i].resize(num_candidates);
                 pruned[i].resize(num_candidates);
+                working_segment_id[i].resize(num_candidates);
             }
         }
 
@@ -100,6 +103,7 @@ template <class CandidateLists> struct HiddenMarkovModel
             std::fill(parents[t].begin(), parents[t].end(), std::make_pair(0u, 0u));
             std::fill(path_distances[t].begin(), path_distances[t].end(), 0);
             std::fill(pruned[t].begin(), pruned[t].end(), true);
+            std::fill(working_segment_id[t].begin(), working_segment_id[t].end(), SPECIAL_NODEID);
         }
         std::fill(breakage.begin() + initial_timestamp, breakage.end(), true);
     }

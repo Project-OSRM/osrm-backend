@@ -188,11 +188,13 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
             const auto &prev_pruned = model.pruned[prev_unbroken_timestamp];
             const auto &prev_unbroken_timestamps_list = candidates_list[prev_unbroken_timestamp];
             const auto &prev_coordinate = trace_coordinates[prev_unbroken_timestamp];
+            const auto &prev_segment_id = model.working_segment_id[prev_unbroken_timestamp];
 
             auto &current_viterbi = model.viterbi[t];
             auto &current_pruned = model.pruned[t];
             auto &current_parents = model.parents[t];
             auto &current_lengths = model.path_distances[t];
+            auto &current_segment_id = model.working_segment_id[t];
             auto &current_timestamps_list = candidates_list[t];
             const auto &current_coordinate = trace_coordinates[t];
 
@@ -219,33 +221,28 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
                         continue;
                     }
 
-                    NodeID lastId;
+                    PhantomNode prev_node = prev_unbroken_timestamps_list[s].phantom_node;
+                    // do not make a uturn at the middle of the trace => invalidate an edge at the
+                    // opposite direction
+                    auto const prev_segment = prev_segment_id[s];
+                    if (prev_segment == prev_node.forward_segment_id.id)
+                    {
+                        prev_node.reverse_segment_id.enabled = false;
+                    }
+                    if (prev_segment == prev_node.reverse_segment_id.id)
+                    {
+                        prev_node.forward_segment_id.enabled = false;
+                    }
+                    NodeID last_id;
                     double network_distance =
                         getNetworkDistance(engine_working_data,
                                            facade,
                                            forward_heap,
                                            reverse_heap,
-                                           prev_unbroken_timestamps_list[s].phantom_node,
+                                           prev_node,
                                            current_timestamps_list[s_prime].phantom_node,
-                                           lastId,
+                                           last_id,
                                            weight_upper_bound);
-
-                    // do not make a uturn at the middle of the trace => invalidate an edge at the
-                    // opposite direction
-                    if (network_distance < std::numeric_limits<double>::max())
-                    {
-                        if (lastId ==
-                            current_timestamps_list[s_prime].phantom_node.forward_segment_id.id)
-                        {
-                            current_timestamps_list[s_prime]
-                                .phantom_node.reverse_segment_id.enabled = false;
-                        }
-                        else
-                        {
-                            current_timestamps_list[s_prime]
-                                .phantom_node.forward_segment_id.enabled = false;
-                        }
-                    }
 
                     // get distance diff between loc1/2 and locs/s_prime
                     const auto d_t = std::abs(network_distance - haversine_distance);
@@ -266,6 +263,7 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
                         current_lengths[s_prime] = network_distance;
                         current_pruned[s_prime] = false;
                         model.breakage[t] = false;
+                        current_segment_id[s_prime] = last_id;
                     }
                 }
                 // Here we can add previous states to the current viterbi if we suppose, that user
@@ -296,13 +294,14 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
                     map_matching::EmissionLogProbability emission_log_probability(precision);
 
                     // We don't add the transition probability because staying is prefered than
-                    // movement.
+                    // movement
                     const auto emission = emission_log_probability(distance);
                     emission_log_probabilities[t].push_back(emission);
                     current_viterbi.push_back(emission + prev_viterbi[s]);
                     current_parents.push_back(std::make_pair(prev_unbroken_timestamp, s));
                     current_lengths.push_back(0);
                     current_pruned.push_back(false);
+                    current_segment_id.push_back(prev_segment_id[s]);
                     model.breakage[t] = false;
                     model.viterbi_reachable[t].push_back(false);
                 }
