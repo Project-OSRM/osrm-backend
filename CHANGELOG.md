@@ -1,14 +1,30 @@
 # UNRELEASED
   - Changes from 5.13
     - API:
-      - new RouteStep property `driving_side` that has either "left" or "right" for that step
+      - ADDED: new RouteStep property `driving_side` that has either "left" or "right" for that step
     - Misc:
-      - Bundles a rough (please improve!) driving-side GeoJSON file for use with `osrm-extract --location-dependent-data data/driving_side.geojson`
+      - ADDED: Bundles a rough (please improve!) driving-side GeoJSON file for use with `osrm-extract --location-dependent-data data/driving_side.geojson`
+      - CHANGED: Conditional turn parsing is disabled by default now
+      - ADDED: Adds a tool to analyze turn instruction generation in a dataset.  Useful for tracking turn-by-turn heuristic changes over time.
+      - CHANGED: Internal refactoring of guidance code as a first step towards a re-runnable guidance pipeline
+      - ADDED: Now publishing Node 8.x LTS binary modules
     - Profile:
-      - Remove dependency on turn types and turn modifier in the process_turn function in the `car.lua` profile. Guidance instruction types are not used to influence turn penalty anymore so this will break backward compatibility between profile version 3 and 4.
+      - CHANGED: Remove dependency on turn types and turn modifier in the process_turn function in the `car.lua` profile. Guidance instruction types are not used to influence turn penalty anymore so this will break backward compatibility between profile version 3 and 4.
+    - Guidance:
+      - ADDED: New internal flag on "segregated intersections" - in the future, will should allow collapsing of instructions across complex intersection geometry where humans only perceive a single maneuver
+      - CHANGED: Decrease roundabout turn radius threshold from 25m to 15m - adds some "exit the roundabout" instructions for moderately sized roundabouts that were being missed previously
+    - Docker:
+      - CHANGED: switch to alpine 3.6, and use a multistage build to reduce image size
+    - Build:
+      - FIX: use LUA_LIBRARY_DIRS to propertly detect Lua on all platforms
+    - Docs:
+      - FIX: clarify description of roundabout exit instructions
     - Bugfixes:
-      - Fixed #4670: Fix bug where merge instructions got the wrong direction modifier
-      - Properly use the `profile.properties.left_hand_driving` property, there was a typo that meant it had no effect
+      - FIXED: Fix bug where merge instructions got the wrong direction modifier ([PR #4670](https://github.com/Project-OSRM/osrm-backend/pull/4670))
+      - FIXED: Properly use the `profile.properties.left_hand_driving` property, there was a typo that meant it had no effect
+      - FIXED: undefined behaviour when alternative candidate via node is same as source node ([#4691](https://github.com/Project-OSRM/osrm-backend/issues/4691))
+      - FIXED: ensure libosrm.pc is pushed to the correct location for pkgconfig to find it on all platforms
+      - FIXED: don't consider empty names + empty refs as a valid name for u-turns
 
 # 5.13.0
   - Changes from 5.12:
