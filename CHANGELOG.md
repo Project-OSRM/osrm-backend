@@ -1,4 +1,4 @@
-# UNRELEASED
+# 5.14.0
   - Changes from 5.13
     - API:
       - ADDED: new RouteStep property `driving_side` that has either "left" or "right" for that step
