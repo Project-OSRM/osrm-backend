@@ -30,8 +30,16 @@ int main(int argc, const char *argv[])
 
     // Configure based on a .osrm base path, and no datasets in shared mem from osrm-datastore
     EngineConfig config;
+
     config.storage_config = {argv[1]};
     config.use_shared_memory = false;
+
+    // We support two routing speed up techniques:
+    // - Contraction Hierarchies (CH): requires extract+contract pre-processing
+    // - Multi-Level Dijkstra (MLD): requires extract+partition+customize pre-processing
+    //
+    // config.algorithm = EngineConfig::Algorithm::CH;
+    config.algorithm = EngineConfig::Algorithm::MLD;
 
     // Routing machine with several services (such as Route, Table, Nearest, Trip, Match)
     const OSRM osrm{config};
