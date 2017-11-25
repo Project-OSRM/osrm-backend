@@ -1,6 +1,6 @@
 # Everyone
 
-Please take some time to review our [code of conduct](CODE_OF_CONDUCT.md) to help guide your interactions with others on this project.
+Please take some time to review our [code of conduct](CODE-OF-CONDUCT.md) to help guide your interactions with others on this project.
 
 # User
 
