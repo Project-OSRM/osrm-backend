@@ -6,7 +6,7 @@ OSRM supports "profiles". Profiles representing routing behavior for different t
 ## Available profiles
 Out-of-the-box OSRM comes with profiles for car, bicycle and foot. You can easily modify these or create new ones if you like.
 
-Profiles have a 'lua' extension, and are places in 'profiles' directory.
+Profiles have a 'lua' extension, and are placed in 'profiles' directory.
 
 When running OSRM preprocessing commands you specify the profile with the --profile (or the shorthand -p) option, for example:
 
@@ -35,40 +35,40 @@ A profile can also define various local functions it needs.
 
 Looking at [car.lua](../profiles/car.lua) as an example, at the top of the file the api version is defined and then required library files are included.
 
-Then follows the `setup` functions, which is called once when the profile is loaded. It returns a big hash table of configurations, specifying things like what speed to use for different way types. The configurations are used later in the various processing functions. Many adjustments can be done just be modifying this configuration table.
+Then follows the `setup` function, which is called once when the profile is loaded. It returns a big hash table of configurations, specifying things like what speed to use for different way types. The configurations are used later in the various processing functions. Many adjustments can be done just by modifying this configuration table.
 
-The setup function is also where you can do other setup, like loading elevation data source if you want to consider that when processing ways.
+The setup function is also where you can do other setup, like loading an elevation data source if you want to consider that when processing ways.
 
-Then comes the `process_node` and `process_way` functions, which are called for each OSM node and way when extracting OpenStreetMap data with `osrm-extract`.
+Then come the `process_node` and `process_way` functions, which are called for each OSM node and way when extracting OpenStreetMap data with `osrm-extract`.
 
 The `process_turn` function processes every possible turn in the network, and sets a penalty depending on the angle and turn of the movement.
 
 Profiles can also define a `process_segment` function to handle differences in speed along an OSM way, for example to handle elevation. As you can see, this is not currently used in the car profile.
 
-At the end of the file, a table if returned with references to the setup and processing functions the profile has defined.
+At the end of the file, a table is returned with references to the setup and processing functions the profile has defined.
 
 ## Understanding speed, weight and rate
-When computing a route from A to B there can be different measure of what is the best route. That's why there's a need for different profiles.
+When computing a route from A to B there can be different measures of what is the best route. That's why there's a need for different profiles.
 
-Because speeds very on different types of roads, the shortest and the fastest route are typically different. But there are many other possible preferences. For example a user might prefer a bicycle route that follow parks or other green areas, even though both duration and distance are a bit longer.
+Because speeds vary on different types of roads, the shortest and the fastest route are typically different. But there are many other possible preferences. For example a user might prefer a bicycle route that follow parks or other green areas, even though both duration and distance are a bit longer.
 
-To handle this, OSRM doesn't simply choose the ways with the highest speed. Instead it uses the concept of `weight` and `rate`. The rate is an abstract measure that you can assign to  ways as you like to make some ways preferable to others. Routing will prefer ways with high rate.
+To handle this, OSRM doesn't simply choose the ways with the highest speed. Instead it uses the concepts of `weight` and `rate`. The rate is an abstract measure that you can assign to ways as you like to make some ways preferable to others. Routing will prefer ways with high rate.
 
-The weight of a way normally computed as length / rate. The weight can be thought of as the resistance or cost when passing the way. Routing will prefer ways with low weight.
+The weight of a way is normally computed as length / rate. The weight can be thought of as the resistance or cost when passing the way. Routing will prefer ways with low weight.
 
-You can also set the weight of a way to a fixed value, In this case it's not calculated based on the length or rate, and the rate is ignored.
+You can also set the weight of a way to a fixed value. In this case it's not calculated based on the length or rate, and the rate is ignored.
 
-You should set the speed to you best estimate of the actual speed that will be used on a particular way. This will result in the best estimated travel times.
+You should set the speed to your best estimate of the actual speed that will be used on a particular way. This will result in the best estimated travel times.
 
-If you want to prefer certain ways due to other factors than the speed, adjust the rate accordingly. If you adjust the speed, the time time estimation will be skewed.
+If you want to prefer certain ways due to other factors than the speed, adjust the rate accordingly. If you adjust the speed, the time estimation will be skewed.
 
 If you set the same rate on all ways, the result will be shortest path routing.
 If you set rate = speed on all ways, the result will be fastest path routing.
-If you want to prioritize certain street, increase the rate on these.
+If you want to prioritize certain streets, increase the rate on these.
 
 ## Elements
 ### api_version
-A profile should set api_version at the top of your profile. This is done to ensure that older profiles are still supported when the api changes. If api_version is not defined, 0 will be assumed. The current api version is 2.
+A profile should set `api_version` at the top of your profile. This is done to ensure that older profiles are still supported when the api changes. If `api_version` is not defined, 0 will be assumed. The current api version is 2.
 
 ### Library files
 The folder [profiles/lib/](../profiles/lib/) contains LUA library files for handling many common processing tasks.
@@ -81,15 +81,15 @@ set.lua           | Defines the Set helper for handling sets of values
 sequence.lua      | Defines the Sequence helper for handling sequences of values
 access.lua        | Function for finding relevant access tags
 destination.lua   | Function for finding relevant destination tags
-destination.lua   | Function for determining maximum speed
+maxspeed.lua      | Function for determining maximum speed
 guidance.lua      | Function for processing guidance attributes
 
-They all return a table of functions when you use `require` to load them. You can either store this table and reference it's functions later, of if you need only a single you can store that directly.
+They all return a table of functions when you use `require` to load them. You can either store this table and reference its functions later, or if you need only a single function you can store that directly.
 
 ### setup()
 The `setup` function is called once when the profile is loaded and must return a table of configurations. It's also where you can do other global setup, like loading data sources that are used during processing.
 
-Note that processing of data is parallelized and several unconnected LUA interpreters will be running at the same time. The `setup` function will be called once for each. Each LUA iinterpreter will have it's own set of globals.
+Note that processing of data is parallelized and several unconnected LUA interpreters will be running at the same time. The `setup` function will be called once for each. Each LUA iinterpreter will have its own set of globals.
 
 The following global properties can be set under `properties` in the hash you return in the `setup` function:
 
@@ -109,8 +109,7 @@ The following additional global properties can be set in the hash you return in 
 
 Attribute                            | Type             | Notes
 -------------------------------------|------------------|----------------------------------------------------------------------------
-excludable                           | Sequence of Sets | Determines which class-combinations are supported by the `exclude` option at query time.
-                                     |                  | E.g. `Sequence{Set{"ferry", "motorway"}, Set{"motorway"}}` will allow you to exclude ferries and motorways, or only motorways.
+excludable                           | Sequence of Sets | Determines which class-combinations are supported by the `exclude` option at query time. E.g. `Sequence{Set{"ferry", "motorway"}, Set{"motorway"}}` will allow you to exclude ferries and motorways, or only motorways.
 classes                              | Sequence         | Determines the allowed classes that can be referenced using `{forward,backward}_classes` on the way in the `process_way` function.
 restrictions                         | Sequence         | Determines which turn restrictions will be used for this profile.
 suffix_list                          | Set              | List of name suffixes needed for determining if "Highway 101 NW" the same road as "Highway 101 ES".
@@ -147,26 +146,26 @@ Importantly it will set `result.forward_mode` and `result.backward_mode` to indi
 
 It will also set a number of other attributes on `result`.
 
-Using the power of the scripting language you wouldn't typically see something as simple as a `result.forward_speed = 20` line within the `process_way` function. Instead `process_way` will examine the tag set on the way, process this information in various ways, calling other local functions and referencing the configuration in `profile`, etc, before arriving at the result.
+Using the power of the scripting language you wouldn't typically see something as simple as a `result.forward_speed = 20` line within the `process_way` function. Instead `process_way` will examine the tag set on the way, process this information in various ways, calling other local functions and referencing the configuration in `profile`, etc., before arriving at the result.
 
 The following attributes can be set on the result in `process_way`:
 
 Attribute                               | Type     | Notes
 ----------------------------------------|----------|--------------------------------------------------------------------------
 forward_speed                           | Float    | Speed on this way in km/h. Mandatory.
-backward_speed                          | Float    |  "   "
+backward_speed                          | Float    |  ""
 forward_rate                            | Float    | Routing weight, expressed as meters/*weight* (e.g. for a fastest-route weighting, you would want this to be meters/second, so set it to forward_speed/3.6)
-backward_rate                           | Float    |  "   "
+backward_rate                           | Float    |  ""
 forward_mode                            | Enum     | Mode of travel (e.g. `car`, `ferry`). Mandatory. Defined in `include/extractor/travel_mode.hpp`.
-backward_mode                           | Enum     |  "   "
+backward_mode                           | Enum     |  ""
 forward_classes                         | Table    | Mark this way as being of a specific class, e.g. `result.classes["toll"] = true`. This will be exposed in the API as `classes` on each `RouteStep`.
-backward_classes                        | Table    |  "   "
+backward_classes                        | Table    |  ""
 duration                                | Float    | Alternative setter for duration of the whole way in both directions
 weight                                  | Float    | Alternative setter for weight of the whole way in both directions
 turn_lanes_forward                      | String   | Directions for individual lanes (normalized OSM `turn:lanes` value)
-turn_lanes_backward                     | String   |  "   "
+turn_lanes_backward                     | String   |  ""
 forward_restricted                      | Boolean  | Is this a restricted access road? (e.g. private, or deliveries only; used to enable high turn penalty, so that way is only chosen for start/end of route)
-backward_restricted                     | Boolean  |  "   "
+backward_restricted                     | Boolean  |  ""
 is_startpoint                           | Boolean  | Can a journey start on this way? (e.g. ferry; if `false`, prevents snapping the start point to this way)
 roundabout                              | Boolean  | Is this part of a roundabout?
 circular                                | Boolean  | Is this part of a non-roundabout circular junction?
@@ -188,18 +187,18 @@ The `process_segment` function is called for every segment of OSM ways. A segmen
 
 On OpenStreetMap way cannot have different tags on different parts of a way. Instead you would split the way into several smaller ways. However many ways are long. For example, many ways pass hills without any change in tags.
 
-Processing each segment of an OSM way makes it possible to have different speeds on different parts of a way based on external data like data about elevation, pollution, noise or scenic value and adjust weight and duration of the segment.
+Processing each segment of an OSM way makes it possible to have different speeds on different parts of a way based on external data like data about elevation, pollution, noise or scenic value and adjust weight and duration of the segment accordingly.
 
-In the `process_segment` you don't have access to OSM tags. Instead you use the geographical location of the start and end point of the way to lookup other data source, like elevation data. See [rasterbot.lua](../profiles/rasterbot.lua) for an example.
+In the `process_segment` function you don't have access to OSM tags. Instead you use the geographical location of the start and end point of the way to look up information from another data source, like elevation data. See [rasterbot.lua](../profiles/rasterbot.lua) for an example.
 
 The following attributes can be read and set on the result in `process_segment`:
 
 Attribute          | Read/write? | Type    | Notes
 -------------------|-------------|---------|----------------------------------------
 source.lon         | Read        | Float   | Co-ordinates of segment start
-source.lat         | Read        | Float   |  "   "
+source.lat         | Read        | Float   |  ""
 target.lon         | Read        | Float   | Co-ordinates of segment end
-target.lat         | Read        | Float   |  "   "
+target.lat         | Read        | Float   |  ""
 target.distance    | Read        | Float   | Length of segment
 weight             | Read/write  | Float   | Routing weight for this segment
 duration           | Read/write  | Float   | Duration for this segment
@@ -231,7 +230,7 @@ The priority-category influences the decision which road is considered the obvio
 Forks can be emitted between roads of similar priority category only. Obvious choices follow a major priority road, if the priority difference is large.
 
 ### Using raster data
-OSRM has build-in support for loading an interpolating raster data in ASCII format. This can be used e.g. for factoring in elevation when computing routes.
+OSRM has built-in support for loading an interpolating raster data in ASCII format. This can be used e.g. for factoring in elevation when computing routes.
 
 Use `raster:load()` in your `setup` function to load data and store the source in your configuration hash:
 
@@ -284,8 +283,8 @@ See [rasterbot.lua](../profiles/rasterbot.lua) and [rasterbotinterp.lua](../prof
 ### Helper functions
 There are a few helper functions defined in the global scope that profiles can use:
 
-durationIsValid
-parseDuration
-trimLaneString
-applyAccessTokens
-canonicalizeStringList
+- `durationIsValid`
+- `parseDuration`
+- `trimLaneString`
+- `applyAccessTokens`
+- `canonicalizeStringList`
