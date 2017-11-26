@@ -17,8 +17,8 @@ It's important to understand that profiles are used when preprocessing the OSM d
 
 This means that after modifying a profile **you will need to extract, contract and reload the data again** and to see changes in the routing results. See [Processing Flow](https://github.com/Project-OSRM/osrm-backend/wiki/Processing-Flow) for more.
 
-## Profiles are written in LUA
-Profiles are not just configuration files. They are scripts written in the [LUA scripting language](http://www.lua.org). The reason for this is that OpenStreetMap data is complex, and it's not possible to simply define tag mappings. LUA scripting offers a powerful way to handle all the possible tag combinations found in OpenStreetMap nodes and ways.
+## Profiles are written in Lua
+Profiles are not just configuration files. They are scripts written in the [Lua scripting language](http://www.lua.org). The reason for this is that OpenStreetMap data is complex, and it's not possible to simply define tag mappings. Lua scripting offers a powerful way to handle all the possible tag combinations found in OpenStreetMap nodes and ways.
 
 ## Basic structure of profiles
 A profile will process every node and way in the OSM input data to determine what ways are routable in which direction, at what speed, etc.
