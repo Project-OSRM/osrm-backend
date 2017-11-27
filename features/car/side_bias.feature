@@ -116,3 +116,28 @@ Feature: Testbot - side bias
             | from | to | route    | driving_side      | time       |
             | d    | a  | bd,ab,ab | right,right,right | 27s +-1    |
             | d    | c  | bd,bc,bc | right,right,right | 24s +-1    |
+
+    Scenario: changing sides
+        Given the profile "car"
+
+        # Note - the boundary in null-island.geojson is at lon = 2.0,
+        # and we use the "last node of the way" as the heuristic to detect
+        # whether the way is in our out of the driving_side polygon
+        And the node locations
+            | node | lat | lon  |
+            | a    | 0   | 0.5  |
+            | b    | 0   | 1.5  |
+            | c    | 0   | 2.5  |
+            | d    | 0   | 3.5  |
+
+        And the ways
+            | nodes |
+            | ab    |
+            | bc    |
+            | cd    |
+
+        And the extract extra arguments "--location-dependent-data test/data/regions/null-island.geojson"
+        When I route I should get
+            | from | to | route       | driving_side           |
+            | d    | a  | cd,bc,ab,ab | right,right,left,left  |
+            | a    | d  | ab,bc,cd,cd | left,right,right,right |
