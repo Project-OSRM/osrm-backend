@@ -71,17 +71,19 @@ TurnType::Enum IntersectionHandler::findBasicTurnType(const EdgeID via_edge,
     if (!on_ramp && onto_ramp)
         return TurnType::OnRamp;
 
-    const auto &in_name =
+    const auto &in_name_id =
         node_data_container.GetAnnotation(node_based_graph.GetEdgeData(via_edge).annotation_data)
             .name_id;
-    const auto &out_name =
+    const auto &out_name_id =
         node_data_container.GetAnnotation(node_based_graph.GetEdgeData(road.eid).annotation_data)
             .name_id;
+    const auto &in_name = name_table.GetNameForID(in_name_id).to_string();
+    const auto &out_name = name_table.GetNameForID(out_name_id).to_string();
 
     const auto same_name = !util::guidance::requiresNameAnnounced(
-        in_name, out_name, name_table, street_name_suffix_table);
+        in_name_id, out_name_id, name_table, street_name_suffix_table);
 
-    if (in_name != EMPTY_NAMEID && out_name != EMPTY_NAMEID && same_name)
+    if (!in_name.empty() && !out_name.empty() && same_name)
     {
         return TurnType::Continue;
     }
