@@ -32,15 +32,17 @@ inline auto makeCheckRoadForName(const NameID name_id,
     return [name_id, &node_based_graph, &node_data_container, &name_table, &suffix_table](
         const MergableRoadDetector::MergableRoadData &road) {
         // since we filter here, we don't want any other name than the one we are looking for
-        const auto road_name =
+        const auto road_name_id =
             node_data_container
                 .GetAnnotation(node_based_graph.GetEdgeData(road.eid).annotation_data)
                 .name_id;
-        if (name_id == EMPTY_NAMEID || road_name == EMPTY_NAMEID)
+        const auto road_name = name_table.GetNameForID(road_name_id).to_string();
+        if (name_id == EMPTY_NAMEID || road_name.empty())
             return true;
         const auto requires_announcement =
-            util::guidance::requiresNameAnnounced(name_id, road_name, name_table, suffix_table) ||
-            util::guidance::requiresNameAnnounced(road_name, name_id, name_table, suffix_table);
+            util::guidance::requiresNameAnnounced(
+                name_id, road_name_id, name_table, suffix_table) ||
+            util::guidance::requiresNameAnnounced(road_name_id, name_id, name_table, suffix_table);
 
         return requires_announcement;
     };
@@ -465,16 +467,19 @@ bool MergableRoadDetector::IsTrafficIsland(const NodeID intersection_node,
                 .name_id;
 
         const auto has_required_name = [this, required_name_id](const auto edge_id) {
-            const auto road_name =
+            const auto road_name_id =
                 node_data_container
                     .GetAnnotation(node_based_graph.GetEdgeData(edge_id).annotation_data)
                     .name_id;
-            if (required_name_id == EMPTY_NAMEID || road_name == EMPTY_NAMEID)
+            const auto &road_name = name_table.GetNameForID(road_name_id).to_string();
+            const auto &required_name = name_table.GetNameForID(required_name_id).to_string();
+            if (required_name_id == EMPTY_NAMEID || road_name_id == EMPTY_NAMEID ||
+                (required_name.empty() && road_name.empty()))
                 return false;
             return !util::guidance::requiresNameAnnounced(
-                       required_name_id, road_name, name_table, street_name_suffix_table) ||
+                       required_name_id, road_name_id, name_table, street_name_suffix_table) ||
                    !util::guidance::requiresNameAnnounced(
-                       road_name, required_name_id, name_table, street_name_suffix_table);
+                       road_name_id, required_name_id, name_table, street_name_suffix_table);
         };
 
         /* the beautiful way would be:
