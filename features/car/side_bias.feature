@@ -129,17 +129,15 @@ Feature: Testbot - side bias
             | b    | 0   | 1.5  |
             | c    | 0   | 2.5  |
             | d    | 0   | 3.5  |
-            | e    | 0   | 4.5  |
 
         And the ways
             | nodes |
             | ab    |
             | bc    |
             | cd    |
-            | de    |
 
         And the extract extra arguments "--location-dependent-data test/data/regions/null-island.geojson"
         When I route I should get
-            | from | to | route          | driving_side                 |
-            | e    | a  | de,cd,bc,ab,ab | right,right,right,left,left  |
-            | a    | e  | ab,bc,cd,de,de | left,right,right,right,right |
+            | from | to | route       | driving_side           |
+            | d    | a  | cd,bc,ab,ab | right,right,left,left  |
+            | a    | d  | ab,bc,cd,cd | left,right,right,right |
