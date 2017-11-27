@@ -1398,4 +1398,38 @@ Feature: Simple Turns
 
        When I route I should get
             | waypoints | route     | turns                    |
-            | a,f       | abc,cf,cf | depart,turn right,arrive |
+            | a,f       | ,,        | depart,turn right,arrive |
+
+    # https://www.openstreetmap.org/#map=18/52.24071/10.29066
+    Scenario: Turn for roads with no name, ref changes
+        Given the node map
+            """
+              x
+              .
+              .
+              d
+             . .
+            .   .
+           .     .
+     e. . t . c . p. .f
+           .     .
+            .   .
+             . .
+              b
+              .
+              .
+              a
+            """
+
+        And the ways
+            | nodes | highway     | ref  | name          | oneway |
+            | abp   | tertiary    | K 23 |               | yes    |
+            | pdx   | tertiary    | K 23 |               | yes    |
+            | xdt   | tertiary    | K 23 |               | yes    |
+            | tba   | tertiary    | K 23 |               | yes    |
+            | etcpf | primary     | B 1  |               | no     |
+
+       When I route I should get
+            | waypoints | route     | turns                                    |
+            | e,x       | ,,,       | depart,turn sharp left,turn right,arrive |
+            | f,a       | ,,        | depart,turn left,arrive                  |
