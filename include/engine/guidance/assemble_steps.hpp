@@ -312,7 +312,7 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
                               leg_geometry.locations.size() - 1,
                               leg_geometry.locations.size(),
                               {intersection},
-                              facade.IsLeftHandDriving(source_node_id)});
+                              facade.IsLeftHandDriving(target_node_id)});
 
     BOOST_ASSERT(steps.front().intersections.size() == 1);
     BOOST_ASSERT(steps.front().intersections.front().bearings.size() == 1);
