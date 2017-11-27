@@ -36,7 +36,9 @@
     },
     {
       "type": "Feature",
-      "properties": { "driving_side" : "left" },
+      "properties": {
+        "driving_side": "left"
+      },
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -399,7 +401,9 @@
     },
     {
       "type": "Feature",
-      "properties": { "driving_side" : "left" },
+      "properties": {
+        "driving_side": "left"
+      },
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -506,7 +510,9 @@
     },
     {
       "type": "Feature",
-      "properties": { "driving_side" : "left" },
+      "properties": {
+        "driving_side": "left"
+      },
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -589,7 +595,9 @@
     },
     {
       "type": "Feature",
-      "properties": { "driving_side" : "left" },
+      "properties": {
+        "driving_side": "left"
+      },
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -1277,7 +1285,9 @@
     },
     {
       "type": "Feature",
-      "properties": { "driving_side" : "left" },
+      "properties": {
+        "driving_side": "left"
+      },
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -1308,7 +1318,9 @@
     },
     {
       "type": "Feature",
-      "properties": { "driving_side" : "left" },
+      "properties": {
+        "driving_side": "left"
+      },
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -1339,7 +1351,9 @@
     },
     {
       "type": "Feature",
-      "properties": { "driving_side" : "left" },
+      "properties": {
+        "driving_side": "left"
+      },
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -1370,7 +1384,9 @@
     },
     {
       "type": "Feature",
-      "properties": { "driving_side" : "left" },
+      "properties": {
+        "driving_side": "left"
+      },
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -1529,7 +1545,9 @@
     },
     {
       "type": "Feature",
-      "properties": { "driving_side" : "left" },
+      "properties": {
+        "driving_side": "left"
+      },
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -1560,7 +1578,9 @@
     },
     {
       "type": "Feature",
-      "properties": { "driving_side" : "left" },
+      "properties": {
+        "driving_side": "left"
+      },
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -1591,7 +1611,9 @@
     },
     {
       "type": "Feature",
-      "properties": { "driving_side" : "left" },
+      "properties": {
+        "driving_side": "left"
+      },
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -1622,7 +1644,9 @@
     },
     {
       "type": "Feature",
-      "properties": { "driving_side" : "left" },
+      "properties": {
+        "driving_side": "left"
+      },
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -1653,7 +1677,9 @@
     },
     {
       "type": "Feature",
-      "properties": { "driving_side" : "left" },
+      "properties": {
+        "driving_side": "left"
+      },
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -1684,7 +1710,9 @@
     },
     {
       "type": "Feature",
-      "properties": { "driving_side" : "left" },
+      "properties": {
+        "driving_side": "left"
+      },
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -1715,7 +1743,9 @@
     },
     {
       "type": "Feature",
-      "properties": { "driving_side" : "left" },
+      "properties": {
+        "driving_side": "left"
+      },
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -1739,6 +1769,212 @@
             [
               13.90869140625,
               35.6126508187567
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "driving_side": "left"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              113.53256464004518,
+              22.17096258989228
+            ],
+            [
+              113.53754281997682,
+              22.16047023983672
+            ],
+            [
+              113.54106187820436,
+              22.154587822430837
+            ],
+            [
+              113.54878664016725,
+              22.14703570986906
+            ],
+            [
+              113.54990243911743,
+              22.141947742446394
+            ],
+            [
+              113.54792833328247,
+              22.118731558535227
+            ],
+            [
+              113.54852914810182,
+              22.11006426296891
+            ],
+            [
+              113.56088876724245,
+              22.105531611874294
+            ],
+            [
+              113.5914444923401,
+              22.117300298747207
+            ],
+            [
+              113.60217332839966,
+              22.136303063467075
+            ],
+            [
+              113.58766794204713,
+              22.183520585503548
+            ],
+            [
+              113.57015848159791,
+              22.189083895743767
+            ],
+            [
+              113.56621026992799,
+              22.189163370008256
+            ],
+            [
+              113.56406450271608,
+              22.190514425625366
+            ],
+            [
+              113.56380701065065,
+              22.19941517306984
+            ],
+            [
+              113.56191873550418,
+              22.2050573189853
+            ],
+            [
+              113.56088876724245,
+              22.21260631441281
+            ],
+            [
+              113.55256319046022,
+              22.217294433458783
+            ],
+            [
+              113.54850769042969,
+              22.21683754739093
+            ],
+            [
+              113.5441303253174,
+              22.217056058304685
+            ],
+            [
+              113.54318618774415,
+              22.216479983343337
+            ],
+            [
+              113.5415554046631,
+              22.213242000752253
+            ],
+            [
+              113.54114770889284,
+              22.213003618712484
+            ],
+            [
+              113.53824019432068,
+              22.213659168347313
+            ],
+            [
+              113.53728532791139,
+              22.21367903343993
+            ],
+            [
+              113.53571891784668,
+              22.213559842841935
+            ],
+            [
+              113.53435635566713,
+              22.213182405280275
+            ],
+            [
+              113.53312253952026,
+              22.212367931293002
+            ],
+            [
+              113.53496789932252,
+              22.20616982803302
+            ],
+            [
+              113.53222131729127,
+              22.19401121511328
+            ],
+            [
+              113.52681398391725,
+              22.184792218694355
+            ],
+            [
+              113.53256464004518,
+              22.17096258989228
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "driving_side": "left"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              114.1398811340332,
+              22.298308554808454
+            ],
+            [
+              114.1146469116211,
+              22.295926164040363
+            ],
+            [
+              114.10280227661133,
+              22.2808367460213
+            ],
+            [
+              114.1505241394043,
+              22.226342457476385
+            ],
+            [
+              114.20768737792969,
+              22.188199741518677
+            ],
+            [
+              114.26794052124023,
+              22.199325771045544
+            ],
+            [
+              114.26673889160155,
+              22.257008033931445
+            ],
+            [
+              114.24699783325194,
+              22.278295210101668
+            ],
+            [
+              114.22657012939453,
+              22.29354373265189
+            ],
+            [
+              114.20408248901367,
+              22.29973796977008
+            ],
+            [
+              114.184513092041,
+              22.290843594643704
+            ],
+            [
+              114.16563034057617,
+              22.28925525380013
+            ],
+            [
+              114.1398811340332,
+              22.298308554808454
             ]
           ]
         ]
