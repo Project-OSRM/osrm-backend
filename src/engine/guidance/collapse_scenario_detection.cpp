@@ -41,15 +41,15 @@ bool noIntermediaryIntersections(const RouteStep &step)
 }
 
 // Link roads, as far as we are concerned, are short unnamed segments between to named segments.
-bool isLinkroad(const RouteStep &pre_link_step,
-                const RouteStep &link_step,
-                const RouteStep &post_link_step)
+bool isLinkRoad(const RouteStep &link_step,
+                const std::string &pre_link_step_name,
+                const std::string &link_step_name,
+                const std::string &post_link_step_name)
 {
     const constexpr double MAX_LINK_ROAD_LENGTH = 2 * MAX_COLLAPSE_DISTANCE;
     const auto is_short = link_step.distance <= MAX_LINK_ROAD_LENGTH;
-    const auto unnamed = link_step.name_id == EMPTY_NAMEID;
-    const auto between_named =
-        (pre_link_step.name_id != EMPTY_NAMEID) && (post_link_step.name_id != EMPTY_NAMEID);
+    const auto unnamed = link_step_name.empty();
+    const auto between_named = !pre_link_step_name.empty() && !post_link_step_name.empty();
 
     return is_short && unnamed && between_named && noIntermediaryIntersections(link_step);
 }
@@ -163,7 +163,10 @@ bool isStaggeredIntersection(const RouteStepIterator step_prior_to_intersection,
 
 bool isUTurn(const RouteStepIterator step_prior_to_intersection,
              const RouteStepIterator step_entering_intersection,
-             const RouteStepIterator step_leaving_intersection)
+             const RouteStepIterator step_leaving_intersection,
+             const std::string &step_prior_name,
+             const std::string &step_entering_name,
+             const std::string &step_leaving_name)
 {
     if (!basicCollapsePreconditions(
             step_prior_to_intersection, step_entering_intersection, step_leaving_intersection))
@@ -196,9 +199,10 @@ bool isUTurn(const RouteStepIterator step_prior_to_intersection,
     const auto only_allowed_turn = (numberOfAllowedTurns(*step_leaving_intersection) == 1) &&
                                    noIntermediaryIntersections(*step_entering_intersection);
 
-    return collapsable || isLinkroad(*step_prior_to_intersection,
-                                     *step_entering_intersection,
-                                     *step_leaving_intersection) ||
+    return collapsable || isLinkRoad(*step_entering_intersection,
+                                     step_prior_name,
+                                     step_entering_name,
+                                     step_leaving_name) ||
            only_allowed_turn;
 }
 
