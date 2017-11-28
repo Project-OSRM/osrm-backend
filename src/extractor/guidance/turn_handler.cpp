@@ -199,7 +199,8 @@ bool TurnHandler::isObviousOfTwo(const EdgeID via_edge,
 
     const bool turn_is_perfectly_straight =
         angularDeviation(road.angle, STRAIGHT_ANGLE) < std::numeric_limits<double>::epsilon();
-    if (via_data.name_id != EMPTY_NAMEID)
+    const auto &via_name = name_table.GetNameForID(via_data.name_id).to_string();
+    if (!via_name.empty())
     {
         const auto same_name = !util::guidance::requiresNameAnnounced(
             via_data.name_id, road_data.name_id, name_table, street_name_suffix_table);

@@ -502,9 +502,11 @@ operator()(const NodeID /*nid*/, const EdgeID source_edge_id, Intersection inter
                     .name_id;
             const auto &sliproad_annotation =
                 node_data_container.GetAnnotation(sliproad_edge_data.annotation_data);
-            const auto &sliproad_name = name_table.GetNameForID(sliproad_annotation.name_id).to_string();
+            const auto &sliproad_name =
+                name_table.GetNameForID(sliproad_annotation.name_id).to_string();
             const auto &main_road_name = name_table.GetNameForID(main_road_name_id).to_string();
-            const auto &candidate_road_name = name_table.GetNameForID(candidate_data.name_id).to_string();
+            const auto &candidate_road_name =
+                name_table.GetNameForID(candidate_data.name_id).to_string();
             if (!sliproad_edge_data.flags.road_classification.IsLinkClass() &&
                 !sliproad_name.empty() && !main_road_name.empty() && !candidate_road_name.empty() &&
                 util::guidance::requiresNameAnnounced(main_road_name_id,
