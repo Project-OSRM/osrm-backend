@@ -36,7 +36,10 @@ bool isStaggeredIntersection(const RouteStepIterator step_prior_to_intersection,
 // a - > x
 bool isUTurn(const RouteStepIterator step_prior_to_intersection,
              const RouteStepIterator step_entering_intersection,
-             const RouteStepIterator step_leaving_intersection);
+             const RouteStepIterator step_leaving_intersection,
+             const std::string &step_prior_name,
+             const std::string &step_entering_name,
+             const std::string &step_leaving_name);
 
 // detect oscillating names where a name switch A->B->A occurs. This is often the case due to
 // bridges or tunnels. Any such oszillation is not supposed to show up

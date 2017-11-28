@@ -1,5 +1,6 @@
 #ifndef OSRM_ENGINE_GUIDANCE_COLLAPSE_HPP
 
+#include "engine/datafacade/datafacade_base.hpp"
 #include "engine/guidance/route_step.hpp"
 #include "util/attributes.hpp"
 
@@ -19,7 +20,8 @@ namespace guidance
 // Collapsing such turns into a single turn instruction, we give a clearer
 // set of instructionst that is not cluttered by unnecessary turns/name changes.
 OSRM_ATTR_WARN_UNUSED
-std::vector<RouteStep> collapseTurnInstructions(std::vector<RouteStep> steps);
+std::vector<RouteStep> collapseTurnInstructions(std::vector<RouteStep> steps,
+                                                const datafacade::BaseDataFacade &facade);
 
 // A combined turn is a set of two instructions that actually form a single turn, as far as we
 // perceive it. A u-turn consisting of two left turns is one such example. But there are also lots

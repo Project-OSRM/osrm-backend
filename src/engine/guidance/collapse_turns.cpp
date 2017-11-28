@@ -326,7 +326,7 @@ void suppressStep(RouteStep &step_at_turn_location, RouteStep &step_after_turn_l
 
 // OTHER IMPLEMENTATIONS
 OSRM_ATTR_WARN_UNUSED
-RouteSteps collapseTurnInstructions(RouteSteps steps)
+RouteSteps collapseTurnInstructions(RouteSteps steps, const datafacade::BaseDataFacade &facade)
 {
     // make sure we can safely iterate over all steps (has depart/arrive with TurnType::NoTurn)
     BOOST_ASSERT(!hasTurnType(steps.front()) && !hasTurnType(steps.back()));
@@ -371,6 +371,9 @@ RouteSteps collapseTurnInstructions(RouteSteps steps)
             break;
 
         const auto previous_step = findPreviousTurn(current_step);
+        const auto previous_step_name = facade.GetNameForID(previous_step->name_id).to_string();
+        const auto current_step_name = facade.GetNameForID(current_step->name_id).to_string();
+        const auto next_step_name = facade.GetNameForID(next_step->name_id).to_string();
 
         // don't collapse anything that does change modes
         if (current_step->mode != next_step->mode)
@@ -387,7 +390,12 @@ RouteSteps collapseTurnInstructions(RouteSteps steps)
                               TransferSignageStrategy(),
                               NoModificationStrategy());
         }
-        else if (isUTurn(previous_step, current_step, next_step))
+        else if (isUTurn(previous_step,
+                         current_step,
+                         next_step,
+                         previous_step_name,
+                         current_step_name,
+                         next_step_name))
         {
             combineRouteSteps(
                 *current_step,
@@ -463,9 +471,15 @@ RouteSteps collapseTurnInstructions(RouteSteps steps)
         if (!hasWaypointType(*previous_step))
         {
             const auto far_back_step = findPreviousTurn(previous_step);
+            const auto far_back_step_name = facade.GetNameForID(far_back_step->name_id).to_string();
             // due to name changes, we can find u-turns a bit late. Thats why we check far back as
             // well
-            if (isUTurn(far_back_step, previous_step, current_step))
+            if (isUTurn(far_back_step,
+                        previous_step,
+                        current_step,
+                        far_back_step_name,
+                        previous_step_name,
+                        current_step_name))
             {
                 combineRouteSteps(
                     *previous_step,
