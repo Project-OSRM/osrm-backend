@@ -309,7 +309,7 @@ Feature: Via points
             | waypoints | route |
             | a,b,e     |       |
 
-    @todo @3359
+     @3359
      Scenario: U-Turn In Bearings
         Given the node map
             """
