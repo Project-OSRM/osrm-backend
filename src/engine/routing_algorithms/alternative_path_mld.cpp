@@ -784,9 +784,8 @@ InternalManyRoutesResult alternativePathSearch(SearchEngineData<Algorithm> &sear
                                                                 begin(weighted_packed_paths) + 1,
                                                                 alternative_paths_last);
 
-    alternative_paths_last = filterPackedPathsByCellSharing(begin(weighted_packed_paths), //
-                                                            end(weighted_packed_paths),   //
-                                                            partition);                   //
+    alternative_paths_last = filterPackedPathsByCellSharing(
+        begin(weighted_packed_paths), alternative_paths_last, partition);
 
     BOOST_ASSERT(weighted_packed_paths.size() >= 1);
 

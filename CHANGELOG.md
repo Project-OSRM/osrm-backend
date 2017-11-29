@@ -1,5 +1,10 @@
 # UNRELEASED
 
+# 5.14.1
+  - Changes from 5.14.0
+    - Bugfixes:
+      - FIXED: don't use removed alternative candidates in `filterPackedPathsByCellSharing`
+
 # 5.14.0
   - Changes from 5.13
     - API:
