@@ -20,8 +20,7 @@ namespace guidance
 // Collapsing such turns into a single turn instruction, we give a clearer
 // set of instructionst that is not cluttered by unnecessary turns/name changes.
 OSRM_ATTR_WARN_UNUSED
-std::vector<RouteStep> collapseTurnInstructions(std::vector<RouteStep> steps,
-                                                const datafacade::BaseDataFacade &facade);
+std::vector<RouteStep> collapseTurnInstructions(std::vector<RouteStep> steps);
 
 // A combined turn is a set of two instructions that actually form a single turn, as far as we
 // perceive it. A u-turn consisting of two left turns is one such example. But there are also lots

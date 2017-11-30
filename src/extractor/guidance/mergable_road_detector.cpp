@@ -23,6 +23,8 @@ namespace guidance
 namespace
 {
 // check a connected road for equality of a name
+// returns 'true' if no equality because this is used as a filter elsewhere, i.e. filter if fn
+// returns 'true'
 inline auto makeCheckRoadForName(const NameID name_id,
                                  const util::NodeBasedDynamicGraph &node_based_graph,
                                  const EdgeBasedNodeDataContainer &node_data_container,
@@ -36,8 +38,11 @@ inline auto makeCheckRoadForName(const NameID name_id,
             node_data_container
                 .GetAnnotation(node_based_graph.GetEdgeData(road.eid).annotation_data)
                 .name_id;
-        const auto road_name = name_table.GetNameForID(road_name_id).to_string();
-        if (name_id == EMPTY_NAMEID || road_name.empty())
+        if (name_id == EMPTY_NAMEID || road_name_id == EMPTY_NAMEID)
+            return true;
+        const auto road_name_empty = name_table.GetNameForID(road_name_id).to_string().empty();
+        const auto in_name_empty = name_table.GetNameForID(name_id).to_string().empty();
+        if (in_name_empty || road_name_empty)
             return true;
         const auto requires_announcement =
             util::guidance::requiresNameAnnounced(
@@ -465,16 +470,20 @@ bool MergableRoadDetector::IsTrafficIsland(const NodeID intersection_node,
             node_data_container
                 .GetAnnotation(node_based_graph.GetEdgeData(range.front()).annotation_data)
                 .name_id;
+        if (required_name_id == EMPTY_NAMEID)
+            return false;
 
         const auto has_required_name = [this, required_name_id](const auto edge_id) {
             const auto road_name_id =
                 node_data_container
                     .GetAnnotation(node_based_graph.GetEdgeData(edge_id).annotation_data)
                     .name_id;
-            const auto &road_name = name_table.GetNameForID(road_name_id).to_string();
-            const auto &required_name = name_table.GetNameForID(required_name_id).to_string();
-            if (required_name_id == EMPTY_NAMEID || road_name_id == EMPTY_NAMEID ||
-                (required_name.empty() && road_name.empty()))
+            if (road_name_id == EMPTY_NAMEID)
+                return false;
+            const auto &road_name_empty = name_table.GetNameForID(road_name_id).to_string().empty();
+            const auto &required_name_empty =
+                name_table.GetNameForID(required_name_id).to_string().empty();
+            if (required_name_empty && road_name_empty)
                 return false;
             return !util::guidance::requiresNameAnnounced(
                        required_name_id, road_name_id, name_table, street_name_suffix_table) ||

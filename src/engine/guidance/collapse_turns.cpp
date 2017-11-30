@@ -326,7 +326,7 @@ void suppressStep(RouteStep &step_at_turn_location, RouteStep &step_after_turn_l
 
 // OTHER IMPLEMENTATIONS
 OSRM_ATTR_WARN_UNUSED
-RouteSteps collapseTurnInstructions(RouteSteps steps, const datafacade::BaseDataFacade &facade)
+RouteSteps collapseTurnInstructions(RouteSteps steps)
 {
     // make sure we can safely iterate over all steps (has depart/arrive with TurnType::NoTurn)
     BOOST_ASSERT(!hasTurnType(steps.front()) && !hasTurnType(steps.back()));
@@ -463,7 +463,6 @@ RouteSteps collapseTurnInstructions(RouteSteps steps, const datafacade::BaseData
         if (!hasWaypointType(*previous_step))
         {
             const auto far_back_step = findPreviousTurn(previous_step);
-            const auto far_back_step_name = facade.GetNameForID(far_back_step->name_id).to_string();
             // due to name changes, we can find u-turns a bit late. Thats why we check far back as
             // well
             if (isUTurn(far_back_step, previous_step, current_step))
