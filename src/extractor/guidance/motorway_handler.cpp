@@ -386,14 +386,14 @@ Intersection MotorwayHandler::fromRamp(const EdgeID via_eid, Intersection inters
                 //
                 //     7         1
                 //          0
-                const auto &first_intersection_name =
-                    name_table.GetNameForID(first_intersection_data.name_id).to_string();
-                const auto &second_intersection_name =
-                    name_table.GetNameForID(second_intersection_data.name_id).to_string();
+                const auto &first_intersection_name_empty =
+                    name_table.GetNameForID(first_intersection_data.name_id).empty();
+                const auto &second_intersection_name_empty =
+                    name_table.GetNameForID(second_intersection_data.name_id).empty();
                 if (intersection[1].entry_allowed)
                 {
                     if (isMotorwayClass(intersection[1].eid, node_based_graph) &&
-                        !second_intersection_name.empty() && !first_intersection_name.empty() &&
+                        !second_intersection_name_empty && !first_intersection_name_empty &&
                         first_second_same_name)
                     {
                         // circular order indicates a merge to the left (0-3 onto 4
@@ -418,7 +418,7 @@ Intersection MotorwayHandler::fromRamp(const EdgeID via_eid, Intersection inters
                 {
                     BOOST_ASSERT(intersection[2].entry_allowed);
                     if (isMotorwayClass(intersection[2].eid, node_based_graph) &&
-                        !second_intersection_name.empty() && !first_intersection_name.empty() &&
+                        !second_intersection_name_empty && !first_intersection_name_empty &&
                         first_second_same_name)
                     {
                         // circular order (5-0) onto 4
