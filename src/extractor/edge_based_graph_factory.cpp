@@ -485,7 +485,6 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
         util::UnbufferedLog log;
 
         const NodeID node_count = m_node_based_graph.GetNumberOfNodes();
-        util::Percent progress(log, node_count);
 
         // Because we write TurnIndexBlock data as we go, we'll
         // buffer them into groups of 1000 to reduce the syscall
@@ -495,11 +494,9 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
         std::vector<lookup::TurnIndexBlock> turn_indexes_write_buffer;
         turn_indexes_write_buffer.reserve(TURN_INDEX_WRITE_BUFFER_SIZE);
 
-        // TODO: update comments block
         // This struct is the buffered output of the `processor_stage`.  This data is
         // appended to the various output arrays/files by the `output_stage`.
-        // same as IntersectionData, but grouped with edge to allow sorting after creating. Edges
-        // can be out of order
+        // same as IntersectionData, but grouped with edge to allow sorting after creating.
         struct EdgeWithData
         {
             EdgeBasedEdge edge;
@@ -1184,13 +1181,12 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
             });
 
         // Last part of the pipeline puts all the calculated data into the serial buffers
-        std::uint64_t routing_nodes_completed = 0;
+        util::Percent routing_progress(log, node_count);
         std::vector<EdgeWithData> delayed_data;
         tbb::filter_t<EdgesPipelineBufferPtr, void> output_stage(
             tbb::filter::serial_in_order, [&](auto buffer) {
 
-                routing_nodes_completed += buffer->nodes_processed;
-                progress.PrintStatus(routing_nodes_completed);
+                routing_progress.PrintAddition(buffer->nodes_processed);
 
                 // Copy data from local buffers into global EBG data
                 std::for_each(
@@ -1215,14 +1211,13 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
             });
 
         // Last part of the pipeline puts all the calculated data into the serial buffers
-        std::uint64_t guidance_nodes_completed = 0;
+        util::Percent guidance_progress(log, node_count);
         std::vector<TurnData> delayed_turn_data;
 
         tbb::filter_t<TurnsPipelineBufferPtr, void> guidance_output_stage(
             tbb::filter::serial_in_order, [&](auto buffer) {
 
-                guidance_nodes_completed += buffer->nodes_processed;
-                progress.PrintStatus(guidance_nodes_completed);
+                guidance_progress.PrintAddition(buffer->nodes_processed);
 
                 // Guidance data
                 std::for_each(buffer->continuous_turn_data.begin(),
@@ -1246,18 +1241,12 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
         current_node = 0;
         tbb::parallel_pipeline(tbb::task_scheduler_init::default_num_threads() * 5,
                                generator_stage & processor_stage & output_stage);
+        log << std::endl;
 
         util::Log() << "Generating guidance turns ";
         current_node = 0;
         tbb::parallel_pipeline(tbb::task_scheduler_init::default_num_threads() * 5,
                                generator_stage & guidance_stage & guidance_output_stage);
-
-        // TODO: remove sorting below
-        // std::sort(delayed_data.begin(), delayed_data.end(), [](auto const &lhs, auto
-        // const &rhs)
-        // {
-        //     return lhs.edge.source < rhs.edge.source;
-        // });
 
         // NOTE: buffer.delayed_data and buffer.delayed_turn_data have the same index
         std::for_each(delayed_data.begin(), delayed_data.end(), transfer_data);
