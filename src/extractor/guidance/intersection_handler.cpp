@@ -77,8 +77,8 @@ TurnType::Enum IntersectionHandler::findBasicTurnType(const EdgeID via_edge,
     const auto &out_name_id =
         node_data_container.GetAnnotation(node_based_graph.GetEdgeData(road.eid).annotation_data)
             .name_id;
-    const auto &in_name_empty = name_table.GetNameForID(in_name_id).to_string().empty();
-    const auto &out_name_empty = name_table.GetNameForID(out_name_id).to_string().empty();
+    const auto &in_name_empty = name_table.GetNameForID(in_name_id).empty();
+    const auto &out_name_empty = name_table.GetNameForID(out_name_id).empty();
 
     const auto same_name = !util::guidance::requiresNameAnnounced(
         in_name_id, out_name_id, name_table, street_name_suffix_table);

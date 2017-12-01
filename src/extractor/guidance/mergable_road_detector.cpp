@@ -40,8 +40,8 @@ inline auto makeCheckRoadForName(const NameID name_id,
                 .name_id;
         if (name_id == EMPTY_NAMEID || road_name_id == EMPTY_NAMEID)
             return true;
-        const auto road_name_empty = name_table.GetNameForID(road_name_id).to_string().empty();
-        const auto in_name_empty = name_table.GetNameForID(name_id).to_string().empty();
+        const auto road_name_empty = name_table.GetNameForID(road_name_id).empty();
+        const auto in_name_empty = name_table.GetNameForID(name_id).empty();
         if (in_name_empty || road_name_empty)
             return true;
         const auto requires_announcement =
@@ -480,9 +480,8 @@ bool MergableRoadDetector::IsTrafficIsland(const NodeID intersection_node,
                     .name_id;
             if (road_name_id == EMPTY_NAMEID)
                 return false;
-            const auto &road_name_empty = name_table.GetNameForID(road_name_id).to_string().empty();
-            const auto &required_name_empty =
-                name_table.GetNameForID(required_name_id).to_string().empty();
+            const auto &road_name_empty = name_table.GetNameForID(road_name_id).empty();
+            const auto &required_name_empty = name_table.GetNameForID(required_name_id).empty();
             if (required_name_empty && road_name_empty)
                 return false;
             return !util::guidance::requiresNameAnnounced(

@@ -475,9 +475,7 @@ operator()(const NodeID /*nid*/, const EdgeID source_edge_id, Intersection inter
             // Name mismatch: check roads at `c` and `d` for same name
             const auto name_mismatch = [&](const NameID road_name_id) {
                 const auto unnamed =
-                    road_name_id == EMPTY_NAMEID
-                        ? true
-                        : name_table.GetNameForID(road_name_id).to_string().empty();
+                    road_name_id == EMPTY_NAMEID || name_table.GetNameForID(road_name_id).empty();
 
                 return unnamed ||
                        util::guidance::requiresNameAnnounced(road_name_id,              //
@@ -502,17 +500,18 @@ operator()(const NodeID /*nid*/, const EdgeID source_edge_id, Intersection inter
                 node_data_container
                     .GetAnnotation(node_based_graph.GetEdgeData(main_road.eid).annotation_data)
                     .name_id;
+            const auto main_road_name_empty = main_road_name_id == EMPTY_NAMEID ||
+                                              name_table.GetNameForID(main_road_name_id).empty();
             const auto &sliproad_annotation =
                 node_data_container.GetAnnotation(sliproad_edge_data.annotation_data);
-            const auto &sliproad_name_empty =
-                sliproad_annotation.name_id == EMPTY_NAMEID
-                    ? true
-                    : name_table.GetNameForID(sliproad_annotation.name_id).to_string().empty();
-            const auto &main_road_name = name_table.GetNameForID(main_road_name_id).to_string();
-            const auto &candidate_road_name =
-                name_table.GetNameForID(candidate_data.name_id).to_string();
+            const auto sliproad_name_empty =
+                sliproad_annotation.name_id == EMPTY_NAMEID ||
+                name_table.GetNameForID(sliproad_annotation.name_id).empty();
+            const auto candidate_road_name_empty =
+                candidate_data.name_id == EMPTY_NAMEID ||
+                name_table.GetNameForID(candidate_data.name_id).empty();
             if (!sliproad_edge_data.flags.road_classification.IsLinkClass() &&
-                !sliproad_name_empty && !main_road_name.empty() && !candidate_road_name.empty() &&
+                !sliproad_name_empty && !main_road_name_empty && !candidate_road_name_empty &&
                 util::guidance::requiresNameAnnounced(main_road_name_id,
                                                       sliproad_annotation.name_id,
                                                       name_table,
