@@ -297,8 +297,9 @@ RoundaboutType RoundaboutHandler::getRoundaboutType(const NodeID nid) const
 
                 if (edge_data.name_id != EMPTY_NAMEID)
                 {
-                    const auto &edge_name = name_table.GetNameForID(edge_data.name_id).to_string();
-                    if (!edge_name.empty())
+                    const auto &edge_name_empty =
+                        name_table.GetNameForID(edge_data.name_id).empty();
+                    if (!edge_name_empty)
                     {
 
                         const auto announce = [&](unsigned id) {
