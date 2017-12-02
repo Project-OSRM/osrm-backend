@@ -254,47 +254,10 @@ getIntersectionOutgoingGeometries(const util::NodeBasedDynamicGraph &graph,
         edge_geometries.push_back({outgoing_edge, initial_bearing, perceived_bearing, edge_length});
     }
 
-    // TODO: remove to fix https://github.com/Project-OSRM/osrm-backend/issues/4704
-    if (!edge_geometries.empty())
-    { // Adjust perceived bearings to keep the initial order with respect to the first edge
-        // Sort geometries by initial bearings
-        std::sort(edge_geometries.begin(),
-                  edge_geometries.end(),
-                  [base_bearing = util::bearing::reverse(edge_geometries.front().initial_bearing)](
-                      const auto &lhs, const auto &rhs) {
-                      return (util::bearing::angleBetween(lhs.initial_bearing, base_bearing) <
-                              util::bearing::angleBetween(rhs.initial_bearing, base_bearing)) ||
-                             (lhs.initial_bearing == rhs.initial_bearing &&
-                              util::bearing::angleBetween(lhs.perceived_bearing,
-                                                          rhs.perceived_bearing) < 180.);
-                  });
-
-        // Make a bearings ordering functor
-        const auto base_bearing = util::bearing::reverse(edge_geometries.front().perceived_bearing);
-        const auto bearings_order = [base_bearing](const auto &lhs, const auto &rhs) {
-            return util::bearing::angleBetween(lhs.perceived_bearing, base_bearing) <
-                   util::bearing::angleBetween(rhs.perceived_bearing, base_bearing);
-        };
-
-        // Check the perceived bearings order is the same as the initial one
-        for (auto curr = edge_geometries.begin(), next = std::next(curr);
-             next != edge_geometries.end();
-             ++curr, ++next)
-        {
-            if (bearings_order(*next, *curr))
-            { // If the true bearing is out of the initial order (next before current) then
-                // adjust the next bearing to keep the order. The adjustment angle is at most
-                // 0.5° or a half-angle between the current bearing and the base bearing.
-                // to prevent overlapping over base bearing + 360°.
-                const auto angle_adjustment = std::min(
-                    .5,
-                    util::restrictAngleToValidRange(base_bearing - curr->perceived_bearing) / 2.);
-                next->perceived_bearing =
-                    util::restrictAngleToValidRange(curr->perceived_bearing + angle_adjustment);
-            }
-        }
-    }
-
+    // Sort edges in the clockwise bearings order
+    std::sort(edge_geometries.begin(), edge_geometries.end(), [](const auto &lhs, const auto &rhs) {
+        return lhs.perceived_bearing < rhs.perceived_bearing;
+    });
     return edge_geometries;
 }
 }
@@ -332,8 +295,8 @@ getIntersectionGeometries(const util::NodeBasedDynamicGraph &graph,
 
                 const auto merge = findMergedBearing(graph, edge_geometries, index, next, false);
 
-                lhs.perceived_bearing = merge.second;
-                rhs.perceived_bearing = merge.second;
+                lhs.perceived_bearing = lhs.initial_bearing = merge.second;
+                rhs.perceived_bearing = rhs.initial_bearing = merge.second;
                 merged_edge_ids.insert(lhs.edge);
                 merged_edge_ids.insert(rhs.edge);
             }
@@ -397,7 +360,7 @@ getIntersectionGeometries(const util::NodeBasedDynamicGraph &graph,
                     //  b --- B ---
                     //       /
                     //     C
-                    edge_geometry.perceived_bearing =
+                    edge_geometry.perceived_bearing = edge_geometry.initial_bearing =
                         std::fmod(edge_geometry.perceived_bearing + 360. - offset, 360.);
                 }
             }
@@ -424,7 +387,7 @@ getIntersectionGeometries(const util::NodeBasedDynamicGraph &graph,
                     //    --- B --- b
                     //         \ 
                     //          C
-                    edge_geometry.perceived_bearing =
+                    edge_geometry.perceived_bearing = edge_geometry.initial_bearing =
                         std::fmod(edge_geometry.perceived_bearing + offset, 360.);
                 }
             }
@@ -666,9 +629,14 @@ convertToIntersectionView(const util::NodeBasedDynamicGraph &graph,
                           const IntersectionEdges &outgoing_edges,
                           const std::unordered_set<EdgeID> &merged_edges)
 {
-    const auto incoming_bearing = findEdgeBearing(edge_geometries, incoming_edge.edge);
+    using util::bearing::angleBetween;
 
-    guidance::IntersectionView intersection_view;
+    const auto edge_it = findEdge(edge_geometries, incoming_edge.edge);
+    const auto incoming_bearing = edge_it->perceived_bearing;
+    const auto initial_incoming_bearing = edge_it->initial_bearing;
+
+    using IntersectionViewDataWithAngle = std::pair<guidance::IntersectionViewData, double>;
+    std::vector<IntersectionViewDataWithAngle> pre_intersection_view;
     guidance::IntersectionViewData uturn{{SPECIAL_EDGEID, 0., 0.}, false, 0.};
     std::size_t allowed_uturns_number = 0;
     for (const auto &outgoing_edge : outgoing_edges)
@@ -678,12 +646,8 @@ convertToIntersectionView(const util::NodeBasedDynamicGraph &graph,
         };
 
         const auto edge_it = findEdge(edge_geometries, outgoing_edge.edge);
-        const auto outgoing_bearing = edge_it->perceived_bearing;
-        const auto initial_outgoing_bearing = edge_it->initial_bearing;
         const auto segment_length = edge_it->length;
-        const auto turn_angle = std::fmod(
-            std::round(util::bearing::angleBetween(incoming_bearing, outgoing_bearing) * 1e8) / 1e8,
-            360.);
+        const auto is_merged = merged_edges.count(outgoing_edge.edge) != 0;
         const auto is_turn_allowed = intersection::isTurnAllowed(graph,
                                                                  node_data_container,
                                                                  restriction_map,
@@ -692,8 +656,25 @@ convertToIntersectionView(const util::NodeBasedDynamicGraph &graph,
                                                                  turn_lanes_data,
                                                                  incoming_edge,
                                                                  outgoing_edge);
+
+        // Compute angles
+        const auto outgoing_bearing = edge_it->perceived_bearing;
+        const auto initial_outgoing_bearing = edge_it->initial_bearing;
+        auto turn_angle = std::fmod(
+            std::round(angleBetween(incoming_bearing, outgoing_bearing) * 1e8) / 1e8, 360.);
+        auto initial_angle = angleBetween(initial_incoming_bearing, initial_outgoing_bearing);
+
+        // If angle of the allowed turn is in a neighborhood of 0° (±15°) but the initial OSM angle
+        // is in the opposite semi-plane then assume explicitly a U-turn to avoid incorrect
+        // adjustments due to numerical noise in selection of representative_coordinate
+        if (is_turn_allowed &&
+            ((turn_angle < 15 && initial_angle > 180) || (turn_angle > 345 && initial_angle < 180)))
+        {
+            turn_angle = 0;
+            initial_angle = 0;
+        }
+
         const auto is_uturn_angle = is_uturn(turn_angle);
-        const auto is_merged = merged_edges.count(outgoing_edge.edge) != 0;
 
         guidance::IntersectionViewData road{
             {outgoing_edge.edge, outgoing_bearing, segment_length}, is_turn_allowed, turn_angle};
@@ -706,20 +687,56 @@ convertToIntersectionView(const util::NodeBasedDynamicGraph &graph,
         { // Add roads that have allowed entry or not U-turns and not merged
             allowed_uturns_number += is_uturn_angle;
 
-            intersection_view.push_back(road);
+            // Adjust computed initial turn angle for non-U-turn road edge cases:
+            // 1) use 0° or 360° if the road has 0° initial angle
+            // 2) use turn angle if the smallest arc between turn and initial angles passes 0°
+            const auto use_turn_angle = (turn_angle > 270 && initial_angle < 90) ||
+                                        (turn_angle < 90 && initial_angle > 270);
+            const auto adjusted_angle = is_uturn(initial_angle)
+                                            ? (turn_angle > 180. ? 360. : 0.)
+                                            : use_turn_angle ? turn_angle : initial_angle;
+            pre_intersection_view.push_back({road, adjusted_angle});
         }
     }
 
     BOOST_ASSERT(uturn.eid != SPECIAL_EDGEID);
     if (uturn.entry_allowed || allowed_uturns_number == 0)
     { // Add the true U-turn if it is allowed or no other U-turns found
-        intersection_view.insert(intersection_view.begin(), uturn);
+        pre_intersection_view.insert(pre_intersection_view.begin(), {uturn, 0});
     }
 
-    // Order roads in counter-clockwise order starting from the U-turn edge
-    std::sort(intersection_view.begin(),
-              intersection_view.end(),
-              [](const auto &lhs, const auto &rhs) { return lhs.angle < rhs.angle; });
+    // Order roads in counter-clockwise order starting from the U-turn edge in the OSM order
+    std::stable_sort(pre_intersection_view.begin(),
+                     pre_intersection_view.end(),
+                     [](const auto &lhs, const auto &rhs) {
+                         return std::tie(lhs.second, lhs.first.angle) <
+                                std::tie(rhs.second, rhs.first.angle);
+                     });
+
+    // Adjust perceived bearings to keep the initial OSM order with respect to the first edge
+    for (auto curr = pre_intersection_view.begin(), next = std::next(curr);
+         next != pre_intersection_view.end();
+         ++curr, ++next)
+    {
+        // Check the the perceived angles order is the same as the initial OSM one
+        if (next->first.angle < curr->first.angle)
+        { // If the true bearing is out of the initial order (next before current) then
+            // adjust the next road angle to keep the order. The adjustment angle is at most
+            // 0.5° or a half-angle between the current angle and 360° to prevent overlapping
+            const auto angle_adjustment =
+                std::min(.5, util::restrictAngleToValidRange(360. - curr->first.angle) / 2.);
+            next->first.angle =
+                util::restrictAngleToValidRange(curr->first.angle + angle_adjustment);
+        }
+    }
+
+    // Copy intersection view data
+    guidance::IntersectionView intersection_view;
+    intersection_view.reserve(pre_intersection_view.size());
+    std::transform(pre_intersection_view.begin(),
+                   pre_intersection_view.end(),
+                   std::back_inserter(intersection_view),
+                   [](const auto &road) { return road.first; });
 
     return intersection_view;
 }

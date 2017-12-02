@@ -2,8 +2,9 @@
  - Changes from 5.14.1:
    - Bugfixes:
       - FIXED #4727: Erroring when a old .core file is present.
-   - Internals
-      - Guidance refactoring step to decouple intersection connectivity analysis and turn instructions generation
+      - FIXED #4704: Fixed regression in bearings reordering introduced in 5.13 [#4704](https://github.com/Project-OSRM/osrm-backend/issues/4704)
+    - Guidance:
+      - CHANGED #4706: Guidance refactoring step to decouple intersection connectivity analysis and turn instructions generation [#4706](https://github.com/Project-OSRM/osrm-backend/pull/4706)
 
 # 5.14.1
   - Changes from 5.14.0
