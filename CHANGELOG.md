@@ -1,4 +1,11 @@
 # UNRELEASED
+  - Changes from 5.14.3:
+    - Bugfixes:
+      - FIXED #4704: Fixed regression in bearings reordering introduced in 5.13 [#4704](https://github.com/Project-OSRM/osrm-backend/issues/4704)
+    - Guidance:
+      - CHANGED #4706: Guidance refactoring step to decouple intersection connectivity analysis and turn instructions generation [#4706](https://github.com/Project-OSRM/osrm-backend/pull/4706)
+
+# 5.14.3
   - Changes from 5.14.2:
     - Bugfixes:
       - FIXED #4754: U-Turn penalties are applied to straight turns.
