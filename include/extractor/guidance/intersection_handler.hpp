@@ -4,6 +4,7 @@
 #include "extractor/guidance/intersection.hpp"
 #include "extractor/guidance/intersection_generator.hpp"
 #include "extractor/guidance/node_based_graph_walker.hpp"
+#include "extractor/intersection/intersection_analysis.hpp"
 #include "extractor/query_node.hpp"
 #include "extractor/suffix_table.hpp"
 
@@ -34,7 +35,11 @@ class IntersectionHandler
   public:
     IntersectionHandler(const util::NodeBasedDynamicGraph &node_based_graph,
                         const EdgeBasedNodeDataContainer &node_data_container,
-                        const std::vector<util::Coordinate> &coordinates,
+                        const std::vector<util::Coordinate> &node_coordinates,
+                        const extractor::CompressedEdgeContainer &compressed_geometries,
+                        const RestrictionMap &node_restriction_map,
+                        const std::unordered_set<NodeID> &barrier_nodes,
+                        const guidance::TurnLanesIndexedArray &turn_lanes_data,
                         const util::NameTable &name_table,
                         const SuffixTable &street_name_suffix_table,
                         const IntersectionGenerator &intersection_generator);
@@ -52,7 +57,11 @@ class IntersectionHandler
   protected:
     const util::NodeBasedDynamicGraph &node_based_graph;
     const EdgeBasedNodeDataContainer &node_data_container;
-    const std::vector<util::Coordinate> &coordinates;
+    const std::vector<util::Coordinate> &node_coordinates;
+    const extractor::CompressedEdgeContainer &compressed_geometries;
+    const RestrictionMap &node_restriction_map;
+    const std::unordered_set<NodeID> &barrier_nodes;
+    const guidance::TurnLanesIndexedArray &turn_lanes_data;
     const util::NameTable &name_table;
     const SuffixTable &street_name_suffix_table;
     const IntersectionGenerator &intersection_generator;
@@ -571,7 +580,15 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
                     node_at_intersection, intersection[0].eid);
                 if (node_based_graph.GetTarget(parameters.via_eid) == node_at_intersection)
                     return {};
-                return intersection_generator.GetConnectedRoads(parameters.nid, parameters.via_eid);
+
+                return intersection::getConnectedRoads(node_based_graph,
+                                                       node_data_container,
+                                                       node_coordinates,
+                                                       compressed_geometries,
+                                                       node_restriction_map,
+                                                       barrier_nodes,
+                                                       turn_lanes_data,
+                                                       {parameters.nid, parameters.via_eid});
             }();
 
             if (!previous_intersection.empty())

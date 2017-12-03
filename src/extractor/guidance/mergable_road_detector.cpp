@@ -3,6 +3,7 @@
 #include "extractor/guidance/coordinate_extractor.hpp"
 #include "extractor/guidance/intersection_generator.hpp"
 #include "extractor/guidance/node_based_graph_walker.hpp"
+#include "extractor/intersection/intersection_analysis.hpp"
 #include "extractor/query_node.hpp"
 #include "extractor/suffix_table.hpp"
 
@@ -52,15 +53,22 @@ inline auto makeCheckRoadForName(const NameID name_id,
 }
 }
 
-MergableRoadDetector::MergableRoadDetector(const util::NodeBasedDynamicGraph &node_based_graph,
-                                           const EdgeBasedNodeDataContainer &node_data_container,
-                                           const std::vector<util::Coordinate> &node_coordinates,
-                                           const IntersectionGenerator &intersection_generator,
-                                           const CoordinateExtractor &coordinate_extractor,
-                                           const util::NameTable &name_table,
-                                           const SuffixTable &street_name_suffix_table)
+MergableRoadDetector::MergableRoadDetector(
+    const util::NodeBasedDynamicGraph &node_based_graph,
+    const EdgeBasedNodeDataContainer &node_data_container,
+    const std::vector<util::Coordinate> &node_coordinates,
+    const extractor::CompressedEdgeContainer &compressed_geometries,
+    const RestrictionMap &node_restriction_map,
+    const std::unordered_set<NodeID> &barrier_nodes,
+    const guidance::TurnLanesIndexedArray &turn_lanes_data,
+    const IntersectionGenerator &intersection_generator,
+    const CoordinateExtractor &coordinate_extractor,
+    const util::NameTable &name_table,
+    const SuffixTable &street_name_suffix_table)
     : node_based_graph(node_based_graph), node_data_container(node_data_container),
-      node_coordinates(node_coordinates), intersection_generator(intersection_generator),
+      node_coordinates(node_coordinates), compressed_geometries(compressed_geometries),
+      node_restriction_map(node_restriction_map), barrier_nodes(barrier_nodes),
+      turn_lanes_data(turn_lanes_data), intersection_generator(intersection_generator),
       coordinate_extractor(coordinate_extractor), name_table(name_table),
       street_name_suffix_table(street_name_suffix_table)
 {
@@ -180,8 +188,22 @@ bool MergableRoadDetector::IsNarrowTriangle(const NodeID intersection_node,
 {
     // selection data to the right and left
     const auto constexpr SMALL_RANDOM_HOPLIMIT = 5;
-    IntersectionFinderAccumulator left_accumulator(SMALL_RANDOM_HOPLIMIT, intersection_generator),
-        right_accumulator(SMALL_RANDOM_HOPLIMIT, intersection_generator);
+    IntersectionFinderAccumulator left_accumulator(SMALL_RANDOM_HOPLIMIT,
+                                                   node_based_graph,
+                                                   node_data_container,
+                                                   node_coordinates,
+                                                   compressed_geometries,
+                                                   node_restriction_map,
+                                                   barrier_nodes,
+                                                   turn_lanes_data),
+        right_accumulator(SMALL_RANDOM_HOPLIMIT,
+                          node_based_graph,
+                          node_data_container,
+                          node_coordinates,
+                          compressed_geometries,
+                          node_restriction_map,
+                          barrier_nodes,
+                          turn_lanes_data);
 
     /* Standard following the straightmost road
      * Since both items have the same id, we can `select` based on any setup
@@ -193,8 +215,13 @@ bool MergableRoadDetector::IsNarrowTriangle(const NodeID intersection_node,
         /*requires entry=*/false,
         false);
 
-    NodeBasedGraphWalker graph_walker(
-        node_based_graph, node_data_container, intersection_generator);
+    NodeBasedGraphWalker graph_walker(node_based_graph,
+                                      node_data_container,
+                                      node_coordinates,
+                                      compressed_geometries,
+                                      node_restriction_map,
+                                      barrier_nodes,
+                                      turn_lanes_data);
     graph_walker.TraverseRoad(intersection_node, lhs.eid, left_accumulator, selector);
     /* if the intersection does not have a right turn, we continue onto the next one once
      * (skipping over a single small side street)
@@ -266,7 +293,13 @@ bool MergableRoadDetector::IsNarrowTriangle(const NodeID intersection_node,
 
     // check if both intersections are connected
     IntersectionFinderAccumulator connect_accumulator(SMALL_RANDOM_HOPLIMIT,
-                                                      intersection_generator);
+                                                      node_based_graph,
+                                                      node_data_container,
+                                                      node_coordinates,
+                                                      compressed_geometries,
+                                                      node_restriction_map,
+                                                      barrier_nodes,
+                                                      turn_lanes_data);
     graph_walker.TraverseRoad(node_based_graph.GetTarget(left_accumulator.via_edge_id),
                               connector_turn->eid,
                               connect_accumulator,
@@ -281,8 +314,13 @@ bool MergableRoadDetector::IsCircularShape(const NodeID intersection_node,
                                            const MergableRoadData &lhs,
                                            const MergableRoadData &rhs) const
 {
-    NodeBasedGraphWalker graph_walker(
-        node_based_graph, node_data_container, intersection_generator);
+    NodeBasedGraphWalker graph_walker(node_based_graph,
+                                      node_data_container,
+                                      node_coordinates,
+                                      compressed_geometries,
+                                      node_restriction_map,
+                                      barrier_nodes,
+                                      turn_lanes_data);
     const auto getCoordinatesAlongWay = [&](const EdgeID edge_id, const double max_length) {
         LengthLimitedCoordinateAccumulator accumulator(coordinate_extractor, max_length);
         SelectStraightmostRoadByNameAndOnlyChoice selector(
@@ -348,8 +386,13 @@ bool MergableRoadDetector::HaveSameDirection(const NodeID intersection_node,
         return false;
 
     // Find a coordinate following a road that is far away
-    NodeBasedGraphWalker graph_walker(
-        node_based_graph, node_data_container, intersection_generator);
+    NodeBasedGraphWalker graph_walker(node_based_graph,
+                                      node_data_container,
+                                      node_coordinates,
+                                      compressed_geometries,
+                                      node_restriction_map,
+                                      barrier_nodes,
+                                      turn_lanes_data);
     const auto getCoordinatesAlongWay = [&](const EdgeID edge_id, const double max_length) {
         LengthLimitedCoordinateAccumulator accumulator(coordinate_extractor, max_length);
         SelectStraightmostRoadByNameAndOnlyChoice selector(
@@ -517,8 +560,15 @@ bool MergableRoadDetector::IsLinkRoad(const NodeID intersection_node,
 {
     const auto next_intersection_parameters =
         intersection_generator.SkipDegreeTwoNodes(intersection_node, road.eid);
-    const auto next_intersection_along_road = intersection_generator.GetConnectedRoads(
-        next_intersection_parameters.nid, next_intersection_parameters.via_eid);
+    const auto next_intersection_along_road = intersection::getConnectedRoads(
+        node_based_graph,
+        node_data_container,
+        node_coordinates,
+        compressed_geometries,
+        node_restriction_map,
+        barrier_nodes,
+        turn_lanes_data,
+        {next_intersection_parameters.nid, next_intersection_parameters.via_eid});
     const auto extract_name_id = [this](const MergableRoadData &road) {
         return node_data_container
             .GetAnnotation(node_based_graph.GetEdgeData(road.eid).annotation_data)

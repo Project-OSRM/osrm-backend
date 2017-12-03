@@ -1,4 +1,5 @@
 #include "extractor/guidance/node_based_graph_walker.hpp"
+#include "extractor/intersection/intersection_analysis.hpp"
 #include "util/bearing.hpp"
 #include "util/coordinate_calculation.hpp"
 
@@ -14,11 +15,18 @@ namespace guidance
 {
 
 // ---------------------------------------------------------------------------------
-NodeBasedGraphWalker::NodeBasedGraphWalker(const util::NodeBasedDynamicGraph &node_based_graph,
-                                           const EdgeBasedNodeDataContainer &node_data_container,
-                                           const IntersectionGenerator &intersection_generator)
+NodeBasedGraphWalker::NodeBasedGraphWalker(
+    const util::NodeBasedDynamicGraph &node_based_graph,
+    const EdgeBasedNodeDataContainer &node_data_container,
+    const std::vector<util::Coordinate> &node_coordinates,
+    const extractor::CompressedEdgeContainer &compressed_geometries,
+    const RestrictionMap &node_restriction_map,
+    const std::unordered_set<NodeID> &barrier_nodes,
+    const guidance::TurnLanesIndexedArray &turn_lanes_data)
     : node_based_graph(node_based_graph), node_data_container(node_data_container),
-      intersection_generator(intersection_generator)
+      node_coordinates(node_coordinates), compressed_geometries(compressed_geometries),
+      node_restriction_map(node_restriction_map), barrier_nodes(barrier_nodes),
+      turn_lanes_data(turn_lanes_data)
 {
 }
 
@@ -235,8 +243,18 @@ operator()(const NodeID /*nid*/,
 
 // ---------------------------------------------------------------------------------
 IntersectionFinderAccumulator::IntersectionFinderAccumulator(
-    const std::uint8_t hop_limit, const IntersectionGenerator &intersection_generator)
-    : hops(0), hop_limit(hop_limit), intersection_generator(intersection_generator)
+    const std::uint8_t hop_limit,
+    const util::NodeBasedDynamicGraph &node_based_graph,
+    const EdgeBasedNodeDataContainer &node_data_container,
+    const std::vector<util::Coordinate> &node_coordinates,
+    const extractor::CompressedEdgeContainer &compressed_geometries,
+    const RestrictionMap &node_restriction_map,
+    const std::unordered_set<NodeID> &barrier_nodes,
+    const guidance::TurnLanesIndexedArray &turn_lanes_data)
+    : hops(0), hop_limit(hop_limit), node_based_graph(node_based_graph),
+      node_data_container(node_data_container), node_coordinates(node_coordinates),
+      compressed_geometries(compressed_geometries), node_restriction_map(node_restriction_map),
+      barrier_nodes(barrier_nodes), turn_lanes_data(turn_lanes_data)
 {
 }
 
@@ -261,7 +279,14 @@ void IntersectionFinderAccumulator::update(const NodeID from_node,
     nid = from_node;
     via_edge_id = via_edge;
 
-    intersection = intersection_generator.GetConnectedRoads(from_node, via_edge, true);
+    intersection = intersection::getConnectedRoads(node_based_graph,
+                                                   node_data_container,
+                                                   node_coordinates,
+                                                   compressed_geometries,
+                                                   node_restriction_map,
+                                                   barrier_nodes,
+                                                   turn_lanes_data,
+                                                   {from_node, via_edge});
 }
 
 } // namespace guidance

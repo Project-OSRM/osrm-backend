@@ -11,15 +11,24 @@ namespace extractor
 namespace guidance
 {
 
-SuppressModeHandler::SuppressModeHandler(const IntersectionGenerator &intersection_generator,
-                                         const util::NodeBasedDynamicGraph &node_based_graph,
-                                         const EdgeBasedNodeDataContainer &node_data_container,
-                                         const std::vector<util::Coordinate> &coordinates,
-                                         const util::NameTable &name_table,
-                                         const SuffixTable &street_name_suffix_table)
+SuppressModeHandler::SuppressModeHandler(
+    const IntersectionGenerator &intersection_generator,
+    const util::NodeBasedDynamicGraph &node_based_graph,
+    const EdgeBasedNodeDataContainer &node_data_container,
+    const std::vector<util::Coordinate> &coordinates,
+    const extractor::CompressedEdgeContainer &compressed_geometries,
+    const RestrictionMap &node_restriction_map,
+    const std::unordered_set<NodeID> &barrier_nodes,
+    const guidance::TurnLanesIndexedArray &turn_lanes_data,
+    const util::NameTable &name_table,
+    const SuffixTable &street_name_suffix_table)
     : IntersectionHandler(node_based_graph,
                           node_data_container,
                           coordinates,
+                          compressed_geometries,
+                          node_restriction_map,
+                          barrier_nodes,
+                          turn_lanes_data,
                           name_table,
                           street_name_suffix_table,
                           intersection_generator)

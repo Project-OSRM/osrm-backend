@@ -421,41 +421,56 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
     TurnDataExternalContainer turn_data_container;
 
+    // TODO: add a MergableRoadDetector instance, to be deleted later
+    SuffixTable street_name_suffix_table(scripting_environment);
+    const auto &turn_lanes_data = transformTurnLaneMapIntoArrays(lane_description_map);
+    guidance::CoordinateExtractor coordinate_extractor(
+        m_node_based_graph, m_compressed_edge_container, m_coordinates);
+    guidance::IntersectionGenerator intersection_generator(m_node_based_graph,
+                                                           m_edge_based_node_container,
+                                                           node_restriction_map,
+                                                           m_barrier_nodes,
+                                                           m_coordinates,
+                                                           m_compressed_edge_container);
+    guidance::MergableRoadDetector mergable_road_detector(m_node_based_graph,
+                                                          m_edge_based_node_container,
+                                                          m_coordinates,
+                                                          m_compressed_edge_container,
+                                                          node_restriction_map,
+                                                          m_barrier_nodes,
+                                                          turn_lanes_data,
+                                                          intersection_generator,
+                                                          coordinate_extractor,
+                                                          name_table,
+                                                          street_name_suffix_table);
+
     // Loop over all turns and generate new set of edges.
     // Three nested loop look super-linear, but we are dealing with a (kind of)
     // linear number of turns only.
-    SuffixTable street_name_suffix_table(scripting_environment);
     guidance::TurnAnalysis turn_analysis(m_node_based_graph,
                                          m_edge_based_node_container,
                                          m_coordinates,
+                                         m_compressed_edge_container,
                                          node_restriction_map,
                                          m_barrier_nodes,
-                                         m_compressed_edge_container,
+                                         turn_lanes_data,
                                          name_table,
                                          street_name_suffix_table);
 
     util::guidance::LaneDataIdMap lane_data_map;
     guidance::lanes::TurnLaneHandler turn_lane_handler(m_node_based_graph,
                                                        m_edge_based_node_container,
+                                                       m_coordinates,
+                                                       m_compressed_edge_container,
+                                                       node_restriction_map,
+                                                       m_barrier_nodes,
+                                                       turn_lanes_data,
                                                        lane_description_map,
                                                        turn_analysis,
                                                        lane_data_map);
 
-    // TODO: add a MergableRoadDetector instance, to be deleted later
-    guidance::CoordinateExtractor coordinate_extractor(
-        m_node_based_graph, m_compressed_edge_container, m_coordinates);
-    guidance::MergableRoadDetector mergable_road_detector(m_node_based_graph,
-                                                          m_edge_based_node_container,
-                                                          m_coordinates,
-                                                          turn_analysis.GetIntersectionGenerator(),
-                                                          coordinate_extractor,
-                                                          name_table,
-                                                          street_name_suffix_table);
-
     bearing_class_by_node_based_node.resize(m_node_based_graph.GetNumberOfNodes(),
                                             std::numeric_limits<std::uint32_t>::max());
-
-    const auto &turn_lanes_data = transformTurnLaneMapIntoArrays(lane_description_map);
 
     // FIXME these need to be tuned in pre-allocated size
     std::vector<TurnPenalty> turn_weight_penalties;

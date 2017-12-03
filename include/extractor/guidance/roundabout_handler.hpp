@@ -42,7 +42,10 @@ class RoundaboutHandler : public IntersectionHandler
     RoundaboutHandler(const util::NodeBasedDynamicGraph &node_based_graph,
                       const EdgeBasedNodeDataContainer &node_data_container,
                       const std::vector<util::Coordinate> &coordinates,
-                      const CompressedEdgeContainer &compressed_edge_container,
+                      const extractor::CompressedEdgeContainer &compressed_geometries,
+                      const RestrictionMap &node_restriction_map,
+                      const std::unordered_set<NodeID> &barrier_nodes,
+                      const guidance::TurnLanesIndexedArray &turn_lanes_data,
                       const util::NameTable &name_table,
                       const SuffixTable &street_name_suffix_table,
                       const IntersectionGenerator &intersection_generator);
@@ -80,7 +83,6 @@ class RoundaboutHandler : public IntersectionHandler
     bool
     qualifiesAsRoundaboutIntersection(const std::unordered_set<NodeID> &roundabout_nodes) const;
 
-    const CompressedEdgeContainer &compressed_edge_container;
     const CoordinateExtractor coordinate_extractor;
 };
 

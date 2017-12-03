@@ -74,6 +74,11 @@ class TurnLaneHandler
 
     TurnLaneHandler(const util::NodeBasedDynamicGraph &node_based_graph,
                     const EdgeBasedNodeDataContainer &node_data_container,
+                    const std::vector<util::Coordinate> &node_coordinates,
+                    const extractor::CompressedEdgeContainer &compressed_geometries,
+                    const RestrictionMap &node_restriction_map,
+                    const std::unordered_set<NodeID> &barrier_nodes,
+                    const guidance::TurnLanesIndexedArray &turn_lanes_data,
                     LaneDescriptionMap &lane_description_map,
                     const TurnAnalysis &turn_analysis,
                     util::guidance::LaneDataIdMap &id_map);
@@ -90,6 +95,12 @@ class TurnLaneHandler
     // lanes for a turn
     const util::NodeBasedDynamicGraph &node_based_graph;
     const EdgeBasedNodeDataContainer &node_data_container;
+    const std::vector<util::Coordinate> &node_coordinates;
+    const extractor::CompressedEdgeContainer &compressed_geometries;
+    const RestrictionMap &node_restriction_map;
+    const std::unordered_set<NodeID> &barrier_nodes;
+    const guidance::TurnLanesIndexedArray &turn_lanes_data;
+
     std::vector<std::uint32_t> turn_lane_offsets;
     std::vector<TurnLaneType::Mask> turn_lane_masks;
     LaneDescriptionMap &lane_description_map;

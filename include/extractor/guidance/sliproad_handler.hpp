@@ -28,6 +28,10 @@ class SliproadHandler final : public IntersectionHandler
                     const util::NodeBasedDynamicGraph &node_based_graph,
                     const EdgeBasedNodeDataContainer &node_data_container,
                     const std::vector<util::Coordinate> &coordinates,
+                    const extractor::CompressedEdgeContainer &compressed_geometries,
+                    const RestrictionMap &node_restriction_map,
+                    const std::unordered_set<NodeID> &barrier_nodes,
+                    const guidance::TurnLanesIndexedArray &turn_lanes_data,
                     const util::NameTable &name_table,
                     const SuffixTable &street_name_suffix_table);
 
@@ -78,6 +82,8 @@ class SliproadHandler final : public IntersectionHandler
     // The return value is guaranteed to not be larger than `threshold`.
     static double scaledThresholdByRoadClass(const double max_threshold,
                                              const RoadClassification &classification);
+
+    const CoordinateExtractor coordinate_extractor;
 };
 
 } // namespace guidance
