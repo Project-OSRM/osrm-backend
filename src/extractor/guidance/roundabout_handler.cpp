@@ -23,21 +23,28 @@ namespace extractor
 namespace guidance
 {
 
-RoundaboutHandler::RoundaboutHandler(const util::NodeBasedDynamicGraph &node_based_graph,
-                                     const EdgeBasedNodeDataContainer &node_data_container,
-                                     const std::vector<util::Coordinate> &coordinates,
-                                     const CompressedEdgeContainer &compressed_edge_container,
-                                     const util::NameTable &name_table,
-                                     const SuffixTable &street_name_suffix_table,
-                                     const IntersectionGenerator &intersection_generator)
+RoundaboutHandler::RoundaboutHandler(
+    const util::NodeBasedDynamicGraph &node_based_graph,
+    const EdgeBasedNodeDataContainer &node_data_container,
+    const std::vector<util::Coordinate> &coordinates,
+    const extractor::CompressedEdgeContainer &compressed_geometries,
+    const RestrictionMap &node_restriction_map,
+    const std::unordered_set<NodeID> &barrier_nodes,
+    const guidance::TurnLanesIndexedArray &turn_lanes_data,
+    const util::NameTable &name_table,
+    const SuffixTable &street_name_suffix_table,
+    const IntersectionGenerator &intersection_generator)
     : IntersectionHandler(node_based_graph,
                           node_data_container,
                           coordinates,
+                          compressed_geometries,
+                          node_restriction_map,
+                          barrier_nodes,
+                          turn_lanes_data,
                           name_table,
                           street_name_suffix_table,
                           intersection_generator),
-      compressed_edge_container(compressed_edge_container),
-      coordinate_extractor(node_based_graph, compressed_edge_container, coordinates)
+      coordinate_extractor(node_based_graph, compressed_geometries, coordinates)
 {
 }
 
@@ -143,7 +150,7 @@ bool RoundaboutHandler::qualifiesAsRoundaboutIntersection(
                     continue;
 
                 // there is a single non-roundabout edge
-                const auto src_coordinate = coordinates[node];
+                const auto src_coordinate = node_coordinates[node];
 
                 const auto edge_range = node_based_graph.GetAdjacentEdgeRange(node);
                 const auto number_of_lanes_at_intersection = std::accumulate(
@@ -262,11 +269,11 @@ RoundaboutType RoundaboutHandler::getRoundaboutType(const NodeID nid) const
 
     const auto getEdgeLength = [&](const NodeID source_node, EdgeID eid) {
         double length = 0.;
-        auto last_coord = coordinates[source_node];
-        const auto &edge_bucket = compressed_edge_container.GetBucketReference(eid);
+        auto last_coord = node_coordinates[source_node];
+        const auto &edge_bucket = compressed_geometries.GetBucketReference(eid);
         for (const auto &compressed_edge : edge_bucket)
         {
-            const auto next_coord = coordinates[compressed_edge.node_id];
+            const auto next_coord = node_coordinates[compressed_edge.node_id];
             length += util::coordinate_calculation::haversineDistance(last_coord, next_coord);
             last_coord = next_coord;
         }

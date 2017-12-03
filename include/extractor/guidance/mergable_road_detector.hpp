@@ -1,7 +1,10 @@
 #ifndef OSRM_EXTRACTOR_GUIDANCE_MERGEABLE_ROADS
 #define OSRM_EXTRACTOR_GUIDANCE_MERGEABLE_ROADS
 
+#include "extractor/compressed_edge_container.hpp"
 #include "extractor/guidance/intersection.hpp"
+#include "extractor/guidance/turn_lane_types.hpp"
+#include "extractor/restriction_index.hpp"
 #include "util/coordinate.hpp"
 #include "util/node_based_graph.hpp"
 #include "util/typedefs.hpp"
@@ -9,6 +12,7 @@
 #include <cstdint>
 #include <functional>
 #include <limits>
+#include <unordered_set>
 #include <vector>
 
 namespace osrm
@@ -39,6 +43,10 @@ class MergableRoadDetector
     MergableRoadDetector(const util::NodeBasedDynamicGraph &node_based_graph,
                          const EdgeBasedNodeDataContainer &node_data_container,
                          const std::vector<util::Coordinate> &node_coordinates,
+                         const extractor::CompressedEdgeContainer &compressed_geometries,
+                         const RestrictionMap &node_restriction_map,
+                         const std::unordered_set<NodeID> &barrier_nodes,
+                         const guidance::TurnLanesIndexedArray &turn_lanes_data,
                          const IntersectionGenerator &intersection_generator,
                          const CoordinateExtractor &coordinate_extractor,
                          const util::NameTable &name_table,
@@ -159,6 +167,10 @@ class MergableRoadDetector
     const util::NodeBasedDynamicGraph &node_based_graph;
     const EdgeBasedNodeDataContainer &node_data_container;
     const std::vector<util::Coordinate> &node_coordinates;
+    const extractor::CompressedEdgeContainer &compressed_geometries;
+    const RestrictionMap &node_restriction_map;
+    const std::unordered_set<NodeID> &barrier_nodes;
+    const guidance::TurnLanesIndexedArray &turn_lanes_data;
     const IntersectionGenerator &intersection_generator;
     const CoordinateExtractor &coordinate_extractor;
 

@@ -2,7 +2,9 @@
 #define OSRM_EXTRACTOR_GUIDANCE_NODE_BASED_GRAPH_WALKER
 
 #include "extractor/guidance/constants.hpp"
-#include "extractor/guidance/intersection_generator.hpp"
+#include "extractor/guidance/coordinate_extractor.hpp"
+#include "extractor/guidance/turn_lane_data.hpp"
+#include "extractor/intersection/intersection_analysis.hpp"
 #include "util/coordinate.hpp"
 #include "util/coordinate_calculation.hpp"
 #include "util/node_based_graph.hpp"
@@ -29,7 +31,11 @@ class NodeBasedGraphWalker
   public:
     NodeBasedGraphWalker(const util::NodeBasedDynamicGraph &node_based_graph,
                          const EdgeBasedNodeDataContainer &node_data_container,
-                         const IntersectionGenerator &intersection_generator);
+                         const std::vector<util::Coordinate> &node_coordinates,
+                         const extractor::CompressedEdgeContainer &compressed_geometries,
+                         const RestrictionMap &node_restriction_map,
+                         const std::unordered_set<NodeID> &barrier_nodes,
+                         const guidance::TurnLanesIndexedArray &turn_lanes_data);
 
     /*
      * the returned node-id, edge-id are either the last ones used, just prior accumulator
@@ -48,7 +54,11 @@ class NodeBasedGraphWalker
   private:
     const util::NodeBasedDynamicGraph &node_based_graph;
     const EdgeBasedNodeDataContainer &node_data_container;
-    const IntersectionGenerator &intersection_generator;
+    const std::vector<util::Coordinate> &node_coordinates;
+    const extractor::CompressedEdgeContainer &compressed_geometries;
+    const RestrictionMap &node_restriction_map;
+    const std::unordered_set<NodeID> &barrier_nodes;
+    const guidance::TurnLanesIndexedArray &turn_lanes_data;
 };
 
 /*
@@ -149,7 +159,13 @@ struct SelectStraightmostRoadByNameAndOnlyChoice
 struct IntersectionFinderAccumulator
 {
     IntersectionFinderAccumulator(const std::uint8_t hop_limit,
-                                  const IntersectionGenerator &intersection_generator);
+                                  const util::NodeBasedDynamicGraph &node_based_graph,
+                                  const EdgeBasedNodeDataContainer &node_data_container,
+                                  const std::vector<util::Coordinate> &node_coordinates,
+                                  const extractor::CompressedEdgeContainer &compressed_geometries,
+                                  const RestrictionMap &node_restriction_map,
+                                  const std::unordered_set<NodeID> &barrier_nodes,
+                                  const guidance::TurnLanesIndexedArray &turn_lanes_data);
     // true if the path has traversed enough distance
     bool terminate();
 
@@ -159,13 +175,19 @@ struct IntersectionFinderAccumulator
     std::uint8_t hops;
     const std::uint8_t hop_limit;
 
-    // we need to be able to look-up the intersection
-    const IntersectionGenerator &intersection_generator;
-
     // the result we are looking for
     NodeID nid;
     EdgeID via_edge_id;
     IntersectionView intersection;
+
+  private:
+    const util::NodeBasedDynamicGraph &node_based_graph;
+    const EdgeBasedNodeDataContainer &node_data_container;
+    const std::vector<util::Coordinate> &node_coordinates;
+    const extractor::CompressedEdgeContainer &compressed_geometries;
+    const RestrictionMap &node_restriction_map;
+    const std::unordered_set<NodeID> &barrier_nodes;
+    const guidance::TurnLanesIndexedArray &turn_lanes_data;
 };
 
 template <class accumulator_type, class selector_type>
@@ -199,9 +221,15 @@ NodeBasedGraphWalker::TraverseRoad(NodeID current_node_id,
             return {};
 
         // look at the next intersection
-        const constexpr auto LOW_PRECISION = true;
-        const auto next_intersection = intersection_generator.GetConnectedRoads(
-            current_node_id, current_edge_id, LOW_PRECISION);
+        const auto next_intersection =
+            intersection::getConnectedRoads(node_based_graph,
+                                            node_data_container,
+                                            node_coordinates,
+                                            compressed_geometries,
+                                            node_restriction_map,
+                                            barrier_nodes,
+                                            turn_lanes_data,
+                                            {current_node_id, current_edge_id});
 
         // don't follow u-turns or go past our initial intersection
         if (next_intersection.size() <= 1)

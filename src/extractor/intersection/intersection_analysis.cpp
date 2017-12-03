@@ -654,7 +654,7 @@ bool isTurnAllowed(const util::NodeBasedDynamicGraph &graph,
     return true;
 }
 
-// TODO: the function adapts intersection geometry data to TurnAnalysis
+// The function adapts intersection geometry data to TurnAnalysis
 guidance::IntersectionView
 convertToIntersectionView(const util::NodeBasedDynamicGraph &graph,
                           const EdgeBasedNodeDataContainer &node_data_container,
@@ -722,6 +722,62 @@ convertToIntersectionView(const util::NodeBasedDynamicGraph &graph,
               [](const auto &lhs, const auto &rhs) { return lhs.angle < rhs.angle; });
 
     return intersection_view;
+}
+
+//                                               a
+//                                               |
+//                                               |
+//                                               v
+// For an intersection from_node --via_eid--> turn_node ----> c
+//                                               ^
+//                                               |
+//                                               |
+//                                               b
+// This functions returns _all_ turns as if the graph was undirected.
+// That means we not only get (from_node, turn_node, c) in the above example
+// but also (from_node, turn_node, a), (from_node, turn_node, b). These turns are
+// marked as invalid and only needed for intersection classification.
+guidance::IntersectionView
+getConnectedRoads(const util::NodeBasedDynamicGraph &graph,
+                  const EdgeBasedNodeDataContainer &node_data_container,
+                  const std::vector<util::Coordinate> &node_coordinates,
+                  const extractor::CompressedEdgeContainer &compressed_geometries,
+                  const RestrictionMap &node_restriction_map,
+                  const std::unordered_set<NodeID> &barrier_nodes,
+                  const guidance::TurnLanesIndexedArray &turn_lanes_data,
+                  const IntersectionEdge &incoming_edge)
+{
+    const auto intersection_node = graph.GetTarget(incoming_edge.edge);
+    const auto &outgoing_edges = intersection::getOutgoingEdges(graph, intersection_node);
+    auto edge_geometries = getIntersectionOutgoingGeometries(
+        graph, compressed_geometries, node_coordinates, intersection_node);
+
+    // Add incoming edges with reversed bearings
+    const auto edges_number = edge_geometries.size();
+    edge_geometries.resize(2 * edges_number);
+    for (std::size_t index = 0; index < edges_number; ++index)
+    {
+        const auto &geometry = edge_geometries[index];
+        const auto remote_node = graph.GetTarget(geometry.edge);
+        const auto incoming_edge = graph.FindEdge(remote_node, intersection_node);
+        edge_geometries[edges_number + index] = {incoming_edge,
+                                                 util::bearing::reverse(geometry.initial_bearing),
+                                                 util::bearing::reverse(geometry.perceived_bearing),
+                                                 geometry.length};
+    }
+
+    // Enforce ordering of edges by IDs
+    std::sort(edge_geometries.begin(), edge_geometries.end());
+
+    return convertToIntersectionView(graph,
+                                     node_data_container,
+                                     node_restriction_map,
+                                     barrier_nodes,
+                                     edge_geometries,
+                                     turn_lanes_data,
+                                     incoming_edge,
+                                     outgoing_edges,
+                                     std::unordered_set<EdgeID>());
 }
 }
 }

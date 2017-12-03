@@ -3,6 +3,7 @@
 #include "extractor/guidance/turn_discovery.hpp"
 #include "extractor/guidance/turn_lane_augmentation.hpp"
 #include "extractor/guidance/turn_lane_matcher.hpp"
+#include "extractor/intersection/intersection_analysis.hpp"
 #include "util/bearing.hpp"
 #include "util/log.hpp"
 #include "util/typedefs.hpp"
@@ -35,14 +36,21 @@ std::size_t getNumberOfTurns(const Intersection &intersection)
 
 TurnLaneHandler::TurnLaneHandler(const util::NodeBasedDynamicGraph &node_based_graph,
                                  const EdgeBasedNodeDataContainer &node_data_container,
+                                 const std::vector<util::Coordinate> &node_coordinates,
+                                 const extractor::CompressedEdgeContainer &compressed_geometries,
+                                 const RestrictionMap &node_restriction_map,
+                                 const std::unordered_set<NodeID> &barrier_nodes,
+                                 const guidance::TurnLanesIndexedArray &turn_lanes_data,
                                  LaneDescriptionMap &lane_description_map,
                                  const TurnAnalysis &turn_analysis,
                                  util::guidance::LaneDataIdMap &id_map)
     : node_based_graph(node_based_graph), node_data_container(node_data_container),
-      lane_description_map(lane_description_map), turn_analysis(turn_analysis), id_map(id_map)
+      node_coordinates(node_coordinates), compressed_geometries(compressed_geometries),
+      node_restriction_map(node_restriction_map), barrier_nodes(barrier_nodes),
+      turn_lanes_data(turn_lanes_data), lane_description_map(lane_description_map),
+      turn_analysis(turn_analysis), id_map(id_map)
 {
-    std::tie(turn_lane_offsets, turn_lane_masks) =
-        transformTurnLaneMapIntoArrays(lane_description_map);
+    std::tie(turn_lane_offsets, turn_lane_masks) = turn_lanes_data;
     count_handled = count_called = 0;
 }
 
@@ -205,8 +213,13 @@ TurnLaneScenario TurnLaneHandler::deduceScenario(const NodeID at,
     if (findPreviousIntersection(at,
                                  via_edge,
                                  intersection,
-                                 turn_analysis.GetIntersectionGenerator(),
                                  node_based_graph,
+                                 node_data_container,
+                                 node_coordinates,
+                                 compressed_geometries,
+                                 node_restriction_map,
+                                 barrier_nodes,
+                                 turn_lanes_data,
                                  previous_node,
                                  previous_via_edge,
                                  previous_intersection_view))
@@ -559,8 +572,17 @@ std::pair<LaneDataVector, LaneDataVector> TurnLaneHandler::partitionLaneData(
 
     // find out about the next intersection. To check for valid matches, we also need the turn
     // types. We can skip merging/angle adjustments, though
-    const auto next_intersection = turn_analysis.AssignTurnTypes(
-        at, straightmost->eid, turn_analysis.GetIntersectionGenerator()(at, straightmost->eid));
+    const auto next_intersection =
+        turn_analysis.AssignTurnTypes(at,
+                                      straightmost->eid,
+                                      intersection::getConnectedRoads(node_based_graph,
+                                                                      node_data_container,
+                                                                      node_coordinates,
+                                                                      compressed_geometries,
+                                                                      node_restriction_map,
+                                                                      barrier_nodes,
+                                                                      turn_lanes_data,
+                                                                      {at, straightmost->eid}));
 
     // check where we can match turn lanes
     std::size_t straightmost_tag_index = turn_lane_data.size();

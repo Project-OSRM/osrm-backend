@@ -44,14 +44,6 @@ inline auto makeCompareShapeDataByBearing(const double base_bearing)
     };
 }
 
-inline auto makeCompareShapeDataAngleToBearing(const double base_bearing)
-{
-    return [base_bearing](const auto &lhs, const auto &rhs) {
-        return util::bearing::angleBetween(lhs.bearing, base_bearing) <
-               util::bearing::angleBetween(rhs.bearing, base_bearing);
-    };
-}
-
 inline auto makeCompareAngularDeviation(const double angle)
 {
     return [angle](const auto &lhs, const auto &rhs) {
