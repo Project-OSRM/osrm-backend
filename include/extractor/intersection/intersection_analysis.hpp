@@ -26,6 +26,19 @@ IntersectionEdges getIncomingEdges(const util::NodeBasedDynamicGraph &graph,
 IntersectionEdges getOutgoingEdges(const util::NodeBasedDynamicGraph &graph,
                                    const NodeID intersection);
 
+bool isTurnAllowed(const util::NodeBasedDynamicGraph &graph,
+                   const EdgeBasedNodeDataContainer &node_data_container,
+                   const RestrictionMap &restriction_map,
+                   const std::unordered_set<NodeID> &barrier_nodes,
+                   const IntersectionEdgeGeometries &geometries,
+                   const guidance::TurnLanesIndexedArray &turn_lanes_data,
+                   const IntersectionEdge &from,
+                   const IntersectionEdge &to);
+
+double findEdgeBearing(const IntersectionEdgeGeometries &geometries, const EdgeID &edge);
+
+double findEdgeLength(const IntersectionEdgeGeometries &geometries, const EdgeID &edge);
+
 std::pair<IntersectionEdgeGeometries, std::unordered_set<EdgeID>>
 getIntersectionGeometries(const util::NodeBasedDynamicGraph &graph,
                           const extractor::CompressedEdgeContainer &compressed_geometries,
@@ -44,18 +57,15 @@ convertToIntersectionView(const util::NodeBasedDynamicGraph &graph,
                           const IntersectionEdges &outgoing_edges,
                           const std::unordered_set<EdgeID> &merged_edges);
 
-bool isTurnAllowed(const util::NodeBasedDynamicGraph &graph,
-                   const EdgeBasedNodeDataContainer &node_data_container,
-                   const RestrictionMap &restriction_map,
-                   const std::unordered_set<NodeID> &barrier_nodes,
-                   const IntersectionEdgeGeometries &geometries,
-                   const guidance::TurnLanesIndexedArray &turn_lanes_data,
-                   const IntersectionEdge &from,
-                   const IntersectionEdge &to);
-
-double findEdgeBearing(const IntersectionEdgeGeometries &geometries, const EdgeID &edge);
-
-double findEdgeLength(const IntersectionEdgeGeometries &geometries, const EdgeID &edge);
+guidance::IntersectionView
+getConnectedRoads(const util::NodeBasedDynamicGraph &graph,
+                  const EdgeBasedNodeDataContainer &node_data_container,
+                  const std::vector<util::Coordinate> &node_coordinates,
+                  const extractor::CompressedEdgeContainer &compressed_geometries,
+                  const RestrictionMap &node_restriction_map,
+                  const std::unordered_set<NodeID> &barrier_nodes,
+                  const guidance::TurnLanesIndexedArray &turn_lanes_data,
+                  const IntersectionEdge &incoming_edge);
 }
 }
 }

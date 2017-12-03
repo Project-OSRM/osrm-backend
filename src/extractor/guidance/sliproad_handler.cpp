@@ -25,15 +25,24 @@ namespace guidance
 SliproadHandler::SliproadHandler(const IntersectionGenerator &intersection_generator,
                                  const util::NodeBasedDynamicGraph &node_based_graph,
                                  const EdgeBasedNodeDataContainer &node_data_container,
-                                 const std::vector<util::Coordinate> &coordinates,
+                                 const std::vector<util::Coordinate> &node_coordinates,
+                                 const extractor::CompressedEdgeContainer &compressed_geometries,
+                                 const RestrictionMap &node_restriction_map,
+                                 const std::unordered_set<NodeID> &barrier_nodes,
+                                 const guidance::TurnLanesIndexedArray &turn_lanes_data,
                                  const util::NameTable &name_table,
                                  const SuffixTable &street_name_suffix_table)
     : IntersectionHandler(node_based_graph,
                           node_data_container,
-                          coordinates,
+                          node_coordinates,
+                          compressed_geometries,
+                          node_restriction_map,
+                          barrier_nodes,
+                          turn_lanes_data,
                           name_table,
                           street_name_suffix_table,
-                          intersection_generator)
+                          intersection_generator),
+      coordinate_extractor(node_based_graph, compressed_geometries, node_coordinates)
 {
 }
 
@@ -243,7 +252,14 @@ operator()(const NodeID /*nid*/, const EdgeID source_edge_id, Intersection inter
 
         // Starting out at the intersection and going onto the Sliproad we skip artificial
         // degree two intersections and limit the max hop count in doing so.
-        IntersectionFinderAccumulator intersection_finder{10, intersection_generator};
+        IntersectionFinderAccumulator intersection_finder{10,
+                                                          node_based_graph,
+                                                          node_data_container,
+                                                          node_coordinates,
+                                                          compressed_geometries,
+                                                          node_restriction_map,
+                                                          barrier_nodes,
+                                                          turn_lanes_data};
         const SkipTrafficSignalBarrierRoadSelector road_selector{};
         (void)graph_walker.TraverseRoad(intersection_node_id, // start node
                                         sliproad_edge,        // onto edge
@@ -372,8 +388,6 @@ operator()(const NodeID /*nid*/, const EdgeID source_edge_id, Intersection inter
         //
         //                    Sliproad           Not a Sliproad
         {
-            const auto &coordinate_extractor = intersection_generator.GetCoordinateExtractor();
-
             const NodeID start = intersection_node_id; // b
             const EdgeID edge = sliproad_edge;         // bd
 
@@ -424,8 +438,8 @@ operator()(const NodeID /*nid*/, const EdgeID source_edge_id, Intersection inter
             // Only check for curvature and ~90 degree when it makes sense to do so.
             const constexpr auto MIN_LENGTH = 3.;
 
-            const auto length = haversineDistance(coordinates[intersection_node_id],
-                                                  coordinates[main_road_intersection->node]);
+            const auto length = haversineDistance(node_coordinates[intersection_node_id],
+                                                  node_coordinates[main_road_intersection->node]);
 
             const double minimal_crossroad_angle_of_intersection = 40.;
 
@@ -546,8 +560,15 @@ operator()(const NodeID /*nid*/, const EdgeID source_edge_id, Intersection inter
             }
             else
             {
-                const auto skip_traffic_light_intersection = intersection_generator(
-                    node_based_graph.GetTarget(sliproad_edge), candidate_road.eid);
+                const auto skip_traffic_light_intersection = intersection::getConnectedRoads(
+                    node_based_graph,
+                    node_data_container,
+                    node_coordinates,
+                    compressed_geometries,
+                    node_restriction_map,
+                    barrier_nodes,
+                    turn_lanes_data,
+                    {node_based_graph.GetTarget(sliproad_edge), candidate_road.eid});
                 if (skip_traffic_light_intersection.isTrafficSignalOrBarrier() &&
                     node_based_graph.GetTarget(skip_traffic_light_intersection[1].eid) ==
                         main_road_intersection->node)
@@ -656,8 +677,6 @@ bool SliproadHandler::nextIntersectionIsTooFarAway(const NodeID start, const Edg
     BOOST_ASSERT(start != SPECIAL_NODEID);
     BOOST_ASSERT(onto != SPECIAL_EDGEID);
 
-    const auto &coordinate_extractor = intersection_generator.GetCoordinateExtractor();
-
     // Base max distance threshold on the current road class we're on
     const auto &data = node_based_graph.GetEdgeData(onto).flags;
     const auto threshold = scaledThresholdByRoadClass(MAX_SLIPROAD_THRESHOLD, // <- scales down
@@ -728,9 +747,9 @@ bool SliproadHandler::isValidSliproadArea(const double max_area,
 {
     using namespace util::coordinate_calculation;
 
-    const auto first = coordinates[a];
-    const auto second = coordinates[b];
-    const auto third = coordinates[c];
+    const auto first = node_coordinates[a];
+    const auto second = node_coordinates[b];
+    const auto third = node_coordinates[c];
 
     const auto length = haversineDistance(first, second);
     const auto heigth = haversineDistance(second, third);
