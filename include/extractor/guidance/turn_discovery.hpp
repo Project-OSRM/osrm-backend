@@ -3,6 +3,7 @@
 
 #include "extractor/guidance/intersection.hpp"
 #include "extractor/guidance/intersection_generator.hpp"
+#include "extractor/guidance/turn_lane_data.hpp"
 #include "util/typedefs.hpp"
 
 namespace osrm
@@ -21,8 +22,13 @@ bool findPreviousIntersection(
     const NodeID node,
     const EdgeID via_edge,
     const Intersection &intersection,
-    const IntersectionGenerator &intersection_generator,
     const util::NodeBasedDynamicGraph &node_based_graph, // query edge data
+    const EdgeBasedNodeDataContainer &node_data_container,
+    const std::vector<util::Coordinate> &node_coordinates,
+    const extractor::CompressedEdgeContainer &compressed_geometries,
+    const RestrictionMap &node_restriction_map,
+    const std::unordered_set<NodeID> &barrier_nodes,
+    const guidance::TurnLanesIndexedArray &turn_lanes_data,
     // output parameters, will be in an arbitrary state on failure
     NodeID &result_node,
     EdgeID &result_via_edge,

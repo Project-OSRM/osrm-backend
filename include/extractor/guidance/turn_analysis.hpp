@@ -42,10 +42,11 @@ class TurnAnalysis
   public:
     TurnAnalysis(const util::NodeBasedDynamicGraph &node_based_graph,
                  const EdgeBasedNodeDataContainer &node_data_container,
-                 const std::vector<util::Coordinate> &coordinates,
+                 const std::vector<util::Coordinate> &node_coordinates,
+                 const CompressedEdgeContainer &compressed_edge_container,
                  const RestrictionMap &restriction_map,
                  const std::unordered_set<NodeID> &barrier_nodes,
-                 const CompressedEdgeContainer &compressed_edge_container,
+                 const guidance::TurnLanesIndexedArray &turn_lanes_data,
                  const util::NameTable &name_table,
                  const SuffixTable &street_name_suffix_table);
 
@@ -60,8 +61,6 @@ class TurnAnalysis
     Intersection AssignTurnTypes(const NodeID from_node,
                                  const EdgeID via_eid,
                                  const IntersectionView &intersection) const;
-
-    const IntersectionGenerator &GetIntersectionGenerator() const;
 
   private:
     const util::NodeBasedDynamicGraph &node_based_graph;

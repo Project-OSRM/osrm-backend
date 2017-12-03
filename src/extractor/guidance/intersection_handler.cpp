@@ -1,5 +1,6 @@
 #include "extractor/guidance/intersection_handler.hpp"
 #include "extractor/guidance/constants.hpp"
+#include "extractor/intersection/intersection_analysis.hpp"
 
 #include "util/coordinate_calculation.hpp"
 #include "util/guidance/name_announcements.hpp"
@@ -45,17 +46,29 @@ inline bool requiresAnnouncement(const util::NodeBasedDynamicGraph &node_based_g
 }
 } // namespace detail
 
-IntersectionHandler::IntersectionHandler(const util::NodeBasedDynamicGraph &node_based_graph,
-                                         const EdgeBasedNodeDataContainer &node_data_container,
-                                         const std::vector<util::Coordinate> &coordinates,
-                                         const util::NameTable &name_table,
-                                         const SuffixTable &street_name_suffix_table,
-                                         const IntersectionGenerator &intersection_generator)
+IntersectionHandler::IntersectionHandler(
+    const util::NodeBasedDynamicGraph &node_based_graph,
+    const EdgeBasedNodeDataContainer &node_data_container,
+    const std::vector<util::Coordinate> &node_coordinates,
+    const extractor::CompressedEdgeContainer &compressed_geometries,
+    const RestrictionMap &node_restriction_map,
+    const std::unordered_set<NodeID> &barrier_nodes,
+    const guidance::TurnLanesIndexedArray &turn_lanes_data,
+    const util::NameTable &name_table,
+    const SuffixTable &street_name_suffix_table,
+    const IntersectionGenerator &intersection_generator)
     : node_based_graph(node_based_graph), node_data_container(node_data_container),
-      coordinates(coordinates), name_table(name_table),
+      node_coordinates(node_coordinates), compressed_geometries(compressed_geometries),
+      node_restriction_map(node_restriction_map), barrier_nodes(barrier_nodes),
+      turn_lanes_data(turn_lanes_data), name_table(name_table),
       street_name_suffix_table(street_name_suffix_table),
-      intersection_generator(intersection_generator),
-      graph_walker(node_based_graph, node_data_container, intersection_generator)
+      intersection_generator(intersection_generator), graph_walker(node_based_graph,
+                                                                   node_data_container,
+                                                                   node_coordinates,
+                                                                   compressed_geometries,
+                                                                   node_restriction_map,
+                                                                   barrier_nodes,
+                                                                   turn_lanes_data)
 {
 }
 
@@ -162,8 +175,8 @@ TurnInstruction IntersectionHandler::getInstructionForObvious(const std::size_t 
                     // or actually follow the full road. When 2399 lands, we can exchange here for a
                     // precalculated distance value.
                     const auto distance = util::coordinate_calculation::haversineDistance(
-                        coordinates[node_based_graph.GetTarget(via_edge)],
-                        coordinates[node_based_graph.GetTarget(road.eid)]);
+                        node_coordinates[node_based_graph.GetTarget(via_edge)],
+                        node_coordinates[node_based_graph.GetTarget(road.eid)]);
 
                     return {TurnType::Turn,
                             (angularDeviation(road.angle, STRAIGHT_ANGLE) < NARROW_TURN_ANGLE &&
@@ -470,8 +483,15 @@ IntersectionHandler::getNextIntersection(const NodeID at, const EdgeID via) cons
         return boost::none;
     }
 
-    auto intersection =
-        intersection_generator(intersection_parameters.nid, intersection_parameters.via_eid);
+    auto intersection = intersection::getConnectedRoads(
+        node_based_graph,
+        node_data_container,
+        node_coordinates,
+        compressed_geometries,
+        node_restriction_map,
+        barrier_nodes,
+        turn_lanes_data,
+        {intersection_parameters.nid, intersection_parameters.via_eid});
     auto intersection_node = node_based_graph.GetTarget(intersection_parameters.via_eid);
 
     if (intersection.size() <= 2 || intersection.isTrafficSignalOrBarrier())
