@@ -3,7 +3,6 @@
 
 #include "extractor/guidance/constants.hpp"
 #include "extractor/guidance/intersection.hpp"
-#include "extractor/guidance/intersection_generator.hpp"
 #include "extractor/guidance/intersection_handler.hpp"
 #include "extractor/travel_mode.hpp"
 #include "util/node_based_graph.hpp"
@@ -21,8 +20,7 @@ namespace guidance
 class SuppressModeHandler final : public IntersectionHandler
 {
   public:
-    SuppressModeHandler(const IntersectionGenerator &intersection_generator,
-                        const util::NodeBasedDynamicGraph &node_based_graph,
+    SuppressModeHandler(const util::NodeBasedDynamicGraph &node_based_graph,
                         const EdgeBasedNodeDataContainer &node_data_container,
                         const std::vector<util::Coordinate> &coordinates,
                         const extractor::CompressedEdgeContainer &compressed_geometries,

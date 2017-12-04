@@ -55,20 +55,18 @@ IntersectionHandler::IntersectionHandler(
     const std::unordered_set<NodeID> &barrier_nodes,
     const guidance::TurnLanesIndexedArray &turn_lanes_data,
     const util::NameTable &name_table,
-    const SuffixTable &street_name_suffix_table,
-    const IntersectionGenerator &intersection_generator)
+    const SuffixTable &street_name_suffix_table)
     : node_based_graph(node_based_graph), node_data_container(node_data_container),
       node_coordinates(node_coordinates), compressed_geometries(compressed_geometries),
       node_restriction_map(node_restriction_map), barrier_nodes(barrier_nodes),
       turn_lanes_data(turn_lanes_data), name_table(name_table),
-      street_name_suffix_table(street_name_suffix_table),
-      intersection_generator(intersection_generator), graph_walker(node_based_graph,
-                                                                   node_data_container,
-                                                                   node_coordinates,
-                                                                   compressed_geometries,
-                                                                   node_restriction_map,
-                                                                   barrier_nodes,
-                                                                   turn_lanes_data)
+      street_name_suffix_table(street_name_suffix_table), graph_walker(node_based_graph,
+                                                                       node_data_container,
+                                                                       node_coordinates,
+                                                                       compressed_geometries,
+                                                                       node_restriction_map,
+                                                                       barrier_nodes,
+                                                                       turn_lanes_data)
 {
 }
 
@@ -475,24 +473,24 @@ IntersectionHandler::getNextIntersection(const NodeID at, const EdgeID via) cons
     // Starting at node `a` via edge `e0` the intersection generator returns the intersection at `c`
     // writing `tl` (traffic signal) node and the edge `e1` which has the intersection as target.
 
-    const auto intersection_parameters = intersection_generator.SkipDegreeTwoNodes(at, via);
+    const auto intersection_parameters =
+        intersection::skipDegreeTwoNodes(node_based_graph, {at, via});
     // This should never happen, guard against nevertheless
-    if (intersection_parameters.nid == SPECIAL_NODEID ||
-        intersection_parameters.via_eid == SPECIAL_EDGEID)
+    if (intersection_parameters.node == SPECIAL_NODEID ||
+        intersection_parameters.edge == SPECIAL_EDGEID)
     {
         return boost::none;
     }
 
-    auto intersection = intersection::getConnectedRoads(
-        node_based_graph,
-        node_data_container,
-        node_coordinates,
-        compressed_geometries,
-        node_restriction_map,
-        barrier_nodes,
-        turn_lanes_data,
-        {intersection_parameters.nid, intersection_parameters.via_eid});
-    auto intersection_node = node_based_graph.GetTarget(intersection_parameters.via_eid);
+    auto intersection = intersection::getConnectedRoads(node_based_graph,
+                                                        node_data_container,
+                                                        node_coordinates,
+                                                        compressed_geometries,
+                                                        node_restriction_map,
+                                                        barrier_nodes,
+                                                        turn_lanes_data,
+                                                        intersection_parameters);
+    auto intersection_node = node_based_graph.GetTarget(intersection_parameters.edge);
 
     if (intersection.size() <= 2 || intersection.isTrafficSignalOrBarrier())
     {

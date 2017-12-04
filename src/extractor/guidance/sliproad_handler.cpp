@@ -22,8 +22,7 @@ namespace extractor
 namespace guidance
 {
 
-SliproadHandler::SliproadHandler(const IntersectionGenerator &intersection_generator,
-                                 const util::NodeBasedDynamicGraph &node_based_graph,
+SliproadHandler::SliproadHandler(const util::NodeBasedDynamicGraph &node_based_graph,
                                  const EdgeBasedNodeDataContainer &node_data_container,
                                  const std::vector<util::Coordinate> &node_coordinates,
                                  const extractor::CompressedEdgeContainer &compressed_geometries,
@@ -40,8 +39,7 @@ SliproadHandler::SliproadHandler(const IntersectionGenerator &intersection_gener
                           barrier_nodes,
                           turn_lanes_data,
                           name_table,
-                          street_name_suffix_table,
-                          intersection_generator),
+                          street_name_suffix_table),
       coordinate_extractor(node_based_graph, compressed_geometries, node_coordinates)
 {
 }

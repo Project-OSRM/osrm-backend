@@ -14,8 +14,7 @@ namespace guidance
 class DrivewayHandler final : public IntersectionHandler
 {
   public:
-    DrivewayHandler(const IntersectionGenerator &intersection_generator,
-                    const util::NodeBasedDynamicGraph &node_based_graph,
+    DrivewayHandler(const util::NodeBasedDynamicGraph &node_based_graph,
                     const EdgeBasedNodeDataContainer &node_data_container,
                     const std::vector<util::Coordinate> &coordinates,
                     const extractor::CompressedEdgeContainer &compressed_geometries,

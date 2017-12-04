@@ -779,6 +779,27 @@ getConnectedRoads(const util::NodeBasedDynamicGraph &graph,
                                      outgoing_edges,
                                      std::unordered_set<EdgeID>());
 }
+
+IntersectionEdge skipDegreeTwoNodes(const util::NodeBasedDynamicGraph &graph, IntersectionEdge road)
+{
+    std::unordered_set<NodeID> visited_nodes;
+    (void)visited_nodes;
+
+    // Skip trivial nodes without generating the intersection in between, stop at the very first
+    // intersection of degree > 2
+    const auto starting_node = road.node;
+    auto next_node = graph.GetTarget(road.edge);
+    while (graph.GetOutDegree(next_node) == 2 && next_node != starting_node)
+    {
+        BOOST_ASSERT(visited_nodes.insert(next_node).second);
+        const auto next_edge = graph.BeginEdges(next_node);
+        road.edge = graph.GetTarget(next_edge) == road.node ? next_edge + 1 : next_edge;
+        road.node = next_node;
+        next_node = graph.GetTarget(road.edge);
+    }
+
+    return road;
+}
 }
 }
 }
