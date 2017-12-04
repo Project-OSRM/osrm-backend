@@ -118,8 +118,7 @@ TurnHandler::TurnHandler(const util::NodeBasedDynamicGraph &node_based_graph,
                          const std::unordered_set<NodeID> &barrier_nodes,
                          const guidance::TurnLanesIndexedArray &turn_lanes_data,
                          const util::NameTable &name_table,
-                         const SuffixTable &street_name_suffix_table,
-                         const IntersectionGenerator &intersection_generator)
+                         const SuffixTable &street_name_suffix_table)
     : IntersectionHandler(node_based_graph,
                           node_data_container,
                           coordinates,
@@ -128,8 +127,7 @@ TurnHandler::TurnHandler(const util::NodeBasedDynamicGraph &node_based_graph,
                           barrier_nodes,
                           turn_lanes_data,
                           name_table,
-                          street_name_suffix_table,
-                          intersection_generator)
+                          street_name_suffix_table)
 {
 }
 

@@ -2,16 +2,27 @@
 #define OSRM_EXTRACTOR_GUIDANCE_TURN_DISCOVERY_HPP_
 
 #include "extractor/guidance/intersection.hpp"
-#include "extractor/guidance/intersection_generator.hpp"
 #include "extractor/guidance/turn_lane_data.hpp"
+#include "extractor/restriction_index.hpp"
 #include "util/typedefs.hpp"
+
+#include <unordered_set>
 
 namespace osrm
 {
+namespace util
+{
+class Coordinate;
+}
+
 namespace extractor
 {
+
+class CompressedEdgeContainer;
+
 namespace guidance
 {
+
 namespace lanes
 {
 

@@ -2,7 +2,6 @@
 #define OSRM_EXTRACTOR_GUIDANCE_MOTORWAY_HANDLER_HPP_
 
 #include "extractor/guidance/intersection.hpp"
-#include "extractor/guidance/intersection_generator.hpp"
 #include "extractor/guidance/intersection_handler.hpp"
 #include "extractor/query_node.hpp"
 
@@ -31,8 +30,7 @@ class MotorwayHandler : public IntersectionHandler
                     const std::unordered_set<NodeID> &barrier_nodes,
                     const guidance::TurnLanesIndexedArray &turn_lanes_data,
                     const util::NameTable &name_table,
-                    const SuffixTable &street_name_suffix_table,
-                    const IntersectionGenerator &intersection_generator);
+                    const SuffixTable &street_name_suffix_table);
 
     ~MotorwayHandler() override final = default;
 

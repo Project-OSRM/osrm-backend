@@ -2,7 +2,6 @@
 #define OSRM_EXTRACTOR_GUIDANCE_INTERSECTION_HANDLER_HPP_
 
 #include "extractor/guidance/intersection.hpp"
-#include "extractor/guidance/intersection_generator.hpp"
 #include "extractor/guidance/node_based_graph_walker.hpp"
 #include "extractor/intersection/intersection_analysis.hpp"
 #include "extractor/query_node.hpp"
@@ -41,8 +40,7 @@ class IntersectionHandler
                         const std::unordered_set<NodeID> &barrier_nodes,
                         const guidance::TurnLanesIndexedArray &turn_lanes_data,
                         const util::NameTable &name_table,
-                        const SuffixTable &street_name_suffix_table,
-                        const IntersectionGenerator &intersection_generator);
+                        const SuffixTable &street_name_suffix_table);
 
     virtual ~IntersectionHandler() = default;
 
@@ -64,7 +62,6 @@ class IntersectionHandler
     const guidance::TurnLanesIndexedArray &turn_lanes_data;
     const util::NameTable &name_table;
     const SuffixTable &street_name_suffix_table;
-    const IntersectionGenerator &intersection_generator;
     const NodeBasedGraphWalker graph_walker; // for skipping traffic signal, distances etc.
 
     // Decide on a basic turn types
@@ -576,9 +573,9 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
             // try to find whether there is a turn going to the opposite direction of our obvious
             // turn, this should be alright.
             const auto previous_intersection = [&]() -> IntersectionView {
-                const auto parameters = intersection_generator.SkipDegreeTwoNodes(
-                    node_at_intersection, intersection[0].eid);
-                if (node_based_graph.GetTarget(parameters.via_eid) == node_at_intersection)
+                const auto parameters = intersection::skipDegreeTwoNodes(
+                    node_based_graph, {node_at_intersection, intersection[0].eid});
+                if (node_based_graph.GetTarget(parameters.edge) == node_at_intersection)
                     return {};
 
                 return intersection::getConnectedRoads(node_based_graph,
@@ -588,7 +585,7 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
                                                        node_restriction_map,
                                                        barrier_nodes,
                                                        turn_lanes_data,
-                                                       {parameters.nid, parameters.via_eid});
+                                                       parameters);
             }();
 
             if (!previous_intersection.empty())

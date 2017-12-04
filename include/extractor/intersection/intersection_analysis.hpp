@@ -66,6 +66,9 @@ getConnectedRoads(const util::NodeBasedDynamicGraph &graph,
                   const std::unordered_set<NodeID> &barrier_nodes,
                   const guidance::TurnLanesIndexedArray &turn_lanes_data,
                   const IntersectionEdge &incoming_edge);
+
+IntersectionEdge skipDegreeTwoNodes(const util::NodeBasedDynamicGraph &graph,
+                                    IntersectionEdge road);
 }
 }
 }
