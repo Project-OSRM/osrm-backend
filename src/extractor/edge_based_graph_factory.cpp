@@ -426,12 +426,6 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     const auto &turn_lanes_data = transformTurnLaneMapIntoArrays(lane_description_map);
     guidance::CoordinateExtractor coordinate_extractor(
         m_node_based_graph, m_compressed_edge_container, m_coordinates);
-    guidance::IntersectionGenerator intersection_generator(m_node_based_graph,
-                                                           m_edge_based_node_container,
-                                                           node_restriction_map,
-                                                           m_barrier_nodes,
-                                                           m_coordinates,
-                                                           m_compressed_edge_container);
     guidance::MergableRoadDetector mergable_road_detector(m_node_based_graph,
                                                           m_edge_based_node_container,
                                                           m_coordinates,
@@ -439,7 +433,6 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                                           node_restriction_map,
                                                           m_barrier_nodes,
                                                           turn_lanes_data,
-                                                          intersection_generator,
                                                           coordinate_extractor,
                                                           name_table,
                                                           street_name_suffix_table);

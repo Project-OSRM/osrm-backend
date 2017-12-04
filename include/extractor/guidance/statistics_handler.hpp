@@ -27,8 +27,7 @@ namespace guidance
 class StatisticsHandler final : public IntersectionHandler
 {
   public:
-    StatisticsHandler(const IntersectionGenerator &intersection_generator,
-                      const util::NodeBasedDynamicGraph &node_based_graph,
+    StatisticsHandler(const util::NodeBasedDynamicGraph &node_based_graph,
                       const EdgeBasedNodeDataContainer &node_data_container,
                       const std::vector<util::Coordinate> &coordinates,
                       const extractor::CompressedEdgeContainer &compressed_geometries,
@@ -45,8 +44,7 @@ class StatisticsHandler final : public IntersectionHandler
                               barrier_nodes,
                               turn_lanes_data,
                               name_table,
-                              street_name_suffix_table,
-                              intersection_generator)
+                              street_name_suffix_table)
     {
     }
 

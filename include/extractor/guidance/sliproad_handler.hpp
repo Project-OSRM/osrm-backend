@@ -2,7 +2,6 @@
 #define OSRM_EXTRACTOR_GUIDANCE_SLIPROAD_HANDLER_HPP_
 
 #include "extractor/guidance/intersection.hpp"
-#include "extractor/guidance/intersection_generator.hpp"
 #include "extractor/guidance/intersection_handler.hpp"
 #include "extractor/query_node.hpp"
 
@@ -24,8 +23,7 @@ namespace guidance
 class SliproadHandler final : public IntersectionHandler
 {
   public:
-    SliproadHandler(const IntersectionGenerator &intersection_generator,
-                    const util::NodeBasedDynamicGraph &node_based_graph,
+    SliproadHandler(const util::NodeBasedDynamicGraph &node_based_graph,
                     const EdgeBasedNodeDataContainer &node_data_container,
                     const std::vector<util::Coordinate> &coordinates,
                     const extractor::CompressedEdgeContainer &compressed_geometries,

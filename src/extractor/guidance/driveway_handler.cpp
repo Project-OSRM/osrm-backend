@@ -12,8 +12,7 @@ namespace extractor
 namespace guidance
 {
 
-DrivewayHandler::DrivewayHandler(const IntersectionGenerator &intersection_generator,
-                                 const util::NodeBasedDynamicGraph &node_based_graph,
+DrivewayHandler::DrivewayHandler(const util::NodeBasedDynamicGraph &node_based_graph,
                                  const EdgeBasedNodeDataContainer &node_data_container,
                                  const std::vector<util::Coordinate> &node_coordinates,
                                  const extractor::CompressedEdgeContainer &compressed_geometries,
@@ -30,8 +29,7 @@ DrivewayHandler::DrivewayHandler(const IntersectionGenerator &intersection_gener
                           barrier_nodes,
                           turn_lanes_data,
                           name_table,
-                          street_name_suffix_table,
-                          intersection_generator)
+                          street_name_suffix_table)
 {
 }
 

@@ -1,5 +1,6 @@
 #include "extractor/guidance/turn_discovery.hpp"
 #include "extractor/guidance/constants.hpp"
+#include "extractor/guidance/coordinate_extractor.hpp"
 #include "extractor/intersection/intersection_analysis.hpp"
 #include "util/bearing.hpp"
 #include "util/coordinate_calculation.hpp"
