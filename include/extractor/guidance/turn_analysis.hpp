@@ -4,8 +4,6 @@
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/guidance/driveway_handler.hpp"
 #include "extractor/guidance/intersection.hpp"
-#include "extractor/guidance/intersection_generator.hpp"
-#include "extractor/guidance/intersection_normalization_operation.hpp"
 #include "extractor/guidance/motorway_handler.hpp"
 #include "extractor/guidance/roundabout_handler.hpp"
 #include "extractor/guidance/sliproad_handler.hpp"
@@ -64,7 +62,6 @@ class TurnAnalysis
 
   private:
     const util::NodeBasedDynamicGraph &node_based_graph;
-    const IntersectionGenerator intersection_generator;
     const RoundaboutHandler roundabout_handler;
     const MotorwayHandler motorway_handler;
     const TurnHandler turn_handler;

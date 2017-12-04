@@ -4,7 +4,6 @@
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/guidance/coordinate_extractor.hpp"
 #include "extractor/guidance/intersection.hpp"
-#include "extractor/guidance/intersection_generator.hpp"
 #include "extractor/guidance/intersection_handler.hpp"
 #include "extractor/guidance/roundabout_type.hpp"
 #include "extractor/query_node.hpp"
@@ -47,8 +46,7 @@ class RoundaboutHandler : public IntersectionHandler
                       const std::unordered_set<NodeID> &barrier_nodes,
                       const guidance::TurnLanesIndexedArray &turn_lanes_data,
                       const util::NameTable &name_table,
-                      const SuffixTable &street_name_suffix_table,
-                      const IntersectionGenerator &intersection_generator);
+                      const SuffixTable &street_name_suffix_table);
 
     ~RoundaboutHandler() override final = default;
 

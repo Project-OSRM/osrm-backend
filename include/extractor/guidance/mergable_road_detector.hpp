@@ -47,7 +47,6 @@ class MergableRoadDetector
                          const RestrictionMap &node_restriction_map,
                          const std::unordered_set<NodeID> &barrier_nodes,
                          const guidance::TurnLanesIndexedArray &turn_lanes_data,
-                         const IntersectionGenerator &intersection_generator,
                          const CoordinateExtractor &coordinate_extractor,
                          const util::NameTable &name_table,
                          const SuffixTable &street_name_suffix_table);
@@ -171,7 +170,6 @@ class MergableRoadDetector
     const RestrictionMap &node_restriction_map;
     const std::unordered_set<NodeID> &barrier_nodes;
     const guidance::TurnLanesIndexedArray &turn_lanes_data;
-    const IntersectionGenerator &intersection_generator;
     const CoordinateExtractor &coordinate_extractor;
 
     // name detection

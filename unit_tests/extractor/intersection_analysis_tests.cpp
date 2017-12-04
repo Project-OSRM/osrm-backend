@@ -252,4 +252,64 @@ BOOST_AUTO_TEST_CASE(roundabout_intersection_connectivity)
                       );
 }
 
+BOOST_AUTO_TEST_CASE(skip_degree_two_nodes)
+{
+    std::unordered_set<NodeID> barrier_nodes{1};
+    std::unordered_set<NodeID> traffic_lights{2};
+    std::vector<NodeBasedEdgeAnnotation> annotations(1);
+    std::vector<TurnRestriction> restrictions;
+    std::vector<ConditionalTurnRestriction> conditional_restrictions;
+    CompressedEdgeContainer container;
+    test::MockScriptingEnvironment scripting_environment;
+
+    TurnLanesIndexedArray turn_lanes_data;
+
+    // Graph
+    //
+    //  0↔1→2↔3↔4→5         7
+    //          ↑          ↕ ↕
+    //          6         8 ↔ 9
+    //
+    const auto unit_edge = [](const NodeID from, const NodeID to, bool allowed) {
+        return InputEdge{
+            from, to, 1, 1, GeometryID{0, false}, !allowed, NodeBasedEdgeClassification{}, 0};
+    };
+    std::vector<InputEdge> edges = {unit_edge(0, 1, true), // 0
+                                    unit_edge(1, 0, true),
+                                    unit_edge(1, 2, true),
+                                    unit_edge(2, 1, false),
+                                    unit_edge(2, 3, true),
+                                    unit_edge(3, 2, true), // 5
+                                    unit_edge(3, 4, true),
+                                    unit_edge(4, 3, true),
+                                    unit_edge(4, 5, true),
+                                    unit_edge(4, 6, false),
+                                    unit_edge(5, 4, false), // 10
+                                    unit_edge(6, 4, true),
+                                    // Circle
+                                    unit_edge(7, 8, true), // 12
+                                    unit_edge(7, 9, true),
+                                    unit_edge(8, 7, true),
+                                    unit_edge(8, 9, true),
+                                    unit_edge(9, 7, true),
+                                    unit_edge(9, 8, true)};
+
+    Graph graph(10, edges);
+
+    GraphCompressor().Compress(barrier_nodes,
+                               traffic_lights,
+                               scripting_environment,
+                               restrictions,
+                               conditional_restrictions,
+                               graph,
+                               annotations,
+                               container);
+
+    BOOST_CHECK_EQUAL(graph.GetTarget(skipDegreeTwoNodes(graph, {0, 0}).edge), 4);
+    BOOST_CHECK_EQUAL(graph.GetTarget(skipDegreeTwoNodes(graph, {4, 7}).edge), 0);
+    BOOST_CHECK_EQUAL(graph.GetTarget(skipDegreeTwoNodes(graph, {5, 10}).edge), 4);
+    BOOST_CHECK_EQUAL(graph.GetTarget(skipDegreeTwoNodes(graph, {6, 11}).edge), 4);
+    BOOST_CHECK_EQUAL(graph.GetTarget(skipDegreeTwoNodes(graph, {7, 12}).edge), 7);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
