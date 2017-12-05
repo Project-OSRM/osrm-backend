@@ -139,6 +139,17 @@ Status MatchPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
         return Error("InvalidValue", "Invalid coordinate value.", json_result);
     }
 
+    if (max_radius_map_matching > 0 && std::any_of(parameters.radiuses.begin(),
+                                                   parameters.radiuses.end(),
+                                                   [&](const auto &radius) {
+                                                       if (!radius)
+                                                           return false;
+                                                       return *radius > max_radius_map_matching;
+                                                   }))
+    {
+        return Error("TooBig", "Radius search size is too large for map matching.", json_result);
+    }
+
     // Check for same or increasing timestamps. Impl. note: Incontrast to `sort(first,
     // last, less_equal)` checking `greater` in reverse meets irreflexive requirements.
     const auto time_increases_monotonically = std::is_sorted(

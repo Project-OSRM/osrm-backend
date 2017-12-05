@@ -133,7 +133,10 @@ inline unsigned generateServerProgramOptions(const int argc,
          "Max. results supported in nearest query") //
         ("max-alternatives",
          value<int>(&config.max_alternatives)->default_value(3),
-         "Max. number of alternatives supported in the MLD route query");
+         "Max. number of alternatives supported in the MLD route query") //
+        ("max-matching-radius",
+         value<double>(&config.max_radius_map_matching)->default_value(5),
+         "Max. radius size supported in map matching query");
 
     // hidden options, will be allowed on command line, but will not be shown to the user
     boost::program_options::options_description hidden_options("Hidden options");

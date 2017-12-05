@@ -53,12 +53,12 @@ template <typename Algorithm> class Engine final : public EngineInterface
 {
   public:
     explicit Engine(const EngineConfig &config)
-        : route_plugin(config.max_locations_viaroute, config.max_alternatives), //
-          table_plugin(config.max_locations_distance_table),                    //
-          nearest_plugin(config.max_results_nearest),                           //
-          trip_plugin(config.max_locations_trip),                               //
-          match_plugin(config.max_locations_map_matching),                      //
-          tile_plugin()                                                         //
+        : route_plugin(config.max_locations_viaroute, config.max_alternatives),            //
+          table_plugin(config.max_locations_distance_table),                               //
+          nearest_plugin(config.max_results_nearest),                                      //
+          trip_plugin(config.max_locations_trip),                                          //
+          match_plugin(config.max_locations_map_matching, config.max_radius_map_matching), //
+          tile_plugin()                                                                    //
 
     {
         if (config.use_shared_memory)
