@@ -57,6 +57,9 @@ convertToIntersectionView(const util::NodeBasedDynamicGraph &graph,
                           const IntersectionEdges &outgoing_edges,
                           const std::unordered_set<EdgeID> &merged_edges);
 
+// Check for restrictions/barriers and generate a list of valid and invalid turns present at
+// the node reached from `incoming_edge`. The resulting candidates have to be analyzed
+// for their actual instructions later on.
 guidance::IntersectionView
 getConnectedRoads(const util::NodeBasedDynamicGraph &graph,
                   const EdgeBasedNodeDataContainer &node_data_container,
@@ -67,6 +70,13 @@ getConnectedRoads(const util::NodeBasedDynamicGraph &graph,
                   const guidance::TurnLanesIndexedArray &turn_lanes_data,
                   const IntersectionEdge &incoming_edge);
 
+// Graph Compression cannot compress every setting. For example any barrier/traffic light cannot
+// be compressed. As a result, a simple road of the form `a ----- b` might end up as having an
+// intermediate intersection, if there is a traffic light in between. If we want to look farther
+// down a road, finding the next actual decision requires the look at multiple intersections.
+// Here we follow the road until we either reach a dead end or find the next intersection with
+// more than a single next road. This function skips over degree two nodes to find correct input
+// for getConnectedRoads.
 IntersectionEdge skipDegreeTwoNodes(const util::NodeBasedDynamicGraph &graph,
                                     IntersectionEdge road);
 }
