@@ -2,6 +2,7 @@
 #include "extractor/guidance/constants.hpp"
 #include "extractor/guidance/road_classification.hpp"
 
+#include "util/assert.hpp"
 #include "util/bearing.hpp"
 #include "util/guidance/name_announcements.hpp"
 
@@ -277,18 +278,11 @@ Intersection MotorwayHandler::fromMotorway(const EdgeID via_eid, Intersection in
         // handle motorway forks
         else if (exiting_motorways > 1)
         {
-            if (exiting_motorways == 2 && intersection.size() == 2)
+            if (exiting_motorways == 2)
             {
-                intersection[1].instruction =
-                    getInstructionForObvious(intersection.size(),
-                                             via_eid,
-                                             isThroughStreet(1, intersection),
-                                             intersection[1]);
-                // TODO: no coverage by feature test cases
-                intersection[0].entry_allowed = false; // UTURN on the freeway
-            }
-            else if (exiting_motorways == 2)
-            {
+                OSRM_ASSERT(intersection.size() != 2,
+                            node_coordinates[node_based_graph.GetTarget(via_eid)]);
+
                 // standard fork
                 std::size_t first_valid = std::numeric_limits<std::size_t>::max(),
                             second_valid = std::numeric_limits<std::size_t>::max();
