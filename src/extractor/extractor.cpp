@@ -841,7 +841,5 @@ void Extractor::WriteCompressedNodeBasedGraph(const std::string &path,
     }
 }
 
-
-
 } // namespace extractor
 } // namespace osrm

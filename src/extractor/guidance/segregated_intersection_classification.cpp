@@ -238,7 +238,6 @@ std::unordered_set<EdgeID> findSegregatedNodes(const NodeBasedGraphFactory &fact
 
     return segregated_edges;
 }
-
 }
 }
 }
