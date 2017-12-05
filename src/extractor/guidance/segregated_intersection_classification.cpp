@@ -125,7 +125,7 @@ bool IsSegregated(std::vector<EdgeInfo> v1,
     return edgeLength <= threshold;
 }
 
-std::unordered_set<EdgeID> findSegregatedNodes(NodeBasedGraphFactory &factory,
+std::unordered_set<EdgeID> findSegregatedNodes(const NodeBasedGraphFactory &factory,
                                                const util::NameTable &names)
 {
 

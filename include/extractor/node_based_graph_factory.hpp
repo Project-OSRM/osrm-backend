@@ -41,9 +41,13 @@ class NodeBasedGraphFactory
                           std::vector<TurnRestriction> &turn_restrictions,
                           std::vector<ConditionalTurnRestriction> &conditional_turn_restrictions);
 
-    auto const &GetGraph() { return compressed_output_graph; }
+    auto const &GetGraph() const { return compressed_output_graph; }
     auto const &GetBarriers() const { return barriers; }
     auto const &GetTrafficSignals() const { return traffic_signals; }
+    auto const &GetCompressedEdges() const { return compressed_edge_container; }
+    auto const &GetCoordinates() const { return coordinates; }
+    auto const &GetAnnotationData() const { return annotation_data; }
+    auto const &GetOsmNodes() const { return osm_node_ids; }
     auto &GetCompressedEdges() { return compressed_edge_container; }
     auto &GetCoordinates() { return coordinates; }
     auto &GetAnnotationData() { return annotation_data; }
