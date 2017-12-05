@@ -1,6 +1,5 @@
 #include "extractor/guidance/mergable_road_detector.hpp"
 #include "extractor/guidance/constants.hpp"
-#include "extractor/guidance/coordinate_extractor.hpp"
 #include "extractor/guidance/node_based_graph_walker.hpp"
 #include "extractor/intersection/intersection_analysis.hpp"
 #include "extractor/query_node.hpp"
@@ -60,14 +59,14 @@ MergableRoadDetector::MergableRoadDetector(
     const RestrictionMap &node_restriction_map,
     const std::unordered_set<NodeID> &barrier_nodes,
     const guidance::TurnLanesIndexedArray &turn_lanes_data,
-    const CoordinateExtractor &coordinate_extractor,
     const util::NameTable &name_table,
     const SuffixTable &street_name_suffix_table)
     : node_based_graph(node_based_graph), node_data_container(node_data_container),
       node_coordinates(node_coordinates), compressed_geometries(compressed_geometries),
       node_restriction_map(node_restriction_map), barrier_nodes(barrier_nodes),
-      turn_lanes_data(turn_lanes_data), coordinate_extractor(coordinate_extractor),
-      name_table(name_table), street_name_suffix_table(street_name_suffix_table)
+      turn_lanes_data(turn_lanes_data), name_table(name_table),
+      street_name_suffix_table(street_name_suffix_table),
+      coordinate_extractor(node_based_graph, compressed_geometries, node_coordinates)
 {
 }
 

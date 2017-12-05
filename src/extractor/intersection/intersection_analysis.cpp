@@ -43,11 +43,7 @@ IntersectionEdges getOutgoingEdges(const util::NodeBasedDynamicGraph &graph,
 
     for (const auto outgoing_edge : graph.GetAdjacentEdgeRange(intersection_node))
     {
-        // TODO: to use TurnAnalysis all outgoing edges are required, to be uncommented later
-        // if (!graph.GetEdgeData(outgoing_edge).reversed)
-        {
-            result.push_back({intersection_node, outgoing_edge});
-        }
+        result.push_back({intersection_node, outgoing_edge});
     }
 
     BOOST_ASSERT(std::is_sorted(result.begin(), result.end()));
@@ -554,6 +550,7 @@ bool isTurnAllowed(const util::NodeBasedDynamicGraph &graph,
             return true;
 
         // Allow U-turn if the incoming edge has a U-turn lane
+        // TODO: revisit the use-case, related PR #2753
         const auto &incoming_edge_annotation_id = graph.GetEdgeData(from.edge).annotation_data;
         const auto lane_description_id = static_cast<std::size_t>(
             node_data_container.GetAnnotation(incoming_edge_annotation_id).lane_description_id);
@@ -718,7 +715,7 @@ convertToIntersectionView(const util::NodeBasedDynamicGraph &graph,
          next != pre_intersection_view.end();
          ++curr, ++next)
     {
-        // Check the the perceived angles order is the same as the initial OSM one
+        // Check that the perceived angles order is the same as the initial OSM one
         if (next->first.angle < curr->first.angle)
         { // If the true bearing is out of the initial order (next before current) then
             // adjust the next road angle to keep the order. The adjustment angle is at most

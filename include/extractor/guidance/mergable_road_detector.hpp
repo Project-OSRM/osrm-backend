@@ -2,6 +2,7 @@
 #define OSRM_EXTRACTOR_GUIDANCE_MERGEABLE_ROADS
 
 #include "extractor/compressed_edge_container.hpp"
+#include "extractor/guidance/coordinate_extractor.hpp"
 #include "extractor/guidance/intersection.hpp"
 #include "extractor/guidance/turn_lane_types.hpp"
 #include "extractor/restriction_index.hpp"
@@ -47,7 +48,6 @@ class MergableRoadDetector
                          const RestrictionMap &node_restriction_map,
                          const std::unordered_set<NodeID> &barrier_nodes,
                          const guidance::TurnLanesIndexedArray &turn_lanes_data,
-                         const CoordinateExtractor &coordinate_extractor,
                          const util::NameTable &name_table,
                          const SuffixTable &street_name_suffix_table);
 
@@ -170,11 +170,12 @@ class MergableRoadDetector
     const RestrictionMap &node_restriction_map;
     const std::unordered_set<NodeID> &barrier_nodes;
     const guidance::TurnLanesIndexedArray &turn_lanes_data;
-    const CoordinateExtractor &coordinate_extractor;
 
     // name detection
     const util::NameTable &name_table;
     const SuffixTable &street_name_suffix_table;
+
+    const CoordinateExtractor coordinate_extractor;
 
     // limit for detecting circles / parallel roads
     const static double constexpr distance_to_extract = 150;
