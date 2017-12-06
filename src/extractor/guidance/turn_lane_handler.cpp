@@ -575,7 +575,7 @@ std::pair<LaneDataVector, LaneDataVector> TurnLaneHandler::partitionLaneData(
     const auto next_intersection =
         turn_analysis.AssignTurnTypes(at,
                                       straightmost->eid,
-                                      intersection::getConnectedRoads(node_based_graph,
+                                      intersection::getConnectedRoads<false>(node_based_graph,
                                                                       node_data_container,
                                                                       node_coordinates,
                                                                       compressed_geometries,

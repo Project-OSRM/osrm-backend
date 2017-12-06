@@ -202,6 +202,7 @@ auto getIntersectionLanes(const util::NodeBasedDynamicGraph &graph, const NodeID
     return max_lanes_intersection;
 }
 
+template<bool USE_CLOSE_BEARINGS>
 IntersectionEdgeGeometries
 getIntersectionOutgoingGeometries(const util::NodeBasedDynamicGraph &graph,
                                   const extractor::CompressedEdgeContainer &compressed_geometries,
@@ -232,7 +233,7 @@ getIntersectionOutgoingGeometries(const util::NodeBasedDynamicGraph &graph,
             util::coordinate_calculation::bearing(geometry[0], close_coordinate);
 
         const auto representative_coordinate =
-            graph.GetOutDegree(intersection_node) <= 2
+            USE_CLOSE_BEARINGS || graph.GetOutDegree(intersection_node) <= 2
                 ? coordinate_extractor.GetCoordinateCloseToTurn(
                       intersection_node, outgoing_edge, false, remote_node)
                 : coordinate_extractor.ExtractRepresentativeCoordinate(intersection_node,
@@ -265,7 +266,7 @@ getIntersectionGeometries(const util::NodeBasedDynamicGraph &graph,
                           const guidance::MergableRoadDetector &detector,
                           const NodeID intersection_node)
 {
-    IntersectionEdgeGeometries edge_geometries = getIntersectionOutgoingGeometries(
+    IntersectionEdgeGeometries edge_geometries = getIntersectionOutgoingGeometries<false>(
         graph, compressed_geometries, node_coordinates, intersection_node);
 
     const auto edges_number = edge_geometries.size();
@@ -314,7 +315,7 @@ getIntersectionGeometries(const util::NodeBasedDynamicGraph &graph,
 
             const auto neighbor_intersection_node = graph.GetTarget(edge_geometry.edge);
 
-            const auto neighbor_geometries = getIntersectionOutgoingGeometries(
+            const auto neighbor_geometries = getIntersectionOutgoingGeometries<false>(
                 graph, compressed_geometries, node_coordinates, neighbor_intersection_node);
 
             const auto neighbor_edges = neighbor_geometries.size();
@@ -751,6 +752,7 @@ convertToIntersectionView(const util::NodeBasedDynamicGraph &graph,
 // That means we not only get (from_node, turn_node, c) in the above example
 // but also (from_node, turn_node, a), (from_node, turn_node, b). These turns are
 // marked as invalid and only needed for intersection classification.
+template<bool USE_CLOSE_BEARINGS>
 guidance::IntersectionView
 getConnectedRoads(const util::NodeBasedDynamicGraph &graph,
                   const EdgeBasedNodeDataContainer &node_data_container,
@@ -763,7 +765,7 @@ getConnectedRoads(const util::NodeBasedDynamicGraph &graph,
 {
     const auto intersection_node = graph.GetTarget(incoming_edge.edge);
     const auto &outgoing_edges = intersection::getOutgoingEdges(graph, intersection_node);
-    auto edge_geometries = getIntersectionOutgoingGeometries(
+    auto edge_geometries = getIntersectionOutgoingGeometries<USE_CLOSE_BEARINGS>(
         graph, compressed_geometries, node_coordinates, intersection_node);
 
     // Add incoming edges with reversed bearings
@@ -793,6 +795,29 @@ getConnectedRoads(const util::NodeBasedDynamicGraph &graph,
                                      outgoing_edges,
                                      std::unordered_set<EdgeID>());
 }
+
+template
+guidance::IntersectionView
+getConnectedRoads<false>(const util::NodeBasedDynamicGraph &graph,
+                  const EdgeBasedNodeDataContainer &node_data_container,
+                  const std::vector<util::Coordinate> &node_coordinates,
+                  const extractor::CompressedEdgeContainer &compressed_geometries,
+                  const RestrictionMap &node_restriction_map,
+                  const std::unordered_set<NodeID> &barrier_nodes,
+                  const guidance::TurnLanesIndexedArray &turn_lanes_data,
+                  const IntersectionEdge &incoming_edge);
+
+template
+guidance::IntersectionView
+getConnectedRoads<true>(const util::NodeBasedDynamicGraph &graph,
+                  const EdgeBasedNodeDataContainer &node_data_container,
+                  const std::vector<util::Coordinate> &node_coordinates,
+                  const extractor::CompressedEdgeContainer &compressed_geometries,
+                  const RestrictionMap &node_restriction_map,
+                  const std::unordered_set<NodeID> &barrier_nodes,
+                  const guidance::TurnLanesIndexedArray &turn_lanes_data,
+                  const IntersectionEdge &incoming_edge);
+
 
 IntersectionEdge skipDegreeTwoNodes(const util::NodeBasedDynamicGraph &graph, IntersectionEdge road)
 {
