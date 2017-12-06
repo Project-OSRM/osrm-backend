@@ -51,7 +51,7 @@ unsigned getMedianSampleTime(const std::vector<unsigned> &timestamps)
 template <typename Algorithm>
 SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
                             const DataFacade<Algorithm> &facade,
-                            CandidateLists &candidates_list,
+                            const CandidateLists &candidates_list,
                             const std::vector<util::Coordinate> &trace_coordinates,
                             const std::vector<unsigned> &trace_timestamps,
                             const std::vector<boost::optional<double>> &trace_gps_precision,
@@ -188,14 +188,12 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
             const auto &prev_pruned = model.pruned[prev_unbroken_timestamp];
             const auto &prev_unbroken_timestamps_list = candidates_list[prev_unbroken_timestamp];
             const auto &prev_coordinate = trace_coordinates[prev_unbroken_timestamp];
-            const auto &prev_segment_id = model.working_segment_id[prev_unbroken_timestamp];
 
             auto &current_viterbi = model.viterbi[t];
             auto &current_pruned = model.pruned[t];
             auto &current_parents = model.parents[t];
             auto &current_lengths = model.path_distances[t];
-            auto &current_segment_id = model.working_segment_id[t];
-            auto &current_timestamps_list = candidates_list[t];
+            const auto &current_timestamps_list = candidates_list[t];
             const auto &current_coordinate = trace_coordinates[t];
 
             const auto haversine_distance = util::coordinate_calculation::haversineDistance(
@@ -222,39 +220,30 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
                     }
 
                     PhantomNode prev_node = prev_unbroken_timestamps_list[s].phantom_node;
-                    // do not make a uturn at the middle of the trace => invalidate an edge at the
-                    // opposite direction
-                    auto const prev_segment = prev_segment_id[s];
-                    if (prev_segment == prev_node.forward_segment_id.id)
+                    double network_distance = 0;
+                    if (!current_timestamps_list[s_prime].phantom_node.IsIndistinct(prev_node))
                     {
-                        prev_node.reverse_segment_id.enabled = false;
-                    }
-                    if (prev_segment == prev_node.reverse_segment_id.id)
-                    {
-                        prev_node.forward_segment_id.enabled = false;
-                    }
-                    NodeID last_id;
-                    double network_distance =
-                        getNetworkDistance(engine_working_data,
-                                           facade,
-                                           forward_heap,
-                                           reverse_heap,
-                                           prev_node,
-                                           current_timestamps_list[s_prime].phantom_node,
-                                           last_id,
-                                           weight_upper_bound);
+                        network_distance =
+                            getNetworkDistance(engine_working_data,
+                                               facade,
+                                               forward_heap,
+                                               reverse_heap,
+                                               prev_node,
+                                               current_timestamps_list[s_prime].phantom_node,
+                                               weight_upper_bound);
 
-                    // get distance diff between loc1/2 and locs/s_prime
-                    const auto d_t = std::abs(network_distance - haversine_distance);
+                        // get distance diff between loc1/2 and locs/s_prime
+                        const auto d_t = std::abs(network_distance - haversine_distance);
 
-                    // very low probability transition -> prune
-                    if (d_t >= max_distance_delta)
-                    {
-                        continue;
+                        // very low probability transition -> prune
+                        if (d_t >= max_distance_delta)
+                        {
+                            continue;
+                        }
+
+                        const double transition_pr = transition_log_probability(d_t);
+                        new_value += transition_pr;
                     }
-
-                    const double transition_pr = transition_log_probability(d_t);
-                    new_value += transition_pr;
 
                     if (new_value > current_viterbi[s_prime])
                     {
@@ -263,47 +252,7 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
                         current_lengths[s_prime] = network_distance;
                         current_pruned[s_prime] = false;
                         model.breakage[t] = false;
-                        current_segment_id[s_prime] = last_id;
                     }
-                }
-                // Here we can add previous states to the current viterbi if we suppose, that user
-                // can stay
-                double precision = DEFAULT_GPS_PRECISION;
-                if (!trace_gps_precision.empty())
-                    precision = (*trace_gps_precision[t]);
-                const auto distance = util::coordinate_calculation::haversineDistance(
-                    candidates_list[prev_unbroken_timestamp][s].phantom_node.location,
-                    trace_coordinates[t]);
-
-                // We can use a previous state as one of possible states if it is inside the
-                // precision range, except for the last state in trace
-                if (distance < 3 * precision && t < candidates_list.size() - 1)
-                {
-                    const PhantomNodeWithDistance &tmpNode =
-                        candidates_list[prev_unbroken_timestamp][s];
-                    if (std::any_of(candidates_list[t].begin(),
-                                    candidates_list[t].end(),
-                                    [&](const PhantomNodeWithDistance &node) {
-                                        return node.phantom_node.IsIndistinct(tmpNode.phantom_node);
-                                    }))
-                        continue;
-
-                    candidates_list[t].push_back(tmpNode);
-                    candidates_list[t].back().phantom_node.input_location = trace_coordinates[t];
-                    candidates_list[t].back().distance = distance;
-                    map_matching::EmissionLogProbability emission_log_probability(precision);
-
-                    // We don't add the transition probability because staying is prefered than
-                    // movement
-                    const auto emission = emission_log_probability(distance);
-                    emission_log_probabilities[t].push_back(emission);
-                    current_viterbi.push_back(emission + prev_viterbi[s]);
-                    current_parents.push_back(std::make_pair(prev_unbroken_timestamp, s));
-                    current_lengths.push_back(0);
-                    current_pruned.push_back(false);
-                    current_segment_id.push_back(prev_segment_id[s]);
-                    model.breakage[t] = false;
-                    model.viterbi_reachable[t].push_back(false);
                 }
             }
 
@@ -442,21 +391,19 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
         auto trace_distance = 0.0;
         matching.nodes.reserve(reconstructed_indices.size());
         matching.indices.reserve(reconstructed_indices.size());
-        const PhantomNode *last_node = nullptr;
+        const PhantomNode *previous_node = nullptr;
         for (const auto &idx : reconstructed_indices)
         {
             const auto timestamp_index = idx.first;
             const auto location_index = idx.second;
 
-            matching.indices.push_back(timestamp_index);
-
-            auto &current_node = candidates_list[timestamp_index][location_index].phantom_node;
-            if (last_node != nullptr && current_node.IsIndistinct(*last_node))
+            matching.indices.push_back((unsigned)timestamp_index);
+            matching.nodes.push_back(candidates_list[timestamp_index][location_index].phantom_node);
+            if (previous_node != nullptr && matching.nodes.back().IsIndistinct(*previous_node))
             {
-                current_node.location = last_node->location;
+                matching.nodes.back().location = previous_node->location;
             }
-            last_node = &current_node;
-            matching.nodes.push_back(current_node);
+            previous_node = &matching.nodes.back();
 
             auto const routes_count =
                 std::accumulate(model.viterbi_reachable[timestamp_index].begin(),
@@ -488,7 +435,7 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
 template SubMatchingList
 mapMatching(SearchEngineData<ch::Algorithm> &engine_working_data,
             const DataFacade<ch::Algorithm> &facade,
-            CandidateLists &candidates_list,
+            const CandidateLists &candidates_list,
             const std::vector<util::Coordinate> &trace_coordinates,
             const std::vector<unsigned> &trace_timestamps,
             const std::vector<boost::optional<double>> &trace_gps_precision,
@@ -498,7 +445,7 @@ mapMatching(SearchEngineData<ch::Algorithm> &engine_working_data,
 template SubMatchingList
 mapMatching(SearchEngineData<mld::Algorithm> &engine_working_data,
             const DataFacade<mld::Algorithm> &facade,
-            CandidateLists &candidates_list,
+            const CandidateLists &candidates_list,
             const std::vector<util::Coordinate> &trace_coordinates,
             const std::vector<unsigned> &trace_timestamps,
             const std::vector<boost::optional<double>> &trace_gps_precision,

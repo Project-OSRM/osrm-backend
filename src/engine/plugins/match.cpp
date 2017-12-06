@@ -33,22 +33,6 @@ void filterCandidates(const std::vector<util::Coordinate> &coordinates,
 {
     for (const auto current_coordinate : util::irange<std::size_t>(0, coordinates.size()))
     {
-        bool allow_uturn = false;
-
-        if (coordinates.size() - 1 > current_coordinate && 0 < current_coordinate)
-        {
-            double turn_angle =
-                util::coordinate_calculation::computeAngle(coordinates[current_coordinate - 1],
-                                                           coordinates[current_coordinate],
-                                                           coordinates[current_coordinate + 1]);
-
-            // sharp turns indicate a possible uturn
-            if (turn_angle <= 90.0 || turn_angle >= 270.0)
-            {
-                allow_uturn = true;
-            }
-        }
-
         auto &candidates = candidates_lists[current_coordinate];
         if (candidates.empty())
         {
@@ -74,29 +58,21 @@ void filterCandidates(const std::vector<util::Coordinate> &coordinates,
             std::unique(candidates.begin(),
                         candidates.end(),
                         [](const PhantomNodeWithDistance &lhs, const PhantomNodeWithDistance &rhs) {
-                            return lhs.phantom_node.forward_segment_id.id ==
-                                       rhs.phantom_node.forward_segment_id.id &&
-                                   lhs.phantom_node.reverse_segment_id.id ==
-                                       rhs.phantom_node.reverse_segment_id.id;
+                            return lhs.phantom_node.IsIndistinct(rhs.phantom_node);
                         });
-        candidates.resize(new_end - candidates.begin());
+        candidates.resize(std::distance(candidates.begin(), new_end));
 
-        if (!allow_uturn)
+        const auto compact_size = candidates.size();
+        for (const auto i : util::irange<std::size_t>(0, compact_size))
         {
-            const auto compact_size = candidates.size();
-            for (const auto i : util::irange<std::size_t>(0, compact_size))
+            // Split edge if it is bidirectional and append reverse direction to end of list
+            if (candidates[i].phantom_node.forward_segment_id.enabled &&
+                candidates[i].phantom_node.reverse_segment_id.enabled)
             {
-                // Split edge if it is bidirectional and append reverse direction to end of list
-                if (candidates[i].phantom_node.forward_segment_id.enabled &&
-                    candidates[i].phantom_node.reverse_segment_id.enabled)
-                {
-                    PhantomNode reverse_node(candidates[i].phantom_node);
-                    reverse_node.forward_segment_id.enabled = false;
-                    candidates.push_back(
-                        PhantomNodeWithDistance{reverse_node, candidates[i].distance});
-
-                    candidates[i].phantom_node.reverse_segment_id.enabled = false;
-                }
+                PhantomNode reverse_node(candidates[i].phantom_node);
+                reverse_node.forward_segment_id.enabled = false;
+                candidates.push_back(PhantomNodeWithDistance{reverse_node, candidates[i].distance});
+                candidates[i].phantom_node.reverse_segment_id.enabled = false;
             }
         }
 
@@ -192,6 +168,36 @@ Status MatchPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
     }
 
     auto candidates_lists = GetPhantomNodesInRange(facade, tidied.parameters, search_radiuses);
+
+    // Add previous states for stand_in_place behavior
+    for (const auto current_index :
+         util::irange<std::size_t>(1, tidied.parameters.coordinates.size() - 1))
+    {
+        // We can use a previous state as one of possible states if it is inside the
+        // precision range, except for the last state in trace
+        const auto &previous_candidates = candidates_lists[current_index - 1];
+        auto &current_candidates = candidates_lists[current_index];
+        const auto &current_coordinate = tidied.parameters.coordinates[current_index];
+        const auto allowed_precision =
+            RADIUS_MULTIPLIER * (tidied.parameters.radiuses.empty()
+                                     ? routing_algorithms::DEFAULT_GPS_PRECISION
+                                     : *tidied.parameters.radiuses[current_index]);
+        for (auto const &candidate : previous_candidates)
+        {
+            const auto matching_distance = util::coordinate_calculation::haversineDistance(
+                candidate.phantom_node.location, current_coordinate);
+            if (matching_distance < allowed_precision)
+            {
+                if (std::any_of(current_candidates.begin(),
+                                current_candidates.end(),
+                                [&](const PhantomNodeWithDistance &node) {
+                                    return node.phantom_node.IsIndistinct(candidate.phantom_node);
+                                }))
+                    continue;
+                current_candidates.push_back(candidate);
+            }
+        }
+    }
 
     filterCandidates(tidied.parameters.coordinates, candidates_lists);
     if (std::all_of(candidates_lists.begin(),
