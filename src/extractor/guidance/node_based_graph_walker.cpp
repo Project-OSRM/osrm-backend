@@ -280,13 +280,13 @@ void IntersectionFinderAccumulator::update(const NodeID from_node,
     via_edge_id = via_edge;
 
     intersection = intersection::getConnectedRoads<true>(node_based_graph,
-                                                   node_data_container,
-                                                   node_coordinates,
-                                                   compressed_geometries,
-                                                   node_restriction_map,
-                                                   barrier_nodes,
-                                                   turn_lanes_data,
-                                                   {from_node, via_edge});
+                                                         node_data_container,
+                                                         node_coordinates,
+                                                         compressed_geometries,
+                                                         node_restriction_map,
+                                                         barrier_nodes,
+                                                         turn_lanes_data,
+                                                         {from_node, via_edge});
 }
 
 } // namespace guidance

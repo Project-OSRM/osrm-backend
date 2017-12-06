@@ -579,13 +579,13 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
                     return {};
 
                 return intersection::getConnectedRoads<false>(node_based_graph,
-                                                       node_data_container,
-                                                       node_coordinates,
-                                                       compressed_geometries,
-                                                       node_restriction_map,
-                                                       barrier_nodes,
-                                                       turn_lanes_data,
-                                                       parameters);
+                                                              node_data_container,
+                                                              node_coordinates,
+                                                              compressed_geometries,
+                                                              node_restriction_map,
+                                                              barrier_nodes,
+                                                              turn_lanes_data,
+                                                              parameters);
             }();
 
             if (!previous_intersection.empty())

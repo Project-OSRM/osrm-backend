@@ -559,13 +559,13 @@ bool MergableRoadDetector::IsLinkRoad(const NodeID intersection_node,
         intersection::skipDegreeTwoNodes(node_based_graph, {intersection_node, road.eid});
     const auto next_intersection_along_road =
         intersection::getConnectedRoads<false>(node_based_graph,
-                                        node_data_container,
-                                        node_coordinates,
-                                        compressed_geometries,
-                                        node_restriction_map,
-                                        barrier_nodes,
-                                        turn_lanes_data,
-                                        next_intersection_parameters);
+                                               node_data_container,
+                                               node_coordinates,
+                                               compressed_geometries,
+                                               node_restriction_map,
+                                               barrier_nodes,
+                                               turn_lanes_data,
+                                               next_intersection_parameters);
     const auto extract_name_id = [this](const MergableRoadData &road) {
         return node_data_container
             .GetAnnotation(node_based_graph.GetEdgeData(road.eid).annotation_data)
