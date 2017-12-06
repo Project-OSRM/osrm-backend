@@ -356,6 +356,7 @@ function process_way(profile, way, result, relations)
     -- routable. this includes things like status=impassable,
     -- toll=yes and oneway=reversible
     WayHandlers.blocked_ways,
+    WayHandlers.avoid_ways,
 
     -- determine access status by checking our hierarchy of
     -- access tags, e.g: motorcar, motor_vehicle, vehicle
