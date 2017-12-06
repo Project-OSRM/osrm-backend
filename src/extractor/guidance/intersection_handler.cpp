@@ -483,13 +483,13 @@ IntersectionHandler::getNextIntersection(const NodeID at, const EdgeID via) cons
     }
 
     auto intersection = intersection::getConnectedRoads<false>(node_based_graph,
-                                                        node_data_container,
-                                                        node_coordinates,
-                                                        compressed_geometries,
-                                                        node_restriction_map,
-                                                        barrier_nodes,
-                                                        turn_lanes_data,
-                                                        intersection_parameters);
+                                                               node_data_container,
+                                                               node_coordinates,
+                                                               compressed_geometries,
+                                                               node_restriction_map,
+                                                               barrier_nodes,
+                                                               turn_lanes_data,
+                                                               intersection_parameters);
     auto intersection_node = node_based_graph.GetTarget(intersection_parameters.edge);
 
     if (intersection.size() <= 2 || intersection.isTrafficSignalOrBarrier())
