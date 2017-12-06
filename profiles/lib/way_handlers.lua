@@ -490,6 +490,15 @@ function WayHandlers.weights(profile,way,result,data)
   end
 end
 
+
+-- handle general avoid rules
+
+function WayHandlers.avoid_ways(profile,way,result,data)
+  if profile.avoid[data.highway] then
+    return false
+  end
+end
+
 -- handle various that can block access
 function WayHandlers.blocked_ways(profile,way,result,data)
 
