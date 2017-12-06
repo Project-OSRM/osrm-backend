@@ -561,7 +561,7 @@ operator()(const NodeID /*nid*/, const EdgeID source_edge_id, Intersection inter
             }
             else
             {
-                const auto skip_traffic_light_intersection = intersection::getConnectedRoads(
+                const auto skip_traffic_light_intersection = intersection::getConnectedRoads<false>(
                     node_based_graph,
                     node_data_container,
                     node_coordinates,

@@ -558,7 +558,7 @@ bool MergableRoadDetector::IsLinkRoad(const NodeID intersection_node,
     const auto next_intersection_parameters =
         intersection::skipDegreeTwoNodes(node_based_graph, {intersection_node, road.eid});
     const auto next_intersection_along_road =
-        intersection::getConnectedRoads(node_based_graph,
+        intersection::getConnectedRoads<false>(node_based_graph,
                                         node_data_container,
                                         node_coordinates,
                                         compressed_geometries,

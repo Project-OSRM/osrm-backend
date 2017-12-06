@@ -222,7 +222,7 @@ NodeBasedGraphWalker::TraverseRoad(NodeID current_node_id,
 
         // look at the next intersection
         const auto next_intersection =
-            intersection::getConnectedRoads(node_based_graph,
+            intersection::getConnectedRoads<true>(node_based_graph,
                                             node_data_container,
                                             node_coordinates,
                                             compressed_geometries,
