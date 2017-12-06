@@ -75,7 +75,7 @@ bool findPreviousIntersection(const NodeID node_v,
         return false;
 
     const auto node_v_reverse_intersection =
-        intersection::getConnectedRoads(node_based_graph,
+        intersection::getConnectedRoads<true>(node_based_graph,
                                         node_data_container,
                                         node_coordinates,
                                         compressed_geometries,
@@ -95,7 +95,7 @@ bool findPreviousIntersection(const NodeID node_v,
 
     const auto node_u = node_based_graph.GetTarget(straightmost_at_v_in_reverse->eid);
     const auto node_u_reverse_intersection =
-        intersection::getConnectedRoads(node_based_graph,
+        intersection::getConnectedRoads<true>(node_based_graph,
                                         node_data_container,
                                         node_coordinates,
                                         compressed_geometries,
@@ -120,7 +120,7 @@ bool findPreviousIntersection(const NodeID node_v,
         return false;
     }
 
-    result_intersection = intersection::getConnectedRoads(node_based_graph,
+    result_intersection = intersection::getConnectedRoads<false>(node_based_graph,
                                                           node_data_container,
                                                           node_coordinates,
                                                           compressed_geometries,

@@ -578,7 +578,7 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
                 if (node_based_graph.GetTarget(parameters.edge) == node_at_intersection)
                     return {};
 
-                return intersection::getConnectedRoads(node_based_graph,
+                return intersection::getConnectedRoads<false>(node_based_graph,
                                                        node_data_container,
                                                        node_coordinates,
                                                        compressed_geometries,

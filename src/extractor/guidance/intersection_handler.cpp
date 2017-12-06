@@ -482,7 +482,7 @@ IntersectionHandler::getNextIntersection(const NodeID at, const EdgeID via) cons
         return boost::none;
     }
 
-    auto intersection = intersection::getConnectedRoads(node_based_graph,
+    auto intersection = intersection::getConnectedRoads<false>(node_based_graph,
                                                         node_data_container,
                                                         node_coordinates,
                                                         compressed_geometries,
