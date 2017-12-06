@@ -178,7 +178,7 @@ class MergableRoadDetector
     const CoordinateExtractor coordinate_extractor;
 
     // limit for detecting circles / parallel roads
-    const static double constexpr distance_to_extract = 150;
+    const static double constexpr distance_to_extract = 120;
 };
 
 } // namespace guidance
