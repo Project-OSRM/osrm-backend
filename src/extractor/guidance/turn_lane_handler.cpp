@@ -572,17 +572,17 @@ std::pair<LaneDataVector, LaneDataVector> TurnLaneHandler::partitionLaneData(
 
     // find out about the next intersection. To check for valid matches, we also need the turn
     // types. We can skip merging/angle adjustments, though
-    const auto next_intersection =
-        turn_analysis.AssignTurnTypes(at,
-                                      straightmost->eid,
-                                      intersection::getConnectedRoads<false>(node_based_graph,
-                                                                      node_data_container,
-                                                                      node_coordinates,
-                                                                      compressed_geometries,
-                                                                      node_restriction_map,
-                                                                      barrier_nodes,
-                                                                      turn_lanes_data,
-                                                                      {at, straightmost->eid}));
+    const auto next_intersection = turn_analysis.AssignTurnTypes(
+        at,
+        straightmost->eid,
+        intersection::getConnectedRoads<false>(node_based_graph,
+                                               node_data_container,
+                                               node_coordinates,
+                                               compressed_geometries,
+                                               node_restriction_map,
+                                               barrier_nodes,
+                                               turn_lanes_data,
+                                               {at, straightmost->eid}));
 
     // check where we can match turn lanes
     std::size_t straightmost_tag_index = turn_lane_data.size();

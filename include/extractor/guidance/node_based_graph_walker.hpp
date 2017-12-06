@@ -223,13 +223,13 @@ NodeBasedGraphWalker::TraverseRoad(NodeID current_node_id,
         // look at the next intersection
         const auto next_intersection =
             intersection::getConnectedRoads<true>(node_based_graph,
-                                            node_data_container,
-                                            node_coordinates,
-                                            compressed_geometries,
-                                            node_restriction_map,
-                                            barrier_nodes,
-                                            turn_lanes_data,
-                                            {current_node_id, current_edge_id});
+                                                  node_data_container,
+                                                  node_coordinates,
+                                                  compressed_geometries,
+                                                  node_restriction_map,
+                                                  barrier_nodes,
+                                                  turn_lanes_data,
+                                                  {current_node_id, current_edge_id});
 
         // don't follow u-turns or go past our initial intersection
         if (next_intersection.size() <= 1)
