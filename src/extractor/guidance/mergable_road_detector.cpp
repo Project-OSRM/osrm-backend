@@ -459,10 +459,16 @@ bool MergableRoadDetector::HaveSameDirection(const NodeID intersection_node,
         return false;
 
     // compare reference distance:
-    const auto distance_between_roads = util::coordinate_calculation::findClosestDistance(
+    const auto distance_mid_left_to_right = util::coordinate_calculation::findClosestDistance(
         coordinates_to_the_left[coordinates_to_the_left.size() / 2],
         coordinates_to_the_right.begin(),
         coordinates_to_the_right.end());
+    const auto distance_mid_right_to_left = util::coordinate_calculation::findClosestDistance(
+        coordinates_to_the_right[coordinates_to_the_right.size() / 2],
+        coordinates_to_the_left.begin(),
+        coordinates_to_the_left.end());
+    const auto distance_between_roads =
+        std::min(distance_mid_left_to_right, distance_mid_right_to_left);
 
     const auto lane_count_lhs = std::max<int>(
         1, node_based_graph.GetEdgeData(lhs.eid).flags.road_classification.GetNumberOfLanes());
