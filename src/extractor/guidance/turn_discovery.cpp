@@ -76,13 +76,13 @@ bool findPreviousIntersection(const NodeID node_v,
 
     const auto node_v_reverse_intersection =
         intersection::getConnectedRoads<true>(node_based_graph,
-                                        node_data_container,
-                                        node_coordinates,
-                                        compressed_geometries,
-                                        node_restriction_map,
-                                        barrier_nodes,
-                                        turn_lanes_data,
-                                        {node_w, u_turn_at_node_w});
+                                              node_data_container,
+                                              node_coordinates,
+                                              compressed_geometries,
+                                              node_restriction_map,
+                                              barrier_nodes,
+                                              turn_lanes_data,
+                                              {node_w, u_turn_at_node_w});
     // Continue along the straightmost turn. If there is no straight turn, we cannot find a valid
     // previous intersection.
     const auto straightmost_at_v_in_reverse =
@@ -96,13 +96,13 @@ bool findPreviousIntersection(const NodeID node_v,
     const auto node_u = node_based_graph.GetTarget(straightmost_at_v_in_reverse->eid);
     const auto node_u_reverse_intersection =
         intersection::getConnectedRoads<true>(node_based_graph,
-                                        node_data_container,
-                                        node_coordinates,
-                                        compressed_geometries,
-                                        node_restriction_map,
-                                        barrier_nodes,
-                                        turn_lanes_data,
-                                        {node_v, straightmost_at_v_in_reverse->eid});
+                                              node_data_container,
+                                              node_coordinates,
+                                              compressed_geometries,
+                                              node_restriction_map,
+                                              barrier_nodes,
+                                              turn_lanes_data,
+                                              {node_v, straightmost_at_v_in_reverse->eid});
 
     // now check that the u-turn at the given intersection connects to via-edge
     // The u-turn at the now found intersection should, hopefully, represent the previous edge.
@@ -121,13 +121,13 @@ bool findPreviousIntersection(const NodeID node_v,
     }
 
     result_intersection = intersection::getConnectedRoads<false>(node_based_graph,
-                                                          node_data_container,
-                                                          node_coordinates,
-                                                          compressed_geometries,
-                                                          node_restriction_map,
-                                                          barrier_nodes,
-                                                          turn_lanes_data,
-                                                          {node_u, result_via_edge});
+                                                                 node_data_container,
+                                                                 node_coordinates,
+                                                                 compressed_geometries,
+                                                                 node_restriction_map,
+                                                                 barrier_nodes,
+                                                                 turn_lanes_data,
+                                                                 {node_u, result_via_edge});
     const auto check_via_edge =
         result_intersection.end() !=
         std::find_if(result_intersection.begin(),

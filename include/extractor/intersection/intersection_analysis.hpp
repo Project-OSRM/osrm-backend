@@ -60,7 +60,7 @@ convertToIntersectionView(const util::NodeBasedDynamicGraph &graph,
 // Check for restrictions/barriers and generate a list of valid and invalid turns present at
 // the node reached from `incoming_edge`. The resulting candidates have to be analyzed
 // for their actual instructions later on.
-template<bool USE_CLOSE_BEARINGS>
+template <bool USE_CLOSE_COORDINATE>
 guidance::IntersectionView
 getConnectedRoads(const util::NodeBasedDynamicGraph &graph,
                   const EdgeBasedNodeDataContainer &node_data_container,
