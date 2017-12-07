@@ -48,14 +48,6 @@ const constexpr char *block_id_to_name[] = {"NAME_CHAR_DATA",
                                             "HSGR_CHECKSUM",
                                             "TIMESTAMP",
                                             "FILE_INDEX_PATH",
-                                            "CH_CORE_MARKER_0",
-                                            "CH_CORE_MARKER_1",
-                                            "CH_CORE_MARKER_2",
-                                            "CH_CORE_MARKER_3",
-                                            "CH_CORE_MARKER_4",
-                                            "CH_CORE_MARKER_5",
-                                            "CH_CORE_MARKER_6",
-                                            "CH_CORE_MARKER_7",
                                             "DATASOURCES_NAMES",
                                             "PROPERTIES",
                                             "BEARING_CLASSID",
@@ -132,14 +124,6 @@ struct DataLayout
         HSGR_CHECKSUM,
         TIMESTAMP,
         FILE_INDEX_PATH,
-        CH_CORE_MARKER_0,
-        CH_CORE_MARKER_1,
-        CH_CORE_MARKER_2,
-        CH_CORE_MARKER_3,
-        CH_CORE_MARKER_4,
-        CH_CORE_MARKER_5,
-        CH_CORE_MARKER_6,
-        CH_CORE_MARKER_7,
         DATASOURCES_NAMES,
         PROPERTIES,
         BEARING_CLASSID,
@@ -200,15 +184,7 @@ struct DataLayout
 
     inline uint64_t GetBlockEntries(BlockID bid) const { return num_entries[bid]; }
 
-    inline uint64_t GetBlockSize(BlockID bid) const
-    {
-        // special bit encoding
-        if (bid >= CH_CORE_MARKER_0 && bid <= CH_CORE_MARKER_7)
-        {
-            return (num_entries[bid] / 32 + 1) * entry_size[bid];
-        }
-        return num_entries[bid] * entry_size[bid];
-    }
+    inline uint64_t GetBlockSize(BlockID bid) const { return num_entries[bid] * entry_size[bid]; }
 
     inline uint64_t GetSizeOfLayout() const
     {

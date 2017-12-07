@@ -1,4 +1,7 @@
 # UNRELEASED
+ - Changes from 5.14.1:
+   - Bugfixes:
+      - FIXED #4727: Erroring when a old .core file is present.
 
 # 5.14.1
   - Changes from 5.14.0
