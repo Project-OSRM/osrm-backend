@@ -586,7 +586,7 @@ step.
 
 - `name`: The name of the way along which travel proceeds.
 - `ref`: A reference number or code for the way. Optionally included, if ref data is available for the given way.
-- `pronunciation`: The pronunciation hint of the way name. Will be `undefined` if there is no pronunciation hit.
+- `pronunciation`: A string containing an [IPA](https://en.wikipedia.org/wiki/International_Phonetic_Alphabet) phonetic transcription indicating how to pronounce the name in the `name` property. This property is omitted if pronunciation data is unavailable for the step.
 - `destinations`: The destinations of the way. Will be `undefined` if there are no destinations.
 - `exits`: The exit numbers or names of the way. Will be `undefined` if there are no exit numbers or names.
 - `mode`: A string signifying the mode of transportation.
