@@ -331,43 +331,6 @@ void Storage::PopulateLayout(DataLayout &layout)
         layout.SetBlockSize<char>(DataLayout::TIMESTAMP, timestamp_size);
     }
 
-    // load core marker size
-    if (boost::filesystem::exists(config.GetPath(".osrm.core")))
-    {
-        io::FileReader core_marker_file(config.GetPath(".osrm.core"),
-                                        io::FileReader::VerifyFingerprint);
-        const auto num_metrics = core_marker_file.ReadElementCount64();
-        if (num_metrics > NUM_METRICS)
-        {
-            throw util::exception("Only " + std::to_string(NUM_METRICS) +
-                                  " metrics are supported at the same time.");
-        }
-
-        const auto number_of_core_markers = core_marker_file.ReadElementCount64();
-        for (const auto index : util::irange<std::size_t>(0, num_metrics))
-        {
-            layout.SetBlockSize<unsigned>(
-                static_cast<DataLayout::BlockID>(DataLayout::CH_CORE_MARKER_0 + index),
-                number_of_core_markers);
-        }
-        for (const auto index : util::irange<std::size_t>(num_metrics, NUM_METRICS))
-        {
-            layout.SetBlockSize<unsigned>(
-                static_cast<DataLayout::BlockID>(DataLayout::CH_CORE_MARKER_0 + index), 0);
-        }
-    }
-    else
-    {
-        layout.SetBlockSize<unsigned>(DataLayout::CH_CORE_MARKER_0, 0);
-        layout.SetBlockSize<unsigned>(DataLayout::CH_CORE_MARKER_1, 0);
-        layout.SetBlockSize<unsigned>(DataLayout::CH_CORE_MARKER_2, 0);
-        layout.SetBlockSize<unsigned>(DataLayout::CH_CORE_MARKER_3, 0);
-        layout.SetBlockSize<unsigned>(DataLayout::CH_CORE_MARKER_4, 0);
-        layout.SetBlockSize<unsigned>(DataLayout::CH_CORE_MARKER_5, 0);
-        layout.SetBlockSize<unsigned>(DataLayout::CH_CORE_MARKER_6, 0);
-        layout.SetBlockSize<unsigned>(DataLayout::CH_CORE_MARKER_7, 0);
-    }
-
     // load turn weight penalties
     {
         io::FileReader turn_weight_penalties_file(config.GetPath(".osrm.turn_weight_penalties"),
