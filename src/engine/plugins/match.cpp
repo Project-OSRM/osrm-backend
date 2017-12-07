@@ -17,6 +17,7 @@
 #include <functional>
 #include <iterator>
 #include <memory>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -174,6 +175,16 @@ Status MatchPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
         tidied = api::tidy::keep_all(parameters);
     }
 
+    // Error: first and last points should be waypoints
+    if (!parameters.waypoints.empty() &&
+        (tidied.parameters.waypoints[0] != 0 ||
+         tidied.parameters.waypoints.back() != (tidied.parameters.coordinates.size() - 1)))
+    {
+        return Error("InvalidValue",
+                     "First and last coordinates must be specified as waypoints.",
+                     json_result);
+    }
+
     // assuming radius is the standard deviation of a normal distribution
     // that models GPS noise (in this model), x3 should give us the correct
     // search radius with > 99% confidence
@@ -229,6 +240,30 @@ Status MatchPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
         return Error("NoMatch", "Could not match the trace.", json_result);
     }
 
+    // trace was split, we don't support the waypoints parameter across multiple match objects
+    if (sub_matchings.size() > 1 && !parameters.waypoints.empty())
+    {
+        return Error("NoMatch", "Could not match the trace with the given waypoints.", json_result);
+    }
+
+    // Error: Check if user-supplied waypoints can be found in the resulting matches
+    {
+        std::set<std::size_t> tidied_waypoints(tidied.parameters.waypoints.begin(),
+                                               tidied.parameters.waypoints.end());
+        for (const auto &sm : sub_matchings)
+        {
+            std::for_each(sm.indices.begin(),
+                          sm.indices.end(),
+                          [&tidied_waypoints](const auto index) { tidied_waypoints.erase(index); });
+        }
+        if (!tidied_waypoints.empty())
+        {
+            return Error(
+                "NoMatch", "Requested waypoint parameter could not be matched.", json_result);
+        }
+    }
+
+    // each sub_route will correspond to a MatchObject
     std::vector<InternalRouteResult> sub_routes(sub_matchings.size());
     for (auto index : util::irange<std::size_t>(0UL, sub_matchings.size()))
     {
@@ -245,12 +280,31 @@ Status MatchPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
             BOOST_ASSERT(current_phantom_node_pair.target_phantom.IsValid());
             sub_routes[index].segment_end_coordinates.emplace_back(current_phantom_node_pair);
         }
-        // force uturns to be on, since we split the phantom nodes anyway and only have
-        // bi-directional
-        // phantom nodes for possible uturns
+        // force uturns to be on
+        // we split the phantom nodes anyway and only have bi-directional phantom nodes for
+        // possible uturns
         sub_routes[index] =
             algorithms.ShortestPathSearch(sub_routes[index].segment_end_coordinates, {false});
         BOOST_ASSERT(sub_routes[index].shortest_path_weight != INVALID_EDGE_WEIGHT);
+        if (!tidied.parameters.waypoints.empty())
+        {
+            std::vector<bool> waypoint_legs;
+            waypoint_legs.reserve(sub_matchings[index].indices.size());
+            for (unsigned i = 0, j = 0; i < sub_matchings[index].indices.size(); ++i)
+            {
+                auto current_wp = tidied.parameters.waypoints[j];
+                if (current_wp == sub_matchings[index].indices[i])
+                {
+                    waypoint_legs.push_back(true);
+                    ++j;
+                }
+                else
+                {
+                    waypoint_legs.push_back(false);
+                }
+            }
+            sub_routes[index] = CollapseInternalRouteResult(sub_routes[index], waypoint_legs);
+        }
     }
 
     api::MatchAPI match_api{facade, parameters, tidied};

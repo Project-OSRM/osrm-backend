@@ -86,6 +86,10 @@ class MatchAPI final : public RouteAPI
             for (auto point_index : util::irange(
                      0u, static_cast<unsigned>(sub_matchings[sub_matching_index].indices.size())))
             {
+                // tidied_to_original: index of the input coordinate that a tidied coordinate
+                // corresponds to
+                // sub_matching indices: index of the coordinate passed to map matching plugin that
+                // a matched node corresponds to
                 trace_idx_to_matching_idx[tidy_result
                                               .tidied_to_original[sub_matchings[sub_matching_index]
                                                                       .indices[point_index]]] =
@@ -93,6 +97,7 @@ class MatchAPI final : public RouteAPI
             }
         }
 
+        std::size_t was_waypoint_idx = 0;
         for (auto trace_index : util::irange<std::size_t>(0UL, parameters.coordinates.size()))
         {
             if (tidy_result.can_be_removed[trace_index])
@@ -110,10 +115,18 @@ class MatchAPI final : public RouteAPI
                 sub_matchings[matching_index.sub_matching_index].nodes[matching_index.point_index];
             auto waypoint = BaseAPI::MakeWaypoint(phantom);
             waypoint.values["matchings_index"] = matching_index.sub_matching_index;
-            waypoint.values["waypoint_index"] = matching_index.point_index;
             waypoint.values["alternatives_count"] =
                 sub_matchings[matching_index.sub_matching_index]
                     .alternatives_count[matching_index.point_index];
+            if (tidy_result.was_waypoint[trace_index])
+            {
+                waypoint.values["waypoint_index"] = was_waypoint_idx;
+                was_waypoint_idx++;
+            }
+            else
+            {
+                waypoint.values["waypoint_index"] = util::json::Null();
+            }
             waypoints.values.push_back(std::move(waypoint));
         }
 

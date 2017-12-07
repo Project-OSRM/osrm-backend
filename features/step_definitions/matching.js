@@ -150,7 +150,8 @@ module.exports = function () {
                     }
                     var ok = true;
                     var encodedResult = '',
-                        extendedTarget = '';
+                        extendedTarget = '',
+                        resultWaypoints = [];
 
                     var testSubMatching = (sub, si) => {
                         var testSubNode = (ni) => {
@@ -186,6 +187,29 @@ module.exports = function () {
                         });
                     }
 
+                    if (headers.has('waypoints')) {
+                        var got_loc = [];
+                        for (let i = 0; i < json.tracepoints.length; i++) {
+                            if (!json.tracepoints[i]) continue;
+                            if (json.tracepoints[i].waypoint_index != null)
+                                got_loc.push(json.tracepoints[i].location);
+                        }
+
+                        if (row.waypoints.length != got_loc.length)
+                            return cb(new Error(`Expected ${row.waypoints.length} waypoints, got ${got_loc.length}`));
+
+                        for (i = 0; i < row.waypoints.length; i++)
+                        {
+                            var want_node = this.findNodeByName(row.waypoints[i]);
+                            if (!this.FuzzyMatch.matchLocation(got_loc[i], want_node)) {
+                                resultWaypoints.push(util.format('? [%s,%s]', got_loc[i][0], got_loc[i][1]));
+                                ok = false;
+                            } else {
+                                resultWaypoints.push(row.waypoints[i]);
+                            }
+                        }
+                    }
+
                     if (ok) {
                         if (headers.has('matchings')) {
                             got.matchings = row.matchings;
@@ -194,7 +218,12 @@ module.exports = function () {
                         if (headers.has('timestamps')) {
                             got.timestamps = row.timestamps;
                         }
+
+                        if (headers.has('waypoints')) {
+                            got.waypoints = row.waypoints;
+                        }
                     } else {
+                        got.waypoints = resultWaypoints.join(';');
                         got.matchings = encodedResult;
                         row.matchings = extendedTarget;
                     }

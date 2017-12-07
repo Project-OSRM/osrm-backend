@@ -7,11 +7,11 @@
 
 #include "engine/phantom_node.hpp"
 
-#include "osrm/coordinate.hpp"
-
+#include "util/coordinate.hpp"
 #include "util/guidance/entry_class.hpp"
 #include "util/guidance/turn_bearing.hpp"
 #include "util/guidance/turn_lanes.hpp"
+#include "util/integer_range.hpp"
 #include "util/typedefs.hpp"
 
 #include <vector>
@@ -102,6 +102,56 @@ struct InternalManyRoutesResult
 
     std::vector<InternalRouteResult> routes;
 };
+
+inline InternalRouteResult CollapseInternalRouteResult(const InternalRouteResult &leggy_result,
+                                                       const std::vector<bool> &is_waypoint)
+{
+    BOOST_ASSERT(leggy_result.is_valid());
+    BOOST_ASSERT(is_waypoint[0]);     // first and last coords
+    BOOST_ASSERT(is_waypoint.back()); // should always be waypoints
+    // Nothing to collapse! return result as is
+    if (leggy_result.unpacked_path_segments.size() == 1)
+        return leggy_result;
+
+    BOOST_ASSERT(leggy_result.segment_end_coordinates.size() > 1);
+
+    InternalRouteResult collapsed;
+    collapsed.shortest_path_weight = leggy_result.shortest_path_weight;
+    for (auto i : util::irange<std::size_t>(0, leggy_result.unpacked_path_segments.size()))
+    {
+        if (is_waypoint[i])
+        {
+            // start another leg vector
+            collapsed.unpacked_path_segments.push_back(leggy_result.unpacked_path_segments[i]);
+            // save new phantom node pair
+            collapsed.segment_end_coordinates.push_back(leggy_result.segment_end_coordinates[i]);
+            // save data about phantom nodes
+            collapsed.source_traversed_in_reverse.push_back(
+                leggy_result.source_traversed_in_reverse[i]);
+            collapsed.target_traversed_in_reverse.push_back(
+                leggy_result.target_traversed_in_reverse[i]);
+        }
+        else
+        // no new leg, collapse the next segment into the last leg
+        {
+            BOOST_ASSERT(!collapsed.unpacked_path_segments.empty());
+            auto &last_segment = collapsed.unpacked_path_segments.back();
+            // deduplicate last segment (needs to be checked for empty for the same node query edge
+            // case)
+            if (!last_segment.empty())
+                last_segment.pop_back();
+            // update target phantom node of leg
+            BOOST_ASSERT(!collapsed.segment_end_coordinates.empty());
+            collapsed.segment_end_coordinates.back().target_phantom =
+                leggy_result.segment_end_coordinates[i].target_phantom;
+            // copy path segments into current leg
+            last_segment.insert(last_segment.end(),
+                                leggy_result.unpacked_path_segments[i].begin(),
+                                leggy_result.unpacked_path_segments[i].end());
+        }
+    }
+    return collapsed;
+}
 }
 }
 
