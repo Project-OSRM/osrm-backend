@@ -480,3 +480,126 @@ Feature: Basic Map Matching
             | trace | a:nodes     |
             | 12    | 1:2:3:4:5:6 |
             | 21    | 6:5:4:3:2:1 |
+
+
+    Scenario: Matching with waypoints param for start/end
+        Given the node map
+            """
+            a-----b---c
+                  |
+                  |
+                  d
+                  |
+                  |
+                  e
+            """
+        And the ways
+            | nodes | oneway |
+            | abc   | no     |
+            | bde   | no     |
+
+        Given the query options
+            | waypoints | 0;3   |
+
+        When I match I should get
+            | trace | code    | matchings | waypoints |
+            | abde  | Ok      | abde      | ae        |
+
+    Scenario: Matching with waypoints param that were tidied away
+        Given the node map
+            """
+            a - b - c - e
+                    |
+                    f
+                    |
+                    g
+            """
+        And the ways
+            | nodes | oneway |
+            | abce  | no     |
+            | cfg   | no     |
+
+        Given the query options
+            | tidy      | true    |
+            | waypoints | 0;2;5   |
+
+        When I match I should get
+            | trace  | code    | matchings | waypoints |
+            | abccfg | Ok      | abcfg     | acg       |
+
+    Scenario: Testbot - Map matching refuses to use waypoints with trace splitting
+        Given the node map
+            """
+            a b c d
+                e
+            """
+        Given the query options
+            | waypoints | 0;3   |
+
+        And the ways
+            | nodes | oneway |
+            | abcd  | no     |
+
+        When I match I should get
+            | trace | timestamps | code     |
+            | abcd  | 0 1 62 63  | NoMatch  |
+
+    Scenario: Testbot - Map matching invalid waypoints
+        Given the node map
+            """
+            a b c d
+                e
+            """
+        Given the query options
+            | waypoints | 0;4   |
+
+        And the ways
+            | nodes | oneway |
+            | abcd  | no     |
+
+        When I match I should get
+            | trace | code           |
+            | abcd  | InvalidOptions |
+
+    Scenario: Matching fail with waypoints param missing start/end
+        Given the node map
+            """
+            a-----b---c
+                  |
+                  |
+                  d
+                  |
+                  |
+                  e
+            """
+        And the ways
+            | nodes | oneway |
+            | abc   | no     |
+            | bde   | no     |
+
+        Given the query options
+            | waypoints | 1;3   |
+
+        When I match I should get
+            | trace | code         |
+            | abde  | InvalidValue |
+
+    Scenario: Testbot - Map matching with outlier that has no candidate and waypoint parameter
+        Given a grid size of 100 meters
+        Given the node map
+            """
+            a b c d
+
+                1
+            """
+
+        And the ways
+            | nodes | oneway |
+            | abcd  | no     |
+
+        Given the query options
+            | waypoints | 0;2;3   |
+
+        When I match I should get
+            | trace | timestamps | code    |
+            | ab1d  | 0 1 2 3    | NoMatch |
