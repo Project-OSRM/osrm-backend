@@ -1,6 +1,5 @@
 #ifndef OSRM_ENGINE_GUIDANCE_COLLAPSE_HPP
 
-#include "engine/datafacade/datafacade_base.hpp"
 #include "engine/guidance/route_step.hpp"
 #include "util/attributes.hpp"
 

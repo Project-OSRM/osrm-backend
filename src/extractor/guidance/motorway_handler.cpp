@@ -361,120 +361,111 @@ Intersection MotorwayHandler::fromRamp(const EdgeID via_eid, Intersection inters
             node_based_graph.GetEdgeData(intersection[2].eid).annotation_data);
         const auto &first_intersection_data = node_data_container.GetAnnotation(
             node_based_graph.GetEdgeData(intersection[1].eid).annotation_data);
-        if (first_intersection_data.name_id == EMPTY_NAMEID ||
-            second_intersection_data.name_id == EMPTY_NAMEID)
-        {
-            return fallback(std::move(intersection));
-        }
-        else
-        {
-            const auto first_second_same_name =
-                !util::guidance::requiresNameAnnounced(second_intersection_data.name_id,
-                                                       first_intersection_data.name_id,
-                                                       name_table,
-                                                       street_name_suffix_table);
+        const auto first_second_same_name =
+            !util::guidance::requiresNameAnnounced(second_intersection_data.name_id,
+                                                   first_intersection_data.name_id,
+                                                   name_table,
+                                                   street_name_suffix_table);
 
-            // merging onto a passing highway / or two ramps merging onto the same highway
-            if (num_valid_turns == 1)
+        // merging onto a passing highway / or two ramps merging onto the same highway
+        if (num_valid_turns == 1)
+        {
+            BOOST_ASSERT(!intersection[0].entry_allowed);
+            // check order of highways
+            //          4
+            //     5         3
+            //
+            //   6              2
+            //
+            //     7         1
+            //          0
+            const auto &first_intersection_name_empty =
+                name_table.GetNameForID(first_intersection_data.name_id).empty();
+            const auto &second_intersection_name_empty =
+                name_table.GetNameForID(second_intersection_data.name_id).empty();
+            if (intersection[1].entry_allowed)
             {
-                BOOST_ASSERT(!intersection[0].entry_allowed);
-                // check order of highways
-                //          4
-                //     5         3
-                //
-                //   6              2
-                //
-                //     7         1
-                //          0
-                const auto &first_intersection_name_empty =
-                    name_table.GetNameForID(first_intersection_data.name_id).empty();
-                const auto &second_intersection_name_empty =
-                    name_table.GetNameForID(second_intersection_data.name_id).empty();
-                if (intersection[1].entry_allowed)
+                if (isMotorwayClass(intersection[1].eid, node_based_graph) &&
+                    !second_intersection_name_empty && !first_intersection_name_empty &&
+                    first_second_same_name)
                 {
-                    if (isMotorwayClass(intersection[1].eid, node_based_graph) &&
-                        !second_intersection_name_empty && !first_intersection_name_empty &&
-                        first_second_same_name)
-                    {
-                        // circular order indicates a merge to the left (0-3 onto 4
-                        if (angularDeviation(intersection[1].angle, STRAIGHT_ANGLE) <
-                            2 * NARROW_TURN_ANGLE)
-                            intersection[1].instruction = {TurnType::Merge,
-                                                           DirectionModifier::SlightLeft};
-                        else // fallback
-                            intersection[1].instruction = {TurnType::Merge,
-                                                           getTurnDirection(intersection[1].angle)};
-                    }
-                    else // passing by the end of a motorway
-                    {
-                        intersection[1].instruction =
-                            getInstructionForObvious(intersection.size(),
-                                                     via_eid,
-                                                     isThroughStreet(1, intersection),
-                                                     intersection[1]);
-                    }
+                    // circular order indicates a merge to the left (0-3 onto 4
+                    if (angularDeviation(intersection[1].angle, STRAIGHT_ANGLE) <
+                        2 * NARROW_TURN_ANGLE)
+                        intersection[1].instruction = {TurnType::Merge,
+                                                       DirectionModifier::SlightLeft};
+                    else // fallback
+                        intersection[1].instruction = {TurnType::Merge,
+                                                       getTurnDirection(intersection[1].angle)};
                 }
-                else
+                else // passing by the end of a motorway
                 {
-                    BOOST_ASSERT(intersection[2].entry_allowed);
-                    if (isMotorwayClass(intersection[2].eid, node_based_graph) &&
-                        !second_intersection_name_empty && !first_intersection_name_empty &&
-                        first_second_same_name)
-                    {
-                        // circular order (5-0) onto 4
-                        if (angularDeviation(intersection[2].angle, STRAIGHT_ANGLE) <
-                            2 * NARROW_TURN_ANGLE)
-                            intersection[2].instruction = {TurnType::Merge,
-                                                           DirectionModifier::SlightRight};
-                        else // fallback
-                            intersection[2].instruction = {TurnType::Merge,
-                                                           getTurnDirection(intersection[2].angle)};
-                    }
-                    else // passing the end of a highway
-                    {
-                        intersection[2].instruction =
-                            getInstructionForObvious(intersection.size(),
-                                                     via_eid,
-                                                     isThroughStreet(2, intersection),
-                                                     intersection[2]);
-                    }
+                    intersection[1].instruction =
+                        getInstructionForObvious(intersection.size(),
+                                                 via_eid,
+                                                 isThroughStreet(1, intersection),
+                                                 intersection[1]);
                 }
             }
             else
             {
-                BOOST_ASSERT(num_valid_turns == 2);
-                // UTurn on ramps is not possible
-                BOOST_ASSERT(!intersection[0].entry_allowed);
-                BOOST_ASSERT(intersection[1].entry_allowed);
                 BOOST_ASSERT(intersection[2].entry_allowed);
-                // two motorways starting at end of ramp (fork)
-                //  M       M
-                //    \   /
-                //      |
-                //      R
-                if (isMotorwayClass(intersection[1].eid, node_based_graph) &&
-                    isMotorwayClass(intersection[2].eid, node_based_graph))
+                if (isMotorwayClass(intersection[2].eid, node_based_graph) &&
+                    !second_intersection_name_empty && !first_intersection_name_empty &&
+                    first_second_same_name)
                 {
-                    assignFork(via_eid, intersection[2], intersection[1]);
+                    // circular order (5-0) onto 4
+                    if (angularDeviation(intersection[2].angle, STRAIGHT_ANGLE) <
+                        2 * NARROW_TURN_ANGLE)
+                        intersection[2].instruction = {TurnType::Merge,
+                                                       DirectionModifier::SlightRight};
+                    else // fallback
+                        intersection[2].instruction = {TurnType::Merge,
+                                                       getTurnDirection(intersection[2].angle)};
+                }
+                else // passing the end of a highway
+                {
+                    intersection[2].instruction =
+                        getInstructionForObvious(intersection.size(),
+                                                 via_eid,
+                                                 isThroughStreet(2, intersection),
+                                                 intersection[2]);
+                }
+            }
+        }
+        else
+        {
+            BOOST_ASSERT(num_valid_turns == 2);
+            // UTurn on ramps is not possible
+            BOOST_ASSERT(!intersection[0].entry_allowed);
+            BOOST_ASSERT(intersection[1].entry_allowed);
+            BOOST_ASSERT(intersection[2].entry_allowed);
+            // two motorways starting at end of ramp (fork)
+            //  M       M
+            //    \   /
+            //      |
+            //      R
+            if (isMotorwayClass(intersection[1].eid, node_based_graph) &&
+                isMotorwayClass(intersection[2].eid, node_based_graph))
+            {
+                assignFork(via_eid, intersection[2], intersection[1]);
+            }
+            else
+            {
+                // continued ramp passing motorway entry
+                //      M  R
+                //      M  R
+                //      | /
+                //      R
+                if (isMotorwayClass(intersection[1].eid, node_based_graph))
+                {
+                    intersection[1].instruction = {TurnType::Turn, DirectionModifier::SlightRight};
+                    intersection[2].instruction = {TurnType::Continue,
+                                                   DirectionModifier::SlightLeft};
                 }
                 else
                 {
-                    // continued ramp passing motorway entry
-                    //      M  R
-                    //      M  R
-                    //      | /
-                    //      R
-                    if (isMotorwayClass(intersection[1].eid, node_based_graph))
-                    {
-                        intersection[1].instruction = {TurnType::Turn,
-                                                       DirectionModifier::SlightRight};
-                        intersection[2].instruction = {TurnType::Continue,
-                                                       DirectionModifier::SlightLeft};
-                    }
-                    else
-                    {
-                        assignFork(via_eid, intersection[2], intersection[1]);
-                    }
+                    assignFork(via_eid, intersection[2], intersection[1]);
                 }
             }
         }

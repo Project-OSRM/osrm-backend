@@ -38,8 +38,6 @@ inline auto makeCheckRoadForName(const NameID name_id,
             node_data_container
                 .GetAnnotation(node_based_graph.GetEdgeData(road.eid).annotation_data)
                 .name_id;
-        if (name_id == EMPTY_NAMEID || road_name_id == EMPTY_NAMEID)
-            return true;
         const auto road_name_empty = name_table.GetNameForID(road_name_id).empty();
         const auto in_name_empty = name_table.GetNameForID(name_id).empty();
         if (in_name_empty || road_name_empty)
@@ -470,16 +468,12 @@ bool MergableRoadDetector::IsTrafficIsland(const NodeID intersection_node,
             node_data_container
                 .GetAnnotation(node_based_graph.GetEdgeData(range.front()).annotation_data)
                 .name_id;
-        if (required_name_id == EMPTY_NAMEID)
-            return false;
 
         const auto has_required_name = [this, required_name_id](const auto edge_id) {
             const auto road_name_id =
                 node_data_container
                     .GetAnnotation(node_based_graph.GetEdgeData(edge_id).annotation_data)
                     .name_id;
-            if (road_name_id == EMPTY_NAMEID)
-                return false;
             const auto &road_name_empty = name_table.GetNameForID(road_name_id).empty();
             const auto &required_name_empty = name_table.GetNameForID(required_name_id).empty();
             if (required_name_empty && road_name_empty)
