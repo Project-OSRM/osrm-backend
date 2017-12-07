@@ -490,8 +490,8 @@ bool IntersectionHandler::isSameName(const EdgeID source_edge_id, const EdgeID t
     const auto &target_edge_data = node_data_container.GetAnnotation(
         node_based_graph.GetEdgeData(target_edge_id).annotation_data);
 
-    return source_edge_data.name_id != EMPTY_NAMEID && //
-           target_edge_data.name_id != EMPTY_NAMEID && //
+    return !name_table.GetNameForID(source_edge_data.name_id).empty() && //
+           !name_table.GetNameForID(target_edge_data.name_id).empty() && //
            !util::guidance::requiresNameAnnounced(source_edge_data.name_id,
                                                   target_edge_data.name_id,
                                                   name_table,
