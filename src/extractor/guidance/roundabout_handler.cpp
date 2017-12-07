@@ -295,22 +295,17 @@ RoundaboutType RoundaboutHandler::getRoundaboutType(const NodeID nid) const
                     return SPECIAL_EDGEID;
                 }
 
-                if (edge_data.name_id != EMPTY_NAMEID)
+                const auto &edge_name_empty = name_table.GetNameForID(edge_data.name_id).empty();
+                if (!edge_name_empty)
                 {
-                    const auto &edge_name_empty =
-                        name_table.GetNameForID(edge_data.name_id).empty();
-                    if (!edge_name_empty)
-                    {
 
-                        const auto announce = [&](unsigned id) {
-                            return util::guidance::requiresNameAnnounced(
-                                id, edge_data.name_id, name_table, street_name_suffix_table);
-                        };
+                    const auto announce = [&](unsigned id) {
+                        return util::guidance::requiresNameAnnounced(
+                            id, edge_data.name_id, name_table, street_name_suffix_table);
+                    };
 
-                        if (std::all_of(
-                                begin(roundabout_name_ids), end(roundabout_name_ids), announce))
-                            roundabout_name_ids.insert(edge_data.name_id);
-                    }
+                    if (std::all_of(begin(roundabout_name_ids), end(roundabout_name_ids), announce))
+                        roundabout_name_ids.insert(edge_data.name_id);
                 }
                 continue_edge = edge_id;
             }
