@@ -221,6 +221,7 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
 
                     PhantomNode prev_node = prev_unbroken_timestamps_list[s].phantom_node;
                     double network_distance = 0;
+                    // do not calculate transition probability in case without movement
                     if (!current_timestamps_list[s_prime].phantom_node.IsIndistinct(prev_node))
                     {
                         network_distance =
