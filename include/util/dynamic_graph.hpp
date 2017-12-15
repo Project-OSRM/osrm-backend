@@ -115,7 +115,7 @@ template <typename EdgeDataT> class DynamicGraph
 
         number_of_nodes = nodes;
         number_of_edges = static_cast<EdgeIterator>(graph.size());
-        node_array.resize(number_of_nodes + 1);
+        node_array.resize(number_of_nodes);
         EdgeIterator edge = 0;
         EdgeIterator position = 0;
         for (const auto node : irange(0u, number_of_nodes))
@@ -129,7 +129,6 @@ template <typename EdgeDataT> class DynamicGraph
             node_array[node].edges = edge - last_edge;
             position += node_array[node].edges;
         }
-        node_array.back().first_edge = position;
         edge_list.reserve(static_cast<std::size_t>(edge_list.size() * 1.1));
         edge_list.resize(position);
         edge = 0;
@@ -144,6 +143,8 @@ template <typename EdgeDataT> class DynamicGraph
                 ++edge;
             }
         }
+
+        BOOST_ASSERT(node_array.size() == number_of_nodes);
     }
 
     // Copy&move for the same data
@@ -191,6 +192,8 @@ template <typename EdgeDataT> class DynamicGraph
     // Removes all edges to and from nodes for which filter(node_id) returns false
     template <typename Pred> auto Filter(Pred filter) const &
     {
+        BOOST_ASSERT(node_array.size() == number_of_nodes);
+
         DynamicGraph other;
 
         other.number_of_nodes = number_of_nodes;
@@ -202,6 +205,8 @@ template <typename EdgeDataT> class DynamicGraph
         std::transform(
             node_array.begin(), node_array.end(), other.node_array.begin(), [&](const Node &node) {
                 const EdgeIterator first_edge = other.edge_list.size();
+
+                BOOST_ASSERT(node_id < number_of_nodes);
                 if (filter(node_id++))
                 {
                     std::copy_if(edge_list.begin() + node.first_edge,
@@ -416,7 +421,7 @@ template <typename EdgeDataT> class DynamicGraph
     void Renumber(const std::vector<NodeID> &old_to_new_node)
     {
         // permutate everything but the sentinel
-        util::inplacePermutation(node_array.begin(), std::prev(node_array.end()), old_to_new_node);
+        util::inplacePermutation(node_array.begin(), node_array.end(), old_to_new_node);
 
         // Build up edge permutation
         auto new_edge_index = 0;

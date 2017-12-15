@@ -384,7 +384,7 @@ void RenumberData(std::vector<RemainingNodeData> &remaining_nodes,
     // we need to make a copy here because we are going to modify it
     auto to_orig = new_to_old_node_id;
 
-    auto new_node_id = 0;
+    auto new_node_id = 0u;
 
     // All remaining nodes get the low IDs
     for (auto &remaining : remaining_nodes)
