@@ -1,3 +1,6 @@
+# 5.14.2
+  - Changes from 5.14.1
+
 # 5.14.1
   - Changes from 5.14.0
     - Bugfixes:
