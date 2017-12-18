@@ -992,7 +992,6 @@ Feature: Slipways and Dedicated Turn Lanes
             | dbef  | primary      | dbef  |        |
             | ae    | primary_link | ae    | yes    |
 
-
        When I route I should get
             | waypoints | route          | turns                    | locations |
             | s,f       | sabc,dbef,dbef | depart,turn right,arrive | s,a,f     |
@@ -1018,7 +1017,6 @@ Feature: Slipways and Dedicated Turn Lanes
             | sab   | primary_link | sab  |        |
             | dbcf  | primary      | dbcf |        |
             | ac    | primary_link | ae   | yes    |
-
 
        When I route I should get
             | waypoints | route         | turns                    | locations |
@@ -1047,7 +1045,31 @@ Feature: Slipways and Dedicated Turn Lanes
             | ae    | primary_link | sab   | yes    |
             | cg    | primary      | cg    |        |
 
-
        When I route I should get
             | waypoints | route           | turns                    | locations |
             | s,f       | sab,dbcef,dbcef | depart,turn right,arrive | s,a,f     |
+
+
+    @sliproads
+    Scenario: Sliproad converted from a fork
+        Given the node map
+            """
+                     d
+                     .
+                     b
+              s . a '.
+                    `c
+                     .
+                     f
+            """
+
+        And the ways
+            | nodes | highway  | name | ref   | oneway |
+            | sa    | tertiary |      | D 60A | yes    |
+            | ab    | tertiary | ab   | D 60A | yes    |
+            | ac    | tertiary |      | D 60A | yes    |
+            | dbcf  | tertiary | dbcf | D 543 | yes    |
+
+       When I route I should get
+            | waypoints | route      | turns                    | locations |
+            | s,f       | ,dbcf,dbcf | depart,turn right,arrive | s,a,f     |
