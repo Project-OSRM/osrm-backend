@@ -582,7 +582,6 @@ operator()(const NodeID /*nid*/, const EdgeID source_edge_id, Intersection inter
         }
         else if (!name_table.GetNameForID(main_annotation.name_id).empty())
         {
-            OSRM_ASSERT(false, coordinates[intersection_node_id]);
             intersection[*obvious].instruction.type = TurnType::NewName;
             intersection[*obvious].instruction.direction_modifier =
                 getTurnDirection(intersection[*obvious].angle);
