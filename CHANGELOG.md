@@ -2,6 +2,8 @@
  - Changes from 5.14.1:
    - Bugfixes:
       - FIXED #4727: Erroring when a old .core file is present.
+      - FIXED #4642: Update checks for EMPTY_NAMEID to check for empty name strings
+      - FIXED #4738: Fix potential segmentation fault
 
 # 5.14.1
   - Changes from 5.14.0
