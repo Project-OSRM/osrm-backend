@@ -96,9 +96,6 @@ class IntersectionHandler
                             const std::size_t begin,
                             const std::size_t end) const;
 
-    // Checks the intersection for a through street connected to `intersection[index]`
-    bool isThroughStreet(const std::size_t index, const Intersection &intersection) const;
-
     // See `getNextIntersection`
     struct IntersectionViewAndNode final
     {

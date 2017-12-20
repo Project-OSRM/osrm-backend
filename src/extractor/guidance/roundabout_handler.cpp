@@ -478,8 +478,16 @@ Intersection RoundaboutHandler::handleRoundabouts(const RoundaboutType roundabou
                 if (util::angularDeviation(turn.angle, STRAIGHT_ANGLE) < FUZZY_ANGLE_DIFFERENCE &&
                     crossing_roundabout)
                 {
-                    turn.instruction = getInstructionForObvious(
-                        intersection.size(), via_eid, isThroughStreet(idx, intersection), turn);
+                    turn.instruction =
+                        getInstructionForObvious(intersection.size(),
+                                                 via_eid,
+                                                 isThroughStreet(idx,
+                                                                 intersection,
+                                                                 node_based_graph,
+                                                                 node_data_container,
+                                                                 name_table,
+                                                                 street_name_suffix_table),
+                                                 turn);
                 }
                 else
                 {
