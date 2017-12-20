@@ -1,7 +1,11 @@
 # UNRELEASED
- - Changes from 5.14.1:
-   - Bugfixes:
+  - Changes from 5.14.1:
+    - Bugfixes:
       - FIXED #4727: Erroring when a old .core file is present.
+    - Node.js Bindings:
+      - ADDED: Exposed new `max_radiuses_map_matching` option from `EngingConfig` options
+    - Tools:
+      - ADDED: New osrm-routed `max_radiuses_map_matching` command line flag to optionally set a maximum radius for map matching
 
 # 5.14.1
   - Changes from 5.14.0

@@ -76,8 +76,9 @@ NAN_MODULE_INIT(Engine::Init)
  * @param {Number} [options.max_locations_viaroute] Max. locations supported in viaroute query (default: unlimited).
  * @param {Number} [options.max_locations_distance_table] Max. locations supported in distance table query (default: unlimited).
  * @param {Number} [options.max_locations_map_matching] Max. locations supported in map-matching query (default: unlimited).
+ * @param {Number} [options.max_radius_map_matching] Max. radius size supported in map matching query (default: 5).
  * @param {Number} [options.max_results_nearest] Max. results supported in nearest query (default: unlimited).
- * @param {Number} [options.max_alternatives] Max.number of alternatives supported in alternative routes query (default: 3).
+ * @param {Number} [options.max_alternatives] Max. number of alternatives supported in alternative routes query (default: 3).
  *
  * @class OSRM
  *

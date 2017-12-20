@@ -186,6 +186,8 @@ inline engine_config_ptr argumentsToEngineConfig(const Nan::FunctionCallbackInfo
         params->Get(Nan::New("max_locations_map_matching").ToLocalChecked());
     auto max_results_nearest = params->Get(Nan::New("max_results_nearest").ToLocalChecked());
     auto max_alternatives = params->Get(Nan::New("max_alternatives").ToLocalChecked());
+    auto max_radius_map_matching =
+        params->Get(Nan::New("max_radius_map_matching").ToLocalChecked());
 
     if (!max_locations_trip->IsUndefined() && !max_locations_trip->IsNumber())
     {
@@ -233,6 +235,9 @@ inline engine_config_ptr argumentsToEngineConfig(const Nan::FunctionCallbackInfo
         engine_config->max_results_nearest = static_cast<int>(max_results_nearest->NumberValue());
     if (max_alternatives->IsNumber())
         engine_config->max_alternatives = static_cast<int>(max_alternatives->NumberValue());
+    if (max_radius_map_matching->IsNumber())
+        engine_config->max_radius_map_matching =
+            static_cast<double>(max_radius_map_matching->NumberValue());
 
     return engine_config;
 }

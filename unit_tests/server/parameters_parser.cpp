@@ -74,8 +74,6 @@ BOOST_AUTO_TEST_CASE(invalid_route_urls)
     BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>("1,2;3,4?annotations=true,false"), 24UL);
     BOOST_CHECK_EQUAL(
         testInvalidOptions<RouteParameters>("1,2;3,4?annotations=&overview=simplified"), 20UL);
-
-    // BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>(), );
 }
 
 BOOST_AUTO_TEST_CASE(invalid_table_urls)
@@ -557,6 +555,22 @@ BOOST_AUTO_TEST_CASE(valid_match_urls)
     CHECK_EQUAL_RANGE(reference_2.radiuses, result_2->radiuses);
     CHECK_EQUAL_RANGE(reference_2.approaches, result_2->approaches);
     CHECK_EQUAL_RANGE(reference_2.coordinates, result_2->coordinates);
+}
+
+BOOST_AUTO_TEST_CASE(invalid_match_urls)
+{
+    std::vector<util::Coordinate> coords_1 = {{util::FloatLongitude{1}, util::FloatLatitude{2}},
+                                              {util::FloatLongitude{3}, util::FloatLatitude{4}}};
+
+    MatchParameters reference_1{};
+    reference_1.coordinates = coords_1;
+    auto result_1 = parseParameters<MatchParameters>("1,2;3,4?radiuses=unlimited;60");
+    BOOST_CHECK(result_1);
+    CHECK_EQUAL_RANGE(reference_1.timestamps, result_1->timestamps);
+    CHECK_EQUAL_RANGE(reference_1.bearings, result_1->bearings);
+    BOOST_CHECK(reference_1.radiuses != result_1->radiuses);
+    CHECK_EQUAL_RANGE(reference_1.approaches, result_1->approaches);
+    CHECK_EQUAL_RANGE(reference_1.coordinates, result_1->coordinates);
 }
 
 BOOST_AUTO_TEST_CASE(valid_nearest_urls)
