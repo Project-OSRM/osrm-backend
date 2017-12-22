@@ -580,7 +580,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
             ExtractionTurn extracted_turn(
                 turn.angle,
                 m_node_based_graph.GetOutDegree(node_at_center_of_intersection),
-                turn.instruction.direction_modifier == guidance::DirectionModifier::UTurn,
+                turn.instruction.IsUTurn(),
                 is_traffic_light,
                 edge_data1.flags.restricted,
                 edge_data2.flags.restricted,

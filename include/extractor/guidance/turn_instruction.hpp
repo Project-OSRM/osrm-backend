@@ -77,7 +77,11 @@ struct TurnInstruction
 
     TurnType::Enum type : 5;
     DirectionModifier::Enum direction_modifier : 3;
-    // the lane tupel that is used for the turn
+
+    bool IsUTurn() const
+    {
+        return type == TurnType::Turn && direction_modifier == DirectionModifier::UTurn;
+    }
 
     static TurnInstruction INVALID() { return {TurnType::Invalid, DirectionModifier::UTurn}; }
 

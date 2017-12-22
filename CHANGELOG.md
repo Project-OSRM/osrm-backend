@@ -1,3 +1,8 @@
+# 5.14.3
+ - Changes from 5.14.2:
+   - Bugfixes:
+      - FIXED #4754: U-Turn penalties are applied to straight turns.
+
 # 5.14.2
  - Changes from 5.14.1:
    - Bugfixes:
