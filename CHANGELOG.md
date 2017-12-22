@@ -2,6 +2,7 @@
   - Changes from 5.14.1:
     - Bugfixes:
       - FIXED #4727: Erroring when a old .core file is present.
+      - FIXED #4754: U-Turn penalties are applied to straight turns.
     - Node.js Bindings:
       - ADDED: Exposed new `max_radiuses_map_matching` option from `EngingConfig` options
     - Tools:
