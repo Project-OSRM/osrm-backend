@@ -475,10 +475,7 @@ operator()(const NodeID /*nid*/, const EdgeID source_edge_id, Intersection inter
 
             // Name mismatch: check roads at `c` and `d` for same name
             const auto name_mismatch = [&](const NameID road_name_id) {
-                const auto unnamed = name_table.GetNameForID(road_name_id).empty();
-
-                return unnamed ||
-                       util::guidance::requiresNameAnnounced(road_name_id,              //
+                return util::guidance::requiresNameAnnounced(road_name_id,              //
                                                              candidate_data.name_id,    //
                                                              name_table,                //
                                                              street_name_suffix_table); //
