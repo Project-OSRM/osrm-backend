@@ -26,7 +26,8 @@ namespace guidance
 // Name Change Logic
 // Used both during Extraction as well as during Post-Processing
 
-inline std::string longest_common_substring(const std::string &lhs, const std::string &rhs)
+inline util::StringView longest_common_substring(const util::StringView &lhs,
+                                                 const util::StringView &rhs)
 {
     if (lhs.empty() || rhs.empty())
         return "";
@@ -60,15 +61,15 @@ inline std::string longest_common_substring(const std::string &lhs, const std::s
 
 // TODO US-ASCII support only, no UTF-8 support
 // While UTF-8 might work in some cases, we do not guarantee full functionality
-inline auto decompose(const std::string &lhs, const std::string &rhs)
+template <typename StringView> inline auto decompose(const StringView &lhs, const StringView &rhs)
 {
     auto const lcs = longest_common_substring(lhs, rhs);
 
     // trim spaces, transform to lower
-    const auto trim = [](auto str) {
+    const auto trim = [](StringView view) {
         // we compare suffixes based on this value, it might break UTF chars, but as long as we are
         // consistent in handling, we do not create bad results
-        boost::to_lower(str);
+        std::string str = boost::to_lower_copy(view.to_string());
         auto front = str.find_first_not_of(" ");
 
         if (front == std::string::npos)
@@ -80,8 +81,7 @@ inline auto decompose(const std::string &lhs, const std::string &rhs)
 
     if (lcs.empty())
     {
-        std::string empty = "";
-        return std::make_tuple(trim(lhs), trim(rhs), empty, empty);
+        return std::make_tuple(trim(lhs), trim(rhs), std::string(), std::string());
     }
 
     // find the common substring in both
@@ -92,32 +92,27 @@ inline auto decompose(const std::string &lhs, const std::string &rhs)
     BOOST_ASSERT(rhs_pos + lcs.size() <= rhs.size());
 
     // prefixes
-    std::string lhs_prefix = (lhs_pos > 0) ? lhs.substr(0, lhs_pos) : "";
-    std::string rhs_prefix = (rhs_pos > 0) ? rhs.substr(0, rhs_pos) : "";
+    auto lhs_prefix = (lhs_pos > 0) ? lhs.substr(0, lhs_pos) : StringView();
+    auto rhs_prefix = (rhs_pos > 0) ? rhs.substr(0, rhs_pos) : StringView();
 
     // suffices
-    std::string lhs_suffix = lhs.substr(lhs_pos + lcs.size());
-    std::string rhs_suffix = rhs.substr(rhs_pos + lcs.size());
+    auto lhs_suffix = lhs.substr(lhs_pos + lcs.size());
+    auto rhs_suffix = rhs.substr(rhs_pos + lcs.size());
 
-    lhs_prefix = trim(std::move(lhs_prefix));
-    lhs_suffix = trim(std::move(lhs_suffix));
-    rhs_prefix = trim(std::move(rhs_prefix));
-    rhs_suffix = trim(std::move(rhs_suffix));
-
-    return std::make_tuple(lhs_prefix, lhs_suffix, rhs_prefix, rhs_suffix);
+    return std::make_tuple(trim(lhs_prefix), trim(lhs_suffix), trim(rhs_prefix), trim(rhs_suffix));
 }
 
 // Note: there is an overload without suffix checking below.
 // (that's the reason we template the suffix table here)
-template <typename SuffixTable>
-inline bool requiresNameAnnounced(const std::string &from_name,
-                                  const std::string &from_ref,
-                                  const std::string &from_pronunciation,
-                                  const std::string &from_exits,
-                                  const std::string &to_name,
-                                  const std::string &to_ref,
-                                  const std::string &to_pronunciation,
-                                  const std::string &to_exits,
+template <typename StringView, typename SuffixTable>
+inline bool requiresNameAnnounced(const StringView &from_name,
+                                  const StringView &from_ref,
+                                  const StringView &from_pronunciation,
+                                  const StringView &from_exits,
+                                  const StringView &to_name,
+                                  const StringView &to_ref,
+                                  const StringView &to_pronunciation,
+                                  const StringView &to_exits,
                                   const SuffixTable &suffix_table)
 {
     // first is empty and the second is not
@@ -134,7 +129,7 @@ inline bool requiresNameAnnounced(const std::string &from_name,
         boost::starts_with(from_name, to_name) || boost::starts_with(to_name, from_name);
 
     const auto checkForPrefixOrSuffixChange =
-        [](const std::string &first, const std::string &second, const SuffixTable &suffix_table) {
+        [](const StringView &first, const StringView &second, const SuffixTable &suffix_table) {
             std::string first_prefix, first_suffix, second_prefix, second_suffix;
             std::tie(first_prefix, first_suffix, second_prefix, second_suffix) =
                 decompose(first, second);
@@ -203,17 +198,17 @@ inline bool requiresNameAnnounced(const std::string &from_name,
     struct NopSuffixTable final
     {
         NopSuffixTable() {}
-        bool isSuffix(const std::string &) const { return false; }
+        bool isSuffix(const StringView &) const { return false; }
     } static const table;
 
-    return requiresNameAnnounced(from_name,
-                                 from_ref,
-                                 from_pronunciation,
-                                 from_exits,
-                                 to_name,
-                                 to_ref,
-                                 to_pronunciation,
-                                 to_exits,
+    return requiresNameAnnounced(util::StringView(from_name),
+                                 util::StringView(from_ref),
+                                 util::StringView(from_pronunciation),
+                                 util::StringView(from_exits),
+                                 util::StringView(to_name),
+                                 util::StringView(to_ref),
+                                 util::StringView(to_pronunciation),
+                                 util::StringView(to_exits),
                                  table);
 }
 
@@ -225,37 +220,17 @@ inline bool requiresNameAnnounced(const NameID from_name_id,
     if (from_name_id == to_name_id)
         return false;
     else
-        return requiresNameAnnounced(name_table.GetNameForID(from_name_id).to_string(),
-                                     name_table.GetRefForID(from_name_id).to_string(),
-                                     name_table.GetPronunciationForID(from_name_id).to_string(),
-                                     name_table.GetExitsForID(from_name_id).to_string(),
+        return requiresNameAnnounced(name_table.GetNameForID(from_name_id),
+                                     name_table.GetRefForID(from_name_id),
+                                     name_table.GetPronunciationForID(from_name_id),
+                                     name_table.GetExitsForID(from_name_id),
                                      //
-                                     name_table.GetNameForID(to_name_id).to_string(),
-                                     name_table.GetRefForID(to_name_id).to_string(),
-                                     name_table.GetPronunciationForID(to_name_id).to_string(),
-                                     name_table.GetExitsForID(to_name_id).to_string(),
+                                     name_table.GetNameForID(to_name_id),
+                                     name_table.GetRefForID(to_name_id),
+                                     name_table.GetPronunciationForID(to_name_id),
+                                     name_table.GetExitsForID(to_name_id),
                                      //
                                      suffix_table);
-    // FIXME: converts StringViews to strings since the name change heuristics mutates in place
-}
-
-inline bool requiresNameAnnounced(const NameID from_name_id,
-                                  const NameID to_name_id,
-                                  const util::NameTable &name_table)
-{
-    if (from_name_id == to_name_id)
-        return false;
-    else
-        return requiresNameAnnounced(name_table.GetNameForID(from_name_id).to_string(),
-                                     name_table.GetRefForID(from_name_id).to_string(),
-                                     name_table.GetPronunciationForID(from_name_id).to_string(),
-                                     name_table.GetExitsForID(from_name_id).to_string(),
-                                     //
-                                     name_table.GetNameForID(to_name_id).to_string(),
-                                     name_table.GetRefForID(to_name_id).to_string(),
-                                     name_table.GetExitsForID(to_name_id).to_string(),
-                                     name_table.GetPronunciationForID(to_name_id).to_string());
-    // FIXME: converts StringViews to strings since the name change heuristics mutates in place
 }
 
 } // namespace guidance
