@@ -1073,3 +1073,27 @@ Feature: Slipways and Dedicated Turn Lanes
        When I route I should get
             | waypoints | route      | turns                    | locations |
             | s,f       | ,dbcf,dbcf | depart,turn right,arrive | s,a,f     |
+
+
+    @sliproads
+    Scenario: Sliproad to a road with a reference only
+        Given the node map
+            """
+            s . a . b . d
+                 `  .
+                  ' .
+                   ..
+                    c
+                    .
+                    f
+            """
+
+        And the ways
+            | nodes | highway      | name | ref  | oneway |
+            | sabd  | primary      | road |      |        |
+            | bcf   | primary      |      | K108 |        |
+            | ac    | primary_link |      |      | yes    |
+
+       When I route I should get
+            | waypoints | route   | turns                                      | locations |
+            | s,f       | road,,, | depart,turn right,turn slight right,arrive | s,a,c,f   |
