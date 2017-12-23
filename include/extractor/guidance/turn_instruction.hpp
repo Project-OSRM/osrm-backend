@@ -80,7 +80,7 @@ struct TurnInstruction
 
     bool IsUTurn() const
     {
-        return type == TurnType::Turn && direction_modifier == DirectionModifier::UTurn;
+        return type != TurnType::NoTurn && direction_modifier == DirectionModifier::UTurn;
     }
 
     static TurnInstruction INVALID() { return {TurnType::Invalid, DirectionModifier::UTurn}; }
