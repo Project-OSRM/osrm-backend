@@ -745,12 +745,15 @@ Feature: Basic Roundabout
 
 
      Scenario: Drive through roundabout
+        Given a grid size of 5 meters
         Given the node map
            """
-              a
-            b e d  f
-              c
-            g   h
+                . a .
+              .       .
+            b     e --- d ---- f
+              .        .
+                 .c.
+               g     h
            """
 
         And the ways
@@ -760,12 +763,12 @@ Feature: Basic Roundabout
            | gch   |            | yes    |
 
         When I route I should get
-           | waypoints | bearings | route           | turns                                                      |
-           | e,f       | 90 90    | edf,edf         | depart,arrive                                              |
-           | e,h       | 90 135   | edf,gch,gch,gch | depart,roundabout-exit-2,exit roundabout straight,arrive   |
-           | g,f       | 45 90    | gch,edf,edf,edf | depart,roundabout-exit-2,exit roundabout right,arrive      |
-           | g,h       | 45 135   | gch,gch,gch     | depart,exit roundabout right,arrive                        |
-           | e,e       | 90 270   | edf,edf,edf     | depart,continue uturn,arrive                               |
+           | waypoints | bearings | route           | turns                                                        |
+           | e,f       | 90 90    | edf,edf         | depart,arrive                                                |
+           | e,h       | 90 130   | edf,gch,gch,gch | depart,roundabout-exit-2,exit roundabout straight,arrive     |
+           | g,f       | 50 90    | gch,edf,edf,edf | depart,roundabout-exit-2,exit roundabout slight right,arrive |
+           | g,h       | 50 130   | gch,gch,gch     | depart,exit roundabout right,arrive                          |
+           | e,e       | 90 270   | edf,edf,edf,edf | depart,roundabout-exit-3,exit roundabout sharp left,arrive   |
 
     Scenario: CCW and CW roundabouts with overlaps
         Given the node map
