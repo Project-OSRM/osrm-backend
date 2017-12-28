@@ -71,9 +71,9 @@ def build_pretty_printer():
     pp.add_printer('TurnLaneData', '::TurnLaneData$', TurnLaneDataPrinter)
     return pp
 
-gdb.pretty_printers = [x for x in gdb.pretty_printers if x.name != 'OSRM'] # unregister OSRM pretty printer before (re)loading
+## unregister OSRM pretty printer before (re)loading
+gdb.pretty_printers = [x for x in gdb.pretty_printers if not isinstance(x, gdb.printing.RegexpCollectionPrettyPrinter) or x.name != 'OSRM']
 gdb.printing.register_pretty_printer(gdb.current_objfile(), build_pretty_printer())
-
 
 import geojson
 import os
