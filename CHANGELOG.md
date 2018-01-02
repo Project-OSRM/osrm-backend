@@ -6,6 +6,7 @@
       - FIXED #4731: Use correct weights for edge-based graph duplicated via nodes.
     - Profile:
       - CHANGED: added Belarus speed limits
+      - CHANGED: set default urban speed in Ukraine to 50kmh
 
 # 5.14.2
  - Changes from 5.14.1:
