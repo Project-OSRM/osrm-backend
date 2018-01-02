@@ -253,6 +253,8 @@ function setup()
       ["at:rural"] = 100,
       ["at:trunk"] = 100,
       ["be:motorway"] = 120,
+      ["by:urban"] = 60,
+      ["by:motorway"] = 110,
       ["ch:rural"] = 80,
       ["ch:trunk"] = 100,
       ["ch:motorway"] = 120,
