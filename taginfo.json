@@ -172,7 +172,6 @@
         {"key": "maxspeed", "value": "RU:living_street"},
         {"key": "maxspeed", "value": "RU:urban"},
         {"key": "maxspeed", "value": "RU:motorway"},
-        {"key": "maxspeed", "value": "UA:urban"},
         {"key": "maxspeed", "value": "UK:nsl_single"},
         {"key": "maxspeed", "value": "UK:nsl_dual"},
         {"key": "maxspeed", "value": "UK:motorway"},

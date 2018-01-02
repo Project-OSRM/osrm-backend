@@ -282,7 +282,6 @@ function setup()
       ["ru:living_street"] = 20,
       ["ru:urban"] = 60,
       ["ru:motorway"] = 110,
-      ["ua:urban"] = 50,
       ["uk:nsl_single"] = (60*1609)/1000,
       ["uk:nsl_dual"] = (70*1609)/1000,
       ["uk:motorway"] = (70*1609)/1000,
