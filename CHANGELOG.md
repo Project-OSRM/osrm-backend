@@ -3,6 +3,8 @@
     - Bugfixes:
       - FIXED #4754: U-Turn penalties are applied to straight turns.
       - FIXED #4756: Removed too restrictive road name check in the sliproad handler
+    - Profile:
+      - CHANGED: added Belarus speed limits
 
 # 5.14.2
   - Changes from 5.14.1:
