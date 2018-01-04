@@ -6,6 +6,7 @@
 #include "util/query_heap.hpp"
 
 #include <tbb/enumerable_thread_specific.h>
+#include <tbb/parallel_for.h>
 
 #include <unordered_set>
 

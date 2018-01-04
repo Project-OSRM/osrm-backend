@@ -10,8 +10,6 @@
 
 #include <boost/optional/optional.hpp>
 
-#include <tbb/concurrent_vector.h>
-
 #include <string>
 #include <vector>
 

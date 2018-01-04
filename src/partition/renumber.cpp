@@ -2,8 +2,6 @@
 
 #include "util/permutation.hpp"
 
-#include <tbb/parallel_sort.h>
-
 namespace osrm
 {
 namespace partition

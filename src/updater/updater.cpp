@@ -33,10 +33,11 @@
 #include <boost/interprocess/mapped_region.hpp>
 
 #include <tbb/blocked_range.h>
-#include <tbb/concurrent_unordered_map.h>
+#include <tbb/concurrent_vector.h>
 #include <tbb/enumerable_thread_specific.h>
-#include <tbb/parallel_for_each.h>
+#include <tbb/parallel_for.h>
 #include <tbb/parallel_invoke.h>
+#include <tbb/parallel_sort.h>
 
 #include <algorithm>
 #include <atomic>

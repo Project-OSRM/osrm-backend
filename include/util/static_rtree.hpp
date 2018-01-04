@@ -23,6 +23,7 @@
 #include <boost/format.hpp>
 #include <boost/iostreams/device/mapped_file.hpp>
 
+#include <tbb/blocked_range.h>
 #include <tbb/parallel_for.h>
 #include <tbb/parallel_sort.h>
 

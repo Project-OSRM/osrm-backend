@@ -19,8 +19,6 @@
 
 #include <osmium/osm.hpp>
 
-#include <tbb/parallel_for.h>
-
 #include <memory>
 #include <sstream>
 
