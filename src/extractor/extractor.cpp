@@ -365,7 +365,7 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
     TIMER_START(parsing);
 
     { // Parse OSM header
-        osmium::io::Reader reader(input_file, osmium::osm_entity_bits::nothing);
+        osmium::io::Reader reader(input_file, pool, osmium::osm_entity_bits::nothing);
         osmium::io::Header header = reader.header();
 
         std::string generator = header.get("generator");
@@ -545,7 +545,7 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
 
     { // Relations reading pipeline
         util::Log() << "Parse relations ...";
-        osmium::io::Reader reader(input_file, osmium::osm_entity_bits::relation, read_meta);
+        osmium::io::Reader reader(input_file, pool, osmium::osm_entity_bits::relation, read_meta);
         tbb::parallel_pipeline(
             num_threads, buffer_reader(reader) & buffer_relation_cache & buffer_storage_relation);
     }
@@ -553,6 +553,7 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
     { // Nodes and ways reading pipeline
         util::Log() << "Parse ways and nodes ...";
         osmium::io::Reader reader(input_file,
+                                  pool,
                                   osmium::osm_entity_bits::node | osmium::osm_entity_bits::way |
                                       osmium::osm_entity_bits::relation,
                                   read_meta);
