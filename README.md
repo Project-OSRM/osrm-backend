@@ -114,7 +114,8 @@ sudo cmake --build . --target install
 
 ### Request Against the Demo Server
 
-Read the [API usage policy](https://github.com/Project-OSRM/osrm-backend/wiki/Api-usage-policy).
+Read the [API usage policy](https://github.com/Project-OSRM/osrm-backend/wiki/Demo-server).
+
 Simple query with instructions and alternatives on Berlin:
 
 ```
