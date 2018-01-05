@@ -765,11 +765,10 @@ void encodeVectorTile(const DataFacadeBase &facade,
                     auto weight_idx =
                         point_float_index.add(t.weight / 10.0); // Note conversion to float here
 
-                    auto turntype_idx =
-                        point_string_index.add(extractor::guidance::internalInstructionTypeToString(
-                            t.turn_instruction.type));
+                    auto turntype_idx = point_string_index.add(
+                        osrm::guidance::internalInstructionTypeToString(t.turn_instruction.type));
                     auto turnmodifier_idx =
-                        point_string_index.add(extractor::guidance::instructionModifierToString(
+                        point_string_index.add(osrm::guidance::instructionModifierToString(
                             t.turn_instruction.direction_modifier));
                     return EncodedTurnData{t.coordinate,
                                            angle_idx,

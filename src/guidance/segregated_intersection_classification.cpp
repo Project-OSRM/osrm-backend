@@ -1,6 +1,6 @@
 #include "guidance/segregated_intersection_classification.hpp"
+#include "extractor/intersection/coordinate_extractor.hpp"
 #include "extractor/node_based_graph_factory.hpp"
-#include "guidance/coordinate_extractor.hpp"
 
 #include "util/coordinate_calculation.hpp"
 #include "util/name_table.hpp"
@@ -132,7 +132,7 @@ std::unordered_set<EdgeID> findSegregatedNodes(const NodeBasedGraphFactory &fact
     auto const &graph = factory.GetGraph();
     auto const &annotation = factory.GetAnnotationData();
 
-    CoordinateExtractor coordExtractor(
+    extractor::intersection::CoordinateExtractor coordExtractor(
         graph, factory.GetCompressedEdges(), factory.GetCoordinates());
 
     auto const get_edge_length = [&](NodeID from_node, EdgeID edgeID, NodeID to_node) {

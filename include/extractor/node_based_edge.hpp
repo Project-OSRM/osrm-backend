@@ -8,7 +8,7 @@
 #include "extractor/travel_mode.hpp"
 #include "util/typedefs.hpp"
 
-#include "guidance/road_classification.hpp"
+#include "extractor/road_classification.hpp"
 
 namespace osrm
 {
@@ -19,16 +19,16 @@ namespace extractor
 // generation but is not available in annotation/navigation
 struct NodeBasedEdgeClassification
 {
-    std::uint8_t forward : 1;                         // 1
-    std::uint8_t backward : 1;                        // 1
-    std::uint8_t is_split : 1;                        // 1
-    std::uint8_t roundabout : 1;                      // 1
-    std::uint8_t circular : 1;                        // 1
-    std::uint8_t startpoint : 1;                      // 1
-    std::uint8_t restricted : 1;                      // 1
-    guidance::RoadClassification road_classification; // 16 2
-    std::uint8_t highway_turn_classification : 4;     // 4
-    std::uint8_t access_turn_classification : 4;      // 4
+    std::uint8_t forward : 1;                     // 1
+    std::uint8_t backward : 1;                    // 1
+    std::uint8_t is_split : 1;                    // 1
+    std::uint8_t roundabout : 1;                  // 1
+    std::uint8_t circular : 1;                    // 1
+    std::uint8_t startpoint : 1;                  // 1
+    std::uint8_t restricted : 1;                  // 1
+    RoadClassification road_classification;       // 16 2
+    std::uint8_t highway_turn_classification : 4; // 4
+    std::uint8_t access_turn_classification : 4;  // 4
 
     NodeBasedEdgeClassification();
 
@@ -39,7 +39,7 @@ struct NodeBasedEdgeClassification
                                 const bool circular,
                                 const bool startpoint,
                                 const bool restricted,
-                                guidance::RoadClassification road_classification,
+                                RoadClassification road_classification,
                                 const std::uint8_t highway_turn_classification,
                                 const std::uint8_t access_turn_classification)
         : forward(forward), backward(backward), is_split(is_split), roundabout(roundabout),

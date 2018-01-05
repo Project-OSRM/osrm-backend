@@ -10,13 +10,12 @@
 #include "extractor/extraction_turn.hpp"
 #include "extractor/nbg_to_ebg.hpp"
 #include "extractor/node_data_container.hpp"
-#include "extractor/original_edge_data.hpp"
 #include "extractor/query_node.hpp"
 #include "extractor/restriction_index.hpp"
+#include "extractor/turn_lane_types.hpp"
 #include "extractor/way_restriction_map.hpp"
 #include "guidance/turn_analysis.hpp"
 #include "guidance/turn_instruction.hpp"
-#include "guidance/turn_lane_types.hpp"
 
 #include "util/concurrent_id_map.hpp"
 #include "util/deallocating_vector.hpp"
@@ -76,7 +75,7 @@ class EdgeBasedGraphFactory
                                    const std::vector<util::Coordinate> &coordinates,
                                    const util::NameTable &name_table,
                                    const std::unordered_set<EdgeID> &segregated_edges,
-                                   guidance::LaneDescriptionMap &lane_description_map);
+                                   LaneDescriptionMap &lane_description_map);
 
     void Run(ScriptingEnvironment &scripting_environment,
              const std::string &turn_data_filename,
@@ -159,7 +158,7 @@ class EdgeBasedGraphFactory
 
     const util::NameTable &name_table;
     const std::unordered_set<EdgeID> &segregated_edges;
-    guidance::LaneDescriptionMap &lane_description_map;
+    LaneDescriptionMap &lane_description_map;
 
     // In the edge based graph, any traversable (non reversed) edge of the node-based graph forms a
     // node of the edge-based graph. To be able to name these nodes, we loop over the node-based

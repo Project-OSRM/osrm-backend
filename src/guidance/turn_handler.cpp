@@ -11,13 +11,13 @@
 #include <boost/assert.hpp>
 #include <boost/optional.hpp>
 
-using osrm::extractor::guidance::getTurnDirection;
+using osrm::guidance::getTurnDirection;
 using osrm::util::angularDeviation;
 
 namespace
 {
 
-using namespace osrm::extractor::guidance;
+using namespace osrm::guidance;
 // given two adjacent roads in clockwise order and `road1` being a candidate for a fork,
 // return false, if next road `road2` is also a fork candidate or
 // return true, if `road2` is not a suitable fork candidate and thus, `road1` the outermost fork
@@ -72,8 +72,6 @@ InputIt findOutermostForkCandidate(const InputIt begin, const InputIt end)
 
 namespace osrm
 {
-namespace extractor
-{
 namespace guidance
 {
 
@@ -111,14 +109,14 @@ std::size_t TurnHandler::Fork::getLeftIndex() const
 }
 
 TurnHandler::TurnHandler(const util::NodeBasedDynamicGraph &node_based_graph,
-                         const EdgeBasedNodeDataContainer &node_data_container,
+                         const extractor::EdgeBasedNodeDataContainer &node_data_container,
                          const std::vector<util::Coordinate> &coordinates,
                          const extractor::CompressedEdgeContainer &compressed_geometries,
-                         const RestrictionMap &node_restriction_map,
+                         const extractor::RestrictionMap &node_restriction_map,
                          const std::unordered_set<NodeID> &barrier_nodes,
-                         const guidance::TurnLanesIndexedArray &turn_lanes_data,
+                         const extractor::TurnLanesIndexedArray &turn_lanes_data,
                          const util::NameTable &name_table,
-                         const SuffixTable &street_name_suffix_table)
+                         const extractor::SuffixTable &street_name_suffix_table)
     : IntersectionHandler(node_based_graph,
                           node_data_container,
                           coordinates,
@@ -844,5 +842,4 @@ void TurnHandler::handleDistinctConflict(const EdgeID via_edge,
 }
 
 } // namespace guidance
-} // namespace extractor
 } // namespace osrm

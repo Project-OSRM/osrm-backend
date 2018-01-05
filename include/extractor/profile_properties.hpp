@@ -10,6 +10,7 @@
 #include <boost/optional.hpp>
 
 #include <algorithm>
+#include <array>
 #include <cstdint>
 
 namespace osrm

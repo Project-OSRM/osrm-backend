@@ -9,7 +9,7 @@ BOOST_AUTO_TEST_SUITE(json_factory)
 BOOST_AUTO_TEST_CASE(instructionTypeToString_test_size)
 {
     using namespace osrm::engine::api::json::detail;
-    using namespace osrm::extractor::guidance;
+    using namespace osrm::guidance;
 
     BOOST_CHECK_EQUAL(instructionTypeToString(TurnType::Sliproad), "invalid");
 }

@@ -1,13 +1,11 @@
-#ifndef OSRM_EXTRACTOR_GUIDANCE_TURN_LANE_AUGMENTATION_HPP_
-#define OSRM_EXTRACTOR_GUIDANCE_TURN_LANE_AUGMENTATION_HPP_
+#ifndef OSRM_GUIDANCE_TURN_LANE_AUGMENTATION_HPP_
+#define OSRM_GUIDANCE_TURN_LANE_AUGMENTATION_HPP_
 
 #include "guidance/intersection.hpp"
 #include "guidance/turn_lane_data.hpp"
 #include "util/attributes.hpp"
 
 namespace osrm
-{
-namespace extractor
 {
 namespace guidance
 {
@@ -20,7 +18,6 @@ LaneDataVector handleNoneValueAtSimpleTurn(LaneDataVector lane_data,
 
 } // namespace lanes
 } // namespace guidance
-} // namespace extractor
 } // namespace osrm
 
-#endif /* OSRM_EXTRACTOR_GUIDANCE_TURN_LANE_AUGMENTATION_HPP_ */
+#endif /* OSRM_GUIDANCE_TURN_LANE_AUGMENTATION_HPP_ */

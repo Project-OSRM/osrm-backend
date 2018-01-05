@@ -6,8 +6,8 @@
 #include "contractor/query_edge.hpp"
 #include "extractor/class_data.hpp"
 #include "extractor/travel_mode.hpp"
+#include "extractor/turn_lane_types.hpp"
 #include "guidance/turn_instruction.hpp"
-#include "guidance/turn_lane_types.hpp"
 
 #include "engine/algorithm.hpp"
 #include "engine/datafacade/algorithm_datafacade.hpp"
@@ -90,10 +90,10 @@ class MockBaseDataFacade : public engine::datafacade::BaseDataFacade
 
     StringView GetDatasourceName(const DatasourceID) const override final { return {}; }
 
-    extractor::guidance::TurnInstruction
+    osrm::guidance::TurnInstruction
     GetTurnInstructionForEdgeID(const EdgeID /* id */) const override
     {
-        return extractor::guidance::TurnInstruction::NO_TURN();
+        return osrm::guidance::TurnInstruction::NO_TURN();
     }
     std::vector<RTreeLeaf> GetEdgesInBox(const util::Coordinate /* south_west */,
                                          const util::Coordinate /*north_east */) const override
@@ -240,7 +240,7 @@ class MockBaseDataFacade : public engine::datafacade::BaseDataFacade
     {
         return {{0, 0}, 0};
     }
-    extractor::guidance::TurnLaneDescription
+    extractor::TurnLaneDescription
     GetTurnDescription(const LaneDescriptionID /*lane_description_id*/) const override final
     {
         return {};

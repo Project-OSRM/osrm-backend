@@ -1,9 +1,9 @@
 #ifndef OSRM_EXTRACTION_TURN_HPP
 #define OSRM_EXTRACTION_TURN_HPP
 
-#include <boost/numeric/conversion/cast.hpp>
+#include <extractor/travel_mode.hpp>
 
-#include <guidance/intersection.hpp>
+#include <boost/numeric/conversion/cast.hpp>
 
 #include <cstdint>
 

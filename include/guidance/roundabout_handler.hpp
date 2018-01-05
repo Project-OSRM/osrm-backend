@@ -1,13 +1,13 @@
-#ifndef OSRM_EXTRACTOR_GUIDANCE_ROUNDABOUT_HANDLER_HPP_
-#define OSRM_EXTRACTOR_GUIDANCE_ROUNDABOUT_HANDLER_HPP_
+#ifndef OSRM_GUIDANCE_ROUNDABOUT_HANDLER_HPP_
+#define OSRM_GUIDANCE_ROUNDABOUT_HANDLER_HPP_
 
 #include "extractor/compressed_edge_container.hpp"
+#include "extractor/intersection/coordinate_extractor.hpp"
 #include "extractor/query_node.hpp"
-#include "guidance/coordinate_extractor.hpp"
 #include "guidance/intersection.hpp"
 #include "guidance/intersection_handler.hpp"
-#include "guidance/roundabout_type.hpp"
 #include "guidance/is_through_street.hpp"
+#include "guidance/roundabout_type.hpp"
 
 #include "util/name_table.hpp"
 #include "util/node_based_graph.hpp"
@@ -17,8 +17,6 @@
 #include <vector>
 
 namespace osrm
-{
-namespace extractor
 {
 namespace guidance
 {
@@ -40,14 +38,14 @@ class RoundaboutHandler : public IntersectionHandler
 {
   public:
     RoundaboutHandler(const util::NodeBasedDynamicGraph &node_based_graph,
-                      const EdgeBasedNodeDataContainer &node_data_container,
+                      const extractor::EdgeBasedNodeDataContainer &node_data_container,
                       const std::vector<util::Coordinate> &coordinates,
                       const extractor::CompressedEdgeContainer &compressed_geometries,
-                      const RestrictionMap &node_restriction_map,
+                      const extractor::RestrictionMap &node_restriction_map,
                       const std::unordered_set<NodeID> &barrier_nodes,
-                      const guidance::TurnLanesIndexedArray &turn_lanes_data,
+                      const extractor::TurnLanesIndexedArray &turn_lanes_data,
                       const util::NameTable &name_table,
-                      const SuffixTable &street_name_suffix_table);
+                      const extractor::SuffixTable &street_name_suffix_table);
 
     ~RoundaboutHandler() override final = default;
 
@@ -82,11 +80,10 @@ class RoundaboutHandler : public IntersectionHandler
     bool
     qualifiesAsRoundaboutIntersection(const std::unordered_set<NodeID> &roundabout_nodes) const;
 
-    const CoordinateExtractor coordinate_extractor;
+    const extractor::intersection::CoordinateExtractor coordinate_extractor;
 };
 
 } // namespace guidance
-} // namespace extractor
 } // namespace osrm
 
-#endif /*OSRM_EXTRACTOR_GUIDANCE_ROUNDABOUT_HANDLER_HPP_*/
+#endif /*OSRM_GUIDANCE_ROUNDABOUT_HANDLER_HPP_*/

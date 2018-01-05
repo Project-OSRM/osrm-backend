@@ -1,5 +1,5 @@
-#include "guidance/coordinate_extractor.hpp"
-#include "guidance/constants.hpp"
+#include "extractor/intersection/coordinate_extractor.hpp"
+#include "extractor/intersection/constants.hpp"
 
 #include <algorithm>
 #include <cstddef>
@@ -17,7 +17,7 @@ namespace osrm
 {
 namespace extractor
 {
-namespace guidance
+namespace intersection
 {
 
 namespace

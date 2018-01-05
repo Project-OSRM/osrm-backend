@@ -6,13 +6,11 @@
 #include <cstdlib>
 #include <string>
 
-#include "guidance/constants.hpp"
+#include "extractor/intersection/constants.hpp"
 
 namespace osrm
 {
 namespace extractor
-{
-namespace guidance
 {
 
 // Priorities are used to distinguish between how likely a turn is in comparison to a different
@@ -132,8 +130,9 @@ inline bool obviousByRoadClass(const RoadClassification in_classification,
                                const RoadClassification compare_candidate)
 {
     // lower numbers are of higher priority
-    const bool has_high_priority = PRIORITY_DISTINCTION_FACTOR * obvious_candidate.GetPriority() <
-                                   compare_candidate.GetPriority();
+    const bool has_high_priority =
+        intersection::PRIORITY_DISTINCTION_FACTOR * obvious_candidate.GetPriority() <
+        compare_candidate.GetPriority();
 
     const bool continues_on_same_class = in_classification == obvious_candidate;
     return (has_high_priority && continues_on_same_class) ||
@@ -142,7 +141,6 @@ inline bool obviousByRoadClass(const RoadClassification in_classification,
             compare_candidate.IsLowPriorityRoadClass());
 }
 
-} // namespace guidance
 } // namespace extractor
 } // namespace osrm
 

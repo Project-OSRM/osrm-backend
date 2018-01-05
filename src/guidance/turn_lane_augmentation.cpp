@@ -1,5 +1,6 @@
 #include "guidance/turn_lane_augmentation.hpp"
-#include "guidance/turn_lane_types.hpp"
+
+#include "extractor/turn_lane_types.hpp"
 #include "util/log.hpp"
 
 #include <algorithm>
@@ -9,8 +10,6 @@
 
 namespace osrm
 {
-namespace extractor
-{
 namespace guidance
 {
 namespace lanes
@@ -19,14 +18,15 @@ namespace lanes
 namespace
 {
 
-const constexpr TurnLaneType::Mask tag_by_modifier[] = {TurnLaneType::uturn,
-                                                        TurnLaneType::sharp_right,
-                                                        TurnLaneType::right,
-                                                        TurnLaneType::slight_right,
-                                                        TurnLaneType::straight,
-                                                        TurnLaneType::slight_left,
-                                                        TurnLaneType::left,
-                                                        TurnLaneType::sharp_left};
+const constexpr extractor::TurnLaneType::Mask tag_by_modifier[] = {
+    extractor::TurnLaneType::uturn,
+    extractor::TurnLaneType::sharp_right,
+    extractor::TurnLaneType::right,
+    extractor::TurnLaneType::slight_right,
+    extractor::TurnLaneType::straight,
+    extractor::TurnLaneType::slight_left,
+    extractor::TurnLaneType::left,
+    extractor::TurnLaneType::sharp_left};
 
 std::size_t getNumberOfTurns(const Intersection &intersection)
 {
@@ -214,12 +214,13 @@ LaneDataVector handleRenamingSituations(const std::size_t none_index,
     // find missing tag and augment neighboring, if possible
     if (none_index == 0)
     {
-        if (has_right &&
-            (lane_data.size() == 1 || (lane_data[none_index + 1].tag != TurnLaneType::sharp_right &&
-                                       lane_data[none_index + 1].tag != TurnLaneType::right)))
+        if (has_right && (lane_data.size() == 1 ||
+                          (lane_data[none_index + 1].tag != extractor::TurnLaneType::sharp_right &&
+                           lane_data[none_index + 1].tag != extractor::TurnLaneType::right)))
         {
-            lane_data[none_index].tag = TurnLaneType::right;
-            if (lane_data.size() > 1 && lane_data[none_index + 1].tag == TurnLaneType::straight)
+            lane_data[none_index].tag = extractor::TurnLaneType::right;
+            if (lane_data.size() > 1 &&
+                lane_data[none_index + 1].tag == extractor::TurnLaneType::straight)
             {
                 lane_data[none_index + 1].from = lane_data[none_index].from;
                 // turning right through a possible through lane is not possible
@@ -227,39 +228,40 @@ LaneDataVector handleRenamingSituations(const std::size_t none_index,
             }
         }
         else if (has_through &&
-                 (lane_data.size() == 1 || lane_data[none_index + 1].tag != TurnLaneType::straight))
+                 (lane_data.size() == 1 ||
+                  lane_data[none_index + 1].tag != extractor::TurnLaneType::straight))
         {
-            lane_data[none_index].tag = TurnLaneType::straight;
+            lane_data[none_index].tag = extractor::TurnLaneType::straight;
         }
     }
     else if (none_index + 1 == lane_data.size())
     {
-        if (has_left && ((lane_data[none_index - 1].tag != TurnLaneType::sharp_left &&
-                          lane_data[none_index - 1].tag != TurnLaneType::left)))
+        if (has_left && ((lane_data[none_index - 1].tag != extractor::TurnLaneType::sharp_left &&
+                          lane_data[none_index - 1].tag != extractor::TurnLaneType::left)))
         {
-            lane_data[none_index].tag = TurnLaneType::left;
-            if (lane_data[none_index - 1].tag == TurnLaneType::straight)
+            lane_data[none_index].tag = extractor::TurnLaneType::left;
+            if (lane_data[none_index - 1].tag == extractor::TurnLaneType::straight)
             {
                 lane_data[none_index - 1].to = lane_data[none_index].to;
                 // turning left through a possible through lane is not possible
                 lane_data[none_index].from = lane_data[none_index].to;
             }
         }
-        else if (has_through && lane_data[none_index - 1].tag != TurnLaneType::straight)
+        else if (has_through && lane_data[none_index - 1].tag != extractor::TurnLaneType::straight)
         {
-            lane_data[none_index].tag = TurnLaneType::straight;
+            lane_data[none_index].tag = extractor::TurnLaneType::straight;
         }
     }
     else
     {
-        if ((lane_data[none_index + 1].tag == TurnLaneType::left ||
-             lane_data[none_index + 1].tag == TurnLaneType::slight_left ||
-             lane_data[none_index + 1].tag == TurnLaneType::sharp_left) &&
-            (lane_data[none_index - 1].tag == TurnLaneType::right ||
-             lane_data[none_index - 1].tag == TurnLaneType::slight_right ||
-             lane_data[none_index - 1].tag == TurnLaneType::sharp_right))
+        if ((lane_data[none_index + 1].tag == extractor::TurnLaneType::left ||
+             lane_data[none_index + 1].tag == extractor::TurnLaneType::slight_left ||
+             lane_data[none_index + 1].tag == extractor::TurnLaneType::sharp_left) &&
+            (lane_data[none_index - 1].tag == extractor::TurnLaneType::right ||
+             lane_data[none_index - 1].tag == extractor::TurnLaneType::slight_right ||
+             lane_data[none_index - 1].tag == extractor::TurnLaneType::sharp_right))
         {
-            lane_data[none_index].tag = TurnLaneType::straight;
+            lane_data[none_index].tag = extractor::TurnLaneType::straight;
         }
     }
     return lane_data;
@@ -275,8 +277,8 @@ LaneDataVector handleRenamingSituations(const std::size_t none_index,
 LaneDataVector handleNoneValueAtSimpleTurn(LaneDataVector lane_data,
                                            const Intersection &intersection)
 {
-    const bool needs_no_processing =
-        (intersection.empty() || lane_data.empty() || !hasTag(TurnLaneType::none, lane_data));
+    const bool needs_no_processing = (intersection.empty() || lane_data.empty() ||
+                                      !hasTag(extractor::TurnLaneType::none, lane_data));
 
     if (needs_no_processing)
         return lane_data;
@@ -305,11 +307,13 @@ LaneDataVector handleNoneValueAtSimpleTurn(LaneDataVector lane_data,
 
     const std::size_t connection_count =
         getNumberOfTurns(intersection) -
-        ((intersection[0].entry_allowed && lane_data.back().tag != TurnLaneType::uturn) ? 1 : 0);
+        ((intersection[0].entry_allowed && lane_data.back().tag != extractor::TurnLaneType::uturn)
+             ? 1
+             : 0);
 
     // TODO check for impossible turns to see whether the turn lane is at the correct place
     const std::size_t none_index =
-        std::distance(lane_data.begin(), findTag(TurnLaneType::none, lane_data));
+        std::distance(lane_data.begin(), findTag(extractor::TurnLaneType::none, lane_data));
     BOOST_ASSERT(none_index != lane_data.size());
     // we have to create multiple turns
     if (connection_count > lane_data.size())
@@ -348,5 +352,4 @@ LaneDataVector handleNoneValueAtSimpleTurn(LaneDataVector lane_data,
 
 } // namespace lanes
 } // namespace guidance
-} // namespace extractor
 } // namespace osrm

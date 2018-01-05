@@ -18,9 +18,9 @@
 #include "extractor/packed_osm_ids.hpp"
 #include "extractor/profile_properties.hpp"
 #include "extractor/segment_data_container.hpp"
-#include "extractor/turn_data_container.hpp"
+#include "extractor/turn_lane_types.hpp"
+#include "guidance/turn_data_container.hpp"
 #include "guidance/turn_instruction.hpp"
-#include "guidance/turn_lane_types.hpp"
 
 #include "contractor/query_graph.hpp"
 
@@ -192,12 +192,12 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     util::vector_view<util::Coordinate> m_coordinate_list;
     extractor::PackedOSMIDsView m_osmnodeid_list;
     util::vector_view<std::uint32_t> m_lane_description_offsets;
-    util::vector_view<extractor::guidance::TurnLaneType::Mask> m_lane_description_masks;
+    util::vector_view<extractor::TurnLaneType::Mask> m_lane_description_masks;
     util::vector_view<TurnPenalty> m_turn_weight_penalties;
     util::vector_view<TurnPenalty> m_turn_duration_penalties;
     extractor::SegmentDataView segment_data;
-    extractor::TurnDataView turn_data;
     extractor::EdgeBasedNodeDataView edge_based_node_data;
+    guidance::TurnDataView turn_data;
 
     util::vector_view<char> m_datasource_name_data;
     util::vector_view<std::size_t> m_datasource_name_offsets;
@@ -318,10 +318,9 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         util::vector_view<LaneDataID> lane_data_ids(
             lane_data_id_ptr, layout.num_entries[storage::DataLayout::LANE_DATA_ID]);
 
-        const auto turn_instruction_list_ptr =
-            layout.GetBlockPtr<extractor::guidance::TurnInstruction>(
-                memory_ptr, storage::DataLayout::TURN_INSTRUCTION);
-        util::vector_view<extractor::guidance::TurnInstruction> turn_instructions(
+        const auto turn_instruction_list_ptr = layout.GetBlockPtr<guidance::TurnInstruction>(
+            memory_ptr, storage::DataLayout::TURN_INSTRUCTION);
+        util::vector_view<guidance::TurnInstruction> turn_instructions(
             turn_instruction_list_ptr, layout.num_entries[storage::DataLayout::TURN_INSTRUCTION]);
 
         const auto entry_class_id_list_ptr =
@@ -339,11 +338,11 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         util::vector_view<util::guidance::TurnBearing> post_turn_bearings(
             post_turn_bearing_ptr, layout.num_entries[storage::DataLayout::POST_TURN_BEARING]);
 
-        turn_data = extractor::TurnDataView(std::move(turn_instructions),
-                                            std::move(lane_data_ids),
-                                            std::move(entry_class_ids),
-                                            std::move(pre_turn_bearings),
-                                            std::move(post_turn_bearings));
+        turn_data = guidance::TurnDataView(std::move(turn_instructions),
+                                           std::move(lane_data_ids),
+                                           std::move(entry_class_ids),
+                                           std::move(pre_turn_bearings),
+                                           std::move(post_turn_bearings));
     }
 
     void InitializeNamePointers(storage::DataLayout &data_layout, char *memory_block)
@@ -363,10 +362,10 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
             offsets_ptr, data_layout.num_entries[storage::DataLayout::LANE_DESCRIPTION_OFFSETS]);
         m_lane_description_offsets = std::move(offsets);
 
-        auto masks_ptr = data_layout.GetBlockPtr<extractor::guidance::TurnLaneType::Mask>(
+        auto masks_ptr = data_layout.GetBlockPtr<extractor::TurnLaneType::Mask>(
             memory_block, storage::DataLayout::LANE_DESCRIPTION_MASKS);
 
-        util::vector_view<extractor::guidance::TurnLaneType::Mask> masks(
+        util::vector_view<extractor::TurnLaneType::Mask> masks(
             masks_ptr, data_layout.num_entries[storage::DataLayout::LANE_DESCRIPTION_MASKS]);
         m_lane_description_masks = std::move(masks);
 
@@ -609,7 +608,7 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         return m_turn_duration_penalties[id];
     }
 
-    extractor::guidance::TurnInstruction
+    osrm::guidance::TurnInstruction
     GetTurnInstructionForEdgeID(const EdgeID id) const override final
     {
         return turn_data.GetTurnInstruction(id);
@@ -868,13 +867,13 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         return m_lane_tupel_id_pairs.at(turn_data.GetLaneDataID(id));
     }
 
-    extractor::guidance::TurnLaneDescription
+    extractor::TurnLaneDescription
     GetTurnDescription(const LaneDescriptionID lane_description_id) const override final
     {
         if (lane_description_id == INVALID_LANE_DESCRIPTIONID)
             return {};
         else
-            return extractor::guidance::TurnLaneDescription(
+            return extractor::TurnLaneDescription(
                 m_lane_description_masks.begin() + m_lane_description_offsets[lane_description_id],
                 m_lane_description_masks.begin() +
                     m_lane_description_offsets[lane_description_id + 1]);

@@ -2,7 +2,7 @@
 #define EXTRACTOR_CALLBACKS_HPP
 
 #include "extractor/class_data.hpp"
-#include "guidance/turn_lane_types.hpp"
+#include "extractor/turn_lane_types.hpp"
 #include "util/typedefs.hpp"
 
 #include <boost/functional/hash.hpp>
@@ -67,7 +67,7 @@ class ExtractorCallbacks
     StringMap string_map;
     ExtractionContainers &external_memory;
     std::unordered_map<std::string, ClassData> &classes_map;
-    guidance::LaneDescriptionMap &lane_description_map;
+    LaneDescriptionMap &lane_description_map;
     bool fallback_to_duration;
     bool force_split_edges;
 
@@ -76,7 +76,7 @@ class ExtractorCallbacks
 
     explicit ExtractorCallbacks(ExtractionContainers &extraction_containers,
                                 std::unordered_map<std::string, ClassData> &classes_map,
-                                guidance::LaneDescriptionMap &lane_description_map,
+                                LaneDescriptionMap &lane_description_map,
                                 const ProfileProperties &properties);
 
     ExtractorCallbacks(const ExtractorCallbacks &) = delete;

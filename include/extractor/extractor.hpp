@@ -57,7 +57,7 @@ class Extractor
   private:
     ExtractorConfig config;
 
-    std::tuple<guidance::LaneDescriptionMap,
+    std::tuple<LaneDescriptionMap,
                std::vector<TurnRestriction>,
                std::vector<ConditionalTurnRestriction>>
     ParseOSMData(ScriptingEnvironment &scripting_environment, const unsigned number_of_threads);
@@ -73,7 +73,7 @@ class Extractor
         const std::vector<ConditionalTurnRestriction> &conditional_turn_restrictions,
         const std::unordered_set<EdgeID> &segregated_edges,
         // might have to be updated to add new lane combinations
-        guidance::LaneDescriptionMap &turn_lane_map,
+        LaneDescriptionMap &turn_lane_map,
         // for calculating turn penalties
         ScriptingEnvironment &scripting_environment,
         // output data

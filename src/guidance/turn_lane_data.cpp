@@ -10,12 +10,12 @@
 
 namespace osrm
 {
-namespace extractor
-{
 namespace guidance
 {
 namespace lanes
 {
+namespace TurnLaneType = extractor::TurnLaneType;
+using TurnLaneDescription = extractor::TurnLaneDescription;
 
 bool TurnLaneData::operator<(const TurnLaneData &other) const
 {
@@ -156,5 +156,4 @@ bool hasTag(const TurnLaneType::Mask tag, const LaneDataVector &data)
 
 } // namespace lanes
 } // namespace guidance
-} // namespace extractor
 } // namespace osrm

@@ -10,8 +10,6 @@
 
 namespace osrm
 {
-namespace extractor
-{
 namespace guidance
 {
 
@@ -157,7 +155,7 @@ inline bool operator==(const TurnInstruction lhs, const TurnInstruction rhs)
 // check if a instruction is associated in any form with a roundabout
 inline bool hasRoundaboutType(const TurnInstruction instruction)
 {
-    using namespace extractor::guidance::TurnType;
+    using namespace guidance::TurnType;
     const constexpr TurnType::Enum valid_types[] = {TurnType::EnterRoundabout,
                                                     TurnType::EnterAndExitRoundabout,
                                                     TurnType::EnterRotary,
@@ -178,106 +176,106 @@ inline bool hasRoundaboutType(const TurnInstruction instruction)
     return std::find(first, last, instruction.type) != last;
 }
 
-inline bool entersRoundabout(const extractor::guidance::TurnInstruction instruction)
+inline bool entersRoundabout(const guidance::TurnInstruction instruction)
 {
-    return (instruction.type == extractor::guidance::TurnType::EnterRoundabout ||
-            instruction.type == extractor::guidance::TurnType::EnterRotary ||
-            instruction.type == extractor::guidance::TurnType::EnterRoundaboutIntersection ||
-            instruction.type == extractor::guidance::TurnType::EnterRoundaboutAtExit ||
-            instruction.type == extractor::guidance::TurnType::EnterRotaryAtExit ||
-            instruction.type == extractor::guidance::TurnType::EnterRoundaboutIntersectionAtExit ||
-            instruction.type == extractor::guidance::TurnType::EnterAndExitRoundabout ||
-            instruction.type == extractor::guidance::TurnType::EnterAndExitRotary ||
-            instruction.type == extractor::guidance::TurnType::EnterAndExitRoundaboutIntersection);
+    return (instruction.type == guidance::TurnType::EnterRoundabout ||
+            instruction.type == guidance::TurnType::EnterRotary ||
+            instruction.type == guidance::TurnType::EnterRoundaboutIntersection ||
+            instruction.type == guidance::TurnType::EnterRoundaboutAtExit ||
+            instruction.type == guidance::TurnType::EnterRotaryAtExit ||
+            instruction.type == guidance::TurnType::EnterRoundaboutIntersectionAtExit ||
+            instruction.type == guidance::TurnType::EnterAndExitRoundabout ||
+            instruction.type == guidance::TurnType::EnterAndExitRotary ||
+            instruction.type == guidance::TurnType::EnterAndExitRoundaboutIntersection);
 }
 
-inline bool leavesRoundabout(const extractor::guidance::TurnInstruction instruction)
+inline bool leavesRoundabout(const guidance::TurnInstruction instruction)
 {
-    return (instruction.type == extractor::guidance::TurnType::ExitRoundabout ||
-            instruction.type == extractor::guidance::TurnType::ExitRotary ||
-            instruction.type == extractor::guidance::TurnType::ExitRoundaboutIntersection ||
-            instruction.type == extractor::guidance::TurnType::EnterAndExitRoundabout ||
-            instruction.type == extractor::guidance::TurnType::EnterAndExitRotary ||
-            instruction.type == extractor::guidance::TurnType::EnterAndExitRoundaboutIntersection);
+    return (instruction.type == guidance::TurnType::ExitRoundabout ||
+            instruction.type == guidance::TurnType::ExitRotary ||
+            instruction.type == guidance::TurnType::ExitRoundaboutIntersection ||
+            instruction.type == guidance::TurnType::EnterAndExitRoundabout ||
+            instruction.type == guidance::TurnType::EnterAndExitRotary ||
+            instruction.type == guidance::TurnType::EnterAndExitRoundaboutIntersection);
 }
 
-inline bool staysOnRoundabout(const extractor::guidance::TurnInstruction instruction)
+inline bool staysOnRoundabout(const guidance::TurnInstruction instruction)
 {
-    return instruction.type == extractor::guidance::TurnType::StayOnRoundabout ||
-           instruction.type == extractor::guidance::TurnType::EnterRoundaboutAtExit ||
-           instruction.type == extractor::guidance::TurnType::EnterRotaryAtExit ||
-           instruction.type == extractor::guidance::TurnType::EnterRoundaboutIntersectionAtExit;
+    return instruction.type == guidance::TurnType::StayOnRoundabout ||
+           instruction.type == guidance::TurnType::EnterRoundaboutAtExit ||
+           instruction.type == guidance::TurnType::EnterRotaryAtExit ||
+           instruction.type == guidance::TurnType::EnterRoundaboutIntersectionAtExit;
 }
 
 // Silent Turn Instructions are not to be mentioned to the outside world but
-inline bool isSilent(const extractor::guidance::TurnInstruction instruction)
+inline bool isSilent(const guidance::TurnInstruction instruction)
 {
-    return instruction.type == extractor::guidance::TurnType::NoTurn ||
-           instruction.type == extractor::guidance::TurnType::Suppressed ||
-           instruction.type == extractor::guidance::TurnType::StayOnRoundabout;
+    return instruction.type == guidance::TurnType::NoTurn ||
+           instruction.type == guidance::TurnType::Suppressed ||
+           instruction.type == guidance::TurnType::StayOnRoundabout;
 }
 
-inline bool hasRampType(const extractor::guidance::TurnInstruction instruction)
+inline bool hasRampType(const guidance::TurnInstruction instruction)
 {
-    return instruction.type == extractor::guidance::TurnType::OffRamp ||
-           instruction.type == extractor::guidance::TurnType::OnRamp;
+    return instruction.type == guidance::TurnType::OffRamp ||
+           instruction.type == guidance::TurnType::OnRamp;
 }
 
-inline extractor::guidance::DirectionModifier::Enum getTurnDirection(const double angle)
+inline guidance::DirectionModifier::Enum getTurnDirection(const double angle)
 {
     // An angle of zero is a u-turn
     // 180 goes perfectly straight
     // 0-180 are right turns
     // 180-360 are left turns
     if (angle > 0 && angle < 60)
-        return extractor::guidance::DirectionModifier::SharpRight;
+        return guidance::DirectionModifier::SharpRight;
     if (angle >= 60 && angle < 140)
-        return extractor::guidance::DirectionModifier::Right;
+        return guidance::DirectionModifier::Right;
     if (angle >= 140 && angle < 160)
-        return extractor::guidance::DirectionModifier::SlightRight;
+        return guidance::DirectionModifier::SlightRight;
     if (angle >= 160 && angle <= 200)
-        return extractor::guidance::DirectionModifier::Straight;
+        return guidance::DirectionModifier::Straight;
     if (angle > 200 && angle <= 220)
-        return extractor::guidance::DirectionModifier::SlightLeft;
+        return guidance::DirectionModifier::SlightLeft;
     if (angle > 220 && angle <= 300)
-        return extractor::guidance::DirectionModifier::Left;
+        return guidance::DirectionModifier::Left;
     if (angle > 300 && angle < 360)
-        return extractor::guidance::DirectionModifier::SharpLeft;
-    return extractor::guidance::DirectionModifier::UTurn;
+        return guidance::DirectionModifier::SharpLeft;
+    return guidance::DirectionModifier::UTurn;
 }
 
 // swaps left <-> right modifier types
 OSRM_ATTR_WARN_UNUSED
-inline extractor::guidance::DirectionModifier::Enum
-mirrorDirectionModifier(const extractor::guidance::DirectionModifier::Enum modifier)
+inline guidance::DirectionModifier::Enum
+mirrorDirectionModifier(const guidance::DirectionModifier::Enum modifier)
 {
-    const constexpr extractor::guidance::DirectionModifier::Enum results[] = {
-        extractor::guidance::DirectionModifier::UTurn,
-        extractor::guidance::DirectionModifier::SharpLeft,
-        extractor::guidance::DirectionModifier::Left,
-        extractor::guidance::DirectionModifier::SlightLeft,
-        extractor::guidance::DirectionModifier::Straight,
-        extractor::guidance::DirectionModifier::SlightRight,
-        extractor::guidance::DirectionModifier::Right,
-        extractor::guidance::DirectionModifier::SharpRight};
+    const constexpr guidance::DirectionModifier::Enum results[] = {
+        guidance::DirectionModifier::UTurn,
+        guidance::DirectionModifier::SharpLeft,
+        guidance::DirectionModifier::Left,
+        guidance::DirectionModifier::SlightLeft,
+        guidance::DirectionModifier::Straight,
+        guidance::DirectionModifier::SlightRight,
+        guidance::DirectionModifier::Right,
+        guidance::DirectionModifier::SharpRight};
     return results[modifier];
 }
 
-inline bool hasLeftModifier(const extractor::guidance::TurnInstruction instruction)
+inline bool hasLeftModifier(const guidance::TurnInstruction instruction)
 {
-    return instruction.direction_modifier == extractor::guidance::DirectionModifier::SharpLeft ||
-           instruction.direction_modifier == extractor::guidance::DirectionModifier::Left ||
-           instruction.direction_modifier == extractor::guidance::DirectionModifier::SlightLeft;
+    return instruction.direction_modifier == guidance::DirectionModifier::SharpLeft ||
+           instruction.direction_modifier == guidance::DirectionModifier::Left ||
+           instruction.direction_modifier == guidance::DirectionModifier::SlightLeft;
 }
 
-inline bool hasRightModifier(const extractor::guidance::TurnInstruction instruction)
+inline bool hasRightModifier(const guidance::TurnInstruction instruction)
 {
-    return instruction.direction_modifier == extractor::guidance::DirectionModifier::SharpRight ||
-           instruction.direction_modifier == extractor::guidance::DirectionModifier::Right ||
-           instruction.direction_modifier == extractor::guidance::DirectionModifier::SlightRight;
+    return instruction.direction_modifier == guidance::DirectionModifier::SharpRight ||
+           instruction.direction_modifier == guidance::DirectionModifier::Right ||
+           instruction.direction_modifier == guidance::DirectionModifier::SlightRight;
 }
 
-inline bool isLeftTurn(const extractor::guidance::TurnInstruction instruction)
+inline bool isLeftTurn(const guidance::TurnInstruction instruction)
 {
     switch (instruction.type)
     {
@@ -288,7 +286,7 @@ inline bool isLeftTurn(const extractor::guidance::TurnInstruction instruction)
     }
 }
 
-inline bool isRightTurn(const extractor::guidance::TurnInstruction instruction)
+inline bool isRightTurn(const guidance::TurnInstruction instruction)
 {
     switch (instruction.type)
     {
@@ -303,14 +301,14 @@ inline DirectionModifier::Enum bearingToDirectionModifier(const double bearing)
 {
     if (bearing < 135)
     {
-        return extractor::guidance::DirectionModifier::Right;
+        return guidance::DirectionModifier::Right;
     }
 
     if (bearing <= 225)
     {
-        return extractor::guidance::DirectionModifier::Straight;
+        return guidance::DirectionModifier::Straight;
     }
-    return extractor::guidance::DirectionModifier::Left;
+    return guidance::DirectionModifier::Left;
 }
 
 namespace detail
@@ -337,7 +335,7 @@ struct TurnTypeName
     const char *internal_name;
 };
 
-// Indexes in this list correspond to the Enum values of osrm::extractor::guidance::TurnType
+// Indexes in this list correspond to the Enum values of osrm::guidance::TurnType
 const constexpr TurnTypeName turn_type_names[] = {
     {"invalid", "(not set)"},
     {"new name", "new name"},
@@ -394,7 +392,6 @@ inline std::string instructionModifierToString(const DirectionModifier::Enum mod
 }
 
 } // namespace guidance
-} // namespace extractor
 } // namespace osrm
 
 #endif // OSRM_GUIDANCE_TURN_INSTRUCTION_HPP_

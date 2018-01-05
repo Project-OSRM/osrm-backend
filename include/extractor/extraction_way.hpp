@@ -1,8 +1,8 @@
 #ifndef EXTRACTION_WAY_HPP
 #define EXTRACTION_WAY_HPP
 
+#include "extractor/road_classification.hpp"
 #include "extractor/travel_mode.hpp"
-#include "guidance/road_classification.hpp"
 #include "util/guidance/turn_lanes.hpp"
 #include "util/typedefs.hpp"
 
@@ -54,9 +54,9 @@ struct ExtractionWay
         exits.clear();
         turn_lanes_forward.clear();
         turn_lanes_backward.clear();
-        road_classification = guidance::RoadClassification();
-        forward_travel_mode = extractor::TRAVEL_MODE_INACCESSIBLE;
-        backward_travel_mode = extractor::TRAVEL_MODE_INACCESSIBLE;
+        road_classification = RoadClassification();
+        forward_travel_mode = TRAVEL_MODE_INACCESSIBLE;
+        backward_travel_mode = TRAVEL_MODE_INACCESSIBLE;
         roundabout = false;
         circular = false;
         is_startpoint = true;
@@ -113,9 +113,9 @@ struct ExtractionWay
     std::string exits;
     std::string turn_lanes_forward;
     std::string turn_lanes_backward;
-    guidance::RoadClassification road_classification;
-    extractor::TravelMode forward_travel_mode : 4;
-    extractor::TravelMode backward_travel_mode : 4;
+    RoadClassification road_classification;
+    TravelMode forward_travel_mode : 4;
+    TravelMode backward_travel_mode : 4;
 
     // Boolean flags
     bool roundabout : 1;

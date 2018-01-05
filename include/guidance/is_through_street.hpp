@@ -1,15 +1,15 @@
-#ifndef OSRM_EXTRACTOR_GUIDANCE_IS_THROUGH_STREET_HPP_
-#define OSRM_EXTRACTOR_GUIDANCE_IS_THROUGH_STREET_HPP_
+#ifndef OSRM_GUIDANCE_IS_THROUGH_STREET_HPP_
+#define OSRM_GUIDANCE_IS_THROUGH_STREET_HPP_
 
 #include "guidance/constants.hpp"
+
+#include "extractor/intersection/have_identical_names.hpp"
+#include "extractor/node_data_container.hpp"
 #include "extractor/suffix_table.hpp"
+
 #include "util/guidance/name_announcements.hpp"
 
-using osrm::util::angularDeviation;
-
 namespace osrm
-{
-namespace extractor
 {
 namespace guidance
 {
@@ -18,10 +18,11 @@ template <typename IntersectionType>
 inline bool isThroughStreet(const std::size_t index,
                             const IntersectionType &intersection,
                             const util::NodeBasedDynamicGraph &node_based_graph,
-                            const EdgeBasedNodeDataContainer &node_data_container,
+                            const extractor::EdgeBasedNodeDataContainer &node_data_container,
                             const util::NameTable &name_table,
-                            const SuffixTable &street_name_suffix_table)
+                            const extractor::SuffixTable &street_name_suffix_table)
 {
+    using osrm::util::angularDeviation;
 
     const auto &data_at_index = node_data_container.GetAnnotation(
         node_based_graph.GetEdgeData(intersection[index].eid).annotation_data);
@@ -43,7 +44,7 @@ inline bool isThroughStreet(const std::size_t index,
         const bool is_nearly_straight = angularDeviation(road.angle, intersection[index].angle) >
                                         (STRAIGHT_ANGLE - FUZZY_ANGLE_DIFFERENCE);
 
-        const bool have_same_name = HaveIdenticalNames(
+        const bool have_same_name = extractor::intersection::HaveIdenticalNames(
             data_at_index.name_id, road_data.name_id, name_table, street_name_suffix_table);
 
         const bool have_same_category =
@@ -57,7 +58,6 @@ inline bool isThroughStreet(const std::size_t index,
 }
 
 } // namespace guidance
-} // namespace extractor
 } // namespace osrm
 
-#endif /*OSRM_EXTRACTOR_GUIDANCE_IS_THROUGH_STREET_HPP_*/
+#endif /*OSRM_GUIDANCE_IS_THROUGH_STREET_HPP_*/

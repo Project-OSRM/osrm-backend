@@ -12,6 +12,7 @@ namespace engine
 {
 namespace guidance
 {
+using namespace osrm::guidance;
 
 namespace
 {

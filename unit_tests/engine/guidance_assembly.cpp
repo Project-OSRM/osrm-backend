@@ -15,7 +15,7 @@ BOOST_AUTO_TEST_SUITE(guidance_assembly)
 BOOST_AUTO_TEST_CASE(trim_short_segments)
 {
     using namespace osrm::extractor;
-    using namespace osrm::extractor::guidance;
+    using namespace osrm::guidance;
     using namespace osrm::engine::guidance;
     using namespace osrm::engine;
     using namespace osrm::util;
@@ -59,7 +59,8 @@ BOOST_AUTO_TEST_CASE(trim_short_segments)
                                       0},
                                      0,
                                      3,
-                                     {intersection1}},
+                                     {intersection1},
+                                     false},
                                     {324,
                                      false,
                                      "Central Park West",
@@ -81,7 +82,8 @@ BOOST_AUTO_TEST_CASE(trim_short_segments)
                                       0},
                                      2,
                                      3,
-                                     {intersection2}}};
+                                     {intersection2},
+                                     false}};
 
     LegGeometry geometry;
     geometry.locations = {{FloatLongitude{-73.981492}, FloatLatitude{40.768258}},

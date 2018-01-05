@@ -6,8 +6,6 @@
 
 namespace osrm
 {
-namespace extractor
-{
 namespace guidance
 {
 
@@ -87,5 +85,4 @@ classifyIntersection(Intersection intersection, const osrm::util::Coordinate &lo
 }
 
 } // namespace guidance
-} // namespace extractor
 } // namespace osrm

@@ -1,5 +1,5 @@
-#ifndef OSRM_EXTRACTOR_COORDINATE_EXTRACTOR_HPP_
-#define OSRM_EXTRACTOR_COORDINATE_EXTRACTOR_HPP_
+#ifndef OSRM_EXTRACTOR_INTERSECTION_COORDINATE_EXTRACTOR_HPP_
+#define OSRM_EXTRACTOR_INTERSECTION_COORDINATE_EXTRACTOR_HPP_
 
 #include <utility>
 #include <vector>
@@ -15,7 +15,7 @@ namespace osrm
 {
 namespace extractor
 {
-namespace guidance
+namespace intersection
 {
 
 class CoordinateExtractor
@@ -251,8 +251,8 @@ class CoordinateExtractor
                         const std::uint8_t considered_lanes) const;
 };
 
-} // namespace guidance
+} // namespace intersection
 } // namespace extractor
 } // namespace osrm
 
-#endif // OSRM_EXTRACTOR_COORDINATE_EXTRACTOR_HPP_
+#endif // OSRM_EXTRACTOR_INTERSECTION_COORDINATE_EXTRACTOR_HPP_

@@ -1,4 +1,4 @@
-#include "guidance/node_based_graph_walker.hpp"
+#include "extractor/intersection/node_based_graph_walker.hpp"
 #include "extractor/intersection/intersection_analysis.hpp"
 #include "util/bearing.hpp"
 #include "util/coordinate_calculation.hpp"
@@ -11,7 +11,7 @@ namespace osrm
 {
 namespace extractor
 {
-namespace guidance
+namespace intersection
 {
 
 // ---------------------------------------------------------------------------------
@@ -22,7 +22,7 @@ NodeBasedGraphWalker::NodeBasedGraphWalker(
     const extractor::CompressedEdgeContainer &compressed_geometries,
     const RestrictionMap &node_restriction_map,
     const std::unordered_set<NodeID> &barrier_nodes,
-    const guidance::TurnLanesIndexedArray &turn_lanes_data)
+    const TurnLanesIndexedArray &turn_lanes_data)
     : node_based_graph(node_based_graph), node_data_container(node_data_container),
       node_coordinates(node_coordinates), compressed_geometries(compressed_geometries),
       node_restriction_map(node_restriction_map), barrier_nodes(barrier_nodes),
@@ -31,7 +31,7 @@ NodeBasedGraphWalker::NodeBasedGraphWalker(
 }
 
 LengthLimitedCoordinateAccumulator::LengthLimitedCoordinateAccumulator(
-    const extractor::guidance::CoordinateExtractor &coordinate_extractor, const double max_length)
+    const CoordinateExtractor &coordinate_extractor, const double max_length)
     : accumulated_length(0), coordinate_extractor(coordinate_extractor), max_length(max_length)
 {
 }
@@ -250,7 +250,7 @@ IntersectionFinderAccumulator::IntersectionFinderAccumulator(
     const extractor::CompressedEdgeContainer &compressed_geometries,
     const RestrictionMap &node_restriction_map,
     const std::unordered_set<NodeID> &barrier_nodes,
-    const guidance::TurnLanesIndexedArray &turn_lanes_data)
+    const TurnLanesIndexedArray &turn_lanes_data)
     : hops(0), hop_limit(hop_limit), node_based_graph(node_based_graph),
       node_data_container(node_data_container), node_coordinates(node_coordinates),
       compressed_geometries(compressed_geometries), node_restriction_map(node_restriction_map),
@@ -289,6 +289,6 @@ void IntersectionFinderAccumulator::update(const NodeID from_node,
                                                          {from_node, via_edge});
 }
 
-} // namespace guidance
+} // namespace intersection
 } // namespace extractor
 } // namespace osrm

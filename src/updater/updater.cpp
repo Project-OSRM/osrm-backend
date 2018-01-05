@@ -9,6 +9,8 @@
 #include "extractor/restriction.hpp"
 #include "extractor/serialization.hpp"
 
+#include "guidance/files.hpp"
+
 #include "storage/io.hpp"
 
 #include "util/exception.hpp"

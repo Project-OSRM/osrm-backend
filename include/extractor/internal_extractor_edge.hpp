@@ -3,8 +3,6 @@
 
 #include "extractor/node_based_edge.hpp"
 #include "extractor/travel_mode.hpp"
-#include "guidance/road_classification.hpp"
-#include "guidance/turn_lane_types.hpp"
 #include "osrm/coordinate.hpp"
 #include "util/typedefs.hpp"
 

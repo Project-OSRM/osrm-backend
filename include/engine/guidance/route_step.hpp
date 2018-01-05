@@ -7,7 +7,7 @@
 #include "util/guidance/bearing_class.hpp"
 #include "util/guidance/entry_class.hpp"
 
-#include "guidance/turn_lane_types.hpp"
+#include "extractor/turn_lane_types.hpp"
 #include "util/guidance/turn_lanes.hpp"
 
 #include <cstddef>
@@ -41,7 +41,7 @@ struct IntermediateIntersection
 
     // turn lane information
     util::guidance::LaneTuple lanes;
-    extractor::guidance::TurnLaneDescription lane_description;
+    extractor::TurnLaneDescription lane_description;
     std::vector<std::string> classes;
 };
 

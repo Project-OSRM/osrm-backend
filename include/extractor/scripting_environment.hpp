@@ -4,7 +4,6 @@
 #include "extractor/internal_extractor_edge.hpp"
 #include "extractor/profile_properties.hpp"
 #include "extractor/restriction.hpp"
-#include "guidance/turn_lane_types.hpp"
 
 #include <osmium/memory/buffer.hpp>
 

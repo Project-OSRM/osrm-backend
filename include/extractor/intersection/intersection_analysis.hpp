@@ -3,9 +3,10 @@
 
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/intersection/intersection_edge.hpp"
+#include "extractor/intersection/intersection_view.hpp"
+#include "extractor/intersection/mergable_road_detector.hpp"
 #include "extractor/restriction_index.hpp"
-#include "guidance/mergable_road_detector.hpp"
-#include "guidance/turn_lane_types.hpp"
+#include "extractor/turn_lane_types.hpp"
 
 #include "util/coordinate.hpp"
 #include "util/node_based_graph.hpp"
@@ -31,7 +32,7 @@ bool isTurnAllowed(const util::NodeBasedDynamicGraph &graph,
                    const RestrictionMap &restriction_map,
                    const std::unordered_set<NodeID> &barrier_nodes,
                    const IntersectionEdgeGeometries &geometries,
-                   const guidance::TurnLanesIndexedArray &turn_lanes_data,
+                   const TurnLanesIndexedArray &turn_lanes_data,
                    const IntersectionEdge &from,
                    const IntersectionEdge &to);
 
@@ -43,33 +44,31 @@ std::pair<IntersectionEdgeGeometries, std::unordered_set<EdgeID>>
 getIntersectionGeometries(const util::NodeBasedDynamicGraph &graph,
                           const extractor::CompressedEdgeContainer &compressed_geometries,
                           const std::vector<util::Coordinate> &node_coordinates,
-                          const guidance::MergableRoadDetector &detector,
+                          const MergableRoadDetector &detector,
                           const NodeID intersection);
 
-guidance::IntersectionView
-convertToIntersectionView(const util::NodeBasedDynamicGraph &graph,
-                          const EdgeBasedNodeDataContainer &node_data_container,
-                          const RestrictionMap &restriction_map,
-                          const std::unordered_set<NodeID> &barrier_nodes,
-                          const IntersectionEdgeGeometries &edge_geometries,
-                          const guidance::TurnLanesIndexedArray &turn_lanes_data,
-                          const IntersectionEdge &incoming_edge,
-                          const IntersectionEdges &outgoing_edges,
-                          const std::unordered_set<EdgeID> &merged_edges);
+IntersectionView convertToIntersectionView(const util::NodeBasedDynamicGraph &graph,
+                                           const EdgeBasedNodeDataContainer &node_data_container,
+                                           const RestrictionMap &restriction_map,
+                                           const std::unordered_set<NodeID> &barrier_nodes,
+                                           const IntersectionEdgeGeometries &edge_geometries,
+                                           const TurnLanesIndexedArray &turn_lanes_data,
+                                           const IntersectionEdge &incoming_edge,
+                                           const IntersectionEdges &outgoing_edges,
+                                           const std::unordered_set<EdgeID> &merged_edges);
 
 // Check for restrictions/barriers and generate a list of valid and invalid turns present at
 // the node reached from `incoming_edge`. The resulting candidates have to be analyzed
 // for their actual instructions later on.
 template <bool USE_CLOSE_COORDINATE>
-guidance::IntersectionView
-getConnectedRoads(const util::NodeBasedDynamicGraph &graph,
-                  const EdgeBasedNodeDataContainer &node_data_container,
-                  const std::vector<util::Coordinate> &node_coordinates,
-                  const extractor::CompressedEdgeContainer &compressed_geometries,
-                  const RestrictionMap &node_restriction_map,
-                  const std::unordered_set<NodeID> &barrier_nodes,
-                  const guidance::TurnLanesIndexedArray &turn_lanes_data,
-                  const IntersectionEdge &incoming_edge);
+IntersectionView getConnectedRoads(const util::NodeBasedDynamicGraph &graph,
+                                   const EdgeBasedNodeDataContainer &node_data_container,
+                                   const std::vector<util::Coordinate> &node_coordinates,
+                                   const extractor::CompressedEdgeContainer &compressed_geometries,
+                                   const RestrictionMap &node_restriction_map,
+                                   const std::unordered_set<NodeID> &barrier_nodes,
+                                   const TurnLanesIndexedArray &turn_lanes_data,
+                                   const IntersectionEdge &incoming_edge);
 
 // Graph Compression cannot compress every setting. For example any barrier/traffic light cannot
 // be compressed. As a result, a simple road of the form `a ----- b` might end up as having an

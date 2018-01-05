@@ -1,5 +1,5 @@
-#ifndef OSRM_EXTRACTOR_GUIDANCE_TURN_HANDLER_HPP_
-#define OSRM_EXTRACTOR_GUIDANCE_TURN_HANDLER_HPP_
+#ifndef OSRM_GUIDANCE_TURN_HANDLER_HPP_
+#define OSRM_GUIDANCE_TURN_HANDLER_HPP_
 
 #include "extractor/query_node.hpp"
 #include "guidance/intersection.hpp"
@@ -18,8 +18,6 @@
 
 namespace osrm
 {
-namespace extractor
-{
 namespace guidance
 {
 
@@ -28,14 +26,14 @@ class TurnHandler : public IntersectionHandler
 {
   public:
     TurnHandler(const util::NodeBasedDynamicGraph &node_based_graph,
-                const EdgeBasedNodeDataContainer &node_data_container,
+                const extractor::EdgeBasedNodeDataContainer &node_data_container,
                 const std::vector<util::Coordinate> &coordinates,
                 const extractor::CompressedEdgeContainer &compressed_geometries,
-                const RestrictionMap &node_restriction_map,
+                const extractor::RestrictionMap &node_restriction_map,
                 const std::unordered_set<NodeID> &barrier_nodes,
-                const guidance::TurnLanesIndexedArray &turn_lanes_data,
+                const extractor::TurnLanesIndexedArray &turn_lanes_data,
                 const util::NameTable &name_table,
-                const SuffixTable &street_name_suffix_table);
+                const extractor::SuffixTable &street_name_suffix_table);
 
     ~TurnHandler() override final = default;
 
@@ -113,7 +111,6 @@ class TurnHandler : public IntersectionHandler
 };
 
 } // namespace guidance
-} // namespace extractor
 } // namespace osrm
 
-#endif /*OSRM_EXTRACTOR_GUIDANCE_TURN_HANDLER_HPP_*/
+#endif /*OSRM_GUIDANCE_TURN_HANDLER_HPP_*/

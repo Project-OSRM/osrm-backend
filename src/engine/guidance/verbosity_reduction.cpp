@@ -10,6 +10,8 @@ namespace engine
 {
 namespace guidance
 {
+using namespace osrm::guidance;
+
 std::vector<RouteStep> suppressShortNameSegments(std::vector<RouteStep> steps)
 {
     // guard against empty routes, even though they shouldn't happen

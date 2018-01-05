@@ -9,7 +9,6 @@
 #include "extractor/profile_properties.hpp"
 #include "extractor/restriction.hpp"
 #include "extractor/segment_data_container.hpp"
-#include "extractor/turn_data_container.hpp"
 
 #include "storage/io.hpp"
 #include "storage/serialization.hpp"
@@ -91,29 +90,6 @@ inline void write(storage::io::FileWriter &writer,
     util::serialization::write(writer, segment_data.rev_durations);
     storage::serialization::write(writer, segment_data.fwd_datasources);
     storage::serialization::write(writer, segment_data.rev_datasources);
-}
-
-// read/write for turn data file
-template <storage::Ownership Ownership>
-inline void read(storage::io::FileReader &reader,
-                 detail::TurnDataContainerImpl<Ownership> &turn_data_container)
-{
-    storage::serialization::read(reader, turn_data_container.turn_instructions);
-    storage::serialization::read(reader, turn_data_container.lane_data_ids);
-    storage::serialization::read(reader, turn_data_container.entry_class_ids);
-    storage::serialization::read(reader, turn_data_container.pre_turn_bearings);
-    storage::serialization::read(reader, turn_data_container.post_turn_bearings);
-}
-
-template <storage::Ownership Ownership>
-inline void write(storage::io::FileWriter &writer,
-                  const detail::TurnDataContainerImpl<Ownership> &turn_data_container)
-{
-    storage::serialization::write(writer, turn_data_container.turn_instructions);
-    storage::serialization::write(writer, turn_data_container.lane_data_ids);
-    storage::serialization::write(writer, turn_data_container.entry_class_ids);
-    storage::serialization::write(writer, turn_data_container.pre_turn_bearings);
-    storage::serialization::write(writer, turn_data_container.post_turn_bearings);
 }
 
 template <storage::Ownership Ownership>
