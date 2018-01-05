@@ -2,10 +2,10 @@
 #include "extractor/conditional_turn_penalty.hpp"
 #include "extractor/edge_based_edge.hpp"
 #include "extractor/files.hpp"
-#include "extractor/guidance/turn_analysis.hpp"
-#include "extractor/guidance/turn_lane_handler.hpp"
 #include "extractor/scripting_environment.hpp"
 #include "extractor/suffix_table.hpp"
+#include "guidance/turn_analysis.hpp"
+#include "guidance/turn_lane_handler.hpp"
 
 #include "extractor/intersection/intersection_analysis.hpp"
 

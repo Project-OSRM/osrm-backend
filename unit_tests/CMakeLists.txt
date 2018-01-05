@@ -68,7 +68,7 @@ add_executable(contractor-tests
 add_executable(extractor-tests
 	EXCLUDE_FROM_ALL
 	${ExtractorTestsSources}
-	$<TARGET_OBJECTS:EXTRACTOR> $<TARGET_OBJECTS:UTIL>)
+	$<TARGET_OBJECTS:EXTRACTOR> $<TARGET_OBJECTS:GUIDANCE> $<TARGET_OBJECTS:UTIL>)
 
 add_executable(partitioner-tests
 	EXCLUDE_FROM_ALL

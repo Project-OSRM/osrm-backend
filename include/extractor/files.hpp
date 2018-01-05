@@ -2,11 +2,11 @@
 #define OSRM_EXTRACTOR_FILES_HPP
 
 #include "extractor/edge_based_edge.hpp"
-#include "extractor/guidance/turn_lane_types.hpp"
 #include "extractor/node_data_container.hpp"
 #include "extractor/profile_properties.hpp"
 #include "extractor/serialization.hpp"
 #include "extractor/turn_data_container.hpp"
+#include "guidance/turn_lane_types.hpp"
 
 #include "util/coordinate.hpp"
 #include "util/guidance/bearing_class.hpp"

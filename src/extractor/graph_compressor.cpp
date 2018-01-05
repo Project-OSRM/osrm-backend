@@ -2,9 +2,9 @@
 
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/extraction_turn.hpp"
-#include "extractor/guidance/intersection.hpp"
 #include "extractor/restriction.hpp"
 #include "extractor/restriction_compressor.hpp"
+#include "guidance/intersection.hpp"
 
 #include "util/dynamic_graph.hpp"
 #include "util/node_based_graph.hpp"

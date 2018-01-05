@@ -13,7 +13,7 @@
 #include "extractor/restriction_parser.hpp"
 #include "extractor/scripting_environment.hpp"
 
-#include "extractor/guidance/segregated_intersection_classification.hpp"
+#include "guidance/segregated_intersection_classification.hpp"
 
 #include "storage/io.hpp"
 

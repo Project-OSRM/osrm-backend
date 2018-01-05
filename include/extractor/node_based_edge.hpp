@@ -8,7 +8,7 @@
 #include "extractor/travel_mode.hpp"
 #include "util/typedefs.hpp"
 
-#include "extractor/guidance/road_classification.hpp"
+#include "guidance/road_classification.hpp"
 
 namespace osrm
 {

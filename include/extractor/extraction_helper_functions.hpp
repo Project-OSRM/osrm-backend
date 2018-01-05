@@ -12,7 +12,7 @@
 #include <limits>
 #include <string>
 
-#include "extractor/guidance/parsing_toolkit.hpp"
+#include "guidance/parsing_toolkit.hpp"
 
 namespace osrm
 {

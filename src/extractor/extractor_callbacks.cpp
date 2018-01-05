@@ -2,10 +2,10 @@
 #include "extractor/extraction_containers.hpp"
 #include "extractor/extraction_node.hpp"
 #include "extractor/extraction_way.hpp"
-#include "extractor/guidance/road_classification.hpp"
 #include "extractor/profile_properties.hpp"
 #include "extractor/query_node.hpp"
 #include "extractor/restriction.hpp"
+#include "guidance/road_classification.hpp"
 
 #include "util/for_each_pair.hpp"
 #include "util/guidance/turn_lanes.hpp"

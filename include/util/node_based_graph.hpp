@@ -2,9 +2,9 @@
 #define NODE_BASED_GRAPH_HPP
 
 #include "extractor/class_data.hpp"
-#include "extractor/guidance/road_classification.hpp"
 #include "extractor/node_based_edge.hpp"
 #include "extractor/node_data_container.hpp"
+#include "guidance/road_classification.hpp"
 #include "util/dynamic_graph.hpp"
 #include "util/graph_utils.hpp"
 

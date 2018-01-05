@@ -13,14 +13,14 @@
 
 #include "extractor/datasources.hpp"
 #include "extractor/edge_based_node.hpp"
-#include "extractor/guidance/turn_instruction.hpp"
-#include "extractor/guidance/turn_lane_types.hpp"
 #include "extractor/intersection_bearings_container.hpp"
 #include "extractor/node_data_container.hpp"
 #include "extractor/packed_osm_ids.hpp"
 #include "extractor/profile_properties.hpp"
 #include "extractor/segment_data_container.hpp"
 #include "extractor/turn_data_container.hpp"
+#include "guidance/turn_instruction.hpp"
+#include "guidance/turn_lane_types.hpp"
 
 #include "contractor/query_graph.hpp"
 
