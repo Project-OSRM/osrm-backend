@@ -14,25 +14,23 @@
 
 #include <boost/assert.hpp>
 
-using osrm::extractor::guidance::getTurnDirection;
+using osrm::guidance::getTurnDirection;
 
 namespace osrm
-{
-namespace extractor
 {
 namespace guidance
 {
 
 RoundaboutHandler::RoundaboutHandler(
     const util::NodeBasedDynamicGraph &node_based_graph,
-    const EdgeBasedNodeDataContainer &node_data_container,
+    const extractor::EdgeBasedNodeDataContainer &node_data_container,
     const std::vector<util::Coordinate> &coordinates,
     const extractor::CompressedEdgeContainer &compressed_geometries,
-    const RestrictionMap &node_restriction_map,
+    const extractor::RestrictionMap &node_restriction_map,
     const std::unordered_set<NodeID> &barrier_nodes,
-    const guidance::TurnLanesIndexedArray &turn_lanes_data,
+    const extractor::TurnLanesIndexedArray &turn_lanes_data,
     const util::NameTable &name_table,
-    const SuffixTable &street_name_suffix_table)
+    const extractor::SuffixTable &street_name_suffix_table)
     : IntersectionHandler(node_based_graph,
                           node_data_container,
                           coordinates,
@@ -501,5 +499,4 @@ Intersection RoundaboutHandler::handleRoundabouts(const RoundaboutType roundabou
 }
 
 } // namespace guidance
-} // namespace extractor
 } // namespace osrm

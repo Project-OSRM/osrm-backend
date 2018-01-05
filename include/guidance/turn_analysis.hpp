@@ -1,8 +1,8 @@
-#ifndef OSRM_EXTRACTOR_TURN_ANALYSIS
-#define OSRM_EXTRACTOR_TURN_ANALYSIS
+#ifndef OSRM_GUIDANCE_TURN_ANALYSIS
+#define OSRM_GUIDANCE_TURN_ANALYSIS
 
 #include "extractor/compressed_edge_container.hpp"
-#include "extractor/query_node.hpp"
+#include "extractor/intersection/intersection_view.hpp"
 #include "extractor/restriction_index.hpp"
 #include "extractor/suffix_table.hpp"
 #include "guidance/driveway_handler.hpp"
@@ -30,8 +30,6 @@
 
 namespace osrm
 {
-namespace extractor
-{
 namespace guidance
 {
 
@@ -39,14 +37,14 @@ class TurnAnalysis
 {
   public:
     TurnAnalysis(const util::NodeBasedDynamicGraph &node_based_graph,
-                 const EdgeBasedNodeDataContainer &node_data_container,
+                 const extractor::EdgeBasedNodeDataContainer &node_data_container,
                  const std::vector<util::Coordinate> &node_coordinates,
-                 const CompressedEdgeContainer &compressed_edge_container,
-                 const RestrictionMap &restriction_map,
+                 const extractor::CompressedEdgeContainer &compressed_edge_container,
+                 const extractor::RestrictionMap &restriction_map,
                  const std::unordered_set<NodeID> &barrier_nodes,
-                 const guidance::TurnLanesIndexedArray &turn_lanes_data,
+                 const extractor::TurnLanesIndexedArray &turn_lanes_data,
                  const util::NameTable &name_table,
-                 const SuffixTable &street_name_suffix_table);
+                 const extractor::SuffixTable &street_name_suffix_table);
 
     /* Full Analysis Process for a single node/edge combination. Use with caution, as the process is
      * relatively expensive */
@@ -56,9 +54,10 @@ class TurnAnalysis
 
     // Select turn types based on the intersection shape
     OSRM_ATTR_WARN_UNUSED
-    Intersection AssignTurnTypes(const NodeID from_node,
-                                 const EdgeID via_eid,
-                                 const IntersectionView &intersection) const;
+    Intersection
+    AssignTurnTypes(const NodeID from_node,
+                    const EdgeID via_eid,
+                    const extractor::intersection::IntersectionView &intersection) const;
 
   private:
     const util::NodeBasedDynamicGraph &node_based_graph;
@@ -76,7 +75,6 @@ class TurnAnalysis
 }; // class TurnAnalysis
 
 } // namespace guidance
-} // namespace extractor
 } // namespace osrm
 
-#endif // OSRM_EXTRACTOR_TURN_ANALYSIS
+#endif // OSRM_GUIDANCE_TURN_ANALYSIS

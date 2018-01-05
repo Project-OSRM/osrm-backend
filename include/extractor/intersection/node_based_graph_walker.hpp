@@ -1,9 +1,9 @@
-#ifndef OSRM_EXTRACTOR_GUIDANCE_NODE_BASED_GRAPH_WALKER
-#define OSRM_EXTRACTOR_GUIDANCE_NODE_BASED_GRAPH_WALKER
+#ifndef OSRM_EXTRACTOR_INTERSECTION_NODE_BASED_GRAPH_WALKER
+#define OSRM_EXTRACTOR_INTERSECTION_NODE_BASED_GRAPH_WALKER
 
+#include "extractor/intersection/coordinate_extractor.hpp"
 #include "extractor/intersection/intersection_analysis.hpp"
-#include "guidance/constants.hpp"
-#include "guidance/coordinate_extractor.hpp"
+#include "extractor/intersection/intersection_view.hpp"
 #include "guidance/turn_lane_data.hpp"
 #include "util/coordinate.hpp"
 #include "util/coordinate_calculation.hpp"
@@ -19,7 +19,7 @@ namespace osrm
 {
 namespace extractor
 {
-namespace guidance
+namespace intersection
 {
 
 /*
@@ -35,7 +35,7 @@ class NodeBasedGraphWalker
                          const extractor::CompressedEdgeContainer &compressed_geometries,
                          const RestrictionMap &node_restriction_map,
                          const std::unordered_set<NodeID> &barrier_nodes,
-                         const guidance::TurnLanesIndexedArray &turn_lanes_data);
+                         const TurnLanesIndexedArray &turn_lanes_data);
 
     /*
      * the returned node-id, edge-id are either the last ones used, just prior accumulator
@@ -58,7 +58,7 @@ class NodeBasedGraphWalker
     const extractor::CompressedEdgeContainer &compressed_geometries;
     const RestrictionMap &node_restriction_map;
     const std::unordered_set<NodeID> &barrier_nodes;
-    const guidance::TurnLanesIndexedArray &turn_lanes_data;
+    const TurnLanesIndexedArray &turn_lanes_data;
 };
 
 /*
@@ -68,7 +68,7 @@ class NodeBasedGraphWalker
 struct LengthLimitedCoordinateAccumulator
 {
     LengthLimitedCoordinateAccumulator(
-        const extractor::guidance::CoordinateExtractor &coordinate_extractor,
+        const extractor::intersection::CoordinateExtractor &coordinate_extractor,
         const double max_length);
 
     /*
@@ -93,7 +93,7 @@ struct LengthLimitedCoordinateAccumulator
     std::vector<util::Coordinate> coordinates;
 
   private:
-    const extractor::guidance::CoordinateExtractor &coordinate_extractor;
+    const extractor::intersection::CoordinateExtractor &coordinate_extractor;
     const double max_length;
 };
 
@@ -165,7 +165,7 @@ struct IntersectionFinderAccumulator
                                   const extractor::CompressedEdgeContainer &compressed_geometries,
                                   const RestrictionMap &node_restriction_map,
                                   const std::unordered_set<NodeID> &barrier_nodes,
-                                  const guidance::TurnLanesIndexedArray &turn_lanes_data);
+                                  const TurnLanesIndexedArray &turn_lanes_data);
     // true if the path has traversed enough distance
     bool terminate();
 
@@ -187,7 +187,7 @@ struct IntersectionFinderAccumulator
     const extractor::CompressedEdgeContainer &compressed_geometries;
     const RestrictionMap &node_restriction_map;
     const std::unordered_set<NodeID> &barrier_nodes;
-    const guidance::TurnLanesIndexedArray &turn_lanes_data;
+    const TurnLanesIndexedArray &turn_lanes_data;
 };
 
 template <class accumulator_type, class selector_type>
@@ -278,7 +278,7 @@ struct SkipTrafficSignalBarrierRoadSelector
 struct DistanceToNextIntersectionAccumulator
 {
     DistanceToNextIntersectionAccumulator(
-        const extractor::guidance::CoordinateExtractor &extractor_,
+        const extractor::intersection::CoordinateExtractor &extractor_,
         const util::NodeBasedDynamicGraph &graph_,
         const double threshold)
         : extractor{extractor_}, graph{graph_}, threshold{threshold}
@@ -304,7 +304,7 @@ struct DistanceToNextIntersectionAccumulator
         distance += getLength(coords.begin(), coords.end(), &haversineDistance);
     }
 
-    const extractor::guidance::CoordinateExtractor &extractor;
+    const extractor::intersection::CoordinateExtractor &extractor;
     const util::NodeBasedDynamicGraph &graph;
     const double threshold;
     bool too_far_away = false;
@@ -315,4 +315,4 @@ struct DistanceToNextIntersectionAccumulator
 } // namespace extractor
 } // namespace osrm
 
-#endif /* OSRM_EXTRACTOR_GUIDANCE_NODE_BASED_GRAPH_WALKER */
+#endif

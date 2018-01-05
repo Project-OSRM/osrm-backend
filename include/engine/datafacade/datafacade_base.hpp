@@ -10,11 +10,10 @@
 
 #include "extractor/class_data.hpp"
 #include "extractor/edge_based_node_segment.hpp"
-#include "extractor/original_edge_data.hpp"
 #include "extractor/query_node.hpp"
 #include "extractor/travel_mode.hpp"
+#include "extractor/turn_lane_types.hpp"
 #include "guidance/turn_instruction.hpp"
-#include "guidance/turn_lane_types.hpp"
 
 #include "util/exception.hpp"
 #include "util/guidance/bearing_class.hpp"
@@ -87,8 +86,7 @@ class BaseDataFacade
     // Gets the name of a datasource
     virtual StringView GetDatasourceName(const DatasourceID id) const = 0;
 
-    virtual extractor::guidance::TurnInstruction
-    GetTurnInstructionForEdgeID(const EdgeID id) const = 0;
+    virtual osrm::guidance::TurnInstruction GetTurnInstructionForEdgeID(const EdgeID id) const = 0;
 
     virtual extractor::TravelMode GetTravelMode(const NodeID id) const = 0;
 
@@ -156,7 +154,7 @@ class BaseDataFacade
 
     virtual bool HasLaneData(const EdgeID id) const = 0;
     virtual util::guidance::LaneTupleIdPair GetLaneData(const EdgeID id) const = 0;
-    virtual extractor::guidance::TurnLaneDescription
+    virtual extractor::TurnLaneDescription
     GetTurnDescription(const LaneDescriptionID lane_description_id) const = 0;
 
     virtual NameID GetNameIndex(const NodeID id) const = 0;

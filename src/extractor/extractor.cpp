@@ -196,7 +196,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
                                                     : tbb::task_scheduler_init::automatic);
     BOOST_ASSERT(init.is_active());
 
-    guidance::LaneDescriptionMap turn_lane_map;
+    LaneDescriptionMap turn_lane_map;
     std::vector<TurnRestriction> turn_restrictions;
     std::vector<ConditionalTurnRestriction> conditional_turn_restrictions;
     std::tie(turn_lane_map, turn_restrictions, conditional_turn_restrictions) =
@@ -345,7 +345,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     return 0;
 }
 
-std::tuple<guidance::LaneDescriptionMap,
+std::tuple<LaneDescriptionMap,
            std::vector<TurnRestriction>,
            std::vector<ConditionalTurnRestriction>>
 Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
@@ -394,7 +394,7 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
     // Extraction containers and restriction parser
     ExtractionContainers extraction_containers;
     ExtractorCallbacks::ClassesMap classes_map;
-    guidance::LaneDescriptionMap turn_lane_map;
+    LaneDescriptionMap turn_lane_map;
     auto extractor_callbacks =
         std::make_unique<ExtractorCallbacks>(extraction_containers,
                                              classes_map,
@@ -673,7 +673,7 @@ EdgeID Extractor::BuildEdgeExpandedGraph(
     const std::vector<ConditionalTurnRestriction> &conditional_turn_restrictions,
     const std::unordered_set<EdgeID> &segregated_edges,
     // might have to be updated to add new lane combinations
-    guidance::LaneDescriptionMap &turn_lane_map,
+    LaneDescriptionMap &turn_lane_map,
     // for calculating turn penalties
     ScriptingEnvironment &scripting_environment,
     // output data
@@ -731,9 +731,9 @@ EdgeID Extractor::BuildEdgeExpandedGraph(
 
     {
         std::vector<std::uint32_t> turn_lane_offsets;
-        std::vector<guidance::TurnLaneType::Mask> turn_lane_masks;
+        std::vector<TurnLaneType::Mask> turn_lane_masks;
         std::tie(turn_lane_offsets, turn_lane_masks) =
-            guidance::transformTurnLaneMapIntoArrays(turn_lane_map);
+            transformTurnLaneMapIntoArrays(turn_lane_map);
         files::writeTurnLaneDescriptions(
             config.GetPath(".osrm.tls"), turn_lane_offsets, turn_lane_masks);
     }

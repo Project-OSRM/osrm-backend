@@ -2,8 +2,8 @@
 #define ENGINE_GUIDANCE_ASSEMBLE_STEPS_HPP_
 
 #include "extractor/travel_mode.hpp"
+#include "extractor/turn_lane_types.hpp"
 #include "guidance/turn_instruction.hpp"
-#include "guidance/turn_lane_types.hpp"
 #include "engine/datafacade/datafacade_base.hpp"
 #include "engine/guidance/leg_geometry.hpp"
 #include "engine/guidance/route_step.hpp"
@@ -83,7 +83,7 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
     StepManeuver maneuver{source_node.location,
                           bearings.first,
                           bearings.second,
-                          extractor::guidance::TurnInstruction::NO_TURN(),
+                          osrm::guidance::TurnInstruction::NO_TURN(),
                           WaypointType::Depart,
                           0};
 
@@ -115,7 +115,7 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
             segment_weight += path_point.weight_until_turn;
 
             // all changes to this check have to be matched with assemble_geometry
-            if (path_point.turn_instruction.type != extractor::guidance::TurnType::NoTurn)
+            if (path_point.turn_instruction.type != osrm::guidance::TurnType::NoTurn)
             {
                 BOOST_ASSERT(segment_weight >= 0);
                 const auto name = facade.GetNameForID(step_name_id);
@@ -171,7 +171,7 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
                 intersection.lane_description =
                     path_point.lane_data.second != INVALID_LANE_DESCRIPTIONID
                         ? facade.GetTurnDescription(path_point.lane_data.second)
-                        : extractor::guidance::TurnLaneDescription();
+                        : extractor::TurnLaneDescription();
 
                 // Lanes in turn are bound by total number of lanes at the location
                 BOOST_ASSERT(intersection.lanes.lanes_in_turn <=
@@ -290,7 +290,7 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
     maneuver = {intersection.location,
                 bearings.first,
                 bearings.second,
-                extractor::guidance::TurnInstruction::NO_TURN(),
+                osrm::guidance::TurnInstruction::NO_TURN(),
                 WaypointType::Arrive,
                 0};
 

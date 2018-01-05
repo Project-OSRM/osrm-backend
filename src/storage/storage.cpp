@@ -17,11 +17,12 @@
 #include "extractor/edge_based_edge.hpp"
 #include "extractor/edge_based_node.hpp"
 #include "extractor/files.hpp"
-#include "extractor/original_edge_data.hpp"
 #include "extractor/packed_osm_ids.hpp"
 #include "extractor/profile_properties.hpp"
 #include "extractor/query_node.hpp"
 #include "extractor/travel_mode.hpp"
+
+#include "guidance/files.hpp"
 #include "guidance/turn_instruction.hpp"
 
 #include "partitioner/cell_storage.hpp"
@@ -227,11 +228,11 @@ void Storage::PopulateLayout(DataLayout &layout)
     {
         io::FileReader reader(config.GetPath(".osrm.tls"), io::FileReader::VerifyFingerprint);
         auto num_offsets = reader.ReadVectorSize<std::uint32_t>();
-        auto num_masks = reader.ReadVectorSize<extractor::guidance::TurnLaneType::Mask>();
+        auto num_masks = reader.ReadVectorSize<extractor::TurnLaneType::Mask>();
 
         layout.SetBlockSize<std::uint32_t>(DataLayout::LANE_DESCRIPTION_OFFSETS, num_offsets);
-        layout.SetBlockSize<extractor::guidance::TurnLaneType::Mask>(
-            DataLayout::LANE_DESCRIPTION_MASKS, num_masks);
+        layout.SetBlockSize<extractor::TurnLaneType::Mask>(DataLayout::LANE_DESCRIPTION_MASKS,
+                                                           num_masks);
     }
 
     // Loading information for original edges
@@ -244,8 +245,8 @@ void Storage::PopulateLayout(DataLayout &layout)
                                                          number_of_original_edges);
         layout.SetBlockSize<util::guidance::TurnBearing>(DataLayout::POST_TURN_BEARING,
                                                          number_of_original_edges);
-        layout.SetBlockSize<extractor::guidance::TurnInstruction>(DataLayout::TURN_INSTRUCTION,
-                                                                  number_of_original_edges);
+        layout.SetBlockSize<guidance::TurnInstruction>(DataLayout::TURN_INSTRUCTION,
+                                                       number_of_original_edges);
         layout.SetBlockSize<LaneDataID>(DataLayout::LANE_DATA_ID, number_of_original_edges);
         layout.SetBlockSize<EntryClassID>(DataLayout::ENTRY_CLASSID, number_of_original_edges);
     }
@@ -661,9 +662,9 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
         util::vector_view<std::uint32_t> offsets(
             offsets_ptr, layout.num_entries[storage::DataLayout::LANE_DESCRIPTION_OFFSETS]);
 
-        auto masks_ptr = layout.GetBlockPtr<extractor::guidance::TurnLaneType::Mask, true>(
+        auto masks_ptr = layout.GetBlockPtr<extractor::TurnLaneType::Mask, true>(
             memory_ptr, storage::DataLayout::LANE_DESCRIPTION_MASKS);
-        util::vector_view<extractor::guidance::TurnLaneType::Mask> masks(
+        util::vector_view<extractor::TurnLaneType::Mask> masks(
             masks_ptr, layout.num_entries[storage::DataLayout::LANE_DESCRIPTION_MASKS]);
 
         extractor::files::readTurnLaneDescriptions(config.GetPath(".osrm.tls"), offsets, masks);
@@ -697,10 +698,9 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
         util::vector_view<LaneDataID> lane_data_ids(
             lane_data_id_ptr, layout.num_entries[storage::DataLayout::LANE_DATA_ID]);
 
-        const auto turn_instruction_list_ptr =
-            layout.GetBlockPtr<extractor::guidance::TurnInstruction, true>(
-                memory_ptr, storage::DataLayout::TURN_INSTRUCTION);
-        util::vector_view<extractor::guidance::TurnInstruction> turn_instructions(
+        const auto turn_instruction_list_ptr = layout.GetBlockPtr<guidance::TurnInstruction, true>(
+            memory_ptr, storage::DataLayout::TURN_INSTRUCTION);
+        util::vector_view<guidance::TurnInstruction> turn_instructions(
             turn_instruction_list_ptr, layout.num_entries[storage::DataLayout::TURN_INSTRUCTION]);
 
         const auto entry_class_id_list_ptr =
@@ -718,13 +718,13 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
         util::vector_view<util::guidance::TurnBearing> post_turn_bearings(
             post_turn_bearing_ptr, layout.num_entries[storage::DataLayout::POST_TURN_BEARING]);
 
-        extractor::TurnDataView turn_data(std::move(turn_instructions),
-                                          std::move(lane_data_ids),
-                                          std::move(entry_class_ids),
-                                          std::move(pre_turn_bearings),
-                                          std::move(post_turn_bearings));
+        guidance::TurnDataView turn_data(std::move(turn_instructions),
+                                         std::move(lane_data_ids),
+                                         std::move(entry_class_ids),
+                                         std::move(pre_turn_bearings),
+                                         std::move(post_turn_bearings));
 
-        extractor::files::readTurnData(config.GetPath(".osrm.edges"), turn_data);
+        guidance::files::readTurnData(config.GetPath(".osrm.edges"), turn_data);
     }
 
     // load compressed geometry

@@ -1,11 +1,11 @@
-#ifndef OSRM_EXTRACTOR_GUIDANCE_TURN_LANE_HANDLER_HPP_
-#define OSRM_EXTRACTOR_GUIDANCE_TURN_LANE_HANDLER_HPP_
+#ifndef OSRM_GUIDANCE_TURN_LANE_HANDLER_HPP_
+#define OSRM_GUIDANCE_TURN_LANE_HANDLER_HPP_
 
 #include "extractor/query_node.hpp"
+#include "extractor/turn_lane_types.hpp"
 #include "guidance/intersection.hpp"
 #include "guidance/turn_analysis.hpp"
 #include "guidance/turn_lane_data.hpp"
-#include "guidance/turn_lane_types.hpp"
 
 #include "util/attributes.hpp"
 #include "util/guidance/turn_lanes.hpp"
@@ -22,8 +22,6 @@
 #include <vector>
 
 namespace osrm
-{
-namespace extractor
 {
 namespace guidance
 {
@@ -73,13 +71,13 @@ class TurnLaneHandler
     typedef std::vector<TurnLaneData> LaneDataVector;
 
     TurnLaneHandler(const util::NodeBasedDynamicGraph &node_based_graph,
-                    const EdgeBasedNodeDataContainer &node_data_container,
+                    const extractor::EdgeBasedNodeDataContainer &node_data_container,
                     const std::vector<util::Coordinate> &node_coordinates,
                     const extractor::CompressedEdgeContainer &compressed_geometries,
-                    const RestrictionMap &node_restriction_map,
+                    const extractor::RestrictionMap &node_restriction_map,
                     const std::unordered_set<NodeID> &barrier_nodes,
-                    const guidance::TurnLanesIndexedArray &turn_lanes_data,
-                    LaneDescriptionMap &lane_description_map,
+                    const extractor::TurnLanesIndexedArray &turn_lanes_data,
+                    extractor::LaneDescriptionMap &lane_description_map,
                     const TurnAnalysis &turn_analysis,
                     util::guidance::LaneDataIdMap &id_map);
 
@@ -94,16 +92,16 @@ class TurnLaneHandler
     // we need to be able to look at previous intersections to, in some cases, find the correct turn
     // lanes for a turn
     const util::NodeBasedDynamicGraph &node_based_graph;
-    const EdgeBasedNodeDataContainer &node_data_container;
+    const extractor::EdgeBasedNodeDataContainer &node_data_container;
     const std::vector<util::Coordinate> &node_coordinates;
     const extractor::CompressedEdgeContainer &compressed_geometries;
-    const RestrictionMap &node_restriction_map;
+    const extractor::RestrictionMap &node_restriction_map;
     const std::unordered_set<NodeID> &barrier_nodes;
-    const guidance::TurnLanesIndexedArray &turn_lanes_data;
+    const extractor::TurnLanesIndexedArray &turn_lanes_data;
 
     std::vector<std::uint32_t> turn_lane_offsets;
-    std::vector<TurnLaneType::Mask> turn_lane_masks;
-    LaneDescriptionMap &lane_description_map;
+    std::vector<extractor::TurnLaneType::Mask> turn_lane_masks;
+    extractor::LaneDescriptionMap &lane_description_map;
     const TurnAnalysis &turn_analysis;
     util::guidance::LaneDataIdMap &id_map;
 
@@ -155,7 +153,6 @@ static_assert(sizeof(scenario_names) / sizeof(*scenario_names) == TurnLaneScenar
 
 } // namespace lanes
 } // namespace guidance
-} // namespace extractor
 } // namespace osrm
 
 #endif // OSRM_EXTRACTOR_GUIDANCE_TURN_LANE_HANDLER_HPP_

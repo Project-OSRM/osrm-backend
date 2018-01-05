@@ -19,8 +19,6 @@ namespace osrm
 {
 namespace extractor
 {
-namespace guidance
-{
 
 namespace TurnLaneType
 {
@@ -95,9 +93,7 @@ struct TurnLaneDescription_hash
     }
 };
 
-typedef util::ConcurrentIDMap<guidance::TurnLaneDescription,
-                              LaneDescriptionID,
-                              guidance::TurnLaneDescription_hash>
+typedef util::ConcurrentIDMap<TurnLaneDescription, LaneDescriptionID, TurnLaneDescription_hash>
     LaneDescriptionMap;
 
 using TurnLanesIndexedArray =
@@ -121,7 +117,7 @@ inline TurnLanesIndexedArray transformTurnLaneMapIntoArrays(const LaneDescriptio
     std::partial_sum(turn_lane_offsets.begin(), turn_lane_offsets.end(), turn_lane_offsets.begin());
 
     // allocate the current masks
-    std::vector<guidance::TurnLaneType::Mask> turn_lane_masks(turn_lane_offsets.back());
+    std::vector<TurnLaneType::Mask> turn_lane_masks(turn_lane_offsets.back());
     for (auto entry = turn_lane_map.data.begin(); entry != turn_lane_map.data.end(); ++entry)
         std::copy(entry->first.begin(),
                   entry->first.end(),
@@ -130,7 +126,6 @@ inline TurnLanesIndexedArray transformTurnLaneMapIntoArrays(const LaneDescriptio
     return std::make_tuple(std::move(turn_lane_offsets), std::move(turn_lane_masks));
 }
 
-} // guidance
 } // extractor
 } // osrm
 

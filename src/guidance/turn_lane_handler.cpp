@@ -17,12 +17,12 @@ using osrm::util::angularDeviation;
 
 namespace osrm
 {
-namespace extractor
-{
 namespace guidance
 {
 namespace lanes
 {
+namespace TurnLaneType = extractor::TurnLaneType;
+using TurnLaneDescription = extractor::TurnLaneDescription;
 
 namespace
 {
@@ -35,13 +35,13 @@ std::size_t getNumberOfTurns(const Intersection &intersection)
 } // namespace
 
 TurnLaneHandler::TurnLaneHandler(const util::NodeBasedDynamicGraph &node_based_graph,
-                                 const EdgeBasedNodeDataContainer &node_data_container,
+                                 const extractor::EdgeBasedNodeDataContainer &node_data_container,
                                  const std::vector<util::Coordinate> &node_coordinates,
                                  const extractor::CompressedEdgeContainer &compressed_geometries,
-                                 const RestrictionMap &node_restriction_map,
+                                 const extractor::RestrictionMap &node_restriction_map,
                                  const std::unordered_set<NodeID> &barrier_nodes,
-                                 const guidance::TurnLanesIndexedArray &turn_lanes_data,
-                                 LaneDescriptionMap &lane_description_map,
+                                 const extractor::TurnLanesIndexedArray &turn_lanes_data,
+                                 extractor::LaneDescriptionMap &lane_description_map,
                                  const TurnAnalysis &turn_analysis,
                                  util::guidance::LaneDataIdMap &id_map)
     : node_based_graph(node_based_graph), node_data_container(node_data_container),
@@ -209,7 +209,7 @@ TurnLaneScenario TurnLaneHandler::deduceScenario(const NodeID at,
     // Due to sliproads, we might need access to the previous intersection at this point already;
     previous_node = SPECIAL_NODEID;
     previous_via_edge = SPECIAL_EDGEID;
-    IntersectionView previous_intersection_view;
+    extractor::intersection::IntersectionView previous_intersection_view;
     if (findPreviousIntersection(at,
                                  via_edge,
                                  intersection,
@@ -575,14 +575,14 @@ std::pair<LaneDataVector, LaneDataVector> TurnLaneHandler::partitionLaneData(
     const auto next_intersection = turn_analysis.AssignTurnTypes(
         at,
         straightmost->eid,
-        intersection::getConnectedRoads<false>(node_based_graph,
-                                               node_data_container,
-                                               node_coordinates,
-                                               compressed_geometries,
-                                               node_restriction_map,
-                                               barrier_nodes,
-                                               turn_lanes_data,
-                                               {at, straightmost->eid}));
+        extractor::intersection::getConnectedRoads<false>(node_based_graph,
+                                                          node_data_container,
+                                                          node_coordinates,
+                                                          compressed_geometries,
+                                                          node_restriction_map,
+                                                          barrier_nodes,
+                                                          turn_lanes_data,
+                                                          {at, straightmost->eid}));
 
     // check where we can match turn lanes
     std::size_t straightmost_tag_index = turn_lane_data.size();
@@ -815,5 +815,4 @@ Intersection TurnLaneHandler::handleSliproadTurn(Intersection intersection,
 
 } // namespace lanes
 } // namespace guidance
-} // namespace extractor
 } // namespace osrm

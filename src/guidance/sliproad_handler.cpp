@@ -12,25 +12,23 @@
 
 #include <boost/assert.hpp>
 
-using osrm::extractor::guidance::getTurnDirection;
+using osrm::guidance::getTurnDirection;
 using osrm::util::angularDeviation;
 
 namespace osrm
-{
-namespace extractor
 {
 namespace guidance
 {
 
 SliproadHandler::SliproadHandler(const util::NodeBasedDynamicGraph &node_based_graph,
-                                 const EdgeBasedNodeDataContainer &node_data_container,
+                                 const extractor::EdgeBasedNodeDataContainer &node_data_container,
                                  const std::vector<util::Coordinate> &node_coordinates,
                                  const extractor::CompressedEdgeContainer &compressed_geometries,
-                                 const RestrictionMap &node_restriction_map,
+                                 const extractor::RestrictionMap &node_restriction_map,
                                  const std::unordered_set<NodeID> &barrier_nodes,
-                                 const guidance::TurnLanesIndexedArray &turn_lanes_data,
+                                 const extractor::TurnLanesIndexedArray &turn_lanes_data,
                                  const util::NameTable &name_table,
-                                 const SuffixTable &street_name_suffix_table)
+                                 const extractor::SuffixTable &street_name_suffix_table)
     : IntersectionHandler(node_based_graph,
                           node_data_container,
                           node_coordinates,
@@ -250,15 +248,16 @@ operator()(const NodeID /*nid*/, const EdgeID source_edge_id, Intersection inter
 
         // Starting out at the intersection and going onto the Sliproad we skip artificial
         // degree two intersections and limit the max hop count in doing so.
-        IntersectionFinderAccumulator intersection_finder{10,
-                                                          node_based_graph,
-                                                          node_data_container,
-                                                          node_coordinates,
-                                                          compressed_geometries,
-                                                          node_restriction_map,
-                                                          barrier_nodes,
-                                                          turn_lanes_data};
-        const SkipTrafficSignalBarrierRoadSelector road_selector{};
+        extractor::intersection::IntersectionFinderAccumulator intersection_finder{
+            10,
+            node_based_graph,
+            node_data_container,
+            node_coordinates,
+            compressed_geometries,
+            node_restriction_map,
+            barrier_nodes,
+            turn_lanes_data};
+        const extractor::intersection::SkipTrafficSignalBarrierRoadSelector road_selector{};
         (void)graph_walker.TraverseRoad(intersection_node_id, // start node
                                         sliproad_edge,        // onto edge
                                         intersection_finder,  // accumulator
@@ -269,7 +268,7 @@ operator()(const NodeID /*nid*/, const EdgeID source_edge_id, Intersection inter
         if (target_intersection.isDeadEnd())
             continue;
 
-        const auto find_valid = [](const IntersectionView &view) {
+        const auto find_valid = [](const extractor::intersection::IntersectionView &view) {
             // according to our current sliproad idea, there should only be one valid turn
             auto itr = std::find_if(
                 view.begin(), view.end(), [](const auto &road) { return road.entry_allowed; });
@@ -353,12 +352,13 @@ operator()(const NodeID /*nid*/, const EdgeID source_edge_id, Intersection inter
             auto index_of_sliproad_in_target_intersection =
                 sliproad_in_target_intersection - target_intersection.begin();
 
-            if (isThroughStreet<IntersectionView>(index_of_sliproad_in_target_intersection,
-                                                  target_intersection,
-                                                  node_based_graph,
-                                                  node_data_container,
-                                                  name_table,
-                                                  street_name_suffix_table))
+            if (isThroughStreet<extractor::intersection::IntersectionView>(
+                    index_of_sliproad_in_target_intersection,
+                    target_intersection,
+                    node_based_graph,
+                    node_data_container,
+                    name_table,
+                    street_name_suffix_table))
             {
                 continue;
             }
@@ -573,15 +573,16 @@ operator()(const NodeID /*nid*/, const EdgeID source_edge_id, Intersection inter
             }
             else
             {
-                const auto skip_traffic_light_intersection = intersection::getConnectedRoads<false>(
-                    node_based_graph,
-                    node_data_container,
-                    node_coordinates,
-                    compressed_geometries,
-                    node_restriction_map,
-                    barrier_nodes,
-                    turn_lanes_data,
-                    {node_based_graph.GetTarget(sliproad_edge), candidate_road.eid});
+                const auto skip_traffic_light_intersection =
+                    extractor::intersection::getConnectedRoads<false>(
+                        node_based_graph,
+                        node_data_container,
+                        node_coordinates,
+                        compressed_geometries,
+                        node_restriction_map,
+                        barrier_nodes,
+                        turn_lanes_data,
+                        {node_based_graph.GetTarget(sliproad_edge), candidate_road.eid});
                 if (skip_traffic_light_intersection.isTrafficSignalOrBarrier() &&
                     node_based_graph.GetTarget(skip_traffic_light_intersection[1].eid) ==
                         main_road_intersection->node)
@@ -695,9 +696,9 @@ bool SliproadHandler::nextIntersectionIsTooFarAway(const NodeID start, const Edg
     const auto threshold = scaledThresholdByRoadClass(MAX_SLIPROAD_THRESHOLD, // <- scales down
                                                       data.road_classification);
 
-    DistanceToNextIntersectionAccumulator accumulator{
+    extractor::intersection::DistanceToNextIntersectionAccumulator accumulator{
         coordinate_extractor, node_based_graph, threshold};
-    const SkipTrafficSignalBarrierRoadSelector selector{};
+    const extractor::intersection::SkipTrafficSignalBarrierRoadSelector selector{};
 
     (void)graph_walker.TraverseRoad(start, onto, accumulator, selector);
 
@@ -755,9 +756,10 @@ bool SliproadHandler::isValidSliproadArea(const double max_area,
     return true;
 }
 
-bool SliproadHandler::isValidSliproadLink(const IntersectionViewData &sliproad,
-                                          const IntersectionViewData & /*first*/,
-                                          const IntersectionViewData &second) const
+bool SliproadHandler::isValidSliproadLink(
+    const extractor::intersection::IntersectionViewData &sliproad,
+    const extractor::intersection::IntersectionViewData & /*first*/,
+    const extractor::intersection::IntersectionViewData &second) const
 {
     // If the Sliproad is not a link we don't care
     const auto &sliproad_data = node_based_graph.GetEdgeData(sliproad.eid).flags;
@@ -791,7 +793,8 @@ bool SliproadHandler::allSameMode(const EdgeID from,
            (target_annotation.travel_mode == sliproad_annotation.travel_mode);
 }
 
-bool SliproadHandler::canBeTargetOfSliproad(const IntersectionView &intersection)
+bool SliproadHandler::canBeTargetOfSliproad(
+    const extractor::intersection::IntersectionView &intersection)
 {
     // Example to handle:
     //       .
@@ -819,44 +822,45 @@ bool SliproadHandler::canBeTargetOfSliproad(const IntersectionView &intersection
     return true;
 }
 
-double SliproadHandler::scaledThresholdByRoadClass(const double max_threshold,
-                                                   const RoadClassification &classification)
+double
+SliproadHandler::scaledThresholdByRoadClass(const double max_threshold,
+                                            const extractor::RoadClassification &classification)
 {
     double factor = 1.0;
 
     switch (classification.GetPriority())
     {
-    case RoadPriorityClass::MOTORWAY:
+    case extractor::RoadPriorityClass::MOTORWAY:
         factor = 1.0;
         break;
-    case RoadPriorityClass::TRUNK:
+    case extractor::RoadPriorityClass::TRUNK:
         factor = 0.8;
         break;
-    case RoadPriorityClass::PRIMARY:
+    case extractor::RoadPriorityClass::PRIMARY:
         factor = 0.8;
         break;
-    case RoadPriorityClass::SECONDARY:
+    case extractor::RoadPriorityClass::SECONDARY:
         factor = 0.6;
         break;
-    case RoadPriorityClass::TERTIARY:
+    case extractor::RoadPriorityClass::TERTIARY:
         factor = 0.5;
         break;
-    case RoadPriorityClass::MAIN_RESIDENTIAL:
+    case extractor::RoadPriorityClass::MAIN_RESIDENTIAL:
         factor = 0.4;
         break;
-    case RoadPriorityClass::SIDE_RESIDENTIAL:
+    case extractor::RoadPriorityClass::SIDE_RESIDENTIAL:
         factor = 0.3;
         break;
-    case RoadPriorityClass::LINK_ROAD:
+    case extractor::RoadPriorityClass::LINK_ROAD:
         factor = 0.3;
         break;
-    case RoadPriorityClass::CONNECTIVITY:
+    case extractor::RoadPriorityClass::CONNECTIVITY:
         factor = 0.1;
         break;
 
     // What
-    case RoadPriorityClass::BIKE_PATH:
-    case RoadPriorityClass::FOOT_PATH:
+    case extractor::RoadPriorityClass::BIKE_PATH:
+    case extractor::RoadPriorityClass::FOOT_PATH:
     default:
         factor = 0.1;
     }
@@ -868,5 +872,4 @@ double SliproadHandler::scaledThresholdByRoadClass(const double max_threshold,
 }
 
 } // namespace guidance
-} // namespace extractor
 } // namespace osrm

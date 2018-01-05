@@ -42,7 +42,7 @@ struct PathData
     // will contain the duration of the turn.  Otherwise it will be 0.
     EdgeWeight duration_of_turn;
     // instruction to execute at the turn
-    extractor::guidance::TurnInstruction turn_instruction;
+    osrm::guidance::TurnInstruction turn_instruction;
     // turn lane data
     util::guidance::LaneTupleIdPair lane_data;
     // travel mode of the street that leads to the turn

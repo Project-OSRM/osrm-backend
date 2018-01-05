@@ -2,11 +2,11 @@
 #define OSRM_EXTRACTOR_GUIDANCE_MERGEABLE_ROADS
 
 #include "extractor/compressed_edge_container.hpp"
+#include "extractor/intersection/coordinate_extractor.hpp"
+#include "extractor/intersection/have_identical_names.hpp"
 #include "extractor/restriction_index.hpp"
-#include "guidance/have_identical_names.hpp"
-#include "guidance/coordinate_extractor.hpp"
+#include "extractor/turn_lane_types.hpp"
 #include "guidance/intersection.hpp"
-#include "guidance/turn_lane_types.hpp"
 #include "util/coordinate.hpp"
 #include "util/node_based_graph.hpp"
 #include "util/typedefs.hpp"
@@ -31,7 +31,7 @@ namespace extractor
 
 class SuffixTable;
 
-namespace guidance
+namespace intersection
 {
 class IntersectionGenerator;
 class CoordinateExtractor;
@@ -48,7 +48,7 @@ class MergableRoadDetector
                          const extractor::CompressedEdgeContainer &compressed_geometries,
                          const RestrictionMap &node_restriction_map,
                          const std::unordered_set<NodeID> &barrier_nodes,
-                         const guidance::TurnLanesIndexedArray &turn_lanes_data,
+                         const TurnLanesIndexedArray &turn_lanes_data,
                          const util::NameTable &name_table,
                          const SuffixTable &street_name_suffix_table);
 
@@ -165,7 +165,7 @@ class MergableRoadDetector
     const extractor::CompressedEdgeContainer &compressed_geometries;
     const RestrictionMap &node_restriction_map;
     const std::unordered_set<NodeID> &barrier_nodes;
-    const guidance::TurnLanesIndexedArray &turn_lanes_data;
+    const TurnLanesIndexedArray &turn_lanes_data;
 
     // name detection
     const util::NameTable &name_table;

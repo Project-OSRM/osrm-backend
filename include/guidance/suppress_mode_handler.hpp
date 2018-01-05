@@ -1,15 +1,11 @@
-#ifndef OSRM_EXTRACTOR_GUIDANCE_SUPPRESS_MODE_HANDLER_HPP_
-#define OSRM_EXTRACTOR_GUIDANCE_SUPPRESS_MODE_HANDLER_HPP_
+#ifndef OSRM_GUIDANCE_SUPPRESS_MODE_HANDLER_HPP_
+#define OSRM_GUIDANCE_SUPPRESS_MODE_HANDLER_HPP_
 
-#include "extractor/travel_mode.hpp"
-#include "guidance/constants.hpp"
 #include "guidance/intersection.hpp"
 #include "guidance/intersection_handler.hpp"
 #include "util/node_based_graph.hpp"
 
 namespace osrm
-{
-namespace extractor
 {
 namespace guidance
 {
@@ -21,14 +17,14 @@ class SuppressModeHandler final : public IntersectionHandler
 {
   public:
     SuppressModeHandler(const util::NodeBasedDynamicGraph &node_based_graph,
-                        const EdgeBasedNodeDataContainer &node_data_container,
+                        const extractor::EdgeBasedNodeDataContainer &node_data_container,
                         const std::vector<util::Coordinate> &coordinates,
                         const extractor::CompressedEdgeContainer &compressed_geometries,
-                        const RestrictionMap &node_restriction_map,
+                        const extractor::RestrictionMap &node_restriction_map,
                         const std::unordered_set<NodeID> &barrier_nodes,
-                        const guidance::TurnLanesIndexedArray &turn_lanes_data,
+                        const extractor::TurnLanesIndexedArray &turn_lanes_data,
                         const util::NameTable &name_table,
-                        const SuffixTable &street_name_suffix_table);
+                        const extractor::SuffixTable &street_name_suffix_table);
 
     ~SuppressModeHandler() override final = default;
 
@@ -41,8 +37,7 @@ class SuppressModeHandler final : public IntersectionHandler
                             Intersection intersection) const override final;
 };
 
-} // namespace osrm
-} // namespace extractor
 } // namespace guidance
+} // namespace osrm
 
-#endif /* OSRM_EXTRACTOR_GUIDANCE_SUPPRESS_MODE_HANDLER_HPP_ */
+#endif /* OSRM_GUIDANCE_SUPPRESS_MODE_HANDLER_HPP_ */

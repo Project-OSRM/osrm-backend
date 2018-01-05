@@ -19,9 +19,9 @@
 #include <utility>
 #include <vector>
 
-namespace TurnType = osrm::extractor::guidance::TurnType;
-namespace DirectionModifier = osrm::extractor::guidance::DirectionModifier;
-using TurnInstruction = osrm::extractor::guidance::TurnInstruction;
+namespace TurnType = osrm::guidance::TurnType;
+namespace DirectionModifier = osrm::guidance::DirectionModifier;
+using TurnInstruction = osrm::guidance::TurnInstruction;
 
 namespace osrm
 {
@@ -56,7 +56,7 @@ util::json::Array lanesFromIntersection(const guidance::IntermediateIntersection
     {
         --lane_id;
         util::json::Object lane;
-        lane.values["indications"] = extractor::guidance::TurnLaneType::toJsonArray(lane_desc);
+        lane.values["indications"] = extractor::TurnLaneType::toJsonArray(lane_desc);
         if (lane_id >= intersection.lanes.first_lane_from_the_right &&
             lane_id <
                 intersection.lanes.first_lane_from_the_right + intersection.lanes.lanes_in_turn)
@@ -97,7 +97,7 @@ util::json::Object makeStepManeuver(const guidance::StepManeuver &maneuver)
     std::string maneuver_type;
 
     if (maneuver.waypoint_type == guidance::WaypointType::None)
-        maneuver_type = extractor::guidance::instructionTypeToString(maneuver.instruction.type);
+        maneuver_type = osrm::guidance::instructionTypeToString(maneuver.instruction.type);
     else
         maneuver_type = detail::waypointTypeToString(maneuver.waypoint_type);
 
@@ -107,8 +107,8 @@ util::json::Object makeStepManeuver(const guidance::StepManeuver &maneuver)
     step_maneuver.values["type"] = std::move(maneuver_type);
 
     if (detail::isValidModifier(maneuver))
-        step_maneuver.values["modifier"] = extractor::guidance::instructionModifierToString(
-            maneuver.instruction.direction_modifier);
+        step_maneuver.values["modifier"] =
+            osrm::guidance::instructionModifierToString(maneuver.instruction.direction_modifier);
 
     step_maneuver.values["location"] = detail::coordinateToLonLat(maneuver.location);
     step_maneuver.values["bearing_before"] = detail::roundAndClampBearing(maneuver.bearing_before);

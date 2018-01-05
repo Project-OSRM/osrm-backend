@@ -11,8 +11,8 @@
 BOOST_AUTO_TEST_SUITE(intersection_analysis_tests)
 
 using namespace osrm;
+using namespace osrm::guidance;
 using namespace osrm::extractor;
-using namespace osrm::extractor::guidance;
 using namespace osrm::extractor::intersection;
 using InputEdge = util::NodeBasedDynamicGraph::InputEdge;
 using Graph = util::NodeBasedDynamicGraph;

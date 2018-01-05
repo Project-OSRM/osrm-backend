@@ -11,8 +11,6 @@
 
 namespace osrm
 {
-namespace extractor
-{
 namespace guidance
 {
 
@@ -20,7 +18,6 @@ std::pair<util::guidance::EntryClass, util::guidance::BearingClass>
 classifyIntersection(Intersection intersection, const osrm::util::Coordinate &location);
 
 } // namespace guidance
-} // namespace extractor
 } // namespace osrm
 
 #endif // OSRM_GUIDANCE_TURN_CLASSIFICATION_HPP_

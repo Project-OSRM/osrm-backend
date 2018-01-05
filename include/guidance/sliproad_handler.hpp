@@ -1,7 +1,6 @@
-#ifndef OSRM_EXTRACTOR_GUIDANCE_SLIPROAD_HANDLER_HPP_
-#define OSRM_EXTRACTOR_GUIDANCE_SLIPROAD_HANDLER_HPP_
+#ifndef OSRM_GUIDANCE_SLIPROAD_HANDLER_HPP_
+#define OSRM_GUIDANCE_SLIPROAD_HANDLER_HPP_
 
-#include "extractor/query_node.hpp"
 #include "guidance/intersection.hpp"
 #include "guidance/intersection_handler.hpp"
 #include "guidance/is_through_street.hpp"
@@ -15,8 +14,6 @@
 
 namespace osrm
 {
-namespace extractor
-{
 namespace guidance
 {
 
@@ -25,14 +22,14 @@ class SliproadHandler final : public IntersectionHandler
 {
   public:
     SliproadHandler(const util::NodeBasedDynamicGraph &node_based_graph,
-                    const EdgeBasedNodeDataContainer &node_data_container,
+                    const extractor::EdgeBasedNodeDataContainer &node_data_container,
                     const std::vector<util::Coordinate> &coordinates,
                     const extractor::CompressedEdgeContainer &compressed_geometries,
-                    const RestrictionMap &node_restriction_map,
+                    const extractor::RestrictionMap &node_restriction_map,
                     const std::unordered_set<NodeID> &barrier_nodes,
-                    const guidance::TurnLanesIndexedArray &turn_lanes_data,
+                    const extractor::TurnLanesIndexedArray &turn_lanes_data,
                     const util::NameTable &name_table,
-                    const SuffixTable &street_name_suffix_table);
+                    const extractor::SuffixTable &street_name_suffix_table);
 
     ~SliproadHandler() override final = default;
 
@@ -61,9 +58,9 @@ class SliproadHandler final : public IntersectionHandler
     bool isValidSliproadArea(const double max_area, const NodeID, const NodeID, const NodeID) const;
 
     // Is the Sliproad a link the both roads it shortcuts must not be links
-    bool isValidSliproadLink(const IntersectionViewData &sliproad,
-                             const IntersectionViewData &first,
-                             const IntersectionViewData &second) const;
+    bool isValidSliproadLink(const extractor::intersection::IntersectionViewData &sliproad,
+                             const extractor::intersection::IntersectionViewData &first,
+                             const extractor::intersection::IntersectionViewData &second) const;
 
     // check if no mode changes are involved
     bool allSameMode(const EdgeID in_road,
@@ -71,19 +68,19 @@ class SliproadHandler final : public IntersectionHandler
                      const EdgeID target_road) const;
 
     // Could a Sliproad reach this intersection?
-    static bool canBeTargetOfSliproad(const IntersectionView &intersection);
+    static bool
+    canBeTargetOfSliproad(const extractor::intersection::IntersectionView &intersection);
 
     // Scales a threshold based on the underlying road classification.
     // Example: a 100 m threshold for a highway if different on living streets.
     // The return value is guaranteed to not be larger than `threshold`.
     static double scaledThresholdByRoadClass(const double max_threshold,
-                                             const RoadClassification &classification);
+                                             const extractor::RoadClassification &classification);
 
-    const CoordinateExtractor coordinate_extractor;
+    const extractor::intersection::CoordinateExtractor coordinate_extractor;
 };
 
 } // namespace guidance
-} // namespace extractor
 } // namespace osrm
 
-#endif /*OSRM_EXTRACTOR_GUIDANCE_SLIPROAD_HANDLER_HPP_*/
+#endif /*OSRM_GUIDANCE_SLIPROAD_HANDLER_HPP_*/

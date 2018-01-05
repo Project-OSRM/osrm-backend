@@ -1,14 +1,12 @@
-#ifndef OSRM_EXTRACTOR_GUIDANCE_TURN_LANE_DATA_HPP_
-#define OSRM_EXTRACTOR_GUIDANCE_TURN_LANE_DATA_HPP_
+#ifndef OSRM_GUIDANCE_TURN_LANE_DATA_HPP_
+#define OSRM_GUIDANCE_TURN_LANE_DATA_HPP_
 
-#include "guidance/turn_lane_types.hpp"
+#include "extractor/turn_lane_types.hpp"
 #include "util/attributes.hpp"
 #include "util/typedefs.hpp"
 #include <vector>
 
 namespace osrm
-{
-namespace extractor
 {
 namespace guidance
 {
@@ -17,7 +15,7 @@ namespace lanes
 
 struct TurnLaneData
 {
-    TurnLaneType::Mask tag;
+    extractor::TurnLaneType::Mask tag;
     LaneID from;
     LaneID to;
 
@@ -30,18 +28,18 @@ typedef std::vector<TurnLaneData> LaneDataVector;
 
 // convertes a string given in the OSM format into a TurnLaneData vector
 OSRM_ATTR_WARN_UNUSED
-LaneDataVector laneDataFromDescription(TurnLaneDescription turn_lane_description);
+LaneDataVector laneDataFromDescription(extractor::TurnLaneDescription turn_lane_description);
 
 // Locate A Tag in a lane data vector (if multiple tags are set, the first one found is returned)
-LaneDataVector::const_iterator findTag(const TurnLaneType::Mask tag, const LaneDataVector &data);
-LaneDataVector::iterator findTag(const TurnLaneType::Mask tag, LaneDataVector &data);
+LaneDataVector::const_iterator findTag(const extractor::TurnLaneType::Mask tag,
+                                       const LaneDataVector &data);
+LaneDataVector::iterator findTag(const extractor::TurnLaneType::Mask tag, LaneDataVector &data);
 
 // Returns true if any of the queried tags is contained
-bool hasTag(const TurnLaneType::Mask tag, const LaneDataVector &data);
+bool hasTag(const extractor::TurnLaneType::Mask tag, const LaneDataVector &data);
 } // namespace lane_data_generation
 
 } // namespace guidance
-} // namespace extractor
 } // namespace osrm
 
-#endif /* OSRM_EXTRACTOR_GUIDANCE_TURN_LANE_DATA_HPP_ */
+#endif /* OSRM_GUIDANCE_TURN_LANE_DATA_HPP_ */

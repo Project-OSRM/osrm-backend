@@ -23,20 +23,15 @@
 #include <limits>
 #include <utility>
 
-using osrm::util::angularDeviation;
-using osrm::extractor::guidance::getTurnDirection;
-using osrm::extractor::guidance::hasRampType;
-using osrm::extractor::guidance::mirrorDirectionModifier;
-using osrm::extractor::guidance::bearingToDirectionModifier;
-
-using RouteStepIterator = std::vector<osrm::engine::guidance::RouteStep>::iterator;
-
 namespace osrm
 {
 namespace engine
 {
 namespace guidance
 {
+using namespace osrm::guidance;
+
+using RouteStepIterator = std::vector<osrm::engine::guidance::RouteStep>::iterator;
 
 namespace
 {
@@ -465,7 +460,7 @@ std::vector<RouteStep> assignRelativeLocations(std::vector<RouteStep> steps,
                 distance_to_start <= MAXIMAL_RELATIVE_DISTANCE
             ? bearingToDirectionModifier(util::coordinate_calculation::computeAngle(
                   source_node.input_location, leg_geometry.locations[0], leg_geometry.locations[1]))
-            : extractor::guidance::DirectionModifier::UTurn;
+            : DirectionModifier::UTurn;
 
     steps.front().maneuver.instruction.direction_modifier = initial_modifier;
 
@@ -478,7 +473,7 @@ std::vector<RouteStep> assignRelativeLocations(std::vector<RouteStep> steps,
                   leg_geometry.locations[leg_geometry.locations.size() - 2],
                   leg_geometry.locations[leg_geometry.locations.size() - 1],
                   target_node.input_location))
-            : extractor::guidance::DirectionModifier::UTurn;
+            : DirectionModifier::UTurn;
 
     steps.back().maneuver.instruction.direction_modifier = final_modifier;
 

@@ -1,5 +1,5 @@
-#ifndef OSRM_EXTRACTOR_GUIDANCE_TURN_DISCOVERY_HPP_
-#define OSRM_EXTRACTOR_GUIDANCE_TURN_DISCOVERY_HPP_
+#ifndef OSRM_GUIDANCE_TURN_DISCOVERY_HPP_
+#define OSRM_GUIDANCE_TURN_DISCOVERY_HPP_
 
 #include "extractor/restriction_index.hpp"
 #include "guidance/intersection.hpp"
@@ -17,8 +17,8 @@ struct Coordinate;
 
 namespace extractor
 {
-
 class CompressedEdgeContainer;
+}
 
 namespace guidance
 {
@@ -34,20 +34,19 @@ bool findPreviousIntersection(
     const EdgeID via_edge,
     const Intersection &intersection,
     const util::NodeBasedDynamicGraph &node_based_graph, // query edge data
-    const EdgeBasedNodeDataContainer &node_data_container,
+    const extractor::EdgeBasedNodeDataContainer &node_data_container,
     const std::vector<util::Coordinate> &node_coordinates,
     const extractor::CompressedEdgeContainer &compressed_geometries,
-    const RestrictionMap &node_restriction_map,
+    const extractor::RestrictionMap &node_restriction_map,
     const std::unordered_set<NodeID> &barrier_nodes,
-    const guidance::TurnLanesIndexedArray &turn_lanes_data,
+    const extractor::TurnLanesIndexedArray &turn_lanes_data,
     // output parameters, will be in an arbitrary state on failure
     NodeID &result_node,
     EdgeID &result_via_edge,
-    IntersectionView &result_intersection);
+    extractor::intersection::IntersectionView &result_intersection);
 
 } // namespace lanes
 } // namespace guidance
-} // namespace extractor
 } // namespace osrm
 
-#endif /*OSRM_EXTRACTOR_GUIDANCE_TURN_DISCOVERY_HPP_*/
+#endif /*OSRM_GUIDANCE_TURN_DISCOVERY_HPP_*/

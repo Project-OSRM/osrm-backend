@@ -1,6 +1,6 @@
 #include "guidance/turn_analysis.hpp"
+#include "extractor/road_classification.hpp"
 #include "guidance/constants.hpp"
-#include "guidance/road_classification.hpp"
 
 #include "util/coordinate.hpp"
 #include "util/coordinate_calculation.hpp"
@@ -10,11 +10,9 @@
 #include <unordered_set>
 #include <utility>
 
-using osrm::extractor::guidance::getTurnDirection;
+using osrm::guidance::getTurnDirection;
 
 namespace osrm
-{
-namespace extractor
 {
 namespace guidance
 {
@@ -22,14 +20,14 @@ namespace guidance
 using EdgeData = util::NodeBasedDynamicGraph::EdgeData;
 
 TurnAnalysis::TurnAnalysis(const util::NodeBasedDynamicGraph &node_based_graph,
-                           const EdgeBasedNodeDataContainer &node_data_container,
+                           const extractor::EdgeBasedNodeDataContainer &node_data_container,
                            const std::vector<util::Coordinate> &node_coordinates,
-                           const CompressedEdgeContainer &compressed_edge_container,
-                           const RestrictionMap &restriction_map,
+                           const extractor::CompressedEdgeContainer &compressed_edge_container,
+                           const extractor::RestrictionMap &restriction_map,
                            const std::unordered_set<NodeID> &barrier_nodes,
-                           const guidance::TurnLanesIndexedArray &turn_lanes_data,
+                           const extractor::TurnLanesIndexedArray &turn_lanes_data,
                            const util::NameTable &name_table,
-                           const SuffixTable &street_name_suffix_table)
+                           const extractor::SuffixTable &street_name_suffix_table)
     : node_based_graph(node_based_graph), roundabout_handler(node_based_graph,
                                                              node_data_container,
                                                              node_coordinates,
@@ -96,9 +94,10 @@ TurnAnalysis::TurnAnalysis(const util::NodeBasedDynamicGraph &node_based_graph,
 {
 }
 
-Intersection TurnAnalysis::AssignTurnTypes(const NodeID node_prior_to_intersection,
-                                           const EdgeID entering_via_edge,
-                                           const IntersectionView &intersection_view) const
+Intersection TurnAnalysis::AssignTurnTypes(
+    const NodeID node_prior_to_intersection,
+    const EdgeID entering_via_edge,
+    const extractor::intersection::IntersectionView &intersection_view) const
 {
     // Roundabouts are a main priority. If there is a roundabout instruction present, we process the
     // turn as a roundabout
@@ -110,7 +109,7 @@ Intersection TurnAnalysis::AssignTurnTypes(const NodeID node_prior_to_intersecti
     std::transform(intersection_view.begin(),
                    intersection_view.end(),
                    std::back_inserter(intersection),
-                   [&](const IntersectionViewData &data) {
+                   [&](const extractor::intersection::IntersectionViewData &data) {
                        return ConnectedRoad(data,
                                             {TurnType::Invalid, DirectionModifier::UTurn},
                                             INVALID_LANE_DATAID);
@@ -203,5 +202,4 @@ Intersection TurnAnalysis::setTurnTypes(const NodeID node_prior_to_intersection,
 }
 
 } // namespace guidance
-} // namespace extractor
 } // namespace osrm

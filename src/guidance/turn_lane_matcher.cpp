@@ -10,12 +10,11 @@ using osrm::util::angularDeviation;
 
 namespace osrm
 {
-namespace extractor
-{
 namespace guidance
 {
 namespace lanes
 {
+namespace TurnLaneType = extractor::TurnLaneType;
 
 // Translate Turn Tags into a Matching Direction Modifier
 DirectionModifier::Enum getMatchingModifier(const TurnLaneType::Mask tag)
@@ -54,8 +53,6 @@ DirectionModifier::Enum getMatchingModifier(const TurnLaneType::Mask tag)
 // check whether a match of a given tag and a turn instruction can be seen as valid
 bool isValidMatch(const TurnLaneType::Mask tag, const TurnInstruction instruction)
 {
-    using extractor::guidance::hasLeftModifier;
-    using extractor::guidance::hasRightModifier;
     const auto isMirroredModifier = [](const TurnInstruction instruction) {
         return instruction.type == TurnType::Merge;
     };
@@ -277,5 +274,4 @@ Intersection triviallyMatchLanesToTurns(Intersection intersection,
 
 } // namespace lane_matching
 } // namespace guidance
-} // namespace extractor
 } // namespace osrm

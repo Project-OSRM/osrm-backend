@@ -1,5 +1,5 @@
-#ifndef OSRM_EXTRACTOR_GUIDANCE_STATISTICS_HANDLER_HPP_
-#define OSRM_EXTRACTOR_GUIDANCE_STATISTICS_HANDLER_HPP_
+#ifndef OSRM_GUIDANCE_STATISTICS_HANDLER_HPP_
+#define OSRM_GUIDANCE_STATISTICS_HANDLER_HPP_
 
 #include "guidance/intersection.hpp"
 #include "guidance/intersection_handler.hpp"
@@ -17,8 +17,6 @@
 
 namespace osrm
 {
-namespace extractor
-{
 namespace guidance
 {
 
@@ -28,14 +26,14 @@ class StatisticsHandler final : public IntersectionHandler
 {
   public:
     StatisticsHandler(const util::NodeBasedDynamicGraph &node_based_graph,
-                      const EdgeBasedNodeDataContainer &node_data_container,
+                      const extractor::EdgeBasedNodeDataContainer &node_data_container,
                       const std::vector<util::Coordinate> &coordinates,
                       const extractor::CompressedEdgeContainer &compressed_geometries,
-                      const RestrictionMap &node_restriction_map,
+                      const extractor::RestrictionMap &node_restriction_map,
                       const std::unordered_set<NodeID> &barrier_nodes,
-                      const guidance::TurnLanesIndexedArray &turn_lanes_data,
+                      const extractor::TurnLanesIndexedArray &turn_lanes_data,
                       const util::NameTable &name_table,
-                      const SuffixTable &street_name_suffix_table)
+                      const extractor::SuffixTable &street_name_suffix_table)
         : IntersectionHandler(node_based_graph,
                               node_data_container,
                               coordinates,
@@ -110,7 +108,6 @@ class StatisticsHandler final : public IntersectionHandler
 };
 
 } // namespace guidance
-} // namespace extractor
 } // namespace osrm
 
-#endif // OSRM_EXTRACTOR_GUIDANCE_VALIDATION_HANDLER_HPP_
+#endif // OSRM_GUIDANCE_VALIDATION_HANDLER_HPP_

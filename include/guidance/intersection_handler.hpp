@@ -1,11 +1,11 @@
-#ifndef OSRM_EXTRACTOR_GUIDANCE_INTERSECTION_HANDLER_HPP_
-#define OSRM_EXTRACTOR_GUIDANCE_INTERSECTION_HANDLER_HPP_
+#ifndef OSRM_GUIDANCE_INTERSECTION_HANDLER_HPP_
+#define OSRM_GUIDANCE_INTERSECTION_HANDLER_HPP_
 
 #include "extractor/intersection/intersection_analysis.hpp"
-#include "extractor/query_node.hpp"
+#include "extractor/intersection/node_based_graph_walker.hpp"
 #include "extractor/suffix_table.hpp"
+#include "guidance/constants.hpp"
 #include "guidance/intersection.hpp"
-#include "guidance/node_based_graph_walker.hpp"
 
 #include "util/coordinate_calculation.hpp"
 #include "util/guidance/name_announcements.hpp"
@@ -21,8 +21,6 @@
 
 namespace osrm
 {
-namespace extractor
-{
 namespace guidance
 {
 
@@ -33,14 +31,14 @@ class IntersectionHandler
 {
   public:
     IntersectionHandler(const util::NodeBasedDynamicGraph &node_based_graph,
-                        const EdgeBasedNodeDataContainer &node_data_container,
+                        const extractor::EdgeBasedNodeDataContainer &node_data_container,
                         const std::vector<util::Coordinate> &node_coordinates,
                         const extractor::CompressedEdgeContainer &compressed_geometries,
-                        const RestrictionMap &node_restriction_map,
+                        const extractor::RestrictionMap &node_restriction_map,
                         const std::unordered_set<NodeID> &barrier_nodes,
-                        const guidance::TurnLanesIndexedArray &turn_lanes_data,
+                        const extractor::TurnLanesIndexedArray &turn_lanes_data,
                         const util::NameTable &name_table,
-                        const SuffixTable &street_name_suffix_table);
+                        const extractor::SuffixTable &street_name_suffix_table);
 
     virtual ~IntersectionHandler() = default;
 
@@ -54,15 +52,16 @@ class IntersectionHandler
 
   protected:
     const util::NodeBasedDynamicGraph &node_based_graph;
-    const EdgeBasedNodeDataContainer &node_data_container;
+    const extractor::EdgeBasedNodeDataContainer &node_data_container;
     const std::vector<util::Coordinate> &node_coordinates;
     const extractor::CompressedEdgeContainer &compressed_geometries;
-    const RestrictionMap &node_restriction_map;
+    const extractor::RestrictionMap &node_restriction_map;
     const std::unordered_set<NodeID> &barrier_nodes;
-    const guidance::TurnLanesIndexedArray &turn_lanes_data;
+    const extractor::TurnLanesIndexedArray &turn_lanes_data;
     const util::NameTable &name_table;
-    const SuffixTable &street_name_suffix_table;
-    const NodeBasedGraphWalker graph_walker; // for skipping traffic signal, distances etc.
+    const extractor::SuffixTable &street_name_suffix_table;
+    const extractor::intersection::NodeBasedGraphWalker
+        graph_walker; // for skipping traffic signal, distances etc.
 
     // Decide on a basic turn types
     TurnType::Enum findBasicTurnType(const EdgeID via_edge, const ConnectedRoad &candidate) const;
@@ -101,8 +100,8 @@ class IntersectionHandler
     // See `getNextIntersection`
     struct IntersectionViewAndNode final
     {
-        IntersectionView intersection; // < actual intersection
-        NodeID node;                   // < node at this intersection
+        extractor::intersection::IntersectionView intersection; // < actual intersection
+        NodeID node;                                            // < node at this intersection
     };
 
     // Skips over artificial intersections i.e. traffic lights, barriers etc.
@@ -153,7 +152,7 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
     double best_continue_deviation = 180;
 
     /* helper functions */
-    const auto IsContinueRoad = [&](const NodeBasedEdgeAnnotation &way_data) {
+    const auto IsContinueRoad = [&](const extractor::NodeBasedEdgeAnnotation &way_data) {
         return !util::guidance::requiresNameAnnounced(
             in_way_data.name_id, way_data.name_id, name_table, street_name_suffix_table);
     };
@@ -571,20 +570,20 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
             // even reverse the direction. Since we don't want to compute actual turns but simply
             // try to find whether there is a turn going to the opposite direction of our obvious
             // turn, this should be alright.
-            const auto previous_intersection = [&]() -> IntersectionView {
-                const auto parameters = intersection::skipDegreeTwoNodes(
+            const auto previous_intersection = [&]() -> extractor::intersection::IntersectionView {
+                const auto parameters = extractor::intersection::skipDegreeTwoNodes(
                     node_based_graph, {node_at_intersection, intersection[0].eid});
                 if (node_based_graph.GetTarget(parameters.edge) == node_at_intersection)
                     return {};
 
-                return intersection::getConnectedRoads<false>(node_based_graph,
-                                                              node_data_container,
-                                                              node_coordinates,
-                                                              compressed_geometries,
-                                                              node_restriction_map,
-                                                              barrier_nodes,
-                                                              turn_lanes_data,
-                                                              parameters);
+                return extractor::intersection::getConnectedRoads<false>(node_based_graph,
+                                                                         node_data_container,
+                                                                         node_coordinates,
+                                                                         compressed_geometries,
+                                                                         node_restriction_map,
+                                                                         barrier_nodes,
+                                                                         turn_lanes_data,
+                                                                         parameters);
             }();
 
             if (!previous_intersection.empty())
@@ -615,7 +614,6 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
 }
 
 } // namespace guidance
-} // namespace extractor
 } // namespace osrm
 
-#endif /*OSRM_EXTRACTOR_GUIDANCE_INTERSECTION_HANDLER_HPP_*/
+#endif /*OSRM_GUIDANCE_INTERSECTION_HANDLER_HPP_*/

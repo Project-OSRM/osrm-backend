@@ -1,6 +1,6 @@
 #include "guidance/motorway_handler.hpp"
+#include "extractor/road_classification.hpp"
 #include "guidance/constants.hpp"
-#include "guidance/road_classification.hpp"
 
 #include "util/assert.hpp"
 #include "util/bearing.hpp"
@@ -12,11 +12,9 @@
 #include <boost/assert.hpp>
 
 using osrm::util::angularDeviation;
-using osrm::extractor::guidance::getTurnDirection;
+using osrm::guidance::getTurnDirection;
 
 namespace osrm
-{
-namespace extractor
 {
 namespace guidance
 {
@@ -27,8 +25,8 @@ inline bool isMotorwayClass(EdgeID eid, const util::NodeBasedDynamicGraph &node_
 {
     return node_based_graph.GetEdgeData(eid).flags.road_classification.IsMotorwayClass();
 }
-inline RoadClassification roadClass(const ConnectedRoad &road,
-                                    const util::NodeBasedDynamicGraph &graph)
+inline extractor::RoadClassification roadClass(const ConnectedRoad &road,
+                                               const util::NodeBasedDynamicGraph &graph)
 {
     return graph.GetEdgeData(road.eid).flags.road_classification;
 }
@@ -41,14 +39,14 @@ inline bool isRampClass(EdgeID eid, const util::NodeBasedDynamicGraph &node_base
 } // namespace
 
 MotorwayHandler::MotorwayHandler(const util::NodeBasedDynamicGraph &node_based_graph,
-                                 const EdgeBasedNodeDataContainer &node_data_container,
+                                 const extractor::EdgeBasedNodeDataContainer &node_data_container,
                                  const std::vector<util::Coordinate> &coordinates,
                                  const extractor::CompressedEdgeContainer &compressed_geometries,
-                                 const RestrictionMap &node_restriction_map,
+                                 const extractor::RestrictionMap &node_restriction_map,
                                  const std::unordered_set<NodeID> &barrier_nodes,
-                                 const guidance::TurnLanesIndexedArray &turn_lanes_data,
+                                 const extractor::TurnLanesIndexedArray &turn_lanes_data,
                                  const util::NameTable &name_table,
-                                 const SuffixTable &street_name_suffix_table)
+                                 const extractor::SuffixTable &street_name_suffix_table)
     : IntersectionHandler(node_based_graph,
                           node_data_container,
                           coordinates,
@@ -564,5 +562,4 @@ Intersection MotorwayHandler::fallback(Intersection intersection) const
 }
 
 } // namespace guidance
-} // namespace extractor
 } // namespace osrm

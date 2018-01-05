@@ -70,7 +70,7 @@ inline LegGeometry assembleGeometry(const datafacade::BaseDataFacade &facade,
         cumulative_distance += current_distance;
 
         // all changes to this check have to be matched with assemble_steps
-        if (path_point.turn_instruction.type != extractor::guidance::TurnType::NoTurn)
+        if (path_point.turn_instruction.type != osrm::guidance::TurnType::NoTurn)
         {
             geometry.segment_distances.push_back(cumulative_distance);
             geometry.segment_offsets.push_back(geometry.locations.size());

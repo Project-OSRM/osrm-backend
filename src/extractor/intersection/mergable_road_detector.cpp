@@ -1,9 +1,9 @@
-#include "guidance/mergable_road_detector.hpp"
+#include "extractor/intersection/mergable_road_detector.hpp"
 #include "extractor/intersection/intersection_analysis.hpp"
+#include "extractor/intersection/node_based_graph_walker.hpp"
 #include "extractor/query_node.hpp"
 #include "extractor/suffix_table.hpp"
 #include "guidance/constants.hpp"
-#include "guidance/node_based_graph_walker.hpp"
 
 #include "util/bearing.hpp"
 #include "util/coordinate_calculation.hpp"
@@ -16,7 +16,7 @@ namespace osrm
 {
 namespace extractor
 {
-namespace guidance
+namespace intersection
 {
 
 namespace
@@ -58,7 +58,7 @@ MergableRoadDetector::MergableRoadDetector(
     const extractor::CompressedEdgeContainer &compressed_geometries,
     const RestrictionMap &node_restriction_map,
     const std::unordered_set<NodeID> &barrier_nodes,
-    const guidance::TurnLanesIndexedArray &turn_lanes_data,
+    const extractor::TurnLanesIndexedArray &turn_lanes_data,
     const util::NameTable &name_table,
     const SuffixTable &street_name_suffix_table)
     : node_based_graph(node_based_graph), node_data_container(node_data_container),

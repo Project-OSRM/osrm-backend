@@ -13,12 +13,10 @@
 #include <cstddef>
 
 using EdgeData = osrm::util::NodeBasedDynamicGraph::EdgeData;
-using osrm::extractor::guidance::getTurnDirection;
+using osrm::guidance::getTurnDirection;
 using osrm::util::angularDeviation;
 
 namespace osrm
-{
-namespace extractor
 {
 namespace guidance
 {
@@ -27,7 +25,7 @@ namespace detail
 {
 // TODO check flags!
 inline bool requiresAnnouncement(const util::NodeBasedDynamicGraph &node_based_graph,
-                                 const EdgeBasedNodeDataContainer &node_data_container,
+                                 const extractor::EdgeBasedNodeDataContainer &node_data_container,
                                  const EdgeID from,
                                  const EdgeID to)
 {
@@ -48,14 +46,14 @@ inline bool requiresAnnouncement(const util::NodeBasedDynamicGraph &node_based_g
 
 IntersectionHandler::IntersectionHandler(
     const util::NodeBasedDynamicGraph &node_based_graph,
-    const EdgeBasedNodeDataContainer &node_data_container,
+    const extractor::EdgeBasedNodeDataContainer &node_data_container,
     const std::vector<util::Coordinate> &node_coordinates,
     const extractor::CompressedEdgeContainer &compressed_geometries,
-    const RestrictionMap &node_restriction_map,
+    const extractor::RestrictionMap &node_restriction_map,
     const std::unordered_set<NodeID> &barrier_nodes,
-    const guidance::TurnLanesIndexedArray &turn_lanes_data,
+    const extractor::TurnLanesIndexedArray &turn_lanes_data,
     const util::NameTable &name_table,
-    const SuffixTable &street_name_suffix_table)
+    const extractor::SuffixTable &street_name_suffix_table)
     : node_based_graph(node_based_graph), node_data_container(node_data_container),
       node_coordinates(node_coordinates), compressed_geometries(compressed_geometries),
       node_restriction_map(node_restriction_map), barrier_nodes(barrier_nodes),
@@ -450,7 +448,7 @@ IntersectionHandler::getNextIntersection(const NodeID at, const EdgeID via) cons
     // writing `tl` (traffic signal) node and the edge `e1` which has the intersection as target.
 
     const auto intersection_parameters =
-        intersection::skipDegreeTwoNodes(node_based_graph, {at, via});
+        extractor::intersection::skipDegreeTwoNodes(node_based_graph, {at, via});
     // This should never happen, guard against nevertheless
     if (intersection_parameters.node == SPECIAL_NODEID ||
         intersection_parameters.edge == SPECIAL_EDGEID)
@@ -458,14 +456,14 @@ IntersectionHandler::getNextIntersection(const NodeID at, const EdgeID via) cons
         return boost::none;
     }
 
-    auto intersection = intersection::getConnectedRoads<false>(node_based_graph,
-                                                               node_data_container,
-                                                               node_coordinates,
-                                                               compressed_geometries,
-                                                               node_restriction_map,
-                                                               barrier_nodes,
-                                                               turn_lanes_data,
-                                                               intersection_parameters);
+    auto intersection = extractor::intersection::getConnectedRoads<false>(node_based_graph,
+                                                                          node_data_container,
+                                                                          node_coordinates,
+                                                                          compressed_geometries,
+                                                                          node_restriction_map,
+                                                                          barrier_nodes,
+                                                                          turn_lanes_data,
+                                                                          intersection_parameters);
     auto intersection_node = node_based_graph.GetTarget(intersection_parameters.edge);
 
     if (intersection.size() <= 2 || intersection.isTrafficSignalOrBarrier())
@@ -493,5 +491,4 @@ bool IntersectionHandler::isSameName(const EdgeID source_edge_id, const EdgeID t
 }
 
 } // namespace guidance
-} // namespace extractor
 } // namespace osrm

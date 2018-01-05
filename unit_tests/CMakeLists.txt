@@ -68,7 +68,7 @@ add_executable(contractor-tests
 add_executable(extractor-tests
 	EXCLUDE_FROM_ALL
 	${ExtractorTestsSources}
-	$<TARGET_OBJECTS:EXTRACTOR> $<TARGET_OBJECTS:GUIDANCE> $<TARGET_OBJECTS:UTIL>)
+	$<TARGET_OBJECTS:EXTRACTOR> $<TARGET_OBJECTS:UTIL>)
 
 add_executable(partitioner-tests
 	EXCLUDE_FROM_ALL
@@ -150,12 +150,12 @@ target_include_directories(updater-tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(contractor-tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_link_libraries(engine-tests ${ENGINE_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
-target_link_libraries(extractor-tests ${EXTRACTOR_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+target_link_libraries(extractor-tests osrm_extract osrm_guidance ${EXTRACTOR_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 target_link_libraries(partitioner-tests ${PARTITIONER_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 target_link_libraries(customizer-tests ${CUSTOMIZER_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 target_link_libraries(updater-tests ${UPDATER_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 target_link_libraries(library-tests osrm ${ENGINE_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
-target_link_libraries(library-extract-tests osrm_extract ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+target_link_libraries(library-extract-tests osrm_extract osrm_guidance ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 target_link_libraries(library-contract-tests osrm_contract ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 target_link_libraries(library-customize-tests osrm_customize ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 target_link_libraries(library-partition-tests osrm_partition ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
