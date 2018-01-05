@@ -1,6 +1,6 @@
 #include "engine/guidance/collapse_turns.hpp"
-#include "extractor/guidance/constants.hpp"
-#include "extractor/guidance/turn_instruction.hpp"
+#include "guidance/constants.hpp"
+#include "guidance/turn_instruction.hpp"
 #include "engine/guidance/collapse_scenario_detection.hpp"
 #include "engine/guidance/collapsing_utility.hpp"
 #include "util/bearing.hpp"

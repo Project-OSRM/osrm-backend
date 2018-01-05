@@ -2,8 +2,8 @@
 #define RAW_ROUTE_DATA_H
 
 #include "extractor/class_data.hpp"
-#include "extractor/guidance/turn_instruction.hpp"
 #include "extractor/travel_mode.hpp"
+#include "guidance/turn_instruction.hpp"
 
 #include "engine/phantom_node.hpp"
 

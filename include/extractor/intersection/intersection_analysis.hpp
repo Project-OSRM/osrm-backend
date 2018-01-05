@@ -2,10 +2,10 @@
 #define OSRM_EXTRACTOR_INTERSECTION_INTERSECTION_ANALYSIS_HPP
 
 #include "extractor/compressed_edge_container.hpp"
-#include "extractor/guidance/mergable_road_detector.hpp"
-#include "extractor/guidance/turn_lane_types.hpp"
 #include "extractor/intersection/intersection_edge.hpp"
 #include "extractor/restriction_index.hpp"
+#include "guidance/mergable_road_detector.hpp"
+#include "guidance/turn_lane_types.hpp"
 
 #include "util/coordinate.hpp"
 #include "util/node_based_graph.hpp"

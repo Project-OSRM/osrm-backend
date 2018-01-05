@@ -1,8 +1,8 @@
 #ifndef ENGINE_GUIDANCE_ASSEMBLE_GEOMETRY_HPP
 #define ENGINE_GUIDANCE_ASSEMBLE_GEOMETRY_HPP
 
-#include "extractor/guidance/turn_instruction.hpp"
 #include "extractor/travel_mode.hpp"
+#include "guidance/turn_instruction.hpp"
 #include "engine/datafacade/datafacade_base.hpp"
 #include "engine/guidance/leg_geometry.hpp"
 #include "engine/guidance/route_step.hpp"

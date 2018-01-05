@@ -1,4 +1,4 @@
-#include "extractor/guidance/turn_instruction.hpp"
+#include "guidance/turn_instruction.hpp"
 
 #include "engine/plugins/plugin_base.hpp"
 #include "engine/plugins/tile.hpp"

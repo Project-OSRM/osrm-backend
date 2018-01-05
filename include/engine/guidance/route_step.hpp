@@ -7,7 +7,7 @@
 #include "util/guidance/bearing_class.hpp"
 #include "util/guidance/entry_class.hpp"
 
-#include "extractor/guidance/turn_lane_types.hpp"
+#include "guidance/turn_lane_types.hpp"
 #include "util/guidance/turn_lanes.hpp"
 
 #include <cstddef>

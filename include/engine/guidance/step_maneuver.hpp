@@ -1,7 +1,7 @@
 #ifndef ENGINE_GUIDANCE_STEP_MANEUVER_HPP
 #define ENGINE_GUIDANCE_STEP_MANEUVER_HPP
 
-#include "extractor/guidance/turn_instruction.hpp"
+#include "guidance/turn_instruction.hpp"
 #include "util/coordinate.hpp"
 
 #include <cstdint>

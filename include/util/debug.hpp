@@ -1,10 +1,10 @@
 #ifndef OSRM_ENGINE_GUIDANCE_DEBUG_HPP_
 #define OSRM_ENGINE_GUIDANCE_DEBUG_HPP_
 
-#include "extractor/guidance/intersection.hpp"
-#include "extractor/guidance/turn_lane_data.hpp"
 #include "extractor/node_data_container.hpp"
 #include "extractor/query_node.hpp"
+#include "guidance/intersection.hpp"
+#include "guidance/turn_lane_data.hpp"
 #include "engine/guidance/route_step.hpp"
 #include "util/node_based_graph.hpp"
 #include "util/typedefs.hpp"

@@ -4,7 +4,7 @@
 #include "util/bearing.hpp"
 #include "util/coordinate_calculation.hpp"
 
-#include "extractor/guidance/coordinate_extractor.hpp"
+#include "guidance/coordinate_extractor.hpp"
 
 #include <boost/optional/optional_io.hpp>
 

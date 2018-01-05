@@ -1,8 +1,8 @@
 #ifndef ORIGINAL_EDGE_DATA_HPP
 #define ORIGINAL_EDGE_DATA_HPP
 
-#include "extractor/guidance/turn_instruction.hpp"
 #include "extractor/travel_mode.hpp"
+#include "guidance/turn_instruction.hpp"
 #include "util/guidance/turn_bearing.hpp"
 #include "util/typedefs.hpp"
 

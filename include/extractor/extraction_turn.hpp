@@ -3,7 +3,7 @@
 
 #include <boost/numeric/conversion/cast.hpp>
 
-#include <extractor/guidance/intersection.hpp>
+#include <guidance/intersection.hpp>
 
 #include <cstdint>
 

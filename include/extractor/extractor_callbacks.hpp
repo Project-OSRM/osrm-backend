@@ -2,7 +2,7 @@
 #define EXTRACTOR_CALLBACKS_HPP
 
 #include "extractor/class_data.hpp"
-#include "extractor/guidance/turn_lane_types.hpp"
+#include "guidance/turn_lane_types.hpp"
 #include "util/typedefs.hpp"
 
 #include <boost/functional/hash.hpp>

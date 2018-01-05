@@ -5,9 +5,9 @@
 
 #include "contractor/query_edge.hpp"
 #include "extractor/class_data.hpp"
-#include "extractor/guidance/turn_instruction.hpp"
-#include "extractor/guidance/turn_lane_types.hpp"
 #include "extractor/travel_mode.hpp"
+#include "guidance/turn_instruction.hpp"
+#include "guidance/turn_lane_types.hpp"
 
 #include "engine/algorithm.hpp"
 #include "engine/datafacade/algorithm_datafacade.hpp"

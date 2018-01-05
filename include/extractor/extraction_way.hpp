@@ -1,8 +1,8 @@
 #ifndef EXTRACTION_WAY_HPP
 #define EXTRACTION_WAY_HPP
 
-#include "extractor/guidance/road_classification.hpp"
 #include "extractor/travel_mode.hpp"
+#include "guidance/road_classification.hpp"
 #include "util/guidance/turn_lanes.hpp"
 #include "util/typedefs.hpp"
 

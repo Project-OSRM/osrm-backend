@@ -1,6 +1,6 @@
 #include "engine/guidance/post_processing.hpp"
-#include "extractor/guidance/constants.hpp"
-#include "extractor/guidance/turn_instruction.hpp"
+#include "guidance/constants.hpp"
+#include "guidance/turn_instruction.hpp"
 
 #include "engine/guidance/assemble_steps.hpp"
 #include "engine/guidance/lane_processing.hpp"

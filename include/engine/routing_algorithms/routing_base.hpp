@@ -1,7 +1,7 @@
 #ifndef OSRM_ENGINE_ROUTING_BASE_HPP
 #define OSRM_ENGINE_ROUTING_BASE_HPP
 
-#include "extractor/guidance/turn_instruction.hpp"
+#include "guidance/turn_instruction.hpp"
 
 #include "engine/algorithm.hpp"
 #include "engine/datafacade.hpp"

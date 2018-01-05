@@ -1,5 +1,5 @@
 #include "engine/guidance/collapse_scenario_detection.hpp"
-#include "extractor/guidance/constants.hpp"
+#include "guidance/constants.hpp"
 #include "util/bearing.hpp"
 
 #include <numeric>

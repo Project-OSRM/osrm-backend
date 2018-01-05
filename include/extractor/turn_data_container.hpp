@@ -1,8 +1,8 @@
 #ifndef OSRM_EXTRACTOR_TURN_DATA_CONTAINER_HPP
 #define OSRM_EXTRACTOR_TURN_DATA_CONTAINER_HPP
 
-#include "extractor/guidance/turn_instruction.hpp"
 #include "extractor/travel_mode.hpp"
+#include "guidance/turn_instruction.hpp"
 
 #include "storage/io_fwd.hpp"
 #include "storage/shared_memory_ownership.hpp"
