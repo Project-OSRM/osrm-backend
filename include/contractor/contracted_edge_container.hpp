@@ -60,6 +60,25 @@ struct ContractedEdgeContainer
         flags.resize(edges.size(), ALL_FLAGS);
     }
 
+    void Filter(const std::vector<bool> &filter, std::size_t index)
+    {
+        BOOST_ASSERT(index < sizeof(MergedFlags) * CHAR_BIT);
+        const MergedFlags flag = 1 << index;
+
+        for (auto edge_index : util::irange<std::size_t>(0, edges.size()))
+        {
+            auto allowed = filter[edges[edge_index].source] && filter[edges[edge_index].target];
+            if (allowed)
+            {
+                flags[edge_index] |= flag;
+            }
+            else
+            {
+                flags[edge_index] &= ~flag;
+            }
+        }
+    }
+
     void Merge(std::vector<QueryEdge> new_edges)
     {
         BOOST_ASSERT(index < sizeof(MergedFlags) * CHAR_BIT);
