@@ -69,6 +69,11 @@ inline auto contractExcludableGraph(ContractorGraph contractor_graph_,
                 });
             non_core_edges.resize(new_end - non_core_edges.begin());
             edge_container.Insert(std::move(non_core_edges));
+
+            for (const auto filter_index : util::irange<std::size_t>(0, filters.size()))
+            {
+                edge_container.Filter(filters[filter_index], filter_index);
+            }
         }
 
         // Extract core graph for further contraction
