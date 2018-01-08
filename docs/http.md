@@ -288,6 +288,7 @@ In addition to the [general options](#general-options) the following options are
 |radiuses    |`{radius};{radius}[;{radius} ...]`              |Standard deviation of GPS precision used for map matching. If applicable use GPS accuracy.|
 |gaps        |`split` (default), `ignore`                     |Allows the input track splitting based on huge timestamp gaps between points.             |
 |tidy        |`true`, `false` (default)                       |Allows the input track modification to obtain better matching quality for noisy tracks.   |
+|waypoints   | `{index};{index};{index}...`                   |Treats input coordinates indicated by given indices as waypoints in returned Match object. Default is to treat all input coordinates as waypoints.    |
 
 |Parameter   |Values                             |
 |------------|-----------------------------------|
