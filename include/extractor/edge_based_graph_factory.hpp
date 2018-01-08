@@ -75,11 +75,9 @@ class EdgeBasedGraphFactory
                                    const std::vector<util::Coordinate> &coordinates,
                                    const util::NameTable &name_table,
                                    const std::unordered_set<EdgeID> &segregated_edges,
-                                   LaneDescriptionMap &lane_description_map);
+                                   const LaneDescriptionMap &lane_description_map);
 
     void Run(ScriptingEnvironment &scripting_environment,
-             const std::string &turn_data_filename,
-             const std::string &turn_lane_data_filename,
              const std::string &turn_weight_penalties_filename,
              const std::string &turn_duration_penalties_filename,
              const std::string &turn_penalties_index_filename,
@@ -94,12 +92,6 @@ class EdgeBasedGraphFactory
     void GetEdgeBasedNodeSegments(std::vector<EdgeBasedNodeSegment> &nodes);
     void GetStartPointMarkers(std::vector<bool> &node_is_startpoint);
     void GetEdgeBasedNodeWeights(std::vector<EdgeWeight> &output_node_weights);
-
-    // These access functions don't destroy the content
-    const std::vector<BearingClassID> &GetBearingClassIds() const;
-    std::vector<BearingClassID> &GetBearingClassIds();
-    std::vector<util::guidance::BearingClass> GetBearingClasses() const;
-    std::vector<util::guidance::EntryClass> GetEntryClasses() const;
 
     std::uint64_t GetNumberOfEdgeBasedNodes() const;
 
@@ -158,7 +150,7 @@ class EdgeBasedGraphFactory
 
     const util::NameTable &name_table;
     const std::unordered_set<EdgeID> &segregated_edges;
-    LaneDescriptionMap &lane_description_map;
+    const LaneDescriptionMap &lane_description_map;
 
     // In the edge based graph, any traversable (non reversed) edge of the node-based graph forms a
     // node of the edge-based graph. To be able to name these nodes, we loop over the node-based
@@ -175,8 +167,6 @@ class EdgeBasedGraphFactory
     // Edge-expanded edges are generate for all valid turns. The validity can be checked via the
     // restriction maps
     void GenerateEdgeExpandedEdges(ScriptingEnvironment &scripting_environment,
-                                   const std::string &original_edge_data_filename,
-                                   const std::string &turn_lane_data_filename,
                                    const std::string &turn_weight_penalties_filename,
                                    const std::string &turn_duration_penalties_filename,
                                    const std::string &turn_penalties_index_filename,
@@ -187,15 +177,8 @@ class EdgeBasedGraphFactory
 
     NBGToEBG InsertEdgeBasedNode(const NodeID u, const NodeID v);
 
-    std::size_t restricted_turns_counter;
-    std::size_t skipped_uturns_counter;
-    std::size_t skipped_barrier_turns_counter;
-
     // mapping of node-based edges to edge-based nodes
     std::vector<NodeID> nbe_to_ebn_mapping;
-    util::ConcurrentIDMap<util::guidance::BearingClass, BearingClassID> bearing_class_hash;
-    std::vector<BearingClassID> bearing_class_by_node_based_node;
-    util::ConcurrentIDMap<util::guidance::EntryClass, EntryClassID> entry_class_hash;
 };
 } // namespace extractor
 } // namespace osrm

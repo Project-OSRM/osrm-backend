@@ -37,5 +37,5 @@ bool EntryClass::operator<(const EntryClass &other) const
 }
 
 } // namespace guidance
-} // namespace extractor
+} // namespace util
 } // namespace osrm

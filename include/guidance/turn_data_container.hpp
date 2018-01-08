@@ -2,12 +2,12 @@
 #define OSRM_GUIDANCE_TURN_DATA_CONTAINER_HPP
 
 #include "extractor/travel_mode.hpp"
+#include "guidance/turn_bearing.hpp"
 #include "guidance/turn_instruction.hpp"
 
 #include "storage/io_fwd.hpp"
 #include "storage/shared_memory_ownership.hpp"
 
-#include "util/guidance/turn_bearing.hpp"
 #include "util/vector_view.hpp"
 
 #include "util/typedefs.hpp"
@@ -33,11 +33,11 @@ void write(storage::io::FileWriter &writer,
 
 struct TurnData
 {
-    guidance::TurnInstruction turn_instruction;
+    TurnInstruction turn_instruction;
     LaneDataID lane_data_id;
     EntryClassID entry_class_id;
-    util::guidance::TurnBearing pre_turn_bearing;
-    util::guidance::TurnBearing post_turn_bearing;
+    TurnBearing pre_turn_bearing;
+    TurnBearing post_turn_bearing;
 };
 
 namespace detail
@@ -49,11 +49,11 @@ template <storage::Ownership Ownership> class TurnDataContainerImpl
   public:
     TurnDataContainerImpl() = default;
 
-    TurnDataContainerImpl(Vector<guidance::TurnInstruction> turn_instructions,
+    TurnDataContainerImpl(Vector<TurnInstruction> turn_instructions,
                           Vector<LaneDataID> lane_data_ids,
                           Vector<EntryClassID> entry_class_ids,
-                          Vector<util::guidance::TurnBearing> pre_turn_bearings,
-                          Vector<util::guidance::TurnBearing> post_turn_bearings)
+                          Vector<TurnBearing> pre_turn_bearings,
+                          Vector<TurnBearing> post_turn_bearings)
         : turn_instructions(std::move(turn_instructions)), lane_data_ids(std::move(lane_data_ids)),
           entry_class_ids(std::move(entry_class_ids)),
           pre_turn_bearings(std::move(pre_turn_bearings)),
@@ -63,15 +63,9 @@ template <storage::Ownership Ownership> class TurnDataContainerImpl
 
     EntryClassID GetEntryClassID(const EdgeID id) const { return entry_class_ids[id]; }
 
-    util::guidance::TurnBearing GetPreTurnBearing(const EdgeID id) const
-    {
-        return pre_turn_bearings[id];
-    }
+    TurnBearing GetPreTurnBearing(const EdgeID id) const { return pre_turn_bearings[id]; }
 
-    util::guidance::TurnBearing GetPostTurnBearing(const EdgeID id) const
-    {
-        return post_turn_bearings[id];
-    }
+    TurnBearing GetPostTurnBearing(const EdgeID id) const { return post_turn_bearings[id]; }
 
     LaneDataID GetLaneDataID(const EdgeID id) const { return lane_data_ids[id]; }
 
@@ -106,11 +100,11 @@ template <storage::Ownership Ownership> class TurnDataContainerImpl
                                                 const TurnDataContainerImpl &turn_data_container);
 
   private:
-    Vector<guidance::TurnInstruction> turn_instructions;
+    Vector<TurnInstruction> turn_instructions;
     Vector<LaneDataID> lane_data_ids;
     Vector<EntryClassID> entry_class_ids;
-    Vector<util::guidance::TurnBearing> pre_turn_bearings;
-    Vector<util::guidance::TurnBearing> post_turn_bearings;
+    Vector<TurnBearing> pre_turn_bearings;
+    Vector<TurnBearing> post_turn_bearings;
 };
 }
 

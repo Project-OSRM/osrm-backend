@@ -1174,6 +1174,6 @@ CoordinateExtractor::RegressionLine(const std::vector<util::Coordinate> &coordin
     return {coord_between_front, coord_between_back};
 }
 
-} // namespace guidance
+} // namespace intersection
 } // namespace extractor
 } // namespace osrm

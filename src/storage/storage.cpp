@@ -241,10 +241,10 @@ void Storage::PopulateLayout(DataLayout &layout)
         const auto number_of_original_edges = edges_file.ReadElementCount64();
 
         // note: settings this all to the same size is correct, we extract them from the same struct
-        layout.SetBlockSize<util::guidance::TurnBearing>(DataLayout::PRE_TURN_BEARING,
-                                                         number_of_original_edges);
-        layout.SetBlockSize<util::guidance::TurnBearing>(DataLayout::POST_TURN_BEARING,
-                                                         number_of_original_edges);
+        layout.SetBlockSize<guidance::TurnBearing>(DataLayout::PRE_TURN_BEARING,
+                                                   number_of_original_edges);
+        layout.SetBlockSize<guidance::TurnBearing>(DataLayout::POST_TURN_BEARING,
+                                                   number_of_original_edges);
         layout.SetBlockSize<guidance::TurnInstruction>(DataLayout::TURN_INSTRUCTION,
                                                        number_of_original_edges);
         layout.SetBlockSize<LaneDataID>(DataLayout::LANE_DATA_ID, number_of_original_edges);
@@ -708,14 +708,14 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
         util::vector_view<EntryClassID> entry_class_ids(
             entry_class_id_list_ptr, layout.num_entries[storage::DataLayout::ENTRY_CLASSID]);
 
-        const auto pre_turn_bearing_ptr = layout.GetBlockPtr<util::guidance::TurnBearing, true>(
+        const auto pre_turn_bearing_ptr = layout.GetBlockPtr<guidance::TurnBearing, true>(
             memory_ptr, storage::DataLayout::PRE_TURN_BEARING);
-        util::vector_view<util::guidance::TurnBearing> pre_turn_bearings(
+        util::vector_view<guidance::TurnBearing> pre_turn_bearings(
             pre_turn_bearing_ptr, layout.num_entries[storage::DataLayout::PRE_TURN_BEARING]);
 
-        const auto post_turn_bearing_ptr = layout.GetBlockPtr<util::guidance::TurnBearing, true>(
+        const auto post_turn_bearing_ptr = layout.GetBlockPtr<guidance::TurnBearing, true>(
             memory_ptr, storage::DataLayout::POST_TURN_BEARING);
-        util::vector_view<util::guidance::TurnBearing> post_turn_bearings(
+        util::vector_view<guidance::TurnBearing> post_turn_bearings(
             post_turn_bearing_ptr, layout.num_entries[storage::DataLayout::POST_TURN_BEARING]);
 
         guidance::TurnDataView turn_data(std::move(turn_instructions),

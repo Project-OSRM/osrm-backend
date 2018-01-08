@@ -177,7 +177,7 @@ class MergableRoadDetector
     const static double constexpr distance_to_extract = 120;
 };
 
-} // namespace guidance
+} // namespace intersection
 } // namespace extractor
 } // namespace osrm
 
