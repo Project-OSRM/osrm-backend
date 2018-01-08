@@ -7,10 +7,10 @@
 
 namespace osrm
 {
-namespace extractor
-{
 namespace guidance
 {
+
+namespace RoadPriorityClass = extractor::RoadPriorityClass;
 
 struct EdgeInfo
 {
@@ -21,7 +21,7 @@ struct EdgeInfo
     // 0 - outgoing (forward), 1 - incoming (reverse), 2 - both outgoing and incoming
     int direction;
 
-    ClassData road_class;
+    extractor::ClassData road_class;
 
     RoadPriorityClass::Enum road_priority_class;
 
@@ -125,7 +125,7 @@ bool IsSegregated(std::vector<EdgeInfo> v1,
     return edgeLength <= threshold;
 }
 
-std::unordered_set<EdgeID> findSegregatedNodes(const NodeBasedGraphFactory &factory,
+std::unordered_set<EdgeID> findSegregatedNodes(const extractor::NodeBasedGraphFactory &factory,
                                                const util::NameTable &names)
 {
 
@@ -238,6 +238,6 @@ std::unordered_set<EdgeID> findSegregatedNodes(const NodeBasedGraphFactory &fact
 
     return segregated_edges;
 }
-}
-}
-}
+
+} // namespace guidance
+} // namespace osrm

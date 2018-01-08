@@ -7,6 +7,7 @@
 #include "extractor/class_data.hpp"
 #include "extractor/travel_mode.hpp"
 #include "extractor/turn_lane_types.hpp"
+#include "guidance/turn_bearing.hpp"
 #include "guidance/turn_instruction.hpp"
 
 #include "engine/algorithm.hpp"
@@ -15,7 +16,6 @@
 
 #include "util/guidance/bearing_class.hpp"
 #include "util/guidance/entry_class.hpp"
-#include "util/guidance/turn_bearing.hpp"
 #include "util/typedefs.hpp"
 
 namespace osrm
@@ -226,13 +226,13 @@ class MockBaseDataFacade : public engine::datafacade::BaseDataFacade
     bool IsLeftHandDriving(const NodeID /*id*/) const override { return false; }
     bool IsSegregated(const NodeID /*id*/) const override { return false; }
 
-    util::guidance::TurnBearing PreTurnBearing(const EdgeID /*eid*/) const override final
+    guidance::TurnBearing PreTurnBearing(const EdgeID /*eid*/) const override final
     {
-        return util::guidance::TurnBearing{0.0};
+        return guidance::TurnBearing{0.0};
     }
-    util::guidance::TurnBearing PostTurnBearing(const EdgeID /*eid*/) const override final
+    guidance::TurnBearing PostTurnBearing(const EdgeID /*eid*/) const override final
     {
-        return util::guidance::TurnBearing{0.0};
+        return guidance::TurnBearing{0.0};
     }
 
     bool HasLaneData(const EdgeID /*id*/) const override final { return true; };

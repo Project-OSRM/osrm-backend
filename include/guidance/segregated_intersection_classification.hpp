@@ -12,6 +12,7 @@ class NameTable;
 namespace extractor
 {
 class NodeBasedGraphFactory;
+}
 
 namespace guidance
 {
@@ -20,8 +21,7 @@ namespace guidance
 // - middle edges between two osm ways in one logic road (U-turn)
 // - staggered intersections (X-cross)
 // - square/circle intersections
-std::unordered_set<EdgeID> findSegregatedNodes(const NodeBasedGraphFactory &factory,
+std::unordered_set<EdgeID> findSegregatedNodes(const extractor::NodeBasedGraphFactory &factory,
                                                const util::NameTable &names);
-}
 }
 }

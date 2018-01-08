@@ -341,14 +341,14 @@ class ContiguousInternalMemoryDataFacade<routing_algorithms::offline::Algorithm>
     ComponentID GetComponentID(NodeID) const override { return ComponentID{}; }
     bool ExcludeNode(const NodeID) const override { return false; }
 
-    util::guidance::TurnBearing PreTurnBearing(const EdgeID /*eid*/) const override
+    guidance::TurnBearing PreTurnBearing(const EdgeID /*eid*/) const override
     {
-        return util::guidance::TurnBearing(0);
+        return guidance::TurnBearing(0);
     }
 
-    util::guidance::TurnBearing PostTurnBearing(const EdgeID /*eid*/) const override
+    guidance::TurnBearing PostTurnBearing(const EdgeID /*eid*/) const override
     {
-        return util::guidance::TurnBearing(0);
+        return guidance::TurnBearing(0);
     }
 
     util::guidance::BearingClass

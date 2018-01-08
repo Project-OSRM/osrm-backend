@@ -19,6 +19,8 @@
 #include "extractor/profile_properties.hpp"
 #include "extractor/segment_data_container.hpp"
 #include "extractor/turn_lane_types.hpp"
+
+#include "guidance/turn_bearing.hpp"
 #include "guidance/turn_data_container.hpp"
 #include "guidance/turn_instruction.hpp"
 
@@ -35,7 +37,6 @@
 #include "util/filtered_graph.hpp"
 #include "util/guidance/bearing_class.hpp"
 #include "util/guidance/entry_class.hpp"
-#include "util/guidance/turn_bearing.hpp"
 #include "util/guidance/turn_lanes.hpp"
 #include "util/log.hpp"
 #include "util/name_table.hpp"
@@ -328,14 +329,14 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         util::vector_view<EntryClassID> entry_class_ids(
             entry_class_id_list_ptr, layout.num_entries[storage::DataLayout::ENTRY_CLASSID]);
 
-        const auto pre_turn_bearing_ptr = layout.GetBlockPtr<util::guidance::TurnBearing>(
+        const auto pre_turn_bearing_ptr = layout.GetBlockPtr<guidance::TurnBearing>(
             memory_ptr, storage::DataLayout::PRE_TURN_BEARING);
-        util::vector_view<util::guidance::TurnBearing> pre_turn_bearings(
+        util::vector_view<guidance::TurnBearing> pre_turn_bearings(
             pre_turn_bearing_ptr, layout.num_entries[storage::DataLayout::PRE_TURN_BEARING]);
 
-        const auto post_turn_bearing_ptr = layout.GetBlockPtr<util::guidance::TurnBearing>(
+        const auto post_turn_bearing_ptr = layout.GetBlockPtr<guidance::TurnBearing>(
             memory_ptr, storage::DataLayout::POST_TURN_BEARING);
-        util::vector_view<util::guidance::TurnBearing> post_turn_bearings(
+        util::vector_view<guidance::TurnBearing> post_turn_bearings(
             post_turn_bearing_ptr, layout.num_entries[storage::DataLayout::POST_TURN_BEARING]);
 
         turn_data = guidance::TurnDataView(std::move(turn_instructions),
@@ -844,11 +845,11 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         return intersection_bearings_view.GetBearingClass(node);
     }
 
-    util::guidance::TurnBearing PreTurnBearing(const EdgeID eid) const override final
+    guidance::TurnBearing PreTurnBearing(const EdgeID eid) const override final
     {
         return turn_data.GetPreTurnBearing(eid);
     }
-    util::guidance::TurnBearing PostTurnBearing(const EdgeID eid) const override final
+    guidance::TurnBearing PostTurnBearing(const EdgeID eid) const override final
     {
         return turn_data.GetPostTurnBearing(eid);
     }

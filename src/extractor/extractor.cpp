@@ -13,7 +13,10 @@
 #include "extractor/restriction_parser.hpp"
 #include "extractor/scripting_environment.hpp"
 
+#include "guidance/files.hpp"
+#include "guidance/guidance_processing.hpp"
 #include "guidance/segregated_intersection_classification.hpp"
+#include "guidance/turn_data_container.hpp"
 
 #include "storage/io.hpp"
 
@@ -274,6 +277,8 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
 
     const auto number_of_node_based_nodes = node_based_graph.GetNumberOfNodes();
 
+    const util::NameTable name_table(config.GetPath(".osrm.names").string());
+
     const auto number_of_edge_based_nodes =
         BuildEdgeExpandedGraph(node_based_graph,
                                coordinates,
@@ -283,14 +288,25 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
                                turn_restrictions,
                                conditional_turn_restrictions,
                                segregated_edges,
+                               name_table,
                                turn_lane_map,
                                scripting_environment,
                                edge_based_nodes_container,
                                edge_based_node_segments,
                                node_is_startpoint,
                                edge_based_node_weights,
-                               edge_based_edge_list,
-                               config.GetPath(".osrm.icd").string());
+                               edge_based_edge_list);
+
+    ProcessGuidanceTurns(node_based_graph,
+                         edge_based_nodes_container,
+                         coordinates,
+                         node_based_graph_factory.GetCompressedEdges(),
+                         barrier_nodes,
+                         turn_restrictions,
+                         conditional_turn_restrictions,
+                         name_table,
+                         std::move(turn_lane_map),
+                         scripting_environment);
 
     TIMER_STOP(expansion);
 
@@ -672,8 +688,8 @@ EdgeID Extractor::BuildEdgeExpandedGraph(
     const std::vector<TurnRestriction> &turn_restrictions,
     const std::vector<ConditionalTurnRestriction> &conditional_turn_restrictions,
     const std::unordered_set<EdgeID> &segregated_edges,
-    // might have to be updated to add new lane combinations
-    LaneDescriptionMap &turn_lane_map,
+    const util::NameTable &name_table,
+    const LaneDescriptionMap &turn_lane_map,
     // for calculating turn penalties
     ScriptingEnvironment &scripting_environment,
     // output data
@@ -681,11 +697,8 @@ EdgeID Extractor::BuildEdgeExpandedGraph(
     std::vector<EdgeBasedNodeSegment> &edge_based_node_segments,
     std::vector<bool> &node_is_startpoint,
     std::vector<EdgeWeight> &edge_based_node_weights,
-    util::DeallocatingVector<EdgeBasedEdge> &edge_based_edge_list,
-    const std::string &intersection_class_output_file)
+    util::DeallocatingVector<EdgeBasedEdge> &edge_based_edge_list)
 {
-    util::NameTable name_table(config.GetPath(".osrm.names").string());
-
     EdgeBasedGraphFactory edge_based_graph_factory(node_based_graph,
                                                    edge_based_nodes_container,
                                                    compressed_edge_container,
@@ -712,10 +725,7 @@ EdgeID Extractor::BuildEdgeExpandedGraph(
         WayRestrictionMap via_way_restriction_map(conditional_turn_restrictions);
         ConditionalRestrictionMap conditional_node_restriction_map(conditional_node_restrictions,
                                                                    IndexNodeByFromAndVia());
-
         edge_based_graph_factory.Run(scripting_environment,
-                                     config.GetPath(".osrm.edges").string(),
-                                     config.GetPath(".osrm.tld").string(),
                                      config.GetPath(".osrm.turn_weight_penalties").string(),
                                      config.GetPath(".osrm.turn_duration_penalties").string(),
                                      config.GetPath(".osrm.turn_penalties_index").string(),
@@ -729,29 +739,10 @@ EdgeID Extractor::BuildEdgeExpandedGraph(
 
     const auto number_of_edge_based_nodes = create_edge_based_edges();
 
-    {
-        std::vector<std::uint32_t> turn_lane_offsets;
-        std::vector<TurnLaneType::Mask> turn_lane_masks;
-        std::tie(turn_lane_offsets, turn_lane_masks) =
-            transformTurnLaneMapIntoArrays(turn_lane_map);
-        files::writeTurnLaneDescriptions(
-            config.GetPath(".osrm.tls"), turn_lane_offsets, turn_lane_masks);
-    }
-
     edge_based_graph_factory.GetEdgeBasedEdges(edge_based_edge_list);
     edge_based_graph_factory.GetEdgeBasedNodeSegments(edge_based_node_segments);
     edge_based_graph_factory.GetStartPointMarkers(node_is_startpoint);
     edge_based_graph_factory.GetEdgeBasedNodeWeights(edge_based_node_weights);
-
-    util::Log() << "Writing Intersection Classification Data";
-    TIMER_START(write_intersections);
-    files::writeIntersections(
-        intersection_class_output_file,
-        IntersectionBearingsContainer{edge_based_graph_factory.GetBearingClassIds(),
-                                      edge_based_graph_factory.GetBearingClasses()},
-        edge_based_graph_factory.GetEntryClasses());
-    TIMER_STOP(write_intersections);
-    util::Log() << "ok, after " << TIMER_SEC(write_intersections) << "s";
 
     return number_of_edge_based_nodes;
 }
@@ -842,6 +833,102 @@ void Extractor::WriteCompressedNodeBasedGraph(const std::string &path,
         writer.WriteOne(qnode.lon);
         writer.WriteOne(qnode.lat);
     }
+}
+
+template <typename Map> auto convertIDMapToVector(const Map &map)
+{
+    std::vector<typename Map::key_type> result(map.size());
+    for (const auto &pair : map)
+    {
+        BOOST_ASSERT(pair.second < map.size());
+        result[pair.second] = pair.first;
+    }
+    return result;
+}
+
+void Extractor::ProcessGuidanceTurns(
+    const util::NodeBasedDynamicGraph &node_based_graph,
+    const extractor::EdgeBasedNodeDataContainer &edge_based_node_container,
+    const std::vector<util::Coordinate> &node_coordinates,
+    const CompressedEdgeContainer &compressed_edge_container,
+    const std::unordered_set<NodeID> &barrier_nodes,
+    const std::vector<TurnRestriction> &turn_restrictions,
+    const std::vector<ConditionalTurnRestriction> &conditional_turn_restrictions,
+    const util::NameTable &name_table,
+    LaneDescriptionMap lane_description_map,
+    ScriptingEnvironment &scripting_environment)
+{
+    // Output data
+    osrm::guidance::TurnDataExternalContainer turn_data_container;
+    util::guidance::LaneDataIdMap lane_data_map;
+    osrm::guidance::BearingClassesVector bearing_class_by_node_based_node;
+    osrm::guidance::BearingClassesMap bearing_class_hash;
+    osrm::guidance::EntryClassesMap entry_class_hash;
+
+    TIMER_START(turn_annotations);
+
+    {
+        SuffixTable street_name_suffix_table(scripting_environment);
+        const auto &turn_lanes_data = transformTurnLaneMapIntoArrays(lane_description_map);
+
+        std::vector<TurnRestriction> node_restrictions;
+        for (auto const &t : turn_restrictions)
+            if (t.Type() == RestrictionType::NODE_RESTRICTION)
+                node_restrictions.push_back(t);
+
+        RestrictionMap node_restriction_map(node_restrictions, IndexNodeByFromAndVia());
+        WayRestrictionMap way_restriction_map(conditional_turn_restrictions);
+
+        osrm::guidance::annotateTurns(node_based_graph,
+                                      edge_based_node_container,
+                                      node_coordinates,
+                                      compressed_edge_container,
+                                      barrier_nodes,
+                                      node_restriction_map,
+                                      way_restriction_map,
+                                      name_table,
+                                      street_name_suffix_table,
+                                      turn_lanes_data,
+                                      lane_description_map,
+                                      lane_data_map,
+                                      turn_data_container,
+                                      bearing_class_by_node_based_node,
+                                      bearing_class_hash,
+                                      entry_class_hash);
+    }
+
+    TIMER_STOP(turn_annotations);
+    util::Log() << "Guidance turn annotations took " << TIMER_SEC(turn_annotations) << "s";
+
+    util::Log() << "Writing Intersection Classification Data";
+    TIMER_START(write_intersections);
+    files::writeIntersections(
+        config.GetPath(".osrm.icd").string(),
+        IntersectionBearingsContainer{bearing_class_by_node_based_node,
+                                      convertIDMapToVector(bearing_class_hash.data)},
+        convertIDMapToVector(entry_class_hash.data));
+    TIMER_STOP(write_intersections);
+    util::Log() << "ok, after " << TIMER_SEC(write_intersections) << "s";
+
+    util::Log() << "Writing Turns and Lane Data...";
+    TIMER_START(write_guidance_data);
+    storage::io::FileWriter writer(config.GetPath(".osrm.tld").string(),
+                                   storage::io::FileWriter::GenerateFingerprint);
+    storage::serialization::write(writer, convertIDMapToVector(lane_data_map.data));
+
+    { // Turn lanes handler modifies lane_description_map, so another transformation is needed
+        std::vector<std::uint32_t> turn_lane_offsets;
+        std::vector<TurnLaneType::Mask> turn_lane_masks;
+        std::tie(turn_lane_offsets, turn_lane_masks) =
+            transformTurnLaneMapIntoArrays(lane_description_map);
+        files::writeTurnLaneDescriptions(
+            config.GetPath(".osrm.tls"), turn_lane_offsets, turn_lane_masks);
+    }
+
+    osrm::guidance::files::writeTurnData(config.GetPath(".osrm.edges").string(),
+                                         turn_data_container);
+    TIMER_STOP(write_guidance_data);
+    util::Log() << "ok, after " << TIMER_SEC(write_guidance_data) << "s";
 }
 
 } // namespace extractor

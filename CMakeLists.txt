@@ -126,7 +126,7 @@ configure_file(
 )
 file(GLOB UtilGlob src/util/*.cpp src/util/*/*.cpp)
 file(GLOB ExtractorGlob src/extractor/*.cpp src/extractor/*/*.cpp)
-file(GLOB GuidanceGlob src/guidance/*.cpp)
+file(GLOB GuidanceGlob src/guidance/*.cpp src/extractor/intersection/*.cpp)
 file(GLOB PartitionerGlob src/partitioner/*.cpp)
 file(GLOB CustomizerGlob src/customize/*.cpp)
 file(GLOB ContractorGlob src/contractor/*.cpp)

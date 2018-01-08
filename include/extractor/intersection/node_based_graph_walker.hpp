@@ -311,7 +311,7 @@ struct DistanceToNextIntersectionAccumulator
     double distance = 0.;
 };
 
-} // namespace guidance
+} // namespace intersection
 } // namespace extractor
 } // namespace osrm
 

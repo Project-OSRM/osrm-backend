@@ -44,7 +44,7 @@ module.exports = function () {
 
         this.OSRM_PORT = process.env.OSRM_PORT && parseInt(process.env.OSRM_PORT) || 5000;
         this.HOST = 'http://127.0.0.1:' + this.OSRM_PORT;
-        
+
         this.OSRM_PROFILE = process.env.OSRM_PROFILE;
 
         if (this.PLATFORM_WINDOWS) {
@@ -72,6 +72,7 @@ module.exports = function () {
         this.OSRM_CONTRACT_PATH = path.resolve(util.format('%s/%s%s', this.BIN_PATH, 'osrm-contract', this.EXE));
         this.OSRM_ROUTED_PATH = path.resolve(util.format('%s/%s%s', this.BIN_PATH, 'osrm-routed', this.EXE));
         this.LIB_OSRM_EXTRACT_PATH = util.format('%s/' + this.LIB, this.BIN_PATH, 'osrm_extract'),
+        this.LIB_OSRM_GUIDANCE_PATH = util.format('%s/' + this.LIB, this.BIN_PATH, 'osrm_guidance'),
         this.LIB_OSRM_CONTRACT_PATH = util.format('%s/' + this.LIB, this.BIN_PATH, 'osrm_contract'),
         this.LIB_OSRM_PATH = util.format('%s/' + this.LIB, this.BIN_PATH, 'osrm');
 
