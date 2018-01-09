@@ -69,13 +69,13 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates_fixture)
                                                    json::Object{{
                                                        {"location", location},
                                                        {"bearing_before", 0},
-                                                       {"bearing_after", 58},
+                                                       {"bearing_after", 238},
                                                        {"type", "depart"},
                                                    }}},
                                                   {"intersections",
                                                    json::Array{{json::Object{
                                                        {{"location", location},
-                                                        {"bearings", json::Array{{58}}},
+                                                        {"bearings", json::Array{{238}}},
                                                         {"entry", json::Array{{json::True()}}},
                                                         {"out", 0}}}}}}}}},
 
@@ -88,13 +88,13 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates_fixture)
                                                  {"driving_side", "right"},
                                                  {"maneuver",
                                                   json::Object{{{"location", location},
-                                                                {"bearing_before", 58},
+                                                                {"bearing_before", 238},
                                                                 {"bearing_after", 0},
                                                                 {"type", "arrive"}}}},
                                                  {"intersections",
                                                   json::Array{{json::Object{
                                                       {{"location", location},
-                                                       {"bearings", json::Array{{238}}},
+                                                       {"bearings", json::Array{{58}}},
                                                        {"entry", json::Array{{json::True()}}},
                                                        {"in", 0}}}}}}
 

@@ -81,6 +81,13 @@ function WayHandlers.startpoint(profile,way,result,data)
     result.is_startpoint = result.forward_mode == profile.default_mode or
                            result.backward_mode == profile.default_mode
   end
+  -- highway=service and access tags check
+  local is_service = data.highway == "service"
+  if is_service then
+    if profile.service_access_tag_blacklist[data.forward_access] then
+      result.is_startpoint = false
+    end
+  end
 end
 
 -- handle turn lanes
@@ -219,7 +226,7 @@ function WayHandlers.access(profile,way,result,data)
   data.forward_access, data.backward_access =
     Tags.get_forward_backward_by_set(way,data,profile.access_tags_hierarchy)
 
-  -- only allow a subset of roads that are marked as restricted
+  -- only allow a subset of roads to be treated as restricted
   if profile.restricted_highway_whitelist[data.highway] then
       if profile.restricted_access_tag_list[data.forward_access] then
           result.forward_restricted = true
@@ -230,6 +237,7 @@ function WayHandlers.access(profile,way,result,data)
       end
   end
 
+  -- blacklist access tags that aren't marked as restricted
   if profile.access_tag_blacklist[data.forward_access] and not result.forward_restricted then
     result.forward_mode = mode.inaccessible
   end
