@@ -39,8 +39,8 @@ struct ExtractionTurn
     const bool is_left_hand_driving;
     double weight;
     double duration;
-    TravelMode source_mode;
-    TravelMode target_mode;
+    const TravelMode source_mode;
+    const TravelMode target_mode;
 };
 }
 }
