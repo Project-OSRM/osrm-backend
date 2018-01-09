@@ -1,4 +1,7 @@
 # UNRELEASED
+  - Changes from 5.15.0:
+    - Profile:
+      - FIXED: `highway=service` will now be used for restricted access, `access=private` is still disabled for snapping.
 
 # 5.15.0
   - Changes from 5.14.3:

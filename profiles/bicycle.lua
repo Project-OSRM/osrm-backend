@@ -71,6 +71,9 @@ function setup()
 
     restricted_highway_whitelist = Set { },
 
+    -- tags disallow access to in combination with highway=service
+    service_access_tag_blacklist = Set { },
+
     construction_whitelist = Set {
       'no',
       'widening',

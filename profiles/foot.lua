@@ -65,6 +65,9 @@ function setup()
       'access'
     },
 
+    -- tags disallow access to in combination with highway=service
+    service_access_tag_blacklist = Set { },
+
     restrictions = Sequence {
       'foot'
     },
