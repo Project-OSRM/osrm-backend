@@ -12,7 +12,7 @@ namespace osrm
 {
 namespace util
 {
-class Coordinate;
+struct Coordinate;
 }
 
 namespace extractor

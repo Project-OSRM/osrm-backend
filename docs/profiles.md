@@ -208,16 +208,19 @@ The `process_turn` function is called for every possible turn in the network. Ba
 
 The following attributes can be read and set on the result in `process_turn`:
 
-Attribute          | Read/write? | Type    | Notes
--------------------|-------------|---------|------------------------------------------------------
-direction_modifier | Read        | Enum    | Geometry of turn. Defined in `include/extractor/guidance/turn_instruction.hpp`
-turn_type          | Read        | Enum    | Priority of turn. Defined in `include/extractor/guidance/turn_instruction.hpp`
-has_traffic_light  | Read        | Boolean | Is a traffic light present at this turn?
-source_restricted  | Read        | Boolean | Is it from a restricted access road? (See definition in `process_way`)
-target_restricted  | Read        | Boolean | Is it to a restricted access road? (See definition in `process_way`)
-angle              | Read        | Float   | Angle of turn in degrees (`0-360`: `0`=u-turn, `180`=straight on)
-duration           | Read/write  | Float   | Penalty to be applied for this turn (duration in deciseconds)
-weight             | Read/write  | Float   | Penalty to be applied for this turn (routing weight)
+Attribute            | Read/write? | Type    | Notes
+---------------------|-------------|---------|------------------------------------------------------
+angle                | Read        | Float   | Angle of turn in degrees (`0-360`: `0`=u-turn, `180`=straight on)
+number_of_roads      | Read        | Integer | Number of ways at the intersection of the turn
+is_u_turn            | Read        | Boolean | Is the turn a u-turn?
+has_traffic_light    | Read        | Boolean | Is a traffic light present at this turn?
+source_restricted    | Read        | Boolean | Is it from a restricted access road? (See definition in `process_way`)
+target_restricted    | Read        | Boolean | Is it to a restricted access road? (See definition in `process_way`)
+is_left_hand_driving | Read        | Boolean | Is left-hand traffic? 
+weight               | Read/write  | Float   | Penalty to be applied for this turn (routing weight)
+duration             | Read/write  | Float   | Penalty to be applied for this turn (duration in deciseconds)
+source_mode          | Read        | Enum    | Travel mode before the turn. Defined in `include/extractor/travel_mode.hpp`
+target_mode          | Read        | Enum    | Travel mode after the turn. Defined in `include/extractor/travel_mode.hpp`
 
 ## Guidance
 The guidance parameters in profiles are currently a work in progress. They can and will change.
