@@ -423,7 +423,7 @@ function process_way(profile, way, result, relations)
   end
 end
 
-function process_turn(profile, turn, source, target)
+function process_turn(profile, turn)
   -- Use a sigmoid function to return a penalty that maxes out at turn_penalty
   -- over the space of 0-180 degrees.  Values here were chosen by fitting
   -- the function to some turn penalty samples from real driving.
@@ -434,7 +434,7 @@ function process_turn(profile, turn, source, target)
       turn.duration = profile.properties.traffic_light_penalty
   end
 
-  if turn.number_of_roads > 2 or source.mode ~= target.mode or turn.is_u_turn then
+  if turn.number_of_roads > 2 or turn.source_mode ~= turn.target_mode or turn.is_u_turn then
     if turn.angle >= 0 then
       turn.duration = turn.duration + turn_penalty / (1 + math.exp( -((13 / turn_bias) *  turn.angle/180 - 6.5*turn_bias)))
     else
@@ -455,7 +455,7 @@ function process_turn(profile, turn, source, target)
 
   if profile.properties.weight_name == 'routability' then
       -- penalize turns from non-local access only segments onto local access only tags
-      if not source.is_restricted and target.is_restricted then
+      if not turn.source_restricted and turn.target_restricted then
           turn.weight = constants.max_turn_weight
       end
   end

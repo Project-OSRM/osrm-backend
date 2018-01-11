@@ -562,7 +562,9 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
             const auto node_based_edge_to,
             const auto incoming_bearing,
             const auto &turn,
-            const auto entry_class_id) {
+            const auto entry_class_id,
+            const auto &node_based_edges_right,
+            const auto &node_based_edges_left) {
 
             const auto node_restricted = isRestricted(node_along_road_entering,
                                                       intersection_node,
@@ -598,23 +600,48 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
             // compute weight and duration penalties
             auto is_traffic_light = m_traffic_lights.count(intersection_node);
+            std::vector<ExtractionTurnLeg> roads_on_the_right;
+            std::vector<ExtractionTurnLeg> roads_on_the_left;
+            for (auto eid : node_based_edges_right) {
+                const auto &edge_data = m_node_based_graph.GetEdgeData(eid);
+                roads_on_the_right.emplace_back(edge_data.flags.restricted,
+                                                m_edge_based_node_container.GetAnnotation(edge_data.annotation_data).travel_mode,
+                                                edge_data.flags.road_classification.IsMotorwayClass(),
+                                                edge_data.flags.road_classification.IsLinkClass(),
+                                                edge_data.flags.road_classification.GetNumberOfLanes());
+            }
+            for (auto eid : node_based_edges_left) {
+                const auto &edge_data = m_node_based_graph.GetEdgeData(eid);
+                roads_on_the_left.emplace_back(edge_data.flags.restricted,
+                                                m_edge_based_node_container.GetAnnotation(edge_data.annotation_data).travel_mode,
+                                                edge_data.flags.road_classification.IsMotorwayClass(),
+                                                edge_data.flags.road_classification.IsLinkClass(),
+                                                edge_data.flags.road_classification.GetNumberOfLanes());
+            }
+
             ExtractionTurn extracted_turn(
-                turn.angle,
-                m_node_based_graph.GetOutDegree(intersection_node),
-                turn.instruction.IsUTurn(),
-                is_traffic_light,
-                m_edge_based_node_container.GetAnnotation(edge_data1.annotation_data).is_left_hand_driving);
-            ExtractionTurnLeg extracted_source_leg(edge_data1.flags.restricted,
-                                                   m_edge_based_node_container.GetAnnotation(edge_data1.annotation_data).travel_mode,
-                                                   edge_data1.flags.road_classification.IsMotorwayClass(),
-                                                   edge_data1.flags.road_classification.IsLinkClass(),
-                                                   edge_data1.flags.road_classification.GetNumberOfLanes());
-            ExtractionTurnLeg extracted_target_leg(edge_data2.flags.restricted,
-                                                   m_edge_based_node_container.GetAnnotation(edge_data2.annotation_data).travel_mode,
-                                                   edge_data2.flags.road_classification.IsMotorwayClass(),
-                                                   edge_data2.flags.road_classification.IsLinkClass(),
-                                                   edge_data2.flags.road_classification.GetNumberOfLanes());
-            scripting_environment.ProcessTurn(extracted_turn, extracted_source_leg, extracted_target_leg);
+                turn.angle, m_node_based_graph.GetOutDegree(intersection_node),
+                turn.instruction.IsUTurn(), is_traffic_light,
+                m_edge_based_node_container
+                    .GetAnnotation(edge_data1.annotation_data)
+                    .is_left_hand_driving,
+                edge_data1.flags.restricted,
+                m_edge_based_node_container
+                    .GetAnnotation(edge_data1.annotation_data)
+                    .travel_mode,
+                edge_data1.flags.road_classification.IsMotorwayClass(),
+                edge_data1.flags.road_classification.IsLinkClass(),
+                edge_data1.flags.road_classification.GetNumberOfLanes(),
+                edge_data2.flags.restricted,
+                m_edge_based_node_container
+                    .GetAnnotation(edge_data2.annotation_data)
+                    .travel_mode,
+                edge_data2.flags.road_classification.IsMotorwayClass(),
+                edge_data2.flags.road_classification.IsLinkClass(),
+                edge_data2.flags.road_classification.GetNumberOfLanes(),
+                roads_on_the_right, roads_on_the_left);
+            scripting_environment.ProcessTurn(
+                extracted_turn);
 
             // turn penalties are limited to [-2^15, 2^15) which roughly
             // translates to 54 minutes and fits signed 16bit deci-seconds
@@ -785,6 +812,18 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                             OSRM_ASSERT(turn != intersection.end(),
                                         m_coordinates[intersection_node]);
 
+
+                            // memory problem @CHAUTODO?
+                            std::vector<std::size_t> node_based_edges_right;
+                            std::vector<std::size_t> node_based_edges_left;
+                            std::size_t outgoing_pos = turn - intersection.begin();
+                            for (std::size_t connected_road = 0; connected_road < outgoing_pos; connected_road++) {
+                                node_based_edges_right.push_back(intersection[connected_road].eid);
+                            }
+                            for (std::size_t connected_road = outgoing_pos+1; connected_road < intersection.size(); connected_road++) {
+                                node_based_edges_left.push_back(intersection[connected_road].eid);
+                            }
+
                             // In case a way restriction starts at a given location, add a turn onto
                             // every artificial node eminating here.
                             //
@@ -822,7 +861,9 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                                   outgoing_edge.edge,
                                                   reversed_incoming_bearing,
                                                   *turn,
-                                                  entry_class_id);
+                                                  entry_class_id,
+                                                  node_based_edges_right,
+                                                  node_based_edges_left);
 
                                 buffer->continuous_data.edges_list.push_back(
                                     edge_with_data_and_condition.first.edge);
@@ -884,7 +925,9 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                                           outgoing_edge.edge,
                                                           reversed_incoming_bearing,
                                                           *turn,
-                                                          entry_class_id);
+                                                          entry_class_id,
+                                                          node_based_edges_right,
+                                                          node_based_edges_left);
 
                                         buffer->delayed_data.push_back(
                                             std::move(edge_with_data_and_condition.first));
@@ -918,7 +961,9 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                                           outgoing_edge.edge,
                                                           reversed_incoming_bearing,
                                                           *turn,
-                                                          entry_class_id);
+                                                          entry_class_id,
+                                                          node_based_edges_right,
+                                                          node_based_edges_left);
 
                                         buffer->delayed_data.push_back(
                                             std::move(edge_with_data_and_condition.first));

@@ -557,7 +557,7 @@ function process_way(profile, way, result)
   WayHandlers.run(profile, way, result, data, handlers)
 end
 
-function process_turn(profile, turn, source, target)
+function process_turn(profile, turn)
   -- compute turn penalty as angle^2, with a left/right bias
   local normalized_angle = turn.angle / 90.0
   if normalized_angle >= 0.0 then

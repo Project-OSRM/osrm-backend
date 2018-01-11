@@ -220,12 +220,13 @@ void GraphCompressor::Compress(
                         continue;
 
                     // generate an artifical turn for the turn penalty generation
-                    ExtractionTurn extraction_turn(0, 2, false, true, false);
-                    ExtractionTurnLeg source_leg(false, TRAVEL_MODE_DRIVING,
-                                                 false, false, 1);
-                    ExtractionTurnLeg target_leg(false, TRAVEL_MODE_DRIVING,
-                                                 false, false, 1);
-                    scripting_environment.ProcessTurn(extraction_turn, source_leg, target_leg);
+                    std::vector<ExtractionTurnLeg> roads_on_the_right;
+                    std::vector<ExtractionTurnLeg> roads_on_the_left;
+                    ExtractionTurn extraction_turn(0, 2, false, true, false,
+                        false, TRAVEL_MODE_DRIVING, false, false, 1,
+                        false, TRAVEL_MODE_DRIVING, false, false, 1,
+                                                 roads_on_the_right, roads_on_the_left);
+                    scripting_environment.ProcessTurn(extraction_turn);
                     node_duration_penalty = extraction_turn.duration * 10;
                     node_weight_penalty = extraction_turn.weight * weight_multiplier;
                 }

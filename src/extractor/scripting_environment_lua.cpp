@@ -693,6 +693,34 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
                                                    &ExtractionTurn::has_traffic_light,
                                                    "is_left_hand_driving",
                                                    &ExtractionTurn::is_left_hand_driving,
+
+                                                   "source_restricted",
+                                                   &ExtractionTurn::source_restricted,
+                                                   "source_mode",
+                                                   &ExtractionTurn::source_mode,
+                                                   "source_is_motorway",
+                                                   &ExtractionTurn::source_is_motorway,
+                                                   "source_is_link",
+                                                   &ExtractionTurn::source_is_link,
+                                                   "source_number_of_lanes",
+                                                   &ExtractionTurn::source_number_of_lanes,
+
+                                                   "target_restricted",
+                                                   &ExtractionTurn::target_restricted,
+                                                   "target_mode",
+                                                   &ExtractionTurn::target_mode,
+                                                   "target_is_motorway",
+                                                   &ExtractionTurn::target_is_motorway,
+                                                   "target_is_link",
+                                                   &ExtractionTurn::target_is_link,
+                                                   "target_number_of_lanes",
+                                                   &ExtractionTurn::target_number_of_lanes,
+
+
+                                                   "roads_on_the_right",
+                                                   &ExtractionTurn::roads_on_the_right,
+                                                   "roads_on_the_left",
+                                                   &ExtractionTurn::roads_on_the_left,
                                                    "weight",
                                                    &ExtractionTurn::weight,
                                                    "duration",
@@ -969,7 +997,7 @@ std::vector<std::string> Sol2ScriptingEnvironment::GetRelations()
     }
 }
 
-void Sol2ScriptingEnvironment::ProcessTurn(ExtractionTurn &turn, ExtractionTurnLeg &source, ExtractionTurnLeg &target)
+void Sol2ScriptingEnvironment::ProcessTurn(ExtractionTurn &turn)
 {
     auto &context = GetSol2Context();
 
@@ -980,7 +1008,7 @@ void Sol2ScriptingEnvironment::ProcessTurn(ExtractionTurn &turn, ExtractionTurnL
     case 2:
         if (context.has_turn_penalty_function)
         {
-            context.turn_function(context.profile_table, turn, source, target);
+            context.turn_function(context.profile_table, turn);
 
             // Turn weight falls back to the duration value in deciseconds
             // or uses the extracted unit-less weight value
