@@ -12,7 +12,7 @@ notifications:
 
 branches:
   only:
-    - master
+    - 5.15
     # enable building tags
     - /^v\d+\.\d+(\.\d+)?(-\S*)?$/
 
