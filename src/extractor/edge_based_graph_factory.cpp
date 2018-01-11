@@ -603,13 +603,18 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 m_node_based_graph.GetOutDegree(intersection_node),
                 turn.instruction.IsUTurn(),
                 is_traffic_light,
-                edge_data1.flags.restricted,
-                edge_data2.flags.restricted,
-                m_edge_based_node_container.GetAnnotation(edge_data1.annotation_data)
-                    .is_left_hand_driving,
-                m_edge_based_node_container.GetAnnotation(edge_data1.annotation_data).travel_mode,
-                m_edge_based_node_container.GetAnnotation(edge_data2.annotation_data).travel_mode);
-            scripting_environment.ProcessTurn(extracted_turn);
+                m_edge_based_node_container.GetAnnotation(edge_data1.annotation_data).is_left_hand_driving);
+            ExtractionTurnLeg extracted_source_leg(edge_data1.flags.restricted,
+                                                   m_edge_based_node_container.GetAnnotation(edge_data1.annotation_data).travel_mode,
+                                                   edge_data1.flags.road_classification.IsMotorwayClass(),
+                                                   edge_data1.flags.road_classification.IsLinkClass(),
+                                                   edge_data1.flags.road_classification.GetNumberOfLanes());
+            ExtractionTurnLeg extracted_target_leg(edge_data2.flags.restricted,
+                                                   m_edge_based_node_container.GetAnnotation(edge_data2.annotation_data).travel_mode,
+                                                   edge_data2.flags.road_classification.IsMotorwayClass(),
+                                                   edge_data2.flags.road_classification.IsLinkClass(),
+                                                   edge_data2.flags.road_classification.GetNumberOfLanes());
+            scripting_environment.ProcessTurn(extracted_turn, extracted_source_leg, extracted_target_leg);
 
             // turn penalties are limited to [-2^15, 2^15) which roughly
             // translates to 54 minutes and fits signed 16bit deci-seconds

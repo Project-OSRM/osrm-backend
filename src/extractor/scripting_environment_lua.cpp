@@ -670,6 +670,18 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
     {
     case 4:
     {
+        context.state.new_usertype<ExtractionTurnLeg>("ExtractionTurnLeg",
+                                                      "is_restricted",
+                                                      &ExtractionTurnLeg::is_restricted,
+                                                      "mode",
+                                                      &ExtractionTurnLeg::mode,
+                                                      "is_motorway",
+                                                      &ExtractionTurnLeg::is_motorway,
+                                                      "is_link",
+                                                      &ExtractionTurnLeg::is_link,
+                                                      "number_of_lanes",
+                                                      &ExtractionTurnLeg::number_of_lanes);
+
         context.state.new_usertype<ExtractionTurn>("ExtractionTurn",
                                                    "angle",
                                                    &ExtractionTurn::angle,
@@ -679,20 +691,12 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
                                                    &ExtractionTurn::is_u_turn,
                                                    "has_traffic_light",
                                                    &ExtractionTurn::has_traffic_light,
+                                                   "is_left_hand_driving",
+                                                   &ExtractionTurn::is_left_hand_driving,
                                                    "weight",
                                                    &ExtractionTurn::weight,
                                                    "duration",
-                                                   &ExtractionTurn::duration,
-                                                   "source_restricted",
-                                                   &ExtractionTurn::source_restricted,
-                                                   "target_restricted",
-                                                   &ExtractionTurn::target_restricted,
-                                                   "is_left_hand_driving",
-                                                   &ExtractionTurn::is_left_hand_driving,
-                                                   "source_mode",
-                                                   &ExtractionTurn::source_mode,
-                                                   "target_mode",
-                                                   &ExtractionTurn::target_mode);
+                                                   &ExtractionTurn::duration);
         initV2Context();
         break;
     }
@@ -965,7 +969,7 @@ std::vector<std::string> Sol2ScriptingEnvironment::GetRelations()
     }
 }
 
-void Sol2ScriptingEnvironment::ProcessTurn(ExtractionTurn &turn)
+void Sol2ScriptingEnvironment::ProcessTurn(ExtractionTurn &turn, ExtractionTurnLeg &source, ExtractionTurnLeg &target)
 {
     auto &context = GetSol2Context();
 
@@ -976,7 +980,7 @@ void Sol2ScriptingEnvironment::ProcessTurn(ExtractionTurn &turn)
     case 2:
         if (context.has_turn_penalty_function)
         {
-            context.turn_function(context.profile_table, turn);
+            context.turn_function(context.profile_table, turn, source, target);
 
             // Turn weight falls back to the duration value in deciseconds
             // or uses the extracted unit-less weight value

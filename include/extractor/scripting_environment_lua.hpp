@@ -82,7 +82,7 @@ class Sol2ScriptingEnvironment final : public ScriptingEnvironment
     std::vector<std::string> GetClassNames() override;
     std::vector<std::string> GetRestrictions() override;
     std::vector<std::string> GetRelations() override;
-    void ProcessTurn(ExtractionTurn &turn) override;
+    void ProcessTurn(ExtractionTurn &turn, ExtractionTurnLeg &source, ExtractionTurnLeg &target) override;
     void ProcessSegment(ExtractionSegment &segment) override;
 
     void

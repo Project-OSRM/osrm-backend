@@ -220,18 +220,12 @@ void GraphCompressor::Compress(
                         continue;
 
                     // generate an artifical turn for the turn penalty generation
-                    ExtractionTurn extraction_turn(
-                        0,
-                        2,
-                        false,
-                        true,
-                        fwd_edge_data1.flags.restricted,
-                        fwd_edge_data2.flags.restricted,
-                        node_data_container[fwd_edge_data1.annotation_data].is_left_hand_driving,
-                        TRAVEL_MODE_DRIVING,
-                        TRAVEL_MODE_DRIVING);
-
-                    scripting_environment.ProcessTurn(extraction_turn);
+                    ExtractionTurn extraction_turn(0, 2, false, true, false);
+                    ExtractionTurnLeg source_leg(false, TRAVEL_MODE_DRIVING,
+                                                 false, false, 1);
+                    ExtractionTurnLeg target_leg(false, TRAVEL_MODE_DRIVING,
+                                                 false, false, 1);
+                    scripting_environment.ProcessTurn(extraction_turn, source_leg, target_leg);
                     node_duration_penalty = extraction_turn.duration * 10;
                     node_weight_penalty = extraction_turn.weight * weight_multiplier;
                 }

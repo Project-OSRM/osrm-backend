@@ -250,7 +250,7 @@ function process_way(profile, way, result)
   WayHandlers.run(profile, way, result, data, handlers)
 end
 
-function process_turn (profile, turn)
+function process_turn (profile, turn, source, target)
   turn.duration = 0.
 
   if turn.direction_modifier == direction_modifier.u_turn then
@@ -262,7 +262,7 @@ function process_turn (profile, turn)
   end
   if profile.properties.weight_name == 'routability' then
       -- penalize turns from non-local access only segments onto local access only tags
-      if not turn.source_restricted and turn.target_restricted then
+      if not source.is_restricted and target.is_restricted then
           turn.weight = turn.weight + 3000
       end
   end
