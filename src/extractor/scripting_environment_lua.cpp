@@ -684,7 +684,11 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
                                                       "is_link",
                                                       &ExtractionTurnLeg::is_link,
                                                       "number_of_lanes",
-                                                      &ExtractionTurnLeg::number_of_lanes);
+                                                      &ExtractionTurnLeg::number_of_lanes,
+                                                      "highway_turn_classification",
+                                                      &ExtractionTurnLeg::highway_turn_classification,
+                                                      "access_turn_classification",
+                                                      &ExtractionTurnLeg::access_turn_classification);
 
         context.state.new_usertype<ExtractionTurn>("ExtractionTurn",
                                                    "angle",
@@ -708,6 +712,10 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
                                                    &ExtractionTurn::source_is_link,
                                                    "source_number_of_lanes",
                                                    &ExtractionTurn::source_number_of_lanes,
+                                                   "source_highway_turn_classification",
+                                                   &ExtractionTurn::source_highway_turn_classification,
+                                                   "source_access_turn_classification",
+                                                   &ExtractionTurn::source_access_turn_classification,
 
                                                    "target_restricted",
                                                    &ExtractionTurn::target_restricted,
@@ -719,6 +727,10 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
                                                    &ExtractionTurn::target_is_link,
                                                    "target_number_of_lanes",
                                                    &ExtractionTurn::target_number_of_lanes,
+                                                   "target_highway_turn_classification",
+                                                   &ExtractionTurn::target_highway_turn_classification,
+                                                   "target_access_turn_classification",
+                                                   &ExtractionTurn::target_access_turn_classification,
 
 
                                                    "roads_on_the_right",

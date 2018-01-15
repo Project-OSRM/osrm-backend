@@ -608,7 +608,10 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                                 m_edge_based_node_container.GetAnnotation(edge_data.annotation_data).travel_mode,
                                                 edge_data.flags.road_classification.IsMotorwayClass(),
                                                 edge_data.flags.road_classification.IsLinkClass(),
-                                                edge_data.flags.road_classification.GetNumberOfLanes());
+                                                edge_data.flags.road_classification.GetNumberOfLanes(),
+                                                edge_data.flags.highway_turn_classification,
+                                                edge_data.flags.access_turn_classification,
+                                                edge_data.flags.speed);
             }
             for (auto eid : node_based_edges_left) {
                 const auto &edge_data = m_node_based_graph.GetEdgeData(eid);
@@ -616,7 +619,10 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                                 m_edge_based_node_container.GetAnnotation(edge_data.annotation_data).travel_mode,
                                                 edge_data.flags.road_classification.IsMotorwayClass(),
                                                 edge_data.flags.road_classification.IsLinkClass(),
-                                                edge_data.flags.road_classification.GetNumberOfLanes());
+                                                edge_data.flags.road_classification.GetNumberOfLanes(),
+                                                edge_data.flags.highway_turn_classification,
+                                                edge_data.flags.access_turn_classification,
+                                                edge_data.flags.speed);
             }
 
             ExtractionTurn extracted_turn(
@@ -632,6 +638,9 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 edge_data1.flags.road_classification.IsMotorwayClass(),
                 edge_data1.flags.road_classification.IsLinkClass(),
                 edge_data1.flags.road_classification.GetNumberOfLanes(),
+                edge_data1.flags.highway_turn_classification,
+                edge_data1.flags.access_turn_classification,
+                edge_data1.flags.speed,
                 edge_data2.flags.restricted,
                 m_edge_based_node_container
                     .GetAnnotation(edge_data2.annotation_data)
@@ -639,6 +648,9 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 edge_data2.flags.road_classification.IsMotorwayClass(),
                 edge_data2.flags.road_classification.IsLinkClass(),
                 edge_data2.flags.road_classification.GetNumberOfLanes(),
+                edge_data2.flags.highway_turn_classification,
+                edge_data2.flags.access_turn_classification,
+                edge_data2.flags.speed,
                 roads_on_the_right, roads_on_the_left);
             scripting_environment.ProcessTurn(
                 extracted_turn);
