@@ -120,6 +120,7 @@ class MatchAPI final : public RouteAPI
                 sub_matchings[matching_index.sub_matching_index]
                     .alternatives_count[matching_index.point_index];
             // waypoint indices need to be adjusted if route legs were collapsed
+            // waypoint parameter assumes there is only one match object
             if (!parameters.waypoints.empty())
             {
                 if (tidy_result.was_waypoint[trace_index])
