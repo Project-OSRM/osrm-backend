@@ -13,6 +13,14 @@ using Latitude = osrm::util::FloatLatitude;
 using Location = osrm::util::Coordinate;
 using Locations = std::vector<Location>;
 
+inline Locations get_split_trace_locations()
+{
+    return {{Longitude{7.420202}, Latitude{43.732274}},
+            {Longitude{7.422369}, Latitude{43.732282}},
+            {Longitude{7.421511}, Latitude{43.734181}},
+            {Longitude{7.421489}, Latitude{43.736553}}};
+}
+
 inline Location get_dummy_location()
 {
     return {osrm::util::FloatLongitude{7.437069}, osrm::util::FloatLatitude{43.749249}};

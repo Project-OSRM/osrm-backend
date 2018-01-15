@@ -64,4 +64,53 @@ BOOST_AUTO_TEST_CASE(test_match)
     }
 }
 
+BOOST_AUTO_TEST_CASE(test_match_split)
+{
+    using namespace osrm;
+
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm");
+
+    MatchParameters params;
+    params.coordinates = get_split_trace_locations();
+    params.timestamps = {1,2,1700,1800};
+
+    json::Object result;
+
+    const auto rc = osrm.Match(params, result);
+
+    BOOST_CHECK(rc == Status::Ok || rc == Status::Error);
+    const auto code = result.values.at("code").get<json::String>().value;
+    BOOST_CHECK_EQUAL(code, "Ok");
+
+    const auto &tracepoints = result.values.at("tracepoints").get<json::Array>().values;
+    BOOST_CHECK_EQUAL(tracepoints.size(), params.coordinates.size());
+
+    const auto &matchings = result.values.at("matchings").get<json::Array>().values;
+    const auto &number_of_matchings = matchings.size();
+    BOOST_CHECK_EQUAL(number_of_matchings, 2);
+    for (const auto &waypoint : tracepoints)
+    {
+        if (waypoint.is<mapbox::util::recursive_wrapper<util::json::Object>>())
+        {
+            BOOST_CHECK(waypoint_check(waypoint));
+            const auto &waypoint_object = waypoint.get<json::Object>();
+            const auto matchings_index =
+                waypoint_object.values.at("matchings_index").get<json::Number>().value;
+            const auto waypoint_index =
+                waypoint_object.values.at("waypoint_index").get<json::Number>().value;
+            const auto &route_legs = matchings[matchings_index]
+                                         .get<json::Object>()
+                                         .values.at("legs")
+                                         .get<json::Array>()
+                                         .values;
+            BOOST_CHECK_LT(waypoint_index, route_legs.size() + 1);
+            BOOST_CHECK_LT(matchings_index, number_of_matchings);
+        }
+        else
+        {
+            BOOST_CHECK(waypoint.is<json::Null>());
+        }
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
