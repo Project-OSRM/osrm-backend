@@ -36,7 +36,6 @@ class ExtractionRelationContainer;
 struct ExtractionNode;
 struct ExtractionWay;
 struct ExtractionTurn;
-struct ExtractionTurnLeg;
 struct ExtractionSegment;
 
 /**

@@ -63,6 +63,8 @@ struct ExtractionWay
         forward_restricted = false;
         backward_restricted = false;
         is_left_hand_driving = false;
+        highway_turn_classification = 0;
+        access_turn_classification = 0;
     }
 
     // wrappers to allow assigning nil (nullptr) to string values
@@ -123,6 +125,10 @@ struct ExtractionWay
     bool backward_restricted : 1;
     bool is_left_hand_driving : 1;
     bool : 2;
+
+    // user classifications for turn penalties
+    std::uint8_t highway_turn_classification; // @CHAUTODO memory? limit to 3 bits? // 8
+    std::uint8_t access_turn_classification;  // 3 are enough
 };
 }
 }

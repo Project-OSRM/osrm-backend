@@ -221,6 +221,21 @@ function WayHandlers.hov(profile,way,result,data)
   end
 end
 
+
+-- set highway and access classification by user preference
+function WayHandlers.way_classification_for_turn(profile,way,result,data)
+  local highway = way:get_value_by_key("highway")
+  local access = way:get_value_by_key("access")
+
+  if highway and profile.highway_turn_classification[highway] then
+    result.highway_turn_classification = profile.highway_turn_classification[highway]
+  end
+  if access and profile.access_turn_classification[access] then
+    result.access_turn_classification = profile.access_turn_classification[access]
+  end
+end
+
+
 -- check accessibility by traversing our access tag hierarchy
 function WayHandlers.access(profile,way,result,data)
   data.forward_access, data.backward_access =
