@@ -563,8 +563,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
             const auto incoming_bearing,
             const auto &turn,
             const auto entry_class_id,
-            const auto &node_based_edges_right,
-            const auto &node_based_edges_left) {
+            const auto &intersection) {
 
             const auto node_restricted = isRestricted(node_along_road_entering,
                                                       intersection_node,
@@ -600,29 +599,52 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
             // compute weight and duration penalties
             auto is_traffic_light = m_traffic_lights.count(intersection_node);
-            std::vector<ExtractionTurnLeg> roads_on_the_right;
-            std::vector<ExtractionTurnLeg> roads_on_the_left;
-            for (auto eid : node_based_edges_right) {
-                const auto &edge_data = m_node_based_graph.GetEdgeData(eid);
-                roads_on_the_right.emplace_back(edge_data.flags.restricted,
-                                                m_edge_based_node_container.GetAnnotation(edge_data.annotation_data).travel_mode,
-                                                edge_data.flags.road_classification.IsMotorwayClass(),
-                                                edge_data.flags.road_classification.IsLinkClass(),
-                                                edge_data.flags.road_classification.GetNumberOfLanes(),
-                                                edge_data.flags.highway_turn_classification,
-                                                edge_data.flags.access_turn_classification,
-                                                edge_data.flags.speed);
-            }
-            for (auto eid : node_based_edges_left) {
-                const auto &edge_data = m_node_based_graph.GetEdgeData(eid);
-                roads_on_the_left.emplace_back(edge_data.flags.restricted,
-                                                m_edge_based_node_container.GetAnnotation(edge_data.annotation_data).travel_mode,
-                                                edge_data.flags.road_classification.IsMotorwayClass(),
-                                                edge_data.flags.road_classification.IsLinkClass(),
-                                                edge_data.flags.road_classification.GetNumberOfLanes(),
-                                                edge_data.flags.highway_turn_classification,
-                                                edge_data.flags.access_turn_classification,
-                                                edge_data.flags.speed);
+            std::vector<ExtractionTurnLeg> road_legs_on_the_right;
+            std::vector<ExtractionTurnLeg> road_legs_on_the_left;
+
+            auto turn_iter = std::find_if(intersection.begin(), intersection.end(), [&turn](const auto &road){return road.eid == turn.eid;});
+
+            if (turn_iter == intersection.begin()) {
+                for (auto connected_edge = intersection.begin() + 1; connected_edge < intersection.end(); connected_edge++) {
+                    const auto &edge_data = m_node_based_graph.GetEdgeData(connected_edge->eid);
+                    road_legs_on_the_right.emplace_back(edge_data.flags.restricted,
+                                                        m_edge_based_node_container.GetAnnotation(edge_data.annotation_data).travel_mode,
+                                                        edge_data.flags.road_classification.IsMotorwayClass(),
+                                                        edge_data.flags.road_classification.IsLinkClass(),
+                                                        edge_data.flags.road_classification.GetNumberOfLanes(),
+                                                        edge_data.flags.highway_turn_classification,
+                                                        edge_data.flags.access_turn_classification,
+                                                        edge_data.flags.speed,
+                                                        !connected_edge->entry_allowed || (edge_data.flags.forward && edge_data.flags.backward),  // is incoming
+                                                        connected_edge->entry_allowed);
+                }
+            } else {
+                for (auto connected_edge = intersection.begin(); connected_edge < turn_iter; connected_edge++) {
+                    const auto &edge_data = m_node_based_graph.GetEdgeData(connected_edge->eid);
+                    road_legs_on_the_right.emplace_back(edge_data.flags.restricted,
+                                                        m_edge_based_node_container.GetAnnotation(edge_data.annotation_data).travel_mode,
+                                                        edge_data.flags.road_classification.IsMotorwayClass(),
+                                                        edge_data.flags.road_classification.IsLinkClass(),
+                                                        edge_data.flags.road_classification.GetNumberOfLanes(),
+                                                        edge_data.flags.highway_turn_classification,
+                                                        edge_data.flags.access_turn_classification,
+                                                        edge_data.flags.speed,
+                                                        !connected_edge->entry_allowed || (edge_data.flags.forward && edge_data.flags.backward), // is incoming
+                                                        connected_edge->entry_allowed);
+                }
+                for (auto connected_edge = turn_iter + 1; connected_edge < intersection.end(); connected_edge++) {
+                    const auto &edge_data = m_node_based_graph.GetEdgeData(connected_edge->eid);
+                    road_legs_on_the_left.emplace_back(edge_data.flags.restricted,
+                                                       m_edge_based_node_container.GetAnnotation(edge_data.annotation_data).travel_mode,
+                                                       edge_data.flags.road_classification.IsMotorwayClass(),
+                                                       edge_data.flags.road_classification.IsLinkClass(),
+                                                       edge_data.flags.road_classification.GetNumberOfLanes(),
+                                                       edge_data.flags.highway_turn_classification,
+                                                       edge_data.flags.access_turn_classification,
+                                                       edge_data.flags.speed,
+                                                       !connected_edge->entry_allowed || (edge_data.flags.forward && edge_data.flags.backward), // is incoming
+                                                       connected_edge->entry_allowed);
+                }
             }
 
             ExtractionTurn extracted_turn(
@@ -640,8 +662,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 edge_data1.flags.road_classification.GetNumberOfLanes(),
                 edge_data1.flags.highway_turn_classification,
                 edge_data1.flags.access_turn_classification,
-                edge_data1.flags.speed,
-                edge_data2.flags.restricted,
+                edge_data1.flags.speed, edge_data2.flags.restricted,
                 m_edge_based_node_container
                     .GetAnnotation(edge_data2.annotation_data)
                     .travel_mode,
@@ -650,8 +671,9 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 edge_data2.flags.road_classification.GetNumberOfLanes(),
                 edge_data2.flags.highway_turn_classification,
                 edge_data2.flags.access_turn_classification,
-                edge_data2.flags.speed,
-                roads_on_the_right, roads_on_the_left);
+                edge_data2.flags.speed, road_legs_on_the_right,
+                road_legs_on_the_left);
+
             scripting_environment.ProcessTurn(
                 extracted_turn);
 
@@ -825,17 +847,6 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                         m_coordinates[intersection_node]);
 
 
-                            // memory problem @CHAUTODO?
-                            std::vector<std::size_t> node_based_edges_right;
-                            std::vector<std::size_t> node_based_edges_left;
-                            std::size_t outgoing_pos = turn - intersection.begin();
-                            for (std::size_t connected_road = 0; connected_road < outgoing_pos; connected_road++) {
-                                node_based_edges_right.push_back(intersection[connected_road].eid);
-                            }
-                            for (std::size_t connected_road = outgoing_pos+1; connected_road < intersection.size(); connected_road++) {
-                                node_based_edges_left.push_back(intersection[connected_road].eid);
-                            }
-
                             // In case a way restriction starts at a given location, add a turn onto
                             // every artificial node eminating here.
                             //
@@ -874,8 +885,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                                   reversed_incoming_bearing,
                                                   *turn,
                                                   entry_class_id,
-                                                  node_based_edges_right,
-                                                  node_based_edges_left);
+                                                  intersection);
 
                                 buffer->continuous_data.edges_list.push_back(
                                     edge_with_data_and_condition.first.edge);
@@ -938,8 +948,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                                           reversed_incoming_bearing,
                                                           *turn,
                                                           entry_class_id,
-                                                          node_based_edges_right,
-                                                          node_based_edges_left);
+                                                          intersection);
 
                                         buffer->delayed_data.push_back(
                                             std::move(edge_with_data_and_condition.first));
@@ -974,8 +983,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                                           reversed_incoming_bearing,
                                                           *turn,
                                                           entry_class_id,
-                                                          node_based_edges_right,
-                                                          node_based_edges_left);
+                                                          intersection);
 
                                         buffer->delayed_data.push_back(
                                             std::move(edge_with_data_and_condition.first));

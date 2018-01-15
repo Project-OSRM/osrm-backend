@@ -12,7 +12,10 @@ namespace extractor {
 
 struct ExtractionTurnLeg {
   ExtractionTurnLeg(bool is_restricted, TravelMode mode, bool is_motorway,
-                    bool is_link, int number_of_lanes, int highway_turn_classification, int access_turn_classification, int speed)
+                    bool is_link, int number_of_lanes,
+                    int highway_turn_classification,
+                    int access_turn_classification, int speed, bool is_incoming,
+                    bool is_outgoing)
       : is_restricted(is_restricted),
         mode(mode),
         is_motorway(is_motorway),
@@ -20,7 +23,9 @@ struct ExtractionTurnLeg {
         number_of_lanes(number_of_lanes),
         highway_turn_classification(highway_turn_classification),
         access_turn_classification(access_turn_classification),
-        speed(speed) {}
+        speed(speed),
+        is_incoming(is_incoming),
+        is_outgoing(is_outgoing) {}
 
   const bool is_restricted;
   const TravelMode mode;
@@ -30,26 +35,31 @@ struct ExtractionTurnLeg {
   const int highway_turn_classification;
   const int access_turn_classification;
   const int speed;
+  const bool is_incoming;
+  const bool is_outgoing;
 };
 
 struct ExtractionTurn {
-  ExtractionTurn(double angle, int number_of_roads, bool is_u_turn,
-                 bool has_traffic_light, bool is_left_hand_driving,
-                 bool source_restricted, TravelMode source_mode,
-                 bool source_is_motorway, bool source_is_link,
-                 int source_number_of_lanes,
-                 int source_highway_turn_classification,
-                 int source_access_turn_classification, int source_speed, bool target_restricted,
-                 TravelMode target_mode, bool target_is_motorway,
-                 bool target_is_link, int target_number_of_lanes,
-                 int target_highway_turn_classification,
-                 int target_access_turn_classification, int target_speed,
-                 std::vector<ExtractionTurnLeg> &roads_on_the_right,
-                 std::vector<ExtractionTurnLeg> &roads_on_the_left)
+  ExtractionTurn(
+      double angle, int number_of_roads, bool is_u_turn, bool has_traffic_light,
+      // bool is_stop, bool is_give_way,
+      bool is_left_hand_driving, bool source_restricted, TravelMode source_mode,
+      bool source_is_motorway, bool source_is_link,
+
+      int source_number_of_lanes, int source_highway_turn_classification,
+      int source_access_turn_classification, int source_speed,
+      bool target_restricted, TravelMode target_mode, bool target_is_motorway,
+      bool target_is_link, int target_number_of_lanes,
+      int target_highway_turn_classification,
+      int target_access_turn_classification, int target_speed,
+      std::vector<ExtractionTurnLeg> &roads_on_the_right,
+      std::vector<ExtractionTurnLeg> &roads_on_the_left)
       : angle(180. - angle),
         number_of_roads(number_of_roads),
         is_u_turn(is_u_turn),
         has_traffic_light(has_traffic_light),
+        // is_stop(is_stop),
+        // is_give_way(is_give_way),
         is_left_hand_driving(is_left_hand_driving),
 
         source_restricted(source_restricted),
@@ -79,14 +89,17 @@ struct ExtractionTurn {
     BOOST_ASSERT_MSG(
         !is_u_turn || roads_on_the_left.size() == 0,
         "there cannot be roads on the left when there is a u turn");
-    BOOST_ASSERT_MSG(roads_on_the_right.size() + roads_on_the_left.size() + is_u_turn + 2 ==
-                         number_of_roads,
-                     "number of roads at intersection do not match");
+    BOOST_ASSERT_MSG(
+        roads_on_the_right.size() + roads_on_the_left.size() + is_u_turn + 2 ==
+            number_of_roads,
+        "number of roads at intersection do not match");
   }
   const double angle;
   const int number_of_roads;
   const bool is_u_turn;
   const bool has_traffic_light;
+  // const bool is_stop;
+  // const bool is_give_way;
   const bool is_left_hand_driving;
 
   // source info
