@@ -619,7 +619,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                                         connected_edge->entry_allowed);
                 }
             } else {
-                for (auto connected_edge = intersection.begin(); connected_edge < turn_iter; connected_edge++) {
+                for (auto connected_edge = intersection.begin() + 1; connected_edge < turn_iter; connected_edge++) {
                     const auto &edge_data = m_node_based_graph.GetEdgeData(connected_edge->eid);
                     road_legs_on_the_right.emplace_back(edge_data.flags.restricted,
                                                         m_edge_based_node_container.GetAnnotation(edge_data.annotation_data).travel_mode,
@@ -646,7 +646,6 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                                        connected_edge->entry_allowed);
                 }
             }
-
             ExtractionTurn extracted_turn(
                 turn.angle, m_node_based_graph.GetOutDegree(intersection_node),
                 turn.instruction.IsUTurn(), is_traffic_light,

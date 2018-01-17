@@ -688,7 +688,13 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
                                                       "highway_turn_classification",
                                                       &ExtractionTurnLeg::highway_turn_classification,
                                                       "access_turn_classification",
-                                                      &ExtractionTurnLeg::access_turn_classification);
+                                                      &ExtractionTurnLeg::access_turn_classification,
+                                                      "speed",
+                                                      &ExtractionTurnLeg::speed,
+                                                      "is_incoming",
+                                                      &ExtractionTurnLeg::is_incoming,
+                                                      "is_outgoing",
+                                                      &ExtractionTurnLeg::is_outgoing);
 
         context.state.new_usertype<ExtractionTurn>("ExtractionTurn",
                                                    "angle",
@@ -716,6 +722,8 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
                                                    &ExtractionTurn::source_highway_turn_classification,
                                                    "source_access_turn_classification",
                                                    &ExtractionTurn::source_access_turn_classification,
+                                                   "source_speed",
+                                                   &ExtractionTurn::source_speed,
 
                                                    "target_restricted",
                                                    &ExtractionTurn::target_restricted,
@@ -731,6 +739,8 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
                                                    &ExtractionTurn::target_highway_turn_classification,
                                                    "target_access_turn_classification",
                                                    &ExtractionTurn::target_access_turn_classification,
+                                                   "target_speed",
+                                                   &ExtractionTurn::target_speed,
 
 
                                                    "roads_on_the_right",
