@@ -220,21 +220,23 @@ source_mode                        | Read          | Enum      | Travel mode bef
 source_is_motorway                 | Read          | Boolean   | Is the source road a motorway?
 source_is_link                     | Read          | Boolean   | Is the source road a link?
 source_number_of_lanes             | Read          | Integer   | How many lanes does the source road have? (default when not tagged: 0)
-source_highway_turn_classification | Read          | Integer   | Classification based on highway tag defined by user during setup. (default when not set: 0)
-source_access_turn_classification  | Read          | Integer   | Classification based on access tag defined by user during setup. (default when not set: 0)
+source_highway_turn_classification | Read          | Integer   | Classification based on highway tag defined by user during setup. (default when not set: 0, allowed classification values are: 0-15))
+source_access_turn_classification  | Read          | Integer   | Classification based on access tag defined by user during setup. (default when not set: 0, allowed classification values are: 0-15))
 source_speed                       | Read          | Integer   | Speed on this source road in km/h
 target_restricted                  | Read          | Boolean   | Is it from a restricted access road? (See definition in `process_way`)
 target_mode                        | Read          | Enum      | Travel mode before the turn. Defined in `include/extractor/travel_mode.hpp`
 target_is_motorway                 | Read          | Boolean   | Is the target road a motorway?
 target_is_link                     | Read          | Boolean   | Is the target road a link?
 target_number_of_lanes             | Read          | Integer   | How many lanes does the target road have? (default when not tagged: 0)
-target_highway_turn_classification | Read          | Integer   | Classification based on highway tag defined by user during setup. (default when not set: 0)
-target_access_turn_classification  | Read          | Integer   | Classification based on access tag defined by user during setup. (default when not set: 0)
+target_highway_turn_classification | Read          | Integer   | Classification based on highway tag defined by user during setup. (default when not set: 0, allowed classification values are: 0-15))
+target_access_turn_classification  | Read          | Integer   | Classification based on access tag defined by user during setup. (default when not set: 0, allowed classification values are: 0-15))
 target_speed                       | Read          | Integer   | Speed on this target road in km/h
 roads_on_the_right  | Read | Vector<ExtractionTurnLeg> | Vector with information about other roads on the right of the turn that are also connected at the intersection
 roads_on_the_left | Read | Vector<ExtractionTurnLeg> | Vector with information about other roads on the left of the turn that are also connected at the intersection
 weight                             | Read/write    | Float     | Penalty to be applied for this turn (routing weight)
 duration                           | Read/write    | Float     | Penalty to be applied for this turn (duration in deciseconds)
+
+#### `roads_on_the_right` and `roads_on_the_left`
 
 The information of `roads_on_the_right` and `roads_on_the_left` that can be read are as follows:
 
@@ -245,15 +247,16 @@ mode                        | Read          | Enum      | Travel mode before the
 is_motorway                 | Read          | Boolean   | Is the road a motorway?
 is_link                     | Read          | Boolean   | Is the road a link?
 number_of_lanes             | Read          | Integer   | How many lanes does the road have? (default when not tagged: 0)
-highway_turn_classification | Read          | Integer   | Classification based on highway tag defined by user during setup. (default when not set: 0)
-access_turn_classification  | Read          | Integer   | Classification based on access tag defined by user during setup. (default when not set: 0)
+highway_turn_classification | Read          | Integer   | Classification based on highway tag defined by user during setup. (default when not set: 0, allowed classification values are: 0-15)
+access_turn_classification  | Read          | Integer   | Classification based on access tag defined by user during setup. (default when not set: 0, allowed classification values are: 0-15)
 speed                       | Read          | Integer   | Speed on this road in km/h
 is_incoming                 | Read          | Boolean   | Is the road an incoming road of the intersection
 is_outgoing                 | Read          | Boolean   | Is the road an outgoing road of the intersection
 
 The order of the roads in `roads_on_the_right` and `roads_on_the_left` are *counter clockwise*. If the turn is a u turn, all other connected roads will be in `roads_on_the_right`.
 
-#### Example
+**Example**
+
 ```
            c   e
            |  /
@@ -271,7 +274,33 @@ When turning from `a` to `b` via `x`,
 * `roads_on_the_left[1]` is the road `xe`
 * `roads_on_the_left[2]` is the road `xc`
 
-Note that indeces of arrays in lua are 1-based.
+Note that indices of arrays in lua are 1-based.
+
+#### `highway_turn_classification` and `access_turn_classification`
+When setting appropriate turn weights and duration, information about the highway and access tags of roads that are involved in the turn are necessary. The lua turn function `process_turn` does not have access to the original osrm tags anymore. However, `highway_turn_classification` and `access_turn_classification` can be set during setup. The classification set during setup can be later used in `process_turn`.
+
+**Example**
+
+In the following example we use `highway_turn_classification` to set the turn weight to `10` if the turn is on a highway and to `5` if the turn is on a primary.
+
+```
+function setup()
+  return {
+    highway_turn_classification = {
+      ['motorway'] = 2,
+      ['primary'] = 1
+    }
+  }
+end
+
+function process_turn(profile, turn) {
+  if turn.source_highway_turn_classification == 2 and turn.target_highway_turn_classification == 2 then
+    turn.weight = 10
+  else if turn.source_highway_turn_classification == 1 and turn.target_highway_turn_classification == 1 then
+    turn.weight = 5
+  end
+}
+```
 
 ## Guidance
 The guidance parameters in profiles are currently a work in progress. They can and will change.
