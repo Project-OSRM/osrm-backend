@@ -616,8 +616,6 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                     const auto &edge_data = m_node_based_graph.GetEdgeData(connected_edge->eid);
                     road_legs_on_the_right.emplace_back(
                         edge_data.flags.restricted,
-                        m_edge_based_node_container.GetAnnotation(edge_data.annotation_data)
-                            .travel_mode,
                         edge_data.flags.road_classification.IsMotorwayClass(),
                         edge_data.flags.road_classification.IsLinkClass(),
                         edge_data.flags.road_classification.GetNumberOfLanes(),
@@ -637,8 +635,6 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                     const auto &edge_data = m_node_based_graph.GetEdgeData(connected_edge->eid);
                     road_legs_on_the_right.emplace_back(
                         edge_data.flags.restricted,
-                        m_edge_based_node_container.GetAnnotation(edge_data.annotation_data)
-                            .travel_mode,
                         edge_data.flags.road_classification.IsMotorwayClass(),
                         edge_data.flags.road_classification.IsLinkClass(),
                         edge_data.flags.road_classification.GetNumberOfLanes(),
@@ -655,8 +651,6 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                     const auto &edge_data = m_node_based_graph.GetEdgeData(connected_edge->eid);
                     road_legs_on_the_left.emplace_back(
                         edge_data.flags.restricted,
-                        m_edge_based_node_container.GetAnnotation(edge_data.annotation_data)
-                            .travel_mode,
                         edge_data.flags.road_classification.IsMotorwayClass(),
                         edge_data.flags.road_classification.IsLinkClass(),
                         edge_data.flags.road_classification.GetNumberOfLanes(),

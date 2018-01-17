@@ -15,7 +15,6 @@ namespace extractor
 struct ExtractionTurnLeg
 {
     ExtractionTurnLeg(bool is_restricted,
-                      TravelMode mode,
                       bool is_motorway,
                       bool is_link,
                       int number_of_lanes,
@@ -24,7 +23,7 @@ struct ExtractionTurnLeg
                       int speed,
                       bool is_incoming,
                       bool is_outgoing)
-        : is_restricted(is_restricted), mode(mode), is_motorway(is_motorway), is_link(is_link),
+        : is_restricted(is_restricted), is_motorway(is_motorway), is_link(is_link),
           number_of_lanes(number_of_lanes),
           highway_turn_classification(highway_turn_classification),
           access_turn_classification(access_turn_classification), speed(speed),
@@ -33,7 +32,6 @@ struct ExtractionTurnLeg
     }
 
     const bool is_restricted;
-    const TravelMode mode;
     const bool is_motorway;
     const bool is_link;
     const int number_of_lanes;
@@ -73,8 +71,6 @@ struct ExtractionTurn
                    std::vector<ExtractionTurnLeg> &roads_on_the_left)
         : angle(180. - angle), number_of_roads(number_of_roads), is_u_turn(is_u_turn),
           has_traffic_light(has_traffic_light),
-          // is_stop(is_stop),
-          // is_give_way(is_give_way),
           is_left_hand_driving(is_left_hand_driving),
 
           source_restricted(source_restricted), source_mode(source_mode),

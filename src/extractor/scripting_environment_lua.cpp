@@ -678,8 +678,6 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
             "ExtractionTurnLeg",
             "is_restricted",
             &ExtractionTurnLeg::is_restricted,
-            "mode",
-            &ExtractionTurnLeg::mode,
             "is_motorway",
             &ExtractionTurnLeg::is_motorway,
             "is_link",
