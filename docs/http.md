@@ -515,10 +515,10 @@ Represents a route between two waypoints.
 
 - `annotation`: Additional details about each coordinate along the route geometry:
 
-| annotations  |                                                                       |
-|--------------|-----------------------------------------------------------------------|
-| true         | An `Annotation` object containing node ids, durations distances and   |
-| false        | weights `undefined`                                                   |
+| annotations  |                                                                               |
+|--------------|-------------------------------------------------------------------------------|
+| true         | An `Annotation` object containing node ids, durations, distances and weights. |
+| false        | `undefined`                                                                   |
 
 #### Example
 
