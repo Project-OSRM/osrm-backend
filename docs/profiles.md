@@ -296,7 +296,8 @@ end
 function process_turn(profile, turn) {
   if turn.source_highway_turn_classification == 2 and turn.target_highway_turn_classification == 2 then
     turn.weight = 10
-  else if turn.source_highway_turn_classification == 1 and turn.target_highway_turn_classification == 1 then
+  end
+  if turn.source_highway_turn_classification == 1 and turn.target_highway_turn_classification == 1 then
     turn.weight = 5
   end
 }

@@ -427,7 +427,6 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                      parsed_way.is_startpoint,
                      parsed_way.forward_restricted,
                      road_classification,
-                     // @CHAUTODO
                      parsed_way.highway_turn_classification,
                      parsed_way.access_turn_classification,
                      speed}};
@@ -466,7 +465,6 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                      parsed_way.is_startpoint,
                      parsed_way.backward_restricted,
                      road_classification,
-                     // @CHAUTODO
                      parsed_way.highway_turn_classification,
                      parsed_way.access_turn_classification,
                      speed}};

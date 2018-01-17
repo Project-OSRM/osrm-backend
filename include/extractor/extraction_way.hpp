@@ -127,8 +127,8 @@ struct ExtractionWay
     bool : 2;
 
     // user classifications for turn penalties
-    std::uint8_t highway_turn_classification; // @CHAUTODO memory? limit to 3 bits? // 8
-    std::uint8_t access_turn_classification;  // 3 are enough
+    std::uint8_t highway_turn_classification : 4;
+    std::uint8_t access_turn_classification : 4;
 };
 }
 }

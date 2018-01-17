@@ -148,7 +148,7 @@ template <storage::Ownership Ownership> class MultiLevelPartitionImpl final
         auto offsets = MakeLevelOffsets(lidx_to_num_cells);
         auto masks = MakeLevelMasks(offsets, num_level);
         auto bits = MakeBitToLevel(offsets, num_level);
-        return std::make_unique<LevelData>(LevelData{num_level, offsets, masks, bits, {0}});
+        return std::make_unique<LevelData>(LevelData{num_level, offsets, masks, bits, {{0}}});
     }
 
     inline std::size_t LevelIDToIndex(LevelID l) const { return l - 1; }

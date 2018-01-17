@@ -348,9 +348,11 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
         sol::property([](const ExtractionWay &way) { return way.is_left_hand_driving; },
                       [](ExtractionWay &way, bool flag) { way.is_left_hand_driving = flag; }),
         "highway_turn_classification",
-        &ExtractionWay::highway_turn_classification,
+        sol::property([](const ExtractionWay &way) { return way.highway_turn_classification; },
+                      [](ExtractionWay &way, int flag) { way.highway_turn_classification = flag; }),
         "access_turn_classification",
-        &ExtractionWay::access_turn_classification);
+        sol::property([](const ExtractionWay &way) { return way.access_turn_classification; },
+                      [](ExtractionWay &way, int flag) { way.access_turn_classification = flag; }));
 
     auto getTypedRefBySol = [](const sol::object &obj) -> ExtractionRelation::OsmIDTyped {
         if (obj.is<osmium::Way>())

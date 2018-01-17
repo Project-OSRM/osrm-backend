@@ -227,6 +227,13 @@ function WayHandlers.way_classification_for_turn(profile,way,result,data)
   local highway = way:get_value_by_key("highway")
   local access = way:get_value_by_key("access")
 
+  if profile.highway_turn_classification[highway] then
+    assert(profile.highway_turn_classification[highway] < 16, "highway_turn_classification must be smaller than 16")
+  end
+  if profile.access_turn_classification[highway] then
+    assert(profile.access_turn_classification[highway] < 16, "access_turn_classification must be smaller than 16")
+  end
+
   if highway and profile.highway_turn_classification[highway] then
     result.highway_turn_classification = profile.highway_turn_classification[highway]
   end

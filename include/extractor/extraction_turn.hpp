@@ -48,7 +48,6 @@ struct ExtractionTurn
                    int number_of_roads,
                    bool is_u_turn,
                    bool has_traffic_light,
-                   // bool is_stop, bool is_give_way,
                    bool is_left_hand_driving,
                    bool source_restricted,
                    TravelMode source_mode,
@@ -93,16 +92,11 @@ struct ExtractionTurn
     {
         BOOST_ASSERT_MSG(!is_u_turn || roads_on_the_left.size() == 0,
                          "there cannot be roads on the left when there is a u turn");
-        BOOST_ASSERT_MSG(roads_on_the_right.size() + roads_on_the_left.size() + is_u_turn + 2 ==
-                             number_of_roads,
-                         "number of roads at intersection do not match");
     }
     const double angle;
     const int number_of_roads;
     const bool is_u_turn;
     const bool has_traffic_light;
-    // const bool is_stop;
-    // const bool is_give_way;
     const bool is_left_hand_driving;
 
     // source info

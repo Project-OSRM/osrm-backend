@@ -599,14 +599,15 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
             // compute weight and duration penalties
             auto is_traffic_light = m_traffic_lights.count(intersection_node);
+
             std::vector<ExtractionTurnLeg> road_legs_on_the_right;
             std::vector<ExtractionTurnLeg> road_legs_on_the_left;
-
             auto turn_iter =
                 std::find_if(intersection.begin(), intersection.end(), [&turn](const auto &road) {
                     return road.eid == turn.eid;
                 });
 
+            // if the turn is a u turn, store all information in road_legs_on_the_right
             if (turn_iter == intersection.begin())
             {
                 for (auto connected_edge = intersection.begin() + 1;
@@ -627,6 +628,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                         connected_edge->entry_allowed);
                 }
             }
+            // otherwise split roads into the right or left side of the turn and store info
             else
             {
                 for (auto connected_edge = intersection.begin() + 1; connected_edge < turn_iter;
@@ -662,13 +664,16 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                         connected_edge->entry_allowed);
                 }
             }
+
             ExtractionTurn extracted_turn(
+                // general info
                 turn.angle,
-                m_node_based_graph.GetOutDegree(intersection_node),
+                intersection.size(),
                 turn.instruction.IsUTurn(),
                 is_traffic_light,
                 m_edge_based_node_container.GetAnnotation(edge_data1.annotation_data)
                     .is_left_hand_driving,
+                // source info
                 edge_data1.flags.restricted,
                 m_edge_based_node_container.GetAnnotation(edge_data1.annotation_data).travel_mode,
                 edge_data1.flags.road_classification.IsMotorwayClass(),
@@ -677,6 +682,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 edge_data1.flags.highway_turn_classification,
                 edge_data1.flags.access_turn_classification,
                 edge_data1.flags.speed,
+                // target info
                 edge_data2.flags.restricted,
                 m_edge_based_node_container.GetAnnotation(edge_data2.annotation_data).travel_mode,
                 edge_data2.flags.road_classification.IsMotorwayClass(),
@@ -685,6 +691,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 edge_data2.flags.highway_turn_classification,
                 edge_data2.flags.access_turn_classification,
                 edge_data2.flags.speed,
+                // connected roads
                 road_legs_on_the_right,
                 road_legs_on_the_left);
 
