@@ -60,9 +60,10 @@ Feature: Turn Function Information
 
             """
         And the ways
-            | nodes | highway       |
-            | ab    | motorway      |
-            | bc    | motorway_link |
+            | nodes | highway       | lanes |
+            | ab    | motorway      | 3     |
+            | bc    | motorway_link |       |
+
         And the data has been saved to disk
 
         When I run "osrm-extract --profile {profile_file} {osm_file}"
@@ -70,8 +71,11 @@ Feature: Turn Function Information
         And stdout should contain "source_is_motorway true"
         And stdout should contain "source_is_link false"
         And stdout should contain "source_speed 90"
+        And stdout should contain "source_number_of_lanes 3"
         And stdout should contain "target_is_motorway false"
         And stdout should contain "target_is_link true"
+        # Question @review: should number_of_lanes when untagged be 0 or 1?
+        And stdout should contain "target_number_of_lanes 0"
         And stdout should contain "number_of_roads 2"
 
     Scenario: Turns should have correct information of other roads at intersection I
