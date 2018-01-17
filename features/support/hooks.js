@@ -50,6 +50,7 @@ module.exports = function () {
             .defer(mkdirp, logDir)
             .defer(rimraf, this.scenarioLogFile)
             .awaitAll(callback);
+        console.log("  Writing logging output to " + this.scenarioLogFile)
     });
 
     this.After((scenario, callback) => {
