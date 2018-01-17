@@ -208,19 +208,70 @@ The `process_turn` function is called for every possible turn in the network. Ba
 
 The following attributes can be read and set on the result in `process_turn`:
 
-Attribute            | Read/write? | Type    | Notes
----------------------|-------------|---------|------------------------------------------------------
-angle                | Read        | Float   | Angle of turn in degrees (`0-360`: `0`=u-turn, `180`=straight on)
-number_of_roads      | Read        | Integer | Number of ways at the intersection of the turn
-is_u_turn            | Read        | Boolean | Is the turn a u-turn?
-has_traffic_light    | Read        | Boolean | Is a traffic light present at this turn?
-source_restricted    | Read        | Boolean | Is it from a restricted access road? (See definition in `process_way`)
-target_restricted    | Read        | Boolean | Is it to a restricted access road? (See definition in `process_way`)
-is_left_hand_driving | Read        | Boolean | Is left-hand traffic? 
-weight               | Read/write  | Float   | Penalty to be applied for this turn (routing weight)
-duration             | Read/write  | Float   | Penalty to be applied for this turn (duration in deciseconds)
-source_mode          | Read        | Enum    | Travel mode before the turn. Defined in `include/extractor/travel_mode.hpp`
-target_mode          | Read        | Enum    | Travel mode after the turn. Defined in `include/extractor/travel_mode.hpp`
+Attribute                          | Read/write?   | Type      | Notes
+---------------------              | ------------- | --------- | ------------------------------------------------------
+angle                              | Read          | Float     | Angle of turn in degrees (`0-360`: `0`=u-turn, `180`=straight on)
+number_of_roads                    | Read          | Integer   | Number of ways at the intersection of the turn
+is_u_turn                          | Read          | Boolean   | Is the turn a u-turn?
+has_traffic_light                  | Read          | Boolean   | Is a traffic light present at this turn?
+is_left_hand_driving               | Read          | Boolean   | Is left-hand traffic?
+source_restricted                  | Read          | Boolean   | Is it from a restricted access road? (See definition in `process_way`)
+source_mode                        | Read          | Enum      | Travel mode before the turn. Defined in `include/extractor/travel_mode.hpp`
+source_is_motorway                 | Read          | Boolean   | Is the source road a motorway?
+source_is_link                     | Read          | Boolean   | Is the source road a link?
+source_number_of_lanes             | Read          | Integer   | How many lanes does the source road have? (default when not tagged: 0)
+source_highway_turn_classification | Read          | Integer   | Classification based on highway tag defined by user during setup. (default when not set: 0)
+source_access_turn_classification  | Read          | Integer   | Classification based on access tag defined by user during setup. (default when not set: 0)
+source_speed                       | Read          | Integer   | Speed on this source road in km/h
+target_restricted                  | Read          | Boolean   | Is it from a restricted access road? (See definition in `process_way`)
+target_mode                        | Read          | Enum      | Travel mode before the turn. Defined in `include/extractor/travel_mode.hpp`
+target_is_motorway                 | Read          | Boolean   | Is the target road a motorway?
+target_is_link                     | Read          | Boolean   | Is the target road a link?
+target_number_of_lanes             | Read          | Integer   | How many lanes does the target road have? (default when not tagged: 0)
+target_highway_turn_classification | Read          | Integer   | Classification based on highway tag defined by user during setup. (default when not set: 0)
+target_access_turn_classification  | Read          | Integer   | Classification based on access tag defined by user during setup. (default when not set: 0)
+target_speed                       | Read          | Integer   | Speed on this target road in km/h
+roads_on_the_right  | Read | Vector<ExtractionTurnLeg> | Vector with information about other roads on the right of the turn that are also connected at the intersection
+roads_on_the_left | Read | Vector<ExtractionTurnLeg> | Vector with information about other roads on the left of the turn that are also connected at the intersection
+weight                             | Read/write    | Float     | Penalty to be applied for this turn (routing weight)
+duration                           | Read/write    | Float     | Penalty to be applied for this turn (duration in deciseconds)
+
+The information of `roads_on_the_right` and `roads_on_the_left` that can be read are as follows:
+
+Attribute                   | Read/write?   | Type      | Notes
+---------------------       | ------------- | --------- | ------------------------------------------------------
+is_restricted               | Read          | Boolean   | Is it a restricted access road? (See definition in `process_way`)
+mode                        | Read          | Enum      | Travel mode before the turn. Defined in `include/extractor/travel_mode.hpp`
+is_motorway                 | Read          | Boolean   | Is the road a motorway?
+is_link                     | Read          | Boolean   | Is the road a link?
+number_of_lanes             | Read          | Integer   | How many lanes does the road have? (default when not tagged: 0)
+highway_turn_classification | Read          | Integer   | Classification based on highway tag defined by user during setup. (default when not set: 0)
+access_turn_classification  | Read          | Integer   | Classification based on access tag defined by user during setup. (default when not set: 0)
+speed                       | Read          | Integer   | Speed on this road in km/h
+is_incoming                 | Read          | Boolean   | Is the road an incoming road of the intersection
+is_outgoing                 | Read          | Boolean   | Is the road an outgoing road of the intersection
+
+The order of the roads in `roads_on_the_right` and `roads_on_the_left` are *counter clockwise*. If the turn is a u turn, all other connected roads will be in `roads_on_the_right`.
+
+#### Example
+```
+           c   e
+           |  /
+           | /
+    a ---- x ---- b
+          /|
+         / |
+        f  d
+
+
+```
+When turning from `a` to `b` via `x`,
+* `roads_on_the_right[1]` is the road `xf`
+* `roads_on_the_right[2]` is the road `xd`
+* `roads_on_the_left[1]` is the road `xe`
+* `roads_on_the_left[2]` is the road `xc`
+
+Note that indeces of arrays in lua are 1-based.
 
 ## Guidance
 The guidance parameters in profiles are currently a work in progress. They can and will change.
