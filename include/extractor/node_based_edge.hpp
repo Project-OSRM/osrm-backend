@@ -27,10 +27,9 @@ struct NodeBasedEdgeClassification
     std::uint8_t startpoint : 1;                      // 1
     std::uint8_t restricted : 1;                      // 1
     guidance::RoadClassification road_classification; // 16 2
-    std::uint8_t highway_turn_classification; // @CHAUTODO memory? limit to 3 bits? // 8
-    std::uint8_t access_turn_classification;  // 3 are enough                      // 8
+    std::uint8_t highway_turn_classification;         // @CHAUTODO memory? limit to 3 bits? // 8
+    std::uint8_t access_turn_classification;          // 3 are enough                      // 8
     std::uint8_t speed; // one bit could be saved here too I guess, so 7             // 8
-
 
     NodeBasedEdgeClassification();
 
@@ -47,7 +46,9 @@ struct NodeBasedEdgeClassification
                                 const std::uint8_t speed)
         : forward(forward), backward(backward), is_split(is_split), roundabout(roundabout),
           circular(circular), startpoint(startpoint), restricted(restricted),
-          road_classification(road_classification), highway_turn_classification(highway_turn_classification), access_turn_classification(access_turn_classification), speed(speed)
+          road_classification(road_classification),
+          highway_turn_classification(highway_turn_classification),
+          access_turn_classification(access_turn_classification), speed(speed)
     {
     }
 

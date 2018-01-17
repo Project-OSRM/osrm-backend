@@ -222,10 +222,29 @@ void GraphCompressor::Compress(
                     // generate an artifical turn for the turn penalty generation
                     std::vector<ExtractionTurnLeg> roads_on_the_right;
                     std::vector<ExtractionTurnLeg> roads_on_the_left;
-                    ExtractionTurn extraction_turn(0, 2, false, true, false,
-                        false, TRAVEL_MODE_DRIVING, false, false, 1, 0,0,0,
-                        false, TRAVEL_MODE_DRIVING, false, false, 1, 0,0,0,
-                                                 roads_on_the_right, roads_on_the_left);
+                    ExtractionTurn extraction_turn(0,
+                                                   2,
+                                                   false,
+                                                   true,
+                                                   false,
+                                                   false,
+                                                   TRAVEL_MODE_DRIVING,
+                                                   false,
+                                                   false,
+                                                   1,
+                                                   0,
+                                                   0,
+                                                   0,
+                                                   false,
+                                                   TRAVEL_MODE_DRIVING,
+                                                   false,
+                                                   false,
+                                                   1,
+                                                   0,
+                                                   0,
+                                                   0,
+                                                   roads_on_the_right,
+                                                   roads_on_the_left);
                     scripting_environment.ProcessTurn(extraction_turn);
                     node_duration_penalty = extraction_turn.duration * 10;
                     node_weight_penalty = extraction_turn.weight * weight_multiplier;

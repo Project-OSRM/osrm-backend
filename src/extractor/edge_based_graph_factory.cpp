@@ -602,79 +602,99 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
             std::vector<ExtractionTurnLeg> road_legs_on_the_right;
             std::vector<ExtractionTurnLeg> road_legs_on_the_left;
 
-            auto turn_iter = std::find_if(intersection.begin(), intersection.end(), [&turn](const auto &road){return road.eid == turn.eid;});
+            auto turn_iter =
+                std::find_if(intersection.begin(), intersection.end(), [&turn](const auto &road) {
+                    return road.eid == turn.eid;
+                });
 
-            if (turn_iter == intersection.begin()) {
-                for (auto connected_edge = intersection.begin() + 1; connected_edge < intersection.end(); connected_edge++) {
+            if (turn_iter == intersection.begin())
+            {
+                for (auto connected_edge = intersection.begin() + 1;
+                     connected_edge < intersection.end();
+                     connected_edge++)
+                {
                     const auto &edge_data = m_node_based_graph.GetEdgeData(connected_edge->eid);
-                    road_legs_on_the_right.emplace_back(edge_data.flags.restricted,
-                                                        m_edge_based_node_container.GetAnnotation(edge_data.annotation_data).travel_mode,
-                                                        edge_data.flags.road_classification.IsMotorwayClass(),
-                                                        edge_data.flags.road_classification.IsLinkClass(),
-                                                        edge_data.flags.road_classification.GetNumberOfLanes(),
-                                                        edge_data.flags.highway_turn_classification,
-                                                        edge_data.flags.access_turn_classification,
-                                                        edge_data.flags.speed,
-                                                        !connected_edge->entry_allowed || (edge_data.flags.forward && edge_data.flags.backward),  // is incoming
-                                                        connected_edge->entry_allowed);
+                    road_legs_on_the_right.emplace_back(
+                        edge_data.flags.restricted,
+                        m_edge_based_node_container.GetAnnotation(edge_data.annotation_data)
+                            .travel_mode,
+                        edge_data.flags.road_classification.IsMotorwayClass(),
+                        edge_data.flags.road_classification.IsLinkClass(),
+                        edge_data.flags.road_classification.GetNumberOfLanes(),
+                        edge_data.flags.highway_turn_classification,
+                        edge_data.flags.access_turn_classification,
+                        edge_data.flags.speed,
+                        !connected_edge->entry_allowed ||
+                            (edge_data.flags.forward && edge_data.flags.backward), // is incoming
+                        connected_edge->entry_allowed);
                 }
-            } else {
-                for (auto connected_edge = intersection.begin() + 1; connected_edge < turn_iter; connected_edge++) {
+            }
+            else
+            {
+                for (auto connected_edge = intersection.begin() + 1; connected_edge < turn_iter;
+                     connected_edge++)
+                {
                     const auto &edge_data = m_node_based_graph.GetEdgeData(connected_edge->eid);
-                    road_legs_on_the_right.emplace_back(edge_data.flags.restricted,
-                                                        m_edge_based_node_container.GetAnnotation(edge_data.annotation_data).travel_mode,
-                                                        edge_data.flags.road_classification.IsMotorwayClass(),
-                                                        edge_data.flags.road_classification.IsLinkClass(),
-                                                        edge_data.flags.road_classification.GetNumberOfLanes(),
-                                                        edge_data.flags.highway_turn_classification,
-                                                        edge_data.flags.access_turn_classification,
-                                                        edge_data.flags.speed,
-                                                        !connected_edge->entry_allowed || (edge_data.flags.forward && edge_data.flags.backward), // is incoming
-                                                        connected_edge->entry_allowed);
+                    road_legs_on_the_right.emplace_back(
+                        edge_data.flags.restricted,
+                        m_edge_based_node_container.GetAnnotation(edge_data.annotation_data)
+                            .travel_mode,
+                        edge_data.flags.road_classification.IsMotorwayClass(),
+                        edge_data.flags.road_classification.IsLinkClass(),
+                        edge_data.flags.road_classification.GetNumberOfLanes(),
+                        edge_data.flags.highway_turn_classification,
+                        edge_data.flags.access_turn_classification,
+                        edge_data.flags.speed,
+                        !connected_edge->entry_allowed ||
+                            (edge_data.flags.forward && edge_data.flags.backward), // is incoming
+                        connected_edge->entry_allowed);
                 }
-                for (auto connected_edge = turn_iter + 1; connected_edge < intersection.end(); connected_edge++) {
+                for (auto connected_edge = turn_iter + 1; connected_edge < intersection.end();
+                     connected_edge++)
+                {
                     const auto &edge_data = m_node_based_graph.GetEdgeData(connected_edge->eid);
-                    road_legs_on_the_left.emplace_back(edge_data.flags.restricted,
-                                                       m_edge_based_node_container.GetAnnotation(edge_data.annotation_data).travel_mode,
-                                                       edge_data.flags.road_classification.IsMotorwayClass(),
-                                                       edge_data.flags.road_classification.IsLinkClass(),
-                                                       edge_data.flags.road_classification.GetNumberOfLanes(),
-                                                       edge_data.flags.highway_turn_classification,
-                                                       edge_data.flags.access_turn_classification,
-                                                       edge_data.flags.speed,
-                                                       !connected_edge->entry_allowed || (edge_data.flags.forward && edge_data.flags.backward), // is incoming
-                                                       connected_edge->entry_allowed);
+                    road_legs_on_the_left.emplace_back(
+                        edge_data.flags.restricted,
+                        m_edge_based_node_container.GetAnnotation(edge_data.annotation_data)
+                            .travel_mode,
+                        edge_data.flags.road_classification.IsMotorwayClass(),
+                        edge_data.flags.road_classification.IsLinkClass(),
+                        edge_data.flags.road_classification.GetNumberOfLanes(),
+                        edge_data.flags.highway_turn_classification,
+                        edge_data.flags.access_turn_classification,
+                        edge_data.flags.speed,
+                        !connected_edge->entry_allowed ||
+                            (edge_data.flags.forward && edge_data.flags.backward), // is incoming
+                        connected_edge->entry_allowed);
                 }
             }
             ExtractionTurn extracted_turn(
-                turn.angle, m_node_based_graph.GetOutDegree(intersection_node),
-                turn.instruction.IsUTurn(), is_traffic_light,
-                m_edge_based_node_container
-                    .GetAnnotation(edge_data1.annotation_data)
+                turn.angle,
+                m_node_based_graph.GetOutDegree(intersection_node),
+                turn.instruction.IsUTurn(),
+                is_traffic_light,
+                m_edge_based_node_container.GetAnnotation(edge_data1.annotation_data)
                     .is_left_hand_driving,
                 edge_data1.flags.restricted,
-                m_edge_based_node_container
-                    .GetAnnotation(edge_data1.annotation_data)
-                    .travel_mode,
+                m_edge_based_node_container.GetAnnotation(edge_data1.annotation_data).travel_mode,
                 edge_data1.flags.road_classification.IsMotorwayClass(),
                 edge_data1.flags.road_classification.IsLinkClass(),
                 edge_data1.flags.road_classification.GetNumberOfLanes(),
                 edge_data1.flags.highway_turn_classification,
                 edge_data1.flags.access_turn_classification,
-                edge_data1.flags.speed, edge_data2.flags.restricted,
-                m_edge_based_node_container
-                    .GetAnnotation(edge_data2.annotation_data)
-                    .travel_mode,
+                edge_data1.flags.speed,
+                edge_data2.flags.restricted,
+                m_edge_based_node_container.GetAnnotation(edge_data2.annotation_data).travel_mode,
                 edge_data2.flags.road_classification.IsMotorwayClass(),
                 edge_data2.flags.road_classification.IsLinkClass(),
                 edge_data2.flags.road_classification.GetNumberOfLanes(),
                 edge_data2.flags.highway_turn_classification,
                 edge_data2.flags.access_turn_classification,
-                edge_data2.flags.speed, road_legs_on_the_right,
+                edge_data2.flags.speed,
+                road_legs_on_the_right,
                 road_legs_on_the_left);
 
-            scripting_environment.ProcessTurn(
-                extracted_turn);
+            scripting_environment.ProcessTurn(extracted_turn);
 
             // turn penalties are limited to [-2^15, 2^15) which roughly
             // translates to 54 minutes and fits signed 16bit deci-seconds
@@ -844,7 +864,6 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                              });
                             OSRM_ASSERT(turn != intersection.end(),
                                         m_coordinates[intersection_node]);
-
 
                             // In case a way restriction starts at a given location, add a turn onto
                             // every artificial node eminating here.

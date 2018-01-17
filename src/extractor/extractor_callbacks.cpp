@@ -469,8 +469,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                      // @CHAUTODO
                      parsed_way.highway_turn_classification,
                      parsed_way.access_turn_classification,
-                     speed
-                     }};
+                     speed}};
 
                 external_memory.all_edges_list.push_back(InternalExtractorEdge(
                     std::move(edge), backward_weight_data, backward_duration_data, {}));
