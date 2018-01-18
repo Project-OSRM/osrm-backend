@@ -53,7 +53,6 @@ function Measure.parse_value_kilograms(value)
       return tonumber(m) * 1000
     end
   end
-  return
 end
 
 --- Get maxheight of specified way in meters. If there are no
