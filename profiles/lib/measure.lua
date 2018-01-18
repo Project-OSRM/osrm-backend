@@ -23,8 +23,6 @@ function Measure.parse_value_meters(value)
     end
     return n
   end
-
-  print("Can't parse value: ", value)
 end
 
 --- according to http://wiki.openstreetmap.org/wiki/Map_Features/Units#Explicit_specifications
@@ -55,10 +53,6 @@ function Measure.parse_value_kilograms(value)
       return tonumber(m) * 1000
     end
   end
-
-  --
-  print("Can't parse value: ", value)
-  return
 end
 
 --- Get maxheight of specified way in meters. If there are no
