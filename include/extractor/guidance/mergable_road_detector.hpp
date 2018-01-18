@@ -77,10 +77,15 @@ class MergableRoadDetector
     // situations with more than two roads that could participate in a merge
     bool IsDistinctFrom(const MergableRoadData &lhs, const MergableRoadData &rhs) const;
 
-  private:
     // check if two name ids can be seen as identical (in presence of refs/others)
     // in our case this translates into no name announcement in either direction (lhs->rhs and
     // rhs->lhs)
+    static bool HaveIdenticalNames(const NameID lhs,
+                                   const NameID rhs,
+                                   const util::NameTable &name_table,
+                                   const SuffixTable &street_name_suffix_table);
+
+  private:
     bool HaveIdenticalNames(const NameID lhs, const NameID rhs) const;
 
     // When it comes to merging roads, we need to find out if two ways actually represent the

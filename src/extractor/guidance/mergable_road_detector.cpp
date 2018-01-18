@@ -122,7 +122,10 @@ bool MergableRoadDetector::CanMergeRoad(const NodeID intersection_node,
            !IsCircularShape(intersection_node, lhs, rhs);
 }
 
-bool MergableRoadDetector::HaveIdenticalNames(const NameID lhs, const NameID rhs) const
+bool MergableRoadDetector::HaveIdenticalNames(const NameID lhs,
+                                              const NameID rhs,
+                                              const util::NameTable &name_table,
+                                              const SuffixTable &street_name_suffix_table)
 {
     const auto non_empty = (lhs != EMPTY_NAMEID) && (rhs != EMPTY_NAMEID);
 
@@ -130,6 +133,11 @@ bool MergableRoadDetector::HaveIdenticalNames(const NameID lhs, const NameID rhs
     return non_empty &&
            !util::guidance::requiresNameAnnounced(lhs, rhs, name_table, street_name_suffix_table) &&
            !util::guidance::requiresNameAnnounced(rhs, lhs, name_table, street_name_suffix_table);
+}
+
+bool MergableRoadDetector::HaveIdenticalNames(const NameID lhs, const NameID rhs) const
+{
+    return HaveIdenticalNames(lhs, rhs, name_table, street_name_suffix_table);
 }
 
 bool MergableRoadDetector::IsDistinctFrom(const MergableRoadData &lhs,
