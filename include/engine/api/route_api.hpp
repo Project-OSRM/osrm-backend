@@ -88,11 +88,12 @@ class RouteAPI : public BaseAPI
     {
         util::json::Array annotations_store;
         annotations_store.values.reserve(leg.annotations.size());
-        std::for_each(leg.annotations.begin(),
-                      leg.annotations.end(),
-                      [Get, &annotations_store](const auto &step) {
-                          annotations_store.values.push_back(Get(step));
-                      });
+
+        for (const auto& step : leg.annotations)
+        {
+              annotations_store.values.push_back(Get(step));
+        }
+
         return annotations_store;
     }
 
@@ -255,10 +256,19 @@ class RouteAPI : public BaseAPI
                 // AnnotationsType uses bit flags, & operator checks if a property is set
                 if (parameters.annotations_type & RouteParameters::AnnotationsType::Speed)
                 {
+                    double prev_speed = 0;
                     annotation.values["speed"] = GetAnnotations(
-                        leg_geometry, [](const guidance::LegGeometry::Annotation &anno) {
-                            auto val = std::round(anno.distance / anno.duration * 10.) / 10.;
-                            return util::json::clamp_float(val);
+                        leg_geometry, [&prev_speed](const guidance::LegGeometry::Annotation &anno) {
+                            if (anno.duration < std::numeric_limits<double>::min())
+                            {
+                                return prev_speed;
+                            }
+                            else
+                            {
+                                auto speed = std::round(anno.distance / anno.duration * 10.) / 10.;
+                                prev_speed = speed;
+                                return util::json::clamp_float(speed);
+                            }
                         });
                 }
 
@@ -293,11 +303,10 @@ class RouteAPI : public BaseAPI
                 {
                     util::json::Array nodes;
                     nodes.values.reserve(leg_geometry.osm_node_ids.size());
-                    std::for_each(leg_geometry.osm_node_ids.begin(),
-                                  leg_geometry.osm_node_ids.end(),
-                                  [this, &nodes](const OSMNodeID &node_id) {
-                                      nodes.values.push_back(static_cast<std::uint64_t>(node_id));
-                                  });
+                    for (const auto node_id : leg_geometry.osm_node_ids)
+                    {
+                          nodes.values.push_back(static_cast<std::uint64_t>(node_id));
+                    }
                     annotation.values["nodes"] = std::move(nodes);
                 }
 

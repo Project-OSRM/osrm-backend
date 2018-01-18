@@ -59,3 +59,27 @@ Feature: Annotations
           | from | to | route               | a:datasources   | a:speed                 |
           | a    | i  | abcdefghi,abcdefghi | 1:0:1:0:1:0:0:0 | 50:10:50:10:50:10:10:10 |
           | i    | a  | abcdefghi,abcdefghi | 0:1:0:0:0:0:0:1 | 10:50:10:10:10:10:10:50 |
+
+    Scenario: Speed annotations should handle zero segments
+        Given the profile "testbot"
+
+        Given the node map
+        """
+        a -- b --- c
+                   |
+                   d
+        """
+
+        And the ways
+          | nodes |
+          | abc   |
+          | cd    |
+
+        # This test relies on the snapping to the EBN cd to introduce a zero segment after the turn
+        And the query options
+          | annotations | speed,distance,duration,nodes |
+          | bearings    | 90,5;180,5                    |
+
+        When I route I should get
+            | from | to | route    | a:speed   | a:distance              | a:duration | a:nodes |
+            | a    | c  | abc,abc  | 10:10:10  | 249.998641:299.931643:0 | 25:30:0    | 1:2:3   |
