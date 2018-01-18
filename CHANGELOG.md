@@ -4,6 +4,8 @@
       - FIXED #4704: Fixed regression in bearings reordering introduced in 5.13 [#4704](https://github.com/Project-OSRM/osrm-backend/issues/4704)
       - FIXED #4781: Fixed overflow exceptions in percent-encoding parsing
       - FIXED #4770: Fixed exclude flags for single toll road scenario
+      - FIXED #4283: Fix overflow on zero duration segments
+      - FIXED #4804: Ignore no_*_on_red turn restrictions
     - Guidance:
       - CHANGED #4706: Guidance refactoring step to decouple intersection connectivity analysis and turn instructions generation [#4706](https://github.com/Project-OSRM/osrm-backend/pull/4706)
     - Profile:

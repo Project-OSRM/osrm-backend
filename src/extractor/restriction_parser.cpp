@@ -107,12 +107,12 @@ RestrictionParser::TryParse(const osmium::Relation &relation) const
         const std::string value(fi_begin->value());
 
         // documented OSM restriction tags start either with only_* or no_*;
-        // check and return on these values, and ignore unrecognized values
+        // check and return on these values, and ignore no_*_on_red or unrecognized values
         if (value.find("only_") == 0)
         {
             is_only_restriction = true;
         }
-        else if (value.find("no_") == 0)
+        else if (value.find("no_") == 0 && !boost::algorithm::ends_with(value, "_on_red"))
         {
             is_only_restriction = false;
         }
