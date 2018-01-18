@@ -232,7 +232,7 @@ target_highway_turn_classification | Read          | Integer   | Classification 
 target_access_turn_classification  | Read          | Integer   | Classification based on access tag defined by user during setup. (default when not set: 0, allowed classification values are: 0-15))
 target_speed                       | Read          | Integer   | Speed on this target road in km/h
 roads_on_the_right  | Read | Vector<ExtractionTurnLeg> | Vector with information about other roads on the right of the turn that are also connected at the intersection
-roads_on_the_left | Read | Vector<ExtractionTurnLeg> | Vector with information about other roads on the left of the turn that are also connected at the intersection
+roads_on_the_left | Read | Vector<ExtractionTurnLeg> | Vector with information about other roads on the left of the turn that are also connected at the intersection. If turn is a u turn, this is empty.
 weight                             | Read/write    | Float     | Penalty to be applied for this turn (routing weight)
 duration                           | Read/write    | Float     | Penalty to be applied for this turn (duration in deciseconds)
 
