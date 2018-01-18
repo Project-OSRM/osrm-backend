@@ -405,9 +405,6 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                                                                   forward_classes,
                                                                   parsed_way.forward_travel_mode,
                                                                   parsed_way.is_left_hand_driving});
-
-        std::uint8_t speed = std::min(parsed_way.forward_speed, 255);
-
         util::for_each_pair(
             nodes.cbegin(),
             nodes.cend(),
@@ -428,8 +425,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                      parsed_way.forward_restricted,
                      road_classification,
                      parsed_way.highway_turn_classification,
-                     parsed_way.access_turn_classification,
-                     speed}};
+                     parsed_way.access_turn_classification}};
 
                 external_memory.all_edges_list.push_back(InternalExtractorEdge(
                     std::move(edge), forward_weight_data, forward_duration_data, {}));
@@ -444,8 +440,6 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                                                                   backward_classes,
                                                                   parsed_way.backward_travel_mode,
                                                                   parsed_way.is_left_hand_driving});
-
-        std::uint8_t speed = std::min(parsed_way.backward_speed, 255);
         util::for_each_pair(
             nodes.cbegin(),
             nodes.cend(),
@@ -466,8 +460,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                      parsed_way.backward_restricted,
                      road_classification,
                      parsed_way.highway_turn_classification,
-                     parsed_way.access_turn_classification,
-                     speed}};
+                     parsed_way.access_turn_classification}};
 
                 external_memory.all_edges_list.push_back(InternalExtractorEdge(
                     std::move(edge), backward_weight_data, backward_duration_data, {}));

@@ -563,7 +563,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
             const auto incoming_bearing,
             const auto &turn,
             const auto entry_class_id,
-            const auto &intersection) {
+            const auto &intersection,
+            const auto &edge_geometries) {
 
             const auto node_restricted = isRestricted(node_along_road_entering,
                                                       intersection_node,
@@ -622,7 +623,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                         edge_data.flags.road_classification.GetNumberOfLanes(),
                         edge_data.flags.highway_turn_classification,
                         edge_data.flags.access_turn_classification,
-                        edge_data.flags.speed,
+                        ((double)intersection::findEdgeLength(edge_geometries, connected_edge->eid) / edge_data.duration) * 36,
                         !connected_edge->entry_allowed ||
                             (edge_data.flags.forward && edge_data.flags.backward), // is incoming
                         connected_edge->entry_allowed);
@@ -642,7 +643,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                         edge_data.flags.road_classification.GetNumberOfLanes(),
                         edge_data.flags.highway_turn_classification,
                         edge_data.flags.access_turn_classification,
-                        edge_data.flags.speed,
+                        ((double)intersection::findEdgeLength(edge_geometries, connected_edge->eid) / edge_data.duration) * 36,
                         !connected_edge->entry_allowed ||
                             (edge_data.flags.forward && edge_data.flags.backward), // is incoming
                         connected_edge->entry_allowed);
@@ -658,7 +659,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                         edge_data.flags.road_classification.GetNumberOfLanes(),
                         edge_data.flags.highway_turn_classification,
                         edge_data.flags.access_turn_classification,
-                        edge_data.flags.speed,
+                        ((double)intersection::findEdgeLength(edge_geometries, connected_edge->eid) / edge_data.duration) * 36,
                         !connected_edge->entry_allowed ||
                             (edge_data.flags.forward && edge_data.flags.backward), // is incoming
                         connected_edge->entry_allowed);
@@ -681,7 +682,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 edge_data1.flags.road_classification.GetNumberOfLanes(),
                 edge_data1.flags.highway_turn_classification,
                 edge_data1.flags.access_turn_classification,
-                edge_data1.flags.speed,
+                ((double)intersection::findEdgeLength(edge_geometries, node_based_edge_from) / edge_data1.duration) * 36,
                 // target info
                 edge_data2.flags.restricted,
                 m_edge_based_node_container.GetAnnotation(edge_data2.annotation_data).travel_mode,
@@ -690,7 +691,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 edge_data2.flags.road_classification.GetNumberOfLanes(),
                 edge_data2.flags.highway_turn_classification,
                 edge_data2.flags.access_turn_classification,
-                edge_data2.flags.speed,
+                ((double)intersection::findEdgeLength(edge_geometries, node_based_edge_to) / edge_data1.duration) * 36,
                 // connected roads
                 road_legs_on_the_right,
                 road_legs_on_the_left);
@@ -904,7 +905,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                                   reversed_incoming_bearing,
                                                   *turn,
                                                   entry_class_id,
-                                                  intersection);
+                                                  intersection,
+                                                  edge_geometries);
 
                                 buffer->continuous_data.edges_list.push_back(
                                     edge_with_data_and_condition.first.edge);
@@ -967,7 +969,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                                           reversed_incoming_bearing,
                                                           *turn,
                                                           entry_class_id,
-                                                          intersection);
+                                                          intersection,
+                                                          edge_geometries);
 
                                         buffer->delayed_data.push_back(
                                             std::move(edge_with_data_and_condition.first));
@@ -1002,7 +1005,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                                           reversed_incoming_bearing,
                                                           *turn,
                                                           entry_class_id,
-                                                          intersection);
+                                                          intersection,
+                                                          edge_geometries);
 
                                         buffer->delayed_data.push_back(
                                             std::move(edge_with_data_and_condition.first));

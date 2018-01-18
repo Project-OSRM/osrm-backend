@@ -29,7 +29,6 @@ struct NodeBasedEdgeClassification
     guidance::RoadClassification road_classification; // 16 2
     std::uint8_t highway_turn_classification : 4;     // 4
     std::uint8_t access_turn_classification : 4;      // 4
-    std::uint8_t speed;                               // 8
 
     NodeBasedEdgeClassification();
 
@@ -42,13 +41,12 @@ struct NodeBasedEdgeClassification
                                 const bool restricted,
                                 guidance::RoadClassification road_classification,
                                 const std::uint8_t highway_turn_classification,
-                                const std::uint8_t access_turn_classification,
-                                const std::uint8_t speed)
+                                const std::uint8_t access_turn_classification)
         : forward(forward), backward(backward), is_split(is_split), roundabout(roundabout),
           circular(circular), startpoint(startpoint), restricted(restricted),
           road_classification(road_classification),
           highway_turn_classification(highway_turn_classification),
-          access_turn_classification(access_turn_classification), speed(speed)
+          access_turn_classification(access_turn_classification)
     {
     }
 
@@ -191,7 +189,7 @@ inline NodeBasedEdgeWithOSM::NodeBasedEdgeWithOSM()
 {
 }
 
-static_assert(sizeof(extractor::NodeBasedEdge) == 32,
+static_assert(sizeof(extractor::NodeBasedEdge) == 28,
               "Size of extractor::NodeBasedEdge type is "
               "bigger than expected. This will influence "
               "memory consumption.");
