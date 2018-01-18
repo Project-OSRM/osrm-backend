@@ -283,6 +283,12 @@ end
 function WayHandlers.classes(profile,way,result,data)
     local forward_toll, backward_toll = Tags.get_forward_backward_by_key(way, data, "toll")
     local forward_route, backward_route = Tags.get_forward_backward_by_key(way, data, "route")
+    local tunnel = way:get_value_by_key("tunnel")
+
+    if tunnel and tunnel ~= "no" then
+      result.forward_classes["tunnel"] = true
+      result.backward_classes["tunnel"] = true
+    end
 
     if forward_toll == "yes" then
         result.forward_classes["toll"] = true
