@@ -141,6 +141,33 @@ Feature: Car - Turn restrictions
             | c    | a  | cj,aj,aj |
             | c    | b  | cj,bj,bj |
 
+    @no_turning
+    Scenario: Car - Ignore no_*_on_red relations
+        Given the node map
+            """
+              a
+            d j b
+              c
+            """
+
+        And the ways
+            | nodes | oneway |
+            | cj    | yes    |
+            | aj    | -1     |
+            | dj    | -1     |
+            | bj    | -1     |
+
+        And the relations
+            | type        | way:from | way:to | node:via | restriction          |
+            | restriction | cj       | dj     | j        | no_turn_on_red       |
+            | restriction | cj       | bj     | j        | no_right_turn_on_red |
+
+        When I route I should get
+            | from | to | route    |
+            | c    | d  | cj,dj,dj |
+            | c    | a  | cj,aj,aj |
+            | c    | b  | cj,bj,bj |
+
     @only_turning
     Scenario: Car - Only left turn
         Given the node map
