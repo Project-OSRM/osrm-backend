@@ -210,7 +210,7 @@ The following attributes can be read and set on the result in `process_turn`:
 
 Attribute                          | Read/write?   | Type      | Notes
 ---------------------              | ------------- | --------- | ------------------------------------------------------
-angle                              | Read          | Float     | Angle of turn in degrees (`0-360`: `0`=u-turn, `180`=straight on)
+angle                              | Read          | Float     | Angle of turn in degrees (`[-179, 180]`: `0`=straight, `180`=u turn, `+x`=x degrees to the right, `-x`= x degrees to the left)
 number_of_roads                    | Read          | Integer   | Number of ways at the intersection of the turn
 is_u_turn                          | Read          | Boolean   | Is the turn a u-turn?
 has_traffic_light                  | Read          | Boolean   | Is a traffic light present at this turn?

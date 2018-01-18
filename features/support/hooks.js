@@ -50,8 +50,7 @@ module.exports = function () {
             .defer(mkdirp, logDir)
             .defer(rimraf, this.scenarioLogFile)
             .awaitAll(callback);
-        // Question @review is this line nice to have here (commented, but ready to use and uncomment if needed?)
-        // i think this is super useful and would love to have it here
+        // uncomment to get path to logfile
         // console.log("  Writing logging output to " + this.scenarioLogFile)
     });
 

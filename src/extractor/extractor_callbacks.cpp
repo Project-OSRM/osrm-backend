@@ -406,7 +406,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                                                                   parsed_way.forward_travel_mode,
                                                                   parsed_way.is_left_hand_driving});
 
-        std::uint8_t speed = parsed_way.forward_speed > 255 ? 255 : parsed_way.forward_speed;
+        std::uint8_t speed = std::min(parsed_way.forward_speed, 255);
 
         util::for_each_pair(
             nodes.cbegin(),
@@ -445,7 +445,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                                                                   parsed_way.backward_travel_mode,
                                                                   parsed_way.is_left_hand_driving});
 
-        std::uint8_t speed = parsed_way.backward_speed > 255 ? 255 : parsed_way.backward_speed;
+        std::uint8_t speed = std::min(parsed_way.backward_speed, 255);
         util::for_each_pair(
             nodes.cbegin(),
             nodes.cend(),
