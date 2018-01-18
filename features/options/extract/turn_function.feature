@@ -95,10 +95,8 @@ Feature: Turn Function Information
         And stdout should contain "source_is_motorway true"
         And stdout should contain "target_is_motorway true"
         And stdout should contain "source_is_link false"
-        And stdout should contain "source_speed 90"
         And stdout should contain "target_is_motorway true"
         And stdout should contain "target_is_link false"
-        And stdout should contain "target_speed 90"
 
 
     Scenario: Turns should detect when turn is leaving highway
@@ -195,7 +193,6 @@ Feature: Turn Function Information
         Then it should exit successfully
         And stdout should contain "source_is_motorway true"
         And stdout should contain "source_is_link false"
-        And stdout should contain "source_speed 90"
         And stdout should contain "source_number_of_lanes 3"
         And stdout should contain "target_is_motorway false"
         And stdout should contain "target_is_link true"
@@ -298,9 +295,9 @@ Feature: Turn Function Information
         Then it should exit successfully
         And stdout should contain "number_of_roads 3"
         # turning abd, give information about bc
-        And stdout should contain "roads_on_the_right [1] speed: 90, is_incoming: false, is_outgoing: true, highway_turn_classification: 4, access_turn_classification: 0"
+        And stdout should contain /roads_on_the_right \[1\] speed: [0-9]+, is_incoming: false, is_outgoing: true, highway_turn_classification: 4, access_turn_classification: 0/
         # turning abc, give information about bd
-        And stdout should contain "roads_on_the_left [1] speed: 25, is_incoming: false, is_outgoing: true, highway_turn_classification: 1, access_turn_classification: 0"
+        And stdout should contain /roads_on_the_left \[1\] speed: [0-9]+, is_incoming: false, is_outgoing: true, highway_turn_classification: 1, access_turn_classification: 0/
 
     Scenario: Turns should have correct information of other roads at intersection II
         Given the profile file
@@ -398,9 +395,9 @@ Feature: Turn Function Information
         Then it should exit successfully
         And stdout should contain "number_of_roads 3"
         # turning dbc, give information about about ab
-        And stdout should contain "roads_on_the_right [1] speed: 55, is_incoming: true, is_outgoing: false, highway_turn_classification: 3, access_turn_classification: 0"
+        And stdout should contain /roads_on_the_right \[1\] speed: [0-9]+, is_incoming: true, is_outgoing: false, highway_turn_classification: 3, access_turn_classification: 0/
         # turning abc, give information about about db
-        And stdout should contain "roads_on_the_left [1] speed: 25, is_incoming: true, is_outgoing: false, highway_turn_classification: 0, access_turn_classification: 1"
+        And stdout should contain /roads_on_the_left \[1\] speed: [0-9]+, is_incoming: true, is_outgoing: false, highway_turn_classification: 0, access_turn_classification: 1/
 
 
 

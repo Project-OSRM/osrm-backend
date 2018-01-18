@@ -232,7 +232,7 @@ function WayHandlers.way_classification_for_turn(profile,way,result,data)
     result.highway_turn_classification = profile.highway_turn_classification[highway]
   end
   if access and profile.access_turn_classification[access] then
-    assert(profile.access_turn_classification[highway] < 16, "access_turn_classification must be smaller than 16")
+    assert(profile.access_turn_classification[access] < 16, "access_turn_classification must be smaller than 16")
     result.access_turn_classification = profile.access_turn_classification[access]
   end
 end
