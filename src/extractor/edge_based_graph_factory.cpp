@@ -147,8 +147,7 @@ NBGToEBG EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const N
     // There should always be some geometry
     BOOST_ASSERT(0 != segment_count);
 
-    // const unsigned packed_geometry_id =
-    // m_compressed_edge_container.ZipEdges(edge_id_1,
+    // const unsigned packed_geometry_id = m_compressed_edge_container.ZipEdges(edge_id_1,
     // edge_id_2);
 
     NodeID current_edge_source_coordinate_id = node_u;
@@ -232,8 +231,7 @@ void EdgeBasedGraphFactory::Run(ScriptingEnvironment &scripting_environment,
     TIMER_STOP(renumber);
 
     // Allocate memory for edge-based nodes
-    // In addition to the normal edges, allocate enough space for copied edges
-    // from
+    // In addition to the normal edges, allocate enough space for copied edges from
     // via-way-restrictions, see calculation above
     m_edge_based_node_container.nodes.resize(m_number_of_edge_based_nodes);
 
@@ -298,16 +296,14 @@ unsigned EdgeBasedGraphFactory::LabelEdgeBasedNodes()
     return numbered_edges_count;
 }
 
-/// Creates the nodes in the edge expanded graph from edges in the node-based
-/// graph.
+// Creates the nodes in the edge expanded graph from edges in the node-based graph.
 std::vector<NBGToEBG>
 EdgeBasedGraphFactory::GenerateEdgeExpandedNodes(const WayRestrictionMap &way_restriction_map)
 {
     std::vector<NBGToEBG> mapping;
 
     util::Log() << "Generating edge expanded nodes ... ";
-    // indicating a normal node within the edge-based graph. This node represents
-    // an edge in the
+    // indicating a normal node within the edge-based graph. This node represents an edge in the
     // node-based graph
     {
         util::UnbufferedLog log;
@@ -328,8 +324,8 @@ EdgeBasedGraphFactory::GenerateEdgeExpandedNodes(const WayRestrictionMap &way_re
                 BOOST_ASSERT(nbg_node_v != SPECIAL_NODEID);
                 BOOST_ASSERT(nbg_node_u != nbg_node_v);
 
-                // pick only every other edge, since we have every edge as an outgoing
-                // and incoming egde
+                // pick only every other edge, since we have every edge as an outgoing and incoming
+                // egde
                 if (nbg_node_u >= nbg_node_v)
                 {
                     continue;
@@ -476,20 +472,12 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
     // filled in during next stage, kept alive through following scope
     std::vector<Conditional> conditionals;
-    // The following block generates the edge-based-edges using a parallel
-    // processing
-    // pipeline.  Sets of intersection IDs are batched in groups of GRAINSIZE
-    // (100)
-    // `generator_stage`,
-    // then those groups are processed in parallel `processor_stage`.  Finally,
-    // results are
-    // appended to the various buffer vectors by the `output_stage` in the same
-    // order
-    // that the `generator_stage` created them in (tbb::filter::serial_in_order
-    // creates this
-    // guarantee).  The order needs to be maintained because we depend on it later
-    // in the
-    // processing pipeline.
+    // The following block generates the edge-based-edges using a parallel processing pipeline.
+    // Sets of intersection IDs are batched in groups of GRAINSIZE (100) `generator_stage`, then
+    // those groups are processed in parallel `processor_stage`.  Finally, results are appended to
+    // the various buffer vectors by the `output_stage` in the same order that the `generator_stage`
+    // created them in (tbb::filter::serial_in_order creates this guarantee).  The order needs to be
+    // maintained because we depend on it later in the processing pipeline.
     {
         util::UnbufferedLog log;
 
@@ -498,17 +486,14 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
         // This counter is used to keep track of how far along we've made it
         std::uint64_t nodes_completed = 0;
 
-        // going over all nodes (which form the center of an intersection), we
-        // compute all
-        // possible turns along these intersections.
+        // going over all nodes (which form the center of an intersection), we compute all possible
+        // turns along these intersections.
 
         NodeID current_node = 0;
 
-        // Handle intersections in sets of 100.  The pipeline below has a serial
-        // bottleneck
-        // during the writing phase, so we want to make the parallel workers do more
-        // work
-        // to give the serial final stage time to complete its tasks.
+        // Handle intersections in sets of 100.  The pipeline below has a serial bottleneck during
+        // the writing phase, so we want to make the parallel workers do more work to give the
+        // serial final stage time to complete its tasks.
         const constexpr unsigned GRAINSIZE = 100;
 
         // First part of the pipeline generates iterator ranges of IDs in sets of
@@ -529,9 +514,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 }
             });
 
-        // This struct is the buffered output of the `processor_stage`.  This data
-        // is
-        // appended to the various output arrays/files by the `output_stage`.
+        // This struct is the buffered output of the `processor_stage`.  This data is appended to
+        // the various output arrays/files by the `output_stage`.
         struct IntersectionData
         {
             std::vector<lookup::TurnIndexBlock> turn_indexes;
@@ -541,8 +525,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
             std::vector<TurnData> turn_data_container;
         };
 
-        // same as IntersectionData, but grouped with edge to allow sorting after
-        // creating. Edges
+        // same as IntersectionData, but grouped with edge to allow sorting after creating. Edges
         // can be out of order
         struct EdgeWithData
         {
@@ -566,10 +549,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                     &scripting_environment,
                                     weight_multiplier,
                                     &conditional_restriction_map](
-            // what nodes will be used? In most cases this will be the id stored in
-            // the edge_data.
-            // In case of duplicated nodes (e.g. due to via-way restrictions),
-            // one/both of these
+            // what nodes will be used? In most cases this will be the id stored in the edge_data.
+            // In case of duplicated nodes (e.g. due to via-way restrictions), one/both of these
             // might refer to a newly added edge based node
             const auto edge_based_node_from,
             const auto edge_based_node_to,
@@ -620,8 +601,6 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
             // compute weight and duration penalties
             auto is_traffic_light = m_traffic_lights.count(intersection_node);
 
-            OSRM_ASSERT(!turn.instruction.IsUTurn() || road_legs_on_the_left.size() == 0,
-                        m_coordinates[intersection_node]);
             ExtractionTurn extracted_turn(
                 // general info
                 turn.angle,
@@ -659,8 +638,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
             scripting_environment.ProcessTurn(extracted_turn);
 
-            // turn penalties are limited to [-2^15, 2^15) which roughly
-            // translates to 54 minutes and fits signed 16bit deci-seconds
+            // turn penalties are limited to [-2^15, 2^15) which roughly translates to 54 minutes
+            // and fits signed 16bit deci-seconds
             auto weight_penalty =
                 boost::numeric_cast<TurnPenalty>(extracted_turn.weight * weight_multiplier);
             auto duration_penalty = boost::numeric_cast<TurnPenalty>(extracted_turn.duration * 10.);
@@ -682,18 +661,15 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 true,
                 false};
 
-            // We write out the mapping between the edge-expanded edges and
-            // the original nodes. Since each edge represents a possible
-            // maneuver, external programs can use this to quickly perform updates to
-            // edge
-            // weights in order to penalize certain turns.
+            // We write out the mapping between the edge-expanded edges and the original nodes.
+            // Since each edge represents a possible maneuver, external programs can use this to
+            // quickly perform updates to edge weights in order to penalize certain turns.
 
-            // If this edge is 'trivial' -- where the compressed edge
-            // corresponds exactly to an original OSM segment -- we can pull the
-            // turn's
-            // preceding node ID directly with `node_along_road_entering`;
-            // otherwise, we need to look up the node immediately preceding the turn
-            // from the compressed edge container.
+            // If this edge is 'trivial' -- where the compressed edge corresponds exactly to an
+            // original OSM segment -- we can pull the turn's preceding node ID directly with
+            // `node_along_road_entering`;
+            // otherwise, we need to look up the node immediately preceding the turn from the
+            // compressed edge container.
             const bool isTrivial = m_compressed_edge_container.IsTrivial(node_based_edge_from);
 
             const auto &from_node =
@@ -710,9 +686,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 conditional);
         };
 
-        // Second part of the pipeline is where the intersection analysis is done
-        // for
-        // each intersection
+        // Second part of the pipeline is where the intersection analysis is done for each
+        // intersection
         tbb::filter_t<tbb::blocked_range<NodeID>, std::shared_ptr<PipelineBuffer>> processor_stage(
             tbb::filter::parallel, [&](const tbb::blocked_range<NodeID> &intersection_node_range) {
 
@@ -720,8 +695,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 buffer->nodes_processed =
                     intersection_node_range.end() - intersection_node_range.begin();
 
-                // If we get fed a 0-length range for some reason, we can just return
-                // right away
+                // If we get fed a 0-length range for some reason, we can just return right away
                 if (buffer->nodes_processed == 0)
                     return buffer;
 
@@ -730,8 +704,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                      intersection_node < end;
                      ++intersection_node)
                 {
-                    // We capture the thread-local work in these objects, then flush
-                    // them in a controlled manner at the end of the parallel range
+                    // We capture the thread-local work in these objects, then flush them in a
+                    // controlled manner at the end of the parallel range
                     const auto &incoming_edges =
                         intersection::getIncomingEdges(m_node_based_graph, intersection_node);
                     const auto &outgoing_edges =
@@ -747,10 +721,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                                                 intersection_node);
 
                     // all nodes in the graph are connected in both directions. We check all
-                    // outgoing nodes to find the incoming edge. This is a larger search
-                    // overhead,
-                    // but the cost we need to pay to generate edges here is worth the
-                    // additional
+                    // outgoing nodes to find the incoming edge. This is a larger search overhead,
+                    // but the cost we need to pay to generate edges here is worth the additional
                     // search overhead.
                     //
                     // a -> b <-> c
@@ -763,11 +735,9 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                     // b: a,rev=1 c,rev=0 d,rev=0
                     // c: b,rev=0
                     //
-                    // From the flags alone, we cannot determine which nodes are connected
-                    // to
-                    // `b` by an outgoing edge. Therefore, we have to search all connected
-                    // edges for
-                    // edges entering `b`
+                    // From the flags alone, we cannot determine which nodes are connected to `b` by
+                    // an outgoing edge. Therefore, we have to search all connected edges for edges
+                    // entering `b`
 
                     for (const auto &incoming_edge : incoming_edges)
                     {
@@ -802,9 +772,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                         const auto bearing_class_id =
                             bearing_class_hash.ConcurrentFindOrAdd(turn_classification.second);
 
-                        // Note - this is strictly speaking not thread safe, but we know we
-                        // should never be touching the same element twice, so we should
-                        // be fine.
+                        // Note - this is strictly speaking not thread safe, but we know we should
+                        // never be touching the same element twice, so we should be fine.
                         bearing_class_by_node_based_node[intersection_node] = bearing_class_id;
 
                         // check if we are turning off a via way
@@ -886,8 +855,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                 }
                             }
 
-                            // In case a way restriction starts at a given location, add a turn
-                            // onto
+                            // In case a way restriction starts at a given location, add a turn onto
                             // every artificial node eminating here.
                             //
                             //     e - f
@@ -899,18 +867,13 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                             // ab via bc to cd
                             // ab via be to ef
                             //
-                            // has two artifical nodes (be/bc) with restrictions starting at
-                            // `ab`.
+                            // has two artifical nodes (be/bc) with restrictions starting at `ab`.
                             // Since every restriction group (abc | abe) refers to the same
-                            // artificial node, we simply have to find a single representative
-                            // for
-                            // the turn. Here we check whether the turn in question is the start
-                            // of
-                            // a via way restriction. If that should be the case, we switch
-                            // the id of the edge-based-node for the target to the ID of the
-                            // duplicated node associated with the turn. (e.g. ab via bc
-                            // switches bc
-                            // to bc_dup)
+                            // artificial node, we simply have to find a single representative for
+                            // the turn. Here we check whether the turn in question is the start of
+                            // a via way restriction. If that should be the case, we switch the id
+                            // of the edge-based-node for the target to the ID of the duplicated
+                            // node associated with the turn. (e.g. ab via bc switches bc to bc_dup)
                             auto const target_id = way_restriction_map.RemapIfRestricted(
                                 nbe_to_ebn_mapping[outgoing_edge.edge],
                                 incoming_edge.node,
@@ -950,11 +913,9 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                 }
                             }
 
-                            // when turning off a a via-way turn restriction, we need to not
-                            // only
+                            // when turning off a a via-way turn restriction, we need to not only
                             // handle the normal edges for the way, but also add turns for every
-                            // duplicated node. This process is integrated here to avoid doing
-                            // the
+                            // duplicated node. This process is integrated here to avoid doing the
                             // turn analysis multiple times.
                             if (turning_off_via_way)
                             {
@@ -1055,19 +1016,16 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 return buffer;
             });
 
-        // Because we write TurnIndexBlock data as we go, we'll
-        // buffer them into groups of 1000 to reduce the syscall
-        // count by 1000x.  This doesn't need much memory, but
-        // greatly reduces the syscall overhead of writing lots
-        // of small objects
+        // Because we write TurnIndexBlock data as we go, we'll buffer them into groups of 1000 to
+        // reduce the syscall count by 1000x.  This doesn't need much memory, but greatly reduces
+        // the syscall overhead of writing lots of small objects
         const constexpr int TURN_INDEX_WRITE_BUFFER_SIZE = 1000;
         std::vector<lookup::TurnIndexBlock> turn_indexes_write_buffer;
         turn_indexes_write_buffer.reserve(TURN_INDEX_WRITE_BUFFER_SIZE);
 
         std::vector<EdgeWithData> delayed_data;
 
-        // Last part of the pipeline puts all the calculated data into the serial
-        // buffers
+        // Last part of the pipeline puts all the calculated data into the serial buffers
         tbb::filter_t<std::shared_ptr<PipelineBuffer>, void> output_stage(
             tbb::filter::serial_in_order, [&](const std::shared_ptr<PipelineBuffer> buffer) {
                 nodes_completed += buffer->nodes_processed;
@@ -1106,15 +1064,11 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                     delayed_data.end(), buffer->delayed_data.begin(), buffer->delayed_data.end());
             });
 
-        // Now, execute the pipeline.  The value of "5" here was chosen by
-        // experimentation
-        // on a 16-CPU machine and seemed to give the best performance.  This value
-        // needs
-        // to be balanced with the GRAINSIZE above - ideally, the pipeline puts as
-        // much work
-        // as possible in the `intersection_handler` step so that those parallel
-        // workers don't
-        // get blocked too much by the slower (io-performing) `buffer_storage`
+        // Now, execute the pipeline.  The value of "5" here was chosen by experimentation on a
+        // 16-CPU machine and seemed to give the best performance.  This value needs to be balanced
+        // with the GRAINSIZE above - ideally, the pipeline puts as much work as possible in the
+        // `intersection_handler` step so that those parallel workers don't get blocked too much by
+        // the slower (io-performing) `buffer_storage`
         tbb::parallel_pipeline(tbb::task_scheduler_init::default_num_threads() * 5,
                                generator_stage & processor_stage & output_stage);
 
@@ -1140,8 +1094,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     }
 
     util::Log() << "Reunmbering turns";
-    // Now, update the turn_id property on every EdgeBasedEdge - it will equal the
-    // position in the m_edge_based_edge_list array for each object.
+    // Now, update the turn_id property on every EdgeBasedEdge - it will equal the position in the
+    // m_edge_based_edge_list array for each object.
     tbb::parallel_for(tbb::blocked_range<NodeID>(0, m_edge_based_edge_list.size()),
                       [this](const tbb::blocked_range<NodeID> &range) {
                           for (auto x = range.begin(), end = range.end(); x != end; ++x)
@@ -1150,11 +1104,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                           }
                       });
 
-    // re-hash conditionals to ocnnect to their respective edge-based edges. Due
-    // to the
-    // ordering, we
-    // do not really have a choice but to index the conditional penalties and walk
-    // over all
+    // re-hash conditionals to ocnnect to their respective edge-based edges. Due to the ordering, we
+    // do not really have a choice but to index the conditional penalties and walk over all
     // edge-based-edges to find the ID of the edge
     auto const indexed_conditionals = IndexConditionals(std::move(conditionals));
     {
