@@ -1,4 +1,4 @@
-# 5.15.0 RC2
+# 5.15.0 RC3
   - Changes from 5.14.3:
     - Bugfixes:
       - FIXED #4704: Fixed regression in bearings reordering introduced in 5.13 [#4704](https://github.com/Project-OSRM/osrm-backend/issues/4704)
@@ -8,6 +8,7 @@
       - FIXED #4804: Ignore no_*_on_red turn restrictions
     - Guidance:
       - CHANGED #4706: Guidance refactoring step to decouple intersection connectivity analysis and turn instructions generation [#4706](https://github.com/Project-OSRM/osrm-backend/pull/4706)
+      - CHANGED #3491: Refactor `isThroughStreet`/Intersection options
     - Profile:
       - ADDED: `tunnel` as a new class in car profile so that sections of the route with tunnel tags will be marked as such
 
