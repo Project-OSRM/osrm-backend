@@ -14,7 +14,6 @@
       - FIXED #4804: Ignore no_*_on_red turn restrictions
     - Guidance:
       - CHANGED #4706: Guidance refactoring step to decouple intersection connectivity analysis and turn instructions generation [#4706](https://github.com/Project-OSRM/osrm-backend/pull/4706)
-      - CHANGED #3491: Refactor `isThroughStreet`/Intersection options
     - Profile:
       - ADDED: `tunnel` as a new class in car profile so that sections of the route with tunnel tags will be marked as such
 
