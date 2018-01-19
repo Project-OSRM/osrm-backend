@@ -885,6 +885,16 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                     get_connected_road_info(road_legs_on_the_left, connected_edge);
                                 }
                             }
+                            if (!(!turn->instruction.IsUTurn() || road_legs_on_the_left.size() == 0)) {
+                                std::cout << std::endl;
+                                std::cout << "is u turn          " << turn->instruction.IsUTurn() << std::endl;
+                                std::cout << "left size          " << road_legs_on_the_left.size() << std::endl;
+                                std::cout << "right size         " << road_legs_on_the_right.size() << std::endl;
+                                std::cout << "intersection size  " << intersection.size() << std::endl;
+                                std::cout << "turn index         " << turn - intersection.begin() << std::endl;
+                            }
+                            OSRM_ASSERT(!turn->instruction.IsUTurn() || road_legs_on_the_left.size() == 0,
+                                        m_coordinates[intersection_node]);
 
                             // In case a way restriction starts at a given location, add a turn
                             // onto
