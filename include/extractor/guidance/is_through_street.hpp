@@ -2,22 +2,9 @@
 #define OSRM_EXTRACTOR_GUIDANCE_IS_THROUGH_STREET_HPP_
 
 #include "extractor/guidance/constants.hpp"
-#include "extractor/guidance/have_identical_names.hpp"
-#include "extractor/guidance/sliproad_handler.hpp"
 #include "extractor/suffix_table.hpp"
-#include "util/assert.hpp"
-#include "util/bearing.hpp"
-#include "util/coordinate_calculation.hpp"
 #include "util/guidance/name_announcements.hpp"
 
-#include <algorithm>
-#include <cmath>
-#include <iterator>
-#include <limits>
-
-#include <boost/assert.hpp>
-
-using osrm::extractor::guidance::getTurnDirection;
 using osrm::util::angularDeviation;
 
 namespace osrm
