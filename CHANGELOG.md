@@ -1,4 +1,4 @@
-# 5.15.0 RC1
+# 5.15.0 RC2
   - Changes from 5.14.3:
     - Bugfixes:
       - FIXED #4704: Fixed regression in bearings reordering introduced in 5.13 [#4704](https://github.com/Project-OSRM/osrm-backend/issues/4704)
