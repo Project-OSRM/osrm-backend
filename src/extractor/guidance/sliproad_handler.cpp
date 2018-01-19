@@ -344,9 +344,24 @@ operator()(const NodeID /*nid*/, const EdgeID source_edge_id, Intersection inter
         }
 
         // If the sliproad candidate is a through street, we cannot handle it as a sliproad.
-        if (isThroughStreet(sliproad_edge, target_intersection))
+        auto sliproad_in_target_intersection =
+            std::find_if(begin(target_intersection),
+                         end(target_intersection),
+                         [&](const auto &road) { return road.eid == sliproad_edge; });
+        if (sliproad_in_target_intersection != target_intersection.end())
         {
-            continue;
+            auto index_of_sliproad_in_target_intersection =
+                sliproad_in_target_intersection - target_intersection.begin();
+
+            if (isThroughStreet<IntersectionView>(index_of_sliproad_in_target_intersection,
+                                                  target_intersection,
+                                                  node_based_graph,
+                                                  node_data_container,
+                                                  name_table,
+                                                  street_name_suffix_table))
+            {
+                continue;
+            }
         }
 
         // The turn off of the Sliproad has to be obvious and a narrow turn and must not be a
@@ -687,32 +702,6 @@ bool SliproadHandler::nextIntersectionIsTooFarAway(const NodeID start, const Edg
     (void)graph_walker.TraverseRoad(start, onto, accumulator, selector);
 
     return accumulator.too_far_away;
-}
-
-bool SliproadHandler::isThroughStreet(const EdgeID from, const IntersectionView &intersection) const
-{
-    BOOST_ASSERT(from != SPECIAL_EDGEID);
-    BOOST_ASSERT(!intersection.empty());
-
-    const auto from_annotation_id = node_based_graph.GetEdgeData(from).annotation_data;
-    const auto &edge_name_id = node_data_container.GetAnnotation(from_annotation_id).name_id;
-
-    auto first = begin(intersection) + 1; // Skip UTurn road
-    auto last = end(intersection);
-
-    auto same_name = [&](const auto &road) {
-        const auto annotation_id = node_based_graph.GetEdgeData(road.eid).annotation_data;
-        const auto &road_name_id = node_data_container.GetAnnotation(annotation_id).name_id;
-
-        return edge_name_id != EMPTY_NAMEID && //
-               road_name_id != EMPTY_NAMEID && //
-               !util::guidance::requiresNameAnnounced(edge_name_id,
-                                                      road_name_id,
-                                                      name_table,
-                                                      street_name_suffix_table); //
-    };
-
-    return std::find_if(first, last, same_name) != last;
 }
 
 bool SliproadHandler::roadContinues(const EdgeID current, const EdgeID next) const
