@@ -97,6 +97,8 @@ class MatchAPI final : public RouteAPI
             }
         }
 
+        BOOST_ASSERT(parameters.waypoints.empty() || sub_matchings.size() == 1);
+
         std::size_t was_waypoint_idx = 0;
         for (auto trace_index : util::irange<std::size_t>(0UL, parameters.coordinates.size()))
         {
