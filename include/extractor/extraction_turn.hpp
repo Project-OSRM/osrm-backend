@@ -89,8 +89,6 @@ struct ExtractionTurn
           duration(0.)
 
     {
-        BOOST_ASSERT_MSG(!is_u_turn || roads_on_the_left.size() == 0,
-                         "there cannot be roads on the left when there is a u turn");
     }
     const double angle;
     const int number_of_roads;
