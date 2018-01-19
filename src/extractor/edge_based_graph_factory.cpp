@@ -830,9 +830,19 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                             };
 
                             // all connected roads on the right of a u turn
-                            if (turn == intersection.begin())
+                            if (turn->instruction.IsUTurn())
                             {
-                                for (auto connected_edge = intersection.begin() + 1;
+                                if (turn != intersection.begin())
+                                {
+                                    for (auto connected_edge = intersection.begin() + 1;
+                                         connected_edge < turn;
+                                         connected_edge++)
+                                    {
+                                        get_connected_road_info(road_legs_on_the_right,
+                                                                connected_edge);
+                                    }
+                                }
+                                for (auto connected_edge = turn + 1;
                                      connected_edge < intersection.end();
                                      connected_edge++)
                                 {
@@ -858,7 +868,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                             if (turn->instruction.IsUTurn() && turn != intersection.begin())
                             {
                                 util::Log(logWARNING)
-                                    << "Turn is a u turn but is not turning in the first connected "
+                                    << "Turn is a u turn but not turning to the first connected "
                                        "edge of the intersection. Node ID "
                                     << intersection_node << " coordinates "
                                     << m_coordinates[intersection_node];
