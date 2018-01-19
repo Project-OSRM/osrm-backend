@@ -122,24 +122,6 @@ bool MergableRoadDetector::CanMergeRoad(const NodeID intersection_node,
            !IsCircularShape(intersection_node, lhs, rhs);
 }
 
-bool MergableRoadDetector::HaveIdenticalNames(const NameID lhs,
-                                              const NameID rhs,
-                                              const util::NameTable &name_table,
-                                              const SuffixTable &street_name_suffix_table)
-{
-    const auto non_empty = (lhs != EMPTY_NAMEID) && (rhs != EMPTY_NAMEID);
-
-    // symmetrical check for announcements
-    return non_empty &&
-           !util::guidance::requiresNameAnnounced(lhs, rhs, name_table, street_name_suffix_table) &&
-           !util::guidance::requiresNameAnnounced(rhs, lhs, name_table, street_name_suffix_table);
-}
-
-bool MergableRoadDetector::HaveIdenticalNames(const NameID lhs, const NameID rhs) const
-{
-    return HaveIdenticalNames(lhs, rhs, name_table, street_name_suffix_table);
-}
-
 bool MergableRoadDetector::IsDistinctFrom(const MergableRoadData &lhs,
                                           const MergableRoadData &rhs) const
 {
@@ -151,7 +133,9 @@ bool MergableRoadDetector::IsDistinctFrom(const MergableRoadData &lhs,
             node_data_container.GetAnnotation(node_based_graph.GetEdgeData(lhs.eid).annotation_data)
                 .name_id,
             node_data_container.GetAnnotation(node_based_graph.GetEdgeData(rhs.eid).annotation_data)
-                .name_id);
+                .name_id,
+            name_table,
+            street_name_suffix_table);
 }
 
 bool MergableRoadDetector::EdgeDataSupportsMerge(
@@ -173,7 +157,8 @@ bool MergableRoadDetector::EdgeDataSupportsMerge(
         return false;
 
     // we require valid names
-    if (!HaveIdenticalNames(lhs_annotation.name_id, rhs_annotation.name_id))
+    if (!HaveIdenticalNames(
+            lhs_annotation.name_id, rhs_annotation.name_id, name_table, street_name_suffix_table))
         return false;
 
     return lhs_flags.road_classification == rhs_flags.road_classification;

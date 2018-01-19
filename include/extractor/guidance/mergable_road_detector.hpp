@@ -3,6 +3,7 @@
 
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/guidance/coordinate_extractor.hpp"
+#include "extractor/guidance/have_identical_names.hpp"
 #include "extractor/guidance/intersection.hpp"
 #include "extractor/guidance/turn_lane_types.hpp"
 #include "extractor/restriction_index.hpp"
@@ -77,17 +78,7 @@ class MergableRoadDetector
     // situations with more than two roads that could participate in a merge
     bool IsDistinctFrom(const MergableRoadData &lhs, const MergableRoadData &rhs) const;
 
-    // check if two name ids can be seen as identical (in presence of refs/others)
-    // in our case this translates into no name announcement in either direction (lhs->rhs and
-    // rhs->lhs)
-    static bool HaveIdenticalNames(const NameID lhs,
-                                   const NameID rhs,
-                                   const util::NameTable &name_table,
-                                   const SuffixTable &street_name_suffix_table);
-
   private:
-    bool HaveIdenticalNames(const NameID lhs, const NameID rhs) const;
-
     // When it comes to merging roads, we need to find out if two ways actually represent the
     // same road. This check tries to identify roads which are the same road in opposite directions
     bool EdgeDataSupportsMerge(const NodeBasedEdgeClassification &lhs_flags,
