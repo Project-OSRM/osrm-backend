@@ -620,11 +620,13 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
             // compute weight and duration penalties
             auto is_traffic_light = m_traffic_lights.count(intersection_node);
 
-            OSRM_ASSERT(!turn.instruction.IsUTurn() || road_legs_on_the_left.size() == 0, m_coordinates[intersection_node]);
+            OSRM_ASSERT(!turn.instruction.IsUTurn() || road_legs_on_the_left.size() == 0,
+                        m_coordinates[intersection_node]);
             ExtractionTurn extracted_turn(
                 // general info
                 turn.angle,
-                road_legs_on_the_right.size() + road_legs_on_the_left.size() + 2 - turn.instruction.IsUTurn(),
+                road_legs_on_the_right.size() + road_legs_on_the_left.size() + 2 -
+                    turn.instruction.IsUTurn(),
                 turn.instruction.IsUTurn(),
                 is_traffic_light,
                 m_edge_based_node_container.GetAnnotation(edge_data1.annotation_data)
@@ -877,8 +879,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                     get_connected_road_info(road_legs_on_the_right, connected_edge);
                                 }
                                 for (auto connected_edge = turn + 1;
-                                 connected_edge < intersection.end();
-                                 connected_edge++)
+                                     connected_edge < intersection.end();
+                                     connected_edge++)
                                 {
                                     get_connected_road_info(road_legs_on_the_left, connected_edge);
                                 }
