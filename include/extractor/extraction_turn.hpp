@@ -66,8 +66,8 @@ struct ExtractionTurn
                    int target_highway_turn_classification,
                    int target_access_turn_classification,
                    int target_speed,
-                   std::vector<ExtractionTurnLeg> &roads_on_the_right,
-                   std::vector<ExtractionTurnLeg> &roads_on_the_left)
+                   const std::vector<ExtractionTurnLeg> &roads_on_the_right,
+                   const std::vector<ExtractionTurnLeg> &roads_on_the_left)
         : angle(180. - angle), number_of_roads(number_of_roads), is_u_turn(is_u_turn),
           has_traffic_light(has_traffic_light), is_left_hand_driving(is_left_hand_driving),
 
