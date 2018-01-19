@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(test_match_split)
 
     MatchParameters params;
     params.coordinates = get_split_trace_locations();
-    params.timestamps = {1,2,1700,1800};
+    params.timestamps = {1, 2, 1700, 1800};
 
     json::Object result;
 
@@ -88,6 +88,7 @@ BOOST_AUTO_TEST_CASE(test_match_split)
     const auto &matchings = result.values.at("matchings").get<json::Array>().values;
     const auto &number_of_matchings = matchings.size();
     BOOST_CHECK_EQUAL(number_of_matchings, 2);
+    std::size_t current_matchings_index = 0, expected_waypoint_index = 0;
     for (const auto &waypoint : tracepoints)
     {
         if (waypoint.is<mapbox::util::recursive_wrapper<util::json::Object>>())
@@ -103,8 +104,15 @@ BOOST_AUTO_TEST_CASE(test_match_split)
                                          .values.at("legs")
                                          .get<json::Array>()
                                          .values;
-            BOOST_CHECK_LT(waypoint_index, route_legs.size() + 1);
+
             BOOST_CHECK_LT(matchings_index, number_of_matchings);
+
+            expected_waypoint_index =
+                (current_matchings_index != matchings_index) ? 0 : expected_waypoint_index;
+            BOOST_CHECK_EQUAL(waypoint_index, expected_waypoint_index);
+
+            current_matchings_index = matchings_index;
+            ++expected_waypoint_index;
         }
         else
         {
