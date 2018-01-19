@@ -5,6 +5,7 @@
 #include "extractor/guidance/coordinate_extractor.hpp"
 #include "extractor/guidance/intersection.hpp"
 #include "extractor/guidance/intersection_handler.hpp"
+#include "extractor/guidance/is_through_street.hpp"
 #include "extractor/guidance/roundabout_type.hpp"
 #include "extractor/query_node.hpp"
 

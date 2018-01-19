@@ -3,6 +3,7 @@
 
 #include "extractor/guidance/intersection.hpp"
 #include "extractor/guidance/intersection_handler.hpp"
+#include "extractor/guidance/is_through_street.hpp"
 #include "extractor/query_node.hpp"
 
 #include "util/attributes.hpp"

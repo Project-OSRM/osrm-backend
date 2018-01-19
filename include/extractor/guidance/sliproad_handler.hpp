@@ -3,6 +3,7 @@
 
 #include "extractor/guidance/intersection.hpp"
 #include "extractor/guidance/intersection_handler.hpp"
+#include "extractor/guidance/is_through_street.hpp"
 #include "extractor/query_node.hpp"
 
 #include "util/name_table.hpp"
@@ -52,9 +53,6 @@ class SliproadHandler final : public IntersectionHandler
 
     // Next intersection from `start` onto `onto` is too far away for a Siproad scenario
     bool nextIntersectionIsTooFarAway(const NodeID start, const EdgeID onto) const;
-
-    // Through street: does a road continue with from's name at the intersection
-    bool isThroughStreet(const EdgeID from, const IntersectionView &intersection) const;
 
     // Does the road from `current` to `next` continue
     bool roadContinues(const EdgeID current, const EdgeID next) const;

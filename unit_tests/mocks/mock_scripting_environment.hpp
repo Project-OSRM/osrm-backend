@@ -44,7 +44,7 @@ class MockScriptingEnvironment : public extractor::ScriptingEnvironment
     {
     }
 
-    bool HasLocationDependentData() const { return false; };
+    bool HasLocationDependentData() const override { return false; };
 };
 
 } // namespace test

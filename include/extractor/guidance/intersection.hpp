@@ -293,10 +293,11 @@ struct IntersectionView final : std::vector<IntersectionViewData>,      //
 };
 
 // `Intersection` is a relative view of an intersection by an incoming edge.
-// `Intersection` are streets at an intersection ordered from from sharp right counter-clockwise to
+// `Intersection` are streets at an intersection stored as an ordered list of connected roads
+// ordered from sharp right counter-clockwise to
 // sharp left where `intersection[0]` is _always_ a u-turn
 
-// An intersection is an ordered list of connected roads ordered from from sharp right
+// An intersection is an ordered list of connected roads ordered from sharp right
 // counter-clockwise to sharp left where `intersection[0]` is always a u-turn
 //
 //                                           |

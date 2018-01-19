@@ -418,44 +418,6 @@ void IntersectionHandler::assignTrivialTurns(const EdgeID via_eid,
         }
 }
 
-bool IntersectionHandler::isThroughStreet(const std::size_t index,
-                                          const Intersection &intersection) const
-{
-    const auto &data_at_index = node_data_container.GetAnnotation(
-        node_based_graph.GetEdgeData(intersection[index].eid).annotation_data);
-
-    if (data_at_index.name_id == EMPTY_NAMEID)
-        return false;
-
-    // a through street cannot start at our own position -> index 1
-    for (std::size_t road_index = 1; road_index < intersection.size(); ++road_index)
-    {
-        if (road_index == index)
-            continue;
-
-        const auto &road = intersection[road_index];
-        const auto &road_data = node_data_container.GetAnnotation(
-            node_based_graph.GetEdgeData(road.eid).annotation_data);
-
-        // roads have a near straight angle (180 degree)
-        const bool is_nearly_straight = angularDeviation(road.angle, intersection[index].angle) >
-                                        (STRAIGHT_ANGLE - FUZZY_ANGLE_DIFFERENCE);
-
-        const bool have_same_name =
-            road_data.name_id != EMPTY_NAMEID &&
-            !util::guidance::requiresNameAnnounced(
-                data_at_index.name_id, road_data.name_id, name_table, street_name_suffix_table);
-
-        const bool have_same_category =
-            node_based_graph.GetEdgeData(intersection[index].eid).flags.road_classification ==
-            node_based_graph.GetEdgeData(road.eid).flags.road_classification;
-
-        if (is_nearly_straight && have_same_name && have_same_category)
-            return true;
-    }
-    return false;
-}
-
 boost::optional<IntersectionHandler::IntersectionViewAndNode>
 IntersectionHandler::getNextIntersection(const NodeID at, const EdgeID via) const
 {
