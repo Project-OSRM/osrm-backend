@@ -855,6 +855,15 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                 }
                             }
 
+                            if (turn->instruction.IsUTurn() && turn != intersection.begin())
+                            {
+                                util::Log(logWARNING)
+                                    << "Turn is a u turn but is not turning in the first connected "
+                                       "edge of the intersection. Node ID "
+                                    << intersection_node << " coordinates "
+                                    << m_coordinates[intersection_node];
+                            }
+
                             // In case a way restriction starts at a given location, add a turn onto
                             // every artificial node eminating here.
                             //
