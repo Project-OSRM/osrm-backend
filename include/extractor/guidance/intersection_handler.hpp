@@ -67,6 +67,8 @@ class IntersectionHandler
     // Decide on a basic turn types
     TurnType::Enum findBasicTurnType(const EdgeID via_edge, const ConnectedRoad &candidate) const;
 
+    TurnType::Enum areSameClasses(const EdgeID via_edge, const ConnectedRoad &road) const;
+
     // Find the most obvious turn to follow. The function returns an index into the intersection
     // determining whether there is a road that can be seen as obvious turn in the presence of many
     // other possible turns. The function will consider road categories and other inputs like the
