@@ -119,6 +119,25 @@ Feature: Car - Mode flag
             | from | to | route       | turns                                      | classes                   |
             | a    | d  | ab,bc,cd,cd | depart,new name right,new name left,arrive | [()],[(tunnel)],[()],[()] |
 
+    Scenario: Car - We tag classes without intersections
+        Background:
+            Given a grid size of 200 meters
+
+        Given the node map
+            """
+            a b c d
+            """
+
+        And the ways
+            | nodes | name | tunnel |
+            | ab    | road |        |
+            | bc    | road | yes    |
+            | cd    | road |        |
+
+        When I route I should get
+          | from | to | route     | turns         | classes               |
+          | a    | d  | road,road | depart,arrive | [(),(tunnel),()],[()] |
+
     Scenario: Car - From roundabout on toll road
         Given the node map
             """
@@ -144,4 +163,3 @@ Feature: Car - Mode flag
         When I route I should get
             | from | to | route       | turns                                                        | classes                                     |
             | a    | f  | ab,df,df,df | depart,roundabout-exit-2,exit roundabout slight right,arrive | [()],[(),(motorway)],[(toll,motorway)],[()] |
-
