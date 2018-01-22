@@ -174,7 +174,7 @@ BOOST_AUTO_TEST_CASE(roundabout_intersection_connectivity)
             1,
             GeometryID{0, false},
             !allowed,
-            NodeBasedEdgeClassification{true, false, false, roundabout, false, false, false, {}},
+            NodeBasedEdgeClassification{true, false, false, roundabout, false, false, false, {}, 0, 0},
             0};
     };
     std::vector<InputEdge> edges = {unit_edge(0, 1, false, false),
