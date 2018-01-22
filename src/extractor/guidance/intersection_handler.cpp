@@ -102,6 +102,19 @@ TurnType::Enum IntersectionHandler::findBasicTurnType(const EdgeID via_edge,
     return TurnType::Turn;
 }
 
+TurnType::Enum IntersectionHandler::areSameClasses(const EdgeID via_edge,
+                                                   const ConnectedRoad &road) const
+{
+    const auto &in_classes =
+        node_data_container.GetAnnotation(node_based_graph.GetEdgeData(via_edge).annotation_data)
+            .classes;
+    const auto &out_classes =
+        node_data_container.GetAnnotation(node_based_graph.GetEdgeData(road.eid).annotation_data)
+            .classes;
+
+    return in_classes == out_classes;
+}
+
 TurnInstruction IntersectionHandler::getInstructionForObvious(const std::size_t num_roads,
                                                               const EdgeID via_edge,
                                                               const bool through_street,
@@ -195,7 +208,8 @@ TurnInstruction IntersectionHandler::getInstructionForObvious(const std::size_t 
             if (needs_notification)
                 return {TurnType::Notification, getTurnDirection(road.angle)};
             else
-                return {num_roads == 2 ? TurnType::NoTurn : TurnType::Suppressed,
+                return {num_roads == 2 && areSameClasses(via_edge, road) ? TurnType::NoTurn
+                                                                         : TurnType::Suppressed,
                         getTurnDirection(road.angle)};
         }
     }
@@ -204,7 +218,7 @@ TurnInstruction IntersectionHandler::getInstructionForObvious(const std::size_t 
     {
         return {TurnType::Notification, getTurnDirection(road.angle)};
     }
-    if (num_roads > 2)
+    if (num_roads > 2 || !areSameClasses(via_edge, road))
     {
         return {TurnType::Suppressed, getTurnDirection(road.angle)};
     }
