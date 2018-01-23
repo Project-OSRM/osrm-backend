@@ -55,11 +55,24 @@ function Measure.parse_value_kilograms(value)
   end
 end
 
+-- default maxheight value defined in https://wiki.openstreetmap.org/wiki/Key:maxheight#Non-numerical_values
+local default_maxheight = 4.5
+-- Available Non numerical values equal to 4.5; below_default and no_indications are not considered
+local height_non_numerical_values = Set { "default", "none", "no-sign", "unsigned" }
+
 --- Get maxheight of specified way in meters. If there are no
 --- max height, then return nil
-function Measure.get_max_height(raw_value)
+function Measure.get_max_height(raw_value,way)
   if raw_value then
-    return Measure.parse_value_meters(raw_value)
+    if height_non_numerical_values[raw_value] then
+      if way then
+        return way:get_location_tag('maxheight') or default_maxheight
+      else
+        return default_maxheight
+      end
+    else
+      return Measure.parse_value_meters(raw_value)
+    end
   end
 end
 

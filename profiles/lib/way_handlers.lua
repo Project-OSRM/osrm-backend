@@ -465,8 +465,8 @@ end
 function WayHandlers.handle_height(profile,way,result,data)
   local keys = Sequence { 'maxheight:physical', 'maxheight' }
   local forward, backward = Tags.get_forward_backward_by_set(way,data,keys)
-  forward = Measure.get_max_height(forward)
-  backward = Measure.get_max_height(backward)
+  forward = Measure.get_max_height(forward,way)
+  backward = Measure.get_max_height(backward,way)
 
   if forward and forward < profile.vehicle_height then
     result.forward_mode = mode.inaccessible
