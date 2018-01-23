@@ -167,15 +167,15 @@ BOOST_AUTO_TEST_CASE(roundabout_intersection_connectivity)
     //   ↙ ↑ ↘
     //  4  5  6
     const auto unit_edge = [](const NodeID from, const NodeID to, bool allowed, bool roundabout) {
-        return InputEdge{
-            from,
-            to,
-            1,
-            1,
-            GeometryID{0, false},
-            !allowed,
-            NodeBasedEdgeClassification{true, false, false, roundabout, false, false, false, {}, 0, 0},
-            0};
+        return InputEdge{from,
+                         to,
+                         1,
+                         1,
+                         GeometryID{0, false},
+                         !allowed,
+                         NodeBasedEdgeClassification{
+                             true, false, false, roundabout, false, false, false, {}, 0, 0},
+                         0};
     };
     std::vector<InputEdge> edges = {unit_edge(0, 1, false, false),
                                     unit_edge(0, 2, true, true),
