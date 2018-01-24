@@ -221,8 +221,9 @@ struct Coordinate
     std::string toOSMLink() const
     {
         std::stringstream link;
-        link << "http://www.openstreetmap.org/?mlat=" << lat << "&mlon=" << lon << "#map=19/" << lat
-             << "/" << lon;
+        link << "http://www.openstreetmap.org/?mlat=" << toFloating(lat)
+             << "&mlon=" << toFloating(lon) << "#map=19/" << toFloating(lat) << "/"
+             << toFloating(lon);
         return link.str();
     }
 };

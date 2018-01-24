@@ -846,10 +846,13 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                             }
                             else
                             {
-                                std::transform(intersection.begin() + 1,
-                                               turn,
-                                               std::back_inserter(road_legs_on_the_right),
-                                               get_connected_road_info);
+                                if (intersection.begin() != turn)
+                                {
+                                    std::transform(intersection.begin() + 1,
+                                                   turn,
+                                                   std::back_inserter(road_legs_on_the_right),
+                                                   get_connected_road_info);
+                                }
                                 std::transform(turn + 1,
                                                intersection.end(),
                                                std::back_inserter(road_legs_on_the_left),
@@ -861,6 +864,13 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                 util::Log(logWARNING)
                                     << "Turn is a u turn but not turning to the first connected "
                                        "edge of the intersection. Node ID: "
+                                    << intersection_node << ", OSM link: "
+                                    << m_coordinates[intersection_node].toOSMLink();
+                            }
+                            else if (turn == intersection.begin() && !turn->instruction.IsUTurn())
+                            {
+                                util::Log(logWARNING)
+                                    << "Turn is a u turn but not classified as a u turn. Node ID: "
                                     << intersection_node << ", OSM link: "
                                     << m_coordinates[intersection_node].toOSMLink();
                             }
