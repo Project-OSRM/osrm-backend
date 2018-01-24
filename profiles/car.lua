@@ -298,6 +298,14 @@ function setup()
 
     relation_types = Sequence {
       "route"
+    },
+
+    -- classify highway tags when necessary for turn weights
+    highway_turn_classification = {
+    },
+
+    -- classify access tags when necessary for turn weights
+    access_turn_classification = {
     }
   }
 end
@@ -413,7 +421,10 @@ function process_way(profile, way, result, relations)
     WayHandlers.names,
 
     -- set weight properties of the way
-    WayHandlers.weights
+    WayHandlers.weights,
+
+    -- set classification of ways relevant for turns
+    WayHandlers.way_classification_for_turn
   }
 
   WayHandlers.run(profile, way, result, data, handlers, relations)

@@ -220,17 +220,31 @@ void GraphCompressor::Compress(
                         continue;
 
                     // generate an artifical turn for the turn penalty generation
-                    ExtractionTurn extraction_turn(
-                        0,
-                        2,
-                        false,
-                        true,
-                        fwd_edge_data1.flags.restricted,
-                        fwd_edge_data2.flags.restricted,
-                        node_data_container[fwd_edge_data1.annotation_data].is_left_hand_driving,
-                        TRAVEL_MODE_DRIVING,
-                        TRAVEL_MODE_DRIVING);
-
+                    std::vector<ExtractionTurnLeg> roads_on_the_right;
+                    std::vector<ExtractionTurnLeg> roads_on_the_left;
+                    ExtractionTurn extraction_turn(0,
+                                                   2,
+                                                   false,
+                                                   true,
+                                                   false,
+                                                   false,
+                                                   TRAVEL_MODE_DRIVING,
+                                                   false,
+                                                   false,
+                                                   1,
+                                                   0,
+                                                   0,
+                                                   0,
+                                                   false,
+                                                   TRAVEL_MODE_DRIVING,
+                                                   false,
+                                                   false,
+                                                   1,
+                                                   0,
+                                                   0,
+                                                   0,
+                                                   roads_on_the_right,
+                                                   roads_on_the_left);
                     scripting_environment.ProcessTurn(extraction_turn);
                     node_duration_penalty = extraction_turn.duration * 10;
                     node_weight_penalty = extraction_turn.weight * weight_multiplier;

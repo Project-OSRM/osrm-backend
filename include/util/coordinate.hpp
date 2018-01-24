@@ -34,6 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <cstddef>
 #include <iosfwd> //for std::ostream
+#include <sstream>
 #include <string>
 #include <type_traits>
 
@@ -216,6 +217,15 @@ struct Coordinate
     friend bool operator==(const Coordinate lhs, const Coordinate rhs);
     friend bool operator!=(const Coordinate lhs, const Coordinate rhs);
     friend std::ostream &operator<<(std::ostream &out, const Coordinate coordinate);
+
+    std::string toOSMLink() const
+    {
+        std::stringstream link;
+        link << "http://www.openstreetmap.org/?mlat=" << toFloating(lat)
+             << "&mlon=" << toFloating(lon) << "#map=19/" << toFloating(lat) << "/"
+             << toFloating(lon);
+        return link.str();
+    }
 };
 
 /**
@@ -257,6 +267,14 @@ struct FloatCoordinate
     friend bool operator==(const FloatCoordinate lhs, const FloatCoordinate rhs);
     friend bool operator!=(const FloatCoordinate lhs, const FloatCoordinate rhs);
     friend std::ostream &operator<<(std::ostream &out, const FloatCoordinate coordinate);
+
+    std::string toOSMLink() const
+    {
+        std::stringstream link;
+        link << "http://www.openstreetmap.org/?mlat=" << lat << "&mlon=" << lon << "#map=19/" << lat
+             << "/" << lon;
+        return link.str();
+    }
 };
 
 bool operator==(const Coordinate lhs, const Coordinate rhs);

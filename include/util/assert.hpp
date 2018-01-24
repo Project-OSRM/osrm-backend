@@ -20,9 +20,7 @@
         if (!static_cast<bool>(cond))                                                              \
         {                                                                                          \
             ::osrm::util::FloatCoordinate c_(loc);                                                 \
-            std::cerr << "[Location] "                                                             \
-                      << "http://www.openstreetmap.org/?mlat=" << c_.lat << "&mlon=" << c_.lon     \
-                      << "#map=19/" << c_.lat << "/" << c_.lon << '\n';                            \
+            std::cerr << "[Location] " << c_.toOSMLink() << '\n';                                  \
         }                                                                                          \
         BOOST_ASSERT_MSG(cond, msg);                                                               \
     } while (0)

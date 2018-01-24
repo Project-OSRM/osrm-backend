@@ -423,7 +423,9 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                      parsed_way.circular,
                      parsed_way.is_startpoint,
                      parsed_way.forward_restricted,
-                     road_classification}};
+                     road_classification,
+                     parsed_way.highway_turn_classification,
+                     parsed_way.access_turn_classification}};
 
                 external_memory.all_edges_list.push_back(InternalExtractorEdge(
                     std::move(edge), forward_weight_data, forward_duration_data, {}));
@@ -456,7 +458,9 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                      parsed_way.circular,
                      parsed_way.is_startpoint,
                      parsed_way.backward_restricted,
-                     road_classification}};
+                     road_classification,
+                     parsed_way.highway_turn_classification,
+                     parsed_way.access_turn_classification}};
 
                 external_memory.all_edges_list.push_back(InternalExtractorEdge(
                     std::move(edge), backward_weight_data, backward_duration_data, {}));

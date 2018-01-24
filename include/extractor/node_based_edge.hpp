@@ -27,6 +27,8 @@ struct NodeBasedEdgeClassification
     std::uint8_t startpoint : 1;                      // 1
     std::uint8_t restricted : 1;                      // 1
     guidance::RoadClassification road_classification; // 16 2
+    std::uint8_t highway_turn_classification : 4;     // 4
+    std::uint8_t access_turn_classification : 4;      // 4
 
     NodeBasedEdgeClassification();
 
@@ -37,10 +39,14 @@ struct NodeBasedEdgeClassification
                                 const bool circular,
                                 const bool startpoint,
                                 const bool restricted,
-                                guidance::RoadClassification road_classification)
+                                guidance::RoadClassification road_classification,
+                                const std::uint8_t highway_turn_classification,
+                                const std::uint8_t access_turn_classification)
         : forward(forward), backward(backward), is_split(is_split), roundabout(roundabout),
           circular(circular), startpoint(startpoint), restricted(restricted),
-          road_classification(road_classification)
+          road_classification(road_classification),
+          highway_turn_classification(highway_turn_classification),
+          access_turn_classification(access_turn_classification)
     {
     }
 
