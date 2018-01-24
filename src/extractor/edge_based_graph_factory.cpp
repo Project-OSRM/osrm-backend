@@ -811,7 +811,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                             auto get_connected_road_info = [&](const auto &connected_edge) {
                                 const auto &edge_data =
                                     m_node_based_graph.GetEdgeData(connected_edge.eid);
-                                return ExtractionTurnLeg(edge_data.flags.restricted,
+                                return ExtractionTurnLeg(
+                                    edge_data.flags.restricted,
                                     edge_data.flags.road_classification.IsMotorwayClass(),
                                     edge_data.flags.road_classification.IsLinkClass(),
                                     edge_data.flags.road_classification.GetNumberOfLanes(),
@@ -832,24 +833,36 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                             {
                                 if (turn != intersection.begin())
                                 {
-                                    std::transform(intersection.begin() + 1, turn, std::back_inserter(road_legs_on_the_right), get_connected_road_info);
+                                    std::transform(intersection.begin() + 1,
+                                                   turn,
+                                                   std::back_inserter(road_legs_on_the_right),
+                                                   get_connected_road_info);
                                 }
 
-                                std::transform(turn + 1, intersection.end(), std::back_inserter(road_legs_on_the_right), get_connected_road_info);
+                                std::transform(turn + 1,
+                                               intersection.end(),
+                                               std::back_inserter(road_legs_on_the_right),
+                                               get_connected_road_info);
                             }
                             else
                             {
-                                std::transform(intersection.begin() + 1, turn, std::back_inserter(road_legs_on_the_right), get_connected_road_info);
-                                std::transform(turn + 1, intersection.end(), std::back_inserter(road_legs_on_the_left), get_connected_road_info);
+                                std::transform(intersection.begin() + 1,
+                                               turn,
+                                               std::back_inserter(road_legs_on_the_right),
+                                               get_connected_road_info);
+                                std::transform(turn + 1,
+                                               intersection.end(),
+                                               std::back_inserter(road_legs_on_the_left),
+                                               get_connected_road_info);
                             }
 
                             if (turn->instruction.IsUTurn() && turn != intersection.begin())
                             {
                                 util::Log(logWARNING)
                                     << "Turn is a u turn but not turning to the first connected "
-                                       "edge of the intersection. Node ID "
-                                    << intersection_node << " coordinates "
-                                    << m_coordinates[intersection_node];
+                                       "edge of the intersection. Node ID: "
+                                    << intersection_node << ", OSM link: "
+                                    << m_coordinates[intersection_node].toOSMLink();
                             }
 
                             // In case a way restriction starts at a given location, add a turn onto
