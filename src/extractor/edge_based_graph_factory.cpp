@@ -610,6 +610,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 is_traffic_light,
                 m_edge_based_node_container.GetAnnotation(edge_data1.annotation_data)
                     .is_left_hand_driving,
+                false, // @CHAUTODO is_stop
                 // source info
                 edge_data1.flags.restricted,
                 m_edge_based_node_container.GetAnnotation(edge_data1.annotation_data).travel_mode,

@@ -709,6 +709,8 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
             &ExtractionTurn::has_traffic_light,
             "is_left_hand_driving",
             &ExtractionTurn::is_left_hand_driving,
+            "is_stop",
+            &ExtractionTurn::is_stop,
 
             "source_restricted",
             &ExtractionTurn::source_restricted,

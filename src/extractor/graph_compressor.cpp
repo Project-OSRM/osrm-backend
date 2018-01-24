@@ -228,6 +228,7 @@ void GraphCompressor::Compress(
                                                    true,
                                                    false,
                                                    false,
+                                                   false,
                                                    TRAVEL_MODE_DRIVING,
                                                    false,
                                                    false,

@@ -43,6 +43,7 @@ Feature: Turn Function Information
         end
 
         function print_turn (profile, turn)
+          print ('is_stop ' .. string.format("%s", tostring(turn.is_stop)))
           print ('source_restricted ' .. string.format("%s", tostring(turn.source_restricted)))
           print ('source_is_motorway ' .. string.format("%s", tostring(turn.source_is_motorway)))
           print ('source_is_link ' .. string.format("%s", tostring(turn.source_is_link)))
@@ -170,6 +171,47 @@ Feature: Turn Function Information
         And stdout should contain /roads_on_the_right \[1\] speed: [0-9]+, is_incoming: true, is_outgoing: false, highway_turn_classification: 3, access_turn_classification: 0/
         # turning abc, give information about about db
         And stdout should contain /roads_on_the_left \[1\] speed: [0-9]+, is_incoming: true, is_outgoing: false, highway_turn_classification: 0, access_turn_classification: 1/
+
+
+
+    Scenario: Turns should show if intersection node is tagged with highway=stop
+        Given the node map
+            """
+            a-b-c
+            """
+        And the ways
+            | nodes | oneway |
+            | ab    | yes    |
+            | bc    | yes    |
+        And the nodes
+            | node | highway |
+            | b    | stop    |
+
+        And the data has been saved to disk
+
+        When I run "osrm-extract --profile {profile_file} {osm_file}"
+        Then it should exit successfully
+        And stdout should contain "is_stop true"
+
+
+    Scenario: Turns should not claim there is stop if there is not
+        Given the node map
+            """
+            a-b-c
+            """
+        And the ways
+            | nodes | oneway |
+            | ab    | yes    |
+            | bc    | yes    |
+        And the nodes
+            | node | highway |
+            | b    | -    |
+
+        And the data has been saved to disk
+
+        When I run "osrm-extract --profile {profile_file} {osm_file}"
+        Then it should exit successfully
+        And stdout should contain "is_stop false"
 
 
 
