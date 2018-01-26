@@ -53,6 +53,7 @@ InternalRouteResult directShortestPathSearch(SearchEngineData<ch::Algorithm> &en
         ch::unpackPath(facade,
                        packed_leg.begin(),
                        packed_leg.end(),
+                       *engine_working_data.unpacking_cache.get(),
                        [&unpacked_nodes, &unpacked_edges](std::pair<NodeID, NodeID> &edge,
                                                           const auto &edge_id) {
                            BOOST_ASSERT(edge.first == unpacked_nodes.back());

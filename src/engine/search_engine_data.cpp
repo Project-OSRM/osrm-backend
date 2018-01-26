@@ -14,6 +14,7 @@ SearchEngineData<CH>::SearchEngineHeapPtr SearchEngineData<CH>::reverse_heap_2;
 SearchEngineData<CH>::SearchEngineHeapPtr SearchEngineData<CH>::forward_heap_3;
 SearchEngineData<CH>::SearchEngineHeapPtr SearchEngineData<CH>::reverse_heap_3;
 SearchEngineData<CH>::ManyToManyHeapPtr SearchEngineData<CH>::many_to_many_heap;
+SearchEngineData<CH>::UnpackingStatisticsPtr SearchEngineData<CH>::unpacking_cache;
 
 void SearchEngineData<CH>::InitializeOrClearFirstThreadLocalStorage(unsigned number_of_nodes)
 {
@@ -87,6 +88,18 @@ void SearchEngineData<CH>::InitializeOrClearManyToManyThreadLocalStorage(unsigne
     else
     {
         many_to_many_heap.reset(new ManyToManyQueryHeap(number_of_nodes));
+    }
+}
+
+void SearchEngineData<CH>::InitializeOrClearUnpackingStatisticsThreadLocalStorage(unsigned number_of_nodes)
+{
+    if (unpacking_cache.get())
+    {
+        unpacking_cache->Clear();
+    }
+    else
+    {
+        unpacking_cache.reset(new UnpackingStatistics(number_of_nodes));
     }
 }
 

@@ -1,6 +1,7 @@
 #ifndef SEARCH_ENGINE_DATA_HPP
 #define SEARCH_ENGINE_DATA_HPP
 
+#include "engine/unpacking_statistics.hpp"
 #include "engine/algorithm.hpp"
 #include "util/query_heap.hpp"
 #include "util/typedefs.hpp"
@@ -46,6 +47,7 @@ template <> struct SearchEngineData<routing_algorithms::ch::Algorithm>
 
     using SearchEngineHeapPtr = boost::thread_specific_ptr<QueryHeap>;
     using ManyToManyHeapPtr = boost::thread_specific_ptr<ManyToManyQueryHeap>;
+    using UnpackingStatisticsPtr = boost::thread_specific_ptr<UnpackingStatistics>;
 
     static SearchEngineHeapPtr forward_heap_1;
     static SearchEngineHeapPtr reverse_heap_1;
@@ -54,6 +56,7 @@ template <> struct SearchEngineData<routing_algorithms::ch::Algorithm>
     static SearchEngineHeapPtr forward_heap_3;
     static SearchEngineHeapPtr reverse_heap_3;
     static ManyToManyHeapPtr many_to_many_heap;
+    static UnpackingStatisticsPtr unpacking_cache;
 
     void InitializeOrClearFirstThreadLocalStorage(unsigned number_of_nodes);
 
@@ -62,6 +65,8 @@ template <> struct SearchEngineData<routing_algorithms::ch::Algorithm>
     void InitializeOrClearThirdThreadLocalStorage(unsigned number_of_nodes);
 
     void InitializeOrClearManyToManyThreadLocalStorage(unsigned number_of_nodes);
+
+    void InitializeOrClearUnpackingStatisticsThreadLocalStorage(unsigned number_of_nodes);
 };
 
 struct MultiLayerDijkstraHeapData

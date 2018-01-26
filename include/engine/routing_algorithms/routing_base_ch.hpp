@@ -5,6 +5,7 @@
 #include "engine/datafacade.hpp"
 #include "engine/routing_algorithms/routing_base.hpp"
 #include "engine/search_engine_data.hpp"
+#include "engine/unpacking_statistics.hpp"
 
 #include "util/typedefs.hpp"
 
@@ -231,6 +232,16 @@ void unpackPath(const DataFacade<Algorithm> &facade,
                 BidirectionalIterator packed_path_end,
                 Callback &&callback)
 {
+    UnpackingStatistics unpacking_cache(0);
+    unpackPath(facade,packed_path_begin,packed_path_end, unpacking_cache, callback);
+}
+template <typename BidirectionalIterator, typename Callback>
+void unpackPath(const DataFacade<Algorithm> &facade,
+                BidirectionalIterator packed_path_begin,
+                BidirectionalIterator packed_path_end,
+                UnpackingStatistics &unpacking_cache,
+                Callback &&callback)
+{
     // make sure we have at least something to unpack
     if (packed_path_begin == packed_path_end)
         return;
@@ -248,6 +259,9 @@ void unpackPath(const DataFacade<Algorithm> &facade,
     while (!recursion_stack.empty())
     {
         edge = recursion_stack.top();
+
+        unpacking_cache.CollectStats(edge);
+
         recursion_stack.pop();
 
         // Look for an edge on the forward CH graph (.forward)
@@ -295,6 +309,7 @@ void unpackPath(const FacadeT &facade,
                 const PhantomNodes &phantom_nodes,
                 std::vector<PathData> &unpacked_path)
 {
+    std::cout << "RandomIter" << std::endl;
     const auto nodes_number = std::distance(packed_path_begin, packed_path_end);
     BOOST_ASSERT(nodes_number > 0);
 
