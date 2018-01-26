@@ -160,7 +160,9 @@ inline bool requiresNameAnnounced(const StringView &from_name,
     const auto needs_announce =
         // " (Ref)" -> "Name " and reverse
         (from_name.empty() && !from_ref.empty() && !to_name.empty() && to_ref.empty()) ||
-        (!from_name.empty() && from_ref.empty() && to_name.empty() && !to_ref.empty());
+        (!from_name.empty() && from_ref.empty() && to_name.empty() && !to_ref.empty()) ||
+        // ... or names are empty but reference changed
+        (names_are_empty && !ref_is_contained);
 
     const auto pronunciation_changes = from_pronunciation != to_pronunciation;
 

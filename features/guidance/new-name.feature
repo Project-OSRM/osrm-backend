@@ -394,8 +394,8 @@ Feature: New-Name Instructions
             | bc    |      | US 422 | motorway |
 
         When I route I should get
-            | waypoints | route | turns         |
-            | a,c       | ,     | depart,arrive |
+            | waypoints | route | turns                           |
+            | a,c       | ,,    | depart,new name straight,arrive |
 
     Scenario: Spaces in refs for containment check, #3086
         Given the node map

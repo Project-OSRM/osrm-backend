@@ -76,7 +76,7 @@ Feature: Basic Routing
 
         When I route I should get
             | waypoints | route  | summary  |
-            | a,c       | ,      | 100, 101 |
+            | a,c       | ,,     | 100, 101 |
 
      Scenario: Single Ref
         Given the node map

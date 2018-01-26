@@ -2,6 +2,8 @@
   - Changes from 5.15.0:
     - Bugfixes:
       - FIXED: Segfault in map matching when RouteLeg collapsing code is run on a match with multiple submatches
+    - Guidance
+      - CHANGED #4830: Announce reference change if names are empty
     - Profile:
       - FIXED: `highway=service` will now be used for restricted access, `access=private` is still disabled for snapping.
       - ADDED #4775: Exposes more information to the turn function, now being able to set turn weights with highway and access information of the turn as well as other roads at the intersection [#4775](https://github.com/Project-OSRM/osrm-backend/issues/4775)
