@@ -382,6 +382,21 @@ Feature: New-Name Instructions
             | waypoints | route | turns         |
             | a,c       | ,     | depart,arrive |
 
+    Scenario: No Name, Reference changed
+        Given the node map
+            """
+            a ----- b ----- c
+            """
+
+        And the ways
+            | nodes | name | ref    | highway  |
+            | ab    |      | US 322 | motorway |
+            | bc    |      | US 422 | motorway |
+
+        When I route I should get
+            | waypoints | route | turns         |
+            | a,c       | ,     | depart,arrive |
+
     Scenario: Spaces in refs for containment check, #3086
         Given the node map
             """
