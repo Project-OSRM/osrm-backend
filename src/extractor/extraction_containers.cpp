@@ -648,6 +648,24 @@ void ExtractionContainers::WriteNodes(storage::io::FileWriter &file_out) const
         log << "ok, after " << TIMER_SEC(write_nodes) << "s";
     }
 
+    {
+        util::UnbufferedLog log;
+        log << "Writing all way stop nodes     ... ";
+        TIMER_START(write_nodes);
+        std::vector<NodeID> internal_all_way_stops;
+        for (const auto osm_id : all_way_stops)
+        {
+            const auto node_id = mapExternalToInternalNodeID(
+                used_node_id_list.begin(), used_node_id_list.end(), osm_id);
+            if (node_id != SPECIAL_NODEID)
+            {
+                internal_all_way_stops.push_back(node_id);
+            }
+        }
+        storage::serialization::write(file_out, internal_all_way_stops);
+        log << "ok, after " << TIMER_SEC(write_nodes) << "s";
+    }
+
     util::Log() << "Processed " << max_internal_node_id << " nodes";
 }
 

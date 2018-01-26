@@ -261,7 +261,11 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
                                                "traffic_lights",
                                                &ExtractionNode::traffic_lights,
                                                "barrier",
-                                               &ExtractionNode::barrier);
+                                               &ExtractionNode::barrier,
+                                               "is_all_way_stop",
+                                               &ExtractionNode::is_all_way_stop,
+                                               "is_minor_stop",
+                                               &ExtractionNode::is_minor_stop);
 
     context.state.new_usertype<guidance::RoadClassification>(
         "RoadClassification",

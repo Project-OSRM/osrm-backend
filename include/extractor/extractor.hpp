@@ -69,6 +69,7 @@ class Extractor
         const CompressedEdgeContainer &compressed_edge_container,
         const std::unordered_set<NodeID> &barrier_nodes,
         const std::unordered_set<NodeID> &traffic_lights,
+        const std::unordered_set<NodeID> &all_way_stops,
         const std::vector<TurnRestriction> &turn_restrictions,
         const std::vector<ConditionalTurnRestriction> &conditional_turn_restrictions,
         const std::unordered_set<EdgeID> &segregated_edges,

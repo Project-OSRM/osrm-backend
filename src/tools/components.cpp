@@ -43,7 +43,7 @@ std::size_t loadGraph(const std::string &path,
     auto nop = boost::make_function_output_iterator([](auto) {});
 
     const auto number_of_nodes =
-        util::loadNodesFromFile(file_reader, nop, nop, coordinate_list, osm_node_ids);
+        util::loadNodesFromFile(file_reader, nop, nop, nop, coordinate_list, osm_node_ids);
 
     util::loadEdgesFromFile(file_reader, edge_list);
 

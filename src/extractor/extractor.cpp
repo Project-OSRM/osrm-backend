@@ -263,6 +263,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
 
     const auto &barrier_nodes = node_based_graph_factory.GetBarriers();
     const auto &traffic_signals = node_based_graph_factory.GetTrafficSignals();
+    const auto &all_way_stops = node_based_graph_factory.GetAllWayStops();
     // stealing the annotation data from the node-based graph
     edge_based_nodes_container =
         EdgeBasedNodeDataContainer({}, std::move(node_based_graph_factory.GetAnnotationData()));
@@ -278,6 +279,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
                                node_based_graph_factory.GetCompressedEdges(),
                                barrier_nodes,
                                traffic_signals,
+                               all_way_stops,
                                turn_restrictions,
                                conditional_turn_restrictions,
                                segregated_edges,
@@ -667,6 +669,7 @@ EdgeID Extractor::BuildEdgeExpandedGraph(
     const CompressedEdgeContainer &compressed_edge_container,
     const std::unordered_set<NodeID> &barrier_nodes,
     const std::unordered_set<NodeID> &traffic_signals,
+    const std::unordered_set<NodeID> &all_way_stops,
     const std::vector<TurnRestriction> &turn_restrictions,
     const std::vector<ConditionalTurnRestriction> &conditional_turn_restrictions,
     const std::unordered_set<EdgeID> &segregated_edges,
@@ -689,6 +692,7 @@ EdgeID Extractor::BuildEdgeExpandedGraph(
                                                    compressed_edge_container,
                                                    barrier_nodes,
                                                    traffic_signals,
+                                                   all_way_stops,
                                                    coordinates,
                                                    name_table,
                                                    segregated_edges,

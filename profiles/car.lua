@@ -335,6 +335,24 @@ function process_node(profile, node, result, relations)
   if "traffic_signals" == tag then
     result.traffic_lights = true
   end
+
+  print('bla')
+  local stop = node:get_value_by_key("stop")
+  if tag == "stop" then
+    if stop == "all" then
+      result.is_all_way_stop = true
+      print('tag ' .. tag)
+      print('stop ' .. stop)
+      print('set all way stop')
+    else
+      if stop == "minor" then
+        result.is_minor_stop = true
+        print('tag ' .. tag)
+        print('stop ' .. stop)
+        print('set minor stop')
+      end
+    end
+  end
 end
 
 function process_way(profile, way, result, relations)

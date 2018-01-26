@@ -71,6 +71,15 @@ void ExtractorCallbacks::ProcessNode(const osmium::Node &input_node,
     {
         external_memory.traffic_signals.push_back(id);
     }
+    std::cout << "STOPS " << id << " " <<  result_node.is_all_way_stop << " " << result_node.is_minor_stop << std::endl;
+    if (result_node.is_all_way_stop)
+    {
+        external_memory.all_way_stops.push_back(id);
+    }
+    if (result_node.is_minor_stop)
+    {
+        external_memory.minor_stops.push_back(id);
+    }
 }
 
 void ExtractorCallbacks::ProcessRestriction(const InputConditionalTurnRestriction &restriction)

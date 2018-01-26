@@ -174,18 +174,18 @@ Feature: Turn Function Information
 
 
 
-    Scenario: Turns should show if intersection node is tagged with highway=stop
+    Scenario: Turns should show if intersection node is tagged with highway=stop stop=all
         Given the node map
             """
-            a-b-c
+            a->b->c
             """
         And the ways
             | nodes | oneway |
             | ab    | yes    |
             | bc    | yes    |
         And the nodes
-            | node | highway |
-            | b    | stop    |
+            | node | highway | stop |
+            | b    | stop    | all  |
 
         And the data has been saved to disk
 
@@ -214,5 +214,27 @@ Feature: Turn Function Information
         And stdout should contain "is_stop false"
 
 
+    Scenario: Turn should show correct stops if intersection node is tagged with highway=stop stop=minor
+        Given the node map
+            """
+               d
+               |
+               v
+            a->b->c
+            """
+        And the ways
+            | nodes | oneway | highway |
+            | ab    | yes    | primary |
+            | bc    | yes    | secondary|
+            | db    | yes    | primary|
+        And the nodes
+            | node | highway | stop  |
+            | b    | stop    | minor |
 
+        And the data has been saved to disk
+
+        When I run "osrm-extract --profile {profile_file} {osm_file}"
+        Then it should exit successfully
+        And stdout should contain "is_stop true"
+        And stdout should contain "is_stop false"
 

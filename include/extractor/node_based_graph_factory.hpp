@@ -44,6 +44,7 @@ class NodeBasedGraphFactory
     auto const &GetGraph() const { return compressed_output_graph; }
     auto const &GetBarriers() const { return barriers; }
     auto const &GetTrafficSignals() const { return traffic_signals; }
+    auto const &GetAllWayStops() const { return all_way_stops; }
     auto const &GetCompressedEdges() const { return compressed_edge_container; }
     auto const &GetCoordinates() const { return coordinates; }
     auto const &GetAnnotationData() const { return annotation_data; }
@@ -89,6 +90,7 @@ class NodeBasedGraphFactory
     // General Information about the graph, not used outside of extractor
     std::unordered_set<NodeID> barriers;
     std::unordered_set<NodeID> traffic_signals;
+    std::unordered_set<NodeID> all_way_stops;
 
     std::vector<util::Coordinate> coordinates;
 

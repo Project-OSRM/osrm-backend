@@ -67,13 +67,14 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(
     const CompressedEdgeContainer &compressed_edge_container,
     const std::unordered_set<NodeID> &barrier_nodes,
     const std::unordered_set<NodeID> &traffic_lights,
+    const std::unordered_set<NodeID> &all_way_stops,
     const std::vector<util::Coordinate> &coordinates,
     const util::NameTable &name_table,
     const std::unordered_set<EdgeID> &segregated_edges,
     guidance::LaneDescriptionMap &lane_description_map)
     : m_edge_based_node_container(node_data_container), m_number_of_edge_based_nodes(0),
       m_coordinates(coordinates), m_node_based_graph(std::move(node_based_graph)),
-      m_barrier_nodes(barrier_nodes), m_traffic_lights(traffic_lights),
+      m_barrier_nodes(barrier_nodes), m_traffic_lights(traffic_lights), m_all_way_stops(all_way_stops),
       m_compressed_edge_container(compressed_edge_container), name_table(name_table),
       segregated_edges(segregated_edges), lane_description_map(lane_description_map)
 {
@@ -601,6 +602,15 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
             // compute weight and duration penalties
             auto is_traffic_light = m_traffic_lights.count(intersection_node);
 
+            //@CHAUTODO
+            auto is_stop = m_all_way_stops.count(intersection_node);
+            std::cout << "Creating turn at " << intersection_node << " " << m_all_way_stops.count(intersection_node) << std::endl;
+
+            std::cout << "printing all way stops" << std::endl;
+            for (auto bla : m_all_way_stops) {
+                std::cout << bla << std::endl;
+            }
+
             ExtractionTurn extracted_turn(
                 // general info
                 turn.angle,
@@ -610,7 +620,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 is_traffic_light,
                 m_edge_based_node_container.GetAnnotation(edge_data1.annotation_data)
                     .is_left_hand_driving,
-                false, // @CHAUTODO is_stop
+                is_stop,
                 // source info
                 edge_data1.flags.restricted,
                 m_edge_based_node_container.GetAnnotation(edge_data1.annotation_data).travel_mode,

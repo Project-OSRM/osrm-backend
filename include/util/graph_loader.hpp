@@ -36,10 +36,11 @@ namespace util
  *  - traffic lights
  *  - nodes indexed by their internal (non-osm) id
  */
-template <typename BarrierOutIter, typename TrafficSignalsOutIter>
+template <typename BarrierOutIter, typename TrafficSignalsOutIter, typename AllWayStopsOutIter>
 NodeID loadNodesFromFile(storage::io::FileReader &file_reader,
                          BarrierOutIter barriers,
                          TrafficSignalsOutIter traffic_signals,
+                         AllWayStopsOutIter all_way_stops,
                          std::vector<util::Coordinate> &coordinates,
                          extractor::PackedOSMIDs &osm_node_ids)
 {
@@ -69,6 +70,12 @@ NodeID loadNodesFromFile(storage::io::FileReader &file_reader,
     for (auto index = 0UL; index < num_lights; ++index)
     {
         *traffic_signals++ = file_reader.ReadOne<NodeID>();
+    }
+
+    auto num_all_way_stops = file_reader.ReadElementCount64();
+    for (auto index = 0UL; index < num_all_way_stops; ++index)
+    {
+        *all_way_stops++ = file_reader.ReadOne<NodeID>();
     }
 
     return number_of_nodes;

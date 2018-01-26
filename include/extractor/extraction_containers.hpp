@@ -42,6 +42,8 @@ class ExtractionContainers
 
     std::vector<OSMNodeID> barrier_nodes;
     std::vector<OSMNodeID> traffic_signals;
+    std::vector<OSMNodeID> all_way_stops;
+    std::vector<OSMNodeID> minor_stops;
     NodeIDVector used_node_id_list;
     NodeVector all_nodes_list;
     EdgeVector all_edges_list;
