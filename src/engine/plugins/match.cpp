@@ -162,6 +162,7 @@ Status MatchPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
             "InvalidValue", "Timestamps need to be monotonically increasing.", json_result);
     }
 
+    bool collapse_legs = false;
     SubMatchingList sub_matchings;
     api::tidy::Result tidied;
     if (parameters.tidy)
@@ -262,6 +263,8 @@ Status MatchPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
                 "NoMatch", "Requested waypoint parameter could not be matched.", json_result);
         }
     }
+    // we haven't errored yet, only allow leg collapsing if we meet this criteria
+    collapse_legs = sub_matchings.size() == 1 && !parameters.waypoints.empty();
 
     // each sub_route will correspond to a MatchObject
     std::vector<InternalRouteResult> sub_routes(sub_matchings.size());
@@ -286,7 +289,7 @@ Status MatchPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
         sub_routes[index] =
             algorithms.ShortestPathSearch(sub_routes[index].segment_end_coordinates, {false});
         BOOST_ASSERT(sub_routes[index].shortest_path_weight != INVALID_EDGE_WEIGHT);
-        if (!tidied.parameters.waypoints.empty())
+        if (collapse_legs)
         {
             std::vector<bool> waypoint_legs;
             waypoint_legs.reserve(sub_matchings[index].indices.size());
