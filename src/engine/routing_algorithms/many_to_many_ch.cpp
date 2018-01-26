@@ -1,6 +1,6 @@
 #include "engine/routing_algorithms/many_to_many.hpp"
-#include "engine/routing_algorithms/routing_base_ch.hpp"
 #include "engine/routing_algorithms/direct_shortest_path.hpp"
+#include "engine/routing_algorithms/routing_base_ch.hpp"
 
 #include <boost/assert.hpp>
 #include <boost/range/iterator_range_core.hpp>
@@ -170,7 +170,7 @@ std::vector<EdgeDuration> manyToManySearch(SearchEngineData<ch::Algorithm> &engi
     std::vector<EdgeDuration> durations_table(number_of_entries, MAXIMAL_EDGE_DURATION);
 
     engine_working_data.InitializeOrClearUnpackingStatisticsThreadLocalStorage(
-            facade.GetNumberOfNodes());
+        facade.GetNumberOfNodes());
 
     for (std::uint32_t column_idx = 0; column_idx < number_of_targets; ++column_idx)
     {
@@ -182,41 +182,45 @@ std::vector<EdgeDuration> manyToManySearch(SearchEngineData<ch::Algorithm> &engi
 
             PhantomNodes pair = {source, target};
 
-            InternalRouteResult result = directShortestPathSearch(engine_working_data, facade, pair);
+            InternalRouteResult result =
+                directShortestPathSearch(engine_working_data, facade, pair);
 
             // std::cout << "column_idx: " << column_idx << std::endl;
             // std::cout << " row_idx: " << row_idx << std::endl;
             // std::cout << " source: " << source << std::endl;
             // std::cout << " target: " << target << std::endl;
-            // std::cout << " row_idx * number_of_targets + column_idx: " << row_idx * number_of_targets + column_idx << std::endl;
+            // std::cout << " row_idx * number_of_targets + column_idx: " << row_idx *
+            // number_of_targets + column_idx << std::endl;
             // std::cout << " number_of_entries: " << number_of_entries << std::endl;
 
             weights_table[row_idx * number_of_targets + column_idx] = result.shortest_path_weight;
             durations_table[row_idx * number_of_targets + column_idx] = result.duration();
 
-            // std::cout << " duration: " <<  durations_table[row_idx * number_of_targets + column_idx] << std::endl;
-            // std::cout << " weight: " << weights_table[row_idx * number_of_targets + column_idx] << std::endl;
+            // std::cout << " duration: " <<  durations_table[row_idx * number_of_targets +
+            // column_idx] << std::endl;
+            // std::cout << " weight: " << weights_table[row_idx * number_of_targets + column_idx]
+            // << std::endl;
         }
     }
 
-    std::cout << "Duration Table" << std::endl;
-    for (auto i = 0; i < number_of_entries; ++i) {
-        std::cout << durations_table[i] << " ";
-        if ((i + 1) % number_of_targets == 0) {
-            std:: cout << std::endl;
-        }
-    }
-    std::cout << "Weight Table" << std::endl;
-    for (auto i = 0; i < number_of_entries; ++i) {
-        std::cout << weights_table[i] << " ";
-        if ((i + 1) % number_of_targets == 0) {
-            std:: cout << std::endl;
-        }
-    }
-
+    // std::cout << "Duration Table" << std::endl;
+    // for (auto i = 0; i < number_of_entries; ++i) {
+    //     std::cout << durations_table[i] << " ";
+    //     if ((i + 1) % number_of_targets == 0) {
+    //         std:: cout << std::endl;
+    //     }
+    // }
+    // std::cout << "Weight Table" << std::endl;
+    // for (auto i = 0; i < number_of_entries; ++i) {
+    //     std::cout << weights_table[i] << " ";
+    //     if ((i + 1) % number_of_targets == 0) {
+    //         std:: cout << std::endl;
+    //     }
+    // }
 
     // Resets the weights_table and the durations_table
-    for (auto i = 0; i < number_of_entries; ++i) {
+    for (auto i = 0; i < number_of_entries; ++i)
+    {
         weights_table[i] = INVALID_EDGE_WEIGHT;
         durations_table[i] = MAXIMAL_EDGE_DURATION;
     }
@@ -270,20 +274,20 @@ std::vector<EdgeDuration> manyToManySearch(SearchEngineData<ch::Algorithm> &engi
         }
     }
 
-    std::cout << "Duration Table" << std::endl;
-    for (auto i = 0; i < number_of_entries; ++i) {
-        std::cout << durations_table[i] << " ";
-        if ((i + 1) % number_of_targets == 0) {
-            std:: cout << std::endl;
-        }
-    }
-    std::cout << "Weight Table" << std::endl;
-    for (auto i = 0; i < number_of_entries; ++i) {
-        std::cout << weights_table[i] << " ";
-        if ((i + 1) % number_of_targets == 0) {
-            std:: cout << std::endl;
-        }
-    }
+    // std::cout << "Duration Table" << std::endl;
+    // for (auto i = 0; i < number_of_entries; ++i) {
+    //     std::cout << durations_table[i] << " ";
+    //     if ((i + 1) % number_of_targets == 0) {
+    //         std:: cout << std::endl;
+    //     }
+    // }
+    // std::cout << "Weight Table" << std::endl;
+    // for (auto i = 0; i < number_of_entries; ++i) {
+    //     std::cout << weights_table[i] << " ";
+    //     if ((i + 1) % number_of_targets == 0) {
+    //         std:: cout << std::endl;
+    //     }
+    // }
 
     return durations_table;
 }

@@ -91,7 +91,8 @@ void SearchEngineData<CH>::InitializeOrClearManyToManyThreadLocalStorage(unsigne
     }
 }
 
-void SearchEngineData<CH>::InitializeOrClearUnpackingStatisticsThreadLocalStorage(unsigned number_of_nodes)
+void SearchEngineData<CH>::InitializeOrClearUnpackingStatisticsThreadLocalStorage(
+    unsigned number_of_nodes)
 {
     if (unpacking_cache.get())
     {

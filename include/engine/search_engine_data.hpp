@@ -1,8 +1,8 @@
 #ifndef SEARCH_ENGINE_DATA_HPP
 #define SEARCH_ENGINE_DATA_HPP
 
-#include "engine/unpacking_statistics.hpp"
 #include "engine/algorithm.hpp"
+#include "engine/unpacking_statistics.hpp"
 #include "util/query_heap.hpp"
 #include "util/typedefs.hpp"
 
