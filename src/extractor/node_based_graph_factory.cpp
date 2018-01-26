@@ -38,9 +38,10 @@ void NodeBasedGraphFactory::LoadDataFromFile(const boost::filesystem::path &inpu
     auto barriers_iter = inserter(barriers, end(barriers));
     auto traffic_signals_iter = inserter(traffic_signals, end(traffic_signals));
     auto all_way_stops_iter = inserter(all_way_stops, end(all_way_stops));
+    auto minor_stops_iter = inserter(minor_stops, end(minor_stops));
 
     const auto number_of_node_based_nodes = util::loadNodesFromFile(
-        file_reader, barriers_iter, traffic_signals_iter, all_way_stops_iter, coordinates, osm_node_ids);
+        file_reader, barriers_iter, traffic_signals_iter, all_way_stops_iter, minor_stops_iter, coordinates, osm_node_ids);
 
     std::vector<NodeBasedEdge> edge_list;
     util::loadEdgesFromFile(file_reader, edge_list);

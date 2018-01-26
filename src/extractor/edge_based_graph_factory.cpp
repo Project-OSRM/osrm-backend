@@ -68,13 +68,14 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(
     const std::unordered_set<NodeID> &barrier_nodes,
     const std::unordered_set<NodeID> &traffic_lights,
     const std::unordered_set<NodeID> &all_way_stops,
+    const std::unordered_set<NodeID> &minor_stops,
     const std::vector<util::Coordinate> &coordinates,
     const util::NameTable &name_table,
     const std::unordered_set<EdgeID> &segregated_edges,
     guidance::LaneDescriptionMap &lane_description_map)
     : m_edge_based_node_container(node_data_container), m_number_of_edge_based_nodes(0),
       m_coordinates(coordinates), m_node_based_graph(std::move(node_based_graph)),
-      m_barrier_nodes(barrier_nodes), m_traffic_lights(traffic_lights), m_all_way_stops(all_way_stops),
+      m_barrier_nodes(barrier_nodes), m_traffic_lights(traffic_lights), m_all_way_stops(all_way_stops), m_minor_stops(minor_stops),
       m_compressed_edge_container(compressed_edge_container), name_table(name_table),
       segregated_edges(segregated_edges), lane_description_map(lane_description_map)
 {
@@ -565,7 +566,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
             const auto &road_legs_on_the_right,
             const auto &road_legs_on_the_left,
             const auto entry_class_id,
-            const auto &edge_geometries) {
+            const auto &edge_geometries,
+            const auto is_minor) {
 
             const auto node_restricted = isRestricted(node_along_road_entering,
                                                       intersection_node,
@@ -603,13 +605,9 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
             auto is_traffic_light = m_traffic_lights.count(intersection_node);
 
             //@CHAUTODO
-            auto is_stop = m_all_way_stops.count(intersection_node);
+            bool is_stop = m_all_way_stops.count(intersection_node) > 0 || (m_minor_stops.count(intersection_node) > 0 && is_minor);
             std::cout << "Creating turn at " << intersection_node << " " << m_all_way_stops.count(intersection_node) << std::endl;
 
-            std::cout << "printing all way stops" << std::endl;
-            for (auto bla : m_all_way_stops) {
-                std::cout << bla << std::endl;
-            }
 
             ExtractionTurn extracted_turn(
                 // general info
@@ -886,6 +884,14 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                     << m_coordinates[intersection_node].toOSMLink();
                             }
 
+
+
+                            guidance::RoadPriorityClass::Enum from_priority = m_node_based_graph.GetEdgeData(incoming_edge.edge).flags.road_classification.GetPriority();
+                            bool is_minor = std::any_of(
+                                intersection.begin(), intersection.end(), [&](auto connected_road) {
+                                    return m_node_based_graph.GetEdgeData(connected_road.eid).flags.road_classification.GetPriority() < from_priority;
+                                });
+
                             // In case a way restriction starts at a given location, add a turn onto
                             // every artificial node eminating here.
                             //
@@ -925,7 +931,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                                   road_legs_on_the_right,
                                                   road_legs_on_the_left,
                                                   entry_class_id,
-                                                  edge_geometries);
+                                                  edge_geometries,
+                                                  is_minor);
 
                                 buffer->continuous_data.edges_list.push_back(
                                     edge_with_data_and_condition.first.edge);
@@ -990,7 +997,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                                           road_legs_on_the_right,
                                                           road_legs_on_the_left,
                                                           entry_class_id,
-                                                          edge_geometries);
+                                                          edge_geometries,
+                                                          is_minor);
 
                                         buffer->delayed_data.push_back(
                                             std::move(edge_with_data_and_condition.first));
@@ -1027,7 +1035,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                                           road_legs_on_the_right,
                                                           road_legs_on_the_left,
                                                           entry_class_id,
-                                                          edge_geometries);
+                                                          edge_geometries,
+                                                          is_minor);
 
                                         buffer->delayed_data.push_back(
                                             std::move(edge_with_data_and_condition.first));

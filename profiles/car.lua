@@ -337,6 +337,8 @@ function process_node(profile, node, result, relations)
   end
 
   print('bla')
+
+  -- @CHAUTODO sure this should be here? This shouldn't be here
   local stop = node:get_value_by_key("stop")
   if tag == "stop" then
     if stop == "all" then

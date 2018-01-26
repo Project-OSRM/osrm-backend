@@ -223,10 +223,10 @@ Feature: Turn Function Information
             a->b->c
             """
         And the ways
-            | nodes | oneway | highway |
-            | ab    | yes    | primary |
-            | bc    | yes    | secondary|
-            | db    | yes    | primary|
+            | nodes | oneway | highway  |
+            | ab    | yes    | primary  |
+            | bc    | yes    | primary  |
+            | db    | yes    | tertiary |
         And the nodes
             | node | highway | stop  |
             | b    | stop    | minor |
