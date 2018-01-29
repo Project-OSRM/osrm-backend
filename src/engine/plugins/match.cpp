@@ -162,7 +162,6 @@ Status MatchPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
             "InvalidValue", "Timestamps need to be monotonically increasing.", json_result);
     }
 
-    bool collapse_legs = false;
     SubMatchingList sub_matchings;
     api::tidy::Result tidied;
     if (parameters.tidy)
@@ -264,8 +263,9 @@ Status MatchPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
                 "NoMatch", "Requested waypoint parameter could not be matched.", json_result);
         }
     }
-    // we haven't errored yet, only allow leg collapsing if we meet this criteria
-    collapse_legs = sub_matchings.size() == 1 && !parameters.waypoints.empty();
+    // we haven't errored yet, only allow leg collapsing if it was originally requested
+    BOOST_ASSERT(parameters.waypoints.empty() || sub_matchings.size() == 1);
+    const auto collapse_legs = !parameters.waypoints.empty();
 
     // each sub_route will correspond to a MatchObject
     std::vector<InternalRouteResult> sub_routes(sub_matchings.size());
