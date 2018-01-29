@@ -603,3 +603,26 @@ Feature: Basic Map Matching
         When I match I should get
             | trace | timestamps | code    |
             | ab1d  | 0 1 2 3    | NoMatch |
+
+    Scenario: Regression test - avoid collapsing legs of a tidied split trace
+        Given a grid size of 20 meters
+        Given the node map
+            """
+            a--b--f
+               |
+               |
+               e--c---d--g
+            """
+        Given the query options
+        | tidy | true |
+
+        And the ways
+            | nodes | oneway |
+            | abf   | no     |
+            | be    | no     |
+            | ecdg  | no     |
+
+        When I match I should get
+        | trace    | timestamps                                   | matchings  | code |
+        | abbecd   | 10 11 27 1516914902 1516914913 1516914952    | ab,ecd     | Ok   |
+
