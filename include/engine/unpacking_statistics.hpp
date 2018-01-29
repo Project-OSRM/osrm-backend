@@ -27,22 +27,13 @@ namespace engine
 class UnpackingStatistics
 {
     std::pair<NodeID, NodeID> edge;
-    unsigned number_of_nodes;
-
     std::unordered_map<std::pair<NodeID, NodeID>, int> cache;
     int number_of_lookups;
     int number_of_finds;
     int number_of_misses;
 
   public:
-    UnpackingStatistics(unsigned number_of_nodes)
-        : number_of_nodes(number_of_nodes), number_of_lookups(0), number_of_finds(0),
-          number_of_misses(0)
-    {
-    }
-    // UnpackingStatistics(std::pair<NodeID, NodeID> edge) : edge(edge) {}
-
-    // UnpackingStatistics() : edge(std::make_pair(SPECIAL_NODEID, SPECIAL_NODEID)) {}
+    UnpackingStatistics() : number_of_lookups(0), number_of_finds(0), number_of_misses(0) {}
 
     void Clear()
     {
@@ -52,7 +43,17 @@ class UnpackingStatistics
         number_of_misses = 0;
     }
 
-    bool EdgeInCache(std::pair<NodeID, NodeID> edge) { return cache.find(edge) != cache.end(); }
+    bool IsEdgeInCache(std::pair<NodeID, NodeID> edge)
+    {
+        ++number_of_lookups;
+        bool edge_is_in_cache = cache.find(edge) != cache.end();
+        // if (edge_is_in_cache) {
+        // 	std::cout << edge.first << ", " << edge.second << " true" << std::endl;
+        // } else {
+        // 	std::cout << edge.first << ", " << edge.second << " false" << std::endl;
+        // }
+        return edge_is_in_cache;
+    }
 
     void CollectStats(std::pair<NodeID, NodeID> edge)
     {
@@ -64,8 +65,6 @@ class UnpackingStatistics
         // if edge is not in map:
         //		- increment number_of_lookups, number_of_misses
         //		- insert edge into map with value 1
-
-        number_of_lookups = number_of_lookups + 1;
 
         if (cache.find(edge) == cache.end())
         {
@@ -84,13 +83,9 @@ class UnpackingStatistics
                   << " Total Lookups: " << number_of_lookups << std::endl;
     }
 
-    void PrintEdgeLookups(std::pair<NodeID, NodeID> edge)
-    {
-        if (cache.find(edge) == cache.end())
-        {
-        }
-        std::cout << "{I'm heeeear}" << std::endl;
-    }
+    // void PrintEdgeLookups(std::pair<NodeID, NodeID> edge)
+    // {
+    // }
 };
 } // engine
 } // osrm

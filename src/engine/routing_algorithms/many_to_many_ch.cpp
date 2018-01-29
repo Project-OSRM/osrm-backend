@@ -169,8 +169,7 @@ std::vector<EdgeDuration> manyToManySearch(SearchEngineData<ch::Algorithm> &engi
     std::vector<EdgeWeight> weights_table(number_of_entries, INVALID_EDGE_WEIGHT);
     std::vector<EdgeDuration> durations_table(number_of_entries, MAXIMAL_EDGE_DURATION);
 
-    engine_working_data.InitializeOrClearUnpackingStatisticsThreadLocalStorage(
-        facade.GetNumberOfNodes());
+    engine_working_data.InitializeOrClearUnpackingStatisticsThreadLocalStorage();
 
     for (std::uint32_t column_idx = 0; column_idx < number_of_targets; ++column_idx)
     {
@@ -203,20 +202,7 @@ std::vector<EdgeDuration> manyToManySearch(SearchEngineData<ch::Algorithm> &engi
         }
     }
 
-    // std::cout << "Duration Table" << std::endl;
-    // for (auto i = 0; i < number_of_entries; ++i) {
-    //     std::cout << durations_table[i] << " ";
-    //     if ((i + 1) % number_of_targets == 0) {
-    //         std:: cout << std::endl;
-    //     }
-    // }
-    // std::cout << "Weight Table" << std::endl;
-    // for (auto i = 0; i < number_of_entries; ++i) {
-    //     std::cout << weights_table[i] << " ";
-    //     if ((i + 1) % number_of_targets == 0) {
-    //         std:: cout << std::endl;
-    //     }
-    // }
+    return durations_table;
 
     // Resets the weights_table and the durations_table
     for (auto i = 0; i < number_of_entries; ++i)

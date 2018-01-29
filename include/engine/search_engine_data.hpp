@@ -66,7 +66,7 @@ template <> struct SearchEngineData<routing_algorithms::ch::Algorithm>
 
     void InitializeOrClearManyToManyThreadLocalStorage(unsigned number_of_nodes);
 
-    void InitializeOrClearUnpackingStatisticsThreadLocalStorage(unsigned number_of_nodes);
+    void InitializeOrClearUnpackingStatisticsThreadLocalStorage();
 };
 
 struct MultiLayerDijkstraHeapData

@@ -232,7 +232,7 @@ void unpackPath(const DataFacade<Algorithm> &facade,
                 BidirectionalIterator packed_path_end,
                 Callback &&callback)
 {
-    UnpackingStatistics unpacking_cache(0);
+    UnpackingStatistics unpacking_cache;
     unpackPath(facade, packed_path_begin, packed_path_end, unpacking_cache, callback);
 }
 template <typename BidirectionalIterator, typename Callback>
@@ -264,13 +264,12 @@ void unpackPath(const DataFacade<Algorithm> &facade,
         if (!std::get<2>(edge))
         {
 
-            if (unpacking_cache.EdgeInCache(std::make_pair(std::get<0>(edge), std::get<1>(edge))))
+            if (unpacking_cache.IsEdgeInCache(std::make_pair(std::get<0>(edge), std::get<1>(edge))))
             {
                 std::get<2>(edge) = true;
             }
 
-            if (!std::get<2>(edge))
-                unpacking_cache.CollectStats(std::make_pair(std::get<0>(edge), std::get<1>(edge)));
+            unpacking_cache.CollectStats(std::make_pair(std::get<0>(edge), std::get<1>(edge)));
         }
 
         // Look for an edge on the forward CH graph (.forward)
