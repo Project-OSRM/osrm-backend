@@ -469,7 +469,7 @@ bool MergableRoadDetector::HaveSameDirection(const NodeID intersection_node,
         1, node_based_graph.GetEdgeData(rhs.eid).flags.road_classification.GetNumberOfLanes());
 
     const auto combined_road_width = 0.5 * (lane_count_lhs + lane_count_rhs) * ASSUMED_LANE_WIDTH;
-    const auto constexpr MAXIMAL_ALLOWED_SEPARATION_WIDTH = 8;
+    const auto constexpr MAXIMAL_ALLOWED_SEPARATION_WIDTH = 12;
 
     return distance_between_roads <= combined_road_width + MAXIMAL_ALLOWED_SEPARATION_WIDTH;
 }
