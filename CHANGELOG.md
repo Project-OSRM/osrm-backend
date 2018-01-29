@@ -1,3 +1,10 @@
+# 5.15.1
+  - Changes from 5.15.0:
+    - Bugfixes:
+      - FIXED: Segfault in map matching when RouteLeg collapsing code is run on a match with multiple submatches
+    - Guidance:
+      -  Set type of trivial intersections where classes change to Suppressed instead of NoTurn
+
 # 5.15.0
   - Changes from 5.14.3:
     - Bugfixes:
