@@ -248,6 +248,7 @@ Status MatchPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
     }
 
     // Error: Check if user-supplied waypoints can be found in the resulting matches
+    if (!parameters.waypoints.empty())
     {
         std::set<std::size_t> tidied_waypoints(tidied.parameters.waypoints.begin(),
                                                tidied.parameters.waypoints.end());
