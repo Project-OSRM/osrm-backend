@@ -79,8 +79,9 @@ class UnpackingStatistics
 
     void PrintStats()
     {
-        std::cout << "Total Misses :" << number_of_misses << " Total Finds: " << number_of_finds
-                  << " Total Lookups: " << number_of_lookups << std::endl;
+        // std::cout << "Total Misses :" << number_of_misses << " Total Finds: " << number_of_finds
+        //           << " Total Lookups: " << number_of_lookups << " Cache size: " << cache.size() << std::endl;
+        std::cout << number_of_misses << "," << number_of_finds << "," << number_of_lookups << "," << cache.size() << std::endl;
     }
 
     // void PrintEdgeLookups(std::pair<NodeID, NodeID> edge)
