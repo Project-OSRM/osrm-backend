@@ -51,7 +51,7 @@ double findTotalTurnAngle(const RouteStep &entry_step, const RouteStep &exit_ste
     // both angles are in the same direction, the total turn gets increased
     //
     // a ---- b
-    //           \ 
+    //           `
     //              c
     //              |
     //              d
