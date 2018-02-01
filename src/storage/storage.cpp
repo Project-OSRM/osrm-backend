@@ -572,44 +572,10 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
 {
     BOOST_ASSERT(memory_ptr != nullptr);
 
+    // Connectivity matrix checksum
+    std::uint32_t turns_connectivity_checksum = 0;
+
     // read actual data into shared memory object //
-
-    // Load the HSGR file
-    if (boost::filesystem::exists(config.GetPath(".osrm.hsgr")))
-    {
-        auto graph_nodes_ptr = layout.GetBlockPtr<contractor::QueryGraphView::NodeArrayEntry, true>(
-            memory_ptr, storage::DataLayout::CH_GRAPH_NODE_LIST);
-        auto graph_edges_ptr = layout.GetBlockPtr<contractor::QueryGraphView::EdgeArrayEntry, true>(
-            memory_ptr, storage::DataLayout::CH_GRAPH_EDGE_LIST);
-        auto checksum = layout.GetBlockPtr<unsigned, true>(memory_ptr, DataLayout::HSGR_CHECKSUM);
-
-        util::vector_view<contractor::QueryGraphView::NodeArrayEntry> node_list(
-            graph_nodes_ptr, layout.num_entries[storage::DataLayout::CH_GRAPH_NODE_LIST]);
-        util::vector_view<contractor::QueryGraphView::EdgeArrayEntry> edge_list(
-            graph_edges_ptr, layout.num_entries[storage::DataLayout::CH_GRAPH_EDGE_LIST]);
-
-        std::vector<util::vector_view<bool>> edge_filter;
-        for (auto index : util::irange<std::size_t>(0, NUM_METRICS))
-        {
-            auto block_id =
-                static_cast<DataLayout::BlockID>(storage::DataLayout::CH_EDGE_FILTER_0 + index);
-            auto data_ptr = layout.GetBlockPtr<unsigned, true>(memory_ptr, block_id);
-            auto num_entries = layout.num_entries[block_id];
-            edge_filter.emplace_back(data_ptr, num_entries);
-        }
-
-        contractor::QueryGraphView graph_view(std::move(node_list), std::move(edge_list));
-        contractor::files::readGraph(
-            config.GetPath(".osrm.hsgr"), *checksum, graph_view, edge_filter);
-    }
-    else
-    {
-        layout.GetBlockPtr<unsigned, true>(memory_ptr, DataLayout::HSGR_CHECKSUM);
-        layout.GetBlockPtr<contractor::QueryGraphView::NodeArrayEntry, true>(
-            memory_ptr, DataLayout::CH_GRAPH_NODE_LIST);
-        layout.GetBlockPtr<contractor::QueryGraphView::EdgeArrayEntry, true>(
-            memory_ptr, DataLayout::CH_GRAPH_EDGE_LIST);
-    }
 
     // store the filename of the on-disk portion of the RTree
     {
@@ -724,7 +690,8 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
                                          std::move(pre_turn_bearings),
                                          std::move(post_turn_bearings));
 
-        guidance::files::readTurnData(config.GetPath(".osrm.edges"), turn_data);
+        guidance::files::readTurnData(
+            config.GetPath(".osrm.edges"), turn_data, turns_connectivity_checksum);
     }
 
     // load compressed geometry
@@ -921,8 +888,60 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
             config.GetPath(".osrm.icd"), intersection_bearings_view, entry_classes);
     }
 
-    {
-        // Loading MLD Data
+    { // Load the HSGR file
+        if (boost::filesystem::exists(config.GetPath(".osrm.hsgr")))
+        {
+            auto graph_nodes_ptr =
+                layout.GetBlockPtr<contractor::QueryGraphView::NodeArrayEntry, true>(
+                    memory_ptr, storage::DataLayout::CH_GRAPH_NODE_LIST);
+            auto graph_edges_ptr =
+                layout.GetBlockPtr<contractor::QueryGraphView::EdgeArrayEntry, true>(
+                    memory_ptr, storage::DataLayout::CH_GRAPH_EDGE_LIST);
+            auto checksum =
+                layout.GetBlockPtr<unsigned, true>(memory_ptr, DataLayout::HSGR_CHECKSUM);
+
+            util::vector_view<contractor::QueryGraphView::NodeArrayEntry> node_list(
+                graph_nodes_ptr, layout.num_entries[storage::DataLayout::CH_GRAPH_NODE_LIST]);
+            util::vector_view<contractor::QueryGraphView::EdgeArrayEntry> edge_list(
+                graph_edges_ptr, layout.num_entries[storage::DataLayout::CH_GRAPH_EDGE_LIST]);
+
+            std::vector<util::vector_view<bool>> edge_filter;
+            for (auto index : util::irange<std::size_t>(0, NUM_METRICS))
+            {
+                auto block_id =
+                    static_cast<DataLayout::BlockID>(storage::DataLayout::CH_EDGE_FILTER_0 + index);
+                auto data_ptr = layout.GetBlockPtr<unsigned, true>(memory_ptr, block_id);
+                auto num_entries = layout.num_entries[block_id];
+                edge_filter.emplace_back(data_ptr, num_entries);
+            }
+
+            std::uint32_t graph_connectivity_checksum = 0;
+            contractor::QueryGraphView graph_view(std::move(node_list), std::move(edge_list));
+            contractor::files::readGraph(config.GetPath(".osrm.hsgr"),
+                                         *checksum,
+                                         graph_view,
+                                         edge_filter,
+                                         graph_connectivity_checksum);
+            if (turns_connectivity_checksum != graph_connectivity_checksum)
+            {
+                throw util::exception(
+                    "Connectivity checksum " + std::to_string(graph_connectivity_checksum) +
+                    " in " + config.GetPath(".osrm.hsgr").string() +
+                    " does not equal to checksum " + std::to_string(turns_connectivity_checksum) +
+                    " in " + config.GetPath(".osrm.edges").string());
+            }
+        }
+        else
+        {
+            layout.GetBlockPtr<unsigned, true>(memory_ptr, DataLayout::HSGR_CHECKSUM);
+            layout.GetBlockPtr<contractor::QueryGraphView::NodeArrayEntry, true>(
+                memory_ptr, DataLayout::CH_GRAPH_NODE_LIST);
+            layout.GetBlockPtr<contractor::QueryGraphView::EdgeArrayEntry, true>(
+                memory_ptr, DataLayout::CH_GRAPH_EDGE_LIST);
+        }
+    }
+
+    { // Loading MLD Data
         if (boost::filesystem::exists(config.GetPath(".osrm.partition")))
         {
             BOOST_ASSERT(layout.GetBlockSize(storage::DataLayout::MLD_LEVEL_DATA) > 0);
@@ -1040,9 +1059,20 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
                 graph_node_to_offset_ptr,
                 layout.num_entries[storage::DataLayout::MLD_GRAPH_NODE_TO_OFFSET]);
 
+            std::uint32_t graph_connectivity_checksum = 0;
             customizer::MultiLevelEdgeBasedGraphView graph_view(
                 std::move(node_list), std::move(edge_list), std::move(node_to_offset));
-            partitioner::files::readGraph(config.GetPath(".osrm.mldgr"), graph_view);
+            partitioner::files::readGraph(
+                config.GetPath(".osrm.mldgr"), graph_view, graph_connectivity_checksum);
+
+            if (turns_connectivity_checksum != graph_connectivity_checksum)
+            {
+                throw util::exception(
+                    "Connectivity checksum " + std::to_string(graph_connectivity_checksum) +
+                    " in " + config.GetPath(".osrm.mldgr").string() +
+                    " does not equal to checksum " + std::to_string(turns_connectivity_checksum) +
+                    " in " + config.GetPath(".osrm.edges").string());
+            }
         }
     }
 }

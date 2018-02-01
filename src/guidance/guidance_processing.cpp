@@ -5,6 +5,7 @@
 #include "extractor/intersection/intersection_analysis.hpp"
 
 #include "util/assert.hpp"
+#include "util/connectivity_checksum.hpp"
 #include "util/percent.hpp"
 
 #include <tbb/blocked_range.h>
@@ -31,7 +32,8 @@ void annotateTurns(const util::NodeBasedDynamicGraph &node_based_graph,
                    guidance::TurnDataExternalContainer &turn_data_container,
                    BearingClassesVector &bearing_class_by_node_based_node,
                    BearingClassesMap &bearing_class_hash,
-                   EntryClassesMap &entry_class_hash)
+                   EntryClassesMap &entry_class_hash,
+                   std::uint32_t &connectivity_checksum)
 {
     util::Log() << "Generating guidance turns ";
 
@@ -75,6 +77,8 @@ void annotateTurns(const util::NodeBasedDynamicGraph &node_based_graph,
 
         std::vector<guidance::TurnData> continuous_turn_data; // populate answers from guidance
         std::vector<guidance::TurnData> delayed_turn_data;    // populate answers from guidance
+
+        util::ConnectivityChecksum checksum;
     };
     using TurnsPipelineBufferPtr = std::shared_ptr<TurnsPipelineBuffer>;
 
@@ -83,6 +87,8 @@ void annotateTurns(const util::NodeBasedDynamicGraph &node_based_graph,
     {
         const NodeID node_count = node_based_graph.GetNumberOfNodes();
         NodeID current_node = 0;
+
+        connectivity_checksum = 0;
 
         // Handle intersections in sets of 100.  The pipeline below has a serial bottleneck
         // during the writing phase, so we want to make the parallel workers do more work
@@ -135,6 +141,9 @@ void annotateTurns(const util::NodeBasedDynamicGraph &node_based_graph,
                             intersection_node);
                     const auto &edge_geometries = edge_geometries_and_merged_edges.first;
                     const auto &merged_edge_ids = edge_geometries_and_merged_edges.second;
+
+                    buffer->checksum.process_byte(incoming_edges.size());
+                    buffer->checksum.process_byte(outgoing_edges.size());
 
                     // all nodes in the graph are connected in both directions. We check all
                     // outgoing nodes to find the incoming edge. This is a larger search overhead,
@@ -207,6 +216,8 @@ void annotateTurns(const util::NodeBasedDynamicGraph &node_based_graph,
                                                                        turn_lanes_data,
                                                                        incoming_edge,
                                                                        outgoing_edge);
+
+                            buffer->checksum.process_bit(is_turn_allowed);
 
                             if (!is_turn_allowed)
                                 continue;
@@ -290,6 +301,8 @@ void annotateTurns(const util::NodeBasedDynamicGraph &node_based_graph,
             tbb::filter::serial_in_order, [&](auto buffer) {
 
                 guidance_progress.PrintAddition(buffer->nodes_processed);
+
+                connectivity_checksum = buffer->checksum.update_checksum(connectivity_checksum);
 
                 // Guidance data
                 std::for_each(buffer->continuous_turn_data.begin(),

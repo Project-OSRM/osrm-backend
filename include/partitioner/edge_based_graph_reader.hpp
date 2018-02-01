@@ -187,12 +187,13 @@ inline DynamicEdgeBasedGraph LoadEdgeBasedGraph(const boost::filesystem::path &p
 {
     EdgeID number_of_edge_based_nodes;
     std::vector<extractor::EdgeBasedEdge> edges;
-    extractor::files::readEdgeBasedGraph(path, number_of_edge_based_nodes, edges);
+    std::uint32_t checksum;
+    extractor::files::readEdgeBasedGraph(path, number_of_edge_based_nodes, edges, checksum);
 
     auto directed = splitBidirectionalEdges(edges);
     auto tidied = prepareEdgesForUsageInGraph<DynamicEdgeBasedGraphEdge>(std::move(directed));
 
-    return DynamicEdgeBasedGraph(number_of_edge_based_nodes, std::move(tidied));
+    return DynamicEdgeBasedGraph(number_of_edge_based_nodes, std::move(tidied), checksum);
 }
 
 } // ns partition

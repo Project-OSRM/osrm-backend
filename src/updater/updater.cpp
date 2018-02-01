@@ -524,14 +524,17 @@ Updater::NumNodesAndEdges Updater::LoadAndUpdateEdgeExpandedGraph() const
 {
     std::vector<EdgeWeight> node_weights;
     std::vector<extractor::EdgeBasedEdge> edge_based_edge_list;
-    auto number_of_edge_based_nodes =
-        Updater::LoadAndUpdateEdgeExpandedGraph(edge_based_edge_list, node_weights);
-    return std::make_tuple(number_of_edge_based_nodes, std::move(edge_based_edge_list));
+    std::uint32_t connectivity_checksum;
+    auto number_of_edge_based_nodes = Updater::LoadAndUpdateEdgeExpandedGraph(
+        edge_based_edge_list, node_weights, connectivity_checksum);
+    return std::make_tuple(
+        number_of_edge_based_nodes, std::move(edge_based_edge_list), connectivity_checksum);
 }
 
 EdgeID
 Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &edge_based_edge_list,
-                                        std::vector<EdgeWeight> &node_weights) const
+                                        std::vector<EdgeWeight> &node_weights,
+                                        std::uint32_t &connectivity_checksum) const
 {
     TIMER_START(load_edges);
 
@@ -539,8 +542,10 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
     std::vector<util::Coordinate> coordinates;
     extractor::PackedOSMIDs osm_node_ids;
 
-    extractor::files::readEdgeBasedGraph(
-        config.GetPath(".osrm.ebg"), number_of_edge_based_nodes, edge_based_edge_list);
+    extractor::files::readEdgeBasedGraph(config.GetPath(".osrm.ebg"),
+                                         number_of_edge_based_nodes,
+                                         edge_based_edge_list,
+                                         connectivity_checksum);
     extractor::files::readNodes(config.GetPath(".osrm.nbg_nodes"), coordinates, osm_node_ids);
 
     const bool update_conditional_turns =

@@ -24,10 +24,14 @@ template <typename EdgeDataT, storage::Ownership Ownership> class MultiLevelGrap
 namespace serialization
 {
 template <typename EdgeDataT, storage::Ownership Ownership>
-void read(storage::io::FileReader &reader, MultiLevelGraph<EdgeDataT, Ownership> &graph);
+void read(storage::io::FileReader &reader,
+          MultiLevelGraph<EdgeDataT, Ownership> &graph,
+          std::uint32_t &connectivity_checksum);
 
 template <typename EdgeDataT, storage::Ownership Ownership>
-void write(storage::io::FileWriter &writer, const MultiLevelGraph<EdgeDataT, Ownership> &graph);
+void write(storage::io::FileWriter &writer,
+           const MultiLevelGraph<EdgeDataT, Ownership> &graph,
+           const std::uint32_t connectivity_checksum);
 }
 
 template <typename EdgeDataT, storage::Ownership Ownership>
@@ -199,12 +203,15 @@ class MultiLevelGraph : public util::StaticGraph<EdgeDataT, Ownership>
 
     friend void
     serialization::read<EdgeDataT, Ownership>(storage::io::FileReader &reader,
-                                              MultiLevelGraph<EdgeDataT, Ownership> &graph);
+                                              MultiLevelGraph<EdgeDataT, Ownership> &graph,
+                                              std::uint32_t &connectivity_checksum);
     friend void
     serialization::write<EdgeDataT, Ownership>(storage::io::FileWriter &writer,
-                                               const MultiLevelGraph<EdgeDataT, Ownership> &graph);
+                                               const MultiLevelGraph<EdgeDataT, Ownership> &graph,
+                                               const std::uint32_t connectivity_checksum);
 
     Vector<EdgeOffset> node_to_edge_offset;
+    std::uint32_t connectivity_checksum;
 };
 }
 }

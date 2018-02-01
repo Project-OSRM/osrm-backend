@@ -19,7 +19,8 @@ template <typename QueryGraphT, typename EdgeFilterT>
 inline void readGraph(const boost::filesystem::path &path,
                       unsigned &checksum,
                       QueryGraphT &graph,
-                      std::vector<EdgeFilterT> &edge_filter)
+                      std::vector<EdgeFilterT> &edge_filter,
+                      std::uint32_t &connectivity_checksum)
 {
     static_assert(std::is_same<QueryGraphView, QueryGraphT>::value ||
                       std::is_same<QueryGraph, QueryGraphT>::value,
@@ -39,6 +40,7 @@ inline void readGraph(const boost::filesystem::path &path,
     {
         storage::serialization::read(reader, edge_filter[index]);
     }
+    reader.ReadInto(connectivity_checksum);
 }
 
 // writes .osrm.hsgr file
@@ -46,7 +48,8 @@ template <typename QueryGraphT, typename EdgeFilterT>
 inline void writeGraph(const boost::filesystem::path &path,
                        unsigned checksum,
                        const QueryGraphT &graph,
-                       const std::vector<EdgeFilterT> &edge_filter)
+                       const std::vector<EdgeFilterT> &edge_filter,
+                       const std::uint32_t connectivity_checksum)
 {
     static_assert(std::is_same<QueryGraphView, QueryGraphT>::value ||
                       std::is_same<QueryGraph, QueryGraphT>::value,
@@ -64,6 +67,7 @@ inline void writeGraph(const boost::filesystem::path &path,
     {
         storage::serialization::write(writer, filter);
     }
+    writer.WriteOne(connectivity_checksum);
 }
 }
 }

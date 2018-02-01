@@ -92,6 +92,7 @@ class EdgeBasedGraphFactory
     void GetEdgeBasedNodeSegments(std::vector<EdgeBasedNodeSegment> &nodes);
     void GetStartPointMarkers(std::vector<bool> &node_is_startpoint);
     void GetEdgeBasedNodeWeights(std::vector<EdgeWeight> &output_node_weights);
+    std::uint32_t GetConnectivityChecksum() const;
 
     std::uint64_t GetNumberOfEdgeBasedNodes() const;
 
@@ -133,6 +134,7 @@ class EdgeBasedGraphFactory
     std::vector<EdgeBasedNodeSegment> m_edge_based_node_segments;
     EdgeBasedNodeDataContainer &m_edge_based_node_container;
     util::DeallocatingVector<EdgeBasedEdge> m_edge_based_edge_list;
+    std::uint32_t m_connectivity_checksum;
 
     // The number of edge-based nodes is mostly made up out of the edges in the node-based graph.
     // Any edge in the node-based graph represents a node in the edge-based graph. In addition, we

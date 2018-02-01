@@ -83,13 +83,15 @@ void CellStorageStatistics(const Graph &graph,
 }
 
 auto LoadAndUpdateEdgeExpandedGraph(const CustomizationConfig &config,
-                                    const partitioner::MultiLevelPartition &mlp)
+                                    const partitioner::MultiLevelPartition &mlp,
+                                    std::uint32_t &connectivity_checksum)
 {
     updater::Updater updater(config.updater_config);
 
     EdgeID num_nodes;
     std::vector<extractor::EdgeBasedEdge> edge_based_edge_list;
-    std::tie(num_nodes, edge_based_edge_list) = updater.LoadAndUpdateEdgeExpandedGraph();
+    std::tie(num_nodes, edge_based_edge_list, connectivity_checksum) =
+        updater.LoadAndUpdateEdgeExpandedGraph();
 
     auto directed = partitioner::splitBidirectionalEdges(edge_based_edge_list);
     auto tidied =
@@ -127,7 +129,8 @@ int Customizer::Run(const CustomizationConfig &config)
     partitioner::MultiLevelPartition mlp;
     partitioner::files::readPartition(config.GetPath(".osrm.partition"), mlp);
 
-    auto graph = LoadAndUpdateEdgeExpandedGraph(config, mlp);
+    std::uint32_t connectivity_checksum = 0;
+    auto graph = LoadAndUpdateEdgeExpandedGraph(config, mlp, connectivity_checksum);
     util::Log() << "Loaded edge based graph: " << graph.GetNumberOfEdges() << " edges, "
                 << graph.GetNumberOfNodes() << " nodes";
 
@@ -155,7 +158,7 @@ int Customizer::Run(const CustomizationConfig &config)
     util::Log() << "MLD customization writing took " << TIMER_SEC(writing_mld_data) << " seconds";
 
     TIMER_START(writing_graph);
-    partitioner::files::writeGraph(config.GetPath(".osrm.mldgr"), graph);
+    partitioner::files::writeGraph(config.GetPath(".osrm.mldgr"), graph, connectivity_checksum);
     TIMER_STOP(writing_graph);
     util::Log() << "Graph writing took " << TIMER_SEC(writing_graph) << " seconds";
 
