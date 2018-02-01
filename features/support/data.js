@@ -10,6 +10,8 @@ const tableDiff = require('../lib/table_diff');
 const ensureDecimal = require('../lib/utils').ensureDecimal;
 const errorReason = require('../lib/utils').errorReason;
 
+const child_process = require('child_process');
+
 module.exports = function () {
     this.setGridSize = (meters) => {
         // the constant is calculated (with BigDecimal as: 1.0/(DEG_TO_RAD*EARTH_RADIUS_IN_METERS
@@ -168,7 +170,13 @@ module.exports = function () {
             if (exists) callback();
             else {
                 this.OSMDB.toXML((xml) => {
-                    fs.writeFile(this.scenarioCacheFile, xml, callback);
+                    fs.writeFile(this.scenarioCacheFile, xml, (err) => {
+                        if (err) callback(err); 
+                        var params = ['cat',this.scenarioCacheFile,'-O','-o',this.scenarioCacheFilePBF, '--no-progress'];
+                        let child = child_process.execFile('/usr/local/bin/osmium', params, {maxBuffer: 1024 * 1024 * 1000, env: {}}, (err,stdout,stderr) => {
+                            callback(err);
+                        });
+                    });
                 });
             }
         });
@@ -178,7 +186,10 @@ module.exports = function () {
         fs.exists(this.inputCacheFile, (exists) => {
             if (exists) callback();
             else {
-                fs.link(this.scenarioCacheFile, this.inputCacheFile, callback);
+                fs.link(this.scenarioCacheFile, this.inputCacheFile, (err) => {
+                    if (err) callback(err);
+                    fs.link(this.scenarioCacheFilePBF, this.inputCacheFilePBF, callback);
+                });
             }
         });
     };
@@ -239,23 +250,93 @@ module.exports = function () {
         });
     };
 
+    this.valhallaBuildConfig = (p, callback) => {
+        let stamp = p.processedCacheFile + '.stamp_valhalla_config';
+        fs.exists(stamp, (exists) => {
+            if (exists) return callback();
+
+            // valhalla_build_config --mjolnir-tile-dir ${PWD}/valhalla_tiles 
+            //                       --mjolnir-tile-extract ${PWD}/valhalla_tiles.tar
+            //                       --mjolnir-timezone ${PWD}/valhalla_tiles/timezones.sqlite
+            //                       --mjolnir-admin ${PWD}/valhalla_tiles/admins.sqlite > valhalla.json
+
+            var params = [`--mjolnir-tile-dir`, `${p.inputCacheDir}/${p.scenarioID}_valhalla_tiles`,
+                          `--mjolnir-tile-extract`, `${p.inputCacheDir}/${p.scenarioID}_valhalla_tiles.tar`,
+                          `--mjolnir-timezone`, `${p.inputCacheDir}/${p.scenarioID}_valhalla_tiles/timezones.sqlite`,
+                          `--mjolnir-admin`, `${p.inputCacheDir}/${p.scenarioID}_valhalla_tiles/admins.sqlite`];
+
+            child_process.execFile('/Users/danpat/mapbox/valhalla/scripts/valhalla_build_config', params, {}, (error, stdout, stderr) => {
+                if (error) { throw error; }
+                fs.writeFile(`${p.inputCacheDir}/${p.scenarioID}_valhalla_config.json`, stdout, (err) => {
+                    if (err) throw err;
+                    fs.writeFile(stamp, 'ok', callback);
+                })
+            });
+        });
+    };
+
+    this.valhallaBuildTiles = (p, callback) => {
+        let stamp = p.processedCacheFile + '.stamp_valhalla_tiles';
+        fs.exists(stamp, (exists) => {
+            if (exists) return callback();
+
+            var params = [`-c`,`${p.inputCacheDir}/${p.scenarioID}_valhalla_config.json`,
+                          `${p.inputCacheFilePBF}`];
+
+            child_process.execFile('/Users/danpat/mapbox/valhalla/valhalla_build_tiles', params, {}, (error, stdout, stderr) => {
+                if (error) { throw error; }
+                console.log(stdout);
+                console.log(stderr);
+                fs.writeFile(stamp, 'ok', callback);
+            });
+        });
+
+    };
+
+    this.valhallaTarTiles = (p, callback) => {
+        let stamp = p.processedCacheFile + '.stamp_valhalla_tartiles';
+        fs.exists(stamp, (exists) => {
+            if (exists) return callback();
+            var params = [`cf`,`${p.inputCacheDir}/${p.scenarioID}_valhalla_tiles.tar`,
+                          `-C`, p.inputCacheDir, `${p.scenarioID}_valhalla_tiles`];
+
+            child_process.execFile('/usr/bin/tar', params, {}, (error, stdout, stderr) => {
+                if (error) { throw error; }
+                console.log(stdout);
+                console.log(stderr);
+                fs.writeFile(stamp, 'ok', callback);
+            });
+
+        });
+    }
+
     this.extractContractPartitionAndCustomize = (callback) => {
         // a shallow copy of scenario parameters to avoid data inconsistency
         // if a cucumber timeout occurs during deferred jobs
         let p = {extractArgs: this.extractArgs, contractArgs: this.contractArgs,
             partitionArgs: this.partitionArgs, customizeArgs: this.customizeArgs,
             profileFile: this.profileFile, inputCacheFile: this.inputCacheFile,
-            processedCacheFile: this.processedCacheFile, environment: this.environment};
+            inputCacheFilePBF: this.inputCacheFilePBF,
+            processedCacheFile: this.processedCacheFile, environment: this.environment,
+            inputCacheDir: this.featureProcessedCacheDirectory,
+            scenarioID: this.scenarioID };
         let queue = d3.queue(1);
         queue.defer(this.extractData.bind(this), p);
         queue.defer(this.partitionData.bind(this), p);
         queue.defer(this.contractData.bind(this), p);
-        queue.defer(this.customizeData.bind(this), p);
+        queue.defer(this.valhallaBuildConfig.bind(this), p);
+        queue.defer(this.valhallaBuildTiles.bind(this), p);
+        queue.defer(this.valhallaTarTiles.bind(this), p);
         queue.awaitAll(callback);
     };
 
     this.writeAndLinkOSM = (callback) => {
         let queue = d3.queue(1);
+        let p = { profileFile: this.profileFile, inputCacheFile: this.inputCacheFile,
+            inputCacheFilePBF: this.inputCacheFilePBF,
+            processedCacheFile: this.processedCacheFile, environment: this.environment,
+            inputCacheDir: this.featureProcessedCacheDirectory,
+            scenarioID: this.scenarioID };
         queue.defer(this.writeOSM.bind(this));
         queue.defer(this.linkOSM.bind(this));
         queue.awaitAll(callback);
@@ -272,7 +353,8 @@ module.exports = function () {
         let queue = d3.queue(1);
         queue.defer(this.writeAndLinkOSM.bind(this));
         queue.defer(this.extractContractPartitionAndCustomize.bind(this));
-        queue.defer(this.osrmLoader.load.bind(this.osrmLoader), this.processedCacheFile);
+        //queue.defer(this.osrmLoader.load.bind(this.osrmLoader), this.processedCacheFile);
+        queue.defer(this.osrmLoader.load.bind(this.osrmLoader), `${this.featureProcessedCacheDirectory}/${this.scenarioID}_valhalla_config.json`);
         queue.awaitAll(callback);
     };
 

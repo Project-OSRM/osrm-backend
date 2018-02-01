@@ -40,31 +40,42 @@ module.exports = function () {
 
                         let json = JSON.parse(body);
 
-                        got.code = json.code;
-
-                        let hasRoute = json.code === 'Ok';
+                        var hasRoute = false;
+                        if (this.osrmLoader.method === 'valhalla') {
+                            got.code = json.trip.status;
+                            hasRoute = json.trip.status == 0;
+                        } else {
+                            got.code = json.code;
+                            hasRoute = json.code === 'Ok';
+                        }
+                        var route;
 
                         if (hasRoute) {
-                            instructions = this.wayList(json.routes[0]);
-                            pronunciations = this.pronunciationList(json.routes[0]);
-                            refs = this.refList(json.routes[0]);
-                            destinations = this.destinationsList(json.routes[0]);
-                            exits = this.exitsList(json.routes[0]);
-                            bearings = this.bearingList(json.routes[0]);
-                            turns = this.turnList(json.routes[0]);
-                            intersections = this.intersectionList(json.routes[0]);
-                            modes = this.modeList(json.routes[0]);
-                            driving_sides = this.drivingSideList(json.routes[0]);
-                            classes = this.classesList(json.routes[0]);
-                            times = this.timeList(json.routes[0]);
-                            distances = this.distanceList(json.routes[0]);
-                            lanes = this.lanesList(json.routes[0]);
-                            summary = this.summary(json.routes[0]);
-                            locations = this.locations(json.routes[0]);
-                            annotation = this.annotationList(json.routes[0]);
-                            weight_name = this.weightName(json.routes[0]);
-                            weights = this.weightList(json.routes[0]);
-                            approaches = this.approachList(json.routes[0]);
+                            if (this.osrmLoader.method === 'valhalla') {
+                                route = json.trip;
+                            } else {
+                                route = json.routes[0];
+                            }
+                            instructions = this.wayList(route);
+                            pronunciations = this.pronunciationList(route);
+                            refs = this.refList(route);
+                            destinations = this.destinationsList(route);
+                            exits = this.exitsList(route);
+                            bearings = this.bearingList(route);
+                            turns = this.turnList(route);
+                            intersections = this.intersectionList(route);
+                            modes = this.modeList(route);
+                            driving_sides = this.drivingSideList(route);
+                            classes = this.classesList(route);
+                            times = this.timeList(route);
+                            distances = this.distanceList(route);
+                            lanes = this.lanesList(route);
+                            summary = this.summary(route);
+                            locations = this.locations(route);
+                            annotation = this.annotationList(route);
+                            weight_name = this.weightName(route);
+                            weights = this.weightList(route);
+                            approaches = this.approachList(route);
                         }
 
                         if (headers.has('status')) {
@@ -99,9 +110,9 @@ module.exports = function () {
                                 got.alternative = this.wayList(json.routes[1]);
                         }
 
-                        var distance = hasRoute && json.routes[0].distance,
-                            time = hasRoute && json.routes[0].duration,
-                            weight = hasRoute && json.routes[0].weight;
+                        var distance = hasRoute && (this.osrmLoader.method === 'valhalla') ? route.summary.length : route.distance,
+                            time = hasRoute && (this.osrmLoader.method === 'valhalla') ? route.summary.time : route.duration,
+                            weight = hasRoute && (this.osrmLoader.method === 'valhalla') ? route.summary.time : route.weight;
 
                         if (headers.has('distance')) {
                             if (row.distance.length) {

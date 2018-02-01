@@ -6,6 +6,7 @@ const Timeout = require('node-timeout');
 const tryConnect = require('../lib/try_connect');
 const errorReason = require('./utils').errorReason;
 
+const child_process = require('child_process');
 class OSRMBaseLoader{
     constructor (scope) {
         this.scope = scope;
@@ -45,7 +46,7 @@ class OSRMBaseLoader{
         var retryCount = 0;
         let retry = (err) => {
           if (err) {
-            if (retryCount < 10) {
+            if (retryCount < 1000) {
               retryCount++;
               setTimeout(() => { tryConnect(this.scope.OSRM_PORT, retry); }, 10);
             } else {
@@ -84,6 +85,33 @@ class OSRMDirectLoader extends OSRMBaseLoader {
                 throw new Error(util.format('osrm-routed %s: %s', errorReason(err), err.cmd));
             }
         });
+        callback();
+    }
+};
+
+class ValhallaDirectLoader extends OSRMBaseLoader {
+    constructor (scope) {
+        super(scope);
+    }
+
+    load (inputFile, callback) {
+        this.inputFile = inputFile;
+        this.shutdown(() => {
+            this.launch(callback);
+        });
+    }
+
+    osrmUp (callback) {
+        if (this.osrmIsRunning()) return callback(new Error("osrm-routed already running!"));
+
+        var args = [this.inputFile, '1'];
+        this.child = child_process.execFile('/Users/danpat/mapbox/valhalla/valhalla_service', args, this.scope.environment, (err) => {
+            if (err && err.signal !== 'SIGINT') {
+                this.child = null;
+                throw new Error(util.format('valhalla_service %s: %s', errorReason(err), err.cmd));
+            }
+        });
+        setTimeout/
         callback();
     }
 };
@@ -134,6 +162,7 @@ class OSRMLoader {
         this.scope = scope;
         this.sharedLoader = new OSRMDatastoreLoader(this.scope);
         this.directLoader = new OSRMDirectLoader(this.scope);
+        this.valhallaLoader = new ValhallaDirectLoader(this.scope);
         this.method = scope.DEFAULT_LOAD_METHOD;
     }
 
@@ -150,6 +179,9 @@ class OSRMLoader {
               this.loader = this.directLoader;
               this.directLoader.load(inputFile, callback);
             });
+        } else if (this.method === 'valhalla') {
+              this.loader = this.valhallaLoader;
+              this.valhallaLoader.load(inputFile, callback);
         } else {
             callback(new Error('*** Unknown load method ' + method));
         }

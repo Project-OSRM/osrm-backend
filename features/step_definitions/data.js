@@ -309,6 +309,11 @@ module.exports = function () {
         callback();
     });
 
+    this.Given(/^data is loaded with valhalla$/, (callback) => {
+        this.osrmLoader.setLoadMethod('valhalla');
+        callback();
+    });
+
     this.Given(/^the HTTP method "([^"]*)"$/, (method, callback) => {
         this.httpMethod = method;
         callback();

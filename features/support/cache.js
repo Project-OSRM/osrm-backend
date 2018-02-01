@@ -101,8 +101,10 @@ module.exports = function() {
 
     this.setupScenarioCache = (scenarioID) => {
         this.scenarioCacheFile = this.getScenarioCacheFile(this.featureCacheDirectory, scenarioID);
+        this.scenarioCacheFilePBF = this.getScenarioCacheFilePBF(this.featureCacheDirectory, scenarioID);
         this.processedCacheFile = this.getProcessedCacheFile(this.featureProcessedCacheDirectory, scenarioID);
         this.inputCacheFile = this.getInputCacheFile(this.featureProcessedCacheDirectory, scenarioID);
+        this.inputCacheFilePBF = this.getInputCacheFilePBF(this.featureProcessedCacheDirectory, scenarioID);
         this.rasterCacheFile = this.getRasterCacheFile(this.featureProcessedCacheDirectory, scenarioID);
         this.speedsCacheFile = this.getSpeedsCacheFile(this.featureProcessedCacheDirectory, scenarioID);
         this.penaltiesCacheFile = this.getPenaltiesCacheFile(this.featureProcessedCacheDirectory, scenarioID);
@@ -176,6 +178,11 @@ module.exports = function() {
         return path.join(featureCacheDirectory, scenarioID) + '.osm';
     };
 
+    // test/cache/{feature_path}/{feature_hash}/{scenario}.osm
+    this.getScenarioCacheFilePBF = (featureCacheDirectory, scenarioID) => {
+        return path.join(featureCacheDirectory, scenarioID) + '.pbf';
+    };
+
     // test/cache/{feature_path}/{feature_hash}/{osrm_hash}/
     this.getFeatureProcessedCacheDirectory = (featureCacheDirectory, osrmHash) => {
         return path.join(featureCacheDirectory, osrmHash);
@@ -189,6 +196,11 @@ module.exports = function() {
     // test/cache/{feature_path}/{feature_hash}/{osrm_hash}/{scenario}.osm
     this.getInputCacheFile = (featureProcessedCacheDirectory, scenarioID) => {
         return path.join(featureProcessedCacheDirectory, scenarioID) + '.osm';
+    };
+
+    // test/cache/{feature_path}/{feature_hash}/{osrm_hash}/{scenario}.osm
+    this.getInputCacheFilePBF = (featureProcessedCacheDirectory, scenarioID) => {
+        return path.join(featureProcessedCacheDirectory, scenarioID) + '.pbf';
     };
 
 
