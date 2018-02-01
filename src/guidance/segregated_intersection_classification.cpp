@@ -89,7 +89,6 @@ std::unordered_set<EdgeID> findSegregatedNodes(const extractor::NodeBasedGraphFa
 
     auto isSegregated = [&](NodeID node1,
                             std::vector<EdgeInfo> v1,
-                            NodeID node2,
                             std::vector<EdgeInfo> v2,
                             EdgeInfo const &current,
                             double edgeLength) {
@@ -100,7 +99,6 @@ std::unordered_set<EdgeID> findSegregatedNodes(const extractor::NodeBasedGraphFa
         }
 
         // Print information about angles at node 1 from all inbound edge to the current edge
-        std::cout << "\nINBOUND to NODE_1 | Angles at node " << node1 << "\n";
         bool oneway_inbound = false;
         for (auto const &edge_from : v1) {
             // Get the inbound edge and edge data
@@ -119,16 +117,10 @@ std::unordered_set<EdgeID> findSegregatedNodes(const extractor::NodeBasedGraphFa
                 // Get the turn degree from the inbound edge to the current edge
                 auto const turn_degree = get_angle(edge_from.node, edge_inbound, current.edge);
                 // Skip if the inbound edge is not somewhat perpendicular to the current edge
+                // TODO add turn degree lamda
                 if (turn_degree > 150 && turn_degree < 210) {
                     continue;
                 }
-
-                // TODO rm
-                std::cout << "Angle for (" << edge_from.node << ", "
-                          << edge_inbound << " " << (is_bidirectional(edge_inbound_data.flags) ? "bidirectional" : "oneway") << " "
-                          << " -> "
-                          << current.edge << " " << (is_bidirectional(current.flags) ? "bidirectional" : "oneway") << ") "
-                          << get_angle(edge_from.node, edge_inbound, current.edge) << "\n";
 
                 // If we are here the edge is a candidate oneway inbound
                 oneway_inbound = true;
@@ -142,7 +134,6 @@ std::unordered_set<EdgeID> findSegregatedNodes(const extractor::NodeBasedGraphFa
         }
 
         // Print information about angles at node 2 from the current edge to all outbound edges
-        std::cout << "OUTBOUND at NODE_2 | Angles at node " << node2 << "\n";
         bool oneway_outbound = false;
         for (auto const &edge_to : v2)
         {
@@ -160,16 +151,10 @@ std::unordered_set<EdgeID> findSegregatedNodes(const extractor::NodeBasedGraphFa
                 // Get the turn degree from the current edge to the outbound edge
                 auto const turn_degree = get_angle(node1, current.edge, edge_to.edge);
                 // Skip if the outbound edge is not somewhat perpendicular to the current edge
+                // TODO add turn degree lamda
                 if (turn_degree > 150 && turn_degree < 210) {
                     continue;
                 }
-
-                // TODO rm
-                std::cout << "Angle for (" << node1  << ", "
-                          << current.edge << " " << (is_bidirectional(current.flags) ? "bidirectional" : "oneway") << " "
-                          << " -> "
-                          << edge_to.edge << " " << (is_bidirectional(edge_to.flags) ? "bidirectional" : "oneway") << ") "
-                          << get_angle(node1, current.edge, edge_to.edge) << "\n";
 
                 // If we are here the edge is a candidate oneway outbound
                 oneway_outbound = true;
@@ -244,7 +229,6 @@ std::unordered_set<EdgeID> findSegregatedNodes(const extractor::NodeBasedGraphFa
                                     double edgeLength) {
         return isSegregated(node1,
                             collect_edge_info_fn(edges1, node2),
-                            node2,
                             collect_edge_info_fn(edges2, node1),
                             get_edge_info(edgeID, node1, edgeData),
                             edgeLength);
@@ -258,20 +242,6 @@ std::unordered_set<EdgeID> findSegregatedNodes(const extractor::NodeBasedGraphFa
         for (EdgeID edgeID : sourceEdges)
         {
             auto const &edgeData = graph.GetEdgeData(edgeID);
-
-            // {
-
-            //     auto rev_edge = graph.FindEdge(graph.GetTarget(edgeID), sourceID);
-            //     auto const &rev_edgeData = graph.GetEdgeData(rev_edge);
-            //     bool bidirectional = !edgeData.reversed && !rev_edgeData.reversed;
-
-            //     std::cout << "sourceID = " << sourceID << " edgeID " << edgeID << " targetID " <<
-            //     graph.GetTarget(edgeID) << " reversed flag " << edgeData.reversed << " " <<
-            //     (bidirectional ? "bidirectional" : "oneway edge")  << "   forward " <<
-            //     (int)edgeData.flags.forward << " backward " << (int)edgeData.flags.backward <<  "
-            //     is_split " << (int)edgeData.flags.is_split << "\n";
-
-            // }
 
             if (edgeData.reversed)
                 continue;
