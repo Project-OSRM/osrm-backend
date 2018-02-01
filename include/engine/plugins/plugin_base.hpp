@@ -44,7 +44,7 @@ class BasePlugin
     {
         if (algorithms.IsValid())
         {
-            return engine::Error { ErrorCode::NO_ERROR, {}};
+            return engine::Error::NO_ERROR();
         }
 
         if (!algorithms.HasExcludeFlags() && !params.exclude.empty())

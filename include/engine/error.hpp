@@ -48,6 +48,8 @@ struct Error
     ErrorCode code = ErrorCode::NO_ERROR;
     std::string message;
 
+    static auto NO_ERROR() { return Error{}; }
+
     auto throwException() const
     {
         throw util::exception(std::string(codeToString(code)) + ":" + message);
