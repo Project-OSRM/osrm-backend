@@ -127,7 +127,10 @@ RestrictionParser::TryParse(const osmium::Relation &relation) const
     InputConditionalTurnRestriction restriction_container;
     restriction_container.is_only = is_only_restriction;
 
-    boost::optional<std::uint64_t> from = boost::none, via = boost::none, to = boost::none;
+    constexpr auto INVALID_OSM_ID = std::numeric_limits<std::uint64_t>::max();
+    auto from = INVALID_OSM_ID;
+    auto via = INVALID_OSM_ID;
+    auto to = INVALID_OSM_ID;
     bool is_node_restriction = true;
 
     for (const auto &member : relation.members())
@@ -208,17 +211,17 @@ RestrictionParser::TryParse(const osmium::Relation &relation) const
         }
     }
 
-    if (from && via && to)
+    if (from != INVALID_OSM_ID && via != INVALID_OSM_ID && to != INVALID_OSM_ID)
     {
         if (is_node_restriction)
         {
             // template struct requires bracket for ID initialisation :(
-            restriction_container.node_or_way = InputNodeRestriction{{*from}, {*via}, {*to}};
+            restriction_container.node_or_way = InputNodeRestriction{{from}, {via}, {to}};
         }
         else
         {
             // template struct requires bracket for ID initialisation :(
-            restriction_container.node_or_way = InputWayRestriction{{*from}, {*via}, {*to}};
+            restriction_container.node_or_way = InputWayRestriction{{from}, {via}, {to}};
         }
         return restriction_container;
     }
