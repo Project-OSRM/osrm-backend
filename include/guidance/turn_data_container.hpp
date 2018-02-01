@@ -24,11 +24,14 @@ template <storage::Ownership Ownership> class TurnDataContainerImpl;
 namespace serialization
 {
 template <storage::Ownership Ownership>
-void read(storage::io::FileReader &reader, detail::TurnDataContainerImpl<Ownership> &turn_data);
+void read(storage::io::FileReader &reader,
+          detail::TurnDataContainerImpl<Ownership> &turn_data,
+          std::uint32_t &connectivity_checksum);
 
 template <storage::Ownership Ownership>
 void write(storage::io::FileWriter &writer,
-           const detail::TurnDataContainerImpl<Ownership> &turn_data);
+           const detail::TurnDataContainerImpl<Ownership> &turn_data,
+           const std::uint32_t connectivity_checksum);
 }
 
 struct TurnData
@@ -95,9 +98,11 @@ template <storage::Ownership Ownership> class TurnDataContainerImpl
     }
 
     friend void serialization::read<Ownership>(storage::io::FileReader &reader,
-                                               TurnDataContainerImpl &turn_data_container);
+                                               TurnDataContainerImpl &turn_data_container,
+                                               std::uint32_t &connectivity_checksum);
     friend void serialization::write<Ownership>(storage::io::FileWriter &writer,
-                                                const TurnDataContainerImpl &turn_data_container);
+                                                const TurnDataContainerImpl &turn_data_container,
+                                                const std::uint32_t connectivity_checksum);
 
   private:
     Vector<TurnInstruction> turn_instructions;

@@ -11,6 +11,7 @@
 
 #include "util/assert.hpp"
 #include "util/bearing.hpp"
+#include "util/connectivity_checksum.hpp"
 #include "util/coordinate.hpp"
 #include "util/coordinate_calculation.hpp"
 #include "util/exception.hpp"
@@ -20,10 +21,10 @@
 #include "util/timing_util.hpp"
 
 #include <boost/assert.hpp>
+#include <boost/crc.hpp>
 #include <boost/functional/hash.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 
-#include "boost/unordered_map.hpp"
 #include <algorithm>
 #include <cmath>
 #include <iomanip>
@@ -70,11 +71,12 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(
     const util::NameTable &name_table,
     const std::unordered_set<EdgeID> &segregated_edges,
     const extractor::LaneDescriptionMap &lane_description_map)
-    : m_edge_based_node_container(node_data_container), m_number_of_edge_based_nodes(0),
-      m_coordinates(coordinates), m_node_based_graph(std::move(node_based_graph)),
-      m_barrier_nodes(barrier_nodes), m_traffic_lights(traffic_lights),
-      m_compressed_edge_container(compressed_edge_container), name_table(name_table),
-      segregated_edges(segregated_edges), lane_description_map(lane_description_map)
+    : m_edge_based_node_container(node_data_container), m_connectivity_checksum(0),
+      m_number_of_edge_based_nodes(0), m_coordinates(coordinates),
+      m_node_based_graph(std::move(node_based_graph)), m_barrier_nodes(barrier_nodes),
+      m_traffic_lights(traffic_lights), m_compressed_edge_container(compressed_edge_container),
+      name_table(name_table), segregated_edges(segregated_edges),
+      lane_description_map(lane_description_map)
 {
 }
 
@@ -102,6 +104,11 @@ void EdgeBasedGraphFactory::GetEdgeBasedNodeWeights(std::vector<EdgeWeight> &out
 {
     using std::swap; // Koenig swap
     swap(m_edge_based_node_weights, output_node_weights);
+}
+
+std::uint32_t EdgeBasedGraphFactory::GetConnectivityChecksum() const
+{
+    return m_connectivity_checksum;
 }
 
 std::uint64_t EdgeBasedGraphFactory::GetNumberOfEdgeBasedNodes() const
@@ -474,8 +481,12 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
             std::vector<EdgeWithData> continuous_data; // may need this
             std::vector<EdgeWithData> delayed_data;    // may need this
             std::vector<Conditional> conditionals;
+
+            util::ConnectivityChecksum checksum;
         };
         using EdgesPipelineBufferPtr = std::shared_ptr<EdgesPipelineBuffer>;
+
+        m_connectivity_checksum = 0;
 
         // going over all nodes (which form the center of an intersection), we compute all possible
         // turns along these intersections.
@@ -486,8 +497,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
         // serial final stage time to complete its tasks.
         const constexpr unsigned GRAINSIZE = 100;
 
-        // First part of the pipeline generates iterator ranges of IDs in sets of
-        // GRAINSIZE
+        // First part of the pipeline generates iterator ranges of IDs in sets of GRAINSIZE
         tbb::filter_t<void, tbb::blocked_range<NodeID>> generator_stage(
             tbb::filter::serial_in_order, [&](tbb::flow_control &fc) {
                 if (current_node < node_count)
@@ -669,6 +679,9 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                                                 mergable_road_detector,
                                                                 intersection_node);
 
+                    buffer->checksum.process_byte(incoming_edges.size());
+                    buffer->checksum.process_byte(outgoing_edges.size());
+
                     // all nodes in the graph are connected in both directions. We check all
                     // outgoing nodes to find the incoming edge. This is a larger search overhead,
                     // but the cost we need to pay to generate edges here is worth the additional
@@ -709,14 +722,18 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
                         for (const auto &outgoing_edge : outgoing_edges)
                         {
-                            if (!intersection::isTurnAllowed(m_node_based_graph,
-                                                             m_edge_based_node_container,
-                                                             node_restriction_map,
-                                                             m_barrier_nodes,
-                                                             edge_geometries,
-                                                             turn_lanes_data,
-                                                             incoming_edge,
-                                                             outgoing_edge))
+                            auto is_turn_allowed =
+                                intersection::isTurnAllowed(m_node_based_graph,
+                                                            m_edge_based_node_container,
+                                                            node_restriction_map,
+                                                            m_barrier_nodes,
+                                                            edge_geometries,
+                                                            turn_lanes_data,
+                                                            incoming_edge,
+                                                            outgoing_edge);
+                            buffer->checksum.process_bit(is_turn_allowed);
+
+                            if (!is_turn_allowed)
                                 continue;
 
                             const auto turn =
@@ -953,6 +970,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
             tbb::filter::serial_in_order, [&](auto buffer) {
 
                 routing_progress.PrintAddition(buffer->nodes_processed);
+
+                m_connectivity_checksum = buffer->checksum.update_checksum(m_connectivity_checksum);
 
                 // Copy data from local buffers into global EBG data
                 std::for_each(

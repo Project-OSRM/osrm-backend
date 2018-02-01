@@ -41,7 +41,8 @@ void annotateTurns(const util::NodeBasedDynamicGraph &node_based_graph,
                    guidance::TurnDataExternalContainer &turn_data_container,
                    BearingClassesVector &bearing_class_by_node_based_node,
                    BearingClassesMap &bearing_class_hash,
-                   EntryClassesMap &entry_class_hash);
+                   EntryClassesMap &entry_class_hash,
+                   std::uint32_t &connectivity_checksum);
 
 } // namespace customizer
 } // namespace osrm

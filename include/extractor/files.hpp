@@ -78,7 +78,8 @@ inline void writeProfileProperties(const boost::filesystem::path &path,
 template <typename EdgeBasedEdgeVector>
 void writeEdgeBasedGraph(const boost::filesystem::path &path,
                          EdgeID const number_of_edge_based_nodes,
-                         const EdgeBasedEdgeVector &edge_based_edge_list)
+                         const EdgeBasedEdgeVector &edge_based_edge_list,
+                         const std::uint32_t connectivity_checksum)
 {
     static_assert(std::is_same<typename EdgeBasedEdgeVector::value_type, EdgeBasedEdge>::value, "");
 
@@ -86,12 +87,14 @@ void writeEdgeBasedGraph(const boost::filesystem::path &path,
 
     writer.WriteElementCount64(number_of_edge_based_nodes);
     storage::serialization::write(writer, edge_based_edge_list);
+    writer.WriteOne(connectivity_checksum);
 }
 
 template <typename EdgeBasedEdgeVector>
 void readEdgeBasedGraph(const boost::filesystem::path &path,
                         EdgeID &number_of_edge_based_nodes,
-                        EdgeBasedEdgeVector &edge_based_edge_list)
+                        EdgeBasedEdgeVector &edge_based_edge_list,
+                        std::uint32_t &connectivity_checksum)
 {
     static_assert(std::is_same<typename EdgeBasedEdgeVector::value_type, EdgeBasedEdge>::value, "");
 
@@ -99,6 +102,7 @@ void readEdgeBasedGraph(const boost::filesystem::path &path,
 
     number_of_edge_based_nodes = reader.ReadElementCount64();
     storage::serialization::read(reader, edge_based_edge_list);
+    reader.ReadInto(connectivity_checksum);
 }
 
 // reads .osrm.nodes

@@ -217,6 +217,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     util::DeallocatingVector<EdgeBasedEdge> edge_based_edge_list;
     std::vector<bool> node_is_startpoint;
     std::vector<EdgeWeight> edge_based_node_weights;
+    std::uint32_t ebg_connectivity_checksum = 0;
 
     // Create a node-based graph from the OSRM file
     NodeBasedGraphFactory node_based_graph_factory(config.GetPath(".osrm"),
@@ -295,7 +296,8 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
                                edge_based_node_segments,
                                node_is_startpoint,
                                edge_based_node_weights,
-                               edge_based_edge_list);
+                               edge_based_edge_list,
+                               ebg_connectivity_checksum);
 
     ProcessGuidanceTurns(node_based_graph,
                          edge_based_nodes_container,
@@ -341,8 +343,10 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
 
     util::Log() << "Writing edge-based-graph edges       ... " << std::flush;
     TIMER_START(write_edges);
-    files::writeEdgeBasedGraph(
-        config.GetPath(".osrm.ebg"), number_of_edge_based_nodes, edge_based_edge_list);
+    files::writeEdgeBasedGraph(config.GetPath(".osrm.ebg"),
+                               number_of_edge_based_nodes,
+                               edge_based_edge_list,
+                               ebg_connectivity_checksum);
     TIMER_STOP(write_edges);
     util::Log() << "ok, after " << TIMER_SEC(write_edges) << "s";
 
@@ -697,7 +701,8 @@ EdgeID Extractor::BuildEdgeExpandedGraph(
     std::vector<EdgeBasedNodeSegment> &edge_based_node_segments,
     std::vector<bool> &node_is_startpoint,
     std::vector<EdgeWeight> &edge_based_node_weights,
-    util::DeallocatingVector<EdgeBasedEdge> &edge_based_edge_list)
+    util::DeallocatingVector<EdgeBasedEdge> &edge_based_edge_list,
+    std::uint32_t &connectivity_checksum)
 {
     EdgeBasedGraphFactory edge_based_graph_factory(node_based_graph,
                                                    edge_based_nodes_container,
@@ -743,6 +748,7 @@ EdgeID Extractor::BuildEdgeExpandedGraph(
     edge_based_graph_factory.GetEdgeBasedNodeSegments(edge_based_node_segments);
     edge_based_graph_factory.GetStartPointMarkers(node_is_startpoint);
     edge_based_graph_factory.GetEdgeBasedNodeWeights(edge_based_node_weights);
+    connectivity_checksum = edge_based_graph_factory.GetConnectivityChecksum();
 
     return number_of_edge_based_nodes;
 }
@@ -864,6 +870,7 @@ void Extractor::ProcessGuidanceTurns(
     osrm::guidance::BearingClassesVector bearing_class_by_node_based_node;
     osrm::guidance::BearingClassesMap bearing_class_hash;
     osrm::guidance::EntryClassesMap entry_class_hash;
+    std::uint32_t connectivity_checksum = 0;
 
     TIMER_START(turn_annotations);
 
@@ -894,7 +901,8 @@ void Extractor::ProcessGuidanceTurns(
                                       turn_data_container,
                                       bearing_class_by_node_based_node,
                                       bearing_class_hash,
-                                      entry_class_hash);
+                                      entry_class_hash,
+                                      connectivity_checksum);
     }
 
     TIMER_STOP(turn_annotations);
@@ -925,8 +933,8 @@ void Extractor::ProcessGuidanceTurns(
             config.GetPath(".osrm.tls"), turn_lane_offsets, turn_lane_masks);
     }
 
-    osrm::guidance::files::writeTurnData(config.GetPath(".osrm.edges").string(),
-                                         turn_data_container);
+    osrm::guidance::files::writeTurnData(
+        config.GetPath(".osrm.edges").string(), turn_data_container, connectivity_checksum);
     TIMER_STOP(write_guidance_data);
     util::Log() << "ok, after " << TIMER_SEC(write_guidance_data) << "s";
 }

@@ -84,7 +84,8 @@ class Extractor
         std::vector<EdgeBasedNodeSegment> &edge_based_node_segments,
         std::vector<bool> &node_is_startpoint,
         std::vector<EdgeWeight> &edge_based_node_weights,
-        util::DeallocatingVector<EdgeBasedEdge> &edge_based_edge_list);
+        util::DeallocatingVector<EdgeBasedEdge> &edge_based_edge_list,
+        std::uint32_t &connectivity_checksum);
 
     void FindComponents(unsigned max_edge_id,
                         const util::DeallocatingVector<EdgeBasedEdge> &input_edge_list,

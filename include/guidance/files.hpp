@@ -19,7 +19,9 @@ namespace files
 
 // reads .osrm.edges
 template <typename TurnDataT>
-inline void readTurnData(const boost::filesystem::path &path, TurnDataT &turn_data)
+inline void readTurnData(const boost::filesystem::path &path,
+                         TurnDataT &turn_data,
+                         std::uint32_t &connectivity_checksum)
 {
     static_assert(std::is_same<guidance::TurnDataContainer, TurnDataT>::value ||
                       std::is_same<guidance::TurnDataView, TurnDataT>::value ||
@@ -28,12 +30,14 @@ inline void readTurnData(const boost::filesystem::path &path, TurnDataT &turn_da
     const auto fingerprint = storage::io::FileReader::VerifyFingerprint;
     storage::io::FileReader reader{path, fingerprint};
 
-    serialization::read(reader, turn_data);
+    serialization::read(reader, turn_data, connectivity_checksum);
 }
 
 // writes .osrm.edges
 template <typename TurnDataT>
-inline void writeTurnData(const boost::filesystem::path &path, const TurnDataT &turn_data)
+inline void writeTurnData(const boost::filesystem::path &path,
+                          const TurnDataT &turn_data,
+                          const std::uint32_t connectivity_checksum)
 {
     static_assert(std::is_same<guidance::TurnDataContainer, TurnDataT>::value ||
                       std::is_same<guidance::TurnDataView, TurnDataT>::value ||
@@ -42,7 +46,7 @@ inline void writeTurnData(const boost::filesystem::path &path, const TurnDataT &
     const auto fingerprint = storage::io::FileWriter::GenerateFingerprint;
     storage::io::FileWriter writer{path, fingerprint};
 
-    serialization::write(writer, turn_data);
+    serialization::write(writer, turn_data, connectivity_checksum);
 }
 }
 }
