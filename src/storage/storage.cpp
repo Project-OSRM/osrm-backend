@@ -24,10 +24,10 @@
 #include "extractor/query_node.hpp"
 #include "extractor/travel_mode.hpp"
 
-#include "partition/cell_storage.hpp"
-#include "partition/edge_based_graph_reader.hpp"
-#include "partition/files.hpp"
-#include "partition/multi_level_partition.hpp"
+#include "partitioner/cell_storage.hpp"
+#include "partitioner/edge_based_graph_reader.hpp"
+#include "partitioner/files.hpp"
+#include "partitioner/multi_level_partition.hpp"
 
 #include "engine/datafacade/datafacade_base.hpp"
 
@@ -446,8 +446,8 @@ void Storage::PopulateLayout(DataLayout &layout)
             io::FileReader reader(config.GetPath(".osrm.partition"),
                                   io::FileReader::VerifyFingerprint);
 
-            reader.Skip<partition::MultiLevelPartition::LevelData>(1);
-            layout.SetBlockSize<partition::MultiLevelPartition::LevelData>(
+            reader.Skip<partitioner::MultiLevelPartition::LevelData>(1);
+            layout.SetBlockSize<partitioner::MultiLevelPartition::LevelData>(
                 DataLayout::MLD_LEVEL_DATA, 1);
             const auto partition_entries_count = reader.ReadVectorSize<PartitionID>();
             layout.SetBlockSize<PartitionID>(DataLayout::MLD_PARTITION, partition_entries_count);
@@ -456,7 +456,7 @@ void Storage::PopulateLayout(DataLayout &layout)
         }
         else
         {
-            layout.SetBlockSize<partition::MultiLevelPartition::LevelData>(
+            layout.SetBlockSize<partitioner::MultiLevelPartition::LevelData>(
                 DataLayout::MLD_LEVEL_DATA, 0);
             layout.SetBlockSize<PartitionID>(DataLayout::MLD_PARTITION, 0);
             layout.SetBlockSize<CellID>(DataLayout::MLD_CELL_TO_CHILDREN, 0);
@@ -471,9 +471,9 @@ void Storage::PopulateLayout(DataLayout &layout)
             const auto destination_node_count = reader.ReadVectorSize<NodeID>();
             layout.SetBlockSize<NodeID>(DataLayout::MLD_CELL_DESTINATION_BOUNDARY,
                                         destination_node_count);
-            const auto cell_count = reader.ReadVectorSize<partition::CellStorage::CellData>();
-            layout.SetBlockSize<partition::CellStorage::CellData>(DataLayout::MLD_CELLS,
-                                                                  cell_count);
+            const auto cell_count = reader.ReadVectorSize<partitioner::CellStorage::CellData>();
+            layout.SetBlockSize<partitioner::CellStorage::CellData>(DataLayout::MLD_CELLS,
+                                                                    cell_count);
             const auto level_offsets_count = reader.ReadVectorSize<std::uint64_t>();
             layout.SetBlockSize<std::uint64_t>(DataLayout::MLD_CELL_LEVEL_OFFSETS,
                                                level_offsets_count);
@@ -930,7 +930,7 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
             BOOST_ASSERT(layout.GetBlockSize(storage::DataLayout::MLD_PARTITION) > 0);
 
             auto level_data =
-                layout.GetBlockPtr<partition::MultiLevelPartitionView::LevelData, true>(
+                layout.GetBlockPtr<partitioner::MultiLevelPartitionView::LevelData, true>(
                     memory_ptr, storage::DataLayout::MLD_LEVEL_DATA);
 
             auto mld_partition_ptr = layout.GetBlockPtr<PartitionID, true>(
@@ -945,9 +945,9 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
                 layout.GetBlockEntries(storage::DataLayout::MLD_CELL_TO_CHILDREN);
             util::vector_view<CellID> cell_to_children(mld_chilren_ptr, children_entries_count);
 
-            partition::MultiLevelPartitionView mlp{
+            partitioner::MultiLevelPartitionView mlp{
                 std::move(level_data), std::move(partition), std::move(cell_to_children)};
-            partition::files::readPartition(config.GetPath(".osrm.partition"), mlp);
+            partitioner::files::readPartition(config.GetPath(".osrm.partition"), mlp);
         }
 
         if (boost::filesystem::exists(config.GetPath(".osrm.cells")))
@@ -959,7 +959,7 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
                 memory_ptr, storage::DataLayout::MLD_CELL_SOURCE_BOUNDARY);
             auto mld_destination_boundary_ptr = layout.GetBlockPtr<NodeID, true>(
                 memory_ptr, storage::DataLayout::MLD_CELL_DESTINATION_BOUNDARY);
-            auto mld_cells_ptr = layout.GetBlockPtr<partition::CellStorageView::CellData, true>(
+            auto mld_cells_ptr = layout.GetBlockPtr<partitioner::CellStorageView::CellData, true>(
                 memory_ptr, storage::DataLayout::MLD_CELLS);
             auto mld_cell_level_offsets_ptr = layout.GetBlockPtr<std::uint64_t, true>(
                 memory_ptr, storage::DataLayout::MLD_CELL_LEVEL_OFFSETS);
@@ -976,16 +976,16 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
                                                       source_boundary_entries_count);
             util::vector_view<NodeID> destination_boundary(mld_destination_boundary_ptr,
                                                            destination_boundary_entries_count);
-            util::vector_view<partition::CellStorageView::CellData> cells(mld_cells_ptr,
-                                                                          cells_entries_counts);
+            util::vector_view<partitioner::CellStorageView::CellData> cells(mld_cells_ptr,
+                                                                            cells_entries_counts);
             util::vector_view<std::uint64_t> level_offsets(mld_cell_level_offsets_ptr,
                                                            cell_level_offsets_entries_count);
 
-            partition::CellStorageView storage{std::move(source_boundary),
-                                               std::move(destination_boundary),
-                                               std::move(cells),
-                                               std::move(level_offsets)};
-            partition::files::readCells(config.GetPath(".osrm.cells"), storage);
+            partitioner::CellStorageView storage{std::move(source_boundary),
+                                                 std::move(destination_boundary),
+                                                 std::move(cells),
+                                                 std::move(level_offsets)};
+            partitioner::files::readCells(config.GetPath(".osrm.cells"), storage);
         }
 
         if (boost::filesystem::exists(config.GetPath(".osrm.cell_metrics")))
@@ -1042,7 +1042,7 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
 
             customizer::MultiLevelEdgeBasedGraphView graph_view(
                 std::move(node_list), std::move(edge_list), std::move(node_to_offset));
-            partition::files::readGraph(config.GetPath(".osrm.mldgr"), graph_view);
+            partitioner::files::readGraph(config.GetPath(".osrm.mldgr"), graph_view);
         }
     }
 }

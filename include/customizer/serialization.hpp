@@ -1,7 +1,7 @@
 #ifndef OSRM_CUSTOMIZER_SERIALIZATION_HPP
 #define OSRM_CUSTOMIZER_SERIALIZATION_HPP
 
-#include "partition/cell_storage.hpp"
+#include "partitioner/cell_storage.hpp"
 
 #include "storage/io.hpp"
 #include "storage/serialization.hpp"

@@ -1,15 +1,15 @@
 #include "common/range_tools.hpp"
 
 #include "customizer/cell_customizer.hpp"
-#include "partition/multi_level_graph.hpp"
-#include "partition/multi_level_partition.hpp"
+#include "partitioner/multi_level_graph.hpp"
+#include "partitioner/multi_level_partition.hpp"
 #include "util/static_graph.hpp"
 
 #include <boost/test/unit_test.hpp>
 
 using namespace osrm;
 using namespace osrm::customizer;
-using namespace osrm::partition;
+using namespace osrm::partitioner;
 using namespace osrm::util;
 
 namespace
@@ -40,7 +40,7 @@ auto makeGraph(const MultiLevelPartition &mlp, const std::vector<MockEdge> &mock
         edges.push_back(Edge{m.target, m.start, m.weight, 2 * m.weight, false, true});
     }
     std::sort(edges.begin(), edges.end());
-    return partition::MultiLevelGraph<EdgeData, osrm::storage::Ownership::Container>(
+    return partitioner::MultiLevelGraph<EdgeData, osrm::storage::Ownership::Container>(
         mlp, max_id + 1, edges);
 }
 }
