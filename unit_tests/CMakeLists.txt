@@ -11,8 +11,8 @@ file(GLOB ExtractorTestsSources
     extractor/*.cpp)
 
 file(GLOB PartitionTestsSources
-    partition_tests.cpp
-    partition/*.cpp)
+    partitioner_tests.cpp
+    partitioner/*.cpp)
 
 file(GLOB CustomizerTestsSources
     customizer_tests.cpp
@@ -58,7 +58,7 @@ add_executable(extractor-tests
 	${ExtractorTestsSources}
 	$<TARGET_OBJECTS:EXTRACTOR> $<TARGET_OBJECTS:UTIL>)
 
-add_executable(partition-tests
+add_executable(partitioner-tests
 	EXCLUDE_FROM_ALL
 	${PartitionTestsSources}
 	$<TARGET_OBJECTS:PARTITIONER> $<TARGET_OBJECTS:UTIL>)
@@ -120,14 +120,14 @@ target_include_directories(library-tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(library-extract-tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(library-contract-tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(util-tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_include_directories(partition-tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(partitioner-tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(customizer-tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(updater-tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(contractor-tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_link_libraries(engine-tests ${ENGINE_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 target_link_libraries(extractor-tests ${EXTRACTOR_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
-target_link_libraries(partition-tests ${PARTITIONER_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+target_link_libraries(partitioner-tests ${PARTITIONER_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 target_link_libraries(customizer-tests ${CUSTOMIZER_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 target_link_libraries(updater-tests ${UPDATER_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 target_link_libraries(library-tests osrm ${ENGINE_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
@@ -138,4 +138,4 @@ target_link_libraries(util-tests ${UTIL_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_L
 target_link_libraries(contractor-tests ${CONTRACTOR_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 
 add_custom_target(tests
-	DEPENDS engine-tests extractor-tests contractor-tests partition-tests updater-tests customizer-tests library-tests library-extract-tests server-tests util-tests)
+	DEPENDS engine-tests extractor-tests contractor-tests partitioner-tests updater-tests customizer-tests library-tests library-extract-tests server-tests util-tests)

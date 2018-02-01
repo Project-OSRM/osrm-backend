@@ -27,7 +27,7 @@ namespace routing_algorithms
 using namespace mld;
 
 using Heap = SearchEngineData<Algorithm>::QueryHeap;
-using Partition = partition::MultiLevelPartitionView;
+using Partition = partitioner::MultiLevelPartitionView;
 using Facade = DataFacade<Algorithm>;
 
 // Implementation details

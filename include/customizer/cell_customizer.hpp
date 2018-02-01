@@ -1,8 +1,8 @@
 #ifndef OSRM_CELLS_CUSTOMIZER_HPP
 #define OSRM_CELLS_CUSTOMIZER_HPP
 
-#include "partition/cell_storage.hpp"
-#include "partition/multi_level_partition.hpp"
+#include "partitioner/cell_storage.hpp"
+#include "partitioner/multi_level_partition.hpp"
 #include "util/query_heap.hpp"
 
 #include <tbb/enumerable_thread_specific.h>
@@ -29,12 +29,12 @@ class CellCustomizer
         util::QueryHeap<NodeID, NodeID, EdgeWeight, HeapData, util::ArrayStorage<NodeID, int>>;
     using HeapPtr = tbb::enumerable_thread_specific<Heap>;
 
-    CellCustomizer(const partition::MultiLevelPartition &partition) : partition(partition) {}
+    CellCustomizer(const partitioner::MultiLevelPartition &partition) : partition(partition) {}
 
     template <typename GraphT>
     void Customize(const GraphT &graph,
                    Heap &heap,
-                   const partition::CellStorage &cells,
+                   const partitioner::CellStorage &cells,
                    const std::vector<bool> &allowed_nodes,
                    CellMetric &metric,
                    LevelID level,
@@ -97,7 +97,7 @@ class CellCustomizer
 
     template <typename GraphT>
     void Customize(const GraphT &graph,
-                   const partition::CellStorage &cells,
+                   const partitioner::CellStorage &cells,
                    const std::vector<bool> &allowed_nodes,
                    CellMetric &metric) const
     {
@@ -121,7 +121,7 @@ class CellCustomizer
   private:
     template <typename GraphT>
     void RelaxNode(const GraphT &graph,
-                   const partition::CellStorage &cells,
+                   const partitioner::CellStorage &cells,
                    const std::vector<bool> &allowed_nodes,
                    const CellMetric &metric,
                    Heap &heap,
@@ -209,7 +209,7 @@ class CellCustomizer
         }
     }
 
-    const partition::MultiLevelPartition &partition;
+    const partitioner::MultiLevelPartition &partition;
 };
 }
 }

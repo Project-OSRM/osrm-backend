@@ -24,8 +24,8 @@
 
 #include "contractor/query_graph.hpp"
 
-#include "partition/cell_storage.hpp"
-#include "partition/multi_level_partition.hpp"
+#include "partitioner/cell_storage.hpp"
+#include "partitioner/multi_level_partition.hpp"
 
 #include "storage/shared_datatype.hpp"
 #include "storage/shared_memory_ownership.hpp"
@@ -912,8 +912,8 @@ class ContiguousInternalMemoryDataFacade<CH>
 template <> class ContiguousInternalMemoryAlgorithmDataFacade<MLD> : public AlgorithmDataFacade<MLD>
 {
     // MLD data
-    partition::MultiLevelPartitionView mld_partition;
-    partition::CellStorageView mld_cell_storage;
+    partitioner::MultiLevelPartitionView mld_partition;
+    partitioner::CellStorageView mld_cell_storage;
     customizer::CellMetricView mld_cell_metric;
     using QueryGraph = customizer::MultiLevelEdgeBasedGraphView;
     using GraphNode = QueryGraph::NodeArrayEntry;
@@ -939,7 +939,7 @@ template <> class ContiguousInternalMemoryAlgorithmDataFacade<MLD> : public Algo
             BOOST_ASSERT(data_layout.GetBlockSize(storage::DataLayout::MLD_CELL_TO_CHILDREN) > 0);
 
             auto level_data =
-                data_layout.GetBlockPtr<partition::MultiLevelPartitionView::LevelData>(
+                data_layout.GetBlockPtr<partitioner::MultiLevelPartitionView::LevelData>(
                     memory_block, storage::DataLayout::MLD_LEVEL_DATA);
 
             auto mld_partition_ptr = data_layout.GetBlockPtr<PartitionID>(
@@ -955,7 +955,7 @@ template <> class ContiguousInternalMemoryAlgorithmDataFacade<MLD> : public Algo
             util::vector_view<CellID> cell_to_children(mld_chilren_ptr, children_entries_count);
 
             mld_partition =
-                partition::MultiLevelPartitionView{level_data, partition, cell_to_children};
+                partitioner::MultiLevelPartitionView{level_data, partition, cell_to_children};
         }
 
         const auto weights_block_id = static_cast<storage::DataLayout::BlockID>(
@@ -988,7 +988,7 @@ template <> class ContiguousInternalMemoryAlgorithmDataFacade<MLD> : public Algo
                 memory_block, storage::DataLayout::MLD_CELL_SOURCE_BOUNDARY);
             auto mld_destination_boundary_ptr = data_layout.GetBlockPtr<NodeID>(
                 memory_block, storage::DataLayout::MLD_CELL_DESTINATION_BOUNDARY);
-            auto mld_cells_ptr = data_layout.GetBlockPtr<partition::CellStorageView::CellData>(
+            auto mld_cells_ptr = data_layout.GetBlockPtr<partitioner::CellStorageView::CellData>(
                 memory_block, storage::DataLayout::MLD_CELLS);
             auto mld_cell_level_offsets_ptr = data_layout.GetBlockPtr<std::uint64_t>(
                 memory_block, storage::DataLayout::MLD_CELL_LEVEL_OFFSETS);
@@ -1005,15 +1005,15 @@ template <> class ContiguousInternalMemoryAlgorithmDataFacade<MLD> : public Algo
                                                       source_boundary_entries_count);
             util::vector_view<NodeID> destination_boundary(mld_destination_boundary_ptr,
                                                            destination_boundary_entries_count);
-            util::vector_view<partition::CellStorageView::CellData> cells(mld_cells_ptr,
-                                                                          cells_entries_counts);
+            util::vector_view<partitioner::CellStorageView::CellData> cells(mld_cells_ptr,
+                                                                            cells_entries_counts);
             util::vector_view<std::uint64_t> level_offsets(mld_cell_level_offsets_ptr,
                                                            cell_level_offsets_entries_count);
 
-            mld_cell_storage = partition::CellStorageView{std::move(source_boundary),
-                                                          std::move(destination_boundary),
-                                                          std::move(cells),
-                                                          std::move(level_offsets)};
+            mld_cell_storage = partitioner::CellStorageView{std::move(source_boundary),
+                                                            std::move(destination_boundary),
+                                                            std::move(cells),
+                                                            std::move(level_offsets)};
         }
     }
     void InitializeGraphPointer(storage::DataLayout &data_layout, char *memory_block)
@@ -1050,12 +1050,12 @@ template <> class ContiguousInternalMemoryAlgorithmDataFacade<MLD> : public Algo
         InitializeInternalPointers(allocator->GetLayout(), allocator->GetMemory(), exclude_index);
     }
 
-    const partition::MultiLevelPartitionView &GetMultiLevelPartition() const override
+    const partitioner::MultiLevelPartitionView &GetMultiLevelPartition() const override
     {
         return mld_partition;
     }
 
-    const partition::CellStorageView &GetCellStorage() const override { return mld_cell_storage; }
+    const partitioner::CellStorageView &GetCellStorage() const override { return mld_cell_storage; }
 
     const customizer::CellMetricView &GetCellMetric() const override { return mld_cell_metric; }
 
