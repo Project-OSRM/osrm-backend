@@ -17,7 +17,7 @@ typedef RangeTable<BLOCK_SIZE, osrm::storage::Ownership::Container> TestRangeTab
 
 void ConstructionTest(std::vector<unsigned> lengths, std::vector<unsigned> offsets)
 {
-    BOOST_ASSERT(lengths.size() == offsets.size() - 1);
+    BOOST_CHECK_EQUAL(lengths.size(), offsets.size() - 1);
 
     TestRangeTable table(lengths);
 
