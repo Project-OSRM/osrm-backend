@@ -99,11 +99,6 @@ BOOST_AUTO_TEST_CASE(test_match_split)
                 waypoint_object.values.at("matchings_index").get<json::Number>().value;
             const auto waypoint_index =
                 waypoint_object.values.at("waypoint_index").get<json::Number>().value;
-            const auto &route_legs = matchings[matchings_index]
-                                         .get<json::Object>()
-                                         .values.at("legs")
-                                         .get<json::Array>()
-                                         .values;
 
             BOOST_CHECK_LT(matchings_index, number_of_matchings);
 
