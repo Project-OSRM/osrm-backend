@@ -105,7 +105,7 @@ class ValhallaDirectLoader extends OSRMBaseLoader {
         if (this.osrmIsRunning()) return callback(new Error("osrm-routed already running!"));
 
         var args = [this.inputFile, '1'];
-        this.child = child_process.execFile('/Users/danpat/mapbox/valhalla/valhalla_service', args, this.scope.environment, (err) => {
+        this.child = child_process.execFile(`${process.env.VALHALLA_HOME}/valhalla_service`, args, this.scope.environment, (err) => {
             if (err && err.signal !== 'SIGINT') {
                 this.child = null;
                 throw new Error(util.format('valhalla_service %s: %s', errorReason(err), err.cmd));

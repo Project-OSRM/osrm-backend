@@ -265,9 +265,12 @@ module.exports = function () {
                           `--mjolnir-timezone`, `${p.inputCacheDir}/${p.scenarioID}_valhalla_tiles/timezones.sqlite`,
                           `--mjolnir-admin`, `${p.inputCacheDir}/${p.scenarioID}_valhalla_tiles/admins.sqlite`];
 
-            child_process.execFile('/Users/danpat/mapbox/valhalla/scripts/valhalla_build_config', params, {}, (error, stdout, stderr) => {
+            child_process.execFile(`${process.env.VALHALLA_HOME}/scripts/valhalla_build_config`, params, {}, (error, stdout, stderr) => {
                 if (error) { throw error; }
-                fs.writeFile(`${p.inputCacheDir}/${p.scenarioID}_valhalla_config.json`, stdout, (err) => {
+                // Disable heirarchy calculation - it's slow, and not needed for small tests.
+                var config = JSON.parse(stdout);
+                config.mjolnir.hierarchy = false;
+                fs.writeFile(`${p.inputCacheDir}/${p.scenarioID}_valhalla_config.json`, JSON.stringify(config), (err) => {
                     if (err) throw err;
                     fs.writeFile(stamp, 'ok', callback);
                 })
@@ -283,7 +286,7 @@ module.exports = function () {
             var params = [`-c`,`${p.inputCacheDir}/${p.scenarioID}_valhalla_config.json`,
                           `${p.inputCacheFilePBF}`];
 
-            child_process.execFile('/Users/danpat/mapbox/valhalla/valhalla_build_tiles', params, {}, (error, stdout, stderr) => {
+            child_process.execFile(`${process.env.VALHALLA_HOME}/valhalla_build_tiles`, params, {}, (error, stdout, stderr) => {
                 if (error) { throw error; }
                 console.log(stdout);
                 console.log(stderr);
