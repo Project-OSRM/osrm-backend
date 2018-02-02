@@ -74,7 +74,7 @@ DinicMaxFlow::MinCut DinicMaxFlow::operator()(const BisectionGraphView &view,
         // check if the sink can be reached from the source, it's enough to check the border
         const auto separated = std::find_if(border_sink_nodes.begin(),
                                             border_sink_nodes.end(),
-                                            [&levels, &view](const auto node) {
+                                            [&levels](const auto node) {
                                                 return levels[node] != INVALID_LEVEL;
                                             }) == border_sink_nodes.end();
 
@@ -182,10 +182,10 @@ std::size_t DinicMaxFlow::BlockingFlow(FlowEdges &flow,
     std::size_t flow_increase = 0;
 
     // augment the flow along a path in the level graph
-    const auto augment_flow = [&flow, &view](const std::vector<NodeID> &path) {
+    const auto augment_flow = [&flow](const std::vector<NodeID> &path) {
 
         // add/remove flow edges from the current residual graph
-        const auto augment_one = [&flow, &view](const NodeID from, const NodeID to) {
+        const auto augment_one = [&flow](const NodeID from, const NodeID to) {
             // check if there is flow in the opposite direction
             auto existing_edge = flow[to].find(from);
             if (existing_edge != flow[to].end())

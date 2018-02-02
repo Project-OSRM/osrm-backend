@@ -214,7 +214,7 @@ updateSegmentData(const UpdaterConfig &config,
 
     using DirectionalGeometryID = extractor::SegmentDataContainer::DirectionalGeometryID;
     auto range = tbb::blocked_range<DirectionalGeometryID>(0, segment_data.GetNumberOfGeometries());
-    tbb::parallel_for(range, [&, LUA_SOURCE](const auto &range) {
+    tbb::parallel_for(range, [&](const auto &range) {
         auto &counters = segment_speeds_counters.local();
         std::vector<double> segment_lengths;
         for (auto geometry_id = range.begin(); geometry_id < range.end(); geometry_id++)

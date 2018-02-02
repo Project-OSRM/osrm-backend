@@ -143,7 +143,7 @@ Intersection MotorwayHandler::fromMotorway(const EdgeID via_eid, Intersection in
         return intersection[0].angle;
     };
 
-    const auto getMostLikelyContinue = [this, in_data](const Intersection &intersection) {
+    const auto getMostLikelyContinue = [this](const Intersection &intersection) {
         double angle = intersection[0].angle;
         double best = 180;
         for (const auto &road : intersection)
