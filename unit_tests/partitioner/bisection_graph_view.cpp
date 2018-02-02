@@ -2,6 +2,8 @@
 #include "partitioner/graph_generator.hpp"
 #include "partitioner/recursive_bisection_state.hpp"
 
+#include "util/debug.hpp"
+
 #include <algorithm>
 #include <climits>
 #include <vector>

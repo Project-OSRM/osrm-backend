@@ -1,19 +1,17 @@
 #ifndef OSRM_GUIDANCE_TURN_LANE_TYPES_HPP_
 #define OSRM_GUIDANCE_TURN_LANE_TYPES_HPP_
 
+#include "util/concurrent_id_map.hpp"
+#include "util/integer_range.hpp"
+#include "util/typedefs.hpp"
+
+#include <boost/functional/hash.hpp>
+
 #include <bitset>
 #include <cstddef>
 #include <cstdint>
 #include <numeric> //partial_sum
-#include <string>
-#include <unordered_map>
 #include <vector>
-
-#include <boost/functional/hash.hpp>
-
-#include "util/concurrent_id_map.hpp"
-#include "util/json_container.hpp"
-#include "util/typedefs.hpp"
 
 namespace osrm
 {
@@ -22,23 +20,23 @@ namespace extractor
 
 namespace TurnLaneType
 {
-namespace detail
+const constexpr std::size_t NUM_TYPES = 11;
+
+inline auto laneTypeToName(const std::size_t type_id)
 {
-const constexpr std::size_t num_supported_lane_types = 11;
-
-const constexpr char *translations[detail::num_supported_lane_types] = {"none",
-                                                                        "straight",
-                                                                        "sharp left",
-                                                                        "left",
-                                                                        "slight left",
-                                                                        "slight right",
-                                                                        "right",
-                                                                        "sharp right",
-                                                                        "uturn",
-                                                                        "merge to left",
-                                                                        "merge to right"};
-
-} // namespace detail
+    const static char *name[NUM_TYPES] = {"none",
+                                          "straight",
+                                          "sharp left",
+                                          "left",
+                                          "slight left",
+                                          "slight right",
+                                          "right",
+                                          "sharp right",
+                                          "uturn",
+                                          "merge to left",
+                                          "merge to right"};
+    return name[type_id];
+}
 
 typedef std::uint16_t Mask;
 const constexpr Mask empty = 0u;
@@ -54,30 +52,6 @@ const constexpr Mask uturn = 1u << 8u;
 const constexpr Mask merge_to_left = 1u << 9u;
 const constexpr Mask merge_to_right = 1u << 10u;
 
-inline std::string toString(const Mask lane_type)
-{
-    if (lane_type == 0)
-        return "none";
-
-    std::bitset<8 * sizeof(Mask)> mask(lane_type);
-    std::string result = "";
-    for (std::size_t lane_id_nr = 0; lane_id_nr < detail::num_supported_lane_types; ++lane_id_nr)
-        if (mask[lane_id_nr])
-            result += (result.empty() ? detail::translations[lane_id_nr]
-                                      : (std::string(";") + detail::translations[lane_id_nr]));
-
-    return result;
-}
-
-inline util::json::Array toJsonArray(const Mask lane_type)
-{
-    util::json::Array result;
-    std::bitset<8 * sizeof(Mask)> mask(lane_type);
-    for (std::size_t lane_id_nr = 0; lane_id_nr < detail::num_supported_lane_types; ++lane_id_nr)
-        if (mask[lane_id_nr])
-            result.values.push_back(detail::translations[lane_id_nr]);
-    return result;
-}
 } // TurnLaneType
 
 typedef std::vector<TurnLaneType::Mask> TurnLaneDescription;
@@ -93,8 +67,9 @@ struct TurnLaneDescription_hash
     }
 };
 
-typedef util::ConcurrentIDMap<TurnLaneDescription, LaneDescriptionID, TurnLaneDescription_hash>
-    LaneDescriptionMap;
+using LaneDescriptionMap = util::ConcurrentIDMap<TurnLaneDescription,
+                                                 LaneDescriptionID,
+                                                 TurnLaneDescription_hash>;
 
 using TurnLanesIndexedArray =
     std::tuple<std::vector<std::uint32_t>, std::vector<TurnLaneType::Mask>>;
