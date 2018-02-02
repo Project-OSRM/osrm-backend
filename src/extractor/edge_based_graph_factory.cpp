@@ -807,14 +807,14 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                     << "Turn is a u turn but not turning to the first connected "
                                        "edge of the intersection. Node ID: "
                                     << intersection_node << ", OSM link: "
-                                    << m_coordinates[intersection_node].toOSMLink();
+                                    << toOSMLink(m_coordinates[intersection_node]);
                             }
                             else if (turn == intersection_view.begin() && !is_uturn)
                             {
                                 util::Log(logWARNING)
                                     << "Turn is a u turn but not classified as a u turn. Node ID: "
                                     << intersection_node << ", OSM link: "
-                                    << m_coordinates[intersection_node].toOSMLink();
+                                    << toOSMLink(m_coordinates[intersection_node]);
                             }
 
                             // In case a way restriction starts at a given location, add a turn onto

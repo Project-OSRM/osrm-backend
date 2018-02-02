@@ -4,7 +4,7 @@
 #include <iostream>
 #include <string>
 
-#include "util/coordinate.hpp"
+#include "util/to_osm_link.hpp"
 
 #include <boost/assert.hpp>
 
@@ -19,8 +19,7 @@
     {                                                                                              \
         if (!static_cast<bool>(cond))                                                              \
         {                                                                                          \
-            ::osrm::util::FloatCoordinate c_(loc);                                                 \
-            std::cerr << "[Location] " << c_.toOSMLink() << '\n';                                  \
+            std::cerr << "[Location] " << ::osrm::util::toOSMLink(loc) << '\n';                    \
         }                                                                                          \
         BOOST_ASSERT_MSG(cond, msg);                                                               \
     } while (0)
