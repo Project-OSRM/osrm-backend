@@ -76,7 +76,7 @@ LaneDataVector laneDataFromDescription(TurnLaneDescription turn_lane_description
             return (test_mask & full_mask) == test_mask;
         };
 
-        for (std::size_t shift = 0; shift < TurnLaneType::detail::num_supported_lane_types; ++shift)
+        for (const auto shift : util::irange<std::size_t>(0, TurnLaneType::NUM_TYPES))
         {
             TurnLaneType::Mask mask = 1 << shift;
             if (isSet(mask))

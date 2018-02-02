@@ -10,6 +10,8 @@
 #include "engine/api/tile_parameters.hpp"
 #include "engine/api/trip_parameters.hpp"
 
+#include "util/debug.hpp"
+
 #include <boost/optional/optional_io.hpp>
 #include <boost/test/test_tools.hpp>
 #include <boost/test/unit_test.hpp>

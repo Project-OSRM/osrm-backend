@@ -46,6 +46,20 @@ inline bool hasValidLanes(const guidance::IntermediateIntersection &intersection
     return intersection.lanes.lanes_in_turn > 0;
 }
 
+inline util::json::Array toJSON(const extractor::TurnLaneType::Mask lane_type)
+{
+    util::json::Array result;
+    std::bitset<8 * sizeof(extractor::TurnLaneType::Mask)> mask(lane_type);
+    for (auto index : util::irange<std::size_t>(0, extractor::TurnLaneType::NUM_TYPES))
+    {
+        if (mask[index])
+        {
+            result.values.push_back(extractor::TurnLaneType::laneTypeToName(index));
+        }
+    }
+    return result;
+}
+
 util::json::Array lanesFromIntersection(const guidance::IntermediateIntersection &intersection)
 {
     BOOST_ASSERT(intersection.lanes.lanes_in_turn >= 1);
@@ -56,7 +70,7 @@ util::json::Array lanesFromIntersection(const guidance::IntermediateIntersection
     {
         --lane_id;
         util::json::Object lane;
-        lane.values["indications"] = extractor::TurnLaneType::toJsonArray(lane_desc);
+        lane.values["indications"] = toJSON(lane_desc);
         if (lane_id >= intersection.lanes.first_lane_from_the_right &&
             lane_id <
                 intersection.lanes.first_lane_from_the_right + intersection.lanes.lanes_in_turn)

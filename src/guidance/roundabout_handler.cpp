@@ -6,6 +6,7 @@
 #include "util/coordinate_calculation.hpp"
 #include "util/guidance/name_announcements.hpp"
 #include "util/log.hpp"
+#include "util/to_osm_link.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -177,7 +178,7 @@ bool RoundaboutHandler::qualifiesAsRoundaboutIntersection(
                 // but is at least not random.
                 if (src_coordinate == next_coordinate)
                 {
-                    util::Log(logDEBUG) << "Zero length segment at " << next_coordinate
+                    util::Log(logDEBUG) << "Zero length segment at " << toOSMLink(next_coordinate)
                                         << " could cause invalid roundabout exit bearings";
                     BOOST_ASSERT(std::abs(result.back()) <= 0.1);
                 }
@@ -210,7 +211,9 @@ RoundaboutType RoundaboutHandler::getRoundaboutType(const NodeID nid) const
     std::unordered_set<unsigned> connected_names;
 
     const auto getNextOnRoundabout = [this, &roundabout_name_ids, &connected_names](
-        const NodeID node, const bool roundabout, const bool circular) {
+                                         const NodeID node,
+                                         const bool roundabout,
+                                         const bool circular) {
         BOOST_ASSERT(roundabout != circular);
         EdgeID continue_edge = SPECIAL_EDGEID;
         for (const auto edge_id : node_based_graph.GetAdjacentEdgeRange(node))

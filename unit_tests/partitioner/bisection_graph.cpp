@@ -1,6 +1,8 @@
 #include "partitioner/bisection_graph.hpp"
 #include "partitioner/graph_generator.hpp"
 
+#include "util/debug.hpp"
+
 #include <algorithm>
 #include <vector>
 

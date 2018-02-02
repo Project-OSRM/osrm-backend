@@ -1,5 +1,6 @@
 #include "engine/douglas_peucker.hpp"
 #include "util/coordinate_calculation.hpp"
+#include "util/debug.hpp"
 
 #include <boost/test/test_case_template.hpp>
 #include <boost/test/unit_test.hpp>

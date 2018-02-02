@@ -1,5 +1,7 @@
 #include "guidance/turn_classification.hpp"
 
+#include "util/to_osm_link.hpp"
+
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
@@ -56,8 +58,10 @@ classifyIntersection(Intersection intersection, const osrm::util::Coordinate &lo
             if (road.entry_allowed)
             {
                 if (!entry_class.activate(number))
+                {
                     util::Log(logWARNING) << "Road " << number << " was not activated at "
-                                          << location;
+                                          << util::toOSMLink(location);
+                }
             }
 
             auto discrete_bearing_class =
@@ -74,8 +78,10 @@ classifyIntersection(Intersection intersection, const osrm::util::Coordinate &lo
             if (road.entry_allowed)
             {
                 if (!entry_class.activate(number))
+                {
                     util::Log(logWARNING) << "Road " << number << " was not activated at "
-                                          << location;
+                                          << util::toOSMLink(location);
+                }
             }
             bearing_class.add(std::round(road.bearing));
             ++number;
