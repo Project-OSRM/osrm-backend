@@ -27,6 +27,8 @@
 #include <boost/assert.hpp>
 #include <boost/filesystem/operations.hpp>
 
+#include <tbb/task_scheduler_init.h>
+
 #include "util/geojson_debug_logger.hpp"
 #include "util/geojson_debug_policies.hpp"
 #include "util/json_container.hpp"
@@ -128,6 +130,9 @@ auto getGraphBisection(const PartitionerConfig &config)
 
 int Partitioner::Run(const PartitionerConfig &config)
 {
+    tbb::task_scheduler_init init(config.requested_num_threads);
+    BOOST_ASSERT(init.is_active());
+
     const std::vector<BisectionID> &node_based_partition_ids = getGraphBisection(config);
 
     // Up until now we worked on the compressed node based graph.

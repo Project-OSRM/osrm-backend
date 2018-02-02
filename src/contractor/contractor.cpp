@@ -35,6 +35,9 @@
 #include <memory>
 #include <vector>
 
+#include <boost/assert.hpp>
+
+#include <tbb/task_scheduler_init.h>
 namespace osrm
 {
 namespace contractor
@@ -42,6 +45,9 @@ namespace contractor
 
 int Contractor::Run()
 {
+    tbb::task_scheduler_init init(config.requested_num_threads);
+    BOOST_ASSERT(init.is_active());
+
     if (config.core_factor != 1.0)
     {
         util::Log(logWARNING)

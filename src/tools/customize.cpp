@@ -166,8 +166,6 @@ int main(int argc, char *argv[]) try
         return EXIT_FAILURE;
     }
 
-    tbb::task_scheduler_init init(customization_config.requested_num_threads);
-
     auto exitcode = customizer::Customizer().Run(customization_config);
 
     util::DumpMemoryStats();

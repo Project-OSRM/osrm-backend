@@ -37,6 +37,7 @@
 
 #include "extractor/tarjan_scc.hpp"
 
+#include <boost/assert.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/iterator/function_input_iterator.hpp>
@@ -193,6 +194,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     const auto number_of_threads = std::min(recommended_num_threads, config.requested_num_threads);
     tbb::task_scheduler_init init(number_of_threads ? number_of_threads
                                                     : tbb::task_scheduler_init::automatic);
+    BOOST_ASSERT(init.is_active());
 
     guidance::LaneDescriptionMap turn_lane_map;
     std::vector<TurnRestriction> turn_restrictions;
