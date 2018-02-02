@@ -187,8 +187,6 @@ int main(int argc, char *argv[]) try
     util::Log() << "Input file: " << contractor_config.base_path.string() << ".osrm";
     util::Log() << "Threads: " << contractor_config.requested_num_threads;
 
-    tbb::task_scheduler_init init(contractor_config.requested_num_threads);
-
     osrm::contract(contractor_config);
 
     util::DumpSTXXLStats();

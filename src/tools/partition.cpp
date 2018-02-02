@@ -10,7 +10,6 @@
 #include <tbb/task_scheduler_init.h>
 
 #include <boost/algorithm/string/join.hpp>
-#include <boost/assert.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 #include <boost/range/adaptor/transformed.hpp>
@@ -235,8 +234,6 @@ int main(int argc, char *argv[]) try
         return EXIT_FAILURE;
     }
 
-    tbb::task_scheduler_init init(partition_config.requested_num_threads);
-    BOOST_ASSERT(init.is_active());
     util::Log() << "Computing recursive bisection";
 
     TIMER_START(bisect);

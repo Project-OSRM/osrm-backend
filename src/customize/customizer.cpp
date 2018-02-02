@@ -18,6 +18,10 @@
 #include "util/log.hpp"
 #include "util/timing_util.hpp"
 
+#include <boost/assert.hpp>
+
+#include <tbb/task_scheduler_init.h>
+
 namespace osrm
 {
 namespace customizer
@@ -115,6 +119,9 @@ std::vector<CellMetric> customizeFilteredMetrics(const MultiLevelEdgeBasedGraph 
 
 int Customizer::Run(const CustomizationConfig &config)
 {
+    tbb::task_scheduler_init init(config.requested_num_threads);
+    BOOST_ASSERT(init.is_active());
+
     TIMER_START(loading_data);
 
     partitioner::MultiLevelPartition mlp;
