@@ -79,7 +79,7 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
     {
         auto results = rtree.Nearest(
             input_coordinate,
-            [this, approach, &input_coordinate, bearing, bearing_range, max_distance](
+            [this, approach, &input_coordinate, bearing, bearing_range](
                 const CandidateSegment &segment) {
                 auto use_direction =
                     boolPairAnd(CheckSegmentBearing(segment, bearing, bearing_range),

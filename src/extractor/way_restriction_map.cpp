@@ -241,7 +241,7 @@ NodeID WayRestrictionMap::RemapIfRestricted(const NodeID edge_based_node,
 
     // returns true if the ID saved in an iterator belongs to a turn restriction that references
     // node_based_to as destination of the `in_restriction`
-    const auto restriction_targets_to = [node_based_to, this](const auto &pair) {
+    const auto restriction_targets_to = [node_based_to](const auto &pair) {
         return pair.second->AsWayRestriction().in_restriction.to == node_based_to;
     };
     const auto itr = std::find_if(range.first, range.second, restriction_targets_to);

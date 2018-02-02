@@ -534,7 +534,6 @@ void encodeVectorTile(const DataFacadeBase &facade,
                     line_string_index.add(name);
 
                     const auto encode_tile_line = [&line_layer_writer,
-                                                   &edge,
                                                    &component_id,
                                                    &id,
                                                    &max_datasource_id,
