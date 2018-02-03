@@ -320,8 +320,37 @@ if (ENABLE_SANITIZER)
 endif()
 
 # Configuring compilers
+
+# Common GCC/clang flags for better diagnostics
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+  set(CXX_FLAGS_WARN "${CXX_FLAGS_WARN} -Wall -Wextra -Wuninitialized -Wunreachable-code")
+  set(CXX_FLAGS_WARN "${CXX_FLAGS_WARN} -Wsign-compare -Wsign-conversion") # MSVC C4018
+  set(CXX_FLAGS_WARN "${CXX_FLAGS_WARN} -Wunused-variable") # MSVC C4101
+  set(CXX_FLAGS_WARN "${CXX_FLAGS_WARN} -Wshadow") # MSVC C2082, C4456, C4457, 
+  set(CXX_FLAGS_WARN "${CXX_FLAGS_WARN} -Wconversion") # MSVC C4267, C4305, C4309
+  set(CXX_FLAGS_WARN "${CXX_FLAGS_WARN} -Wdiv-by-zero") # MSVC C4723
+  if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    set(CXX_FLAGS_WARN "${CXX_FLAGS_WARN} -Wstrict-overflow=2")
+    set(CXX_FLAGS_WARN "${CXX_FLAGS_WARN} -Wshorten-64-to-32")
+    #set(CXX_FLAGS_WARN "${CXX_FLAGS_WARN} -Winconsistent-missing-override")
+    set(CXX_FLAGS_WARN "${CXX_FLAGS_WARN} -Wno-unused-command-line-argument")
+  else()
+    set(CXX_FLAGS_WARN "${CXX_FLAGS_WARN} -Wstrict-overflow=1")
+    set(CXX_FLAGS_WARN "${CXX_FLAGS_WARN} -Wbool-compare") # MSVC C4800
+    # TODO: GCC 7 option, skip for earlier versions
+    #set(CXX_FLAGS_WARN "${CXX_FLAGS_WARN} -Wbool-operation")
+    set(CXX_FLAGS_WARN "${CXX_FLAGS_WARN} -Wsuggest-override")
+  endif()
+  
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic ${CXX_FLAGS_WARN} -ftemplate-depth=1024")
+
+  remove_definitions(-U_FORTIFY_SOURCE)
+  add_definitions(-D_FORTIFY_SOURCE=2)
+endif()
+
+# Compiler-specific flags
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -Wuninitialized -Wunreachable-code -Wstrict-overflow=2 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fPIC -fcolor-diagnostics -ftemplate-depth=1024 -Wno-unused-command-line-argument")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -fcolor-diagnostics")
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
   set(COLOR_FLAG "-fdiagnostics-color=auto")
   check_cxx_compiler_flag("-fdiagnostics-color=auto" HAS_COLOR_FLAG)
@@ -329,7 +358,7 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     set(COLOR_FLAG "")
   endif()
   # using GCC
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -Wuninitialized -Wunreachable-code -Wstrict-overflow=1 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 ${COLOR_FLAG} -fPIC -ftemplate-depth=1024")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC ${COLOR_FLAG}")
   if(WIN32) # using mingw
     add_dependency_defines(-DWIN32)
     set(OPTIONAL_SOCKET_LIBS ws2_32 wsock32)
