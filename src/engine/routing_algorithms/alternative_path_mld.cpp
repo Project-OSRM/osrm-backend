@@ -544,6 +544,7 @@ void unpackPackedPaths(InputIt first,
                                                                                 reverse_heap,
                                                                                 DO_NOT_FORCE_LOOPS,
                                                                                 DO_NOT_FORCE_LOOPS,
+                                                                                false,
                                                                                 INVALID_EDGE_WEIGHT,
                                                                                 sublevel,
                                                                                 parent_cell_id);

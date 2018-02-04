@@ -87,6 +87,7 @@ InternalRouteResult directShortestPathSearch(SearchEngineData<mld::Algorithm> &e
                                                                    reverse_heap,
                                                                    DO_NOT_FORCE_LOOPS,
                                                                    DO_NOT_FORCE_LOOPS,
+                                                                   false,
                                                                    INVALID_EDGE_WEIGHT,
                                                                    phantom_nodes);
 
