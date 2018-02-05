@@ -1,8 +1,8 @@
 #ifndef OSRM_UTIL_RECTANGLE_HPP
 #define OSRM_UTIL_RECTANGLE_HPP
 
-#include "util/coordinate_calculation.hpp"
 #include "util/coordinate.hpp"
+#include "util/coordinate_calculation.hpp"
 
 #include <boost/assert.hpp>
 

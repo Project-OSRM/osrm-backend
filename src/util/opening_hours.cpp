@@ -137,12 +137,12 @@ struct opening_hours_grammar : qi::grammar<Iterator, Skipper, std::vector<Openin
         using qi::_a;
         using qi::_b;
         using qi::_c;
-        using qi::_r1;
         using qi::_pass;
+        using qi::_r1;
         using qi::_val;
+        using qi::char_;
         using qi::eoi;
         using qi::lit;
-        using qi::char_;
         using qi::uint_;
         using oh = osrm::util::OpeningHours;
 

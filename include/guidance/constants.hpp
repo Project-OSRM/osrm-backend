@@ -13,8 +13,8 @@ using extractor::intersection::STRAIGHT_ANGLE;
 // if a turn deviates this much from going straight, it will be kept straight
 using extractor::intersection::MAXIMAL_ALLOWED_NO_TURN_DEVIATION;
 // angle that lies between two nearly indistinguishable roads
-using extractor::intersection::NARROW_TURN_ANGLE;
 using extractor::intersection::GROUP_ANGLE;
+using extractor::intersection::NARROW_TURN_ANGLE;
 // angle difference that can be classified as straight, if its the only narrow turn
 using extractor::intersection::FUZZY_ANGLE_DIFFERENCE;
 

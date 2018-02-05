@@ -115,8 +115,8 @@ std::pair<bool, double> findMergedBearing(const util::NodeBasedDynamicGraph &gra
     // Function returns a pair with a flag and a value of bearing for merged roads
     // If the flag is false the bearing must not be used as a merged value at neighbor intersections
 
-    using util::bearing::angleBetween;
     using util::angularDeviation;
+    using util::bearing::angleBetween;
 
     const auto &lhs = edge_geometries[lhs_index];
     const auto &rhs = edge_geometries[rhs_index];

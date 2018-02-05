@@ -3,8 +3,8 @@
 
 #include "util/bearing.hpp"
 #include "util/coordinate_calculation.hpp"
-#include "util/web_mercator.hpp"
 #include "util/debug.hpp"
+#include "util/web_mercator.hpp"
 
 #include <osrm/coordinate.hpp>
 

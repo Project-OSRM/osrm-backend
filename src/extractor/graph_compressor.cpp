@@ -186,9 +186,9 @@ void GraphCompressor::Compress(
                 const auto selectAnnotation = [&node_data_container](
                     const AnnotationID front_annotation, const AnnotationID back_annotation) {
                     // A lane has tags: u - (front) - v - (back) - w
-                    // During contraction, we keep only one of the tags. Usually the one closer to
-                    // the intersection is preferred. If its empty, however, we keep the non-empty
-                    // one
+                    // During contraction, we keep only one of the tags. Usually the one closer
+                    // to the intersection is preferred. If its empty, however, we keep the
+                    // non-empty one
                     if (node_data_container[back_annotation].lane_description_id ==
                         INVALID_LANE_DESCRIPTIONID)
                         return front_annotation;

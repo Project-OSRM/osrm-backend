@@ -32,8 +32,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace osrm
 {
-using util::exception;
 using util::RuntimeError;
+using util::exception;
 }
 
 #endif

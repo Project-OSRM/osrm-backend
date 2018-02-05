@@ -8,8 +8,8 @@ BOOST_AUTO_TEST_SUITE(opening_hours)
 
 // Some tests from https://www.netzwolf.info/en/cartography/osm/time_domain/explanation
 
-using osrm::util::ParseOpeningHours;
 using osrm::util::CheckOpeningHours;
+using osrm::util::ParseOpeningHours;
 
 // convert a string representation of time to a tm structure
 struct tm time(const char *str)

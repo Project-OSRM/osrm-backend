@@ -94,7 +94,6 @@ inline std::ostream &operator<<(std::ostream &out, const IntersectionViewData &v
 }
 }
 
-
 namespace TurnLaneType
 {
 inline std::ostream &operator<<(std::ostream &out, const Mask lane_type)
@@ -185,7 +184,6 @@ inline std::ostream &operator<<(std::ostream &out, const LaneDataVector &turn_la
     return out;
 }
 }
-
 }
 }
 

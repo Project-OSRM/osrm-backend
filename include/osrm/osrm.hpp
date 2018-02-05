@@ -38,12 +38,12 @@ namespace osrm
 {
 namespace json = util::json;
 using engine::EngineConfig;
+using engine::api::MatchParameters;
+using engine::api::NearestParameters;
 using engine::api::RouteParameters;
 using engine::api::TableParameters;
-using engine::api::NearestParameters;
-using engine::api::TripParameters;
-using engine::api::MatchParameters;
 using engine::api::TileParameters;
+using engine::api::TripParameters;
 
 /**
  * Represents a Open Source Routing Machine with access to its services.
