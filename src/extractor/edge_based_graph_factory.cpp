@@ -519,9 +519,10 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                     &scripting_environment,
                                     weight_multiplier,
                                     &conditional_restriction_map](
-            // what nodes will be used? In most cases this will be the id stored in the edge_data.
-            // In case of duplicated nodes (e.g. due to via-way restrictions), one/both of these
-            // might refer to a newly added edge based node
+            // what nodes will be used? In most cases this will be the id
+            // stored in the edge_data. In case of duplicated nodes (e.g.
+            // due to via-way restrictions), one/both of these might
+            // refer to a newly added edge based node
             const auto edge_based_node_from,
             const auto edge_based_node_to,
             // the situation of the turn

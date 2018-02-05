@@ -35,10 +35,10 @@ template <typename Iterator> struct iso_8601_grammar : qi::grammar<Iterator, uns
         using qi::_c;
         using qi::_pass;
         using qi::_val;
+        using qi::char_;
         using qi::eoi;
         using qi::eps;
         using qi::uint_;
-        using qi::char_;
 
         hh = uint2_p[_pass = bind([](unsigned x) { return x < 24; }, _1), _val = _1];
         mm = uint2_p[_pass = bind([](unsigned x) { return x < 60; }, _1), _val = _1];

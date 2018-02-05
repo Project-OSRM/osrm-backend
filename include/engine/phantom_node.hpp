@@ -30,9 +30,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "extractor/travel_mode.hpp"
 
-#include "util/typedefs.hpp"
 #include "util/bearing.hpp"
 #include "util/coordinate.hpp"
+#include "util/typedefs.hpp"
 
 #include <boost/assert.hpp>
 
@@ -195,7 +195,6 @@ struct PhantomNodes
     PhantomNode source_phantom;
     PhantomNode target_phantom;
 };
-
 }
 }
 

@@ -70,27 +70,27 @@ LaneDataVector laneDataFromDescription(TurnLaneDescription turn_lane_description
     // TODO need to handle cases that have none-in between two identical values
     const auto num_lanes = boost::numeric_cast<LaneID>(turn_lane_description.size());
 
-    const auto setLaneData = [&](
-        LaneMap &map, TurnLaneType::Mask full_mask, const LaneID current_lane) {
-        const auto isSet = [&](const TurnLaneType::Mask test_mask) -> bool {
-            return (test_mask & full_mask) == test_mask;
-        };
+    const auto setLaneData =
+        [&](LaneMap &map, TurnLaneType::Mask full_mask, const LaneID current_lane) {
+            const auto isSet = [&](const TurnLaneType::Mask test_mask) -> bool {
+                return (test_mask & full_mask) == test_mask;
+            };
 
-        for (const auto shift : util::irange<std::size_t>(0, TurnLaneType::NUM_TYPES))
-        {
-            TurnLaneType::Mask mask = 1 << shift;
-            if (isSet(mask))
+            for (const auto shift : util::irange<std::size_t>(0, TurnLaneType::NUM_TYPES))
             {
-                auto map_iterator = map.find(mask);
-                if (map_iterator == map.end())
-                    map[mask] = std::make_pair(current_lane, current_lane);
-                else
+                TurnLaneType::Mask mask = 1 << shift;
+                if (isSet(mask))
                 {
-                    map_iterator->second.first = current_lane;
+                    auto map_iterator = map.find(mask);
+                    if (map_iterator == map.end())
+                        map[mask] = std::make_pair(current_lane, current_lane);
+                    else
+                    {
+                        map_iterator->second.first = current_lane;
+                    }
                 }
             }
-        }
-    };
+        };
 
     LaneMap lane_map;
     LaneID lane_nr = num_lanes - 1;

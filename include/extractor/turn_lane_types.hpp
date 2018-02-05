@@ -67,9 +67,8 @@ struct TurnLaneDescription_hash
     }
 };
 
-using LaneDescriptionMap = util::ConcurrentIDMap<TurnLaneDescription,
-                                                 LaneDescriptionID,
-                                                 TurnLaneDescription_hash>;
+using LaneDescriptionMap =
+    util::ConcurrentIDMap<TurnLaneDescription, LaneDescriptionID, TurnLaneDescription_hash>;
 
 using TurnLanesIndexedArray =
     std::tuple<std::vector<std::uint32_t>, std::vector<TurnLaneType::Mask>>;

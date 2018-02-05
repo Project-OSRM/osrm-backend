@@ -83,8 +83,8 @@ inline unsigned generateServerProgramOptions(const int argc,
                                              EngineConfig &config,
                                              int &requested_thread_num)
 {
-    using boost::program_options::value;
     using boost::filesystem::path;
+    using boost::program_options::value;
 
     const auto hardware_threads = std::max<int>(1, std::thread::hardware_concurrency());
 

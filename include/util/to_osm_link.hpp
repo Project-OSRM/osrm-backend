@@ -28,5 +28,4 @@ inline std::string toOSMLink(const util::Coordinate &c)
 }
 }
 
-
 #endif

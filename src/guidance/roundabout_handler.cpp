@@ -211,9 +211,7 @@ RoundaboutType RoundaboutHandler::getRoundaboutType(const NodeID nid) const
     std::unordered_set<unsigned> connected_names;
 
     const auto getNextOnRoundabout = [this, &roundabout_name_ids, &connected_names](
-                                         const NodeID node,
-                                         const bool roundabout,
-                                         const bool circular) {
+        const NodeID node, const bool roundabout, const bool circular) {
         BOOST_ASSERT(roundabout != circular);
         EdgeID continue_edge = SPECIAL_EDGEID;
         for (const auto edge_id : node_based_graph.GetAdjacentEdgeRange(node))
