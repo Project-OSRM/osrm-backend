@@ -1,6 +1,7 @@
 # UNRELEASED
   - Changes from 5.15.1:
     - Guidance
+      - CHANGED #4854: Removed maneuverSucceededBySuppressedDirection collapsing scenario
       - CHANGED #4830: Announce reference change if names are empty
       - CHANGED #4835: MAXIMAL_ALLOWED_SEPARATION_WIDTH increased to 12 meters
     - Profile:

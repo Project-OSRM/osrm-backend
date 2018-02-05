@@ -410,7 +410,6 @@ RouteSteps collapseTurnInstructions(RouteSteps steps)
         }
         else if (maneuverSucceededByNameChange(current_step, next_step) ||
                  nameChangeImmediatelyAfterSuppressed(current_step, next_step) ||
-                 maneuverSucceededBySuppressedDirection(current_step, next_step) ||
                  closeChoicelessTurnAfterTurn(current_step, next_step))
         {
             combineRouteSteps(*current_step,
