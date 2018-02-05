@@ -1,7 +1,5 @@
 # UNRELEASED
-  - Changes from 5.15.0:
-    - Bugfixes:
-      - FIXED: Segfault in map matching when RouteLeg collapsing code is run on a match with multiple submatches
+  - Changes from 5.15.1:
     - Guidance
       - CHANGED #4830: Announce reference change if names are empty
       - CHANGED #4835: MAXIMAL_ALLOWED_SEPARATION_WIDTH increased to 12 meters
@@ -9,6 +7,13 @@
       - FIXED: `highway=service` will now be used for restricted access, `access=private` is still disabled for snapping.
       - ADDED #4775: Exposes more information to the turn function, now being able to set turn weights with highway and access information of the turn as well as other roads at the intersection [#4775](https://github.com/Project-OSRM/osrm-backend/issues/4775)
       - FIXED: #4763: Add support for non-numerical units in car profile for maxheight [#4763](https://github.com/Project-OSRM/osrm-backend/issues/4763)
+
+# 5.15.1
+  - Changes from 5.15.0:
+    - Bugfixes:
+      - FIXED: Segfault in map matching when RouteLeg collapsing code is run on a match with multiple submatches
+    - Guidance:
+      - Set type of trivial intersections where classes change to Suppressed instead of NoTurn
 
 # 5.15.0
   - Changes from 5.14.3:
