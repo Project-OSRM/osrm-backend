@@ -11,7 +11,11 @@ namespace guidance
 {
 
 // Maximum length in meters of an internal intersection edge
-constexpr float kMaxInternalLength = 32.0f;
+constexpr auto INTERNAL_LENGTH_MAX = 32.0f;
+
+// The lower and upper bound internal straight values
+constexpr auto INTERNAL_STRAIGHT_LOWER_BOUND = 150.0;
+constexpr auto INTERNAL_STRAIGHT_UPPER_BOUND = 210.0;
 
 struct EdgeInfo
 {
@@ -86,6 +90,11 @@ std::unordered_set<EdgeID> findSegregatedNodes(const extractor::NodeBasedGraphFa
         return flags.is_split || (!flags.is_split && flags.forward && flags.backward);
     };
 
+    auto is_internal_straight = [](auto const turn_degree) {
+        return (turn_degree > INTERNAL_STRAIGHT_LOWER_BOUND &&
+                turn_degree < INTERNAL_STRAIGHT_UPPER_BOUND);
+    };
+
     auto isSegregated = [&](NodeID node1,
                             std::vector<EdgeInfo> v1,
                             std::vector<EdgeInfo> v2,
@@ -93,11 +102,12 @@ std::unordered_set<EdgeID> findSegregatedNodes(const extractor::NodeBasedGraphFa
                             double edge_length) {
         // Internal intersection edges must be short and cannot be a roundabout
         // TODO adjust length as needed with lamda
-        if (edge_length > kMaxInternalLength || current.flags.roundabout)
+        if (edge_length > INTERNAL_LENGTH_MAX || current.flags.roundabout)
         {
             return false;
         }
 
+        // Look for oneway inbound edge
         bool oneway_inbound = false;
         for (auto const &edge_from : v1)
         {
@@ -118,10 +128,8 @@ std::unordered_set<EdgeID> findSegregatedNodes(const extractor::NodeBasedGraphFa
                 }
 
                 // Get the turn degree from the inbound edge to the current edge
-                auto const turn_degree = get_angle(edge_from.node, edge_inbound, current.edge);
                 // Skip if the inbound edge is not somewhat perpendicular to the current edge
-                // TODO add turn degree lamda
-                if (turn_degree > 150 && turn_degree < 210)
+                if (is_internal_straight(get_angle(edge_from.node, edge_inbound, current.edge)))
                 {
                     continue;
                 }
@@ -138,6 +146,7 @@ std::unordered_set<EdgeID> findSegregatedNodes(const extractor::NodeBasedGraphFa
             return false;
         }
 
+        // Look for oneway outbound edge
         bool oneway_outbound = false;
         for (auto const &edge_to : v2)
         {
@@ -155,10 +164,8 @@ std::unordered_set<EdgeID> findSegregatedNodes(const extractor::NodeBasedGraphFa
                 }
 
                 // Get the turn degree from the current edge to the outbound edge
-                auto const turn_degree = get_angle(node1, current.edge, edge_to.edge);
                 // Skip if the outbound edge is not somewhat perpendicular to the current edge
-                // TODO add turn degree lamda
-                if (turn_degree > 150 && turn_degree < 210)
+                if (is_internal_straight(get_angle(node1, current.edge, edge_to.edge)))
                 {
                     continue;
                 }
@@ -174,11 +181,6 @@ std::unordered_set<EdgeID> findSegregatedNodes(const extractor::NodeBasedGraphFa
         {
             return false;
         }
-
-        // TODO - determine if we need to add name checks
-
-        // TODO - do we need to check headings of the inbound and outbound
-        // oneway edges
 
         // Assume this is an intersection internal edge
         return true;
