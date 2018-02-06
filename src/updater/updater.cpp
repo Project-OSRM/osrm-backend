@@ -143,6 +143,8 @@ void checkWeightsConsistency(
 }
 #endif
 
+static const constexpr std::size_t LUA_SOURCE = 0;
+
 tbb::concurrent_vector<GeometryID>
 updateSegmentData(const UpdaterConfig &config,
                   const extractor::ProfileProperties &profile_properties,
@@ -157,7 +159,6 @@ updateSegmentData(const UpdaterConfig &config,
     std::size_t num_counters = config.segment_speed_lookup_paths.size() + 1;
     tbb::enumerable_thread_specific<counters_type> segment_speeds_counters(
         counters_type(num_counters, 0));
-    const constexpr auto LUA_SOURCE = 0;
 
     // closure to convert SpeedSource value to weight and count fallbacks to durations
     std::atomic<std::uint32_t> fallbacks_to_duration{0};
