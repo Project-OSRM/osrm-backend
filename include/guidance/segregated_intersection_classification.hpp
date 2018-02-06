@@ -12,6 +12,7 @@ class NameTable;
 namespace extractor
 {
 class NodeBasedGraphFactory;
+
 }
 
 namespace guidance
