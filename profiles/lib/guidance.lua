@@ -6,19 +6,19 @@ local Guidance = {}
 -- Guidance: Default Mapping from roads to types/priorities
 highway_classes = {
   motorway = road_priority_class.motorway,
-  motorway_link = road_priority_class.link_road,
+  motorway_link = road_priority_class.motorway_link,
   trunk = road_priority_class.trunk,
-  trunk_link = road_priority_class.link_road,
+  trunk_link = road_priority_class.trunk_link,
   primary = road_priority_class.primary,
-  primary_link = road_priority_class.link_road,
+  primary_link = road_priority_class.primary_link,
   secondary = road_priority_class.secondary,
-  secondary_link = road_priority_class.link_road,
+  secondary_link = road_priority_class.secondary_link,
   tertiary = road_priority_class.tertiary,
-  tertiary_link = road_priority_class.link_road,
-  unclassified = road_priority_class.side_residential,
-  residential = road_priority_class.side_residential,
-  service = road_priority_class.connectivity,
-  living_street = road_priority_class.main_residential,
+  tertiary_link = road_priority_class.tertiary_link,
+  unclassified = road_priority_class.unclassified,
+  residential = road_priority_class.main_residential,
+  service = road_priority_class.alley,
+  living_street = road_priority_class.side_residential,
   track = road_priority_class.bike_path,
   path = road_priority_class.bike_path,
   footway = road_priority_class.foot_path,
@@ -60,6 +60,14 @@ link_types = Set {
   'tertiary_link'
 }
 
+-- roads like parking lots are very unimportant for normal driving
+parking_class = Set{
+    'parking_aisle',
+    'driveway',
+    'drive-through',
+    'emergency_access'
+}
+
 function Guidance.set_classification (highway, result, input_way)
   if motorway_types[highway] then
     result.road_classification.motorway_class = true;
@@ -67,10 +75,30 @@ function Guidance.set_classification (highway, result, input_way)
   if link_types[highway] then
     result.road_classification.link_class = true;
   end
-  if highway_classes[highway] ~= nil then
-    result.road_classification.road_priority_class = highway_classes[highway]
+
+  -- we distinguish between different service types, if specified, we recognise parking and alleys.
+  -- If we see an unrecognised type, we assume a pure connectivity road. All unspecified are recognised as alley
+  if highway ~= nil and highway == 'service' then
+    local service_type = input_way:get_value_by_key('service');
+    if service_type ~= nil and parking_class[service_type] then
+      result.road_classification.road_priority_class = road_priority_class.parking;
+    else
+      if service_type ~= nil and service_type == 'alley' then
+        result.road_classification.road_priority_class = road_priority_class.alley;
+      else
+        if serice_type == nil then
+          result.road_classification.road_priority_class = road_priority_class.alley;
+        else
+          result.road_classification.road_priority_class = highway_classes[highway]
+        end
+      end
+    end
   else
-    result.road_classification.road_priority_class = default_highway_class
+    if highway_classes[highway] ~= nil then
+      result.road_classification.road_priority_class = highway_classes[highway]
+    else
+      result.road_classification.road_priority_class = default_highway_class
+    end
   end
   if road_types[highway] then
     result.road_classification.may_be_ignored = false;
@@ -137,7 +165,7 @@ function Guidance.get_turn_lanes(way,data)
   local psv_fw, psv_bw = get_psv_counts(way,data)
   local turn_lanes_fw, turn_lanes_bw = Tags.get_forward_backward_by_key(way,data,'turn:lanes')
   local vehicle_lanes_fw, vehicle_lanes_bw = Tags.get_forward_backward_by_key(way,data,'vehicle:lanes')
-  
+
   --note: backward lanes swap psv_bw and psv_fw
   return process_lanes(turn_lanes_fw,vehicle_lanes_fw,psv_bw,psv_fw) or turn_lanes,
          process_lanes(turn_lanes_bw,vehicle_lanes_bw,psv_fw,psv_bw) or turn_lanes

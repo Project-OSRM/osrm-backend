@@ -152,7 +152,7 @@ Feature: Turn Function Information
         And stdout should contain "number_of_roads 3"
         And stdout should contain "source_priority_class 4"
         And stdout should contain "target_priority_class 0"
-        And stdout should contain "target_priority_class 11"
+        And stdout should contain "target_priority_class 10"
         # turning abd, give information about bc
         And stdout should contain /roads_on_the_right \[1\] speed: [0-9]+, is_incoming: false, is_outgoing: true, highway_turn_classification: 4, access_turn_classification: 0/
         # turning abc, give information about bd
@@ -180,7 +180,3 @@ Feature: Turn Function Information
         And stdout should contain /roads_on_the_right \[1\] speed: [0-9]+, is_incoming: true, is_outgoing: false, highway_turn_classification: 3, access_turn_classification: 0/
         # turning abc, give information about about db
         And stdout should contain /roads_on_the_left \[1\] speed: [0-9]+, is_incoming: true, is_outgoing: false, highway_turn_classification: 0, access_turn_classification: 1/
-
-
-
-
