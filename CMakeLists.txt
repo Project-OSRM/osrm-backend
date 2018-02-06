@@ -43,7 +43,6 @@ if(ENABLE_MASON)
   set(MASON_LUA_VERSION "5.2.4")
   set(MASON_BZIP2_VERSION "1.0.6")
   set(MASON_TBB_VERSION "2017_U7")
-  set(MASON_LIBSHP_VERSION "1.3.0")
 
   message(STATUS "Enabling mason")
 

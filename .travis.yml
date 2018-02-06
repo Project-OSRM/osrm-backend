@@ -68,7 +68,7 @@ matrix:
       addons: &gcc7
         apt:
           sources: ['ubuntu-toolchain-r-test']
-          packages: ['g++-7', 'libbz2-dev', 'libxml2-dev', 'libzip-dev', 'liblua5.2-dev', 'libtbb-dev', 'libgdal-dev', 'libboost-all-dev', 'lcov']
+          packages: ['g++-7', 'libbz2-dev', 'libxml2-dev', 'libzip-dev', 'liblua5.2-dev', 'libtbb-dev', 'libboost-all-dev', 'lcov']
       env: CCOMPILER='gcc-7' CXXCOMPILER='g++-7' BUILD_TYPE='Debug' ENABLE_COVERAGE=ON CUCUMBER_TIMEOUT=20000
       before_script:
         - cd ${TRAVIS_BUILD_DIR}
@@ -87,7 +87,7 @@ matrix:
       addons: &gcc7
         apt:
           sources: ['ubuntu-toolchain-r-test']
-          packages: ['g++-7', 'libbz2-dev', 'libxml2-dev', 'libzip-dev', 'liblua5.2-dev', 'libtbb-dev', 'libgdal-dev', 'libboost-all-dev']
+          packages: ['g++-7', 'libbz2-dev', 'libxml2-dev', 'libzip-dev', 'liblua5.2-dev', 'libtbb-dev', 'libboost-all-dev']
       env: CCOMPILER='gcc-7' CXXCOMPILER='g++-7' BUILD_TYPE='Debug' TARGET_ARCH='x86_64-asan' ENABLE_SANITIZER=ON CUCUMBER_TIMEOUT=20000 LSAN_OPTIONS="suppressions=$TRAVIS_BUILD_DIR/scripts/travis/leaksanitizer.conf"
 
     - os: linux
@@ -95,7 +95,7 @@ matrix:
       addons: &clang50
         apt:
           sources: ['ubuntu-toolchain-r-test']
-          packages: ['libstdc++-5-dev', 'libbz2-dev', 'libxml2-dev', 'libzip-dev', 'liblua5.2-dev', 'libtbb-dev', 'libgdal-dev', 'libboost-all-dev']
+          packages: ['libstdc++-5-dev', 'libbz2-dev', 'libxml2-dev', 'libzip-dev', 'liblua5.2-dev', 'libtbb-dev', 'libboost-all-dev']
       env: CLANG_VERSION='5.0.0' BUILD_TYPE='Debug' CUCUMBER_TIMEOUT=60000
 
     - os: linux
@@ -120,7 +120,7 @@ matrix:
       addons: &gcc7
         apt:
           sources: ['ubuntu-toolchain-r-test']
-          packages: ['g++-7', 'libbz2-dev', 'libxml2-dev', 'libzip-dev', 'liblua5.2-dev', 'libtbb-dev', 'libgdal-dev', 'libboost-all-dev']
+          packages: ['g++-7', 'libbz2-dev', 'libxml2-dev', 'libzip-dev', 'liblua5.2-dev', 'libtbb-dev', 'libboost-all-dev']
       env: CCOMPILER='gcc-7' CXXCOMPILER='g++-7' BUILD_TYPE='Release'
 
     - os: linux
@@ -134,7 +134,7 @@ matrix:
       addons: &gcc7
         apt:
           sources: ['ubuntu-toolchain-r-test']
-          packages: ['g++-7', 'libbz2-dev', 'libstxxl-dev', 'libxml2-dev', 'libzip-dev', 'liblua5.2-dev', 'libtbb-dev', 'libgdal-dev', 'libboost-all-dev']
+          packages: ['g++-7', 'libbz2-dev', 'libstxxl-dev', 'libxml2-dev', 'libzip-dev', 'liblua5.2-dev', 'libtbb-dev', 'libboost-all-dev']
       env: CCOMPILER='gcc-7' CXXCOMPILER='g++-7' BUILD_TYPE='Release' ENABLE_STXXL=On
 
     - os: linux
@@ -142,7 +142,7 @@ matrix:
       addons: &gcc49
         apt:
           sources: ['ubuntu-toolchain-r-test']
-          packages: ['g++-4.9', 'libbz2-dev', 'libxml2-dev', 'libzip-dev', 'liblua5.2-dev', 'libtbb-dev', 'libgdal-dev', 'libboost-all-dev', 'ccache']
+          packages: ['g++-4.9', 'libbz2-dev', 'libxml2-dev', 'libzip-dev', 'liblua5.2-dev', 'libtbb-dev', 'libboost-all-dev', 'ccache']
       env: CCOMPILER='gcc-4.9' CXXCOMPILER='g++-4.9' BUILD_TYPE='Release'
 
     - os: linux
@@ -150,7 +150,7 @@ matrix:
       addons: &gcc49
         apt:
           sources: ['ubuntu-toolchain-r-test']
-          packages: ['g++-6', 'libbz2-dev', 'libxml2-dev', 'libzip-dev', 'liblua5.2-dev', 'libtbb-dev', 'libgdal-dev', 'libboost-all-dev', 'ccache']
+          packages: ['g++-6', 'libbz2-dev', 'libxml2-dev', 'libzip-dev', 'liblua5.2-dev', 'libtbb-dev', 'libboost-all-dev', 'ccache']
       env: CCOMPILER='gcc-6' CXXCOMPILER='g++-6' BUILD_TYPE='Release'
 
     - os: osx
@@ -167,7 +167,7 @@ matrix:
       addons: &gcc7
         apt:
           sources: ['ubuntu-toolchain-r-test']
-          packages: ['g++-7', 'libbz2-dev', 'libxml2-dev', 'libzip-dev', 'liblua5.2-dev', 'libtbb-dev', 'libgdal-dev', 'libboost-all-dev']
+          packages: ['g++-7', 'libbz2-dev', 'libxml2-dev', 'libzip-dev', 'liblua5.2-dev', 'libtbb-dev', 'libboost-all-dev']
       env: CCOMPILER='gcc-7' CXXCOMPILER='g++-7' BUILD_TYPE='Release' BUILD_SHARED_LIBS=ON
 
     # Node build jobs. These skip running the tests.
