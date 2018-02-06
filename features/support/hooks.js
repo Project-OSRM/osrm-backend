@@ -25,10 +25,12 @@ module.exports = function () {
         this.profile = this.OSRM_PROFILE || this.DEFAULT_PROFILE;
         this.profileFile = path.join(this.PROFILES_PATH, this.profile + '.lua');
         this.setupFeatureCache(feature);
+        this.feature = feature;
         callback();
     });
 
     this.Before((scenario, callback) => {
+        this.scenario = scenario;
         this.osrmLoader.setLoadMethod(this.DEFAULT_LOAD_METHOD);
         this.setGridSize(this.DEFAULT_GRID_SIZE);
         this.setOrigin(this.DEFAULT_ORIGIN);

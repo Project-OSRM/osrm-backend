@@ -2,6 +2,8 @@
 
 var util = require('util');
 var assert = require('assert');
+var polyline = require('polyline');
+var fs = require('fs');
 
 module.exports = function () {
     this.ShouldGetAResponse = () => {
@@ -28,10 +30,11 @@ module.exports = function () {
             if (e) return callback(e);
             var headers = new Set(table.raw()[0]);
 
-            var requestRow = (row, ri, cb) => {
+            var requestRow = (row, rowIndex, cb) => {
                 var got;
 
                 var afterRequest = (err, res, body) => {
+                    console.log(waypoints);
                     if (err) return cb(err);
                     if (body && body.length) {
                         let destinations, exits, pronunciations, instructions, refs, bearings, turns, modes, times, classes,
@@ -76,6 +79,67 @@ module.exports = function () {
                             weight_name = this.weightName(route);
                             weights = this.weightList(route);
                             approaches = this.approachList(route);
+
+
+                            var resultdata = {
+                                feature: this.feature.getName(),
+                                scenario: this.scenario.getName(),
+                                row: rowIndex,
+                                expected: {
+                                    route: table.hashes()[rowIndex]["route"],
+                                    turns: table.hashes()[rowIndex]["turns"],
+                                },
+                                got: {
+                                    route: instructions,
+                                    turns: turns
+                                }
+                            }
+                            fs.writeFileSync(`${this.scenarioCacheFile}_${rowIndex}_results.json`,JSON.stringify(resultdata));
+
+                            var geojson = {
+                                type: 'FeatureCollection',
+                                features: [
+                                    {
+                                        type: 'Feature',
+                                        properties: { type: 'startpoint' },
+                                        geometry: {
+                                            type: 'Point',
+                                            coordinates: [parseFloat(waypoints[0].lon),parseFloat(waypoints[0].lat)]
+                                        }
+                                    }
+                                    ,
+                                    {
+                                        type: 'Feature',
+                                        properties: { type: 'endpoint' },
+                                        geometry: {
+                                            type: 'Point',
+                                            coordinates: [parseFloat(waypoints[1].lon), parseFloat(waypoints[1].lat)]
+                                        }
+                                    },
+                                    {
+                                        type: 'Feature',
+                                        geometry: {
+                                            type: 'LineString',
+                                            coordinates: []
+                                        },
+                                        properties: {}
+                                    }
+                                ]
+                            };
+
+                            // Extract Valhalla route geometry
+                            if (this.osrmLoader.method === 'valhalla') {
+                                geojson.features[2].geometry.coordinates = polyline.decode(route.legs[0].shape,6).map(c => c.reverse());
+                            } else {
+                                // OSRM route geometry
+                                // TODO: Assume polyline5 for now
+                                if (typeof route.geometry === 'string') {
+                                    geojson.features[2].geometry.coordinates = polyline.decode(route.geometry).map(c => c.reverse());
+                                } else {
+                                    geojson.features[2].geometry = route.geometry;
+                                }
+                            }
+                            fs.writeFileSync(`${this.scenarioCacheFile}_${rowIndex}_shape.geojson`,JSON.stringify(geojson));
                         }
 
                         if (headers.has('status')) {

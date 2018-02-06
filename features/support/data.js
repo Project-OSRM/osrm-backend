@@ -12,6 +12,9 @@ const errorReason = require('../lib/utils').errorReason;
 
 const child_process = require('child_process');
 
+const osmtogeojson = require('osmtogeojson');
+const osmxmltojson = require('osmtogeojson/parse_osmxml');
+
 module.exports = function () {
     this.setGridSize = (meters) => {
         // the constant is calculated (with BigDecimal as: 1.0/(DEG_TO_RAD*EARTH_RADIUS_IN_METERS
@@ -170,13 +173,18 @@ module.exports = function () {
             if (exists) callback();
             else {
                 this.OSMDB.toXML((xml) => {
-                    fs.writeFile(this.scenarioCacheFile, xml, (err) => {
-                        if (err) callback(err); 
-                        var params = ['cat',this.scenarioCacheFile,'-O','-o',this.scenarioCacheFilePBF, '--no-progress'];
-                        let child = child_process.execFile('/usr/local/bin/osmium', params, {maxBuffer: 1024 * 1024 * 1000, env: {}}, (err,stdout,stderr) => {
-                            callback(err);
-                        });
+                    var q = d3.queue(1);
+
+                    q.defer(fs.writeFile, this.scenarioCacheFile, xml);
+                    q.defer((cb) => {
+                        var json = osmxmltojson.parseFromString(xml);
+                        var geojson = osmtogeojson(json);
+                        fs.writeFile(`${this.scenarioCacheFile}.geojson`,JSON.stringify(geojson),cb);
                     });
+
+                    var params = ['cat',this.scenarioCacheFile,'-O','-o',this.scenarioCacheFilePBF, '--no-progress'];
+                    q.defer(child_process.execFile,'/usr/local/bin/osmium', params, {maxBuffer: 1024 * 1024 * 1000, env: {}});
+                    q.awaitAll(callback);
                 });
             }
         });
