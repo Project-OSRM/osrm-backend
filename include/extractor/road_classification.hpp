@@ -1,6 +1,7 @@
 #ifndef OSRM_EXTRACTOR_CLASSIFICATION_DATA_HPP_
 #define OSRM_EXTRACTOR_CLASSIFICATION_DATA_HPP_
 
+#include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <cstdlib>
@@ -22,17 +23,25 @@ namespace RoadPriorityClass
 typedef std::uint8_t Enum;
 // Top priority Road
 const constexpr Enum MOTORWAY = 0;
+const constexpr Enum MOTORWAY_LINK = 1;
 // Second highest priority
 const constexpr Enum TRUNK = 2;
+const constexpr Enum TRUNK_LINK = 3;
 // Main roads
 const constexpr Enum PRIMARY = 4;
+const constexpr Enum PRIMARY_LINK = 5;
 const constexpr Enum SECONDARY = 6;
+const constexpr Enum SECONDARY_LINK = 7;
 const constexpr Enum TERTIARY = 8;
+const constexpr Enum TERTIARY_LINK = 9;
 // Residential Categories
 const constexpr Enum MAIN_RESIDENTIAL = 10;
 const constexpr Enum SIDE_RESIDENTIAL = 11;
+const constexpr Enum ALLEY = 12;
+const constexpr Enum PARKING = 13;
 // Link Category
 const constexpr Enum LINK_ROAD = 14;
+const constexpr Enum UNCLASSIFIED = 15;
 // Bike Accessible
 const constexpr Enum BIKE_PATH = 16;
 // Walk Accessible
@@ -123,6 +132,67 @@ inline bool canBeSeenAsFork(const RoadClassification first, const RoadClassifica
 {
     return std::abs(static_cast<int>(first.GetPriority()) -
                     static_cast<int>(second.GetPriority())) <= 1;
+}
+
+// priority groups are road classes that can be categoriesed as somewhat similar
+inline std::uint32_t getRoadGroup(const RoadClassification classification)
+{
+    // a list of dividers (inclusive) specifying the end of a class
+    const auto constexpr num_dividers = 7;
+    // dividers point one past the entry we want, so motorways will be pre-primary
+    const constexpr RoadPriorityClass::Enum dividers[num_dividers] = {
+        RoadPriorityClass::PRIMARY,
+        RoadPriorityClass::TERTIARY_LINK,
+        RoadPriorityClass::ALLEY,
+        RoadPriorityClass::LINK_ROAD,
+        RoadPriorityClass::UNCLASSIFIED,
+        RoadPriorityClass::BIKE_PATH,
+        RoadPriorityClass::CONNECTIVITY + 1};
+
+    const auto upper =
+        std::upper_bound(dividers, dividers + num_dividers, classification.GetPriority());
+    return upper - dividers;
+}
+
+// a road classification is strictly less, if it belongs to a lower general category of roads. E.g.
+// normal city roads are strictly less of a priority than a motorway and alleys are strictly less
+// than inner-city roads
+inline bool strictlyLess(const RoadClassification lhs, const RoadClassification rhs)
+{
+    const auto lhs_class = getRoadGroup(lhs);
+    const auto rhs_class = getRoadGroup(rhs);
+    // different class, not neighbors
+    return lhs_class > rhs_class &&
+           ((lhs.GetPriority() - rhs.GetPriority() > 4) || lhs.IsLowPriorityRoadClass());
+}
+
+// check whether a link class is the fitting link class to a road
+inline bool isLinkTo(const RoadClassification link, const RoadClassification road)
+{
+    // needs to be a link/non-link combination
+    if (!link.IsLinkClass() || road.IsLinkClass())
+        return false;
+
+    switch (link.GetPriority())
+    {
+    case RoadPriorityClass::MOTORWAY_LINK:
+        return road.GetPriority() == RoadPriorityClass::MOTORWAY;
+
+    case RoadPriorityClass::TRUNK_LINK:
+        return road.GetPriority() == RoadPriorityClass::TRUNK;
+
+    case RoadPriorityClass::PRIMARY_LINK:
+        return road.GetPriority() == RoadPriorityClass::PRIMARY;
+
+    case RoadPriorityClass::SECONDARY_LINK:
+        return road.GetPriority() == RoadPriorityClass::SECONDARY;
+
+    case RoadPriorityClass::TERTIARY_LINK:
+        return road.GetPriority() == RoadPriorityClass::TERTIARY;
+
+    default:
+        return false;
+    }
 }
 
 inline bool obviousByRoadClass(const RoadClassification in_classification,
