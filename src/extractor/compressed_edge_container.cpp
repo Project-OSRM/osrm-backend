@@ -112,8 +112,8 @@ void CompressedEdgeContainer::CompressEdge(
     const EdgeWeight weight2,
     const EdgeDuration duration1,
     const EdgeDuration duration2,
-    const boost::optional<EdgeWeight> node_weight_penalty,
-    const boost::optional<EdgeDuration> node_duration_penalty)
+    const EdgeWeight node_weight_penalty,
+    const EdgeDuration node_duration_penalty)
 {
     // remove super-trivial geometries
     BOOST_ASSERT(SPECIAL_EDGEID != edge_id_1);
@@ -169,10 +169,10 @@ void CompressedEdgeContainer::CompressEdge(
 
     // if the via-node offers a penalty, we add the weight of the penalty as an artificial
     // segment that references SPECIAL_NODEID
-    if (node_weight_penalty && node_duration_penalty)
+    if (node_weight_penalty != INVALID_EDGE_WEIGHT && node_duration_penalty != MAXIMAL_EDGE_DURATION)
     {
         edge_bucket_list1.emplace_back(OnewayCompressedEdge{
-            via_node_id, ClipWeight(*node_weight_penalty), ClipDuration(*node_duration_penalty)});
+            via_node_id, ClipWeight(node_weight_penalty), ClipDuration(node_duration_penalty)});
     }
 
     if (HasEntryForID(edge_id_2))

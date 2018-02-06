@@ -211,8 +211,8 @@ void GraphCompressor::Compress(
                 // doesn't have access to.
                 */
                 const bool has_node_penalty = traffic_signals.find(node_v) != traffic_signals.end();
-                boost::optional<EdgeDuration> node_duration_penalty = boost::none;
-                boost::optional<EdgeWeight> node_weight_penalty = boost::none;
+                EdgeDuration node_duration_penalty = MAXIMAL_EDGE_DURATION;
+                EdgeWeight node_weight_penalty = INVALID_EDGE_WEIGHT;
                 if (has_node_penalty)
                 {
                     // we cannot handle this as node penalty, if it depends on turn direction
@@ -277,12 +277,12 @@ void GraphCompressor::Compress(
                 graph.GetEdgeData(forward_e1).duration += forward_duration2;
                 graph.GetEdgeData(reverse_e1).duration += reverse_duration2;
 
-                if (node_weight_penalty && node_duration_penalty)
+                if (node_weight_penalty != INVALID_EDGE_WEIGHT && node_duration_penalty != MAXIMAL_EDGE_DURATION)
                 {
-                    graph.GetEdgeData(forward_e1).weight += *node_weight_penalty;
-                    graph.GetEdgeData(reverse_e1).weight += *node_weight_penalty;
-                    graph.GetEdgeData(forward_e1).duration += *node_duration_penalty;
-                    graph.GetEdgeData(reverse_e1).duration += *node_duration_penalty;
+                    graph.GetEdgeData(forward_e1).weight += node_weight_penalty;
+                    graph.GetEdgeData(reverse_e1).weight += node_weight_penalty;
+                    graph.GetEdgeData(forward_e1).duration += node_duration_penalty;
+                    graph.GetEdgeData(reverse_e1).duration += node_duration_penalty;
                 }
 
                 // extend e1's to targets of e2's
