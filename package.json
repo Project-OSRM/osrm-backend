@@ -12,6 +12,7 @@
     "node-pre-gyp": "^0.6.36",
     "osmtogeojson": "^3.0.0-beta.3"
     "rimraf": "^2.5.4"
+    "xmldoc": "^1.1.0"
   },
   "browserify": {
     "transform": [

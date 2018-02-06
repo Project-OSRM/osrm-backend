@@ -73,6 +73,22 @@ var stylesheet = `
     <TextSymbolizer face-name="Arial Regular" size="10" fill="black" placement="line" allow-overlap="false" dy='8'>'highway=' + [highway]</TextSymbolizer>
   </Rule>
 
+  <Rule>
+    <Filter>[highway] = 'secondary' or [highway] = 'secondary_link' or [highway] = 'tertiary' or [highway] = 'tertiary_link' or [highway] = 'residential' or [highway] = 'service' or [highway] = 'living_street'</Filter>
+    <LineSymbolizer stroke-width="10" stroke-linejoin="round" stroke-linecap="round" stroke="#bbbbbb" />
+    <LineSymbolizer stroke-width="8" stroke-linejoin="round" stroke-linecap="round" stroke="#77bb77" />
+    <TextSymbolizer face-name="Arial Regular" size="10" fill="black" placement="line" allow-overlap="false" dy='-8'>'name=' + [name]</TextSymbolizer>
+    <TextSymbolizer face-name="Arial Regular" size="10" fill="black" placement="line" allow-overlap="false" dy='8'>'highway=' + [highway]</TextSymbolizer>
+  </Rule>
+
+  <Rule>
+    <Filter>[route] = 'ferry'</Filter>
+    <LineSymbolizer stroke-width="10" stroke-linejoin="round" stroke-linecap="round" stroke="#bbbbbb" />
+    <LineSymbolizer stroke-width="8" stroke-linejoin="round" stroke-linecap="round" stroke="#7777bb" />
+    <TextSymbolizer face-name="Arial Regular" size="10" fill="black" placement="line" allow-overlap="false" dy='-8'>'name=' + [name]</TextSymbolizer>
+    <TextSymbolizer face-name="Arial Regular" size="10" fill="black" placement="line" allow-overlap="false" dy='8'>'route=' + [route]</TextSymbolizer>
+  </Rule>
+
 </Style>
 
 <Layer name="testmap" srs="+init=epsg:4326">
@@ -136,17 +152,23 @@ find('test/cache').filter((f) => f.match(/[0-9]+_results.json$/)).forEach((f) =>
 
   var results = JSON.parse(fs.readFileSync(f));
 
-  
-
   // Generate map image
-
-  var imagefile = `${files[1]}_${files[2]}`.replace(/\//g,'_');
-
+  var imagefile = `${files[1]}_${files[2]}.png`.replace(/\//g,'_');
+  /*
   var png = makemappng(`${files[1]}.geojson`, `${files[1]}_${files[2]}_shape.geojson`, (png) => {
     fs.writeFileSync(`report/${imagefile}`,png);
   });
+  */
 
   toc.push({ title: `${results.feature} - ${results.scenario}`, link: imagefile });
+
+  if (typeof results.got.turns === 'object')
+      results.got.turns = results.got.turns.join(',');
+
+  if (typeof results.expected.turns === 'string')
+      results.expected.turns = results.expected.turns.replace(/slight /g,'').replace(/sharp /g, '');
+  if (typeof results.got.turns === 'string')
+      results.got.turns = results.got.turns.replace(/slight /g,'').replace(/sharp /g, '');
 
   report += `<div class='scenario ${results.got.turns == results.expected.turns ? 'ok' : 'error'}'>
   <h2><a name="${imagefile}">${results.feature} - ${results.scenario}</a></h2>
@@ -158,8 +180,8 @@ find('test/cache').filter((f) => f.match(/[0-9]+_results.json$/)).forEach((f) =>
   <td>
   <table class="results">
       <tr><th/><th style='text-align: left'>Route</th><th style='text-align: left'>Turns</th></tr>
-      <tr><th style='text-align: right'>Expected</th><td>${results.expected.route}</td><td>${results.expected.turns}</td></tr>
-      <tr><th style='text-align: right'>Got</th><td>${results.got.route}</td><td class='${results.got.turns == results.expected.turns ? 'ok' : 'error'}'>${results.got.turns}</td></tr>
+      <tr><th style='text-align: right'>OSRM</th><td>${results.expected.route}</td><td>${results.expected.turns}</td></tr>
+      <tr><th style='text-align: right'>Valhalla</th><td>${results.got.route}</td><td class='${results.got.turns == results.expected.turns ? 'ok' : 'error'}'>${results.got.turns}</td></tr>
   </table>
 </td></tr></table>
 </div>
@@ -182,6 +204,8 @@ console.log(`
     .error { color: red; }
   </style>
   <body>
+Notes: OSRM "slight" and "sharp" indicators have been removed for comparison purposes.
+<hr/>
 `);
 toc.forEach(r => {
   console.log(`<a href='#${r.link}'>${r.title}</a><br/>`);

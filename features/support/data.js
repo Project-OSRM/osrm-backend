@@ -12,9 +12,6 @@ const errorReason = require('../lib/utils').errorReason;
 
 const child_process = require('child_process');
 
-const osmtogeojson = require('osmtogeojson');
-const osmxmltojson = require('osmtogeojson/parse_osmxml');
-
 module.exports = function () {
     this.setGridSize = (meters) => {
         // the constant is calculated (with BigDecimal as: 1.0/(DEG_TO_RAD*EARTH_RADIUS_IN_METERS
@@ -176,11 +173,14 @@ module.exports = function () {
                     var q = d3.queue(1);
 
                     q.defer(fs.writeFile, this.scenarioCacheFile, xml);
-                    q.defer((cb) => {
+                    q.defer((xml, cb) => {
+                        delete require.cache[require.resolve('osmtogeojson/parse_osmxml')];
+                        var osmtogeojson = require('osmtogeojson');
+                        var osmxmltojson = require('osmtogeojson/parse_osmxml');
                         var json = osmxmltojson.parseFromString(xml);
                         var geojson = osmtogeojson(json);
-                        fs.writeFile(`${this.scenarioCacheFile}.geojson`,JSON.stringify(geojson),cb);
-                    });
+                        fs.writeFile(`${this.scenarioCacheFile}.geojson`, JSON.stringify(geojson), cb);
+                    }, xml);
 
                     var params = ['cat',this.scenarioCacheFile,'-O','-o',this.scenarioCacheFilePBF, '--no-progress'];
                     q.defer(child_process.execFile,'/usr/local/bin/osmium', params, {maxBuffer: 1024 * 1024 * 1000, env: {}});
