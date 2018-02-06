@@ -55,7 +55,7 @@ std::unordered_set<EdgeID> findSegregatedNodes(const extractor::NodeBasedGraphFa
     };
 
     // Returns an angle between edges from from_edge_id to to_edge_id
-    auto const get_angle = [&](NodeID from_node, EdgeID from_edge_id, NodeID to_edge_id) {
+    auto const get_angle = [&](NodeID from_node, EdgeID from_edge_id, EdgeID to_edge_id) {
         auto intersection_node = graph.GetTarget(from_edge_id);
         auto from_edge_id_outgoing = graph.FindEdge(intersection_node, from_node);
         auto to_node = graph.GetTarget(to_edge_id);
