@@ -692,6 +692,8 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
             &ExtractionTurnLeg::access_turn_classification,
             "speed",
             &ExtractionTurnLeg::speed,
+            "priority_class",
+            &ExtractionTurnLeg::priority_class,
             "is_incoming",
             &ExtractionTurnLeg::is_incoming,
             "is_outgoing",
@@ -726,6 +728,8 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
             &ExtractionTurn::source_access_turn_classification,
             "source_speed",
             &ExtractionTurn::source_speed,
+            "source_priority_class",
+            &ExtractionTurn::source_priority_class,
 
             "target_restricted",
             &ExtractionTurn::target_restricted,
@@ -743,6 +747,8 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
             &ExtractionTurn::target_access_turn_classification,
             "target_speed",
             &ExtractionTurn::target_speed,
+            "target_priority_class",
+            &ExtractionTurn::target_priority_class,
 
             "roads_on_the_right",
             &ExtractionTurn::roads_on_the_right,
