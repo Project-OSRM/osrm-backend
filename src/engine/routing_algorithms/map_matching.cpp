@@ -156,7 +156,7 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
             }
         }();
 
-        const auto max_distance_delta = [&] {
+        const auto max_network_distance = [&] {
             if (use_timestamps)
             {
                 return step_time * facade.GetMapMatchingMaxSpeed();
@@ -199,9 +199,9 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
 
             const auto haversine_distance = util::coordinate_calculation::haversineDistance(
                 prev_coordinate, current_coordinate);
-            // assumes minumum of 4 m/s
+            // assumes minumum of 5 km/h == 1.39 m/s
             const EdgeWeight weight_upper_bound =
-                ((haversine_distance + max_distance_delta) / 4.) * facade.GetWeightMultiplier();
+                (max_network_distance / 1.39) * facade.GetWeightMultiplier();
 
             // compute d_t for this timestamp and the next one
             for (const auto s : util::irange<std::size_t>(0UL, prev_viterbi.size()))
@@ -229,14 +229,14 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
                                            current_timestamps_list[s_prime].phantom_node,
                                            weight_upper_bound);
 
-                    // get distance diff between loc1/2 and locs/s_prime
-                    const auto d_t = std::abs(network_distance - haversine_distance);
-
                     // very low probability transition -> prune
-                    if (d_t >= max_distance_delta)
+                    if (network_distance > max_network_distance)
                     {
                         continue;
                     }
+
+                    // get distance diff between loc1/2 and locs/s_prime
+                    const auto d_t = std::abs(network_distance - haversine_distance);
 
                     const double transition_pr = transition_log_probability(d_t);
                     new_value += transition_pr;
