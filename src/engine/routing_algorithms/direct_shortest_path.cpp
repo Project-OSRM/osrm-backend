@@ -90,6 +90,7 @@ InternalRouteResult directShortestPathSearch(SearchEngineData<mld::Algorithm> &e
                                                                    false,
                                                                    INVALID_EDGE_WEIGHT,
                                                                    phantom_nodes);
+    engine_working_data.unpacking_cache.get()->PrintStats();
 
     return extractRoute(facade, weight, phantom_nodes, unpacked_nodes, unpacked_edges);
 }
