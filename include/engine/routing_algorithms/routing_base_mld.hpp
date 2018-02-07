@@ -364,12 +364,15 @@ UnpackedPath search(SearchEngineData<Algorithm> &engine_working_data,
         bool overlay_edge;
         std::tie(source, target, overlay_edge) = packed_edge;
 
+        bool child_is_in_cache = false;
+
         if (!already_in_cache)
         {
             if (engine_working_data.unpacking_cache.get()->IsEdgeInCache(std::make_pair(source, target)))
             {
-                already_in_cache = true;
+                child_is_in_cache = true;
             }
+            // if(!already_in_cache)std::cout << facade.GetCoordinateOfNode(source) << ", "<< facade.GetCoordinateOfNode(target);
             engine_working_data.unpacking_cache.get()->CollectStats(std::make_pair(source, target));
         }
 
@@ -404,7 +407,7 @@ UnpackedPath search(SearchEngineData<Algorithm> &engine_working_data,
                                                                             reverse_heap,
                                                                             force_loop_forward,
                                                                             force_loop_reverse,
-                                                                            already_in_cache,
+                                                                            child_is_in_cache,
                                                                             INVALID_EDGE_WEIGHT,
                                                                             sublevel,
                                                                             parent_cell_id);
