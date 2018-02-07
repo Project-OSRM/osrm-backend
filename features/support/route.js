@@ -5,7 +5,7 @@ const request = require('request');
 const ensureDecimal = require('../lib/utils').ensureDecimal;
 
 module.exports = function () {
-    this.requestPath = (service, params, callback) => {
+    this.requestPath = (service, params, logfile, callback) => {
         var uri;
         if (service == 'timestamp' || this.osrmLoader.method === 'valhalla') {
             uri = [this.HOST, service].join('/');
@@ -13,7 +13,7 @@ module.exports = function () {
             uri = [this.HOST, service, 'v1', this.profile].join('/');
         }
 
-        return this.sendRequest(uri, params, this.osrmLoader.method === 'valhalla' ? 'POST' : 'GET', callback);
+        return this.sendRequest(uri, params, this.osrmLoader.method === 'valhalla' ? 'POST' : 'GET', logfile, callback);
     };
 
     this.requestUrl = (path, callback) => {
@@ -46,7 +46,7 @@ module.exports = function () {
         return waypoints.map(w => [w.lon, w.lat].map(ensureDecimal).join(','));
     };
 
-    this.requestRoute = (waypoints, bearings, approaches, userParams, callback) => {
+    this.requestRoute = (waypoints, bearings, approaches, userParams, logfile, callback) => {
         if (bearings.length && bearings.length !== waypoints.length) throw new Error('*** number of bearings does not equal the number of waypoints');
         if (approaches.length && approaches.length !== waypoints.length) throw new Error('*** number of approaches does not equal the number of waypoints');
 
@@ -82,7 +82,7 @@ module.exports = function () {
         }
 
 
-        return this.requestPath('route', params, callback);
+        return this.requestPath('route', params, logfile, callback);
     };
 
     this.requestNearest = (node, userParams, callback) => {
@@ -316,14 +316,19 @@ var typemap = {
 
     25: {type: 'merge', modifier: null },
 
-    26: {type: 'roundabout', modifier: null },
-    27: {type: 'roundabout-exit', modifier: null },
+    26: {type: 'roundabout-exit', modifier: null },
+    27: {type: 'exit roundabout', modifier: null },
+
+    28: {type: 'enter ferry', modifier: null },
+    29: {type: 'exit ferry', modifier: null }
 
 }
         return instructions.legs.reduce((m, v) => m.concat(v.maneuvers), [])
             .map(v => {
                 if (v.type in typemap) {
-                    if (typemap[v.type].modifier) {
+                    if (v.type === 26) { // special construction for roundabout instructions
+                        return `${typemap[v.type].type}-${v.roundabout_exit_count}`;
+                    } else if (typemap[v.type].modifier) {
                         return `${typemap[v.type].type} ${typemap[v.type].modifier}`;
                     } else {
                         return `${typemap[v.type].type}`;

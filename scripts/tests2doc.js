@@ -32,61 +32,61 @@ var stylesheet = `
     <Filter>[highway] = 'motorway'</Filter>
     <LineSymbolizer stroke-width="12" stroke-linejoin="round" stroke-linecap="round" stroke="#bbbbbb" />
     <LineSymbolizer stroke-width="10" stroke-linejoin="round" stroke-linecap="round" stroke="#aacc77" />
-    <TextSymbolizer face-name="Arial Regular" size="10" fill="black" placement="line" allow-overlap="false" dy='-10'>'name=' + [name]</TextSymbolizer>
-    <TextSymbolizer face-name="Arial Regular" size="10" fill="black" placement="line" allow-overlap="false" dy='10'>'highway=' + [highway]</TextSymbolizer>
+    <TextSymbolizer face-name="Arial Regular" size="10" fill="black" placement="line" allow-overlap="true" dy='-10'>'name=' + [name]</TextSymbolizer>
+    <TextSymbolizer face-name="Arial Regular" size="10" fill="black" placement="line" allow-overlap="true" dy='10'>'highway=' + [highway]</TextSymbolizer>
   </Rule>
   <Rule>
     <Filter>[highway] = 'motorway_link'</Filter>
     <LineSymbolizer stroke-width="12" stroke-linejoin="round" stroke-linecap="round" stroke="#bbbbbb" />
     <LineSymbolizer stroke-width="10" stroke-linejoin="round" stroke-linecap="round" stroke="#77aacc" />
-    <TextSymbolizer face-name="Arial Regular" size="10" fill="black" placement="line" allow-overlap="false" dy='-10'>'name=' + [name]</TextSymbolizer>
-    <TextSymbolizer face-name="Arial Regular" size="10" fill="black" placement="line" allow-overlap="false" dy='10'>'highway=' + [highway]</TextSymbolizer>
+    <TextSymbolizer face-name="Arial Regular" size="10" fill="black" placement="line" allow-overlap="true" dy='-10'>'name=' + [name]</TextSymbolizer>
+    <TextSymbolizer face-name="Arial Regular" size="10" fill="black" placement="line" allow-overlap="true" dy='10'>'highway=' + [highway]</TextSymbolizer>
   </Rule>
 
   <Rule>
     <Filter>[highway] = 'trunk'</Filter>
     <LineSymbolizer stroke-width="12" stroke-linejoin="round" stroke-linecap="round" stroke="#bbbbbb" />
     <LineSymbolizer stroke-width="10" stroke-linejoin="round" stroke-linecap="round" stroke="#ccaa77" />
-    <TextSymbolizer face-name="Arial Regular" size="10" fill="black" placement="line" allow-overlap="false" dy='-10'>'name=' + [name]</TextSymbolizer>
-    <TextSymbolizer face-name="Arial Regular" size="10" fill="black" placement="line" allow-overlap="false" dy='10'>'highway=' + [highway]</TextSymbolizer>
+    <TextSymbolizer face-name="Arial Regular" size="10" fill="black" placement="line" allow-overlap="true" dy='-10'>'name=' + [name]</TextSymbolizer>
+    <TextSymbolizer face-name="Arial Regular" size="10" fill="black" placement="line" allow-overlap="true" dy='10'>'highway=' + [highway]</TextSymbolizer>
   </Rule>
   <Rule>
     <Filter>[highway] = 'trunk_link'</Filter>
     <LineSymbolizer stroke-width="12" stroke-linejoin="round" stroke-linecap="round" stroke="#bbbbbb" />
     <LineSymbolizer stroke-width="10" stroke-linejoin="round" stroke-linecap="round" stroke="#aa77cc" />
-    <TextSymbolizer face-name="Arial Regular" size="10" fill="black" placement="line" allow-overlap="false" dy='-10'>'name=' + [name]</TextSymbolizer>
-    <TextSymbolizer face-name="Arial Regular" size="10" fill="black" placement="line" allow-overlap="false" dy='10'>'highway=' + [highway]</TextSymbolizer>
+    <TextSymbolizer face-name="Arial Regular" size="10" fill="black" placement="line" allow-overlap="true" dy='-10'>'name=' + [name]</TextSymbolizer>
+    <TextSymbolizer face-name="Arial Regular" size="10" fill="black" placement="line" allow-overlap="true" dy='10'>'highway=' + [highway]</TextSymbolizer>
   </Rule>
 
   <Rule>
     <Filter>[highway] = 'primary'</Filter>
     <LineSymbolizer stroke-width="10" stroke-linejoin="round" stroke-linecap="round" stroke="#bbbbbb" />
     <LineSymbolizer stroke-width="8" stroke-linejoin="round" stroke-linecap="round" stroke="#77ccaa" />
-    <TextSymbolizer face-name="Arial Regular" size="10" fill="black" placement="line" allow-overlap="false" dy='-8'>'name=' + [name]</TextSymbolizer>
-    <TextSymbolizer face-name="Arial Regular" size="10" fill="black" placement="line" allow-overlap="false" dy='8'>'highway=' + [highway]</TextSymbolizer>
+    <TextSymbolizer face-name="Arial Regular" size="10" fill="black" placement="line" allow-overlap="true" dy='-8'>'name=' + [name]</TextSymbolizer>
+    <TextSymbolizer face-name="Arial Regular" size="10" fill="black" placement="line" allow-overlap="true" dy='8'>'highway=' + [highway]</TextSymbolizer>
   </Rule>
   <Rule>
     <Filter>[highway] = 'primary_link'</Filter>
     <LineSymbolizer stroke-width="10" stroke-linejoin="round" stroke-linecap="round" stroke="#bbbbbb" />
     <LineSymbolizer stroke-width="8" stroke-linejoin="round" stroke-linecap="round" stroke="#aa77cc" />
-    <TextSymbolizer face-name="Arial Regular" size="10" fill="black" placement="line" allow-overlap="false" dy='-8'>'name=' + [name]</TextSymbolizer>
-    <TextSymbolizer face-name="Arial Regular" size="10" fill="black" placement="line" allow-overlap="false" dy='8'>'highway=' + [highway]</TextSymbolizer>
+    <TextSymbolizer face-name="Arial Regular" size="10" fill="black" placement="line" allow-overlap="true" dy='-8'>'name=' + [name]</TextSymbolizer>
+    <TextSymbolizer face-name="Arial Regular" size="10" fill="black" placement="line" allow-overlap="true" dy='8'>'highway=' + [highway]</TextSymbolizer>
   </Rule>
 
   <Rule>
     <Filter>[highway] = 'secondary' or [highway] = 'secondary_link' or [highway] = 'tertiary' or [highway] = 'tertiary_link' or [highway] = 'residential' or [highway] = 'service' or [highway] = 'living_street'</Filter>
     <LineSymbolizer stroke-width="10" stroke-linejoin="round" stroke-linecap="round" stroke="#bbbbbb" />
     <LineSymbolizer stroke-width="8" stroke-linejoin="round" stroke-linecap="round" stroke="#77bb77" />
-    <TextSymbolizer face-name="Arial Regular" size="10" fill="black" placement="line" allow-overlap="false" dy='-8'>'name=' + [name]</TextSymbolizer>
-    <TextSymbolizer face-name="Arial Regular" size="10" fill="black" placement="line" allow-overlap="false" dy='8'>'highway=' + [highway]</TextSymbolizer>
+    <TextSymbolizer face-name="Arial Regular" size="10" fill="black" placement="line" allow-overlap="true" dy='-8'>'name=' + [name]</TextSymbolizer>
+    <TextSymbolizer face-name="Arial Regular" size="10" fill="black" placement="line" allow-overlap="true" dy='8'>'highway=' + [highway]</TextSymbolizer>
   </Rule>
 
   <Rule>
     <Filter>[route] = 'ferry'</Filter>
     <LineSymbolizer stroke-width="10" stroke-linejoin="round" stroke-linecap="round" stroke="#bbbbbb" />
     <LineSymbolizer stroke-width="8" stroke-linejoin="round" stroke-linecap="round" stroke="#7777bb" />
-    <TextSymbolizer face-name="Arial Regular" size="10" fill="black" placement="line" allow-overlap="false" dy='-8'>'name=' + [name]</TextSymbolizer>
-    <TextSymbolizer face-name="Arial Regular" size="10" fill="black" placement="line" allow-overlap="false" dy='8'>'route=' + [route]</TextSymbolizer>
+    <TextSymbolizer face-name="Arial Regular" size="10" fill="black" placement="line" allow-overlap="true" dy='-8'>'name=' + [name]</TextSymbolizer>
+    <TextSymbolizer face-name="Arial Regular" size="10" fill="black" placement="line" allow-overlap="true" dy='8'>'route=' + [route]</TextSymbolizer>
   </Rule>
 
 </Style>
@@ -105,14 +105,14 @@ var stylesheet = `
     <LineSymbolizer stroke-width="3" stroke-linejoin="round" stroke-linecap="round" stroke="#0000ff" offset="6"/>
   </Rule>
 </Style>
-<Style name="testroute-markers" filter-mode="all">
+<Style name="testroute-markers" filter-mode="first">
   <Rule>
     <Filter>[type] = 'startpoint'</Filter>
-    <MarkersSymbolizer fill="green" width="20" height="20" stroke="green"/>
+    <MarkersSymbolizer fill="green" width="20" height="20" stroke="green" allow-overlap="true"/>
   </Rule>
   <Rule>
     <Filter>[type] = 'endpoint'</Filter>
-    <MarkersSymbolizer fill="red" width="20" height="20" stroke="red"/>
+    <MarkersSymbolizer fill="red" width="20" height="20" stroke="red" allow-overlap="true"/>
   </Rule>
 </Style>
 <Layer name="testroute" srs="+init=epsg:4326">
@@ -125,19 +125,19 @@ var stylesheet = `
 </Layer>
 </Map>`;
 
-    var map = new mapnik.Map(300, 200);
+    var map = new mapnik.Map(400, 300);
     map.fromStringSync(stylesheet,{strict:true});
     map.zoomAll();
 
     var extent = map.extent;
-    extent[0] = extent[0] - Math.abs(extent[0]) * 0.00001;
-    extent[1] = extent[1] - Math.abs(extent[1]) * 0.00001;
+    extent[0] = extent[0] - Math.abs(extent[0]) * 0.00005;
+    extent[1] = extent[1] - Math.abs(extent[1]) * 0.00005;
 
-    extent[2] = extent[2] + Math.abs(extent[2]) * 0.00001;
-    extent[3] = extent[3] + Math.abs(extent[3]) * 0.00001;
+    extent[2] = extent[2] + Math.abs(extent[2]) * 0.00005;
+    extent[3] = extent[3] + Math.abs(extent[3]) * 0.00005;
     map.zoomToBox(extent);
 
-    var buffer = new mapnik.Image(300,200)
+    var buffer = new mapnik.Image(400,300)
     map.render(buffer, {}, (err,image) => {
       callback(image.encodeSync('png'));
     });
@@ -154,11 +154,19 @@ find('test/cache').filter((f) => f.match(/[0-9]+_results.json$/)).forEach((f) =>
 
   // Generate map image
   var imagefile = `${files[1]}_${files[2]}.png`.replace(/\//g,'_');
-  /*
   var png = makemappng(`${files[1]}.geojson`, `${files[1]}_${files[2]}_shape.geojson`, (png) => {
     fs.writeFileSync(`report/${imagefile}`,png);
   });
-  */
+
+  var osmfile = `${files[1]}`.replace(/\//g,'_');
+  var pbffile = `${files[1]}`.replace(/\//g,'_').replace(/.osm/,'.pbf');
+  var responsefile = `${files[1]}_${files[2]}_response.json`.replace(/\//g,'_');
+  var requestfile = `${files[1]}_${files[2]}_request.txt`.replace(/\//g,'_');
+
+  fs.writeFileSync(`report/${osmfile}`, fs.readFileSync(files[1]));
+  fs.writeFileSync(`report/${pbffile}`, fs.readFileSync(`${files[1].replace(/.osm$/,'.pbf')}`));
+  fs.writeFileSync(`report/${responsefile}`, fs.readFileSync(`${files[1]}_${files[2]}_response.json`));
+  fs.writeFileSync(`report/${requestfile}`, fs.readFileSync(`${files[1]}_${files[2]}_request.txt`));
 
   toc.push({ title: `${results.feature} - ${results.scenario}`, link: imagefile });
 
@@ -172,6 +180,11 @@ find('test/cache').filter((f) => f.match(/[0-9]+_results.json$/)).forEach((f) =>
 
   report += `<div class='scenario ${results.got.turns == results.expected.turns ? 'ok' : 'error'}'>
   <h2><a name="${imagefile}">${results.feature} - ${results.scenario}</a></h2>
+  <a href="${osmfile}">Download OSM XML file for this test</a><br/>
+  <a href="${pbffile}">Download OSM PBF file for this test</a><br/>
+  <a href="${requestfile}">Download request used for this test</a><br/>
+  <a href="${responsefile}">Download raw response for this test</a>
+
 <table class="row">
   <tr>
     <td>

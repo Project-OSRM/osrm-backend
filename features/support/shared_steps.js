@@ -95,6 +95,7 @@ module.exports = function () {
                                 }
                             }
                             fs.writeFileSync(`${this.scenarioCacheFile}_${rowIndex}_results.json`,JSON.stringify(resultdata));
+                            fs.writeFileSync(`${this.scenarioCacheFile}_${rowIndex}_response.json`,body);
 
                             var geojson = {
                                 type: 'FeatureCollection',
@@ -324,7 +325,9 @@ module.exports = function () {
 
                         got.from = row.from;
                         got.to = row.to;
-                        this.requestRoute(waypoints, bearings, approaches, params, afterRequest);
+
+                        this.currentRowIndex = rowIndex;
+                        this.requestRoute(waypoints, bearings, approaches, params, `${this.scenarioCacheFile}_${rowIndex}_request.txt`, afterRequest);
                     } else if (row.waypoints) {
                         row.waypoints.split(',').forEach((n) => {
                             var node = this.findNodeByName(n.trim());
@@ -332,7 +335,7 @@ module.exports = function () {
                             waypoints.push(node);
                         });
                         got.waypoints = row.waypoints;
-                        this.requestRoute(waypoints, bearings, approaches, params, afterRequest);
+                        this.requestRoute(waypoints, bearings, approaches, params, `${this.scenarioCacheFile}_${rowIndex}_request.txt`, afterRequest);
                     } else {
                         return cb(new Error('*** no waypoints'));
                     }
