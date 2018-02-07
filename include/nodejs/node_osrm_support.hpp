@@ -1269,8 +1269,7 @@ argumentsToMatchParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
             {
                 std::cout << "index " << index << std::endl;
                 std::cout << "coords_size " << coords_size << std::endl;
-                Nan::ThrowError(
-                    "Waypoints must correspond with the index of an input coordinate");
+                Nan::ThrowError("Waypoints must correspond with the index of an input coordinate");
                 return match_parameters_ptr();
             }
             params->waypoints.emplace_back(static_cast<unsigned>(waypoint_value->NumberValue()));
