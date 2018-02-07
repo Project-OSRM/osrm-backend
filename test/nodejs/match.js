@@ -238,3 +238,26 @@ test('match: match in Monaco without motorways', function(assert) {
         assert.equal(response.matchings.length, 1);
     });
 });
+
+test('match: match in Monaco with waypoints', function(assert) {
+    assert.plan(5);
+    var osrm = new OSRM(data_path);
+    var options = {
+        steps: true,
+        coordinates: three_test_coordinates,
+        waypoints: [0,2]
+    };
+    osrm.match(options, function(err, response) {
+        assert.ifError(err);
+        console.log(JSON.stringify(response, null, 4));
+        assert.equal(response.matchings.length, 1);
+        assert.ok(response.matchings.every(function(m) {
+            return !!m.distance && !!m.duration && Array.isArray(m.legs) && !!m.geometry && m.confidence > 0;
+        }))
+        assert.equal(response.tracepoints.length, 3);
+        assert.ok(response.tracepoints.every(function(t) {
+            return !!t.hint && !isNaN(t.matchings_index) && !isNaN(t.waypoint_index) && !!t.name;
+        }));
+    });
+});
+

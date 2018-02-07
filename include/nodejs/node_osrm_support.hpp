@@ -1171,7 +1171,7 @@ argumentsToMatchParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
                 Nan::ThrowError("Timestamps array items must be numbers");
                 return match_parameters_ptr();
             }
-            params->timestamps.emplace_back(static_cast<unsigned>(timestamp->NumberValue()));
+            params->timestamps.emplace_back(static_cast<std::size_t>(timestamp->NumberValue()));
         }
     }
 
@@ -1231,7 +1231,7 @@ argumentsToMatchParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
         {
             Nan::ThrowError(
                 "Waypoints must be an array of integers corresponding to the input coordinates.");
-            return false;
+            return match_parameters_ptr();
         }
 
         auto waypoints_array = v8::Local<v8::Array>::Cast(waypoints);
@@ -1239,28 +1239,11 @@ argumentsToMatchParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
         if (waypoints_array->Length() < 2)
         {
             Nan::ThrowError("At least two waypoints must be provided");
-            return false;
+            return match_parameters_ptr();
         }
         auto coords_size = params->coordinates.size();
         auto waypoints_array_size = waypoints_array->Length();
-        for (uint32_t i = 0; i < waypoints_array_size; ++i)
-        {
-            v8::Local<v8::Value> waypoint_value = waypoints_array->Get(i);
-            // all elements must be numbers
-            if (!waypoint_value->IsNumber())
-            {
-                Nan::ThrowError("Waypoint values must be an array of integers");
-                return false;
-            }
-            // check that the waypoint index corresponds with an inpute coordinate
-            const auto index = Nan::To<std::uint32_t>(waypoint_value).FromJust();
-            if (index >= coords_size - 1)
-            {
-                Nan::ThrowError(
-                    "Waypoints must correspond with the index of an input coordinate");
-                return false;
-            }
-        }
+
         const auto first_index = Nan::To<std::uint32_t>(waypoints_array->Get(0)).FromJust();
         const auto last_index =
             Nan::To<std::uint32_t>(waypoints_array->Get(waypoints_array_size - 1)).FromJust();
@@ -1268,18 +1251,42 @@ argumentsToMatchParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
         {
             Nan::ThrowError("First and last waypoints values must correspond to first and last "
                             "coordinate indices");
-            return false;
-        }
-    }
-
-        bool parsedSuccessfully = parseCommonParameters(obj, params);
-        if (!parsedSuccessfully)
-        {
             return match_parameters_ptr();
         }
 
-        return params;
+        for (uint32_t i = 0; i < waypoints_array_size; ++i)
+        {
+            v8::Local<v8::Value> waypoint_value = waypoints_array->Get(i);
+            // all elements must be numbers
+            if (!waypoint_value->IsNumber())
+            {
+                Nan::ThrowError("Waypoint values must be an array of integers");
+                return match_parameters_ptr();
+            }
+            // check that the waypoint index corresponds with an inpute coordinate
+            const auto index = Nan::To<std::uint32_t>(waypoint_value).FromJust();
+            if (index >= coords_size)
+            {
+                std::cout << "index " << index << std::endl;
+                std::cout << "coords_size " << coords_size << std::endl;
+                Nan::ThrowError(
+                    "Waypoints must correspond with the index of an input coordinate");
+                return match_parameters_ptr();
+            }
+            params->waypoints.emplace_back(static_cast<unsigned>(waypoint_value->NumberValue()));
+            std::cout << "waypoints params size " << params->waypoints.size() << std::endl;
+            std::cout << "waypoints params capacity " << params->waypoints.capacity() << std::endl;
+        }
     }
+
+    bool parsedSuccessfully = parseCommonParameters(obj, params);
+    if (!parsedSuccessfully)
+    {
+        return match_parameters_ptr();
+    }
+
+    return params;
+}
 
 } // ns node_osrm
 
