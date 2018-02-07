@@ -329,7 +329,7 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     set(COLOR_FLAG "")
   endif()
   # using GCC
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OSRM_WARNING_FLAGS} -Werror=strict-overflow=1 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 ${COLOR_FLAG} -fPIC -ftemplate-depth=1024")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OSRM_WARNING_FLAGS} -Werror=strict-overflow=1 -Wno-error=maybe-uninitialized -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 ${COLOR_FLAG} -fPIC -ftemplate-depth=1024")
   if(WIN32) # using mingw
     add_dependency_defines(-DWIN32)
     set(OPTIONAL_SOCKET_LIBS ws2_32 wsock32)
