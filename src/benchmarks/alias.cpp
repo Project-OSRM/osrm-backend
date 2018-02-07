@@ -50,7 +50,7 @@ int main(int, char **)
     TIMER_START(aliased_u32);
     for (auto round : util::irange(0, num_rounds))
     {
-        (void) round;
+        (void)round;
         osrm_uint32 sum{0};
         osrm_uint32 mult{1};
         for (auto idx : indices)
@@ -69,7 +69,7 @@ int main(int, char **)
     TIMER_START(plain_u32);
     for (auto round : util::irange(0, num_rounds))
     {
-        (void) round;
+        (void)round;
         std::uint32_t sum{0};
         std::uint32_t mult{1};
         for (auto idx : indices)
@@ -88,7 +88,7 @@ int main(int, char **)
     TIMER_START(aliased_double);
     for (auto round : util::irange(0, num_rounds))
     {
-        (void) round;
+        (void)round;
         osrm_double sum{0.0};
         osrm_double mult{1.0};
         for (auto idx : indices)
@@ -108,7 +108,7 @@ int main(int, char **)
     TIMER_START(plain_double);
     for (auto round : util::irange(0, num_rounds))
     {
-        (void) round;
+        (void)round;
         double sum{0.0};
         double mult{1.0};
         for (auto idx : indices)
