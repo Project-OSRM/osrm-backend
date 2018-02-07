@@ -3,12 +3,10 @@ Feature: Basic Map Matching
 
     Background:
         Given the profile "testbot"
-        Given a grid size of 10 meters
-        Given the query options
-            | geometries | geojson |
 
     Scenario: Testbot - Map matching with outlier that has no candidate
         Given a grid size of 100 meters
+
         Given the node map
             """
             a b c d
@@ -21,44 +19,49 @@ Feature: Basic Map Matching
             | abcd  | no     |
 
         When I match I should get
-            | trace | timestamps | matchings |
-            | ab1d  | 0 1 2 3    | ad        |
+            | trace | timestamps  | matchings |
+            | ab1d  | 0 20 40 60  | ad        |
 
     Scenario: Testbot - Map matching with trace splitting
+        Given a grid size of 10 meters
+
         Given the node map
             """
-            a b c d
-                e
+            a b c d e f g
+                h
             """
 
         And the ways
-            | nodes | oneway |
-            | abcd  | no     |
+            | nodes    | oneway |
+            | abcdefg  | no     |
+            | ch       | no     |
 
         When I match I should get
-            | trace | timestamps | matchings |
-            | abcd  | 0 1 62 63  | ab,cd     |
+            | trace    | timestamps         | matchings |
+            | abcdefg  | 0 2 30 32 34 36 38 | ab,cdefg  |
 
     Scenario: Testbot - Map matching with trace splitting suppression
+        Given a grid size of 10 meters
+
         Given the query options
             | gaps | ignore |
 
         Given the node map
             """
-            a b c d
-                e
+            a b c d e f g
+                h
             """
-
         And the ways
-            | nodes | oneway |
-            | abcd  | no     |
+            | nodes    | oneway |
+            | abcdefg  | no     |
+            | ch       | no     |
 
         When I match I should get
-            | trace | timestamps | matchings |
-            | abcd  | 0 1 62 63  | abcd      |
+            | trace    | timestamps               | matchings |
+            | abcdefg  | 0 2 30 32 34 36 38       | abcdefg   |
 
     Scenario: Testbot - Map matching with trace tidying. Clean case.
-        Given a grid size of 100 meters
+        Given a grid size of 50 meters
 
         Given the query options
             | tidy | true |
@@ -74,11 +77,11 @@ Feature: Basic Map Matching
             | abcd  | no     |
 
         When I match I should get
-            | trace | timestamps | matchings |
-            | abcd | 0 10 20 30  | abcd      |
+            | trace | timestamps  | matchings |
+            | abcd  | 0 10 20 30  | abcd      |
 
     Scenario: Testbot - Map matching with trace tidying. Dirty case by ts.
-        Given a grid size of 100 meters
+        Given a grid size of 50 meters
 
         Given the query options
             | tidy | true |
@@ -117,23 +120,9 @@ Feature: Basic Map Matching
             | trace | matchings |
             | abcbd | abbd      |
 
-    Scenario: Testbot - Map matching with core factor
-        Given the contract extra arguments "--core 0.8"
-        Given the node map
-            """
-            a b c d
-                e
-            """
-
-        And the ways
-            | nodes | oneway |
-            | abcd  | no     |
-
-        When I match I should get
-            | trace | timestamps | matchings |
-            | abcd  | 0 1 2 3    | abcd      |
-
     Scenario: Testbot - Map matching with small distortion
+        Given a grid size of 10 meters
+
         Given the node map
             """
             a b c d e
@@ -158,6 +147,7 @@ Feature: Basic Map Matching
 
     Scenario: Testbot - Map matching with oneways
         Given a grid size of 10 meters
+
         Given the node map
             """
             a b c d
@@ -175,6 +165,7 @@ Feature: Basic Map Matching
 
     Scenario: Testbot - Matching with oneway streets
         Given a grid size of 10 meters
+
         Given the node map
             """
             a b c d
@@ -196,6 +187,8 @@ Feature: Basic Map Matching
             | efgh  | abcd        |
 
     Scenario: Testbot - request duration annotations
+        Given a grid size of 10 meters
+
         Given the query options
             | annotations | duration |
 
@@ -223,6 +216,8 @@ Feature: Basic Map Matching
             | ach   | ach       | 1:1,0:1:1:2:1    |
 
     Scenario: Testbot - Duration details
+        Given a grid size of 10 meters
+
         Given the query options
             | annotations | duration,nodes |
 
@@ -257,9 +252,11 @@ Feature: Basic Map Matching
             | abci  | abci      | 1:2:3,2:3,2:3:8       |
 
     Scenario: Testbot - Regression test for #3037
+        Given a grid size of 10 meters
+
         Given the query options
             | overview   | simplified |
-            | geometries | geojson  |
+            | geometries | geojson    |
 
         Given the node map
             """
@@ -279,13 +276,15 @@ Feature: Basic Map Matching
             | fb    | yes    |
 
         When I match I should get
-            | trace | matchings | geometry                                      |
+            | trace | matchings | geometry                                       |
             | efbc  | efbc      | 1,0.99964,1.00036,0.99964,1.00036,1,1.000719,1 |
 
     Scenario: Testbot - Geometry details using geojson
+        Given a grid size of 10 meters
+
         Given the query options
-            | overview   | full     |
-            | geometries | geojson  |
+            | overview   | full       |
+            | geometries | geojson    |
 
         Given the node map
             """
@@ -303,6 +302,8 @@ Feature: Basic Map Matching
             | abd   | abd       | 1,1,1.00009,1,1.00009,1,1.00009,0.99991 |
 
     Scenario: Testbot - Geometry details using polyline
+        Given a grid size of 10 meters
+
         Given the query options
             | overview   | full      |
             | geometries | polyline  |
@@ -323,6 +324,8 @@ Feature: Basic Map Matching
             | abd   | abd       | 1,1,1,1.00009,1,1.00009,0.99991,1.00009 |
 
     Scenario: Testbot - Geometry details using polyline6
+        Given a grid size of 10 meters
+
         Given the query options
             | overview   | full       |
             | geometries | polyline6  |
@@ -343,6 +346,8 @@ Feature: Basic Map Matching
             | abd   | abd       | 1,1,1,1.00009,1,1.00009,0.99991,1.00009 |
 
     Scenario: Testbot - Matching alternatives count test
+        Given a grid size of 10 meters
+
         Given the node map
             """
             a b c d e f
@@ -358,49 +363,10 @@ Feature: Basic Map Matching
             | trace  | matchings | alternatives         |
             | abcdef | abcde     | 0,0,0,0,1,1          |
 
-    Scenario: Testbot - Speed greater than speed threshold
-        Given a grid size of 100 meters
-        Given the query options
-            | geometries | geojson  |
-
-        Given the node map
-            """
-            a b ---- x
-                     |
-                     |
-                     y --- c d
-            """
-
-        And the ways
-            | nodes   | oneway |
-            | abxycd  | no     |
-
-        When I match I should get
-            | trace | timestamps | matchings |
-            | abcd  | 0 1 2 3    | ab,cd     |
-
-    Scenario: Testbot - Speed less than speed threshold
-        Given a grid size of 100 meters
-        Given the query options
-            | geometries | geojson  |
-
-        Given the node map
-            """
-            a b c d
-            """
-
-        And the ways
-            | nodes | oneway |
-            | abcd  | no     |
-
-        When I match I should get
-            | trace | timestamps | matchings |
-            | abcd  | 0 1 2 3    | abcd      |
-
     Scenario: Testbot - Huge gap in the coordinates
-        Given a grid size of 100 meters
+        Given a grid size of 10 meters
+
         Given the query options
-            | geometries | geojson  |
             | gaps | ignore |
 
         Given the node map
@@ -417,10 +383,12 @@ Feature: Basic Map Matching
 
         When I match I should get
             | trace     | timestamps           | matchings  |
-            | abcdefjk  | 0 1 2 3 50 51 52 53  | abcdefjk   |
+            | abcdefjk  | 0 2 4 6 50 52 54 56  | abcdefjk   |
 
     # Regression test 1 for issue 3176
     Scenario: Testbot - multiple segments: properly expose OSM IDs
+        Given a grid size of 100 meters
+
         Given the query options
             | annotations | true    |
 
@@ -455,6 +423,8 @@ Feature: Basic Map Matching
 
     # Regression test 2 for issue 3176
     Scenario: Testbot - same edge: properly expose OSM IDs
+        Given a grid size of 100 meters
+
         Given the query options
             | annotations | true    |
 
@@ -483,6 +453,8 @@ Feature: Basic Map Matching
 
 
     Scenario: Matching with waypoints param for start/end
+        Given a grid size of 100 meters
+
         Given the node map
             """
             a-----b---c
@@ -506,6 +478,8 @@ Feature: Basic Map Matching
             | abde  | Ok      | abde      | ae        |
 
     Scenario: Matching with waypoints param that were tidied away
+        Given a grid size of 100 meters
+
         Given the node map
             """
             a - b - c - e
@@ -528,23 +502,29 @@ Feature: Basic Map Matching
             | abccfg | Ok      | abcfg     | acg       |
 
     Scenario: Testbot - Map matching refuses to use waypoints with trace splitting
+        Given a grid size of 10 meters
+
         Given the node map
             """
-            a b c d
-                e
+            a b c d e f g
+                h
             """
+
         Given the query options
             | waypoints | 0;3   |
 
         And the ways
-            | nodes | oneway |
-            | abcd  | no     |
+            | nodes    | oneway |
+            | abcdefg  | no     |
+            | ch       | no     |
 
         When I match I should get
-            | trace | timestamps | code     |
-            | abcd  | 0 1 62 63  | NoMatch  |
+            | trace    | timestamps         | code         |
+            | abcdefg  | 0 2 30 32 34 36 38 | InvalidValue |
 
     Scenario: Testbot - Map matching invalid waypoints
+        Given a grid size of 100 meters
+
         Given the node map
             """
             a b c d
@@ -562,6 +542,8 @@ Feature: Basic Map Matching
             | abcd  | InvalidOptions |
 
     Scenario: Matching fail with waypoints param missing start/end
+        Given a grid size of 100 meters
+
         Given the node map
             """
             a-----b---c
@@ -586,6 +568,7 @@ Feature: Basic Map Matching
 
     Scenario: Testbot - Map matching with outlier that has no candidate and waypoint parameter
         Given a grid size of 100 meters
+
         Given the node map
             """
             a b c d
@@ -606,6 +589,7 @@ Feature: Basic Map Matching
 
     Scenario: Regression test - avoid collapsing legs of a tidied split trace
         Given a grid size of 20 meters
+
         Given the node map
             """
             a--b--f
@@ -614,7 +598,7 @@ Feature: Basic Map Matching
                e--c---d--g
             """
         Given the query options
-        | tidy | true |
+            | tidy | true |
 
         And the ways
             | nodes | oneway |
