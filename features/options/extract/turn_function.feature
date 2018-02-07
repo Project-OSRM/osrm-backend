@@ -40,6 +40,7 @@ Feature: Turn Function Information
              .. ', is_outgoing: ' .. tostring(leg.is_outgoing)
              .. ', highway_turn_classification: ' .. tostring(leg.highway_turn_classification)
              .. ', access_turn_classification: ' .. tostring(leg.access_turn_classification)
+             .. ', priority_class: ' .. tostring(leg.priority_class)
         end
 
         function print_turn (profile, turn)
@@ -50,6 +51,8 @@ Feature: Turn Function Information
           print ('source_highway_turn_classification ' .. string.format("%s", tostring(turn.source_highway_turn_classification)))
           print ('source_access_turn_classification ' .. string.format("%s", tostring(turn.source_access_turn_classification)))
           print ('source_speed ' .. string.format("%s", tostring(turn.source_speed)))
+          print ('source_priority_class ' .. string.format("%s", tostring(turn.source_priority_class)))
+          print ('source_mode ' .. string.format("%s", tostring(turn.source_mode)))
 
           print ('target_restricted ' .. string.format("%s", tostring(turn.target_restricted)))
           print ('target_is_motorway ' .. string.format("%s", tostring(turn.target_is_motorway)))
@@ -58,6 +61,8 @@ Feature: Turn Function Information
           print ('target_highway_turn_classification ' .. string.format("%s", tostring(turn.target_highway_turn_classification)))
           print ('target_access_turn_classification ' .. string.format("%s", tostring(turn.target_access_turn_classification)))
           print ('target_speed ' .. string.format("%s", tostring(turn.target_speed)))
+          print ('target_priority_class ' .. string.format("%s", tostring(turn.target_priority_class)))
+          print ('target_mode ' .. string.format("%s", tostring(turn.target_mode)))
 
           print ('number_of_roads ' .. string.format("%s", tostring(turn.number_of_roads)))
           if not turn.is_u_turn then
@@ -97,8 +102,10 @@ Feature: Turn Function Information
         And stdout should contain "source_is_motorway true"
         And stdout should contain "target_is_motorway true"
         And stdout should contain "source_is_link false"
+        And stdout should contain "source_priority_class 0"
         And stdout should contain "target_is_motorway true"
         And stdout should contain "target_is_link false"
+        And stdout should contain "target_priority_class 0"
 
 
     Scenario: Turns should detect when turn is leaving highway
@@ -143,6 +150,9 @@ Feature: Turn Function Information
         When I run "osrm-extract --profile {profile_file} {osm_file}"
         Then it should exit successfully
         And stdout should contain "number_of_roads 3"
+        And stdout should contain "source_priority_class 4"
+        And stdout should contain "target_priority_class 0"
+        And stdout should contain "target_priority_class 11"
         # turning abd, give information about bc
         And stdout should contain /roads_on_the_right \[1\] speed: [0-9]+, is_incoming: false, is_outgoing: true, highway_turn_classification: 4, access_turn_classification: 0/
         # turning abc, give information about bd

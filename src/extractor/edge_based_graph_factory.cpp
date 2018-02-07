@@ -585,6 +585,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 ((double)intersection::findEdgeLength(edge_geometries, node_based_edge_from) /
                  edge_data1.duration) *
                     36,
+                edge_data1.flags.road_classification.GetPriority(),
                 // target info
                 edge_data2.flags.restricted,
                 m_edge_based_node_container.GetAnnotation(edge_data2.annotation_data).travel_mode,
@@ -596,6 +597,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 ((double)intersection::findEdgeLength(edge_geometries, node_based_edge_to) /
                  edge_data2.duration) *
                     36,
+                edge_data2.flags.road_classification.GetPriority(),
                 // connected roads
                 road_legs_on_the_right,
                 road_legs_on_the_left);
@@ -763,6 +765,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                                                           connected_edge.eid) /
                                      edge_data.duration) *
                                         36,
+                                    edge_data.flags.road_classification.GetPriority(),
                                     !connected_edge.entry_allowed ||
                                         (edge_data.flags.forward &&
                                          edge_data.flags.backward), // is incoming
