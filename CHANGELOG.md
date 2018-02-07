@@ -1,3 +1,10 @@
+# 5.15.2
+  - Changes from 5.15.1:
+    - Features:
+        - Exposed the waypoints parameter in the node bindings interface
+    - Bugfixes:
+        - Segfault causing bug in leg collapsing map matching when traversing edges in reverse
+
 # 5.15.1
   - Changes from 5.15.0:
     - Bugfixes:
