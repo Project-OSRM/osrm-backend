@@ -81,20 +81,6 @@ module.exports = function () {
                             approaches = this.approachList(route);
 
 
-                            var resultdata = {
-                                feature: this.feature.getName(),
-                                scenario: this.scenario.getName(),
-                                row: rowIndex,
-                                expected: {
-                                    route: table.hashes()[rowIndex]["route"],
-                                    turns: table.hashes()[rowIndex]["turns"],
-                                },
-                                got: {
-                                    route: instructions,
-                                    turns: turns
-                                }
-                            }
-                            fs.writeFileSync(`${this.scenarioCacheFile}_${rowIndex}_results.json`,JSON.stringify(resultdata));
                             fs.writeFileSync(`${this.scenarioCacheFile}_${rowIndex}_response.json`,body);
 
                             var geojson = {
@@ -267,6 +253,16 @@ module.exports = function () {
                         if (driving_sides) {
                             putValue('driving_side', driving_sides);
                         }
+
+                        var resultdata = {
+                            feature: this.feature.getName(),
+                            scenario: this.scenario.getName(),
+                            row: rowIndex,
+                            expected: table.hashes()[rowIndex],
+                            got: got
+                        }
+                        console.log(resultdata);
+                        fs.writeFileSync(`${this.scenarioCacheFile}_${rowIndex}_results.json`,JSON.stringify(resultdata));
 
                         for (var key in row) {
                             if (this.FuzzyMatch.match(got[key], row[key])) {

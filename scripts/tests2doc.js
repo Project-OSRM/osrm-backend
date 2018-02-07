@@ -179,7 +179,7 @@ find('test/cache').filter((f) => f.match(/[0-9]+_results.json$/)).forEach((f) =>
       results.got.turns = results.got.turns.replace(/slight /g,'').replace(/sharp /g, '');
 
   report += `<div class='scenario ${results.got.turns == results.expected.turns ? 'ok' : 'error'}'>
-  <h2><a name="${imagefile}">${results.feature} - ${results.scenario}</a></h2>
+  <h2><a href="${imagefile}">[link]</a> <a name="${imagefile}">${results.feature} - ${results.scenario}</a></h2>
   <a href="${osmfile}">Download OSM XML file for this test</a><br/>
   <a href="${pbffile}">Download OSM PBF file for this test</a><br/>
   <a href="${requestfile}">Download request used for this test</a><br/>
@@ -192,9 +192,21 @@ find('test/cache').filter((f) => f.match(/[0-9]+_results.json$/)).forEach((f) =>
     </td>
   <td>
   <table class="results">
-      <tr><th/><th style='text-align: left'>Route</th><th style='text-align: left'>Turns</th></tr>
-      <tr><th style='text-align: right'>OSRM</th><td>${results.expected.route}</td><td>${results.expected.turns}</td></tr>
-      <tr><th style='text-align: right'>Valhalla</th><td>${results.got.route}</td><td class='${results.got.turns == results.expected.turns ? 'ok' : 'error'}'>${results.got.turns}</td></tr>
+      <tr><th/>`;
+Object.keys(results.expected).forEach((k) => {
+    report += `<th style="text-align: left">${k}</th>`;
+});
+report += `</tr>`;
+report += `<tr><th style='text-align: right'>OSRM</th>`;
+Object.keys(results.expected).forEach((k) => {
+    report += `<td style="text-align: left">${results.expected[k]}</td>`;
+});
+report += `</tr>`;
+report += `<tr><th style='text-align: right'>Valhalla</th>`;
+Object.keys(results.expected).forEach((k) => {
+    report += `<td style="text-align: left" class="${results.expected[k] === results.got[k] ? "ok" :"error" }">${results.got[k]}</td>`;
+});
+report += `</tr>
   </table>
 </td></tr></table>
 </div>
