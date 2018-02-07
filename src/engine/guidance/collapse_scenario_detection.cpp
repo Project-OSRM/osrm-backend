@@ -346,28 +346,6 @@ bool maneuverSucceededByNameChange(const RouteStepIterator step_entering_interse
            followed_by_name_change && is_maneuver;
 }
 
-bool maneuverSucceededBySuppressedDirection(const RouteStepIterator step_entering_intersection,
-                                            const RouteStepIterator step_leaving_intersection)
-{
-    if (!basicCollapsePreconditions(step_entering_intersection, step_leaving_intersection))
-        return false;
-
-    const auto short_and_undisturbed = isShortAndUndisturbed(*step_entering_intersection);
-
-    const auto followed_by_suppressed_direction =
-        hasTurnType(*step_leaving_intersection, TurnType::Suppressed) &&
-        !hasModifier(*step_leaving_intersection, DirectionModifier::Straight);
-
-    const auto is_maneuver = hasTurnType(*step_entering_intersection) &&
-                             !hasTurnType(*step_entering_intersection, TurnType::Suppressed);
-
-    const auto keeps_direction =
-        areSameSide(*step_entering_intersection, *step_leaving_intersection);
-
-    return short_and_undisturbed && followed_by_suppressed_direction && is_maneuver &&
-           keeps_direction;
-}
-
 bool nameChangeImmediatelyAfterSuppressed(const RouteStepIterator step_entering_intersection,
                                           const RouteStepIterator step_leaving_intersection)
 {

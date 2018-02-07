@@ -1221,7 +1221,7 @@ Feature: Simple Turns
             | a,c       | rose,trift,trift  | depart,turn slight left,arrive  |
             | a,k       | rose,muhle,muhle  | depart,turn slight right,arrive |
             | d,f       | trift,rose        | depart,arrive                   |
-            | d,k       | trift,muhle,muhle | depart,turn sharp left,arrive   |
+            | d,k       | trift,muhle,muhle | depart,turn left,arrive         |
             | d,c       | trift,trift,trift | depart,continue uturn,arrive    |
 
     #http://www.openstreetmap.org/#map=19/52.50740/13.44824
