@@ -1267,14 +1267,10 @@ argumentsToMatchParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
             const auto index = Nan::To<std::uint32_t>(waypoint_value).FromJust();
             if (index >= coords_size)
             {
-                std::cout << "index " << index << std::endl;
-                std::cout << "coords_size " << coords_size << std::endl;
                 Nan::ThrowError("Waypoints must correspond with the index of an input coordinate");
                 return match_parameters_ptr();
             }
             params->waypoints.emplace_back(static_cast<unsigned>(waypoint_value->NumberValue()));
-            std::cout << "waypoints params size " << params->waypoints.size() << std::endl;
-            std::cout << "waypoints params capacity " << params->waypoints.capacity() << std::endl;
         }
     }
 
