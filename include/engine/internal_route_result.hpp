@@ -145,6 +145,8 @@ inline InternalRouteResult CollapseInternalRouteResult(const InternalRouteResult
             BOOST_ASSERT(!collapsed.segment_end_coordinates.empty());
             collapsed.segment_end_coordinates.back().target_phantom =
                 leggy_result.segment_end_coordinates[i].target_phantom;
+            collapsed.target_traversed_in_reverse.back() =
+                leggy_result.target_traversed_in_reverse[i];
             // copy path segments into current leg
             last_segment.insert(last_segment.end(),
                                 leggy_result.unpacked_path_segments[i].begin(),

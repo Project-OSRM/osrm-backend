@@ -1171,7 +1171,7 @@ argumentsToMatchParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
                 Nan::ThrowError("Timestamps array items must be numbers");
                 return match_parameters_ptr();
             }
-            params->timestamps.emplace_back(static_cast<unsigned>(timestamp->NumberValue()));
+            params->timestamps.emplace_back(static_cast<std::size_t>(timestamp->NumberValue()));
         }
     }
 
@@ -1218,6 +1218,60 @@ argumentsToMatchParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
         }
 
         params->tidy = tidy->BooleanValue();
+    }
+
+    if (obj->Has(Nan::New("waypoints").ToLocalChecked()))
+    {
+        v8::Local<v8::Value> waypoints = obj->Get(Nan::New("waypoints").ToLocalChecked());
+        if (waypoints.IsEmpty())
+            return match_parameters_ptr();
+
+        // must be array
+        if (!waypoints->IsArray())
+        {
+            Nan::ThrowError(
+                "Waypoints must be an array of integers corresponding to the input coordinates.");
+            return match_parameters_ptr();
+        }
+
+        auto waypoints_array = v8::Local<v8::Array>::Cast(waypoints);
+        // must have at least two elements
+        if (waypoints_array->Length() < 2)
+        {
+            Nan::ThrowError("At least two waypoints must be provided");
+            return match_parameters_ptr();
+        }
+        auto coords_size = params->coordinates.size();
+        auto waypoints_array_size = waypoints_array->Length();
+
+        const auto first_index = Nan::To<std::uint32_t>(waypoints_array->Get(0)).FromJust();
+        const auto last_index =
+            Nan::To<std::uint32_t>(waypoints_array->Get(waypoints_array_size - 1)).FromJust();
+        if (first_index != 0 || last_index != coords_size - 1)
+        {
+            Nan::ThrowError("First and last waypoints values must correspond to first and last "
+                            "coordinate indices");
+            return match_parameters_ptr();
+        }
+
+        for (uint32_t i = 0; i < waypoints_array_size; ++i)
+        {
+            v8::Local<v8::Value> waypoint_value = waypoints_array->Get(i);
+            // all elements must be numbers
+            if (!waypoint_value->IsNumber())
+            {
+                Nan::ThrowError("Waypoint values must be an array of integers");
+                return match_parameters_ptr();
+            }
+            // check that the waypoint index corresponds with an inpute coordinate
+            const auto index = Nan::To<std::uint32_t>(waypoint_value).FromJust();
+            if (index >= coords_size)
+            {
+                Nan::ThrowError("Waypoints must correspond with the index of an input coordinate");
+                return match_parameters_ptr();
+            }
+            params->waypoints.emplace_back(static_cast<unsigned>(waypoint_value->NumberValue()));
+        }
     }
 
     bool parsedSuccessfully = parseCommonParameters(obj, params);
