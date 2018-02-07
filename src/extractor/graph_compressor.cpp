@@ -277,7 +277,8 @@ void GraphCompressor::Compress(
                 graph.GetEdgeData(forward_e1).duration += forward_duration2;
                 graph.GetEdgeData(reverse_e1).duration += reverse_duration2;
 
-                if (node_weight_penalty != INVALID_EDGE_WEIGHT && node_duration_penalty != MAXIMAL_EDGE_DURATION)
+                if (node_weight_penalty != INVALID_EDGE_WEIGHT &&
+                    node_duration_penalty != MAXIMAL_EDGE_DURATION)
                 {
                     graph.GetEdgeData(forward_e1).weight += node_weight_penalty;
                     graph.GetEdgeData(reverse_e1).weight += node_weight_penalty;
