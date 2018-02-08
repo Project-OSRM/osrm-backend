@@ -259,7 +259,7 @@ if(CMAKE_BUILD_TYPE MATCHES Release OR CMAKE_BUILD_TYPE MATCHES MinRelSize OR CM
 
     # Since gcc 4.9 the LTO format is non-standart ('slim'), so we need to use the build-in tools
     if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND
-        NOT "${CMAKE_CXX_COMPILER_VERSION}" VERSION_LESS "4.9.0" AND NOT MINGW)
+        NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.9.0 AND NOT MINGW)
       find_program(GCC_AR gcc-ar)
       find_program(GCC_RANLIB gcc-ranlib)
       if ("${GCC_AR}" STREQUAL "GCC_AR-NOTFOUND" OR "${GCC_RANLIB}" STREQUAL "GCC_RANLIB-NOTFOUND")
@@ -288,7 +288,7 @@ if(CMAKE_BUILD_TYPE MATCHES Release OR CMAKE_BUILD_TYPE MATCHES MinRelSize OR CM
       endif()
     endif()
 
-    if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND "${CMAKE_CXX_COMPILER_VERSION}" VERSION_LESS "4.9.0")
+    if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.9.0)
       message(STATUS "Disabling LTO on GCC < 4.9.0 since it is broken, see: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=57038")
       set(CMAKE_CXX_FLAGS "${OLD_CXX_FLAGS}")
       set(ENABLE_LTO Off)
@@ -330,6 +330,13 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
   endif()
   # using GCC
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OSRM_WARNING_FLAGS} -Werror=strict-overflow=1 -Wno-error=maybe-uninitialized -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 ${COLOR_FLAG} -fPIC -ftemplate-depth=1024")
+
+  # Disable missing field initializer since this has a lot of false positives with incomplete curly-braces
+  # initialization support on 4.9
+  if(NOT CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 4.9)
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=missing-field-initializers")
+  endif()
+
   if(WIN32) # using mingw
     add_dependency_defines(-DWIN32)
     set(OPTIONAL_SOCKET_LIBS ws2_32 wsock32)
