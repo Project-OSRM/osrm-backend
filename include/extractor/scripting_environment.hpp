@@ -2,6 +2,7 @@
 #define SCRIPTING_ENVIRONMENT_HPP
 
 #include "extractor/internal_extractor_edge.hpp"
+#include "extractor/maneuver_override.hpp"
 #include "extractor/profile_properties.hpp"
 #include "extractor/restriction.hpp"
 
@@ -31,6 +32,7 @@ namespace extractor
 {
 
 class RestrictionParser;
+class ManeuverOverrideRelationParser;
 class ExtractionRelationContainer;
 struct ExtractionNode;
 struct ExtractionWay;
@@ -62,10 +64,12 @@ class ScriptingEnvironment
     virtual void
     ProcessElements(const osmium::memory::Buffer &buffer,
                     const RestrictionParser &restriction_parser,
+                    const ManeuverOverrideRelationParser &maneuver_override_parser,
                     const ExtractionRelationContainer &relations,
                     std::vector<std::pair<const osmium::Node &, ExtractionNode>> &resulting_nodes,
                     std::vector<std::pair<const osmium::Way &, ExtractionWay>> &resulting_ways,
-                    std::vector<InputConditionalTurnRestriction> &resulting_restrictions) = 0;
+                    std::vector<InputConditionalTurnRestriction> &resulting_restrictions,
+                    std::vector<InputManeuverOverride> &resulting_maneuver_overrides) = 0;
 
     virtual bool HasLocationDependentData() const = 0;
 };

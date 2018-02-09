@@ -8,6 +8,7 @@
 #include "extractor/edge_based_edge.hpp"
 #include "extractor/edge_based_node_segment.hpp"
 #include "extractor/extraction_turn.hpp"
+#include "extractor/maneuver_override.hpp"
 #include "extractor/nbg_to_ebg.hpp"
 #include "extractor/node_data_container.hpp"
 #include "extractor/query_node.hpp"
@@ -83,9 +84,11 @@ class EdgeBasedGraphFactory
              const std::string &turn_penalties_index_filename,
              const std::string &cnbg_ebg_mapping_path,
              const std::string &conditional_penalties_filename,
+             const std::string &maneuver_overrides_filename,
              const RestrictionMap &node_restriction_map,
              const ConditionalRestrictionMap &conditional_restriction_map,
-             const WayRestrictionMap &way_restriction_map);
+             const WayRestrictionMap &way_restriction_map,
+             const std::vector<UnresolvedManeuverOverride> &maneuver_overrides);
 
     // The following get access functions destroy the content in the factory
     void GetEdgeBasedEdges(util::DeallocatingVector<EdgeBasedEdge> &edges);
@@ -168,14 +171,17 @@ class EdgeBasedGraphFactory
 
     // Edge-expanded edges are generate for all valid turns. The validity can be checked via the
     // restriction maps
-    void GenerateEdgeExpandedEdges(ScriptingEnvironment &scripting_environment,
-                                   const std::string &turn_weight_penalties_filename,
-                                   const std::string &turn_duration_penalties_filename,
-                                   const std::string &turn_penalties_index_filename,
-                                   const std::string &conditional_turn_penalties_filename,
-                                   const RestrictionMap &node_restriction_map,
-                                   const ConditionalRestrictionMap &conditional_restriction_map,
-                                   const WayRestrictionMap &way_restriction_map);
+    void
+    GenerateEdgeExpandedEdges(ScriptingEnvironment &scripting_environment,
+                              const std::string &turn_weight_penalties_filename,
+                              const std::string &turn_duration_penalties_filename,
+                              const std::string &turn_penalties_index_filename,
+                              const std::string &conditional_turn_penalties_filename,
+                              const std::string &maneuver_overrides_filename,
+                              const RestrictionMap &node_restriction_map,
+                              const ConditionalRestrictionMap &conditional_restriction_map,
+                              const WayRestrictionMap &way_restriction_map,
+                              const std::vector<UnresolvedManeuverOverride> &maneuver_overrides);
 
     NBGToEBG InsertEdgeBasedNode(const NodeID u, const NodeID v);
 

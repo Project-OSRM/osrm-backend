@@ -1,5 +1,6 @@
 #include "extractor/graph_compressor.hpp"
 #include "extractor/compressed_edge_container.hpp"
+#include "extractor/maneuver_override.hpp"
 #include "extractor/restriction.hpp"
 #include "util/node_based_graph.hpp"
 #include "util/typedefs.hpp"
@@ -71,6 +72,7 @@ BOOST_AUTO_TEST_CASE(long_road_test)
     std::vector<NodeBasedEdgeAnnotation> annotations(1);
     CompressedEdgeContainer container;
     test::MockScriptingEnvironment scripting_environment;
+    std::vector<UnresolvedManeuverOverride> maneuver_overrides;
 
     std::vector<InputEdge> edges = {MakeUnitEdge(0, 1),
                                     MakeUnitEdge(1, 0),
@@ -91,6 +93,7 @@ BOOST_AUTO_TEST_CASE(long_road_test)
                         scripting_environment,
                         restrictions,
                         conditional_restrictions,
+                        maneuver_overrides,
                         graph,
                         annotations,
                         container);
@@ -117,6 +120,7 @@ BOOST_AUTO_TEST_CASE(loop_test)
     CompressedEdgeContainer container;
     std::vector<NodeBasedEdgeAnnotation> annotations(1);
     test::MockScriptingEnvironment scripting_environment;
+    std::vector<UnresolvedManeuverOverride> maneuver_overrides;
 
     std::vector<InputEdge> edges = {MakeUnitEdge(0, 1),
                                     MakeUnitEdge(0, 5),
@@ -151,6 +155,7 @@ BOOST_AUTO_TEST_CASE(loop_test)
                         scripting_environment,
                         restrictions,
                         conditional_restrictions,
+                        maneuver_overrides,
                         graph,
                         annotations,
                         container);
@@ -180,6 +185,7 @@ BOOST_AUTO_TEST_CASE(t_intersection)
     std::vector<ConditionalTurnRestriction> conditional_restrictions;
     CompressedEdgeContainer container;
     test::MockScriptingEnvironment scripting_environment;
+    std::vector<UnresolvedManeuverOverride> maneuver_overrides;
 
     std::vector<InputEdge> edges = {MakeUnitEdge(0, 1),
                                     MakeUnitEdge(1, 0),
@@ -200,6 +206,7 @@ BOOST_AUTO_TEST_CASE(t_intersection)
                         scripting_environment,
                         restrictions,
                         conditional_restrictions,
+                        maneuver_overrides,
                         graph,
                         annotations,
                         container);
@@ -223,6 +230,7 @@ BOOST_AUTO_TEST_CASE(street_name_changes)
     std::vector<ConditionalTurnRestriction> conditional_restrictions;
     CompressedEdgeContainer container;
     test::MockScriptingEnvironment scripting_environment;
+    std::vector<UnresolvedManeuverOverride> maneuver_overrides;
 
     std::vector<InputEdge> edges = {
         MakeUnitEdge(0, 1), MakeUnitEdge(1, 0), MakeUnitEdge(1, 2), MakeUnitEdge(2, 1)};
@@ -239,6 +247,7 @@ BOOST_AUTO_TEST_CASE(street_name_changes)
                         scripting_environment,
                         restrictions,
                         conditional_restrictions,
+                        maneuver_overrides,
                         graph,
                         annotations,
                         container);
@@ -261,6 +270,7 @@ BOOST_AUTO_TEST_CASE(direction_changes)
     std::vector<ConditionalTurnRestriction> conditional_restrictions;
     CompressedEdgeContainer container;
     test::MockScriptingEnvironment scripting_environment;
+    std::vector<UnresolvedManeuverOverride> maneuver_overrides;
 
     std::vector<InputEdge> edges = {
         MakeUnitEdge(0, 1), MakeUnitEdge(1, 0), MakeUnitEdge(1, 2), MakeUnitEdge(2, 1)};
@@ -273,6 +283,7 @@ BOOST_AUTO_TEST_CASE(direction_changes)
                         scripting_environment,
                         restrictions,
                         conditional_restrictions,
+                        maneuver_overrides,
                         graph,
                         annotations,
                         container);

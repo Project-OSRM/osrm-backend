@@ -2,6 +2,7 @@
 #define OSRM_EXTRACTOR_NODE_BASED_GRAPH_FACTORY_HPP_
 
 #include "extractor/compressed_edge_container.hpp"
+#include "extractor/maneuver_override.hpp"
 #include "extractor/node_based_edge.hpp"
 #include "extractor/node_data_container.hpp"
 #include "extractor/packed_osm_ids.hpp"
@@ -39,7 +40,8 @@ class NodeBasedGraphFactory
     NodeBasedGraphFactory(const boost::filesystem::path &input_file,
                           ScriptingEnvironment &scripting_environment,
                           std::vector<TurnRestriction> &turn_restrictions,
-                          std::vector<ConditionalTurnRestriction> &conditional_turn_restrictions);
+                          std::vector<ConditionalTurnRestriction> &conditional_turn_restrictions,
+                          std::vector<UnresolvedManeuverOverride> &maneuver_overrides);
 
     auto const &GetGraph() const { return compressed_output_graph; }
     auto const &GetBarriers() const { return barriers; }
@@ -67,7 +69,8 @@ class NodeBasedGraphFactory
     // edges into a single representative form
     void Compress(ScriptingEnvironment &scripting_environment,
                   std::vector<TurnRestriction> &turn_restrictions,
-                  std::vector<ConditionalTurnRestriction> &conditional_turn_restrictions);
+                  std::vector<ConditionalTurnRestriction> &conditional_turn_restrictions,
+                  std::vector<UnresolvedManeuverOverride> &maneuver_overrides);
 
     // Most ways are bidirectional, making the geometry in forward and backward direction the same,
     // except for reversal. We make use of this fact by keeping only one representation of the

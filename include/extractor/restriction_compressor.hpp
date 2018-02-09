@@ -1,6 +1,7 @@
 #ifndef OSRM_EXTRACTOR_RESTRICTION_COMPRESSOR_HPP_
 #define OSRM_EXTRACTOR_RESTRICTION_COMPRESSOR_HPP_
 
+#include "extractor/maneuver_override.hpp"
 #include "extractor/restriction.hpp"
 #include "util/typedefs.hpp"
 
@@ -28,7 +29,8 @@ class RestrictionCompressor
 {
   public:
     RestrictionCompressor(std::vector<TurnRestriction> &restrictions,
-                          std::vector<ConditionalTurnRestriction> &conditional_turn_restrictions);
+                          std::vector<ConditionalTurnRestriction> &conditional_turn_restrictions,
+                          std::vector<UnresolvedManeuverOverride> &maneuver_overrides);
 
     // account for the compression of `from-via-to` into `from-to`
     void Compress(const NodeID from, const NodeID via, const NodeID to);
@@ -40,6 +42,9 @@ class RestrictionCompressor
     // node-restrictions, so we can focus on them alone
     boost::unordered_multimap<NodeID, NodeRestriction *> starts;
     boost::unordered_multimap<NodeID, NodeRestriction *> ends;
+
+    boost::unordered_multimap<NodeID, NodeBasedTurn *> maneuver_starts;
+    boost::unordered_multimap<NodeID, NodeBasedTurn *> maneuver_ends;
 };
 
 } // namespace extractor

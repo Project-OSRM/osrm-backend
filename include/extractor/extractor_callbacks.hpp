@@ -48,6 +48,7 @@ struct ExtractionWay;
 struct ExtractionRelation;
 struct ProfileProperties;
 struct InputConditionalTurnRestriction;
+struct InputManeuverOverride;
 
 /**
  * This class is used by the extractor with the results of the
@@ -90,6 +91,9 @@ class ExtractorCallbacks
 
     // warning: caller needs to take care of synchronization!
     void ProcessWay(const osmium::Way &current_way, const ExtractionWay &result_way);
+
+    // warning: caller needs to take care of synchronization!
+    void ProcessManeuverOverride(const InputManeuverOverride & override);
 };
 }
 }

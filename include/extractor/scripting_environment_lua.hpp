@@ -88,10 +88,12 @@ class Sol2ScriptingEnvironment final : public ScriptingEnvironment
     void
     ProcessElements(const osmium::memory::Buffer &buffer,
                     const RestrictionParser &restriction_parser,
+                    const ManeuverOverrideRelationParser &maneuver_override_parser,
                     const ExtractionRelationContainer &relations,
                     std::vector<std::pair<const osmium::Node &, ExtractionNode>> &resulting_nodes,
                     std::vector<std::pair<const osmium::Way &, ExtractionWay>> &resulting_ways,
-                    std::vector<InputConditionalTurnRestriction> &resulting_restrictions) override;
+                    std::vector<InputConditionalTurnRestriction> &resulting_restrictions,
+                    std::vector<InputManeuverOverride> &resulting_maneuver_overrides) override;
 
     bool HasLocationDependentData() const override { return !location_dependent_data.empty(); }
 

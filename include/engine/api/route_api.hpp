@@ -1,6 +1,7 @@
 #ifndef ENGINE_API_ROUTE_HPP
 #define ENGINE_API_ROUTE_HPP
 
+#include "extractor/maneuver_override.hpp"
 #include "engine/api/base_api.hpp"
 #include "engine/api/json_factory.hpp"
 #include "engine/api/route_parameters.hpp"
@@ -18,6 +19,8 @@
 #include "engine/guidance/verbosity_reduction.hpp"
 
 #include "engine/internal_route_result.hpp"
+
+#include "guidance/turn_instruction.hpp"
 
 #include "util/coordinate.hpp"
 #include "util/integer_range.hpp"
@@ -130,6 +133,7 @@ class RouteAPI : public BaseAPI
                                              reversed_target,
                                              parameters.steps);
 
+            util::Log(logDEBUG) << "Assembling steps " << std::endl;
             if (parameters.steps)
             {
                 auto steps = guidance::assembleSteps(BaseAPI::facade,
@@ -139,6 +143,10 @@ class RouteAPI : public BaseAPI
                                                      phantoms.target_phantom,
                                                      reversed_source,
                                                      reversed_target);
+
+                // Apply maneuver overrides before any other post
+                // processing is performed
+                guidance::applyOverrides(BaseAPI::facade, steps, leg_geometry);
 
                 /* Perform step-based post-processing.
                  *

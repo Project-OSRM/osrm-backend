@@ -7,6 +7,7 @@
 #include "extractor/extraction_way.hpp"
 #include "extractor/extractor_callbacks.hpp"
 #include "extractor/files.hpp"
+#include "extractor/maneuver_override_relation_parser.hpp"
 #include "extractor/node_based_graph_factory.hpp"
 #include "extractor/raster_source.hpp"
 #include "extractor/restriction_filter.hpp"
@@ -202,7 +203,11 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     LaneDescriptionMap turn_lane_map;
     std::vector<TurnRestriction> turn_restrictions;
     std::vector<ConditionalTurnRestriction> conditional_turn_restrictions;
-    std::tie(turn_lane_map, turn_restrictions, conditional_turn_restrictions) =
+    std::vector<UnresolvedManeuverOverride> unresolved_maneuver_overrides;
+    std::tie(turn_lane_map,
+             turn_restrictions,
+             conditional_turn_restrictions,
+             unresolved_maneuver_overrides) =
         ParseOSMData(scripting_environment, number_of_threads);
 
     // Transform the node-based graph that OSM is based on into an edge-based graph
@@ -223,7 +228,8 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     NodeBasedGraphFactory node_based_graph_factory(config.GetPath(".osrm"),
                                                    scripting_environment,
                                                    turn_restrictions,
-                                                   conditional_turn_restrictions);
+                                                   conditional_turn_restrictions,
+                                                   unresolved_maneuver_overrides);
 
     util::Log() << "Find segregated edges in node-based graph ..." << std::flush;
     TIMER_START(segregated);
@@ -290,6 +296,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
                                conditional_turn_restrictions,
                                segregated_edges,
                                name_table,
+                               unresolved_maneuver_overrides,
                                turn_lane_map,
                                scripting_environment,
                                edge_based_nodes_container,
@@ -367,7 +374,8 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
 
 std::tuple<LaneDescriptionMap,
            std::vector<TurnRestriction>,
-           std::vector<ConditionalTurnRestriction>>
+           std::vector<ConditionalTurnRestriction>,
+           std::vector<UnresolvedManeuverOverride>>
 Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
                         const unsigned number_of_threads)
 {
@@ -432,6 +440,8 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
         config.parse_conditionals,
         restrictions);
 
+    const ManeuverOverrideRelationParser maneuver_override_parser;
+
     // OSM data reader
     using SharedBuffer = std::shared_ptr<osmium::memory::Buffer>;
     struct ParsedBuffer
@@ -441,6 +451,7 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
         std::vector<std::pair<const osmium::Way &, ExtractionWay>> resulting_ways;
         std::vector<std::pair<const osmium::Relation &, ExtractionRelation>> resulting_relations;
         std::vector<InputConditionalTurnRestriction> resulting_restrictions;
+        std::vector<InputManeuverOverride> resulting_maneuver_overrides;
     };
 
     ExtractionRelationContainer relations;
@@ -482,10 +493,12 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
             parsed_buffer.buffer = buffer;
             scripting_environment.ProcessElements(*buffer,
                                                   restriction_parser,
+                                                  maneuver_override_parser,
                                                   relations,
                                                   parsed_buffer.resulting_nodes,
                                                   parsed_buffer.resulting_ways,
-                                                  parsed_buffer.resulting_restrictions);
+                                                  parsed_buffer.resulting_restrictions,
+                                                  parsed_buffer.resulting_maneuver_overrides);
             return parsed_buffer;
         });
 
@@ -493,6 +506,7 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
     unsigned number_of_nodes = 0;
     unsigned number_of_ways = 0;
     unsigned number_of_restrictions = 0;
+    unsigned number_of_maneuver_overrides = 0;
     tbb::filter_t<ParsedBuffer, void> buffer_storage(
         tbb::filter::serial_in_order, [&](const ParsedBuffer &parsed_buffer) {
 
@@ -513,6 +527,13 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
             {
                 extractor_callbacks->ProcessRestriction(result);
             }
+
+            number_of_maneuver_overrides = parsed_buffer.resulting_maneuver_overrides.size();
+            for (const auto &result : parsed_buffer.resulting_maneuver_overrides)
+            {
+                extractor_callbacks->ProcessManeuverOverride(result);
+            }
+
         });
 
     tbb::filter_t<SharedBuffer, std::shared_ptr<ExtractionRelationContainer>> buffer_relation_cache(
@@ -617,7 +638,8 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
 
     return std::make_tuple(std::move(turn_lane_map),
                            std::move(extraction_containers.unconditional_turn_restrictions),
-                           std::move(extraction_containers.conditional_turn_restrictions));
+                           std::move(extraction_containers.conditional_turn_restrictions),
+                           std::move(extraction_containers.internal_maneuver_overrides));
 }
 
 void Extractor::FindComponents(unsigned number_of_edge_based_nodes,
@@ -693,6 +715,7 @@ EdgeID Extractor::BuildEdgeExpandedGraph(
     const std::vector<ConditionalTurnRestriction> &conditional_turn_restrictions,
     const std::unordered_set<EdgeID> &segregated_edges,
     const util::NameTable &name_table,
+    const std::vector<UnresolvedManeuverOverride> &maneuver_overrides,
     const LaneDescriptionMap &turn_lane_map,
     // for calculating turn penalties
     ScriptingEnvironment &scripting_environment,
@@ -736,9 +759,11 @@ EdgeID Extractor::BuildEdgeExpandedGraph(
                                      config.GetPath(".osrm.turn_penalties_index").string(),
                                      config.GetPath(".osrm.cnbg_to_ebg").string(),
                                      config.GetPath(".osrm.restrictions").string(),
+                                     config.GetPath(".osrm.maneuver_overrides").string(),
                                      via_node_restriction_map,
                                      conditional_node_restriction_map,
-                                     via_way_restriction_map);
+                                     via_way_restriction_map,
+                                     maneuver_overrides);
         return edge_based_graph_factory.GetNumberOfEdgeBasedNodes();
     };
 

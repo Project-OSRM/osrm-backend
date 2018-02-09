@@ -28,6 +28,7 @@ BOOST_AUTO_TEST_CASE(simple_intersection_connectivity)
     std::vector<ConditionalTurnRestriction> conditional_restrictions;
     CompressedEdgeContainer container;
     test::MockScriptingEnvironment scripting_environment;
+    std::vector<UnresolvedManeuverOverride> maneuver_overrides;
 
     TurnLanesIndexedArray turn_lanes_data{{0, 0, 3},
                                           {TurnLaneType::uturn | TurnLaneType::left,
@@ -90,6 +91,7 @@ BOOST_AUTO_TEST_CASE(simple_intersection_connectivity)
                                scripting_environment,
                                restrictions,
                                conditional_restrictions,
+                               maneuver_overrides,
                                graph,
                                annotations,
                                container);
@@ -157,6 +159,7 @@ BOOST_AUTO_TEST_CASE(roundabout_intersection_connectivity)
     std::vector<ConditionalTurnRestriction> conditional_restrictions;
     CompressedEdgeContainer container;
     test::MockScriptingEnvironment scripting_environment;
+    std::vector<UnresolvedManeuverOverride> maneuver_overrides;
 
     TurnLanesIndexedArray turn_lanes_data;
 
@@ -211,6 +214,7 @@ BOOST_AUTO_TEST_CASE(roundabout_intersection_connectivity)
                                scripting_environment,
                                restrictions,
                                conditional_restrictions,
+                               maneuver_overrides,
                                graph,
                                annotations,
                                container);
@@ -261,6 +265,7 @@ BOOST_AUTO_TEST_CASE(skip_degree_two_nodes)
     std::vector<ConditionalTurnRestriction> conditional_restrictions;
     CompressedEdgeContainer container;
     test::MockScriptingEnvironment scripting_environment;
+    std::vector<UnresolvedManeuverOverride> maneuver_overrides;
 
     TurnLanesIndexedArray turn_lanes_data;
 
@@ -301,6 +306,7 @@ BOOST_AUTO_TEST_CASE(skip_degree_two_nodes)
                                scripting_environment,
                                restrictions,
                                conditional_restrictions,
+                               maneuver_overrides,
                                graph,
                                annotations,
                                container);
