@@ -57,13 +57,22 @@ InternalRouteResult directShortestPathSearch(SearchEngineData<ch::Algorithm> &en
                        [&unpacked_nodes, &unpacked_edges](std::pair<NodeID, NodeID> &edge,
                                                           const auto &edge_id) {
                            BOOST_ASSERT(edge.first == unpacked_nodes.back());
-                           unpacked_nodes.push_back(edge.second);
-                           unpacked_edges.push_back(edge_id);
+                           unpacked_nodes.push_back(edge.second); // edge.second is edge based node ids
+                           unpacked_edges.push_back(edge_id); 
                        });
         engine_working_data.unpacking_cache.get()->PrintStats();
     }
 
     return extractRoute(facade, weight, phantom_nodes, unpacked_nodes, unpacked_edges);
+    // a function that takes the endge based node ids and returns to you the duration 
+    // takes path returns duration
+    // path is made of Edge based edges == turns that are unpacked edges and unpacked nodes
+    //
+    //     / \     get the duration of the street segment , get the duration of the turn segment and add them up for total duration
+    //      |
+    // - - - 
+    //
+    // what I should really do first is read extractRoute implementation and understand what is happenin in there
 }
 
 template <>
