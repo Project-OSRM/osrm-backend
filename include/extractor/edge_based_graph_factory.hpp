@@ -15,13 +15,9 @@
 #include "extractor/restriction_index.hpp"
 #include "extractor/turn_lane_types.hpp"
 #include "extractor/way_restriction_map.hpp"
-#include "guidance/turn_analysis.hpp"
-#include "guidance/turn_instruction.hpp"
 
 #include "util/concurrent_id_map.hpp"
 #include "util/deallocating_vector.hpp"
-#include "util/guidance/bearing_class.hpp"
-#include "util/guidance/entry_class.hpp"
 #include "util/name_table.hpp"
 #include "util/node_based_graph.hpp"
 #include "util/typedefs.hpp"
@@ -98,17 +94,6 @@ class EdgeBasedGraphFactory
     std::uint32_t GetConnectivityChecksum() const;
 
     std::uint64_t GetNumberOfEdgeBasedNodes() const;
-
-    // Basic analysis of a turn (u --(e1)-- v --(e2)-- w)
-    // with known angle.
-    // Handles special cases like u-turns and roundabouts
-    // For basic turns, the turn based on the angle-classification is returned
-    guidance::TurnInstruction AnalyzeTurn(const NodeID u,
-                                          const EdgeID e1,
-                                          const NodeID v,
-                                          const EdgeID e2,
-                                          const NodeID w,
-                                          const double angle) const;
 
   private:
     using EdgeData = util::NodeBasedDynamicGraph::EdgeData;
