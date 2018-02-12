@@ -91,6 +91,7 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
                         const std::vector<NodeBucket> &search_space_with_buckets,
                         std::vector<EdgeWeight> &weights_table,
                         std::vector<EdgeDuration> &durations_table,
+                        std::vector<NodeID> &middle_nodes_table,
                         const PhantomNode &phantom_node)
 {
     const auto node = query_heap.DeleteMin();
@@ -122,6 +123,7 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
             {
                 current_weight = std::min(current_weight, new_weight);
                 current_duration = std::min(current_duration, new_duration);
+                middle_nodes_table.emplace_back(node);
             }
         }
         else if (std::tie(new_weight, new_duration) < std::tie(current_weight, current_duration))
@@ -144,9 +146,11 @@ void backwardRoutingStep(const DataFacade<Algorithm> &facade,
     const auto node = query_heap.DeleteMin();
     const auto target_weight = query_heap.GetKey(node);
     const auto target_duration = query_heap.GetData(node).duration;
+    const auto parent = query_heap.GetData(node).parent;
 
     // Store settled nodes in search space bucket
-    search_space_with_buckets.emplace_back(node, column_idx, target_weight, target_duration);
+    search_space_with_buckets.emplace_back(
+        node, parent, column_idx, target_weight, target_duration);
 
     relaxOutgoingEdges<REVERSE_DIRECTION>(
         facade, node, target_weight, target_duration, query_heap, phantom_node);
@@ -167,6 +171,7 @@ std::vector<EdgeDuration> manyToManySearch(SearchEngineData<ch::Algorithm> &engi
 
     std::vector<EdgeWeight> weights_table(number_of_entries, INVALID_EDGE_WEIGHT);
     std::vector<EdgeDuration> durations_table(number_of_entries, MAXIMAL_EDGE_DURATION);
+    std::vector<NodeID> middle_nodes_table(number_of_entries, SPECIAL_NODEID);
 
     std::vector<NodeBucket> search_space_with_buckets;
 
@@ -213,6 +218,7 @@ std::vector<EdgeDuration> manyToManySearch(SearchEngineData<ch::Algorithm> &engi
                                search_space_with_buckets,
                                weights_table,
                                durations_table,
+                               middle_nodes_table,
                                phantom);
         }
     }
