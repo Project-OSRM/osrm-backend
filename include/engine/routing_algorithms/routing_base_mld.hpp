@@ -5,6 +5,7 @@
 #include "engine/datafacade.hpp"
 #include "engine/routing_algorithms/routing_base.hpp"
 #include "engine/search_engine_data.hpp"
+#include "engine/unpacking_statistics.hpp"
 
 #include "util/typedefs.hpp"
 
@@ -286,6 +287,7 @@ UnpackedPath search(SearchEngineData<Algorithm> &engine_working_data,
                     typename SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
                     const bool force_loop_forward,
                     const bool force_loop_reverse,
+                    bool already_in_cache,
                     EdgeWeight weight_upper_bound,
                     Args... args)
 {
@@ -361,6 +363,20 @@ UnpackedPath search(SearchEngineData<Algorithm> &engine_working_data,
         NodeID source, target;
         bool overlay_edge;
         std::tie(source, target, overlay_edge) = packed_edge;
+
+        bool child_is_in_cache = false;
+
+        if (!already_in_cache)
+        {
+            if (engine_working_data.unpacking_cache.get()->IsEdgeInCache(std::make_pair(source, target)))
+            {
+                child_is_in_cache = true;
+            }
+            // if(!already_in_cache)std::cout << facade.GetCoordinateOfNode(source) << ", "<< facade.GetCoordinateOfNode(target);
+            engine_working_data.unpacking_cache.get()->CollectStats(std::make_pair(source, target));
+        }
+
+
         if (!overlay_edge)
         { // a base graph edge
             unpacked_nodes.push_back(target);
@@ -391,6 +407,7 @@ UnpackedPath search(SearchEngineData<Algorithm> &engine_working_data,
                                                                             reverse_heap,
                                                                             force_loop_forward,
                                                                             force_loop_reverse,
+                                                                            child_is_in_cache,
                                                                             INVALID_EDGE_WEIGHT,
                                                                             sublevel,
                                                                             parent_cell_id);
@@ -427,6 +444,7 @@ inline void search(SearchEngineData<Algorithm> &engine_working_data,
                                                            reverse_heap,
                                                            force_loop_forward,
                                                            force_loop_reverse,
+                                                           false,
                                                            weight_upper_bound,
                                                            phantom_nodes);
 }
@@ -486,6 +504,7 @@ double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
                                                               reverse_heap,
                                                               DO_NOT_FORCE_LOOPS,
                                                               DO_NOT_FORCE_LOOPS,
+                                                              false,
                                                               weight_upper_bound,
                                                               phantom_nodes);
 

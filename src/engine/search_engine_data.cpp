@@ -14,6 +14,7 @@ SearchEngineData<CH>::SearchEngineHeapPtr SearchEngineData<CH>::reverse_heap_2;
 SearchEngineData<CH>::SearchEngineHeapPtr SearchEngineData<CH>::forward_heap_3;
 SearchEngineData<CH>::SearchEngineHeapPtr SearchEngineData<CH>::reverse_heap_3;
 SearchEngineData<CH>::ManyToManyHeapPtr SearchEngineData<CH>::many_to_many_heap;
+SearchEngineData<CH>::UnpackingStatisticsPtr SearchEngineData<CH>::unpacking_cache;
 
 void SearchEngineData<CH>::InitializeOrClearFirstThreadLocalStorage(unsigned number_of_nodes)
 {
@@ -90,11 +91,24 @@ void SearchEngineData<CH>::InitializeOrClearManyToManyThreadLocalStorage(unsigne
     }
 }
 
+void SearchEngineData<CH>::InitializeOrClearUnpackingStatisticsThreadLocalStorage()
+{
+    if (unpacking_cache.get())
+    {
+        // unpacking_cache->Clear();
+    }
+    else
+    {
+        unpacking_cache.reset(new UnpackingStatistics());
+    }
+}
+
 // MLD
 using MLD = routing_algorithms::mld::Algorithm;
 SearchEngineData<MLD>::SearchEngineHeapPtr SearchEngineData<MLD>::forward_heap_1;
 SearchEngineData<MLD>::SearchEngineHeapPtr SearchEngineData<MLD>::reverse_heap_1;
 SearchEngineData<MLD>::ManyToManyHeapPtr SearchEngineData<MLD>::many_to_many_heap;
+SearchEngineData<MLD>::UnpackingStatisticsPtr SearchEngineData<MLD>::unpacking_cache;
 
 void SearchEngineData<MLD>::InitializeOrClearFirstThreadLocalStorage(unsigned number_of_nodes)
 {
@@ -126,6 +140,19 @@ void SearchEngineData<MLD>::InitializeOrClearManyToManyThreadLocalStorage(unsign
     else
     {
         many_to_many_heap.reset(new ManyToManyQueryHeap(number_of_nodes));
+    }
+}
+
+
+void SearchEngineData<MLD>::InitializeOrClearUnpackingStatisticsThreadLocalStorage()
+{
+    if (unpacking_cache.get())
+    {
+        // unpacking_cache->Clear();
+    }
+    else
+    {
+        unpacking_cache.reset(new UnpackingStatistics());
     }
 }
 }
