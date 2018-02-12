@@ -177,6 +177,7 @@ void annotatePath(const FacadeT &facade,
         const auto geometry_index = facade.GetGeometryIndex(node_id);
         get_segment_geometry(geometry_index);
 
+
         BOOST_ASSERT(id_vector.size() > 0);
         BOOST_ASSERT(datasource_vector.size() > 0);
         BOOST_ASSERT(weight_vector.size() + 1 == id_vector.size());
@@ -403,6 +404,31 @@ InternalRouteResult extractRoute(const DataFacade<AlgorithmT> &facade,
                  raw_route_data.unpacked_path_segments.front());
 
     return raw_route_data;
+}
+
+template <typename FacadeT>
+EdgeDuration computeEdgeDuration(const FacadeT &facade, NodeID node_id, NodeID turn_id)
+{
+    const auto geometry_index = facade.GetGeometryIndex(node_id);
+
+    // datastructures to hold extracted data from geometry
+    EdgeDuration total_duration;
+
+    if (geometry_index.forward)
+    {
+        auto duration_range = facade.GetUncompressedForwardDurations(geometry_index.id);
+        total_duration = std::accumulate(duration_range.begin(), duration_range.end(), 0);
+    }
+    else
+    {
+        auto duration_range = facade.GetUncompressedReverseDurations(geometry_index.id);
+        total_duration = std::accumulate(duration_range.begin(), duration_range.end(), 0);
+    }
+
+    const auto turn_duration = facade.GetDurationPenaltyForEdgeID(turn_id);
+    total_duration += turn_duration;
+
+    return total_duration;
 }
 
 } // namespace routing_algorithms

@@ -60,8 +60,8 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
         if (DIRECTION == FORWARD_DIRECTION ? data.forward : data.backward)
         {
             const NodeID to = facade.GetTarget(edge);
-
             const auto edge_weight = data.weight;
+
             const auto edge_duration = data.duration;
 
             BOOST_ASSERT_MSG(edge_weight > 0, "edge_weight invalid");
@@ -91,6 +91,7 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
                         const std::vector<NodeBucket> &search_space_with_buckets,
                         std::vector<EdgeWeight> &weights_table,
                         std::vector<EdgeDuration> &durations_table,
+                        std::vector<NodeID> &middle_nodes_table,
                         const PhantomNode &phantom_node)
 {
     const auto node = query_heap.DeleteMin();
@@ -122,12 +123,14 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
             {
                 current_weight = std::min(current_weight, new_weight);
                 current_duration = std::min(current_duration, new_duration);
+                middle_nodes_table[row_idx * number_of_targets + column_idx] = node;
             }
         }
         else if (std::tie(new_weight, new_duration) < std::tie(current_weight, current_duration))
         {
             current_weight = new_weight;
             current_duration = new_duration;
+            middle_nodes_table[row_idx * number_of_targets + column_idx] = node;
         }
     }
 
@@ -144,15 +147,65 @@ void backwardRoutingStep(const DataFacade<Algorithm> &facade,
     const auto node = query_heap.DeleteMin();
     const auto target_weight = query_heap.GetKey(node);
     const auto target_duration = query_heap.GetData(node).duration;
+    const auto parent = query_heap.GetData(node).parent;
 
     // Store settled nodes in search space bucket
-    search_space_with_buckets.emplace_back(node, column_idx, target_weight, target_duration);
+    search_space_with_buckets.emplace_back(
+        node, parent, column_idx, target_weight, target_duration);
 
     relaxOutgoingEdges<REVERSE_DIRECTION>(
         facade, node, target_weight, target_duration, query_heap, phantom_node);
 }
 
 } // namespace ch
+
+std::vector<NodeID>
+retrievePackedPathFromSearchSpace(NodeID middle_node_id,
+                                  const unsigned column_idx,
+                                  std::vector<NodeBucket> &search_space_with_buckets,
+                                  std::vector<NodeID> &packed_leg)
+{
+
+    //     [  0           1          2         3    ]
+    //     [ [m0,p=m3],[m1,p=m2],[m2,p=m1], [m3,p=2]]
+
+    //           targets (columns) target_id = column_idx
+    //              a   b   c
+    //          a  [0,  1,  2],
+    // sources  b  [3,  4,  5],
+    //  (rows)  c  [6,  7,  8],
+    //          d  [9, 10, 11]
+    // row_idx * number_of_targets + column_idx
+    // a -> c 0 * 3 + 2 = 2
+    // c -> c 2 * 3 + 2 = 8
+    // d -> c 3 * 3 + 2 = 11
+
+    //   middle_nodes_table = [0 , 1, 2, .........]
+
+    auto bucket_list = std::equal_range(search_space_with_buckets.begin(),
+                                        search_space_with_buckets.end(),
+                                        middle_node_id,
+                                        NodeBucket::ColumnCompare(column_idx));
+
+    NodeID current_node_id = middle_node_id;
+
+    BOOST_ASSERT_MSG(std::distance(bucket_list.first, bucket_list.second) == 1,
+                     "The pointers are not pointing to the same element.");
+
+    while (bucket_list.first->parent_node != current_node_id &&
+           bucket_list.first != search_space_with_buckets.end())
+    {
+        current_node_id = bucket_list.first->parent_node;
+
+        packed_leg.emplace_back(current_node_id);
+
+        bucket_list = std::equal_range(search_space_with_buckets.begin(),
+                                       search_space_with_buckets.end(),
+                                       current_node_id,
+                                       NodeBucket::ColumnCompare(column_idx));
+    }
+    return packed_leg;
+}
 
 template <>
 std::vector<EdgeDuration> manyToManySearch(SearchEngineData<ch::Algorithm> &engine_working_data,
@@ -167,8 +220,13 @@ std::vector<EdgeDuration> manyToManySearch(SearchEngineData<ch::Algorithm> &engi
 
     std::vector<EdgeWeight> weights_table(number_of_entries, INVALID_EDGE_WEIGHT);
     std::vector<EdgeDuration> durations_table(number_of_entries, MAXIMAL_EDGE_DURATION);
+    std::vector<NodeID> middle_nodes_table(number_of_entries, SPECIAL_NODEID);
 
     std::vector<NodeBucket> search_space_with_buckets;
+    std::vector<NodeID> packed_leg;
+
+    engine_working_data.InitializeOrClearUnpackingCacheThreadLocalStorage(
+        facade.GetTimestamp()); // always pass in the timestamp and clear if it's different
 
     // Populate buckets with paths from all accessible nodes to destinations via backward searches
     for (std::uint32_t column_idx = 0; column_idx < target_indices.size(); ++column_idx)
@@ -194,14 +252,14 @@ std::vector<EdgeDuration> manyToManySearch(SearchEngineData<ch::Algorithm> &engi
     // Find shortest paths from sources to all accessible nodes
     for (std::uint32_t row_idx = 0; row_idx < source_indices.size(); ++row_idx)
     {
-        const auto index = source_indices[row_idx];
-        const auto &phantom = phantom_nodes[index];
+        const auto source_index = source_indices[row_idx];
+        const auto &source_phantom = phantom_nodes[source_index];
 
         // Clear heap and insert source nodes
         engine_working_data.InitializeOrClearManyToManyThreadLocalStorage(
             facade.GetNumberOfNodes());
         auto &query_heap = *(engine_working_data.many_to_many_heap);
-        insertSourceInHeap(query_heap, phantom);
+        insertSourceInHeap(query_heap, source_phantom);
 
         // Explore search space
         while (!query_heap.Empty())
@@ -213,7 +271,97 @@ std::vector<EdgeDuration> manyToManySearch(SearchEngineData<ch::Algorithm> &engi
                                search_space_with_buckets,
                                weights_table,
                                durations_table,
-                               phantom);
+                               middle_nodes_table,
+                               source_phantom);
+        }
+        for (unsigned column_idx = 0; column_idx < number_of_targets; ++column_idx)
+        {
+            auto target_index = target_indices[column_idx];
+
+            if (source_index == target_index)
+            {
+                durations_table[row_idx * number_of_targets + column_idx] = 0;
+                continue;
+            }
+
+            const auto &target_phantom = phantom_nodes[target_indices[column_idx]];
+            NodeID middle_node_id = middle_nodes_table[row_idx * number_of_targets + column_idx];
+
+            if (middle_node_id == SPECIAL_NODEID) // takes care of one-ways
+            {
+                durations_table[row_idx * number_of_targets + column_idx] = MAXIMAL_EDGE_DURATION;
+                continue;
+            }
+
+            // Step 1: Find path from source to middle node
+            ch::retrievePackedPathFromSingleManyToManyHeap(
+                query_heap,
+                middle_node_id,
+                packed_leg); // packed_leg_from_source_to_middle
+            std::reverse(packed_leg.begin(), packed_leg.end());
+
+            packed_leg.push_back(middle_node_id);
+
+            // Step 2: Find path from middle to target node
+            retrievePackedPathFromSearchSpace(middle_node_id,
+                                              column_idx,
+                                              search_space_with_buckets,
+                                              packed_leg); // packed_leg_from_middle_to_target
+
+            if (packed_leg.size() == 1 && (needsLoopForward(source_phantom, target_phantom) ||
+                                           needsLoopBackwards(source_phantom, target_phantom)))
+            {
+                auto weight = ch::getLoopWeight<false>(facade, packed_leg.front());
+                if (weight != INVALID_EDGE_WEIGHT)
+                    packed_leg.push_back(packed_leg.front());
+            }
+            if (!packed_leg.empty())
+            {
+                durations_table[row_idx * number_of_targets + column_idx] =
+                    ch::calculateEBGNodeAnnotations(facade,
+                                                    packed_leg.begin(),
+                                                    packed_leg.end(),
+                                                    *engine_working_data.unpacking_cache.get());
+
+                // check the direction of travel to figure out how to calculate the offset to/from
+                // the source/target
+                if (source_phantom.forward_segment_id.id == packed_leg.front())
+                { // direction of travel is forward
+                    EdgeDuration offset = source_phantom.GetForwardDuration();
+                    durations_table[row_idx * number_of_targets + column_idx] -= offset;
+                }
+                if (source_phantom.reverse_segment_id.id == packed_leg.front())
+                {
+                    EdgeDuration offset = source_phantom.GetReverseDuration();
+                    durations_table[row_idx * number_of_targets + column_idx] -= offset;
+                }
+                if (target_phantom.forward_segment_id.id == packed_leg.back())
+                { // direction of travel is forward
+                    EdgeDuration offset = target_phantom.GetForwardDuration();
+                    durations_table[row_idx * number_of_targets + column_idx] += offset;
+                }
+                if (target_phantom.reverse_segment_id.id == packed_leg.back())
+                {
+                    EdgeDuration offset = target_phantom.GetReverseDuration();
+                    durations_table[row_idx * number_of_targets + column_idx] += offset;
+                }
+            }
+            else
+            {
+                if (target_phantom.GetForwardDuration() > source_phantom.GetForwardDuration())
+                {
+                    EdgeDuration offset =
+                        target_phantom.GetForwardDuration() - source_phantom.GetForwardDuration();
+                    durations_table[row_idx * number_of_targets + column_idx] += offset;
+                }
+                else
+                {
+                    EdgeDuration offset =
+                        target_phantom.GetReverseDuration() - source_phantom.GetReverseDuration();
+                    durations_table[row_idx * number_of_targets + column_idx] += offset;
+                }
+            }
+            packed_leg.clear();
         }
     }
 
