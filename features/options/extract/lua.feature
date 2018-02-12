@@ -129,8 +129,12 @@ Feature: osrm-extract lua ways:get_nodes()
         """
         functions = require('testbot')
 
+        functions.process_node = function(profile, node, result, relations)
+           print ('node ' .. tostring(node:get_location_tag('answer')))
+        end
+
         functions.process_way = function(profile, way, result, relations)
-           print ('answer ' .. tostring(way:get_location_tag('answer')))
+           print ('way ' .. tostring(way:get_location_tag('answer')))
            result.forward_mode = mode.driving
            result.forward_speed = 1
         end
@@ -148,4 +152,5 @@ Feature: osrm-extract lua ways:get_nodes()
 
         When I run "osrm-extract --profile {profile_file} {osm_file} --location-dependent-data test/data/regions/null-island.geojson"
         Then it should exit successfully
-        And stdout should contain "answer 42"
+        And stdout should contain "node 42"
+        And stdout should contain "way 42"
