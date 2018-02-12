@@ -7,7 +7,6 @@
 #include "../../third_party/compute_detail/lru_cache.hpp"
 #include "util/typedefs.hpp"
 
-
 // sizeof size_t: 8
 // sizeof unsigned: 4
 // sizeof unchar: 1
