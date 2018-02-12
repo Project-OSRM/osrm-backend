@@ -81,7 +81,7 @@ Feature: Motorway Guidance
             """
                  ,g,e
                ,f,d
-            a-b-c 
+            a-b-c
             """
 
         And the ways
@@ -281,3 +281,21 @@ Feature: Motorway Guidance
             | waypoints | route | turns         |
             | a,d       | ,     | depart,arrive |
             | b,d       | ,     | depart,arrive |
+
+
+    Scenario: Ramp Exit with Lower Priority
+        Given the node map
+            """
+            a-b-c-d-e
+               `--f-g
+            """
+
+        And the ways
+            | nodes | highway      | oneway |
+            | abcde | trunk        |        |
+            | bfg   | primary_link | yes    |
+
+       When I route I should get
+            | waypoints | route         | turns                               |
+            | a,e       | abcde,abcde   | depart,arrive                       |
+            | a,g       | abcde,bfg,bfg | depart,off ramp slight right,arrive |

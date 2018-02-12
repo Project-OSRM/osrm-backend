@@ -31,9 +31,13 @@ inline extractor::RoadClassification roadClass(const ConnectedRoad &road,
     return graph.GetEdgeData(road.eid).flags.road_classification;
 }
 
-inline bool isRampClass(EdgeID eid, const util::NodeBasedDynamicGraph &node_based_graph)
+inline bool isRampClass(EdgeID eid,
+                        const util::NodeBasedDynamicGraph &node_based_graph,
+                        bool from_motorway = true)
 {
-    return node_based_graph.GetEdgeData(eid).flags.road_classification.IsRampClass();
+    return node_based_graph.GetEdgeData(eid).flags.road_classification.IsRampClass() ||
+           (from_motorway &&
+            node_based_graph.GetEdgeData(eid).flags.road_classification.IsLinkClass());
 }
 
 } // namespace
@@ -63,6 +67,8 @@ bool MotorwayHandler::canProcess(const NodeID,
                                  const EdgeID via_eid,
                                  const Intersection &intersection) const
 {
+    const bool from_motorway = isMotorwayClass(via_eid, node_based_graph);
+
     bool has_motorway = false;
     bool has_normal_roads = false;
 
@@ -76,14 +82,14 @@ bool MotorwayHandler::canProcess(const NodeID,
             if (road.entry_allowed)
                 has_motorway = true;
         }
-        else if (!isRampClass(road.eid, node_based_graph))
+        else if (!isRampClass(road.eid, node_based_graph, from_motorway))
             has_normal_roads = true;
     }
 
     if (has_normal_roads)
         return false;
 
-    return has_motorway || isMotorwayClass(via_eid, node_based_graph);
+    return has_motorway || from_motorway;
 }
 
 Intersection MotorwayHandler::
