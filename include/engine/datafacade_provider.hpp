@@ -34,7 +34,8 @@ class ExternalProvider final : public DataFacadeProvider<AlgorithmT, FacadeT>
 
     ExternalProvider(const storage::StorageConfig &config,
                      const boost::filesystem::path &memory_file)
-        : facade_factory(std::make_shared<datafacade::MMapMemoryAllocator>(config, memory_file))
+        : facade_factory(std::make_shared<datafacade::MMapMemoryAllocator>(config, memory_file),
+                         0) // is it ok to add timestamp as zero here?
     {
     }
 
@@ -58,7 +59,7 @@ class ImmutableProvider final : public DataFacadeProvider<AlgorithmT, FacadeT>
     using Facade = typename DataFacadeProvider<AlgorithmT, FacadeT>::Facade;
 
     ImmutableProvider(const storage::StorageConfig &config)
-        : facade_factory(std::make_shared<datafacade::ProcessMemoryAllocator>(config))
+        : facade_factory(std::make_shared<datafacade::ProcessMemoryAllocator>(config), 0)
     {
     }
 
