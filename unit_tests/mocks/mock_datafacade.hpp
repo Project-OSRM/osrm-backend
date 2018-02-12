@@ -73,7 +73,6 @@ class MockBaseDataFacade : public engine::datafacade::BaseDataFacade
     {
         return WeightReverseRange(GetUncompressedForwardWeights(id));
     }
-
     DurationForwardRange GetUncompressedForwardDurations(const EdgeID /*id*/) const override
     {
         static std::uint64_t data[] = {1, 2, 3};

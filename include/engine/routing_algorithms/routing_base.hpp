@@ -177,11 +177,11 @@ void annotatePath(const FacadeT &facade,
         const auto geometry_index = facade.GetGeometryIndex(node_id);
         get_segment_geometry(geometry_index);
 
-
         BOOST_ASSERT(id_vector.size() > 0);
         BOOST_ASSERT(datasource_vector.size() > 0);
         BOOST_ASSERT(weight_vector.size() + 1 == id_vector.size());
         BOOST_ASSERT(duration_vector.size() + 1 == id_vector.size());
+
         const bool is_first_segment = unpacked_path.empty();
 
         const std::size_t start_index =

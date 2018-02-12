@@ -71,6 +71,7 @@ template <template <typename A> class FacadeT, typename AlgorithmT> class DataFa
             std::size_t index =
                 std::stoi(exclude_prefix.substr(index_begin + 1, exclude_prefix.size()));
             BOOST_ASSERT(index >= 0 && index < facades.size());
+
             facades[index] =
                 std::make_shared<const Facade>(allocator, metric_name, index, timestamp);
         }

@@ -2,7 +2,10 @@
 #define UNPACKING_CACHE_HPP
 
 #include <boost/optional/optional_io.hpp>
+<<<<<<< HEAD
 #include <boost/thread.hpp>
+=======
+>>>>>>> 68659b398... set up for computing durations while unpacking them
 
 #include "../../third_party/compute_detail/lru_cache.hpp"
 #include "util/typedefs.hpp"
