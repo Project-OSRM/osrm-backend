@@ -139,6 +139,7 @@
         {"key": "access", "value": "emergency"},
         {"key": "access", "value": "psv"},
         {"key": "access", "value": "delivery"},
+        {"key": "maxheight", "object_types": ["node", "way"]},
         {"key": "maxspeed", "value": "none"},
         {"key": "maxspeed", "value": "urban"},
         {"key": "maxspeed", "value": "rural"},

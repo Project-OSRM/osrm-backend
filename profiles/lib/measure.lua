@@ -62,11 +62,11 @@ local height_non_numerical_values = Set { "default", "none", "no-sign", "unsigne
 
 --- Get maxheight of specified way in meters. If there are no
 --- max height, then return nil
-function Measure.get_max_height(raw_value,way)
+function Measure.get_max_height(raw_value, element)
   if raw_value then
     if height_non_numerical_values[raw_value] then
-      if way then
-        return way:get_location_tag('maxheight') or default_maxheight
+      if element then
+        return element:get_location_tag('maxheight') or default_maxheight
       else
         return default_maxheight
       end
