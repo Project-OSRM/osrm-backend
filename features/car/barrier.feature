@@ -45,3 +45,11 @@ Feature: Car - Barriers
             | bollard      |               |       |
             | bollard      | rising        | x     |
             | bollard      | removable     |       |
+
+    Scenario: Car - Height restrictions
+        Then routability should be
+            | node/barrier      | node/maxheight | bothw |
+            | height_restrictor |                | x     |
+            | height_restrictor |              1 |       |
+            | height_restrictor |              3 | x     |
+            | height_restrictor |        default | x     |
