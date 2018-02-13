@@ -70,24 +70,23 @@ parking_class = Set{
 
 function Guidance.set_classification (highway, result, input_way)
   if motorway_types[highway] then
-    result.road_classification.motorway_class = true;
+    result.road_classification.motorway_class = true
   end
   if link_types[highway] then
-    result.road_classification.link_class = true;
+    result.road_classification.link_class = true
   end
 
-  -- we distinguish between different service types, if specified, we recognise parking and alleys.
-  -- If we see an unrecognised type, we assume a pure connectivity road. All unspecified are recognised as alley
+  -- All service roads are recognised as alley
   if highway ~= nil and highway == 'service' then
     local service_type = input_way:get_value_by_key('service');
     if service_type ~= nil and parking_class[service_type] then
-      result.road_classification.road_priority_class = road_priority_class.parking;
+      result.road_classification.road_priority_class = road_priority_class.alley
     else
       if service_type ~= nil and service_type == 'alley' then
-        result.road_classification.road_priority_class = road_priority_class.alley;
+        result.road_classification.road_priority_class = road_priority_class.alley
       else
         if serice_type == nil then
-          result.road_classification.road_priority_class = road_priority_class.alley;
+          result.road_classification.road_priority_class = road_priority_class.alley
         else
           result.road_classification.road_priority_class = highway_classes[highway]
         end
