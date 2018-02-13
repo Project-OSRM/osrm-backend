@@ -66,6 +66,7 @@ Thumbs.db
 ######################################
 /.vs*
 /*.local.bat
+/CMakeSettings.json
 
 # stxxl related files #
 #######################
