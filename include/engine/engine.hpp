@@ -67,6 +67,13 @@ template <typename Algorithm> class Engine final : public EngineInterface
                                 << routing_algorithms::name<Algorithm>();
             facade_provider = std::make_unique<WatchingProvider<Algorithm>>();
         }
+        else if (!config.memory_file.empty())
+        {
+            util::Log(logDEBUG) << "Using memory mapped filed at " << config.memory_file
+                                << " with algorithm " << routing_algorithms::name<Algorithm>();
+            facade_provider = std::make_unique<ExternalProvider<Algorithm>>(config.storage_config,
+                                                                            config.memory_file);
+        }
         else
         {
             util::Log(logDEBUG) << "Using internal memory with algorithm "

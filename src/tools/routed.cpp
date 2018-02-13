@@ -112,6 +112,9 @@ inline unsigned generateServerProgramOptions(const int argc,
         ("shared-memory,s",
          value<bool>(&config.use_shared_memory)->implicit_value(true)->default_value(false),
          "Load data from shared memory") //
+        ("memory_file",
+         value<boost::filesystem::path>(&config.memory_file),
+         "Store data in a memory mapped file rather than in process memory.") //
         ("algorithm,a",
          value<EngineConfig::Algorithm>(&config.algorithm)
              ->default_value(EngineConfig::Algorithm::CH, "CH"),

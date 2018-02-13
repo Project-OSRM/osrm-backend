@@ -33,6 +33,32 @@ util::vector_view<T> mmapFile(const boost::filesystem::path &file, RegionT &regi
             SOURCE_REF);
     }
 }
+
+template <typename T, typename RegionT>
+util::vector_view<T>
+mmapFile(const boost::filesystem::path &file, RegionT &region, const std::size_t size)
+{
+    try
+    {
+        // Create a new file with the given size in bytes
+        boost::iostreams::mapped_file_params params;
+        params.path = file.string();
+        params.flags = boost::iostreams::mapped_file::readwrite;
+        params.new_file_size = size;
+        region.open(params);
+
+        std::size_t num_objects = size / sizeof(T);
+        auto data_ptr = region.data();
+        BOOST_ASSERT(reinterpret_cast<uintptr_t>(data_ptr) % alignof(T) == 0);
+        return util::vector_view<T>(reinterpret_cast<T *>(data_ptr), num_objects);
+    }
+    catch (const std::exception &exc)
+    {
+        throw exception(
+            boost::str(boost::format("File %1% mapping failed: %2%") % file % exc.what()) +
+            SOURCE_REF);
+    }
+}
 }
 
 template <typename T>
@@ -47,6 +73,14 @@ util::vector_view<T> mmapFile(const boost::filesystem::path &file,
                               boost::iostreams::mapped_file &region)
 {
     return detail::mmapFile<T>(file, region);
+}
+
+template <typename T>
+util::vector_view<T> mmapFile(const boost::filesystem::path &file,
+                              boost::iostreams::mapped_file &region,
+                              std::size_t size)
+{
+    return detail::mmapFile<T>(file, region, size);
 }
 }
 }
