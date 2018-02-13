@@ -300,10 +300,11 @@ Feature: Simple Turns
 
     When I route I should get
         | from | to | route | turns                    |
-        | a    | d  | ,     | depart,turn right,arrive |
+        | a    | d  | ,,    | depart,turn right,arrive |
 
 
   # https://www.openstreetmap.org/#map=19/37.61256/-122.40371
+  @todo
   Scenario: Turning Road with Offset at Segregated Intersection
     Given the node map
         """

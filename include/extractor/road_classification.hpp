@@ -154,16 +154,17 @@ inline std::uint32_t getRoadGroup(const RoadClassification classification)
     return upper - dividers;
 }
 
-// a road classification is strictly less, if it belongs to a lower general category of roads. E.g.
-// normal city roads are strictly less of a priority than a motorway and alleys are strictly less
-// than inner-city roads
+// LHS road classification is strictly less than RHS, if it belongs to a lower general category
+// of roads. E.g. normal city roads are strictly less of a priority than a motorway and alleys
+// are strictly less than inner-city roads.
 inline bool strictlyLess(const RoadClassification lhs, const RoadClassification rhs)
 {
-    const auto lhs_class = getRoadGroup(lhs);
-    const auto rhs_class = getRoadGroup(rhs);
-    // different class, not neighbors
-    return lhs_class > rhs_class &&
-           ((lhs.GetPriority() - rhs.GetPriority() > 4) || lhs.IsLowPriorityRoadClass());
+    if (!lhs.IsLowPriorityRoadClass() && rhs.IsLowPriorityRoadClass())
+        return false;
+    if (lhs.IsLowPriorityRoadClass() && !rhs.IsLowPriorityRoadClass())
+        return true;
+
+    return getRoadGroup(lhs) > getRoadGroup(rhs);
 }
 
 // check whether a link class is the fitting link class to a road

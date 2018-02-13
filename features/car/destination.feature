@@ -135,12 +135,12 @@ Feature: Car - Destination only, no passing through
     Scenario: Car - Routing through a parking lot tagged access=destination,service
         Given the node map
             """
-               a----c++++b+++g----h---i
-               |    +    +   +   |
-               |    +    +   +   |
-               |    +    +  +    |
+               a----c++++b+++g------h---i
+               |    +    +   +     /
+               |    +    +   +    /
+               |    +    +  +    /
                |    d++++e+f    /
-               z---------------y
+               z--------------y
             """
 
         And the ways
@@ -155,9 +155,10 @@ Feature: Car - Destination only, no passing through
             | gf    | destination | service   |
 
         When I route I should get
-            | from | to | route         |
-            | a    | i  | azyhi,azyhi   |
-            | b    | f  | be,def,def    |
+            | from | to | route               |
+            | a    | i  | azyhi,azyhi         |
+            | b    | f  | be,def,def          |
+            | b    | i  | cbg,ghi,azyhi,azyhi |
 
     Scenario: Car - Disallow snapping to access=private,highway=service
         Given a grid size of 20 meters

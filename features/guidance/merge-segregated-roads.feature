@@ -384,9 +384,9 @@ Feature: Merge Segregated Roads
             | cd    | right  | no     |
 
         When I route I should get
-            | waypoints | route                           | intersections                                                                                       |
-            | a,d       | left,circle,circle,right,right  | true:90;false:90 true:120 false:270;true:60 true:180 false:300;true:90 false:240 true:270;true:270  |
-            | g,d       | bottom,circle,right,right       | true:0;true:60 false:180 false:300;true:90 false:240 true:270;true:270                              |
+            | waypoints | route                     | intersections                                                                                      |
+            | a,d       | left,circle,right,right   | true:90,false:90 true:120 false:270;true:60 true:180 false:300;true:90 false:240 true:270;true:270 |
+            | g,d       | bottom,circle,right,right | true:0;true:60 false:180 false:300;true:90 false:240 true:270;true:270                             |
 
     Scenario: Middle Island
         Given the node map
@@ -644,7 +644,7 @@ Feature: Merge Segregated Roads
             | k,j       | marianne,albrecht,luise,luise      | depart,turn left,turn left,arrive              |
             | k,d       | marianne,schwert,schwert           | depart,turn right,arrive                       |
             | i,j       | luise,luise                        | depart,arrive                                  |
-            | i,d       | luise,albrecht,schwert,schwert     | depart,turn left,turn straight,arrive          |
+            | i,d       | luise,albrecht,schwert             | depart,turn left,arrive                        |
             | i,l       | luise,albrecht,marianne,marianne   | depart,turn left,turn left,arrive              |
 
     # https://www.openstreetmap.org/#map=19/52.46339/13.40272

@@ -852,6 +852,11 @@ SliproadHandler::scaledThresholdByRoadClass(const double max_threshold,
     case extractor::RoadPriorityClass::SIDE_RESIDENTIAL:
         factor = 0.3;
         break;
+    case extractor::RoadPriorityClass::MOTORWAY_LINK:
+    case extractor::RoadPriorityClass::TRUNK_LINK:
+    case extractor::RoadPriorityClass::PRIMARY_LINK:
+    case extractor::RoadPriorityClass::SECONDARY_LINK:
+    case extractor::RoadPriorityClass::TERTIARY_LINK:
     case extractor::RoadPriorityClass::LINK_ROAD:
         factor = 0.3;
         break;
