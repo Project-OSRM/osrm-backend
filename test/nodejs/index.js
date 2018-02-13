@@ -1,6 +1,7 @@
 var OSRM = require('../../');
 var test = require('tape');
 var monaco_path = require('./constants').data_path;
+var test_memory_file = require('./constants').test_memory_file;
 var monaco_mld_path = require('./constants').mld_data_path;
 var monaco_corech_path = require('./constants').corech_data_path;
 
@@ -34,6 +35,12 @@ test('constructor: throws if necessary files do not exist', function(assert) {
 test('constructor: takes a shared memory argument', function(assert) {
     assert.plan(1);
     var osrm = new OSRM({path: monaco_path, shared_memory: false});
+    assert.ok(osrm);
+});
+
+test('constructor: takes a memory file', function(assert) {
+    assert.plan(1);
+    var osrm = new OSRM({path: monaco_path, memory_file: test_memory_file});
     assert.ok(osrm);
 });
 

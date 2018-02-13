@@ -115,14 +115,31 @@ inline engine_config_ptr argumentsToEngineConfig(const Nan::FunctionCallbackInfo
     if (path.IsEmpty())
         return engine_config_ptr();
 
+    auto memory_file = params->Get(Nan::New("memory_file").ToLocalChecked());
+    if (memory_file.IsEmpty())
+        return engine_config_ptr();
+
     auto shared_memory = params->Get(Nan::New("shared_memory").ToLocalChecked());
     if (shared_memory.IsEmpty())
         return engine_config_ptr();
+
+    if (!memory_file->IsUndefined())
+    {
+        if (path->IsUndefined())
+        {
+            Nan::ThrowError("memory_file option requires a path to a file.");
+            return engine_config_ptr();
+        }
+
+        engine_config->memory_file =
+            *v8::String::Utf8Value(Nan::To<v8::String>(memory_file).ToLocalChecked());
+    }
 
     if (!path->IsUndefined())
     {
         engine_config->storage_config =
             osrm::StorageConfig(*v8::String::Utf8Value(Nan::To<v8::String>(path).ToLocalChecked()));
+
         engine_config->use_shared_memory = false;
     }
     if (!shared_memory->IsUndefined())

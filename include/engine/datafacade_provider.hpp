@@ -4,6 +4,7 @@
 #include "engine/data_watchdog.hpp"
 #include "engine/datafacade.hpp"
 #include "engine/datafacade/contiguous_internalmem_datafacade.hpp"
+#include "engine/datafacade/mmap_memory_allocator.hpp"
 #include "engine/datafacade/process_memory_allocator.hpp"
 #include "engine/datafacade_factory.hpp"
 
@@ -23,6 +24,31 @@ template <typename AlgorithmT, template <typename A> class FacadeT> class DataFa
 
     virtual std::shared_ptr<const Facade> Get(const api::BaseParameters &) const = 0;
     virtual std::shared_ptr<const Facade> Get(const api::TileParameters &) const = 0;
+};
+
+template <typename AlgorithmT, template <typename A> class FacadeT>
+class ExternalProvider final : public DataFacadeProvider<AlgorithmT, FacadeT>
+{
+  public:
+    using Facade = typename DataFacadeProvider<AlgorithmT, FacadeT>::Facade;
+
+    ExternalProvider(const storage::StorageConfig &config,
+                     const boost::filesystem::path &memory_file)
+        : facade_factory(std::make_shared<datafacade::MMapMemoryAllocator>(config, memory_file))
+    {
+    }
+
+    std::shared_ptr<const Facade> Get(const api::TileParameters &params) const override final
+    {
+        return facade_factory.Get(params);
+    }
+    std::shared_ptr<const Facade> Get(const api::BaseParameters &params) const override final
+    {
+        return facade_factory.Get(params);
+    }
+
+  private:
+    DataFacadeFactory<FacadeT, AlgorithmT> facade_factory;
 };
 
 template <typename AlgorithmT, template <typename A> class FacadeT>
@@ -74,6 +100,8 @@ template <typename AlgorithmT>
 using WatchingProvider = detail::WatchingProvider<AlgorithmT, DataFacade>;
 template <typename AlgorithmT>
 using ImmutableProvider = detail::ImmutableProvider<AlgorithmT, DataFacade>;
+template <typename AlgorithmT>
+using ExternalProvider = detail::ExternalProvider<AlgorithmT, DataFacade>;
 }
 }
 

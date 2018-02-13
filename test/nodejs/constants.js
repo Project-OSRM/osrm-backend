@@ -17,9 +17,11 @@ if (process.env.OSRM_DATA_PATH !== undefined) {
     exports.data_path = path.join(path.resolve(process.env.OSRM_DATA_PATH), "ch/monaco.osrm");
     exports.mld_data_path = path.join(path.resolve(process.env.OSRM_DATA_PATH), "mld/monaco.osrm");
     exports.corech_data_path = path.join(path.resolve(process.env.OSRM_DATA_PATH), "corech/monaco.osrm");
+    exports.test_memory_path = path.join(path.resolve(process.env.OSRM_DATA_PATH), "test_memory");
     console.log('Setting custom data path to ' + exports.data_path);
 } else {
     exports.data_path = path.resolve(path.join(__dirname, "../data/ch/monaco.osrm"));
     exports.mld_data_path = path.resolve(path.join(__dirname, "../data/mld/monaco.osrm"));
     exports.corech_data_path = path.resolve(path.join(__dirname, "../data/corech/monaco.osrm"));
+    exports.test_memory_path = path.resolve(path.join(__dirname, "../data/test_memory"));
 }
