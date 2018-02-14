@@ -1,4 +1,4 @@
-# 5.16.0 RC 2
+# 5.16.0 RC 3
   - Changes from 5.15.1:
     - Guidance
       - ADDED #4676: Support for maneuver override relation, allowing data-driven overrides for turn-by-turn instructions [#4676](https://github.com/Project-OSRM/osrm-backend/pull/4676)
