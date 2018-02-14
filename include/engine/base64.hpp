@@ -87,7 +87,7 @@ inline std::string encodeBase64(const std::string &x) { return encodeBase64(x.da
 // Encode any sufficiently trivial object to Base64.
 template <typename T> std::string encodeBase64Bytewise(const T &x)
 {
-#if not defined __GNUC__ or __GNUC__ > 4
+#if !defined(__GNUC__) || (__GNUC__ > 4)
     static_assert(std::is_trivially_copyable<T>::value, "requires a trivially copyable type");
 #endif
 
@@ -124,7 +124,7 @@ inline std::string decodeBase64(const std::string &encoded)
 // Decodes from Base 64 to any sufficiently trivial object.
 template <typename T> T decodeBase64Bytewise(const std::string &encoded)
 {
-#if not defined __GNUC__ or __GNUC__ > 4
+#if !defined(__GNUC__) || (__GNUC__ > 4)
     static_assert(std::is_trivially_copyable<T>::value, "requires a trivially copyable type");
 #endif
 
