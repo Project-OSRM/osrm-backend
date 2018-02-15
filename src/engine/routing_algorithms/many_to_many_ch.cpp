@@ -92,7 +92,6 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
                         const std::vector<NodeBucket> &search_space_with_buckets,
                         std::vector<EdgeWeight> &weights_table,
                         std::vector<EdgeDuration> &durations_table,
-                        std::vector<NodeID> &middle_nodes_table,
                         const PhantomNode &phantom_node)
 {
     const auto node = query_heap.DeleteMin();
@@ -124,16 +123,12 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
             {
                 current_weight = std::min(current_weight, new_weight);
                 current_duration = std::min(current_duration, new_duration);
-                std::cout << "new NodeID weight <0: " << node;
-                middle_nodes_table[row_idx * number_of_targets + column_idx] = node;
             }
         }
         else if (std::tie(new_weight, new_duration) < std::tie(current_weight, current_duration))
         {
             current_weight = new_weight;
             current_duration = new_duration;
-            std::cout << "new NodeID weight>0: " << node;
-            middle_nodes_table[row_idx * number_of_targets + column_idx] = node;
         }
     }
 
@@ -150,11 +145,9 @@ void backwardRoutingStep(const DataFacade<Algorithm> &facade,
     const auto node = query_heap.DeleteMin();
     const auto target_weight = query_heap.GetKey(node);
     const auto target_duration = query_heap.GetData(node).duration;
-    const auto parent = query_heap.GetData(node).parent;
 
     // Store settled nodes in search space bucket
-    search_space_with_buckets.emplace_back(
-        node, parent, column_idx, target_weight, target_duration);
+    search_space_with_buckets.emplace_back(node, column_idx, target_weight, target_duration);
 
     relaxOutgoingEdges<REVERSE_DIRECTION>(
         facade, node, target_weight, target_duration, query_heap, phantom_node);
@@ -175,9 +168,10 @@ std::vector<EdgeDuration> manyToManySearch(SearchEngineData<ch::Algorithm> &engi
 
     std::vector<EdgeWeight> weights_table(number_of_entries, INVALID_EDGE_WEIGHT);
     std::vector<EdgeDuration> durations_table(number_of_entries, MAXIMAL_EDGE_DURATION);
-    std::vector<NodeID> middle_nodes_table(number_of_entries, SPECIAL_NODEID);
 
     std::vector<NodeBucket> search_space_with_buckets;
+
+    engine_working_data.InitializeOrClearUnpackingCacheThreadLocalStorage();
 
     // Populate buckets with paths from all accessible nodes to destinations via backward searches
     for (std::uint32_t column_idx = 0; column_idx < target_indices.size(); ++column_idx)
@@ -222,15 +216,8 @@ std::vector<EdgeDuration> manyToManySearch(SearchEngineData<ch::Algorithm> &engi
                                search_space_with_buckets,
                                weights_table,
                                durations_table,
-                               middle_nodes_table,
                                phantom);
         }
-        for (std::uint32_t idx = 0; idx < number_of_entries; ++idx)
-        {
-            std::cout << "NodeID: " << middle_nodes_table[idx] << ", ";
-            std::cout << "duration: " << durations_table[idx] << ", ";
-        }
-        std::cout << std::endl;
     }
 
     return durations_table;
