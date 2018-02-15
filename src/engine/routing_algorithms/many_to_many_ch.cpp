@@ -230,6 +230,20 @@ std::vector<EdgeDuration> manyToManySearch(SearchEngineData<ch::Algorithm> &engi
             std::cout << "duration: " << durations_table[idx] << ", ";
         }
         std::cout << std::endl;
+
+        // to calculate the durations table: 
+        // 1) get the packed path from the the above loops
+        // void retrievePackedPathFromHeap(const SearchEngineData<Algorithm>::QueryHeap &forward_heap,
+                                // const SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
+                                // const NodeID middle_node_id,
+                                // std::vector<NodeID> &packed_path);
+        // 2) call unpackPath inside this file, in here
+        // void unpackPath(const DataFacade<Algorithm> &facade,
+                // BidirectionalIterator packed_path_begin,
+                // BidirectionalIterator packed_path_end,
+                // Callback &&callback)
+        // 3) calculate the duration using the new method that you will write:
+        // extractDurations(facade, weight, phantom_nodes, unpacked_nodes, unpacked_edges)
     }
 
     return durations_table;
