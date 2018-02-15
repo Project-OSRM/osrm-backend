@@ -62,7 +62,8 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
             const NodeID to = facade.GetTarget(edge);
 
             const auto edge_weight = data.weight;
-            const auto edge_duration = data.duration;
+            const auto edge_duration = data.duration; // data.duration will be gone. so we can get
+                                                      // this info from  node -> to
 
             BOOST_ASSERT_MSG(edge_weight > 0, "edge_weight invalid");
             const auto to_weight = weight + edge_weight;
@@ -131,8 +132,8 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
         {
             current_weight = new_weight;
             current_duration = new_duration;
-                std::cout << "new NodeID weight>0: " << node;
-                middle_nodes_table[row_idx * number_of_targets + column_idx] = node;
+            std::cout << "new NodeID weight>0: " << node;
+            middle_nodes_table[row_idx * number_of_targets + column_idx] = node;
         }
     }
 
@@ -230,20 +231,6 @@ std::vector<EdgeDuration> manyToManySearch(SearchEngineData<ch::Algorithm> &engi
             std::cout << "duration: " << durations_table[idx] << ", ";
         }
         std::cout << std::endl;
-
-        // to calculate the durations table: 
-        // 1) get the packed path from the the above loops
-        // void retrievePackedPathFromHeap(const SearchEngineData<Algorithm>::QueryHeap &forward_heap,
-                                // const SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
-                                // const NodeID middle_node_id,
-                                // std::vector<NodeID> &packed_path);
-        // 2) call unpackPath inside this file, in here
-        // void unpackPath(const DataFacade<Algorithm> &facade,
-                // BidirectionalIterator packed_path_begin,
-                // BidirectionalIterator packed_path_end,
-                // Callback &&callback)
-        // 3) calculate the duration using the new method that you will write:
-        // extractDurations(facade, weight, phantom_nodes, unpacked_nodes, unpacked_edges)
     }
 
     return durations_table;
