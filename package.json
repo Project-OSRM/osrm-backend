@@ -54,9 +54,11 @@
     "xmlbuilder": "^4.2.1"
   },
   "bundleDependencies": [
+    "mkdirp",
     "nan",
     "node-cmake",
-    "node-pre-gyp"
+    "node-pre-gyp",
+    "rimraf"
   ],
   "main": "lib/index.js",
   "binary": {
