@@ -123,13 +123,16 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
             {
                 current_weight = std::min(current_weight, new_weight);
                 current_duration = std::min(current_duration, new_duration);
-                middle_nodes_table.emplace_back(node);
+                std::cout << "new NodeID weight <0: " << node;
+                middle_nodes_table[row_idx * number_of_targets + column_idx] = node;
             }
         }
         else if (std::tie(new_weight, new_duration) < std::tie(current_weight, current_duration))
         {
             current_weight = new_weight;
             current_duration = new_duration;
+                std::cout << "new NodeID weight>0: " << node;
+                middle_nodes_table[row_idx * number_of_targets + column_idx] = node;
         }
     }
 
@@ -221,6 +224,12 @@ std::vector<EdgeDuration> manyToManySearch(SearchEngineData<ch::Algorithm> &engi
                                middle_nodes_table,
                                phantom);
         }
+        for (std::uint32_t idx = 0; idx < number_of_entries; ++idx)
+        {
+            std::cout << "NodeID: " << middle_nodes_table[idx] << ", ";
+            std::cout << "duration: " << durations_table[idx] << ", ";
+        }
+        std::cout << std::endl;
     }
 
     return durations_table;
