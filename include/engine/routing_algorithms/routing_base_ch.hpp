@@ -5,6 +5,7 @@
 #include "engine/datafacade.hpp"
 #include "engine/routing_algorithms/routing_base.hpp"
 #include "engine/search_engine_data.hpp"
+#include "engine/unpacking_cache.hpp"
 
 #include "util/typedefs.hpp"
 
@@ -231,36 +232,66 @@ void unpackPath(const DataFacade<Algorithm> &facade,
                 BidirectionalIterator packed_path_end,
                 Callback &&callback)
 {
+    UnpackingCache unpacking_cache;
+    unpackPath(facade, packed_path_begin, packed_path_end, unpacking_cache, callback);
+}
+template <typename BidirectionalIterator, typename Callback>
+void unpackPath(const DataFacade<Algorithm> &facade,
+                BidirectionalIterator packed_path_begin,
+                BidirectionalIterator packed_path_end,
+                UnpackingCache &unpacking_cache,
+                Callback &&callback)
+{
     // make sure we have at least something to unpack
     if (packed_path_begin == packed_path_end)
         return;
 
-    std::stack<std::pair<NodeID, NodeID>> recursion_stack;
+    // std::stack<std::pair<NodeID, NodeID>> recursion_stack;
+    std::stack<std::tuple<NodeID, NodeID, bool>> recursion_stack;
 
     // We have to push the path in reverse order onto the stack because it's LIFO.
     for (auto current = std::prev(packed_path_end); current != packed_path_begin;
          current = std::prev(current))
     {
-        recursion_stack.emplace(*std::prev(current), *current);
+        // recursion_stack.emplace(*std::prev(current), *current);
+        recursion_stack.emplace(*std::prev(current), *current, false);
     }
 
-    std::pair<NodeID, NodeID> edge;
+    // std::pair<NodeID, NodeID> edge;
+    std::tuple<NodeID, NodeID, bool> edge;
     while (!recursion_stack.empty())
     {
         edge = recursion_stack.top();
         recursion_stack.pop();
 
+        if (!std::get<2>(edge))
+        {
+
+            if (unpacking_cache.IsEdgeInCache(std::make_pair(std::get<0>(edge), std::get<1>(edge))))
+            {
+                std::get<2>(edge) = true;
+            }
+
+            unpacking_cache.CollectStats(std::make_pair(std::get<0>(edge), std::get<1>(edge)));
+        }
         // Look for an edge on the forward CH graph (.forward)
         EdgeID smaller_edge_id = facade.FindSmallestEdge(
-            edge.first, edge.second, [](const auto &data) { return data.forward; });
+            // edge.first, edge.second, [](const auto &data) { return data.forward; });
+            std::get<0>(edge),
+            std::get<1>(edge),
+            [](const auto &data) { return data.forward; });
 
         // If we didn't find one there, the we might be looking at a part of the path that
         // was found using the backward search.  Here, we flip the node order (.second, .first)
         // and only consider edges with the `.backward` flag.
         if (SPECIAL_EDGEID == smaller_edge_id)
         {
-            smaller_edge_id = facade.FindSmallestEdge(
-                edge.second, edge.first, [](const auto &data) { return data.backward; });
+            // smaller_edge_id = facade.FindSmallestEdge(
+            //     edge.second, edge.first, [](const auto &data) { return data.backward; });
+            smaller_edge_id =
+                facade.FindSmallestEdge(std::get<1>(edge), std::get<0>(edge), [](const auto &data) {
+                    return data.backward;
+                });
         }
 
         // If we didn't find anything *still*, then something is broken and someone has
@@ -277,13 +308,17 @@ void unpackPath(const DataFacade<Algorithm> &facade,
             const NodeID middle_node_id = data.turn_id;
             // Note the order here - we're adding these to a stack, so we
             // want the first->middle to get visited before middle->second
-            recursion_stack.emplace(middle_node_id, edge.second);
-            recursion_stack.emplace(edge.first, middle_node_id);
+            // recursion_stack.emplace(middle_node_id, edge.second);
+            // recursion_stack.emplace(edge.first, middle_node_id);
+            recursion_stack.emplace(middle_node_id, std::get<1>(edge), std::get<2>(edge));
+            recursion_stack.emplace(std::get<0>(edge), middle_node_id, std::get<2>(edge));
         }
         else
         {
+            auto temp = std::make_pair(std::get<0>(edge), std::get<1>(edge));
             // We found an original edge, call our callback.
-            std::forward<Callback>(callback)(edge, smaller_edge_id);
+            // std::forward<Callback>(callback)(edge, smaller_edge_id);
+            std::forward<Callback>(callback)(temp, smaller_edge_id);
         }
     }
 }
