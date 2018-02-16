@@ -321,5 +321,5 @@ Feature: Motorway Guidance
        When I route I should get
             | waypoints | route | turns                                            |
             | a,c       | ,,    | depart,fork slight left,arrive                   |
-            | a,e       | ,,,   | depart,fork slight right,turn slight left,arrive |
-            | a,f       | ,,    | depart,fork slight right,arrive                  |
+            | a,e       | ,,,   | depart,fork slight right,fork slight left,arrive  |
+            | a,f       | ,,,   | depart,fork slight right,fork slight right,arrive |

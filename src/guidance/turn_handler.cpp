@@ -249,8 +249,13 @@ Intersection TurnHandler::handleThreeWayTurn(const EdgeID via_edge, Intersection
                OOOOOOO
      */
 
+    const auto all_ramps =
+        std::all_of(intersection.begin(), intersection.end(), [this](const auto &road) {
+            return node_based_graph.GetEdgeData(road.eid).flags.road_classification.IsRampClass();
+        });
+
     auto fork = findFork(via_edge, intersection);
-    if (fork && obvious_index == 0)
+    if (fork && (all_ramps || obvious_index == 0))
     {
         assignFork(via_edge, fork->getLeft(), fork->getRight());
     }
