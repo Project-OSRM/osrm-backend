@@ -26,14 +26,19 @@ struct IntersectionEdge
 
 using IntersectionEdges = std::vector<IntersectionEdge>;
 
+// The extracted geometry of an intersection edge only knows about edge IDs and bearings
+// Bearing is the direction in clockwise angle from true north after taking the turn:
+//    0 = heading north, 90 = east, 180 = south, 270 = west
+// `initial_bearing` is the original OSM edge bearing
+// `perceived_bearing` is the edge bearing after line fitting and edges merging
 struct IntersectionEdgeGeometry
 {
-    EdgeID edge;
+    EdgeID eid;
     double initial_bearing;
     double perceived_bearing;
-    double length;
+    double segment_length;
 
-    bool operator<(const IntersectionEdgeGeometry &other) const { return edge < other.edge; }
+    bool operator<(const IntersectionEdgeGeometry &other) const { return eid < other.eid; }
 };
 
 using IntersectionEdgeGeometries = std::vector<IntersectionEdgeGeometry>;

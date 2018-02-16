@@ -40,7 +40,7 @@ class MergableRoadDetector
 {
   public:
     // in case we have to change the mode we are operating on
-    using MergableRoadData = IntersectionShapeData;
+    using MergableRoadData = IntersectionEdgeGeometry;
 
     MergableRoadDetector(const util::NodeBasedDynamicGraph &node_based_graph,
                          const EdgeBasedNodeDataContainer &node_data_container,

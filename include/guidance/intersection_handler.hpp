@@ -348,7 +348,7 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
     const auto turns_onto_through_street = [&](const auto &road) {
         // find edge opposite to the one we are checking (in-road)
         const auto in_through_candidate =
-            intersection.FindClosestBearing(util::bearing::reverse(road.bearing));
+            intersection.FindClosestBearing(util::bearing::reverse(road.perceived_bearing));
 
         const auto &in_edge = node_based_graph.GetEdgeData(in_through_candidate->eid);
         const auto &out_edge = node_based_graph.GetEdgeData(road.eid);

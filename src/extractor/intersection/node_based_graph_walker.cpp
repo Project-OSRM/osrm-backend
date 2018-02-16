@@ -175,7 +175,7 @@ operator()(const NodeID /*nid*/,
         ((intersection.size() == 2 ||
           intersection.findClosestTurn(STRAIGHT_ANGLE) == min_element) &&
          angularDeviation(min_element->angle, STRAIGHT_ANGLE) < NARROW_TURN_ANGLE) &&
-        angularDeviation(initial_bearing, min_element->bearing) < NARROW_TURN_ANGLE;
+        angularDeviation(initial_bearing, min_element->perceived_bearing) < NARROW_TURN_ANGLE;
 
     if (has_valid_angle)
         return (*min_element).eid;

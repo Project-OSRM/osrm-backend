@@ -20,7 +20,7 @@ classifyIntersection(Intersection intersection, const osrm::util::Coordinate &lo
     std::sort(intersection.begin(),
               intersection.end(),
               [](const ConnectedRoad &left, const ConnectedRoad &right) {
-                  return left.bearing < right.bearing;
+                  return left.perceived_bearing < right.perceived_bearing;
               });
 
     util::guidance::EntryClass entry_class;
@@ -31,11 +31,12 @@ classifyIntersection(Intersection intersection, const osrm::util::Coordinate &lo
             return true;
 
         DiscreteBearing last_discrete_bearing = util::guidance::BearingClass::getDiscreteBearing(
-            std::round(intersection.back().bearing));
+            std::round(intersection.back().perceived_bearing));
         for (const auto &road : intersection)
         {
             const DiscreteBearing discrete_bearing =
-                util::guidance::BearingClass::getDiscreteBearing(std::round(road.bearing));
+                util::guidance::BearingClass::getDiscreteBearing(
+                    std::round(road.perceived_bearing));
             if (discrete_bearing == last_discrete_bearing)
                 return false;
             last_discrete_bearing = discrete_bearing;
@@ -47,8 +48,10 @@ classifyIntersection(Intersection intersection, const osrm::util::Coordinate &lo
     std::size_t number = 0;
     if (canBeDiscretized)
     {
-        if (util::guidance::BearingClass::getDiscreteBearing(intersection.back().bearing) <
-            util::guidance::BearingClass::getDiscreteBearing(intersection.front().bearing))
+        if (util::guidance::BearingClass::getDiscreteBearing(
+                intersection.back().perceived_bearing) <
+            util::guidance::BearingClass::getDiscreteBearing(
+                intersection.front().perceived_bearing))
         {
             intersection.insert(intersection.begin(), intersection.back());
             intersection.pop_back();
@@ -64,8 +67,8 @@ classifyIntersection(Intersection intersection, const osrm::util::Coordinate &lo
                 }
             }
 
-            auto discrete_bearing_class =
-                util::guidance::BearingClass::getDiscreteBearing(std::round(road.bearing));
+            auto discrete_bearing_class = util::guidance::BearingClass::getDiscreteBearing(
+                std::round(road.perceived_bearing));
             bearing_class.add(std::round(discrete_bearing_class *
                                          util::guidance::BearingClass::discrete_step_size));
             ++number;
@@ -83,7 +86,7 @@ classifyIntersection(Intersection intersection, const osrm::util::Coordinate &lo
                                           << util::toOSMLink(location);
                 }
             }
-            bearing_class.add(std::round(road.bearing));
+            bearing_class.add(std::round(road.perceived_bearing));
             ++number;
         }
     }

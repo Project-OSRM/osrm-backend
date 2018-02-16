@@ -120,9 +120,9 @@ std::pair<bool, double> findMergedBearing(const util::NodeBasedDynamicGraph &gra
 
     const auto &lhs = edge_geometries[lhs_index];
     const auto &rhs = edge_geometries[rhs_index];
-    BOOST_ASSERT(graph.GetEdgeData(lhs.edge).reversed != graph.GetEdgeData(rhs.edge).reversed);
+    BOOST_ASSERT(graph.GetEdgeData(lhs.eid).reversed != graph.GetEdgeData(rhs.eid).reversed);
 
-    const auto &entry = graph.GetEdgeData(lhs.edge).reversed ? rhs : lhs;
+    const auto &entry = graph.GetEdgeData(lhs.eid).reversed ? rhs : lhs;
     const auto opposite_bearing =
         findClosestOppositeBearing(edge_geometries, entry.perceived_bearing);
     const auto merged_bearing = findAngleBisector(rhs.perceived_bearing, lhs.perceived_bearing);
@@ -178,13 +178,8 @@ bool isRoadsPairMergeable(const MergableRoadDetector &detector,
 
     // TODO: check IsDistinctFrom - it is an angle and name-only check
     // also check CanMergeRoad for all merging scenarios
-    return detector.IsDistinctFrom({llhs.edge, llhs.perceived_bearing, llhs.length},
-                                   {lhs.edge, lhs.perceived_bearing, lhs.length}) &&
-           detector.CanMergeRoad(intersection_node,
-                                 {lhs.edge, lhs.perceived_bearing, lhs.length},
-                                 {rhs.edge, rhs.perceived_bearing, rhs.length}) &&
-           detector.IsDistinctFrom({rhs.edge, rhs.perceived_bearing, rhs.length},
-                                   {rrhs.edge, rrhs.perceived_bearing, rrhs.length});
+    return detector.IsDistinctFrom(llhs, lhs) &&
+           detector.CanMergeRoad(intersection_node, lhs, rhs) && detector.IsDistinctFrom(rhs, rrhs);
 }
 
 auto getIntersectionLanes(const util::NodeBasedDynamicGraph &graph, const NodeID intersection_node)
@@ -293,9 +288,9 @@ getIntersectionGeometries(const util::NodeBasedDynamicGraph &graph,
 
                 // Only one of the edges must be reversed, mark it as merged to remove from
                 // intersection view
-                BOOST_ASSERT(graph.GetEdgeData(lhs.edge).reversed ^
-                             graph.GetEdgeData(rhs.edge).reversed);
-                merged_edge_ids.insert(graph.GetEdgeData(lhs.edge).reversed ? lhs.edge : rhs.edge);
+                BOOST_ASSERT(graph.GetEdgeData(lhs.eid).reversed ^
+                             graph.GetEdgeData(rhs.eid).reversed);
+                merged_edge_ids.insert(graph.GetEdgeData(lhs.eid).reversed ? lhs.eid : rhs.eid);
             }
         }
     }
@@ -310,10 +305,10 @@ getIntersectionGeometries(const util::NodeBasedDynamicGraph &graph,
 
             // Don't adjust bearings of roads that were merged at the current intersection
             // or have neighbor intersection farer than the pruning distance
-            if (merged_edges[index] || edge_geometry.length > PRUNING_DISTANCE)
+            if (merged_edges[index] || edge_geometry.segment_length > PRUNING_DISTANCE)
                 continue;
 
-            const auto neighbor_intersection_node = graph.GetTarget(edge_geometry.edge);
+            const auto neighbor_intersection_node = graph.GetTarget(edge_geometry.eid);
 
             const auto neighbor_geometries = getIntersectionOutgoingGeometries<false>(
                 graph, compressed_geometries, node_coordinates, neighbor_intersection_node);
@@ -327,7 +322,7 @@ getIntersectionGeometries(const util::NodeBasedDynamicGraph &graph,
                 std::find_if(neighbor_geometries.begin(),
                              neighbor_geometries.end(),
                              [&graph, &intersection_node](const auto &road) {
-                                 return graph.GetTarget(road.edge) == intersection_node;
+                                 return graph.GetTarget(road.eid) == intersection_node;
                              }));
             BOOST_ASSERT(static_cast<std::size_t>(neighbor_curr) != neighbor_geometries.size());
             const auto neighbor_prev = (neighbor_curr + neighbor_edges - 1) % neighbor_edges;
@@ -396,12 +391,12 @@ getIntersectionGeometries(const util::NodeBasedDynamicGraph &graph,
     for (std::size_t index = 0; index < edges_number; ++index)
     {
         const auto &geometry = edge_geometries[index];
-        const auto remote_node = graph.GetTarget(geometry.edge);
+        const auto remote_node = graph.GetTarget(geometry.eid);
         const auto incoming_edge = graph.FindEdge(remote_node, intersection_node);
         edge_geometries[edges_number + index] = {incoming_edge,
                                                  util::bearing::reverse(geometry.initial_bearing),
                                                  util::bearing::reverse(geometry.perceived_bearing),
-                                                 geometry.length};
+                                                 geometry.segment_length};
     }
 
     // Enforce ordering of edges by IDs
@@ -414,9 +409,9 @@ inline auto findEdge(const IntersectionEdgeGeometries &geometries, const EdgeID 
 {
     const auto it = std::lower_bound(
         geometries.begin(), geometries.end(), edge, [](const auto &geometry, const auto edge) {
-            return geometry.edge < edge;
+            return geometry.eid < edge;
         });
-    BOOST_ASSERT(it != geometries.end() && it->edge == edge);
+    BOOST_ASSERT(it != geometries.end() && it->eid == edge);
     return it;
 }
 
@@ -427,7 +422,7 @@ double findEdgeBearing(const IntersectionEdgeGeometries &geometries, const EdgeI
 
 double findEdgeLength(const IntersectionEdgeGeometries &geometries, const EdgeID &edge)
 {
-    return findEdge(geometries, edge)->length;
+    return findEdge(geometries, edge)->segment_length;
 }
 
 template <typename RestrictionsRange>
@@ -634,7 +629,7 @@ IntersectionView convertToIntersectionView(const util::NodeBasedDynamicGraph &gr
 
     using IntersectionViewDataWithAngle = std::pair<IntersectionViewData, double>;
     std::vector<IntersectionViewDataWithAngle> pre_intersection_view;
-    IntersectionViewData uturn{{SPECIAL_EDGEID, 0., 0.}, false, 0.};
+    IntersectionViewData uturn{{SPECIAL_EDGEID, 0., 0., 0.}, false, 0.};
     std::size_t allowed_uturns_number = 0;
     for (const auto &outgoing_edge : outgoing_edges)
     {
@@ -643,7 +638,6 @@ IntersectionView convertToIntersectionView(const util::NodeBasedDynamicGraph &gr
         };
 
         const auto edge_it = findEdge(edge_geometries, outgoing_edge.edge);
-        const auto segment_length = edge_it->length;
         const auto is_merged = merged_edges.count(outgoing_edge.edge) != 0;
         const auto is_turn_allowed = intersection::isTurnAllowed(graph,
                                                                  node_data_container,
@@ -673,8 +667,7 @@ IntersectionView convertToIntersectionView(const util::NodeBasedDynamicGraph &gr
 
         const auto is_uturn_angle = is_uturn(turn_angle);
 
-        IntersectionViewData road{
-            {outgoing_edge.edge, outgoing_bearing, segment_length}, is_turn_allowed, turn_angle};
+        IntersectionViewData road{*edge_it, is_turn_allowed, turn_angle};
 
         if (graph.GetTarget(outgoing_edge.edge) == incoming_edge.node)
         { // Save the true U-turn road to add later if no allowed U-turns will be added
@@ -772,12 +765,12 @@ IntersectionView getConnectedRoads(const util::NodeBasedDynamicGraph &graph,
     for (std::size_t index = 0; index < edges_number; ++index)
     {
         const auto &geometry = edge_geometries[index];
-        const auto remote_node = graph.GetTarget(geometry.edge);
+        const auto remote_node = graph.GetTarget(geometry.eid);
         const auto incoming_edge = graph.FindEdge(remote_node, intersection_node);
         edge_geometries[edges_number + index] = {incoming_edge,
                                                  util::bearing::reverse(geometry.initial_bearing),
                                                  util::bearing::reverse(geometry.perceived_bearing),
-                                                 geometry.length};
+                                                 geometry.segment_length};
     }
 
     // Enforce ordering of edges by IDs
