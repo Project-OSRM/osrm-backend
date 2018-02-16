@@ -299,3 +299,27 @@ Feature: Motorway Guidance
             | waypoints | route         | turns                               |
             | a,e       | abcde,abcde   | depart,arrive                       |
             | a,g       | abcde,bfg,bfg | depart,off ramp slight right,arrive |
+
+
+    # https://www.openstreetmap.org/node/67366428#map=18/33.64613/-84.44425
+    Scenario: Ramp Bifurcations should not be suppressed
+        Given the node map
+            """
+                 /-----------c      /-----------e
+            a---b------------------d------------f
+            """
+
+        And the ways
+            | nodes | highway       | name | destination                                         |
+            | ab    | motorway      |      |                                                     |
+            | bc    | motorway_link |      | City 17                                             |
+            | bd    | motorway_link |      |                                                     |
+            | de    | motorway_link |      | Domestic Terminal;Camp Creek Parkway;Riverdale Road |
+            | df    | motorway_link |      | Montgomery                                          |
+
+
+       When I route I should get
+            | waypoints | route | turns                                            |
+            | a,c       | ,,    | depart,fork slight left,arrive                   |
+            | a,e       | ,,,   | depart,fork slight right,turn slight left,arrive |
+            | a,f       | ,,    | depart,fork slight right,arrive                  |
