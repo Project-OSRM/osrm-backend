@@ -71,11 +71,11 @@ MergableRoadDetector::MergableRoadDetector(
 }
 
 bool MergableRoadDetector::CanMergeRoad(const NodeID intersection_node,
-                                        const IntersectionShapeData &lhs,
-                                        const IntersectionShapeData &rhs) const
+                                        const IntersectionEdgeGeometry &lhs,
+                                        const IntersectionEdgeGeometry &rhs) const
 {
     // roads should be somewhat close
-    if (angularDeviation(lhs.bearing, rhs.bearing) > MERGABLE_ANGLE_DIFFERENCE)
+    if (angularDeviation(lhs.perceived_bearing, rhs.perceived_bearing) > MERGABLE_ANGLE_DIFFERENCE)
         return false;
 
     const auto &lhs_edge = node_based_graph.GetEdgeData(lhs.eid);
@@ -126,7 +126,7 @@ bool MergableRoadDetector::IsDistinctFrom(const MergableRoadData &lhs,
                                           const MergableRoadData &rhs) const
 {
     // needs to be far away
-    if (angularDeviation(lhs.bearing, rhs.bearing) > MERGABLE_ANGLE_DIFFERENCE)
+    if (angularDeviation(lhs.perceived_bearing, rhs.perceived_bearing) > MERGABLE_ANGLE_DIFFERENCE)
         return true;
     else // or it cannot have the same name
         return !HaveIdenticalNames(
@@ -201,7 +201,7 @@ bool MergableRoadDetector::IsNarrowTriangle(const NodeID intersection_node,
     SelectStraightmostRoadByNameAndOnlyChoice selector(
         node_data_container.GetAnnotation(node_based_graph.GetEdgeData(lhs.eid).annotation_data)
             .name_id,
-        lhs.bearing,
+        lhs.perceived_bearing,
         /*requires entry=*/false,
         false);
 
@@ -316,7 +316,7 @@ bool MergableRoadDetector::IsCircularShape(const NodeID intersection_node,
         SelectStraightmostRoadByNameAndOnlyChoice selector(
             node_data_container.GetAnnotation(node_based_graph.GetEdgeData(edge_id).annotation_data)
                 .name_id,
-            lhs.bearing,
+            lhs.perceived_bearing,
             /*requires_entry=*/false,
             false);
         graph_walker.TraverseRoad(intersection_node, edge_id, accumulator, selector);
@@ -372,7 +372,7 @@ bool MergableRoadDetector::HaveSameDirection(const NodeID intersection_node,
                                              const MergableRoadData &lhs,
                                              const MergableRoadData &rhs) const
 {
-    if (angularDeviation(lhs.bearing, rhs.bearing) > MERGABLE_ANGLE_DIFFERENCE)
+    if (angularDeviation(lhs.perceived_bearing, rhs.perceived_bearing) > MERGABLE_ANGLE_DIFFERENCE)
         return false;
 
     // Find a coordinate following a road that is far away
@@ -388,7 +388,7 @@ bool MergableRoadDetector::HaveSameDirection(const NodeID intersection_node,
         SelectStraightmostRoadByNameAndOnlyChoice selector(
             node_data_container.GetAnnotation(node_based_graph.GetEdgeData(edge_id).annotation_data)
                 .name_id,
-            lhs.bearing,
+            lhs.perceived_bearing,
             /*requires_entry=*/false,
             true);
         graph_walker.TraverseRoad(intersection_node, edge_id, accumulator, selector);
