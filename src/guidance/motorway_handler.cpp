@@ -118,16 +118,6 @@ Intersection MotorwayHandler::fromMotorway(const EdgeID via_eid, Intersection in
         node_data_container.GetAnnotation(node_based_graph.GetEdgeData(via_eid).annotation_data);
     BOOST_ASSERT(isMotorwayClass(via_eid, node_based_graph));
 
-    const auto countExitingMotorways = [this](const Intersection &intersection) {
-        unsigned count = 0;
-        for (const auto &road : intersection)
-        {
-            if (road.entry_allowed && isMotorwayClass(road.eid, node_based_graph))
-                ++count;
-        }
-        return count;
-    };
-
     // find the angle that continues on our current highway
     const auto getContinueAngle = [this, in_data](const Intersection &intersection) {
         for (const auto &road : intersection)
@@ -219,7 +209,13 @@ Intersection MotorwayHandler::fromMotorway(const EdgeID via_eid, Intersection in
     }
     else
     {
-        const unsigned exiting_motorways = countExitingMotorways(intersection);
+        const auto valid_exits = std::count_if(intersection.begin(),
+                                               intersection.end(),
+                                               [](const auto &road) { return road.entry_allowed; });
+        const auto exiting_motorways =
+            std::count_if(intersection.begin(), intersection.end(), [this](const auto &road) {
+                return road.entry_allowed && isMotorwayClass(road.eid, node_based_graph);
+            });
 
         if (exiting_motorways == 0)
         {
@@ -233,7 +229,7 @@ Intersection MotorwayHandler::fromMotorway(const EdgeID via_eid, Intersection in
                 }
             }
         }
-        else if (exiting_motorways == 1)
+        else if (exiting_motorways == 1 || exiting_motorways != valid_exits)
         {
             // normal motorway passing some ramps or mering onto another motorway
             if (intersection.size() == 2)

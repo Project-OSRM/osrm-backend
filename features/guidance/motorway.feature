@@ -341,7 +341,7 @@ Feature: Motorway Guidance
             | cd    | motorway_link |
 
        When I route I should get
-            | waypoints | route          | turns                           |
-            | a,d       | abce,cd,cd     | depart,turn straight,arrive     |
-            | a,e       | abce,abce,abce | depart,fork slight left,arrive  |
-            | a,f       | abce,cf,cf     | depart,fork slight right,arrive |
+            | waypoints | route      | turns                              |
+            | a,d       | abce,cd,cd | depart,off ramp slight left,arrive |
+            | a,e       | abce,abce  | depart,arrive                      |
+            | a,f       | abce,cf,cf | depart,turn slight right,arrive |
