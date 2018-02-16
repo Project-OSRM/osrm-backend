@@ -323,3 +323,25 @@ Feature: Motorway Guidance
             | a,c       | ,,    | depart,fork slight left,arrive                   |
             | a,e       | ,,,   | depart,fork slight right,fork slight left,arrive  |
             | a,f       | ,,,   | depart,fork slight right,fork slight right,arrive |
+
+
+    # https://www.openstreetmap.org/#map=19/53.46186/-2.24509
+    Scenario: Highway Fork with a Link
+        Given the node map
+            """
+                 /-----------d
+            a-b-c------------e
+                 \-----------f
+            """
+
+        And the ways
+            | nodes | highway       |
+            | abce  | motorway      |
+            | cf    | motorway      |
+            | cd    | motorway_link |
+
+       When I route I should get
+            | waypoints | route          | turns                           |
+            | a,d       | abce,cd,cd     | depart,turn straight,arrive     |
+            | a,e       | abce,abce,abce | depart,fork slight left,arrive  |
+            | a,f       | abce,cf,cf     | depart,fork slight right,arrive |
