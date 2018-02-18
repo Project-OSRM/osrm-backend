@@ -25,6 +25,7 @@ var osrm = new OSRM('network.osrm');
                Make sure you prepared the dataset with the correct toolchain.
     -   `options.shared_memory` **[Boolean](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean)?** Connects to the persistent shared memory datastore.
                This requires you to run `osrm-datastore` prior to creating an `OSRM` object.
+    -   `options.memory_file` **[String](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)?** Path to a file on disk to store the memory using mmap.
     -   `options.path` **[String](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)?** The path to the `.osrm` files. This is mutually exclusive with setting {options.shared_memory} to true.
     -   `options.max_locations_trip` **[Number](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number)?** Max. locations supported in trip query (default: unlimited).
     -   `options.max_locations_viaroute` **[Number](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number)?** Max. locations supported in viaroute query (default: unlimited).
