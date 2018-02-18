@@ -72,6 +72,7 @@ NAN_MODULE_INIT(Engine::Init)
  * @param {Boolean} [options.shared_memory] Connects to the persistent shared memory datastore.
  *        This requires you to run `osrm-datastore` prior to creating an `OSRM` object.
  * @param {String} [options.path] The path to the `.osrm` files. This is mutually exclusive with setting {options.shared_memory} to true.
+ * @param {String} [options.memory_file] Path to a file to store the memory using mmap.
  * @param {Number} [options.max_locations_trip] Max. locations supported in trip query (default: unlimited).
  * @param {Number} [options.max_locations_viaroute] Max. locations supported in viaroute query (default: unlimited).
  * @param {Number} [options.max_locations_distance_table] Max. locations supported in distance table query (default: unlimited).
