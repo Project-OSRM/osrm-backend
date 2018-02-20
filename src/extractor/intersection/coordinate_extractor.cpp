@@ -185,7 +185,7 @@ util::Coordinate CoordinateExtractor::ExtractRepresentativeCoordinate(
      */
     const bool first_coordinate_is_far_away = [&first_distance, considered_lanes]() {
         const auto required_distance =
-            considered_lanes * 0.5 * ASSUMED_LANE_WIDTH + LOOKAHEAD_DISTANCE_WITHOUT_LANES;
+            considered_lanes * ASSUMED_LANE_WIDTH + LOOKAHEAD_DISTANCE_WITHOUT_LANES;
         return first_distance > required_distance;
     }();
 
@@ -196,8 +196,7 @@ util::Coordinate CoordinateExtractor::ExtractRepresentativeCoordinate(
     }
 
     // now, after the simple checks have succeeded make our further computations simpler
-    const auto lookahead_distance =
-        FAR_LOOKAHEAD_DISTANCE + considered_lanes * ASSUMED_LANE_WIDTH * 0.5;
+    const auto lookahead_distance = FAR_LOOKAHEAD_DISTANCE + considered_lanes * ASSUMED_LANE_WIDTH;
 
     /*
      * The coordinates along the road are in different distances from the source. If only very few
@@ -286,7 +285,7 @@ util::Coordinate CoordinateExtractor::ExtractRepresentativeCoordinate(
 
     const bool starts_of_without_turn = [&]() {
         return straight_distance >=
-               considered_lanes * 0.5 * ASSUMED_LANE_WIDTH + LOOKAHEAD_DISTANCE_WITHOUT_LANES;
+               considered_lanes * ASSUMED_LANE_WIDTH + LOOKAHEAD_DISTANCE_WITHOUT_LANES;
     }();
 
     if (starts_of_without_turn)
@@ -355,7 +354,7 @@ util::Coordinate CoordinateExtractor::ExtractRepresentativeCoordinate(
     if (IsCurve(coordinates,
                 segment_distances,
                 total_distance,
-                considered_lanes * 0.5 * ASSUMED_LANE_WIDTH,
+                considered_lanes * ASSUMED_LANE_WIDTH,
                 turn_edge_data))
     {
         if (total_distance <= skipping_inaccuracies_distance)

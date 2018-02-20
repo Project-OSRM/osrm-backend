@@ -201,7 +201,7 @@ Feature: Motorway Guidance
             | a,e       | abcde,abcde     | depart,arrive                      |
             | f,e       | fgc,abcde,abcde | depart,merge slight left,arrive    |
             | a,i       | abcde,chi,chi   | depart,off ramp slight right,arrive |
-            | f,i       | fgc,chi,chi     | depart,off ramp right,arrive       |
+            | f,i       | fgc,chi,chi     | depart,off ramp slight right,arrive |
 
     Scenario: On And Off Ramp Left
        Given the node map
@@ -221,7 +221,7 @@ Feature: Motorway Guidance
             | a,e       | abcde,abcde     | depart,arrive                     |
             | f,e       | fgc,abcde,abcde | depart,merge slight right,arrive  |
             | a,i       | abcde,chi,chi   | depart,off ramp slight left,arrive |
-            | f,i       | fgc,chi,chi     | depart,off ramp left,arrive       |
+            | f,i       | fgc,chi,chi     | depart,off ramp slight left,arrive |
 
     Scenario: Merging Motorways
         Given the node map
