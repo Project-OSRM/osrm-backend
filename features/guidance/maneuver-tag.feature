@@ -30,7 +30,7 @@ Feature: Maneuver tag support
 
         When I route I should get
             | waypoints | route                               | turns                                    |
-        # Testing directly connected from/to 
+        # Testing directly connected from/to
             | a,j       | A Street,C Street,J Street,J Street | depart,turn sharp right,turn left,arrive |
             | b,g       | A Street,C Street,C Street          | depart,turn sharp right,arrive           |
         # Testing re-awakening suppressed turns
@@ -198,11 +198,26 @@ Feature: Maneuver tag support
             | pt    | 395     | no     | primary       |
 
         And the relations
-            | type     | way:from | node:via | way:via | way:to | maneuver  |
-            | maneuver | zy       | p        | yp      | pt     | suppress  |
+            | type     | way:from | node:via | way:via | way:to | maneuver | #                                                     |
+            | maneuver | zy       | p        | yp      | pt     | suppress | original: depart,on ramp left,fork slight left,arrive |
+
+        And the relations
+            | type     | way:from | way:via | way:to | maneuver | #                                  |
+            | maneuver | zy       | yp      | pb     | suppress | invalid relation: missing node:via |
+
+        And the relations
+            | type     | node:via | way:via | way:to | maneuver | #                                  |
+            | maneuver | p        | yp      | pb     | suppress | invalid relation: missing way:from |
+
+        And the relations
+            | type     | way:from | node:via | way:via | maneuver | #                                |
+            | maneuver | zy       | p        | yp      | suppress | invalid relation: missing way:to |
+
+        And the relations
+            | type     | way:from | node:via | way:via | way:to | maneuver | #                                   |
+            | maneuver | zy       | y, p     | yp      | pb     | suppress | invalid relation: multiple node:via |
 
         When I route I should get
-            | waypoints | route           | turns                      |
-            | z,t       | NY Ave,395,395  | depart,on ramp left,arrive |
-  #original | z,t       | NY Ave,,395,395 | depart,on ramp left,fork slight left,arrive |
-
+            | waypoints | route                 | turns                                        |
+            | z,t       | NY Ave,395,395        | depart,on ramp left,arrive                   |
+            | z,b       | NY Ave,,4th St,4th St | depart,on ramp left,fork slight right,arrive |
