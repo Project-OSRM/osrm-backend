@@ -21,12 +21,13 @@ namespace
 struct NodeBucket
 {
     NodeID middle_node;
+    NodeID parent_node;
     unsigned column_index; // a column in the weight/duration matrix
     EdgeWeight weight;
     EdgeDuration duration;
 
-    NodeBucket(NodeID middle_node, unsigned column_index, EdgeWeight weight, EdgeDuration duration)
-        : middle_node(middle_node), column_index(column_index), weight(weight), duration(duration)
+    NodeBucket(NodeID middle_node, NodeID parent_node, unsigned column_index, EdgeWeight weight, EdgeDuration duration)
+        : middle_node(middle_node), parent_node(parent_node), column_index(column_index), weight(weight), duration(duration)
     {
     }
 

@@ -1,5 +1,5 @@
 #include "engine/routing_algorithms/direct_shortest_path.hpp"
-
+#include "engine/routing_algorithms/many_to_many.hpp"
 #include "engine/routing_algorithms/routing_base.hpp"
 #include "engine/routing_algorithms/routing_base_ch.hpp"
 #include "engine/routing_algorithms/routing_base_mld.hpp"
@@ -44,6 +44,12 @@ InternalRouteResult directShortestPathSearch(SearchEngineData<ch::Algorithm> &en
 
     std::vector<NodeID> unpacked_nodes;
     std::vector<EdgeID> unpacked_edges;
+
+    for (std::vector<NodeID>::iterator leg = packed_leg.begin(); leg != packed_leg.end(); ++leg){
+      std::cout << *leg  << ", ";
+    }
+    std::cout << std::endl;
+    
 
     if (!packed_leg.empty())
     {
