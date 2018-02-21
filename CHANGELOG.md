@@ -7,6 +7,7 @@
       - CHANGED #4842: Lower priority links from a motorway now are used as motorway links [#4842](https://github.com/Project-OSRM/osrm-backend/pull/4842)
       - CHANGED #4895: Use ramp bifurcations as fork intersections [#4895](https://github.com/Project-OSRM/osrm-backend/issues/4895)
       - CHANGED #4893: Handle motorway forks with links as normal motorway intersections[#4893](https://github.com/Project-OSRM/osrm-backend/issues/4893)
+      - FIXED #4905: Check required tags of `maneuver` relations [#4905](https://github.com/Project-OSRM/osrm-backend/pull/4905)
     - Profile:
       - FIXED: `highway=service` will now be used for restricted access, `access=private` is still disabled for snapping.
       - ADDED #4775: Exposes more information to the turn function, now being able to set turn weights with highway and access information of the turn as well as other roads at the intersection [#4775](https://github.com/Project-OSRM/osrm-backend/issues/4775)

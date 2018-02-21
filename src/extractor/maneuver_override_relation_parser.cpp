@@ -52,8 +52,10 @@ ManeuverOverrideRelationParser::TryParse(const osmium::Relation &relation) const
     maneuver_override.maneuver = relation.tags().get_value_by_key("maneuver", "");
     maneuver_override.direction = relation.tags().get_value_by_key("direction", "");
 
-    boost::optional<std::uint64_t> from = boost::none, via = boost::none, to = boost::none;
-    std::vector<std::uint64_t> via_ways;
+    bool valid_relation = true;
+    OSMNodeID via_node = SPECIAL_OSM_NODEID;
+    OSMWayID from = SPECIAL_OSM_WAYID, to = SPECIAL_OSM_WAYID;
+    std::vector<OSMWayID> via_ways;
 
     for (const auto &member : relation.members())
     {
@@ -74,8 +76,9 @@ ManeuverOverrideRelationParser::TryParse(const osmium::Relation &relation) const
                 continue;
             }
             BOOST_ASSERT(0 == strcmp("via", role));
-            via = static_cast<std::uint64_t>(member.ref());
             // set via node id
+            valid_relation &= via_node == SPECIAL_OSM_NODEID;
+            via_node = OSMNodeID{static_cast<std::uint64_t>(member.ref())};
             break;
         }
         case osmium::item_type::way:
@@ -83,15 +86,17 @@ ManeuverOverrideRelationParser::TryParse(const osmium::Relation &relation) const
                          0 == strcmp("via", role));
             if (0 == strcmp("from", role))
             {
-                from = static_cast<std::uint64_t>(member.ref());
+                valid_relation &= from == SPECIAL_OSM_WAYID;
+                from = OSMWayID{static_cast<std::uint64_t>(member.ref())};
             }
             else if (0 == strcmp("to", role))
             {
-                to = static_cast<std::uint64_t>(member.ref());
+                valid_relation &= to == SPECIAL_OSM_WAYID;
+                to = OSMWayID{static_cast<std::uint64_t>(member.ref())};
             }
             else if (0 == strcmp("via", role))
             {
-                via_ways.push_back(static_cast<std::uint64_t>(member.ref()));
+                via_ways.push_back(OSMWayID{static_cast<std::uint64_t>(member.ref())});
             }
             break;
         case osmium::item_type::relation:
@@ -103,18 +108,17 @@ ManeuverOverrideRelationParser::TryParse(const osmium::Relation &relation) const
         }
     }
 
-    if (from && (via || via_ways.size() > 0) && to)
+    // Check required roles
+    valid_relation &= from != SPECIAL_OSM_WAYID;
+    valid_relation &= to != SPECIAL_OSM_WAYID;
+    valid_relation &= via_node != SPECIAL_OSM_NODEID;
+
+    if (valid_relation)
     {
-        via_ways.insert(via_ways.begin(), *from);
-        via_ways.push_back(*to);
-        if (via)
-        {
-            maneuver_override.via_node = {*via};
-        }
-        for (const auto &n : via_ways)
-        {
-            maneuver_override.via_ways.push_back(OSMWayID{n});
-        }
+        maneuver_override.via_ways.push_back(from);
+        std::copy(via_ways.begin(), via_ways.end(), std::back_inserter(maneuver_override.via_ways));
+        maneuver_override.via_ways.push_back(to);
+        maneuver_override.via_node = via_node;
     }
     else
     {
