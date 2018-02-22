@@ -70,6 +70,13 @@ std::unordered_set<EdgeID> findSegregatedNodes(const extractor::NodeBasedGraphFa
             coordExtractor.GetCoordinateCloseToTurn(intersection_node, to_edge_id, false, to_node);
         auto const node_from = coordExtractor.GetCoordinateCloseToTurn(
             intersection_node, from_edge_id_outgoing, false, from_node);
+
+        util::Log() << "from edge id :: " << from_edge_id << ", to edge id :: " << to_edge_id;
+        util::Log() << "intersection node :: " << intersection_node;
+        util::Log() << "coords of intersection node :: " << coordinates[intersection_node].lat << ", " << coordinates[intersection_node].lon;
+        util::Log() << "turn angle :: " << util::coordinate_calculation::computeAngle(
+            node_from, coordinates[intersection_node], node_to) ;
+
         return util::coordinate_calculation::computeAngle(
             node_from, coordinates[intersection_node], node_to);
     };
@@ -81,6 +88,7 @@ std::unordered_set<EdgeID> findSegregatedNodes(const extractor::NodeBasedGraphFa
         BOOST_ASSERT(id != INVALID_NAMEID);
         auto const name = names.GetNameForID(id);
 
+        util::Log() << "node :: " << node << ", edge_id :: " << edge_id << ", name :: " << name;
         return {edge_id,
                 node,
                 name,
