@@ -1,9 +1,12 @@
 #include "guidance/segregated_intersection_classification.hpp"
 #include "extractor/intersection/coordinate_extractor.hpp"
 #include "extractor/node_based_graph_factory.hpp"
+#include "guidance/turn_instruction.hpp"
 
 #include "util/coordinate_calculation.hpp"
 #include "util/name_table.hpp"
+
+using osrm::guidance::getTurnDirection;
 
 namespace osrm
 {
@@ -95,20 +98,35 @@ std::unordered_set<EdgeID> findSegregatedNodes(const extractor::NodeBasedGraphFa
                 turn_degree < INTERNAL_STRAIGHT_UPPER_BOUND);
     };
 
+    // Lambda to check if the turn set includes a right turn type
+    const auto has_turn_right = [](std::set<guidance::DirectionModifier::Enum> &turn_types) {
+        return turn_types.find(guidance::DirectionModifier::Right) != turn_types.end() ||
+               turn_types.find(guidance::DirectionModifier::SharpRight) != turn_types.end();
+    };
+    // Lambda to check if the turn set includes a left turn type
+    const auto has_turn_left = [](std::set<guidance::DirectionModifier::Enum> &turn_types) {
+        return turn_types.find(guidance::DirectionModifier::Left) != turn_types.end() ||
+               turn_types.find(guidance::DirectionModifier::SharpLeft) != turn_types.end();
+    };
+
     auto isSegregated = [&](NodeID node1,
                             std::vector<EdgeInfo> v1,
                             std::vector<EdgeInfo> v2,
                             EdgeInfo const &current,
                             double edge_length) {
-        // Internal intersection edges must be short and cannot be a roundabout
+        // Internal intersection edges must be short and cannot be a roundabout.
+        // Also they must be a road use (not footway, cycleway, etc.)
+        // TODO - consider whether alleys, cul-de-sacs, and other road uses
+        // are candidates to be marked as internal intersection edges.
         // TODO adjust length as needed with lamda
         if (edge_length > INTERNAL_LENGTH_MAX || current.flags.roundabout)
         {
             return false;
         }
-
-        // Look for oneway inbound edge
+        // Iterate through inbound edges and get turn degrees from driveable inbound
+        // edges onto the candidate edge.
         bool oneway_inbound = false;
+        std::set<guidance::DirectionModifier::Enum> incoming_turn_type;
         for (auto const &edge_from : v1)
         {
             // Get the inbound edge and edge data
@@ -116,6 +134,10 @@ std::unordered_set<EdgeID> findSegregatedNodes(const extractor::NodeBasedGraphFa
             auto const &edge_inbound_data = graph.GetEdgeData(edge_inbound);
             if (!edge_inbound_data.reversed)
             {
+                // Store the turn type of incoming driveable edges.
+                incoming_turn_type.insert(guidance::getTurnDirection(
+                    get_angle(edge_from.node, edge_inbound, current.edge)));
+
                 // Skip any inbound edges not oneway (i.e. skip bidirectional)
                 // and link edge
                 // and not a road
@@ -126,32 +148,37 @@ std::unordered_set<EdgeID> findSegregatedNodes(const extractor::NodeBasedGraphFa
                 {
                     continue;
                 }
-
                 // Get the turn degree from the inbound edge to the current edge
                 // Skip if the inbound edge is not somewhat perpendicular to the current edge
                 if (is_internal_straight(get_angle(edge_from.node, edge_inbound, current.edge)))
                 {
                     continue;
                 }
-
                 // If we are here the edge is a candidate oneway inbound
                 oneway_inbound = true;
                 break;
             }
         }
 
-        // Return false if no valid oneway inbound edge
+        // Must have an inbound oneway, excluding edges that are nearly straight
+        // turn type onto the directed edge.
         if (!oneway_inbound)
         {
             return false;
         }
 
-        // Look for oneway outbound edge
+        // Iterate through outbound edges and get turn degrees from the candidate
+        // edge onto outbound driveable edges.
         bool oneway_outbound = false;
+        std::set<guidance::DirectionModifier::Enum> outgoing_turn_type;
         for (auto const &edge_to : v2)
         {
             if (!edge_to.reversed)
             {
+                // Store outgoing turn type for any driveable edges
+                outgoing_turn_type.insert(
+                    guidance::getTurnDirection(get_angle(node1, current.edge, edge_to.edge)));
+
                 // Skip any outbound edges not oneway (i.e. skip bidirectional)
                 // and link edge
                 // and not a road
@@ -175,12 +202,24 @@ std::unordered_set<EdgeID> findSegregatedNodes(const extractor::NodeBasedGraphFa
                 break;
             }
         }
-
-        // Return false if no valid oneway outbound edge
+        // Must have outbound oneway at end node (exclude edges that are nearly
+        // straight turn from directed edge
         if (!oneway_outbound)
         {
             return false;
         }
+
+        // A further rejection case is if there are incoming edges that
+        // have "opposite" turn degrees than outgoing edges or if the outgoing
+        // edges have opposing turn degrees.
+        if ((has_turn_left(incoming_turn_type) && has_turn_right(outgoing_turn_type)) ||
+            (has_turn_right(incoming_turn_type) && has_turn_left(outgoing_turn_type)) ||
+            (has_turn_left(outgoing_turn_type) && has_turn_right(outgoing_turn_type))) {
+          return false;
+        }
+
+        // TODO - determine if we need to add name checks or need to check headings
+        // of the inbound and outbound oneway edges
 
         // Assume this is an intersection internal edge
         return true;
