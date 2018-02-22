@@ -1106,11 +1106,9 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
         std::sort(storage_maneuver_overrides.begin(),
                   storage_maneuver_overrides.end(),
                   [](const auto &a, const auto &b) { return a.start_node < b.start_node; });
-        // write conditional turn penalties into the restrictions file
-        storage::io::FileWriter writer(maneuver_overrides_filename,
-                                       storage::io::FileWriter::GenerateFingerprint);
-        extractor::serialization::write(
-            writer, storage_maneuver_overrides, maneuver_override_sequences);
+
+        files::writeManeuverOverrides(
+            maneuver_overrides_filename, storage_maneuver_overrides, maneuver_override_sequences);
     }
 
     util::Log() << "done.";

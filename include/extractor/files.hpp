@@ -261,6 +261,29 @@ inline void writeTurnLaneDescriptions(const boost::filesystem::path &path,
     storage::serialization::write(writer, turn_offsets);
     storage::serialization::write(writer, turn_masks);
 }
+
+// reads .osrm.maneuver_overrides
+template <typename StorageManeuverOverrideT, typename NodeSequencesT>
+inline void readManeuverOverrides(const boost::filesystem::path &path,
+                                  StorageManeuverOverrideT &maneuver_overrides,
+                                  NodeSequencesT &node_sequences)
+{
+    const auto fingerprint = storage::io::FileReader::VerifyFingerprint;
+    storage::io::FileReader reader{path, fingerprint};
+
+    serialization::read(reader, maneuver_overrides, node_sequences);
+}
+
+// writes .osrm.maneuver_overrides
+inline void writeManeuverOverrides(const boost::filesystem::path &path,
+                                   const std::vector<StorageManeuverOverride> &maneuver_overrides,
+                                   const std::vector<NodeID> &node_sequences)
+{
+    const auto fingerprint = storage::io::FileWriter::GenerateFingerprint;
+    storage::io::FileWriter writer{path, fingerprint};
+
+    serialization::write(writer, maneuver_overrides, node_sequences);
+}
 }
 }
 }

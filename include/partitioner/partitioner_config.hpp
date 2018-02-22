@@ -16,10 +16,14 @@ namespace partitioner
 struct PartitionerConfig final : storage::IOConfig
 {
     PartitionerConfig()
-        : IOConfig(
-              {".osrm", ".osrm.fileIndex", ".osrm.ebg_nodes"},
-              {".osrm.hsgr", ".osrm.cnbg"},
-              {".osrm.ebg", ".osrm.cnbg", ".osrm.cnbg_to_ebg", ".osrm.partition", ".osrm.cells"}),
+        : IOConfig({".osrm", ".osrm.fileIndex", ".osrm.ebg_nodes"},
+                   {".osrm.hsgr", ".osrm.cnbg"},
+                   {".osrm.ebg",
+                    ".osrm.cnbg",
+                    ".osrm.cnbg_to_ebg",
+                    ".osrm.partition",
+                    ".osrm.cells",
+                    ".osrm.maneuver_overrides"}),
           requested_num_threads(0), balance(1.2), boundary_factor(0.25), num_optimizing_cuts(10),
           small_component_size(1000),
           max_cell_sizes({128, 128 * 32, 128 * 32 * 16, 128 * 32 * 16 * 32})
