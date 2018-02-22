@@ -124,7 +124,6 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
             {
                 current_weight = std::min(current_weight, new_weight);
                 current_duration = std::min(current_duration, new_duration);
-                // // std::cout << "new NodeID weight<0: " << node;
                 middle_nodes_table[row_idx * number_of_targets + column_idx] = node;
             }
         }
@@ -132,7 +131,6 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
         {
             current_weight = new_weight;
             current_duration = new_duration;
-            // // std::cout << "new NodeID weight>0: " << node;
             middle_nodes_table[row_idx * number_of_targets + column_idx] = node;
         }
     }
@@ -188,47 +186,61 @@ std::vector<NodeID> retrievePackedPathFromSearchSpace(std::vector<NodeID> &middl
  // c -> c 2 * 3 + 2 = 8
  // d -> c 3 * 3 + 2 = 11
 
-    NodeID middle_node = middle_nodes_table[row_idx];
+ //   middle_nodes_table = [0 , 1, 2, .........]
+
     const auto &bucket_list = std::equal_range(search_space_with_buckets.begin(),
                                                search_space_with_buckets.end(),
                                                middle_node,
                                                NodeBucket::Compare());
-
-    for (const auto &current_bucket : boost::make_iterator_range(bucket_list))
+    int min_weight = 0;
+    int min_duration = 0;
+    std::vector<NodeID> shortest_packed_path;
+    //inside the loop, do a check to see if the current path is better
+    for (const auto &current_bucket_list_bucket : boost::make_iterator_range(bucket_list))
     {
-        // Get target id from bucket entry
-        const auto column_idx = current_bucket.column_index;
-        const auto target_weight = current_bucket.weight;
-        const auto target_duration = current_bucket.duration;
+        int current_path_weight = 0;
+        int current_path_duration = 0;
+        std::vector<NodeID> current_packed_path = {middle_node};
+        auto traverse_path_bucket = current_bucket_list_bucket;
+        do {
+            // Get target id from bucket entry
+            const auto column_idx = traverse_path_bucket.column_index;
+            const auto target_weight = traverse_path_bucket.weight;
+            const auto target_duration = traverse_path_bucket.duration;
 
-        auto &current_weight = weights_table[row_idx * number_of_targets + column_idx];
-        auto &current_duration = durations_table[row_idx * number_of_targets + column_idx];
+            auto &current_weight = weights_table[row_idx * number_of_targets + column_idx];
+            auto &current_duration = durations_table[row_idx * number_of_targets + column_idx];
 
-        // Check if new weight is better
-        auto new_weight = source_weight + target_weight;
-        auto new_duration = source_duration + target_duration;
+            // Check if new weight is better
+            auto new_weight = source_weight + target_weight; // wait what is source_weight?
+            auto new_duration = source_duration + target_duration;
 
-        if (new_weight < 0)
-        {
-            if (addLoopWeight(facade, node, new_weight, new_duration))
+            if (new_weight < 0)
             {
-                current_weight = std::min(current_weight, new_weight);
-                current_duration = std::min(current_duration, new_duration);
+                if (addLoopWeight(facade, node, new_weight, new_duration))
+                {
+                    current_weight = std::min(current_weight, new_weight);
+                    current_duration = std::min(current_duration, new_duration);
+                }
             }
-        }
-        else if (std::tie(new_weight, new_duration) < std::tie(current_weight, current_duration))
-        {
-            current_weight = new_weight;
-            current_duration = new_duration;
+            else if (std::tie(new_weight, new_duration) < std::tie(current_weight, current_duration))
+            {
+                current_weight = new_weight;
+                current_duration = new_duration;
+            }
+            current_path_weight += current_weight;
+            current_path_duration += new_duration;
+            current_packed_path.emplace_back{middle_node};
+            traverse_path_bucket = search_space_with_buckets[traverse_path_bucket.parent_node];
+        } while (traverse_path_bucket.parent_node != traverse_path_bucket.middle_node);
+
+        if (min_weight < current_path_weight) {
+            min_weight = current_path_weight;
+            shortest_packed_path = current_packed_path;
         }
     }
 
-    std::vector<NodeID> packed_path = {1,2,3};
-
-    packed_path.emplace_back(target_node);
-
-    std::cout << search_space_with_buckets.size();
-    return packed_path;
+    return shortest_packed_path;
 }
 
 template <>
@@ -312,8 +324,22 @@ std::vector<EdgeDuration> manyToManySearch(SearchEngineData<ch::Algorithm> &engi
                                middle_nodes_table,
                                phantom);
         }
+        // row_idx == one source
+        // target == search_space_with_buckets.column_idx
 
-        std::vector<NodeID> packed_path = retrievePackedPathFromSearchSpace(middle_nodes_table, row_idx, search_space_with_buckets)
+        for (unsigned column_idx = 0; column_idx < number_of_targets; ++column_idx){
+            NodeID middle_node = middle_nodes_table[row_idx * number_of_targets + column_idx];
+            std::vector<NodeID> packed_path_from_source_to_middle = retrievePackedPathFromSearchSpace(middle_nodes_table, number_of_targets, row_idx, search_space_with_buckets,weights_table, durations_table);
+            // store packed_path_from_source_to_middle
+        }
+
+        // find packed_path_from_middle_to_target
+
+        // join packed_path_from_source_to_middle and packed_path_from_middle_to_target to make packed_path
+
+        // unpack packed_path (ch::unpackPath())
+
+        // calculate the duration and fill in the durations table
 
  //           targets (columns) target_id = column_idx
  //              a   b   c
@@ -326,44 +352,10 @@ std::vector<EdgeDuration> manyToManySearch(SearchEngineData<ch::Algorithm> &engi
  // c -> c 2 * 3 + 2 = 8
  // d -> c 3 * 3 + 2 = 11
 
-        // to calculate the durations table: 
-        // 1) get the packed path from the the above loops
-        // std::vector<NodeID> retrievePackedPathFromSearchSpace(middle_node, target_node, search_space_with_buckets)
-        // 2) call unpackPath inside this file, in here
-        // void unpackPath(const DataFacade<Algorithm> &facade,
-                // BidirectionalIterator packed_path_begin,
-                // BidirectionalIterator packed_path_end,
-                // Callback &&callback)
-        // 3) calculate the duration using the new method that you will write:
-        // extractDurations(facade, weight, phantom_nodes, unpacked_nodes, unpacked_edges)
-
-        // std::vector<NodeID> packed_path = retrievePackedPathFromSearchSpace(1, 0, search_space_with_buckets);
-
-        // std::cout << "Packed Path: ";
-        // for (std::uint32_t idx = 0; idx < packed_path.size(); ++idx)
-        // {
-        //     std::cout  << packed_path[idx] << ", ";
-        //     std::cout << "duration: " << durations_table[idx] << ", ";
-        // }
-        // std::cout << std::endl;
-
-        // ch::unpackPath(facade,
-        //                packed_leg.begin(),
-        //                packed_leg.end(),
-        //                *engine_working_data.unpacking_cache.get(),
-        //                [&unpacked_nodes, &unpacked_edges](std::pair<NodeID, NodeID> &edge,
-        //                                                   const auto &edge_id) {
-        //                    BOOST_ASSERT(edge.first == unpacked_nodes.back());
-        //                    unpacked_nodes.push_back(edge.second);
-        //                    unpacked_edges.push_back(edge_id);
-        //                });
-        // engine_working_data.unpacking_cache.get()->PrintStats();
     }
 
     return durations_table;
 }
-
-
 
 } // namespace routing_algorithms
 } // namespace engine
