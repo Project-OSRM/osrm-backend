@@ -145,6 +145,15 @@ int Partitioner::Run(const PartitionerConfig &config)
         renumber(node_data, permutation);
         extractor::files::writeNodeData(config.GetPath(".osrm.ebg_nodes"), node_data);
     }
+    {
+        const auto &filename = config.GetPath(".osrm.maneuver_overrides");
+        std::vector<extractor::StorageManeuverOverride> maneuver_overrides;
+        std::vector<NodeID> node_sequences;
+        extractor::files::readManeuverOverrides(filename, maneuver_overrides, node_sequences);
+        renumber(maneuver_overrides, permutation);
+        renumber(node_sequences, permutation);
+        extractor::files::writeManeuverOverrides(filename, maneuver_overrides, node_sequences);
+    }
     if (boost::filesystem::exists(config.GetPath(".osrm.hsgr")))
     {
         util::Log(logWARNING) << "Found existing .osrm.hsgr file, removing. You need to re-run "
