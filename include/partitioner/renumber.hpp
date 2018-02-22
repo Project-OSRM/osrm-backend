@@ -2,6 +2,7 @@
 #define OSRM_PARTITIONER_RENUMBER_HPP
 
 #include "extractor/edge_based_node_segment.hpp"
+#include "extractor/maneuver_override.hpp"
 #include "extractor/nbg_to_ebg.hpp"
 #include "extractor/node_data_container.hpp"
 
@@ -70,6 +71,25 @@ inline void renumber(std::vector<extractor::NBGToEBG> &mapping,
             m.backward_ebg_node = permutation[m.backward_ebg_node];
         if (m.forward_ebg_node != SPECIAL_NODEID)
             m.forward_ebg_node = permutation[m.forward_ebg_node];
+    }
+}
+
+inline void renumber(std::vector<NodeID> &node_ids, const std::vector<std::uint32_t> &permutation)
+{
+    for (auto &node_id : node_ids)
+    {
+        if (node_id != SPECIAL_NODEID)
+            node_id = permutation[node_id];
+    }
+}
+
+inline void renumber(std::vector<extractor::StorageManeuverOverride> &maneuver_overrides,
+                     const std::vector<std::uint32_t> &permutation)
+{
+    for (auto &maneuver_override : maneuver_overrides)
+    {
+        if (maneuver_override.start_node != SPECIAL_NODEID)
+            maneuver_override.start_node = permutation[maneuver_override.start_node];
     }
 }
 
