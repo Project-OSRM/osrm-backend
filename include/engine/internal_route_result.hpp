@@ -139,11 +139,6 @@ inline InternalRouteResult CollapseInternalRouteResult(const InternalRouteResult
         {
             BOOST_ASSERT(!collapsed.unpacked_path_segments.empty());
             auto &last_segment = collapsed.unpacked_path_segments.back();
-            // deduplicate last segment (needs to be checked for empty for the same node query edge
-            // case)
-            if (!last_segment.empty())
-                last_segment.pop_back();
-            // update target phantom node of leg
             BOOST_ASSERT(!collapsed.segment_end_coordinates.empty());
             collapsed.segment_end_coordinates.back().target_phantom =
                 leggy_result.segment_end_coordinates[i].target_phantom;

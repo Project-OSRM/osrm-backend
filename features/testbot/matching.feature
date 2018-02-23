@@ -626,3 +626,28 @@ Feature: Basic Map Matching
         | trace    | timestamps                                   | matchings  | code |
         | abbecd   | 10 11 27 1516914902 1516914913 1516914952    | ab,ecd     | Ok   |
 
+    Scenario: Regression test - waypoints trimming too much geometry
+        Given the node map
+            """
+            ad
+            |
+            |
+            |
+            |
+            |e   g
+            b--------------c
+            f              h
+            """
+
+        And the ways
+            | nodes |
+            | ab    |
+            | bc    |
+
+        Given the query options
+            | waypoints | 0;4   |
+            | overview  | full  |
+
+        When I match I should get
+            | trace    | geometry                           | code |
+            | defgh    | 1,1,1,0.999461,1.000674,0.999461   | Ok   |
