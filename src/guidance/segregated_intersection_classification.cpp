@@ -5,6 +5,7 @@
 
 #include "util/coordinate_calculation.hpp"
 #include "util/name_table.hpp"
+#include <set>
 
 using osrm::guidance::getTurnDirection;
 
