@@ -1,5 +1,5 @@
 # UNRELEASED
-  - Changes from 5.15.1:
+  - Changes from 5.15.2:
     - Guidance
       - ADDED #4676: Support for maneuver override relation, allowing data-driven overrides for turn-by-turn instructions [#4676](https://github.com/Project-OSRM/osrm-backend/pull/4676)
       - CHANGED #4830: Announce reference change if names are empty
@@ -13,6 +13,13 @@
       - ADDED #4775: Exposes more information to the turn function, now being able to set turn weights with highway and access information of the turn as well as other roads at the intersection [#4775](https://github.com/Project-OSRM/osrm-backend/issues/4775)
       - FIXED #4763: Add support for non-numerical units in car profile for maxheight [#4763](https://github.com/Project-OSRM/osrm-backend/issues/4763)
       - ADDED #4872: Handling of `barrier=height_restrictor` nodes [#4872](https://github.com/Project-OSRM/osrm-backend/pull/4872)
+
+# 5.15.2
+  - Changes from 5.15.1:
+    - Features:
+        - ADDED: Exposed the waypoints parameter in the node bindings interface
+    - Bugfixes:
+        - FIXED: Segfault causing bug in leg collapsing map matching when traversing edges in reverse
 
 # 5.15.1
   - Changes from 5.15.0:
