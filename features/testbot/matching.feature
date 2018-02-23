@@ -627,6 +627,8 @@ Feature: Basic Map Matching
         | abbecd   | 10 11 27 1516914902 1516914913 1516914952    | ab,ecd     | Ok   |
 
     Scenario: Regression test - waypoints trimming too much geometry
+        # fixes bug in map matching collapsing that was dropping path geometries
+        # after segments that had 0 distance in internal route results
         Given the node map
             """
             ad
@@ -651,3 +653,34 @@ Feature: Basic Map Matching
         When I match I should get
             | trace    | geometry                           | code |
             | defgh    | 1,1,1,0.999461,1.000674,0.999461   | Ok   |
+
+    @match @testbot
+    Scenario: Regression test - waypoints trimming too much geometry
+        Given the profile "testbot"
+        Given a grid size of 10 meters
+        Given the query options
+          | geometries | geojson |
+        Given the node map
+          """
+            bh
+             |
+             |
+             |
+             c
+             g\
+               \k
+                \
+                 \
+                  \
+                 j f
+          """
+        And the ways
+          | nodes |
+          | hc    |
+          | cf    |
+        Given the query options
+          | waypoints | 0;3  |
+          | overview  | full |
+        When I match I should get
+          | trace | geometry                                      | code |
+          | bgkj  | 1.000135,1,1.000135,0.99964,1.000387,0.999137 | Ok   |
