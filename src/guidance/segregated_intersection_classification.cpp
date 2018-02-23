@@ -213,8 +213,9 @@ std::unordered_set<EdgeID> findSegregatedNodes(const extractor::NodeBasedGraphFa
         // edges have opposing turn degrees.
         if ((has_turn_left(incoming_turn_type) && has_turn_right(outgoing_turn_type)) ||
             (has_turn_right(incoming_turn_type) && has_turn_left(outgoing_turn_type)) ||
-            (has_turn_left(outgoing_turn_type) && has_turn_right(outgoing_turn_type))) {
-          return false;
+            (has_turn_left(outgoing_turn_type) && has_turn_right(outgoing_turn_type)))
+        {
+            return false;
         }
 
         // TODO - determine if we need to add name checks or need to check headings
