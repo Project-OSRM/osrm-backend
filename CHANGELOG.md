@@ -1,5 +1,6 @@
 # UNRELEASED
   - Changes from 5.16.0:
+    - Bugfixes: fix deduplication of route steps when waypoints are used [#4909](https://github.com/Project-OSRM/osrm-backend/issues/4909)
 
 # 5.16.0
   - Changes from 5.15.2:
