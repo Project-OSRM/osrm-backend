@@ -43,14 +43,13 @@ We may introduce forward-compatible changes: query parameters and response prope
 
 1. Check out the appropriate release branch `x.y`
 2. Make sure `CHANGELOG.md` is up to date.
-3. Make sure the OSRM version in `CMakeLists.txt` is up to date
-4. Make sure the `package.json` is up to date.
-5. Make sure all tests are passing (e.g. Travis CI gives you a :thumbs_up:)
-6. Use an annotated tag to mark the release: `git tag vx.y.z -a` Body of the tag description should be the changelog entries.
-7. Use `npm run docs` to generate the API documentation.  Copy `build/docs/*` to `https://github.com/Project-OSRM/project-osrm.github.com` in the `docs/vN.N.N/api` directory
-8. Push tags and commits: `git push; git push --tags`
-9. If not a release-candidate: Write a mailing-list post to osrm-talk@openstreetmap.org to announce the release
-10. Wait until the travis build has been completed and check if the node binaries were published by doing:
+3. Make sure the `package.json` is up to date.
+4. Make sure all tests are passing (e.g. Travis CI gives you a :thumbs_up:)
+5. Use an annotated tag to mark the release: `git tag vx.y.z -a` Body of the tag description should be the changelog entries.
+6. Use `npm run docs` to generate the API documentation.  Copy `build/docs/*` to `https://github.com/Project-OSRM/project-osrm.github.com` in the `docs/vN.N.N/api` directory
+7. Push tags and commits: `git push; git push --tags`
+8. If not a release-candidate: Write a mailing-list post to osrm-talk@openstreetmap.org to announce the release
+9. Wait until the travis build has been completed and check if the node binaries were published by doing:
     `rm -rf node_modules && npm install` locally.
-11. For final releases run `npm publish` or `npm publish --tag next` for release candidates.
-12. Bump version in `package.json` to `{MAJOR}.{MINOR+1}.0-latest.1` on the `master` branch after the release.
+10. For final releases run `npm publish` or `npm publish --tag next` for release candidates.
+11. Bump version in `package.json` to `{MAJOR}.{MINOR+1}.0-latest.1` on the `master` branch after the release.

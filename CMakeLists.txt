@@ -1,5 +1,4 @@
-cmake_minimum_required(VERSION 2.8.11)
-# we depend on 2.8.11 introducing target_include_directories
+cmake_minimum_required(VERSION 3.1)
 
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR AND NOT MSVC_IDE)
   message(FATAL_ERROR "In-source builds are not allowed.
@@ -59,10 +58,20 @@ if (POLICY CMP0048)
   cmake_policy(SET CMP0048 OLD)
 endif()
 project(OSRM C CXX)
-set(OSRM_VERSION_MAJOR 5)
-set(OSRM_VERSION_MINOR 16)
-set(OSRM_VERSION_PATCH 0)
-set(OSRM_VERSION "${OSRM_VERSION_MAJOR}.${OSRM_VERSION_MINOR}.${OSRM_VERSION_PATCH}")
+
+include(JSONParser)
+file(READ "package.json" packagejsonraw)
+sbeParseJson(packagejson packagejsonraw)
+
+if (packagejson.version MATCHES "^([0-9]+)\.([0-9]+)\.([0-9]+)")
+    set(OSRM_VERSION_MAJOR ${CMAKE_MATCH_1})
+    set(OSRM_VERSION_MINOR ${CMAKE_MATCH_2})
+    set(OSRM_VERSION_PATCH ${CMAKE_MATCH_3})
+
+    set(OSRM_VERSION "${OSRM_VERSION_MAJOR}.${OSRM_VERSION_MINOR}.${OSRM_VERSION_PATCH}")
+else()
+    message(FATAL_ERROR "Version from package.json cannot be parsed, expected semver compatible X.Y.Z, but found ${packagejson.version}")
+endif()
 
 if (MSVC)
   add_definitions("-DOSRM_PROJECT_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}\"")
