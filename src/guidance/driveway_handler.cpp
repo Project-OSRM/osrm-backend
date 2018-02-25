@@ -78,6 +78,18 @@ operator()(const NodeID nid, const EdgeID source_edge_id, Intersection intersect
     road->instruction.type =
         isSameName(source_edge_id, road->eid) ? TurnType::NoTurn : TurnType::NewName;
 
+    if (road->instruction.direction_modifier == DirectionModifier::Straight)
+    {
+        std::for_each(intersection.begin() + 1, road, [](auto &side_road) {
+            if (side_road.instruction.direction_modifier == DirectionModifier::Straight)
+                side_road.instruction.direction_modifier = DirectionModifier::SlightRight;
+        });
+        std::for_each(road + 1, intersection.end(), [](auto &side_road) {
+            if (side_road.instruction.direction_modifier == DirectionModifier::Straight)
+                side_road.instruction.direction_modifier = DirectionModifier::SlightLeft;
+        });
+    }
+
     return intersection;
 }
 
