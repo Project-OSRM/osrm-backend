@@ -1,3 +1,8 @@
+# 5.16.2
+  - Changes from 5.16.1:
+    - Bugfixes:
+      - FIXED #4920: Use smaller range for U-turn angles in map-matching [#4920](https://github.com/Project-OSRM/osrm-backend/pull/4920)
+
 # 5.16.1
   - Changes from 5.16.0:
     - Bugfixes

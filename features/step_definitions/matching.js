@@ -74,7 +74,7 @@ module.exports = function () {
 
                         if (headers.has('turns')) {
                             if (json.matchings.length != 1) throw new Error('*** Checking turns only supported for matchings with one subtrace');
-                            turns = this.turnList(json.matchings[0].instructions);
+                            turns = this.turnList(json.matchings[0]);
                         }
 
                         if (headers.has('route')) {

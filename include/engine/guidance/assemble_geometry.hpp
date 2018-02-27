@@ -80,7 +80,9 @@ inline LegGeometry assembleGeometry(const datafacade::BaseDataFacade &facade,
         prev_coordinate = coordinate;
 
         const auto osm_node_id = facade.GetOSMNodeIDOfNode(path_point.turn_via_node);
-        if (osm_node_id != geometry.osm_node_ids.back())
+
+        if (osm_node_id != geometry.osm_node_ids.back() ||
+            path_point.turn_instruction.type != osrm::guidance::TurnType::NoTurn)
         {
             geometry.annotations.emplace_back(LegGeometry::Annotation{
                 current_distance,
