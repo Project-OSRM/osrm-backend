@@ -684,3 +684,34 @@ Feature: Basic Map Matching
         When I match I should get
           | trace | geometry                                      | code |
           | bgkj  | 1.000135,1,1.000135,0.99964,1.000387,0.999137 | Ok   |
+
+
+    @match @testbot
+    Scenario: Regression test - waypoints trimming too much geometry
+        Given the profile "testbot"
+        Given a grid size of 10 meters
+        Given the query options
+          | geometries | geojson |
+        Given the node map
+          """
+                e
+                ;
+                ;
+          a-----b-----c
+                ;
+                ;
+                d
+          """
+        And the ways
+          | nodes |
+          | abc   |
+          | bde   |
+        Given the query options
+          | waypoints | 0;2  |
+          | overview  | full |
+          | steps     | true |
+        When I match I should get
+          | trace | geometry                                   | turns                    | code |
+          | abc   | 1,0.99973,1.00027,0.99973,1.000539,0.99973 | depart,arrive            | Ok   |
+          | abd   | 1,0.99973,1.00027,0.99973,1.00027,0.999461 | depart,turn right,arrive | Ok   |
+          | abe   | 1,0.99973,1.00027,0.99973,1.00027,1        | depart,turn left,arrive  | Ok   |

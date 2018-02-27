@@ -44,7 +44,7 @@ void filterCandidates(const std::vector<util::Coordinate> &coordinates,
                                                            coordinates[current_coordinate + 1]);
 
             // sharp turns indicate a possible uturn
-            if (turn_angle <= 90.0 || turn_angle >= 270.0)
+            if (turn_angle <= 45.0 || turn_angle >= 315.0)
             {
                 allow_uturn = true;
             }
