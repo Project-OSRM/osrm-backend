@@ -62,8 +62,7 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
             const NodeID to = facade.GetTarget(edge);
 
             const auto edge_weight = data.weight;
-            const auto edge_duration = data.duration; // data.duration will be gone. so we can get
-                                                      // this info from  node -> to
+            const auto edge_duration = data.duration; 
 
             BOOST_ASSERT_MSG(edge_weight > 0, "edge_weight invalid");
             const auto to_weight = weight + edge_weight;
@@ -159,25 +158,21 @@ void backwardRoutingStep(const DataFacade<Algorithm> &facade,
 
 } // namespace ch
 
-std::vector<NodeID> retrievePackedPathFromSearchSpace(std::vector<NodeID> &middle_nodes_table, // middle_nodes_table
-    const unsigned row_idx, // in order to figure out which target is being accessed and also to access the middle_nodes_table correctly
-    std::vector<NodeBucket> &search_space_with_buckets) {
-
-// We need to write an own function retrievePackedPathFromSearchSpace that take the middle node, the target node and the search space. It iteratively needs to lookup the parent of the middle node, the parent of the parent, and so forth but not using the ManyToManySearchHeap but the search_space_with_buckets
-// For a given middle node we can find the parent node over running this code to extract a list of NodeBuckets and find the parent with the smallest weight to middle.
-//         const auto &bucket_list = std::equal_range(search_space_with_buckets.begin(),
-//                                                search_space_with_buckets.end(),
-//                                                node,
-//                                                NodeBucket::Compare());
-// For start to middle we run retrievePackedPathFromSingleHeap on the forward heap
-// With the packed path we continue as discussed by unpacking it with the cache
+std::vector<NodeID> retrievePackedPathFromSearchSpace(
+    const DataFacade<ch::Algorithm> &facade,
+    NodeID middle_node, // middle_node,
+    const unsigned number_of_targets,
+    const unsigned row_idx, // in order to figure out which target is being accessed
+    std::vector<NodeBucket> &search_space_with_buckets,
+    std::vector<EdgeWeight> &weights_table,
+    std::vector<EdgeDuration> &durations_table) {
 
 //     [  0           1          2         3    ]
 //     [ [m0,p=m3],[m1,p=m2],[m2,p=m1], [m3,p=2]]
 
  //           targets (columns) target_id = column_idx
  //              a   b   c
- //          a  [0,  1,  2],
+ //          a  [0,  1,  2], 
  // sources  b  [3,  4,  5],
  //  (rows)  c  [6,  7,  8],
  //          d  [9, 10, 11]
@@ -188,57 +183,96 @@ std::vector<NodeID> retrievePackedPathFromSearchSpace(std::vector<NodeID> &middl
 
  //   middle_nodes_table = [0 , 1, 2, .........]
 
+        std::cout << "number_of_targets: "<< number_of_targets << " row_idx: "<< row_idx << std::endl;
+        std::cout << "weights_table: ";
+        for ( std::vector<EdgeWeight>::iterator weight = weights_table.begin(); weight != weights_table.end(); weight++) std::cout << *weight << " ";
+        std::cout << std::endl;
+        std::cout << "durationz_table: ";
+        for ( std::vector<EdgeDuration>::iterator duration = durations_table.begin(); duration != durations_table.end(); duration++) std::cout << *duration << " ";
+            std::cout << std::endl;
+
     const auto &bucket_list = std::equal_range(search_space_with_buckets.begin(),
                                                search_space_with_buckets.end(),
                                                middle_node,
                                                NodeBucket::Compare());
-    int min_weight = 0;
-    int min_duration = 0;
+
+    EdgeWeight shortest_path_weight = INVALID_EDGE_WEIGHT;
+    EdgeDuration shortest_path_duration = MAXIMAL_EDGE_DURATION;
     std::vector<NodeID> shortest_packed_path;
     //inside the loop, do a check to see if the current path is better
-    for (const auto &current_bucket_list_bucket : boost::make_iterator_range(bucket_list))
+    // for (const auto &cb : boost::make_iterator_range(bucket_list))
+    for (std::vector<NodeBucket>::iterator cb = bucket_list.first; cb <= bucket_list.second; cb++)
     {
-        int current_path_weight = 0;
-        int current_path_duration = 0;
-        std::vector<NodeID> current_packed_path = {middle_node};
-        auto traverse_path_bucket = current_bucket_list_bucket;
+
+        EdgeWeight current_path_weight = 0;
+        EdgeDuration current_path_duration = 0;
+        std::vector<NodeID> current_packed_path = { cb->middle_node };
+        auto pb = cb;
+        std::cout << "--------------MIDDLE NODE " << pb->middle_node <<" INDEX " << pb - bucket_list.first << "--------------" << std::endl;
         do {
+            std::cout << "pb->middle_node (" << pb->middle_node << ") != pb->parent_node (" << pb->parent_node <<") \n";
             // Get target id from bucket entry
-            const auto column_idx = traverse_path_bucket.column_index;
-            const auto target_weight = traverse_path_bucket.weight;
-            const auto target_duration = traverse_path_bucket.duration;
+            const auto column_idx = pb->column_index;
+            const auto target_weight = pb->weight;
+            const auto target_duration = pb->duration;
+            std::cout << "target_weight = " << target_weight << ", target_duration = " << target_duration <<") \n";
 
             auto &current_weight = weights_table[row_idx * number_of_targets + column_idx];
             auto &current_duration = durations_table[row_idx * number_of_targets + column_idx];
-
-            // Check if new weight is better
-            auto new_weight = source_weight + target_weight; // wait what is source_weight?
-            auto new_duration = source_duration + target_duration;
+            // std::cout << "current_weight: " << current_weight;
+            // std::cout << " current_duration: " << current_duration;
+            // // Check if new weight is better
+            auto new_weight = current_path_weight + target_weight;
+            auto new_duration = current_path_duration + target_duration;
 
             if (new_weight < 0)
             {
-                if (addLoopWeight(facade, node, new_weight, new_duration))
+                if (addLoopWeight(facade, pb->middle_node, new_weight, new_duration))
                 {
                     current_weight = std::min(current_weight, new_weight);
-                    current_duration = std::min(current_duration, new_duration);
+                    current_path_duration = std::min(current_path_duration, new_duration);
+                    std::cout << "loop weight: current_weight = " << current_weight << ", current_duration = " << current_duration <<") \n";
                 }
             }
             else if (std::tie(new_weight, new_duration) < std::tie(current_weight, current_duration))
             {
                 current_weight = new_weight;
                 current_duration = new_duration;
+                std::cout << "current_weight = " << current_weight << ", current_duration = " << current_duration <<") \n";
             }
-            current_path_weight += current_weight;
-            current_path_duration += new_duration;
-            current_packed_path.emplace_back{middle_node};
-            traverse_path_bucket = search_space_with_buckets[traverse_path_bucket.parent_node];
-        } while (traverse_path_bucket.parent_node != traverse_path_bucket.middle_node);
+            current_path_weight = current_weight;
+            current_path_duration = current_duration;
+            current_packed_path.emplace_back(pb->parent_node);
+            pb = std::find_if(search_space_with_buckets.begin(), search_space_with_buckets.end(), [pb](const auto &b){return pb->parent_node == b.middle_node;});
+        } while (pb->parent_node != pb->middle_node && pb != search_space_with_buckets.end());
 
-        if (min_weight < current_path_weight) {
-            min_weight = current_path_weight;
-            shortest_packed_path = current_packed_path;
+        std::cout << " Packed Path for NodeBucket { middle_node: " << cb->middle_node << " "
+            << " parent_node: " << cb->parent_node << " "
+            << " column_index: " << cb->column_index << " "
+            << " weight: " << cb->weight << " " 
+            << " duration: " << cb->duration << " }: ";
+        for (unsigned idx = 0; idx < current_packed_path.size(); ++idx) std::cout << current_packed_path[idx] << ", ";
+        std::cout << std::endl;
+        std::cout << "current_path_weight: " << current_path_weight << " current_path_duration: " << current_path_duration<< std::endl;
+
+        if (shortest_path_weight > current_path_weight) {
+            shortest_path_weight = current_path_weight;
+            shortest_path_duration = current_path_duration;
+            shortest_packed_path.clear();
+            for (unsigned idx = 0; idx < current_packed_path.size(); ++idx) shortest_packed_path.emplace_back(current_packed_path[idx]);
         }
+        std::cout << "Shortest Packed Path: ";
+        for (unsigned idx = 0; idx < shortest_packed_path.size(); ++idx) std::cout << shortest_packed_path[idx] << ", ";
+        std::cout << std::endl;
+        std::cout << "shortest_path_weight: " << shortest_path_weight << " shortest_path_duration: " << shortest_path_duration << std::endl;
+        std::cout << "--------------END MIDDLE NODE " << pb->middle_node <<" INDEX " << pb - bucket_list.first << "--------------" <<std::endl;
+
     }
+
+    
+    // std::cout << " Packed Path: ";
+    // for (unsigned idx = 0; idx < shortest_packed_path.size(); ++idx) std::cout << shortest_packed_path[idx] << ", ";
+    // std::cout << std::endl;
 
     return shortest_packed_path;
 }
@@ -299,6 +333,15 @@ std::vector<EdgeDuration> manyToManySearch(SearchEngineData<ch::Algorithm> &engi
     // Order lookup buckets
     std::sort(search_space_with_buckets.begin(), search_space_with_buckets.end());
 
+    std::cout << "search_space_with_buckets:" << std::endl; 
+    for (std::vector<NodeBucket>::iterator bucket = search_space_with_buckets.begin(); bucket != search_space_with_buckets.end(); bucket++) {
+         std::cout << "NodeBucket { middle_node: " << bucket->middle_node << " "
+            << " parent_node: " << bucket->parent_node << " "
+            << " column_index: " << bucket->column_index << " "
+            << " weight: " << bucket->weight << " " 
+            << " duration: " << bucket->duration << " }\n";
+        }
+
     // Find shortest paths from sources to all accessible nodes
     for (std::uint32_t row_idx = 0; row_idx < source_indices.size(); ++row_idx)
     {
@@ -329,11 +372,17 @@ std::vector<EdgeDuration> manyToManySearch(SearchEngineData<ch::Algorithm> &engi
 
         for (unsigned column_idx = 0; column_idx < number_of_targets; ++column_idx){
             NodeID middle_node = middle_nodes_table[row_idx * number_of_targets + column_idx];
-            std::vector<NodeID> packed_path_from_source_to_middle = retrievePackedPathFromSearchSpace(middle_nodes_table, number_of_targets, row_idx, search_space_with_buckets,weights_table, durations_table);
+            std::cout << "Passing in " << middle_node << " as middle_node to retrievePackedPathFromSearchSpace: " << std::endl;
+            std::vector<NodeID> packed_path_from_source_to_middle = retrievePackedPathFromSearchSpace(
+                facade,
+                middle_node, number_of_targets, row_idx, search_space_with_buckets, weights_table, durations_table);
+
+
+            std::cout << "------------------------------------------------------------------------------------" << std::endl;
             // store packed_path_from_source_to_middle
         }
 
-        // find packed_path_from_middle_to_target
+        // find packed_path_from_middle_to_target (using retrievePackedPathFromSingleHeap using the many_to_many_heap that we have up there for backwardRoutingStep )
 
         // join packed_path_from_source_to_middle and packed_path_from_middle_to_target to make packed_path
 
