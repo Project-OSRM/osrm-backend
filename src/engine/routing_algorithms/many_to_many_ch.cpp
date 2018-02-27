@@ -183,13 +183,13 @@ std::vector<NodeID> retrievePackedPathFromSearchSpace(
 
  //   middle_nodes_table = [0 , 1, 2, .........]
 
-        std::cout << "number_of_targets: "<< number_of_targets << " row_idx: "<< row_idx << std::endl;
-        std::cout << "weights_table: ";
-        for ( std::vector<EdgeWeight>::iterator weight = weights_table.begin(); weight != weights_table.end(); weight++) std::cout << *weight << " ";
-        std::cout << std::endl;
-        std::cout << "durationz_table: ";
-        for ( std::vector<EdgeDuration>::iterator duration = durations_table.begin(); duration != durations_table.end(); duration++) std::cout << *duration << " ";
-            std::cout << std::endl;
+    std::cout << "number_of_targets: "<< number_of_targets << " row_idx: "<< row_idx << std::endl;
+    std::cout << "weights_table: ";
+    for ( std::vector<EdgeWeight>::iterator weight = weights_table.begin(); weight != weights_table.end(); weight++) std::cout << *weight << " ";
+    std::cout << std::endl;
+    std::cout << "durationz_table: ";
+    for ( std::vector<EdgeDuration>::iterator duration = durations_table.begin(); duration != durations_table.end(); duration++) std::cout << *duration << " ";
+    std::cout << std::endl;
 
     const auto &bucket_list = std::equal_range(search_space_with_buckets.begin(),
                                                search_space_with_buckets.end(),
@@ -203,7 +203,6 @@ std::vector<NodeID> retrievePackedPathFromSearchSpace(
     // for (const auto &cb : boost::make_iterator_range(bucket_list))
     for (std::vector<NodeBucket>::iterator cb = bucket_list.first; cb <= bucket_list.second; cb++)
     {
-
         EdgeWeight current_path_weight = 0;
         EdgeDuration current_path_duration = 0;
         std::vector<NodeID> current_packed_path = { cb->middle_node };
@@ -215,14 +214,12 @@ std::vector<NodeID> retrievePackedPathFromSearchSpace(
             const auto column_idx = pb->column_index;
             const auto target_weight = pb->weight;
             const auto target_duration = pb->duration;
-            std::cout << "target_weight = " << target_weight << ", target_duration = " << target_duration <<") \n";
+            // std::cout << "target_weight = " << target_weight << ", target_duration = " << target_duration <<" \n";
 
             auto &current_weight = weights_table[row_idx * number_of_targets + column_idx];
             auto &current_duration = durations_table[row_idx * number_of_targets + column_idx];
-            // std::cout << "current_weight: " << current_weight;
-            // std::cout << " current_duration: " << current_duration;
-            // // Check if new weight is better
-            auto new_weight = current_path_weight + target_weight;
+            // Check if new weight is better
+            auto new_weight = current_path_weight + target_weight;  // in the original this is the source_weight + target_weight that is taken off from the heap. But, here we are using current_path_weight and it is not serving well because it is causing the test cases to fail. the total weight isn't adding up correctly but. Why not? What am I missing here?
             auto new_duration = current_path_duration + target_duration;
 
             if (new_weight < 0)
@@ -231,14 +228,12 @@ std::vector<NodeID> retrievePackedPathFromSearchSpace(
                 {
                     current_weight = std::min(current_weight, new_weight);
                     current_path_duration = std::min(current_path_duration, new_duration);
-                    std::cout << "loop weight: current_weight = " << current_weight << ", current_duration = " << current_duration <<") \n";
                 }
             }
             else if (std::tie(new_weight, new_duration) < std::tie(current_weight, current_duration))
             {
                 current_weight = new_weight;
                 current_duration = new_duration;
-                std::cout << "current_weight = " << current_weight << ", current_duration = " << current_duration <<") \n";
             }
             current_path_weight = current_weight;
             current_path_duration = current_duration;
@@ -246,13 +241,13 @@ std::vector<NodeID> retrievePackedPathFromSearchSpace(
             pb = std::find_if(search_space_with_buckets.begin(), search_space_with_buckets.end(), [pb](const auto &b){return pb->parent_node == b.middle_node;});
         } while (pb->parent_node != pb->middle_node && pb != search_space_with_buckets.end());
 
-        std::cout << " Packed Path for NodeBucket { middle_node: " << cb->middle_node << " "
-            << " parent_node: " << cb->parent_node << " "
-            << " column_index: " << cb->column_index << " "
-            << " weight: " << cb->weight << " " 
-            << " duration: " << cb->duration << " }: ";
-        for (unsigned idx = 0; idx < current_packed_path.size(); ++idx) std::cout << current_packed_path[idx] << ", ";
-        std::cout << std::endl;
+        // std::cout << " Packed Path for NodeBucket { middle_node: " << cb->middle_node << " "
+        //     << " parent_node: " << cb->parent_node << " "
+        //     << " column_index: " << cb->column_index << " "
+        //     << " weight: " << cb->weight << " " 
+        //     << " duration: " << cb->duration << " }: ";
+        // for (unsigned idx = 0; idx < current_packed_path.size(); ++idx) std::cout << current_packed_path[idx] << ", ";
+        // std::cout << std::endl;
         std::cout << "current_path_weight: " << current_path_weight << " current_path_duration: " << current_path_duration<< std::endl;
 
         if (shortest_path_weight > current_path_weight) {
@@ -265,8 +260,7 @@ std::vector<NodeID> retrievePackedPathFromSearchSpace(
         for (unsigned idx = 0; idx < shortest_packed_path.size(); ++idx) std::cout << shortest_packed_path[idx] << ", ";
         std::cout << std::endl;
         std::cout << "shortest_path_weight: " << shortest_path_weight << " shortest_path_duration: " << shortest_path_duration << std::endl;
-        std::cout << "--------------END MIDDLE NODE " << pb->middle_node <<" INDEX " << pb - bucket_list.first << "--------------" <<std::endl;
-
+        std::cout << "--------------END MIDDLE NODE " << cb->middle_node <<" INDEX " << cb - bucket_list.first << "--------------" <<std::endl;
     }
 
     
@@ -374,9 +368,7 @@ std::vector<EdgeDuration> manyToManySearch(SearchEngineData<ch::Algorithm> &engi
             NodeID middle_node = middle_nodes_table[row_idx * number_of_targets + column_idx];
             std::cout << "Passing in " << middle_node << " as middle_node to retrievePackedPathFromSearchSpace: " << std::endl;
             std::vector<NodeID> packed_path_from_source_to_middle = retrievePackedPathFromSearchSpace(
-                facade,
-                middle_node, number_of_targets, row_idx, search_space_with_buckets, weights_table, durations_table);
-
+                facade, middle_node, number_of_targets, row_idx, search_space_with_buckets, weights_table, durations_table);
 
             std::cout << "------------------------------------------------------------------------------------" << std::endl;
             // store packed_path_from_source_to_middle
