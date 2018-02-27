@@ -1,12 +1,14 @@
 # UNRELEASED
   - Changes from 5.16.0:
-    - Bugfixes: fix deduplication of route steps when waypoints are used [#4909](https://github.com/Project-OSRM/osrm-backend/issues/4909)
+    - Bugfixes:
+      - fix deduplication of route steps when waypoints are used [#4909](https://github.com/Project-OSRM/osrm-backend/issues/4909)
+      - FIXED #4920: Use smaller range for U-turn angles in map-matching [#4920](https://github.com/Project-OSRM/osrm-backend/pull/4920)
     - Tools:
       - `osrm-routed` accepts a new property `--memory_file` to store memory in a file on disk.
     - NodeJS:
       - `OSRM` object accepts a new option `memory_file` that stores the memory in a file on disk.
-    - Internals 
-      - CHANGED #4845: Updated segregated intersection identification  
+    - Internals
+      - CHANGED #4845: Updated segregated intersection identification
 
 
 # 5.16.0
