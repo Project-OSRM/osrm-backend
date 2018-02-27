@@ -5,6 +5,8 @@
       - `osrm-routed` accepts a new property `--memory_file` to store memory in a file on disk.
     - NodeJS:
       - `OSRM` object accepts a new option `memory_file` that stores the memory in a file on disk.
+    - Internals 
+      - CHANGED #4845: Updated segregated intersection identification  
 
 
 # 5.16.0
