@@ -26,8 +26,13 @@ struct NodeBucket
     EdgeWeight weight;
     EdgeDuration duration;
 
-    NodeBucket(NodeID middle_node, NodeID parent_node, unsigned column_index, EdgeWeight weight, EdgeDuration duration)
-        : middle_node(middle_node), parent_node(parent_node), column_index(column_index), weight(weight), duration(duration)
+    NodeBucket(NodeID middle_node,
+               NodeID parent_node,
+               unsigned column_index,
+               EdgeWeight weight,
+               EdgeDuration duration)
+        : middle_node(middle_node), parent_node(parent_node), column_index(column_index),
+          weight(weight), duration(duration)
     {
     }
 
@@ -45,6 +50,26 @@ struct NodeBucket
         bool operator()(const NodeID &lhs, const NodeBucket &rhs) const
         {
             return lhs < rhs.middle_node;
+        }
+    };
+
+    // functor for equal_range
+    struct ColumnCompare
+    {
+        unsigned column_idx;
+
+        ColumnCompare(unsigned column_idx)
+            : column_idx(column_idx){}; // ask Chau about sublime plugin for C++ compiler checks or
+                                        // warnings
+
+        bool operator()(const NodeBucket &lhs, const NodeID &rhs) const // lowerbound
+        {
+            return std::tie(lhs.middle_node, lhs.column_index) < std::tie(rhs, column_idx);
+        }
+
+        bool operator()(const NodeID &lhs, const NodeBucket &rhs) const // upperbound
+        {
+            return std::tie(lhs, column_idx) < std::tie(rhs.middle_node, rhs.column_index);
         }
     };
 };

@@ -434,7 +434,8 @@ void backwardRoutingStep(const DataFacade<Algorithm> &facade,
     const auto parent = query_heap.GetData(node).parent;
 
     // Store settled nodes in search space bucket
-    search_space_with_buckets.emplace_back(node, parent, column_idx, target_weight, target_duration);
+    search_space_with_buckets.emplace_back(
+        node, parent, column_idx, target_weight, target_duration);
 
     const auto &partition = facade.GetMultiLevelPartition();
     const auto maximal_level = partition.GetNumberOfLevels() - 1;

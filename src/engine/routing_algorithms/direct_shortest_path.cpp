@@ -45,11 +45,11 @@ InternalRouteResult directShortestPathSearch(SearchEngineData<ch::Algorithm> &en
     std::vector<NodeID> unpacked_nodes;
     std::vector<EdgeID> unpacked_edges;
 
-    for (std::vector<NodeID>::iterator leg = packed_leg.begin(); leg != packed_leg.end(); ++leg){
-      std::cout << *leg  << ", ";
+    for (std::vector<NodeID>::iterator leg = packed_leg.begin(); leg != packed_leg.end(); ++leg)
+    {
+        std::cout << *leg << ", ";
     }
     std::cout << std::endl;
-    
 
     if (!packed_leg.empty())
     {
