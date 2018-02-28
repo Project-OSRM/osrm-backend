@@ -283,6 +283,7 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
                                         geometry.osm_node_ids.begin() + offset);
         }
 
+        auto const first_bearing = steps.front().maneuver.bearing_after;
         // We have to adjust the first step both for its name and the bearings
         if (zero_length_step)
         {
@@ -339,10 +340,14 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
         });
 
         auto &first_step = steps.front();
+        auto bearing = first_bearing;
         // we changed the geometry, we need to recalculate the bearing
-        auto bearing = std::round(util::coordinate_calculation::bearing(
-            geometry.locations[first_step.geometry_begin],
-            geometry.locations[first_step.geometry_begin + 1]));
+        if (geometry.locations[first_step.geometry_begin] != geometry.locations[first_step.geometry_begin + 1])
+        {
+            bearing = std::round(util::coordinate_calculation::bearing(
+                geometry.locations[first_step.geometry_begin],
+                geometry.locations[first_step.geometry_begin + 1]));
+        }
         first_step.maneuver.bearing_after = bearing;
         first_step.intersections.front().bearings.front() = bearing;
     }
