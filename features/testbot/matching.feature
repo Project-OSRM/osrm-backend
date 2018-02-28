@@ -687,7 +687,8 @@ Feature: Basic Map Matching
 
 
     @match @testbot
-    Scenario: Regression test - waypoints trimming too much geometry
+    # Regression test for issue #4919
+    Scenario: Regression test - non-uturn maneuver preferred over uturn
         Given the profile "testbot"
         Given a grid size of 10 meters
         Given the query options
@@ -697,7 +698,7 @@ Feature: Basic Map Matching
                 e
                 ;
                 ;
-          a-----b-----c
+          a----hb-----c
                 ;
                 ;
                 d
@@ -705,7 +706,7 @@ Feature: Basic Map Matching
         And the ways
           | nodes |
           | abc   |
-          | bde   |
+          | dbe   |
         Given the query options
           | waypoints | 0;2  |
           | overview  | full |
@@ -715,3 +716,5 @@ Feature: Basic Map Matching
           | abc   | 1,0.99973,1.00027,0.99973,1.000539,0.99973 | depart,arrive            | Ok   |
           | abd   | 1,0.99973,1.00027,0.99973,1.00027,0.999461 | depart,turn right,arrive | Ok   |
           | abe   | 1,0.99973,1.00027,0.99973,1.00027,1        | depart,turn left,arrive  | Ok   |
+          | ahd   | 1,0.99973,1.00027,0.99973,1.00027,0.999461 | depart,turn right,arrive | Ok   |
+          | ahe   | 1,0.99973,1.00027,0.99973,1.00027,1        | depart,turn left,arrive  | Ok   |
