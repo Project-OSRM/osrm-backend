@@ -496,44 +496,45 @@ RouteSteps collapseSegregatedTurnInstructions(RouteSteps steps)
     {
         const auto prev_step = findPreviousTurn(curr_step);
 
-        // if current step and next step are both segregated then combine the steps with no turn adjustment
+        // if current step and next step are both segregated then combine the steps with no turn
+        // adjustment
         if (curr_step->is_segregated && next_step->is_segregated)
         {
             suppressStep(*curr_step, *next_step);
             ++next_step;
         }
-        // else if the current step is segregated and the next step is not then combine with turn adjustment
+        // else if the current step is segregated and the next step is not then combine with turn
+        // adjustment
         else if (curr_step->is_segregated && !next_step->is_segregated)
         {
             // Determine if u-turn
             if (bearingsAreReversed(
-                    util::bearing::reverse(
-                            curr_step->intersections.front().bearings[curr_step->intersections.front().in]),
-                            next_step->intersections.front().bearings[next_step->intersections.front().out]))
+                    util::bearing::reverse(curr_step->intersections.front()
+                                               .bearings[curr_step->intersections.front().in]),
+                    next_step->intersections.front()
+                        .bearings[next_step->intersections.front().out]))
             {
                 // Collapse segregated u-turn
                 combineRouteSteps(
-                        *curr_step,
-                        *next_step,
-                        SetFixedInstructionStrategy({TurnType::Continue, DirectionModifier::UTurn}),
-                        TransferSignageStrategy(),
-                        NoModificationStrategy());
+                    *curr_step,
+                    *next_step,
+                    SetFixedInstructionStrategy({TurnType::Continue, DirectionModifier::UTurn}),
+                    TransferSignageStrategy(),
+                    NoModificationStrategy());
             }
             else
             {
                 // Collapse segregated turn
-                combineRouteSteps(
-                        *curr_step,
-                        *next_step,
-                        AdjustToCombinedTurnStrategy(*prev_step),
-                        TransferSignageStrategy(),
-                        NoModificationStrategy());
+                combineRouteSteps(*curr_step,
+                                  *next_step,
+                                  AdjustToCombinedTurnStrategy(*prev_step),
+                                  TransferSignageStrategy(),
+                                  NoModificationStrategy());
             }
 
             // Segregated step has been removed
             curr_step->is_segregated = false;
             ++next_step;
-
         }
         // else next step
         else
@@ -541,7 +542,6 @@ RouteSteps collapseSegregatedTurnInstructions(RouteSteps steps)
             curr_step = next_step;
             ++next_step;
         }
-
     }
 
     // Clean up steps
