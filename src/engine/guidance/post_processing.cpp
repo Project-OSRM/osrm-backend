@@ -342,7 +342,8 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
         auto &first_step = steps.front();
         auto bearing = first_bearing;
         // we changed the geometry, we need to recalculate the bearing
-        if (geometry.locations[first_step.geometry_begin] != geometry.locations[first_step.geometry_begin + 1])
+        if (geometry.locations[first_step.geometry_begin] !=
+            geometry.locations[first_step.geometry_begin + 1])
         {
             bearing = std::round(util::coordinate_calculation::bearing(
                 geometry.locations[first_step.geometry_begin],
