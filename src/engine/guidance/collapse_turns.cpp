@@ -477,6 +477,79 @@ RouteSteps collapseTurnInstructions(RouteSteps steps)
     return steps;
 }
 
+// OTHER IMPLEMENTATIONS
+OSRM_ATTR_WARN_UNUSED
+RouteSteps collapseSegregatedTurnInstructions(RouteSteps steps)
+{
+    // make sure we can safely iterate over all steps (has depart/arrive with TurnType::NoTurn)
+    BOOST_ASSERT(!hasTurnType(steps.front()) && !hasTurnType(steps.back()));
+    BOOST_ASSERT(hasWaypointType(steps.front()) && hasWaypointType(steps.back()));
+
+    if (steps.size() <= 2)
+        return steps;
+
+    auto curr_step = steps.begin() + 1;
+    auto next_step = curr_step + 1;
+
+    // Loop over steps to collapse the segregated intersections with the
+    while (next_step != steps.end())
+    {
+        const auto prev_step = findPreviousTurn(curr_step);
+
+        // if current step and next step are both segregated then combine the steps with no turn adjustment
+        if (curr_step->is_segregated && next_step->is_segregated)
+        {
+            suppressStep(*curr_step, *next_step);
+            ++next_step;
+        }
+        // else if the current step is segregated and the next step is not then combine with turn adjustment
+        else if (curr_step->is_segregated && !next_step->is_segregated)
+        {
+            // Determine if u-turn
+            if (bearingsAreReversed(
+                    util::bearing::reverse(
+                            curr_step->intersections.front().bearings[curr_step->intersections.front().in]),
+                            next_step->intersections.front().bearings[next_step->intersections.front().out]))
+            {
+                // Collapse segregated u-turn
+                combineRouteSteps(
+                        *curr_step,
+                        *next_step,
+                        SetFixedInstructionStrategy({TurnType::Continue, DirectionModifier::UTurn}),
+                        TransferSignageStrategy(),
+                        NoModificationStrategy());
+            }
+            else
+            {
+                // Collapse segregated turn
+                combineRouteSteps(
+                        *curr_step,
+                        *next_step,
+                        AdjustToCombinedTurnStrategy(*prev_step),
+                        TransferSignageStrategy(),
+                        NoModificationStrategy());
+            }
+
+            // Segregated step has been removed
+            curr_step->is_segregated = false;
+            ++next_step;
+
+        }
+        // else next step
+        else
+        {
+            curr_step = next_step;
+            ++next_step;
+        }
+
+    }
+
+    // Clean up steps
+    steps = removeNoTurnInstructions(std::move(steps));
+
+    return steps;
+}
+
 } // namespace guidance
 } // namespace engine
 } // namespace osrm
