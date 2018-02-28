@@ -695,7 +695,7 @@ Feature: Car - Turn restrictions
             | b    | 38.91080 | -77.00909 |
             | c    | 38.91038 | -77.00909 |
             | d    | 38.91105 | -77.00967 |
-            | e    | 38.91063 | -77.00853 |
+            | e    | 38.91037 | -77.00807 |
             | f    | 38.91036 | -77.00899 |
             | g    | 38.91076 | -77.00901 |
             | h    | 38.91124 | -77.00900 |
@@ -738,14 +738,14 @@ Feature: Car - Turn restrictions
         #    """
         Given the node locations
             | node | lat     | lon      |
-            | a    | 38.9113 | -77.0091 |
-            | b    | 38.9108 | -77.0091 |
-            | c    | 38.9104 | -77.0091 |
-            | d    | 38.9110 | -77.0096 |
-            | e    | 38.9106 | -77.0086 |
-            | f    | 38.9105 | -77.0090 |
-            | g    | 38.9108 | -77.0090 |
-            | h    | 38.9113 | -77.0090 |
+            | a    | 38.91124 | -77.00909 |
+            | b    | 38.91080 | -77.00909 |
+            | c    | 38.91038 | -77.00909 |
+            | d    | 38.91105 | -77.00967 |
+            | e    | 38.91037 | -77.00807 |
+            | f    | 38.91036 | -77.00899 |
+            | g    | 38.91076 | -77.00901 |
+            | h    | 38.91124 | -77.00900 |
 
         And the ways
             | nodes | oneway | name       |
@@ -765,7 +765,7 @@ Feature: Car - Turn restrictions
 
         When I route I should get
             | from | to | route                                      | turns                                         |
-            | a    | e  | cap south,florida,florida ne               | depart,turn left,arrive                       |
+            | a    | e  | cap south,florida ne,florida ne            | depart,turn left,arrive                       |
             | f    | d  | cap north,florida ne,florida ne,florida nw | depart,turn sharp right,continue uturn,arrive |
             | e    | c  | florida ne,cap south,cap south             | depart,turn left,arrive                       |
 
