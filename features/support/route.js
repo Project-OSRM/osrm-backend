@@ -13,7 +13,7 @@ module.exports = function () {
             uri = [this.HOST, service, 'v1', this.profile].join('/');
         }
 
-        return this.sendRequest(uri, params, this.osrmLoader.method === 'valhalla' ? 'POST' : 'GET', logfile, callback);
+        return this.sendRequest(uri, params, 'GET', logfile, callback);
     };
 
     this.requestUrl = (path, callback) => {
@@ -60,6 +60,8 @@ module.exports = function () {
 
         params.coordinates = encodedWaypoints;
 
+        console.log(params);
+
         if (bearings.length) {
             params.bearings = bearings.map(b => {
                 var bs = b.split(',');
@@ -74,11 +76,14 @@ module.exports = function () {
 
         if (this.osrmLoader.method === 'valhalla') {
         params = {
-            locations: waypoints.map(w => {return{ lat: w.lat, lon: w.lon };}),
-            costing: 'auto',
-            directions_options:{
-                units:'miles'}
-            };
+            json: JSON.stringify({ 
+                locations: waypoints.map(w => {return{ lat: w.lat, lon: w.lon };}),
+                costing: 'auto',
+                directions_options:{
+                    units:'miles'}
+                }),
+            format: 'osrm'
+        };
         }
 
 
@@ -137,18 +142,10 @@ module.exports = function () {
     };
 
     this.extractInstructionList = (instructions, keyFinder) => {
-        if (this.osrmLoader.method === 'valhalla') {
-            if (instructions) {
-                return instructions.legs.reduce((m, v) => m.concat(v.maneuvers), [])
-                    .map(keyFinder)
-                    .join(',');
-            }
-        } else {
-            if (instructions) {
-                return instructions.legs.reduce((m, v) => m.concat(v.steps), [])
-                    .map(keyFinder)
-                    .join(',');
-            }
+        if (instructions) {
+            return instructions.legs.reduce((m, v) => m.concat(v.steps), [])
+                .map(keyFinder)
+                .join(',');
         }
     };
 
@@ -159,13 +156,7 @@ module.exports = function () {
     };
 
     this.wayList = (instructions) => {
-        if (this.osrmLoader.method === 'valhalla') {
-            var result = this.extractInstructionList(instructions, s => s.street_names && s.street_names.join(',') || '');
-            var laststep = result.split(',').slice(-2)[0];
-            return result + laststep;
-        } else {
-            return this.extractInstructionList(instructions, s => s.name);
-        }
+        return this.extractInstructionList(instructions, s => s.name);
     };
 
     this.refList = (instructions) => {
@@ -192,19 +183,12 @@ module.exports = function () {
 
     this.bearingList = (instructions) => {
 
-        if (this.osrmLoader.method === 'valhalla') {
-            return 'NOT IMPLEMENTED';
-        } else {
-            return this.extractInstructionList(instructions, s => ('in' in s.intersections[0] ? this.reverseBearing(s.intersections[0].bearings[s.intersections[0].in]) : 0)
-                                                              + '->' +
-                                                              ('out' in s.intersections[0] ? s.intersections[0].bearings[s.intersections[0].out] : 0));
-        }
+        return this.extractInstructionList(instructions, s => ('in' in s.intersections[0] ? this.reverseBearing(s.intersections[0].bearings[s.intersections[0].in]) : 0)
+                                                          + '->' +
+                                                          ('out' in s.intersections[0] ? s.intersections[0].bearings[s.intersections[0].out] : 0));
     };
 
     this.lanesList = (instructions) => {
-        if (this.osrmLoader.method === 'valhalla') {
-            return 'NOT IMPLEMENTED';
-        } else {
         return this.extractInstructionList(instructions, s => {
             return s.intersections.map( i => {
                 if(i.lanes)
@@ -220,7 +204,6 @@ module.exports = function () {
                 }
             }).join(';');
         });
-    }
     };
 
     this.approachList = (instructions) => {
@@ -250,94 +233,6 @@ module.exports = function () {
     };
 
     this.turnList = (instructions) => {
-        if (this.osrmLoader.method === 'valhalla') {
-                /*
-                from https://github.com/valhalla/valhalla-docs/blob/master/turn-by-turn/api-reference.md
-
-                kNone = 0;
-kStart = 1; kStartRight = 2; kStartLeft = 3; kDestination = 4; kDestinationRight = 5; kDestinationLeft = 6;
-kBecomes = 7; kContinue = 8;
-kSlightRight = 9; kRight = 10; kSharpRight = 11; kUturnRight = 12;
-
-kUturnLeft = 13; kSharpLeft = 14; kLeft = 15; kSlightLeft = 16;
-
-kRampStraight = 17; kRampRight = 18; kRampLeft = 19;
-
-kExitRight = 20; kExitLeft = 21;
-
-kStayStraight = 22; kStayRight = 23; kStayLeft = 24;
-
-kMerge = 25;
-
-kRoundaboutEnter = 26;
-kRoundaboutExit = 27;
-kFerryEnter = 28;
-kFerryExit = 29;
-kTransit = 30;
-kTransitTransfer = 31;
-kTransitRemainOn = 32;
-kTransitConnectionStart = 33;
-kTransitConnectionTransfer = 34;
-kTransitConnectionDestination = 35;
-kPostTransitConnectionDestination = 36;
-*/
-var typemap = {
-    1: {type: 'depart', modifier: null },
-    2: {type: 'depart', modifier: 'right' },
-    3: {type: 'depart', modifier: 'left' },
-
-    4: {type: 'arrive', modifier: null },
-    5: {type: 'arrive', modifier: 'right' },
-    6: {type: 'arrive', modifier: 'left' },
-
-    7: {type: 'becomes', modifier: null },
-    8: {type: 'continue', modifier: 'straight' },
-
-    9: {type: 'turn', modifier: 'slight right' },
-    10: {type: 'turn', modifier: 'right' },
-    11: {type: 'turn', modifier: 'sharp right' },
-    12: {type: 'uturn', modifier: 'right' },
-
-    13: {type: 'uturn', modifier: 'left' },
-    14: {type: 'turn', modifier: 'sharp left' },
-    15: {type: 'turn', modifier: 'left' },
-    16: {type: 'turn', modifier: 'slight left' },
-
-    17: {type: 'on ramp', modifier: 'straight' },
-    18: {type: 'on ramp', modifier: 'right' },
-    19: {type: 'on ramp', modifier: 'left' },
-
-    20: {type: 'off ramp', modifier: 'right' },
-    21: {type: 'off ramp', modifier: 'left' },
-
-    22: {type: 'continue', modifier: 'straight' },
-    23: {type: 'continue', modifier: 'right' },
-    24: {type: 'continue', modifier: 'left' },
-
-    25: {type: 'merge', modifier: null },
-
-    26: {type: 'roundabout-exit', modifier: null },
-    27: {type: 'exit roundabout', modifier: null },
-
-    28: {type: 'enter ferry', modifier: null },
-    29: {type: 'exit ferry', modifier: null }
-
-}
-        return instructions.legs.reduce((m, v) => m.concat(v.maneuvers), [])
-            .map(v => {
-                if (v.type in typemap) {
-                    if (v.type === 26) { // special construction for roundabout instructions
-                        return `${typemap[v.type].type}-${v.roundabout_exit_count}`;
-                    } else if (typemap[v.type].modifier) {
-                        return `${typemap[v.type].type} ${typemap[v.type].modifier}`;
-                    } else {
-                        return `${typemap[v.type].type}`;
-                    }
-                } else {
-                    return "UNRECOGNIZED";
-                }
-            });
-        } else {
         return instructions.legs.reduce((m, v) => m.concat(v.steps), [])
             .map(v => {
                 switch (v.maneuver.type) {
@@ -362,25 +257,17 @@ var typemap = {
                 }
             })
             .join(',');
-        }
     };
 
     this.locations = (instructions) => {
-        if (this.osrmLoader.method === 'valhalla') {
-            return 'NOT IMPLEMENTED';
-        } else {
         return instructions.legs.reduce((m, v) => m.concat(v.steps), [])
             .map(v => {
                 return this.findNodeByLocation(v.maneuver.location);
             })
             .join(',');
-        }
     };
 
     this.intersectionList = (instructions) => {
-        if (this.osrmLoader.method === 'valhalla') {
-            return 'NOT IMPLEMENTED';
-        } else {
         return instructions.legs.reduce((m, v) => m.concat(v.steps), [])
             .map( v => {
                 return v.intersections
@@ -391,7 +278,6 @@ var typemap = {
                         return string;
                     }).join(',');
             }).join(';');
-        }
     };
 
     this.modeList = (instructions) => {
@@ -403,11 +289,7 @@ var typemap = {
     };
 
     this.classesList = (instructions) => {
-        if (this.osrmLoader.method === 'valhalla') {
-            return 'NOT IMPLEMENTED';
-        } else {
         return this.extractInstructionList(instructions, s => '[' + s.intersections.map(i => '(' + (i.classes ? i.classes.join(',') : '') + ')').join(',') + ']');
-        }
     };
 
     this.timeList = (instructions) => {

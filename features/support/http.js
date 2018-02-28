@@ -31,7 +31,10 @@ module.exports = function () {
             if (type === 'GET') {
 
                 var params = this.paramsToString(parameters);
-                this.query = baseUri + (params.length ? '/' + params : '');
+                console.log(params);
+                this.query = baseUri + (params.length ? ((params[0] != '?') ? '/' : '' + params) : '');
+
+                console.log(this.query);
 
                 if (logfile && typeof logfile !== 'function') fs.writeFileSync(logfile, `GET ${this.query}`);
                 request(this.query, (err, res, body) => {
