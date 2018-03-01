@@ -490,9 +490,10 @@ RouteSteps collapseSegregatedTurnInstructions(RouteSteps steps)
 
     auto curr_step = steps.begin() + 1;
     auto next_step = curr_step + 1;
+    const auto last_step = steps.end() - 1;
 
-    // Loop over steps to collapse the segregated intersections with the
-    while (next_step != steps.end())
+    // Loop over steps to collapse the segregated intersections; ignore first and last step
+    while (next_step != last_step)
     {
         const auto prev_step = findPreviousTurn(curr_step);
 
