@@ -284,15 +284,113 @@ std::vector<EdgeDuration> manyToManySearch(SearchEngineData<ch::Algorithm> &engi
         for (unsigned column_idx = 0; column_idx < number_of_targets; ++column_idx)
         {
             NodeID middle_node_id = middle_nodes_table[row_idx * number_of_targets + column_idx];
-            std::vector<NodeID> packed_path = retrievePackedPathFromSearchSpace(middle_node_id, column_idx, search_space_with_buckets); // packed_path_from_middle_to_target
+            std::vector<NodeID> packed_path_from_middle_to_target = retrievePackedPathFromSearchSpace(middle_node_id, column_idx, search_space_with_buckets); // packed_path_from_middle_to_target
+            std::cout << "packed_path_from_middle_to_target: ";
+            for (unsigned idx = 0; idx < packed_path_from_middle_to_target.size(); ++idx) std::cout << packed_path_from_middle_to_target[idx] << ", ";
+            std::cout << std::endl;
 
-            ch::retrievePackedPathFromSingleManyToManyHeap(query_heap, middle_node_id, packed_path); // packed_path_from_source_to_middle
+            std::vector<NodeID> packed_path_from_source_to_middle;
+            ch::retrievePackedPathFromSingleManyToManyHeap(query_heap, middle_node_id, packed_path_from_source_to_middle); // packed_path_from_source_to_middle
+            std::cout << "packed_path_from_source_to_middle: ";
+            for (unsigned idx = 0; idx < packed_path_from_source_to_middle.size(); ++idx) std::cout << packed_path_from_source_to_middle[idx] << ", ";
+            std::cout << std::endl;
 
-            // join packed_path_from_source_to_middle and packed_path_from_middle_to_target to make
-            // packed_path
+            // FUNCTION BODY FOR REFERENCE:
+            // void retrievePackedPathFromSingleManyToManyHeap(const SearchEngineData<Algorithm>::ManyToManyQueryHeap &search_heap,
+            //                           const NodeID middle_node_id,
+            //                           std::vector<NodeID> &packed_path)
+            // {
+            //     NodeID current_node_id = middle_node_id;
+            //     // all initial nodes will have itself as parent, or a node not in the heap
+            //     // in case of a core search heap. We need a distinction between core entry nodes
+            //     // and start nodes since otherwise start node specific code that assumes
+            //     // node == node.parent (e.g. the loop code) might get actived.
 
+            //     while (current_node_id != search_heap.GetData(current_node_id).parent &&
+            //            search_heap.WasInserted(search_heap.GetData(current_node_id).parent))
+            //     {
+            //         current_node_id = search_heap.GetData(current_node_id).parent;
+            //         std::cout << "Im in here! current_node_id is " << current_node_id << std::endl;
+            //         packed_path.emplace_back(current_node_id);
+            //     }
+            // }
+
+            // ^ returns far fewer results than retrievePackedPathFromSearchSpace returns. for example the couts above look like this:
+            // packed_path_from_middle_to_target: 1, 
+            // packed_path_from_source_to_middle: 
+            // packed_path_from_middle_to_target: 0, 2, 
+            // packed_path_from_source_to_middle: 
+            // packed_path_from_middle_to_target: 0, 2, 
+            // packed_path_from_source_to_middle: 
+            // packed_path_from_middle_to_target: 4, 
+            // Im in here! current_node_id is 0
+            // packed_path_from_source_to_middle: 0, 
+            // packed_path_from_middle_to_target: 3, 0, 
+            // packed_path_from_source_to_middle: 
+            // packed_path_from_middle_to_target: 3, 
+            // packed_path_from_source_to_middle: 
+            // packed_path_from_middle_to_target: 2, 
+            // packed_path_from_source_to_middle: 
+            // packed_path_from_middle_to_target: 4, 
+            // Im in here! current_node_id is 2
+            // packed_path_from_source_to_middle: 2, 
+            // packed_path_from_middle_to_target: 3, 0, 
+            // packed_path_from_source_to_middle: 
+            // packed_path_from_middle_to_target: 3, 
+            // packed_path_from_source_to_middle: 
+            // packed_path_from_middle_to_target: 2, 
+            // packed_path_from_source_to_middle: 
+            // packed_path_from_middle_to_target: 4, 
+            // Im in here! current_node_id is 2
+            // packed_path_from_source_to_middle: 2, 
+            // packed_path_from_middle_to_target: 4, 3, 0, 
+            // packed_path_from_source_to_middle: 
+            // packed_path_from_middle_to_target: 4, 3, 
+            // packed_path_from_source_to_middle: 
+            // packed_path_from_middle_to_target: 4, 3, 
+            // packed_path_from_source_to_middle: 
+            // packed_path_from_middle_to_target: 4, 
+            // packed_path_from_source_to_middle:  
+            //
+            // why? because some middle nodes have the same id as their parents (the loop thing) and we don't want to bother with those, and otherwise, they weren't inserted into the heap. 
+            // what does insertion into the heap mean? it means that that node was part of a path. so not being isnerted into the heap means we probably don't care about it since the
+            // packed_path_from_middle_to_target won't have a matching packed_path_from_source_to_middle 
+            // ```
+            // while (current_node_id != search_heap.GetData(current_node_id).parent &&
+            //      search_heap.WasInserted(search_heap.GetData(current_node_id).parent))
+            // {
+            // ```
+            // I could use the same while conditions to only pick out the shortcuts that matter i.e. the ones that have a middle node that's relevant? But this should already be the
+            // case from the use of the column_index and row_index. argh. I dont understand why ^ is happening.
+
+            // also, does a packed path or packed leg only ever have two nodeIDs in it? the start and the end? so, is `packed_path_from_middle_to_target: 4, 3, 0, ` invalid? 
+            
+            // Let's try to move on to unpackPath in the meantime.
+
+            // std::vector<NodeID> unpacked_nodes;
+            // std::vector<EdgeID> unpacked_edges;
+            // if (!packed_leg.empty())
+            // {
+            //     unpacked_nodes.reserve(packed_leg.size());
+            //     unpacked_edges.reserve(packed_leg.size());
+            //     unpacked_nodes.push_back(packed_leg.front());
+            //     ch::unpackPath(facade,
+            //                     packed_leg.begin(),
+            //                     packed_leg.end(),
+            //                     *engine_working_data.unpacking_cache.get(),
+            //                     [&unpacked_nodes, &unpacked_edges](std::pair<NodeID, NodeID> &edge,
+            //                                                       const auto &edge_id) {
+            //                        BOOST_ASSERT(edge.first == unpacked_nodes.back());
+            //                        unpacked_nodes.push_back(edge.second);
+            //                        unpacked_edges.push_back(edge_id);
+            //     });
+            // }
+
+            // Nooooooo. It compiles and then crashes, citing a socket hanging up error! :sadpanda: I'm going to sleep.
+
+            // next steps:
+            // to get the path into vector just use the same vector and pass it in to both fns above
             // unpack packed_path (ch::unpackPath())
-
             // calculate the duration and fill in the durations table
         }
 

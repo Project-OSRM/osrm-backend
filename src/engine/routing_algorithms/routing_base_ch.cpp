@@ -74,13 +74,7 @@ void retrievePackedPathFromSingleManyToManyHeap(const SearchEngineData<Algorithm
     {
         current_node_id = search_heap.GetData(current_node_id).parent;
         std::cout << "Im in here! current_node_id is " << current_node_id << std::endl;
-        std::cout << "packed_path_from_middle_to_target: ";
-        for (unsigned idx = 0; idx < packed_path.size(); ++idx) std::cout << packed_path[idx] << ", ";
-            std::cout << std::endl;
         packed_path.emplace_back(current_node_id);
-        std::cout << "packed_path_from_source_to_middle: ";
-        for (unsigned idx = 0; idx < packed_path.size(); ++idx) std::cout << packed_path[idx] << ", ";
-            std::cout << std::endl;
     }
 }
 
