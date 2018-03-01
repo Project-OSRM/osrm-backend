@@ -34,7 +34,7 @@ module.exports = function () {
                 var got;
 
                 var afterRequest = (err, res, body) => {
-                    console.log(waypoints);
+                    console.log(body);
                     if (err) return cb(err);
                     if (body && body.length) {
                         let destinations, exits, pronunciations, instructions, refs, bearings, turns, modes, times, classes,
@@ -44,21 +44,12 @@ module.exports = function () {
                         let json = JSON.parse(body);
 
                         var hasRoute = false;
-                        if (this.osrmLoader.method === 'valhalla') {
-                            got.code = json.trip.status;
-                            hasRoute = json.trip.status == 0;
-                        } else {
-                            got.code = json.code;
-                            hasRoute = json.code === 'Ok';
-                        }
+                        got.code = json.code;
+                        hasRoute = json.code === 'Ok' || json.code;
                         var route;
 
                         if (hasRoute) {
-                            if (this.osrmLoader.method === 'valhalla') {
-                                route = json.trip;
-                            } else {
-                                route = json.routes[0];
-                            }
+                            route = json.routes[0];
                             instructions = this.wayList(route);
                             pronunciations = this.pronunciationList(route);
                             refs = this.refList(route);
@@ -114,17 +105,16 @@ module.exports = function () {
                                 ]
                             };
 
-                            // Extract Valhalla route geometry
-                            if (this.osrmLoader.method === 'valhalla') {
-                                geojson.features[2].geometry.coordinates = polyline.decode(route.legs[0].shape,6).map(c => c.reverse());
-                            } else {
-                                // OSRM route geometry
-                                // TODO: Assume polyline5 for now
-                                if (typeof route.geometry === 'string') {
-                                    geojson.features[2].geometry.coordinates = polyline.decode(route.geometry).map(c => c.reverse());
+                            // OSRM route geometry
+                            // TODO: Assume polyline5 for now
+                            if (typeof route.geometry === 'string') {
+                                if (this.osrmLoader.method === 'valhalla') {
+                                geojson.features[2].geometry.coordinates = polyline.decode(route.geometry,6).map(c => c.reverse());
                                 } else {
-                                    geojson.features[2].geometry = route.geometry;
+                                geojson.features[2].geometry.coordinates = polyline.decode(route.geometry).map(c => c.reverse());
                                 }
+                            } else {
+                                geojson.features[2].geometry = route.geometry;
                             }
                             fs.writeFileSync(`${this.scenarioCacheFile}_${rowIndex}_shape.geojson`,JSON.stringify(geojson));
                         }
@@ -161,9 +151,9 @@ module.exports = function () {
                                 got.alternative = this.wayList(json.routes[1]);
                         }
 
-                        var distance = hasRoute && (this.osrmLoader.method === 'valhalla') ? route.summary.length : route.distance,
-                            time = hasRoute && (this.osrmLoader.method === 'valhalla') ? route.summary.time : route.duration,
-                            weight = hasRoute && (this.osrmLoader.method === 'valhalla') ? route.summary.time : route.weight;
+                        var distance = hasRoute && route.distance,
+                            time = hasRoute && route.duration,
+                            weight = hasRoute && route.weight;
 
                         if (headers.has('distance')) {
                             if (row.distance.length) {
