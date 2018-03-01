@@ -78,9 +78,9 @@ Feature: Simple Turns
         | a    | c  | ab,bc    | depart,arrive            |
         | a    | d  | ab,bd,bd | depart,turn right,arrive |
 
-    #https://www.openstreetmap.org/#map=19/52.50602/13.25468
-    # this scenario detects obvious correctly, but requires changes in collapsing roads
-    @todo
+
+  #https://www.openstreetmap.org/#map=19/52.50602/13.25468
+  # this scenario detects obvious correctly, but requires changes in collapsing roads
   Scenario: Small offset due to large Intersection
     Given the node map
         """
@@ -99,12 +99,13 @@ Feature: Simple Turns
         | df    | residential |
 
     When I route I should get
-        | from | to | route       | turns                          |
-        | a    | e  | abc,bde,bde | depart,turn right,arrive       |
-        | a    | f  | abc,df,df   | depart,turn sharp right,arrive |
+        | from | to | route           | turns                                  |
+        | a    | e  | abc,bde,bde,bde | depart,turn right,continue left,arrive |
+        | a    | f  | abc,bde,df,df   | depart,turn right,turn right,arrive    |
 
   # https://www.openstreetmap.org/#map=19/52.49709/13.26620
   # https://www.openstreetmap.org/#map=19/52.49458/13.26273
+  # scenario requires handling in post-processing
   @todo
   Scenario: Offsets in road
     Given a grid size of 3 meters
@@ -160,7 +161,6 @@ Feature: Simple Turns
 
 
   # https://www.openstreetmap.org/#map=19/52.49198/13.28069
-  @todo
   Scenario: Curved roads at turn
     Given the node map
         """
@@ -182,12 +182,11 @@ Feature: Simple Turns
         | befg  | residential | casper  | yes    |
 
     When I route I should get
-        | from | to | route                 | turns                   |
-        | a    | d  | herbert,herbert       | depart,arrive           |
-        | a    | g  | herbert,casper,casper | depart,turn left,arrive |
+        | from | to | route                   | turns                        |
+        | a    | d  | herbert,herbert,herbert | depart,continue right,arrive |
+        | a    | g  | herbert,casper,casper   | depart,turn left,arrive      |
 
   # https://www.openstreetmap.org/#map=19/52.49189/13.28431
-  @todo
   Scenario: Turning residential
     Given the node map
         """
@@ -205,12 +204,11 @@ Feature: Simple Turns
         | bd    | residential | caspar  | yes    |
 
     When I route I should get
-        | from | to | route                 | turns                   |
-        | a    | c  | bismark,bismark       | depart,arrive           |
-        | a    | d  | bismark,caspar,caspar | depart,turn left,arrive |
+        | from | to | route                   | turns                        |
+        | a    | c  | bismark,bismark,bismark | depart,continue right,arrive |
+        | a    | d  | bismark,caspar,caspar   | depart,turn left,arrive      |
 
   # https://www.openstreetmap.org/#map=19/52.48681/13.28547
-  @todo
   Scenario: Slight Loss in Category with turning road
     Given the node map
         """
@@ -225,7 +223,7 @@ Feature: Simple Turns
         | nodes | highway     | name |
         | ab    | tertiary    | warm |
         | bcd   | residential | warm |
-        | begg  | tertiary    | paul |
+        | befg  | tertiary    | paul |
 
     When I route I should get
         | from | to | route          | turns                          |
@@ -304,7 +302,6 @@ Feature: Simple Turns
 
 
   # https://www.openstreetmap.org/#map=19/37.61256/-122.40371
-  @todo
   Scenario: Turning Road with Offset at Segregated Intersection
     Given the node map
         """
@@ -327,10 +324,10 @@ Feature: Simple Turns
         | icj   | primary     | camino | yes    |
 
     When I route I should get
-        | from | to | route              | turns                          |
-        | a    | g  | park,diego,diego   | depart,turn slight left,arrive |
-        | a    | h  | park,camino,camino | depart,turn left,arrive        |
-        | a    | j  | park,camino,camino | depart,turn right,arrive       |
+        | from | to | route                    | turns                                    |
+        | a    | g  | park,diego,diego         | depart,turn slight left,arrive           |
+        | a    | h  | park,diego,camino,camino | depart,turn slight left,turn left,arrive |
+        | a    | j  | park,camino,camino       | depart,turn right,arrive                 |
 
 
   # https://www.openstreetmap.org/#map=19/37.76407/-122.49642
@@ -356,6 +353,7 @@ Feature: Simple Turns
 
 
   # https://www.openstreetmap.org/#map=19/37.77072/-122.41727
+  # requires changes in post-processing
   @todo
   Scenario: Splitting road at traffic island before a turn
     Given the node map
@@ -390,6 +388,7 @@ Feature: Simple Turns
         | e    | a  | ness,howard,howard | depart,turn slight right,arrive    |   |
 
   # https://www.openstreetmap.org/#map=19/37.63171/-122.46205
+  # requires changes in post-processing
   @todo
   Scenario: Weird combination of turning roads
     Given the node map
@@ -432,7 +431,6 @@ Feature: Simple Turns
         | d    | n  | depart,turn right,arrive | loop,drive,drive |
 
   # https://www.openstreetmap.org/#map=19/37.26591/-121.84474
-  @todo
   Scenario: Road splitting (unmerged)
     Given the node map
         """
@@ -456,15 +454,14 @@ Feature: Simple Turns
         | hgfe  | primary | lane | no     |
 
     When I route I should get
-        | from | to | route     | turns                    |
-        | a    | h  | lane,lane | depart,arrive            |
-        | a    | i  | lane,,    | depart,turn right,arrive |
-        | h    | d  | lane,lane | depart,arrive            |
-        | h    | i  | lane,,    | depart,turn left,arrive  |
+        | from | to | route     | turns                          |
+        | a    | h  | lane,lane | depart,arrive                  |
+        | a    | i  | lane,,    | depart,turn sharp right,arrive |
+        | h    | d  | lane,lane | depart,arrive                  |
+        | h    | i  | lane,,    | depart,turn left,arrive        |
 
 
   # https://www.openstreetmap.org/#map=19/37.85108/-122.27078
-  @todo
   Scenario: Turning Road category
     Given the node map
         """
@@ -474,9 +471,9 @@ Feature: Simple Turns
          f   c    i
          |   |  `
          |   j`
-         | `  |   l
-         |k   |.`
-         |    |
+         | `  |
+         |k   |   l
+         |    |.`
          g    b
          |    |
          |   |
@@ -493,13 +490,12 @@ Feature: Simple Turns
 
     When I route I should get
         | from | to | route                   | turns                               |
-        | e    | h  | martin,adeline          | depart,arrive                       |
-        | a    | d  | adeline,martin,martin   | depart,turn slight left, arrive     |
+        | e    | h  | martin,adeline,adeline  | depart,turn straight,arrive         |
+        | a    | d  | adeline,martin,martin   | depart,turn slight left,arrive      |
         | a    | l  | adeline,adeline,adeline | depart,continue slight right,arrive |
         | i    | h  | adeline,adeline         | depart,arrive                       |
 
   # https://www.openstreetmap.org/#map=19/37.76471/-122.49639
-  @todo
   Scenario: Turning road
     Given the node map
         """
@@ -519,13 +515,12 @@ Feature: Simple Turns
         | eghbi | secondary | 37      | yes    |
 
     When I route I should get
-        | from | to | route           | turns                   |
-        | d    | i  | lincoln,37,37   | depart,turn left,arrive |
-        | d    | f  | lincoln,lincoln | depart,arrive           |
+        | from | to | route           | turns                          |
+        | d    | i  | lincoln,37,37   | depart,turn slight left,arrive |
+        | d    | f  | lincoln,lincoln | depart,arrive                  |
 
   # https://www.openstreetmap.org/#map=19/37.63541/-122.48343
   # https://www.openstreetmap.org/#map=19/52.47752/13.28864
-  @todo
   Scenario: Road Splitting up
     Given the node map
         """
@@ -536,7 +531,7 @@ Feature: Simple Turns
         a - - - - - - - - - b
                                `
                                    `
-                                       `c
+                                       `  c
 
         """
 
@@ -551,6 +546,7 @@ Feature: Simple Turns
         | a    | d  | vista,sierra,sierra | depart,turn left,arrive |
 
   # https://www.openstreetmap.org/#map=19/52.45191/13.44113
+  # check service road handling in `is_similar_turn`
   @todo
   Scenario: Road Splitting up at a Driveway
     Given the node map
@@ -578,6 +574,7 @@ Feature: Simple Turns
         | a    | e  | britz,,     | depart,turn straight,arrive |
 
   # https://www.openstreetmap.org/#map=20/37.62997/-122.49246
+  # test is mutually exclusive with features/guidance/fork.feature:27 "Scenario: Don't Fork On Single Road"
   @todo
   Scenario: Curving road with name-handoff
     Given the node map
@@ -601,11 +598,11 @@ Feature: Simple Turns
         | lkjihd | residential | clare | yes    |
 
     When I route I should get
-        | from | to | route            | turns                    |
-        | a    | g  | palm,clare,clare | depart,turn left,arrive  |
-        | g    | a  | clare,palm,palm  | depart,turn right,arrive |
-        | l    | g  | clare,clare      | depart,arrive            |
-        | l    | a  | clare,palm,palm  | depart,turn left,arrive  |
+        | from | to | route            | turns                              |
+        | a    | g  | palm,clare,clare | depart,new name slight left,arrive |
+        | g    | a  | clare,palm,palm  | depart,turn right,arrive           |
+        | l    | g  | clare,clare      | depart,arrive                      |
+        | l    | a  | clare,palm,palm  | depart,turn left,arrive            |
 
   # https://www.openstreetmap.org/#map=19/37.84291/-122.23681
   Scenario: Two roads turning into the same direction
@@ -632,6 +629,9 @@ Feature: Simple Turns
 
 
   # https://www.openstreetmap.org/#map=19/37.82815/-122.28733
+  # the similarity check considers `bc` as non-similar to `bd` due to a name change "mandela"->"horton"
+  # this behavior is captured by features/guidance/turn.feature:126 "Scenario: Three Way Intersection"
+  # and is mutually exclusive with the test expectation
   @todo
   Scenario: Turning Secondary Next to Residential
     Given the node map
@@ -718,7 +718,6 @@ Feature: Simple Turns
 
 
   # https://www.openstreetmap.org/#map=19/37.63866/-122.46677
-  @todo
   Scenario: Slightly offset traffic circle
     Given the node map
         """
@@ -735,13 +734,14 @@ Feature: Simple Turns
         | abcdefghib | residential | road |
 
     When I route I should get
-        | from | to | route     | turns         |
-        | a    | e  | road,road | depart,arrive |
-        | i    | a  | road,road | depart,arrive |
-        | d    | a  | road,road | depart,arrive |
+        | from | to | route          | turns                        |
+        | a    | e  | road,road,road | depart,continue right,arrive |
+        | i    | a  | road,road,road | depart,continue right,arrive |
+        | d    | a  | road,road,road | depart,continue left,arrive  |
 
 
   # https://www.openstreetmap.org/#map=19/37.63829/-122.46345
+  # scenario geometry must be updated to catch the OSM map
   @todo
   Scenario: Entering a motorway (curved)
     Given the node map
@@ -767,7 +767,6 @@ Feature: Simple Turns
 
 
   # https://www.openstreetmap.org/#map=18/48.99155/8.43520
-  @todo
   Scenario: Passing a motorway link on a trunk road
     Given the node map
         """
@@ -784,7 +783,7 @@ Feature: Simple Turns
     When I route I should get
         | from | to | route     | turns                       |
         | a    | c  | sued,sued | depart,arrive               |
-        | a    | d  | sued,,    | depart,on ramp right,arrive |
+        | a    | d  | sued,,    | depart,off ramp slight right,arrive |
 
 
   # https://www.openstreetmap.org/#map=19/48.98900/8.43800
@@ -901,6 +900,8 @@ Feature: Simple Turns
 
 
   # https://www.openstreetmap.org/#map=19/48.99810/8.46749
+  # the test case depends on geometry: for `da` route both `no_name_change_to_candidate`
+  # and `compare_road_deviation_is_distinct` are true so `bc` is considered non-similar
   @todo
   Scenario: Slight End of Road
     Given the node map
@@ -952,6 +953,7 @@ Feature: Simple Turns
 
 
   # https://www.openstreetmap.org/#map=19/52.56562/13.39109
+  # the obviousness check depends on geometry at node `c`
   @todo
   Scenario: Dented Straight
     Given the node map
@@ -976,7 +978,6 @@ Feature: Simple Turns
 
 
   # https://www.openstreetmap.org/#map=17/52.57124/13.39892
-  @todo
   Scenario: Primary road curved turn
     Given the node map
         """
@@ -996,23 +997,24 @@ Feature: Simple Turns
         """
 
     And the ways
-        | nodes | highway        | name   | oneway |
-        | abc   | primary        | schoen | yes    |
-        | cdef  | primary        | grab   | yes    |
-        | klm   | primary        | schoen | yes    |
-        | ghijk | primary        | grab   | yes    |
-        | cj    | secondary_link | mann   | yes    |
-        | jo    | secondary      | mann   | yes    |
-        | pk    | secondary      | mann   | yes    |
+        | nodes | highway        | name   | oneway | lanes |
+        | abc   | primary        | schoen | yes    | 2     |
+        | cdef  | primary        | grab   | yes    | 1     |
+        | klm   | primary        | schoen | yes    | 2     |
+        | ghijk | primary        | grab   | yes    | 1     |
+        | cj    | secondary_link | mann   | yes    | 1     |
+        | jo    | secondary      | mann   | yes    | 1     |
+        | pk    | secondary      | mann   | yes    | 1     |
 
     When I route I should get
-        | from | to | route            | turns                          |
-        | a    | f  | schoen,grab,grab | depart,turn right,arrive       |
-        | g    | m  | grab,schoen      | depart,arrive                  |
-        | a    | o  | schoen,mann,mann | depart,turn slight left,arrive |
+        | from | to | route            | turns                           |
+        | a    | f  | schoen,grab,grab | depart,turn slight right,arrive |
+        | g    | m  | grab,schoen      | depart,arrive                   |
+        | a    | o  | schoen,mann,mann | depart,turn straight,arrive     |
 
 
   # https://www.openstreetmap.org/#map=18/52.55374/13.41462
+  # scenario for internal intersection collapsing
   @todo
   Scenario: Turn Links as Straights
     Given the node map
@@ -1047,7 +1049,6 @@ Feature: Simple Turns
 
 
   # https://www.openstreetmap.org/#map=19/52.56934/13.40131
-  @todo
   Scenario: Crossing Segregated before a turn
     Given the node map
         """
@@ -1055,8 +1056,8 @@ Feature: Simple Turns
         f - - - e -- ` `
                 |        _-c
         a - - -.b -- ` `
-           . `
-        g`
+             . `
+            g`
         """
 
     And the ways
@@ -1069,15 +1070,14 @@ Feature: Simple Turns
         | be    | secondary_link | no     | woll |
 
     When I route I should get
-        | from | to | route          | turns                         |
-        | g    | c  | woll,brei,brei | depart,turn right,arrive      |
-        | g    | f  | woll,scho,scho | depart,turn sharp left,arrive |
-        | a    | c  | scho,brei      | depart,arrive                 |
-        | d    | f  | brei,scho      | depart,arrive                 |
+        | from | to | route          | turns                             |
+        | g    | c  | woll,brei,brei | depart,turn slight right,arrive   |
+        | g    | f  | woll,scho,scho | depart,continue sharp left,arrive |
+        | a    | c  | scho,brei      | depart,arrive                     |
+        | d    | f  | brei,scho      | depart,arrive                     |
 
 
   # https://www.openstreetmap.org/#map=19/52.58072/13.42985
-  @todo
   Scenario: Trunk Turning into Motorway
     Given the node map
         """
@@ -1094,9 +1094,9 @@ Feature: Simple Turns
         | bd    | trunk_link |       | yes    |
 
     When I route I should get
-        | from | to | route    | turns                           |
-        | a    | c  | prenz,   | depart,arrive                   |
-        | a    | d  | prenz,,, | depart,turn slight right,arrive |
+        | from | to | route   | turns                               |
+        | a    | c  | prenz,  | depart,arrive                       |
+        | a    | d  | prenz,, | depart,off ramp slight right,arrive |
 
 
   # https://www.openstreetmap.org/#map=19/52.57800/13.42900
@@ -1118,11 +1118,10 @@ Feature: Simple Turns
 
     When I route I should get
         | from | to | route          | turns                           |
-        | a    | c  | dame,pase,pase | depart,new name straight,arrive |
+        | a    | c  | dame,pase,pase | depart,new name straight,arrive  |
         | a    | e  | dame,feuc,feuc | depart,turn slight right,arrive |
 
   # https://www.openstreetmap.org/#map=19/52.48468/13.34532
-  @todo
   Scenario: Forking into Tertiary
     Given the node map
         """
@@ -1139,8 +1138,8 @@ Feature: Simple Turns
 
     When I route I should get
         | from | to | route             | turns                           |
-        | a    | c  | kenny,kenny,kenny | depart,fork slight right,arrive |
-        | a    | d  | kenny,domi,domi   | depart,fork slight left,arrie   |
+        | a    | c  | kenny,kenny,kenny | depart,continue straight,arrive |
+        | a    | d  | kenny,domi,domi   | depart,turn slight left,arrive  |
 
   # https://www.openstreetmap.org/#map=18/52.56960/13.43815
   Scenario: Turn onto classified
@@ -1167,7 +1166,6 @@ Feature: Simple Turns
 
 
   # https://www.openstreetmap.org/#map=18/52.50908/13.27312
-  @todo
   Scenario: Merging onto a different street
     Given the node map
         """
@@ -1182,9 +1180,9 @@ Feature: Simple Turns
         | dbc   | primary   | theo | yes    |
 
     When I route I should get
-        | from | to | route     | turns         |
-        | a    | c  | masu,theo | depart,arrive |
-        | d    | c  | theo,theo | depart,arrive |
+        | from | to | route          | turns                       | #                        |
+        | a    | c  | masu,theo,theo | depart,turn straight,arrive | theo is a through street |
+        | d    | c  | theo,theo      | depart,arrive               |                          |
 
   # https://www.openstreetmap.org/#map=18/52.51299/13.28936
   Scenario: Lanes override road classes

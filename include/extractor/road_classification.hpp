@@ -135,23 +135,34 @@ inline bool canBeSeenAsFork(const RoadClassification first, const RoadClassifica
 }
 
 // priority groups are road classes that can be categoriesed as somewhat similar
-inline std::uint32_t getRoadGroup(const RoadClassification classification)
+inline std::uint8_t getRoadGroup(const RoadClassification classification)
 {
-    // a list of dividers (inclusive) specifying the end of a class
-    const auto constexpr num_dividers = 7;
-    // dividers point one past the entry we want, so motorways will be pre-primary
-    const constexpr RoadPriorityClass::Enum dividers[num_dividers] = {
-        RoadPriorityClass::PRIMARY,
-        RoadPriorityClass::TERTIARY_LINK,
-        RoadPriorityClass::ALLEY,
-        RoadPriorityClass::LINK_ROAD,
-        RoadPriorityClass::UNCLASSIFIED,
-        RoadPriorityClass::BIKE_PATH,
-        RoadPriorityClass::CONNECTIVITY + 1};
+    const constexpr std::uint8_t groups[RoadPriorityClass::CONNECTIVITY + 1] = {
+        0, // MOTORWAY
+        0, // MOTORWAY_LINK
+        1, // TRUNK
+        1, // TRUNK_LINK
+        2, // PRIMARY
+        2, // PRIMARY_LINK
+        2, // SECONDARY
+        2, // SECONDARY_LINK
+        2, // TERTIARY
+        2, // TERTIARY_LINK
+        3, // MAIN_RESIDENTIAL
+        3, // SIDE_RESIDENTIAL
+        3, // ALLEY
+        3, // PARKING
+        4, // LINK_ROAD
+        4, // UNCLASSIFIED
+        5, // BIKE_PATH
+        6, // FOOT_PATH
+        7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+        7 // CONNECTIVITY
+    };
 
-    const auto upper =
-        std::upper_bound(dividers, dividers + num_dividers, classification.GetPriority());
-    return upper - dividers;
+    BOOST_ASSERT(groups[RoadPriorityClass::CONNECTIVITY] == 7);
+
+    return groups[classification.GetPriority()];
 }
 
 // LHS road classification is strictly less than RHS, if it belongs to a lower general category
