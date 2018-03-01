@@ -59,9 +59,10 @@ void retrievePackedPathFromSingleHeap(const SearchEngineData<Algorithm>::QueryHe
     }
 }
 
-void retrievePackedPathFromSingleManyToManyHeap(const SearchEngineData<Algorithm>::ManyToManyQueryHeap &search_heap,
-                                      const NodeID middle_node_id,
-                                      std::vector<NodeID> &packed_path)
+void retrievePackedPathFromSingleManyToManyHeap(
+    const SearchEngineData<Algorithm>::ManyToManyQueryHeap &search_heap,
+    const NodeID middle_node_id,
+    std::vector<NodeID> &packed_path)
 {
     NodeID current_node_id = middle_node_id;
     // all initial nodes will have itself as parent, or a node not in the heap

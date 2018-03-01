@@ -375,9 +375,10 @@ void retrievePackedPathFromSingleHeap(const SearchEngineData<Algorithm>::QueryHe
                                       const NodeID middle_node_id,
                                       std::vector<NodeID> &packed_path);
 
-void retrievePackedPathFromSingleManyToManyHeap(const SearchEngineData<Algorithm>::ManyToManyQueryHeap &search_heap,
-                                      const NodeID middle_node_id,
-                                      std::vector<NodeID> &packed_path);
+void retrievePackedPathFromSingleManyToManyHeap(
+    const SearchEngineData<Algorithm>::ManyToManyQueryHeap &search_heap,
+    const NodeID middle_node_id,
+    std::vector<NodeID> &packed_path);
 
 // assumes that heaps are already setup correctly.
 // ATTENTION: This only works if no additional offset is supplied next to the Phantom Node
