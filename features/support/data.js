@@ -182,8 +182,8 @@ module.exports = function () {
                         fs.writeFile(`${this.scenarioCacheFile}.geojson`, JSON.stringify(geojson), cb);
                     }, xml);
 
-                    var params = ['cat',this.scenarioCacheFile,'-O','-o',this.scenarioCacheFilePBF, '--no-progress'];
-                    q.defer(child_process.execFile,'/usr/local/bin/osmium', params, {maxBuffer: 1024 * 1024 * 1000, env: {}});
+                    var params = ['cat',this.scenarioCacheFile,'-O','-o',this.scenarioCacheFilePBF];
+                    q.defer(child_process.execFile,'osmium', params, {maxBuffer: 1024 * 1024 * 1000, env: {}});
                     q.awaitAll(callback);
                 });
             }
