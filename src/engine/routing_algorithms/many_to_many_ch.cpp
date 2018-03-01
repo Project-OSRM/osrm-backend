@@ -257,15 +257,15 @@ std::vector<EdgeDuration> manyToManySearch(SearchEngineData<ch::Algorithm> &engi
     for (std::uint32_t row_idx = 0; row_idx < source_indices.size(); ++row_idx)
     {
         const auto index = source_indices[row_idx];
-        const auto &phantom = phantom_nodes[index];
+        const auto &source_phantom = phantom_nodes[index];
 
         // Clear heap and insert source nodes
         engine_working_data.InitializeOrClearManyToManyThreadLocalStorage(
             facade.GetNumberOfNodes());
         auto &query_heap = *(engine_working_data.many_to_many_heap);
-        insertSourceInHeap(query_heap, phantom);
+        insertSourceInHeap(query_heap, source_phantom);
 
-        // Explore search space
+        // Explore search spacekewl thanks
         while (!query_heap.Empty())
         {
             forwardRoutingStep(facade,
@@ -276,24 +276,40 @@ std::vector<EdgeDuration> manyToManySearch(SearchEngineData<ch::Algorithm> &engi
                                weights_table,
                                durations_table,
                                middle_nodes_table,
-                               phantom);
+                               source_phantom);
         }
         // row_idx == one source
         // target == search_space_with_buckets.column_idx
 
         for (unsigned column_idx = 0; column_idx < number_of_targets; ++column_idx)
         {
+            const auto &target_phantom = phantom_nodes[target_indices[column_idx]];
+            std::cout << "source -- f: " << source_phantom.forward_segment_id.id << " b: " << source_phantom.reverse_segment_id.id << std::endl;
+            std::cout << "target -- f: " << target_phantom.forward_segment_id.id << " b: " << target_phantom.reverse_segment_id.id << std::endl;
             NodeID middle_node_id = middle_nodes_table[row_idx * number_of_targets + column_idx];
-            std::vector<NodeID> packed_path_from_middle_to_target = retrievePackedPathFromSearchSpace(middle_node_id, column_idx, search_space_with_buckets); // packed_path_from_middle_to_target
-            std::cout << "packed_path_from_middle_to_target: ";
-            for (unsigned idx = 0; idx < packed_path_from_middle_to_target.size(); ++idx) std::cout << packed_path_from_middle_to_target[idx] << ", ";
-            std::cout << std::endl;
-
+           
+            // Step 1: Find path from source to middle node
             std::vector<NodeID> packed_path_from_source_to_middle;
             ch::retrievePackedPathFromSingleManyToManyHeap(query_heap, middle_node_id, packed_path_from_source_to_middle); // packed_path_from_source_to_middle
             std::cout << "packed_path_from_source_to_middle: ";
             for (unsigned idx = 0; idx < packed_path_from_source_to_middle.size(); ++idx) std::cout << packed_path_from_source_to_middle[idx] << ", ";
             std::cout << std::endl;
+
+            // Step 2: Find path from middle to target node
+            std::vector<NodeID> packed_path_from_middle_to_target = retrievePackedPathFromSearchSpace(middle_node_id, column_idx, search_space_with_buckets); // packed_path_from_middle_to_target
+            std::cout << "packed_path_from_middle_to_target: ";
+            for (unsigned idx = 0; idx < packed_path_from_middle_to_target.size(); ++idx) std::cout << packed_path_from_middle_to_target[idx] << ", ";
+            std::cout << std::endl;
+
+            // Step 3: Join them together
+            std::vector<NodeID> packed_path;
+            packed_path.reserve(packed_path_from_source_to_middle.size() + packed_path_from_middle_to_target.size());
+            packed_path.insert(packed_path.end(), packed_path_from_source_to_middle.begin(), packed_path_from_source_to_middle.end());
+            packed_path.insert(packed_path.end(), packed_path_from_middle_to_target.begin(), packed_path_from_middle_to_target.end());
+            std::cout << "packed_path: ";
+            for (unsigned idx = 0; idx < packed_path.size(); ++idx) std::cout << packed_path[idx] << ", ";
+            std::cout << std::endl;std::cout << std::endl;
+
 
             // FUNCTION BODY FOR REFERENCE:
             // void retrievePackedPathFromSingleManyToManyHeap(const SearchEngineData<Algorithm>::ManyToManyQueryHeap &search_heap,
@@ -363,8 +379,44 @@ std::vector<EdgeDuration> manyToManySearch(SearchEngineData<ch::Algorithm> &engi
             // I could use the same while conditions to only pick out the shortcuts that matter i.e. the ones that have a middle node that's relevant? But this should already be the
             // case from the use of the column_index and row_index. argh. I dont understand why ^ is happening.
 
+
+
+
+            // It turns out that this isn't a problem and actaully it working perfectly fine! Here is this information with a bit more context:
+
+            // source -- f: 0 b: 1
+            // target -- f: 0 b: 1
+            // packed_path_from_source_to_middle: 
+            // packed_path_from_middle_to_target: 1, 
+            // packed_path: 1, 
+
+            // source -- f: 2 b: 3
+            // target -- f: 0 b: 1
+            // packed_path_from_source_to_middle: 
+            // packed_path_from_middle_to_target: 3, 0, 
+            // packed_path: 3, 0, 
+
+            // source -- f: 2 b: 3
+            // target -- f: 0 b: 1
+            // packed_path_from_source_to_middle: 
+            // packed_path_from_middle_to_target: 3, 0, 
+            // packed_path: 3, 0, 
+
+            // source -- f: 4 b: 5
+            // target -- f: 0 b: 1
+            // packed_path_from_source_to_middle: 
+            // packed_path_from_middle_to_target: 4, 3, 0, 
+            // packed_path: 4, 3, 0, 
+
+            // so the packed path does go from a source to a target even if one of `retrievePackedPathFromSearchSpace` or `retrievePackedPathFromSingleManyToManyHeap` doesn't seem to return a result.
+
             // also, does a packed path or packed leg only ever have two nodeIDs in it? the start and the end? so, is `packed_path_from_middle_to_target: 4, 3, 0, ` invalid? 
-            
+
+            // the answer to this is that it can be indefinitely long or short :)
+
+            // Step 4: Unpack the pack_path
+            // unpack packed_path (ch::unpackPath())
+
             // Let's try to move on to unpackPath in the meantime.
 
             // std::vector<NodeID> unpacked_nodes;
@@ -388,10 +440,7 @@ std::vector<EdgeDuration> manyToManySearch(SearchEngineData<ch::Algorithm> &engi
 
             // Nooooooo. It compiles and then crashes, citing a socket hanging up error! :sadpanda: I'm going to sleep.
 
-            // next steps:
-            // to get the path into vector just use the same vector and pass it in to both fns above
-            // unpack packed_path (ch::unpackPath())
-            // calculate the duration and fill in the durations table
+            // Step 5: Calculate the duration of the unpacked path and fill in the durations table
         }
 
         //           targets (columns) target_id = column_idx
