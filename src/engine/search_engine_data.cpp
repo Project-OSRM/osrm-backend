@@ -95,7 +95,7 @@ void SearchEngineData<CH>::InitializeOrClearUnpackingCacheThreadLocalStorage()
 {
     if (unpacking_cache.get())
     {
-        // unpacking_cache->Clear();
+        unpacking_cache->Clear();
     }
     else
     {

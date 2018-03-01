@@ -433,7 +433,7 @@ inline void search(SearchEngineData<Algorithm> &engine_working_data,
 
 // TODO: refactor CH-related stub to use unpacked_edges
 template <typename RandomIter, typename FacadeT>
-void unpackPath(const FacadeT &facade,
+EdgeDuration unpackPath(const FacadeT &facade,
                 RandomIter packed_path_begin,
                 RandomIter packed_path_end,
                 const PhantomNodes &phantom_nodes,
@@ -448,6 +448,7 @@ void unpackPath(const FacadeT &facade,
     unpacked_edges.reserve(nodes_number);
 
     unpacked_nodes.push_back(*packed_path_begin);
+    EdgeDuration duration = 0;
     if (nodes_number > 1)
     {
         util::for_each_pair(
@@ -460,6 +461,7 @@ void unpackPath(const FacadeT &facade,
     }
 
     annotatePath(facade, phantom_nodes, unpacked_nodes, unpacked_edges, unpacked_path);
+    return duration;
 }
 
 template <typename Algorithm>

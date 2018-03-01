@@ -186,19 +186,19 @@ retrievePackedPathFromSearchSpace(NodeID middle_node,
                                         middle_node,
                                         NodeBucket::ColumnCompare(column_idx));
 
-    std::vector<NodeID> packed_path = {bucket_list.first->middle_node};
+    std::vector<NodeID> packed_leg = {bucket_list.first->middle_node};
     while (bucket_list.first->parent_node != bucket_list.first->middle_node &&
            bucket_list.first != search_space_with_buckets.end())
     {
 
-        packed_path.emplace_back(bucket_list.first->parent_node);
+        packed_leg.emplace_back(bucket_list.first->parent_node);
         bucket_list = std::equal_range(search_space_with_buckets.begin(),
                                        search_space_with_buckets.end(),
                                        bucket_list.first->parent_node,
                                        NodeBucket::ColumnCompare(column_idx));
     }
 
-    return packed_path;
+    return packed_leg;
 }
 
 template <>
@@ -257,15 +257,15 @@ std::vector<EdgeDuration> manyToManySearch(SearchEngineData<ch::Algorithm> &engi
     for (std::uint32_t row_idx = 0; row_idx < source_indices.size(); ++row_idx)
     {
         const auto index = source_indices[row_idx];
-        const auto &phantom = phantom_nodes[index];
+        const auto &source_phantom = phantom_nodes[index];
 
         // Clear heap and insert source nodes
         engine_working_data.InitializeOrClearManyToManyThreadLocalStorage(
             facade.GetNumberOfNodes());
         auto &query_heap = *(engine_working_data.many_to_many_heap);
-        insertSourceInHeap(query_heap, phantom);
+        insertSourceInHeap(query_heap, source_phantom);
 
-        // Explore search space
+        // Explore search spacekewl thanks
         while (!query_heap.Empty())
         {
             forwardRoutingStep(facade,
@@ -276,33 +276,87 @@ std::vector<EdgeDuration> manyToManySearch(SearchEngineData<ch::Algorithm> &engi
                                weights_table,
                                durations_table,
                                middle_nodes_table,
-                               phantom);
+                               source_phantom);
         }
         // row_idx == one source
         // target == search_space_with_buckets.column_idx
 
         for (unsigned column_idx = 0; column_idx < number_of_targets; ++column_idx)
         {
-
+            const auto &target_phantom = phantom_nodes[target_indices[column_idx]];
+            std::cout << "source -- f: " << source_phantom.forward_segment_id.id
+                      << " b: " << source_phantom.reverse_segment_id.id << std::endl;
+            std::cout << "target -- f: " << target_phantom.forward_segment_id.id
+                      << " b: " << target_phantom.reverse_segment_id.id << std::endl;
             NodeID middle_node_id = middle_nodes_table[row_idx * number_of_targets + column_idx];
-            std::vector<NodeID> packed_path = retrievePackedPathFromSearchSpace(
+
+            // Step 1: Find path from source to middle node
+            std::vector<NodeID> packed_leg_from_source_to_middle;
+            ch::retrievePackedPathFromSingleManyToManyHeap(
+                query_heap,
                 middle_node_id,
-                column_idx,
-                search_space_with_buckets); // packed_path_from_middle_to_target
-
-            ch::retrievePackedPathFromSingleHeap(
-                query_heap, middle_node_id, packed_path); // packed_path_from_source_to_middle
-
-            for (unsigned idx = 0; idx < packed_path.size(); ++idx)
-                std::cout << packed_path[idx] << ", ";
+                packed_leg_from_source_to_middle); // packed_leg_from_source_to_middle
+            std::cout << "packed_leg_from_source_to_middle: ";
+            for (unsigned idx = 0; idx < packed_leg_from_source_to_middle.size(); ++idx)
+                std::cout << packed_leg_from_source_to_middle[idx] << ", ";
             std::cout << std::endl;
 
-            // join packed_path_from_source_to_middle and packed_path_from_middle_to_target to make
-            // packed_path
+            // Step 2: Find path from middle to target node
+            std::vector<NodeID> packed_leg_from_middle_to_target =
+                retrievePackedPathFromSearchSpace(
+                    middle_node_id,
+                    column_idx,
+                    search_space_with_buckets); // packed_leg_from_middle_to_target
+            std::cout << "packed_leg_from_middle_to_target: ";
+            for (unsigned idx = 0; idx < packed_leg_from_middle_to_target.size(); ++idx)
+                std::cout << packed_leg_from_middle_to_target[idx] << ", ";
+            std::cout << std::endl;
 
-            // unpack packed_path (ch::unpackPath())
+            // Step 3: Join them together
+            std::vector<NodeID> packed_leg;
+            packed_leg.reserve(packed_leg_from_source_to_middle.size() +
+                               packed_leg_from_middle_to_target.size());
+            packed_leg.insert(packed_leg.end(),
+                              packed_leg_from_source_to_middle.begin(),
+                              packed_leg_from_source_to_middle.end());
+            packed_leg.insert(packed_leg.end(),
+                              packed_leg_from_middle_to_target.begin(),
+                              packed_leg_from_middle_to_target.end());
+            std::cout << "packed_leg: ";
+            for (unsigned idx = 0; idx < packed_leg.size(); ++idx)
+                std::cout << packed_leg[idx] << ", ";
+            std::cout << std::endl;
 
-            // calculate the duration and fill in the durations table
+            // Step 4: Unpack the pack_path. Modify the unpackPath method to also calculate duration as it unpacks the path.
+
+            std::vector<NodeID> unpacked_nodes;
+            std::vector<EdgeID> unpacked_edges;
+            if (!packed_leg.empty())
+            {
+                unpacked_nodes.reserve(packed_leg.size());
+                unpacked_edges.reserve(packed_leg.size());
+                unpacked_nodes.push_back(packed_leg.front());
+                durations_table[row_idx * number_of_targets + column_idx] = ch::unpackPath(facade,
+                               packed_leg.begin(),
+                               packed_leg.end(),
+                               *engine_working_data.unpacking_cache.get(),
+                               [&unpacked_nodes, &unpacked_edges](std::pair<NodeID, NodeID> &edge,
+                                                                  const auto &edge_id) {
+                                   BOOST_ASSERT(edge.first == unpacked_nodes.back());
+                                   unpacked_nodes.push_back(edge.second);
+                                   unpacked_edges.push_back(edge_id);
+                               }); // add duration extraction here?
+            }
+
+            std::cout << "unpacked_nodes: ";
+            for (unsigned idx = 0; idx < unpacked_nodes.size(); ++idx)
+                std::cout << unpacked_nodes[idx] << ", ";
+            std::cout << std::endl;
+
+            std::cout << "unpacked_edges: ";
+            for (unsigned idx = 0; idx < unpacked_edges.size(); ++idx)
+                std::cout << unpacked_edges[idx] << ", ";
+            std::cout << std::endl; std::cout << std::endl;
         }
 
         //           targets (columns) target_id = column_idx

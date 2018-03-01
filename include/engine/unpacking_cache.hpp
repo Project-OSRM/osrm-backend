@@ -27,7 +27,7 @@ namespace engine
 class UnpackingCache
 {
     std::pair<NodeID, NodeID> edge;
-    std::unordered_map<std::pair<NodeID, NodeID>, int> cache;
+    std::unordered_map<std::pair<NodeID, NodeID>, EdgeDuration> cache;
     int number_of_lookups;
     int number_of_finds;
     int number_of_misses;
@@ -47,43 +47,48 @@ class UnpackingCache
     {
         ++number_of_lookups;
         bool edge_is_in_cache = cache.find(edge) != cache.end();
-        // if (edge_is_in_cache) {
-        // 	std::cout << edge.first << ", " << edge.second << " true" << std::endl;
-        // } else {
-        // 	std::cout << edge.first << ", " << edge.second << " false" << std::endl;
+        // if (edge_is_in_cache)
+        // {
+        //     std::cout << edge.first << ", " << edge.second << " true" << std::endl;
+        // }
+        // else
+        // {
+        //     std::cout << edge.first << ", " << edge.second << " false" << std::endl;
         // }
         return edge_is_in_cache;
     }
 
-    void CollectStats(std::pair<NodeID, NodeID> edge)
-    {
+    // void CollectStats(std::pair<NodeID, NodeID> edge)
+    // {
 
-        // check if edge is in the map
-        // if edge is in the map :
-        // 		- increment number_of_lookups, number_of_finds
-        // 		- update cache with edge:number_of_times to edge:number_of_times++
-        // if edge is not in map:
-        //		- increment number_of_lookups, number_of_misses
-        //		- insert edge into map with value 1
+    //     // check if edge is in the map
+    //     // if edge is in the map :
+    //     // 		- increment number_of_lookups, number_of_finds
+    //     // 		- update cache with edge:number_of_times to edge:number_of_times++
+    //     // if edge is not in map:
+    //     //		- increment number_of_lookups, number_of_misses
+    //     //		- insert edge into map with value 1
 
-        if (cache.find(edge) == cache.end())
-        {
-            ++number_of_misses;
-        }
-        else
-        {
-            ++number_of_finds;
-        }
-        ++cache[edge];
-    }
+    //     std::cout << "Collected Stats" << std::endl;
+    //     if (cache.find(edge) == cache.end())
+    //     {
+    //         ++number_of_misses;
+    //     }
+    //     else
+    //     {
+    //         ++number_of_finds;
+    //     }
+    //     ++cache[edge];
+    // }
 
     void PrintStats()
     {
-        // std::cout << "Total Misses :" << number_of_misses << " Total Finds: " << number_of_finds
-        //           << " Total Lookups: " << number_of_lookups << " Cache size: " << cache.size()
-        //           << std::endl;
-        std::cout << number_of_misses << "," << number_of_finds << "," << number_of_lookups << ","
-                  << cache.size() << std::endl;
+        std::cout << "Total Misses :" << number_of_misses << " Total Finds: " << number_of_finds
+                  << " Total Lookups: " << number_of_lookups << " Cache size: " << cache.size()
+                  << std::endl;
+        // std::cout << number_of_misses << "," << number_of_finds << "," << number_of_lookups <<
+        // ","
+        //           << cache.size() << std::endl;
     }
 
     void AddEdge(std::pair<NodeID, NodeID> edge)
@@ -92,9 +97,13 @@ class UnpackingCache
         std::cout << "Added edge: " << edge.first << ", " << edge.second << std::endl;
     }
 
-    // void PrintEdgeLookups(std::pair<NodeID, NodeID> edge)
-    // {
-    // }
+    EdgeDuration GetDuration(std::pair<NodeID, NodeID> edge)
+    {
+        EdgeDuration duration = cache[edge];
+        std::cout << "Duration is: " << duration << std::endl;
+        return duration;
+    }
+
 };
 } // engine
 } // osrm
