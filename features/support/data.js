@@ -268,10 +268,7 @@ module.exports = function () {
             //                       --mjolnir-timezone ${PWD}/valhalla_tiles/timezones.sqlite
             //                       --mjolnir-admin ${PWD}/valhalla_tiles/admins.sqlite > valhalla.json
 
-            var params = [`--mjolnir-tile-dir`, `${p.inputCacheDir}/${p.scenarioID}_valhalla_tiles`,
-                          `--mjolnir-tile-extract`, `${p.inputCacheDir}/${p.scenarioID}_valhalla_tiles.tar`,
-                          `--mjolnir-timezone`, `${p.inputCacheDir}/${p.scenarioID}_valhalla_tiles/timezones.sqlite`,
-                          `--mjolnir-admin`, `${p.inputCacheDir}/${p.scenarioID}_valhalla_tiles/admins.sqlite`];
+            var params = [`--mjolnir-tile-dir`, `${p.inputCacheDir}/${p.scenarioID}_valhalla_tiles`];
 
             child_process.execFile(`${process.env.VALHALLA_HOME}/scripts/valhalla_build_config`, params, {}, (error, stdout, stderr) => {
                 if (error) { throw error; }
@@ -305,7 +302,7 @@ module.exports = function () {
     };
 
     this.valhallaTarTiles = (p, callback) => {
-        let stamp = p.processedCacheFile + '.stamp_valhalla_tartiles';
+        let stamp = p.processedCacheFile + '.stamp_valhalla_tiles';
         fs.exists(stamp, (exists) => {
             if (exists) return callback();
             var params = [`cf`,`${p.inputCacheDir}/${p.scenarioID}_valhalla_tiles.tar`,
