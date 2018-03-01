@@ -283,19 +283,10 @@ std::vector<EdgeDuration> manyToManySearch(SearchEngineData<ch::Algorithm> &engi
 
         for (unsigned column_idx = 0; column_idx < number_of_targets; ++column_idx)
         {
-
             NodeID middle_node_id = middle_nodes_table[row_idx * number_of_targets + column_idx];
-            std::vector<NodeID> packed_path = retrievePackedPathFromSearchSpace(
-                middle_node_id,
-                column_idx,
-                search_space_with_buckets); // packed_path_from_middle_to_target
+            std::vector<NodeID> packed_path = retrievePackedPathFromSearchSpace(middle_node_id, column_idx, search_space_with_buckets); // packed_path_from_middle_to_target
 
-            ch::retrievePackedPathFromSingleHeap(
-                query_heap, middle_node_id, packed_path); // packed_path_from_source_to_middle
-
-            for (unsigned idx = 0; idx < packed_path.size(); ++idx)
-                std::cout << packed_path[idx] << ", ";
-            std::cout << std::endl;
+            ch::retrievePackedPathFromSingleManyToManyHeap(query_heap, middle_node_id, packed_path); // packed_path_from_source_to_middle
 
             // join packed_path_from_source_to_middle and packed_path_from_middle_to_target to make
             // packed_path
