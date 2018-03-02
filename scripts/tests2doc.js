@@ -8,7 +8,7 @@ const d3 = require('d3-queue');
 var mapnik = require('mapnik');
 
 mapnik.register_default_input_plugins();
-mapnik.register_system_fonts()
+mapnik.register_default_fonts()
 
 //console.log(mapnik.fonts());
 
@@ -32,61 +32,61 @@ var stylesheet = `
     <Filter>[highway] = 'motorway'</Filter>
     <LineSymbolizer stroke-width="12" stroke-linejoin="round" stroke-linecap="round" stroke="#bbbbbb" />
     <LineSymbolizer stroke-width="10" stroke-linejoin="round" stroke-linecap="round" stroke="#aacc77" />
-    <TextSymbolizer face-name="Arial Regular" size="10" fill="black" placement="line" allow-overlap="true" dy='-10'>'name=' + [name]</TextSymbolizer>
-    <TextSymbolizer face-name="Arial Regular" size="10" fill="black" placement="line" allow-overlap="true" dy='10'>'highway=' + [highway]</TextSymbolizer>
+    <TextSymbolizer face-name="DejaVu Sans Bold" size="10" fill="black" placement="line" allow-overlap="true" dy='-10'>'name=' + [name]</TextSymbolizer>
+    <TextSymbolizer face-name="DejaVu Sans Bold" size="10" fill="black" placement="line" allow-overlap="true" dy='10'>'highway=' + [highway]</TextSymbolizer>
   </Rule>
   <Rule>
     <Filter>[highway] = 'motorway_link'</Filter>
     <LineSymbolizer stroke-width="12" stroke-linejoin="round" stroke-linecap="round" stroke="#bbbbbb" />
     <LineSymbolizer stroke-width="10" stroke-linejoin="round" stroke-linecap="round" stroke="#77aacc" />
-    <TextSymbolizer face-name="Arial Regular" size="10" fill="black" placement="line" allow-overlap="true" dy='-10'>'name=' + [name]</TextSymbolizer>
-    <TextSymbolizer face-name="Arial Regular" size="10" fill="black" placement="line" allow-overlap="true" dy='10'>'highway=' + [highway]</TextSymbolizer>
+    <TextSymbolizer face-name="DejaVu Sans Bold" size="10" fill="black" placement="line" allow-overlap="true" dy='-10'>'name=' + [name]</TextSymbolizer>
+    <TextSymbolizer face-name="DejaVu Sans Bold" size="10" fill="black" placement="line" allow-overlap="true" dy='10'>'highway=' + [highway]</TextSymbolizer>
   </Rule>
 
   <Rule>
     <Filter>[highway] = 'trunk'</Filter>
     <LineSymbolizer stroke-width="12" stroke-linejoin="round" stroke-linecap="round" stroke="#bbbbbb" />
     <LineSymbolizer stroke-width="10" stroke-linejoin="round" stroke-linecap="round" stroke="#ccaa77" />
-    <TextSymbolizer face-name="Arial Regular" size="10" fill="black" placement="line" allow-overlap="true" dy='-10'>'name=' + [name]</TextSymbolizer>
-    <TextSymbolizer face-name="Arial Regular" size="10" fill="black" placement="line" allow-overlap="true" dy='10'>'highway=' + [highway]</TextSymbolizer>
+    <TextSymbolizer face-name="DejaVu Sans Bold" size="10" fill="black" placement="line" allow-overlap="true" dy='-10'>'name=' + [name]</TextSymbolizer>
+    <TextSymbolizer face-name="DejaVu Sans Bold" size="10" fill="black" placement="line" allow-overlap="true" dy='10'>'highway=' + [highway]</TextSymbolizer>
   </Rule>
   <Rule>
     <Filter>[highway] = 'trunk_link'</Filter>
     <LineSymbolizer stroke-width="12" stroke-linejoin="round" stroke-linecap="round" stroke="#bbbbbb" />
     <LineSymbolizer stroke-width="10" stroke-linejoin="round" stroke-linecap="round" stroke="#aa77cc" />
-    <TextSymbolizer face-name="Arial Regular" size="10" fill="black" placement="line" allow-overlap="true" dy='-10'>'name=' + [name]</TextSymbolizer>
-    <TextSymbolizer face-name="Arial Regular" size="10" fill="black" placement="line" allow-overlap="true" dy='10'>'highway=' + [highway]</TextSymbolizer>
+    <TextSymbolizer face-name="DejaVu Sans Bold" size="10" fill="black" placement="line" allow-overlap="true" dy='-10'>'name=' + [name]</TextSymbolizer>
+    <TextSymbolizer face-name="DejaVu Sans Bold" size="10" fill="black" placement="line" allow-overlap="true" dy='10'>'highway=' + [highway]</TextSymbolizer>
   </Rule>
 
   <Rule>
     <Filter>[highway] = 'primary'</Filter>
     <LineSymbolizer stroke-width="10" stroke-linejoin="round" stroke-linecap="round" stroke="#bbbbbb" />
     <LineSymbolizer stroke-width="8" stroke-linejoin="round" stroke-linecap="round" stroke="#77ccaa" />
-    <TextSymbolizer face-name="Arial Regular" size="10" fill="black" placement="line" allow-overlap="true" dy='-8'>'name=' + [name]</TextSymbolizer>
-    <TextSymbolizer face-name="Arial Regular" size="10" fill="black" placement="line" allow-overlap="true" dy='8'>'highway=' + [highway]</TextSymbolizer>
+    <TextSymbolizer face-name="DejaVu Sans Bold" size="10" fill="black" placement="line" allow-overlap="true" dy='-8'>'name=' + [name]</TextSymbolizer>
+    <TextSymbolizer face-name="DejaVu Sans Bold" size="10" fill="black" placement="line" allow-overlap="true" dy='8'>'highway=' + [highway]</TextSymbolizer>
   </Rule>
   <Rule>
     <Filter>[highway] = 'primary_link'</Filter>
     <LineSymbolizer stroke-width="10" stroke-linejoin="round" stroke-linecap="round" stroke="#bbbbbb" />
     <LineSymbolizer stroke-width="8" stroke-linejoin="round" stroke-linecap="round" stroke="#aa77cc" />
-    <TextSymbolizer face-name="Arial Regular" size="10" fill="black" placement="line" allow-overlap="true" dy='-8'>'name=' + [name]</TextSymbolizer>
-    <TextSymbolizer face-name="Arial Regular" size="10" fill="black" placement="line" allow-overlap="true" dy='8'>'highway=' + [highway]</TextSymbolizer>
+    <TextSymbolizer face-name="DejaVu Sans Bold" size="10" fill="black" placement="line" allow-overlap="true" dy='-8'>'name=' + [name]</TextSymbolizer>
+    <TextSymbolizer face-name="DejaVu Sans Bold" size="10" fill="black" placement="line" allow-overlap="true" dy='8'>'highway=' + [highway]</TextSymbolizer>
   </Rule>
 
   <Rule>
     <Filter>[highway] = 'secondary' or [highway] = 'secondary_link' or [highway] = 'tertiary' or [highway] = 'tertiary_link' or [highway] = 'residential' or [highway] = 'service' or [highway] = 'living_street'</Filter>
     <LineSymbolizer stroke-width="10" stroke-linejoin="round" stroke-linecap="round" stroke="#bbbbbb" />
     <LineSymbolizer stroke-width="8" stroke-linejoin="round" stroke-linecap="round" stroke="#77bb77" />
-    <TextSymbolizer face-name="Arial Regular" size="10" fill="black" placement="line" allow-overlap="true" dy='-8'>'name=' + [name]</TextSymbolizer>
-    <TextSymbolizer face-name="Arial Regular" size="10" fill="black" placement="line" allow-overlap="true" dy='8'>'highway=' + [highway]</TextSymbolizer>
+    <TextSymbolizer face-name="DejaVu Sans Bold" size="10" fill="black" placement="line" allow-overlap="true" dy='-8'>'name=' + [name]</TextSymbolizer>
+    <TextSymbolizer face-name="DejaVu Sans Bold" size="10" fill="black" placement="line" allow-overlap="true" dy='8'>'highway=' + [highway]</TextSymbolizer>
   </Rule>
 
   <Rule>
     <Filter>[route] = 'ferry'</Filter>
     <LineSymbolizer stroke-width="10" stroke-linejoin="round" stroke-linecap="round" stroke="#bbbbbb" />
     <LineSymbolizer stroke-width="8" stroke-linejoin="round" stroke-linecap="round" stroke="#7777bb" />
-    <TextSymbolizer face-name="Arial Regular" size="10" fill="black" placement="line" allow-overlap="true" dy='-8'>'name=' + [name]</TextSymbolizer>
-    <TextSymbolizer face-name="Arial Regular" size="10" fill="black" placement="line" allow-overlap="true" dy='8'>'route=' + [route]</TextSymbolizer>
+    <TextSymbolizer face-name="DejaVu Sans Bold" size="10" fill="black" placement="line" allow-overlap="true" dy='-8'>'name=' + [name]</TextSymbolizer>
+    <TextSymbolizer face-name="DejaVu Sans Bold" size="10" fill="black" placement="line" allow-overlap="true" dy='8'>'route=' + [route]</TextSymbolizer>
   </Rule>
 
 </Style>
