@@ -327,7 +327,7 @@ std::vector<EdgeDuration> manyToManySearch(SearchEngineData<ch::Algorithm> &engi
                 std::cout << packed_leg[idx] << ", ";
             std::cout << std::endl;
 
-            // Step 4: Unpack the pack_path
+            // Step 4: Unpack the pack_path. Modify the unpackPath method to also calculate duration as it unpacks the path.
 
             std::vector<NodeID> unpacked_nodes;
             std::vector<EdgeID> unpacked_edges;
@@ -345,7 +345,8 @@ std::vector<EdgeDuration> manyToManySearch(SearchEngineData<ch::Algorithm> &engi
                                    BOOST_ASSERT(edge.first == unpacked_nodes.back());
                                    unpacked_nodes.push_back(edge.second);
                                    unpacked_edges.push_back(edge_id);
-                               });
+                               }); // add duration extraction here?
+                // engine_working_data.unpacking_cache.get()->PrintStats();
             }
 
             std::cout << "unpacked_nodes: ";
@@ -357,45 +358,6 @@ std::vector<EdgeDuration> manyToManySearch(SearchEngineData<ch::Algorithm> &engi
             for (unsigned idx = 0; idx < unpacked_edges.size(); ++idx)
                 std::cout << unpacked_edges[idx] << ", ";
             std::cout << std::endl;
-            std::cout << std::endl;
-
-            // Nooooooo. It compiles and then crashes, citing a socket hanging up error! :sadpanda:
-            // I'm going to sleep.
-            // wait it stopped crashing!! Look at the output! Everything that was broken last night is magically fixed now!!!
-            //
-            // source -- f: 0 b: 1
-            // target -- f: 0 b: 1
-            // packed_leg_from_source_to_middle:
-            // packed_leg_from_middle_to_target: 1,
-            // packed_leg: 1,
-            // unpacked_nodes: 1,
-            // unpacked_edges:
-
-            // source -- f: 2 b: 3
-            // target -- f: 0 b: 1
-            // packed_leg_from_source_to_middle:
-            // packed_leg_from_middle_to_target: 3, 0,
-            // packed_leg: 3, 0,
-            // unpacked_nodes: 3, 1, 0,
-            // unpacked_edges: 3, 2,
-
-            // source -- f: 2 b: 3
-            // target -- f: 0 b: 1
-            // packed_leg_from_source_to_middle:
-            // packed_leg_from_middle_to_target: 3, 0,
-            // packed_leg: 3, 0,
-            // unpacked_nodes: 3, 1, 0,
-            // unpacked_edges: 3, 2,
-
-            // source -- f: 4 b: 5
-            // target -- f: 0 b: 1
-            // packed_leg_from_source_to_middle:
-            // packed_leg_from_middle_to_target: 4, 3, 0,
-            // packed_leg: 4, 3, 0,
-            // unpacked_nodes: 4, 5, 3, 1, 0,
-            // unpacked_edges: 9, 8, 3, 2,
-
-            // Step 5: Calculate the duration of the unpacked path and fill in the durations table
         }
 
         //           targets (columns) target_id = column_idx
