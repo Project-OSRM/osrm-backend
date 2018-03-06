@@ -211,11 +211,15 @@ class RouteAPI : public BaseAPI
         }
 
         std::vector<util::json::Value> step_geometries;
+        const auto total_step_count =
+            std::accumulate(legs.begin(), legs.end(), 0, [](const auto &v, const auto &leg) {
+                return v + leg.steps.size();
+            });
+        step_geometries.reserve(total_step_count);
+
         for (const auto idx : util::irange<std::size_t>(0UL, legs.size()))
         {
             auto &leg_geometry = leg_geometries[idx];
-
-            step_geometries.reserve(step_geometries.size() + legs[idx].steps.size());
 
             std::transform(
                 legs[idx].steps.begin(),
