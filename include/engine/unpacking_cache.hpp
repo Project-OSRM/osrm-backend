@@ -27,7 +27,7 @@ namespace engine
 class UnpackingCache
 {
     std::pair<NodeID, NodeID> edge;
-    std::unordered_map<std::pair<NodeID, NodeID>, int> cache;
+    std::unordered_map<std::pair<NodeID, NodeID>, EdgeDuration> cache;
     int number_of_lookups;
     int number_of_finds;
     int number_of_misses;
@@ -47,14 +47,14 @@ class UnpackingCache
     {
         ++number_of_lookups;
         bool edge_is_in_cache = cache.find(edge) != cache.end();
-        if (edge_is_in_cache)
-        {
-            std::cout << edge.first << ", " << edge.second << " true" << std::endl;
-        }
-        else
-        {
-            std::cout << edge.first << ", " << edge.second << " false" << std::endl;
-        }
+        // if (edge_is_in_cache)
+        // {
+        //     std::cout << edge.first << ", " << edge.second << " true" << std::endl;
+        // }
+        // else
+        // {
+        //     std::cout << edge.first << ", " << edge.second << " false" << std::endl;
+        // }
         return edge_is_in_cache;
     }
 
@@ -104,9 +104,6 @@ class UnpackingCache
         return duration;
     }
 
-    // void PrintEdgeLookups(std::pair<NodeID, NodeID> edge)
-    // {
-    // }
 };
 } // engine
 } // osrm

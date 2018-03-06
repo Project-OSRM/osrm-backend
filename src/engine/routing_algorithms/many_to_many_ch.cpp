@@ -336,7 +336,7 @@ std::vector<EdgeDuration> manyToManySearch(SearchEngineData<ch::Algorithm> &engi
                 unpacked_nodes.reserve(packed_leg.size());
                 unpacked_edges.reserve(packed_leg.size());
                 unpacked_nodes.push_back(packed_leg.front());
-                ch::unpackPath(facade,
+                durations_table[row_idx * number_of_targets + column_idx] = ch::unpackPath(facade,
                                packed_leg.begin(),
                                packed_leg.end(),
                                *engine_working_data.unpacking_cache.get(),
@@ -346,7 +346,6 @@ std::vector<EdgeDuration> manyToManySearch(SearchEngineData<ch::Algorithm> &engi
                                    unpacked_nodes.push_back(edge.second);
                                    unpacked_edges.push_back(edge_id);
                                }); // add duration extraction here?
-                // engine_working_data.unpacking_cache.get()->PrintStats();
             }
 
             std::cout << "unpacked_nodes: ";
@@ -357,7 +356,7 @@ std::vector<EdgeDuration> manyToManySearch(SearchEngineData<ch::Algorithm> &engi
             std::cout << "unpacked_edges: ";
             for (unsigned idx = 0; idx < unpacked_edges.size(); ++idx)
                 std::cout << unpacked_edges[idx] << ", ";
-            std::cout << std::endl;
+            std::cout << std::endl; std::cout << std::endl;
         }
 
         //           targets (columns) target_id = column_idx

@@ -264,17 +264,24 @@ EdgeWeight getLoopWeight(const DataFacade<Algorithm> &facade, NodeID node)
 // (should have two values at the beginning of this process, and a total of one less at the end of
 // it)
 
+// ------------------------------
+// have we processed the edge before? tells us if we have values in the durations stack that we can add up
+// if yes, pop top values of duration_stack and add them up and push onto duration_stack
+// if no, check if its in the cache
+//      if yes, add duration value to stack
+//      if no, either find the children OR we get to the point where we use the single edge duration method (which is like annotatePath) and add do duration_stack
+
 template <typename BidirectionalIterator, typename Callback>
-void unpackPath(const DataFacade<Algorithm> &facade,
+EdgeDuration unpackPath(const DataFacade<Algorithm> &facade,
                 BidirectionalIterator packed_path_begin,
                 BidirectionalIterator packed_path_end,
                 Callback &&callback)
 {
     UnpackingCache unpacking_cache;
-    unpackPath(facade, packed_path_begin, packed_path_end, unpacking_cache, callback);
+    return unpackPath(facade, packed_path_begin, packed_path_end, unpacking_cache, callback);
 }
 template <typename BidirectionalIterator, typename Callback>
-void unpackPath(const DataFacade<Algorithm> &facade,
+EdgeDuration unpackPath(const DataFacade<Algorithm> &facade,
                 BidirectionalIterator packed_path_begin,
                 BidirectionalIterator packed_path_end,
                 UnpackingCache &unpacking_cache,
@@ -282,7 +289,7 @@ void unpackPath(const DataFacade<Algorithm> &facade,
 {
     // make sure we have at least something to unpack
     if (packed_path_begin == packed_path_end)
-        return;
+        return 0;
 
     // std::stack<std::pair<NodeID, NodeID>> recursion_stack;
     std::stack<std::tuple<NodeID, NodeID, bool>> recursion_stack;
@@ -303,78 +310,93 @@ void unpackPath(const DataFacade<Algorithm> &facade,
         edge = recursion_stack.top();
         std::cout << "Processing edge: " << std::get<0>(edge) << ", " << std::get<1>(edge) << std::endl;
         recursion_stack.pop();
-        if (!std::get<2>(edge))
-        {
-            if (unpacking_cache.IsEdgeInCache(std::make_pair(std::get<0>(edge), std::get<1>(edge))))
-            {
-                std::get<2>(edge) = true; // flag that this edge is in the cache
+
+        // have we processed the edge before? tells us if we have values in the durations stack that we can add up
+        if (!std::get<2>(edge)) { // haven't processed edge before, so process it in the body!
+
+            std::get<2>(edge) = true; // mark that this edge will now be processed
+
+            if (unpacking_cache.IsEdgeInCache(std::make_pair(std::get<0>(edge), std::get<1>(edge)))) {
                 std::cout << "Edge is in cache" << std::endl;
                 EdgeDuration duration = unpacking_cache.GetDuration(std::make_pair(std::get<0>(edge), std::get<1>(edge)));
                 duration_stack.emplace(duration);
+                recursion_stack.emplace(edge);
+            } else {
+                // Look for an edge on the forward CH graph (.forward)
+                EdgeID smaller_edge_id = facade.FindSmallestEdge(
+                    // edge.first, edge.second, [](const auto &data) { return data.forward; });
+                    std::get<0>(edge),
+                    std::get<1>(edge),
+                    [](const auto &data) { return data.forward; });
+
+                // If we didn't find one there, the we might be looking at a part of the path that
+                // was found using the backward search.  Here, we flip the node order (.second, .first)
+                // and only consider edges with the `.backward` flag.
+                if (SPECIAL_EDGEID == smaller_edge_id)
+                {
+                    // smaller_edge_id = facade.FindSmallestEdge(
+                    //     edge.second, edge.first, [](const auto &data) { return data.backward; });
+                    smaller_edge_id =
+                        facade.FindSmallestEdge(std::get<1>(edge), std::get<0>(edge), [](const auto &data) {
+                            return data.backward;
+                        });
+                }
+
+                // If we didn't find anything *still*, then something is broken and someone has
+                // called this function with bad values.
+                BOOST_ASSERT_MSG(smaller_edge_id != SPECIAL_EDGEID, "Invalid smaller edge ID");
+
+                const auto &data = facade.GetEdgeData(smaller_edge_id);
+                BOOST_ASSERT_MSG(data.weight != std::numeric_limits<EdgeWeight>::max(),
+                                 "edge weight invalid");
+
+                // If the edge is a shortcut, we need to add the two halfs to the stack.
+                if (data.shortcut)
+                { // unpack
+                    const NodeID middle_node_id = data.turn_id;
+                    // Note the order here - we're adding these to a stack, so we
+                    // want the first->middle to get visited before middle->second
+                    // recursion_stack.emplace(middle_node_id, edge.second);
+                    // recursion_stack.emplace(edge.first, middle_node_id);
+                    recursion_stack.emplace(middle_node_id, std::get<1>(edge), false);
+                    recursion_stack.emplace(std::get<0>(edge), middle_node_id, false);
+                }
+                else
+                {
+                    auto temp = std::make_pair(std::get<0>(edge), std::get<1>(edge));
+                    // We found an original edge, call our callback.
+                    // std::forward<Callback>(callback)(edge, smaller_edge_id);
+                    std::forward<Callback>(callback)(temp, smaller_edge_id);
+                    // compute the duration here and put it onto the duration stack using method similar to
+                    // annotatePath but smaller
+                    EdgeDuration duration = 10;
+                    duration_stack.emplace(duration);
+                    recursion_stack.emplace(edge);
+                }
             }
 
-            // unpacking_cache.CollectStats(std::make_pair(std::get<0>(edge), std::get<1>(edge)));
+        } else { // the edge has already been processed. this means that there are enough values in the durations stack
+            if (duration_stack.size() >= 2) {
+                std::cout << "I'm here!" << std::endl;
+                EdgeDuration edge1 = duration_stack.top(); duration_stack.pop(); recursion_stack.pop();
+                EdgeDuration edge2 = duration_stack.top(); duration_stack.pop(); recursion_stack.pop();
+                duration_stack.emplace(edge1 + edge2); recursion_stack.emplace(edge);
+            }
+            if (duration_stack.size() == 1) {
+            // if (duration_stack.size() == 1 && recursion_stack.size() == 1) {
+                std::cout << "No, I'm here! recursion_stack.size():" << recursion_stack.size() << " " << std::endl;
+
+                return duration_stack.top(); duration_stack.pop(); recursion_stack.pop();
+            }
         }
-        //-------------------- NORMAL BODY
-        // Look for an edge on the forward CH graph (.forward)
-        EdgeID smaller_edge_id = facade.FindSmallestEdge(
-            // edge.first, edge.second, [](const auto &data) { return data.forward; });
-            std::get<0>(edge),
-            std::get<1>(edge),
-            [](const auto &data) { return data.forward; });
-
-        // If we didn't find one there, the we might be looking at a part of the path that
-        // was found using the backward search.  Here, we flip the node order (.second, .first)
-        // and only consider edges with the `.backward` flag.
-        if (SPECIAL_EDGEID == smaller_edge_id)
-        {
-            // smaller_edge_id = facade.FindSmallestEdge(
-            //     edge.second, edge.first, [](const auto &data) { return data.backward; });
-            smaller_edge_id =
-                facade.FindSmallestEdge(std::get<1>(edge), std::get<0>(edge), [](const auto &data) {
-                    return data.backward;
-                });
-        }
-
-        // If we didn't find anything *still*, then something is broken and someone has
-        // called this function with bad values.
-        BOOST_ASSERT_MSG(smaller_edge_id != SPECIAL_EDGEID, "Invalid smaller edge ID");
-
-        const auto &data = facade.GetEdgeData(smaller_edge_id);
-        BOOST_ASSERT_MSG(data.weight != std::numeric_limits<EdgeWeight>::max(),
-                         "edge weight invalid");
-
-        // CHECK HAS THIS EDGE BEEN PROCESSED BEFORE?
-        // IS THE EDGE IN THE CACHE
-
-        // If the edge is a shortcut, we need to add the two halfs to the stack.
-        if (data.shortcut)
-        { // unpack
-            const NodeID middle_node_id = data.turn_id;
-            // Note the order here - we're adding these to a stack, so we
-            // want the first->middle to get visited before middle->second
-            // recursion_stack.emplace(middle_node_id, edge.second);
-            // recursion_stack.emplace(edge.first, middle_node_id);
-            recursion_stack.emplace(middle_node_id, std::get<1>(edge), std::get<2>(edge)); // flag tells us if we've already got the duration in the cache
-            recursion_stack.emplace(std::get<0>(edge), middle_node_id, std::get<2>(edge)); // flag tells us if we've already got the duration in the cache
-        }
-        else
-        {
-            auto temp = std::make_pair(std::get<0>(edge), std::get<1>(edge));
-            // We found an original edge, call our callback.
-            // std::forward<Callback>(callback)(edge, smaller_edge_id);
-            std::forward<Callback>(callback)(temp, smaller_edge_id);
-            // compute the duration here and put it onto the duration stack using method similar to
-            // annotatePath but smaller
-            EdgeDuration duration = 10;
-            duration_stack.emplace(duration);
-        }
-        //--------------- END OF NORMAL BODY
+        std::cout << "in loop duration_stack.size(): " << duration_stack.size() << " " << "in loop recursion_stack.size(): " << recursion_stack.size() << " recursion_stack.top(): " << std::get<0>(recursion_stack.top()) << "," << std::get<1>(recursion_stack.top()) << " " <<  std::endl;
     }
+
+    std::cout << "Do I ever get here?!" << std::endl; return 0;
 }
 
 template <typename RandomIter, typename FacadeT>
-void unpackPath(const FacadeT &facade,
+EdgeDuration unpackPath(const FacadeT &facade,
                 RandomIter packed_path_begin,
                 RandomIter packed_path_end,
                 const PhantomNodes &phantom_nodes,
@@ -389,9 +411,10 @@ void unpackPath(const FacadeT &facade,
     unpacked_edges.reserve(nodes_number);
 
     unpacked_nodes.push_back(*packed_path_begin);
+    EdgeDuration duration = 0;
     if (nodes_number > 1)
     {
-        unpackPath(facade,
+        duration = unpackPath(facade,
                    packed_path_begin,
                    packed_path_end,
                    [&](std::pair<NodeID, NodeID> &edge, const auto &edge_id) {
@@ -402,6 +425,7 @@ void unpackPath(const FacadeT &facade,
     }
 
     annotatePath(facade, phantom_nodes, unpacked_nodes, unpacked_edges, unpacked_path);
+    return duration;
 }
 
 /**

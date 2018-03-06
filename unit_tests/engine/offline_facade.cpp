@@ -393,7 +393,7 @@ inline void search(SearchEngineData<Algorithm> &engine_working_data,
 }
 
 template <typename RandomIter, typename FacadeT>
-void unpackPath(const FacadeT &facade,
+EdgeDuration unpackPath(const FacadeT &facade,
                 RandomIter packed_path_begin,
                 RandomIter packed_path_end,
                 const PhantomNodes &phantom_nodes,
