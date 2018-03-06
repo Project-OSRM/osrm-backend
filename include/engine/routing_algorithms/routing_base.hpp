@@ -398,6 +398,38 @@ InternalRouteResult extractRoute(const DataFacade<AlgorithmT> &facade,
     return raw_route_data;
 }
 
+template <typename FacadeT>
+EdgeDuration computeEdgeDuration(const FacadeT &facade, NodeID node_id, NodeID turn_id)
+{
+    // datastructures to hold extracted data from geometry
+    std::vector<EdgeWeight> duration_vector;
+    EdgeDuration total_duration = 0;
+
+    const auto get_segment_geometry = [&](const auto geometry_index) {
+        if (geometry_index.forward)
+        {
+            duration_vector = facade.GetUncompressedForwardDurations(geometry_index.id);
+        }
+        else
+        {
+            duration_vector = facade.GetUncompressedReverseDurations(geometry_index.id);
+        }
+    };
+
+    const auto geometry_index = facade.GetGeometryIndex(node_id);
+    get_segment_geometry(geometry_index);
+
+    for (std::vector<EdgeWeight>::iterator duration = duration_vector.begin();
+         duration != duration_vector.end();
+         duration++)
+        total_duration += *duration;
+
+    const auto turn_duration = facade.GetDurationPenaltyForEdgeID(turn_id);
+    total_duration += turn_duration;
+
+    return total_duration;
+}
+
 } // namespace routing_algorithms
 } // namespace engine
 } // namespace osrm

@@ -93,11 +93,11 @@ template <typename GraphT> class TarjanSCC
                     continue;
                 }
 
-                if (before_recursion) // (u,v)
+                if (before_recursion)
                 {
                     // Mark frame to handle tail of recursion
                     recursion_stack.emplace(currentFrame);
-                    processing_node_before_recursion[v] = false; // do we have component parts yet?
+                    processing_node_before_recursion[v] = false;
 
                     // Mark essential information for SCC
                     tarjan_node_list[v].index = index;
@@ -124,7 +124,7 @@ template <typename GraphT> class TarjanSCC
                         }
                     }
                 }
-                else // after recursion
+                else
                 {
                     processing_node_before_recursion[v] = true;
                     tarjan_node_list[u].low_link =

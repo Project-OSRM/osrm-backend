@@ -37,7 +37,10 @@ struct NodeBucket
     }
 
     // partial order comparison
-    bool operator<(const NodeBucket &rhs) const { return middle_node < rhs.middle_node; }
+    bool operator<(const NodeBucket &rhs) const
+    {
+        return std::tie(middle_node, column_index) < std::tie(rhs.middle_node, rhs.column_index);
+    }
 
     // functor for equal_range
     struct Compare
@@ -58,9 +61,7 @@ struct NodeBucket
     {
         unsigned column_idx;
 
-        ColumnCompare(unsigned column_idx)
-            : column_idx(column_idx){}; // ask Chau about sublime plugin for C++ compiler checks or
-                                        // warnings
+        ColumnCompare(unsigned column_idx) : column_idx(column_idx){};
 
         bool operator()(const NodeBucket &lhs, const NodeID &rhs) const // lowerbound
         {
