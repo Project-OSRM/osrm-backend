@@ -256,8 +256,8 @@ std::vector<EdgeDuration> manyToManySearch(SearchEngineData<ch::Algorithm> &engi
     // Find shortest paths from sources to all accessible nodes
     for (std::uint32_t row_idx = 0; row_idx < source_indices.size(); ++row_idx)
     {
-        const auto index = source_indices[row_idx];
-        const auto &source_phantom = phantom_nodes[index];
+        const auto source_index = source_indices[row_idx];
+        const auto &source_phantom = phantom_nodes[source_index];
 
         // Clear heap and insert source nodes
         engine_working_data.InitializeOrClearManyToManyThreadLocalStorage(
@@ -283,6 +283,14 @@ std::vector<EdgeDuration> manyToManySearch(SearchEngineData<ch::Algorithm> &engi
 
         for (unsigned column_idx = 0; column_idx < number_of_targets; ++column_idx)
         {
+            auto target_index = target_indices[column_idx];
+
+            if (source_index == target_index)
+            {
+                durations_table[row_idx * number_of_targets + column_idx] = 0;
+                continue;
+            }
+
             const auto &target_phantom = phantom_nodes[target_indices[column_idx]];
             std::cout << "source -- f: " << source_phantom.forward_segment_id.id
                       << " b: " << source_phantom.reverse_segment_id.id << std::endl;
@@ -327,8 +335,19 @@ std::vector<EdgeDuration> manyToManySearch(SearchEngineData<ch::Algorithm> &engi
                 std::cout << packed_leg[idx] << ", ";
             std::cout << std::endl;
 
-            // Step 4: Unpack the pack_path. Modify the unpackPath method to also calculate duration as it unpacks the path.
+            // Step 4: Unpack the pack_path. Modify the unpackPath method to also calculate duration
+            // as it unpacks the path.
 
+            // if (!packed_leg.empty())
+            // {
+            //     durations_table[row_idx * number_of_targets + column_idx] =
+            //     ch::calculateEBGNodeAnnotations(facade,
+            //                    packed_leg.begin(),
+            //                    packed_leg.end(),
+            //                    *engine_working_data.unpacking_cache.get());
+            // }
+
+            // Step 4: Unpack the pack_path
             std::vector<NodeID> unpacked_nodes;
             std::vector<EdgeID> unpacked_edges;
             if (!packed_leg.empty())
@@ -336,18 +355,17 @@ std::vector<EdgeDuration> manyToManySearch(SearchEngineData<ch::Algorithm> &engi
                 unpacked_nodes.reserve(packed_leg.size());
                 unpacked_edges.reserve(packed_leg.size());
                 unpacked_nodes.push_back(packed_leg.front());
-                durations_table[row_idx * number_of_targets + column_idx] = ch::unpackPath(facade,
+
+                ch::unpackPath(facade,
                                packed_leg.begin(),
                                packed_leg.end(),
-                               *engine_working_data.unpacking_cache.get(),
                                [&unpacked_nodes, &unpacked_edges](std::pair<NodeID, NodeID> &edge,
                                                                   const auto &edge_id) {
                                    BOOST_ASSERT(edge.first == unpacked_nodes.back());
                                    unpacked_nodes.push_back(edge.second);
                                    unpacked_edges.push_back(edge_id);
-                               }); // add duration extraction here?
+                               });
             }
-
             std::cout << "unpacked_nodes: ";
             for (unsigned idx = 0; idx < unpacked_nodes.size(); ++idx)
                 std::cout << unpacked_nodes[idx] << ", ";
@@ -356,7 +374,24 @@ std::vector<EdgeDuration> manyToManySearch(SearchEngineData<ch::Algorithm> &engi
             std::cout << "unpacked_edges: ";
             for (unsigned idx = 0; idx < unpacked_edges.size(); ++idx)
                 std::cout << unpacked_edges[idx] << ", ";
-            std::cout << std::endl; std::cout << std::endl;
+            std::cout << std::endl;
+            std::cout << std::endl;
+
+            PhantomNodes phantom_nodes_pair{source_phantom, target_phantom};
+
+            // Step 5: Use modified function to calculate durations of path (modelled after
+            // extractRoute)
+            InternalDurationsRouteResult result =
+                extractDurations(facade,
+                                 weights_table[row_idx * number_of_targets + column_idx],
+                                 phantom_nodes_pair,
+                                 unpacked_nodes,
+                                 unpacked_edges);
+
+            durations_table[row_idx * number_of_targets + column_idx] = result.duration();
+
+            std::cout << "path duration: " << result.duration() << std::endl;
+            // TAKE CARE OF THE START AND TARGET OFFSET FOR WHEN source_index == target_index
         }
 
         //           targets (columns) target_id = column_idx

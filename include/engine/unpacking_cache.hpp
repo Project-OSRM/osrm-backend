@@ -26,8 +26,8 @@ namespace engine
 {
 class UnpackingCache
 {
-    std::pair<NodeID, NodeID> edge;
-    std::unordered_map<std::pair<NodeID, NodeID>, EdgeDuration> cache;
+    std::unordered_map<std::pair<NodeID, NodeID>, EdgeDuration>
+        cache; // WAIT WHERE DO WE ADD THE DURATION!!?!?!?!
     int number_of_lookups;
     int number_of_finds;
     int number_of_misses;
@@ -91,19 +91,19 @@ class UnpackingCache
         //           << cache.size() << std::endl;
     }
 
-    void AddEdge(std::pair<NodeID, NodeID> edge)
+    void AddEdge(std::pair<NodeID, NodeID> edge, EdgeDuration duration)
     {
-        ++cache[edge];
-        std::cout << "Added edge: " << edge.first << ", " << edge.second << std::endl;
+        cache.insert({edge, duration});
+        std::cout << "Added edge to cache: " << edge.first << ", " << edge.second << std::endl;
+        GetDuration(edge);
     }
 
     EdgeDuration GetDuration(std::pair<NodeID, NodeID> edge)
     {
         EdgeDuration duration = cache[edge];
-        std::cout << "Duration is: " << duration << std::endl;
+        std::cout << "Duration from cache is: " << duration << std::endl;
         return duration;
     }
-
 };
 } // engine
 } // osrm

@@ -22,6 +22,16 @@ namespace osrm
 namespace engine
 {
 
+struct DurationData
+{
+    // duration that is traveled on the segment until the turn is reached,
+    // including a turn if the segment preceeds one.
+    EdgeWeight duration_until_turn;
+    // If this segment immediately preceeds a turn, then duration_of_turn
+    // will contain the duration of the turn.  Otherwise it will be 0.
+    EdgeWeight duration_of_turn;
+};
+
 struct PathData
 {
     // from edge-based-node id
@@ -65,6 +75,34 @@ struct PathData
 
     // Driving side of the turn
     bool is_left_hand_driving;
+};
+
+struct InternalDurationsRouteResult
+{
+    std::vector<std::vector<DurationData>> unpacked_path_segments;
+    std::vector<PhantomNodes> segment_end_coordinates;
+    std::vector<bool> source_traversed_in_reverse;
+    std::vector<bool> target_traversed_in_reverse;
+    EdgeWeight shortest_path_weight = INVALID_EDGE_WEIGHT;
+
+    bool is_valid() const { return INVALID_EDGE_WEIGHT != shortest_path_weight; }
+
+    bool is_via_leg(const std::size_t leg) const
+    {
+        return (leg != unpacked_path_segments.size() - 1);
+    }
+
+    // Note: includes duration for turns, except for at start and end node.
+    EdgeWeight duration() const
+    {
+        EdgeWeight ret{0};
+
+        for (const auto &leg : unpacked_path_segments)
+            for (const auto &segment : leg)
+                ret += segment.duration_until_turn;
+
+        return ret;
+    }
 };
 
 struct InternalRouteResult
