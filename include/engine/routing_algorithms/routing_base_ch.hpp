@@ -373,7 +373,6 @@ EdgeDuration calculateEBGNodeAnnotations(const DataFacade<Algorithm> &facade,
 
             if (unpacking_cache.IsEdgeInCache(std::make_pair(std::get<0>(edge), std::get<1>(edge))))
             {
-                std::cout << "Edge is in cache" << std::endl;
                 EdgeDuration duration = unpacking_cache.GetDuration(
                     std::make_pair(std::get<0>(edge), std::get<1>(edge)));
                 duration_stack.emplace(duration);
@@ -388,8 +387,7 @@ EdgeDuration calculateEBGNodeAnnotations(const DataFacade<Algorithm> &facade,
 
                 // If we didn't find one there, the we might be looking at a part of the path that
                 // was found using the backward search.  Here, we flip the node order (.second,
-                // .first)
-                // and only consider edges with the `.backward` flag.
+                // .first) and only consider edges with the `.backward` flag.
                 if (SPECIAL_EDGEID == smaller_edge_id)
                 {
                     smaller_edge_id =
@@ -415,7 +413,6 @@ EdgeDuration calculateEBGNodeAnnotations(const DataFacade<Algorithm> &facade,
                     recursion_stack.emplace(edge);
                     recursion_stack.emplace(middle_node_id, std::get<1>(edge), false);
                     recursion_stack.emplace(std::get<0>(edge), middle_node_id, false);
-                    std::cout << "after adding three edges to recursion stack" << std::endl;
                 }
                 else
                 {
@@ -423,7 +420,9 @@ EdgeDuration calculateEBGNodeAnnotations(const DataFacade<Algorithm> &facade,
                     // compute the duration here and put it onto the duration stack using method
                     // similar to
                     // annotatePath but smaller
-                    EdgeDuration duration = 10;
+                    EdgeDuration duration = computeEdgeDuration(facade, std::get<0>(edge), data.turn_id);
+                    // std::get<0>(edge) (need NodeID here to get geometry to get segments durtion vector)
+                    // data.turn_id to get const auto turn_duration = facade.GetDurationPenaltyForEdgeID(turn_id);
                     duration_stack.emplace(duration);
                     unpacking_cache.AddEdge(temp, duration);
                 }
@@ -434,7 +433,6 @@ EdgeDuration calculateEBGNodeAnnotations(const DataFacade<Algorithm> &facade,
           // durations stack
             BOOST_ASSERT_MSG(duration_stack.size() >= 2,
                              "There are not enough (at least 2) values on the duration stack");
-            std::cout << "I'm here!" << std::endl;
             EdgeDuration edge1 = duration_stack.top();
             duration_stack.pop();
             EdgeDuration edge2 = duration_stack.top();
