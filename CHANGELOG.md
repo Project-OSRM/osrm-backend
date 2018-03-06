@@ -1,3 +1,8 @@
+# 5.16.3
+  - Changes from 5.16.2:
+    - Performance
+      - FIXED: Speed up response time when lots of legs exist and geojson is used with `steps=true` [#4936](https://github.com/Project-OSRM/osrm-backend/pull/4936)
+
 # 5.16.2
   - Changes from 5.16.1:
     - Bugfixes:
