@@ -16,6 +16,8 @@
       - CHANGED #4845: Updated segregated intersection identification
     - Documentation:
       - ADDED: Add documentation about OSM node ids in nearest service response [#4436](https://github.com/Project-OSRM/osrm-backend/pull/4436)
+    - Performance
+      - FIXED: Speed up response time when lots of legs exist and geojson is used with `steps=true` [#4936](https://github.com/Project-OSRM/osrm-backend/pull/4936)
 
 
 # 5.16.0
