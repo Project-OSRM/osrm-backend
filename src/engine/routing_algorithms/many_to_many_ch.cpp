@@ -345,53 +345,9 @@ std::vector<EdgeDuration> manyToManySearch(SearchEngineData<ch::Algorithm> &engi
                                packed_leg.begin(),
                                packed_leg.end(),
                                *engine_working_data.unpacking_cache.get());
+
             }
 
-            // // Step 4: Unpack the pack_path
-            // std::vector<NodeID> unpacked_nodes;
-            // std::vector<EdgeID> unpacked_edges;
-            // if (!packed_leg.empty())
-            // {
-            //     unpacked_nodes.reserve(packed_leg.size());
-            //     unpacked_edges.reserve(packed_leg.size());
-            //     unpacked_nodes.push_back(packed_leg.front());
-
-            //     ch::unpackPath(facade,
-            //                    packed_leg.begin(),
-            //                    packed_leg.end(),
-            //                    [&unpacked_nodes, &unpacked_edges](std::pair<NodeID, NodeID> &edge,
-            //                                                       const auto &edge_id) {
-            //                        BOOST_ASSERT(edge.first == unpacked_nodes.back());
-            //                        unpacked_nodes.push_back(edge.second);
-            //                        unpacked_edges.push_back(edge_id);
-            //                    });
-            // }
-            // std::cout << "unpacked_nodes: ";
-            // for (unsigned idx = 0; idx < unpacked_nodes.size(); ++idx)
-            //     std::cout << unpacked_nodes[idx] << ", ";
-            // std::cout << std::endl;
-
-            // std::cout << "unpacked_edges: ";
-            // for (unsigned idx = 0; idx < unpacked_edges.size(); ++idx)
-            //     std::cout << unpacked_edges[idx] << ", ";
-            // std::cout << std::endl;
-            // std::cout << std::endl;
-
-            // PhantomNodes phantom_nodes_pair{source_phantom, target_phantom};
-
-            // // Step 5: Use modified function to calculate durations of path (modelled after
-            // // extractRoute)
-            // InternalDurationsRouteResult result =
-            //     extractDurations(facade,
-            //                      weights_table[row_idx * number_of_targets + column_idx],
-            //                      phantom_nodes_pair,
-            //                      unpacked_nodes,
-            //                      unpacked_edges);
-
-            // durations_table[row_idx * number_of_targets + column_idx] = result.duration();
-
-            // std::cout << "path duration: " << result.duration() << std::endl;
-            // TAKE CARE OF THE START AND TARGET OFFSET FOR WHEN source_index == target_index
         }
 
         //           targets (columns) target_id = column_idx
