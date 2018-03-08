@@ -11,7 +11,7 @@ Feature: Annotations
             """
 
         And the query options
-          | annotations | duration,speed,weight |
+          | annotations | duration,speed,weight,nodes |
 
         And the ways
             | nodes | highway     |
@@ -22,10 +22,10 @@ Feature: Annotations
             | lm    | residential |
 
         When I route I should get
-            | from | to | route    | a:speed     | a:weight |
-            | h    | j  | hk,jk,jk | 6.7:6.7     | 15:15    |
-            | i    | m  | il,lm,lm | 6.7:6.7     | 15:15    |
-            | j    | m  | jk,lm    | 6.7:6.7:6.7 | 15:15:15 |
+            | from | to | route    | a:speed     | a:weight | a:nodes |
+            | h    | j  | hk,jk,jk | 6.7:6.7     | 15:15    | 1:4:3   |
+            | i    | m  | il,lm,lm | 6.7:6.7     | 15:15    | 2:5:6   |
+            | j    | m  | jk,lm    | 6.7:6.7:6.7 | 15:15:15 | 3:4:5:6 |
 
 
     Scenario: There should be different forward/reverse datasources
@@ -81,5 +81,5 @@ Feature: Annotations
           | bearings    | 90,5;180,5                    |
 
         When I route I should get
-            | from | to | route    | a:speed   | a:distance              | a:duration | a:nodes |
-            | a    | c  | abc,abc  | 10:10:10  | 249.998641:299.931643:0 | 25:30:0    | 1:2:3   |
+            | from | to | route    | a:speed | a:distance            | a:duration | a:nodes |
+            | a    | c  | abc,abc  | 10:10   | 249.998641:299.931643 | 25:30      | 1:2:3   |

@@ -1,5 +1,6 @@
 # 5.16.3
   - Changes from 5.16.2:
+      - FIXED: Remove the last short annotation segment in `trimShortSegments` [#4946](https://github.com/Project-OSRM/osrm-backend/pull/4946)
     - Performance
       - FIXED: Speed up response time when lots of legs exist and geojson is used with `steps=true` [#4936](https://github.com/Project-OSRM/osrm-backend/pull/4936)
 
