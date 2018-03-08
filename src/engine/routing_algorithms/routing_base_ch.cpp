@@ -74,7 +74,6 @@ void retrievePackedPathFromSingleManyToManyHeap(
            search_heap.WasInserted(search_heap.GetData(current_node_id).parent))
     {
         current_node_id = search_heap.GetData(current_node_id).parent;
-        std::cout << "Im in here! current_node_id is " << current_node_id << std::endl;
         packed_path.emplace_back(current_node_id);
     }
 }

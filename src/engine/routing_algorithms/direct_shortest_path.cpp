@@ -45,6 +45,11 @@ InternalRouteResult directShortestPathSearch(SearchEngineData<ch::Algorithm> &en
     std::vector<NodeID> unpacked_nodes;
     std::vector<EdgeID> unpacked_edges;
 
+    std::cout << "Packed Path in direct_shortest_path: ";
+    for (auto i = packed_leg.begin(); i != packed_leg.end(); ++i)
+        std::cout << *i << " ";
+    std::cout << std::endl;
+
     if (!packed_leg.empty())
     {
         unpacked_nodes.reserve(packed_leg.size());

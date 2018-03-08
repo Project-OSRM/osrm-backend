@@ -419,7 +419,9 @@ EdgeDuration computeEdgeDuration(const FacadeT &facade, NodeID node_id, NodeID t
     const auto geometry_index = facade.GetGeometryIndex(node_id);
     get_segment_geometry(geometry_index);
 
-    for (std::vector<EdgeWeight>::iterator duration = duration_vector.begin(); duration != duration_vector.end(); duration++)
+    for (std::vector<EdgeWeight>::iterator duration = duration_vector.begin();
+         duration != duration_vector.end();
+         duration++)
         total_duration += *duration;
 
     const auto turn_duration = facade.GetDurationPenaltyForEdgeID(turn_id);

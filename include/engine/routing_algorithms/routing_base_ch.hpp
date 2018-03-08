@@ -418,19 +418,21 @@ EdgeDuration calculateEBGNodeAnnotations(const DataFacade<Algorithm> &facade,
                 {
                     auto temp = std::make_pair(std::get<0>(edge), std::get<1>(edge));
                     // compute the duration here and put it onto the duration stack using method
-                    // similar to
-                    // annotatePath but smaller
-                    EdgeDuration duration = computeEdgeDuration(facade, std::get<0>(edge), data.turn_id);
-                    // std::get<0>(edge) (need NodeID here to get geometry to get segments durtion vector)
-                    // data.turn_id to get const auto turn_duration = facade.GetDurationPenaltyForEdgeID(turn_id);
+                    // similar to annotatePath but smaller
+                    EdgeDuration duration =
+                        computeEdgeDuration(facade, std::get<0>(edge), data.turn_id);
+                    // std::get<0>(edge) (need NodeID here to get geometry to get segments durtion
+                    // vector)
+                    // data.turn_id to get const auto turn_duration =
+                    // facade.GetDurationPenaltyForEdgeID(turn_id);
                     duration_stack.emplace(duration);
                     unpacking_cache.AddEdge(temp, duration);
                 }
             }
         }
         else
-        { // the edge has already been processed. this means that there are enough values in the
-          // durations stack
+        {   // the edge has already been processed. this means that there are enough values in the
+            // durations stack
             BOOST_ASSERT_MSG(duration_stack.size() >= 2,
                              "There are not enough (at least 2) values on the duration stack");
             EdgeDuration edge1 = duration_stack.top();
@@ -442,7 +444,14 @@ EdgeDuration calculateEBGNodeAnnotations(const DataFacade<Algorithm> &facade,
             unpacking_cache.AddEdge(std::make_pair(std::get<0>(edge), std::get<1>(edge)), duration);
         }
     }
-    return duration_stack.top();
+
+    EdgeDuration total_duration = 0;
+    while (!duration_stack.empty())
+    {
+        total_duration += duration_stack.top();
+        duration_stack.pop();
+    }
+    return total_duration;
 }
 
 template <typename RandomIter, typename FacadeT>
@@ -452,6 +461,10 @@ void unpackPath(const FacadeT &facade,
                 const PhantomNodes &phantom_nodes,
                 std::vector<PathData> &unpacked_path)
 {
+    std::cout << "path from unpackPath: ";
+    for (auto i = packed_path_begin; i != packed_path_end; ++i)
+        std::cout << *i << " ";
+    std::cout << std::endl;
     const auto nodes_number = std::distance(packed_path_begin, packed_path_end);
     BOOST_ASSERT(nodes_number > 0);
 
