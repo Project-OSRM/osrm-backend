@@ -1,6 +1,6 @@
 -- Bicycle profile
 
-api_version = 2
+api_version = 4
 
 Set = require('lib/set')
 Sequence = require('lib/sequence')
@@ -566,7 +566,7 @@ function process_turn(profile, turn)
     turn.duration = normalized_angle * normalized_angle * profile.turn_penalty * profile.turn_bias
   end
 
-  if turn.direction_modifier == direction_modifier.uturn then
+  if turn.is_u_turn then
     turn.duration = turn.duration + profile.properties.u_turn_penalty
   end
 
