@@ -376,7 +376,7 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
         geometry.segment_offsets.pop_back();
         // remove all the last coordinates from the geometry
         geometry.locations.resize(geometry.segment_offsets.back() + 1);
-        geometry.annotations.resize(geometry.segment_offsets.back() + 1);
+        geometry.annotations.resize(geometry.segment_offsets.back());
         geometry.osm_node_ids.resize(geometry.segment_offsets.back() + 1);
 
         BOOST_ASSERT(geometry.segment_distances.back() <= 1);
@@ -434,6 +434,10 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
         last_step.maneuver.bearing_before = bearing;
         last_step.intersections.front().bearings.front() = util::bearing::reverse(bearing);
     }
+
+    BOOST_ASSERT(geometry.segment_offsets.back() + 1 == geometry.locations.size());
+    BOOST_ASSERT(geometry.segment_offsets.back() + 1 == geometry.osm_node_ids.size());
+    BOOST_ASSERT(geometry.segment_offsets.back() == geometry.annotations.size());
 
     BOOST_ASSERT(steps.back().geometry_end == geometry.locations.size());
 

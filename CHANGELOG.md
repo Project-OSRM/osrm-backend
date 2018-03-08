@@ -3,6 +3,7 @@
     - Bugfixes:
       - fix deduplication of route steps when waypoints are used [#4909](https://github.com/Project-OSRM/osrm-backend/issues/4909)
       - FIXED #4920: Use smaller range for U-turn angles in map-matching [#4920](https://github.com/Project-OSRM/osrm-backend/pull/4920)
+      - FIXED: Remove the last short annotation segment in `trimShortSegments`
     - Profile:
       - CHANGED #4929: Handle oneways in get_forward_backward_by_key [#4929](https://github.com/Project-OSRM/osrm-backend/pull/4929)
     - Guidance:
