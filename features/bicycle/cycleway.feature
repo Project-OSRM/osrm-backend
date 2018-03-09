@@ -51,6 +51,8 @@ Feature: Bike - Cycle tracks/lanes
             | motorway |          | opposite      |                | x    | x     |
             | motorway |          |               | track          | x    |       |
             | motorway |          |               | opposite       | x    | x     |
+            # motorways are implicit oneways and cycleway tracks next to oneways always
+            # follow the oneway direction (unless tagged as opposite)
             | motorway |          | track         | track          | x    |       |
             | motorway |          | opposite      | opposite       | x    | x     |
             | motorway |          | track         | opposite       | x    | x     |
