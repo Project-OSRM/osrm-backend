@@ -152,10 +152,10 @@ bool Engine<routing_algorithms::ch::Algorithm>::CheckCompatibility(const EngineC
 
         auto mem = storage::makeSharedMemory(barrier.data().region);
         auto layout = reinterpret_cast<storage::DataLayout *>(mem->Ptr());
-        std::cout << "layout->GetBlockSize(storage::DataLayout::CH_GRAPH_NODE_LIST): "
-                  << layout->GetBlockSize(storage::DataLayout::CH_GRAPH_NODE_LIST) << "\n"
-                  << "layout->GetBlockSize(storage::DataLayout::CH_GRAPH_EDGE_LIST): "
-                  << layout->GetBlockSize(storage::DataLayout::CH_GRAPH_EDGE_LIST) << std::endl;
+        // std::cout << "layout->GetBlockSize(storage::DataLayout::CH_GRAPH_NODE_LIST): "
+        //           << layout->GetBlockSize(storage::DataLayout::CH_GRAPH_NODE_LIST) << "\n"
+        //           << "layout->GetBlockSize(storage::DataLayout::CH_GRAPH_EDGE_LIST): "
+        //           << layout->GetBlockSize(storage::DataLayout::CH_GRAPH_EDGE_LIST) << std::endl;
         return layout->GetBlockSize(storage::DataLayout::CH_GRAPH_NODE_LIST) > 4;
         // &&
         // layout->GetBlockSize(storage::DataLayout::CH_GRAPH_EDGE_LIST) > 4;

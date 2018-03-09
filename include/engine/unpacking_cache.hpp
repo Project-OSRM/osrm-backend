@@ -94,14 +94,14 @@ class UnpackingCache
     void AddEdge(std::pair<NodeID, NodeID> edge, EdgeDuration duration)
     {
         cache.insert({edge, duration});
-        std::cout << "Added edge to cache: " << edge.first << ", " << edge.second << std::endl;
+        // std::cout << "Added edge to cache: " << edge.first << ", " << edge.second << std::endl;
         GetDuration(edge);
     }
 
     EdgeDuration GetDuration(std::pair<NodeID, NodeID> edge)
     {
         EdgeDuration duration = cache[edge];
-        std::cout << "Duration from cache is: " << duration << std::endl;
+        // std::cout << "Duration from cache is: " << duration << std::endl;
         return duration;
     }
 };

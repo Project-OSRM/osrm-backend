@@ -46,7 +46,6 @@ module.exports = function () {
         // setup output logging
         let logDir = path.join(this.LOGS_PATH, this.featureID);
         this.scenarioLogFile = path.join(logDir, this.scenarioID) + '.log';
-        console.log(this.scenarioLogFile);
         d3.queue(1)
             .defer(mkdirp, logDir)
             .defer(rimraf, this.scenarioLogFile)

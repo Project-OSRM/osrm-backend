@@ -297,35 +297,6 @@ void unpackPath(const DataFacade<Algorithm> &facade,
 // one is for the edges
 // one is for the associated durations
 
-// edge stack
-// --------------
-// get edge (u,v)
-// check if it's in the cache:
-// - if it's in the cache, put the value in the duration stack
-//     continue with the next element in the stack
-// - if it's not in the cache:
-//     did we process the child edge yet? yes if we have seen the edge before --> move to steps in
-//     duration stack steps
-//     if no, we need to determine child edges by executing the "normal body"
-
-// -------------------------------------------------------
-// duration computation using method similar to annotatePath but limited to single edge duration
-// caculations
-// --------------------------------------------------------
-
-// --------------------------------------------------------
-// duration computation if we have children (duration stack)
-// --------------------------------------------------------
-// 1. every time we see an edge we've seen before (u,v) (from a boolean flag maybe) <- this means
-// we've already processed it's child edges
-// 2. take the top two duration values and sum them up (pop them out of the stack)<-- this is the
-// duration value for (u,v)
-// 3. put this summed value, suv, into the cache
-// 4. push the summed value onto the top of this durations stack
-
-// (should have two values at the beginning of this process, and a total of one less at the end of
-// it)
-
 // ------------------------------
 // have we processed the edge before? tells us if we have values in the durations stack that we can
 // add up
@@ -360,8 +331,8 @@ EdgeDuration calculateEBGNodeAnnotations(const DataFacade<Algorithm> &facade,
     while (!recursion_stack.empty())
     {
         edge = recursion_stack.top();
-        std::cout << "Processing edge: " << std::get<0>(edge) << ", " << std::get<1>(edge)
-                  << std::endl;
+        // std::cout << "Processing edge: " << std::get<0>(edge) << ", " << std::get<1>(edge)
+        // << std::endl;
         recursion_stack.pop();
 
         // have we processed the edge before? tells us if we have values in the durations stack that
@@ -461,10 +432,10 @@ void unpackPath(const FacadeT &facade,
                 const PhantomNodes &phantom_nodes,
                 std::vector<PathData> &unpacked_path)
 {
-    std::cout << "path from unpackPath: ";
-    for (auto i = packed_path_begin; i != packed_path_end; ++i)
-        std::cout << *i << " ";
-    std::cout << std::endl;
+    // std::cout << "path from unpackPath: ";
+    // for (auto i = packed_path_begin; i != packed_path_end; ++i)
+    // std::cout << *i << " ";
+    // std::cout << std::endl;
     const auto nodes_number = std::distance(packed_path_begin, packed_path_end);
     BOOST_ASSERT(nodes_number > 0);
 
