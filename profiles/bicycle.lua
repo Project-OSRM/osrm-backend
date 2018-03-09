@@ -94,13 +94,16 @@ function setup()
     cycleway_tags = Set {
       'track',
       'lane',
-      'opposite',
-      'opposite_lane',
-      'opposite_track',
       'share_busway',
       'sharrow',
       'shared',
       'shared_lane'
+    },
+
+    opposite_cycleway_tags = Set {
+      'opposite',
+      'opposite_lane',
+      'opposite_track',
     },
 
     -- reduce the driving speed by 30% for unsafe roads
@@ -370,56 +373,36 @@ function handle_bicycle_tags(profile,way,result,data)
   -- cycleway
   local has_cycleway_forward = false
   local has_cycleway_backward = false
+  local is_oneway = result.forward_mode ~= mode.inaccessible and result.backward_mode ~= mode.inaccessible and not implied_oneway
 
   -- cycleways on normal roads
-  if result.forward_mode ~= mode.inaccessible and result.backward_mode ~= mode.inaccessible and not implied_oneway then
-
-    if cycleway and profile.cycleway_tags[cycleway] and string.find(cycleway, "opposite") ~= 1 then
-
+  if is_oneway then
+    if cycleway and profile.cycleway_tags[cycleway] then
       has_cycleway_backward = true
       has_cycleway_forward = true
-
     end
-    if (cycleway_right and profile.cycleway_tags[cycleway_right] and string.find(cycleway_right, "opposite") ~= 1)
-       or (cycleway_left and profile.cycleway_tags[cycleway_left] and string.find(cycleway_left, "opposite") == 1) then
-
+    if (cycleway_right and profile.cycleway_tags[cycleway_right]) or (cycleway_left and profile.opposite_cycleway_tags[cycleway_left]) then
       has_cycleway_forward = true
-
     end
-    if cycleway_left and profile.cycleway_tags[cycleway_left] and string.find(cycleway_left, "opposite") ~= 1
-       or (cycleway_right and profile.cycleway_tags[cycleway_right] and string.find(cycleway_right, "opposite") == 1) then
-
+    if (cycleway_left and profile.cycleway_tags[cycleway_left]) or (cycleway_right and profile.opposite_cycleway_tags[cycleway_right]) then
       has_cycleway_backward = true
-
     end
-
-  end
-
-  -- cycleways on one-way roads
-  if result.forward_mode == mode.inaccessible or result.backward_mode == mode.inaccessible or implied_oneway then
+  else
+    local has_twoway_cycleway = (cycleway and profile.opposite_cycleway_tags[cycleway]) or (cycleway_right and profile.opposite_cycleway_tags[cycleway_right]) or (cycleway_left and profile.opposite_cycleway_tags[cycleway_left])
+    local has_opposite_cycleway = (cycleway_left and profile.opposite_cycleway_tags[cycleway_left]) or (cycleway_right and profile.opposite_cycleway_tags[cycleway_right])
+    local has_oneway_cycleway = (cycleway and profile.cycleway_tags[cycleway]) or (cycleway_right and profile.cycleway_tags[cycleway_right]) or (cycleway_left and profile.cycleway_tags[cycleway_left])
 
     -- set cycleway even though it is an one-way if opposite is tagged
-    if (cycleway and profile.cycleway_tags[cycleway] and string.find(cycleway, "opposite") == 1)
-       or (cycleway_right and profile.cycleway_tags[cycleway_right] and string.find(cycleway_right, "opposite") == 1)
-       or (cycleway_left and profile.cycleway_tags[cycleway_left] and string.find(cycleway_left, "opposite") == 1)  then
+    if has_twoway_cycleway then
       has_cycleway_backward = true
       has_cycleway_forward = true
-    end
-    if (cycleway_left and profile.cycleway_tags[cycleway_left] and string.find(cycleway_left, "opposite") == 1)
-       or (cycleway_right and profile.cycleway_tags[cycleway_right] and string.find(cycleway_right, "opposite") == 1) then
-
+    elseif has_opposite_cycleway then
       if not reverse then
         has_cycleway_backward = true
       else
         has_cycleway_forward = true
       end
-
-    end
-    -- otherwise only tag forward direction
-    if (cycleway and profile.cycleway_tags[cycleway] and string.find(cycleway, "opposite") ~= 1)
-       or (cycleway_right and profile.cycleway_tags[cycleway_right] and string.find(cycleway_right, "opposite") ~= 1)
-       or (cycleway_left and profile.cycleway_tags[cycleway_left] and string.find(cycleway_left, "opposite") ~= 1) then
-
+    elseif has_oneway_cycleway then
       if not reverse then
         has_cycleway_forward = true
       else
