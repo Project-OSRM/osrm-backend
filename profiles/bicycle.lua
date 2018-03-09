@@ -10,7 +10,7 @@ limit = require("lib/maxspeed").limit
 
 function setup()
   local default_speed = 15
-  local walking_speed = 6
+  local walking_speed = 4
 
   return {
     properties = {
@@ -21,7 +21,8 @@ function setup()
       process_call_tagless_node     = false,
       max_speed_for_map_matching    = 110/3.6, -- kmph -> m/s
       use_turn_restrictions         = false,
-      continue_straight_at_waypoint = false
+      continue_straight_at_waypoint = false,
+      mode_change_penalty           = 30,
     },
 
     default_mode              = mode.cycling,
@@ -575,6 +576,9 @@ function process_turn(profile, turn)
   end
   if profile.properties.weight_name == 'cyclability' then
     turn.weight = turn.duration
+  end
+  if turn.source_mode == mode.cycling and turn.target_mode ~= mode.cycling then
+    turn.weight = turn.weight + profile.properties.mode_change_penalty
   end
 end
 
