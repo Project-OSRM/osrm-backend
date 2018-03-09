@@ -6,6 +6,7 @@
       - FIXED: Remove the last short annotation segment in `trimShortSegments`
     - Profile:
       - CHANGED #4929: Handle oneways in get_forward_backward_by_key [#4929](https://github.com/Project-OSRM/osrm-backend/pull/4929)
+      - FIXED #4943: Do not route against oneway road if there is a cycleway in the wrong direction; also review bike profile [#4943](https://github.com/Project-OSRM/osrm-backend/issues/4943)
     - Guidance:
       - CHANGED #4929: Don't use obviousness for links bifurcations [#4929](https://github.com/Project-OSRM/osrm-backend/pull/4929)
       - FIXED #4929: Adjust Straight direction modifiers of side roads in driveway handler [#4929](https://github.com/Project-OSRM/osrm-backend/pull/4929)
@@ -19,7 +20,6 @@
       - ADDED: Add documentation about OSM node ids in nearest service response [#4436](https://github.com/Project-OSRM/osrm-backend/pull/4436)
     - Performance
       - FIXED: Speed up response time when lots of legs exist and geojson is used with `steps=true` [#4936](https://github.com/Project-OSRM/osrm-backend/pull/4936)
-
 
 # 5.16.0
   - Changes from 5.15.2:
@@ -36,6 +36,7 @@
       - ADDED #4775: Exposes more information to the turn function, now being able to set turn weights with highway and access information of the turn as well as other roads at the intersection [#4775](https://github.com/Project-OSRM/osrm-backend/issues/4775)
       - FIXED #4763: Add support for non-numerical units in car profile for maxheight [#4763](https://github.com/Project-OSRM/osrm-backend/issues/4763)
       - ADDED #4872: Handling of `barrier=height_restrictor` nodes [#4872](https://github.com/Project-OSRM/osrm-backend/pull/4872)
+
 # 5.15.2
   - Changes from 5.15.1:
     - Features:
