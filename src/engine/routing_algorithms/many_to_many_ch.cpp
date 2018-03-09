@@ -61,6 +61,8 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
         {
             const NodeID to = facade.GetTarget(edge);
 
+            std::cout << "to: " << to << " from: " << node << std::endl;
+
             const auto edge_weight = data.weight;
             const auto edge_duration = data.duration;
 
@@ -98,6 +100,8 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
     const auto source_weight = query_heap.GetKey(node);
     const auto source_duration = query_heap.GetData(node).duration;
 
+    std::cout << "inside forwardRoutingStep " << std::endl;
+
     // Check if each encountered node has an entry
     const auto &bucket_list = std::equal_range(search_space_with_buckets.begin(),
                                                search_space_with_buckets.end(),
@@ -128,6 +132,11 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
                 std::cout << "current_weight: " << current_weight << "new_weight: " << new_weight
                           << std::endl;
                 current_duration = std::min(current_duration, new_duration);
+                std::cout << "adding to middle_nodes_table with loop weight: " << node << std::endl;
+                std::cout << "middle_nodes_table[row_idx * number_of_targets + column_idx] = "
+                             "middle_nodes_table["
+                          << row_idx << " * " << number_of_targets << " + " << column_idx
+                          << "] = " << node << std::endl;
                 middle_nodes_table[row_idx * number_of_targets + column_idx] = node;
             }
         }
@@ -135,6 +144,11 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
         {
             current_weight = new_weight;
             current_duration = new_duration;
+            std::cout << "adding to middle_nodes_table: " << node << std::endl;
+            std::cout << "middle_nodes_table[row_idx * number_of_targets + column_idx] = "
+                         "middle_nodes_table["
+                      << row_idx << " * " << number_of_targets << " + " << column_idx
+                      << "] = " << node << std::endl;
             middle_nodes_table[row_idx * number_of_targets + column_idx] = node;
         }
     }
@@ -193,13 +207,32 @@ retrievePackedPathFromSearchSpace(NodeID middle_node_id,
     std::vector<NodeID> packed_leg;
     NodeID current_node_id = middle_node_id;
 
+    BOOST_ASSERT_MSG(std::distance(bucket_list.first, bucket_list.second) == 1,
+                     "The pointers are not pointing to the same element.");
+
     while (bucket_list.first->parent_node != current_node_id &&
            bucket_list.first != search_space_with_buckets.end())
     {
+        std::cout << "current_node_id: " << current_node_id
+                  << " parent_node_id: " << bucket_list.first->parent_node << std::endl;
         current_node_id = bucket_list.first->parent_node;
 
         packed_leg.emplace_back(current_node_id);
 
+        std::cout << "buckets with middle node " << middle_node_id << ": ";
+        for (auto bucket = bucket_list.first; bucket != bucket_list.second; bucket++)
+        {
+            std::cout << "NodeBucket { middle_node: " << bucket->middle_node << " "
+                      << " parent_node: " << bucket->parent_node << " "
+                      << " column_index: " << bucket->column_index << " "
+                      << " weight: " << bucket->weight << " "
+                      << " duration: " << bucket->duration << " }\n";
+        }
+
+        std::cout << "distance: " << std::distance(bucket_list.first, bucket_list.second)
+                  << std::endl;
+        BOOST_ASSERT_MSG(std::distance(bucket_list.first, bucket_list.second) == 1,
+                         "The pointers are not pointing to the same element.");
         bucket_list = std::equal_range(search_space_with_buckets.begin(),
                                        search_space_with_buckets.end(),
                                        current_node_id,
@@ -305,15 +338,30 @@ std::vector<EdgeDuration> manyToManySearch(SearchEngineData<ch::Algorithm> &engi
                       << " b: " << target_phantom.reverse_segment_id.id << std::endl;
             NodeID middle_node_id = middle_nodes_table[row_idx * number_of_targets + column_idx];
 
+            if (middle_node_id == SPECIAL_NODEID)
+            {
+                durations_table[row_idx * number_of_targets + column_idx] = MAXIMAL_EDGE_DURATION;
+                continue;
+            }
+            std::cout << "SPECIAL_NODEID: " << SPECIAL_NODEID << std::endl;
+            std::cout << "middle_nodes_table[row_idx * number_of_targets + column_idx] = "
+                         "middle_nodes_table["
+                      << row_idx << " * " << number_of_targets << " + " << column_idx
+                      << "] = " << middle_nodes_table[row_idx * number_of_targets + column_idx]
+                      << std::endl;
             // Step 1: Find path from source to middle node
+            std::cout << "run retrievePackedPathFromSingleManyToManyHeap with middle node: "
+                      << middle_node_id << std::endl;
             std::vector<NodeID> packed_leg_from_source_to_middle;
             ch::retrievePackedPathFromSingleManyToManyHeap(
                 query_heap,
                 middle_node_id,
                 packed_leg_from_source_to_middle); // packed_leg_from_source_to_middle
+            std::cout << "exit retrievePackedPathFromSingleManyToManyHeap" << std::endl;
             std::reverse(packed_leg_from_source_to_middle.begin(),
                          packed_leg_from_source_to_middle.end());
-            std::cout << "packed_leg_from_source_to_middle: ";
+            std::cout << "reverse packed_leg_from_source_to_middle" << std::endl;
+            std::cout << "packed_leg_from_source_to_middle: " << std::endl;
             for (unsigned idx = 0; idx < packed_leg_from_source_to_middle.size(); ++idx)
                 std::cout << packed_leg_from_source_to_middle[idx] << ", ";
             std::cout << std::endl;

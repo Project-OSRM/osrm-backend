@@ -431,7 +431,7 @@ EdgeDuration calculateEBGNodeAnnotations(const DataFacade<Algorithm> &facade,
             }
         }
         else
-        {   // the edge has already been processed. this means that there are enough values in the
+        { // the edge has already been processed. this means that there are enough values in the
             // durations stack
             BOOST_ASSERT_MSG(duration_stack.size() >= 2,
                              "There are not enough (at least 2) values on the duration stack");
