@@ -101,4 +101,4 @@ Feature: Bicycle - Adds penalties to unsafe roads
             | highway  | cycleway    | forw    | backw   | forw_rate | backw_rate |
             | tertiary | shared_lane | 15 km/h | 15 km/h |       4.2 |        4.2 |
             | tertiary | lane        | 15 km/h | 15 km/h |       4.2 |        4.2 |
-            | tertiary | opposite    | 15 km/h | 15 km/h |       3.3 |        4.2 |
+            | tertiary | opposite    | 15 km/h | 15 km/h |       3.3 |        3.3 |

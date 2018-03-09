@@ -46,12 +46,12 @@ Feature: Bike - Cycle tracks/lanes
             | primary  |          |               |                | x    | x     |
             | motorway |          |               |                |      |       |
             | motorway | track    |               |                | x    |       |
-            | motorway | opposite |               |                |      | x     |
-            | motorway |          | track         |                |      | x     |
-            | motorway |          | opposite      |                |      | x     |
+            | motorway | opposite |               |                | x    | x     |
+            | motorway |          | track         |                | x    |       |
+            | motorway |          | opposite      |                | x    | x     |
             | motorway |          |               | track          | x    |       |
-            | motorway |          |               | opposite       | x    |       |
-            | motorway |          | track         | track          | x    | x     |
+            | motorway |          |               | opposite       | x    | x     |
+            | motorway |          | track         | track          | x    |       |
             | motorway |          | opposite      | opposite       | x    | x     |
             | motorway |          | track         | opposite       | x    | x     |
             | motorway |          | opposite      | track          | x    | x     |
