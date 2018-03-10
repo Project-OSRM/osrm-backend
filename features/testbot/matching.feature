@@ -718,3 +718,27 @@ Feature: Basic Map Matching
           | abe   | 1,0.99973,1.00027,0.99973,1.00027,1        | depart,turn left,arrive  | Ok   |
           | ahd   | 1,0.99973,1.00027,0.99973,1.00027,0.999461 | depart,turn right,arrive | Ok   |
           | ahe   | 1,0.99973,1.00027,0.99973,1.00027,1        | depart,turn left,arrive  | Ok   |
+
+    @match @testbot
+    Scenario: Regression test - duration aggregation for phantom nodes
+        Given the profile "testbot"
+        Given a grid size of 10 meters
+        Given the node map
+          """
+          a--1-b2cd-3--e
+          """
+        And the ways
+          | nodes |
+          | ab    |
+          | bcd   |
+          | de    |
+        Given the query options
+          | geometries | geojson |
+          | overview    | full |
+          | steps       | true |
+          | waypoints   | 0;2 |
+          | annotations | duration,weight |
+          | generate_hints | false |
+        When I match I should get
+          | trace | geometry                                             | a:duration | a:weight  | duration |
+          | 123   | 1.000135,1,1.000225,1,1.000315,1,1.00036,1,1.00045,1 | 1:1:0.5:1  | 1:1:0.5:1 | 3.5      |
