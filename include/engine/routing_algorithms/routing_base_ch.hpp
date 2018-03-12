@@ -312,6 +312,7 @@ EdgeDuration calculateEBGNodeAnnotations(const DataFacade<Algorithm> &facade,
                                          BidirectionalIterator packed_path_end,
                                          UnpackingCache &unpacking_cache)
 {
+    (void) unpacking_cache;
     // make sure we have at least something to unpack
     if (packed_path_begin == packed_path_end ||
         std::distance(packed_path_begin, packed_path_end) <= 1)
@@ -342,14 +343,14 @@ EdgeDuration calculateEBGNodeAnnotations(const DataFacade<Algorithm> &facade,
 
             std::get<2>(edge) = true; // mark that this edge will now be processed
 
-            if (unpacking_cache.IsEdgeInCache(std::make_pair(std::get<0>(edge), std::get<1>(edge))))
-            {
-                EdgeDuration duration = unpacking_cache.GetDuration(
-                    std::make_pair(std::get<0>(edge), std::get<1>(edge)));
-                duration_stack.emplace(duration);
-            }
-            else
-            {
+            // if (unpacking_cache.IsEdgeInCache(std::make_pair(std::get<0>(edge), std::get<1>(edge))))
+            // {
+            //     EdgeDuration duration = unpacking_cache.GetDuration(
+            //         std::make_pair(std::get<0>(edge), std::get<1>(edge)));
+            //     duration_stack.emplace(duration);
+            // }
+            // else
+            // {
                 // Look for an edge on the forward CH graph (.forward)
                 EdgeID smaller_edge_id =
                     facade.FindSmallestEdge(std::get<0>(edge),
@@ -387,7 +388,7 @@ EdgeDuration calculateEBGNodeAnnotations(const DataFacade<Algorithm> &facade,
                 }
                 else
                 {
-                    auto temp = std::make_pair(std::get<0>(edge), std::get<1>(edge));
+                    // auto temp = std::make_pair(std::get<0>(edge), std::get<1>(edge));
                     // compute the duration here and put it onto the duration stack using method
                     // similar to annotatePath but smaller
                     EdgeDuration duration =
@@ -397,9 +398,9 @@ EdgeDuration calculateEBGNodeAnnotations(const DataFacade<Algorithm> &facade,
                     // data.turn_id to get const auto turn_duration =
                     // facade.GetDurationPenaltyForEdgeID(turn_id);
                     duration_stack.emplace(duration);
-                    unpacking_cache.AddEdge(temp, duration);
+                    // unpacking_cache.AddEdge(temp, duration);
                 }
-            }
+            // }
         }
         else
         { // the edge has already been processed. this means that there are enough values in the
@@ -412,7 +413,7 @@ EdgeDuration calculateEBGNodeAnnotations(const DataFacade<Algorithm> &facade,
             duration_stack.pop();
             EdgeDuration duration = edge1 + edge2;
             duration_stack.emplace(duration);
-            unpacking_cache.AddEdge(std::make_pair(std::get<0>(edge), std::get<1>(edge)), duration);
+            // unpacking_cache.AddEdge(std::make_pair(std::get<0>(edge), std::get<1>(edge)), duration);
         }
     }
 
