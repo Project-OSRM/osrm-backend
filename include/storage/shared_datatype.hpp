@@ -1,6 +1,8 @@
 #ifndef SHARED_DATA_TYPE_HPP
 #define SHARED_DATA_TYPE_HPP
 
+#include "storage/block.hpp"
+
 #include "util/exception.hpp"
 #include "util/exception_utils.hpp"
 #include "util/log.hpp"
@@ -172,31 +174,23 @@ struct DataLayout
         NUM_BLOCKS
     };
 
-    std::array<std::uint64_t, NUM_BLOCKS> num_entries;
-    std::array<std::size_t, NUM_BLOCKS> entry_size;
-    std::array<std::size_t, NUM_BLOCKS> entry_align;
+    std::array<Block, NUM_BLOCKS> blocks;
 
-    DataLayout() : num_entries(), entry_size(), entry_align() {}
+    DataLayout() : blocks{} {}
 
-    template <typename T> inline void SetBlockSize(BlockID bid, uint64_t entries)
-    {
-        static_assert(sizeof(T) % alignof(T) == 0, "aligned T* can't be used as an array pointer");
-        num_entries[bid] = entries;
-        entry_size[bid] = sizeof(T);
-        entry_align[bid] = alignof(T);
-    }
+    inline void SetBlock(BlockID bid, Block block) { blocks[bid] = std::move(block); }
 
-    inline uint64_t GetBlockEntries(BlockID bid) const { return num_entries[bid]; }
+    inline uint64_t GetBlockEntries(BlockID bid) const { return blocks[bid].num_entries; }
 
-    inline uint64_t GetBlockSize(BlockID bid) const { return num_entries[bid] * entry_size[bid]; }
+    inline uint64_t GetBlockSize(BlockID bid) const { return blocks[bid].byte_size; }
 
     inline uint64_t GetSizeOfLayout() const
     {
         uint64_t result = 0;
         for (auto i = 0; i < NUM_BLOCKS; i++)
         {
-            BOOST_ASSERT(entry_align[i] > 0);
-            result += 2 * sizeof(CANARY) + GetBlockSize((BlockID)i) + entry_align[i];
+            BOOST_ASSERT(blocks[i].entry_align > 0);
+            result += 2 * sizeof(CANARY) + GetBlockSize((BlockID)i) + blocks[i].entry_align;
         }
         return result;
     }
@@ -217,13 +211,13 @@ struct DataLayout
         for (auto i = 0; i < bid; i++)
         {
             ptr = static_cast<char *>(ptr) + sizeof(CANARY);
-            ptr = align(entry_align[i], entry_size[i], ptr);
+            ptr = align(blocks[i].entry_align, blocks[i].entry_size, ptr);
             ptr = static_cast<char *>(ptr) + GetBlockSize((BlockID)i);
             ptr = static_cast<char *>(ptr) + sizeof(CANARY);
         }
 
         ptr = static_cast<char *>(ptr) + sizeof(CANARY);
-        ptr = align(entry_align[bid], entry_size[bid], ptr);
+        ptr = align(blocks[bid].entry_align, blocks[bid].entry_size, ptr);
         return ptr;
     }
 
