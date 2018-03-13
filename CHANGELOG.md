@@ -1,3 +1,8 @@
+# 5.16.4
+  - Changes from 5.16.3:
+    - Bugfixes:
+      - FIXED: Properly calculate annotations for speeds, durations and distances when waypoints are used with mapmatching [#4949](https://github.com/Project-OSRM/osrm-backend/pull/4949)
+
 # 5.16.3
   - Changes from 5.16.2:
       - FIXED: Remove the last short annotation segment in `trimShortSegments` [#4946](https://github.com/Project-OSRM/osrm-backend/pull/4946)
