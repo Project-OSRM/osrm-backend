@@ -603,7 +603,7 @@ Feature: Collapse
 
         When I route I should get
             | waypoints | route        | turns                           | locations |
-            | i,h       | in,road,road | depart,turn left,arrive         | i,f,h     |
+            | i,h       | in,road,road | depart,turn slight left,arrive  | i,c,h     |
             | a,d       | road,road    | depart,arrive                   | a,d       |
             | a,j       | road,out,out | depart,turn slight right,arrive | a,b,j     |
 
