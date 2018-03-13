@@ -787,6 +787,8 @@ Feature: Basic Map Matching
           | waypoints      | 0;3             |
           | annotations    | duration,weight |
           | generate_hints | false           |
+
+        # These should have the same weights/duration in either direction
         When I match I should get
           | trace | geometry             | a:duration | a:weight | duration |
           | 2345  | 1.00018,1,1.000315,1 | 2          | 2        | 2        |
