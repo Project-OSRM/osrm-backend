@@ -104,7 +104,7 @@ void SetClassNames(const std::vector<std::string> &class_names,
                 auto index = classes_map.size();
                 if (index > MAX_CLASS_INDEX)
                 {
-                    throw util::exception("Maximum number of classes if " +
+                    throw util::exception("Maximum number of classes is " +
                                           std::to_string(MAX_CLASS_INDEX + 1));
                 }
 
