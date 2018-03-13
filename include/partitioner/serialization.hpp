@@ -6,6 +6,7 @@
 #include "partitioner/multi_level_graph.hpp"
 #include "partitioner/multi_level_partition.hpp"
 
+#include "storage/block.hpp"
 #include "storage/io.hpp"
 #include "storage/serialization.hpp"
 #include "storage/shared_memory_ownership.hpp"
