@@ -781,15 +781,15 @@ Feature: Basic Map Matching
           | nodes |
           | ab    |
         Given the query options
-          | geometries     | geojson         |
-          | overview       | full            |
-          | steps          | true            |
-          | waypoints      | 0;3             |
-          | annotations    | duration,weight |
-          | generate_hints | false           |
+          | geometries     | geojson                  |
+          | overview       | full                     |
+          | steps          | true                     |
+          | waypoints      | 0;3                      |
+          | annotations    | duration,weight,distance |
+          | generate_hints | false                    |
 
         # These should have the same weights/duration in either direction
         When I match I should get
-          | trace | geometry             | a:duration | a:weight | duration |
-          | 2345  | 1.00018,1,1.000315,1 | 2          | 2        | 2        |
-          | 4321  | 1.00027,1,1.000135,1 | 2          | 2        | 2        |
+          | trace | geometry             | a:distance | a:duration | a:weight | duration |
+          | 2345  | 1.00018,1,1.000315,1 | 15.013264  | 1.5        | 1.5      | 1.5      |
+          | 4321  | 1.00027,1,1.000135,1 | 15.013264  | 1.5        | 1.5      | 1.5      |
