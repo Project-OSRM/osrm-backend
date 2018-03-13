@@ -345,20 +345,20 @@ Feature: Collapse
             | waypoints | route                | turns                        | locations |
             | a,l       | first,second,second  | depart,turn right,arrive     | a,b,l     |
             | a,d       | first,first          | depart,arrive                | a,d       |
-            | a,j       | first,second,second  | depart,turn left,arrive      | a,c,j     |
-            | a,h       | first,first,first    | depart,continue uturn,arrive | a,c,h     |
+            | a,j       | first,second,second  | depart,turn left,arrive      | a,b,j     |
+            | a,h       | first,first,first    | depart,continue uturn,arrive | a,b,h     |
             | e,j       | first,second,second  | depart,turn right,arrive     | e,f,j     |
             | e,h       | first,first          | depart,arrive                | e,h       |
-            | e,l       | first,second,second  | depart,turn left,arrive      | e,g,l     |
-            | e,d       | first,first,first    | depart,continue uturn,arrive | e,g,d     |
+            | e,l       | first,second,second  | depart,turn left,arrive      | e,f,l     |
+            | e,d       | first,first,first    | depart,continue uturn,arrive | e,f,d     |
             | k,h       | second,first,first   | depart,turn right,arrive     | k,g,h     |
             | k,l       | second,second        | depart,arrive                | k,l       |
-            | k,d       | second,first,first   | depart,turn left,arrive      | k,b,d     |
-            | k,j       | second,second,second | depart,continue uturn,arrive | k,b,j     |
+            | k,d       | second,first,first   | depart,turn left,arrive      | k,g,d     |
+            | k,j       | second,second,second | depart,continue uturn,arrive | k,g,j     |
             | i,d       | second,first,first   | depart,turn right,arrive     | i,c,d     |
             | i,j       | second,second        | depart,arrive                | i,j       |
-            | i,h       | second,first,first   | depart,turn left,arrive      | i,f,h     |
-            | i,l       | second,second,second | depart,continue uturn,arrive | i,f,l     |
+            | i,h       | second,first,first   | depart,turn left,arrive      | i,c,h     |
+            | i,l       | second,second,second | depart,continue uturn,arrive | i,c,l     |
 
     Scenario: Entering a segregated road
         Given the node map
