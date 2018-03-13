@@ -156,9 +156,15 @@ inline InternalRouteResult CollapseInternalRouteResult(const InternalRouteResult
                 // source phantom.  We need to add those values back so that the total
                 // edge weight is correct
                 last_segment[old_size].weight_until_turn +=
-                    leggy_result.segment_end_coordinates[i].source_phantom.forward_weight;
+
+                    leggy_result.source_traversed_in_reverse[i] ?
+                    leggy_result.segment_end_coordinates[i].source_phantom.reverse_weight :
+                    leggy_result.segment_end_coordinates[i].source_phantom.forward_weight ;
+
 
                 last_segment[old_size].duration_until_turn +=
+                    leggy_result.source_traversed_in_reverse[i] ?
+                    leggy_result.segment_end_coordinates[i].source_phantom.reverse_duration :
                     leggy_result.segment_end_coordinates[i].source_phantom.forward_duration;
             }
         }

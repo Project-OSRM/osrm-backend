@@ -720,12 +720,12 @@ Feature: Basic Map Matching
           | ahe   | 1,0.99973,1.00027,0.99973,1.00027,1        | depart,turn left,arrive  | Ok   |
 
     @match @testbot
-    Scenario: Regression test - duration aggregation for phantom nodes
+    Scenario: Regression test - add source phantoms properly (one phantom on one edge)
         Given the profile "testbot"
         Given a grid size of 10 meters
         Given the node map
           """
-          a--1-b2cd-3--e
+          a--1-b2-cd3--e
           """
         And the ways
           | nodes |
@@ -733,12 +733,61 @@ Feature: Basic Map Matching
           | bcd   |
           | de    |
         Given the query options
-          | geometries | geojson |
-          | overview    | full |
-          | steps       | true |
-          | waypoints   | 0;2 |
-          | annotations | duration,weight |
-          | generate_hints | false |
+          | geometries     | geojson         |
+          | overview       | full            |
+          | steps          | true            |
+          | waypoints      | 0;2             |
+          | annotations    | duration,weight |
+          | generate_hints | false           |
         When I match I should get
-          | trace | geometry                                             | a:duration | a:weight  | duration |
-          | 123   | 1.000135,1,1.000225,1,1.000315,1,1.00036,1,1.00045,1 | 1:1:0.5:1  | 1:1:0.5:1 | 3.5      |
+          | trace | geometry                                             | a:duration    | a:weight      | duration |
+          | 123   | 1.000135,1,1.000225,1,1.00036,1,1.000405,1,1.00045,1 | 1:1.5:0.5:0.5 | 1:1.5:0.5:0.5 | 3.5      |
+          | 321   | 1.00045,1,1.000405,1,1.00036,1,1.000225,1,1.000135,1 | 0.5:0.5:1.5:1 | 0.5:0.5:1.5:1 | 3.5      |
+
+    @match @testbot
+    Scenario: Regression test - add source phantom properly (two phantoms on one edge)
+        Given the profile "testbot"
+        Given a grid size of 10 meters
+        Given the node map
+          """
+          a--1-b23-c4--d
+          """
+        And the ways
+          | nodes |
+          | ab    |
+          | bc    |
+          | cd    |
+        Given the query options
+          | geometries     | geojson         |
+          | overview       | full            |
+          | steps          | true            |
+          | waypoints      | 0;3             |
+          | annotations    | duration,weight |
+          | generate_hints | false           |
+        When I match I should get
+          | trace | geometry                                   | a:duration | a:weight | duration |
+          | 1234  | 1.000135,1,1.000225,1,1.000405,1,1.00045,1 | 1:2:0.5    | 1:2:0.5  | 3.5      |
+          | 4321  | 1.00045,1,1.000405,1,1.000225,1,1.000135,1 | 0.5:2:1    | 0.5:2:1  | 3.5      |
+
+    @match @testbot
+    Scenario: Regression test - add source phantom properly (two phantoms on one edge)
+        Given the profile "testbot"
+        Given a grid size of 10 meters
+        Given the node map
+          """
+          a--12345-b
+          """
+        And the ways
+          | nodes |
+          | ab    |
+        Given the query options
+          | geometries     | geojson         |
+          | overview       | full            |
+          | steps          | true            |
+          | waypoints      | 0;3             |
+          | annotations    | duration,weight |
+          | generate_hints | false           |
+        When I match I should get
+          | trace | geometry             | a:duration | a:weight | duration |
+          | 2345  | 1.00018,1,1.000315,1 | 2          | 2        | 2        |
+          | 4321  | 1.00027,1,1.000135,1 | 2          | 2        | 2        |
