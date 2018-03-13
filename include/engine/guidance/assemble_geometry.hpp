@@ -12,6 +12,7 @@
 #include "util/coordinate_calculation.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <utility>
 #include <vector>
 
@@ -113,15 +114,39 @@ inline LegGeometry assembleGeometry(const datafacade::BaseDataFacade &facade,
     const std::vector<DatasourceID> forward_datasources =
         facade.GetUncompressedForwardDatasources(target_geometry_id);
 
-    // FIXME if source and target phantoms are on the same segment then duration and weight
-    // will be from one projected point till end of segment
-    // testbot/weight.feature:Start and target on the same and adjacent edge
-    geometry.annotations.emplace_back(LegGeometry::Annotation{
-        current_distance,
-        (reversed_target ? target_node.reverse_duration : target_node.forward_duration) / 10.,
-        (reversed_target ? target_node.reverse_weight : target_node.forward_weight) /
-            facade.GetWeightMultiplier(),
-        forward_datasources[target_node.fwd_segment_position]});
+    // This happens when the source/target are on the same edge-based-node
+    // There will be no entries in the unpacked path, thus no annotations.
+    // We will need to calculate the lone annotation by looking at the position
+    // of the source/target nodes, and calculating their differences.
+    if (geometry.annotations.empty())
+    {
+        auto duration =
+            std::abs(
+                (reversed_target ? target_node.reverse_duration : target_node.forward_duration) -
+                (reversed_source ? source_node.reverse_duration : source_node.forward_duration)) /
+            10.;
+        BOOST_ASSERT(duration >= 0);
+        auto weight =
+            std::abs((reversed_target ? target_node.reverse_weight : target_node.forward_weight) -
+                     (reversed_source ? source_node.reverse_weight : source_node.forward_weight)) /
+            facade.GetWeightMultiplier();
+        BOOST_ASSERT(weight >= 0);
+
+        geometry.annotations.emplace_back(
+            LegGeometry::Annotation{current_distance,
+                                    duration,
+                                    weight,
+                                    forward_datasources[target_node.fwd_segment_position]});
+    }
+    else
+    {
+        geometry.annotations.emplace_back(LegGeometry::Annotation{
+            current_distance,
+            (reversed_target ? target_node.reverse_duration : target_node.forward_duration) / 10.,
+            (reversed_target ? target_node.reverse_weight : target_node.forward_weight) /
+                facade.GetWeightMultiplier(),
+            forward_datasources[target_node.fwd_segment_position]});
+    }
 
     geometry.segment_offsets.push_back(geometry.locations.size());
     geometry.locations.push_back(target_node.location);
