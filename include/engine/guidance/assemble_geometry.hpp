@@ -114,9 +114,10 @@ inline LegGeometry assembleGeometry(const datafacade::BaseDataFacade &facade,
     const std::vector<DatasourceID> forward_datasources =
         facade.GetUncompressedForwardDatasources(target_geometry_id);
 
-    // FIXME if source and target phantoms are on the same segment then duration and weight
-    // will be from one projected point till end of segment
-    // testbot/weight.feature:Start and target on the same and adjacent edge
+    // This happens when the source/target are on the same edge-based-node
+    // There will be no entries in the unpacked path, thus no annotations.
+    // We will need to calculate the lone annotation by looking at the position
+    // of the source/target nodes, and calculating their differences.
     if (geometry.annotations.empty())
     {
         auto duration =
