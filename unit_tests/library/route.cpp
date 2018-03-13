@@ -412,7 +412,8 @@ BOOST_AUTO_TEST_CASE(speed_annotation_matches_duration_and_distance)
         auto speed = speeds[i].get<json::Number>().value;
         auto duration = durations[i].get<json::Number>().value;
         auto distance = distances[i].get<json::Number>().value;
-        BOOST_CHECK_EQUAL(speed, std::round(distance / duration * 10.) / 10.);
+        auto calc = std::round(distance / duration * 10.) / 10.;
+        BOOST_CHECK_EQUAL(speed, std::isnan(calc) ? 0 : calc);
     }
 }
 
