@@ -11,6 +11,7 @@ mapnik.register_default_input_plugins();
 mapnik.register_default_fonts()
 
 //console.log(mapnik.fonts());
+mapnik.registerFonts("/usr/share/fonts", { recurse: true });
 
 const find = (dir) =>
   fs.readdirSync(dir)
