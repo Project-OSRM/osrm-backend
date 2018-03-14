@@ -166,7 +166,7 @@ add_executable(osrm-partition src/tools/partition.cpp)
 add_executable(osrm-customize src/tools/customize.cpp)
 add_executable(osrm-contract src/tools/contract.cpp)
 add_executable(osrm-routed src/tools/routed.cpp $<TARGET_OBJECTS:SERVER> $<TARGET_OBJECTS:UTIL>)
-add_executable(osrm-datastore src/tools/store.cpp $<TARGET_OBJECTS:UTIL>)
+add_executable(osrm-datastore src/tools/store.cpp $<TARGET_OBJECTS:MICROTAR> $<TARGET_OBJECTS:UTIL>)
 add_library(osrm src/osrm/osrm.cpp $<TARGET_OBJECTS:ENGINE> $<TARGET_OBJECTS:UTIL> $<TARGET_OBJECTS:STORAGE>)
 add_library(osrm_contract src/osrm/contractor.cpp $<TARGET_OBJECTS:CONTRACTOR> $<TARGET_OBJECTS:UTIL>)
 add_library(osrm_extract src/osrm/extractor.cpp $<TARGET_OBJECTS:EXTRACTOR> $<TARGET_OBJECTS:UTIL>)
@@ -174,7 +174,7 @@ add_library(osrm_guidance $<TARGET_OBJECTS:GUIDANCE> $<TARGET_OBJECTS:UTIL>)
 add_library(osrm_partition src/osrm/partitioner.cpp $<TARGET_OBJECTS:PARTITIONER> $<TARGET_OBJECTS:UTIL>)
 add_library(osrm_customize src/osrm/customizer.cpp $<TARGET_OBJECTS:CUSTOMIZER> $<TARGET_OBJECTS:UTIL>)
 add_library(osrm_update $<TARGET_OBJECTS:UPDATER> $<TARGET_OBJECTS:UTIL>)
-add_library(osrm_store $<TARGET_OBJECTS:STORAGE> $<TARGET_OBJECTS:UTIL>)
+add_library(osrm_store $<TARGET_OBJECTS:STORAGE> $<TARGET_OBJECTS:MICROTAR> $<TARGET_OBJECTS:UTIL>)
 
 if(ENABLE_GOLD_LINKER)
     execute_process(COMMAND ${CMAKE_C_COMPILER} -fuse-ld=gold -Wl,--version ERROR_QUIET OUTPUT_VARIABLE LD_VERSION)
@@ -495,9 +495,6 @@ if(ENABLE_MASON)
   # note: we avoid calling find_package(Osmium ...) here to ensure that the
   # expat and bzip2 are used from mason rather than the system
   include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/include)
-
-  include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/rapidjson/include)
-
 else()
 
   find_package(Boost 1.54 REQUIRED COMPONENTS ${BOOST_COMPONENTS})
@@ -555,11 +552,14 @@ else()
   endif()
   find_package(Osmium REQUIRED COMPONENTS io)
   include_directories(SYSTEM ${OSMIUM_INCLUDE_DIR})
-
-  set(RAPIDJSON_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/rapidjson/include")
-  include_directories(SYSTEM ${RAPIDJSON_INCLUDE_DIR})
-
 endif()
+
+set(RAPIDJSON_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/rapidjson/include")
+include_directories(SYSTEM ${RAPIDJSON_INCLUDE_DIR})
+
+set(MICROTAR_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/microtar/src")
+include_directories(SYSTEM ${MICROTAR_INCLUDE_DIR})
+add_library(MICROTAR OBJECT "${CMAKE_CURRENT_SOURCE_DIR}/third_party/microtar/src/microtar.c")
 
 # prefix compilation with ccache by default if available and on clang or gcc
 if(ENABLE_CCACHE AND (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU"))
