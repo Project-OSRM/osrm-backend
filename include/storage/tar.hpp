@@ -22,43 +22,64 @@ class TarFileReader
   public:
     TarFileReader(const boost::filesystem::path &path) : path(path)
     {
-        mtar_open(&handle, path.c_str(), "r");
+        auto ret = mtar_open(&handle, path.c_str(), "r");
+        if (ret != MTAR_ESUCCESS)
+        {
+            throw util::exception(mtar_strerror(ret));
+        }
+    }
+
+    ~TarFileReader()
+    {
+        mtar_close(&handle);
     }
 
     template <typename T> T ReadOne(const std::string &name)
     {
-        mtar_header_t header;
-        mtar_find(&handle, name.c_str(), &header);
-        if (header.size != sizeof(T))
-        {
-            throw util::exception("Datatype size does not match file size.");
-        }
-
         T tmp;
-        mtar_read_data(&handle, reinterpret_cast<char *>(&tmp), header.size);
+        ReadInto(name, &tmp, 1);
         return tmp;
     }
 
     template <typename T>
-    void ReadInto(const std::string &name, T &data, const std::size_t number_of_entries)
+    void ReadInto(const std::string &name, std::vector<T> &data)
+    {
+        ReadInto(name, data.data(), data.size());
+    }
+
+    template <typename T>
+    void ReadInto(const std::string &name, T *data, const std::size_t number_of_entries)
     {
         mtar_header_t header;
-        mtar_find(&handle, name.c_str(), &header);
+        auto ret = mtar_find(&handle, name.c_str(), &header);
+        if (ret != MTAR_ESUCCESS)
+        {
+            throw util::exception(mtar_strerror(ret));
+        }
+
         if (header.size != sizeof(T) * number_of_entries)
         {
             throw util::exception("Datatype size does not match file size.");
         }
 
-        mtar_read_data(&handle, reinterpret_cast<char *>(&data), header.size);
+        ret = mtar_read_data(&handle, reinterpret_cast<char *>(data), header.size);
+        if (ret != MTAR_ESUCCESS)
+        {
+            throw util::exception(mtar_strerror(ret));
+        }
     }
 
     using TarEntry = std::tuple<std::string, std::size_t>;
     template <typename OutIter> void List(OutIter out)
     {
         mtar_header_t header;
-        while ((mtar_read_header(&handle, &header)) != MTAR_ENULLRECORD)
+        while (mtar_read_header(&handle, &header) != MTAR_ENULLRECORD)
         {
-            *out++ = std::tuple<std::string, std::uint64_t>(header.name, header.size);
+            if (header.type == MTAR_TREG)
+            {
+                *out++ = TarEntry {header.name, header.size};
+            }
+            mtar_next(&handle);
         }
     }
 
@@ -97,21 +118,43 @@ class TarFileWriter
   public:
     TarFileWriter(const boost::filesystem::path &path) : path(path)
     {
-        mtar_open(&handle, path.c_str(), "w");
+        auto ret = mtar_open(&handle, path.c_str(), "w");
+        if (ret != MTAR_ESUCCESS)
+            throw util::exception(mtar_strerror(ret));
         WriteFingerprint();
+    }
+
+    ~TarFileWriter()
+    {
+        mtar_finalize(&handle);
+        mtar_close(&handle);
     }
 
     template <typename T> void WriteOne(const std::string &name, const T &data)
     {
-        mtar_write_file_header(&handle, name.c_str(), name.size());
-        mtar_write_data(&handle, reinterpret_cast<const char *>(&data), sizeof(T));
+        WriteFrom(name, &data, 1);
     }
 
     template <typename T>
-    void WriteFrom(const std::string &name, const T &data, const std::size_t number_of_entries)
+    void WriteFrom(const std::string &name, const std::vector<T> &data)
     {
-        mtar_write_file_header(&handle, name.c_str(), name.size());
-        mtar_write_data(&handle, reinterpret_cast<const char *>(&data), number_of_entries * sizeof(T));
+        WriteFrom(name, data.data(), data.size());
+    }
+
+    template <typename T>
+    void WriteFrom(const std::string &name, const T *data, const std::size_t number_of_entries)
+    {
+        auto number_of_bytes = number_of_entries * sizeof(T);
+        auto ret = mtar_write_file_header(&handle, name.c_str(), number_of_bytes);
+        if (ret != MTAR_ESUCCESS)
+        {
+            throw util::exception(mtar_strerror(ret));
+        }
+        ret = mtar_write_data(&handle, reinterpret_cast<const char *>(data), number_of_bytes);
+        if (ret != MTAR_ESUCCESS)
+        {
+            throw util::exception(mtar_strerror(ret));
+        }
     }
 
   private:
