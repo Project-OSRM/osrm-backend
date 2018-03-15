@@ -67,6 +67,32 @@ namespace osrm
 {
 namespace storage
 {
+namespace
+{
+    template<typename OutIter>
+    void readBlocks(const boost::filesystem::path& path, OutIter out)
+    {
+        tar::FileReader reader(path, tar::FileReader::VerifyFingerprint);
+
+        std::vector<tar::FileReader::TarEntry> entries;
+        reader.List(std::back_inserter(entries));
+
+        for (const auto& entry : entries)
+        {
+            std::string name;
+            std::uint64_t size;
+            std::tie(name, size) = entry;
+
+            const auto name_end = name.rfind(".meta");
+            if (name_end == std::string::npos)
+            {
+                auto number_of_elements = reader.ReadElementCount64(name);
+                *out++ = NamedBlock {name, Block{number_of_elements, size}};
+            }
+        }
+
+    }
+}
 
 static constexpr std::size_t NUM_METRICS = 8;
 
@@ -572,35 +598,27 @@ void Storage::PopulateLayout(DataLayout &layout)
             layout.SetBlock(DataLayout::MLD_CELL_DURATIONS_7, make_block<char>(0));
         }
 
+        std::unordered_map<std::string, DataLayout::BlockID> name_to_block_id = {
+            {"/mld/multilevelgraph/node_array", DataLayout::MLD_GRAPH_NODE_LIST},
+            {"/mld/multilevelgraph/edge_array", DataLayout::MLD_GRAPH_EDGE_LIST},
+            {"/mld/multilevelgraph/node_to_edge_offset", DataLayout::MLD_GRAPH_NODE_TO_OFFSET},
+            {"/mld/multilevelgraph/connectivity_checksum", DataLayout::IGNORE_BLOCK},
+        };
+        std::vector<NamedBlock> blocks;
+
         if (boost::filesystem::exists(config.GetPath(".osrm.mldgr")))
         {
-            io::FileReader reader(config.GetPath(".osrm.mldgr"), io::FileReader::VerifyFingerprint);
-
-            const auto num_nodes =
-                reader.ReadVectorSize<customizer::MultiLevelEdgeBasedGraph::NodeArrayEntry>();
-            const auto num_edges =
-                reader.ReadVectorSize<customizer::MultiLevelEdgeBasedGraph::EdgeArrayEntry>();
-            const auto num_node_offsets =
-                reader.ReadVectorSize<customizer::MultiLevelEdgeBasedGraph::EdgeOffset>();
-
-            layout.SetBlock(
-                DataLayout::MLD_GRAPH_NODE_LIST,
-                make_block<customizer::MultiLevelEdgeBasedGraph::NodeArrayEntry>(num_nodes));
-            layout.SetBlock(
-                DataLayout::MLD_GRAPH_EDGE_LIST,
-                make_block<customizer::MultiLevelEdgeBasedGraph::EdgeArrayEntry>(num_edges));
-            layout.SetBlock(
-                DataLayout::MLD_GRAPH_NODE_TO_OFFSET,
-                make_block<customizer::MultiLevelEdgeBasedGraph::EdgeOffset>(num_node_offsets));
+            readBlocks(config.GetPath(".osrm.mldgr"), std::back_inserter(blocks));
         }
-        else
+
+        for (const auto& block : blocks)
         {
-            layout.SetBlock(DataLayout::MLD_GRAPH_NODE_LIST,
-                            make_block<customizer::MultiLevelEdgeBasedGraph::NodeArrayEntry>(0));
-            layout.SetBlock(DataLayout::MLD_GRAPH_EDGE_LIST,
-                            make_block<customizer::MultiLevelEdgeBasedGraph::EdgeArrayEntry>(0));
-            layout.SetBlock(DataLayout::MLD_GRAPH_NODE_TO_OFFSET,
-                            make_block<customizer::MultiLevelEdgeBasedGraph::EdgeOffset>(0));
+            auto id_iter = name_to_block_id.find(std::get<0>(block));
+            if (id_iter == name_to_block_id.end())
+            {
+                throw util::exception("Could not map " + std::get<0>(block) + " to a region in memory.");
+            }
+            layout.SetBlock(id_iter->second, std::get<1>(block));
         }
     }
 }

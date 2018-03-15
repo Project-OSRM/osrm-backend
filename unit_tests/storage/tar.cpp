@@ -10,7 +10,8 @@ using namespace osrm;
 
 BOOST_AUTO_TEST_CASE(list_tar_file)
 {
-    storage::tar::FileReader reader(TEST_DATA_DIR "/tar_test.tar");
+    storage::tar::FileReader reader(TEST_DATA_DIR "/tar_test.tar",
+                                    storage::tar::FileReader::HasNoFingerprint);
 
     std::vector<storage::tar::FileReader::TarEntry> file_list;
     reader.List(std::back_inserter(file_list));
@@ -29,7 +30,8 @@ BOOST_AUTO_TEST_CASE(list_tar_file)
 
 BOOST_AUTO_TEST_CASE(read_tar_file)
 {
-    storage::tar::FileReader reader(TEST_DATA_DIR "/tar_test.tar");
+    storage::tar::FileReader reader(TEST_DATA_DIR "/tar_test.tar",
+                                    storage::tar::FileReader::HasNoFingerprint);
 
     char result_0[4];
     reader.ReadInto("foo_1.txt", result_0, 4);
@@ -58,7 +60,7 @@ BOOST_AUTO_TEST_CASE(write_tar_file)
         0, 1, 2, 3, 4, 1ULL << 62, 0, 1 << 22, 0xFFFFFFFFFFFFFFFF};
 
     {
-        storage::tar::FileWriter writer(tmp_path);
+        storage::tar::FileWriter writer(tmp_path, storage::tar::FileWriter::GenerateFingerprint);
         writer.WriteOne("foo/single_64bit_integer", single_64bit_integer);
         writer.WriteOne("bar/single_32bit_integer", single_32bit_integer);
         writer.WriteElementCount64("baz/bla/64bit_vector", vector_64bit.size());
@@ -67,7 +69,7 @@ BOOST_AUTO_TEST_CASE(write_tar_file)
         writer.WriteFrom("32bit_vector", vector_32bit.data(), vector_32bit.size());
     }
 
-    storage::tar::FileReader reader(tmp_path);
+    storage::tar::FileReader reader(tmp_path, storage::tar::FileReader::VerifyFingerprint);
 
     BOOST_CHECK_EQUAL(reader.ReadOne<std::uint32_t>("bar/single_32bit_integer"),
                       single_32bit_integer);

@@ -40,6 +40,7 @@ inline void write(storage::tar::FileWriter &writer,
     storage::serialization::write(writer, name + "/node_array", graph.node_array);
     storage::serialization::write(writer, name + "/edge_array", graph.edge_array);
     storage::serialization::write(writer, name + "/node_to_edge_offset", graph.node_to_edge_offset);
+    writer.WriteElementCount64(name + "/connectivity_checksum", 1);
     writer.WriteOne(name + "/connectivity_checksum", connectivity_checksum);
 }
 

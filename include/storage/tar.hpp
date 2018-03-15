@@ -22,23 +22,31 @@ namespace tar
 class FileReader
 {
   public:
-    FileReader(const boost::filesystem::path &path) : path(path)
+    enum FingerprintFlag
+    {
+        VerifyFingerprint,
+        HasNoFingerprint
+    };
+
+    FileReader(const boost::filesystem::path &path, FingerprintFlag flag) : path(path)
     {
         auto ret = mtar_open(&handle, path.c_str(), "r");
         if (ret != MTAR_ESUCCESS)
         {
             throw util::exception(mtar_strerror(ret));
         }
+
+        if (flag == VerifyFingerprint)
+        {
+            ReadAndCheckFingerprint();
+        }
     }
 
-    ~FileReader()
-    {
-        mtar_close(&handle);
-    }
+    ~FileReader() { mtar_close(&handle); }
 
     std::uint64_t ReadElementCount64(const std::string &name)
     {
-        return ReadOne<std::uint64_t>(name + "_count");
+        return ReadOne<std::uint64_t>(name + ".meta");
     }
 
     template <typename T> T ReadOne(const std::string &name)
@@ -49,24 +57,25 @@ class FileReader
     }
 
     template <typename T>
-    void ReadInto(const std::string &name, T *data, const std::size_t number_of_entries)
+    void ReadInto(const std::string &name, T *data, const std::size_t number_of_elements)
     {
         mtar_header_t header;
         auto ret = mtar_find(&handle, name.c_str(), &header);
         if (ret != MTAR_ESUCCESS)
         {
-            throw util::exception(mtar_strerror(ret));
+            throw util::exception(name + ": " + mtar_strerror(ret));
         }
 
-        if (header.size != sizeof(T) * number_of_entries)
+        auto expected_size = sizeof(T) * number_of_elements;
+        if (header.size != expected_size)
         {
-            throw util::exception("Datatype size does not match file size.");
+            throw util::exception(name + ": Datatype size does not match file size.");
         }
 
         ret = mtar_read_data(&handle, reinterpret_cast<char *>(data), header.size);
         if (ret != MTAR_ESUCCESS)
         {
-            throw util::exception(mtar_strerror(ret));
+            throw util::exception(name + ": Failed reading data: " + mtar_strerror(ret));
         }
     }
 
@@ -78,7 +87,7 @@ class FileReader
         {
             if (header.type == MTAR_TREG)
             {
-                *out++ = TarEntry {header.name, header.size};
+                *out++ = TarEntry{header.name, header.size};
             }
             mtar_next(&handle);
         }
@@ -87,7 +96,7 @@ class FileReader
   private:
     bool ReadAndCheckFingerprint()
     {
-        auto loaded_fingerprint = ReadOne<util::FingerPrint>("osrm_fingerprint");
+        auto loaded_fingerprint = ReadOne<util::FingerPrint>("osrm_fingerprint.meta");
         const auto expected_fingerprint = util::FingerPrint::GetValid();
 
         if (!loaded_fingerprint.IsValid())
@@ -117,12 +126,22 @@ class FileReader
 class FileWriter
 {
   public:
-    FileWriter(const boost::filesystem::path &path) : path(path)
+    enum FingerprintFlag
+    {
+        GenerateFingerprint,
+        HasNoFingerprint
+    };
+
+    FileWriter(const boost::filesystem::path &path, FingerprintFlag flag) : path(path)
     {
         auto ret = mtar_open(&handle, path.c_str(), "w");
         if (ret != MTAR_ESUCCESS)
             throw util::exception(mtar_strerror(ret));
-        WriteFingerprint();
+
+        if (flag == GenerateFingerprint)
+        {
+            WriteFingerprint();
+        }
     }
 
     ~FileWriter()
@@ -133,7 +152,7 @@ class FileWriter
 
     void WriteElementCount64(const std::string &name, const std::uint64_t count)
     {
-        WriteOne(name + "_count", count);
+        WriteOne(name + ".meta", count);
     }
 
     template <typename T> void WriteOne(const std::string &name, const T &data)
@@ -142,18 +161,20 @@ class FileWriter
     }
 
     template <typename T>
-    void WriteFrom(const std::string &name, const T *data, const std::size_t number_of_entries)
+    void WriteFrom(const std::string &name, const T *data, const std::size_t number_of_elements)
     {
-        auto number_of_bytes = number_of_entries * sizeof(T);
+        auto number_of_bytes = number_of_elements * sizeof(T);
+
         auto ret = mtar_write_file_header(&handle, name.c_str(), number_of_bytes);
         if (ret != MTAR_ESUCCESS)
         {
-            throw util::exception(mtar_strerror(ret));
+            throw util::exception(name + ": Error reading header: " + mtar_strerror(ret));
         }
+
         ret = mtar_write_data(&handle, reinterpret_cast<const char *>(data), number_of_bytes);
         if (ret != MTAR_ESUCCESS)
         {
-            throw util::exception(mtar_strerror(ret));
+            throw util::exception(name + ": Error reading data : " + mtar_strerror(ret));
         }
     }
 
@@ -161,13 +182,12 @@ class FileWriter
     void WriteFingerprint()
     {
         const auto fingerprint = util::FingerPrint::GetValid();
-        WriteOne("osrm_fingerprint", fingerprint);
+        WriteOne("osrm_fingerprint.meta", fingerprint);
     }
 
     boost::filesystem::path path;
     mtar_t handle;
 };
-
 }
 }
 }

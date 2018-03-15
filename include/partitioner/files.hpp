@@ -24,7 +24,7 @@ inline void readGraph(const boost::filesystem::path &path,
                       std::is_same<customizer::MultiLevelEdgeBasedGraph, MultiLevelGraphT>::value,
                   "");
 
-    storage::tar::FileReader reader{path};
+    storage::tar::FileReader reader{path, storage::tar::FileReader::VerifyFingerprint};
 
     serialization::read(reader, "/mld/multilevelgraph", graph, connectivity_checksum);
 }
@@ -39,7 +39,7 @@ inline void writeGraph(const boost::filesystem::path &path,
                       std::is_same<customizer::MultiLevelEdgeBasedGraph, MultiLevelGraphT>::value,
                   "");
 
-    storage::tar::FileWriter writer{path};
+    storage::tar::FileWriter writer{path, storage::tar::FileWriter::GenerateFingerprint};
 
     serialization::write(writer, "/mld/multilevelgraph", graph, connectivity_checksum);
 }

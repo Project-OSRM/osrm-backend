@@ -14,9 +14,11 @@ namespace storage
 
 struct Block
 {
-    std::uint64_t num_entries;
-    std::uint64_t byte_size;
+    std::uint64_t num_entries = 0;
+    std::uint64_t byte_size = 0;
 };
+
+using NamedBlock = std::tuple<std::string, Block>;
 
 template <typename T> Block make_block(uint64_t num_entries)
 {
