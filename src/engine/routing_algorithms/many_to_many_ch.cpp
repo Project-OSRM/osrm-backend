@@ -61,6 +61,7 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
         {
             const NodeID to = facade.GetTarget(edge);
             const auto edge_weight = data.weight;
+
             const auto edge_duration = data.duration;
 
             BOOST_ASSERT_MSG(edge_weight > 0, "edge_weight invalid");
@@ -161,7 +162,8 @@ void backwardRoutingStep(const DataFacade<Algorithm> &facade,
 std::vector<NodeID>
 retrievePackedPathFromSearchSpace(NodeID middle_node_id,
                                   const unsigned column_idx,
-                                  std::vector<NodeBucket> &search_space_with_buckets)
+                                  std::vector<NodeBucket> &search_space_with_buckets,
+                                  std::vector<NodeID> &packed_leg)
 {
 
     //     [  0           1          2         3    ]
@@ -184,7 +186,7 @@ retrievePackedPathFromSearchSpace(NodeID middle_node_id,
                                         search_space_with_buckets.end(),
                                         middle_node_id,
                                         NodeBucket::ColumnCompare(column_idx));
-    std::vector<NodeID> packed_leg;
+
     NodeID current_node_id = middle_node_id;
 
     BOOST_ASSERT_MSG(std::distance(bucket_list.first, bucket_list.second) == 1,
@@ -223,6 +225,7 @@ std::vector<EdgeDuration> manyToManySearch(SearchEngineData<ch::Algorithm> &engi
     std::vector<NodeID> middle_nodes_table(number_of_entries, SPECIAL_NODEID);
 
     std::vector<NodeBucket> search_space_with_buckets;
+    std::vector<NodeID> packed_leg;
 
     engine_working_data.InitializeOrClearUnpackingCacheThreadLocalStorage();
 
@@ -259,7 +262,7 @@ std::vector<EdgeDuration> manyToManySearch(SearchEngineData<ch::Algorithm> &engi
         auto &query_heap = *(engine_working_data.many_to_many_heap);
         insertSourceInHeap(query_heap, source_phantom);
 
-        // Explore search spacekewl thanks
+        // Explore search space
         while (!query_heap.Empty())
         {
             forwardRoutingStep(facade,
@@ -290,33 +293,23 @@ std::vector<EdgeDuration> manyToManySearch(SearchEngineData<ch::Algorithm> &engi
                 durations_table[row_idx * number_of_targets + column_idx] = MAXIMAL_EDGE_DURATION;
                 continue;
             }
+
             // Step 1: Find path from source to middle node
-            std::vector<NodeID> packed_leg_from_source_to_middle;
             ch::retrievePackedPathFromSingleManyToManyHeap(
                 query_heap,
                 middle_node_id,
-                packed_leg_from_source_to_middle); // packed_leg_from_source_to_middle
-            std::reverse(packed_leg_from_source_to_middle.begin(),
-                         packed_leg_from_source_to_middle.end());
+                packed_leg); // packed_leg_from_source_to_middle
+            std::reverse(packed_leg.begin(), packed_leg.end());
+
+            packed_leg.push_back(middle_node_id);
 
             // Step 2: Find path from middle to target node
-            std::vector<NodeID> packed_leg_from_middle_to_target =
                 retrievePackedPathFromSearchSpace(
                     middle_node_id,
                     column_idx,
-                    search_space_with_buckets); // packed_leg_from_middle_to_target
+                    search_space_with_buckets,
+                    packed_leg); // packed_leg_from_middle_to_target
 
-            // Step 3: Join them together
-            std::vector<NodeID> packed_leg;
-            packed_leg.reserve(packed_leg_from_source_to_middle.size() + 1 +
-                               packed_leg_from_middle_to_target.size());
-            packed_leg.insert(packed_leg.end(),
-                              packed_leg_from_source_to_middle.begin(),
-                              packed_leg_from_source_to_middle.end());
-            packed_leg.push_back(middle_node_id);
-            packed_leg.insert(packed_leg.end(),
-                              packed_leg_from_middle_to_target.begin(),
-                              packed_leg_from_middle_to_target.end());
             if (packed_leg.size() == 1 && (needsLoopForward(source_phantom, target_phantom) ||
                                            needsLoopBackwards(source_phantom, target_phantom)))
             {
@@ -370,6 +363,7 @@ std::vector<EdgeDuration> manyToManySearch(SearchEngineData<ch::Algorithm> &engi
                     durations_table[row_idx * number_of_targets + column_idx] += offset;
                 }
             }
+            packed_leg.clear();
         }
     }
 

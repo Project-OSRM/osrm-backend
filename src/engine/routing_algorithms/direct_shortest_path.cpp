@@ -1,5 +1,4 @@
 #include "engine/routing_algorithms/direct_shortest_path.hpp"
-#include "engine/routing_algorithms/many_to_many.hpp"
 #include "engine/routing_algorithms/routing_base.hpp"
 #include "engine/routing_algorithms/routing_base_ch.hpp"
 #include "engine/routing_algorithms/routing_base_mld.hpp"
@@ -44,11 +43,6 @@ InternalRouteResult directShortestPathSearch(SearchEngineData<ch::Algorithm> &en
 
     std::vector<NodeID> unpacked_nodes;
     std::vector<EdgeID> unpacked_edges;
-
-    std::cout << "Packed Path in direct_shortest_path: ";
-    for (auto i = packed_leg.begin(); i != packed_leg.end(); ++i)
-        std::cout << *i << " ";
-    std::cout << std::endl;
 
     if (!packed_leg.empty())
     {
