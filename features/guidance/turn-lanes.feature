@@ -1243,4 +1243,4 @@ Feature: Turn Lane Guidance
 
         When I route I should get
             | waypoints | route             | turns                        | lanes                                                                                           | locations |
-            | a,f       | road1,road1,road1 | depart,continue uturn,arrive | ;left:false straight:true straight;right:false,left:true straight:false straight;right:false;;, | a,d,f     |
+            | a,f       | road1,road1,road1 | depart,continue uturn,arrive | ,;left:true straight:false straight;right:false;;, | a,c,f     |
