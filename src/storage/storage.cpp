@@ -494,59 +494,6 @@ void Storage::PopulateLayout(DataLayout &layout)
     }
 
     {
-        if (boost::filesystem::exists(config.GetPath(".osrm.cell_metrics")))
-        {
-            io::FileReader reader(config.GetPath(".osrm.cell_metrics"),
-                                  io::FileReader::VerifyFingerprint);
-            auto num_metric = reader.ReadElementCount64();
-
-            if (num_metric > NUM_METRICS)
-            {
-                throw util::exception("Only " + std::to_string(NUM_METRICS) +
-                                      " metrics are supported at the same time.");
-            }
-
-            for (const auto index : util::irange<std::size_t>(0, num_metric))
-            {
-                const auto weights_count = reader.ReadVectorSize<EdgeWeight>();
-                layout.SetBlock(
-                    static_cast<DataLayout::BlockID>(DataLayout::MLD_CELL_WEIGHTS_0 + index),
-                    make_block<EdgeWeight>(weights_count));
-                const auto durations_count = reader.ReadVectorSize<EdgeDuration>();
-                layout.SetBlock(
-                    static_cast<DataLayout::BlockID>(DataLayout::MLD_CELL_DURATIONS_0 + index),
-                    make_block<EdgeDuration>(durations_count));
-            }
-            for (const auto index : util::irange<std::size_t>(num_metric, NUM_METRICS))
-            {
-                layout.SetBlock(
-                    static_cast<DataLayout::BlockID>(DataLayout::MLD_CELL_WEIGHTS_0 + index),
-                    make_block<EdgeWeight>(0));
-                layout.SetBlock(
-                    static_cast<DataLayout::BlockID>(DataLayout::MLD_CELL_DURATIONS_0 + index),
-                    make_block<EdgeDuration>(0));
-            }
-        }
-        else
-        {
-            layout.SetBlock(DataLayout::MLD_CELL_WEIGHTS_0, make_block<char>(0));
-            layout.SetBlock(DataLayout::MLD_CELL_WEIGHTS_1, make_block<char>(0));
-            layout.SetBlock(DataLayout::MLD_CELL_WEIGHTS_2, make_block<char>(0));
-            layout.SetBlock(DataLayout::MLD_CELL_WEIGHTS_3, make_block<char>(0));
-            layout.SetBlock(DataLayout::MLD_CELL_WEIGHTS_4, make_block<char>(0));
-            layout.SetBlock(DataLayout::MLD_CELL_WEIGHTS_5, make_block<char>(0));
-            layout.SetBlock(DataLayout::MLD_CELL_WEIGHTS_6, make_block<char>(0));
-            layout.SetBlock(DataLayout::MLD_CELL_WEIGHTS_7, make_block<char>(0));
-            layout.SetBlock(DataLayout::MLD_CELL_DURATIONS_0, make_block<char>(0));
-            layout.SetBlock(DataLayout::MLD_CELL_DURATIONS_1, make_block<char>(0));
-            layout.SetBlock(DataLayout::MLD_CELL_DURATIONS_2, make_block<char>(0));
-            layout.SetBlock(DataLayout::MLD_CELL_DURATIONS_3, make_block<char>(0));
-            layout.SetBlock(DataLayout::MLD_CELL_DURATIONS_4, make_block<char>(0));
-            layout.SetBlock(DataLayout::MLD_CELL_DURATIONS_5, make_block<char>(0));
-            layout.SetBlock(DataLayout::MLD_CELL_DURATIONS_6, make_block<char>(0));
-            layout.SetBlock(DataLayout::MLD_CELL_DURATIONS_7, make_block<char>(0));
-        }
-
         std::unordered_map<std::string, DataLayout::BlockID> name_to_block_id = {
             {"/mld/multilevelgraph/node_array", DataLayout::MLD_GRAPH_NODE_LIST},
             {"/mld/multilevelgraph/edge_array", DataLayout::MLD_GRAPH_EDGE_LIST},
@@ -559,12 +506,29 @@ void Storage::PopulateLayout(DataLayout &layout)
             {"/mld/cellstorage/destination_boundary", DataLayout::MLD_CELL_DESTINATION_BOUNDARY},
             {"/mld/cellstorage/cells", DataLayout::MLD_CELLS},
             {"/mld/cellstorage/level_to_cell_offset", DataLayout::MLD_CELL_LEVEL_OFFSETS},
+            {"/mld/metrics/0/weights", DataLayout::MLD_CELL_WEIGHTS_0},
+            {"/mld/metrics/1/weights", DataLayout::MLD_CELL_WEIGHTS_1},
+            {"/mld/metrics/2/weights", DataLayout::MLD_CELL_WEIGHTS_2},
+            {"/mld/metrics/3/weights", DataLayout::MLD_CELL_WEIGHTS_3},
+            {"/mld/metrics/4/weights", DataLayout::MLD_CELL_WEIGHTS_4},
+            {"/mld/metrics/5/weights", DataLayout::MLD_CELL_WEIGHTS_5},
+            {"/mld/metrics/6/weights", DataLayout::MLD_CELL_WEIGHTS_6},
+            {"/mld/metrics/7/weights", DataLayout::MLD_CELL_WEIGHTS_7},
+            {"/mld/metrics/0/durations", DataLayout::MLD_CELL_DURATIONS_0},
+            {"/mld/metrics/1/durations", DataLayout::MLD_CELL_DURATIONS_1},
+            {"/mld/metrics/2/durations", DataLayout::MLD_CELL_DURATIONS_2},
+            {"/mld/metrics/3/durations", DataLayout::MLD_CELL_DURATIONS_3},
+            {"/mld/metrics/4/durations", DataLayout::MLD_CELL_DURATIONS_4},
+            {"/mld/metrics/5/durations", DataLayout::MLD_CELL_DURATIONS_5},
+            {"/mld/metrics/6/durations", DataLayout::MLD_CELL_DURATIONS_6},
+            {"/mld/metrics/7/durations", DataLayout::MLD_CELL_DURATIONS_7},
         };
         std::vector<NamedBlock> blocks;
 
         std::vector<boost::filesystem::path> optional_tar_files = {config.GetPath(".osrm.mldgr"),
                                                                    config.GetPath(".osrm.cells"),
-                                                                   config.GetPath(".osrm.partition")};
+                                                                   config.GetPath(".osrm.partition"),
+                                                                   config.GetPath(".osrm.cell_metrics")};
 
         for (const auto &path : optional_tar_files)
         {
