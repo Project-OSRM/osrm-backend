@@ -6,6 +6,7 @@
 #include "util/vector_view.hpp"
 
 #include "storage/io.hpp"
+#include "storage/tar.hpp"
 
 #include <cmath>
 #include <cstdint>
@@ -85,6 +86,34 @@ inline void write(storage::io::FileWriter &writer, const stxxl::vector<T> &vec)
     }
 }
 #endif
+
+template <typename T> void read(tar::FileReader &reader, const std::string& name, std::vector<T> &data)
+{
+    const auto count = reader.ReadElementCount64(name);
+    data.resize(count);
+    reader.ReadInto(name, data.data(), count);
+}
+
+template <typename T> void write(tar::FileWriter &writer, const std::string& name, const std::vector<T> &data)
+{
+    const auto count = data.size();
+    writer.WriteElementCount64(name, count);
+    writer.WriteFrom(name, data.data(), count);
+}
+
+template <typename T> void read(tar::FileReader &reader, const std::string& name, util::vector_view<T> &data)
+{
+    const auto count = reader.ReadElementCount64(name);
+    BOOST_ASSERT(data.size() == count);
+    reader.ReadInto(name, data.data(), count);
+}
+
+template <typename T> void write(tar::FileWriter &writer, const std::string& name, const util::vector_view<T> &data)
+{
+    const auto count = data.size();
+    writer.WriteElementCount64(name, count);
+    writer.WriteFrom(name, data.data(), count);
+}
 
 template <typename T> void read(io::FileReader &reader, std::vector<T> &data)
 {

@@ -16,11 +16,13 @@ namespace osrm
 {
 namespace storage
 {
+namespace tar
+{
 
-class TarFileReader
+class FileReader
 {
   public:
-    TarFileReader(const boost::filesystem::path &path) : path(path)
+    FileReader(const boost::filesystem::path &path) : path(path)
     {
         auto ret = mtar_open(&handle, path.c_str(), "r");
         if (ret != MTAR_ESUCCESS)
@@ -29,9 +31,14 @@ class TarFileReader
         }
     }
 
-    ~TarFileReader()
+    ~FileReader()
     {
         mtar_close(&handle);
+    }
+
+    std::uint64_t ReadElementCount64(const std::string &name)
+    {
+        return ReadOne<std::uint64_t>(name + "_count");
     }
 
     template <typename T> T ReadOne(const std::string &name)
@@ -39,12 +46,6 @@ class TarFileReader
         T tmp;
         ReadInto(name, &tmp, 1);
         return tmp;
-    }
-
-    template <typename T>
-    void ReadInto(const std::string &name, std::vector<T> &data)
-    {
-        ReadInto(name, data.data(), data.size());
     }
 
     template <typename T>
@@ -113,10 +114,10 @@ class TarFileReader
     mtar_t handle;
 };
 
-class TarFileWriter
+class FileWriter
 {
   public:
-    TarFileWriter(const boost::filesystem::path &path) : path(path)
+    FileWriter(const boost::filesystem::path &path) : path(path)
     {
         auto ret = mtar_open(&handle, path.c_str(), "w");
         if (ret != MTAR_ESUCCESS)
@@ -124,21 +125,20 @@ class TarFileWriter
         WriteFingerprint();
     }
 
-    ~TarFileWriter()
+    ~FileWriter()
     {
         mtar_finalize(&handle);
         mtar_close(&handle);
     }
 
+    void WriteElementCount64(const std::string &name, const std::uint64_t count)
+    {
+        WriteOne(name + "_count", count);
+    }
+
     template <typename T> void WriteOne(const std::string &name, const T &data)
     {
         WriteFrom(name, &data, 1);
-    }
-
-    template <typename T>
-    void WriteFrom(const std::string &name, const std::vector<T> &data)
-    {
-        WriteFrom(name, data.data(), data.size());
     }
 
     template <typename T>
@@ -167,6 +167,8 @@ class TarFileWriter
     boost::filesystem::path path;
     mtar_t handle;
 };
+
+}
 }
 }
 
