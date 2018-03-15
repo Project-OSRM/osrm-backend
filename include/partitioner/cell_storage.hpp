@@ -38,9 +38,12 @@ using CellStorageView = detail::CellStorageImpl<storage::Ownership::View>;
 namespace serialization
 {
 template <storage::Ownership Ownership>
-inline void read(storage::io::FileReader &reader, detail::CellStorageImpl<Ownership> &storage);
+inline void read(storage::tar::FileReader &reader,
+                 const std::string &name,
+                 detail::CellStorageImpl<Ownership> &storage);
 template <storage::Ownership Ownership>
-inline void write(storage::io::FileWriter &writer,
+inline void write(storage::tar::FileWriter &writer,
+                  const std::string &name,
                   const detail::CellStorageImpl<Ownership> &storage);
 }
 
@@ -92,10 +95,9 @@ template <storage::Ownership Ownership> class CellStorageImpl
                                                              WeightValueT,
                                                              boost::random_access_traversal_tag>
         {
-            typedef boost::iterator_facade<ColumnIterator,
-                                           WeightValueT,
-                                           boost::random_access_traversal_tag>
-                base_t;
+            typedef boost::
+                iterator_facade<ColumnIterator, WeightValueT, boost::random_access_traversal_tag>
+                    base_t;
 
           public:
             typedef typename base_t::value_type value_type;
@@ -180,8 +182,8 @@ template <storage::Ownership Ownership> class CellStorageImpl
                  const NodeID *const all_destinations)
             : num_source_nodes{data.num_source_nodes},
               num_destination_nodes{data.num_destination_nodes},
-              weights{all_weights + data.value_offset},
-              durations{all_durations + data.value_offset},
+              weights{all_weights + data.value_offset}, durations{all_durations +
+                                                                  data.value_offset},
               source_boundary{all_sources + data.source_boundary_offset},
               destination_boundary{all_destinations + data.destination_boundary_offset}
         {
@@ -390,9 +392,11 @@ template <storage::Ownership Ownership> class CellStorageImpl
                     destination_boundary.data()};
     }
 
-    friend void serialization::read<Ownership>(storage::io::FileReader &reader,
+    friend void serialization::read<Ownership>(storage::tar::FileReader &reader,
+                                               const std::string &name,
                                                detail::CellStorageImpl<Ownership> &storage);
-    friend void serialization::write<Ownership>(storage::io::FileWriter &writer,
+    friend void serialization::write<Ownership>(storage::tar::FileWriter &writer,
+                                                const std::string &name,
                                                 const detail::CellStorageImpl<Ownership> &storage);
 
   private:

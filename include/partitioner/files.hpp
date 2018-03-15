@@ -52,10 +52,10 @@ inline void readPartition(const boost::filesystem::path &path, MultiLevelPartiti
                       std::is_same<MultiLevelPartition, MultiLevelPartitionT>::value,
                   "");
 
-    const auto fingerprint = storage::io::FileReader::VerifyFingerprint;
-    storage::io::FileReader reader{path, fingerprint};
+    const auto fingerprint = storage::tar::FileReader::VerifyFingerprint;
+    storage::tar::FileReader reader{path, fingerprint};
 
-    serialization::read(reader, mlp);
+    serialization::read(reader, "/mld/multilevelpartition", mlp);
 }
 
 // writes .osrm.partition file
@@ -66,10 +66,10 @@ inline void writePartition(const boost::filesystem::path &path, const MultiLevel
                       std::is_same<MultiLevelPartition, MultiLevelPartitionT>::value,
                   "");
 
-    const auto fingerprint = storage::io::FileWriter::GenerateFingerprint;
-    storage::io::FileWriter writer{path, fingerprint};
+    const auto fingerprint = storage::tar::FileWriter::GenerateFingerprint;
+    storage::tar::FileWriter writer{path, fingerprint};
 
-    serialization::write(writer, mlp);
+    serialization::write(writer, "/mld/multilevelpartition", mlp);
 }
 
 // reads .osrm.cells file
@@ -80,10 +80,10 @@ inline void readCells(const boost::filesystem::path &path, CellStorageT &storage
                       std::is_same<CellStorage, CellStorageT>::value,
                   "");
 
-    const auto fingerprint = storage::io::FileReader::VerifyFingerprint;
-    storage::io::FileReader reader{path, fingerprint};
+    const auto fingerprint = storage::tar::FileReader::VerifyFingerprint;
+    storage::tar::FileReader reader{path, fingerprint};
 
-    serialization::read(reader, storage);
+    serialization::read(reader, "/mld/cellstorage", storage);
 }
 
 // writes .osrm.cells file
@@ -94,10 +94,10 @@ inline void writeCells(const boost::filesystem::path &path, CellStorageT &storag
                       std::is_same<CellStorage, CellStorageT>::value,
                   "");
 
-    const auto fingerprint = storage::io::FileWriter::GenerateFingerprint;
-    storage::io::FileWriter writer{path, fingerprint};
+    const auto fingerprint = storage::tar::FileWriter::GenerateFingerprint;
+    storage::tar::FileWriter writer{path, fingerprint};
 
-    serialization::write(writer, storage);
+    serialization::write(writer, "/mld/cellstorage", storage);
 }
 }
 }

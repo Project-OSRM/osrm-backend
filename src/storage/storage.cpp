@@ -69,29 +69,27 @@ namespace storage
 {
 namespace
 {
-    template<typename OutIter>
-    void readBlocks(const boost::filesystem::path& path, OutIter out)
+template <typename OutIter> void readBlocks(const boost::filesystem::path &path, OutIter out)
+{
+    tar::FileReader reader(path, tar::FileReader::VerifyFingerprint);
+
+    std::vector<tar::FileReader::TarEntry> entries;
+    reader.List(std::back_inserter(entries));
+
+    for (const auto &entry : entries)
     {
-        tar::FileReader reader(path, tar::FileReader::VerifyFingerprint);
+        std::string name;
+        std::uint64_t size;
+        std::tie(name, size) = entry;
 
-        std::vector<tar::FileReader::TarEntry> entries;
-        reader.List(std::back_inserter(entries));
-
-        for (const auto& entry : entries)
+        const auto name_end = name.rfind(".meta");
+        if (name_end == std::string::npos)
         {
-            std::string name;
-            std::uint64_t size;
-            std::tie(name, size) = entry;
-
-            const auto name_end = name.rfind(".meta");
-            if (name_end == std::string::npos)
-            {
-                auto number_of_elements = reader.ReadElementCount64(name);
-                *out++ = NamedBlock {name, Block{number_of_elements, size}};
-            }
+            auto number_of_elements = reader.ReadElementCount64(name);
+            *out++ = NamedBlock{name, Block{number_of_elements, size}};
         }
-
     }
+}
 }
 
 static constexpr std::size_t NUM_METRICS = 8;
@@ -496,55 +494,6 @@ void Storage::PopulateLayout(DataLayout &layout)
     }
 
     {
-        // Loading MLD Data
-        if (boost::filesystem::exists(config.GetPath(".osrm.partition")))
-        {
-            io::FileReader reader(config.GetPath(".osrm.partition"),
-                                  io::FileReader::VerifyFingerprint);
-
-            reader.Skip<partitioner::MultiLevelPartition::LevelData>(1);
-            layout.SetBlock(DataLayout::MLD_LEVEL_DATA,
-                            make_block<partitioner::MultiLevelPartition::LevelData>(1));
-            const auto partition_entries_count = reader.ReadVectorSize<PartitionID>();
-            layout.SetBlock(DataLayout::MLD_PARTITION,
-                            make_block<PartitionID>(partition_entries_count));
-            const auto children_entries_count = reader.ReadVectorSize<CellID>();
-            layout.SetBlock(DataLayout::MLD_CELL_TO_CHILDREN,
-                            make_block<CellID>(children_entries_count));
-        }
-        else
-        {
-            layout.SetBlock(DataLayout::MLD_LEVEL_DATA,
-                            make_block<partitioner::MultiLevelPartition::LevelData>(0));
-            layout.SetBlock(DataLayout::MLD_PARTITION, make_block<PartitionID>(0));
-            layout.SetBlock(DataLayout::MLD_CELL_TO_CHILDREN, make_block<CellID>(0));
-        }
-
-        if (boost::filesystem::exists(config.GetPath(".osrm.cells")))
-        {
-            io::FileReader reader(config.GetPath(".osrm.cells"), io::FileReader::VerifyFingerprint);
-
-            const auto source_node_count = reader.ReadVectorSize<NodeID>();
-            layout.SetBlock(DataLayout::MLD_CELL_SOURCE_BOUNDARY,
-                            make_block<NodeID>(source_node_count));
-            const auto destination_node_count = reader.ReadVectorSize<NodeID>();
-            layout.SetBlock(DataLayout::MLD_CELL_DESTINATION_BOUNDARY,
-                            make_block<NodeID>(destination_node_count));
-            const auto cell_count = reader.ReadVectorSize<partitioner::CellStorage::CellData>();
-            layout.SetBlock(DataLayout::MLD_CELLS,
-                            make_block<partitioner::CellStorage::CellData>(cell_count));
-            const auto level_offsets_count = reader.ReadVectorSize<std::uint64_t>();
-            layout.SetBlock(DataLayout::MLD_CELL_LEVEL_OFFSETS,
-                            make_block<std::uint64_t>(level_offsets_count));
-        }
-        else
-        {
-            layout.SetBlock(DataLayout::MLD_CELL_SOURCE_BOUNDARY, make_block<char>(0));
-            layout.SetBlock(DataLayout::MLD_CELL_DESTINATION_BOUNDARY, make_block<char>(0));
-            layout.SetBlock(DataLayout::MLD_CELLS, make_block<char>(0));
-            layout.SetBlock(DataLayout::MLD_CELL_LEVEL_OFFSETS, make_block<char>(0));
-        }
-
         if (boost::filesystem::exists(config.GetPath(".osrm.cell_metrics")))
         {
             io::FileReader reader(config.GetPath(".osrm.cell_metrics"),
@@ -603,20 +552,35 @@ void Storage::PopulateLayout(DataLayout &layout)
             {"/mld/multilevelgraph/edge_array", DataLayout::MLD_GRAPH_EDGE_LIST},
             {"/mld/multilevelgraph/node_to_edge_offset", DataLayout::MLD_GRAPH_NODE_TO_OFFSET},
             {"/mld/multilevelgraph/connectivity_checksum", DataLayout::IGNORE_BLOCK},
+            {"/mld/multilevelpartition/level_data", DataLayout::MLD_LEVEL_DATA},
+            {"/mld/multilevelpartition/partition", DataLayout::MLD_PARTITION},
+            {"/mld/multilevelpartition/cell_to_children", DataLayout::MLD_CELL_TO_CHILDREN},
+            {"/mld/cellstorage/source_boundary", DataLayout::MLD_CELL_SOURCE_BOUNDARY},
+            {"/mld/cellstorage/destination_boundary", DataLayout::MLD_CELL_DESTINATION_BOUNDARY},
+            {"/mld/cellstorage/cells", DataLayout::MLD_CELLS},
+            {"/mld/cellstorage/level_to_cell_offset", DataLayout::MLD_CELL_LEVEL_OFFSETS},
         };
         std::vector<NamedBlock> blocks;
 
-        if (boost::filesystem::exists(config.GetPath(".osrm.mldgr")))
+        std::vector<boost::filesystem::path> optional_tar_files = {config.GetPath(".osrm.mldgr"),
+                                                                   config.GetPath(".osrm.cells"),
+                                                                   config.GetPath(".osrm.partition")};
+
+        for (const auto &path : optional_tar_files)
         {
-            readBlocks(config.GetPath(".osrm.mldgr"), std::back_inserter(blocks));
+            if (boost::filesystem::exists(path))
+            {
+                readBlocks(path, std::back_inserter(blocks));
+            }
         }
 
-        for (const auto& block : blocks)
+        for (const auto &block : blocks)
         {
             auto id_iter = name_to_block_id.find(std::get<0>(block));
             if (id_iter == name_to_block_id.end())
             {
-                throw util::exception("Could not map " + std::get<0>(block) + " to a region in memory.");
+                throw util::exception("Could not map " + std::get<0>(block) +
+                                      " to a region in memory.");
             }
             layout.SetBlock(id_iter->second, std::get<1>(block));
         }
