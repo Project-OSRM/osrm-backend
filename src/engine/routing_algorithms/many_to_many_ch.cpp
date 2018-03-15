@@ -60,9 +60,6 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
         if (DIRECTION == FORWARD_DIRECTION ? data.forward : data.backward)
         {
             const NodeID to = facade.GetTarget(edge);
-
-            // std::cout << "to: " << to << " from: " << node << std::endl;
-
             const auto edge_weight = data.weight;
             const auto edge_duration = data.duration;
 
@@ -100,8 +97,6 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
     const auto source_weight = query_heap.GetKey(node);
     const auto source_duration = query_heap.GetData(node).duration;
 
-    // std::cout << "inside forwardRoutingStep " << std::endl;
-
     // Check if each encountered node has an entry
     const auto &bucket_list = std::equal_range(search_space_with_buckets.begin(),
                                                search_space_with_buckets.end(),
@@ -126,18 +121,7 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
             if (addLoopWeight(facade, node, new_weight, new_duration))
             {
                 current_weight = std::min(current_weight, new_weight);
-                // std::cout << "current_bucket.parent_node: " << current_bucket.parent_node
-                //           << "current_bucket.middle_node: " << current_bucket.middle_node
-                //           << std::endl;
-                // std::cout << "current_weight: " << current_weight << "new_weight: " << new_weight
-                //           << std::endl;
                 current_duration = std::min(current_duration, new_duration);
-                // std::cout << "adding to middle_nodes_table with loop weight: " << node <<
-                // std::endl;
-                // std::cout << "middle_nodes_table[row_idx * number_of_targets + column_idx] = "
-                //              "middle_nodes_table["
-                //           << row_idx << " * " << number_of_targets << " + " << column_idx
-                //           << "] = " << node << std::endl;
                 middle_nodes_table[row_idx * number_of_targets + column_idx] = node;
             }
         }
@@ -145,11 +129,6 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
         {
             current_weight = new_weight;
             current_duration = new_duration;
-            // std::cout << "adding to middle_nodes_table: " << node << std::endl;
-            // std::cout << "middle_nodes_table[row_idx * number_of_targets + column_idx] = "
-            //              "middle_nodes_table["
-            //           << row_idx << " * " << number_of_targets << " + " << column_idx
-            //           << "] = " << node << std::endl;
             middle_nodes_table[row_idx * number_of_targets + column_idx] = node;
         }
     }
@@ -214,24 +193,10 @@ retrievePackedPathFromSearchSpace(NodeID middle_node_id,
     while (bucket_list.first->parent_node != current_node_id &&
            bucket_list.first != search_space_with_buckets.end())
     {
-        // std::cout << "current_node_id: " << current_node_id
-        //           << " parent_node_id: " << bucket_list.first->parent_node << std::endl;
         current_node_id = bucket_list.first->parent_node;
 
         packed_leg.emplace_back(current_node_id);
 
-        // std::cout << "buckets with middle node " << middle_node_id << ": ";
-        for (auto bucket = bucket_list.first; bucket != bucket_list.second; bucket++)
-        {
-            // std::cout << "NodeBucket { middle_node: " << bucket->middle_node << " "
-            //           << " parent_node: " << bucket->parent_node << " "
-            //           << " column_index: " << bucket->column_index << " "
-            //           << " weight: " << bucket->weight << " "
-            //           << " duration: " << bucket->duration << " }\n";
-        }
-
-        // std::cout << "distance: " << std::distance(bucket_list.first, bucket_list.second)
-        //           << std::endl;
         BOOST_ASSERT_MSG(std::distance(bucket_list.first, bucket_list.second) == 1,
                          "The pointers are not pointing to the same element.");
         bucket_list = std::equal_range(search_space_with_buckets.begin(),
@@ -282,18 +247,6 @@ std::vector<EdgeDuration> manyToManySearch(SearchEngineData<ch::Algorithm> &engi
     // Order lookup buckets
     std::sort(search_space_with_buckets.begin(), search_space_with_buckets.end());
 
-    // std::cout << "search_space_with_buckets:" << std::endl;
-    // for (std::vector<NodeBucket>::iterator bucket = search_space_with_buckets.begin();
-    //      bucket != search_space_with_buckets.end();
-    //      bucket++)
-    // {
-    //     std::cout << "NodeBucket { middle_node: " << bucket->middle_node << " "
-    //               << " parent_node: " << bucket->parent_node << " "
-    //               << " column_index: " << bucket->column_index << " "
-    //               << " weight: " << bucket->weight << " "
-    //               << " duration: " << bucket->duration << " }\n";
-    // }
-
     // Find shortest paths from sources to all accessible nodes
     for (std::uint32_t row_idx = 0; row_idx < source_indices.size(); ++row_idx)
     {
@@ -319,9 +272,6 @@ std::vector<EdgeDuration> manyToManySearch(SearchEngineData<ch::Algorithm> &engi
                                middle_nodes_table,
                                source_phantom);
         }
-        // row_idx == one source
-        // target == search_space_with_buckets.column_idx
-
         for (unsigned column_idx = 0; column_idx < number_of_targets; ++column_idx)
         {
             auto target_index = target_indices[column_idx];
@@ -333,10 +283,6 @@ std::vector<EdgeDuration> manyToManySearch(SearchEngineData<ch::Algorithm> &engi
             }
 
             const auto &target_phantom = phantom_nodes[target_indices[column_idx]];
-            // std::cout << "source -- f: " << source_phantom.forward_segment_id.id
-            //           << " b: " << source_phantom.reverse_segment_id.id << std::endl;
-            // std::cout << "target -- f: " << target_phantom.forward_segment_id.id
-            //           << " b: " << target_phantom.reverse_segment_id.id << std::endl;
             NodeID middle_node_id = middle_nodes_table[row_idx * number_of_targets + column_idx];
 
             if (middle_node_id == SPECIAL_NODEID) // takes care of one-ways
@@ -344,28 +290,14 @@ std::vector<EdgeDuration> manyToManySearch(SearchEngineData<ch::Algorithm> &engi
                 durations_table[row_idx * number_of_targets + column_idx] = MAXIMAL_EDGE_DURATION;
                 continue;
             }
-            // std::cout << "SPECIAL_NODEID: " << SPECIAL_NODEID << std::endl;
-            // std::cout << "middle_nodes_table[row_idx * number_of_targets + column_idx] = "
-            //              "middle_nodes_table["
-            //           << row_idx << " * " << number_of_targets << " + " << column_idx
-            //           << "] = " << middle_nodes_table[row_idx * number_of_targets + column_idx]
-            //           << std::endl;
             // Step 1: Find path from source to middle node
-            // std::cout << "run retrievePackedPathFromSingleManyToManyHeap with middle node: "
-            //           << middle_node_id << std::endl;
             std::vector<NodeID> packed_leg_from_source_to_middle;
             ch::retrievePackedPathFromSingleManyToManyHeap(
                 query_heap,
                 middle_node_id,
                 packed_leg_from_source_to_middle); // packed_leg_from_source_to_middle
-            // std::cout << "exit retrievePackedPathFromSingleManyToManyHeap" << std::endl;
             std::reverse(packed_leg_from_source_to_middle.begin(),
                          packed_leg_from_source_to_middle.end());
-            // std::cout << "reverse packed_leg_from_source_to_middle" << std::endl;
-            // std::cout << "packed_leg_from_source_to_middle: " << std::endl;
-            // for (unsigned idx = 0; idx < packed_leg_from_source_to_middle.size(); ++idx)
-            //     std::cout << packed_leg_from_source_to_middle[idx] << ", ";
-            // std::cout << std::endl;
 
             // Step 2: Find path from middle to target node
             std::vector<NodeID> packed_leg_from_middle_to_target =
@@ -373,10 +305,6 @@ std::vector<EdgeDuration> manyToManySearch(SearchEngineData<ch::Algorithm> &engi
                     middle_node_id,
                     column_idx,
                     search_space_with_buckets); // packed_leg_from_middle_to_target
-            // std::cout << "packed_leg_from_middle_to_target: ";
-            // for (unsigned idx = 0; idx < packed_leg_from_middle_to_target.size(); ++idx)
-            //     std::cout << packed_leg_from_middle_to_target[idx] << ", ";
-            // std::cout << std::endl;
 
             // Step 3: Join them together
             std::vector<NodeID> packed_leg;
@@ -389,28 +317,12 @@ std::vector<EdgeDuration> manyToManySearch(SearchEngineData<ch::Algorithm> &engi
             packed_leg.insert(packed_leg.end(),
                               packed_leg_from_middle_to_target.begin(),
                               packed_leg_from_middle_to_target.end());
-            // std::cout << "packed_leg: ";
-            // for (unsigned idx = 0; idx < packed_leg.size(); ++idx)
-            //     std::cout << packed_leg[idx] << ", ";
-            // std::cout << std::endl;
-
-            // Step 4: Unpack the pack_path. Modify the unpackPath method to also calculate duration
-            // as it unpacks the path.
-
-            // std::cout << "weights_table[row_idx * number_of_targets + column_idx]: "
-            //           << weights_table[row_idx * number_of_targets + column_idx] << std::endl;
-            // std::cout << "needsLoopBackwards(source_phantom, target_phantom): "
-            //           << needsLoopBackwards(source_phantom, target_phantom) << std::endl;
-            // std::cout << "needsLoopForward(source_phantom, target_phantom): "
-            //           << needsLoopForward(source_phantom, target_phantom) << std::endl;
             if (packed_leg.size() == 1 && (needsLoopForward(source_phantom, target_phantom) ||
                                            needsLoopBackwards(source_phantom, target_phantom)))
             {
                 auto weight = ch::getLoopWeight<false>(facade, packed_leg.front());
                 if (weight != INVALID_EDGE_WEIGHT)
                     packed_leg.push_back(packed_leg.front());
-                // std::cout << "getLoopWeight(facade, packed_leg.front()): " << weight <<
-                // std::endl;
             }
             if (!packed_leg.empty())
             {
@@ -420,42 +332,28 @@ std::vector<EdgeDuration> manyToManySearch(SearchEngineData<ch::Algorithm> &engi
                                                     packed_leg.end(),
                                                     *engine_working_data.unpacking_cache.get());
 
-                // std::cout << "1 durations_table[row_idx * number_of_targets + column_idx]: "
-                //           << durations_table[row_idx * number_of_targets + column_idx] << " \n";
                 // check the direction of travel to figure out how to calculate the offset to/from
                 // the source/target
                 if (source_phantom.forward_segment_id.id == packed_leg.front())
                 { // direction of travel is forward
                     EdgeDuration offset = source_phantom.GetForwardDuration();
-                    // std::cout << "offset " << offset << std::endl;
                     durations_table[row_idx * number_of_targets + column_idx] -= offset;
                 }
-                // std::cout << "6 durations_table[row_idx * number_of_targets + column_idx]: "
-                //           << durations_table[row_idx * number_of_targets + column_idx] << " \n";
                 if (source_phantom.reverse_segment_id.id == packed_leg.front())
                 {
                     EdgeDuration offset = source_phantom.GetReverseDuration();
-                    // std::cout << "offset " << offset << std::endl;
                     durations_table[row_idx * number_of_targets + column_idx] -= offset;
                 }
-                // std::cout << "7 durations_table[row_idx * number_of_targets + column_idx]: "
-                //           << durations_table[row_idx * number_of_targets + column_idx] << " \n";
                 if (target_phantom.forward_segment_id.id == packed_leg.back())
                 { // direction of travel is forward
                     EdgeDuration offset = target_phantom.GetForwardDuration();
-                    // std::cout << "offset " << offset << std::endl;
                     durations_table[row_idx * number_of_targets + column_idx] += offset;
                 }
-                // std::cout << "8 durations_table[row_idx * number_of_targets + column_idx]: "
-                //           << durations_table[row_idx * number_of_targets + column_idx] << " \n";
                 if (target_phantom.reverse_segment_id.id == packed_leg.back())
                 {
                     EdgeDuration offset = target_phantom.GetReverseDuration();
-                    // std::cout << "offset " << offset << std::endl;
                     durations_table[row_idx * number_of_targets + column_idx] += offset;
                 }
-                // std::cout << "2 durations_table[row_idx * number_of_targets + column_idx]: "
-                // << durations_table[row_idx * number_of_targets + column_idx] << " \n";
             }
             else
             {
@@ -464,35 +362,15 @@ std::vector<EdgeDuration> manyToManySearch(SearchEngineData<ch::Algorithm> &engi
                     EdgeDuration offset =
                         target_phantom.GetForwardDuration() - source_phantom.GetForwardDuration();
                     durations_table[row_idx * number_of_targets + column_idx] += offset;
-                    // std::cout << "3 durations_table[row_idx * number_of_targets + column_idx]: "
-                    //           << durations_table[row_idx * number_of_targets + column_idx] << "
-                    //           \n";
                 }
                 else
                 {
                     EdgeDuration offset =
                         target_phantom.GetReverseDuration() - source_phantom.GetReverseDuration();
                     durations_table[row_idx * number_of_targets + column_idx] += offset;
-                    // std::cout << "4 durations_table[row_idx * number_of_targets + column_idx]: "
-                    //           << durations_table[row_idx * number_of_targets + column_idx] << "
-                    //           \n";
                 }
             }
-            // std::cout << "5 durations_table[row_idx * number_of_targets + column_idx]: "
-            //           << durations_table[row_idx * number_of_targets + column_idx] << " \n";
-            // std::cout << std::endl;
         }
-
-        //           targets (columns) target_id = column_idx
-        //              a   b   c
-        //          a  [0,  1,  2],
-        // sources  b  [3,  4,  5],
-        //  (rows)  c  [6,  7,  8],
-        //          d  [9, 10, 11]
-        // row_idx * number_of_targets + column_idx
-        // a -> c 0 * 3 + 2 = 2
-        // c -> c 2 * 3 + 2 = 8
-        // d -> c 3 * 3 + 2 = 11
     }
 
     return durations_table;

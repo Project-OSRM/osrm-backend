@@ -289,30 +289,13 @@ void unpackPath(const DataFacade<Algorithm> &facade,
     }
 }
 
-// Function needs to:
-// 1. SUM UP THE DURATION OF THE PATH
-// 2. UNPACK THE PATH
-
-// two stacks --
-// one is for the edges
-// one is for the associated durations
-
-// ------------------------------
-// have we processed the edge before? tells us if we have values in the durations stack that we can
-// add up
-// if yes, pop top values of duration_stack and add them up and push onto duration_stack
-// if no, check if its in the cache
-//      if yes, add duration value to stack
-//      if no, either find the children OR we get to the point where we use the single edge duration
-//      method (which is like annotatePath) and add do duration_stack
-
 template <typename BidirectionalIterator>
 EdgeDuration calculateEBGNodeAnnotations(const DataFacade<Algorithm> &facade,
                                          BidirectionalIterator packed_path_begin,
                                          BidirectionalIterator packed_path_end,
                                          UnpackingCache &unpacking_cache)
 {
-    (void) unpacking_cache;
+    (void)unpacking_cache;
     // make sure we have at least something to unpack
     if (packed_path_begin == packed_path_end ||
         std::distance(packed_path_begin, packed_path_end) <= 1)
@@ -332,8 +315,6 @@ EdgeDuration calculateEBGNodeAnnotations(const DataFacade<Algorithm> &facade,
     while (!recursion_stack.empty())
     {
         edge = recursion_stack.top();
-        // std::cout << "Processing edge: " << std::get<0>(edge) << ", " << std::get<1>(edge)
-        // << std::endl;
         recursion_stack.pop();
 
         // have we processed the edge before? tells us if we have values in the durations stack that
@@ -343,7 +324,8 @@ EdgeDuration calculateEBGNodeAnnotations(const DataFacade<Algorithm> &facade,
 
             std::get<2>(edge) = true; // mark that this edge will now be processed
 
-            // if (unpacking_cache.IsEdgeInCache(std::make_pair(std::get<0>(edge), std::get<1>(edge))))
+            // if (unpacking_cache.IsEdgeInCache(std::make_pair(std::get<0>(edge),
+            // std::get<1>(edge))))
             // {
             //     EdgeDuration duration = unpacking_cache.GetDuration(
             //         std::make_pair(std::get<0>(edge), std::get<1>(edge)));
@@ -351,55 +333,51 @@ EdgeDuration calculateEBGNodeAnnotations(const DataFacade<Algorithm> &facade,
             // }
             // else
             // {
-                // Look for an edge on the forward CH graph (.forward)
-                EdgeID smaller_edge_id =
-                    facade.FindSmallestEdge(std::get<0>(edge),
-                                            std::get<1>(edge),
-                                            [](const auto &data) { return data.forward; });
+            // Look for an edge on the forward CH graph (.forward)
+            EdgeID smaller_edge_id =
+                facade.FindSmallestEdge(std::get<0>(edge), std::get<1>(edge), [](const auto &data) {
+                    return data.forward;
+                });
 
-                // If we didn't find one there, the we might be looking at a part of the path that
-                // was found using the backward search.  Here, we flip the node order (.second,
-                // .first) and only consider edges with the `.backward` flag.
-                if (SPECIAL_EDGEID == smaller_edge_id)
-                {
-                    smaller_edge_id =
-                        facade.FindSmallestEdge(std::get<1>(edge),
-                                                std::get<0>(edge),
-                                                [](const auto &data) { return data.backward; });
-                }
+            // If we didn't find one there, the we might be looking at a part of the path that
+            // was found using the backward search.  Here, we flip the node order (.second,
+            // .first) and only consider edges with the `.backward` flag.
+            if (SPECIAL_EDGEID == smaller_edge_id)
+            {
+                smaller_edge_id =
+                    facade.FindSmallestEdge(std::get<1>(edge),
+                                            std::get<0>(edge),
+                                            [](const auto &data) { return data.backward; });
+            }
 
-                // If we didn't find anything *still*, then something is broken and someone has
-                // called this function with bad values.
-                BOOST_ASSERT_MSG(smaller_edge_id != SPECIAL_EDGEID, "Invalid smaller edge ID");
+            // If we didn't find anything *still*, then something is broken and someone has
+            // called this function with bad values.
+            BOOST_ASSERT_MSG(smaller_edge_id != SPECIAL_EDGEID, "Invalid smaller edge ID");
 
-                const auto &data = facade.GetEdgeData(smaller_edge_id);
-                BOOST_ASSERT_MSG(data.weight != std::numeric_limits<EdgeWeight>::max(),
-                                 "edge weight invalid");
+            const auto &data = facade.GetEdgeData(smaller_edge_id);
+            BOOST_ASSERT_MSG(data.weight != std::numeric_limits<EdgeWeight>::max(),
+                             "edge weight invalid");
 
-                // If the edge is a shortcut, we need to add the two halfs to the stack.
-                if (data.shortcut)
-                { // unpack
-                    const NodeID middle_node_id = data.turn_id;
-                    // Note the order here - we're adding these to a stack, so we
-                    // want the first->middle to get visited before middle->second
-                    recursion_stack.emplace(edge);
-                    recursion_stack.emplace(middle_node_id, std::get<1>(edge), false);
-                    recursion_stack.emplace(std::get<0>(edge), middle_node_id, false);
-                }
-                else
-                {
-                    // auto temp = std::make_pair(std::get<0>(edge), std::get<1>(edge));
-                    // compute the duration here and put it onto the duration stack using method
-                    // similar to annotatePath but smaller
-                    EdgeDuration duration =
-                        computeEdgeDuration(facade, std::get<0>(edge), data.turn_id);
-                    // std::get<0>(edge) (need NodeID here to get geometry to get segments durtion
-                    // vector)
-                    // data.turn_id to get const auto turn_duration =
-                    // facade.GetDurationPenaltyForEdgeID(turn_id);
-                    duration_stack.emplace(duration);
-                    // unpacking_cache.AddEdge(temp, duration);
-                }
+            // If the edge is a shortcut, we need to add the two halfs to the stack.
+            if (data.shortcut)
+            { // unpack
+                const NodeID middle_node_id = data.turn_id;
+                // Note the order here - we're adding these to a stack, so we
+                // want the first->middle to get visited before middle->second
+                recursion_stack.emplace(edge);
+                recursion_stack.emplace(middle_node_id, std::get<1>(edge), false);
+                recursion_stack.emplace(std::get<0>(edge), middle_node_id, false);
+            }
+            else
+            {
+                // auto temp = std::make_pair(std::get<0>(edge), std::get<1>(edge));
+                // compute the duration here and put it onto the duration stack using method
+                // similar to annotatePath but smaller
+                EdgeDuration duration =
+                    computeEdgeDuration(facade, std::get<0>(edge), data.turn_id);
+                duration_stack.emplace(duration);
+                // unpacking_cache.AddEdge(temp, duration);
+            }
             // }
         }
         else
@@ -413,7 +391,8 @@ EdgeDuration calculateEBGNodeAnnotations(const DataFacade<Algorithm> &facade,
             duration_stack.pop();
             EdgeDuration duration = edge1 + edge2;
             duration_stack.emplace(duration);
-            // unpacking_cache.AddEdge(std::make_pair(std::get<0>(edge), std::get<1>(edge)), duration);
+            // unpacking_cache.AddEdge(std::make_pair(std::get<0>(edge), std::get<1>(edge)),
+            // duration);
         }
     }
 
@@ -433,10 +412,6 @@ void unpackPath(const FacadeT &facade,
                 const PhantomNodes &phantom_nodes,
                 std::vector<PathData> &unpacked_path)
 {
-    // std::cout << "path from unpackPath: ";
-    // for (auto i = packed_path_begin; i != packed_path_end; ++i)
-    // std::cout << *i << " ";
-    // std::cout << std::endl;
     const auto nodes_number = std::distance(packed_path_begin, packed_path_end);
     BOOST_ASSERT(nodes_number > 0);
 

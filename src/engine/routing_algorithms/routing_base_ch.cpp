@@ -69,18 +69,9 @@ void retrievePackedPathFromSingleManyToManyHeap(
     // in case of a core search heap. We need a distinction between core entry nodes
     // and start nodes since otherwise start node specific code that assumes
     // node == node.parent (e.g. the loop code) might get actived.
-
-    // std::cout << "we have entered retrievePackedPathFromSingleManyToManyHeap" << std::endl;
-    // std::cout << "current_node_id: " << current_node_id << std::endl;
-    // std::cout << "middle_node_id: " << middle_node_id << std::endl;
-    // std::cout << "search_heap.GetData(current_node_id).parent"
-    //           << search_heap.GetData(current_node_id).parent << std::endl;
     while (current_node_id != search_heap.GetData(current_node_id).parent &&
            search_heap.WasInserted(search_heap.GetData(current_node_id).parent))
     {
-        // std::cout << "current_node_id" << current_node_id
-        //           << "search_heap.GetData(current_node_id).parent"
-        //           << search_heap.GetData(current_node_id).parent << std::endl;
         current_node_id = search_heap.GetData(current_node_id).parent;
         packed_path.emplace_back(current_node_id);
     }
