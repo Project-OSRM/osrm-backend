@@ -94,8 +94,9 @@ const constexpr char *block_id_to_name[] = {"NAME_CHAR_DATA",
                                             "MANEUVER_OVERRIDES",
                                             "MANEUVER_OVERRIDE_NODE_SEQUENCES"};
 
-struct DataLayout
+class DataLayout
 {
+  public:
     enum BlockID
     {
         NAME_CHAR_DATA = 0,
@@ -174,8 +175,6 @@ struct DataLayout
         NUM_BLOCKS
     };
 
-    std::array<Block, NUM_BLOCKS> blocks;
-
     DataLayout() : blocks{} {}
 
     inline void SetBlock(BlockID bid, Block block) { blocks[bid] = std::move(block); }
@@ -189,47 +188,17 @@ struct DataLayout
         uint64_t result = 0;
         for (auto i = 0; i < NUM_BLOCKS; i++)
         {
-            BOOST_ASSERT(blocks[i].entry_align > 0);
-            result += 2 * sizeof(CANARY) + GetBlockSize((BlockID)i) + blocks[i].entry_align;
+            result += 2 * sizeof(CANARY) + GetBlockSize(static_cast<BlockID>(i)) + BLOCK_ALIGNMENT;
         }
         return result;
-    }
-
-    // \brief Fit aligned storage in buffer.
-    // Interface Similar to [ptr.align] but omits space computation.
-    // The method can be removed and changed directly to an std::align
-    // function call after dropping gcc < 5 support.
-    inline void *align(std::size_t align, std::size_t, void *&ptr) const noexcept
-    {
-        const auto intptr = reinterpret_cast<uintptr_t>(ptr);
-        const auto aligned = (intptr - 1u + align) & -align;
-        return ptr = reinterpret_cast<void *>(aligned);
-    }
-
-    inline void *GetAlignedBlockPtr(void *ptr, BlockID bid) const
-    {
-        for (auto i = 0; i < bid; i++)
-        {
-            ptr = static_cast<char *>(ptr) + sizeof(CANARY);
-            ptr = align(blocks[i].entry_align, blocks[i].entry_size, ptr);
-            ptr = static_cast<char *>(ptr) + GetBlockSize((BlockID)i);
-            ptr = static_cast<char *>(ptr) + sizeof(CANARY);
-        }
-
-        ptr = static_cast<char *>(ptr) + sizeof(CANARY);
-        ptr = align(blocks[bid].entry_align, blocks[bid].entry_size, ptr);
-        return ptr;
-    }
-
-    template <typename T> inline T *GetBlockEnd(char *shared_memory, BlockID bid) const
-    {
-        auto begin = GetBlockPtr<T>(shared_memory, bid);
-        return begin + GetBlockEntries(bid);
     }
 
     template <typename T, bool WRITE_CANARY = false>
     inline T *GetBlockPtr(char *shared_memory, BlockID bid) const
     {
+        static_assert(BLOCK_ALIGNMENT % std::alignment_of<T>::value == 0,
+                      "Datatype does not fit alignment constraints.");
+
         char *ptr = (char *)GetAlignedBlockPtr(shared_memory, bid);
         if (WRITE_CANARY)
         {
@@ -258,6 +227,39 @@ struct DataLayout
 
         return (T *)ptr;
     }
+
+  private:
+    // Fit aligned storage in buffer to 64 bytes to conform with AVX 512 types
+    inline void *align(void *&ptr) const noexcept
+    {
+        const auto intptr = reinterpret_cast<uintptr_t>(ptr);
+        const auto aligned = (intptr - 1u + BLOCK_ALIGNMENT) & -BLOCK_ALIGNMENT;
+        return ptr = reinterpret_cast<void *>(aligned);
+    }
+
+    inline void *GetAlignedBlockPtr(void *ptr, BlockID bid) const
+    {
+        for (auto i = 0; i < bid; i++)
+        {
+            ptr = static_cast<char *>(ptr) + sizeof(CANARY);
+            ptr = align(ptr);
+            ptr = static_cast<char *>(ptr) + GetBlockSize((BlockID)i);
+            ptr = static_cast<char *>(ptr) + sizeof(CANARY);
+        }
+
+        ptr = static_cast<char *>(ptr) + sizeof(CANARY);
+        ptr = align(ptr);
+        return ptr;
+    }
+
+    template <typename T> inline T *GetBlockEnd(char *shared_memory, BlockID bid) const
+    {
+        auto begin = GetBlockPtr<T>(shared_memory, bid);
+        return begin + GetBlockEntries(bid);
+    }
+
+    static constexpr std::size_t BLOCK_ALIGNMENT = 64;
+    std::array<Block, NUM_BLOCKS> blocks;
 };
 
 enum SharedDataType
