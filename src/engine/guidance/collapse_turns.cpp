@@ -501,7 +501,12 @@ RouteSteps collapseSegregatedTurnInstructions(RouteSteps steps)
         // adjustment
         if (curr_step->is_segregated && next_step->is_segregated)
         {
-            suppressStep(*curr_step, *next_step);
+            // Combine segregated steps
+            combineRouteSteps(*curr_step,
+                              *next_step,
+                              NoModificationStrategy(),
+                              TransferSignageStrategy(),
+                              TransferLanesStrategy());
             ++next_step;
         }
         // else if the current step is segregated and the next step is not then combine with turn
