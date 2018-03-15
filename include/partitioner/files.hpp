@@ -24,10 +24,9 @@ inline void readGraph(const boost::filesystem::path &path,
                       std::is_same<customizer::MultiLevelEdgeBasedGraph, MultiLevelGraphT>::value,
                   "");
 
-    const auto fingerprint = storage::io::FileReader::VerifyFingerprint;
-    storage::io::FileReader reader{path, fingerprint};
+    storage::tar::FileReader reader{path};
 
-    serialization::read(reader, graph, connectivity_checksum);
+    serialization::read(reader, "/mld/multilevelgraph", graph, connectivity_checksum);
 }
 
 // writes .osrm.mldgr file
@@ -40,10 +39,9 @@ inline void writeGraph(const boost::filesystem::path &path,
                       std::is_same<customizer::MultiLevelEdgeBasedGraph, MultiLevelGraphT>::value,
                   "");
 
-    const auto fingerprint = storage::io::FileWriter::GenerateFingerprint;
-    storage::io::FileWriter writer{path, fingerprint};
+    storage::tar::FileWriter writer{path};
 
-    serialization::write(writer, graph, connectivity_checksum);
+    serialization::write(writer, "/mld/multilevelgraph", graph, connectivity_checksum);
 }
 
 // read .osrm.partition file
