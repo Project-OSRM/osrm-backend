@@ -100,3 +100,28 @@ Feature: Divided road entry
        When I route I should get
             | waypoints | route    | turns                           |
             | g,a       | side st,main st,main st| depart,turn left,arrive |
+
+    # Verify end of road left turn across divided roads
+    Scenario: Join on a divided road, named after the side street
+        Given the node map
+            """
+            a-----h--b-----c
+                  |  |
+            d-----i--e-----f
+                  |  |
+                  |  |
+                  j  g
+            """
+
+        And the ways
+            | nodes  | name    | highway     | oneway |
+            | ahbc   | main st | residential | -1     |
+            | dief   | main st | residential | yes    |
+            | beg    | side st | residential | -1     |
+            | hij    | side st | residential | yes    |
+
+       When I route I should get
+            | waypoints | route    | turns                           |
+            | g,a       | side st,main st,main st| depart,end of road left,arrive |
+
+
