@@ -10,6 +10,7 @@
 
 #include "storage/io_fwd.hpp"
 #include "storage/shared_memory_ownership.hpp"
+#include "storage/tar_fwd.hpp"
 
 #include <boost/assert.hpp>
 
@@ -32,6 +33,16 @@ void read(storage::io::FileReader &reader, StaticGraph<EdgeDataT, Ownership> &gr
 
 template <typename EdgeDataT, storage::Ownership Ownership>
 void write(storage::io::FileWriter &writer, const StaticGraph<EdgeDataT, Ownership> &graph);
+
+template <typename EdgeDataT, storage::Ownership Ownership>
+void read(storage::tar::FileReader &reader,
+          const std::string &name,
+          StaticGraph<EdgeDataT, Ownership> &graph);
+
+template <typename EdgeDataT, storage::Ownership Ownership>
+void write(storage::tar::FileWriter &writer,
+           const std::string &name,
+           const StaticGraph<EdgeDataT, Ownership> &graph);
 }
 
 namespace static_graph_details
@@ -276,6 +287,14 @@ class StaticGraph
                                                           StaticGraph<EdgeDataT, Ownership> &graph);
     friend void
     serialization::write<EdgeDataT, Ownership>(storage::io::FileWriter &writer,
+                                               const StaticGraph<EdgeDataT, Ownership> &graph);
+
+    friend void serialization::read<EdgeDataT, Ownership>(storage::tar::FileReader &reader,
+                                                          const std::string &name,
+                                                          StaticGraph<EdgeDataT, Ownership> &graph);
+    friend void
+    serialization::write<EdgeDataT, Ownership>(storage::tar::FileWriter &writer,
+                                               const std::string &name,
                                                const StaticGraph<EdgeDataT, Ownership> &graph);
 
   protected:

@@ -4,6 +4,7 @@
 #include "util/exception.hpp"
 #include "util/exception_utils.hpp"
 #include "util/fingerprint.hpp"
+#include "util/integer_range.hpp"
 #include "util/version.hpp"
 
 #include <boost/filesystem/path.hpp>
@@ -54,6 +55,36 @@ class FileReader
         T tmp;
         ReadInto(name, &tmp, 1);
         return tmp;
+    }
+
+    template <typename T, typename OutIter> void ReadStreaming(const std::string &name, OutIter out)
+    {
+        mtar_header_t header;
+        auto ret = mtar_find(&handle, name.c_str(), &header);
+        if (ret != MTAR_ESUCCESS)
+        {
+            throw util::exception(name + ": " + mtar_strerror(ret));
+        }
+
+        auto number_of_elements = header.size / sizeof(T);
+        auto expected_size = sizeof(T) * number_of_elements;
+        if (header.size != expected_size)
+        {
+            throw util::exception(name + ": Datatype size does not match file size.");
+        }
+
+        T tmp;
+        for (auto index : util::irange<std::size_t>(0, number_of_elements))
+        {
+            (void) index;
+            ret = mtar_read_data(&handle, reinterpret_cast<char *>(&tmp), sizeof(T));
+            if (ret != MTAR_ESUCCESS)
+            {
+                throw util::exception(name + ": Failed reading data: " + mtar_strerror(ret));
+            }
+
+            *out++ = tmp;
+        }
     }
 
     template <typename T>
@@ -160,6 +191,29 @@ class FileWriter
         WriteFrom(name, &data, 1);
     }
 
+    template <typename T, typename Iter>
+    void WriteStreaming(const std::string &name, Iter iter, const std::uint64_t number_of_elements)
+    {
+        auto number_of_bytes = number_of_elements * sizeof(T);
+
+        auto ret = mtar_write_file_header(&handle, name.c_str(), number_of_bytes);
+        if (ret != MTAR_ESUCCESS)
+        {
+            throw util::exception(name + ": Error writing header: " + mtar_strerror(ret));
+        }
+
+        for (auto index : util::irange<std::size_t>(0, number_of_elements))
+        {
+            (void) index;
+            T tmp = *iter++;
+            ret = mtar_write_data(&handle, &tmp, sizeof(T));
+            if (ret != MTAR_ESUCCESS)
+            {
+                throw util::exception(name + ": Error writing data : " + mtar_strerror(ret));
+            }
+        }
+    }
+
     template <typename T>
     void WriteFrom(const std::string &name, const T *data, const std::size_t number_of_elements)
     {
@@ -168,13 +222,13 @@ class FileWriter
         auto ret = mtar_write_file_header(&handle, name.c_str(), number_of_bytes);
         if (ret != MTAR_ESUCCESS)
         {
-            throw util::exception(name + ": Error reading header: " + mtar_strerror(ret));
+            throw util::exception(name + ": Error writing header: " + mtar_strerror(ret));
         }
 
         ret = mtar_write_data(&handle, reinterpret_cast<const char *>(data), number_of_bytes);
         if (ret != MTAR_ESUCCESS)
         {
-            throw util::exception(name + ": Error reading data : " + mtar_strerror(ret));
+            throw util::exception(name + ": Error writing data : " + mtar_strerror(ret));
         }
     }
 

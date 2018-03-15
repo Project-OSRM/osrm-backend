@@ -8,6 +8,9 @@
 #include "storage/io.hpp"
 #include "storage/tar.hpp"
 
+#include <boost/function_output_iterator.hpp>
+#include <boost/iterator/function_input_iterator.hpp>
+
 #include <cmath>
 #include <cstdint>
 
@@ -87,28 +90,32 @@ inline void write(storage::io::FileWriter &writer, const stxxl::vector<T> &vec)
 }
 #endif
 
-template <typename T> void read(tar::FileReader &reader, const std::string& name, std::vector<T> &data)
+template <typename T>
+void read(tar::FileReader &reader, const std::string &name, std::vector<T> &data)
 {
     const auto count = reader.ReadElementCount64(name);
     data.resize(count);
     reader.ReadInto(name, data.data(), count);
 }
 
-template <typename T> void write(tar::FileWriter &writer, const std::string& name, const std::vector<T> &data)
+template <typename T>
+void write(tar::FileWriter &writer, const std::string &name, const std::vector<T> &data)
 {
     const auto count = data.size();
     writer.WriteElementCount64(name, count);
     writer.WriteFrom(name, data.data(), count);
 }
 
-template <typename T> void read(tar::FileReader &reader, const std::string& name, util::vector_view<T> &data)
+template <typename T>
+void read(tar::FileReader &reader, const std::string &name, util::vector_view<T> &data)
 {
     const auto count = reader.ReadElementCount64(name);
     BOOST_ASSERT(data.size() == count);
     reader.ReadInto(name, data.data(), count);
 }
 
-template <typename T> void write(tar::FileWriter &writer, const std::string& name, const util::vector_view<T> &data)
+template <typename T>
+void write(tar::FileWriter &writer, const std::string &name, const util::vector_view<T> &data)
 {
     const auto count = data.size();
     writer.WriteElementCount64(name, count);
@@ -143,6 +150,8 @@ template <typename T> void write(io::FileWriter &writer, const util::vector_view
     writer.WriteFrom(data.data(), count);
 }
 
+namespace detail
+{
 template <typename T>
 inline unsigned char packBits(const T &data, std::size_t index, std::size_t count)
 {
@@ -162,7 +171,7 @@ inline void unpackBits(T &data, std::size_t index, std::size_t count, unsigned c
         data[index] = value & mask;
 }
 
-template <> inline void read<bool>(io::FileReader &reader, util::vector_view<bool> &data)
+template <typename VectorT> void readBoolVector(io::FileReader &reader, VectorT &data)
 {
     const auto count = reader.ReadElementCount64();
     BOOST_ASSERT(data.size() == count);
@@ -175,7 +184,7 @@ template <> inline void read<bool>(io::FileReader &reader, util::vector_view<boo
         unpackBits(data, index, count - index, reader.ReadOne<unsigned char>());
 }
 
-template <> inline void write<bool>(io::FileWriter &writer, const util::vector_view<bool> &data)
+template <typename VectorT> void writeBoolVector(io::FileWriter &writer, const VectorT &data)
 {
     const auto count = data.size();
     writer.WriteElementCount64(count);
@@ -188,30 +197,87 @@ template <> inline void write<bool>(io::FileWriter &writer, const util::vector_v
         writer.WriteOne<unsigned char>(packBits(data, index, count - index));
 }
 
+template <typename VectorT>
+void readBoolVector(tar::FileReader &reader, const std::string &name, VectorT &data)
+{
+    const auto count = reader.ReadElementCount64(name);
+    BOOST_ASSERT(data.size() == count);
+    std::uint64_t index = 0;
+
+    const auto decode = [&data, &index, count](const char block) {
+        auto read_size = std::min<std::size_t>(count - index, CHAR_BIT);
+        unpackBits(data, index, read_size, block);
+        index += CHAR_BIT;
+    };
+
+    reader.ReadStreaming<unsigned char>(name, boost::make_function_output_iterator(decode));
+}
+
+template <typename VectorT>
+void writeBoolVector(tar::FileWriter &writer, const std::string &name, const VectorT &data)
+{
+    const auto count = data.size();
+    writer.WriteElementCount64(name, count);
+    std::uint64_t index = 0;
+
+    const auto encode = [&]() {
+        auto write_size = std::min<std::size_t>(count - index, CHAR_BIT);
+        auto packed = packBits(data, CHAR_BIT * index, write_size);
+        index += CHAR_BIT;
+        return packed;
+    };
+
+    std::uint64_t number_of_blocks = std::ceil(count / CHAR_BIT);
+    writer.WriteStreaming<unsigned char>(
+        name, boost::make_function_input_iterator(encode, boost::infinite()), number_of_blocks);
+}
+}
+
+template <> inline void read<bool>(io::FileReader &reader, util::vector_view<bool> &data)
+{
+    detail::readBoolVector(reader, data);
+}
+
+template <> inline void write<bool>(io::FileWriter &writer, const util::vector_view<bool> &data)
+{
+    detail::writeBoolVector(writer, data);
+}
+
 template <> inline void read<bool>(io::FileReader &reader, std::vector<bool> &data)
 {
-    const auto count = reader.ReadElementCount64();
-    data.resize(count);
-    std::uint64_t index = 0;
-    for (std::uint64_t next = CHAR_BIT; next < count; index = next, next += CHAR_BIT)
-    {
-        unpackBits(data, index, CHAR_BIT, reader.ReadOne<unsigned char>());
-    }
-    if (count > index)
-        unpackBits(data, index, count - index, reader.ReadOne<unsigned char>());
+    detail::readBoolVector(reader, data);
 }
 
 template <> inline void write<bool>(io::FileWriter &writer, const std::vector<bool> &data)
 {
-    const auto count = data.size();
-    writer.WriteElementCount64(count);
-    std::uint64_t index = 0;
-    for (std::uint64_t next = CHAR_BIT; next < count; index = next, next += CHAR_BIT)
-    {
-        writer.WriteOne<unsigned char>(packBits(data, index, CHAR_BIT));
-    }
-    if (count > index)
-        writer.WriteOne<unsigned char>(packBits(data, index, count - index));
+    detail::writeBoolVector(writer, data);
+}
+
+template <>
+inline void
+read<bool>(tar::FileReader &reader, const std::string &name, util::vector_view<bool> &data)
+{
+    detail::readBoolVector(reader, name, data);
+}
+
+template <>
+inline void
+write<bool>(tar::FileWriter &writer, const std::string &name, const util::vector_view<bool> &data)
+{
+    detail::writeBoolVector(writer, name, data);
+}
+
+template <>
+inline void read<bool>(tar::FileReader &reader, const std::string &name, std::vector<bool> &data)
+{
+    detail::readBoolVector(reader, name, data);
+}
+
+template <>
+inline void
+write<bool>(tar::FileWriter &writer, const std::string &name, const std::vector<bool> &data)
+{
+    detail::writeBoolVector(writer, name, data);
 }
 }
 }

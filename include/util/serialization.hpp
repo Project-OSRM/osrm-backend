@@ -86,6 +86,50 @@ inline void write(storage::io::FileWriter &writer, const DynamicGraph<EdgeDataT>
         writer.WriteOne(graph.edge_list[index]);
     }
 }
+
+template <typename EdgeDataT, storage::Ownership Ownership>
+inline void read(storage::tar::FileReader &reader,
+                 const std::string &name,
+                 StaticGraph<EdgeDataT, Ownership> &graph)
+{
+    storage::serialization::read(reader, name + "/node_array", graph.node_array);
+    storage::serialization::read(reader, name + "/edge_array", graph.edge_array);
+    graph.number_of_nodes = graph.node_array.size() - 1;
+    graph.number_of_edges = graph.edge_array.size();
+}
+
+template <typename EdgeDataT, storage::Ownership Ownership>
+inline void write(storage::tar::FileWriter &writer,
+                  const std::string &name,
+                  const StaticGraph<EdgeDataT, Ownership> &graph)
+{
+    storage::serialization::write(writer, name + "/node_array", graph.node_array);
+    storage::serialization::write(writer, name + "/edge_array", graph.edge_array);
+}
+
+template <typename EdgeDataT>
+inline void
+read(storage::tar::FileReader &reader, const std::string &name, DynamicGraph<EdgeDataT> &graph)
+{
+    storage::serialization::read(reader, name + "/node_array", graph.node_array);
+    const auto num_edges = reader.ReadElementCount64(name + "/edge_list");
+    graph.edge_list.resize(num_edges);
+    reader.ReadStreaming<typename std::remove_reference_t<decltype(graph)>::Edge>(
+        name + "/edge_list", graph.edge_list.begin());
+    graph.number_of_nodes = graph.node_array.size();
+    graph.number_of_edges = num_edges;
+}
+
+template <typename EdgeDataT>
+inline void write(storage::tar::FileWriter &writer,
+                  const std::string &name,
+                  const DynamicGraph<EdgeDataT> &graph)
+{
+    storage::serialization::write(writer, name + "/node_array", graph.node_array);
+    writer.WriteElementCount64(name + "/edge_list", graph.number_of_edges);
+    writer.WriteStreaming<typename std::remove_reference_t<decltype(graph)>::Edge>(
+        name + "/edge_list", graph.edge_list.begin(), graph.number_of_edges);
+}
 }
 }
 }

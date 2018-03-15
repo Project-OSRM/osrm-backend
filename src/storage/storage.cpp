@@ -289,52 +289,6 @@ void Storage::PopulateLayout(DataLayout &layout)
                         make_block<extractor::NodeBasedEdgeAnnotation>(annotations_number));
     }
 
-    if (boost::filesystem::exists(config.GetPath(".osrm.hsgr")))
-    {
-        io::FileReader reader(config.GetPath(".osrm.hsgr"), io::FileReader::VerifyFingerprint);
-
-        reader.Skip<std::uint32_t>(1); // checksum
-        auto num_nodes = reader.ReadVectorSize<contractor::QueryGraph::NodeArrayEntry>();
-        auto num_edges = reader.ReadVectorSize<contractor::QueryGraph::EdgeArrayEntry>();
-        auto num_metrics = reader.ReadElementCount64();
-
-        if (num_metrics > NUM_METRICS)
-        {
-            throw util::exception("Only " + std::to_string(NUM_METRICS) +
-                                  " metrics are supported at the same time.");
-        }
-
-        layout.SetBlock(DataLayout::HSGR_CHECKSUM, make_block<unsigned>(1));
-        layout.SetBlock(DataLayout::CH_GRAPH_NODE_LIST,
-                        make_block<contractor::QueryGraph::NodeArrayEntry>(num_nodes));
-        layout.SetBlock(DataLayout::CH_GRAPH_EDGE_LIST,
-                        make_block<contractor::QueryGraph::EdgeArrayEntry>(num_edges));
-
-        for (const auto index : util::irange<std::size_t>(0, num_metrics))
-        {
-            layout.SetBlock(static_cast<DataLayout::BlockID>(DataLayout::CH_EDGE_FILTER_0 + index),
-                            make_block<unsigned>(num_edges));
-        }
-        for (const auto index : util::irange<std::size_t>(num_metrics, NUM_METRICS))
-        {
-            layout.SetBlock(static_cast<DataLayout::BlockID>(DataLayout::CH_EDGE_FILTER_0 + index),
-                            make_block<unsigned>(0));
-        }
-    }
-    else
-    {
-        layout.SetBlock(DataLayout::HSGR_CHECKSUM, make_block<unsigned>(0));
-        layout.SetBlock(DataLayout::CH_GRAPH_NODE_LIST,
-                        make_block<contractor::QueryGraph::NodeArrayEntry>(0));
-        layout.SetBlock(DataLayout::CH_GRAPH_EDGE_LIST,
-                        make_block<contractor::QueryGraph::EdgeArrayEntry>(0));
-        for (const auto index : util::irange<std::size_t>(0, NUM_METRICS))
-        {
-            layout.SetBlock(static_cast<DataLayout::BlockID>(DataLayout::CH_EDGE_FILTER_0 + index),
-                            make_block<unsigned>(0));
-        }
-    }
-
     // load rsearch tree size
     {
         io::FileReader tree_node_file(config.GetPath(".osrm.ramIndex"),
@@ -493,61 +447,83 @@ void Storage::PopulateLayout(DataLayout &layout)
                         make_block<NodeID>(number_of_nodes));
     }
 
+    std::unordered_map<std::string, DataLayout::BlockID> name_to_block_id = {
+        {"/mld/multilevelgraph/node_array", DataLayout::MLD_GRAPH_NODE_LIST},
+        {"/mld/multilevelgraph/edge_array", DataLayout::MLD_GRAPH_EDGE_LIST},
+        {"/mld/multilevelgraph/node_to_edge_offset", DataLayout::MLD_GRAPH_NODE_TO_OFFSET},
+        {"/mld/multilevelgraph/connectivity_checksum", DataLayout::IGNORE_BLOCK},
+        {"/mld/multilevelpartition/level_data", DataLayout::MLD_LEVEL_DATA},
+        {"/mld/multilevelpartition/partition", DataLayout::MLD_PARTITION},
+        {"/mld/multilevelpartition/cell_to_children", DataLayout::MLD_CELL_TO_CHILDREN},
+        {"/mld/cellstorage/source_boundary", DataLayout::MLD_CELL_SOURCE_BOUNDARY},
+        {"/mld/cellstorage/destination_boundary", DataLayout::MLD_CELL_DESTINATION_BOUNDARY},
+        {"/mld/cellstorage/cells", DataLayout::MLD_CELLS},
+        {"/mld/cellstorage/level_to_cell_offset", DataLayout::MLD_CELL_LEVEL_OFFSETS},
+        {"/mld/metrics/0/weights", DataLayout::MLD_CELL_WEIGHTS_0},
+        {"/mld/metrics/1/weights", DataLayout::MLD_CELL_WEIGHTS_1},
+        {"/mld/metrics/2/weights", DataLayout::MLD_CELL_WEIGHTS_2},
+        {"/mld/metrics/3/weights", DataLayout::MLD_CELL_WEIGHTS_3},
+        {"/mld/metrics/4/weights", DataLayout::MLD_CELL_WEIGHTS_4},
+        {"/mld/metrics/5/weights", DataLayout::MLD_CELL_WEIGHTS_5},
+        {"/mld/metrics/6/weights", DataLayout::MLD_CELL_WEIGHTS_6},
+        {"/mld/metrics/7/weights", DataLayout::MLD_CELL_WEIGHTS_7},
+        {"/mld/metrics/0/durations", DataLayout::MLD_CELL_DURATIONS_0},
+        {"/mld/metrics/1/durations", DataLayout::MLD_CELL_DURATIONS_1},
+        {"/mld/metrics/2/durations", DataLayout::MLD_CELL_DURATIONS_2},
+        {"/mld/metrics/3/durations", DataLayout::MLD_CELL_DURATIONS_3},
+        {"/mld/metrics/4/durations", DataLayout::MLD_CELL_DURATIONS_4},
+        {"/mld/metrics/5/durations", DataLayout::MLD_CELL_DURATIONS_5},
+        {"/mld/metrics/6/durations", DataLayout::MLD_CELL_DURATIONS_6},
+        {"/mld/metrics/7/durations", DataLayout::MLD_CELL_DURATIONS_7},
+        {"/ch/checksum", DataLayout::HSGR_CHECKSUM},
+        {"/ch/contracted_graph/node_array", DataLayout::CH_GRAPH_NODE_LIST},
+        {"/ch/contracted_graph/edge_array", DataLayout::CH_GRAPH_EDGE_LIST},
+        {"/ch/connectivity_checksum", DataLayout::IGNORE_BLOCK},
+        {"/ch/edge_filter/0", DataLayout::CH_EDGE_FILTER_0},
+        {"/ch/edge_filter/1", DataLayout::CH_EDGE_FILTER_1},
+        {"/ch/edge_filter/2", DataLayout::CH_EDGE_FILTER_2},
+        {"/ch/edge_filter/3", DataLayout::CH_EDGE_FILTER_3},
+        {"/ch/edge_filter/4", DataLayout::CH_EDGE_FILTER_4},
+        {"/ch/edge_filter/5", DataLayout::CH_EDGE_FILTER_5},
+        {"/ch/edge_filter/6", DataLayout::CH_EDGE_FILTER_6},
+        {"/ch/edge_filter/7", DataLayout::CH_EDGE_FILTER_7},
+    };
+    std::vector<NamedBlock> blocks;
+
+    constexpr bool REQUIRED = true;
+    constexpr bool OPTIONAL = false;
+    std::vector<std::tuple<bool, boost::filesystem::path>> tar_files = {
+        {OPTIONAL, config.GetPath(".osrm.mldgr")},
+        {OPTIONAL, config.GetPath(".osrm.cells")},
+        {OPTIONAL, config.GetPath(".osrm.partition")},
+        {OPTIONAL, config.GetPath(".osrm.cell_metrics")},
+        {OPTIONAL, config.GetPath(".osrm.hsgr")}
+    };
+
+    for (const auto &file : tar_files)
     {
-        std::unordered_map<std::string, DataLayout::BlockID> name_to_block_id = {
-            {"/mld/multilevelgraph/node_array", DataLayout::MLD_GRAPH_NODE_LIST},
-            {"/mld/multilevelgraph/edge_array", DataLayout::MLD_GRAPH_EDGE_LIST},
-            {"/mld/multilevelgraph/node_to_edge_offset", DataLayout::MLD_GRAPH_NODE_TO_OFFSET},
-            {"/mld/multilevelgraph/connectivity_checksum", DataLayout::IGNORE_BLOCK},
-            {"/mld/multilevelpartition/level_data", DataLayout::MLD_LEVEL_DATA},
-            {"/mld/multilevelpartition/partition", DataLayout::MLD_PARTITION},
-            {"/mld/multilevelpartition/cell_to_children", DataLayout::MLD_CELL_TO_CHILDREN},
-            {"/mld/cellstorage/source_boundary", DataLayout::MLD_CELL_SOURCE_BOUNDARY},
-            {"/mld/cellstorage/destination_boundary", DataLayout::MLD_CELL_DESTINATION_BOUNDARY},
-            {"/mld/cellstorage/cells", DataLayout::MLD_CELLS},
-            {"/mld/cellstorage/level_to_cell_offset", DataLayout::MLD_CELL_LEVEL_OFFSETS},
-            {"/mld/metrics/0/weights", DataLayout::MLD_CELL_WEIGHTS_0},
-            {"/mld/metrics/1/weights", DataLayout::MLD_CELL_WEIGHTS_1},
-            {"/mld/metrics/2/weights", DataLayout::MLD_CELL_WEIGHTS_2},
-            {"/mld/metrics/3/weights", DataLayout::MLD_CELL_WEIGHTS_3},
-            {"/mld/metrics/4/weights", DataLayout::MLD_CELL_WEIGHTS_4},
-            {"/mld/metrics/5/weights", DataLayout::MLD_CELL_WEIGHTS_5},
-            {"/mld/metrics/6/weights", DataLayout::MLD_CELL_WEIGHTS_6},
-            {"/mld/metrics/7/weights", DataLayout::MLD_CELL_WEIGHTS_7},
-            {"/mld/metrics/0/durations", DataLayout::MLD_CELL_DURATIONS_0},
-            {"/mld/metrics/1/durations", DataLayout::MLD_CELL_DURATIONS_1},
-            {"/mld/metrics/2/durations", DataLayout::MLD_CELL_DURATIONS_2},
-            {"/mld/metrics/3/durations", DataLayout::MLD_CELL_DURATIONS_3},
-            {"/mld/metrics/4/durations", DataLayout::MLD_CELL_DURATIONS_4},
-            {"/mld/metrics/5/durations", DataLayout::MLD_CELL_DURATIONS_5},
-            {"/mld/metrics/6/durations", DataLayout::MLD_CELL_DURATIONS_6},
-            {"/mld/metrics/7/durations", DataLayout::MLD_CELL_DURATIONS_7},
-        };
-        std::vector<NamedBlock> blocks;
-
-        std::vector<boost::filesystem::path> optional_tar_files = {config.GetPath(".osrm.mldgr"),
-                                                                   config.GetPath(".osrm.cells"),
-                                                                   config.GetPath(".osrm.partition"),
-                                                                   config.GetPath(".osrm.cell_metrics")};
-
-        for (const auto &path : optional_tar_files)
+        if (boost::filesystem::exists(std::get<1>(file)))
         {
-            if (boost::filesystem::exists(path))
+            readBlocks(std::get<1>(file), std::back_inserter(blocks));
+        }
+        else
+        {
+            if (std::get<0>(file) == REQUIRED)
             {
-                readBlocks(path, std::back_inserter(blocks));
+                throw util::exception("Could not find required filed: " + std::get<1>(file).string());
             }
         }
+    }
 
-        for (const auto &block : blocks)
+    for (const auto &block : blocks)
+    {
+        auto id_iter = name_to_block_id.find(std::get<0>(block));
+        if (id_iter == name_to_block_id.end())
         {
-            auto id_iter = name_to_block_id.find(std::get<0>(block));
-            if (id_iter == name_to_block_id.end())
-            {
-                throw util::exception("Could not map " + std::get<0>(block) +
-                                      " to a region in memory.");
-            }
-            layout.SetBlock(id_iter->second, std::get<1>(block));
+            throw util::exception("Could not map " + std::get<0>(block) +
+                                  " to a region in memory.");
         }
+        layout.SetBlock(id_iter->second, std::get<1>(block));
     }
 }
 

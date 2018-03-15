@@ -5,7 +5,7 @@
 
 #include "util/serialization.hpp"
 
-#include "storage/io.hpp"
+#include "storage/tar.hpp"
 #include "storage/serialization.hpp"
 
 namespace osrm
@@ -29,18 +29,20 @@ inline void readGraph(const boost::filesystem::path &path,
                       std::is_same<EdgeFilterT, util::vector_view<bool>>::value,
                   "edge_filter must be a container of vector<bool> or vector_view<bool>");
 
-    const auto fingerprint = storage::io::FileReader::VerifyFingerprint;
-    storage::io::FileReader reader{path, fingerprint};
+    const auto fingerprint = storage::tar::FileReader::VerifyFingerprint;
+    storage::tar::FileReader reader{path, fingerprint};
 
-    reader.ReadInto(checksum);
-    util::serialization::read(reader, graph);
-    auto count = reader.ReadElementCount64();
+    checksum = reader.ReadOne<std::uint32_t>("/ch/checksum");
+    util::serialization::read(reader, "/ch/contracted_graph", graph);
+
+    auto count = reader.ReadElementCount64("/ch/edge_filter");
     edge_filter.resize(count);
     for (const auto index : util::irange<std::size_t>(0, count))
     {
-        storage::serialization::read(reader, edge_filter[index]);
+        storage::serialization::read(reader, "/ch/edge_filter/" + std::to_string(index), edge_filter[index]);
     }
-    reader.ReadInto(connectivity_checksum);
+
+    connectivity_checksum = reader.ReadOne<std::uint32_t>("/ch/connectivity_checksum");
 }
 
 // writes .osrm.hsgr file
@@ -57,17 +59,22 @@ inline void writeGraph(const boost::filesystem::path &path,
     static_assert(std::is_same<EdgeFilterT, std::vector<bool>>::value ||
                       std::is_same<EdgeFilterT, util::vector_view<bool>>::value,
                   "edge_filter must be a container of vector<bool> or vector_view<bool>");
-    const auto fingerprint = storage::io::FileWriter::GenerateFingerprint;
-    storage::io::FileWriter writer{path, fingerprint};
+    const auto fingerprint = storage::tar::FileWriter::GenerateFingerprint;
+    storage::tar::FileWriter writer{path, fingerprint};
 
-    writer.WriteOne(checksum);
-    util::serialization::write(writer, graph);
-    writer.WriteElementCount64(edge_filter.size());
+    writer.WriteElementCount64("/ch/checksum", 1);
+    writer.WriteOne("/ch/checksum", checksum);
+    util::serialization::write(writer, "/ch/contracted_graph", graph);
+
+    writer.WriteElementCount64("/ch/edge_filter", edge_filter.size());
+    auto id = 0;
     for (const auto &filter : edge_filter)
     {
-        storage::serialization::write(writer, filter);
+        storage::serialization::write(writer, "/ch/edge_filter/" + std::to_string(id++), filter);
     }
-    writer.WriteOne(connectivity_checksum);
+
+    writer.WriteElementCount64("/ch/connectivity_checksum", 1);
+    writer.WriteOne("/ch/connectivity_checksum", connectivity_checksum);
 }
 }
 }
