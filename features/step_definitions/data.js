@@ -13,6 +13,11 @@ module.exports = function () {
         callback();
     });
 
+    this.Given(/^the valhalla admin db "(.*?)"$/, (args, callback) => {
+        this.vahallaAdminDB = this.expandOptions(args);
+        callback();
+    });
+
     this.Given(/^the extract extra arguments "(.*?)"$/, (args, callback) => {
         this.extractArgs = this.expandOptions(args);
         callback();
