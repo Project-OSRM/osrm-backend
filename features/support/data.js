@@ -268,7 +268,15 @@ module.exports = function () {
             //                       --mjolnir-timezone ${PWD}/valhalla_tiles/timezones.sqlite
             //                       --mjolnir-admin ${PWD}/valhalla_tiles/admins.sqlite > valhalla.json
 
-            var params = [`--mjolnir-tile-dir`, `${p.inputCacheDir}/${p.scenarioID}_valhalla_tiles`];
+            var params = [];
+
+            if (p.vahallaAdminDB === 'left') {
+                params = [`--mjolnir-tile-dir`, `${p.inputCacheDir}/${p.scenarioID}_valhalla_tiles`,
+                          `--mjolnir-admin`, `/data/valhalla/admins_left.sqlite`];
+            } else {
+                params = [`--mjolnir-tile-dir`, `${p.inputCacheDir}/${p.scenarioID}_valhalla_tiles`,
+                          `--mjolnir-admin`, `/data/valhalla/admins_right.sqlite`];
+            }
 
             child_process.execFile(`${process.env.VALHALLA_HOME}/scripts/valhalla_build_config`, params, {}, (error, stdout, stderr) => {
                 if (error) { throw error; }
@@ -324,7 +332,7 @@ module.exports = function () {
         let p = {extractArgs: this.extractArgs, contractArgs: this.contractArgs,
             partitionArgs: this.partitionArgs, customizeArgs: this.customizeArgs,
             profileFile: this.profileFile, inputCacheFile: this.inputCacheFile,
-            inputCacheFilePBF: this.inputCacheFilePBF,
+            inputCacheFilePBF: this.inputCacheFilePBF, vahallaAdminDB: this.vahallaAdminDB,
             processedCacheFile: this.processedCacheFile, environment: this.environment,
             inputCacheDir: this.featureProcessedCacheDirectory,
             scenarioID: this.scenarioID };
