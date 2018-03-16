@@ -33,10 +33,10 @@ inline void writeIntersections(const boost::filesystem::path &path,
                       std::is_same<IntersectionBearingsView, IntersectionBearingsT>::value,
                   "");
 
-    storage::io::FileWriter writer(path, storage::io::FileWriter::GenerateFingerprint);
+    storage::tar::FileWriter writer(path, storage::tar::FileWriter::GenerateFingerprint);
 
-    serialization::write(writer, intersection_bearings);
-    storage::serialization::write(writer, entry_classes);
+    serialization::write(writer, "/common/intersection_bearings", intersection_bearings);
+    storage::serialization::write(writer, "/common/entry_classes", entry_classes);
 }
 
 // read the .osrm.icd file
@@ -49,10 +49,10 @@ inline void readIntersections(const boost::filesystem::path &path,
                       std::is_same<IntersectionBearingsView, IntersectionBearingsT>::value,
                   "");
 
-    storage::io::FileReader reader(path, storage::io::FileReader::VerifyFingerprint);
+    storage::tar::FileReader reader(path, storage::tar::FileReader::VerifyFingerprint);
 
-    serialization::read(reader, intersection_bearings);
-    storage::serialization::read(reader, entry_classes);
+    serialization::read(reader, "/common/intersection_bearings", intersection_bearings);
+    storage::serialization::read(reader, "/common/entry_classes", entry_classes);
 }
 
 // reads .osrm.properties

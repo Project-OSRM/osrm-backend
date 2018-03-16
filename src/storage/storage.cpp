@@ -399,30 +399,6 @@ void Storage::PopulateLayout(DataLayout &layout)
     }
 
     {
-        io::FileReader reader(config.GetPath(".osrm.icd"), io::FileReader::VerifyFingerprint);
-
-        auto num_discreate_bearings = reader.ReadVectorSize<DiscreteBearing>();
-        layout.SetBlock(DataLayout::BEARING_VALUES,
-                        make_block<DiscreteBearing>(num_discreate_bearings));
-
-        auto num_bearing_classes = reader.ReadVectorSize<BearingClassID>();
-        layout.SetBlock(DataLayout::BEARING_CLASSID,
-                        make_block<BearingClassID>(num_bearing_classes));
-
-        reader.Skip<std::uint32_t>(1); // sum_lengths
-        const auto bearing_blocks = reader.ReadVectorSize<unsigned>();
-        const auto bearing_offsets =
-            reader
-                .ReadVectorSize<typename util::RangeTable<16, storage::Ownership::View>::BlockT>();
-
-        layout.SetBlock(DataLayout::BEARING_OFFSETS, make_block<unsigned>(bearing_blocks));
-        layout.SetBlock(DataLayout::BEARING_BLOCKS,
-                        make_block<typename util::RangeTable<16, storage::Ownership::View>::BlockT>(
-                            bearing_offsets));
-
-        auto num_entry_classes = reader.ReadVectorSize<util::guidance::EntryClass>();
-        layout.SetBlock(DataLayout::ENTRY_CLASS,
-                        make_block<util::guidance::EntryClass>(num_entry_classes));
     }
 
     {
@@ -487,6 +463,11 @@ void Storage::PopulateLayout(DataLayout &layout)
         {"/ch/edge_filter/5", DataLayout::CH_EDGE_FILTER_5},
         {"/ch/edge_filter/6", DataLayout::CH_EDGE_FILTER_6},
         {"/ch/edge_filter/7", DataLayout::CH_EDGE_FILTER_7},
+        {"/common/intersection_bearings/bearing_values", DataLayout::BEARING_VALUES},
+        {"/common/intersection_bearings/node_to_class_id", DataLayout::BEARING_CLASSID},
+        {"/common/intersection_bearings/class_id_to_ranges/block_offsets", DataLayout::BEARING_OFFSETS},
+        {"/common/intersection_bearings/class_id_to_ranges/diff_blocks", DataLayout::BEARING_BLOCKS},
+        {"/common/entry_classes", DataLayout::ENTRY_CLASS},
     };
     std::vector<NamedBlock> blocks;
 
@@ -497,7 +478,8 @@ void Storage::PopulateLayout(DataLayout &layout)
         {OPTIONAL, config.GetPath(".osrm.cells")},
         {OPTIONAL, config.GetPath(".osrm.partition")},
         {OPTIONAL, config.GetPath(".osrm.cell_metrics")},
-        {OPTIONAL, config.GetPath(".osrm.hsgr")}
+        {OPTIONAL, config.GetPath(".osrm.hsgr")},
+        {REQUIRED, config.GetPath(".osrm.icd")}
     };
 
     for (const auto &file : tar_files)

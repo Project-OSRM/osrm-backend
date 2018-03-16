@@ -31,6 +31,22 @@ void read(storage::io::FileReader &reader, util::RangeTable<BlockSize, Ownership
     storage::serialization::read(reader, table.diff_blocks);
 }
 
+template <unsigned BlockSize, storage::Ownership Ownership>
+void write(storage::tar::FileWriter &writer, const std::string& name, const util::RangeTable<BlockSize, Ownership> &table)
+{
+    writer.WriteOne(name + "/sum_lengths.meta", table.sum_lengths);
+    storage::serialization::write(writer, name + "/block_offsets", table.block_offsets);
+    storage::serialization::write(writer, name + "/diff_blocks", table.diff_blocks);
+}
+
+template <unsigned BlockSize, storage::Ownership Ownership>
+void read(storage::tar::FileReader &reader, const std::string& name, util::RangeTable<BlockSize, Ownership> &table)
+{
+    table.sum_lengths = reader.ReadOne<unsigned>(name + "/sum_lengths.meta");
+    storage::serialization::read(reader, name + "/block_offsets", table.block_offsets);
+    storage::serialization::read(reader, name + "/diff_blocks", table.diff_blocks);
+}
+
 template <typename T, std::size_t Bits, storage::Ownership Ownership>
 inline void read(storage::io::FileReader &reader, detail::PackedVector<T, Bits, Ownership> &vec)
 {

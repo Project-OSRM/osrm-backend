@@ -25,21 +25,23 @@ namespace serialization
 
 // read/write for bearing data
 template <storage::Ownership Ownership>
-inline void read(storage::io::FileReader &reader,
+inline void read(storage::tar::FileReader &reader,
+                 const std::string& name,
                  detail::IntersectionBearingsContainer<Ownership> &intersection_bearings)
 {
-    storage::serialization::read(reader, intersection_bearings.values);
-    storage::serialization::read(reader, intersection_bearings.node_to_class_id);
-    util::serialization::read(reader, intersection_bearings.class_id_to_ranges_table);
+    storage::serialization::read(reader, name + "/bearing_values", intersection_bearings.values);
+    storage::serialization::read(reader, name + "/node_to_class_id", intersection_bearings.node_to_class_id);
+    util::serialization::read(reader, name + "/class_id_to_ranges", intersection_bearings.class_id_to_ranges_table);
 }
 
 template <storage::Ownership Ownership>
-inline void write(storage::io::FileWriter &writer,
+inline void write(storage::tar::FileWriter &writer,
+                 const std::string& name,
                   const detail::IntersectionBearingsContainer<Ownership> &intersection_bearings)
 {
-    storage::serialization::write(writer, intersection_bearings.values);
-    storage::serialization::write(writer, intersection_bearings.node_to_class_id);
-    util::serialization::write(writer, intersection_bearings.class_id_to_ranges_table);
+    storage::serialization::write(writer, name + "/bearing_values", intersection_bearings.values);
+    storage::serialization::write(writer, name + "/node_to_class_id", intersection_bearings.node_to_class_id);
+    util::serialization::write(writer, name + "/class_id_to_ranges", intersection_bearings.class_id_to_ranges_table);
 }
 
 // read/write for properties file
