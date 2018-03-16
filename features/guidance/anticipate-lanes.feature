@@ -2,6 +2,7 @@
 Feature: Turn Lane Guidance
 
     Background:
+        Given the valhalla admin db "left"
         Given the profile "car"
         Given a grid size of 100 meters
 
