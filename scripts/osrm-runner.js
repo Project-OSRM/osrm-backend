@@ -123,11 +123,11 @@ queries = queries.map(q => { return {hostname: options.server.hostname, port: op
 http.globalAgent.maxSockets = options['max-sockets'];
 queries.map(query => {
     run_query(query, options.filter, (query, code, ttfb, total, results) => {
-        let str = `"${query}",${code}`;
-        if (ttfb !== undefined) str += `,${ttfb}`;
-        if (total !== undefined) str += `,${total}`;
-        if (typeof results === 'object' && results.length > 0)
-            str += ',' + results.map(x => isNaN(x) ? '"' + JSON.stringify(x).replace(/\n/g, ';').replace(/"/g, "'") + '"' : Number(x)).join(',');
+        // let str = `"${query}",${code}`;
+        // if (ttfb !== undefined) str += `,${ttfb}`;
+        let str = ""; if (total !== undefined) str += `,${total}`;
+        // if (typeof results === 'object' && results.length > 0)
+        //     str += ',' + results.map(x => isNaN(x) ? '"' + JSON.stringify(x).replace(/\n/g, ';').replace(/"/g, "'") + '"' : Number(x)).join(',');
         console.log(str);
     });
 });

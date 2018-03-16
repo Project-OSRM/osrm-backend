@@ -304,11 +304,10 @@ std::vector<EdgeDuration> manyToManySearch(SearchEngineData<ch::Algorithm> &engi
             packed_leg.push_back(middle_node_id);
 
             // Step 2: Find path from middle to target node
-                retrievePackedPathFromSearchSpace(
-                    middle_node_id,
-                    column_idx,
-                    search_space_with_buckets,
-                    packed_leg); // packed_leg_from_middle_to_target
+            retrievePackedPathFromSearchSpace(middle_node_id,
+                                              column_idx,
+                                              search_space_with_buckets,
+                                              packed_leg); // packed_leg_from_middle_to_target
 
             if (packed_leg.size() == 1 && (needsLoopForward(source_phantom, target_phantom) ||
                                            needsLoopBackwards(source_phantom, target_phantom)))

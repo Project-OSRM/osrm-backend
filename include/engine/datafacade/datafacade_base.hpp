@@ -23,14 +23,19 @@
 #include "util/guidance/entry_class.hpp"
 #include "util/guidance/turn_lanes.hpp"
 #include "util/integer_range.hpp"
+#include "util/packed_vector.hpp"
 #include "util/string_util.hpp"
 #include "util/string_view.hpp"
 #include "util/typedefs.hpp"
 
-#include "osrm/coordinate.hpp"
+#include "osrm/coordinate.hpp" // also searches in local directory (include directory in this project)
 
+<<<<<<< HEAD
 #include <boost/range/any_range.hpp>
 
+=======
+#include <boost/range/adaptor/reversed.hpp> // only in system directories (specified with -I param)
+>>>>>>> hack to not return vectors on facade.GetUncompressedForwardDurations and facade.GetUncompressedReverseDurations
 #include <cstddef>
 
 #include <string>
