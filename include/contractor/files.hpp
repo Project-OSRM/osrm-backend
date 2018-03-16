@@ -67,10 +67,9 @@ inline void writeGraph(const boost::filesystem::path &path,
     util::serialization::write(writer, "/ch/contracted_graph", graph);
 
     writer.WriteElementCount64("/ch/edge_filter", edge_filter.size());
-    auto id = 0;
-    for (const auto &filter : edge_filter)
+    for (const auto index : util::irange<std::size_t>(0, edge_filter.size()))
     {
-        storage::serialization::write(writer, "/ch/edge_filter/" + std::to_string(id++), filter);
+        storage::serialization::write(writer, "/ch/edge_filter/" + std::to_string(index), edge_filter[index]);
     }
 
     writer.WriteElementCount64("/ch/connectivity_checksum", 1);

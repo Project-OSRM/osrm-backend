@@ -139,7 +139,7 @@ template <typename T> void write(io::FileWriter &writer, const std::vector<T> &d
 template <typename T> void read(io::FileReader &reader, util::vector_view<T> &data)
 {
     const auto count = reader.ReadElementCount64();
-    BOOST_ASSERT(data.size() == count);
+    data.resize(count);
     reader.ReadInto(data.data(), count);
 }
 
@@ -174,7 +174,7 @@ inline void unpackBits(T &data, std::size_t index, std::size_t count, unsigned c
 template <typename VectorT> void readBoolVector(io::FileReader &reader, VectorT &data)
 {
     const auto count = reader.ReadElementCount64();
-    BOOST_ASSERT(data.size() == count);
+    data.resize(count);
     std::uint64_t index = 0;
     for (std::uint64_t next = CHAR_BIT; next < count; index = next, next += CHAR_BIT)
     {
@@ -191,7 +191,7 @@ template <typename VectorT> void writeBoolVector(io::FileWriter &writer, const V
     std::uint64_t index = 0;
     for (std::uint64_t next = CHAR_BIT; next < count; index = next, next += CHAR_BIT)
     {
-        writer.WriteOne<unsigned char>(packBits(data, CHAR_BIT * index, CHAR_BIT));
+        writer.WriteOne<unsigned char>(packBits(data, index, CHAR_BIT));
     }
     if (count > index)
         writer.WriteOne<unsigned char>(packBits(data, index, count - index));
@@ -201,10 +201,10 @@ template <typename VectorT>
 void readBoolVector(tar::FileReader &reader, const std::string &name, VectorT &data)
 {
     const auto count = reader.ReadElementCount64(name);
-    BOOST_ASSERT(data.size() == count);
+    data.resize(count);
     std::uint64_t index = 0;
 
-    const auto decode = [&data, &index, count](const char block) {
+    const auto decode = [&](const unsigned char block) {
         auto read_size = std::min<std::size_t>(count - index, CHAR_BIT);
         unpackBits(data, index, read_size, block);
         index += CHAR_BIT;
@@ -222,12 +222,12 @@ void writeBoolVector(tar::FileWriter &writer, const std::string &name, const Vec
 
     const auto encode = [&]() {
         auto write_size = std::min<std::size_t>(count - index, CHAR_BIT);
-        auto packed = packBits(data, CHAR_BIT * index, write_size);
+        auto packed = packBits(data, index, write_size);
         index += CHAR_BIT;
         return packed;
     };
 
-    std::uint64_t number_of_blocks = std::ceil(count / CHAR_BIT);
+    std::uint64_t number_of_blocks = std::ceil((double)count / CHAR_BIT);
     writer.WriteStreaming<unsigned char>(
         name, boost::make_function_input_iterator(encode, boost::infinite()), number_of_blocks);
 }

@@ -108,6 +108,15 @@ template <typename DataT> class vector_view
 
     std::size_t size() const { return m_size; }
 
+    void resize(const size_t size) {
+        if (size > m_size)
+        {
+            throw util::exception("Trying to resize a view to a larger size.");
+        }
+        m_size = size;
+    }
+
+
     bool empty() const { return 0 == size(); }
 
     DataT &operator[](const unsigned index)
@@ -185,7 +194,18 @@ template <> class vector_view<bool>
         return m_ptr[bucket] & (1u << offset);
     }
 
-    void reset(unsigned *, std::size_t size) { m_size = size; }
+    void reset(unsigned * ptr, std::size_t size) {
+        m_ptr = ptr;
+        m_size = size;
+    }
+
+    void resize(const size_t size) {
+        if (size > m_size)
+        {
+            throw util::exception("Trying to resize a view to a larger size.");
+        }
+        m_size = size;
+    }
 
     std::size_t size() const { return m_size; }
 
