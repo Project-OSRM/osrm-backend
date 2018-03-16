@@ -302,10 +302,6 @@ void Storage::PopulateLayout(DataLayout &layout)
                         make_block<std::uint64_t>(tree_levels_size));
     }
 
-    {
-        layout.SetBlock(DataLayout::PROPERTIES, make_block<extractor::ProfileProperties>(1));
-    }
-
     // read timestampsize
     {
         io::FileReader timestamp_file(config.GetPath(".osrm.timestamp"),
@@ -468,6 +464,7 @@ void Storage::PopulateLayout(DataLayout &layout)
         {"/common/intersection_bearings/class_id_to_ranges/block_offsets", DataLayout::BEARING_OFFSETS},
         {"/common/intersection_bearings/class_id_to_ranges/diff_blocks", DataLayout::BEARING_BLOCKS},
         {"/common/entry_classes", DataLayout::ENTRY_CLASS},
+        {"/common/properties", DataLayout::PROPERTIES},
     };
     std::vector<NamedBlock> blocks;
 
@@ -479,7 +476,8 @@ void Storage::PopulateLayout(DataLayout &layout)
         {OPTIONAL, config.GetPath(".osrm.partition")},
         {OPTIONAL, config.GetPath(".osrm.cell_metrics")},
         {OPTIONAL, config.GetPath(".osrm.hsgr")},
-        {REQUIRED, config.GetPath(".osrm.icd")}
+        {REQUIRED, config.GetPath(".osrm.icd")},
+        {REQUIRED, config.GetPath(".osrm.properties")}
     };
 
     for (const auto &file : tar_files)

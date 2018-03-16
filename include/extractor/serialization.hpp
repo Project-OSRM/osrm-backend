@@ -26,33 +26,41 @@ namespace serialization
 // read/write for bearing data
 template <storage::Ownership Ownership>
 inline void read(storage::tar::FileReader &reader,
-                 const std::string& name,
+                 const std::string &name,
                  detail::IntersectionBearingsContainer<Ownership> &intersection_bearings)
 {
     storage::serialization::read(reader, name + "/bearing_values", intersection_bearings.values);
-    storage::serialization::read(reader, name + "/node_to_class_id", intersection_bearings.node_to_class_id);
-    util::serialization::read(reader, name + "/class_id_to_ranges", intersection_bearings.class_id_to_ranges_table);
+    storage::serialization::read(
+        reader, name + "/node_to_class_id", intersection_bearings.node_to_class_id);
+    util::serialization::read(
+        reader, name + "/class_id_to_ranges", intersection_bearings.class_id_to_ranges_table);
 }
 
 template <storage::Ownership Ownership>
 inline void write(storage::tar::FileWriter &writer,
-                 const std::string& name,
+                  const std::string &name,
                   const detail::IntersectionBearingsContainer<Ownership> &intersection_bearings)
 {
     storage::serialization::write(writer, name + "/bearing_values", intersection_bearings.values);
-    storage::serialization::write(writer, name + "/node_to_class_id", intersection_bearings.node_to_class_id);
-    util::serialization::write(writer, name + "/class_id_to_ranges", intersection_bearings.class_id_to_ranges_table);
+    storage::serialization::write(
+        writer, name + "/node_to_class_id", intersection_bearings.node_to_class_id);
+    util::serialization::write(
+        writer, name + "/class_id_to_ranges", intersection_bearings.class_id_to_ranges_table);
 }
 
 // read/write for properties file
-inline void read(storage::io::FileReader &reader, ProfileProperties &properties)
+inline void
+read(storage::tar::FileReader &reader, const std::string &name, ProfileProperties &properties)
 {
-    reader.ReadInto(properties);
+    properties = reader.ReadOne<ProfileProperties>(name);
 }
 
-inline void write(storage::io::FileWriter &writer, const ProfileProperties &properties)
+inline void write(storage::tar::FileWriter &writer,
+                  const std::string &name,
+                  const ProfileProperties &properties)
 {
-    writer.WriteFrom(properties);
+    writer.WriteElementCount64(name, 1);
+    writer.WriteOne(name, properties);
 }
 
 // read/write for datasources file

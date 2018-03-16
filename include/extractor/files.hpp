@@ -59,20 +59,20 @@ inline void readIntersections(const boost::filesystem::path &path,
 inline void readProfileProperties(const boost::filesystem::path &path,
                                   ProfileProperties &properties)
 {
-    const auto fingerprint = storage::io::FileReader::VerifyFingerprint;
-    storage::io::FileReader reader{path, fingerprint};
+    const auto fingerprint = storage::tar::FileReader::VerifyFingerprint;
+    storage::tar::FileReader reader{path, fingerprint};
 
-    serialization::read(reader, properties);
+    serialization::read(reader, "/common/properties", properties);
 }
 
 // writes .osrm.properties
 inline void writeProfileProperties(const boost::filesystem::path &path,
                                    const ProfileProperties &properties)
 {
-    const auto fingerprint = storage::io::FileWriter::GenerateFingerprint;
-    storage::io::FileWriter writer{path, fingerprint};
+    const auto fingerprint = storage::tar::FileWriter::GenerateFingerprint;
+    storage::tar::FileWriter writer{path, fingerprint};
 
-    serialization::write(writer, properties);
+    serialization::write(writer, "/common/properties", properties);
 }
 
 template <typename EdgeBasedEdgeVector>

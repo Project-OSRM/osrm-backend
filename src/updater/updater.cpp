@@ -594,10 +594,7 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
         };
 
         const auto load_profile_properties = [&] {
-            // Propagate profile properties to contractor configuration structure
-            storage::io::FileReader profile_properties_file(
-                config.GetPath(".osrm.properties"), storage::io::FileReader::VerifyFingerprint);
-            profile_properties = profile_properties_file.ReadOne<extractor::ProfileProperties>();
+            extractor::files::readProfileProperties(config.GetPath(".osrm.properties"), profile_properties);
         };
 
         tbb::parallel_invoke(load_node_data,
