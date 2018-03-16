@@ -71,7 +71,6 @@ class MockBaseDataFacade : public engine::datafacade::BaseDataFacade
     {
         return GetUncompressedForwardWeights(id);
     }
-
     DurationsRangeT GetUncompressedForwardDurations(const EdgeID /*id*/) const override
     {
         static const std::vector<SegmentDuration> data{1, 2, 3};

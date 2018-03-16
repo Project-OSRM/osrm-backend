@@ -199,8 +199,6 @@ retrievePackedPathFromSearchSpace(NodeID middle_node_id,
 
         packed_leg.emplace_back(current_node_id);
 
-        BOOST_ASSERT_MSG(std::distance(bucket_list.first, bucket_list.second) == 1,
-                         "The pointers are not pointing to the same element.");
         bucket_list = std::equal_range(search_space_with_buckets.begin(),
                                        search_space_with_buckets.end(),
                                        current_node_id,
@@ -304,11 +302,10 @@ std::vector<EdgeDuration> manyToManySearch(SearchEngineData<ch::Algorithm> &engi
             packed_leg.push_back(middle_node_id);
 
             // Step 2: Find path from middle to target node
-                retrievePackedPathFromSearchSpace(
-                    middle_node_id,
-                    column_idx,
-                    search_space_with_buckets,
-                    packed_leg); // packed_leg_from_middle_to_target
+            retrievePackedPathFromSearchSpace(middle_node_id,
+                                              column_idx,
+                                              search_space_with_buckets,
+                                              packed_leg); // packed_leg_from_middle_to_target
 
             if (packed_leg.size() == 1 && (needsLoopForward(source_phantom, target_phantom) ||
                                            needsLoopBackwards(source_phantom, target_phantom)))

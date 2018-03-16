@@ -176,6 +176,7 @@ void annotatePath(const FacadeT &facade,
         BOOST_ASSERT(datasource_range.size() > 0);
         BOOST_ASSERT(weight_range.size() + 1 == id_range.size());
         BOOST_ASSERT(duration_range.size() + 1 == id_range.size());
+
         const bool is_first_segment = unpacked_path.empty();
 
         const std::size_t start_index =
@@ -192,6 +193,8 @@ void annotatePath(const FacadeT &facade,
         BOOST_ASSERT(start_index < end_index);
         for (std::size_t segment_idx = start_index; segment_idx < end_index; ++segment_idx)
         {
+            auto durations_range_itr = durations_range.begin();
+            std::advance(durations_range_itr, segment_idx);
             unpacked_path.push_back(PathData{*node_from,
                                              id_range[segment_idx + 1],
                                              name_index,
@@ -401,28 +404,21 @@ InternalRouteResult extractRoute(const DataFacade<AlgorithmT> &facade,
 template <typename FacadeT>
 EdgeDuration computeEdgeDuration(const FacadeT &facade, NodeID node_id, NodeID turn_id)
 {
-    // datastructures to hold extracted data from geometry
-    std::vector<EdgeWeight> duration_vector;
-    EdgeDuration total_duration = 0;
-
-    const auto get_segment_geometry = [&](const auto geometry_index) {
-        if (geometry_index.forward)
-        {
-            duration_vector = facade.GetUncompressedForwardDurations(geometry_index.id);
-        }
-        else
-        {
-            duration_vector = facade.GetUncompressedReverseDurations(geometry_index.id);
-        }
-    };
-
     const auto geometry_index = facade.GetGeometryIndex(node_id);
-    get_segment_geometry(geometry_index);
 
-    for (std::vector<EdgeWeight>::iterator duration = duration_vector.begin();
-         duration != duration_vector.end();
-         duration++)
-        total_duration += *duration;
+    // datastructures to hold extracted data from geometry
+    EdgeDuration total_duration;
+
+    if (geometry_index.forward)
+    {
+        auto durations_range = facade.GetUncompressedForwardDurations(geometry_index.id);
+        total_duration = std::accumulate(durations_range.begin(), durations_range.end(), 0);
+    }
+    else
+    {
+        auto durations_range = facade.GetUncompressedReverseDurations(geometry_index.id);
+        total_duration = std::accumulate(durations_range.begin(), durations_range.end(), 0);
+    }
 
     const auto turn_duration = facade.GetDurationPenaltyForEdgeID(turn_id);
     total_duration += turn_duration;
