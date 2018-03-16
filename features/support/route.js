@@ -77,14 +77,15 @@ module.exports = function () {
         if (this.osrmLoader.method === 'valhalla') {
 
         var val_costing = 'auto';
-        if (this.profile === 'bicycle')
+        if (this.profile === 'bicycle') {
            val_costing = 'bicycle';
-        else if (this.profile === 'foot')
+        } else if (this.profile === 'foot') {
            val_costing = 'pedestrian';
+        }
 
         params = {
             json: JSON.stringify({ 
-                locations: waypoints.map(w => {return{ lat: w.lat, lon: w.lon };}),
+                locations: waypoints.map(w => {return{ lat: w.lat, lon: w.lon, node_snap_tolerance: 0};}),
                 costing: val_costing,
                 directions_options:{
                     units:'miles'}
