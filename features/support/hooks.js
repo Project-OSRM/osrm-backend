@@ -36,6 +36,7 @@ module.exports = function () {
         this.setOrigin(this.DEFAULT_ORIGIN);
         this.queryParams = {};
         this.extractArgs = '';
+        this.vahallaAdminDB = '';
         this.contractArgs = '';
         this.partitionArgs = '';
         this.customizeArgs = '';
