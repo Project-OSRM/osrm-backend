@@ -228,6 +228,14 @@ template <typename ElementT> class DeallocatingVector
         return *this;
     }
 
+    DeallocatingVector(std::initializer_list<ElementT> elements)
+    {
+        for (auto && elem : elements)
+        {
+            emplace_back(std::move(elem));
+        }
+    }
+
     ~DeallocatingVector() { clear(); }
 
     friend void swap<>(DeallocatingVector<ElementT> &lhs, DeallocatingVector<ElementT> &rhs);

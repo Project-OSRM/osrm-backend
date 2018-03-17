@@ -83,11 +83,13 @@ void writeEdgeBasedGraph(const boost::filesystem::path &path,
 {
     static_assert(std::is_same<typename EdgeBasedEdgeVector::value_type, EdgeBasedEdge>::value, "");
 
-    storage::io::FileWriter writer(path, storage::io::FileWriter::GenerateFingerprint);
+    storage::tar::FileWriter writer(path, storage::tar::FileWriter::GenerateFingerprint);
 
-    writer.WriteElementCount64(number_of_edge_based_nodes);
-    storage::serialization::write(writer, edge_based_edge_list);
-    writer.WriteOne(connectivity_checksum);
+    writer.WriteElementCount64("/common/number_of_edge_based_nodes", 1);
+    writer.WriteOne("/common/number_of_edge_based_nodes", number_of_edge_based_nodes);
+    storage::serialization::write(writer, "/common/edge_based_edge_list", edge_based_edge_list);
+    writer.WriteElementCount64("/common/connectivity_checksum", 1);
+    writer.WriteOne("/common/connectivity_checksum", connectivity_checksum);
 }
 
 template <typename EdgeBasedEdgeVector>
@@ -98,11 +100,11 @@ void readEdgeBasedGraph(const boost::filesystem::path &path,
 {
     static_assert(std::is_same<typename EdgeBasedEdgeVector::value_type, EdgeBasedEdge>::value, "");
 
-    storage::io::FileReader reader(path, storage::io::FileReader::VerifyFingerprint);
+    storage::tar::FileReader reader(path, storage::tar::FileReader::VerifyFingerprint);
 
-    number_of_edge_based_nodes = reader.ReadElementCount64();
-    storage::serialization::read(reader, edge_based_edge_list);
-    reader.ReadInto(connectivity_checksum);
+    number_of_edge_based_nodes = reader.ReadOne<EdgeID>("/common/number_of_edge_based_nodes");
+    storage::serialization::read(reader, "/common/edge_based_edge_list", edge_based_edge_list);
+    connectivity_checksum = reader.ReadOne<std::uint32_t>("/common/connectivity_checksum");
 }
 
 // reads .osrm.nodes

@@ -112,4 +112,24 @@ BOOST_AUTO_TEST_CASE(tar_serialize_unsigned_vector)
     }
 }
 
+BOOST_AUTO_TEST_CASE(tar_serialize_deallocting_vector)
+{
+    TemporaryFile tmp;
+    {
+        std::vector<util::DeallocatingVector<unsigned>> data = {
+            {}, {0}, {1, 2, 3}, {4, 5, 6, 7, 8, 9, 10, 11}, {12, 13, 14, 15, 16, 17, 18, 19, 20}};
+        for (const auto &v : data)
+        {
+            {
+                tar::FileWriter writer(tmp.path, tar::FileWriter::GenerateFingerprint);
+                storage::serialization::write(writer, "my_unsigned_vector", v);
+            }
+            std::vector<unsigned> result;
+            tar::FileReader reader(tmp.path, tar::FileReader::VerifyFingerprint);
+            storage::serialization::read(reader, "my_unsigned_vector", result);
+            BOOST_CHECK_EQUAL_COLLECTIONS(v.begin(), v.end(), result.begin(), result.end());
+        }
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()

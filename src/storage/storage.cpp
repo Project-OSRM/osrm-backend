@@ -395,9 +395,6 @@ void Storage::PopulateLayout(DataLayout &layout)
     }
 
     {
-    }
-
-    {
         // Loading turn lane data
         io::FileReader lane_data_file(config.GetPath(".osrm.tld"),
                                       io::FileReader::VerifyFingerprint);

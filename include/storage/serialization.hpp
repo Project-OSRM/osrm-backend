@@ -67,6 +67,20 @@ inline void write(storage::io::FileWriter &writer, const util::DeallocatingVecto
     writer.WriteFrom(vec.bucket_list.back(), last_block_size);
 }
 
+template <typename T>
+inline void read(storage::tar::FileReader &reader, const std::string& name, util::DeallocatingVector<T> &vec)
+{
+    vec.resize(reader.ReadElementCount64(name));
+    reader.ReadStreaming<T>(name, vec.begin(), vec.size());
+}
+
+template <typename T>
+inline void write(storage::tar::FileWriter &writer, const std::string& name, const util::DeallocatingVector<T> &vec)
+{
+    writer.WriteElementCount64(name, vec.size());
+    writer.WriteStreaming<T>(name, vec.begin(), vec.size());
+}
+
 #if USE_STXXL_LIBRARY
 template <typename T> inline void read(storage::io::FileReader &reader, stxxl::vector<T> &vec)
 {
