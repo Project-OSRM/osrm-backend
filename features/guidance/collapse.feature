@@ -209,11 +209,11 @@ Feature: Collapse
             | d,c       | first,first,first    | depart,continue uturn,arrive | d,e,c     |
             | g,c       | second,first,first   | depart,turn right,arrive     | g,b,c     |
             | g,j       | second,second        | depart,arrive                | g,j       |
-            | g,f       | second,first,first   | depart,turn left,arrive      | g,e,f     |
+            | g,f       | second,first,first   | depart,turn left,arrive      | g,b,f     |
             | g,h       | second,second,second | depart,continue uturn,arrive | g,b,h     |
             | i,f       | second,first,first   | depart,turn right,arrive     | i,e,f     |
             | i,h       | second,second        | depart,arrive                | i,h       |
-            | i,c       | second,first,first   | depart,turn left,arrive      | i,b,c     |
+            | i,c       | second,first,first   | depart,turn left,arrive      | i,e,c     |
             | i,j       | second,second,second | depart,continue uturn,arrive | i,e,j     |
 
     Scenario: Partly Segregated Intersection, Two Segregated Roads, Intersection belongs to Second
