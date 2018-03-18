@@ -961,25 +961,27 @@ Feature: Turn Lane Guidance
     Scenario: Partitioned turn, Slight Curve
         Given the node map
             """
-                f   e
-                |   |
-                |   |
-                |   c
-            a - b ' |
-                g   d
+                    f   e
+                    |   |
+                i   |   |
+                |   |   c
+            h - a - b ' |
+                j   g   d
             """
 
         And the ways
             | nodes | name  | highway | oneway | turn:lanes:forward |
+            | ha    | road  | primary | yes    |                    |
             | ab    | road  | primary | yes    | left\|right        |
             | bc    | cross | primary | yes    |                    |
             | fbg   | cross | primary | yes    |                    |
             | dce   | cross | primary | yes    |                    |
+            | iaj   | kross | primary | no     |                    |
 
         When I route I should get
-            | waypoints | route            | turns                          | lanes                                         | locations |
-            | a,g       | road,cross,cross | depart,turn right,arrive       | ,left:false right:true,                       | a,b,g     |
-            | a,e       | road,cross,cross | depart,end of road left,arrive | ;left:true right:false,left:true right:false, | a,c,e     |
+            | waypoints | route            | turns                          | lanes                                          | locations |
+            | h,g       | road,cross,cross | depart,turn right,arrive       | ;,left:false right:true,                       | h,b,g     |
+            | h,e       | road,cross,cross | depart,end of road left,arrive | ;,left:true right:false;left:true right:false, | h,b,e     |
 
     Scenario: Lane Parsing Issue #2694
         Given the node map
