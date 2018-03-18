@@ -936,25 +936,27 @@ Feature: Turn Lane Guidance
     Scenario: Partitioned turn, Slight Curve - maxspeed
         Given the node map
             """
-                f   e
-                |   |
-                |   |
-                |   c
-            a - b ' |
-                g   d
+                    f   e
+                    |   |
+                i   |   |
+                |   |   c
+            h - a - b ' |
+                j   g   d
             """
 
         And the ways
             | nodes | name  | highway | oneway | turn:lanes:forward | maxspeed |
+            | ha    | road  | primary | yes    |                    | 1        |
             | ab    | road  | primary | yes    | left\|right        | 1        |
             | bc    | cross | primary | yes    |                    | 1        |
             | fbg   | cross | primary | yes    |                    | 1        |
             | dce   | cross | primary | yes    |                    | 1        |
+            | iaj   | kross | primary | no     |                    | 1        |
 
         When I route I should get
             | waypoints | route            | turns                          | lanes                                         | locations |
-            | a,g       | road,cross,cross | depart,turn right,arrive       | ,left:false right:true,                       | a,b,g     |
-            | a,e       | road,cross,cross | depart,end of road left,arrive | ;left:true right:false,left:true right:false, | a,c,e     |
+            | h,g       | road,cross,cross | depart,turn right,arrive       | ;,left:false right:true,                       | h,b,g     |
+            | h,e       | road,cross,cross | depart,end of road left,arrive | ;,left:true right:false;left:true right:false, | h,b,e     |
 
     Scenario: Partitioned turn, Slight Curve
         Given the node map
