@@ -156,15 +156,9 @@ class ContiguousInternalMemoryDataFacade<routing_algorithms::offline::Algorithm>
 
     GeometryID GetGeometryIndex(const NodeID /*id*/) const override { return GeometryID{0, false}; }
 
-    std::vector<NodeID> GetUncompressedForwardGeometry(const EdgeID /*id*/) const override
-    {
-        return {};
-    }
+    NodesIDRangeT GetUncompressedForwardGeometry(const EdgeID /*id*/) const override { return {}; }
 
-    std::vector<NodeID> GetUncompressedReverseGeometry(const EdgeID /*id*/) const override
-    {
-        return {};
-    }
+    NodesIDRangeT GetUncompressedReverseGeometry(const EdgeID /*id*/) const override { return {}; }
 
     TurnPenalty GetWeightPenaltyForEdgeID(const unsigned /*id*/) const override
     {
@@ -176,32 +170,26 @@ class ContiguousInternalMemoryDataFacade<routing_algorithms::offline::Algorithm>
         return INVALID_TURN_PENALTY;
     }
 
-    std::vector<EdgeWeight> GetUncompressedForwardWeights(const EdgeID /*id*/) const override
+    WeightsRangeT GetUncompressedForwardWeights(const EdgeID /*id*/) const override { return {}; }
+
+    WeightsRangeT GetUncompressedReverseWeights(const EdgeID /*id*/) const override { return {}; }
+
+    DurationsRangeT GetUncompressedForwardDurations(const EdgeID /*geomID*/) const override
     {
         return {};
     }
 
-    std::vector<EdgeWeight> GetUncompressedReverseWeights(const EdgeID /*id*/) const override
+    DurationsRangeT GetUncompressedReverseDurations(const EdgeID /*geomID*/) const override
     {
         return {};
     }
 
-    std::vector<EdgeWeight> GetUncompressedForwardDurations(const EdgeID /*geomID*/) const override
+    DatasourceIDRangeT GetUncompressedForwardDatasources(const EdgeID /*id*/) const override
     {
         return {};
     }
 
-    std::vector<EdgeWeight> GetUncompressedReverseDurations(const EdgeID /*geomID*/) const override
-    {
-        return {};
-    }
-
-    std::vector<DatasourceID> GetUncompressedForwardDatasources(const EdgeID /*id*/) const override
-    {
-        return {};
-    }
-
-    std::vector<DatasourceID> GetUncompressedReverseDatasources(const EdgeID /*id*/) const override
+    DatasourceIDRangeT GetUncompressedReverseDatasources(const EdgeID /*id*/) const override
     {
         return {};
     }
@@ -436,6 +424,23 @@ BOOST_AUTO_TEST_CASE(shortest_path)
         osrm::engine::routing_algorithms::shortestPathSearch(heaps, facade, phantom_nodes, false);
 
     BOOST_CHECK_EQUAL(route.shortest_path_weight, INVALID_EDGE_WEIGHT);
+}
+
+BOOST_AUTO_TEST_CASE(facade_uncompressed_methods)
+{
+    using Algorithm = osrm::engine::routing_algorithms::offline::Algorithm;
+
+    osrm::engine::SearchEngineData<Algorithm> heaps;
+    osrm::engine::datafacade::ContiguousInternalMemoryDataFacade<Algorithm> facade;
+
+    BOOST_CHECK_EQUAL(facade.GetUncompressedForwardGeometry(0).size(), 0);
+    BOOST_CHECK_EQUAL(facade.GetUncompressedReverseGeometry(0).size(), 0);
+    BOOST_CHECK_EQUAL(facade.GetUncompressedForwardWeights(0).size(), 0);
+    BOOST_CHECK_EQUAL(facade.GetUncompressedReverseWeights(0).size(), 0);
+    BOOST_CHECK_EQUAL(facade.GetUncompressedForwardDurations(0).size(), 0);
+    BOOST_CHECK_EQUAL(facade.GetUncompressedReverseDurations(0).size(), 0);
+    BOOST_CHECK_EQUAL(facade.GetUncompressedForwardDatasources(0).size(), 0);
+    BOOST_CHECK_EQUAL(facade.GetUncompressedReverseDatasources(0).size(), 0);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

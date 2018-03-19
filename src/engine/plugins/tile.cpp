@@ -397,16 +397,14 @@ void encodeVectorTile(const DataFacadeBase &facade,
         const auto &edge = edges[edge_index];
 
         const auto geometry_id = get_geometry_id(edge);
-        const auto forward_datasource_vector =
-            facade.GetUncompressedForwardDatasources(geometry_id);
-        const auto reverse_datasource_vector =
-            facade.GetUncompressedReverseDatasources(geometry_id);
+        const auto forward_datasource_range = facade.GetUncompressedForwardDatasources(geometry_id);
+        const auto reverse_datasource_range = facade.GetUncompressedReverseDatasources(geometry_id);
 
-        BOOST_ASSERT(edge.fwd_segment_position < forward_datasource_vector.size());
-        const auto forward_datasource = forward_datasource_vector[edge.fwd_segment_position];
-        BOOST_ASSERT(edge.fwd_segment_position < reverse_datasource_vector.size());
-        const auto reverse_datasource = reverse_datasource_vector[reverse_datasource_vector.size() -
-                                                                  edge.fwd_segment_position - 1];
+        BOOST_ASSERT(edge.fwd_segment_position < forward_datasource_range.size());
+        const auto forward_datasource = forward_datasource_range[edge.fwd_segment_position];
+        BOOST_ASSERT(edge.fwd_segment_position < reverse_datasource_range.size());
+        const auto reverse_datasource = reverse_datasource_range[reverse_datasource_range.size() -
+                                                                 edge.fwd_segment_position - 1];
 
         // Keep track of the highest datasource seen so that we don't write unnecessary
         // data to the layer attribute values
@@ -453,13 +451,11 @@ void encodeVectorTile(const DataFacadeBase &facade,
                 const double length = osrm::util::coordinate_calculation::haversineDistance(a, b);
 
                 // Weight values
-                const auto forward_weight_vector =
-                    facade.GetUncompressedForwardWeights(geometry_id);
-                const auto reverse_weight_vector =
-                    facade.GetUncompressedReverseWeights(geometry_id);
-                const auto forward_weight = forward_weight_vector[edge.fwd_segment_position];
-                const auto reverse_weight = reverse_weight_vector[reverse_weight_vector.size() -
-                                                                  edge.fwd_segment_position - 1];
+                const auto forward_weight_range = facade.GetUncompressedForwardWeights(geometry_id);
+                const auto reverse_weight_range = facade.GetUncompressedReverseWeights(geometry_id);
+                const auto forward_weight = forward_weight_range[edge.fwd_segment_position];
+                const auto reverse_weight = reverse_weight_range[reverse_weight_range.size() -
+                                                                 edge.fwd_segment_position - 1];
                 line_int_index.add(forward_weight);
                 line_int_index.add(reverse_weight);
 
@@ -472,14 +468,14 @@ void encodeVectorTile(const DataFacadeBase &facade,
                 line_int_index.add(reverse_rate);
 
                 // Duration values
-                const auto forward_duration_vector =
+                const auto forward_duration_range =
                     facade.GetUncompressedForwardDurations(geometry_id);
-                const auto reverse_duration_vector =
+                const auto reverse_duration_range =
                     facade.GetUncompressedReverseDurations(geometry_id);
-                const auto forward_duration = forward_duration_vector[edge.fwd_segment_position];
-                const auto reverse_duration =
-                    reverse_duration_vector[reverse_duration_vector.size() -
-                                            edge.fwd_segment_position - 1];
+                const auto forward_duration = forward_duration_range[edge.fwd_segment_position];
+                const auto reverse_duration = reverse_duration_range[reverse_duration_range.size() -
+                                                                     edge.fwd_segment_position - 1];
+
                 line_int_index.add(forward_duration);
                 line_int_index.add(reverse_duration);
             }
@@ -500,32 +496,32 @@ void encodeVectorTile(const DataFacadeBase &facade,
                     const double length =
                         osrm::util::coordinate_calculation::haversineDistance(a, b);
 
-                    const auto forward_weight_vector =
+                    const auto forward_weight_range =
                         facade.GetUncompressedForwardWeights(geometry_id);
-                    const auto reverse_weight_vector =
+                    const auto reverse_weight_range =
                         facade.GetUncompressedReverseWeights(geometry_id);
-                    const auto forward_duration_vector =
+                    const auto forward_duration_range =
                         facade.GetUncompressedForwardDurations(geometry_id);
-                    const auto reverse_duration_vector =
+                    const auto reverse_duration_range =
                         facade.GetUncompressedReverseDurations(geometry_id);
-                    const auto forward_datasource_vector =
+                    const auto forward_datasource_range =
                         facade.GetUncompressedForwardDatasources(geometry_id);
-                    const auto reverse_datasource_vector =
+                    const auto reverse_datasource_range =
                         facade.GetUncompressedReverseDatasources(geometry_id);
-                    const auto forward_weight = forward_weight_vector[edge.fwd_segment_position];
-                    const auto reverse_weight =
-                        reverse_weight_vector[reverse_weight_vector.size() -
-                                              edge.fwd_segment_position - 1];
-                    const auto forward_duration =
-                        forward_duration_vector[edge.fwd_segment_position];
+                    const auto forward_weight = forward_weight_range[edge.fwd_segment_position];
+                    const auto reverse_weight = reverse_weight_range[reverse_weight_range.size() -
+                                                                     edge.fwd_segment_position - 1];
+
+                    const auto forward_duration = forward_duration_range[edge.fwd_segment_position];
                     const auto reverse_duration =
-                        reverse_duration_vector[reverse_duration_vector.size() -
-                                                edge.fwd_segment_position - 1];
+                        reverse_duration_range[reverse_duration_range.size() -
+                                               edge.fwd_segment_position - 1];
+
                     const auto forward_datasource_idx =
-                        forward_datasource_vector[edge.fwd_segment_position];
+                        forward_datasource_range[edge.fwd_segment_position];
                     const auto reverse_datasource_idx =
-                        reverse_datasource_vector[reverse_datasource_vector.size() -
-                                                  edge.fwd_segment_position - 1];
+                        reverse_datasource_range[reverse_datasource_range.size() -
+                                                 edge.fwd_segment_position - 1];
 
                     const auto component_id = facade.GetComponentID(edge.forward_segment_id.id);
                     const auto name_id = facade.GetNameIndex(edge.forward_segment_id.id);
@@ -929,7 +925,7 @@ void encodeVectorTile(const DataFacadeBase &facade,
             for (auto edgeNodeID : segregated_nodes)
             {
                 auto const geomIndex = facade.GetGeometryIndex(edgeNodeID);
-                std::vector<NodeID> geometry;
+                DataFacadeBase::NodesIDRangeT geometry;
 
                 if (geomIndex.forward)
                     geometry = facade.GetUncompressedForwardGeometry(geomIndex.id);
