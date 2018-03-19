@@ -18,19 +18,59 @@ BOOST_AUTO_TEST_CASE(tar_serialize_range_table)
         constexpr unsigned BLOCK_SIZE = 16;
         using TestRangeTable = RangeTable<BLOCK_SIZE, osrm::storage::Ownership::Container>;
 
-        std::vector<TestRangeTable> data = {
-        };
+        std::vector<std::vector<unsigned>> data = {std::vector<unsigned>{0, 10, 24, 100, 2, 100},
+                                                   std::vector<unsigned>{1, 12, 15},
+                                                   std::vector<unsigned>{10, 10, 10}};
 
         for (const auto &v : data)
         {
+            TestRangeTable reference{v};
             {
-                storage::tar::FileWriter writer(tmp.path, storage::tar::FileWriter::GenerateFingerprint);
-                util::serialization::write(writer, "my_range_table", v);
+                storage::tar::FileWriter writer(tmp.path,
+                                                storage::tar::FileWriter::GenerateFingerprint);
+                util::serialization::write(writer, "my_range_table", reference);
             }
 
             TestRangeTable result;
             storage::tar::FileReader reader(tmp.path, storage::tar::FileReader::VerifyFingerprint);
             util::serialization::read(reader, "my_range_table", result);
+
+            for (auto index : util::irange<std::size_t>(0, v.size()))
+            {
+                CHECK_EQUAL_COLLECTIONS(result.GetRange(index), reference.GetRange(index));
+            }
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(tar_serialize_packed_vector)
+{
+    TemporaryFile tmp;
+    {
+        using TestPackedVector = PackedVector<std::uint64_t, 33>;
+
+        std::vector<TestPackedVector> data = {{1597322404,
+                                               1939964443,
+                                               2112255763,
+                                               1432114613,
+                                               1067854538,
+                                               352118606,
+                                               1782436840,
+                                               1909002904,
+                                               165344818},
+                                              {0, 1, 2, 3}};
+
+        for (const auto &v : data)
+        {
+            {
+                storage::tar::FileWriter writer(tmp.path,
+                                                storage::tar::FileWriter::GenerateFingerprint);
+                util::serialization::write(writer, "my_packed_vector", v);
+            }
+
+            TestPackedVector result;
+            storage::tar::FileReader reader(tmp.path, storage::tar::FileReader::VerifyFingerprint);
+            util::serialization::read(reader, "my_packed_vector", result);
         }
     }
 }
