@@ -328,50 +328,6 @@ void Storage::PopulateLayout(DataLayout &layout)
                         make_block<TurnPenalty>(number_of_penalties));
     }
 
-    // load geometries sizes
-    {
-        io::FileReader reader(config.GetPath(".osrm.geometry"), io::FileReader::VerifyFingerprint);
-
-        const auto number_of_geometries_indices = reader.ReadVectorSize<unsigned>();
-        layout.SetBlock(DataLayout::GEOMETRIES_INDEX,
-                        make_block<unsigned>(number_of_geometries_indices));
-
-        const auto number_of_compressed_geometries = reader.ReadVectorSize<NodeID>();
-        layout.SetBlock(DataLayout::GEOMETRIES_NODE_LIST,
-                        make_block<NodeID>(number_of_compressed_geometries));
-
-        reader.ReadElementCount64(); // number of segments
-        const auto number_of_segment_weight_blocks =
-            reader.ReadVectorSize<extractor::SegmentDataView::SegmentWeightVector::block_type>();
-
-        reader.ReadElementCount64(); // number of segments
-        auto number_of_rev_weight_blocks =
-            reader.ReadVectorSize<extractor::SegmentDataView::SegmentWeightVector::block_type>();
-        BOOST_ASSERT(number_of_rev_weight_blocks == number_of_segment_weight_blocks);
-        (void)number_of_rev_weight_blocks;
-
-        reader.ReadElementCount64(); // number of segments
-        const auto number_of_segment_duration_blocks =
-            reader.ReadVectorSize<extractor::SegmentDataView::SegmentDurationVector::block_type>();
-
-        layout.SetBlock(DataLayout::GEOMETRIES_FWD_WEIGHT_LIST,
-                        make_block<extractor::SegmentDataView::SegmentWeightVector::block_type>(
-                            number_of_segment_weight_blocks));
-        layout.SetBlock(DataLayout::GEOMETRIES_REV_WEIGHT_LIST,
-                        make_block<extractor::SegmentDataView::SegmentWeightVector::block_type>(
-                            number_of_segment_weight_blocks));
-        layout.SetBlock(DataLayout::GEOMETRIES_FWD_DURATION_LIST,
-                        make_block<extractor::SegmentDataView::SegmentDurationVector::block_type>(
-                            number_of_segment_duration_blocks));
-        layout.SetBlock(DataLayout::GEOMETRIES_REV_DURATION_LIST,
-                        make_block<extractor::SegmentDataView::SegmentDurationVector::block_type>(
-                            number_of_segment_duration_blocks));
-        layout.SetBlock(DataLayout::GEOMETRIES_FWD_DATASOURCES_LIST,
-                        make_block<DatasourceID>(number_of_compressed_geometries));
-        layout.SetBlock(DataLayout::GEOMETRIES_REV_DATASOURCES_LIST,
-                        make_block<DatasourceID>(number_of_compressed_geometries));
-    }
-
     {
         // Loading turn lane data
         io::FileReader lane_data_file(config.GetPath(".osrm.tld"),
@@ -443,6 +399,14 @@ void Storage::PopulateLayout(DataLayout &layout)
         {"/common/coordinates", DataLayout::COORDINATE_LIST},
         {"/common/osm_node_ids/packed", DataLayout::OSM_NODE_ID_LIST},
         {"/common/data_sources_names", DataLayout::DATASOURCES_NAMES},
+        {"/common/segment_data/index", DataLayout::GEOMETRIES_INDEX},
+        {"/common/segment_data/nodes", DataLayout::GEOMETRIES_NODE_LIST},
+        {"/common/segment_data/forward_weights/packed", DataLayout::GEOMETRIES_FWD_WEIGHT_LIST},
+        {"/common/segment_data/reverse_weights/packed", DataLayout::GEOMETRIES_REV_WEIGHT_LIST},
+        {"/common/segment_data/forward_durations/packed", DataLayout::GEOMETRIES_FWD_DURATION_LIST},
+        {"/common/segment_data/reverse_durations/packed", DataLayout::GEOMETRIES_REV_DURATION_LIST},
+        {"/common/segment_data/forward_data_sources", DataLayout::GEOMETRIES_FWD_DATASOURCES_LIST},
+        {"/common/segment_data/reverse_data_sources", DataLayout::GEOMETRIES_REV_DATASOURCES_LIST},
     };
     std::vector<NamedBlock> blocks;
 
@@ -457,7 +421,8 @@ void Storage::PopulateLayout(DataLayout &layout)
         {REQUIRED, config.GetPath(".osrm.icd")},
         {REQUIRED, config.GetPath(".osrm.properties")},
         {REQUIRED, config.GetPath(".osrm.nbg_nodes")},
-        {REQUIRED, config.GetPath(".osrm.datasource_names")}
+        {REQUIRED, config.GetPath(".osrm.datasource_names")},
+        {REQUIRED, config.GetPath(".osrm.geometry")},
     };
 
     for (const auto &file : tar_files)

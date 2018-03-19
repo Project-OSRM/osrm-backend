@@ -64,12 +64,12 @@ inline void write(storage::tar::FileWriter &writer,
 }
 
 // read/write for datasources file
-inline void read(storage::tar::FileReader &reader, const std::string& name, Datasources &sources)
+inline void read(storage::tar::FileReader &reader, const std::string &name, Datasources &sources)
 {
     sources = reader.ReadOne<Datasources>(name);
 }
 
-inline void write(storage::tar::FileWriter &writer, const std::string& name, Datasources &sources)
+inline void write(storage::tar::FileWriter &writer, const std::string &name, Datasources &sources)
 {
     writer.WriteElementCount64(name, 1);
     writer.WriteOne(name, sources);
@@ -77,31 +77,37 @@ inline void write(storage::tar::FileWriter &writer, const std::string& name, Dat
 
 // read/write for segment data file
 template <storage::Ownership Ownership>
-inline void read(storage::io::FileReader &reader,
+inline void read(storage::tar::FileReader &reader,
+                 const std::string &name,
                  detail::SegmentDataContainerImpl<Ownership> &segment_data)
 {
-    storage::serialization::read(reader, segment_data.index);
-    storage::serialization::read(reader, segment_data.nodes);
-    util::serialization::read(reader, segment_data.fwd_weights);
-    util::serialization::read(reader, segment_data.rev_weights);
-    util::serialization::read(reader, segment_data.fwd_durations);
-    util::serialization::read(reader, segment_data.rev_durations);
-    storage::serialization::read(reader, segment_data.fwd_datasources);
-    storage::serialization::read(reader, segment_data.rev_datasources);
+    storage::serialization::read(reader, name + "/index", segment_data.index);
+    storage::serialization::read(reader, name + "/nodes", segment_data.nodes);
+    util::serialization::read(reader, name + "/forward_weights", segment_data.fwd_weights);
+    util::serialization::read(reader, name + "/reverse_weights", segment_data.rev_weights);
+    util::serialization::read(reader, name + "/forward_durations", segment_data.fwd_durations);
+    util::serialization::read(reader, name + "/reverse_durations", segment_data.rev_durations);
+    storage::serialization::read(
+        reader, name + "/forward_data_sources", segment_data.fwd_datasources);
+    storage::serialization::read(
+        reader, name + "/reverse_data_sources", segment_data.rev_datasources);
 }
 
 template <storage::Ownership Ownership>
-inline void write(storage::io::FileWriter &writer,
+inline void write(storage::tar::FileWriter &writer,
+                  const std::string &name,
                   const detail::SegmentDataContainerImpl<Ownership> &segment_data)
 {
-    storage::serialization::write(writer, segment_data.index);
-    storage::serialization::write(writer, segment_data.nodes);
-    util::serialization::write(writer, segment_data.fwd_weights);
-    util::serialization::write(writer, segment_data.rev_weights);
-    util::serialization::write(writer, segment_data.fwd_durations);
-    util::serialization::write(writer, segment_data.rev_durations);
-    storage::serialization::write(writer, segment_data.fwd_datasources);
-    storage::serialization::write(writer, segment_data.rev_datasources);
+    storage::serialization::write(writer, name + "/index", segment_data.index);
+    storage::serialization::write(writer, name + "/nodes", segment_data.nodes);
+    util::serialization::write(writer, name + "/forward_weights", segment_data.fwd_weights);
+    util::serialization::write(writer, name + "/reverse_weights", segment_data.rev_weights);
+    util::serialization::write(writer, name + "/forward_durations", segment_data.fwd_durations);
+    util::serialization::write(writer, name + "/reverse_durations", segment_data.rev_durations);
+    storage::serialization::write(
+        writer, name + "/forward_data_sources", segment_data.fwd_datasources);
+    storage::serialization::write(
+        writer, name + "/reverse_data_sources", segment_data.rev_datasources);
 }
 
 template <storage::Ownership Ownership>
