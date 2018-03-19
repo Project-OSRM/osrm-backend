@@ -1138,17 +1138,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
     // write weight penalties per turn
     BOOST_ASSERT(turn_weight_penalties.size() == turn_duration_penalties.size());
-    {
-        storage::io::FileWriter writer(turn_weight_penalties_filename,
-                                       storage::io::FileWriter::GenerateFingerprint);
-        storage::serialization::write(writer, turn_weight_penalties);
-    }
-
-    {
-        storage::io::FileWriter writer(turn_duration_penalties_filename,
-                                       storage::io::FileWriter::GenerateFingerprint);
-        storage::serialization::write(writer, turn_duration_penalties);
-    }
+    files::writeTurnWeightPenalty(turn_weight_penalties_filename, turn_weight_penalties);
+    files::writeTurnDurationPenalty(turn_duration_penalties_filename, turn_duration_penalties);
 
     util::Log() << "Generated " << m_edge_based_node_segments.size() << " edge based node segments";
     util::Log() << "Node-based graph contains " << node_based_edge_counter << " edges";

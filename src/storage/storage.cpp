@@ -250,7 +250,6 @@ void Storage::PopulateLayout(DataLayout &layout)
         layout.SetBlock(DataLayout::NAME_CHAR_DATA, make_block<char>(name_file.GetSize()));
     }
 
-
     // Loading information for original edges
     {
         io::FileReader edges_file(config.GetPath(".osrm.edges"), io::FileReader::VerifyFingerprint);
@@ -287,24 +286,6 @@ void Storage::PopulateLayout(DataLayout &layout)
                                       io::FileReader::VerifyFingerprint);
         const auto timestamp_size = timestamp_file.GetSize();
         layout.SetBlock(DataLayout::TIMESTAMP, make_block<char>(timestamp_size));
-    }
-
-    // load turn weight penalties
-    {
-        io::FileReader turn_weight_penalties_file(config.GetPath(".osrm.turn_weight_penalties"),
-                                                  io::FileReader::VerifyFingerprint);
-        const auto number_of_penalties = turn_weight_penalties_file.ReadElementCount64();
-        layout.SetBlock(DataLayout::TURN_WEIGHT_PENALTIES,
-                        make_block<TurnPenalty>(number_of_penalties));
-    }
-
-    // load turn duration penalties
-    {
-        io::FileReader turn_duration_penalties_file(config.GetPath(".osrm.turn_duration_penalties"),
-                                                    io::FileReader::VerifyFingerprint);
-        const auto number_of_penalties = turn_duration_penalties_file.ReadElementCount64();
-        layout.SetBlock(DataLayout::TURN_DURATION_PENALTIES,
-                        make_block<TurnPenalty>(number_of_penalties));
     }
 
     std::unordered_map<std::string, DataLayout::BlockID> name_to_block_id = {
@@ -349,8 +330,10 @@ void Storage::PopulateLayout(DataLayout &layout)
         {"/ch/edge_filter/7", DataLayout::CH_EDGE_FILTER_7},
         {"/common/intersection_bearings/bearing_values", DataLayout::BEARING_VALUES},
         {"/common/intersection_bearings/node_to_class_id", DataLayout::BEARING_CLASSID},
-        {"/common/intersection_bearings/class_id_to_ranges/block_offsets", DataLayout::BEARING_OFFSETS},
-        {"/common/intersection_bearings/class_id_to_ranges/diff_blocks", DataLayout::BEARING_BLOCKS},
+        {"/common/intersection_bearings/class_id_to_ranges/block_offsets",
+         DataLayout::BEARING_OFFSETS},
+        {"/common/intersection_bearings/class_id_to_ranges/diff_blocks",
+         DataLayout::BEARING_BLOCKS},
         {"/common/entry_classes", DataLayout::ENTRY_CLASS},
         {"/common/properties", DataLayout::PROPERTIES},
         {"/common/coordinates", DataLayout::COORDINATE_LIST},
@@ -371,6 +354,8 @@ void Storage::PopulateLayout(DataLayout &layout)
         {"/common/turn_lanes/data", DataLayout::TURN_LANE_DATA},
         {"/common/maneuver_overrides/overrides", DataLayout::MANEUVER_OVERRIDES},
         {"/common/maneuver_overrides/node_sequences", DataLayout::MANEUVER_OVERRIDE_NODE_SEQUENCES},
+        {"/common/turn_penalty/weight", DataLayout::TURN_WEIGHT_PENALTIES},
+        {"/common/turn_penalty/duration", DataLayout::TURN_DURATION_PENALTIES},
     };
     std::vector<NamedBlock> blocks;
 
@@ -391,6 +376,8 @@ void Storage::PopulateLayout(DataLayout &layout)
         {REQUIRED, config.GetPath(".osrm.tls")},
         {REQUIRED, config.GetPath(".osrm.tld")},
         {REQUIRED, config.GetPath(".osrm.maneuver_overrides")},
+        {REQUIRED, config.GetPath(".osrm.turn_weight_penalties")},
+        {REQUIRED, config.GetPath(".osrm.turn_duration_penalties")},
     };
 
     for (const auto &file : tar_files)
@@ -403,7 +390,8 @@ void Storage::PopulateLayout(DataLayout &layout)
         {
             if (std::get<0>(file) == REQUIRED)
             {
-                throw util::exception("Could not find required filed: " + std::get<1>(file).string());
+                throw util::exception("Could not find required filed: " +
+                                      std::get<1>(file).string());
             }
         }
     }
@@ -640,22 +628,24 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
 
     // load turn weight penalties
     {
-        io::FileReader turn_weight_penalties_file(config.GetPath(".osrm.turn_weight_penalties"),
-                                                  io::FileReader::VerifyFingerprint);
-        const auto number_of_penalties = turn_weight_penalties_file.ReadElementCount64();
-        const auto turn_weight_penalties_ptr =
-            layout.GetBlockPtr<TurnPenalty, true>(memory_ptr, DataLayout::TURN_WEIGHT_PENALTIES);
-        turn_weight_penalties_file.ReadInto(turn_weight_penalties_ptr, number_of_penalties);
+        auto turn_duration_penalties_ptr = layout.GetBlockPtr<TurnPenalty, true>(
+            memory_ptr, storage::DataLayout::TURN_WEIGHT_PENALTIES);
+        util::vector_view<TurnPenalty> turn_duration_penalties(
+            turn_duration_penalties_ptr,
+            layout.GetBlockEntries(storage::DataLayout::TURN_WEIGHT_PENALTIES));
+        extractor::files::readTurnWeightPenalty(config.GetPath(".osrm.turn_weight_penalties"),
+                                                  turn_duration_penalties);
     }
 
     // load turn duration penalties
     {
-        io::FileReader turn_duration_penalties_file(config.GetPath(".osrm.turn_duration_penalties"),
-                                                    io::FileReader::VerifyFingerprint);
-        const auto number_of_penalties = turn_duration_penalties_file.ReadElementCount64();
-        const auto turn_duration_penalties_ptr =
-            layout.GetBlockPtr<TurnPenalty, true>(memory_ptr, DataLayout::TURN_DURATION_PENALTIES);
-        turn_duration_penalties_file.ReadInto(turn_duration_penalties_ptr, number_of_penalties);
+        auto turn_duration_penalties_ptr = layout.GetBlockPtr<TurnPenalty, true>(
+            memory_ptr, storage::DataLayout::TURN_DURATION_PENALTIES);
+        util::vector_view<TurnPenalty> turn_duration_penalties(
+            turn_duration_penalties_ptr,
+            layout.GetBlockEntries(storage::DataLayout::TURN_DURATION_PENALTIES));
+        extractor::files::readTurnDurationPenalty(config.GetPath(".osrm.turn_duration_penalties"),
+                                                  turn_duration_penalties);
     }
 
     // store timestamp

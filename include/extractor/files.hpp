@@ -269,8 +269,9 @@ inline void writeTurnLaneDescriptions(const boost::filesystem::path &path,
 template <typename TurnLaneDataT>
 inline void readTurnLaneData(const boost::filesystem::path &path, TurnLaneDataT &turn_lane_data)
 {
-    static_assert(std::is_same<typename TurnLaneDataT::value_type, util::guidance::LaneTupleIdPair>::value,
-                  "");
+    static_assert(
+        std::is_same<typename TurnLaneDataT::value_type, util::guidance::LaneTupleIdPair>::value,
+        "");
 
     const auto fingerprint = storage::tar::FileReader::VerifyFingerprint;
     storage::tar::FileReader reader{path, fingerprint};
@@ -281,17 +282,17 @@ inline void readTurnLaneData(const boost::filesystem::path &path, TurnLaneDataT 
 // writes .osrm.tld
 template <typename TurnLaneDataT>
 inline void writeTurnLaneData(const boost::filesystem::path &path,
-                                      const TurnLaneDataT &turn_lane_data)
+                              const TurnLaneDataT &turn_lane_data)
 {
-    static_assert(std::is_same<typename TurnLaneDataT::value_type, util::guidance::LaneTupleIdPair>::value,
-                  "");
+    static_assert(
+        std::is_same<typename TurnLaneDataT::value_type, util::guidance::LaneTupleIdPair>::value,
+        "");
 
     const auto fingerprint = storage::tar::FileWriter::GenerateFingerprint;
     storage::tar::FileWriter writer{path, fingerprint};
 
     storage::serialization::write(writer, "/common/turn_lanes/data", turn_lane_data);
 }
-
 
 // reads .osrm.maneuver_overrides
 template <typename StorageManeuverOverrideT, typename NodeSequencesT>
@@ -302,8 +303,10 @@ inline void readManeuverOverrides(const boost::filesystem::path &path,
     const auto fingerprint = storage::tar::FileReader::VerifyFingerprint;
     storage::tar::FileReader reader{path, fingerprint};
 
-    storage::serialization::read(reader, "/common/maneuver_overrides/overrides", maneuver_overrides);
-    storage::serialization::read(reader, "/common/maneuver_overrides/node_sequences", node_sequences);
+    storage::serialization::read(
+        reader, "/common/maneuver_overrides/overrides", maneuver_overrides);
+    storage::serialization::read(
+        reader, "/common/maneuver_overrides/node_sequences", node_sequences);
 }
 
 // writes .osrm.maneuver_overrides
@@ -314,8 +317,52 @@ inline void writeManeuverOverrides(const boost::filesystem::path &path,
     const auto fingerprint = storage::tar::FileWriter::GenerateFingerprint;
     storage::tar::FileWriter writer{path, fingerprint};
 
-    storage::serialization::write(writer, "/common/maneuver_overrides/overrides", maneuver_overrides);
-    storage::serialization::write(writer, "/common/maneuver_overrides/node_sequences", node_sequences);
+    storage::serialization::write(
+        writer, "/common/maneuver_overrides/overrides", maneuver_overrides);
+    storage::serialization::write(
+        writer, "/common/maneuver_overrides/node_sequences", node_sequences);
+}
+
+// writes .osrm.turn_weight_penalties
+template <typename TurnPenaltyT>
+inline void writeTurnWeightPenalty(const boost::filesystem::path &path,
+                                   const TurnPenaltyT &turn_penalty)
+{
+    const auto fingerprint = storage::tar::FileWriter::GenerateFingerprint;
+    storage::tar::FileWriter writer{path, fingerprint};
+
+    storage::serialization::write(writer, "/common/turn_penalty/weight", turn_penalty);
+}
+
+// read .osrm.turn_weight_penalties
+template <typename TurnPenaltyT>
+inline void readTurnWeightPenalty(const boost::filesystem::path &path, TurnPenaltyT &turn_penalty)
+{
+    const auto fingerprint = storage::tar::FileReader::VerifyFingerprint;
+    storage::tar::FileReader reader{path, fingerprint};
+
+    storage::serialization::read(reader, "/common/turn_penalty/weight", turn_penalty);
+}
+
+// writes .osrm.turn_duration_penalties
+template <typename TurnPenaltyT>
+inline void writeTurnDurationPenalty(const boost::filesystem::path &path,
+                                     const TurnPenaltyT &turn_penalty)
+{
+    const auto fingerprint = storage::tar::FileWriter::GenerateFingerprint;
+    storage::tar::FileWriter writer{path, fingerprint};
+
+    storage::serialization::write(writer, "/common/turn_penalty/duration", turn_penalty);
+}
+
+// read .osrm.turn_weight_penalties
+template <typename TurnPenaltyT>
+inline void readTurnDurationPenalty(const boost::filesystem::path &path, TurnPenaltyT &turn_penalty)
+{
+    const auto fingerprint = storage::tar::FileReader::VerifyFingerprint;
+    storage::tar::FileReader reader{path, fingerprint};
+
+    storage::serialization::read(reader, "/common/turn_penalty/duration", turn_penalty);
 }
 }
 }
