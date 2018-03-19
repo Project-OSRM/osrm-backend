@@ -210,10 +210,10 @@ inline void readNodeData(const boost::filesystem::path &path, NodeDataT &node_da
                       std::is_same<EdgeBasedNodeDataView, NodeDataT>::value ||
                       std::is_same<EdgeBasedNodeDataExternalContainer, NodeDataT>::value,
                   "");
-    const auto fingerprint = storage::io::FileReader::VerifyFingerprint;
-    storage::io::FileReader reader{path, fingerprint};
+    const auto fingerprint = storage::tar::FileReader::VerifyFingerprint;
+    storage::tar::FileReader reader{path, fingerprint};
 
-    serialization::read(reader, node_data);
+    serialization::read(reader, "/common/ebg_node_data", node_data);
 }
 
 // writes .osrm.ebg_nodes
@@ -224,10 +224,10 @@ inline void writeNodeData(const boost::filesystem::path &path, const NodeDataT &
                       std::is_same<EdgeBasedNodeDataView, NodeDataT>::value ||
                       std::is_same<EdgeBasedNodeDataExternalContainer, NodeDataT>::value,
                   "");
-    const auto fingerprint = storage::io::FileWriter::GenerateFingerprint;
-    storage::io::FileWriter writer{path, fingerprint};
+    const auto fingerprint = storage::tar::FileWriter::GenerateFingerprint;
+    storage::tar::FileWriter writer{path, fingerprint};
 
-    serialization::write(writer, node_data);
+    serialization::write(writer, "/common/ebg_node_data", node_data);
 }
 
 // reads .osrm.tls

@@ -278,17 +278,6 @@ void Storage::PopulateLayout(DataLayout &layout)
                         make_block<EntryClassID>(number_of_original_edges));
     }
 
-    {
-        io::FileReader nodes_data_file(config.GetPath(".osrm.ebg_nodes"),
-                                       io::FileReader::VerifyFingerprint);
-        const auto nodes_number = nodes_data_file.ReadElementCount64();
-        const auto annotations_number = nodes_data_file.ReadElementCount64();
-        layout.SetBlock(DataLayout::EDGE_BASED_NODE_DATA_LIST,
-                        make_block<extractor::EdgeBasedNode>(nodes_number));
-        layout.SetBlock(DataLayout::ANNOTATION_DATA_LIST,
-                        make_block<extractor::NodeBasedEdgeAnnotation>(annotations_number));
-    }
-
     // load rsearch tree size
     {
         io::FileReader tree_node_file(config.GetPath(".osrm.ramIndex"),
@@ -407,6 +396,8 @@ void Storage::PopulateLayout(DataLayout &layout)
         {"/common/segment_data/reverse_durations/packed", DataLayout::GEOMETRIES_REV_DURATION_LIST},
         {"/common/segment_data/forward_data_sources", DataLayout::GEOMETRIES_FWD_DATASOURCES_LIST},
         {"/common/segment_data/reverse_data_sources", DataLayout::GEOMETRIES_REV_DATASOURCES_LIST},
+        {"/common/ebg_node_data/nodes", DataLayout::EDGE_BASED_NODE_DATA_LIST},
+        {"/common/ebg_node_data/annotations", DataLayout::ANNOTATION_DATA_LIST},
     };
     std::vector<NamedBlock> blocks;
 
@@ -423,6 +414,7 @@ void Storage::PopulateLayout(DataLayout &layout)
         {REQUIRED, config.GetPath(".osrm.nbg_nodes")},
         {REQUIRED, config.GetPath(".osrm.datasource_names")},
         {REQUIRED, config.GetPath(".osrm.geometry")},
+        {REQUIRED, config.GetPath(".osrm.ebg_nodes")},
     };
 
     for (const auto &file : tar_files)

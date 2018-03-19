@@ -111,25 +111,22 @@ inline void write(storage::tar::FileWriter &writer,
 }
 
 template <storage::Ownership Ownership>
-inline void read(storage::io::FileReader &reader,
+inline void read(storage::tar::FileReader &reader,
+                 const std::string &name,
                  detail::EdgeBasedNodeDataContainerImpl<Ownership> &node_data_container)
 {
-    // read header (separate sizes for both vectors)
-    reader.ReadElementCount64();
-    reader.ReadElementCount64();
     // read actual data
-    storage::serialization::read(reader, node_data_container.nodes);
-    storage::serialization::read(reader, node_data_container.annotation_data);
+    storage::serialization::read(reader, name + "/nodes", node_data_container.nodes);
+    storage::serialization::read(reader, name + "/annotations", node_data_container.annotation_data);
 }
 
 template <storage::Ownership Ownership>
-inline void write(storage::io::FileWriter &writer,
+inline void write(storage::tar::FileWriter &writer,
+                  const std::string& name,
                   const detail::EdgeBasedNodeDataContainerImpl<Ownership> &node_data_container)
 {
-    writer.WriteElementCount64(node_data_container.NumberOfNodes());
-    writer.WriteElementCount64(node_data_container.NumberOfAnnotations());
-    storage::serialization::write(writer, node_data_container.nodes);
-    storage::serialization::write(writer, node_data_container.annotation_data);
+    storage::serialization::write(writer, name + "/nodes", node_data_container.nodes);
+    storage::serialization::write(writer, name + "/annotations", node_data_container.annotation_data);
 }
 
 inline void read(storage::io::FileReader &reader, NodeRestriction &restriction)

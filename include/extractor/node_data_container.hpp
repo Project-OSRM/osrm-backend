@@ -6,8 +6,8 @@
 #include "extractor/node_based_edge.hpp"
 #include "extractor/travel_mode.hpp"
 
-#include "storage/io_fwd.hpp"
 #include "storage/shared_memory_ownership.hpp"
+#include "storage/tar_fwd.hpp"
 
 #include "util/permutation.hpp"
 #include "util/typedefs.hpp"
@@ -29,11 +29,13 @@ template <storage::Ownership Ownership> class EdgeBasedNodeDataContainerImpl;
 namespace serialization
 {
 template <storage::Ownership Ownership>
-void read(storage::io::FileReader &reader,
+void read(storage::tar::FileReader &reader,
+          const std::string &name,
           detail::EdgeBasedNodeDataContainerImpl<Ownership> &ebn_data);
 
 template <storage::Ownership Ownership>
-void write(storage::io::FileWriter &writer,
+void write(storage::tar::FileWriter &writer,
+           const std::string &name,
            const detail::EdgeBasedNodeDataContainerImpl<Ownership> &ebn_data);
 }
 
@@ -89,10 +91,12 @@ template <storage::Ownership Ownership> class EdgeBasedNodeDataContainerImpl
         return annotation_data[nodes[node_id].annotation_id].classes;
     }
 
-    friend void serialization::read<Ownership>(storage::io::FileReader &reader,
+    friend void serialization::read<Ownership>(storage::tar::FileReader &reader,
+                                               const std::string &name,
                                                EdgeBasedNodeDataContainerImpl &ebn_data_container);
     friend void
-    serialization::write<Ownership>(storage::io::FileWriter &writer,
+    serialization::write<Ownership>(storage::tar::FileWriter &writer,
+                                    const std::string &name,
                                     const EdgeBasedNodeDataContainerImpl &ebn_data_container);
 
     template <typename = std::enable_if<Ownership == storage::Ownership::Container>>
