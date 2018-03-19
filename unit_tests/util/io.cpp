@@ -159,30 +159,4 @@ BOOST_AUTO_TEST_CASE(io_incompatible_fingerprint)
     }
 }
 
-BOOST_AUTO_TEST_CASE(io_read_lines)
-{
-    {
-        std::ofstream f(IO_TEXT_FILE, std::ios::binary);
-        char str[] = "A\nB\nC\nD";
-        f.write(str, strlen(str));
-    }
-    {
-        osrm::storage::io::FileReader infile(IO_TEXT_FILE,
-                                             osrm::storage::io::FileReader::HasNoFingerprint);
-        auto startiter = infile.GetLineIteratorBegin();
-        auto enditer = infile.GetLineIteratorEnd();
-        std::vector<std::string> resultlines;
-        while (startiter != enditer)
-        {
-            resultlines.push_back(*startiter);
-            ++startiter;
-        }
-        BOOST_REQUIRE_MESSAGE(resultlines.size() == 4, "Expected 4 lines of text");
-        BOOST_REQUIRE_MESSAGE(resultlines[0] == "A", "Expected the first line to be A");
-        BOOST_REQUIRE_MESSAGE(resultlines[1] == "B", "Expected the first line to be B");
-        BOOST_REQUIRE_MESSAGE(resultlines[2] == "C", "Expected the first line to be C");
-        BOOST_REQUIRE_MESSAGE(resultlines[3] == "D", "Expected the first line to be D");
-    }
-}
-
 BOOST_AUTO_TEST_SUITE_END()

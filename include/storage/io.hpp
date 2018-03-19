@@ -27,16 +27,6 @@ namespace io
 class FileReader
 {
   public:
-    class LineWrapper : public std::string
-    {
-        friend std::istream &operator>>(std::istream &is, LineWrapper &line)
-        {
-            return std::getline(is, line);
-        }
-    };
-    auto GetLineIteratorBegin() { return std::istream_iterator<LineWrapper>(input_stream); }
-    auto GetLineIteratorEnd() { return std::istream_iterator<LineWrapper>(); }
-
     enum FingerprintFlag
     {
         VerifyFingerprint,
