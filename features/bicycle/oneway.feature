@@ -141,5 +141,12 @@ Feature: Bike - Oneway streets
             | highway     | oneway | cycleway:left  | cycleway:right | forw    | backw        |
             | primary     | yes    |                |                | cycling | pushing bike |
             | primary     | yes    |                | track          | cycling | pushing bike |
-            | primary     | yes    | track          |                | cycling | cycling      |
-            | primary     | yes    | track          | track          | cycling | cycling      |
+            | primary     | yes    | track          |                | cycling | pushing bike |
+            | primary     | yes    | track          | track          | cycling | pushing bike |
+
+    Scenario: Bike - Left/right cycleways on any oneways
+        Then routability should be
+            | foot | oneway | cycleway:left | cycleway:right | forw         | backw        |
+            | no   | yes    | track         |                | cycling      |              |
+            | yes  | yes    | track         |                | cycling      | pushing bike |
+            | yes  | -1     | track         |                | pushing bike | cycling      |
