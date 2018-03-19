@@ -314,22 +314,6 @@ inline void read(storage::io::FileReader &reader,
         read(reader, penalty);
 }
 
-inline void write(storage::io::FileWriter &writer,
-                  const std::vector<StorageManeuverOverride> &maneuver_overrides,
-                  const std::vector<NodeID> &node_sequences)
-{
-    storage::serialization::write(writer, maneuver_overrides);
-    storage::serialization::write(writer, node_sequences);
-}
-
-template <typename ManeuverOverridesT, typename NodeSequenceT>
-inline void read(storage::io::FileReader &reader,
-                 ManeuverOverridesT &maneuver_overrides,
-                 NodeSequenceT &node_sequences)
-{
-    storage::serialization::read(reader, maneuver_overrides);
-    storage::serialization::read(reader, node_sequences);
-}
 }
 }
 }

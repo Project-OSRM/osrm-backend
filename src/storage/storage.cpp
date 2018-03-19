@@ -307,19 +307,6 @@ void Storage::PopulateLayout(DataLayout &layout)
                         make_block<TurnPenalty>(number_of_penalties));
     }
 
-    // load maneuver overrides
-    {
-        io::FileReader maneuver_overrides_file(config.GetPath(".osrm.maneuver_overrides"),
-                                               io::FileReader::VerifyFingerprint);
-        const auto number_of_overrides =
-            maneuver_overrides_file.ReadVectorSize<extractor::StorageManeuverOverride>();
-        layout.SetBlock(DataLayout::MANEUVER_OVERRIDES,
-                        make_block<extractor::StorageManeuverOverride>(number_of_overrides));
-        const auto number_of_nodes = maneuver_overrides_file.ReadVectorSize<NodeID>();
-        layout.SetBlock(DataLayout::MANEUVER_OVERRIDE_NODE_SEQUENCES,
-                        make_block<NodeID>(number_of_nodes));
-    }
-
     std::unordered_map<std::string, DataLayout::BlockID> name_to_block_id = {
         {"/mld/multilevelgraph/node_array", DataLayout::MLD_GRAPH_NODE_LIST},
         {"/mld/multilevelgraph/edge_array", DataLayout::MLD_GRAPH_EDGE_LIST},
@@ -382,6 +369,8 @@ void Storage::PopulateLayout(DataLayout &layout)
         {"/common/turn_lanes/offsets", DataLayout::LANE_DESCRIPTION_OFFSETS},
         {"/common/turn_lanes/masks", DataLayout::LANE_DESCRIPTION_MASKS},
         {"/common/turn_lanes/data", DataLayout::TURN_LANE_DATA},
+        {"/common/maneuver_overrides/overrides", DataLayout::MANEUVER_OVERRIDES},
+        {"/common/maneuver_overrides/node_sequences", DataLayout::MANEUVER_OVERRIDE_NODE_SEQUENCES},
     };
     std::vector<NamedBlock> blocks;
 
@@ -401,6 +390,7 @@ void Storage::PopulateLayout(DataLayout &layout)
         {REQUIRED, config.GetPath(".osrm.ebg_nodes")},
         {REQUIRED, config.GetPath(".osrm.tls")},
         {REQUIRED, config.GetPath(".osrm.tld")},
+        {REQUIRED, config.GetPath(".osrm.maneuver_overrides")},
     };
 
     for (const auto &file : tar_files)

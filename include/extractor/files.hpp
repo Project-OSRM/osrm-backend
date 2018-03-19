@@ -299,10 +299,11 @@ inline void readManeuverOverrides(const boost::filesystem::path &path,
                                   StorageManeuverOverrideT &maneuver_overrides,
                                   NodeSequencesT &node_sequences)
 {
-    const auto fingerprint = storage::io::FileReader::VerifyFingerprint;
-    storage::io::FileReader reader{path, fingerprint};
+    const auto fingerprint = storage::tar::FileReader::VerifyFingerprint;
+    storage::tar::FileReader reader{path, fingerprint};
 
-    serialization::read(reader, maneuver_overrides, node_sequences);
+    storage::serialization::read(reader, "/common/maneuver_overrides/overrides", maneuver_overrides);
+    storage::serialization::read(reader, "/common/maneuver_overrides/node_sequences", node_sequences);
 }
 
 // writes .osrm.maneuver_overrides
@@ -310,10 +311,11 @@ inline void writeManeuverOverrides(const boost::filesystem::path &path,
                                    const std::vector<StorageManeuverOverride> &maneuver_overrides,
                                    const std::vector<NodeID> &node_sequences)
 {
-    const auto fingerprint = storage::io::FileWriter::GenerateFingerprint;
-    storage::io::FileWriter writer{path, fingerprint};
+    const auto fingerprint = storage::tar::FileWriter::GenerateFingerprint;
+    storage::tar::FileWriter writer{path, fingerprint};
 
-    serialization::write(writer, maneuver_overrides, node_sequences);
+    storage::serialization::write(writer, "/common/maneuver_overrides/overrides", maneuver_overrides);
+    storage::serialization::write(writer, "/common/maneuver_overrides/node_sequences", node_sequences);
 }
 }
 }
