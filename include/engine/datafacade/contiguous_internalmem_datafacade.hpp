@@ -239,72 +239,57 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         return m_osmnodeid_list[id];
     }
 
-    std::vector<NodeID> GetUncompressedForwardGeometry(const EdgeID id) const override final
+    NodesIDRangeT GetUncompressedForwardGeometry(const EdgeID id) const override final
     {
-
-        auto range = segment_data.GetForwardGeometry(id);
-        return std::vector<NodeID>{range.begin(), range.end()};
+        return segment_data.GetForwardGeometry(id);
     }
 
-    virtual std::vector<NodeID> GetUncompressedReverseGeometry(const EdgeID id) const override final
+    NodesIDRangeT GetUncompressedReverseGeometry(const EdgeID id) const override final
     {
-        auto range = segment_data.GetReverseGeometry(id);
-        return std::vector<NodeID>{range.begin(), range.end()};
+        return segment_data.GetReverseGeometry(id);
     }
 
-    virtual std::vector<EdgeWeight>
-    GetUncompressedForwardDurations(const EdgeID id) const override final
+    DurationsRangeT GetUncompressedForwardDurations(const EdgeID id) const override final
     {
-        auto range = segment_data.GetForwardDurations(id);
-        return std::vector<EdgeWeight>{range.begin(), range.end()};
+        return segment_data.GetForwardDurations(id);
     }
 
-    virtual std::vector<EdgeWeight>
-    GetUncompressedReverseDurations(const EdgeID id) const override final
+    DurationsRangeT GetUncompressedReverseDurations(const EdgeID id) const override final
     {
-        auto range = segment_data.GetReverseDurations(id);
-        return std::vector<EdgeWeight>{range.begin(), range.end()};
+        return segment_data.GetReverseDurations(id);
     }
 
-    virtual std::vector<EdgeWeight>
-    GetUncompressedForwardWeights(const EdgeID id) const override final
+    WeightsRangeT GetUncompressedForwardWeights(const EdgeID id) const override final
     {
-        auto range = segment_data.GetForwardWeights(id);
-        return std::vector<EdgeWeight>{range.begin(), range.end()};
+        return segment_data.GetForwardWeights(id);
     }
 
-    virtual std::vector<EdgeWeight>
-    GetUncompressedReverseWeights(const EdgeID id) const override final
+    WeightsRangeT GetUncompressedReverseWeights(const EdgeID id) const override final
     {
-        auto range = segment_data.GetReverseWeights(id);
-        return std::vector<EdgeWeight>{range.begin(), range.end()};
+        return segment_data.GetReverseWeights(id);
     }
 
     // Returns the data source ids that were used to supply the edge
     // weights.
-    virtual std::vector<DatasourceID>
-    GetUncompressedForwardDatasources(const EdgeID id) const override final
+    DatasourceIDRangeT GetUncompressedForwardDatasources(const EdgeID id) const override final
     {
-        auto range = segment_data.GetForwardDatasources(id);
-        return std::vector<DatasourceID>{range.begin(), range.end()};
+        return segment_data.GetForwardDatasources(id);
     }
 
     // Returns the data source ids that were used to supply the edge
     // weights.
-    virtual std::vector<DatasourceID>
-    GetUncompressedReverseDatasources(const EdgeID id) const override final
+    DatasourceIDRangeT GetUncompressedReverseDatasources(const EdgeID id) const override final
     {
-        auto range = segment_data.GetReverseDatasources(id);
-        return std::vector<DatasourceID>{range.begin(), range.end()};
+        return segment_data.GetReverseDatasources(id);
     }
 
-    virtual TurnPenalty GetWeightPenaltyForEdgeID(const unsigned id) const override final
+    TurnPenalty GetWeightPenaltyForEdgeID(const unsigned id) const override final
     {
         BOOST_ASSERT(m_turn_weight_penalties.size() > id);
         return m_turn_weight_penalties[id];
     }
 
-    virtual TurnPenalty GetDurationPenaltyForEdgeID(const unsigned id) const override final
+    TurnPenalty GetDurationPenaltyForEdgeID(const unsigned id) const override final
     {
         BOOST_ASSERT(m_turn_duration_penalties.size() > id);
         return m_turn_duration_penalties[id];

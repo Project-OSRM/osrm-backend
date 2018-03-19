@@ -434,11 +434,6 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
         // Find the node-based-edge that this belongs to, and directly
         // calculate the forward_weight, forward_offset, reverse_weight, reverse_offset
 
-        EdgeWeight forward_weight_offset = 0, forward_weight = 0;
-        EdgeWeight reverse_weight_offset = 0, reverse_weight = 0;
-        EdgeDuration forward_duration_offset = 0, forward_duration = 0;
-        EdgeDuration reverse_duration_offset = 0, reverse_duration = 0;
-
         BOOST_ASSERT(data.forward_segment_id.enabled || data.reverse_segment_id.enabled);
         BOOST_ASSERT(!data.reverse_segment_id.enabled ||
                      datafacade.GetGeometryIndex(data.forward_segment_id.id).id ==
@@ -446,35 +441,42 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
         const auto geometry_id = datafacade.GetGeometryIndex(data.forward_segment_id.id).id;
         const auto component_id = datafacade.GetComponentID(data.forward_segment_id.id);
 
-        const std::vector<EdgeWeight> forward_weight_vector =
-            datafacade.GetUncompressedForwardWeights(geometry_id);
-        const std::vector<EdgeWeight> reverse_weight_vector =
-            datafacade.GetUncompressedReverseWeights(geometry_id);
-        const std::vector<EdgeWeight> forward_duration_vector =
-            datafacade.GetUncompressedForwardDurations(geometry_id);
-        const std::vector<EdgeWeight> reverse_duration_vector =
-            datafacade.GetUncompressedReverseDurations(geometry_id);
+        const auto forward_weights = datafacade.GetUncompressedForwardWeights(geometry_id);
+        const auto reverse_weights = datafacade.GetUncompressedReverseWeights(geometry_id);
 
-        for (std::size_t i = 0; i < data.fwd_segment_position; i++)
-        {
-            forward_weight_offset += forward_weight_vector[i];
-            forward_duration_offset += forward_duration_vector[i];
-        }
-        forward_weight = forward_weight_vector[data.fwd_segment_position];
-        forward_duration = forward_duration_vector[data.fwd_segment_position];
+        const auto forward_durations = datafacade.GetUncompressedForwardDurations(geometry_id);
+        const auto reverse_durations = datafacade.GetUncompressedReverseDurations(geometry_id);
 
-        BOOST_ASSERT(data.fwd_segment_position < reverse_weight_vector.size());
+        const auto forward_weight_offset =
+            std::accumulate(forward_weights.begin(),
+                            forward_weights.begin() + data.fwd_segment_position,
+                            EdgeWeight{0});
 
-        for (std::size_t i = 0; i < reverse_weight_vector.size() - data.fwd_segment_position - 1;
-             i++)
-        {
-            reverse_weight_offset += reverse_weight_vector[i];
-            reverse_duration_offset += reverse_duration_vector[i];
-        }
-        reverse_weight =
-            reverse_weight_vector[reverse_weight_vector.size() - data.fwd_segment_position - 1];
-        reverse_duration =
-            reverse_duration_vector[reverse_duration_vector.size() - data.fwd_segment_position - 1];
+        const auto forward_duration_offset =
+            std::accumulate(forward_durations.begin(),
+                            forward_durations.begin() + data.fwd_segment_position,
+                            EdgeDuration{0});
+
+        EdgeWeight forward_weight = forward_weights[data.fwd_segment_position];
+        EdgeDuration forward_duration = forward_durations[data.fwd_segment_position];
+
+        BOOST_ASSERT(data.fwd_segment_position <
+                     std::distance(forward_durations.begin(), forward_durations.end()));
+
+        const auto reverse_weight_offset =
+            std::accumulate(reverse_weights.begin(),
+                            reverse_weights.end() - data.fwd_segment_position - 1,
+                            EdgeWeight{0});
+
+        const auto reverse_duration_offset =
+            std::accumulate(reverse_durations.begin(),
+                            reverse_durations.end() - data.fwd_segment_position - 1,
+                            EdgeDuration{0});
+
+        EdgeWeight reverse_weight =
+            reverse_weights[reverse_weights.size() - data.fwd_segment_position - 1];
+        EdgeDuration reverse_duration =
+            reverse_durations[reverse_durations.size() - data.fwd_segment_position - 1];
 
         ratio = std::min(1.0, std::max(0.0, ratio));
         if (data.forward_segment_id.id != SPECIAL_SEGMENTID)
@@ -493,14 +495,13 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
             return std::find(first, last, INVALID_SEGMENT_WEIGHT) == last;
         };
         bool is_forward_valid_source =
-            areSegmentsValid(forward_weight_vector.begin(), forward_weight_vector.end());
-        bool is_forward_valid_target =
-            areSegmentsValid(forward_weight_vector.begin(),
-                             forward_weight_vector.begin() + data.fwd_segment_position + 1);
+            areSegmentsValid(forward_weights.begin(), forward_weights.end());
+        bool is_forward_valid_target = areSegmentsValid(
+            forward_weights.begin(), forward_weights.begin() + data.fwd_segment_position + 1);
         bool is_reverse_valid_source =
-            areSegmentsValid(reverse_weight_vector.begin(), reverse_weight_vector.end());
+            areSegmentsValid(reverse_weights.begin(), reverse_weights.end());
         bool is_reverse_valid_target = areSegmentsValid(
-            reverse_weight_vector.begin(), reverse_weight_vector.end() - data.fwd_segment_position);
+            reverse_weights.begin(), reverse_weights.end() - data.fwd_segment_position);
 
         auto transformed = PhantomNodeWithDistance{
             PhantomNode{data,
@@ -605,17 +606,14 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
         BOOST_ASSERT(data.forward_segment_id.id != SPECIAL_NODEID);
         const auto geometry_id = datafacade.GetGeometryIndex(data.forward_segment_id.id).id;
 
-        const std::vector<EdgeWeight> forward_weight_vector =
-            datafacade.GetUncompressedForwardWeights(geometry_id);
-
-        if (forward_weight_vector[data.fwd_segment_position] != INVALID_SEGMENT_WEIGHT)
+        const auto forward_weights = datafacade.GetUncompressedForwardWeights(geometry_id);
+        if (forward_weights[data.fwd_segment_position] != INVALID_SEGMENT_WEIGHT)
         {
             forward_edge_valid = data.forward_segment_id.enabled;
         }
 
-        const std::vector<EdgeWeight> reverse_weight_vector =
-            datafacade.GetUncompressedReverseWeights(geometry_id);
-        if (reverse_weight_vector[reverse_weight_vector.size() - data.fwd_segment_position - 1] !=
+        const auto reverse_weights = datafacade.GetUncompressedReverseWeights(geometry_id);
+        if (reverse_weights[reverse_weights.size() - data.fwd_segment_position - 1] !=
             INVALID_SEGMENT_WEIGHT)
         {
             reverse_edge_valid = data.reverse_segment_id.enabled;

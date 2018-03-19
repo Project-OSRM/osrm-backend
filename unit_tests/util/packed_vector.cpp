@@ -1,7 +1,10 @@
 #include "util/packed_vector.hpp"
 #include "util/typedefs.hpp"
 
+#include "common/range_tools.hpp"
+
 #include <boost/range/adaptor/reversed.hpp>
+#include <boost/range/any_range.hpp>
 #include <boost/range/iterator_range.hpp>
 #include <boost/test/test_case_template.hpp>
 #include <boost/test/unit_test.hpp>
@@ -201,6 +204,52 @@ BOOST_AUTO_TEST_CASE(packed_vector_33bit_continious)
         vector.push_back(i);
         BOOST_CHECK_EQUAL(vector.back(), i);
     }
+}
+
+BOOST_AUTO_TEST_CASE(packed_weights_container_with_type_erasure)
+{
+    using Vector = PackedVector<SegmentWeight, SEGMENT_WEIGHT_BITS>;
+    using WeightsRangeT = boost::any_range<SegmentWeight,
+                                           boost::random_access_traversal_tag,
+                                           const typename Vector::internal_reference,
+                                           std::ptrdiff_t>;
+
+    PackedVector<SegmentWeight, SEGMENT_WEIGHT_BITS> vector(7);
+
+    std::iota(vector.begin(), vector.end(), 0);
+
+    auto forward = boost::make_iterator_range(vector.begin() + 1, vector.begin() + 6);
+    auto forward_any = WeightsRangeT(forward.begin(), forward.end());
+    CHECK_EQUAL_RANGE(forward, 1, 2, 3, 4, 5);
+    CHECK_EQUAL_RANGE(forward_any, 1, 2, 3, 4, 5);
+
+    auto reverse = boost::adaptors::reverse(forward);
+    auto reverse_any = WeightsRangeT(reverse);
+    CHECK_EQUAL_RANGE(reverse, 5, 4, 3, 2, 1);
+    CHECK_EQUAL_RANGE(reverse_any, 5, 4, 3, 2, 1);
+}
+
+BOOST_AUTO_TEST_CASE(packed_weights_view_with_type_erasure)
+{
+    using View = PackedVectorView<SegmentWeight, SEGMENT_WEIGHT_BITS>;
+    using PackedDataWord = std::uint64_t; // PackedVectorView<>::WordT
+    using WeightsRangeT = boost::any_range<SegmentWeight,
+                                           boost::random_access_traversal_tag,
+                                           const typename View::internal_reference,
+                                           std::ptrdiff_t>;
+
+    PackedDataWord data[] = {0x200000400000, 0xc, 0};
+    View view(vector_view<PackedDataWord>(data, 3), 7);
+
+    auto forward = boost::make_iterator_range(view.begin() + 1, view.begin() + 4);
+    auto forward_any = WeightsRangeT(forward.begin(), forward.end());
+    CHECK_EQUAL_RANGE(forward, 1, 2, 3);
+    CHECK_EQUAL_RANGE(forward_any, 1, 2, 3);
+
+    auto reverse = boost::adaptors::reverse(forward);
+    auto reverse_any = WeightsRangeT(reverse);
+    CHECK_EQUAL_RANGE(reverse, 3, 2, 1);
+    CHECK_EQUAL_RANGE(reverse_any, 3, 2, 1);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
