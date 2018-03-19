@@ -34,56 +34,55 @@ class NearestAPI final : public BaseAPI
 
         util::json::Array waypoints;
         waypoints.values.resize(phantom_nodes.front().size());
-        std::transform(phantom_nodes.front().begin(),
-                       phantom_nodes.front().end(),
-                       waypoints.values.begin(),
-                       [this](const PhantomNodeWithDistance &phantom_with_distance) {
-                           auto &phantom_node = phantom_with_distance.phantom_node;
-                           auto waypoint = MakeWaypoint(phantom_node);
-                           waypoint.values["distance"] = phantom_with_distance.distance;
+        std::transform(
+            phantom_nodes.front().begin(),
+            phantom_nodes.front().end(),
+            waypoints.values.begin(),
+            [this](const PhantomNodeWithDistance &phantom_with_distance) {
+                auto &phantom_node = phantom_with_distance.phantom_node;
+                auto waypoint = MakeWaypoint(phantom_node);
+                waypoint.values["distance"] = phantom_with_distance.distance;
 
-                           util::json::Array nodes;
+                util::json::Array nodes;
 
-                           std::uint64_t from_node = 0;
-                           std::uint64_t to_node = 0;
+                std::uint64_t from_node = 0;
+                std::uint64_t to_node = 0;
 
-                           std::vector<NodeID> forward_geometry;
-                           if (phantom_node.forward_segment_id.enabled)
-                           {
-                               auto segment_id = phantom_node.forward_segment_id.id;
-                               const auto geometry_id = facade.GetGeometryIndex(segment_id).id;
-                               forward_geometry =
-                                   facade.GetUncompressedForwardGeometry(geometry_id);
+                datafacade::BaseDataFacade::NodesIDRangeT forward_geometry;
+                if (phantom_node.forward_segment_id.enabled)
+                {
+                    auto segment_id = phantom_node.forward_segment_id.id;
+                    const auto geometry_id = facade.GetGeometryIndex(segment_id).id;
+                    forward_geometry = facade.GetUncompressedForwardGeometry(geometry_id);
 
-                               auto osm_node_id = facade.GetOSMNodeIDOfNode(
-                                   forward_geometry[phantom_node.fwd_segment_position]);
-                               to_node = static_cast<std::uint64_t>(osm_node_id);
-                           }
+                    auto osm_node_id = facade.GetOSMNodeIDOfNode(
+                        forward_geometry[phantom_node.fwd_segment_position]);
+                    to_node = static_cast<std::uint64_t>(osm_node_id);
+                }
 
-                           if (phantom_node.reverse_segment_id.enabled)
-                           {
-                               auto segment_id = phantom_node.reverse_segment_id.id;
-                               const auto geometry_id = facade.GetGeometryIndex(segment_id).id;
-                               std::vector<NodeID> geometry =
-                                   facade.GetUncompressedForwardGeometry(geometry_id);
-                               auto osm_node_id = facade.GetOSMNodeIDOfNode(
-                                   geometry[phantom_node.fwd_segment_position + 1]);
-                               from_node = static_cast<std::uint64_t>(osm_node_id);
-                           }
-                           else if (phantom_node.forward_segment_id.enabled &&
-                                    phantom_node.fwd_segment_position > 0)
-                           {
-                               // In the case of one way, rely on forward segment only
-                               auto osm_node_id = facade.GetOSMNodeIDOfNode(
-                                   forward_geometry[phantom_node.fwd_segment_position - 1]);
-                               from_node = static_cast<std::uint64_t>(osm_node_id);
-                           }
-                           nodes.values.push_back(from_node);
-                           nodes.values.push_back(to_node);
-                           waypoint.values["nodes"] = std::move(nodes);
+                if (phantom_node.reverse_segment_id.enabled)
+                {
+                    auto segment_id = phantom_node.reverse_segment_id.id;
+                    const auto geometry_id = facade.GetGeometryIndex(segment_id).id;
+                    const auto geometry = facade.GetUncompressedForwardGeometry(geometry_id);
+                    auto osm_node_id =
+                        facade.GetOSMNodeIDOfNode(geometry[phantom_node.fwd_segment_position + 1]);
+                    from_node = static_cast<std::uint64_t>(osm_node_id);
+                }
+                else if (phantom_node.forward_segment_id.enabled &&
+                         phantom_node.fwd_segment_position > 0)
+                {
+                    // In the case of one way, rely on forward segment only
+                    auto osm_node_id = facade.GetOSMNodeIDOfNode(
+                        forward_geometry[phantom_node.fwd_segment_position - 1]);
+                    from_node = static_cast<std::uint64_t>(osm_node_id);
+                }
+                nodes.values.push_back(from_node);
+                nodes.values.push_back(to_node);
+                waypoint.values["nodes"] = std::move(nodes);
 
-                           return waypoint;
-                       });
+                return waypoint;
+            });
 
         response.values["code"] = "Ok";
         response.values["waypoints"] = std::move(waypoints);

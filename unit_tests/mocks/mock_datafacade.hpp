@@ -54,38 +54,39 @@ class MockBaseDataFacade : public engine::datafacade::BaseDataFacade
     {
         return 0;
     }
-    std::vector<NodeID> GetUncompressedForwardGeometry(const EdgeID /* id */) const override
+    NodesIDRangeT GetUncompressedForwardGeometry(const EdgeID /* id */) const override
     {
         return {};
     }
-    std::vector<NodeID> GetUncompressedReverseGeometry(const EdgeID /* id */) const override
+    NodesIDRangeT GetUncompressedReverseGeometry(const EdgeID /* id */) const override
     {
         return {};
     }
-    std::vector<EdgeWeight> GetUncompressedForwardWeights(const EdgeID /* id */) const override
+    WeightsRangeT GetUncompressedForwardWeights(const EdgeID /* id */) const override
     {
-        std::vector<EdgeWeight> result_weights;
-        result_weights.resize(1);
-        result_weights[0] = 1;
+        static const std::vector<SegmentWeight> result_weights{1, 2, 3};
         return result_weights;
     }
-    std::vector<EdgeWeight> GetUncompressedReverseWeights(const EdgeID id) const override
+    WeightsRangeT GetUncompressedReverseWeights(const EdgeID id) const override
     {
         return GetUncompressedForwardWeights(id);
     }
-    std::vector<EdgeWeight> GetUncompressedForwardDurations(const EdgeID id) const override
+
+    DurationsRangeT GetUncompressedForwardDurations(const EdgeID /*id*/) const override
     {
-        return GetUncompressedForwardWeights(id);
+        static const std::vector<SegmentDuration> data{1, 2, 3};
+        return data;
     }
-    std::vector<EdgeWeight> GetUncompressedReverseDurations(const EdgeID id) const override
+    DurationsRangeT GetUncompressedReverseDurations(const EdgeID /*id*/) const override
     {
-        return GetUncompressedForwardWeights(id);
+        static const std::vector<SegmentDuration> data{1, 2, 3};
+        return data;
     }
-    std::vector<DatasourceID> GetUncompressedForwardDatasources(const EdgeID /*id*/) const override
+    DatasourceIDRangeT GetUncompressedForwardDatasources(const EdgeID /*id*/) const override
     {
         return {};
     }
-    std::vector<DatasourceID> GetUncompressedReverseDatasources(const EdgeID /*id*/) const override
+    DatasourceIDRangeT GetUncompressedReverseDatasources(const EdgeID /*id*/) const override
     {
         return {};
     }

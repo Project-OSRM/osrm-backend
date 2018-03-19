@@ -56,7 +56,7 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
     using DirectionalGeometryID = std::uint32_t;
     using SegmentOffset = std::uint32_t;
     using SegmentWeightVector = PackedVector<SegmentWeight, SEGMENT_WEIGHT_BITS>;
-    using SegmentDurationVector = PackedVector<SegmentDuration, SEGMENT_DURAITON_BITS>;
+    using SegmentDurationVector = PackedVector<SegmentDuration, SEGMENT_DURATION_BITS>;
     using SegmentDatasourceVector = Vector<DatasourceID>;
 
     SegmentDataContainerImpl() = default;
