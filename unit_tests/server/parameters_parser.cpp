@@ -86,11 +86,13 @@ BOOST_AUTO_TEST_CASE(invalid_table_urls)
         testInvalidOptions<TableParameters>("1,2;3,4?sources=1&destinations=1&bla=foo"), 32UL);
     BOOST_CHECK_EQUAL(testInvalidOptions<TableParameters>("1,2;3,4?sources=foo"), 16UL);
     BOOST_CHECK_EQUAL(testInvalidOptions<TableParameters>("1,2;3,4?destinations=foo"), 21UL);
+    BOOST_CHECK_EQUAL(
+        testInvalidOptions<TableParameters>("1,2;3,4?sources=all&destinations=all&annotations=bla"),
+        49UL);
 }
 
 BOOST_AUTO_TEST_CASE(valid_route_hint)
 {
-
     engine::PhantomNode reference_node;
     reference_node.input_location =
         util::Coordinate(util::FloatLongitude{7.432251}, util::FloatLatitude{43.745995});
@@ -284,6 +286,7 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
                                               {util::FloatLongitude{3}, util::FloatLatitude{4}},
                                               {util::FloatLongitude{5}, util::FloatLatitude{6}},
                                               {util::FloatLongitude{7}, util::FloatLatitude{8}}};
+
     engine::PhantomNode phantom_3;
     phantom_3.input_location = coords_3[0];
     engine::PhantomNode phantom_4;
@@ -379,11 +382,11 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
                                          "overview=simplified&annotations=duration,weight,nodes");
     BOOST_CHECK(result_16);
     BOOST_CHECK_EQUAL(reference_16.geometries, result_16->geometries);
-    BOOST_CHECK_EQUAL(
-        static_cast<bool>(result_2->annotations_type & (RouteParameters::AnnotationsType::Weight |
-                                                        RouteParameters::AnnotationsType::Duration |
-                                                        RouteParameters::AnnotationsType::Nodes)),
-        true);
+    BOOST_CHECK_EQUAL(static_cast<bool>(result_16->annotations_type &
+                                        (RouteParameters::AnnotationsType::Weight |
+                                         RouteParameters::AnnotationsType::Duration |
+                                         RouteParameters::AnnotationsType::Nodes)),
+                      true);
     BOOST_CHECK_EQUAL(result_16->annotations, true);
 
     // parse all annotations correctly
@@ -523,6 +526,43 @@ BOOST_AUTO_TEST_CASE(valid_table_urls)
     CHECK_EQUAL_RANGE(reference_1.radiuses, result_3->radiuses);
     CHECK_EQUAL_RANGE(reference_1.approaches, result_3->approaches);
     CHECK_EQUAL_RANGE(reference_1.coordinates, result_3->coordinates);
+
+    TableParameters reference_4{};
+    reference_4.coordinates = coords_1;
+    auto result_4 = parseParameters<TableParameters>(
+        "1,2;3,4?sources=all&destinations=all&annotations=duration");
+    BOOST_CHECK(result_4);
+    BOOST_CHECK_EQUAL(result_4->annotations & (TableParameters::AnnotationsType::Distance |
+                                               TableParameters::AnnotationsType::Duration),
+                      true);
+    CHECK_EQUAL_RANGE(reference_4.sources, result_4->sources);
+    CHECK_EQUAL_RANGE(reference_4.destinations, result_4->destinations);
+
+    TableParameters reference_5{};
+    reference_5.coordinates = coords_1;
+    auto result_5 = parseParameters<TableParameters>(
+        "1,2;3,4?sources=all&destinations=all&annotations=duration");
+    BOOST_CHECK(result_5);
+    BOOST_CHECK_EQUAL(result_5->annotations & TableParameters::AnnotationsType::Duration, true);
+    CHECK_EQUAL_RANGE(reference_5.sources, result_5->sources);
+    CHECK_EQUAL_RANGE(reference_5.destinations, result_5->destinations);
+
+    TableParameters reference_6{};
+    reference_6.coordinates = coords_1;
+    auto result_6 = parseParameters<TableParameters>(
+        "1,2;3,4?sources=all&destinations=all&annotations=distance");
+    BOOST_CHECK(result_6);
+    BOOST_CHECK_EQUAL(result_6->annotations & TableParameters::AnnotationsType::Distance, true);
+    CHECK_EQUAL_RANGE(reference_6.sources, result_6->sources);
+    CHECK_EQUAL_RANGE(reference_6.destinations, result_6->destinations);
+
+    TableParameters reference_7{};
+    reference_7.coordinates = coords_1;
+    auto result_7 = parseParameters<TableParameters>("1,2;3,4?annotations=distance");
+    BOOST_CHECK(result_7);
+    BOOST_CHECK_EQUAL(result_7->annotations & TableParameters::AnnotationsType::Distance, true);
+    CHECK_EQUAL_RANGE(reference_7.sources, result_7->sources);
+    CHECK_EQUAL_RANGE(reference_7.destinations, result_7->destinations);
 }
 
 BOOST_AUTO_TEST_CASE(valid_match_urls)

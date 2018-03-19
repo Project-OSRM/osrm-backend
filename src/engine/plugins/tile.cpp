@@ -475,7 +475,6 @@ void encodeVectorTile(const DataFacadeBase &facade,
                 const auto forward_duration = forward_duration_range[edge.fwd_segment_position];
                 const auto reverse_duration = reverse_duration_range[reverse_duration_range.size() -
                                                                      edge.fwd_segment_position - 1];
-
                 line_int_index.add(forward_duration);
                 line_int_index.add(reverse_duration);
             }
@@ -516,7 +515,6 @@ void encodeVectorTile(const DataFacadeBase &facade,
                     const auto reverse_duration =
                         reverse_duration_range[reverse_duration_range.size() -
                                                edge.fwd_segment_position - 1];
-
                     const auto forward_datasource_idx =
                         forward_datasource_range(edge.fwd_segment_position);
                     const auto reverse_datasource_idx = reverse_datasource_range(

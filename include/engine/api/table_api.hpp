@@ -36,9 +36,10 @@ class TableAPI final : public BaseAPI
     {
     }
 
-    virtual void MakeResponse(const std::vector<EdgeWeight> &durations,
-                              const std::vector<PhantomNode> &phantoms,
-                              util::json::Object &response) const
+    virtual void
+    MakeResponse(const std::pair<std::vector<EdgeDuration>, std::vector<EdgeDistance>> &tables,
+                 const std::vector<PhantomNode> &phantoms,
+                 util::json::Object &response) const
     {
         auto number_of_sources = parameters.sources.size();
         auto number_of_destinations = parameters.destinations.size();
@@ -64,8 +65,18 @@ class TableAPI final : public BaseAPI
             response.values["destinations"] = MakeWaypoints(phantoms, parameters.destinations);
         }
 
-        response.values["durations"] =
-            MakeTable(durations, number_of_sources, number_of_destinations);
+        if (parameters.annotations & TableParameters::AnnotationsType::Duration)
+        {
+            response.values["durations"] =
+                MakeDurationTable(tables.first, number_of_sources, number_of_destinations);
+        }
+
+        if (parameters.annotations & TableParameters::AnnotationsType::Distance)
+        {
+            response.values["distances"] =
+                MakeDistanceTable(tables.second, number_of_sources, number_of_destinations);
+        }
+
         response.values["code"] = "Ok";
     }
 
@@ -97,9 +108,9 @@ class TableAPI final : public BaseAPI
         return json_waypoints;
     }
 
-    virtual util::json::Array MakeTable(const std::vector<EdgeWeight> &values,
-                                        std::size_t number_of_rows,
-                                        std::size_t number_of_columns) const
+    virtual util::json::Array MakeDurationTable(const std::vector<EdgeWeight> &values,
+                                                std::size_t number_of_rows,
+                                                std::size_t number_of_columns) const
     {
         util::json::Array json_table;
         for (const auto row : util::irange<std::size_t>(0UL, number_of_rows))
@@ -116,7 +127,36 @@ class TableAPI final : public BaseAPI
                                {
                                    return util::json::Value(util::json::Null());
                                }
+                               // division by 10 because the duration is in deciseconds (10s)
                                return util::json::Value(util::json::Number(duration / 10.));
+                           });
+            json_table.values.push_back(std::move(json_row));
+        }
+        return json_table;
+    }
+
+    virtual util::json::Array MakeDistanceTable(const std::vector<EdgeDistance> &values,
+                                                std::size_t number_of_rows,
+                                                std::size_t number_of_columns) const
+    {
+        util::json::Array json_table;
+        for (const auto row : util::irange<std::size_t>(0UL, number_of_rows))
+        {
+            util::json::Array json_row;
+            auto row_begin_iterator = values.begin() + (row * number_of_columns);
+            auto row_end_iterator = values.begin() + ((row + 1) * number_of_columns);
+            json_row.values.resize(number_of_columns);
+            std::transform(row_begin_iterator,
+                           row_end_iterator,
+                           json_row.values.begin(),
+                           [](const EdgeDistance distance) {
+                               if (distance == INVALID_EDGE_DISTANCE)
+                               {
+                                   return util::json::Value(util::json::Null());
+                               }
+                               // round to single decimal place
+                               return util::json::Value(
+                                   util::json::Number(std::round(distance * 10) / 10.));
                            });
             json_table.values.push_back(std::move(json_row));
         }

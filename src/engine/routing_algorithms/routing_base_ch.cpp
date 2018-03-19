@@ -59,6 +59,24 @@ void retrievePackedPathFromSingleHeap(const SearchEngineData<Algorithm>::QueryHe
     }
 }
 
+void retrievePackedPathFromSingleManyToManyHeap(
+    const SearchEngineData<Algorithm>::ManyToManyQueryHeap &search_heap,
+    const NodeID middle_node_id,
+    std::vector<NodeID> &packed_path)
+{
+    NodeID current_node_id = middle_node_id;
+    // all initial nodes will have itself as parent, or a node not in the heap
+    // in case of a core search heap. We need a distinction between core entry nodes
+    // and start nodes since otherwise start node specific code that assumes
+    // node == node.parent (e.g. the loop code) might get actived.
+    while (current_node_id != search_heap.GetData(current_node_id).parent &&
+           search_heap.WasInserted(search_heap.GetData(current_node_id).parent))
+    {
+        current_node_id = search_heap.GetData(current_node_id).parent;
+        packed_path.emplace_back(current_node_id);
+    }
+}
+
 // assumes that heaps are already setup correctly.
 // ATTENTION: This only works if no additional offset is supplied next to the Phantom Node
 // Offsets.

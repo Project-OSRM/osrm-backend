@@ -56,7 +56,9 @@ class MockBaseDataFacade : public engine::datafacade::BaseDataFacade
     }
     NodeForwardRange GetUncompressedForwardGeometry(const EdgeID /* id */) const override
     {
-        return {};
+        static NodeID data[] = {0, 1, 2, 3};
+        static extractor::SegmentDataView::SegmentNodeVector nodes(data, 4);
+        return boost::make_iterator_range(nodes.cbegin(), nodes.cend());
     }
     NodeReverseRange GetUncompressedReverseGeometry(const EdgeID id) const override
     {
@@ -73,7 +75,6 @@ class MockBaseDataFacade : public engine::datafacade::BaseDataFacade
     {
         return WeightReverseRange(GetUncompressedForwardWeights(id));
     }
-
     DurationForwardRange GetUncompressedForwardDurations(const EdgeID /*id*/) const override
     {
         static std::uint64_t data[] = {1, 2, 3};

@@ -220,6 +220,7 @@ BOOST_AUTO_TEST_CASE(packed_weights_container_with_type_erasure)
 
     auto forward = boost::make_iterator_range(vector.begin() + 1, vector.begin() + 6);
     auto forward_any = WeightsAnyRange(forward.begin(), forward.end());
+
     CHECK_EQUAL_RANGE(forward, 1, 2, 3, 4, 5);
     CHECK_EQUAL_RANGE(forward_any, 1, 2, 3, 4, 5);
 
@@ -243,11 +244,13 @@ BOOST_AUTO_TEST_CASE(packed_weights_view_with_type_erasure)
 
     auto forward = boost::make_iterator_range(view.begin() + 1, view.begin() + 4);
     auto forward_any = WeightsAnyRange(forward.begin(), forward.end());
+
     CHECK_EQUAL_RANGE(forward, 1, 2, 3);
     CHECK_EQUAL_RANGE(forward_any, 1, 2, 3);
 
     auto reverse = boost::adaptors::reverse(forward);
     auto reverse_any = WeightsAnyRange(reverse);
+
     CHECK_EQUAL_RANGE(reverse, 3, 2, 1);
     CHECK_EQUAL_RANGE(reverse_any, 3, 2, 1);
 }
