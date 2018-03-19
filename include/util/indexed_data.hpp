@@ -106,7 +106,7 @@ template <int N, typename T = std::string> struct VariableGroupBlock
             prefix_length += byte_length;
         }
 
-        out.WriteOne(refernce);
+        out.WriteFrom(refernce);
 
         return prefix_length;
     }
@@ -187,7 +187,7 @@ template <int N, typename T = std::string> struct FixedGroupBlock
         BOOST_ASSERT(data_offset <= std::numeric_limits<decltype(BlockReference::offset)>::max());
 
         BlockReference refernce{static_cast<decltype(BlockReference::offset)>(data_offset)};
-        out.WriteOne(refernce);
+        out.WriteFrom(refernce);
 
         return BLOCK_SIZE;
     }
@@ -268,7 +268,7 @@ template <typename GroupBlock> struct IndexedData
         const BlocksNumberType number_of_blocks =
             number_of_elements == 0 ? 0
                                     : 1 + (std::distance(first, sentinel) - 1) / (BLOCK_SIZE + 1);
-        out.WriteOne(number_of_blocks);
+        out.WriteFrom(number_of_blocks);
 
         // Write block references and compute the total data size that includes prefix and data
         const GroupBlock block;
@@ -282,7 +282,7 @@ template <typename GroupBlock> struct IndexedData
         }
 
         // Write the total data size
-        out.WriteOne(data_size);
+        out.WriteFrom(data_size);
 
         // Write data blocks that are (prefix, data)
         for (OffsetIterator curr = first, next = first; next != sentinel; curr = next)
@@ -291,7 +291,7 @@ template <typename GroupBlock> struct IndexedData
             block.WriteBlockPrefix(out, curr, next);
             std::advance(next, std::min<diff_type>(1, std::distance(next, sentinel)));
             std::for_each(
-                data + *curr, data + *next, [&out](const auto &element) { out.WriteOne(element); });
+                data + *curr, data + *next, [&out](const auto &element) { out.WriteFrom(element); });
         }
     }
 

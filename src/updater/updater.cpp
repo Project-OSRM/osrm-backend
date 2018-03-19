@@ -596,9 +596,8 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
     std::vector<extractor::ConditionalTurnPenalty> conditional_turns;
     if (update_conditional_turns)
     {
-        using storage::io::FileReader;
-        FileReader reader(config.GetPath(".osrm.restrictions"), FileReader::VerifyFingerprint);
-        extractor::serialization::read(reader, conditional_turns);
+        extractor::files::readConditionalRestrictions(config.GetPath(".osrm.restrictions"),
+                                                      conditional_turns);
     }
 
     tbb::concurrent_vector<GeometryID> updated_segments;

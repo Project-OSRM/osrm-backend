@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(read_tar_file)
 
 BOOST_AUTO_TEST_CASE(write_tar_file)
 {
-    TemporaryFile tmp {TEST_DATA_DIR "/tar_write_test.tar"};
+    TemporaryFile tmp{TEST_DATA_DIR "/tar_write_test.tar"};
 
     std::uint64_t single_64bit_integer = 0xDEADBEEFAABBCCDD;
     std::uint32_t single_32bit_integer = 0xDEADBEEF;
@@ -62,8 +62,8 @@ BOOST_AUTO_TEST_CASE(write_tar_file)
 
     {
         storage::tar::FileWriter writer(tmp.path, storage::tar::FileWriter::GenerateFingerprint);
-        writer.WriteOne("foo/single_64bit_integer", single_64bit_integer);
-        writer.WriteOne("bar/single_32bit_integer", single_32bit_integer);
+        writer.WriteFrom("foo/single_64bit_integer", single_64bit_integer);
+        writer.WriteFrom("bar/single_32bit_integer", single_32bit_integer);
         writer.WriteElementCount64("baz/bla/64bit_vector", vector_64bit.size());
         writer.WriteFrom("baz/bla/64bit_vector", vector_64bit.data(), vector_64bit.size());
         writer.WriteElementCount64("32bit_vector", vector_32bit.size());
@@ -72,10 +72,12 @@ BOOST_AUTO_TEST_CASE(write_tar_file)
 
     storage::tar::FileReader reader(tmp.path, storage::tar::FileReader::VerifyFingerprint);
 
-    BOOST_CHECK_EQUAL(reader.ReadOne<std::uint32_t>("bar/single_32bit_integer"),
-                      single_32bit_integer);
-    BOOST_CHECK_EQUAL(reader.ReadOne<std::uint64_t>("foo/single_64bit_integer"),
-                      single_64bit_integer);
+    std::uint32_t result_32bit_integer;
+    std::uint64_t result_64bit_integer;
+    reader.ReadInto("bar/single_32bit_integer", result_32bit_integer);
+    reader.ReadInto("foo/single_64bit_integer", result_64bit_integer);
+    BOOST_CHECK_EQUAL(result_32bit_integer, single_32bit_integer);
+    BOOST_CHECK_EQUAL(result_32bit_integer, single_64bit_integer);
 
     std::vector<std::uint64_t> result_64bit_vector(
         reader.ReadElementCount64("baz/bla/64bit_vector"));

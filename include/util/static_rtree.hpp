@@ -452,10 +452,10 @@ class StaticRTree
             std::uint64_t size_of_tree = m_search_tree.size();
             BOOST_ASSERT_MSG(0 < size_of_tree, "tree empty");
 
-            tree_node_file.WriteOne(size_of_tree);
+            tree_node_file.WriteFrom(size_of_tree);
             tree_node_file.WriteFrom(m_search_tree);
 
-            tree_node_file.WriteOne(static_cast<std::uint64_t>(m_tree_level_sizes.size()));
+            tree_node_file.WriteFrom(static_cast<std::uint64_t>(m_tree_level_sizes.size()));
             tree_node_file.WriteFrom(m_tree_level_sizes);
         }
 

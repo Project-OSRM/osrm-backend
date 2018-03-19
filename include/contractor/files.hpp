@@ -32,7 +32,7 @@ inline void readGraph(const boost::filesystem::path &path,
     const auto fingerprint = storage::tar::FileReader::VerifyFingerprint;
     storage::tar::FileReader reader{path, fingerprint};
 
-    checksum = reader.ReadOne<std::uint32_t>("/ch/checksum");
+    reader.ReadInto("/ch/checksum", checksum);
     util::serialization::read(reader, "/ch/contracted_graph", graph);
 
     auto count = reader.ReadElementCount64("/ch/edge_filter");
@@ -42,7 +42,7 @@ inline void readGraph(const boost::filesystem::path &path,
         storage::serialization::read(reader, "/ch/edge_filter/" + std::to_string(index), edge_filter[index]);
     }
 
-    connectivity_checksum = reader.ReadOne<std::uint32_t>("/ch/connectivity_checksum");
+     reader.ReadInto("/ch/connectivity_checksum", connectivity_checksum);
 }
 
 // writes .osrm.hsgr file
@@ -63,7 +63,7 @@ inline void writeGraph(const boost::filesystem::path &path,
     storage::tar::FileWriter writer{path, fingerprint};
 
     writer.WriteElementCount64("/ch/checksum", 1);
-    writer.WriteOne("/ch/checksum", checksum);
+    writer.WriteFrom("/ch/checksum", checksum);
     util::serialization::write(writer, "/ch/contracted_graph", graph);
 
     writer.WriteElementCount64("/ch/edge_filter", edge_filter.size());
@@ -73,7 +73,7 @@ inline void writeGraph(const boost::filesystem::path &path,
     }
 
     writer.WriteElementCount64("/ch/connectivity_checksum", 1);
-    writer.WriteOne("/ch/connectivity_checksum", connectivity_checksum);
+    writer.WriteFrom("/ch/connectivity_checksum", connectivity_checksum);
 }
 }
 }

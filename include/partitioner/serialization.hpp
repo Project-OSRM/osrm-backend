@@ -28,7 +28,7 @@ inline void read(storage::tar::FileReader &reader,
     storage::serialization::read(reader, name + "/node_array", graph.node_array);
     storage::serialization::read(reader, name + "/edge_array", graph.edge_array);
     storage::serialization::read(reader, name + "/node_to_edge_offset", graph.node_to_edge_offset);
-    connectivity_checksum = reader.ReadOne<std::uint32_t>(name + "/connectivity_checksum");
+    reader.ReadInto(name + "/connectivity_checksum", connectivity_checksum);
 }
 
 template <typename EdgeDataT, storage::Ownership Ownership>
@@ -41,7 +41,7 @@ inline void write(storage::tar::FileWriter &writer,
     storage::serialization::write(writer, name + "/edge_array", graph.edge_array);
     storage::serialization::write(writer, name + "/node_to_edge_offset", graph.node_to_edge_offset);
     writer.WriteElementCount64(name + "/connectivity_checksum", 1);
-    writer.WriteOne(name + "/connectivity_checksum", connectivity_checksum);
+    writer.WriteFrom(name + "/connectivity_checksum", connectivity_checksum);
 }
 
 template <storage::Ownership Ownership>
@@ -49,7 +49,7 @@ inline void read(storage::tar::FileReader &reader,
                  const std::string &name,
                  detail::MultiLevelPartitionImpl<Ownership> &mlp)
 {
-    *mlp.level_data = reader.ReadOne<typename std::remove_reference_t<decltype(mlp)>::LevelData>(name + "/level_data");
+    reader.ReadInto(name + "/level_data", *mlp.level_data);
     storage::serialization::read(reader, name + "/partition", mlp.partition);
     storage::serialization::read(reader, name + "/cell_to_children", mlp.cell_to_children);
 }
@@ -60,7 +60,7 @@ inline void write(storage::tar::FileWriter &writer,
                   const detail::MultiLevelPartitionImpl<Ownership> &mlp)
 {
     writer.WriteElementCount64(name + "/level_data", 1);
-    writer.WriteOne(name + "/level_data", *mlp.level_data);
+    writer.WriteFrom(name + "/level_data", *mlp.level_data);
     storage::serialization::write(writer, name + "/partition", mlp.partition);
     storage::serialization::write(writer, name + "/cell_to_children", mlp.cell_to_children);
 }

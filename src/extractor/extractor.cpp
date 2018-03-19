@@ -853,16 +853,16 @@ void Extractor::WriteCompressedNodeBasedGraph(const std::string &path,
         {
             const auto to_node = graph.GetTarget(edge);
 
-            writer.WriteOne(from_node);
-            writer.WriteOne(to_node);
+            writer.WriteFrom(from_node);
+            writer.WriteFrom(to_node);
         }
     }
 
     // FIXME this is unneccesary: We have this data
     for (const auto &qnode : coordinates)
     {
-        writer.WriteOne(qnode.lon);
-        writer.WriteOne(qnode.lat);
+        writer.WriteFrom(qnode.lon);
+        writer.WriteFrom(qnode.lat);
     }
 }
 

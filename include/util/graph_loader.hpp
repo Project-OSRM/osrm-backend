@@ -15,6 +15,7 @@
 #include <boost/assert.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
+#include <boost/function_output_iterator.hpp>
 
 #include <tbb/parallel_sort.h>
 
@@ -49,27 +50,22 @@ NodeID loadNodesFromFile(storage::io::FileReader &file_reader,
     coordinates.resize(number_of_nodes);
     osm_node_ids.reserve(number_of_nodes);
 
-    extractor::QueryNode current_node;
-    for (NodeID i = 0; i < number_of_nodes; ++i)
-    {
-        file_reader.ReadInto(&current_node, 1);
-
-        coordinates[i].lon = current_node.lon;
-        coordinates[i].lat = current_node.lat;
+    auto index = 0;
+    auto decode = [&](const extractor::QueryNode &current_node) {
+        coordinates[index].lon = current_node.lon;
+        coordinates[index].lat = current_node.lat;
         osm_node_ids.push_back(current_node.node_id);
-    }
+        index++;
+    };
+
+    file_reader.ReadStreaming<extractor::QueryNode>(boost::make_function_output_iterator(decode),
+                                                    number_of_nodes);
 
     auto num_barriers = file_reader.ReadElementCount64();
-    for (auto index = 0UL; index < num_barriers; ++index)
-    {
-        *barriers++ = file_reader.ReadOne<NodeID>();
-    }
+    file_reader.ReadStreaming<NodeID>(barriers, num_barriers);
 
     auto num_lights = file_reader.ReadElementCount64();
-    for (auto index = 0UL; index < num_lights; ++index)
-    {
-        *traffic_signals++ = file_reader.ReadOne<NodeID>();
-    }
+    file_reader.ReadStreaming<NodeID>(traffic_signals, num_lights);
 
     return number_of_nodes;
 }

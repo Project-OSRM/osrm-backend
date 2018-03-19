@@ -18,7 +18,7 @@ namespace serialization
 template <unsigned BlockSize, storage::Ownership Ownership>
 void write(storage::io::FileWriter &writer, const util::RangeTable<BlockSize, Ownership> &table)
 {
-    writer.WriteOne(table.sum_lengths);
+    writer.WriteFrom(table.sum_lengths);
     storage::serialization::write(writer, table.block_offsets);
     storage::serialization::write(writer, table.diff_blocks);
 }
@@ -26,7 +26,7 @@ void write(storage::io::FileWriter &writer, const util::RangeTable<BlockSize, Ow
 template <unsigned BlockSize, storage::Ownership Ownership>
 void read(storage::io::FileReader &reader, util::RangeTable<BlockSize, Ownership> &table)
 {
-    table.sum_lengths = reader.ReadOne<unsigned>();
+    reader.ReadInto(table.sum_lengths);
     storage::serialization::read(reader, table.block_offsets);
     storage::serialization::read(reader, table.diff_blocks);
 }
@@ -36,7 +36,7 @@ void write(storage::tar::FileWriter &writer,
            const std::string &name,
            const util::RangeTable<BlockSize, Ownership> &table)
 {
-    writer.WriteOne(name + "/sum_lengths.meta", table.sum_lengths);
+    writer.WriteFrom(name + "/sum_lengths.meta", table.sum_lengths);
     storage::serialization::write(writer, name + "/block_offsets", table.block_offsets);
     storage::serialization::write(writer, name + "/diff_blocks", table.diff_blocks);
 }
@@ -46,7 +46,7 @@ void read(storage::tar::FileReader &reader,
           const std::string &name,
           util::RangeTable<BlockSize, Ownership> &table)
 {
-    table.sum_lengths = reader.ReadOne<unsigned>(name + "/sum_lengths.meta");
+    reader.ReadInto(name + "/sum_lengths.meta", table.sum_lengths);
     storage::serialization::read(reader, name + "/block_offsets", table.block_offsets);
     storage::serialization::read(reader, name + "/diff_blocks", table.diff_blocks);
 }
@@ -54,7 +54,7 @@ void read(storage::tar::FileReader &reader,
 template <typename T, std::size_t Bits, storage::Ownership Ownership>
 inline void read(storage::io::FileReader &reader, detail::PackedVector<T, Bits, Ownership> &vec)
 {
-    vec.num_elements = reader.ReadOne<std::uint64_t>();
+    reader.ReadInto(vec.num_elements);
     storage::serialization::read(reader, vec.vec);
 }
 
@@ -62,7 +62,7 @@ template <typename T, std::size_t Bits, storage::Ownership Ownership>
 inline void write(storage::io::FileWriter &writer,
                   const detail::PackedVector<T, Bits, Ownership> &vec)
 {
-    writer.WriteOne(vec.num_elements);
+    writer.WriteFrom(vec.num_elements);
     storage::serialization::write(writer, vec.vec);
 }
 
@@ -71,7 +71,7 @@ inline void read(storage::tar::FileReader &reader,
                  const std::string &name,
                  detail::PackedVector<T, Bits, Ownership> &vec)
 {
-    vec.num_elements = reader.ReadOne<std::uint64_t>(name + "/number_of_elements.meta");
+    reader.ReadInto(name + "/number_of_elements.meta", vec.num_elements);
     storage::serialization::read(reader, name + "/packed", vec.vec);
 }
 
@@ -80,7 +80,7 @@ inline void write(storage::tar::FileWriter &writer,
                   const std::string &name,
                   const detail::PackedVector<T, Bits, Ownership> &vec)
 {
-    writer.WriteOne(name + "/number_of_elements.meta", vec.num_elements);
+    writer.WriteFrom(name + "/number_of_elements.meta", vec.num_elements);
     storage::serialization::write(writer, name + "/packed", vec.vec);
 }
 
@@ -108,7 +108,7 @@ inline void read(storage::io::FileReader &reader, DynamicGraph<EdgeDataT> &graph
     graph.edge_list.resize(num_edges);
     for (auto index : irange<std::size_t>(0, num_edges))
     {
-        reader.ReadOne(graph.edge_list[index]);
+        reader.ReadInto(graph.edge_list[index]);
     }
     graph.number_of_nodes = graph.node_array.size();
     graph.number_of_edges = num_edges;
@@ -121,7 +121,7 @@ inline void write(storage::io::FileWriter &writer, const DynamicGraph<EdgeDataT>
     writer.WriteElementCount64(graph.number_of_edges);
     for (auto index : irange<std::size_t>(0, graph.number_of_edges))
     {
-        writer.WriteOne(graph.edge_list[index]);
+        writer.WriteFrom(graph.edge_list[index]);
     }
 }
 

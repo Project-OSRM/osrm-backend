@@ -47,14 +47,14 @@ class FileReader
 
     std::uint64_t ReadElementCount64(const std::string &name)
     {
-        return ReadOne<std::uint64_t>(name + ".meta");
+        std::uint64_t size;
+        ReadInto(name + ".meta", size);
+        return size;
     }
 
-    template <typename T> T ReadOne(const std::string &name)
+    template <typename T> void ReadInto(const std::string &name, T& tmp)
     {
-        T tmp;
         ReadInto(name, &tmp, 1);
-        return tmp;
     }
 
     template <typename T, typename OutIter> void ReadStreaming(const std::string &name, OutIter out)
@@ -127,7 +127,8 @@ class FileReader
   private:
     bool ReadAndCheckFingerprint()
     {
-        auto loaded_fingerprint = ReadOne<util::FingerPrint>("osrm_fingerprint.meta");
+        util::FingerPrint loaded_fingerprint;
+        ReadInto("osrm_fingerprint.meta", loaded_fingerprint);
         const auto expected_fingerprint = util::FingerPrint::GetValid();
 
         if (!loaded_fingerprint.IsValid())
@@ -183,10 +184,10 @@ class FileWriter
 
     void WriteElementCount64(const std::string &name, const std::uint64_t count)
     {
-        WriteOne(name + ".meta", count);
+        WriteFrom(name + ".meta", count);
     }
 
-    template <typename T> void WriteOne(const std::string &name, const T &data)
+    template <typename T> void WriteFrom(const std::string &name, const T &data)
     {
         WriteFrom(name, &data, 1);
     }
@@ -236,7 +237,7 @@ class FileWriter
     void WriteFingerprint()
     {
         const auto fingerprint = util::FingerPrint::GetValid();
-        WriteOne("osrm_fingerprint.meta", fingerprint);
+        WriteFrom("osrm_fingerprint.meta", fingerprint);
     }
 
     boost::filesystem::path path;

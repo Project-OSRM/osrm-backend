@@ -87,10 +87,10 @@ void writeEdgeBasedGraph(const boost::filesystem::path &path,
     storage::tar::FileWriter writer(path, storage::tar::FileWriter::GenerateFingerprint);
 
     writer.WriteElementCount64("/common/number_of_edge_based_nodes", 1);
-    writer.WriteOne("/common/number_of_edge_based_nodes", number_of_edge_based_nodes);
+    writer.WriteFrom("/common/number_of_edge_based_nodes", number_of_edge_based_nodes);
     storage::serialization::write(writer, "/common/edge_based_edge_list", edge_based_edge_list);
     writer.WriteElementCount64("/common/connectivity_checksum", 1);
-    writer.WriteOne("/common/connectivity_checksum", connectivity_checksum);
+    writer.WriteFrom("/common/connectivity_checksum", connectivity_checksum);
 }
 
 template <typename EdgeBasedEdgeVector>
@@ -103,9 +103,9 @@ void readEdgeBasedGraph(const boost::filesystem::path &path,
 
     storage::tar::FileReader reader(path, storage::tar::FileReader::VerifyFingerprint);
 
-    number_of_edge_based_nodes = reader.ReadOne<EdgeID>("/common/number_of_edge_based_nodes");
+    reader.ReadInto("/common/number_of_edge_based_nodes", number_of_edge_based_nodes);
     storage::serialization::read(reader, "/common/edge_based_edge_list", edge_based_edge_list);
-    connectivity_checksum = reader.ReadOne<std::uint32_t>("/common/connectivity_checksum");
+    reader.ReadInto("/common/connectivity_checksum", connectivity_checksum);
 }
 
 // reads .osrm.nbg_nodes
@@ -363,6 +363,27 @@ inline void readTurnDurationPenalty(const boost::filesystem::path &path, TurnPen
     storage::tar::FileReader reader{path, fingerprint};
 
     storage::serialization::read(reader, "/common/turn_penalty/duration", turn_penalty);
+}
+
+// writes .osrm.restrictions
+template <typename ConditionalRestrictionsT>
+inline void writeConditionalRestrictions(const boost::filesystem::path &path,
+                                     const ConditionalRestrictionsT &conditional_restrictions)
+{
+    const auto fingerprint = storage::tar::FileWriter::GenerateFingerprint;
+    storage::tar::FileWriter writer{path, fingerprint};
+
+    serialization::write(writer, "/common/conditional_restrictions", conditional_restrictions);
+}
+
+// read .osrm.restrictions
+template <typename ConditionalRestrictionsT>
+inline void readConditionalRestrictions(const boost::filesystem::path &path, ConditionalRestrictionsT &conditional_restrictions)
+{
+    const auto fingerprint = storage::tar::FileReader::VerifyFingerprint;
+    storage::tar::FileReader reader{path, fingerprint};
+
+    serialization::read(reader, "/common/conditional_restrictions", conditional_restrictions);
 }
 }
 }

@@ -123,7 +123,7 @@ BOOST_AUTO_TEST_CASE(io_corrupt_fingerprint)
         osrm::storage::io::FileWriter outfile(IO_CORRUPT_FINGERPRINT_FILE,
                                               osrm::storage::io::FileWriter::HasNoFingerprint);
 
-        outfile.WriteOne(0xDEADBEEFCAFEFACE);
+        outfile.WriteFrom(0xDEADBEEFCAFEFACE);
         osrm::storage::serialization::write(outfile, v);
     }
 
@@ -154,7 +154,7 @@ BOOST_AUTO_TEST_CASE(io_incompatible_fingerprint)
                                                   osrm::storage::io::FileWriter::HasNoFingerprint);
 
             const auto fingerprint = osrm::util::FingerPrint::GetValid();
-            outfile.WriteOne(fingerprint);
+            outfile.WriteFrom(fingerprint);
             osrm::storage::serialization::write(outfile, v);
         }
 

@@ -52,7 +52,7 @@ inline void write(storage::tar::FileWriter &writer,
 inline void
 read(storage::tar::FileReader &reader, const std::string &name, ProfileProperties &properties)
 {
-    properties = reader.ReadOne<ProfileProperties>(name);
+    reader.ReadInto(name, properties);
 }
 
 inline void write(storage::tar::FileWriter &writer,
@@ -60,19 +60,19 @@ inline void write(storage::tar::FileWriter &writer,
                   const ProfileProperties &properties)
 {
     writer.WriteElementCount64(name, 1);
-    writer.WriteOne(name, properties);
+    writer.WriteFrom(name, properties);
 }
 
 // read/write for datasources file
 inline void read(storage::tar::FileReader &reader, const std::string &name, Datasources &sources)
 {
-    sources = reader.ReadOne<Datasources>(name);
+    reader.ReadInto(name, sources);
 }
 
 inline void write(storage::tar::FileWriter &writer, const std::string &name, Datasources &sources)
 {
     writer.WriteElementCount64(name, 1);
-    writer.WriteOne(name, sources);
+    writer.WriteFrom(name, sources);
 }
 
 // read/write for segment data file
@@ -138,9 +138,9 @@ inline void read(storage::io::FileReader &reader, NodeRestriction &restriction)
 
 inline void write(storage::io::FileWriter &writer, const NodeRestriction &restriction)
 {
-    writer.WriteOne(restriction.from);
-    writer.WriteOne(restriction.via);
-    writer.WriteOne(restriction.to);
+    writer.WriteFrom(restriction.from);
+    writer.WriteFrom(restriction.via);
+    writer.WriteFrom(restriction.to);
 }
 
 inline void read(storage::io::FileReader &reader, WayRestriction &restriction)
@@ -177,9 +177,9 @@ inline void read(storage::io::FileReader &reader, TurnRestriction &restriction)
 
 inline void write(storage::io::FileWriter &writer, const TurnRestriction &restriction)
 {
-    writer.WriteOne(restriction.is_only);
+    writer.WriteFrom(restriction.is_only);
     const std::uint32_t restriction_type = restriction.Type();
-    writer.WriteOne(restriction_type);
+    writer.WriteFrom(restriction_type);
     if (restriction.Type() == RestrictionType::WAY_RESTRICTION)
     {
         write(writer, mapbox::util::get<WayRestriction>(restriction.node_or_way));
@@ -197,7 +197,7 @@ inline void write(storage::io::FileWriter &writer, const ConditionalTurnRestrict
     writer.WriteElementCount64(restriction.condition.size());
     for (const auto &c : restriction.condition)
     {
-        writer.WriteOne(c.modifier);
+        writer.WriteFrom(c.modifier);
         storage::serialization::write(writer, c.times);
         storage::serialization::write(writer, c.weekdays);
         storage::serialization::write(writer, c.monthdays);
@@ -266,7 +266,7 @@ inline void write(storage::io::FileWriter &writer,
     std::for_each(restrictions.begin(), restrictions.end(), write_restriction);
 }
 
-inline void read(storage::io::FileReader &reader, ConditionalTurnPenalty &turn_penalty)
+inline void read(storage::io::BufferReader &reader, ConditionalTurnPenalty &turn_penalty)
 {
     reader.ReadInto(turn_penalty.turn_offset);
     reader.ReadInto(turn_penalty.location.lat);
@@ -282,36 +282,61 @@ inline void read(storage::io::FileReader &reader, ConditionalTurnPenalty &turn_p
     }
 }
 
-inline void write(storage::io::FileWriter &writer, const ConditionalTurnPenalty &turn_penalty)
+inline void write(storage::io::BufferWriter &writer, const ConditionalTurnPenalty &turn_penalty)
 {
-    writer.WriteOne(turn_penalty.turn_offset);
-    writer.WriteOne(static_cast<util::FixedLatitude::value_type>(turn_penalty.location.lat));
-    writer.WriteOne(static_cast<util::FixedLongitude::value_type>(turn_penalty.location.lon));
+    writer.WriteFrom(turn_penalty.turn_offset);
+    writer.WriteFrom(static_cast<util::FixedLatitude::value_type>(turn_penalty.location.lat));
+    writer.WriteFrom(static_cast<util::FixedLongitude::value_type>(turn_penalty.location.lon));
     writer.WriteElementCount64(turn_penalty.conditions.size());
     for (const auto &c : turn_penalty.conditions)
     {
-        writer.WriteOne(c.modifier);
+        writer.WriteFrom(c.modifier);
         storage::serialization::write(writer, c.times);
         storage::serialization::write(writer, c.weekdays);
         storage::serialization::write(writer, c.monthdays);
     }
 }
 
-inline void write(storage::io::FileWriter &writer,
+inline void write(storage::io::BufferWriter &writer,
                   const std::vector<ConditionalTurnPenalty> &conditional_penalties)
 {
     writer.WriteElementCount64(conditional_penalties.size());
     for (const auto &penalty : conditional_penalties)
+    {
         write(writer, penalty);
+    }
 }
 
-inline void read(storage::io::FileReader &reader,
-                 std::vector<ConditionalTurnPenalty> &conditional_penalties)
+inline void read(storage::io::BufferReader &reader, std::vector<ConditionalTurnPenalty> &conditional_penalties)
 {
-    auto const num_elements = reader.ReadElementCount64();
+    auto num_elements = reader.ReadElementCount64();
     conditional_penalties.resize(num_elements);
     for (auto &penalty : conditional_penalties)
+    {
         read(reader, penalty);
+    }
+}
+
+inline void write(storage::tar::FileWriter &writer,
+                 const std::string& name,
+                 const std::vector<ConditionalTurnPenalty> &conditional_penalties)
+{
+    storage::io::BufferWriter buffer_writer;
+    write(buffer_writer, conditional_penalties);
+
+    storage::serialization::write(writer, name, buffer_writer.GetBuffer());
+}
+
+inline void read(storage::tar::FileReader &reader,
+                 const std::string& name,
+                 std::vector<ConditionalTurnPenalty> &conditional_penalties)
+{
+    std::string buffer;
+    storage::serialization::read(reader, name, buffer);
+
+    storage::io::BufferReader buffer_reader{buffer};
+    read(buffer_reader, conditional_penalties);
+
 }
 
 }

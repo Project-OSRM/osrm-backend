@@ -6,6 +6,7 @@
 #include "util/exception.hpp"
 #include "util/exception_utils.hpp"
 #include "util/fingerprint.hpp"
+#include "util/integer_range.hpp"
 #include "util/log.hpp"
 #include "util/version.hpp"
 
@@ -110,19 +111,44 @@ class FileReader
         }
     }
 
+    template <typename T, typename OutIter> void ReadStreaming(OutIter out, const std::size_t count)
+    {
+#if !defined(__GNUC__) || (__GNUC__ > 4)
+        static_assert(!std::is_pointer<T>::value, "saving pointer types is not allowed");
+        static_assert(std::is_trivially_copyable<T>::value,
+                      "bytewise reading requires trivially copyable type");
+#endif
+
+        if (count == 0)
+            return;
+
+        T tmp;
+        for (auto index : util::irange<std::size_t>(0, count))
+        {
+            (void)index;
+            const auto &result = input_stream.read(reinterpret_cast<char *>(&tmp), sizeof(T));
+            const std::size_t bytes_read = input_stream.gcount();
+
+            if (bytes_read != sizeof(T) && !result)
+            {
+                if (result.eof())
+                {
+                    throw util::RuntimeError(
+                        filepath.string(), ErrorCode::UnexpectedEndOfFile, SOURCE_REF);
+                }
+                throw util::RuntimeError(
+                    filepath.string(), ErrorCode::FileReadError, SOURCE_REF, std::strerror(errno));
+            }
+            *out++ = tmp;
+        }
+    }
+
     template <typename T> void ReadInto(std::vector<T> &target)
     {
         ReadInto(target.data(), target.size());
     }
 
     template <typename T> void ReadInto(T &target) { ReadInto(&target, 1); }
-
-    template <typename T> T ReadOne()
-    {
-        T tmp;
-        ReadInto(tmp);
-        return tmp;
-    }
 
     template <typename T> void Skip(const std::size_t element_count)
     {
@@ -131,7 +157,12 @@ class FileReader
 
     /*******************************************/
 
-    std::uint64_t ReadElementCount64() { return ReadOne<std::uint64_t>(); }
+    std::uint64_t ReadElementCount64()
+    {
+        std::uint64_t count;
+        ReadInto(count);
+        return count;
+    }
 
     template <typename T> std::size_t ReadVectorSize()
     {
@@ -142,7 +173,8 @@ class FileReader
 
     bool ReadAndCheckFingerprint()
     {
-        auto loaded_fingerprint = ReadOne<util::FingerPrint>();
+        util::FingerPrint loaded_fingerprint;
+        ReadInto(loaded_fingerprint);
         const auto expected_fingerprint = util::FingerPrint::GetValid();
 
         if (!loaded_fingerprint.IsValid())
@@ -229,14 +261,12 @@ class FileWriter
 
     template <typename T> void WriteFrom(const T &src) { WriteFrom(&src, 1); }
 
-    template <typename T> void WriteOne(const T &tmp) { WriteFrom(tmp); }
-
-    void WriteElementCount64(const std::uint64_t count) { WriteOne<std::uint64_t>(count); }
+    void WriteElementCount64(const std::uint64_t count) { WriteFrom(count); }
 
     void WriteFingerprint()
     {
         const auto fingerprint = util::FingerPrint::GetValid();
-        return WriteOne(fingerprint);
+        return WriteFrom(fingerprint);
     }
 
     template <typename T> void Skip(const std::size_t element_count)
@@ -298,14 +328,14 @@ class BufferReader
         }
     }
 
-    template <typename T> T ReadOne()
-    {
-        T tmp;
-        ReadInto(&tmp, 1);
-        return tmp;
-    }
+    template <typename T> void ReadInto(T &tmp) { ReadInto(&tmp, 1); }
 
-    std::uint64_t ReadElementCount64() { return ReadOne<std::uint64_t>(); }
+    std::uint64_t ReadElementCount64()
+    {
+        std::uint64_t count;
+        ReadInto(count);
+        return count;
+    }
 
   private:
     std::istringstream input_stream;
@@ -343,9 +373,9 @@ class BufferWriter
         }
     }
 
-    template <typename T> void WriteOne(const T &tmp) { WriteFrom(&tmp, 1); }
+    template <typename T> void WriteFrom(const T &tmp) { WriteFrom(&tmp, 1); }
 
-    void WriteElementCount64(const std::uint64_t count) { WriteOne<std::uint64_t>(count); }
+    void WriteElementCount64(const std::uint64_t count) { WriteFrom(count); }
 
     std::string GetBuffer() const { return output_stream.str(); }
 

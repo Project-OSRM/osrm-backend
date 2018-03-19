@@ -39,7 +39,7 @@ inline void write(storage::io::FileWriter &writer,
     storage::serialization::write(writer, turn_data_container.entry_class_ids);
     storage::serialization::write(writer, turn_data_container.pre_turn_bearings);
     storage::serialization::write(writer, turn_data_container.post_turn_bearings);
-    writer.WriteOne(connectivity_checksum);
+    writer.WriteFrom(connectivity_checksum);
 }
 }
 }

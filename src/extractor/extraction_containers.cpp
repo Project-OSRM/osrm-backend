@@ -616,7 +616,7 @@ void ExtractionContainers::WriteNodes(storage::io::FileWriter &file_out) const
             }
             BOOST_ASSERT(*node_id_iterator == node_iterator->node_id);
 
-            file_out.WriteOne((*node_iterator));
+            file_out.WriteFrom((*node_iterator));
 
             ++node_id_iterator;
             ++node_iterator;

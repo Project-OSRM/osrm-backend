@@ -84,22 +84,24 @@ inline void write(storage::tar::FileWriter &writer, const std::string& name, con
 #if USE_STXXL_LIBRARY
 template <typename T> inline void read(storage::io::FileReader &reader, stxxl::vector<T> &vec)
 {
-    auto size = reader.ReadOne<std::uint64_t>();
+    auto size = reader.ReadElementCount64();
     vec.reserve(size);
+    T tmp;
     for (auto idx : util::irange<std::size_t>(0, size))
     {
         (void)idx;
-        vec.push_back(reader.ReadOne<T>());
+        reader.ReadInto(tmp);
+        vec.push_back(tmp);
     }
 }
 
 template <typename T>
 inline void write(storage::io::FileWriter &writer, const stxxl::vector<T> &vec)
 {
-    writer.WriteOne(vec.size());
+    writer.WriteFrom(vec.size());
     for (auto idx : util::irange<std::size_t>(0, vec.size()))
     {
-        writer.WriteOne<T>(vec[idx]);
+        writer.WriteFrom<T>(vec[idx]);
     }
 }
 #endif
@@ -120,8 +122,22 @@ void write(io::BufferWriter &writer, const std::vector<T> &data)
     writer.WriteFrom(data.data(), count);
 }
 
+inline void write(tar::FileWriter &writer, const std::string &name, const std::string &data)
+{
+    const auto count = data.size();
+    writer.WriteElementCount64(name, count);
+    writer.WriteFrom(name, data.data(), count);
+}
+
+inline void read(tar::FileReader &reader, const std::string &name, std::string &data)
+{
+    const auto count = reader.ReadElementCount64(name);
+    data.resize(count);
+    reader.ReadInto(name, const_cast<char*>(data.data()), count);
+}
+
 template <typename T>
-void read(tar::FileReader &reader, const std::string &name, std::vector<T> &data)
+inline void read(tar::FileReader &reader, const std::string& name, std::vector<T> &data)
 {
     const auto count = reader.ReadElementCount64(name);
     data.resize(count);
@@ -140,7 +156,7 @@ template <typename T>
 void read(tar::FileReader &reader, const std::string &name, util::vector_view<T> &data)
 {
     const auto count = reader.ReadElementCount64(name);
-    BOOST_ASSERT(data.size() == count);
+    data.resize(count);
     reader.ReadInto(name, data.data(), count);
 }
 
@@ -206,12 +222,17 @@ template <typename VectorT> void readBoolVector(io::FileReader &reader, VectorT 
     const auto count = reader.ReadElementCount64();
     data.resize(count);
     std::uint64_t index = 0;
+    unsigned char block_data;
     for (std::uint64_t next = CHAR_BIT; next < count; index = next, next += CHAR_BIT)
     {
-        unpackBits(data, index, CHAR_BIT, reader.ReadOne<unsigned char>());
+        reader.ReadInto(block_data);
+        unpackBits(data, index, CHAR_BIT, block_data);
     }
     if (count > index)
-        unpackBits(data, index, count - index, reader.ReadOne<unsigned char>());
+    {
+        reader.ReadInto(block_data);
+        unpackBits(data, index, count - index, block_data);
+    }
 }
 
 template <typename VectorT> void writeBoolVector(io::FileWriter &writer, const VectorT &data)
@@ -221,10 +242,10 @@ template <typename VectorT> void writeBoolVector(io::FileWriter &writer, const V
     std::uint64_t index = 0;
     for (std::uint64_t next = CHAR_BIT; next < count; index = next, next += CHAR_BIT)
     {
-        writer.WriteOne<unsigned char>(packBits(data, index, CHAR_BIT));
+        writer.WriteFrom<unsigned char>(packBits(data, index, CHAR_BIT));
     }
     if (count > index)
-        writer.WriteOne<unsigned char>(packBits(data, index, count - index));
+        writer.WriteFrom<unsigned char>(packBits(data, index, count - index));
 }
 
 template <typename VectorT>
