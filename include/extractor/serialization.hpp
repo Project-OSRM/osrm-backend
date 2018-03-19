@@ -64,14 +64,15 @@ inline void write(storage::tar::FileWriter &writer,
 }
 
 // read/write for datasources file
-inline void read(storage::io::FileReader &reader, Datasources &sources)
+inline void read(storage::tar::FileReader &reader, const std::string& name, Datasources &sources)
 {
-    reader.ReadInto(sources);
+    sources = reader.ReadOne<Datasources>(name);
 }
 
-inline void write(storage::io::FileWriter &writer, Datasources &sources)
+inline void write(storage::tar::FileWriter &writer, const std::string& name, Datasources &sources)
 {
-    writer.WriteFrom(sources);
+    writer.WriteElementCount64(name, 1);
+    writer.WriteOne(name, sources);
 }
 
 // read/write for segment data file

@@ -372,11 +372,6 @@ void Storage::PopulateLayout(DataLayout &layout)
                         make_block<DatasourceID>(number_of_compressed_geometries));
     }
 
-    // Load datasource name sizes.
-    {
-        layout.SetBlock(DataLayout::DATASOURCES_NAMES, make_block<extractor::Datasources>(1));
-    }
-
     {
         // Loading turn lane data
         io::FileReader lane_data_file(config.GetPath(".osrm.tld"),
@@ -447,6 +442,7 @@ void Storage::PopulateLayout(DataLayout &layout)
         {"/common/properties", DataLayout::PROPERTIES},
         {"/common/coordinates", DataLayout::COORDINATE_LIST},
         {"/common/osm_node_ids/packed", DataLayout::OSM_NODE_ID_LIST},
+        {"/common/data_sources_names", DataLayout::DATASOURCES_NAMES},
     };
     std::vector<NamedBlock> blocks;
 
@@ -460,7 +456,8 @@ void Storage::PopulateLayout(DataLayout &layout)
         {OPTIONAL, config.GetPath(".osrm.hsgr")},
         {REQUIRED, config.GetPath(".osrm.icd")},
         {REQUIRED, config.GetPath(".osrm.properties")},
-        {REQUIRED, config.GetPath(".osrm.nbg_nodes")}
+        {REQUIRED, config.GetPath(".osrm.nbg_nodes")},
+        {REQUIRED, config.GetPath(".osrm.datasource_names")}
     };
 
     for (const auto &file : tar_files)

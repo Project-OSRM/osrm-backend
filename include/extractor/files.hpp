@@ -107,7 +107,7 @@ void readEdgeBasedGraph(const boost::filesystem::path &path,
     connectivity_checksum = reader.ReadOne<std::uint32_t>("/common/connectivity_checksum");
 }
 
-// reads .osrm.nodes
+// reads .osrm.nbg_nodes
 template <typename CoordinatesT, typename PackedOSMIDsT>
 inline void readNodes(const boost::filesystem::path &path,
                       CoordinatesT &coordinates,
@@ -123,7 +123,7 @@ inline void readNodes(const boost::filesystem::path &path,
     util::serialization::read(reader, "/common/osm_node_ids", osm_node_ids);
 }
 
-// writes .osrm.nodes
+// writes .osrm.nbg_nodes
 template <typename CoordinatesT, typename PackedOSMIDsT>
 inline void writeNodes(const boost::filesystem::path &path,
                        const CoordinatesT &coordinates,
@@ -142,38 +142,38 @@ inline void writeNodes(const boost::filesystem::path &path,
 // reads .osrm.cnbg_to_ebg
 inline void readNBGMapping(const boost::filesystem::path &path, std::vector<NBGToEBG> &mapping)
 {
-    const auto fingerprint = storage::io::FileReader::VerifyFingerprint;
-    storage::io::FileReader reader{path, fingerprint};
+    const auto fingerprint = storage::tar::FileReader::VerifyFingerprint;
+    storage::tar::FileReader reader{path, fingerprint};
 
-    storage::serialization::read(reader, mapping);
+    storage::serialization::read(reader, "/common/cnbg_to_ebg", mapping);
 }
 
 // writes .osrm.cnbg_to_ebg
 inline void writeNBGMapping(const boost::filesystem::path &path,
                             const std::vector<NBGToEBG> &mapping)
 {
-    const auto fingerprint = storage::io::FileWriter::GenerateFingerprint;
-    storage::io::FileWriter writer{path, fingerprint};
+    const auto fingerprint = storage::tar::FileWriter::GenerateFingerprint;
+    storage::tar::FileWriter writer{path, fingerprint};
 
-    storage::serialization::write(writer, mapping);
+    storage::serialization::write(writer, "/common/cnbg_to_ebg", mapping);
 }
 
 // reads .osrm.datasource_names
 inline void readDatasources(const boost::filesystem::path &path, Datasources &sources)
 {
-    const auto fingerprint = storage::io::FileReader::VerifyFingerprint;
-    storage::io::FileReader reader{path, fingerprint};
+    const auto fingerprint = storage::tar::FileReader::VerifyFingerprint;
+    storage::tar::FileReader reader{path, fingerprint};
 
-    serialization::read(reader, sources);
+    serialization::read(reader, "/common/data_sources_names", sources);
 }
 
 // writes .osrm.datasource_names
 inline void writeDatasources(const boost::filesystem::path &path, Datasources &sources)
 {
-    const auto fingerprint = storage::io::FileWriter::GenerateFingerprint;
-    storage::io::FileWriter writer{path, fingerprint};
+    const auto fingerprint = storage::tar::FileWriter::GenerateFingerprint;
+    storage::tar::FileWriter writer{path, fingerprint};
 
-    serialization::write(writer, sources);
+    serialization::write(writer, "/common/data_sources_names", sources);
 }
 
 // reads .osrm.geometry
