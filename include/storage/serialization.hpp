@@ -105,6 +105,22 @@ inline void write(storage::io::FileWriter &writer, const stxxl::vector<T> &vec)
 #endif
 
 template <typename T>
+void read(io::BufferReader &reader, std::vector<T> &data)
+{
+    const auto count = reader.ReadElementCount64();
+    data.resize(count);
+    reader.ReadInto(data.data(), count);
+}
+
+template <typename T>
+void write(io::BufferWriter &writer, const std::vector<T> &data)
+{
+    const auto count = data.size();
+    writer.WriteElementCount64(count);
+    writer.WriteFrom(data.data(), count);
+}
+
+template <typename T>
 void read(tar::FileReader &reader, const std::string &name, std::vector<T> &data)
 {
     const auto count = reader.ReadElementCount64(name);

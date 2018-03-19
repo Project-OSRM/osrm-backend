@@ -20,6 +20,8 @@ const static std::string IO_INCOMPATIBLE_FINGERPRINT_FILE =
     "incompatible_fingerprint_file_test_io.tmp";
 const static std::string IO_TEXT_FILE = "plain_text_file.tmp";
 
+using namespace osrm;
+
 BOOST_AUTO_TEST_SUITE(osrm_io)
 
 BOOST_AUTO_TEST_CASE(io_data)
@@ -36,6 +38,25 @@ BOOST_AUTO_TEST_CASE(io_data)
     osrm::storage::io::FileReader infile(IO_TMP_FILE,
                                          osrm::storage::io::FileReader::VerifyFingerprint);
     osrm::storage::serialization::read(infile, data_out);
+
+    BOOST_REQUIRE_EQUAL(data_in.size(), data_out.size());
+    BOOST_CHECK_EQUAL_COLLECTIONS(data_out.begin(), data_out.end(), data_in.begin(), data_in.end());
+}
+
+BOOST_AUTO_TEST_CASE(io_buffered_data)
+{
+    std::vector<int> data_in(53), data_out;
+    std::iota(begin(data_in), end(data_in), 0);
+
+    std::string result;
+    {
+        storage::io::BufferWriter writer;
+        storage::serialization::write(writer, data_in);
+        result = writer.GetBuffer();
+    }
+
+    storage::io::BufferReader reader(result);
+    storage::serialization::read(reader, data_out);
 
     BOOST_REQUIRE_EQUAL(data_in.size(), data_out.size());
     BOOST_CHECK_EQUAL_COLLECTIONS(data_out.begin(), data_out.end(), data_in.begin(), data_in.end());

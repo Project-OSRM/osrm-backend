@@ -260,6 +260,98 @@ class FileWriter
     boost::filesystem::ofstream output_stream;
     FingerprintFlag fingerprint;
 };
+
+class BufferReader
+{
+  public:
+    BufferReader(const std::string &buffer) : input_stream(buffer, std::ios::binary)
+    {
+        if (!input_stream)
+        {
+            throw util::RuntimeError(
+                "<buffer>", ErrorCode::FileOpenError, SOURCE_REF, std::strerror(errno));
+        }
+    }
+
+    template <typename T> void ReadInto(T *dest, const std::size_t count)
+    {
+#if !defined(__GNUC__) || (__GNUC__ > 4)
+        static_assert(!std::is_pointer<T>::value, "saving pointer types is not allowed");
+        static_assert(std::is_trivially_copyable<T>::value,
+                      "bytewise reading requires trivially copyable type");
+#endif
+
+        if (count == 0)
+            return;
+
+        const auto &result = input_stream.read(reinterpret_cast<char *>(dest), count * sizeof(T));
+        const std::size_t bytes_read = input_stream.gcount();
+
+        if (bytes_read != count * sizeof(T) && !result)
+        {
+            if (result.eof())
+            {
+                throw util::RuntimeError("<buffer>", ErrorCode::UnexpectedEndOfFile, SOURCE_REF);
+            }
+            throw util::RuntimeError(
+                "<buffer>", ErrorCode::FileReadError, SOURCE_REF, std::strerror(errno));
+        }
+    }
+
+    template <typename T> T ReadOne()
+    {
+        T tmp;
+        ReadInto(&tmp, 1);
+        return tmp;
+    }
+
+    std::uint64_t ReadElementCount64() { return ReadOne<std::uint64_t>(); }
+
+  private:
+    std::istringstream input_stream;
+};
+
+class BufferWriter
+{
+  public:
+    BufferWriter() : output_stream(std::ios::binary)
+    {
+        if (!output_stream)
+        {
+            throw util::RuntimeError(
+                "<buffer>", ErrorCode::FileOpenError, SOURCE_REF, std::strerror(errno));
+        }
+    }
+
+    template <typename T> void WriteFrom(const T *src, const std::size_t count)
+    {
+#if !defined(__GNUC__) || (__GNUC__ > 4)
+        static_assert(std::is_trivially_copyable<T>::value,
+                      "bytewise writing requires trivially copyable type");
+#endif
+
+        if (count == 0)
+            return;
+
+        const auto &result =
+            output_stream.write(reinterpret_cast<const char *>(src), count * sizeof(T));
+
+        if (!result)
+        {
+            throw util::RuntimeError(
+                "<buffer>", ErrorCode::FileWriteError, SOURCE_REF, std::strerror(errno));
+        }
+    }
+
+    template <typename T> void WriteOne(const T &tmp) { WriteFrom(&tmp, 1); }
+
+    void WriteElementCount64(const std::uint64_t count) { WriteOne<std::uint64_t>(count); }
+
+    std::string GetBuffer() const { return output_stream.str(); }
+
+  private:
+    std::ostringstream output_stream;
+};
 } // ns io
 } // ns storage
 } // ns osrm
