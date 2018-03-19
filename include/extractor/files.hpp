@@ -10,6 +10,7 @@
 #include "util/coordinate.hpp"
 #include "util/guidance/bearing_class.hpp"
 #include "util/guidance/entry_class.hpp"
+#include "util/guidance/turn_lanes.hpp"
 #include "util/packed_vector.hpp"
 #include "util/range_table.hpp"
 #include "util/serialization.hpp"
@@ -240,11 +241,11 @@ inline void readTurnLaneDescriptions(const boost::filesystem::path &path,
                   "");
     static_assert(std::is_same<typename OffsetsT::value_type, std::uint32_t>::value, "");
 
-    const auto fingerprint = storage::io::FileReader::VerifyFingerprint;
-    storage::io::FileReader reader{path, fingerprint};
+    const auto fingerprint = storage::tar::FileReader::VerifyFingerprint;
+    storage::tar::FileReader reader{path, fingerprint};
 
-    storage::serialization::read(reader, turn_offsets);
-    storage::serialization::read(reader, turn_masks);
+    storage::serialization::read(reader, "/common/turn_lanes/offsets", turn_offsets);
+    storage::serialization::read(reader, "/common/turn_lanes/masks", turn_masks);
 }
 
 // writes .osrm.tls
@@ -257,12 +258,40 @@ inline void writeTurnLaneDescriptions(const boost::filesystem::path &path,
                   "");
     static_assert(std::is_same<typename OffsetsT::value_type, std::uint32_t>::value, "");
 
-    const auto fingerprint = storage::io::FileWriter::GenerateFingerprint;
-    storage::io::FileWriter writer{path, fingerprint};
+    const auto fingerprint = storage::tar::FileWriter::GenerateFingerprint;
+    storage::tar::FileWriter writer{path, fingerprint};
 
-    storage::serialization::write(writer, turn_offsets);
-    storage::serialization::write(writer, turn_masks);
+    storage::serialization::write(writer, "/common/turn_lanes/offsets", turn_offsets);
+    storage::serialization::write(writer, "/common/turn_lanes/masks", turn_masks);
 }
+
+// reads .osrm.tld
+template <typename TurnLaneDataT>
+inline void readTurnLaneData(const boost::filesystem::path &path, TurnLaneDataT &turn_lane_data)
+{
+    static_assert(std::is_same<typename TurnLaneDataT::value_type, util::guidance::LaneTupleIdPair>::value,
+                  "");
+
+    const auto fingerprint = storage::tar::FileReader::VerifyFingerprint;
+    storage::tar::FileReader reader{path, fingerprint};
+
+    storage::serialization::read(reader, "/common/turn_lanes/data", turn_lane_data);
+}
+
+// writes .osrm.tld
+template <typename TurnLaneDataT>
+inline void writeTurnLaneData(const boost::filesystem::path &path,
+                                      const TurnLaneDataT &turn_lane_data)
+{
+    static_assert(std::is_same<typename TurnLaneDataT::value_type, util::guidance::LaneTupleIdPair>::value,
+                  "");
+
+    const auto fingerprint = storage::tar::FileWriter::GenerateFingerprint;
+    storage::tar::FileWriter writer{path, fingerprint};
+
+    storage::serialization::write(writer, "/common/turn_lanes/data", turn_lane_data);
+}
+
 
 // reads .osrm.maneuver_overrides
 template <typename StorageManeuverOverrideT, typename NodeSequencesT>

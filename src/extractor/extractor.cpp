@@ -550,9 +550,9 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
                 const auto &rel = static_cast<const osmium::Relation &>(*entity);
 
                 const char *rel_type = rel.get_value_by_key("type");
-                if (!rel_type ||
-                    !std::binary_search(
-                        relation_types.begin(), relation_types.end(), std::string(rel_type)))
+                if (!rel_type || !std::binary_search(relation_types.begin(),
+                                                     relation_types.end(),
+                                                     std::string(rel_type)))
                     continue;
 
                 ExtractionRelation extracted_rel({rel.id(), osmium::item_type::relation});
@@ -945,9 +945,11 @@ void Extractor::ProcessGuidanceTurns(
 
     util::Log() << "Writing Turns and Lane Data...";
     TIMER_START(write_guidance_data);
-    storage::io::FileWriter writer(config.GetPath(".osrm.tld").string(),
-                                   storage::io::FileWriter::GenerateFingerprint);
-    storage::serialization::write(writer, convertIDMapToVector(lane_data_map.data));
+
+    {
+        auto turn_lane_data = convertIDMapToVector(lane_data_map.data);
+        files::writeTurnLaneData(config.GetPath(".osrm.tld"), turn_lane_data);
+    }
 
     { // Turn lanes handler modifies lane_description_map, so another transformation is needed
         std::vector<std::uint32_t> turn_lane_offsets;

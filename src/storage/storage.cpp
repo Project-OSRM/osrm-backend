@@ -250,16 +250,6 @@ void Storage::PopulateLayout(DataLayout &layout)
         layout.SetBlock(DataLayout::NAME_CHAR_DATA, make_block<char>(name_file.GetSize()));
     }
 
-    {
-        io::FileReader reader(config.GetPath(".osrm.tls"), io::FileReader::VerifyFingerprint);
-        auto num_offsets = reader.ReadVectorSize<std::uint32_t>();
-        auto num_masks = reader.ReadVectorSize<extractor::TurnLaneType::Mask>();
-
-        layout.SetBlock(DataLayout::LANE_DESCRIPTION_OFFSETS,
-                        make_block<std::uint32_t>(num_offsets));
-        layout.SetBlock(DataLayout::LANE_DESCRIPTION_MASKS,
-                        make_block<extractor::TurnLaneType::Mask>(num_masks));
-    }
 
     // Loading information for original edges
     {
@@ -315,15 +305,6 @@ void Storage::PopulateLayout(DataLayout &layout)
         const auto number_of_penalties = turn_duration_penalties_file.ReadElementCount64();
         layout.SetBlock(DataLayout::TURN_DURATION_PENALTIES,
                         make_block<TurnPenalty>(number_of_penalties));
-    }
-
-    {
-        // Loading turn lane data
-        io::FileReader lane_data_file(config.GetPath(".osrm.tld"),
-                                      io::FileReader::VerifyFingerprint);
-        const auto lane_tuple_count = lane_data_file.ReadElementCount64();
-        layout.SetBlock(DataLayout::TURN_LANE_DATA,
-                        make_block<util::guidance::LaneTupleIdPair>(lane_tuple_count));
     }
 
     // load maneuver overrides
@@ -398,6 +379,9 @@ void Storage::PopulateLayout(DataLayout &layout)
         {"/common/segment_data/reverse_data_sources", DataLayout::GEOMETRIES_REV_DATASOURCES_LIST},
         {"/common/ebg_node_data/nodes", DataLayout::EDGE_BASED_NODE_DATA_LIST},
         {"/common/ebg_node_data/annotations", DataLayout::ANNOTATION_DATA_LIST},
+        {"/common/turn_lanes/offsets", DataLayout::LANE_DESCRIPTION_OFFSETS},
+        {"/common/turn_lanes/masks", DataLayout::LANE_DESCRIPTION_MASKS},
+        {"/common/turn_lanes/data", DataLayout::TURN_LANE_DATA},
     };
     std::vector<NamedBlock> blocks;
 
@@ -415,6 +399,8 @@ void Storage::PopulateLayout(DataLayout &layout)
         {REQUIRED, config.GetPath(".osrm.datasource_names")},
         {REQUIRED, config.GetPath(".osrm.geometry")},
         {REQUIRED, config.GetPath(".osrm.ebg_nodes")},
+        {REQUIRED, config.GetPath(".osrm.tls")},
+        {REQUIRED, config.GetPath(".osrm.tld")},
     };
 
     for (const auto &file : tar_files)
@@ -483,18 +469,12 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
 
     // Turn lane data
     {
-        io::FileReader lane_data_file(config.GetPath(".osrm.tld"),
-                                      io::FileReader::VerifyFingerprint);
-
-        const auto lane_tuple_count = lane_data_file.ReadElementCount64();
-
-        // Need to call GetBlockPtr -> it write the memory canary, even if no data needs to be
-        // loaded.
         const auto turn_lane_data_ptr = layout.GetBlockPtr<util::guidance::LaneTupleIdPair, true>(
             memory_ptr, DataLayout::TURN_LANE_DATA);
-        BOOST_ASSERT(lane_tuple_count * sizeof(util::guidance::LaneTupleIdPair) ==
-                     layout.GetBlockSize(DataLayout::TURN_LANE_DATA));
-        lane_data_file.ReadInto(turn_lane_data_ptr, lane_tuple_count);
+        util::vector_view<util::guidance::LaneTupleIdPair> turn_lane_data(
+            turn_lane_data_ptr, layout.GetBlockEntries(storage::DataLayout::TURN_LANE_DATA));
+
+        extractor::files::readTurnLaneData(config.GetPath(".osrm.tld"), turn_lane_data);
     }
 
     // Turn lane descriptions
