@@ -116,11 +116,11 @@ inline void readNodes(const boost::filesystem::path &path,
     static_assert(std::is_same<typename CoordinatesT::value_type, util::Coordinate>::value, "");
     static_assert(std::is_same<typename PackedOSMIDsT::value_type, OSMNodeID>::value, "");
 
-    const auto fingerprint = storage::io::FileReader::VerifyFingerprint;
-    storage::io::FileReader reader{path, fingerprint};
+    const auto fingerprint = storage::tar::FileReader::VerifyFingerprint;
+    storage::tar::FileReader reader{path, fingerprint};
 
-    storage::serialization::read(reader, coordinates);
-    util::serialization::read(reader, osm_node_ids);
+    storage::serialization::read(reader, "/common/coordinates", coordinates);
+    util::serialization::read(reader, "/common/osm_node_ids", osm_node_ids);
 }
 
 // writes .osrm.nodes
@@ -132,11 +132,11 @@ inline void writeNodes(const boost::filesystem::path &path,
     static_assert(std::is_same<typename CoordinatesT::value_type, util::Coordinate>::value, "");
     static_assert(std::is_same<typename PackedOSMIDsT::value_type, OSMNodeID>::value, "");
 
-    const auto fingerprint = storage::io::FileWriter::GenerateFingerprint;
-    storage::io::FileWriter writer{path, fingerprint};
+    const auto fingerprint = storage::tar::FileWriter::GenerateFingerprint;
+    storage::tar::FileWriter writer{path, fingerprint};
 
-    storage::serialization::write(writer, coordinates);
-    util::serialization::write(writer, osm_node_ids);
+    storage::serialization::write(writer, "/common/coordinates", coordinates);
+    util::serialization::write(writer, "/common/osm_node_ids", osm_node_ids);
 }
 
 // reads .osrm.cnbg_to_ebg

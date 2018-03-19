@@ -328,23 +328,6 @@ void Storage::PopulateLayout(DataLayout &layout)
                         make_block<TurnPenalty>(number_of_penalties));
     }
 
-    // load coordinate size
-    {
-        io::FileReader node_file(config.GetPath(".osrm.nbg_nodes"),
-                                 io::FileReader::VerifyFingerprint);
-        const auto coordinate_list_size = node_file.ReadElementCount64();
-        layout.SetBlock(DataLayout::COORDINATE_LIST,
-                        make_block<util::Coordinate>(coordinate_list_size));
-        node_file.Skip<util::Coordinate>(coordinate_list_size);
-        // skip number of elements
-        node_file.Skip<std::uint64_t>(1);
-        const auto num_id_blocks = node_file.ReadElementCount64();
-        // we'll read a list of OSM node IDs from the same data, so set the block size for the same
-        // number of items:
-        layout.SetBlock(DataLayout::OSM_NODE_ID_LIST,
-                        make_block<extractor::PackedOSMIDsView::block_type>(num_id_blocks));
-    }
-
     // load geometries sizes
     {
         io::FileReader reader(config.GetPath(".osrm.geometry"), io::FileReader::VerifyFingerprint);
@@ -462,6 +445,8 @@ void Storage::PopulateLayout(DataLayout &layout)
         {"/common/intersection_bearings/class_id_to_ranges/diff_blocks", DataLayout::BEARING_BLOCKS},
         {"/common/entry_classes", DataLayout::ENTRY_CLASS},
         {"/common/properties", DataLayout::PROPERTIES},
+        {"/common/coordinates", DataLayout::COORDINATE_LIST},
+        {"/common/osm_node_ids/packed", DataLayout::OSM_NODE_ID_LIST},
     };
     std::vector<NamedBlock> blocks;
 
@@ -474,7 +459,8 @@ void Storage::PopulateLayout(DataLayout &layout)
         {OPTIONAL, config.GetPath(".osrm.cell_metrics")},
         {OPTIONAL, config.GetPath(".osrm.hsgr")},
         {REQUIRED, config.GetPath(".osrm.icd")},
-        {REQUIRED, config.GetPath(".osrm.properties")}
+        {REQUIRED, config.GetPath(".osrm.properties")},
+        {REQUIRED, config.GetPath(".osrm.nbg_nodes")}
     };
 
     for (const auto &file : tar_files)

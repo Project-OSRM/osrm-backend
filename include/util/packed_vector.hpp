@@ -7,6 +7,7 @@
 
 #include "storage/io_fwd.hpp"
 #include "storage/shared_memory_ownership.hpp"
+#include "storage/tar_fwd.hpp"
 
 #include <boost/iterator/iterator_facade.hpp>
 #include <boost/iterator/reverse_iterator.hpp>
@@ -33,6 +34,16 @@ inline void read(storage::io::FileReader &reader, detail::PackedVector<T, Bits, 
 
 template <typename T, std::size_t Bits, storage::Ownership Ownership>
 inline void write(storage::io::FileWriter &writer,
+                  const detail::PackedVector<T, Bits, Ownership> &vec);
+
+template <typename T, std::size_t Bits, storage::Ownership Ownership>
+inline void read(storage::tar::FileReader &reader,
+                 const std::string &name,
+                 detail::PackedVector<T, Bits, Ownership> &vec);
+
+template <typename T, std::size_t Bits, storage::Ownership Ownership>
+inline void write(storage::tar::FileWriter &writer,
+                  const std::string &name,
                   const detail::PackedVector<T, Bits, Ownership> &vec);
 }
 
@@ -451,6 +462,15 @@ template <typename T, std::size_t Bits, storage::Ownership Ownership> class Pack
 
     friend void serialization::write<T, Bits, Ownership>(storage::io::FileWriter &writer,
                                                          const PackedVector &vec);
+
+    friend void serialization::read<T, Bits, Ownership>(storage::tar::FileReader &reader,
+                                                        const std::string &name,
+                                                        PackedVector &vec);
+
+    friend void serialization::write<T, Bits, Ownership>(storage::tar::FileWriter &writer,
+                                                         const std::string &name,
+                                                         const PackedVector &vec);
+
     inline void swap(PackedVector &other) noexcept
     {
         std::swap(vec, other.vec);

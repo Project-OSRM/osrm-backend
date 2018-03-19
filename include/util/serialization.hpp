@@ -32,7 +32,9 @@ void read(storage::io::FileReader &reader, util::RangeTable<BlockSize, Ownership
 }
 
 template <unsigned BlockSize, storage::Ownership Ownership>
-void write(storage::tar::FileWriter &writer, const std::string& name, const util::RangeTable<BlockSize, Ownership> &table)
+void write(storage::tar::FileWriter &writer,
+           const std::string &name,
+           const util::RangeTable<BlockSize, Ownership> &table)
 {
     writer.WriteOne(name + "/sum_lengths.meta", table.sum_lengths);
     storage::serialization::write(writer, name + "/block_offsets", table.block_offsets);
@@ -40,7 +42,9 @@ void write(storage::tar::FileWriter &writer, const std::string& name, const util
 }
 
 template <unsigned BlockSize, storage::Ownership Ownership>
-void read(storage::tar::FileReader &reader, const std::string& name, util::RangeTable<BlockSize, Ownership> &table)
+void read(storage::tar::FileReader &reader,
+          const std::string &name,
+          util::RangeTable<BlockSize, Ownership> &table)
 {
     table.sum_lengths = reader.ReadOne<unsigned>(name + "/sum_lengths.meta");
     storage::serialization::read(reader, name + "/block_offsets", table.block_offsets);
@@ -60,6 +64,24 @@ inline void write(storage::io::FileWriter &writer,
 {
     writer.WriteOne(vec.num_elements);
     storage::serialization::write(writer, vec.vec);
+}
+
+template <typename T, std::size_t Bits, storage::Ownership Ownership>
+inline void read(storage::tar::FileReader &reader,
+                 const std::string &name,
+                 detail::PackedVector<T, Bits, Ownership> &vec)
+{
+    vec.num_elements = reader.ReadOne<std::uint64_t>(name + "/number_of_elements.meta");
+    storage::serialization::read(reader, name + "/packed", vec.vec);
+}
+
+template <typename T, std::size_t Bits, storage::Ownership Ownership>
+inline void write(storage::tar::FileWriter &writer,
+                  const std::string &name,
+                  const detail::PackedVector<T, Bits, Ownership> &vec)
+{
+    writer.WriteOne(name + "/number_of_elements.meta", vec.num_elements);
+    storage::serialization::write(writer, name + "/packed", vec.vec);
 }
 
 template <typename EdgeDataT, storage::Ownership Ownership>
