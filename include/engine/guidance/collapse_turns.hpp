@@ -99,6 +99,22 @@ struct StaggeredTurnStrategy : CombineStrategy
     const RouteStep &step_prior_to_intersection;
 };
 
+// Handling of consecutive segregated steps
+struct CombineSegregatedStepsStrategy : CombineStrategy
+{
+    void operator()(RouteStep &step_at_turn_location, const RouteStep &transfer_from_step) const;
+};
+
+// Handling of segregated intersections
+struct SegregatedTurnStrategy : CombineStrategy
+{
+    SegregatedTurnStrategy(const RouteStep &step_prior_to_intersection);
+
+    void operator()(RouteStep &step_at_turn_location, const RouteStep &transfer_from_step) const;
+
+    const RouteStep &step_prior_to_intersection;
+};
+
 // Signage Strategies
 
 // Transfer the signage from the next step onto this step
