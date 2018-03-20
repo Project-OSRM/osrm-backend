@@ -250,23 +250,6 @@ void Storage::PopulateLayout(DataLayout &layout)
         layout.SetBlock(DataLayout::NAME_CHAR_DATA, make_block<char>(name_file.GetSize()));
     }
 
-    // Loading information for original edges
-    {
-        io::FileReader edges_file(config.GetPath(".osrm.edges"), io::FileReader::VerifyFingerprint);
-        const auto number_of_original_edges = edges_file.ReadElementCount64();
-
-        // note: settings this all to the same size is correct, we extract them from the same struct
-        layout.SetBlock(DataLayout::PRE_TURN_BEARING,
-                        make_block<guidance::TurnBearing>(number_of_original_edges));
-        layout.SetBlock(DataLayout::POST_TURN_BEARING,
-                        make_block<guidance::TurnBearing>(number_of_original_edges));
-        layout.SetBlock(DataLayout::TURN_INSTRUCTION,
-                        make_block<guidance::TurnInstruction>(number_of_original_edges));
-        layout.SetBlock(DataLayout::LANE_DATA_ID, make_block<LaneDataID>(number_of_original_edges));
-        layout.SetBlock(DataLayout::ENTRY_CLASSID,
-                        make_block<EntryClassID>(number_of_original_edges));
-    }
-
     // load rsearch tree size
     {
         io::FileReader tree_node_file(config.GetPath(".osrm.ramIndex"),
@@ -356,6 +339,12 @@ void Storage::PopulateLayout(DataLayout &layout)
         {"/common/maneuver_overrides/node_sequences", DataLayout::MANEUVER_OVERRIDE_NODE_SEQUENCES},
         {"/common/turn_penalty/weight", DataLayout::TURN_WEIGHT_PENALTIES},
         {"/common/turn_penalty/duration", DataLayout::TURN_DURATION_PENALTIES},
+        {"/common/turn_data/pre_turn_bearings", DataLayout::PRE_TURN_BEARING},
+        {"/common/turn_data/post_turn_bearings", DataLayout::POST_TURN_BEARING},
+        {"/common/turn_data/turn_instructions", DataLayout::TURN_INSTRUCTION},
+        {"/common/turn_data/lane_data_ids", DataLayout::LANE_DATA_ID},
+        {"/common/turn_data/entry_class_ids", DataLayout::ENTRY_CLASSID},
+        {"/common/turn_data/connectivity_checksum", DataLayout::IGNORE_BLOCK},
     };
     std::vector<NamedBlock> blocks;
 
@@ -378,6 +367,7 @@ void Storage::PopulateLayout(DataLayout &layout)
         {REQUIRED, config.GetPath(".osrm.maneuver_overrides")},
         {REQUIRED, config.GetPath(".osrm.turn_weight_penalties")},
         {REQUIRED, config.GetPath(".osrm.turn_duration_penalties")},
+        {REQUIRED, config.GetPath(".osrm.edges")},
     };
 
     for (const auto &file : tar_files)
