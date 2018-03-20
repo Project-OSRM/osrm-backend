@@ -289,11 +289,10 @@ void CombineSegregatedStepsStrategy::operator()(RouteStep &step_at_turn_location
 {
     // TODO
     if (hasTurnType(step_at_turn_location, TurnType::EndOfRoad) ||
-            hasTurnType(transfer_from_step, TurnType::EndOfRoad))
+        hasTurnType(transfer_from_step, TurnType::EndOfRoad))
     {
         setInstructionType(step_at_turn_location, TurnType::EndOfRoad);
     }
-
 }
 
 SegregatedTurnStrategy::SegregatedTurnStrategy(const RouteStep &step_prior_to_intersection)
@@ -302,11 +301,12 @@ SegregatedTurnStrategy::SegregatedTurnStrategy(const RouteStep &step_prior_to_in
 }
 
 void SegregatedTurnStrategy::operator()(RouteStep &step_at_turn_location,
-                                       const RouteStep &transfer_from_step) const
+                                        const RouteStep &transfer_from_step) const
 {
-    const auto calculate_turn_direction = [](const RouteStep &entry_step, const RouteStep &exit_step) {
-        const double angle =
-            util::bearing::angleBetween(entry_step.maneuver.bearing_before, exit_step.maneuver.bearing_after);
+    const auto calculate_turn_direction = [](const RouteStep &entry_step,
+                                             const RouteStep &exit_step) {
+        const double angle = util::bearing::angleBetween(entry_step.maneuver.bearing_before,
+                                                         exit_step.maneuver.bearing_after);
 
         return getTurnDirection(angle);
     };
@@ -315,25 +315,21 @@ void SegregatedTurnStrategy::operator()(RouteStep &step_at_turn_location,
     const auto turn_direction = calculate_turn_direction(step_at_turn_location, transfer_from_step);
 
     const auto is_straight_step = [](const RouteStep &step) {
-        return ((hasTurnType(step, TurnType::NewName) ||
-                hasTurnType(step, TurnType::Continue) ||
-                hasTurnType(step, TurnType::Suppressed) ||
-                hasTurnType(step, TurnType::Turn)) &&
+        return ((hasTurnType(step, TurnType::NewName) || hasTurnType(step, TurnType::Continue) ||
+                 hasTurnType(step, TurnType::Suppressed) || hasTurnType(step, TurnType::Turn)) &&
                 (hasModifier(step, DirectionModifier::Straight) ||
-                        hasModifier(step, DirectionModifier::SlightLeft) ||
-                        hasModifier(step, DirectionModifier::SlightRight)));
+                 hasModifier(step, DirectionModifier::SlightLeft) ||
+                 hasModifier(step, DirectionModifier::SlightRight)));
     };
 
     const auto is_turn_step = [](const RouteStep &step) {
-        return (hasTurnType(step, TurnType::Turn) ||
-               hasTurnType(step, TurnType::Continue) ||
-               hasTurnType(step, TurnType::NewName) ||
-               hasTurnType(step, TurnType::Suppressed));
+        return (hasTurnType(step, TurnType::Turn) || hasTurnType(step, TurnType::Continue) ||
+                hasTurnType(step, TurnType::NewName) || hasTurnType(step, TurnType::Suppressed));
     };
 
     // Process end of road step
     if (hasTurnType(step_at_turn_location, TurnType::EndOfRoad) ||
-            hasTurnType(transfer_from_step, TurnType::EndOfRoad))
+        hasTurnType(transfer_from_step, TurnType::EndOfRoad))
     {
         // Keep end of road
         setInstructionType(step_at_turn_location, TurnType::EndOfRoad);
@@ -350,17 +346,17 @@ void SegregatedTurnStrategy::operator()(RouteStep &step_at_turn_location,
     }
     // Process straight step
     else if ((turn_direction == guidance::DirectionModifier::Straight) &&
-            is_straight_step(transfer_from_step))
+             is_straight_step(transfer_from_step))
     {
         // Determine if continue or new name
         setInstructionType(step_at_turn_location,
-                (haveSameName(step_prior_to_intersection, transfer_from_step)
-                        ? TurnType::Suppressed
-                        : TurnType::NewName));
+                           (haveSameName(step_prior_to_intersection, transfer_from_step)
+                                ? TurnType::Suppressed
+                                : TurnType::NewName));
     }
     // Process turn step
     else if ((turn_direction != guidance::DirectionModifier::Straight) &&
-            is_turn_step(transfer_from_step))
+             is_turn_step(transfer_from_step))
     {
         // Mark as turn
         setInstructionType(step_at_turn_location, TurnType::Turn);
