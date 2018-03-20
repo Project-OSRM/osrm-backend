@@ -105,6 +105,12 @@ inline void setInstructionType(RouteStep &step, const osrm::guidance::TurnType::
 }
 
 // alias for readability
+inline void setModifier(RouteStep &step, const osrm::guidance::DirectionModifier::Enum modifier)
+{
+    step.maneuver.instruction.direction_modifier = modifier;
+}
+
+// alias for readability
 inline bool haveSameMode(const RouteStep &lhs, const RouteStep &rhs)
 {
     return lhs.mode == rhs.mode;
