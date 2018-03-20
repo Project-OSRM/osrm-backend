@@ -700,7 +700,7 @@ target_link_libraries(osrm_customize ${CUSTOMIZER_LIBRARIES} osrm_update osrm_st
 target_link_libraries(osrm_store ${STORAGE_LIBRARIES})
 
 # BUILD_COMPONENTS
-add_executable(osrm-components src/tools/components.cpp $<TARGET_OBJECTS:UTIL>)
+add_executable(osrm-components src/tools/components.cpp $<TARGET_OBJECTS:MICROTAR> $<TARGET_OBJECTS:UTIL>)
 target_link_libraries(osrm-components ${TBB_LIBRARIES} ${BOOST_BASE_LIBRARIES} ${UTIL_LIBRARIES})
 install(TARGETS osrm-components DESTINATION bin)
 

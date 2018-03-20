@@ -19,7 +19,6 @@
 #include "util/exception_utils.hpp"
 #include "util/exclude_flag.hpp"
 #include "util/filtered_graph.hpp"
-#include "util/graph_loader.hpp"
 #include "util/integer_range.hpp"
 #include "util/log.hpp"
 #include "util/static_graph.hpp"

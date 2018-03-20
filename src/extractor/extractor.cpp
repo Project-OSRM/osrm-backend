@@ -23,7 +23,6 @@
 
 #include "util/exception.hpp"
 #include "util/exception_utils.hpp"
-#include "util/graph_loader.hpp"
 #include "util/integer_range.hpp"
 #include "util/log.hpp"
 #include "util/name_table.hpp"

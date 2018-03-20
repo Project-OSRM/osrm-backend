@@ -16,7 +16,6 @@
 #include "util/exception.hpp"
 #include "util/exception_utils.hpp"
 #include "util/for_each_pair.hpp"
-#include "util/graph_loader.hpp"
 #include "util/integer_range.hpp"
 #include "util/log.hpp"
 #include "util/opening_hours.hpp"

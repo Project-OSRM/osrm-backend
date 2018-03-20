@@ -4,6 +4,7 @@
 #include "extractor/edge_based_edge.hpp"
 #include "extractor/node_data_container.hpp"
 #include "extractor/profile_properties.hpp"
+#include "extractor/query_node.hpp"
 #include "extractor/serialization.hpp"
 #include "extractor/turn_lane_types.hpp"
 
@@ -368,7 +369,7 @@ inline void readTurnDurationPenalty(const boost::filesystem::path &path, TurnPen
 // writes .osrm.restrictions
 template <typename ConditionalRestrictionsT>
 inline void writeConditionalRestrictions(const boost::filesystem::path &path,
-                                     const ConditionalRestrictionsT &conditional_restrictions)
+                                         const ConditionalRestrictionsT &conditional_restrictions)
 {
     const auto fingerprint = storage::tar::FileWriter::GenerateFingerprint;
     storage::tar::FileWriter writer{path, fingerprint};
@@ -378,12 +379,46 @@ inline void writeConditionalRestrictions(const boost::filesystem::path &path,
 
 // read .osrm.restrictions
 template <typename ConditionalRestrictionsT>
-inline void readConditionalRestrictions(const boost::filesystem::path &path, ConditionalRestrictionsT &conditional_restrictions)
+inline void readConditionalRestrictions(const boost::filesystem::path &path,
+                                        ConditionalRestrictionsT &conditional_restrictions)
 {
     const auto fingerprint = storage::tar::FileReader::VerifyFingerprint;
     storage::tar::FileReader reader{path, fingerprint};
 
     serialization::read(reader, "/common/conditional_restrictions", conditional_restrictions);
+}
+
+// reads .osrm file which is a temporary file of osrm-extract
+template <typename BarrierOutIter, typename TrafficSignalsOutIter, typename PackedOSMIDsT>
+void readRawNBGraph(const boost::filesystem::path &path,
+                    BarrierOutIter barriers,
+                    TrafficSignalsOutIter traffic_signals,
+                    std::vector<util::Coordinate> &coordinates,
+                    PackedOSMIDsT &osm_node_ids,
+                    std::vector<extractor::NodeBasedEdge> &edge_list,
+                    std::vector<extractor::NodeBasedEdgeAnnotation> &annotations)
+{
+    const auto fingerprint = storage::tar::FileReader::VerifyFingerprint;
+    storage::tar::FileReader reader{path, fingerprint};
+
+    auto number_of_nodes = reader.ReadElementCount64("/extractor/nodes");
+    coordinates.resize(number_of_nodes);
+    osm_node_ids.reserve(number_of_nodes);
+    auto index = 0;
+    auto decode = [&](const auto &current_node) {
+        coordinates[index].lon = current_node.lon;
+        coordinates[index].lat = current_node.lat;
+        osm_node_ids.push_back(current_node.node_id);
+        index++;
+    };
+    reader.ReadStreaming<extractor::QueryNode>("/extractor/nodes", boost::make_function_output_iterator(decode));
+
+    reader.ReadStreaming<NodeID>("/extractor/barriers", barriers);
+
+    reader.ReadStreaming<NodeID>("/extractor/traffic_lights", traffic_signals);
+
+    storage::serialization::read(reader, "/extractor/edges", edge_list);
+    storage::serialization::read(reader, "/extractor/annotations", annotations);
 }
 }
 }

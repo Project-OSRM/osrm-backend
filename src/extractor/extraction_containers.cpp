@@ -131,15 +131,15 @@ void ExtractionContainers::PrepareData(ScriptingEnvironment &scripting_environme
                                        const std::string &osrm_path,
                                        const std::string &name_file_name)
 {
-    storage::io::FileWriter file_out(osrm_path, storage::io::FileWriter::GenerateFingerprint);
+    storage::tar::FileWriter writer(osrm_path, storage::tar::FileWriter::GenerateFingerprint);
 
     PrepareNodes();
-    WriteNodes(file_out);
+    WriteNodes(writer);
     PrepareEdges(scripting_environment);
     all_nodes_list.clear(); // free all_nodes_list before allocation of normal_edges
     all_nodes_list.shrink_to_fit();
-    WriteEdges(file_out);
-    WriteMetadata(file_out);
+    WriteEdges(writer);
+    WriteMetadata(writer);
 
     /* Sort these so that searching is a bit faster later on */
     {
@@ -276,8 +276,8 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
         {
             if (edge_iterator->result.osm_source_id < node_iterator->node_id)
             {
-                util::Log(logDEBUG) << "Found invalid node reference "
-                                    << edge_iterator->result.source;
+                util::Log(logDEBUG)
+                    << "Found invalid node reference " << edge_iterator->result.source;
                 edge_iterator->result.source = SPECIAL_NODEID;
                 ++edge_iterator;
                 continue;
@@ -531,7 +531,7 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
     }
 }
 
-void ExtractionContainers::WriteEdges(storage::io::FileWriter &file_out) const
+void ExtractionContainers::WriteEdges(storage::tar::FileWriter &writer) const
 {
     std::vector<NodeBasedEdge> normal_edges;
     normal_edges.reserve(all_edges_list.size());
@@ -558,8 +558,7 @@ void ExtractionContainers::WriteEdges(storage::io::FileWriter &file_out) const
             throw util::exception("There are too many edges, OSRM only supports 2^32" + SOURCE_REF);
         }
 
-        file_out.WriteElementCount64(normal_edges.size());
-        file_out.WriteFrom(normal_edges.data(), normal_edges.size());
+        storage::serialization::write(writer, "/extractor/edges", normal_edges);
 
         TIMER_STOP(write_edges);
         log << "ok, after " << TIMER_SEC(write_edges) << "s";
@@ -567,31 +566,21 @@ void ExtractionContainers::WriteEdges(storage::io::FileWriter &file_out) const
     }
 }
 
-void ExtractionContainers::WriteMetadata(storage::io::FileWriter &file_out) const
+void ExtractionContainers::WriteMetadata(storage::tar::FileWriter &writer) const
 {
     util::UnbufferedLog log;
     log << "Writing way meta-data     ... " << std::flush;
     TIMER_START(write_meta_data);
 
-    file_out.WriteElementCount64(all_edges_annotation_data_list.size());
-    file_out.WriteFrom(all_edges_annotation_data_list.data(),
-                       all_edges_annotation_data_list.size());
+    storage::serialization::write(writer, "/extractor/annotations", all_edges_annotation_data_list);
 
     TIMER_STOP(write_meta_data);
     log << "ok, after " << TIMER_SEC(write_meta_data) << "s";
     log << " -- Metadata contains << " << all_edges_annotation_data_list.size() << " entries.";
 }
 
-void ExtractionContainers::WriteNodes(storage::io::FileWriter &file_out) const
+void ExtractionContainers::WriteNodes(storage::tar::FileWriter &writer) const
 {
-    {
-        // write dummy value, will be overwritten later
-        util::UnbufferedLog log;
-        log << "setting number of nodes   ... " << std::flush;
-        file_out.WriteElementCount64(max_internal_node_id);
-        log << "ok";
-    }
-
     {
         util::UnbufferedLog log;
         log << "Confirming/Writing used nodes     ... ";
@@ -599,28 +588,35 @@ void ExtractionContainers::WriteNodes(storage::io::FileWriter &file_out) const
         // identify all used nodes by a merging step of two sorted lists
         auto node_iterator = all_nodes_list.begin();
         auto node_id_iterator = used_node_id_list.begin();
-        const auto used_node_id_list_end = used_node_id_list.end();
         const auto all_nodes_list_end = all_nodes_list.end();
 
-        while (node_id_iterator != used_node_id_list_end && node_iterator != all_nodes_list_end)
-        {
-            if (*node_id_iterator < node_iterator->node_id)
-            {
-                ++node_id_iterator;
-                continue;
-            }
-            if (*node_id_iterator > node_iterator->node_id)
+        const auto encode = [&]() {
+            BOOST_ASSERT(node_id_iterator != used_node_id_list.end());
+            BOOST_ASSERT(node_iterator != all_nodes_list_end);
+            BOOST_ASSERT(*node_id_iterator >= node_iterator->node_id);
+            while (*node_id_iterator > node_iterator->node_id &&
+                   node_iterator != all_nodes_list_end)
             {
                 ++node_iterator;
-                continue;
+            }
+            if (node_iterator == all_nodes_list_end || *node_id_iterator < node_iterator->node_id)
+            {
+                throw util::exception(
+                    "Invalid OSM data: Referenced non-existing node with ID " +
+                    std::to_string(static_cast<std::uint64_t>(*node_id_iterator)));
             }
             BOOST_ASSERT(*node_id_iterator == node_iterator->node_id);
 
-            file_out.WriteFrom((*node_iterator));
-
             ++node_id_iterator;
-            ++node_iterator;
-        }
+            return *node_iterator++;
+        };
+
+        writer.WriteElementCount64("/extractor/nodes", used_node_id_list.size());
+        writer.WriteStreaming<QueryNode>(
+            "/extractor/nodes",
+            boost::make_function_input_iterator(encode, boost::infinite()),
+            used_node_id_list.size());
+
         TIMER_STOP(write_nodes);
         log << "ok, after " << TIMER_SEC(write_nodes) << "s";
     }
@@ -639,7 +635,7 @@ void ExtractionContainers::WriteNodes(storage::io::FileWriter &file_out) const
                 internal_barrier_nodes.push_back(node_id);
             }
         }
-        storage::serialization::write(file_out, internal_barrier_nodes);
+        storage::serialization::write(writer, "/extractor/barriers", internal_barrier_nodes);
         log << "ok, after " << TIMER_SEC(write_nodes) << "s";
     }
 
@@ -657,7 +653,8 @@ void ExtractionContainers::WriteNodes(storage::io::FileWriter &file_out) const
                 internal_traffic_signals.push_back(node_id);
             }
         }
-        storage::serialization::write(file_out, internal_traffic_signals);
+        storage::serialization::write(
+            writer, "/extractor/traffic_lights", internal_traffic_signals);
         log << "ok, after " << TIMER_SEC(write_nodes) << "s";
     }
 
@@ -1035,8 +1032,9 @@ void ExtractionContainers::PrepareRestrictions()
     // translate the turn from one segment onto another into a node restriction (the ways can
     // only
     // be connected at a single location)
-    auto const get_node_restriction_from_OSM_ids = [&](
-        auto const from_id, auto const to_id, const OSMNodeID via_node) {
+    auto const get_node_restriction_from_OSM_ids = [&](auto const from_id,
+                                                       auto const to_id,
+                                                       const OSMNodeID via_node) {
         auto const from_segment_itr = referenced_ways.find(from_id);
         if (from_segment_itr->second.way_id != from_id)
         {
