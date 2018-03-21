@@ -99,11 +99,6 @@ class Extractor
                     const std::vector<util::Coordinate> &coordinates);
     std::shared_ptr<RestrictionMap> LoadRestrictionMap();
 
-    // Writes compressed node based graph and its embedding into a file for osrm-partition to use.
-    static void WriteCompressedNodeBasedGraph(const std::string &path,
-                                              const util::NodeBasedDynamicGraph &graph,
-                                              const std::vector<util::Coordinate> &coordiantes);
-
     void WriteConditionalRestrictions(
         const std::string &path,
         std::vector<ConditionalTurnRestriction> &conditional_turn_restrictions);

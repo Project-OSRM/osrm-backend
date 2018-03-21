@@ -94,6 +94,7 @@ void writeEdgeBasedGraph(const boost::filesystem::path &path,
     writer.WriteFrom("/common/connectivity_checksum", connectivity_checksum);
 }
 
+// reads .osrm.ebg file
 template <typename EdgeBasedEdgeVector>
 void readEdgeBasedGraph(const boost::filesystem::path &path,
                         EdgeID &number_of_edge_based_nodes,
@@ -123,6 +124,19 @@ inline void readNodes(const boost::filesystem::path &path,
 
     storage::serialization::read(reader, "/common/coordinates", coordinates);
     util::serialization::read(reader, "/common/osm_node_ids", osm_node_ids);
+}
+
+// reads only coordinates from .osrm.nbg_nodes
+template <typename CoordinatesT>
+inline void readNodeCoordinates(const boost::filesystem::path &path,
+                      CoordinatesT &coordinates)
+{
+    static_assert(std::is_same<typename CoordinatesT::value_type, util::Coordinate>::value, "");
+
+    const auto fingerprint = storage::tar::FileReader::VerifyFingerprint;
+    storage::tar::FileReader reader{path, fingerprint};
+
+    storage::serialization::read(reader, "/common/coordinates", coordinates);
 }
 
 // writes .osrm.nbg_nodes
@@ -475,6 +489,24 @@ void readRamIndex(const boost::filesystem::path &path, RTreeT &rtree)
     storage::tar::FileReader reader{path, fingerprint};
 
     util::serialization::read(reader, "/common/rtree", rtree);
+}
+
+template <typename EdgeListT>
+void writeCompressedNodeBasedGraph(const boost::filesystem::path &path, const EdgeListT &edge_list)
+{
+    const auto fingerprint = storage::tar::FileWriter::GenerateFingerprint;
+    storage::tar::FileWriter writer{path, fingerprint};
+
+    storage::serialization::write(writer, "/extractor/cnbg", edge_list);
+}
+
+template <typename EdgeListT>
+void readCompressedNodeBasedGraph(const boost::filesystem::path &path, EdgeListT &edge_list)
+{
+    const auto fingerprint = storage::tar::FileReader::VerifyFingerprint;
+    storage::tar::FileReader reader{path, fingerprint};
+
+    storage::serialization::read(reader, "/extractor/cnbg", edge_list);
 }
 }
 }

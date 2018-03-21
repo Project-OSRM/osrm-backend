@@ -2,7 +2,6 @@
 #include "partitioner/bisection_graph.hpp"
 #include "partitioner/bisection_to_partition.hpp"
 #include "partitioner/cell_storage.hpp"
-#include "partitioner/compressed_node_based_graph_reader.hpp"
 #include "partitioner/edge_based_graph_reader.hpp"
 #include "partitioner/files.hpp"
 #include "partitioner/multi_level_partition.hpp"
@@ -10,6 +9,7 @@
 #include "partitioner/remove_unconnected.hpp"
 #include "partitioner/renumber.hpp"
 
+#include "extractor/compressed_node_based_graph_edge.hpp"
 #include "extractor/files.hpp"
 
 #include "util/coordinate.hpp"
@@ -40,19 +40,17 @@ namespace partitioner
 {
 auto getGraphBisection(const PartitionerConfig &config)
 {
-    auto compressed_node_based_graph =
-        LoadCompressedNodeBasedGraph(config.GetPath(".osrm.cnbg").string());
+    std::vector<extractor::CompressedNodeBasedGraphEdge> edges;
+    extractor::files::readCompressedNodeBasedGraph(config.GetPath(".osrm.cnbg"), edges);
+    groupEdgesBySource(begin(edges), end(edges));
 
-    util::Log() << "Loaded compressed node based graph: "
-                << compressed_node_based_graph.edges.size() << " edges, "
-                << compressed_node_based_graph.coordinates.size() << " nodes";
+    std::vector<util::Coordinate> coordinates;
+    extractor::files::readNodeCoordinates(config.GetPath(".osrm.nbg_nodes"), coordinates);
 
-    groupEdgesBySource(begin(compressed_node_based_graph.edges),
-                       end(compressed_node_based_graph.edges));
+    util::Log() << "Loaded compressed node based graph: " << edges.size() << " edges, "
+                << coordinates.size() << " nodes";
 
-    auto graph =
-        makeBisectionGraph(compressed_node_based_graph.coordinates,
-                           adaptToBisectionEdge(std::move(compressed_node_based_graph.edges)));
+    auto graph = makeBisectionGraph(coordinates, adaptToBisectionEdge(std::move(edges)));
 
     util::Log() << " running partition: " << config.max_cell_sizes.front() << " " << config.balance
                 << " " << config.boundary_factor << " " << config.num_optimizing_cuts << " "

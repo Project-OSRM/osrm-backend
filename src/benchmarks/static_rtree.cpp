@@ -33,15 +33,6 @@ constexpr int32_t WORLD_MAX_LON = 180 * COORDINATE_PRECISION;
 using RTreeLeaf = extractor::EdgeBasedNodeSegment;
 using BenchStaticRTree = util::StaticRTree<RTreeLeaf, storage::Ownership::Container>;
 
-std::vector<util::Coordinate> loadCoordinates(const boost::filesystem::path &nodes_file)
-{
-    std::vector<util::Coordinate> coords;
-    extractor::PackedOSMIDs nodes;
-    extractor::files::readNodes(nodes_file, coords, nodes);
-
-    return coords;
-}
-
 template <typename QueryT>
 void benchmarkQuery(const std::vector<util::Coordinate> &queries,
                     const std::string &name,
@@ -99,7 +90,8 @@ int main(int argc, char **argv)
     const char *file_path = argv[2];
     const char *nodes_path = argv[3];
 
-    auto coords = osrm::benchmarks::loadCoordinates(nodes_path);
+    std::vector<osrm::util::Coordinate> coords;
+    osrm::extractor::files::readNodeCoordinates(nodes_path, coords);
 
     osrm::benchmarks::BenchStaticRTree rtree(file_path, coords);
     osrm::extractor::files::readRamIndex(ram_path, rtree);

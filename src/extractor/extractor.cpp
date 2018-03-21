@@ -14,6 +14,7 @@
 #include "extractor/restriction_parser.hpp"
 #include "extractor/scripting_environment.hpp"
 #include "extractor/name_table.hpp"
+#include "extractor/compressed_node_based_graph_edge.hpp"
 
 #include "guidance/files.hpp"
 #include "guidance/guidance_processing.hpp"
@@ -168,6 +169,26 @@ void SetExcludableClasses(const ExtractorCallbacks::ClassesMap &classes_map,
         }
     }
 }
+
+std::vector<CompressedNodeBasedGraphEdge> toEdgeList(const util::NodeBasedDynamicGraph& graph)
+{
+    std::vector<CompressedNodeBasedGraphEdge> edges;
+    edges.reserve(graph.GetNumberOfEdges());
+
+    // For all nodes iterate over its edges and dump (from, to) pairs
+    for (const NodeID from_node : util::irange(0u, graph.GetNumberOfNodes()))
+    {
+        for (const EdgeID edge : graph.GetAdjacentEdgeRange(from_node))
+        {
+            const auto to_node = graph.GetTarget(edge);
+
+            edges.push_back({from_node, to_node});
+        }
+    }
+
+    return edges;
+}
+
 }
 
 /**
@@ -267,10 +288,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
             compressed_node_based_graph_writing.wait();
     };
 
-    compressed_node_based_graph_writing = std::async(std::launch::async, [&] {
-        WriteCompressedNodeBasedGraph(
-            config.GetPath(".osrm.cnbg").string(), node_based_graph, coordinates);
-    });
+    files::writeCompressedNodeBasedGraph(config.GetPath(".osrm.cnbg").string(), toEdgeList(node_based_graph));
 
     node_based_graph_factory.GetCompressedEdges().PrintStatistics();
 
@@ -812,48 +830,6 @@ void Extractor::BuildRTree(std::vector<EdgeBasedNodeSegment> edge_based_node_seg
 
     TIMER_STOP(construction);
     util::Log() << "finished r-tree construction in " << TIMER_SEC(construction) << " seconds";
-}
-
-void Extractor::WriteCompressedNodeBasedGraph(const std::string &path,
-                                              const util::NodeBasedDynamicGraph &graph,
-                                              const std::vector<util::Coordinate> &coordinates)
-{
-    const auto fingerprint = storage::io::FileWriter::GenerateFingerprint;
-
-    storage::io::FileWriter writer{path, fingerprint};
-
-    // Writes:  | Fingerprint | #e | #n | edges | coordinates |
-    // - uint64: number of edges (from, to) pairs
-    // - uint64: number of nodes and therefore also coordinates
-    // - (uint32_t, uint32_t): num_edges * edges
-    // - (int32_t, int32_t: num_nodes * coordinates (lon, lat)
-
-    const auto num_edges = graph.GetNumberOfEdges();
-    const auto num_nodes = graph.GetNumberOfNodes();
-
-    BOOST_ASSERT_MSG(num_nodes == coordinates.size(), "graph and embedding out of sync");
-
-    writer.WriteElementCount64(num_edges);
-    writer.WriteElementCount64(num_nodes);
-
-    // For all nodes iterate over its edges and dump (from, to) pairs
-    for (const NodeID from_node : util::irange(0u, num_nodes))
-    {
-        for (const EdgeID edge : graph.GetAdjacentEdgeRange(from_node))
-        {
-            const auto to_node = graph.GetTarget(edge);
-
-            writer.WriteFrom(from_node);
-            writer.WriteFrom(to_node);
-        }
-    }
-
-    // FIXME this is unneccesary: We have this data
-    for (const auto &qnode : coordinates)
-    {
-        writer.WriteFrom(qnode.lon);
-        writer.WriteFrom(qnode.lat);
-    }
 }
 
 template <typename Map> auto convertIDMapToVector(const Map &map)
