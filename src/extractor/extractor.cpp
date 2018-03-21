@@ -407,11 +407,6 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
             timestamp = "n/a";
         }
         util::Log() << "timestamp: " << timestamp;
-
-        storage::io::FileWriter timestamp_file(config.GetPath(".osrm.timestamp"),
-                                               storage::io::FileWriter::GenerateFingerprint);
-
-        timestamp_file.WriteFrom(timestamp.c_str(), timestamp.length());
     }
 
     // Extraction containers and restriction parser

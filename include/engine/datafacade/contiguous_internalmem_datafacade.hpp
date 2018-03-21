@@ -233,16 +233,6 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         exclude_mask = m_profile_properties->excludable_classes[exclude_index];
     }
 
-    void InitializeTimestampPointer(storage::DataLayout &data_layout, char *memory_block)
-    {
-        auto timestamp_ptr =
-            data_layout.GetBlockPtr<char>(memory_block, storage::DataLayout::TIMESTAMP);
-        m_timestamp.resize(data_layout.GetBlockSize(storage::DataLayout::TIMESTAMP));
-        std::copy(timestamp_ptr,
-                  timestamp_ptr + data_layout.GetBlockSize(storage::DataLayout::TIMESTAMP),
-                  m_timestamp.begin());
-    }
-
     void InitializeChecksumPointer(storage::DataLayout &data_layout, char *memory_block)
     {
         m_check_sum =
@@ -543,7 +533,6 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         InitializeEdgeInformationPointers(data_layout, memory_block);
         InitializeTurnPenalties(data_layout, memory_block);
         InitializeGeometryPointers(data_layout, memory_block);
-        InitializeTimestampPointer(data_layout, memory_block);
         InitializeNamePointers(data_layout, memory_block);
         InitializeTurnLaneDescriptionsPointers(data_layout, memory_block);
         InitializeProfilePropertiesPointer(data_layout, memory_block, exclude_index);
@@ -850,8 +839,6 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     {
         return m_datasources->GetSourceName(id);
     }
-
-    std::string GetTimestamp() const override final { return m_timestamp; }
 
     bool GetContinueStraightDefault() const override final
     {

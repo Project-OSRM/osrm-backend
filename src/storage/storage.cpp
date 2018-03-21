@@ -257,14 +257,6 @@ void Storage::PopulateLayout(DataLayout &layout)
                         make_block<std::uint64_t>(tree_levels_size));
     }
 
-    // read timestampsize
-    {
-        io::FileReader timestamp_file(config.GetPath(".osrm.timestamp"),
-                                      io::FileReader::VerifyFingerprint);
-        const auto timestamp_size = timestamp_file.GetSize();
-        layout.SetBlock(DataLayout::TIMESTAMP, make_block<char>(timestamp_size));
-    }
-
     std::unordered_map<std::string, DataLayout::BlockID> name_to_block_id = {
         {"/mld/multilevelgraph/node_array", DataLayout::MLD_GRAPH_NODE_LIST},
         {"/mld/multilevelgraph/edge_array", DataLayout::MLD_GRAPH_EDGE_LIST},
@@ -640,18 +632,6 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
             layout.GetBlockEntries(storage::DataLayout::TURN_DURATION_PENALTIES));
         extractor::files::readTurnDurationPenalty(config.GetPath(".osrm.turn_duration_penalties"),
                                                   turn_duration_penalties);
-    }
-
-    // store timestamp
-    {
-        io::FileReader timestamp_file(config.GetPath(".osrm.timestamp"),
-                                      io::FileReader::VerifyFingerprint);
-        const auto timestamp_size = timestamp_file.GetSize();
-
-        const auto timestamp_ptr =
-            layout.GetBlockPtr<char, true>(memory_ptr, DataLayout::TIMESTAMP);
-        BOOST_ASSERT(timestamp_size == layout.GetBlockEntries(DataLayout::TIMESTAMP));
-        timestamp_file.ReadInto(timestamp_ptr, timestamp_size);
     }
 
     // store search tree portion of rtree
