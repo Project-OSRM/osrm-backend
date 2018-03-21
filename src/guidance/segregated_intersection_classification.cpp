@@ -118,8 +118,8 @@ std::unordered_set<EdgeID> findSegregatedNodes(const extractor::NodeBasedGraphFa
         // Also they must be a road use (not footway, cycleway, etc.)
         // TODO - consider whether alleys, cul-de-sacs, and other road uses
         // are candidates to be marked as internal intersection edges.
-        // TODO adjust length as needed with lamda
-        if (edge_length > INTERNAL_LENGTH_MAX || current.flags.roundabout)
+        // TODO adjust length as needed with lambda
+        if (edge_length > INTERNAL_LENGTH_MAX || current.flags.roundabout || current.flags.circular)
         {
             return false;
         }
