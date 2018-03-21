@@ -6,6 +6,7 @@
 #include "util/range_table.hpp"
 #include "util/static_graph.hpp"
 #include "util/indexed_data.hpp"
+#include "util/static_rtree.hpp"
 
 #include "storage/io.hpp"
 #include "storage/serialization.hpp"
@@ -185,6 +186,26 @@ inline void write(storage::tar::FileWriter &writer,
     storage::serialization::write(writer, name + "/blocks", index_data.blocks);
     storage::serialization::write(writer, name + "/values", index_data.values);
 }
+
+template <class EdgeDataT,
+          storage::Ownership Ownership,
+          std::uint32_t BRANCHING_FACTOR,
+          std::uint32_t LEAF_PAGE_SIZE>
+void read(storage::tar::FileReader &reader, const std::string& name, util::StaticRTree<EdgeDataT, Ownership, BRANCHING_FACTOR, LEAF_PAGE_SIZE> &rtree)
+{
+    storage::serialization::read(reader, name + "/search_tree", rtree.m_search_tree);
+    storage::serialization::read(reader, name + "/search_tree_level_starts", rtree.m_tree_level_starts);
+}
+
+template <class EdgeDataT,
+          storage::Ownership Ownership,
+          std::uint32_t BRANCHING_FACTOR,
+          std::uint32_t LEAF_PAGE_SIZE>
+void write(storage::tar::FileWriter &writer, const std::string& name, const util::StaticRTree<EdgeDataT, Ownership, BRANCHING_FACTOR, LEAF_PAGE_SIZE> &rtree){
+    storage::serialization::write(writer, name + "/search_tree", rtree.m_search_tree);
+    storage::serialization::write(writer, name + "/search_tree_level_starts", rtree.m_tree_level_starts);
+}
+
 }
 }
 }

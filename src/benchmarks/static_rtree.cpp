@@ -1,6 +1,9 @@
 #include "util/static_rtree.hpp"
 #include "extractor/edge_based_node_segment.hpp"
 #include "extractor/query_node.hpp"
+#include "extractor/files.hpp"
+#include "extractor/packed_osm_ids.hpp"
+
 #include "mocks/mock_datafacade.hpp"
 #include "storage/io.hpp"
 #include "engine/geospatial_query.hpp"
@@ -32,11 +35,10 @@ using BenchStaticRTree = util::StaticRTree<RTreeLeaf, storage::Ownership::Contai
 
 std::vector<util::Coordinate> loadCoordinates(const boost::filesystem::path &nodes_file)
 {
-    storage::io::FileReader nodes_path_file_reader(nodes_file,
-                                                   storage::io::FileReader::VerifyFingerprint);
-
     std::vector<util::Coordinate> coords;
-    storage::serialization::read(nodes_path_file_reader, coords);
+    extractor::PackedOSMIDs nodes;
+    extractor::files::readNodes(nodes_file, coords, nodes);
+
     return coords;
 }
 
@@ -99,7 +101,8 @@ int main(int argc, char **argv)
 
     auto coords = osrm::benchmarks::loadCoordinates(nodes_path);
 
-    osrm::benchmarks::BenchStaticRTree rtree(ram_path, file_path, coords);
+    osrm::benchmarks::BenchStaticRTree rtree(file_path, coords);
+    osrm::extractor::files::readRamIndex(ram_path, rtree);
 
     osrm::benchmarks::benchmark(rtree, 10000);
 

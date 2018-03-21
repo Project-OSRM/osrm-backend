@@ -1,7 +1,8 @@
 #ifndef STATIC_RTREE_HPP
 #define STATIC_RTREE_HPP
 
-#include "storage/io.hpp"
+#include "storage/tar_fwd.hpp"
+
 #include "util/bearing.hpp"
 #include "util/coordinate_calculation.hpp"
 #include "util/deallocating_vector.hpp"
@@ -35,20 +36,35 @@
 #include <string>
 #include <vector>
 
-// An extended alignment is implementation-defined, so use compiler attributes
-// until alignas(LEAF_PAGE_SIZE) is compiler-independent.
-#if defined(_MSC_VER)
-#define ALIGNED(x) __declspec(align(x))
-#elif defined(__GNUC__)
-#define ALIGNED(x) __attribute__((aligned(x)))
-#else
-#define ALIGNED(x)
-#endif
-
 namespace osrm
 {
 namespace util
 {
+template <class EdgeDataT,
+          storage::Ownership Ownership = storage::Ownership::Container,
+          std::uint32_t BRANCHING_FACTOR = 64,
+          std::uint32_t LEAF_PAGE_SIZE = 4096>
+class StaticRTree;
+
+namespace serialization
+{
+template <class EdgeDataT,
+          storage::Ownership Ownership,
+          std::uint32_t BRANCHING_FACTOR,
+          std::uint32_t LEAF_PAGE_SIZE>
+inline void read(storage::tar::FileReader &reader,
+                 const std::string &name,
+                 util::StaticRTree<EdgeDataT, Ownership, BRANCHING_FACTOR, LEAF_PAGE_SIZE> &rtree);
+
+template <class EdgeDataT,
+          storage::Ownership Ownership,
+          std::uint32_t BRANCHING_FACTOR,
+          std::uint32_t LEAF_PAGE_SIZE>
+inline void
+write(storage::tar::FileWriter &writer,
+      const std::string &name,
+      const util::StaticRTree<EdgeDataT, Ownership, BRANCHING_FACTOR, LEAF_PAGE_SIZE> &rtree);
+}
 
 /***
  * Static RTree for serving nearest neighbour queries
@@ -57,9 +73,9 @@ namespace util
  */
 
 template <class EdgeDataT,
-          storage::Ownership Ownership = storage::Ownership::Container,
-          std::uint32_t BRANCHING_FACTOR = 64,
-          std::uint32_t LEAF_PAGE_SIZE = 4096>
+          storage::Ownership Ownership,
+          std::uint32_t BRANCHING_FACTOR,
+          std::uint32_t LEAF_PAGE_SIZE>
 class StaticRTree
 {
     /**********************************************************
@@ -236,39 +252,31 @@ class StaticRTree
         std::uint32_t segment_index;
     };
 
-    // We use a const view type when we don't own the data, otherwise
-    // we use a mutable type (usually becase we're building the tree)
-    using TreeViewType = typename std::conditional<Ownership == storage::Ownership::View,
-                                                   const Vector<const TreeNode>,
-                                                   Vector<TreeNode>>::type;
-    TreeViewType m_search_tree;
-
+    // Representation of the in-memory search tree
+    Vector<TreeNode> m_search_tree;
     // Reference to the actual lon/lat data we need for doing math
     const Vector<Coordinate> &m_coordinate_list;
-
-    // Holds the number of TreeNodes in each level.
-    // We always start with the root node, so
-    // m_tree_level_sizes[0] should always be 1
-    std::vector<std::uint64_t> m_tree_level_sizes;
-
     // Holds the start indexes of each level in m_search_tree
-    std::vector<std::uint64_t> m_tree_level_starts;
-
+    Vector<std::uint64_t> m_tree_level_starts;
     // mmap'd .fileIndex file
-    boost::iostreams::mapped_file_source m_objects_region;
+    boost::iostreams::mapped_file m_objects_region;
     // This is a view of the EdgeDataT data mmap'd from the .fileIndex file
-    util::vector_view<const EdgeDataT> m_objects;
+    util::vector_view<EdgeDataT> m_objects;
 
   public:
     StaticRTree(const StaticRTree &) = delete;
     StaticRTree &operator=(const StaticRTree &) = delete;
+    StaticRTree(StaticRTree &&) = default;
+    StaticRTree &operator=(StaticRTree &&) = default;
 
     // Construct a packed Hilbert-R-Tree with Kamel-Faloutsos algorithm [1]
     explicit StaticRTree(const std::vector<EdgeDataT> &input_data_vector,
-                         const std::string &tree_node_filename,
-                         const std::string &leaf_node_filename,
-                         const Vector<Coordinate> &coordinate_list)
-        : m_coordinate_list(coordinate_list)
+                         const Vector<Coordinate> &coordinate_list,
+                         const boost::filesystem::path &on_disk_file_name)
+        : m_coordinate_list(coordinate_list), m_objects{mmapFile<EdgeDataT>(
+                                                  on_disk_file_name,
+                                                  m_objects_region,
+                                                  input_data_vector.size() * sizeof(EdgeDataT))}
     {
         const auto element_count = input_data_vector.size();
         std::vector<WrappedInputElement> input_wrapper_vector(element_count);
@@ -304,8 +312,7 @@ class StaticRTree
         // sort the hilbert-value representatives
         tbb::parallel_sort(input_wrapper_vector.begin(), input_wrapper_vector.end());
         {
-            storage::io::FileWriter leaf_node_file(leaf_node_filename,
-                                                   storage::io::FileWriter::HasNoFingerprint);
+
             // Note, we can't just write everything in one go, because the input_data_vector
             // is not sorted by hilbert code, only the input_wrapper_vector is in the correct
             // order.  Instead, we iterate over input_wrapper_vector, copy the hilbert-indexed
@@ -315,12 +322,11 @@ class StaticRTree
             // Create the first level of TreeNodes - each bounding LEAF_NODE_COUNT EdgeDataT
             // objects.
             std::size_t wrapped_element_index = 0;
+            auto objects_iter = m_objects.begin();
+
             while (wrapped_element_index < element_count)
             {
                 TreeNode current_node;
-
-                std::array<EdgeDataT, LEAF_NODE_SIZE> objects;
-                std::uint32_t object_count = 0;
 
                 // Loop over the next block of EdgeDataT, calculate the bounding box
                 // for the block, and save the data to write to disk in the correct
@@ -333,8 +339,7 @@ class StaticRTree
                         input_wrapper_vector[wrapped_element_index].m_original_index;
                     const EdgeDataT &object = input_data_vector[input_object_index];
 
-                    object_count += 1;
-                    objects[object_index] = object;
+                    *objects_iter++ = object;
 
                     Coordinate projected_u{
                         web_mercator::fromWGS84(Coordinate{m_coordinate_list[object.u]})};
@@ -361,19 +366,19 @@ class StaticRTree
                     current_node.minimum_bounding_rectangle.MergeBoundingBoxes(rectangle);
                 }
 
-                // Write out our EdgeDataT block to the leaf node file
-                leaf_node_file.WriteFrom(objects.data(), object_count);
-
                 m_search_tree.emplace_back(current_node);
             }
-
-            // leaf_node_file wil be RAII closed at this point
         }
 
         // Should hold the number of nodes at the lowest level of the graph (closest
         // to the data)
         std::uint32_t nodes_in_previous_level = m_search_tree.size();
-        m_tree_level_sizes.push_back(nodes_in_previous_level);
+
+        // Holds the number of TreeNodes in each level.
+        // We always start with the root node, so
+        // m_tree_level_sizes[0] should always be 1
+        std::vector<std::uint64_t> tree_level_sizes;
+        tree_level_sizes.push_back(nodes_in_previous_level);
 
         // Now, repeatedly create levels of nodes that contain BRANCHING_FACTOR
         // nodes from the previous level.
@@ -408,7 +413,7 @@ class StaticRTree
                 m_search_tree.emplace_back(parent_node);
             }
             nodes_in_previous_level = nodes_in_current_level;
-            m_tree_level_sizes.push_back(nodes_in_previous_level);
+            tree_level_sizes.push_back(nodes_in_previous_level);
         }
         // At this point, we've got our tree built, but the nodes are in a weird order.
         // Next thing we'll do is flip it around so that we don't end up with a lot of
@@ -419,14 +424,15 @@ class StaticRTree
         std::reverse(m_search_tree.begin(), m_search_tree.end());
 
         // Same for the level sizes - root node / base level is at 0
-        std::reverse(m_tree_level_sizes.begin(), m_tree_level_sizes.end());
+        std::reverse(tree_level_sizes.begin(), tree_level_sizes.end());
 
         // The first level starts at 0
         m_tree_level_starts = {0};
         // The remaining levels start at the partial sum of the preceeding level sizes
-        std::partial_sum(m_tree_level_sizes.begin(),
-                         m_tree_level_sizes.end() - 1,
+        std::partial_sum(tree_level_sizes.begin(),
+                         tree_level_sizes.end(),
                          std::back_inserter(m_tree_level_starts));
+        BOOST_ASSERT(m_tree_level_starts.size() >= 2);
 
         // Now we have to flip the coordinates within each level so that math is easier
         // later on.  The workflow here is:
@@ -438,58 +444,22 @@ class StaticRTree
         // 0 12 345 6789
         // This ordering keeps the position math easy to understand during later
         // searches
-        for (auto i : irange<std::size_t>(0, m_tree_level_sizes.size()))
+        for (auto i : irange<std::size_t>(0, tree_level_sizes.size()))
         {
             std::reverse(m_search_tree.begin() + m_tree_level_starts[i],
-                         m_search_tree.begin() + m_tree_level_starts[i] + m_tree_level_sizes[i]);
+                         m_search_tree.begin() + m_tree_level_starts[i] + tree_level_sizes[i]);
         }
-
-        // Write all the TreeNode data to disk
-        {
-            storage::io::FileWriter tree_node_file(tree_node_filename,
-                                                   storage::io::FileWriter::GenerateFingerprint);
-
-            std::uint64_t size_of_tree = m_search_tree.size();
-            BOOST_ASSERT_MSG(0 < size_of_tree, "tree empty");
-
-            tree_node_file.WriteFrom(size_of_tree);
-            tree_node_file.WriteFrom(m_search_tree);
-
-            tree_node_file.WriteFrom(static_cast<std::uint64_t>(m_tree_level_sizes.size()));
-            tree_node_file.WriteFrom(m_tree_level_sizes);
-        }
-
-        m_objects = mmapFile<EdgeDataT>(leaf_node_filename, m_objects_region);
     }
 
     /**
-     * Constructs an r-tree from already prepared files on disk (generated by the previous
-     * constructor)
+     * Constructs an empty RTree for de-serialization.
      */
-    explicit StaticRTree(const boost::filesystem::path &node_file,
-                         const boost::filesystem::path &leaf_file,
+    template <typename = std::enable_if<Ownership == storage::Ownership::Container>>
+    explicit StaticRTree(const boost::filesystem::path &on_disk_file_name,
                          const Vector<Coordinate> &coordinate_list)
         : m_coordinate_list(coordinate_list)
     {
-        storage::io::FileReader tree_node_file(node_file,
-                                               storage::io::FileReader::VerifyFingerprint);
-
-        const auto tree_size = tree_node_file.ReadElementCount64();
-        m_search_tree.resize(tree_size);
-        tree_node_file.ReadInto(m_search_tree);
-
-        const auto levels_array_size = tree_node_file.ReadElementCount64();
-        m_tree_level_sizes.resize(levels_array_size);
-        tree_node_file.ReadInto(m_tree_level_sizes);
-
-        // The first level always starts at 0
-        m_tree_level_starts = {0};
-        // The remaining levels start at the partial sum of the preceeding level sizes
-        std::partial_sum(m_tree_level_sizes.begin(),
-                         m_tree_level_sizes.end() - 1,
-                         std::back_inserter(m_tree_level_starts));
-
-        m_objects = mmapFile<EdgeDataT>(leaf_file, m_objects_region);
+        m_objects = mmapFile<EdgeDataT>(on_disk_file_name, m_objects_region);
     }
 
     /**
@@ -498,22 +468,15 @@ class StaticRTree
      * These memory blocks basically just contain the files read into RAM,
      * excep the .fileIndex file always stays on disk, and we mmap() it as usual
      */
-    explicit StaticRTree(const TreeNode *tree_node_ptr,
-                         const uint64_t number_of_nodes,
-                         const std::uint64_t *level_sizes_ptr,
-                         const std::size_t number_of_levels,
-                         const boost::filesystem::path &leaf_file,
+    explicit StaticRTree(Vector<TreeNode> search_tree_,
+                         Vector<std::uint64_t> tree_level_starts,
+                         const boost::filesystem::path &on_disk_file_name,
                          const Vector<Coordinate> &coordinate_list)
-        : m_search_tree(tree_node_ptr, number_of_nodes), m_coordinate_list(coordinate_list),
-          m_tree_level_sizes(level_sizes_ptr, level_sizes_ptr + number_of_levels)
+        : m_search_tree(std::move(search_tree_)), m_coordinate_list(coordinate_list),
+          m_tree_level_starts(std::move(tree_level_starts))
     {
-        // The first level starts at 0
-        m_tree_level_starts = {0};
-        // The remaining levels start at the partial sum of the preceeding level sizes
-        std::partial_sum(m_tree_level_sizes.begin(),
-                         m_tree_level_sizes.end() - 1,
-                         std::back_inserter(m_tree_level_starts));
-        m_objects = mmapFile<EdgeDataT>(leaf_file, m_objects_region);
+        BOOST_ASSERT(m_tree_level_starts.size() >= 2);
+        m_objects = mmapFile<EdgeDataT>(on_disk_file_name, m_objects_region);
     }
 
     /* Returns all features inside the bounding box.
@@ -734,6 +697,13 @@ class StaticRTree
         }
     }
 
+    std::uint64_t GetLevelSize(const std::size_t level) const
+    {
+        BOOST_ASSERT(m_tree_level_starts.size() > level + 1);
+        BOOST_ASSERT(m_tree_level_starts[level + 1] >= m_tree_level_starts[level]);
+        return m_tree_level_starts[level + 1] - m_tree_level_starts[level];
+    }
+
     /**
      * Calculates the absolute position of child data in our packed data
      * vectors.
@@ -769,22 +739,31 @@ class StaticRTree
             const std::uint64_t first_child_index =
                 m_tree_level_starts[parent.level + 1] + parent.offset * BRANCHING_FACTOR;
 
-            const std::uint64_t end_child_index = std::min(
-                first_child_index + BRANCHING_FACTOR,
-                m_tree_level_starts[parent.level + 1] + m_tree_level_sizes[parent.level + 1]);
+            const std::uint64_t end_child_index =
+                std::min(first_child_index + BRANCHING_FACTOR,
+                         m_tree_level_starts[parent.level + 1] + GetLevelSize(parent.level + 1));
             BOOST_ASSERT(first_child_index < std::numeric_limits<std::uint32_t>::max());
             BOOST_ASSERT(end_child_index < std::numeric_limits<std::uint32_t>::max());
             BOOST_ASSERT(end_child_index <= m_search_tree.size());
-            BOOST_ASSERT(end_child_index <= m_tree_level_starts[parent.level + 1] +
-                                                m_tree_level_sizes[parent.level + 1]);
+            BOOST_ASSERT(end_child_index <=
+                         m_tree_level_starts[parent.level + 1] + GetLevelSize(parent.level + 1));
             return irange<std::size_t>(first_child_index, end_child_index);
         }
     }
 
     bool is_leaf(const TreeIndex &treeindex) const
     {
-        return treeindex.level == m_tree_level_starts.size() - 1;
+        BOOST_ASSERT(m_tree_level_starts.size() >= 2);
+        return treeindex.level == m_tree_level_starts.size() - 2;
     }
+
+    friend void serialization::read<EdgeDataT, Ownership, BRANCHING_FACTOR, LEAF_PAGE_SIZE>(
+        storage::tar::FileReader &reader,
+        const std::string &name,
+        StaticRTree &rtree);
+
+    friend void serialization::write<EdgeDataT, Ownership, BRANCHING_FACTOR, LEAF_PAGE_SIZE>(
+        storage::tar::FileWriter &writer, const std::string &name, const StaticRTree &rtree);
 };
 
 //[1] "On Packing R-Trees"; I. Kamel, C. Faloutsos; 1993; DOI: 10.1145/170088.170403

@@ -254,17 +254,21 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
                                   "Is any data loaded into shared memory?" + SOURCE_REF);
         }
 
-        auto tree_nodes_ptr =
+        const auto rtree_ptr =
             data_layout.GetBlockPtr<RTreeNode>(memory_block, storage::DataLayout::R_SEARCH_TREE);
-        auto tree_level_sizes_ptr = data_layout.GetBlockPtr<std::uint64_t>(
-            memory_block, storage::DataLayout::R_SEARCH_TREE_LEVELS);
-        m_static_rtree.reset(
-            new SharedRTree(tree_nodes_ptr,
-                            data_layout.GetBlockEntries(storage::DataLayout::R_SEARCH_TREE),
-                            tree_level_sizes_ptr,
-                            data_layout.GetBlockEntries(storage::DataLayout::R_SEARCH_TREE_LEVELS),
-                            file_index_path,
-                            m_coordinate_list));
+        util::vector_view<RTreeNode> search_tree(
+            rtree_ptr, data_layout.GetBlockEntries(storage::DataLayout::R_SEARCH_TREE));
+
+        const auto rtree_levelstarts_ptr = data_layout.GetBlockPtr<std::uint64_t>(
+            memory_block, storage::DataLayout::R_SEARCH_TREE_LEVEL_STARTS);
+        util::vector_view<std::uint64_t> rtree_level_starts(
+            rtree_levelstarts_ptr,
+            data_layout.GetBlockEntries(storage::DataLayout::R_SEARCH_TREE_LEVEL_STARTS));
+
+        m_static_rtree.reset(new SharedRTree{std::move(search_tree),
+                                             std::move(rtree_level_starts),
+                                             file_index_path,
+                                             m_coordinate_list});
         m_geospatial_query.reset(
             new SharedGeospatialQuery(*m_static_rtree, m_coordinate_list, *this));
     }

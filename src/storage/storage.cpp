@@ -244,19 +244,6 @@ void Storage::PopulateLayout(DataLayout &layout)
                         make_block<char>(absolute_file_index_path.string().length() + 1));
     }
 
-    // load rsearch tree size
-    {
-        io::FileReader tree_node_file(config.GetPath(".osrm.ramIndex"),
-                                      io::FileReader::VerifyFingerprint);
-
-        const auto tree_size = tree_node_file.ReadElementCount64();
-        layout.SetBlock(DataLayout::R_SEARCH_TREE, make_block<RTreeNode>(tree_size));
-        tree_node_file.Skip<RTreeNode>(tree_size);
-        const auto tree_levels_size = tree_node_file.ReadElementCount64();
-        layout.SetBlock(DataLayout::R_SEARCH_TREE_LEVELS,
-                        make_block<std::uint64_t>(tree_levels_size));
-    }
-
     std::unordered_map<std::string, DataLayout::BlockID> name_to_block_id = {
         {"/mld/multilevelgraph/node_array", DataLayout::MLD_GRAPH_NODE_LIST},
         {"/mld/multilevelgraph/edge_array", DataLayout::MLD_GRAPH_EDGE_LIST},
@@ -333,6 +320,8 @@ void Storage::PopulateLayout(DataLayout &layout)
         {"/common/turn_data/connectivity_checksum", DataLayout::IGNORE_BLOCK},
         {"/common/names/blocks", DataLayout::NAME_BLOCKS},
         {"/common/names/values", DataLayout::NAME_VALUES},
+        {"/common/rtree/search_tree", DataLayout::R_SEARCH_TREE},
+        {"/common/rtree/search_tree_level_starts", DataLayout::R_SEARCH_TREE_LEVEL_STARTS},
     };
     std::vector<NamedBlock> blocks;
 
@@ -357,6 +346,7 @@ void Storage::PopulateLayout(DataLayout &layout)
         {REQUIRED, config.GetPath(".osrm.turn_duration_penalties")},
         {REQUIRED, config.GetPath(".osrm.edges")},
         {REQUIRED, config.GetPath(".osrm.names")},
+        {REQUIRED, config.GetPath(".osrm.ramIndex")},
     };
 
     for (const auto &file : tar_files)
@@ -636,22 +626,27 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
 
     // store search tree portion of rtree
     {
-        io::FileReader tree_node_file(config.GetPath(".osrm.ramIndex"),
-                                      io::FileReader::VerifyFingerprint);
-        // perform this read so that we're at the right stream position for the next
-        // read.
-        tree_node_file.Skip<std::uint64_t>(1);
+
         const auto rtree_ptr =
             layout.GetBlockPtr<RTreeNode, true>(memory_ptr, DataLayout::R_SEARCH_TREE);
+        util::vector_view<RTreeNode> search_tree(
+            rtree_ptr, layout.GetBlockEntries(storage::DataLayout::R_SEARCH_TREE));
 
-        tree_node_file.ReadInto(rtree_ptr, layout.GetBlockEntries(DataLayout::R_SEARCH_TREE));
+        const auto rtree_levelstarts_ptr = layout.GetBlockPtr<std::uint64_t, true>(
+            memory_ptr, DataLayout::R_SEARCH_TREE_LEVEL_STARTS);
+        util::vector_view<std::uint64_t> rtree_level_starts(
+            rtree_levelstarts_ptr,
+            layout.GetBlockEntries(storage::DataLayout::R_SEARCH_TREE_LEVEL_STARTS));
 
-        tree_node_file.Skip<std::uint64_t>(1);
-        const auto rtree_levelsizes_ptr =
-            layout.GetBlockPtr<std::uint64_t, true>(memory_ptr, DataLayout::R_SEARCH_TREE_LEVELS);
+        // we need this purely for the interface
+        util::vector_view<util::Coordinate> empty_coords;
 
-        tree_node_file.ReadInto(rtree_levelsizes_ptr,
-                                layout.GetBlockEntries(DataLayout::R_SEARCH_TREE_LEVELS));
+        util::StaticRTree<RTreeLeaf, storage::Ownership::View> rtree{
+            std::move(search_tree),
+            std::move(rtree_level_starts),
+            config.GetPath(".osrm.fileIndex"),
+            empty_coords};
+        extractor::files::readRamIndex(config.GetPath(".osrm.ramIndex"), rtree);
     }
 
     // load profile properties

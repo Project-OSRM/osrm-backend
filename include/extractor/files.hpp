@@ -450,12 +450,31 @@ void readEdgeBasedNodeWeights(const boost::filesystem::path &path, NodeWeigtsVec
 }
 
 template <typename NodeWeigtsVectorT>
-void writeEdgeBasedNodeWeights(const boost::filesystem::path &path, const NodeWeigtsVectorT &weights)
+void writeEdgeBasedNodeWeights(const boost::filesystem::path &path,
+                               const NodeWeigtsVectorT &weights)
 {
     const auto fingerprint = storage::tar::FileWriter::GenerateFingerprint;
     storage::tar::FileWriter writer{path, fingerprint};
 
     storage::serialization::write(writer, "/extractor/edge_based_node_weights", weights);
+}
+
+template <typename RTreeT>
+void writeRamIndex(const boost::filesystem::path &path, const RTreeT &rtree)
+{
+    const auto fingerprint = storage::tar::FileWriter::GenerateFingerprint;
+    storage::tar::FileWriter writer{path, fingerprint};
+
+    util::serialization::write(writer, "/common/rtree", rtree);
+}
+
+template <typename RTreeT>
+void readRamIndex(const boost::filesystem::path &path, RTreeT &rtree)
+{
+    const auto fingerprint = storage::tar::FileReader::VerifyFingerprint;
+    storage::tar::FileReader reader{path, fingerprint};
+
+    util::serialization::read(reader, "/common/rtree", rtree);
 }
 }
 }

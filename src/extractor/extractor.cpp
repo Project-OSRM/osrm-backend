@@ -805,10 +805,10 @@ void Extractor::BuildRTree(std::vector<EdgeBasedNodeSegment> edge_based_node_seg
     edge_based_node_segments.resize(new_size);
 
     TIMER_START(construction);
-    util::StaticRTree<EdgeBasedNodeSegment> rtree(edge_based_node_segments,
-                                                  config.GetPath(".osrm.ramIndex").string(),
-                                                  config.GetPath(".osrm.fileIndex").string(),
-                                                  coordinates);
+    util::StaticRTree<EdgeBasedNodeSegment> rtree(edge_based_node_segments, coordinates,
+                                                  config.GetPath(".osrm.fileIndex"));
+
+    files::writeRamIndex(config.GetPath(".osrm.ramIndex"), rtree);
 
     TIMER_STOP(construction);
     util::Log() << "finished r-tree construction in " << TIMER_SEC(construction) << " seconds";
