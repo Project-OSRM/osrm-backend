@@ -77,7 +77,7 @@ class Extractor
         const std::vector<TurnRestriction> &turn_restrictions,
         const std::vector<ConditionalTurnRestriction> &conditional_turn_restrictions,
         const std::unordered_set<EdgeID> &segregated_edges,
-        const util::NameTable &name_table,
+        const NameTable &name_table,
         const std::vector<UnresolvedManeuverOverride> &maneuver_overrides,
         const LaneDescriptionMap &turn_lane_map,
         // for calculating turn penalties
@@ -116,7 +116,7 @@ class Extractor
         const std::unordered_set<NodeID> &barrier_nodes,
         const std::vector<TurnRestriction> &turn_restrictions,
         const std::vector<ConditionalTurnRestriction> &conditional_turn_restrictions,
-        const util::NameTable &name_table,
+        const NameTable &name_table,
         LaneDescriptionMap lane_description_map,
         ScriptingEnvironment &scripting_environment);
 };

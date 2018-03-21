@@ -15,6 +15,7 @@
 #include "extractor/edge_based_node.hpp"
 #include "extractor/intersection_bearings_container.hpp"
 #include "extractor/maneuver_override.hpp"
+#include "extractor/name_table.hpp"
 #include "extractor/node_data_container.hpp"
 #include "extractor/packed_osm_ids.hpp"
 #include "extractor/profile_properties.hpp"
@@ -40,7 +41,6 @@
 #include "util/guidance/entry_class.hpp"
 #include "util/guidance/turn_lanes.hpp"
 #include "util/log.hpp"
-#include "util/name_table.hpp"
 #include "util/packed_vector.hpp"
 #include "util/range_table.hpp"
 #include "util/rectangle.hpp"
@@ -215,7 +215,7 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
 
     extractor::IntersectionBearingsView intersection_bearings_view;
 
-    util::NameTable m_name_table;
+    extractor::NameTableView m_name_table;
     // the look-up table for entry classes. An entry class lists the possibility of entry for all
     // available turns. Such a class id is stored with every edge.
     util::vector_view<util::guidance::EntryClass> m_entry_class_table;
@@ -353,11 +353,20 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
 
     void InitializeNamePointers(storage::DataLayout &data_layout, char *memory_block)
     {
-        auto name_data_ptr =
-            data_layout.GetBlockPtr<char>(memory_block, storage::DataLayout::NAME_CHAR_DATA);
-        const auto name_data_size =
-            data_layout.GetBlockEntries(storage::DataLayout::NAME_CHAR_DATA);
-        m_name_table.reset(name_data_ptr, name_data_ptr + name_data_size);
+        const auto name_blocks_ptr =
+            data_layout.GetBlockPtr<extractor::NameTableView::IndexedData::BlockReference>(
+                memory_block, storage::DataLayout::NAME_BLOCKS);
+        const auto name_values_ptr =
+            data_layout.GetBlockPtr<extractor::NameTableView::IndexedData::ValueType>(
+                memory_block, storage::DataLayout::NAME_VALUES);
+
+        util::vector_view<extractor::NameTableView::IndexedData::BlockReference> blocks(
+            name_blocks_ptr, data_layout.GetBlockEntries(storage::DataLayout::NAME_BLOCKS));
+        util::vector_view<extractor::NameTableView::IndexedData::ValueType> values(
+            name_values_ptr, data_layout.GetBlockEntries(storage::DataLayout::NAME_VALUES));
+
+        extractor::NameTableView::IndexedData index_data_view{std::move(blocks), std::move(values)};
+        m_name_table = extractor::NameTableView{std::move(index_data_view)};
     }
 
     void InitializeTurnLaneDescriptionsPointers(storage::DataLayout &data_layout,
@@ -938,7 +947,7 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         auto found_range = std::equal_range(
             m_maneuver_overrides.begin(), m_maneuver_overrides.end(), edge_based_node_id, Comp{});
 
-        std::for_each(found_range.first, found_range.second, [&](const auto & override) {
+        std::for_each(found_range.first, found_range.second, [&](const auto &override) {
             std::vector<NodeID> sequence(
                 m_maneuver_override_node_sequences.begin() + override.node_sequence_offset_begin,
                 m_maneuver_override_node_sequences.begin() + override.node_sequence_offset_end);

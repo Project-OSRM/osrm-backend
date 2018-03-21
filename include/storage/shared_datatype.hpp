@@ -20,7 +20,9 @@ namespace storage
 // Added at the start and end of each block as sanity check
 const constexpr char CANARY[4] = {'O', 'S', 'R', 'M'};
 
-const constexpr char *block_id_to_name[] = {"NAME_CHAR_DATA",
+const constexpr char *block_id_to_name[] = {"IGNORE_BLOCK",
+                                            "NAME_BLOCKS",
+                                            "NAME_VALUES",
                                             "EDGE_BASED_NODE_DATA",
                                             "ANNOTATION_DATA",
                                             "CH_GRAPH_NODE_LIST",
@@ -92,15 +94,16 @@ const constexpr char *block_id_to_name[] = {"NAME_CHAR_DATA",
                                             "MLD_GRAPH_EDGE_LIST",
                                             "MLD_GRAPH_NODE_TO_OFFSET",
                                             "MANEUVER_OVERRIDES",
-                                            "MANEUVER_OVERRIDE_NODE_SEQUENCES",
-                                            "IGNORE_BLOCK"};
+                                            "MANEUVER_OVERRIDE_NODE_SEQUENCES"};
 
 class DataLayout
 {
   public:
     enum BlockID
     {
-        NAME_CHAR_DATA = 0,
+        IGNORE_BLOCK = 0,
+        NAME_BLOCKS,
+        NAME_VALUES,
         EDGE_BASED_NODE_DATA_LIST,
         ANNOTATION_DATA_LIST,
         CH_GRAPH_NODE_LIST,
@@ -173,7 +176,6 @@ class DataLayout
         MLD_GRAPH_NODE_TO_OFFSET,
         MANEUVER_OVERRIDES,
         MANEUVER_OVERRIDE_NODE_SEQUENCES,
-        IGNORE_BLOCK,
         NUM_BLOCKS
     };
 

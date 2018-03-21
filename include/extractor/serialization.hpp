@@ -1,10 +1,11 @@
 #ifndef OSRM_EXTRACTOR_IO_HPP
 #define OSRM_EXTRACTOR_IO_HPP
 
-#include "conditional_turn_penalty.hpp"
+#include "extractor/conditional_turn_penalty.hpp"
 #include "extractor/datasources.hpp"
 #include "extractor/intersection_bearings_container.hpp"
 #include "extractor/maneuver_override.hpp"
+#include "extractor/name_table.hpp"
 #include "extractor/nbg_to_ebg.hpp"
 #include "extractor/node_data_container.hpp"
 #include "extractor/profile_properties.hpp"
@@ -117,16 +118,18 @@ inline void read(storage::tar::FileReader &reader,
 {
     // read actual data
     storage::serialization::read(reader, name + "/nodes", node_data_container.nodes);
-    storage::serialization::read(reader, name + "/annotations", node_data_container.annotation_data);
+    storage::serialization::read(
+        reader, name + "/annotations", node_data_container.annotation_data);
 }
 
 template <storage::Ownership Ownership>
 inline void write(storage::tar::FileWriter &writer,
-                  const std::string& name,
+                  const std::string &name,
                   const detail::EdgeBasedNodeDataContainerImpl<Ownership> &node_data_container)
 {
     storage::serialization::write(writer, name + "/nodes", node_data_container.nodes);
-    storage::serialization::write(writer, name + "/annotations", node_data_container.annotation_data);
+    storage::serialization::write(
+        writer, name + "/annotations", node_data_container.annotation_data);
 }
 
 inline void read(storage::io::FileReader &reader, NodeRestriction &restriction)
@@ -307,7 +310,8 @@ inline void write(storage::io::BufferWriter &writer,
     }
 }
 
-inline void read(storage::io::BufferReader &reader, std::vector<ConditionalTurnPenalty> &conditional_penalties)
+inline void read(storage::io::BufferReader &reader,
+                 std::vector<ConditionalTurnPenalty> &conditional_penalties)
 {
     auto num_elements = reader.ReadElementCount64();
     conditional_penalties.resize(num_elements);
@@ -318,8 +322,8 @@ inline void read(storage::io::BufferReader &reader, std::vector<ConditionalTurnP
 }
 
 inline void write(storage::tar::FileWriter &writer,
-                 const std::string& name,
-                 const std::vector<ConditionalTurnPenalty> &conditional_penalties)
+                  const std::string &name,
+                  const std::vector<ConditionalTurnPenalty> &conditional_penalties)
 {
     storage::io::BufferWriter buffer_writer;
     write(buffer_writer, conditional_penalties);
@@ -328,7 +332,7 @@ inline void write(storage::tar::FileWriter &writer,
 }
 
 inline void read(storage::tar::FileReader &reader,
-                 const std::string& name,
+                 const std::string &name,
                  std::vector<ConditionalTurnPenalty> &conditional_penalties)
 {
     std::string buffer;
@@ -336,9 +340,25 @@ inline void read(storage::tar::FileReader &reader,
 
     storage::io::BufferReader buffer_reader{buffer};
     read(buffer_reader, conditional_penalties);
-
 }
 
+template <storage::Ownership Ownership>
+inline void write(storage::tar::FileWriter &writer,
+                  const std::string &name,
+                  const detail::NameTableImpl<Ownership> &name_table)
+{
+    storage::io::BufferWriter buffer_writer;
+    util::serialization::write(writer, name, name_table.indexed_data);
+}
+
+template <storage::Ownership Ownership>
+inline void read(storage::tar::FileReader &reader,
+                 const std::string &name,
+                detail::NameTableImpl<Ownership> &name_table)
+{
+    std::string buffer;
+    util::serialization::read(reader, name, name_table.indexed_data);
+}
 }
 }
 }

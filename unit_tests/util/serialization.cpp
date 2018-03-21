@@ -71,6 +71,46 @@ BOOST_AUTO_TEST_CASE(tar_serialize_packed_vector)
             TestPackedVector result;
             storage::tar::FileReader reader(tmp.path, storage::tar::FileReader::VerifyFingerprint);
             util::serialization::read(reader, "my_packed_vector", result);
+
+            CHECK_EQUAL_COLLECTIONS(result, v);
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(tar_serialize_variable_indexed_data)
+{
+    TemporaryFile tmp;
+    {
+        using TestIndexedData = IndexedData<VariableGroupBlock<16, std::string>>;
+
+        std::vector<std::vector<unsigned>> offset_data = {
+            {5, 8, 8},
+            {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17},
+            {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}
+        };
+        std::vector<std::string> char_data = {
+            "HalloFoo",
+            "ABCDEFGHIJKLMNOPQR",
+            "ABCDEFGHIJKLMNOP",
+        };
+
+        for (const auto i : util::irange<std::size_t>(0, offset_data.size()))
+        {
+            TestIndexedData indexed {offset_data[i].begin(), offset_data[i].end(), char_data[i].begin()};
+            {
+                storage::tar::FileWriter writer(tmp.path,
+                                                storage::tar::FileWriter::GenerateFingerprint);
+                util::serialization::write(writer, "my_indexed_data", indexed);
+            }
+
+            TestIndexedData result;
+            storage::tar::FileReader reader(tmp.path, storage::tar::FileReader::VerifyFingerprint);
+            util::serialization::read(reader, "my_indexed_data", result);
+
+            for(auto j : util::irange<std::size_t>(0, offset_data[i].size() - 1))
+            {
+                BOOST_CHECK_EQUAL(indexed.at(j), result.at(j));
+            }
         }
     }
 }

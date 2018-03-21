@@ -35,29 +35,7 @@ BOOST_AUTO_TEST_CASE(check_variable_group_block_bitops)
 template <typename IndexedData, typename Offsets, typename Data>
 void test_rw(const Offsets &offsets, const Data &data)
 {
-    TemporaryFile file;
-
-    IndexedData indexed_data;
-
-    {
-        storage::io::FileWriter writer(file.path, storage::io::FileWriter::HasNoFingerprint);
-        indexed_data.write(writer, offsets.begin(), offsets.end(), data.begin());
-    }
-
-    storage::io::FileReader reader(file.path, storage::io::FileReader::HasNoFingerprint);
-    auto length = reader.GetSize();
-    std::string str(length, '\0');
-    reader.ReadInto(const_cast<char *>(str.data()), length);
-
-#if 0
-    std::cout << "\n" << typeid(IndexedData).name() << "\nsaved size = " << str.size() << "\n";
-    for (auto c : str)
-        std::cout << std::hex << std::setw(2) << std::setfill('0')
-                  << (int)((unsigned char)c) << " ";
-    std::cout << std::dec << "\n";
-#endif
-
-    indexed_data.reset(str.c_str(), str.c_str() + str.size());
+    IndexedData indexed_data(offsets.begin(), offsets.end(), data.begin());
 
     for (std::size_t index = 0; index < offsets.size() - 1; ++index)
     {
@@ -151,56 +129,16 @@ BOOST_AUTO_TEST_CASE(check_max_size)
     name_offsets = {0, 256};
     BOOST_CHECK_THROW(test_fixed(), osrm::util::exception);
     name_offsets = {0, 255};
-    test_fixed();
-}
-
-BOOST_AUTO_TEST_CASE(check_corrupted_memory)
-{
-    std::vector<unsigned char> buf;
-
-    auto test_variable = [&buf]() {
-        IndexedData<VariableGroupBlock<16, std::vector<unsigned char>>> indexed_data;
-        indexed_data.reset(&buf[0], &buf[buf.size()]);
-        const auto result = indexed_data.at(0);
-        return std::string(reinterpret_cast<const char *>(&result[0]), result.size());
-    };
-
-    // Use LE internal representation
-    buf = {0, 42};
-    BOOST_CHECK_THROW(test_variable(), osrm::util::exception);
-
-    buf = {1, 0, 0, 0, 0};
-    BOOST_CHECK_THROW(test_variable(), osrm::util::exception);
-
-    buf = {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 42};
-    BOOST_CHECK_THROW(test_variable(), osrm::util::exception);
-
-    buf = {1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 42};
-    BOOST_CHECK_THROW(test_variable(), osrm::util::exception);
-
-    buf = {1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 4, 0xF0, 0x9F, 0x90, 0xBC};
-    BOOST_CHECK_EQUAL(test_variable(), "🐼");
+    BOOST_CHECK_NO_THROW(test_fixed());
 }
 
 BOOST_AUTO_TEST_CASE(check_string_view)
 {
-    TemporaryFile file;
-
     std::string name_data = "hellostringview";
     std::vector<std::uint32_t> name_offsets = {0, 5, 11, 15};
 
-    IndexedData<VariableGroupBlock<16, StringView>> indexed_data;
-    {
-        storage::io::FileWriter writer(file.path, storage::io::FileWriter::HasNoFingerprint);
-        indexed_data.write(writer, name_offsets.begin(), name_offsets.end(), name_data.begin());
-    }
-
-    storage::io::FileReader reader(file.path, storage::io::FileReader::HasNoFingerprint);
-    auto length = reader.GetSize();
-    std::string str(length, '\0');
-    reader.ReadInto(const_cast<char *>(str.data()), length);
-
-    indexed_data.reset(str.c_str(), str.c_str() + str.size());
+    IndexedData<VariableGroupBlock<16, StringView>> indexed_data(
+        name_offsets.begin(), name_offsets.end(), name_data.begin());
 
     BOOST_CHECK_EQUAL(indexed_data.at(0), "hello");
     BOOST_CHECK_EQUAL(indexed_data.at(1), "string");

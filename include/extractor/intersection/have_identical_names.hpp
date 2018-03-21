@@ -1,9 +1,9 @@
 #ifndef OSRM_EXTRACTOR_INTERSECTION_HAVE_IDENTICAL_NAMES_HPP_
 #define OSRM_EXTRACTOR_INTERSECTION_HAVE_IDENTICAL_NAMES_HPP_
 
+#include "extractor/name_table.hpp"
 #include "extractor/suffix_table.hpp"
 #include "guidance/constants.hpp"
-#include "util/name_table.hpp"
 
 namespace osrm
 {
@@ -17,7 +17,7 @@ namespace intersection
 // rhs->lhs)
 bool HaveIdenticalNames(const NameID lhs,
                         const NameID rhs,
-                        const util::NameTable &name_table,
+                        const NameTable &name_table,
                         const SuffixTable &street_name_suffix_table);
 
 } // namespace intersection

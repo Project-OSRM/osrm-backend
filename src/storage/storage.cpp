@@ -18,6 +18,7 @@
 #include "extractor/edge_based_node.hpp"
 #include "extractor/files.hpp"
 #include "extractor/maneuver_override.hpp"
+#include "extractor/name_table.hpp"
 #include "extractor/packed_osm_ids.hpp"
 #include "extractor/profile_properties.hpp"
 #include "extractor/query_node.hpp"
@@ -243,13 +244,6 @@ void Storage::PopulateLayout(DataLayout &layout)
                         make_block<char>(absolute_file_index_path.string().length() + 1));
     }
 
-    {
-        util::Log() << "load names from: " << config.GetPath(".osrm.names");
-        // number of entries in name index
-        io::FileReader name_file(config.GetPath(".osrm.names"), io::FileReader::VerifyFingerprint);
-        layout.SetBlock(DataLayout::NAME_CHAR_DATA, make_block<char>(name_file.GetSize()));
-    }
-
     // load rsearch tree size
     {
         io::FileReader tree_node_file(config.GetPath(".osrm.ramIndex"),
@@ -345,6 +339,8 @@ void Storage::PopulateLayout(DataLayout &layout)
         {"/common/turn_data/lane_data_ids", DataLayout::LANE_DATA_ID},
         {"/common/turn_data/entry_class_ids", DataLayout::ENTRY_CLASSID},
         {"/common/turn_data/connectivity_checksum", DataLayout::IGNORE_BLOCK},
+        {"/common/names/blocks", DataLayout::NAME_BLOCKS},
+        {"/common/names/values", DataLayout::NAME_VALUES},
     };
     std::vector<NamedBlock> blocks;
 
@@ -368,6 +364,7 @@ void Storage::PopulateLayout(DataLayout &layout)
         {REQUIRED, config.GetPath(".osrm.turn_weight_penalties")},
         {REQUIRED, config.GetPath(".osrm.turn_duration_penalties")},
         {REQUIRED, config.GetPath(".osrm.edges")},
+        {REQUIRED, config.GetPath(".osrm.names")},
     };
 
     for (const auto &file : tar_files)
@@ -425,14 +422,21 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
 
     // Name data
     {
-        io::FileReader name_file(config.GetPath(".osrm.names"), io::FileReader::VerifyFingerprint);
-        std::size_t name_file_size = name_file.GetSize();
+        const auto name_blocks_ptr =
+            layout.GetBlockPtr<extractor::NameTableView::IndexedData::BlockReference, true>(
+                memory_ptr, DataLayout::NAME_BLOCKS);
+        const auto name_values_ptr =
+            layout.GetBlockPtr<extractor::NameTableView::IndexedData::ValueType, true>(
+                memory_ptr, DataLayout::NAME_VALUES);
 
-        BOOST_ASSERT(name_file_size == layout.GetBlockSize(DataLayout::NAME_CHAR_DATA));
-        const auto name_char_ptr =
-            layout.GetBlockPtr<char, true>(memory_ptr, DataLayout::NAME_CHAR_DATA);
+        util::vector_view<extractor::NameTableView::IndexedData::BlockReference> blocks(
+            name_blocks_ptr, layout.GetBlockEntries(storage::DataLayout::NAME_BLOCKS));
+        util::vector_view<extractor::NameTableView::IndexedData::ValueType> values(
+            name_values_ptr, layout.GetBlockEntries(storage::DataLayout::NAME_VALUES));
 
-        name_file.ReadInto<char>(name_char_ptr, name_file_size);
+        extractor::NameTableView::IndexedData index_data_view{std::move(blocks), std::move(values)};
+        extractor::NameTableView name_table{index_data_view};
+        extractor::files::readNames(config.GetPath(".osrm.names"), name_table);
     }
 
     // Turn lane data
@@ -624,7 +628,7 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
             turn_duration_penalties_ptr,
             layout.GetBlockEntries(storage::DataLayout::TURN_WEIGHT_PENALTIES));
         extractor::files::readTurnWeightPenalty(config.GetPath(".osrm.turn_weight_penalties"),
-                                                  turn_duration_penalties);
+                                                turn_duration_penalties);
     }
 
     // load turn duration penalties

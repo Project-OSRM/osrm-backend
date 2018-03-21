@@ -1,14 +1,11 @@
+#include "extractor/name_table.hpp"
+
 #include "util/typedefs.hpp"
 
 #include <unordered_set>
 
 namespace osrm
 {
-namespace util
-{
-class NameTable;
-}
-
 namespace extractor
 {
 class NodeBasedGraphFactory;
@@ -22,6 +19,6 @@ namespace guidance
 // - staggered intersections (X-cross)
 // - square/circle intersections
 std::unordered_set<EdgeID> findSegregatedNodes(const extractor::NodeBasedGraphFactory &factory,
-                                               const util::NameTable &names);
+                                               const extractor::NameTable &names);
 }
 }

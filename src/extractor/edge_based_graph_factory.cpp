@@ -69,7 +69,7 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(
     const std::unordered_set<NodeID> &barrier_nodes,
     const std::unordered_set<NodeID> &traffic_lights,
     const std::vector<util::Coordinate> &coordinates,
-    const util::NameTable &name_table,
+    const NameTable &name_table,
     const std::unordered_set<EdgeID> &segregated_edges,
     const extractor::LaneDescriptionMap &lane_description_map)
     : m_edge_based_node_container(node_data_container), m_connectivity_checksum(0),

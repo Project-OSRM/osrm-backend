@@ -3,6 +3,8 @@
 #include "extractor/extraction_way.hpp"
 #include "extractor/restriction.hpp"
 #include "extractor/serialization.hpp"
+#include "extractor/name_table.hpp"
+#include "extractor/files.hpp"
 
 #include "util/coordinate_calculation.hpp"
 
@@ -10,7 +12,6 @@
 #include "util/exception_utils.hpp"
 #include "util/fingerprint.hpp"
 #include "util/log.hpp"
-#include "util/name_table.hpp"
 #include "util/timing_util.hpp"
 
 #include "storage/io.hpp"
@@ -163,10 +164,8 @@ void ExtractionContainers::WriteCharData(const std::string &file_name)
     util::UnbufferedLog log;
     log << "writing street name index ... ";
     TIMER_START(write_index);
-    storage::io::FileWriter file(file_name, storage::io::FileWriter::GenerateFingerprint);
 
-    const util::NameTable::IndexedData indexed_data;
-    indexed_data.write(file, name_offsets.begin(), name_offsets.end(), name_char_data.begin());
+    files::writeNames(file_name, NameTable {NameTable::IndexedData (name_offsets.begin(), name_offsets.end(), name_char_data.begin())});
 
     TIMER_STOP(write_index);
     log << "ok, after " << TIMER_SEC(write_index) << "s";

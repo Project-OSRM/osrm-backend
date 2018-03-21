@@ -6,7 +6,10 @@
 #include "extractor/intersection/have_identical_names.hpp"
 #include "extractor/restriction_index.hpp"
 #include "extractor/turn_lane_types.hpp"
+#include "extractor/name_table.hpp"
+
 #include "guidance/intersection.hpp"
+
 #include "util/coordinate.hpp"
 #include "util/node_based_graph.hpp"
 #include "util/typedefs.hpp"
@@ -49,7 +52,7 @@ class MergableRoadDetector
                          const RestrictionMap &node_restriction_map,
                          const std::unordered_set<NodeID> &barrier_nodes,
                          const TurnLanesIndexedArray &turn_lanes_data,
-                         const util::NameTable &name_table,
+                         const extractor::NameTable &name_table,
                          const SuffixTable &street_name_suffix_table);
 
     // OSM ways tend to be modelled as separate ways for different directions. This is often due to
@@ -168,7 +171,7 @@ class MergableRoadDetector
     const TurnLanesIndexedArray &turn_lanes_data;
 
     // name detection
-    const util::NameTable &name_table;
+    const extractor::NameTable &name_table;
     const SuffixTable &street_name_suffix_table;
 
     const CoordinateExtractor coordinate_extractor;

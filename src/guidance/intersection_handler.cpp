@@ -52,7 +52,7 @@ IntersectionHandler::IntersectionHandler(
     const extractor::RestrictionMap &node_restriction_map,
     const std::unordered_set<NodeID> &barrier_nodes,
     const extractor::TurnLanesIndexedArray &turn_lanes_data,
-    const util::NameTable &name_table,
+    const extractor::NameTable &name_table,
     const extractor::SuffixTable &street_name_suffix_table)
     : node_based_graph(node_based_graph), node_data_container(node_data_container),
       node_coordinates(node_coordinates), compressed_geometries(compressed_geometries),

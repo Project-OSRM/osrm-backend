@@ -1,15 +1,16 @@
 #ifndef OSRM_GUIDANCE_TURN_LANE_HANDLER_HPP_
 #define OSRM_GUIDANCE_TURN_LANE_HANDLER_HPP_
 
+#include "extractor/name_table.hpp"
 #include "extractor/query_node.hpp"
 #include "extractor/turn_lane_types.hpp"
+
 #include "guidance/intersection.hpp"
 #include "guidance/turn_analysis.hpp"
 #include "guidance/turn_lane_data.hpp"
 
 #include "util/attributes.hpp"
 #include "util/guidance/turn_lanes.hpp"
-#include "util/name_table.hpp"
 #include "util/node_based_graph.hpp"
 #include "util/typedefs.hpp"
 

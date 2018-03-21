@@ -13,6 +13,7 @@
 #include "extractor/restriction_filter.hpp"
 #include "extractor/restriction_parser.hpp"
 #include "extractor/scripting_environment.hpp"
+#include "extractor/name_table.hpp"
 
 #include "guidance/files.hpp"
 #include "guidance/guidance_processing.hpp"
@@ -25,7 +26,6 @@
 #include "util/exception_utils.hpp"
 #include "util/integer_range.hpp"
 #include "util/log.hpp"
-#include "util/name_table.hpp"
 #include "util/range_table.hpp"
 #include "util/timing_util.hpp"
 
@@ -230,11 +230,13 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
                                                    conditional_turn_restrictions,
                                                    unresolved_maneuver_overrides);
 
+    NameTable name_table;
+    files::readNames(config.GetPath(".osrm.names"), name_table);
+
     util::Log() << "Find segregated edges in node-based graph ..." << std::flush;
     TIMER_START(segregated);
 
-    util::NameTable names(config.GetPath(".osrm.names").string());
-    auto segregated_edges = guidance::findSegregatedNodes(node_based_graph_factory, names);
+    auto segregated_edges = guidance::findSegregatedNodes(node_based_graph_factory, name_table);
 
     TIMER_STOP(segregated);
     util::Log() << "ok, after " << TIMER_SEC(segregated) << "s";
@@ -282,8 +284,6 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
         removeInvalidRestrictions(std::move(conditional_turn_restrictions), node_based_graph);
 
     const auto number_of_node_based_nodes = node_based_graph.GetNumberOfNodes();
-
-    const util::NameTable name_table(config.GetPath(".osrm.names").string());
 
     const auto number_of_edge_based_nodes =
         BuildEdgeExpandedGraph(node_based_graph,
@@ -713,7 +713,7 @@ EdgeID Extractor::BuildEdgeExpandedGraph(
     const std::vector<TurnRestriction> &turn_restrictions,
     const std::vector<ConditionalTurnRestriction> &conditional_turn_restrictions,
     const std::unordered_set<EdgeID> &segregated_edges,
-    const util::NameTable &name_table,
+    const NameTable &name_table,
     const std::vector<UnresolvedManeuverOverride> &maneuver_overrides,
     const LaneDescriptionMap &turn_lane_map,
     // for calculating turn penalties
@@ -884,7 +884,7 @@ void Extractor::ProcessGuidanceTurns(
     const std::unordered_set<NodeID> &barrier_nodes,
     const std::vector<TurnRestriction> &turn_restrictions,
     const std::vector<ConditionalTurnRestriction> &conditional_turn_restrictions,
-    const util::NameTable &name_table,
+    const NameTable &name_table,
     LaneDescriptionMap lane_description_map,
     ScriptingEnvironment &scripting_environment)
 {

@@ -5,6 +5,8 @@
 #include "extractor/intersection/intersection_view.hpp"
 #include "extractor/restriction_index.hpp"
 #include "extractor/suffix_table.hpp"
+#include "extractor/name_table.hpp"
+
 #include "guidance/driveway_handler.hpp"
 #include "guidance/intersection.hpp"
 #include "guidance/motorway_handler.hpp"
@@ -16,7 +18,6 @@
 #include "guidance/turn_handler.hpp"
 
 #include "util/attributes.hpp"
-#include "util/name_table.hpp"
 #include "util/node_based_graph.hpp"
 
 #include <cstdint>
@@ -43,7 +44,7 @@ class TurnAnalysis
                  const extractor::RestrictionMap &restriction_map,
                  const std::unordered_set<NodeID> &barrier_nodes,
                  const extractor::TurnLanesIndexedArray &turn_lanes_data,
-                 const util::NameTable &name_table,
+                 const extractor::NameTable &name_table,
                  const extractor::SuffixTable &street_name_suffix_table);
 
     /* Full Analysis Process for a single node/edge combination. Use with caution, as the process is

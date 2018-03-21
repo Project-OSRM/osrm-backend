@@ -5,6 +5,7 @@
 #include "util/packed_vector.hpp"
 #include "util/range_table.hpp"
 #include "util/static_graph.hpp"
+#include "util/indexed_data.hpp"
 
 #include "storage/io.hpp"
 #include "storage/serialization.hpp"
@@ -167,6 +168,22 @@ inline void write(storage::tar::FileWriter &writer,
     writer.WriteElementCount64(name + "/edge_list", graph.number_of_edges);
     writer.WriteStreaming<typename std::remove_reference_t<decltype(graph)>::Edge>(
         name + "/edge_list", graph.edge_list.begin(), graph.number_of_edges);
+}
+
+template <typename BlockPolicy, storage::Ownership Ownership>
+inline void
+read(storage::tar::FileReader &reader, const std::string &name, detail::IndexedDataImpl<BlockPolicy, Ownership> &index_data)
+{
+    storage::serialization::read(reader, name + "/blocks", index_data.blocks);
+    storage::serialization::read(reader, name + "/values", index_data.values);
+}
+
+template <typename BlockPolicy, storage::Ownership Ownership>
+inline void write(storage::tar::FileWriter &writer,
+                  const std::string &name, const detail::IndexedDataImpl<BlockPolicy, Ownership> &index_data)
+{
+    storage::serialization::write(writer, name + "/blocks", index_data.blocks);
+    storage::serialization::write(writer, name + "/values", index_data.values);
 }
 }
 }

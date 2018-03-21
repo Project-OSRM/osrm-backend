@@ -411,7 +411,8 @@ void readRawNBGraph(const boost::filesystem::path &path,
         osm_node_ids.push_back(current_node.node_id);
         index++;
     };
-    reader.ReadStreaming<extractor::QueryNode>("/extractor/nodes", boost::make_function_output_iterator(decode));
+    reader.ReadStreaming<extractor::QueryNode>("/extractor/nodes",
+                                               boost::make_function_output_iterator(decode));
 
     reader.ReadStreaming<NodeID>("/extractor/barriers", barriers);
 
@@ -419,6 +420,24 @@ void readRawNBGraph(const boost::filesystem::path &path,
 
     storage::serialization::read(reader, "/extractor/edges", edge_list);
     storage::serialization::read(reader, "/extractor/annotations", annotations);
+}
+
+template <typename NameTableT>
+void readNames(const boost::filesystem::path &path, NameTableT &table)
+{
+    const auto fingerprint = storage::tar::FileReader::VerifyFingerprint;
+    storage::tar::FileReader reader{path, fingerprint};
+
+    serialization::read(reader, "/common/names", table);
+}
+
+template <typename NameTableT>
+void writeNames(const boost::filesystem::path &path, const NameTableT &table)
+{
+    const auto fingerprint = storage::tar::FileWriter::GenerateFingerprint;
+    storage::tar::FileWriter writer{path, fingerprint};
+
+    serialization::write(writer, "/common/names", table);
 }
 }
 }
