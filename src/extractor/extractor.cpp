@@ -325,11 +325,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
 
     util::Log() << "Saving edge-based node weights to file.";
     TIMER_START(timer_write_node_weights);
-    {
-        storage::io::FileWriter writer(config.GetPath(".osrm.enw"),
-                                       storage::io::FileWriter::GenerateFingerprint);
-        storage::serialization::write(writer, edge_based_node_weights);
-    }
+    extractor::files::writeEdgeBasedNodeWeights(config.GetPath(".osrm.enw"), edge_based_node_weights);
     TIMER_STOP(timer_write_node_weights);
     util::Log() << "Done writing. (" << TIMER_SEC(timer_write_node_weights) << ")";
 

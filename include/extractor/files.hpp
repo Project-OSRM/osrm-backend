@@ -439,6 +439,24 @@ void writeNames(const boost::filesystem::path &path, const NameTableT &table)
 
     serialization::write(writer, "/common/names", table);
 }
+
+template <typename NodeWeigtsVectorT>
+void readEdgeBasedNodeWeights(const boost::filesystem::path &path, NodeWeigtsVectorT &weights)
+{
+    const auto fingerprint = storage::tar::FileReader::VerifyFingerprint;
+    storage::tar::FileReader reader{path, fingerprint};
+
+    storage::serialization::read(reader, "/extractor/edge_based_node_weights", weights);
+}
+
+template <typename NodeWeigtsVectorT>
+void writeEdgeBasedNodeWeights(const boost::filesystem::path &path, const NodeWeigtsVectorT &weights)
+{
+    const auto fingerprint = storage::tar::FileWriter::GenerateFingerprint;
+    storage::tar::FileWriter writer{path, fingerprint};
+
+    storage::serialization::write(writer, "/extractor/edge_based_node_weights", weights);
+}
 }
 }
 }

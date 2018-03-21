@@ -63,11 +63,7 @@ int Contractor::Run()
 
     util::Log() << "Reading node weights.";
     std::vector<EdgeWeight> node_weights;
-    {
-        storage::io::FileReader reader(config.GetPath(".osrm.enw"),
-                                       storage::io::FileReader::VerifyFingerprint);
-        storage::serialization::read(reader, node_weights);
-    }
+    extractor::files::readEdgeBasedNodeWeights(config.GetPath(".osrm.enw"), node_weights);
     util::Log() << "Done reading node weights.";
 
     util::Log() << "Loading edge-expanded graph representation";
