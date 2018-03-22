@@ -215,6 +215,39 @@ class FileWriter
         }
     }
 
+    // Continue writing an existing file, overwrites all data after the file!
+    template <typename T>
+    void ContinueFrom(const std::string &name, const T *data, const std::size_t number_of_elements)
+    {
+        auto number_of_bytes = number_of_elements * sizeof(T);
+
+        mtar_header_t header;
+        auto ret = mtar_find(&handle, name.c_str(), &header);
+        if (ret != MTAR_ESUCCESS)
+        {
+            throw util::exception(name + ": Error reading header: " + mtar_strerror(ret));
+        }
+
+        // update header to reflect increased tar size
+        auto old_size = header.size;
+        header.size += number_of_bytes;
+        mtar_write_header(&handle, &header);
+
+        // now seek to the end of the old record
+        handle.remaining_data = number_of_bytes;
+        ret = mtar_seek(&handle, handle.pos + old_size);
+        if (ret != MTAR_ESUCCESS)
+        {
+            throw util::exception(name + ": Error seeking to end of old data: " + mtar_strerror(ret));
+        }
+
+        ret = mtar_write_data(&handle, data, number_of_bytes);
+        if (ret != MTAR_ESUCCESS)
+        {
+            throw util::exception(name + ": Error writing data : " + mtar_strerror(ret));
+        }
+    }
+
     template <typename T>
     void WriteFrom(const std::string &name, const T *data, const std::size_t number_of_elements)
     {
