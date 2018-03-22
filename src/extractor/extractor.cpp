@@ -1,5 +1,6 @@
 #include "extractor/extractor.hpp"
 
+#include "extractor/compressed_node_based_graph_edge.hpp"
 #include "extractor/edge_based_edge.hpp"
 #include "extractor/extraction_containers.hpp"
 #include "extractor/extraction_node.hpp"
@@ -8,13 +9,12 @@
 #include "extractor/extractor_callbacks.hpp"
 #include "extractor/files.hpp"
 #include "extractor/maneuver_override_relation_parser.hpp"
+#include "extractor/name_table.hpp"
 #include "extractor/node_based_graph_factory.hpp"
 #include "extractor/raster_source.hpp"
 #include "extractor/restriction_filter.hpp"
 #include "extractor/restriction_parser.hpp"
 #include "extractor/scripting_environment.hpp"
-#include "extractor/name_table.hpp"
-#include "extractor/compressed_node_based_graph_edge.hpp"
 
 #include "guidance/files.hpp"
 #include "guidance/guidance_processing.hpp"
@@ -170,7 +170,7 @@ void SetExcludableClasses(const ExtractorCallbacks::ClassesMap &classes_map,
     }
 }
 
-std::vector<CompressedNodeBasedGraphEdge> toEdgeList(const util::NodeBasedDynamicGraph& graph)
+std::vector<CompressedNodeBasedGraphEdge> toEdgeList(const util::NodeBasedDynamicGraph &graph)
 {
     std::vector<CompressedNodeBasedGraphEdge> edges;
     edges.reserve(graph.GetNumberOfEdges());
@@ -188,7 +188,6 @@ std::vector<CompressedNodeBasedGraphEdge> toEdgeList(const util::NodeBasedDynami
 
     return edges;
 }
-
 }
 
 /**
@@ -288,7 +287,8 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
             compressed_node_based_graph_writing.wait();
     };
 
-    files::writeCompressedNodeBasedGraph(config.GetPath(".osrm.cnbg").string(), toEdgeList(node_based_graph));
+    files::writeCompressedNodeBasedGraph(config.GetPath(".osrm.cnbg").string(),
+                                         toEdgeList(node_based_graph));
 
     node_based_graph_factory.GetCompressedEdges().PrintStatistics();
 
@@ -343,7 +343,8 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
 
     util::Log() << "Saving edge-based node weights to file.";
     TIMER_START(timer_write_node_weights);
-    extractor::files::writeEdgeBasedNodeWeights(config.GetPath(".osrm.enw"), edge_based_node_weights);
+    extractor::files::writeEdgeBasedNodeWeights(config.GetPath(".osrm.enw"),
+                                                edge_based_node_weights);
     TIMER_STOP(timer_write_node_weights);
     util::Log() << "Done writing. (" << TIMER_SEC(timer_write_node_weights) << ")";
 
@@ -558,9 +559,9 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
                 const auto &rel = static_cast<const osmium::Relation &>(*entity);
 
                 const char *rel_type = rel.get_value_by_key("type");
-                if (!rel_type || !std::binary_search(relation_types.begin(),
-                                                     relation_types.end(),
-                                                     std::string(rel_type)))
+                if (!rel_type ||
+                    !std::binary_search(
+                        relation_types.begin(), relation_types.end(), std::string(rel_type)))
                     continue;
 
                 ExtractionRelation extracted_rel({rel.id(), osmium::item_type::relation});
@@ -823,8 +824,8 @@ void Extractor::BuildRTree(std::vector<EdgeBasedNodeSegment> edge_based_node_seg
     edge_based_node_segments.resize(new_size);
 
     TIMER_START(construction);
-    util::StaticRTree<EdgeBasedNodeSegment> rtree(edge_based_node_segments, coordinates,
-                                                  config.GetPath(".osrm.fileIndex"));
+    util::StaticRTree<EdgeBasedNodeSegment> rtree(
+        edge_based_node_segments, coordinates, config.GetPath(".osrm.fileIndex"));
 
     files::writeRamIndex(config.GetPath(".osrm.ramIndex"), rtree);
 

@@ -4,9 +4,9 @@
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/intersection/coordinate_extractor.hpp"
 #include "extractor/intersection/have_identical_names.hpp"
+#include "extractor/name_table.hpp"
 #include "extractor/restriction_index.hpp"
 #include "extractor/turn_lane_types.hpp"
-#include "extractor/name_table.hpp"
 
 #include "guidance/intersection.hpp"
 

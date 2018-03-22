@@ -1,8 +1,8 @@
 #include "util/static_rtree.hpp"
 #include "extractor/edge_based_node_segment.hpp"
-#include "extractor/query_node.hpp"
 #include "extractor/files.hpp"
 #include "extractor/packed_osm_ids.hpp"
+#include "extractor/query_node.hpp"
 
 #include "mocks/mock_datafacade.hpp"
 #include "storage/io.hpp"

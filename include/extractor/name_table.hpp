@@ -107,6 +107,7 @@ template <storage::Ownership Ownership> class NameTableImpl
     friend void serialization::write<Ownership>(storage::tar::FileWriter &writer,
                                                 const std::string &name,
                                                 const NameTableImpl &index_data);
+
   private:
     IndexedData indexed_data;
 };

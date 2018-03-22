@@ -7,7 +7,6 @@
 
 #include <boost/test/unit_test.hpp>
 
-
 BOOST_AUTO_TEST_SUITE(tar)
 
 using namespace osrm;
@@ -25,7 +24,7 @@ BOOST_AUTO_TEST_CASE(read_write_hsgr)
                                    TestEdge{3, 1, 1},
                                    TestEdge{4, 3, 1},
                                    TestEdge{5, 1, 1}};
-    auto reference_graph = QueryGraph {6, toEdges<QueryEdge>(makeGraph(edges))};
+    auto reference_graph = QueryGraph{6, toEdges<QueryEdge>(makeGraph(edges))};
     std::vector<std::vector<bool>> reference_filters = {
         {false, false, true, true, false, false, true},
         {true, false, true, false, true, false, true},
@@ -33,8 +32,12 @@ BOOST_AUTO_TEST_CASE(read_write_hsgr)
         {true, true, true, true, true, true, true},
     };
 
-    TemporaryFile tmp {TEST_DATA_DIR "/read_write_hsgr_test.osrm.hsgr"};
-    contractor::files::writeGraph(tmp.path, reference_checksum, reference_graph, reference_filters, reference_connectivity_checksum);
+    TemporaryFile tmp{TEST_DATA_DIR "/read_write_hsgr_test.osrm.hsgr"};
+    contractor::files::writeGraph(tmp.path,
+                                  reference_checksum,
+                                  reference_graph,
+                                  reference_filters,
+                                  reference_connectivity_checksum);
 
     unsigned checksum;
     unsigned connectivity_checksum;

@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(check_name_table_fill)
         "X",    "Y", "Z",          "",    "",     "",  "",   "",    "",     "",  "0",  ""};
 
     auto data = PrapareNameTableData(expected_names, true);
-    NameTable name_table {data};
+    NameTable name_table{data};
 
     for (std::size_t index = 0; index < expected_names.size(); ++index)
     {
@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(check_name_table_nofill)
         "X",    "Y", "Z",          "",    "",     "",  "",   "",    "",     "",  "0",  ""};
 
     auto data = PrapareNameTableData(expected_names, false);
-    NameTable name_table {data};
+    NameTable name_table{data};
 
     // CALLGRIND_START_INSTRUMENTATION;
     for (std::size_t index = 0; index < expected_names.size(); ++index)

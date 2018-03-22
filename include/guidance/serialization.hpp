@@ -3,8 +3,8 @@
 
 #include "guidance/turn_data_container.hpp"
 
-#include "storage/tar.hpp"
 #include "storage/serialization.hpp"
+#include "storage/tar.hpp"
 
 #include <boost/assert.hpp>
 

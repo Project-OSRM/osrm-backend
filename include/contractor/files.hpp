@@ -5,8 +5,8 @@
 
 #include "util/serialization.hpp"
 
-#include "storage/tar.hpp"
 #include "storage/serialization.hpp"
+#include "storage/tar.hpp"
 
 namespace osrm
 {
@@ -39,10 +39,11 @@ inline void readGraph(const boost::filesystem::path &path,
     edge_filter.resize(count);
     for (const auto index : util::irange<std::size_t>(0, count))
     {
-        storage::serialization::read(reader, "/ch/edge_filter/" + std::to_string(index), edge_filter[index]);
+        storage::serialization::read(
+            reader, "/ch/edge_filter/" + std::to_string(index), edge_filter[index]);
     }
 
-     reader.ReadInto("/ch/connectivity_checksum", connectivity_checksum);
+    reader.ReadInto("/ch/connectivity_checksum", connectivity_checksum);
 }
 
 // writes .osrm.hsgr file
@@ -69,7 +70,8 @@ inline void writeGraph(const boost::filesystem::path &path,
     writer.WriteElementCount64("/ch/edge_filter", edge_filter.size());
     for (const auto index : util::irange<std::size_t>(0, edge_filter.size()))
     {
-        storage::serialization::write(writer, "/ch/edge_filter/" + std::to_string(index), edge_filter[index]);
+        storage::serialization::write(
+            writer, "/ch/edge_filter/" + std::to_string(index), edge_filter[index]);
     }
 
     writer.WriteElementCount64("/ch/connectivity_checksum", 1);

@@ -3,8 +3,8 @@
 
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/intersection/coordinate_extractor.hpp"
-#include "extractor/query_node.hpp"
 #include "extractor/name_table.hpp"
+#include "extractor/query_node.hpp"
 
 #include "guidance/intersection.hpp"
 #include "guidance/intersection_handler.hpp"

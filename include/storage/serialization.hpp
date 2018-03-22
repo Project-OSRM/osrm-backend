@@ -33,21 +33,25 @@ namespace serialization
  */
 
 template <typename T>
-inline void read(storage::tar::FileReader &reader, const std::string& name, util::DeallocatingVector<T> &vec)
+inline void
+read(storage::tar::FileReader &reader, const std::string &name, util::DeallocatingVector<T> &vec)
 {
     vec.resize(reader.ReadElementCount64(name));
     reader.ReadStreaming<T>(name, vec.begin(), vec.size());
 }
 
 template <typename T>
-inline void write(storage::tar::FileWriter &writer, const std::string& name, const util::DeallocatingVector<T> &vec)
+inline void write(storage::tar::FileWriter &writer,
+                  const std::string &name,
+                  const util::DeallocatingVector<T> &vec)
 {
     writer.WriteElementCount64(name, vec.size());
     writer.WriteStreaming<T>(name, vec.begin(), vec.size());
 }
 
 #if USE_STXXL_LIBRARY
-template <typename T> inline void read(storage::tar::FileReader &reader, const std::string& name, stxxl::vector<T> &vec)
+template <typename T>
+inline void read(storage::tar::FileReader &reader, const std::string &name, stxxl::vector<T> &vec)
 {
     auto size = reader.ReadElementCount64(name);
     vec.reserve(size);
@@ -55,23 +59,22 @@ template <typename T> inline void read(storage::tar::FileReader &reader, const s
 }
 
 template <typename T>
-inline void write(storage::tar::FileWriter &writer, const std::string& name, const stxxl::vector<T> &vec)
+inline void
+write(storage::tar::FileWriter &writer, const std::string &name, const stxxl::vector<T> &vec)
 {
     writer.WriteElementCount64(name, vec.size());
     writer.WriteStreaming<T>(name, vec.begin(), vec.size());
 }
 #endif
 
-template <typename T>
-void read(io::BufferReader &reader, std::vector<T> &data)
+template <typename T> void read(io::BufferReader &reader, std::vector<T> &data)
 {
     const auto count = reader.ReadElementCount64();
     data.resize(count);
     reader.ReadInto(data.data(), count);
 }
 
-template <typename T>
-void write(io::BufferWriter &writer, const std::vector<T> &data)
+template <typename T> void write(io::BufferWriter &writer, const std::vector<T> &data)
 {
     const auto count = data.size();
     writer.WriteElementCount64(count);
@@ -89,11 +92,11 @@ inline void read(tar::FileReader &reader, const std::string &name, std::string &
 {
     const auto count = reader.ReadElementCount64(name);
     data.resize(count);
-    reader.ReadInto(name, const_cast<char*>(data.data()), count);
+    reader.ReadInto(name, const_cast<char *>(data.data()), count);
 }
 
 template <typename T>
-inline void read(tar::FileReader &reader, const std::string& name, std::vector<T> &data)
+inline void read(tar::FileReader &reader, const std::string &name, std::vector<T> &data)
 {
     const auto count = reader.ReadElementCount64(name);
     data.resize(count);
@@ -179,7 +182,9 @@ void writeBoolVector(tar::FileWriter &writer, const std::string &name, const Vec
 
     std::uint64_t number_of_blocks = std::ceil((double)count / CHAR_BIT);
     writer.WriteStreaming<unsigned char>(
-        name, boost::make_function_input_iterator(encode_function, boost::infinite()), number_of_blocks);
+        name,
+        boost::make_function_input_iterator(encode_function, boost::infinite()),
+        number_of_blocks);
 }
 }
 

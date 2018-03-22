@@ -214,7 +214,8 @@ template <int N, typename T = std::string> struct FixedGroupBlock
     template <typename OffsetIterator, typename OutByteIter>
     OutByteIter WriteBlockPrefix(OffsetIterator first, OffsetIterator last, OutByteIter out) const
     {
-        constexpr std::size_t MAX_LENGTH = std::numeric_limits<std::make_unsigned_t<ValueType>>::max();
+        constexpr std::size_t MAX_LENGTH =
+            std::numeric_limits<std::make_unsigned_t<ValueType>>::max();
 
         auto index = 0;
         std::array<ValueType, BLOCK_SIZE> prefix;
@@ -223,12 +224,13 @@ template <int N, typename T = std::string> struct FixedGroupBlock
         {
             const std::uint32_t data_length = *next - *curr;
             if (data_length > MAX_LENGTH)
-                throw util::exception(boost::format("too large data length %1% > %2%") % data_length % MAX_LENGTH);
+                throw util::exception(boost::format("too large data length %1% > %2%") %
+                                      data_length % MAX_LENGTH);
 
             prefix[index++] = data_length;
         }
 
-        out = std::copy_n((const char *)prefix.data(), sizeof(ValueType)*BLOCK_SIZE, out);
+        out = std::copy_n((const char *)prefix.data(), sizeof(ValueType) * BLOCK_SIZE, out);
         return out;
     }
 

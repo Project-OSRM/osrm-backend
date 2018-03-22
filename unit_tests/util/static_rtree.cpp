@@ -7,8 +7,8 @@
 #include "util/rectangle.hpp"
 #include "util/typedefs.hpp"
 
-#include "mocks/mock_datafacade.hpp"
 #include "../common/temporary_file.hpp"
+#include "mocks/mock_datafacade.hpp"
 
 #include <boost/functional/hash.hpp>
 #include <boost/test/auto_unit_test.hpp>

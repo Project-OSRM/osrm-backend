@@ -3,9 +3,9 @@
 
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/intersection/intersection_view.hpp"
+#include "extractor/name_table.hpp"
 #include "extractor/restriction_index.hpp"
 #include "extractor/suffix_table.hpp"
-#include "extractor/name_table.hpp"
 
 #include "guidance/driveway_handler.hpp"
 #include "guidance/intersection.hpp"

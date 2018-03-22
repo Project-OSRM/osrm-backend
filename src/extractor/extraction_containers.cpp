@@ -1,10 +1,10 @@
 #include "extractor/extraction_containers.hpp"
 #include "extractor/extraction_segment.hpp"
 #include "extractor/extraction_way.hpp"
+#include "extractor/files.hpp"
+#include "extractor/name_table.hpp"
 #include "extractor/restriction.hpp"
 #include "extractor/serialization.hpp"
-#include "extractor/name_table.hpp"
-#include "extractor/files.hpp"
 
 #include "util/coordinate_calculation.hpp"
 
@@ -165,7 +165,9 @@ void ExtractionContainers::WriteCharData(const std::string &file_name)
     log << "writing street name index ... ";
     TIMER_START(write_index);
 
-    files::writeNames(file_name, NameTable {NameTable::IndexedData (name_offsets.begin(), name_offsets.end(), name_char_data.begin())});
+    files::writeNames(file_name,
+                      NameTable{NameTable::IndexedData(
+                          name_offsets.begin(), name_offsets.end(), name_char_data.begin())});
 
     TIMER_STOP(write_index);
     log << "ok, after " << TIMER_SEC(write_index) << "s";
@@ -275,8 +277,8 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
         {
             if (edge_iterator->result.osm_source_id < node_iterator->node_id)
             {
-                util::Log(logDEBUG)
-                    << "Found invalid node reference " << edge_iterator->result.source;
+                util::Log(logDEBUG) << "Found invalid node reference "
+                                    << edge_iterator->result.source;
                 edge_iterator->result.source = SPECIAL_NODEID;
                 ++edge_iterator;
                 continue;
@@ -1031,9 +1033,8 @@ void ExtractionContainers::PrepareRestrictions()
     // translate the turn from one segment onto another into a node restriction (the ways can
     // only
     // be connected at a single location)
-    auto const get_node_restriction_from_OSM_ids = [&](auto const from_id,
-                                                       auto const to_id,
-                                                       const OSMNodeID via_node) {
+    auto const get_node_restriction_from_OSM_ids = [&](
+        auto const from_id, auto const to_id, const OSMNodeID via_node) {
         auto const from_segment_itr = referenced_ways.find(from_id);
         if (from_segment_itr->second.way_id != from_id)
         {

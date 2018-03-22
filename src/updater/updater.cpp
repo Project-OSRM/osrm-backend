@@ -162,10 +162,8 @@ updateSegmentData(const UpdaterConfig &config,
 
     // closure to convert SpeedSource value to weight and count fallbacks to durations
     std::atomic<std::uint32_t> fallbacks_to_duration{0};
-    auto convertToWeight = [&profile_properties,
-                            &fallbacks_to_duration](const SegmentWeight &existing_weight,
-                                                    const SpeedSource &value,
-                                                    double distance_in_meters) {
+    auto convertToWeight = [&profile_properties, &fallbacks_to_duration](
+        const SegmentWeight &existing_weight, const SpeedSource &value, double distance_in_meters) {
 
         double rate = std::numeric_limits<double>::quiet_NaN();
 
@@ -440,8 +438,8 @@ updateTurnPenalties(const UpdaterConfig &config,
     {
         auto map =
             util::mmapTarFile(config.GetPath(".osrm.turn_penalties_index"), turn_index_region);
-        turn_index_blocks =
-            reinterpret_cast<const extractor::lookup::TurnIndexBlock *>(map["/extractor/turn_index"].first);
+        turn_index_blocks = reinterpret_cast<const extractor::lookup::TurnIndexBlock *>(
+            map["/extractor/turn_index"].first);
     }
 
     // Get the turn penalty and update to the new value if required
@@ -770,9 +768,9 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
             {
                 if (turn_weight_penalty < 0)
                 {
-                    util::Log(logWARNING)
-                        << "turn penalty " << turn_weight_penalty
-                        << " is too negative: clamping turn weight to " << weight_min_value;
+                    util::Log(logWARNING) << "turn penalty " << turn_weight_penalty
+                                          << " is too negative: clamping turn weight to "
+                                          << weight_min_value;
                     turn_weight_penalty = weight_min_value - new_weight;
                     turn_weight_penalties[edge.data.turn_id] = turn_weight_penalty;
                 }

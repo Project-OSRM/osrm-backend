@@ -4,11 +4,11 @@
 #include "guidance/turn_data_container.hpp"
 
 #include "extractor/compressed_edge_container.hpp"
+#include "extractor/name_table.hpp"
 #include "extractor/node_data_container.hpp"
 #include "extractor/suffix_table.hpp"
 #include "extractor/turn_lane_types.hpp"
 #include "extractor/way_restriction_map.hpp"
-#include "extractor/name_table.hpp"
 
 #include "util/coordinate.hpp"
 #include "util/guidance/bearing_class.hpp"

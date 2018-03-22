@@ -32,8 +32,8 @@ BOOST_AUTO_TEST_CASE(io_data)
     {
         osrm::storage::io::FileWriter outfile(IO_TMP_FILE,
                                               osrm::storage::io::FileWriter::GenerateFingerprint);
-            outfile.WriteElementCount64(data_in.size());
-            outfile.WriteFrom(data_in.data(), data_in.size());
+        outfile.WriteElementCount64(data_in.size());
+        outfile.WriteFrom(data_in.data(), data_in.size());
     }
 
     osrm::storage::io::FileReader infile(IO_TMP_FILE,

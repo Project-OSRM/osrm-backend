@@ -23,12 +23,12 @@ namespace serialization
 {
 template <storage::Ownership Ownership>
 void read(storage::tar::FileReader &reader,
-          const std::string& name,
+          const std::string &name,
           detail::IntersectionBearingsContainer<Ownership> &turn_data);
 
 template <storage::Ownership Ownership>
 void write(storage::tar::FileWriter &writer,
-          const std::string& name,
+           const std::string &name,
            const detail::IntersectionBearingsContainer<Ownership> &turn_data);
 }
 

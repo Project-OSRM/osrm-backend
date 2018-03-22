@@ -128,8 +128,7 @@ inline void readNodes(const boost::filesystem::path &path,
 
 // reads only coordinates from .osrm.nbg_nodes
 template <typename CoordinatesT>
-inline void readNodeCoordinates(const boost::filesystem::path &path,
-                      CoordinatesT &coordinates)
+inline void readNodeCoordinates(const boost::filesystem::path &path, CoordinatesT &coordinates)
 {
     static_assert(std::is_same<typename CoordinatesT::value_type, util::Coordinate>::value, "");
 
@@ -482,8 +481,7 @@ void writeRamIndex(const boost::filesystem::path &path, const RTreeT &rtree)
     util::serialization::write(writer, "/common/rtree", rtree);
 }
 
-template <typename RTreeT>
-void readRamIndex(const boost::filesystem::path &path, RTreeT &rtree)
+template <typename RTreeT> void readRamIndex(const boost::filesystem::path &path, RTreeT &rtree)
 {
     const auto fingerprint = storage::tar::FileReader::VerifyFingerprint;
     storage::tar::FileReader reader{path, fingerprint};

@@ -7,8 +7,8 @@
 #include "util/typedefs.hpp"
 #include "util/vector_view.hpp"
 
-#include "storage/tar_fwd.hpp"
 #include "storage/shared_memory_ownership.hpp"
+#include "storage/tar_fwd.hpp"
 
 #include <algorithm>
 #include <array>
@@ -34,9 +34,13 @@ using MultiLevelPartitionView = detail::MultiLevelPartitionImpl<storage::Ownersh
 namespace serialization
 {
 template <storage::Ownership Ownership>
-void read(storage::tar::FileReader &reader, const std::string& name, detail::MultiLevelPartitionImpl<Ownership> &mlp);
+void read(storage::tar::FileReader &reader,
+          const std::string &name,
+          detail::MultiLevelPartitionImpl<Ownership> &mlp);
 template <storage::Ownership Ownership>
-void write(storage::tar::FileWriter &writer, const std::string& name, const detail::MultiLevelPartitionImpl<Ownership> &mlp);
+void write(storage::tar::FileWriter &writer,
+           const std::string &name,
+           const detail::MultiLevelPartitionImpl<Ownership> &mlp);
 }
 
 namespace detail
@@ -137,10 +141,10 @@ template <storage::Ownership Ownership> class MultiLevelPartitionImpl final
     }
 
     friend void serialization::read<Ownership>(storage::tar::FileReader &reader,
-                                                const std::string& name,
+                                               const std::string &name,
                                                MultiLevelPartitionImpl &mlp);
     friend void serialization::write<Ownership>(storage::tar::FileWriter &writer,
-                                                const std::string& name,
+                                                const std::string &name,
                                                 const MultiLevelPartitionImpl &mlp);
 
   private:

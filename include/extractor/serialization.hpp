@@ -217,7 +217,7 @@ inline void write(storage::tar::FileWriter &writer,
 template <storage::Ownership Ownership>
 inline void read(storage::tar::FileReader &reader,
                  const std::string &name,
-                detail::NameTableImpl<Ownership> &name_table)
+                 detail::NameTableImpl<Ownership> &name_table)
 {
     std::string buffer;
     util::serialization::read(reader, name, name_table.indexed_data);

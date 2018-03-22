@@ -1,8 +1,8 @@
 #ifndef OSRM_GUIDANCE_TURN_HANDLER_HPP_
 #define OSRM_GUIDANCE_TURN_HANDLER_HPP_
 
-#include "extractor/query_node.hpp"
 #include "extractor/name_table.hpp"
+#include "extractor/query_node.hpp"
 
 #include "guidance/intersection.hpp"
 #include "guidance/intersection_handler.hpp"

@@ -3,8 +3,8 @@
 
 #include "extractor/intersection/intersection_analysis.hpp"
 #include "extractor/intersection/node_based_graph_walker.hpp"
-#include "extractor/suffix_table.hpp"
 #include "extractor/name_table.hpp"
+#include "extractor/suffix_table.hpp"
 #include "guidance/constants.hpp"
 #include "guidance/intersection.hpp"
 

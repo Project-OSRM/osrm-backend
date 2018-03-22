@@ -938,7 +938,7 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         auto found_range = std::equal_range(
             m_maneuver_overrides.begin(), m_maneuver_overrides.end(), edge_based_node_id, Comp{});
 
-        std::for_each(found_range.first, found_range.second, [&](const auto &override) {
+        std::for_each(found_range.first, found_range.second, [&](const auto & override) {
             std::vector<NodeID> sequence(
                 m_maneuver_override_node_sequences.begin() + override.node_sequence_offset_begin,
                 m_maneuver_override_node_sequences.begin() + override.node_sequence_offset_end);

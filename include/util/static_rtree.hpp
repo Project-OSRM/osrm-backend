@@ -273,10 +273,9 @@ class StaticRTree
     explicit StaticRTree(const std::vector<EdgeDataT> &input_data_vector,
                          const Vector<Coordinate> &coordinate_list,
                          const boost::filesystem::path &on_disk_file_name)
-        : m_coordinate_list(coordinate_list), m_objects{mmapFile<EdgeDataT>(
-                                                  on_disk_file_name,
-                                                  m_objects_region,
-                                                  input_data_vector.size() * sizeof(EdgeDataT))}
+        : m_coordinate_list(coordinate_list),
+          m_objects{mmapFile<EdgeDataT>(
+              on_disk_file_name, m_objects_region, input_data_vector.size() * sizeof(EdgeDataT))}
     {
         const auto element_count = input_data_vector.size();
         std::vector<WrappedInputElement> input_wrapper_vector(element_count);
@@ -758,9 +757,7 @@ class StaticRTree
     }
 
     friend void serialization::read<EdgeDataT, Ownership, BRANCHING_FACTOR, LEAF_PAGE_SIZE>(
-        storage::tar::FileReader &reader,
-        const std::string &name,
-        StaticRTree &rtree);
+        storage::tar::FileReader &reader, const std::string &name, StaticRTree &rtree);
 
     friend void serialization::write<EdgeDataT, Ownership, BRANCHING_FACTOR, LEAF_PAGE_SIZE>(
         storage::tar::FileWriter &writer, const std::string &name, const StaticRTree &rtree);

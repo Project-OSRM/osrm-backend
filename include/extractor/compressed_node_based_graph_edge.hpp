@@ -14,7 +14,6 @@ struct CompressedNodeBasedGraphEdge
     NodeID source;
     NodeID target;
 };
-
 }
 }
 

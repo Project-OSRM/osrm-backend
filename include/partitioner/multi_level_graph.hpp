@@ -3,8 +3,8 @@
 
 #include "partitioner/multi_level_partition.hpp"
 
-#include "storage/tar_fwd.hpp"
 #include "storage/shared_memory_ownership.hpp"
+#include "storage/tar_fwd.hpp"
 
 #include "util/static_graph.hpp"
 #include "util/vector_view.hpp"
@@ -25,13 +25,13 @@ namespace serialization
 {
 template <typename EdgeDataT, storage::Ownership Ownership>
 void read(storage::tar::FileReader &reader,
-          const std::string& name,
+          const std::string &name,
           MultiLevelGraph<EdgeDataT, Ownership> &graph,
           std::uint32_t &connectivity_checksum);
 
 template <typename EdgeDataT, storage::Ownership Ownership>
 void write(storage::tar::FileWriter &writer,
-          const std::string& name,
+           const std::string &name,
            const MultiLevelGraph<EdgeDataT, Ownership> &graph,
            const std::uint32_t connectivity_checksum);
 }
@@ -205,12 +205,12 @@ class MultiLevelGraph : public util::StaticGraph<EdgeDataT, Ownership>
 
     friend void
     serialization::read<EdgeDataT, Ownership>(storage::tar::FileReader &reader,
-                                              const std::string& name,
+                                              const std::string &name,
                                               MultiLevelGraph<EdgeDataT, Ownership> &graph,
                                               std::uint32_t &connectivity_checksum);
     friend void
     serialization::write<EdgeDataT, Ownership>(storage::tar::FileWriter &writer,
-                                               const std::string& name,
+                                               const std::string &name,
                                                const MultiLevelGraph<EdgeDataT, Ownership> &graph,
                                                const std::uint32_t connectivity_checksum);
 

@@ -7,8 +7,8 @@
 #include "extractor/node_data_container.hpp"
 #include "extractor/suffix_table.hpp"
 
-#include "util/node_based_graph.hpp"
 #include "util/bearing.hpp"
+#include "util/node_based_graph.hpp"
 
 #include "util/guidance/name_announcements.hpp"
 

@@ -1,6 +1,6 @@
 #include "extractor/node_based_graph_factory.hpp"
-#include "extractor/graph_compressor.hpp"
 #include "extractor/files.hpp"
+#include "extractor/graph_compressor.hpp"
 #include "storage/io.hpp"
 
 #include "util/log.hpp"
@@ -38,7 +38,13 @@ void NodeBasedGraphFactory::LoadDataFromFile(const boost::filesystem::path &inpu
     auto traffic_signals_iter = inserter(traffic_signals, end(traffic_signals));
     std::vector<NodeBasedEdge> edge_list;
 
-    files::readRawNBGraph(input_file, barriers_iter, traffic_signals_iter, coordinates, osm_node_ids, edge_list, annotation_data);
+    files::readRawNBGraph(input_file,
+                          barriers_iter,
+                          traffic_signals_iter,
+                          coordinates,
+                          osm_node_ids,
+                          edge_list,
+                          annotation_data);
 
     const auto number_of_node_based_nodes = coordinates.size();
     if (edge_list.empty())
