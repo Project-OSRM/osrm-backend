@@ -271,7 +271,9 @@ void writeBoolVector(tar::FileWriter &writer, const std::string &name, const Vec
     writer.WriteElementCount64(name, count);
     std::uint64_t index = 0;
 
-    const auto encode = [&]() {
+    // FIXME on old boost version the function_input_iterator does not work with lambdas
+    // so we need to wrap it in a function here.
+    const std::function<char()> encode_function = [&]() -> char {
         auto write_size = std::min<std::size_t>(count - index, CHAR_BIT);
         auto packed = packBits(data, index, write_size);
         index += CHAR_BIT;
@@ -280,7 +282,7 @@ void writeBoolVector(tar::FileWriter &writer, const std::string &name, const Vec
 
     std::uint64_t number_of_blocks = std::ceil((double)count / CHAR_BIT);
     writer.WriteStreaming<unsigned char>(
-        name, boost::make_function_input_iterator(encode, boost::infinite()), number_of_blocks);
+        name, boost::make_function_input_iterator(encode_function, boost::infinite()), number_of_blocks);
 }
 }
 

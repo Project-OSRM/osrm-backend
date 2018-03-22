@@ -589,7 +589,7 @@ void ExtractionContainers::WriteNodes(storage::tar::FileWriter &writer) const
         auto node_id_iterator = used_node_id_list.begin();
         const auto all_nodes_list_end = all_nodes_list.end();
 
-        const auto encode = [&]() {
+        const std::function<QueryNode()> encode_function = [&]() -> QueryNode {
             BOOST_ASSERT(node_id_iterator != used_node_id_list.end());
             BOOST_ASSERT(node_iterator != all_nodes_list_end);
             BOOST_ASSERT(*node_id_iterator >= node_iterator->node_id);
@@ -613,7 +613,7 @@ void ExtractionContainers::WriteNodes(storage::tar::FileWriter &writer) const
         writer.WriteElementCount64("/extractor/nodes", used_node_id_list.size());
         writer.WriteStreaming<QueryNode>(
             "/extractor/nodes",
-            boost::make_function_input_iterator(encode, boost::infinite()),
+            boost::make_function_input_iterator(encode_function, boost::infinite()),
             used_node_id_list.size());
 
         TIMER_STOP(write_nodes);
