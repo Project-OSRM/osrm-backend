@@ -32,12 +32,14 @@ BOOST_AUTO_TEST_CASE(io_data)
     {
         osrm::storage::io::FileWriter outfile(IO_TMP_FILE,
                                               osrm::storage::io::FileWriter::GenerateFingerprint);
-        osrm::storage::serialization::write(outfile, data_in);
+            outfile.WriteElementCount64(data_in.size());
+            outfile.WriteFrom(data_in.data(), data_in.size());
     }
 
     osrm::storage::io::FileReader infile(IO_TMP_FILE,
                                          osrm::storage::io::FileReader::VerifyFingerprint);
-    osrm::storage::serialization::read(infile, data_out);
+    data_out.resize(infile.ReadElementCount64());
+    infile.ReadInto(data_out.data(), data_out.size());
 
     BOOST_REQUIRE_EQUAL(data_in.size(), data_out.size());
     BOOST_CHECK_EQUAL_COLLECTIONS(data_out.begin(), data_out.end(), data_in.begin(), data_in.end());
@@ -88,7 +90,8 @@ BOOST_AUTO_TEST_CASE(file_too_small)
         {
             osrm::storage::io::FileWriter outfile(
                 IO_TOO_SMALL_FILE, osrm::storage::io::FileWriter::GenerateFingerprint);
-            osrm::storage::serialization::write(outfile, v);
+            outfile.WriteElementCount64(v.size());
+            outfile.WriteFrom(v.data(), v.size());
         }
 
         std::fstream f(IO_TOO_SMALL_FILE);
@@ -102,7 +105,8 @@ BOOST_AUTO_TEST_CASE(file_too_small)
         osrm::storage::io::FileReader infile(IO_TOO_SMALL_FILE,
                                              osrm::storage::io::FileReader::VerifyFingerprint);
         std::vector<int> buffer;
-        osrm::storage::serialization::read(infile, buffer);
+        buffer.resize(infile.ReadElementCount64());
+        infile.ReadInto(buffer.data(), buffer.size());
         BOOST_REQUIRE_MESSAGE(false, "Should not get here");
     }
     catch (const osrm::util::RuntimeError &e)
@@ -124,7 +128,8 @@ BOOST_AUTO_TEST_CASE(io_corrupt_fingerprint)
                                               osrm::storage::io::FileWriter::HasNoFingerprint);
 
         outfile.WriteFrom(0xDEADBEEFCAFEFACE);
-        osrm::storage::serialization::write(outfile, v);
+        outfile.WriteElementCount64(v.size());
+        outfile.WriteFrom(v.data(), v.size());
     }
 
     try
@@ -155,7 +160,8 @@ BOOST_AUTO_TEST_CASE(io_incompatible_fingerprint)
 
             const auto fingerprint = osrm::util::FingerPrint::GetValid();
             outfile.WriteFrom(fingerprint);
-            osrm::storage::serialization::write(outfile, v);
+            outfile.WriteElementCount64(v.size());
+            outfile.WriteFrom(v.data(), v.size());
         }
 
         std::fstream f(IO_INCOMPATIBLE_FINGERPRINT_FILE);

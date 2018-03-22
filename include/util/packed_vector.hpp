@@ -5,7 +5,6 @@
 #include "util/typedefs.hpp"
 #include "util/vector_view.hpp"
 
-#include "storage/io_fwd.hpp"
 #include "storage/shared_memory_ownership.hpp"
 #include "storage/tar_fwd.hpp"
 
@@ -29,13 +28,6 @@ template <typename T, std::size_t Bits, storage::Ownership Ownership> class Pack
 
 namespace serialization
 {
-template <typename T, std::size_t Bits, storage::Ownership Ownership>
-inline void read(storage::io::FileReader &reader, detail::PackedVector<T, Bits, Ownership> &vec);
-
-template <typename T, std::size_t Bits, storage::Ownership Ownership>
-inline void write(storage::io::FileWriter &writer,
-                  const detail::PackedVector<T, Bits, Ownership> &vec);
-
 template <typename T, std::size_t Bits, storage::Ownership Ownership>
 inline void read(storage::tar::FileReader &reader,
                  const std::string &name,
@@ -456,12 +448,6 @@ template <typename T, std::size_t Bits, storage::Ownership Ownership> class Pack
         auto num_blocks = std::ceil(static_cast<double>(capacity) / BLOCK_ELEMENTS);
         vec.reserve(num_blocks * BLOCK_WORDS + 1);
     }
-
-    friend void serialization::read<T, Bits, Ownership>(storage::io::FileReader &reader,
-                                                        PackedVector &vec);
-
-    friend void serialization::write<T, Bits, Ownership>(storage::io::FileWriter &writer,
-                                                         const PackedVector &vec);
 
     friend void serialization::read<T, Bits, Ownership>(storage::tar::FileReader &reader,
                                                         const std::string &name,

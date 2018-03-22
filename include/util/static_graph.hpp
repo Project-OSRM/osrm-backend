@@ -8,7 +8,6 @@
 #include "util/typedefs.hpp"
 #include "util/vector_view.hpp"
 
-#include "storage/io_fwd.hpp"
 #include "storage/shared_memory_ownership.hpp"
 #include "storage/tar_fwd.hpp"
 
@@ -28,12 +27,6 @@ template <typename EdgeDataT, storage::Ownership Ownership> class StaticGraph;
 
 namespace serialization
 {
-template <typename EdgeDataT, storage::Ownership Ownership>
-void read(storage::io::FileReader &reader, StaticGraph<EdgeDataT, Ownership> &graph);
-
-template <typename EdgeDataT, storage::Ownership Ownership>
-void write(storage::io::FileWriter &writer, const StaticGraph<EdgeDataT, Ownership> &graph);
-
 template <typename EdgeDataT, storage::Ownership Ownership>
 void read(storage::tar::FileReader &reader,
           const std::string &name,
@@ -282,12 +275,6 @@ class StaticGraph
 
         util::inplacePermutation(edge_array.begin(), edge_array.end(), old_to_new_edge);
     }
-
-    friend void serialization::read<EdgeDataT, Ownership>(storage::io::FileReader &reader,
-                                                          StaticGraph<EdgeDataT, Ownership> &graph);
-    friend void
-    serialization::write<EdgeDataT, Ownership>(storage::io::FileWriter &writer,
-                                               const StaticGraph<EdgeDataT, Ownership> &graph);
 
     friend void serialization::read<EdgeDataT, Ownership>(storage::tar::FileReader &reader,
                                                           const std::string &name,

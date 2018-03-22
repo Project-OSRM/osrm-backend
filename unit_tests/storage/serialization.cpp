@@ -32,26 +32,6 @@ BOOST_AUTO_TEST_CASE(unpack_test)
     BOOST_CHECK_EQUAL_COLLECTIONS(v.begin(), v.end(), expected.begin(), expected.end());
 }
 
-BOOST_AUTO_TEST_CASE(bin_serialize_bool_vector)
-{
-    TemporaryFile tmp;
-    {
-        std::vector<std::vector<bool>> data = {
-            {}, {0}, {1, 1, 1}, {1, 1, 0, 0, 1, 1, 0, 0}, {1, 1, 0, 0, 1, 1, 0, 0, 1}};
-        for (const auto &v : data)
-        {
-            {
-                io::FileWriter writer(tmp.path, io::FileWriter::GenerateFingerprint);
-                storage::serialization::write(writer, v);
-            }
-            std::vector<bool> result;
-            io::FileReader reader(tmp.path, io::FileReader::VerifyFingerprint);
-            storage::serialization::read(reader, result);
-            BOOST_CHECK_EQUAL_COLLECTIONS(v.begin(), v.end(), result.begin(), result.end());
-        }
-    }
-}
-
 BOOST_AUTO_TEST_CASE(tar_serialize_bool_vector)
 {
     TemporaryFile tmp;
