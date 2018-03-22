@@ -1,4 +1,7 @@
 #include "engine/datafacade/shared_memory_allocator.hpp"
+
+#include "storage/serialization.hpp"
+
 #include "util/log.hpp"
 
 #include "boost/assert.hpp"
@@ -16,17 +19,21 @@ SharedMemoryAllocator::SharedMemoryAllocator(storage::SharedDataType data_region
 
     BOOST_ASSERT(storage::SharedMemory::RegionExists(data_region));
     m_large_memory = storage::makeSharedMemory(data_region);
+
+    storage::io::BufferReader reader(GetMemory());
+    storage::serialization::read(reader, data_layout);
+    layout_size = reader.GetPosition();
 }
 
 SharedMemoryAllocator::~SharedMemoryAllocator() {}
 
-storage::DataLayout &SharedMemoryAllocator::GetLayout()
+const storage::DataLayout &SharedMemoryAllocator::GetLayout()
 {
-    return *reinterpret_cast<storage::DataLayout *>(m_large_memory->Ptr());
+    return data_layout;
 }
 char *SharedMemoryAllocator::GetMemory()
 {
-    return reinterpret_cast<char *>(m_large_memory->Ptr()) + sizeof(storage::DataLayout);
+    return reinterpret_cast<char *>(m_large_memory->Ptr()) + layout_size;
 }
 
 } // namespace datafacade

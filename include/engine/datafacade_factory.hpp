@@ -51,7 +51,7 @@ template <template <typename A> class FacadeT, typename AlgorithmT> class DataFa
         }
 
         properties = allocator->GetLayout().template GetBlockPtr<extractor::ProfileProperties>(
-            allocator->GetMemory(), storage::DataLayout::PROPERTIES);
+            allocator->GetMemory(), "/common/properties");
 
         for (const auto index : util::irange<std::size_t>(0, properties->class_names.size()))
         {

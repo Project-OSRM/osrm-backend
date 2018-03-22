@@ -81,26 +81,25 @@ class ContiguousInternalMemoryAlgorithmDataFacade<CH> : public datafacade::Algor
     // allocator that keeps the allocation data
     std::shared_ptr<ContiguousBlockAllocator> allocator;
 
-    void InitializeGraphPointer(storage::DataLayout &data_layout,
+    void InitializeGraphPointer(const storage::DataLayout &data_layout,
                                 char *memory_block,
                                 const std::size_t exclude_index)
     {
-        auto graph_nodes_ptr = data_layout.GetBlockPtr<GraphNode>(
-            memory_block, storage::DataLayout::CH_GRAPH_NODE_LIST);
+        auto graph_nodes_ptr =
+            data_layout.GetBlockPtr<GraphNode>(memory_block, "/ch/contracted_graph/node_array");
 
-        auto graph_edges_ptr = data_layout.GetBlockPtr<GraphEdge>(
-            memory_block, storage::DataLayout::CH_GRAPH_EDGE_LIST);
+        auto graph_edges_ptr =
+            data_layout.GetBlockPtr<GraphEdge>(memory_block, "/ch/contracted_graph/edge_array");
 
-        auto filter_block_id = static_cast<storage::DataLayout::BlockID>(
-            storage::DataLayout::CH_EDGE_FILTER_0 + exclude_index);
+        auto filter_block_id = "/ch/edge_filter/" + std::to_string(exclude_index);
 
         auto edge_filter_ptr =
             data_layout.GetBlockPtr<util::vector_view<bool>::Word>(memory_block, filter_block_id);
 
         util::vector_view<GraphNode> node_list(
-            graph_nodes_ptr, data_layout.GetBlockEntries(storage::DataLayout::CH_GRAPH_NODE_LIST));
+            graph_nodes_ptr, data_layout.GetBlockEntries("/ch/contracted_graph/node_array"));
         util::vector_view<GraphEdge> edge_list(
-            graph_edges_ptr, data_layout.GetBlockEntries(storage::DataLayout::CH_GRAPH_EDGE_LIST));
+            graph_edges_ptr, data_layout.GetBlockEntries("/ch/contracted_graph/edge_array"));
 
         util::vector_view<bool> edge_filter(edge_filter_ptr,
                                             data_layout.GetBlockEntries(filter_block_id));
@@ -115,7 +114,7 @@ class ContiguousInternalMemoryAlgorithmDataFacade<CH> : public datafacade::Algor
         InitializeInternalPointers(allocator->GetLayout(), allocator->GetMemory(), exclude_index);
     }
 
-    void InitializeInternalPointers(storage::DataLayout &data_layout,
+    void InitializeInternalPointers(const storage::DataLayout &data_layout,
                                     char *memory_block,
                                     const std::size_t exclude_index)
     {
@@ -224,29 +223,28 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     // allocator that keeps the allocation data
     std::shared_ptr<ContiguousBlockAllocator> allocator;
 
-    void InitializeProfilePropertiesPointer(storage::DataLayout &data_layout,
+    void InitializeProfilePropertiesPointer(const storage::DataLayout &data_layout,
                                             char *memory_block,
                                             const std::size_t exclude_index)
     {
         m_profile_properties = data_layout.GetBlockPtr<extractor::ProfileProperties>(
-            memory_block, storage::DataLayout::PROPERTIES);
+            memory_block, "/common/properties");
 
         exclude_mask = m_profile_properties->excludable_classes[exclude_index];
     }
 
-    void InitializeChecksumPointer(storage::DataLayout &data_layout, char *memory_block)
+    void InitializeChecksumPointer(const storage::DataLayout &data_layout, char *memory_block)
     {
-        m_check_sum =
-            *data_layout.GetBlockPtr<unsigned>(memory_block, storage::DataLayout::HSGR_CHECKSUM);
+        m_check_sum = *data_layout.GetBlockPtr<unsigned>(memory_block, "/ch/checksum");
         util::Log() << "set checksum: " << m_check_sum;
     }
 
-    void InitializeRTreePointers(storage::DataLayout &data_layout, char *memory_block)
+    void InitializeRTreePointers(const storage::DataLayout &data_layout, char *memory_block)
     {
         BOOST_ASSERT_MSG(!m_coordinate_list.empty(), "coordinates must be loaded before r-tree");
 
         const auto file_index_ptr =
-            data_layout.GetBlockPtr<char>(memory_block, storage::DataLayout::FILE_INDEX_PATH);
+            data_layout.GetBlockPtr<char>(memory_block, "/common/rtree/file_index_path");
         file_index_path = boost::filesystem::path(file_index_ptr);
         if (!boost::filesystem::exists(file_index_path))
         {
@@ -256,15 +254,15 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         }
 
         const auto rtree_ptr =
-            data_layout.GetBlockPtr<RTreeNode>(memory_block, storage::DataLayout::R_SEARCH_TREE);
+            data_layout.GetBlockPtr<RTreeNode>(memory_block, "/common/rtree/search_tree");
         util::vector_view<RTreeNode> search_tree(
-            rtree_ptr, data_layout.GetBlockEntries(storage::DataLayout::R_SEARCH_TREE));
+            rtree_ptr, data_layout.GetBlockEntries("/common/rtree/search_tree"));
 
         const auto rtree_levelstarts_ptr = data_layout.GetBlockPtr<std::uint64_t>(
-            memory_block, storage::DataLayout::R_SEARCH_TREE_LEVEL_STARTS);
+            memory_block, "/common/rtree/search_tree_level_starts");
         util::vector_view<std::uint64_t> rtree_level_starts(
             rtree_levelstarts_ptr,
-            data_layout.GetBlockEntries(storage::DataLayout::R_SEARCH_TREE_LEVEL_STARTS));
+            data_layout.GetBlockEntries("/common/rtree/search_tree_level_starts"));
 
         m_static_rtree.reset(new SharedRTree{std::move(search_tree),
                                              std::move(rtree_level_starts),
@@ -274,70 +272,67 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
             new SharedGeospatialQuery(*m_static_rtree, m_coordinate_list, *this));
     }
 
-    void InitializeNodeInformationPointers(storage::DataLayout &layout, char *memory_ptr)
+    void InitializeNodeInformationPointers(const storage::DataLayout &layout, char *memory_ptr)
     {
         const auto coordinate_list_ptr =
-            layout.GetBlockPtr<util::Coordinate>(memory_ptr, storage::DataLayout::COORDINATE_LIST);
-        m_coordinate_list.reset(coordinate_list_ptr,
-                                layout.GetBlockEntries(storage::DataLayout::COORDINATE_LIST));
+            layout.GetBlockPtr<util::Coordinate>(memory_ptr, "/common/coordinates");
+        m_coordinate_list.reset(coordinate_list_ptr, layout.GetBlockEntries("/common/coordinates"));
 
         const auto osmnodeid_ptr = layout.GetBlockPtr<extractor::PackedOSMIDsView::block_type>(
-            memory_ptr, storage::DataLayout::OSM_NODE_ID_LIST);
+            memory_ptr, "/common/osm_node_ids/packed");
         m_osmnodeid_list = extractor::PackedOSMIDsView(
             util::vector_view<extractor::PackedOSMIDsView::block_type>(
-                osmnodeid_ptr, layout.GetBlockEntries(storage::DataLayout::OSM_NODE_ID_LIST)),
+                osmnodeid_ptr, layout.GetBlockEntries("/common/osm_node_ids/packed")),
             // We (ab)use the number of coordinates here because we know we have the same amount of
             // ids
-            layout.GetBlockEntries(storage::DataLayout::COORDINATE_LIST));
+            layout.GetBlockEntries("/common/coordinates"));
     }
 
-    void InitializeEdgeBasedNodeDataInformationPointers(storage::DataLayout &layout,
+    void InitializeEdgeBasedNodeDataInformationPointers(const storage::DataLayout &layout,
                                                         char *memory_ptr)
     {
-        const auto edge_based_node_list_ptr = layout.GetBlockPtr<extractor::EdgeBasedNode>(
-            memory_ptr, storage::DataLayout::EDGE_BASED_NODE_DATA_LIST);
+        const auto edge_based_node_list_ptr =
+            layout.GetBlockPtr<extractor::EdgeBasedNode>(memory_ptr, "/common/ebg_node_data/nodes");
         util::vector_view<extractor::EdgeBasedNode> edge_based_node_data_list(
-            edge_based_node_list_ptr,
-            layout.GetBlockEntries(storage::DataLayout::EDGE_BASED_NODE_DATA_LIST));
+            edge_based_node_list_ptr, layout.GetBlockEntries("/common/ebg_node_data/nodes"));
 
         const auto annotation_data_list_ptr =
             layout.GetBlockPtr<extractor::NodeBasedEdgeAnnotation>(
-                memory_ptr, storage::DataLayout::ANNOTATION_DATA_LIST);
+                memory_ptr, "/common/ebg_node_data/annotations");
         util::vector_view<extractor::NodeBasedEdgeAnnotation> annotation_data(
-            annotation_data_list_ptr,
-            layout.GetBlockEntries(storage::DataLayout::ANNOTATION_DATA_LIST));
+            annotation_data_list_ptr, layout.GetBlockEntries("/common/ebg_node_data/annotations"));
 
         edge_based_node_data = extractor::EdgeBasedNodeDataView(
             std::move(edge_based_node_data_list), std::move(annotation_data));
     }
 
-    void InitializeEdgeInformationPointers(storage::DataLayout &layout, char *memory_ptr)
+    void InitializeEdgeInformationPointers(const storage::DataLayout &layout, char *memory_ptr)
     {
         const auto lane_data_id_ptr =
-            layout.GetBlockPtr<LaneDataID>(memory_ptr, storage::DataLayout::LANE_DATA_ID);
+            layout.GetBlockPtr<LaneDataID>(memory_ptr, "/common/turn_data/lane_data_ids");
         util::vector_view<LaneDataID> lane_data_ids(
-            lane_data_id_ptr, layout.GetBlockEntries(storage::DataLayout::LANE_DATA_ID));
+            lane_data_id_ptr, layout.GetBlockEntries("/common/turn_data/lane_data_ids"));
 
         const auto turn_instruction_list_ptr = layout.GetBlockPtr<guidance::TurnInstruction>(
-            memory_ptr, storage::DataLayout::TURN_INSTRUCTION);
+            memory_ptr, "/common/turn_data/turn_instructions");
         util::vector_view<guidance::TurnInstruction> turn_instructions(
             turn_instruction_list_ptr,
-            layout.GetBlockEntries(storage::DataLayout::TURN_INSTRUCTION));
+            layout.GetBlockEntries("/common/turn_data/turn_instructions"));
 
         const auto entry_class_id_list_ptr =
-            layout.GetBlockPtr<EntryClassID>(memory_ptr, storage::DataLayout::ENTRY_CLASSID);
+            layout.GetBlockPtr<EntryClassID>(memory_ptr, "/common/turn_data/entry_class_ids");
         util::vector_view<EntryClassID> entry_class_ids(
-            entry_class_id_list_ptr, layout.GetBlockEntries(storage::DataLayout::ENTRY_CLASSID));
+            entry_class_id_list_ptr, layout.GetBlockEntries("/common/turn_data/entry_class_ids"));
 
         const auto pre_turn_bearing_ptr = layout.GetBlockPtr<guidance::TurnBearing>(
-            memory_ptr, storage::DataLayout::PRE_TURN_BEARING);
+            memory_ptr, "/common/turn_data/pre_turn_bearings");
         util::vector_view<guidance::TurnBearing> pre_turn_bearings(
-            pre_turn_bearing_ptr, layout.GetBlockEntries(storage::DataLayout::PRE_TURN_BEARING));
+            pre_turn_bearing_ptr, layout.GetBlockEntries("/common/turn_data/pre_turn_bearings"));
 
         const auto post_turn_bearing_ptr = layout.GetBlockPtr<guidance::TurnBearing>(
-            memory_ptr, storage::DataLayout::POST_TURN_BEARING);
+            memory_ptr, "/common/turn_data/post_turn_bearings");
         util::vector_view<guidance::TurnBearing> post_turn_bearings(
-            post_turn_bearing_ptr, layout.GetBlockEntries(storage::DataLayout::POST_TURN_BEARING));
+            post_turn_bearing_ptr, layout.GetBlockEntries("/common/turn_data/post_turn_bearings"));
 
         turn_data = guidance::TurnDataView(std::move(turn_instructions),
                                            std::move(lane_data_ids),
@@ -346,124 +341,120 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
                                            std::move(post_turn_bearings));
     }
 
-    void InitializeNamePointers(storage::DataLayout &data_layout, char *memory_block)
+    void InitializeNamePointers(const storage::DataLayout &data_layout, char *memory_block)
     {
         const auto name_blocks_ptr =
             data_layout.GetBlockPtr<extractor::NameTableView::IndexedData::BlockReference>(
-                memory_block, storage::DataLayout::NAME_BLOCKS);
+                memory_block, "/common/names/blocks");
         const auto name_values_ptr =
             data_layout.GetBlockPtr<extractor::NameTableView::IndexedData::ValueType>(
-                memory_block, storage::DataLayout::NAME_VALUES);
+                memory_block, "/common/names/values");
 
         util::vector_view<extractor::NameTableView::IndexedData::BlockReference> blocks(
-            name_blocks_ptr, data_layout.GetBlockEntries(storage::DataLayout::NAME_BLOCKS));
+            name_blocks_ptr, data_layout.GetBlockEntries("/common/names/blocks"));
         util::vector_view<extractor::NameTableView::IndexedData::ValueType> values(
-            name_values_ptr, data_layout.GetBlockEntries(storage::DataLayout::NAME_VALUES));
+            name_values_ptr, data_layout.GetBlockEntries("/common/names/values"));
 
         extractor::NameTableView::IndexedData index_data_view{std::move(blocks), std::move(values)};
         m_name_table = extractor::NameTableView{std::move(index_data_view)};
     }
 
-    void InitializeTurnLaneDescriptionsPointers(storage::DataLayout &data_layout,
+    void InitializeTurnLaneDescriptionsPointers(const storage::DataLayout &data_layout,
                                                 char *memory_block)
     {
-        auto offsets_ptr = data_layout.GetBlockPtr<std::uint32_t>(
-            memory_block, storage::DataLayout::LANE_DESCRIPTION_OFFSETS);
+        auto offsets_ptr =
+            data_layout.GetBlockPtr<std::uint32_t>(memory_block, "/common/turn_lanes/offsets");
         util::vector_view<std::uint32_t> offsets(
-            offsets_ptr,
-            data_layout.GetBlockEntries(storage::DataLayout::LANE_DESCRIPTION_OFFSETS));
+            offsets_ptr, data_layout.GetBlockEntries("/common/turn_lanes/offsets"));
         m_lane_description_offsets = std::move(offsets);
 
         auto masks_ptr = data_layout.GetBlockPtr<extractor::TurnLaneType::Mask>(
-            memory_block, storage::DataLayout::LANE_DESCRIPTION_MASKS);
+            memory_block, "/common/turn_lanes/masks");
 
         util::vector_view<extractor::TurnLaneType::Mask> masks(
-            masks_ptr, data_layout.GetBlockEntries(storage::DataLayout::LANE_DESCRIPTION_MASKS));
+            masks_ptr, data_layout.GetBlockEntries("/common/turn_lanes/masks"));
         m_lane_description_masks = std::move(masks);
 
         const auto lane_tupel_id_pair_ptr =
-            data_layout.GetBlockPtr<util::guidance::LaneTupleIdPair>(
-                memory_block, storage::DataLayout::TURN_LANE_DATA);
+            data_layout.GetBlockPtr<util::guidance::LaneTupleIdPair>(memory_block,
+                                                                     "/common/turn_lanes/data");
         util::vector_view<util::guidance::LaneTupleIdPair> lane_tupel_id_pair(
-            lane_tupel_id_pair_ptr,
-            data_layout.GetBlockEntries(storage::DataLayout::TURN_LANE_DATA));
+            lane_tupel_id_pair_ptr, data_layout.GetBlockEntries("/common/turn_lanes/data"));
         m_lane_tupel_id_pairs = std::move(lane_tupel_id_pair);
     }
 
-    void InitializeTurnPenalties(storage::DataLayout &data_layout, char *memory_block)
+    void InitializeTurnPenalties(const storage::DataLayout &data_layout, char *memory_block)
     {
-        auto turn_weight_penalties_ptr = data_layout.GetBlockPtr<TurnPenalty>(
-            memory_block, storage::DataLayout::TURN_WEIGHT_PENALTIES);
+        auto turn_weight_penalties_ptr =
+            data_layout.GetBlockPtr<TurnPenalty>(memory_block, "/common/turn_penalty/weight");
         m_turn_weight_penalties = util::vector_view<TurnPenalty>(
-            turn_weight_penalties_ptr,
-            data_layout.GetBlockEntries(storage::DataLayout::TURN_WEIGHT_PENALTIES));
-        auto turn_duration_penalties_ptr = data_layout.GetBlockPtr<TurnPenalty>(
-            memory_block, storage::DataLayout::TURN_DURATION_PENALTIES);
+            turn_weight_penalties_ptr, data_layout.GetBlockEntries("/common/turn_penalty/weight"));
+        auto turn_duration_penalties_ptr =
+            data_layout.GetBlockPtr<TurnPenalty>(memory_block, "/common/turn_penalty/duration");
         m_turn_duration_penalties = util::vector_view<TurnPenalty>(
             turn_duration_penalties_ptr,
-            data_layout.GetBlockEntries(storage::DataLayout::TURN_DURATION_PENALTIES));
+            data_layout.GetBlockEntries("/common/turn_penalty/duration"));
     }
 
-    void InitializeGeometryPointers(storage::DataLayout &data_layout, char *memory_block)
+    void InitializeGeometryPointers(const storage::DataLayout &data_layout, char *memory_block)
     {
         auto geometries_index_ptr =
-            data_layout.GetBlockPtr<unsigned>(memory_block, storage::DataLayout::GEOMETRIES_INDEX);
+            data_layout.GetBlockPtr<unsigned>(memory_block, "/common/segment_data/index");
         util::vector_view<unsigned> geometry_begin_indices(
-            geometries_index_ptr,
-            data_layout.GetBlockEntries(storage::DataLayout::GEOMETRIES_INDEX));
+            geometries_index_ptr, data_layout.GetBlockEntries("/common/segment_data/index"));
 
-        auto num_entries = data_layout.GetBlockEntries(storage::DataLayout::GEOMETRIES_NODE_LIST);
-        auto geometries_node_list_ptr = data_layout.GetBlockPtr<NodeID>(
-            memory_block, storage::DataLayout::GEOMETRIES_NODE_LIST);
+        auto num_entries = data_layout.GetBlockEntries("/common/segment_data/nodes");
+        auto geometries_node_list_ptr =
+            data_layout.GetBlockPtr<NodeID>(memory_block, "/common/segment_data/nodes");
         util::vector_view<NodeID> geometry_node_list(geometries_node_list_ptr, num_entries);
 
         auto geometries_fwd_weight_list_ptr =
             data_layout.GetBlockPtr<extractor::SegmentDataView::SegmentWeightVector::block_type>(
-                memory_block, storage::DataLayout::GEOMETRIES_FWD_WEIGHT_LIST);
+                memory_block, "/common/segment_data/forward_weights/packed");
         extractor::SegmentDataView::SegmentWeightVector geometry_fwd_weight_list(
             util::vector_view<extractor::SegmentDataView::SegmentWeightVector::block_type>(
                 geometries_fwd_weight_list_ptr,
-                data_layout.GetBlockEntries(storage::DataLayout::GEOMETRIES_FWD_WEIGHT_LIST)),
+                data_layout.GetBlockEntries("/common/segment_data/forward_weights/packed")),
             num_entries);
 
         auto geometries_rev_weight_list_ptr =
             data_layout.GetBlockPtr<extractor::SegmentDataView::SegmentWeightVector::block_type>(
-                memory_block, storage::DataLayout::GEOMETRIES_REV_WEIGHT_LIST);
+                memory_block, "/common/segment_data/reverse_weights/packed");
         extractor::SegmentDataView::SegmentWeightVector geometry_rev_weight_list(
             util::vector_view<extractor::SegmentDataView::SegmentWeightVector::block_type>(
                 geometries_rev_weight_list_ptr,
-                data_layout.GetBlockEntries(storage::DataLayout::GEOMETRIES_REV_WEIGHT_LIST)),
+                data_layout.GetBlockEntries("/common/segment_data/reverse_weights/packed")),
             num_entries);
 
         auto geometries_fwd_duration_list_ptr =
             data_layout.GetBlockPtr<extractor::SegmentDataView::SegmentDurationVector::block_type>(
-                memory_block, storage::DataLayout::GEOMETRIES_FWD_DURATION_LIST);
+                memory_block, "/common/segment_data/forward_durations/packed");
         extractor::SegmentDataView::SegmentDurationVector geometry_fwd_duration_list(
             util::vector_view<extractor::SegmentDataView::SegmentDurationVector::block_type>(
                 geometries_fwd_duration_list_ptr,
-                data_layout.GetBlockEntries(storage::DataLayout::GEOMETRIES_FWD_DURATION_LIST)),
+                data_layout.GetBlockEntries("/common/segment_data/forward_durations/packed")),
             num_entries);
 
         auto geometries_rev_duration_list_ptr =
             data_layout.GetBlockPtr<extractor::SegmentDataView::SegmentDurationVector::block_type>(
-                memory_block, storage::DataLayout::GEOMETRIES_REV_DURATION_LIST);
+                memory_block, "/common/segment_data/reverse_durations/packed");
         extractor::SegmentDataView::SegmentDurationVector geometry_rev_duration_list(
             util::vector_view<extractor::SegmentDataView::SegmentDurationVector::block_type>(
                 geometries_rev_duration_list_ptr,
-                data_layout.GetBlockEntries(storage::DataLayout::GEOMETRIES_REV_DURATION_LIST)),
+                data_layout.GetBlockEntries("/common/segment_data/reverse_durations/packed")),
             num_entries);
 
         auto geometries_fwd_datasources_list_ptr = data_layout.GetBlockPtr<DatasourceID>(
-            memory_block, storage::DataLayout::GEOMETRIES_FWD_DATASOURCES_LIST);
+            memory_block, "/common/segment_data/forward_data_sources");
         util::vector_view<DatasourceID> geometry_fwd_datasources_list(
             geometries_fwd_datasources_list_ptr,
-            data_layout.GetBlockEntries(storage::DataLayout::GEOMETRIES_FWD_DATASOURCES_LIST));
+            data_layout.GetBlockEntries("/common/segment_data/forward_data_sources"));
 
         auto geometries_rev_datasources_list_ptr = data_layout.GetBlockPtr<DatasourceID>(
-            memory_block, storage::DataLayout::GEOMETRIES_REV_DATASOURCES_LIST);
+            memory_block, "/common/segment_data/reverse_data_sources");
         util::vector_view<DatasourceID> geometry_rev_datasources_list(
             geometries_rev_datasources_list_ptr,
-            data_layout.GetBlockEntries(storage::DataLayout::GEOMETRIES_REV_DATASOURCES_LIST));
+            data_layout.GetBlockEntries("/common/segment_data/reverse_data_sources"));
 
         segment_data = extractor::SegmentDataView{std::move(geometry_begin_indices),
                                                   std::move(geometry_node_list),
@@ -475,30 +466,36 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
                                                   std::move(geometry_rev_datasources_list)};
 
         m_datasources = data_layout.GetBlockPtr<extractor::Datasources>(
-            memory_block, storage::DataLayout::DATASOURCES_NAMES);
+            memory_block, "/common/data_sources_names");
     }
 
-    void InitializeIntersectionClassPointers(storage::DataLayout &data_layout, char *memory_block)
+    void InitializeIntersectionClassPointers(const storage::DataLayout &data_layout,
+                                             char *memory_block)
     {
         auto bearing_class_id_ptr = data_layout.GetBlockPtr<BearingClassID>(
-            memory_block, storage::DataLayout::BEARING_CLASSID);
+            memory_block, "/common/intersection_bearings/node_to_class_id");
         util::vector_view<BearingClassID> bearing_class_id(
             bearing_class_id_ptr,
-            data_layout.GetBlockEntries(storage::DataLayout::BEARING_CLASSID));
+            data_layout.GetBlockEntries("/common/intersection_bearings/node_to_class_id"));
 
         auto bearing_values_ptr = data_layout.GetBlockPtr<DiscreteBearing>(
-            memory_block, storage::DataLayout::BEARING_VALUES);
+            memory_block, "/common/intersection_bearings/bearing_values");
         util::vector_view<DiscreteBearing> bearing_values(
-            bearing_values_ptr, data_layout.GetBlockEntries(storage::DataLayout::BEARING_VALUES));
+            bearing_values_ptr,
+            data_layout.GetBlockEntries("/common/intersection_bearings/bearing_values"));
 
-        auto offsets_ptr =
-            data_layout.GetBlockPtr<unsigned>(memory_block, storage::DataLayout::BEARING_OFFSETS);
-        auto blocks_ptr =
-            data_layout.GetBlockPtr<IndexBlock>(memory_block, storage::DataLayout::BEARING_BLOCKS);
+        auto offsets_ptr = data_layout.GetBlockPtr<unsigned>(
+            memory_block, "/common/intersection_bearings/class_id_to_ranges/block_offsets");
+        auto blocks_ptr = data_layout.GetBlockPtr<IndexBlock>(
+            memory_block, "/common/intersection_bearings/class_id_to_ranges/diff_blocks");
         util::vector_view<unsigned> bearing_offsets(
-            offsets_ptr, data_layout.GetBlockEntries(storage::DataLayout::BEARING_OFFSETS));
+            offsets_ptr,
+            data_layout.GetBlockEntries(
+                "/common/intersection_bearings/class_id_to_ranges/block_offsets"));
         util::vector_view<IndexBlock> bearing_blocks(
-            blocks_ptr, data_layout.GetBlockEntries(storage::DataLayout::BEARING_BLOCKS));
+            blocks_ptr,
+            data_layout.GetBlockEntries(
+                "/common/intersection_bearings/class_id_to_ranges/diff_blocks"));
 
         util::RangeTable<16, storage::Ownership::View> bearing_range_table(
             bearing_offsets, bearing_blocks, static_cast<unsigned>(bearing_values.size()));
@@ -507,28 +504,29 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
             std::move(bearing_values), std::move(bearing_class_id), std::move(bearing_range_table)};
 
         auto entry_class_ptr = data_layout.GetBlockPtr<util::guidance::EntryClass>(
-            memory_block, storage::DataLayout::ENTRY_CLASS);
+            memory_block, "/common/entry_classes");
         util::vector_view<util::guidance::EntryClass> entry_class_table(
-            entry_class_ptr, data_layout.GetBlockEntries(storage::DataLayout::ENTRY_CLASS));
+            entry_class_ptr, data_layout.GetBlockEntries("/common/entry_classes"));
         m_entry_class_table = std::move(entry_class_table);
     }
 
-    void InitializeManeuverOverridePointers(storage::DataLayout &data_layout, char *memory_block)
+    void InitializeManeuverOverridePointers(const storage::DataLayout &data_layout,
+                                            char *memory_block)
     {
         auto maneuver_overrides_ptr = data_layout.GetBlockPtr<extractor::StorageManeuverOverride>(
-            memory_block, storage::DataLayout::MANEUVER_OVERRIDES);
+            memory_block, "/common/maneuver_overrides/overrides");
         m_maneuver_overrides = util::vector_view<extractor::StorageManeuverOverride>(
             maneuver_overrides_ptr,
-            data_layout.GetBlockEntries(storage::DataLayout::MANEUVER_OVERRIDES));
+            data_layout.GetBlockEntries("/common/maneuver_overrides/overrides"));
 
         auto maneuver_override_node_sequences_ptr = data_layout.GetBlockPtr<NodeID>(
-            memory_block, storage::DataLayout::MANEUVER_OVERRIDE_NODE_SEQUENCES);
+            memory_block, "/common/maneuver_overrides/node_sequences");
         m_maneuver_override_node_sequences = util::vector_view<NodeID>(
             maneuver_override_node_sequences_ptr,
-            data_layout.GetBlockEntries(storage::DataLayout::MANEUVER_OVERRIDE_NODE_SEQUENCES));
+            data_layout.GetBlockEntries("/common/maneuver_overrides/node_sequences"));
     }
 
-    void InitializeInternalPointers(storage::DataLayout &data_layout,
+    void InitializeInternalPointers(const storage::DataLayout &data_layout,
                                     char *memory_block,
                                     const std::size_t exclude_index)
     {
@@ -939,7 +937,7 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         auto found_range = std::equal_range(
             m_maneuver_overrides.begin(), m_maneuver_overrides.end(), edge_based_node_id, Comp{});
 
-        std::for_each(found_range.first, found_range.second, [&](const auto & override) {
+        std::for_each(found_range.first, found_range.second, [&](const auto &override) {
             std::vector<NodeID> sequence(
                 m_maneuver_override_node_sequences.begin() + override.node_sequence_offset_begin,
                 m_maneuver_override_node_sequences.begin() + override.node_sequence_offset_end);
@@ -981,7 +979,7 @@ template <> class ContiguousInternalMemoryAlgorithmDataFacade<MLD> : public Algo
 
     QueryGraph query_graph;
 
-    void InitializeInternalPointers(storage::DataLayout &data_layout,
+    void InitializeInternalPointers(const storage::DataLayout &data_layout,
                                     char *memory_block,
                                     const std::size_t exclude_index)
     {
@@ -989,39 +987,38 @@ template <> class ContiguousInternalMemoryAlgorithmDataFacade<MLD> : public Algo
         InitializeGraphPointer(data_layout, memory_block);
     }
 
-    void InitializeMLDDataPointers(storage::DataLayout &data_layout,
+    void InitializeMLDDataPointers(const storage::DataLayout &data_layout,
                                    char *memory_block,
                                    const std::size_t exclude_index)
     {
-        if (data_layout.GetBlockSize(storage::DataLayout::MLD_PARTITION) > 0)
+        if (data_layout.GetBlockSize("/mld/multilevelpartition/partition") > 0)
         {
-            BOOST_ASSERT(data_layout.GetBlockSize(storage::DataLayout::MLD_LEVEL_DATA) > 0);
-            BOOST_ASSERT(data_layout.GetBlockSize(storage::DataLayout::MLD_CELL_TO_CHILDREN) > 0);
+            BOOST_ASSERT(data_layout.GetBlockSize("/mld/multilevelpartition/level_data") > 0);
+            BOOST_ASSERT(data_layout.GetBlockSize("/mld/multilevelpartition/cell_to_children") > 0);
 
             auto level_data =
                 data_layout.GetBlockPtr<partitioner::MultiLevelPartitionView::LevelData>(
-                    memory_block, storage::DataLayout::MLD_LEVEL_DATA);
+                    memory_block, "/mld/multilevelpartition/level_data");
 
             auto mld_partition_ptr = data_layout.GetBlockPtr<PartitionID>(
-                memory_block, storage::DataLayout::MLD_PARTITION);
+                memory_block, "/mld/multilevelpartition/partition");
             auto partition_entries_count =
-                data_layout.GetBlockEntries(storage::DataLayout::MLD_PARTITION);
+                data_layout.GetBlockEntries("/mld/multilevelpartition/partition");
             util::vector_view<PartitionID> partition(mld_partition_ptr, partition_entries_count);
 
             auto mld_chilren_ptr = data_layout.GetBlockPtr<CellID>(
-                memory_block, storage::DataLayout::MLD_CELL_TO_CHILDREN);
+                memory_block, "/mld/multilevelpartition/cell_to_children");
             auto children_entries_count =
-                data_layout.GetBlockEntries(storage::DataLayout::MLD_CELL_TO_CHILDREN);
+                data_layout.GetBlockEntries("/mld/multilevelpartition/cell_to_children");
             util::vector_view<CellID> cell_to_children(mld_chilren_ptr, children_entries_count);
 
             mld_partition =
                 partitioner::MultiLevelPartitionView{level_data, partition, cell_to_children};
         }
 
-        const auto weights_block_id = static_cast<storage::DataLayout::BlockID>(
-            storage::DataLayout::MLD_CELL_WEIGHTS_0 + exclude_index);
-        const auto durations_block_id = static_cast<storage::DataLayout::BlockID>(
-            storage::DataLayout::MLD_CELL_DURATIONS_0 + exclude_index);
+        const auto weights_block_id = "/mld/metrics/" + std::to_string(exclude_index) + "/weights";
+        const auto durations_block_id =
+            "/mld/metrics/" + std::to_string(exclude_index) + "/durations";
 
         if (data_layout.GetBlockSize(weights_block_id) > 0)
         {
@@ -1029,10 +1026,8 @@ template <> class ContiguousInternalMemoryAlgorithmDataFacade<MLD> : public Algo
                 data_layout.GetBlockPtr<EdgeWeight>(memory_block, weights_block_id);
             auto mld_cell_durations_ptr =
                 data_layout.GetBlockPtr<EdgeDuration>(memory_block, durations_block_id);
-            auto weight_entries_count =
-                data_layout.GetBlockEntries(storage::DataLayout::MLD_CELL_WEIGHTS_0);
-            auto duration_entries_count =
-                data_layout.GetBlockEntries(storage::DataLayout::MLD_CELL_DURATIONS_0);
+            auto weight_entries_count = data_layout.GetBlockEntries("/mld/metrics/0/weights");
+            auto duration_entries_count = data_layout.GetBlockEntries("/mld/metrics/0/durations");
             BOOST_ASSERT(weight_entries_count == duration_entries_count);
             util::vector_view<EdgeWeight> weights(mld_cell_weights_ptr, weight_entries_count);
             util::vector_view<EdgeDuration> durations(mld_cell_durations_ptr,
@@ -1041,25 +1036,25 @@ template <> class ContiguousInternalMemoryAlgorithmDataFacade<MLD> : public Algo
             mld_cell_metric = customizer::CellMetricView{std::move(weights), std::move(durations)};
         }
 
-        if (data_layout.GetBlockSize(storage::DataLayout::MLD_CELLS) > 0)
+        if (data_layout.GetBlockSize("/mld/cellstorage/cells") > 0)
         {
 
-            auto mld_source_boundary_ptr = data_layout.GetBlockPtr<NodeID>(
-                memory_block, storage::DataLayout::MLD_CELL_SOURCE_BOUNDARY);
+            auto mld_source_boundary_ptr =
+                data_layout.GetBlockPtr<NodeID>(memory_block, "/mld/cellstorage/source_boundary");
             auto mld_destination_boundary_ptr = data_layout.GetBlockPtr<NodeID>(
-                memory_block, storage::DataLayout::MLD_CELL_DESTINATION_BOUNDARY);
+                memory_block, "/mld/cellstorage/destination_boundary");
             auto mld_cells_ptr = data_layout.GetBlockPtr<partitioner::CellStorageView::CellData>(
-                memory_block, storage::DataLayout::MLD_CELLS);
+                memory_block, "/mld/cellstorage/cells");
             auto mld_cell_level_offsets_ptr = data_layout.GetBlockPtr<std::uint64_t>(
-                memory_block, storage::DataLayout::MLD_CELL_LEVEL_OFFSETS);
+                memory_block, "/mld/cellstorage/level_to_cell_offset");
 
             auto source_boundary_entries_count =
-                data_layout.GetBlockEntries(storage::DataLayout::MLD_CELL_SOURCE_BOUNDARY);
+                data_layout.GetBlockEntries("/mld/cellstorage/source_boundary");
             auto destination_boundary_entries_count =
-                data_layout.GetBlockEntries(storage::DataLayout::MLD_CELL_DESTINATION_BOUNDARY);
-            auto cells_entries_counts = data_layout.GetBlockEntries(storage::DataLayout::MLD_CELLS);
+                data_layout.GetBlockEntries("/mld/cellstorage/destination_boundary");
+            auto cells_entries_counts = data_layout.GetBlockEntries("/mld/cellstorage/cells");
             auto cell_level_offsets_entries_count =
-                data_layout.GetBlockEntries(storage::DataLayout::MLD_CELL_LEVEL_OFFSETS);
+                data_layout.GetBlockEntries("/mld/cellstorage/level_to_cell_offset");
 
             util::vector_view<NodeID> source_boundary(mld_source_boundary_ptr,
                                                       source_boundary_entries_count);
@@ -1076,24 +1071,24 @@ template <> class ContiguousInternalMemoryAlgorithmDataFacade<MLD> : public Algo
                                                             std::move(level_offsets)};
         }
     }
-    void InitializeGraphPointer(storage::DataLayout &data_layout, char *memory_block)
+    void InitializeGraphPointer(const storage::DataLayout &data_layout, char *memory_block)
     {
-        auto graph_nodes_ptr = data_layout.GetBlockPtr<GraphNode>(
-            memory_block, storage::DataLayout::MLD_GRAPH_NODE_LIST);
+        auto graph_nodes_ptr =
+            data_layout.GetBlockPtr<GraphNode>(memory_block, "/mld/multilevelgraph/node_array");
 
-        auto graph_edges_ptr = data_layout.GetBlockPtr<GraphEdge>(
-            memory_block, storage::DataLayout::MLD_GRAPH_EDGE_LIST);
+        auto graph_edges_ptr =
+            data_layout.GetBlockPtr<GraphEdge>(memory_block, "/mld/multilevelgraph/edge_array");
 
         auto graph_node_to_offset_ptr = data_layout.GetBlockPtr<QueryGraph::EdgeOffset>(
-            memory_block, storage::DataLayout::MLD_GRAPH_NODE_TO_OFFSET);
+            memory_block, "/mld/multilevelgraph/node_to_edge_offset");
 
         util::vector_view<GraphNode> node_list(
-            graph_nodes_ptr, data_layout.GetBlockEntries(storage::DataLayout::MLD_GRAPH_NODE_LIST));
+            graph_nodes_ptr, data_layout.GetBlockEntries("/mld/multilevelgraph/node_array"));
         util::vector_view<GraphEdge> edge_list(
-            graph_edges_ptr, data_layout.GetBlockEntries(storage::DataLayout::MLD_GRAPH_EDGE_LIST));
+            graph_edges_ptr, data_layout.GetBlockEntries("/mld/multilevelgraph/edge_array"));
         util::vector_view<QueryGraph::EdgeOffset> node_to_offset(
             graph_node_to_offset_ptr,
-            data_layout.GetBlockEntries(storage::DataLayout::MLD_GRAPH_NODE_TO_OFFSET));
+            data_layout.GetBlockEntries("/mld/multilevelgraph/node_to_edge_offset"));
 
         query_graph =
             QueryGraph(std::move(node_list), std::move(edge_list), std::move(node_to_offset));

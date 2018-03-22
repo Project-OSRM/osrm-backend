@@ -15,17 +15,16 @@ ProcessMemoryAllocator::ProcessMemoryAllocator(const storage::StorageConfig &con
     storage::Storage storage(config);
 
     // Calculate the layout/size of the memory block
-    internal_layout = std::make_unique<storage::DataLayout>();
-    storage.PopulateLayout(*internal_layout);
+    storage.PopulateLayout(internal_layout);
 
     // Allocate the memory block, then load data from files into it
-    internal_memory = std::make_unique<char[]>(internal_layout->GetSizeOfLayout());
-    storage.PopulateData(*internal_layout, internal_memory.get());
+    internal_memory = std::make_unique<char[]>(internal_layout.GetSizeOfLayout());
+    storage.PopulateData(internal_layout, internal_memory.get());
 }
 
 ProcessMemoryAllocator::~ProcessMemoryAllocator() {}
 
-storage::DataLayout &ProcessMemoryAllocator::GetLayout() { return *internal_layout.get(); }
+const storage::DataLayout &ProcessMemoryAllocator::GetLayout() { return internal_layout; }
 char *ProcessMemoryAllocator::GetMemory() { return internal_memory.get(); }
 
 } // namespace datafacade

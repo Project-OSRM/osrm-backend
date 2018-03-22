@@ -7,12 +7,14 @@
 
 #include "storage/io.hpp"
 #include "storage/tar.hpp"
+#include "storage/shared_datatype.hpp"
 
 #include <boost/function_output_iterator.hpp>
 #include <boost/iterator/function_input_iterator.hpp>
 
 #include <cmath>
 #include <cstdint>
+#include <tuple>
 
 #if USE_STXXL_LIBRARY
 #include <stxxl/vector>
@@ -79,6 +81,32 @@ template <typename T> void write(io::BufferWriter &writer, const std::vector<T> 
     const auto count = data.size();
     writer.WriteElementCount64(count);
     writer.WriteFrom(data.data(), count);
+}
+
+template<typename T>
+inline void write(io::BufferWriter &writer, const T &data)
+{
+    writer.WriteFrom(data);
+}
+
+template<typename T>
+inline void read(io::BufferReader &reader, T &data)
+{
+    reader.ReadInto(data);
+}
+
+inline void write(io::BufferWriter &writer, const std::string &data)
+{
+    const auto count = data.size();
+    writer.WriteElementCount64(count);
+    writer.WriteFrom(data.data(), count);
+}
+
+inline void read(io::BufferReader &reader, std::string &data)
+{
+    const auto count = reader.ReadElementCount64();
+    data.resize(count);
+    reader.ReadInto(const_cast<char *>(data.data()), count);
 }
 
 inline void write(tar::FileWriter &writer, const std::string &name, const std::string &data)
@@ -218,6 +246,42 @@ write<bool>(tar::FileWriter &writer, const std::string &name, const std::vector<
 {
     detail::writeBoolVector(writer, name, data);
 }
+
+template <typename K, typename V> void read(io::BufferReader &reader, std::map<K, V> &data)
+{
+    const auto count = reader.ReadElementCount64();
+    std::pair<K, V> pair;
+    for (auto index : util::irange<std::size_t>(0, count))
+    {
+        (void) index;
+        read(reader, pair.first);
+        read(reader, pair.second);
+        data.insert(pair);
+    }
+}
+
+template <typename K, typename V> void write(io::BufferWriter &writer, const std::map<K, V> &data)
+{
+    const auto count = data.size();
+    writer.WriteElementCount64(count);
+    for (const auto &pair : data)
+    {
+        write(writer, pair.first);
+        write(writer, pair.second);
+    }
+}
+
+inline void read(io::BufferReader &reader, DataLayout &layout)
+{
+    read(reader, layout.blocks);
+}
+
+inline void write(io::BufferWriter &writer, const DataLayout &layout)
+{
+    write(writer, layout.blocks);
+}
+
+
 }
 }
 }
