@@ -18,6 +18,7 @@
 #include "util/for_each_pair.hpp"
 #include "util/integer_range.hpp"
 #include "util/log.hpp"
+#include "util/mmap_tar.hpp"
 #include "util/opening_hours.hpp"
 #include "util/static_graph.hpp"
 #include "util/static_rtree.hpp"
@@ -435,8 +436,13 @@ updateTurnPenalties(const UpdaterConfig &config,
 
     // Mapped file pointer for turn indices
     boost::iostreams::mapped_file_source turn_index_region;
-    auto turn_index_blocks = util::mmapFile<extractor::lookup::TurnIndexBlock>(
-        config.GetPath(".osrm.turn_penalties_index"), turn_index_region);
+    const extractor::lookup::TurnIndexBlock *turn_index_blocks;
+    {
+        auto map =
+            util::mmapTarFile(config.GetPath(".osrm.turn_penalties_index"), turn_index_region);
+        turn_index_blocks =
+            reinterpret_cast<const extractor::lookup::TurnIndexBlock *>(map["/extractor/turn_index"].first);
+    }
 
     // Get the turn penalty and update to the new value if required
     std::vector<std::uint64_t> updated_turns;
