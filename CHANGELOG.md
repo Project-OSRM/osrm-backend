@@ -16,7 +16,7 @@
     - NodeJS:
       - `OSRM` object accepts a new option `memory_file` that stores the memory in a file on disk.
     - Internals
-      - CHANGED #4845: Updated segregated intersection identification
+      - CHANGED #4845 #4968: Updated segregated intersection identification
     - Documentation:
       - ADDED: Add documentation about OSM node ids in nearest service response [#4436](https://github.com/Project-OSRM/osrm-backend/pull/4436)
     - Performance
