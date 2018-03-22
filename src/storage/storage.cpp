@@ -323,7 +323,7 @@ void Storage::PopulateLayout(DataLayout &layout)
 
     constexpr bool REQUIRED = true;
     constexpr bool OPTIONAL = false;
-    std::vector<std::tuple<bool, boost::filesystem::path>> tar_files = {
+    std::vector<std::pair<bool, boost::filesystem::path>> tar_files = {
         {OPTIONAL, config.GetPath(".osrm.mldgr")},
         {OPTIONAL, config.GetPath(".osrm.cells")},
         {OPTIONAL, config.GetPath(".osrm.partition")},
@@ -347,13 +347,13 @@ void Storage::PopulateLayout(DataLayout &layout)
 
     for (const auto &file : tar_files)
     {
-        if (boost::filesystem::exists(std::get<1>(file)))
+        if (boost::filesystem::exists(file.second))
         {
-            readBlocks(std::get<1>(file), std::back_inserter(blocks));
+            readBlocks(file.second, std::back_inserter(blocks));
         }
         else
         {
-            if (std::get<0>(file) == REQUIRED)
+            if (file.first == REQUIRED)
             {
                 throw util::exception("Could not find required filed: " +
                                       std::get<1>(file).string());
