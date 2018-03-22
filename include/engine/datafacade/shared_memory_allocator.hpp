@@ -27,10 +27,12 @@ class SharedMemoryAllocator : public ContiguousBlockAllocator
     ~SharedMemoryAllocator() override final;
 
     // interface to give access to the datafacades
-    storage::DataLayout &GetLayout() override final;
+    const storage::DataLayout &GetLayout() override final;
     char *GetMemory() override final;
 
   private:
+    std::size_t layout_size;
+    storage::DataLayout data_layout;
     std::unique_ptr<storage::SharedMemory> m_large_memory;
 };
 

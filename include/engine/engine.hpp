@@ -152,8 +152,8 @@ bool Engine<routing_algorithms::ch::Algorithm>::CheckCompatibility(const EngineC
 
         auto mem = storage::makeSharedMemory(barrier.data().region);
         auto layout = reinterpret_cast<storage::DataLayout *>(mem->Ptr());
-        return layout->GetBlockSize(storage::DataLayout::CH_GRAPH_NODE_LIST) > 4 &&
-               layout->GetBlockSize(storage::DataLayout::CH_GRAPH_EDGE_LIST) > 4;
+        return layout->GetBlockSize("/ch/contracted_graph/node_array") > 4 &&
+               layout->GetBlockSize("/ch/contracted_graph/edge_array") > 4;
     }
     else
     {
@@ -173,19 +173,19 @@ bool Engine<routing_algorithms::mld::Algorithm>::CheckCompatibility(const Engine
         auto mem = storage::makeSharedMemory(barrier.data().region);
         auto layout = reinterpret_cast<storage::DataLayout *>(mem->Ptr());
         // checks that all the needed memory blocks are populated
-        // DataLayout::MLD_CELL_SOURCE_BOUNDARY and DataLayout::MLD_CELL_DESTINATION_BOUNDARY
+        // "/mld/cellstorage/source_boundary" and "/mld/cellstorage/destination_boundary"
         // are not checked, because in situations where there are so few nodes in the graph that
         // they all fit into one cell, they can be empty.
-        bool empty_data = layout->GetBlockSize(storage::DataLayout::MLD_LEVEL_DATA) > 0 &&
-                          layout->GetBlockSize(storage::DataLayout::MLD_PARTITION) > 0 &&
-                          layout->GetBlockSize(storage::DataLayout::MLD_CELL_TO_CHILDREN) > 0 &&
-                          layout->GetBlockSize(storage::DataLayout::MLD_CELLS) > 0 &&
-                          layout->GetBlockSize(storage::DataLayout::MLD_CELL_LEVEL_OFFSETS) > 0 &&
-                          layout->GetBlockSize(storage::DataLayout::MLD_GRAPH_NODE_LIST) > 0 &&
-                          layout->GetBlockSize(storage::DataLayout::MLD_GRAPH_EDGE_LIST) > 0 &&
-                          layout->GetBlockSize(storage::DataLayout::MLD_CELL_WEIGHTS_0) > 0 &&
-                          layout->GetBlockSize(storage::DataLayout::MLD_CELL_DURATIONS_0) > 0 &&
-                          layout->GetBlockSize(storage::DataLayout::MLD_GRAPH_NODE_TO_OFFSET) > 0;
+        bool empty_data = layout->GetBlockSize("/mld/multilevelpartition/level_data") > 0 &&
+                          layout->GetBlockSize("/mld/multilevelpartition/partition") > 0 &&
+                          layout->GetBlockSize("/mld/multilevelpartition/cell_to_children") > 0 &&
+                          layout->GetBlockSize("/mld/cellstorage/cells") > 0 &&
+                          layout->GetBlockSize("/mld/cellstorage/level_to_cell_offset") > 0 &&
+                          layout->GetBlockSize("/mld/multilevelgraph/node_array") > 0 &&
+                          layout->GetBlockSize("/mld/multilevelgraph/edge_array") > 0 &&
+                          layout->GetBlockSize("/mld/metrics/0/weights") > 0 &&
+                          layout->GetBlockSize("/mld/metrics/0/durations") > 0 &&
+                          layout->GetBlockSize("/mld/multilevelgraph/node_to_edge_offset") > 0;
         return empty_data;
     }
     else

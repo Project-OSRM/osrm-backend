@@ -303,6 +303,10 @@ class BufferReader
         }
     }
 
+    std::size_t GetPosition() {
+        return input_stream.tellg();
+    }
+
     template <typename T> void ReadInto(T *dest, const std::size_t count)
     {
 #if !defined(__GNUC__) || (__GNUC__ > 4)
