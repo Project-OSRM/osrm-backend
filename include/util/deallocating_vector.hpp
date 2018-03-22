@@ -228,9 +228,9 @@ template <typename ElementT> class DeallocatingVector
         return *this;
     }
 
-    DeallocatingVector(std::initializer_list<ElementT> elements)
+    DeallocatingVector(std::initializer_list<ElementT> elements) : DeallocatingVector()
     {
-        for (auto && elem : elements)
+        for (auto &&elem : elements)
         {
             emplace_back(std::move(elem));
         }
