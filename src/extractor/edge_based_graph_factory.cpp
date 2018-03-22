@@ -423,8 +423,9 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
     std::size_t node_based_edge_counter = 0;
 
-    storage::io::FileWriter turn_penalties_index_file(turn_penalties_index_filename,
-                                                      storage::io::FileWriter::HasNoFingerprint);
+    storage::tar::FileWriter turn_penalties_index_file(
+        turn_penalties_index_filename, storage::tar::FileWriter::GenerateFingerprint);
+    turn_penalties_index_file.WriteFrom("/extractor/turn_index", (char *)nullptr, 0);
 
     SuffixTable street_name_suffix_table(scripting_environment);
     const auto &turn_lanes_data = transformTurnLaneMapIntoArrays(lane_description_map);
@@ -1029,8 +1030,9 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 // Buffer writes to reduce syscall count
                 if (turn_indexes_write_buffer.size() >= TURN_INDEX_WRITE_BUFFER_SIZE)
                 {
-                    turn_penalties_index_file.WriteFrom(turn_indexes_write_buffer.data(),
-                                                        turn_indexes_write_buffer.size());
+                    turn_penalties_index_file.ContinueFrom("/extractor/turn_index",
+                                                           turn_indexes_write_buffer.data(),
+                                                           turn_indexes_write_buffer.size());
                     turn_indexes_write_buffer.clear();
                 }
 
@@ -1093,8 +1095,9 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
         // Flush the turn_indexes_write_buffer if it's not empty
         if (!turn_indexes_write_buffer.empty())
         {
-            turn_penalties_index_file.WriteFrom(turn_indexes_write_buffer.data(),
-                                                turn_indexes_write_buffer.size());
+            turn_penalties_index_file.ContinueFrom("/extractor/turn_index",
+                                                   turn_indexes_write_buffer.data(),
+                                                   turn_indexes_write_buffer.size());
             turn_indexes_write_buffer.clear();
         }
     }

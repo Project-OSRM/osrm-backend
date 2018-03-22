@@ -14,19 +14,22 @@ BOOST_AUTO_TEST_CASE(list_tar_file)
     storage::tar::FileReader reader(TEST_DATA_DIR "/tar_test.tar",
                                     storage::tar::FileReader::HasNoFingerprint);
 
-    std::vector<storage::tar::FileReader::TarEntry> file_list;
+    std::vector<storage::tar::FileReader::FileEntry> file_list;
     reader.List(std::back_inserter(file_list));
 
-    auto reference_0 = storage::tar::FileReader::TarEntry{"foo_1.txt", 4};
-    auto reference_1 = storage::tar::FileReader::TarEntry{"bla/foo_2.txt", 4};
-    auto reference_2 = storage::tar::FileReader::TarEntry{"foo_3.txt", 4};
+    auto reference_0 = storage::tar::FileReader::FileEntry{"foo_1.txt", 4, 0x00000200};
+    auto reference_1 = storage::tar::FileReader::FileEntry{"bla/foo_2.txt", 4, 0x00000600};
+    auto reference_2 = storage::tar::FileReader::FileEntry{"foo_3.txt", 4, 0x00000a00};
 
-    BOOST_CHECK_EQUAL(std::get<0>(file_list[0]), std::get<0>(reference_0));
-    BOOST_CHECK_EQUAL(std::get<1>(file_list[0]), std::get<1>(reference_0));
-    BOOST_CHECK_EQUAL(std::get<0>(file_list[1]), std::get<0>(reference_1));
-    BOOST_CHECK_EQUAL(std::get<1>(file_list[1]), std::get<1>(reference_1));
-    BOOST_CHECK_EQUAL(std::get<0>(file_list[2]), std::get<0>(reference_2));
-    BOOST_CHECK_EQUAL(std::get<1>(file_list[2]), std::get<1>(reference_2));
+    BOOST_CHECK_EQUAL(file_list[0].name, reference_0.name);
+    BOOST_CHECK_EQUAL(file_list[1].name, reference_1.name);
+    BOOST_CHECK_EQUAL(file_list[2].name, reference_2.name);
+    BOOST_CHECK_EQUAL(file_list[0].size, reference_0.size);
+    BOOST_CHECK_EQUAL(file_list[1].size, reference_1.size);
+    BOOST_CHECK_EQUAL(file_list[2].size, reference_2.size);
+    BOOST_CHECK_EQUAL(file_list[0].offset, reference_0.offset);
+    BOOST_CHECK_EQUAL(file_list[1].offset, reference_1.offset);
+    BOOST_CHECK_EQUAL(file_list[2].offset, reference_2.offset);
 }
 
 BOOST_AUTO_TEST_CASE(read_tar_file)

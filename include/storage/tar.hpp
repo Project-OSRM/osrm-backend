@@ -110,7 +110,13 @@ class FileReader
         }
     }
 
-    using TarEntry = std::tuple<std::string, std::size_t>;
+    struct FileEntry
+    {
+        std::string name;
+        std::size_t size;
+        std::size_t offset;
+    };
+
     template <typename OutIter> void List(OutIter out)
     {
         mtar_header_t header;
@@ -118,7 +124,12 @@ class FileReader
         {
             if (header.type == MTAR_TREG)
             {
-                *out++ = TarEntry{header.name, header.size};
+                mtar_read_data(&handle, nullptr, 0);
+                auto offset = handle.pos;
+                // seek back to the header
+                handle.remaining_data = 0;
+                mtar_seek(&handle, handle.last_header);
+                *out++ = FileEntry{header.name, header.size, offset};
             }
             mtar_next(&handle);
         }

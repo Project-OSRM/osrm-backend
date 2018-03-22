@@ -74,20 +74,16 @@ template <typename OutIter> void readBlocks(const boost::filesystem::path &path,
 {
     tar::FileReader reader(path, tar::FileReader::VerifyFingerprint);
 
-    std::vector<tar::FileReader::TarEntry> entries;
+    std::vector<tar::FileReader::FileEntry> entries;
     reader.List(std::back_inserter(entries));
 
     for (const auto &entry : entries)
     {
-        std::string name;
-        std::uint64_t size;
-        std::tie(name, size) = entry;
-
-        const auto name_end = name.rfind(".meta");
+        const auto name_end = entry.name.rfind(".meta");
         if (name_end == std::string::npos)
         {
-            auto number_of_elements = reader.ReadElementCount64(name);
-            *out++ = NamedBlock{name, Block{number_of_elements, size}};
+            auto number_of_elements = reader.ReadElementCount64(entry.name);
+            *out++ = NamedBlock{entry.name, Block{number_of_elements, entry.size}};
         }
     }
 }
