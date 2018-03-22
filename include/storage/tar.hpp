@@ -19,6 +19,60 @@ namespace storage
 {
 namespace tar
 {
+namespace detail
+{
+inline void
+checkMTarError(int error_code, const boost::filesystem::path &filepath, const std::string &name)
+{
+    switch (error_code)
+    {
+    case MTAR_ESUCCESS:
+        return;
+    case MTAR_EFAILURE:
+        throw util::RuntimeError(filepath.string() + " : " + name,
+                                 ErrorCode::FileIOError,
+                                 SOURCE_REF,
+                                 std::strerror(errno));
+    case MTAR_EOPENFAIL:
+        throw util::RuntimeError(filepath.string() + " : " + name,
+                                 ErrorCode::FileOpenError,
+                                 SOURCE_REF,
+                                 std::strerror(errno));
+    case MTAR_EREADFAIL:
+        throw util::RuntimeError(filepath.string() + " : " + name,
+                                 ErrorCode::FileReadError,
+                                 SOURCE_REF,
+                                 std::strerror(errno));
+    case MTAR_EWRITEFAIL:
+        throw util::RuntimeError(filepath.string() + " : " + name,
+                                 ErrorCode::FileWriteError,
+                                 SOURCE_REF,
+                                 std::strerror(errno));
+    case MTAR_ESEEKFAIL:
+        throw util::RuntimeError(filepath.string() + " : " + name,
+                                 ErrorCode::FileIOError,
+                                 SOURCE_REF,
+                                 std::strerror(errno));
+    case MTAR_EBADCHKSUM:
+        throw util::RuntimeError(filepath.string() + " : " + name,
+                                 ErrorCode::FileIOError,
+                                 SOURCE_REF,
+                                 std::strerror(errno));
+    case MTAR_ENULLRECORD:
+        throw util::RuntimeError(filepath.string() + " : " + name,
+                                 ErrorCode::UnexpectedEndOfFile,
+                                 SOURCE_REF,
+                                 std::strerror(errno));
+    case MTAR_ENOTFOUND:
+        throw util::RuntimeError(filepath.string() + " : " + name,
+                                 ErrorCode::FileIOError,
+                                 SOURCE_REF,
+                                 std::strerror(errno));
+    default:
+        throw util::exception(filepath.string() + " : " + name + ":" + mtar_strerror(error_code));
+    }
+}
+}
 
 class FileReader
 {
@@ -32,10 +86,7 @@ class FileReader
     FileReader(const boost::filesystem::path &path, FingerprintFlag flag) : path(path)
     {
         auto ret = mtar_open(&handle, path.c_str(), "r");
-        if (ret != MTAR_ESUCCESS)
-        {
-            throw util::exception(mtar_strerror(ret));
-        }
+        detail::checkMTarError(ret, path, "");
 
         if (flag == VerifyFingerprint)
         {
@@ -52,7 +103,7 @@ class FileReader
         return size;
     }
 
-    template <typename T> void ReadInto(const std::string &name, T& tmp)
+    template <typename T> void ReadInto(const std::string &name, T &tmp)
     {
         ReadInto(name, &tmp, 1);
     }
@@ -61,27 +112,23 @@ class FileReader
     {
         mtar_header_t header;
         auto ret = mtar_find(&handle, name.c_str(), &header);
-        if (ret != MTAR_ESUCCESS)
-        {
-            throw util::exception(name + ": " + mtar_strerror(ret));
-        }
+        detail::checkMTarError(ret, path, name);
 
         auto number_of_elements = header.size / sizeof(T);
         auto expected_size = sizeof(T) * number_of_elements;
         if (header.size != expected_size)
         {
-            throw util::exception(name + ": Datatype size does not match file size.");
+            throw util::RuntimeError(name + ": Datatype size does not match file size.",
+                                     ErrorCode::UnexpectedEndOfFile,
+                                     SOURCE_REF);
         }
 
         T tmp;
         for (auto index : util::irange<std::size_t>(0, number_of_elements))
         {
-            (void) index;
+            (void)index;
             ret = mtar_read_data(&handle, reinterpret_cast<char *>(&tmp), sizeof(T));
-            if (ret != MTAR_ESUCCESS)
-            {
-                throw util::exception(name + ": Failed reading data: " + mtar_strerror(ret));
-            }
+            detail::checkMTarError(ret, path, name);
 
             *out++ = tmp;
         }
@@ -92,22 +139,18 @@ class FileReader
     {
         mtar_header_t header;
         auto ret = mtar_find(&handle, name.c_str(), &header);
-        if (ret != MTAR_ESUCCESS)
-        {
-            throw util::exception(name + ": " + mtar_strerror(ret));
-        }
+        detail::checkMTarError(ret, path, name);
 
         auto expected_size = sizeof(T) * number_of_elements;
         if (header.size != expected_size)
         {
-            throw util::exception(name + ": Datatype size does not match file size.");
+            throw util::RuntimeError(name + ": Datatype size does not match file size.",
+                                     ErrorCode::UnexpectedEndOfFile,
+                                     SOURCE_REF);
         }
 
         ret = mtar_read_data(&handle, reinterpret_cast<char *>(data), header.size);
-        if (ret != MTAR_ESUCCESS)
-        {
-            throw util::exception(name + ": Failed reading data: " + mtar_strerror(ret));
-        }
+        detail::checkMTarError(ret, path, name);
     }
 
     struct FileEntry
@@ -124,11 +167,15 @@ class FileReader
         {
             if (header.type == MTAR_TREG)
             {
-                mtar_read_data(&handle, nullptr, 0);
+                int ret = mtar_read_data(&handle, nullptr, 0);
+                detail::checkMTarError(ret, path, header.name);
+
                 auto offset = handle.pos;
                 // seek back to the header
                 handle.remaining_data = 0;
-                mtar_seek(&handle, handle.last_header);
+                ret = mtar_seek(&handle, handle.last_header);
+                detail::checkMTarError(ret, path, header.name);
+
                 *out++ = FileEntry{header.name, header.size, offset};
             }
             mtar_next(&handle);
@@ -178,8 +225,7 @@ class FileWriter
     FileWriter(const boost::filesystem::path &path, FingerprintFlag flag) : path(path)
     {
         auto ret = mtar_open(&handle, path.c_str(), "w");
-        if (ret != MTAR_ESUCCESS)
-            throw util::exception(mtar_strerror(ret));
+        detail::checkMTarError(ret, path, "");
 
         if (flag == GenerateFingerprint)
         {
@@ -209,20 +255,14 @@ class FileWriter
         auto number_of_bytes = number_of_elements * sizeof(T);
 
         auto ret = mtar_write_file_header(&handle, name.c_str(), number_of_bytes);
-        if (ret != MTAR_ESUCCESS)
-        {
-            throw util::exception(name + ": Error writing header: " + mtar_strerror(ret));
-        }
+        detail::checkMTarError(ret, path, name);
 
         for (auto index : util::irange<std::size_t>(0, number_of_elements))
         {
-            (void) index;
+            (void)index;
             T tmp = *iter++;
             ret = mtar_write_data(&handle, &tmp, sizeof(T));
-            if (ret != MTAR_ESUCCESS)
-            {
-                throw util::exception(name + ": Error writing data : " + mtar_strerror(ret));
-            }
+            detail::checkMTarError(ret, path, name);
         }
     }
 
@@ -234,10 +274,7 @@ class FileWriter
 
         mtar_header_t header;
         auto ret = mtar_find(&handle, name.c_str(), &header);
-        if (ret != MTAR_ESUCCESS)
-        {
-            throw util::exception(name + ": Error reading header: " + mtar_strerror(ret));
-        }
+        detail::checkMTarError(ret, path, name);
 
         // update header to reflect increased tar size
         auto old_size = header.size;
@@ -247,16 +284,10 @@ class FileWriter
         // now seek to the end of the old record
         handle.remaining_data = number_of_bytes;
         ret = mtar_seek(&handle, handle.pos + old_size);
-        if (ret != MTAR_ESUCCESS)
-        {
-            throw util::exception(name + ": Error seeking to end of old data: " + mtar_strerror(ret));
-        }
+        detail::checkMTarError(ret, path, name);
 
         ret = mtar_write_data(&handle, data, number_of_bytes);
-        if (ret != MTAR_ESUCCESS)
-        {
-            throw util::exception(name + ": Error writing data : " + mtar_strerror(ret));
-        }
+        detail::checkMTarError(ret, path, name);
     }
 
     template <typename T>
@@ -265,16 +296,10 @@ class FileWriter
         auto number_of_bytes = number_of_elements * sizeof(T);
 
         auto ret = mtar_write_file_header(&handle, name.c_str(), number_of_bytes);
-        if (ret != MTAR_ESUCCESS)
-        {
-            throw util::exception(name + ": Error writing header: " + mtar_strerror(ret));
-        }
+        detail::checkMTarError(ret, path, name);
 
         ret = mtar_write_data(&handle, reinterpret_cast<const char *>(data), number_of_bytes);
-        if (ret != MTAR_ESUCCESS)
-        {
-            throw util::exception(name + ": Error writing data : " + mtar_strerror(ret));
-        }
+        detail::checkMTarError(ret, path, name);
     }
 
   private:
