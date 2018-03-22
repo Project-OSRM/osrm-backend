@@ -1,6 +1,7 @@
 #include "extractor/name_table.hpp"
-#include "common/temporary_file.hpp"
 #include "util/exception.hpp"
+
+#include "../common/temporary_file.hpp"
 
 #include <boost/filesystem.hpp>
 #include <boost/test/test_case_template.hpp>
