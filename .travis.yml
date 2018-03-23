@@ -59,6 +59,7 @@ matrix:
         - ./scripts/check_taginfo.py taginfo.json profiles/car.lua
         - ${MASON} install clang-format 3.8.1
         - PATH=$(${MASON} prefix clang-format 3.8.1)/bin:${PATH} ./scripts/format.sh && ./scripts/error_on_dirty.sh
+        - node ./scripts/validate_changelog.js
         # See issue 4043
         #- npm run docs && ./scripts/error_on_dirty.sh
       after_success:

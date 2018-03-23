@@ -1,25 +1,25 @@
 # UNRELEASED
   - Changes from 5.16.0:
     - Bugfixes:
-      - fix deduplication of route steps when waypoints are used [#4909](https://github.com/Project-OSRM/osrm-backend/issues/4909)
-      - FIXED #4920: Use smaller range for U-turn angles in map-matching [#4920](https://github.com/Project-OSRM/osrm-backend/pull/4920)
-      - FIXED: Remove the last short annotation segment in `trimShortSegments`
+      - FIXED: deduplication of route steps when waypoints are used [#4909](https://github.com/Project-OSRM/osrm-backend/issues/4909)
+      - FIXED: Use smaller range for U-turn angles in map-matching [#4920](https://github.com/Project-OSRM/osrm-backend/pull/4920)
+      - FIXED: Remove the last short annotation segment in `trimShortSegments` [#4946](https://github.com/Project-OSRM/osrm-backend/pull/4946)
       - FIXED: Properly calculate annotations for speeds, durations and distances when waypoints are used with mapmatching [#4949](https://github.com/Project-OSRM/osrm-backend/pull/4949)
     - Profile:
-      - CHANGED #4929: Handle oneways in get_forward_backward_by_key [#4929](https://github.com/Project-OSRM/osrm-backend/pull/4929)
-      - FIXED #4943: Do not route against oneway road if there is a cycleway in the wrong direction; also review bike profile [#4943](https://github.com/Project-OSRM/osrm-backend/issues/4943)
+      - CHANGED: Handle oneways in get_forward_backward_by_key [#4929](https://github.com/Project-OSRM/osrm-backend/pull/4929)
+      - FIXED: Do not route against oneway road if there is a cycleway in the wrong direction; also review bike profile [#4943](https://github.com/Project-OSRM/osrm-backend/issues/4943)
     - Guidance:
-      - CHANGED #4929: Don't use obviousness for links bifurcations [#4929](https://github.com/Project-OSRM/osrm-backend/pull/4929)
-      - FIXED #4929: Adjust Straight direction modifiers of side roads in driveway handler [#4929](https://github.com/Project-OSRM/osrm-backend/pull/4929)
-      - CHANGED #4925: Added post process logic to collapse segregated turn instructions [#4925](https://github.com/Project-OSRM/osrm-backend/pull/4925)
+      - CHANGED: Don't use obviousness for links bifurcations [#4929](https://github.com/Project-OSRM/osrm-backend/pull/4929)
+      - FIXED: Adjust Straight direction modifiers of side roads in driveway handler [#4929](https://github.com/Project-OSRM/osrm-backend/pull/4929)
+      - CHANGED: Added post process logic to collapse segregated turn instructions [#4925](https://github.com/Project-OSRM/osrm-backend/pull/4925)
       - ADDED: Maneuver relation now supports `straight` as a direction [#4995](https://github.com/Project-OSRM/osrm-backend/pull/4995)
     - Tools:
-      - `osrm-routed` accepts a new property `--memory_file` to store memory in a file on disk.
+      - ADDED: `osrm-routed` accepts a new property `--memory_file` to store memory in a file on disk. [#4881](https://github.com/Project-OSRM/osrm-backend/pull/4881)
     - NodeJS:
-      - `OSRM` object accepts a new option `memory_file` that stores the memory in a file on disk.
+      - ADDED: `OSRM` object accepts a new option `memory_file` that stores the memory in a file on disk. [#4881](https://github.com/Project-OSRM/osrm-backend/pull/4881)
     - Internals
-      - CHANGED #4845 #4968: Updated segregated intersection identification [#4845](https://github.com/Project-OSRM/osrm-backend/pull/4845) [#4968](https://github.com/Project-OSRM/osrm-backend/pull/4968)
-      - REMOVED: Remove `.timestamp` file since it was unused.
+      - CHANGED: Updated segregated intersection identification [#4845](https://github.com/Project-OSRM/osrm-backend/pull/4845) [#4968](https://github.com/Project-OSRM/osrm-backend/pull/4968)
+      - REMOVED: Remove `.timestamp` file since it was unused [#4960](https://github.com/Project-OSRM/osrm-backend/pull/4960)
     - Documentation:
       - ADDED: Add documentation about OSM node ids in nearest service response [#4436](https://github.com/Project-OSRM/osrm-backend/pull/4436)
     - Performance
