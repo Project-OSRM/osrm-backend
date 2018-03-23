@@ -324,6 +324,13 @@ class RouteAPI : public BaseAPI
                     }
                     annotation.values["nodes"] = std::move(nodes);
                 }
+                if (requested_annotations & RouteParameters::AnnotationsType::DatasourceNames)
+                {
+                    annotation.values["datasource_names"] = GetAnnotations(
+                        leg_geometry, [&](const guidance::LegGeometry::Annotation &anno) {
+                            return std::string(facade.GetDatasourceName(anno.datasource));
+                        });
+                }
 
                 annotations.push_back(std::move(annotation));
             }

@@ -65,10 +65,10 @@ struct RouteParametersGrammar : public BaseParametersGrammar<Iterator, Signature
             "full", engine::api::RouteParameters::OverviewType::Full)(
             "false", engine::api::RouteParameters::OverviewType::False);
 
-        annotations_type.add("duration", AnnotationsType::Duration)("nodes",
-                                                                    AnnotationsType::Nodes)(
-            "distance", AnnotationsType::Distance)("weight", AnnotationsType::Weight)(
-            "datasources", AnnotationsType::Datasources)("speed", AnnotationsType::Speed);
+        annotations_type.add("duration", AnnotationsType::Duration)(
+            "nodes", AnnotationsType::Nodes)("distance", AnnotationsType::Distance)(
+            "weight", AnnotationsType::Weight)("datasources", AnnotationsType::Datasources)(
+            "speed", AnnotationsType::Speed)("datasource_names", AnnotationsType::DatasourceNames);
 
         base_rule =
             BaseGrammar::base_rule(qi::_r1) |

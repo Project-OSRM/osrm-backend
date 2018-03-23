@@ -60,6 +60,39 @@ Feature: Annotations
           | a    | i  | abcdefghi,abcdefghi | 1:0:1:0:1:0:0:0 | 50:10:50:10:50:10:10:10 |
           | i    | a  | abcdefghi,abcdefghi | 0:1:0:0:0:0:0:1 | 10:50:10:10:10:10:10:50 |
 
+    Scenario: datasource name annotations
+        Given the profile "testbot"
+
+        And the node map
+            """
+            a b c
+            """
+
+        And the ways
+            | nodes |
+            | abc   |
+
+        And the contract extra arguments "--segment-speed-file {speeds_file}"
+        And the customize extra arguments "--segment-speed-file {speeds_file}"
+
+        And the speed file
+        """
+        1,2,180,1
+        2,1,180,1
+        """
+
+        And the query options
+            | annotations | datasource_names |
+
+        # Note - the source names here are specific to how the tests are constructed,
+        #        so if this test is moved around (changes line number) or support code
+        #        changes how the filenames are generated, this test will need to be updated
+        When I route I should get
+            | from | to | route   | a:datasource_names                                |
+            | a    | c  | abc,abc | 63_datasource_name_annotations_speeds:lua profile |
+            | c    | a  | abc,abc | lua profile:63_datasource_name_annotations_speeds |
+
+
     Scenario: Speed annotations should handle zero segments
         Given the profile "testbot"
 
