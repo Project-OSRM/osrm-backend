@@ -176,6 +176,7 @@ void annotatePath(const FacadeT &facade,
         BOOST_ASSERT(datasource_range.size() > 0);
         BOOST_ASSERT(weight_range.size() + 1 == id_range.size());
         BOOST_ASSERT(duration_range.size() + 1 == id_range.size());
+
         const bool is_first_segment = unpacked_path.empty();
 
         const std::size_t start_index =
@@ -192,6 +193,8 @@ void annotatePath(const FacadeT &facade,
         BOOST_ASSERT(start_index < end_index);
         for (std::size_t segment_idx = start_index; segment_idx < end_index; ++segment_idx)
         {
+            auto durations_range_itr = durations_range.begin();
+            std::advance(durations_range_itr, segment_idx);
             unpacked_path.push_back(PathData{*node_from,
                                              id_range[segment_idx + 1],
                                              name_index,
@@ -408,12 +411,12 @@ EdgeDuration computeEdgeDuration(const FacadeT &facade, NodeID node_id, NodeID t
 
     if (geometry_index.forward)
     {
-        auto durations_range = facade.GetUncompressedForwardDurations1(geometry_index.id);
+        auto durations_range = facade.GetUncompressedForwardDurations(geometry_index.id);
         total_duration = std::accumulate(durations_range.begin(), durations_range.end(), 0);
     }
     else
     {
-        auto durations_range = facade.GetUncompressedReverseDurations1(geometry_index.id);
+        auto durations_range = facade.GetUncompressedReverseDurations(geometry_index.id);
         total_duration = std::accumulate(durations_range.begin(), durations_range.end(), 0);
     }
 

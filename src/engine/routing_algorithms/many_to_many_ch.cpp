@@ -199,8 +199,6 @@ retrievePackedPathFromSearchSpace(NodeID middle_node_id,
 
         packed_leg.emplace_back(current_node_id);
 
-        BOOST_ASSERT_MSG(std::distance(bucket_list.first, bucket_list.second) == 1,
-                         "The pointers are not pointing to the same element.");
         bucket_list = std::equal_range(search_space_with_buckets.begin(),
                                        search_space_with_buckets.end(),
                                        current_node_id,
