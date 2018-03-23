@@ -436,7 +436,7 @@ template <typename T, std::size_t Bits, storage::Ownership Ownership> class Pack
     void resize(std::size_t elements)
     {
         num_elements = elements;
-        auto num_blocks = std::ceil(static_cast<double>(elements) / BLOCK_ELEMENTS);
+        auto num_blocks = (elements + BLOCK_ELEMENTS - 1) / BLOCK_ELEMENTS;
         vec.resize(num_blocks * BLOCK_WORDS + 1);
     }
 
@@ -445,7 +445,7 @@ template <typename T, std::size_t Bits, storage::Ownership Ownership> class Pack
     template <bool enabled = (Ownership == storage::Ownership::View)>
     void reserve(typename std::enable_if<!enabled, std::size_t>::type capacity)
     {
-        auto num_blocks = std::ceil(static_cast<double>(capacity) / BLOCK_ELEMENTS);
+        auto num_blocks = (capacity + BLOCK_ELEMENTS - 1) / BLOCK_ELEMENTS;
         vec.reserve(num_blocks * BLOCK_WORDS + 1);
     }
 

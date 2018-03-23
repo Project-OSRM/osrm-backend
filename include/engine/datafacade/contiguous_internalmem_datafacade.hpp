@@ -94,7 +94,7 @@ class ContiguousInternalMemoryAlgorithmDataFacade<CH> : public datafacade::Algor
         auto filter_block_id = static_cast<storage::DataLayout::BlockID>(
             storage::DataLayout::CH_EDGE_FILTER_0 + exclude_index);
 
-        auto edge_filter_ptr = data_layout.GetBlockPtr<unsigned>(memory_block, filter_block_id);
+        auto edge_filter_ptr = data_layout.GetBlockPtr<util::vector_view<bool>::Word>(memory_block, filter_block_id);
 
         util::vector_view<GraphNode> node_list(
             graph_nodes_ptr, data_layout.GetBlockEntries(storage::DataLayout::CH_GRAPH_NODE_LIST));

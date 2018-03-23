@@ -150,11 +150,14 @@ template <typename DataT> class vector_view
 
 template <> class vector_view<bool>
 {
-  private:
-    unsigned *m_ptr;
-    std::size_t m_size;
+  public:
+    using Word = std::uint64_t;
 
-    static constexpr std::size_t UNSIGNED_BITS = CHAR_BIT * sizeof(unsigned);
+  private:
+    static constexpr std::size_t WORD_BITS = CHAR_BIT * sizeof(Word);
+
+    Word *m_ptr;
+    std::size_t m_size;
 
   public:
     using value_type = bool;
@@ -178,23 +181,23 @@ template <> class vector_view<bool>
             return os << static_cast<bool>(rhs);
         }
 
-        unsigned *m_ptr;
-        const unsigned mask;
+        Word *m_ptr;
+        const Word mask;
     };
 
     vector_view() : m_ptr(nullptr), m_size(0) {}
 
-    vector_view(unsigned *ptr, std::size_t size) : m_ptr(ptr), m_size(size) {}
+    vector_view(Word *ptr, std::size_t size) : m_ptr(ptr), m_size(size) {}
 
     bool at(const std::size_t index) const
     {
         BOOST_ASSERT_MSG(index < m_size, "invalid size");
-        const std::size_t bucket = index / UNSIGNED_BITS;
-        const unsigned offset = index % UNSIGNED_BITS;
-        return m_ptr[bucket] & (1u << offset);
+        const std::size_t bucket = index / WORD_BITS;
+        const auto offset = index % WORD_BITS;
+        return m_ptr[bucket] & (static_cast<Word>(1) << offset);
     }
 
-    void reset(unsigned *ptr, std::size_t size)
+    void reset(std::uint64_t *ptr, std::size_t size)
     {
         m_ptr = ptr;
         m_size = size;
@@ -213,14 +216,14 @@ template <> class vector_view<bool>
 
     bool empty() const { return 0 == size(); }
 
-    bool operator[](const unsigned index) const { return at(index); }
+    bool operator[](const std::size_t index) const { return at(index); }
 
-    reference operator[](const unsigned index)
+    reference operator[](const std::size_t index)
     {
         BOOST_ASSERT(index < m_size);
-        const std::size_t bucket = index / UNSIGNED_BITS;
-        const unsigned offset = index % UNSIGNED_BITS;
-        return reference{m_ptr + bucket, 1u << offset};
+        const auto bucket = index / WORD_BITS;
+        const auto offset = index % WORD_BITS;
+        return reference{m_ptr + bucket, static_cast<Word>(1) << offset};
     }
 
     template <typename T> friend void swap(vector_view<T> &, vector_view<T> &) noexcept;
