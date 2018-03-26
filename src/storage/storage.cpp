@@ -170,7 +170,7 @@ int Storage::Run(int max_wait)
 
     // Copy memory layout to shared memory and populate data
     char *shared_memory_ptr = static_cast<char *>(data_memory->Ptr());
-    memcpy(shared_memory_ptr, encoded_layout.data(), encoded_layout.size());
+    std::copy_n(encoded_layout.data(), encoded_layout.size(), shared_memory_ptr);
     PopulateData(layout, shared_memory_ptr + encoded_layout.size());
 
     { // Lock for write access shared region mutex
@@ -304,8 +304,8 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
                   0);
         const auto absolute_file_index_path =
             boost::filesystem::absolute(config.GetPath(".osrm.fileIndex")).string();
-        BOOST_ASSERT(static_cast<std::size_t>(layout.GetBlockSize("/common/rtree/file_index_path")) >=
-                     absolute_file_index_path.size());
+        BOOST_ASSERT(static_cast<std::size_t>(layout.GetBlockSize(
+                         "/common/rtree/file_index_path")) >= absolute_file_index_path.size());
         std::copy(
             absolute_file_index_path.begin(), absolute_file_index_path.end(), file_index_path_ptr);
     }
@@ -386,8 +386,8 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
             turn_instruction_list_ptr,
             layout.GetBlockEntries("/common/turn_data/turn_instructions"));
 
-        const auto entry_class_id_list_ptr = layout.GetBlockPtr<EntryClassID, true>(
-            memory_ptr, "/common/turn_data/entry_class_ids");
+        const auto entry_class_id_list_ptr =
+            layout.GetBlockPtr<EntryClassID, true>(memory_ptr, "/common/turn_data/entry_class_ids");
         util::vector_view<EntryClassID> entry_class_ids(
             entry_class_id_list_ptr, layout.GetBlockEntries("/common/turn_data/entry_class_ids"));
 
@@ -620,13 +620,13 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
                 graph_edges_ptr, layout.GetBlockEntries("/ch/contracted_graph/edge_array"));
 
             std::vector<util::vector_view<bool>> edge_filter;
-            for (auto index : util::irange<std::size_t>(0, NUM_METRICS))
-            {
-                auto block_id = "/ch/edge_filter/" + std::to_string(index);
-                auto data_ptr = layout.GetBlockPtr<util::vector_view<bool>::Word, true>(memory_ptr, block_id);
-                auto num_entries = layout.GetBlockEntries(block_id);
-                edge_filter.emplace_back(data_ptr, num_entries);
-            }
+            layout.List(
+                "/ch/edge_filter", boost::make_function_output_iterator([&](const auto &name) {
+                    auto data_ptr =
+                        layout.GetBlockPtr<util::vector_view<bool>::Word, true>(memory_ptr, name);
+                    auto num_entries = layout.GetBlockEntries(name);
+                    edge_filter.emplace_back(data_ptr, num_entries);
+                }));
 
             std::uint32_t graph_connectivity_checksum = 0;
             contractor::QueryGraphView graph_view(std::move(node_list), std::move(edge_list));
