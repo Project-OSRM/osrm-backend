@@ -39,24 +39,12 @@ class DataLayout
 
     inline uint64_t GetBlockEntries(const std::string &name) const
     {
-        auto iter = blocks.find(name);
-        if (iter == blocks.end())
-        {
-            throw util::exception("Could not find block " + name);
-        }
-
-        return iter->second.num_entries;
+        return GetBlock(name).num_entries;
     }
 
     inline uint64_t GetBlockSize(const std::string &name) const
     {
-        auto iter = blocks.find(name);
-        if (iter == blocks.end())
-        {
-            throw util::exception("Could not find block " + name);
-        }
-
-        return iter->second.byte_size;
+        return GetBlock(name).byte_size;
     }
 
     inline uint64_t GetSizeOfLayout() const
@@ -80,6 +68,7 @@ class DataLayout
         {
             char *start_canary_ptr = ptr - sizeof(CANARY);
             char *end_canary_ptr = ptr + GetBlockSize(name);
+            std::cout << name << ": " << (long) (start_canary_ptr-shared_memory) << " -> " << (long) (end_canary_ptr-shared_memory) << std::endl;
             std::copy(CANARY, CANARY + sizeof(CANARY), start_canary_ptr);
             std::copy(CANARY, CANARY + sizeof(CANARY), end_canary_ptr);
         }
@@ -103,9 +92,33 @@ class DataLayout
         return (T *)ptr;
     }
 
+    template<typename OutIter>
+    void List(const std::string& name_prefix, OutIter out) const
+    {
+        for (const auto& pair : blocks)
+        {
+            // check if string begins with the name prefix
+            if (pair.first.find(name_prefix) == 0)
+            {
+                *out++ = pair.first;
+            }
+        }
+    }
+
   private:
     friend void serialization::read(io::BufferReader &reader, DataLayout &layout);
     friend void serialization::write(io::BufferWriter &writer, const DataLayout &layout);
+
+    const Block& GetBlock(const std::string& name) const
+    {
+        auto iter = blocks.find(name);
+        if (iter == blocks.end())
+        {
+            throw util::exception("Could not find block " + name);
+        }
+
+        return iter->second;
+    }
 
     // Fit aligned storage in buffer to 64 bytes to conform with AVX 512 types
     inline void *align(void *&ptr) const noexcept
@@ -117,23 +130,23 @@ class DataLayout
 
     inline void *GetAlignedBlockPtr(void *ptr, const std::string &name) const
     {
-        for (auto iter = blocks.begin(); iter != blocks.end() && iter->first != name; ++iter)
+        auto block_iter = blocks.find(name);
+        if (block_iter == blocks.end())
+        {
+            throw util::exception("Could not find block " + name);
+        }
+
+        for (auto iter = blocks.begin(); iter != block_iter; ++iter)
         {
             ptr = static_cast<char *>(ptr) + sizeof(CANARY);
             ptr = align(ptr);
-            ptr = static_cast<char *>(ptr) + GetBlockSize(name);
+            ptr = static_cast<char *>(ptr) + iter->second.byte_size;
             ptr = static_cast<char *>(ptr) + sizeof(CANARY);
         }
 
         ptr = static_cast<char *>(ptr) + sizeof(CANARY);
         ptr = align(ptr);
         return ptr;
-    }
-
-    template <typename T> inline T *GetBlockEnd(char *shared_memory, const std::string &name) const
-    {
-        auto begin = GetBlockPtr<T>(shared_memory, name);
-        return begin + GetBlockEntries(name);
     }
 
     static constexpr std::size_t BLOCK_ALIGNMENT = 64;
