@@ -301,7 +301,7 @@ Feature: Turn Lane Guidance
             | e,l       | road,cross,cross  | depart,turn right,arrive     | ,none:false straight:false straight;right:true,                               |
             | i,h       | cross,road,road   | depart,turn right,arrive     | ,,                                                                            |
             | i,j       | cross,cross       | depart,arrive                | ;;left:false straight:true,                                                   |
-            | i,l       | cross,cross,cross | depart,continue uturn,arrive | ;,left:true straight:false;left:true straight:false;left:false straight:true, |
+            | i,l       | cross,cross,cross | depart,continue uturn,arrive | ,left:true straight:false;left:true straight:false;left:true straight:false;left:false straight:true, |
 
     @partition-lanes
     Scenario: Turn Lanes at Segregated Road
