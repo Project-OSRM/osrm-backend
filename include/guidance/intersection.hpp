@@ -114,7 +114,7 @@ inline std::string toString(const ConnectedRoad &road)
     result += " angle: ";
     result += std::to_string(road.angle);
     result += " bearing: ";
-    result += std::to_string(road.bearing);
+    result += std::to_string(road.perceived_bearing);
     result += " instruction: ";
     result += std::to_string(static_cast<std::int32_t>(road.instruction.type)) + " " +
               std::to_string(static_cast<std::int32_t>(road.instruction.direction_modifier)) + " " +

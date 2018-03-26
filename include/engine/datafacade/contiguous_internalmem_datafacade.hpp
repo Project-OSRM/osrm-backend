@@ -97,12 +97,12 @@ class ContiguousInternalMemoryAlgorithmDataFacade<CH> : public datafacade::Algor
         auto edge_filter_ptr = data_layout.GetBlockPtr<unsigned>(memory_block, filter_block_id);
 
         util::vector_view<GraphNode> node_list(
-            graph_nodes_ptr, data_layout.num_entries[storage::DataLayout::CH_GRAPH_NODE_LIST]);
+            graph_nodes_ptr, data_layout.GetBlockEntries(storage::DataLayout::CH_GRAPH_NODE_LIST));
         util::vector_view<GraphEdge> edge_list(
-            graph_edges_ptr, data_layout.num_entries[storage::DataLayout::CH_GRAPH_EDGE_LIST]);
+            graph_edges_ptr, data_layout.GetBlockEntries(storage::DataLayout::CH_GRAPH_EDGE_LIST));
 
         util::vector_view<bool> edge_filter(edge_filter_ptr,
-                                            data_layout.num_entries[filter_block_id]);
+                                            data_layout.GetBlockEntries(filter_block_id));
         m_query_graph = QueryGraph({node_list, edge_list}, edge_filter);
     }
 
@@ -270,9 +270,9 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
             memory_block, storage::DataLayout::R_SEARCH_TREE_LEVELS);
         m_static_rtree.reset(
             new SharedRTree(tree_nodes_ptr,
-                            data_layout.num_entries[storage::DataLayout::R_SEARCH_TREE],
+                            data_layout.GetBlockEntries(storage::DataLayout::R_SEARCH_TREE),
                             tree_level_sizes_ptr,
-                            data_layout.num_entries[storage::DataLayout::R_SEARCH_TREE_LEVELS],
+                            data_layout.GetBlockEntries(storage::DataLayout::R_SEARCH_TREE_LEVELS),
                             file_index_path,
                             m_coordinate_list));
         m_geospatial_query.reset(
@@ -284,16 +284,16 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         const auto coordinate_list_ptr =
             layout.GetBlockPtr<util::Coordinate>(memory_ptr, storage::DataLayout::COORDINATE_LIST);
         m_coordinate_list.reset(coordinate_list_ptr,
-                                layout.num_entries[storage::DataLayout::COORDINATE_LIST]);
+                                layout.GetBlockEntries(storage::DataLayout::COORDINATE_LIST));
 
         const auto osmnodeid_ptr = layout.GetBlockPtr<extractor::PackedOSMIDsView::block_type>(
             memory_ptr, storage::DataLayout::OSM_NODE_ID_LIST);
         m_osmnodeid_list = extractor::PackedOSMIDsView(
             util::vector_view<extractor::PackedOSMIDsView::block_type>(
-                osmnodeid_ptr, layout.num_entries[storage::DataLayout::OSM_NODE_ID_LIST]),
+                osmnodeid_ptr, layout.GetBlockEntries(storage::DataLayout::OSM_NODE_ID_LIST)),
             // We (ab)use the number of coordinates here because we know we have the same amount of
             // ids
-            layout.num_entries[storage::DataLayout::COORDINATE_LIST]);
+            layout.GetBlockEntries(storage::DataLayout::COORDINATE_LIST));
     }
 
     void InitializeEdgeBasedNodeDataInformationPointers(storage::DataLayout &layout,
@@ -303,14 +303,14 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
             memory_ptr, storage::DataLayout::EDGE_BASED_NODE_DATA_LIST);
         util::vector_view<extractor::EdgeBasedNode> edge_based_node_data_list(
             edge_based_node_list_ptr,
-            layout.num_entries[storage::DataLayout::EDGE_BASED_NODE_DATA_LIST]);
+            layout.GetBlockEntries(storage::DataLayout::EDGE_BASED_NODE_DATA_LIST));
 
         const auto annotation_data_list_ptr =
             layout.GetBlockPtr<extractor::NodeBasedEdgeAnnotation>(
                 memory_ptr, storage::DataLayout::ANNOTATION_DATA_LIST);
         util::vector_view<extractor::NodeBasedEdgeAnnotation> annotation_data(
             annotation_data_list_ptr,
-            layout.num_entries[storage::DataLayout::ANNOTATION_DATA_LIST]);
+            layout.GetBlockEntries(storage::DataLayout::ANNOTATION_DATA_LIST));
 
         edge_based_node_data = extractor::EdgeBasedNodeDataView(
             std::move(edge_based_node_data_list), std::move(annotation_data));
@@ -321,27 +321,28 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         const auto lane_data_id_ptr =
             layout.GetBlockPtr<LaneDataID>(memory_ptr, storage::DataLayout::LANE_DATA_ID);
         util::vector_view<LaneDataID> lane_data_ids(
-            lane_data_id_ptr, layout.num_entries[storage::DataLayout::LANE_DATA_ID]);
+            lane_data_id_ptr, layout.GetBlockEntries(storage::DataLayout::LANE_DATA_ID));
 
         const auto turn_instruction_list_ptr = layout.GetBlockPtr<guidance::TurnInstruction>(
             memory_ptr, storage::DataLayout::TURN_INSTRUCTION);
         util::vector_view<guidance::TurnInstruction> turn_instructions(
-            turn_instruction_list_ptr, layout.num_entries[storage::DataLayout::TURN_INSTRUCTION]);
+            turn_instruction_list_ptr,
+            layout.GetBlockEntries(storage::DataLayout::TURN_INSTRUCTION));
 
         const auto entry_class_id_list_ptr =
             layout.GetBlockPtr<EntryClassID>(memory_ptr, storage::DataLayout::ENTRY_CLASSID);
         util::vector_view<EntryClassID> entry_class_ids(
-            entry_class_id_list_ptr, layout.num_entries[storage::DataLayout::ENTRY_CLASSID]);
+            entry_class_id_list_ptr, layout.GetBlockEntries(storage::DataLayout::ENTRY_CLASSID));
 
         const auto pre_turn_bearing_ptr = layout.GetBlockPtr<guidance::TurnBearing>(
             memory_ptr, storage::DataLayout::PRE_TURN_BEARING);
         util::vector_view<guidance::TurnBearing> pre_turn_bearings(
-            pre_turn_bearing_ptr, layout.num_entries[storage::DataLayout::PRE_TURN_BEARING]);
+            pre_turn_bearing_ptr, layout.GetBlockEntries(storage::DataLayout::PRE_TURN_BEARING));
 
         const auto post_turn_bearing_ptr = layout.GetBlockPtr<guidance::TurnBearing>(
             memory_ptr, storage::DataLayout::POST_TURN_BEARING);
         util::vector_view<guidance::TurnBearing> post_turn_bearings(
-            post_turn_bearing_ptr, layout.num_entries[storage::DataLayout::POST_TURN_BEARING]);
+            post_turn_bearing_ptr, layout.GetBlockEntries(storage::DataLayout::POST_TURN_BEARING));
 
         turn_data = guidance::TurnDataView(std::move(turn_instructions),
                                            std::move(lane_data_ids),
@@ -354,7 +355,8 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     {
         auto name_data_ptr =
             data_layout.GetBlockPtr<char>(memory_block, storage::DataLayout::NAME_CHAR_DATA);
-        const auto name_data_size = data_layout.num_entries[storage::DataLayout::NAME_CHAR_DATA];
+        const auto name_data_size =
+            data_layout.GetBlockEntries(storage::DataLayout::NAME_CHAR_DATA);
         m_name_table.reset(name_data_ptr, name_data_ptr + name_data_size);
     }
 
@@ -364,21 +366,23 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         auto offsets_ptr = data_layout.GetBlockPtr<std::uint32_t>(
             memory_block, storage::DataLayout::LANE_DESCRIPTION_OFFSETS);
         util::vector_view<std::uint32_t> offsets(
-            offsets_ptr, data_layout.num_entries[storage::DataLayout::LANE_DESCRIPTION_OFFSETS]);
+            offsets_ptr,
+            data_layout.GetBlockEntries(storage::DataLayout::LANE_DESCRIPTION_OFFSETS));
         m_lane_description_offsets = std::move(offsets);
 
         auto masks_ptr = data_layout.GetBlockPtr<extractor::TurnLaneType::Mask>(
             memory_block, storage::DataLayout::LANE_DESCRIPTION_MASKS);
 
         util::vector_view<extractor::TurnLaneType::Mask> masks(
-            masks_ptr, data_layout.num_entries[storage::DataLayout::LANE_DESCRIPTION_MASKS]);
+            masks_ptr, data_layout.GetBlockEntries(storage::DataLayout::LANE_DESCRIPTION_MASKS));
         m_lane_description_masks = std::move(masks);
 
         const auto lane_tupel_id_pair_ptr =
             data_layout.GetBlockPtr<util::guidance::LaneTupleIdPair>(
                 memory_block, storage::DataLayout::TURN_LANE_DATA);
         util::vector_view<util::guidance::LaneTupleIdPair> lane_tupel_id_pair(
-            lane_tupel_id_pair_ptr, data_layout.num_entries[storage::DataLayout::TURN_LANE_DATA]);
+            lane_tupel_id_pair_ptr,
+            data_layout.GetBlockEntries(storage::DataLayout::TURN_LANE_DATA));
         m_lane_tupel_id_pairs = std::move(lane_tupel_id_pair);
     }
 
@@ -388,12 +392,12 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
             memory_block, storage::DataLayout::TURN_WEIGHT_PENALTIES);
         m_turn_weight_penalties = util::vector_view<TurnPenalty>(
             turn_weight_penalties_ptr,
-            data_layout.num_entries[storage::DataLayout::TURN_WEIGHT_PENALTIES]);
+            data_layout.GetBlockEntries(storage::DataLayout::TURN_WEIGHT_PENALTIES));
         auto turn_duration_penalties_ptr = data_layout.GetBlockPtr<TurnPenalty>(
             memory_block, storage::DataLayout::TURN_DURATION_PENALTIES);
         m_turn_duration_penalties = util::vector_view<TurnPenalty>(
             turn_duration_penalties_ptr,
-            data_layout.num_entries[storage::DataLayout::TURN_DURATION_PENALTIES]);
+            data_layout.GetBlockEntries(storage::DataLayout::TURN_DURATION_PENALTIES));
     }
 
     void InitializeGeometryPointers(storage::DataLayout &data_layout, char *memory_block)
@@ -401,9 +405,10 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         auto geometries_index_ptr =
             data_layout.GetBlockPtr<unsigned>(memory_block, storage::DataLayout::GEOMETRIES_INDEX);
         util::vector_view<unsigned> geometry_begin_indices(
-            geometries_index_ptr, data_layout.num_entries[storage::DataLayout::GEOMETRIES_INDEX]);
+            geometries_index_ptr,
+            data_layout.GetBlockEntries(storage::DataLayout::GEOMETRIES_INDEX));
 
-        auto num_entries = data_layout.num_entries[storage::DataLayout::GEOMETRIES_NODE_LIST];
+        auto num_entries = data_layout.GetBlockEntries(storage::DataLayout::GEOMETRIES_NODE_LIST);
         auto geometries_node_list_ptr = data_layout.GetBlockPtr<NodeID>(
             memory_block, storage::DataLayout::GEOMETRIES_NODE_LIST);
         util::vector_view<NodeID> geometry_node_list(geometries_node_list_ptr, num_entries);
@@ -414,7 +419,7 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         extractor::SegmentDataView::SegmentWeightVector geometry_fwd_weight_list(
             util::vector_view<extractor::SegmentDataView::SegmentWeightVector::block_type>(
                 geometries_fwd_weight_list_ptr,
-                data_layout.num_entries[storage::DataLayout::GEOMETRIES_FWD_WEIGHT_LIST]),
+                data_layout.GetBlockEntries(storage::DataLayout::GEOMETRIES_FWD_WEIGHT_LIST)),
             num_entries);
 
         auto geometries_rev_weight_list_ptr =
@@ -423,7 +428,7 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         extractor::SegmentDataView::SegmentWeightVector geometry_rev_weight_list(
             util::vector_view<extractor::SegmentDataView::SegmentWeightVector::block_type>(
                 geometries_rev_weight_list_ptr,
-                data_layout.num_entries[storage::DataLayout::GEOMETRIES_REV_WEIGHT_LIST]),
+                data_layout.GetBlockEntries(storage::DataLayout::GEOMETRIES_REV_WEIGHT_LIST)),
             num_entries);
 
         auto geometries_fwd_duration_list_ptr =
@@ -432,7 +437,7 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         extractor::SegmentDataView::SegmentDurationVector geometry_fwd_duration_list(
             util::vector_view<extractor::SegmentDataView::SegmentDurationVector::block_type>(
                 geometries_fwd_duration_list_ptr,
-                data_layout.num_entries[storage::DataLayout::GEOMETRIES_FWD_DURATION_LIST]),
+                data_layout.GetBlockEntries(storage::DataLayout::GEOMETRIES_FWD_DURATION_LIST)),
             num_entries);
 
         auto geometries_rev_duration_list_ptr =
@@ -441,20 +446,20 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         extractor::SegmentDataView::SegmentDurationVector geometry_rev_duration_list(
             util::vector_view<extractor::SegmentDataView::SegmentDurationVector::block_type>(
                 geometries_rev_duration_list_ptr,
-                data_layout.num_entries[storage::DataLayout::GEOMETRIES_REV_DURATION_LIST]),
+                data_layout.GetBlockEntries(storage::DataLayout::GEOMETRIES_REV_DURATION_LIST)),
             num_entries);
 
         auto geometries_fwd_datasources_list_ptr = data_layout.GetBlockPtr<DatasourceID>(
             memory_block, storage::DataLayout::GEOMETRIES_FWD_DATASOURCES_LIST);
         util::vector_view<DatasourceID> geometry_fwd_datasources_list(
             geometries_fwd_datasources_list_ptr,
-            data_layout.num_entries[storage::DataLayout::GEOMETRIES_FWD_DATASOURCES_LIST]);
+            data_layout.GetBlockEntries(storage::DataLayout::GEOMETRIES_FWD_DATASOURCES_LIST));
 
         auto geometries_rev_datasources_list_ptr = data_layout.GetBlockPtr<DatasourceID>(
             memory_block, storage::DataLayout::GEOMETRIES_REV_DATASOURCES_LIST);
         util::vector_view<DatasourceID> geometry_rev_datasources_list(
             geometries_rev_datasources_list_ptr,
-            data_layout.num_entries[storage::DataLayout::GEOMETRIES_REV_DATASOURCES_LIST]);
+            data_layout.GetBlockEntries(storage::DataLayout::GEOMETRIES_REV_DATASOURCES_LIST));
 
         segment_data = extractor::SegmentDataView{std::move(geometry_begin_indices),
                                                   std::move(geometry_node_list),
@@ -474,21 +479,22 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         auto bearing_class_id_ptr = data_layout.GetBlockPtr<BearingClassID>(
             memory_block, storage::DataLayout::BEARING_CLASSID);
         util::vector_view<BearingClassID> bearing_class_id(
-            bearing_class_id_ptr, data_layout.num_entries[storage::DataLayout::BEARING_CLASSID]);
+            bearing_class_id_ptr,
+            data_layout.GetBlockEntries(storage::DataLayout::BEARING_CLASSID));
 
         auto bearing_values_ptr = data_layout.GetBlockPtr<DiscreteBearing>(
             memory_block, storage::DataLayout::BEARING_VALUES);
         util::vector_view<DiscreteBearing> bearing_values(
-            bearing_values_ptr, data_layout.num_entries[storage::DataLayout::BEARING_VALUES]);
+            bearing_values_ptr, data_layout.GetBlockEntries(storage::DataLayout::BEARING_VALUES));
 
         auto offsets_ptr =
             data_layout.GetBlockPtr<unsigned>(memory_block, storage::DataLayout::BEARING_OFFSETS);
         auto blocks_ptr =
             data_layout.GetBlockPtr<IndexBlock>(memory_block, storage::DataLayout::BEARING_BLOCKS);
         util::vector_view<unsigned> bearing_offsets(
-            offsets_ptr, data_layout.num_entries[storage::DataLayout::BEARING_OFFSETS]);
+            offsets_ptr, data_layout.GetBlockEntries(storage::DataLayout::BEARING_OFFSETS));
         util::vector_view<IndexBlock> bearing_blocks(
-            blocks_ptr, data_layout.num_entries[storage::DataLayout::BEARING_BLOCKS]);
+            blocks_ptr, data_layout.GetBlockEntries(storage::DataLayout::BEARING_BLOCKS));
 
         util::RangeTable<16, storage::Ownership::View> bearing_range_table(
             bearing_offsets, bearing_blocks, static_cast<unsigned>(bearing_values.size()));
@@ -499,7 +505,7 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         auto entry_class_ptr = data_layout.GetBlockPtr<util::guidance::EntryClass>(
             memory_block, storage::DataLayout::ENTRY_CLASS);
         util::vector_view<util::guidance::EntryClass> entry_class_table(
-            entry_class_ptr, data_layout.num_entries[storage::DataLayout::ENTRY_CLASS]);
+            entry_class_ptr, data_layout.GetBlockEntries(storage::DataLayout::ENTRY_CLASS));
         m_entry_class_table = std::move(entry_class_table);
     }
 
@@ -509,13 +515,13 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
             memory_block, storage::DataLayout::MANEUVER_OVERRIDES);
         m_maneuver_overrides = util::vector_view<extractor::StorageManeuverOverride>(
             maneuver_overrides_ptr,
-            data_layout.num_entries[storage::DataLayout::MANEUVER_OVERRIDES]);
+            data_layout.GetBlockEntries(storage::DataLayout::MANEUVER_OVERRIDES));
 
         auto maneuver_override_node_sequences_ptr = data_layout.GetBlockPtr<NodeID>(
             memory_block, storage::DataLayout::MANEUVER_OVERRIDE_NODE_SEQUENCES);
         m_maneuver_override_node_sequences = util::vector_view<NodeID>(
             maneuver_override_node_sequences_ptr,
-            data_layout.num_entries[storage::DataLayout::MANEUVER_OVERRIDE_NODE_SEQUENCES]);
+            data_layout.GetBlockEntries(storage::DataLayout::MANEUVER_OVERRIDE_NODE_SEQUENCES));
     }
 
     void InitializeInternalPointers(storage::DataLayout &data_layout,
@@ -1081,12 +1087,12 @@ template <> class ContiguousInternalMemoryAlgorithmDataFacade<MLD> : public Algo
             memory_block, storage::DataLayout::MLD_GRAPH_NODE_TO_OFFSET);
 
         util::vector_view<GraphNode> node_list(
-            graph_nodes_ptr, data_layout.num_entries[storage::DataLayout::MLD_GRAPH_NODE_LIST]);
+            graph_nodes_ptr, data_layout.GetBlockEntries(storage::DataLayout::MLD_GRAPH_NODE_LIST));
         util::vector_view<GraphEdge> edge_list(
-            graph_edges_ptr, data_layout.num_entries[storage::DataLayout::MLD_GRAPH_EDGE_LIST]);
+            graph_edges_ptr, data_layout.GetBlockEntries(storage::DataLayout::MLD_GRAPH_EDGE_LIST));
         util::vector_view<QueryGraph::EdgeOffset> node_to_offset(
             graph_node_to_offset_ptr,
-            data_layout.num_entries[storage::DataLayout::MLD_GRAPH_NODE_TO_OFFSET]);
+            data_layout.GetBlockEntries(storage::DataLayout::MLD_GRAPH_NODE_TO_OFFSET));
 
         query_graph =
             QueryGraph(std::move(node_list), std::move(edge_list), std::move(node_to_offset));

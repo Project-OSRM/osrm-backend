@@ -68,7 +68,7 @@ namespace guidance
 inline std::ostream &operator<<(std::ostream &out, const ConnectedRoad &road)
 {
     out << "ConnectedRoad {" << road.eid << " allows entry: " << road.entry_allowed
-        << " angle: " << road.angle << " bearing: " << road.bearing
+        << " angle: " << road.angle << " bearing: " << road.perceived_bearing
         << " instruction: " << static_cast<std::int32_t>(road.instruction.type) << " "
         << static_cast<std::int32_t>(road.instruction.direction_modifier) << " "
         << static_cast<std::int32_t>(road.lane_data_id) << "}";
@@ -80,16 +80,17 @@ namespace extractor
 {
 namespace intersection
 {
-inline std::ostream &operator<<(std::ostream &out, const IntersectionShapeData &shape)
+inline std::ostream &operator<<(std::ostream &out, const IntersectionEdgeGeometry &shape)
 {
-    out << "IntersectionShapeData { " << shape.eid << " bearing: " << shape.bearing << "}";
+    out << "IntersectionEdgeGeometry { " << shape.eid << " bearing: " << shape.perceived_bearing
+        << "}";
     return out;
 }
 
 inline std::ostream &operator<<(std::ostream &out, const IntersectionViewData &view)
 {
     out << "IntersectionViewData {" << view.eid << " allows entry: " << view.entry_allowed
-        << " angle: " << view.angle << " bearing: " << view.bearing << "}";
+        << " angle: " << view.angle << " bearing: " << view.perceived_bearing << "}";
     return out;
 }
 }

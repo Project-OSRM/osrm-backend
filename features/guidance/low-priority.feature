@@ -64,9 +64,9 @@ Feature: Exceptions for routing onto low-priority roads
             | bc     | service     |         |
 
        When I route I should get
-            | waypoints | route             | turns                       |
-            | e,c       | service,          | depart,arrive               |
-            | c,e       | ,service,service  | depart,turn straight,arrive |
+            | waypoints | route    | turns         |
+            | e,c       | service, | depart,arrive |
+            | c,e       | ,service | depart,arrive |
 
     Scenario: Straight onto low-priority
         Given the node map

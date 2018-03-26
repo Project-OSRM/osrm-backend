@@ -46,3 +46,23 @@ Feature: Driveways intersections
        When I route I should get
           | waypoints | route   | turns         | locations |
           | a,d       | ,second | depart,arrive | a,d       |
+
+
+    Scenario: Road with a turn to service road
+        Given the node map
+          """
+               /-----------------e
+          a---b------------------c
+               `-----------------d
+          """
+
+        And the ways
+          | nodes | highway | name | oneway |
+          | abc   | trunk   | road | yes    |
+          | bd    | service | serv | yes    |
+          | be    | service | serv | yes    |
+
+       When I route I should get
+          | waypoints | route          | turns                           | locations |
+          | a,d       | road,serv,serv | depart,turn slight right,arrive | a,b,d     |
+          | a,e       | road,serv,serv | depart,turn slight left,arrive  | a,b,e     |

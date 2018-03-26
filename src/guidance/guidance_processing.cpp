@@ -232,12 +232,12 @@ void annotateTurns(const util::NodeBasedDynamicGraph &node_based_graph,
                             OSRM_ASSERT(turn != intersection.end(),
                                         node_coordinates[intersection_node]);
 
-                            buffer->continuous_turn_data.push_back(
-                                guidance::TurnData{turn->instruction,
-                                                   turn->lane_data_id,
-                                                   entry_class_id,
-                                                   guidance::TurnBearing(intersection[0].bearing),
-                                                   guidance::TurnBearing(turn->bearing)});
+                            buffer->continuous_turn_data.push_back(guidance::TurnData{
+                                turn->instruction,
+                                turn->lane_data_id,
+                                entry_class_id,
+                                guidance::TurnBearing(intersection[0].perceived_bearing),
+                                guidance::TurnBearing(turn->perceived_bearing)});
 
                             // when turning off a a via-way turn restriction, we need to not only
                             // handle the normal edges for the way, but also add turns for every
@@ -271,8 +271,9 @@ void annotateTurns(const util::NodeBasedDynamicGraph &node_based_graph,
                                             turn->instruction,
                                             turn->lane_data_id,
                                             entry_class_id,
-                                            guidance::TurnBearing(intersection[0].bearing),
-                                            guidance::TurnBearing(turn->bearing)});
+                                            guidance::TurnBearing(
+                                                intersection[0].perceived_bearing),
+                                            guidance::TurnBearing(turn->perceived_bearing)});
                                     }
                                     else
                                     {
@@ -280,8 +281,9 @@ void annotateTurns(const util::NodeBasedDynamicGraph &node_based_graph,
                                             turn->instruction,
                                             turn->lane_data_id,
                                             entry_class_id,
-                                            guidance::TurnBearing(intersection[0].bearing),
-                                            guidance::TurnBearing(turn->bearing)});
+                                            guidance::TurnBearing(
+                                                intersection[0].perceived_bearing),
+                                            guidance::TurnBearing(turn->perceived_bearing)});
                                     }
                                 }
                             }

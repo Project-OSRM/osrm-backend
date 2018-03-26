@@ -1,6 +1,19 @@
 #ifndef OSRM_EXTRACTOR_INTERSECTION_INTERSECTION_VIEW_HPP_
 #define OSRM_EXTRACTOR_INTERSECTION_INTERSECTION_VIEW_HPP_
 
+#include "extractor/intersection/intersection_edge.hpp"
+
+#include "guidance/turn_instruction.hpp"
+
+#include "util/bearing.hpp"
+#include "util/log.hpp"
+#include "util/node_based_graph.hpp"
+#include "util/typedefs.hpp" // EdgeID
+
+#include <boost/range/algorithm/count_if.hpp>
+#include <boost/range/algorithm/find_if.hpp>
+#include <boost/range/algorithm/min_element.hpp>
+
 #include <algorithm>
 #include <functional>
 #include <limits>
@@ -8,41 +21,12 @@
 #include <type_traits>
 #include <vector>
 
-#include "util/bearing.hpp"
-#include "util/log.hpp"
-#include "util/node_based_graph.hpp"
-#include "util/typedefs.hpp" // EdgeID
-
-#include "guidance/turn_instruction.hpp"
-
-#include <boost/range/algorithm/count_if.hpp>
-#include <boost/range/algorithm/find_if.hpp>
-#include <boost/range/algorithm/min_element.hpp>
-
 namespace osrm
 {
 namespace extractor
 {
 namespace intersection
 {
-
-// the shape of an intersection only knows about edge IDs and bearings
-// `bearing`    is the direction in clockwise angle from true north after taking the turn:
-//              0 = heading north, 90 = east, 180 = south, 270 = west
-struct IntersectionShapeData
-{
-    EdgeID eid;
-    double bearing;
-    double segment_length;
-};
-
-inline auto makeCompareShapeDataByBearing(const double base_bearing)
-{
-    return [base_bearing](const auto &lhs, const auto &rhs) {
-        return util::angularDeviation(lhs.bearing, base_bearing) <
-               util::angularDeviation(rhs.bearing, base_bearing);
-    };
-}
 
 inline auto makeCompareAngularDeviation(const double angle)
 {
@@ -60,12 +44,12 @@ inline auto makeExtractLanesForRoad(const util::NodeBasedDynamicGraph &node_base
 
 // When viewing an intersection from an incoming edge, we can transform a shape into a view which
 // gives additional information on angles and whether a turn is allowed
-struct IntersectionViewData : IntersectionShapeData
+struct IntersectionViewData : IntersectionEdgeGeometry
 {
-    IntersectionViewData(const IntersectionShapeData &shape,
+    IntersectionViewData(const IntersectionEdgeGeometry &geometry,
                          const bool entry_allowed,
                          const double angle)
-        : IntersectionShapeData(shape), entry_allowed(entry_allowed), angle(angle)
+        : IntersectionEdgeGeometry(geometry), entry_allowed(entry_allowed), angle(angle)
     {
     }
 
@@ -80,10 +64,13 @@ struct IntersectionViewData : IntersectionShapeData
 template <typename Self> struct EnableShapeOps
 {
     // same as closest turn, but for bearings
-    auto FindClosestBearing(double bearing) const
+    auto FindClosestBearing(double base_bearing) const
     {
-        auto comp = makeCompareShapeDataByBearing(bearing);
-        return std::min_element(self()->begin(), self()->end(), comp);
+        return std::min_element(
+            self()->begin(), self()->end(), [base_bearing](const auto &lhs, const auto &rhs) {
+                return util::angularDeviation(lhs.perceived_bearing, base_bearing) <
+                       util::angularDeviation(rhs.perceived_bearing, base_bearing);
+            });
     }
 
     // search a given eid in the intersection
@@ -119,10 +106,10 @@ template <typename Self> struct EnableShapeOps
     auto self() const { return static_cast<const Self *>(this); }
 };
 
-struct IntersectionShape final : std::vector<IntersectionShapeData>, //
-                                 EnableShapeOps<IntersectionShape>   //
+struct IntersectionShape final : std::vector<IntersectionEdgeGeometry>, //
+                                 EnableShapeOps<IntersectionShape>      //
 {
-    using Base = std::vector<IntersectionShapeData>;
+    using Base = std::vector<IntersectionEdgeGeometry>;
 };
 
 // Common operations shared among IntersectionView and Intersections.

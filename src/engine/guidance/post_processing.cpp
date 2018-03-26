@@ -283,6 +283,7 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
                                         geometry.osm_node_ids.begin() + offset);
         }
 
+        auto const first_bearing = steps.front().maneuver.bearing_after;
         // We have to adjust the first step both for its name and the bearings
         if (zero_length_step)
         {
@@ -339,10 +340,15 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
         });
 
         auto &first_step = steps.front();
+        auto bearing = first_bearing;
         // we changed the geometry, we need to recalculate the bearing
-        auto bearing = std::round(util::coordinate_calculation::bearing(
-            geometry.locations[first_step.geometry_begin],
-            geometry.locations[first_step.geometry_begin + 1]));
+        if (geometry.locations[first_step.geometry_begin] !=
+            geometry.locations[first_step.geometry_begin + 1])
+        {
+            bearing = std::round(util::coordinate_calculation::bearing(
+                geometry.locations[first_step.geometry_begin],
+                geometry.locations[first_step.geometry_begin + 1]));
+        }
         first_step.maneuver.bearing_after = bearing;
         first_step.intersections.front().bearings.front() = bearing;
     }
@@ -370,7 +376,7 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
         geometry.segment_offsets.pop_back();
         // remove all the last coordinates from the geometry
         geometry.locations.resize(geometry.segment_offsets.back() + 1);
-        geometry.annotations.resize(geometry.segment_offsets.back() + 1);
+        geometry.annotations.resize(geometry.segment_offsets.back());
         geometry.osm_node_ids.resize(geometry.segment_offsets.back() + 1);
 
         BOOST_ASSERT(geometry.segment_distances.back() <= 1);
@@ -428,6 +434,10 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
         last_step.maneuver.bearing_before = bearing;
         last_step.intersections.front().bearings.front() = util::bearing::reverse(bearing);
     }
+
+    BOOST_ASSERT(geometry.segment_offsets.back() + 1 == geometry.locations.size());
+    BOOST_ASSERT(geometry.segment_offsets.back() + 1 == geometry.osm_node_ids.size());
+    BOOST_ASSERT(geometry.segment_offsets.back() == geometry.annotations.size());
 
     BOOST_ASSERT(steps.back().geometry_end == geometry.locations.size());
 

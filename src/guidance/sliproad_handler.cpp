@@ -562,7 +562,8 @@ operator()(const NodeID /*nid*/, const EdgeID source_edge_id, Intersection inter
             const auto candidate_road_target = node_based_graph.GetTarget(candidate_road.eid);
             if ((candidate_road_target == main_road_intersection->node) ||
                 (candidate_road_target == node_based_graph.GetTarget(crossing_road.eid) &&
-                 util::bearing::angleBetween(candidate_road.bearing, crossing_road.bearing) <
+                 util::bearing::angleBetween(candidate_road.perceived_bearing,
+                                             crossing_road.perceived_bearing) <
                      FUZZY_ANGLE_DIFFERENCE &&
                  (getTurnDirection(candidate_road.angle) == DirectionModifier::SharpRight ||
                   getTurnDirection(candidate_road.angle) == DirectionModifier::SharpLeft)))
@@ -851,6 +852,11 @@ SliproadHandler::scaledThresholdByRoadClass(const double max_threshold,
     case extractor::RoadPriorityClass::SIDE_RESIDENTIAL:
         factor = 0.3;
         break;
+    case extractor::RoadPriorityClass::MOTORWAY_LINK:
+    case extractor::RoadPriorityClass::TRUNK_LINK:
+    case extractor::RoadPriorityClass::PRIMARY_LINK:
+    case extractor::RoadPriorityClass::SECONDARY_LINK:
+    case extractor::RoadPriorityClass::TERTIARY_LINK:
     case extractor::RoadPriorityClass::LINK_ROAD:
         factor = 0.3;
         break;

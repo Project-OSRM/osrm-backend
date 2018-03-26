@@ -1,6 +1,6 @@
 -- Bicycle profile
 
-api_version = 2
+api_version = 4
 
 Set = require('lib/set')
 Sequence = require('lib/sequence')
@@ -10,7 +10,7 @@ limit = require("lib/maxspeed").limit
 
 function setup()
   local default_speed = 15
-  local walking_speed = 6
+  local walking_speed = 4
 
   return {
     properties = {
@@ -21,7 +21,8 @@ function setup()
       process_call_tagless_node     = false,
       max_speed_for_map_matching    = 110/3.6, -- kmph -> m/s
       use_turn_restrictions         = false,
-      continue_straight_at_waypoint = false
+      continue_straight_at_waypoint = false,
+      mode_change_penalty           = 30,
     },
 
     default_mode              = mode.cycling,
@@ -93,13 +94,16 @@ function setup()
     cycleway_tags = Set {
       'track',
       'lane',
-      'opposite',
-      'opposite_lane',
-      'opposite_track',
       'share_busway',
       'sharrow',
       'shared',
       'shared_lane'
+    },
+
+    opposite_cycleway_tags = Set {
+      'opposite',
+      'opposite_lane',
+      'opposite_track',
     },
 
     -- reduce the driving speed by 30% for unsafe roads
@@ -367,35 +371,53 @@ function handle_bicycle_tags(profile,way,result,data)
   end
 
   -- cycleway
-  local has_cycleway_left = false
-  local has_cycleway_right = false
+  local has_cycleway_forward = false
+  local has_cycleway_backward = false
+  local is_oneway = result.forward_mode ~= mode.inaccessible and result.backward_mode ~= mode.inaccessible and not implied_oneway
 
-  if cycleway_left and profile.cycleway_tags[cycleway_left] then
-    has_cycleway_left = true
-  end
-  if cycleway_right and profile.cycleway_tags[cycleway_right] then
-    has_cycleway_right = true
-  end
-  if cycleway and string.find(cycleway, "opposite") == 1 then
-    if reverse then
-      has_cycleway_right = true
-  else
-      has_cycleway_left = true
+  -- cycleways on normal roads
+  if is_oneway then
+    if cycleway and profile.cycleway_tags[cycleway] then
+      has_cycleway_backward = true
+      has_cycleway_forward = true
     end
-  elseif cycleway and profile.cycleway_tags[cycleway] then
-    -- "cycleway" tag without left/right should not affect a direction
-    -- already forbidden by oneway tags
-    has_cycleway_left = result.backward_mode ~= mode.inaccessible
-    has_cycleway_right = result.forward_mode ~= mode.inaccessible
+    if (cycleway_right and profile.cycleway_tags[cycleway_right]) or (cycleway_left and profile.opposite_cycleway_tags[cycleway_left]) then
+      has_cycleway_forward = true
+    end
+    if (cycleway_left and profile.cycleway_tags[cycleway_left]) or (cycleway_right and profile.opposite_cycleway_tags[cycleway_right]) then
+      has_cycleway_backward = true
+    end
+  else
+    local has_twoway_cycleway = (cycleway and profile.opposite_cycleway_tags[cycleway]) or (cycleway_right and profile.opposite_cycleway_tags[cycleway_right]) or (cycleway_left and profile.opposite_cycleway_tags[cycleway_left])
+    local has_opposite_cycleway = (cycleway_left and profile.opposite_cycleway_tags[cycleway_left]) or (cycleway_right and profile.opposite_cycleway_tags[cycleway_right])
+    local has_oneway_cycleway = (cycleway and profile.cycleway_tags[cycleway]) or (cycleway_right and profile.cycleway_tags[cycleway_right]) or (cycleway_left and profile.cycleway_tags[cycleway_left])
+
+    -- set cycleway even though it is an one-way if opposite is tagged
+    if has_twoway_cycleway then
+      has_cycleway_backward = true
+      has_cycleway_forward = true
+    elseif has_opposite_cycleway then
+      if not reverse then
+        has_cycleway_backward = true
+      else
+        has_cycleway_forward = true
+      end
+    elseif has_oneway_cycleway then
+      if not reverse then
+        has_cycleway_forward = true
+      else
+        has_cycleway_backward = true
+      end
+
+    end
   end
 
-
-  if has_cycleway_left then
+  if has_cycleway_backward then
     result.backward_mode = mode.cycling
     result.backward_speed = profile.bicycle_speeds["cycleway"]
   end
 
-  if has_cycleway_right then
+  if has_cycleway_forward then
     result.forward_mode = mode.cycling
     result.forward_speed = profile.bicycle_speeds["cycleway"]
   end
@@ -473,8 +495,8 @@ function handle_bicycle_tags(profile,way,result,data)
   if profile.properties.weight_name == 'cyclability' then
       local safety_penalty = profile.unsafe_highway_list[data.highway] or 1.
       local is_unsafe = safety_penalty < 1
-      local forward_is_unsafe = is_unsafe and not has_cycleway_right
-      local backward_is_unsafe = is_unsafe and not has_cycleway_left
+      local forward_is_unsafe = is_unsafe and not has_cycleway_forward
+      local backward_is_unsafe = is_unsafe and not has_cycleway_backward
       local is_undesireable = data.highway == "service" and profile.service_penalties[service]
       local forward_penalty = 1.
       local backward_penalty = 1.
@@ -566,7 +588,7 @@ function process_turn(profile, turn)
     turn.duration = normalized_angle * normalized_angle * profile.turn_penalty * profile.turn_bias
   end
 
-  if turn.direction_modifier == direction_modifier.uturn then
+  if turn.is_u_turn then
     turn.duration = turn.duration + profile.properties.u_turn_penalty
   end
 
@@ -575,6 +597,9 @@ function process_turn(profile, turn)
   end
   if profile.properties.weight_name == 'cyclability' then
     turn.weight = turn.duration
+  end
+  if turn.source_mode == mode.cycling and turn.target_mode ~= mode.cycling then
+    turn.weight = turn.weight + profile.properties.mode_change_penalty
   end
 end
 

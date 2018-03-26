@@ -385,7 +385,7 @@ Feature: Collapse
             | a,g       | first,second,second | depart,turn left,arrive        | a,b,g     |
             | d,g       | first,second,second | depart,turn right,arrive       | d,e,g     |
             | g,f       | second,first,first  | depart,turn right,arrive       | g,e,f     |
-            | g,c       | second,first,first  | depart,turn left,arrive        | g,e,c     |
+            | g,c       | second,first,first  | depart,end of road left,arrive | g,b,c     |
 
     Scenario: Do not collapse turning roads
         Given the node map
@@ -1010,7 +1010,7 @@ Feature: Collapse
             | f,j       | hohe,hohe             | depart,arrive               | f,j       |
             | a,t       | hohe,a100,a100        | depart,on ramp right,arrive | a,b,t     |
             | f,e       |                       |                             |           |
-            | q,j       | a100,hohe,hohe        | depart,turn right,arrive    | q,p,j     |
+            | q,j       | a100,hohe,hohe        | depart,turn right,arrive    | q,i,j     |
             | q,e       | a100,hohebruecke,hohe | depart,turn left,arrive     | q,p,e     |
 
     Scenario: Forking before a turn (forky)

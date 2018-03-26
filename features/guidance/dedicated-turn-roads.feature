@@ -687,7 +687,7 @@ Feature: Slipways and Dedicated Turn Lanes
 
        When I route I should get
             | waypoints | route             | turns                                      | locations |
-            | s,f       | sabc,ae,dbef,dbef | depart,turn slight right,turn right,arrive | s,a,e,f   |
+            | s,f       | sabc,ae,dbef,dbef | depart,fork slight right,turn right,arrive | s,a,e,f   |
 
     @sliproads
     Scenario: Traffic Signal on Sliproad

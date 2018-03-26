@@ -67,7 +67,7 @@ class FileReader
 
     std::size_t GetSize()
     {
-        const boost::filesystem::ifstream::pos_type positon = input_stream.tellg();
+        const boost::filesystem::ifstream::pos_type position = input_stream.tellg();
         input_stream.seekg(0, std::ios::end);
         const boost::filesystem::ifstream::pos_type file_size = input_stream.tellg();
 
@@ -81,7 +81,7 @@ class FileReader
         }
 
         // restore the current position
-        input_stream.seekg(positon, std::ios::beg);
+        input_stream.seekg(position, std::ios::beg);
 
         if (fingerprint == FingerprintFlag::VerifyFingerprint)
         {

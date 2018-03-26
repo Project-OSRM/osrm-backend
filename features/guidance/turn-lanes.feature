@@ -614,8 +614,9 @@ Feature: Turn Lane Guidance
                  | |
                  | |
                  b d
-            h     c
-             ' -- g - - f
+            h-----c
+                  | `-f
+                  g
             """
 
         And the ways

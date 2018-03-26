@@ -240,6 +240,7 @@ void AdjustToCombinedTurnStrategy::operator()(RouteStep &step_at_turn_location,
             setInstructionType(step_at_turn_location, TurnType::Turn);
         }
         else if (hasTurnType(step_at_turn_location, TurnType::Turn) &&
+                 !hasTurnType(transfer_from_step, TurnType::Suppressed) &&
                  haveSameName(step_prior_to_intersection, transfer_from_step))
         {
             setInstructionType(step_at_turn_location, TurnType::Continue);
