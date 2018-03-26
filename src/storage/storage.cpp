@@ -727,10 +727,12 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
 
             std::vector<customizer::CellMetricView> metrics;
 
-            for (auto index : util::irange<std::size_t>(0, NUM_METRICS))
+            std::vector<std::string> metric_prefix_names;
+            layout.List("/mld/metrics/", std::back_inserter(metric_prefix_names));
+            for (const auto &prefix : metric_prefix_names)
             {
-                auto weights_block_id = "/mld/metrics/" + std::to_string(index) + "/weights";
-                auto durations_block_id = "/mld/metrics/" + std::to_string(index) + "/durations";
+                auto weights_block_id = prefix + "/weights";
+                auto durations_block_id = prefix + "/durations";
 
                 auto weight_entries_count = layout.GetBlockEntries(weights_block_id);
                 auto duration_entries_count = layout.GetBlockEntries(durations_block_id);

@@ -23,6 +23,7 @@ SharedMemoryAllocator::SharedMemoryAllocator(storage::SharedDataType data_region
     storage::io::BufferReader reader(GetMemory());
     storage::serialization::read(reader, data_layout);
     layout_size = reader.GetPosition();
+    util::Log(logDEBUG) << "Data layout has size " << layout_size;
 }
 
 SharedMemoryAllocator::~SharedMemoryAllocator() {}

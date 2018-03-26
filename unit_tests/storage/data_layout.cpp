@@ -63,4 +63,42 @@ BOOST_AUTO_TEST_CASE(layout_write_test)
     }
 }
 
+BOOST_AUTO_TEST_CASE(layout_list_test)
+{
+    DataLayout layout;
+
+    Block block_1{20, 8 * 20};
+    Block block_2{1, 4 * 1};
+    Block block_3{100, static_cast<std::uint64_t>(std::ceil(100 / 64.))};
+
+    layout.SetBlock("/ch/edge_filter/block1", block_1);
+    layout.SetBlock("/ch/edge_filter/block2", block_2);
+    layout.SetBlock("/ch/edge_filter/block3", block_3);
+    layout.SetBlock("/mld/metrics/0/durations", block_2);
+    layout.SetBlock("/mld/metrics/0/weights", block_3);
+    layout.SetBlock("/mld/metrics/1/durations", block_2);
+    layout.SetBlock("/mld/metrics/1/weights", block_3);
+
+    std::vector<std::string> results_1;
+    std::vector<std::string> results_2;
+    std::vector<std::string> results_3;
+    layout.List("/ch/edge_filter", std::back_inserter(results_1));
+    layout.List("/ch/edge_filter/", std::back_inserter(results_2));
+    layout.List("/ch/", std::back_inserter(results_3));
+
+    std::vector<std::string> results_4;
+    std::vector<std::string> results_5;
+    std::vector<std::string> results_6;
+    layout.List("/mld/metrics", std::back_inserter(results_4));
+    layout.List("/mld/metrics/", std::back_inserter(results_5));
+    layout.List("/mld/", std::back_inserter(results_6));
+
+    CHECK_EQUAL_RANGE(results_1, "/ch/edge_filter/block1", "/ch/edge_filter/block2", "/ch/edge_filter/block3");
+    CHECK_EQUAL_RANGE(results_2, "/ch/edge_filter/block1", "/ch/edge_filter/block2", "/ch/edge_filter/block3");
+    CHECK_EQUAL_RANGE(results_3, "/ch/edge_filter");
+    CHECK_EQUAL_RANGE(results_4, "/mld/metrics/0/durations", "/mld/metrics/0/weights", "/mld/metrics/1/durations", "/mld/metrics/1/weights");
+    CHECK_EQUAL_RANGE(results_5, "/mld/metrics/0", "/mld/metrics/1");
+    CHECK_EQUAL_RANGE(results_6, "/mld/metrics");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
