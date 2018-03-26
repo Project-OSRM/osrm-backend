@@ -85,7 +85,7 @@ class FileReader
 
     FileReader(const boost::filesystem::path &path, FingerprintFlag flag) : path(path)
     {
-        auto ret = mtar_open(&handle, path.c_str(), "r");
+        auto ret = mtar_open(&handle, path.string().c_str(), "r");
         detail::checkMTarError(ret, path, "");
 
         if (flag == VerifyFingerprint)
@@ -224,7 +224,7 @@ class FileWriter
 
     FileWriter(const boost::filesystem::path &path, FingerprintFlag flag) : path(path)
     {
-        auto ret = mtar_open(&handle, path.c_str(), "w");
+        auto ret = mtar_open(&handle, path.string().c_str(), "w");
         detail::checkMTarError(ret, path, "");
 
         if (flag == GenerateFingerprint)
