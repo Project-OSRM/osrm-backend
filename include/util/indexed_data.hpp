@@ -322,7 +322,9 @@ template <typename GroupBlockPolicy, storage::Ownership Ownership> struct Indexe
             auto to_bytes = [&](const auto &data) {
                 values_byte_iter = std::copy_n(&data, sizeof(ValueType), values_byte_iter);
             };
-            std::copy(data + *curr, data + *next, boost::make_function_output_iterator(to_bytes));
+            std::copy(data + *curr,
+                      data + *next,
+                      boost::make_function_output_iterator(std::cref(to_bytes)));
         }
     }
 

@@ -14,8 +14,14 @@ namespace storage
 
 struct Block
 {
-    std::uint64_t num_entries = 0;
-    std::uint64_t byte_size = 0;
+    std::uint64_t num_entries;
+    std::uint64_t byte_size;
+
+    Block() : num_entries(0), byte_size(0) {}
+    Block(std::uint64_t num_entries, std::uint64_t byte_size)
+        : num_entries(num_entries), byte_size(byte_size)
+    {
+    }
 };
 
 using NamedBlock = std::tuple<std::string, Block>;
