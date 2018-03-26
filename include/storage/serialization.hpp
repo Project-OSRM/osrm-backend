@@ -143,7 +143,7 @@ template <typename T, typename BlockT = unsigned char>
 inline void unpackBits(T &data, std::size_t index, std::size_t count, BlockT value)
 {
     static_assert(std::is_same<typename T::value_type, bool>::value, "value_type is not bool");
-    const BlockT mask = BlockT {1} << (count - 1);
+    const BlockT mask = BlockT{1} << (count - 1);
     for (std::size_t bit = 0; bit < count; value <<= 1, ++bit, ++index)
         data[index] = value & mask;
 }
@@ -159,7 +159,7 @@ void readBoolVector(tar::FileReader &reader, const std::string &name, VectorT &d
 
     const auto decode = [&](const std::uint64_t block) {
         auto read_size = std::min<std::size_t>(count - index, WORD_BITS);
-        unpackBits<VectorT,std::uint64_t>(data, index, read_size, block);
+        unpackBits<VectorT, std::uint64_t>(data, index, read_size, block);
         index += WORD_BITS;
     };
 

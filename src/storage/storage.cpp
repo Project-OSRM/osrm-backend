@@ -712,7 +712,8 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
             {
                 auto block_id =
                     static_cast<DataLayout::BlockID>(storage::DataLayout::CH_EDGE_FILTER_0 + index);
-                auto data_ptr = layout.GetBlockPtr<util::vector_view<bool>::Word, true>(memory_ptr, block_id);
+                auto data_ptr =
+                    layout.GetBlockPtr<util::vector_view<bool>::Word, true>(memory_ptr, block_id);
                 auto num_entries = layout.GetBlockEntries(block_id);
                 edge_filter.emplace_back(data_ptr, num_entries);
             }
