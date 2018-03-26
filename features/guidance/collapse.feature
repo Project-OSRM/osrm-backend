@@ -363,10 +363,11 @@ Feature: Collapse
     Scenario: Entering a segregated road
         Given the node map
             """
-              a f       g
-              | |   . '
-              b-e '
-              / /
+                    h
+              a f   |   g
+              | |   i '
+              b-e ' |
+              / /   j
              / /
             c d
             """
@@ -376,7 +377,8 @@ Feature: Collapse
             | abc   | primary | first  | yes    |
             | def   | primary | first  | yes    |
             | be    | primary | first  | no     |
-            | ge    | primary | second | no     |
+            | gie   | primary | second | no     |
+            | hij   | primary | maple  | no     |
 
         When I route I should get
             | waypoints | route               | turns                          | locations |
@@ -385,7 +387,7 @@ Feature: Collapse
             | a,g       | first,second,second | depart,turn left,arrive        | a,b,g     |
             | d,g       | first,second,second | depart,turn right,arrive       | d,e,g     |
             | g,f       | second,first,first  | depart,turn right,arrive       | g,e,f     |
-            | g,c       | second,first,first  | depart,end of road left,arrive | g,b,c     |
+            | g,c       | second,first,first  | depart,end of road left,arrive | g,e,c     |
 
     Scenario: Do not collapse turning roads
         Given the node map
