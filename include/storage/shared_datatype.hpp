@@ -13,6 +13,7 @@
 #include <array>
 #include <cstdint>
 #include <map>
+#include <unordered_set>
 
 namespace osrm
 {
@@ -25,6 +26,32 @@ namespace serialization
 inline void read(io::BufferReader &reader, DataLayout &layout);
 
 inline void write(io::BufferWriter &writer, const DataLayout &layout);
+}
+
+namespace detail
+{
+// Removes the file name if name_prefix is a directory and name is not a file in that directory
+inline std::string trimName(const std::string &name_prefix, const std::string &name)
+{
+    // list directory and
+    if (name_prefix.back() == '/')
+    {
+        auto directory_position = name.find_first_of("/", name_prefix.length());
+        // this is a "file" in the directory of name_prefix
+        if (directory_position == std::string::npos)
+        {
+            return name;
+        }
+        else
+        {
+            return name.substr(0, directory_position);
+        }
+    }
+    else
+    {
+        return name;
+    }
+}
 }
 
 // Added at the start and end of each block as sanity check
@@ -42,10 +69,7 @@ class DataLayout
         return GetBlock(name).num_entries;
     }
 
-    inline uint64_t GetBlockSize(const std::string &name) const
-    {
-        return GetBlock(name).byte_size;
-    }
+    inline uint64_t GetBlockSize(const std::string &name) const { return GetBlock(name).byte_size; }
 
     inline uint64_t GetSizeOfLayout() const
     {
@@ -68,7 +92,8 @@ class DataLayout
         {
             char *start_canary_ptr = ptr - sizeof(CANARY);
             char *end_canary_ptr = ptr + GetBlockSize(name);
-            std::cout << name << ": " << (long) (start_canary_ptr-shared_memory) << " -> " << (long) (end_canary_ptr-shared_memory) << std::endl;
+            std::cout << name << ": " << (long)(start_canary_ptr - shared_memory) << " -> "
+                      << (long)(end_canary_ptr - shared_memory) << std::endl;
             std::copy(CANARY, CANARY + sizeof(CANARY), start_canary_ptr);
             std::copy(CANARY, CANARY + sizeof(CANARY), end_canary_ptr);
         }
@@ -92,15 +117,25 @@ class DataLayout
         return (T *)ptr;
     }
 
-    template<typename OutIter>
-    void List(const std::string& name_prefix, OutIter out) const
+    // Depending on the name prefix this function either lists all blocks with the same prefix
+    // or all entries in the sub-directory.
+    // '/ch/edge' -> '/ch/edge_filter/0/blocks', '/ch/edge_filter/1/blocks'
+    // '/ch/edge_filters/' -> '/ch/edge_filter/0', '/ch/edge_filter/1'
+    template <typename OutIter> void List(const std::string &name_prefix, OutIter out) const
     {
-        for (const auto& pair : blocks)
+        std::unordered_set<std::string> returned_name;
+
+        for (const auto &pair : blocks)
         {
             // check if string begins with the name prefix
             if (pair.first.find(name_prefix) == 0)
             {
-                *out++ = pair.first;
+                auto trimmed_name = detail::trimName(name_prefix, pair.first);
+                auto ret = returned_name.insert(trimmed_name);
+                if (ret.second)
+                {
+                    *out++ = trimmed_name;
+                }
             }
         }
     }
@@ -109,7 +144,7 @@ class DataLayout
     friend void serialization::read(io::BufferReader &reader, DataLayout &layout);
     friend void serialization::write(io::BufferWriter &writer, const DataLayout &layout);
 
-    const Block& GetBlock(const std::string& name) const
+    const Block &GetBlock(const std::string &name) const
     {
         auto iter = blocks.find(name);
         if (iter == blocks.end())
