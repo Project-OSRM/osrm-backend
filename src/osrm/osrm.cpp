@@ -32,12 +32,6 @@ OSRM::OSRM(engine::EngineConfig &config)
         storage::SharedMonitor<storage::SharedDataTimestamp> barrier;
         using mutex_type = typename decltype(barrier)::mutex_type;
         boost::interprocess::scoped_lock<mutex_type> current_region_lock(barrier.get_mutex());
-
-        auto mem = storage::makeSharedMemory(barrier.data().region);
-        auto layout = reinterpret_cast<storage::DataLayout *>(mem->Ptr());
-        if (layout->GetBlockSize("/common/names/values") == 0)
-            throw util::exception(
-                "No name data loaded, cannot continue.  Have you run osrm-datastore to load data?");
     }
 
     // Now, check that the algorithm requested can be used with the data
