@@ -71,6 +71,8 @@ class DataLayout
 
     inline uint64_t GetBlockSize(const std::string &name) const { return GetBlock(name).byte_size; }
 
+    inline bool HasBlock(const std::string &name) const { return blocks.find(name) != blocks.end(); }
+
     inline uint64_t GetSizeOfLayout() const
     {
         uint64_t result = 0;

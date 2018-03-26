@@ -19,6 +19,9 @@
 #include "engine/plugins/viaroute.hpp"
 #include "engine/routing_algorithms.hpp"
 #include "engine/status.hpp"
+
+#include "storage/serialization.hpp"
+
 #include "util/exception.hpp"
 #include "util/exception_utils.hpp"
 #include "util/fingerprint.hpp"
@@ -151,9 +154,11 @@ bool Engine<routing_algorithms::ch::Algorithm>::CheckCompatibility(const EngineC
         boost::interprocess::scoped_lock<mutex_type> current_region_lock(barrier.get_mutex());
 
         auto mem = storage::makeSharedMemory(barrier.data().region);
-        auto layout = reinterpret_cast<storage::DataLayout *>(mem->Ptr());
-        return layout->GetBlockSize("/ch/contracted_graph/node_array") > 4 &&
-               layout->GetBlockSize("/ch/contracted_graph/edge_array") > 4;
+        storage::DataLayout layout;
+        storage::io::BufferReader reader(reinterpret_cast<const char*>(mem->Ptr()), mem->Size());
+        storage::serialization::read(reader, layout);
+        return layout.HasBlock("/ch/contracted_graph/node_array") &&
+               layout.HasBlock("/ch/contracted_graph/edge_array");
     }
     else
     {
@@ -171,21 +176,24 @@ bool Engine<routing_algorithms::mld::Algorithm>::CheckCompatibility(const Engine
         boost::interprocess::scoped_lock<mutex_type> current_region_lock(barrier.get_mutex());
 
         auto mem = storage::makeSharedMemory(barrier.data().region);
-        auto layout = reinterpret_cast<storage::DataLayout *>(mem->Ptr());
+        storage::DataLayout layout;
+        storage::io::BufferReader reader(reinterpret_cast<const char*>(mem->Ptr()), mem->Size());
+        storage::serialization::read(reader, layout);
+
         // checks that all the needed memory blocks are populated
         // "/mld/cellstorage/source_boundary" and "/mld/cellstorage/destination_boundary"
         // are not checked, because in situations where there are so few nodes in the graph that
         // they all fit into one cell, they can be empty.
-        bool empty_data = layout->GetBlockSize("/mld/multilevelpartition/level_data") > 0 &&
-                          layout->GetBlockSize("/mld/multilevelpartition/partition") > 0 &&
-                          layout->GetBlockSize("/mld/multilevelpartition/cell_to_children") > 0 &&
-                          layout->GetBlockSize("/mld/cellstorage/cells") > 0 &&
-                          layout->GetBlockSize("/mld/cellstorage/level_to_cell_offset") > 0 &&
-                          layout->GetBlockSize("/mld/multilevelgraph/node_array") > 0 &&
-                          layout->GetBlockSize("/mld/multilevelgraph/edge_array") > 0 &&
-                          layout->GetBlockSize("/mld/metrics/0/weights") > 0 &&
-                          layout->GetBlockSize("/mld/metrics/0/durations") > 0 &&
-                          layout->GetBlockSize("/mld/multilevelgraph/node_to_edge_offset") > 0;
+        bool empty_data = layout.HasBlock("/mld/multilevelpartition/level_data") &&
+                          layout.HasBlock("/mld/multilevelpartition/partition") &&
+                          layout.HasBlock("/mld/multilevelpartition/cell_to_children") &&
+                          layout.HasBlock("/mld/cellstorage/cells") &&
+                          layout.HasBlock("/mld/cellstorage/level_to_cell_offset") &&
+                          layout.HasBlock("/mld/multilevelgraph/node_array") &&
+                          layout.HasBlock("/mld/multilevelgraph/edge_array") &&
+                          layout.HasBlock("/mld/metrics/0/weights") &&
+                          layout.HasBlock("/mld/metrics/0/durations") &&
+                          layout.HasBlock("/mld/multilevelgraph/node_to_edge_offset");
         return empty_data;
     }
     else

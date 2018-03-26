@@ -47,6 +47,7 @@ class SharedMemory
 {
   public:
     void *Ptr() const { return region.get_address(); }
+    std::size_t Size() const { return region.get_size(); }
 
     SharedMemory(const SharedMemory &) = delete;
     SharedMemory &operator=(const SharedMemory &) = delete;
@@ -200,6 +201,7 @@ class SharedMemory
 
   public:
     void *Ptr() const { return region.get_address(); }
+    std::size_t Size() const { return region.get_size(); }
 
     SharedMemory(const boost::filesystem::path &lock_file, const int id, const uint64_t size = 0)
     {

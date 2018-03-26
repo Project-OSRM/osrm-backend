@@ -165,6 +165,7 @@ int Storage::Run(int max_wait)
 
     // Allocate shared memory block
     auto regions_size = encoded_layout.size() + layout.GetSizeOfLayout();
+    util::Log() << "Data layout has a size of " << encoded_layout.size() << " bytes";
     util::Log() << "Allocating shared memory of " << regions_size << " bytes";
     auto data_memory = makeSharedMemory(next_region, regions_size);
 
