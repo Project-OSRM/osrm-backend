@@ -155,10 +155,19 @@ bool Engine<routing_algorithms::ch::Algorithm>::CheckCompatibility(const EngineC
 
         auto mem = storage::makeSharedMemory(barrier.data().region);
         storage::DataLayout layout;
-        storage::io::BufferReader reader(reinterpret_cast<const char*>(mem->Ptr()), mem->Size());
+        storage::io::BufferReader reader(reinterpret_cast<const char *>(mem->Ptr()), mem->Size());
         storage::serialization::read(reader, layout);
-        return layout.HasBlock("/ch/contracted_graph/node_array") &&
-               layout.HasBlock("/ch/contracted_graph/edge_array");
+
+        std::vector<std::string> metric_prefixes;
+        layout.List("/ch/metrics/", std::back_inserter(metric_prefixes));
+
+        bool has_graph = false;
+        for (const auto &metric_prefix : metric_prefixes)
+        {
+            has_graph |= layout.HasBlock(metric_prefix + "/contracted_graph/node_array") &&
+                         layout.HasBlock(metric_prefix + "/contracted_graph/edge_array");
+        }
+        return has_graph;
     }
     else
     {
@@ -177,24 +186,32 @@ bool Engine<routing_algorithms::mld::Algorithm>::CheckCompatibility(const Engine
 
         auto mem = storage::makeSharedMemory(barrier.data().region);
         storage::DataLayout layout;
-        storage::io::BufferReader reader(reinterpret_cast<const char*>(mem->Ptr()), mem->Size());
+        storage::io::BufferReader reader(reinterpret_cast<const char *>(mem->Ptr()), mem->Size());
         storage::serialization::read(reader, layout);
+
+        std::vector<std::string> metric_prefixes;
+        layout.List("/mld/metrics/", std::back_inserter(metric_prefixes));
+
+        bool has_cells = false;
+        for (const auto &metric_prefix : metric_prefixes)
+        {
+            has_cells |= layout.HasBlock(metric_prefix + "/exclude/0/durations") &&
+                         layout.HasBlock(metric_prefix + "/exclude/0/weights");
+        }
 
         // checks that all the needed memory blocks are populated
         // "/mld/cellstorage/source_boundary" and "/mld/cellstorage/destination_boundary"
         // are not checked, because in situations where there are so few nodes in the graph that
         // they all fit into one cell, they can be empty.
-        bool empty_data = layout.HasBlock("/mld/multilevelpartition/level_data") &&
-                          layout.HasBlock("/mld/multilevelpartition/partition") &&
-                          layout.HasBlock("/mld/multilevelpartition/cell_to_children") &&
-                          layout.HasBlock("/mld/cellstorage/cells") &&
-                          layout.HasBlock("/mld/cellstorage/level_to_cell_offset") &&
-                          layout.HasBlock("/mld/multilevelgraph/node_array") &&
-                          layout.HasBlock("/mld/multilevelgraph/edge_array") &&
-                          layout.HasBlock("/mld/metrics/0/weights") &&
-                          layout.HasBlock("/mld/metrics/0/durations") &&
-                          layout.HasBlock("/mld/multilevelgraph/node_to_edge_offset");
-        return empty_data;
+        bool has_data = has_cells && layout.HasBlock("/mld/multilevelpartition/level_data") &&
+                        layout.HasBlock("/mld/multilevelpartition/partition") &&
+                        layout.HasBlock("/mld/multilevelpartition/cell_to_children") &&
+                        layout.HasBlock("/mld/cellstorage/cells") &&
+                        layout.HasBlock("/mld/cellstorage/level_to_cell_offset") &&
+                        layout.HasBlock("/mld/multilevelgraph/node_array") &&
+                        layout.HasBlock("/mld/multilevelgraph/edge_array") &&
+                        layout.HasBlock("/mld/multilevelgraph/node_to_edge_offset");
+        return has_data;
     }
     else
     {

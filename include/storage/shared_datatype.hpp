@@ -94,8 +94,6 @@ class DataLayout
         {
             char *start_canary_ptr = ptr - sizeof(CANARY);
             char *end_canary_ptr = ptr + GetBlockSize(name);
-            std::cout << name << ": " << (long)(start_canary_ptr - shared_memory) << " -> "
-                      << (long)(end_canary_ptr - shared_memory) << std::endl;
             std::copy(CANARY, CANARY + sizeof(CANARY), start_canary_ptr);
             std::copy(CANARY, CANARY + sizeof(CANARY), end_canary_ptr);
         }

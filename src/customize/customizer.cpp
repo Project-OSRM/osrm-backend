@@ -153,7 +153,10 @@ int Customizer::Run(const CustomizationConfig &config)
     util::Log() << "Cells customization took " << TIMER_SEC(cell_customize) << " seconds";
 
     TIMER_START(writing_mld_data);
-    files::writeCellMetrics(config.GetPath(".osrm.cell_metrics"), metrics);
+    std::unordered_map<std::string, std::vector<CellMetric>> metric_exclude_classes = {
+        {properties.GetWeightName(), std::move(metrics)},
+    };
+    files::writeCellMetrics(config.GetPath(".osrm.cell_metrics"), metric_exclude_classes);
     TIMER_STOP(writing_mld_data);
     util::Log() << "MLD customization writing took " << TIMER_SEC(writing_mld_data) << " seconds";
 
