@@ -259,9 +259,9 @@ class StaticRTree
     // Holds the start indexes of each level in m_search_tree
     Vector<std::uint64_t> m_tree_level_starts;
     // mmap'd .fileIndex file
-    boost::iostreams::mapped_file m_objects_region;
+    boost::iostreams::mapped_file_source m_objects_region;
     // This is a view of the EdgeDataT data mmap'd from the .fileIndex file
-    util::vector_view<EdgeDataT> m_objects;
+    util::vector_view<const EdgeDataT> m_objects;
 
   public:
     StaticRTree(const StaticRTree &) = delete;
@@ -273,9 +273,7 @@ class StaticRTree
     explicit StaticRTree(const std::vector<EdgeDataT> &input_data_vector,
                          const Vector<Coordinate> &coordinate_list,
                          const boost::filesystem::path &on_disk_file_name)
-        : m_coordinate_list(coordinate_list),
-          m_objects{mmapFile<EdgeDataT>(
-              on_disk_file_name, m_objects_region, input_data_vector.size() * sizeof(EdgeDataT))}
+        : m_coordinate_list(coordinate_list)
     {
         const auto element_count = input_data_vector.size();
         std::vector<WrappedInputElement> input_wrapper_vector(element_count);
@@ -311,6 +309,10 @@ class StaticRTree
         // sort the hilbert-value representatives
         tbb::parallel_sort(input_wrapper_vector.begin(), input_wrapper_vector.end());
         {
+            boost::iostreams::mapped_file out_objects_region;
+            auto out_objects = mmapFile<EdgeDataT>(on_disk_file_name,
+                                                   out_objects_region,
+                                                   input_data_vector.size() * sizeof(EdgeDataT));
 
             // Note, we can't just write everything in one go, because the input_data_vector
             // is not sorted by hilbert code, only the input_wrapper_vector is in the correct
@@ -321,7 +323,7 @@ class StaticRTree
             // Create the first level of TreeNodes - each bounding LEAF_NODE_COUNT EdgeDataT
             // objects.
             std::size_t wrapped_element_index = 0;
-            auto objects_iter = m_objects.begin();
+            auto objects_iter = out_objects.begin();
 
             while (wrapped_element_index < element_count)
             {
@@ -368,6 +370,8 @@ class StaticRTree
                 m_search_tree.emplace_back(current_node);
             }
         }
+        // mmap as read-only now
+        m_objects = mmapFile<EdgeDataT>(on_disk_file_name, m_objects_region);
 
         // Should hold the number of nodes at the lowest level of the graph (closest
         // to the data)
