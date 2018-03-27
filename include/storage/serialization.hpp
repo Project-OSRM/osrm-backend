@@ -27,6 +27,72 @@ namespace storage
 namespace serialization
 {
 
+namespace detail
+{
+template <typename T, typename BlockT = unsigned char>
+inline BlockT packBits(const T &data, std::size_t index, std::size_t count)
+{
+    static_assert(std::is_same<typename T::value_type, bool>::value, "value_type is not bool");
+    BlockT value = 0;
+    for (std::size_t bit = 0; bit < count; ++bit, ++index)
+        value = (value << 1) | data[index];
+    return value;
+}
+
+template <typename T, typename BlockT = unsigned char>
+inline void unpackBits(T &data, std::size_t index, std::size_t count, BlockT value)
+{
+    static_assert(std::is_same<typename T::value_type, bool>::value, "value_type is not bool");
+    const BlockT mask = BlockT{1} << (count - 1);
+    for (std::size_t bit = 0; bit < count; value <<= 1, ++bit, ++index)
+        data[index] = value & mask;
+}
+
+template <typename VectorT>
+void readBoolVector(tar::FileReader &reader, const std::string &name, VectorT &data)
+{
+    const auto count = reader.ReadElementCount64(name);
+    data.resize(count);
+    std::uint64_t index = 0;
+
+    constexpr std::uint64_t WORD_BITS = CHAR_BIT * sizeof(std::uint64_t);
+
+    const auto decode = [&](const std::uint64_t block) {
+        auto read_size = std::min<std::size_t>(count - index, WORD_BITS);
+        unpackBits<VectorT, std::uint64_t>(data, index, read_size, block);
+        index += WORD_BITS;
+    };
+
+    reader.ReadStreaming<std::uint64_t>(name, boost::make_function_output_iterator(decode));
+}
+
+template <typename VectorT>
+void writeBoolVector(tar::FileWriter &writer, const std::string &name, const VectorT &data)
+{
+    const auto count = data.size();
+    writer.WriteElementCount64(name, count);
+    std::uint64_t index = 0;
+
+    constexpr std::uint64_t WORD_BITS = CHAR_BIT * sizeof(std::uint64_t);
+
+    // FIXME on old boost version the function_input_iterator does not work with lambdas
+    // so we need to wrap it in a function here.
+    const std::function<std::uint64_t()> encode_function = [&]() -> std::uint64_t {
+        auto write_size = std::min<std::size_t>(count - index, WORD_BITS);
+        auto packed = packBits<VectorT, std::uint64_t>(data, index, write_size);
+        index += WORD_BITS;
+        return packed;
+    };
+
+    std::uint64_t number_of_blocks = (count + WORD_BITS - 1) / WORD_BITS;
+    writer.WriteStreaming<std::uint64_t>(
+        name,
+        boost::make_function_input_iterator(encode_function, boost::infinite()),
+        number_of_blocks);
+}
+}
+
+
 /* All vector formats here use the same on-disk format.
  * This is important because we want to be able to write from a vector
  * of one kind, but read it into a vector of another kind.
@@ -153,71 +219,6 @@ void write(tar::FileWriter &writer, const std::string &name, const util::vector_
     const auto count = data.size();
     writer.WriteElementCount64(name, count);
     writer.WriteFrom(name, data.data(), count);
-}
-
-namespace detail
-{
-template <typename T, typename BlockT = unsigned char>
-inline BlockT packBits(const T &data, std::size_t index, std::size_t count)
-{
-    static_assert(std::is_same<typename T::value_type, bool>::value, "value_type is not bool");
-    BlockT value = 0;
-    for (std::size_t bit = 0; bit < count; ++bit, ++index)
-        value = (value << 1) | data[index];
-    return value;
-}
-
-template <typename T, typename BlockT = unsigned char>
-inline void unpackBits(T &data, std::size_t index, std::size_t count, BlockT value)
-{
-    static_assert(std::is_same<typename T::value_type, bool>::value, "value_type is not bool");
-    const BlockT mask = BlockT{1} << (count - 1);
-    for (std::size_t bit = 0; bit < count; value <<= 1, ++bit, ++index)
-        data[index] = value & mask;
-}
-
-template <typename VectorT>
-void readBoolVector(tar::FileReader &reader, const std::string &name, VectorT &data)
-{
-    const auto count = reader.ReadElementCount64(name);
-    data.resize(count);
-    std::uint64_t index = 0;
-
-    constexpr std::uint64_t WORD_BITS = CHAR_BIT * sizeof(std::uint64_t);
-
-    const auto decode = [&](const std::uint64_t block) {
-        auto read_size = std::min<std::size_t>(count - index, WORD_BITS);
-        unpackBits<VectorT, std::uint64_t>(data, index, read_size, block);
-        index += WORD_BITS;
-    };
-
-    reader.ReadStreaming<std::uint64_t>(name, boost::make_function_output_iterator(decode));
-}
-
-template <typename VectorT>
-void writeBoolVector(tar::FileWriter &writer, const std::string &name, const VectorT &data)
-{
-    const auto count = data.size();
-    writer.WriteElementCount64(name, count);
-    std::uint64_t index = 0;
-
-    constexpr std::uint64_t WORD_BITS = CHAR_BIT * sizeof(std::uint64_t);
-
-    // FIXME on old boost version the function_input_iterator does not work with lambdas
-    // so we need to wrap it in a function here.
-    const std::function<std::uint64_t()> encode_function = [&]() -> std::uint64_t {
-        auto write_size = std::min<std::size_t>(count - index, WORD_BITS);
-        auto packed = packBits<VectorT, std::uint64_t>(data, index, write_size);
-        index += WORD_BITS;
-        return packed;
-    };
-
-    std::uint64_t number_of_blocks = (count + WORD_BITS - 1) / WORD_BITS;
-    writer.WriteStreaming<std::uint64_t>(
-        name,
-        boost::make_function_input_iterator(encode_function, boost::infinite()),
-        number_of_blocks);
-}
 }
 
 template <>

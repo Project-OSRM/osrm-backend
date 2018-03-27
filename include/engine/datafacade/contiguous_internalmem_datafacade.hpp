@@ -83,23 +83,26 @@ class ContiguousInternalMemoryAlgorithmDataFacade<CH> : public datafacade::Algor
 
     void InitializeGraphPointer(const storage::DataLayout &data_layout,
                                 char *memory_block,
+                                const std::string& metric_name,
                                 const std::size_t exclude_index)
     {
+        const std::string metric_prefix = "/ch/metrics/" + metric_name;
         auto graph_nodes_ptr =
-            data_layout.GetBlockPtr<GraphNode>(memory_block, "/ch/contracted_graph/node_array");
+            data_layout.GetBlockPtr<GraphNode>(memory_block, metric_prefix + "/contracted_graph/node_array");
 
         auto graph_edges_ptr =
-            data_layout.GetBlockPtr<GraphEdge>(memory_block, "/ch/contracted_graph/edge_array");
+            data_layout.GetBlockPtr<GraphEdge>(memory_block, metric_prefix + "/contracted_graph/edge_array");
 
-        auto filter_block_id = "/ch/edge_filter/" + std::to_string(exclude_index);
+        auto exclude_prefix = metric_prefix + "/exclude/" + std::to_string(exclude_index);
+        auto filter_block_id = exclude_prefix + "/edge_filter";
 
         auto edge_filter_ptr =
             data_layout.GetBlockPtr<util::vector_view<bool>::Word>(memory_block, filter_block_id);
 
         util::vector_view<GraphNode> node_list(
-            graph_nodes_ptr, data_layout.GetBlockEntries("/ch/contracted_graph/node_array"));
+            graph_nodes_ptr, data_layout.GetBlockEntries(metric_prefix + "/contracted_graph/node_array"));
         util::vector_view<GraphEdge> edge_list(
-            graph_edges_ptr, data_layout.GetBlockEntries("/ch/contracted_graph/edge_array"));
+            graph_edges_ptr, data_layout.GetBlockEntries(metric_prefix + "/contracted_graph/edge_array"));
 
         util::vector_view<bool> edge_filter(edge_filter_ptr,
                                             data_layout.GetBlockEntries(filter_block_id));
@@ -108,17 +111,18 @@ class ContiguousInternalMemoryAlgorithmDataFacade<CH> : public datafacade::Algor
 
   public:
     ContiguousInternalMemoryAlgorithmDataFacade(
-        std::shared_ptr<ContiguousBlockAllocator> allocator_, std::size_t exclude_index)
+        std::shared_ptr<ContiguousBlockAllocator> allocator_, const std::string& metric_name, std::size_t exclude_index)
         : allocator(std::move(allocator_))
     {
-        InitializeInternalPointers(allocator->GetLayout(), allocator->GetMemory(), exclude_index);
+        InitializeInternalPointers(allocator->GetLayout(), allocator->GetMemory(), metric_name, exclude_index);
     }
 
     void InitializeInternalPointers(const storage::DataLayout &data_layout,
                                     char *memory_block,
+                                    const std::string& metric_name,
                                     const std::size_t exclude_index)
     {
-        InitializeGraphPointer(data_layout, memory_block, exclude_index);
+        InitializeGraphPointer(data_layout, memory_block, metric_name, exclude_index);
     }
 
     // search graph access
@@ -225,8 +229,11 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
 
     void InitializeProfilePropertiesPointer(const storage::DataLayout &data_layout,
                                             char *memory_block,
+                                            const std::string& metric_name,
                                             const std::size_t exclude_index)
     {
+        // TODO: For multi-metric support we need to have separate exclude classes per metric
+        (void) metric_name;
         m_profile_properties = data_layout.GetBlockPtr<extractor::ProfileProperties>(
             memory_block, "/common/properties");
 
@@ -528,6 +535,7 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
 
     void InitializeInternalPointers(const storage::DataLayout &data_layout,
                                     char *memory_block,
+                                    const std::string& metric_name,
                                     const std::size_t exclude_index)
     {
         InitializeChecksumPointer(data_layout, memory_block);
@@ -538,7 +546,7 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         InitializeGeometryPointers(data_layout, memory_block);
         InitializeNamePointers(data_layout, memory_block);
         InitializeTurnLaneDescriptionsPointers(data_layout, memory_block);
-        InitializeProfilePropertiesPointer(data_layout, memory_block, exclude_index);
+        InitializeProfilePropertiesPointer(data_layout, memory_block, metric_name, exclude_index);
         InitializeRTreePointers(data_layout, memory_block);
         InitializeIntersectionClassPointers(data_layout, memory_block);
         InitializeManeuverOverridePointers(data_layout, memory_block);
@@ -548,10 +556,11 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     // allows switching between process_memory/shared_memory datafacade, based on the type of
     // allocator
     ContiguousInternalMemoryDataFacadeBase(std::shared_ptr<ContiguousBlockAllocator> allocator_,
+                                            const std::string& metric_name,
                                            const std::size_t exclude_index)
         : allocator(std::move(allocator_))
     {
-        InitializeInternalPointers(allocator->GetLayout(), allocator->GetMemory(), exclude_index);
+        InitializeInternalPointers(allocator->GetLayout(), allocator->GetMemory(), metric_name, exclude_index);
     }
 
     // node and edge information access
@@ -959,9 +968,10 @@ class ContiguousInternalMemoryDataFacade<CH>
 {
   public:
     ContiguousInternalMemoryDataFacade(std::shared_ptr<ContiguousBlockAllocator> allocator,
+            const std::string& metric_name,
                                        const std::size_t exclude_index)
-        : ContiguousInternalMemoryDataFacadeBase(allocator, exclude_index),
-          ContiguousInternalMemoryAlgorithmDataFacade<CH>(allocator, exclude_index)
+        : ContiguousInternalMemoryDataFacadeBase(allocator, metric_name, exclude_index),
+          ContiguousInternalMemoryAlgorithmDataFacade<CH>(allocator, metric_name, exclude_index)
 
     {
     }
@@ -981,14 +991,16 @@ template <> class ContiguousInternalMemoryAlgorithmDataFacade<MLD> : public Algo
 
     void InitializeInternalPointers(const storage::DataLayout &data_layout,
                                     char *memory_block,
+                                    const std::string& metric_name,
                                     const std::size_t exclude_index)
     {
-        InitializeMLDDataPointers(data_layout, memory_block, exclude_index);
+        InitializeMLDDataPointers(data_layout, memory_block, metric_name, exclude_index);
         InitializeGraphPointer(data_layout, memory_block);
     }
 
     void InitializeMLDDataPointers(const storage::DataLayout &data_layout,
                                    char *memory_block,
+                                   const std::string& metric_name,
                                    const std::size_t exclude_index)
     {
         if (data_layout.GetBlockSize("/mld/multilevelpartition/partition") > 0)
@@ -1016,9 +1028,9 @@ template <> class ContiguousInternalMemoryAlgorithmDataFacade<MLD> : public Algo
                 partitioner::MultiLevelPartitionView{level_data, partition, cell_to_children};
         }
 
-        const auto weights_block_id = "/mld/metrics/" + std::to_string(exclude_index) + "/weights";
-        const auto durations_block_id =
-            "/mld/metrics/" + std::to_string(exclude_index) + "/durations";
+        const auto exclude_prefix = "/mld/metrics/" + metric_name + "/exclude/" + std::to_string(exclude_index);
+        const auto weights_block_id = exclude_prefix + "/weights";
+        const auto durations_block_id = exclude_prefix + "/durations";
 
         if (data_layout.GetBlockSize(weights_block_id) > 0)
         {
@@ -1026,8 +1038,8 @@ template <> class ContiguousInternalMemoryAlgorithmDataFacade<MLD> : public Algo
                 data_layout.GetBlockPtr<EdgeWeight>(memory_block, weights_block_id);
             auto mld_cell_durations_ptr =
                 data_layout.GetBlockPtr<EdgeDuration>(memory_block, durations_block_id);
-            auto weight_entries_count = data_layout.GetBlockEntries("/mld/metrics/0/weights");
-            auto duration_entries_count = data_layout.GetBlockEntries("/mld/metrics/0/durations");
+            auto weight_entries_count = data_layout.GetBlockEntries(weights_block_id);
+            auto duration_entries_count = data_layout.GetBlockEntries(durations_block_id);
             BOOST_ASSERT(weight_entries_count == duration_entries_count);
             util::vector_view<EdgeWeight> weights(mld_cell_weights_ptr, weight_entries_count);
             util::vector_view<EdgeDuration> durations(mld_cell_durations_ptr,
@@ -1099,10 +1111,10 @@ template <> class ContiguousInternalMemoryAlgorithmDataFacade<MLD> : public Algo
 
   public:
     ContiguousInternalMemoryAlgorithmDataFacade(
-        std::shared_ptr<ContiguousBlockAllocator> allocator_, const std::size_t exclude_index)
+        std::shared_ptr<ContiguousBlockAllocator> allocator_, const std::string& metric_name, const std::size_t exclude_index)
         : allocator(std::move(allocator_))
     {
-        InitializeInternalPointers(allocator->GetLayout(), allocator->GetMemory(), exclude_index);
+        InitializeInternalPointers(allocator->GetLayout(), allocator->GetMemory(), metric_name, exclude_index);
     }
 
     const partitioner::MultiLevelPartitionView &GetMultiLevelPartition() const override
@@ -1156,9 +1168,10 @@ class ContiguousInternalMemoryDataFacade<MLD> final
   private:
   public:
     ContiguousInternalMemoryDataFacade(std::shared_ptr<ContiguousBlockAllocator> allocator,
+                                       const std::string& metric_name,
                                        const std::size_t exclude_index)
-        : ContiguousInternalMemoryDataFacadeBase(allocator, exclude_index),
-          ContiguousInternalMemoryAlgorithmDataFacade<MLD>(allocator, exclude_index)
+        : ContiguousInternalMemoryDataFacadeBase(allocator, metric_name, exclude_index),
+          ContiguousInternalMemoryAlgorithmDataFacade<MLD>(allocator, metric_name, exclude_index)
 
     {
     }

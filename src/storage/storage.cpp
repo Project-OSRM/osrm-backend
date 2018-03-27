@@ -554,12 +554,16 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
         extractor::files::readRamIndex(config.GetPath(".osrm.ramIndex"), rtree);
     }
 
+    // FIXME we only need to get the weight name
+    std::string metric_name;
     // load profile properties
     {
         const auto profile_properties_ptr = layout.GetBlockPtr<extractor::ProfileProperties, true>(
             memory_ptr, "/common/properties");
         extractor::files::readProfileProperties(config.GetPath(".osrm.properties"),
                                                 *profile_properties_ptr);
+
+        metric_name = profile_properties_ptr->GetWeightName();
     }
 
     // Load intersection data
@@ -604,210 +608,198 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
             config.GetPath(".osrm.icd"), intersection_bearings_view, entry_classes);
     }
 
-    { // Load the HSGR file
-        if (boost::filesystem::exists(config.GetPath(".osrm.hsgr")))
+    if (boost::filesystem::exists(config.GetPath(".osrm.hsgr")))
+    {
+        const std::string metric_prefix = "/ch/metrics/" + metric_name;
+        auto graph_nodes_ptr = layout.GetBlockPtr<contractor::QueryGraphView::NodeArrayEntry, true>(
+            memory_ptr, metric_prefix + "/contracted_graph/node_array");
+        auto graph_edges_ptr = layout.GetBlockPtr<contractor::QueryGraphView::EdgeArrayEntry, true>(
+            memory_ptr, metric_prefix + "/contracted_graph/edge_array");
+        auto checksum = layout.GetBlockPtr<unsigned, true>(memory_ptr, "/ch/checksum");
+
+        util::vector_view<contractor::QueryGraphView::NodeArrayEntry> node_list(
+            graph_nodes_ptr,
+            layout.GetBlockEntries(metric_prefix + "/contracted_graph/node_array"));
+        util::vector_view<contractor::QueryGraphView::EdgeArrayEntry> edge_list(
+            graph_edges_ptr,
+            layout.GetBlockEntries(metric_prefix + "/contracted_graph/edge_array"));
+
+        std::vector<util::vector_view<bool>> edge_filter;
+        layout.List(
+            metric_prefix + "/exclude", boost::make_function_output_iterator([&](const auto &name) {
+                auto data_ptr =
+                    layout.GetBlockPtr<util::vector_view<bool>::Word, true>(memory_ptr, name);
+                auto num_entries = layout.GetBlockEntries(name);
+                edge_filter.emplace_back(data_ptr, num_entries);
+            }));
+
+        std::uint32_t graph_connectivity_checksum = 0;
+        std::unordered_map<std::string, contractor::ContractedMetricView> metrics = {
+            {metric_name, {{std::move(node_list), std::move(edge_list)}, std::move(edge_filter)}}};
+
+        contractor::files::readGraph(
+            config.GetPath(".osrm.hsgr"), *checksum, metrics, graph_connectivity_checksum);
+        if (turns_connectivity_checksum != graph_connectivity_checksum)
         {
-            auto graph_nodes_ptr =
-                layout.GetBlockPtr<contractor::QueryGraphView::NodeArrayEntry, true>(
-                    memory_ptr, "/ch/contracted_graph/node_array");
-            auto graph_edges_ptr =
-                layout.GetBlockPtr<contractor::QueryGraphView::EdgeArrayEntry, true>(
-                    memory_ptr, "/ch/contracted_graph/edge_array");
-            auto checksum = layout.GetBlockPtr<unsigned, true>(memory_ptr, "/ch/checksum");
-
-            util::vector_view<contractor::QueryGraphView::NodeArrayEntry> node_list(
-                graph_nodes_ptr, layout.GetBlockEntries("/ch/contracted_graph/node_array"));
-            util::vector_view<contractor::QueryGraphView::EdgeArrayEntry> edge_list(
-                graph_edges_ptr, layout.GetBlockEntries("/ch/contracted_graph/edge_array"));
-
-            std::vector<util::vector_view<bool>> edge_filter;
-            layout.List(
-                "/ch/edge_filter", boost::make_function_output_iterator([&](const auto &name) {
-                    auto data_ptr =
-                        layout.GetBlockPtr<util::vector_view<bool>::Word, true>(memory_ptr, name);
-                    auto num_entries = layout.GetBlockEntries(name);
-                    edge_filter.emplace_back(data_ptr, num_entries);
-                }));
-
-            std::uint32_t graph_connectivity_checksum = 0;
-            contractor::QueryGraphView graph_view(std::move(node_list), std::move(edge_list));
-            contractor::files::readGraph(config.GetPath(".osrm.hsgr"),
-                                         *checksum,
-                                         graph_view,
-                                         edge_filter,
-                                         graph_connectivity_checksum);
-            if (turns_connectivity_checksum != graph_connectivity_checksum)
-            {
-                throw util::exception(
-                    "Connectivity checksum " + std::to_string(graph_connectivity_checksum) +
-                    " in " + config.GetPath(".osrm.hsgr").string() +
-                    " does not equal to checksum " + std::to_string(turns_connectivity_checksum) +
-                    " in " + config.GetPath(".osrm.edges").string());
-            }
-        }
-        else
-        {
-            layout.GetBlockPtr<unsigned, true>(memory_ptr, "/ch/checksum");
-            layout.GetBlockPtr<contractor::QueryGraphView::NodeArrayEntry, true>(
-                memory_ptr, "/ch/contracted_graph/node_array");
-            layout.GetBlockPtr<contractor::QueryGraphView::EdgeArrayEntry, true>(
-                memory_ptr, "/ch/contracted_graph/edge_array");
+            throw util::exception(
+                "Connectivity checksum " + std::to_string(graph_connectivity_checksum) + " in " +
+                config.GetPath(".osrm.hsgr").string() + " does not equal to checksum " +
+                std::to_string(turns_connectivity_checksum) + " in " +
+                config.GetPath(".osrm.edges").string());
         }
     }
 
-    { // Loading MLD Data
-        if (boost::filesystem::exists(config.GetPath(".osrm.partition")))
+    if (boost::filesystem::exists(config.GetPath(".osrm.partition")))
+    {
+        BOOST_ASSERT(layout.GetBlockSize("/mld/multilevelpartition/level_data") > 0);
+        BOOST_ASSERT(layout.GetBlockSize("/mld/multilevelpartition/cell_to_children") > 0);
+        BOOST_ASSERT(layout.GetBlockSize("/mld/multilevelpartition/partition") > 0);
+
+        auto level_data = layout.GetBlockPtr<partitioner::MultiLevelPartitionView::LevelData, true>(
+            memory_ptr, "/mld/multilevelpartition/level_data");
+
+        auto mld_partition_ptr =
+            layout.GetBlockPtr<PartitionID, true>(memory_ptr, "/mld/multilevelpartition/partition");
+        auto partition_entries_count = layout.GetBlockEntries("/mld/multilevelpartition/partition");
+        util::vector_view<PartitionID> partition(mld_partition_ptr, partition_entries_count);
+
+        auto mld_chilren_ptr = layout.GetBlockPtr<CellID, true>(
+            memory_ptr, "/mld/multilevelpartition/cell_to_children");
+        auto children_entries_count =
+            layout.GetBlockEntries("/mld/multilevelpartition/cell_to_children");
+        util::vector_view<CellID> cell_to_children(mld_chilren_ptr, children_entries_count);
+
+        partitioner::MultiLevelPartitionView mlp{
+            std::move(level_data), std::move(partition), std::move(cell_to_children)};
+        partitioner::files::readPartition(config.GetPath(".osrm.partition"), mlp);
+    }
+
+    if (boost::filesystem::exists(config.GetPath(".osrm.cells")))
+    {
+        BOOST_ASSERT(layout.GetBlockSize("/mld/cellstorage/cells") > 0);
+        BOOST_ASSERT(layout.GetBlockSize("/mld/cellstorage/level_to_cell_offset") > 0);
+
+        auto mld_source_boundary_ptr =
+            layout.GetBlockPtr<NodeID, true>(memory_ptr, "/mld/cellstorage/source_boundary");
+        auto mld_destination_boundary_ptr =
+            layout.GetBlockPtr<NodeID, true>(memory_ptr, "/mld/cellstorage/destination_boundary");
+        auto mld_cells_ptr = layout.GetBlockPtr<partitioner::CellStorageView::CellData, true>(
+            memory_ptr, "/mld/cellstorage/cells");
+        auto mld_cell_level_offsets_ptr = layout.GetBlockPtr<std::uint64_t, true>(
+            memory_ptr, "/mld/cellstorage/level_to_cell_offset");
+
+        auto source_boundary_entries_count =
+            layout.GetBlockEntries("/mld/cellstorage/source_boundary");
+        auto destination_boundary_entries_count =
+            layout.GetBlockEntries("/mld/cellstorage/destination_boundary");
+        auto cells_entries_counts = layout.GetBlockEntries("/mld/cellstorage/cells");
+        auto cell_level_offsets_entries_count =
+            layout.GetBlockEntries("/mld/cellstorage/level_to_cell_offset");
+
+        util::vector_view<NodeID> source_boundary(mld_source_boundary_ptr,
+                                                  source_boundary_entries_count);
+        util::vector_view<NodeID> destination_boundary(mld_destination_boundary_ptr,
+                                                       destination_boundary_entries_count);
+        util::vector_view<partitioner::CellStorageView::CellData> cells(mld_cells_ptr,
+                                                                        cells_entries_counts);
+        util::vector_view<std::uint64_t> level_offsets(mld_cell_level_offsets_ptr,
+                                                       cell_level_offsets_entries_count);
+
+        partitioner::CellStorageView storage{std::move(source_boundary),
+                                             std::move(destination_boundary),
+                                             std::move(cells),
+                                             std::move(level_offsets)};
+        partitioner::files::readCells(config.GetPath(".osrm.cells"), storage);
+    }
+
+    if (boost::filesystem::exists(config.GetPath(".osrm.cell_metrics")))
+    {
+        BOOST_ASSERT(layout.GetBlockSize("/mld/cellstorage/cells") > 0);
+        BOOST_ASSERT(layout.GetBlockSize("/mld/cellstorage/level_to_cell_offset") > 0);
+
+        std::unordered_map<std::string, std::vector<customizer::CellMetricView>> metrics = {
+            {metric_name, {}},
+        };
+
+        std::vector<std::string> metric_prefix_names;
+        layout.List("/mld/metrics/" + metric_name + "/exclude/",
+                    std::back_inserter(metric_prefix_names));
+        for (const auto &prefix : metric_prefix_names)
         {
-            BOOST_ASSERT(layout.GetBlockSize("/mld/multilevelpartition/level_data") > 0);
-            BOOST_ASSERT(layout.GetBlockSize("/mld/multilevelpartition/cell_to_children") > 0);
-            BOOST_ASSERT(layout.GetBlockSize("/mld/multilevelpartition/partition") > 0);
+            auto weights_block_id = prefix + "/weights";
+            auto durations_block_id = prefix + "/durations";
 
-            auto level_data =
-                layout.GetBlockPtr<partitioner::MultiLevelPartitionView::LevelData, true>(
-                    memory_ptr, "/mld/multilevelpartition/level_data");
+            auto weight_entries_count = layout.GetBlockEntries(weights_block_id);
+            auto duration_entries_count = layout.GetBlockEntries(durations_block_id);
+            auto mld_cell_weights_ptr =
+                layout.GetBlockPtr<EdgeWeight, true>(memory_ptr, weights_block_id);
+            auto mld_cell_duration_ptr =
+                layout.GetBlockPtr<EdgeDuration, true>(memory_ptr, durations_block_id);
+            util::vector_view<EdgeWeight> weights(mld_cell_weights_ptr, weight_entries_count);
+            util::vector_view<EdgeDuration> durations(mld_cell_duration_ptr,
+                                                      duration_entries_count);
 
-            auto mld_partition_ptr = layout.GetBlockPtr<PartitionID, true>(
-                memory_ptr, "/mld/multilevelpartition/partition");
-            auto partition_entries_count =
-                layout.GetBlockEntries("/mld/multilevelpartition/partition");
-            util::vector_view<PartitionID> partition(mld_partition_ptr, partition_entries_count);
-
-            auto mld_chilren_ptr = layout.GetBlockPtr<CellID, true>(
-                memory_ptr, "/mld/multilevelpartition/cell_to_children");
-            auto children_entries_count =
-                layout.GetBlockEntries("/mld/multilevelpartition/cell_to_children");
-            util::vector_view<CellID> cell_to_children(mld_chilren_ptr, children_entries_count);
-
-            partitioner::MultiLevelPartitionView mlp{
-                std::move(level_data), std::move(partition), std::move(cell_to_children)};
-            partitioner::files::readPartition(config.GetPath(".osrm.partition"), mlp);
+            metrics[metric_name].push_back(
+                customizer::CellMetricView{std::move(weights), std::move(durations)});
         }
 
-        if (boost::filesystem::exists(config.GetPath(".osrm.cells")))
+        customizer::files::readCellMetrics(config.GetPath(".osrm.cell_metrics"), metrics);
+    }
+
+    if (boost::filesystem::exists(config.GetPath(".osrm.mldgr")))
+    {
+
+        auto graph_nodes_ptr =
+            layout.GetBlockPtr<customizer::MultiLevelEdgeBasedGraphView::NodeArrayEntry, true>(
+                memory_ptr, "/mld/multilevelgraph/node_array");
+        auto graph_edges_ptr =
+            layout.GetBlockPtr<customizer::MultiLevelEdgeBasedGraphView::EdgeArrayEntry, true>(
+                memory_ptr, "/mld/multilevelgraph/edge_array");
+        auto graph_node_to_offset_ptr =
+            layout.GetBlockPtr<customizer::MultiLevelEdgeBasedGraphView::EdgeOffset, true>(
+                memory_ptr, "/mld/multilevelgraph/node_to_edge_offset");
+
+        util::vector_view<customizer::MultiLevelEdgeBasedGraphView::NodeArrayEntry> node_list(
+            graph_nodes_ptr, layout.GetBlockEntries("/mld/multilevelgraph/node_array"));
+        util::vector_view<customizer::MultiLevelEdgeBasedGraphView::EdgeArrayEntry> edge_list(
+            graph_edges_ptr, layout.GetBlockEntries("/mld/multilevelgraph/edge_array"));
+        util::vector_view<customizer::MultiLevelEdgeBasedGraphView::EdgeOffset> node_to_offset(
+            graph_node_to_offset_ptr,
+            layout.GetBlockEntries("/mld/multilevelgraph/node_to_edge_offset"));
+
+        std::uint32_t graph_connectivity_checksum = 0;
+        customizer::MultiLevelEdgeBasedGraphView graph_view(
+            std::move(node_list), std::move(edge_list), std::move(node_to_offset));
+        partitioner::files::readGraph(
+            config.GetPath(".osrm.mldgr"), graph_view, graph_connectivity_checksum);
+
+        if (turns_connectivity_checksum != graph_connectivity_checksum)
         {
-            BOOST_ASSERT(layout.GetBlockSize("/mld/cellstorage/cells") > 0);
-            BOOST_ASSERT(layout.GetBlockSize("/mld/cellstorage/level_to_cell_offset") > 0);
-
-            auto mld_source_boundary_ptr =
-                layout.GetBlockPtr<NodeID, true>(memory_ptr, "/mld/cellstorage/source_boundary");
-            auto mld_destination_boundary_ptr = layout.GetBlockPtr<NodeID, true>(
-                memory_ptr, "/mld/cellstorage/destination_boundary");
-            auto mld_cells_ptr = layout.GetBlockPtr<partitioner::CellStorageView::CellData, true>(
-                memory_ptr, "/mld/cellstorage/cells");
-            auto mld_cell_level_offsets_ptr = layout.GetBlockPtr<std::uint64_t, true>(
-                memory_ptr, "/mld/cellstorage/level_to_cell_offset");
-
-            auto source_boundary_entries_count =
-                layout.GetBlockEntries("/mld/cellstorage/source_boundary");
-            auto destination_boundary_entries_count =
-                layout.GetBlockEntries("/mld/cellstorage/destination_boundary");
-            auto cells_entries_counts = layout.GetBlockEntries("/mld/cellstorage/cells");
-            auto cell_level_offsets_entries_count =
-                layout.GetBlockEntries("/mld/cellstorage/level_to_cell_offset");
-
-            util::vector_view<NodeID> source_boundary(mld_source_boundary_ptr,
-                                                      source_boundary_entries_count);
-            util::vector_view<NodeID> destination_boundary(mld_destination_boundary_ptr,
-                                                           destination_boundary_entries_count);
-            util::vector_view<partitioner::CellStorageView::CellData> cells(mld_cells_ptr,
-                                                                            cells_entries_counts);
-            util::vector_view<std::uint64_t> level_offsets(mld_cell_level_offsets_ptr,
-                                                           cell_level_offsets_entries_count);
-
-            partitioner::CellStorageView storage{std::move(source_boundary),
-                                                 std::move(destination_boundary),
-                                                 std::move(cells),
-                                                 std::move(level_offsets)};
-            partitioner::files::readCells(config.GetPath(".osrm.cells"), storage);
+            throw util::exception(
+                "Connectivity checksum " + std::to_string(graph_connectivity_checksum) + " in " +
+                config.GetPath(".osrm.mldgr").string() + " does not equal to checksum " +
+                std::to_string(turns_connectivity_checksum) + " in " +
+                config.GetPath(".osrm.edges").string());
         }
+    }
 
-        if (boost::filesystem::exists(config.GetPath(".osrm.cell_metrics")))
-        {
-            BOOST_ASSERT(layout.GetBlockSize("/mld/cellstorage/cells") > 0);
-            BOOST_ASSERT(layout.GetBlockSize("/mld/cellstorage/level_to_cell_offset") > 0);
+    // load maneuver overrides
+    {
+        const auto maneuver_overrides_ptr =
+            layout.GetBlockPtr<extractor::StorageManeuverOverride, true>(
+                memory_ptr, "/common/maneuver_overrides/overrides");
+        const auto maneuver_override_node_sequences_ptr = layout.GetBlockPtr<NodeID, true>(
+            memory_ptr, "/common/maneuver_overrides/node_sequences");
 
-            std::vector<customizer::CellMetricView> metrics;
+        util::vector_view<extractor::StorageManeuverOverride> maneuver_overrides(
+            maneuver_overrides_ptr, layout.GetBlockEntries("/common/maneuver_overrides/overrides"));
+        util::vector_view<NodeID> maneuver_override_node_sequences(
+            maneuver_override_node_sequences_ptr,
+            layout.GetBlockEntries("/common/maneuver_overrides/node_sequences"));
 
-            std::vector<std::string> metric_prefix_names;
-            layout.List("/mld/metrics/", std::back_inserter(metric_prefix_names));
-            for (const auto &prefix : metric_prefix_names)
-            {
-                auto weights_block_id = prefix + "/weights";
-                auto durations_block_id = prefix + "/durations";
-
-                auto weight_entries_count = layout.GetBlockEntries(weights_block_id);
-                auto duration_entries_count = layout.GetBlockEntries(durations_block_id);
-                auto mld_cell_weights_ptr =
-                    layout.GetBlockPtr<EdgeWeight, true>(memory_ptr, weights_block_id);
-                auto mld_cell_duration_ptr =
-                    layout.GetBlockPtr<EdgeDuration, true>(memory_ptr, durations_block_id);
-                util::vector_view<EdgeWeight> weights(mld_cell_weights_ptr, weight_entries_count);
-                util::vector_view<EdgeDuration> durations(mld_cell_duration_ptr,
-                                                          duration_entries_count);
-
-                metrics.push_back(
-                    customizer::CellMetricView{std::move(weights), std::move(durations)});
-            }
-
-            customizer::files::readCellMetrics(config.GetPath(".osrm.cell_metrics"), metrics);
-        }
-
-        if (boost::filesystem::exists(config.GetPath(".osrm.mldgr")))
-        {
-
-            auto graph_nodes_ptr =
-                layout.GetBlockPtr<customizer::MultiLevelEdgeBasedGraphView::NodeArrayEntry, true>(
-                    memory_ptr, "/mld/multilevelgraph/node_array");
-            auto graph_edges_ptr =
-                layout.GetBlockPtr<customizer::MultiLevelEdgeBasedGraphView::EdgeArrayEntry, true>(
-                    memory_ptr, "/mld/multilevelgraph/edge_array");
-            auto graph_node_to_offset_ptr =
-                layout.GetBlockPtr<customizer::MultiLevelEdgeBasedGraphView::EdgeOffset, true>(
-                    memory_ptr, "/mld/multilevelgraph/node_to_edge_offset");
-
-            util::vector_view<customizer::MultiLevelEdgeBasedGraphView::NodeArrayEntry> node_list(
-                graph_nodes_ptr, layout.GetBlockEntries("/mld/multilevelgraph/node_array"));
-            util::vector_view<customizer::MultiLevelEdgeBasedGraphView::EdgeArrayEntry> edge_list(
-                graph_edges_ptr, layout.GetBlockEntries("/mld/multilevelgraph/edge_array"));
-            util::vector_view<customizer::MultiLevelEdgeBasedGraphView::EdgeOffset> node_to_offset(
-                graph_node_to_offset_ptr,
-                layout.GetBlockEntries("/mld/multilevelgraph/node_to_edge_offset"));
-
-            std::uint32_t graph_connectivity_checksum = 0;
-            customizer::MultiLevelEdgeBasedGraphView graph_view(
-                std::move(node_list), std::move(edge_list), std::move(node_to_offset));
-            partitioner::files::readGraph(
-                config.GetPath(".osrm.mldgr"), graph_view, graph_connectivity_checksum);
-
-            if (turns_connectivity_checksum != graph_connectivity_checksum)
-            {
-                throw util::exception(
-                    "Connectivity checksum " + std::to_string(graph_connectivity_checksum) +
-                    " in " + config.GetPath(".osrm.mldgr").string() +
-                    " does not equal to checksum " + std::to_string(turns_connectivity_checksum) +
-                    " in " + config.GetPath(".osrm.edges").string());
-            }
-        }
-
-        // load maneuver overrides
-        {
-            const auto maneuver_overrides_ptr =
-                layout.GetBlockPtr<extractor::StorageManeuverOverride, true>(
-                    memory_ptr, "/common/maneuver_overrides/overrides");
-            const auto maneuver_override_node_sequences_ptr = layout.GetBlockPtr<NodeID, true>(
-                memory_ptr, "/common/maneuver_overrides/node_sequences");
-
-            util::vector_view<extractor::StorageManeuverOverride> maneuver_overrides(
-                maneuver_overrides_ptr,
-                layout.GetBlockEntries("/common/maneuver_overrides/overrides"));
-            util::vector_view<NodeID> maneuver_override_node_sequences(
-                maneuver_override_node_sequences_ptr,
-                layout.GetBlockEntries("/common/maneuver_overrides/node_sequences"));
-
-            extractor::files::readManeuverOverrides(config.GetPath(".osrm.maneuver_overrides"),
-                                                    maneuver_overrides,
-                                                    maneuver_override_node_sequences);
-        }
+        extractor::files::readManeuverOverrides(config.GetPath(".osrm.maneuver_overrides"),
+                                                maneuver_overrides,
+                                                maneuver_override_node_sequences);
     }
 }
 }

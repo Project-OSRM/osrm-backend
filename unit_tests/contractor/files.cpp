@@ -32,26 +32,33 @@ BOOST_AUTO_TEST_CASE(read_write_hsgr)
         {true, true, true, true, true, true, true},
     };
 
+    std::unordered_map<std::string, ContractedMetric> reference_metrics = {
+        {"duration", {std::move(reference_graph), std::move(reference_filters)}}};
+
     TemporaryFile tmp{TEST_DATA_DIR "/read_write_hsgr_test.osrm.hsgr"};
-    contractor::files::writeGraph(tmp.path,
-                                  reference_checksum,
-                                  reference_graph,
-                                  reference_filters,
-                                  reference_connectivity_checksum);
+    contractor::files::writeGraph(
+        tmp.path, reference_checksum, reference_metrics, reference_connectivity_checksum);
 
     unsigned checksum;
     unsigned connectivity_checksum;
-    QueryGraph graph;
-    std::vector<std::vector<bool>> filters;
-    contractor::files::readGraph(tmp.path, checksum, graph, filters, connectivity_checksum);
+
+    std::unordered_map<std::string, ContractedMetric> metrics = {
+        {"duration", {}}
+    };
+    contractor::files::readGraph(tmp.path, checksum, metrics, connectivity_checksum);
 
     BOOST_CHECK_EQUAL(checksum, reference_checksum);
     BOOST_CHECK_EQUAL(connectivity_checksum, reference_connectivity_checksum);
-    BOOST_CHECK_EQUAL(filters.size(), reference_filters.size());
-    CHECK_EQUAL_COLLECTIONS(filters[0], reference_filters[0]);
-    CHECK_EQUAL_COLLECTIONS(filters[1], reference_filters[1]);
-    CHECK_EQUAL_COLLECTIONS(filters[2], reference_filters[2]);
-    CHECK_EQUAL_COLLECTIONS(filters[3], reference_filters[3]);
+    BOOST_CHECK_EQUAL(metrics["duration"].edge_filter.size(),
+                      reference_metrics["duration"].edge_filter.size());
+    CHECK_EQUAL_COLLECTIONS(metrics["duration"].edge_filter[0],
+                            reference_metrics["duration"].edge_filter[0]);
+    CHECK_EQUAL_COLLECTIONS(metrics["duration"].edge_filter[1],
+                            reference_metrics["duration"].edge_filter[1]);
+    CHECK_EQUAL_COLLECTIONS(metrics["duration"].edge_filter[2],
+                            reference_metrics["duration"].edge_filter[2]);
+    CHECK_EQUAL_COLLECTIONS(metrics["duration"].edge_filter[3],
+                            reference_metrics["duration"].edge_filter[3]);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

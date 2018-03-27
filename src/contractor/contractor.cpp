@@ -79,6 +79,7 @@ int Contractor::Run()
 
     TIMER_START(contraction);
 
+    std::string metric_name;
     std::vector<std::vector<bool>> node_filters;
     {
         extractor::EdgeBasedNodeDataContainer node_data;
@@ -86,6 +87,7 @@ int Contractor::Run()
 
         extractor::ProfileProperties properties;
         extractor::files::readProfileProperties(config.GetPath(".osrm.properties"), properties);
+        metric_name = properties.GetWeightName();
 
         node_filters =
             util::excludeFlagsToNodeFilter(number_of_edge_based_nodes, node_data, properties);
@@ -105,8 +107,10 @@ int Contractor::Run()
     util::Log() << "Contracted graph has " << query_graph.GetNumberOfEdges() << " edges.";
     util::Log() << "Contraction took " << TIMER_SEC(contraction) << " sec";
 
-    files::writeGraph(
-        config.GetPath(".osrm.hsgr"), checksum, query_graph, edge_filters, connectivity_checksum);
+    std::unordered_map<std::string, ContractedMetric> metrics = {
+        {metric_name, {std::move(query_graph), std::move(edge_filters)}}};
+
+    files::writeGraph(config.GetPath(".osrm.hsgr"), checksum, metrics, connectivity_checksum);
 
     TIMER_STOP(preparing);
 

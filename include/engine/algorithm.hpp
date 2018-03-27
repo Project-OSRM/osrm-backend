@@ -30,6 +30,11 @@ template <typename AlgorithmT> const char *name();
 template <> inline const char *name<ch::Algorithm>() { return "CH"; }
 template <> inline const char *name<mld::Algorithm>() { return "MLD"; }
 
+// Algorithm identifier
+template <typename AlgorithmT> const char *identifier();
+template <> inline const char *identifier<ch::Algorithm>() { return "ch"; }
+template <> inline const char *identifier<mld::Algorithm>() { return "mld"; }
+
 template <typename AlgorithmT> struct HasAlternativePathSearch final : std::false_type
 {
 };
