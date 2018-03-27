@@ -5,8 +5,8 @@
 #include "util/typedefs.hpp"
 #include "util/vector_view.hpp"
 
-#include "storage/io_fwd.hpp"
 #include "storage/shared_memory_ownership.hpp"
+#include "storage/tar_fwd.hpp"
 
 #include <boost/iterator/iterator_facade.hpp>
 #include <boost/iterator/reverse_iterator.hpp>
@@ -29,10 +29,13 @@ template <typename T, std::size_t Bits, storage::Ownership Ownership> class Pack
 namespace serialization
 {
 template <typename T, std::size_t Bits, storage::Ownership Ownership>
-inline void read(storage::io::FileReader &reader, detail::PackedVector<T, Bits, Ownership> &vec);
+inline void read(storage::tar::FileReader &reader,
+                 const std::string &name,
+                 detail::PackedVector<T, Bits, Ownership> &vec);
 
 template <typename T, std::size_t Bits, storage::Ownership Ownership>
-inline void write(storage::io::FileWriter &writer,
+inline void write(storage::tar::FileWriter &writer,
+                  const std::string &name,
                   const detail::PackedVector<T, Bits, Ownership> &vec);
 }
 
@@ -433,7 +436,7 @@ template <typename T, std::size_t Bits, storage::Ownership Ownership> class Pack
     void resize(std::size_t elements)
     {
         num_elements = elements;
-        auto num_blocks = std::ceil(static_cast<double>(elements) / BLOCK_ELEMENTS);
+        auto num_blocks = (elements + BLOCK_ELEMENTS - 1) / BLOCK_ELEMENTS;
         vec.resize(num_blocks * BLOCK_WORDS + 1);
     }
 
@@ -442,15 +445,18 @@ template <typename T, std::size_t Bits, storage::Ownership Ownership> class Pack
     template <bool enabled = (Ownership == storage::Ownership::View)>
     void reserve(typename std::enable_if<!enabled, std::size_t>::type capacity)
     {
-        auto num_blocks = std::ceil(static_cast<double>(capacity) / BLOCK_ELEMENTS);
+        auto num_blocks = (capacity + BLOCK_ELEMENTS - 1) / BLOCK_ELEMENTS;
         vec.reserve(num_blocks * BLOCK_WORDS + 1);
     }
 
-    friend void serialization::read<T, Bits, Ownership>(storage::io::FileReader &reader,
+    friend void serialization::read<T, Bits, Ownership>(storage::tar::FileReader &reader,
+                                                        const std::string &name,
                                                         PackedVector &vec);
 
-    friend void serialization::write<T, Bits, Ownership>(storage::io::FileWriter &writer,
+    friend void serialization::write<T, Bits, Ownership>(storage::tar::FileWriter &writer,
+                                                         const std::string &name,
                                                          const PackedVector &vec);
+
     inline void swap(PackedVector &other) noexcept
     {
         std::swap(vec, other.vec);

@@ -18,6 +18,7 @@
 #include "extractor/edge_based_node.hpp"
 #include "extractor/files.hpp"
 #include "extractor/maneuver_override.hpp"
+#include "extractor/name_table.hpp"
 #include "extractor/packed_osm_ids.hpp"
 #include "extractor/profile_properties.hpp"
 #include "extractor/query_node.hpp"
@@ -67,6 +68,26 @@ namespace osrm
 {
 namespace storage
 {
+namespace
+{
+template <typename OutIter> void readBlocks(const boost::filesystem::path &path, OutIter out)
+{
+    tar::FileReader reader(path, tar::FileReader::VerifyFingerprint);
+
+    std::vector<tar::FileReader::FileEntry> entries;
+    reader.List(std::back_inserter(entries));
+
+    for (const auto &entry : entries)
+    {
+        const auto name_end = entry.name.rfind(".meta");
+        if (name_end == std::string::npos)
+        {
+            auto number_of_elements = reader.ReadElementCount64(entry.name);
+            *out++ = NamedBlock{entry.name, Block{number_of_elements, entry.size}};
+        }
+    }
+}
+}
 
 static constexpr std::size_t NUM_METRICS = 8;
 
@@ -219,389 +240,136 @@ void Storage::PopulateLayout(DataLayout &layout)
                         make_block<char>(absolute_file_index_path.string().length() + 1));
     }
 
+    std::unordered_map<std::string, DataLayout::BlockID> name_to_block_id = {
+        {"/mld/multilevelgraph/node_array", DataLayout::MLD_GRAPH_NODE_LIST},
+        {"/mld/multilevelgraph/edge_array", DataLayout::MLD_GRAPH_EDGE_LIST},
+        {"/mld/multilevelgraph/node_to_edge_offset", DataLayout::MLD_GRAPH_NODE_TO_OFFSET},
+        {"/mld/multilevelgraph/connectivity_checksum", DataLayout::IGNORE_BLOCK},
+        {"/mld/multilevelpartition/level_data", DataLayout::MLD_LEVEL_DATA},
+        {"/mld/multilevelpartition/partition", DataLayout::MLD_PARTITION},
+        {"/mld/multilevelpartition/cell_to_children", DataLayout::MLD_CELL_TO_CHILDREN},
+        {"/mld/cellstorage/source_boundary", DataLayout::MLD_CELL_SOURCE_BOUNDARY},
+        {"/mld/cellstorage/destination_boundary", DataLayout::MLD_CELL_DESTINATION_BOUNDARY},
+        {"/mld/cellstorage/cells", DataLayout::MLD_CELLS},
+        {"/mld/cellstorage/level_to_cell_offset", DataLayout::MLD_CELL_LEVEL_OFFSETS},
+        {"/mld/metrics/0/weights", DataLayout::MLD_CELL_WEIGHTS_0},
+        {"/mld/metrics/1/weights", DataLayout::MLD_CELL_WEIGHTS_1},
+        {"/mld/metrics/2/weights", DataLayout::MLD_CELL_WEIGHTS_2},
+        {"/mld/metrics/3/weights", DataLayout::MLD_CELL_WEIGHTS_3},
+        {"/mld/metrics/4/weights", DataLayout::MLD_CELL_WEIGHTS_4},
+        {"/mld/metrics/5/weights", DataLayout::MLD_CELL_WEIGHTS_5},
+        {"/mld/metrics/6/weights", DataLayout::MLD_CELL_WEIGHTS_6},
+        {"/mld/metrics/7/weights", DataLayout::MLD_CELL_WEIGHTS_7},
+        {"/mld/metrics/0/durations", DataLayout::MLD_CELL_DURATIONS_0},
+        {"/mld/metrics/1/durations", DataLayout::MLD_CELL_DURATIONS_1},
+        {"/mld/metrics/2/durations", DataLayout::MLD_CELL_DURATIONS_2},
+        {"/mld/metrics/3/durations", DataLayout::MLD_CELL_DURATIONS_3},
+        {"/mld/metrics/4/durations", DataLayout::MLD_CELL_DURATIONS_4},
+        {"/mld/metrics/5/durations", DataLayout::MLD_CELL_DURATIONS_5},
+        {"/mld/metrics/6/durations", DataLayout::MLD_CELL_DURATIONS_6},
+        {"/mld/metrics/7/durations", DataLayout::MLD_CELL_DURATIONS_7},
+        {"/ch/checksum", DataLayout::HSGR_CHECKSUM},
+        {"/ch/contracted_graph/node_array", DataLayout::CH_GRAPH_NODE_LIST},
+        {"/ch/contracted_graph/edge_array", DataLayout::CH_GRAPH_EDGE_LIST},
+        {"/ch/connectivity_checksum", DataLayout::IGNORE_BLOCK},
+        {"/ch/edge_filter/0", DataLayout::CH_EDGE_FILTER_0},
+        {"/ch/edge_filter/1", DataLayout::CH_EDGE_FILTER_1},
+        {"/ch/edge_filter/2", DataLayout::CH_EDGE_FILTER_2},
+        {"/ch/edge_filter/3", DataLayout::CH_EDGE_FILTER_3},
+        {"/ch/edge_filter/4", DataLayout::CH_EDGE_FILTER_4},
+        {"/ch/edge_filter/5", DataLayout::CH_EDGE_FILTER_5},
+        {"/ch/edge_filter/6", DataLayout::CH_EDGE_FILTER_6},
+        {"/ch/edge_filter/7", DataLayout::CH_EDGE_FILTER_7},
+        {"/common/intersection_bearings/bearing_values", DataLayout::BEARING_VALUES},
+        {"/common/intersection_bearings/node_to_class_id", DataLayout::BEARING_CLASSID},
+        {"/common/intersection_bearings/class_id_to_ranges/block_offsets",
+         DataLayout::BEARING_OFFSETS},
+        {"/common/intersection_bearings/class_id_to_ranges/diff_blocks",
+         DataLayout::BEARING_BLOCKS},
+        {"/common/entry_classes", DataLayout::ENTRY_CLASS},
+        {"/common/properties", DataLayout::PROPERTIES},
+        {"/common/coordinates", DataLayout::COORDINATE_LIST},
+        {"/common/osm_node_ids/packed", DataLayout::OSM_NODE_ID_LIST},
+        {"/common/data_sources_names", DataLayout::DATASOURCES_NAMES},
+        {"/common/segment_data/index", DataLayout::GEOMETRIES_INDEX},
+        {"/common/segment_data/nodes", DataLayout::GEOMETRIES_NODE_LIST},
+        {"/common/segment_data/forward_weights/packed", DataLayout::GEOMETRIES_FWD_WEIGHT_LIST},
+        {"/common/segment_data/reverse_weights/packed", DataLayout::GEOMETRIES_REV_WEIGHT_LIST},
+        {"/common/segment_data/forward_durations/packed", DataLayout::GEOMETRIES_FWD_DURATION_LIST},
+        {"/common/segment_data/reverse_durations/packed", DataLayout::GEOMETRIES_REV_DURATION_LIST},
+        {"/common/segment_data/forward_data_sources", DataLayout::GEOMETRIES_FWD_DATASOURCES_LIST},
+        {"/common/segment_data/reverse_data_sources", DataLayout::GEOMETRIES_REV_DATASOURCES_LIST},
+        {"/common/ebg_node_data/nodes", DataLayout::EDGE_BASED_NODE_DATA_LIST},
+        {"/common/ebg_node_data/annotations", DataLayout::ANNOTATION_DATA_LIST},
+        {"/common/turn_lanes/offsets", DataLayout::LANE_DESCRIPTION_OFFSETS},
+        {"/common/turn_lanes/masks", DataLayout::LANE_DESCRIPTION_MASKS},
+        {"/common/turn_lanes/data", DataLayout::TURN_LANE_DATA},
+        {"/common/maneuver_overrides/overrides", DataLayout::MANEUVER_OVERRIDES},
+        {"/common/maneuver_overrides/node_sequences", DataLayout::MANEUVER_OVERRIDE_NODE_SEQUENCES},
+        {"/common/turn_penalty/weight", DataLayout::TURN_WEIGHT_PENALTIES},
+        {"/common/turn_penalty/duration", DataLayout::TURN_DURATION_PENALTIES},
+        {"/common/turn_data/pre_turn_bearings", DataLayout::PRE_TURN_BEARING},
+        {"/common/turn_data/post_turn_bearings", DataLayout::POST_TURN_BEARING},
+        {"/common/turn_data/turn_instructions", DataLayout::TURN_INSTRUCTION},
+        {"/common/turn_data/lane_data_ids", DataLayout::LANE_DATA_ID},
+        {"/common/turn_data/entry_class_ids", DataLayout::ENTRY_CLASSID},
+        {"/common/turn_data/connectivity_checksum", DataLayout::IGNORE_BLOCK},
+        {"/common/names/blocks", DataLayout::NAME_BLOCKS},
+        {"/common/names/values", DataLayout::NAME_VALUES},
+        {"/common/rtree/search_tree", DataLayout::R_SEARCH_TREE},
+        {"/common/rtree/search_tree_level_starts", DataLayout::R_SEARCH_TREE_LEVEL_STARTS},
+    };
+    std::vector<NamedBlock> blocks;
+
+    constexpr bool REQUIRED = true;
+    constexpr bool OPTIONAL = false;
+    std::vector<std::pair<bool, boost::filesystem::path>> tar_files = {
+        {OPTIONAL, config.GetPath(".osrm.mldgr")},
+        {OPTIONAL, config.GetPath(".osrm.cells")},
+        {OPTIONAL, config.GetPath(".osrm.partition")},
+        {OPTIONAL, config.GetPath(".osrm.cell_metrics")},
+        {OPTIONAL, config.GetPath(".osrm.hsgr")},
+        {REQUIRED, config.GetPath(".osrm.icd")},
+        {REQUIRED, config.GetPath(".osrm.properties")},
+        {REQUIRED, config.GetPath(".osrm.nbg_nodes")},
+        {REQUIRED, config.GetPath(".osrm.datasource_names")},
+        {REQUIRED, config.GetPath(".osrm.geometry")},
+        {REQUIRED, config.GetPath(".osrm.ebg_nodes")},
+        {REQUIRED, config.GetPath(".osrm.tls")},
+        {REQUIRED, config.GetPath(".osrm.tld")},
+        {REQUIRED, config.GetPath(".osrm.maneuver_overrides")},
+        {REQUIRED, config.GetPath(".osrm.turn_weight_penalties")},
+        {REQUIRED, config.GetPath(".osrm.turn_duration_penalties")},
+        {REQUIRED, config.GetPath(".osrm.edges")},
+        {REQUIRED, config.GetPath(".osrm.names")},
+        {REQUIRED, config.GetPath(".osrm.ramIndex")},
+    };
+
+    for (const auto &file : tar_files)
     {
-        util::Log() << "load names from: " << config.GetPath(".osrm.names");
-        // number of entries in name index
-        io::FileReader name_file(config.GetPath(".osrm.names"), io::FileReader::VerifyFingerprint);
-        layout.SetBlock(DataLayout::NAME_CHAR_DATA, make_block<char>(name_file.GetSize()));
-    }
-
-    {
-        io::FileReader reader(config.GetPath(".osrm.tls"), io::FileReader::VerifyFingerprint);
-        auto num_offsets = reader.ReadVectorSize<std::uint32_t>();
-        auto num_masks = reader.ReadVectorSize<extractor::TurnLaneType::Mask>();
-
-        layout.SetBlock(DataLayout::LANE_DESCRIPTION_OFFSETS,
-                        make_block<std::uint32_t>(num_offsets));
-        layout.SetBlock(DataLayout::LANE_DESCRIPTION_MASKS,
-                        make_block<extractor::TurnLaneType::Mask>(num_masks));
-    }
-
-    // Loading information for original edges
-    {
-        io::FileReader edges_file(config.GetPath(".osrm.edges"), io::FileReader::VerifyFingerprint);
-        const auto number_of_original_edges = edges_file.ReadElementCount64();
-
-        // note: settings this all to the same size is correct, we extract them from the same struct
-        layout.SetBlock(DataLayout::PRE_TURN_BEARING,
-                        make_block<guidance::TurnBearing>(number_of_original_edges));
-        layout.SetBlock(DataLayout::POST_TURN_BEARING,
-                        make_block<guidance::TurnBearing>(number_of_original_edges));
-        layout.SetBlock(DataLayout::TURN_INSTRUCTION,
-                        make_block<guidance::TurnInstruction>(number_of_original_edges));
-        layout.SetBlock(DataLayout::LANE_DATA_ID, make_block<LaneDataID>(number_of_original_edges));
-        layout.SetBlock(DataLayout::ENTRY_CLASSID,
-                        make_block<EntryClassID>(number_of_original_edges));
-    }
-
-    {
-        io::FileReader nodes_data_file(config.GetPath(".osrm.ebg_nodes"),
-                                       io::FileReader::VerifyFingerprint);
-        const auto nodes_number = nodes_data_file.ReadElementCount64();
-        const auto annotations_number = nodes_data_file.ReadElementCount64();
-        layout.SetBlock(DataLayout::EDGE_BASED_NODE_DATA_LIST,
-                        make_block<extractor::EdgeBasedNode>(nodes_number));
-        layout.SetBlock(DataLayout::ANNOTATION_DATA_LIST,
-                        make_block<extractor::NodeBasedEdgeAnnotation>(annotations_number));
-    }
-
-    if (boost::filesystem::exists(config.GetPath(".osrm.hsgr")))
-    {
-        io::FileReader reader(config.GetPath(".osrm.hsgr"), io::FileReader::VerifyFingerprint);
-
-        reader.Skip<std::uint32_t>(1); // checksum
-        auto num_nodes = reader.ReadVectorSize<contractor::QueryGraph::NodeArrayEntry>();
-        auto num_edges = reader.ReadVectorSize<contractor::QueryGraph::EdgeArrayEntry>();
-        auto num_metrics = reader.ReadElementCount64();
-
-        if (num_metrics > NUM_METRICS)
+        if (boost::filesystem::exists(file.second))
         {
-            throw util::exception("Only " + std::to_string(NUM_METRICS) +
-                                  " metrics are supported at the same time.");
-        }
-
-        layout.SetBlock(DataLayout::HSGR_CHECKSUM, make_block<unsigned>(1));
-        layout.SetBlock(DataLayout::CH_GRAPH_NODE_LIST,
-                        make_block<contractor::QueryGraph::NodeArrayEntry>(num_nodes));
-        layout.SetBlock(DataLayout::CH_GRAPH_EDGE_LIST,
-                        make_block<contractor::QueryGraph::EdgeArrayEntry>(num_edges));
-
-        for (const auto index : util::irange<std::size_t>(0, num_metrics))
-        {
-            layout.SetBlock(static_cast<DataLayout::BlockID>(DataLayout::CH_EDGE_FILTER_0 + index),
-                            make_block<unsigned>(num_edges));
-        }
-        for (const auto index : util::irange<std::size_t>(num_metrics, NUM_METRICS))
-        {
-            layout.SetBlock(static_cast<DataLayout::BlockID>(DataLayout::CH_EDGE_FILTER_0 + index),
-                            make_block<unsigned>(0));
-        }
-    }
-    else
-    {
-        layout.SetBlock(DataLayout::HSGR_CHECKSUM, make_block<unsigned>(0));
-        layout.SetBlock(DataLayout::CH_GRAPH_NODE_LIST,
-                        make_block<contractor::QueryGraph::NodeArrayEntry>(0));
-        layout.SetBlock(DataLayout::CH_GRAPH_EDGE_LIST,
-                        make_block<contractor::QueryGraph::EdgeArrayEntry>(0));
-        for (const auto index : util::irange<std::size_t>(0, NUM_METRICS))
-        {
-            layout.SetBlock(static_cast<DataLayout::BlockID>(DataLayout::CH_EDGE_FILTER_0 + index),
-                            make_block<unsigned>(0));
-        }
-    }
-
-    // load rsearch tree size
-    {
-        io::FileReader tree_node_file(config.GetPath(".osrm.ramIndex"),
-                                      io::FileReader::VerifyFingerprint);
-
-        const auto tree_size = tree_node_file.ReadElementCount64();
-        layout.SetBlock(DataLayout::R_SEARCH_TREE, make_block<RTreeNode>(tree_size));
-        tree_node_file.Skip<RTreeNode>(tree_size);
-        const auto tree_levels_size = tree_node_file.ReadElementCount64();
-        layout.SetBlock(DataLayout::R_SEARCH_TREE_LEVELS,
-                        make_block<std::uint64_t>(tree_levels_size));
-    }
-
-    {
-        layout.SetBlock(DataLayout::PROPERTIES, make_block<extractor::ProfileProperties>(1));
-    }
-
-    // read timestampsize
-    {
-        io::FileReader timestamp_file(config.GetPath(".osrm.timestamp"),
-                                      io::FileReader::VerifyFingerprint);
-        const auto timestamp_size = timestamp_file.GetSize();
-        layout.SetBlock(DataLayout::TIMESTAMP, make_block<char>(timestamp_size));
-    }
-
-    // load turn weight penalties
-    {
-        io::FileReader turn_weight_penalties_file(config.GetPath(".osrm.turn_weight_penalties"),
-                                                  io::FileReader::VerifyFingerprint);
-        const auto number_of_penalties = turn_weight_penalties_file.ReadElementCount64();
-        layout.SetBlock(DataLayout::TURN_WEIGHT_PENALTIES,
-                        make_block<TurnPenalty>(number_of_penalties));
-    }
-
-    // load turn duration penalties
-    {
-        io::FileReader turn_duration_penalties_file(config.GetPath(".osrm.turn_duration_penalties"),
-                                                    io::FileReader::VerifyFingerprint);
-        const auto number_of_penalties = turn_duration_penalties_file.ReadElementCount64();
-        layout.SetBlock(DataLayout::TURN_DURATION_PENALTIES,
-                        make_block<TurnPenalty>(number_of_penalties));
-    }
-
-    // load coordinate size
-    {
-        io::FileReader node_file(config.GetPath(".osrm.nbg_nodes"),
-                                 io::FileReader::VerifyFingerprint);
-        const auto coordinate_list_size = node_file.ReadElementCount64();
-        layout.SetBlock(DataLayout::COORDINATE_LIST,
-                        make_block<util::Coordinate>(coordinate_list_size));
-        node_file.Skip<util::Coordinate>(coordinate_list_size);
-        // skip number of elements
-        node_file.Skip<std::uint64_t>(1);
-        const auto num_id_blocks = node_file.ReadElementCount64();
-        // we'll read a list of OSM node IDs from the same data, so set the block size for the same
-        // number of items:
-        layout.SetBlock(DataLayout::OSM_NODE_ID_LIST,
-                        make_block<extractor::PackedOSMIDsView::block_type>(num_id_blocks));
-    }
-
-    // load geometries sizes
-    {
-        io::FileReader reader(config.GetPath(".osrm.geometry"), io::FileReader::VerifyFingerprint);
-
-        const auto number_of_geometries_indices = reader.ReadVectorSize<unsigned>();
-        layout.SetBlock(DataLayout::GEOMETRIES_INDEX,
-                        make_block<unsigned>(number_of_geometries_indices));
-
-        const auto number_of_compressed_geometries = reader.ReadVectorSize<NodeID>();
-        layout.SetBlock(DataLayout::GEOMETRIES_NODE_LIST,
-                        make_block<NodeID>(number_of_compressed_geometries));
-
-        reader.ReadElementCount64(); // number of segments
-        const auto number_of_segment_weight_blocks =
-            reader.ReadVectorSize<extractor::SegmentDataView::SegmentWeightVector::block_type>();
-
-        reader.ReadElementCount64(); // number of segments
-        auto number_of_rev_weight_blocks =
-            reader.ReadVectorSize<extractor::SegmentDataView::SegmentWeightVector::block_type>();
-        BOOST_ASSERT(number_of_rev_weight_blocks == number_of_segment_weight_blocks);
-        (void)number_of_rev_weight_blocks;
-
-        reader.ReadElementCount64(); // number of segments
-        const auto number_of_segment_duration_blocks =
-            reader.ReadVectorSize<extractor::SegmentDataView::SegmentDurationVector::block_type>();
-
-        layout.SetBlock(DataLayout::GEOMETRIES_FWD_WEIGHT_LIST,
-                        make_block<extractor::SegmentDataView::SegmentWeightVector::block_type>(
-                            number_of_segment_weight_blocks));
-        layout.SetBlock(DataLayout::GEOMETRIES_REV_WEIGHT_LIST,
-                        make_block<extractor::SegmentDataView::SegmentWeightVector::block_type>(
-                            number_of_segment_weight_blocks));
-        layout.SetBlock(DataLayout::GEOMETRIES_FWD_DURATION_LIST,
-                        make_block<extractor::SegmentDataView::SegmentDurationVector::block_type>(
-                            number_of_segment_duration_blocks));
-        layout.SetBlock(DataLayout::GEOMETRIES_REV_DURATION_LIST,
-                        make_block<extractor::SegmentDataView::SegmentDurationVector::block_type>(
-                            number_of_segment_duration_blocks));
-        layout.SetBlock(DataLayout::GEOMETRIES_FWD_DATASOURCES_LIST,
-                        make_block<DatasourceID>(number_of_compressed_geometries));
-        layout.SetBlock(DataLayout::GEOMETRIES_REV_DATASOURCES_LIST,
-                        make_block<DatasourceID>(number_of_compressed_geometries));
-    }
-
-    // Load datasource name sizes.
-    {
-        layout.SetBlock(DataLayout::DATASOURCES_NAMES, make_block<extractor::Datasources>(1));
-    }
-
-    {
-        io::FileReader reader(config.GetPath(".osrm.icd"), io::FileReader::VerifyFingerprint);
-
-        auto num_discreate_bearings = reader.ReadVectorSize<DiscreteBearing>();
-        layout.SetBlock(DataLayout::BEARING_VALUES,
-                        make_block<DiscreteBearing>(num_discreate_bearings));
-
-        auto num_bearing_classes = reader.ReadVectorSize<BearingClassID>();
-        layout.SetBlock(DataLayout::BEARING_CLASSID,
-                        make_block<BearingClassID>(num_bearing_classes));
-
-        reader.Skip<std::uint32_t>(1); // sum_lengths
-        const auto bearing_blocks = reader.ReadVectorSize<unsigned>();
-        const auto bearing_offsets =
-            reader
-                .ReadVectorSize<typename util::RangeTable<16, storage::Ownership::View>::BlockT>();
-
-        layout.SetBlock(DataLayout::BEARING_OFFSETS, make_block<unsigned>(bearing_blocks));
-        layout.SetBlock(DataLayout::BEARING_BLOCKS,
-                        make_block<typename util::RangeTable<16, storage::Ownership::View>::BlockT>(
-                            bearing_offsets));
-
-        auto num_entry_classes = reader.ReadVectorSize<util::guidance::EntryClass>();
-        layout.SetBlock(DataLayout::ENTRY_CLASS,
-                        make_block<util::guidance::EntryClass>(num_entry_classes));
-    }
-
-    {
-        // Loading turn lane data
-        io::FileReader lane_data_file(config.GetPath(".osrm.tld"),
-                                      io::FileReader::VerifyFingerprint);
-        const auto lane_tuple_count = lane_data_file.ReadElementCount64();
-        layout.SetBlock(DataLayout::TURN_LANE_DATA,
-                        make_block<util::guidance::LaneTupleIdPair>(lane_tuple_count));
-    }
-
-    // load maneuver overrides
-    {
-        io::FileReader maneuver_overrides_file(config.GetPath(".osrm.maneuver_overrides"),
-                                               io::FileReader::VerifyFingerprint);
-        const auto number_of_overrides =
-            maneuver_overrides_file.ReadVectorSize<extractor::StorageManeuverOverride>();
-        layout.SetBlock(DataLayout::MANEUVER_OVERRIDES,
-                        make_block<extractor::StorageManeuverOverride>(number_of_overrides));
-        const auto number_of_nodes = maneuver_overrides_file.ReadVectorSize<NodeID>();
-        layout.SetBlock(DataLayout::MANEUVER_OVERRIDE_NODE_SEQUENCES,
-                        make_block<NodeID>(number_of_nodes));
-    }
-
-    {
-        // Loading MLD Data
-        if (boost::filesystem::exists(config.GetPath(".osrm.partition")))
-        {
-            io::FileReader reader(config.GetPath(".osrm.partition"),
-                                  io::FileReader::VerifyFingerprint);
-
-            reader.Skip<partitioner::MultiLevelPartition::LevelData>(1);
-            layout.SetBlock(DataLayout::MLD_LEVEL_DATA,
-                            make_block<partitioner::MultiLevelPartition::LevelData>(1));
-            const auto partition_entries_count = reader.ReadVectorSize<PartitionID>();
-            layout.SetBlock(DataLayout::MLD_PARTITION,
-                            make_block<PartitionID>(partition_entries_count));
-            const auto children_entries_count = reader.ReadVectorSize<CellID>();
-            layout.SetBlock(DataLayout::MLD_CELL_TO_CHILDREN,
-                            make_block<CellID>(children_entries_count));
+            readBlocks(file.second, std::back_inserter(blocks));
         }
         else
         {
-            layout.SetBlock(DataLayout::MLD_LEVEL_DATA,
-                            make_block<partitioner::MultiLevelPartition::LevelData>(0));
-            layout.SetBlock(DataLayout::MLD_PARTITION, make_block<PartitionID>(0));
-            layout.SetBlock(DataLayout::MLD_CELL_TO_CHILDREN, make_block<CellID>(0));
-        }
-
-        if (boost::filesystem::exists(config.GetPath(".osrm.cells")))
-        {
-            io::FileReader reader(config.GetPath(".osrm.cells"), io::FileReader::VerifyFingerprint);
-
-            const auto source_node_count = reader.ReadVectorSize<NodeID>();
-            layout.SetBlock(DataLayout::MLD_CELL_SOURCE_BOUNDARY,
-                            make_block<NodeID>(source_node_count));
-            const auto destination_node_count = reader.ReadVectorSize<NodeID>();
-            layout.SetBlock(DataLayout::MLD_CELL_DESTINATION_BOUNDARY,
-                            make_block<NodeID>(destination_node_count));
-            const auto cell_count = reader.ReadVectorSize<partitioner::CellStorage::CellData>();
-            layout.SetBlock(DataLayout::MLD_CELLS,
-                            make_block<partitioner::CellStorage::CellData>(cell_count));
-            const auto level_offsets_count = reader.ReadVectorSize<std::uint64_t>();
-            layout.SetBlock(DataLayout::MLD_CELL_LEVEL_OFFSETS,
-                            make_block<std::uint64_t>(level_offsets_count));
-        }
-        else
-        {
-            layout.SetBlock(DataLayout::MLD_CELL_SOURCE_BOUNDARY, make_block<char>(0));
-            layout.SetBlock(DataLayout::MLD_CELL_DESTINATION_BOUNDARY, make_block<char>(0));
-            layout.SetBlock(DataLayout::MLD_CELLS, make_block<char>(0));
-            layout.SetBlock(DataLayout::MLD_CELL_LEVEL_OFFSETS, make_block<char>(0));
-        }
-
-        if (boost::filesystem::exists(config.GetPath(".osrm.cell_metrics")))
-        {
-            io::FileReader reader(config.GetPath(".osrm.cell_metrics"),
-                                  io::FileReader::VerifyFingerprint);
-            auto num_metric = reader.ReadElementCount64();
-
-            if (num_metric > NUM_METRICS)
+            if (file.first == REQUIRED)
             {
-                throw util::exception("Only " + std::to_string(NUM_METRICS) +
-                                      " metrics are supported at the same time.");
-            }
-
-            for (const auto index : util::irange<std::size_t>(0, num_metric))
-            {
-                const auto weights_count = reader.ReadVectorSize<EdgeWeight>();
-                layout.SetBlock(
-                    static_cast<DataLayout::BlockID>(DataLayout::MLD_CELL_WEIGHTS_0 + index),
-                    make_block<EdgeWeight>(weights_count));
-                const auto durations_count = reader.ReadVectorSize<EdgeDuration>();
-                layout.SetBlock(
-                    static_cast<DataLayout::BlockID>(DataLayout::MLD_CELL_DURATIONS_0 + index),
-                    make_block<EdgeDuration>(durations_count));
-            }
-            for (const auto index : util::irange<std::size_t>(num_metric, NUM_METRICS))
-            {
-                layout.SetBlock(
-                    static_cast<DataLayout::BlockID>(DataLayout::MLD_CELL_WEIGHTS_0 + index),
-                    make_block<EdgeWeight>(0));
-                layout.SetBlock(
-                    static_cast<DataLayout::BlockID>(DataLayout::MLD_CELL_DURATIONS_0 + index),
-                    make_block<EdgeDuration>(0));
+                throw util::exception("Could not find required filed: " +
+                                      std::get<1>(file).string());
             }
         }
-        else
-        {
-            layout.SetBlock(DataLayout::MLD_CELL_WEIGHTS_0, make_block<char>(0));
-            layout.SetBlock(DataLayout::MLD_CELL_WEIGHTS_1, make_block<char>(0));
-            layout.SetBlock(DataLayout::MLD_CELL_WEIGHTS_2, make_block<char>(0));
-            layout.SetBlock(DataLayout::MLD_CELL_WEIGHTS_3, make_block<char>(0));
-            layout.SetBlock(DataLayout::MLD_CELL_WEIGHTS_4, make_block<char>(0));
-            layout.SetBlock(DataLayout::MLD_CELL_WEIGHTS_5, make_block<char>(0));
-            layout.SetBlock(DataLayout::MLD_CELL_WEIGHTS_6, make_block<char>(0));
-            layout.SetBlock(DataLayout::MLD_CELL_WEIGHTS_7, make_block<char>(0));
-            layout.SetBlock(DataLayout::MLD_CELL_DURATIONS_0, make_block<char>(0));
-            layout.SetBlock(DataLayout::MLD_CELL_DURATIONS_1, make_block<char>(0));
-            layout.SetBlock(DataLayout::MLD_CELL_DURATIONS_2, make_block<char>(0));
-            layout.SetBlock(DataLayout::MLD_CELL_DURATIONS_3, make_block<char>(0));
-            layout.SetBlock(DataLayout::MLD_CELL_DURATIONS_4, make_block<char>(0));
-            layout.SetBlock(DataLayout::MLD_CELL_DURATIONS_5, make_block<char>(0));
-            layout.SetBlock(DataLayout::MLD_CELL_DURATIONS_6, make_block<char>(0));
-            layout.SetBlock(DataLayout::MLD_CELL_DURATIONS_7, make_block<char>(0));
-        }
+    }
 
-        if (boost::filesystem::exists(config.GetPath(".osrm.mldgr")))
+    for (const auto &block : blocks)
+    {
+        auto id_iter = name_to_block_id.find(std::get<0>(block));
+        if (id_iter == name_to_block_id.end())
         {
-            io::FileReader reader(config.GetPath(".osrm.mldgr"), io::FileReader::VerifyFingerprint);
-
-            const auto num_nodes =
-                reader.ReadVectorSize<customizer::MultiLevelEdgeBasedGraph::NodeArrayEntry>();
-            const auto num_edges =
-                reader.ReadVectorSize<customizer::MultiLevelEdgeBasedGraph::EdgeArrayEntry>();
-            const auto num_node_offsets =
-                reader.ReadVectorSize<customizer::MultiLevelEdgeBasedGraph::EdgeOffset>();
-
-            layout.SetBlock(
-                DataLayout::MLD_GRAPH_NODE_LIST,
-                make_block<customizer::MultiLevelEdgeBasedGraph::NodeArrayEntry>(num_nodes));
-            layout.SetBlock(
-                DataLayout::MLD_GRAPH_EDGE_LIST,
-                make_block<customizer::MultiLevelEdgeBasedGraph::EdgeArrayEntry>(num_edges));
-            layout.SetBlock(
-                DataLayout::MLD_GRAPH_NODE_TO_OFFSET,
-                make_block<customizer::MultiLevelEdgeBasedGraph::EdgeOffset>(num_node_offsets));
+            throw util::exception("Could not map " + std::get<0>(block) +
+                                  " to a region in memory.");
         }
-        else
-        {
-            layout.SetBlock(DataLayout::MLD_GRAPH_NODE_LIST,
-                            make_block<customizer::MultiLevelEdgeBasedGraph::NodeArrayEntry>(0));
-            layout.SetBlock(DataLayout::MLD_GRAPH_EDGE_LIST,
-                            make_block<customizer::MultiLevelEdgeBasedGraph::EdgeArrayEntry>(0));
-            layout.SetBlock(DataLayout::MLD_GRAPH_NODE_TO_OFFSET,
-                            make_block<customizer::MultiLevelEdgeBasedGraph::EdgeOffset>(0));
-        }
+        layout.SetBlock(id_iter->second, std::get<1>(block));
     }
 }
 
@@ -632,30 +400,31 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
 
     // Name data
     {
-        io::FileReader name_file(config.GetPath(".osrm.names"), io::FileReader::VerifyFingerprint);
-        std::size_t name_file_size = name_file.GetSize();
+        const auto name_blocks_ptr =
+            layout.GetBlockPtr<extractor::NameTableView::IndexedData::BlockReference, true>(
+                memory_ptr, DataLayout::NAME_BLOCKS);
+        const auto name_values_ptr =
+            layout.GetBlockPtr<extractor::NameTableView::IndexedData::ValueType, true>(
+                memory_ptr, DataLayout::NAME_VALUES);
 
-        BOOST_ASSERT(name_file_size == layout.GetBlockSize(DataLayout::NAME_CHAR_DATA));
-        const auto name_char_ptr =
-            layout.GetBlockPtr<char, true>(memory_ptr, DataLayout::NAME_CHAR_DATA);
+        util::vector_view<extractor::NameTableView::IndexedData::BlockReference> blocks(
+            name_blocks_ptr, layout.GetBlockEntries(storage::DataLayout::NAME_BLOCKS));
+        util::vector_view<extractor::NameTableView::IndexedData::ValueType> values(
+            name_values_ptr, layout.GetBlockEntries(storage::DataLayout::NAME_VALUES));
 
-        name_file.ReadInto<char>(name_char_ptr, name_file_size);
+        extractor::NameTableView::IndexedData index_data_view{std::move(blocks), std::move(values)};
+        extractor::NameTableView name_table{index_data_view};
+        extractor::files::readNames(config.GetPath(".osrm.names"), name_table);
     }
 
     // Turn lane data
     {
-        io::FileReader lane_data_file(config.GetPath(".osrm.tld"),
-                                      io::FileReader::VerifyFingerprint);
-
-        const auto lane_tuple_count = lane_data_file.ReadElementCount64();
-
-        // Need to call GetBlockPtr -> it write the memory canary, even if no data needs to be
-        // loaded.
         const auto turn_lane_data_ptr = layout.GetBlockPtr<util::guidance::LaneTupleIdPair, true>(
             memory_ptr, DataLayout::TURN_LANE_DATA);
-        BOOST_ASSERT(lane_tuple_count * sizeof(util::guidance::LaneTupleIdPair) ==
-                     layout.GetBlockSize(DataLayout::TURN_LANE_DATA));
-        lane_data_file.ReadInto(turn_lane_data_ptr, lane_tuple_count);
+        util::vector_view<util::guidance::LaneTupleIdPair> turn_lane_data(
+            turn_lane_data_ptr, layout.GetBlockEntries(storage::DataLayout::TURN_LANE_DATA));
+
+        extractor::files::readTurnLaneData(config.GetPath(".osrm.tld"), turn_lane_data);
     }
 
     // Turn lane descriptions
@@ -831,54 +600,49 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
 
     // load turn weight penalties
     {
-        io::FileReader turn_weight_penalties_file(config.GetPath(".osrm.turn_weight_penalties"),
-                                                  io::FileReader::VerifyFingerprint);
-        const auto number_of_penalties = turn_weight_penalties_file.ReadElementCount64();
-        const auto turn_weight_penalties_ptr =
-            layout.GetBlockPtr<TurnPenalty, true>(memory_ptr, DataLayout::TURN_WEIGHT_PENALTIES);
-        turn_weight_penalties_file.ReadInto(turn_weight_penalties_ptr, number_of_penalties);
+        auto turn_duration_penalties_ptr = layout.GetBlockPtr<TurnPenalty, true>(
+            memory_ptr, storage::DataLayout::TURN_WEIGHT_PENALTIES);
+        util::vector_view<TurnPenalty> turn_duration_penalties(
+            turn_duration_penalties_ptr,
+            layout.GetBlockEntries(storage::DataLayout::TURN_WEIGHT_PENALTIES));
+        extractor::files::readTurnWeightPenalty(config.GetPath(".osrm.turn_weight_penalties"),
+                                                turn_duration_penalties);
     }
 
     // load turn duration penalties
     {
-        io::FileReader turn_duration_penalties_file(config.GetPath(".osrm.turn_duration_penalties"),
-                                                    io::FileReader::VerifyFingerprint);
-        const auto number_of_penalties = turn_duration_penalties_file.ReadElementCount64();
-        const auto turn_duration_penalties_ptr =
-            layout.GetBlockPtr<TurnPenalty, true>(memory_ptr, DataLayout::TURN_DURATION_PENALTIES);
-        turn_duration_penalties_file.ReadInto(turn_duration_penalties_ptr, number_of_penalties);
-    }
-
-    // store timestamp
-    {
-        io::FileReader timestamp_file(config.GetPath(".osrm.timestamp"),
-                                      io::FileReader::VerifyFingerprint);
-        const auto timestamp_size = timestamp_file.GetSize();
-
-        const auto timestamp_ptr =
-            layout.GetBlockPtr<char, true>(memory_ptr, DataLayout::TIMESTAMP);
-        BOOST_ASSERT(timestamp_size == layout.GetBlockEntries(DataLayout::TIMESTAMP));
-        timestamp_file.ReadInto(timestamp_ptr, timestamp_size);
+        auto turn_duration_penalties_ptr = layout.GetBlockPtr<TurnPenalty, true>(
+            memory_ptr, storage::DataLayout::TURN_DURATION_PENALTIES);
+        util::vector_view<TurnPenalty> turn_duration_penalties(
+            turn_duration_penalties_ptr,
+            layout.GetBlockEntries(storage::DataLayout::TURN_DURATION_PENALTIES));
+        extractor::files::readTurnDurationPenalty(config.GetPath(".osrm.turn_duration_penalties"),
+                                                  turn_duration_penalties);
     }
 
     // store search tree portion of rtree
     {
-        io::FileReader tree_node_file(config.GetPath(".osrm.ramIndex"),
-                                      io::FileReader::VerifyFingerprint);
-        // perform this read so that we're at the right stream position for the next
-        // read.
-        tree_node_file.Skip<std::uint64_t>(1);
+
         const auto rtree_ptr =
             layout.GetBlockPtr<RTreeNode, true>(memory_ptr, DataLayout::R_SEARCH_TREE);
+        util::vector_view<RTreeNode> search_tree(
+            rtree_ptr, layout.GetBlockEntries(storage::DataLayout::R_SEARCH_TREE));
 
-        tree_node_file.ReadInto(rtree_ptr, layout.GetBlockEntries(DataLayout::R_SEARCH_TREE));
+        const auto rtree_levelstarts_ptr = layout.GetBlockPtr<std::uint64_t, true>(
+            memory_ptr, DataLayout::R_SEARCH_TREE_LEVEL_STARTS);
+        util::vector_view<std::uint64_t> rtree_level_starts(
+            rtree_levelstarts_ptr,
+            layout.GetBlockEntries(storage::DataLayout::R_SEARCH_TREE_LEVEL_STARTS));
 
-        tree_node_file.Skip<std::uint64_t>(1);
-        const auto rtree_levelsizes_ptr =
-            layout.GetBlockPtr<std::uint64_t, true>(memory_ptr, DataLayout::R_SEARCH_TREE_LEVELS);
+        // we need this purely for the interface
+        util::vector_view<util::Coordinate> empty_coords;
 
-        tree_node_file.ReadInto(rtree_levelsizes_ptr,
-                                layout.GetBlockEntries(DataLayout::R_SEARCH_TREE_LEVELS));
+        util::StaticRTree<RTreeLeaf, storage::Ownership::View> rtree{
+            std::move(search_tree),
+            std::move(rtree_level_starts),
+            config.GetPath(".osrm.fileIndex"),
+            empty_coords};
+        extractor::files::readRamIndex(config.GetPath(".osrm.ramIndex"), rtree);
     }
 
     // load profile properties
@@ -948,7 +712,8 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
             {
                 auto block_id =
                     static_cast<DataLayout::BlockID>(storage::DataLayout::CH_EDGE_FILTER_0 + index);
-                auto data_ptr = layout.GetBlockPtr<unsigned, true>(memory_ptr, block_id);
+                auto data_ptr =
+                    layout.GetBlockPtr<util::vector_view<bool>::Word, true>(memory_ptr, block_id);
                 auto num_entries = layout.GetBlockEntries(block_id);
                 edge_filter.emplace_back(data_ptr, num_entries);
             }

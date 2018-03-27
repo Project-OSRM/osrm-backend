@@ -7,7 +7,7 @@
 #include "extractor/restriction.hpp"
 #include "extractor/scripting_environment.hpp"
 
-#include "storage/io.hpp"
+#include "storage/tar_fwd.hpp"
 
 namespace osrm
 {
@@ -27,9 +27,9 @@ class ExtractionContainers
     void PrepareRestrictions();
     void PrepareEdges(ScriptingEnvironment &scripting_environment);
 
-    void WriteNodes(storage::io::FileWriter &file_out) const;
-    void WriteEdges(storage::io::FileWriter &file_out) const;
-    void WriteMetadata(storage::io::FileWriter &file_out) const;
+    void WriteNodes(storage::tar::FileWriter &file_out) const;
+    void WriteEdges(storage::tar::FileWriter &file_out) const;
+    void WriteMetadata(storage::tar::FileWriter &file_out) const;
     void WriteCharData(const std::string &file_name);
 
   public:

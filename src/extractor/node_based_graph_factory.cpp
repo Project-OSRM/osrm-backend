@@ -1,7 +1,7 @@
 #include "extractor/node_based_graph_factory.hpp"
+#include "extractor/files.hpp"
 #include "extractor/graph_compressor.hpp"
 #include "storage/io.hpp"
-#include "util/graph_loader.hpp"
 
 #include "util/log.hpp"
 #include "util/timing_util.hpp"
@@ -34,27 +34,24 @@ NodeBasedGraphFactory::NodeBasedGraphFactory(
 // load the data serialised during the extraction run
 void NodeBasedGraphFactory::LoadDataFromFile(const boost::filesystem::path &input_file)
 {
-    // the extraction_containers serialise all data necessary to create the node-based graph into a
-    // single file, the *.osrm file. It contains nodes, basic information about which of these nodes
-    // are traffic signals/stop signs. It also contains Edges and purely annotative meta-data
-    storage::io::FileReader file_reader(input_file, storage::io::FileReader::VerifyFingerprint);
-
     auto barriers_iter = inserter(barriers, end(barriers));
     auto traffic_signals_iter = inserter(traffic_signals, end(traffic_signals));
-
-    const auto number_of_node_based_nodes = util::loadNodesFromFile(
-        file_reader, barriers_iter, traffic_signals_iter, coordinates, osm_node_ids);
-
     std::vector<NodeBasedEdge> edge_list;
-    util::loadEdgesFromFile(file_reader, edge_list);
 
+    files::readRawNBGraph(input_file,
+                          barriers_iter,
+                          traffic_signals_iter,
+                          coordinates,
+                          osm_node_ids,
+                          edge_list,
+                          annotation_data);
+
+    const auto number_of_node_based_nodes = coordinates.size();
     if (edge_list.empty())
     {
         throw util::exception("Node-based-graph (" + input_file.string() + ") contains no edges." +
                               SOURCE_REF);
     }
-
-    util::loadAnnotationData(file_reader, annotation_data);
 
     // at this point, the data isn't compressed, but since we update the graph in-place, we assign
     // it here.

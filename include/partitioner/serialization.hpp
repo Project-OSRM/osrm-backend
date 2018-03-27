@@ -10,6 +10,7 @@
 #include "storage/io.hpp"
 #include "storage/serialization.hpp"
 #include "storage/shared_memory_ownership.hpp"
+#include "storage/tar.hpp"
 
 namespace osrm
 {
@@ -19,61 +20,75 @@ namespace serialization
 {
 
 template <typename EdgeDataT, storage::Ownership Ownership>
-inline void read(storage::io::FileReader &reader,
+inline void read(storage::tar::FileReader &reader,
+                 const std::string &name,
                  MultiLevelGraph<EdgeDataT, Ownership> &graph,
                  std::uint32_t &connectivity_checksum)
 {
-    storage::serialization::read(reader, graph.node_array);
-    storage::serialization::read(reader, graph.edge_array);
-    storage::serialization::read(reader, graph.node_to_edge_offset);
-    reader.ReadInto(connectivity_checksum);
+    storage::serialization::read(reader, name + "/node_array", graph.node_array);
+    storage::serialization::read(reader, name + "/edge_array", graph.edge_array);
+    storage::serialization::read(reader, name + "/node_to_edge_offset", graph.node_to_edge_offset);
+    reader.ReadInto(name + "/connectivity_checksum", connectivity_checksum);
 }
 
 template <typename EdgeDataT, storage::Ownership Ownership>
-inline void write(storage::io::FileWriter &writer,
+inline void write(storage::tar::FileWriter &writer,
+                  const std::string &name,
                   const MultiLevelGraph<EdgeDataT, Ownership> &graph,
                   const std::uint32_t connectivity_checksum)
 {
-    storage::serialization::write(writer, graph.node_array);
-    storage::serialization::write(writer, graph.edge_array);
-    storage::serialization::write(writer, graph.node_to_edge_offset);
-    writer.WriteOne(connectivity_checksum);
+    storage::serialization::write(writer, name + "/node_array", graph.node_array);
+    storage::serialization::write(writer, name + "/edge_array", graph.edge_array);
+    storage::serialization::write(writer, name + "/node_to_edge_offset", graph.node_to_edge_offset);
+    writer.WriteElementCount64(name + "/connectivity_checksum", 1);
+    writer.WriteFrom(name + "/connectivity_checksum", connectivity_checksum);
 }
 
 template <storage::Ownership Ownership>
-inline void read(storage::io::FileReader &reader, detail::MultiLevelPartitionImpl<Ownership> &mlp)
+inline void read(storage::tar::FileReader &reader,
+                 const std::string &name,
+                 detail::MultiLevelPartitionImpl<Ownership> &mlp)
 {
-    reader.ReadInto(*mlp.level_data);
-    storage::serialization::read(reader, mlp.partition);
-    storage::serialization::read(reader, mlp.cell_to_children);
+    reader.ReadInto(name + "/level_data", *mlp.level_data);
+    storage::serialization::read(reader, name + "/partition", mlp.partition);
+    storage::serialization::read(reader, name + "/cell_to_children", mlp.cell_to_children);
 }
 
 template <storage::Ownership Ownership>
-inline void write(storage::io::FileWriter &writer,
+inline void write(storage::tar::FileWriter &writer,
+                  const std::string &name,
                   const detail::MultiLevelPartitionImpl<Ownership> &mlp)
 {
-    writer.WriteOne(*mlp.level_data);
-    storage::serialization::write(writer, mlp.partition);
-    storage::serialization::write(writer, mlp.cell_to_children);
+    writer.WriteElementCount64(name + "/level_data", 1);
+    writer.WriteFrom(name + "/level_data", *mlp.level_data);
+    storage::serialization::write(writer, name + "/partition", mlp.partition);
+    storage::serialization::write(writer, name + "/cell_to_children", mlp.cell_to_children);
 }
 
 template <storage::Ownership Ownership>
-inline void read(storage::io::FileReader &reader, detail::CellStorageImpl<Ownership> &storage)
+inline void read(storage::tar::FileReader &reader,
+                 const std::string &name,
+                 detail::CellStorageImpl<Ownership> &storage)
 {
-    storage::serialization::read(reader, storage.source_boundary);
-    storage::serialization::read(reader, storage.destination_boundary);
-    storage::serialization::read(reader, storage.cells);
-    storage::serialization::read(reader, storage.level_to_cell_offset);
+    storage::serialization::read(reader, name + "/source_boundary", storage.source_boundary);
+    storage::serialization::read(
+        reader, name + "/destination_boundary", storage.destination_boundary);
+    storage::serialization::read(reader, name + "/cells", storage.cells);
+    storage::serialization::read(
+        reader, name + "/level_to_cell_offset", storage.level_to_cell_offset);
 }
 
 template <storage::Ownership Ownership>
-inline void write(storage::io::FileWriter &writer,
+inline void write(storage::tar::FileWriter &writer,
+                  const std::string &name,
                   const detail::CellStorageImpl<Ownership> &storage)
 {
-    storage::serialization::write(writer, storage.source_boundary);
-    storage::serialization::write(writer, storage.destination_boundary);
-    storage::serialization::write(writer, storage.cells);
-    storage::serialization::write(writer, storage.level_to_cell_offset);
+    storage::serialization::write(writer, name + "/source_boundary", storage.source_boundary);
+    storage::serialization::write(
+        writer, name + "/destination_boundary", storage.destination_boundary);
+    storage::serialization::write(writer, name + "/cells", storage.cells);
+    storage::serialization::write(
+        writer, name + "/level_to_cell_offset", storage.level_to_cell_offset);
 }
 }
 }

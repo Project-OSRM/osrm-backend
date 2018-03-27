@@ -69,7 +69,7 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(
     const std::unordered_set<NodeID> &barrier_nodes,
     const std::unordered_set<NodeID> &traffic_lights,
     const std::vector<util::Coordinate> &coordinates,
-    const util::NameTable &name_table,
+    const NameTable &name_table,
     const std::unordered_set<EdgeID> &segregated_edges,
     const extractor::LaneDescriptionMap &lane_description_map)
     : m_edge_based_node_container(node_data_container), m_connectivity_checksum(0),
@@ -423,8 +423,9 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
     std::size_t node_based_edge_counter = 0;
 
-    storage::io::FileWriter turn_penalties_index_file(turn_penalties_index_filename,
-                                                      storage::io::FileWriter::HasNoFingerprint);
+    storage::tar::FileWriter turn_penalties_index_file(
+        turn_penalties_index_filename, storage::tar::FileWriter::GenerateFingerprint);
+    turn_penalties_index_file.WriteFrom("/extractor/turn_index", (char *)nullptr, 0);
 
     SuffixTable street_name_suffix_table(scripting_environment);
     const auto &turn_lanes_data = transformTurnLaneMapIntoArrays(lane_description_map);
@@ -1029,8 +1030,9 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 // Buffer writes to reduce syscall count
                 if (turn_indexes_write_buffer.size() >= TURN_INDEX_WRITE_BUFFER_SIZE)
                 {
-                    turn_penalties_index_file.WriteFrom(turn_indexes_write_buffer.data(),
-                                                        turn_indexes_write_buffer.size());
+                    turn_penalties_index_file.ContinueFrom("/extractor/turn_index",
+                                                           turn_indexes_write_buffer.data(),
+                                                           turn_indexes_write_buffer.size());
                     turn_indexes_write_buffer.clear();
                 }
 
@@ -1093,8 +1095,9 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
         // Flush the turn_indexes_write_buffer if it's not empty
         if (!turn_indexes_write_buffer.empty())
         {
-            turn_penalties_index_file.WriteFrom(turn_indexes_write_buffer.data(),
-                                                turn_indexes_write_buffer.size());
+            turn_penalties_index_file.ContinueFrom("/extractor/turn_index",
+                                                   turn_indexes_write_buffer.data(),
+                                                   turn_indexes_write_buffer.size());
             turn_indexes_write_buffer.clear();
         }
     }
@@ -1127,28 +1130,14 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     // do not really have a choice but to index the conditional penalties and walk over all
     // edge-based-edges to find the ID of the edge
     auto const indexed_conditionals = IndexConditionals(std::move(conditionals));
-    {
-        util::Log() << "Writing " << indexed_conditionals.size()
-                    << " conditional turn penalties...";
-        // write conditional turn penalties into the restrictions file
-        storage::io::FileWriter writer(conditional_penalties_filename,
-                                       storage::io::FileWriter::GenerateFingerprint);
-        extractor::serialization::write(writer, indexed_conditionals);
-    }
+    util::Log() << "Writing " << indexed_conditionals.size() << " conditional turn penalties...";
+    extractor::files::writeConditionalRestrictions(conditional_penalties_filename,
+                                                   indexed_conditionals);
 
     // write weight penalties per turn
     BOOST_ASSERT(turn_weight_penalties.size() == turn_duration_penalties.size());
-    {
-        storage::io::FileWriter writer(turn_weight_penalties_filename,
-                                       storage::io::FileWriter::GenerateFingerprint);
-        storage::serialization::write(writer, turn_weight_penalties);
-    }
-
-    {
-        storage::io::FileWriter writer(turn_duration_penalties_filename,
-                                       storage::io::FileWriter::GenerateFingerprint);
-        storage::serialization::write(writer, turn_duration_penalties);
-    }
+    files::writeTurnWeightPenalty(turn_weight_penalties_filename, turn_weight_penalties);
+    files::writeTurnDurationPenalty(turn_duration_penalties_filename, turn_duration_penalties);
 
     util::Log() << "Generated " << m_edge_based_node_segments.size() << " edge based node segments";
     util::Log() << "Node-based graph contains " << node_based_edge_counter << " edges";

@@ -2,6 +2,7 @@
 #define OSRM_EXTRACTOR_BEARING_CONTAINER_HPP
 
 #include "storage/shared_memory_ownership.hpp"
+#include "storage/tar_fwd.hpp"
 
 #include "util/guidance/bearing_class.hpp"
 #include "util/range_table.hpp"
@@ -21,11 +22,13 @@ template <storage::Ownership Ownership> class IntersectionBearingsContainer;
 namespace serialization
 {
 template <storage::Ownership Ownership>
-void read(storage::io::FileReader &reader,
+void read(storage::tar::FileReader &reader,
+          const std::string &name,
           detail::IntersectionBearingsContainer<Ownership> &turn_data);
 
 template <storage::Ownership Ownership>
-void write(storage::io::FileWriter &writer,
+void write(storage::tar::FileWriter &writer,
+           const std::string &name,
            const detail::IntersectionBearingsContainer<Ownership> &turn_data);
 }
 
@@ -83,10 +86,12 @@ template <storage::Ownership Ownership> class IntersectionBearingsContainer
         return result;
     }
 
-    friend void serialization::read<Ownership>(storage::io::FileReader &reader,
+    friend void serialization::read<Ownership>(storage::tar::FileReader &reader,
+                                               const std::string &name,
                                                IntersectionBearingsContainer &turn_data_container);
     friend void
-    serialization::write<Ownership>(storage::io::FileWriter &writer,
+    serialization::write<Ownership>(storage::tar::FileWriter &writer,
+                                    const std::string &name,
                                     const IntersectionBearingsContainer &turn_data_container);
 
   private:

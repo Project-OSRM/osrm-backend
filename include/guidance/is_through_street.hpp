@@ -7,6 +7,9 @@
 #include "extractor/node_data_container.hpp"
 #include "extractor/suffix_table.hpp"
 
+#include "util/bearing.hpp"
+#include "util/node_based_graph.hpp"
+
 #include "util/guidance/name_announcements.hpp"
 
 namespace osrm
@@ -19,7 +22,7 @@ inline bool isThroughStreet(const std::size_t index,
                             const IntersectionType &intersection,
                             const util::NodeBasedDynamicGraph &node_based_graph,
                             const extractor::EdgeBasedNodeDataContainer &node_data_container,
-                            const util::NameTable &name_table,
+                            const extractor::NameTable &name_table,
                             const extractor::SuffixTable &street_name_suffix_table)
 {
     using osrm::util::angularDeviation;

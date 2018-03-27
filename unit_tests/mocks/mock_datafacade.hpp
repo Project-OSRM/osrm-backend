@@ -219,7 +219,6 @@ class MockBaseDataFacade : public engine::datafacade::BaseDataFacade
     StringView GetDestinationsForID(const NameID) const override final { return {}; }
     StringView GetExitsForID(const NameID) const override final { return {}; }
 
-    std::string GetTimestamp() const override { return ""; }
     bool GetContinueStraightDefault() const override { return true; }
     double GetMapMatchingMaxSpeed() const override { return 180 / 3.6; }
     const char *GetWeightName() const override final { return "duration"; }

@@ -6,6 +6,7 @@
 struct TemporaryFile
 {
     TemporaryFile() : path(boost::filesystem::unique_path()) {}
+    TemporaryFile(const std::string &path) : path(path) {}
 
     ~TemporaryFile() { boost::filesystem::remove(path); }
 

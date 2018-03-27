@@ -5,8 +5,8 @@
 #include "util/typedefs.hpp"
 #include "util/vector_view.hpp"
 
-#include "storage/io_fwd.hpp"
 #include "storage/shared_memory_ownership.hpp"
+#include "storage/tar_fwd.hpp"
 
 #include <boost/filesystem/path.hpp>
 #include <boost/range/adaptor/reversed.hpp>
@@ -32,10 +32,12 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl;
 namespace serialization
 {
 template <storage::Ownership Ownership>
-inline void read(storage::io::FileReader &reader,
+inline void read(storage::tar::FileReader &reader,
+                 const std::string &name,
                  detail::SegmentDataContainerImpl<Ownership> &segment_data);
 template <storage::Ownership Ownership>
-inline void write(storage::io::FileWriter &writer,
+inline void write(storage::tar::FileWriter &writer,
+                  const std::string &name,
                   const detail::SegmentDataContainerImpl<Ownership> &segment_data);
 }
 
@@ -200,10 +202,12 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
     auto GetNumberOfSegments() const { return fwd_weights.size(); }
 
     friend void
-    serialization::read<Ownership>(storage::io::FileReader &reader,
+    serialization::read<Ownership>(storage::tar::FileReader &reader,
+                                   const std::string &name,
                                    detail::SegmentDataContainerImpl<Ownership> &segment_data);
     friend void serialization::write<Ownership>(
-        storage::io::FileWriter &writer,
+        storage::tar::FileWriter &writer,
+        const std::string &name,
         const detail::SegmentDataContainerImpl<Ownership> &segment_data);
 
   private:

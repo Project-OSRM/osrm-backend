@@ -4,7 +4,6 @@
 #include "guidance/turn_instruction.hpp"
 
 #include "util/coordinate_calculation.hpp"
-#include "util/name_table.hpp"
 #include <set>
 
 using osrm::guidance::getTurnDirection;
@@ -42,7 +41,7 @@ struct EdgeInfo
 };
 
 std::unordered_set<EdgeID> findSegregatedNodes(const extractor::NodeBasedGraphFactory &factory,
-                                               const util::NameTable &names)
+                                               const extractor::NameTable &names)
 {
     auto const &graph = factory.GetGraph();
     auto const &annotation = factory.GetAnnotationData();
