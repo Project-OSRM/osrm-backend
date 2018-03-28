@@ -47,7 +47,7 @@ template <typename Data> struct SharedMonitor
         bi::offset_t size = 0;
         if (shmem.get_size(size) && size == 0)
         {
-            shmem.truncate(internal_size + sizeof(Data));
+            shmem.truncate(rounded_internal_size + sizeof(Data));
             region = bi::mapped_region(shmem, bi::read_write);
             new (&internal()) InternalData;
             new (&data()) Data(initial_data);
@@ -65,11 +65,11 @@ template <typename Data> struct SharedMonitor
             shmem = bi::shared_memory_object(bi::open_only, Data::name, bi::read_write);
 
             bi::offset_t size = 0;
-            if (!shmem.get_size(size) || size != internal_size + sizeof(Data))
+            if (!shmem.get_size(size) || size != rounded_internal_size + sizeof(Data))
             {
                 auto message =
                     boost::format("Wrong shared memory block '%1%' size %2%, expected %3% bytes") %
-                    (const char *)Data::name % size % (internal_size + sizeof(Data));
+                    (const char *)Data::name % size % (rounded_internal_size + sizeof(Data));
                 throw util::exception(message.str() + SOURCE_REF);
             }
 
@@ -87,7 +87,7 @@ template <typename Data> struct SharedMonitor
     Data &data() const
     {
         auto region_pointer = reinterpret_cast<char *>(region.get_address());
-        return *reinterpret_cast<Data *>(region_pointer + internal_size);
+        return *reinterpret_cast<Data *>(region_pointer + rounded_internal_size);
     }
 
     mutex_type &get_mutex() const { return internal().mutex; }
@@ -120,14 +120,12 @@ template <typename Data> struct SharedMonitor
 
   private:
 #if USE_BOOST_INTERPROCESS_CONDITION
-
-    static constexpr int internal_size = 128;
-
     struct InternalData
     {
         mutex_type mutex;
         bi::interprocess_condition condition;
     };
+
 
 #else
     // Implement a conditional variable using a queue of semaphores.
@@ -137,7 +135,6 @@ template <typename Data> struct SharedMonitor
     // fail if a waiter is killed.
 
     static constexpr int buffer_size = 256;
-    static constexpr int internal_size = 4 * 4096;
 
     struct InternalData
     {
@@ -210,9 +207,8 @@ template <typename Data> struct SharedMonitor
     static_assert(buffer_size >= 2, "buffer size is too small");
 
 #endif
-
-    static_assert(sizeof(InternalData) + sizeof(Data) <= internal_size, "not enough space");
-    static_assert(sizeof(InternalData) % alignof(Data) == 0, "incorrect data alignment");
+    static constexpr int rounded_internal_size = ((sizeof(InternalData) + alignof(Data) - 1) / alignof(Data)) * alignof(Data);
+    static_assert(rounded_internal_size < sizeof(InternalData) + sizeof(Data), "Data and internal data need to fit into shared memory");
 
     InternalData &internal() const
     {

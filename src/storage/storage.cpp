@@ -61,7 +61,7 @@ inline void readBlocks(const boost::filesystem::path &path, DataLayout &layout)
 }
 }
 
-using Monitor = SharedMonitor<SharedDataTimestamp>;
+using Monitor = SharedMonitor<SharedRegionRegister>;
 
 Storage::Storage(StorageConfig config_) : config(std::move(config_)) {}
 
@@ -100,25 +100,24 @@ int Storage::Run(int max_wait)
 
     // Get the next region ID and time stamp without locking shared barriers.
     // Because of datastore_lock the only write operation can occur sequentially later.
-    Monitor monitor(SharedDataTimestamp{REGION_NONE, 0});
-    auto in_use_region = monitor.data().region;
-    auto next_timestamp = monitor.data().timestamp + 1;
-    auto next_region =
-        in_use_region == REGION_2 || in_use_region == REGION_NONE ? REGION_1 : REGION_2;
+    Monitor monitor(SharedRegionRegister{});
+    auto &shared_register = monitor.data();
+
+    // This is safe because we have an exclusive lock for all osrm-datastore processes.
+    auto shm_key = shared_register.ReserveKey();
 
     // ensure that the shared memory region we want to write to is really removed
     // this is only needef for failure recovery because we actually wait for all clients
     // to detach at the end of the function
-    if (storage::SharedMemory::RegionExists(next_region))
+    if (storage::SharedMemory::RegionExists(shm_key))
     {
-        util::Log(logWARNING) << "Old shared memory region " << regionToString(next_region)
-                              << " still exists.";
+        util::Log(logWARNING) << "Old shared memory region " << shm_key << " still exists.";
         util::UnbufferedLog() << "Retrying removal... ";
-        storage::SharedMemory::Remove(next_region);
+        storage::SharedMemory::Remove(shm_key);
         util::UnbufferedLog() << "ok.";
     }
 
-    util::Log() << "Loading data into " << regionToString(next_region);
+    util::Log() << "Loading data into " << shm_key;
 
     // Populate a memory layout into stack memory
     DataLayout layout;
@@ -132,12 +131,15 @@ int Storage::Run(int max_wait)
     auto regions_size = encoded_layout.size() + layout.GetSizeOfLayout();
     util::Log() << "Data layout has a size of " << encoded_layout.size() << " bytes";
     util::Log() << "Allocating shared memory of " << regions_size << " bytes";
-    auto data_memory = makeSharedMemory(next_region, regions_size);
+    auto data_memory = makeSharedMemory(shm_key, regions_size);
 
     // Copy memory layout to shared memory and populate data
     char *shared_memory_ptr = static_cast<char *>(data_memory->Ptr());
     std::copy_n(encoded_layout.data(), encoded_layout.size(), shared_memory_ptr);
     PopulateData(layout, shared_memory_ptr + encoded_layout.size());
+
+    std::uint32_t next_timestamp = 0;
+    std::uint8_t in_use_key = SharedRegionRegister::MAX_SHM_KEYS;
 
     { // Lock for write access shared region mutex
         boost::interprocess::scoped_lock<Monitor::mutex_type> lock(monitor.get_mutex(),
@@ -148,13 +150,10 @@ int Storage::Run(int max_wait)
             if (!lock.timed_lock(boost::posix_time::microsec_clock::universal_time() +
                                  boost::posix_time::seconds(max_wait)))
             {
-                util::Log(logWARNING)
-                    << "Could not aquire current region lock after " << max_wait
-                    << " seconds. Removing locked block and creating a new one. All currently "
-                       "attached processes will not receive notifications and must be restarted";
-                Monitor::remove();
-                in_use_region = REGION_NONE;
-                monitor = Monitor(SharedDataTimestamp{REGION_NONE, 0});
+                util::Log(logERROR) << "Could not aquire current region lock after " << max_wait
+                                    << " seconds. Data update failed.";
+                SharedMemory::Remove(shm_key);
+                return EXIT_FAILURE;
             }
         }
         else
@@ -162,32 +161,45 @@ int Storage::Run(int max_wait)
             lock.lock();
         }
 
-        // Update the current region ID and timestamp
-        monitor.data().region = next_region;
-        monitor.data().timestamp = next_timestamp;
+        auto region_id = shared_register.Find("data");
+        if (region_id == SharedRegionRegister::INVALID_REGION_ID)
+        {
+            region_id = shared_register.Register("data", shm_key);
+        }
+        else
+        {
+            auto& shared_region = shared_register.GetRegion(region_id);
+            next_timestamp = shared_region.timestamp + 1;
+            in_use_key = shared_region.shm_key;
+            shared_region.shm_key = shm_key;
+            shared_region.timestamp = next_timestamp;
+        }
     }
 
-    util::Log() << "All data loaded. Notify all client about new data in "
-                << regionToString(next_region) << " with timestamp " << next_timestamp;
+    util::Log() << "All data loaded. Notify all client about new data in " << shm_key
+                << " with timestamp " << next_timestamp;
     monitor.notify_all();
 
     // SHMCTL(2): Mark the segment to be destroyed. The segment will actually be destroyed
     // only after the last process detaches it.
-    if (in_use_region != REGION_NONE && storage::SharedMemory::RegionExists(in_use_region))
+    if (in_use_key != SharedRegionRegister::MAX_SHM_KEYS &&
+        storage::SharedMemory::RegionExists(in_use_key))
     {
-        util::UnbufferedLog() << "Marking old shared memory region "
-                              << regionToString(in_use_region) << " for removal... ";
+        util::UnbufferedLog() << "Marking old shared memory region " << in_use_key
+                              << " for removal... ";
 
         // aquire a handle for the old shared memory region before we mark it for deletion
         // we will need this to wait for all users to detach
-        auto in_use_shared_memory = makeSharedMemory(in_use_region);
+        auto in_use_shared_memory = makeSharedMemory(in_use_key);
 
-        storage::SharedMemory::Remove(in_use_region);
+        storage::SharedMemory::Remove(in_use_key);
         util::UnbufferedLog() << "ok.";
 
         util::UnbufferedLog() << "Waiting for clients to detach... ";
         in_use_shared_memory->WaitForDetach();
         util::UnbufferedLog() << " ok.";
+
+        shared_register.ReleaseKey(in_use_key);
     }
 
     util::Log() << "All clients switched.";

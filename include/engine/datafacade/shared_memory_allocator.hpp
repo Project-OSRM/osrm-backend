@@ -23,7 +23,7 @@ namespace datafacade
 class SharedMemoryAllocator : public ContiguousBlockAllocator
 {
   public:
-    explicit SharedMemoryAllocator(storage::SharedDataType data_region);
+    explicit SharedMemoryAllocator(storage::SharedRegionRegister::ShmKey data_shm_key);
     ~SharedMemoryAllocator() override final;
 
     // interface to give access to the datafacades
