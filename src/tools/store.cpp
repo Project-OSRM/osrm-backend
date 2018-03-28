@@ -15,14 +15,13 @@
 
 using namespace osrm;
 
-void removeLocks() { storage::SharedMonitor<storage::SharedDataTimestamp>::remove(); }
+void removeLocks() { storage::SharedMonitor<storage::SharedRegionRegister>::remove(); }
 
-void deleteRegion(const storage::SharedDataType region)
+void deleteRegion(const storage::SharedRegionRegister::ShmKey key)
 {
-    if (storage::SharedMemory::RegionExists(region) && !storage::SharedMemory::Remove(region))
+    if (storage::SharedMemory::RegionExists(key) && !storage::SharedMemory::Remove(key))
     {
-        util::Log(logWARNING) << "could not delete shared memory region "
-                              << storage::regionToString(region);
+        util::Log(logWARNING) << "could not delete shared memory region " << key;
     }
 }
 
@@ -43,8 +42,10 @@ void springClean()
     }
     else
     {
-        deleteRegion(storage::REGION_1);
-        deleteRegion(storage::REGION_2);
+        for (auto key : util::irange<std::uint8_t>(0, storage::SharedRegionRegister::MAX_SHM_KEYS))
+        {
+            deleteRegion(key);
+        }
         removeLocks();
     }
 }

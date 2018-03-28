@@ -28,12 +28,6 @@ OSRM::OSRM(engine::EngineConfig &config)
         throw util::exception("Required files are missing, cannot continue.  Have all the "
                               "pre-processing steps been run?");
     }
-    else if (config.use_shared_memory)
-    {
-        storage::SharedMonitor<storage::SharedDataTimestamp> barrier;
-        using mutex_type = typename decltype(barrier)::mutex_type;
-        boost::interprocess::scoped_lock<mutex_type> current_region_lock(barrier.get_mutex());
-    }
 
     // Now, check that the algorithm requested can be used with the data
     // that's available.

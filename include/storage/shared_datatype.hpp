@@ -6,13 +6,13 @@
 
 #include "util/exception.hpp"
 #include "util/exception_utils.hpp"
-#include "util/log.hpp"
 
 #include <boost/assert.hpp>
 
 #include <array>
 #include <cstdint>
 #include <map>
+#include <numeric>
 #include <unordered_set>
 
 namespace osrm
@@ -160,40 +160,100 @@ class DataLayout
     std::map<std::string, Block> blocks;
 };
 
-enum SharedDataType
+struct SharedRegion
 {
-    REGION_NONE,
-    REGION_1,
-    REGION_2
-};
+    static constexpr const int MAX_NAME_LENGTH = 254;
 
-struct SharedDataTimestamp
-{
-    explicit SharedDataTimestamp(SharedDataType region, unsigned timestamp)
-        : region(region), timestamp(timestamp)
+    SharedRegion() : name{0}, timestamp{0} {}
+    SharedRegion(const std::string &name_, std::uint64_t timestamp, std::uint8_t shm_key)
+        : name{0}, timestamp{timestamp}, shm_key{shm_key}
     {
+        std::copy_n(name_.begin(), std::min<std::size_t>(MAX_NAME_LENGTH, name_.size()), name);
     }
 
-    SharedDataType region;
-    unsigned timestamp;
+    bool IsEmpty() const { return timestamp == 0; }
+
+    char name[MAX_NAME_LENGTH + 1];
+    std::uint64_t timestamp;
+    std::uint8_t shm_key;
+};
+
+// Keeps a list of all shared regions in a fixed-sized struct
+// for fast access and deserialization.
+struct SharedRegionRegister
+{
+    using RegionID = std::uint8_t;
+    static constexpr const RegionID INVALID_REGION_ID = std::numeric_limits<RegionID>::max();
+    using ShmKey = decltype(SharedRegion::shm_key);
+
+    // Returns the key of the region with the given name
+    RegionID Find(const std::string &name) const
+    {
+        auto iter = std::find_if(regions.begin(), regions.end(), [&](const auto &region) {
+            return std::strncmp(region.name, name.c_str(), SharedRegion::MAX_NAME_LENGTH) == 0;
+        });
+
+        if (iter == regions.end())
+        {
+            return INVALID_REGION_ID;
+        }
+        else
+        {
+            return std::distance(regions.begin(), iter);
+        }
+    }
+
+    RegionID Register(const std::string &name, ShmKey key)
+    {
+        auto iter = std::find_if(
+            regions.begin(), regions.end(), [&](const auto &region) { return region.IsEmpty(); });
+        if (iter == regions.end())
+        {
+            throw util::exception("No shared memory regions left. Could not register " + name +
+                                  ".");
+        }
+        else
+        {
+            constexpr std::uint32_t INITIAL_TIMESTAMP = 1;
+            *iter = SharedRegion{name, INITIAL_TIMESTAMP, key};
+            RegionID key = std::distance(regions.begin(), iter);
+            return key;
+        }
+    }
+
+    void Deregister(const RegionID key) { regions[key] = SharedRegion{}; }
+
+    const auto &GetRegion(const RegionID key) const { return regions[key]; }
+
+    auto &GetRegion(const RegionID key) { return regions[key]; }
+
+    ShmKey ReserveKey()
+    {
+        auto free_key_iter = std::find(shm_key_in_use.begin(), shm_key_in_use.end(), false);
+        if (free_key_iter == shm_key_in_use.end())
+        {
+            throw util::exception("Could not reserve a new SHM key. All keys are in use");
+        }
+
+        *free_key_iter = true;
+        return std::distance(shm_key_in_use.begin(), free_key_iter);
+    }
+
+    void ReleaseKey(ShmKey key) { shm_key_in_use[key] = false; }
+
+    static constexpr const std::uint8_t MAX_SHARED_REGIONS =
+        std::numeric_limits<RegionID>::max() - 1;
+    static_assert(MAX_SHARED_REGIONS < std::numeric_limits<RegionID>::max(),
+                  "Number of shared memory regions needs to be less than the region id size.");
+
+    static constexpr const std::uint8_t MAX_SHM_KEYS = std::numeric_limits<std::uint8_t>::max() - 1;
 
     static constexpr const char *name = "osrm-region";
-};
 
-inline std::string regionToString(const SharedDataType region)
-{
-    switch (region)
-    {
-    case REGION_1:
-        return "REGION_1";
-    case REGION_2:
-        return "REGION_2";
-    case REGION_NONE:
-        return "REGION_NONE";
-    default:
-        return "INVALID_REGION";
-    }
-}
+  private:
+    std::array<SharedRegion, MAX_SHARED_REGIONS> regions;
+    std::array<bool, MAX_SHM_KEYS> shm_key_in_use;
+};
 }
 }
 
