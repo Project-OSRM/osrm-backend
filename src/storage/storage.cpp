@@ -89,8 +89,6 @@ inline void readBlocks(const boost::filesystem::path &path, DataLayout &layout)
 }
 }
 
-static constexpr std::size_t NUM_METRICS = 8;
-
 using RTreeLeaf = engine::datafacade::BaseDataFacade::RTreeLeaf;
 using RTreeNode = util::StaticRTree<RTreeLeaf, storage::Ownership::View>::TreeNode;
 using QueryGraph = util::StaticGraph<contractor::QueryEdge::EdgeData>;
