@@ -149,7 +149,6 @@ class RouteAPI : public BaseAPI
                 guidance::applyOverrides(BaseAPI::facade, steps, leg_geometry);
 
                 // Collapse segregated steps before others
-                // TODO: before or after overrides?
                 steps = guidance::collapseSegregatedTurnInstructions(std::move(steps));
 
                 /* Perform step-based post-processing.
