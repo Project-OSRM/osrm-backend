@@ -7,8 +7,6 @@
 #include "engine/api/table_parameters.hpp"
 #include "engine/api/tile_parameters.hpp"
 #include "engine/api/trip_parameters.hpp"
-#include "engine/data_watchdog.hpp"
-#include "engine/datafacade/contiguous_block_allocator.hpp"
 #include "engine/datafacade_provider.hpp"
 #include "engine/engine_config.hpp"
 #include "engine/plugins/match.hpp"
@@ -20,11 +18,6 @@
 #include "engine/routing_algorithms.hpp"
 #include "engine/status.hpp"
 
-#include "storage/serialization.hpp"
-
-#include "util/exception.hpp"
-#include "util/exception_utils.hpp"
-#include "util/fingerprint.hpp"
 #include "util/json_container.hpp"
 
 #include <memory>
@@ -126,8 +119,6 @@ template <typename Algorithm> class Engine final : public EngineInterface
         return tile_plugin.HandleRequest(GetAlgorithms(params), params, result);
     }
 
-    static bool CheckCompatibility(const EngineConfig &config);
-
   private:
     template <typename ParametersT> auto GetAlgorithms(const ParametersT &params) const
     {
@@ -143,84 +134,6 @@ template <typename Algorithm> class Engine final : public EngineInterface
     const plugins::MatchPlugin match_plugin;
     const plugins::TilePlugin tile_plugin;
 };
-
-template <>
-bool Engine<routing_algorithms::ch::Algorithm>::CheckCompatibility(const EngineConfig &config)
-{
-    if (config.use_shared_memory)
-    {
-        storage::SharedMonitor<storage::SharedDataTimestamp> barrier;
-        using mutex_type = typename decltype(barrier)::mutex_type;
-        boost::interprocess::scoped_lock<mutex_type> current_region_lock(barrier.get_mutex());
-
-        auto mem = storage::makeSharedMemory(barrier.data().region);
-        storage::DataLayout layout;
-        storage::io::BufferReader reader(reinterpret_cast<const char *>(mem->Ptr()), mem->Size());
-        storage::serialization::read(reader, layout);
-
-        std::vector<std::string> metric_prefixes;
-        layout.List("/ch/metrics/", std::back_inserter(metric_prefixes));
-
-        bool has_graph = false;
-        for (const auto &metric_prefix : metric_prefixes)
-        {
-            has_graph |= layout.HasBlock(metric_prefix + "/contracted_graph/node_array") &&
-                         layout.HasBlock(metric_prefix + "/contracted_graph/edge_array");
-        }
-        return has_graph;
-    }
-    else
-    {
-        return boost::filesystem::exists(config.storage_config.GetPath(".osrm.hsgr"));
-    }
-}
-
-template <>
-bool Engine<routing_algorithms::mld::Algorithm>::CheckCompatibility(const EngineConfig &config)
-{
-    if (config.use_shared_memory)
-    {
-        storage::SharedMonitor<storage::SharedDataTimestamp> barrier;
-        using mutex_type = typename decltype(barrier)::mutex_type;
-        boost::interprocess::scoped_lock<mutex_type> current_region_lock(barrier.get_mutex());
-
-        auto mem = storage::makeSharedMemory(barrier.data().region);
-        storage::DataLayout layout;
-        storage::io::BufferReader reader(reinterpret_cast<const char *>(mem->Ptr()), mem->Size());
-        storage::serialization::read(reader, layout);
-
-        std::vector<std::string> metric_prefixes;
-        layout.List("/mld/metrics/", std::back_inserter(metric_prefixes));
-
-        bool has_cells = false;
-        for (const auto &metric_prefix : metric_prefixes)
-        {
-            has_cells |= layout.HasBlock(metric_prefix + "/exclude/0/durations") &&
-                         layout.HasBlock(metric_prefix + "/exclude/0/weights");
-        }
-
-        // checks that all the needed memory blocks are populated
-        // "/mld/cellstorage/source_boundary" and "/mld/cellstorage/destination_boundary"
-        // are not checked, because in situations where there are so few nodes in the graph that
-        // they all fit into one cell, they can be empty.
-        bool has_data = has_cells && layout.HasBlock("/mld/multilevelpartition/level_data") &&
-                        layout.HasBlock("/mld/multilevelpartition/partition") &&
-                        layout.HasBlock("/mld/multilevelpartition/cell_to_children") &&
-                        layout.HasBlock("/mld/cellstorage/cells") &&
-                        layout.HasBlock("/mld/cellstorage/level_to_cell_offset") &&
-                        layout.HasBlock("/mld/multilevelgraph/node_array") &&
-                        layout.HasBlock("/mld/multilevelgraph/edge_array") &&
-                        layout.HasBlock("/mld/multilevelgraph/node_to_edge_offset");
-        return has_data;
-    }
-    else
-    {
-        return boost::filesystem::exists(config.storage_config.GetPath(".osrm.partition")) &&
-               boost::filesystem::exists(config.storage_config.GetPath(".osrm.cells")) &&
-               boost::filesystem::exists(config.storage_config.GetPath(".osrm.mldgr")) &&
-               boost::filesystem::exists(config.storage_config.GetPath(".osrm.cell_metrics"));
-    }
-}
 }
 }
 
