@@ -221,12 +221,16 @@ void AdjustToCombinedTurnStrategy::operator()(RouteStep &step_at_turn_location,
         if (hasTurnType(step_at_turn_location, TurnType::Suppressed))
         {
             if (new_modifier == DirectionModifier::Straight)
+            {
                 setInstructionType(step_at_turn_location, TurnType::NewName);
+            }
             else
+            {
                 step_at_turn_location.maneuver.instruction.type =
                     haveSameName(step_prior_to_intersection, transfer_from_step)
                         ? TurnType::Continue
                         : TurnType::Turn;
+            }
         }
         else if (hasTurnType(step_at_turn_location, TurnType::NewName) &&
                  hasTurnType(transfer_from_step, TurnType::Suppressed) &&
@@ -288,7 +292,7 @@ void StaggeredTurnStrategy::operator()(RouteStep &step_at_turn_location,
 void CombineSegregatedStepsStrategy::operator()(RouteStep &step_at_turn_location,
                                                 const RouteStep &transfer_from_step) const
 {
-    // TODO
+    // Handle end of road
     if (hasTurnType(step_at_turn_location, TurnType::EndOfRoad) ||
         hasTurnType(transfer_from_step, TurnType::EndOfRoad))
     {
@@ -304,16 +308,17 @@ SegregatedTurnStrategy::SegregatedTurnStrategy(const RouteStep &step_prior_to_in
 void SegregatedTurnStrategy::operator()(RouteStep &step_at_turn_location,
                                         const RouteStep &transfer_from_step) const
 {
-    const auto calculate_turn_direction = [](const RouteStep &entry_step,
-                                             const RouteStep &exit_step) {
-        const double angle = util::bearing::angleBetween(entry_step.maneuver.bearing_before,
-                                                         exit_step.maneuver.bearing_after);
+    // Used to control updating of the modifier based on turn direction
+    bool update_modifier_for_turn_direction = true;
 
-        return getTurnDirection(angle);
+    const auto calculate_turn_angle = [](const RouteStep &entry_step, const RouteStep &exit_step) {
+        return util::bearing::angleBetween(entry_step.maneuver.bearing_before,
+                                           exit_step.maneuver.bearing_after);
     };
 
-    // Calculate turn direction for segregated
-    const auto turn_direction = calculate_turn_direction(step_at_turn_location, transfer_from_step);
+    // Calculate turn angle and direction for segregated
+    const auto turn_angle = calculate_turn_angle(step_at_turn_location, transfer_from_step);
+    const auto turn_direction = getTurnDirection(turn_angle);
 
     const auto is_straight_step = [](const RouteStep &step) {
         return ((hasTurnType(step, TurnType::NewName) || hasTurnType(step, TurnType::Continue) ||
@@ -334,16 +339,28 @@ void SegregatedTurnStrategy::operator()(RouteStep &step_at_turn_location,
     {
         // Keep end of road
         setInstructionType(step_at_turn_location, TurnType::EndOfRoad);
-
-        // Set modifier based on turn angle
-        setModifier(step_at_turn_location, turn_direction);
     }
-    // TODO maybe remove fork logic after updating identification logic
     // Process fork step at turn
     else if (hasTurnType(step_at_turn_location, TurnType::Fork))
     {
-        // Keep fork
-        setInstructionType(step_at_turn_location, TurnType::Fork);
+        // Do not update modifier based on turn direction
+        update_modifier_for_turn_direction = false;
+    }
+    // Process wider straight step
+    else if (isWiderStraight(turn_angle) && hasSingleIntersection(step_at_turn_location) &&
+             hasStraightestTurn(step_at_turn_location) && hasStraightestTurn(transfer_from_step))
+    {
+        // Determine if continue or new name
+        setInstructionType(step_at_turn_location,
+                           (haveSameName(step_prior_to_intersection, transfer_from_step)
+                                ? TurnType::Suppressed
+                                : TurnType::NewName));
+
+        // Set modifier to straight
+        setModifier(step_at_turn_location, osrm::guidance::DirectionModifier::Straight);
+
+        // Do not update modifier based on turn direction
+        update_modifier_for_turn_direction = false;
     }
     // Process straight step
     else if ((turn_direction == guidance::DirectionModifier::Straight) &&
@@ -369,8 +386,8 @@ void SegregatedTurnStrategy::operator()(RouteStep &step_at_turn_location,
         setInstructionType(step_at_turn_location, transfer_from_step.maneuver.instruction.type);
     }
 
-    // If not fork then set modifier based on turn angle
-    if (!hasTurnType(step_at_turn_location, TurnType::Fork))
+    // Update modifier based on turn direction, if needed
+    if (update_modifier_for_turn_direction)
     {
         setModifier(step_at_turn_location, turn_direction);
     }
@@ -566,7 +583,6 @@ RouteSteps collapseTurnInstructions(RouteSteps steps)
             }
         }
     }
-
     return steps;
 }
 
