@@ -35,7 +35,7 @@ OSRM::OSRM(engine::EngineConfig &config)
 
         auto mem = storage::makeSharedMemory(barrier.data().region);
         auto layout = reinterpret_cast<storage::DataLayout *>(mem->Ptr());
-        if (layout->GetBlockSize(storage::DataLayout::NAME_CHAR_DATA) == 0)
+        if (layout->GetBlockSize(storage::DataLayout::NAME_VALUES) == 0)
             throw util::exception(
                 "No name data loaded, cannot continue.  Have you run osrm-datastore to load data?");
     }

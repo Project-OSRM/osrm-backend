@@ -1,6 +1,7 @@
 #include "extractor/intersection/mergable_road_detector.hpp"
 #include "extractor/intersection/intersection_analysis.hpp"
 #include "extractor/intersection/node_based_graph_walker.hpp"
+#include "extractor/name_table.hpp"
 #include "extractor/query_node.hpp"
 #include "extractor/suffix_table.hpp"
 #include "guidance/constants.hpp"
@@ -8,7 +9,6 @@
 #include "util/bearing.hpp"
 #include "util/coordinate_calculation.hpp"
 #include "util/guidance/name_announcements.hpp"
-#include "util/name_table.hpp"
 
 using osrm::util::angularDeviation;
 
@@ -27,7 +27,7 @@ namespace
 inline auto makeCheckRoadForName(const NameID name_id,
                                  const util::NodeBasedDynamicGraph &node_based_graph,
                                  const EdgeBasedNodeDataContainer &node_data_container,
-                                 const util::NameTable &name_table,
+                                 const NameTable &name_table,
                                  const SuffixTable &suffix_table)
 {
     return [name_id, &node_based_graph, &node_data_container, &name_table, &suffix_table](
@@ -59,7 +59,7 @@ MergableRoadDetector::MergableRoadDetector(
     const RestrictionMap &node_restriction_map,
     const std::unordered_set<NodeID> &barrier_nodes,
     const extractor::TurnLanesIndexedArray &turn_lanes_data,
-    const util::NameTable &name_table,
+    const NameTable &name_table,
     const SuffixTable &street_name_suffix_table)
     : node_based_graph(node_based_graph), node_data_container(node_data_container),
       node_coordinates(node_coordinates), compressed_geometries(compressed_geometries),

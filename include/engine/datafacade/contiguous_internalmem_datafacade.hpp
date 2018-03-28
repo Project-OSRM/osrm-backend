@@ -15,6 +15,7 @@
 #include "extractor/edge_based_node.hpp"
 #include "extractor/intersection_bearings_container.hpp"
 #include "extractor/maneuver_override.hpp"
+#include "extractor/name_table.hpp"
 #include "extractor/node_data_container.hpp"
 #include "extractor/packed_osm_ids.hpp"
 #include "extractor/profile_properties.hpp"
@@ -40,7 +41,6 @@
 #include "util/guidance/entry_class.hpp"
 #include "util/guidance/turn_lanes.hpp"
 #include "util/log.hpp"
-#include "util/name_table.hpp"
 #include "util/packed_vector.hpp"
 #include "util/range_table.hpp"
 #include "util/rectangle.hpp"
@@ -94,7 +94,8 @@ class ContiguousInternalMemoryAlgorithmDataFacade<CH> : public datafacade::Algor
         auto filter_block_id = static_cast<storage::DataLayout::BlockID>(
             storage::DataLayout::CH_EDGE_FILTER_0 + exclude_index);
 
-        auto edge_filter_ptr = data_layout.GetBlockPtr<unsigned>(memory_block, filter_block_id);
+        auto edge_filter_ptr =
+            data_layout.GetBlockPtr<util::vector_view<bool>::Word>(memory_block, filter_block_id);
 
         util::vector_view<GraphNode> node_list(
             graph_nodes_ptr, data_layout.GetBlockEntries(storage::DataLayout::CH_GRAPH_NODE_LIST));
@@ -215,7 +216,7 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
 
     extractor::IntersectionBearingsView intersection_bearings_view;
 
-    util::NameTable m_name_table;
+    extractor::NameTableView m_name_table;
     // the look-up table for entry classes. An entry class lists the possibility of entry for all
     // available turns. Such a class id is stored with every edge.
     util::vector_view<util::guidance::EntryClass> m_entry_class_table;
@@ -231,16 +232,6 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
             memory_block, storage::DataLayout::PROPERTIES);
 
         exclude_mask = m_profile_properties->excludable_classes[exclude_index];
-    }
-
-    void InitializeTimestampPointer(storage::DataLayout &data_layout, char *memory_block)
-    {
-        auto timestamp_ptr =
-            data_layout.GetBlockPtr<char>(memory_block, storage::DataLayout::TIMESTAMP);
-        m_timestamp.resize(data_layout.GetBlockSize(storage::DataLayout::TIMESTAMP));
-        std::copy(timestamp_ptr,
-                  timestamp_ptr + data_layout.GetBlockSize(storage::DataLayout::TIMESTAMP),
-                  m_timestamp.begin());
     }
 
     void InitializeChecksumPointer(storage::DataLayout &data_layout, char *memory_block)
@@ -264,17 +255,21 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
                                   "Is any data loaded into shared memory?" + SOURCE_REF);
         }
 
-        auto tree_nodes_ptr =
+        const auto rtree_ptr =
             data_layout.GetBlockPtr<RTreeNode>(memory_block, storage::DataLayout::R_SEARCH_TREE);
-        auto tree_level_sizes_ptr = data_layout.GetBlockPtr<std::uint64_t>(
-            memory_block, storage::DataLayout::R_SEARCH_TREE_LEVELS);
-        m_static_rtree.reset(
-            new SharedRTree(tree_nodes_ptr,
-                            data_layout.GetBlockEntries(storage::DataLayout::R_SEARCH_TREE),
-                            tree_level_sizes_ptr,
-                            data_layout.GetBlockEntries(storage::DataLayout::R_SEARCH_TREE_LEVELS),
-                            file_index_path,
-                            m_coordinate_list));
+        util::vector_view<RTreeNode> search_tree(
+            rtree_ptr, data_layout.GetBlockEntries(storage::DataLayout::R_SEARCH_TREE));
+
+        const auto rtree_levelstarts_ptr = data_layout.GetBlockPtr<std::uint64_t>(
+            memory_block, storage::DataLayout::R_SEARCH_TREE_LEVEL_STARTS);
+        util::vector_view<std::uint64_t> rtree_level_starts(
+            rtree_levelstarts_ptr,
+            data_layout.GetBlockEntries(storage::DataLayout::R_SEARCH_TREE_LEVEL_STARTS));
+
+        m_static_rtree.reset(new SharedRTree{std::move(search_tree),
+                                             std::move(rtree_level_starts),
+                                             file_index_path,
+                                             m_coordinate_list});
         m_geospatial_query.reset(
             new SharedGeospatialQuery(*m_static_rtree, m_coordinate_list, *this));
     }
@@ -353,11 +348,20 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
 
     void InitializeNamePointers(storage::DataLayout &data_layout, char *memory_block)
     {
-        auto name_data_ptr =
-            data_layout.GetBlockPtr<char>(memory_block, storage::DataLayout::NAME_CHAR_DATA);
-        const auto name_data_size =
-            data_layout.GetBlockEntries(storage::DataLayout::NAME_CHAR_DATA);
-        m_name_table.reset(name_data_ptr, name_data_ptr + name_data_size);
+        const auto name_blocks_ptr =
+            data_layout.GetBlockPtr<extractor::NameTableView::IndexedData::BlockReference>(
+                memory_block, storage::DataLayout::NAME_BLOCKS);
+        const auto name_values_ptr =
+            data_layout.GetBlockPtr<extractor::NameTableView::IndexedData::ValueType>(
+                memory_block, storage::DataLayout::NAME_VALUES);
+
+        util::vector_view<extractor::NameTableView::IndexedData::BlockReference> blocks(
+            name_blocks_ptr, data_layout.GetBlockEntries(storage::DataLayout::NAME_BLOCKS));
+        util::vector_view<extractor::NameTableView::IndexedData::ValueType> values(
+            name_values_ptr, data_layout.GetBlockEntries(storage::DataLayout::NAME_VALUES));
+
+        extractor::NameTableView::IndexedData index_data_view{std::move(blocks), std::move(values)};
+        m_name_table = extractor::NameTableView{std::move(index_data_view)};
     }
 
     void InitializeTurnLaneDescriptionsPointers(storage::DataLayout &data_layout,
@@ -534,7 +538,6 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         InitializeEdgeInformationPointers(data_layout, memory_block);
         InitializeTurnPenalties(data_layout, memory_block);
         InitializeGeometryPointers(data_layout, memory_block);
-        InitializeTimestampPointer(data_layout, memory_block);
         InitializeNamePointers(data_layout, memory_block);
         InitializeTurnLaneDescriptionsPointers(data_layout, memory_block);
         InitializeProfilePropertiesPointer(data_layout, memory_block, exclude_index);
@@ -841,8 +844,6 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     {
         return m_datasources->GetSourceName(id);
     }
-
-    std::string GetTimestamp() const override final { return m_timestamp; }
 
     bool GetContinueStraightDefault() const override final
     {

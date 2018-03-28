@@ -3,6 +3,7 @@
 
 #include "extractor/intersection/intersection_analysis.hpp"
 #include "extractor/intersection/node_based_graph_walker.hpp"
+#include "extractor/name_table.hpp"
 #include "extractor/suffix_table.hpp"
 #include "guidance/constants.hpp"
 #include "guidance/intersection.hpp"
@@ -10,7 +11,6 @@
 #include "util/assert.hpp"
 #include "util/coordinate_calculation.hpp"
 #include "util/guidance/name_announcements.hpp"
-#include "util/name_table.hpp"
 #include "util/node_based_graph.hpp"
 
 #include <algorithm>
@@ -38,7 +38,7 @@ class IntersectionHandler
                         const extractor::RestrictionMap &node_restriction_map,
                         const std::unordered_set<NodeID> &barrier_nodes,
                         const extractor::TurnLanesIndexedArray &turn_lanes_data,
-                        const util::NameTable &name_table,
+                        const extractor::NameTable &name_table,
                         const extractor::SuffixTable &street_name_suffix_table);
 
     virtual ~IntersectionHandler() = default;
@@ -59,7 +59,7 @@ class IntersectionHandler
     const extractor::RestrictionMap &node_restriction_map;
     const std::unordered_set<NodeID> &barrier_nodes;
     const extractor::TurnLanesIndexedArray &turn_lanes_data;
-    const util::NameTable &name_table;
+    const extractor::NameTable &name_table;
     const extractor::SuffixTable &street_name_suffix_table;
     const extractor::intersection::NodeBasedGraphWalker
         graph_walker; // for skipping traffic signal, distances etc.

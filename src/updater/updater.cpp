@@ -16,9 +16,9 @@
 #include "util/exception.hpp"
 #include "util/exception_utils.hpp"
 #include "util/for_each_pair.hpp"
-#include "util/graph_loader.hpp"
 #include "util/integer_range.hpp"
 #include "util/log.hpp"
+#include "util/mmap_tar.hpp"
 #include "util/opening_hours.hpp"
 #include "util/static_graph.hpp"
 #include "util/static_rtree.hpp"
@@ -434,8 +434,13 @@ updateTurnPenalties(const UpdaterConfig &config,
 
     // Mapped file pointer for turn indices
     boost::iostreams::mapped_file_source turn_index_region;
-    auto turn_index_blocks = util::mmapFile<extractor::lookup::TurnIndexBlock>(
-        config.GetPath(".osrm.turn_penalties_index"), turn_index_region);
+    const extractor::lookup::TurnIndexBlock *turn_index_blocks;
+    {
+        auto map =
+            util::mmapTarFile(config.GetPath(".osrm.turn_penalties_index"), turn_index_region);
+        turn_index_blocks = reinterpret_cast<const extractor::lookup::TurnIndexBlock *>(
+            map["/extractor/turn_index"].first);
+    }
 
     // Get the turn penalty and update to the new value if required
     std::vector<std::uint64_t> updated_turns;
@@ -571,48 +576,31 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
     std::vector<TurnPenalty> turn_duration_penalties;
     if (update_edge_weights || update_turn_penalties || update_conditional_turns)
     {
-        const auto load_segment_data = [&] {
-            extractor::files::readSegmentData(config.GetPath(".osrm.geometry"), segment_data);
-        };
+        tbb::parallel_invoke(
+            [&] {
+                extractor::files::readSegmentData(config.GetPath(".osrm.geometry"), segment_data);
+            },
+            [&] { extractor::files::readNodeData(config.GetPath(".osrm.ebg_nodes"), node_data); },
 
-        const auto load_node_data = [&] {
-            extractor::files::readNodeData(config.GetPath(".osrm.ebg_nodes"), node_data);
-        };
-
-        const auto load_turn_weight_penalties = [&] {
-            using storage::io::FileReader;
-            FileReader reader(config.GetPath(".osrm.turn_weight_penalties"),
-                              FileReader::VerifyFingerprint);
-            storage::serialization::read(reader, turn_weight_penalties);
-        };
-
-        const auto load_turn_duration_penalties = [&] {
-            using storage::io::FileReader;
-            FileReader reader(config.GetPath(".osrm.turn_duration_penalties"),
-                              FileReader::VerifyFingerprint);
-            storage::serialization::read(reader, turn_duration_penalties);
-        };
-
-        const auto load_profile_properties = [&] {
-            // Propagate profile properties to contractor configuration structure
-            storage::io::FileReader profile_properties_file(
-                config.GetPath(".osrm.properties"), storage::io::FileReader::VerifyFingerprint);
-            profile_properties = profile_properties_file.ReadOne<extractor::ProfileProperties>();
-        };
-
-        tbb::parallel_invoke(load_node_data,
-                             load_segment_data,
-                             load_turn_weight_penalties,
-                             load_turn_duration_penalties,
-                             load_profile_properties);
+            [&] {
+                extractor::files::readTurnWeightPenalty(
+                    config.GetPath(".osrm.turn_weight_penalties"), turn_weight_penalties);
+            },
+            [&] {
+                extractor::files::readTurnDurationPenalty(
+                    config.GetPath(".osrm.turn_duration_penalties"), turn_duration_penalties);
+            },
+            [&] {
+                extractor::files::readProfileProperties(config.GetPath(".osrm.properties"),
+                                                        profile_properties);
+            });
     }
 
     std::vector<extractor::ConditionalTurnPenalty> conditional_turns;
     if (update_conditional_turns)
     {
-        using storage::io::FileReader;
-        FileReader reader(config.GetPath(".osrm.restrictions"), FileReader::VerifyFingerprint);
-        extractor::serialization::read(reader, conditional_turns);
+        extractor::files::readConditionalRestrictions(config.GetPath(".osrm.restrictions"),
+                                                      conditional_turns);
     }
 
     tbb::concurrent_vector<GeometryID> updated_segments;
@@ -811,19 +799,14 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
 
     if (update_turn_penalties || update_conditional_turns)
     {
-        const auto save_penalties = [](const auto &filename, const auto &data) -> void {
-            storage::io::FileWriter writer(filename, storage::io::FileWriter::GenerateFingerprint);
-            storage::serialization::write(writer, data);
-        };
-
         tbb::parallel_invoke(
             [&] {
-                save_penalties(config.GetPath(".osrm.turn_weight_penalties"),
-                               turn_weight_penalties);
+                extractor::files::writeTurnWeightPenalty(
+                    config.GetPath(".osrm.turn_weight_penalties"), turn_weight_penalties);
             },
             [&] {
-                save_penalties(config.GetPath(".osrm.turn_duration_penalties"),
-                               turn_duration_penalties);
+                extractor::files::writeTurnDurationPenalty(
+                    config.GetPath(".osrm.turn_duration_penalties"), turn_duration_penalties);
             });
     }
 

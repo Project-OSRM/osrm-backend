@@ -16,14 +16,20 @@ struct Block
 {
     std::uint64_t num_entries;
     std::uint64_t byte_size;
-    std::uint64_t entry_size;
-    std::uint64_t entry_align;
+
+    Block() : num_entries(0), byte_size(0) {}
+    Block(std::uint64_t num_entries, std::uint64_t byte_size)
+        : num_entries(num_entries), byte_size(byte_size)
+    {
+    }
 };
+
+using NamedBlock = std::tuple<std::string, Block>;
 
 template <typename T> Block make_block(uint64_t num_entries)
 {
     static_assert(sizeof(T) % alignof(T) == 0, "aligned T* can't be used as an array pointer");
-    return Block{num_entries, sizeof(T) * num_entries, sizeof(T), alignof(T)};
+    return Block{num_entries, sizeof(T) * num_entries};
 }
 }
 }

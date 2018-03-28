@@ -21,6 +21,7 @@ struct PartitionerConfig final : storage::IOConfig
                    {".osrm.ebg",
                     ".osrm.cnbg",
                     ".osrm.cnbg_to_ebg",
+                    ".osrm.nbg_nodes",
                     ".osrm.partition",
                     ".osrm.cells",
                     ".osrm.maneuver_overrides"}),

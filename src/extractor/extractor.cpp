@@ -1,5 +1,6 @@
 #include "extractor/extractor.hpp"
 
+#include "extractor/compressed_node_based_graph_edge.hpp"
 #include "extractor/edge_based_edge.hpp"
 #include "extractor/extraction_containers.hpp"
 #include "extractor/extraction_node.hpp"
@@ -8,6 +9,7 @@
 #include "extractor/extractor_callbacks.hpp"
 #include "extractor/files.hpp"
 #include "extractor/maneuver_override_relation_parser.hpp"
+#include "extractor/name_table.hpp"
 #include "extractor/node_based_graph_factory.hpp"
 #include "extractor/raster_source.hpp"
 #include "extractor/restriction_filter.hpp"
@@ -23,10 +25,8 @@
 
 #include "util/exception.hpp"
 #include "util/exception_utils.hpp"
-#include "util/graph_loader.hpp"
 #include "util/integer_range.hpp"
 #include "util/log.hpp"
-#include "util/name_table.hpp"
 #include "util/range_table.hpp"
 #include "util/timing_util.hpp"
 
@@ -169,6 +169,25 @@ void SetExcludableClasses(const ExtractorCallbacks::ClassesMap &classes_map,
         }
     }
 }
+
+std::vector<CompressedNodeBasedGraphEdge> toEdgeList(const util::NodeBasedDynamicGraph &graph)
+{
+    std::vector<CompressedNodeBasedGraphEdge> edges;
+    edges.reserve(graph.GetNumberOfEdges());
+
+    // For all nodes iterate over its edges and dump (from, to) pairs
+    for (const NodeID from_node : util::irange(0u, graph.GetNumberOfNodes()))
+    {
+        for (const EdgeID edge : graph.GetAdjacentEdgeRange(from_node))
+        {
+            const auto to_node = graph.GetTarget(edge);
+
+            edges.push_back({from_node, to_node});
+        }
+    }
+
+    return edges;
+}
 }
 
 /**
@@ -231,11 +250,13 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
                                                    conditional_turn_restrictions,
                                                    unresolved_maneuver_overrides);
 
+    NameTable name_table;
+    files::readNames(config.GetPath(".osrm.names"), name_table);
+
     util::Log() << "Find segregated edges in node-based graph ..." << std::flush;
     TIMER_START(segregated);
 
-    util::NameTable names(config.GetPath(".osrm.names").string());
-    auto segregated_edges = guidance::findSegregatedNodes(node_based_graph_factory, names);
+    auto segregated_edges = guidance::findSegregatedNodes(node_based_graph_factory, name_table);
 
     TIMER_STOP(segregated);
     util::Log() << "ok, after " << TIMER_SEC(segregated) << "s";
@@ -266,10 +287,8 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
             compressed_node_based_graph_writing.wait();
     };
 
-    compressed_node_based_graph_writing = std::async(std::launch::async, [&] {
-        WriteCompressedNodeBasedGraph(
-            config.GetPath(".osrm.cnbg").string(), node_based_graph, coordinates);
-    });
+    files::writeCompressedNodeBasedGraph(config.GetPath(".osrm.cnbg").string(),
+                                         toEdgeList(node_based_graph));
 
     node_based_graph_factory.GetCompressedEdges().PrintStatistics();
 
@@ -283,8 +302,6 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
         removeInvalidRestrictions(std::move(conditional_turn_restrictions), node_based_graph);
 
     const auto number_of_node_based_nodes = node_based_graph.GetNumberOfNodes();
-
-    const util::NameTable name_table(config.GetPath(".osrm.names").string());
 
     const auto number_of_edge_based_nodes =
         BuildEdgeExpandedGraph(node_based_graph,
@@ -326,11 +343,8 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
 
     util::Log() << "Saving edge-based node weights to file.";
     TIMER_START(timer_write_node_weights);
-    {
-        storage::io::FileWriter writer(config.GetPath(".osrm.enw"),
-                                       storage::io::FileWriter::GenerateFingerprint);
-        storage::serialization::write(writer, edge_based_node_weights);
-    }
+    extractor::files::writeEdgeBasedNodeWeights(config.GetPath(".osrm.enw"),
+                                                edge_based_node_weights);
     TIMER_STOP(timer_write_node_weights);
     util::Log() << "Done writing. (" << TIMER_SEC(timer_write_node_weights) << ")";
 
@@ -412,11 +426,6 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
             timestamp = "n/a";
         }
         util::Log() << "timestamp: " << timestamp;
-
-        storage::io::FileWriter timestamp_file(config.GetPath(".osrm.timestamp"),
-                                               storage::io::FileWriter::GenerateFingerprint);
-
-        timestamp_file.WriteFrom(timestamp.c_str(), timestamp.length());
     }
 
     // Extraction containers and restriction parser
@@ -714,7 +723,7 @@ EdgeID Extractor::BuildEdgeExpandedGraph(
     const std::vector<TurnRestriction> &turn_restrictions,
     const std::vector<ConditionalTurnRestriction> &conditional_turn_restrictions,
     const std::unordered_set<EdgeID> &segregated_edges,
-    const util::NameTable &name_table,
+    const NameTable &name_table,
     const std::vector<UnresolvedManeuverOverride> &maneuver_overrides,
     const LaneDescriptionMap &turn_lane_map,
     // for calculating turn penalties
@@ -815,55 +824,13 @@ void Extractor::BuildRTree(std::vector<EdgeBasedNodeSegment> edge_based_node_seg
     edge_based_node_segments.resize(new_size);
 
     TIMER_START(construction);
-    util::StaticRTree<EdgeBasedNodeSegment> rtree(edge_based_node_segments,
-                                                  config.GetPath(".osrm.ramIndex").string(),
-                                                  config.GetPath(".osrm.fileIndex").string(),
-                                                  coordinates);
+    util::StaticRTree<EdgeBasedNodeSegment> rtree(
+        edge_based_node_segments, coordinates, config.GetPath(".osrm.fileIndex"));
+
+    files::writeRamIndex(config.GetPath(".osrm.ramIndex"), rtree);
 
     TIMER_STOP(construction);
     util::Log() << "finished r-tree construction in " << TIMER_SEC(construction) << " seconds";
-}
-
-void Extractor::WriteCompressedNodeBasedGraph(const std::string &path,
-                                              const util::NodeBasedDynamicGraph &graph,
-                                              const std::vector<util::Coordinate> &coordinates)
-{
-    const auto fingerprint = storage::io::FileWriter::GenerateFingerprint;
-
-    storage::io::FileWriter writer{path, fingerprint};
-
-    // Writes:  | Fingerprint | #e | #n | edges | coordinates |
-    // - uint64: number of edges (from, to) pairs
-    // - uint64: number of nodes and therefore also coordinates
-    // - (uint32_t, uint32_t): num_edges * edges
-    // - (int32_t, int32_t: num_nodes * coordinates (lon, lat)
-
-    const auto num_edges = graph.GetNumberOfEdges();
-    const auto num_nodes = graph.GetNumberOfNodes();
-
-    BOOST_ASSERT_MSG(num_nodes == coordinates.size(), "graph and embedding out of sync");
-
-    writer.WriteElementCount64(num_edges);
-    writer.WriteElementCount64(num_nodes);
-
-    // For all nodes iterate over its edges and dump (from, to) pairs
-    for (const NodeID from_node : util::irange(0u, num_nodes))
-    {
-        for (const EdgeID edge : graph.GetAdjacentEdgeRange(from_node))
-        {
-            const auto to_node = graph.GetTarget(edge);
-
-            writer.WriteOne(from_node);
-            writer.WriteOne(to_node);
-        }
-    }
-
-    // FIXME this is unneccesary: We have this data
-    for (const auto &qnode : coordinates)
-    {
-        writer.WriteOne(qnode.lon);
-        writer.WriteOne(qnode.lat);
-    }
 }
 
 template <typename Map> auto convertIDMapToVector(const Map &map)
@@ -885,7 +852,7 @@ void Extractor::ProcessGuidanceTurns(
     const std::unordered_set<NodeID> &barrier_nodes,
     const std::vector<TurnRestriction> &turn_restrictions,
     const std::vector<ConditionalTurnRestriction> &conditional_turn_restrictions,
-    const util::NameTable &name_table,
+    const NameTable &name_table,
     LaneDescriptionMap lane_description_map,
     ScriptingEnvironment &scripting_environment)
 {
@@ -945,9 +912,11 @@ void Extractor::ProcessGuidanceTurns(
 
     util::Log() << "Writing Turns and Lane Data...";
     TIMER_START(write_guidance_data);
-    storage::io::FileWriter writer(config.GetPath(".osrm.tld").string(),
-                                   storage::io::FileWriter::GenerateFingerprint);
-    storage::serialization::write(writer, convertIDMapToVector(lane_data_map.data));
+
+    {
+        auto turn_lane_data = convertIDMapToVector(lane_data_map.data);
+        files::writeTurnLaneData(config.GetPath(".osrm.tld"), turn_lane_data);
+    }
 
     { // Turn lanes handler modifies lane_description_map, so another transformation is needed
         std::vector<std::uint32_t> turn_lane_offsets;

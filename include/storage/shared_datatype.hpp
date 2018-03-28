@@ -20,7 +20,9 @@ namespace storage
 // Added at the start and end of each block as sanity check
 const constexpr char CANARY[4] = {'O', 'S', 'R', 'M'};
 
-const constexpr char *block_id_to_name[] = {"NAME_CHAR_DATA",
+const constexpr char *block_id_to_name[] = {"IGNORE_BLOCK",
+                                            "NAME_BLOCKS",
+                                            "NAME_VALUES",
                                             "EDGE_BASED_NODE_DATA",
                                             "ANNOTATION_DATA",
                                             "CH_GRAPH_NODE_LIST",
@@ -38,7 +40,7 @@ const constexpr char *block_id_to_name[] = {"NAME_CHAR_DATA",
                                             "TURN_INSTRUCTION",
                                             "ENTRY_CLASSID",
                                             "R_SEARCH_TREE",
-                                            "R_SEARCH_TREE_LEVELS",
+                                            "R_SEARCH_TREE_LEVEL_STARTS",
                                             "GEOMETRIES_INDEX",
                                             "GEOMETRIES_NODE_LIST",
                                             "GEOMETRIES_FWD_WEIGHT_LIST",
@@ -48,7 +50,6 @@ const constexpr char *block_id_to_name[] = {"NAME_CHAR_DATA",
                                             "GEOMETRIES_FWD_DATASOURCES_LIST",
                                             "GEOMETRIES_REV_DATASOURCES_LIST",
                                             "HSGR_CHECKSUM",
-                                            "TIMESTAMP",
                                             "FILE_INDEX_PATH",
                                             "DATASOURCES_NAMES",
                                             "PROPERTIES",
@@ -94,11 +95,14 @@ const constexpr char *block_id_to_name[] = {"NAME_CHAR_DATA",
                                             "MANEUVER_OVERRIDES",
                                             "MANEUVER_OVERRIDE_NODE_SEQUENCES"};
 
-struct DataLayout
+class DataLayout
 {
+  public:
     enum BlockID
     {
-        NAME_CHAR_DATA = 0,
+        IGNORE_BLOCK = 0,
+        NAME_BLOCKS,
+        NAME_VALUES,
         EDGE_BASED_NODE_DATA_LIST,
         ANNOTATION_DATA_LIST,
         CH_GRAPH_NODE_LIST,
@@ -116,7 +120,7 @@ struct DataLayout
         TURN_INSTRUCTION,
         ENTRY_CLASSID,
         R_SEARCH_TREE,
-        R_SEARCH_TREE_LEVELS,
+        R_SEARCH_TREE_LEVEL_STARTS,
         GEOMETRIES_INDEX,
         GEOMETRIES_NODE_LIST,
         GEOMETRIES_FWD_WEIGHT_LIST,
@@ -126,7 +130,6 @@ struct DataLayout
         GEOMETRIES_FWD_DATASOURCES_LIST,
         GEOMETRIES_REV_DATASOURCES_LIST,
         HSGR_CHECKSUM,
-        TIMESTAMP,
         FILE_INDEX_PATH,
         DATASOURCES_NAMES,
         PROPERTIES,
@@ -174,8 +177,6 @@ struct DataLayout
         NUM_BLOCKS
     };
 
-    std::array<Block, NUM_BLOCKS> blocks;
-
     DataLayout() : blocks{} {}
 
     inline void SetBlock(BlockID bid, Block block) { blocks[bid] = std::move(block); }
@@ -189,47 +190,17 @@ struct DataLayout
         uint64_t result = 0;
         for (auto i = 0; i < NUM_BLOCKS; i++)
         {
-            BOOST_ASSERT(blocks[i].entry_align > 0);
-            result += 2 * sizeof(CANARY) + GetBlockSize((BlockID)i) + blocks[i].entry_align;
+            result += 2 * sizeof(CANARY) + GetBlockSize(static_cast<BlockID>(i)) + BLOCK_ALIGNMENT;
         }
         return result;
-    }
-
-    // \brief Fit aligned storage in buffer.
-    // Interface Similar to [ptr.align] but omits space computation.
-    // The method can be removed and changed directly to an std::align
-    // function call after dropping gcc < 5 support.
-    inline void *align(std::size_t align, std::size_t, void *&ptr) const noexcept
-    {
-        const auto intptr = reinterpret_cast<uintptr_t>(ptr);
-        const auto aligned = (intptr - 1u + align) & -align;
-        return ptr = reinterpret_cast<void *>(aligned);
-    }
-
-    inline void *GetAlignedBlockPtr(void *ptr, BlockID bid) const
-    {
-        for (auto i = 0; i < bid; i++)
-        {
-            ptr = static_cast<char *>(ptr) + sizeof(CANARY);
-            ptr = align(blocks[i].entry_align, blocks[i].entry_size, ptr);
-            ptr = static_cast<char *>(ptr) + GetBlockSize((BlockID)i);
-            ptr = static_cast<char *>(ptr) + sizeof(CANARY);
-        }
-
-        ptr = static_cast<char *>(ptr) + sizeof(CANARY);
-        ptr = align(blocks[bid].entry_align, blocks[bid].entry_size, ptr);
-        return ptr;
-    }
-
-    template <typename T> inline T *GetBlockEnd(char *shared_memory, BlockID bid) const
-    {
-        auto begin = GetBlockPtr<T>(shared_memory, bid);
-        return begin + GetBlockEntries(bid);
     }
 
     template <typename T, bool WRITE_CANARY = false>
     inline T *GetBlockPtr(char *shared_memory, BlockID bid) const
     {
+        static_assert(BLOCK_ALIGNMENT % std::alignment_of<T>::value == 0,
+                      "Datatype does not fit alignment constraints.");
+
         char *ptr = (char *)GetAlignedBlockPtr(shared_memory, bid);
         if (WRITE_CANARY)
         {
@@ -258,6 +229,39 @@ struct DataLayout
 
         return (T *)ptr;
     }
+
+  private:
+    // Fit aligned storage in buffer to 64 bytes to conform with AVX 512 types
+    inline void *align(void *&ptr) const noexcept
+    {
+        const auto intptr = reinterpret_cast<uintptr_t>(ptr);
+        const auto aligned = (intptr - 1u + BLOCK_ALIGNMENT) & -BLOCK_ALIGNMENT;
+        return ptr = reinterpret_cast<void *>(aligned);
+    }
+
+    inline void *GetAlignedBlockPtr(void *ptr, BlockID bid) const
+    {
+        for (auto i = 0; i < bid; i++)
+        {
+            ptr = static_cast<char *>(ptr) + sizeof(CANARY);
+            ptr = align(ptr);
+            ptr = static_cast<char *>(ptr) + GetBlockSize((BlockID)i);
+            ptr = static_cast<char *>(ptr) + sizeof(CANARY);
+        }
+
+        ptr = static_cast<char *>(ptr) + sizeof(CANARY);
+        ptr = align(ptr);
+        return ptr;
+    }
+
+    template <typename T> inline T *GetBlockEnd(char *shared_memory, BlockID bid) const
+    {
+        auto begin = GetBlockPtr<T>(shared_memory, bid);
+        return begin + GetBlockEntries(bid);
+    }
+
+    static constexpr std::size_t BLOCK_ALIGNMENT = 64;
+    std::array<Block, NUM_BLOCKS> blocks;
 };
 
 enum SharedDataType

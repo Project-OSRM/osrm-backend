@@ -19,7 +19,6 @@
 #include "util/exception_utils.hpp"
 #include "util/exclude_flag.hpp"
 #include "util/filtered_graph.hpp"
-#include "util/graph_loader.hpp"
 #include "util/integer_range.hpp"
 #include "util/log.hpp"
 #include "util/static_graph.hpp"
@@ -64,11 +63,7 @@ int Contractor::Run()
 
     util::Log() << "Reading node weights.";
     std::vector<EdgeWeight> node_weights;
-    {
-        storage::io::FileReader reader(config.GetPath(".osrm.enw"),
-                                       storage::io::FileReader::VerifyFingerprint);
-        storage::serialization::read(reader, node_weights);
-    }
+    extractor::files::readEdgeBasedNodeWeights(config.GetPath(".osrm.enw"), node_weights);
     util::Log() << "Done reading node weights.";
 
     util::Log() << "Loading edge-expanded graph representation";

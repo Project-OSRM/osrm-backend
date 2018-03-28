@@ -173,8 +173,6 @@ class BaseDataFacade
 
     virtual StringView GetExitsForID(const NameID id) const = 0;
 
-    virtual std::string GetTimestamp() const = 0;
-
     virtual bool GetContinueStraightDefault() const = 0;
 
     virtual double GetMapMatchingMaxSpeed() const = 0;

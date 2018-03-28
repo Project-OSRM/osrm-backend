@@ -1,9 +1,11 @@
+#include "extractor/files.hpp"
+#include "extractor/packed_osm_ids.hpp"
 #include "extractor/tarjan_scc.hpp"
+
 #include "util/coordinate.hpp"
 #include "util/coordinate_calculation.hpp"
 #include "util/dynamic_graph.hpp"
 #include "util/fingerprint.hpp"
-#include "util/graph_loader.hpp"
 #include "util/log.hpp"
 #include "util/static_graph.hpp"
 #include "util/typedefs.hpp"
@@ -36,16 +38,13 @@ std::size_t loadGraph(const std::string &path,
                       extractor::PackedOSMIDs &osm_node_ids,
                       std::vector<TarjanEdge> &graph_edge_list)
 {
-    storage::io::FileReader file_reader(path, storage::io::FileReader::VerifyFingerprint);
-
     std::vector<extractor::NodeBasedEdge> edge_list;
+    std::vector<extractor::NodeBasedEdgeAnnotation> annotation_data;
 
     auto nop = boost::make_function_output_iterator([](auto) {});
 
-    const auto number_of_nodes =
-        util::loadNodesFromFile(file_reader, nop, nop, coordinate_list, osm_node_ids);
-
-    util::loadEdgesFromFile(file_reader, edge_list);
+    extractor::files::readRawNBGraph(
+        path, nop, nop, coordinate_list, osm_node_ids, edge_list, annotation_data);
 
     // Building a node-based graph
     for (const auto &input_edge : edge_list)
@@ -66,7 +65,7 @@ std::size_t loadGraph(const std::string &path,
         }
     }
 
-    return number_of_nodes;
+    return osm_node_ids.size();
 }
 
 struct FeatureWriter

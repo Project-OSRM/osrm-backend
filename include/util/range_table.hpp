@@ -1,8 +1,8 @@
 #ifndef RANGE_TABLE_HPP
 #define RANGE_TABLE_HPP
 
-#include "storage/io.hpp"
 #include "storage/shared_memory_ownership.hpp"
+#include "storage/tar_fwd.hpp"
 #include "util/integer_range.hpp"
 #include "util/vector_view.hpp"
 
@@ -25,10 +25,14 @@ class RangeTable;
 namespace serialization
 {
 template <unsigned BlockSize, storage::Ownership Ownership>
-void write(storage::io::FileWriter &writer, const util::RangeTable<BlockSize, Ownership> &table);
+void write(storage::tar::FileWriter &writer,
+           const std::string &name,
+           const util::RangeTable<BlockSize, Ownership> &table);
 
 template <unsigned BlockSize, storage::Ownership Ownership>
-void read(storage::io::FileReader &reader, util::RangeTable<BlockSize, Ownership> &table);
+void read(storage::tar::FileReader &reader,
+          const std::string &name,
+          util::RangeTable<BlockSize, Ownership> &table);
 }
 
 /**
@@ -177,9 +181,11 @@ template <unsigned BLOCK_SIZE, storage::Ownership Ownership> class RangeTable
         return irange(begin_idx, end_idx);
     }
 
-    friend void serialization::write<BLOCK_SIZE, Ownership>(storage::io::FileWriter &writer,
+    friend void serialization::write<BLOCK_SIZE, Ownership>(storage::tar::FileWriter &writer,
+                                                            const std::string &name,
                                                             const RangeTable &table);
-    friend void serialization::read<BLOCK_SIZE, Ownership>(storage::io::FileReader &reader,
+    friend void serialization::read<BLOCK_SIZE, Ownership>(storage::tar::FileReader &reader,
+                                                           const std::string &name,
                                                            RangeTable &table);
 
   private:

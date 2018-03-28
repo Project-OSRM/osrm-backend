@@ -38,9 +38,12 @@ using CellStorageView = detail::CellStorageImpl<storage::Ownership::View>;
 namespace serialization
 {
 template <storage::Ownership Ownership>
-inline void read(storage::io::FileReader &reader, detail::CellStorageImpl<Ownership> &storage);
+inline void read(storage::tar::FileReader &reader,
+                 const std::string &name,
+                 detail::CellStorageImpl<Ownership> &storage);
 template <storage::Ownership Ownership>
-inline void write(storage::io::FileWriter &writer,
+inline void write(storage::tar::FileWriter &writer,
+                  const std::string &name,
                   const detail::CellStorageImpl<Ownership> &storage);
 }
 
@@ -390,9 +393,11 @@ template <storage::Ownership Ownership> class CellStorageImpl
                     destination_boundary.data()};
     }
 
-    friend void serialization::read<Ownership>(storage::io::FileReader &reader,
+    friend void serialization::read<Ownership>(storage::tar::FileReader &reader,
+                                               const std::string &name,
                                                detail::CellStorageImpl<Ownership> &storage);
-    friend void serialization::write<Ownership>(storage::io::FileWriter &writer,
+    friend void serialization::write<Ownership>(storage::tar::FileWriter &writer,
+                                                const std::string &name,
                                                 const detail::CellStorageImpl<Ownership> &storage);
 
   private:

@@ -7,6 +7,7 @@
 #include "util/rectangle.hpp"
 #include "util/typedefs.hpp"
 
+#include "../common/temporary_file.hpp"
 #include "mocks/mock_datafacade.hpp"
 
 #include <boost/functional/hash.hpp>
@@ -244,60 +245,53 @@ void sampling_verify_rtree(RTreeT &rtree,
     }
 }
 
-template <typename FixtureT, typename RTreeT = TestStaticRTree>
-void build_rtree(const std::string &prefix,
-                 FixtureT *fixture,
-                 std::string &leaves_path,
-                 std::string &nodes_path)
+template <typename RTreeT, typename FixtureT>
+auto make_rtree(const boost::filesystem::path &path, FixtureT &fixture)
 {
-    nodes_path = prefix + ".ramIndex";
-    leaves_path = prefix + ".fileIndex";
-
-    RTreeT r(fixture->edges, nodes_path, leaves_path, fixture->coords);
+    return RTreeT(fixture.edges, fixture.coords, path);
 }
 
 template <typename RTreeT = TestStaticRTree, typename FixtureT>
-void construction_test(const std::string &prefix, FixtureT *fixture)
+void construction_test(const std::string &path, FixtureT &fixture)
 {
     std::string leaves_path;
     std::string nodes_path;
-    build_rtree<FixtureT, RTreeT>(prefix, fixture, leaves_path, nodes_path);
-    RTreeT rtree(nodes_path, leaves_path, fixture->coords);
-    LinearSearchNN<TestData> lsnn(fixture->coords, fixture->edges);
+    auto rtree = make_rtree<RTreeT>(path, fixture);
+    LinearSearchNN<TestData> lsnn(fixture.coords, fixture.edges);
 
-    simple_verify_rtree(rtree, fixture->coords, fixture->edges);
-    sampling_verify_rtree(rtree, lsnn, fixture->coords, 100);
+    simple_verify_rtree(rtree, fixture.coords, fixture.edges);
+    sampling_verify_rtree(rtree, lsnn, fixture.coords, 100);
 }
 
 BOOST_FIXTURE_TEST_CASE(construct_tiny, TestRandomGraphFixture_10_30)
 {
     using TinyTestTree = StaticRTree<TestData, osrm::storage::Ownership::Container, 2, 64>;
-    construction_test<TinyTestTree>("test_tiny", this);
+    construction_test<TinyTestTree>("test_tiny", *this);
 }
 
 BOOST_FIXTURE_TEST_CASE(construct_half_leaf_test, TestRandomGraphFixture_LeafHalfFull)
 {
-    construction_test("test_1", this);
+    construction_test("test_1", *this);
 }
 
 BOOST_FIXTURE_TEST_CASE(construct_full_leaf_test, TestRandomGraphFixture_LeafFull)
 {
-    construction_test("test_2", this);
+    construction_test("test_2", *this);
 }
 
 BOOST_FIXTURE_TEST_CASE(construct_two_leaves_test, TestRandomGraphFixture_TwoLeaves)
 {
-    construction_test("test_3", this);
+    construction_test("test_3", *this);
 }
 
 BOOST_FIXTURE_TEST_CASE(construct_branch_test, TestRandomGraphFixture_Branch)
 {
-    construction_test("test_4", this);
+    construction_test("test_4", *this);
 }
 
 BOOST_FIXTURE_TEST_CASE(construct_multiple_levels_test, TestRandomGraphFixture_MultipleLevels)
 {
-    construction_test("test_5", this);
+    construction_test("test_5", *this);
 }
 
 // Bug: If you querry a point that lies between two BBs that have a gap,
@@ -321,11 +315,8 @@ BOOST_AUTO_TEST_CASE(regression_test)
         },
         {Edge(0, 1), Edge(2, 3), Edge(4, 5), Edge(6, 7), Edge(8, 9)});
 
-    std::string leaves_path;
-    std::string nodes_path;
-    build_rtree<GraphFixture, MiniStaticRTree>(
-        "test_regression", &fixture, leaves_path, nodes_path);
-    MiniStaticRTree rtree(nodes_path, leaves_path, fixture.coords);
+    TemporaryFile tmp;
+    auto rtree = make_rtree<MiniStaticRTree>(tmp.path, fixture);
     LinearSearchNN<TestData> lsnn(fixture.coords, fixture.edges);
 
     // query a node just right of the center of the gap
@@ -352,10 +343,8 @@ BOOST_AUTO_TEST_CASE(radius_regression_test)
         },
         {Edge(0, 1), Edge(1, 0)});
 
-    std::string leaves_path;
-    std::string nodes_path;
-    build_rtree<GraphFixture, MiniStaticRTree>("test_angle", &fixture, leaves_path, nodes_path);
-    MiniStaticRTree rtree(nodes_path, leaves_path, fixture.coords);
+    TemporaryFile tmp;
+    auto rtree = make_rtree<MiniStaticRTree>(tmp.path, fixture);
     TestDataFacade mockfacade;
     engine::GeospatialQuery<MiniStaticRTree, TestDataFacade> query(
         rtree, fixture.coords, mockfacade);
@@ -380,10 +369,8 @@ BOOST_AUTO_TEST_CASE(bearing_tests)
         },
         {Edge(0, 1), Edge(1, 0)});
 
-    std::string leaves_path;
-    std::string nodes_path;
-    build_rtree<GraphFixture, MiniStaticRTree>("test_bearing", &fixture, leaves_path, nodes_path);
-    MiniStaticRTree rtree(nodes_path, leaves_path, fixture.coords);
+    TemporaryFile tmp;
+    auto rtree = make_rtree<MiniStaticRTree>(tmp.path, fixture);
     TestDataFacade mockfacade;
     engine::GeospatialQuery<MiniStaticRTree, TestDataFacade> query(
         rtree, fixture.coords, mockfacade);
@@ -459,10 +446,8 @@ BOOST_AUTO_TEST_CASE(bbox_search_tests)
         },
         {Edge(0, 1), Edge(1, 2), Edge(2, 3), Edge(3, 4)});
 
-    std::string leaves_path;
-    std::string nodes_path;
-    build_rtree<GraphFixture, MiniStaticRTree>("test_bbox", &fixture, leaves_path, nodes_path);
-    MiniStaticRTree rtree(nodes_path, leaves_path, fixture.coords);
+    TemporaryFile tmp;
+    auto rtree = make_rtree<MiniStaticRTree>(tmp.path, fixture);
     TestDataFacade mockfacade;
     engine::GeospatialQuery<MiniStaticRTree, TestDataFacade> query(
         rtree, fixture.coords, mockfacade);

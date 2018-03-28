@@ -1,3 +1,5 @@
+#include "extractor/intersection/have_identical_names.hpp"
+
 #include "util/guidance/name_announcements.hpp"
 
 namespace osrm
@@ -12,7 +14,7 @@ namespace intersection
 // rhs->lhs)
 bool HaveIdenticalNames(const NameID lhs,
                         const NameID rhs,
-                        const util::NameTable &name_table,
+                        const NameTable &name_table,
                         const extractor::SuffixTable &street_name_suffix_table)
 {
     const auto non_empty = (lhs != EMPTY_NAMEID) && (rhs != EMPTY_NAMEID);
