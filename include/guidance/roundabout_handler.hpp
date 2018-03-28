@@ -3,13 +3,14 @@
 
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/intersection/coordinate_extractor.hpp"
+#include "extractor/name_table.hpp"
 #include "extractor/query_node.hpp"
+
 #include "guidance/intersection.hpp"
 #include "guidance/intersection_handler.hpp"
 #include "guidance/is_through_street.hpp"
 #include "guidance/roundabout_type.hpp"
 
-#include "util/name_table.hpp"
 #include "util/node_based_graph.hpp"
 #include "util/typedefs.hpp"
 
@@ -44,7 +45,7 @@ class RoundaboutHandler : public IntersectionHandler
                       const extractor::RestrictionMap &node_restriction_map,
                       const std::unordered_set<NodeID> &barrier_nodes,
                       const extractor::TurnLanesIndexedArray &turn_lanes_data,
-                      const util::NameTable &name_table,
+                      const extractor::NameTable &name_table,
                       const extractor::SuffixTable &street_name_suffix_table);
 
     ~RoundaboutHandler() override final = default;

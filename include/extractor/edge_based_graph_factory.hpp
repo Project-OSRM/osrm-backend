@@ -9,6 +9,7 @@
 #include "extractor/edge_based_node_segment.hpp"
 #include "extractor/extraction_turn.hpp"
 #include "extractor/maneuver_override.hpp"
+#include "extractor/name_table.hpp"
 #include "extractor/nbg_to_ebg.hpp"
 #include "extractor/node_data_container.hpp"
 #include "extractor/query_node.hpp"
@@ -18,7 +19,6 @@
 
 #include "util/concurrent_id_map.hpp"
 #include "util/deallocating_vector.hpp"
-#include "util/name_table.hpp"
 #include "util/node_based_graph.hpp"
 #include "util/typedefs.hpp"
 
@@ -70,7 +70,7 @@ class EdgeBasedGraphFactory
                                    const std::unordered_set<NodeID> &barrier_nodes,
                                    const std::unordered_set<NodeID> &traffic_lights,
                                    const std::vector<util::Coordinate> &coordinates,
-                                   const util::NameTable &name_table,
+                                   const NameTable &name_table,
                                    const std::unordered_set<EdgeID> &segregated_edges,
                                    const LaneDescriptionMap &lane_description_map);
 
@@ -138,7 +138,7 @@ class EdgeBasedGraphFactory
     const std::unordered_set<NodeID> &m_traffic_lights;
     const CompressedEdgeContainer &m_compressed_edge_container;
 
-    const util::NameTable &name_table;
+    const NameTable &name_table;
     const std::unordered_set<EdgeID> &segregated_edges;
     const LaneDescriptionMap &lane_description_map;
 

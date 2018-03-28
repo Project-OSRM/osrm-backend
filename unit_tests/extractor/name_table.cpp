@@ -1,6 +1,7 @@
-#include "util/name_table.hpp"
-#include "common/temporary_file.hpp"
+#include "extractor/name_table.hpp"
 #include "util/exception.hpp"
+
+#include "../common/temporary_file.hpp"
 
 #include <boost/filesystem.hpp>
 #include <boost/test/test_case_template.hpp>
@@ -12,14 +13,12 @@
 #include <typeinfo>
 #include <vector>
 
-//#include <valgrind/callgrind.h>
-
 BOOST_AUTO_TEST_SUITE(name_table)
 
 using namespace osrm;
-using namespace osrm::util;
+using namespace osrm::extractor;
 
-std::string PrapareNameTableData(std::vector<std::string> &data, bool fill_all)
+NameTable::IndexedData PrapareNameTableData(std::vector<std::string> &data, bool fill_all)
 {
     NameTable::IndexedData indexed_data;
     std::vector<unsigned char> name_char_data;
@@ -60,19 +59,7 @@ std::string PrapareNameTableData(std::vector<std::string> &data, bool fill_all)
     }
     name_offsets.push_back(name_char_data.size());
 
-    TemporaryFile file;
-    {
-        storage::io::FileWriter writer(file.path, storage::io::FileWriter::HasNoFingerprint);
-        indexed_data.write(
-            writer, name_offsets.begin(), name_offsets.end(), name_char_data.begin());
-    }
-
-    storage::io::FileReader reader(file.path, storage::io::FileReader::HasNoFingerprint);
-    auto length = reader.GetSize();
-    std::string str(length, '\0');
-    reader.ReadInto(const_cast<char *>(str.data()), length);
-
-    return str;
+    return NameTable::IndexedData(name_offsets.begin(), name_offsets.end(), name_char_data.begin());
 }
 
 BOOST_AUTO_TEST_CASE(check_name_table_fill)
@@ -83,9 +70,7 @@ BOOST_AUTO_TEST_CASE(check_name_table_fill)
         "X",    "Y", "Z",          "",    "",     "",  "",   "",    "",     "",  "0",  ""};
 
     auto data = PrapareNameTableData(expected_names, true);
-
-    NameTable name_table;
-    name_table.reset(&data[0], &data[data.size()]);
+    NameTable name_table{data};
 
     for (std::size_t index = 0; index < expected_names.size(); ++index)
     {
@@ -106,9 +91,7 @@ BOOST_AUTO_TEST_CASE(check_name_table_nofill)
         "X",    "Y", "Z",          "",    "",     "",  "",   "",    "",     "",  "0",  ""};
 
     auto data = PrapareNameTableData(expected_names, false);
-
-    NameTable name_table;
-    name_table.reset(&data[0], &data[data.size()]);
+    NameTable name_table{data};
 
     // CALLGRIND_START_INSTRUMENTATION;
     for (std::size_t index = 0; index < expected_names.size(); ++index)

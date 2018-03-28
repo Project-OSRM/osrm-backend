@@ -20,6 +20,8 @@ const static std::string IO_INCOMPATIBLE_FINGERPRINT_FILE =
     "incompatible_fingerprint_file_test_io.tmp";
 const static std::string IO_TEXT_FILE = "plain_text_file.tmp";
 
+using namespace osrm;
+
 BOOST_AUTO_TEST_SUITE(osrm_io)
 
 BOOST_AUTO_TEST_CASE(io_data)
@@ -30,12 +32,33 @@ BOOST_AUTO_TEST_CASE(io_data)
     {
         osrm::storage::io::FileWriter outfile(IO_TMP_FILE,
                                               osrm::storage::io::FileWriter::GenerateFingerprint);
-        osrm::storage::serialization::write(outfile, data_in);
+        outfile.WriteElementCount64(data_in.size());
+        outfile.WriteFrom(data_in.data(), data_in.size());
     }
 
     osrm::storage::io::FileReader infile(IO_TMP_FILE,
                                          osrm::storage::io::FileReader::VerifyFingerprint);
-    osrm::storage::serialization::read(infile, data_out);
+    data_out.resize(infile.ReadElementCount64());
+    infile.ReadInto(data_out.data(), data_out.size());
+
+    BOOST_REQUIRE_EQUAL(data_in.size(), data_out.size());
+    BOOST_CHECK_EQUAL_COLLECTIONS(data_out.begin(), data_out.end(), data_in.begin(), data_in.end());
+}
+
+BOOST_AUTO_TEST_CASE(io_buffered_data)
+{
+    std::vector<int> data_in(53), data_out;
+    std::iota(begin(data_in), end(data_in), 0);
+
+    std::string result;
+    {
+        storage::io::BufferWriter writer;
+        storage::serialization::write(writer, data_in);
+        result = writer.GetBuffer();
+    }
+
+    storage::io::BufferReader reader(result);
+    storage::serialization::read(reader, data_out);
 
     BOOST_REQUIRE_EQUAL(data_in.size(), data_out.size());
     BOOST_CHECK_EQUAL_COLLECTIONS(data_out.begin(), data_out.end(), data_in.begin(), data_in.end());
@@ -67,7 +90,8 @@ BOOST_AUTO_TEST_CASE(file_too_small)
         {
             osrm::storage::io::FileWriter outfile(
                 IO_TOO_SMALL_FILE, osrm::storage::io::FileWriter::GenerateFingerprint);
-            osrm::storage::serialization::write(outfile, v);
+            outfile.WriteElementCount64(v.size());
+            outfile.WriteFrom(v.data(), v.size());
         }
 
         std::fstream f(IO_TOO_SMALL_FILE);
@@ -81,7 +105,8 @@ BOOST_AUTO_TEST_CASE(file_too_small)
         osrm::storage::io::FileReader infile(IO_TOO_SMALL_FILE,
                                              osrm::storage::io::FileReader::VerifyFingerprint);
         std::vector<int> buffer;
-        osrm::storage::serialization::read(infile, buffer);
+        buffer.resize(infile.ReadElementCount64());
+        infile.ReadInto(buffer.data(), buffer.size());
         BOOST_REQUIRE_MESSAGE(false, "Should not get here");
     }
     catch (const osrm::util::RuntimeError &e)
@@ -102,8 +127,9 @@ BOOST_AUTO_TEST_CASE(io_corrupt_fingerprint)
         osrm::storage::io::FileWriter outfile(IO_CORRUPT_FINGERPRINT_FILE,
                                               osrm::storage::io::FileWriter::HasNoFingerprint);
 
-        outfile.WriteOne(0xDEADBEEFCAFEFACE);
-        osrm::storage::serialization::write(outfile, v);
+        outfile.WriteFrom(0xDEADBEEFCAFEFACE);
+        outfile.WriteElementCount64(v.size());
+        outfile.WriteFrom(v.data(), v.size());
     }
 
     try
@@ -133,8 +159,9 @@ BOOST_AUTO_TEST_CASE(io_incompatible_fingerprint)
                                                   osrm::storage::io::FileWriter::HasNoFingerprint);
 
             const auto fingerprint = osrm::util::FingerPrint::GetValid();
-            outfile.WriteOne(fingerprint);
-            osrm::storage::serialization::write(outfile, v);
+            outfile.WriteFrom(fingerprint);
+            outfile.WriteElementCount64(v.size());
+            outfile.WriteFrom(v.data(), v.size());
         }
 
         std::fstream f(IO_INCOMPATIBLE_FINGERPRINT_FILE);
@@ -156,32 +183,6 @@ BOOST_AUTO_TEST_CASE(io_incompatible_fingerprint)
         const std::string got(e.what());
         BOOST_REQUIRE(std::equal(expected.begin(), expected.end(), got.begin()));
         BOOST_REQUIRE(e.GetCode() == osrm::ErrorCode::InvalidFingerprint);
-    }
-}
-
-BOOST_AUTO_TEST_CASE(io_read_lines)
-{
-    {
-        std::ofstream f(IO_TEXT_FILE, std::ios::binary);
-        char str[] = "A\nB\nC\nD";
-        f.write(str, strlen(str));
-    }
-    {
-        osrm::storage::io::FileReader infile(IO_TEXT_FILE,
-                                             osrm::storage::io::FileReader::HasNoFingerprint);
-        auto startiter = infile.GetLineIteratorBegin();
-        auto enditer = infile.GetLineIteratorEnd();
-        std::vector<std::string> resultlines;
-        while (startiter != enditer)
-        {
-            resultlines.push_back(*startiter);
-            ++startiter;
-        }
-        BOOST_REQUIRE_MESSAGE(resultlines.size() == 4, "Expected 4 lines of text");
-        BOOST_REQUIRE_MESSAGE(resultlines[0] == "A", "Expected the first line to be A");
-        BOOST_REQUIRE_MESSAGE(resultlines[1] == "B", "Expected the first line to be B");
-        BOOST_REQUIRE_MESSAGE(resultlines[2] == "C", "Expected the first line to be C");
-        BOOST_REQUIRE_MESSAGE(resultlines[3] == "D", "Expected the first line to be D");
     }
 }
 

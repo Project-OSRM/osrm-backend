@@ -157,13 +157,7 @@ bool Engine<routing_algorithms::ch::Algorithm>::CheckCompatibility(const EngineC
     }
     else
     {
-        if (!boost::filesystem::exists(config.storage_config.GetPath(".osrm.hsgr")))
-            return false;
-        storage::io::FileReader in(config.storage_config.GetPath(".osrm.hsgr"),
-                                   storage::io::FileReader::VerifyFingerprint);
-
-        auto size = in.GetSize();
-        return size > 0;
+        return boost::filesystem::exists(config.storage_config.GetPath(".osrm.hsgr"));
     }
 }
 
@@ -196,16 +190,10 @@ bool Engine<routing_algorithms::mld::Algorithm>::CheckCompatibility(const Engine
     }
     else
     {
-        if (!boost::filesystem::exists(config.storage_config.GetPath(".osrm.partition")) ||
-            !boost::filesystem::exists(config.storage_config.GetPath(".osrm.cells")) ||
-            !boost::filesystem::exists(config.storage_config.GetPath(".osrm.mldgr")) ||
-            !boost::filesystem::exists(config.storage_config.GetPath(".osrm.cell_metrics")))
-            return false;
-        storage::io::FileReader in(config.storage_config.GetPath(".osrm.partition"),
-                                   storage::io::FileReader::VerifyFingerprint);
-
-        auto size = in.GetSize();
-        return size > 0;
+        return boost::filesystem::exists(config.storage_config.GetPath(".osrm.partition")) &&
+               boost::filesystem::exists(config.storage_config.GetPath(".osrm.cells")) &&
+               boost::filesystem::exists(config.storage_config.GetPath(".osrm.mldgr")) &&
+               boost::filesystem::exists(config.storage_config.GetPath(".osrm.cell_metrics"));
     }
 }
 }
