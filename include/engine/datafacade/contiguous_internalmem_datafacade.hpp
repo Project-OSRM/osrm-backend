@@ -194,7 +194,7 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     extractor::ProfileProperties *m_profile_properties;
     extractor::Datasources *m_datasources;
 
-    unsigned m_check_sum;
+    std::uint32_t m_check_sum;
     util::vector_view<util::Coordinate> m_coordinate_list;
     extractor::PackedOSMIDsView m_osmnodeid_list;
     util::vector_view<std::uint32_t> m_lane_description_offsets;
@@ -242,7 +242,7 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
 
     void InitializeChecksumPointer(const storage::DataLayout &data_layout, char *memory_block)
     {
-        m_check_sum = *data_layout.GetBlockPtr<unsigned>(memory_block, "/ch/checksum");
+        m_check_sum = *data_layout.GetBlockPtr<std::uint32_t>(memory_block, "/common/connectivity_checksum");
         util::Log() << "set checksum: " << m_check_sum;
     }
 
@@ -779,7 +779,7 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
             input_coordinate, bearing, bearing_range, approach);
     }
 
-    unsigned GetCheckSum() const override final { return m_check_sum; }
+    std::uint32_t GetCheckSum() const override final { return m_check_sum; }
 
     GeometryID GetGeometryIndex(const NodeID id) const override final
     {

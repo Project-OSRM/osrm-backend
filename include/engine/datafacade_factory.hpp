@@ -57,6 +57,13 @@ template <template <typename A> class FacadeT, typename AlgorithmT> class DataFa
         layout.List(exclude_path, std::back_inserter(exclude_prefixes));
         facades.resize(exclude_prefixes.size());
 
+        if (facades.empty())
+        {
+            throw util::exception(std::string("Could not find any metrics for ") +
+                                  routing_algorithms::name<AlgorithmT>() +
+                                  " in the data. Did you load the right dataset?");
+        }
+
         for (const auto &exclude_prefix : exclude_prefixes)
         {
             auto index_begin = exclude_prefix.find_last_of("/");

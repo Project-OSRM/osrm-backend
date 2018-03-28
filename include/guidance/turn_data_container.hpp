@@ -26,14 +26,12 @@ namespace serialization
 template <storage::Ownership Ownership>
 void read(storage::tar::FileReader &reader,
           const std::string &name,
-          detail::TurnDataContainerImpl<Ownership> &turn_data,
-          std::uint32_t &connectivity_checksum);
+          detail::TurnDataContainerImpl<Ownership> &turn_data);
 
 template <storage::Ownership Ownership>
 void write(storage::tar::FileWriter &writer,
            const std::string &name,
-           const detail::TurnDataContainerImpl<Ownership> &turn_data,
-           const std::uint32_t connectivity_checksum);
+           const detail::TurnDataContainerImpl<Ownership> &turn_data);
 }
 
 struct TurnData
@@ -101,12 +99,10 @@ template <storage::Ownership Ownership> class TurnDataContainerImpl
 
     friend void serialization::read<Ownership>(storage::tar::FileReader &reader,
                                                const std::string &name,
-                                               TurnDataContainerImpl &turn_data_container,
-                                               std::uint32_t &connectivity_checksum);
+                                               TurnDataContainerImpl &turn_data_container);
     friend void serialization::write<Ownership>(storage::tar::FileWriter &writer,
                                                 const std::string &name,
-                                                const TurnDataContainerImpl &turn_data_container,
-                                                const std::uint32_t connectivity_checksum);
+                                                const TurnDataContainerImpl &turn_data_container);
 
   private:
     Vector<TurnInstruction> turn_instructions;

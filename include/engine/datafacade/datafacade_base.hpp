@@ -53,7 +53,7 @@ class BaseDataFacade
     BaseDataFacade() {}
     virtual ~BaseDataFacade() {}
 
-    virtual unsigned GetCheckSum() const = 0;
+    virtual std::uint32_t GetCheckSum() const = 0;
 
     // node and edge information access
     virtual util::Coordinate GetCoordinateOfNode(const NodeID id) const = 0;
