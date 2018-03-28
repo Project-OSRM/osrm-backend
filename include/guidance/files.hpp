@@ -30,7 +30,8 @@ inline void readTurnData(const boost::filesystem::path &path,
     const auto fingerprint = storage::tar::FileReader::VerifyFingerprint;
     storage::tar::FileReader reader{path, fingerprint};
 
-    serialization::read(reader, "/common/turn_data", turn_data, connectivity_checksum);
+    reader.ReadInto("/common/connectivity_checksum", connectivity_checksum);
+    serialization::read(reader, "/common/turn_data", turn_data);
 }
 
 // writes .osrm.edges
@@ -46,7 +47,9 @@ inline void writeTurnData(const boost::filesystem::path &path,
     const auto fingerprint = storage::tar::FileWriter::GenerateFingerprint;
     storage::tar::FileWriter writer{path, fingerprint};
 
-    serialization::write(writer, "/common/turn_data", turn_data, connectivity_checksum);
+    writer.WriteElementCount64("/common/connectivity_checksum", 1);
+    writer.WriteFrom("/common/connectivity_checksum", connectivity_checksum);
+    serialization::write(writer, "/common/turn_data", turn_data);
 }
 }
 }

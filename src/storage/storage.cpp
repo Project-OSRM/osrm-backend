@@ -405,9 +405,12 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
                                          std::move(entry_class_ids),
                                          std::move(pre_turn_bearings),
                                          std::move(post_turn_bearings));
+        auto connectivity_checksum_ptr = layout.GetBlockPtr<std::uint32_t, true>(memory_ptr, "/common/connectivity_checksum");
 
         guidance::files::readTurnData(
-            config.GetPath(".osrm.edges"), turn_data, turns_connectivity_checksum);
+            config.GetPath(".osrm.edges"), turn_data, *connectivity_checksum_ptr);
+
+        turns_connectivity_checksum = *connectivity_checksum_ptr;
     }
 
     // load compressed geometry
@@ -613,7 +616,6 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
             memory_ptr, metric_prefix + "/contracted_graph/node_array");
         auto graph_edges_ptr = layout.GetBlockPtr<contractor::QueryGraphView::EdgeArrayEntry, true>(
             memory_ptr, metric_prefix + "/contracted_graph/edge_array");
-        auto checksum = layout.GetBlockPtr<unsigned, true>(memory_ptr, "/ch/checksum");
 
         util::vector_view<contractor::QueryGraphView::NodeArrayEntry> node_list(
             graph_nodes_ptr,
@@ -636,7 +638,7 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
             {metric_name, {{std::move(node_list), std::move(edge_list)}, std::move(edge_filter)}}};
 
         contractor::files::readGraph(
-            config.GetPath(".osrm.hsgr"), *checksum, metrics, graph_connectivity_checksum);
+            config.GetPath(".osrm.hsgr"), metrics, graph_connectivity_checksum);
         if (turns_connectivity_checksum != graph_connectivity_checksum)
         {
             throw util::exception(

@@ -197,7 +197,7 @@ class MockBaseDataFacade : public engine::datafacade::BaseDataFacade
         return {};
     }
 
-    unsigned GetCheckSum() const override { return 0; }
+    std::uint32_t GetCheckSum() const override { return 0; }
 
     extractor::TravelMode GetTravelMode(const NodeID /* id */) const override
     {

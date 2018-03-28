@@ -93,9 +93,6 @@ int Contractor::Run()
             util::excludeFlagsToNodeFilter(number_of_edge_based_nodes, node_data, properties);
     }
 
-    RangebasedCRC32 crc32_calculator;
-    const unsigned checksum = crc32_calculator(edge_based_edge_list);
-
     QueryGraph query_graph;
     std::vector<std::vector<bool>> edge_filters;
     std::vector<std::vector<bool>> cores;
@@ -110,7 +107,7 @@ int Contractor::Run()
     std::unordered_map<std::string, ContractedMetric> metrics = {
         {metric_name, {std::move(query_graph), std::move(edge_filters)}}};
 
-    files::writeGraph(config.GetPath(".osrm.hsgr"), checksum, metrics, connectivity_checksum);
+    files::writeGraph(config.GetPath(".osrm.hsgr"), metrics, connectivity_checksum);
 
     TIMER_STOP(preparing);
 

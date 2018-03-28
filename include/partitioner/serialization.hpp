@@ -22,26 +22,21 @@ namespace serialization
 template <typename EdgeDataT, storage::Ownership Ownership>
 inline void read(storage::tar::FileReader &reader,
                  const std::string &name,
-                 MultiLevelGraph<EdgeDataT, Ownership> &graph,
-                 std::uint32_t &connectivity_checksum)
+                 MultiLevelGraph<EdgeDataT, Ownership> &graph)
 {
     storage::serialization::read(reader, name + "/node_array", graph.node_array);
     storage::serialization::read(reader, name + "/edge_array", graph.edge_array);
     storage::serialization::read(reader, name + "/node_to_edge_offset", graph.node_to_edge_offset);
-    reader.ReadInto(name + "/connectivity_checksum", connectivity_checksum);
 }
 
 template <typename EdgeDataT, storage::Ownership Ownership>
 inline void write(storage::tar::FileWriter &writer,
                   const std::string &name,
-                  const MultiLevelGraph<EdgeDataT, Ownership> &graph,
-                  const std::uint32_t connectivity_checksum)
+                  const MultiLevelGraph<EdgeDataT, Ownership> &graph)
 {
     storage::serialization::write(writer, name + "/node_array", graph.node_array);
     storage::serialization::write(writer, name + "/edge_array", graph.edge_array);
     storage::serialization::write(writer, name + "/node_to_edge_offset", graph.node_to_edge_offset);
-    writer.WriteElementCount64(name + "/connectivity_checksum", 1);
-    writer.WriteFrom(name + "/connectivity_checksum", connectivity_checksum);
 }
 
 template <storage::Ownership Ownership>

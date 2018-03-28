@@ -26,7 +26,8 @@ inline void readGraph(const boost::filesystem::path &path,
 
     storage::tar::FileReader reader{path, storage::tar::FileReader::VerifyFingerprint};
 
-    serialization::read(reader, "/mld/multilevelgraph", graph, connectivity_checksum);
+    reader.ReadInto("/mld/connectivity_checksum", connectivity_checksum);
+    serialization::read(reader, "/mld/multilevelgraph", graph);
 }
 
 // writes .osrm.mldgr file
@@ -41,7 +42,9 @@ inline void writeGraph(const boost::filesystem::path &path,
 
     storage::tar::FileWriter writer{path, storage::tar::FileWriter::GenerateFingerprint};
 
-    serialization::write(writer, "/mld/multilevelgraph", graph, connectivity_checksum);
+    writer.WriteElementCount64("/mld/connectivity_checksum", 1);
+    writer.WriteFrom("/mld/connectivity_checksum", connectivity_checksum);
+    serialization::write(writer, "/mld/multilevelgraph", graph);
 }
 
 // read .osrm.partition file
