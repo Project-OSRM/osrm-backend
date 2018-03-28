@@ -11,12 +11,13 @@
     - Guidance:
       - CHANGED #4929: Don't use obviousness for links bifurcations [#4929](https://github.com/Project-OSRM/osrm-backend/pull/4929)
       - FIXED #4929: Adjust Straight direction modifiers of side roads in driveway handler [#4929](https://github.com/Project-OSRM/osrm-backend/pull/4929)
+      - CHANGED #4925: Added post process logic to collapse segregated turn instructions [#4925](https://github.com/Project-OSRM/osrm-backend/pull/4925)
     - Tools:
       - `osrm-routed` accepts a new property `--memory_file` to store memory in a file on disk.
     - NodeJS:
       - `OSRM` object accepts a new option `memory_file` that stores the memory in a file on disk.
     - Internals
-      - CHANGED #4845 #4968: Updated segregated intersection identification
+      - CHANGED #4845 #4968: Updated segregated intersection identification [#4845](https://github.com/Project-OSRM/osrm-backend/pull/4845) [#4968](https://github.com/Project-OSRM/osrm-backend/pull/4968)
       - REMOVED: Remove `.timestamp` file since it was unused.
     - Documentation:
       - ADDED: Add documentation about OSM node ids in nearest service response [#4436](https://github.com/Project-OSRM/osrm-backend/pull/4436)
