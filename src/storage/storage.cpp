@@ -405,7 +405,8 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
                                          std::move(entry_class_ids),
                                          std::move(pre_turn_bearings),
                                          std::move(post_turn_bearings));
-        auto connectivity_checksum_ptr = layout.GetBlockPtr<std::uint32_t, true>(memory_ptr, "/common/connectivity_checksum");
+        auto connectivity_checksum_ptr =
+            layout.GetBlockPtr<std::uint32_t, true>(memory_ptr, "/common/connectivity_checksum");
 
         guidance::files::readTurnData(
             config.GetPath(".osrm.edges"), turn_data, *connectivity_checksum_ptr);

@@ -18,7 +18,8 @@ namespace files
 
 // reads .osrm.cell_metrics file
 template <typename CellMetricT>
-inline void readCellMetrics(const boost::filesystem::path &path, std::unordered_map<std::string, std::vector<CellMetricT>> &metrics)
+inline void readCellMetrics(const boost::filesystem::path &path,
+                            std::unordered_map<std::string, std::vector<CellMetricT>> &metrics)
 {
     static_assert(std::is_same<CellMetricView, CellMetricT>::value ||
                       std::is_same<CellMetric, CellMetricT>::value,
@@ -27,10 +28,10 @@ inline void readCellMetrics(const boost::filesystem::path &path, std::unordered_
     const auto fingerprint = storage::tar::FileReader::VerifyFingerprint;
     storage::tar::FileReader reader{path, fingerprint};
 
-    for (auto& pair : metrics)
+    for (auto &pair : metrics)
     {
-        const auto& metric_name = pair.first;
-        auto& metric_exclude_classes = pair.second;
+        const auto &metric_name = pair.first;
+        auto &metric_exclude_classes = pair.second;
 
         auto prefix = "/mld/metrics/" + metric_name + "/exclude";
         auto num_exclude_classes = reader.ReadElementCount64(prefix);
@@ -46,8 +47,9 @@ inline void readCellMetrics(const boost::filesystem::path &path, std::unordered_
 
 // writes .osrm.cell_metrics file
 template <typename CellMetricT>
-inline void writeCellMetrics(const boost::filesystem::path &path,
-                             const std::unordered_map<std::string, std::vector<CellMetricT>> &metrics)
+inline void
+writeCellMetrics(const boost::filesystem::path &path,
+                 const std::unordered_map<std::string, std::vector<CellMetricT>> &metrics)
 {
     static_assert(std::is_same<CellMetricView, CellMetricT>::value ||
                       std::is_same<CellMetric, CellMetricT>::value,
@@ -56,10 +58,10 @@ inline void writeCellMetrics(const boost::filesystem::path &path,
     const auto fingerprint = storage::tar::FileWriter::GenerateFingerprint;
     storage::tar::FileWriter writer{path, fingerprint};
 
-    for (const auto& pair : metrics)
+    for (const auto &pair : metrics)
     {
-        const auto& metric_name = pair.first;
-        const auto& metric_exclude_classes = pair.second;
+        const auto &metric_name = pair.first;
+        const auto &metric_exclude_classes = pair.second;
 
         auto prefix = "/mld/metrics/" + metric_name + "/exclude";
         writer.WriteElementCount64(prefix, metric_exclude_classes.size());

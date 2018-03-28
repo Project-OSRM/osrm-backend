@@ -42,9 +42,7 @@ BOOST_AUTO_TEST_CASE(read_write_hsgr)
     unsigned checksum;
     unsigned connectivity_checksum;
 
-    std::unordered_map<std::string, ContractedMetric> metrics = {
-        {"duration", {}}
-    };
+    std::unordered_map<std::string, ContractedMetric> metrics = {{"duration", {}}};
     contractor::files::readGraph(tmp.path, checksum, metrics, connectivity_checksum);
 
     BOOST_CHECK_EQUAL(checksum, reference_checksum);

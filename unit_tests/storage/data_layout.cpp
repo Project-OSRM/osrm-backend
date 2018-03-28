@@ -93,10 +93,16 @@ BOOST_AUTO_TEST_CASE(layout_list_test)
     layout.List("/mld/metrics/", std::back_inserter(results_5));
     layout.List("/mld/", std::back_inserter(results_6));
 
-    CHECK_EQUAL_RANGE(results_1, "/ch/edge_filter/block1", "/ch/edge_filter/block2", "/ch/edge_filter/block3");
-    CHECK_EQUAL_RANGE(results_2, "/ch/edge_filter/block1", "/ch/edge_filter/block2", "/ch/edge_filter/block3");
+    CHECK_EQUAL_RANGE(
+        results_1, "/ch/edge_filter/block1", "/ch/edge_filter/block2", "/ch/edge_filter/block3");
+    CHECK_EQUAL_RANGE(
+        results_2, "/ch/edge_filter/block1", "/ch/edge_filter/block2", "/ch/edge_filter/block3");
     CHECK_EQUAL_RANGE(results_3, "/ch/edge_filter");
-    CHECK_EQUAL_RANGE(results_4, "/mld/metrics/0/durations", "/mld/metrics/0/weights", "/mld/metrics/1/durations", "/mld/metrics/1/weights");
+    CHECK_EQUAL_RANGE(results_4,
+                      "/mld/metrics/0/durations",
+                      "/mld/metrics/0/weights",
+                      "/mld/metrics/1/durations",
+                      "/mld/metrics/1/weights");
     CHECK_EQUAL_RANGE(results_5, "/mld/metrics/0", "/mld/metrics/1");
     CHECK_EQUAL_RANGE(results_6, "/mld/metrics");
 }
