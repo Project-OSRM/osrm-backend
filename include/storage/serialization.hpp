@@ -6,8 +6,8 @@
 #include "util/vector_view.hpp"
 
 #include "storage/io.hpp"
-#include "storage/tar.hpp"
 #include "storage/shared_datatype.hpp"
+#include "storage/tar.hpp"
 
 #include <boost/function_output_iterator.hpp>
 #include <boost/iterator/function_input_iterator.hpp>
@@ -92,7 +92,6 @@ void writeBoolVector(tar::FileWriter &writer, const std::string &name, const Vec
 }
 }
 
-
 /* All vector formats here use the same on-disk format.
  * This is important because we want to be able to write from a vector
  * of one kind, but read it into a vector of another kind.
@@ -149,17 +148,12 @@ template <typename T> void write(io::BufferWriter &writer, const std::vector<T> 
     writer.WriteFrom(data.data(), count);
 }
 
-template<typename T>
-inline void write(io::BufferWriter &writer, const T &data)
+template <typename T> inline void write(io::BufferWriter &writer, const T &data)
 {
     writer.WriteFrom(data);
 }
 
-template<typename T>
-inline void read(io::BufferReader &reader, T &data)
-{
-    reader.ReadInto(data);
-}
+template <typename T> inline void read(io::BufferReader &reader, T &data) { reader.ReadInto(data); }
 
 inline void write(io::BufferWriter &writer, const std::string &data)
 {
@@ -254,7 +248,7 @@ template <typename K, typename V> void read(io::BufferReader &reader, std::map<K
     std::pair<K, V> pair;
     for (auto index : util::irange<std::size_t>(0, count))
     {
-        (void) index;
+        (void)index;
         read(reader, pair.first);
         read(reader, pair.second);
         data.insert(pair);
@@ -272,17 +266,12 @@ template <typename K, typename V> void write(io::BufferWriter &writer, const std
     }
 }
 
-inline void read(io::BufferReader &reader, DataLayout &layout)
-{
-    read(reader, layout.blocks);
-}
+inline void read(io::BufferReader &reader, DataLayout &layout) { read(reader, layout.blocks); }
 
 inline void write(io::BufferWriter &writer, const DataLayout &layout)
 {
     write(writer, layout.blocks);
 }
-
-
 }
 }
 }

@@ -30,7 +30,6 @@ inline void readGraph(const boost::filesystem::path &path,
     {
         serialization::read(reader, "/ch/metrics/" + pair.first, pair.second);
     }
-
 }
 
 // writes .osrm.hsgr file

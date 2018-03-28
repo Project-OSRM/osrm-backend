@@ -10,8 +10,7 @@ namespace contractor
 
 namespace detail
 {
-template<storage::Ownership Ownership>
-struct ContractedMetric
+template <storage::Ownership Ownership> struct ContractedMetric
 {
     detail::QueryGraph<Ownership> graph;
     std::vector<util::ViewOrVector<bool, Ownership>> edge_filter;
