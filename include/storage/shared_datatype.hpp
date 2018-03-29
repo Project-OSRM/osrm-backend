@@ -4,6 +4,7 @@
 #include "storage/block.hpp"
 #include "storage/io_fwd.hpp"
 
+#include "util/vector_view.hpp"
 #include "util/exception.hpp"
 #include "util/exception_utils.hpp"
 #include "util/log.hpp"
@@ -84,6 +85,18 @@ class DataLayout
             result += 2 * sizeof(CANARY) + GetBlockSize(name_and_block.first) + BLOCK_ALIGNMENT;
         }
         return result;
+    }
+
+    template <typename T>
+    util::vector_view<T> GetVector(char* shared_memory, const std::string& name) const
+    {
+        return util::vector_view<T>(GetBlockPtr<T>(shared_memory, name), GetBlockEntries(name));
+    }
+
+    template <typename T>
+    util::vector_view<T> GetWritableVector(char* shared_memory, const std::string& name) const
+    {
+        return util::vector_view<T>(GetBlockPtr<T, true>(shared_memory, name), GetBlockEntries(name));
     }
 
     template <typename T, bool WRITE_CANARY = false>

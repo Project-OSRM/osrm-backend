@@ -311,17 +311,11 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
 
     // Name data
     {
-        const auto name_blocks_ptr =
-            layout.GetBlockPtr<extractor::NameTableView::IndexedData::BlockReference, true>(
+        auto blocks =
+            layout.GetWritableVector<extractor::NameTableView::IndexedData::BlockReference>(
                 memory_ptr, "/common/names/blocks");
-        const auto name_values_ptr =
-            layout.GetBlockPtr<extractor::NameTableView::IndexedData::ValueType, true>(
-                memory_ptr, "/common/names/values");
-
-        util::vector_view<extractor::NameTableView::IndexedData::BlockReference> blocks(
-            name_blocks_ptr, layout.GetBlockEntries("/common/names/blocks"));
-        util::vector_view<extractor::NameTableView::IndexedData::ValueType> values(
-            name_values_ptr, layout.GetBlockEntries("/common/names/values"));
+        auto values = layout.GetWritableVector<extractor::NameTableView::IndexedData::ValueType>(
+            memory_ptr, "/common/names/values");
 
         extractor::NameTableView::IndexedData index_data_view{std::move(blocks), std::move(values)};
         extractor::NameTableView name_table{index_data_view};
@@ -330,41 +324,28 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
 
     // Turn lane data
     {
-        const auto turn_lane_data_ptr = layout.GetBlockPtr<util::guidance::LaneTupleIdPair, true>(
+        auto turn_lane_data = layout.GetWritableVector<util::guidance::LaneTupleIdPair>(
             memory_ptr, "/common/turn_lanes/data");
-        util::vector_view<util::guidance::LaneTupleIdPair> turn_lane_data(
-            turn_lane_data_ptr, layout.GetBlockEntries("/common/turn_lanes/data"));
 
         extractor::files::readTurnLaneData(config.GetPath(".osrm.tld"), turn_lane_data);
     }
 
     // Turn lane descriptions
     {
-        auto offsets_ptr =
-            layout.GetBlockPtr<std::uint32_t, true>(memory_ptr, "/common/turn_lanes/offsets");
-        util::vector_view<std::uint32_t> offsets(
-            offsets_ptr, layout.GetBlockEntries("/common/turn_lanes/offsets"));
-
-        auto masks_ptr = layout.GetBlockPtr<extractor::TurnLaneType::Mask, true>(
+        auto offsets =
+            layout.GetWritableVector<std::uint32_t>(memory_ptr, "/common/turn_lanes/offsets");
+        auto masks = layout.GetWritableVector<extractor::TurnLaneType::Mask>(
             memory_ptr, "/common/turn_lanes/masks");
-        util::vector_view<extractor::TurnLaneType::Mask> masks(
-            masks_ptr, layout.GetBlockEntries("/common/turn_lanes/masks"));
 
         extractor::files::readTurnLaneDescriptions(config.GetPath(".osrm.tls"), offsets, masks);
     }
 
     // Load edge-based nodes data
     {
-        auto edge_based_node_data_list_ptr = layout.GetBlockPtr<extractor::EdgeBasedNode, true>(
+        auto edge_based_node_data = layout.GetWritableVector<extractor::EdgeBasedNode>(
             memory_ptr, "/common/ebg_node_data/nodes");
-        util::vector_view<extractor::EdgeBasedNode> edge_based_node_data(
-            edge_based_node_data_list_ptr, layout.GetBlockEntries("/common/ebg_node_data/nodes"));
-
-        auto annotation_data_list_ptr =
-            layout.GetBlockPtr<extractor::NodeBasedEdgeAnnotation, true>(
-                memory_ptr, "/common/ebg_node_data/annotations");
-        util::vector_view<extractor::NodeBasedEdgeAnnotation> annotation_data(
-            annotation_data_list_ptr, layout.GetBlockEntries("/common/ebg_node_data/annotations"));
+        auto  annotation_data = layout.GetWritableVector<extractor::NodeBasedEdgeAnnotation>(
+            memory_ptr, "/common/ebg_node_data/annotations");
 
         extractor::EdgeBasedNodeDataView node_data(std::move(edge_based_node_data),
                                                    std::move(annotation_data));
@@ -374,16 +355,11 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
 
     // Load original edge data
     {
-        const auto lane_data_id_ptr =
-            layout.GetBlockPtr<LaneDataID, true>(memory_ptr, "/common/turn_data/lane_data_ids");
-        util::vector_view<LaneDataID> lane_data_ids(
-            lane_data_id_ptr, layout.GetBlockEntries("/common/turn_data/lane_data_ids"));
+        auto lane_data_ids = layout.GetWritableVector<LaneDataID>(
+            memory_ptr, "/common/turn_data/lane_data_ids");
 
-        const auto turn_instruction_list_ptr = layout.GetBlockPtr<guidance::TurnInstruction, true>(
+        const auto turn_instructions = layout.GetWritableVector<guidance::TurnInstruction>(
             memory_ptr, "/common/turn_data/turn_instructions");
-        util::vector_view<guidance::TurnInstruction> turn_instructions(
-            turn_instruction_list_ptr,
-            layout.GetBlockEntries("/common/turn_data/turn_instructions"));
 
         const auto entry_class_id_list_ptr =
             layout.GetBlockPtr<EntryClassID, true>(memory_ptr, "/common/turn_data/entry_class_ids");
