@@ -93,6 +93,10 @@ BOOST_AUTO_TEST_CASE(layout_list_test)
     layout.List("/mld/metrics/", std::back_inserter(results_5));
     layout.List("/mld/", std::back_inserter(results_6));
 
+    std::vector<std::string> results_7;
+    layout.List("", std::back_inserter(results_7));
+    BOOST_CHECK_EQUAL(results_7.size(), 7);
+
     CHECK_EQUAL_RANGE(
         results_1, "/ch/edge_filter/block1", "/ch/edge_filter/block2", "/ch/edge_filter/block3");
     CHECK_EQUAL_RANGE(
