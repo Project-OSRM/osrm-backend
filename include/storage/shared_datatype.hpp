@@ -35,7 +35,7 @@ namespace detail
 inline std::string trimName(const std::string &name_prefix, const std::string &name)
 {
     // list directory and
-    if (name_prefix.back() == '/')
+    if (!name_prefix.empty() && name_prefix.back() == '/')
     {
         auto directory_position = name.find_first_of("/", name_prefix.length());
         // this is a "file" in the directory of name_prefix
