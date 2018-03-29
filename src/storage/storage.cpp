@@ -344,7 +344,7 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
     {
         auto edge_based_node_data = layout.GetWritableVector<extractor::EdgeBasedNode>(
             memory_ptr, "/common/ebg_node_data/nodes");
-        auto  annotation_data = layout.GetWritableVector<extractor::NodeBasedEdgeAnnotation>(
+        auto annotation_data = layout.GetWritableVector<extractor::NodeBasedEdgeAnnotation>(
             memory_ptr, "/common/ebg_node_data/annotations");
 
         extractor::EdgeBasedNodeDataView node_data(std::move(edge_based_node_data),
@@ -355,26 +355,20 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
 
     // Load original edge data
     {
-        auto lane_data_ids = layout.GetWritableVector<LaneDataID>(
-            memory_ptr, "/common/turn_data/lane_data_ids");
+        auto lane_data_ids =
+            layout.GetWritableVector<LaneDataID>(memory_ptr, "/common/turn_data/lane_data_ids");
 
         const auto turn_instructions = layout.GetWritableVector<guidance::TurnInstruction>(
             memory_ptr, "/common/turn_data/turn_instructions");
 
-        const auto entry_class_id_list_ptr =
-            layout.GetBlockPtr<EntryClassID, true>(memory_ptr, "/common/turn_data/entry_class_ids");
-        util::vector_view<EntryClassID> entry_class_ids(
-            entry_class_id_list_ptr, layout.GetBlockEntries("/common/turn_data/entry_class_ids"));
+        const auto entry_class_ids =
+            layout.GetWritableVector<EntryClassID>(memory_ptr, "/common/turn_data/entry_class_ids");
 
-        const auto pre_turn_bearing_ptr = layout.GetBlockPtr<guidance::TurnBearing, true>(
+        const auto pre_turn_bearings = layout.GetWritableVector<guidance::TurnBearing>(
             memory_ptr, "/common/turn_data/pre_turn_bearings");
-        util::vector_view<guidance::TurnBearing> pre_turn_bearings(
-            pre_turn_bearing_ptr, layout.GetBlockEntries("/common/turn_data/pre_turn_bearings"));
 
-        const auto post_turn_bearing_ptr = layout.GetBlockPtr<guidance::TurnBearing, true>(
+        const auto post_turn_bearings = layout.GetWritableVector<guidance::TurnBearing>(
             memory_ptr, "/common/turn_data/post_turn_bearings");
-        util::vector_view<guidance::TurnBearing> post_turn_bearings(
-            post_turn_bearing_ptr, layout.GetBlockEntries("/common/turn_data/post_turn_bearings"));
 
         guidance::TurnDataView turn_data(std::move(turn_instructions),
                                          std::move(lane_data_ids),
@@ -392,73 +386,47 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
 
     // load compressed geometry
     {
-        auto geometries_index_ptr =
-            layout.GetBlockPtr<unsigned, true>(memory_ptr, "/common/segment_data/index");
-        util::vector_view<unsigned> geometry_begin_indices(
-            geometries_index_ptr, layout.GetBlockEntries("/common/segment_data/index"));
+        auto geometry_begin_indices =
+            layout.GetWritableVector<unsigned>(memory_ptr, "/common/segment_data/index");
+
+        auto node_list = layout.GetWritableVector<NodeID>(memory_ptr, "/common/segment_data/nodes");
 
         auto num_entries = layout.GetBlockEntries("/common/segment_data/nodes");
 
-        auto geometries_node_list_ptr =
-            layout.GetBlockPtr<NodeID, true>(memory_ptr, "/common/segment_data/nodes");
-        util::vector_view<NodeID> geometry_node_list(geometries_node_list_ptr, num_entries);
-
-        auto geometries_fwd_weight_list_ptr =
-            layout.GetBlockPtr<extractor::SegmentDataView::SegmentWeightVector::block_type, true>(
-                memory_ptr, "/common/segment_data/forward_weights/packed");
-        extractor::SegmentDataView::SegmentWeightVector geometry_fwd_weight_list(
-            util::vector_view<extractor::SegmentDataView::SegmentWeightVector::block_type>(
-                geometries_fwd_weight_list_ptr,
-                layout.GetBlockEntries("/common/segment_data/forward_weights/packed")),
+        extractor::SegmentDataView::SegmentWeightVector fwd_weight_list(
+            layout.GetWritableVector<extractor::SegmentDataView::SegmentWeightVector::block_type>(
+                memory_ptr, "/common/segment_data/forward_weights/packed"),
             num_entries);
 
-        auto geometries_rev_weight_list_ptr =
-            layout.GetBlockPtr<extractor::SegmentDataView::SegmentWeightVector::block_type, true>(
-                memory_ptr, "/common/segment_data/reverse_weights/packed");
-        extractor::SegmentDataView::SegmentWeightVector geometry_rev_weight_list(
-            util::vector_view<extractor::SegmentDataView::SegmentWeightVector::block_type>(
-                geometries_rev_weight_list_ptr,
-                layout.GetBlockEntries("/common/segment_data/reverse_weights/packed")),
+        extractor::SegmentDataView::SegmentWeightVector rev_weight_list(
+            layout.GetWritableVector<extractor::SegmentDataView::SegmentWeightVector::block_type>(
+                memory_ptr, "/common/segment_data/reverse_weights/packed"),
             num_entries);
 
-        auto geometries_fwd_duration_list_ptr =
-            layout.GetBlockPtr<extractor::SegmentDataView::SegmentDurationVector::block_type, true>(
-                memory_ptr, "/common/segment_data/forward_durations/packed");
-        extractor::SegmentDataView::SegmentDurationVector geometry_fwd_duration_list(
-            util::vector_view<extractor::SegmentDataView::SegmentDurationVector::block_type>(
-                geometries_fwd_duration_list_ptr,
-                layout.GetBlockEntries("/common/segment_data/forward_durations/packed")),
+        extractor::SegmentDataView::SegmentDurationVector fwd_duration_list(
+            layout.GetWritableVector<extractor::SegmentDataView::SegmentDurationVector::block_type>(
+                memory_ptr, "/common/segment_data/forward_durations/packed"),
             num_entries);
 
-        auto geometries_rev_duration_list_ptr =
-            layout.GetBlockPtr<extractor::SegmentDataView::SegmentDurationVector::block_type, true>(
-                memory_ptr, "/common/segment_data/reverse_durations/packed");
-        extractor::SegmentDataView::SegmentDurationVector geometry_rev_duration_list(
-            util::vector_view<extractor::SegmentDataView::SegmentDurationVector::block_type>(
-                geometries_rev_duration_list_ptr,
-                layout.GetBlockEntries("/common/segment_data/reverse_durations/packed")),
+        extractor::SegmentDataView::SegmentDurationVector rev_duration_list(
+            layout.GetWritableVector<extractor::SegmentDataView::SegmentDurationVector::block_type>(
+                memory_ptr, "/common/segment_data/reverse_durations/packed"),
             num_entries);
 
-        auto geometries_fwd_datasources_list_ptr = layout.GetBlockPtr<DatasourceID, true>(
+        auto fwd_datasources_list = layout.GetWritableVector<DatasourceID>(
             memory_ptr, "/common/segment_data/forward_data_sources");
-        util::vector_view<DatasourceID> geometry_fwd_datasources_list(
-            geometries_fwd_datasources_list_ptr,
-            layout.GetBlockEntries("/common/segment_data/forward_data_sources"));
 
-        auto geometries_rev_datasources_list_ptr = layout.GetBlockPtr<DatasourceID, true>(
+        auto rev_datasources_list = layout.GetWritableVector<DatasourceID>(
             memory_ptr, "/common/segment_data/reverse_data_sources");
-        util::vector_view<DatasourceID> geometry_rev_datasources_list(
-            geometries_rev_datasources_list_ptr,
-            layout.GetBlockEntries("/common/segment_data/reverse_data_sources"));
 
         extractor::SegmentDataView segment_data{std::move(geometry_begin_indices),
-                                                std::move(geometry_node_list),
-                                                std::move(geometry_fwd_weight_list),
-                                                std::move(geometry_rev_weight_list),
-                                                std::move(geometry_fwd_duration_list),
-                                                std::move(geometry_rev_duration_list),
-                                                std::move(geometry_fwd_datasources_list),
-                                                std::move(geometry_rev_datasources_list)};
+                                                std::move(node_list),
+                                                std::move(fwd_weight_list),
+                                                std::move(rev_weight_list),
+                                                std::move(fwd_duration_list),
+                                                std::move(rev_duration_list),
+                                                std::move(fwd_datasources_list),
+                                                std::move(rev_datasources_list)};
 
         extractor::files::readSegmentData(config.GetPath(".osrm.geometry"), segment_data);
     }
@@ -472,37 +440,29 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
 
     // Loading list of coordinates
     {
-        const auto coordinates_ptr =
-            layout.GetBlockPtr<util::Coordinate, true>(memory_ptr, "/common/coordinates");
-        const auto osmnodeid_ptr =
-            layout.GetBlockPtr<extractor::PackedOSMIDsView::block_type, true>(
-                memory_ptr, "/common/osm_node_ids/packed");
-        util::vector_view<util::Coordinate> coordinates(
-            coordinates_ptr, layout.GetBlockEntries("/common/coordinates"));
-        extractor::PackedOSMIDsView osm_node_ids(
-            util::vector_view<extractor::PackedOSMIDsView::block_type>(
-                osmnodeid_ptr, layout.GetBlockEntries("/common/osm_node_ids/packed")),
-            layout.GetBlockEntries("/common/coordinates"));
+        auto coordinates =
+            layout.GetWritableVector<util::Coordinate>(memory_ptr, "/common/coordinates");
+
+        auto osm_node_ids = extractor::PackedOSMIDsView{
+            layout.GetWritableVector<extractor::PackedOSMIDsView::block_type>(
+                memory_ptr, "/common/osm_node_ids/packed"),
+            coordinates.size()};
 
         extractor::files::readNodes(config.GetPath(".osrm.nbg_nodes"), coordinates, osm_node_ids);
     }
 
     // load turn weight penalties
     {
-        auto turn_duration_penalties_ptr =
-            layout.GetBlockPtr<TurnPenalty, true>(memory_ptr, "/common/turn_penalty/weight");
-        util::vector_view<TurnPenalty> turn_duration_penalties(
-            turn_duration_penalties_ptr, layout.GetBlockEntries("/common/turn_penalty/weight"));
+        auto turn_duration_penalties =
+            layout.GetWritableVector<TurnPenalty>(memory_ptr, "/common/turn_penalty/weight");
         extractor::files::readTurnWeightPenalty(config.GetPath(".osrm.turn_weight_penalties"),
                                                 turn_duration_penalties);
     }
 
     // load turn duration penalties
     {
-        auto turn_duration_penalties_ptr =
-            layout.GetBlockPtr<TurnPenalty, true>(memory_ptr, "/common/turn_penalty/duration");
-        util::vector_view<TurnPenalty> turn_duration_penalties(
-            turn_duration_penalties_ptr, layout.GetBlockEntries("/common/turn_penalty/duration"));
+        auto turn_duration_penalties =
+            layout.GetWritableVector<TurnPenalty>(memory_ptr, "/common/turn_penalty/duration");
         extractor::files::readTurnDurationPenalty(config.GetPath(".osrm.turn_duration_penalties"),
                                                   turn_duration_penalties);
     }
@@ -510,16 +470,11 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
     // store search tree portion of rtree
     {
 
-        const auto rtree_ptr =
-            layout.GetBlockPtr<RTreeNode, true>(memory_ptr, "/common/rtree/search_tree");
-        util::vector_view<RTreeNode> search_tree(
-            rtree_ptr, layout.GetBlockEntries("/common/rtree/search_tree"));
+        const auto search_tree =
+            layout.GetWritableVector<RTreeNode>(memory_ptr, "/common/rtree/search_tree");
 
-        const auto rtree_levelstarts_ptr = layout.GetBlockPtr<std::uint64_t, true>(
+        const auto rtree_level_starts = layout.GetWritableVector<std::uint64_t>(
             memory_ptr, "/common/rtree/search_tree_level_starts");
-        util::vector_view<std::uint64_t> rtree_level_starts(
-            rtree_levelstarts_ptr,
-            layout.GetBlockEntries("/common/rtree/search_tree_level_starts"));
 
         // we need this purely for the interface
         util::vector_view<util::Coordinate> empty_coords;
@@ -546,42 +501,25 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
 
     // Load intersection data
     {
-        auto bearing_class_id_ptr = layout.GetBlockPtr<BearingClassID, true>(
-            memory_ptr, "/common/intersection_bearings/node_to_class_id");
-        util::vector_view<BearingClassID> bearing_class_id(
-            bearing_class_id_ptr,
-            layout.GetBlockEntries("/common/intersection_bearings/node_to_class_id"));
-
-        auto bearing_values_ptr = layout.GetBlockPtr<DiscreteBearing, true>(
-            memory_ptr, "/common/intersection_bearings/bearing_values");
-        util::vector_view<DiscreteBearing> bearing_values(
-            bearing_values_ptr,
-            layout.GetBlockEntries("/common/intersection_bearings/bearing_values"));
-
-        auto offsets_ptr = layout.GetBlockPtr<unsigned, true>(
+        auto bearing_offsets = layout.GetWritableVector<unsigned>(
             memory_ptr, "/common/intersection_bearings/class_id_to_ranges/block_offsets");
-        auto blocks_ptr =
-            layout.GetBlockPtr<util::RangeTable<16, storage::Ownership::View>::BlockT, true>(
+        auto bearing_blocks =
+            layout.GetWritableVector<util::RangeTable<16, storage::Ownership::View>::BlockT>(
                 memory_ptr, "/common/intersection_bearings/class_id_to_ranges/diff_blocks");
-        util::vector_view<unsigned> bearing_offsets(
-            offsets_ptr,
-            layout.GetBlockEntries(
-                "/common/intersection_bearings/class_id_to_ranges/block_offsets"));
-        util::vector_view<util::RangeTable<16, storage::Ownership::View>::BlockT> bearing_blocks(
-            blocks_ptr,
-            layout.GetBlockEntries("/common/intersection_bearings/class_id_to_ranges/diff_blocks"));
-
+        auto bearing_values = layout.GetWritableVector<DiscreteBearing>(
+            memory_ptr, "/common/intersection_bearings/bearing_values");
         util::RangeTable<16, storage::Ownership::View> bearing_range_table(
-            bearing_offsets, bearing_blocks, static_cast<unsigned>(bearing_values.size()));
+            std::move(bearing_offsets),
+            std::move(bearing_blocks),
+            static_cast<unsigned>(bearing_values.size()));
 
+        auto bearing_class_id = layout.GetWritableVector<BearingClassID>(
+            memory_ptr, "/common/intersection_bearings/node_to_class_id");
         extractor::IntersectionBearingsView intersection_bearings_view{
             std::move(bearing_values), std::move(bearing_class_id), std::move(bearing_range_table)};
 
-        auto entry_class_ptr = layout.GetBlockPtr<util::guidance::EntryClass, true>(
+        auto entry_classes = layout.GetWritableVector<util::guidance::EntryClass>(
             memory_ptr, "/common/entry_classes");
-        util::vector_view<util::guidance::EntryClass> entry_classes(
-            entry_class_ptr, layout.GetBlockEntries("/common/entry_classes"));
-
         extractor::files::readIntersections(
             config.GetPath(".osrm.icd"), intersection_bearings_view, entry_classes);
     }
@@ -589,26 +527,17 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
     if (boost::filesystem::exists(config.GetPath(".osrm.hsgr")))
     {
         const std::string metric_prefix = "/ch/metrics/" + metric_name;
-        auto graph_nodes_ptr = layout.GetBlockPtr<contractor::QueryGraphView::NodeArrayEntry, true>(
+
+        auto node_list = layout.GetWritableVector<contractor::QueryGraphView::NodeArrayEntry>(
             memory_ptr, metric_prefix + "/contracted_graph/node_array");
-        auto graph_edges_ptr = layout.GetBlockPtr<contractor::QueryGraphView::EdgeArrayEntry, true>(
+        auto edge_list = layout.GetWritableVector<contractor::QueryGraphView::EdgeArrayEntry>(
             memory_ptr, metric_prefix + "/contracted_graph/edge_array");
 
-        util::vector_view<contractor::QueryGraphView::NodeArrayEntry> node_list(
-            graph_nodes_ptr,
-            layout.GetBlockEntries(metric_prefix + "/contracted_graph/node_array"));
-        util::vector_view<contractor::QueryGraphView::EdgeArrayEntry> edge_list(
-            graph_edges_ptr,
-            layout.GetBlockEntries(metric_prefix + "/contracted_graph/edge_array"));
-
         std::vector<util::vector_view<bool>> edge_filter;
-        layout.List(
-            metric_prefix + "/exclude", boost::make_function_output_iterator([&](const auto &name) {
-                auto data_ptr =
-                    layout.GetBlockPtr<util::vector_view<bool>::Word, true>(memory_ptr, name);
-                auto num_entries = layout.GetBlockEntries(name);
-                edge_filter.emplace_back(data_ptr, num_entries);
-            }));
+        layout.List(metric_prefix + "/exclude",
+                    boost::make_function_output_iterator([&](const auto &name) {
+                        edge_filter.push_back(layout.GetWritableVector<bool>(memory_ptr, name));
+                    }));
 
         std::uint32_t graph_connectivity_checksum = 0;
         std::unordered_map<std::string, contractor::ContractedMetricView> metrics = {
@@ -632,22 +561,16 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
         BOOST_ASSERT(layout.GetBlockSize("/mld/multilevelpartition/cell_to_children") > 0);
         BOOST_ASSERT(layout.GetBlockSize("/mld/multilevelpartition/partition") > 0);
 
-        auto level_data = layout.GetBlockPtr<partitioner::MultiLevelPartitionView::LevelData, true>(
-            memory_ptr, "/mld/multilevelpartition/level_data");
-
-        auto mld_partition_ptr =
-            layout.GetBlockPtr<PartitionID, true>(memory_ptr, "/mld/multilevelpartition/partition");
-        auto partition_entries_count = layout.GetBlockEntries("/mld/multilevelpartition/partition");
-        util::vector_view<PartitionID> partition(mld_partition_ptr, partition_entries_count);
-
-        auto mld_chilren_ptr = layout.GetBlockPtr<CellID, true>(
+        auto level_data_ptr =
+            layout.GetBlockPtr<partitioner::MultiLevelPartitionView::LevelData, true>(
+                memory_ptr, "/mld/multilevelpartition/level_data");
+        auto partition =
+            layout.GetWritableVector<PartitionID>(memory_ptr, "/mld/multilevelpartition/partition");
+        auto cell_to_children = layout.GetWritableVector<CellID>(
             memory_ptr, "/mld/multilevelpartition/cell_to_children");
-        auto children_entries_count =
-            layout.GetBlockEntries("/mld/multilevelpartition/cell_to_children");
-        util::vector_view<CellID> cell_to_children(mld_chilren_ptr, children_entries_count);
 
         partitioner::MultiLevelPartitionView mlp{
-            std::move(level_data), std::move(partition), std::move(cell_to_children)};
+            level_data_ptr, std::move(partition), std::move(cell_to_children)};
         partitioner::files::readPartition(config.GetPath(".osrm.partition"), mlp);
     }
 
@@ -656,31 +579,14 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
         BOOST_ASSERT(layout.GetBlockSize("/mld/cellstorage/cells") > 0);
         BOOST_ASSERT(layout.GetBlockSize("/mld/cellstorage/level_to_cell_offset") > 0);
 
-        auto mld_source_boundary_ptr =
-            layout.GetBlockPtr<NodeID, true>(memory_ptr, "/mld/cellstorage/source_boundary");
-        auto mld_destination_boundary_ptr =
-            layout.GetBlockPtr<NodeID, true>(memory_ptr, "/mld/cellstorage/destination_boundary");
-        auto mld_cells_ptr = layout.GetBlockPtr<partitioner::CellStorageView::CellData, true>(
+        auto source_boundary =
+            layout.GetWritableVector<NodeID>(memory_ptr, "/mld/cellstorage/source_boundary");
+        auto destination_boundary =
+            layout.GetWritableVector<NodeID>(memory_ptr, "/mld/cellstorage/destination_boundary");
+        auto cells = layout.GetWritableVector<partitioner::CellStorageView::CellData>(
             memory_ptr, "/mld/cellstorage/cells");
-        auto mld_cell_level_offsets_ptr = layout.GetBlockPtr<std::uint64_t, true>(
+        auto level_offsets = layout.GetWritableVector<std::uint64_t>(
             memory_ptr, "/mld/cellstorage/level_to_cell_offset");
-
-        auto source_boundary_entries_count =
-            layout.GetBlockEntries("/mld/cellstorage/source_boundary");
-        auto destination_boundary_entries_count =
-            layout.GetBlockEntries("/mld/cellstorage/destination_boundary");
-        auto cells_entries_counts = layout.GetBlockEntries("/mld/cellstorage/cells");
-        auto cell_level_offsets_entries_count =
-            layout.GetBlockEntries("/mld/cellstorage/level_to_cell_offset");
-
-        util::vector_view<NodeID> source_boundary(mld_source_boundary_ptr,
-                                                  source_boundary_entries_count);
-        util::vector_view<NodeID> destination_boundary(mld_destination_boundary_ptr,
-                                                       destination_boundary_entries_count);
-        util::vector_view<partitioner::CellStorageView::CellData> cells(mld_cells_ptr,
-                                                                        cells_entries_counts);
-        util::vector_view<std::uint64_t> level_offsets(mld_cell_level_offsets_ptr,
-                                                       cell_level_offsets_entries_count);
 
         partitioner::CellStorageView storage{std::move(source_boundary),
                                              std::move(destination_boundary),
@@ -706,15 +612,8 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
             auto weights_block_id = prefix + "/weights";
             auto durations_block_id = prefix + "/durations";
 
-            auto weight_entries_count = layout.GetBlockEntries(weights_block_id);
-            auto duration_entries_count = layout.GetBlockEntries(durations_block_id);
-            auto mld_cell_weights_ptr =
-                layout.GetBlockPtr<EdgeWeight, true>(memory_ptr, weights_block_id);
-            auto mld_cell_duration_ptr =
-                layout.GetBlockPtr<EdgeDuration, true>(memory_ptr, durations_block_id);
-            util::vector_view<EdgeWeight> weights(mld_cell_weights_ptr, weight_entries_count);
-            util::vector_view<EdgeDuration> durations(mld_cell_duration_ptr,
-                                                      duration_entries_count);
+            auto weights = layout.GetWritableVector<EdgeWeight>(memory_ptr, weights_block_id);
+            auto durations = layout.GetWritableVector<EdgeDuration>(memory_ptr, durations_block_id);
 
             metrics[metric_name].push_back(
                 customizer::CellMetricView{std::move(weights), std::move(durations)});
@@ -725,24 +624,15 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
 
     if (boost::filesystem::exists(config.GetPath(".osrm.mldgr")))
     {
-
-        auto graph_nodes_ptr =
-            layout.GetBlockPtr<customizer::MultiLevelEdgeBasedGraphView::NodeArrayEntry, true>(
+        auto node_list =
+            layout.GetWritableVector<customizer::MultiLevelEdgeBasedGraphView::NodeArrayEntry>(
                 memory_ptr, "/mld/multilevelgraph/node_array");
-        auto graph_edges_ptr =
-            layout.GetBlockPtr<customizer::MultiLevelEdgeBasedGraphView::EdgeArrayEntry, true>(
+        auto edge_list =
+            layout.GetWritableVector<customizer::MultiLevelEdgeBasedGraphView::EdgeArrayEntry>(
                 memory_ptr, "/mld/multilevelgraph/edge_array");
-        auto graph_node_to_offset_ptr =
-            layout.GetBlockPtr<customizer::MultiLevelEdgeBasedGraphView::EdgeOffset, true>(
+        auto node_to_offset =
+            layout.GetWritableVector<customizer::MultiLevelEdgeBasedGraphView::EdgeOffset>(
                 memory_ptr, "/mld/multilevelgraph/node_to_edge_offset");
-
-        util::vector_view<customizer::MultiLevelEdgeBasedGraphView::NodeArrayEntry> node_list(
-            graph_nodes_ptr, layout.GetBlockEntries("/mld/multilevelgraph/node_array"));
-        util::vector_view<customizer::MultiLevelEdgeBasedGraphView::EdgeArrayEntry> edge_list(
-            graph_edges_ptr, layout.GetBlockEntries("/mld/multilevelgraph/edge_array"));
-        util::vector_view<customizer::MultiLevelEdgeBasedGraphView::EdgeOffset> node_to_offset(
-            graph_node_to_offset_ptr,
-            layout.GetBlockEntries("/mld/multilevelgraph/node_to_edge_offset"));
 
         std::uint32_t graph_connectivity_checksum = 0;
         customizer::MultiLevelEdgeBasedGraphView graph_view(
@@ -762,17 +652,10 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
 
     // load maneuver overrides
     {
-        const auto maneuver_overrides_ptr =
-            layout.GetBlockPtr<extractor::StorageManeuverOverride, true>(
-                memory_ptr, "/common/maneuver_overrides/overrides");
-        const auto maneuver_override_node_sequences_ptr = layout.GetBlockPtr<NodeID, true>(
+        auto maneuver_overrides = layout.GetWritableVector<extractor::StorageManeuverOverride>(
+            memory_ptr, "/common/maneuver_overrides/overrides");
+        auto maneuver_override_node_sequences = layout.GetWritableVector<NodeID>(
             memory_ptr, "/common/maneuver_overrides/node_sequences");
-
-        util::vector_view<extractor::StorageManeuverOverride> maneuver_overrides(
-            maneuver_overrides_ptr, layout.GetBlockEntries("/common/maneuver_overrides/overrides"));
-        util::vector_view<NodeID> maneuver_override_node_sequences(
-            maneuver_override_node_sequences_ptr,
-            layout.GetBlockEntries("/common/maneuver_overrides/node_sequences"));
 
         extractor::files::readManeuverOverrides(config.GetPath(".osrm.maneuver_overrides"),
                                                 maneuver_overrides,

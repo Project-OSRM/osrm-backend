@@ -4,10 +4,10 @@
 #include "storage/block.hpp"
 #include "storage/io_fwd.hpp"
 
-#include "util/vector_view.hpp"
 #include "util/exception.hpp"
 #include "util/exception_utils.hpp"
 #include "util/log.hpp"
+#include "util/vector_view.hpp"
 
 #include <boost/assert.hpp>
 
@@ -88,15 +88,16 @@ class DataLayout
     }
 
     template <typename T>
-    util::vector_view<T> GetVector(char* shared_memory, const std::string& name) const
+    util::vector_view<T> GetVector(char *shared_memory, const std::string &name) const
     {
         return util::vector_view<T>(GetBlockPtr<T>(shared_memory, name), GetBlockEntries(name));
     }
 
     template <typename T>
-    util::vector_view<T> GetWritableVector(char* shared_memory, const std::string& name) const
+    util::vector_view<T> GetWritableVector(char *shared_memory, const std::string &name) const
     {
-        return util::vector_view<T>(GetBlockPtr<T, true>(shared_memory, name), GetBlockEntries(name));
+        return util::vector_view<T>(GetBlockPtr<T, true>(shared_memory, name),
+                                    GetBlockEntries(name));
     }
 
     template <typename T, bool WRITE_CANARY = false>
@@ -203,6 +204,15 @@ class DataLayout
     static constexpr std::size_t BLOCK_ALIGNMENT = 64;
     std::map<std::string, Block> blocks;
 };
+
+template <>
+inline util::vector_view<bool> DataLayout::GetWritableVector<bool>(char *shared_memory,
+                                                                   const std::string &name) const
+{
+    return util::vector_view<bool>(
+        GetBlockPtr<util::vector_view<bool>::Word, true>(shared_memory, name),
+        GetBlockEntries(name));
+}
 
 enum SharedDataType
 {

@@ -55,14 +55,12 @@ template <unsigned BLOCK_SIZE, storage::Ownership Ownership> class RangeTable
     RangeTable() : sum_lengths(0) {}
 
     // for loading from shared memory
-    explicit RangeTable(OffsetContainerT &external_offsets,
-                        BlockContainerT &external_blocks,
+    explicit RangeTable(OffsetContainerT offsets_,
+                        BlockContainerT blocks_,
                         const unsigned sum_lengths)
-        : sum_lengths(sum_lengths)
+        : block_offsets(std::move(offsets_)), diff_blocks(std::move(blocks_)),
+          sum_lengths(sum_lengths)
     {
-        using std::swap;
-        swap(block_offsets, external_offsets);
-        swap(diff_blocks, external_blocks);
     }
 
     // construct table from length vector
