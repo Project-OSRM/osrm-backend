@@ -187,7 +187,6 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     using RTreeNode = SharedRTree::TreeNode;
 
     extractor::ClassData exclude_mask;
-    std::string m_timestamp;
     extractor::ProfileProperties *m_profile_properties;
     extractor::Datasources *m_datasources;
 
@@ -225,6 +224,7 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     std::shared_ptr<ContiguousBlockAllocator> allocator;
 
     std::size_t m_exclude_index;
+    unsigned m_timestamp;
 
     void InitializeProfilePropertiesPointer(storage::DataLayout &data_layout,
                                             char *memory_block,
@@ -550,13 +550,15 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     }
 
   public:
+    std::size_t GetTimestamp() const { return m_timestamp; }
     std::size_t GetExcludeIndex() const { return m_exclude_index; }
 
     // allows switching between process_memory/shared_memory datafacade, based on the type of
     // allocator
     ContiguousInternalMemoryDataFacadeBase(std::shared_ptr<ContiguousBlockAllocator> allocator_,
-                                           const std::size_t exclude_index)
-        : allocator(std::move(allocator_))
+                                           const std::size_t exclude_index,
+                                           unsigned timestamp)
+        : allocator(std::move(allocator_)), m_timestamp(timestamp)
     {
         InitializeInternalPointers(allocator->GetLayout(), allocator->GetMemory(), exclude_index);
     }
@@ -951,8 +953,9 @@ class ContiguousInternalMemoryDataFacade<CH>
 {
   public:
     ContiguousInternalMemoryDataFacade(std::shared_ptr<ContiguousBlockAllocator> allocator,
-                                       const std::size_t exclude_index)
-        : ContiguousInternalMemoryDataFacadeBase(allocator, exclude_index),
+                                       const std::size_t exclude_index,
+                                       unsigned timestamp)
+        : ContiguousInternalMemoryDataFacadeBase(allocator, exclude_index, timestamp),
           ContiguousInternalMemoryAlgorithmDataFacade<CH>(allocator, exclude_index)
 
     {
@@ -1151,10 +1154,10 @@ class ContiguousInternalMemoryDataFacade<MLD> final
   private:
   public:
     ContiguousInternalMemoryDataFacade(std::shared_ptr<ContiguousBlockAllocator> allocator,
-                                       const std::size_t exclude_index)
-        : ContiguousInternalMemoryDataFacadeBase(allocator, exclude_index),
+                                       const std::size_t exclude_index,
+                                       unsigned timestamp)
+        : ContiguousInternalMemoryDataFacadeBase(allocator, exclude_index, timestamp),
           ContiguousInternalMemoryAlgorithmDataFacade<MLD>(allocator, exclude_index)
-
     {
     }
 };

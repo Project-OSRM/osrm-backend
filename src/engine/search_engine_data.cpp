@@ -91,15 +91,15 @@ void SearchEngineData<CH>::InitializeOrClearManyToManyThreadLocalStorage(unsigne
     }
 }
 
-void SearchEngineData<CH>::InitializeOrClearUnpackingCacheThreadLocalStorage()
+void SearchEngineData<CH>::InitializeOrClearUnpackingCacheThreadLocalStorage(unsigned timestamp)
 {
     if (unpacking_cache.get())
     {
-        unpacking_cache->Clear();
+        unpacking_cache->Clear(timestamp);
     }
     else
     {
-        unpacking_cache.reset(new UnpackingCache());
+        unpacking_cache.reset(new UnpackingCache(timestamp));
     }
 }
 
