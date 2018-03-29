@@ -15,7 +15,6 @@ using namespace osrm::unit_test;
 
 BOOST_AUTO_TEST_CASE(read_write_hsgr)
 {
-    auto reference_checksum = 0xFF00FF00;
     auto reference_connectivity_checksum = 0xDEADBEEF;
     std::vector<TestEdge> edges = {TestEdge{0, 1, 3},
                                    TestEdge{0, 5, 1},
@@ -36,16 +35,13 @@ BOOST_AUTO_TEST_CASE(read_write_hsgr)
         {"duration", {std::move(reference_graph), std::move(reference_filters)}}};
 
     TemporaryFile tmp{TEST_DATA_DIR "/read_write_hsgr_test.osrm.hsgr"};
-    contractor::files::writeGraph(
-        tmp.path, reference_checksum, reference_metrics, reference_connectivity_checksum);
+    contractor::files::writeGraph(tmp.path, reference_metrics, reference_connectivity_checksum);
 
-    unsigned checksum;
     unsigned connectivity_checksum;
 
     std::unordered_map<std::string, ContractedMetric> metrics = {{"duration", {}}};
-    contractor::files::readGraph(tmp.path, checksum, metrics, connectivity_checksum);
+    contractor::files::readGraph(tmp.path, metrics, connectivity_checksum);
 
-    BOOST_CHECK_EQUAL(checksum, reference_checksum);
     BOOST_CHECK_EQUAL(connectivity_checksum, reference_connectivity_checksum);
     BOOST_CHECK_EQUAL(metrics["duration"].edge_filter.size(),
                       reference_metrics["duration"].edge_filter.size());
