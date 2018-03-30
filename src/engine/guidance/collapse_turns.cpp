@@ -346,6 +346,16 @@ void SegregatedTurnStrategy::operator()(RouteStep &step_at_turn_location,
         // Do not update modifier based on turn direction
         update_modifier_for_turn_direction = false;
     }
+    // Process straight step
+    else if ((turn_direction == guidance::DirectionModifier::Straight) &&
+             is_straight_step(transfer_from_step))
+    {
+        // Determine if continue or new name
+        setInstructionType(step_at_turn_location,
+                           (haveSameName(step_prior_to_intersection, transfer_from_step)
+                                ? TurnType::Suppressed
+                                : TurnType::NewName));
+    }
     // Process wider straight step
     else if (isWiderStraight(turn_angle) && hasSingleIntersection(step_at_turn_location) &&
              hasStraightestTurn(step_at_turn_location) && hasStraightestTurn(transfer_from_step))
@@ -361,16 +371,6 @@ void SegregatedTurnStrategy::operator()(RouteStep &step_at_turn_location,
 
         // Do not update modifier based on turn direction
         update_modifier_for_turn_direction = false;
-    }
-    // Process straight step
-    else if ((turn_direction == guidance::DirectionModifier::Straight) &&
-             is_straight_step(transfer_from_step))
-    {
-        // Determine if continue or new name
-        setInstructionType(step_at_turn_location,
-                           (haveSameName(step_prior_to_intersection, transfer_from_step)
-                                ? TurnType::Suppressed
-                                : TurnType::NewName));
     }
     // Process turn step
     else if ((turn_direction != guidance::DirectionModifier::Straight) &&
