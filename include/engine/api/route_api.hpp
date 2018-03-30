@@ -148,6 +148,9 @@ class RouteAPI : public BaseAPI
                 // processing is performed
                 guidance::applyOverrides(BaseAPI::facade, steps, leg_geometry);
 
+                // Collapse segregated steps before others
+                steps = guidance::collapseSegregatedTurnInstructions(std::move(steps));
+
                 /* Perform step-based post-processing.
                  *
                  * Using post-processing on basis of route-steps for a single leg at a time

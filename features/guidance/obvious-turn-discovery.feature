@@ -1072,7 +1072,7 @@ Feature: Simple Turns
     When I route I should get
         | from | to | route          | turns                             |
         | g    | c  | woll,brei,brei | depart,turn slight right,arrive   |
-        | g    | f  | woll,scho,scho | depart,continue sharp left,arrive |
+        | g    | f  | woll,scho,scho | depart,turn sharp left,arrive |
         | a    | c  | scho,brei      | depart,arrive                     |
         | d    | f  | brei,scho      | depart,arrive                     |
 
