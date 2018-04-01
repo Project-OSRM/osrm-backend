@@ -13,34 +13,40 @@ namespace engine
 class UnpackingCache
 {
   private:
-    boost::compute::detail::lru_cache<std::tuple<NodeID, NodeID, std::size_t>, EdgeDuration> cache;
-    unsigned current_data_timestamp = 0;
+    boost::compute::detail::lru_cache<std::tuple<NodeID, NodeID, std::size_t>, EdgeDuration>
+        m_cache;
+    unsigned m_current_data_timestamp = 0;
+    std::mutex m_mutex;
 
   public:
-    UnpackingCache(unsigned timestamp) : cache(6000000), current_data_timestamp(timestamp){};
+    UnpackingCache(unsigned timestamp) : m_cache(6000000), m_current_data_timestamp(timestamp){};
 
     void Clear(unsigned new_data_timestamp)
     {
-        if (current_data_timestamp != new_data_timestamp)
+        std::lock_guard<std::mutex> guard(m_mutex);
+        if (m_current_data_timestamp != new_data_timestamp)
         {
-            cache.clear();
-            current_data_timestamp = new_data_timestamp;
+            m_cache.clear();
+            m_current_data_timestamp = new_data_timestamp;
         }
     }
 
     bool IsEdgeInCache(std::tuple<NodeID, NodeID, std::size_t> edge)
     {
-        return cache.contains(edge);
+        std::lock_guard<std::mutex> guard(m_mutex);
+        return m_cache.contains(edge);
     }
 
     void AddEdge(std::tuple<NodeID, NodeID, std::size_t> edge, EdgeDuration duration)
     {
-        cache.insert(edge, duration);
+        std::lock_guard<std::mutex> guard(m_mutex);
+        m_cache.insert(edge, duration);
     }
 
     EdgeDuration GetDuration(std::tuple<NodeID, NodeID, std::size_t> edge)
     {
-        boost::optional<EdgeDuration> duration = cache.get(edge);
+        std::lock_guard<std::mutex> guard(m_mutex);
+        boost::optional<EdgeDuration> duration = m_cache.get(edge);
         return *duration ? *duration : MAXIMAL_EDGE_DURATION;
     }
 };

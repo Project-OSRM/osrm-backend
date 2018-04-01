@@ -47,7 +47,7 @@ template <> struct SearchEngineData<routing_algorithms::ch::Algorithm>
 
     using SearchEngineHeapPtr = boost::thread_specific_ptr<QueryHeap>;
     using ManyToManyHeapPtr = boost::thread_specific_ptr<ManyToManyQueryHeap>;
-    using UnpackingCachePtr = boost::thread_specific_ptr<UnpackingCache>;
+    using UnpackingCachePtr = std::unique_ptr<UnpackingCache>; // do I need to make this threadsafe?
 
     static SearchEngineHeapPtr forward_heap_1;
     static SearchEngineHeapPtr reverse_heap_1;
@@ -66,7 +66,7 @@ template <> struct SearchEngineData<routing_algorithms::ch::Algorithm>
 
     void InitializeOrClearManyToManyThreadLocalStorage(unsigned number_of_nodes);
 
-    void InitializeOrClearUnpackingCacheThreadLocalStorage(unsigned timestamp);
+    void InitializeOrClearUnpackingCacheGlobalStorage(unsigned timestamp);
 };
 
 struct MultiLayerDijkstraHeapData
