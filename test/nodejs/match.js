@@ -238,3 +238,89 @@ test('match: match in Monaco without motorways', function(assert) {
         assert.equal(response.matchings.length, 1);
     });
 });
+
+test('match: throws on invalid waypoints values needs at least two', function(assert) {
+    assert.plan(1);
+    var osrm = new OSRM(data_path);
+    var options = {
+        steps: true,
+        coordinates: three_test_coordinates,
+        waypoints: [0]
+    };
+    assert.throws(function() { osrm.match(options, function(err, response) {}); },
+        'At least two waypoints must be provided');
+});
+
+test('match: throws on invalid waypoints values, needs first and last coordinate indices', function(assert) {
+    assert.plan(1);
+    var osrm = new OSRM(data_path);
+    var options = {
+        steps: true,
+        coordinates: three_test_coordinates,
+        waypoints: [1, 2]
+    };
+    assert.throws(function() { osrm.match(options, function(err, response) {console.log(err);}); },
+        'First and last waypoints values must correspond to first and last coordinate indices');
+});
+
+test('match: throws on invalid waypoints values, order matters', function(assert) {
+    assert.plan(1);
+    var osrm = new OSRM(data_path);
+    var options = {
+        steps: true,
+        coordinates: three_test_coordinates,
+        waypoints: [2, 0]
+    };
+    assert.throws(function() { osrm.match(options, function(err, response) {console.log(err);}); },
+        'First and last waypoints values must correspond to first and last coordinate indices');
+});
+
+test('match: throws on invalid waypoints values, waypoints must correspond with a coordinate index', function(assert) {
+    assert.plan(1);
+    var osrm = new OSRM(data_path);
+    var options = {
+        steps: true,
+        coordinates: three_test_coordinates,
+        waypoints: [0, 3, 2]
+    };
+    assert.throws(function() { osrm.match(options, function(err, response) {console.log(err);}); },
+        'Waypoints must correspond with the index of an input coordinate');
+});
+
+test('match: error on split trace', function(assert) {
+    assert.plan(1);
+    var osrm = new OSRM(data_path);
+    var four_coords = Array.from(three_test_coordinates);
+    four_coords.push([7.41902,43.73487]);
+    var options = {
+        steps: true,
+        coordinates: four_coords,
+        timestamps: [1700, 1750, 1424684616, 1424684620],
+        waypoints: [0,3]
+    };
+    osrm.match(options, function(err, response) {
+        assert.ok(err, 'Errors with NoMatch');
+    });
+});
+
+test('match: match in Monaco with waypoints', function(assert) {
+    assert.plan(6);
+    var osrm = new OSRM(data_path);
+    var options = {
+        steps: true,
+        coordinates: three_test_coordinates,
+        waypoints: [0,2]
+    };
+    osrm.match(options, function(err, response) {
+        assert.ifError(err);
+        assert.equal(response.matchings.length, 1);
+        assert.equal(response.matchings[0].legs.length, 1);
+        assert.ok(response.matchings.every(function(m) {
+            return !!m.distance && !!m.duration && Array.isArray(m.legs) && !!m.geometry && m.confidence > 0;
+        }))
+        assert.equal(response.tracepoints.length, 3);
+        assert.ok(response.tracepoints.every(function(t) {
+            return !!t.hint && !isNaN(t.matchings_index) && !isNaN(t.waypoint_index) && !!t.name;
+        }));
+    });
+});

@@ -16,10 +16,10 @@ namespace datafacade
 {
 
 /**
-* This allocator uses an IPC shared memory block as the data location.
-* Many SharedMemoryDataFacade objects can be created that point to the same shared
-* memory block.
-*/
+ * This allocator uses an IPC shared memory block as the data location.
+ * Many SharedMemoryDataFacade objects can be created that point to the same shared
+ * memory block.
+ */
 class SharedMemoryAllocator : public ContiguousBlockAllocator
 {
   public:

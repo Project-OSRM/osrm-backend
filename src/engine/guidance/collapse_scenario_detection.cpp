@@ -1,5 +1,5 @@
 #include "engine/guidance/collapse_scenario_detection.hpp"
-#include "extractor/guidance/constants.hpp"
+#include "guidance/constants.hpp"
 #include "util/bearing.hpp"
 
 #include <numeric>
@@ -12,24 +12,10 @@ namespace engine
 {
 namespace guidance
 {
+using namespace osrm::guidance;
 
 namespace
 {
-
-// check bearings for u-turns.
-// since bearings are wrapped around at 0 (we only support 0,360), we need to do some minor math to
-// check if bearings `a` and `b` go in opposite directions. In general we accept some minor
-// deviations for u-turns.
-bool bearingsAreReversed(const double bearing_in, const double bearing_out)
-{
-    // Nearly perfectly reversed angles have a difference close to 180 degrees (straight)
-    const double left_turn_angle = [&]() {
-        if (0 <= bearing_out && bearing_out <= bearing_in)
-            return bearing_in - bearing_out;
-        return bearing_in + 360 - bearing_out;
-    }();
-    return util::angularDeviation(left_turn_angle, 180) <= 35;
-}
 
 // to collapse steps, we focus on short segments that don't interact with other roads. To collapse
 // two instructions into one, we need to look at to instrutions immediately after each other.

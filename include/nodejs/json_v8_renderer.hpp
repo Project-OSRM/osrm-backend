@@ -3,7 +3,10 @@
 
 #include "osrm/json_container.hpp"
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 #include <nan.h>
+#pragma GCC diagnostic pop
 
 #include <functional>
 

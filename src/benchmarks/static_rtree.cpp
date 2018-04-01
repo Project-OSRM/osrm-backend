@@ -1,6 +1,9 @@
 #include "util/static_rtree.hpp"
 #include "extractor/edge_based_node_segment.hpp"
+#include "extractor/files.hpp"
+#include "extractor/packed_osm_ids.hpp"
 #include "extractor/query_node.hpp"
+
 #include "mocks/mock_datafacade.hpp"
 #include "storage/io.hpp"
 #include "engine/geospatial_query.hpp"
@@ -29,16 +32,6 @@ constexpr int32_t WORLD_MAX_LON = 180 * COORDINATE_PRECISION;
 
 using RTreeLeaf = extractor::EdgeBasedNodeSegment;
 using BenchStaticRTree = util::StaticRTree<RTreeLeaf, storage::Ownership::Container>;
-
-std::vector<util::Coordinate> loadCoordinates(const boost::filesystem::path &nodes_file)
-{
-    storage::io::FileReader nodes_path_file_reader(nodes_file,
-                                                   storage::io::FileReader::VerifyFingerprint);
-
-    std::vector<util::Coordinate> coords;
-    storage::serialization::read(nodes_path_file_reader, coords);
-    return coords;
-}
 
 template <typename QueryT>
 void benchmarkQuery(const std::vector<util::Coordinate> &queries,
@@ -97,9 +90,11 @@ int main(int argc, char **argv)
     const char *file_path = argv[2];
     const char *nodes_path = argv[3];
 
-    auto coords = osrm::benchmarks::loadCoordinates(nodes_path);
+    std::vector<osrm::util::Coordinate> coords;
+    osrm::extractor::files::readNodeCoordinates(nodes_path, coords);
 
-    osrm::benchmarks::BenchStaticRTree rtree(ram_path, file_path, coords);
+    osrm::benchmarks::BenchStaticRTree rtree(file_path, coords);
+    osrm::extractor::files::readRamIndex(ram_path, rtree);
 
     osrm::benchmarks::benchmark(rtree, 10000);
 

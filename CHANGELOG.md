@@ -1,8 +1,59 @@
 # UNRELEASED
-  - Changes from 5.15.0:
+  - Changes from 5.16.0:
+    - Bugfixes:
+      - fix deduplication of route steps when waypoints are used [#4909](https://github.com/Project-OSRM/osrm-backend/issues/4909)
+      - FIXED #4920: Use smaller range for U-turn angles in map-matching [#4920](https://github.com/Project-OSRM/osrm-backend/pull/4920)
+      - FIXED: Remove the last short annotation segment in `trimShortSegments`
+      - FIXED: Properly calculate annotations for speeds, durations and distances when waypoints are used with mapmatching [#4949](https://github.com/Project-OSRM/osrm-backend/pull/4949)
+    - Profile:
+      - CHANGED #4929: Handle oneways in get_forward_backward_by_key [#4929](https://github.com/Project-OSRM/osrm-backend/pull/4929)
+      - FIXED #4943: Do not route against oneway road if there is a cycleway in the wrong direction; also review bike profile [#4943](https://github.com/Project-OSRM/osrm-backend/issues/4943)
+    - Guidance:
+      - CHANGED #4929: Don't use obviousness for links bifurcations [#4929](https://github.com/Project-OSRM/osrm-backend/pull/4929)
+      - FIXED #4929: Adjust Straight direction modifiers of side roads in driveway handler [#4929](https://github.com/Project-OSRM/osrm-backend/pull/4929)
+      - CHANGED #4925: Added post process logic to collapse segregated turn instructions [#4925](https://github.com/Project-OSRM/osrm-backend/pull/4925)
+    - Tools:
+      - `osrm-routed` accepts a new property `--memory_file` to store memory in a file on disk.
+    - NodeJS:
+      - `OSRM` object accepts a new option `memory_file` that stores the memory in a file on disk.
+    - Internals
+      - CHANGED #4845 #4968: Updated segregated intersection identification [#4845](https://github.com/Project-OSRM/osrm-backend/pull/4845) [#4968](https://github.com/Project-OSRM/osrm-backend/pull/4968)
+      - REMOVED: Remove `.timestamp` file since it was unused.
+    - Documentation:
+      - ADDED: Add documentation about OSM node ids in nearest service response [#4436](https://github.com/Project-OSRM/osrm-backend/pull/4436)
+    - Performance
+      - FIXED: Speed up response time when lots of legs exist and geojson is used with `steps=true` [#4936](https://github.com/Project-OSRM/osrm-backend/pull/4936)
+      - FIXED: Return iterators instead of vectors in datafacade_base functions [#4969](https://github.com/Project-OSRM/osrm-backend/issues/4969)
+
+# 5.16.0
+  - Changes from 5.15.2:
+    - Guidance
+      - ADDED #4676: Support for maneuver override relation, allowing data-driven overrides for turn-by-turn instructions [#4676](https://github.com/Project-OSRM/osrm-backend/pull/4676)
+      - CHANGED #4830: Announce reference change if names are empty
+      - CHANGED #4835: MAXIMAL_ALLOWED_SEPARATION_WIDTH increased to 12 meters
+      - CHANGED #4842: Lower priority links from a motorway now are used as motorway links [#4842](https://github.com/Project-OSRM/osrm-backend/pull/4842)
+      - CHANGED #4895: Use ramp bifurcations as fork intersections [#4895](https://github.com/Project-OSRM/osrm-backend/issues/4895)
+      - CHANGED #4893: Handle motorway forks with links as normal motorway intersections[#4893](https://github.com/Project-OSRM/osrm-backend/issues/4893)
+      - FIXED #4905: Check required tags of `maneuver` relations [#4905](https://github.com/Project-OSRM/osrm-backend/pull/4905)
     - Profile:
       - FIXED: `highway=service` will now be used for restricted access, `access=private` is still disabled for snapping.
       - ADDED #4775: Exposes more information to the turn function, now being able to set turn weights with highway and access information of the turn as well as other roads at the intersection [#4775](https://github.com/Project-OSRM/osrm-backend/issues/4775)
+      - FIXED #4763: Add support for non-numerical units in car profile for maxheight [#4763](https://github.com/Project-OSRM/osrm-backend/issues/4763)
+      - ADDED #4872: Handling of `barrier=height_restrictor` nodes [#4872](https://github.com/Project-OSRM/osrm-backend/pull/4872)
+
+# 5.15.2
+  - Changes from 5.15.1:
+    - Features:
+        - ADDED: Exposed the waypoints parameter in the node bindings interface
+    - Bugfixes:
+        - FIXED: Segfault causing bug in leg collapsing map matching when traversing edges in reverse
+
+# 5.15.1
+  - Changes from 5.15.0:
+    - Bugfixes:
+      - FIXED: Segfault in map matching when RouteLeg collapsing code is run on a match with multiple submatches
+    - Guidance:
+      - Set type of trivial intersections where classes change to Suppressed instead of NoTurn
 
 # 5.15.0
   - Changes from 5.14.3:

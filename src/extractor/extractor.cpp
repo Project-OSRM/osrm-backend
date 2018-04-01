@@ -1,5 +1,6 @@
 #include "extractor/extractor.hpp"
 
+#include "extractor/compressed_node_based_graph_edge.hpp"
 #include "extractor/edge_based_edge.hpp"
 #include "extractor/extraction_containers.hpp"
 #include "extractor/extraction_node.hpp"
@@ -7,22 +8,25 @@
 #include "extractor/extraction_way.hpp"
 #include "extractor/extractor_callbacks.hpp"
 #include "extractor/files.hpp"
+#include "extractor/maneuver_override_relation_parser.hpp"
+#include "extractor/name_table.hpp"
 #include "extractor/node_based_graph_factory.hpp"
 #include "extractor/raster_source.hpp"
 #include "extractor/restriction_filter.hpp"
 #include "extractor/restriction_parser.hpp"
 #include "extractor/scripting_environment.hpp"
 
-#include "extractor/guidance/segregated_intersection_classification.hpp"
+#include "guidance/files.hpp"
+#include "guidance/guidance_processing.hpp"
+#include "guidance/segregated_intersection_classification.hpp"
+#include "guidance/turn_data_container.hpp"
 
 #include "storage/io.hpp"
 
 #include "util/exception.hpp"
 #include "util/exception_utils.hpp"
-#include "util/graph_loader.hpp"
 #include "util/integer_range.hpp"
 #include "util/log.hpp"
-#include "util/name_table.hpp"
 #include "util/range_table.hpp"
 #include "util/timing_util.hpp"
 
@@ -37,6 +41,7 @@
 
 #include "extractor/tarjan_scc.hpp"
 
+#include <boost/assert.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/iterator/function_input_iterator.hpp>
@@ -99,7 +104,7 @@ void SetClassNames(const std::vector<std::string> &class_names,
                 auto index = classes_map.size();
                 if (index > MAX_CLASS_INDEX)
                 {
-                    throw util::exception("Maximum number of classes if " +
+                    throw util::exception("Maximum number of classes is " +
                                           std::to_string(MAX_CLASS_INDEX + 1));
                 }
 
@@ -164,6 +169,25 @@ void SetExcludableClasses(const ExtractorCallbacks::ClassesMap &classes_map,
         }
     }
 }
+
+std::vector<CompressedNodeBasedGraphEdge> toEdgeList(const util::NodeBasedDynamicGraph &graph)
+{
+    std::vector<CompressedNodeBasedGraphEdge> edges;
+    edges.reserve(graph.GetNumberOfEdges());
+
+    // For all nodes iterate over its edges and dump (from, to) pairs
+    for (const NodeID from_node : util::irange(0u, graph.GetNumberOfNodes()))
+    {
+        for (const EdgeID edge : graph.GetAdjacentEdgeRange(from_node))
+        {
+            const auto to_node = graph.GetTarget(edge);
+
+            edges.push_back({from_node, to_node});
+        }
+    }
+
+    return edges;
+}
 }
 
 /**
@@ -193,11 +217,16 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     const auto number_of_threads = std::min(recommended_num_threads, config.requested_num_threads);
     tbb::task_scheduler_init init(number_of_threads ? number_of_threads
                                                     : tbb::task_scheduler_init::automatic);
+    BOOST_ASSERT(init.is_active());
 
-    guidance::LaneDescriptionMap turn_lane_map;
+    LaneDescriptionMap turn_lane_map;
     std::vector<TurnRestriction> turn_restrictions;
     std::vector<ConditionalTurnRestriction> conditional_turn_restrictions;
-    std::tie(turn_lane_map, turn_restrictions, conditional_turn_restrictions) =
+    std::vector<UnresolvedManeuverOverride> unresolved_maneuver_overrides;
+    std::tie(turn_lane_map,
+             turn_restrictions,
+             conditional_turn_restrictions,
+             unresolved_maneuver_overrides) =
         ParseOSMData(scripting_environment, number_of_threads);
 
     // Transform the node-based graph that OSM is based on into an edge-based graph
@@ -212,18 +241,22 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     util::DeallocatingVector<EdgeBasedEdge> edge_based_edge_list;
     std::vector<bool> node_is_startpoint;
     std::vector<EdgeWeight> edge_based_node_weights;
+    std::uint32_t ebg_connectivity_checksum = 0;
 
     // Create a node-based graph from the OSRM file
     NodeBasedGraphFactory node_based_graph_factory(config.GetPath(".osrm"),
                                                    scripting_environment,
                                                    turn_restrictions,
-                                                   conditional_turn_restrictions);
+                                                   conditional_turn_restrictions,
+                                                   unresolved_maneuver_overrides);
+
+    NameTable name_table;
+    files::readNames(config.GetPath(".osrm.names"), name_table);
 
     util::Log() << "Find segregated edges in node-based graph ..." << std::flush;
     TIMER_START(segregated);
 
-    util::NameTable names(config.GetPath(".osrm.names").string());
-    auto segregated_edges = guidance::findSegregatedNodes(node_based_graph_factory, names);
+    auto segregated_edges = guidance::findSegregatedNodes(node_based_graph_factory, name_table);
 
     TIMER_STOP(segregated);
     util::Log() << "ok, after " << TIMER_SEC(segregated) << "s";
@@ -254,10 +287,8 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
             compressed_node_based_graph_writing.wait();
     };
 
-    compressed_node_based_graph_writing = std::async(std::launch::async, [&] {
-        WriteCompressedNodeBasedGraph(
-            config.GetPath(".osrm.cnbg").string(), node_based_graph, coordinates);
-    });
+    files::writeCompressedNodeBasedGraph(config.GetPath(".osrm.cnbg").string(),
+                                         toEdgeList(node_based_graph));
 
     node_based_graph_factory.GetCompressedEdges().PrintStatistics();
 
@@ -281,6 +312,8 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
                                turn_restrictions,
                                conditional_turn_restrictions,
                                segregated_edges,
+                               name_table,
+                               unresolved_maneuver_overrides,
                                turn_lane_map,
                                scripting_environment,
                                edge_based_nodes_container,
@@ -288,7 +321,18 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
                                node_is_startpoint,
                                edge_based_node_weights,
                                edge_based_edge_list,
-                               config.GetPath(".osrm.icd").string());
+                               ebg_connectivity_checksum);
+
+    ProcessGuidanceTurns(node_based_graph,
+                         edge_based_nodes_container,
+                         coordinates,
+                         node_based_graph_factory.GetCompressedEdges(),
+                         barrier_nodes,
+                         turn_restrictions,
+                         conditional_turn_restrictions,
+                         name_table,
+                         std::move(turn_lane_map),
+                         scripting_environment);
 
     TIMER_STOP(expansion);
 
@@ -299,11 +343,8 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
 
     util::Log() << "Saving edge-based node weights to file.";
     TIMER_START(timer_write_node_weights);
-    {
-        storage::io::FileWriter writer(config.GetPath(".osrm.enw"),
-                                       storage::io::FileWriter::GenerateFingerprint);
-        storage::serialization::write(writer, edge_based_node_weights);
-    }
+    extractor::files::writeEdgeBasedNodeWeights(config.GetPath(".osrm.enw"),
+                                                edge_based_node_weights);
     TIMER_STOP(timer_write_node_weights);
     util::Log() << "Done writing. (" << TIMER_SEC(timer_write_node_weights) << ")";
 
@@ -323,8 +364,10 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
 
     util::Log() << "Writing edge-based-graph edges       ... " << std::flush;
     TIMER_START(write_edges);
-    files::writeEdgeBasedGraph(
-        config.GetPath(".osrm.ebg"), number_of_edge_based_nodes, edge_based_edge_list);
+    files::writeEdgeBasedGraph(config.GetPath(".osrm.ebg"),
+                               number_of_edge_based_nodes,
+                               edge_based_edge_list,
+                               ebg_connectivity_checksum);
     TIMER_STOP(write_edges);
     util::Log() << "ok, after " << TIMER_SEC(write_edges) << "s";
 
@@ -343,9 +386,10 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     return 0;
 }
 
-std::tuple<guidance::LaneDescriptionMap,
+std::tuple<LaneDescriptionMap,
            std::vector<TurnRestriction>,
-           std::vector<ConditionalTurnRestriction>>
+           std::vector<ConditionalTurnRestriction>,
+           std::vector<UnresolvedManeuverOverride>>
 Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
                         const unsigned number_of_threads)
 {
@@ -382,17 +426,12 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
             timestamp = "n/a";
         }
         util::Log() << "timestamp: " << timestamp;
-
-        storage::io::FileWriter timestamp_file(config.GetPath(".osrm.timestamp"),
-                                               storage::io::FileWriter::GenerateFingerprint);
-
-        timestamp_file.WriteFrom(timestamp.c_str(), timestamp.length());
     }
 
     // Extraction containers and restriction parser
     ExtractionContainers extraction_containers;
     ExtractorCallbacks::ClassesMap classes_map;
-    guidance::LaneDescriptionMap turn_lane_map;
+    LaneDescriptionMap turn_lane_map;
     auto extractor_callbacks =
         std::make_unique<ExtractorCallbacks>(extraction_containers,
                                              classes_map,
@@ -410,6 +449,8 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
         config.parse_conditionals,
         restrictions);
 
+    const ManeuverOverrideRelationParser maneuver_override_parser;
+
     // OSM data reader
     using SharedBuffer = std::shared_ptr<osmium::memory::Buffer>;
     struct ParsedBuffer
@@ -419,6 +460,7 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
         std::vector<std::pair<const osmium::Way &, ExtractionWay>> resulting_ways;
         std::vector<std::pair<const osmium::Relation &, ExtractionRelation>> resulting_relations;
         std::vector<InputConditionalTurnRestriction> resulting_restrictions;
+        std::vector<InputManeuverOverride> resulting_maneuver_overrides;
     };
 
     ExtractionRelationContainer relations;
@@ -460,10 +502,12 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
             parsed_buffer.buffer = buffer;
             scripting_environment.ProcessElements(*buffer,
                                                   restriction_parser,
+                                                  maneuver_override_parser,
                                                   relations,
                                                   parsed_buffer.resulting_nodes,
                                                   parsed_buffer.resulting_ways,
-                                                  parsed_buffer.resulting_restrictions);
+                                                  parsed_buffer.resulting_restrictions,
+                                                  parsed_buffer.resulting_maneuver_overrides);
             return parsed_buffer;
         });
 
@@ -471,6 +515,7 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
     unsigned number_of_nodes = 0;
     unsigned number_of_ways = 0;
     unsigned number_of_restrictions = 0;
+    unsigned number_of_maneuver_overrides = 0;
     tbb::filter_t<ParsedBuffer, void> buffer_storage(
         tbb::filter::serial_in_order, [&](const ParsedBuffer &parsed_buffer) {
 
@@ -491,6 +536,13 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
             {
                 extractor_callbacks->ProcessRestriction(result);
             }
+
+            number_of_maneuver_overrides = parsed_buffer.resulting_maneuver_overrides.size();
+            for (const auto &result : parsed_buffer.resulting_maneuver_overrides)
+            {
+                extractor_callbacks->ProcessManeuverOverride(result);
+            }
+
         });
 
     tbb::filter_t<SharedBuffer, std::shared_ptr<ExtractionRelationContainer>> buffer_relation_cache(
@@ -595,7 +647,8 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
 
     return std::make_tuple(std::move(turn_lane_map),
                            std::move(extraction_containers.unconditional_turn_restrictions),
-                           std::move(extraction_containers.conditional_turn_restrictions));
+                           std::move(extraction_containers.conditional_turn_restrictions),
+                           std::move(extraction_containers.internal_maneuver_overrides));
 }
 
 void Extractor::FindComponents(unsigned number_of_edge_based_nodes,
@@ -670,8 +723,9 @@ EdgeID Extractor::BuildEdgeExpandedGraph(
     const std::vector<TurnRestriction> &turn_restrictions,
     const std::vector<ConditionalTurnRestriction> &conditional_turn_restrictions,
     const std::unordered_set<EdgeID> &segregated_edges,
-    // might have to be updated to add new lane combinations
-    guidance::LaneDescriptionMap &turn_lane_map,
+    const NameTable &name_table,
+    const std::vector<UnresolvedManeuverOverride> &maneuver_overrides,
+    const LaneDescriptionMap &turn_lane_map,
     // for calculating turn penalties
     ScriptingEnvironment &scripting_environment,
     // output data
@@ -680,10 +734,8 @@ EdgeID Extractor::BuildEdgeExpandedGraph(
     std::vector<bool> &node_is_startpoint,
     std::vector<EdgeWeight> &edge_based_node_weights,
     util::DeallocatingVector<EdgeBasedEdge> &edge_based_edge_list,
-    const std::string &intersection_class_output_file)
+    std::uint32_t &connectivity_checksum)
 {
-    util::NameTable name_table(config.GetPath(".osrm.names").string());
-
     EdgeBasedGraphFactory edge_based_graph_factory(node_based_graph,
                                                    edge_based_nodes_container,
                                                    compressed_edge_container,
@@ -710,46 +762,27 @@ EdgeID Extractor::BuildEdgeExpandedGraph(
         WayRestrictionMap via_way_restriction_map(conditional_turn_restrictions);
         ConditionalRestrictionMap conditional_node_restriction_map(conditional_node_restrictions,
                                                                    IndexNodeByFromAndVia());
-
         edge_based_graph_factory.Run(scripting_environment,
-                                     config.GetPath(".osrm.edges").string(),
-                                     config.GetPath(".osrm.tld").string(),
                                      config.GetPath(".osrm.turn_weight_penalties").string(),
                                      config.GetPath(".osrm.turn_duration_penalties").string(),
                                      config.GetPath(".osrm.turn_penalties_index").string(),
                                      config.GetPath(".osrm.cnbg_to_ebg").string(),
                                      config.GetPath(".osrm.restrictions").string(),
+                                     config.GetPath(".osrm.maneuver_overrides").string(),
                                      via_node_restriction_map,
                                      conditional_node_restriction_map,
-                                     via_way_restriction_map);
+                                     via_way_restriction_map,
+                                     maneuver_overrides);
         return edge_based_graph_factory.GetNumberOfEdgeBasedNodes();
     };
 
     const auto number_of_edge_based_nodes = create_edge_based_edges();
 
-    {
-        std::vector<std::uint32_t> turn_lane_offsets;
-        std::vector<guidance::TurnLaneType::Mask> turn_lane_masks;
-        std::tie(turn_lane_offsets, turn_lane_masks) =
-            guidance::transformTurnLaneMapIntoArrays(turn_lane_map);
-        files::writeTurnLaneDescriptions(
-            config.GetPath(".osrm.tls"), turn_lane_offsets, turn_lane_masks);
-    }
-
     edge_based_graph_factory.GetEdgeBasedEdges(edge_based_edge_list);
     edge_based_graph_factory.GetEdgeBasedNodeSegments(edge_based_node_segments);
     edge_based_graph_factory.GetStartPointMarkers(node_is_startpoint);
     edge_based_graph_factory.GetEdgeBasedNodeWeights(edge_based_node_weights);
-
-    util::Log() << "Writing Intersection Classification Data";
-    TIMER_START(write_intersections);
-    files::writeIntersections(
-        intersection_class_output_file,
-        IntersectionBearingsContainer{edge_based_graph_factory.GetBearingClassIds(),
-                                      edge_based_graph_factory.GetBearingClasses()},
-        edge_based_graph_factory.GetEntryClasses());
-    TIMER_STOP(write_intersections);
-    util::Log() << "ok, after " << TIMER_SEC(write_intersections) << "s";
+    connectivity_checksum = edge_based_graph_factory.GetConnectivityChecksum();
 
     return number_of_edge_based_nodes;
 }
@@ -791,55 +824,113 @@ void Extractor::BuildRTree(std::vector<EdgeBasedNodeSegment> edge_based_node_seg
     edge_based_node_segments.resize(new_size);
 
     TIMER_START(construction);
-    util::StaticRTree<EdgeBasedNodeSegment> rtree(edge_based_node_segments,
-                                                  config.GetPath(".osrm.ramIndex").string(),
-                                                  config.GetPath(".osrm.fileIndex").string(),
-                                                  coordinates);
+    util::StaticRTree<EdgeBasedNodeSegment> rtree(
+        edge_based_node_segments, coordinates, config.GetPath(".osrm.fileIndex"));
+
+    files::writeRamIndex(config.GetPath(".osrm.ramIndex"), rtree);
 
     TIMER_STOP(construction);
     util::Log() << "finished r-tree construction in " << TIMER_SEC(construction) << " seconds";
 }
 
-void Extractor::WriteCompressedNodeBasedGraph(const std::string &path,
-                                              const util::NodeBasedDynamicGraph &graph,
-                                              const std::vector<util::Coordinate> &coordinates)
+template <typename Map> auto convertIDMapToVector(const Map &map)
 {
-    const auto fingerprint = storage::io::FileWriter::GenerateFingerprint;
-
-    storage::io::FileWriter writer{path, fingerprint};
-
-    // Writes:  | Fingerprint | #e | #n | edges | coordinates |
-    // - uint64: number of edges (from, to) pairs
-    // - uint64: number of nodes and therefore also coordinates
-    // - (uint32_t, uint32_t): num_edges * edges
-    // - (int32_t, int32_t: num_nodes * coordinates (lon, lat)
-
-    const auto num_edges = graph.GetNumberOfEdges();
-    const auto num_nodes = graph.GetNumberOfNodes();
-
-    BOOST_ASSERT_MSG(num_nodes == coordinates.size(), "graph and embedding out of sync");
-
-    writer.WriteElementCount64(num_edges);
-    writer.WriteElementCount64(num_nodes);
-
-    // For all nodes iterate over its edges and dump (from, to) pairs
-    for (const NodeID from_node : util::irange(0u, num_nodes))
+    std::vector<typename Map::key_type> result(map.size());
+    for (const auto &pair : map)
     {
-        for (const EdgeID edge : graph.GetAdjacentEdgeRange(from_node))
-        {
-            const auto to_node = graph.GetTarget(edge);
+        BOOST_ASSERT(pair.second < map.size());
+        result[pair.second] = pair.first;
+    }
+    return result;
+}
 
-            writer.WriteOne(from_node);
-            writer.WriteOne(to_node);
-        }
+void Extractor::ProcessGuidanceTurns(
+    const util::NodeBasedDynamicGraph &node_based_graph,
+    const extractor::EdgeBasedNodeDataContainer &edge_based_node_container,
+    const std::vector<util::Coordinate> &node_coordinates,
+    const CompressedEdgeContainer &compressed_edge_container,
+    const std::unordered_set<NodeID> &barrier_nodes,
+    const std::vector<TurnRestriction> &turn_restrictions,
+    const std::vector<ConditionalTurnRestriction> &conditional_turn_restrictions,
+    const NameTable &name_table,
+    LaneDescriptionMap lane_description_map,
+    ScriptingEnvironment &scripting_environment)
+{
+    // Output data
+    osrm::guidance::TurnDataExternalContainer turn_data_container;
+    util::guidance::LaneDataIdMap lane_data_map;
+    osrm::guidance::BearingClassesVector bearing_class_by_node_based_node;
+    osrm::guidance::BearingClassesMap bearing_class_hash;
+    osrm::guidance::EntryClassesMap entry_class_hash;
+    std::uint32_t connectivity_checksum = 0;
+
+    TIMER_START(turn_annotations);
+
+    {
+        SuffixTable street_name_suffix_table(scripting_environment);
+        const auto &turn_lanes_data = transformTurnLaneMapIntoArrays(lane_description_map);
+
+        std::vector<TurnRestriction> node_restrictions;
+        for (auto const &t : turn_restrictions)
+            if (t.Type() == RestrictionType::NODE_RESTRICTION)
+                node_restrictions.push_back(t);
+
+        RestrictionMap node_restriction_map(node_restrictions, IndexNodeByFromAndVia());
+        WayRestrictionMap way_restriction_map(conditional_turn_restrictions);
+
+        osrm::guidance::annotateTurns(node_based_graph,
+                                      edge_based_node_container,
+                                      node_coordinates,
+                                      compressed_edge_container,
+                                      barrier_nodes,
+                                      node_restriction_map,
+                                      way_restriction_map,
+                                      name_table,
+                                      street_name_suffix_table,
+                                      turn_lanes_data,
+                                      lane_description_map,
+                                      lane_data_map,
+                                      turn_data_container,
+                                      bearing_class_by_node_based_node,
+                                      bearing_class_hash,
+                                      entry_class_hash,
+                                      connectivity_checksum);
     }
 
-    // FIXME this is unneccesary: We have this data
-    for (const auto &qnode : coordinates)
+    TIMER_STOP(turn_annotations);
+    util::Log() << "Guidance turn annotations took " << TIMER_SEC(turn_annotations) << "s";
+
+    util::Log() << "Writing Intersection Classification Data";
+    TIMER_START(write_intersections);
+    files::writeIntersections(
+        config.GetPath(".osrm.icd").string(),
+        IntersectionBearingsContainer{bearing_class_by_node_based_node,
+                                      convertIDMapToVector(bearing_class_hash.data)},
+        convertIDMapToVector(entry_class_hash.data));
+    TIMER_STOP(write_intersections);
+    util::Log() << "ok, after " << TIMER_SEC(write_intersections) << "s";
+
+    util::Log() << "Writing Turns and Lane Data...";
+    TIMER_START(write_guidance_data);
+
     {
-        writer.WriteOne(qnode.lon);
-        writer.WriteOne(qnode.lat);
+        auto turn_lane_data = convertIDMapToVector(lane_data_map.data);
+        files::writeTurnLaneData(config.GetPath(".osrm.tld"), turn_lane_data);
     }
+
+    { // Turn lanes handler modifies lane_description_map, so another transformation is needed
+        std::vector<std::uint32_t> turn_lane_offsets;
+        std::vector<TurnLaneType::Mask> turn_lane_masks;
+        std::tie(turn_lane_offsets, turn_lane_masks) =
+            transformTurnLaneMapIntoArrays(lane_description_map);
+        files::writeTurnLaneDescriptions(
+            config.GetPath(".osrm.tls"), turn_lane_offsets, turn_lane_masks);
+    }
+
+    osrm::guidance::files::writeTurnData(
+        config.GetPath(".osrm.edges").string(), turn_data_container, connectivity_checksum);
+    TIMER_STOP(write_guidance_data);
+    util::Log() << "ok, after " << TIMER_SEC(write_guidance_data) << "s";
 }
 
 } // namespace extractor

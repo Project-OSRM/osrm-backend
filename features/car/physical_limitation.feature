@@ -39,7 +39,12 @@ Feature: Car - Handle physical limitation
     Scenario: Car - Limited by height
         Then routability should be
             | highway | maxheight:physical | maxheight | bothw |
+            | primary |                    |           | x     |
             | primary | 1                  |           |       |
             | primary | 3                  |           | x     |
             | primary |                    | 1         |       |
             | primary |                    | 3         | x     |
+            | primary |                    | default   | x     |
+            | primary |                    | none      | x     |
+            | primary |                    | no-sign   | x     |
+            | primary |                    | unsigned  | x     |

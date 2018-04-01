@@ -301,7 +301,7 @@ Feature: Turn Lane Guidance
             | e,l       | road,cross,cross  | depart,turn right,arrive     | ,none:false straight:false straight;right:true,                               |
             | i,h       | cross,road,road   | depart,turn right,arrive     | ,,                                                                            |
             | i,j       | cross,cross       | depart,arrive                | ;;left:false straight:true,                                                   |
-            | i,l       | cross,cross,cross | depart,continue uturn,arrive | ;,left:true straight:false;left:true straight:false;left:false straight:true, |
+            | i,l       | cross,cross,cross | depart,continue uturn,arrive | ,left:true straight:false;left:true straight:false;left:true straight:false;left:false straight:true, |
 
     @partition-lanes
     Scenario: Turn Lanes at Segregated Road
@@ -614,8 +614,9 @@ Feature: Turn Lane Guidance
                  | |
                  | |
                  b d
-            h     c
-             ' -- g - - f
+            h-----c
+                  | `-f
+                  g
             """
 
         And the ways
@@ -936,48 +937,52 @@ Feature: Turn Lane Guidance
     Scenario: Partitioned turn, Slight Curve - maxspeed
         Given the node map
             """
-                f   e
-                |   |
-                |   |
-                |   c
-            a - b ' |
-                g   d
+                    f   e
+                    |   |
+                i   |   |
+                |   |   c
+            h - a - b ' |
+                j   g   d
             """
 
         And the ways
             | nodes | name  | highway | oneway | turn:lanes:forward | maxspeed |
+            | ha    | road  | primary | yes    |                    | 1        |
             | ab    | road  | primary | yes    | left\|right        | 1        |
             | bc    | cross | primary | yes    |                    | 1        |
             | fbg   | cross | primary | yes    |                    | 1        |
             | dce   | cross | primary | yes    |                    | 1        |
+            | iaj   | kross | primary | no     |                    | 1        |
 
         When I route I should get
             | waypoints | route            | turns                          | lanes                                         | locations |
-            | a,g       | road,cross,cross | depart,turn right,arrive       | ,left:false right:true,                       | a,b,g     |
-            | a,e       | road,cross,cross | depart,end of road left,arrive | ;left:true right:false,left:true right:false, | a,c,e     |
+            | h,g       | road,cross,cross | depart,turn right,arrive       | ;,left:false right:true,                       | h,b,g     |
+            | h,e       | road,cross,cross | depart,end of road left,arrive | ;,left:true right:false;left:true right:false, | h,b,e     |
 
     Scenario: Partitioned turn, Slight Curve
         Given the node map
             """
-                f   e
-                |   |
-                |   |
-                |   c
-            a - b ' |
-                g   d
+                    f   e
+                    |   |
+                i   |   |
+                |   |   c
+            h - a - b ' |
+                j   g   d
             """
 
         And the ways
             | nodes | name  | highway | oneway | turn:lanes:forward |
+            | ha    | road  | primary | yes    |                    |
             | ab    | road  | primary | yes    | left\|right        |
             | bc    | cross | primary | yes    |                    |
             | fbg   | cross | primary | yes    |                    |
             | dce   | cross | primary | yes    |                    |
+            | iaj   | kross | primary | no     |                    |
 
         When I route I should get
-            | waypoints | route            | turns                          | lanes                                         | locations |
-            | a,g       | road,cross,cross | depart,turn right,arrive       | ,left:false right:true,                       | a,b,g     |
-            | a,e       | road,cross,cross | depart,end of road left,arrive | ;left:true right:false,left:true right:false, | a,c,e     |
+            | waypoints | route            | turns                          | lanes                                          | locations |
+            | h,g       | road,cross,cross | depart,turn right,arrive       | ;,left:false right:true,                       | h,b,g     |
+            | h,e       | road,cross,cross | depart,end of road left,arrive | ;,left:true right:false;left:true right:false, | h,b,e     |
 
     Scenario: Lane Parsing Issue #2694
         Given the node map
@@ -1243,4 +1248,4 @@ Feature: Turn Lane Guidance
 
         When I route I should get
             | waypoints | route             | turns                        | lanes                                                                                           | locations |
-            | a,f       | road1,road1,road1 | depart,continue uturn,arrive | ;left:false straight:true straight;right:false,left:true straight:false straight;right:false;;, | a,d,f     |
+            | a,f       | road1,road1,road1 | depart,continue uturn,arrive | ,;left:true straight:false straight;right:false;;, | a,c,f     |

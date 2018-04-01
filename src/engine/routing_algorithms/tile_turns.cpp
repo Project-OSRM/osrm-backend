@@ -101,8 +101,8 @@ std::vector<TurnData> generateTurns(const datafacade &facade,
     //         w
     //  uv is the "approach"
     //  vw is the "exit"
-    std::vector<EdgeWeight> approach_weight_vector;
-    std::vector<EdgeWeight> approach_duration_vector;
+    typename datafacade::BaseDataFacade::WeightsRangeT approach_weight_range;
+    typename datafacade::BaseDataFacade::DurationsRangeT approach_duration_range;
 
     // Look at every node in the directed graph we created
     for (const auto &startnode : sorted_startnodes)
@@ -151,27 +151,26 @@ std::vector<TurnData> generateTurns(const datafacade &facade,
                     if (edge_based_node_info.find(approachedge.edge_based_node_id)
                             ->second.is_geometry_forward)
                     {
-                        approach_weight_vector = facade.GetUncompressedForwardWeights(
+                        approach_weight_range = facade.GetUncompressedForwardWeights(
                             edge_based_node_info.find(approachedge.edge_based_node_id)
                                 ->second.packed_geometry_id);
-                        approach_duration_vector = facade.GetUncompressedForwardDurations(
+                        approach_duration_range = facade.GetUncompressedForwardDurations(
                             edge_based_node_info.find(approachedge.edge_based_node_id)
                                 ->second.packed_geometry_id);
                     }
                     else
                     {
-                        approach_weight_vector = facade.GetUncompressedReverseWeights(
+                        approach_weight_range = facade.GetUncompressedReverseWeights(
                             edge_based_node_info.find(approachedge.edge_based_node_id)
                                 ->second.packed_geometry_id);
-                        approach_duration_vector = facade.GetUncompressedReverseDurations(
+                        approach_duration_range = facade.GetUncompressedReverseDurations(
                             edge_based_node_info.find(approachedge.edge_based_node_id)
                                 ->second.packed_geometry_id);
                     }
-                    const auto sum_node_weight = std::accumulate(approach_weight_vector.begin(),
-                                                                 approach_weight_vector.end(),
-                                                                 EdgeWeight{0});
-                    const auto sum_node_duration = std::accumulate(approach_duration_vector.begin(),
-                                                                   approach_duration_vector.end(),
+                    const auto sum_node_weight = std::accumulate(
+                        approach_weight_range.begin(), approach_weight_range.end(), EdgeWeight{0});
+                    const auto sum_node_duration = std::accumulate(approach_duration_range.begin(),
+                                                                   approach_duration_range.end(),
                                                                    EdgeWeight{0});
 
                     // The edge.weight is the whole edge weight, which includes the turn

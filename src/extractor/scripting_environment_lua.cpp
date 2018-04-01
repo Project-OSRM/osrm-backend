@@ -7,10 +7,14 @@
 #include "extractor/extraction_turn.hpp"
 #include "extractor/extraction_way.hpp"
 #include "extractor/internal_extractor_edge.hpp"
+#include "extractor/maneuver_override_relation_parser.hpp"
 #include "extractor/profile_properties.hpp"
 #include "extractor/query_node.hpp"
 #include "extractor/raster_source.hpp"
 #include "extractor/restriction_parser.hpp"
+
+#include "guidance/turn_instruction.hpp"
+
 #include "util/coordinate.hpp"
 #include "util/exception.hpp"
 #include "util/log.hpp"
@@ -135,27 +139,43 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
 
     context.state.new_enum("road_priority_class",
                            "motorway",
-                           extractor::guidance::RoadPriorityClass::MOTORWAY,
+                           extractor::RoadPriorityClass::MOTORWAY,
+                           "motorway_link",
+                           extractor::RoadPriorityClass::MOTORWAY_LINK,
                            "trunk",
-                           extractor::guidance::RoadPriorityClass::TRUNK,
+                           extractor::RoadPriorityClass::TRUNK,
+                           "trunk_link",
+                           extractor::RoadPriorityClass::TRUNK_LINK,
                            "primary",
-                           extractor::guidance::RoadPriorityClass::PRIMARY,
+                           extractor::RoadPriorityClass::PRIMARY,
+                           "primary_link",
+                           extractor::RoadPriorityClass::PRIMARY_LINK,
                            "secondary",
-                           extractor::guidance::RoadPriorityClass::SECONDARY,
+                           extractor::RoadPriorityClass::SECONDARY,
+                           "secondary_link",
+                           extractor::RoadPriorityClass::SECONDARY_LINK,
                            "tertiary",
-                           extractor::guidance::RoadPriorityClass::TERTIARY,
+                           extractor::RoadPriorityClass::TERTIARY,
+                           "tertiary_link",
+                           extractor::RoadPriorityClass::TERTIARY_LINK,
                            "main_residential",
-                           extractor::guidance::RoadPriorityClass::MAIN_RESIDENTIAL,
+                           extractor::RoadPriorityClass::MAIN_RESIDENTIAL,
                            "side_residential",
-                           extractor::guidance::RoadPriorityClass::SIDE_RESIDENTIAL,
+                           extractor::RoadPriorityClass::SIDE_RESIDENTIAL,
+                           "alley",
+                           extractor::RoadPriorityClass::ALLEY,
+                           "parking",
+                           extractor::RoadPriorityClass::PARKING,
                            "link_road",
-                           extractor::guidance::RoadPriorityClass::LINK_ROAD,
+                           extractor::RoadPriorityClass::LINK_ROAD,
+                           "unclassified",
+                           extractor::RoadPriorityClass::UNCLASSIFIED,
                            "bike_path",
-                           extractor::guidance::RoadPriorityClass::BIKE_PATH,
+                           extractor::RoadPriorityClass::BIKE_PATH,
                            "foot_path",
-                           extractor::guidance::RoadPriorityClass::FOOT_PATH,
+                           extractor::RoadPriorityClass::FOOT_PATH,
                            "connectivity",
-                           extractor::guidance::RoadPriorityClass::CONNECTIVITY);
+                           extractor::RoadPriorityClass::CONNECTIVITY);
 
     context.state.new_enum("item_type",
                            "node",
@@ -214,6 +234,22 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
                                                  "valid",
                                                  &osmium::Location::valid);
 
+    auto get_location_tag = [](auto &context, const auto &location, const char *key) {
+        if (context.location_dependent_data.empty())
+            return sol::object(sol::nil);
+
+        const LocationDependentData::point_t point{location.lon(), location.lat()};
+        if (!boost::geometry::equals(context.last_location_point, point))
+        {
+            context.last_location_point = point;
+            context.last_location_indexes =
+                context.location_dependent_data.GetPropertyIndexes(point);
+        }
+
+        auto value = context.location_dependent_data.FindByKey(context.last_location_indexes, key);
+        return boost::apply_visitor(to_lua_object(context.state), value);
+    };
+
     context.state.new_usertype<osmium::Way>(
         "Way",
         "get_value_by_key",
@@ -225,37 +261,29 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
         "get_nodes",
         [](const osmium::Way &way) { return sol::as_table(way.nodes()); },
         "get_location_tag",
-        [&context](const osmium::Way &way, const char *key) {
-            if (context.location_dependent_data.empty())
-                return sol::object(sol::nil);
+        [&context, &get_location_tag](const osmium::Way &way, const char *key) {
             // HEURISTIC: use a single node (last) of the way to localize the way
             // For more complicated scenarios a proper merging of multiple tags
             // at one or many locations must be provided
             const auto &nodes = way.nodes();
             const auto &location = nodes.back().location();
-            const LocationDependentData::point_t point{location.lon(), location.lat()};
-
-            if (!boost::geometry::equals(context.last_location_point, point))
-            {
-                context.last_location_point = point;
-                context.last_location_indexes =
-                    context.location_dependent_data.GetPropertyIndexes(point);
-            }
-
-            auto value =
-                context.location_dependent_data.FindByKey(context.last_location_indexes, key);
-            return boost::apply_visitor(to_lua_object(context.state), value);
+            return get_location_tag(context, location, key);
         });
 
-    context.state.new_usertype<osmium::Node>("Node",
-                                             "location",
-                                             &osmium::Node::location,
-                                             "get_value_by_key",
-                                             &get_value_by_key<osmium::Node>,
-                                             "id",
-                                             &osmium::Node::id,
-                                             "version",
-                                             &osmium::Node::version);
+    context.state.new_usertype<osmium::Node>(
+        "Node",
+        "location",
+        &osmium::Node::location,
+        "get_value_by_key",
+        &get_value_by_key<osmium::Node>,
+        "id",
+        &osmium::Node::id,
+        "version",
+        &osmium::Node::version,
+        "get_location_tag",
+        [&context, &get_location_tag](const osmium::Node &node, const char *key) {
+            return get_location_tag(context, node.location(), key);
+        });
 
     context.state.new_usertype<ExtractionNode>("ResultNode",
                                                "traffic_lights",
@@ -263,23 +291,20 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
                                                "barrier",
                                                &ExtractionNode::barrier);
 
-    context.state.new_usertype<guidance::RoadClassification>(
+    context.state.new_usertype<RoadClassification>(
         "RoadClassification",
         "motorway_class",
-        sol::property(&guidance::RoadClassification::IsMotorwayClass,
-                      &guidance::RoadClassification::SetMotorwayFlag),
+        sol::property(&RoadClassification::IsMotorwayClass, &RoadClassification::SetMotorwayFlag),
         "link_class",
-        sol::property(&guidance::RoadClassification::IsLinkClass,
-                      &guidance::RoadClassification::SetLinkClass),
+        sol::property(&RoadClassification::IsLinkClass, &RoadClassification::SetLinkClass),
         "may_be_ignored",
-        sol::property(&guidance::RoadClassification::IsLowPriorityRoadClass,
-                      &guidance::RoadClassification::SetLowPriorityFlag),
+        sol::property(&RoadClassification::IsLowPriorityRoadClass,
+                      &RoadClassification::SetLowPriorityFlag),
         "road_priority_class",
-        sol::property(&guidance::RoadClassification::GetClass,
-                      &guidance::RoadClassification::SetClass),
+        sol::property(&RoadClassification::GetClass, &RoadClassification::SetClass),
         "num_lanes",
-        sol::property(&guidance::RoadClassification::GetNumberOfLanes,
-                      &guidance::RoadClassification::SetNumberOfLanes));
+        sol::property(&RoadClassification::GetNumberOfLanes,
+                      &RoadClassification::SetNumberOfLanes));
 
     context.state.new_usertype<ExtractionWay>(
         "ResultWay",
@@ -573,16 +598,16 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
             sol::property([](const ExtractionTurn &turn) {
                 if (turn.number_of_roads > 2 || turn.source_mode != turn.target_mode ||
                     turn.is_u_turn)
-                    return guidance::TurnType::Turn;
+                    return osrm::guidance::TurnType::Turn;
                 else
-                    return guidance::TurnType::NoTurn;
+                    return osrm::guidance::TurnType::NoTurn;
             }),
             "direction_modifier",
             sol::property([](const ExtractionTurn &turn) {
                 if (turn.is_u_turn)
-                    return guidance::DirectionModifier::UTurn;
+                    return osrm::guidance::DirectionModifier::UTurn;
                 else
-                    return guidance::DirectionModifier::Straight;
+                    return osrm::guidance::DirectionModifier::Straight;
             }),
             "has_traffic_light",
             &ExtractionTurn::has_traffic_light,
@@ -599,77 +624,77 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
 
         context.state.new_enum("turn_type",
                                "invalid",
-                               extractor::guidance::TurnType::Invalid,
+                               osrm::guidance::TurnType::Invalid,
                                "new_name",
-                               extractor::guidance::TurnType::NewName,
+                               osrm::guidance::TurnType::NewName,
                                "continue",
-                               extractor::guidance::TurnType::Continue,
+                               osrm::guidance::TurnType::Continue,
                                "turn",
-                               extractor::guidance::TurnType::Turn,
+                               osrm::guidance::TurnType::Turn,
                                "merge",
-                               extractor::guidance::TurnType::Merge,
+                               osrm::guidance::TurnType::Merge,
                                "on_ramp",
-                               extractor::guidance::TurnType::OnRamp,
+                               osrm::guidance::TurnType::OnRamp,
                                "off_ramp",
-                               extractor::guidance::TurnType::OffRamp,
+                               osrm::guidance::TurnType::OffRamp,
                                "fork",
-                               extractor::guidance::TurnType::Fork,
+                               osrm::guidance::TurnType::Fork,
                                "end_of_road",
-                               extractor::guidance::TurnType::EndOfRoad,
+                               osrm::guidance::TurnType::EndOfRoad,
                                "notification",
-                               extractor::guidance::TurnType::Notification,
+                               osrm::guidance::TurnType::Notification,
                                "enter_roundabout",
-                               extractor::guidance::TurnType::EnterRoundabout,
+                               osrm::guidance::TurnType::EnterRoundabout,
                                "enter_and_exit_roundabout",
-                               extractor::guidance::TurnType::EnterAndExitRoundabout,
+                               osrm::guidance::TurnType::EnterAndExitRoundabout,
                                "enter_rotary",
-                               extractor::guidance::TurnType::EnterRotary,
+                               osrm::guidance::TurnType::EnterRotary,
                                "enter_and_exit_rotary",
-                               extractor::guidance::TurnType::EnterAndExitRotary,
+                               osrm::guidance::TurnType::EnterAndExitRotary,
                                "enter_roundabout_intersection",
-                               extractor::guidance::TurnType::EnterRoundaboutIntersection,
+                               osrm::guidance::TurnType::EnterRoundaboutIntersection,
                                "enter_and_exit_roundabout_intersection",
-                               extractor::guidance::TurnType::EnterAndExitRoundaboutIntersection,
+                               osrm::guidance::TurnType::EnterAndExitRoundaboutIntersection,
                                "use_lane",
-                               extractor::guidance::TurnType::Suppressed,
+                               osrm::guidance::TurnType::Suppressed,
                                "no_turn",
-                               extractor::guidance::TurnType::NoTurn,
+                               osrm::guidance::TurnType::NoTurn,
                                "suppressed",
-                               extractor::guidance::TurnType::Suppressed,
+                               osrm::guidance::TurnType::Suppressed,
                                "enter_roundabout_at_exit",
-                               extractor::guidance::TurnType::EnterRoundaboutAtExit,
+                               osrm::guidance::TurnType::EnterRoundaboutAtExit,
                                "exit_roundabout",
-                               extractor::guidance::TurnType::ExitRoundabout,
+                               osrm::guidance::TurnType::ExitRoundabout,
                                "enter_rotary_at_exit",
-                               extractor::guidance::TurnType::EnterRotaryAtExit,
+                               osrm::guidance::TurnType::EnterRotaryAtExit,
                                "exit_rotary",
-                               extractor::guidance::TurnType::ExitRotary,
+                               osrm::guidance::TurnType::ExitRotary,
                                "enter_roundabout_intersection_at_exit",
-                               extractor::guidance::TurnType::EnterRoundaboutIntersectionAtExit,
+                               osrm::guidance::TurnType::EnterRoundaboutIntersectionAtExit,
                                "exit_roundabout_intersection",
-                               extractor::guidance::TurnType::ExitRoundaboutIntersection,
+                               osrm::guidance::TurnType::ExitRoundaboutIntersection,
                                "stay_on_roundabout",
-                               extractor::guidance::TurnType::StayOnRoundabout,
+                               osrm::guidance::TurnType::StayOnRoundabout,
                                "sliproad",
-                               extractor::guidance::TurnType::Sliproad);
+                               osrm::guidance::TurnType::Sliproad);
 
         context.state.new_enum("direction_modifier",
                                "u_turn",
-                               extractor::guidance::DirectionModifier::UTurn,
+                               osrm::guidance::DirectionModifier::UTurn,
                                "sharp_right",
-                               extractor::guidance::DirectionModifier::SharpRight,
+                               osrm::guidance::DirectionModifier::SharpRight,
                                "right",
-                               extractor::guidance::DirectionModifier::Right,
+                               osrm::guidance::DirectionModifier::Right,
                                "slight_right",
-                               extractor::guidance::DirectionModifier::SlightRight,
+                               osrm::guidance::DirectionModifier::SlightRight,
                                "straight",
-                               extractor::guidance::DirectionModifier::Straight,
+                               osrm::guidance::DirectionModifier::Straight,
                                "slight_left",
-                               extractor::guidance::DirectionModifier::SlightLeft,
+                               osrm::guidance::DirectionModifier::SlightLeft,
                                "left",
-                               extractor::guidance::DirectionModifier::Left,
+                               osrm::guidance::DirectionModifier::Left,
                                "sharp_left",
-                               extractor::guidance::DirectionModifier::SharpLeft);
+                               osrm::guidance::DirectionModifier::SharpLeft);
     };
 
     switch (context.api_version)
@@ -692,6 +717,8 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
             &ExtractionTurnLeg::access_turn_classification,
             "speed",
             &ExtractionTurnLeg::speed,
+            "priority_class",
+            &ExtractionTurnLeg::priority_class,
             "is_incoming",
             &ExtractionTurnLeg::is_incoming,
             "is_outgoing",
@@ -726,6 +753,8 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
             &ExtractionTurn::source_access_turn_classification,
             "source_speed",
             &ExtractionTurn::source_speed,
+            "source_priority_class",
+            &ExtractionTurn::source_priority_class,
 
             "target_restricted",
             &ExtractionTurn::target_restricted,
@@ -743,6 +772,8 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
             &ExtractionTurn::target_access_turn_classification,
             "target_speed",
             &ExtractionTurn::target_speed,
+            "target_priority_class",
+            &ExtractionTurn::target_priority_class,
 
             "roads_on_the_right",
             &ExtractionTurn::roads_on_the_right,
@@ -836,10 +867,12 @@ LuaScriptingContext &Sol2ScriptingEnvironment::GetSol2Context()
 void Sol2ScriptingEnvironment::ProcessElements(
     const osmium::memory::Buffer &buffer,
     const RestrictionParser &restriction_parser,
+    const ManeuverOverrideRelationParser &maneuver_override_parser,
     const ExtractionRelationContainer &relations,
     std::vector<std::pair<const osmium::Node &, ExtractionNode>> &resulting_nodes,
     std::vector<std::pair<const osmium::Way &, ExtractionWay>> &resulting_ways,
-    std::vector<InputConditionalTurnRestriction> &resulting_restrictions)
+    std::vector<InputConditionalTurnRestriction> &resulting_restrictions,
+    std::vector<InputManeuverOverride> &resulting_maneuver_overrides)
 {
     ExtractionNode result_node;
     ExtractionWay result_way;
@@ -878,6 +911,10 @@ void Sol2ScriptingEnvironment::ProcessElements(
             if (auto result_res = restriction_parser.TryParse(relation))
             {
                 resulting_restrictions.push_back(*result_res);
+            }
+            else if (auto result_res = maneuver_override_parser.TryParse(relation))
+            {
+                resulting_maneuver_overrides.push_back(*result_res);
             }
         }
         break;

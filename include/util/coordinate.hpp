@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef COORDINATE_HPP_
-#define COORDINATE_HPP_
+#ifndef OSRM_UTIL_COORDINATE_HPP_
+#define OSRM_UTIL_COORDINATE_HPP_
 
 #include "util/alias.hpp"
 
@@ -216,16 +216,6 @@ struct Coordinate
     bool IsValid() const;
     friend bool operator==(const Coordinate lhs, const Coordinate rhs);
     friend bool operator!=(const Coordinate lhs, const Coordinate rhs);
-    friend std::ostream &operator<<(std::ostream &out, const Coordinate coordinate);
-
-    std::string toOSMLink() const
-    {
-        std::stringstream link;
-        link << "http://www.openstreetmap.org/?mlat=" << toFloating(lat)
-             << "&mlon=" << toFloating(lon) << "#map=19/" << toFloating(lat) << "/"
-             << toFloating(lon);
-        return link.str();
-    }
 };
 
 /**
@@ -266,21 +256,10 @@ struct FloatCoordinate
     bool IsValid() const;
     friend bool operator==(const FloatCoordinate lhs, const FloatCoordinate rhs);
     friend bool operator!=(const FloatCoordinate lhs, const FloatCoordinate rhs);
-    friend std::ostream &operator<<(std::ostream &out, const FloatCoordinate coordinate);
-
-    std::string toOSMLink() const
-    {
-        std::stringstream link;
-        link << "http://www.openstreetmap.org/?mlat=" << lat << "&mlon=" << lon << "#map=19/" << lat
-             << "/" << lon;
-        return link.str();
-    }
 };
 
 bool operator==(const Coordinate lhs, const Coordinate rhs);
 bool operator==(const FloatCoordinate lhs, const FloatCoordinate rhs);
-std::ostream &operator<<(std::ostream &out, const Coordinate coordinate);
-std::ostream &operator<<(std::ostream &out, const FloatCoordinate coordinate);
 
 inline Coordinate::Coordinate(const FloatCoordinate &other)
     : Coordinate(toFixed(other.lon), toFixed(other.lat))

@@ -1,5 +1,4 @@
 #include "engine/routing_algorithms/direct_shortest_path.hpp"
-
 #include "engine/routing_algorithms/routing_base.hpp"
 #include "engine/routing_algorithms/routing_base_ch.hpp"
 #include "engine/routing_algorithms/routing_base_mld.hpp"

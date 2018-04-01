@@ -74,6 +74,7 @@ Feature: Approach parameter
             | from | to | approaches        | route |
             | s    | e  | unrestricted curb | ab,bc |
 
+
     ###############
     # Oneway Test #
     ###############
@@ -215,6 +216,93 @@ Feature: Approach parameter
         And the node map
             """
                s        e
+            a------b------c
+            """
+
+        And the ways
+            | nodes |
+            | ab    |
+            | bc    |
+
+        When I route I should get
+            | from | to | approaches        | route |
+            | s    | e  | unrestricted curb | ab,bc |
+
+
+    #######################
+    # Left-side countries #
+    #######################
+
+    Scenario: [Left-hand-side] Start End same approach, option unrestricted for Start and End
+        Given the profile file "car" initialized with
+        """
+        profile.properties.left_hand_driving = true
+        """
+        And the node map
+            """
+               s        e
+            a------b------c
+            """
+
+        And the ways
+            | nodes |
+            | ab    |
+            | bc    |
+
+        When I route I should get
+            | from | to | approaches                | route |
+            | s    | e  | unrestricted unrestricted | ab,bc |
+
+    Scenario: [Left-hand-side] Start End same approach, option unrestricted for Start and curb for End
+        Given the profile file "car" initialized with
+        """
+        profile.properties.left_hand_driving = true
+        """
+        And the node map
+            """
+               s
+            a------b------c
+                       e
+            """
+
+        And the ways
+            | nodes |
+            | ab    |
+            | bc    |
+
+        When I route I should get
+            | from | to | approaches        | route    |
+            | s    | e  | unrestricted curb | ab,bc,bc |
+
+    Scenario: [Left-hand-side] Start End opposite approach, option unrestricted for Start and End
+        Given the profile file "car" initialized with
+        """
+        profile.properties.left_hand_driving = true
+        """
+        And the node map
+            """
+               s
+            a------b------c
+                        e
+            """
+
+        And the ways
+            | nodes |
+            | ab    |
+            | bc    |
+
+        When I route I should get
+            | from | to | approaches                | route |
+            | s    | e  | unrestricted unrestricted | ab,bc |
+
+    Scenario: [Left-hand-side] Start End opposite approach, option unrestricted for Start and curb for End
+        Given the profile file "car" initialized with
+        """
+        profile.properties.left_hand_driving = true
+        """
+        And the node map
+            """
+               s      e
             a------b------c
             """
 

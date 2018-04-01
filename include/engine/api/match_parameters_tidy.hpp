@@ -48,12 +48,14 @@ inline Result keep_all(const MatchParameters &params)
 
     result.can_be_removed.resize(params.coordinates.size(), false);
     result.was_waypoint.resize(params.coordinates.size(), true);
+    // by default all input coordinates are treated as waypoints
     if (!params.waypoints.empty())
     {
         for (const auto p : params.waypoints)
         {
             result.was_waypoint.set(p, false);
         }
+        // logic is a little funny, uses inversion to set the bitfield
         result.was_waypoint.flip();
     }
     result.tidied_to_original.reserve(params.coordinates.size());

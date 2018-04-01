@@ -42,17 +42,5 @@ bool operator==(const FloatCoordinate lhs, const FloatCoordinate rhs)
 
 bool operator!=(const Coordinate lhs, const Coordinate rhs) { return !(lhs == rhs); }
 bool operator!=(const FloatCoordinate lhs, const FloatCoordinate rhs) { return !(lhs == rhs); }
-
-std::ostream &operator<<(std::ostream &out, const Coordinate coordinate)
-{
-    out << std::setprecision(12) << "(lon:" << toFloating(coordinate.lon)
-        << ", lat:" << toFloating(coordinate.lat) << ")";
-    return out;
-}
-std::ostream &operator<<(std::ostream &out, const FloatCoordinate coordinate)
-{
-    out << std::setprecision(12) << "(lon:" << coordinate.lon << ", lat:" << coordinate.lat << ")";
-    return out;
-}
 }
 }

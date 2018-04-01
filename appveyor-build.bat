@@ -161,29 +161,6 @@ XCOPY /Y corech\*.* ..\test\data\corech\
 XCOPY /Y mld\*.* ..\test\data\mld\
 unit_tests\%Configuration%\library-tests.exe
 
-IF NOT "%APPVEYOR_REPO_BRANCH%"=="master" GOTO DONE
-ECHO ========= CREATING PACKAGES ==========
-
-CD %PROJECT_DIR%\build\%Configuration%
-IF %ERRORLEVEL% NEQ 0 GOTO ERROR
-
-SET P=%PROJECT_DIR%
-SET ZIP= %P%\osrm_%Configuration%.zip
-IF EXIST %ZIP% ECHO deleting %ZIP% && DEL /F /Q %ZIP%
-IF %ERRORLEVEL% NEQ 0 ECHO deleting %ZIP% FAILED && GOTO ERROR
-
-7z a %ZIP% *.lib *.exe *.pdb %P%/osrm-deps/libs/bin/*.dll -tzip -mx9 | %windir%\system32\FIND "ing archive"
-IF %ERRORLEVEL% NEQ 0 GOTO ERROR
-
-CD ..\..\profiles
-IF %ERRORLEVEL% NEQ 0 GOTO ERROR
-
-ECHO disk=c:\temp\stxxl,10000,wincall > .stxxl.txt
-7z a %ZIP% * -tzip -mx9 | %windir%\system32\FIND "ing archive"
-IF %ERRORLEVEL% NEQ 0 GOTO ERROR
-
-GOTO DONE
-
 :ERROR
 ECHO ~~~~~~~~~~~~~~~~~~~~~~ ERROR %~f0 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ECHO ERRORLEVEL^: %ERRORLEVEL%

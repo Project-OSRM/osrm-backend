@@ -57,7 +57,7 @@ inline std::ostream &operator<<(std::ostream &out, Bearing bearing)
 
 inline std::ostream &operator<<(std::ostream &out, Approach approach)
 {
-    out << approach;
+    out << static_cast<int>(approach);
     return out;
 }
 }

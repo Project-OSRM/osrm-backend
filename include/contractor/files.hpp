@@ -5,8 +5,8 @@
 
 #include "util/serialization.hpp"
 
-#include "storage/io.hpp"
 #include "storage/serialization.hpp"
+#include "storage/tar.hpp"
 
 namespace osrm
 {
@@ -19,7 +19,8 @@ template <typename QueryGraphT, typename EdgeFilterT>
 inline void readGraph(const boost::filesystem::path &path,
                       unsigned &checksum,
                       QueryGraphT &graph,
-                      std::vector<EdgeFilterT> &edge_filter)
+                      std::vector<EdgeFilterT> &edge_filter,
+                      std::uint32_t &connectivity_checksum)
 {
     static_assert(std::is_same<QueryGraphView, QueryGraphT>::value ||
                       std::is_same<QueryGraph, QueryGraphT>::value,
@@ -28,17 +29,21 @@ inline void readGraph(const boost::filesystem::path &path,
                       std::is_same<EdgeFilterT, util::vector_view<bool>>::value,
                   "edge_filter must be a container of vector<bool> or vector_view<bool>");
 
-    const auto fingerprint = storage::io::FileReader::VerifyFingerprint;
-    storage::io::FileReader reader{path, fingerprint};
+    const auto fingerprint = storage::tar::FileReader::VerifyFingerprint;
+    storage::tar::FileReader reader{path, fingerprint};
 
-    reader.ReadInto(checksum);
-    util::serialization::read(reader, graph);
-    auto count = reader.ReadElementCount64();
+    reader.ReadInto("/ch/checksum", checksum);
+    util::serialization::read(reader, "/ch/contracted_graph", graph);
+
+    auto count = reader.ReadElementCount64("/ch/edge_filter");
     edge_filter.resize(count);
     for (const auto index : util::irange<std::size_t>(0, count))
     {
-        storage::serialization::read(reader, edge_filter[index]);
+        storage::serialization::read(
+            reader, "/ch/edge_filter/" + std::to_string(index), edge_filter[index]);
     }
+
+    reader.ReadInto("/ch/connectivity_checksum", connectivity_checksum);
 }
 
 // writes .osrm.hsgr file
@@ -46,7 +51,8 @@ template <typename QueryGraphT, typename EdgeFilterT>
 inline void writeGraph(const boost::filesystem::path &path,
                        unsigned checksum,
                        const QueryGraphT &graph,
-                       const std::vector<EdgeFilterT> &edge_filter)
+                       const std::vector<EdgeFilterT> &edge_filter,
+                       const std::uint32_t connectivity_checksum)
 {
     static_assert(std::is_same<QueryGraphView, QueryGraphT>::value ||
                       std::is_same<QueryGraph, QueryGraphT>::value,
@@ -54,16 +60,22 @@ inline void writeGraph(const boost::filesystem::path &path,
     static_assert(std::is_same<EdgeFilterT, std::vector<bool>>::value ||
                       std::is_same<EdgeFilterT, util::vector_view<bool>>::value,
                   "edge_filter must be a container of vector<bool> or vector_view<bool>");
-    const auto fingerprint = storage::io::FileWriter::GenerateFingerprint;
-    storage::io::FileWriter writer{path, fingerprint};
+    const auto fingerprint = storage::tar::FileWriter::GenerateFingerprint;
+    storage::tar::FileWriter writer{path, fingerprint};
 
-    writer.WriteOne(checksum);
-    util::serialization::write(writer, graph);
-    writer.WriteElementCount64(edge_filter.size());
-    for (const auto &filter : edge_filter)
+    writer.WriteElementCount64("/ch/checksum", 1);
+    writer.WriteFrom("/ch/checksum", checksum);
+    util::serialization::write(writer, "/ch/contracted_graph", graph);
+
+    writer.WriteElementCount64("/ch/edge_filter", edge_filter.size());
+    for (const auto index : util::irange<std::size_t>(0, edge_filter.size()))
     {
-        storage::serialization::write(writer, filter);
+        storage::serialization::write(
+            writer, "/ch/edge_filter/" + std::to_string(index), edge_filter[index]);
     }
+
+    writer.WriteElementCount64("/ch/connectivity_checksum", 1);
+    writer.WriteFrom("/ch/connectivity_checksum", connectivity_checksum);
 }
 }
 }

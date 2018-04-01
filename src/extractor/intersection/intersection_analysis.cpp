@@ -1,10 +1,9 @@
 #include "extractor/intersection/intersection_analysis.hpp"
+#include "extractor/intersection/coordinate_extractor.hpp"
 
 #include "util/assert.hpp"
 #include "util/bearing.hpp"
 #include "util/coordinate_calculation.hpp"
-
-#include "extractor/guidance/coordinate_extractor.hpp"
 
 #include <boost/optional/optional_io.hpp>
 
@@ -116,16 +115,14 @@ std::pair<bool, double> findMergedBearing(const util::NodeBasedDynamicGraph &gra
     // Function returns a pair with a flag and a value of bearing for merged roads
     // If the flag is false the bearing must not be used as a merged value at neighbor intersections
 
-    using guidance::STRAIGHT_ANGLE;
-    using guidance::MAXIMAL_ALLOWED_NO_TURN_DEVIATION;
-    using util::bearing::angleBetween;
     using util::angularDeviation;
+    using util::bearing::angleBetween;
 
     const auto &lhs = edge_geometries[lhs_index];
     const auto &rhs = edge_geometries[rhs_index];
-    BOOST_ASSERT(graph.GetEdgeData(lhs.edge).reversed != graph.GetEdgeData(rhs.edge).reversed);
+    BOOST_ASSERT(graph.GetEdgeData(lhs.eid).reversed != graph.GetEdgeData(rhs.eid).reversed);
 
-    const auto &entry = graph.GetEdgeData(lhs.edge).reversed ? rhs : lhs;
+    const auto &entry = graph.GetEdgeData(lhs.eid).reversed ? rhs : lhs;
     const auto opposite_bearing =
         findClosestOppositeBearing(edge_geometries, entry.perceived_bearing);
     const auto merged_bearing = findAngleBisector(rhs.perceived_bearing, lhs.perceived_bearing);
@@ -166,7 +163,7 @@ std::pair<bool, double> findMergedBearing(const util::NodeBasedDynamicGraph &gra
     return {true, merged_bearing};
 }
 
-bool isRoadsPairMergeable(const guidance::MergableRoadDetector &detector,
+bool isRoadsPairMergeable(const MergableRoadDetector &detector,
                           const IntersectionEdgeGeometries &edge_geometries,
                           const NodeID intersection_node,
                           const std::size_t index)
@@ -181,13 +178,8 @@ bool isRoadsPairMergeable(const guidance::MergableRoadDetector &detector,
 
     // TODO: check IsDistinctFrom - it is an angle and name-only check
     // also check CanMergeRoad for all merging scenarios
-    return detector.IsDistinctFrom({llhs.edge, llhs.perceived_bearing, llhs.length},
-                                   {lhs.edge, lhs.perceived_bearing, lhs.length}) &&
-           detector.CanMergeRoad(intersection_node,
-                                 {lhs.edge, lhs.perceived_bearing, lhs.length},
-                                 {rhs.edge, rhs.perceived_bearing, rhs.length}) &&
-           detector.IsDistinctFrom({rhs.edge, rhs.perceived_bearing, rhs.length},
-                                   {rrhs.edge, rrhs.perceived_bearing, rrhs.length});
+    return detector.IsDistinctFrom(llhs, lhs) &&
+           detector.CanMergeRoad(intersection_node, lhs, rhs) && detector.IsDistinctFrom(rhs, rrhs);
 }
 
 auto getIntersectionLanes(const util::NodeBasedDynamicGraph &graph, const NodeID intersection_node)
@@ -212,8 +204,7 @@ getIntersectionOutgoingGeometries(const util::NodeBasedDynamicGraph &graph,
     IntersectionEdgeGeometries edge_geometries;
 
     // TODO: keep CoordinateExtractor to reproduce bearings, simplify later
-    const guidance::CoordinateExtractor coordinate_extractor(
-        graph, compressed_geometries, node_coordinates);
+    const CoordinateExtractor coordinate_extractor(graph, compressed_geometries, node_coordinates);
 
     const auto max_lanes_intersection = getIntersectionLanes(graph, intersection_node);
 
@@ -263,7 +254,7 @@ std::pair<IntersectionEdgeGeometries, std::unordered_set<EdgeID>>
 getIntersectionGeometries(const util::NodeBasedDynamicGraph &graph,
                           const extractor::CompressedEdgeContainer &compressed_geometries,
                           const std::vector<util::Coordinate> &node_coordinates,
-                          const guidance::MergableRoadDetector &detector,
+                          const MergableRoadDetector &detector,
                           const NodeID intersection_node)
 {
     IntersectionEdgeGeometries edge_geometries = getIntersectionOutgoingGeometries<false>(
@@ -297,9 +288,9 @@ getIntersectionGeometries(const util::NodeBasedDynamicGraph &graph,
 
                 // Only one of the edges must be reversed, mark it as merged to remove from
                 // intersection view
-                BOOST_ASSERT(graph.GetEdgeData(lhs.edge).reversed ^
-                             graph.GetEdgeData(rhs.edge).reversed);
-                merged_edge_ids.insert(graph.GetEdgeData(lhs.edge).reversed ? lhs.edge : rhs.edge);
+                BOOST_ASSERT(graph.GetEdgeData(lhs.eid).reversed ^
+                             graph.GetEdgeData(rhs.eid).reversed);
+                merged_edge_ids.insert(graph.GetEdgeData(lhs.eid).reversed ? lhs.eid : rhs.eid);
             }
         }
     }
@@ -314,10 +305,10 @@ getIntersectionGeometries(const util::NodeBasedDynamicGraph &graph,
 
             // Don't adjust bearings of roads that were merged at the current intersection
             // or have neighbor intersection farer than the pruning distance
-            if (merged_edges[index] || edge_geometry.length > PRUNING_DISTANCE)
+            if (merged_edges[index] || edge_geometry.segment_length > PRUNING_DISTANCE)
                 continue;
 
-            const auto neighbor_intersection_node = graph.GetTarget(edge_geometry.edge);
+            const auto neighbor_intersection_node = graph.GetTarget(edge_geometry.eid);
 
             const auto neighbor_geometries = getIntersectionOutgoingGeometries<false>(
                 graph, compressed_geometries, node_coordinates, neighbor_intersection_node);
@@ -331,7 +322,7 @@ getIntersectionGeometries(const util::NodeBasedDynamicGraph &graph,
                 std::find_if(neighbor_geometries.begin(),
                              neighbor_geometries.end(),
                              [&graph, &intersection_node](const auto &road) {
-                                 return graph.GetTarget(road.edge) == intersection_node;
+                                 return graph.GetTarget(road.eid) == intersection_node;
                              }));
             BOOST_ASSERT(static_cast<std::size_t>(neighbor_curr) != neighbor_geometries.size());
             const auto neighbor_prev = (neighbor_curr + neighbor_edges - 1) % neighbor_edges;
@@ -400,12 +391,12 @@ getIntersectionGeometries(const util::NodeBasedDynamicGraph &graph,
     for (std::size_t index = 0; index < edges_number; ++index)
     {
         const auto &geometry = edge_geometries[index];
-        const auto remote_node = graph.GetTarget(geometry.edge);
+        const auto remote_node = graph.GetTarget(geometry.eid);
         const auto incoming_edge = graph.FindEdge(remote_node, intersection_node);
         edge_geometries[edges_number + index] = {incoming_edge,
                                                  util::bearing::reverse(geometry.initial_bearing),
                                                  util::bearing::reverse(geometry.perceived_bearing),
-                                                 geometry.length};
+                                                 geometry.segment_length};
     }
 
     // Enforce ordering of edges by IDs
@@ -418,9 +409,9 @@ inline auto findEdge(const IntersectionEdgeGeometries &geometries, const EdgeID 
 {
     const auto it = std::lower_bound(
         geometries.begin(), geometries.end(), edge, [](const auto &geometry, const auto edge) {
-            return geometry.edge < edge;
+            return geometry.eid < edge;
         });
-    BOOST_ASSERT(it != geometries.end() && it->edge == edge);
+    BOOST_ASSERT(it != geometries.end() && it->eid == edge);
     return it;
 }
 
@@ -431,7 +422,7 @@ double findEdgeBearing(const IntersectionEdgeGeometries &geometries, const EdgeI
 
 double findEdgeLength(const IntersectionEdgeGeometries &geometries, const EdgeID &edge)
 {
-    return findEdge(geometries, edge)->length;
+    return findEdge(geometries, edge)->segment_length;
 }
 
 template <typename RestrictionsRange>
@@ -462,7 +453,7 @@ bool isTurnAllowed(const util::NodeBasedDynamicGraph &graph,
                    const RestrictionMap &restriction_map,
                    const std::unordered_set<NodeID> &barrier_nodes,
                    const IntersectionEdgeGeometries &geometries,
-                   const guidance::TurnLanesIndexedArray &turn_lanes_data,
+                   const TurnLanesIndexedArray &turn_lanes_data,
                    const IntersectionEdge &from,
                    const IntersectionEdge &to)
 {
@@ -567,7 +558,7 @@ bool isTurnAllowed(const util::NodeBasedDynamicGraph &graph,
 
             if (std::any_of(turn_lanes.begin() + turn_lane_offsets[lane_description_id],
                             turn_lanes.begin() + turn_lane_offsets[lane_description_id + 1],
-                            [](const auto &lane) { return lane & guidance::TurnLaneType::uturn; }))
+                            [](const auto &lane) { return lane & TurnLaneType::uturn; }))
                 return true;
         }
 
@@ -620,16 +611,15 @@ bool isTurnAllowed(const util::NodeBasedDynamicGraph &graph,
 }
 
 // The function adapts intersection geometry data to TurnAnalysis
-guidance::IntersectionView
-convertToIntersectionView(const util::NodeBasedDynamicGraph &graph,
-                          const EdgeBasedNodeDataContainer &node_data_container,
-                          const RestrictionMap &restriction_map,
-                          const std::unordered_set<NodeID> &barrier_nodes,
-                          const IntersectionEdgeGeometries &edge_geometries,
-                          const guidance::TurnLanesIndexedArray &turn_lanes_data,
-                          const IntersectionEdge &incoming_edge,
-                          const IntersectionEdges &outgoing_edges,
-                          const std::unordered_set<EdgeID> &merged_edges)
+IntersectionView convertToIntersectionView(const util::NodeBasedDynamicGraph &graph,
+                                           const EdgeBasedNodeDataContainer &node_data_container,
+                                           const RestrictionMap &restriction_map,
+                                           const std::unordered_set<NodeID> &barrier_nodes,
+                                           const IntersectionEdgeGeometries &edge_geometries,
+                                           const TurnLanesIndexedArray &turn_lanes_data,
+                                           const IntersectionEdge &incoming_edge,
+                                           const IntersectionEdges &outgoing_edges,
+                                           const std::unordered_set<EdgeID> &merged_edges)
 {
     using util::bearing::angleBetween;
 
@@ -637,9 +627,9 @@ convertToIntersectionView(const util::NodeBasedDynamicGraph &graph,
     const auto incoming_bearing = edge_it->perceived_bearing;
     const auto initial_incoming_bearing = edge_it->initial_bearing;
 
-    using IntersectionViewDataWithAngle = std::pair<guidance::IntersectionViewData, double>;
+    using IntersectionViewDataWithAngle = std::pair<IntersectionViewData, double>;
     std::vector<IntersectionViewDataWithAngle> pre_intersection_view;
-    guidance::IntersectionViewData uturn{{SPECIAL_EDGEID, 0., 0.}, false, 0.};
+    IntersectionViewData uturn{{SPECIAL_EDGEID, 0., 0., 0.}, false, 0.};
     std::size_t allowed_uturns_number = 0;
     for (const auto &outgoing_edge : outgoing_edges)
     {
@@ -648,7 +638,6 @@ convertToIntersectionView(const util::NodeBasedDynamicGraph &graph,
         };
 
         const auto edge_it = findEdge(edge_geometries, outgoing_edge.edge);
-        const auto segment_length = edge_it->length;
         const auto is_merged = merged_edges.count(outgoing_edge.edge) != 0;
         const auto is_turn_allowed = intersection::isTurnAllowed(graph,
                                                                  node_data_container,
@@ -678,8 +667,7 @@ convertToIntersectionView(const util::NodeBasedDynamicGraph &graph,
 
         const auto is_uturn_angle = is_uturn(turn_angle);
 
-        guidance::IntersectionViewData road{
-            {outgoing_edge.edge, outgoing_bearing, segment_length}, is_turn_allowed, turn_angle};
+        IntersectionViewData road{*edge_it, is_turn_allowed, turn_angle};
 
         if (graph.GetTarget(outgoing_edge.edge) == incoming_edge.node)
         { // Save the true U-turn road to add later if no allowed U-turns will be added
@@ -733,7 +721,7 @@ convertToIntersectionView(const util::NodeBasedDynamicGraph &graph,
     }
 
     // Copy intersection view data
-    guidance::IntersectionView intersection_view;
+    IntersectionView intersection_view;
     intersection_view.reserve(pre_intersection_view.size());
     std::transform(pre_intersection_view.begin(),
                    pre_intersection_view.end(),
@@ -757,15 +745,14 @@ convertToIntersectionView(const util::NodeBasedDynamicGraph &graph,
 // but also (from_node, turn_node, a), (from_node, turn_node, b). These turns are
 // marked as invalid and only needed for intersection classification.
 template <bool USE_CLOSE_COORDINATE>
-guidance::IntersectionView
-getConnectedRoads(const util::NodeBasedDynamicGraph &graph,
-                  const EdgeBasedNodeDataContainer &node_data_container,
-                  const std::vector<util::Coordinate> &node_coordinates,
-                  const extractor::CompressedEdgeContainer &compressed_geometries,
-                  const RestrictionMap &node_restriction_map,
-                  const std::unordered_set<NodeID> &barrier_nodes,
-                  const guidance::TurnLanesIndexedArray &turn_lanes_data,
-                  const IntersectionEdge &incoming_edge)
+IntersectionView getConnectedRoads(const util::NodeBasedDynamicGraph &graph,
+                                   const EdgeBasedNodeDataContainer &node_data_container,
+                                   const std::vector<util::Coordinate> &node_coordinates,
+                                   const extractor::CompressedEdgeContainer &compressed_geometries,
+                                   const RestrictionMap &node_restriction_map,
+                                   const std::unordered_set<NodeID> &barrier_nodes,
+                                   const TurnLanesIndexedArray &turn_lanes_data,
+                                   const IntersectionEdge &incoming_edge)
 {
     const auto intersection_node = graph.GetTarget(incoming_edge.edge);
     const auto &outgoing_edges = intersection::getOutgoingEdges(graph, intersection_node);
@@ -778,12 +765,12 @@ getConnectedRoads(const util::NodeBasedDynamicGraph &graph,
     for (std::size_t index = 0; index < edges_number; ++index)
     {
         const auto &geometry = edge_geometries[index];
-        const auto remote_node = graph.GetTarget(geometry.edge);
+        const auto remote_node = graph.GetTarget(geometry.eid);
         const auto incoming_edge = graph.FindEdge(remote_node, intersection_node);
         edge_geometries[edges_number + index] = {incoming_edge,
                                                  util::bearing::reverse(geometry.initial_bearing),
                                                  util::bearing::reverse(geometry.perceived_bearing),
-                                                 geometry.length};
+                                                 geometry.segment_length};
     }
 
     // Enforce ordering of edges by IDs
@@ -800,24 +787,24 @@ getConnectedRoads(const util::NodeBasedDynamicGraph &graph,
                                      std::unordered_set<EdgeID>());
 }
 
-template guidance::IntersectionView
+template IntersectionView
 getConnectedRoads<false>(const util::NodeBasedDynamicGraph &graph,
                          const EdgeBasedNodeDataContainer &node_data_container,
                          const std::vector<util::Coordinate> &node_coordinates,
                          const extractor::CompressedEdgeContainer &compressed_geometries,
                          const RestrictionMap &node_restriction_map,
                          const std::unordered_set<NodeID> &barrier_nodes,
-                         const guidance::TurnLanesIndexedArray &turn_lanes_data,
+                         const TurnLanesIndexedArray &turn_lanes_data,
                          const IntersectionEdge &incoming_edge);
 
-template guidance::IntersectionView
+template IntersectionView
 getConnectedRoads<true>(const util::NodeBasedDynamicGraph &graph,
                         const EdgeBasedNodeDataContainer &node_data_container,
                         const std::vector<util::Coordinate> &node_coordinates,
                         const extractor::CompressedEdgeContainer &compressed_geometries,
                         const RestrictionMap &node_restriction_map,
                         const std::unordered_set<NodeID> &barrier_nodes,
-                        const guidance::TurnLanesIndexedArray &turn_lanes_data,
+                        const TurnLanesIndexedArray &turn_lanes_data,
                         const IntersectionEdge &incoming_edge);
 
 IntersectionEdge skipDegreeTwoNodes(const util::NodeBasedDynamicGraph &graph, IntersectionEdge road)

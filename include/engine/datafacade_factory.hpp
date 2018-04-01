@@ -30,8 +30,8 @@ template <template <typename A> class FacadeT, typename AlgorithmT> class DataFa
     DataFacadeFactory() = default;
 
     template <typename AllocatorT>
-    DataFacadeFactory(std::shared_ptr<AllocatorT> allocator)
-        : DataFacadeFactory(allocator, has_exclude_flags)
+    DataFacadeFactory(std::shared_ptr<AllocatorT> allocator, unsigned timestamp)
+        : DataFacadeFactory(allocator, has_exclude_flags, timestamp)
     {
     }
 
@@ -43,11 +43,11 @@ template <template <typename A> class FacadeT, typename AlgorithmT> class DataFa
   private:
     // Algorithm with exclude flags
     template <typename AllocatorT>
-    DataFacadeFactory(std::shared_ptr<AllocatorT> allocator, std::true_type)
+    DataFacadeFactory(std::shared_ptr<AllocatorT> allocator, std::true_type, unsigned timestamp)
     {
         for (const auto index : util::irange<std::size_t>(0, facades.size()))
         {
-            facades[index] = std::make_shared<const Facade>(allocator, index);
+            facades[index] = std::make_shared<const Facade>(allocator, index, timestamp);
         }
 
         properties = allocator->GetLayout().template GetBlockPtr<extractor::ProfileProperties>(
@@ -65,9 +65,9 @@ template <template <typename A> class FacadeT, typename AlgorithmT> class DataFa
 
     // Algorithm without exclude flags
     template <typename AllocatorT>
-    DataFacadeFactory(std::shared_ptr<AllocatorT> allocator, std::false_type)
+    DataFacadeFactory(std::shared_ptr<AllocatorT> allocator, std::false_type, unsigned timestamp)
     {
-        facades[0] = std::make_shared<const Facade>(allocator, 0);
+        facades[0] = std::make_shared<const Facade>(allocator, 0, timestamp);
     }
 
     std::shared_ptr<const Facade> Get(const api::TileParameters &, std::false_type) const

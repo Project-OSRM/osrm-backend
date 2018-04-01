@@ -120,6 +120,7 @@ In addition to the [general options](#general-options) the following options are
 - `code` if the request was successful `Ok` otherwise see the service dependent and general status codes.
 - `waypoints` array of `Waypoint` objects sorted by distance to the input coordinate. Each object has at least the following additional properties:
   - `distance`: Distance in meters to the supplied input coordinate.
+  - `nodes`: Array of OpenStreetMap node ids.
 
 #### Example Requests
 
@@ -134,6 +135,10 @@ curl 'http://router.project-osrm.org/nearest/v1/driving/13.388860,52.517037?numb
 {
    "waypoints" : [
       {
+         "nodes": [
+            2264199819,
+            0
+         ],
          "hint" : "KSoKADRYroqUBAEAEAAAABkAAAAGAAAAAAAAABhnCQCLtwAA_0vMAKlYIQM8TMwArVghAwEAAQH1a66g",
          "distance" : 4.152629,
          "name" : "Friedrichstraße",
@@ -143,6 +148,10 @@ curl 'http://router.project-osrm.org/nearest/v1/driving/13.388860,52.517037?numb
          ]
       },
       {
+         "nodes": [
+            2045820592,
+            0
+         ],
          "hint" : "KSoKADRYroqUBAEABgAAAAAAAAAAAAAAKQAAABhnCQCLtwAA7kvMAAxZIQM8TMwArVghAwAAAQH1a66g",
          "distance" : 11.811961,
          "name" : "Friedrichstraße",
@@ -152,6 +161,10 @@ curl 'http://router.project-osrm.org/nearest/v1/driving/13.388860,52.517037?numb
          ]
       },
       {
+         "nodes": [
+            0,
+            21487242
+         ],
          "hint" : "KioKgDbbDgCUBAEAAAAAABoAAAAAAAAAPAAAABlnCQCLtwAA50vMADJZIQM8TMwArVghAwAAAQH1a66g",
          "distance" : 15.872438,
          "name" : "Friedrichstraße",

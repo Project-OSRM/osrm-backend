@@ -5,10 +5,10 @@
 #include "customizer/edge_based_graph.hpp"
 #include "customizer/files.hpp"
 
-#include "partition/cell_storage.hpp"
-#include "partition/edge_based_graph_reader.hpp"
-#include "partition/files.hpp"
-#include "partition/multi_level_partition.hpp"
+#include "partitioner/cell_storage.hpp"
+#include "partitioner/edge_based_graph_reader.hpp"
+#include "partitioner/files.hpp"
+#include "partitioner/multi_level_partition.hpp"
 
 #include "storage/shared_memory_ownership.hpp"
 
@@ -17,6 +17,10 @@
 #include "util/exclude_flag.hpp"
 #include "util/log.hpp"
 #include "util/timing_util.hpp"
+
+#include <boost/assert.hpp>
+
+#include <tbb/task_scheduler_init.h>
 
 namespace osrm
 {
@@ -79,24 +83,26 @@ void CellStorageStatistics(const Graph &graph,
 }
 
 auto LoadAndUpdateEdgeExpandedGraph(const CustomizationConfig &config,
-                                    const partition::MultiLevelPartition &mlp)
+                                    const partitioner::MultiLevelPartition &mlp,
+                                    std::uint32_t &connectivity_checksum)
 {
     updater::Updater updater(config.updater_config);
 
     EdgeID num_nodes;
     std::vector<extractor::EdgeBasedEdge> edge_based_edge_list;
-    std::tie(num_nodes, edge_based_edge_list) = updater.LoadAndUpdateEdgeExpandedGraph();
+    std::tie(num_nodes, edge_based_edge_list, connectivity_checksum) =
+        updater.LoadAndUpdateEdgeExpandedGraph();
 
-    auto directed = partition::splitBidirectionalEdges(edge_based_edge_list);
+    auto directed = partitioner::splitBidirectionalEdges(edge_based_edge_list);
     auto tidied =
-        partition::prepareEdgesForUsageInGraph<StaticEdgeBasedGraphEdge>(std::move(directed));
+        partitioner::prepareEdgesForUsageInGraph<StaticEdgeBasedGraphEdge>(std::move(directed));
     auto edge_based_graph = customizer::MultiLevelEdgeBasedGraph(mlp, num_nodes, std::move(tidied));
 
     return edge_based_graph;
 }
 
 std::vector<CellMetric> customizeFilteredMetrics(const MultiLevelEdgeBasedGraph &graph,
-                                                 const partition::CellStorage &storage,
+                                                 const partitioner::CellStorage &storage,
                                                  const CellCustomizer &customizer,
                                                  const std::vector<std::vector<bool>> &node_filters)
 {
@@ -115,17 +121,21 @@ std::vector<CellMetric> customizeFilteredMetrics(const MultiLevelEdgeBasedGraph 
 
 int Customizer::Run(const CustomizationConfig &config)
 {
+    tbb::task_scheduler_init init(config.requested_num_threads);
+    BOOST_ASSERT(init.is_active());
+
     TIMER_START(loading_data);
 
-    partition::MultiLevelPartition mlp;
-    partition::files::readPartition(config.GetPath(".osrm.partition"), mlp);
+    partitioner::MultiLevelPartition mlp;
+    partitioner::files::readPartition(config.GetPath(".osrm.partition"), mlp);
 
-    auto graph = LoadAndUpdateEdgeExpandedGraph(config, mlp);
+    std::uint32_t connectivity_checksum = 0;
+    auto graph = LoadAndUpdateEdgeExpandedGraph(config, mlp, connectivity_checksum);
     util::Log() << "Loaded edge based graph: " << graph.GetNumberOfEdges() << " edges, "
                 << graph.GetNumberOfNodes() << " nodes";
 
-    partition::CellStorage storage;
-    partition::files::readCells(config.GetPath(".osrm.cells"), storage);
+    partitioner::CellStorage storage;
+    partitioner::files::readCells(config.GetPath(".osrm.cells"), storage);
     TIMER_STOP(loading_data);
 
     extractor::EdgeBasedNodeDataContainer node_data;
@@ -148,7 +158,7 @@ int Customizer::Run(const CustomizationConfig &config)
     util::Log() << "MLD customization writing took " << TIMER_SEC(writing_mld_data) << " seconds";
 
     TIMER_START(writing_graph);
-    partition::files::writeGraph(config.GetPath(".osrm.mldgr"), graph);
+    partitioner::files::writeGraph(config.GetPath(".osrm.mldgr"), graph, connectivity_checksum);
     TIMER_STOP(writing_graph);
     util::Log() << "Graph writing took " << TIMER_SEC(writing_graph) << " seconds";
 

@@ -1,8 +1,6 @@
 #ifndef INTERNAL_EXTRACTOR_EDGE_HPP
 #define INTERNAL_EXTRACTOR_EDGE_HPP
 
-#include "extractor/guidance/road_classification.hpp"
-#include "extractor/guidance/turn_lane_types.hpp"
 #include "extractor/node_based_edge.hpp"
 #include "extractor/travel_mode.hpp"
 #include "osrm/coordinate.hpp"

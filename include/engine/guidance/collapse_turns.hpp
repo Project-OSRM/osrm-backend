@@ -14,12 +14,18 @@ namespace guidance
 {
 
 // Multiple possible reasons can result in unnecessary/confusing instructions
+// Collapsing such turns into a single turn instruction, we give a clearer
+// set of instructions that is not cluttered by unnecessary turns/name changes.
+OSRM_ATTR_WARN_UNUSED
+std::vector<RouteStep> collapseTurnInstructions(std::vector<RouteStep> steps);
+
+// Multiple possible reasons can result in unnecessary/confusing instructions
 // A prime example would be a segregated intersection. Turning around at this
 // intersection would result in two instructions to turn left.
 // Collapsing such turns into a single turn instruction, we give a clearer
-// set of instructionst that is not cluttered by unnecessary turns/name changes.
+// set of instructions that is not cluttered by unnecessary turns/name changes.
 OSRM_ATTR_WARN_UNUSED
-std::vector<RouteStep> collapseTurnInstructions(std::vector<RouteStep> steps);
+std::vector<RouteStep> collapseSegregatedTurnInstructions(std::vector<RouteStep> steps);
 
 // A combined turn is a set of two instructions that actually form a single turn, as far as we
 // perceive it. A u-turn consisting of two left turns is one such example. But there are also lots
@@ -77,16 +83,32 @@ struct AdjustToCombinedTurnStrategy : CombineStrategy
 // Set a fixed instruction type
 struct SetFixedInstructionStrategy : CombineStrategy
 {
-    SetFixedInstructionStrategy(const extractor::guidance::TurnInstruction instruction);
+    SetFixedInstructionStrategy(const osrm::guidance::TurnInstruction instruction);
     void operator()(RouteStep &step_at_turn_location, const RouteStep &transfer_from_step) const;
 
-    const extractor::guidance::TurnInstruction instruction;
+    const osrm::guidance::TurnInstruction instruction;
 };
 
 // Handling of staggered intersections
 struct StaggeredTurnStrategy : CombineStrategy
 {
     StaggeredTurnStrategy(const RouteStep &step_prior_to_intersection);
+
+    void operator()(RouteStep &step_at_turn_location, const RouteStep &transfer_from_step) const;
+
+    const RouteStep &step_prior_to_intersection;
+};
+
+// Handling of consecutive segregated steps
+struct CombineSegregatedStepsStrategy : CombineStrategy
+{
+    void operator()(RouteStep &step_at_turn_location, const RouteStep &transfer_from_step) const;
+};
+
+// Handling of segregated intersections
+struct SegregatedTurnStrategy : CombineStrategy
+{
+    SegregatedTurnStrategy(const RouteStep &step_prior_to_intersection);
 
     void operator()(RouteStep &step_at_turn_location, const RouteStep &transfer_from_step) const;
 

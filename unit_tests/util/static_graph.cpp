@@ -62,7 +62,8 @@ template <unsigned NUM_NODES, unsigned NUM_EDGES> struct RandomArrayEntryFixture
         std::uniform_int_distribution<> node_udist(0, NUM_NODES - 1);
         for (unsigned i = 0; i < NUM_EDGES; i++)
         {
-            edges.emplace_back(TestEdgeArrayEntry{static_cast<unsigned>(node_udist(g)), EdgeID{i}});
+            edges.emplace_back(
+                TestEdgeArrayEntry{static_cast<unsigned>(node_udist(g)), {EdgeID{i}}});
         }
 
         for (unsigned i = 0; i < NUM_NODES; i++)

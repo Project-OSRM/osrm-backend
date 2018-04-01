@@ -848,6 +848,7 @@ Feature: Simple Turns
             | h,a       | Heide,Perle,Perle   | depart,turn left,arrive  | true:16;true:90 true:195 true:270 true:345;true:90    |
 
     #http://www.openstreetmap.org/#map=19/52.53293/13.32956
+    # adjusted ways to reflect the case geometry for 2/3/2018
     Scenario: Curved Exit from Curved Road
         Given the node map
             """
@@ -874,16 +875,16 @@ Feature: Simple Turns
 
         And the ways
             | nodes  | name    | oneway | lanes | highway     |
-            | abcd   | Siemens | no     | 5     | secondary   |
-            | defg   | Erna    | no     | 3     | secondary   |
+            | ab     | Siemens | no     | 5     | secondary   |
+            | bcdefg | Erna    | no     | 3     | secondary   |
             | dhij   | Siemens | no     |       | residential |
 
         When I route I should get
-            | waypoints | route                   | turns                               |
-            | a,j       | Siemens,Siemens,Siemens | depart,continue slight right,arrive |
-            | a,g       | Siemens,Erna            | depart,arrive                       |
-            | g,j       | Erna,Siemens,Siemens    | depart,turn left,arrive             |
-            | g,a       | Erna,Siemens            | depart,arrive                       |
+            | waypoints | route                   | turns                           |
+            | a,j       | Siemens,Siemens,Siemens | depart,turn slight right,arrive |
+            | a,g       | Siemens,Erna            | depart,arrive                   |
+            | g,j       | Erna,Siemens,Siemens    | depart,turn left,arrive         |
+            | g,a       | Erna,Siemens            | depart,arrive                   |
 
      #http://www.openstreetmap.org/#map=19/52.51303/13.32170
      Scenario: Ernst Reuter Platz

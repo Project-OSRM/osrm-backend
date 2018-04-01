@@ -185,31 +185,34 @@ module.exports = function () {
 
         let q = d3.queue();
 
-        let addRelation = (row, cb) => {
+        let addRelation = (headers, row, cb) => {
             let relation = new OSM.Relation(this.makeOSMId(), this.OSM_USER, this.OSM_TIMESTAMP, this.OSM_UID);
 
 
             var name = null;
-            for (let key in row) {
+            for (let index in row) {
+
+                var key = headers[index];
+                var value = row[index];
                 let isNode = key.match(/^node:?(.*)/),
                     isWay = key.match(/^way:?(.*)/),
                     isRelation = key.match(/^relation:?(.*)/),
                     isColonSeparated = key.match(/^(.*):(.*)/);
                 if (isNode) {
-                    row[key].split(',').map(function(v) { return v.trim(); }).forEach((nodeName) => {
+                    value.split(',').map(function(v) { return v.trim(); }).forEach((nodeName) => {
                         if (nodeName.length !== 1) throw new Error(util.format('*** invalid relation node member "%s"', nodeName));
                         let node = this.findNodeByName(nodeName);
                         if (!node) throw new Error(util.format('*** unknown relation node member "%s"', nodeName));
                         relation.addMember('node', node.id, isNode[1]);
                     });
                 } else if (isWay) {
-                    row[key].split(',').map(function(v) { return v.trim(); }).forEach((wayName) => {
+                    value.split(',').map(function(v) { return v.trim(); }).forEach((wayName) => {
                         let way = this.findWayByName(wayName);
                         if (!way) throw new Error(util.format('*** unknown relation way member "%s"', wayName));
                         relation.addMember('way', way.id, isWay[1]);
                     });
                 } else if (isRelation) {
-                    row[key].split(',').map(function(v) { return v.trim(); }).forEach((relName) => {
+                    value.split(',').map(function(v) { return v.trim(); }).forEach((relName) => {
                         let otherrelation = this.findRelationByName(relName);
                         if (!otherrelation) throw new Error(util.format('*** unknown relation relation member "%s"', relName));
                         relation.addMember('relation', otherrelation.id, isRelation[1]);
@@ -217,8 +220,8 @@ module.exports = function () {
                 } else if (isColonSeparated && isColonSeparated[1] !== 'restriction') {
                     throw new Error(util.format('*** unknown relation member type "%s:%s", must be either "node" or "way"', isColonSeparated[1], isColonSeparated[2]));
                 } else {
-                    relation.addTag(key, row[key]);
-                    if (key.match(/name/)) name = row[key];
+                    relation.addTag(key, value);
+                    if (key.match(/name/)) name = value;
                 }
             }
             relation.uid = this.OSM_UID;
@@ -233,7 +236,8 @@ module.exports = function () {
             cb();
         };
 
-        table.hashes().forEach((row) => q.defer(addRelation, row));
+        var headers = table.raw()[0];
+        table.rows().forEach((row) => q.defer(addRelation, headers, row));
 
         q.awaitAll(callback);
     });

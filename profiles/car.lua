@@ -9,6 +9,7 @@ Relations = require("lib/relations")
 find_access_tag = require("lib/access").find_access_tag
 limit = require("lib/maxspeed").limit
 Utils = require("lib/utils")
+Measure = require("lib/measure")
 
 function setup()
   return {
@@ -54,7 +55,8 @@ function setup()
       'gate',
       'lift_gate',
       'no',
-      'entrance'
+      'entrance',
+      'height_restrictor'
     },
 
     access_tag_whitelist = Set {
@@ -320,11 +322,18 @@ function process_node(profile, node, result, relations)
   else
     local barrier = node:get_value_by_key("barrier")
     if barrier then
+      --  check height restriction barriers
+      local restricted_by_height = false
+      if barrier == 'height_restrictor' then
+         local maxheight = Measure.get_max_height(node:get_value_by_key("maxheight"), node)
+         restricted_by_height = maxheight and maxheight < profile.vehicle_height
+      end
+
       --  make an exception for rising bollard barriers
       local bollard = node:get_value_by_key("bollard")
       local rising_bollard = bollard and "rising" == bollard
 
-      if not profile.barrier_whitelist[barrier] and not rising_bollard then
+      if not profile.barrier_whitelist[barrier] and not rising_bollard or restricted_by_height then
         result.barrier = true
       end
     end

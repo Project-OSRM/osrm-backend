@@ -2,7 +2,7 @@
 #define EXTRACTOR_CALLBACKS_HPP
 
 #include "extractor/class_data.hpp"
-#include "extractor/guidance/turn_lane_types.hpp"
+#include "extractor/turn_lane_types.hpp"
 #include "util/typedefs.hpp"
 
 #include <boost/functional/hash.hpp>
@@ -48,6 +48,7 @@ struct ExtractionWay;
 struct ExtractionRelation;
 struct ProfileProperties;
 struct InputConditionalTurnRestriction;
+struct InputManeuverOverride;
 
 /**
  * This class is used by the extractor with the results of the
@@ -67,7 +68,7 @@ class ExtractorCallbacks
     StringMap string_map;
     ExtractionContainers &external_memory;
     std::unordered_map<std::string, ClassData> &classes_map;
-    guidance::LaneDescriptionMap &lane_description_map;
+    LaneDescriptionMap &lane_description_map;
     bool fallback_to_duration;
     bool force_split_edges;
 
@@ -76,7 +77,7 @@ class ExtractorCallbacks
 
     explicit ExtractorCallbacks(ExtractionContainers &extraction_containers,
                                 std::unordered_map<std::string, ClassData> &classes_map,
-                                guidance::LaneDescriptionMap &lane_description_map,
+                                LaneDescriptionMap &lane_description_map,
                                 const ProfileProperties &properties);
 
     ExtractorCallbacks(const ExtractorCallbacks &) = delete;
@@ -90,6 +91,9 @@ class ExtractorCallbacks
 
     // warning: caller needs to take care of synchronization!
     void ProcessWay(const osmium::Way &current_way, const ExtractionWay &result_way);
+
+    // warning: caller needs to take care of synchronization!
+    void ProcessManeuverOverride(const InputManeuverOverride & override);
 };
 }
 }

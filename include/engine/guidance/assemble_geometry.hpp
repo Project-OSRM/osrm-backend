@@ -1,8 +1,8 @@
 #ifndef ENGINE_GUIDANCE_ASSEMBLE_GEOMETRY_HPP
 #define ENGINE_GUIDANCE_ASSEMBLE_GEOMETRY_HPP
 
-#include "extractor/guidance/turn_instruction.hpp"
 #include "extractor/travel_mode.hpp"
+#include "guidance/turn_instruction.hpp"
 #include "engine/datafacade/datafacade_base.hpp"
 #include "engine/guidance/leg_geometry.hpp"
 #include "engine/guidance/route_step.hpp"
@@ -12,6 +12,7 @@
 #include "util/coordinate_calculation.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <utility>
 #include <vector>
 
@@ -54,7 +55,7 @@ inline LegGeometry assembleGeometry(const datafacade::BaseDataFacade &facade,
     const auto source_node_id =
         reversed_source ? source_node.reverse_segment_id.id : source_node.forward_segment_id.id;
     const auto source_geometry_id = facade.GetGeometryIndex(source_node_id).id;
-    std::vector<NodeID> source_geometry = facade.GetUncompressedForwardGeometry(source_geometry_id);
+    const auto source_geometry = facade.GetUncompressedForwardGeometry(source_geometry_id);
 
     geometry.osm_node_ids.push_back(
         facade.GetOSMNodeIDOfNode(source_geometry[source_segment_start_coordinate]));
@@ -70,7 +71,7 @@ inline LegGeometry assembleGeometry(const datafacade::BaseDataFacade &facade,
         cumulative_distance += current_distance;
 
         // all changes to this check have to be matched with assemble_steps
-        if (path_point.turn_instruction.type != extractor::guidance::TurnType::NoTurn)
+        if (path_point.turn_instruction.type != osrm::guidance::TurnType::NoTurn)
         {
             geometry.segment_distances.push_back(cumulative_distance);
             geometry.segment_offsets.push_back(geometry.locations.size());
@@ -80,7 +81,9 @@ inline LegGeometry assembleGeometry(const datafacade::BaseDataFacade &facade,
         prev_coordinate = coordinate;
 
         const auto osm_node_id = facade.GetOSMNodeIDOfNode(path_point.turn_via_node);
-        if (osm_node_id != geometry.osm_node_ids.back())
+
+        if (osm_node_id != geometry.osm_node_ids.back() ||
+            path_point.turn_instruction.type != osrm::guidance::TurnType::NoTurn)
         {
             geometry.annotations.emplace_back(LegGeometry::Annotation{
                 current_distance,
@@ -108,18 +111,41 @@ inline LegGeometry assembleGeometry(const datafacade::BaseDataFacade &facade,
     const auto target_node_id =
         reversed_target ? target_node.reverse_segment_id.id : target_node.forward_segment_id.id;
     const auto target_geometry_id = facade.GetGeometryIndex(target_node_id).id;
-    const std::vector<DatasourceID> forward_datasources =
-        facade.GetUncompressedForwardDatasources(target_geometry_id);
+    const auto forward_datasources = facade.GetUncompressedForwardDatasources(target_geometry_id);
 
-    // FIXME if source and target phantoms are on the same segment then duration and weight
-    // will be from one projected point till end of segment
-    // testbot/weight.feature:Start and target on the same and adjacent edge
-    geometry.annotations.emplace_back(LegGeometry::Annotation{
-        current_distance,
-        (reversed_target ? target_node.reverse_duration : target_node.forward_duration) / 10.,
-        (reversed_target ? target_node.reverse_weight : target_node.forward_weight) /
-            facade.GetWeightMultiplier(),
-        forward_datasources[target_node.fwd_segment_position]});
+    // This happens when the source/target are on the same edge-based-node
+    // There will be no entries in the unpacked path, thus no annotations.
+    // We will need to calculate the lone annotation by looking at the position
+    // of the source/target nodes, and calculating their differences.
+    if (geometry.annotations.empty())
+    {
+        auto duration =
+            std::abs(
+                (reversed_target ? target_node.reverse_duration : target_node.forward_duration) -
+                (reversed_source ? source_node.reverse_duration : source_node.forward_duration)) /
+            10.;
+        BOOST_ASSERT(duration >= 0);
+        auto weight =
+            std::abs((reversed_target ? target_node.reverse_weight : target_node.forward_weight) -
+                     (reversed_source ? source_node.reverse_weight : source_node.forward_weight)) /
+            facade.GetWeightMultiplier();
+        BOOST_ASSERT(weight >= 0);
+
+        geometry.annotations.emplace_back(
+            LegGeometry::Annotation{current_distance,
+                                    duration,
+                                    weight,
+                                    forward_datasources[target_node.fwd_segment_position]});
+    }
+    else
+    {
+        geometry.annotations.emplace_back(LegGeometry::Annotation{
+            current_distance,
+            (reversed_target ? target_node.reverse_duration : target_node.forward_duration) / 10.,
+            (reversed_target ? target_node.reverse_weight : target_node.forward_weight) /
+                facade.GetWeightMultiplier(),
+            forward_datasources[target_node.fwd_segment_position]});
+    }
 
     geometry.segment_offsets.push_back(geometry.locations.size());
     geometry.locations.push_back(target_node.location);
@@ -131,8 +157,7 @@ inline LegGeometry assembleGeometry(const datafacade::BaseDataFacade &facade,
     // target node rev:       1       1 <- 2 <- 3
     const auto target_segment_end_coordinate =
         target_node.fwd_segment_position + (reversed_target ? 0 : 1);
-    const std::vector<NodeID> target_geometry =
-        facade.GetUncompressedForwardGeometry(target_geometry_id);
+    const auto target_geometry = facade.GetUncompressedForwardGeometry(target_geometry_id);
     geometry.osm_node_ids.push_back(
         facade.GetOSMNodeIDOfNode(target_geometry[target_segment_end_coordinate]));
 

@@ -7,7 +7,7 @@
 #include "extractor/restriction.hpp"
 #include "extractor/scripting_environment.hpp"
 
-#include "storage/io.hpp"
+#include "storage/tar_fwd.hpp"
 
 namespace osrm
 {
@@ -23,12 +23,13 @@ namespace extractor
 class ExtractionContainers
 {
     void PrepareNodes();
+    void PrepareManeuverOverrides();
     void PrepareRestrictions();
     void PrepareEdges(ScriptingEnvironment &scripting_environment);
 
-    void WriteNodes(storage::io::FileWriter &file_out) const;
-    void WriteEdges(storage::io::FileWriter &file_out) const;
-    void WriteMetadata(storage::io::FileWriter &file_out) const;
+    void WriteNodes(storage::tar::FileWriter &file_out) const;
+    void WriteEdges(storage::tar::FileWriter &file_out) const;
+    void WriteMetadata(storage::tar::FileWriter &file_out) const;
     void WriteCharData(const std::string &file_name);
 
   public:
@@ -62,6 +63,9 @@ class ExtractionContainers
     // turn restrictions split into conditional and unconditional turn restrictions
     std::vector<ConditionalTurnRestriction> conditional_turn_restrictions;
     std::vector<TurnRestriction> unconditional_turn_restrictions;
+
+    std::vector<InputManeuverOverride> external_maneuver_overrides_list;
+    std::vector<UnresolvedManeuverOverride> internal_maneuver_overrides;
 
     ExtractionContainers();
 

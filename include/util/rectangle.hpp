@@ -1,14 +1,11 @@
-#ifndef RECTANGLE_HPP
-#define RECTANGLE_HPP
+#ifndef OSRM_UTIL_RECTANGLE_HPP
+#define OSRM_UTIL_RECTANGLE_HPP
 
+#include "util/coordinate.hpp"
 #include "util/coordinate_calculation.hpp"
 
 #include <boost/assert.hpp>
 
-#include "osrm/coordinate.hpp"
-
-#include <algorithm>
-#include <iomanip>
 #include <limits>
 #include <utility>
 
@@ -19,7 +16,6 @@ namespace osrm
 namespace util
 {
 
-// TODO: Make template type, add tests
 struct RectangleInt2D
 {
     RectangleInt2D()
@@ -174,19 +170,7 @@ struct RectangleInt2D
                min_lat != FixedLatitude{std::numeric_limits<std::int32_t>::max()} &&
                max_lat != FixedLatitude{std::numeric_limits<std::int32_t>::min()};
     }
-
-    friend std::ostream &operator<<(std::ostream &out, const RectangleInt2D &rect);
 };
-inline std::ostream &operator<<(std::ostream &out, const RectangleInt2D &rect)
-{
-    out << std::setprecision(12) << "{\"type\":\"Polygon\",\"coordinates\": [["
-        << toFloating(rect.min_lon) << "," << toFloating(rect.min_lat) << "],["
-        << toFloating(rect.min_lon) << "," << toFloating(rect.max_lat) << "],["
-        << toFloating(rect.max_lon) << "," << toFloating(rect.max_lat) << "],["
-        << toFloating(rect.max_lon) << "," << toFloating(rect.min_lat) << "],["
-        << toFloating(rect.min_lon) << "," << toFloating(rect.min_lat) << "]] }";
-    return out;
-}
 }
 }
 

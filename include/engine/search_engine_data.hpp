@@ -2,7 +2,7 @@
 #define SEARCH_ENGINE_DATA_HPP
 
 #include "engine/algorithm.hpp"
-#include "engine/unpacking_statistics.hpp"
+#include "engine/unpacking_cache.hpp"
 #include "util/query_heap.hpp"
 #include "util/typedefs.hpp"
 
@@ -47,7 +47,7 @@ template <> struct SearchEngineData<routing_algorithms::ch::Algorithm>
 
     using SearchEngineHeapPtr = boost::thread_specific_ptr<QueryHeap>;
     using ManyToManyHeapPtr = boost::thread_specific_ptr<ManyToManyQueryHeap>;
-    using UnpackingStatisticsPtr = boost::thread_specific_ptr<UnpackingStatistics>;
+    using UnpackingCachePtr = std::unique_ptr<UnpackingCache>; // do I need to make this threadsafe?
 
     static SearchEngineHeapPtr forward_heap_1;
     static SearchEngineHeapPtr reverse_heap_1;
@@ -56,7 +56,7 @@ template <> struct SearchEngineData<routing_algorithms::ch::Algorithm>
     static SearchEngineHeapPtr forward_heap_3;
     static SearchEngineHeapPtr reverse_heap_3;
     static ManyToManyHeapPtr many_to_many_heap;
-    static UnpackingStatisticsPtr unpacking_cache;
+    static UnpackingCachePtr unpacking_cache;
 
     void InitializeOrClearFirstThreadLocalStorage(unsigned number_of_nodes);
 
@@ -66,7 +66,7 @@ template <> struct SearchEngineData<routing_algorithms::ch::Algorithm>
 
     void InitializeOrClearManyToManyThreadLocalStorage(unsigned number_of_nodes);
 
-    void InitializeOrClearUnpackingStatisticsThreadLocalStorage();
+    void InitializeOrClearUnpackingCacheGlobalStorage(unsigned timestamp);
 };
 
 struct MultiLayerDijkstraHeapData

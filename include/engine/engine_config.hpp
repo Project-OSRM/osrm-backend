@@ -88,6 +88,7 @@ struct EngineConfig final
     int max_results_nearest = -1;
     int max_alternatives = 3; // set an arbitrary upper bound; can be adjusted by user
     bool use_shared_memory = true;
+    boost::filesystem::path memory_file;
     Algorithm algorithm = Algorithm::CH;
     std::string verbosity;
 };

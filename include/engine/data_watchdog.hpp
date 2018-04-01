@@ -42,10 +42,11 @@ class DataWatchdogImpl<AlgorithmT, datafacade::ContiguousInternalMemoryDataFacad
         {
             boost::interprocess::scoped_lock<mutex_type> current_region_lock(barrier.get_mutex());
 
+            timestamp = barrier.data().timestamp;
             facade_factory =
                 DataFacadeFactory<datafacade::ContiguousInternalMemoryDataFacade, AlgorithmT>(
-                    std::make_shared<datafacade::SharedMemoryAllocator>(barrier.data().region));
-            timestamp = barrier.data().timestamp;
+                    std::make_shared<datafacade::SharedMemoryAllocator>(barrier.data().region),
+                    timestamp); // I think I need to pass it in here too, is that true?
         }
 
         watcher = std::thread(&DataWatchdogImpl::Run, this);
@@ -82,10 +83,10 @@ class DataWatchdogImpl<AlgorithmT, datafacade::ContiguousInternalMemoryDataFacad
             if (timestamp != barrier.data().timestamp)
             {
                 auto region = barrier.data().region;
+                timestamp = barrier.data().timestamp;
                 facade_factory =
                     DataFacadeFactory<datafacade::ContiguousInternalMemoryDataFacade, AlgorithmT>(
-                        std::make_shared<datafacade::SharedMemoryAllocator>(region));
-                timestamp = barrier.data().timestamp;
+                        std::make_shared<datafacade::SharedMemoryAllocator>(region), timestamp);
                 util::Log() << "updated facade to region " << region << " with timestamp "
                             << timestamp;
             }

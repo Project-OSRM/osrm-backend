@@ -64,7 +64,7 @@ class EntryClass
     friend std::size_t std::hash<EntryClass>::operator()(const EntryClass &) const;
 };
 
-#if not defined __GNUC__ or __GNUC__ > 4
+#if !defined(__GNUC__) || (__GNUC__ > 4)
 static_assert(std::is_trivially_copyable<EntryClass>::value,
               "Class is serialized trivially in "
               "the datafacades. Bytewise writing "

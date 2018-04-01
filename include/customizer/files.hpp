@@ -3,7 +3,7 @@
 
 #include "customizer/serialization.hpp"
 
-#include "storage/io.hpp"
+#include "storage/tar.hpp"
 
 #include "util/integer_range.hpp"
 
@@ -22,15 +22,16 @@ inline void readCellMetrics(const boost::filesystem::path &path, std::vector<Cel
                       std::is_same<CellMetric, CellMetricT>::value,
                   "");
 
-    const auto fingerprint = storage::io::FileReader::VerifyFingerprint;
-    storage::io::FileReader reader{path, fingerprint};
+    const auto fingerprint = storage::tar::FileReader::VerifyFingerprint;
+    storage::tar::FileReader reader{path, fingerprint};
 
-    auto num_metrics = reader.ReadElementCount64();
+    auto num_metrics = reader.ReadElementCount64("/mld/metrics");
     metrics.resize(num_metrics);
 
+    auto id = 0;
     for (auto &metric : metrics)
     {
-        serialization::read(reader, metric);
+        serialization::read(reader, "/mld/metrics/" + std::to_string(id++), metric);
     }
 }
 
@@ -43,13 +44,15 @@ inline void writeCellMetrics(const boost::filesystem::path &path,
                       std::is_same<CellMetric, CellMetricT>::value,
                   "");
 
-    const auto fingerprint = storage::io::FileWriter::GenerateFingerprint;
-    storage::io::FileWriter writer{path, fingerprint};
+    const auto fingerprint = storage::tar::FileWriter::GenerateFingerprint;
+    storage::tar::FileWriter writer{path, fingerprint};
 
-    writer.WriteElementCount64(metrics.size());
+    writer.WriteElementCount64("/mld/metrics", metrics.size());
+
+    auto id = 0;
     for (const auto &metric : metrics)
     {
-        serialization::write(writer, metric);
+        serialization::write(writer, "/mld/metrics/" + std::to_string(id++), metric);
     }
 }
 }

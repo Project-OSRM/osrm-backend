@@ -1,5 +1,5 @@
-#include "partition/partition_config.hpp"
-#include "partition/partitioner.hpp"
+#include "partitioner/partitioner.hpp"
+#include "partitioner/partitioner_config.hpp"
 
 #include "osrm/exception.hpp"
 #include "util/log.hpp"
@@ -10,7 +10,6 @@
 #include <tbb/task_scheduler_init.h>
 
 #include <boost/algorithm/string/join.hpp>
-#include <boost/assert.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 #include <boost/range/adaptor/transformed.hpp>
@@ -69,8 +68,10 @@ void validate(boost::any &v, const std::vector<std::string> &values, MaxCellSize
     v = boost::any(MaxCellSizesArgument{output});
 }
 
-return_code
-parseArguments(int argc, char *argv[], std::string &verbosity, partition::PartitionConfig &config)
+return_code parseArguments(int argc,
+                           char *argv[],
+                           std::string &verbosity,
+                           partitioner::PartitionerConfig &config)
 {
     // declare a group of options that will be allowed only on command line
     boost::program_options::options_description generic_options("Options");
@@ -189,7 +190,7 @@ int main(int argc, char *argv[]) try
 {
     util::LogPolicy::GetInstance().Unmute();
     std::string verbosity;
-    partition::PartitionConfig partition_config;
+    partitioner::PartitionerConfig partition_config;
 
     const auto result = parseArguments(argc, argv, verbosity, partition_config);
 
@@ -233,12 +234,10 @@ int main(int argc, char *argv[]) try
         return EXIT_FAILURE;
     }
 
-    tbb::task_scheduler_init init(partition_config.requested_num_threads);
-    BOOST_ASSERT(init.is_active());
     util::Log() << "Computing recursive bisection";
 
     TIMER_START(bisect);
-    auto exitcode = partition::Partitioner().Run(partition_config);
+    auto exitcode = partitioner::Partitioner().Run(partition_config);
     TIMER_STOP(bisect);
     util::Log() << "Bisection took " << TIMER_SEC(bisect) << " seconds.";
 

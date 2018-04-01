@@ -67,6 +67,13 @@ template <typename Algorithm> class Engine final : public EngineInterface
                                 << routing_algorithms::name<Algorithm>();
             facade_provider = std::make_unique<WatchingProvider<Algorithm>>();
         }
+        else if (!config.memory_file.empty())
+        {
+            util::Log(logDEBUG) << "Using memory mapped filed at " << config.memory_file
+                                << " with algorithm " << routing_algorithms::name<Algorithm>();
+            facade_provider = std::make_unique<ExternalProvider<Algorithm>>(config.storage_config,
+                                                                            config.memory_file);
+        }
         else
         {
             util::Log(logDEBUG) << "Using internal memory with algorithm "
@@ -145,18 +152,17 @@ bool Engine<routing_algorithms::ch::Algorithm>::CheckCompatibility(const EngineC
 
         auto mem = storage::makeSharedMemory(barrier.data().region);
         auto layout = reinterpret_cast<storage::DataLayout *>(mem->Ptr());
-        return layout->GetBlockSize(storage::DataLayout::CH_GRAPH_NODE_LIST) > 4 &&
-               layout->GetBlockSize(storage::DataLayout::CH_GRAPH_EDGE_LIST) > 4;
+        // std::cout << "layout->GetBlockSize(storage::DataLayout::CH_GRAPH_NODE_LIST): "
+        //           << layout->GetBlockSize(storage::DataLayout::CH_GRAPH_NODE_LIST) << "\n"
+        //           << "layout->GetBlockSize(storage::DataLayout::CH_GRAPH_EDGE_LIST): "
+        //           << layout->GetBlockSize(storage::DataLayout::CH_GRAPH_EDGE_LIST) << std::endl;
+        return layout->GetBlockSize(storage::DataLayout::CH_GRAPH_NODE_LIST) > 4;
+        // &&
+        // layout->GetBlockSize(storage::DataLayout::CH_GRAPH_EDGE_LIST) > 4;
     }
     else
     {
-        if (!boost::filesystem::exists(config.storage_config.GetPath(".osrm.hsgr")))
-            return false;
-        storage::io::FileReader in(config.storage_config.GetPath(".osrm.hsgr"),
-                                   storage::io::FileReader::VerifyFingerprint);
-
-        auto size = in.GetSize();
-        return size > 0;
+        return boost::filesystem::exists(config.storage_config.GetPath(".osrm.hsgr"));
     }
 }
 
@@ -189,16 +195,10 @@ bool Engine<routing_algorithms::mld::Algorithm>::CheckCompatibility(const Engine
     }
     else
     {
-        if (!boost::filesystem::exists(config.storage_config.GetPath(".osrm.partition")) ||
-            !boost::filesystem::exists(config.storage_config.GetPath(".osrm.cells")) ||
-            !boost::filesystem::exists(config.storage_config.GetPath(".osrm.mldgr")) ||
-            !boost::filesystem::exists(config.storage_config.GetPath(".osrm.cell_metrics")))
-            return false;
-        storage::io::FileReader in(config.storage_config.GetPath(".osrm.partition"),
-                                   storage::io::FileReader::VerifyFingerprint);
-
-        auto size = in.GetSize();
-        return size > 0;
+        return boost::filesystem::exists(config.storage_config.GetPath(".osrm.partition")) &&
+               boost::filesystem::exists(config.storage_config.GetPath(".osrm.cells")) &&
+               boost::filesystem::exists(config.storage_config.GetPath(".osrm.mldgr")) &&
+               boost::filesystem::exists(config.storage_config.GetPath(".osrm.cell_metrics"));
     }
 }
 }

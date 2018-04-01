@@ -78,5 +78,5 @@ std::size_t BearingClass::findMatchingBearing(const double bearing) const
 }
 
 } // namespace guidance
-} // namespace extractor
+} // namespace util
 } // namespace osrm

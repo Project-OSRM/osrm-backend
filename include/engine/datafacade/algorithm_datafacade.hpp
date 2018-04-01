@@ -5,8 +5,8 @@
 #include "extractor/edge_based_edge.hpp"
 #include "engine/algorithm.hpp"
 
-#include "partition/cell_storage.hpp"
-#include "partition/multi_level_partition.hpp"
+#include "partitioner/cell_storage.hpp"
+#include "partitioner/multi_level_partition.hpp"
 
 #include "util/filtered_graph.hpp"
 #include "util/integer_range.hpp"
@@ -75,9 +75,9 @@ template <> class AlgorithmDataFacade<MLD>
 
     virtual EdgeRange GetAdjacentEdgeRange(const NodeID node) const = 0;
 
-    virtual const partition::MultiLevelPartitionView &GetMultiLevelPartition() const = 0;
+    virtual const partitioner::MultiLevelPartitionView &GetMultiLevelPartition() const = 0;
 
-    virtual const partition::CellStorageView &GetCellStorage() const = 0;
+    virtual const partitioner::CellStorageView &GetCellStorage() const = 0;
 
     virtual const customizer::CellMetricView &GetCellMetric() const = 0;
 

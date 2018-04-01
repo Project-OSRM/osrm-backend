@@ -15,23 +15,6 @@ namespace osrm
 {
 namespace util
 {
-template <typename ElementT> class DeallocatingVector;
-}
-
-namespace storage
-{
-namespace serialization
-{
-template <typename T>
-inline void read(storage::io::FileReader &reader, util::DeallocatingVector<T> &vec);
-
-template <typename T>
-inline void write(storage::io::FileWriter &writer, const util::DeallocatingVector<T> &vec);
-}
-}
-
-namespace util
-{
 template <typename ElementT> struct ConstDeallocatingVectorIteratorState
 {
     ConstDeallocatingVectorIteratorState()
@@ -183,6 +166,8 @@ class DeallocatingVectorIterator
     }
 };
 
+template <typename ElementT> class DeallocatingVector;
+
 template <typename T> void swap(DeallocatingVector<T> &lhs, DeallocatingVector<T> &rhs);
 
 template <typename ElementT> class DeallocatingVector
@@ -226,6 +211,14 @@ template <typename ElementT> class DeallocatingVector
     {
         swap(other);
         return *this;
+    }
+
+    DeallocatingVector(std::initializer_list<ElementT> elements) : DeallocatingVector()
+    {
+        for (auto &&elem : elements)
+        {
+            emplace_back(std::move(elem));
+        }
     }
 
     ~DeallocatingVector() { clear(); }
@@ -351,11 +344,6 @@ template <typename ElementT> class DeallocatingVector
             ++position;
         }
     }
-
-    friend void storage::serialization::read<ElementT>(storage::io::FileReader &reader,
-                                                       DeallocatingVector &vec);
-    friend void storage::serialization::write<ElementT>(storage::io::FileWriter &writer,
-                                                        const DeallocatingVector &vec);
 };
 
 template <typename T> void swap(DeallocatingVector<T> &lhs, DeallocatingVector<T> &rhs)

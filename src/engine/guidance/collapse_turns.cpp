@@ -1,6 +1,6 @@
 #include "engine/guidance/collapse_turns.hpp"
-#include "extractor/guidance/constants.hpp"
-#include "extractor/guidance/turn_instruction.hpp"
+#include "guidance/constants.hpp"
+#include "guidance/turn_instruction.hpp"
 #include "engine/guidance/collapse_scenario_detection.hpp"
 #include "engine/guidance/collapsing_utility.hpp"
 #include "util/bearing.hpp"
@@ -10,16 +10,14 @@
 
 #include <boost/assert.hpp>
 
-using osrm::extractor::guidance::TurnInstruction;
-using osrm::util::angularDeviation;
-using namespace osrm::extractor::guidance;
-
 namespace osrm
 {
 namespace engine
 {
 namespace guidance
 {
+using osrm::util::angularDeviation;
+using namespace osrm::guidance;
 
 namespace
 {
@@ -53,7 +51,7 @@ double findTotalTurnAngle(const RouteStep &entry_step, const RouteStep &exit_ste
     // both angles are in the same direction, the total turn gets increased
     //
     // a ---- b
-    //           \
+    //           `
     //              c
     //              |
     //              d
@@ -223,12 +221,16 @@ void AdjustToCombinedTurnStrategy::operator()(RouteStep &step_at_turn_location,
         if (hasTurnType(step_at_turn_location, TurnType::Suppressed))
         {
             if (new_modifier == DirectionModifier::Straight)
+            {
                 setInstructionType(step_at_turn_location, TurnType::NewName);
+            }
             else
+            {
                 step_at_turn_location.maneuver.instruction.type =
                     haveSameName(step_prior_to_intersection, transfer_from_step)
                         ? TurnType::Continue
                         : TurnType::Turn;
+            }
         }
         else if (hasTurnType(step_at_turn_location, TurnType::NewName) &&
                  hasTurnType(transfer_from_step, TurnType::Suppressed) &&
@@ -242,6 +244,7 @@ void AdjustToCombinedTurnStrategy::operator()(RouteStep &step_at_turn_location,
             setInstructionType(step_at_turn_location, TurnType::Turn);
         }
         else if (hasTurnType(step_at_turn_location, TurnType::Turn) &&
+                 !hasTurnType(transfer_from_step, TurnType::Suppressed) &&
                  haveSameName(step_prior_to_intersection, transfer_from_step))
         {
             setInstructionType(step_at_turn_location, TurnType::Continue);
@@ -286,8 +289,111 @@ void StaggeredTurnStrategy::operator()(RouteStep &step_at_turn_location,
                                                                      : TurnType::NewName;
 }
 
-SetFixedInstructionStrategy::SetFixedInstructionStrategy(
-    const extractor::guidance::TurnInstruction instruction)
+void CombineSegregatedStepsStrategy::operator()(RouteStep &step_at_turn_location,
+                                                const RouteStep &transfer_from_step) const
+{
+    // Handle end of road
+    if (hasTurnType(step_at_turn_location, TurnType::EndOfRoad) ||
+        hasTurnType(transfer_from_step, TurnType::EndOfRoad))
+    {
+        setInstructionType(step_at_turn_location, TurnType::EndOfRoad);
+    }
+}
+
+SegregatedTurnStrategy::SegregatedTurnStrategy(const RouteStep &step_prior_to_intersection)
+    : step_prior_to_intersection(step_prior_to_intersection)
+{
+}
+
+void SegregatedTurnStrategy::operator()(RouteStep &step_at_turn_location,
+                                        const RouteStep &transfer_from_step) const
+{
+    // Used to control updating of the modifier based on turn direction
+    bool update_modifier_for_turn_direction = true;
+
+    const auto calculate_turn_angle = [](const RouteStep &entry_step, const RouteStep &exit_step) {
+        return util::bearing::angleBetween(entry_step.maneuver.bearing_before,
+                                           exit_step.maneuver.bearing_after);
+    };
+
+    // Calculate turn angle and direction for segregated
+    const auto turn_angle = calculate_turn_angle(step_at_turn_location, transfer_from_step);
+    const auto turn_direction = getTurnDirection(turn_angle);
+
+    const auto is_straight_step = [](const RouteStep &step) {
+        return ((hasTurnType(step, TurnType::NewName) || hasTurnType(step, TurnType::Continue) ||
+                 hasTurnType(step, TurnType::Suppressed) || hasTurnType(step, TurnType::Turn)) &&
+                (hasModifier(step, DirectionModifier::Straight) ||
+                 hasModifier(step, DirectionModifier::SlightLeft) ||
+                 hasModifier(step, DirectionModifier::SlightRight)));
+    };
+
+    const auto is_turn_step = [](const RouteStep &step) {
+        return (hasTurnType(step, TurnType::Turn) || hasTurnType(step, TurnType::Continue) ||
+                hasTurnType(step, TurnType::NewName) || hasTurnType(step, TurnType::Suppressed));
+    };
+
+    // Process end of road step
+    if (hasTurnType(step_at_turn_location, TurnType::EndOfRoad) ||
+        hasTurnType(transfer_from_step, TurnType::EndOfRoad))
+    {
+        // Keep end of road
+        setInstructionType(step_at_turn_location, TurnType::EndOfRoad);
+    }
+    // Process fork step at turn
+    else if (hasTurnType(step_at_turn_location, TurnType::Fork))
+    {
+        // Do not update modifier based on turn direction
+        update_modifier_for_turn_direction = false;
+    }
+    // Process straight step
+    else if ((turn_direction == guidance::DirectionModifier::Straight) &&
+             is_straight_step(transfer_from_step))
+    {
+        // Determine if continue or new name
+        setInstructionType(step_at_turn_location,
+                           (haveSameName(step_prior_to_intersection, transfer_from_step)
+                                ? TurnType::Suppressed
+                                : TurnType::NewName));
+    }
+    // Process wider straight step
+    else if (isWiderStraight(turn_angle) && hasSingleIntersection(step_at_turn_location) &&
+             hasStraightestTurn(step_at_turn_location) && hasStraightestTurn(transfer_from_step))
+    {
+        // Determine if continue or new name
+        setInstructionType(step_at_turn_location,
+                           (haveSameName(step_prior_to_intersection, transfer_from_step)
+                                ? TurnType::Suppressed
+                                : TurnType::NewName));
+
+        // Set modifier to straight
+        setModifier(step_at_turn_location, osrm::guidance::DirectionModifier::Straight);
+
+        // Do not update modifier based on turn direction
+        update_modifier_for_turn_direction = false;
+    }
+    // Process turn step
+    else if ((turn_direction != guidance::DirectionModifier::Straight) &&
+             is_turn_step(transfer_from_step))
+    {
+        // Mark as turn
+        setInstructionType(step_at_turn_location, TurnType::Turn);
+    }
+    // Process the others not covered above by using the transfer step turn type
+    else
+    {
+        // Set type from transfer step
+        setInstructionType(step_at_turn_location, transfer_from_step.maneuver.instruction.type);
+    }
+
+    // Update modifier based on turn direction, if needed
+    if (update_modifier_for_turn_direction)
+    {
+        setModifier(step_at_turn_location, turn_direction);
+    }
+}
+
+SetFixedInstructionStrategy::SetFixedInstructionStrategy(const TurnInstruction instruction)
     : instruction(instruction)
 {
 }
@@ -477,6 +583,85 @@ RouteSteps collapseTurnInstructions(RouteSteps steps)
             }
         }
     }
+    return steps;
+}
+
+// OTHER IMPLEMENTATIONS
+OSRM_ATTR_WARN_UNUSED
+RouteSteps collapseSegregatedTurnInstructions(RouteSteps steps)
+{
+    // make sure we can safely iterate over all steps (has depart/arrive with TurnType::NoTurn)
+    BOOST_ASSERT(!hasTurnType(steps.front()) && !hasTurnType(steps.back()));
+    BOOST_ASSERT(hasWaypointType(steps.front()) && hasWaypointType(steps.back()));
+
+    if (steps.size() <= 2)
+        return steps;
+
+    auto curr_step = steps.begin() + 1;
+    auto next_step = curr_step + 1;
+    const auto last_step = steps.end() - 1;
+
+    // Loop over steps to collapse the segregated intersections; ignore first and last step
+    while (next_step != last_step)
+    {
+        const auto prev_step = findPreviousTurn(curr_step);
+
+        // if current step and next step are both segregated then combine the steps with no turn
+        // adjustment
+        if (curr_step->is_segregated && next_step->is_segregated)
+        {
+            // Combine segregated steps
+            combineRouteSteps(*curr_step,
+                              *next_step,
+                              CombineSegregatedStepsStrategy(),
+                              TransferSignageStrategy(),
+                              TransferLanesStrategy());
+            ++next_step;
+        }
+        // else if the current step is segregated and the next step is not then combine with turn
+        // adjustment
+        else if (curr_step->is_segregated && !next_step->is_segregated)
+        {
+            // Determine if u-turn
+            if (bearingsAreReversed(
+                    util::bearing::reverse(curr_step->intersections.front()
+                                               .bearings[curr_step->intersections.front().in]),
+                    next_step->intersections.front()
+                        .bearings[next_step->intersections.front().out]))
+            {
+                // Collapse segregated u-turn
+                combineRouteSteps(
+                    *curr_step,
+                    *next_step,
+                    SetFixedInstructionStrategy({TurnType::Continue, DirectionModifier::UTurn}),
+                    TransferSignageStrategy(),
+                    NoModificationStrategy());
+            }
+            else
+            {
+                // Collapse segregated turn
+                combineRouteSteps(*curr_step,
+                                  *next_step,
+                                  SegregatedTurnStrategy(*prev_step),
+                                  TransferSignageStrategy(),
+                                  NoModificationStrategy());
+            }
+
+            // Segregated step has been removed
+            curr_step->is_segregated = false;
+            ++next_step;
+        }
+        // else next step
+        else
+        {
+            curr_step = next_step;
+            ++next_step;
+        }
+    }
+
+    // Clean up steps
+    steps = removeNoTurnInstructions(std::move(steps));
+
     return steps;
 }
 

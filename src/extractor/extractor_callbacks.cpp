@@ -2,10 +2,10 @@
 #include "extractor/extraction_containers.hpp"
 #include "extractor/extraction_node.hpp"
 #include "extractor/extraction_way.hpp"
-#include "extractor/guidance/road_classification.hpp"
 #include "extractor/profile_properties.hpp"
 #include "extractor/query_node.hpp"
 #include "extractor/restriction.hpp"
+#include "extractor/road_classification.hpp"
 
 #include "util/for_each_pair.hpp"
 #include "util/guidance/turn_lanes.hpp"
@@ -29,13 +29,9 @@ namespace osrm
 {
 namespace extractor
 {
-
-using TurnLaneDescription = guidance::TurnLaneDescription;
-namespace TurnLaneType = guidance::TurnLaneType;
-
 ExtractorCallbacks::ExtractorCallbacks(ExtractionContainers &extraction_containers_,
                                        std::unordered_map<std::string, ClassData> &classes_map,
-                                       guidance::LaneDescriptionMap &lane_description_map,
+                                       LaneDescriptionMap &lane_description_map,
                                        const ProfileProperties &properties)
     : external_memory(extraction_containers_), classes_map(classes_map),
       lane_description_map(lane_description_map),
@@ -77,6 +73,11 @@ void ExtractorCallbacks::ProcessRestriction(const InputConditionalTurnRestrictio
 {
     external_memory.restrictions_list.push_back(restriction);
     // util::Log() << restriction.toString();
+}
+
+void ExtractorCallbacks::ProcessManeuverOverride(const InputManeuverOverride & override)
+{
+    external_memory.external_maneuver_overrides_list.push_back(override);
 }
 
 /**
@@ -187,7 +188,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
         {
             if (classes_map.size() > MAX_CLASS_INDEX)
             {
-                throw util::exception("Maximum number of classes if " +
+                throw util::exception("Maximum number of classes is " +
                                       std::to_string(MAX_CLASS_INDEX + 1));
             }
             ClassData class_mask = getClassData(classes_map.size());
@@ -260,9 +261,9 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
         for (auto iter = tokens.begin(); iter != tokens.end(); ++iter)
         {
             tokenizer inner_tokens(*iter, inner_sep);
-            guidance::TurnLaneType::Mask lane_mask = inner_tokens.begin() == inner_tokens.end()
-                                                         ? TurnLaneType::none
-                                                         : TurnLaneType::empty;
+            TurnLaneType::Mask lane_mask = inner_tokens.begin() == inner_tokens.end()
+                                               ? TurnLaneType::none
+                                               : TurnLaneType::empty;
             for (auto token_itr = inner_tokens.begin(); token_itr != inner_tokens.end();
                  ++token_itr)
             {

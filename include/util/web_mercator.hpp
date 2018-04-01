@@ -13,8 +13,8 @@ namespace web_mercator
 {
 namespace detail
 {
-const constexpr long double DEGREE_TO_RAD = 0.017453292519943295769236907684886;
-const constexpr long double RAD_TO_DEGREE = 1. / DEGREE_TO_RAD;
+const constexpr double DEGREE_TO_RAD = 0.017453292519943295769236907684886;
+const constexpr double RAD_TO_DEGREE = 1. / DEGREE_TO_RAD;
 // radius used by WGS84
 const constexpr double EARTH_RADIUS_WGS84 = 6378137.0;
 // earth circumference devided by 2

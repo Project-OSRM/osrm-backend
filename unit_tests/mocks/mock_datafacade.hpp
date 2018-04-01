@@ -5,9 +5,12 @@
 
 #include "contractor/query_edge.hpp"
 #include "extractor/class_data.hpp"
-#include "extractor/guidance/turn_instruction.hpp"
-#include "extractor/guidance/turn_lane_types.hpp"
+#include "extractor/maneuver_override.hpp"
 #include "extractor/travel_mode.hpp"
+#include "extractor/turn_lane_types.hpp"
+#include "guidance/turn_bearing.hpp"
+#include "guidance/turn_instruction.hpp"
+#include "guidance/turn_instruction.hpp"
 
 #include "engine/algorithm.hpp"
 #include "engine/datafacade/algorithm_datafacade.hpp"
@@ -15,7 +18,6 @@
 
 #include "util/guidance/bearing_class.hpp"
 #include "util/guidance/entry_class.hpp"
-#include "util/guidance/turn_bearing.hpp"
 #include "util/typedefs.hpp"
 
 namespace osrm
@@ -52,48 +54,48 @@ class MockBaseDataFacade : public engine::datafacade::BaseDataFacade
     {
         return 0;
     }
-    std::vector<NodeID> GetUncompressedForwardGeometry(const EdgeID /* id */) const override
+    NodesIDRangeT GetUncompressedForwardGeometry(const EdgeID /* id */) const override
     {
         return {};
     }
-    std::vector<NodeID> GetUncompressedReverseGeometry(const EdgeID /* id */) const override
+    NodesIDRangeT GetUncompressedReverseGeometry(const EdgeID /* id */) const override
     {
         return {};
     }
-    std::vector<EdgeWeight> GetUncompressedForwardWeights(const EdgeID /* id */) const override
+    WeightsRangeT GetUncompressedForwardWeights(const EdgeID /* id */) const override
     {
-        std::vector<EdgeWeight> result_weights;
-        result_weights.resize(1);
-        result_weights[0] = 1;
+        static const std::vector<SegmentWeight> result_weights{1, 2, 3};
         return result_weights;
     }
-    std::vector<EdgeWeight> GetUncompressedReverseWeights(const EdgeID id) const override
+    WeightsRangeT GetUncompressedReverseWeights(const EdgeID id) const override
     {
         return GetUncompressedForwardWeights(id);
     }
-    std::vector<EdgeWeight> GetUncompressedForwardDurations(const EdgeID id) const override
+    DurationsRangeT GetUncompressedForwardDurations(const EdgeID /*id*/) const override
     {
-        return GetUncompressedForwardWeights(id);
+        static const std::vector<SegmentDuration> data{1, 2, 3};
+        return data;
     }
-    std::vector<EdgeWeight> GetUncompressedReverseDurations(const EdgeID id) const override
+    DurationsRangeT GetUncompressedReverseDurations(const EdgeID /*id*/) const override
     {
-        return GetUncompressedForwardWeights(id);
+        static const std::vector<SegmentDuration> data{1, 2, 3};
+        return data;
     }
-    std::vector<DatasourceID> GetUncompressedForwardDatasources(const EdgeID /*id*/) const override
+    DatasourceIDRangeT GetUncompressedForwardDatasources(const EdgeID /*id*/) const override
     {
         return {};
     }
-    std::vector<DatasourceID> GetUncompressedReverseDatasources(const EdgeID /*id*/) const override
+    DatasourceIDRangeT GetUncompressedReverseDatasources(const EdgeID /*id*/) const override
     {
         return {};
     }
 
     StringView GetDatasourceName(const DatasourceID) const override final { return {}; }
 
-    extractor::guidance::TurnInstruction
+    osrm::guidance::TurnInstruction
     GetTurnInstructionForEdgeID(const EdgeID /* id */) const override
     {
-        return extractor::guidance::TurnInstruction::NO_TURN();
+        return osrm::guidance::TurnInstruction::NO_TURN();
     }
     std::vector<RTreeLeaf> GetEdgesInBox(const util::Coordinate /* south_west */,
                                          const util::Coordinate /*north_east */) const override
@@ -217,7 +219,6 @@ class MockBaseDataFacade : public engine::datafacade::BaseDataFacade
     StringView GetDestinationsForID(const NameID) const override final { return {}; }
     StringView GetExitsForID(const NameID) const override final { return {}; }
 
-    std::string GetTimestamp() const override { return ""; }
     bool GetContinueStraightDefault() const override { return true; }
     double GetMapMatchingMaxSpeed() const override { return 180 / 3.6; }
     const char *GetWeightName() const override final { return "duration"; }
@@ -226,13 +227,13 @@ class MockBaseDataFacade : public engine::datafacade::BaseDataFacade
     bool IsLeftHandDriving(const NodeID /*id*/) const override { return false; }
     bool IsSegregated(const NodeID /*id*/) const override { return false; }
 
-    util::guidance::TurnBearing PreTurnBearing(const EdgeID /*eid*/) const override final
+    guidance::TurnBearing PreTurnBearing(const EdgeID /*eid*/) const override final
     {
-        return util::guidance::TurnBearing{0.0};
+        return guidance::TurnBearing{0.0};
     }
-    util::guidance::TurnBearing PostTurnBearing(const EdgeID /*eid*/) const override final
+    guidance::TurnBearing PostTurnBearing(const EdgeID /*eid*/) const override final
     {
-        return util::guidance::TurnBearing{0.0};
+        return guidance::TurnBearing{0.0};
     }
 
     bool HasLaneData(const EdgeID /*id*/) const override final { return true; };
@@ -240,7 +241,7 @@ class MockBaseDataFacade : public engine::datafacade::BaseDataFacade
     {
         return {{0, 0}, 0};
     }
-    extractor::guidance::TurnLaneDescription
+    extractor::TurnLaneDescription
     GetTurnDescription(const LaneDescriptionID /*lane_description_id*/) const override final
     {
         return {};
@@ -263,6 +264,12 @@ class MockBaseDataFacade : public engine::datafacade::BaseDataFacade
         result.activate(2);
         result.activate(3);
         return result;
+    }
+
+    std::vector<extractor::ManeuverOverride>
+    GetOverridesThatStartAt(const NodeID /* edge_based_node_id */) const override
+    {
+        return {};
     }
 };
 

@@ -3,9 +3,10 @@
 
 /* A set of tools required for guidance in both pre and post-processing */
 
+#include "extractor/name_table.hpp"
 #include "extractor/suffix_table.hpp"
+
 #include "util/attributes.hpp"
-#include "util/name_table.hpp"
 #include "util/typedefs.hpp"
 
 #include <algorithm>
@@ -160,7 +161,9 @@ inline bool requiresNameAnnounced(const StringView &from_name,
     const auto needs_announce =
         // " (Ref)" -> "Name " and reverse
         (from_name.empty() && !from_ref.empty() && !to_name.empty() && to_ref.empty()) ||
-        (!from_name.empty() && from_ref.empty() && to_name.empty() && !to_ref.empty());
+        (!from_name.empty() && from_ref.empty() && to_name.empty() && !to_ref.empty()) ||
+        // ... or names are empty but reference changed
+        (names_are_empty && !ref_is_contained);
 
     const auto pronunciation_changes = from_pronunciation != to_pronunciation;
 
@@ -214,7 +217,7 @@ inline bool requiresNameAnnounced(const std::string &from_name,
 
 inline bool requiresNameAnnounced(const NameID from_name_id,
                                   const NameID to_name_id,
-                                  const util::NameTable &name_table,
+                                  const extractor::NameTable &name_table,
                                   const extractor::SuffixTable &suffix_table)
 {
     if (from_name_id == to_name_id)

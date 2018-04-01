@@ -25,20 +25,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef PHANTOM_NODES_H
-#define PHANTOM_NODES_H
+#ifndef OSRM_ENGINE_PHANTOM_NODES_H
+#define OSRM_ENGINE_PHANTOM_NODES_H
 
 #include "extractor/travel_mode.hpp"
-#include "util/typedefs.hpp"
 
 #include "util/bearing.hpp"
 #include "util/coordinate.hpp"
+#include "util/typedefs.hpp"
 
 #include <boost/assert.hpp>
-
-#include <iostream>
-#include <utility>
-#include <vector>
 
 namespace osrm
 {
@@ -199,31 +195,6 @@ struct PhantomNodes
     PhantomNode source_phantom;
     PhantomNode target_phantom;
 };
-
-inline std::ostream &operator<<(std::ostream &out, const PhantomNodes &pn)
-{
-    out << "source_coord: " << pn.source_phantom.location << "\n";
-    out << "target_coord: " << pn.target_phantom.location << std::endl;
-    return out;
-}
-
-inline std::ostream &operator<<(std::ostream &out, const PhantomNode &pn)
-{
-    out << "node1: " << pn.forward_segment_id.id << ", "
-        << "node2: " << pn.reverse_segment_id.id << ", "
-        << "fwd-w: " << pn.forward_weight << ", "
-        << "rev-w: " << pn.reverse_weight << ", "
-        << "fwd-o: " << pn.forward_weight_offset << ", "
-        << "rev-o: " << pn.reverse_weight_offset << ", "
-        << "fwd-d: " << pn.forward_duration << ", "
-        << "rev-d: " << pn.reverse_duration << ", "
-        << "fwd-do: " << pn.forward_duration_offset << ", "
-        << "rev-do: " << pn.reverse_duration_offset << ", "
-        << "comp: " << pn.component.is_tiny << " / " << pn.component.id << ", "
-        << "pos: " << pn.fwd_segment_position << ", "
-        << "loc: " << pn.location;
-    return out;
-}
 }
 }
 

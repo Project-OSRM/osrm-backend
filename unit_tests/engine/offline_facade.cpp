@@ -156,15 +156,9 @@ class ContiguousInternalMemoryDataFacade<routing_algorithms::offline::Algorithm>
 
     GeometryID GetGeometryIndex(const NodeID /*id*/) const override { return GeometryID{0, false}; }
 
-    std::vector<NodeID> GetUncompressedForwardGeometry(const EdgeID /*id*/) const override
-    {
-        return {};
-    }
+    NodesIDRangeT GetUncompressedForwardGeometry(const EdgeID /*id*/) const override { return {}; }
 
-    std::vector<NodeID> GetUncompressedReverseGeometry(const EdgeID /*id*/) const override
-    {
-        return {};
-    }
+    NodesIDRangeT GetUncompressedReverseGeometry(const EdgeID /*id*/) const override { return {}; }
 
     TurnPenalty GetWeightPenaltyForEdgeID(const unsigned /*id*/) const override
     {
@@ -176,42 +170,35 @@ class ContiguousInternalMemoryDataFacade<routing_algorithms::offline::Algorithm>
         return INVALID_TURN_PENALTY;
     }
 
-    std::vector<EdgeWeight> GetUncompressedForwardWeights(const EdgeID /*id*/) const override
+    WeightsRangeT GetUncompressedForwardWeights(const EdgeID /*id*/) const override { return {}; }
+
+    WeightsRangeT GetUncompressedReverseWeights(const EdgeID /*id*/) const override { return {}; }
+
+    DurationsRangeT GetUncompressedForwardDurations(const EdgeID /*geomID*/) const override
     {
         return {};
     }
 
-    std::vector<EdgeWeight> GetUncompressedReverseWeights(const EdgeID /*id*/) const override
+    DurationsRangeT GetUncompressedReverseDurations(const EdgeID /*geomID*/) const override
     {
         return {};
     }
 
-    std::vector<EdgeWeight> GetUncompressedForwardDurations(const EdgeID /*geomID*/) const override
+    DatasourceIDRangeT GetUncompressedForwardDatasources(const EdgeID /*id*/) const override
     {
         return {};
     }
 
-    std::vector<EdgeWeight> GetUncompressedReverseDurations(const EdgeID /*geomID*/) const override
-    {
-        return {};
-    }
-
-    std::vector<DatasourceID> GetUncompressedForwardDatasources(const EdgeID /*id*/) const override
-    {
-        return {};
-    }
-
-    std::vector<DatasourceID> GetUncompressedReverseDatasources(const EdgeID /*id*/) const override
+    DatasourceIDRangeT GetUncompressedReverseDatasources(const EdgeID /*id*/) const override
     {
         return {};
     }
 
     StringView GetDatasourceName(const DatasourceID /*id*/) const override { return StringView{}; }
 
-    extractor::guidance::TurnInstruction
-    GetTurnInstructionForEdgeID(const EdgeID /*id*/) const override
+    guidance::TurnInstruction GetTurnInstructionForEdgeID(const EdgeID /*id*/) const override
     {
-        return extractor::guidance::TurnInstruction{};
+        return guidance::TurnInstruction{};
     }
 
     extractor::TravelMode GetTravelMode(const NodeID /*id*/) const override
@@ -320,7 +307,7 @@ class ContiguousInternalMemoryDataFacade<routing_algorithms::offline::Algorithm>
         return util::guidance::LaneTupleIdPair{};
     }
 
-    extractor::guidance::TurnLaneDescription
+    extractor::TurnLaneDescription
     GetTurnDescription(const LaneDescriptionID /*laneDescriptionID*/) const override
     {
         return {};
@@ -333,7 +320,6 @@ class ContiguousInternalMemoryDataFacade<routing_algorithms::offline::Algorithm>
     StringView GetPronunciationForID(const NameID /*id*/) const override { return StringView{}; }
     StringView GetDestinationsForID(const NameID /*id*/) const override { return StringView{}; }
     StringView GetExitsForID(const NameID /*id*/) const override { return StringView{}; }
-    std::string GetTimestamp() const override { return std::string(); }
     bool GetContinueStraightDefault() const override { return false; }
     double GetMapMatchingMaxSpeed() const override { return 0; }
     const char *GetWeightName() const override { return ""; }
@@ -342,14 +328,14 @@ class ContiguousInternalMemoryDataFacade<routing_algorithms::offline::Algorithm>
     ComponentID GetComponentID(NodeID) const override { return ComponentID{}; }
     bool ExcludeNode(const NodeID) const override { return false; }
 
-    util::guidance::TurnBearing PreTurnBearing(const EdgeID /*eid*/) const override
+    guidance::TurnBearing PreTurnBearing(const EdgeID /*eid*/) const override
     {
-        return util::guidance::TurnBearing(0);
+        return guidance::TurnBearing(0);
     }
 
-    util::guidance::TurnBearing PostTurnBearing(const EdgeID /*eid*/) const override
+    guidance::TurnBearing PostTurnBearing(const EdgeID /*eid*/) const override
     {
-        return util::guidance::TurnBearing(0);
+        return guidance::TurnBearing(0);
     }
 
     util::guidance::BearingClass
@@ -367,6 +353,12 @@ class ContiguousInternalMemoryDataFacade<routing_algorithms::offline::Algorithm>
     util::guidance::EntryClass GetEntryClass(const EdgeID /*turn_id*/) const override { return {}; }
     bool IsLeftHandDriving(const NodeID /*id*/) const override { return false; }
     bool IsSegregated(const NodeID /*id*/) const override { return false; }
+
+    std::vector<extractor::ManeuverOverride>
+    GetOverridesThatStartAt(const NodeID /* edge_based_node_id */) const override
+    {
+        return {};
+    }
 };
 
 } // datafacade

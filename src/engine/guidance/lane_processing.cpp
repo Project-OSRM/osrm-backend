@@ -1,7 +1,7 @@
 #include "util/for_each_pair.hpp"
 #include "util/group_by.hpp"
 
-#include "extractor/guidance/turn_instruction.hpp"
+#include "guidance/turn_instruction.hpp"
 #include "engine/guidance/collapsing_utility.hpp"
 
 #include <algorithm>
@@ -9,16 +9,13 @@
 #include <unordered_set>
 #include <utility>
 
-using osrm::extractor::guidance::TurnInstruction;
-using osrm::extractor::guidance::isLeftTurn;
-using osrm::extractor::guidance::isRightTurn;
-
 namespace osrm
 {
 namespace engine
 {
 namespace guidance
 {
+using namespace osrm::guidance;
 
 std::vector<RouteStep> anticipateLaneChange(std::vector<RouteStep> steps,
                                             const double min_distance_needed_for_lane_change)
