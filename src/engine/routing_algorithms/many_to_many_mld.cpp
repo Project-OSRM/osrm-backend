@@ -1,5 +1,6 @@
 #include "engine/routing_algorithms/many_to_many.hpp"
 #include "engine/routing_algorithms/routing_base.hpp"
+#include "engine/routing_algorithms/direct_shortest_path.hpp"
 
 #include <boost/assert.hpp>
 #include <boost/range/iterator_range_core.hpp>
@@ -457,6 +458,41 @@ std::vector<EdgeDuration> manyToManySearch(SearchEngineData<Algorithm> &engine_w
 
     std::vector<EdgeWeight> weights_table(number_of_entries, INVALID_EDGE_WEIGHT);
     std::vector<EdgeDuration> durations_table(number_of_entries, MAXIMAL_EDGE_DURATION);
+
+    engine_working_data.InitializeOrClearUnpackingStatisticsThreadLocalStorage();
+
+    for (std::uint32_t column_idx = 0; column_idx < number_of_targets; ++column_idx)
+    {
+        const auto &target = phantom_nodes[target_indices[column_idx]];
+
+        for (std::uint32_t row_idx = 0; row_idx < number_of_sources; ++row_idx)
+        {
+            const auto &source = phantom_nodes[source_indices[row_idx]];
+
+            PhantomNodes pair = {source, target};
+
+            InternalRouteResult result =
+                directShortestPathSearch(engine_working_data, facade, pair);
+
+            // std::cout << "column_idx: " << column_idx << std::endl;
+            // std::cout << " row_idx: " << row_idx << std::endl;
+            // std::cout << " source: " << source << std::endl;
+            // std::cout << " target: " << target << std::endl;
+            // std::cout << " row_idx * number_of_targets + column_idx: " << row_idx *
+            // number_of_targets + column_idx << std::endl;
+            // std::cout << " number_of_entries: " << number_of_entries << std::endl;
+
+            weights_table[row_idx * number_of_targets + column_idx] = result.shortest_path_weight;
+            durations_table[row_idx * number_of_targets + column_idx] = result.duration();
+
+            // std::cout << " duration: " <<  durations_table[row_idx * number_of_targets +
+            // column_idx] << std::endl;
+            // std::cout << " weight: " << weights_table[row_idx * number_of_targets + column_idx]
+            // << std::endl;
+        }
+    }
+
+    return durations_table;
 
     std::vector<NodeBucket> search_space_with_buckets;
 
