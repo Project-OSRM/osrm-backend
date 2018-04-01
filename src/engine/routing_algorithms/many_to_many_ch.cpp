@@ -225,9 +225,6 @@ std::vector<EdgeDuration> manyToManySearch(SearchEngineData<ch::Algorithm> &engi
     std::vector<NodeBucket> search_space_with_buckets;
     std::vector<NodeID> packed_leg;
 
-    engine_working_data.InitializeOrClearUnpackingCacheThreadLocalStorage(
-        facade.GetTimestamp()); // always pass in the timestamp and clear if it's different
-
     // Populate buckets with paths from all accessible nodes to destinations via backward searches
     for (std::uint32_t column_idx = 0; column_idx < target_indices.size(); ++column_idx)
     {
@@ -321,7 +318,7 @@ std::vector<EdgeDuration> manyToManySearch(SearchEngineData<ch::Algorithm> &engi
                     ch::calculateEBGNodeAnnotations(facade,
                                                     packed_leg.begin(),
                                                     packed_leg.end(),
-                                                    *engine_working_data.unpacking_cache.get());
+                                                    engine_working_data.unpacking_cache);
 
                 // check the direction of travel to figure out how to calculate the offset to/from
                 // the source/target

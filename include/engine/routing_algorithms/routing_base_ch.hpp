@@ -323,11 +323,16 @@ EdgeDuration calculateEBGNodeAnnotations(const DataFacade<Algorithm> &facade,
 
             std::get<2>(edge) = true; // mark that this edge will now be processed
 
-            if (unpacking_cache.IsEdgeInCache(std::make_tuple(
-                    std::get<0>(edge), std::get<1>(edge), facade.GetExcludeIndex())))
+            if (unpacking_cache.IsEdgeInCache(std::make_tuple(std::get<0>(edge),
+                                                              std::get<1>(edge),
+                                                              facade.GetExcludeIndex(),
+                                                              facade.GetTimestamp())))
             {
-                EdgeDuration duration = unpacking_cache.GetDuration(std::make_tuple(
-                    std::get<0>(edge), std::get<1>(edge), facade.GetExcludeIndex()));
+                EdgeDuration duration =
+                    unpacking_cache.GetDuration(std::make_tuple(std::get<0>(edge),
+                                                                std::get<1>(edge),
+                                                                facade.GetExcludeIndex(),
+                                                                facade.GetTimestamp()));
                 duration_stack.emplace(duration);
             }
             else
@@ -369,8 +374,10 @@ EdgeDuration calculateEBGNodeAnnotations(const DataFacade<Algorithm> &facade,
                 }
                 else
                 {
-                    auto temp = std::make_tuple(
-                        std::get<0>(edge), std::get<1>(edge), facade.GetExcludeIndex());
+                    auto temp = std::make_tuple(std::get<0>(edge),
+                                                std::get<1>(edge),
+                                                facade.GetExcludeIndex(),
+                                                facade.GetTimestamp());
                     // compute the duration here and put it onto the duration stack using method
                     // similar to annotatePath but smaller
                     EdgeDuration duration =
@@ -391,9 +398,11 @@ EdgeDuration calculateEBGNodeAnnotations(const DataFacade<Algorithm> &facade,
             duration_stack.pop();
             EdgeDuration duration = edge1 + edge2;
             duration_stack.emplace(duration);
-            unpacking_cache.AddEdge(
-                std::make_tuple(std::get<0>(edge), std::get<1>(edge), facade.GetExcludeIndex()),
-                duration);
+            unpacking_cache.AddEdge(std::make_tuple(std::get<0>(edge),
+                                                    std::get<1>(edge),
+                                                    facade.GetExcludeIndex(),
+                                                    facade.GetTimestamp()),
+                                    duration);
         }
     }
 
