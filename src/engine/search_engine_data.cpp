@@ -94,8 +94,7 @@ void SearchEngineData<CH>::InitializeOrClearManyToManyThreadLocalStorage(unsigne
 void SearchEngineData<CH>::InitializeOrClearUnpackingCacheGlobalStorage(unsigned timestamp)
 {
     //  using UnpackingCachePtr = std::unique_ptr<UnpackingCache>; // do I need to make this
-    //  threadsafe?
-    // because of effects here
+    //  threadsafe? because of effects here
     if (unpacking_cache.get())
     {
         unpacking_cache->Clear(timestamp);
