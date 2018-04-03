@@ -844,6 +844,10 @@ void ExtractionContainers::PrepareManeuverOverrides()
         {
             result.second = guidance::DirectionModifier::Right;
         }
+        else if (direction_string == "straight")
+        {
+            result.second = guidance::DirectionModifier::Straight;
+        }
 
         return result;
     };
