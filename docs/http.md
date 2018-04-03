@@ -192,7 +192,7 @@ In addition to the [general options](#general-options) the following options are
 |------------|---------------------------------------------|-------------------------------------------------------------------------------|
 |alternatives|`true`, `false` (default), or Number         |Search for alternative routes. Passing a number `alternatives=n` searches for up to `n` alternative routes.\*                            |
 |steps       |`true`, `false` (default)                    |Returned route steps for each route leg                                        |
-|annotations |`true`, `false` (default), `nodes`, `distance`, `duration`, `datasources`, `weight`, `speed`, `datasource_names`  |Returns additional metadata for each coordinate along the route geometry.      |
+|annotations |`true`, `false` (default), `nodes`, `distance`, `duration`, `datasources`, `weight`, `speed`  |Returns additional metadata for each coordinate along the route geometry.      |
 |geometries  |`polyline` (default), `polyline6`, `geojson` |Returned route geometry format (influences overview and per step)              |
 |overview    |`simplified` (default), `full`, `false`      |Add overview geometry either full, simplified according to highest zoom level it could be display on, or not at all.|
 |continue\_straight |`default` (default), `true`, `false` |Forces the route to keep going straight at waypoints constraining uturns there even if it would be faster. Default value depends on the profile. |
@@ -295,7 +295,7 @@ In addition to the [general options](#general-options) the following options are
 |------------|------------------------------------------------|------------------------------------------------------------------------------------------|
 |steps       |`true`, `false` (default)                       |Returned route steps for each route                                                       |
 |geometries  |`polyline` (default), `polyline6`, `geojson`    |Returned route geometry format (influences overview and per step)                         |
-|annotations |`true`, `false` (default), `nodes`, `distance`, `duration`, `datasources`, `weight`, `speed`, `datasource_names`  |Returns additional metadata for each coordinate along the route geometry.                 |
+|annotations |`true`, `false` (default), `nodes`, `distance`, `duration`, `datasources`, `weight`, `speed`  |Returns additional metadata for each coordinate along the route geometry.                 |
 |overview    |`simplified` (default), `full`, `false`         |Add overview geometry either full, simplified according to highest zoom level it could be display on, or not at all.|
 |timestamps  |`{timestamp};{timestamp}[;{timestamp} ...]`     |Timestamps for the input locations in seconds since UNIX epoch. Timestamps need to be monotonically increasing. |
 |radiuses    |`{radius};{radius}[;{radius} ...]`              |Standard deviation of GPS precision used for map matching. If applicable use GPS accuracy.|
@@ -351,7 +351,7 @@ In addition to the [general options](#general-options) the following options are
 |source      |`any` (default), `first`                        |Returned route starts at `any` or `first` coordinate                       |
 |destination |`any` (default), `last`                         |Returned route ends at `any` or `last` coordinate                          |
 |steps       |`true`, `false` (default)                       |Returned route instructions for each trip                                  |
-|annotations |`true`, `false` (default), `nodes`, `distance`, `duration`, `datasources`, `weight`, `speed`, `datasource_names` |Returns additional metadata for each coordinate along the route geometry.  |
+|annotations |`true`, `false` (default), `nodes`, `distance`, `duration`, `datasources`, `weight`, `speed` |Returns additional metadata for each coordinate along the route geometry.  |
 |geometries  |`polyline` (default), `polyline6`, `geojson`    |Returned route geometry format (influences overview and per step)          |
 |overview    |`simplified` (default), `full`, `false`         |Add overview geometry either full, simplified according to highest zoom level it could be display on, or not at all.|
 
@@ -547,7 +547,7 @@ With `steps=false` and `annotations=true`:
     "distance": [5,5,10,5,5],
     "duration": [15,15,40,15,15],
     "datasources": [1,0,0,0,1],
-    "datasource_names": ["traffic","lua profile","lua profile","lua profile","traffic"],
+    "metadata": { "datasource_names": ["traffic","lua profile","lua profile","lua profile","traffic"] },
     "nodes": [49772551,49772552,49786799,49786800,49786801,49786802],
     "speed": [0.3, 0.3, 0.3, 0.3, 0.3]
   }
@@ -562,11 +562,12 @@ Annotation of the whole route leg with fine-grained information about each segme
 
 - `distance`: The distance, in metres, between each pair of coordinates
 - `duration`: The duration between each pair of coordinates, in seconds.  Does not include the duration of any turns.
-- `datasources`: The index of the datasource for the speed between each pair of coordinates. `0` is the default profile, other values are supplied via `--segment-speed-file` to `osrm-contract` or `osrm-customize`
-- `datasource_names`: The names of the datasources used for the speed between each pair of coordinates.  `lua profile` is the default profile, other values arethe filenames supplied via `--segment-speed-file` to `osrm-contract` or `osrm-customize`
+- `datasources`: The index of the datasource for the speed between each pair of coordinates. `0` is the default profile, other values are supplied via `--segment-speed-file` to `osrm-contract` or `osrm-customize`.  String-like names are in the `metadata.datasource_names` array.
 - `nodes`: The OSM node ID for each coordinate along the route, excluding the first/last user-supplied coordinates
 - `weight`: The weights between each pair of coordinates.  Does not include any turn costs.
 - `speed`: Convenience field, calculation of `distance / duration` rounded to one decimal place
+- `metadata`: Metadata related to other annotations
+  - `datasource_names`: The names of the datasources used for the speed between each pair of coordinates.  `lua profile` is the default profile, other values arethe filenames supplied via `--segment-speed-file` to `osrm-contract` or `osrm-customize`
 
 #### Example
 
@@ -575,7 +576,7 @@ Annotation of the whole route leg with fine-grained information about each segme
   "distance": [5,5,10,5,5],
   "duration": [15,15,40,15,15],
   "datasources": [1,0,0,0,1],
-  "datasource_names": ["traffic","lua profile","lua profile","lua profile","traffic"],
+  "metadata": { "datasource_names": ["traffic","lua profile","lua profile","lua profile","traffic"] },
   "nodes": [49772551,49772552,49786799,49786800,49786801,49786802],
   "weight": [15,15,40,15,15]
 }

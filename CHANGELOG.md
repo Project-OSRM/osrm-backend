@@ -24,7 +24,7 @@
     - Performance
       - FIXED: Speed up response time when lots of legs exist and geojson is used with `steps=true` [#4936](https://github.com/Project-OSRM/osrm-backend/pull/4936)
     - Misc:
-      - ADDED: support for new `datasource_names` annotation [#4973](https://github.com/Project-OSRM/osrm-backend/pull/4973)
+      - ADDED: expose name for datasource annotations as metadata [#4973](https://github.com/Project-OSRM/osrm-backend/pull/4973)
 
 # 5.16.0
   - Changes from 5.15.2:

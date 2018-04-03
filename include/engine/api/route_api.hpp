@@ -324,12 +324,22 @@ class RouteAPI : public BaseAPI
                     }
                     annotation.values["nodes"] = std::move(nodes);
                 }
-                if (requested_annotations & RouteParameters::AnnotationsType::DatasourceNames)
+                // Add any supporting metadata, if needed
+                if (requested_annotations & RouteParameters::AnnotationsType::Datasources)
                 {
-                    annotation.values["datasource_names"] = GetAnnotations(
-                        leg_geometry, [&](const guidance::LegGeometry::Annotation &anno) {
-                            return std::string(facade.GetDatasourceName(anno.datasource));
-                        });
+                    const auto MAX_DATASOURCE_ID = 255u;
+                    util::json::Object metadata;
+                    util::json::Array datasource_names;
+                    for (auto i = 0u; i < MAX_DATASOURCE_ID; i++)
+                    {
+                        const auto name = facade.GetDatasourceName(i);
+                        // Length of 0 indicates the first empty name, so we can stop here
+                        if (name.size() == 0)
+                            break;
+                        datasource_names.values.push_back(std::string(facade.GetDatasourceName(i)));
+                    }
+                    metadata.values["datasource_names"] = datasource_names;
+                    annotation.values["metadata"] = metadata;
                 }
 
                 annotations.push_back(std::move(annotation));

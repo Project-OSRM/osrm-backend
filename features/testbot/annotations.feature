@@ -82,14 +82,14 @@ Feature: Annotations
         """
 
         And the query options
-            | annotations | datasource_names |
+            | annotations | datasources |
 
         # Note - the source names here are specific to how the tests are constructed,
         #        so if this test is moved around (changes line number) or support code
         #        changes how the filenames are generated, this test will need to be updated
         When I route I should get
-            | from | to | route   | a:datasource_names                                |
-            | a    | c  | abc,abc | 63_datasource_name_annotations_speeds:lua profile |
+            | from | to | route   | am:datasource_names                               |
+            | a    | c  | abc,abc | lua profile:63_datasource_name_annotations_speeds |
             | c    | a  | abc,abc | lua profile:63_datasource_name_annotations_speeds |
 
 
