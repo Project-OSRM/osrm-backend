@@ -453,7 +453,7 @@ BOOST_AUTO_TEST_CASE(test_manual_setting_of_annotations_property)
                            .values["annotation"]
                            .get<json::Object>()
                            .values;
-    BOOST_CHECK_EQUAL(annotations.size(), 5);
+    BOOST_CHECK_EQUAL(annotations.size(), 6);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

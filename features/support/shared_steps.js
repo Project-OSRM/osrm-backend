@@ -158,7 +158,8 @@ module.exports = function () {
                         // if header matches 'a:*', parse out the values for *
                         // and return in that header
                         headers.forEach((k) => {
-                            let whitelist = ['duration', 'distance', 'datasources', 'nodes', 'weight', 'speed'];
+                            let whitelist = ['duration', 'distance', 'datasources', 'nodes', 'weight', 'speed' ];
+                            let metadata_whitelist = [ 'datasource_names' ];
                             if (k.match(/^a:/)) {
                                 let a_type = k.slice(2);
                                 if (whitelist.indexOf(a_type) == -1)
@@ -166,6 +167,13 @@ module.exports = function () {
                                 if (annotation && !annotation[a_type])
                                     return cb(new Error('Annotation not found in response', a_type));
                                 got[k] = annotation && annotation[a_type] || '';
+                            } else if (k.match(/^am:/)) {
+                                let a_type = k.slice(3);
+                                if (metadata_whitelist.indexOf(a_type) == -1)
+                                    return cb(new Error('Unrecognized annotation field', a_type));
+                                if (annotation && (!annotation.metadata || !annotation.metadata[a_type]))
+                                    return cb(new Error('Annotation not found in response', a_type));
+                                got[k] = (annotation && annotation.metadata && annotation.metadata[a_type]) || '';
                             }
                         });
 
