@@ -122,8 +122,8 @@ inline void readNodes(const boost::filesystem::path &path,
     const auto fingerprint = storage::tar::FileReader::VerifyFingerprint;
     storage::tar::FileReader reader{path, fingerprint};
 
-    storage::serialization::read(reader, "/common/coordinates", coordinates);
-    util::serialization::read(reader, "/common/osm_node_ids", osm_node_ids);
+    storage::serialization::read(reader, "/common/nbn_data/coordinates", coordinates);
+    util::serialization::read(reader, "/common/nbn_data/osm_node_ids", osm_node_ids);
 }
 
 // reads only coordinates from .osrm.nbg_nodes
@@ -135,7 +135,7 @@ inline void readNodeCoordinates(const boost::filesystem::path &path, Coordinates
     const auto fingerprint = storage::tar::FileReader::VerifyFingerprint;
     storage::tar::FileReader reader{path, fingerprint};
 
-    storage::serialization::read(reader, "/common/coordinates", coordinates);
+    storage::serialization::read(reader, "/common/nbn_data/coordinates", coordinates);
 }
 
 // writes .osrm.nbg_nodes
@@ -150,8 +150,8 @@ inline void writeNodes(const boost::filesystem::path &path,
     const auto fingerprint = storage::tar::FileWriter::GenerateFingerprint;
     storage::tar::FileWriter writer{path, fingerprint};
 
-    storage::serialization::write(writer, "/common/coordinates", coordinates);
-    util::serialization::write(writer, "/common/osm_node_ids", osm_node_ids);
+    storage::serialization::write(writer, "/common/nbn_data/coordinates", coordinates);
+    util::serialization::write(writer, "/common/nbn_data/osm_node_ids", osm_node_ids);
 }
 
 // reads .osrm.cnbg_to_ebg
