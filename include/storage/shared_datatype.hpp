@@ -7,7 +7,6 @@
 #include "util/exception.hpp"
 #include "util/exception_utils.hpp"
 #include "util/log.hpp"
-#include "util/vector_view.hpp"
 
 #include <boost/assert.hpp>
 
@@ -55,9 +54,6 @@ inline std::string trimName(const std::string &name_prefix, const std::string &n
 }
 }
 
-// Added at the start and end of each block as sanity check
-const constexpr char CANARY[4] = {'O', 'S', 'R', 'M'};
-
 class DataLayout
 {
   public:
@@ -82,55 +78,17 @@ class DataLayout
         uint64_t result = 0;
         for (const auto &name_and_block : blocks)
         {
-            result += 2 * sizeof(CANARY) + GetBlockSize(name_and_block.first) + BLOCK_ALIGNMENT;
+            result += GetBlockSize(name_and_block.first) + BLOCK_ALIGNMENT;
         }
         return result;
     }
 
-    template <typename T>
-    util::vector_view<T> GetVector(char *shared_memory, const std::string &name) const
-    {
-        return util::vector_view<T>(GetBlockPtr<T>(shared_memory, name), GetBlockEntries(name));
-    }
-
-    template <typename T>
-    util::vector_view<T> GetWritableVector(char *shared_memory, const std::string &name) const
-    {
-        return util::vector_view<T>(GetBlockPtr<T, true>(shared_memory, name),
-                                    GetBlockEntries(name));
-    }
-
-    template <typename T, bool WRITE_CANARY = false>
-    inline T *GetBlockPtr(char *shared_memory, const std::string &name) const
+    template <typename T> inline T *GetBlockPtr(char *shared_memory, const std::string &name) const
     {
         static_assert(BLOCK_ALIGNMENT % std::alignment_of<T>::value == 0,
                       "Datatype does not fit alignment constraints.");
 
         char *ptr = (char *)GetAlignedBlockPtr(shared_memory, name);
-        if (WRITE_CANARY)
-        {
-            char *start_canary_ptr = ptr - sizeof(CANARY);
-            char *end_canary_ptr = ptr + GetBlockSize(name);
-            std::copy(CANARY, CANARY + sizeof(CANARY), start_canary_ptr);
-            std::copy(CANARY, CANARY + sizeof(CANARY), end_canary_ptr);
-        }
-        else
-        {
-            char *start_canary_ptr = ptr - sizeof(CANARY);
-            char *end_canary_ptr = ptr + GetBlockSize(name);
-            bool start_canary_alive = std::equal(CANARY, CANARY + sizeof(CANARY), start_canary_ptr);
-            bool end_canary_alive = std::equal(CANARY, CANARY + sizeof(CANARY), end_canary_ptr);
-            if (!start_canary_alive)
-            {
-                throw util::exception("Start canary of block corrupted. (" + name + ")" +
-                                      SOURCE_REF);
-            }
-            if (!end_canary_alive)
-            {
-                throw util::exception("End canary of block corrupted. (" + name + ")" + SOURCE_REF);
-            }
-        }
-
         return (T *)ptr;
     }
 
@@ -190,13 +148,10 @@ class DataLayout
 
         for (auto iter = blocks.begin(); iter != block_iter; ++iter)
         {
-            ptr = static_cast<char *>(ptr) + sizeof(CANARY);
             ptr = align(ptr);
             ptr = static_cast<char *>(ptr) + iter->second.byte_size;
-            ptr = static_cast<char *>(ptr) + sizeof(CANARY);
         }
 
-        ptr = static_cast<char *>(ptr) + sizeof(CANARY);
         ptr = align(ptr);
         return ptr;
     }
@@ -204,15 +159,6 @@ class DataLayout
     static constexpr std::size_t BLOCK_ALIGNMENT = 64;
     std::map<std::string, Block> blocks;
 };
-
-template <>
-inline util::vector_view<bool> DataLayout::GetWritableVector<bool>(char *shared_memory,
-                                                                   const std::string &name) const
-{
-    return util::vector_view<bool>(
-        GetBlockPtr<util::vector_view<bool>::Word, true>(shared_memory, name),
-        GetBlockEntries(name));
-}
 
 enum SharedDataType
 {
