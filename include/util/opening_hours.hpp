@@ -166,12 +166,18 @@ struct OpeningHours
                 date_to = date_from;
             }
 
+            const bool inverse = (from.year == 0) && (to.year == 0) && (date_from > date_to);
+            if (inverse)
+            {
+                std::swap(date_from, date_to);
+            }
+
             if (!use_curr_day)
                 date_from += date_duration(1);
             if (use_next_day && date_to != date(boost::gregorian::max_date_time))
                 date_to += date_duration(1);
 
-            return date_from <= date_current && date_current <= date_to;
+            return (date_from <= date_current && date_current <= date_to) ^ inverse;
         }
     };
 
@@ -181,29 +187,30 @@ struct OpeningHours
     {
         bool use_curr_day = true;  // the first matching time uses the current day
         bool use_next_day = false; // the first matching time uses the next day
-        return
-            // the value is in range if time is not specified or is in any time range
-            // (also modifies use_curr_day and use_next_day flags to handle overnight day ranges,
-            // e.g. for 22:00-03:00 and 2am -> use_curr_day = false and use_next_day = true)
-            (times.empty() || std::any_of(times.begin(),
-                                          times.end(),
-                                          [&time, &use_curr_day, &use_next_day](const auto &x) {
-                                              return x.IsInRange(time, use_curr_day, use_next_day);
-                                          }))
-            // .. and if weekdays are not specified or matches weekdays range
-            && (weekdays.empty() ||
-                std::any_of(weekdays.begin(),
-                            weekdays.end(),
-                            [&time, use_curr_day, use_next_day](const auto &x) {
-                                return x.IsInRange(time, use_curr_day, use_next_day);
-                            }))
-            // .. and if month-day ranges are not specified or is in any month-day range
-            && (monthdays.empty() ||
-                std::any_of(monthdays.begin(),
-                            monthdays.end(),
-                            [&time, use_curr_day, use_next_day](const auto &x) {
-                                return x.IsInRange(time, use_curr_day, use_next_day);
-                            }));
+        return (!times.empty() || !weekdays.empty() || !monthdays.empty())
+               // the value is in range if time is not specified or is in any time range
+               // (also modifies use_curr_day and use_next_day flags to handle overnight day ranges,
+               // e.g. for 22:00-03:00 and 2am -> use_curr_day = false and use_next_day = true)
+               && (times.empty() ||
+                   std::any_of(times.begin(),
+                               times.end(),
+                               [&time, &use_curr_day, &use_next_day](const auto &x) {
+                                   return x.IsInRange(time, use_curr_day, use_next_day);
+                               }))
+               // .. and if weekdays are not specified or matches weekdays range
+               && (weekdays.empty() ||
+                   std::any_of(weekdays.begin(),
+                               weekdays.end(),
+                               [&time, use_curr_day, use_next_day](const auto &x) {
+                                   return x.IsInRange(time, use_curr_day, use_next_day);
+                               }))
+               // .. and if month-day ranges are not specified or is in any month-day range
+               && (monthdays.empty() ||
+                   std::any_of(monthdays.begin(),
+                               monthdays.end(),
+                               [&time, use_curr_day, use_next_day](const auto &x) {
+                                   return x.IsInRange(time, use_curr_day, use_next_day);
+                               }));
     }
 
     std::vector<TimeSpan> times;
