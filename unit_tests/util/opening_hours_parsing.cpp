@@ -49,8 +49,10 @@ BOOST_AUTO_TEST_CASE(check_opening_hours_grammar)
         "2016 Feb-2017 Dec",
         "2016-2017",
         "Mo,Tu,Th,Fr 12:00-18:00;Sa 12:00-17:00; Th[3] off; Th[-1] off",
-        "Sep 15+Sa-Oct Su[1]; Oct 01-03" // Oktoberfest
-    };
+        "Sep 15+Sa-Oct Su[1]; Oct 01-03", // Oktoberfest
+        "Aug 15-Jun 15: Mo-Fr 07:30-09:30,13:30-15:30",
+        "Mo-Fr 07:00-08:30,14:30-15:30; SH off",
+        "Jun 07: 08:30"};
 
     for (auto &input : opening_hours)
     {
@@ -78,7 +80,8 @@ BOOST_AUTO_TEST_CASE(check_opening_hours_grammar_incorrect_correct)
          "Fr-Sa 20:00-04:00",
          "Tu-Th 20:00-03:00 open \"Club and bar\"; Fr-Sa 20:00-04:00 open \"Club and bar\" || "
          "Su-Mo 18:00-02:00 open \"bar\" || Tu-Th 18:00-03:00 open \"bar\" || Fr-Sa 18:00-04:00 "
-         "open \"bar\""}};
+         "open \"bar\""},
+        {"Jun 07:08:30", "Jun 07:08"}};
 
     for (auto &input : opening_hours)
     {
@@ -288,6 +291,27 @@ BOOST_AUTO_TEST_CASE(check_opening_hours_extended_hours_nonoverlapping)
     BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours, time("Tue, 20 Dec 2016 20:00:00")), true);
     BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours, time("Wed, 21 Dec 2016 20:00:00")), false);
     BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours, time("Thu, 22 Dec 2016 20:00:00")), false);
+}
+
+BOOST_AUTO_TEST_CASE(check_opening_hours_inverted_date_range)
+{
+    const auto &opening_hours = ParseOpeningHours("Aug 15-Jun 15: Mo-Fr 07:30-09:30,13:30-15:30");
+    BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours, time("Tue, 03 Jul 2018 07:00:00")), false);
+    BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours, time("Tue, 03 Jul 2018 09:00:00")), false);
+    BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours, time("Tue, 03 Apr 2018 09:00:00")), true);
+    BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours, time("Mon, 03 Sep 2018 14:00:00")), true);
+    BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours, time("Fri, 13 Jun 2018 09:00:00")), true);
+    BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours, time("Mon, 16 Jun 2018 09:00:00")), false);
+}
+
+BOOST_AUTO_TEST_CASE(check_opening_hours_school_hours)
+{
+    const auto &opening_hours = ParseOpeningHours("Mo-Fr 07:00-08:30,14:30-15:30; SH off");
+    BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours, time("Tue, 03 Jul 2018 06:00:00")), false);
+    BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours, time("Tue, 03 Jul 2018 09:00:00")), false);
+    BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours, time("Tue, 03 Apr 2018 08:00:00")), true);
+    BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours, time("Mon, 03 Sep 2018 15:00:00")), true);
+    BOOST_CHECK_EQUAL(CheckOpeningHours(opening_hours, time("Sun, 02 Sep 2018 15:00:00")), false);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
