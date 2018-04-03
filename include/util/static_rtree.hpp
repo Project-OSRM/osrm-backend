@@ -255,7 +255,7 @@ class StaticRTree
     // Representation of the in-memory search tree
     Vector<TreeNode> m_search_tree;
     // Reference to the actual lon/lat data we need for doing math
-    const Vector<Coordinate> &m_coordinate_list;
+    util::vector_view<const Coordinate> m_coordinate_list;
     // Holds the start indexes of each level in m_search_tree
     Vector<std::uint64_t> m_tree_level_starts;
     // mmap'd .fileIndex file
@@ -264,6 +264,7 @@ class StaticRTree
     util::vector_view<const EdgeDataT> m_objects;
 
   public:
+    StaticRTree() = default;
     StaticRTree(const StaticRTree &) = delete;
     StaticRTree &operator=(const StaticRTree &) = delete;
     StaticRTree(StaticRTree &&) = default;
@@ -273,7 +274,7 @@ class StaticRTree
     explicit StaticRTree(const std::vector<EdgeDataT> &input_data_vector,
                          const Vector<Coordinate> &coordinate_list,
                          const boost::filesystem::path &on_disk_file_name)
-        : m_coordinate_list(coordinate_list)
+        : m_coordinate_list(coordinate_list.data(), coordinate_list.size())
     {
         const auto element_count = input_data_vector.size();
         std::vector<WrappedInputElement> input_wrapper_vector(element_count);
@@ -460,7 +461,7 @@ class StaticRTree
     template <typename = std::enable_if<Ownership == storage::Ownership::Container>>
     explicit StaticRTree(const boost::filesystem::path &on_disk_file_name,
                          const Vector<Coordinate> &coordinate_list)
-        : m_coordinate_list(coordinate_list)
+        : m_coordinate_list(coordinate_list.data(), coordinate_list.size())
     {
         m_objects = mmapFile<EdgeDataT>(on_disk_file_name, m_objects_region);
     }
@@ -475,7 +476,8 @@ class StaticRTree
                          Vector<std::uint64_t> tree_level_starts,
                          const boost::filesystem::path &on_disk_file_name,
                          const Vector<Coordinate> &coordinate_list)
-        : m_search_tree(std::move(search_tree_)), m_coordinate_list(coordinate_list),
+        : m_search_tree(std::move(search_tree_)),
+          m_coordinate_list(coordinate_list.data(), coordinate_list.size()),
           m_tree_level_starts(std::move(tree_level_starts))
     {
         BOOST_ASSERT(m_tree_level_starts.size() >= 2);

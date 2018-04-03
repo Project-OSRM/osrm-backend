@@ -329,21 +329,15 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
 
     // Loading list of coordinates
     {
-        auto coordinates =
-            make_vector_view<util::Coordinate>(memory_ptr, layout, "/common/coordinates");
-
-        auto osm_node_ids =
-            extractor::PackedOSMIDsView{make_vector_view<extractor::PackedOSMIDsView::block_type>(
-                                            memory_ptr, layout, "/common/osm_node_ids/packed"),
-                                        coordinates.size()};
-
-        extractor::files::readNodes(config.GetPath(".osrm.nbg_nodes"), coordinates, osm_node_ids);
+        auto views = make_nbn_data_view(memory_ptr, layout, "/common/nbn_data");
+        extractor::files::readNodes(
+            config.GetPath(".osrm.nbg_nodes"), std::get<0>(views), std::get<1>(views));
     }
 
     // load turn weight penalties
     {
         auto turn_duration_penalties =
-            make_vector_view<TurnPenalty>(memory_ptr, layout, "/common/turn_penalty/weight");
+            make_turn_weight_view(memory_ptr, layout, "/common/turn_penalty");
         extractor::files::readTurnWeightPenalty(config.GetPath(".osrm.turn_weight_penalties"),
                                                 turn_duration_penalties);
     }
@@ -351,7 +345,7 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
     // load turn duration penalties
     {
         auto turn_duration_penalties =
-            make_vector_view<TurnPenalty>(memory_ptr, layout, "/common/turn_penalty/duration");
+            make_turn_duration_view(memory_ptr, layout, "/common/turn_penalty");
         extractor::files::readTurnDurationPenalty(config.GetPath(".osrm.turn_duration_penalties"),
                                                   turn_duration_penalties);
     }

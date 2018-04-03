@@ -35,6 +35,7 @@
 #include "util/typedefs.hpp"
 #include "util/vector_view.hpp"
 
+#include "util/filtered_graph.hpp"
 #include "util/packed_vector.hpp"
 #include "util/vector_view.hpp"
 
@@ -72,7 +73,8 @@ make_packed_vector_view(char *memory_ptr, const DataLayout &layout, const std::s
     return V{packed_internal, std::numeric_limits<std::size_t>::max()};
 }
 
-auto make_name_table_view(char *memory_ptr, const DataLayout &layout, const std::string &name)
+inline auto
+make_name_table_view(char *memory_ptr, const DataLayout &layout, const std::string &name)
 {
     auto blocks = make_vector_view<extractor::NameTableView::IndexedData::BlockReference>(
         memory_ptr, layout, name + "/blocks");
@@ -83,14 +85,14 @@ auto make_name_table_view(char *memory_ptr, const DataLayout &layout, const std:
     return extractor::NameTableView{index_data_view};
 }
 
-auto make_lane_data_view(char *memory_ptr, const DataLayout &layout, const std::string &name)
+inline auto make_lane_data_view(char *memory_ptr, const DataLayout &layout, const std::string &name)
 {
     return make_vector_view<util::guidance::LaneTupleIdPair>(memory_ptr, layout, name + "/data");
 }
 
-auto make_turn_lane_description_views(char *memory_ptr,
-                                      const DataLayout &layout,
-                                      const std::string &name)
+inline auto make_turn_lane_description_views(char *memory_ptr,
+                                             const DataLayout &layout,
+                                             const std::string &name)
 {
     auto offsets = make_vector_view<std::uint32_t>(memory_ptr, layout, name + "/offsets");
     auto masks =
@@ -99,7 +101,7 @@ auto make_turn_lane_description_views(char *memory_ptr,
     return std::make_tuple(offsets, masks);
 }
 
-auto make_ebn_data_view(char *memory_ptr, const DataLayout &layout, const std::string &name)
+inline auto make_ebn_data_view(char *memory_ptr, const DataLayout &layout, const std::string &name)
 {
     auto edge_based_node_data =
         make_vector_view<extractor::EdgeBasedNode>(memory_ptr, layout, name + "/nodes");
@@ -110,7 +112,7 @@ auto make_ebn_data_view(char *memory_ptr, const DataLayout &layout, const std::s
                                             std::move(annotation_data));
 }
 
-auto make_turn_data_view(char *memory_ptr, const DataLayout &layout, const std::string &name)
+inline auto make_turn_data_view(char *memory_ptr, const DataLayout &layout, const std::string &name)
 {
     auto lane_data_ids = make_vector_view<LaneDataID>(memory_ptr, layout, name + "/lane_data_ids");
 
@@ -133,7 +135,8 @@ auto make_turn_data_view(char *memory_ptr, const DataLayout &layout, const std::
                                   std::move(post_turn_bearings));
 }
 
-auto make_segment_data_view(char *memory_ptr, const DataLayout &layout, const std::string &name)
+inline auto
+make_segment_data_view(char *memory_ptr, const DataLayout &layout, const std::string &name)
 {
     auto geometry_begin_indices = make_vector_view<unsigned>(memory_ptr, layout, name + "/index");
 
@@ -177,29 +180,39 @@ auto make_segment_data_view(char *memory_ptr, const DataLayout &layout, const st
                                       std::move(rev_datasources_list)};
 }
 
-auto make_coordinates_view(char *memory_ptr, const DataLayout &layout, const std::string &name)
+inline auto
+make_coordinates_view(char *memory_ptr, const DataLayout &layout, const std::string &name)
 {
     return make_vector_view<util::Coordinate>(memory_ptr, layout, name);
 }
 
-auto make_osm_ids_view(char *memory_ptr, const DataLayout &layout, const std::string &name)
+inline auto make_osm_ids_view(char *memory_ptr, const DataLayout &layout, const std::string &name)
 {
     return make_packed_vector_view<extractor::PackedOSMIDsView::value_type,
                                    extractor::PackedOSMIDsView::value_size>(
         memory_ptr, layout, name);
 }
 
-auto make_turn_duration_view(char *memory_ptr, const DataLayout &layout, const std::string &name)
+inline auto make_nbn_data_view(char *memory_ptr, const DataLayout &layout, const std::string &name)
+{
+    return std::make_tuple(make_coordinates_view(memory_ptr, layout, name + "/coordinates"),
+                           make_osm_ids_view(memory_ptr, layout, name + "/osm_node_ids"));
+}
+
+inline auto
+make_turn_weight_view(char *memory_ptr, const DataLayout &layout, const std::string &name)
 {
     return make_vector_view<TurnPenalty>(memory_ptr, layout, name + "/weight");
 }
 
-auto make_turn_penalties_view(char *memory_ptr, const DataLayout &layout, const std::string &name)
+inline auto
+make_turn_duration_view(char *memory_ptr, const DataLayout &layout, const std::string &name)
 {
     return make_vector_view<TurnPenalty>(memory_ptr, layout, name + "/duration");
 }
 
-auto make_search_tree_view(char *memory_ptr, const DataLayout &layout, const std::string &name)
+inline auto
+make_search_tree_view(char *memory_ptr, const DataLayout &layout, const std::string &name)
 {
     using RTreeLeaf = extractor::EdgeBasedNodeSegment;
     using RTreeNode = util::StaticRTree<RTreeLeaf, storage::Ownership::View>::TreeNode;
@@ -209,17 +222,23 @@ auto make_search_tree_view(char *memory_ptr, const DataLayout &layout, const std
     const auto rtree_level_starts =
         make_vector_view<std::uint64_t>(memory_ptr, layout, name + "/search_tree_level_starts");
 
-    const auto coordinates = make_coordinates_view(memory_ptr, layout, "/common/coordinates");
+    const auto coordinates =
+        make_coordinates_view(memory_ptr, layout, "/common/nbn_data/coordinates");
 
     const char *path = layout.GetBlockPtr<char>(memory_ptr, name + "/file_index_path");
+
+    if (!boost::filesystem::exists(boost::filesystem::path{path}))
+    {
+        throw util::exception("Could not load " + std::string(path) + "Does the leaf file exist?" +
+                              SOURCE_REF);
+    }
 
     return util::StaticRTree<RTreeLeaf, storage::Ownership::View>{
         std::move(search_tree), std::move(rtree_level_starts), path, std::move(coordinates)};
 }
 
-auto make_intersection_bearings_view(char *memory_ptr,
-                                     const DataLayout &layout,
-                                     const std::string &name)
+inline auto
+make_intersection_bearings_view(char *memory_ptr, const DataLayout &layout, const std::string &name)
 {
     auto bearing_offsets =
         make_vector_view<unsigned>(memory_ptr, layout, name + "/class_id_to_ranges/block_offsets");
@@ -238,14 +257,14 @@ auto make_intersection_bearings_view(char *memory_ptr,
         std::move(bearing_values), std::move(bearing_class_id), std::move(bearing_range_table)};
 }
 
-auto make_entry_classes_view(char *memory_ptr, const DataLayout &layout, const std::string &name)
+inline auto
+make_entry_classes_view(char *memory_ptr, const DataLayout &layout, const std::string &name)
 {
     return make_vector_view<util::guidance::EntryClass>(memory_ptr, layout, name);
 }
 
-auto make_contracted_metric_view(char *memory_ptr,
-                                 const DataLayout &layout,
-                                 const std::string &name)
+inline auto
+make_contracted_metric_view(char *memory_ptr, const DataLayout &layout, const std::string &name)
 {
     auto node_list = make_vector_view<contractor::QueryGraphView::NodeArrayEntry>(
         memory_ptr, layout, name + "/contracted_graph/node_array");
@@ -262,7 +281,7 @@ auto make_contracted_metric_view(char *memory_ptr,
                                             std::move(edge_filter)};
 }
 
-auto make_partition_view(char *memory_ptr, const DataLayout &layout, const std::string &name)
+inline auto make_partition_view(char *memory_ptr, const DataLayout &layout, const std::string &name)
 {
     auto level_data_ptr = layout.GetBlockPtr<partitioner::MultiLevelPartitionView::LevelData>(
         memory_ptr, name + "/level_data");
@@ -274,7 +293,8 @@ auto make_partition_view(char *memory_ptr, const DataLayout &layout, const std::
         level_data_ptr, std::move(partition), std::move(cell_to_children)};
 }
 
-auto make_cell_storage_view(char *memory_ptr, const DataLayout &layout, const std::string &name)
+inline auto
+make_cell_storage_view(char *memory_ptr, const DataLayout &layout, const std::string &name)
 {
     auto source_boundary = make_vector_view<NodeID>(memory_ptr, layout, name + "/source_boundary");
     auto destination_boundary =
@@ -290,7 +310,25 @@ auto make_cell_storage_view(char *memory_ptr, const DataLayout &layout, const st
                                         std::move(level_offsets)};
 }
 
-auto make_cell_metric_view(char *memory_ptr, const DataLayout &layout, const std::string &name)
+inline auto make_filtered_cell_metric_view(char *memory_ptr,
+                                           const DataLayout &layout,
+                                           const std::string &name,
+                                           const std::size_t exclude_index)
+{
+    customizer::CellMetricView cell_metric;
+
+    auto prefix = name + "/exclude/" + std::to_string(exclude_index);
+    auto weights_block_id = prefix + "/weights";
+    auto durations_block_id = prefix + "/durations";
+
+    auto weights = make_vector_view<EdgeWeight>(memory_ptr, layout, weights_block_id);
+    auto durations = make_vector_view<EdgeDuration>(memory_ptr, layout, durations_block_id);
+
+    return customizer::CellMetricView{std::move(weights), std::move(durations)};
+}
+
+inline auto
+make_cell_metric_view(char *memory_ptr, const DataLayout &layout, const std::string &name)
 {
     std::vector<customizer::CellMetricView> cell_metric_excludes;
 
@@ -311,9 +349,8 @@ auto make_cell_metric_view(char *memory_ptr, const DataLayout &layout, const std
     return cell_metric_excludes;
 }
 
-auto make_multi_level_graph_view(char *memory_ptr,
-                                 const DataLayout &layout,
-                                 const std::string &name)
+inline auto
+make_multi_level_graph_view(char *memory_ptr, const DataLayout &layout, const std::string &name)
 {
     auto node_list = make_vector_view<customizer::MultiLevelEdgeBasedGraphView::NodeArrayEntry>(
         memory_ptr, layout, name + "/node_array");
@@ -326,9 +363,8 @@ auto make_multi_level_graph_view(char *memory_ptr,
         std::move(node_list), std::move(edge_list), std::move(node_to_offset));
 }
 
-auto make_maneuver_overrides_views(char *memory_ptr,
-                                   const DataLayout &layout,
-                                   const std::string &name)
+inline auto
+make_maneuver_overrides_views(char *memory_ptr, const DataLayout &layout, const std::string &name)
 {
     auto maneuver_overrides = make_vector_view<extractor::StorageManeuverOverride>(
         memory_ptr, layout, name + "/overrides");
@@ -336,6 +372,21 @@ auto make_maneuver_overrides_views(char *memory_ptr,
         make_vector_view<NodeID>(memory_ptr, layout, name + "/node_sequences");
 
     return std::make_tuple(maneuver_overrides, maneuver_override_node_sequences);
+}
+
+inline auto make_filtered_graph_view(char *memory_ptr,
+                                     const DataLayout &layout,
+                                     const std::string &name,
+                                     const std::size_t exclude_index)
+{
+    auto exclude_prefix = name + "/exclude/" + std::to_string(exclude_index);
+    auto edge_filter = make_vector_view<bool>(memory_ptr, layout, exclude_prefix + "/edge_filter");
+    auto node_list = make_vector_view<contractor::QueryGraphView::NodeArrayEntry>(
+        memory_ptr, layout, name + "/contracted_graph/node_array");
+    auto edge_list = make_vector_view<contractor::QueryGraphView::EdgeArrayEntry>(
+        memory_ptr, layout, name + "/contracted_graph/edge_array");
+
+    return util::FilteredGraphView<contractor::QueryGraphView>({node_list, edge_list}, edge_filter);
 }
 }
 }
