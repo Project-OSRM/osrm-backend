@@ -38,9 +38,9 @@ BOOST_AUTO_TEST_CASE(layout_write_test)
     auto biggest_addr = buffer.data() + buffer.size();
 
     {
-        auto block_1_ptr = layout.GetBlockPtr<std::uint64_t, true>(buffer.data(), "block1");
-        auto block_2_ptr = layout.GetBlockPtr<std::uint32_t, true>(buffer.data(), "block2");
-        auto block_3_ptr = layout.GetBlockPtr<std::uint64_t, true>(buffer.data(), "block3");
+        auto block_1_ptr = layout.GetBlockPtr<std::uint64_t>(buffer.data(), "block1");
+        auto block_2_ptr = layout.GetBlockPtr<std::uint32_t>(buffer.data(), "block2");
+        auto block_3_ptr = layout.GetBlockPtr<std::uint64_t>(buffer.data(), "block3");
 
         BOOST_CHECK_LT(reinterpret_cast<std::size_t>(smallest_addr),
                        reinterpret_cast<std::size_t>(block_1_ptr));
