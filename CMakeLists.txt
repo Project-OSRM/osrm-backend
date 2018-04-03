@@ -42,7 +42,6 @@ if(ENABLE_MASON)
   set(MASON_LUA_VERSION "5.2.4")
   set(MASON_BZIP2_VERSION "1.0.6")
   set(MASON_TBB_VERSION "2017_U7")
-  set(MASON_CLANG_FORMAT_VERSION "3.8.1")
 
   message(STATUS "Enabling mason")
 
@@ -447,8 +446,6 @@ if(ENABLE_MASON)
   set(Boost_THREAD_LIBRARY ${MASON_PACKAGE_boost_libthread_STATIC_LIBS})
   mason_use(boost_libsystem VERSION ${MASON_BOOST_VERSION})
   set(Boost_SYSTEM_LIBRARY ${MASON_PACKAGE_boost_libsystem_STATIC_LIBS})
-
-  mason_use(clang-format VERSION ${MASON_CLANG_FORMAT_VERSION})
 
   if (ENABLE_STXXL)
     mason_use(stxxl VERSION ${MASON_STXXL_VERSION})
