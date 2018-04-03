@@ -243,6 +243,7 @@ template <typename T, std::size_t Bits, storage::Ownership Ownership> class Pack
 
   public:
     using value_type = T;
+    static constexpr std::size_t value_size = Bits;
     using block_type = WordT;
 
     class internal_reference
