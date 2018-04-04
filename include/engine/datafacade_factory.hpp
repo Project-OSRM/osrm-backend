@@ -46,15 +46,14 @@ template <template <typename A> class FacadeT, typename AlgorithmT> class DataFa
     template <typename AllocatorT>
     DataFacadeFactory(std::shared_ptr<AllocatorT> allocator, std::true_type)
     {
-        const auto &layout = allocator->GetLayout();
-        properties = layout.template GetBlockPtr<extractor::ProfileProperties>(
-            allocator->GetMemory(), "/common/properties");
+        const auto &index = allocator->GetIndex();
+        properties = index.template GetBlockPtr<extractor::ProfileProperties>("/common/properties");
         const auto &metric_name = properties->GetWeightName();
 
         std::vector<std::string> exclude_prefixes;
         auto exclude_path = std::string("/") + routing_algorithms::identifier<AlgorithmT>() +
                             std::string("/metrics/") + metric_name + "/exclude/";
-        layout.List(exclude_path, std::back_inserter(exclude_prefixes));
+        index.List(exclude_path, std::back_inserter(exclude_prefixes));
         facades.resize(exclude_prefixes.size());
 
         if (facades.empty())
@@ -89,9 +88,8 @@ template <template <typename A> class FacadeT, typename AlgorithmT> class DataFa
     template <typename AllocatorT>
     DataFacadeFactory(std::shared_ptr<AllocatorT> allocator, std::false_type)
     {
-        const auto &layout = allocator->GetLayout();
-        properties = layout.template GetBlockPtr<extractor::ProfileProperties>(
-            allocator->GetMemory(), "/common/properties");
+        const auto &index = allocator->GetIndex();
+        properties = index.template GetBlockPtr<extractor::ProfileProperties>("/common/properties");
         const auto &metric_name = properties->GetWeightName();
         facades.push_back(std::make_shared<const Facade>(allocator, metric_name, 0));
     }

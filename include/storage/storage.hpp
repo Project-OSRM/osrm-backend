@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define STORAGE_HPP
 
 #include "storage/shared_datatype.hpp"
+#include "storage/shared_data_index.hpp"
 #include "storage/storage_config.hpp"
 
 #include <boost/filesystem/path.hpp>
@@ -46,8 +47,10 @@ class Storage
 
     int Run(int max_wait, const std::string &name);
 
-    void PopulateLayout(DataLayout &layout);
-    void PopulateData(const DataLayout &layout, char *memory_ptr);
+    void PopulateStaticLayout(DataLayout &layout);
+    void PopulateUpdatableLayout(DataLayout &layout);
+    void PopulateStaticData(const SharedDataIndex &index);
+    void PopulateUpdatableData(const SharedDataIndex &index);
 
   private:
     StorageConfig config;

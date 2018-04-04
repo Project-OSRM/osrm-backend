@@ -29,11 +29,10 @@ class MMapMemoryAllocator : public ContiguousBlockAllocator
     ~MMapMemoryAllocator() override final;
 
     // interface to give access to the datafacades
-    storage::DataLayout &GetLayout() override final;
-    char *GetMemory() override final;
+    const storage::SharedDataIndex &GetIndex() override final;
 
   private:
-    storage::DataLayout *data_layout;
+    storage::SharedDataIndex index;
     util::vector_view<char> mapped_memory;
     boost::iostreams::mapped_file mapped_memory_file;
 };
