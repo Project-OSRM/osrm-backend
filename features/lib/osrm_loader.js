@@ -77,7 +77,7 @@ class OSRMDirectLoader extends OSRMBaseLoader {
     osrmUp (callback) {
         if (this.osrmIsRunning()) return callback(new Error("osrm-routed already running!"));
 
-        const command_arguments = util.format('%s -p %d -i %s -a %s', this.inputFile, this.scope.OSRM_PORT, this.scope.OSRM_HOST, this.scope.ROUTING_ALGORITHM);
+        const command_arguments = util.format('%s -p %d -i %s -a %s', this.inputFile, this.scope.OSRM_PORT, this.scope.OSRM_IP, this.scope.ROUTING_ALGORITHM);
         this.child = this.scope.runBin('osrm-routed', command_arguments, this.scope.environment, (err) => {
             if (err && err.signal !== 'SIGINT') {
                 this.child = null;
