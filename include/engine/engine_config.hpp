@@ -91,6 +91,7 @@ struct EngineConfig final
     boost::filesystem::path memory_file;
     Algorithm algorithm = Algorithm::CH;
     std::string verbosity;
+    std::string dataset_name;
 };
 }
 }

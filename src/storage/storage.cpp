@@ -65,7 +65,7 @@ using Monitor = SharedMonitor<SharedRegionRegister>;
 
 Storage::Storage(StorageConfig config_) : config(std::move(config_)) {}
 
-int Storage::Run(int max_wait)
+int Storage::Run(int max_wait, const std::string &dataset_name)
 {
     BOOST_ASSERT_MSG(config.IsValid(), "Invalid storage config");
 
@@ -161,14 +161,14 @@ int Storage::Run(int max_wait)
             lock.lock();
         }
 
-        auto region_id = shared_register.Find("data");
+        auto region_id = shared_register.Find(dataset_name + "/data");
         if (region_id == SharedRegionRegister::INVALID_REGION_ID)
         {
-            region_id = shared_register.Register("data", shm_key);
+            region_id = shared_register.Register(dataset_name + "/data", shm_key);
         }
         else
         {
-            auto& shared_region = shared_register.GetRegion(region_id);
+            auto &shared_region = shared_register.GetRegion(region_id);
             next_timestamp = shared_region.timestamp + 1;
             in_use_key = shared_region.shm_key;
             shared_region.shm_key = shm_key;

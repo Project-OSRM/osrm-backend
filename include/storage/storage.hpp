@@ -44,7 +44,7 @@ class Storage
   public:
     Storage(StorageConfig config);
 
-    int Run(int max_wait);
+    int Run(int max_wait, const std::string &name);
 
     void PopulateLayout(DataLayout &layout);
     void PopulateData(const DataLayout &layout, char *memory_ptr);

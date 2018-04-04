@@ -221,6 +221,18 @@ struct SharedRegionRegister
         }
     }
 
+    template<typename OutIter>
+    void List(OutIter out) const
+    {
+        for (const auto& region : regions)
+        {
+            if (!region.IsEmpty())
+            {
+                *out++ = region.name;
+            }
+        }
+    }
+
     void Deregister(const RegionID key) { regions[key] = SharedRegion{}; }
 
     const auto &GetRegion(const RegionID key) const { return regions[key]; }

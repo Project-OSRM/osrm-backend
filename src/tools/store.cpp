@@ -25,6 +25,23 @@ void deleteRegion(const storage::SharedRegionRegister::ShmKey key)
     }
 }
 
+void listRegions()
+{
+
+    storage::SharedMonitor<storage::SharedRegionRegister> monitor;
+    std::vector<std::string> names;
+    const auto &shared_register = monitor.data();
+    shared_register.List(std::back_inserter(names));
+    osrm::util::Log() << "name\tshm key\ttimestamp";
+    for (const auto &name : names)
+    {
+        auto id = shared_register.Find(name);
+        auto region = shared_register.GetRegion(id);
+        osrm::util::Log() << name << "\t"
+                          << (int) region.shm_key << "\t" << region.timestamp;
+    }
+}
+
 void springClean()
 {
     osrm::util::Log() << "Releasing all locks";
@@ -55,7 +72,9 @@ bool generateDataStoreOptions(const int argc,
                               const char *argv[],
                               std::string &verbosity,
                               boost::filesystem::path &base_path,
-                              int &max_wait)
+                              int &max_wait,
+                              std::string &dataset_name,
+                              bool &list_datasets)
 {
     // declare a group of options that will be allowed only on command line
     boost::program_options::options_description generic_options("Options");
@@ -69,10 +88,19 @@ bool generateDataStoreOptions(const int argc,
     // declare a group of options that will be allowed both on command line
     // as well as in a config file
     boost::program_options::options_description config_options("Configuration");
-    config_options.add_options()("max-wait",
-                                 boost::program_options::value<int>(&max_wait)->default_value(-1),
-                                 "Maximum number of seconds to wait on a running data update "
-                                 "before aquiring the lock by force.");
+    config_options.add_options() //
+        ("max-wait",
+         boost::program_options::value<int>(&max_wait)->default_value(-1),
+         "Maximum number of seconds to wait on a running data update "
+         "before aquiring the lock by force.") //
+        ("dataset-name",
+         boost::program_options::value<std::string>(&dataset_name)->default_value(""),
+         "Name of the dataset to load into memory. This allows having multiple datasets in memory "
+         "at the same time.") //
+        ("list",
+         boost::program_options::value<bool>(&list_datasets)->default_value(false)->implicit_value(true),
+         "Name of the dataset to load into memory. This allows having multiple datasets in memory "
+         "at the same time.");
 
     // hidden options, will be allowed on command line but will not be shown to the user
     boost::program_options::options_description hidden_options("Hidden options");
@@ -165,12 +193,21 @@ int main(const int argc, const char *argv[]) try
     std::string verbosity;
     boost::filesystem::path base_path;
     int max_wait = -1;
-    if (!generateDataStoreOptions(argc, argv, verbosity, base_path, max_wait))
+    std::string dataset_name;
+    bool list_datasets = false;
+    if (!generateDataStoreOptions(
+            argc, argv, verbosity, base_path, max_wait, dataset_name, list_datasets))
     {
         return EXIT_SUCCESS;
     }
 
     util::LogPolicy::GetInstance().SetLevel(verbosity);
+
+    if (list_datasets)
+    {
+        listRegions();
+        return EXIT_SUCCESS;
+    }
 
     storage::StorageConfig config(base_path);
     if (!config.IsValid())
@@ -180,7 +217,7 @@ int main(const int argc, const char *argv[]) try
     }
     storage::Storage storage(std::move(config));
 
-    return storage.Run(max_wait);
+    return storage.Run(max_wait, dataset_name);
 }
 catch (const osrm::RuntimeError &e)
 {
