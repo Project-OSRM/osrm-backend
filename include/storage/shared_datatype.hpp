@@ -221,10 +221,9 @@ struct SharedRegionRegister
         }
     }
 
-    template<typename OutIter>
-    void List(OutIter out) const
+    template <typename OutIter> void List(OutIter out) const
     {
-        for (const auto& region : regions)
+        for (const auto &region : regions)
         {
             if (!region.IsEmpty())
             {

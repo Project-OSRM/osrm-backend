@@ -63,7 +63,7 @@ class SharedMemory
         {
             shm = boost::interprocess::xsi_shared_memory(boost::interprocess::open_only, key);
 
-            util::Log(logDEBUG) << "opening " << (int) shm.get_shmid() << " from id " << (int) id;
+            util::Log(logDEBUG) << "opening " << (int)shm.get_shmid() << " from id " << (int)id;
 
             region = boost::interprocess::mapped_region(shm, boost::interprocess::read_only);
         }

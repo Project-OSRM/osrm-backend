@@ -37,8 +37,7 @@ void listRegions()
     {
         auto id = shared_register.Find(name);
         auto region = shared_register.GetRegion(id);
-        osrm::util::Log() << name << "\t"
-                          << (int) region.shm_key << "\t" << region.timestamp;
+        osrm::util::Log() << name << "\t" << (int)region.shm_key << "\t" << region.timestamp;
     }
 }
 
@@ -98,7 +97,9 @@ bool generateDataStoreOptions(const int argc,
          "Name of the dataset to load into memory. This allows having multiple datasets in memory "
          "at the same time.") //
         ("list",
-         boost::program_options::value<bool>(&list_datasets)->default_value(false)->implicit_value(true),
+         boost::program_options::value<bool>(&list_datasets)
+             ->default_value(false)
+             ->implicit_value(true),
          "Name of the dataset to load into memory. This allows having multiple datasets in memory "
          "at the same time.");
 
