@@ -279,7 +279,8 @@ class FileWriter
         // update header to reflect increased tar size
         auto old_size = header.size;
         header.size += number_of_bytes;
-        mtar_write_header(&handle, &header);
+        ret = mtar_write_header(&handle, &header);
+        detail::checkMTarError(ret, path, name);
 
         // now seek to the end of the old record
         handle.remaining_data = number_of_bytes;
