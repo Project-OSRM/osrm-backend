@@ -15,7 +15,7 @@ namespace datafacade
 
 SharedMemoryAllocator::SharedMemoryAllocator(storage::SharedRegionRegister::ShmKey data_shm_key)
 {
-    util::Log(logDEBUG) << "Loading new data for region " << data_shm_key;
+    util::Log(logDEBUG) << "Loading new data for region " << (int)data_shm_key;
 
     BOOST_ASSERT(storage::SharedMemory::RegionExists(data_shm_key));
     m_large_memory = storage::makeSharedMemory(data_shm_key);
