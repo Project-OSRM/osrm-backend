@@ -12,6 +12,7 @@
       - CHANGED #4929: Don't use obviousness for links bifurcations [#4929](https://github.com/Project-OSRM/osrm-backend/pull/4929)
       - FIXED #4929: Adjust Straight direction modifiers of side roads in driveway handler [#4929](https://github.com/Project-OSRM/osrm-backend/pull/4929)
       - CHANGED #4925: Added post process logic to collapse segregated turn instructions [#4925](https://github.com/Project-OSRM/osrm-backend/pull/4925)
+      - ADDED: Maneuver relation now supports `straight` as a direction [#4995](https://github.com/Project-OSRM/osrm-backend/pull/4995)
     - Tools:
       - `osrm-routed` accepts a new property `--memory_file` to store memory in a file on disk.
     - NodeJS:
