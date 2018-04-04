@@ -142,7 +142,8 @@ inline engine_config_ptr argumentsToEngineConfig(const Nan::FunctionCallbackInfo
     {
         if (dataset_name->IsString())
         {
-            engine_config->dataset_name = *v8::String::Utf8Value(Nan::To<v8::String>(dataset_name).ToLocalChecked());
+            engine_config->dataset_name =
+                *v8::String::Utf8Value(Nan::To<v8::String>(dataset_name).ToLocalChecked());
         }
         else
         {

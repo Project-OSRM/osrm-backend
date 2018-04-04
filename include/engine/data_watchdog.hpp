@@ -46,8 +46,8 @@ class DataWatchdogImpl<AlgorithmT, datafacade::ContiguousInternalMemoryDataFacad
             auto region_id = shared_register.Find(dataset_name + "/data");
             if (region_id == storage::SharedRegionRegister::INVALID_REGION_ID)
             {
-                throw util::exception(
-                    "Could not find shared memory region for \"" + dataset_name +"/data\". Did you run osrm-datastore?");
+                throw util::exception("Could not find shared memory region for \"" + dataset_name +
+                                      "/data\". Did you run osrm-datastore?");
             }
             shared_region = &shared_register.GetRegion(region_id);
             region = *shared_region;
@@ -94,8 +94,8 @@ class DataWatchdogImpl<AlgorithmT, datafacade::ContiguousInternalMemoryDataFacad
                 facade_factory =
                     DataFacadeFactory<datafacade::ContiguousInternalMemoryDataFacade, AlgorithmT>(
                         std::make_shared<datafacade::SharedMemoryAllocator>(region.shm_key));
-                util::Log() << "updated facade to region " << (int) region.shm_key << " with timestamp "
-                            << region.timestamp;
+                util::Log() << "updated facade to region " << (int)region.shm_key
+                            << " with timestamp " << region.timestamp;
             }
         }
 
