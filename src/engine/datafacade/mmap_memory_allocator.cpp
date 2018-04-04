@@ -1,5 +1,7 @@
 #include "engine/datafacade/mmap_memory_allocator.hpp"
 
+#include "storage/io.hpp"
+#include "storage/serialization.hpp"
 #include "storage/storage.hpp"
 
 #include "util/log.hpp"
@@ -22,31 +24,43 @@ MMapMemoryAllocator::MMapMemoryAllocator(const storage::StorageConfig &config,
     if (!boost::filesystem::exists(memory_file))
     {
         storage::DataLayout initial_layout;
-        storage.PopulateLayout(initial_layout);
+        storage.PopulateStaticLayout(initial_layout);
+        storage.PopulateUpdatableLayout(initial_layout);
 
         auto data_size = initial_layout.GetSizeOfLayout();
-        auto total_size = data_size + sizeof(storage::DataLayout);
+
+        storage::io::BufferWriter writer;
+        storage::serialization::write(writer, initial_layout);
+        auto encoded_layout = writer.GetBuffer();
+
+        auto total_size = data_size + encoded_layout.size();
 
         mapped_memory = util::mmapFile<char>(memory_file, mapped_memory_file, total_size);
 
-        data_layout = reinterpret_cast<storage::DataLayout *>(mapped_memory.data());
-        *data_layout = initial_layout;
-        storage.PopulateData(*data_layout, GetMemory());
+        std::copy(encoded_layout.begin(), encoded_layout.end(), mapped_memory.data());
+
+        index = storage::SharedDataIndex(
+            {{mapped_memory.data() + encoded_layout.size(), std::move(initial_layout)}});
+
+        storage.PopulateStaticData(index);
+        storage.PopulateUpdatableData(index);
     }
     else
     {
         mapped_memory = util::mmapFile<char>(memory_file, mapped_memory_file);
-        data_layout = reinterpret_cast<storage::DataLayout *>(mapped_memory.data());
+
+        storage::DataLayout layout;
+        storage::io::BufferReader reader(mapped_memory.data());
+        storage::serialization::read(reader, layout);
+        auto layout_size = reader.GetPosition();
+
+        index = storage::SharedDataIndex({{mapped_memory.data() + layout_size, std::move(layout)}});
     }
 }
 
 MMapMemoryAllocator::~MMapMemoryAllocator() {}
 
-storage::DataLayout &MMapMemoryAllocator::GetLayout() { return *data_layout; }
-char *MMapMemoryAllocator::GetMemory()
-{
-    return mapped_memory.data() + sizeof(storage::DataLayout);
-}
+const storage::SharedDataIndex &MMapMemoryAllocator::GetIndex() { return index; }
 
 } // namespace datafacade
 } // namespace engine

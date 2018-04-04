@@ -43,18 +43,23 @@ class DataWatchdogImpl<AlgorithmT, datafacade::ContiguousInternalMemoryDataFacad
             boost::interprocess::scoped_lock<mutex_type> current_region_lock(barrier.get_mutex());
 
             auto &shared_register = barrier.data();
-            auto region_id = shared_register.Find(dataset_name + "/data");
-            if (region_id == storage::SharedRegionRegister::INVALID_REGION_ID)
+            auto static_region_id = shared_register.Find(dataset_name + "/static");
+            auto updatable_region_id = shared_register.Find(dataset_name + "/updatable");
+            if (static_region_id == storage::SharedRegionRegister::INVALID_REGION_ID ||
+                updatable_region_id == storage::SharedRegionRegister::INVALID_REGION_ID)
             {
                 throw util::exception("Could not find shared memory region for \"" + dataset_name +
                                       "/data\". Did you run osrm-datastore?");
             }
-            shared_region = &shared_register.GetRegion(region_id);
-            region = *shared_region;
+            static_shared_region = &shared_register.GetRegion(static_region_id);
+            updatable_shared_region = &shared_register.GetRegion(updatable_region_id);
+            static_region = *static_shared_region;
+            updatable_region = *updatable_shared_region;
 
             facade_factory =
                 DataFacadeFactory<datafacade::ContiguousInternalMemoryDataFacade, AlgorithmT>(
-                    std::make_shared<datafacade::SharedMemoryAllocator>(region.shm_key));
+                    std::make_shared<datafacade::SharedMemoryAllocator>(
+                        std::vector<storage::SharedRegionRegister::ShmKey> {static_region.shm_key, updatable_region.shm_key}));
         }
 
         watcher = std::thread(&DataWatchdogImpl::Run, this);
@@ -83,20 +88,32 @@ class DataWatchdogImpl<AlgorithmT, datafacade::ContiguousInternalMemoryDataFacad
         {
             boost::interprocess::scoped_lock<mutex_type> current_region_lock(barrier.get_mutex());
 
-            while (active && region.timestamp == shared_region->timestamp)
+            while (active && static_region.timestamp == static_shared_region->timestamp &&
+                   updatable_region.timestamp == updatable_shared_region->timestamp)
             {
                 barrier.wait(current_region_lock);
             }
 
-            if (region.timestamp != shared_region->timestamp)
+            if (!active)
+                break;
+
+            if (static_region.timestamp != static_shared_region->timestamp)
             {
-                region = *shared_region;
-                facade_factory =
-                    DataFacadeFactory<datafacade::ContiguousInternalMemoryDataFacade, AlgorithmT>(
-                        std::make_shared<datafacade::SharedMemoryAllocator>(region.shm_key));
-                util::Log() << "updated facade to region " << (int)region.shm_key
-                            << " with timestamp " << region.timestamp;
+                static_region = *static_shared_region;
             }
+            if (updatable_region.timestamp != updatable_shared_region->timestamp)
+            {
+                updatable_region = *updatable_shared_region;
+            }
+
+            util::Log() << "updated facade to regions " << (int)static_region.shm_key << " and "
+                        << (int)updatable_region.shm_key << " with timestamps "
+                        << static_region.timestamp << " and " << updatable_region.timestamp;
+
+            facade_factory =
+                DataFacadeFactory<datafacade::ContiguousInternalMemoryDataFacade, AlgorithmT>(
+                    std::make_shared<datafacade::SharedMemoryAllocator>(
+                        std::vector<storage::SharedRegionRegister::ShmKey>{static_region.shm_key, updatable_region.shm_key}));
         }
 
         util::Log() << "DataWatchdog thread stopped";
@@ -106,8 +123,10 @@ class DataWatchdogImpl<AlgorithmT, datafacade::ContiguousInternalMemoryDataFacad
     storage::SharedMonitor<storage::SharedRegionRegister> barrier;
     std::thread watcher;
     bool active;
-    storage::SharedRegion region;
-    storage::SharedRegion *shared_region;
+    storage::SharedRegion static_region;
+    storage::SharedRegion updatable_region;
+    storage::SharedRegion *static_shared_region;
+    storage::SharedRegion *updatable_shared_region;
     DataFacadeFactory<datafacade::ContiguousInternalMemoryDataFacade, AlgorithmT> facade_factory;
 };
 }
