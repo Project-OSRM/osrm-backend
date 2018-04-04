@@ -83,6 +83,8 @@ class WatchingProvider : public DataFacadeProvider<AlgorithmT, FacadeT>
   public:
     using Facade = typename DataFacadeProvider<AlgorithmT, FacadeT>::Facade;
 
+    WatchingProvider(const std::string &dataset_name) : watchdog(dataset_name) {}
+
     std::shared_ptr<const Facade> Get(const api::TileParameters &params) const override final
     {
         return watchdog.Get(params);

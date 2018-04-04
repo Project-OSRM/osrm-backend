@@ -115,6 +115,9 @@ inline unsigned generateServerProgramOptions(const int argc,
         ("memory_file",
          value<boost::filesystem::path>(&config.memory_file),
          "Store data in a memory mapped file rather than in process memory.") //
+        ("dataset-name",
+         value<std::string>(&config.dataset_name),
+         "Name of the shared memory dataset to connect to.") //
         ("algorithm,a",
          value<EngineConfig::Algorithm>(&config.algorithm)
              ->default_value(EngineConfig::Algorithm::CH, "CH"),

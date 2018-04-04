@@ -36,17 +36,18 @@ class DataWatchdogImpl<AlgorithmT, datafacade::ContiguousInternalMemoryDataFacad
     using Facade = datafacade::ContiguousInternalMemoryDataFacade<AlgorithmT>;
 
   public:
-    DataWatchdogImpl() : active(true)
+    DataWatchdogImpl(const std::string &dataset_name) : dataset_name(dataset_name), active(true)
     {
         // create the initial facade before launching the watchdog thread
         {
             boost::interprocess::scoped_lock<mutex_type> current_region_lock(barrier.get_mutex());
 
-            auto& shared_register = barrier.data();
-            auto region_id = shared_register.Find("data");
+            auto &shared_register = barrier.data();
+            auto region_id = shared_register.Find(dataset_name + "/data");
             if (region_id == storage::SharedRegionRegister::INVALID_REGION_ID)
             {
-                throw util::exception("Could not find shared memory region. Did you run osrm-datastore?");
+                throw util::exception(
+                    "Could not find shared memory region. Did you run osrm-datastore?");
             }
             shared_region = &shared_register.GetRegion(region_id);
             region = *shared_region;
@@ -101,6 +102,7 @@ class DataWatchdogImpl<AlgorithmT, datafacade::ContiguousInternalMemoryDataFacad
         util::Log() << "DataWatchdog thread stopped";
     }
 
+    const std::string dataset_name;
     storage::SharedMonitor<storage::SharedRegionRegister> barrier;
     std::thread watcher;
     bool active;

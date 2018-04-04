@@ -126,7 +126,6 @@ template <typename Data> struct SharedMonitor
         bi::interprocess_condition condition;
     };
 
-
 #else
     // Implement a conditional variable using a queue of semaphores.
     // OSX checks the virtual address of a mutex in pthread_cond_wait and fails with EINVAL
@@ -207,8 +206,10 @@ template <typename Data> struct SharedMonitor
     static_assert(buffer_size >= 2, "buffer size is too small");
 
 #endif
-    static constexpr int rounded_internal_size = ((sizeof(InternalData) + alignof(Data) - 1) / alignof(Data)) * alignof(Data);
-    static_assert(rounded_internal_size < sizeof(InternalData) + sizeof(Data), "Data and internal data need to fit into shared memory");
+    static constexpr int rounded_internal_size =
+        ((sizeof(InternalData) + alignof(Data) - 1) / alignof(Data)) * alignof(Data);
+    static_assert(rounded_internal_size < sizeof(InternalData) + sizeof(Data),
+                  "Data and internal data need to fit into shared memory");
 
     InternalData &internal() const
     {

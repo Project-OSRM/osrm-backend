@@ -61,7 +61,7 @@ template <typename Algorithm> class Engine final : public EngineInterface
         {
             util::Log(logDEBUG) << "Using shared memory with algorithm "
                                 << routing_algorithms::name<Algorithm>();
-            facade_provider = std::make_unique<WatchingProvider<Algorithm>>();
+            facade_provider = std::make_unique<WatchingProvider<Algorithm>>(config.dataset_name);
         }
         else if (!config.memory_file.empty())
         {
