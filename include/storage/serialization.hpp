@@ -245,10 +245,10 @@ write<bool>(tar::FileWriter &writer, const std::string &name, const std::vector<
 template <typename K, typename V> void read(io::BufferReader &reader, std::map<K, V> &data)
 {
     const auto count = reader.ReadElementCount64();
-    std::pair<K, V> pair;
     for (auto index : util::irange<std::size_t>(0, count))
     {
         (void)index;
+        std::pair<K, V> pair;
         read(reader, pair.first);
         read(reader, pair.second);
         data.insert(pair);
