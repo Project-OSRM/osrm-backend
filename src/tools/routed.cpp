@@ -90,12 +90,17 @@ inline unsigned generateServerProgramOptions(const int argc,
 
     // declare a group of options that will be allowed only on command line
     boost::program_options::options_description generic_options("Options");
-    generic_options.add_options() //
-        ("version,v", "Show version")("help,h", "Show this help message")(
-            "verbosity,l",
-            boost::program_options::value<std::string>(&config.verbosity)->default_value("INFO"),
-            std::string("Log verbosity level: " + util::LogPolicy::GetLevels()).c_str())(
-            "trial", value<bool>(&trial)->implicit_value(true), "Quit after initialization");
+    generic_options.add_options()            //
+        ("version,v", "Show version")        //
+        ("help,h", "Show this help message") //
+        ("verbosity,l",
+#ifdef NDEBUG
+         boost::program_options::value<std::string>(&config.verbosity)->default_value("INFO"),
+#else
+         boost::program_options::value<std::string>(&config.verbosity)->default_value("DEBUG"),
+#endif
+         std::string("Log verbosity level: " + util::LogPolicy::GetLevels()).c_str()) //
+        ("trial", value<bool>(&trial)->implicit_value(true), "Quit after initialization");
 
     // declare a group of options that will be allowed on command line
     boost::program_options::options_description config_options("Configuration");

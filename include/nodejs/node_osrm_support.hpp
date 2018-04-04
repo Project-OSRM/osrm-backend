@@ -135,6 +135,22 @@ inline engine_config_ptr argumentsToEngineConfig(const Nan::FunctionCallbackInfo
             *v8::String::Utf8Value(Nan::To<v8::String>(memory_file).ToLocalChecked());
     }
 
+    auto dataset_name = params->Get(Nan::New("dataset_name").ToLocalChecked());
+    if (dataset_name.IsEmpty())
+        return engine_config_ptr();
+    if (!dataset_name->IsUndefined())
+    {
+        if (dataset_name->IsString())
+        {
+            engine_config->dataset_name = *v8::String::Utf8Value(Nan::To<v8::String>(dataset_name).ToLocalChecked());
+        }
+        else
+        {
+            Nan::ThrowError("dataset_name needs to be a string");
+            return engine_config_ptr();
+        }
+    }
+
     if (!path->IsUndefined())
     {
         engine_config->storage_config =
