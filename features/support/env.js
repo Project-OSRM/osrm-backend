@@ -27,6 +27,7 @@ module.exports = function () {
             return callback(new Error('*** '+stxxl_config+ 'does not exist'));
         }
 
+        this.DATASET_NAME = 'cucumber';
         this.PLATFORM_WINDOWS = process.platform.match(/^win.*/);
         this.DEFAULT_ENVIRONMENT = Object.assign({STXXLCFG: stxxl_config}, process.env);
         this.DEFAULT_PROFILE = 'bicycle';
