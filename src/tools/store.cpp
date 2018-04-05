@@ -21,7 +21,7 @@ void deleteRegion(const storage::SharedRegionRegister::ShmKey key)
 {
     if (storage::SharedMemory::RegionExists(key) && !storage::SharedMemory::Remove(key))
     {
-        util::Log(logWARNING) << "could not delete shared memory region " << key;
+        util::Log(logWARNING) << "could not delete shared memory region " << static_cast<int>(key);
     }
 }
 
@@ -32,12 +32,14 @@ void listRegions()
     std::vector<std::string> names;
     const auto &shared_register = monitor.data();
     shared_register.List(std::back_inserter(names));
-    osrm::util::Log() << "name\tshm key\ttimestamp";
+    osrm::util::Log() << "name\tshm key\ttimestamp\tsize";
     for (const auto &name : names)
     {
         auto id = shared_register.Find(name);
         auto region = shared_register.GetRegion(id);
-        osrm::util::Log() << name << "\t" << (int)region.shm_key << "\t" << region.timestamp;
+        auto shm = osrm::storage::makeSharedMemory(region.shm_key);
+        osrm::util::Log() << name << "\t" << static_cast<int>(region.shm_key) << "\t"
+                          << region.timestamp << "\t" << shm->Size();
     }
 }
 
@@ -77,12 +79,14 @@ bool generateDataStoreOptions(const int argc,
 {
     // declare a group of options that will be allowed only on command line
     boost::program_options::options_description generic_options("Options");
-    generic_options.add_options()("version,v", "Show version")("help,h", "Show this help message")(
-        "verbosity,l",
-        boost::program_options::value<std::string>(&verbosity)->default_value("INFO"),
-        std::string("Log verbosity level: " + util::LogPolicy::GetLevels()).c_str())(
-        "remove-locks,r", "Remove locks")("spring-clean,s",
-                                          "Spring-cleaning all shared memory regions");
+    generic_options.add_options()            //
+        ("version,v", "Show version")        //
+        ("help,h", "Show this help message") //
+        ("verbosity,l",
+         boost::program_options::value<std::string>(&verbosity)->default_value("INFO"),
+         std::string("Log verbosity level: " + util::LogPolicy::GetLevels()).c_str()) //
+        ("remove-locks,r", "Remove locks")                                            //
+        ("spring-clean,s", "Spring-cleaning all shared memory regions");
 
     // declare a group of options that will be allowed both on command line
     // as well as in a config file

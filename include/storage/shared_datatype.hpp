@@ -232,8 +232,6 @@ struct SharedRegionRegister
         }
     }
 
-    void Deregister(const RegionID key) { regions[key] = SharedRegion{}; }
-
     const auto &GetRegion(const RegionID key) const { return regions[key]; }
 
     auto &GetRegion(const RegionID key) { return regions[key]; }
