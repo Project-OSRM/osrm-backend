@@ -117,7 +117,7 @@ int Storage::Run(int max_wait, const std::string &dataset_name)
         util::UnbufferedLog() << "ok.";
     }
 
-    util::Log() << "Loading data into " << shm_key;
+    util::Log() << "Loading data into " << static_cast<int>(shm_key);
 
     // Populate a memory layout into stack memory
     DataLayout layout;
@@ -176,8 +176,8 @@ int Storage::Run(int max_wait, const std::string &dataset_name)
         }
     }
 
-    util::Log() << "All data loaded. Notify all client about new data in " << shm_key
-                << " with timestamp " << next_timestamp;
+    util::Log() << "All data loaded. Notify all client about new data in "
+                << static_cast<int>(shm_key) << " with timestamp " << next_timestamp;
     monitor.notify_all();
 
     // SHMCTL(2): Mark the segment to be destroyed. The segment will actually be destroyed
@@ -185,7 +185,7 @@ int Storage::Run(int max_wait, const std::string &dataset_name)
     if (in_use_key != SharedRegionRegister::MAX_SHM_KEYS &&
         storage::SharedMemory::RegionExists(in_use_key))
     {
-        util::UnbufferedLog() << "Marking old shared memory region " << in_use_key
+        util::UnbufferedLog() << "Marking old shared memory region " << static_cast<int>(in_use_key)
                               << " for removal... ";
 
         // aquire a handle for the old shared memory region before we mark it for deletion
