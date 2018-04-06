@@ -11,7 +11,8 @@
 #include <boost/regex.hpp>
 
 #include <osmium/osm.hpp>
-#include <osmium/tags/regex_filter.hpp>
+#include <osmium/tags/filter.hpp>
+#include <osmium/tags/taglist.hpp>
 
 #include <algorithm>
 #include <iterator>
@@ -31,16 +32,16 @@ ManeuverOverrideRelationParser::ManeuverOverrideRelationParser() {}
 boost::optional<InputManeuverOverride>
 ManeuverOverrideRelationParser::TryParse(const osmium::Relation &relation) const
 {
-    osmium::tags::KeyFilter filter(false);
-    filter.add(true, "maneuver");
+
+    // Support both American and British spellings of maneuver/manoeuvre
+    osmium::tags::KeyValueFilter filter{false};
+    filter.add(true, "type", "maneuver");
+    filter.add(true, "type", "manoeuvre");
 
     const osmium::TagList &tag_list = relation.tags();
 
-    osmium::tags::KeyFilter::iterator fi_begin(filter, tag_list.begin(), tag_list.end());
-    osmium::tags::KeyFilter::iterator fi_end(filter, tag_list.end(), tag_list.end());
-
+    if (osmium::tags::match_none_of(tag_list, filter))
     // if it's not a maneuver, continue;
-    if (std::distance(fi_begin, fi_end) == 0)
     {
         return boost::none;
     }
@@ -49,7 +50,16 @@ ManeuverOverrideRelationParser::TryParse(const osmium::Relation &relation) const
     // we can trim away the vector after parsing
     InputManeuverOverride maneuver_override;
 
-    maneuver_override.maneuver = relation.tags().get_value_by_key("maneuver", "");
+    // Handle both spellings
+    if (relation.tags().has_key("maneuver"))
+    {
+        maneuver_override.maneuver = relation.tags().get_value_by_key("maneuver", "");
+    }
+    else
+    {
+        maneuver_override.maneuver = relation.tags().get_value_by_key("manoeuvre", "");
+    }
+
     maneuver_override.direction = relation.tags().get_value_by_key("direction", "");
 
     bool valid_relation = true;
