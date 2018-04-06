@@ -59,7 +59,8 @@ class DataWatchdogImpl<AlgorithmT, datafacade::ContiguousInternalMemoryDataFacad
             facade_factory =
                 DataFacadeFactory<datafacade::ContiguousInternalMemoryDataFacade, AlgorithmT>(
                     std::make_shared<datafacade::SharedMemoryAllocator>(
-                        std::vector<storage::SharedRegionRegister::ShmKey> {static_region.shm_key, updatable_region.shm_key}));
+                        std::vector<storage::SharedRegionRegister::ShmKey>{
+                            static_region.shm_key, updatable_region.shm_key}));
         }
 
         watcher = std::thread(&DataWatchdogImpl::Run, this);
@@ -113,7 +114,8 @@ class DataWatchdogImpl<AlgorithmT, datafacade::ContiguousInternalMemoryDataFacad
             facade_factory =
                 DataFacadeFactory<datafacade::ContiguousInternalMemoryDataFacade, AlgorithmT>(
                     std::make_shared<datafacade::SharedMemoryAllocator>(
-                        std::vector<storage::SharedRegionRegister::ShmKey>{static_region.shm_key, updatable_region.shm_key}));
+                        std::vector<storage::SharedRegionRegister::ShmKey>{
+                            static_region.shm_key, updatable_region.shm_key}));
         }
 
         util::Log() << "DataWatchdog thread stopped";
