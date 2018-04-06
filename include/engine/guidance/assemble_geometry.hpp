@@ -58,7 +58,7 @@ inline LegGeometry assembleGeometry(const datafacade::BaseDataFacade &facade,
     const auto source_geometry = facade.GetUncompressedForwardGeometry(source_geometry_id);
 
     geometry.osm_node_ids.push_back(
-        facade.GetOSMNodeIDOfNode(source_geometry[source_segment_start_coordinate]));
+        facade.GetOSMNodeIDOfNode(source_geometry(source_segment_start_coordinate)));
 
     auto cumulative_distance = 0.;
     auto current_distance = 0.;
@@ -135,7 +135,7 @@ inline LegGeometry assembleGeometry(const datafacade::BaseDataFacade &facade,
             LegGeometry::Annotation{current_distance,
                                     duration,
                                     weight,
-                                    forward_datasources[target_node.fwd_segment_position]});
+                                    forward_datasources(target_node.fwd_segment_position)});
     }
     else
     {
@@ -144,7 +144,7 @@ inline LegGeometry assembleGeometry(const datafacade::BaseDataFacade &facade,
             (reversed_target ? target_node.reverse_duration : target_node.forward_duration) / 10.,
             (reversed_target ? target_node.reverse_weight : target_node.forward_weight) /
                 facade.GetWeightMultiplier(),
-            forward_datasources[target_node.fwd_segment_position]});
+            forward_datasources(target_node.fwd_segment_position)});
     }
 
     geometry.segment_offsets.push_back(geometry.locations.size());
@@ -159,7 +159,7 @@ inline LegGeometry assembleGeometry(const datafacade::BaseDataFacade &facade,
         target_node.fwd_segment_position + (reversed_target ? 0 : 1);
     const auto target_geometry = facade.GetUncompressedForwardGeometry(target_geometry_id);
     geometry.osm_node_ids.push_back(
-        facade.GetOSMNodeIDOfNode(target_geometry[target_segment_end_coordinate]));
+        facade.GetOSMNodeIDOfNode(target_geometry(target_segment_end_coordinate)));
 
     BOOST_ASSERT(geometry.segment_distances.size() == geometry.segment_offsets.size() - 1);
     BOOST_ASSERT(geometry.locations.size() > geometry.segment_distances.size());

@@ -55,6 +55,7 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
     // FIXME We should change the indexing to Edge-Based-Node id
     using DirectionalGeometryID = std::uint32_t;
     using SegmentOffset = std::uint32_t;
+    using SegmentNodeVector = Vector<NodeID>;
     using SegmentWeightVector = PackedVector<SegmentWeight, SEGMENT_WEIGHT_BITS>;
     using SegmentDurationVector = PackedVector<SegmentDuration, SEGMENT_DURATION_BITS>;
     using SegmentDatasourceVector = Vector<DatasourceID>;
@@ -62,7 +63,7 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
     SegmentDataContainerImpl() = default;
 
     SegmentDataContainerImpl(Vector<std::uint32_t> index_,
-                             Vector<NodeID> nodes_,
+                             SegmentNodeVector nodes_,
                              SegmentWeightVector fwd_weights_,
                              SegmentWeightVector rev_weights_,
                              SegmentDurationVector fwd_durations_,
@@ -212,7 +213,7 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
 
   private:
     Vector<std::uint32_t> index;
-    Vector<NodeID> nodes;
+    SegmentNodeVector nodes;
     SegmentWeightVector fwd_weights;
     SegmentWeightVector rev_weights;
     SegmentDurationVector fwd_durations;

@@ -239,46 +239,46 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         return m_osmnodeid_list[id];
     }
 
-    NodesIDRangeT GetUncompressedForwardGeometry(const EdgeID id) const override final
+    NodeForwardRange GetUncompressedForwardGeometry(const EdgeID id) const override final
     {
         return segment_data.GetForwardGeometry(id);
     }
 
-    NodesIDRangeT GetUncompressedReverseGeometry(const EdgeID id) const override final
+    NodeReverseRange GetUncompressedReverseGeometry(const EdgeID id) const override final
     {
         return segment_data.GetReverseGeometry(id);
     }
 
-    DurationsRangeT GetUncompressedForwardDurations(const EdgeID id) const override final
+    DurationForwardRange GetUncompressedForwardDurations(const EdgeID id) const override final
     {
         return segment_data.GetForwardDurations(id);
     }
 
-    DurationsRangeT GetUncompressedReverseDurations(const EdgeID id) const override final
+    DurationReverseRange GetUncompressedReverseDurations(const EdgeID id) const override final
     {
         return segment_data.GetReverseDurations(id);
     }
 
-    WeightsRangeT GetUncompressedForwardWeights(const EdgeID id) const override final
+    WeightForwardRange GetUncompressedForwardWeights(const EdgeID id) const override final
     {
         return segment_data.GetForwardWeights(id);
     }
 
-    WeightsRangeT GetUncompressedReverseWeights(const EdgeID id) const override final
+    WeightReverseRange GetUncompressedReverseWeights(const EdgeID id) const override final
     {
         return segment_data.GetReverseWeights(id);
     }
 
     // Returns the data source ids that were used to supply the edge
     // weights.
-    DatasourceIDRangeT GetUncompressedForwardDatasources(const EdgeID id) const override final
+    DatasourceForwardRange GetUncompressedForwardDatasources(const EdgeID id) const override final
     {
         return segment_data.GetForwardDatasources(id);
     }
 
     // Returns the data source ids that were used to supply the edge
     // weights.
-    DatasourceIDRangeT GetUncompressedReverseDatasources(const EdgeID id) const override final
+    DatasourceReverseRange GetUncompressedReverseDatasources(const EdgeID id) const override final
     {
         return segment_data.GetReverseDatasources(id);
     }

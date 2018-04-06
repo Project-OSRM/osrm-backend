@@ -156,9 +156,15 @@ class ContiguousInternalMemoryDataFacade<routing_algorithms::offline::Algorithm>
 
     GeometryID GetGeometryIndex(const NodeID /*id*/) const override { return GeometryID{0, false}; }
 
-    NodesIDRangeT GetUncompressedForwardGeometry(const EdgeID /*id*/) const override { return {}; }
+    NodeForwardRange GetUncompressedForwardGeometry(const EdgeID /*id*/) const override
+    {
+        return {};
+    }
 
-    NodesIDRangeT GetUncompressedReverseGeometry(const EdgeID /*id*/) const override { return {}; }
+    NodeReverseRange GetUncompressedReverseGeometry(const EdgeID /*id*/) const override
+    {
+        return NodeReverseRange(NodeForwardRange());
+    }
 
     TurnPenalty GetWeightPenaltyForEdgeID(const unsigned /*id*/) const override
     {
@@ -170,28 +176,34 @@ class ContiguousInternalMemoryDataFacade<routing_algorithms::offline::Algorithm>
         return INVALID_TURN_PENALTY;
     }
 
-    WeightsRangeT GetUncompressedForwardWeights(const EdgeID /*id*/) const override { return {}; }
-
-    WeightsRangeT GetUncompressedReverseWeights(const EdgeID /*id*/) const override { return {}; }
-
-    DurationsRangeT GetUncompressedForwardDurations(const EdgeID /*geomID*/) const override
+    WeightForwardRange GetUncompressedForwardWeights(const EdgeID /*id*/) const override
     {
         return {};
     }
 
-    DurationsRangeT GetUncompressedReverseDurations(const EdgeID /*geomID*/) const override
+    WeightReverseRange GetUncompressedReverseWeights(const EdgeID /*id*/) const override
+    {
+        return WeightReverseRange(WeightForwardRange());
+    }
+
+    DurationForwardRange GetUncompressedForwardDurations(const EdgeID /*geomID*/) const override
     {
         return {};
     }
 
-    DatasourceIDRangeT GetUncompressedForwardDatasources(const EdgeID /*id*/) const override
+    DurationReverseRange GetUncompressedReverseDurations(const EdgeID /*geomID*/) const override
+    {
+        return DurationReverseRange(DurationForwardRange());
+    }
+
+    DatasourceForwardRange GetUncompressedForwardDatasources(const EdgeID /*id*/) const override
     {
         return {};
     }
 
-    DatasourceIDRangeT GetUncompressedReverseDatasources(const EdgeID /*id*/) const override
+    DatasourceReverseRange GetUncompressedReverseDatasources(const EdgeID /*id*/) const override
     {
-        return {};
+        return DatasourceReverseRange(DatasourceForwardRange());
     }
 
     StringView GetDatasourceName(const DatasourceID /*id*/) const override { return StringView{}; }
