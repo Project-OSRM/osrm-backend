@@ -50,7 +50,7 @@ MMapMemoryAllocator::MMapMemoryAllocator(const storage::StorageConfig &config,
         mapped_memory = util::mmapFile<char>(memory_file, mapped_memory_file);
 
         storage::DataLayout layout;
-        storage::io::BufferReader reader(mapped_memory.data());
+        storage::io::BufferReader reader(mapped_memory.data(), mapped_memory.size());
         storage::serialization::read(reader, layout);
         auto layout_size = reader.GetPosition();
 

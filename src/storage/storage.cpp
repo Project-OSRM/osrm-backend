@@ -228,7 +228,32 @@ int Storage::Run(int max_wait, const std::string &dataset_name, bool only_metric
     std::vector<SharedDataIndex::AllocatedRegion> regions;
     std::map<std::string, RegionHandle> handles;
 
-    if (!only_metric)
+    // We keep this handles to read-only regions
+    // that we don't update to be able to cross-validate
+    // data when loading it
+    std::vector<RegionHandle> readonly_handles;
+
+    if (only_metric)
+    {
+        auto region_id = shared_register.Find(dataset_name + "/static");
+        if (region_id == storage::SharedRegionRegister::INVALID_REGION_ID)
+        {
+            throw util::exception("Cannot update the metric to a dataset that does not exist yet.");
+        }
+        auto static_region = shared_register.GetRegion(region_id);
+        auto static_memory = makeSharedMemory(static_region.shm_key);
+
+        DataLayout static_layout;
+        io::BufferReader reader(reinterpret_cast<char *>(static_memory->Ptr()),
+                                static_memory->Size());
+        serialization::read(reader, static_layout);
+        auto layout_size = reader.GetPosition();
+        auto *data_ptr = reinterpret_cast<char *>(static_memory->Ptr()) + layout_size;
+
+        regions.push_back({data_ptr, static_layout});
+        readonly_handles.push_back({std::move(static_memory), data_ptr, static_region.shm_key});
+    }
+    else
     {
         DataLayout static_layout;
         PopulateStaticLayout(static_layout);
@@ -503,6 +528,17 @@ void Storage::PopulateUpdatableData(const SharedDataIndex &index)
         std::uint32_t graph_connectivity_checksum = 0;
         contractor::files::readGraph(
             config.GetPath(".osrm.hsgr"), metrics, graph_connectivity_checksum);
+
+        auto turns_connectivity_checksum =
+            *index.GetBlockPtr<std::uint32_t>("/common/connectivity_checksum");
+        if (turns_connectivity_checksum != graph_connectivity_checksum)
+        {
+            throw util::exception(
+                "Connectivity checksum " + std::to_string(graph_connectivity_checksum) + " in " +
+                config.GetPath(".osrm.hsgr").string() + " does not equal to checksum " +
+                std::to_string(turns_connectivity_checksum) + " in " +
+                config.GetPath(".osrm.edges").string());
+        }
     }
 
     if (boost::filesystem::exists(config.GetPath(".osrm.cell_metrics")))
@@ -520,6 +556,17 @@ void Storage::PopulateUpdatableData(const SharedDataIndex &index)
         std::uint32_t graph_connectivity_checksum = 0;
         partitioner::files::readGraph(
             config.GetPath(".osrm.mldgr"), graph_view, graph_connectivity_checksum);
+
+        auto turns_connectivity_checksum =
+            *index.GetBlockPtr<std::uint32_t>("/common/connectivity_checksum");
+        if (turns_connectivity_checksum != graph_connectivity_checksum)
+        {
+            throw util::exception(
+                "Connectivity checksum " + std::to_string(graph_connectivity_checksum) + " in " +
+                config.GetPath(".osrm.hsgr").string() + " does not equal to checksum " +
+                std::to_string(turns_connectivity_checksum) + " in " +
+                config.GetPath(".osrm.edges").string());
+        }
     }
 }
 }
