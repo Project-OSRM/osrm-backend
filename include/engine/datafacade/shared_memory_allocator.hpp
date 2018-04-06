@@ -23,7 +23,8 @@ namespace datafacade
 class SharedMemoryAllocator : public ContiguousBlockAllocator
 {
   public:
-    explicit SharedMemoryAllocator(const std::vector<storage::SharedRegionRegister::ShmKey> &shm_keys);
+    explicit SharedMemoryAllocator(
+        const std::vector<storage::SharedRegionRegister::ShmKey> &shm_keys);
     ~SharedMemoryAllocator() override final;
 
     // interface to give access to the datafacades

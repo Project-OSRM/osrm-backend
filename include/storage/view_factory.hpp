@@ -50,8 +50,9 @@ util::vector_view<T> make_vector_view(const SharedDataIndex &index, const std::s
     return util::vector_view<T>(index.GetBlockPtr<T>(name), index.GetBlockEntries(name));
 }
 
-template<>
-inline util::vector_view<bool> make_vector_view(const SharedDataIndex &index, const std::string &name)
+template <>
+inline util::vector_view<bool> make_vector_view(const SharedDataIndex &index,
+                                                const std::string &name)
 {
     return util::vector_view<bool>(index.GetBlockPtr<util::vector_view<bool>::Word>(name),
                                    index.GetBlockEntries(name));
