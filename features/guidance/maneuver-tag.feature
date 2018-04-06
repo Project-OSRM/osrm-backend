@@ -28,8 +28,11 @@ Feature: Maneuver tag support
             | maneuver | hij      | i        | cde    | turn     | sharp_left  |
             | maneuver | abc      | c        | cde    | turn     | slight_left |
             | maneuver | cde      | c        | cgi    | turn     | straight    |
-            | maneuver | cde      | c        | cgi    | turn     | straight    |
-            | manoeuvre | cde     | c        | abc    | fork     | right       |
+            | manoeuvre| cgi      | c        | abc    | turn     | right       |
+
+        And the relations
+            | type      | way:from | node:via | way:to | manoeuvre | maneuver | direction    |
+            | maneuver  | cgi      | c        | cde    | fork      | turn     | slight_right |
 
         When I route I should get
             | waypoints | route                               | turns                                    |
@@ -38,7 +41,9 @@ Feature: Maneuver tag support
             | b,g       | A Street,C Street,C Street          | depart,turn sharp right,arrive           |
         # Testing re-awakening suppressed turns
             | a,e       | A Street,B Street,B Street          | depart,turn slight left,arrive           |
-            | e,a       | B Street,A Street,A Street          | depart,fork right,arrive              |
+            | e,i       | B Street,C Street,C Street          | depart,turn straight,arrive              |
+            | i,e       | C Street,B Street,B Street          | depart,fork slight right,arrive          |
+            | i,a       | C Street,A Street,A Street          | depart,turn right,arrive                 |
 
     Scenario: single via-way
       Given the node map
