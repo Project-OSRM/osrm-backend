@@ -186,7 +186,7 @@ bool swapData(Monitor &monitor,
 
 Storage::Storage(StorageConfig config_) : config(std::move(config_)) {}
 
-int Storage::Run(int max_wait, const std::string &dataset_name)
+int Storage::Run(int max_wait, const std::string &dataset_name, bool only_metric)
 {
     BOOST_ASSERT_MSG(config.IsValid(), "Invalid storage config");
 
@@ -225,23 +225,31 @@ int Storage::Run(int max_wait, const std::string &dataset_name)
     auto &shared_register = monitor.data();
 
     // Populate a memory layout into stack memory
-    DataLayout static_layout;
-    PopulateStaticLayout(static_layout);
+    std::vector<SharedDataIndex::AllocatedRegion> regions;
+    std::map<std::string, RegionHandle> handles;
+
+    if (!only_metric)
+    {
+        DataLayout static_layout;
+        PopulateStaticLayout(static_layout);
+        auto static_handle = setupRegion(shared_register, static_layout);
+        regions.push_back({static_handle.data_ptr, static_layout});
+        handles[dataset_name + "/static"] = std::move(static_handle);
+    }
+
     DataLayout updatable_layout;
     PopulateUpdatableLayout(updatable_layout);
-
-    auto static_handle = setupRegion(shared_register, static_layout);
     auto updatable_handle = setupRegion(shared_register, updatable_layout);
-
-    SharedDataIndex index{
-        {{static_handle.data_ptr, static_layout}, {updatable_handle.data_ptr, updatable_layout}}};
-
-    PopulateStaticData(index);
-    PopulateUpdatableData(index);
-
-    std::map<std::string, RegionHandle> handles;
-    handles[dataset_name + "/static"] = std::move(static_handle);
+    regions.push_back({updatable_handle.data_ptr, updatable_layout});
     handles[dataset_name + "/updatable"] = std::move(updatable_handle);
+
+    SharedDataIndex index{std::move(regions)};
+
+    if (!only_metric)
+    {
+        PopulateStaticData(index);
+    }
+    PopulateUpdatableData(index);
 
     swapData(monitor, shared_register, handles, max_wait);
 
@@ -400,8 +408,8 @@ void Storage::PopulateStaticData(const SharedDataIndex &index)
     std::string metric_name;
     // load profile properties
     {
-        const auto profile_properties_ptr = index.GetBlockPtr<extractor::ProfileProperties>(
-            "/common/properties");
+        const auto profile_properties_ptr =
+            index.GetBlockPtr<extractor::ProfileProperties>("/common/properties");
         extractor::files::readProfileProperties(config.GetPath(".osrm.properties"),
                                                 *profile_properties_ptr);
 
@@ -455,8 +463,8 @@ void Storage::PopulateUpdatableData(const SharedDataIndex &index)
     }
 
     {
-        const auto datasources_names_ptr = index.GetBlockPtr<extractor::Datasources>(
-            "/common/data_sources_names");
+        const auto datasources_names_ptr =
+            index.GetBlockPtr<extractor::Datasources>("/common/data_sources_names");
         extractor::files::readDatasources(config.GetPath(".osrm.datasource_names"),
                                           *datasources_names_ptr);
     }
