@@ -18,6 +18,7 @@
       - ADDED: `osrm-routed` accepts a new property `--memory_file` to store memory in a file on disk. [#4881](https://github.com/Project-OSRM/osrm-backend/pull/4881)
       - ADDED: `osrm-datastore` accepts a new parameter `--dataset-name` to select the name of the dataset. [#4982](https://github.com/Project-OSRM/osrm-backend/pull/4982)
       - ADDED: `osrm-datastore` accepts a new parameter `--list` to list all datasets loaded into memory. [#4982](https://github.com/Project-OSRM/osrm-backend/pull/4982)
+      - ADDED: `osrm-datastore` accepts a new parameter `--only-metric` to only reload the data that can be updated by a weight update (reduces memory for traffic updates). [#5002](https://github.com/Project-OSRM/osrm-backend/pull/5002)
       - ADDED: `osrm-routed` accepts a new parameter `--dataset-name` to select the shared-memory dataset to use. [#4982](https://github.com/Project-OSRM/osrm-backend/pull/4982)
     - NodeJS:
       - ADDED: `OSRM` object accepts a new option `memory_file` that stores the memory in a file on disk. [#4881](https://github.com/Project-OSRM/osrm-backend/pull/4881)
