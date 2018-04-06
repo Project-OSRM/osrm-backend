@@ -18,6 +18,7 @@ Feature: osrm-datastore command line options
         When I try to run "osrm-datastore --list"
         Then it should exit successfully
         And stdout should contain "test_dataset_42/static"
+        And stdout should contain "test_dataset_42/updatable"
 
     Scenario: osrm-datastore - Only metric update should work
         Given the speed file
@@ -31,3 +32,13 @@ Feature: osrm-datastore command line options
         Then it should exit successfully
         When I try to run "osrm-datastore {processed_file} --dataset-name cucumber/only_metric_test --only-metric"
         Then it should exit successfully
+
+    Scenario: osrm-datastore - Displaying help should work
+        When I try to run "osrm-datastore {processed_file} --help"
+        Then it should exit successfully
+
+    Scenario: osrm-datastore - Errors on invalid path
+        When I try to run "osrm-datastore invalid_path.osrm"
+        Then stderr should contain "[error] Config contains invalid file paths."
+        And stderr should contain "Missing/Broken"
+        And it should exit with an error
