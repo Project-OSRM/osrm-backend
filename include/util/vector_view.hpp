@@ -31,11 +31,13 @@ namespace util
 template <typename DataT>
 class VectorViewIterator : public boost::iterator_facade<VectorViewIterator<DataT>,
                                                          DataT,
-                                                         boost::random_access_traversal_tag>
+                                                         boost::random_access_traversal_tag,
+                                                         DataT &>
 {
     typedef boost::iterator_facade<VectorViewIterator<DataT>,
                                    DataT,
-                                   boost::random_access_traversal_tag>
+                                   boost::random_access_traversal_tag,
+                                   DataT &>
         base_t;
 
   public:

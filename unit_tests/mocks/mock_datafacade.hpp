@@ -54,41 +54,44 @@ class MockBaseDataFacade : public engine::datafacade::BaseDataFacade
     {
         return 0;
     }
-    NodesIDRangeT GetUncompressedForwardGeometry(const EdgeID /* id */) const override
+    NodeForwardRange GetUncompressedForwardGeometry(const EdgeID /* id */) const override
     {
         return {};
     }
-    NodesIDRangeT GetUncompressedReverseGeometry(const EdgeID /* id */) const override
+    NodeReverseRange GetUncompressedReverseGeometry(const EdgeID id) const override
     {
-        return {};
+        return NodeReverseRange(GetUncompressedForwardGeometry(id));
     }
-    WeightsRangeT GetUncompressedForwardWeights(const EdgeID /* id */) const override
+    WeightForwardRange GetUncompressedForwardWeights(const EdgeID /* id */) const override
     {
-        static const std::vector<SegmentWeight> result_weights{1, 2, 3};
-        return result_weights;
+        static std::uint64_t data[] = {1, 2, 3};
+        static const extractor::SegmentDataView::SegmentWeightVector weights(
+            util::vector_view<std::uint64_t>(data, 3), 3);
+        return WeightForwardRange(weights.begin(), weights.end());
     }
-    WeightsRangeT GetUncompressedReverseWeights(const EdgeID id) const override
+    WeightReverseRange GetUncompressedReverseWeights(const EdgeID id) const override
     {
-        return GetUncompressedForwardWeights(id);
+        return WeightReverseRange(GetUncompressedForwardWeights(id));
     }
 
-    DurationsRangeT GetUncompressedForwardDurations(const EdgeID /*id*/) const override
+    DurationForwardRange GetUncompressedForwardDurations(const EdgeID /*id*/) const override
     {
-        static const std::vector<SegmentDuration> data{1, 2, 3};
-        return data;
+        static std::uint64_t data[] = {1, 2, 3};
+        static const extractor::SegmentDataView::SegmentDurationVector durations(
+            util::vector_view<std::uint64_t>(data, 3), 3);
+        return DurationForwardRange(durations.begin(), durations.end());
     }
-    DurationsRangeT GetUncompressedReverseDurations(const EdgeID /*id*/) const override
+    DurationReverseRange GetUncompressedReverseDurations(const EdgeID id) const override
     {
-        static const std::vector<SegmentDuration> data{1, 2, 3};
-        return data;
+        return DurationReverseRange(GetUncompressedForwardDurations(id));
     }
-    DatasourceIDRangeT GetUncompressedForwardDatasources(const EdgeID /*id*/) const override
+    DatasourceForwardRange GetUncompressedForwardDatasources(const EdgeID /*id*/) const override
     {
         return {};
     }
-    DatasourceIDRangeT GetUncompressedReverseDatasources(const EdgeID /*id*/) const override
+    DatasourceReverseRange GetUncompressedReverseDatasources(const EdgeID /*id*/) const override
     {
-        return {};
+        return DatasourceReverseRange(DatasourceForwardRange());
     }
 
     StringView GetDatasourceName(const DatasourceID) const override final { return {}; }

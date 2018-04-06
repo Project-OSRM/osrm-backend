@@ -401,10 +401,10 @@ void encodeVectorTile(const DataFacadeBase &facade,
         const auto reverse_datasource_range = facade.GetUncompressedReverseDatasources(geometry_id);
 
         BOOST_ASSERT(edge.fwd_segment_position < forward_datasource_range.size());
-        const auto forward_datasource = forward_datasource_range[edge.fwd_segment_position];
+        const auto forward_datasource = forward_datasource_range(edge.fwd_segment_position);
         BOOST_ASSERT(edge.fwd_segment_position < reverse_datasource_range.size());
-        const auto reverse_datasource = reverse_datasource_range[reverse_datasource_range.size() -
-                                                                 edge.fwd_segment_position - 1];
+        const auto reverse_datasource = reverse_datasource_range(reverse_datasource_range.size() -
+                                                                 edge.fwd_segment_position - 1);
 
         // Keep track of the highest datasource seen so that we don't write unnecessary
         // data to the layer attribute values
@@ -518,10 +518,9 @@ void encodeVectorTile(const DataFacadeBase &facade,
                                                edge.fwd_segment_position - 1];
 
                     const auto forward_datasource_idx =
-                        forward_datasource_range[edge.fwd_segment_position];
-                    const auto reverse_datasource_idx =
-                        reverse_datasource_range[reverse_datasource_range.size() -
-                                                 edge.fwd_segment_position - 1];
+                        forward_datasource_range(edge.fwd_segment_position);
+                    const auto reverse_datasource_idx = reverse_datasource_range(
+                        reverse_datasource_range.size() - edge.fwd_segment_position - 1);
 
                     const auto component_id = facade.GetComponentID(edge.forward_segment_id.id);
                     const auto name_id = facade.GetNameIndex(edge.forward_segment_id.id);
@@ -925,16 +924,18 @@ void encodeVectorTile(const DataFacadeBase &facade,
             for (auto edgeNodeID : segregated_nodes)
             {
                 auto const geomIndex = facade.GetGeometryIndex(edgeNodeID);
-                DataFacadeBase::NodesIDRangeT geometry;
-
-                if (geomIndex.forward)
-                    geometry = facade.GetUncompressedForwardGeometry(geomIndex.id);
-                else
-                    geometry = facade.GetUncompressedReverseGeometry(geomIndex.id);
 
                 std::vector<util::Coordinate> points;
-                for (auto const nodeID : geometry)
-                    points.push_back(facade.GetCoordinateOfNode(nodeID));
+                if (geomIndex.forward)
+                {
+                    for (auto const nodeID : facade.GetUncompressedForwardGeometry(geomIndex.id))
+                        points.push_back(facade.GetCoordinateOfNode(nodeID));
+                }
+                else
+                {
+                    for (auto const nodeID : facade.GetUncompressedReverseGeometry(geomIndex.id))
+                        points.push_back(facade.GetCoordinateOfNode(nodeID));
+                }
 
                 const auto encode_tile_line = [&line_layer_writer, &id](
                     const FixedLine &tile_line, std::int32_t &start_x, std::int32_t &start_y) {
