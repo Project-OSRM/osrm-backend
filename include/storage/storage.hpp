@@ -45,7 +45,7 @@ class Storage
   public:
     Storage(StorageConfig config);
 
-    int Run(int max_wait, const std::string &name);
+    int Run(int max_wait, const std::string &name, bool only_metric);
 
     void PopulateStaticLayout(DataLayout &layout);
     void PopulateUpdatableLayout(DataLayout &layout);

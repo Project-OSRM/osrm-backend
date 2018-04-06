@@ -1,5 +1,5 @@
 @datastore @options @help
-Feature: osrm-datastore command line options: list
+Feature: osrm-datastore command line options
 
     Background:
         Given the profile "testbot"
@@ -17,4 +17,17 @@ Feature: osrm-datastore command line options: list
         Then it should exit successfully
         When I try to run "osrm-datastore --list"
         Then it should exit successfully
-        And stdout should contain "test_dataset_42/data"
+        And stdout should contain "test_dataset_42/static"
+
+    Scenario: osrm-datastore - Only metric update should work
+        Given the speed file
+        """
+        0,1,50
+        """
+        And the data has been extracted
+        When I try to run "osrm-datastore {processed_file} --dataset-name cucumber/only_metric_test"
+        Then it should exit successfully
+        When I try to run "osrm-customize --segment-speed-file {speeds_file} {processed_file}"
+        Then it should exit successfully
+        When I try to run "osrm-datastore {processed_file} --dataset-name cucumber/only_metric_test --only-metric"
+        Then it should exit successfully

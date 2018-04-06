@@ -75,7 +75,8 @@ bool generateDataStoreOptions(const int argc,
                               boost::filesystem::path &base_path,
                               int &max_wait,
                               std::string &dataset_name,
-                              bool &list_datasets)
+                              bool &list_datasets,
+                              bool &only_metric)
 {
     // declare a group of options that will be allowed only on command line
     boost::program_options::options_description generic_options("Options");
@@ -105,7 +106,13 @@ bool generateDataStoreOptions(const int argc,
              ->default_value(false)
              ->implicit_value(true),
          "Name of the dataset to load into memory. This allows having multiple datasets in memory "
-         "at the same time.");
+         "at the same time.") //
+        ("only-metric",
+         boost::program_options::value<bool>(&only_metric)
+             ->default_value(false)
+             ->implicit_value(true),
+         "Only reload the metric data without updating the full dataset. This is an optimization "
+         "for traffic updates.");
 
     // hidden options, will be allowed on command line but will not be shown to the user
     boost::program_options::options_description hidden_options("Hidden options");
@@ -200,8 +207,9 @@ int main(const int argc, const char *argv[]) try
     int max_wait = -1;
     std::string dataset_name;
     bool list_datasets = false;
+    bool only_metric = false;
     if (!generateDataStoreOptions(
-            argc, argv, verbosity, base_path, max_wait, dataset_name, list_datasets))
+            argc, argv, verbosity, base_path, max_wait, dataset_name, list_datasets, only_metric))
     {
         return EXIT_SUCCESS;
     }
@@ -222,7 +230,7 @@ int main(const int argc, const char *argv[]) try
     }
     storage::Storage storage(std::move(config));
 
-    return storage.Run(max_wait, dataset_name);
+    return storage.Run(max_wait, dataset_name, only_metric);
 }
 catch (const osrm::RuntimeError &e)
 {
