@@ -51,13 +51,13 @@ ManeuverOverrideRelationParser::TryParse(const osmium::Relation &relation) const
     InputManeuverOverride maneuver_override;
 
     // Handle both spellings
-    if (relation.tags().has_key("maneuver"))
+    if (relation.tags().has_key("manoeuvre"))
     {
-        maneuver_override.maneuver = relation.tags().get_value_by_key("maneuver", "");
+        maneuver_override.maneuver = relation.tags().get_value_by_key("manoeuvre", "");
     }
     else
     {
-        maneuver_override.maneuver = relation.tags().get_value_by_key("manoeuvre", "");
+        maneuver_override.maneuver = relation.tags().get_value_by_key("maneuver", "");
     }
 
     maneuver_override.direction = relation.tags().get_value_by_key("direction", "");
