@@ -258,7 +258,8 @@ std::vector<EdgeDuration> oneToManySearch(SearchEngineData<Algorithm> &engine_wo
     }
 
     // Initialize query heap
-    engine_working_data.InitializeOrClearManyToManyThreadLocalStorage(facade.GetNumberOfNodes());
+    engine_working_data.InitializeOrClearManyToManyThreadLocalStorage(
+        facade.GetNumberOfNodes(), facade.GetMaxBorderNodeID() + 1);
     auto &query_heap = *(engine_working_data.many_to_many_heap);
 
     // Check if node is in the destinations list and update weights/durations
@@ -465,7 +466,7 @@ std::vector<EdgeDuration> manyToManySearch(SearchEngineData<Algorithm> &engine_w
         const auto &phantom = phantom_nodes[index];
 
         engine_working_data.InitializeOrClearManyToManyThreadLocalStorage(
-            facade.GetNumberOfNodes());
+            facade.GetNumberOfNodes(), facade.GetMaxBorderNodeID() + 1);
         auto &query_heap = *(engine_working_data.many_to_many_heap);
 
         if (DIRECTION == FORWARD_DIRECTION)
@@ -492,7 +493,7 @@ std::vector<EdgeDuration> manyToManySearch(SearchEngineData<Algorithm> &engine_w
 
         // Clear heap and insert source nodes
         engine_working_data.InitializeOrClearManyToManyThreadLocalStorage(
-            facade.GetNumberOfNodes());
+            facade.GetNumberOfNodes(), facade.GetMaxBorderNodeID() + 1);
         auto &query_heap = *(engine_working_data.many_to_many_heap);
 
         if (DIRECTION == FORWARD_DIRECTION)

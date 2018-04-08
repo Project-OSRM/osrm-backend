@@ -700,7 +700,8 @@ InternalManyRoutesResult alternativePathSearch(SearchEngineData<Algorithm> &sear
     const Partition &partition = facade.GetMultiLevelPartition();
 
     // Prepare heaps for usage below. The searches will modify them in-place.
-    search_engine_data.InitializeOrClearFirstThreadLocalStorage(facade.GetNumberOfNodes());
+    search_engine_data.InitializeOrClearFirstThreadLocalStorage(facade.GetNumberOfNodes(),
+                                                                facade.GetMaxBorderNodeID() + 1);
 
     Heap &forward_heap = *search_engine_data.forward_heap_1;
     Heap &reverse_heap = *search_engine_data.reverse_heap_1;

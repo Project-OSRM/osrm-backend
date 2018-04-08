@@ -675,6 +675,8 @@ template <> class ContiguousInternalMemoryAlgorithmDataFacade<MLD> : public Algo
     // search graph access
     unsigned GetNumberOfNodes() const override final { return query_graph.GetNumberOfNodes(); }
 
+    unsigned GetMaxBorderNodeID() const override final { return query_graph.GetMaxBorderNodeID(); }
+
     unsigned GetNumberOfEdges() const override final { return query_graph.GetNumberOfEdges(); }
 
     unsigned GetOutDegree(const NodeID n) const override final
