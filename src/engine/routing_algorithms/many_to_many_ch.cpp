@@ -148,10 +148,11 @@ void backwardRoutingStep(const DataFacade<Algorithm> &facade,
     const auto target_weight = query_heap.GetKey(node);
     const auto target_duration = query_heap.GetData(node).duration;
     const auto parent = query_heap.GetData(node).parent;
+    const bool INVALID_CLIQUE_ARC_TYPE = false;
 
     // Store settled nodes in search space bucket
     search_space_with_buckets.emplace_back(
-        node, parent, column_index, target_weight, target_duration);
+        node, parent, INVALID_CLIQUE_ARC_TYPE, column_index, target_weight, target_duration);
 
     relaxOutgoingEdges<REVERSE_DIRECTION>(
         facade, node, target_weight, target_duration, query_heap, phantom_node);

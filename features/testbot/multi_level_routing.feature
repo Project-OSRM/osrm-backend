@@ -106,6 +106,40 @@ Feature: Multi level routing
             | l | 144.7 |    60 |
             | o | 124.7 |     0 |
 
+
+        When I request a travel distance matrix I should get
+            |   |       a |       f |       l |         o |
+            | a |    0+-2 | 2287+-2 | 1443+-2 |   1243+-2 |
+            | f | 2284+-2 |    0+-2 | 1241+-2 |   1443+-2 |
+            | l | 1443+-2 | 1244+-2 |    0+-2 |    600+-2 |
+            | o | 1243+-2 | 1444+-2 |  600+-2 |      0+-2 |
+
+        When I request a travel distance matrix I should get
+            |   | a | f          | l          | o        |
+            | a | 0 | 2287.2+-2  | 1443+-2    | 1243+-2  |
+
+        When I request a travel distance matrix I should get
+            |   |         a |
+            | a |         0 |
+            | f | 2284.5+-2 |
+            | l |    1443.1 |
+            | o |      1243 |
+
+        When I request a travel distance matrix I should get
+            |   |    a |      f  |      l  |       o |
+            | a |    0 | 2287+-2 | 1443+-2 | 1243+-2 |
+            | o | 1243 | 1444+-2 |  600+-2 |    0+-2 |
+
+
+        When I request a travel distance matrix I should get
+            |   |         a |        o  |
+            | a |      0+-2 |   1243+-2 |
+            | f |   2284+-2 |   1443+-2 |
+            | l |   1443+-2 |    600+-2 |
+            | o |   1243+-2 |      0+-2 |
+
+
+
     Scenario: Testbot - Multi level routing: horizontal road
         Given the node map
             """

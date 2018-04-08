@@ -74,6 +74,15 @@ InternalRouteResult directShortestPathSearch(SearchEngineData<mld::Algorithm> &e
     auto &reverse_heap = *engine_working_data.reverse_heap_1;
     insertNodesInHeaps(forward_heap, reverse_heap, phantom_nodes);
 
+    std::cout << "source_phantom.forward_segment_id.id: "
+              << phantom_nodes.source_phantom.forward_segment_id.id
+              << " source_phantom.reverse_segment_id.id: "
+              << phantom_nodes.source_phantom.reverse_segment_id.id << std::endl;
+    std::cout << "target_phantom.forward_segment_id.id: "
+              << phantom_nodes.target_phantom.forward_segment_id.id
+              << " target_phantom.reverse_segment_id.id: "
+              << phantom_nodes.target_phantom.reverse_segment_id.id << std::endl;
+
     // TODO: when structured bindings will be allowed change to
     // auto [weight, source_node, target_node, unpacked_edges] = ...
     EdgeWeight weight = INVALID_EDGE_WEIGHT;

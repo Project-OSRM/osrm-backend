@@ -488,3 +488,25 @@ Feature: Basic Duration Matrix
           | b |  1 |
           | c | 15 |
           | d | 10 |
+
+    Scenario: Testbot - OneToMany vs ManyToOne
+        Given the node map
+            """
+            a b
+            c
+            """
+
+        And the ways
+            | nodes  | oneway |
+            | ab     | yes    |
+            | ac     |        |
+            | bc     |        |
+
+        When I request a travel time matrix I should get
+            |   |   a  |  b  |
+            | b | 24.1 |  0  |
+
+        When I request a travel time matrix I should get
+            |   |   a   |
+            | a |   0   |
+            | b | 24.1  |

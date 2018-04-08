@@ -85,14 +85,6 @@ Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
     bool request_distance = params.annotations & api::TableParameters::AnnotationsType::Distance;
     bool request_duration = params.annotations & api::TableParameters::AnnotationsType::Duration;
 
-    if (request_distance && !algorithms.SupportsDistanceAnnotationType())
-    {
-        return Error("NotImplemented",
-                     "The distance annotations calculation is not implemented for the chosen "
-                     "search algorithm.",
-                     result);
-    }
-
     auto result_tables_pair = algorithms.ManyToManySearch(
         snapped_phantoms, params.sources, params.destinations, request_distance, request_duration);
 

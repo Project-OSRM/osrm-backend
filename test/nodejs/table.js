@@ -225,8 +225,7 @@ tables.forEach(function(annotation) {
             annotations: [annotation.slice(0,-1)]
         };
         osrm.table(options, function(err, response) {
-            if (annotation === 'durations') assert.equal(response[annotation].length, 2);
-            else assert.error(response, 'NotImplemented');
+            assert.equal(response[annotation].length, 2);
         });
     });
 });
