@@ -193,6 +193,20 @@ template <storage::Ownership Ownership> class CellStorageImpl
             BOOST_ASSERT(num_source_nodes == 0 || all_sources != nullptr);
             BOOST_ASSERT(num_destination_nodes == 0 || all_destinations != nullptr);
         }
+
+        // Consturcts an emptry cell without weights. Useful when only access
+        // to the cell structure is needed, without a concrete metric.
+        CellImpl(const CellData &data,
+                 const NodeID *const all_sources,
+                 const NodeID *const all_destinations)
+            : num_source_nodes{data.num_source_nodes},
+              num_destination_nodes{data.num_destination_nodes}, weights{nullptr},
+              durations{nullptr}, source_boundary{all_sources + data.source_boundary_offset},
+              destination_boundary{all_destinations + data.destination_boundary_offset}
+        {
+            BOOST_ASSERT(num_source_nodes == 0 || all_sources != nullptr);
+            BOOST_ASSERT(num_destination_nodes == 0 || all_destinations != nullptr);
+        }
     };
 
     std::size_t LevelIDToIndex(LevelID level) const { return level - 1; }
@@ -374,6 +388,18 @@ template <storage::Ownership Ownership> class CellStorageImpl
         return ConstCell{cells[cell_index],
                          metric.weights.data(),
                          metric.durations.data(),
+                         source_boundary.empty() ? nullptr : source_boundary.data(),
+                         destination_boundary.empty() ? nullptr : destination_boundary.data()};
+    }
+
+    ConstCell GetUnfilledCell(LevelID level, CellID id) const
+    {
+        const auto level_index = LevelIDToIndex(level);
+        BOOST_ASSERT(level_index < level_to_cell_offset.size());
+        const auto offset = level_to_cell_offset[level_index];
+        const auto cell_index = offset + id;
+        BOOST_ASSERT(cell_index < cells.size());
+        return ConstCell{cells[cell_index],
                          source_boundary.empty() ? nullptr : source_boundary.data(),
                          destination_boundary.empty() ? nullptr : destination_boundary.data()};
     }
