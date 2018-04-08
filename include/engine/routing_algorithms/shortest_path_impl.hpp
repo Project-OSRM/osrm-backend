@@ -207,6 +207,25 @@ void unpackLegs(const DataFacade<Algorithm> &facade,
              phantom_nodes_vector[current_leg].target_phantom.forward_segment_id.id));
     }
 }
+
+template <typename Algorithm>
+inline void initializeHeap(SearchEngineData<Algorithm> &engine_working_data,
+                           const DataFacade<Algorithm> &facade)
+{
+
+    const auto nodes_number = facade.GetNumberOfNodes();
+    engine_working_data.InitializeOrClearFirstThreadLocalStorage(nodes_number);
+}
+
+template <>
+inline void initializeHeap<mld::Algorithm>(SearchEngineData<mld::Algorithm> &engine_working_data,
+                                           const DataFacade<mld::Algorithm> &facade)
+{
+
+    const auto nodes_number = facade.GetNumberOfNodes();
+    const auto border_nodes_number = facade.GetMaxBorderNodeID() + 1;
+    engine_working_data.InitializeOrClearFirstThreadLocalStorage(nodes_number, border_nodes_number);
+}
 }
 
 template <typename Algorithm>
@@ -221,7 +240,7 @@ InternalRouteResult shortestPathSearch(SearchEngineData<Algorithm> &engine_worki
         !(continue_straight_at_waypoint ? *continue_straight_at_waypoint
                                         : facade.GetContinueStraightDefault());
 
-    engine_working_data.InitializeOrClearFirstThreadLocalStorage(facade.GetNumberOfNodes());
+    initializeHeap(engine_working_data, facade);
 
     auto &forward_heap = *engine_working_data.forward_heap_1;
     auto &reverse_heap = *engine_working_data.reverse_heap_1;

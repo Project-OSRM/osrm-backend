@@ -138,6 +138,14 @@ class MultiLevelGraph : public util::StaticGraph<EdgeDataT, Ownership>
     // We save the level as sentinel at the end
     LevelID GetNumberOfLevels() const { return node_to_edge_offset.back(); }
 
+    NodeID GetMaxBorderNodeID() const
+    {
+        auto num_levels = GetNumberOfLevels();
+        BOOST_ASSERT((node_to_edge_offset.size() - 1) % num_levels == 0);
+        auto max_border_node_id = (node_to_edge_offset.size() - 1) / num_levels - 1;
+        return max_border_node_id;
+    }
+
   private:
     template <typename ContainerT>
     auto GetHighestBorderLevel(const MultiLevelPartition &mlp, const ContainerT &edges) const

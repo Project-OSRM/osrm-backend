@@ -96,7 +96,8 @@ SearchEngineData<MLD>::SearchEngineHeapPtr SearchEngineData<MLD>::forward_heap_1
 SearchEngineData<MLD>::SearchEngineHeapPtr SearchEngineData<MLD>::reverse_heap_1;
 SearchEngineData<MLD>::ManyToManyHeapPtr SearchEngineData<MLD>::many_to_many_heap;
 
-void SearchEngineData<MLD>::InitializeOrClearFirstThreadLocalStorage(unsigned number_of_nodes)
+void SearchEngineData<MLD>::InitializeOrClearFirstThreadLocalStorage(
+    unsigned number_of_nodes, unsigned number_of_boundary_nodes)
 {
     if (forward_heap_1.get())
     {
@@ -104,7 +105,7 @@ void SearchEngineData<MLD>::InitializeOrClearFirstThreadLocalStorage(unsigned nu
     }
     else
     {
-        forward_heap_1.reset(new QueryHeap(number_of_nodes));
+        forward_heap_1.reset(new QueryHeap(number_of_nodes, number_of_boundary_nodes));
     }
 
     if (reverse_heap_1.get())
@@ -113,11 +114,12 @@ void SearchEngineData<MLD>::InitializeOrClearFirstThreadLocalStorage(unsigned nu
     }
     else
     {
-        reverse_heap_1.reset(new QueryHeap(number_of_nodes));
+        reverse_heap_1.reset(new QueryHeap(number_of_nodes, number_of_boundary_nodes));
     }
 }
 
-void SearchEngineData<MLD>::InitializeOrClearManyToManyThreadLocalStorage(unsigned number_of_nodes)
+void SearchEngineData<MLD>::InitializeOrClearManyToManyThreadLocalStorage(
+    unsigned number_of_nodes, unsigned number_of_boundary_nodes)
 {
     if (many_to_many_heap.get())
     {
@@ -125,7 +127,7 @@ void SearchEngineData<MLD>::InitializeOrClearManyToManyThreadLocalStorage(unsign
     }
     else
     {
-        many_to_many_heap.reset(new ManyToManyQueryHeap(number_of_nodes));
+        many_to_many_heap.reset(new ManyToManyQueryHeap(number_of_nodes, number_of_boundary_nodes));
     }
 }
 }

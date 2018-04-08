@@ -65,6 +65,8 @@ template <> class AlgorithmDataFacade<MLD>
     // search graph access
     virtual unsigned GetNumberOfNodes() const = 0;
 
+    virtual unsigned GetMaxBorderNodeID() const = 0;
+
     virtual unsigned GetNumberOfEdges() const = 0;
 
     virtual unsigned GetOutDegree(const NodeID n) const = 0;

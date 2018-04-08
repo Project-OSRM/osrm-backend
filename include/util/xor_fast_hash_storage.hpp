@@ -31,7 +31,9 @@ class XORFastHashStorage
         void operator=(const Key key_to_insert) { key = key_to_insert; }
     };
 
-    explicit XORFastHashStorage(size_t) : positions(MaxNumElements), current_timestamp{0u} {}
+    explicit XORFastHashStorage(size_t, size_t) : positions(MaxNumElements), current_timestamp{0u}
+    {
+    }
 
     HashCell &operator[](const NodeID node)
     {

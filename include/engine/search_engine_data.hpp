@@ -91,13 +91,13 @@ template <> struct SearchEngineData<routing_algorithms::mld::Algorithm>
                                       NodeID,
                                       EdgeWeight,
                                       MultiLayerDijkstraHeapData,
-                                      util::UnorderedMapStorage<NodeID, int>>;
+                                      util::TwoLevelStorage<NodeID, int>>;
 
     using ManyToManyQueryHeap = util::QueryHeap<NodeID,
                                                 NodeID,
                                                 EdgeWeight,
                                                 ManyToManyMultiLayerDijkstraHeapData,
-                                                util::UnorderedMapStorage<NodeID, int>>;
+                                                util::TwoLevelStorage<NodeID, int>>;
 
     using SearchEngineHeapPtr = boost::thread_specific_ptr<QueryHeap>;
     using ManyToManyHeapPtr = boost::thread_specific_ptr<ManyToManyQueryHeap>;
@@ -106,9 +106,11 @@ template <> struct SearchEngineData<routing_algorithms::mld::Algorithm>
     static SearchEngineHeapPtr reverse_heap_1;
     static ManyToManyHeapPtr many_to_many_heap;
 
-    void InitializeOrClearFirstThreadLocalStorage(unsigned number_of_nodes);
+    void InitializeOrClearFirstThreadLocalStorage(unsigned number_of_nodes,
+                                                  unsigned number_of_boundary_nodes);
 
-    void InitializeOrClearManyToManyThreadLocalStorage(unsigned number_of_nodes);
+    void InitializeOrClearManyToManyThreadLocalStorage(unsigned number_of_nodes,
+                                                       unsigned number_of_boundary_nodes);
 };
 }
 }
