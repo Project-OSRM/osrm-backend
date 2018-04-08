@@ -226,12 +226,14 @@ class QueryHeap
     Data &GetData(NodeID node)
     {
         const auto index = node_index.peek_index(node);
+        BOOST_ASSERT((int)index >= 0 && (int)index < (int)inserted_nodes.size());
         return inserted_nodes[index].data;
     }
 
     Data const &GetData(NodeID node) const
     {
         const auto index = node_index.peek_index(node);
+        BOOST_ASSERT((int)index >= 0 && (int)index < (int)inserted_nodes.size());
         return inserted_nodes[index].data;
     }
 

@@ -15,24 +15,25 @@ namespace engine
 {
 namespace routing_algorithms
 {
-
 namespace
 {
 struct NodeBucket
 {
     NodeID middle_node;
     NodeID parent_node;
+    bool from_clique_arc;
     unsigned column_index; // a column in the weight/duration matrix
     EdgeWeight weight;
     EdgeDuration duration;
 
     NodeBucket(NodeID middle_node,
                NodeID parent_node,
+               bool from_clique_arc,
                unsigned column_index,
                EdgeWeight weight,
                EdgeDuration duration)
-        : middle_node(middle_node), parent_node(parent_node), column_index(column_index),
-          weight(weight), duration(duration)
+        : middle_node(middle_node), parent_node(parent_node), from_clique_arc(from_clique_arc),
+          column_index(column_index), weight(weight), duration(duration)
     {
     }
 

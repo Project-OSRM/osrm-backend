@@ -54,7 +54,7 @@ Feature: Traffic - speeds
           | a    | d  | ad,ad       | 27 km/h | 1275.7,0             | 1             |
           | d    | c  | dc,dc       | 36 km/h | 956.8,0              | 0             |
           | g    | b  | fb,fb       | 36 km/h | 164.7,0              | 0             |
-          | a    | g  | ad,df,fb,fb | 30 km/h | 1275.7,487.5,304.7,0 | 1:0:0         |
+          | a    | g  | ad,df,fb,fb | 30 km/h | 1295.7,487.5,304.7,0 | 1:0:0         |
 
 
     Scenario: Weighting based on speed file weights, ETA based on file durations
