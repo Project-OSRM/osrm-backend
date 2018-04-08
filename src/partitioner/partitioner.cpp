@@ -1,6 +1,7 @@
 #include "partitioner/partitioner.hpp"
 #include "partitioner/bisection_graph.hpp"
 #include "partitioner/bisection_to_partition.hpp"
+#include "partitioner/cell_statistics.hpp"
 #include "partitioner/cell_storage.hpp"
 #include "partitioner/edge_based_graph_reader.hpp"
 #include "partitioner/files.hpp"
@@ -180,6 +181,8 @@ int Partitioner::Run(const PartitionerConfig &config)
                                           edge_based_graph.connectivity_checksum);
     TIMER_STOP(writing_mld_data);
     util::Log() << "MLD data writing took " << TIMER_SEC(writing_mld_data) << " seconds";
+
+    printCellStatistics(mlp, storage);
 
     return 0;
 }

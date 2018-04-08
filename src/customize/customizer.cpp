@@ -5,6 +5,7 @@
 #include "customizer/edge_based_graph.hpp"
 #include "customizer/files.hpp"
 
+#include "partitioner/cell_statistics.hpp"
 #include "partitioner/cell_storage.hpp"
 #include "partitioner/edge_based_graph_reader.hpp"
 #include "partitioner/files.hpp"
@@ -29,30 +30,22 @@ namespace customizer
 
 namespace
 {
-template <typename Graph, typename Partition, typename CellStorage>
-void CellStorageStatistics(const Graph &graph,
-                           const Partition &partition,
-                           const CellStorage &storage,
-                           const CellMetric &metric)
+
+template <typename Partition, typename CellStorage>
+void printUnreachableStatistics(const Partition &partition,
+                                const CellStorage &storage,
+                                const CellMetric &metric)
 {
-    util::Log() << "Cells statistics per level";
+    util::Log() << "Unreachable nodes statistics per level";
 
     for (std::size_t level = 1; level < partition.GetNumberOfLevels(); ++level)
     {
-        std::unordered_map<CellID, std::size_t> cell_nodes;
-        for (auto node : util::irange(0u, graph.GetNumberOfNodes()))
-        {
-            ++cell_nodes[partition.GetCell(level, node)];
-        }
-
-        std::size_t source = 0, destination = 0, total = 0;
-        std::size_t invalid_sources = 0, invalid_destinations = 0;
-        for (std::uint32_t cell_id = 0; cell_id < partition.GetNumberOfCells(level); ++cell_id)
+        auto num_cells = partition.GetNumberOfCells(level);
+        std::size_t invalid_sources = 0;
+        std::size_t invalid_destinations = 0;
+        for (std::uint32_t cell_id = 0; cell_id < num_cells; ++cell_id)
         {
             const auto &cell = storage.GetCell(metric, level, cell_id);
-            source += cell.GetSourceNodes().size();
-            destination += cell.GetDestinationNodes().size();
-            total += cell_nodes[cell_id];
             for (auto node : cell.GetSourceNodes())
             {
                 const auto &weights = cell.GetOutWeight(node);
@@ -70,15 +63,12 @@ void CellStorageStatistics(const Graph &graph,
             }
         }
 
-        util::Log() << "Level " << level << " #cells " << cell_nodes.size() << " #nodes " << total
-                    << ",   source nodes: average " << source << " (" << (100. * source / total)
-                    << "%)"
-                    << " invalid " << invalid_sources << " (" << (100. * invalid_sources / total)
-                    << "%)"
-                    << ",   destination nodes: average " << destination << " ("
-                    << (100. * destination / total) << "%)"
-                    << " invalid " << invalid_destinations << " ("
-                    << (100. * invalid_destinations / total) << "%)";
+        if (invalid_sources > 0 || invalid_destinations > 0)
+        {
+            util::Log(logWARNING) << "Level " << level << " unreachable boundary nodes per cell: "
+                                  << (invalid_sources / (float)num_cells) << " sources, "
+                                  << (invalid_destinations / (float)num_cells) << " destinations";
+        }
     }
 }
 
@@ -152,6 +142,12 @@ int Customizer::Run(const CustomizationConfig &config)
     TIMER_STOP(cell_customize);
     util::Log() << "Cells customization took " << TIMER_SEC(cell_customize) << " seconds";
 
+    partitioner::printCellStatistics(mlp, storage);
+    for (const auto &metric : metrics)
+    {
+        printUnreachableStatistics(mlp, storage, metric);
+    }
+
     TIMER_START(writing_mld_data);
     std::unordered_map<std::string, std::vector<CellMetric>> metric_exclude_classes = {
         {properties.GetWeightName(), std::move(metrics)},
@@ -164,11 +160,6 @@ int Customizer::Run(const CustomizationConfig &config)
     partitioner::files::writeGraph(config.GetPath(".osrm.mldgr"), graph, connectivity_checksum);
     TIMER_STOP(writing_graph);
     util::Log() << "Graph writing took " << TIMER_SEC(writing_graph) << " seconds";
-
-    for (const auto &metric : metrics)
-    {
-        CellStorageStatistics(graph, mlp, storage, metric);
-    }
 
     return 0;
 }
