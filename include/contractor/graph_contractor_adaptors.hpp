@@ -128,23 +128,24 @@ ContractorGraph toContractorGraph(NodeID number_of_nodes, InputEdgeContainer inp
 
 template <class Edge, typename GraphT> inline std::vector<Edge> toEdges(GraphT graph)
 {
-    std::vector<Edge> edges;
-    edges.reserve(graph.GetNumberOfEdges());
+    util::Log() << "Converting contracted graph with " << graph.GetNumberOfEdges()
+                << " to edge list (" << (graph.GetNumberOfEdges() * sizeof(Edge)) << " bytes)";
+    std::vector<Edge> edges(graph.GetNumberOfEdges());
 
-    util::UnbufferedLog log;
-    log << "Getting edges of minimized graph ";
-    util::Percent p(log, graph.GetNumberOfNodes());
-    const NodeID number_of_nodes = graph.GetNumberOfNodes();
-    if (graph.GetNumberOfNodes())
     {
-        Edge new_edge;
+        util::UnbufferedLog log;
+        log << "Getting edges of minimized graph ";
+        util::Percent p(log, graph.GetNumberOfNodes());
+        const NodeID number_of_nodes = graph.GetNumberOfNodes();
+        std::size_t edge_index = 0;
         for (const auto node : util::irange(0u, number_of_nodes))
         {
             p.PrintStatus(node);
             for (auto edge : graph.GetAdjacentEdgeRange(node))
             {
                 const NodeID target = graph.GetTarget(edge);
-                const ContractorGraph::EdgeData &data = graph.GetEdgeData(edge);
+                const auto &data = graph.GetEdgeData(edge);
+                auto &new_edge = edges[edge_index++];
                 new_edge.source = node;
                 new_edge.target = target;
                 BOOST_ASSERT_MSG(SPECIAL_NODEID != new_edge.target, "Target id invalid");
@@ -156,16 +157,12 @@ template <class Edge, typename GraphT> inline std::vector<Edge> toEdges(GraphT g
                                  "edge id invalid");
                 new_edge.data.forward = data.forward;
                 new_edge.data.backward = data.backward;
-                edges.push_back(new_edge);
             }
         }
+        BOOST_ASSERT(edge_index == edges.size());
     }
 
-    // sort and remove duplicates
     tbb::parallel_sort(edges.begin(), edges.end());
-    auto new_end = std::unique(edges.begin(), edges.end());
-    edges.resize(new_end - edges.begin());
-    edges.shrink_to_fit();
 
     return edges;
 }
