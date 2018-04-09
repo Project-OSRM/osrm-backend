@@ -40,7 +40,7 @@ template <> struct SearchEngineData<routing_algorithms::offline::Algorithm>
         }
         else
         {
-            forward_heap_1.reset(new QueryHeap(number_of_nodes));
+            forward_heap_1.reset(new QueryHeap(number_of_nodes, 0));
         }
 
         if (reverse_heap_1.get())
@@ -49,7 +49,7 @@ template <> struct SearchEngineData<routing_algorithms::offline::Algorithm>
         }
         else
         {
-            reverse_heap_1.reset(new QueryHeap(number_of_nodes));
+            reverse_heap_1.reset(new QueryHeap(number_of_nodes, 0));
         }
     }
 };
