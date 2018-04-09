@@ -20,7 +20,7 @@ template <typename NodeID, typename Key> class GenerationArrayStorage
     using GenerationCounter = std::uint16_t;
 
   public:
-    explicit GenerationArrayStorage(std::size_t size, std::size_t)
+    explicit GenerationArrayStorage(std::size_t size)
         : positions(size, 0), generation(1), generations(size, 0)
     {
     }
@@ -60,7 +60,7 @@ template <typename NodeID, typename Key> class GenerationArrayStorage
 template <typename NodeID, typename Key> class ArrayStorage
 {
   public:
-    explicit ArrayStorage(std::size_t size, std::size_t) : positions(size, 0) {}
+    explicit ArrayStorage(std::size_t size) : positions(size, 0) {}
 
     ~ArrayStorage() {}
 
@@ -77,7 +77,7 @@ template <typename NodeID, typename Key> class ArrayStorage
 template <typename NodeID, typename Key> class MapStorage
 {
   public:
-    explicit MapStorage(std::size_t, std::size_t) {}
+    explicit MapStorage(std::size_t) {}
 
     Key &operator[](NodeID node) { return nodes[node]; }
 
@@ -100,7 +100,7 @@ template <typename NodeID, typename Key> class MapStorage
 template <typename NodeID, typename Key> class UnorderedMapStorage
 {
   public:
-    explicit UnorderedMapStorage(std::size_t, std::size_t) { nodes.rehash(1000); }
+    explicit UnorderedMapStorage(std::size_t) { nodes.rehash(1000); }
 
     Key &operator[](const NodeID node) { return nodes[node]; }
 
@@ -134,8 +134,8 @@ class TwoLevelStorage
 {
   public:
     explicit TwoLevelStorage(std::size_t number_of_nodes, std::size_t number_of_overlay_nodes)
-        : number_of_overlay_nodes(number_of_overlay_nodes), base(number_of_nodes, number_of_nodes),
-          overlay(number_of_overlay_nodes, number_of_overlay_nodes)
+        : number_of_overlay_nodes(number_of_overlay_nodes), base(number_of_nodes),
+          overlay(number_of_overlay_nodes)
     {
     }
 
@@ -198,15 +198,9 @@ class QueryHeap
     using WeightType = Weight;
     using DataType = Data;
 
-    explicit QueryHeap(std::size_t number_of_elements, std::size_t number_of_overlay_nodes)
-        : node_index(number_of_elements, number_of_overlay_nodes)
+    template <typename... StorageArgs> explicit QueryHeap(StorageArgs... args) : node_index(args...)
     {
         Clear();
-    }
-
-    explicit QueryHeap(std::size_t number_of_elements)
-        : QueryHeap(number_of_elements, number_of_elements)
-    {
     }
 
     void Clear()
