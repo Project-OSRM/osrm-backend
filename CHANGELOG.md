@@ -1,3 +1,8 @@
+# 5.16.5
+  - Changes from 5.16.4:
+    - Debug:
+      - ADDED: Made toEdges allocation more robust and add better memory usage debugging.
+
 # 5.16.4
   - Changes from 5.16.3:
     - Bugfixes:
