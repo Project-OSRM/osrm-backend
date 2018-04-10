@@ -22,7 +22,7 @@ namespace util
 inline std::ostream &operator<<(std::ostream &out, const Coordinate &coordinate)
 {
     out << std::setprecision(12) << "{" << toFloating(coordinate.lon) << ", "
-        << toFloating(coordinate.lon) << "}";
+        << toFloating(coordinate.lat) << "}";
     return out;
 }
 }
