@@ -105,7 +105,7 @@ static int raw_to_header(mtar_header_t *h, const mtar_raw_header_t *rh) {
   /* Load raw header into header */
   sscanf(rh->mode, "%o", &h->mode);
   sscanf(rh->owner, "%o", &h->owner);
-  sscanf(rh->size, "%lo", &h->size);
+  sscanf(rh->size, "%12lo", &h->size);
   sscanf(rh->mtime, "%o", &h->mtime);
   h->type = rh->type;
   strcpy(h->name, rh->name);
@@ -332,6 +332,9 @@ int mtar_write_header(mtar_t *tar, const mtar_header_t *h) {
 
 int mtar_write_file_header(mtar_t *tar, const char *name, mtar_size_t size) {
   mtar_header_t h;
+  if (size >= 0777777777777) {
+    return MTAR_EFAILURE;
+  }
   /* Build header */
   memset(&h, 0, sizeof(h));
   strcpy(h.name, name);
