@@ -29,10 +29,8 @@ checkMTarError(int error_code, const boost::filesystem::path &filepath, const st
     case MTAR_ESUCCESS:
         return;
     case MTAR_EFAILURE:
-        throw util::RuntimeError(filepath.string() + " : " + name,
-                                 ErrorCode::FileIOError,
-                                 SOURCE_REF,
-                                 std::strerror(errno));
+        throw util::RuntimeError(
+            filepath.string() + " : " + name, ErrorCode::FileIOError, SOURCE_REF);
     case MTAR_EOPENFAIL:
         throw util::RuntimeError(filepath.string() + " : " + name,
                                  ErrorCode::FileOpenError,
