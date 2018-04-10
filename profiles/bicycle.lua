@@ -109,11 +109,11 @@ function setup()
     -- reduce the driving speed by 30% for unsafe roads
     -- only used for cyclability metric
     unsafe_highway_list = {
-      primary = 0.7,
-      secondary = 0.75,
+      primary = 0.5,
+      secondary = 0.65,
       tertiary = 0.8,
-      primary_link = 0.7,
-      secondary_link = 0.75,
+      primary_link = 0.5,
+      secondary_link = 0.65,
       tertiary_link = 0.8,
     },
 
@@ -373,10 +373,10 @@ function handle_bicycle_tags(profile,way,result,data)
   -- cycleway
   local has_cycleway_forward = false
   local has_cycleway_backward = false
-  local is_oneway = result.forward_mode ~= mode.inaccessible and result.backward_mode ~= mode.inaccessible and not implied_oneway
+  local is_twoway = result.forward_mode ~= mode.inaccessible and result.backward_mode ~= mode.inaccessible and not implied_oneway
 
   -- cycleways on normal roads
-  if is_oneway then
+  if is_twoway then
     if cycleway and profile.cycleway_tags[cycleway] then
       has_cycleway_backward = true
       has_cycleway_forward = true
@@ -495,6 +495,15 @@ function handle_bicycle_tags(profile,way,result,data)
   if profile.properties.weight_name == 'cyclability' then
       local safety_penalty = profile.unsafe_highway_list[data.highway] or 1.
       local is_unsafe = safety_penalty < 1
+
+      -- primaries that are one ways are probably huge primaries where the lanes need to be separated
+      if is_unsafe and data.highway == 'primary' and not is_twoway then
+        safety_penalty = safety_penalty * 0.5
+      end
+      if is_unsafe and data.highway == 'secondary' and not is_twoway then
+        safety_penalty = safety_penalty * 0.6
+      end
+
       local forward_is_unsafe = is_unsafe and not has_cycleway_forward
       local backward_is_unsafe = is_unsafe and not has_cycleway_backward
       local is_undesireable = data.highway == "service" and profile.service_penalties[service]
