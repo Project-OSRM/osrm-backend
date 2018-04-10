@@ -189,7 +189,10 @@ BOOST_AUTO_TEST_CASE(continue_write_tar_file)
     CHECK_EQUAL_COLLECTIONS(result_64bit_vector, vector_64bit);
 }
 
-// This test case is disabled by default because it needs 70 GiB of storage
+// Boost test only supports disabling was only introduced in 1.59
+#if BOOST_VERSION >= 105900
+// This test case is disabled by default because it needs 10 GiB of storage
+// Enable with ./storage-tests --run_test=tar/write_huge_tar_file
 BOOST_AUTO_TEST_CASE(write_huge_tar_file, *boost::unit_test::disabled())
 {
     TemporaryFile tmp{TEST_DATA_DIR "/tar_huge_write_test.tar"};
@@ -202,7 +205,7 @@ BOOST_AUTO_TEST_CASE(write_huge_tar_file, *boost::unit_test::disabled())
             reference_checksum += value;
             return value++;
         };
-        std::uint64_t num_elements = (70ULL * 1024ULL * 1024ULL * 1024ULL) / sizeof(std::uint64_t);
+        std::uint64_t num_elements = (10ULL * 1024ULL * 1024ULL * 1024ULL) / sizeof(std::uint64_t);
         writer.WriteStreaming<std::uint64_t>(
             "huge_data",
             boost::make_function_input_iterator(encode_function, boost::infinite()),
@@ -219,5 +222,6 @@ BOOST_AUTO_TEST_CASE(write_huge_tar_file, *boost::unit_test::disabled())
 
     BOOST_CHECK_EQUAL(checksum, reference_checksum);
 }
+#endif
 
 BOOST_AUTO_TEST_SUITE_END()

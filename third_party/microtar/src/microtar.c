@@ -141,7 +141,7 @@ static int header_to_raw(mtar_raw_header_t *rh, const mtar_header_t *h) {
   memset(rh, 0, sizeof(*rh));
 
   /* Store size in ASCII octal digits or base-256 formats */
-  if (sizeof(mtar_size_t) <= 4 || filesize <= (mtar_size_t)0777777777777LL) {
+  if (sizeof(mtar_size_t) <= 4 || filesize <= (mtar_size_t)077777777777LL) {
 #ifdef _MSC_VER
       sprintf(rh->size, "%llo", h->size);
 #else
