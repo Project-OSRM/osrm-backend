@@ -89,6 +89,7 @@ static int write_null_bytes(mtar_t *tar, int n) {
 
 static int raw_to_header(mtar_header_t *h, const mtar_raw_header_t *rh) {
   unsigned chksum1, chksum2;
+  mtar_size_t filesize;
 
   /* If the checksum starts with a null byte we assume the record is NULL */
   if (*rh->checksum == '\0') {
@@ -105,11 +106,28 @@ static int raw_to_header(mtar_header_t *h, const mtar_raw_header_t *rh) {
   /* Load raw header into header */
   sscanf(rh->mode, "%o", &h->mode);
   sscanf(rh->owner, "%o", &h->owner);
-  sscanf(rh->size, "%12lo", &h->size);
   sscanf(rh->mtime, "%o", &h->mtime);
   h->type = rh->type;
   strcpy(h->name, rh->name);
   strcpy(h->linkname, rh->linkname);
+
+  /* Load size field */
+  if ((rh->size[0] & 0x80) == 0) {
+#ifdef _MSC_VER
+      sscanf(rh->size, "%12llo", &h->size);
+#else
+      sscanf(rh->size, "%12lo", &h->size);
+#endif
+  } else {
+      h->size = (rh->size[0] & 0x7f) | (rh->size[0] & 0x40 ? 0x80 : 0);
+      uint8_t *p8 = (uint8_t *)&rh->size + 1;
+      while (p8 != (uint8_t *)&rh->size + sizeof(rh->size)) {
+          if (h->size >= ((mtar_size_t)1 << (sizeof(h->size) - 1) * 8)) {
+              return MTAR_EFAILURE;
+          }
+          h->size = ((mtar_size_t)h->size << 8) + *p8++;
+      }
+  }
 
   return MTAR_ESUCCESS;
 }
@@ -117,12 +135,39 @@ static int raw_to_header(mtar_header_t *h, const mtar_raw_header_t *rh) {
 
 static int header_to_raw(mtar_raw_header_t *rh, const mtar_header_t *h) {
   unsigned chksum;
+  mtar_size_t filesize = h->size;
 
   /* Load header into raw header */
   memset(rh, 0, sizeof(*rh));
+
+  /* Store size in ASCII octal digits or base-256 formats */
+  if (sizeof(mtar_size_t) <= 4 || filesize <= (mtar_size_t)0777777777777LL) {
+#ifdef _MSC_VER
+      sprintf(rh->size, "%llo", h->size);
+#else
+      sprintf(rh->size, "%lo", h->size);
+#endif
+  } else if (sizeof(filesize) < sizeof(rh->size)) {
+      /* GNU tar uses "base-256 encoding" for very large numbers.
+       * Encoding is binary, with highest bit always set as a marker
+       * and sign in next-highest bit:
+       * 80 00 .. 00 - zero
+       * bf ff .. ff - largest positive number
+       * ff ff .. ff - minus 1
+       * c0 00 .. 00 - smallest negative number
+       */
+      uint8_t *p8 = (uint8_t *)&rh->size + sizeof(rh->size);
+      do {
+          *--p8 = (uint8_t)filesize;
+          filesize >>= 8;
+      } while (p8 != (uint8_t *)&rh->size);
+      *p8 |= 0x80;
+  } else {
+      return MTAR_EFAILURE;
+  }
+
   sprintf(rh->mode, "%o", h->mode);
   sprintf(rh->owner, "%o", h->owner);
-  sprintf(rh->size, "%lo", h->size);
   sprintf(rh->mtime, "%o", h->mtime);
   rh->type = h->type ? h->type : MTAR_TREG;
   strcpy(rh->name, h->name);
@@ -332,9 +377,6 @@ int mtar_write_header(mtar_t *tar, const mtar_header_t *h) {
 
 int mtar_write_file_header(mtar_t *tar, const char *name, mtar_size_t size) {
   mtar_header_t h;
-  if (size >= 0777777777777) {
-    return MTAR_EFAILURE;
-  }
   /* Build header */
   memset(&h, 0, sizeof(h));
   strcpy(h.name, name);
