@@ -671,6 +671,14 @@ std::vector<bool> contractGraph(ContractorGraph &graph,
             stable_partition(remaining_nodes.begin(),
                              remaining_nodes.end(),
                              [](RemainingNodeData node_data) { return !node_data.is_independent; });
+
+        if (begin_independent_nodes == remaining_nodes.end())
+        {
+            util::Log() << "No independent node found in " << remaining_nodes.size()
+                        << " remaining nodes";
+            break;
+        }
+
         auto begin_independent_nodes_idx =
             std::distance(remaining_nodes.begin(), begin_independent_nodes);
         auto end_independent_nodes_idx = remaining_nodes.size();
@@ -761,7 +769,8 @@ std::vector<bool> contractGraph(ContractorGraph &graph,
     }
 
     util::Log() << "Contracted graph has " << graph.GetNumberOfEdges()
-                << " thus far, with an edge list of (" << (graph.GetNumberOfEdges() * sizeof(ContractorEdge)) << " bytes)";
+                << " thus far, with an edge list of ("
+                << (graph.GetNumberOfEdges() * sizeof(ContractorEdge)) << " bytes)";
 
     /* comment out renumbering and observe if memory spike still happens
     node_data.Renumber(new_to_old_node_id);
