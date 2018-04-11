@@ -200,7 +200,7 @@ matrix:
         - make --jobs=${JOBS}
         - popd
       script:
-        - npm run nodejs-tests
+        - #npm run nodejs-tests
       after_success:
         - ./scripts/travis/publish.sh
 
@@ -224,7 +224,7 @@ matrix:
         - make --jobs=${JOBS}
         - popd
       script:
-        - npm run nodejs-tests
+        - # npm run nodejs-tests
       after_success:
         - ./scripts/travis/publish.sh
 
@@ -248,7 +248,7 @@ matrix:
         - make --jobs=${JOBS}
         - popd
       script:
-        - npm run nodejs-tests
+        - # npm run nodejs-tests
       after_success:
         - ./scripts/travis/publish.sh
 
@@ -272,7 +272,7 @@ matrix:
         - make --jobs=${JOBS}
         - popd
       script:
-        - npm run nodejs-tests
+        - # npm run nodejs-tests
       after_success:
         - ./scripts/travis/publish.sh
 
@@ -299,7 +299,7 @@ before_install:
       npm install -g yarn
     fi
   - export PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
-  - export PUBLISH=$([[ "${TRAVIS_TAG:-}" == "v${PACKAGE_JSON_VERSION}" ]] && echo "On" || echo "Off")
+  - export PUBLISH="On"
   - echo "Using ${JOBS} jobs"
   - yarn install --ignore-scripts
   - yarn check --ignore-scripts --integrity
