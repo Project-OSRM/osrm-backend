@@ -760,8 +760,13 @@ std::vector<bool> contractGraph(ContractorGraph &graph,
         ++current_level;
     }
 
+    util::Log() << "Contracted graph has " << graph.GetNumberOfEdges()
+                << " thus far, with an edge list of (" << (graph.GetNumberOfEdges() * sizeof(ContractorEdge)) << " bytes)";
+
+    /* comment out renumbering and observe if memory spike still happens
     node_data.Renumber(new_to_old_node_id);
     RenumberGraph(graph, new_to_old_node_id);
+    */
 
     return std::move(node_data.is_core);
 }
