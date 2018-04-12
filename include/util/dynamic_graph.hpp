@@ -2,6 +2,8 @@
 #define DYNAMICGRAPH_HPP
 
 #include "util/deallocating_vector.hpp"
+#include "util/exception.hpp"
+#include "util/exception_utils.hpp"
 #include "util/integer_range.hpp"
 #include "util/permutation.hpp"
 #include "util/typedefs.hpp"
@@ -424,7 +426,7 @@ template <typename EdgeDataT> class DynamicGraph
         util::inplacePermutation(node_array.begin(), node_array.end(), old_to_new_node);
 
         // Build up edge permutation
-        auto new_edge_index = 0;
+        EdgeID new_edge_index = 0;
         std::vector<EdgeID> old_to_new_edge(edge_list.size(), SPECIAL_EDGEID);
         for (auto node : util::irange<NodeID>(0, number_of_nodes))
         {
@@ -432,6 +434,11 @@ template <typename EdgeDataT> class DynamicGraph
             // move all filled edges
             for (auto edge : GetAdjacentEdgeRange(node))
             {
+                if (new_edge_index == std::numeric_limits<EdgeID>::max())
+                {
+                    throw util::exception("There are too many edges, OSRM only supports 2^32" +
+                                          SOURCE_REF);
+                }
                 edge_list[edge].target = old_to_new_node[edge_list[edge].target];
                 BOOST_ASSERT(edge_list[edge].target != SPECIAL_NODEID);
                 old_to_new_edge[edge] = new_edge_index++;

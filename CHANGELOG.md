@@ -1,3 +1,8 @@
+# 5.16.6
+  - Changes from 5.16.5:
+    - Bugfixes:
+      - FIXED: integer overflow in `DynamicGraph::Renumber` [#5021](https://github.com/Project-OSRM/osrm-backend/pull/5021)
+
 # 5.16.5
   - Changes from 5.16.4:
     - Debug:
