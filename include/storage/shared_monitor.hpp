@@ -117,6 +117,17 @@ template <typename Data> struct SharedMonitor
 #endif
 
     static void remove() { bi::shared_memory_object::remove(Data::name); }
+    static bool exists() {
+        try
+        {
+            bi::shared_memory_object shmem_open = bi::shared_memory_object(bi::open_only, Data::name, bi::read_only);
+        }
+        catch (const bi::interprocess_exception &exception)
+        {
+            return false;
+        }
+        return true;
+    }
 
   private:
 #if USE_BOOST_INTERPROCESS_CONDITION

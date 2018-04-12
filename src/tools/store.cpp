@@ -27,7 +27,11 @@ void deleteRegion(const storage::SharedRegionRegister::ShmKey key)
 
 void listRegions()
 {
-
+    if (!storage::SharedMonitor<storage::SharedRegionRegister>::exists())
+    {
+        osrm::util::Log() << "No shared memory regions found. Try running osrm-datastore";
+        return;
+    }
     storage::SharedMonitor<storage::SharedRegionRegister> monitor;
     std::vector<std::string> names;
     const auto &shared_register = monitor.data();
@@ -105,8 +109,7 @@ bool generateDataStoreOptions(const int argc,
          boost::program_options::value<bool>(&list_datasets)
              ->default_value(false)
              ->implicit_value(true),
-         "Name of the dataset to load into memory. This allows having multiple datasets in memory "
-         "at the same time.") //
+         "List all OSRM datasets currently in memory") //
         ("only-metric",
          boost::program_options::value<bool>(&only_metric)
              ->default_value(false)
