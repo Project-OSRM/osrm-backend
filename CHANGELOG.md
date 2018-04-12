@@ -6,6 +6,7 @@
       - FIXED: Remove the last short annotation segment in `trimShortSegments` [#4946](https://github.com/Project-OSRM/osrm-backend/pull/4946)
       - FIXED: Properly calculate annotations for speeds, durations and distances when waypoints are used with mapmatching [#4949](https://github.com/Project-OSRM/osrm-backend/pull/4949)
       - FIXED: Don't apply unimplemented SH and PH conditions in OpeningHours and add inversed date ranges [#4992](https://github.com/Project-OSRM/osrm-backend/issues/4992)
+      - FIXED: integer overflow in `DynamicGraph::Renumber` [#5021](https://github.com/Project-OSRM/osrm-backend/pull/5021)
     - Profile:
       - CHANGED: Handle oneways in get_forward_backward_by_key [#4929](https://github.com/Project-OSRM/osrm-backend/pull/4929)
       - FIXED: Do not route against oneway road if there is a cycleway in the wrong direction; also review bike profile [#4943](https://github.com/Project-OSRM/osrm-backend/issues/4943)
