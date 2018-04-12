@@ -250,204 +250,237 @@ end
 
 function handle_bicycle_tags(profile,way,result,data)
     -- initial routability check, filters out buildings, boundaries, etc
-  local route = way:get_value_by_key("route")
-  local man_made = way:get_value_by_key("man_made")
-  local railway = way:get_value_by_key("railway")
-  local amenity = way:get_value_by_key("amenity")
-  local public_transport = way:get_value_by_key("public_transport")
-  local bridge = way:get_value_by_key("bridge")
+  data.route = way:get_value_by_key("route")
+  data.man_made = way:get_value_by_key("man_made")
+  data.railway = way:get_value_by_key("railway")
+  data.amenity = way:get_value_by_key("amenity")
+  data.public_transport = way:get_value_by_key("public_transport")
+  data.bridge = way:get_value_by_key("bridge")
 
   if (not data.highway or data.highway == '') and
-  (not route or route == '') and
-  (not profile.use_public_transport or not railway or railway=='') and
-  (not amenity or amenity=='') and
-  (not man_made or man_made=='') and
-  (not public_transport or public_transport=='') and
-  (not bridge or bridge=='')
+  (not data.route or data.route == '') and
+  (not profile.use_public_transport or not data.railway or data.railway=='') and
+  (not data.amenity or data.amenity=='') and
+  (not data.man_made or data.man_made=='') and
+  (not data.public_transport or data.public_transport=='') and
+  (not data.bridge or data.bridge=='')
   then
     return false
   end
 
   -- access
-  local access = find_access_tag(way, profile.access_tags_hierarchy)
-  if access and profile.access_tag_blacklist[access] then
+  data.access = find_access_tag(way, profile.access_tags_hierarchy)
+  if data.access and profile.access_tag_blacklist[data.access] then
     return false
   end
 
   -- other tags
-  local junction = way:get_value_by_key("junction")
-  local maxspeed = parse_maxspeed(way:get_value_by_key ( "maxspeed") )
-  local maxspeed_forward = parse_maxspeed(way:get_value_by_key( "maxspeed:forward"))
-  local maxspeed_backward = parse_maxspeed(way:get_value_by_key( "maxspeed:backward"))
-  local barrier = way:get_value_by_key("barrier")
-  local oneway = way:get_value_by_key("oneway")
-  local oneway_bicycle = way:get_value_by_key("oneway:bicycle")
-  local cycleway = way:get_value_by_key("cycleway")
-  local cycleway_left = way:get_value_by_key("cycleway:left")
-  local cycleway_right = way:get_value_by_key("cycleway:right")
-  local duration = way:get_value_by_key("duration")
-  local service = way:get_value_by_key("service")
-  local foot = way:get_value_by_key("foot")
-  local foot_forward = way:get_value_by_key("foot:forward")
-  local foot_backward = way:get_value_by_key("foot:backward")
-  local bicycle = way:get_value_by_key("bicycle")
+  data.junction = way:get_value_by_key("junction")
+  data.maxspeed = parse_maxspeed(way:get_value_by_key ( "maxspeed") )
+  data.maxspeed_forward = parse_maxspeed(way:get_value_by_key( "maxspeed:forward"))
+  data.maxspeed_backward = parse_maxspeed(way:get_value_by_key( "maxspeed:backward"))
+  data.barrier = way:get_value_by_key("barrier")
+  data.oneway = way:get_value_by_key("oneway")
+  data.oneway_bicycle = way:get_value_by_key("oneway:bicycle")
+  data.cycleway = way:get_value_by_key("cycleway")
+  data.cycleway_left = way:get_value_by_key("cycleway:left")
+  data.cycleway_right = way:get_value_by_key("cycleway:right")
+  data.duration = way:get_value_by_key("duration")
+  data.service = way:get_value_by_key("service")
+  data.foot = way:get_value_by_key("foot")
+  data.foot_forward = way:get_value_by_key("foot:forward")
+  data.foot_backward = way:get_value_by_key("foot:backward")
+  data.bicycle = way:get_value_by_key("bicycle")
+
+  speed_handler(profile,way,result,data)
+
+  oneway_handler(profile,way,result,data)
+
+  cycleway_handler(profile,way,result,data)
+
+  bike_push_handler(profile,way,result,data)
 
 
-  local way_type_allows_pushing = false
+  -- maxspeed
+  limit( result, data.maxspeed, data.maxspeed_forward, data.maxspeed_backward )
+
+  -- not routable if no speed assigned
+  -- this avoid assertions in debug builds
+  if result.forward_speed <= 0 and result.duration <= 0 then
+    result.forward_mode = mode.inaccessible
+  end
+  if result.backward_speed <= 0 and result.duration <= 0 then
+    result.backward_mode = mode.inaccessible
+  end
+
+  safety_handler(profile,way,result,data)
+end
+
+
+
+function speed_handler(profile,way,result,data)
+
+  data.way_type_allows_pushing = false
 
   -- speed
-  local bridge_speed = profile.bridge_speeds[bridge]
+  local bridge_speed = profile.bridge_speeds[data.bridge]
   if (bridge_speed and bridge_speed > 0) then
-    data.highway = bridge
-    if duration and durationIsValid(duration) then
-      result.duration = math.max( parseDuration(duration), 1 )
+    data.highway = data.bridge
+    if data.duration and durationIsValid(data.duration) then
+      result.duration = math.max( parseDuration(data.duration), 1 )
     end
     result.forward_speed = bridge_speed
     result.backward_speed = bridge_speed
-    way_type_allows_pushing = true
-  elseif profile.route_speeds[route] then
+    data.way_type_allows_pushing = true
+  elseif profile.route_speeds[data.route] then
     -- ferries (doesn't cover routes tagged using relations)
     result.forward_mode = mode.ferry
     result.backward_mode = mode.ferry
-    if duration and durationIsValid(duration) then
-      result.duration = math.max( 1, parseDuration(duration) )
+    if data.duration and durationIsValid(data.duration) then
+      result.duration = math.max( 1, parseDuration(data.duration) )
     else
-       result.forward_speed = profile.route_speeds[route]
-       result.backward_speed = profile.route_speeds[route]
+       result.forward_speed = profile.route_speeds[data.route]
+       result.backward_speed = profile.route_speeds[data.route]
     end
   -- railway platforms (old tagging scheme)
-  elseif railway and profile.platform_speeds[railway] then
-    result.forward_speed = profile.platform_speeds[railway]
-    result.backward_speed = profile.platform_speeds[railway]
-    way_type_allows_pushing = true
+  elseif data.railway and profile.platform_speeds[data.railway] then
+    result.forward_speed = profile.platform_speeds[data.railway]
+    result.backward_speed = profile.platform_speeds[data.railway]
+    data.way_type_allows_pushing = true
   -- public_transport platforms (new tagging platform)
-  elseif public_transport and profile.platform_speeds[public_transport] then
-    result.forward_speed = profile.platform_speeds[public_transport]
-    result.backward_speed = profile.platform_speeds[public_transport]
-    way_type_allows_pushing = true
+  elseif data.public_transport and profile.platform_speeds[data.public_transport] then
+    result.forward_speed = profile.platform_speeds[data.public_transport]
+    result.backward_speed = profile.platform_speeds[data.public_transport]
+    data.way_type_allows_pushing = true
   -- railways
-  elseif profile.use_public_transport and railway and profile.railway_speeds[railway] and profile.access_tag_whitelist[access] then
+  elseif profile.use_public_transport and data.railway and profile.railway_speeds[data.railway] and profile.access_tag_whitelist[data.access] then
     result.forward_mode = mode.train
     result.backward_mode = mode.train
-    result.forward_speed = profile.railway_speeds[railway]
-    result.backward_speed = profile.railway_speeds[railway]
-  elseif amenity and profile.amenity_speeds[amenity] then
+    result.forward_speed = profile.railway_speeds[data.railway]
+    result.backward_speed = profile.railway_speeds[data.railway]
+  elseif data.amenity and profile.amenity_speeds[data.amenity] then
     -- parking areas
-    result.forward_speed = profile.amenity_speeds[amenity]
-    result.backward_speed = profile.amenity_speeds[amenity]
-    way_type_allows_pushing = true
+    result.forward_speed = profile.amenity_speeds[data.amenity]
+    result.backward_speed = profile.amenity_speeds[data.amenity]
+    data.way_type_allows_pushing = true
   elseif profile.bicycle_speeds[data.highway] then
     -- regular ways
     result.forward_speed = profile.bicycle_speeds[data.highway]
     result.backward_speed = profile.bicycle_speeds[data.highway]
-    way_type_allows_pushing = true
-  elseif access and profile.access_tag_whitelist[access]  then
+    data.way_type_allows_pushing = true
+  elseif data.access and profile.access_tag_whitelist[data.access]  then
     -- unknown way, but valid access tag
     result.forward_speed = profile.default_speed
     result.backward_speed = profile.default_speed
-    way_type_allows_pushing = true
+    data.way_type_allows_pushing = true
   end
+end
 
+function oneway_handler(profile,way,result,data)
   -- oneway
-  local implied_oneway = junction == "roundabout" or junction == "circular" or data.highway == "motorway"
-  local reverse = false
+  data.implied_oneway = data.junction == "roundabout" or data.junction == "circular" or data.highway == "motorway"
+  data.reverse = false
 
-  if oneway_bicycle == "yes" or oneway_bicycle == "1" or oneway_bicycle == "true" then
+  if data.oneway_bicycle == "yes" or data.oneway_bicycle == "1" or data.oneway_bicycle == "true" then
     result.backward_mode = mode.inaccessible
-  elseif oneway_bicycle == "no" or oneway_bicycle == "0" or oneway_bicycle == "false" then
+  elseif data.oneway_bicycle == "no" or data.oneway_bicycle == "0" or data.oneway_bicycle == "false" then
    -- prevent other cases
-  elseif oneway_bicycle == "-1" then
+  elseif data.oneway_bicycle == "-1" then
     result.forward_mode = mode.inaccessible
-    reverse = true
-  elseif oneway == "yes" or oneway == "1" or oneway == "true" then
+    data.reverse = true
+  elseif data.oneway == "yes" or data.oneway == "1" or data.oneway == "true" then
     result.backward_mode = mode.inaccessible
-  elseif oneway == "no" or oneway == "0" or oneway == "false" then
+  elseif data.oneway == "no" or data.oneway == "0" or data.oneway == "false" then
     -- prevent other cases
-  elseif oneway == "-1" then
+  elseif data.oneway == "-1" then
     result.forward_mode = mode.inaccessible
-    reverse = true
-  elseif implied_oneway then
+    data.reverse = true
+  elseif data.implied_oneway then
     result.backward_mode = mode.inaccessible
   end
+end
 
+function cycleway_handler(profile,way,result,data)
   -- cycleway
-  local has_cycleway_forward = false
-  local has_cycleway_backward = false
-  local is_twoway = result.forward_mode ~= mode.inaccessible and result.backward_mode ~= mode.inaccessible and not implied_oneway
+  data.has_cycleway_forward = false
+  data.has_cycleway_backward = false
+  data.is_twoway = result.forward_mode ~= mode.inaccessible and result.backward_mode ~= mode.inaccessible and not data.implied_oneway
 
   -- cycleways on normal roads
-  if is_twoway then
-    if cycleway and profile.cycleway_tags[cycleway] then
-      has_cycleway_backward = true
-      has_cycleway_forward = true
+  if data.is_twoway then
+    if data.cycleway and profile.cycleway_tags[data.cycleway] then
+      data.has_cycleway_backward = true
+      data.has_cycleway_forward = true
     end
-    if (cycleway_right and profile.cycleway_tags[cycleway_right]) or (cycleway_left and profile.opposite_cycleway_tags[cycleway_left]) then
-      has_cycleway_forward = true
+    if (data.cycleway_right and profile.cycleway_tags[data.cycleway_right]) or (data.cycleway_left and profile.opposite_cycleway_tags[data.cycleway_left]) then
+      data.has_cycleway_forward = true
     end
-    if (cycleway_left and profile.cycleway_tags[cycleway_left]) or (cycleway_right and profile.opposite_cycleway_tags[cycleway_right]) then
-      has_cycleway_backward = true
+    if (data.cycleway_left and profile.cycleway_tags[data.cycleway_left]) or (data.cycleway_right and profile.opposite_cycleway_tags[data.cycleway_right]) then
+      data.has_cycleway_backward = true
     end
   else
-    local has_twoway_cycleway = (cycleway and profile.opposite_cycleway_tags[cycleway]) or (cycleway_right and profile.opposite_cycleway_tags[cycleway_right]) or (cycleway_left and profile.opposite_cycleway_tags[cycleway_left])
-    local has_opposite_cycleway = (cycleway_left and profile.opposite_cycleway_tags[cycleway_left]) or (cycleway_right and profile.opposite_cycleway_tags[cycleway_right])
-    local has_oneway_cycleway = (cycleway and profile.cycleway_tags[cycleway]) or (cycleway_right and profile.cycleway_tags[cycleway_right]) or (cycleway_left and profile.cycleway_tags[cycleway_left])
+    local has_twoway_cycleway = (data.cycleway and profile.opposite_cycleway_tags[data.cycleway]) or (data.cycleway_right and profile.opposite_cycleway_tags[data.cycleway_right]) or (data.cycleway_left and profile.opposite_cycleway_tags[data.cycleway_left])
+    local has_opposite_cycleway = (data.cycleway_left and profile.opposite_cycleway_tags[data.cycleway_left]) or (data.cycleway_right and profile.opposite_cycleway_tags[data.cycleway_right])
+    local has_oneway_cycleway = (data.cycleway and profile.cycleway_tags[data.cycleway]) or (data.cycleway_right and profile.cycleway_tags[data.cycleway_right]) or (data.cycleway_left and profile.cycleway_tags[data.cycleway_left])
 
     -- set cycleway even though it is an one-way if opposite is tagged
     if has_twoway_cycleway then
-      has_cycleway_backward = true
-      has_cycleway_forward = true
+      data.has_cycleway_backward = true
+      data.has_cycleway_forward = true
     elseif has_opposite_cycleway then
-      if not reverse then
-        has_cycleway_backward = true
+      if not data.reverse then
+        data.has_cycleway_backward = true
       else
-        has_cycleway_forward = true
+        data.has_cycleway_forward = true
       end
     elseif has_oneway_cycleway then
-      if not reverse then
-        has_cycleway_forward = true
+      if not data.reverse then
+        data.has_cycleway_forward = true
       else
-        has_cycleway_backward = true
+        data.has_cycleway_backward = true
       end
 
     end
   end
 
-  if has_cycleway_backward then
+  if data.has_cycleway_backward then
     result.backward_mode = mode.cycling
     result.backward_speed = profile.bicycle_speeds["cycleway"]
   end
 
-  if has_cycleway_forward then
+  if data.has_cycleway_forward then
     result.forward_mode = mode.cycling
     result.forward_speed = profile.bicycle_speeds["cycleway"]
   end
+end
 
+function bike_push_handler(profile,way,result,data)
   -- pushing bikes - if no other mode found
   if result.forward_mode == mode.inaccessible or result.backward_mode == mode.inaccessible or
     result.forward_speed == -1 or result.backward_speed == -1 then
-    if foot ~= 'no' then
+    if data.foot ~= 'no' then
       local push_forward_speed = nil
       local push_backward_speed = nil
 
       if profile.pedestrian_speeds[data.highway] then
         push_forward_speed = profile.pedestrian_speeds[data.highway]
         push_backward_speed = profile.pedestrian_speeds[data.highway]
-      elseif man_made and profile.man_made_speeds[man_made] then
-        push_forward_speed = profile.man_made_speeds[man_made]
-        push_backward_speed = profile.man_made_speeds[man_made]
+      elseif data.man_made and profile.man_made_speeds[data.man_made] then
+        push_forward_speed = profile.man_made_speeds[data.man_made]
+        push_backward_speed = profile.man_made_speeds[data.man_made]
       else
-        if foot == 'yes' then
+        if data.foot == 'yes' then
           push_forward_speed = profile.walking_speed
-          if not implied_oneway then
+          if not data.implied_oneway then
             push_backward_speed = profile.walking_speed
           end
-        elseif foot_forward == 'yes' then
+        elseif data.foot_forward == 'yes' then
           push_forward_speed = profile.walking_speed
-        elseif foot_backward == 'yes' then
+        elseif data.foot_backward == 'yes' then
           push_backward_speed = profile.walking_speed
-        elseif way_type_allows_pushing then
+        elseif data.way_type_allows_pushing then
           push_forward_speed = profile.walking_speed
-          if not implied_oneway then
+          if not data.implied_oneway then
             push_backward_speed = profile.walking_speed
           end
         end
@@ -466,74 +499,77 @@ function handle_bicycle_tags(profile,way,result,data)
 
   end
 
-
   -- dismount
-  if bicycle == "dismount" then
+  if data.bicycle == "dismount" then
     result.forward_mode = mode.pushing_bike
     result.backward_mode = mode.pushing_bike
     result.forward_speed = profile.walking_speed
     result.backward_speed = profile.walking_speed
   end
+end
 
-
-
-  -- maxspeed
-  limit( result, maxspeed, maxspeed_forward, maxspeed_backward )
-
-
-  -- not routable if no speed assigned
-  -- this avoid assertions in debug builds
-  if result.forward_speed <= 0 and result.duration <= 0 then
-    result.forward_mode = mode.inaccessible
-  end
-  if result.backward_speed <= 0 and result.duration <= 0 then
-    result.backward_mode = mode.inaccessible
-  end
-
-
+function safety_handler(profile,way,result,data)
   -- convert duration into cyclability
   if profile.properties.weight_name == 'cyclability' then
-      local safety_penalty = profile.unsafe_highway_list[data.highway] or 1.
-      local is_unsafe = safety_penalty < 1
+    local safety_penalty = profile.unsafe_highway_list[data.highway] or 1.
+    local is_unsafe = safety_penalty < 1
 
-      -- primaries that are one ways are probably huge primaries where the lanes need to be separated
-      if is_unsafe and data.highway == 'primary' and not is_twoway then
-        safety_penalty = safety_penalty * 0.5
-      end
-      if is_unsafe and data.highway == 'secondary' and not is_twoway then
-        safety_penalty = safety_penalty * 0.6
-      end
+    -- primaries that are one ways are probably huge primaries where the lanes need to be separated
+    if is_unsafe and data.highway == 'primary' and not data.is_twoway then
+      safety_penalty = safety_penalty * 0.5
+    end
+    if is_unsafe and data.highway == 'secondary' and not data.is_twoway then
+      safety_penalty = safety_penalty * 0.6
+    end
 
-      local forward_is_unsafe = is_unsafe and not has_cycleway_forward
-      local backward_is_unsafe = is_unsafe and not has_cycleway_backward
-      local is_undesireable = data.highway == "service" and profile.service_penalties[service]
-      local forward_penalty = 1.
-      local backward_penalty = 1.
-      if forward_is_unsafe then
-        forward_penalty = math.min(forward_penalty, safety_penalty)
-      end
-      if backward_is_unsafe then
-         backward_penalty = math.min(backward_penalty, safety_penalty)
-      end
+    local forward_is_unsafe = is_unsafe and not data.has_cycleway_forward
+    local backward_is_unsafe = is_unsafe and not data.has_cycleway_backward
+    local is_undesireable = data.highway == "service" and profile.service_penalties[data.service]
+    local forward_penalty = 1.
+    local backward_penalty = 1.
+    if forward_is_unsafe then
+      forward_penalty = math.min(forward_penalty, safety_penalty)
+    end
+    if backward_is_unsafe then
+       backward_penalty = math.min(backward_penalty, safety_penalty)
+    end
 
-      if is_undesireable then
-         forward_penalty = math.min(forward_penalty, profile.service_penalties[service])
-         backward_penalty = math.min(backward_penalty, profile.service_penalties[service])
-      end
+    if is_undesireable then
+       forward_penalty = math.min(forward_penalty, profile.service_penalties[data.service])
+       backward_penalty = math.min(backward_penalty, profile.service_penalties[data.service])
+    end
 
+    if result.forward_speed > 0 then
+      -- convert from km/h to m/s
+      result.forward_rate = result.forward_speed / 3.6 * forward_penalty
+    end
+    if result.backward_speed > 0 then
+      -- convert from km/h to m/s
+      result.backward_rate = result.backward_speed / 3.6 * backward_penalty
+    end
+    if result.duration > 0 then
+      result.weight = result.duration / forward_penalty
+    end
+
+    if data.highway == "bicycle" then
+      safety_bonus = safety_bonus + 0.2
       if result.forward_speed > 0 then
         -- convert from km/h to m/s
-        result.forward_rate = result.forward_speed / 3.6 * forward_penalty
+        result.forward_rate = result.forward_speed / 3.6 * safety_bonus
       end
       if result.backward_speed > 0 then
         -- convert from km/h to m/s
-        result.backward_rate = result.backward_speed / 3.6 * backward_penalty
+        result.backward_rate = result.backward_speed / 3.6 * safety_bonus
       end
       if result.duration > 0 then
-        result.weight = result.duration / forward_penalty
+        result.weight = result.duration / safety_bonus
       end
+    end
   end
 end
+
+
+
 function process_way(profile, way, result)
   -- the initial filtering of ways based on presence of tags
   -- affects processing times significantly, because all ways
@@ -551,6 +587,39 @@ function process_way(profile, way, result)
   local data = {
     -- prefetch tags
     highway = way:get_value_by_key('highway'),
+
+    route = nil,
+    man_made = nil,
+    railway = nil,
+    amenity = nil,
+    public_transport = nil,
+    bridge = nil,
+
+    access = nil,
+
+    junction = nil,
+    maxspeed = nil,
+    maxspeed_forward = nil,
+    maxspeed_backward = nil,
+    barrier = nil,
+    oneway = nil,
+    oneway_bicycle = nil,
+    cycleway = nil,
+    cycleway_left = nil,
+    cycleway_right = nil,
+    duration = nil,
+    service = nil,
+    foot = nil,
+    foot_forward = nil,
+    foot_backward = nil,
+    bicycle = nil,
+
+    way_type_allows_pushing = false,
+    has_cycleway_forward = false,
+    has_cycleway_backward = false,
+    is_twoway = true,
+    reverse = false,
+    implied_oneway = false
   }
 
   local handlers = Sequence {
