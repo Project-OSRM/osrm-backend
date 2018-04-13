@@ -36,7 +36,6 @@ void listRegions()
     std::vector<std::string> names;
     const auto &shared_register = monitor.data();
     shared_register.List(std::back_inserter(names));
-    osrm::util::Log() << "name\tshm key\ttimestamp\tsize";
     for (const auto &name : names)
     {
         auto id = shared_register.Find(name);
