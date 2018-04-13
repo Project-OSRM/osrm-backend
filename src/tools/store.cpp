@@ -27,9 +27,9 @@ void deleteRegion(const storage::SharedRegionRegister::ShmKey key)
 
 void listRegions()
 {
+    osrm::util::Log() << "name\tshm key\ttimestamp\tsize";
     if (!storage::SharedMonitor<storage::SharedRegionRegister>::exists())
     {
-        osrm::util::Log() << "No shared memory regions found. Try running osrm-datastore";
         return;
     }
     storage::SharedMonitor<storage::SharedRegionRegister> monitor;
