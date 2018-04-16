@@ -10,6 +10,7 @@ const clu = require('command-line-usage');
 const ansi = require('ansi-escape-sequences');
 const turf = require('turf');
 const jp = require('jsonpath');
+const csv_stringify = require('csv-stringify/lib/sync');
 
 const run_query = (query_options, filters, callback) => {
     let tic = () => 0.;
@@ -123,11 +124,8 @@ queries = queries.map(q => { return {hostname: options.server.hostname, port: op
 http.globalAgent.maxSockets = options['max-sockets'];
 queries.map(query => {
     run_query(query, options.filter, (query, code, ttfb, total, results) => {
-        let str = `"${query}",${code}`;
-        if (ttfb !== undefined) str += `,${ttfb}`;
-        if (total !== undefined) str += `,${total}`;
-        if (typeof results === 'object' && results.length > 0)
-            str += ',' + results.map(x => isNaN(x) ? '"' + JSON.stringify(x).replace(/\n/g, ';').replace(/"/g, "'") + '"' : Number(x)).join(',');
-        console.log(str);
+        let data = results ? JSON.stringify(results[0]) : '';
+        let record = [[query, code, ttfb, total, data]];
+        process.stdout.write(csv_stringify(record));
     });
 });
