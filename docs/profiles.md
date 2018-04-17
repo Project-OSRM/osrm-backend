@@ -68,7 +68,7 @@ If you want to prioritize certain streets, increase the rate on these.
 
 ## Elements
 ### api_version
-A profile should set `api_version` at the top of your profile. This is done to ensure that older profiles are still supported when the api changes. If `api_version` is not defined, 0 will be assumed. The current api version is 2.
+A profile should set `api_version` at the top of your profile. This is done to ensure that older profiles are still supported when the api changes. If `api_version` is not defined, 0 will be assumed. The current api version is 4.
 
 ### Library files
 The folder [profiles/lib/](../profiles/lib/) contains LUA library files for handling many common processing tasks.
