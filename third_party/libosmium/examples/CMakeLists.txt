@@ -32,25 +32,6 @@ set(EXAMPLES
 
 #-----------------------------------------------------------------------------
 #
-#  Examples depending on wingetopt
-#
-#-----------------------------------------------------------------------------
-set(GETOPT_EXAMPLES area_test convert index_lookup)
-if(NOT GETOPT_MISSING)
-    foreach(example ${GETOPT_EXAMPLES})
-        list(APPEND EXAMPLE_LIBS_${example} ${GETOPT_LIBRARY})
-    endforeach()
-else()
-    message(STATUS "Configuring examples - Skipping examples because on Visual Studio the wingetopt library is needed and was not found:")
-    foreach(example ${GETOPT_EXAMPLES})
-        message(STATUS "  - osmium_${example}")
-        list(REMOVE_ITEM EXAMPLES ${example})
-    endforeach()
-endif()
-
-
-#-----------------------------------------------------------------------------
-#
 #  Configure examples
 #
 #-----------------------------------------------------------------------------

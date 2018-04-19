@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,13 +33,13 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <cstdint>
-#include <cstdlib>
-#include <iosfwd>
-
 #include <osmium/memory/item.hpp>
 #include <osmium/osm/location.hpp>
 #include <osmium/osm/types.hpp>
+
+#include <cstdint>
+#include <cstdlib>
+#include <iosfwd>
 
 namespace osmium {
 
@@ -54,7 +54,13 @@ namespace osmium {
 
     public:
 
-        constexpr NodeRef(const osmium::object_id_type ref = 0, const osmium::Location& location = Location()) noexcept :
+        /**
+         * Constructor for NodeRef
+         *
+         * This is not explicit to allow implicit construction from an object
+         * ID.
+         */
+        constexpr NodeRef(const osmium::object_id_type ref = 0, const osmium::Location& location = Location{}) noexcept : // NOLINT(google-explicit-constructor, hicpp-explicit-conversions)
             m_ref(ref),
             m_location(location) {
         }
@@ -153,7 +159,7 @@ namespace osmium {
      * Node IDs.
      */
     inline constexpr bool operator!=(const NodeRef& lhs, const NodeRef& rhs) noexcept {
-        return ! (lhs == rhs);
+        return !(lhs == rhs);
     }
 
     /**
@@ -177,7 +183,7 @@ namespace osmium {
      * they reference.
      */
     inline constexpr bool operator<=(const NodeRef& lhs, const NodeRef& rhs) noexcept {
-        return ! (rhs < lhs);
+        return !(rhs < lhs);
     }
 
     /**
@@ -185,7 +191,7 @@ namespace osmium {
      * they reference.
      */
     inline constexpr bool operator>=(const NodeRef& lhs, const NodeRef& rhs) noexcept {
-        return ! (lhs < rhs);
+        return !(lhs < rhs);
     }
 
     /**

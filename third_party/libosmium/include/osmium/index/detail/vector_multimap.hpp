@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,13 +33,13 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <algorithm>
-#include <cstddef>
-#include <utility>
-
 #include <osmium/index/index.hpp>
 #include <osmium/index/multimap.hpp>
 #include <osmium/io/detail/read_write.hpp>
+
+#include <algorithm>
+#include <cstddef>
+#include <utility>
 
 namespace osmium {
 
@@ -47,7 +47,7 @@ namespace osmium {
 
         namespace multimap {
 
-            template <typename TId, typename TValue, template<typename...> class TVector>
+            template <typename TId, typename TValue, template <typename...> class TVector>
             class VectorBasedSparseMultimap : public Multimap<TId, TValue> {
 
             public:
@@ -74,8 +74,6 @@ namespace osmium {
                 explicit VectorBasedSparseMultimap(int fd) :
                     m_vector(fd) {
                 }
-
-                ~VectorBasedSparseMultimap() noexcept final = default;
 
                 void set(const TId id, const TValue value) final {
                     m_vector.push_back(element_type(id, value));

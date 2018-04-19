@@ -1,4 +1,3 @@
-
 #include "catch.hpp"
 
 #include <osmium/builder/attr.hpp>
@@ -7,7 +6,7 @@
 #include <osmium/osm/object_comparisons.hpp>
 #include <osmium/visitor.hpp>
 
-using namespace osmium::builder::attr;
+using namespace osmium::builder::attr; // NOLINT(google-build-using-namespace)
 
 TEST_CASE("Create ObjectPointerCollection") {
     osmium::memory::Buffer buffer{1024, osmium::memory::Buffer::auto_grow::yes};
@@ -29,7 +28,7 @@ TEST_CASE("Create ObjectPointerCollection") {
 
     osmium::ObjectPointerCollection collection;
     REQUIRE(collection.empty());
-    REQUIRE(collection.size() == 0);
+    REQUIRE(collection.size() == 0); // NOLINT(readability-container-size-empty)
 
     osmium::apply(buffer, collection);
 
@@ -81,6 +80,5 @@ TEST_CASE("Create ObjectPointerCollection") {
     collection.clear();
 
     REQUIRE(collection.empty());
-    REQUIRE(collection.size() == 0);
 }
 

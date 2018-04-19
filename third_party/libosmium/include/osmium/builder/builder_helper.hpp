@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,15 +33,15 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <cstddef>
-#include <initializer_list>
-#include <functional>
-#include <map>
-#include <utility>
-
 #include <osmium/builder/osm_object_builder.hpp>
 #include <osmium/memory/buffer.hpp>
 #include <osmium/util/compatibility.hpp>
+
+#include <cstddef>
+#include <functional>
+#include <initializer_list>
+#include <map>
+#include <utility>
 
 namespace osmium {
 
@@ -103,7 +103,7 @@ namespace osmium {
          * @deprecated
          * Use osmium::builder::add_tag_list() instead.
          */
-        OSMIUM_DEPRECATED inline const osmium::TagList& build_tag_list_from_func(osmium::memory::Buffer& buffer, std::function<void(osmium::builder::TagListBuilder&)> func) {
+        OSMIUM_DEPRECATED inline const osmium::TagList& build_tag_list_from_func(osmium::memory::Buffer& buffer, const std::function<void(osmium::builder::TagListBuilder&)>& func) {
             const size_t pos = buffer.committed();
             {
                 osmium::builder::TagListBuilder tl_builder(buffer);

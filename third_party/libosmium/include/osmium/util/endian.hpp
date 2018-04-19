@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -34,8 +34,8 @@ DEALINGS IN THE SOFTWARE.
 */
 
 // Windows is only available for little endian architectures
-// http://stackoverflow.com/questions/6449468/can-i-safely-assume-that-windows-installations-will-always-be-little-endian
-#if defined(__FreeBSD__)
+// https://stackoverflow.com/questions/6449468/can-i-safely-assume-that-windows-installations-will-always-be-little-endian
+#if defined(__FreeBSD__) || defined(__DragonFly__)
 # include <sys/endian.h>
 #elif !defined(_WIN32) && !defined(__APPLE__)
 # include <endian.h>

@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,10 +33,6 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <string>
-#include <utility>
-#include <vector>
-
 #include <osmium/area/assembler.hpp>
 #include <osmium/area/multipolygon_collector.hpp>
 #include <osmium/handler/node_locations_for_ways.hpp> // IWYU pragma: keep
@@ -46,6 +42,10 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/memory/buffer.hpp>
 #include <osmium/osm/entity_bits.hpp>
 #include <osmium/visitor.hpp>
+
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace osmium {
 

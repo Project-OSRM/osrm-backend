@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,17 +33,17 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <osmium/thread/function_wrapper.hpp>
+#include <osmium/thread/queue.hpp>
+#include <osmium/thread/util.hpp>
+#include <osmium/util/config.hpp>
+
 #include <cstddef>
 #include <future>
 #include <thread>
 #include <type_traits>
 #include <utility>
 #include <vector>
-
-#include <osmium/thread/function_wrapper.hpp>
-#include <osmium/thread/queue.hpp>
-#include <osmium/thread/util.hpp>
-#include <osmium/util/config.hpp>
 
 namespace osmium {
 
@@ -102,6 +102,12 @@ namespace osmium {
                     m_threads(threads) {
                 }
 
+                thread_joiner(const thread_joiner&) = delete;
+                thread_joiner& operator=(const thread_joiner&) = delete;
+
+                thread_joiner(thread_joiner&&) = delete;
+                thread_joiner& operator=(thread_joiner&&) = delete;
+
                 ~thread_joiner() {
                     for (auto& thread : m_threads) {
                         if (thread.joinable()) {
@@ -113,7 +119,7 @@ namespace osmium {
             }; // class thread_joiner
 
             osmium::thread::Queue<function_wrapper> m_work_queue;
-            std::vector<std::thread> m_threads;
+            std::vector<std::thread> m_threads{};
             thread_joiner m_joiner;
             int m_num_threads;
 
@@ -152,13 +158,12 @@ namespace osmium {
              */
             explicit Pool(int num_threads = default_num_threads, std::size_t max_queue_size = default_queue_size) :
                 m_work_queue(max_queue_size > 0 ? max_queue_size : detail::get_work_queue_size(), "work"),
-                m_threads(),
                 m_joiner(m_threads),
                 m_num_threads(detail::get_pool_size(num_threads, osmium::config::get_pool_threads(), std::thread::hardware_concurrency())) {
 
                 try {
                     for (int i = 0; i < m_num_threads; ++i) {
-                        m_threads.push_back(std::thread(&Pool::worker_thread, this));
+                        m_threads.emplace_back(&Pool::worker_thread, this);
                     }
                 } catch (...) {
                     shutdown_all_workers();
@@ -177,6 +182,12 @@ namespace osmium {
                     m_work_queue.push(function_wrapper{0});
                 }
             }
+
+            Pool(const Pool&) = delete;
+            Pool& operator=(const Pool&) = delete;
+
+            Pool(Pool&&) = delete;
+            Pool& operator=(Pool&&) = delete;
 
             ~Pool() {
                 shutdown_all_workers();

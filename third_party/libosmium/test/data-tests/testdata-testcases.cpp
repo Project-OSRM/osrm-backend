@@ -1,10 +1,10 @@
 
-#include <iostream>
-#include <string>
-
 #define CATCH_CONFIG_RUNNER
 
 #include "testdata-testcases.hpp"
+
+#include <iostream>
+#include <string>
 
 std::string dirname;
 

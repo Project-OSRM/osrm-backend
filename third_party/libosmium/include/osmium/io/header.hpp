@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,11 +33,11 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <initializer_list>
-#include <vector>
-
 #include <osmium/osm/box.hpp>
 #include <osmium/util/options.hpp>
+
+#include <initializer_list>
+#include <vector>
 
 namespace osmium {
 
@@ -65,30 +65,24 @@ namespace osmium {
          * specially. The the Options parent class for details on how to
          * set and get those key-value pairs.
          */
-        class Header : public osmium::util::Options {
+        class Header : public osmium::Options {
 
             /// Bounding boxes
-            std::vector<osmium::Box> m_boxes;
+            std::vector<osmium::Box> m_boxes{};
 
             /**
              * Are there possibly multiple versions of the same object in
              * this stream of objects? This should be true for history files
              * and for change files, but not for normal OSM data files.
              */
-            bool m_has_multiple_object_versions;
+            bool m_has_multiple_object_versions = false;
 
         public:
 
-            Header() :
-                Options(),
-                m_boxes(),
-                m_has_multiple_object_versions(false) {
-            }
+            Header() = default;
 
-            explicit Header(const std::initializer_list<osmium::util::Options::value_type>& values) :
-                Options(values),
-                m_boxes(),
-                m_has_multiple_object_versions(false) {
+            Header(const std::initializer_list<osmium::Options::value_type>& values) :
+                Options(values) {
             }
 
             /**

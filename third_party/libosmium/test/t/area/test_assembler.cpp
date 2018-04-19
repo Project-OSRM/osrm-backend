@@ -5,7 +5,7 @@
 #include <osmium/memory/buffer.hpp>
 #include <osmium/osm/area.hpp>
 
-using namespace osmium::builder::attr;
+using namespace osmium::builder::attr; // NOLINT(google-build-using-namespace)
 
 TEST_CASE("Build area from way") {
     osmium::memory::Buffer buffer{10240};

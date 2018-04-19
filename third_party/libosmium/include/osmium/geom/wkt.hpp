@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,13 +33,13 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <osmium/geom/coordinates.hpp>
+#include <osmium/geom/factory.hpp>
+
 #include <cassert>
 #include <cstddef>
 #include <string>
 #include <utility>
-
-#include <osmium/geom/coordinates.hpp>
-#include <osmium/geom/factory.hpp>
 
 namespace osmium {
 
@@ -67,8 +67,7 @@ namespace osmium {
                 using multipolygon_type = std::string;
                 using ring_type         = std::string;
 
-                WKTFactoryImpl(int srid, int precision = 7, wkt_type wtype = wkt_type::wkt) :
-                    m_srid_prefix(),
+                explicit WKTFactoryImpl(int srid, int precision = 7, wkt_type wtype = wkt_type::wkt) :
                     m_precision(precision),
                     m_wkt_type(wtype) {
                     if (m_wkt_type == wkt_type::ewkt) {
@@ -81,7 +80,7 @@ namespace osmium {
                 /* Point */
 
                 point_type make_point(const osmium::geom::Coordinates& xy) const {
-                    std::string str {m_srid_prefix};
+                    std::string str{m_srid_prefix};
                     str += "POINT";
                     xy.append_to_string(str, '(', ' ', ')', m_precision);
                     return str;
@@ -107,6 +106,29 @@ namespace osmium {
                     swap(str, m_str);
 
                     str.back() = ')';
+                    return str;
+                }
+
+                /* Polygon */
+                void polygon_start() {
+                    m_str = m_srid_prefix;
+                    m_str += "POLYGON((";
+                }
+
+                void polygon_add_location(const osmium::geom::Coordinates& xy) {
+                    xy.append_to_string(m_str, ' ', m_precision);
+                    m_str += ',';
+                }
+
+                polygon_type polygon_finish(size_t /* num_points */) {
+                    assert(!m_str.empty());
+                    std::string str;
+
+                    using std::swap;
+                    swap(str, m_str);
+
+                    str.back() = ')';
+                    str += ")";
                     return str;
                 }
 

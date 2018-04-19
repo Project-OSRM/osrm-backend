@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,6 +33,9 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <osmium/util/compatibility.hpp>
+#include <osmium/util/minmax.hpp> // IWYU pragma: keep
+
 #include <cassert>
 #include <cstdint>
 #include <ctime>
@@ -42,12 +45,39 @@ DEALINGS IN THE SOFTWARE.
 #include <string>
 #include <type_traits>
 
-#include <osmium/util/compatibility.hpp>
-#include <osmium/util/minmax.hpp> // IWYU pragma: keep
-
 namespace osmium {
 
     namespace detail {
+
+        inline void add_2digit_int_to_string(int value, std::string& out) {
+            assert(value >= 0 && value <= 99);
+            if (value > 9) {
+                const int dec = value / 10;
+                out += static_cast<char>('0' + dec);
+                value -= dec * 10;
+            } else {
+                out += '0';
+            }
+            out += static_cast<char>('0' + value);
+        }
+
+        inline void add_4digit_int_to_string(int value, std::string& out) {
+            assert(value >= 1000 && value <= 9999);
+
+            const int dec1 = value / 1000;
+            out += static_cast<char>('0' + dec1);
+            value -= dec1 * 1000;
+
+            const int dec2 = value / 100;
+            out += static_cast<char>('0' + dec2);
+            value -= dec2 * 100;
+
+            const int dec3 = value / 10;
+            out += static_cast<char>('0' + dec3);
+            value -= dec3 * 10;
+
+            out += static_cast<char>('0' + value);
+        }
 
         inline time_t parse_timestamp(const char* str) {
             static const int mon_lengths[] = {
@@ -114,26 +144,14 @@ namespace osmium {
      */
     class Timestamp {
 
-        // length of ISO timestamp string yyyy-mm-ddThh:mm:ssZ\0
-        static constexpr const int timestamp_length = 20 + 1;
-
-        // The timestamp format for OSM timestamps in strftime(3) format.
-        // This is the ISO-Format "yyyy-mm-ddThh:mm:ssZ".
-        static const char* timestamp_format() {
-            static const char f[timestamp_length] = "%Y-%m-%dT%H:%M:%SZ";
-            return f;
-        }
-
-        uint32_t m_timestamp;
+        uint32_t m_timestamp = 0;
 
     public:
 
         /**
          * Default construct an invalid Timestamp.
          */
-        constexpr Timestamp() noexcept :
-            m_timestamp(0) {
-        }
+        constexpr Timestamp() noexcept = default;
 
         /**
          * Construct a Timestamp from any integer type containing the seconds
@@ -145,7 +163,7 @@ namespace osmium {
          * like @code node.set_timestamp(123); @endcode work.
          */
         template <typename T, typename std::enable_if<std::is_integral<T>::value, int>::type = 0>
-        constexpr Timestamp(T timestamp) noexcept :
+        constexpr Timestamp(T timestamp) noexcept : // NOLINT(google-explicit-constructor, hicpp-explicit-conversions)
             m_timestamp(uint32_t(timestamp)) {
         }
 
@@ -202,7 +220,7 @@ namespace osmium {
          *
          * @deprecated You should call seconds_since_epoch() explicitly instead.
          */
-        OSMIUM_DEPRECATED constexpr operator time_t() const noexcept {
+        OSMIUM_DEPRECATED constexpr operator time_t() const noexcept { // NOLINT(google-explicit-constructor, hicpp-explicit-conversions)
             return static_cast<time_t>(m_timestamp);
         }
 
@@ -230,21 +248,26 @@ namespace osmium {
 #ifndef NDEBUG
                 auto result =
 #endif
-#ifndef _MSC_VER
-                              gmtime_r(&sse, &tm);
+#ifndef _WIN32
+                gmtime_r(&sse, &tm);
                 assert(result != nullptr);
 #else
-                              gmtime_s(&tm, &sse);
+                gmtime_s(&tm, &sse);
                 assert(result == 0);
 #endif
 
-                s.resize(timestamp_length);
-                /* This const_cast is ok, because we know we have enough space
-                in the string for the format we are using (well at least until
-                the year will have 5 digits). And by setting the size
-                afterwards from the result of strftime we make sure thats set
-                right, too. */
-                s.resize(strftime(const_cast<char*>(s.c_str()), timestamp_length, timestamp_format(), &tm));
+                detail::add_4digit_int_to_string(tm.tm_year + 1900, s);
+                s += '-';
+                detail::add_2digit_int_to_string(tm.tm_mon + 1, s);
+                s += '-';
+                detail::add_2digit_int_to_string(tm.tm_mday, s);
+                s += 'T';
+                detail::add_2digit_int_to_string(tm.tm_hour, s);
+                s += ':';
+                detail::add_2digit_int_to_string(tm.tm_min, s);
+                s += ':';
+                detail::add_2digit_int_to_string(tm.tm_sec, s);
+                s += 'Z';
             }
 
             return s;
@@ -257,7 +280,7 @@ namespace osmium {
      * Timestamp.
      */
     inline constexpr Timestamp start_of_time() noexcept {
-        return Timestamp(1);
+        return {1};
     }
 
     /**
@@ -265,7 +288,7 @@ namespace osmium {
      * Timestamp.
      */
     inline constexpr Timestamp end_of_time() noexcept {
-        return Timestamp(std::numeric_limits<uint32_t>::max());
+        return {std::numeric_limits<uint32_t>::max()};
     }
 
     template <typename TChar, typename TTraits>
@@ -291,11 +314,11 @@ namespace osmium {
     }
 
     inline bool operator<=(const Timestamp& lhs, const Timestamp& rhs) noexcept {
-        return ! (rhs < lhs);
+        return !(rhs < lhs);
     }
 
     inline bool operator>=(const Timestamp& lhs, const Timestamp& rhs) noexcept {
-        return ! (lhs < rhs);
+        return !(lhs < rhs);
     }
 
     template <>

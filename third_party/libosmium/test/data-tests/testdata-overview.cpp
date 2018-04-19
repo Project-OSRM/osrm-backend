@@ -1,17 +1,16 @@
 /* The code in this file is released into the Public Domain. */
 
-#include <iostream>
-#include <string>
-
-#include <gdalcpp.hpp>
-
-#include <osmium/index/map/sparse_mem_array.hpp>
-
 #include <osmium/geom/ogr.hpp>
 #include <osmium/handler.hpp>
 #include <osmium/handler/node_locations_for_ways.hpp>
+#include <osmium/index/map/sparse_mem_array.hpp>
 #include <osmium/io/xml_input.hpp>
 #include <osmium/visitor.hpp>
+
+#include <gdalcpp.hpp>
+
+#include <iostream>
+#include <string>
 
 using index_type = osmium::index::map::SparseMemArray<osmium::unsigned_object_id_type, osmium::Location>;
 using location_handler_type = osmium::handler::NodeLocationsForWays<index_type>;

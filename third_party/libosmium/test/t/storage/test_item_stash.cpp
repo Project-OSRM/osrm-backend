@@ -1,13 +1,12 @@
-
-#include <catch.hpp>
-
-#include <sstream>
+#include "catch.hpp"
 
 #include <osmium/builder/attr.hpp>
 #include <osmium/storage/item_stash.hpp>
 
+#include <sstream>
+
 osmium::memory::Buffer generate_test_data() {
-    using namespace osmium::builder::attr;
+    using namespace osmium::builder::attr; // NOLINT(google-build-using-namespace)
 
     osmium::memory::Buffer buffer{1024 * 1024, osmium::memory::Buffer::auto_grow::yes};
 
@@ -79,7 +78,7 @@ TEST_CASE("Item stash") {
             handle = osmium::ItemStash::handle_type{};
         }
 
-        id++;
+        ++id;
     }
 
     REQUIRE(stash.size() == 120);
@@ -101,7 +100,7 @@ TEST_CASE("Item stash") {
         } else {
             ++count_invalid;
         }
-        id++;
+        ++id;
     }
 
     REQUIRE(count_valid   == 120);
@@ -122,7 +121,7 @@ TEST_CASE("Item stash") {
             const auto& obj = static_cast<const osmium::OSMObject&>(item);
             REQUIRE(obj.id() == id);
         }
-        id++;
+        ++id;
     }
 
     stash.clear();

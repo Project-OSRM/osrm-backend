@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,19 +33,6 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <cassert>
-#include <cmath>
-#include <cstdint>
-#include <cstdlib>
-#include <memory>
-#include <string>
-#include <utility>
-#include <vector>
-
-#include <protozero/pbf_builder.hpp>
-#include <protozero/pbf_writer.hpp>
-#include <protozero/types.hpp>
-
 #include <osmium/handler.hpp>
 #include <osmium/io/detail/output_format.hpp>
 #include <osmium/io/detail/pbf.hpp> // IWYU pragma: export
@@ -61,6 +48,7 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/osm/box.hpp>
 #include <osmium/osm/item_type.hpp>
 #include <osmium/osm/location.hpp>
+#include <osmium/osm/metadata_options.hpp>
 #include <osmium/osm/node.hpp>
 #include <osmium/osm/node_ref.hpp>
 #include <osmium/osm/object.hpp>
@@ -72,7 +60,21 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/thread/pool.hpp>
 #include <osmium/util/cast.hpp>
 #include <osmium/util/delta.hpp>
+#include <osmium/util/misc.hpp>
 #include <osmium/visitor.hpp>
+
+#include <protozero/pbf_builder.hpp>
+#include <protozero/pbf_writer.hpp>
+#include <protozero/types.hpp>
+
+#include <cassert>
+#include <cmath>
+#include <cstdint>
+#include <cstdlib>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace osmium {
 
@@ -82,8 +84,11 @@ namespace osmium {
 
             struct pbf_output_options {
 
+                /// Which metadata of objects should be added?
+                osmium::metadata_options add_metadata;
+
                 /// Should nodes be encoded in DenseNodes?
-                bool use_dense_nodes;
+                bool use_dense_nodes = true;
 
                 /**
                  * Should the PBF blobs contain zlib compressed data?
@@ -93,21 +98,18 @@ namespace osmium {
                  * the writing speed a little but the output will be 2x to 3x
                  * bigger.
                  */
-                bool use_compression;
-
-                /// Should metadata of objects be written?
-                bool add_metadata;
+                bool use_compression = true;
 
                 /// Add the "HistoricalInformation" header flag.
-                bool add_historical_information_flag;
+                bool add_historical_information_flag = false;
 
                 /// Should the visible flag be added to all OSM objects?
-                bool add_visible_flag;
+                bool add_visible_flag = false;
 
                 /// Should node locations be added to ways?
-                bool locations_on_ways;
+                bool locations_on_ways = false;
 
-            };
+            }; // struct pbf_output_options
 
             /**
              * Maximum number of items in a primitive block.
@@ -185,7 +187,12 @@ namespace osmium {
                     pbf_blob_header.add_string(FileFormat::BlobHeader::required_string_type, m_blob_type == pbf_blob_type::data ? "OSMData" : "OSMHeader");
                     pbf_blob_header.add_int32(FileFormat::BlobHeader::required_int32_datasize, static_cast_with_assert<int32_t>(blob_data.size()));
 
+#ifndef _WIN32
                     const uint32_t sz = htonl(static_cast_with_assert<uint32_t>(blob_header_data.size()));
+#else
+                    uint32_t sz = static_cast_with_assert<uint32_t>(blob_header_data.size());
+                    protozero::detail::byteswap_inplace(&sz);
+#endif
 
                     // write to output: the 4-byte BlobHeader-Size followed by the BlobHeader followed by the Blob
                     std::string output;
@@ -224,15 +231,15 @@ namespace osmium {
                 std::vector<int64_t> m_lons;
                 std::vector<int32_t> m_tags;
 
-                osmium::util::DeltaEncode<object_id_type, int64_t> m_delta_id;
+                osmium::DeltaEncode<object_id_type, int64_t> m_delta_id;
 
-                osmium::util::DeltaEncode<uint32_t, int64_t> m_delta_timestamp;
-                osmium::util::DeltaEncode<changeset_id_type, int64_t> m_delta_changeset;
-                osmium::util::DeltaEncode<user_id_type, int32_t> m_delta_uid;
-                osmium::util::DeltaEncode<uint32_t, int32_t> m_delta_user_sid;
+                osmium::DeltaEncode<uint32_t, int64_t> m_delta_timestamp;
+                osmium::DeltaEncode<changeset_id_type, int64_t> m_delta_changeset;
+                osmium::DeltaEncode<user_id_type, int32_t> m_delta_uid;
+                osmium::DeltaEncode<uint32_t, int32_t> m_delta_user_sid;
 
-                osmium::util::DeltaEncode<int64_t, int64_t> m_delta_lat;
-                osmium::util::DeltaEncode<int64_t, int64_t> m_delta_lon;
+                osmium::DeltaEncode<int64_t, int64_t> m_delta_lat;
+                osmium::DeltaEncode<int64_t, int64_t> m_delta_lon;
 
                 const pbf_output_options& m_options;
 
@@ -269,22 +276,30 @@ namespace osmium {
                     m_delta_lon.clear();
                 }
 
-                std::size_t size() const {
+                std::size_t size() const noexcept {
                     return m_ids.size() * 3 * sizeof(int64_t);
                 }
 
                 void add_node(const osmium::Node& node) {
                     m_ids.push_back(m_delta_id.update(node.id()));
 
-                    if (m_options.add_metadata) {
+                    if (m_options.add_metadata.version()) {
                         m_versions.push_back(static_cast_with_assert<int32_t>(node.version()));
+                    }
+                    if (m_options.add_metadata.timestamp()) {
                         m_timestamps.push_back(m_delta_timestamp.update(uint32_t(node.timestamp())));
+                    }
+                    if (m_options.add_metadata.changeset()) {
                         m_changesets.push_back(m_delta_changeset.update(node.changeset()));
+                    }
+                    if (m_options.add_metadata.uid()) {
                         m_uids.push_back(m_delta_uid.update(node.uid()));
+                    }
+                    if (m_options.add_metadata.user()) {
                         m_user_sids.push_back(m_delta_user_sid.update(m_stringtable.add(node.user())));
-                        if (m_options.add_visible_flag) {
-                            m_visibles.push_back(node.visible());
-                        }
+                    }
+                    if (m_options.add_visible_flag) {
+                        m_visibles.push_back(node.visible());
                     }
 
                     m_lats.push_back(m_delta_lat.update(lonlat2int(node.location().lat_without_check())));
@@ -303,14 +318,23 @@ namespace osmium {
 
                     pbf_dense_nodes.add_packed_sint64(OSMFormat::DenseNodes::packed_sint64_id, m_ids.cbegin(), m_ids.cend());
 
-                    if (m_options.add_metadata) {
+                    if (m_options.add_metadata.any() || m_options.add_visible_flag) {
                         protozero::pbf_builder<OSMFormat::DenseInfo> pbf_dense_info{pbf_dense_nodes, OSMFormat::DenseNodes::optional_DenseInfo_denseinfo};
-                        pbf_dense_info.add_packed_int32(OSMFormat::DenseInfo::packed_int32_version, m_versions.cbegin(), m_versions.cend());
-                        pbf_dense_info.add_packed_sint64(OSMFormat::DenseInfo::packed_sint64_timestamp, m_timestamps.cbegin(), m_timestamps.cend());
-                        pbf_dense_info.add_packed_sint64(OSMFormat::DenseInfo::packed_sint64_changeset, m_changesets.cbegin(), m_changesets.cend());
-                        pbf_dense_info.add_packed_sint32(OSMFormat::DenseInfo::packed_sint32_uid, m_uids.cbegin(), m_uids.cend());
-                        pbf_dense_info.add_packed_sint32(OSMFormat::DenseInfo::packed_sint32_user_sid, m_user_sids.cbegin(), m_user_sids.cend());
-
+                        if (m_options.add_metadata.version()) {
+                            pbf_dense_info.add_packed_int32(OSMFormat::DenseInfo::packed_int32_version, m_versions.cbegin(), m_versions.cend());
+                        }
+                        if (m_options.add_metadata.timestamp()) {
+                            pbf_dense_info.add_packed_sint64(OSMFormat::DenseInfo::packed_sint64_timestamp, m_timestamps.cbegin(), m_timestamps.cend());
+                        }
+                        if (m_options.add_metadata.changeset()) {
+                            pbf_dense_info.add_packed_sint64(OSMFormat::DenseInfo::packed_sint64_changeset, m_changesets.cbegin(), m_changesets.cend());
+                        }
+                        if (m_options.add_metadata.uid()) {
+                            pbf_dense_info.add_packed_sint32(OSMFormat::DenseInfo::packed_sint32_uid, m_uids.cbegin(), m_uids.cend());
+                        }
+                        if (m_options.add_metadata.user()) {
+                            pbf_dense_info.add_packed_sint32(OSMFormat::DenseInfo::packed_sint32_user_sid, m_user_sids.cbegin(), m_user_sids.cend());
+                        }
                         if (m_options.add_visible_flag) {
                             pbf_dense_info.add_packed_bool(OSMFormat::DenseInfo::packed_bool_visible, m_visibles.cbegin(), m_visibles.cend());
                         }
@@ -332,18 +356,14 @@ namespace osmium {
                 protozero::pbf_builder<OSMFormat::PrimitiveGroup> m_pbf_primitive_group;
                 StringTable m_stringtable;
                 DenseNodes m_dense_nodes;
-                OSMFormat::PrimitiveGroup m_type;
-                int m_count;
+                OSMFormat::PrimitiveGroup m_type = OSMFormat::PrimitiveGroup::unknown;
+                int m_count = 0;
 
             public:
 
                 explicit PrimitiveBlock(const pbf_output_options& options) :
-                    m_pbf_primitive_group_data(),
                     m_pbf_primitive_group(m_pbf_primitive_group_data),
-                    m_stringtable(),
-                    m_dense_nodes(m_stringtable, options),
-                    m_type(OSMFormat::PrimitiveGroup::unknown),
-                    m_count(0) {
+                    m_dense_nodes(m_stringtable, options) {
                 }
 
                 const std::string& group_data() {
@@ -367,7 +387,7 @@ namespace osmium {
                     }
                 }
 
-                protozero::pbf_builder<OSMFormat::PrimitiveGroup>& group() {
+                protozero::pbf_builder<OSMFormat::PrimitiveGroup>& group() noexcept {
                     ++m_count;
                     return m_pbf_primitive_group;
                 }
@@ -381,15 +401,15 @@ namespace osmium {
                     return m_stringtable.add(s);
                 }
 
-                int count() const {
+                int count() const noexcept {
                     return m_count;
                 }
 
-                OSMFormat::PrimitiveGroup type() const {
+                OSMFormat::PrimitiveGroup type() const noexcept {
                     return m_type;
                 }
 
-                std::size_t size() const {
+                std::size_t size() const noexcept {
                     return m_pbf_primitive_group_data.size() + m_stringtable.size() + m_dense_nodes.size();
                 }
 
@@ -401,7 +421,7 @@ namespace osmium {
                  */
                 constexpr static std::size_t max_used_blob_size = max_uncompressed_blob_size * 95 / 100;
 
-                bool can_add(OSMFormat::PrimitiveGroup type) const {
+                bool can_add(OSMFormat::PrimitiveGroup type) const noexcept {
                     if (type != m_type) {
                         return false;
                     }
@@ -457,14 +477,24 @@ namespace osmium {
                         }
                     }
 
-                    if (m_options.add_metadata) {
+                    if (m_options.add_metadata.any() || m_options.add_visible_flag) {
                         protozero::pbf_builder<OSMFormat::Info> pbf_info{pbf_object, T::enum_type::optional_Info_info};
 
-                        pbf_info.add_int32(OSMFormat::Info::optional_int32_version, static_cast_with_assert<int32_t>(object.version()));
-                        pbf_info.add_int64(OSMFormat::Info::optional_int64_timestamp, uint32_t(object.timestamp()));
-                        pbf_info.add_int64(OSMFormat::Info::optional_int64_changeset, object.changeset());
-                        pbf_info.add_int32(OSMFormat::Info::optional_int32_uid, static_cast_with_assert<int32_t>(object.uid()));
-                        pbf_info.add_uint32(OSMFormat::Info::optional_uint32_user_sid, m_primitive_block.store_in_stringtable(object.user()));
+                        if (m_options.add_metadata.version()) {
+                            pbf_info.add_int32(OSMFormat::Info::optional_int32_version, static_cast_with_assert<int32_t>(object.version()));
+                        }
+                        if (m_options.add_metadata.timestamp()) {
+                            pbf_info.add_int64(OSMFormat::Info::optional_int64_timestamp, uint32_t(object.timestamp()));
+                        }
+                        if (m_options.add_metadata.changeset()) {
+                            pbf_info.add_int64(OSMFormat::Info::optional_int64_changeset, object.changeset());
+                        }
+                        if (m_options.add_metadata.uid()) {
+                            pbf_info.add_int32(OSMFormat::Info::optional_int32_uid, static_cast_with_assert<int32_t>(object.uid()));
+                        }
+                        if (m_options.add_metadata.user()) {
+                            pbf_info.add_uint32(OSMFormat::Info::optional_uint32_user_sid, m_primitive_block.store_in_stringtable(object.user()));
+                        }
                         if (m_options.add_visible_flag) {
                             pbf_info.add_bool(OSMFormat::Info::optional_bool_visible, object.visible());
                         }
@@ -482,20 +512,19 @@ namespace osmium {
 
                 PBFOutputFormat(osmium::thread::Pool& pool, const osmium::io::File& file, future_string_queue_type& output_queue) :
                     OutputFormat(pool, output_queue),
-                    m_options(),
                     m_primitive_block(m_options) {
+
+                    if (!file.get("pbf_add_metadata").empty()) {
+                        throw std::invalid_argument{"The 'pbf_add_metadata' option is deprecated. Please use 'add_metadata' instead."};
+                    }
+
                     m_options.use_dense_nodes = file.is_not_false("pbf_dense_nodes");
                     m_options.use_compression = file.get("pbf_compression") != "none" && file.is_not_false("pbf_compression");
-                    m_options.add_metadata = file.is_not_false("pbf_add_metadata") && file.is_not_false("add_metadata");
+                    m_options.add_metadata = osmium::metadata_options{file.get("add_metadata")};
                     m_options.add_historical_information_flag = file.has_multiple_object_versions();
                     m_options.add_visible_flag = file.has_multiple_object_versions();
                     m_options.locations_on_ways = file.is_true("locations_on_ways");
                 }
-
-                PBFOutputFormat(const PBFOutputFormat&) = delete;
-                PBFOutputFormat& operator=(const PBFOutputFormat&) = delete;
-
-                ~PBFOutputFormat() noexcept final = default;
 
                 void write_header(const osmium::io::Header& header) final {
                     std::string data;
@@ -535,7 +564,7 @@ namespace osmium {
 
                     const std::string osmosis_replication_sequence_number{header.get("osmosis_replication_sequence_number")};
                     if (!osmosis_replication_sequence_number.empty()) {
-                        pbf_header_block.add_int64(OSMFormat::HeaderBlock::optional_int64_osmosis_replication_sequence_number, std::atoll(osmosis_replication_sequence_number.c_str()));
+                        pbf_header_block.add_int64(OSMFormat::HeaderBlock::optional_int64_osmosis_replication_sequence_number, osmium::detail::str_to_int<int64_t>(osmosis_replication_sequence_number.c_str()));
                     }
 
                     const std::string osmosis_replication_base_url{header.get("osmosis_replication_base_url")};
@@ -583,7 +612,7 @@ namespace osmium {
                     add_meta(way, pbf_way);
 
                     {
-                        osmium::util::DeltaEncode<object_id_type, int64_t> delta_id;
+                        osmium::DeltaEncode<object_id_type, int64_t> delta_id;
                         protozero::packed_field_sint64 field{pbf_way, protozero::pbf_tag_type(OSMFormat::Way::packed_sint64_refs)};
                         for (const auto& node_ref : way.nodes()) {
                             field.add_element(delta_id.update(node_ref.ref()));
@@ -592,14 +621,14 @@ namespace osmium {
 
                     if (m_options.locations_on_ways) {
                         {
-                            osmium::util::DeltaEncode<int64_t, int64_t> delta_id;
+                            osmium::DeltaEncode<int64_t, int64_t> delta_id;
                             protozero::packed_field_sint64 field{pbf_way, protozero::pbf_tag_type(OSMFormat::Way::packed_sint64_lon)};
                             for (const auto& node_ref : way.nodes()) {
                                 field.add_element(delta_id.update(lonlat2int(node_ref.location().lon_without_check())));
                             }
                         }
                         {
-                            osmium::util::DeltaEncode<int64_t, int64_t> delta_id;
+                            osmium::DeltaEncode<int64_t, int64_t> delta_id;
                             protozero::packed_field_sint64 field{pbf_way, protozero::pbf_tag_type(OSMFormat::Way::packed_sint64_lat)};
                             for (const auto& node_ref : way.nodes()) {
                                 field.add_element(delta_id.update(lonlat2int(node_ref.location().lat_without_check())));
@@ -623,7 +652,7 @@ namespace osmium {
                     }
 
                     {
-                        osmium::util::DeltaEncode<object_id_type, int64_t> delta_id;
+                        osmium::DeltaEncode<object_id_type, int64_t> delta_id;
                         protozero::packed_field_sint64 field{pbf_relation, protozero::pbf_tag_type(OSMFormat::Relation::packed_sint64_memids)};
                         for (const auto& member : relation.members()) {
                             field.add_element(delta_id.update(member.ref()));

@@ -1,8 +1,8 @@
 #include "catch.hpp"
 
-#include <string>
-
 #include <osmium/geom/factory.hpp>
+
+#include <string>
 
 TEST_CASE("Geometry exception") {
 

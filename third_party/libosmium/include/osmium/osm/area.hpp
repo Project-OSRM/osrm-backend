@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,11 +33,6 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <cassert>
-#include <cstdlib>
-#include <iterator>
-#include <utility>
-
 #include <osmium/memory/collection.hpp>
 #include <osmium/memory/item.hpp>
 #include <osmium/memory/item_iterator.hpp>
@@ -47,6 +42,11 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/osm/object.hpp>
 #include <osmium/osm/types.hpp>
 #include <osmium/util/compatibility.hpp>
+
+#include <cassert>
+#include <cstdlib>
+#include <iterator>
+#include <utility>
 
 namespace osmium {
 
@@ -68,7 +68,7 @@ namespace osmium {
             return t == itemtype;
         }
 
-        OuterRing():
+        OuterRing() :
             NodeRefList(itemtype) {
         }
 
@@ -89,7 +89,7 @@ namespace osmium {
             return t == itemtype;
         }
 
-        InnerRing():
+        InnerRing() :
             NodeRefList(itemtype) {
         }
 
@@ -149,7 +149,7 @@ namespace osmium {
          * Complexity: Constant.
          */
         bool from_way() const noexcept {
-            return (positive_id() & 0x1) == 0;
+            return (positive_id() & 0x1u) == 0;
         }
 
         /**

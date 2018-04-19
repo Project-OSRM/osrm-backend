@@ -1,15 +1,16 @@
-
 #include "catch.hpp"
-#include "utils.hpp"
 
-#include <stdexcept>
-#include <string>
+#include "utils.hpp"
 
 #include <osmium/io/compression.hpp>
 #include <osmium/io/detail/output_format.hpp>
 #include <osmium/io/detail/queue_util.hpp>
-#include <osmium/io/xml_input.hpp>
 #include <osmium/io/writer.hpp>
+#include <osmium/io/xml_input.hpp>
+
+#include <stdexcept>
+#include <string>
+#include <utility>
 
 class MockOutputFormat : public osmium::io::detail::OutputFormat {
 
@@ -17,19 +18,19 @@ class MockOutputFormat : public osmium::io::detail::OutputFormat {
 
 public:
 
-    MockOutputFormat(osmium::thread::Pool& pool, const osmium::io::File&, osmium::io::detail::future_string_queue_type& output_queue, const std::string& fail_in) :
+    MockOutputFormat(osmium::thread::Pool& pool, const osmium::io::File& /*file*/, osmium::io::detail::future_string_queue_type& output_queue, std::string fail_in) :
         OutputFormat(pool, output_queue),
-        m_fail_in(fail_in) {
+        m_fail_in(std::move(fail_in)) {
     }
 
-    void write_header(const osmium::io::Header&) final {
+    void write_header(const osmium::io::Header& /*header*/) final {
         if (m_fail_in == "header") {
             throw std::logic_error{"header"};
         }
         send_to_output_queue(std::string{"header"});
     }
 
-    void write_buffer(osmium::memory::Buffer&&) final {
+    void write_buffer(osmium::memory::Buffer&& /*buffer*/) final {
         if (m_fail_in == "write") {
             throw std::logic_error{"write"};
         }
@@ -62,7 +63,8 @@ TEST_CASE("Test Writer with MockOutputFormat") {
     osmium::memory::Buffer buffer = reader.read();
     REQUIRE(buffer);
     REQUIRE(buffer.committed() > 0);
-    REQUIRE(buffer.select<osmium::OSMObject>().size() > 0);
+    REQUIRE_FALSE(buffer.select<osmium::OSMObject>().empty());
+    REQUIRE(buffer.select<osmium::OSMObject>().size() > 0); // NOLINT(readability-container-size-empty)
 
     SECTION("error in header") {
 

@@ -1,15 +1,15 @@
 #include "catch.hpp"
 
-#include <sstream>
+#include <osmium/geom/relations.hpp>
+#include <osmium/osm/box.hpp>
+#include <osmium/osm/crc.hpp>
 
 #include <boost/crc.hpp>
 
-#include <osmium/osm/box.hpp>
-#include <osmium/osm/crc.hpp>
-#include <osmium/geom/relations.hpp>
+#include <sstream>
 
 TEST_CASE("Default constructor creates invalid box") {
-    const osmium::Box b;
+    const osmium::Box b{};
 
     REQUIRE_FALSE(b);
     REQUIRE_FALSE(b.bottom_left());
@@ -18,7 +18,7 @@ TEST_CASE("Default constructor creates invalid box") {
 }
 
 TEST_CASE("Extend box with undefined") {
-    osmium::Box b;
+    osmium::Box b{};
 
     REQUIRE_FALSE(b);
     b.extend(osmium::Location{});
@@ -28,7 +28,7 @@ TEST_CASE("Extend box with undefined") {
 }
 
 TEST_CASE("Extend box with invalid") {
-    osmium::Box b;
+    osmium::Box b{};
 
     REQUIRE_FALSE(b);
     b.extend(osmium::Location{200.0, 100.0});
@@ -38,7 +38,7 @@ TEST_CASE("Extend box with invalid") {
 }
 
 TEST_CASE("Extend box with valid") {
-    osmium::Box b;
+    osmium::Box b{};
 
     const osmium::Location loc1{1.2, 3.4};
     b.extend(loc1);
@@ -70,7 +70,7 @@ TEST_CASE("Extend box with valid") {
 }
 
 TEST_CASE("Output of defined Box") {
-    osmium::Box b;
+    osmium::Box b{};
 
     b.extend(osmium::Location{1.2, 3.4});
     b.extend(osmium::Location{5.6, 7.8});
@@ -83,7 +83,7 @@ TEST_CASE("Output of defined Box") {
 }
 
 TEST_CASE("Output of undefined Box") {
-    const osmium::Box b;
+    const osmium::Box b{};
 
     std::stringstream out;
     out << b;
@@ -92,7 +92,7 @@ TEST_CASE("Output of undefined Box") {
 }
 
 TEST_CASE("Output of undefined Box (bottom left)") {
-    osmium::Box b;
+    osmium::Box b{};
 
     b.top_right() = osmium::Location(1.2, 3.4);
     std::stringstream out;
@@ -101,7 +101,7 @@ TEST_CASE("Output of undefined Box (bottom left)") {
 }
 
 TEST_CASE("Output of undefined Box (top right)") {
-    osmium::Box b;
+    osmium::Box b{};
 
     b.bottom_left() = osmium::Location(1.2, 3.4);
     std::stringstream out;
@@ -124,15 +124,15 @@ TEST_CASE("Create box from doubles") {
 }
 
 TEST_CASE("Relationship between boxes: contains") {
-    osmium::Box outer;
+    osmium::Box outer{};
     outer.extend(osmium::Location{1, 1});
     outer.extend(osmium::Location{10, 10});
 
-    osmium::Box inner;
+    osmium::Box inner{};
     inner.extend(osmium::Location{2, 2});
     inner.extend(osmium::Location{4, 4});
 
-    osmium::Box overlap;
+    osmium::Box overlap{};
     overlap.extend(osmium::Location{3, 3});
     overlap.extend(osmium::Location{5, 5});
 
@@ -144,19 +144,19 @@ TEST_CASE("Relationship between boxes: contains") {
 }
 
 TEST_CASE("Relationship between boxes: overlaps") {
-    osmium::Box outer;
+    osmium::Box outer{};
     outer.extend(osmium::Location{1, 1});
     outer.extend(osmium::Location{10, 10});
 
-    osmium::Box inner;
+    osmium::Box inner{};
     inner.extend(osmium::Location{2, 2});
     inner.extend(osmium::Location{4, 4});
 
-    osmium::Box overlap;
+    osmium::Box overlap{};
     overlap.extend(osmium::Location{3, 3});
     overlap.extend(osmium::Location{5, 5});
 
-    osmium::Box outside;
+    osmium::Box outside{};
     overlap.extend(osmium::Location{30, 30});
     overlap.extend(osmium::Location{50, 50});
 

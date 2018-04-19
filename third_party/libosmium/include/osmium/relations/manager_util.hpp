@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,11 +33,6 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <cstddef>
-#include <initializer_list>
-#include <iomanip>
-#include <utility>
-
 #include <osmium/fwd.hpp>
 #include <osmium/handler.hpp>
 #include <osmium/handler/check_order.hpp>
@@ -47,6 +42,11 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/osm/entity_bits.hpp>
 #include <osmium/util/progress_bar.hpp>
 #include <osmium/visitor.hpp>
+
+#include <cstddef>
+#include <initializer_list>
+#include <iomanip>
+#include <utility>
 
 namespace osmium {
 
@@ -174,7 +174,7 @@ namespace osmium {
          * stream.
          *
          * @tparam TStream Output stream type (like std::cout, std::cerr, or
-         *                 osmium::util::VerboseOutput).
+         *                 osmium::VerboseOutput).
          * @param stream Reference to stream where the output should go.
          * @param mu Memory usage data as returned by the used_memory()
          *                  functions of various relations managers.

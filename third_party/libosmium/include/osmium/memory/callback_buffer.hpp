@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,11 +33,11 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <osmium/memory/buffer.hpp>
+
 #include <cstddef>
 #include <functional>
 #include <utility>
-
-#include <osmium/memory/buffer.hpp>
 
 namespace osmium {
 
@@ -112,11 +112,11 @@ namespace osmium {
              * @param max_buffer_size If the buffer grows beyond this size the
              *                        callback will be called.
              */
-            explicit CallbackBuffer(const callback_func_type& callback, std::size_t initial_buffer_size = default_initial_buffer_size, std::size_t max_buffer_size = default_max_buffer_size) :
+            explicit CallbackBuffer(callback_func_type callback, std::size_t initial_buffer_size = default_initial_buffer_size, std::size_t max_buffer_size = default_max_buffer_size) :
                 m_buffer(initial_buffer_size, osmium::memory::Buffer::auto_grow::yes),
                 m_initial_buffer_size(initial_buffer_size),
                 m_max_buffer_size(max_buffer_size),
-                m_callback(callback) {
+                m_callback(std::move(callback)) {
             }
 
             /**

@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,70 +33,70 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <osmium/util/cast.hpp>
+
 #include <cerrno>
 #include <cstddef>
 #include <cstdio>
 #include <string>
-#include <system_error>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <system_error>
 
 #ifdef _WIN32
 #  ifndef WIN32_LEAN_AND_MEAN
 #   define WIN32_LEAN_AND_MEAN // Prevent winsock.h inclusion; avoid winsock2.h conflict
 #  endif
+# include <crtdbg.h>
 # include <io.h>
 # include <windows.h>
-# include <crtdbg.h>
 #endif
 
 #ifndef _MSC_VER
 # include <unistd.h>
 #endif
 
-#include <osmium/util/cast.hpp>
-
 namespace osmium {
 
-    namespace util {
-
 #ifdef _MSC_VER
-        namespace detail {
+    namespace detail {
 
-            // Disable parameter validation on Windows and reenable it
-            // automatically when scope closes.
-            // https://docs.microsoft.com/en-us/cpp/c-runtime-library/parameter-validation
-            class disable_invalid_parameter_handler {
+        // Disable parameter validation on Windows and reenable it
+        // automatically when scope closes.
+        // https://docs.microsoft.com/en-us/cpp/c-runtime-library/parameter-validation
+        class disable_invalid_parameter_handler {
 
-                static void invalid_parameter_handler(
-                        const wchar_t* expression,
-                        const wchar_t* function,
-                        const wchar_t* file,
-                        unsigned int line,
-                        uintptr_t pReserved
-                        ) {
-                    // do nothing
-                }
+            static void invalid_parameter_handler(
+                    const wchar_t* expression,
+                    const wchar_t* function,
+                    const wchar_t* file,
+                    unsigned int line,
+                    uintptr_t pReserved
+                    ) {
+                // do nothing
+            }
 
-                _invalid_parameter_handler old_handler;
-                int old_report_mode;
+            _invalid_parameter_handler old_handler;
+            int old_report_mode;
 
-            public:
+        public:
 
-                disable_invalid_parameter_handler() :
-                    old_handler(_set_thread_local_invalid_parameter_handler(invalid_parameter_handler)),
-                    old_report_mode(_CrtSetReportMode(_CRT_ASSERT, 0)) {
-                }
+            disable_invalid_parameter_handler() :
+                old_handler(_set_thread_local_invalid_parameter_handler(invalid_parameter_handler)),
+                old_report_mode(_CrtSetReportMode(_CRT_ASSERT, 0)) {
+            }
 
-                ~disable_invalid_parameter_handler() {
-                    _CrtSetReportMode(_CRT_ASSERT, old_report_mode);
-                    _set_thread_local_invalid_parameter_handler(old_handler);
-                }
+            ~disable_invalid_parameter_handler() {
+                _CrtSetReportMode(_CRT_ASSERT, old_report_mode);
+                _set_thread_local_invalid_parameter_handler(old_handler);
+            }
 
-            }; // class disable_invalid_parameter_handler
+        }; // class disable_invalid_parameter_handler
 
-        }
+    } // namespace detail
 #endif
+
+    inline namespace util {
 
         /**
          * Get file size.
@@ -109,7 +109,7 @@ namespace osmium {
         inline std::size_t file_size(int fd) {
 #ifdef _MSC_VER
             // Windows implementation
-            detail::disable_invalid_parameter_handler diph;
+            osmium::detail::disable_invalid_parameter_handler diph;
             // https://msdn.microsoft.com/en-us/library/dfbc2kec.aspx
             const auto size = ::_filelengthi64(fd);
             if (size < 0) {
@@ -118,7 +118,7 @@ namespace osmium {
             return static_cast<std::size_t>(size);
 #else
             // Unix implementation
-            struct stat s;
+            struct stat s; // NOLINT clang-tidy
             if (::fstat(fd, &s) != 0) {
                 throw std::system_error{errno, std::system_category(), "Could not get file size"};
             }
@@ -139,13 +139,13 @@ namespace osmium {
 #ifdef _MSC_VER
             // Windows implementation
             // https://msdn.microsoft.com/en-us/library/14h5k7ff.aspx
-            struct _stat64 s;
+            struct _stat64 s{};
             if (::_stati64(name, &s) != 0) {
                 throw std::system_error{errno, std::system_category(), std::string{"Could not get file size of file '"} + name + "'"};
             }
 #else
             // Unix implementation
-            struct stat s;
+            struct stat s; // NOLINT clang-tidy
             if (::stat(name, &s) != 0) {
                 throw std::system_error{errno, std::system_category(), std::string{"Could not get file size of file '"} + name + "'"};
             }
@@ -174,8 +174,8 @@ namespace osmium {
          * @throws std::system_error If ftruncate(2) call failed
          */
         inline void resize_file(int fd, std::size_t new_size) {
-#ifdef _WIN32
-            detail::disable_invalid_parameter_handler diph;
+#ifdef _MSC_VER
+            osmium::detail::disable_invalid_parameter_handler diph;
             // https://msdn.microsoft.com/en-us/library/whx354w1.aspx
             if (::_chsize_s(fd, static_cast_with_assert<__int64>(new_size)) != 0) {
 #else
@@ -208,7 +208,7 @@ namespace osmium {
          */
         inline std::size_t file_offset(int fd) {
 #ifdef _MSC_VER
-            detail::disable_invalid_parameter_handler diph;
+            osmium::detail::disable_invalid_parameter_handler diph;
             // https://msdn.microsoft.com/en-us/library/1yee101t.aspx
             const auto offset = _lseeki64(fd, 0, SEEK_CUR);
 #else
@@ -225,7 +225,7 @@ namespace osmium {
          */
         inline bool isatty(int fd) {
 #ifdef _MSC_VER
-            detail::disable_invalid_parameter_handler diph;
+            osmium::detail::disable_invalid_parameter_handler diph;
             // https://msdn.microsoft.com/en-us/library/f4s0ddew.aspx
             return _isatty(fd) != 0;
 #else

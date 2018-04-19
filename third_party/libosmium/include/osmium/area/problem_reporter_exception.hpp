@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,12 +33,12 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <sstream>
-#include <stdexcept>
-
 #include <osmium/area/problem_reporter_stream.hpp>
 #include <osmium/osm/location.hpp>
 #include <osmium/osm/types.hpp>
+
+#include <sstream>
+#include <stdexcept>
 
 namespace osmium {
 
@@ -56,8 +56,6 @@ namespace osmium {
             ProblemReporterException() :
                 ProblemReporterStream(m_sstream) {
             }
-
-            ~ProblemReporterException() override = default;
 
             void report_duplicate_node(osmium::object_id_type node_id1, osmium::object_id_type node_id2, osmium::Location location) override {
                 m_sstream.str("");
@@ -90,7 +88,7 @@ namespace osmium {
                 throw std::runtime_error{m_sstream.str()};
             }
 
-            void report_ring_not_closed(const osmium::NodeRef& nr, const osmium::Way* way = nullptr) override {
+            void report_ring_not_closed(const osmium::NodeRef& nr, const osmium::Way* way) override {
                 m_sstream.str("");
                 ProblemReporterStream::report_ring_not_closed(nr, way);
                 throw std::runtime_error{m_sstream.str()};

@@ -1,5 +1,5 @@
-
 #include "catch.hpp"
+
 #include "utils.hpp"
 
 #include <osmium/io/reader.hpp>

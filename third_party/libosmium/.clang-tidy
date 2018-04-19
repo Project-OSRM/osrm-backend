@@ -1,0 +1,90 @@
+---
+Checks: '*,-android-cloexec-*,-cert-dcl21-cpp,-cert-err58-cpp,-cppcoreguidelines-owning-memory,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-cppcoreguidelines-pro-bounds-constant-array-index,-cppcoreguidelines-pro-bounds-pointer-arithmetic,-cppcoreguidelines-pro-type-const-cast,-cppcoreguidelines-pro-type-reinterpret-cast,-cppcoreguidelines-pro-type-static-cast-downcast,-cppcoreguidelines-pro-type-vararg,-fuchsia-*,-google-runtime-references,-hicpp-invalid-access-moved,-hicpp-no-array-decay,-hicpp-no-assembler,-hicpp-vararg,-misc-macro-parentheses,-misc-unused-parameters,-modernize-make-unique,-modernize-raw-string-literal,-readability-avoid-const-params-in-decls,-readability-implicit-bool-cast,-readability-implicit-bool-conversion'
+#
+#  For a list of check options, see:
+#  http://clang.llvm.org/extra/clang-tidy/checks/list.html
+#
+#  Disabled checks:
+#
+#  android-cloexec-*
+#    O_CLOEXEC isn't available on Windows making this non-portable.
+#
+#  cert-dcl21-cpp
+#    It is unclear whether this is still a good recommendation in modern C++.
+#
+#  cert-err58-cpp
+#    Used in several singelton factory functions. I don't know of a better
+#    way to do this and it is rather unlikely that this will be a problem.
+#
+#  cppcoreguidelines-owning-memory
+#    Don't want to add dependency on gsl library.
+#
+#  cppcoreguidelines-pro-bounds-array-to-pointer-decay
+#    Limited use and many false positives including for all asserts.
+#
+#  cppcoreguidelines-pro-bounds-constant-array-index
+#    Is needed for low-level code.
+#
+#  cppcoreguidelines-pro-bounds-pointer-arithmetic
+#    This is a low-level library, it needs to do pointer arithmetic.
+#
+#  cppcoreguidelines-pro-type-const-cast
+#    When you need it, you need it.
+#
+#  cppcoreguidelines-pro-type-reinterpret-cast
+#    This is a low-level library, it needs to do reinterpret-casts.
+#
+#  cppcoreguidelines-pro-type-static-cast-downcast
+#    This is needed and totally okay if we are sure about the types.
+#
+#  cppcoreguidelines-pro-type-vararg
+#    We need some of these functions at least and for some functions it isn't
+#    even clear that those are vararg functions.
+#
+#  fuchsia-*
+#    Much too strict.
+#
+#  google-runtime-references
+#    This is just a matter of preference, and we can't change the interfaces
+#    now anyways.
+#
+#  hicpp-invalid-access-moved
+#    Creates false positives.
+#
+#  hicpp-no-array-decay
+#    Alias for cppcoreguidelines-pro-bounds-array-to-pointer-decay.
+#
+#  hicpp-no-assembler
+#    Reports are from macros we don't have any control over.
+#
+#  hicpp-vararg
+#    Too strict, sometimes calling vararg functions is necessary.
+#
+#  misc-macro-parentheses
+#    False positive in the only place where it reports something and
+#    disabling locally doesn't work.
+#
+#  misc-unused-parameters
+#    Can't be fixed, because then Doxygen will complain. (In file
+#    include/osmium/area/problem_reporter.hpp).
+#
+#  modernize-make-unique
+#    This is a C++11 library and C++ doesn't have std::make_unique.
+#
+#  modernize-raw-string-literal
+#    Readability isn't that much better, arguably worse because of the new
+#    syntax.
+#
+#  readability-avoid-const-params-in-decls
+#    This is header only library, so the declaration and implementation are
+#    often the same and we want to have the const in implementations.
+#
+#  readability-implicit-bool-cast
+#    Old name for readability-implicit-bool-conversion.
+#
+#  readability-implicit-bool-conversion
+#    I don't think this makes the code more readable.
+#
+#WarningsAsErrors: '*'
+HeaderFilterRegex: '\/include\/osmium\/.*'
+...

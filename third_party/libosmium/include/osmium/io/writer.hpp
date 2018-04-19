@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,16 +33,6 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <cassert>
-#include <cstddef>
-#include <exception>
-#include <functional>
-#include <future>
-#include <initializer_list>
-#include <memory>
-#include <string>
-#include <utility>
-
 #include <osmium/io/compression.hpp>
 #include <osmium/io/detail/output_format.hpp>
 #include <osmium/io/detail/queue_util.hpp>
@@ -57,6 +47,16 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/thread/util.hpp>
 #include <osmium/util/config.hpp>
 #include <osmium/version.hpp>
+
+#include <cassert>
+#include <cstddef>
+#include <exception>
+#include <functional>
+#include <future>
+#include <initializer_list>
+#include <memory>
+#include <string>
+#include <utility>
 
 namespace osmium {
 
@@ -104,23 +104,23 @@ namespace osmium {
 
             osmium::io::File m_file;
 
-            detail::future_string_queue_type m_output_queue;
+            detail::future_string_queue_type m_output_queue{detail::get_output_queue_size(), "raw_output"};
 
-            std::unique_ptr<osmium::io::detail::OutputFormat> m_output;
+            std::unique_ptr<osmium::io::detail::OutputFormat> m_output{nullptr};
 
-            osmium::memory::Buffer m_buffer;
+            osmium::memory::Buffer m_buffer{};
 
-            size_t m_buffer_size;
+            size_t m_buffer_size = default_buffer_size;
 
-            std::future<bool> m_write_future;
+            std::future<bool> m_write_future{};
 
-            osmium::thread::thread_handler m_thread;
+            osmium::thread::thread_handler m_thread{};
 
             enum class status {
                 okay   = 0, // normal writing
                 error  = 1, // some error occurred while writing
                 closed = 2  // close() called successfully
-            } m_status;
+            } m_status = status::okay;
 
             // This function will run in a separate thread.
             static void write_thread(detail::future_string_queue_type& output_queue,
@@ -227,14 +227,7 @@ namespace osmium {
              */
             template <typename... TArgs>
             explicit Writer(const osmium::io::File& file, TArgs&&... args) :
-                m_file(file.check()),
-                m_output_queue(detail::get_output_queue_size(), "raw_output"),
-                m_output(nullptr),
-                m_buffer(),
-                m_buffer_size(default_buffer_size),
-                m_write_future(),
-                m_thread(),
-                m_status(status::okay) {
+                m_file(file.check()) {
                 assert(!m_file.buffer()); // XXX can't handle pseudo-files
 
                 options_type options;
@@ -248,7 +241,7 @@ namespace osmium {
 
                 m_output = osmium::io::detail::OutputFormatFactory::instance().create_output(*options.pool, m_file, m_output_queue);
 
-                if (options.header.get("generator") == "") {
+                if (options.header.get("generator").empty()) {
                     options.header.set("generator", "libosmium/" LIBOSMIUM_VERSION_STRING);
                 }
 
@@ -279,8 +272,8 @@ namespace osmium {
             Writer(const Writer&) = delete;
             Writer& operator=(const Writer&) = delete;
 
-            Writer(Writer&&) = default;
-            Writer& operator=(Writer&&) = default;
+            Writer(Writer&&) = delete;
+            Writer& operator=(Writer&&) = delete;
 
             ~Writer() noexcept {
                 try {

@@ -3,7 +3,7 @@
   EXAMPLE osmium_filter_discussions
 
   Read OSM changesets with discussions from a changeset dump like the one
-  you get from http://planet.osm.org/planet/discussions-latest.osm.bz2
+  you get from https://planet.osm.org/planet/discussions-latest.osm.bz2
   and write out only those changesets which have discussions (ie comments).
 
   DEMONSTRATES USE OF:

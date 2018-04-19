@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,6 +33,10 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <osmium/osm/item_type.hpp>
+#include <osmium/osm/relation.hpp>
+#include <osmium/osm/types.hpp>
+
 #include <algorithm>
 #include <cassert>
 #include <cstddef>
@@ -41,10 +45,6 @@ DEALINGS IN THE SOFTWARE.
 #include <type_traits>
 #include <utility>
 #include <vector>
-
-#include <osmium/osm/item_type.hpp>
-#include <osmium/osm/relation.hpp>
-#include <osmium/osm/types.hpp>
 
 namespace osmium {
 
@@ -187,8 +187,10 @@ namespace osmium {
             RelationsMapIndex(const RelationsMapIndex&) = delete;
             RelationsMapIndex& operator=(const RelationsMapIndex&) = delete;
 
-            RelationsMapIndex(RelationsMapIndex&&) = default;
-            RelationsMapIndex& operator=(RelationsMapIndex&&) = default;
+            RelationsMapIndex(RelationsMapIndex&& /*other*/) noexcept(std::is_nothrow_move_constructible<map_type>::value);
+            RelationsMapIndex& operator=(RelationsMapIndex&& /*other*/) noexcept(std::is_nothrow_move_assignable<map_type>::value);
+
+            ~RelationsMapIndex() noexcept = default;
 
             /**
              * Find the given relation id in the index and call the given
@@ -256,6 +258,11 @@ namespace osmium {
 
         }; // class RelationsMapIndex
 
+        // defined outside the class on purpose
+        // see https://akrzemi1.wordpress.com/2015/09/11/declaring-the-move-constructor/
+        inline RelationsMapIndex::RelationsMapIndex(RelationsMapIndex&&) noexcept(std::is_nothrow_move_constructible<map_type>::value) = default;
+        inline RelationsMapIndex& RelationsMapIndex::operator=(RelationsMapIndex&&) noexcept(std::is_nothrow_move_assignable<map_type>::value) = default;
+
         class RelationsMapIndexes {
 
             friend class RelationsMapStash;
@@ -321,8 +328,10 @@ namespace osmium {
             RelationsMapStash(const RelationsMapStash&) = delete;
             RelationsMapStash& operator=(const RelationsMapStash&) = delete;
 
-            RelationsMapStash(RelationsMapStash&&) = default;
-            RelationsMapStash& operator=(RelationsMapStash&&) = default;
+            RelationsMapStash(RelationsMapStash&& /*other*/) noexcept(std::is_nothrow_move_constructible<map_type>::value);
+            RelationsMapStash& operator=(RelationsMapStash&& /*other*/) noexcept(std::is_nothrow_move_assignable<map_type>::value);
+
+            ~RelationsMapStash() noexcept = default;
 
             /**
              * Add mapping from member to parent relation in the stash.
@@ -430,6 +439,11 @@ namespace osmium {
             }
 
         }; // class RelationsMapStash
+
+        // defined outside the class on purpose
+        // see https://akrzemi1.wordpress.com/2015/09/11/declaring-the-move-constructor/
+        inline RelationsMapStash::RelationsMapStash(RelationsMapStash&&) noexcept(std::is_nothrow_move_constructible<map_type>::value) = default;
+        inline RelationsMapStash& RelationsMapStash::operator=(RelationsMapStash&&) noexcept(std::is_nothrow_move_assignable<map_type>::value) = default;
 
     } // namespace index
 

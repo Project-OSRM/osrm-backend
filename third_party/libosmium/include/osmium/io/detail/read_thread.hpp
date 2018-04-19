@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,15 +33,15 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <osmium/io/compression.hpp>
+#include <osmium/io/detail/queue_util.hpp>
+#include <osmium/thread/util.hpp>
+
 #include <atomic>
 #include <exception>
 #include <string>
 #include <thread>
 #include <utility>
-
-#include <osmium/io/compression.hpp>
-#include <osmium/io/detail/queue_util.hpp>
-#include <osmium/thread/util.hpp>
 
 namespace osmium {
 

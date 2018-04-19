@@ -67,7 +67,7 @@ TEST_CASE("split_string sep") {
 }
 
 TEST_CASE("split_string empty string") {
-    const std::string str{""};
+    const std::string str{};
     const std::vector<std::string> result;
 
     REQUIRE(result == osmium::split_string(str, ','));

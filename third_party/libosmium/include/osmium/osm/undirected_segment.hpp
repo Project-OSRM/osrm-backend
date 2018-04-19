@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,10 +33,10 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <iosfwd>
-
 #include <osmium/osm/location.hpp>
 #include <osmium/osm/segment.hpp>
+
+#include <iosfwd>
 
 namespace osmium {
 
@@ -56,14 +56,6 @@ namespace osmium {
             }
         }
 
-        UndirectedSegment(const UndirectedSegment&) = default;
-        UndirectedSegment(UndirectedSegment&&) = default;
-
-        UndirectedSegment& operator=(const UndirectedSegment&) = default;
-        UndirectedSegment& operator=(UndirectedSegment&&) = default;
-
-        ~UndirectedSegment() = default;
-
     }; // class UndirectedSegment
 
     /**
@@ -80,11 +72,11 @@ namespace osmium {
     }
 
     inline bool operator<=(const UndirectedSegment& lhs, const UndirectedSegment& rhs) noexcept {
-        return ! (rhs < lhs);
+        return !(rhs < lhs);
     }
 
     inline bool operator>=(const UndirectedSegment& lhs, const UndirectedSegment& rhs) noexcept {
-        return ! (lhs < rhs);
+        return !(lhs < rhs);
     }
 
     /**

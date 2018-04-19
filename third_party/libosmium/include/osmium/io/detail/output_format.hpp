@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,13 +33,6 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <cstdint>
-#include <functional>
-#include <map>
-#include <memory>
-#include <string>
-#include <utility>
-
 #include <osmium/handler.hpp>
 #include <osmium/io/detail/queue_util.hpp>
 #include <osmium/io/error.hpp>
@@ -47,6 +40,13 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/io/file_format.hpp>
 #include <osmium/memory/buffer.hpp>
 #include <osmium/thread/pool.hpp>
+
+#include <array>
+#include <cstdint>
+#include <functional>
+#include <memory>
+#include <string>
+#include <utility>
 
 namespace osmium {
 
@@ -121,23 +121,23 @@ namespace osmium {
 
             public:
 
-                OutputFormat(osmium::thread::Pool& pool, future_string_queue_type& output_queue) :
+                OutputFormat(osmium::thread::Pool& pool, future_string_queue_type& output_queue) noexcept :
                     m_pool(pool),
                     m_output_queue(output_queue) {
                 }
 
                 OutputFormat(const OutputFormat&) = delete;
-                OutputFormat(OutputFormat&&) = delete;
-
                 OutputFormat& operator=(const OutputFormat&) = delete;
+
+                OutputFormat(OutputFormat&&) = delete;
                 OutputFormat& operator=(OutputFormat&&) = delete;
 
                 virtual ~OutputFormat() noexcept = default;
 
-                virtual void write_header(const osmium::io::Header&) {
+                virtual void write_header(const osmium::io::Header& /*header*/) {
                 }
 
-                virtual void write_buffer(osmium::memory::Buffer&&) = 0;
+                virtual void write_buffer(osmium::memory::Buffer&& /*buffer*/) = 0;
 
                 virtual void write_end() {
                 }
@@ -159,32 +159,34 @@ namespace osmium {
 
             private:
 
-                using map_type = std::map<osmium::io::file_format, create_output_type>;
+                std::array<create_output_type, static_cast<std::size_t>(file_format::last) + 1> m_callbacks;
 
-                map_type m_callbacks;
+                OutputFormatFactory() noexcept = default;
 
-                OutputFormatFactory() :
-                    m_callbacks() {
+                create_output_type& callbacks(const osmium::io::file_format format) noexcept {
+                    return m_callbacks[static_cast<std::size_t>(format)];
+                }
+
+                const create_output_type& callbacks(const osmium::io::file_format format) const noexcept {
+                    return m_callbacks[static_cast<std::size_t>(format)];
                 }
 
             public:
 
-                static OutputFormatFactory& instance() {
+                static OutputFormatFactory& instance() noexcept {
                     static OutputFormatFactory factory;
                     return factory;
                 }
 
-                bool register_output_format(osmium::io::file_format format, create_output_type create_function) {
-                    if (! m_callbacks.insert(map_type::value_type(format, create_function)).second) {
-                        return false;
-                    }
+                bool register_output_format(const osmium::io::file_format format, create_output_type&& create_function) {
+                    callbacks(format) = std::forward<create_output_type>(create_function);
                     return true;
                 }
 
-                std::unique_ptr<osmium::io::detail::OutputFormat> create_output(osmium::thread::Pool& pool, const osmium::io::File& file, future_string_queue_type& output_queue) {
-                    const auto it = m_callbacks.find(file.format());
-                    if (it != m_callbacks.end()) {
-                        return std::unique_ptr<osmium::io::detail::OutputFormat>((it->second)(pool, file, output_queue));
+                std::unique_ptr<osmium::io::detail::OutputFormat> create_output(osmium::thread::Pool& pool, const osmium::io::File& file, future_string_queue_type& output_queue) const {
+                    const auto func = callbacks(file.format());
+                    if (func) {
+                        return std::unique_ptr<osmium::io::detail::OutputFormat>((func)(pool, file, output_queue));
                     }
 
                     throw unsupported_file_format_error{
@@ -207,6 +209,9 @@ namespace osmium {
 
                 BlackholeOutputFormat(const BlackholeOutputFormat&) = delete;
                 BlackholeOutputFormat& operator=(const BlackholeOutputFormat&) = delete;
+
+                BlackholeOutputFormat(BlackholeOutputFormat&&) = delete;
+                BlackholeOutputFormat& operator=(BlackholeOutputFormat&&) = delete;
 
                 ~BlackholeOutputFormat() noexcept final = default;
 

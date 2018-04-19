@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,14 +33,14 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <osmium/memory/buffer.hpp>
+#include <osmium/thread/queue.hpp>
+
 #include <cassert>
 #include <exception>
 #include <future>
 #include <string>
 #include <utility>
-
-#include <osmium/memory/buffer.hpp>
-#include <osmium/thread/queue.hpp>
 
 namespace osmium {
 
@@ -109,6 +109,12 @@ namespace osmium {
                     m_queue(queue),
                     m_has_reached_end_of_data(false) {
                 }
+
+                queue_wrapper(const queue_wrapper&) = delete;
+                queue_wrapper& operator=(const queue_wrapper&) = delete;
+
+                queue_wrapper(queue_wrapper&&) = delete;
+                queue_wrapper& operator=(queue_wrapper&&) = delete;
 
                 ~queue_wrapper() noexcept {
                     drain();

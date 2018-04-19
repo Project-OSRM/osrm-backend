@@ -54,45 +54,76 @@ TEST_CASE("set type and ID from string") {
 TEST_CASE("set object version from string") {
     REQUIRE(osmium::string_to_object_version("0") == 0);
     REQUIRE(osmium::string_to_object_version("1") == 1);
+    REQUIRE(osmium::string_to_object_version("-1") == 0);
+    REQUIRE(osmium::string_to_object_version("4294967294") == 4294967294);
 
-    REQUIRE_THROWS_AS(osmium::string_to_object_version("-1"), const std::range_error&);
+    REQUIRE_THROWS_AS(osmium::string_to_object_version("-2"), const std::range_error&);
     REQUIRE_THROWS_AS(osmium::string_to_object_version(""), const std::range_error&);
     REQUIRE_THROWS_AS(osmium::string_to_object_version(" "), const std::range_error&);
     REQUIRE_THROWS_AS(osmium::string_to_object_version(" 22"), const std::range_error&);
     REQUIRE_THROWS_AS(osmium::string_to_object_version("x"), const std::range_error&);
+    REQUIRE_THROWS_AS(osmium::string_to_object_version("4294967295"), const std::range_error&);
+    REQUIRE_THROWS_AS(osmium::string_to_object_version("999999999999"), const std::range_error&);
 }
 
 TEST_CASE("set changeset id from string") {
     REQUIRE(osmium::string_to_changeset_id("0") == 0);
     REQUIRE(osmium::string_to_changeset_id("1") == 1);
+    REQUIRE(osmium::string_to_changeset_id("-1") == 0);
+    REQUIRE(osmium::string_to_changeset_id("4294967294") == 4294967294);
 
-    REQUIRE_THROWS_AS(osmium::string_to_changeset_id("-1"), const std::range_error&);
+    REQUIRE_THROWS_AS(osmium::string_to_changeset_id("-2"), const std::range_error&);
     REQUIRE_THROWS_AS(osmium::string_to_changeset_id(""), const std::range_error&);
     REQUIRE_THROWS_AS(osmium::string_to_changeset_id(" "), const std::range_error&);
     REQUIRE_THROWS_AS(osmium::string_to_changeset_id(" 22"), const std::range_error&);
     REQUIRE_THROWS_AS(osmium::string_to_changeset_id("x"), const std::range_error&);
+    REQUIRE_THROWS_AS(osmium::string_to_changeset_id("4294967295"), const std::range_error&);
+    REQUIRE_THROWS_AS(osmium::string_to_changeset_id("999999999999"), const std::range_error&);
 }
 
 TEST_CASE("set user id from string") {
     REQUIRE(osmium::string_to_user_id("0") == 0);
     REQUIRE(osmium::string_to_user_id("1") == 1);
     REQUIRE(osmium::string_to_user_id("-1") == -1);
+    REQUIRE(osmium::string_to_user_id("2147483647") == 2147483647);
 
     REQUIRE_THROWS_AS(osmium::string_to_user_id("-2"), const std::range_error&);
     REQUIRE_THROWS_AS(osmium::string_to_user_id(""), const std::range_error&);
     REQUIRE_THROWS_AS(osmium::string_to_user_id(" "), const std::range_error&);
     REQUIRE_THROWS_AS(osmium::string_to_user_id(" 22"), const std::range_error&);
     REQUIRE_THROWS_AS(osmium::string_to_user_id("x"), const std::range_error&);
+    REQUIRE_THROWS_AS(osmium::string_to_user_id("2147483648"), const std::range_error&);
+    REQUIRE_THROWS_AS(osmium::string_to_user_id("4294967295"), const std::range_error&);
+    REQUIRE_THROWS_AS(osmium::string_to_user_id("999999999999"), const std::range_error&);
+}
+
+TEST_CASE("set uid from string") {
+    REQUIRE(osmium::string_to_uid("0") == 0);
+    REQUIRE(osmium::string_to_uid("1") == 1);
+    REQUIRE(osmium::string_to_uid("-1") == 0);
+    REQUIRE(osmium::string_to_uid("4294967294") == 4294967294);
+
+    REQUIRE_THROWS_AS(osmium::string_to_uid("-2"), const std::range_error&);
+    REQUIRE_THROWS_AS(osmium::string_to_uid(""), const std::range_error&);
+    REQUIRE_THROWS_AS(osmium::string_to_uid(" "), const std::range_error&);
+    REQUIRE_THROWS_AS(osmium::string_to_uid(" 22"), const std::range_error&);
+    REQUIRE_THROWS_AS(osmium::string_to_uid("x"), const std::range_error&);
+    REQUIRE_THROWS_AS(osmium::string_to_uid("4294967295"), const std::range_error&);
+    REQUIRE_THROWS_AS(osmium::string_to_uid("999999999999"), const std::range_error&);
 }
 
 TEST_CASE("set num changes from string") {
     REQUIRE(osmium::string_to_num_changes("0") == 0);
     REQUIRE(osmium::string_to_num_changes("1") == 1);
+    REQUIRE(osmium::string_to_num_changes("-1") == 0);
+    REQUIRE(osmium::string_to_num_changes("4294967294") == 4294967294);
 
-    REQUIRE_THROWS_AS(osmium::string_to_num_changes("-1"), const std::range_error&);
+    REQUIRE_THROWS_AS(osmium::string_to_num_changes("-2"), const std::range_error&);
     REQUIRE_THROWS_AS(osmium::string_to_num_changes(""), const std::range_error&);
     REQUIRE_THROWS_AS(osmium::string_to_num_changes(" "), const std::range_error&);
     REQUIRE_THROWS_AS(osmium::string_to_num_changes(" 22"), const std::range_error&);
     REQUIRE_THROWS_AS(osmium::string_to_num_changes("x"), const std::range_error&);
+    REQUIRE_THROWS_AS(osmium::string_to_num_changes("4294967295"), const std::range_error&);
+    REQUIRE_THROWS_AS(osmium::string_to_num_changes("999999999999"), const std::range_error&);
 }
 

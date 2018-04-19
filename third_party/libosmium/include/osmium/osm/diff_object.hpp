@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,12 +33,12 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <cassert>
-
 #include <osmium/osm/item_type.hpp>
 #include <osmium/osm/object.hpp>
 #include <osmium/osm/timestamp.hpp>
 #include <osmium/osm/types.hpp>
+
+#include <cassert>
 
 namespace osmium {
 
@@ -65,9 +65,9 @@ namespace osmium {
      */
     class DiffObject {
 
-        const osmium::OSMObject* m_prev;
-        const osmium::OSMObject* m_curr;
-        const osmium::OSMObject* m_next;
+        const osmium::OSMObject* m_prev = nullptr;
+        const osmium::OSMObject* m_curr = nullptr;
+        const osmium::OSMObject* m_next = nullptr;
 
     public:
 
@@ -75,11 +75,7 @@ namespace osmium {
          * Default construct an empty DiffObject. Most methods of this class
          * can not be called on empty DiffObjects.
          */
-        DiffObject() noexcept :
-            m_prev(nullptr),
-            m_curr(nullptr),
-            m_next(nullptr) {
-        }
+        DiffObject() noexcept = default;
 
         /**
          * Construct a non-empty DiffObject from the given OSMObjects. All

@@ -1,4 +1,3 @@
-
 #include "catch.hpp"
 
 #include <osmium/builder/osm_object_builder.hpp>

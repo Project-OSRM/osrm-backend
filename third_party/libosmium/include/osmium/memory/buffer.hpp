@@ -1,12 +1,11 @@
 #ifndef OSMIUM_MEMORY_BUFFER_HPP
 #define OSMIUM_MEMORY_BUFFER_HPP
 
-#include <iostream>
 /*
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -34,6 +33,11 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <osmium/memory/item.hpp>
+#include <osmium/memory/item_iterator.hpp>
+#include <osmium/osm/entity.hpp>
+#include <osmium/util/compatibility.hpp>
+
 #include <algorithm>
 #include <cassert>
 #include <cstddef>
@@ -43,11 +47,6 @@ DEALINGS IN THE SOFTWARE.
 #include <memory>
 #include <stdexcept>
 #include <utility>
-
-#include <osmium/memory/item.hpp>
-#include <osmium/memory/item_iterator.hpp>
-#include <osmium/osm/entity.hpp>
-#include <osmium/util/compatibility.hpp>
 
 namespace osmium {
 
@@ -110,10 +109,10 @@ namespace osmium {
         private:
 
             std::unique_ptr<unsigned char[]> m_memory;
-            unsigned char* m_data;
-            std::size_t m_capacity;
-            std::size_t m_written;
-            std::size_t m_committed;
+            unsigned char* m_data = nullptr;
+            std::size_t m_capacity = 0;
+            std::size_t m_written = 0;
+            std::size_t m_committed = 0;
 #ifndef NDEBUG
             uint8_t m_builder_count = 0;
 #endif
@@ -140,11 +139,7 @@ namespace osmium {
              * buffer.
              */
             Buffer() noexcept :
-                m_memory(),
-                m_data(nullptr),
-                m_capacity(0),
-                m_written(0),
-                m_committed(0) {
+                m_memory() {
             }
 
             /**
@@ -213,8 +208,6 @@ namespace osmium {
                 m_memory(new unsigned char[calculate_capacity(capacity)]),
                 m_data(m_memory.get()),
                 m_capacity(calculate_capacity(capacity)),
-                m_written(0),
-                m_committed(0),
                 m_auto_grow(auto_grow) {
             }
 
@@ -582,7 +575,7 @@ namespace osmium {
              */
             iterator begin() {
                 assert(m_data && "This must be a valid buffer");
-                return iterator(m_data, m_data + m_committed);
+                return {m_data, m_data + m_committed};
             }
 
             /**
@@ -597,7 +590,7 @@ namespace osmium {
             template <typename T>
             t_iterator<T> get_iterator(std::size_t offset) {
                 assert(m_data && "This must be a valid buffer");
-                return t_iterator<T>(m_data + offset, m_data + m_committed);
+                return {m_data + offset, m_data + m_committed};
             }
 
             /**
@@ -611,7 +604,7 @@ namespace osmium {
              */
             iterator get_iterator(std::size_t offset) {
                 assert(m_data && "This must be a valid buffer");
-                return iterator(m_data + offset, m_data + m_committed);
+                return {m_data + offset, m_data + m_committed};
             }
 
             /**
@@ -625,7 +618,7 @@ namespace osmium {
             template <typename T>
             t_iterator<T> end() {
                 assert(m_data && "This must be a valid buffer");
-                return t_iterator<T>(m_data + m_committed, m_data + m_committed);
+                return {m_data + m_committed, m_data + m_committed};
             }
 
             /**
@@ -638,40 +631,40 @@ namespace osmium {
              */
             iterator end() {
                 assert(m_data && "This must be a valid buffer");
-                return iterator(m_data + m_committed, m_data + m_committed);
+                return {m_data + m_committed, m_data + m_committed};
             }
 
             template <typename T>
             t_const_iterator<T> cbegin() const {
                 assert(m_data && "This must be a valid buffer");
-                return t_const_iterator<T>(m_data, m_data + m_committed);
+                return {m_data, m_data + m_committed};
             }
 
             const_iterator cbegin() const {
                 assert(m_data && "This must be a valid buffer");
-                return const_iterator(m_data, m_data + m_committed);
+                return {m_data, m_data + m_committed};
             }
 
             template <typename T>
             t_const_iterator<T> get_iterator(std::size_t offset) const {
                 assert(m_data && "This must be a valid buffer");
-                return t_const_iterator<T>(m_data + offset, m_data + m_committed);
+                return {m_data + offset, m_data + m_committed};
             }
 
             const_iterator get_iterator(std::size_t offset) const {
                 assert(m_data && "This must be a valid buffer");
-                return const_iterator(m_data + offset, m_data + m_committed);
+                return {m_data + offset, m_data + m_committed};
             }
 
             template <typename T>
             t_const_iterator<T> cend() const {
                 assert(m_data && "This must be a valid buffer");
-                return t_const_iterator<T>(m_data + m_committed, m_data + m_committed);
+                return {m_data + m_committed, m_data + m_committed};
             }
 
             const_iterator cend() const {
                 assert(m_data && "This must be a valid buffer");
-                return const_iterator(m_data + m_committed, m_data + m_committed);
+                return {m_data + m_committed, m_data + m_committed};
             }
 
             template <typename T>
@@ -778,7 +771,7 @@ namespace osmium {
         }
 
         inline bool operator!=(const Buffer& lhs, const Buffer& rhs) noexcept {
-            return ! (lhs == rhs);
+            return !(lhs == rhs);
         }
 
     } // namespace memory

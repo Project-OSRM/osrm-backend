@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,11 +33,6 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <cstddef>
-#include <stdexcept>
-#include <string>
-#include <utility>
-
 #include <osmium/geom/coordinates.hpp>
 #include <osmium/memory/collection.hpp>
 #include <osmium/memory/item.hpp>
@@ -49,6 +44,11 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/osm/node_ref_list.hpp>
 #include <osmium/osm/types.hpp>
 #include <osmium/osm/way.hpp>
+
+#include <cstddef>
+#include <stdexcept>
+#include <string>
+#include <utility>
 
 namespace osmium {
 
@@ -267,7 +267,6 @@ namespace osmium {
                 size_t num_points = 0;
 
                 if (un == use_nodes::unique) {
-                    osmium::Location last_location;
                     switch (dir) {
                         case direction::forward:
                             num_points = fill_linestring_unique(wnl.cbegin(), wnl.cend());
@@ -294,7 +293,7 @@ namespace osmium {
                 return linestring_finish(num_points);
             }
 
-            linestring_type create_linestring(const osmium::Way& way, use_nodes un=use_nodes::unique, direction dir = direction::forward) {
+            linestring_type create_linestring(const osmium::Way& way, use_nodes un = use_nodes::unique, direction dir = direction::forward) {
                 try {
                     return create_linestring(way.nodes(), un, dir);
                 } catch (osmium::geometry_error& e) {
@@ -341,7 +340,6 @@ namespace osmium {
                 size_t num_points = 0;
 
                 if (un == use_nodes::unique) {
-                    osmium::Location last_location;
                     switch (dir) {
                         case direction::forward:
                             num_points = fill_polygon_unique(wnl.cbegin(), wnl.cend());
@@ -368,7 +366,7 @@ namespace osmium {
                 return polygon_finish(num_points);
             }
 
-            polygon_type create_polygon(const osmium::Way& way, use_nodes un=use_nodes::unique, direction dir = direction::forward) {
+            polygon_type create_polygon(const osmium::Way& way, use_nodes un = use_nodes::unique, direction dir = direction::forward) {
                 try {
                     return create_polygon(way.nodes(), un, dir);
                 } catch (osmium::geometry_error& e) {

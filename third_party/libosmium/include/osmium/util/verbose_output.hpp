@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -44,7 +44,7 @@ namespace osmium {
     /**
      * @brief Helpful utility classes and functions not strictly OSM related
      */
-    namespace util {
+    inline namespace util {
 
         /**
          * Osmium programs often run for a long time because of the amount of
@@ -93,13 +93,6 @@ namespace osmium {
                 m_newline(true) {
             }
 
-            ~VerboseOutput() = default;
-
-            VerboseOutput(const VerboseOutput&) = default;
-            VerboseOutput& operator=(const VerboseOutput&) = default;
-            VerboseOutput(VerboseOutput&&) = default;
-            VerboseOutput& operator=(VerboseOutput&&) = default;
-
             time_t runtime() const noexcept {
                 return time(nullptr) - m_start;
             }
@@ -114,7 +107,7 @@ namespace osmium {
                 m_verbose = verbose;
             }
 
-            template<typename T>
+            template <typename T>
             void print(const T& value) {
                 if (m_verbose) {
                     start_line();
@@ -131,7 +124,7 @@ namespace osmium {
 
         }; // class VerboseOutput
 
-        template<typename T>
+        template <typename T>
         inline VerboseOutput& operator<<(VerboseOutput& verbose_output, const T& value) {
             verbose_output.print(value);
             return verbose_output;

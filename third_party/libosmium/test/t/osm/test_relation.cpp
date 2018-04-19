@@ -1,15 +1,15 @@
 #include "catch.hpp"
 
-#include <boost/crc.hpp>
-
 #include <osmium/builder/attr.hpp>
 #include <osmium/osm/crc.hpp>
 #include <osmium/osm/relation.hpp>
 
-using namespace osmium::builder::attr;
+#include <boost/crc.hpp>
+
+using namespace osmium::builder::attr; // NOLINT(google-build-using-namespace)
 
 TEST_CASE("Build relation") {
-    osmium::memory::Buffer buffer(10000);
+    osmium::memory::Buffer buffer{10000};
 
     osmium::builder::add_relation(buffer,
         _id(17),
@@ -30,7 +30,7 @@ TEST_CASE("Build relation") {
 
     REQUIRE(17 == relation.id());
     REQUIRE(3 == relation.version());
-    REQUIRE(true == relation.visible());
+    REQUIRE(relation.visible());
     REQUIRE(333 == relation.changeset());
     REQUIRE(21 == relation.uid());
     REQUIRE(std::string("foo") == relation.user());
@@ -64,9 +64,9 @@ TEST_CASE("Build relation") {
 }
 
 TEST_CASE("Member role too long") {
-    osmium::memory::Buffer buffer(10000);
+    osmium::memory::Buffer buffer{10000};
 
-    osmium::builder::RelationMemberListBuilder builder(buffer);
+    osmium::builder::RelationMemberListBuilder builder{buffer};
 
     const char role[2000] = "";
     builder.add_member(osmium::item_type::node, 1, role, 1024);

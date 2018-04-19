@@ -24,8 +24,8 @@
 
 #include <algorithm>   // for std::all_of, std::equal_range
 #include <cstdlib>     // for std::exit
+#include <cstring>     // for std::strcmp
 #include <fcntl.h>     // for open
-#include <getopt.h>    // for getopt_long
 #include <iostream>    // for std::cout, std::cerr
 #include <memory>      // for std::unique_ptr
 #include <string>      // for std::string
@@ -64,6 +64,12 @@ public:
         return m_fd;
     }
 
+    IndexAccess(const IndexAccess&) = delete;
+    IndexAccess& operator=(const IndexAccess&) = delete;
+
+    IndexAccess(IndexAccess&&) = delete;
+    IndexAccess& operator=(IndexAccess&&) = delete;
+
     virtual ~IndexAccess() = default;
 
     virtual void dump() const = 0;
@@ -83,7 +89,7 @@ public:
 template <typename TValue>
 class IndexAccessDense : public IndexAccess<TValue> {
 
-    using index_type  = typename osmium::index::map::DenseFileArray<osmium::unsigned_object_id_type, TValue>;
+    using index_type = typename osmium::index::map::DenseFileArray<osmium::unsigned_object_id_type, TValue>;
 
 public:
 
@@ -187,58 +193,70 @@ class Options {
         ;
     }
 
+    void print_usage(const char* prgname) {
+        std::cout << "Usage: " << prgname << " [OPTIONS]\n\n";
+        std::exit(0);
+    }
+
 public:
 
     Options(int argc, char* argv[]) {
         if (argc == 1) {
-            print_help();
-            std::exit(1);
+            print_usage(argv[0]);
         }
 
-        static struct option long_options[] = {
-            {"array",  required_argument, nullptr, 'a'},
-            {"dump",         no_argument, nullptr, 'd'},
-            {"help",         no_argument, nullptr, 'h'},
-            {"list",   required_argument, nullptr, 'l'},
-            {"search", required_argument, nullptr, 's'},
-            {"type",   required_argument, nullptr, 't'},
-            {nullptr, 0, nullptr, 0}
-        };
+        if (argc > 1 && (!std::strcmp(argv[1], "-h") ||
+                         !std::strcmp(argv[1], "--help"))) {
+            print_help();
+            std::exit(0);
+        }
 
-        while (true) {
-            const int c = getopt_long(argc, argv, "a:dhl:s:t:", long_options, nullptr);
-            if (c == -1) {
-                break;
-            }
-
-            switch (c) {
-                case 'a':
+        for (int i = 1; i < argc; ++i) {
+            if (!std::strcmp(argv[i], "-a") || !std::strcmp(argv[i], "--array")) {
+                ++i;
+                if (i < argc) {
                     m_array_format = true;
-                    m_filename = optarg;
-                    break;
-                case 'd':
-                    m_dump = true;
-                    break;
-                case 'h':
-                    print_help();
-                    std::exit(0);
-                case 'l':
+                    m_filename = argv[i];
+                } else {
+                    print_usage(argv[0]);
+                }
+            } else if (!std::strncmp(argv[i], "--array=", 8)) {
+                m_array_format = true;
+                m_filename = argv[i] + 8;
+            } else if (!std::strcmp(argv[i], "-l") || !std::strcmp(argv[i], "--list")) {
+                ++i;
+                if (i < argc) {
                     m_list_format = true;
-                    m_filename = optarg;
-                    break;
-                case 's':
-                    m_ids.push_back(std::atoll(optarg));
-                    break;
-                case 't':
-                    m_type = optarg;
-                    if (m_type != "location" && m_type != "id" && m_type != "offset") {
-                        std::cerr << "Unknown type '" << m_type
-                                  << "'. Must be 'location', 'id', or 'offset'.\n";
-                        std::exit(2);
-                    }
-                    break;
-                default:
-                    std::exit(2);
+                    m_filename = argv[i];
+                } else {
+                    print_usage(argv[0]);
+                }
+            } else if (!std::strncmp(argv[i], "--list=", 7)) {
+                m_list_format = true;
+                m_filename = argv[i] + 7;
+            } else if (!std::strcmp(argv[i], "-d") || !std::strcmp(argv[i], "--dump")) {
+                m_dump = true;
+            } else if (!std::strcmp(argv[i], "-s") || !std::strcmp(argv[i], "--search")) {
+                ++i;
+                if (i < argc) {
+                    m_ids.push_back(std::atoll(argv[i])); // NOLINT(cert-err34-c)
+                } else {
+                    print_usage(argv[0]);
+                }
+            } else if (!std::strncmp(argv[i], "--search=", 9)) {
+                m_ids.push_back(std::atoll(argv[i] + 9)); // NOLINT(cert-err34-c)
+            } else if (!std::strcmp(argv[i], "-t") || !std::strcmp(argv[i], "--type")) {
+                ++i;
+                if (i < argc) {
+                    m_type = argv[i];
+                } else {
+                    print_usage(argv[0]);
+                }
+            } else if (!std::strncmp(argv[i], "--type=", 7)) {
+                m_type = argv[i] + 7;
+            } else {
+                std::cerr << "Unknown command line options or arguments\n";
+                print_usage(argv[0]);
             }
         }
 
@@ -257,6 +275,11 @@ public:
             std::exit(2);
         }
 
+        if (m_type != "location" && m_type != "id" && m_type != "offset") {
+            std::cerr << "Unknown type '" << m_type
+                      << "'. Must be 'location', 'id', or 'offset'.\n";
+            std::exit(2);
+        }
     }
 
     const char* filename() const noexcept {
@@ -302,9 +325,8 @@ int run(const IndexAccess<TValue>& index, const Options& options) {
     if (options.do_dump()) {
         index.dump();
         return 0;
-    } else {
-        return index.search(options.search_keys()) ? 0 : 1;
     }
+    return index.search(options.search_keys()) ? 0 : 1;
 }
 
 int main(int argc, char* argv[]) {
@@ -329,16 +351,18 @@ int main(int argc, char* argv[]) {
             // index id -> location
             const auto index = create<osmium::Location>(options.dense_format(), fd);
             return run(*index, options);
-        } else if (options.type_is("id")) {
+        }
+
+        if (options.type_is("id")) {
             // index id -> id
             const auto index = create<osmium::unsigned_object_id_type>(options.dense_format(), fd);
             return run(*index, options);
-        } else {
-            // index id -> offset
-            const auto index = create<std::size_t>(options.dense_format(), fd);
-            return run(*index, options);
         }
-    } catch(const std::exception& e) {
+
+        // index id -> offset
+        const auto index = create<std::size_t>(options.dense_format(), fd);
+        return run(*index, options);
+    } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << '\n';
         std::exit(1);
     }

@@ -1,4 +1,3 @@
-
 #include "catch.hpp"
 
 #include <osmium/util/memory.hpp>
@@ -25,7 +24,7 @@ TEST_CASE("Check memory usage") {
 
     osmium::MemoryUsage m3;
     REQUIRE(m3.current() > 1);
-    REQUIRE(m3.current() < m3.peak());
+    REQUIRE(m3.current() <= m3.peak());
     REQUIRE(m3.peak() >= m1.peak() + size_in_mbytes);
 # endif
 #else

@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,14 +33,14 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <utf8.h>
+
 #include <cassert>
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
 #include <string>
 #include <utility>
-
-#include <utf8.h>
 
 namespace osmium {
 
@@ -127,22 +127,22 @@ namespace osmium {
 
             // Write out the value with exactly two hex digits.
             inline void append_2_hex_digits(std::string& out, uint32_t value, const char* const hex_digits) {
-                out += hex_digits[(value >> 4) & 0xf];
-                out += hex_digits[ value       & 0xf];
+                out += hex_digits[(value >> 4u) & 0xfu];
+                out += hex_digits[ value        & 0xfu];
             }
 
             // Write out the value with four or more hex digits.
             inline void append_min_4_hex_digits(std::string& out, uint32_t value, const char* const hex_digits) {
                 auto
-                v = value & 0xf0000000; if (v) { out += hex_digits[v >> 28]; }
-                v = value & 0x0f000000; if (v) { out += hex_digits[v >> 24]; }
-                v = value & 0x00f00000; if (v) { out += hex_digits[v >> 20]; }
-                v = value & 0x000f0000; if (v) { out += hex_digits[v >> 16]; }
+                v = value & 0xf0000000u; if (v) { out += hex_digits[v >> 28u]; }
+                v = value & 0x0f000000u; if (v) { out += hex_digits[v >> 24u]; }
+                v = value & 0x00f00000u; if (v) { out += hex_digits[v >> 20u]; }
+                v = value & 0x000f0000u; if (v) { out += hex_digits[v >> 16u]; }
 
-                out += hex_digits[(value >> 12) & 0xf];
-                out += hex_digits[(value >>  8) & 0xf];
-                out += hex_digits[(value >>  4) & 0xf];
-                out += hex_digits[ value        & 0xf];
+                out += hex_digits[(value >> 12u) & 0xfu];
+                out += hex_digits[(value >>  8u) & 0xfu];
+                out += hex_digits[(value >>  4u) & 0xfu];
+                out += hex_digits[ value         & 0xfu];
             }
 
             inline void append_utf8_encoded_string(std::string& out, const char* data) {

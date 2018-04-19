@@ -1,20 +1,19 @@
-
 #include "catch.hpp"
-
-#include <type_traits>
 
 #include <osmium/index/relations_map.hpp>
 
-static_assert(std::is_default_constructible<osmium::index::RelationsMapIndex>::value == false, "RelationsMapIndex should not be default constructible");
-static_assert(std::is_copy_constructible<osmium::index::RelationsMapIndex>::value == false, "RelationsMapIndex should not be copy constructible");
-static_assert(std::is_copy_constructible<osmium::index::RelationsMapStash>::value == false, "RelationsMapStash should not be copy constructible");
-static_assert(std::is_copy_assignable<osmium::index::RelationsMapIndex>::value == false, "RelationsMapIndex should not be copy assignable");
-static_assert(std::is_copy_assignable<osmium::index::RelationsMapStash>::value == false, "RelationsMapStash should not be copy assignable");
+#include <type_traits>
+
+static_assert(!std::is_default_constructible<osmium::index::RelationsMapIndex>::value, "RelationsMapIndex should not be default constructible");
+static_assert(!std::is_copy_constructible<osmium::index::RelationsMapIndex>::value, "RelationsMapIndex should not be copy constructible");
+static_assert(!std::is_copy_constructible<osmium::index::RelationsMapStash>::value, "RelationsMapStash should not be copy constructible");
+static_assert(!std::is_copy_assignable<osmium::index::RelationsMapIndex>::value, "RelationsMapIndex should not be copy assignable");
+static_assert(!std::is_copy_assignable<osmium::index::RelationsMapStash>::value, "RelationsMapStash should not be copy assignable");
 
 TEST_CASE("RelationsMapStash lvalue") {
     osmium::index::RelationsMapStash stash;
     REQUIRE(stash.empty());
-    REQUIRE(stash.size() == 0);
+    REQUIRE(stash.size() == 0); // NOLINT(readability-container-size-empty)
 
     stash.add(1, 2);
     stash.add(2, 3);
@@ -57,7 +56,6 @@ TEST_CASE("RelationsMapStash rvalue") {
 TEST_CASE("RelationsMapStash reverse index") {
     osmium::index::RelationsMapStash stash;
     REQUIRE(stash.empty());
-    REQUIRE(stash.size() == 0);
 
     stash.add(1, 2);
     stash.add(2, 3);
@@ -84,7 +82,6 @@ TEST_CASE("RelationsMapStash reverse index") {
 TEST_CASE("RelationsMapStash both indexes") {
     osmium::index::RelationsMapStash stash;
     REQUIRE(stash.empty());
-    REQUIRE(stash.size() == 0);
 
     stash.add(1, 2);
     stash.add(2, 3);

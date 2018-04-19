@@ -1,9 +1,9 @@
 #include "catch.hpp"
 
-#include <osmium/geom/ogr.hpp>
-
 #include "area_helper.hpp"
 #include "wnl_helper.hpp"
+
+#include <osmium/geom/ogr.hpp>
 
 TEST_CASE("OGR point geometry") {
     osmium::geom::OGRFactory<> factory;
@@ -67,7 +67,7 @@ TEST_CASE("OGR area geometry") {
         std::unique_ptr<OGRMultiPolygon> mp {factory.create_multipolygon(area)};
         REQUIRE(1 == mp->getNumGeometries());
 
-        const OGRPolygon* p0 = dynamic_cast<const OGRPolygon*>(mp->getGeometryRef(0));
+        const auto* p0 = dynamic_cast<const OGRPolygon*>(mp->getGeometryRef(0));
         REQUIRE(p0);
         REQUIRE(0 == p0->getNumInteriorRings());
 
@@ -83,7 +83,7 @@ TEST_CASE("OGR area geometry") {
         std::unique_ptr<OGRMultiPolygon> mp {factory.create_multipolygon(area)};
         REQUIRE(1 == mp->getNumGeometries());
 
-        const OGRPolygon* p0 = dynamic_cast<const OGRPolygon*>(mp->getGeometryRef(0));
+        const auto* p0 = dynamic_cast<const OGRPolygon*>(mp->getGeometryRef(0));
         REQUIRE(p0);
         REQUIRE(1 == p0->getNumInteriorRings());
 
@@ -100,14 +100,14 @@ TEST_CASE("OGR area geometry") {
         std::unique_ptr<OGRMultiPolygon> mp {factory.create_multipolygon(area)};
         REQUIRE(2 == mp->getNumGeometries());
 
-        const OGRPolygon* p0 = dynamic_cast<const OGRPolygon*>(mp->getGeometryRef(0));
+        const auto* p0 = dynamic_cast<const OGRPolygon*>(mp->getGeometryRef(0));
         REQUIRE(p0);
         REQUIRE(2 == p0->getNumInteriorRings());
 
         const OGRLineString* l0e = p0->getExteriorRing();
         REQUIRE(5 == l0e->getNumPoints());
 
-        const OGRPolygon* p1 = dynamic_cast<const OGRPolygon*>(mp->getGeometryRef(1));
+        const auto* p1 = dynamic_cast<const OGRPolygon*>(mp->getGeometryRef(1));
         REQUIRE(p1);
         REQUIRE(0 == p1->getNumInteriorRings());
 

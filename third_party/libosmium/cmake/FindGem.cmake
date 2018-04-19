@@ -1,5 +1,7 @@
 # Author thomas.roehr@dfki.de
 #
+# Version 0.31 2017-09-15
+#       - find gem executable gem.cmd on Windows
 # Version 0.3 2013-07-02
 #       - rely on `gem content` to find library and header
 #       - introduce GEM_OS_PKG to allow search via pkgconfig
@@ -28,7 +30,7 @@
 # Check for how 'gem' should be called
 include(FindPackageHandleStandardArgs)
 find_program(GEM_EXECUTABLE
-    NAMES "gem${RUBY_VERSION_MAJOR}${RUBY_VERSION_MINOR}"
+    NAMES "gem.cmd" "gem${RUBY_VERSION_MAJOR}${RUBY_VERSION_MINOR}"
         "gem${RUBY_VERSION_MAJOR}.${RUBY_VERSION_MINOR}"
         "gem-${RUBY_VERSION_MAJOR}${RUBY_VERSION_MINOR}"
         "gem-${RUBY_VERSION_MAJOR}.${RUBY_VERSION_MINOR}"

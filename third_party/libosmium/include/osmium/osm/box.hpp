@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,10 +33,10 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <osmium/osm/location.hpp>
+
 #include <cassert>
 #include <iosfwd>
-
-#include <osmium/osm/location.hpp>
 
 namespace osmium {
 
@@ -48,8 +48,8 @@ namespace osmium {
      */
     class Box {
 
-        osmium::Location m_bottom_left;
-        osmium::Location m_top_right;
+        osmium::Location m_bottom_left{};
+        osmium::Location m_top_right{};
 
     public:
 
@@ -57,10 +57,7 @@ namespace osmium {
          * Create undefined Box. Use the extend() function
          * to add actual bounds.
          */
-        constexpr Box() noexcept :
-            m_bottom_left(),
-            m_top_right() {
-        }
+        constexpr Box() noexcept = default;
 
         /**
          * Create box from minimum and maximum coordinates.
@@ -90,12 +87,6 @@ namespace osmium {
                 (bottom_left.x() <= top_right.x() && bottom_left.y() <= top_right.y())
             );
         }
-
-        Box(const Box&) = default;
-        Box(Box&&) = default;
-        Box& operator=(const Box&) = default;
-        Box& operator=(Box&&) = default;
-        ~Box() = default;
 
         /**
          * Extend this bounding box by the specified location. If the

@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -37,18 +37,20 @@ DEALINGS IN THE SOFTWARE.
 #include <fstream>
 #include <string>
 
+#include <osmium/util/misc.hpp>
+
 namespace osmium {
 
     class MemoryUsage {
 
-        int m_current = 0;
-        int m_peak    = 0;
+        int64_t m_current = 0;
+        int64_t m_peak    = 0;
 
 #ifdef __linux__
         static int parse_number(const std::string& line) {
             const auto f = line.find_first_of("0123456789");
             const auto l = line.find_last_of("0123456789");
-            return std::atoi(line.substr(f, l - f + 1).c_str());
+            return osmium::detail::str_to_int<int64_t>(line.substr(f, l - f + 1).c_str());
         }
 #endif
 
@@ -83,12 +85,12 @@ namespace osmium {
 
         /// Return current memory usage in MBytes
         int current() const {
-            return m_current / 1024;
+            return static_cast<int>(m_current / 1024);
         }
 
         /// Return peak memory usage in MBytes
         int peak() const {
-            return m_peak / 1024;
+            return static_cast<int>(m_peak / 1024);
         }
 
     }; // class MemoryUsage

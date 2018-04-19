@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,11 +33,6 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <iterator>
-#include <memory>
-#include <string>
-#include <utility>
-
 #include <osmium/handler.hpp>
 #include <osmium/io/detail/output_format.hpp>
 #include <osmium/io/detail/queue_util.hpp>
@@ -51,6 +46,7 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/osm/changeset.hpp>
 #include <osmium/osm/item_type.hpp>
 #include <osmium/osm/location.hpp>
+#include <osmium/osm/metadata_options.hpp>
 #include <osmium/osm/node.hpp>
 #include <osmium/osm/node_ref.hpp>
 #include <osmium/osm/object.hpp>
@@ -62,6 +58,11 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/thread/pool.hpp>
 #include <osmium/visitor.hpp>
 
+#include <iterator>
+#include <memory>
+#include <string>
+#include <utility>
+
 namespace osmium {
 
     namespace io {
@@ -72,21 +73,22 @@ namespace osmium {
 
             struct xml_output_options {
 
-                /// Should metadata of objects be added?
-                bool add_metadata;
+                /// Which metadata of objects should be added?
+                osmium::metadata_options add_metadata;
 
                 /// Should the visible flag be added to all OSM objects?
-                bool add_visible_flag;
+                bool add_visible_flag = false;
 
                 /**
                  * Should <create>, <modify>, <delete> "operations" be added?
                  * (This is used for .osc files.)
                  */
-                bool use_change_ops;
+                bool use_change_ops = false;
 
                 /// Should node locations be added to ways?
-                bool locations_on_ways;
-            };
+                bool locations_on_ways = false;
+
+            }; // struct xml_output_options
 
             namespace detail {
 
@@ -144,34 +146,35 @@ namespace osmium {
                 void write_meta(const osmium::OSMObject& object) {
                     write_attribute("id", object.id());
 
-                    if (m_options.add_metadata) {
-                        if (object.version()) {
-                            write_attribute("version", object.version());
-                        }
+                    if (m_options.add_metadata.version() && object.version()) {
+                        write_attribute("version", object.version());
+                    }
 
-                        if (object.timestamp()) {
-                            *m_out += " timestamp=\"";
-                            *m_out += object.timestamp().to_iso();
-                            *m_out += "\"";
-                        }
+                    if (m_options.add_metadata.timestamp() && object.timestamp()) {
+                        *m_out += " timestamp=\"";
+                        *m_out += object.timestamp().to_iso();
+                        *m_out += "\"";
+                    }
 
-                        if (!object.user_is_anonymous()) {
-                            write_attribute("uid", object.uid());
-                            *m_out += " user=\"";
-                            append_xml_encoded_string(*m_out, object.user());
-                            *m_out += "\"";
-                        }
+                    if (m_options.add_metadata.uid() && object.uid()) {
+                        write_attribute("uid", object.uid());
+                    }
 
-                        if (object.changeset()) {
-                            write_attribute("changeset", object.changeset());
-                        }
+                    if (m_options.add_metadata.user() && object.user()[0] != '\0') {
+                        *m_out += " user=\"";
+                        append_xml_encoded_string(*m_out, object.user());
+                        *m_out += "\"";
+                    }
 
-                        if (m_options.add_visible_flag) {
-                            if (object.visible()) {
-                                *m_out += " visible=\"true\"";
-                            } else {
-                                *m_out += " visible=\"false\"";
-                            }
+                    if (m_options.add_metadata.changeset() && object.changeset()) {
+                        write_attribute("changeset", object.changeset());
+                    }
+
+                    if (m_options.add_visible_flag) {
+                        if (object.visible()) {
+                            *m_out += " visible=\"true\"";
+                        } else {
+                            *m_out += " visible=\"false\"";
                         }
                     }
                 }
@@ -246,14 +249,6 @@ namespace osmium {
                     OutputBlock(std::move(buffer)),
                     m_options(options) {
                 }
-
-                XMLOutputBlock(const XMLOutputBlock&) = default;
-                XMLOutputBlock& operator=(const XMLOutputBlock&) = default;
-
-                XMLOutputBlock(XMLOutputBlock&&) = default;
-                XMLOutputBlock& operator=(XMLOutputBlock&&) = default;
-
-                ~XMLOutputBlock() noexcept = default;
 
                 std::string operator()() {
                     osmium::apply(m_input_buffer->cbegin(), m_input_buffer->cend(), *this);
@@ -432,18 +427,12 @@ namespace osmium {
             public:
 
                 XMLOutputFormat(osmium::thread::Pool& pool, const osmium::io::File& file, future_string_queue_type& output_queue) :
-                    OutputFormat(pool, output_queue),
-                    m_options() {
-                    m_options.add_metadata      = file.is_not_false("add_metadata");
+                    OutputFormat(pool, output_queue) {
+                    m_options.add_metadata      = osmium::metadata_options{file.get("add_metadata")};
                     m_options.use_change_ops    = file.is_true("xml_change_format");
                     m_options.add_visible_flag  = (file.has_multiple_object_versions() || file.is_true("force_visible_flag")) && !m_options.use_change_ops;
                     m_options.locations_on_ways = file.is_true("locations_on_ways");
                 }
-
-                XMLOutputFormat(const XMLOutputFormat&) = delete;
-                XMLOutputFormat& operator=(const XMLOutputFormat&) = delete;
-
-                ~XMLOutputFormat() noexcept final = default;
 
                 void write_header(const osmium::io::Header& header) final {
                     std::string out{"<?xml version='1.0' encoding='UTF-8'?>\n"};

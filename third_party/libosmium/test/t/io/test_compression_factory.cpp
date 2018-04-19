@@ -1,4 +1,3 @@
-
 #include "catch.hpp"
 
 #include <osmium/io/compression.hpp>

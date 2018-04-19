@@ -1,10 +1,10 @@
 #include "catch.hpp"
 
-#include <functional>
-
 #include <osmium/builder/attr.hpp>
 #include <osmium/memory/buffer.hpp>
 #include <osmium/tags/tags_filter.hpp>
+
+#include <functional>
 
 TEST_CASE("Tags filter") {
     osmium::memory::Buffer buffer{10240};

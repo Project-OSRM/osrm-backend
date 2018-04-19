@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,14 +33,14 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <osmium/index/index.hpp>
+#include <osmium/index/map.hpp>
+
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <utility>
 #include <vector>
-
-#include <osmium/index/map.hpp>
-#include <osmium/index/index.hpp>
 
 #define OSMIUM_HAS_INDEX_MAP_FLEX_MEM
 
@@ -67,7 +67,7 @@ namespace osmium {
                 };
 
                 enum constant_block_size : uint64_t {
-                    block_size = 1ll << bits
+                    block_size = 1ull << bits
                 };
 
                 // Minimum number of entries in the sparse index before we
@@ -92,7 +92,7 @@ namespace osmium {
 
                     entry(uint64_t i, TValue v) :
                         id(i),
-                        value(v) {
+                        value(std::move(v)) {
                     }
 
                     bool operator<(const entry other) const noexcept {
@@ -178,8 +178,6 @@ namespace osmium {
                 explicit FlexMem(bool use_dense = false) :
                     m_dense(use_dense) {
                 }
-
-                ~FlexMem() noexcept final = default;
 
                 bool is_dense() const noexcept {
                     return m_dense;
