@@ -1,0 +1,11 @@
+
+option optimize_for = LITE_RUNTIME;
+
+package TestString;
+
+message Test {
+
+    required string s = 1;
+
+}
+
