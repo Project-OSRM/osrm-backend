@@ -1,8 +1,8 @@
 #include "guidance/turn_instruction.hpp"
 
 #include "engine/plugins/plugin_base.hpp"
-#include "engine/plugins/tile.hpp"
 #include "engine/plugins/plugin_base.hpp"
+#include "engine/plugins/tile.hpp"
 
 #include "util/coordinate_calculation.hpp"
 #include "util/string_view.hpp"
@@ -279,7 +279,8 @@ std::vector<NodeID> getSegregatedNodes(const DataFacadeBase &facade,
     return result;
 }
 
-struct SpeedLayer : public vtzero::layer_builder {
+struct SpeedLayer : public vtzero::layer_builder
+{
 
     vtzero::value_index_small_uint uint_index;
     vtzero::value_index<vtzero::double_value_type, float, std::unordered_map> double_index;
@@ -294,118 +295,126 @@ struct SpeedLayer : public vtzero::layer_builder {
     vtzero::index_value key_name;
     vtzero::index_value key_rate;
 
-    SpeedLayer(vtzero::tile_builder& tile) :
-        layer_builder(tile, "speeds"),
-        uint_index(*this),
-        double_index(*this),
-        string_index(*this),
-        bool_index(*this),
-        key_speed(add_key_without_dup_check("speed")),
-        key_is_small(add_key_without_dup_check("is_small")),
-        key_datasource(add_key_without_dup_check("datasource")),
-        key_weight(add_key_without_dup_check("weight")),
-        key_duration(add_key_without_dup_check("duration")),
-        key_name(add_key_without_dup_check("name")),
-        key_rate(add_key_without_dup_check("rate")) {
+    SpeedLayer(vtzero::tile_builder &tile)
+        : layer_builder(tile, "speeds"), uint_index(*this), double_index(*this),
+          string_index(*this), bool_index(*this), key_speed(add_key_without_dup_check("speed")),
+          key_is_small(add_key_without_dup_check("is_small")),
+          key_datasource(add_key_without_dup_check("datasource")),
+          key_weight(add_key_without_dup_check("weight")),
+          key_duration(add_key_without_dup_check("duration")),
+          key_name(add_key_without_dup_check("name")), key_rate(add_key_without_dup_check("rate"))
+    {
     }
 
 }; // struct SpeedLayer
 
-class SpeedLayerFeatureBuilder : public vtzero::linestring_feature_builder {
+class SpeedLayerFeatureBuilder : public vtzero::linestring_feature_builder
+{
 
-    SpeedLayer& m_layer;
+    SpeedLayer &m_layer;
 
-public:
-
-    SpeedLayerFeatureBuilder(SpeedLayer& layer, uint64_t id) :
-        vtzero::linestring_feature_builder(layer),
-        m_layer(layer) {
+  public:
+    SpeedLayerFeatureBuilder(SpeedLayer &layer, uint64_t id)
+        : vtzero::linestring_feature_builder(layer), m_layer(layer)
+    {
         set_id(id);
     }
 
-    void set_speed(unsigned int value) {
-        add_property(m_layer.key_speed,
-                     m_layer.uint_index(std::min(value, 127u)));
+    void set_speed(unsigned int value)
+    {
+        add_property(m_layer.key_speed, m_layer.uint_index(std::min(value, 127u)));
     }
 
-    void set_is_small(bool value) {
-        add_property(m_layer.key_is_small, m_layer.bool_index(value));
-    }
+    void set_is_small(bool value) { add_property(m_layer.key_is_small, m_layer.bool_index(value)); }
 
-    void set_datasource(const std::string& value) {
+    void set_datasource(const std::string &value)
+    {
         add_property(m_layer.key_datasource,
                      m_layer.string_index(vtzero::encoded_property_value{value}));
     }
 
-    void set_weight(double value) {
-        add_property(m_layer.key_weight, m_layer.double_index(value));
-    }
+    void set_weight(double value) { add_property(m_layer.key_weight, m_layer.double_index(value)); }
 
-    void set_duration(double value) {
+    void set_duration(double value)
+    {
         add_property(m_layer.key_duration, m_layer.double_index(value));
     }
 
-    void set_name(const boost::string_ref& value) {
-        add_property(m_layer.key_name,
-                     m_layer.string_index(vtzero::encoded_property_value{value.data(), value.size()}));
+    void set_name(const boost::string_ref &value)
+    {
+        add_property(
+            m_layer.key_name,
+            m_layer.string_index(vtzero::encoded_property_value{value.data(), value.size()}));
     }
 
-    void set_rate(double value) {
-        add_property(m_layer.key_rate, m_layer.double_index(value));
-    }
+    void set_rate(double value) { add_property(m_layer.key_rate, m_layer.double_index(value)); }
 
 }; // class SpeedLayerFeatureBuilder
 
-struct TurnsLayer : public vtzero::layer_builder {
+struct TurnsLayer : public vtzero::layer_builder
+{
 
     vtzero::value_index<vtzero::sint_value_type, int, std::unordered_map> int_index;
     vtzero::value_index<vtzero::float_value_type, float, std::unordered_map> float_index;
+    vtzero::value_index_internal<std::unordered_map> string_index;
 
     vtzero::index_value key_bearing_in;
     vtzero::index_value key_turn_angle;
     vtzero::index_value key_cost;
     vtzero::index_value key_weight;
+    vtzero::index_value key_turn_type;
+    vtzero::index_value key_turn_modifier;
 
-    TurnsLayer(vtzero::tile_builder& tile) :
-        layer_builder(tile, "turns"),
-        int_index(*this),
-        float_index(*this),
-        key_bearing_in(add_key_without_dup_check("bearing_in")),
-        key_turn_angle(add_key_without_dup_check("turn_angle")),
-        key_cost(add_key_without_dup_check("cost")),
-        key_weight(add_key_without_dup_check("weight")) {
+    TurnsLayer(vtzero::tile_builder &tile)
+        : layer_builder(tile, "turns"), int_index(*this), float_index(*this), string_index(*this),
+          key_bearing_in(add_key_without_dup_check("bearing_in")),
+          key_turn_angle(add_key_without_dup_check("turn_angle")),
+          key_cost(add_key_without_dup_check("cost")),
+          key_weight(add_key_without_dup_check("weight")),
+          key_turn_type(add_key_without_dup_check("type")),
+          key_turn_modifier(add_key_without_dup_check("modifier"))
+    {
     }
 
 }; // struct TurnsLayer
 
-class TurnsLayerFeatureBuilder : public vtzero::point_feature_builder {
+class TurnsLayerFeatureBuilder : public vtzero::point_feature_builder
+{
 
-    TurnsLayer& m_layer;
+    TurnsLayer &m_layer;
 
-public:
-
-    TurnsLayerFeatureBuilder(TurnsLayer& layer, uint64_t id) :
-        vtzero::point_feature_builder(layer),
-        m_layer(layer) {
+  public:
+    TurnsLayerFeatureBuilder(TurnsLayer &layer, uint64_t id)
+        : vtzero::point_feature_builder(layer), m_layer(layer)
+    {
         set_id(id);
     }
 
-    void set_bearing_in(int value) {
+    void set_bearing_in(int value)
+    {
         add_property(m_layer.key_bearing_in, m_layer.int_index(value));
     }
 
-    void set_turn_angle(int value) {
+    void set_turn_angle(int value)
+    {
         add_property(m_layer.key_turn_angle, m_layer.int_index(value));
     }
 
-    void set_cost(float value) {
-        add_property(m_layer.key_cost, m_layer.float_index(value));
-    }
+    void set_cost(float value) { add_property(m_layer.key_cost, m_layer.float_index(value)); }
 
-    void set_weight(float value) {
-        add_property(m_layer.key_weight, m_layer.float_index(value));
-    }
+    void set_weight(float value) { add_property(m_layer.key_weight, m_layer.float_index(value)); }
 
+    void set_turn(osrm::guidance::TurnInstruction value)
+    {
+        const auto type = osrm::guidance::internalInstructionTypeToString(value.type);
+        const auto modifier = osrm::guidance::instructionModifierToString(value.direction_modifier);
+        add_property(
+            m_layer.key_turn_type,
+            m_layer.string_index(vtzero::encoded_property_value{type.data(), type.size()}));
+        add_property(
+            m_layer.key_turn_modifier,
+            m_layer.string_index(vtzero::encoded_property_value{modifier.data(), modifier.size()}));
+    }
 }; // class TurnsLayerFeatureBuilder
 
 void encodeVectorTile(const DataFacadeBase &facade,
@@ -502,7 +511,8 @@ void encodeVectorTile(const DataFacadeBase &facade,
 
                             fbuilder.set_speed(speed_kmh_idx);
                             fbuilder.set_is_small(component_id.is_tiny);
-                            fbuilder.set_datasource(facade.GetDatasourceName(forward_datasource_idx).to_string());
+                            fbuilder.set_datasource(
+                                facade.GetDatasourceName(forward_datasource_idx).to_string());
                             fbuilder.set_weight(forward_weight / 10.0);
                             fbuilder.set_duration(forward_duration / 10.0);
                             fbuilder.set_name(name);
@@ -534,7 +544,8 @@ void encodeVectorTile(const DataFacadeBase &facade,
 
                             fbuilder.set_speed(speed_kmh_idx);
                             fbuilder.set_is_small(component_id.is_tiny);
-                            fbuilder.set_datasource(facade.GetDatasourceName(reverse_datasource_idx).to_string());
+                            fbuilder.set_datasource(
+                                facade.GetDatasourceName(reverse_datasource_idx).to_string());
                             fbuilder.set_weight(reverse_weight / 10.0);
                             fbuilder.set_duration(reverse_duration / 10.0);
                             fbuilder.set_name(name);
@@ -553,9 +564,9 @@ void encodeVectorTile(const DataFacadeBase &facade,
         {
             TurnsLayer turns_layer{tile};
             uint64_t id = 0;
-            for (const auto& turn_data : all_turn_data) {
-                const auto tile_point =
-                    coordinatesToTilePoint(turn_data.coordinate, tile_bbox);
+            for (const auto &turn_data : all_turn_data)
+            {
+                const auto tile_point = coordinatesToTilePoint(turn_data.coordinate, tile_bbox);
                 if (boost::geometry::within(point_t(tile_point.x, tile_point.y), clip_box))
                 {
                     TurnsLayerFeatureBuilder fbuilder{turns_layer, ++id};
@@ -565,6 +576,7 @@ void encodeVectorTile(const DataFacadeBase &facade,
                     fbuilder.set_turn_angle(turn_data.turn_angle);
                     fbuilder.set_cost(turn_data.duration / 10.0);
                     fbuilder.set_weight(turn_data.weight / 10.0);
+                    fbuilder.set_turn(turn_data.turn_instruction);
 
                     fbuilder.commit();
                 }
@@ -596,7 +608,8 @@ void encodeVectorTile(const DataFacadeBase &facade,
                 }
 
                 vtzero::point_feature_builder fbuilder{osmnodes_layer};
-                fbuilder.set_id(static_cast<OSMNodeID::value_type>(facade.GetOSMNodeIDOfNode(internal_node)));
+                fbuilder.set_id(
+                    static_cast<OSMNodeID::value_type>(facade.GetOSMNodeIDOfNode(internal_node)));
                 fbuilder.add_point(tile_point);
                 fbuilder.commit();
             }

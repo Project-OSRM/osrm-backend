@@ -14,252 +14,141 @@
 #include "util/typedefs.hpp"
 #include "util/vector_tile.hpp"
 
-#include <protozero/pbf_reader.hpp>
+#include <boost/variant.hpp>
+#include <vtzero/vector_tile.hpp>
+
+#include <map>
 
 #define CHECK_EQUAL_RANGE(R1, R2)                                                                  \
     BOOST_CHECK_EQUAL_COLLECTIONS(R1.begin(), R1.end(), R2.begin(), R2.end());
 
 BOOST_AUTO_TEST_SUITE(tile)
 
-void validate_value(protozero::pbf_reader value)
+using variant_type = boost::variant<std::string, float, double, int64_t, uint64_t, bool>;
+
+std::string to_string(const protozero::data_view &view)
 {
-    using namespace osrm;
-    while (value.next())
+    return std::string{view.data(), view.size()};
+}
+
+void validate_feature_layer(vtzero::layer layer)
+{
+    BOOST_CHECK_EQUAL(layer.version(), 2);
+    BOOST_CHECK_EQUAL(to_string(layer.name()), "speeds");
+    BOOST_CHECK_EQUAL(layer.extent(), osrm::util::vector_tile::EXTENT);
+    BOOST_CHECK_EQUAL(layer.key_table().size(), 7);
+    BOOST_CHECK(layer.num_features() > 2500);
+
+    while (auto feature = layer.next_feature())
     {
-        switch (value.tag())
-        {
-        case util::vector_tile::VARIANT_TYPE_BOOL:
-            value.get_bool();
-            break;
-        case util::vector_tile::VARIANT_TYPE_DOUBLE:
-            value.get_double();
-            break;
-        case util::vector_tile::VARIANT_TYPE_FLOAT:
-            value.get_float();
-            break;
-        case util::vector_tile::VARIANT_TYPE_STRING:
-            value.get_string();
-            break;
-        case util::vector_tile::VARIANT_TYPE_UINT64:
-            value.get_uint64();
-            break;
-        case util::vector_tile::VARIANT_TYPE_SINT64:
-            value.get_sint64();
-            break;
-        }
+        BOOST_CHECK(feature.has_id());
+        BOOST_CHECK(feature.geometry_type() == vtzero::GeomType::LINESTRING);
+        BOOST_CHECK(!feature.empty());
+
+        auto props = vtzero::create_properties_map<std::map<std::string, variant_type>>(feature);
+
+        BOOST_CHECK(props.find("speed") != props.end());
+        BOOST_CHECK(props["speed"].type() == typeid(uint64_t));
+
+        BOOST_CHECK(props.find("rate") != props.end());
+        BOOST_CHECK(props["rate"].type() == typeid(double));
+
+        BOOST_CHECK(props.find("weight") != props.end());
+        BOOST_CHECK(props["weight"].type() == typeid(double));
+
+        BOOST_CHECK(props.find("duration") != props.end());
+        BOOST_CHECK(props["duration"].type() == typeid(double));
+
+        BOOST_CHECK(props.find("is_small") != props.end());
+        BOOST_CHECK(props["is_small"].type() == typeid(bool));
+
+        BOOST_CHECK(props.find("datasource") != props.end());
+        BOOST_CHECK(props["datasource"].type() == typeid(std::string));
+
+        BOOST_CHECK(props.find("name") != props.end());
+        BOOST_CHECK(props["name"].type() == typeid(std::string));
+    }
+
+    auto number_of_uint_values =
+        std::count_if(layer.value_table().begin(), layer.value_table().end(), [](auto v) {
+            return v.type() == vtzero::property_value_type::uint_value;
+        });
+    BOOST_CHECK_EQUAL(number_of_uint_values, 77);
+}
+
+void validate_turn_layer(vtzero::layer layer)
+{
+    BOOST_CHECK_EQUAL(layer.version(), 2);
+    BOOST_CHECK_EQUAL(to_string(layer.name()), "turns");
+    BOOST_CHECK_EQUAL(layer.extent(), osrm::util::vector_tile::EXTENT);
+    BOOST_CHECK_EQUAL(layer.key_table().size(), 6);
+    BOOST_CHECK(layer.num_features() > 700);
+
+    while (auto feature = layer.next_feature())
+    {
+        BOOST_CHECK(feature.has_id());
+        BOOST_CHECK(feature.geometry_type() == vtzero::GeomType::POINT);
+        BOOST_CHECK(!feature.empty());
+
+        auto props = vtzero::create_properties_map<std::map<std::string, variant_type>>(feature);
+
+        BOOST_CHECK(props.find("bearing_in") != props.end());
+        BOOST_CHECK(props["bearing_in"].type() == typeid(std::int64_t));
+
+        BOOST_CHECK(props.find("turn_angle") != props.end());
+        BOOST_CHECK(props["turn_angle"].type() == typeid(std::int64_t));
+
+        BOOST_CHECK(props.find("weight") != props.end());
+        BOOST_CHECK(props["weight"].type() == typeid(float));
+
+        BOOST_CHECK(props.find("cost") != props.end());
+        BOOST_CHECK(props["cost"].type() == typeid(float));
+
+        BOOST_CHECK(props.find("type") != props.end());
+        BOOST_CHECK(props["type"].type() == typeid(std::string));
+
+        BOOST_CHECK(props.find("modifier") != props.end());
+        BOOST_CHECK(props["modifier"].type() == typeid(std::string));
+    }
+
+    auto number_of_float_values =
+        std::count_if(layer.value_table().begin(), layer.value_table().end(), [](auto v) {
+            return v.type() == vtzero::property_value_type::float_value;
+        });
+
+    BOOST_CHECK_EQUAL(number_of_float_values, 74);
+}
+
+void validate_node_layer(vtzero::layer layer)
+{
+    BOOST_CHECK_EQUAL(layer.version(), 2);
+    BOOST_CHECK_EQUAL(to_string(layer.name()), "osmnodes");
+    BOOST_CHECK_EQUAL(layer.extent(), osrm::util::vector_tile::EXTENT);
+    BOOST_CHECK_EQUAL(layer.key_table().size(), 0);
+    BOOST_CHECK_EQUAL(layer.num_features(), 1791);
+
+    while (auto feature = layer.next_feature())
+    {
+        BOOST_CHECK(feature.has_id());
+        BOOST_CHECK(feature.geometry_type() == vtzero::GeomType::POINT);
+        BOOST_CHECK(feature.empty());
     }
 }
 
-void validate_feature_layer(protozero::pbf_reader &layer_message)
+void validate_internal_nodes_layer(vtzero::layer layer)
 {
-    using namespace osrm;
+    BOOST_CHECK_EQUAL(layer.version(), 2);
+    BOOST_CHECK_EQUAL(to_string(layer.name()), "internal-nodes");
+    BOOST_CHECK_EQUAL(layer.extent(), osrm::util::vector_tile::EXTENT);
+    BOOST_CHECK_EQUAL(layer.key_table().size(), 0);
+    BOOST_CHECK_EQUAL(layer.num_features(), 24);
 
-    const auto check_feature = [](protozero::pbf_reader feature_message) {
-        feature_message.next(); // advance parser to first entry
-        BOOST_CHECK_EQUAL(feature_message.tag(), util::vector_tile::GEOMETRY_TAG);
-        BOOST_CHECK_EQUAL(feature_message.get_enum(), util::vector_tile::GEOMETRY_TYPE_LINE);
-
-        feature_message.next(); // advance to next entry
-        BOOST_CHECK_EQUAL(feature_message.tag(), util::vector_tile::ID_TAG);
-        feature_message.get_uint64(); // id
-
-        feature_message.next(); // advance to next entry
-        BOOST_CHECK_EQUAL(feature_message.tag(), util::vector_tile::FEATURE_ATTRIBUTES_TAG);
-        // properties
-        auto property_iter_pair = feature_message.get_packed_uint32();
-        auto value_begin = property_iter_pair.begin();
-        auto value_end = property_iter_pair.end();
-        BOOST_CHECK_EQUAL(std::distance(value_begin, value_end), 14);
-        auto iter = value_begin;
-        BOOST_CHECK_EQUAL(*iter++, 0); // speed key
-        BOOST_CHECK_LT(*iter++, 128);  // speed value
-        BOOST_CHECK_EQUAL(*iter++, 1); // component key
-        // component value
-        BOOST_CHECK_GE(*iter, 128);
-        BOOST_CHECK_LE(*iter, 129);
-        iter++;
-        BOOST_CHECK_EQUAL(*iter++, 2); // data source key
-        *iter++;                       // skip value check, can be valud uint32
-        BOOST_CHECK_EQUAL(*iter++, 3); // weight key
-        BOOST_CHECK_GT(*iter++, 130);  // weight value
-        BOOST_CHECK_EQUAL(*iter++, 4); // duration key
-        BOOST_CHECK_GT(*iter++, 130);  // duration value
-        // name
-        BOOST_CHECK_EQUAL(*iter++, 5);
-        BOOST_CHECK_GT(*iter++, 130);
-        // rate
-        BOOST_CHECK_EQUAL(*iter++, 6);
-        BOOST_CHECK_GT(*iter++, 130);
-        BOOST_CHECK(iter == value_end);
-        // geometry
-        feature_message.next();
-        auto geometry_iter_pair = feature_message.get_packed_uint32();
-        BOOST_CHECK_GT(std::distance(geometry_iter_pair.begin(), geometry_iter_pair.end()), 1);
-    };
-
-    auto number_of_speed_keys = 0u;
-    auto number_of_speed_values = 0u;
-
-    while (layer_message.next())
+    while (auto feature = layer.next_feature())
     {
-        switch (layer_message.tag())
-        {
-        case util::vector_tile::VERSION_TAG:
-            BOOST_CHECK_EQUAL(layer_message.get_uint32(), 2);
-            break;
-        case util::vector_tile::NAME_TAG:
-            BOOST_CHECK_EQUAL(layer_message.get_string(), "speeds");
-            break;
-        case util::vector_tile::EXTENT_TAG:
-            BOOST_CHECK_EQUAL(layer_message.get_uint32(), util::vector_tile::EXTENT);
-            break;
-        case util::vector_tile::FEATURE_TAG:
-            check_feature(layer_message.get_message());
-            break;
-        case util::vector_tile::KEY_TAG:
-            layer_message.get_string();
-            number_of_speed_keys++;
-            break;
-        case util::vector_tile::VARIANT_TAG:
-            validate_value(layer_message.get_message());
-            number_of_speed_values++;
-            break;
-        default:
-            BOOST_CHECK(false); // invalid tag
-            break;
-        }
+        BOOST_CHECK(!feature.has_id());
+        BOOST_CHECK(feature.geometry_type() == vtzero::GeomType::LINESTRING);
+        BOOST_CHECK(feature.empty());
     }
-
-    BOOST_CHECK_EQUAL(number_of_speed_keys, 7);
-    BOOST_CHECK_GT(number_of_speed_values, 128); // speed value resolution
-}
-
-void validate_turn_layer(protozero::pbf_reader &layer_message)
-{
-    using namespace osrm;
-
-    const auto check_turn_feature = [](protozero::pbf_reader feature_message) {
-        feature_message.next(); // advance parser to first entry
-        BOOST_CHECK_EQUAL(feature_message.tag(), util::vector_tile::GEOMETRY_TAG);
-        BOOST_CHECK_EQUAL(feature_message.get_enum(), util::vector_tile::GEOMETRY_TYPE_POINT);
-
-        feature_message.next(); // advance to next entry
-        BOOST_CHECK_EQUAL(feature_message.tag(), util::vector_tile::ID_TAG);
-        feature_message.get_uint64(); // id
-
-        feature_message.next(); // advance to next entry
-        BOOST_CHECK_EQUAL(feature_message.tag(), util::vector_tile::FEATURE_ATTRIBUTES_TAG);
-        // properties
-        auto feature_iter_pair = feature_message.get_packed_uint32();
-        BOOST_CHECK_EQUAL(std::distance(feature_iter_pair.begin(), feature_iter_pair.end()), 12);
-        auto iter = feature_iter_pair.begin();
-        BOOST_CHECK_EQUAL(*iter++, 0); // bearing_in key
-        *iter++;
-        BOOST_CHECK_EQUAL(*iter++, 1); // turn_angle key
-        *iter++;
-        BOOST_CHECK_EQUAL(*iter++, 2); // turn cost (duration) key
-        *iter++;                       // skip value check, can be valud uint32
-        BOOST_CHECK_EQUAL(*iter++, 3); // turn weight key
-        *iter++;                       // skip value check, can be valud uint32
-        BOOST_CHECK_EQUAL(*iter++, 4); // turn type key
-        *iter++;                       // skip value check, can be valud uint32
-        BOOST_CHECK_EQUAL(*iter++, 5); // turn modifier
-        *iter++;                       // skip value check, can be valud uint32
-        BOOST_CHECK(iter == feature_iter_pair.end());
-        // geometry
-        feature_message.next();
-        auto geometry_iter_pair = feature_message.get_packed_uint32();
-        BOOST_CHECK_GT(std::distance(geometry_iter_pair.begin(), geometry_iter_pair.end()), 1);
-    };
-
-    auto number_of_turn_keys = 0u;
-    auto number_of_turns_found = 0u;
-
-    while (layer_message.next())
-    {
-        switch (layer_message.tag())
-        {
-        case util::vector_tile::VERSION_TAG:
-            BOOST_CHECK_EQUAL(layer_message.get_uint32(), 2);
-            break;
-        case util::vector_tile::NAME_TAG:
-            BOOST_CHECK_EQUAL(layer_message.get_string(), "turns");
-            break;
-        case util::vector_tile::EXTENT_TAG:
-            BOOST_CHECK_EQUAL(layer_message.get_uint32(), util::vector_tile::EXTENT);
-            break;
-        case util::vector_tile::FEATURE_TAG:
-            check_turn_feature(layer_message.get_message());
-            number_of_turns_found++;
-            break;
-        case util::vector_tile::KEY_TAG:
-            layer_message.get_string();
-            number_of_turn_keys++;
-            break;
-        case util::vector_tile::VARIANT_TAG:
-            validate_value(layer_message.get_message());
-            break;
-        default:
-            BOOST_CHECK(false); // invalid tag
-            break;
-        }
-    }
-
-    BOOST_CHECK_EQUAL(number_of_turn_keys, 6);
-    BOOST_CHECK(number_of_turns_found > 700);
-}
-
-void validate_node_layer(protozero::pbf_reader &layer_message)
-{
-    using namespace osrm;
-    auto number_of_nodes_found = 0u;
-
-    const auto check_osmnode_feature = [](protozero::pbf_reader feature_message) {
-        feature_message.next(); // advance parser to first entry
-        BOOST_CHECK_EQUAL(feature_message.tag(), util::vector_tile::GEOMETRY_TAG);
-        BOOST_CHECK_EQUAL(feature_message.get_enum(), util::vector_tile::GEOMETRY_TYPE_POINT);
-
-        feature_message.next(); // advance to next entry
-        BOOST_CHECK_EQUAL(feature_message.tag(), util::vector_tile::ID_TAG);
-        feature_message.get_uint64(); // id
-
-        feature_message.next(); // advance to next entry
-        // Note - on this layer, there should be no feature attributes, the next thing
-        // we get should be the geometry
-        BOOST_CHECK_EQUAL(feature_message.tag(), util::vector_tile::FEATURE_GEOMETRIES_TAG);
-        auto geometry_iter_pair = feature_message.get_packed_uint32();
-        BOOST_CHECK_GT(std::distance(geometry_iter_pair.begin(), geometry_iter_pair.end()), 1);
-    };
-
-    while (layer_message.next())
-    {
-        switch (layer_message.tag())
-        {
-        case util::vector_tile::VERSION_TAG:
-            BOOST_CHECK_EQUAL(layer_message.get_uint32(), 2);
-            break;
-        case util::vector_tile::NAME_TAG:
-            BOOST_CHECK_EQUAL(layer_message.get_string(), "osmnodes");
-            break;
-        case util::vector_tile::EXTENT_TAG:
-            BOOST_CHECK_EQUAL(layer_message.get_uint32(), util::vector_tile::EXTENT);
-            break;
-        case util::vector_tile::FEATURE_TAG:
-            check_osmnode_feature(layer_message.get_message());
-            number_of_nodes_found++;
-            break;
-        case util::vector_tile::KEY_TAG:
-            BOOST_CHECK(false); // There should be no properties on node features
-            break;
-        case util::vector_tile::VARIANT_TAG:
-            BOOST_CHECK(false); // There should be no properties on node features
-            break;
-        default:
-            BOOST_CHECK(false); // invalid tag
-            break;
-        }
-    }
-    BOOST_CHECK_EQUAL(number_of_nodes_found, 1791);
 }
 
 void validate_tile(const osrm::OSRM &osrm)
@@ -275,22 +164,12 @@ void validate_tile(const osrm::OSRM &osrm)
 
     BOOST_CHECK(result.size() > 114000);
 
-    protozero::pbf_reader tile_message(result);
+    vtzero::vector_tile tile{result};
 
-    tile_message.next();
-    BOOST_CHECK_EQUAL(tile_message.tag(), util::vector_tile::LAYER_TAG); // must be a layer
-    protozero::pbf_reader layer_message = tile_message.get_message();
-    validate_feature_layer(layer_message);
-
-    tile_message.next();
-    BOOST_CHECK_EQUAL(tile_message.tag(), util::vector_tile::LAYER_TAG); // must be a layer
-    layer_message = tile_message.get_message();
-    validate_turn_layer(layer_message);
-
-    tile_message.next();
-    BOOST_CHECK_EQUAL(tile_message.tag(), util::vector_tile::LAYER_TAG); // must be a layer
-    layer_message = tile_message.get_message();
-    validate_node_layer(layer_message);
+    validate_feature_layer(tile.next_layer());
+    validate_turn_layer(tile.next_layer());
+    validate_node_layer(tile.next_layer());
+    validate_internal_nodes_layer(tile.next_layer());
 }
 
 BOOST_AUTO_TEST_CASE(test_tile_ch)
@@ -330,147 +209,50 @@ void test_tile_turns(const osrm::OSRM &osrm)
 
     BOOST_CHECK_GT(result.size(), 128);
 
-    protozero::pbf_reader tile_message(result);
-    tile_message.next();
-    BOOST_CHECK_EQUAL(tile_message.tag(), util::vector_tile::LAYER_TAG); // must be a layer
-    // Skip the segments layer
-    tile_message.skip();
+    vtzero::vector_tile tile{result};
 
-    tile_message.next();
-    auto layer_message = tile_message.get_message();
+    tile.next_layer();
+    auto layer = tile.next_layer();
+    BOOST_CHECK_EQUAL(to_string(layer.name()), "turns");
 
-    std::vector<int> found_bearing_in_indexes;
-    std::vector<int> found_turn_angles_indexes;
-    std::vector<int> found_time_penalties_indexes;
-    std::vector<int> found_weight_penalties_indexes;
-    std::vector<int> found_turn_type_indexes;
-    std::vector<int> found_turn_modifier_indexes;
+    std::vector<float> actual_time_turn_penalties;
+    std::vector<float> actual_weight_turn_penalties;
+    std::vector<std::string> actual_turn_types;
+    std::vector<std::string> actual_turn_modifiers;
+    std::vector<std::int64_t> actual_turn_angles;
+    std::vector<std::int64_t> actual_turn_bearings;
 
-    const auto check_turn_feature = [&](protozero::pbf_reader feature_message) {
-        feature_message.next(); // advance parser to first entry
-        BOOST_CHECK_EQUAL(feature_message.tag(), util::vector_tile::GEOMETRY_TAG);
-        BOOST_CHECK_EQUAL(feature_message.get_enum(), util::vector_tile::GEOMETRY_TYPE_POINT);
-
-        feature_message.next(); // advance to next entry
-        BOOST_CHECK_EQUAL(feature_message.tag(), util::vector_tile::ID_TAG);
-        feature_message.get_uint64(); // id
-
-        feature_message.next(); // advance to next entry
-        BOOST_CHECK_EQUAL(feature_message.tag(), util::vector_tile::FEATURE_ATTRIBUTES_TAG);
-        // properties
-        auto feature_iter_pair = feature_message.get_packed_uint32();
-        BOOST_CHECK_EQUAL(std::distance(feature_iter_pair.begin(), feature_iter_pair.end()), 12);
-        auto iter = feature_iter_pair.begin();
-        BOOST_CHECK_EQUAL(*iter++, 0); // bearing_in key
-        found_bearing_in_indexes.push_back(*iter++);
-        BOOST_CHECK_EQUAL(*iter++, 1); // turn_angle key
-        found_turn_angles_indexes.push_back(*iter++);
-        BOOST_CHECK_EQUAL(*iter++, 2);                     // "cost" key (actually duration)
-        found_time_penalties_indexes.push_back(*iter++);   // skip value check, can be valud uint32
-        BOOST_CHECK_EQUAL(*iter++, 3);                     // "weight" key
-        found_weight_penalties_indexes.push_back(*iter++); // skip value check, can be valud uint32
-        BOOST_CHECK_EQUAL(*iter++, 4);                     // "weight" key
-        found_turn_type_indexes.push_back(*iter++);        // skip value check, can be valud uint32
-        BOOST_CHECK_EQUAL(*iter++, 5);                     // "weight" key
-        found_turn_modifier_indexes.push_back(*iter++);    // skip value check, can be valud uint32
-        BOOST_CHECK(iter == feature_iter_pair.end());
-        // geometry
-        feature_message.next();
-        auto geometry_iter_pair = feature_message.get_packed_uint32();
-        BOOST_CHECK_GT(std::distance(geometry_iter_pair.begin(), geometry_iter_pair.end()), 1);
-    };
-
-    std::unordered_map<int, float> float_vals;
-    std::unordered_map<int, std::int64_t> sint64_vals;
-    std::unordered_map<int, std::string> string_vals;
-
-    int kv_index = 0;
-
-    const auto check_value = [&](protozero::pbf_reader value) {
-        while (value.next())
-        {
-            switch (value.tag())
-            {
-            case util::vector_tile::VARIANT_TYPE_FLOAT:
-                float_vals[kv_index] = value.get_float();
-                break;
-            case util::vector_tile::VARIANT_TYPE_SINT64:
-                sint64_vals[kv_index] = value.get_sint64();
-                break;
-            case util::vector_tile::VARIANT_TYPE_STRING:
-                string_vals[kv_index] = value.get_string();
-                break;
-            default:
-                BOOST_CHECK(false);
-            }
-            kv_index++;
-        }
-    };
-
-    auto number_of_turn_keys = 0u;
-    auto number_of_turns_found = 0u;
-
-    while (layer_message.next())
+    while (auto feature = layer.next_feature())
     {
-        switch (layer_message.tag())
-        {
-        case util::vector_tile::VERSION_TAG:
-            BOOST_CHECK_EQUAL(layer_message.get_uint32(), 2);
-            break;
-        case util::vector_tile::NAME_TAG:
-            BOOST_CHECK_EQUAL(layer_message.get_string(), "turns");
-            break;
-        case util::vector_tile::EXTENT_TAG:
-            BOOST_CHECK_EQUAL(layer_message.get_uint32(), util::vector_tile::EXTENT);
-            break;
-        case util::vector_tile::FEATURE_TAG:
-            check_turn_feature(layer_message.get_message());
-            number_of_turns_found++;
-            break;
-        case util::vector_tile::KEY_TAG:
-            layer_message.get_string();
-            number_of_turn_keys++;
-            break;
-        case util::vector_tile::VARIANT_TAG:
-            check_value(layer_message.get_message());
-            break;
-        default:
-            BOOST_CHECK(false); // invalid tag
-            break;
-        }
+        auto props = vtzero::create_properties_map<std::map<std::string, variant_type>>(feature);
+
+        BOOST_CHECK(props["cost"].type() == typeid(float));
+        actual_time_turn_penalties.push_back(boost::get<float>(props["cost"]));
+        BOOST_CHECK(props["weight"].type() == typeid(float));
+        actual_weight_turn_penalties.push_back(boost::get<float>(props["weight"]));
+        BOOST_CHECK(props["turn_angle"].type() == typeid(std::int64_t));
+        actual_turn_angles.push_back(boost::get<std::int64_t>(props["turn_angle"]));
+        BOOST_CHECK(props["bearing_in"].type() == typeid(std::int64_t));
+        actual_turn_bearings.push_back(boost::get<std::int64_t>(props["bearing_in"]));
+        BOOST_CHECK(props["type"].type() == typeid(std::string));
+        actual_turn_types.push_back(boost::get<std::string>(props["type"]));
+        BOOST_CHECK(props["modifier"].type() == typeid(std::string));
+        actual_turn_modifiers.push_back(boost::get<std::string>(props["modifier"]));
     }
 
     // Verify that we got the expected turn penalties
-    std::vector<float> actual_time_turn_penalties;
-    for (const auto &i : found_time_penalties_indexes)
-    {
-        BOOST_CHECK(float_vals.count(i) == 1);
-        actual_time_turn_penalties.push_back(float_vals[i]);
-    }
     std::sort(actual_time_turn_penalties.begin(), actual_time_turn_penalties.end());
     const std::vector<float> expected_time_turn_penalties = {
         0, 0, 0, 0, 0, 0, .1f, .1f, .3f, .4f, 1.2f, 1.9f, 5.3f, 5.5f, 5.8f, 7.1f, 7.2f, 7.2f};
     CHECK_EQUAL_RANGE(actual_time_turn_penalties, expected_time_turn_penalties);
 
     // Verify that we got the expected turn penalties
-    std::vector<float> actual_weight_turn_penalties;
-    for (const auto &i : found_weight_penalties_indexes)
-    {
-        BOOST_CHECK(float_vals.count(i) == 1);
-        actual_weight_turn_penalties.push_back(float_vals[i]);
-    }
     std::sort(actual_weight_turn_penalties.begin(), actual_weight_turn_penalties.end());
     const std::vector<float> expected_weight_turn_penalties = {
         0, 0, 0, 0, 0, 0, .1f, .1f, .3f, .4f, 1.2f, 1.9f, 5.3f, 5.5f, 5.8f, 7.1f, 7.2f, 7.2f};
     CHECK_EQUAL_RANGE(actual_weight_turn_penalties, expected_weight_turn_penalties);
 
     // Verify that we got the expected turn types
-    std::vector<std::string> actual_turn_types;
-    for (const auto &i : found_turn_type_indexes)
-    {
-        BOOST_CHECK(string_vals.count(i) == 1);
-        actual_turn_types.push_back(string_vals[i]);
-    }
     std::sort(actual_turn_types.begin(), actual_turn_types.end());
     const std::vector<std::string> expected_turn_types = {"(noturn)",
                                                           "(noturn)",
@@ -493,12 +275,6 @@ void test_tile_turns(const osrm::OSRM &osrm)
     CHECK_EQUAL_RANGE(actual_turn_types, expected_turn_types);
 
     // Verify that we got the expected turn modifiers
-    std::vector<std::string> actual_turn_modifiers;
-    for (const auto &i : found_turn_modifier_indexes)
-    {
-        BOOST_CHECK(string_vals.count(i) == 1);
-        actual_turn_modifiers.push_back(string_vals[i]);
-    }
     std::sort(actual_turn_modifiers.begin(), actual_turn_modifiers.end());
     const std::vector<std::string> expected_turn_modifiers = {"left",
                                                               "left",
@@ -521,24 +297,12 @@ void test_tile_turns(const osrm::OSRM &osrm)
     CHECK_EQUAL_RANGE(actual_turn_modifiers, expected_turn_modifiers);
 
     // Verify the expected turn angles
-    std::vector<std::int64_t> actual_turn_angles;
-    for (const auto &i : found_turn_angles_indexes)
-    {
-        BOOST_CHECK(sint64_vals.count(i) == 1);
-        actual_turn_angles.push_back(sint64_vals[i]);
-    }
     std::sort(actual_turn_angles.begin(), actual_turn_angles.end());
     const std::vector<std::int64_t> expected_turn_angles = {
         -122, -120, -117, -65, -57, -30, -28, -3, -2, 2, 3, 28, 30, 57, 65, 117, 120, 122};
     CHECK_EQUAL_RANGE(actual_turn_angles, expected_turn_angles);
 
     // Verify the expected bearings
-    std::vector<std::int64_t> actual_turn_bearings;
-    for (const auto &i : found_bearing_in_indexes)
-    {
-        BOOST_CHECK(sint64_vals.count(i) == 1);
-        actual_turn_bearings.push_back(sint64_vals[i]);
-    }
     std::sort(actual_turn_bearings.begin(), actual_turn_bearings.end());
     const std::vector<std::int64_t> expected_turn_bearings = {
         49, 49, 107, 107, 169, 169, 171, 171, 229, 229, 257, 257, 286, 286, 349, 349, 352, 352};
@@ -586,132 +350,18 @@ void test_tile_speeds(const osrm::OSRM &osrm)
 
     BOOST_CHECK_GT(result.size(), 128);
 
-    protozero::pbf_reader tile_message(result);
-    tile_message.next();
-    BOOST_CHECK_EQUAL(tile_message.tag(), util::vector_tile::LAYER_TAG); // must be a layer
-    protozero::pbf_reader layer_message = tile_message.get_message();
+    vtzero::vector_tile tile{result};
 
-    std::vector<int> found_speed_indexes;
-    std::vector<int> found_component_indexes;
-    std::vector<int> found_datasource_indexes;
-    std::vector<int> found_weight_indexes;
-    std::vector<int> found_duration_indexes;
-    std::vector<int> found_name_indexes;
-    std::vector<int> found_rate_indexes;
-
-    const auto check_feature = [&](protozero::pbf_reader feature_message) {
-        feature_message.next(); // advance parser to first entry
-        BOOST_CHECK_EQUAL(feature_message.tag(), util::vector_tile::GEOMETRY_TAG);
-        BOOST_CHECK_EQUAL(feature_message.get_enum(), util::vector_tile::GEOMETRY_TYPE_LINE);
-
-        feature_message.next(); // advance to next entry
-        BOOST_CHECK_EQUAL(feature_message.tag(), util::vector_tile::ID_TAG);
-        feature_message.get_uint64(); // id
-
-        feature_message.next(); // advance to next entry
-        BOOST_CHECK_EQUAL(feature_message.tag(), util::vector_tile::FEATURE_ATTRIBUTES_TAG);
-        // properties
-        auto property_iter_pair = feature_message.get_packed_uint32();
-        auto value_begin = property_iter_pair.begin();
-        auto value_end = property_iter_pair.end();
-        BOOST_CHECK_EQUAL(std::distance(value_begin, value_end), 14);
-        auto iter = value_begin;
-        BOOST_CHECK_EQUAL(*iter++, 0); // speed key
-        found_speed_indexes.push_back(*iter++);
-        BOOST_CHECK_EQUAL(*iter++, 1); // component key
-        // component value
-        found_component_indexes.push_back(*iter++);
-        BOOST_CHECK_EQUAL(*iter++, 2); // data source key
-        found_datasource_indexes.push_back(*iter++);
-        BOOST_CHECK_EQUAL(*iter++, 3); // weight key
-        found_weight_indexes.push_back(*iter++);
-        BOOST_CHECK_EQUAL(*iter++, 4); // duration key
-        found_duration_indexes.push_back(*iter++);
-        // name
-        BOOST_CHECK_EQUAL(*iter++, 5);
-        found_name_indexes.push_back(*iter++);
-        BOOST_CHECK_EQUAL(*iter++, 6);
-        found_rate_indexes.push_back(*iter++);
-        BOOST_CHECK(iter == value_end);
-        // geometry
-        feature_message.next();
-        auto geometry_iter_pair = feature_message.get_packed_uint32();
-        BOOST_CHECK_GT(std::distance(geometry_iter_pair.begin(), geometry_iter_pair.end()), 1);
-    };
-
-    std::unordered_map<int, std::string> string_vals;
-    std::unordered_map<int, bool> bool_vals;
-    std::unordered_map<int, std::uint64_t> uint64_vals;
-    std::unordered_map<int, double> double_vals;
-
-    int kv_index = 0;
-
-    const auto check_value = [&](protozero::pbf_reader value) {
-        while (value.next())
-        {
-            switch (value.tag())
-            {
-            case util::vector_tile::VARIANT_TYPE_BOOL:
-                bool_vals[kv_index] = value.get_bool();
-                break;
-            case util::vector_tile::VARIANT_TYPE_DOUBLE:
-                double_vals[kv_index] = value.get_double();
-                break;
-            case util::vector_tile::VARIANT_TYPE_FLOAT:
-                value.get_float();
-                break;
-            case util::vector_tile::VARIANT_TYPE_STRING:
-                string_vals[kv_index] = value.get_string();
-                break;
-            case util::vector_tile::VARIANT_TYPE_UINT64:
-                uint64_vals[kv_index] = value.get_uint64();
-                break;
-            case util::vector_tile::VARIANT_TYPE_SINT64:
-                value.get_sint64();
-                break;
-            }
-            kv_index++;
-        }
-    };
-
-    auto number_of_speed_keys = 0u;
-    auto number_of_speed_values = 0u;
-
-    while (layer_message.next())
-    {
-        switch (layer_message.tag())
-        {
-        case util::vector_tile::VERSION_TAG:
-            BOOST_CHECK_EQUAL(layer_message.get_uint32(), 2);
-            break;
-        case util::vector_tile::NAME_TAG:
-            BOOST_CHECK_EQUAL(layer_message.get_string(), "speeds");
-            break;
-        case util::vector_tile::EXTENT_TAG:
-            BOOST_CHECK_EQUAL(layer_message.get_uint32(), util::vector_tile::EXTENT);
-            break;
-        case util::vector_tile::FEATURE_TAG:
-            check_feature(layer_message.get_message());
-            break;
-        case util::vector_tile::KEY_TAG:
-            layer_message.get_string();
-            number_of_speed_keys++;
-            break;
-        case util::vector_tile::VARIANT_TAG:
-            check_value(layer_message.get_message());
-            number_of_speed_values++;
-            break;
-        default:
-            BOOST_CHECK(false); // invalid tag
-            break;
-        }
-    }
+    auto layer = tile.next_layer();
+    BOOST_CHECK_EQUAL(to_string(layer.name()), "speeds");
 
     std::vector<std::string> actual_names;
-    for (const auto &i : found_name_indexes)
+    while (auto feature = layer.next_feature())
     {
-        BOOST_CHECK(string_vals.count(i) == 1);
-        actual_names.push_back(string_vals[i]);
+        auto props = vtzero::create_properties_map<std::map<std::string, variant_type>>(feature);
+
+        BOOST_CHECK(props["name"].type() == typeid(std::string));
+        actual_names.push_back(boost::get<std::string>(props["name"]));
     }
     std::sort(actual_names.begin(), actual_names.end());
     const std::vector<std::string> expected_names = {"Avenue du Carnier",
@@ -780,62 +430,17 @@ void test_tile_nodes(const osrm::OSRM &osrm)
 
     BOOST_CHECK_GT(result.size(), 128);
 
-    protozero::pbf_reader tile_message(result);
-    tile_message.next();
-    BOOST_CHECK_EQUAL(tile_message.tag(), util::vector_tile::LAYER_TAG); // must be a layer
+    vtzero::vector_tile tile{result};
 
-    // Skip the segments and turns layers
-    tile_message.skip();
-    tile_message.next();
-    tile_message.skip();
-
-    // Get the osmnodes layer
-    tile_message.next();
-    protozero::pbf_reader layer_message = tile_message.get_message();
+    tile.next_layer();
+    tile.next_layer();
+    auto layer = tile.next_layer();
+    BOOST_CHECK_EQUAL(to_string(layer.name()), "osmnodes");
 
     std::vector<OSMNodeID::value_type> found_node_ids;
-
-    const auto check_feature = [&](protozero::pbf_reader feature_message) {
-        feature_message.next(); // advance parser to first entry
-        BOOST_CHECK_EQUAL(feature_message.tag(), util::vector_tile::GEOMETRY_TAG);
-        BOOST_CHECK_EQUAL(feature_message.get_enum(), util::vector_tile::GEOMETRY_TYPE_POINT);
-
-        feature_message.next(); // advance to next entry
-        BOOST_CHECK_EQUAL(feature_message.tag(), util::vector_tile::ID_TAG);
-        found_node_ids.push_back(feature_message.get_uint64()); // id
-
-        feature_message.next(); // advance to next entry
-        BOOST_CHECK_EQUAL(feature_message.tag(), util::vector_tile::FEATURE_GEOMETRIES_TAG);
-        auto geometry_iter_pair = feature_message.get_packed_uint32();
-        BOOST_CHECK_GT(std::distance(geometry_iter_pair.begin(), geometry_iter_pair.end()), 1);
-    };
-
-    while (layer_message.next())
+    while (auto feature = layer.next_feature())
     {
-        switch (layer_message.tag())
-        {
-        case util::vector_tile::VERSION_TAG:
-            BOOST_CHECK_EQUAL(layer_message.get_uint32(), 2);
-            break;
-        case util::vector_tile::NAME_TAG:
-            BOOST_CHECK_EQUAL(layer_message.get_string(), "osmnodes");
-            break;
-        case util::vector_tile::EXTENT_TAG:
-            BOOST_CHECK_EQUAL(layer_message.get_uint32(), util::vector_tile::EXTENT);
-            break;
-        case util::vector_tile::FEATURE_TAG:
-            check_feature(layer_message.get_message());
-            break;
-        case util::vector_tile::KEY_TAG:
-            BOOST_CHECK(false); // There should be no keys
-            break;
-        case util::vector_tile::VARIANT_TAG:
-            BOOST_CHECK(false); // There should be no values
-            break;
-        default:
-            BOOST_CHECK(false); // invalid tag
-            break;
-        }
+        found_node_ids.push_back(feature.id());
     }
 
     std::sort(found_node_ids.begin(), found_node_ids.end());
