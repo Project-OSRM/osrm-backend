@@ -1,0 +1,19 @@
+
+option optimize_for = LITE_RUNTIME;
+
+package TestComplex;
+
+message Sub {
+    required string s = 1;
+}
+
+message Test {
+    required fixed32 f = 1;
+    optional int64 i = 2;
+    optional int64 j = 3;
+    required Sub submessage = 5;
+    optional string s = 8;
+    repeated uint32 u = 4;
+    repeated sint32 d = 7 [packed=true];
+}
+

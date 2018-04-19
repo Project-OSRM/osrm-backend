@@ -1,0 +1,15 @@
+
+option optimize_for = LITE_RUNTIME;
+
+package TestTagAndType;
+
+message TestNotPacked {
+    repeated int32 x = 1;
+    optional string s = 2;
+}
+
+message TestPacked {
+    repeated int32 x = 1 [packed=true];
+    optional string s = 2;
+}
+

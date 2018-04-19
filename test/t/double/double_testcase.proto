@@ -1,0 +1,11 @@
+
+option optimize_for = LITE_RUNTIME;
+
+package TestDouble;
+
+message Test {
+
+    required double x = 1;
+
+}
+

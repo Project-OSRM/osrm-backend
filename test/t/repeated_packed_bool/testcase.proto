@@ -1,0 +1,11 @@
+
+option optimize_for = LITE_RUNTIME;
+
+package TestRepeatedPackedBool;
+
+message Test {
+
+    repeated bool b = 1 [packed=true];
+
+}
+

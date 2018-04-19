@@ -1,0 +1,11 @@
+
+option optimize_for = LITE_RUNTIME;
+
+package TestFloat;
+
+message Test {
+
+    required float x = 1;
+
+}
+

@@ -1,0 +1,11 @@
+
+option optimize_for = LITE_RUNTIME;
+
+package TestRepeatedPackedDouble;
+
+message Test {
+
+    repeated double d = 1 [packed=true];
+
+}
+

@@ -1,0 +1,11 @@
+
+option optimize_for = LITE_RUNTIME;
+
+package TestRepeatedPackedSInt64;
+
+message Test {
+
+    repeated sint64 i = 1 [packed=true];
+
+}
+
