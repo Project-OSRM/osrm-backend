@@ -402,7 +402,7 @@ template <typename RandIt> RandIt filterUnpackedPathsBySharing(RandIt first, Ran
     std::unordered_set<EdgeID> edges;
     edges.reserve(size * shortest_path.edges.size() * (1. + kAtMostLongerBy));
 
-    edges.insert(begin(shortest_path.edges), begin(shortest_path.edges));
+    edges.insert(begin(shortest_path.edges), end(shortest_path.edges));
 
     const auto over_sharing_limit = [&](const auto &unpacked) {
 
