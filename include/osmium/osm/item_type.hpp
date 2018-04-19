@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -68,7 +68,7 @@ namespace osmium {
      */
     inline item_type nwr_index_to_item_type(unsigned int i) noexcept {
         assert(i <= 2);
-        return item_type(i+1);
+        return item_type(i + 1);
     }
 
     /**
@@ -80,7 +80,7 @@ namespace osmium {
      * @returns Index.
      */
     inline unsigned int item_type_to_nwr_index(item_type type) noexcept {
-        unsigned int i = static_cast<unsigned int>(type);
+        const auto i = static_cast<unsigned int>(type);
         assert(i >= 1 && i <= 3);
         return i - 1;
     }

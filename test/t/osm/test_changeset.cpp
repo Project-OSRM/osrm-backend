@@ -1,12 +1,12 @@
 #include "catch.hpp"
 
-#include <boost/crc.hpp>
-
 #include <osmium/builder/attr.hpp>
 #include <osmium/osm/changeset.hpp>
 #include <osmium/osm/crc.hpp>
 
-using namespace osmium::builder::attr;
+#include <boost/crc.hpp>
+
+using namespace osmium::builder::attr; // NOLINT(google-build-using-namespace)
 
 TEST_CASE("Build changeset") {
     osmium::memory::Buffer buffer{10 * 1000};
@@ -28,7 +28,7 @@ TEST_CASE("Build changeset") {
     REQUIRE(9 == cs1.uid());
     REQUIRE(7 == cs1.num_changes());
     REQUIRE(3 == cs1.num_comments());
-    REQUIRE(true == cs1.closed());
+    REQUIRE(cs1.closed());
     REQUIRE(osmium::Timestamp(100) == cs1.created_at());
     REQUIRE(osmium::Timestamp(200) == cs1.closed_at());
     REQUIRE(1 == cs1.tags().size());
@@ -57,7 +57,7 @@ TEST_CASE("Build changeset") {
     REQUIRE(9 == cs2.uid());
     REQUIRE(21 == cs2.num_changes());
     REQUIRE(0 == cs2.num_comments());
-    REQUIRE(false == cs2.closed());
+    REQUIRE_FALSE(cs2.closed());
     REQUIRE(osmium::Timestamp(120) == cs2.created_at());
     REQUIRE(osmium::Timestamp() == cs2.closed_at());
     REQUIRE(2 == cs2.tags().size());
@@ -67,8 +67,8 @@ TEST_CASE("Build changeset") {
 
     REQUIRE(cs1 < cs2);
     REQUIRE(cs1 <= cs2);
-    REQUIRE(false == (cs1 > cs2));
-    REQUIRE(false == (cs1 >= cs2));
+    REQUIRE_FALSE(cs1 > cs2);
+    REQUIRE_FALSE(cs1 >= cs2);
 
     auto cit = cs2.discussion().begin();
 
@@ -119,7 +119,7 @@ TEST_CASE("Create changeset without helper") {
     REQUIRE(9 == cs.uid());
     REQUIRE(7 == cs.num_changes());
     REQUIRE(2 == cs.num_comments());
-    REQUIRE(true == cs.closed());
+    REQUIRE(cs.closed());
     REQUIRE(osmium::Timestamp(100) == cs.created_at());
     REQUIRE(osmium::Timestamp(200) == cs.closed_at());
     REQUIRE(2 == cs.tags().size());

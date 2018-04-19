@@ -43,17 +43,17 @@ struct CountHandler : public osmium::handler::Handler {
     std::uint64_t relations = 0;
 
     // This callback is called by osmium::apply for each node in the data.
-    void node(const osmium::Node&) noexcept {
+    void node(const osmium::Node& /*node*/) noexcept {
         ++nodes;
     }
 
     // This callback is called by osmium::apply for each way in the data.
-    void way(const osmium::Way&) noexcept {
+    void way(const osmium::Way& /*way*/) noexcept {
         ++ways;
     }
 
     // This callback is called by osmium::apply for each relation in the data.
-    void relation(const osmium::Relation&) noexcept {
+    void relation(const osmium::Relation& /*relation*/) noexcept {
         ++relations;
     }
 

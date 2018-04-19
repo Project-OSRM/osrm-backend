@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,13 +33,13 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <cassert>
-#include <cstdlib>
-#include <tuple>
-
 #include <osmium/osm/object.hpp>
 #include <osmium/osm/timestamp.hpp>
 #include <osmium/util/misc.hpp>
+
+#include <cassert>
+#include <cstdlib>
+#include <tuple>
 
 namespace osmium {
 
@@ -112,6 +112,27 @@ namespace osmium {
     }; // struct object_order_type_id_version
 
     /**
+     * Function object class for ordering OSM objects by type, id, and version.
+     *
+     * The naming is a bit awkward here, but necessary to keep backwards
+     * compatibility with object_order_type_id_version.
+     */
+    struct object_order_type_id_version_without_timestamp {
+
+        bool operator()(const osmium::OSMObject& lhs, const osmium::OSMObject& rhs) const noexcept {
+            return const_tie(lhs.type(), lhs.id() > 0, lhs.positive_id(), lhs.version()) <
+                   const_tie(rhs.type(), rhs.id() > 0, rhs.positive_id(), rhs.version());
+        }
+
+        /// @pre lhs and rhs must not be nullptr
+        bool operator()(const osmium::OSMObject* lhs, const osmium::OSMObject* rhs) const noexcept {
+            assert(lhs && rhs);
+            return operator()(*lhs, *rhs);
+        }
+
+    }; // struct object_order_type_id_version_without_timestamp
+
+    /**
      * Function object class for ordering OSM objects by type, ID, and
      * reverse version, timestamp. So objects are ordered by type and ID
      * (negative IDs first, then positive IDs, both in the order of their
@@ -122,8 +143,10 @@ namespace osmium {
     struct object_order_type_id_reverse_version {
 
         bool operator()(const osmium::OSMObject& lhs, const osmium::OSMObject& rhs) const noexcept {
-            return const_tie(lhs.type(), lhs.id() > 0, lhs.positive_id(), rhs.version(), rhs.timestamp()) <
-                   const_tie(rhs.type(), rhs.id() > 0, rhs.positive_id(), lhs.version(), lhs.timestamp());
+            return const_tie(lhs.type(), lhs.id() > 0, lhs.positive_id(), rhs.version(),
+                        ((lhs.timestamp().valid() && rhs.timestamp().valid()) ? rhs.timestamp() : osmium::Timestamp())) <
+                   const_tie(rhs.type(), rhs.id() > 0, rhs.positive_id(), lhs.version(),
+                        ((lhs.timestamp().valid() && rhs.timestamp().valid()) ? lhs.timestamp() : osmium::Timestamp()));
         }
 
         /// @pre lhs and rhs must not be nullptr

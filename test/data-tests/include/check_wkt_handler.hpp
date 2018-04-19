@@ -17,25 +17,25 @@ class CheckWKTHandler : public osmium::handler::Handler {
     osmium::geom::WKTFactory<> m_factory;
 
     void read_wkt_file(const std::string& filename) {
-        std::ifstream in(filename, std::ifstream::in);
+        std::ifstream in{filename, std::ifstream::in};
         if (in) {
             osmium::object_id_type id;
             std::string line;
             while (std::getline(in, line)) {
-                size_t pos = line.find_first_of(' ');
+                const std::size_t pos = line.find_first_of(' ');
 
                 if (pos == std::string::npos) {
                     std::cerr << filename << " not formatted correctly\n";
-                    exit(1);
+                    std::exit(1);
                 }
 
                 std::string id_str = line.substr(0, pos);
-                std::istringstream iss(id_str);
+                std::istringstream iss{id_str};
                 iss >> id;
 
                 if (m_geometries.find(id) != m_geometries.end()) {
                      std::cerr << filename + " contains id " << id << "twice\n";
-                     exit(1);
+                     std::exit(1);
                 }
 
                 m_geometries[id] = line.substr(pos+1);
@@ -58,7 +58,7 @@ public:
             for (const auto& geom : m_geometries) {
                 std::cerr << "geometry id " << geom.first << " not in data.osm.\n";
             }
-            exit(1);
+            std::exit(1);
         }
     }
 
@@ -66,7 +66,7 @@ public:
         const std::string wkt = m_geometries[node.id()];
         assert(wkt != "" && "Missing geometry for node in nodes.wkt");
 
-        std::string this_wkt = m_factory.create_point(node.location());
+        const std::string this_wkt = m_factory.create_point(node.location());
         assert(wkt == this_wkt && "wkt geometries don't match");
         m_geometries.erase(node.id());
     }
@@ -75,8 +75,10 @@ public:
         const std::string wkt = m_geometries[way.id()];
         assert(wkt != "" && "Missing geometry for way in ways.wkt");
 
-        std::string this_wkt = m_factory.create_linestring(way);
-        assert(wkt == this_wkt && "wkt geometries don't match");
+        if (wkt != "NULL") {
+            const std::string this_wkt = m_factory.create_linestring(way);
+            assert(wkt == this_wkt && "wkt geometries don't match");
+        }
         m_geometries.erase(way.id());
     }
 

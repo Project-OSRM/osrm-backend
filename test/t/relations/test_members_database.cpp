@@ -7,7 +7,7 @@
 #include <osmium/storage/item_stash.hpp>
 
 osmium::memory::Buffer fill_buffer() {
-    using namespace osmium::builder::attr;
+    using namespace osmium::builder::attr; // NOLINT(google-build-using-namespace)
     osmium::memory::Buffer buffer{1024 * 1024, osmium::memory::Buffer::auto_grow::yes};
 
     osmium::builder::add_relation(buffer,
@@ -98,7 +98,7 @@ TEST_CASE("Fill member database") {
 }
 
 TEST_CASE("Member database with duplicate member in relation") {
-    using namespace osmium::builder::attr;
+    using namespace osmium::builder::attr; // NOLINT(google-build-using-namespace)
     osmium::memory::Buffer buffer{1024 * 1024, osmium::memory::Buffer::auto_grow::yes};
 
     osmium::builder::add_relation(buffer,

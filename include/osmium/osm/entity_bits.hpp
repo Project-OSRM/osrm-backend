@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,10 +33,10 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <osmium/osm/item_type.hpp>
+
 #include <cassert>
 #include <type_traits>
-
-#include <osmium/osm/item_type.hpp>
 
 namespace osmium {
 
@@ -78,15 +78,15 @@ namespace osmium {
         }; // enum type
 
         inline constexpr type operator|(const type lhs, const type rhs) noexcept {
-            return static_cast<type>(static_cast<int>(lhs) | static_cast<int>(rhs));
+            return static_cast<type>(static_cast<unsigned char>(lhs) | static_cast<unsigned char>(rhs));
         }
 
         inline constexpr type operator&(const type lhs, const type rhs) noexcept {
-            return static_cast<type>(static_cast<int>(lhs) & static_cast<int>(rhs));
+            return static_cast<type>(static_cast<unsigned char>(lhs) & static_cast<unsigned char>(rhs));
         }
 
         inline constexpr type operator~(const type value) noexcept {
-            return all & static_cast<type>(~static_cast<int>(value));
+            return all & static_cast<type>(~static_cast<unsigned char>(value));
         }
 
         inline type& operator|=(type& lhs, const type rhs) noexcept {
@@ -111,7 +111,7 @@ namespace osmium {
             if (ut == 0) {
                 return nothing;
             }
-            return static_cast<osmium::osm_entity_bits::type>(0x1 << (ut - 1));
+            return static_cast<osmium::osm_entity_bits::type>(1u << (ut - 1u));
         }
 
     } // namespace osm_entity_bits

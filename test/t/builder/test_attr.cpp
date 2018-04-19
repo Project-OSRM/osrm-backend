@@ -1,5 +1,9 @@
-
 #include "catch.hpp"
+
+#include <osmium/builder/attr.hpp>
+#include <osmium/memory/buffer.hpp>
+#include <osmium/osm.hpp>
+#include <osmium/osm/types.hpp>
 
 #include <cstdint>
 #include <initializer_list>
@@ -8,14 +12,9 @@
 #include <utility>
 #include <vector>
 
-#include <osmium/builder/attr.hpp>
-#include <osmium/memory/buffer.hpp>
-#include <osmium/osm.hpp>
-#include <osmium/osm/types.hpp>
-
 TEST_CASE("create node using builders") {
 
-    using namespace osmium::builder::attr;
+    using namespace osmium::builder::attr; // NOLINT(google-build-using-namespace)
 
     osmium::memory::Buffer buffer{1024 * 10};
 
@@ -29,9 +28,9 @@ TEST_CASE("create node using builders") {
         REQUIRE(node.timestamp() == osmium::Timestamp{});
         REQUIRE(node.changeset() == 0);
         REQUIRE(node.uid() == 0);
-        REQUIRE(std::string(node.user()) == "");
+        REQUIRE(std::string{node.user()}.empty());
         REQUIRE(node.location() == osmium::Location{});
-        REQUIRE(node.tags().size() == 0);
+        REQUIRE(node.tags().empty());
     }
 
     SECTION("add node with complete info but no tags") {
@@ -53,9 +52,9 @@ TEST_CASE("create node using builders") {
         REQUIRE(node.timestamp() == osmium::Timestamp{"2015-01-01T10:20:30Z"});
         REQUIRE(node.changeset() == 21);
         REQUIRE(node.uid() == 222);
-        REQUIRE(std::string(node.user()) == "foo");
+        REQUIRE(std::string{node.user()} == "foo");
         REQUIRE(node.location() == loc);
-        REQUIRE(node.tags().size() == 0);
+        REQUIRE(node.tags().empty());
         REQUIRE(std::distance(node.cbegin(), node.cend()) == 0);
     }
 
@@ -84,7 +83,7 @@ TEST_CASE("create node using builders") {
             _version(17),
             _cid(21),
             _uid(222),
-            _user(std::string("foo")),
+            _user(std::string{"foo"}),
             _id(1),
             _location(3.14, 1.59)
         );
@@ -96,10 +95,18 @@ TEST_CASE("create node using builders") {
         REQUIRE(node.timestamp() == osmium::Timestamp{"2015-01-01T10:20:30Z"});
         REQUIRE(node.changeset() == 21);
         REQUIRE(node.uid() == 222);
-        REQUIRE(std::string(node.user()) == "foo");
+        REQUIRE(std::string{node.user()} == "foo");
         REQUIRE(node.location() == loc);
-        REQUIRE(node.tags().size() == 0);
+        REQUIRE(node.tags().empty());
     }
+
+}
+
+TEST_CASE("create node with tags using builders") {
+
+    using namespace osmium::builder::attr; // NOLINT(google-build-using-namespace)
+
+    osmium::memory::Buffer buffer{1024 * 10};
 
     SECTION("add tags using _tag") {
         std::pair<const char*, const char*> t1 = {"name", "Node Inn"};
@@ -120,17 +127,17 @@ TEST_CASE("create node using builders") {
         REQUIRE(std::distance(node.cbegin(), node.cend()) == 1);
 
         auto it = node.tags().cbegin();
-        REQUIRE(std::string(it->key()) == "amenity");
-        REQUIRE(std::string(it->value()) == "restaurant");
+        REQUIRE(std::string{it->key()} == "amenity");
+        REQUIRE(std::string{it->value()} == "restaurant");
         ++it;
-        REQUIRE(std::string(it->key()) == "name");
-        REQUIRE(std::string(it->value()) == "Node Inn");
+        REQUIRE(std::string{it->key()} == "name");
+        REQUIRE(std::string{it->value()} == "Node Inn");
         ++it;
-        REQUIRE(std::string(it->key()) == "phone");
-        REQUIRE(std::string(it->value()) == "+1-123-555-4567");
+        REQUIRE(std::string{it->key()} == "phone");
+        REQUIRE(std::string{it->value()} == "+1-123-555-4567");
         ++it;
-        REQUIRE(std::string(it->key()) == "cuisine");
-        REQUIRE(std::string(it->value()) == "italian");
+        REQUIRE(std::string{it->key()} == "cuisine");
+        REQUIRE(std::string{it->value()} == "italian");
         ++it;
         REQUIRE(it == node.tags().cend());
     }
@@ -147,8 +154,8 @@ TEST_CASE("create node using builders") {
         REQUIRE(node.tags().size() == 1);
 
         auto it = node.tags().cbegin();
-        REQUIRE(std::string(it->key()) == "amenity");
-        REQUIRE(std::string(it->value()) == "post_box");
+        REQUIRE(std::string{it->key()} == "amenity");
+        REQUIRE(std::string{it->value()} == "post_box");
         ++it;
         REQUIRE(it == node.tags().cend());
         REQUIRE(std::distance(node.cbegin(), node.cend()) == 1);
@@ -175,9 +182,9 @@ TEST_CASE("create node using builders") {
         REQUIRE(node2.tags().size() == 3);
 
         auto it = node2.tags().cbegin();
-        REQUIRE(std::string(it++->key()) == "a");
-        REQUIRE(std::string(it++->key()) == "b");
-        REQUIRE(std::string(it++->key()) == "c");
+        REQUIRE(std::string{it++->key()} == "a");
+        REQUIRE(std::string{it++->key()} == "b");
+        REQUIRE(std::string{it++->key()} == "c");
         REQUIRE(it == node2.tags().cend());
         REQUIRE(std::distance(node2.cbegin(), node2.cend()) == 1);
     }
@@ -202,17 +209,17 @@ TEST_CASE("create node using builders") {
         REQUIRE(node.tags().size() == 6);
 
         auto it = node.tags().cbegin();
-        REQUIRE(std::string(it->key()) == "t1");
+        REQUIRE(std::string{it->key()} == "t1");
         ++it;
-        REQUIRE(std::string(it->key()) == "t2");
+        REQUIRE(std::string{it->key()} == "t2");
         ++it;
-        REQUIRE(std::string(it->key()) == "t3");
+        REQUIRE(std::string{it->key()} == "t3");
         ++it;
-        REQUIRE(std::string(it->key()) == "t4");
+        REQUIRE(std::string{it->key()} == "t4");
         ++it;
-        REQUIRE(std::string(it->key()) == "t5");
+        REQUIRE(std::string{it->key()} == "t5");
         ++it;
-        REQUIRE(std::string(it->key()) == "t6");
+        REQUIRE(std::string{it->key()} == "t6");
         ++it;
         REQUIRE(it == node.tags().cend());
         REQUIRE(std::distance(node.cbegin(), node.cend()) == 1);
@@ -222,7 +229,7 @@ TEST_CASE("create node using builders") {
 
 TEST_CASE("create way using builders") {
 
-    using namespace osmium::builder::attr;
+    using namespace osmium::builder::attr; // NOLINT(google-build-using-namespace)
 
     osmium::memory::Buffer buffer{1024 * 10};
 
@@ -241,9 +248,9 @@ TEST_CASE("create way using builders") {
         REQUIRE(way.timestamp() == osmium::Timestamp{});
         REQUIRE(way.changeset() == 21);
         REQUIRE(way.uid() == 222);
-        REQUIRE(std::string(way.user()) == "foo");
-        REQUIRE(way.tags().size() == 0);
-        REQUIRE(way.nodes().size() == 0);
+        REQUIRE(std::string{way.user()} == "foo");
+        REQUIRE(way.tags().empty());
+        REQUIRE(way.nodes().empty());
         REQUIRE(std::distance(way.cbegin(), way.cend()) == 0);
     }
 
@@ -257,7 +264,7 @@ TEST_CASE("create way with nodes") {
         { 8, osmium::Location{8.8, 0.8} }
     };
 
-    using namespace osmium::builder::attr;
+    using namespace osmium::builder::attr; // NOLINT(google-build-using-namespace)
 
     osmium::memory::Buffer wbuffer{1024 * 10};
     osmium::builder::add_way(wbuffer,
@@ -378,7 +385,7 @@ TEST_CASE("create way with nodes") {
 
 TEST_CASE("create relation using builders") {
 
-    using namespace osmium::builder::attr;
+    using namespace osmium::builder::attr; // NOLINT(google-build-using-namespace)
 
     osmium::memory::Buffer buffer{1024 * 10};
 
@@ -404,27 +411,27 @@ TEST_CASE("create relation using builders") {
 
         REQUIRE(it->type() == osmium::item_type::node);
         REQUIRE(it->ref() == 123);
-        REQUIRE(std::string(it->role()) == "");
+        REQUIRE(std::string{it->role()}.empty());
         ++it;
 
         REQUIRE(it->type() == osmium::item_type::node);
         REQUIRE(it->ref() == 132);
-        REQUIRE(std::string(it->role()) == "");
+        REQUIRE(std::string{it->role()}.empty());
         ++it;
 
         REQUIRE(it->type() == osmium::item_type::way);
         REQUIRE(it->ref() == 111);
-        REQUIRE(std::string(it->role()) == "outer");
+        REQUIRE(std::string{it->role()} == "outer");
         ++it;
 
         REQUIRE(it->type() == osmium::item_type::way);
         REQUIRE(it->ref() == 112);
-        REQUIRE(std::string(it->role()) == "inner");
+        REQUIRE(std::string{it->role()} == "inner");
         ++it;
 
         REQUIRE(it->type() == osmium::item_type::way);
         REQUIRE(it->ref() == 113);
-        REQUIRE(std::string(it->role()) == "inner");
+        REQUIRE(std::string{it->role()} == "inner");
         ++it;
 
         REQUIRE(it == relation.members().end());
@@ -454,12 +461,12 @@ TEST_CASE("create relation using builders") {
 
         REQUIRE(it->type() == osmium::item_type::way);
         REQUIRE(it->ref() == 111);
-        REQUIRE(std::string(it->role()) == "outer");
+        REQUIRE(std::string{it->role()} == "outer");
         ++it;
 
         REQUIRE(it->type() == osmium::item_type::way);
         REQUIRE(it->ref() == 112);
-        REQUIRE(std::string(it->role()) == "inner");
+        REQUIRE(std::string{it->role()} == "inner");
         ++it;
 
         REQUIRE(it == relation.members().end());
@@ -483,11 +490,11 @@ TEST_CASE("create relation using builders") {
         auto it = relation.members().begin();
         REQUIRE(it->type() == osmium::item_type::node);
         REQUIRE(it->ref() == 123);
-        REQUIRE(std::string(it->role()) == "");
+        REQUIRE(std::string{it->role()}.empty());
         ++it;
         REQUIRE(it->type() == osmium::item_type::way);
         REQUIRE(it->ref() == 111);
-        REQUIRE(std::string(it->role()) == "outer");
+        REQUIRE(std::string{it->role()} == "outer");
         ++it;
         REQUIRE(it == relation.members().end());
     }
@@ -525,11 +532,11 @@ TEST_CASE("create relation using builders") {
         auto it = relation.members().begin();
         REQUIRE(it->type() == osmium::item_type::node);
         REQUIRE(it->ref() == 123);
-        REQUIRE(std::string(it->role()) == "");
+        REQUIRE(std::string{it->role()}.empty());
         ++it;
         REQUIRE(it->type() == osmium::item_type::way);
         REQUIRE(it->ref() == 111);
-        REQUIRE(std::string(it->role()) == "outer");
+        REQUIRE(std::string{it->role()} == "outer");
         ++it;
         REQUIRE(it == relation.members().end());
     }
@@ -538,7 +545,7 @@ TEST_CASE("create relation using builders") {
 
 TEST_CASE("create area using builders") {
 
-    using namespace osmium::builder::attr;
+    using namespace osmium::builder::attr; // NOLINT(google-build-using-namespace)
 
     osmium::memory::Buffer buffer{1024 * 10};
 
@@ -558,7 +565,7 @@ TEST_CASE("create area using builders") {
         REQUIRE(area.timestamp() == osmium::Timestamp{});
         REQUIRE(area.changeset() == 21);
         REQUIRE(area.uid() == 222);
-        REQUIRE(std::string(area.user()) == "foo");
+        REQUIRE(std::string{area.user()} == "foo");
         REQUIRE(area.tags().size() == 1);
         REQUIRE(std::distance(area.cbegin(), area.cend()) == 1);
     }

@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,6 +33,8 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <osmium/io/writer_options.hpp>
+
 #include <cerrno>
 #include <cstddef>
 #include <fcntl.h>
@@ -44,8 +46,6 @@ DEALINGS IN THE SOFTWARE.
 #else
 # include <io.h>
 #endif
-
-#include <osmium/io/writer_options.hpp>
 
 namespace osmium {
 
@@ -67,14 +67,14 @@ namespace osmium {
              * @throws system_error if the file can't be opened.
              */
             inline int open_for_writing(const std::string& filename, osmium::io::overwrite allow_overwrite = osmium::io::overwrite::no) {
-                if (filename == "" || filename == "-") {
+                if (filename.empty() || filename == "-") {
 #ifdef _WIN32
                     _setmode(1, _O_BINARY);
 #endif
                     return 1; // stdout
                 }
 
-                int flags = O_WRONLY | O_CREAT;
+                int flags = O_WRONLY | O_CREAT; // NOLINT(hicpp-signed-bitwise)
                 if (allow_overwrite == osmium::io::overwrite::allow) {
                     flags |= O_TRUNC;
                 } else {
@@ -99,7 +99,7 @@ namespace osmium {
              * @throws system_error if the file can't be opened.
              */
             inline int open_for_reading(const std::string& filename) {
-                if (filename == "" || filename == "-") {
+                if (filename.empty() || filename == "-") {
                     return 0; // stdin
                 }
 
@@ -132,10 +132,14 @@ namespace osmium {
                     if (write_count > max_write) {
                         write_count = max_write;
                     }
-                    const auto length = ::write(fd, output_buffer + offset, static_cast<unsigned int>(write_count));
-                    if (length < 0) {
-                        throw std::system_error{errno, std::system_category(), "Write failed"};
-                    }
+
+                    int64_t length = 0;
+                    do {
+                        length = ::write(fd, output_buffer + offset, static_cast<unsigned int>(write_count));
+                        if (length < 0 && errno != EINTR) {
+                            throw std::system_error{errno, std::system_category(), "Write failed"};
+                        }
+                    } while (length < 0);
                     offset += static_cast<size_t>(length);
                 } while (offset < size);
             }
@@ -152,6 +156,30 @@ namespace osmium {
              */
             inline void reliable_write(const int fd, const char* output_buffer, const size_t size) {
                 reliable_write(fd, reinterpret_cast<const unsigned char*>(output_buffer), size);
+            }
+
+            /**
+             * Reads a maximum of size bytes from the file descriptor into the
+             * input_buffer. This is just a wrapper around read(2) catching
+             * errors.
+             *
+             * @param fd File descriptor.
+             * @param input_buffer Buffer for data to be read. Must be at least size bytes long.
+             * @param size Maximum number of bytes to read.
+             * @returns the number of bytes read
+             * @throws std::system_error On error.
+             */
+            inline int64_t reliable_read(const int fd, char* input_buffer, const unsigned int size) {
+                int64_t nread = 0;
+
+                do {
+                    nread = ::read(fd, input_buffer, size);
+                    if (nread < 0 && errno != EINTR) {
+                        throw std::system_error{errno, std::system_category(), "Read failed"};
+                    }
+                } while (nread < 0);
+
+                return nread;
             }
 
             inline void reliable_fsync(const int fd) {

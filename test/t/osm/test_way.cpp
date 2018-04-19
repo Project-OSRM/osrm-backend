@@ -1,13 +1,13 @@
 #include "catch.hpp"
 
-#include <boost/crc.hpp>
-
 #include <osmium/builder/attr.hpp>
 #include <osmium/builder/osm_object_builder.hpp>
 #include <osmium/osm/crc.hpp>
 #include <osmium/osm/way.hpp>
 
-using namespace osmium::builder::attr;
+#include <boost/crc.hpp>
+
+using namespace osmium::builder::attr; // NOLINT(google-build-using-namespace)
 
 TEST_CASE("Build way") {
     osmium::memory::Buffer buffer{10000};
@@ -32,7 +32,7 @@ TEST_CASE("Build way") {
     REQUIRE(way.type_is_in(osmium::osm_entity_bits::node | osmium::osm_entity_bits::way));
     REQUIRE(17 == way.id());
     REQUIRE(3 == way.version());
-    REQUIRE(true == way.visible());
+    REQUIRE(way.visible());
     REQUIRE(333 == way.changeset());
     REQUIRE(21 == way.uid());
     REQUIRE(std::string("foo") == way.user());

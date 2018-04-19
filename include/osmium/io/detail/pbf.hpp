@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,18 +33,18 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <cstdint>
-#include <string>
+#include <osmium/io/error.hpp>
+#include <osmium/osm/location.hpp>
 
-// needed for htonl and ntohl
+// needed for htonl and ntohl or their equivalent in protozero
 #ifndef _WIN32
 # include <netinet/in.h>
 #else
-# include <winsock2.h>
+# include <protozero/byteswap.hpp>
 #endif
 
-#include <osmium/io/error.hpp>
-#include <osmium/osm/location.hpp>
+#include <cstdint>
+#include <string>
 
 namespace osmium {
 

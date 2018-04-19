@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -220,7 +220,7 @@ namespace osmium {
                 v /= 10;
             } while (v != 0);
 
-            while (t-temp < 7) {
+            while (t - temp < 7) {
                 *t++ = '0';
             }
 
@@ -326,12 +326,6 @@ namespace osmium {
             m_x(double_to_fix(lon)),
             m_y(double_to_fix(lat)) {
         }
-
-        Location(const Location&) = default;
-        Location(Location&&) = default;
-        Location& operator=(const Location&) = default;
-        Location& operator=(Location&&) = default;
-        ~Location() = default;
 
         /**
          * Check whether the coordinates of this location
@@ -443,19 +437,21 @@ namespace osmium {
 
         Location& set_lon(const char* str) {
             const char** data = &str;
-            m_x = detail::string_to_location_coordinate(data);
+            const auto value = detail::string_to_location_coordinate(data);
             if (**data != '\0') {
                 throw invalid_location{std::string{"characters after coordinate: '"} + *data + "'"};
             }
+            m_x = value;
             return *this;
         }
 
         Location& set_lat(const char* str) {
             const char** data = &str;
-            m_y = detail::string_to_location_coordinate(data);
+            const auto value = detail::string_to_location_coordinate(data);
             if (**data != '\0') {
                 throw invalid_location{std::string{"characters after coordinate: '"} + *data + "'"};
             }
+            m_y = value;
             return *this;
         }
 
@@ -494,7 +490,7 @@ namespace osmium {
     }
 
     inline constexpr bool operator!=(const Location& lhs, const Location& rhs) noexcept {
-        return ! (lhs == rhs);
+        return !(lhs == rhs);
     }
 
     /**
@@ -511,11 +507,11 @@ namespace osmium {
     }
 
     inline constexpr bool operator<=(const Location& lhs, const Location& rhs) noexcept {
-        return ! (rhs < lhs);
+        return !(rhs < lhs);
     }
 
     inline constexpr bool operator>=(const Location& lhs, const Location& rhs) noexcept {
-        return ! (lhs < rhs);
+        return !(lhs < rhs);
     }
 
     /**
@@ -537,14 +533,14 @@ namespace osmium {
 
         template <int N>
         inline size_t hash(const osmium::Location& location) noexcept {
-            return location.x() ^ location.y();
+            return static_cast<uint32_t>(location.x()) ^ static_cast<uint32_t>(location.y());
         }
 
         template <>
         inline size_t hash<8>(const osmium::Location& location) noexcept {
             uint64_t h = location.x();
             h <<= 32;
-            return static_cast<size_t>(h ^ location.y());
+            return static_cast<size_t>(h ^ static_cast<uint64_t>(location.y()));
         }
 
     } // namespace detail

@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,14 +33,14 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <osmium/index/index.hpp>
+#include <osmium/util/memory_mapping.hpp>
+
 #include <algorithm>
 #include <cassert>
 #include <cstddef>
 #include <new> // IWYU pragma: keep
 #include <stdexcept>
-
-#include <osmium/index/index.hpp>
-#include <osmium/util/memory_mapping.hpp>
 
 namespace osmium {
 
@@ -58,26 +58,23 @@ namespace osmium {
 
         protected:
 
-            size_t m_size;
-            osmium::util::TypedMemoryMapping<T> m_mapping;
+            size_t m_size = 0;
+            osmium::TypedMemoryMapping<T> m_mapping;
 
         public:
 
             mmap_vector_base(int fd, size_t capacity, size_t size = 0) :
                 m_size(size),
-                m_mapping(capacity, osmium::util::MemoryMapping::mapping_mode::write_shared, fd) {
+                m_mapping(capacity, osmium::MemoryMapping::mapping_mode::write_shared, fd) {
                 assert(size <= capacity);
                 std::fill(data() + size, data() + capacity, osmium::index::empty_value<T>());
                 shrink_to_fit();
             }
 
             explicit mmap_vector_base(size_t capacity = mmap_vector_size_increment) :
-                m_size(0),
                 m_mapping(capacity) {
                 std::fill_n(data(), capacity, osmium::index::empty_value<T>());
             }
-
-            ~mmap_vector_base() noexcept = default;
 
             using value_type      = T;
             using pointer         = value_type*;

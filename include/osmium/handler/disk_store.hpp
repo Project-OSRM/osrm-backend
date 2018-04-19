@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,8 +33,6 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <cstddef>
-
 #include <osmium/handler.hpp>
 #include <osmium/index/map.hpp>
 #include <osmium/io/detail/read_write.hpp>
@@ -45,6 +43,8 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/osm/types.hpp>
 #include <osmium/osm/way.hpp>
 #include <osmium/visitor.hpp>
+
+#include <cstddef>
 
 namespace osmium {
 
@@ -77,11 +77,6 @@ namespace osmium {
                 m_way_index(way_index),
                 m_relation_index(relation_index) {
             }
-
-            DiskStore(const DiskStore&) = delete;
-            DiskStore& operator=(const DiskStore&) = delete;
-
-            ~DiskStore() noexcept = default;
 
             void node(const osmium::Node& node) {
                 m_node_index.set(node.positive_id(), m_offset);

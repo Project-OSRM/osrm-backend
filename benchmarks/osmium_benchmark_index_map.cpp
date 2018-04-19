@@ -4,16 +4,15 @@
 
 */
 
+#include <osmium/handler.hpp>
+#include <osmium/handler/node_locations_for_ways.hpp>
+#include <osmium/index/map/all.hpp>
+#include <osmium/io/any_input.hpp>
+#include <osmium/visitor.hpp>
+
 #include <cstdlib>
 #include <iostream>
 #include <string>
-
-#include <osmium/index/map/all.hpp>
-#include <osmium/handler/node_locations_for_ways.hpp>
-#include <osmium/visitor.hpp>
-
-#include <osmium/io/any_input.hpp>
-#include <osmium/handler.hpp>
 
 using index_type = osmium::index::map::Map<osmium::unsigned_object_id_type, osmium::Location>;
 

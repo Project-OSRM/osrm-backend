@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,16 +33,16 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <osmium/memory/collection.hpp>
+#include <osmium/osm/tag.hpp>
+
+#include <boost/iterator/filter_iterator.hpp>
+
 #include <cstddef>
 #include <cstring>
 #include <string>
 #include <type_traits>
 #include <vector>
-
-#include <boost/iterator/filter_iterator.hpp>
-
-#include <osmium/memory/collection.hpp>
-#include <osmium/osm/tag.hpp>
 
 namespace osmium {
 
@@ -84,13 +84,13 @@ namespace osmium {
 
         template <>
         struct match_value<void> {
-            bool operator()(const bool, const char*) const noexcept {
+            bool operator()(const bool /*rule_value*/, const char* /*tag_value*/) const noexcept {
                 return true;
             }
         }; // struct match_value<void>
 
         /// @deprecated Use osmium::TagsFilter instead.
-        template <typename TKey, typename TValue=void, typename TKeyComp=match_key<TKey>, typename TValueComp=match_value<TValue>>
+        template <typename TKey, typename TValue = void, typename TKeyComp = match_key<TKey>, typename TValueComp = match_value<TValue>>
         class Filter {
 
             using key_type   = TKey;
@@ -102,15 +102,15 @@ namespace osmium {
                 bool ignore_value;
                 bool result;
 
-                explicit Rule(bool r, bool ignore, const key_type& k, const value_type& v) :
-                    key(k),
-                    value(v),
+                explicit Rule(bool r, bool ignore, key_type k, value_type v) :
+                    key(std::move(k)),
+                    value(std::move(v)),
                     ignore_value(ignore),
                     result(r) {
                 }
 
-                explicit Rule(bool r, bool ignore, const key_type& k) :
-                    key(k),
+                explicit Rule(bool r, bool ignore, key_type k) :
+                    key(std::move(k)),
                     value(),
                     ignore_value(ignore),
                     result(r) {
@@ -132,7 +132,7 @@ namespace osmium {
                 m_default_result(default_result) {
             }
 
-            template <typename V=TValue, typename std::enable_if<!std::is_void<V>::value, int>::type = 0>
+            template <typename V = TValue, typename std::enable_if<!std::is_void<V>::value, int>::type = 0>
             Filter& add(bool result, const key_type& key, const value_type& value) {
                 m_rules.emplace_back(result, false, key, value);
                 return *this;

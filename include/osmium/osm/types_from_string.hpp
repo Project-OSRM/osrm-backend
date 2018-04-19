@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,6 +33,11 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <osmium/osm/entity_bits.hpp>
+#include <osmium/osm/item_type.hpp>
+#include <osmium/osm/types.hpp>
+#include <osmium/util/compatibility.hpp>
+
 #include <cassert>
 #include <cctype>
 #include <cstdlib>
@@ -40,11 +45,6 @@ DEALINGS IN THE SOFTWARE.
 #include <stdexcept>
 #include <string>
 #include <utility>
-
-#include <osmium/osm/entity_bits.hpp>
-#include <osmium/osm/item_type.hpp>
-#include <osmium/osm/types.hpp>
-#include <osmium/util/cast.hpp>
 
 namespace osmium {
 
@@ -62,8 +62,8 @@ namespace osmium {
         if (*input != '\0' && !std::isspace(*input)) {
             char* end;
             const auto id = std::strtoll(input, &end, 10);
-            if (id != std::numeric_limits<long long>::min() &&
-                id != std::numeric_limits<long long>::max() &&
+            if (id != std::numeric_limits<long long>::min() && // NOLINT(google-runtime-int)
+                id != std::numeric_limits<long long>::max() && // NOLINT(google-runtime-int)
                 *end == '\0') {
                 return id;
             }
@@ -107,12 +107,15 @@ namespace osmium {
 
     namespace detail {
 
-        inline unsigned long string_to_ulong(const char* input, const char* name) {
+        inline uint32_t string_to_ulong(const char* input, const char* name) {
+            if (input[0] == '-' && input[1] == '1' && input[2] == '\0') {
+                return 0;
+            }
             if (*input != '\0' && *input != '-' && !std::isspace(*input)) {
                 char* end;
                 const auto value = std::strtoul(input, &end, 10);
-                if (value != std::numeric_limits<unsigned long>::max() && *end == '\0') {
-                    return value;
+                if (value < std::numeric_limits<uint32_t>::max() && *end == '\0') {
+                    return static_cast<uint32_t>(value);
                 }
             }
             throw std::range_error{std::string{"illegal "} + name + ": '" + input + "'"};
@@ -131,7 +134,7 @@ namespace osmium {
      */
     inline object_version_type string_to_object_version(const char* input) {
         assert(input);
-        return static_cast_with_assert<object_version_type>(detail::string_to_ulong(input, "version"));
+        return detail::string_to_ulong(input, "version");
     }
 
     /**
@@ -145,7 +148,7 @@ namespace osmium {
      */
     inline changeset_id_type string_to_changeset_id(const char* input) {
         assert(input);
-        return static_cast_with_assert<changeset_id_type>(detail::string_to_ulong(input, "changeset"));
+        return detail::string_to_ulong(input, "changeset");
     }
 
     /**
@@ -156,13 +159,33 @@ namespace osmium {
      * @param input Input string.
      *
      * @throws std::range_error if the value is out of range.
+     *
+     * @deprecated Use string_to_uid() instead.
      */
-    inline signed_user_id_type string_to_user_id(const char* input) {
+    OSMIUM_DEPRECATED inline signed_user_id_type string_to_user_id(const char* input) {
         assert(input);
         if (input[0] == '-' && input[1] == '1' && input[2] == '\0') {
             return -1;
         }
-        return static_cast_with_assert<signed_user_id_type>(detail::string_to_ulong(input, "user id"));
+        const auto value = detail::string_to_ulong(input, "user id");
+        if (value > static_cast<uint32_t>(std::numeric_limits<int32_t>::max())) {
+            throw std::range_error{"illegal user id"};
+        }
+        return static_cast<signed_user_id_type>(value);
+    }
+
+    /**
+     * Convert string with user id to user_id_type.
+     *
+     * @pre input must not be nullptr.
+     *
+     * @param input Input string.
+     *
+     * @throws std::range_error if the value is out of range.
+     */
+    inline user_id_type string_to_uid(const char* input) {
+        assert(input);
+        return detail::string_to_ulong(input, "user id");
     }
 
     /**
@@ -176,7 +199,7 @@ namespace osmium {
      */
     inline num_changes_type string_to_num_changes(const char* input) {
         assert(input);
-        return static_cast_with_assert<num_changes_type>(detail::string_to_ulong(input, "value for num changes"));
+        return detail::string_to_ulong(input, "value for num changes");
     }
 
     /**
@@ -190,7 +213,7 @@ namespace osmium {
      */
     inline num_comments_type string_to_num_comments(const char* input) {
         assert(input);
-        return static_cast_with_assert<num_comments_type>(detail::string_to_ulong(input, "value for num comments"));
+        return detail::string_to_ulong(input, "value for num comments");
     }
 
 } // namespace osmium

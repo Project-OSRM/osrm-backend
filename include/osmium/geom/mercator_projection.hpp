@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,12 +33,12 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <cmath>
-#include <string>
-
 #include <osmium/geom/coordinates.hpp>
 #include <osmium/geom/util.hpp>
 #include <osmium/osm/location.hpp>
+
+#include <cmath>
+#include <string>
 
 namespace osmium {
 
@@ -54,7 +54,7 @@ namespace osmium {
             }
 
             inline double lat_to_y_with_tan(double lat) { // not constexpr because math functions aren't
-                return earth_radius_for_epsg3857 * std::log(std::tan(osmium::geom::PI/4 + deg_to_rad(lat)/2));
+                return earth_radius_for_epsg3857 * std::log(std::tan(osmium::geom::PI / 4 + deg_to_rad(lat) / 2));
             }
 
 #ifdef OSMIUM_USE_SLOW_MERCATOR_PROJECTION
@@ -101,7 +101,7 @@ namespace osmium {
             }
 
             inline double y_to_lat(double y) { // not constexpr because math functions aren't
-                return rad_to_deg(2 * std::atan(std::exp(y / earth_radius_for_epsg3857)) - osmium::geom::PI/2);
+                return rad_to_deg(2 * std::atan(std::exp(y / earth_radius_for_epsg3857)) - osmium::geom::PI / 2);
             }
 
         } // namespace detail
@@ -138,7 +138,11 @@ namespace osmium {
 
         public:
 
-            MercatorProjection() {
+            // This is not "= default" on purpose because some compilers don't
+            // like it and complain that "default initialization of an object
+            // of const type 'const osmium::geom::MercatorProjection' requires
+            // a user-provided default constructor".
+            MercatorProjection() { // NOLINT(hicpp-use-equals-default, modernize-use-equals-default)
             }
 
             Coordinates operator()(osmium::Location location) const {

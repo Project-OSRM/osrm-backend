@@ -1,75 +1,83 @@
 #include "catch.hpp"
 
 #include <cstdlib>
+#include <string>
 
-const char* env = nullptr;
-std::string name;
+namespace osmium {
 
-const char* fake_getenv(const char* env_var) {
-    name = env_var;
-    return env;
-}
+    namespace detail {
 
-#define getenv fake_getenv
+        const char* env = nullptr;
+        std::string name;
 
+        inline const char* getenv_wrapper(const char* var) noexcept {
+            name = var;
+            return env;
+        }
+
+    } // namespace detail
+
+} // namespace osmium
+
+#define OSMIUM_TEST_RUNNER
 #include <osmium/util/config.hpp>
 
 TEST_CASE("get_pool_threads") {
-    env = nullptr;
+    osmium::detail::env = nullptr;
     REQUIRE(osmium::config::get_pool_threads() == 0);
-    REQUIRE(name == "OSMIUM_POOL_THREADS");
-    env = "";
+    REQUIRE(osmium::detail::name == "OSMIUM_POOL_THREADS");
+    osmium::detail::env = "";
     REQUIRE(osmium::config::get_pool_threads() == 0);
-    env = "2";
+    osmium::detail::env = "2";
     REQUIRE(osmium::config::get_pool_threads() == 2);
 }
 
 TEST_CASE("use_pool_threads_for_pbf_parsing") {
-    env = nullptr;
+    osmium::detail::env = nullptr;
     REQUIRE(osmium::config::use_pool_threads_for_pbf_parsing());
-    REQUIRE(name == "OSMIUM_USE_POOL_THREADS_FOR_PBF_PARSING");
-    env = "";
+    REQUIRE(osmium::detail::name == "OSMIUM_USE_POOL_THREADS_FOR_PBF_PARSING");
+    osmium::detail::env = "";
     REQUIRE(osmium::config::use_pool_threads_for_pbf_parsing());
 
-    env = "off";
+    osmium::detail::env = "off";
     REQUIRE_FALSE(osmium::config::use_pool_threads_for_pbf_parsing());
-    env = "OFF";
+    osmium::detail::env = "OFF";
     REQUIRE_FALSE(osmium::config::use_pool_threads_for_pbf_parsing());
-    env = "false";
+    osmium::detail::env = "false";
     REQUIRE_FALSE(osmium::config::use_pool_threads_for_pbf_parsing());
-    env = "no";
+    osmium::detail::env = "no";
     REQUIRE_FALSE(osmium::config::use_pool_threads_for_pbf_parsing());
-    env = "No";
+    osmium::detail::env = "No";
     REQUIRE_FALSE(osmium::config::use_pool_threads_for_pbf_parsing());
-    env = "0";
+    osmium::detail::env = "0";
     REQUIRE_FALSE(osmium::config::use_pool_threads_for_pbf_parsing());
 
-    env = "on";
+    osmium::detail::env = "on";
     REQUIRE(osmium::config::use_pool_threads_for_pbf_parsing());
-    env = "ON";
+    osmium::detail::env = "ON";
     REQUIRE(osmium::config::use_pool_threads_for_pbf_parsing());
-    env = "true";
+    osmium::detail::env = "true";
     REQUIRE(osmium::config::use_pool_threads_for_pbf_parsing());
-    env = "yes";
+    osmium::detail::env = "yes";
     REQUIRE(osmium::config::use_pool_threads_for_pbf_parsing());
-    env = "Yes";
+    osmium::detail::env = "Yes";
     REQUIRE(osmium::config::use_pool_threads_for_pbf_parsing());
-    env = "1";
+    osmium::detail::env = "1";
     REQUIRE(osmium::config::use_pool_threads_for_pbf_parsing());
 }
 
 TEST_CASE("get_max_queue_size") {
-    env = nullptr;
+    osmium::detail::env = nullptr;
     REQUIRE(osmium::config::get_max_queue_size("NAME", 0) == 0);
-    REQUIRE(name == "OSMIUM_MAX_NAME_QUEUE_SIZE");
+    REQUIRE(osmium::detail::name == "OSMIUM_MAX_NAME_QUEUE_SIZE");
 
     REQUIRE(osmium::config::get_max_queue_size("NAME", 7) == 7);
 
-    env = "";
+    osmium::detail::env = "";
     REQUIRE(osmium::config::get_max_queue_size("NAME", 7) == 7);
-    env = "0";
+    osmium::detail::env = "0";
     REQUIRE(osmium::config::get_max_queue_size("NAME", 7) == 7);
-    env = "3";
+    osmium::detail::env = "3";
     REQUIRE(osmium::config::get_max_queue_size("NAME", 7) == 3);
 }
 

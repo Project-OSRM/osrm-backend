@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,18 +33,6 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <algorithm>
-#include <cassert>
-#include <cstdint>
-#include <cstddef>
-#include <cstring>
-#include <initializer_list>
-#include <limits>
-#include <new>
-#include <stdexcept>
-#include <string>
-#include <utility>
-
 #include <osmium/builder/builder.hpp>
 #include <osmium/memory/item.hpp>
 #include <osmium/osm/area.hpp>
@@ -60,8 +48,19 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/osm/timestamp.hpp>
 #include <osmium/osm/types.hpp>
 #include <osmium/osm/way.hpp>
-#include <osmium/util/cast.hpp>
 #include <osmium/util/compatibility.hpp>
+
+#include <algorithm>
+#include <cassert>
+#include <cstddef>
+#include <cstdint>
+#include <cstring>
+#include <initializer_list>
+#include <limits>
+#include <new>
+#include <stdexcept>
+#include <string>
+#include <utility>
 
 namespace osmium {
 
@@ -84,6 +83,12 @@ namespace osmium {
                 Builder(parent.buffer(), &parent, sizeof(TagList)) {
                 new (&item()) TagList{};
             }
+
+            TagListBuilder(const TagListBuilder&) = delete;
+            TagListBuilder& operator=(const TagListBuilder&) = delete;
+
+            TagListBuilder(TagListBuilder&&) = delete;
+            TagListBuilder& operator=(TagListBuilder&&) = delete;
 
             ~TagListBuilder() {
                 add_padding();
@@ -196,6 +201,12 @@ namespace osmium {
                 new (&item()) T{};
             }
 
+            NodeRefListBuilder(const NodeRefListBuilder&) = delete;
+            NodeRefListBuilder& operator=(const NodeRefListBuilder&) = delete;
+
+            NodeRefListBuilder(NodeRefListBuilder&&) = delete;
+            NodeRefListBuilder& operator=(NodeRefListBuilder&&) = delete;
+
             ~NodeRefListBuilder() {
                 add_padding();
             }
@@ -247,6 +258,12 @@ namespace osmium {
                 new (&item()) RelationMemberList{};
             }
 
+            RelationMemberListBuilder(const RelationMemberListBuilder&) = delete;
+            RelationMemberListBuilder& operator=(const RelationMemberListBuilder&) = delete;
+
+            RelationMemberListBuilder(RelationMemberListBuilder&&) = delete;
+            RelationMemberListBuilder& operator=(RelationMemberListBuilder&&) = delete;
+
             ~RelationMemberListBuilder() {
                 add_padding();
             }
@@ -265,7 +282,7 @@ namespace osmium {
              *         osmium::max_osm_string_length
              */
             void add_member(osmium::item_type type, object_id_type ref, const char* role, const std::size_t role_length, const osmium::OSMObject* full_member = nullptr) {
-                osmium::RelationMember* member = reserve_space_for<osmium::RelationMember>();
+                auto* member = reserve_space_for<osmium::RelationMember>();
                 new (member) osmium::RelationMember{ref, type, full_member != nullptr};
                 add_size(sizeof(RelationMember));
                 add_role(*member, role, role_length);
@@ -338,6 +355,12 @@ namespace osmium {
                 Builder(parent.buffer(), &parent, sizeof(ChangesetDiscussion)) {
                 new (&item()) ChangesetDiscussion{};
             }
+
+            ChangesetDiscussionBuilder(const ChangesetDiscussionBuilder&) = delete;
+            ChangesetDiscussionBuilder& operator=(const ChangesetDiscussionBuilder&) = delete;
+
+            ChangesetDiscussionBuilder(ChangesetDiscussionBuilder&&) = delete;
+            ChangesetDiscussionBuilder& operator=(ChangesetDiscussionBuilder&&) = delete;
 
             ~ChangesetDiscussionBuilder() {
                 assert(!m_comment && "You have to always call both add_comment() and then add_comment_text() in that order for each comment!");
@@ -440,18 +463,25 @@ namespace osmium {
              * Set user name.
              *
              * @param user Pointer to \0-terminated user name.
+             *
+             * @pre @code strlen(user) < 2^16 - 1 @endcode
              */
             TDerived& set_user(const char* user) {
-                return set_user(user, static_cast_with_assert<string_size_type>(std::strlen(user)));
+                const auto len = std::strlen(user);
+                assert(len < std::numeric_limits<string_size_type>::max());
+                return set_user(user, static_cast<string_size_type>(len));
             }
 
             /**
              * Set user name.
              *
              * @param user User name.
+             *
+             * @pre @code user.size() < 2^16 - 1 @endcode
              */
             TDerived& set_user(const std::string& user) {
-                return set_user(user.data(), static_cast_with_assert<string_size_type>(user.size()));
+                assert(user.size() < std::numeric_limits<string_size_type>::max());
+                return set_user(user.data(), static_cast<string_size_type>(user.size()));
             }
 
             /// @deprecated Use set_user(...) instead.
@@ -649,18 +679,25 @@ namespace osmium {
              * Set user name.
              *
              * @param user Pointer to \0-terminated user name.
+             *
+             * @pre @code strlen(user) < 2^16 - 1 @endcode
              */
             ChangesetBuilder& set_user(const char* user) {
-                return set_user(user, static_cast_with_assert<string_size_type>(std::strlen(user)));
+                const auto len = std::strlen(user);
+                assert(len <= std::numeric_limits<string_size_type>::max());
+                return set_user(user, static_cast<string_size_type>(len));
             }
 
             /**
              * Set user name.
              *
              * @param user User name.
+             *
+             * @pre @code user.size() < 2^16 - 1 @endcode
              */
             ChangesetBuilder& set_user(const std::string& user) {
-                return set_user(user.data(), static_cast_with_assert<string_size_type>(user.size()));
+                assert(user.size() < std::numeric_limits<string_size_type>::max());
+                return set_user(user.data(), static_cast<string_size_type>(user.size()));
             }
 
             /// @deprecated Use set_user(...) instead.

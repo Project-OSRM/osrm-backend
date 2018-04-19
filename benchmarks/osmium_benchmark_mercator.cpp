@@ -4,16 +4,16 @@
 
 */
 
+#include <osmium/geom/mercator_projection.hpp>
+#include <osmium/geom/wkb.hpp>
+#include <osmium/handler.hpp>
+#include <osmium/io/any_input.hpp>
+#include <osmium/visitor.hpp>
+
 #include <cstdint>
 #include <cstdlib>
 #include <iostream>
 #include <string>
-
-#include <osmium/io/any_input.hpp>
-#include <osmium/handler.hpp>
-#include <osmium/visitor.hpp>
-#include <osmium/geom/wkb.hpp>
-#include <osmium/geom/mercator_projection.hpp>
 
 struct GeomHandler : public osmium::handler::Handler {
 
@@ -24,7 +24,6 @@ struct GeomHandler : public osmium::handler::Handler {
     }
 
 };
-
 
 int main(int argc, char* argv[]) {
     if (argc != 2) {

@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,19 +33,18 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <limits>
-#include <type_traits>
-
 #include <osmium/handler.hpp>
 #include <osmium/index/index.hpp>
 #include <osmium/index/map/dummy.hpp>
+#include <osmium/index/node_locations_map.hpp>
 #include <osmium/osm/location.hpp>
 #include <osmium/osm/node.hpp>
 #include <osmium/osm/node_ref.hpp>
 #include <osmium/osm/types.hpp>
 #include <osmium/osm/way.hpp>
 
-#include <osmium/index/node_locations_map.hpp>
+#include <limits>
+#include <type_traits>
 
 namespace osmium {
 
@@ -99,7 +98,7 @@ namespace osmium {
         public:
 
             explicit NodeLocationsForWays(TStoragePosIDs& storage_pos,
-                                          TStorageNegIDs& storage_neg = get_dummy()) :
+                                          TStorageNegIDs& storage_neg = get_dummy()) noexcept :
                 m_storage_pos(storage_pos),
                 m_storage_neg(storage_neg) {
             }
@@ -107,8 +106,8 @@ namespace osmium {
             NodeLocationsForWays(const NodeLocationsForWays&) = delete;
             NodeLocationsForWays& operator=(const NodeLocationsForWays&) = delete;
 
-            NodeLocationsForWays(NodeLocationsForWays&&) = default;
-            NodeLocationsForWays& operator=(NodeLocationsForWays&&) = default;
+            NodeLocationsForWays(NodeLocationsForWays&&) noexcept = default;
+            NodeLocationsForWays& operator=(NodeLocationsForWays&&) noexcept = default;
 
             ~NodeLocationsForWays() noexcept = default;
 
@@ -138,10 +137,9 @@ namespace osmium {
              */
             osmium::Location get_node_location(const osmium::object_id_type id) const {
                 if (id >= 0) {
-                    return m_storage_pos.get_noexcept(static_cast<osmium::unsigned_object_id_type>( id));
-                } else {
-                    return m_storage_neg.get_noexcept(static_cast<osmium::unsigned_object_id_type>(-id));
+                    return m_storage_pos.get_noexcept(static_cast<osmium::unsigned_object_id_type>(id));
                 }
+                return m_storage_neg.get_noexcept(static_cast<osmium::unsigned_object_id_type>(-id));
             }
 
             /**

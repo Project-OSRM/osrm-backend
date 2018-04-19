@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -34,6 +34,8 @@ DEALINGS IN THE SOFTWARE.
 */
 
 #include <osmium/index/map.hpp> // IWYU pragma: keep
+#include <osmium/osm/location.hpp>
+#include <osmium/osm/types.hpp>
 
 #define OSMIUM_WANT_NODE_LOCATION_MAPS
 

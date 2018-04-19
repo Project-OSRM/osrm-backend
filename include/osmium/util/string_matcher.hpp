@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,17 +33,19 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <boost/variant.hpp>
+
 #include <cstring>
 #include <iosfwd>
-#include <string>
-#include <vector>
-
 #include <regex>
+#include <string>
+#include <utility>
+#include <vector>
 
 // std::regex isn't implemented properly in glibc++ (before the version
 // delivered with GCC 4.9) and libc++ before the version 3.6, so the use is
 // disabled by these checks. Checks for GLIBC were based on
-// http://stackoverflow.com/questions/12530406/is-gcc-4-8-or-earlier-buggy-about-regular-expressions
+// https://stackoverflow.com/questions/12530406/is-gcc-4-8-or-earlier-buggy-about-regular-expressions
 // Checks for libc++ are simply based on compiler defines. This is probably
 // not optimal but seems to work for now.
 #if defined(__GLIBCXX__)
@@ -62,8 +64,6 @@ DEALINGS IN THE SOFTWARE.
 #  pragma message("Disabling regex functionality")
 # endif
 #endif
-
-#include <boost/variant.hpp>
 
 namespace osmium {
 
@@ -123,8 +123,8 @@ namespace osmium {
 
         public:
 
-            explicit equal(const std::string& str) :
-                m_str(str) {
+            explicit equal(std::string str) :
+                m_str(std::move(str)) {
             }
 
             explicit equal(const char* str) :
@@ -151,8 +151,8 @@ namespace osmium {
 
         public:
 
-            explicit prefix(const std::string& str) :
-                m_str(str) {
+            explicit prefix(std::string str) :
+                m_str(std::move(str)) {
             }
 
             explicit prefix(const char* str) :
@@ -179,8 +179,8 @@ namespace osmium {
 
         public:
 
-            explicit substring(const std::string& str) :
-                m_str(str) {
+            explicit substring(std::string str) :
+                m_str(std::move(str)) {
             }
 
             explicit substring(const char* str) :
@@ -208,8 +208,8 @@ namespace osmium {
 
         public:
 
-            explicit regex(const std::regex& regex) :
-                m_regex(regex) {
+            explicit regex(std::regex regex) :
+                m_regex(std::move(regex)) {
             }
 
             bool match(const char* test_string) const noexcept {
@@ -233,16 +233,14 @@ namespace osmium {
 
         public:
 
-            explicit list() :
-                m_strings() {
-            }
+            explicit list() = default;
 
-            explicit list(const std::vector<std::string>& strings) :
-                m_strings(strings) {
+            explicit list(std::vector<std::string> strings) :
+                m_strings(std::move(strings)) {
             }
 
             list& add_string(const char* str) {
-                m_strings.push_back(str);
+                m_strings.emplace_back(str);
                 return *this;
             }
 
@@ -292,7 +290,7 @@ namespace osmium {
 
         public:
 
-            match_visitor(const char* str) noexcept :
+            explicit match_visitor(const char* str) noexcept :
                 m_str(str) {
             }
 
@@ -310,7 +308,7 @@ namespace osmium {
 
         public:
 
-            print_visitor(std::basic_ostream<TChar, TTraits>& out) :
+            explicit print_visitor(std::basic_ostream<TChar, TTraits>& out) :
                 m_out(&out) {
             }
 
@@ -338,7 +336,7 @@ namespace osmium {
          * or
          * @code StringMatcher{StringMatcher::always_false}; @endcode
          */
-        StringMatcher(bool result) :
+        StringMatcher(bool result) : // NOLINT(google-explicit-constructor, hicpp-explicit-conversions)
             m_matcher(always_false{}) {
             if (result) {
                 m_matcher = always_true{};
@@ -350,7 +348,7 @@ namespace osmium {
          * Shortcut for
          * @code StringMatcher{StringMatcher::equal{str}}; @endcode
          */
-        StringMatcher(const char* str) :
+        StringMatcher(const char* str) : // NOLINT(google-explicit-constructor, hicpp-explicit-conversions)
             m_matcher(equal{str}) {
         }
 
@@ -359,7 +357,7 @@ namespace osmium {
          * Shortcut for
          * @code StringMatcher{StringMatcher::equal{str}}; @endcode
          */
-        StringMatcher(const std::string& str) :
+        StringMatcher(const std::string& str) : // NOLINT(google-explicit-constructor, hicpp-explicit-conversions)
             m_matcher(equal{str}) {
         }
 
@@ -369,7 +367,7 @@ namespace osmium {
          * Shortcut for
          * @code StringMatcher{StringMatcher::regex{aregex}}; @endcode
          */
-        StringMatcher(const std::regex& aregex) :
+        StringMatcher(const std::regex& aregex) : // NOLINT(google-explicit-constructor, hicpp-explicit-conversions)
             m_matcher(regex{aregex}) {
         }
 #endif
@@ -380,7 +378,7 @@ namespace osmium {
          * Shortcut for
          * @code StringMatcher{StringMatcher::list{strings}}; @endcode
          */
-        StringMatcher(const std::vector<std::string>& strings) :
+        StringMatcher(const std::vector<std::string>& strings) : // NOLINT(google-explicit-constructor, hicpp-explicit-conversions)
             m_matcher(list{strings}) {
         }
 
@@ -393,7 +391,7 @@ namespace osmium {
          */
         template <typename TMatcher, typename std::enable_if<
             std::is_base_of<matcher, TMatcher>::value, int>::type = 0>
-        StringMatcher(TMatcher&& matcher) :
+        StringMatcher(TMatcher&& matcher) : // NOLINT(google-explicit-constructor, hicpp-explicit-conversions, misc-forwarding-reference-overload)
             m_matcher(std::forward<TMatcher>(matcher)) {
         }
 

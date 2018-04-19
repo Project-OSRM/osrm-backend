@@ -42,8 +42,8 @@
 
 // For the location index. There are different types of index implementation
 // available. These implementations put the index on disk. See below.
-#include <osmium/index/map/sparse_file_array.hpp>
 #include <osmium/index/map/dense_file_array.hpp>
+#include <osmium/index/map/sparse_file_array.hpp>
 
 // For the NodeLocationForWays handler
 #include <osmium/handler/node_locations_for_ways.hpp>
@@ -72,7 +72,7 @@ int main(int argc, char* argv[]) {
     osmium::io::Reader reader{input_filename, osmium::osm_entity_bits::node};
 
     // Initialize location index on disk creating a new file.
-    const int fd = ::open(cache_filename.c_str(), O_RDWR | O_CREAT | O_TRUNC, 0666);
+    const int fd = ::open(cache_filename.c_str(), O_RDWR | O_CREAT | O_TRUNC, 0666); // NOLINT(hicpp-signed-bitwise)
     if (fd == -1) {
         std::cerr << "Can not open location cache file '" << cache_filename << "': " << std::strerror(errno) << "\n";
         std::exit(1);

@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,10 +33,6 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <cassert>
-#include <iostream>
-#include <vector>
-
 #include <osmium/area/assembler_config.hpp>
 #include <osmium/area/detail/basic_assembler_with_tags.hpp>
 #include <osmium/area/detail/segment_list.hpp>
@@ -49,6 +45,10 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/osm/relation.hpp>
 #include <osmium/osm/tag.hpp>
 #include <osmium/osm/way.hpp>
+
+#include <cassert>
+#include <iostream>
+#include <vector>
 
 namespace osmium {
 
@@ -110,8 +110,6 @@ namespace osmium {
             explicit Assembler(const config_type& config) :
                 detail::BasicAssemblerWithTags(config) {
             }
-
-            ~Assembler() noexcept = default;
 
             /**
              * Assemble an area from the given way.

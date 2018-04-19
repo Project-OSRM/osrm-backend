@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,15 +33,15 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <osmium/index/index.hpp>
+#include <osmium/index/map.hpp>
+#include <osmium/io/detail/read_write.hpp>
+
 #include <algorithm> // IWYU pragma: keep (for std::copy)
 #include <cstddef>
 #include <iterator>
 #include <map>
 #include <vector>
-
-#include <osmium/index/map.hpp>
-#include <osmium/index/index.hpp>
-#include <osmium/io/detail/read_write.hpp>
 
 #define OSMIUM_HAS_INDEX_MAP_SPARSE_MEM_MAP
 
@@ -69,8 +69,6 @@ namespace osmium {
             public:
 
                 SparseMemMap() = default;
-
-                ~SparseMemMap() noexcept final = default;
 
                 void set(const TId id, const TValue value) final {
                     m_elements[id] = value;

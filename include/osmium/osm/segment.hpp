@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,10 +33,10 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <osmium/osm/location.hpp>
+
 #include <iosfwd>
 #include <utility>
-
-#include <osmium/osm/location.hpp>
 
 namespace osmium {
 
@@ -54,14 +54,6 @@ namespace osmium {
             m_first(location1),
             m_second(location2) {
         }
-
-        constexpr Segment(const Segment&) = default;
-        constexpr Segment(Segment&&) = default;
-
-        Segment& operator=(const Segment&) = default;
-        Segment& operator=(Segment&&) = default;
-
-        ~Segment() = default;
 
         /// Return first Location of Segment.
         constexpr osmium::Location first() const noexcept {
@@ -88,7 +80,7 @@ namespace osmium {
     }
 
     inline constexpr bool operator!=(const Segment& lhs, const Segment& rhs) noexcept {
-        return ! (lhs == rhs);
+        return !(lhs == rhs);
     }
 
     /**

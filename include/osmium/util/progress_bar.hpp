@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,6 +33,7 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <cassert>
 #include <cstddef>
 #include <iostream>
 
@@ -44,15 +45,19 @@ namespace osmium {
      */
     class ProgressBar {
 
-        static const char* bar() noexcept {
-            return "======================================================================";
+        static constexpr const std::size_t full_length = 70;
+
+        static const char* bar(std::size_t len = full_length) noexcept {
+            assert(len <= full_length);
+            return "======================================================================"
+                   + full_length - len;
         }
 
-        static const char* spc() noexcept {
-            return "                                                                     ";
+        static const char* spc(std::size_t len = full_length) noexcept {
+            assert(len >= 1 && len <= full_length);
+            return "                                                                     "
+                   + full_length - len;
         }
-
-        static constexpr const std::size_t length = 70;
 
         // The max size is the file size if there is a single file and the
         // sum of all file sizes if there are multiple files. It corresponds
@@ -84,12 +89,12 @@ namespace osmium {
             }
             m_prev_percent = percent;
 
-            const auto num = static_cast<std::size_t>(percent * (length / 100.0));
+            const auto num = static_cast<std::size_t>(percent * (full_length / 100.0));
             std::cerr << '[';
-            if (num >= length) {
+            if (num >= full_length) {
                 std::cerr << bar();
             } else {
-                std::cerr << (bar() + length - num) << '>' << (spc() + num);
+                std::cerr << bar(num) << '>' << spc(full_length - num);
             }
             std::cerr << "] ";
             if (percent < 10) {
@@ -114,6 +119,12 @@ namespace osmium {
             m_max_size(max_size),
             m_enable(max_size > 0 && enable) {
         }
+
+        ProgressBar(const ProgressBar&) = delete;
+        ProgressBar& operator=(const ProgressBar&) = delete;
+
+        ProgressBar(ProgressBar&&) noexcept = default;
+        ProgressBar& operator=(ProgressBar&&) = default;
 
         ~ProgressBar() {
             if (m_do_cleanup) {

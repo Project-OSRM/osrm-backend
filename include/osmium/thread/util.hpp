@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -88,9 +88,7 @@ namespace osmium {
 
         public:
 
-            thread_handler() :
-                m_thread() {
-            }
+            thread_handler() = default;
 
             template <typename TFunction, typename... TArgs>
             explicit thread_handler(TFunction&& f, TArgs&&... args) :
@@ -100,8 +98,8 @@ namespace osmium {
             thread_handler(const thread_handler&) = delete;
             thread_handler& operator=(const thread_handler&) = delete;
 
-            thread_handler(thread_handler&&) = default;
-            thread_handler& operator=(thread_handler&&) = default;
+            thread_handler(thread_handler&&) noexcept = default;
+            thread_handler& operator=(thread_handler&&) noexcept = default;
 
             ~thread_handler() {
                 if (m_thread.joinable()) {

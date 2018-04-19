@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -49,8 +49,6 @@ DEALINGS IN THE SOFTWARE.
 namespace osmium {
 
     namespace thread {
-
-        static const std::chrono::milliseconds max_wait{10};
 
         /**
          *  A thread-safe queue.
@@ -106,13 +104,10 @@ namespace osmium {
              *                 0 for an unlimited size.
              * @param name Optional name for this queue. (Used for debugging.)
              */
-            explicit Queue(std::size_t max_size = 0, const std::string& name = "") :
+            explicit Queue(std::size_t max_size = 0, std::string name = "") :
                 m_max_size(max_size),
-                m_name(name),
-                m_mutex(),
-                m_queue(),
-                m_data_available(),
-                m_space_available()
+                m_name(std::move(name)),
+                m_queue()
 #ifdef OSMIUM_DEBUG_QUEUE_SIZE
                 ,
                 m_largest_size(0),
@@ -124,8 +119,14 @@ namespace osmium {
             {
             }
 
-            ~Queue() {
+            Queue(const Queue&) = delete;
+            Queue& operator=(const Queue&) = delete;
+
+            Queue(Queue&&) = delete;
+            Queue& operator=(Queue&&) = delete;
+
 #ifdef OSMIUM_DEBUG_QUEUE_SIZE
+            ~Queue() {
                 std::cerr << "queue '" << m_name
                           << "' with max_size=" << m_max_size
                           << " had largest size " << m_largest_size
@@ -134,14 +135,17 @@ namespace osmium {
                           << " push() calls and was empty " << m_empty_counter
                           << " times in " << m_pop_counter
                           << " pop() calls\n";
-#endif
             }
+#else
+            ~Queue() = default;
+#endif
 
             /**
              * Push an element onto the queue. If the queue has a max size,
              * this call will block if the queue is full.
              */
             void push(T value) {
+                constexpr const std::chrono::milliseconds max_wait{10};
 #ifdef OSMIUM_DEBUG_QUEUE_SIZE
                 ++m_push_counter;
 #endif

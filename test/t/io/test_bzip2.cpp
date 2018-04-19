@@ -1,11 +1,12 @@
 #include "catch.hpp"
+
 #include "utils.hpp"
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-
 #include <osmium/io/bzip2_compression.hpp>
+
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 TEST_CASE("Read bzip2-compressed file") {
     const std::string input_file = with_data_dir("t/io/data_bzip2.txt.bz2");

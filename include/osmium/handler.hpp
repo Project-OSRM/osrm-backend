@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -72,40 +72,40 @@ namespace osmium {
 
         public:
 
-            void osm_object(const osmium::OSMObject&) const noexcept {
+            void osm_object(const osmium::OSMObject& /*osm_object*/) const noexcept {
             }
 
-            void node(const osmium::Node&) const noexcept {
+            void node(const osmium::Node& /*node*/) const noexcept {
             }
 
-            void way(const osmium::Way&) const noexcept {
+            void way(const osmium::Way& /*way*/) const noexcept {
             }
 
-            void relation(const osmium::Relation&) const noexcept {
+            void relation(const osmium::Relation& /*relation*/) const noexcept {
             }
 
-            void area(const osmium::Area&) const noexcept {
+            void area(const osmium::Area& /*area*/) const noexcept {
             }
 
-            void changeset(const osmium::Changeset&) const noexcept {
+            void changeset(const osmium::Changeset& /*changeset*/) const noexcept {
             }
 
-            void tag_list(const osmium::TagList&) const noexcept {
+            void tag_list(const osmium::TagList& /*tag_list*/) const noexcept {
             }
 
-            void way_node_list(const osmium::WayNodeList&) const noexcept {
+            void way_node_list(const osmium::WayNodeList& /*way_node_list*/) const noexcept {
             }
 
-            void relation_member_list(const osmium::RelationMemberList&) const noexcept {
+            void relation_member_list(const osmium::RelationMemberList& /*relation_member_list*/) const noexcept {
             }
 
-            void outer_ring(const osmium::OuterRing&) const noexcept {
+            void outer_ring(const osmium::OuterRing& /*outer_ring*/) const noexcept {
             }
 
-            void inner_ring(const osmium::InnerRing&) const noexcept {
+            void inner_ring(const osmium::InnerRing& /*inner_ring*/) const noexcept {
             }
 
-            void changeset_discussion(const osmium::ChangesetDiscussion&) const noexcept {
+            void changeset_discussion(const osmium::ChangesetDiscussion& /*changeset_discussion*/) const noexcept {
             }
 
             void flush() const noexcept {

@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,14 +33,21 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <string>
+#include <osmium/io/error.hpp>
+
+#include <protozero/version.hpp>
+
+#if PROTOZERO_VERSION_CODE >= 10600
+# include <protozero/data_view.hpp>
+#else
+# include <protozero/types.hpp>
+#endif
 
 #include <zlib.h>
 
-#include <protozero/types.hpp>
-
-#include <osmium/io/error.hpp>
-#include <osmium/util/cast.hpp>
+#include <cassert>
+#include <limits>
+#include <string>
 
 namespace osmium {
 
@@ -58,7 +65,8 @@ namespace osmium {
              * @returns Compressed data.
              */
             inline std::string zlib_compress(const std::string& input) {
-                unsigned long output_size = ::compressBound(osmium::static_cast_with_assert<unsigned long>(input.size()));
+                assert(input.size() < std::numeric_limits<unsigned long>::max());
+                unsigned long output_size = ::compressBound(static_cast<unsigned long>(input.size())); // NOLINT(google-runtime-int)
 
                 std::string output(output_size, '\0');
 
@@ -66,7 +74,7 @@ namespace osmium {
                     reinterpret_cast<unsigned char*>(const_cast<char *>(output.data())),
                     &output_size,
                     reinterpret_cast<const unsigned char*>(input.data()),
-                    osmium::static_cast_with_assert<unsigned long>(input.size())
+                    static_cast<unsigned long>(input.size()) // NOLINT(google-runtime-int)
                 );
 
                 if (result != Z_OK) {
@@ -89,7 +97,7 @@ namespace osmium {
              * @param output Uncompressed result data.
              * @returns Pointer and size to incompressed data.
              */
-            inline protozero::data_view zlib_uncompress_string(const char* input, unsigned long input_size, unsigned long raw_size, std::string& output) {
+            inline protozero::data_view zlib_uncompress_string(const char* input, unsigned long input_size, unsigned long raw_size, std::string& output) { // NOLINT(google-runtime-int)
                 output.resize(raw_size);
 
                 const auto result = ::uncompress(

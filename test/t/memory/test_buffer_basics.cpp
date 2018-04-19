@@ -1,9 +1,9 @@
 #include "catch.hpp"
 
+#include <osmium/memory/buffer.hpp>
+
 #include <array>
 #include <stdexcept>
-
-#include <osmium/memory/buffer.hpp>
 
 TEST_CASE("Buffer basics") {
     osmium::memory::Buffer invalid_buffer1;

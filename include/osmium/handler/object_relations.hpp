@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -35,8 +35,8 @@ DEALINGS IN THE SOFTWARE.
 
 #include <osmium/handler.hpp>
 #include <osmium/index/multimap.hpp>
-#include <osmium/osm/node_ref.hpp>
 #include <osmium/osm/item_type.hpp>
+#include <osmium/osm/node_ref.hpp>
 #include <osmium/osm/relation.hpp>
 #include <osmium/osm/types.hpp>
 #include <osmium/osm/way.hpp>
@@ -69,11 +69,6 @@ namespace osmium {
                 m_index_w2r(w2r),
                 m_index_r2r(r2r) {
             }
-
-            ObjectRelations(const ObjectRelations&) = delete;
-            ObjectRelations& operator=(const ObjectRelations&) = delete;
-
-            ~ObjectRelations() noexcept = default;
 
             void way(const osmium::Way& way) {
                 for (const auto& node_ref : way.nodes()) {

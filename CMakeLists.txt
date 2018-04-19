@@ -24,8 +24,8 @@ set(CMAKE_CONFIGURATION_TYPES "Debug;Release;RelWithDebInfo;MinSizeRel;Dev;Cover
 project(libosmium)
 
 set(LIBOSMIUM_VERSION_MAJOR 2)
-set(LIBOSMIUM_VERSION_MINOR 13)
-set(LIBOSMIUM_VERSION_PATCH 1)
+set(LIBOSMIUM_VERSION_MINOR 14)
+set(LIBOSMIUM_VERSION_PATCH 0)
 
 set(LIBOSMIUM_VERSION
     "${LIBOSMIUM_VERSION_MAJOR}.${LIBOSMIUM_VERSION_MINOR}.${LIBOSMIUM_VERSION_PATCH}")
@@ -62,7 +62,6 @@ option(BUILD_BENCHMARKS "compile benchmark programs" ${dev_build})
 option(BUILD_DATA_TESTS "compile data tests, please run them with ctest" ${data_test_build})
 
 option(INSTALL_GDALCPP   "also install gdalcpp headers" OFF)
-option(INSTALL_PROTOZERO "also install protozero headers" OFF)
 option(INSTALL_UTFCPP    "also install utfcpp headers" OFF)
 
 option(WITH_PROFILING    "add flags needed for profiling" OFF)
@@ -172,17 +171,6 @@ list(REMOVE_AT OSMIUM_INCLUDE_DIRS ${_own_index})
 set(_own_index)
 
 include_directories(SYSTEM ${OSMIUM_INCLUDE_DIRS})
-
-if(MSVC)
-    find_path(GETOPT_INCLUDE_DIR getopt.h)
-    find_library(GETOPT_LIBRARY NAMES wingetopt)
-    if(GETOPT_INCLUDE_DIR AND GETOPT_LIBRARY)
-        include_directories(SYSTEM ${GETOPT_INCLUDE_DIR})
-        list(APPEND OSMIUM_LIBRARIES ${GETOPT_LIBRARY})
-    else()
-        set(GETOPT_MISSING 1)
-    endif()
-endif()
 
 
 #-----------------------------------------------------------------------------
@@ -402,21 +390,22 @@ if(BUILD_HEADERS)
     file(MAKE_DIRECTORY header_check)
 
     foreach(hpp ${ALL_HPPS})
-        string(REPLACE ".hpp" "" tmp ${hpp})
-        string(REPLACE "/" "__" libname ${tmp})
+        if(GDAL_FOUND OR NOT ((hpp STREQUAL "osmium/area/problem_reporter_ogr.hpp") OR (hpp STREQUAL "osmium/geom/ogr.hpp")))
+            string(REPLACE ".hpp" "" tmp ${hpp})
+            string(REPLACE "/" "__" libname ${tmp})
 
-        # Create a dummy .cpp file that includes the header file we want to
-        # check.
-        set(DUMMYCPP ${CMAKE_BINARY_DIR}/header_check/${libname}.cpp)
-        file(WRITE ${DUMMYCPP} "#include <${hpp}>\n")
+            # Create a dummy .cpp file that includes the header file we want to
+            # check.
+            set(DUMMYCPP ${CMAKE_BINARY_DIR}/header_check/${libname}.cpp)
+            file(WRITE ${DUMMYCPP} "#include <${hpp}> // IWYU pragma: keep\n")
 
-        # There is no way in CMake to just compile but not link a C++ file,
-        # so we pretend to build a library here.
-        add_library(${libname} STATIC ${DUMMYCPP} include/${hpp})
+            # There is no way in CMake to just compile but not link a C++ file,
+            # so we pretend to build a library here.
+            add_library(${libname} STATIC ${DUMMYCPP} include/${hpp})
 
-        #### this is better but only supported from cmake 3.0:
-        ###add_library(${libname} OBJECT ${DUMMYCPP} include/${hpp})
-
+            #### this is better but only supported from cmake 3.0:
+            ###add_library(${libname} OBJECT ${DUMMYCPP} include/${hpp})
+        endif()
     endforeach()
 endif()
 
@@ -427,10 +416,10 @@ endif()
 #
 #-----------------------------------------------------------------------------
 message(STATUS "Looking for clang-tidy")
-find_program(CLANG_TIDY NAMES clang-tidy clang-tidy-3.9 clang-tidy-3.8 clang-tidy-3.7 clang-tidy-3.6 clang-tidy-3.5)
+find_program(CLANG_TIDY NAMES clang-tidy clang-tidy-6.0 clang-tidy-5.0)
 
 if(CLANG_TIDY)
-    message(STATUS "Looking for clang-tidy - found")
+    message(STATUS "Looking for clang-tidy - found ${CLANG_TIDY}")
 
     if(BUILD_EXAMPLES)
         file(GLOB CT_ALL_EXAMPLES examples/*.cpp)
@@ -467,41 +456,9 @@ if(CLANG_TIDY)
         ${CT_ALL_BENCHMARKS}
         ${CT_ALL_DATA_TESTS})
 
-    # For a list of check options, see:
-    # http://clang.llvm.org/extra/clang-tidy/checks/list.html
-
-    list(APPEND CT_CHECKS "cert-*"
-                         "-cert-err60-cpp") # even the std lib doesn't do this
-
-    # disabled, because it is slow
-#    list(APPEND CT_CHECKS "clang-analyzer-*")
-
-    list(APPEND CT_CHECKS "google-*"
-                         "-google-explicit-constructor"
-                         "-google-readability-casting"
-                         "-google-readability-function")
-
-    list(APPEND CT_CHECKS "llvm-*"
-                         "-llvm-include-order")
-
-    list(APPEND CT_CHECKS "misc-*"
-                         "-misc-argument-comment")
-
-    list(APPEND CT_CHECKS "modernize-*"
-                          "-modernize-make-unique") # not available in C++11
-
-    list(APPEND CT_CHECKS "readability-*"
-                         "-readability-identifier-naming"
-                         "-readability-implicit-bool-cast"
-                         "-readability-named-parameter")
-
-    string(REPLACE ";" "," ALL_CHECKS "${CT_CHECKS}")
-
     add_custom_target(clang-tidy
         ${CLANG_TIDY}
         -p ${CMAKE_BINARY_DIR}
-        -header-filter='include/osmium/.*'
-        -checks="${ALL_CHECKS}"
         ${CT_CHECK_FILES}
     )
 else()
@@ -521,10 +478,6 @@ install(DIRECTORY include/osmium DESTINATION include)
 
 if(INSTALL_GDALCPP)
     install(FILES include/gdalcpp.hpp DESTINATION include)
-endif()
-
-if(INSTALL_PROTOZERO)
-    install(DIRECTORY include/protozero DESTINATION include)
 endif()
 
 if(INSTALL_UTFCPP)
@@ -560,8 +513,7 @@ include(CPack)
 if(BUILD_DATA_TESTS AND OSM_TESTDATA STREQUAL "OSM_TESTDATA-NOTFOUND")
     message("\n========================== WARNING ==========================")
     message("osm-testdata directory not found, data tests were disabled!\n")
-    message("You can get it from https://github.com/osmcode/osm-testdata")
-    message("Clone it into the same directory libosmium is in")
+    message("Call 'git submodule update --init' to install test data")
     message("or set the OSM_TESTDATA cmake variable to its path.")
     message("=============================================================\n")
 endif()

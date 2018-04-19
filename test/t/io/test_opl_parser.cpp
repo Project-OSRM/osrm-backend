@@ -1,13 +1,13 @@
-
-#include <algorithm>
-#include <cstring>
-
 #include "catch.hpp"
+
 #include "utils.hpp"
 
 #include <osmium/io/detail/opl_input_format.hpp>
 #include <osmium/io/opl_input.hpp>
 #include <osmium/opl.hpp>
+
+#include <algorithm>
+#include <cstring>
 
 namespace oid = osmium::io::detail;
 
@@ -161,8 +161,7 @@ TEST_CASE("Parse OPL: parse string") {
         const char* s = "";
         const char* e = s + std::strlen(s);
         oid::opl_parse_string(&s, result);
-        REQUIRE(result.size() == 0);
-        REQUIRE(result == "");
+        REQUIRE(result.empty());
         REQUIRE(s == e);
     }
 
@@ -384,8 +383,8 @@ TEST_CASE("Parse OPL: tags") {
         oid::opl_parse_tags(data, buffer);
         const auto& taglist = buffer.get<osmium::TagList>(0);
         REQUIRE(taglist.size() == 1);
-        REQUIRE(std::string{taglist.begin()->key()} == "");
-        REQUIRE(std::string{taglist.begin()->value()} == "");
+        REQUIRE(std::string{taglist.begin()->key()}.empty());
+        REQUIRE(std::string{taglist.begin()->value()}.empty());
     }
 
     SECTION("Multiple tags") {
@@ -548,7 +547,7 @@ TEST_CASE("Parse OPL: members") {
         auto it = rml.begin();
         REQUIRE(it->type() == osmium::item_type::node);
         REQUIRE(it->ref() == 123);
-        REQUIRE(std::string{it->role()} == "");
+        REQUIRE(std::string{it->role()}.empty());
         ++it;
         REQUIRE(it == rml.end());
     }
@@ -562,7 +561,7 @@ TEST_CASE("Parse OPL: members") {
         auto it = rml.begin();
         REQUIRE(it->type() == osmium::item_type::node);
         REQUIRE(it->ref() == 123);
-        REQUIRE(std::string{it->role()} == "");
+        REQUIRE(std::string{it->role()}.empty());
         ++it;
         REQUIRE(it->type() == osmium::item_type::way);
         REQUIRE(it->ref() == 456);
@@ -584,7 +583,7 @@ TEST_CASE("Parse OPL: members") {
         auto it = rml.begin();
         REQUIRE(it->type() == osmium::item_type::node);
         REQUIRE(it->ref() == 123);
-        REQUIRE(std::string{it->role()} == "");
+        REQUIRE(std::string{it->role()}.empty());
         ++it;
         REQUIRE(it->type() == osmium::item_type::way);
         REQUIRE(it->ref() == 456);

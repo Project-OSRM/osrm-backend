@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,15 +33,15 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <osmium/area/detail/vector.hpp>
+#include <osmium/osm/location.hpp>
+#include <osmium/osm/node_ref.hpp>
+
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
 #include <iosfwd>
 #include <utility>
-
-#include <osmium/area/detail/vector.hpp>
-#include <osmium/osm/location.hpp>
-#include <osmium/osm/node_ref.hpp>
 
 namespace osmium {
 
@@ -74,20 +74,20 @@ namespace osmium {
             class NodeRefSegment {
 
                 // First node in order described above.
-                osmium::NodeRef m_first;
+                osmium::NodeRef m_first{};
 
                 // Second node in order described above.
-                osmium::NodeRef m_second;
+                osmium::NodeRef m_second{};
 
                 // Way this segment was from.
-                const osmium::Way* m_way;
+                const osmium::Way* m_way = nullptr;
 
                 // The ring this segment is part of. Initially nullptr, this
                 // will be filled in once we know which ring the segment is in.
-                ProtoRing* m_ring;
+                ProtoRing* m_ring = nullptr;
 
                 // The role of this segment from the member role.
-                role_type m_role;
+                role_type m_role = role_type::unknown;
 
                 // Nodes have to be reversed to get the intended order.
                 bool m_reverse = false;
@@ -98,19 +98,12 @@ namespace osmium {
 
             public:
 
-                NodeRefSegment() noexcept :
-                    m_first(),
-                    m_second(),
-                    m_way(nullptr),
-                    m_ring(nullptr),
-                    m_role(role_type::unknown) {
-                }
+                NodeRefSegment() noexcept = default;
 
                 NodeRefSegment(const osmium::NodeRef& nr1, const osmium::NodeRef& nr2, role_type role, const osmium::Way* way) noexcept :
                     m_first(nr1),
                     m_second(nr2),
                     m_way(way),
-                    m_ring(nullptr),
                     m_role(role) {
                     if (nr2.location() < nr1.location()) {
                         using std::swap;
@@ -303,7 +296,7 @@ namespace osmium {
              *          or a defined Location if the segments intersect.
              */
             inline osmium::Location calculate_intersection(const NodeRefSegment& s1, const NodeRefSegment& s2) noexcept {
-                // See http://stackoverflow.com/questions/563198/how-do-you-detect-where-two-line-segments-intersect
+                // See https://stackoverflow.com/questions/563198/how-do-you-detect-where-two-line-segments-intersect
                 // for some hints about how the algorithm works.
                 const vec p0{s1.first()};
                 const vec p1{s1.second()};

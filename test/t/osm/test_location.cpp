@@ -1,10 +1,10 @@
 #include "catch.hpp"
 
+#include <osmium/osm/location.hpp>
+
 #include <limits>
 #include <sstream>
 #include <type_traits>
-
-#include <osmium/osm/location.hpp>
 
 // fails on MSVC and doesn't really matter
 // static_assert(std::is_literal_type<osmium::Location>::value, "osmium::Location not literal type");
@@ -169,11 +169,11 @@ TEST_CASE("Location hash") {
     }
 }
 
-void C(const char* s, long v, const char* r = "") {
+void C(const char* s, int32_t v, const char* r = "") {
     std::string strm{"-"};
     strm += s;
-    REQUIRE(std::atof(strm.c_str() + 1) == Approx( v / 10000000.0));
-    REQUIRE(std::atof(strm.c_str()    ) == Approx(-v / 10000000.0));
+    REQUIRE(std::atof(strm.c_str() + 1) == Approx( v / 10000000.0)); // NOLINT(cert-err34-c)
+    REQUIRE(std::atof(strm.c_str()    ) == Approx(-v / 10000000.0)); // NOLINT(cert-err34-c)
     const char* x = strm.c_str() + 1;
     const char** data = &x;
     REQUIRE(osmium::detail::string_to_location_coordinate(data) == v);
@@ -346,7 +346,7 @@ TEST_CASE("Writing zero coordinate into string") {
     REQUIRE(buffer == "0");
 }
 
-void CW(long v, const char* s) {
+void CW(int32_t v, const char* s) {
     std::string buffer;
 
     osmium::detail::append_location_coordinate_to_string(std::back_inserter(buffer), v);

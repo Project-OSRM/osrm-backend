@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,17 +33,17 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <cstdint>
-#include <memory>
-#include <string>
-#include <utility>
-
 #include <osmium/io/detail/input_format.hpp>
 #include <osmium/io/detail/opl_parser_functions.hpp>
 #include <osmium/io/file_format.hpp>
 #include <osmium/io/header.hpp>
 #include <osmium/memory/buffer.hpp>
 #include <osmium/thread/util.hpp>
+
+#include <cstdint>
+#include <memory>
+#include <string>
+#include <utility>
 
 namespace osmium {
 
@@ -119,6 +119,12 @@ namespace osmium {
                     Parser(args) {
                     set_header_value(osmium::io::Header{});
                 }
+
+                OPLParser(const OPLParser&) = delete;
+                OPLParser& operator=(const OPLParser&) = delete;
+
+                OPLParser(OPLParser&&) = delete;
+                OPLParser& operator=(OPLParser&&) = delete;
 
                 ~OPLParser() noexcept final = default;
 

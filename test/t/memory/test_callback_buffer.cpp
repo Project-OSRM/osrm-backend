@@ -1,11 +1,11 @@
 #include "catch.hpp"
 
-#include <iterator>
-
 #include <osmium/builder/attr.hpp>
 #include <osmium/memory/callback_buffer.hpp>
 
-using namespace osmium::builder::attr;
+#include <iterator>
+
+using namespace osmium::builder::attr; // NOLINT(google-build-using-namespace)
 
 TEST_CASE("Callback buffer") {
     osmium::memory::CallbackBuffer cb;

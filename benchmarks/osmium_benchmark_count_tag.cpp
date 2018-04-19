@@ -4,14 +4,14 @@
 
 */
 
+#include <osmium/handler.hpp>
+#include <osmium/io/any_input.hpp>
+#include <osmium/visitor.hpp>
+
 #include <cstdint>
 #include <cstdlib>
 #include <iostream>
 #include <string>
-
-#include <osmium/io/any_input.hpp>
-#include <osmium/handler.hpp>
-#include <osmium/visitor.hpp>
 
 struct CountHandler : public osmium::handler::Handler {
 
@@ -26,16 +26,15 @@ struct CountHandler : public osmium::handler::Handler {
         }
     }
 
-    void way(const osmium::Way&) {
+    void way(const osmium::Way& /*way*/) {
         ++all;
     }
 
-    void relation(const osmium::Relation&) {
+    void relation(const osmium::Relation& /*relation*/) {
         ++all;
     }
 
 };
-
 
 int main(int argc, char* argv[]) {
     if (argc != 2) {
@@ -51,6 +50,6 @@ int main(int argc, char* argv[]) {
     osmium::apply(reader, handler);
     reader.close();
 
-    std::cout << "r_all=" << handler.all << " r_counter="  << handler.counter << "\n";
+    std::cout << "r_all=" << handler.all << " r_counter=" << handler.counter << '\n';
 }
 

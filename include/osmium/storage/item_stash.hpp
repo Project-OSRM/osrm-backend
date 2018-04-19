@@ -1,11 +1,11 @@
-#ifndef OSMIUM_ITEM_STASH_HPP
-#define OSMIUM_ITEM_STASH_HPP
+#ifndef OSMIUM_STORAGE_ITEM_STASH_HPP
+#define OSMIUM_STORAGE_ITEM_STASH_HPP
 
 /*
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,6 +33,9 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <osmium/memory/buffer.hpp>
+#include <osmium/memory/item.hpp>
+
 #include <cassert>
 #include <cstdlib>
 #include <limits>
@@ -43,9 +46,6 @@ DEALINGS IN THE SOFTWARE.
 # include <iostream>
 # include <chrono>
 #endif
-
-#include <osmium/memory/buffer.hpp>
-#include <osmium/memory/item.hpp>
 
 namespace osmium {
 
@@ -72,7 +72,12 @@ namespace osmium {
 
             friend class ItemStash;
 
-            std::size_t value;
+            std::size_t value; // NOLINT(modernize-use-default-member-init)
+                               // Some compilers don't like the default member
+                               // init: "error: defaulted default constructor
+                               // of 'handle_type' cannot be used by non-static
+                               // data member initializer which appears before
+                               // end of class definition"
 
             explicit handle_type(std::size_t new_value) noexcept :
                 value(new_value) {
@@ -81,7 +86,7 @@ namespace osmium {
 
         public:
 
-            /// The defalt constructor creates an invalid handle.
+            /// The default constructor creates an invalid handle.
             handle_type() noexcept :
                 value(0) {
             }
@@ -339,4 +344,4 @@ namespace osmium {
 
 } // namespace osmium
 
-#endif // OSMIUM_ITEM_STASH_HPP
+#endif // OSMIUM_STORAGE_ITEM_STASH_HPP

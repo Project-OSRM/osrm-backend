@@ -1,13 +1,13 @@
 #include "catch.hpp"
 
-#include <algorithm>
-
 #include <osmium/builder/attr.hpp>
 #include <osmium/memory/buffer.hpp>
 #include <osmium/osm/tag.hpp>
-#include <osmium/tags/taglist.hpp>
 #include <osmium/tags/filter.hpp>
 #include <osmium/tags/regex_filter.hpp>
+#include <osmium/tags/taglist.hpp>
+
+#include <algorithm>
 
 template <class TFilter>
 void check_filter(const osmium::TagList& tag_list,

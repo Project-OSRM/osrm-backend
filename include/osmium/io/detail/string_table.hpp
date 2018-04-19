@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,6 +33,8 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <osmium/io/detail/pbf.hpp>
+
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -42,8 +44,6 @@ DEALINGS IN THE SOFTWARE.
 #include <string>
 #include <unordered_map>
 #include <utility>
-
-#include <osmium/io/detail/pbf.hpp>
 
 namespace osmium {
 
@@ -77,8 +77,7 @@ namespace osmium {
             public:
 
                 explicit StringStore(size_t chunk_size) :
-                    m_chunk_size(chunk_size),
-                    m_chunks() {
+                    m_chunk_size(chunk_size) {
                     add_chunk();
                 }
 
@@ -212,12 +211,12 @@ namespace osmium {
 
             struct djb2_hash {
 
-                size_t operator()(const char* str) const noexcept {
-                    size_t hash = 5381;
+                std::size_t operator()(const char* str) const noexcept {
+                    std::size_t hash = 5381;
                     int c;
 
                     while ((c = *str++)) {
-                        hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
+                        hash = ((hash << 5u) + hash) + c; /* hash * 33 + c */
                     }
 
                     return hash;
@@ -245,14 +244,12 @@ namespace osmium {
 
                 StringStore m_strings;
                 std::unordered_map<const char*, size_t, djb2_hash, str_equal> m_index;
-                uint32_t m_size;
+                uint32_t m_size = 0;
 
             public:
 
                 explicit StringTable(size_t size = default_stringtable_chunk_size) :
-                    m_strings(size),
-                    m_index(),
-                    m_size(0) {
+                    m_strings(size) {
                     m_strings.add("");
                 }
 

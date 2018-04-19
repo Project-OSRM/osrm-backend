@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,18 +33,6 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <algorithm>
-#include <cassert>
-#include <cstring>
-#include <functional>
-#include <iostream>
-#include <iterator>
-#include <set>
-#include <string>
-#include <map>
-#include <utility>
-#include <vector>
-
 #include <osmium/area/assembler_config.hpp>
 #include <osmium/area/detail/basic_assembler_with_tags.hpp>
 #include <osmium/area/detail/proto_ring.hpp>
@@ -61,6 +49,18 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/osm/tag.hpp>
 #include <osmium/osm/way.hpp>
 #include <osmium/tags/filter.hpp>
+
+#include <algorithm>
+#include <cassert>
+#include <cstring>
+#include <functional>
+#include <iostream>
+#include <iterator>
+#include <map>
+#include <set>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace osmium {
 
@@ -207,8 +207,6 @@ namespace osmium {
                 detail::BasicAssemblerWithTags(config) {
             }
 
-            ~AssemblerLegacy() noexcept = default;
-
             /**
              * Assemble an area from the given way.
              * The resulting area is put into the out_buffer.
@@ -335,7 +333,7 @@ namespace osmium {
                 if (stats().wrong_role == 0) {
                     detail::for_each_member(relation, members, [this, &ways_that_should_be_areas, &area_tags](const osmium::RelationMember& member, const osmium::Way& way) {
                         if (!std::strcmp(member.role(), "inner")) {
-                            if (!way.nodes().empty() && way.is_closed() && way.tags().size() > 0) {
+                            if (!way.nodes().empty() && way.is_closed() && !way.tags().empty()) {
                                 const auto d = std::count_if(way.tags().cbegin(), way.tags().cend(), std::cref(filter()));
                                 if (d > 0) {
                                     osmium::tags::KeyFilter::iterator way_fi_begin(std::cref(filter()), way.tags().cbegin(), way.tags().cend());

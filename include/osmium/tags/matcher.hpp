@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,11 +33,11 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <type_traits>
-#include <utility>
-
 #include <osmium/osm/tag.hpp>
 #include <osmium/util/string_matcher.hpp>
+
+#include <type_traits>
+#include <utility>
 
 namespace osmium {
 
@@ -48,7 +48,7 @@ namespace osmium {
 
         osmium::StringMatcher m_key_matcher;
         osmium::StringMatcher m_value_matcher;
-        bool m_result;
+        bool m_result = true;
 
     public:
 
@@ -57,8 +57,7 @@ namespace osmium {
          */
         TagMatcher() :
             m_key_matcher(osmium::StringMatcher::always_false{}),
-            m_value_matcher(osmium::StringMatcher::always_false{}),
-            m_result(true) {
+            m_value_matcher(osmium::StringMatcher::always_false{}) {
         }
 
         /**
@@ -69,10 +68,9 @@ namespace osmium {
          */
         template <typename TKey, typename std::enable_if<
             std::is_convertible<TKey, osmium::StringMatcher>::value, int>::type = 0>
-        TagMatcher(TKey&& key_matcher) :
+        explicit TagMatcher(TKey&& key_matcher) : // NOLINT(misc-forwarding-reference-overload) (false positive due to enable_if)
             m_key_matcher(std::forward<TKey>(key_matcher)),
-            m_value_matcher(osmium::StringMatcher::always_true{}),
-            m_result(true) {
+            m_value_matcher(osmium::StringMatcher::always_true{}) {
         }
 
         /**

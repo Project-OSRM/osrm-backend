@@ -1,10 +1,10 @@
 #include "catch.hpp"
 
+#include "wnl_helper.hpp"
+
 #include <osmium/geom/mercator_projection.hpp>
 #include <osmium/geom/wkb.hpp>
 #include <osmium/util/endian.hpp>
-
-#include "wnl_helper.hpp"
 
 #if __BYTE_ORDER == __LITTLE_ENDIAN
 

@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,11 +33,11 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <cstddef>
-#include <iterator>
-
 #include <osmium/osm/diff_object.hpp>
 #include <osmium/util/compatibility.hpp>
+
+#include <cstddef>
+#include <iterator>
 
 namespace osmium {
 
@@ -75,14 +75,6 @@ namespace osmium {
                 destination.set_buffer_size(buffer_size);
             }
 
-            OutputIterator(const OutputIterator&) = default;
-            OutputIterator(OutputIterator&&) = default;
-
-            OutputIterator& operator=(const OutputIterator&) = default;
-            OutputIterator& operator=(OutputIterator&&) = default;
-
-            ~OutputIterator() = default;
-
             /**
              * @deprecated
              * Calling OutputIterator<Writer>::flush() is usually not
@@ -98,18 +90,23 @@ namespace osmium {
             }
 
             OutputIterator& operator=(const osmium::DiffObject& diff) {
-                return this->operator=(diff.curr());
-            }
-
-            OutputIterator& operator*() {
+                this->operator=(diff.curr());
                 return *this;
             }
 
-            OutputIterator& operator++() {
+            OutputIterator& operator*() noexcept {
                 return *this;
             }
 
-            OutputIterator& operator++(int) {
+            const OutputIterator& operator*() const noexcept {
+                return *this;
+            }
+
+            OutputIterator& operator++() noexcept {
+                return *this;
+            }
+
+            OutputIterator operator++(int) const noexcept {
                 return *this;
             }
 

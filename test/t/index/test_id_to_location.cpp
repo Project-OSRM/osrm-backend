@@ -1,8 +1,5 @@
 #include "catch.hpp"
 
-#include <osmium/osm/types.hpp>
-#include <osmium/osm/location.hpp>
-
 #include <osmium/index/map/dense_file_array.hpp>
 #include <osmium/index/map/dense_mem_array.hpp>
 #include <osmium/index/map/dense_mmap_array.hpp>
@@ -13,8 +10,9 @@
 #include <osmium/index/map/sparse_mem_map.hpp>
 #include <osmium/index/map/sparse_mem_table.hpp>
 #include <osmium/index/map/sparse_mmap_array.hpp>
-
 #include <osmium/index/node_locations_map.hpp>
+#include <osmium/osm/location.hpp>
+#include <osmium/osm/types.hpp>
 
 static_assert(osmium::index::empty_value<osmium::Location>() == osmium::Location{}, "Empty value for location is wrong");
 

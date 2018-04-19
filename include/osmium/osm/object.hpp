@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,12 +33,6 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <cstdlib>
-#include <cstring>
-#include <stdexcept>
-#include <tuple>
-#include <type_traits>
-
 #include <osmium/memory/collection.hpp>
 #include <osmium/memory/item.hpp>
 #include <osmium/memory/item_iterator.hpp>
@@ -50,6 +44,12 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/osm/types.hpp>
 #include <osmium/osm/types_from_string.hpp>
 #include <osmium/util/misc.hpp>
+
+#include <cstdlib>
+#include <cstring>
+#include <stdexcept>
+#include <tuple>
+#include <type_traits>
 
 namespace osmium {
 
@@ -66,12 +66,12 @@ namespace osmium {
         template <typename TDerived, typename T>
         friend class osmium::builder::OSMObjectBuilder;
 
-        object_id_type      m_id;
+        object_id_type      m_id = 0;
         bool                m_deleted : 1;
         object_version_type m_version : 31;
-        osmium::Timestamp   m_timestamp;
-        user_id_type        m_uid;
-        changeset_id_type   m_changeset;
+        osmium::Timestamp   m_timestamp{};
+        user_id_type        m_uid = 0;
+        changeset_id_type   m_changeset = 0;
 
         size_t sizeof_object() const noexcept {
             return sizeof(OSMObject) + (type() == item_type::node ? sizeof(osmium::Location) : 0) + sizeof(string_size_type);
@@ -101,12 +101,8 @@ namespace osmium {
 
         OSMObject(osmium::memory::item_size_type size, osmium::item_type type) :
             OSMEntity(size, type),
-            m_id(0),
             m_deleted(false),
-            m_version(0),
-            m_timestamp(),
-            m_uid(0),
-            m_changeset(0) {
+            m_version(0) {
         }
 
         void set_user_size(string_size_type size) {
@@ -278,7 +274,8 @@ namespace osmium {
          * @returns Reference to object to make calls chainable.
          */
         OSMObject& set_uid(const char* uid) {
-            return set_uid_from_signed(string_to_user_id(uid));
+            m_uid = string_to_uid(uid);
+            return *this;
         }
 
         /// Is this user anonymous?
@@ -460,7 +457,7 @@ namespace osmium {
     }
 
     inline bool operator!=(const OSMObject& lhs, const OSMObject& rhs) noexcept {
-        return ! (lhs == rhs);
+        return !(lhs == rhs);
     }
 
     /**
@@ -479,8 +476,10 @@ namespace osmium {
      * ordering.
      */
     inline bool operator<(const OSMObject& lhs, const OSMObject& rhs) noexcept {
-        return const_tie(lhs.type(), lhs.id() > 0, lhs.positive_id(), lhs.version(), lhs.timestamp()) <
-               const_tie(rhs.type(), rhs.id() > 0, rhs.positive_id(), rhs.version(), rhs.timestamp());
+        return const_tie(lhs.type(), lhs.id() > 0, lhs.positive_id(), lhs.version(),
+                   ((lhs.timestamp().valid() && rhs.timestamp().valid()) ? lhs.timestamp() : osmium::Timestamp())) <
+               const_tie(rhs.type(), rhs.id() > 0, rhs.positive_id(), rhs.version(),
+                   ((lhs.timestamp().valid() && rhs.timestamp().valid()) ? rhs.timestamp() : osmium::Timestamp()));
     }
 
     inline bool operator>(const OSMObject& lhs, const OSMObject& rhs) noexcept {
@@ -488,11 +487,11 @@ namespace osmium {
     }
 
     inline bool operator<=(const OSMObject& lhs, const OSMObject& rhs) noexcept {
-        return ! (rhs < lhs);
+        return !(rhs < lhs);
     }
 
     inline bool operator>=(const OSMObject& lhs, const OSMObject& rhs) noexcept {
-        return ! (lhs < rhs);
+        return !(lhs < rhs);
     }
 
 } // namespace osmium

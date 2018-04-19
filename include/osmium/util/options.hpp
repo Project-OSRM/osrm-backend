@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -41,7 +41,7 @@ DEALINGS IN THE SOFTWARE.
 
 namespace osmium {
 
-    namespace util {
+    inline namespace util {
 
         /**
          * Stores key=value type options. This class can be used stand-alone or
@@ -77,7 +77,7 @@ namespace osmium {
              *   Options options{ { "foo", "true" }, { "bar", "17" } };
              * @endcode
              */
-            explicit Options(const std::initializer_list<value_type>& values) :
+            Options(const std::initializer_list<value_type>& values) :
                 m_options(values) {
             }
 
@@ -112,7 +112,7 @@ namespace osmium {
                 if (pos == std::string::npos) {
                     m_options[data] = "true";
                 } else {
-                    const std::string value{data.substr(pos+1)};
+                    const std::string value{data.substr(pos + 1)};
                     set(data.substr(0, pos), value);
                 }
             }

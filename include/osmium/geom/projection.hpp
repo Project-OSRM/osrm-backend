@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -42,15 +42,15 @@ DEALINGS IN THE SOFTWARE.
  * @attention If you include this file, you'll need to link with `libproj`.
  */
 
-#include <memory>
-#include <string>
-
-#include <proj_api.h>
-
 #include <osmium/geom/coordinates.hpp>
 #include <osmium/geom/mercator_projection.hpp>
 #include <osmium/geom/util.hpp>
 #include <osmium/osm/location.hpp>
+
+#include <proj_api.h>
+
+#include <memory>
+#include <string>
 
 namespace osmium {
 
@@ -161,7 +161,9 @@ namespace osmium {
             Coordinates operator()(osmium::Location location) const {
                 if (m_epsg == 4326) {
                     return Coordinates{location.lon(), location.lat()};
-                } else if (m_epsg == 3857) {
+                }
+
+                if (m_epsg == 3857) {
                     return Coordinates{detail::lon_to_x(location.lon()),
                                        detail::lat_to_y(location.lat())};
                 }

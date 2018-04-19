@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -35,8 +35,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include <cstddef>
 #include <cstdint>
-
-#include <osmium/util/cast.hpp>
 
 namespace osmium {
 
@@ -78,15 +76,15 @@ namespace osmium {
 
             protected:
 
-                ItemHelper() = default;
+                ItemHelper() noexcept = default;
 
-                ~ItemHelper() = default;
+                ItemHelper(const ItemHelper&) noexcept = default;
+                ItemHelper(ItemHelper&&) noexcept = default;
 
-                ItemHelper(const ItemHelper&) = default;
-                ItemHelper(ItemHelper&&) = default;
+                ItemHelper& operator=(const ItemHelper&) noexcept = default;
+                ItemHelper& operator=(ItemHelper&&) noexcept = default;
 
-                ItemHelper& operator=(const ItemHelper&) = default;
-                ItemHelper& operator=(ItemHelper&&) = default;
+                ~ItemHelper() noexcept = default;
 
             public:
 
@@ -133,18 +131,20 @@ namespace osmium {
                 m_padding(0) {
             }
 
-            Item(const Item&) = delete;
-            Item(Item&&) = delete;
-
-            Item& operator=(const Item&) = delete;
-            Item& operator=(Item&&) = delete;
-
             Item& set_type(const item_type item_type) noexcept {
                 m_type = item_type;
                 return *this;
             }
 
         public:
+
+            Item(const Item&) = delete;
+            Item& operator=(const Item&) = delete;
+
+            Item(Item&&) = delete;
+            Item& operator=(Item&&) = delete;
+
+            ~Item() noexcept = default;
 
             constexpr static bool is_compatible_to(osmium::item_type /*t*/) noexcept {
                 return true;
@@ -163,7 +163,7 @@ namespace osmium {
             }
 
             item_size_type padded_size() const {
-                return static_cast_with_assert<item_size_type>(padded_length(m_size));
+                return static_cast<item_size_type>(padded_length(m_size));
             }
 
             item_type type() const noexcept {

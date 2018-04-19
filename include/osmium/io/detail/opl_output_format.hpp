@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,12 +33,6 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <cstdint>
-#include <iterator>
-#include <memory>
-#include <string>
-#include <utility>
-
 #include <osmium/io/detail/output_format.hpp>
 #include <osmium/io/detail/queue_util.hpp>
 #include <osmium/io/detail/string_util.hpp>
@@ -51,6 +45,7 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/osm/changeset.hpp>
 #include <osmium/osm/item_type.hpp>
 #include <osmium/osm/location.hpp>
+#include <osmium/osm/metadata_options.hpp>
 #include <osmium/osm/node.hpp>
 #include <osmium/osm/node_ref.hpp>
 #include <osmium/osm/object.hpp>
@@ -61,6 +56,12 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/thread/pool.hpp>
 #include <osmium/visitor.hpp>
 
+#include <cstdint>
+#include <iterator>
+#include <memory>
+#include <string>
+#include <utility>
+
 namespace osmium {
 
     namespace io {
@@ -69,16 +70,16 @@ namespace osmium {
 
             struct opl_output_options {
 
-                /// Should metadata of objects be added?
-                bool add_metadata;
+                /// Which metadata of objects should be added?
+                osmium::metadata_options add_metadata;
 
                 /// Should node locations be added to ways?
-                bool locations_on_ways;
+                bool locations_on_ways = false;
 
                 /// Write in form of a diff file?
-                bool format_as_diff;
+                bool format_as_diff = false;
 
-            };
+            }; // struct opl_output_options
 
             /**
              * Writes out one buffer with OSM data in OPL format.
@@ -123,19 +124,29 @@ namespace osmium {
 
                 void write_meta(const osmium::OSMObject& object) {
                     output_int(object.id());
-                    if (m_options.add_metadata) {
-                        *m_out += ' ';
-                        write_field_int('v', object.version());
+                    if (m_options.add_metadata.any()) {
+                        if (m_options.add_metadata.version()) {
+                            *m_out += ' ';
+                            write_field_int('v', object.version());
+                        }
                         *m_out += " d";
                         *m_out += (object.visible() ? 'V' : 'D');
-                        *m_out += ' ';
-                        write_field_int('c', object.changeset());
-                        *m_out += ' ';
-                        write_field_timestamp('t', object.timestamp());
-                        *m_out += ' ';
-                        write_field_int('i', object.uid());
-                        *m_out += " u";
-                        append_encoded_string(object.user());
+                        if (m_options.add_metadata.changeset()) {
+                            *m_out += ' ';
+                            write_field_int('c', object.changeset());
+                        }
+                        if (m_options.add_metadata.timestamp()) {
+                            *m_out += ' ';
+                            write_field_timestamp('t', object.timestamp());
+                        }
+                        if (m_options.add_metadata.uid()) {
+                            *m_out += ' ';
+                            write_field_int('i', object.uid());
+                        }
+                        if (m_options.add_metadata.user()) {
+                            *m_out += " u";
+                            append_encoded_string(object.user());
+                        }
                     }
                     write_tags(object.tags());
                 }
@@ -166,14 +177,6 @@ namespace osmium {
                     OutputBlock(std::move(buffer)),
                     m_options(options) {
                 }
-
-                OPLOutputBlock(const OPLOutputBlock&) = default;
-                OPLOutputBlock& operator=(const OPLOutputBlock&) = default;
-
-                OPLOutputBlock(OPLOutputBlock&&) = default;
-                OPLOutputBlock& operator=(OPLOutputBlock&&) = default;
-
-                ~OPLOutputBlock() noexcept = default;
 
                 std::string operator()() {
                     osmium::apply(m_input_buffer->cbegin(), m_input_buffer->cend(), *this);
@@ -285,17 +288,11 @@ namespace osmium {
             public:
 
                 OPLOutputFormat(osmium::thread::Pool& pool, const osmium::io::File& file, future_string_queue_type& output_queue) :
-                    OutputFormat(pool, output_queue),
-                    m_options() {
-                    m_options.add_metadata      = file.is_not_false("add_metadata");
+                    OutputFormat(pool, output_queue) {
+                    m_options.add_metadata      = osmium::metadata_options{file.get("add_metadata")};
                     m_options.locations_on_ways = file.is_true("locations_on_ways");
                     m_options.format_as_diff    = file.is_true("diff");
                 }
-
-                OPLOutputFormat(const OPLOutputFormat&) = delete;
-                OPLOutputFormat& operator=(const OPLOutputFormat&) = delete;
-
-                ~OPLOutputFormat() noexcept final = default;
 
                 void write_buffer(osmium::memory::Buffer&& buffer) final {
                     m_output_queue.push(m_pool.submit(OPLOutputBlock{std::move(buffer), m_options}));

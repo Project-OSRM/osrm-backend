@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,15 +33,15 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <osmium/io/error.hpp>
+#include <osmium/io/file_compression.hpp>
+#include <osmium/io/file_format.hpp>
+#include <osmium/util/options.hpp>
+
 #include <cstddef>
 #include <sstream>
 #include <string>
 #include <vector>
-
-#include <osmium/io/error.hpp>
-#include <osmium/io/file_format.hpp>
-#include <osmium/io/file_compression.hpp>
-#include <osmium/util/options.hpp>
 
 namespace osmium {
 
@@ -69,22 +69,22 @@ namespace osmium {
          *
          * If the filename is empty or "-", this means stdin or stdout is used.
          */
-        class File : public osmium::util::Options {
+        class File : public osmium::Options {
 
         private:
 
-            std::string m_filename;
+            std::string m_filename{};
 
-            const char* m_buffer;
-            size_t m_buffer_size;
+            const char* m_buffer = nullptr;
+            size_t m_buffer_size = 0;
 
             std::string m_format_string;
 
-            file_format m_file_format {file_format::unknown};
+            file_format m_file_format = file_format::unknown;
 
-            file_compression m_file_compression {file_compression::none};
+            file_compression m_file_compression = file_compression::none;
 
-            bool m_has_multiple_object_versions {false};
+            bool m_has_multiple_object_versions = false;
 
         public:
 
@@ -100,12 +100,9 @@ namespace osmium {
              *               empty the format will be deduced from the suffix
              *               of the filename.
              */
-            explicit File(const std::string& filename = "", const std::string& format = "") :
-                Options(),
-                m_filename(filename),
-                m_buffer(nullptr),
-                m_buffer_size(0),
-                m_format_string(format) {
+            explicit File(std::string filename = "", std::string format = "") :
+                m_filename(std::move(filename)),
+                m_format_string(std::move(format)) {
 
                 // stdin/stdout
                 if (m_filename == "-") {
@@ -118,10 +115,10 @@ namespace osmium {
                     m_file_format = file_format::xml;
                 }
 
-                if (format.empty()) {
+                if (m_format_string.empty()) {
                     detect_format_from_suffix(m_filename);
                 } else {
-                    parse_format(format);
+                    parse_format(m_format_string);
                 }
             }
 
@@ -135,23 +132,13 @@ namespace osmium {
              *               parse_format() function for details.
              */
             explicit File(const char* buffer, size_t size, const std::string& format = "") :
-                Options(),
-                m_filename(),
                 m_buffer(buffer),
                 m_buffer_size(size),
                 m_format_string(format) {
-                if (format != "") {
+                if (!format.empty()) {
                     parse_format(format);
                 }
             }
-
-            File(const File&) = default;
-            File& operator=(const File&) = default;
-
-            File(File&&) = default;
-            File& operator=(File&&) = default;
-
-            ~File() = default;
 
             const char* buffer() const noexcept {
                 return m_buffer;
@@ -176,7 +163,7 @@ namespace osmium {
                     if (pos == std::string::npos) {
                         set(option, true);
                     } else {
-                        std::string value{option.substr(pos+1)};
+                        std::string value{option.substr(pos + 1)};
                         option.erase(pos);
                         set(option, value);
                     }
@@ -274,7 +261,7 @@ namespace osmium {
             const File& check() const {
                 if (m_file_format == file_format::unknown) {
                     std::string msg{"Could not detect file format"};
-                    if (!m_format_string.empty())  {
+                    if (!m_format_string.empty()) {
                         msg += " from format string '";
                         msg += m_format_string;
                         msg += "'";

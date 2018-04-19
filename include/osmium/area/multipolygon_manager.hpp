@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,13 +33,6 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <algorithm>
-#include <cassert>
-#include <cstddef>
-#include <cstdint>
-#include <cstring>
-#include <vector>
-
 #include <osmium/area/stats.hpp>
 #include <osmium/osm/item_type.hpp>
 #include <osmium/osm/relation.hpp>
@@ -52,6 +45,13 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/storage/item_stash.hpp>
 #include <osmium/tags/taglist.hpp>
 #include <osmium/tags/tags_filter.hpp>
+
+#include <algorithm>
+#include <cassert>
+#include <cstddef>
+#include <cstdint>
+#include <cstring>
+#include <vector>
 
 namespace osmium {
 
@@ -93,9 +93,9 @@ namespace osmium {
              *               needed on closed ways or multipolygon relations
              *               to build the area.
              */
-            explicit MultipolygonManager(const assembler_config_type& assembler_config, const osmium::TagsFilter& filter = osmium::TagsFilter{true}) :
-                m_assembler_config(assembler_config),
-                m_filter(filter) {
+            explicit MultipolygonManager(assembler_config_type assembler_config, osmium::TagsFilter filter = osmium::TagsFilter{true}) :
+                m_assembler_config(std::move(assembler_config)),
+                m_filter(std::move(filter)) {
             }
 
             /**

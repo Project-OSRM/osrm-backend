@@ -9,6 +9,7 @@ Libosmium works on Linux, Mac OSX and Windows.
 [![Travis Build Status](https://secure.travis-ci.org/osmcode/libosmium.svg)](https://travis-ci.org/osmcode/libosmium)
 [![Appveyor Build Status](https://ci.appveyor.com/api/projects/status/github/osmcode/libosmium?svg=true)](https://ci.appveyor.com/project/Mapbox/libosmium)
 [![Coverage Status](https://codecov.io/gh/osmcode/libosmium/branch/master/graph/badge.svg)](https://codecov.io/gh/osmcode/libosmium)
+[![Packaging status](https://repology.org/badge/tiny-repos/libosmium.svg)](https://repology.org/metapackage/libosmium)
 
 Please see the [Libosmium manual](http://osmcode.org/libosmium/manual.html)
 for more details than this README can provide.
@@ -31,8 +32,10 @@ manual.
 The following external (header-only) libraries are included in the libosmium
 repository:
 * [gdalcpp](https://github.com/joto/gdalcpp)
-* [protozero](https://github.com/mapbox/protozero)
 * [utfcpp](http://utfcpp.sourceforge.net/)
+
+Note that [protozero](https://github.com/mapbox/protozero) was included in
+earlier versions of libosmium, but isn't any more.
 
 
 ## Directories
@@ -72,6 +75,14 @@ chapter in the manual.
 
 
 ## Testing
+
+To download the `osm-testdata` submodule call:
+
+```
+git submodule update --init
+```
+
+This will enable additional tests.
 
 See the
 [Libosmium Manual](http://osmcode.org/libosmium/manual.html#running-tests)
