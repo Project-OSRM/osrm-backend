@@ -5,6 +5,8 @@
 
 #include <boost/assert.hpp>
 
+#include <mapbox/cheap_ruler.hpp>
+
 #include <algorithm>
 #include <iterator>
 #include <limits>
@@ -18,6 +20,30 @@ namespace util
 namespace coordinate_calculation
 {
 
+namespace
+{
+mapbox::cheap_ruler::CheapRuler cheap_ruler_cache[] = {
+    mapbox::cheap_ruler::CheapRuler(-90, mapbox::cheap_ruler::CheapRuler::Meters),
+    mapbox::cheap_ruler::CheapRuler(-80, mapbox::cheap_ruler::CheapRuler::Meters),
+    mapbox::cheap_ruler::CheapRuler(-70, mapbox::cheap_ruler::CheapRuler::Meters),
+    mapbox::cheap_ruler::CheapRuler(-60, mapbox::cheap_ruler::CheapRuler::Meters),
+    mapbox::cheap_ruler::CheapRuler(-50, mapbox::cheap_ruler::CheapRuler::Meters),
+    mapbox::cheap_ruler::CheapRuler(-40, mapbox::cheap_ruler::CheapRuler::Meters),
+    mapbox::cheap_ruler::CheapRuler(-30, mapbox::cheap_ruler::CheapRuler::Meters),
+    mapbox::cheap_ruler::CheapRuler(-20, mapbox::cheap_ruler::CheapRuler::Meters),
+    mapbox::cheap_ruler::CheapRuler(-10, mapbox::cheap_ruler::CheapRuler::Meters),
+    mapbox::cheap_ruler::CheapRuler(0, mapbox::cheap_ruler::CheapRuler::Meters),
+    mapbox::cheap_ruler::CheapRuler(10, mapbox::cheap_ruler::CheapRuler::Meters),
+    mapbox::cheap_ruler::CheapRuler(20, mapbox::cheap_ruler::CheapRuler::Meters),
+    mapbox::cheap_ruler::CheapRuler(30, mapbox::cheap_ruler::CheapRuler::Meters),
+    mapbox::cheap_ruler::CheapRuler(40, mapbox::cheap_ruler::CheapRuler::Meters),
+    mapbox::cheap_ruler::CheapRuler(50, mapbox::cheap_ruler::CheapRuler::Meters),
+    mapbox::cheap_ruler::CheapRuler(60, mapbox::cheap_ruler::CheapRuler::Meters),
+    mapbox::cheap_ruler::CheapRuler(70, mapbox::cheap_ruler::CheapRuler::Meters),
+    mapbox::cheap_ruler::CheapRuler(80, mapbox::cheap_ruler::CheapRuler::Meters),
+    mapbox::cheap_ruler::CheapRuler(90, mapbox::cheap_ruler::CheapRuler::Meters)};
+}
+
 // Does not project the coordinates!
 std::uint64_t squaredEuclideanDistance(const Coordinate lhs, const Coordinate rhs)
 {
@@ -30,6 +56,19 @@ std::uint64_t squaredEuclideanDistance(const Coordinate lhs, const Coordinate rh
     std::uint64_t result = static_cast<std::uint64_t>(sq_lon + sq_lat);
 
     return result;
+}
+
+// Uses method described here:
+// https://www.gpo.gov/fdsys/pkg/CFR-2005-title47-vol4/pdf/CFR-2005-title47-vol4-sec73-208.pdf
+// should be within 0.1% or so of Vincenty method (assuming 19 buckets are enough)
+// Should be more faster and more precise than Haversine
+double fccApproximateDistance(const Coordinate coordinate_1, const Coordinate coordinate_2)
+{
+    const auto lon1 = static_cast<double>(util::toFloating(coordinate_1.lon));
+    const auto lat1 = static_cast<double>(util::toFloating(coordinate_1.lat));
+    const auto lon2 = static_cast<double>(util::toFloating(coordinate_2.lon));
+    const auto lat2 = static_cast<double>(util::toFloating(coordinate_2.lat));
+    return cheap_ruler_cache[std::lround(lat1 / 10) + 9].distance({lon1, lat1}, {lon2, lat2});
 }
 
 double haversineDistance(const Coordinate coordinate_1, const Coordinate coordinate_2)
