@@ -1,0 +1,50 @@
+language: generic
+sudo: false
+
+matrix:
+  include:
+    - os: linux
+      env: CXX=g++-4.9
+      addons:
+        apt:
+          sources: [ 'ubuntu-toolchain-r-test' ]
+          packages: [ 'g++-4.9' ]
+    - os: linux
+      env: CXX=g++-5
+      addons:
+        apt:
+          sources: [ 'ubuntu-toolchain-r-test' ]
+          packages: [ 'g++-5' ]
+    - os: linux
+      env: CXX=g++-6
+      addons:
+        apt:
+          sources: [ 'ubuntu-toolchain-r-test' ]
+          packages: [ 'g++-6' ]
+    - os: linux
+      env: CXX=clang++-3.8
+      addons:
+        apt:
+          sources: [ 'ubuntu-toolchain-r-test' ]
+          packages: [ 'libstdc++-4.9-dev' ]
+      before_script:
+        - git submodule update --init
+        - .mason/mason install clang++ 3.8.1
+        - export PATH=$(.mason/mason prefix clang++ 3.8.1)/bin:$PATH
+    - os: linux
+      env: CXX=clang++-3.9
+      addons:
+        apt:
+          sources: [ 'ubuntu-toolchain-r-test' ]
+          packages: [ 'libstdc++-4.9-dev' ]
+      before_script:
+        - git submodule update --init
+        - .mason/mason install clang++ 3.9.1
+        - export PATH=$(.mason/mason prefix clang++ 3.9.1)/bin:$PATH
+    - os: osx
+      osx_image: xcode7.3
+
+cache: apt
+
+script:
+ - make test
