@@ -1,3 +1,8 @@
+# UNRELEASED
+  - Changes from 5.17.0:
+    - Infrastructure:
+      - ADDED: Updated libosmium and added protozero and vtzero libraries [#5037](https://github.com/Project-OSRM/osrm-backend/pull/5037)
+
 # 5.17.0
   - Changes from 5.16.0:
     - Bugfixes:
