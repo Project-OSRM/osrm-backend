@@ -5,6 +5,7 @@
       - ADDED: New optional parameter `annotations` for `table` that accepts `distance`, `duration`, or both `distance,duration` as values [#4990](https://github.com/Project-OSRM/osrm-backend/pull/4990)
     - Infrastructure:
       - ADDED: Updated libosmium and added protozero and vtzero libraries [#5037](https://github.com/Project-OSRM/osrm-backend/pull/5037)
+      - CHANGED: Use vtzero library in tile plugin [#4686](https://github.com/Project-OSRM/osrm-backend/pull/4686)
 
 # 5.17.1
   - Changes from 5.17.0:
