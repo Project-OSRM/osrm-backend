@@ -1,0 +1,48 @@
+---
+Checks: '*,-cert-dcl21-cpp,-cert-err60-cpp,-clang-analyzer-core.CallAndMessage,-cppcoreguidelines-owning-memory,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-cppcoreguidelines-pro-bounds-pointer-arithmetic,-fuchsia-*,-google-runtime-references,-hicpp-no-array-decay,-readability-avoid-const-params-in-decls,-readability-implicit-bool-cast,-readability-implicit-bool-conversion'
+#
+#  Disabled checks:
+#
+#  cert-dcl21-cpp
+#    It is unclear whether this is still a good recommendation in modern C++.
+#
+#  cert-err60-cpp
+#    Reports std::runtime_error as broken which we can't do anything about.
+#
+#  clang-analyzer-core.CallAndMessage
+#    Produces false positives
+#
+#  cppcoreguidelines-owning-memory
+#    Don't want to add dependency on gsl library.
+#
+#  cppcoreguidelines-pro-bounds-array-to-pointer-decay
+#    Limited use and many false positives including for all asserts.
+#
+#  cppcoreguidelines-pro-bounds-pointer-arithmetic
+#    This is a low-level library, it needs to do pointer arithmetic.
+#
+#  fuchsia-*
+#    Much too strict.
+#
+#  google-runtime-references
+#    This is just a matter of preference, and we can't change the interfaces
+#    now anyways.
+#
+#  hicpp-no-array-decay
+#    Limited use and many false positives including for all asserts.
+#
+#  readability-avoid-const-params-in-decls
+#    Inconsistently complaines about some cases but not others. It is nice
+#    to have const in parameters if we don't change them just like with any
+#    other variables.
+#
+#  readability-implicit-bool-cast
+#    Old name for readability-implicit-bool-conversion.
+#
+#  readability-implicit-bool-conversion
+#    I don't think this makes the code more readable.
+#
+WarningsAsErrors: '*'
+HeaderFilterRegex: '\/include\/'
+AnalyzeTemporaryDtors: false
+...
