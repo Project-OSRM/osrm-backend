@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,7 +33,13 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <cassert>
+#include <cerrno>
+#include <cstdlib>
+#include <limits>
+#include <stdexcept>
 #include <tuple>
+#include <type_traits>
 
 namespace osmium {
 
@@ -46,6 +52,35 @@ namespace osmium {
     const_tie(const Ts&... args) noexcept {
         return std::tuple<const Ts&...>(args...);
     }
+
+    namespace detail {
+
+        /**
+         * Interpret the input string as number. Leading white space is
+         * ignored. If there is any error, return 0.
+         *
+         * @tparam TReturn The return type.
+         * @param str The input string.
+         *
+         * @pre @code str != nullptr @endcode
+         *
+         */
+
+        template <typename TReturn>
+        inline TReturn str_to_int(const char* str) {
+            static_assert(std::is_integral<TReturn>::value, "Must be integral type");
+            using r_type = typename std::conditional<std::is_unsigned<TReturn>::value, unsigned long long, long long>::type; // NOLINT(google-runtime-int)
+            assert(str);
+            char* end = nullptr;
+            const auto value = std::strtoll(str, &end, 10);
+            if (value < 0 || value == std::numeric_limits<long long>::max() || static_cast<r_type>(value) >= std::numeric_limits<TReturn>::max() || end == nullptr || *end != '\0') { // NOLINT(google-runtime-int)
+                return 0;
+            }
+
+            return static_cast<TReturn>(value);
+        }
+
+    } // namespace detail
 
 } // namespace osmium
 

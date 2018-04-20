@@ -1,10 +1,10 @@
 #include "catch.hpp"
 
-#include <random>
-
 #include <osmium/geom/factory.hpp>
 #include <osmium/geom/mercator_projection.hpp>
 #include <osmium/geom/projection.hpp>
+
+#include <random>
 
 TEST_CASE("Indentity Projection") {
     osmium::geom::IdentityProjection projection;
@@ -108,21 +108,3 @@ TEST_CASE("MercatorProjection") {
     }
 }
 
-TEST_CASE("Compare mercator implementations") {
-    osmium::geom::MercatorProjection projection_merc;
-    osmium::geom::Projection projection_3857{3857};
-
-    SECTION("random coordinates") {
-        std::random_device rd;
-        std::mt19937 gen{rd()};
-        std::uniform_real_distribution<> dis_x{-180.0, 180.0};
-        std::uniform_real_distribution<> dis_y{-90.0, 90.0};
-
-        for (int n = 0; n < 10000; ++n) {
-            const osmium::Location loc{dis_x(gen), dis_y(gen)};
-            REQUIRE(projection_merc(loc).x == Approx(projection_3857(loc).x).epsilon(0.00001));
-            REQUIRE(projection_merc(loc).y == Approx(projection_3857(loc).y).epsilon(0.00001));
-        }
-    }
-
-}

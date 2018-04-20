@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,6 +33,15 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <osmium/area/detail/node_ref_segment.hpp>
+#include <osmium/area/problem_reporter.hpp>
+#include <osmium/osm/item_type.hpp>
+#include <osmium/osm/location.hpp>
+#include <osmium/osm/node_ref.hpp>
+#include <osmium/osm/relation.hpp>
+#include <osmium/osm/types.hpp>
+#include <osmium/osm/way.hpp>
+
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
@@ -42,15 +51,6 @@ DEALINGS IN THE SOFTWARE.
 #include <numeric>
 #include <unordered_set>
 #include <vector>
-
-#include <osmium/area/detail/node_ref_segment.hpp>
-#include <osmium/area/problem_reporter.hpp>
-#include <osmium/osm/item_type.hpp>
-#include <osmium/osm/location.hpp>
-#include <osmium/osm/node_ref.hpp>
-#include <osmium/osm/relation.hpp>
-#include <osmium/osm/types.hpp>
-#include <osmium/osm/way.hpp>
 
 namespace osmium {
 
@@ -84,7 +84,7 @@ namespace osmium {
 
                 using slist_type = std::vector<NodeRefSegment>;
 
-                slist_type m_segments;
+                slist_type m_segments{};
 
                 bool m_debug;
 
@@ -144,7 +144,6 @@ namespace osmium {
             public:
 
                 explicit SegmentList(bool debug) noexcept :
-                    m_segments(),
                     m_debug(debug) {
                 }
 

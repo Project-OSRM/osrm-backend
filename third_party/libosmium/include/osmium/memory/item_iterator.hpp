@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,14 +33,14 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <osmium/memory/item.hpp>
+#include <osmium/osm/item_type.hpp>
+
 #include <cassert>
 #include <cstddef>
 #include <iosfwd>
 #include <iterator>
 #include <type_traits>
-
-#include <osmium/memory/item.hpp>
-#include <osmium/osm/item_type.hpp>
 
 namespace osmium {
 
@@ -221,10 +221,9 @@ namespace osmium {
             /**
              * Return the number of items in this range.
              *
-             * Note that this methods has worst-case complexity O(n) with n
-             * being the number of items in the underlying range.
+             * Complexity: Linear in the number of items.
              */
-            size_t size() const {
+            size_t size() const noexcept {
                 if (m_begin == m_end) {
                     return 0;
                 }
@@ -234,10 +233,9 @@ namespace osmium {
             /**
              * Is this range empty?
              *
-             * Note that this methods has worst-case complexity O(n) with n
-             * being the number of items in the underlying range.
+             * Complexity: Linear in the number of items.
              */
-            bool empty() const {
+            bool empty() const noexcept {
                 return size() == 0;
             }
 

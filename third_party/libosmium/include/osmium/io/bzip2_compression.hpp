@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -42,24 +42,25 @@ DEALINGS IN THE SOFTWARE.
  * @attention If you include this file, you'll need to link with `libbz2`.
  */
 
-#include <cerrno>
-#include <cstdio>
-#include <string>
-#include <system_error>
-
-#include <bzlib.h>
-
-#ifndef _MSC_VER
-# include <unistd.h>
-#endif
-
 #include <osmium/io/compression.hpp>
 #include <osmium/io/detail/read_write.hpp>
 #include <osmium/io/error.hpp>
 #include <osmium/io/file_compression.hpp>
 #include <osmium/io/writer_options.hpp>
-#include <osmium/util/cast.hpp>
 #include <osmium/util/compatibility.hpp>
+
+#include <bzlib.h>
+
+#include <cassert>
+#include <cerrno>
+#include <cstdio>
+#include <limits>
+#include <string>
+#include <system_error>
+
+#ifndef _MSC_VER
+# include <unistd.h>
+#endif
 
 namespace osmium {
 
@@ -117,6 +118,12 @@ namespace osmium {
                 }
             }
 
+            Bzip2Compressor(const Bzip2Compressor&) = delete;
+            Bzip2Compressor& operator=(const Bzip2Compressor&) = delete;
+
+            Bzip2Compressor(Bzip2Compressor&&) = delete;
+            Bzip2Compressor& operator=(Bzip2Compressor&&) = delete;
+
             ~Bzip2Compressor() noexcept final {
                 try {
                     close();
@@ -127,7 +134,8 @@ namespace osmium {
 
             void write(const std::string& data) final {
                 int error;
-                ::BZ2_bzWrite(&error, m_bzfile, const_cast<char*>(data.data()), static_cast_with_assert<int>(data.size()));
+                assert(data.size() < std::numeric_limits<int>::max());
+                ::BZ2_bzWrite(&error, m_bzfile, const_cast<char*>(data.data()), static_cast<int>(data.size()));
                 if (error != BZ_OK && error != BZ_STREAM_END) {
                     detail::throw_bzip2_error(m_bzfile, "write failed", error);
                 }
@@ -157,21 +165,25 @@ namespace osmium {
         class Bzip2Decompressor : public Decompressor {
 
             FILE* m_file;
-            int m_bzerror;
+            int m_bzerror = BZ_OK;
             BZFILE* m_bzfile;
-            bool m_stream_end {false};
+            bool m_stream_end = false;
 
         public:
 
             explicit Bzip2Decompressor(int fd) :
-                Decompressor(),
                 m_file(fdopen(::dup(fd), "rb")),
-                m_bzerror(BZ_OK),
                 m_bzfile(::BZ2_bzReadOpen(&m_bzerror, m_file, 0, 0, nullptr, 0)) {
                 if (!m_bzfile) {
                     detail::throw_bzip2_error(m_bzfile, "read open failed", m_bzerror);
                 }
             }
+
+            Bzip2Decompressor(const Bzip2Decompressor&) = delete;
+            Bzip2Decompressor& operator=(const Bzip2Decompressor&) = delete;
+
+            Bzip2Decompressor(Bzip2Decompressor&&) = delete;
+            Bzip2Decompressor& operator=(Bzip2Decompressor&&) = delete;
 
             ~Bzip2Decompressor() noexcept final {
                 try {
@@ -187,7 +199,8 @@ namespace osmium {
                 if (!m_stream_end) {
                     buffer.resize(osmium::io::Decompressor::input_buffer_size);
                     int error;
-                    const int nread = ::BZ2_bzRead(&error, m_bzfile, const_cast<char*>(buffer.data()), static_cast_with_assert<int>(buffer.size()));
+                    assert(buffer.size() < std::numeric_limits<int>::max());
+                    const int nread = ::BZ2_bzRead(&error, m_bzfile, const_cast<char*>(buffer.data()), static_cast<int>(buffer.size()));
                     if (error != BZ_OK && error != BZ_STREAM_END) {
                         detail::throw_bzip2_error(m_bzfile, "read failed", error);
                     }
@@ -204,7 +217,8 @@ namespace osmium {
                             if (error != BZ_OK) {
                                 detail::throw_bzip2_error(m_bzfile, "read close failed", error);
                             }
-                            m_bzfile = ::BZ2_bzReadOpen(&error, m_file, 0, 0, const_cast<void*>(static_cast<const void*>(unused_data.data())), static_cast_with_assert<int>(unused_data.size()));
+                            assert(unused_data.size() < std::numeric_limits<int>::max());
+                            m_bzfile = ::BZ2_bzReadOpen(&error, m_file, 0, 0, const_cast<void*>(static_cast<const void*>(unused_data.data())), static_cast<int>(unused_data.size()));
                             if (error != BZ_OK) {
                                 detail::throw_bzip2_error(m_bzfile, "read open failed", error);
                             }
@@ -251,13 +265,20 @@ namespace osmium {
                 m_buffer_size(size),
                 m_bzstream() {
                 m_bzstream.next_in = const_cast<char*>(buffer);
-                m_bzstream.avail_in = static_cast_with_assert<unsigned int>(size);
+                assert(size < std::numeric_limits<unsigned int>::max());
+                m_bzstream.avail_in = static_cast<unsigned int>(size);
                 const int result = BZ2_bzDecompressInit(&m_bzstream, 0, 0);
                 if (result != BZ_OK) {
                     std::string message{"bzip2 error: decompression init failed: "};
                     throw bzip2_error{message, result};
                 }
             }
+
+            Bzip2BufferDecompressor(const Bzip2BufferDecompressor&) = delete;
+            Bzip2BufferDecompressor& operator=(const Bzip2BufferDecompressor&) = delete;
+
+            Bzip2BufferDecompressor(Bzip2BufferDecompressor&&) = delete;
+            Bzip2BufferDecompressor& operator=(Bzip2BufferDecompressor&&) = delete;
 
             ~Bzip2BufferDecompressor() noexcept final {
                 try {
@@ -287,7 +308,7 @@ namespace osmium {
                         throw bzip2_error{message, result};
                     }
 
-                    output.resize(static_cast<unsigned long>(m_bzstream.next_out - output.data()));
+                    output.resize(static_cast<std::size_t>(m_bzstream.next_out - output.data()));
                 }
 
                 return output;

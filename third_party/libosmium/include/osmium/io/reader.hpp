@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,6 +33,20 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <osmium/io/compression.hpp>
+#include <osmium/io/detail/input_format.hpp>
+#include <osmium/io/detail/queue_util.hpp>
+#include <osmium/io/detail/read_thread.hpp>
+#include <osmium/io/detail/read_write.hpp>
+#include <osmium/io/error.hpp>
+#include <osmium/io/file.hpp>
+#include <osmium/io/header.hpp>
+#include <osmium/memory/buffer.hpp>
+#include <osmium/osm/entity_bits.hpp>
+#include <osmium/thread/pool.hpp>
+#include <osmium/thread/util.hpp>
+#include <osmium/util/config.hpp>
+
 #include <cerrno>
 #include <cstdlib>
 #include <fcntl.h>
@@ -50,20 +64,6 @@ DEALINGS IN THE SOFTWARE.
 #ifndef _MSC_VER
 # include <unistd.h>
 #endif
-
-#include <osmium/io/compression.hpp>
-#include <osmium/io/detail/input_format.hpp>
-#include <osmium/io/detail/read_thread.hpp>
-#include <osmium/io/detail/read_write.hpp>
-#include <osmium/io/detail/queue_util.hpp>
-#include <osmium/io/error.hpp>
-#include <osmium/io/file.hpp>
-#include <osmium/io/header.hpp>
-#include <osmium/memory/buffer.hpp>
-#include <osmium/osm/entity_bits.hpp>
-#include <osmium/thread/pool.hpp>
-#include <osmium/thread/util.hpp>
-#include <osmium/util/config.hpp>
 
 namespace osmium {
 
@@ -102,9 +102,9 @@ namespace osmium {
                 error  = 1, // some error occurred while reading
                 closed = 2, // close() called
                 eof    = 3  // eof of file was reached without error
-            } m_status;
+            } m_status = status::okay;
 
-            int m_childpid;
+            int m_childpid = 0;
 
             detail::future_string_queue_type m_input_queue;
 
@@ -115,12 +115,12 @@ namespace osmium {
             detail::future_buffer_queue_type m_osmdata_queue;
             detail::queue_wrapper<osmium::memory::Buffer> m_osmdata_queue_wrapper;
 
-            std::future<osmium::io::Header> m_header_future;
-            osmium::io::Header m_header;
+            std::future<osmium::io::Header> m_header_future{};
+            osmium::io::Header m_header{};
 
-            osmium::thread::thread_handler m_thread;
+            osmium::thread::thread_handler m_thread{};
 
-            std::size_t m_file_size;
+            std::size_t m_file_size = 0;
 
             osmium::osm_entity_bits::type m_read_which_entities = osmium::osm_entity_bits::all;
             osmium::io::read_meta m_read_metadata = osmium::io::read_meta::yes;
@@ -254,8 +254,6 @@ namespace osmium {
             explicit Reader(const osmium::io::File& file, TArgs&&... args) :
                 m_file(file.check()),
                 m_creator(detail::ParserFactory::instance().get_creator_function(m_file)),
-                m_status(status::okay),
-                m_childpid(0),
                 m_input_queue(detail::get_input_queue_size(), "raw_input"),
                 m_decompressor(m_file.buffer() ?
                     osmium::io::CompressionFactory::instance().create_decompressor(file.compression(), m_file.buffer(), m_file.buffer_size()) :
@@ -263,9 +261,6 @@ namespace osmium {
                 m_read_thread_manager(*m_decompressor, m_input_queue),
                 m_osmdata_queue(detail::get_osmdata_queue_size(), "parser_results"),
                 m_osmdata_queue_wrapper(m_osmdata_queue),
-                m_header_future(),
-                m_header(),
-                m_thread(),
                 m_file_size(m_decompressor->file_size()) {
 
                 (void)std::initializer_list<int>{
@@ -294,8 +289,8 @@ namespace osmium {
             Reader(const Reader&) = delete;
             Reader& operator=(const Reader&) = delete;
 
-            Reader(Reader&&) = default;
-            Reader& operator=(Reader&&) = default;
+            Reader(Reader&&) = delete;
+            Reader& operator=(Reader&&) = delete;
 
             ~Reader() noexcept {
                 try {
@@ -332,7 +327,7 @@ namespace osmium {
                     const pid_t pid = ::waitpid(m_childpid, &status, 0);
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wold-style-cast"
-                    if (pid < 0 || !WIFEXITED(status) || WEXITSTATUS(status) != 0) {
+                    if (pid < 0 || !WIFEXITED(status) || WEXITSTATUS(status) != 0) { // NOLINT(hicpp-signed-bitwise)
                         throw std::system_error{errno, std::system_category(), "subprocess returned error"};
                     }
 #pragma GCC diagnostic pop

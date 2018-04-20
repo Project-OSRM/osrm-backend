@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,14 +33,14 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <osmium/index/detail/mmap_vector_base.hpp>
+#include <osmium/index/detail/tmpfile.hpp>
+#include <osmium/util/file.hpp>
+
 #include <algorithm>
 #include <cstddef>
 #include <stdexcept>
 #include <string>
-
-#include <osmium/index/detail/mmap_vector_base.hpp>
-#include <osmium/index/detail/tmpfile.hpp>
-#include <osmium/util/file.hpp>
 
 namespace osmium {
 
@@ -54,7 +54,7 @@ namespace osmium {
         class mmap_vector_file : public mmap_vector_base<T> {
 
             static std::size_t filesize(int fd) {
-                const auto size = osmium::util::file_size(fd);
+                const auto size = osmium::file_size(fd);
 
                 if (size % sizeof(T) != 0) {
                     throw std::runtime_error{"Index file has wrong size (must be multiple of " + std::to_string(sizeof(T)) + ")."};
@@ -77,8 +77,6 @@ namespace osmium {
                     std::max(osmium::detail::mmap_vector_size_increment, filesize(fd)),
                     filesize(fd)) {
             }
-
-            ~mmap_vector_file() noexcept = default;
 
         }; // class mmap_vector_file
 

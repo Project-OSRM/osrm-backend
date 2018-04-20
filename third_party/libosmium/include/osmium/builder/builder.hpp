@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,15 +33,15 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <osmium/memory/buffer.hpp>
+#include <osmium/memory/item.hpp>
+#include <osmium/util/compatibility.hpp>
+
 #include <algorithm>
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
-
-#include <osmium/memory/buffer.hpp>
-#include <osmium/memory/item.hpp>
-#include <osmium/util/compatibility.hpp>
 
 namespace osmium {
 
@@ -59,12 +59,6 @@ namespace osmium {
             osmium::memory::Buffer& m_buffer;
             Builder* m_parent;
             std::size_t m_item_offset;
-
-            Builder(const Builder&) = delete;
-            Builder(Builder&&) = delete;
-
-            Builder& operator=(const Builder&) = delete;
-            Builder& operator=(Builder&&) = delete;
 
         protected:
 
@@ -202,6 +196,12 @@ namespace osmium {
             }
 
         public:
+
+            Builder(const Builder&) = delete;
+            Builder(Builder&&) = delete;
+
+            Builder& operator=(const Builder&) = delete;
+            Builder& operator=(Builder&&) = delete;
 
             /// Return the buffer this builder is using.
             osmium::memory::Buffer& buffer() noexcept {

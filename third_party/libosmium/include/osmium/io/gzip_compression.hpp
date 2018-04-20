@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -42,23 +42,24 @@ DEALINGS IN THE SOFTWARE.
  * @attention If you include this file, you'll need to link with `libz`.
  */
 
+#include <osmium/io/compression.hpp>
+#include <osmium/io/detail/read_write.hpp>
+#include <osmium/io/error.hpp>
+#include <osmium/io/file_compression.hpp>
+#include <osmium/io/writer_options.hpp>
+#include <osmium/util/compatibility.hpp>
+
+#include <zlib.h>
+
+#include <cassert>
+#include <cerrno>
 #include <cstddef>
+#include <limits>
 #include <string>
 
 #ifndef _MSC_VER
 # include <unistd.h>
 #endif
-
-#include <errno.h>
-#include <zlib.h>
-
-#include <osmium/io/compression.hpp>
-#include <osmium/io/error.hpp>
-#include <osmium/io/file_compression.hpp>
-#include <osmium/io/detail/read_write.hpp>
-#include <osmium/io/writer_options.hpp>
-#include <osmium/util/cast.hpp>
-#include <osmium/util/compatibility.hpp>
 
 namespace osmium {
 
@@ -114,6 +115,12 @@ namespace osmium {
                 }
             }
 
+            GzipCompressor(const GzipCompressor&) = delete;
+            GzipCompressor& operator=(const GzipCompressor&) = delete;
+
+            GzipCompressor(GzipCompressor&&) = delete;
+            GzipCompressor& operator=(GzipCompressor&&) = delete;
+
             ~GzipCompressor() noexcept final {
                 try {
                     close();
@@ -124,7 +131,8 @@ namespace osmium {
 
             void write(const std::string& data) final {
                 if (!data.empty()) {
-                    const int nwrite = ::gzwrite(m_gzfile, data.data(), static_cast_with_assert<unsigned int>(data.size()));
+                    assert(data.size() < std::numeric_limits<unsigned int>::max());
+                    const int nwrite = ::gzwrite(m_gzfile, data.data(), static_cast<unsigned int>(data.size()));
                     if (nwrite == 0) {
                         detail::throw_gzip_error(m_gzfile, "write failed");
                     }
@@ -154,12 +162,17 @@ namespace osmium {
         public:
 
             explicit GzipDecompressor(int fd) :
-                Decompressor(),
                 m_gzfile(::gzdopen(fd, "r")) {
                 if (!m_gzfile) {
                     detail::throw_gzip_error(m_gzfile, "read initialization failed");
                 }
             }
+
+            GzipDecompressor(const GzipDecompressor&) = delete;
+            GzipDecompressor& operator=(const GzipDecompressor&) = delete;
+
+            GzipDecompressor(GzipDecompressor&&) = delete;
+            GzipDecompressor& operator=(GzipDecompressor&&) = delete;
 
             ~GzipDecompressor() noexcept final {
                 try {
@@ -171,7 +184,8 @@ namespace osmium {
 
             std::string read() final {
                 std::string buffer(osmium::io::Decompressor::input_buffer_size, '\0');
-                int nread = ::gzread(m_gzfile, const_cast<char*>(buffer.data()), static_cast_with_assert<unsigned int>(buffer.size()));
+                assert(buffer.size() < std::numeric_limits<unsigned int>::max());
+                int nread = ::gzread(m_gzfile, const_cast<char*>(buffer.data()), static_cast<unsigned int>(buffer.size()));
                 if (nread < 0) {
                     detail::throw_gzip_error(m_gzfile, "read failed");
                 }
@@ -207,8 +221,9 @@ namespace osmium {
                 m_buffer_size(size),
                 m_zstream() {
                 m_zstream.next_in = reinterpret_cast<unsigned char*>(const_cast<char*>(buffer));
-                m_zstream.avail_in = static_cast_with_assert<unsigned int>(size);
-                const int result = inflateInit2(&m_zstream, MAX_WBITS | 32);
+                assert(size < std::numeric_limits<unsigned int>::max());
+                m_zstream.avail_in = static_cast<unsigned int>(size);
+                const int result = inflateInit2(&m_zstream, MAX_WBITS | 32); // NOLINT(hicpp-signed-bitwise)
                 if (result != Z_OK) {
                     std::string message{"gzip error: decompression init failed: "};
                     if (m_zstream.msg) {
@@ -217,6 +232,12 @@ namespace osmium {
                     throw osmium::gzip_error{message, result};
                 }
             }
+
+            GzipBufferDecompressor(const GzipBufferDecompressor&) = delete;
+            GzipBufferDecompressor& operator=(const GzipBufferDecompressor&) = delete;
+
+            GzipBufferDecompressor(GzipBufferDecompressor&&) = delete;
+            GzipBufferDecompressor& operator=(GzipBufferDecompressor&&) = delete;
 
             ~GzipBufferDecompressor() noexcept final {
                 try {
@@ -249,7 +270,7 @@ namespace osmium {
                         throw osmium::gzip_error{message, result};
                     }
 
-                    output.resize(static_cast<unsigned long>(m_zstream.next_out - reinterpret_cast<const unsigned char*>(output.data())));
+                    output.resize(static_cast<std::size_t>(m_zstream.next_out - reinterpret_cast<const unsigned char*>(output.data())));
                 }
 
                 return output;

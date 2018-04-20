@@ -1,13 +1,12 @@
-
 #include "catch.hpp"
-
-#include <memory>
-#include <sstream>
-#include <string>
 
 #include <osmium/geom/ogr.hpp>
 #include <osmium/geom/wkb.hpp>
 #include <osmium/util/endian.hpp>
+
+#include <memory>
+#include <sstream>
+#include <string>
 
 #if __BYTE_ORDER == __LITTLE_ENDIAN
 

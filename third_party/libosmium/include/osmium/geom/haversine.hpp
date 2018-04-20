@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,13 +33,13 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <cmath>
-#include <iterator>
-
 #include <osmium/geom/coordinates.hpp>
 #include <osmium/geom/util.hpp>
 #include <osmium/osm/node_ref.hpp>
 #include <osmium/osm/way.hpp>
+
+#include <cmath>
+#include <iterator>
 
 namespace osmium {
 
@@ -48,7 +48,7 @@ namespace osmium {
         /**
          * @brief Functions to calculate arc distance on Earth using the haversine formula.
          *
-         * See http://en.wikipedia.org/wiki/Haversine_formula
+         * See https://en.wikipedia.org/wiki/Haversine_formula
          *
          * Implementation derived from
          * http://blog.julien.cayzac.name/2008/10/arc-and-distance-between-two-points-on.html
@@ -69,7 +69,7 @@ namespace osmium {
                 double lath = sin(deg_to_rad(c1.y - c2.y) * 0.5);
                 lath *= lath;
                 const double tmp = cos(deg_to_rad(c1.y)) * cos(deg_to_rad(c2.y));
-                return 2.0 * EARTH_RADIUS_IN_METERS * asin(sqrt(lath + tmp*lonh));
+                return 2.0 * EARTH_RADIUS_IN_METERS * asin(sqrt(lath + tmp * lonh));
             }
 
             /**

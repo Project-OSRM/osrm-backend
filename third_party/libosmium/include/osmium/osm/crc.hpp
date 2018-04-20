@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,8 +33,6 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <cstdint>
-
 #include <osmium/osm/area.hpp>
 #include <osmium/osm/box.hpp>
 #include <osmium/osm/changeset.hpp>
@@ -50,40 +48,42 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/osm/way.hpp>
 #include <osmium/util/endian.hpp>
 
+#include <cstdint>
+
 namespace osmium {
 
-    namespace util {
+    inline namespace util {
 
         inline uint16_t byte_swap_16(uint16_t value) noexcept {
-# if defined(__GNUC__) || defined(__clang__)
+#if defined(__GNUC__) || defined(__clang__)
             return __builtin_bswap16(value);
-# else
+#else
             return (value >> 8) | (value << 8);
-# endif
+#endif
         }
 
         inline uint32_t byte_swap_32(uint32_t value) noexcept {
-# if defined(__GNUC__) || defined(__clang__)
+#if defined(__GNUC__) || defined(__clang__)
             return __builtin_bswap32(value);
-# else
+#else
             return  (value >> 24) |
                    ((value >>  8) & 0x0000FF00) |
                    ((value <<  8) & 0x00FF0000) |
                     (value << 24);
-# endif
+#endif
         }
 
         inline uint64_t byte_swap_64(uint64_t value) noexcept {
-# if defined(__GNUC__) || defined(__clang__)
+#if defined(__GNUC__) || defined(__clang__)
             return __builtin_bswap64(value);
-# else
+#else
             const uint64_t val1 = byte_swap_32(value & 0xFFFFFFFF);
             const uint64_t val2 = byte_swap_32(value >> 32);
             return (val1 << 32) | val2;
-# endif
+#endif
         }
 
-    } // namespace util
+    } // inline namespace util
 
     template <typename TCRC>
     class CRC {
@@ -112,7 +112,7 @@ namespace osmium {
 #if __BYTE_ORDER == __LITTLE_ENDIAN
             m_crc.process_bytes(&value, sizeof(uint16_t));
 #else
-            const uint16_t v = osmium::util::byte_swap_16(value);
+            const uint16_t v = osmium::byte_swap_16(value);
             m_crc.process_bytes(&v, sizeof(uint16_t));
 #endif
         }
@@ -121,7 +121,7 @@ namespace osmium {
 #if __BYTE_ORDER == __LITTLE_ENDIAN
             m_crc.process_bytes(&value, sizeof(uint32_t));
 #else
-            const uint32_t v = osmium::util::byte_swap_32(value);
+            const uint32_t v = osmium::byte_swap_32(value);
             m_crc.process_bytes(&v, sizeof(uint32_t));
 #endif
         }
@@ -130,7 +130,7 @@ namespace osmium {
 #if __BYTE_ORDER == __LITTLE_ENDIAN
             m_crc.process_bytes(&value, sizeof(uint64_t));
 #else
-            const uint64_t v = osmium::util::byte_swap_64(value);
+            const uint64_t v = osmium::byte_swap_64(value);
             m_crc.process_bytes(&v, sizeof(uint64_t));
 #endif
         }

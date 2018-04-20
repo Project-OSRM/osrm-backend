@@ -26,7 +26,7 @@
 */
 
 #include <cstdlib>  // for std::exit
-#include <getopt.h> // for getopt_long
+#include <cstring>  // for std::strcmp
 #include <iostream> // for std::cout, std::cerr
 
 // For assembling multipolygons
@@ -91,13 +91,21 @@ void print_help() {
               << "  -o, --dump-objects   Dump area objects\n";
 }
 
+void print_usage(const char* prgname) {
+    std::cerr << "Usage: " << prgname << " [OPTIONS] OSMFILE\n";
+    std::exit(1);
+}
+
 int main(int argc, char* argv[]) {
-    static struct option long_options[] = {
-        {"help",         no_argument, nullptr, 'h'},
-        {"dump-wkt",     no_argument, nullptr, 'w'},
-        {"dump-objects", no_argument, nullptr, 'o'},
-        {nullptr, 0, nullptr, 0}
-    };
+    if (argc > 1 && (!std::strcmp(argv[1], "-h") ||
+                     !std::strcmp(argv[1], "--help"))) {
+        print_help();
+        std::exit(0);
+    }
+
+    if (argc != 3) {
+        print_usage(argv[0]);
+    }
 
     // Initialize an empty DynamicHandler. Later it will be associated
     // with one of the handlers. You can think of the DynamicHandler as
@@ -105,35 +113,15 @@ int main(int argc, char* argv[]) {
     // real handler.
     osmium::handler::DynamicHandler handler;
 
-    // Read options from command line.
-    while (true) {
-        const int c = getopt_long(argc, argv, "hwo", long_options, nullptr);
-        if (c == -1) {
-            break;
-        }
-
-        switch (c) {
-            case 'h':
-                print_help();
-                std::exit(0);
-            case 'w':
-                handler.set<WKTDump>();
-                break;
-            case 'o':
-                handler.set<osmium::handler::Dump>(std::cout);
-                break;
-            default:
-                std::exit(1);
-        }
+    if (!std::strcmp(argv[1], "-w") || !std::strcmp(argv[1], "--dump-wkt")) {
+        handler.set<WKTDump>();
+    } else if (!std::strcmp(argv[1], "-o") || !std::strcmp(argv[1], "--dump-objects")) {
+        handler.set<osmium::handler::Dump>(std::cout);
+    } else {
+        print_usage(argv[0]);
     }
 
-    const int remaining_args = argc - optind;
-    if (remaining_args != 1) {
-        std::cerr << "Usage: " << argv[0] << " [OPTIONS] OSMFILE\n";
-        std::exit(1);
-    }
-
-    osmium::io::File input_file{argv[optind]};
+    osmium::io::File input_file{argv[2]};
 
     // Configuration for the multipolygon assembler. Here the default settings
     // are used, but you could change multiple settings.

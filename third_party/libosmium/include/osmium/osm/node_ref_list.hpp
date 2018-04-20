@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,15 +33,15 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <cassert>
-#include <cstddef>
-#include <iterator>
-
 #include <osmium/memory/item.hpp>
 #include <osmium/osm/box.hpp>
 #include <osmium/osm/item_type.hpp>
 #include <osmium/osm/location.hpp>
 #include <osmium/osm/node_ref.hpp>
+
+#include <cassert>
+#include <cstddef>
+#include <iterator>
 
 namespace osmium {
 
@@ -137,7 +137,7 @@ namespace osmium {
          */
         const NodeRef& back() const noexcept {
             assert(!empty());
-            return operator[](size()-1);
+            return operator[](size() - 1);
         }
 
         /**

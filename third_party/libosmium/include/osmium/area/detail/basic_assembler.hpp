@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,6 +33,20 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <osmium/area/assembler_config.hpp>
+#include <osmium/area/detail/node_ref_segment.hpp>
+#include <osmium/area/detail/proto_ring.hpp>
+#include <osmium/area/detail/segment_list.hpp>
+#include <osmium/area/problem_reporter.hpp>
+#include <osmium/area/stats.hpp>
+#include <osmium/builder/osm_object_builder.hpp>
+#include <osmium/osm/location.hpp>
+#include <osmium/osm/node_ref.hpp>
+#include <osmium/osm/types.hpp>
+#include <osmium/osm/way.hpp>
+#include <osmium/util/iterator.hpp>
+#include <osmium/util/timer.hpp>
+
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
@@ -45,21 +59,6 @@ DEALINGS IN THE SOFTWARE.
 #include <utility>
 #include <vector>
 
-#include <osmium/builder/osm_object_builder.hpp>
-#include <osmium/osm/location.hpp>
-#include <osmium/osm/node_ref.hpp>
-#include <osmium/osm/types.hpp>
-#include <osmium/osm/way.hpp>
-#include <osmium/util/iterator.hpp>
-#include <osmium/util/timer.hpp>
-
-#include <osmium/area/assembler_config.hpp>
-#include <osmium/area/detail/node_ref_segment.hpp>
-#include <osmium/area/detail/proto_ring.hpp>
-#include <osmium/area/detail/segment_list.hpp>
-#include <osmium/area/problem_reporter.hpp>
-#include <osmium/area/stats.hpp>
-
 namespace osmium {
 
     namespace area {
@@ -70,19 +69,17 @@ namespace osmium {
 
             struct location_to_ring_map {
                 osmium::Location location;
-                open_ring_its_type::iterator ring_it;
-                bool start;
+                open_ring_its_type::iterator ring_it{};
+                bool start{false};
 
-                location_to_ring_map(const osmium::Location& l, const open_ring_its_type::iterator& r, bool s) noexcept :
+                location_to_ring_map(osmium::Location l, open_ring_its_type::iterator r, const bool s) noexcept :
                     location(l),
                     ring_it(r),
                     start(s) {
                 }
 
-                explicit location_to_ring_map(const osmium::Location& l) noexcept :
-                    location(l),
-                    ring_it(),
-                    start(false) {
+                explicit location_to_ring_map(osmium::Location l) noexcept :
+                    location(l) {
                 }
 
                 const ProtoRing& ring() const noexcept {
@@ -108,7 +105,7 @@ namespace osmium {
 
                 struct slocation {
 
-                    static constexpr const uint32_t invalid_item = 1 << 30;
+                    static constexpr const uint32_t invalid_item = 1u << 30u;
 
                     uint32_t item : 31;
                     uint32_t reverse : 1;
@@ -320,7 +317,7 @@ namespace osmium {
                             const int64_t ly = end_location.y();
                             const auto z = (bx - ax)*(ly - ay) - (by - ay)*(lx - ax);
                             if (debug()) {
-                                std::cerr << "      Segment XXXX z=" << z << "\n";
+                                std::cerr << "      Segment z=" << z << '\n';
                             }
                             if (z > 0) {
                                 nesting += segment->is_reverse() ? -1 : 1;
@@ -623,8 +620,8 @@ namespace osmium {
                 }
 
                 void merge_two_rings(open_ring_its_type& open_ring_its, const location_to_ring_map& m1, const location_to_ring_map& m2) {
-                    std::list<ProtoRing>::iterator r1 = *m1.ring_it;
-                    std::list<ProtoRing>::iterator r2 = *m2.ring_it;
+                    const auto r1 = *m1.ring_it;
+                    const auto r2 = *m2.ring_it;
 
                     if (r1->get_node_ref_stop().location() == r2->get_node_ref_start().location()) {
                         r1->join_forward(*r2);
@@ -689,13 +686,12 @@ namespace osmium {
 
                 struct candidate {
                     int64_t sum;
-                    std::vector<std::pair<location_to_ring_map, bool>> rings;
+                    std::vector<std::pair<location_to_ring_map, bool>> rings{};
                     osmium::Location start_location;
                     osmium::Location stop_location;
 
                     explicit candidate(location_to_ring_map& ring, bool reverse) :
                         sum(ring.ring().sum()),
-                        rings(),
                         start_location(ring.ring().get_node_ref_start().location()),
                         stop_location(ring.ring().get_node_ref_stop().location()) {
                         rings.emplace_back(ring, reverse);
@@ -813,8 +809,8 @@ namespace osmium {
                             ++m_stats.open_rings;
                             if (m_config.problem_reporter) {
                                 for (auto& it : open_ring_its) {
-                                    m_config.problem_reporter->report_ring_not_closed(it->get_node_ref_start());
-                                    m_config.problem_reporter->report_ring_not_closed(it->get_node_ref_stop());
+                                    m_config.problem_reporter->report_ring_not_closed(it->get_node_ref_start(), nullptr);
+                                    m_config.problem_reporter->report_ring_not_closed(it->get_node_ref_stop(), nullptr);
                                 }
                             }
                         }
@@ -939,20 +935,6 @@ namespace osmium {
                     return true;
                 }
 
-                /**
-                 * Checks if any ways were completely removed in the
-                 * erase_duplicate_segments step.
-                 */
-                bool ways_were_lost() {
-                    std::unordered_set<const osmium::Way*> ways_in_segments;
-
-                    for (const auto& segment : m_segment_list) {
-                        ways_in_segments.insert(segment.way());
-                    }
-
-                    return ways_in_segments.size() < m_num_members;
-                }
-
 #ifdef OSMIUM_WITH_TIMER
                 static bool print_header() {
                     std::cout << "nodes outer_rings inner_rings sort dupl intersection locations split simple_case complex_case roles_check\n";
@@ -1018,15 +1000,6 @@ namespace osmium {
                     if (m_segment_list.empty()) {
                         if (debug()) {
                             std::cerr << "  No segments left\n";
-                        }
-                        return false;
-                    }
-
-                    // If one or more complete ways was removed because of
-                    // duplicate segments, this isn't a valid area.
-                    if (ways_were_lost()) {
-                        if (debug()) {
-                            std::cerr << "  Complete ways removed because of duplicate segments\n";
                         }
                         return false;
                     }
@@ -1169,8 +1142,6 @@ namespace osmium {
                     init_header();
 #endif
                 }
-
-                ~BasicAssembler() noexcept = default;
 
                 const AssemblerConfig& config() const noexcept {
                     return m_config;

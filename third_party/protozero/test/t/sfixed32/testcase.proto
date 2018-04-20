@@ -1,0 +1,11 @@
+
+option optimize_for = LITE_RUNTIME;
+
+package TestSFixed32;
+
+message Test {
+
+    required sfixed32 i = 1;
+
+}
+

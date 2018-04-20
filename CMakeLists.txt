@@ -167,7 +167,7 @@ add_executable(osrm-customize src/tools/customize.cpp)
 add_executable(osrm-contract src/tools/contract.cpp)
 add_executable(osrm-routed src/tools/routed.cpp $<TARGET_OBJECTS:SERVER> $<TARGET_OBJECTS:UTIL>)
 add_executable(osrm-datastore src/tools/store.cpp $<TARGET_OBJECTS:MICROTAR> $<TARGET_OBJECTS:UTIL>)
-add_library(osrm src/osrm/osrm.cpp $<TARGET_OBJECTS:ENGINE> $<TARGET_OBJECTS:STORAGE> $<TARGET_OBJECTS:MICROTAR> $<TARGET_OBJECTS:UTIL> )
+add_library(osrm src/osrm/osrm.cpp $<TARGET_OBJECTS:ENGINE> $<TARGET_OBJECTS:STORAGE> $<TARGET_OBJECTS:MICROTAR> $<TARGET_OBJECTS:UTIL>)
 add_library(osrm_contract src/osrm/contractor.cpp $<TARGET_OBJECTS:CONTRACTOR> $<TARGET_OBJECTS:UTIL>)
 add_library(osrm_extract src/osrm/extractor.cpp $<TARGET_OBJECTS:EXTRACTOR> $<TARGET_OBJECTS:MICROTAR> $<TARGET_OBJECTS:UTIL>)
 add_library(osrm_guidance $<TARGET_OBJECTS:GUIDANCE> $<TARGET_OBJECTS:UTIL>)
@@ -416,10 +416,23 @@ if(UNIX AND NOT APPLE)
   set(MAYBE_RT_LIBRARY -lrt)
 endif()
 
-# Disallow deprecated protozero APIs
-add_definitions(-DPROTOZERO_STRICT_API)
-
 find_package(Threads REQUIRED)
+
+# Third-party libraries
+set(RAPIDJSON_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/rapidjson/include")
+include_directories(SYSTEM ${RAPIDJSON_INCLUDE_DIR})
+
+set(MICROTAR_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/microtar/src")
+include_directories(SYSTEM ${MICROTAR_INCLUDE_DIR})
+add_library(MICROTAR OBJECT "${CMAKE_CURRENT_SOURCE_DIR}/third_party/microtar/src/microtar.c")
+set_property(TARGET MICROTAR PROPERTY POSITION_INDEPENDENT_CODE ON)
+
+set(PROTOZERO_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/protozero/include")
+include_directories(SYSTEM ${PROTOZERO_INCLUDE_DIR})
+
+set(VTZERO_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/vtzero/include")
+include_directories(SYSTEM ${VTZERO_INCLUDE_DIR})
+
 
 # if mason is enabled no find_package calls are made
 # to ensure that we are only compiling and linking against
@@ -553,14 +566,6 @@ else()
   find_package(Osmium REQUIRED COMPONENTS io)
   include_directories(SYSTEM ${OSMIUM_INCLUDE_DIR})
 endif()
-
-set(RAPIDJSON_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/rapidjson/include")
-include_directories(SYSTEM ${RAPIDJSON_INCLUDE_DIR})
-
-set(MICROTAR_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/microtar/src")
-include_directories(SYSTEM ${MICROTAR_INCLUDE_DIR})
-add_library(MICROTAR OBJECT "${CMAKE_CURRENT_SOURCE_DIR}/third_party/microtar/src/microtar.c")
-set_property(TARGET MICROTAR PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 # prefix compilation with ccache by default if available and on clang or gcc
 if(ENABLE_CCACHE AND (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU"))

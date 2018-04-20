@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,15 +33,15 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <osmium/util/cast.hpp>
+
 #include <cstdint>
 #include <type_traits>
 #include <utility>
 
-#include <osmium/util/cast.hpp>
-
 namespace osmium {
 
-    namespace util {
+    inline namespace util {
 
         /**
          * Helper class for delta encoding.
@@ -111,8 +111,12 @@ namespace osmium {
             }
 
             TValue update(TDelta delta) noexcept {
-                m_value = static_cast_with_assert<TValue>(
-                              static_cast_with_assert<TDelta>(m_value) + delta);
+                // Do not check for overflow. With real data this should not
+                // happen and if somebody is trying to trick us they can only
+                // create values this way they would also be able to generate
+                // without having an overflow.
+                m_value = static_cast<TValue>(
+                              static_cast<TDelta>(m_value) + delta);
                 return m_value;
             }
 

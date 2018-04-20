@@ -1,8 +1,6 @@
-
 #include "catch.hpp"
-#include "utils.hpp"
 
-#include <string>
+#include "utils.hpp"
 
 #include <osmium/builder/attr.hpp>
 #include <osmium/builder/osm_object_builder.hpp>
@@ -15,6 +13,9 @@
 #include <osmium/thread/queue.hpp>
 #include <osmium/thread/util.hpp>
 
+#include <string>
+#include <utility>
+
 class MockParser : public osmium::io::detail::Parser {
 
     std::string m_fail_in;
@@ -22,9 +23,9 @@ class MockParser : public osmium::io::detail::Parser {
 public:
 
     MockParser(osmium::io::detail::parser_arguments& args,
-               const std::string& fail_in) :
+               std::string fail_in) :
         Parser(args),
-        m_fail_in(fail_in) {
+        m_fail_in(std::move(fail_in)) {
     }
 
     void run() final {

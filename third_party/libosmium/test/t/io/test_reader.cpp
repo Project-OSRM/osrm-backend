@@ -1,18 +1,19 @@
 #include "catch.hpp"
+
 #include "utils.hpp"
 
 #include <osmium/handler.hpp>
 #include <osmium/io/any_compression.hpp>
-#include <osmium/io/xml_input.hpp>
 #include <osmium/io/pbf_input.hpp>
-#include <osmium/visitor.hpp>
+#include <osmium/io/xml_input.hpp>
 #include <osmium/memory/buffer.hpp>
+#include <osmium/visitor.hpp>
 
 struct CountHandler : public osmium::handler::Handler {
 
     int count = 0;
 
-    void node(const osmium::Node&) {
+    void node(const osmium::Node& /*node*/) {
         ++count;
     }
 

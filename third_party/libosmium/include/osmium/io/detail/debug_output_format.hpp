@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,16 +33,6 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <cinttypes>
-#include <cmath>
-#include <cstring>
-#include <iterator>
-#include <memory>
-#include <string>
-#include <utility>
-
-#include <boost/crc.hpp>
-
 #include <osmium/io/detail/output_format.hpp>
 #include <osmium/io/detail/queue_util.hpp>
 #include <osmium/io/detail/string_util.hpp>
@@ -56,6 +46,7 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/osm/crc.hpp>
 #include <osmium/osm/item_type.hpp>
 #include <osmium/osm/location.hpp>
+#include <osmium/osm/metadata_options.hpp>
 #include <osmium/osm/node.hpp>
 #include <osmium/osm/node_ref.hpp>
 #include <osmium/osm/object.hpp>
@@ -67,6 +58,16 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/thread/pool.hpp>
 #include <osmium/util/minmax.hpp>
 #include <osmium/visitor.hpp>
+
+#include <boost/crc.hpp>
+
+#include <cinttypes>
+#include <cmath>
+#include <cstring>
+#include <iterator>
+#include <memory>
+#include <string>
+#include <utility>
 
 namespace osmium {
 
@@ -92,18 +93,19 @@ namespace osmium {
 
             struct debug_output_options {
 
-                /// Should metadata of objects be added?
-                bool add_metadata;
+                /// Which metadata of objects should be added?
+                osmium::metadata_options add_metadata;
 
                 /// Output with ANSI colors?
-                bool use_color;
+                bool use_color = false;
 
                 /// Add CRC32 checksum to each object?
-                bool add_crc32;
+                bool add_crc32 = false;
 
                 /// Write in form of a diff file?
-                bool format_as_diff;
-            };
+                bool format_as_diff = false;
+
+            }; // struct debug_output_options
 
             /**
              * Writes out one buffer with OSM data in Debug format.
@@ -144,7 +146,8 @@ namespace osmium {
                             *m_out += '-';
                             *m_out += color_reset;
                             return;
-                        } else if (m_diff_char == '+') {
+                        }
+                        if (m_diff_char == '+') {
                             *m_out += color_backg_green;
                             *m_out += color_white;
                             *m_out += color_bold;
@@ -218,26 +221,36 @@ namespace osmium {
 
                 void write_meta(const osmium::OSMObject& object) {
                     output_int(object.id());
-                    *m_out += '\n';
-                    if (m_options.add_metadata) {
+                    if (object.visible()) {
+                        *m_out += " visible\n";
+                    } else {
+                        write_error(" deleted\n");
+                    }
+                    if (m_options.add_metadata.version()) {
                         write_fieldname("version");
                         *m_out += "  ";
                         output_int(object.version());
-                        if (object.visible()) {
-                            *m_out += " visible\n";
-                        } else {
-                            write_error(" deleted\n");
-                        }
+                        *m_out += '\n';
+                    }
+                    if (m_options.add_metadata.changeset()) {
                         write_fieldname("changeset");
                         output_int(object.changeset());
                         *m_out += '\n';
+                    }
+                    if (m_options.add_metadata.timestamp()) {
                         write_fieldname("timestamp");
                         write_timestamp(object.timestamp());
+                    }
+                    if (m_options.add_metadata.user() || m_options.add_metadata.uid()) {
                         write_fieldname("user");
                         *m_out += "     ";
-                        output_int(object.uid());
-                        *m_out += ' ';
-                        write_string(object.user());
+                        if (m_options.add_metadata.uid()) {
+                            output_int(object.uid());
+                            *m_out += ' ';
+                        }
+                        if (m_options.add_metadata.user()) {
+                            write_string(object.user());
+                        }
                         *m_out += '\n';
                     }
                 }
@@ -261,8 +274,9 @@ namespace osmium {
                         *m_out += "    ";
                         write_string(tag.key());
                         auto spacing = max() - std::strlen(tag.key());
-                        while (spacing--) {
+                        while (spacing > 0) {
                             *m_out += " ";
+                            --spacing;
                         }
                         *m_out += " = ";
                         write_string(tag.value());
@@ -321,14 +335,6 @@ namespace osmium {
                     m_utf8_prefix(options.use_color ? color_red  : ""),
                     m_utf8_suffix(options.use_color ? color_blue : "") {
                 }
-
-                DebugOutputBlock(const DebugOutputBlock&) = default;
-                DebugOutputBlock& operator=(const DebugOutputBlock&) = default;
-
-                DebugOutputBlock(DebugOutputBlock&&) = default;
-                DebugOutputBlock& operator=(DebugOutputBlock&&) = default;
-
-                ~DebugOutputBlock() noexcept = default;
 
                 std::string operator()() {
                     osmium::apply(m_input_buffer->cbegin(), m_input_buffer->cend(), *this);
@@ -522,18 +528,12 @@ namespace osmium {
             public:
 
                 DebugOutputFormat(osmium::thread::Pool& pool, const osmium::io::File& file, future_string_queue_type& output_queue) :
-                    OutputFormat(pool, output_queue),
-                    m_options() {
-                    m_options.add_metadata   = file.is_not_false("add_metadata");
+                    OutputFormat(pool, output_queue) {
+                    m_options.add_metadata   = osmium::metadata_options{file.get("add_metadata")};
                     m_options.use_color      = file.is_true("color");
                     m_options.add_crc32      = file.is_true("add_crc32");
                     m_options.format_as_diff = file.is_true("diff");
                 }
-
-                DebugOutputFormat(const DebugOutputFormat&) = delete;
-                DebugOutputFormat& operator=(const DebugOutputFormat&) = delete;
-
-                ~DebugOutputFormat() noexcept final = default;
 
                 void write_header(const osmium::io::Header& header) final {
                     if (m_options.format_as_diff) {

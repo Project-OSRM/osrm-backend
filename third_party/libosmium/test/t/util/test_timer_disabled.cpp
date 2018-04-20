@@ -1,9 +1,9 @@
 #include "catch.hpp"
 
+#include <osmium/util/timer.hpp>
+
 #include <chrono>
 #include <thread>
-
-#include <osmium/util/timer.hpp>
 
 TEST_CASE("timer") {
     osmium::Timer timer;

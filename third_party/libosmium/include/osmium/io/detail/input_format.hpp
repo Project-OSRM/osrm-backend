@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,14 +33,6 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <exception>
-#include <functional>
-#include <future>
-#include <map>
-#include <memory>
-#include <string>
-#include <utility>
-
 #include <osmium/io/detail/queue_util.hpp>
 #include <osmium/io/error.hpp>
 #include <osmium/io/file.hpp>
@@ -49,6 +41,14 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/memory/buffer.hpp>
 #include <osmium/osm/entity_bits.hpp>
 #include <osmium/thread/pool.hpp>
+
+#include <array>
+#include <exception>
+#include <functional>
+#include <future>
+#include <memory>
+#include <string>
+#include <utility>
 
 namespace osmium {
 
@@ -177,37 +177,41 @@ namespace osmium {
 
             private:
 
-                using map_type = std::map<osmium::io::file_format, create_parser_type>;
+                std::array<create_parser_type, static_cast<std::size_t>(file_format::last) + 1> m_callbacks;
 
-                map_type m_callbacks;
+                ParserFactory() noexcept = default;
 
-                ParserFactory() :
-                    m_callbacks() {
+                create_parser_type& callbacks(const osmium::io::file_format format) noexcept {
+                    return m_callbacks[static_cast<std::size_t>(format)];
+                }
+
+                const create_parser_type& callbacks(const osmium::io::file_format format) const noexcept {
+                    return m_callbacks[static_cast<std::size_t>(format)];
                 }
 
             public:
 
-                static ParserFactory& instance() {
+                static ParserFactory& instance() noexcept {
                     static ParserFactory factory;
                     return factory;
                 }
 
-                bool register_parser(osmium::io::file_format format, create_parser_type&& create_function) {
-                    const auto result = m_callbacks.emplace(format, std::forward<create_parser_type>(create_function));
-                    return result.second;
+                bool register_parser(const osmium::io::file_format format, create_parser_type&& create_function) {
+                    callbacks(format) = std::forward<create_parser_type>(create_function);
+                    return true;
                 }
 
                 create_parser_type get_creator_function(const osmium::io::File& file) const {
-                    const auto it = m_callbacks.find(file.format());
-                    if (it == m_callbacks.end()) {
-                        throw unsupported_file_format_error{
-                                std::string{"Can not open file '"} +
-                                file.filename() +
-                                "' with type '" +
-                                as_string(file.format()) +
-                                "'. No support for reading this format in this program."};
+                    const auto func = callbacks(file.format());
+                    if (func) {
+                        return func;
                     }
-                    return it->second;
+                    throw unsupported_file_format_error{
+                            std::string{"Can not open file '"} +
+                            file.filename() +
+                            "' with type '" +
+                            as_string(file.format()) +
+                            "'. No support for reading this format in this program."};
                 }
 
             }; // class ParserFactory

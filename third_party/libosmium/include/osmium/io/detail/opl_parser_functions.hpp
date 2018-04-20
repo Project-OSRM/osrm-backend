@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,15 +33,6 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <cstdint>
-#include <cstdlib>
-#include <iterator>
-#include <limits>
-#include <stdexcept>
-#include <string>
-
-#include <utf8.h>
-
 #include <osmium/builder/osm_object_builder.hpp>
 #include <osmium/io/error.hpp>
 #include <osmium/memory/buffer.hpp>
@@ -55,6 +46,15 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/osm/timestamp.hpp>
 #include <osmium/osm/types.hpp>
 #include <osmium/osm/way.hpp>
+
+#include <utf8.h>
+
+#include <cstdint>
+#include <cstdlib>
+#include <iterator>
+#include <limits>
+#include <stdexcept>
+#include <string>
 
 namespace osmium {
 
@@ -187,7 +187,8 @@ namespace osmium {
                 while (true) {
                     if (*s == '\0' || *s == ' ' || *s == '\t' || *s == ',' || *s == '=') {
                         break;
-                    } else if (*s == '%') {
+                    }
+                    if (*s == '%') {
                         ++s;
                         opl_parse_escaped(&s, result);
                     } else {

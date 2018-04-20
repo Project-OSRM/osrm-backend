@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,15 +33,15 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <algorithm>
-#include <cstddef>
-#include <cstdint>
-#include <string>
-
 #include <osmium/geom/coordinates.hpp>
 #include <osmium/geom/factory.hpp>
 #include <osmium/util/cast.hpp>
 #include <osmium/util/endian.hpp>
+
+#include <algorithm>
+#include <cstddef>
+#include <cstdint>
+#include <string>
 
 namespace osmium {
 
@@ -70,8 +70,8 @@ namespace osmium {
                 out.reserve(str.size() * 2);
 
                 for (char c : str) {
-                    out += lookup_hex[(c >> 4) & 0xf];
-                    out += lookup_hex[c & 0xf];
+                    out += lookup_hex[(static_cast<unsigned int>(c) >> 4u) & 0xfu];
+                    out += lookup_hex[ static_cast<unsigned int>(c)        & 0xfu];
                 }
 
                 return out;
@@ -83,7 +83,7 @@ namespace osmium {
                 * Type of WKB geometry.
                 * These definitions are from
                 * 99-049_OpenGIS_Simple_Features_Specification_For_SQL_Rev_1.1.pdf (for WKB)
-                * and http://trac.osgeo.org/postgis/browser/trunk/doc/ZMSgeoms.txt (for EWKB).
+                * and https://trac.osgeo.org/postgis/browser/trunk/doc/ZMSgeoms.txt (for EWKB).
                 * They are used to encode geometries into the WKB format.
                 */
                 enum wkbGeometryType : uint32_t {
@@ -140,8 +140,11 @@ namespace osmium {
                 }
 
                 void set_size(const std::size_t offset, const std::size_t size) {
-                    uint32_t s = static_cast_with_assert<uint32_t>(size);
-                    std::copy_n(reinterpret_cast<char*>(&s), sizeof(uint32_t), &m_data[offset]);
+                    if (size > std::numeric_limits<uint32_t>::max()) {
+                        throw geometry_error{"Too many points in geometry"};
+                    }
+                    const auto s = static_cast<uint32_t>(size);
+                    std::copy_n(reinterpret_cast<const char*>(&s), sizeof(uint32_t), &m_data[offset]);
                 }
 
             public:
@@ -168,9 +171,9 @@ namespace osmium {
 
                     if (m_out_type == out_type::hex) {
                         return convert_to_hex(data);
-                    } else {
-                        return data;
                     }
+
+                    return data;
                 }
 
                 /* LineString */
@@ -194,9 +197,9 @@ namespace osmium {
 
                     if (m_out_type == out_type::hex) {
                         return convert_to_hex(data);
-                    } else {
-                        return data;
                     }
+
+                    return data;
                 }
 
                 /* MultiPolygon */
@@ -254,9 +257,9 @@ namespace osmium {
 
                     if (m_out_type == out_type::hex) {
                         return convert_to_hex(data);
-                    } else {
-                        return data;
                     }
+
+                    return data;
                 }
 
             }; // class WKBFactoryImpl

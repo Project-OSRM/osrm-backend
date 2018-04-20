@@ -1,8 +1,8 @@
 #include "catch.hpp"
 
-#include <boost/crc.hpp>
-
 #include <osmium/osm/crc.hpp>
+
+#include <boost/crc.hpp>
 
 TEST_CASE("CRC of bool") {
     osmium::CRC<boost::crc_32_type> crc32;

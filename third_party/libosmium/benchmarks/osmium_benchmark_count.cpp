@@ -4,14 +4,14 @@
 
 */
 
+#include <osmium/handler.hpp>
+#include <osmium/io/any_input.hpp>
+#include <osmium/visitor.hpp>
+
 #include <cstdint>
 #include <cstdlib>
 #include <iostream>
 #include <string>
-
-#include <osmium/io/any_input.hpp>
-#include <osmium/handler.hpp>
-#include <osmium/visitor.hpp>
 
 struct CountHandler : public osmium::handler::Handler {
 
@@ -19,20 +19,19 @@ struct CountHandler : public osmium::handler::Handler {
     uint64_t ways = 0;
     uint64_t relations = 0;
 
-    void node(const osmium::Node&) {
+    void node(const osmium::Node& /*node*/) {
         ++nodes;
     }
 
-    void way(const osmium::Way&) {
+    void way(const osmium::Way& /*way*/) {
         ++ways;
     }
 
-    void relation(const osmium::Relation&) {
+    void relation(const osmium::Relation& /*relation*/) {
         ++relations;
     }
 
 };
-
 
 int main(int argc, char* argv[]) {
     if (argc != 2) {
@@ -48,8 +47,8 @@ int main(int argc, char* argv[]) {
     osmium::apply(reader, handler);
     reader.close();
 
-    std::cout << "Nodes: "     << handler.nodes << "\n";
-    std::cout << "Ways: "      << handler.ways << "\n";
-    std::cout << "Relations: " << handler.relations << "\n";
+    std::cout << "Nodes: "     << handler.nodes     << '\n';
+    std::cout << "Ways: "      << handler.ways      << '\n';
+    std::cout << "Relations: " << handler.relations << '\n';
 }
 

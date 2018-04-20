@@ -1,0 +1,11 @@
+
+option optimize_for = LITE_RUNTIME;
+
+package TestRepeatedPackedFloat;
+
+message Test {
+
+    repeated float f = 1 [packed=true];
+
+}
+

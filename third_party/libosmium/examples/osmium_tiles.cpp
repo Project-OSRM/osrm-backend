@@ -36,21 +36,21 @@ int main(int argc, char* argv[]) {
         std::exit(1);
     }
 
-    const int zoom = std::atoi(argv[1]);
+    const int zoom = std::atoi(argv[1]); // NOLINT(cert-err34-c)
 
     if (zoom < 0 || zoom > 30) {
         std::cerr << "ERROR: Zoom must be between 0 and 30\n";
         std::exit(1);
     }
 
-    const double lon = std::atof(argv[2]);
-    const double lat = std::atof(argv[3]);
-
-    // Create location from WGS84 coordinates. In Osmium the order of
-    // coordinate values is always x/longitude first, then y/latitude.
-    const osmium::Location location{lon, lat};
-
-    std::cout << "WGS84:    lon=" << lon << " lat=" << lat << "\n";
+    osmium::Location location{};
+    try {
+        location.set_lon(argv[2]);
+        location.set_lat(argv[3]);
+    } catch (const osmium::invalid_location&) {
+        std::cerr << "ERROR: Location is invalid\n";
+        std::exit(1);
+    }
 
     // A location can store some invalid locations, ie locations outside the
     // -180 to 180 and -90 to 90 degree range. This function checks for that.
@@ -58,6 +58,8 @@ int main(int argc, char* argv[]) {
         std::cerr << "ERROR: Location is invalid\n";
         std::exit(1);
     }
+
+    std::cout << "WGS84:    lon=" << location.lon() << " lat=" << location.lat() << "\n";
 
     // Project the coordinates using a helper function. You can also use the
     // osmium::geom::MercatorProjection class.

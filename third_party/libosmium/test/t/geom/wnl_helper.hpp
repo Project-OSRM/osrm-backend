@@ -16,6 +16,19 @@ inline const osmium::WayNodeList& create_test_wnl_okay(osmium::memory::Buffer& b
     return buffer.get<osmium::WayNodeList>(pos);
 }
 
+inline const osmium::WayNodeList& create_test_wnl_closed(osmium::memory::Buffer& buffer) {
+    const auto pos = osmium::builder::add_way_node_list(buffer, _nodes({
+        {1, {3.0, 3.0}},
+        {2, {4.1, 4.1}},
+        {3, {4.1, 4.1}},
+        {4, {3.6, 4.1}},
+        {5, {3.1, 3.5}},
+        {6, {3.0, 3.0}},
+    }));
+
+    return buffer.get<osmium::WayNodeList>(pos);
+}
+
 inline const osmium::WayNodeList& create_test_wnl_empty(osmium::memory::Buffer& buffer) {
     {
         osmium::builder::WayNodeListBuilder wnl_builder(buffer);

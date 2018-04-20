@@ -1,10 +1,10 @@
 #include "catch.hpp"
 
-#include <osmium/geom/mercator_projection.hpp>
-#include <osmium/geom/wkt.hpp>
-
 #include "area_helper.hpp"
 #include "wnl_helper.hpp"
+
+#include <osmium/geom/mercator_projection.hpp>
+#include <osmium/geom/wkt.hpp>
 
 TEST_CASE("WKT geometry for point") {
     const osmium::geom::WKTFactory<> factory;
@@ -57,6 +57,30 @@ TEST_CASE("WKT geometry factory") {
         SECTION("all backwards") {
             const std::string wkt{factory.create_linestring(wnl, osmium::geom::use_nodes::all, osmium::geom::direction::backward)};
             REQUIRE(wkt == "LINESTRING(3.6 4.9,3.5 4.7,3.5 4.7,3.2 4.2)");
+        }
+    }
+
+    SECTION("polygon") {
+        const auto& wnl = create_test_wnl_closed(buffer);
+
+        SECTION("unique forwards (default)") {
+            const std::string wkt{factory.create_polygon(wnl)};
+            REQUIRE(wkt == "POLYGON((3 3,4.1 4.1,3.6 4.1,3.1 3.5,3 3))");
+        }
+
+        SECTION("unique backwards") {
+            const std::string wkt{factory.create_polygon(wnl, osmium::geom::use_nodes::unique, osmium::geom::direction::backward)};
+            REQUIRE(wkt == "POLYGON((3 3,3.1 3.5,3.6 4.1,4.1 4.1,3 3))");
+        }
+
+        SECTION("all forwards") {
+            const std::string wkt{factory.create_polygon(wnl,  osmium::geom::use_nodes::all)};
+            REQUIRE(wkt == "POLYGON((3 3,4.1 4.1,4.1 4.1,3.6 4.1,3.1 3.5,3 3))");
+        }
+
+        SECTION("all backwards") {
+            const std::string wkt{factory.create_polygon(wnl, osmium::geom::use_nodes::all, osmium::geom::direction::backward)};
+            REQUIRE(wkt == "POLYGON((3 3,3.1 3.5,3.6 4.1,4.1 4.1,4.1 4.1,3 3))");
         }
     }
 

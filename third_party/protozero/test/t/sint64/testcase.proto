@@ -1,0 +1,11 @@
+
+option optimize_for = LITE_RUNTIME;
+
+package TestSInt64;
+
+message Test {
+
+    required sint64 i = 1;
+
+}
+

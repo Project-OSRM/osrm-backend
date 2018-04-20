@@ -1,9 +1,9 @@
 #include "catch.hpp"
 
-#include <osmium/geom/geojson.hpp>
-
 #include "area_helper.hpp"
 #include "wnl_helper.hpp"
+
+#include <osmium/geom/geojson.hpp>
 
 TEST_CASE("GeoJSON point geometry") {
     osmium::geom::GeoJSONFactory<> factory;
@@ -78,6 +78,32 @@ TEST_CASE("GeoJSON linestring geometry") {
         REQUIRE_THROWS_AS(factory.create_linestring(wnl), const osmium::invalid_location&);
     }
 
+}
+
+TEST_CASE("GeoJSON polygon geometry") {
+    osmium::geom::GeoJSONFactory<> factory;
+    osmium::memory::Buffer buffer{1000};
+    const auto& wnl = create_test_wnl_closed(buffer);
+
+    SECTION("unique forwards (default)") {
+      const std::string wkt{factory.create_polygon(wnl)};
+      REQUIRE(wkt == "{\"type\":\"Polygon\",\"coordinates\":[[[3,3],[4.1,4.1],[3.6,4.1],[3.1,3.5],[3,3]]]}");
+    }
+
+    SECTION("unique backwards") {
+      const std::string wkt{factory.create_polygon(wnl, osmium::geom::use_nodes::unique, osmium::geom::direction::backward)};
+      REQUIRE(wkt == "{\"type\":\"Polygon\",\"coordinates\":[[[3,3],[3.1,3.5],[3.6,4.1],[4.1,4.1],[3,3]]]}");
+    }
+
+    SECTION("all forwards") {
+      const std::string wkt{factory.create_polygon(wnl,  osmium::geom::use_nodes::all)};
+      REQUIRE(wkt == "{\"type\":\"Polygon\",\"coordinates\":[[[3,3],[4.1,4.1],[4.1,4.1],[3.6,4.1],[3.1,3.5],[3,3]]]}");
+    }
+
+    SECTION("all backwards") {
+      const std::string wkt{factory.create_polygon(wnl, osmium::geom::use_nodes::all, osmium::geom::direction::backward)};
+      REQUIRE(wkt == "{\"type\":\"Polygon\",\"coordinates\":[[[3,3],[3.1,3.5],[3.6,4.1],[4.1,4.1],[4.1,4.1],[3,3]]]}");
+    }
 }
 
 TEST_CASE("GeoJSON area geometry") {

@@ -1,9 +1,9 @@
 #include "catch.hpp"
 
+#include <osmium/util/string_matcher.hpp>
+
 #include <sstream>
 #include <type_traits>
-
-#include <osmium/util/string_matcher.hpp>
 
 static_assert(std::is_default_constructible<osmium::StringMatcher>::value, "StringMatcher should be default constructible");
 static_assert(std::is_copy_constructible<osmium::StringMatcher>::value, "StringMatcher should be copy constructible");
@@ -185,5 +185,37 @@ TEST_CASE("Construct StringMatcher") {
     REQUIRE(m("foobar"));
     REQUIRE(m(std::string{"barfoo"}));
     REQUIRE(print(m) == "substring[foo]");
+}
+
+TEST_CASE("Copy construct StringMatcher") {
+    osmium::StringMatcher m1{"foo"};
+    osmium::StringMatcher m2{m1}; // NOLINT(performance-unnecessary-copy-initialization)
+
+    REQUIRE(print(m1) == "equal[foo]");
+    REQUIRE(print(m2) == "equal[foo]");
+}
+
+TEST_CASE("Copy assign StringMatcher") {
+    osmium::StringMatcher m1{"foo"};
+    osmium::StringMatcher m2{"bar"};
+    m2 = m1;
+
+    REQUIRE(print(m1) == "equal[foo]");
+    REQUIRE(print(m2) == "equal[foo]");
+}
+
+TEST_CASE("Move construct StringMatcher") {
+    osmium::StringMatcher m1{"foo"};
+    osmium::StringMatcher m2{std::move(m1)};
+
+    REQUIRE(print(m2) == "equal[foo]");
+}
+
+TEST_CASE("Move assign StringMatcher") {
+    osmium::StringMatcher m1{"foo"};
+    osmium::StringMatcher m2{"bar"};
+    m2 = std::move(m1);
+
+    REQUIRE(print(m2) == "equal[foo]");
 }
 

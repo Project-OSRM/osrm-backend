@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,10 +33,6 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <iomanip>
-#include <iostream>
-#include <string>
-
 #include <osmium/handler.hpp>
 #include <osmium/memory/collection.hpp>
 #include <osmium/memory/item.hpp>
@@ -53,6 +49,10 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/osm/timestamp.hpp>
 #include <osmium/osm/way.hpp>
 #include <osmium/visitor.hpp>
+
+#include <iomanip>
+#include <iostream>
+#include <string>
 
 namespace osmium {
 
@@ -136,10 +136,10 @@ namespace osmium {
 
         public:
 
-            explicit Dump(std::ostream& out, bool with_size = true, const std::string& prefix = "") :
+            explicit Dump(std::ostream& out, bool with_size = true, std::string prefix = "") :
                 m_out(&out),
                 m_with_size(with_size),
-                m_prefix(prefix) {
+                m_prefix(std::move(prefix)) {
             }
 
             void tag_list(const osmium::TagList& tags) {

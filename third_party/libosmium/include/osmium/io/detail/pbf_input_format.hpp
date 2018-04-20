@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,18 +33,6 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <cassert>
-#include <cstddef>
-#include <cstdint>
-#include <cstring>
-#include <memory>
-#include <string>
-#include <type_traits>
-#include <utility>
-
-#include <protozero/pbf_message.hpp>
-#include <protozero/types.hpp>
-
 #include <osmium/io/detail/input_format.hpp>
 #include <osmium/io/detail/pbf.hpp> // IWYU pragma: export
 #include <osmium/io/detail/pbf_decoder.hpp>
@@ -56,6 +44,18 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/thread/util.hpp>
 #include <osmium/util/config.hpp>
 
+#include <protozero/pbf_message.hpp>
+#include <protozero/types.hpp>
+
+#include <cassert>
+#include <cstddef>
+#include <cstdint>
+#include <cstring>
+#include <memory>
+#include <string>
+#include <type_traits>
+#include <utility>
+
 namespace osmium {
 
     namespace io {
@@ -64,7 +64,7 @@ namespace osmium {
 
             class PBFParser : public Parser {
 
-                std::string m_input_buffer;
+                std::string m_input_buffer{};
 
                 /**
                  * Read the given number of bytes from the input queue.
@@ -105,7 +105,13 @@ namespace osmium {
                         return 0; // EOF
                     }
 
+                    #ifndef _WIN32
                     const uint32_t size = ntohl(size_in_network_byte_order);
+                    #else
+                    uint32_t size = size_in_network_byte_order;
+                    protozero::detail::byteswap_inplace(&size);
+                    #endif
+
                     if (size > static_cast<uint32_t>(max_blob_header_size)) {
                         throw osmium::pbf_error{"invalid BlobHeader size (> max_blob_header_size)"};
                     }
@@ -122,11 +128,11 @@ namespace osmium {
                     size_t blob_header_datasize = 0;
 
                     while (pbf_blob_header.next()) {
-                        switch (pbf_blob_header.tag()) {
-                            case FileFormat::BlobHeader::required_string_type:
+                        switch (pbf_blob_header.tag_and_type()) {
+                            case protozero::tag_and_type(FileFormat::BlobHeader::required_string_type, protozero::pbf_wire_type::length_delimited):
                                 blob_header_type = pbf_blob_header.get_view();
                                 break;
-                            case FileFormat::BlobHeader::required_int32_datasize:
+                            case protozero::tag_and_type(FileFormat::BlobHeader::required_int32_datasize, protozero::pbf_wire_type::varint):
                                 blob_header_datasize = pbf_blob_header.get_int32();
                                 break;
                             default:
@@ -138,7 +144,7 @@ namespace osmium {
                         throw osmium::pbf_error{"PBF format error: BlobHeader.datasize missing or zero."};
                     }
 
-                    if (std::strncmp(expected_type, blob_header_type.data(), blob_header_type.size())) {
+                    if (std::strncmp(expected_type, blob_header_type.data(), blob_header_type.size()) != 0) {
                         throw osmium::pbf_error{"blob does not have expected type (OSMHeader in first blob, OSMData in following blobs)"};
                     }
 
@@ -190,9 +196,14 @@ namespace osmium {
             public:
 
                 explicit PBFParser(parser_arguments& args) :
-                    Parser(args),
-                    m_input_buffer() {
+                    Parser(args) {
                 }
+
+                PBFParser(const PBFParser&) = delete;
+                PBFParser& operator=(const PBFParser&) = delete;
+
+                PBFParser(PBFParser&&) = delete;
+                PBFParser& operator=(PBFParser&&) = delete;
 
                 ~PBFParser() noexcept final = default;
 

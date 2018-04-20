@@ -1,13 +1,14 @@
-
 #include "catch.hpp"
-#include "utils.hpp"
 
-#include <stdexcept>
-#include <string>
+#include "utils.hpp"
 
 #include <osmium/io/compression.hpp>
 #include <osmium/io/xml_input.hpp>
 #include <osmium/io/xml_output.hpp>
+
+#include <stdexcept>
+#include <string>
+#include <utility>
 
 class MockCompressor : public osmium::io::Compressor {
 
@@ -15,17 +16,23 @@ class MockCompressor : public osmium::io::Compressor {
 
 public:
 
-    explicit MockCompressor(const std::string& fail_in) :
+    explicit MockCompressor(std::string fail_in) :
         Compressor(osmium::io::fsync::no),
-        m_fail_in(fail_in) {
+        m_fail_in(std::move(fail_in)) {
         if (m_fail_in == "constructor") {
             throw std::logic_error{"constructor"};
         }
     }
 
+    MockCompressor(const MockCompressor&) = delete;
+    MockCompressor& operator=(const MockCompressor&) = delete;
+
+    MockCompressor(MockCompressor&&) = delete;
+    MockCompressor& operator=(MockCompressor&&) = delete;
+
     ~MockCompressor() noexcept final = default;
 
-    void write(const std::string&) final {
+    void write(const std::string& /*data*/) final {
         if (m_fail_in == "write") {
             throw std::logic_error{"write"};
         }
@@ -56,7 +63,8 @@ TEST_CASE("Write with mock compressor") {
     osmium::memory::Buffer buffer = reader.read();
     REQUIRE(buffer);
     REQUIRE(buffer.committed() > 0);
-    REQUIRE(buffer.select<osmium::OSMObject>().size() > 0);
+    REQUIRE_FALSE(buffer.select<osmium::OSMObject>().empty());
+    REQUIRE(buffer.select<osmium::OSMObject>().size() > 0); // NOLINT(readability-container-size-empty)
 
     SECTION("fail on construction") {
 

@@ -76,14 +76,14 @@ class RewriteHandler : public osmium::handler::Handler {
         // Iterate over all tags and build new tags using the new builder
         // based on the old ones.
         for (const auto& tag : tags) {
-            if (std::strcmp(tag.key(), "created_by")) {
-                if (!std::strcmp(tag.key(), "landuse") && !std::strcmp(tag.value(), "forest")) {
-                    // add_tag() can be called with key and value C strings
-                    builder.add_tag("natural", "wood");
-                } else {
-                    // add_tag() can also be called with an osmium::Tag
-                    builder.add_tag(tag);
-                }
+            if (!std::strcmp(tag.key(), "created_by")) {
+                // ignore
+            } else if (!std::strcmp(tag.key(), "landuse") && !std::strcmp(tag.value(), "forest")) {
+                // add_tag() can be called with key and value C strings
+                builder.add_tag("natural", "wood");
+            } else {
+                // add_tag() can also be called with an osmium::Tag
+                builder.add_tag(tag);
             }
         }
     }

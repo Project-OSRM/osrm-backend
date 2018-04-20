@@ -1,12 +1,12 @@
 #include "catch.hpp"
 
+#include <osmium/builder/attr.hpp>
+#include <osmium/osm/area.hpp>
+#include <osmium/osm/crc.hpp>
+
 #include <boost/crc.hpp>
 
-#include <osmium/builder/attr.hpp>
-#include <osmium/osm/crc.hpp>
-#include <osmium/osm/area.hpp>
-
-using namespace osmium::builder::attr;
+using namespace osmium::builder::attr; // NOLINT(google-build-using-namespace)
 
 TEST_CASE("Build area") {
     osmium::memory::Buffer buffer(10000);
@@ -40,7 +40,7 @@ TEST_CASE("Build area") {
 
     REQUIRE(17 == area.id());
     REQUIRE(3 == area.version());
-    REQUIRE(true == area.visible());
+    REQUIRE(area.visible());
     REQUIRE(333 == area.changeset());
     REQUIRE(21 == area.uid());
     REQUIRE(std::string("foo") == area.user());

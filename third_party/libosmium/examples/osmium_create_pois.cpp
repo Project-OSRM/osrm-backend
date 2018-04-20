@@ -31,11 +31,8 @@
 #include <osmium/io/any_output.hpp>
 
 // We want to use the builder interface
-#include <osmium/builder/osm_object_builder.hpp>
 #include <osmium/builder/attr.hpp>
-
-// Declare this to use the functions starting with the underscore (_) below.
-using namespace osmium::builder::attr;
+#include <osmium/builder/osm_object_builder.hpp>
 
 int main(int argc, char* argv[]) {
     if (argc != 2) {
@@ -55,6 +52,9 @@ int main(int argc, char* argv[]) {
         // buffer size and set the buffer to automatically grow if needed.
         const size_t initial_buffer_size = 10000;
         osmium::memory::Buffer buffer{initial_buffer_size, osmium::memory::Buffer::auto_grow::yes};
+
+        // Declare this to use the functions starting with the underscore (_) below.
+        using namespace osmium::builder::attr; // NOLINT(google-build-using-namespace)
 
         // Add nodes to the buffer. This is, of course, only an example.
         // You can set any of the attributes and more tags, etc. Ways and

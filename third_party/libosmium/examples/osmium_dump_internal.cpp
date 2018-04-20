@@ -29,8 +29,8 @@
 */
 
 #include <cerrno>      // for errno
-#include <cstring>     // for std::strerror
 #include <cstdlib>     // for std::exit
+#include <cstring>     // for std::strerror
 #include <iostream>    // for std::cout, std::cerr
 #include <string>      // for std::string
 #include <sys/stat.h>  // for open
@@ -71,7 +71,7 @@ class IndexFile {
 public:
 
     explicit IndexFile(const std::string& filename) :
-        m_fd(::open(filename.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0666)) {
+        m_fd(::open(filename.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0666)) { // NOLINT(hicpp-signed-bitwise)
         if (m_fd < 0) {
             std::cerr << "Can't open index file '" << filename << "': " << std::strerror(errno) << "\n";
             std::exit(2);
@@ -80,6 +80,12 @@ public:
         _setmode(m_fd, _O_BINARY);
 #endif
     }
+
+    IndexFile(const IndexFile&) = delete;
+    IndexFile& operator=(const IndexFile&) = delete;
+
+    IndexFile(IndexFile&&) = delete;
+    IndexFile& operator=(IndexFile&&) = delete;
 
     ~IndexFile() {
         if (m_fd >= 0) {
@@ -115,7 +121,7 @@ int main(int argc, char* argv[]) {
 
     // Create the output file which will contain our serialized OSM data
     const std::string data_file{output_dir + "/data.osm.ser"};
-    const int data_fd = ::open(data_file.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
+    const int data_fd = ::open(data_file.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0666); // NOLINT(hicpp-signed-bitwise)
     if (data_fd < 0) {
         std::cerr << "Can't open data file '" << data_file << "': " << std::strerror(errno) << "\n";
         std::exit(2);

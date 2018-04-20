@@ -1,4 +1,3 @@
-
 #include "catch.hpp"
 
 #include <osmium/memory/item_iterator.hpp>

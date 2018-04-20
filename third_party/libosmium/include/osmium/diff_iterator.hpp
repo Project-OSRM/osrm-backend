@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,13 +33,13 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <osmium/osm/diff_object.hpp>
+
 #include <cassert>
 #include <cstddef>
 #include <iterator>
 #include <type_traits>
 #include <utility>
-
-#include <osmium/osm/diff_object.hpp>
 
 namespace osmium {
 
@@ -69,11 +69,11 @@ namespace osmium {
             const bool use_curr_for_prev =                    m_prev->type() != m_curr->type() || m_prev->id() != m_curr->id();
             const bool use_curr_for_next = m_next == m_end || m_next->type() != m_curr->type() || m_next->id() != m_curr->id();
 
-            m_diff = std::move(osmium::DiffObject{
+            m_diff = osmium::DiffObject{
                 *(use_curr_for_prev ? m_curr : m_prev),
                 *m_curr,
                 *(use_curr_for_next ? m_curr : m_next)
-            });
+            };
         }
 
     public:

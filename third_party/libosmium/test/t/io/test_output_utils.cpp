@@ -1,9 +1,8 @@
-
 #include "catch.hpp"
 
-#include <locale>
-
 #include <osmium/io/detail/string_util.hpp>
+
+#include <locale>
 
 TEST_CASE("output formatted") {
 

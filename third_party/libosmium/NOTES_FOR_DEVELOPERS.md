@@ -126,7 +126,7 @@ Call `cmake/iwyu.sh` to check for proper includes and forward declarations.
 This uses the clang-based `include-what-you-use` program. Note that it does
 produce some false reports and crashes often. The `osmium.imp` file can be
 used to define mappings for iwyu. See the IWYU tool at
-<http://code.google.com/p/include-what-you-use/>.
+<https://include-what-you-use.org/>.
 
 
 ## Testing

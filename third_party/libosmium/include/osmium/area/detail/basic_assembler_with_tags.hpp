@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,13 +33,13 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <cstring>
-
 #include <osmium/area/assembler_config.hpp>
 #include <osmium/area/detail/basic_assembler.hpp>
 #include <osmium/area/stats.hpp>
 #include <osmium/builder/osm_object_builder.hpp>
 #include <osmium/osm/tag.hpp>
+
+#include <cstring>
 
 namespace osmium {
 
@@ -68,7 +68,7 @@ namespace osmium {
                 static void copy_tags_without_type(osmium::builder::AreaBuilder& builder, const osmium::TagList& tags) {
                     osmium::builder::TagListBuilder tl_builder{builder};
                     for (const osmium::Tag& tag : tags) {
-                        if (std::strcmp(tag.key(), "type")) {
+                        if (std::strcmp(tag.key(), "type") != 0) {
                             tl_builder.add_tag(tag.key(), tag.value());
                         }
                     }

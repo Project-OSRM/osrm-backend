@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,14 +33,14 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <ostream>
-
 #include <osmium/area/problem_reporter.hpp>
 #include <osmium/osm/item_type.hpp>
 #include <osmium/osm/location.hpp>
 #include <osmium/osm/node_ref.hpp>
 #include <osmium/osm/types.hpp>
 #include <osmium/osm/way.hpp>
+
+#include <ostream>
 
 namespace osmium {
 
@@ -55,8 +55,6 @@ namespace osmium {
             explicit ProblemReporterStream(std::ostream& out) :
                 m_out(&out) {
             }
-
-            ~ProblemReporterStream() override = default;
 
             void header(const char* msg) {
                 *m_out << "DATA PROBLEM: " << msg << " on " << item_type_to_char(m_object_type) << m_object_id << " (with " << m_nodes << " nodes): ";
@@ -91,7 +89,7 @@ namespace osmium {
                        << " node_id2=" << nr2.ref() << " location2=" << nr2.location() << "\n";
             }
 
-            void report_ring_not_closed(const osmium::NodeRef& nr, const osmium::Way* way = nullptr) override {
+            void report_ring_not_closed(const osmium::NodeRef& nr, const osmium::Way* way) override {
                 header("ring not closed");
                 *m_out << "node_id=" << nr.ref() << " location=" << nr.location();
                 if (way) {

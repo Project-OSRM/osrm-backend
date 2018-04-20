@@ -6,34 +6,54 @@
 
 environment:
   matrix:
-  - config: Dev
+  - config: MSYS2
     autocrlf: true
-  - config: Dev
+  - config: Debug
+    autocrlf: true
+  - config: Release
+    autocrlf: true
+  - config: Debug
     autocrlf: false
-  - config: RelWithDebInfo
-    autocrlf: true
-  - config: RelWithDebInfo
+  - config: Release
     autocrlf: false
 
-shallow_clone: true
+clone_depth: 1
 
 # Operating system (build VM template)
 os: Visual Studio 2015
+
+platform: x64
 
 # scripts that are called at very beginning, before repo cloning
 init:
   - git config --global core.autocrlf %autocrlf%
   - git config --get core.autocrlf
 
-# clone directory
 clone_folder: c:\projects\libosmium
 
-platform: x64
+# The option --ask=20 is a workaround for a problem with the MSYS2 update
+# process. Without it the following error is printed and the appveyor script
+# halts: "msys2-runtime and catgets are in conflict. Remove catgets?"
+# See also: https://github.com/Alexpux/MSYS2-packages/issues/1141
+install:
+  - git submodule update --init
+  - cd c:\projects
+  - git clone --depth 1 https://github.com/mapbox/protozero
+  - if [%config%]==[MSYS2] (
+          C:\msys64\usr\bin\pacman --noconfirm --sync --refresh --refresh --sysupgrade --sysupgrade --ask=20
+       && C:\msys64\usr\bin\pacman -Rc --noconfirm mingw-w64-x86_64-gcc-libs
+    )
 
 build_script:
-  - build-appveyor.bat
+  - cd c:\projects\libosmium
+  - if [%config%]==[MSYS2] (
+        build-msys2.bat
+    ) else (
+        build-appveyor.bat
+    )
 
 # remove garbage VS messages
-# http://help.appveyor.com/discussions/problems/4569-the-target-_convertpdbfiles-listed-in-a-beforetargets-attribute-at-c-does-not-exist-in-the-project-and-will-be-ignored
+# https://help.appveyor.com/discussions/problems/4569-the-target-_convertpdbfiles-listed-in-a-beforetargets-attribute-at-c-does-not-exist-in-the-project-and-will-be-ignored
 before_build:
   - del "C:\Program Files (x86)\MSBuild\14.0\Microsoft.Common.targets\ImportAfter\Xamarin.Common.targets"
+

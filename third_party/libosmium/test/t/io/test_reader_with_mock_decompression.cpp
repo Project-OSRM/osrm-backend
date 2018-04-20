@@ -1,11 +1,12 @@
-
 #include "catch.hpp"
-#include "utils.hpp"
 
-#include <string>
+#include "utils.hpp"
 
 #include <osmium/io/compression.hpp>
 #include <osmium/io/xml_input.hpp>
+
+#include <string>
+#include <utility>
 
 // The MockDecompressor behaves like other Decompressor classes, but "invents"
 // OSM data in XML format that can be read. Through a parameter to the
@@ -19,13 +20,18 @@ class MockDecompressor : public osmium::io::Decompressor {
 
 public:
 
-    explicit MockDecompressor(const std::string& fail_in) :
-        Decompressor(),
-        m_fail_in(fail_in) {
+    explicit MockDecompressor(std::string fail_in) :
+        m_fail_in(std::move(fail_in)) {
         if (m_fail_in == "constructor") {
             throw std::runtime_error{"error constructor"};
         }
     }
+
+    MockDecompressor(const MockDecompressor&) = delete;
+    MockDecompressor& operator=(const MockDecompressor&) = delete;
+
+    MockDecompressor(MockDecompressor&&) = delete;
+    MockDecompressor& operator=(MockDecompressor&&) = delete;
 
     ~MockDecompressor() noexcept final = default;
 
@@ -42,19 +48,17 @@ public:
         if (m_read_count == 1) {
             if (m_fail_in == "first read") {
                 throw std::runtime_error{"error first read"};
-            } else {
-                buffer += "<?xml version='1.0' encoding='UTF-8'?>\n<osm version='0.6' generator='testdata'>\n";
-                for (int i = 0; i < 1000; ++i) {
-                    add_node(buffer, i);
-                }
+            }
+            buffer += "<?xml version='1.0' encoding='UTF-8'?>\n<osm version='0.6' generator='testdata'>\n";
+            for (int i = 0; i < 1000; ++i) {
+                add_node(buffer, i);
             }
         } else if (m_read_count == 2) {
             if (m_fail_in == "second read") {
                 throw std::runtime_error{"error second read"};
-            } else {
-                for (int i = 1000; i < 2000; ++i) {
-                    add_node(buffer, i);
-                }
+            }
+            for (int i = 1000; i < 2000; ++i) {
+                add_node(buffer, i);
             }
         } else if (m_read_count == 3) {
             buffer += "</osm>";

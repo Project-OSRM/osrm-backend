@@ -1,10 +1,10 @@
 #include "catch.hpp"
 
-#include <type_traits>
-
 #include <osmium/builder/attr.hpp>
 #include <osmium/memory/buffer.hpp>
 #include <osmium/tags/matcher.hpp>
+
+#include <type_traits>
 
 static_assert(std::is_default_constructible<osmium::TagMatcher>::value, "TagMatcher should be default constructible");
 static_assert(std::is_copy_constructible<osmium::TagMatcher>::value, "TagMatcher should be copy constructible");
@@ -22,6 +22,29 @@ TEST_CASE("Tag matcher") {
             { "source", "GPS" }
     }));
     const osmium::TagList& tag_list = buffer.get<osmium::TagList>(pos);
+
+    SECTION("Matching nothing (default constructor)") {
+        osmium::TagMatcher m{};
+        REQUIRE_FALSE(m(tag_list));
+
+        REQUIRE_FALSE(m(*tag_list.begin()));
+    }
+
+    SECTION("Matching nothing (bool)") {
+        osmium::TagMatcher m{false};
+        REQUIRE_FALSE(m(tag_list));
+
+        REQUIRE_FALSE(m(*tag_list.begin()));
+    }
+
+    SECTION("Matching everything") {
+        osmium::TagMatcher m{true};
+        REQUIRE(m(tag_list));
+
+        REQUIRE(m(*tag_list.begin()));
+        REQUIRE(m(*std::next(tag_list.begin())));
+        REQUIRE(m(*std::next(std::next(tag_list.begin()))));
+    }
 
     SECTION("Matching keys only") {
         osmium::TagMatcher m{osmium::StringMatcher::equal{"highway"}};
@@ -89,5 +112,29 @@ TEST_CASE("Tag matcher") {
         REQUIRE(m(*tag_list.begin()));
         REQUIRE_FALSE(m(*std::next(tag_list.begin())));
     }
+}
+
+TEST_CASE("Copy and move tag matcher") {
+    osmium::TagMatcher m1{"highway"};
+    osmium::TagMatcher c1{true};
+    osmium::TagMatcher c2{false};
+
+    auto m2 = m1;
+
+    REQUIRE(m2("highway", "residential"));
+    REQUIRE_FALSE(m2("name", "High Street"));
+
+    c1 = m1;
+    REQUIRE(c1("highway", "residential"));
+    REQUIRE_FALSE(c1("name", "High Street"));
+
+    auto m3 = std::move(m2);
+
+    REQUIRE(m3("highway", "residential"));
+    REQUIRE_FALSE(m3("name", "High Street"));
+
+    c1 = std::move(c2);
+    REQUIRE_FALSE(c1("highway", "residential"));
+    REQUIRE_FALSE(c1("name", "High Street"));
 }
 

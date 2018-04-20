@@ -1,7 +1,7 @@
 #include "catch.hpp"
 
-#include <osmium/util/minmax.hpp>
 #include <osmium/osm/timestamp.hpp>
+#include <osmium/util/minmax.hpp>
 
 TEST_CASE("min_op numeric") {
     osmium::min_op<int> x;
