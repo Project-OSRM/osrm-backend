@@ -384,7 +384,7 @@ RandIt filterPackedPathsByLocalOptimality(const WeightedViaNodePackedPath &path,
 
 // Filters unpacked paths compared to all other paths. Mutates range in-place.
 // Returns an iterator to the filtered range's new end.
-template <typename RandIt> RandIt filterUnpackedPathsBySharing(RandIt first, RandIt last)
+template <typename RandIt> RandIt filterUnpackedPathsBySharing(RandIt first, RandIt last, const Facade& facade)
 {
     util::static_assert_iter_category<RandIt, std::random_access_iterator_tag>();
     util::static_assert_iter_value<RandIt, WeightedViaNodeUnpackedPath>();
@@ -411,14 +411,22 @@ template <typename RandIt> RandIt filterUnpackedPathsBySharing(RandIt first, Ran
             return false;
         }
 
-        const auto not_seen = [&](const EdgeID edge) { return edges.count(edge) < 1; };
-        const auto different = std::count_if(begin(unpacked.edges), end(unpacked.edges), not_seen);
+        EdgeWeight total_weight = 0;
+        const auto add_if_seen = [&](const EdgeWeight weight, const EdgeID edge) {
+            auto edge_weight = facade.GetEdgeData(edge).weight;
+            total_weight += edge_weight;
+            if (edges.count(edge) > 0)
+            {
+                return weight + edge_weight;
+            }
+            return weight;
+        };
 
-        const auto difference = different / static_cast<double>(unpacked.edges.size());
-        BOOST_ASSERT(difference >= 0.);
-        BOOST_ASSERT(difference <= 1.);
+        const auto shared_weight = std::accumulate(begin(unpacked.edges), end(unpacked.edges), 0, add_if_seen);
 
-        const auto sharing = 1. - difference;
+        const auto sharing = shared_weight / static_cast<double>(total_weight);
+        BOOST_ASSERT(sharing >= 0.);
+        BOOST_ASSERT(sharing <= 1.);
 
         if (sharing > kAtLeastDifferentBy)
         {
@@ -816,7 +824,7 @@ InternalManyRoutesResult alternativePathSearch(SearchEngineData<Algorithm> &sear
 
     auto unpacked_paths_last = end(unpacked_paths);
 
-    unpacked_paths_last = filterUnpackedPathsBySharing(begin(unpacked_paths), end(unpacked_paths));
+    unpacked_paths_last = filterUnpackedPathsBySharing(begin(unpacked_paths), end(unpacked_paths), facade);
 
     const auto unpacked_paths_first = begin(unpacked_paths);
     const auto number_of_unpacked_paths =
