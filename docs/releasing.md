@@ -43,9 +43,9 @@ We may introduce forward-compatible changes: query parameters and response prope
 
 1. Check out the appropriate release branch `x.y`
 2. Make sure `CHANGELOG.md` is up to date.
-3. Make sure the `package.json` is up to date.
-4. Make sure all tests are passing (e.g. Travis CI gives you a :thumbs_up:)
-5. Use an annotated tag to mark the release: `git tag vx.y.z -a` Body of the tag description should be the changelog entries.
+3. Make sure the `package.json` on branch `x.y` has been committed.
+4. Make sure all tests are passing (e.g. Travis CI gives you a :green_apple:)
+5. Use an annotated tag to mark the release: `git tag vx.y.z -a` Body of the tag description should be the changelog entries. Commit should be one in which the `package.json` version matches the version you want to release.
 6. Use `npm run docs` to generate the API documentation.  Copy `build/docs/*` to `https://github.com/Project-OSRM/project-osrm.github.com` in the `docs/vN.N.N/api` directory
 7. Push tags and commits: `git push; git push --tags`
 8. On https://github.com/Project-OSRM/osrm-backend/releases press `Draft a new release`,

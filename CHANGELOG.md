@@ -3,6 +3,11 @@
     - Infrastructure:
       - ADDED: Updated libosmium and added protozero and vtzero libraries [#5037](https://github.com/Project-OSRM/osrm-backend/pull/5037)
 
+# 5.17.1
+  - Changes from 5.17.0:
+    - Bugfixes:
+      - FIXED: Do not combine a segregated edge with a roundabout [#5039](https://github.com/Project-OSRM/osrm-backend/issues/5039)
+
 # 5.17.0
   - Changes from 5.16.0:
     - Bugfixes:
