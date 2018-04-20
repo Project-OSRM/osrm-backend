@@ -39,5 +39,66 @@ Feature: Fixed bugs, kept to check for regressions
             | de    | yes    |
 
         When I route I should get
-            | from | to | route     |
-            | 1    | 2  | bcd,bcd   |
+            | from | to | route   |
+            | 1    | 2  | bcd,bcd |
+
+    #############################
+    # NOTE: this test case doesn't actually expose the bug it's supposed to test
+    #       NOT READY FOR MERGING YET
+    # This test, in theory, models the OSM map at the location for
+    #    https://github.com/Project-OSRM/osrm-backend/issues/5039
+    # but it does not trigger the bug when the fix is removed.
+    #############################
+    Scenario: Mixed Entry and Exit and segregated
+        Given the profile file "car" initialized with
+            """
+            profile.properties.left_hand_driving = true
+            """
+            Given the node locations
+            | node | lon             | lat             |
+            | a    | 171.12889297029 | -42.58425289548 |
+            | b    | 171.1299357     | -42.5849295     |
+            | c    | 171.1295427     | -42.5849385     |
+            | d    | 171.1297356     | -42.5852029     |
+            | e    | 171.1296909     | -42.5851986     |
+            | f    | 171.1295097     | -42.585007      |
+            | g    | 171.1298225     | -42.5851928     |
+            | h    | 171.1300262     | -42.5859122     |
+            | i    | 171.1292651     | -42.584698      |
+            | j    | 171.1297209     | -42.5848569     |
+            | k    | 171.1297188     | -42.5854056     |
+            | l    | 171.1298326     | -42.5857266     |
+            | m    | 171.1298871     | -42.5848922     |
+            | n    | 171.1296505     | -42.585189      |
+            | o    | 171.1295206     | -42.5850862     |
+            | p    | 171.1296106     | -42.5848862     |
+            | q    | 171.1299784     | -42.5850191     |
+            | r    | 171.1298867     | -42.5851671     |
+            | s    | 171.1306955     | -42.5845812     |
+            | t    | 171.129525      | -42.584807      |
+            | u    | 171.1299705     | -42.584984      |
+            | v    | 171.1299067     | -42.5849073     |
+            | w    | 171.1302061     | -42.5848173     |
+            | x    | 171.12975       | -42.5855753     |
+            | y    | 171.129969      | -42.585079      |
+            | 1    | 171.131511926651| -42.584306746421966 |
+            | 2    | 171.128743886947| -42.58414875714669 |
+        And the ways
+            | nodes     | highway | maxspeed | name                    | ref   | surface | junction   | oneway |
+            | ws        | primary | 100      | Taramakau Highway       | SH 6  | asphalt |            |        |
+            | kxlh      | trunk   |          | Otira Highway           | SH 73 |         |            |        |
+            | ai        | primary | 100      | Kumara Junction Highway | SH 6  | asphalt |            |        |
+            | qyrgdenof | primary | 100      | Kumara Junction         |       |         | roundabout |        |
+            | ke        | trunk   |          | Otira Highway           | SH 73 |         |            | yes    |
+            | itj       | primary | 100      | Kumara Junction Highway | SH 6  |         |            | yes    |
+            | gk        | trunk   |          | Otira Highway           | SH 73 |         |            | yes    |
+            | fi        | primary | 100      | Kumara Junction Highway | SH 6  |         |            | yes    |
+            | wq        | primary | 100      | Taramakau Highway       | SH 6  |         |            | yes    |
+            | vw        | primary | 100      | Taramakau Highway       | SH 6  |         |            | yes    |
+            | vbuq      | primary | 100      | Kumara Junction         |       |         | roundabout |        |
+            | jmv       | primary | 100      | Kumara Junction         |       |         | roundabout |        |
+            | fcpj      | primary | 100      | Kumara Junction         |       |         | roundabout |        |
+
+        When I route I should get
+            | waypoints | route           | turns                                                    |
+            | 1,2       | poh,cba,cba,cba | depart,roundabout-exit-2,exit roundabout straight,arrive |
