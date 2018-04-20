@@ -618,8 +618,8 @@ RouteSteps collapseSegregatedTurnInstructions(RouteSteps steps)
                               TransferLanesStrategy());
             ++next_step;
         }
-        // else if the current step is segregated and the next step is not then combine with turn
-        // adjustment
+        // else if the current step is segregated and the next step is not segregated
+        // and the next step is not a roundabout then combine with turn adjustment
         else if (curr_step->is_segregated && !next_step->is_segregated
                 && !hasRoundaboutType(next_step->maneuver.instruction))
         {
