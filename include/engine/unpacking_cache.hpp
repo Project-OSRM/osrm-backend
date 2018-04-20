@@ -53,7 +53,7 @@ class UnpackingCache
     // SHARED STORAGE CACHE
     // Number of lines we need for shared storage cache = 524288000 / 20 = 26214400
 
-    UnpackingCache(unsigned timestamp) : m_cache(5698782), m_current_data_timestamp(timestamp){};
+    UnpackingCache(unsigned timestamp) : m_cache(2849391), m_current_data_timestamp(timestamp){};
 
     UnpackingCache(std::size_t cache_size, unsigned timestamp)
         : m_cache(cache_size), m_current_data_timestamp(timestamp){};
