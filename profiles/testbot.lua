@@ -32,7 +32,7 @@ function setup()
       primary = 36,
       secondary = 18,
       tertiary = 12,
-      steps = 6,
+      steps = 6
     }
   }
 end

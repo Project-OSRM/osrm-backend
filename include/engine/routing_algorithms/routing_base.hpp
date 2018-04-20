@@ -181,6 +181,7 @@ void annotatePath(const FacadeT &facade,
         BOOST_ASSERT(datasource_vector.size() > 0);
         BOOST_ASSERT(weight_vector.size() + 1 == id_vector.size());
         BOOST_ASSERT(duration_vector.size() + 1 == id_vector.size());
+
         const bool is_first_segment = unpacked_path.empty();
 
         const std::size_t start_index =
@@ -403,6 +404,22 @@ InternalRouteResult extractRoute(const DataFacade<AlgorithmT> &facade,
                  raw_route_data.unpacked_path_segments.front());
 
     return raw_route_data;
+}
+
+template <typename FacadeT> EdgeDistance computeEdgeDistance(const FacadeT &facade, NodeID node_id)
+{
+    const auto geometry_index = facade.GetGeometryIndex(node_id);
+
+    EdgeDistance total_distance = 0.0;
+
+    auto geometry_range = facade.GetUncompressedForwardGeometry(geometry_index.id);
+    for (auto current = geometry_range.begin(); current < geometry_range.end() - 1; ++current)
+    {
+        total_distance += util::coordinate_calculation::haversineDistance(
+            facade.GetCoordinateOfNode(*current), facade.GetCoordinateOfNode(*std::next(current)));
+    }
+
+    return total_distance;
 }
 
 } // namespace routing_algorithms

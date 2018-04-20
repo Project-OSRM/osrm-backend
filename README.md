@@ -9,7 +9,7 @@ High performance routing engine written in C++14 designed to run on OpenStreetMa
 The following services are available via HTTP API, C++ library interface and NodeJs wrapper:
 - Nearest - Snaps coordinates to the street network and returns the nearest matches
 - Route - Finds the fastest route between coordinates
-- Table - Computes the duration of the fastest route between all pairs of supplied coordinates
+- Table - Computes the duration or distances of the fastest route between all pairs of supplied coordinates
 - Match - Snaps noisy GPS traces to the road network in the most plausible way
 - Trip - Solves the Traveling Salesman Problem using a greedy heuristic
 - Tile - Generates Mapbox Vector Tiles with internal routing metadata

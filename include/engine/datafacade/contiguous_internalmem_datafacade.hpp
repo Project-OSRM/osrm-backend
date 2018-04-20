@@ -133,7 +133,6 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     using RTreeNode = SharedRTree::TreeNode;
 
     extractor::ClassData exclude_mask;
-    std::string m_timestamp;
     extractor::ProfileProperties *m_profile_properties;
     extractor::Datasources *m_datasources;
 
@@ -622,7 +621,6 @@ class ContiguousInternalMemoryDataFacade<CH>
                                        const std::size_t exclude_index)
         : ContiguousInternalMemoryDataFacadeBase(allocator, metric_name, exclude_index),
           ContiguousInternalMemoryAlgorithmDataFacade<CH>(allocator, metric_name, exclude_index)
-
     {
     }
 };
@@ -720,7 +718,6 @@ class ContiguousInternalMemoryDataFacade<MLD> final
                                        const std::size_t exclude_index)
         : ContiguousInternalMemoryDataFacadeBase(allocator, metric_name, exclude_index),
           ContiguousInternalMemoryAlgorithmDataFacade<MLD>(allocator, metric_name, exclude_index)
-
     {
     }
 };

@@ -101,7 +101,6 @@ std::vector<TurnData> generateTurns(const datafacade &facade,
     //         w
     //  uv is the "approach"
     //  vw is the "exit"
-
     // Look at every node in the directed graph we created
     for (const auto &startnode : sorted_startnodes)
     {

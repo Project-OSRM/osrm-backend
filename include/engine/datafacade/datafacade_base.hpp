@@ -33,7 +33,6 @@
 
 #include <boost/range/adaptor/reversed.hpp>
 #include <boost/range/any_range.hpp>
-
 #include <cstddef>
 
 #include <string>

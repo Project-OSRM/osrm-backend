@@ -75,6 +75,7 @@ using NameID = std::uint32_t;
 using AnnotationID = std::uint32_t;
 using EdgeWeight = std::int32_t;
 using EdgeDuration = std::int32_t;
+using EdgeDistance = float;
 using SegmentWeight = std::uint32_t;
 using SegmentDuration = std::uint32_t;
 using TurnPenalty = std::int16_t; // turn penalty in 100ms units
@@ -113,6 +114,7 @@ static const SegmentDuration MAX_SEGMENT_DURATION = INVALID_SEGMENT_DURATION - 1
 static const EdgeWeight INVALID_EDGE_WEIGHT = std::numeric_limits<EdgeWeight>::max();
 static const EdgeDuration MAXIMAL_EDGE_DURATION = std::numeric_limits<EdgeDuration>::max();
 static const TurnPenalty INVALID_TURN_PENALTY = std::numeric_limits<TurnPenalty>::max();
+static const EdgeDistance INVALID_EDGE_DISTANCE = std::numeric_limits<EdgeDistance>::max();
 
 // FIXME the bitfields we use require a reduced maximal duration, this should be kept consistent
 // within the code base. For now we have to ensure that we don't case 30 bit to -1 and break any

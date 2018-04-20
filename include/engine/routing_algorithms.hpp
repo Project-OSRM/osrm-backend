@@ -30,10 +30,12 @@ class RoutingAlgorithmsInterface
     virtual InternalRouteResult
     DirectShortestPathSearch(const PhantomNodes &phantom_node_pair) const = 0;
 
-    virtual std::vector<EdgeDuration>
+    virtual std::pair<std::vector<EdgeDuration>, std::vector<EdgeDistance>>
     ManyToManySearch(const std::vector<PhantomNode> &phantom_nodes,
                      const std::vector<std::size_t> &source_indices,
-                     const std::vector<std::size_t> &target_indices) const = 0;
+                     const std::vector<std::size_t> &target_indices,
+                     const bool calculate_distance,
+                     const bool calculate_duration) const = 0;
 
     virtual routing_algorithms::SubMatchingList
     MapMatching(const routing_algorithms::CandidateLists &candidates_list,
@@ -81,10 +83,12 @@ template <typename Algorithm> class RoutingAlgorithms final : public RoutingAlgo
     InternalRouteResult
     DirectShortestPathSearch(const PhantomNodes &phantom_nodes) const final override;
 
-    std::vector<EdgeDuration>
+    virtual std::pair<std::vector<EdgeDuration>, std::vector<EdgeDistance>>
     ManyToManySearch(const std::vector<PhantomNode> &phantom_nodes,
                      const std::vector<std::size_t> &source_indices,
-                     const std::vector<std::size_t> &target_indices) const final override;
+                     const std::vector<std::size_t> &target_indices,
+                     const bool calculate_distance,
+                     const bool calculate_duration) const final override;
 
     routing_algorithms::SubMatchingList
     MapMatching(const routing_algorithms::CandidateLists &candidates_list,
@@ -184,10 +188,12 @@ inline routing_algorithms::SubMatchingList RoutingAlgorithms<Algorithm>::MapMatc
 }
 
 template <typename Algorithm>
-std::vector<EdgeDuration> RoutingAlgorithms<Algorithm>::ManyToManySearch(
-    const std::vector<PhantomNode> &phantom_nodes,
-    const std::vector<std::size_t> &_source_indices,
-    const std::vector<std::size_t> &_target_indices) const
+std::pair<std::vector<EdgeDuration>, std::vector<EdgeDistance>>
+RoutingAlgorithms<Algorithm>::ManyToManySearch(const std::vector<PhantomNode> &phantom_nodes,
+                                               const std::vector<std::size_t> &_source_indices,
+                                               const std::vector<std::size_t> &_target_indices,
+                                               const bool calculate_distance,
+                                               const bool calculate_duration) const
 {
     BOOST_ASSERT(!phantom_nodes.empty());
 
@@ -205,8 +211,13 @@ std::vector<EdgeDuration> RoutingAlgorithms<Algorithm>::ManyToManySearch(
         std::iota(target_indices.begin(), target_indices.end(), 0);
     }
 
-    return routing_algorithms::manyToManySearch(
-        heaps, *facade, phantom_nodes, std::move(source_indices), std::move(target_indices));
+    return routing_algorithms::manyToManySearch(heaps,
+                                                *facade,
+                                                phantom_nodes,
+                                                std::move(source_indices),
+                                                std::move(target_indices),
+                                                calculate_distance,
+                                                calculate_duration);
 }
 
 template <typename Algorithm>

@@ -60,6 +60,16 @@ struct TableParameters : public BaseParameters
     std::vector<std::size_t> sources;
     std::vector<std::size_t> destinations;
 
+    enum class AnnotationsType
+    {
+        None = 0,
+        Duration = 0x01,
+        Distance = 0x02,
+        All = Duration | Distance
+    };
+
+    AnnotationsType annotations = AnnotationsType::Duration;
+
     TableParameters() = default;
     template <typename... Args>
     TableParameters(std::vector<std::size_t> sources_,
@@ -67,6 +77,16 @@ struct TableParameters : public BaseParameters
                     Args... args_)
         : BaseParameters{std::forward<Args>(args_)...}, sources{std::move(sources_)},
           destinations{std::move(destinations_)}
+    {
+    }
+
+    template <typename... Args>
+    TableParameters(std::vector<std::size_t> sources_,
+                    std::vector<std::size_t> destinations_,
+                    const AnnotationsType annotations_,
+                    Args... args_)
+        : BaseParameters{std::forward<Args>(args_)...}, sources{std::move(sources_)},
+          destinations{std::move(destinations_)}, annotations{annotations_}
     {
     }
 
@@ -79,7 +99,7 @@ struct TableParameters : public BaseParameters
         if (coordinates.size() < 2)
             return false;
 
-        // 1/ The user is able to specify duplicates in srcs and dsts, in that case it's her fault
+        // 1/ The user is able to specify duplicates in srcs and dsts, in that case it's their fault
 
         // 2/ len(srcs) and len(dsts) smaller or equal to len(locations)
         if (sources.size() > coordinates.size())
@@ -100,6 +120,26 @@ struct TableParameters : public BaseParameters
         return true;
     }
 };
+inline bool operator&(TableParameters::AnnotationsType lhs, TableParameters::AnnotationsType rhs)
+{
+    return static_cast<bool>(
+        static_cast<std::underlying_type_t<TableParameters::AnnotationsType>>(lhs) &
+        static_cast<std::underlying_type_t<TableParameters::AnnotationsType>>(rhs));
+}
+
+inline TableParameters::AnnotationsType operator|(TableParameters::AnnotationsType lhs,
+                                                  TableParameters::AnnotationsType rhs)
+{
+    return (TableParameters::AnnotationsType)(
+        static_cast<std::underlying_type_t<TableParameters::AnnotationsType>>(lhs) |
+        static_cast<std::underlying_type_t<TableParameters::AnnotationsType>>(rhs));
+}
+
+inline TableParameters::AnnotationsType operator|=(TableParameters::AnnotationsType lhs,
+                                                   TableParameters::AnnotationsType rhs)
+{
+    return lhs = lhs | rhs;
+}
 }
 }
 }

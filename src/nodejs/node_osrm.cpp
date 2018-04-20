@@ -263,7 +263,7 @@ NAN_METHOD(Engine::nearest) //
 
 // clang-format off
 /**
- * Computes duration tables for the given locations. Allows for both symmetric and asymmetric
+ * Computes duration and distance tables for the given locations. Allows for both symmetric and asymmetric
  * tables.
  *
  * @name table
@@ -299,6 +299,7 @@ NAN_METHOD(Engine::nearest) //
  * };
  * osrm.table(options, function(err, response) {
  *   console.log(response.durations); // array of arrays, matrix in row-major order
+ *   console.log(response.distances); // array of arrays, matrix in row-major order
  *   console.log(response.sources); // array of Waypoint objects
  *   console.log(response.destinations); // array of Waypoint objects
  * });

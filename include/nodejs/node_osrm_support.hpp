@@ -1064,6 +1064,44 @@ argumentsToTableParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
         }
     }
 
+    if (obj->Has(Nan::New("annotations").ToLocalChecked()))
+    {
+        v8::Local<v8::Value> annotations = obj->Get(Nan::New("annotations").ToLocalChecked());
+        if (annotations.IsEmpty())
+            return table_parameters_ptr();
+
+        if (!annotations->IsArray())
+        {
+            Nan::ThrowError(
+                "Annotations must an array containing 'duration' or 'distance', or both");
+            return table_parameters_ptr();
+        }
+
+        v8::Local<v8::Array> annotations_array = v8::Local<v8::Array>::Cast(annotations);
+        for (std::size_t i = 0; i < annotations_array->Length(); ++i)
+        {
+            const Nan::Utf8String annotations_utf8str(annotations_array->Get(i));
+            std::string annotations_str{*annotations_utf8str,
+                                        *annotations_utf8str + annotations_utf8str.length()};
+
+            if (annotations_str == "duration")
+            {
+                params->annotations =
+                    params->annotations | osrm::TableParameters::AnnotationsType::Duration;
+            }
+            else if (annotations_str == "distance")
+            {
+                params->annotations =
+                    params->annotations | osrm::TableParameters::AnnotationsType::Distance;
+            }
+            else
+            {
+                Nan::ThrowError("this 'annotations' param is not supported");
+                return table_parameters_ptr();
+            }
+        }
+    }
+
     return params;
 }
 

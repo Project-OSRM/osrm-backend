@@ -27,6 +27,7 @@ BOOST_AUTO_TEST_CASE(test_table_three_coords_one_source_one_dest_matrix)
     params.coordinates.push_back(get_dummy_location());
     params.sources.push_back(0);
     params.destinations.push_back(2);
+    params.annotations = TableParameters::AnnotationsType::All;
 
     json::Object result;
 
@@ -46,6 +47,18 @@ BOOST_AUTO_TEST_CASE(test_table_three_coords_one_source_one_dest_matrix)
         BOOST_CHECK_EQUAL(durations_matrix.size(),
                           params.sources.size() * params.destinations.size());
     }
+
+    // check that returned distances error is expected size and proportions
+    // this test expects a 1x1 matrix
+    const auto &distances_array = result.values.at("distances").get<json::Array>().values;
+    BOOST_CHECK_EQUAL(distances_array.size(), params.sources.size());
+    for (unsigned int i = 0; i < distances_array.size(); i++)
+    {
+        const auto distances_matrix = distances_array[i].get<json::Array>().values;
+        BOOST_CHECK_EQUAL(distances_matrix.size(),
+                          params.sources.size() * params.destinations.size());
+    }
+
     // check destinations array of waypoint objects
     const auto &destinations_array = result.values.at("destinations").get<json::Array>().values;
     BOOST_CHECK_EQUAL(destinations_array.size(), params.destinations.size());
@@ -73,7 +86,6 @@ BOOST_AUTO_TEST_CASE(test_table_three_coords_one_source_matrix)
     params.coordinates.push_back(get_dummy_location());
     params.coordinates.push_back(get_dummy_location());
     params.sources.push_back(0);
-
     json::Object result;
 
     const auto rc = osrm.Table(params, result);
@@ -119,6 +131,7 @@ BOOST_AUTO_TEST_CASE(test_table_three_coordinates_matrix)
     params.coordinates.push_back(get_dummy_location());
     params.coordinates.push_back(get_dummy_location());
     params.coordinates.push_back(get_dummy_location());
+    params.annotations = TableParameters::AnnotationsType::Duration;
 
     json::Object result;
 
