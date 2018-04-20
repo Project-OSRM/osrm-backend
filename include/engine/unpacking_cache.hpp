@@ -77,7 +77,7 @@ class UnpackingCache
     // Number of lines for shared storage cache 500 mb = 1073741824 / 30 = 35791394
     // Number of lines for shared storage cache 250 mb = 11397565 / 30 = 379918
 
-    UnpackingCache() : m_cache(17476266){};
+    UnpackingCache() : m_cache(379918){};
 
     bool IsEdgeInCache(Key edge)
     {
