@@ -43,11 +43,8 @@ Feature: Fixed bugs, kept to check for regressions
             | 1    | 2  | bcd,bcd |
 
     #############################
-    # NOTE: this test case doesn't actually expose the bug it's supposed to test
-    #       NOT READY FOR MERGING YET
-    # This test, in theory, models the OSM map at the location for
+    # This test models the OSM map at the location for
     #    https://github.com/Project-OSRM/osrm-backend/issues/5039
-    # but it does not trigger the bug when the fix is removed.
     #############################
     Scenario: Mixed Entry and Exit and segregated
         Given the profile file "car" initialized with
@@ -88,17 +85,18 @@ Feature: Fixed bugs, kept to check for regressions
             | ws        | primary | 100      | Taramakau Highway       | SH 6  | asphalt |            |        |
             | kxlh      | trunk   |          | Otira Highway           | SH 73 |         |            |        |
             | ai        | primary | 100      | Kumara Junction Highway | SH 6  | asphalt |            |        |
-            | qyrgdenof | primary | 100      | Kumara Junction         |       |         | roundabout |        |
+            | qyrgdenof | primary | 100      | Kumara Junction         |       |         | roundabout | yes    |
             | ke        | trunk   |          | Otira Highway           | SH 73 |         |            | yes    |
             | itj       | primary | 100      | Kumara Junction Highway | SH 6  |         |            | yes    |
             | gk        | trunk   |          | Otira Highway           | SH 73 |         |            | yes    |
             | fi        | primary | 100      | Kumara Junction Highway | SH 6  |         |            | yes    |
             | wq        | primary | 100      | Taramakau Highway       | SH 6  |         |            | yes    |
             | vw        | primary | 100      | Taramakau Highway       | SH 6  |         |            | yes    |
-            | vbuq      | primary | 100      | Kumara Junction         |       |         | roundabout |        |
-            | jmv       | primary | 100      | Kumara Junction         |       |         | roundabout |        |
-            | fcpj      | primary | 100      | Kumara Junction         |       |         | roundabout |        |
+            | vbuq      | primary | 100      | Kumara Junction         |       |         | roundabout | yes    |
+            | jmv       | primary | 100      | Kumara Junction         |       |         | roundabout | yes    |
+            | fcpj      | primary | 100      | Kumara Junction         |       |         | roundabout | yes    |
 
         When I route I should get
             | waypoints | route           | turns                                                    |
-            | 1,2       | poh,cba,cba,cba | depart,roundabout-exit-2,exit roundabout straight,arrive |
+            | 1,2       | Taramakau Highway,Kumara Junction Highway,Kumara Junction Highway,Kumara Junction Highway | depart,Kumara Junction-exit-2,exit rotary slight left,arrive |
+
