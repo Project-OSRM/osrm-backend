@@ -34,22 +34,24 @@ using Facade = DataFacade<Algorithm>;
 namespace
 {
 
-// Alternative paths candidate via nodes are taken from overlapping search spaces.
-// Overlapping by a third guarantees us taking candidate nodes "from the middle".
-const constexpr auto kSearchSpaceOverlapFactor = 1.33;
-// Unpack n-times more candidate paths to run high-quality checks on.
-// Unpacking paths yields higher chance to find good alternatives but is also expensive.
-const constexpr auto kAlternativesToUnpackFactor = 2.0;
-// Alternative paths length requirement (stretch).
-// At most 25% longer then the shortest path.
-const constexpr auto kAtMostLongerBy = 0.25;
-// Alternative paths similarity requirement (sharing).
-// At least 15% different than the shortest path.
-const constexpr auto kAtLeastDifferentBy = 0.85;
-// Alternative paths are still reasonable around the via node candidate (local optimality).
-// At least optimal around 10% sub-paths around the via node candidate.
-const /*constexpr*/ auto kAtLeastOptimalAroundViaBy = 0.10;
-// gcc 7.1 ICE ^
+struct Parameters
+{
+    // Alternative paths candidate via nodes are taken from overlapping search spaces.
+    // Overlapping by a third guarantees us taking candidate nodes "from the middle".
+    double kSearchSpaceOverlapFactor;
+    // Unpack n-times more candidate paths to run high-quality checks on.
+    // Unpacking paths yields higher chance to find good alternatives but is also expensive.
+    double kAlternativesToUnpackFactor;
+    // Alternative paths length requirement (stretch).
+    // At most 25% longer then the shortest path.
+    double kAtMostLongerBy;
+    // Alternative paths similarity requirement (sharing).
+    // At least 15% different than the shortest path.
+    double kAtLeastDifferentBy;
+    // Alternative paths are still reasonable around the via node candidate (local optimality).
+    // At least optimal around 10% sub-paths around the via node candidate.
+    double kAtLeastOptimalAroundViaBy;
+};
 
 // Represents a via middle node where forward (from s) and backward (from t)
 // search spaces overlap and the weight a path (made up of s,via and via,t) has.
@@ -75,6 +77,54 @@ struct WeightedViaNodeUnpackedPath
     UnpackedNodes nodes;
     UnpackedEdges edges;
 };
+
+// Scale the maximum allowed weight increase based on its magnitude:
+//  - Shortest path 10 minutes, alternative 13 minutes => Factor of 0.30 ok
+//  - Shortest path 10 hours, alternative 13 hours     => Factor of 0.30 unreasonable
+double getLongerByFactorBasedOnDuration(const EdgeWeight duration)
+{
+    BOOST_ASSERT(duration != INVALID_EDGE_WEIGHT);
+
+    // We only have generic weights here and no durations without unpacking.
+    // We also have restricted way penalties which are huge and will screw scaling here.
+    //
+    // Users can pass us generic weights not based on durations; we can't do anything about
+    // it here other than either generating too many or no alternatives in these cases.
+    //
+    // We scale the weights with a step function based on some rough guestimates, so that
+    // they match tens of minutes, in the low hours, tens of hours, etc.
+
+    // Todo: instead of a piecewise constant function should this be a continuous function?
+    // At the moment there are "hard" jump edge cases when crossing the thresholds.
+
+    const constexpr double DEFAULT_LONGER_BY = 0.5;
+    const constexpr auto minutes = 60.;
+    const constexpr auto hours = 60. * minutes;
+
+    if (duration < EdgeWeight(10 * minutes))
+        return DEFAULT_LONGER_BY * 1.20;
+    else if (duration < EdgeWeight(30 * minutes))
+        return DEFAULT_LONGER_BY * 1.00;
+    else if (duration < EdgeWeight(1 * hours))
+        return DEFAULT_LONGER_BY * 0.90;
+    else if (duration < EdgeWeight(3 * hours))
+        return DEFAULT_LONGER_BY * 0.70;
+    else if (duration > EdgeWeight(10 * hours))
+        return DEFAULT_LONGER_BY * 0.50;
+
+    return DEFAULT_LONGER_BY;
+}
+
+Parameters getDefaultParameters()
+{
+    Parameters parameters;
+    parameters.kSearchSpaceOverlapFactor = 1.33;
+    parameters.kAlternativesToUnpackFactor = 2.0;
+    parameters.kAtMostLongerBy = 0.25;
+    parameters.kAtLeastDifferentBy = 0.85;
+    parameters.kAtLeastOptimalAroundViaBy = 0.10;
+    return parameters;
+}
 
 // Filters candidates which are on not unique.
 // Returns an iterator to the uniquified range's new end.
@@ -110,49 +160,13 @@ RandIt filterViaCandidatesByRoadImportance(RandIt first, RandIt last, const Faca
     return last;
 }
 
-// Scale the maximum allowed weight increase based on its magnitude:
-//  - Shortest path 10 minutes, alternative 13 minutes => Factor of 0.30 ok
-//  - Shortest path 10 hours, alternative 13 hours     => Factor of 0.30 unreasonable
-double scaledAtMostLongerByFactorBasedOnDuration(EdgeWeight duration)
-{
-    BOOST_ASSERT(duration != INVALID_EDGE_WEIGHT);
-
-    // We only have generic weights here and no durations without unpacking.
-    // We also have restricted way penalties which are huge and will screw scaling here.
-    //
-    // Users can pass us generic weights not based on durations; we can't do anything about
-    // it here other than either generating too many or no alternatives in these cases.
-    //
-    // We scale the weights with a step function based on some rough guestimates, so that
-    // they match tens of minutes, in the low hours, tens of hours, etc.
-
-    // Todo: instead of a piecewise constant function should this be a continuous function?
-    // At the moment there are "hard" jump edge cases when crossing the thresholds.
-
-    auto scaledAtMostLongerBy = kAtMostLongerBy;
-
-    const constexpr auto minutes = 60.;
-    const constexpr auto hours = 60. * minutes;
-
-    if (duration < EdgeWeight(10 * minutes))
-        scaledAtMostLongerBy *= 1.20;
-    else if (duration < EdgeWeight(30 * minutes))
-        scaledAtMostLongerBy *= 1.00;
-    else if (duration < EdgeWeight(1 * hours))
-        scaledAtMostLongerBy *= 0.90;
-    else if (duration < EdgeWeight(3 * hours))
-        scaledAtMostLongerBy *= 0.70;
-    else if (duration > EdgeWeight(10 * hours))
-        scaledAtMostLongerBy *= 0.50;
-
-    return scaledAtMostLongerBy;
-}
-
 // Filters candidates with much higher weight than the primary route. Mutates range in-place.
 // Returns an iterator to the filtered range's new end.
 template <typename RandIt>
-RandIt
-filterViaCandidatesByStretch(RandIt first, RandIt last, EdgeWeight weight, double weight_multiplier)
+RandIt filterViaCandidatesByStretch(RandIt first,
+                                    RandIt last,
+                                    const EdgeWeight weight,
+                                    const Parameters &parameters)
 {
     util::static_assert_iter_category<RandIt, std::random_access_iterator_tag>();
     util::static_assert_iter_value<RandIt, WeightedViaNode>();
@@ -160,9 +174,7 @@ filterViaCandidatesByStretch(RandIt first, RandIt last, EdgeWeight weight, doubl
     // Assumes weight roughly corresponds to duration-ish. If this is not the case e.g.
     // because users are setting weight to be distance in the profiles, then we might
     // either generate more candidates than we have to or not enough. But is okay.
-    const auto scaled_at_most_longer_by =
-        scaledAtMostLongerByFactorBasedOnDuration(weight / weight_multiplier);
-    const auto stretch_weight_limit = (1. + scaled_at_most_longer_by) * weight;
+    const auto stretch_weight_limit = (1. + parameters.kAtMostLongerBy) * weight;
 
     const auto over_weight_limit = [=](const auto via) {
         return via.weight > stretch_weight_limit;
@@ -198,7 +210,10 @@ filterViaCandidatesByViaNotOnPath(const WeightedViaNodePackedPath &path, RandIt 
 // Filters packed paths with similar cells between each other. Mutates range in-place.
 // Returns an iterator to the filtered range's new end.
 template <typename RandIt>
-RandIt filterPackedPathsByCellSharing(RandIt first, RandIt last, const Partition &partition)
+RandIt filterPackedPathsByCellSharing(RandIt first,
+                                      RandIt last,
+                                      const Partition &partition,
+                                      const Parameters &parameters)
 {
     util::static_assert_iter_category<RandIt, std::random_access_iterator_tag>();
     util::static_assert_iter_value<RandIt, WeightedViaNodePackedPath>();
@@ -226,14 +241,13 @@ RandIt filterPackedPathsByCellSharing(RandIt first, RandIt last, const Partition
         return last;
 
     std::unordered_set<CellID> cells;
-    cells.reserve(size * (shortest_path.path.size() + 1) * (1. + kAtMostLongerBy));
+    cells.reserve(size * (shortest_path.path.size() + 1) * (1.25));
 
     cells.insert(get_cell(std::get<0>(shortest_path.path.front())));
     for (const auto &edge : shortest_path.path)
         cells.insert(get_cell(std::get<1>(edge)));
 
     const auto over_sharing_limit = [&](const auto &packed) {
-
         if (packed.path.empty())
         { // don't remove routes with single-node (empty) path
             return false;
@@ -253,7 +267,7 @@ RandIt filterPackedPathsByCellSharing(RandIt first, RandIt last, const Partition
 
         const auto sharing = 1. - difference;
 
-        if (sharing > kAtLeastDifferentBy)
+        if (sharing > parameters.kAtLeastDifferentBy)
         {
             return true;
         }
@@ -277,7 +291,8 @@ RandIt filterPackedPathsByLocalOptimality(const WeightedViaNodePackedPath &path,
                                           const Heap &forward_heap,
                                           const Heap &reverse_heap,
                                           RandIt first,
-                                          RandIt last)
+                                          RandIt last,
+                                          const Parameters &parameters)
 {
     util::static_assert_iter_category<RandIt, std::random_access_iterator_tag>();
     util::static_assert_iter_value<RandIt, WeightedViaNodePackedPath>();
@@ -376,7 +391,7 @@ RandIt filterPackedPathsByLocalOptimality(const WeightedViaNodePackedPath &path,
         const auto detour_length = forward_heap.GetKey(via) - forward_heap.GetKey(a) +
                                    reverse_heap.GetKey(via) - reverse_heap.GetKey(b);
 
-        return plateaux_length < kAtLeastOptimalAroundViaBy * detour_length;
+        return plateaux_length < parameters.kAtLeastOptimalAroundViaBy * detour_length;
     };
 
     return std::remove_if(first, last, is_not_locally_optimal);
@@ -384,7 +399,11 @@ RandIt filterPackedPathsByLocalOptimality(const WeightedViaNodePackedPath &path,
 
 // Filters unpacked paths compared to all other paths. Mutates range in-place.
 // Returns an iterator to the filtered range's new end.
-template <typename RandIt> RandIt filterUnpackedPathsBySharing(RandIt first, RandIt last, const Facade& facade)
+template <typename RandIt>
+RandIt filterUnpackedPathsBySharing(RandIt first,
+                                    RandIt last,
+                                    const Facade &facade,
+                                    const Parameters &parameters)
 {
     util::static_assert_iter_category<RandIt, std::random_access_iterator_tag>();
     util::static_assert_iter_value<RandIt, WeightedViaNodeUnpackedPath>();
@@ -400,12 +419,11 @@ template <typename RandIt> RandIt filterUnpackedPathsBySharing(RandIt first, Ran
         return last;
 
     std::unordered_set<EdgeID> edges;
-    edges.reserve(size * shortest_path.edges.size() * (1. + kAtMostLongerBy));
+    edges.reserve(size * shortest_path.edges.size() * (1.25));
 
     edges.insert(begin(shortest_path.edges), end(shortest_path.edges));
 
     const auto over_sharing_limit = [&](const auto &unpacked) {
-
         if (unpacked.edges.empty())
         { // don't remove routes with single-node (empty) path
             return false;
@@ -422,13 +440,14 @@ template <typename RandIt> RandIt filterUnpackedPathsBySharing(RandIt first, Ran
             return weight;
         };
 
-        const auto shared_weight = std::accumulate(begin(unpacked.edges), end(unpacked.edges), 0, add_if_seen);
+        const auto shared_weight =
+            std::accumulate(begin(unpacked.edges), end(unpacked.edges), 0, add_if_seen);
 
         const auto sharing = shared_weight / static_cast<double>(total_weight);
         BOOST_ASSERT(sharing >= 0.);
         BOOST_ASSERT(sharing <= 1.);
 
-        if (sharing > kAtLeastDifferentBy)
+        if (sharing > parameters.kAtLeastDifferentBy)
         {
             return true;
         }
@@ -445,8 +464,10 @@ template <typename RandIt> RandIt filterUnpackedPathsBySharing(RandIt first, Ran
 // Filters annotated routes by stretch based on duration. Mutates range in-place.
 // Returns an iterator to the filtered range's new end.
 template <typename RandIt>
-RandIt
-filterAnnotatedRoutesByStretch(RandIt first, RandIt last, const InternalRouteResult &shortest_route)
+RandIt filterAnnotatedRoutesByStretch(RandIt first,
+                                      RandIt last,
+                                      const InternalRouteResult &shortest_route,
+                                      const Parameters &parameters)
 {
     util::static_assert_iter_category<RandIt, std::random_access_iterator_tag>();
     util::static_assert_iter_value<RandIt, InternalRouteResult>();
@@ -454,9 +475,7 @@ filterAnnotatedRoutesByStretch(RandIt first, RandIt last, const InternalRouteRes
     BOOST_ASSERT(shortest_route.is_valid());
 
     const auto shortest_route_duration = shortest_route.duration();
-    const auto scaled_at_most_longer_by =
-        scaledAtMostLongerByFactorBasedOnDuration(shortest_route_duration);
-    const auto stretch_duration_limit = (1. + scaled_at_most_longer_by) * shortest_route_duration;
+    const auto stretch_duration_limit = (1. + parameters.kAtMostLongerBy) * shortest_route_duration;
 
     const auto over_duration_limit = [=](const auto &route) {
         return route.duration() > stretch_duration_limit;
@@ -581,7 +600,8 @@ void unpackPackedPaths(InputIt first,
 inline std::vector<WeightedViaNode>
 makeCandidateVias(SearchEngineData<Algorithm> &search_engine_data,
                   const Facade &facade,
-                  const PhantomNodes &phantom_node_pair)
+                  const PhantomNodes &phantom_node_pair,
+                  const Parameters &parameters)
 {
     Heap &forward_heap = *search_engine_data.forward_heap_1;
     Heap &reverse_heap = *search_engine_data.reverse_heap_1;
@@ -613,7 +633,7 @@ makeCandidateVias(SearchEngineData<Algorithm> &search_engine_data,
     while (forward_heap.Size() + reverse_heap.Size() > 0)
     {
         if (shortest_path_weight != INVALID_EDGE_WEIGHT)
-            overlap_weight = shortest_path_weight * kSearchSpaceOverlapFactor;
+            overlap_weight = shortest_path_weight * parameters.kSearchSpaceOverlapFactor;
 
         // Termination criteria - when we have a shortest path this will guarantee for our overlap.
         const bool keep_going = forward_heap_min + reverse_heap_min < overlap_weight;
@@ -678,7 +698,7 @@ makeCandidateVias(SearchEngineData<Algorithm> &search_engine_data,
     return candidate_vias;
 }
 
-} // anon. ns
+} // namespace
 
 // Alternative Routes for MLD.
 //
@@ -699,9 +719,11 @@ InternalManyRoutesResult alternativePathSearch(SearchEngineData<Algorithm> &sear
                                                const PhantomNodes &phantom_node_pair,
                                                unsigned number_of_alternatives)
 {
+    auto parameters = getDefaultParameters();
+
     const auto max_number_of_alternatives = number_of_alternatives;
     const auto max_number_of_alternatives_to_unpack =
-        kAlternativesToUnpackFactor * max_number_of_alternatives;
+        parameters.kAlternativesToUnpackFactor * max_number_of_alternatives;
     BOOST_ASSERT(max_number_of_alternatives > 0);
     BOOST_ASSERT(max_number_of_alternatives_to_unpack >= max_number_of_alternatives);
 
@@ -715,7 +737,8 @@ InternalManyRoutesResult alternativePathSearch(SearchEngineData<Algorithm> &sear
     Heap &reverse_heap = *search_engine_data.reverse_heap_1;
 
     // Do forward and backward search, save search space overlap as via candidates.
-    auto candidate_vias = makeCandidateVias(search_engine_data, facade, phantom_node_pair);
+    auto candidate_vias =
+        makeCandidateVias(search_engine_data, facade, phantom_node_pair, parameters);
 
     const auto by_weight = [](const auto &lhs, const auto &rhs) { return lhs.weight < rhs.weight; };
     auto shortest_path_via_it =
@@ -738,6 +761,9 @@ InternalManyRoutesResult alternativePathSearch(SearchEngineData<Algorithm> &sear
     NodeID shortest_path_via = shortest_path_via_it->node;
     EdgeWeight shortest_path_weight = shortest_path_via_it->weight;
 
+    const double duration_estimation = shortest_path_weight / facade.GetWeightMultiplier();
+    parameters.kAtMostLongerBy = getLongerByFactorBasedOnDuration(duration_estimation);
+
     // Filters via candidate nodes with heuristics
 
     // Note: filter pipeline below only makes range smaller; no need to erase items
@@ -746,8 +772,7 @@ InternalManyRoutesResult alternativePathSearch(SearchEngineData<Algorithm> &sear
 
     it = filterViaCandidatesByUniqueNodeIds(begin(candidate_vias), it);
     it = filterViaCandidatesByRoadImportance(begin(candidate_vias), it, facade);
-    it = filterViaCandidatesByStretch(
-        begin(candidate_vias), it, shortest_path_weight, facade.GetWeightMultiplier());
+    it = filterViaCandidatesByStretch(begin(candidate_vias), it, shortest_path_weight, parameters);
 
     // Pre-rank by weight; sharing filtering below then discards by similarity.
     std::sort(begin(candidate_vias), it, [](const auto lhs, const auto rhs) {
@@ -791,10 +816,11 @@ InternalManyRoutesResult alternativePathSearch(SearchEngineData<Algorithm> &sear
                                                                 forward_heap, // paths for s, via
                                                                 reverse_heap, // paths for via, t
                                                                 begin(weighted_packed_paths) + 1,
-                                                                alternative_paths_last);
+                                                                alternative_paths_last,
+                                                                parameters);
 
     alternative_paths_last = filterPackedPathsByCellSharing(
-        begin(weighted_packed_paths), alternative_paths_last, partition);
+        begin(weighted_packed_paths), alternative_paths_last, partition, parameters);
 
     BOOST_ASSERT(weighted_packed_paths.size() >= 1);
 
@@ -824,7 +850,8 @@ InternalManyRoutesResult alternativePathSearch(SearchEngineData<Algorithm> &sear
 
     auto unpacked_paths_last = end(unpacked_paths);
 
-    unpacked_paths_last = filterUnpackedPathsBySharing(begin(unpacked_paths), end(unpacked_paths), facade);
+    unpacked_paths_last = filterUnpackedPathsBySharing(
+        begin(unpacked_paths), end(unpacked_paths), facade, parameters);
 
     const auto unpacked_paths_first = begin(unpacked_paths);
     const auto number_of_unpacked_paths =
@@ -858,7 +885,9 @@ InternalManyRoutesResult alternativePathSearch(SearchEngineData<Algorithm> &sear
 
     if (routes.size() > 1)
     {
-        routes_last = filterAnnotatedRoutesByStretch(routes_first + 1, routes_last, *routes_first);
+        parameters.kAtMostLongerBy = getLongerByFactorBasedOnDuration(routes_first->duration());
+        routes_last = filterAnnotatedRoutesByStretch(
+            routes_first + 1, routes_last, *routes_first, parameters);
         routes.erase(routes_last, end(routes));
     }
 
