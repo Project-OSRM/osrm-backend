@@ -1,8 +1,6 @@
 #ifndef OSRM_PARTITIONER_SERILIZATION_HPP
 #define OSRM_PARTITIONER_SERILIZATION_HPP
 
-#include "customizer/edge_based_graph.hpp"
-
 #include "partitioner/serialization.hpp"
 
 #include "storage/io.hpp"
@@ -13,39 +11,6 @@ namespace partitioner
 {
 namespace files
 {
-
-// reads .osrm.mldgr file
-template <typename MultiLevelGraphT>
-inline void readGraph(const boost::filesystem::path &path,
-                      MultiLevelGraphT &graph,
-                      std::uint32_t &connectivity_checksum)
-{
-    static_assert(std::is_same<customizer::MultiLevelEdgeBasedGraphView, MultiLevelGraphT>::value ||
-                      std::is_same<customizer::MultiLevelEdgeBasedGraph, MultiLevelGraphT>::value,
-                  "");
-
-    storage::tar::FileReader reader{path, storage::tar::FileReader::VerifyFingerprint};
-
-    reader.ReadInto("/mld/connectivity_checksum", connectivity_checksum);
-    serialization::read(reader, "/mld/multilevelgraph", graph);
-}
-
-// writes .osrm.mldgr file
-template <typename MultiLevelGraphT>
-inline void writeGraph(const boost::filesystem::path &path,
-                       const MultiLevelGraphT &graph,
-                       const std::uint32_t connectivity_checksum)
-{
-    static_assert(std::is_same<customizer::MultiLevelEdgeBasedGraphView, MultiLevelGraphT>::value ||
-                      std::is_same<customizer::MultiLevelEdgeBasedGraph, MultiLevelGraphT>::value,
-                  "");
-
-    storage::tar::FileWriter writer{path, storage::tar::FileWriter::GenerateFingerprint};
-
-    writer.WriteElementCount64("/mld/connectivity_checksum", 1);
-    writer.WriteFrom("/mld/connectivity_checksum", connectivity_checksum);
-    serialization::write(writer, "/mld/multilevelgraph", graph);
-}
 
 // read .osrm.partition file
 template <typename MultiLevelPartitionT>
@@ -101,6 +66,35 @@ inline void writeCells(const boost::filesystem::path &path, CellStorageT &storag
     storage::tar::FileWriter writer{path, fingerprint};
 
     serialization::write(writer, "/mld/cellstorage", storage);
+}
+
+// reads .osrm.mldgr file
+template <typename MultiLevelGraphT>
+inline void readGraph(const boost::filesystem::path &path,
+                      MultiLevelGraphT &graph,
+                      std::uint32_t &connectivity_checksum)
+{
+    static_assert(std::is_same<partitioner::MultiLevelEdgeBasedGraph, MultiLevelGraphT>::value, "");
+
+    storage::tar::FileReader reader{path, storage::tar::FileReader::VerifyFingerprint};
+
+    reader.ReadInto("/mld/connectivity_checksum", connectivity_checksum);
+    serialization::read(reader, "/mld/multilevelgraph", graph);
+}
+
+// writes .osrm.mldgr file
+template <typename MultiLevelGraphT>
+inline void writeGraph(const boost::filesystem::path &path,
+                       const MultiLevelGraphT &graph,
+                       const std::uint32_t connectivity_checksum)
+{
+    static_assert(std::is_same<partitioner::MultiLevelEdgeBasedGraph, MultiLevelGraphT>::value, "");
+
+    storage::tar::FileWriter writer{path, storage::tar::FileWriter::GenerateFingerprint};
+
+    writer.WriteElementCount64("/mld/connectivity_checksum", 1);
+    writer.WriteFrom("/mld/connectivity_checksum", connectivity_checksum);
+    serialization::write(writer, "/mld/multilevelgraph", graph);
 }
 }
 }

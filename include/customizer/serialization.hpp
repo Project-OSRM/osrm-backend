@@ -1,6 +1,8 @@
 #ifndef OSRM_CUSTOMIZER_SERIALIZATION_HPP
 #define OSRM_CUSTOMIZER_SERIALIZATION_HPP
 
+#include "customizer/edge_based_graph.hpp"
+
 #include "partitioner/cell_storage.hpp"
 
 #include "storage/serialization.hpp"
@@ -30,6 +32,30 @@ inline void write(storage::tar::FileWriter &writer,
 {
     storage::serialization::write(writer, name + "/weights", metric.weights);
     storage::serialization::write(writer, name + "/durations", metric.durations);
+}
+
+template <typename EdgeDataT, storage::Ownership Ownership>
+inline void read(storage::tar::FileReader &reader,
+                 const std::string &name,
+                 MultiLevelGraph<EdgeDataT, Ownership> &graph)
+{
+    storage::serialization::read(reader, name + "/node_array", graph.node_array);
+    storage::serialization::read(reader, name + "/node_weights", graph.node_weights);
+    storage::serialization::read(reader, name + "/node_durations", graph.node_durations);
+    storage::serialization::read(reader, name + "/edge_array", graph.edge_array);
+    storage::serialization::read(reader, name + "/node_to_edge_offset", graph.node_to_edge_offset);
+}
+
+template <typename EdgeDataT, storage::Ownership Ownership>
+inline void write(storage::tar::FileWriter &writer,
+                  const std::string &name,
+                  const MultiLevelGraph<EdgeDataT, Ownership> &graph)
+{
+    storage::serialization::write(writer, name + "/node_array", graph.node_array);
+    storage::serialization::write(writer, name + "/node_weights", graph.node_weights);
+    storage::serialization::write(writer, name + "/node_durations", graph.node_durations);
+    storage::serialization::write(writer, name + "/edge_array", graph.edge_array);
+    storage::serialization::write(writer, name + "/node_to_edge_offset", graph.node_to_edge_offset);
 }
 }
 }
