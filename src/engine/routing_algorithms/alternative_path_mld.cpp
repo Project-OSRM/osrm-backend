@@ -94,25 +94,36 @@ double getLongerByFactorBasedOnDuration(const EdgeWeight duration)
     // We scale the weights with a step function based on some rough guestimates, so that
     // they match tens of minutes, in the low hours, tens of hours, etc.
 
-    // Todo: instead of a piecewise constant function should this be a continuous function?
-    // At the moment there are "hard" jump edge cases when crossing the thresholds.
+    // Computed using a least-squares curve fitiing on the following values:
+    //
+    // def func(xs, a, b, c, d):
+    //       return a + b/(xs-d) + c/(xs-d)**3
+    //
+    // xs = np.array([5 * 60, 10 * 60, 30 * 60, 60 * 60, 3 * 60 * 60, 10 * 60 * 60])
+    // ys = np.array([1.0,    0.75,    0.5,     0.3,     0.2,          0.1])
+    //
+    // xs_interp = np.arange(5*60, 10*60*60, 5*60)
+    // ys_interp = np.interp(xs_interp, xs, ys)
+    //
+    // params, _ = scipy.optimize.curve_fit(func, xs_interp, ys_interp)
+    const constexpr auto a = 9.49571282e-02;
+    const constexpr auto b = 1.25440191e+03;
+    const constexpr auto c = 2.06152165e+09;
+    const constexpr auto d = -1.71666881e+03;
 
-    const constexpr double DEFAULT_LONGER_BY = 0.5;
-    const constexpr auto minutes = 60.;
-    const constexpr auto hours = 60. * minutes;
+    if (duration < EdgeWeight(5 * 60))
+    {
+        return 1.0;
+    }
+    else if (duration > EdgeWeight(10 * 60 * 60))
+    {
+        return 0.10;
+    }
 
-    if (duration < EdgeWeight(10 * minutes))
-        return DEFAULT_LONGER_BY * 1.20;
-    else if (duration < EdgeWeight(30 * minutes))
-        return DEFAULT_LONGER_BY * 1.00;
-    else if (duration < EdgeWeight(1 * hours))
-        return DEFAULT_LONGER_BY * 0.90;
-    else if (duration < EdgeWeight(3 * hours))
-        return DEFAULT_LONGER_BY * 0.70;
-    else if (duration > EdgeWeight(10 * hours))
-        return DEFAULT_LONGER_BY * 0.50;
+    // Bigger than 10 minutes but smaller than 10 hours
+    BOOST_ASSERT(duration > 5*60 && duration < 10*60*60);
 
-    return DEFAULT_LONGER_BY;
+    return a + b/(duration-d) + c/std::pow(duration-d, 3);
 }
 
 Parameters getDefaultParameters()
