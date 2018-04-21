@@ -73,6 +73,39 @@ writeCellMetrics(const boost::filesystem::path &path,
         }
     }
 }
+
+// reads .osrm.mldgr file
+template <typename MultiLevelGraphT>
+inline void readGraph(const boost::filesystem::path &path,
+                      MultiLevelGraphT &graph,
+                      std::uint32_t &connectivity_checksum)
+{
+    static_assert(std::is_same<customizer::MultiLevelEdgeBasedGraphView, MultiLevelGraphT>::value ||
+                      std::is_same<customizer::MultiLevelEdgeBasedGraph, MultiLevelGraphT>::value,
+                  "");
+
+    storage::tar::FileReader reader{path, storage::tar::FileReader::VerifyFingerprint};
+
+    reader.ReadInto("/mld/connectivity_checksum", connectivity_checksum);
+    serialization::read(reader, "/mld/multilevelgraph", graph);
+}
+
+// writes .osrm.mldgr file
+template <typename MultiLevelGraphT>
+inline void writeGraph(const boost::filesystem::path &path,
+                       const MultiLevelGraphT &graph,
+                       const std::uint32_t connectivity_checksum)
+{
+    static_assert(std::is_same<customizer::MultiLevelEdgeBasedGraphView, MultiLevelGraphT>::value ||
+                      std::is_same<customizer::MultiLevelEdgeBasedGraph, MultiLevelGraphT>::value,
+                  "");
+
+    storage::tar::FileWriter writer{path, storage::tar::FileWriter::GenerateFingerprint};
+
+    writer.WriteElementCount64("/mld/connectivity_checksum", 1);
+    writer.WriteFrom("/mld/connectivity_checksum", connectivity_checksum);
+    serialization::write(writer, "/mld/multilevelgraph", graph);
+}
 }
 }
 }

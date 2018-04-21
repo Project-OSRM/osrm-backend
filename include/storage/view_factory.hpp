@@ -330,9 +330,14 @@ inline auto make_multi_level_graph_view(const SharedDataIndex &index, const std:
         index, name + "/edge_array");
     auto node_to_offset = make_vector_view<customizer::MultiLevelEdgeBasedGraphView::EdgeOffset>(
         index, name + "/node_to_edge_offset");
+    auto node_weights = make_vector_view<EdgeWeight>(index, name + "/node_weights");
+    auto node_durations = make_vector_view<EdgeDuration>(index, name + "/node_durations");
 
-    return customizer::MultiLevelEdgeBasedGraphView(
-        std::move(node_list), std::move(edge_list), std::move(node_to_offset));
+    return customizer::MultiLevelEdgeBasedGraphView(std::move(node_list),
+                                                    std::move(edge_list),
+                                                    std::move(node_to_offset),
+                                                    std::move(node_weights),
+                                                    std::move(node_durations));
 }
 
 inline auto make_maneuver_overrides_views(const SharedDataIndex &index, const std::string &name)

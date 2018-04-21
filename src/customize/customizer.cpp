@@ -84,14 +84,15 @@ auto LoadAndUpdateEdgeExpandedGraph(const CustomizationConfig &config,
         updater.LoadAndUpdateEdgeExpandedGraph();
 
     auto directed = partitioner::splitBidirectionalEdges(edge_based_edge_list);
-    auto tidied =
-        partitioner::prepareEdgesForUsageInGraph<StaticEdgeBasedGraphEdge>(std::move(directed));
-    auto edge_based_graph = customizer::MultiLevelEdgeBasedGraph(mlp, num_nodes, std::move(tidied));
+    auto tidied = partitioner::prepareEdgesForUsageInGraph<
+        typename partitioner::MultiLevelEdgeBasedGraph::InputEdge>(std::move(directed));
+    auto edge_based_graph =
+        partitioner::MultiLevelEdgeBasedGraph(mlp, num_nodes, std::move(tidied));
 
     return edge_based_graph;
 }
 
-std::vector<CellMetric> customizeFilteredMetrics(const MultiLevelEdgeBasedGraph &graph,
+std::vector<CellMetric> customizeFilteredMetrics(const partitioner::MultiLevelEdgeBasedGraph &graph,
                                                  const partitioner::CellStorage &storage,
                                                  const CellCustomizer &customizer,
                                                  const std::vector<std::vector<bool>> &node_filters)
@@ -157,7 +158,12 @@ int Customizer::Run(const CustomizationConfig &config)
     util::Log() << "MLD customization writing took " << TIMER_SEC(writing_mld_data) << " seconds";
 
     TIMER_START(writing_graph);
-    partitioner::files::writeGraph(config.GetPath(".osrm.mldgr"), graph, connectivity_checksum);
+    std::vector<EdgeWeight> node_weights;
+    std::vector<EdgeDuration> node_durations;
+    MultiLevelEdgeBasedGraph shaved_graph{
+        std::move(graph), std::move(node_weights), std::move(node_durations)};
+    customizer::files::writeGraph(
+        config.GetPath(".osrm.mldgr"), shaved_graph, connectivity_checksum);
     TIMER_STOP(writing_graph);
     util::Log() << "Graph writing took " << TIMER_SEC(writing_graph) << " seconds";
 

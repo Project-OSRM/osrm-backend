@@ -554,7 +554,7 @@ void Storage::PopulateUpdatableData(const SharedDataIndex &index)
     {
         auto graph_view = make_multi_level_graph_view(index, "/mld/multilevelgraph");
         std::uint32_t graph_connectivity_checksum = 0;
-        partitioner::files::readGraph(
+        customizer::files::readGraph(
             config.GetPath(".osrm.mldgr"), graph_view, graph_connectivity_checksum);
 
         auto turns_connectivity_checksum =

@@ -312,7 +312,7 @@ class StaticGraph
         });
     }
 
-    // private:
+  protected:
     NodeIterator number_of_nodes;
     EdgeIterator number_of_edges;
 

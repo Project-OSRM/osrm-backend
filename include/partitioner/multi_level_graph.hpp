@@ -1,6 +1,7 @@
 #ifndef OSRM_PARTITIONER_MULTI_LEVEL_GRAPH_HPP
 #define OSRM_PARTITIONER_MULTI_LEVEL_GRAPH_HPP
 
+#include "partitioner/edge_based_graph.hpp"
 #include "partitioner/multi_level_partition.hpp"
 
 #include "storage/shared_memory_ownership.hpp"
@@ -42,6 +43,8 @@ class MultiLevelGraph : public util::StaticGraph<EdgeDataT, Ownership>
     template <typename T> using Vector = util::ViewOrVector<T, Ownership>;
 
   public:
+    using SuperT::SuperT;
+
     // We limit each node to have 255 edges
     // this is very generous, we could probably pack this
     using EdgeOffset = std::uint8_t;
@@ -146,6 +149,14 @@ class MultiLevelGraph : public util::StaticGraph<EdgeDataT, Ownership>
         return max_border_node_id;
     }
 
+    auto data() &&
+    {
+        return std::make_tuple(std::move(SuperT::node_array),
+                               std::move(SuperT::edge_array),
+                               std::move(node_to_edge_offset),
+                               connectivity_checksum);
+    }
+
   private:
     template <typename ContainerT>
     auto GetHighestBorderLevel(const MultiLevelPartition &mlp, const ContainerT &edges) const
@@ -218,9 +229,13 @@ class MultiLevelGraph : public util::StaticGraph<EdgeDataT, Ownership>
                                                const std::string &name,
                                                const MultiLevelGraph<EdgeDataT, Ownership> &graph);
 
+  protected:
     Vector<EdgeOffset> node_to_edge_offset;
     std::uint32_t connectivity_checksum;
 };
+
+using MultiLevelEdgeBasedGraph =
+    MultiLevelGraph<EdgeBasedGraphEdgeData, storage::Ownership::Container>;
 }
 }
 
