@@ -46,33 +46,39 @@ class SharedDataIndex
 
     template <typename T> auto GetBlockPtr(const std::string &name) const
     {
-        const auto index_iter = block_to_region.find(name);
-        const auto &region = regions[index_iter->second];
+        const auto &region = GetBlockRegion(name);
         return region.layout.GetBlockPtr<T>(region.memory_ptr, name);
     }
 
     template <typename T> auto GetBlockPtr(const std::string &name)
     {
-        const auto index_iter = block_to_region.find(name);
-        const auto &region = regions[index_iter->second];
+        const auto &region = GetBlockRegion(name);
         return region.layout.GetBlockPtr<T>(region.memory_ptr, name);
     }
 
     std::size_t GetBlockEntries(const std::string &name) const
     {
-        const auto index_iter = block_to_region.find(name);
-        const auto &region = regions[index_iter->second];
+        const auto &region = GetBlockRegion(name);
         return region.layout.GetBlockEntries(name);
     }
 
     std::size_t GetBlockSize(const std::string &name) const
     {
-        const auto index_iter = block_to_region.find(name);
-        const auto &region = regions[index_iter->second];
+        const auto &region = GetBlockRegion(name);
         return region.layout.GetBlockSize(name);
     }
 
   private:
+    const AllocatedRegion &GetBlockRegion(const std::string &name) const
+    {
+        const auto index_iter = block_to_region.find(name);
+        if (index_iter == block_to_region.end())
+        {
+            throw util::exception("data block " + name + " not found " + SOURCE_REF);
+        }
+        return regions[index_iter->second];
+    }
+
     std::vector<AllocatedRegion> regions;
     std::unordered_map<std::string, std::uint32_t> block_to_region;
 };
