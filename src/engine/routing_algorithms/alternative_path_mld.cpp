@@ -38,19 +38,22 @@ struct Parameters
 {
     // Alternative paths candidate via nodes are taken from overlapping search spaces.
     // Overlapping by a third guarantees us taking candidate nodes "from the middle".
-    double kSearchSpaceOverlapFactor;
+    double kSearchSpaceOverlapFactor = 1.33;
     // Unpack n-times more candidate paths to run high-quality checks on.
     // Unpacking paths yields higher chance to find good alternatives but is also expensive.
-    double kAlternativesToUnpackFactor;
+    unsigned kAlternativesToUnpackFactor = 2;
     // Alternative paths length requirement (stretch).
     // At most 25% longer then the shortest path.
-    double kAtMostLongerBy;
+    double kAtMostLongerBy = 0.25;
     // Alternative paths similarity requirement (sharing).
     // At least 15% different than the shortest path.
-    double kAtLeastDifferentBy;
+    double kAtLeastDifferentBy = 0.85;
     // Alternative paths are still reasonable around the via node candidate (local optimality).
     // At least optimal around 10% sub-paths around the via node candidate.
-    double kAtLeastOptimalAroundViaBy;
+    double kAtLeastOptimalAroundViaBy = 0.1;
+    // Alternative paths similarity requirement (sharing) based on calles.
+    // At least 15% different than the shortest path.
+    double kCellsAtLeastDifferentBy = 0.85;
 };
 
 // Represents a via middle node where forward (from s) and backward (from t)
@@ -121,19 +124,45 @@ double getLongerByFactorBasedOnDuration(const EdgeWeight duration)
     }
 
     // Bigger than 10 minutes but smaller than 10 hours
-    BOOST_ASSERT(duration > 5*60 && duration < 10*60*60);
+    BOOST_ASSERT(duration > 5 * 60 && duration < 10 * 60 * 60);
 
-    return a + b/(duration-d) + c/std::pow(duration-d, 3);
+    return a + b / (duration - d) + c / std::pow(duration - d, 3);
 }
 
-Parameters getDefaultParameters()
+Parameters parametersFromRequest(const PhantomNodes &phantom_node_pair)
 {
     Parameters parameters;
-    parameters.kSearchSpaceOverlapFactor = 1.33;
-    parameters.kAlternativesToUnpackFactor = 2.0;
-    parameters.kAtMostLongerBy = 0.25;
-    parameters.kAtLeastDifferentBy = 0.85;
-    parameters.kAtLeastOptimalAroundViaBy = 0.10;
+
+    auto distance = util::coordinate_calculation::haversineDistance(
+        phantom_node_pair.source_phantom.location, phantom_node_pair.target_phantom.location);
+
+    // 10km
+    if (distance < 10000.)
+    {
+        parameters.kAlternativesToUnpackFactor = 10.0;
+        parameters.kCellsAtLeastDifferentBy = 1.0;
+        parameters.kAtLeastOptimalAroundViaBy = 0.2;
+    }
+    // 20km
+    else if (distance < 20000.)
+    {
+        parameters.kAlternativesToUnpackFactor = 8.0;
+        parameters.kCellsAtLeastDifferentBy = 1.0;
+        parameters.kAtLeastOptimalAroundViaBy = 0.2;
+    }
+    // 50km
+    else if (distance < 50000.)
+    {
+        parameters.kAlternativesToUnpackFactor = 6.0;
+        parameters.kCellsAtLeastDifferentBy = 0.95;
+    }
+    // 100km
+    else if (distance < 100000.)
+    {
+        parameters.kAlternativesToUnpackFactor = 4.0;
+        parameters.kCellsAtLeastDifferentBy = 0.75;
+    }
+
     return parameters;
 }
 
@@ -226,6 +255,10 @@ RandIt filterPackedPathsByCellSharing(RandIt first,
                                       const Partition &partition,
                                       const Parameters &parameters)
 {
+    // In this case we don't need to calculate sharing, because it would not filter anything
+    if (parameters.kCellsAtLeastDifferentBy >= 1.0)
+        return last;
+
     util::static_assert_iter_category<RandIt, std::random_access_iterator_tag>();
     util::static_assert_iter_value<RandIt, WeightedViaNodePackedPath>();
 
@@ -278,7 +311,7 @@ RandIt filterPackedPathsByCellSharing(RandIt first,
 
         const auto sharing = 1. - difference;
 
-        if (sharing > parameters.kAtLeastDifferentBy)
+        if (sharing > parameters.kCellsAtLeastDifferentBy)
         {
             return true;
         }
@@ -730,7 +763,7 @@ InternalManyRoutesResult alternativePathSearch(SearchEngineData<Algorithm> &sear
                                                const PhantomNodes &phantom_node_pair,
                                                unsigned number_of_alternatives)
 {
-    auto parameters = getDefaultParameters();
+    Parameters parameters = parametersFromRequest(phantom_node_pair);
 
     const auto max_number_of_alternatives = number_of_alternatives;
     const auto max_number_of_alternatives_to_unpack =
