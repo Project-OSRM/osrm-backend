@@ -473,21 +473,21 @@ RandIt filterUnpackedPathsBySharing(RandIt first,
             return false;
         }
 
-        EdgeWeight total_weight = 0;
-        const auto add_if_seen = [&](const EdgeWeight weight, const EdgeID edge) {
-            auto edge_weight = facade.GetEdgeData(edge).weight;
-            total_weight += edge_weight;
+        EdgeWeight total_duration = 0;
+        const auto add_if_seen = [&](const EdgeWeight duration, const EdgeID edge) {
+            auto edge_duration = facade.GetEdgeData(edge).duration;
+            total_duration += edge_duration;
             if (edges.count(edge) > 0)
             {
-                return weight + edge_weight;
+                return duration + edge_duration;
             }
-            return weight;
+            return duration;
         };
 
         const auto shared_weight =
             std::accumulate(begin(unpacked.edges), end(unpacked.edges), 0, add_if_seen);
 
-        const auto sharing = shared_weight / static_cast<double>(total_weight);
+        const auto sharing = shared_weight / static_cast<double>(total_duration);
         BOOST_ASSERT(sharing >= 0.);
         BOOST_ASSERT(sharing <= 1.);
 
