@@ -530,13 +530,25 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
                                         std::vector<EdgeWeight> &node_weights,
                                         std::uint32_t &connectivity_checksum) const
 {
+    std::vector<EdgeDuration> node_durations(node_weights.size());
+    return LoadAndUpdateEdgeExpandedGraph(
+        edge_based_edge_list, node_weights, node_durations, connectivity_checksum);
+}
+
+EdgeID
+Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &edge_based_edge_list,
+                                        std::vector<EdgeWeight> &node_weights,
+                                        std::vector<EdgeDuration> &node_durations,
+                                        std::uint32_t &connectivity_checksum) const
+{
     TIMER_START(load_edges);
 
     EdgeID number_of_edge_based_nodes = 0;
     std::vector<util::Coordinate> coordinates;
     extractor::PackedOSMIDs osm_node_ids;
 
-    extractor::files::readEdgeBasedNodeWeights(config.GetPath(".osrm.enw"), node_weights);
+    extractor::files::readEdgeBasedNodeWeightsDurations(
+        config.GetPath(".osrm.enw"), node_weights, node_durations);
 
     extractor::files::readEdgeBasedGraph(config.GetPath(".osrm.ebg"),
                                          number_of_edge_based_nodes,
@@ -738,6 +750,7 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
             BOOST_ASSERT(edge.source < node_weights.size());
             node_weights[edge.source] =
                 node_weights[edge.source] & 0x80000000 ? new_weight | 0x80000000 : new_weight;
+            node_durations[edge.source] = new_duration;
 
             // We found a zero-speed edge, so we'll skip this whole edge-based-edge
             // which

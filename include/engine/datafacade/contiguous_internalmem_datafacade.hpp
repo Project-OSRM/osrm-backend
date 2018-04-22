@@ -692,9 +692,9 @@ template <> class ContiguousInternalMemoryAlgorithmDataFacade<MLD> : public Algo
         return query_graph.GetNodeWeight(node);
     }
 
-    EdgeDuration GetNodeDuration(const NodeID) const override final
+    EdgeDuration GetNodeDuration(const NodeID node) const override final
     {
-        return 0; // TODO: query_graph.GetNodeduration(node);
+        return query_graph.GetNodeDuration(node);
     }
 
     NodeID GetTarget(const EdgeID e) const override final { return query_graph.GetTarget(e); }

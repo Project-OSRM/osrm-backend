@@ -169,8 +169,6 @@ void relaxOutgoingEdges(const DataFacade<mld::Algorithm> &facade,
         }
     }
 
-    const auto node_weight = facade.GetNodeWeight(node);
-    const auto node_duration = facade.GetNodeDuration(node); // TODO: remove later
     for (const auto edge : facade.GetBorderEdgeRange(level, node))
     {
         const auto &data = facade.GetEdgeData(edge);
@@ -183,6 +181,10 @@ void relaxOutgoingEdges(const DataFacade<mld::Algorithm> &facade,
             }
 
             const auto turn_id = data.turn_id;
+            const auto node_weight =
+                facade.GetNodeWeight(DIRECTION == FORWARD_DIRECTION ? node : to);
+            const auto node_duration = facade.GetNodeDuration(
+                DIRECTION == FORWARD_DIRECTION ? node : to); // TODO: remove later
             const auto edge_weight = node_weight + facade.GetWeightPenaltyForEdgeID(turn_id);
             const auto edge_duration = node_duration + facade.GetDurationPenaltyForEdgeID(turn_id);
 
@@ -299,7 +301,6 @@ oneToManySearch(SearchEngineData<Algorithm> &engine_working_data,
         }
     };
 
-    // Check a single path result and insert adjacent nodes into heap
     auto insert_node = [&](NodeID node, EdgeWeight initial_weight, EdgeDuration initial_duration) {
 
         // Update single node paths
@@ -311,9 +312,19 @@ oneToManySearch(SearchEngineData<Algorithm> &engine_working_data,
             const auto &data = facade.GetEdgeData(edge);
             if (DIRECTION == FORWARD_DIRECTION ? data.forward : data.backward)
             {
-                query_heap.Insert(facade.GetTarget(edge),
-                                  data.weight + initial_weight,
-                                  {node, data.duration + initial_duration});
+                const auto turn_id = data.turn_id;
+                const auto edge_weight =
+                    initial_weight +
+                    facade.GetNodeWeight(DIRECTION == FORWARD_DIRECTION ? node
+                                                                        : facade.GetTarget(edge)) +
+                    facade.GetWeightPenaltyForEdgeID(turn_id);
+                const auto edge_duration = initial_duration +
+                                           +facade.GetNodeDuration(DIRECTION == FORWARD_DIRECTION
+                                                                       ? node
+                                                                       : facade.GetTarget(edge)) +
+                                           facade.GetDurationPenaltyForEdgeID(turn_id);
+
+                query_heap.Insert(facade.GetTarget(edge), edge_weight, {node, edge_duration});
             }
         }
     };

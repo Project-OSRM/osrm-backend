@@ -76,6 +76,8 @@ class MultiLevelGraph : public partitioner::MultiLevelGraph<EdgeDataT, Ownership
 
     EdgeWeight GetNodeWeight(NodeID node) const { return node_weights[node]; }
 
+    EdgeWeight GetNodeDuration(NodeID node) const { return node_durations[node]; }
+
     friend void
     serialization::read<EdgeDataT, Ownership>(storage::tar::FileReader &reader,
                                               const std::string &name,
