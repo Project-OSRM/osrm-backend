@@ -74,18 +74,20 @@ void printUnreachableStatistics(const Partition &partition,
 
 auto LoadAndUpdateEdgeExpandedGraph(const CustomizationConfig &config,
                                     const partitioner::MultiLevelPartition &mlp,
+                                    std::vector<EdgeWeight> &node_weights,
                                     std::uint32_t &connectivity_checksum)
 {
     updater::Updater updater(config.updater_config);
 
-    EdgeID num_nodes;
     std::vector<extractor::EdgeBasedEdge> edge_based_edge_list;
-    std::tie(num_nodes, edge_based_edge_list, connectivity_checksum) =
-        updater.LoadAndUpdateEdgeExpandedGraph();
+    EdgeID num_nodes = updater.LoadAndUpdateEdgeExpandedGraph(
+        edge_based_edge_list, node_weights, connectivity_checksum);
 
     auto directed = partitioner::splitBidirectionalEdges(edge_based_edge_list);
+
     auto tidied = partitioner::prepareEdgesForUsageInGraph<
         typename partitioner::MultiLevelEdgeBasedGraph::InputEdge>(std::move(directed));
+
     auto edge_based_graph =
         partitioner::MultiLevelEdgeBasedGraph(mlp, num_nodes, std::move(tidied));
 
@@ -120,8 +122,11 @@ int Customizer::Run(const CustomizationConfig &config)
     partitioner::MultiLevelPartition mlp;
     partitioner::files::readPartition(config.GetPath(".osrm.partition"), mlp);
 
+    std::vector<EdgeWeight> node_weights;
     std::uint32_t connectivity_checksum = 0;
-    auto graph = LoadAndUpdateEdgeExpandedGraph(config, mlp, connectivity_checksum);
+    auto graph = LoadAndUpdateEdgeExpandedGraph(config, mlp, node_weights, connectivity_checksum);
+    BOOST_ASSERT(graph.GetNumberOfNodes() == node_weights.size());
+    std::for_each(node_weights.begin(), node_weights.end(), [](auto &w) { w &= 0x7fffffff; });
     util::Log() << "Loaded edge based graph: " << graph.GetNumberOfEdges() << " edges, "
                 << graph.GetNumberOfNodes() << " nodes";
 
@@ -158,8 +163,7 @@ int Customizer::Run(const CustomizationConfig &config)
     util::Log() << "MLD customization writing took " << TIMER_SEC(writing_mld_data) << " seconds";
 
     TIMER_START(writing_graph);
-    std::vector<EdgeWeight> node_weights;
-    std::vector<EdgeDuration> node_durations;
+    std::vector<EdgeDuration> node_durations; // TODO: save an empty vector, to be removed later
     MultiLevelEdgeBasedGraph shaved_graph{
         std::move(graph), std::move(node_weights), std::move(node_durations)};
     customizer::files::writeGraph(

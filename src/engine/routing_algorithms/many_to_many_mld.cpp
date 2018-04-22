@@ -169,6 +169,8 @@ void relaxOutgoingEdges(const DataFacade<mld::Algorithm> &facade,
         }
     }
 
+    const auto node_weight = facade.GetNodeWeight(node);
+    const auto node_duration = facade.GetNodeDuration(node); // TODO: remove later
     for (const auto edge : facade.GetBorderEdgeRange(level, node))
     {
         const auto &data = facade.GetEdgeData(edge);
@@ -180,8 +182,9 @@ void relaxOutgoingEdges(const DataFacade<mld::Algorithm> &facade,
                 continue;
             }
 
-            const auto edge_weight = data.weight;
-            const auto edge_duration = data.duration;
+            const auto turn_id = data.turn_id;
+            const auto edge_weight = node_weight + facade.GetWeightPenaltyForEdgeID(turn_id);
+            const auto edge_duration = node_duration + facade.GetDurationPenaltyForEdgeID(turn_id);
 
             BOOST_ASSERT_MSG(edge_weight > 0, "edge_weight invalid");
             const auto to_weight = weight + edge_weight;

@@ -74,6 +74,8 @@ class MultiLevelGraph : public partitioner::MultiLevelGraph<EdgeDataT, Ownership
         // TODO: add EdgeArrayEntry shaving
     }
 
+    EdgeWeight GetNodeWeight(NodeID node) const { return node_weights[node]; }
+
     friend void
     serialization::read<EdgeDataT, Ownership>(storage::tar::FileReader &reader,
                                               const std::string &name,

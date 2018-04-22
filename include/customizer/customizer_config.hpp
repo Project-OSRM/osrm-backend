@@ -21,7 +21,8 @@ struct CustomizationConfig final : storage::IOConfig
                     ".osrm.partition",
                     ".osrm.cells",
                     ".osrm.ebg_nodes",
-                    ".osrm.properties"},
+                    ".osrm.properties",
+                    ".osrm.enw"},
                    {},
                    {".osrm.cell_metrics", ".osrm.mldgr"}),
           requested_num_threads(0)

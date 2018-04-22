@@ -206,6 +206,7 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
     for (const auto edge : facade.GetBorderEdgeRange(level, node))
     {
         const auto &edge_data = facade.GetEdgeData(edge);
+
         if (DIRECTION == FORWARD_DIRECTION ? edge_data.forward : edge_data.backward)
         {
             const NodeID to = facade.GetTarget(edge);
@@ -213,8 +214,13 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
             if (!facade.ExcludeNode(to) &&
                 checkParentCellRestriction(partition.GetCell(level + 1, to), args...))
             {
-                BOOST_ASSERT_MSG(edge_data.weight > 0, "edge_weight invalid");
-                const EdgeWeight to_weight = weight + edge_data.weight;
+                const auto node_weight =
+                    facade.GetNodeWeight(DIRECTION == FORWARD_DIRECTION ? node : to);
+                const auto turn_penalty = facade.GetWeightPenaltyForEdgeID(edge_data.turn_id);
+
+                BOOST_ASSERT(edge_data.weight == node_weight + turn_penalty);
+
+                const EdgeWeight to_weight = weight + node_weight + turn_penalty;
 
                 if (!forward_heap.WasInserted(to))
                 {

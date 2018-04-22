@@ -145,6 +145,12 @@ int Partitioner::Run(const PartitionerConfig &config)
         extractor::files::writeNodeData(config.GetPath(".osrm.ebg_nodes"), node_data);
     }
     {
+        std::vector<EdgeWeight> node_weights;
+        extractor::files::readEdgeBasedNodeWeights(config.GetPath(".osrm.enw"), node_weights);
+        util::inplacePermutation(node_weights.begin(), node_weights.end(), permutation);
+        extractor::files::writeEdgeBasedNodeWeights(config.GetPath(".osrm.enw"), node_weights);
+    }
+    {
         const auto &filename = config.GetPath(".osrm.maneuver_overrides");
         std::vector<extractor::StorageManeuverOverride> maneuver_overrides;
         std::vector<NodeID> node_sequences;

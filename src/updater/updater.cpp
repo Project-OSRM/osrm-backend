@@ -517,24 +517,12 @@ updateConditionalTurns(std::vector<TurnPenalty> &turn_weight_penalties,
     {
         if (IsRestrictionValid(time_zone_handler, penalty))
         {
-            std::cout << "Disabling: " << penalty.turn_offset << std::endl;
             turn_weight_penalties[penalty.turn_offset] = INVALID_TURN_PENALTY;
             updated_turns.push_back(penalty.turn_offset);
         }
     }
     return updated_turns;
 }
-}
-
-Updater::NumNodesAndEdges Updater::LoadAndUpdateEdgeExpandedGraph() const
-{
-    std::vector<EdgeWeight> node_weights;
-    std::vector<extractor::EdgeBasedEdge> edge_based_edge_list;
-    std::uint32_t connectivity_checksum;
-    auto number_of_edge_based_nodes = Updater::LoadAndUpdateEdgeExpandedGraph(
-        edge_based_edge_list, node_weights, connectivity_checksum);
-    return std::make_tuple(
-        number_of_edge_based_nodes, std::move(edge_based_edge_list), connectivity_checksum);
 }
 
 EdgeID
@@ -547,6 +535,8 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
     EdgeID number_of_edge_based_nodes = 0;
     std::vector<util::Coordinate> coordinates;
     extractor::PackedOSMIDs osm_node_ids;
+
+    extractor::files::readEdgeBasedNodeWeights(config.GetPath(".osrm.enw"), node_weights);
 
     extractor::files::readEdgeBasedGraph(config.GetPath(".osrm.ebg"),
                                          number_of_edge_based_nodes,
