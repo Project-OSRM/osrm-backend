@@ -1,6 +1,8 @@
+#include "storage/serialization.hpp"
 #include "storage/shared_memory.hpp"
 #include "storage/shared_monitor.hpp"
 #include "storage/storage.hpp"
+
 #include "osrm/exception.hpp"
 #include "util/log.hpp"
 #include "util/meminfo.hpp"
@@ -25,7 +27,7 @@ void deleteRegion(const storage::SharedRegionRegister::ShmKey key)
     }
 }
 
-void listRegions()
+void listRegions(bool show_blocks)
 {
     osrm::util::Log() << "name\tshm key\ttimestamp\tsize";
     if (!storage::SharedMonitor<storage::SharedRegionRegister>::exists())
@@ -43,6 +45,23 @@ void listRegions()
         auto shm = osrm::storage::makeSharedMemory(region.shm_key);
         osrm::util::Log() << name << "\t" << static_cast<int>(region.shm_key) << "\t"
                           << region.timestamp << "\t" << shm->Size();
+
+        if (show_blocks)
+        {
+            using namespace storage;
+            auto memory = makeSharedMemory(region.shm_key);
+            io::BufferReader reader(reinterpret_cast<char *>(memory->Ptr()), memory->Size());
+
+            DataLayout layout;
+            serialization::read(reader, layout);
+
+            std::vector<std::string> block_names;
+            layout.List("", std::back_inserter(block_names));
+            for (auto &name : block_names)
+            {
+                osrm::util::Log() << "  " << name << " " << layout.GetBlockSize(name);
+            }
+        }
     }
 }
 
@@ -79,6 +98,7 @@ bool generateDataStoreOptions(const int argc,
                               int &max_wait,
                               std::string &dataset_name,
                               bool &list_datasets,
+                              bool &list_blocks,
                               bool &only_metric)
 {
     // declare a group of options that will be allowed only on command line
@@ -109,12 +129,18 @@ bool generateDataStoreOptions(const int argc,
              ->default_value(false)
              ->implicit_value(true),
          "List all OSRM datasets currently in memory") //
-        ("only-metric",
-         boost::program_options::value<bool>(&only_metric)
+        ("list-blocks",
+         boost::program_options::value<bool>(&list_blocks)
              ->default_value(false)
              ->implicit_value(true),
-         "Only reload the metric data without updating the full dataset. This is an optimization "
-         "for traffic updates.");
+         "List all OSRM datasets currently in memory")(
+            "only-metric",
+            boost::program_options::value<bool>(&only_metric)
+                ->default_value(false)
+                ->implicit_value(true),
+            "Only reload the metric data without updating the full dataset. This is an "
+            "optimization "
+            "for traffic updates.");
 
     // hidden options, will be allowed on command line but will not be shown to the user
     boost::program_options::options_description hidden_options("Hidden options");
@@ -209,18 +235,26 @@ int main(const int argc, const char *argv[]) try
     int max_wait = -1;
     std::string dataset_name;
     bool list_datasets = false;
+    bool list_blocks = false;
     bool only_metric = false;
-    if (!generateDataStoreOptions(
-            argc, argv, verbosity, base_path, max_wait, dataset_name, list_datasets, only_metric))
+    if (!generateDataStoreOptions(argc,
+                                  argv,
+                                  verbosity,
+                                  base_path,
+                                  max_wait,
+                                  dataset_name,
+                                  list_datasets,
+                                  list_blocks,
+                                  only_metric))
     {
         return EXIT_SUCCESS;
     }
 
     util::LogPolicy::GetInstance().SetLevel(verbosity);
 
-    if (list_datasets)
+    if (list_datasets || list_blocks)
     {
-        listRegions();
+        listRegions(list_blocks);
         return EXIT_SUCCESS;
     }
 
