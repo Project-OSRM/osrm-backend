@@ -241,6 +241,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     util::DeallocatingVector<EdgeBasedEdge> edge_based_edge_list;
     std::vector<bool> node_is_startpoint;
     std::vector<EdgeWeight> edge_based_node_weights;
+    std::vector<EdgeDuration> edge_based_node_durations;
     std::uint32_t ebg_connectivity_checksum = 0;
 
     // Create a node-based graph from the OSRM file
@@ -320,6 +321,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
                                edge_based_node_segments,
                                node_is_startpoint,
                                edge_based_node_weights,
+                               edge_based_node_durations,
                                edge_based_edge_list,
                                ebg_connectivity_checksum);
 
@@ -343,8 +345,8 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
 
     util::Log() << "Saving edge-based node weights to file.";
     TIMER_START(timer_write_node_weights);
-    extractor::files::writeEdgeBasedNodeWeights(config.GetPath(".osrm.enw"),
-                                                edge_based_node_weights);
+    extractor::files::writeEdgeBasedNodeWeightsDurations(
+        config.GetPath(".osrm.enw"), edge_based_node_weights, edge_based_node_durations);
     TIMER_STOP(timer_write_node_weights);
     util::Log() << "Done writing. (" << TIMER_SEC(timer_write_node_weights) << ")";
 
@@ -733,6 +735,7 @@ EdgeID Extractor::BuildEdgeExpandedGraph(
     std::vector<EdgeBasedNodeSegment> &edge_based_node_segments,
     std::vector<bool> &node_is_startpoint,
     std::vector<EdgeWeight> &edge_based_node_weights,
+    std::vector<EdgeDuration> &edge_based_node_durations,
     util::DeallocatingVector<EdgeBasedEdge> &edge_based_edge_list,
     std::uint32_t &connectivity_checksum)
 {
@@ -782,6 +785,7 @@ EdgeID Extractor::BuildEdgeExpandedGraph(
     edge_based_graph_factory.GetEdgeBasedNodeSegments(edge_based_node_segments);
     edge_based_graph_factory.GetStartPointMarkers(node_is_startpoint);
     edge_based_graph_factory.GetEdgeBasedNodeWeights(edge_based_node_weights);
+    edge_based_graph_factory.GetEdgeBasedNodeDurations(edge_based_node_durations);
     connectivity_checksum = edge_based_graph_factory.GetConnectivityChecksum();
 
     return number_of_edge_based_nodes;

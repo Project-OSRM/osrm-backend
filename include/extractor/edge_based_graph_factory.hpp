@@ -91,6 +91,7 @@ class EdgeBasedGraphFactory
     void GetEdgeBasedNodeSegments(std::vector<EdgeBasedNodeSegment> &nodes);
     void GetStartPointMarkers(std::vector<bool> &node_is_startpoint);
     void GetEdgeBasedNodeWeights(std::vector<EdgeWeight> &output_node_weights);
+    void GetEdgeBasedNodeDurations(std::vector<EdgeWeight> &output_node_durations);
     std::uint32_t GetConnectivityChecksum() const;
 
     std::uint64_t GetNumberOfEdgeBasedNodes() const;
@@ -117,6 +118,7 @@ class EdgeBasedGraphFactory
     //! node weights that indicate the length of the segment (node based) represented by the
     //! edge-based node
     std::vector<EdgeWeight> m_edge_based_node_weights;
+    std::vector<EdgeDuration> m_edge_based_node_durations;
 
     //! list of edge based nodes (compressed segments)
     std::vector<EdgeBasedNodeSegment> m_edge_based_node_segments;

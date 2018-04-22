@@ -107,6 +107,13 @@ void EdgeBasedGraphFactory::GetEdgeBasedNodeWeights(std::vector<EdgeWeight> &out
     swap(m_edge_based_node_weights, output_node_weights);
 }
 
+void EdgeBasedGraphFactory::GetEdgeBasedNodeDurations(
+    std::vector<EdgeWeight> &output_node_durations)
+{
+    using std::swap; // Koenig swap
+    swap(m_edge_based_node_durations, output_node_durations);
+}
+
 std::uint32_t EdgeBasedGraphFactory::GetConnectivityChecksum() const
 {
     return m_connectivity_checksum;
@@ -281,6 +288,7 @@ unsigned EdgeBasedGraphFactory::LabelEdgeBasedNodes()
     // heuristic: node-based graph node is a simple intersection with four edges
     // (edge-based nodes)
     m_edge_based_node_weights.reserve(4 * m_node_based_graph.GetNumberOfNodes());
+    m_edge_based_node_durations.reserve(4 * m_node_based_graph.GetNumberOfNodes());
     nbe_to_ebn_mapping.resize(m_node_based_graph.GetEdgeCapacity(), SPECIAL_NODEID);
 
     // renumber edge based node of outgoing edges
@@ -297,6 +305,7 @@ unsigned EdgeBasedGraphFactory::LabelEdgeBasedNodes()
             }
 
             m_edge_based_node_weights.push_back(edge_data.weight);
+            m_edge_based_node_durations.push_back(edge_data.duration);
 
             BOOST_ASSERT(numbered_edges_count < m_node_based_graph.GetNumberOfEdges());
             nbe_to_ebn_mapping[current_edge] = numbered_edges_count;
@@ -392,6 +401,8 @@ EdgeBasedGraphFactory::GenerateEdgeExpandedNodes(const WayRestrictionMap &way_re
             const auto ebn_weight = m_edge_based_node_weights[nbe_to_ebn_mapping[eid]];
             BOOST_ASSERT(ebn_weight == INVALID_EDGE_WEIGHT || ebn_weight == edge_data.weight);
             m_edge_based_node_weights.push_back(ebn_weight);
+            m_edge_based_node_durations.push_back(
+                m_edge_based_node_durations[nbe_to_ebn_mapping[eid]]);
 
             edge_based_node_id++;
             progress.PrintStatus(progress_counter++);
@@ -400,6 +411,7 @@ EdgeBasedGraphFactory::GenerateEdgeExpandedNodes(const WayRestrictionMap &way_re
 
     BOOST_ASSERT(m_edge_based_node_segments.size() == m_edge_based_node_is_startpoint.size());
     BOOST_ASSERT(m_number_of_edge_based_nodes == m_edge_based_node_weights.size());
+    BOOST_ASSERT(m_number_of_edge_based_nodes == m_edge_based_node_durations.size());
 
     util::Log() << "Generated " << m_number_of_edge_based_nodes << " nodes ("
                 << way_restriction_map.NumberOfDuplicatedNodes()
