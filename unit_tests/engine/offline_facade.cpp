@@ -325,6 +325,11 @@ class ContiguousInternalMemoryDataFacade<routing_algorithms::offline::Algorithm>
         return {};
     }
 
+    EdgeWeight GetNodeWeight(const NodeID /*node*/) const
+    {
+        return 0;
+    }
+
     bool HasLaneData(const EdgeID /*id*/) const override { return false; }
     NameID GetNameIndex(const NodeID /*nodeID*/) const override { return EMPTY_NAMEID; }
     StringView GetNameForID(const NameID /*id*/) const override { return StringView{}; }

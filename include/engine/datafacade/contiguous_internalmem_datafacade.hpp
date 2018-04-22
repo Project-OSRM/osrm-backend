@@ -282,13 +282,13 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         return segment_data.GetReverseDatasources(id);
     }
 
-    TurnPenalty GetWeightPenaltyForEdgeID(const unsigned id) const override final
+    TurnPenalty GetWeightPenaltyForEdgeID(const EdgeID id) const override final
     {
         BOOST_ASSERT(m_turn_weight_penalties.size() > id);
         return m_turn_weight_penalties[id];
     }
 
-    TurnPenalty GetDurationPenaltyForEdgeID(const unsigned id) const override final
+    TurnPenalty GetDurationPenaltyForEdgeID(const EdgeID id) const override final
     {
         BOOST_ASSERT(m_turn_duration_penalties.size() > id);
         return m_turn_duration_penalties[id];
@@ -682,16 +682,26 @@ template <> class ContiguousInternalMemoryAlgorithmDataFacade<MLD> : public Algo
         return query_graph.GetOutDegree(n);
     }
 
+    EdgeRange GetAdjacentEdgeRange(const NodeID node) const override final
+    {
+        return query_graph.GetAdjacentEdgeRange(node);
+    }
+
+    EdgeWeight GetNodeWeight(const NodeID node) const override final
+    {
+        return query_graph.GetNodeWeight(node);
+    }
+
+    EdgeDuration GetNodeDuration(const NodeID) const override final
+    {
+        return 0; // TODO: query_graph.GetNodeduration(node);
+    }
+
     NodeID GetTarget(const EdgeID e) const override final { return query_graph.GetTarget(e); }
 
     const EdgeData &GetEdgeData(const EdgeID e) const override final
     {
         return query_graph.GetEdgeData(e);
-    }
-
-    EdgeRange GetAdjacentEdgeRange(const NodeID node) const override final
-    {
-        return query_graph.GetAdjacentEdgeRange(node);
     }
 
     EdgeRange GetBorderEdgeRange(const LevelID level, const NodeID node) const override final

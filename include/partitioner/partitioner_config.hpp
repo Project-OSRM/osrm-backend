@@ -16,7 +16,7 @@ namespace partitioner
 struct PartitionerConfig final : storage::IOConfig
 {
     PartitionerConfig()
-        : IOConfig({".osrm", ".osrm.fileIndex", ".osrm.ebg_nodes"},
+        : IOConfig({".osrm", ".osrm.fileIndex", ".osrm.ebg_nodes", ".osrm.enw"},
                    {".osrm.hsgr", ".osrm.cnbg"},
                    {".osrm.ebg",
                     ".osrm.cnbg",

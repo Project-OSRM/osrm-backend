@@ -71,11 +71,15 @@ template <> class AlgorithmDataFacade<MLD>
 
     virtual unsigned GetOutDegree(const NodeID n) const = 0;
 
+    virtual EdgeRange GetAdjacentEdgeRange(const NodeID node) const = 0;
+
+    virtual EdgeWeight GetNodeWeight(const NodeID node) const = 0;
+
+    virtual EdgeWeight GetNodeDuration(const NodeID node) const = 0; // TODO: to be removed
+
     virtual NodeID GetTarget(const EdgeID e) const = 0;
 
     virtual const EdgeData &GetEdgeData(const EdgeID e) const = 0;
-
-    virtual EdgeRange GetAdjacentEdgeRange(const NodeID node) const = 0;
 
     virtual const partitioner::MultiLevelPartitionView &GetMultiLevelPartition() const = 0;
 

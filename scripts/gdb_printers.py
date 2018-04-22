@@ -9,6 +9,8 @@ lonlat = lambda x: (coord2float(x['lon']['__value']), coord2float(x['lat']['__va
 
 def call(this, method, *args):
     """Call this.method(args)"""
+    if (str(this) == '<optimized out>'):
+        raise BaseException('"this" is optimized out')
     command = '(*({})({})).{}({})'.format(this.type.target().pointer(), this.address, method, ','.join((str(x) for x in args)))
     return gdb.parse_and_eval(command)
 
@@ -234,7 +236,6 @@ class SVGPrinter (gdb.Command):
             mld_facade = facade.cast(gdb.lookup_type('osrm::engine::datafacade::ContiguousInternalMemoryAlgorithmDataFacade<osrm::engine::routing_algorithms::mld::Algorithm>'))
             mld_partition = mld_facade['mld_partition']
             mld_levels = call(mld_partition, 'GetNumberOfLevels')
-            print (mld_level, mld_levels)
             if mld_level < mld_levels:
                 sentinel_node = call(mld_partition['partition'], 'size') - 1 # GetSentinelNode
                 number_of_cells = call(mld_partition, 'GetCell', mld_level, sentinel_node) # GetNumberOfCells
@@ -272,6 +273,7 @@ class SVGPrinter (gdb.Command):
         for node in nodes:
             geometry_id = call(facade, 'GetGeometryIndex', node)
             direction = 'forward' if geometry_id['forward'] else 'reverse'
+            print (geometry_id, direction)
             geometry = SVGPrinter.getByGeometryId(facade, geometry_id, 'Geometry')
             weights = SVGPrinter.getByGeometryId(facade, geometry_id, 'Weights')
 
