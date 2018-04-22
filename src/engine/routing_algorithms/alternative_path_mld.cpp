@@ -47,13 +47,13 @@ struct Parameters
     double kAtMostLongerBy = 0.25;
     // Alternative paths similarity requirement (sharing).
     // At least 15% different than the shortest path.
-    double kAtLeastDifferentBy = 0.85;
+    double kAtMostSameBy = 0.85;
     // Alternative paths are still reasonable around the via node candidate (local optimality).
     // At least optimal around 10% sub-paths around the via node candidate.
     double kAtLeastOptimalAroundViaBy = 0.1;
     // Alternative paths similarity requirement (sharing) based on calles.
     // At least 15% different than the shortest path.
-    double kCellsAtLeastDifferentBy = 0.85;
+    double kCellsAtMostSameBy = 0.85;
 };
 
 // Represents a via middle node where forward (from s) and backward (from t)
@@ -140,27 +140,30 @@ Parameters parametersFromRequest(const PhantomNodes &phantom_node_pair)
     if (distance < 10000.)
     {
         parameters.kAlternativesToUnpackFactor = 10.0;
-        parameters.kCellsAtLeastDifferentBy = 1.0;
+        parameters.kCellsAtMostSameBy = 1.0;
         parameters.kAtLeastOptimalAroundViaBy = 0.2;
+        parameters.kAtMostSameBy = 0.50;
     }
     // 20km
     else if (distance < 20000.)
     {
         parameters.kAlternativesToUnpackFactor = 8.0;
-        parameters.kCellsAtLeastDifferentBy = 1.0;
+        parameters.kCellsAtMostSameBy = 1.0;
         parameters.kAtLeastOptimalAroundViaBy = 0.2;
+        parameters.kAtMostSameBy = 0.60;
     }
     // 50km
     else if (distance < 50000.)
     {
         parameters.kAlternativesToUnpackFactor = 6.0;
-        parameters.kCellsAtLeastDifferentBy = 0.95;
+        parameters.kCellsAtMostSameBy = 0.95;
+        parameters.kAtMostSameBy = 0.70;
     }
     // 100km
     else if (distance < 100000.)
     {
         parameters.kAlternativesToUnpackFactor = 4.0;
-        parameters.kCellsAtLeastDifferentBy = 0.75;
+        parameters.kCellsAtMostSameBy = 0.75;
     }
 
     return parameters;
@@ -256,7 +259,7 @@ RandIt filterPackedPathsByCellSharing(RandIt first,
                                       const Parameters &parameters)
 {
     // In this case we don't need to calculate sharing, because it would not filter anything
-    if (parameters.kCellsAtLeastDifferentBy >= 1.0)
+    if (parameters.kCellsAtMostSameBy >= 1.0)
         return last;
 
     util::static_assert_iter_category<RandIt, std::random_access_iterator_tag>();
@@ -311,7 +314,7 @@ RandIt filterPackedPathsByCellSharing(RandIt first,
 
         const auto sharing = 1. - difference;
 
-        if (sharing > parameters.kCellsAtLeastDifferentBy)
+        if (sharing > parameters.kCellsAtMostSameBy)
         {
             return true;
         }
@@ -491,7 +494,7 @@ RandIt filterUnpackedPathsBySharing(RandIt first,
         BOOST_ASSERT(sharing >= 0.);
         BOOST_ASSERT(sharing <= 1.);
 
-        if (sharing > parameters.kAtLeastDifferentBy)
+        if (sharing > parameters.kAtMostSameBy)
         {
             return true;
         }
