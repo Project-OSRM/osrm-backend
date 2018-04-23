@@ -185,7 +185,6 @@ tables.forEach(function(annotation) {
             annotations: [annotation.slice(0,-1)]
         };
         osrm.table(options, function(err, table) {
-            console.log(table);
             assert.ifError(err);
 
             function assertHasHints(waypoint) {
@@ -218,7 +217,7 @@ tables.forEach(function(annotation) {
     });
 
     test('table: ' + annotation + ' table in Monaco without motorways', function(assert) {
-        assert.plan(2);
+        assert.plan(1);
         var osrm = new OSRM({path: mld_data_path, algorithm: 'MLD'});
         var options = {
             coordinates: two_test_coordinates,
@@ -226,8 +225,8 @@ tables.forEach(function(annotation) {
             annotations: [annotation.slice(0,-1)]
         };
         osrm.table(options, function(err, response) {
-            assert.ifError(err);
-            assert.equal(response[annotation].length, 2);
+            if (annotation === 'durations') assert.equal(response[annotation].length, 2);
+            else assert.error(response, 'NotImplemented');
         });
     });
 });
