@@ -135,8 +135,8 @@ inline TableParameters::AnnotationsType operator|(TableParameters::AnnotationsTy
         static_cast<std::underlying_type_t<TableParameters::AnnotationsType>>(rhs));
 }
 
-inline TableParameters::AnnotationsType operator|=(TableParameters::AnnotationsType lhs,
-                                                   TableParameters::AnnotationsType rhs)
+inline TableParameters::AnnotationsType &operator|=(TableParameters::AnnotationsType &lhs,
+                                                    TableParameters::AnnotationsType rhs)
 {
     return lhs = lhs | rhs;
 }
