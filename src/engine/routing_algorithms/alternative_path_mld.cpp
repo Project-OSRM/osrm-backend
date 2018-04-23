@@ -76,6 +76,7 @@ struct WeightedViaNodePackedPath
 // its total weight and the via node used to construct the path.
 struct WeightedViaNodeUnpackedPath
 {
+    double sharing;
     WeightedViaNode via;
     UnpackedNodes nodes;
     UnpackedEdges edges;
@@ -474,7 +475,7 @@ RandIt filterUnpackedPathsBySharing(RandIt first,
 
     edges.insert(begin(shortest_path.edges), end(shortest_path.edges));
 
-    const auto over_sharing_limit = [&](const auto &unpacked) {
+    const auto over_sharing_limit = [&](auto &unpacked) {
         if (unpacked.edges.empty())
         { // don't remove routes with single-node (empty) path
             return false;
@@ -494,11 +495,11 @@ RandIt filterUnpackedPathsBySharing(RandIt first,
         const auto shared_weight =
             std::accumulate(begin(unpacked.edges), end(unpacked.edges), EdgeWeight{0}, add_if_seen);
 
-        const auto sharing = shared_weight / static_cast<double>(total_duration);
-        BOOST_ASSERT(sharing >= 0.);
-        BOOST_ASSERT(sharing <= 1.);
+        unpacked.sharing = shared_weight / static_cast<double>(total_duration);
+        BOOST_ASSERT(unpacked.sharing >= 0.);
+        BOOST_ASSERT(unpacked.sharing <= 1.);
 
-        if (sharing > parameters.kAtMostSameBy)
+        if (unpacked.sharing > parameters.kAtMostSameBy)
         {
             return true;
         }
@@ -509,7 +510,10 @@ RandIt filterUnpackedPathsBySharing(RandIt first,
         }
     };
 
-    return std::remove_if(first + 1, last, over_sharing_limit);
+    auto end = std::remove_if(first + 1, last, over_sharing_limit);
+    std::sort(
+        first + 1, end, [](const auto &lhs, const auto &rhs) { return lhs.sharing < rhs.sharing; });
+    return end;
 }
 
 // Filters annotated routes by stretch based on duration. Mutates range in-place.
@@ -637,6 +641,7 @@ void unpackPackedPaths(InputIt first,
         }
 
         WeightedViaNodeUnpackedPath unpacked_path{
+            0.0,
             WeightedViaNode{packed_path_via, packed_path_weight},
             std::move(unpacked_nodes),
             std::move(unpacked_edges)};
