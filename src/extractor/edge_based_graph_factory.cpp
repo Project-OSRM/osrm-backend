@@ -138,9 +138,12 @@ NBGToEBG EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const N
     BOOST_ASSERT(nbe_to_ebn_mapping[edge_id_1] != SPECIAL_NODEID ||
                  nbe_to_ebn_mapping[edge_id_2] != SPECIAL_NODEID);
 
+    // TODO: use the sign bit to distinguish oneway streets that must
+    // have INVALID_EDGE_WEIGHT node weight values to enforce loop edges
+    // in contraction
     if (nbe_to_ebn_mapping[edge_id_1] != SPECIAL_NODEID &&
         nbe_to_ebn_mapping[edge_id_2] == SPECIAL_NODEID)
-        m_edge_based_node_weights[nbe_to_ebn_mapping[edge_id_1]] = INVALID_EDGE_WEIGHT;
+        m_edge_based_node_weights[nbe_to_ebn_mapping[edge_id_1]] |= 0x80000000;
 
     BOOST_ASSERT(m_compressed_edge_container.HasEntryForID(edge_id_1) ==
                  m_compressed_edge_container.HasEntryForID(edge_id_2));

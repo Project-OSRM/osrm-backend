@@ -75,6 +75,12 @@ int Contractor::Run()
     EdgeID number_of_edge_based_nodes = updater.LoadAndUpdateEdgeExpandedGraph(
         edge_based_edge_list, node_weights, connectivity_checksum);
 
+    // Convert node weights for oneway streets to INVALID_EDGE_WEIGHT
+    for (auto &weight : node_weights)
+    {
+        weight = (weight & 0x80000000) ? INVALID_EDGE_WEIGHT : weight;
+    }
+
     // Contracting the edge-expanded graph
 
     TIMER_START(contraction);
