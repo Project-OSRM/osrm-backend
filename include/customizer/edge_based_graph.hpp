@@ -16,8 +16,10 @@ namespace osrm
 namespace customizer
 {
 
-// TODO: Change to turn_id only
-using EdgeBasedGraphEdgeData = partitioner::EdgeBasedGraphEdgeData;
+struct EdgeBasedGraphEdgeData
+{
+    NodeID turn_id; // ID of the edge based node (node based edge)
+};
 
 template <typename EdgeDataT, storage::Ownership Ownership> class MultiLevelGraph;
 
@@ -39,8 +41,8 @@ class MultiLevelGraph : public partitioner::MultiLevelGraph<EdgeDataT, Ownership
 {
   private:
     using SuperT = partitioner::MultiLevelGraph<EdgeDataT, Ownership>;
-    using SuperC = partitioner::MultiLevelGraph<partitioner::EdgeBasedGraphEdgeData,
-                                                storage::Ownership::Container>;
+    using PartitionerGraphT = partitioner::MultiLevelGraph<partitioner::EdgeBasedGraphEdgeData,
+                                                           storage::Ownership::Container>;
     template <typename T> using Vector = util::ViewOrVector<T, Ownership>;
 
   public:
@@ -50,33 +52,48 @@ class MultiLevelGraph : public partitioner::MultiLevelGraph<EdgeDataT, Ownership
     MultiLevelGraph &operator=(MultiLevelGraph &&) = default;
     MultiLevelGraph &operator=(const MultiLevelGraph &) = default;
 
-    // TODO: add constructor for EdgeBasedGraphEdgeData
-    MultiLevelGraph(SuperC &&graph,
+    MultiLevelGraph(PartitionerGraphT &&graph,
                     Vector<EdgeWeight> node_weights_,
                     Vector<EdgeDuration> node_durations_)
         : node_weights(std::move(node_weights_)), node_durations(std::move(node_durations_))
     {
+        util::ViewOrVector<PartitionerGraphT::EdgeArrayEntry, storage::Ownership::Container>
+            original_edge_array;
+
         std::tie(SuperT::node_array,
-                 SuperT::edge_array,
+                 original_edge_array,
                  SuperT::node_to_edge_offset,
                  SuperT::connectivity_checksum) = std::move(graph).data();
-        // TODO: add EdgeArrayEntry shaving
+
+        SuperT::edge_array.reserve(original_edge_array.size());
+        for (const auto &edge : original_edge_array)
+        {
+            SuperT::edge_array.push_back({edge.target, {edge.data.turn_id}});
+            is_forward_edge.push_back(edge.data.forward);
+            is_backward_edge.push_back(edge.data.backward);
+        }
     }
 
     MultiLevelGraph(Vector<typename SuperT::NodeArrayEntry> node_array_,
                     Vector<typename SuperT::EdgeArrayEntry> edge_array_,
                     Vector<typename SuperT::EdgeOffset> node_to_edge_offset_,
                     Vector<EdgeWeight> node_weights_,
-                    Vector<EdgeDuration> node_durations_)
+                    Vector<EdgeDuration> node_durations_,
+                    Vector<bool> is_forward_edge_,
+                    Vector<bool> is_backward_edge_)
         : SuperT(std::move(node_array_), std::move(edge_array_), std::move(node_to_edge_offset_)),
-          node_weights(std::move(node_weights_)), node_durations(std::move(node_durations_))
+          node_weights(std::move(node_weights_)), node_durations(std::move(node_durations_)),
+          is_forward_edge(is_forward_edge_), is_backward_edge(is_backward_edge_)
     {
-        // TODO: add EdgeArrayEntry shaving
     }
 
     EdgeWeight GetNodeWeight(NodeID node) const { return node_weights[node]; }
 
     EdgeWeight GetNodeDuration(NodeID node) const { return node_durations[node]; }
+
+    bool IsForwardEdge(EdgeID edge) const { return is_forward_edge[edge]; }
+
+    bool IsBackwardEdge(EdgeID edge) const { return is_backward_edge[edge]; }
 
     friend void
     serialization::read<EdgeDataT, Ownership>(storage::tar::FileReader &reader,
@@ -90,6 +107,8 @@ class MultiLevelGraph : public partitioner::MultiLevelGraph<EdgeDataT, Ownership
   protected:
     Vector<EdgeWeight> node_weights;
     Vector<EdgeDuration> node_durations;
+    Vector<bool> is_forward_edge;
+    Vector<bool> is_backward_edge;
 };
 
 using MultiLevelEdgeBasedGraph =

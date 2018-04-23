@@ -145,42 +145,8 @@ std::vector<TurnData> generateTurns(const datafacade &facade,
                     const auto &data = facade.GetEdgeData(edge_based_edge_id);
 
                     // Now, calculate the sum of the weight of all the segments.
-                    const auto &geometry =
-                        edge_based_node_info.find(approachedge.edge_based_node_id)->second;
-                    EdgeWeight sum_node_weight = 0;
-                    EdgeDuration sum_node_duration = 0;
-                    if (geometry.is_geometry_forward)
-                    {
-                        const auto approach_weight =
-                            facade.GetUncompressedForwardWeights(geometry.packed_geometry_id);
-                        const auto approach_duration =
-                            facade.GetUncompressedForwardDurations(geometry.packed_geometry_id);
-                        sum_node_weight = std::accumulate(
-                            approach_weight.begin(), approach_weight.end(), EdgeWeight{0});
-                        sum_node_duration = std::accumulate(
-                            approach_duration.begin(), approach_duration.end(), EdgeDuration{0});
-                    }
-                    else
-                    {
-                        const auto approach_weight =
-                            facade.GetUncompressedReverseWeights(geometry.packed_geometry_id);
-                        const auto approach_duration =
-                            facade.GetUncompressedReverseDurations(geometry.packed_geometry_id);
-                        sum_node_weight = std::accumulate(
-                            approach_weight.begin(), approach_weight.end(), EdgeWeight{0});
-                        sum_node_duration = std::accumulate(
-                            approach_duration.begin(), approach_duration.end(), EdgeDuration{0});
-                    }
-
-                    // The edge.weight is the whole edge weight, which includes the turn
-                    // cost.
-                    // The turn cost is the edge.weight minus the sum of the individual road
-                    // segment weights.  This might not be 100% accurate, because some
-                    // intersections include stop signs, traffic signals and other
-                    // penalties, but at this stage, we can't divide those out, so we just
-                    // treat the whole lot as the "turn cost" that we'll stick on the map.
-                    const auto turn_weight = data.weight - sum_node_weight;
-                    const auto turn_duration = data.duration - sum_node_duration;
+                    const auto turn_weight = facade.GetWeightPenaltyForEdgeID(data.turn_id);
+                    const auto turn_duration = facade.GetDurationPenaltyForEdgeID(data.turn_id);
                     const auto turn_instruction = facade.GetTurnInstructionForEdgeID(data.turn_id);
 
                     // Find the three nodes that make up the turn movement)

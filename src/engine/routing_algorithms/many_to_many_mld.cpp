@@ -172,7 +172,8 @@ void relaxOutgoingEdges(const DataFacade<mld::Algorithm> &facade,
     for (const auto edge : facade.GetBorderEdgeRange(level, node))
     {
         const auto &data = facade.GetEdgeData(edge);
-        if (DIRECTION == FORWARD_DIRECTION ? data.forward : data.backward)
+        if ((DIRECTION == FORWARD_DIRECTION) ? facade.IsForwardEdge(edge)
+                                             : facade.IsBackwardEdge(edge))
         {
             const NodeID to = facade.GetTarget(edge);
             if (facade.ExcludeNode(to))
@@ -310,7 +311,8 @@ oneToManySearch(SearchEngineData<Algorithm> &engine_working_data,
         for (auto edge : facade.GetAdjacentEdgeRange(node))
         {
             const auto &data = facade.GetEdgeData(edge);
-            if (DIRECTION == FORWARD_DIRECTION ? data.forward : data.backward)
+            if ((DIRECTION == FORWARD_DIRECTION) ? facade.IsForwardEdge(edge)
+                                                 : facade.IsBackwardEdge(edge))
             {
                 const auto turn_id = data.turn_id;
                 const auto edge_weight =

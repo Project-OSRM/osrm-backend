@@ -697,6 +697,16 @@ template <> class ContiguousInternalMemoryAlgorithmDataFacade<MLD> : public Algo
         return query_graph.GetNodeDuration(node);
     }
 
+    bool IsForwardEdge(const NodeID node) const override final
+    {
+        return query_graph.IsForwardEdge(node);
+    }
+
+    bool IsBackwardEdge(const NodeID node) const override final
+    {
+        return query_graph.IsBackwardEdge(node);
+    }
+
     NodeID GetTarget(const EdgeID e) const override final { return query_graph.GetTarget(e); }
 
     const EdgeData &GetEdgeData(const EdgeID e) const override final
