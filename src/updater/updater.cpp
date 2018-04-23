@@ -743,12 +743,11 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
                 accumulated_segment_data[updated_iter - updated_segments.begin()];
 
             // Update the node-weight cache. This is the weight of the edge-based-node
-            // only,
-            // it doesn't include the turn. We may visit the same node multiple times,
-            // but
-            // we should always assign the same value here.
-            if (node_weights.size() > 0)
-                node_weights[edge.source] = new_weight;
+            // only, it doesn't include the turn. We may visit the same node multiple times,
+            // but we should always assign the same value here.
+            BOOST_ASSERT(edge.source < node_weights.size());
+            node_weights[edge.source] =
+                node_weights[edge.source] & 0x80000000 ? new_weight | 0x80000000 : new_weight;
 
             // We found a zero-speed edge, so we'll skip this whole edge-based-edge
             // which
