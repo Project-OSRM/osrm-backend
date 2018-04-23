@@ -109,6 +109,9 @@ double getLongerByFactorBasedOnDuration(const EdgeWeight duration)
     // ys_interp = np.interp(xs_interp, xs, ys)
     //
     // params, _ = scipy.optimize.curve_fit(func, xs_interp, ys_interp)
+    //
+    // The hyperbolic shape was chosen because it interpolated well between
+    // the given datapoints and drops off for large durations.
     const constexpr auto a = 9.49571282e-02;
     const constexpr auto b = 1.25440191e+03;
     const constexpr auto c = 2.06152165e+09;
@@ -124,7 +127,7 @@ double getLongerByFactorBasedOnDuration(const EdgeWeight duration)
     }
 
     // Bigger than 10 minutes but smaller than 10 hours
-    BOOST_ASSERT(duration > 5 * 60 && duration < 10 * 60 * 60);
+    BOOST_ASSERT(duration >= 5 * 60 && duration <= 10 * 60 * 60);
 
     return a + b / (duration - d) + c / std::pow(duration - d, 3);
 }
@@ -133,7 +136,7 @@ Parameters parametersFromRequest(const PhantomNodes &phantom_node_pair)
 {
     Parameters parameters;
 
-    auto distance = util::coordinate_calculation::haversineDistance(
+    const auto distance = util::coordinate_calculation::haversineDistance(
         phantom_node_pair.source_phantom.location, phantom_node_pair.target_phantom.location);
 
     // 10km
@@ -288,7 +291,7 @@ RandIt filterPackedPathsByCellSharing(RandIt first,
         return last;
 
     std::unordered_set<CellID> cells;
-    cells.reserve(size * (shortest_path.path.size() + 1) * (1.25));
+    cells.reserve(size * (shortest_path.path.size() + 1) * (1 + parameters.kAtMostLongerBy));
 
     cells.insert(get_cell(std::get<0>(shortest_path.path.front())));
     for (const auto &edge : shortest_path.path)
@@ -488,7 +491,7 @@ RandIt filterUnpackedPathsBySharing(RandIt first,
         };
 
         const auto shared_weight =
-            std::accumulate(begin(unpacked.edges), end(unpacked.edges), 0, add_if_seen);
+            std::accumulate(begin(unpacked.edges), end(unpacked.edges), EdgeWeight{0}, add_if_seen);
 
         const auto sharing = shared_weight / static_cast<double>(total_duration);
         BOOST_ASSERT(sharing >= 0.);
