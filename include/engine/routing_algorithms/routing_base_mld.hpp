@@ -207,7 +207,8 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
     {
         const auto &edge_data = facade.GetEdgeData(edge);
 
-        if (DIRECTION == FORWARD_DIRECTION ? edge_data.forward : edge_data.backward)
+        if ((DIRECTION == FORWARD_DIRECTION) ? facade.IsForwardEdge(edge)
+                                             : facade.IsBackwardEdge(edge))
         {
             const NodeID to = facade.GetTarget(edge);
 
@@ -218,7 +219,7 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
                     facade.GetNodeWeight(DIRECTION == FORWARD_DIRECTION ? node : to);
                 const auto turn_penalty = facade.GetWeightPenaltyForEdgeID(edge_data.turn_id);
 
-                BOOST_ASSERT(edge_data.weight == node_weight + turn_penalty);
+                // TODO: BOOST_ASSERT(edge_data.weight == node_weight + turn_penalty);
 
                 const EdgeWeight to_weight = weight + node_weight + turn_penalty;
 

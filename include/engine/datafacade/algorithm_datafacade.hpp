@@ -2,6 +2,7 @@
 #define OSRM_ENGINE_DATAFACADE_ALGORITHM_DATAFACADE_HPP
 
 #include "contractor/query_edge.hpp"
+#include "customizer/edge_based_graph.hpp"
 #include "extractor/edge_based_edge.hpp"
 #include "engine/algorithm.hpp"
 
@@ -59,7 +60,7 @@ template <> class AlgorithmDataFacade<CH>
 template <> class AlgorithmDataFacade<MLD>
 {
   public:
-    using EdgeData = extractor::EdgeBasedEdge::EdgeData;
+    using EdgeData = customizer::EdgeBasedGraphEdgeData;
     using EdgeRange = util::range<EdgeID>;
 
     // search graph access
@@ -76,6 +77,10 @@ template <> class AlgorithmDataFacade<MLD>
     virtual EdgeWeight GetNodeWeight(const NodeID node) const = 0;
 
     virtual EdgeWeight GetNodeDuration(const NodeID node) const = 0; // TODO: to be removed
+
+    virtual bool IsForwardEdge(EdgeID edge) const = 0;
+
+    virtual bool IsBackwardEdge(EdgeID edge) const = 0;
 
     virtual NodeID GetTarget(const EdgeID e) const = 0;
 

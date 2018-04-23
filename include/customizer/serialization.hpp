@@ -43,6 +43,8 @@ inline void read(storage::tar::FileReader &reader,
     storage::serialization::read(reader, name + "/node_weights", graph.node_weights);
     storage::serialization::read(reader, name + "/node_durations", graph.node_durations);
     storage::serialization::read(reader, name + "/edge_array", graph.edge_array);
+    storage::serialization::read(reader, name + "/is_forward_edge", graph.is_forward_edge);
+    storage::serialization::read(reader, name + "/is_backward_edge", graph.is_backward_edge);
     storage::serialization::read(reader, name + "/node_to_edge_offset", graph.node_to_edge_offset);
 }
 
@@ -55,6 +57,8 @@ inline void write(storage::tar::FileWriter &writer,
     storage::serialization::write(writer, name + "/node_weights", graph.node_weights);
     storage::serialization::write(writer, name + "/node_durations", graph.node_durations);
     storage::serialization::write(writer, name + "/edge_array", graph.edge_array);
+    storage::serialization::write(writer, name + "/is_forward_edge", graph.is_forward_edge);
+    storage::serialization::write(writer, name + "/is_backward_edge", graph.is_backward_edge);
     storage::serialization::write(writer, name + "/node_to_edge_offset", graph.node_to_edge_offset);
 }
 }
