@@ -88,7 +88,7 @@ Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
     auto result_tables_pair = algorithms.ManyToManySearch(
         snapped_phantoms, params.sources, params.destinations, request_distance, request_duration);
 
-    if ((request_duration & result_tables_pair.first.empty()) ||
+    if ((request_duration && result_tables_pair.first.empty()) ||
         (request_distance && result_tables_pair.second.empty()))
     {
         return Error("NoTable", "No table found", result);

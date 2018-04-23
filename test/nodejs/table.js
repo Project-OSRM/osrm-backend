@@ -5,6 +5,48 @@ var mld_data_path = require('./constants').mld_data_path;
 var three_test_coordinates = require('./constants').three_test_coordinates;
 var two_test_coordinates = require('./constants').two_test_coordinates;
 
+test('table: test annotations paramater combination', function(assert) {
+    assert.plan(12);
+    var osrm = new OSRM(data_path);
+    var options = {
+        coordinates: [three_test_coordinates[0], three_test_coordinates[1]],
+        annotations: ['distance']
+    };
+    osrm.table(options, function(err, table) {
+        assert.ifError(err);
+        assert.ok(table['distances'], 'distances table result should exist');
+        assert.notOk(table['durations'], 'durations table result should not exist');
+    });
+
+    options = {
+        coordinates: [three_test_coordinates[0], three_test_coordinates[1]],
+        annotations: ['duration']
+    };
+    osrm.table(options, function(err, table) {
+        assert.ifError(err);
+        assert.ok(table['durations'], 'durations table result should exist');
+        assert.notOk(table['distances'], 'distances table result should not exist');
+    });
+
+    options = {
+        coordinates: [three_test_coordinates[0], three_test_coordinates[1]],
+        annotations: ['duration', 'distance']
+    };
+    osrm.table(options, function(err, table) {
+        assert.ifError(err);
+        assert.ok(table['durations'], 'durations table result should exist');
+        assert.ok(table['distances'], 'distances table result should exist');
+    });
+
+    options = {
+        coordinates: [three_test_coordinates[0], three_test_coordinates[1]]
+    };
+    osrm.table(options, function(err, table) {
+        assert.ifError(err);
+        assert.ok(table['durations'], 'durations table result should exist');
+        assert.notOk(table['distances'], 'distances table result should not exist');
+    });
+});
 
 var tables = ['distances', 'durations'];
 
