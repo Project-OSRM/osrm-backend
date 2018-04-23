@@ -46,14 +46,14 @@ struct Parameters
     // At most 25% longer then the shortest path.
     double kAtMostLongerBy = 0.25;
     // Alternative paths similarity requirement (sharing).
-    // At least 15% different than the shortest path.
-    double kAtMostSameBy = 0.85;
+    // At least 25% different than the shortest path.
+    double kAtMostSameBy = 0.75;
     // Alternative paths are still reasonable around the via node candidate (local optimality).
     // At least optimal around 10% sub-paths around the via node candidate.
     double kAtLeastOptimalAroundViaBy = 0.1;
     // Alternative paths similarity requirement (sharing) based on calles.
     // At least 15% different than the shortest path.
-    double kCellsAtMostSameBy = 0.85;
+    double kCellsAtMostSameBy = 0.95;
 };
 
 // Represents a via middle node where forward (from s) and backward (from t)
@@ -103,7 +103,7 @@ double getLongerByFactorBasedOnDuration(const EdgeWeight duration)
     //       return a + b/(xs-d) + c/(xs-d)**3
     //
     // xs = np.array([5 * 60, 10 * 60, 30 * 60, 60 * 60, 3 * 60 * 60, 10 * 60 * 60])
-    // ys = np.array([1.0,    0.75,    0.5,     0.3,     0.2,          0.1])
+    // ys = np.array([1.0,    0.75,    0.5,     0.4,     0.3,          0.2])
     //
     // xs_interp = np.arange(5*60, 10*60*60, 5*60)
     // ys_interp = np.interp(xs_interp, xs, ys)
@@ -112,10 +112,10 @@ double getLongerByFactorBasedOnDuration(const EdgeWeight duration)
     //
     // The hyperbolic shape was chosen because it interpolated well between
     // the given datapoints and drops off for large durations.
-    const constexpr auto a = 9.49571282e-02;
-    const constexpr auto b = 1.25440191e+03;
-    const constexpr auto c = 2.06152165e+09;
-    const constexpr auto d = -1.71666881e+03;
+    const constexpr auto a = 1.91578463e-01;
+    const constexpr auto b = 1.35118442e+03;
+    const constexpr auto c = 2.45437877e+09;
+    const constexpr auto d = -2.07944571e+03;
 
     if (duration < EdgeWeight(5 * 60))
     {
@@ -123,7 +123,7 @@ double getLongerByFactorBasedOnDuration(const EdgeWeight duration)
     }
     else if (duration > EdgeWeight(10 * 60 * 60))
     {
-        return 0.10;
+        return 0.20;
     }
 
     // Bigger than 10 minutes but smaller than 10 hours
@@ -160,13 +160,14 @@ Parameters parametersFromRequest(const PhantomNodes &phantom_node_pair)
     {
         parameters.kAlternativesToUnpackFactor = 6.0;
         parameters.kCellsAtMostSameBy = 0.95;
-        parameters.kAtMostSameBy = 0.70;
+        parameters.kAtMostSameBy = 0.65;
     }
     // 100km
     else if (distance < 100000.)
     {
         parameters.kAlternativesToUnpackFactor = 4.0;
-        parameters.kCellsAtMostSameBy = 0.75;
+        parameters.kCellsAtMostSameBy = 0.95;
+        parameters.kAtMostSameBy = 0.70;
     }
 
     return parameters;
@@ -868,7 +869,6 @@ InternalManyRoutesResult alternativePathSearch(SearchEngineData<Algorithm> &sear
                                                                 begin(weighted_packed_paths) + 1,
                                                                 alternative_paths_last,
                                                                 parameters);
-
     alternative_paths_last = filterPackedPathsByCellSharing(
         begin(weighted_packed_paths), alternative_paths_last, partition, parameters);
 
