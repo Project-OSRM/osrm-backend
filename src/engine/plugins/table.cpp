@@ -88,7 +88,8 @@ Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
     if (request_distance && !algorithms.SupportsDistanceAnnotationType())
     {
         return Error("NotImplemented",
-                     "The distance annotations calculation is not implemented for the chosen search algorithm.",
+                     "The distance annotations calculation is not implemented for the chosen "
+                     "search algorithm.",
                      result);
     }
 

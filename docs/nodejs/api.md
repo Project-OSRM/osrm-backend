@@ -126,7 +126,6 @@ tables. Optionally returns distance table.
         location with given index as source. Default is to use all.
     -   `options.destinations` **[Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array)?** An array of `index` elements (`0 <= integer <
         #coordinates`) to use location with given index as destination. Default is to use all.
-    -   `options.annotations` **[Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array)?** An array of the table types to return. Values can be `duration` or `distance` or both. Default is to return only duration table.
     -   `options.approaches` **[Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array)?** Keep waypoints on curb side. Can be `null` (unrestricted, default) or `curb`.
 -   `callback` **[Function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function)** 
 
@@ -143,7 +142,6 @@ var options = {
 };
 osrm.table(options, function(err, response) {
   console.log(response.durations); // array of arrays, matrix in row-major order
-  console.log(response.distances); // array of arrays, matrix in row-major order
   console.log(response.sources); // array of Waypoint objects
   console.log(response.destinations); // array of Waypoint objects
 });
