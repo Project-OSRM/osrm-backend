@@ -1077,6 +1077,8 @@ argumentsToTableParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
             return table_parameters_ptr();
         }
 
+        params->annotations = osrm::TableParameters::AnnotationsType::None;
+
         v8::Local<v8::Array> annotations_array = v8::Local<v8::Array>::Cast(annotations);
         for (std::size_t i = 0; i < annotations_array->Length(); ++i)
         {

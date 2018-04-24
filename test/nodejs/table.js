@@ -5,6 +5,48 @@ var mld_data_path = require('./constants').mld_data_path;
 var three_test_coordinates = require('./constants').three_test_coordinates;
 var two_test_coordinates = require('./constants').two_test_coordinates;
 
+test('table: test annotations paramater combination', function(assert) {
+    assert.plan(12);
+    var osrm = new OSRM(data_path);
+    var options = {
+        coordinates: [three_test_coordinates[0], three_test_coordinates[1]],
+        annotations: ['distance']
+    };
+    osrm.table(options, function(err, table) {
+        assert.ifError(err);
+        assert.ok(table['distances'], 'distances table result should exist');
+        assert.notOk(table['durations'], 'durations table result should not exist');
+    });
+
+    options = {
+        coordinates: [three_test_coordinates[0], three_test_coordinates[1]],
+        annotations: ['duration']
+    };
+    osrm.table(options, function(err, table) {
+        assert.ifError(err);
+        assert.ok(table['durations'], 'durations table result should exist');
+        assert.notOk(table['distances'], 'distances table result should not exist');
+    });
+
+    options = {
+        coordinates: [three_test_coordinates[0], three_test_coordinates[1]],
+        annotations: ['duration', 'distance']
+    };
+    osrm.table(options, function(err, table) {
+        assert.ifError(err);
+        assert.ok(table['durations'], 'durations table result should exist');
+        assert.ok(table['distances'], 'distances table result should exist');
+    });
+
+    options = {
+        coordinates: [three_test_coordinates[0], three_test_coordinates[1]]
+    };
+    osrm.table(options, function(err, table) {
+        assert.ifError(err);
+        assert.ok(table['durations'], 'durations table result should exist');
+        assert.notOk(table['distances'], 'distances table result should not exist');
+    });
+});
 
 var tables = ['distances', 'durations'];
 
@@ -143,7 +185,6 @@ tables.forEach(function(annotation) {
             annotations: [annotation.slice(0,-1)]
         };
         osrm.table(options, function(err, table) {
-            console.log(table);
             assert.ifError(err);
 
             function assertHasHints(waypoint) {
@@ -176,7 +217,7 @@ tables.forEach(function(annotation) {
     });
 
     test('table: ' + annotation + ' table in Monaco without motorways', function(assert) {
-        assert.plan(2);
+        assert.plan(1);
         var osrm = new OSRM({path: mld_data_path, algorithm: 'MLD'});
         var options = {
             coordinates: two_test_coordinates,
@@ -184,8 +225,8 @@ tables.forEach(function(annotation) {
             annotations: [annotation.slice(0,-1)]
         };
         osrm.table(options, function(err, response) {
-            assert.ifError(err);
-            assert.equal(response[annotation].length, 2);
+            if (annotation === 'durations') assert.equal(response[annotation].length, 2);
+            else assert.error(response, 'NotImplemented');
         });
     });
 });

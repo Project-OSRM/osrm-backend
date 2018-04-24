@@ -274,17 +274,20 @@ NAN_METHOD(Engine::nearest) //
  *                                   Can be `null` or an array of `[{value},{range}]` with `integer 0 .. 360,integer 0 .. 180`.
  * @param {Array} [options.radiuses] Limits the coordinate snapping to streets in the given radius in meters. Can be `null` (unlimited, default) or `double >= 0`.
  * @param {Array} [options.hints] Hints for the coordinate snapping. Array of base64 encoded strings.
- * @param {Array} [options.sources] An array of `index` elements (`0 <= integer < #coordinates`) to
- * use
- * location with given index as source. Default is to use all.
- * @param {Array} [options.destinations] An array of `index` elements (`0 <= integer <
- * #coordinates`) to use location with given index as destination. Default is to use all.
+ * @param {Array} [options.sources] An array of `index` elements (`0 <= integer < #coordinates`) to use
+ *                                  location with given index as source. Default is to use all.
+ * @param {Array} [options.destinations] An array of `index` elements (`0 <= integer < #coordinates`) to use location with given index as destination. Default is to use all.
  * @param {Array} [options.approaches] Keep waypoints on curb side. Can be `null` (unrestricted, default) or `curb`.
+ * @param {Array} [options.annotations] An array of the table types to return. Values can be `duration` or `distance` or both. If no annotations parameter is added, the default is to return the `durations` table. If `annotations=distance` or `annotations=duration,distance` is requested when running a MLD router, a `NotImplemented` error will be returned.
+
  * @param {Function} callback
  *
  * @returns {Object} containing `durations`, `sources`, and `destinations`.
  * **`durations`**: array of arrays that stores the matrix in row-major order. `durations[i][j]` gives the travel time from the i-th waypoint to the j-th waypoint.
  *                  Values are given in seconds.
+ * **`distances`**: array of arrays that stores the matrix in row-major order. `distances[i][j]` gives the travel time from the i-th waypoint to the j-th waypoint.
+ *                  Values are given in meters. Note that computing the `distances` table is currently only implemented for CH. If `annotations=distance` or
+ *                  `annotations=duration,distance` is requested when running a MLD router, a `NotImplemented` error will be returned.
  * **`sources`**: array of [`Ẁaypoint`](#waypoint) objects describing all sources in order.
  * **`destinations`**: array of [`Ẁaypoint`](#waypoint) objects describing all destinations in order.
  *
@@ -299,7 +302,7 @@ NAN_METHOD(Engine::nearest) //
  * };
  * osrm.table(options, function(err, response) {
  *   console.log(response.durations); // array of arrays, matrix in row-major order
- *   console.log(response.distances); // array of arrays, matrix in row-major order
+ *   console.log(response.distances); // array of arrays, matrix in row-major order (currently only implemented for CH router)
  *   console.log(response.sources); // array of Waypoint objects
  *   console.log(response.destinations); // array of Waypoint objects
  * });

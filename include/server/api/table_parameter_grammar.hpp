@@ -58,17 +58,15 @@ struct TableParametersGrammar : public BaseParametersGrammar<Iterator, Signature
     {
         using AnnotationsType = engine::api::TableParameters::AnnotationsType;
 
-        const auto add_annotation = [](engine::api::TableParameters &table_parameters,
-                                       AnnotationsType table_param) {
-            table_parameters.annotations = table_parameters.annotations | table_param;
-        };
-
         annotations.add("duration", AnnotationsType::Duration)("distance",
                                                                AnnotationsType::Distance);
 
+        annotations_list = annotations[qi::_val |= qi::_1] % ',';
+
         base_rule = BaseGrammar::base_rule(qi::_r1) |
                     (qi::lit("annotations=") >
-                     (annotations[ph::bind(add_annotation, qi::_r1, qi::_1)] % ','));
+                     annotations_list[ph::bind(&engine::api::TableParameters::annotations,
+                                               qi::_r1) = qi::_1]);
     }
 
   protected:
@@ -81,6 +79,7 @@ struct TableParametersGrammar : public BaseParametersGrammar<Iterator, Signature
     qi::rule<Iterator, Signature> destinations_rule;
     qi::rule<Iterator, std::size_t()> size_t_;
     qi::symbols<char, engine::api::TableParameters::AnnotationsType> annotations;
+    qi::rule<Iterator, engine::api::TableParameters::AnnotationsType()> annotations_list;
 };
 }
 }
