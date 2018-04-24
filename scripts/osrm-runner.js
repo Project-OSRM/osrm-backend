@@ -16,8 +16,6 @@ const run_query = (query_options, filters, callback) => {
     let tic = () => 0.;
     http.request(query_options, function (res) {
         let body = '', ttfb = tic();
-        if (res.statusCode != 200)
-            return callback(query_options.path, res.statusCode, ttfb);
 
         res.setEncoding('utf8');
         res.on('data', function (chunk) {
