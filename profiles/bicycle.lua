@@ -193,6 +193,16 @@ function setup()
       sett = 10
     },
 
+    classes = Sequence {
+        'ferry', 'tunnel'
+    },
+
+    -- Which classes should be excludable
+    -- This increases memory usage so its disabled by default.
+    excludable = Sequence {
+--        Set {'ferry'}
+    },
+
     tracktype_speeds = {
     },
 
@@ -649,6 +659,9 @@ function process_way(profile, way, result)
 
     -- set name, ref and pronunciation
     WayHandlers.names,
+
+    -- set classes
+    WayHandlers.classes,
 
     -- set weight properties of the way
     WayHandlers.weights
