@@ -6,6 +6,9 @@
     - Infrastructure:
       - ADDED: Updated libosmium and added protozero and vtzero libraries [#5037](https://github.com/Project-OSRM/osrm-backend/pull/5037)
       - CHANGED: Use vtzero library in tile plugin [#4686](https://github.com/Project-OSRM/osrm-backend/pull/4686)
+    - Profile:
+      - ADDED: Bicycle profile now returns classes for ferry and tunnel routes. [#5054](https://github.com/Project-OSRM/osrm-backend/pull/5054)
+      - ADDED: Bicycle profile allows to exclude ferry routes (default to not enabled) [#5054](https://github.com/Project-OSRM/osrm-backend/pull/5054)
 
 # 5.17.1
   - Changes from 5.17.0:
