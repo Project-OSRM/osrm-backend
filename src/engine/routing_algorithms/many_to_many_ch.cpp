@@ -295,7 +295,7 @@ void calculateDistances(typename SearchEngineData<ch::Algorithm>::ManyToManyQuer
                 // entry 0---1---2---3---   <-- 3 is exit node
                 EdgeDistance offset =
                     target_phantom.GetForwardDistance() - source_phantom.GetForwardDistance();
-                distances_table[row_index * number_of_targets + column_index] += offset;
+                distances_table[row_index * number_of_targets + column_index] = offset;
             }
             else
             {
@@ -306,7 +306,7 @@ void calculateDistances(typename SearchEngineData<ch::Algorithm>::ManyToManyQuer
                 // entry 0---1---2---3---   <-- 3 is exit node
                 EdgeDistance offset =
                     target_phantom.GetReverseDistance() - source_phantom.GetReverseDistance();
-                distances_table[row_index * number_of_targets + column_index] += offset;
+                distances_table[row_index * number_of_targets + column_index] = offset;
             }
         }
         packed_leg.clear();
