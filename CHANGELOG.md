@@ -1,3 +1,8 @@
+# 5.17.3
+  - Changes from 5.17.2:
+    - Bugfixes:
+      - FIXED: Increased probability of returning alternatives and quality of the ones returned for MLD. [#5048](https://github.com/Project-OSRM/osrm-backend/issues/5048)
+
 # 5.17.2
   - Changes from 5.17.0:
     - Bugfixes:
