@@ -25,20 +25,20 @@ namespace
 class CheapRulerContainer {
 public:
     CheapRulerContainer(const int number_of_rulers)
-    : cheap_ruler_cache(number_of_rulers, mapbox::cheap_ruler::CheapRuler(0)), step(180. / number_of_rulers){
+    : cheap_ruler_cache(number_of_rulers, mapbox::cheap_ruler::CheapRuler(0)), step(90.0 / number_of_rulers) {
         for (int n = 0; n < number_of_rulers; n++) {
-            cheap_ruler_cache[n] = mapbox::cheap_ruler::CheapRuler(-90 + step * n, mapbox::cheap_ruler::CheapRuler::Meters);
+            cheap_ruler_cache[n] = mapbox::cheap_ruler::CheapRuler(step * (n + 0.5), mapbox::cheap_ruler::CheapRuler::Meters);
         }
     };
     mapbox::cheap_ruler::CheapRuler& getRuler(const double lat) {
-        return cheap_ruler_cache[std::min((int)std::round((lat + 90)/step), (int)cheap_ruler_cache.size() - 1)];
+        return cheap_ruler_cache[std::min((int)std::floor(abs(lat)/step), (int)cheap_ruler_cache.size() - 1)];
     };
 
 private:
     std::vector<mapbox::cheap_ruler::CheapRuler> cheap_ruler_cache;
     const double step;
 };
-CheapRulerContainer cheap_ruler_container(3600);
+CheapRulerContainer cheap_ruler_container(1800);
 }
 
 // Does not project the coordinates!
@@ -65,7 +65,7 @@ double fccApproximateDistance(const Coordinate coordinate_1, const Coordinate co
     const auto lat1 = static_cast<double>(util::toFloating(coordinate_1.lat));
     const auto lon2 = static_cast<double>(util::toFloating(coordinate_2.lon));
     const auto lat2 = static_cast<double>(util::toFloating(coordinate_2.lat));
-    return cheap_ruler_container.getRuler(lat1).distance({lon1, lat1}, {lon2, lat2});
+    return cheap_ruler_container.getRuler(0.5*(lat1+lat2)).distance({lon1, lat1}, {lon2, lat2});
 }
 
 double haversineDistance(const Coordinate coordinate_1, const Coordinate coordinate_2)
