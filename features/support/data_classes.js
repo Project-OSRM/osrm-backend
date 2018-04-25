@@ -108,9 +108,9 @@ module.exports = {
                 return got.match(matchRe[1]);
             } else if (matchRangeNumbers) {
                 let real_want_and_margin = want.split('+-'),
-                                  margin = parseFloat(real_want_and_margin[1].trim()),
-                               real_want = parseFloat(real_want_and_margin[0].trim());
-               return inRange(margin, got, real_want);
+                    margin = parseFloat(real_want_and_margin[1].trim()),
+                    real_want = parseFloat(real_want_and_margin[0].trim());
+                return inRange(margin, got, real_want);
             } else {
                 return false;
             }
