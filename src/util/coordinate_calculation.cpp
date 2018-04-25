@@ -22,26 +22,23 @@ namespace coordinate_calculation
 
 namespace
 {
-mapbox::cheap_ruler::CheapRuler cheap_ruler_cache[] = {
-    mapbox::cheap_ruler::CheapRuler(-90, mapbox::cheap_ruler::CheapRuler::Meters),
-    mapbox::cheap_ruler::CheapRuler(-80, mapbox::cheap_ruler::CheapRuler::Meters),
-    mapbox::cheap_ruler::CheapRuler(-70, mapbox::cheap_ruler::CheapRuler::Meters),
-    mapbox::cheap_ruler::CheapRuler(-60, mapbox::cheap_ruler::CheapRuler::Meters),
-    mapbox::cheap_ruler::CheapRuler(-50, mapbox::cheap_ruler::CheapRuler::Meters),
-    mapbox::cheap_ruler::CheapRuler(-40, mapbox::cheap_ruler::CheapRuler::Meters),
-    mapbox::cheap_ruler::CheapRuler(-30, mapbox::cheap_ruler::CheapRuler::Meters),
-    mapbox::cheap_ruler::CheapRuler(-20, mapbox::cheap_ruler::CheapRuler::Meters),
-    mapbox::cheap_ruler::CheapRuler(-10, mapbox::cheap_ruler::CheapRuler::Meters),
-    mapbox::cheap_ruler::CheapRuler(0, mapbox::cheap_ruler::CheapRuler::Meters),
-    mapbox::cheap_ruler::CheapRuler(10, mapbox::cheap_ruler::CheapRuler::Meters),
-    mapbox::cheap_ruler::CheapRuler(20, mapbox::cheap_ruler::CheapRuler::Meters),
-    mapbox::cheap_ruler::CheapRuler(30, mapbox::cheap_ruler::CheapRuler::Meters),
-    mapbox::cheap_ruler::CheapRuler(40, mapbox::cheap_ruler::CheapRuler::Meters),
-    mapbox::cheap_ruler::CheapRuler(50, mapbox::cheap_ruler::CheapRuler::Meters),
-    mapbox::cheap_ruler::CheapRuler(60, mapbox::cheap_ruler::CheapRuler::Meters),
-    mapbox::cheap_ruler::CheapRuler(70, mapbox::cheap_ruler::CheapRuler::Meters),
-    mapbox::cheap_ruler::CheapRuler(80, mapbox::cheap_ruler::CheapRuler::Meters),
-    mapbox::cheap_ruler::CheapRuler(90, mapbox::cheap_ruler::CheapRuler::Meters)};
+class CheapRulerContainer {
+public:
+    CheapRulerContainer(const int number_of_rulers)
+    : cheap_ruler_cache(number_of_rulers, mapbox::cheap_ruler::CheapRuler(0)), step(180. / number_of_rulers){
+        for (int n = 0; n < number_of_rulers; n++) {
+            cheap_ruler_cache[n] = mapbox::cheap_ruler::CheapRuler(-90 + step * n, mapbox::cheap_ruler::CheapRuler::Meters);
+        }
+    };
+    mapbox::cheap_ruler::CheapRuler& getRuler(const double lat) {
+        return cheap_ruler_cache[std::min((int)std::round((lat + 90)/step), (int)cheap_ruler_cache.size() - 1)];
+    };
+
+private:
+    std::vector<mapbox::cheap_ruler::CheapRuler> cheap_ruler_cache;
+    const double step;
+};
+CheapRulerContainer cheap_ruler_container(3600);
 }
 
 // Does not project the coordinates!
@@ -68,7 +65,7 @@ double fccApproximateDistance(const Coordinate coordinate_1, const Coordinate co
     const auto lat1 = static_cast<double>(util::toFloating(coordinate_1.lat));
     const auto lon2 = static_cast<double>(util::toFloating(coordinate_2.lon));
     const auto lat2 = static_cast<double>(util::toFloating(coordinate_2.lat));
-    return cheap_ruler_cache[std::lround(lat1 / 10) + 9].distance({lon1, lat1}, {lon2, lat2});
+    return cheap_ruler_container.getRuler(lat1).distance({lon1, lat1}, {lon2, lat2});
 }
 
 double haversineDistance(const Coordinate coordinate_1, const Coordinate coordinate_2)
