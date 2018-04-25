@@ -226,3 +226,22 @@ Feature: Distance calculation
             | x    | v  | xv,xv | 424m +-1 |
             | x    | w  | xw,xw | 360m +-1 |
             | x    | y  | xy,xy | 316m +-1 |
+
+
+    # Check rounding errors
+    Scenario: Distances Long distances
+        Given a grid size of 1000 meters
+        Given the node map
+            """
+            a b c d
+            """
+
+        And the ways
+            | nodes    |
+            | abcd |
+
+        When I route I should get
+            | from | to | distance  |
+            | a    | b  | 1000m +-3 |
+            | a    | c  | 2000m +-3 |
+            | a    | d  | 3000m +-3 |

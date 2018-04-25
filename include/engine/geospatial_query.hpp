@@ -465,7 +465,7 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
              current < forward_geometry.begin() + data.fwd_segment_position;
              ++current)
         {
-            forward_distance_offset += util::coordinate_calculation::haversineDistance(
+            forward_distance_offset += util::coordinate_calculation::fccApproximateDistance(
                 datafacade.GetCoordinateOfNode(*current),
                 datafacade.GetCoordinateOfNode(*std::next(current)));
         }
@@ -475,7 +475,7 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
 
         EdgeWeight forward_weight = forward_weights[data.fwd_segment_position];
         EdgeDuration forward_duration = forward_durations[data.fwd_segment_position];
-        EdgeDistance forward_distance = util::coordinate_calculation::haversineDistance(
+        EdgeDistance forward_distance = util::coordinate_calculation::fccApproximateDistance(
             datafacade.GetCoordinateOfNode(forward_geometry(data.fwd_segment_position)),
             point_on_segment);
 
@@ -494,7 +494,7 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
              current < forward_geometry.end() - data.fwd_segment_position - 2;
              ++current)
         {
-            reverse_distance_offset += util::coordinate_calculation::haversineDistance(
+            reverse_distance_offset += util::coordinate_calculation::fccApproximateDistance(
                 datafacade.GetCoordinateOfNode(*current),
                 datafacade.GetCoordinateOfNode(*std::next(current)));
         }
@@ -503,7 +503,7 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
             reverse_weights[reverse_weights.size() - data.fwd_segment_position - 1];
         EdgeDuration reverse_duration =
             reverse_durations[reverse_durations.size() - data.fwd_segment_position - 1];
-        EdgeDistance reverse_distance = util::coordinate_calculation::haversineDistance(
+        EdgeDistance reverse_distance = util::coordinate_calculation::fccApproximateDistance(
             point_on_segment,
             datafacade.GetCoordinateOfNode(forward_geometry(data.fwd_segment_position + 1)));
 
