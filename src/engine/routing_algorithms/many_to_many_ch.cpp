@@ -286,12 +286,13 @@ void calculateDistances(typename SearchEngineData<ch::Algorithm>::ManyToManyQuer
         }
         else
         {
+            // there is no shortcut to unpack. source and target are on the same EBG Node.
+            // if the offset of the target is greater than the offset of the source, subtract it
             if (target_phantom.GetForwardDistance() > source_phantom.GetForwardDistance())
             {
-                //       ............       <-- calculateEGBAnnotation returns distance from 0 to 3
-                //       ->s         -->t   <-- offsets
-                //       --..........++++   <-- subtract source offset and add target offset
-                //         ..............   <-- want this distance as result
+                //       --------->t        <-- offsets
+                //       ->s                <-- subtract source offset from target offset
+                //         .........        <-- want this distance as result
                 // entry 0---1---2---3---   <-- 3 is exit node
                 EdgeDistance offset =
                     target_phantom.GetForwardDistance() - source_phantom.GetForwardDistance();
@@ -299,10 +300,9 @@ void calculateDistances(typename SearchEngineData<ch::Algorithm>::ManyToManyQuer
             }
             else
             {
-                //       ............       <-- calculateEGBAnnotation returns distance from 0 to 3
-                //         s<--------<--t   <-- GetReverseDistance() returns this offset
-                //       ---.........++++   <-- subtract source offset and add target offset
-                //          .............   <-- want this distance as result
+                //               s<---      <-- offsets
+                //         t<---------      <-- subtract source offset from target offset
+                //         ......           <-- want this distance as result
                 // entry 0---1---2---3---   <-- 3 is exit node
                 EdgeDistance offset =
                     target_phantom.GetReverseDistance() - source_phantom.GetReverseDistance();
