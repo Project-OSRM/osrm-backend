@@ -1209,3 +1209,33 @@ Feature: Simple Turns
         | a    | c  | knob,knob      | depart,arrive           |
         | d    | e  | soph,soph      | depart,arrive           |
         | d    | a  | soph,knob,knob | depart,turn left,arrive |
+
+
+  # https://www.openstreetmap.org/node/30797565
+  Scenario: No turn instruction when turning from unnamed onto unnamed
+    Given the node map
+      """
+      a
+      |
+      |
+      |
+      |
+      b----------------c
+      |
+      |
+      |
+      |
+      |
+      |
+      d
+      """
+
+    And the ways
+      | nodes | highway    | name | ref   |
+      | ab    | trunk_link |      |       |
+      | db    | secondary  |      | L 460 |
+      | bc    | secondary  |      |       |
+
+    When I route I should get
+      | from | to | route | turns                    |
+      | d    | c  | ,,    | depart,turn right,arrive |
