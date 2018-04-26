@@ -55,7 +55,7 @@ class CheapRulerContainer
     std::vector<mapbox::cheap_ruler::CheapRuler> cheap_ruler_cache;
     const int step;
 };
-CheapRulerContainer cheap_ruler_container(1800);
+static CheapRulerContainer cheap_ruler_container(1800);
 } // namespace
 
 // Does not project the coordinates!
