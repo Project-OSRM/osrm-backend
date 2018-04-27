@@ -242,7 +242,8 @@ void calculateDistances(typename SearchEngineData<ch::Algorithm>::ManyToManyQuer
         {
             EdgeDistance annotation =
                 ch::calculateEBGNodeAnnotations(facade, packed_leg.begin(), packed_leg.end());
-            adjustPathDistanceToPhantomNodes(packed_leg, source_phantom, target_phantom, annotation);
+            annotation = adjustPathDistanceToPhantomNodes(
+                packed_leg, source_phantom, target_phantom, annotation);
 
             distances_table[row_index * number_of_targets + column_index] = annotation;
         }

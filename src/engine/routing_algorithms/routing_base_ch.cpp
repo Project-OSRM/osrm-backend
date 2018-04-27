@@ -100,7 +100,7 @@ void search(SearchEngineData<Algorithm> & /*engine_working_data*/,
             const PhantomNodes & /*phantom_nodes*/,
             const EdgeWeight weight_upper_bound)
 {
-    if (forward_heap.Empty() || reverse_heap.Empty())
+    if (forward_heap.Empty() && reverse_heap.Empty())
     {
         weight = INVALID_EDGE_WEIGHT;
         return;
@@ -110,10 +110,14 @@ void search(SearchEngineData<Algorithm> & /*engine_working_data*/,
     weight = weight_upper_bound;
 
     // get offset to account for offsets on phantom nodes on compressed edges
-    const auto min_edge_offset = std::min(0, forward_heap.MinKey());
-    BOOST_ASSERT(min_edge_offset <= 0);
+    EdgeWeight min_edge_offset = 0;
+    if (forward_heap.Size() > 0)
+    {
+        min_edge_offset = std::min(min_edge_offset, forward_heap.MinKey());
+        BOOST_ASSERT(min_edge_offset <= 0);
+    }
     // we only every insert negative offsets for nodes in the forward heap
-    BOOST_ASSERT(reverse_heap.MinKey() >= 0);
+    BOOST_ASSERT(reverse_heap.Empty() || reverse_heap.MinKey() >= 0);
 
     // run two-Target Dijkstra routing step.
     while (0 < (forward_heap.Size() + reverse_heap.Size()))
@@ -176,11 +180,6 @@ double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
                           const PhantomNode &target_phantom,
                           EdgeWeight weight_upper_bound)
 {
-    forward_heap.Clear();
-    reverse_heap.Clear();
-
-    insertNodesInHeaps(forward_heap, reverse_heap, {source_phantom, target_phantom});
-
     EdgeWeight weight = INVALID_EDGE_WEIGHT;
     std::vector<NodeID> packed_path;
     search(engine_working_data,
@@ -199,8 +198,6 @@ double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
         return std::numeric_limits<double>::max();
     }
 
-    BOOST_ASSERT(nodes_number > 0);
-
     EdgeDistance distance = 0;
 
     std::vector<NodeID> unpacked_nodes;
@@ -208,24 +205,24 @@ double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
     if (!packed_path.empty())
     {
         unpacked_nodes.push_back(packed_path.front());
-        unpackPath(facade,
-                   packed_path.begin(),
-                   packed_path.end(),
-                   [&](std::pair<NodeID, NodeID> &edge, const auto &) {
-                       BOOST_ASSERT(edge.first == unpacked_nodes.back());
-                       unpacked_nodes.push_back(edge.second);
-                   });
+        unpackPath(
+            facade, packed_path.begin(), packed_path.end(), [&](const auto &edge, const auto &) {
+                BOOST_ASSERT(edge.first == unpacked_nodes.back());
+                unpacked_nodes.push_back(edge.second);
+            });
 
-        for (auto node_iter = unpacked_nodes.begin(); node_iter != std::prev(unpacked_nodes.end());
-             node_iter++)
-        {
-            distance += computeEdgeDistance(facade, *node_iter);
-        }
+        distance = std::accumulate(unpacked_nodes.begin(),
+                                   std::prev(unpacked_nodes.end()),
+                                   EdgeDistance{0},
+                                   [&](const EdgeDistance distance, const auto node_id) {
+                                       return distance + computeEdgeDistance(facade, node_id);
+                                   });
     }
 
-    adjustPathDistanceToPhantomNodes(unpacked_nodes, source_phantom, target_phantom, distance);
+    distance =
+        adjustPathDistanceToPhantomNodes(unpacked_nodes, source_phantom, target_phantom, distance);
 
-    return distance / 10.;
+    return distance;
 }
 } // namespace ch
 

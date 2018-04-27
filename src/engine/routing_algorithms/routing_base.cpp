@@ -33,11 +33,12 @@ bool needsLoopBackwards(const PhantomNodes &phantoms)
     return needsLoopBackwards(phantoms.source_phantom, phantoms.target_phantom);
 }
 
-void adjustPathDistanceToPhantomNodes(const std::vector<NodeID> &path,
-                                      const PhantomNode &source_phantom,
-                                      const PhantomNode &target_phantom,
-                                      EdgeDistance &distance)
+EdgeDistance adjustPathDistanceToPhantomNodes(const std::vector<NodeID> &path,
+                                              const PhantomNode &source_phantom,
+                                              const PhantomNode &target_phantom,
+                                              const EdgeDistance uncorrected_distance)
 {
+    EdgeDistance distance = uncorrected_distance;
     if (!path.empty())
     {
 
@@ -97,6 +98,12 @@ void adjustPathDistanceToPhantomNodes(const std::vector<NodeID> &path,
             distance = target_phantom.GetReverseDistance() - source_phantom.GetReverseDistance();
         }
     }
+
+    BOOST_ASSERT_MSG(distance >= 0 || distance > -1.0f,
+                     "Distance correction generated negative number");
+    // guard against underflow errors caused by rounding
+    distance = std::max(EdgeDistance{0}, distance);
+    return distance;
 }
 
 } // namespace routing_algorithms
