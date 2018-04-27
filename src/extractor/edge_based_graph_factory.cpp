@@ -145,9 +145,13 @@ NBGToEBG EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const N
     BOOST_ASSERT(nbe_to_ebn_mapping[edge_id_1] != SPECIAL_NODEID ||
                  nbe_to_ebn_mapping[edge_id_2] != SPECIAL_NODEID);
 
-    // TODO: use the sign bit to distinguish oneway streets that must
-    // have INVALID_EDGE_WEIGHT node weight values to enforce loop edges
-    // in contraction
+    // ⚠ Use the sign bit of node weights to distinguish oneway streets:
+    //  * MSB is set - a node corresponds to a one-way street
+    //  * MSB is clear - a node corresponds to a bidirectional street
+    // Before using node weights data values must be adjusted:
+    //  * in contraction if MSB is set the node weight is INVALID_EDGE_WEIGHT.
+    //    This adjustment is needed to enforce loop creation for oneways.
+    //  * in other cases node weights must be masked with 0x7fffffff to clear MSB
     if (nbe_to_ebn_mapping[edge_id_1] != SPECIAL_NODEID &&
         nbe_to_ebn_mapping[edge_id_2] == SPECIAL_NODEID)
         m_edge_based_node_weights[nbe_to_ebn_mapping[edge_id_1]] |= 0x80000000;

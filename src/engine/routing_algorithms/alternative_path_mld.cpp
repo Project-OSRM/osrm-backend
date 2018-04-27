@@ -470,10 +470,10 @@ RandIt filterUnpackedPathsBySharing(RandIt first,
     if (shortest_path.edges.empty())
         return last;
 
-    std::unordered_set<EdgeID> edges;
-    edges.reserve(size * shortest_path.edges.size() * (1.25));
+    std::unordered_set<NodeID> nodes;
+    nodes.reserve(size * shortest_path.nodes.size() * (1.25));
 
-    edges.insert(begin(shortest_path.edges), end(shortest_path.edges));
+    nodes.insert(begin(shortest_path.nodes), end(shortest_path.nodes));
 
     const auto over_sharing_limit = [&](auto &unpacked) {
         if (unpacked.edges.empty())
@@ -482,20 +482,20 @@ RandIt filterUnpackedPathsBySharing(RandIt first,
         }
 
         EdgeWeight total_duration = 0;
-        const auto add_if_seen = [&](const EdgeWeight duration, const EdgeID edge) {
-            auto edge_duration = facade.GetEdgeData(edge).duration;
-            total_duration += edge_duration;
-            if (edges.count(edge) > 0)
+        const auto add_if_seen = [&](const EdgeWeight duration, const NodeID node) {
+            auto node_duration = facade.GetNodeDuration(node);
+            total_duration += node_duration;
+            if (nodes.count(node) > 0)
             {
-                return duration + edge_duration;
+                return duration + node_duration;
             }
             return duration;
         };
 
-        const auto shared_weight =
-            std::accumulate(begin(unpacked.edges), end(unpacked.edges), EdgeWeight{0}, add_if_seen);
+        const auto shared_duration = std::accumulate(
+            begin(unpacked.nodes), end(unpacked.nodes), EdgeDuration{0}, add_if_seen);
 
-        unpacked.sharing = shared_weight / static_cast<double>(total_duration);
+        unpacked.sharing = shared_duration / static_cast<double>(total_duration);
         BOOST_ASSERT(unpacked.sharing >= 0.);
         BOOST_ASSERT(unpacked.sharing <= 1.);
 
@@ -505,7 +505,7 @@ RandIt filterUnpackedPathsBySharing(RandIt first,
         }
         else
         {
-            edges.insert(begin(unpacked.edges), end(unpacked.edges));
+            nodes.insert(begin(unpacked.nodes), end(unpacked.nodes));
             return false;
         }
     };
