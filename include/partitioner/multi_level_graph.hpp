@@ -149,7 +149,7 @@ class MultiLevelGraph : public util::StaticGraph<EdgeDataT, Ownership>
         return max_border_node_id;
     }
 
-    auto data() &&
+    auto data() && // rvalue ref-qualifier is a safety-belt
     {
         return std::make_tuple(std::move(SuperT::node_array),
                                std::move(SuperT::edge_array),

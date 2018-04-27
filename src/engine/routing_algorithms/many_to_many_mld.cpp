@@ -182,16 +182,15 @@ void relaxOutgoingEdges(const DataFacade<mld::Algorithm> &facade,
             }
 
             const auto turn_id = data.turn_id;
-            const auto node_weight =
-                facade.GetNodeWeight(DIRECTION == FORWARD_DIRECTION ? node : to);
-            const auto node_duration = facade.GetNodeDuration(
-                DIRECTION == FORWARD_DIRECTION ? node : to); // TODO: remove later
-            const auto edge_weight = node_weight + facade.GetWeightPenaltyForEdgeID(turn_id);
-            const auto edge_duration = node_duration + facade.GetDurationPenaltyForEdgeID(turn_id);
+            const auto node_id = DIRECTION == FORWARD_DIRECTION ? node : facade.GetTarget(edge);
+            const auto node_weight = facade.GetNodeWeight(node_id);
+            const auto node_duration = facade.GetNodeDuration(node_id);
+            const auto turn_weight = node_weight + facade.GetWeightPenaltyForEdgeID(turn_id);
+            const auto turn_duration = node_duration + facade.GetDurationPenaltyForEdgeID(turn_id);
 
-            BOOST_ASSERT_MSG(edge_weight > 0, "edge_weight invalid");
-            const auto to_weight = weight + edge_weight;
-            const auto to_duration = duration + edge_duration;
+            BOOST_ASSERT_MSG(node_weight + turn_weight > 0, "edge weight is invalid");
+            const auto to_weight = weight + turn_weight;
+            const auto to_duration = duration + turn_duration;
 
             // New Node discovered -> Add to Heap + Node Info Storage
             if (!query_heap.WasInserted(to))
@@ -315,15 +314,10 @@ oneToManySearch(SearchEngineData<Algorithm> &engine_working_data,
                                                  : facade.IsBackwardEdge(edge))
             {
                 const auto turn_id = data.turn_id;
-                const auto edge_weight =
-                    initial_weight +
-                    facade.GetNodeWeight(DIRECTION == FORWARD_DIRECTION ? node
-                                                                        : facade.GetTarget(edge)) +
-                    facade.GetWeightPenaltyForEdgeID(turn_id);
-                const auto edge_duration = initial_duration +
-                                           +facade.GetNodeDuration(DIRECTION == FORWARD_DIRECTION
-                                                                       ? node
-                                                                       : facade.GetTarget(edge)) +
+                const auto node_id = DIRECTION == FORWARD_DIRECTION ? node : facade.GetTarget(edge);
+                const auto edge_weight = initial_weight + facade.GetNodeWeight(node_id) +
+                                         facade.GetWeightPenaltyForEdgeID(turn_id);
+                const auto edge_duration = initial_duration + facade.GetNodeDuration(node_id) +
                                            facade.GetDurationPenaltyForEdgeID(turn_id);
 
                 query_heap.Insert(facade.GetTarget(edge), edge_weight, {node, edge_duration});
