@@ -120,7 +120,7 @@ inline LevelID getNodeQueryLevel(const MultiLevelPartition &partition,
     }
     return result;
 }
-}
+} // namespace
 
 // Heaps only record for each node its predecessor ("parent") on the shortest path.
 // For re-constructing the actual path we need to trace back all parent "pointers".
@@ -680,11 +680,20 @@ double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
         return std::numeric_limits<double>::max();
     }
 
-    std::vector<PathData> unpacked_path;
+    EdgeDistance distance = 0;
 
-    annotatePath(facade, phantom_nodes, unpacked_nodes, unpacked_edges, unpacked_path);
+    if (!unpacked_nodes.empty())
+    {
+        for (auto node_iter = unpacked_nodes.begin(); node_iter != std::prev(unpacked_nodes.end()); node_iter++)
+        {
+            distance += computeEdgeDistance(facade, *node_iter);
+        }
+    }
 
-    return getPathDistance(facade, unpacked_path, source_phantom, target_phantom);
+    adjustPathDistanceToPhantomNodes(
+        unpacked_nodes, phantom_nodes.source_phantom, phantom_nodes.target_phantom, distance);
+
+    return distance / 10.;
 }
 
 } // namespace mld

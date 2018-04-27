@@ -199,14 +199,33 @@ double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
         return std::numeric_limits<double>::max();
     }
 
-    std::vector<PathData> unpacked_path;
-    unpackPath(facade,
-               packed_path.begin(),
-               packed_path.end(),
-               {source_phantom, target_phantom},
-               unpacked_path);
+    BOOST_ASSERT(nodes_number > 0);
 
-    return getPathDistance(facade, unpacked_path, source_phantom, target_phantom);
+    EdgeDistance distance = 0;
+
+    std::vector<NodeID> unpacked_nodes;
+    unpacked_nodes.reserve(packed_path.size());
+    if (!packed_path.empty())
+    {
+        unpacked_nodes.push_back(packed_path.front());
+        unpackPath(facade,
+                   packed_path.begin(),
+                   packed_path.end(),
+                   [&](std::pair<NodeID, NodeID> &edge, const auto &) {
+                       BOOST_ASSERT(edge.first == unpacked_nodes.back());
+                       unpacked_nodes.push_back(edge.second);
+                   });
+
+        for (auto node_iter = unpacked_nodes.begin(); node_iter != std::prev(unpacked_nodes.end());
+             node_iter++)
+        {
+            distance += computeEdgeDistance(facade, *node_iter);
+        }
+    }
+
+    adjustPathDistanceToPhantomNodes(unpacked_nodes, source_phantom, target_phantom, distance);
+
+    return distance / 10.;
 }
 } // namespace ch
 
