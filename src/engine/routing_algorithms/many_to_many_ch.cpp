@@ -240,74 +240,11 @@ void calculateDistances(typename SearchEngineData<ch::Algorithm>::ManyToManyQuer
         }
         if (!packed_leg.empty())
         {
-            auto annotation =
+            EdgeDistance annotation =
                 ch::calculateEBGNodeAnnotations(facade, packed_leg.begin(), packed_leg.end());
+            adjustPathDistanceToPhantomNodes(packed_leg, source_phantom, target_phantom, annotation);
 
             distances_table[row_index * number_of_targets + column_index] = annotation;
-
-            // check the direction of travel to figure out how to calculate the offset to/from
-            // the source/target
-            if (source_phantom.forward_segment_id.id == packed_leg.front())
-            {
-                //       ............       <-- calculateEGBAnnotation returns distance from 0 to 3
-                //       -->s               <-- subtract offset to start at source
-                //          .........       <-- want this distance as result
-                // entry 0---1---2---3---   <-- 3 is exit node
-                EdgeDistance offset = source_phantom.GetForwardDistance();
-                distances_table[row_index * number_of_targets + column_index] -= offset;
-            }
-            else if (source_phantom.reverse_segment_id.id == packed_leg.front())
-            {
-                //       ............    <-- calculateEGBAnnotation returns distance from 0 to 3
-                //          s<-------    <-- subtract offset to start at source
-                //       ...             <-- want this distance
-                // entry 0---1---2---3   <-- 3 is exit node
-                EdgeDistance offset = source_phantom.GetReverseDistance();
-                distances_table[row_index * number_of_targets + column_index] -= offset;
-            }
-            if (target_phantom.forward_segment_id.id == packed_leg.back())
-            {
-                //       ............       <-- calculateEGBAnnotation returns distance from 0 to 3
-                //                   ++>t   <-- add offset to get to target
-                //       ................   <-- want this distance as result
-                // entry 0---1---2---3---   <-- 3 is exit node
-                EdgeDistance offset = target_phantom.GetForwardDistance();
-                distances_table[row_index * number_of_targets + column_index] += offset;
-            }
-            else if (target_phantom.reverse_segment_id.id == packed_leg.back())
-            {
-                //       ............       <-- calculateEGBAnnotation returns distance from 0 to 3
-                //                   <++t   <-- add offset to get from target
-                //       ................   <-- want this distance as result
-                // entry 0---1---2---3---   <-- 3 is exit node
-                EdgeDistance offset = target_phantom.GetReverseDistance();
-                distances_table[row_index * number_of_targets + column_index] += offset;
-            }
-        }
-        else
-        {
-            // there is no shortcut to unpack. source and target are on the same EBG Node.
-            // if the offset of the target is greater than the offset of the source, subtract it
-            if (target_phantom.GetForwardDistance() > source_phantom.GetForwardDistance())
-            {
-                //       --------->t        <-- offsets
-                //       ->s                <-- subtract source offset from target offset
-                //         .........        <-- want this distance as result
-                // entry 0---1---2---3---   <-- 3 is exit node
-                EdgeDistance offset =
-                    target_phantom.GetForwardDistance() - source_phantom.GetForwardDistance();
-                distances_table[row_index * number_of_targets + column_index] = offset;
-            }
-            else
-            {
-                //               s<---      <-- offsets
-                //         t<---------      <-- subtract source offset from target offset
-                //         ......           <-- want this distance as result
-                // entry 0---1---2---3---   <-- 3 is exit node
-                EdgeDistance offset =
-                    target_phantom.GetReverseDistance() - source_phantom.GetReverseDistance();
-                distances_table[row_index * number_of_targets + column_index] = offset;
-            }
         }
         packed_leg.clear();
     }
