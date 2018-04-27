@@ -25,7 +25,7 @@ namespace
 
 // earth radius varies between 6,356.750-6,378.135 km (3,949.901-3,963.189mi)
 // The IUGG value for the equatorial radius is 6378.137 km (3963.19 miles)
-const constexpr long double EARTH_RADIUS = 6372797.560856;
+const constexpr double EARTH_RADIUS = 6372797.560856;
 
 class CheapRulerContainer
 {
