@@ -403,7 +403,7 @@ EdgeBasedGraphFactory::GenerateEdgeExpandedNodes(const WayRestrictionMap &way_re
                 segregated_edges.count(eid) > 0;
 
             const auto ebn_weight = m_edge_based_node_weights[nbe_to_ebn_mapping[eid]];
-            BOOST_ASSERT(ebn_weight == INVALID_EDGE_WEIGHT || ebn_weight == edge_data.weight);
+            BOOST_ASSERT((ebn_weight & 0x7fffffff) == edge_data.weight);
             m_edge_based_node_weights.push_back(ebn_weight);
             m_edge_based_node_durations.push_back(
                 m_edge_based_node_durations[nbe_to_ebn_mapping[eid]]);
