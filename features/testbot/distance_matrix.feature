@@ -25,80 +25,6 @@ Feature: Basic Distance Matrix
         Given the query options
             | exclude  | toll        |
 
-    Scenario: Testbot - Travel time matrix of minimal network with excludes
-        Given the query options
-            | exclude  | toll        |
-
-        Given the node map
-            """
-            a b
-            c d
-            """
-
-        And the ways
-            | nodes | highway  | toll | #                                        |
-            | ab    | motorway |      | not drivable for exclude=motorway        |
-            | cd    | primary  |      | always drivable                          |
-            | ac    | highway  | yes  | not drivable for exclude=motorway exclude=toll and exclude=motorway,toll |
-            | bd    | highway  | yes  | not drivable for exclude=motorway exclude=toll |
-
-        When I request a travel time matrix I should get
-            |   | a  | b  | c  | d  |
-            | a | 0  | 15 |    |    |
-            | b | 15 | 0  |    |    |
-            | c |    |    | 0  | 10 |
-            | d |    |    | 10 | 0  |
-
-    Scenario: Testbot - Travel time matrix of minimal network with different exclude
-        Given the query options
-            | exclude  | motorway  |
-
-        Given the node map
-            """
-            a b
-            c d
-            """
-
-        And the ways
-            | nodes | highway  | toll | #                                        |
-            | ab    | motorway |      | not drivable for exclude=motorway        |
-            | cd    | primary  |      | always drivable                          |
-            | ac    | highway  | yes  | not drivable for exclude=motorway exclude=toll and exclude=motorway,toll |
-            | bd    | highway  | yes  | not drivable for exclude=motorway exclude=toll |
-
-
-        When I request a travel time matrix I should get
-            |   | a  | b  | c  | d  |
-            | a | 0  | 40 | 15 | 25 |
-            | b | 40 | 0  | 25 | 15 |
-            | c | 15 | 25 | 0  | 10 |
-            | d | 25 | 15 | 10 | 0  |
-
-    Scenario: Testbot - Travel time matrix of minimal network with excludes combination
-        Given the query options
-            | exclude  | motorway,toll  |
-
-        Given the node map
-            """
-            a b
-            c d
-            """
-
-        And the ways
-            | nodes | highway  | toll | #                                        |
-            | ab    | motorway |      | not drivable for exclude=motorway        |
-            | cd    | primary  |      | always drivable                          |
-            | ac    | highway  | yes  | not drivable for exclude=motorway exclude=toll and exclude=motorway,toll |
-            | bd    | highway  | yes  | not drivable for exclude=motorway exclude=toll |
-
-        When I request a travel time matrix I should get
-            |   | a  | b  | c  | d  |
-            | a | 0  | 10 | 0  | 10 |
-            | b | 10 | 0  | 10 | 0  |
-            | c | 0  | 10 | 0  | 10 |
-            | d | 10 | 0  | 10 | 0  |
-
-    Scenario: Testbot - Travel time matrix with different way speeds
         Given the node map
             """
             a b
@@ -404,10 +330,10 @@ Feature: Basic Distance Matrix
 
         When I request a travel distance matrix I should get
             |   | f      | g      | h      | i      |
-            | f | 0      | 300+-2 | 0      | 300+-2 |
-            | g | 300+-2 | 0      | 300+-2 | 0      |
-            | h | 0      | 300+-2 | 0      | 300+-2 |
-            | i | 300+-2 | 0      | 300+-2 | 0      |
+            | f | 0      | 300+-3 | 0      | 300+-3 |
+            | g | 300+-3 | 0      | 300+-3 | 0      |
+            | h | 0      | 300+-3 | 0      | 300+-3 |
+            | i | 300+-3 | 0      | 300+-3 | 0      |
 
     Scenario: Testbot - Travel distance matrix with loops
         Given the node map
@@ -426,9 +352,9 @@ Feature: Basic Distance Matrix
         When I request a travel distance matrix I should get
             |   | 1      | 2      | 3      | 4      |
             | 1 | 0      | 100+-1 | 400+-1 | 500+-1 |
-            | 2 | 700+-1 | 0      | 300+-1 | 400+-1 |
+            | 2 | 700+-2 | 0      | 300+-2 | 400+-1 |
             | 3 | 400+-1 | 500+-1 | 0      | 100+-1 |
-            | 4 | 300+-1 | 400+-1 | 700+-1 | 0      |
+            | 4 | 300+-2 | 400+-1 | 700+-3 | 0      |
 
 
     Scenario: Testbot - Travel distance matrix based on segment durations

@@ -198,7 +198,8 @@ void calculateDistances(typename SearchEngineData<ch::Algorithm>::ManyToManyQuer
                         const std::size_t number_of_targets,
                         const std::vector<NodeBucket> &search_space_with_buckets,
                         std::vector<EdgeDistance> &distances_table,
-                        const std::vector<NodeID> &middle_nodes_table)
+                        const std::vector<NodeID> &middle_nodes_table,
+                        const SearchEngineData<ch::Algorithm> &engine_working_data)
 {
     std::vector<NodeID> packed_leg;
 
@@ -240,8 +241,10 @@ void calculateDistances(typename SearchEngineData<ch::Algorithm>::ManyToManyQuer
         }
         if (!packed_leg.empty())
         {
-            auto annotation =
-                ch::calculateEBGNodeAnnotations(facade, packed_leg.begin(), packed_leg.end());
+            auto annotation = ch::calculateEBGNodeDistance(facade,
+                                                           packed_leg.begin(),
+                                                           packed_leg.end(),
+                                                           *(engine_working_data.distance_cache));
 
             distances_table[row_index * number_of_targets + column_index] = annotation;
 
@@ -337,9 +340,6 @@ manyToManySearch(SearchEngineData<ch::Algorithm> &engine_working_data,
     std::vector<NodeBucket> search_space_with_buckets;
     std::vector<NodeID> packed_leg;
 
-    engine_working_data.InitializeOrClearUnpackingCacheThreadLocalStorage(
-        facade.GetTimestamp()); // always pass in the timestamp and clear if it's different
-
     // Populate buckets with paths from all accessible nodes to destinations via backward searches
     for (std::uint32_t column_index = 0; column_index < target_indices.size(); ++column_index)
     {
@@ -390,6 +390,9 @@ manyToManySearch(SearchEngineData<ch::Algorithm> &engine_working_data,
 
         if (calculate_distance)
         {
+            engine_working_data.InitializeOrClearDistanceCacheThreadLocalStorage(
+                facade.GetTimestamp()); // always pass in the timestamp and clear if it's different
+
             distances_table.resize(number_of_entries, INVALID_EDGE_DISTANCE);
             calculateDistances(query_heap,
                                facade,
@@ -401,7 +404,8 @@ manyToManySearch(SearchEngineData<ch::Algorithm> &engine_working_data,
                                number_of_targets,
                                search_space_with_buckets,
                                distances_table,
-                               middle_nodes_table);
+                               middle_nodes_table,
+                               engine_working_data);
         }
     }
 

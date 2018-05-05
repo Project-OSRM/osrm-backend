@@ -16,7 +16,7 @@ BOOST_AUTO_TEST_CASE(add_edge_and_check_existence)
 {
     // Arrange (Setup)
     unsigned timestamp = 1522782542;
-    UnpackingCache cache(1, timestamp);
+    UnpackingCache<EdgeDistance> cache(1, timestamp);
 
     auto key = std::make_tuple(1, 1, 1);
     auto value = 1;
@@ -28,7 +28,7 @@ BOOST_AUTO_TEST_CASE(add_edge_and_check_existence)
     BOOST_CHECK(cache.IsEdgeInCache(key) == true);
     BOOST_CHECK(cache.IsEdgeInCache(std::make_tuple(2, 2, 2)) == false);
 
-    auto result = cache.GetDuration(key);
+    auto result = cache.GetAnnotation(key);
     BOOST_CHECK_EQUAL(result, value);
 }
 
@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_CASE(cache_invalidation)
 {
     // Arrange (Setup)
     unsigned timestamp = 1522782542;
-    UnpackingCache cache(1, timestamp);
+    UnpackingCache<EdgeDistance> cache(1, timestamp);
 
     auto key1 = std::make_tuple(1, 1, 1);
     auto value1 = 1;
@@ -49,11 +49,45 @@ BOOST_AUTO_TEST_CASE(cache_invalidation)
     cache.AddEdge(key2, value2);
 
     // Assert
-    auto result = cache.GetDuration(key1);
-    BOOST_CHECK_EQUAL(result, MAXIMAL_EDGE_DURATION);
+    auto result = cache.GetAnnotation(key1);
+    BOOST_CHECK_EQUAL(result, INVALID_EDGE_DISTANCE);
 
-    result = cache.GetDuration(key2);
+    result = cache.GetAnnotation(key2);
     BOOST_CHECK_EQUAL(result, value2);
+}
+
+BOOST_AUTO_TEST_CASE(type_check)
+{
+    // Arrange (Setup)
+    unsigned timestamp = 1522782542;
+
+    UnpackingCache<EdgeDistance> distance_cache(1, timestamp);
+    UnpackingCache<EdgeDuration> duration_cache(1, timestamp);
+
+    auto key1 = std::make_tuple(1, 1, 1);
+    auto value1 = 1;
+
+    auto key2 = std::make_tuple(2, 2, 2);
+    auto value2 = 2;
+
+    // Act
+    distance_cache.AddEdge(key1, value1);
+    distance_cache.AddEdge(key2, value2);
+    duration_cache.AddEdge(key1, value1);
+    duration_cache.AddEdge(key2, value2);
+
+    // Assert
+    auto result_distance = distance_cache.GetAnnotation(key1);
+    BOOST_CHECK_EQUAL(result_distance, std::numeric_limits<EdgeDistance>::max());
+
+    result_distance = distance_cache.GetAnnotation(key2);
+    BOOST_CHECK_EQUAL(result_distance, value2);
+
+    auto result_duration = duration_cache.GetAnnotation(key1);
+    BOOST_CHECK_EQUAL(result_duration, std::numeric_limits<EdgeDuration>::max());
+
+    result_duration = duration_cache.GetAnnotation(key2);
+    BOOST_CHECK_EQUAL(result_duration, value2);
 }
 
 BOOST_AUTO_TEST_CASE(new_data)
@@ -62,7 +96,7 @@ BOOST_AUTO_TEST_CASE(new_data)
     unsigned timestamp1 = 1522782542;
     unsigned timestamp2 = 1522782543;
 
-    UnpackingCache cache(1, timestamp1);
+    UnpackingCache<EdgeDistance> cache(1, timestamp1);
 
     auto key1 = std::make_tuple(1, 2, 3);
     auto value1 = 1;
@@ -79,7 +113,7 @@ BOOST_AUTO_TEST_CASE(new_data)
     BOOST_CHECK(cache.IsEdgeInCache(key2) == true);
     BOOST_CHECK(cache.IsEdgeInCache(std::make_tuple(2, 2, 2)) == false);
 
-    auto result = cache.GetDuration(key2);
+    auto result = cache.GetAnnotation(key2);
     BOOST_CHECK_EQUAL(result, value2);
 }
 

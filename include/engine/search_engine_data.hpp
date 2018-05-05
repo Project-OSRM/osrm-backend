@@ -47,7 +47,8 @@ template <> struct SearchEngineData<routing_algorithms::ch::Algorithm>
 
     using SearchEngineHeapPtr = boost::thread_specific_ptr<QueryHeap>;
     using ManyToManyHeapPtr = boost::thread_specific_ptr<ManyToManyQueryHeap>;
-    using UnpackingCachePtr = boost::thread_specific_ptr<UnpackingCache>;
+    using DistanceCachePtr = boost::thread_specific_ptr<UnpackingCache<EdgeDistance>>;
+    using DurationCachePtr = boost::thread_specific_ptr<UnpackingCache<EdgeDuration>>;
 
     static SearchEngineHeapPtr forward_heap_1;
     static SearchEngineHeapPtr reverse_heap_1;
@@ -56,7 +57,8 @@ template <> struct SearchEngineData<routing_algorithms::ch::Algorithm>
     static SearchEngineHeapPtr forward_heap_3;
     static SearchEngineHeapPtr reverse_heap_3;
     static ManyToManyHeapPtr many_to_many_heap;
-    static UnpackingCachePtr unpacking_cache;
+    static DistanceCachePtr distance_cache;
+    static DurationCachePtr duration_cache;
 
     void InitializeOrClearFirstThreadLocalStorage(unsigned number_of_nodes);
 
@@ -66,7 +68,9 @@ template <> struct SearchEngineData<routing_algorithms::ch::Algorithm>
 
     void InitializeOrClearManyToManyThreadLocalStorage(unsigned number_of_nodes);
 
-    void InitializeOrClearUnpackingCacheThreadLocalStorage(unsigned timestamp);
+    void InitializeOrClearDistanceCacheThreadLocalStorage(unsigned timestamp);
+
+    void InitializeOrClearDurationCacheThreadLocalStorage(unsigned timestamp);
 };
 
 struct MultiLayerDijkstraHeapData

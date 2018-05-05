@@ -288,11 +288,12 @@ void unpackPath(const DataFacade<Algorithm> &facade,
         }
     }
 }
+
 template <typename BidirectionalIterator>
-EdgeDistance calculateEBGNodeDuration(const DataFacade<Algorithm> &facade,
-                                         BidirectionalIterator packed_path_begin,
-                                         BidirectionalIterator packed_path_end,
-                                         UnpackingCache &unpacking_cache)
+EdgeDuration calculateEBGNodeDuration(const DataFacade<Algorithm> &facade,
+                                      BidirectionalIterator packed_path_begin,
+                                      BidirectionalIterator packed_path_end,
+                                      UnpackingCache<EdgeDuration> &unpacking_cache)
 {
     // Make sure we have at least something to unpack
     if (packed_path_begin == packed_path_end ||
@@ -324,7 +325,7 @@ EdgeDistance calculateEBGNodeDuration(const DataFacade<Algorithm> &facade,
             if (unpacking_cache.IsEdgeInCache(std::make_tuple(
                     std::get<0>(edge), std::get<1>(edge), facade.GetExcludeIndex())))
             {
-                EdgeDuration duration = unpacking_cache.GetDuration(std::make_tuple(
+                EdgeDuration duration = unpacking_cache.GetAnnotation(std::make_tuple(
                     std::get<0>(edge), std::get<1>(edge), facade.GetExcludeIndex()));
                 duration_stack.emplace(duration);
             }
@@ -404,12 +405,11 @@ EdgeDistance calculateEBGNodeDuration(const DataFacade<Algorithm> &facade,
     return total_duration;
 }
 
-
 template <typename BidirectionalIterator>
 EdgeDistance calculateEBGNodeDistance(const DataFacade<Algorithm> &facade,
-                                         BidirectionalIterator packed_path_begin,
-                                         BidirectionalIterator packed_path_end,
-                                         UnpackingCache &unpacking_cache)
+                                      BidirectionalIterator packed_path_begin,
+                                      BidirectionalIterator packed_path_end,
+                                      UnpackingCache<EdgeDistance> &unpacking_cache)
 {
     // Make sure we have at least something to unpack
     if (packed_path_begin == packed_path_end ||
@@ -417,6 +417,7 @@ EdgeDistance calculateEBGNodeDistance(const DataFacade<Algorithm> &facade,
         return 0;
 
     std::stack<std::tuple<NodeID, NodeID, bool>> recursion_stack;
+
     std::stack<EdgeDistance> distance_stack;
     // We have to push the path in reverse order onto the stack because it's LIFO.
     for (auto current = std::prev(packed_path_end); current > packed_path_begin;
@@ -442,7 +443,7 @@ EdgeDistance calculateEBGNodeDistance(const DataFacade<Algorithm> &facade,
             if (unpacking_cache.IsEdgeInCache(std::make_tuple(
                     std::get<0>(edge), std::get<1>(edge), facade.GetExcludeIndex())))
             {
-                EdgeDuration distance = unpacking_cache.GetDistance(std::make_tuple(
+                EdgeDuration distance = unpacking_cache.GetAnnotation(std::make_tuple(
                     std::get<0>(edge), std::get<1>(edge), facade.GetExcludeIndex()));
                 distance_stack.emplace(distance);
             }
