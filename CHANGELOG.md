@@ -1,4 +1,4 @@
-# UNRELEASED
+# 5.18.0 RC1
   - Changes from 5.17.0:
     - Features:
       - ADDED: `table` plugin now optionally returns `distance` matrix as part of response [#4990](https://github.com/Project-OSRM/osrm-backend/pull/4990)
