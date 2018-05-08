@@ -21,8 +21,8 @@ struct NodeBucket
 {
     NodeID middle_node;
     NodeID parent_node;
-    bool from_clique_arc;
-    unsigned column_index; // a column in the weight/duration matrix
+    unsigned column_index : 31; // a column in the weight/duration matrix
+    unsigned from_clique_arc : 1;
     EdgeWeight weight;
     EdgeDuration duration;
 
@@ -32,8 +32,18 @@ struct NodeBucket
                unsigned column_index,
                EdgeWeight weight,
                EdgeDuration duration)
-        : middle_node(middle_node), parent_node(parent_node), from_clique_arc(from_clique_arc),
-          column_index(column_index), weight(weight), duration(duration)
+        : middle_node(middle_node), parent_node(parent_node), column_index(column_index),
+          from_clique_arc(from_clique_arc), weight(weight), duration(duration)
+    {
+    }
+
+    NodeBucket(NodeID middle_node,
+               NodeID parent_node,
+               unsigned column_index,
+               EdgeWeight weight,
+               EdgeDuration duration)
+        : middle_node(middle_node), parent_node(parent_node), column_index(column_index),
+          from_clique_arc(false), weight(weight), duration(duration)
     {
     }
 
@@ -75,7 +85,7 @@ struct NodeBucket
         }
     };
 };
-}
+} // namespace
 
 template <typename Algorithm>
 std::pair<std::vector<EdgeDuration>, std::vector<EdgeDistance>>
