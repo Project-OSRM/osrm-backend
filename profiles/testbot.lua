@@ -135,8 +135,6 @@ function process_turn (profile, turn)
   if turn.has_traffic_light then
      turn.duration = turn.duration + profile.properties.traffic_light_penalty
   end
-
-  io.write("after penalty turn.duration: ", turn.duration, "turn.weight: ", turn.weight, "\n")
 end
 
 return {

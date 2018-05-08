@@ -275,18 +275,19 @@ oneToManySearch(SearchEngineData<Algorithm> &engine_working_data,
         for (auto edge : facade.GetAdjacentEdgeRange(node))
         {
             const auto &data = facade.GetEdgeData(edge);
+            const auto to = facade.GetTarget(edge);
             if ((DIRECTION == FORWARD_DIRECTION ? facade.IsForwardEdge(edge)
                                                 : facade.IsBackwardEdge(edge)) &&
-                !query_heap.WasInserted(facade.GetTarget(edge)))
+                !query_heap.WasInserted(to))
             {
                 const auto turn_id = data.turn_id;
-                const auto node_id = DIRECTION == FORWARD_DIRECTION ? node : facade.GetTarget(edge);
+                const auto node_id = DIRECTION == FORWARD_DIRECTION ? node : to;
                 const auto edge_weight = initial_weight + facade.GetNodeWeight(node_id) +
                                          facade.GetWeightPenaltyForEdgeID(turn_id);
                 const auto edge_duration = initial_duration + facade.GetNodeDuration(node_id) +
                                            facade.GetDurationPenaltyForEdgeID(turn_id);
 
-                query_heap.Insert(facade.GetTarget(edge), edge_weight, {node, edge_duration});
+                query_heap.Insert(to, edge_weight, {node, edge_duration});
             }
         }
     };
