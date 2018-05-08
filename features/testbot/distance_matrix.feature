@@ -21,7 +21,6 @@ Feature: Basic Distance Matrix
             | a | 0      | 100+-1 |
             | b | 100+-1 | 0      |
 
-    @ch
     Scenario: Testbot - Travel distance matrix of minimal network with toll exclude
         Given the query options
             | exclude  | toll        |
@@ -46,7 +45,6 @@ Feature: Basic Distance Matrix
             | c |        |        | 0      | 100+-1 |
             | d |        |        | 100+-1 | 0      |
 
-    @ch
     Scenario: Testbot - Travel distance matrix of minimal network with motorway exclude
         Given the query options
             | exclude  | motorway  |
@@ -68,7 +66,6 @@ Feature: Basic Distance Matrix
             |   | a | b      | c      | d      |
             | a | 0 | 300+-2 | 100+-2 | 200+-2 |
 
-    @ch
     Scenario: Testbot - Travel distance matrix of minimal network disconnected motorway exclude
         Given the query options
             | exclude  | motorway  |
@@ -90,7 +87,6 @@ Feature: Basic Distance Matrix
             |   | a | b     | e |
             | a | 0 | 50+-1 |   |
 
-    @ch
     Scenario: Testbot - Travel distance matrix of minimal network with motorway and toll excludes
         Given the query options
             | exclude  | motorway,toll  |

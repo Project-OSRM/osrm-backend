@@ -276,6 +276,12 @@ oneToManySearch(SearchEngineData<Algorithm> &engine_working_data,
         {
             const auto &data = facade.GetEdgeData(edge);
             const auto to = facade.GetTarget(edge);
+
+            if (facade.ExcludeNode(to))
+            {
+                continue;
+            }
+
             if ((DIRECTION == FORWARD_DIRECTION ? facade.IsForwardEdge(edge)
                                                 : facade.IsBackwardEdge(edge)) &&
                 !query_heap.WasInserted(to))
