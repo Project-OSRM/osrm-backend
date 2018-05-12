@@ -24,19 +24,10 @@ function setup()
     default_speed           = walking_speed,
     oneway_handling         = 'specific',     -- respect 'oneway:foot' but not 'oneway'
 
-    barrier_whitelist = Set {
-      'cycle_barrier',
-      'bollard',
-      'entrance',
-      'cattle_grid',
-      'border_control',
-      'toll_booth',
-      'sally_port',
-      'gate',
-      'lift_gate',
-      'no',
-      'kerb',
-      'block'
+    barrier_blacklist = Set {
+      'yes',
+      'wall',
+      'fence'
     },
 
     access_tag_whitelist = Set {
@@ -157,7 +148,7 @@ function process_node(profile, node, result)
       local bollard = node:get_value_by_key("bollard")
       local rising_bollard = bollard and "rising" == bollard
 
-      if not profile.barrier_whitelist[barrier] and not rising_bollard then
+      if profile.barrier_blacklist[barrier] and not rising_bollard then
         result.barrier = true
       end
     end
