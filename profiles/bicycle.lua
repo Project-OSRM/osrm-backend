@@ -39,7 +39,7 @@ function setup()
       mode.pushing_bike
     },
 
-     barrier_whitelist = Set {
+    barrier_whitelist = Set {
       'sump_buster',
       'bus_trap',
       'cycle_barrier',
@@ -245,7 +245,7 @@ function process_node(profile, node, result)
     end
   else
     local barrier = node:get_value_by_key("barrier")
-     if barrier and "" ~= barrier then
+    if barrier and "" ~= barrier then
       if not profile.barrier_whitelist[barrier] then
         result.barrier = true
       end
