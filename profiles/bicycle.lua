@@ -5,6 +5,7 @@ api_version = 4
 Set = require('lib/set')
 Sequence = require('lib/sequence')
 Handlers = require("lib/way_handlers")
+Relations = require("lib/relations")
 find_access_tag = require("lib/access").find_access_tag
 limit = require("lib/maxspeed").limit
 
