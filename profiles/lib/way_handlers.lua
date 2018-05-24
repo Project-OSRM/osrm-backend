@@ -84,7 +84,7 @@ function WayHandlers.startpoint(profile,way,result,data)
   -- highway=service and access tags check
   local is_service = data.highway == "service"
   if is_service then
-    if profile.service_access_tag_blacklist[data.forward_access] then
+    if profile.access_tag_blacklist[data.forward_access] then
       result.is_startpoint = false
     end
   end
