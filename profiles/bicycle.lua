@@ -5,6 +5,7 @@ api_version = 4
 Set = require('lib/set')
 Sequence = require('lib/sequence')
 Handlers = require("lib/way_handlers")
+Relations = require("lib/relations")
 find_access_tag = require("lib/access").find_access_tag
 limit = require("lib/maxspeed").limit
 
@@ -32,6 +33,7 @@ function setup()
     turn_penalty              = 6,
     turn_bias                 = 1.4,
     use_public_transport      = true,
+    route_preference          = 1.1,
 
     allowed_start_modes = Set {
       mode.cycling,
@@ -314,6 +316,7 @@ function handle_bicycle_tags(profile,way,result,data)
   end
 
   safety_handler(profile,way,result,data)
+  bicycle_relation_handler(profile,way,result,data,relations)
 end
 
 
@@ -451,6 +454,16 @@ function cycleway_handler(profile,way,result,data)
   if data.has_cycleway_forward then
     result.forward_mode = mode.cycling
     result.forward_speed = profile.bicycle_speeds["cycleway"]
+  end
+end
+
+function bicycle_relation_handler(profile,way,result,data,relations)
+  -- prefer ways on route=bicycle by factor of profile.route_preference
+  if result.forward_rate and Relations.filter_relations(relations, way, "route", "bicycle", "route", "forward") == "bicycle" then
+    result.forward_rate = result.forward_rate * profile.route_preference
+  end
+  if result.backward_rate and Relations.filter_relations(relations, way, "route", "bicycle", "route", "backward") == "bicycle" then
+    result.backward_rate = result.backward_rate * profile.route_preference
   end
 end
 
