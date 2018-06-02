@@ -430,7 +430,6 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
         util::UnbufferedLog log;
         log << "Sorting edges by renumbered start ... ";
         TIMER_START(sort_edges_by_renumbered_start);
-        std::mutex name_data_mutex;
         tbb::parallel_sort(all_edges_list.begin(),
                            all_edges_list.end(),
                            CmpEdgeByInternalSourceTargetAndName{
