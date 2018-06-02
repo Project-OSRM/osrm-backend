@@ -470,10 +470,10 @@ end
 
 function bicycle_relation_handler(profile,way,result,data,relations)
   -- prefer ways on route=bicycle by factor of profile.route_preference
-  if result.forward_rate and Relations.filter_relations(relations, way, "route", "bicycle", "route", "forward") == "bicycle" then
+  if profile.properties.weight_name == 'cyclability' and result.forward_rate and Relations.filter_relations(relations, way, "route", "bicycle", "route", "forward") == "bicycle" then
     result.forward_rate = result.forward_rate * profile.route_preference
   end
-  if result.backward_rate and Relations.filter_relations(relations, way, "route", "bicycle", "route", "backward") == "bicycle" then
+  if profile.properties.weight_name == 'cyclability' and result.backward_rate and Relations.filter_relations(relations, way, "route", "bicycle", "route", "backward") == "bicycle" then
     result.backward_rate = result.backward_rate * profile.route_preference
   end
 end
