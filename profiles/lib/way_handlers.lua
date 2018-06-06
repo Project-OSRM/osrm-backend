@@ -511,6 +511,38 @@ function WayHandlers.handle_width(profile,way,result,data)
   end
 end
 
+-- handle maxweight tags
+function WayHandlers.handle_weight(profile,way,result,data)
+  local keys = Sequence { 'maxweight' }
+  local forward, backward = Tags.get_forward_backward_by_set(way,data,keys)
+  forward = Measure.get_max_weight(forward)
+  backward = Measure.get_max_weight(backward)
+
+  if forward and forward < profile.vehicle_weight then
+    result.forward_mode = mode.inaccessible
+  end
+
+  if backward and backward < profile.vehicle_weight then
+    result.backward_mode = mode.inaccessible
+  end
+end
+
+-- handle maxlength tags
+function WayHandlers.handle_length(profile,way,result,data)
+  local keys = Sequence { 'maxlength' }
+  local forward, backward = Tags.get_forward_backward_by_set(way,data,keys)
+  forward = Measure.get_max_length(forward)
+  backward = Measure.get_max_length(backward)
+
+  if forward and forward < profile.vehicle_length then
+    result.forward_mode = mode.inaccessible
+  end
+
+  if backward and backward < profile.vehicle_length then
+    result.backward_mode = mode.inaccessible
+  end
+end
+
 -- handle oneways tags
 function WayHandlers.oneway(profile,way,result,data)
   if not profile.oneway_handling then
