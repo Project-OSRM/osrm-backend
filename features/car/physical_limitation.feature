@@ -48,3 +48,22 @@ Feature: Car - Handle physical limitation
             | primary |                    | none      | x     |
             | primary |                    | no-sign   | x     |
             | primary |                    | unsigned  | x     |
+
+    Scenario: Car - Limited by length
+        Then routability should be
+            | highway | maxlength | bothw |
+            | primary |           | x     |
+            | primary | 1         |       |
+            | primary | 5         | x     |
+            | primary | unsigned  | x     |
+
+    Scenario: Car - Limited by weight
+        Then routability should be
+            | highway | maxweight | bothw |
+            | primary |           | x     |
+            | primary | 1         |       |
+            | primary | 3.5       | x     |
+            | primary | 35000 kg  | x     |
+            | primary | 8.9t      | x     |
+            | primary | 0.1 lbs   |       |
+            | primary | unsigned  | x     |
