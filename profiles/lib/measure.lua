@@ -70,7 +70,14 @@ function Measure.get_max_width(raw_value)
   end
 end
 
---- Get maxweight of specified way in kilogramms
+--- Get maxlength of specified way in meters.
+function Measure.get_max_length(raw_value)
+  if raw_value then
+    return Measure.parse_value_meters(raw_value)
+  end
+end
+
+--- Get maxweight of specified way in kilogramms.
 function Measure.get_max_weight(raw_value)
   if raw_value then
     return Measure.parse_value_kilograms(raw_value)
