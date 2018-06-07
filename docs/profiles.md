@@ -199,7 +199,7 @@ source.lon         | Read        | Float   | Co-ordinates of segment start
 source.lat         | Read        | Float   |  ""
 target.lon         | Read        | Float   | Co-ordinates of segment end
 target.lat         | Read        | Float   |  ""
-target.distance    | Read        | Float   | Length of segment
+distance           | Read        | Float   | Length of segment
 weight             | Read/write  | Float   | Routing weight for this segment
 duration           | Read/write  | Float   | Duration for this segment
 
