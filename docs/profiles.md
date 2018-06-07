@@ -138,7 +138,7 @@ Given an OpenStreetMap way, the `process_way` function will either return nothin
 Argument | Description
 ---------|-------------------------------------------------------
 profile  | The configuration table you returned in `setup`.
-node     | The input way to process (read-only).
+way      | The input way to process (read-only).
 result   | The output that you will modify.
 relations| Storage of relations to access relations, where `way` is a member.
 
