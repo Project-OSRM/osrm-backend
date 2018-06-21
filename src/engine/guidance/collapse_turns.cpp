@@ -621,6 +621,7 @@ RouteSteps collapseSegregatedTurnInstructions(RouteSteps steps)
         // else if the current step is segregated and the next step is not segregated
         // and the next step is not a roundabout then combine with turn adjustment
         else if (curr_step->is_segregated && !next_step->is_segregated &&
+                 !hasRoundaboutType(curr_step->maneuver.instruction) &&
                  !hasRoundaboutType(next_step->maneuver.instruction))
         {
             // Determine if u-turn
