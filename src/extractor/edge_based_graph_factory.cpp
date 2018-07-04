@@ -714,16 +714,15 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                     {
                         ++node_based_edge_counter;
 
-                        const auto intersection_view =
-                            convertToIntersectionView(m_node_based_graph,
-                                                      m_edge_based_node_container,
-                                                      unconditional_node_restriction_map,
-                                                      m_barrier_nodes,
-                                                      edge_geometries,
-                                                      turn_lanes_data,
-                                                      incoming_edge,
-                                                      outgoing_edges,
-                                                      merged_edge_ids);
+                        const auto connected_roads =
+                            extractor::intersection::getConnectedRoads<false>(m_node_based_graph,
+                                                     m_edge_based_node_container,
+                                                     m_coordinates,
+                                                     m_compressed_edge_container,
+                                                     unconditional_node_restriction_map,
+                                                     m_barrier_nodes,
+                                                     turn_lanes_data,
+                                                     incoming_edge);
 
                         // check if this edge is part of a restriction via-way
                         const auto is_restriction_via_edge =
@@ -746,12 +745,12 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                 continue;
 
                             const auto turn =
-                                std::find_if(intersection_view.begin(),
-                                             intersection_view.end(),
+                                std::find_if(connected_roads.begin(),
+                                             connected_roads.end(),
                                              [edge = outgoing_edge.edge](const auto &road) {
                                                  return road.eid == edge;
                                              });
-                            OSRM_ASSERT(turn != intersection_view.end(),
+                            OSRM_ASSERT(turn != connected_roads.end(),
                                         m_coordinates[intersection_node]);
 
                             std::vector<ExtractionTurnLeg> road_legs_on_the_right;
@@ -760,6 +759,37 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                             auto get_connected_road_info = [&](const auto &connected_edge) {
                                 const auto &edge_data =
                                     m_node_based_graph.GetEdgeData(connected_edge.eid);
+
+                                bool is_incoming, is_outgoing;
+                                if (edge_data.reversed)
+                                {
+                                    // If getConnectedRoads adds reversed edge it means
+                                    // this edge is incoming-only
+                                    is_incoming = true;
+                                    is_outgoing = false;
+                                }
+                                else
+                                {
+                                    // It does not add incoming edge if there is outgoing so we should
+                                    // find it ourselves
+                                    is_incoming = false;
+                                    auto reversed_edge = m_node_based_graph.FindEdge(
+                                        m_node_based_graph.GetTarget(connected_edge.eid),
+                                        intersection_node);
+                                    if (reversed_edge != SPECIAL_EDGEID)
+                                    {
+                                        const auto &reversed_edge_data =
+                                            m_node_based_graph.GetEdgeData(reversed_edge);
+
+                                        if (!reversed_edge_data.reversed)
+                                        {
+                                            is_incoming = true;
+                                        }
+                                    }
+
+                                    is_outgoing = true;
+                                }
+
                                 return ExtractionTurnLeg(
                                     edge_data.flags.restricted,
                                     edge_data.flags.road_classification.IsMotorwayClass(),
@@ -772,10 +802,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                      edge_data.duration) *
                                         36,
                                     edge_data.flags.road_classification.GetPriority(),
-                                    !connected_edge.entry_allowed ||
-                                        (edge_data.flags.forward &&
-                                         edge_data.flags.backward), // is incoming
-                                    connected_edge.entry_allowed);
+                                    is_incoming,
+                                    is_outgoing);
                             };
 
                             // all connected roads on the right of a u turn
@@ -783,35 +811,35 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                                   guidance::DirectionModifier::UTurn;
                             if (is_uturn)
                             {
-                                if (turn != intersection_view.begin())
+                                if (turn != connected_roads.begin())
                                 {
-                                    std::transform(intersection_view.begin() + 1,
+                                    std::transform(connected_roads.begin() + 1,
                                                    turn,
                                                    std::back_inserter(road_legs_on_the_right),
                                                    get_connected_road_info);
                                 }
 
                                 std::transform(turn + 1,
-                                               intersection_view.end(),
+                                               connected_roads.end(),
                                                std::back_inserter(road_legs_on_the_right),
                                                get_connected_road_info);
                             }
                             else
                             {
-                                if (intersection_view.begin() != turn)
+                                if (connected_roads.begin() != turn)
                                 {
-                                    std::transform(intersection_view.begin() + 1,
+                                    std::transform(connected_roads.begin() + 1,
                                                    turn,
                                                    std::back_inserter(road_legs_on_the_right),
                                                    get_connected_road_info);
                                 }
                                 std::transform(turn + 1,
-                                               intersection_view.end(),
+                                               connected_roads.end(),
                                                std::back_inserter(road_legs_on_the_left),
                                                get_connected_road_info);
                             }
 
-                            if (is_uturn && turn != intersection_view.begin())
+                            if (is_uturn && turn != connected_roads.begin())
                             {
                                 util::Log(logWARNING)
                                     << "Turn is a u turn but not turning to the first connected "
@@ -819,7 +847,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                     << intersection_node << ", OSM link: "
                                     << toOSMLink(m_coordinates[intersection_node]);
                             }
-                            else if (turn == intersection_view.begin() && !is_uturn)
+                            else if (turn == connected_roads.begin() && !is_uturn)
                             {
                                 util::Log(logWARNING)
                                     << "Turn is a u turn but not classified as a u turn. Node ID: "
