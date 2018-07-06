@@ -159,6 +159,7 @@
         {"key": "maxspeed", "value": "DE:rural"},
         {"key": "maxspeed", "value": "DE:motorway"},
         {"key": "maxspeed", "value": "DK:rural"},
+        {"key": "maxspeed", "value": "FR:rural"},
         {"key": "maxspeed", "value": "GB:nsl_single"},
         {"key": "maxspeed", "value": "GB:nsl_dual"},
         {"key": "maxspeed", "value": "GB:motorway"},

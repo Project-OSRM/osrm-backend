@@ -276,6 +276,7 @@ function setup()
       ["de:rural"] = 100,
       ["de:motorway"] = 0,
       ["dk:rural"] = 80,
+      ["fr:rural"] = 80,
       ["gb:nsl_single"] = (60*1609)/1000,
       ["gb:nsl_dual"] = (70*1609)/1000,
       ["gb:motorway"] = (70*1609)/1000,
