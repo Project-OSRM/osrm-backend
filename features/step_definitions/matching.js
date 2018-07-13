@@ -59,7 +59,7 @@ module.exports = function () {
                             for(var i = start_index; i < json.tracepoints.length; i++){
                                 if (json.tracepoints[i] === null) continue;
 
-                                let current_index = json.tracepoints[i].matchings_index;
+                                let current_index = json.tracepoints[i].matching_index;
 
                                 if(prev_index !== current_index) {
                                     if (sub.length > 0) subMatchings.push(sub);
@@ -191,7 +191,7 @@ module.exports = function () {
                         var got_loc = [];
                         for (let i = 0; i < json.tracepoints.length; i++) {
                             if (!json.tracepoints[i]) continue;
-                            if (json.tracepoints[i].waypoint_index != null)
+                            if (json.tracepoints[i].leg_index != null)
                                 got_loc.push(json.tracepoints[i].location);
                         }
 

@@ -116,8 +116,8 @@ class MatchAPI final : public RouteAPI
             const auto &phantom =
                 sub_matchings[matching_index.sub_matching_index].nodes[matching_index.point_index];
             auto waypoint = BaseAPI::MakeWaypoint(phantom);
-            waypoint.values["matchings_index"] = matching_index.sub_matching_index;
-            waypoint.values["waypoint_index"] = matching_index.point_index;
+            waypoint.values["matching_index"] = matching_index.sub_matching_index;
+            waypoint.values["leg_index"] = matching_index.point_index;
             waypoint.values["alternatives_count"] =
                 sub_matchings[matching_index.sub_matching_index]
                     .alternatives_count[matching_index.point_index];
@@ -127,12 +127,12 @@ class MatchAPI final : public RouteAPI
             {
                 if (tidy_result.was_waypoint[trace_index])
                 {
-                    waypoint.values["waypoint_index"] = was_waypoint_idx;
+                    waypoint.values["leg_index"] = was_waypoint_idx;
                     was_waypoint_idx++;
                 }
                 else
                 {
-                    waypoint.values["waypoint_index"] = util::json::Null();
+                    waypoint.values["leg_index"] = util::json::Null();
                 }
             }
             waypoints.values.push_back(std::move(waypoint));

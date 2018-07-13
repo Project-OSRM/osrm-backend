@@ -20,7 +20,7 @@ test('match: match in Monaco', function(assert) {
         }))
         assert.equal(response.tracepoints.length, 3);
         assert.ok(response.tracepoints.every(function(t) {
-            return !!t.hint && !isNaN(t.matchings_index) && !isNaN(t.waypoint_index) && !!t.name;
+            return !!t.hint && !isNaN(t.matching_index) && !isNaN(t.leg_index) && !!t.name;
         }));
     });
 });
@@ -320,7 +320,7 @@ test('match: match in Monaco with waypoints', function(assert) {
         }))
         assert.equal(response.tracepoints.length, 3);
         assert.ok(response.tracepoints.every(function(t) {
-            return !!t.hint && !isNaN(t.matchings_index) && !isNaN(t.waypoint_index) && !!t.name;
+            return !!t.hint && !isNaN(t.matching_index) && !isNaN(t.leg_index) && !!t.name;
         }));
     });
 });
