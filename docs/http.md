@@ -428,8 +428,8 @@ The area to search is chosen such that the correct candidate should be considere
 - `tracepoints`: Array of `Waypoint` objects representing all points of the trace in order.
   If the trace point was ommited by map matching because it is an outlier, the entry will be `null`.
   Each `Waypoint` object has the following additional properties:
-  - `matchings_index`: Index to the `Route` object in `matchings` the sub-trace was matched to.
-  - `waypoint_index`: Index of the waypoint inside the matched route.
+  - `matching_index`: Index to the `Route` object in `matchings` the sub-trace was matched to.
+  - `leg_index`: Index to the `Leg` object inside the matched route.
   - `alternatives_count`: Number of probable alternative matchings for this trace point. A value of zero indicate that this point was matched unambiguously. Split the trace at these points for incremental map matching.
 - `matchings`: An array of `Route` objects that assemble the trace. Each `Route` object has the following additional properties:
   - `confidence`: Confidence of the matching. `float` value between 0 and 1. 1 is very confident that the matching is correct.

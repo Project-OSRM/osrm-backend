@@ -45,17 +45,17 @@ BOOST_AUTO_TEST_CASE(test_match)
         {
             BOOST_CHECK(waypoint_check(waypoint));
             const auto &waypoint_object = waypoint.get<json::Object>();
-            const auto matchings_index =
-                waypoint_object.values.at("matchings_index").get<json::Number>().value;
-            const auto waypoint_index =
-                waypoint_object.values.at("waypoint_index").get<json::Number>().value;
-            const auto &route_legs = matchings[matchings_index]
+            const auto matching_index =
+                waypoint_object.values.at("matching_index").get<json::Number>().value;
+            const auto leg_index =
+                waypoint_object.values.at("leg_index").get<json::Number>().value;
+            const auto &route_legs = matchings[matching_index]
                                          .get<json::Object>()
                                          .values.at("legs")
                                          .get<json::Array>()
                                          .values;
-            BOOST_CHECK_LT(waypoint_index, route_legs.size() + 1);
-            BOOST_CHECK_LT(matchings_index, number_of_matchings);
+            BOOST_CHECK_LT(leg_index, route_legs.size() + 1);
+            BOOST_CHECK_LT(matching_index, number_of_matchings);
         }
         else
         {
@@ -95,18 +95,18 @@ BOOST_AUTO_TEST_CASE(test_match_split)
         {
             BOOST_CHECK(waypoint_check(waypoint));
             const auto &waypoint_object = waypoint.get<json::Object>();
-            const auto matchings_index =
-                waypoint_object.values.at("matchings_index").get<json::Number>().value;
-            const auto waypoint_index =
-                waypoint_object.values.at("waypoint_index").get<json::Number>().value;
+            const auto matching_index =
+                waypoint_object.values.at("matching_index").get<json::Number>().value;
+            const auto leg_index =
+                waypoint_object.values.at("leg_index").get<json::Number>().value;
 
-            BOOST_CHECK_LT(matchings_index, number_of_matchings);
+            BOOST_CHECK_LT(matching_index, number_of_matchings);
 
             expected_waypoint_index =
-                (current_matchings_index != matchings_index) ? 0 : expected_waypoint_index;
-            BOOST_CHECK_EQUAL(waypoint_index, expected_waypoint_index);
+                (current_matchings_index != matching_index) ? 0 : expected_waypoint_index;
+            BOOST_CHECK_EQUAL(leg_index, expected_waypoint_index);
 
-            current_matchings_index = matchings_index;
+            current_matchings_index = matching_index;
             ++expected_waypoint_index;
         }
         else

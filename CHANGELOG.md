@@ -1,5 +1,8 @@
 # UNRELEASED
   - Changes from 5.18.0:
+    - API:
+      - CHANGED: refactor property `matchings_index` to `matching_index` in `tracepoints` object of `match` service response
+      - CHANGED: refactor property `waypoint_index` to `leg_index` in `tracepoints` object of `match` service response
     - Bugfixes:
       - FIXED: collapsing of ExitRoundabout instructions [#5114](https://github.com/Project-OSRM/osrm-backend/issues/5114)
 
