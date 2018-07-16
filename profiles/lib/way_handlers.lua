@@ -450,12 +450,9 @@ function WayHandlers.parse_maxspeed(source,profile)
   if not source then
     return 0
   end
-  local n = tonumber(source:match("%d*"))
-  if n then
-    if string.match(source, "mph") or string.match(source, "mp/h") then
-      n = (n*1609)/1000
-    end
-  else
+
+  local n = Measure.get_max_speed(source)
+  if not n then
     -- parse maxspeed like FR:urban
     source = string.lower(source)
     n = profile.maxspeed_table[source]

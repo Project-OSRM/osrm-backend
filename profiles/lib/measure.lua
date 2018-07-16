@@ -6,6 +6,18 @@ Measure = {}
 local inch_to_meters = 0.0254
 local feet_to_inches = 12
 local pound_to_kilograms = 0.45359237
+local miles_to_kilometers = 1.609
+
+-- Parse speed value as kilometers by hours.
+function Measure.parse_value_speed(source)
+  local n = tonumber(source:match("%d*"))
+  if n then
+    if string.match(source, "mph") or string.match(source, "mp/h") then
+      n = n * miles_to_kilometers
+    end
+    return n
+  end
+end
 
 --- Parse string as a height in meters.
 --- according to http://wiki.openstreetmap.org/wiki/Key:maxheight
@@ -39,6 +51,13 @@ function Measure.parse_value_kilograms(value)
       n = n * 1000
     end
     return n
+  end
+end
+
+--- Get maxspeed of specified way in kilometers by hours.
+function Measure.get_max_speed(raw_value)
+  if raw_value then
+    return Measure.parse_value_speed(raw_value)
   end
 end
 
