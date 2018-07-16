@@ -37,7 +37,8 @@ FROM alpine:3.6 as runstage
 RUN mkdir -p /src  && mkdir -p /opt
 RUN echo "@testing http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories && \
     apk update && \
-    apk add boost-filesystem boost-program_options boost-regex boost-iostreams boost-thread libgomp lua5.2 expat libtbb@testing
+    apk add boost-filesystem boost-program_options boost-regex boost-iostreams boost-thread libgomp lua5.2 expat libtbb@testing su-exec
+RUN adduser -D osrm
 COPY --from=buildstage /usr/local /usr/local
 COPY --from=buildstage /opt /opt
 WORKDIR /opt

@@ -67,7 +67,7 @@ The flag `-v $(pwd):/data` creates the directory `/data` inside the docker conta
 
 Note that `berlin-latest.osrm` has a different file extension. 
 
-    docker run -t -i -p 5000:5000 -v $(pwd):/data osrm/osrm-backend osrm-routed --algorithm mld /data/berlin-latest.osrm
+    docker run -t -i -p 5000:5000 -v $(pwd):/data osrm/osrm-backend su-exec osrm osrm-routed --algorithm mld /data/berlin-latest.osrm
 
 Make requests against the HTTP server
 
