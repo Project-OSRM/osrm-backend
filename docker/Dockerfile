@@ -1,4 +1,4 @@
-FROM alpine:3.6 as buildstage
+FROM alpine:3.8 as buildstage
 
 ARG DOCKER_TAG
 RUN mkdir -p /src  && mkdir -p /opt
@@ -33,7 +33,7 @@ RUN NPROC=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || 1) && \
 
 # Multistage build to reduce image size - https://docs.docker.com/engine/userguide/eng-image/multistage-build/#use-multi-stage-builds
 # Only the content below ends up in the image, this helps remove /src from the image (which is large)
-FROM alpine:3.6 as runstage
+FROM alpine:3.8 as runstage
 RUN mkdir -p /src  && mkdir -p /opt
 RUN echo "@testing http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories && \
     apk update && \
