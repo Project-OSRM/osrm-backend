@@ -6,6 +6,7 @@ Set = require('lib/set')
 Sequence = require('lib/sequence')
 Handlers = require("lib/way_handlers")
 find_access_tag = require("lib/access").find_access_tag
+Tags = require('lib/tags')
 
 function setup()
   local walking_speed = 5
@@ -21,7 +22,7 @@ function setup()
     },
 
     default_mode            = mode.walking,
-    default_speed           = walking_speed,
+    default_speed           = function(way) return walking_speed end,
     oneway_handling         = 'specific',     -- respect 'oneway:foot' but not 'oneway'
 
     barrier_blacklist = Set {
@@ -72,44 +73,49 @@ function setup()
       'impassable'
     },
 
-    speeds = Sequence {
-      highway = {
-        primary         = walking_speed,
-        primary_link    = walking_speed,
-        secondary       = walking_speed,
-        secondary_link  = walking_speed,
-        tertiary        = walking_speed,
-        tertiary_link   = walking_speed,
-        unclassified    = walking_speed,
-        residential     = walking_speed,
-        road            = walking_speed,
-        living_street   = walking_speed,
-        service         = walking_speed,
-        track           = walking_speed,
-        path            = walking_speed,
-        steps           = walking_speed,
-        pedestrian      = walking_speed,
-        footway         = walking_speed,
-        pier            = walking_speed,
-      },
+    speeds = function(way)
+      local s = Sequence {
+        highway = {
+          primary         = walking_speed,
+          primary_link    = walking_speed,
+          secondary       = walking_speed,
+          secondary_link  = walking_speed,
+          tertiary        = walking_speed,
+          tertiary_link   = walking_speed,
+          unclassified    = walking_speed,
+          residential     = walking_speed,
+          road            = walking_speed,
+          living_street   = walking_speed,
+          service         = walking_speed,
+          track           = walking_speed,
+          path            = walking_speed,
+          steps           = walking_speed,
+          pedestrian      = walking_speed,
+          footway         = walking_speed,
+          pier            = walking_speed,
+        },
 
-      railway = {
-        platform        = walking_speed
-      },
+        railway = {
+          platform        = walking_speed
+        },
 
-      amenity = {
-        parking         = walking_speed,
-        parking_entrance= walking_speed
-      },
+        amenity = {
+          parking         = walking_speed,
+          parking_entrance= walking_speed
+        },
 
-      man_made = {
-        pier            = walking_speed
-      },
+        man_made = {
+          pier            = walking_speed
+        },
 
-      leisure = {
-        track           = walking_speed
+        leisure = {
+          track           = walking_speed
+        }
       }
-    },
+
+      print(way:id(), Tags.get_constant_by_key_value(way, s))
+      return Tags.get_constant_by_key_value(way, s)
+    end,
 
     route_speeds = {
       ferry = 5

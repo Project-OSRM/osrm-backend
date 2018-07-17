@@ -274,7 +274,7 @@ function WayHandlers.speed(profile,way,result,data)
     return        -- abort if already set, eg. by a route
   end
 
-  local key,value,speed = Tags.get_constant_by_key_value(way,profile.speeds)
+  local key,value,speed = profile.speeds(way)
 
   if speed then
     -- set speed by way type
@@ -283,17 +283,17 @@ function WayHandlers.speed(profile,way,result,data)
   else
     -- Set the avg speed on ways that are marked accessible
     if profile.access_tag_whitelist[data.forward_access] then
-      result.forward_speed = profile.default_speed
+      result.forward_speed = profile.default_speed(way)
     elseif data.forward_access and not profile.access_tag_blacklist[data.forward_access] then
-      result.forward_speed = profile.default_speed -- fallback to the avg speed if access tag is not blacklisted
+      result.forward_speed = profile.default_speed(way) -- fallback to the avg speed if access tag is not blacklisted
     elseif not data.forward_access and data.backward_access then
        result.forward_mode = mode.inaccessible
     end
 
     if profile.access_tag_whitelist[data.backward_access] then
-      result.backward_speed = profile.default_speed
+      result.backward_speed = profile.default_speed(way)
     elseif data.backward_access and not profile.access_tag_blacklist[data.backward_access] then
-      result.backward_speed = profile.default_speed -- fallback to the avg speed if access tag is not blacklisted
+      result.backward_speed = profile.default_speed(way) -- fallback to the avg speed if access tag is not blacklisted
     elseif not data.backward_access and data.forward_access then
        result.backward_mode = mode.inaccessible
     end
@@ -438,11 +438,11 @@ function WayHandlers.maxspeed(profile,way,result,data)
   backward = WayHandlers.parse_maxspeed(backward,profile)
 
   if forward and forward > 0 then
-    result.forward_speed = forward * profile.speed_reduction
+    result.forward_speed = profile.speed_reduction(way, forward)
   end
 
   if backward and backward > 0 then
-    result.backward_speed = backward * profile.speed_reduction
+    result.backward_speed = profile.speed_reduction(way, backward)
   end
 end
 

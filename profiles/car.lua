@@ -10,6 +10,7 @@ find_access_tag = require("lib/access").find_access_tag
 limit = require("lib/maxspeed").limit
 Utils = require("lib/utils")
 Measure = require("lib/measure")
+Tags = require('lib/tags')
 
 function setup()
   return {
@@ -30,11 +31,11 @@ function setup()
     },
 
     default_mode              = mode.driving,
-    default_speed             = 10,
+    default_speed             = function(way) return 10 end,
     oneway_handling           = true,
     side_road_multiplier      = 0.8,
     turn_penalty              = 7.5,
-    speed_reduction           = 0.8,
+    speed_reduction           = function(way, speed) return speed * 0.8 end,
     turn_bias                 = 1.075,
     cardinal_directions       = false,
 
@@ -136,24 +137,28 @@ function setup()
       'proposed'
     },
 
-    speeds = Sequence {
-      highway = {
-        motorway        = 90,
-        motorway_link   = 45,
-        trunk           = 85,
-        trunk_link      = 40,
-        primary         = 65,
-        primary_link    = 30,
-        secondary       = 55,
-        secondary_link  = 25,
-        tertiary        = 40,
-        tertiary_link   = 20,
-        unclassified    = 25,
-        residential     = 25,
-        living_street   = 10,
-        service         = 15
+    speeds = function(way)
+      local s = Sequence {
+        highway = {
+          motorway        = 90,
+          motorway_link   = 45,
+          trunk           = 85,
+          trunk_link      = 40,
+          primary         = 65,
+          primary_link    = 30,
+          secondary       = 55,
+          secondary_link  = 25,
+          tertiary        = 40,
+          tertiary_link   = 20,
+          unclassified    = 25,
+          residential     = 25,
+          living_street   = 10,
+          service         = 15
+        }
       }
-    },
+
+      return Tags.get_constant_by_key_value(way, s)
+    end,
 
     service_penalties = {
       alley             = 0.5,
