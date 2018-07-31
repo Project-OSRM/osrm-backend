@@ -2,6 +2,7 @@
   - Changes from 5.18.0:
     - Bugfixes:
       - FIXED: collapsing of ExitRoundabout instructions [#5114](https://github.com/Project-OSRM/osrm-backend/issues/5114)
+      - FIXED: fix osrm-routed gdb not work issue [#5156](https://github.com/Project-OSRM/osrm-backend/issues/5156)
 
 # 5.18.0
   - Changes from 5.17.0:
