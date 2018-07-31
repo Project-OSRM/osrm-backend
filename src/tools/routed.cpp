@@ -70,8 +70,8 @@ std::istream &operator>>(std::istream &in, EngineConfig::Algorithm &algorithm)
         throw util::RuntimeError(token, ErrorCode::UnknownAlgorithm, SOURCE_REF);
     return in;
 }
-}
-}
+} // namespace engine
+} // namespace osrm
 
 // generate boost::program_options object for the routing part
 inline unsigned generateServerProgramOptions(const int argc,
@@ -278,7 +278,7 @@ int main(int argc, const char *argv[]) try
     sigaddset(&wait_mask, SIGINT);
     sigaddset(&wait_mask, SIGQUIT);
     sigaddset(&wait_mask, SIGTERM);
-    pthread_sigmask(SIG_BLOCK, &wait_mask, nullptr);  // only block necessary signals 
+    pthread_sigmask(SIG_BLOCK, &wait_mask, nullptr); // only block necessary signals
 #endif
 
     auto service_handler = std::make_unique<server::ServiceHandler>(config);
