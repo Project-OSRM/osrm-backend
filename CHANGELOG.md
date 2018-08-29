@@ -5,6 +5,8 @@
     - Bugfixes:
       - FIXED: collapsing of ExitRoundabout instructions [#5114](https://github.com/Project-OSRM/osrm-backend/issues/5114)
       - FIXED: negative distances in table plugin annotation [#5106](https://github.com/Project-OSRM/osrm-backend/issues/5106)
+    - Misc:
+      - CHANGED: Support up to 512 named shared memory regions [#5185](https://github.com/Project-OSRM/osrm-backend/pull/5185)
 
 # 5.18.0
   - Changes from 5.17.0:
