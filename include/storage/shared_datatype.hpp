@@ -26,7 +26,7 @@ namespace serialization
 inline void read(io::BufferReader &reader, DataLayout &layout);
 
 inline void write(io::BufferWriter &writer, const DataLayout &layout);
-}
+} // namespace serialization
 
 namespace detail
 {
@@ -52,7 +52,7 @@ inline std::string trimName(const std::string &name_prefix, const std::string &n
         return name;
     }
 }
-}
+} // namespace detail
 
 class DataLayout
 {
@@ -165,7 +165,7 @@ struct SharedRegion
     static constexpr const int MAX_NAME_LENGTH = 254;
 
     SharedRegion() : name{0}, timestamp{0} {}
-    SharedRegion(const std::string &name_, std::uint64_t timestamp, std::uint8_t shm_key)
+    SharedRegion(const std::string &name_, std::uint64_t timestamp, std::uint16_t shm_key)
         : name{0}, timestamp{timestamp}, shm_key{shm_key}
     {
         std::copy_n(name_.begin(), std::min<std::size_t>(MAX_NAME_LENGTH, name_.size()), name);
@@ -175,14 +175,14 @@ struct SharedRegion
 
     char name[MAX_NAME_LENGTH + 1];
     std::uint64_t timestamp;
-    std::uint8_t shm_key;
+    std::uint16_t shm_key;
 };
 
 // Keeps a list of all shared regions in a fixed-sized struct
 // for fast access and deserialization.
 struct SharedRegionRegister
 {
-    using RegionID = std::uint8_t;
+    using RegionID = std::uint16_t;
     static constexpr const RegionID INVALID_REGION_ID = std::numeric_limits<RegionID>::max();
     using ShmKey = decltype(SharedRegion::shm_key);
 
@@ -250,12 +250,11 @@ struct SharedRegionRegister
 
     void ReleaseKey(ShmKey key) { shm_key_in_use[key] = false; }
 
-    static constexpr const std::uint8_t MAX_SHARED_REGIONS =
-        std::numeric_limits<RegionID>::max() - 1;
+    static constexpr const std::size_t MAX_SHARED_REGIONS = 512;
     static_assert(MAX_SHARED_REGIONS < std::numeric_limits<RegionID>::max(),
                   "Number of shared memory regions needs to be less than the region id size.");
 
-    static constexpr const std::uint8_t MAX_SHM_KEYS = std::numeric_limits<std::uint8_t>::max() - 1;
+    static constexpr const std::size_t MAX_SHM_KEYS = MAX_SHARED_REGIONS * 2;
 
     static constexpr const char *name = "osrm-region";
 
@@ -263,7 +262,7 @@ struct SharedRegionRegister
     std::array<SharedRegion, MAX_SHARED_REGIONS> regions;
     std::array<bool, MAX_SHM_KEYS> shm_key_in_use;
 };
-}
-}
+} // namespace storage
+} // namespace osrm
 
 #endif /* SHARED_DATA_TYPE_HPP */

@@ -66,7 +66,7 @@ struct RegionHandle
 {
     std::unique_ptr<SharedMemory> memory;
     char *data_ptr;
-    std::uint8_t shm_key;
+    std::uint16_t shm_key;
 };
 
 auto setupRegion(SharedRegionRegister &shared_register, const DataLayout &layout)

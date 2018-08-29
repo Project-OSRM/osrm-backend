@@ -82,7 +82,8 @@ void springClean()
     }
     else
     {
-        for (auto key : util::irange<std::uint8_t>(0, storage::SharedRegionRegister::MAX_SHM_KEYS))
+        for (auto key : util::irange<storage::SharedRegionRegister::RegionID>(
+                 0, storage::SharedRegionRegister::MAX_SHM_KEYS))
         {
             deleteRegion(key);
         }
