@@ -146,7 +146,7 @@ template <typename Data> struct SharedMonitor
     // like two-turnstile reusable barrier or boost/interprocess/sync/spin/condition.hpp
     // fail if a waiter is killed.
 
-    static constexpr int buffer_size = 4096;
+    static constexpr int buffer_size = 4096 * 4;
 
     struct InternalData
     {
