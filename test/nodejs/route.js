@@ -43,8 +43,22 @@ test('route: routes Monaco on CoreCH', function(assert) {
     });
 });
 
+test('route: routes Monaco and returns a JSON buffer', function(assert) {
+    assert.plan(6);
+    var osrm = new OSRM({path: monaco_corech_path, algorithm: 'CoreCH'});
+    osrm.route({coordinates: [[13.43864,52.51993],[13.415852,52.513191]]}, { format: 'json_buffer'}, function(err, result) {
+        assert.ifError(err);
+        assert.ok(result instanceof Buffer);
+        const route = JSON.parse(result);
+        assert.ok(route.waypoints);
+        assert.ok(route.routes);
+        assert.ok(route.routes.length);
+        assert.ok(route.routes[0].geometry);
+    });
+});
+
 test('route: throws with too few or invalid args', function(assert) {
-    assert.plan(3);
+    assert.plan(4);
     var osrm = new OSRM(monaco_path);
     assert.throws(function() { osrm.route({coordinates: two_test_coordinates}) },
         /Two arguments required/);
@@ -52,6 +66,8 @@ test('route: throws with too few or invalid args', function(assert) {
         /First arg must be an object/);
     assert.throws(function() { osrm.route({coordinates: two_test_coordinates}, true)},
         /last argument must be a callback function/);
+    assert.throws(function() { osrm.route({coordinates: two_test_coordinates}, { format: 'invalid' }, function(err, route) {})},
+        /format must be a string:/);
 });
 
 test('route: provides no alternatives by default, but when requested it may (not guaranteed)', function(assert) {

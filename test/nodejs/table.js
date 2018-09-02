@@ -48,6 +48,20 @@ test('table: test annotations paramater combination', function(assert) {
     });
 });
 
+test('table: returns buffer', function(assert) {
+    assert.plan(3);
+    var osrm = new OSRM(data_path);
+    var options = {
+        coordinates: [three_test_coordinates[0], three_test_coordinates[1]],
+    };
+    osrm.table(options, { format: 'json_buffer' }, function(err, table) {
+        assert.ifError(err);
+        assert.ok(table instanceof Buffer);
+        table = JSON.parse(table);
+        assert.ok(table['durations'], 'distances table result should exist');
+    });
+});
+
 var tables = ['distances', 'durations'];
 
 tables.forEach(function(annotation) {
@@ -116,7 +130,7 @@ tables.forEach(function(annotation) {
     });
 
     test('table: ' + annotation + ' throws on invalid arguments', function(assert) {
-        assert.plan(14);
+        assert.plan(15);
         var osrm = new OSRM(data_path);
         var options = {annotations: [annotation.slice(0,-1)]};
         assert.throws(function() { osrm.table(options); },
@@ -135,6 +149,9 @@ tables.forEach(function(annotation) {
             /Coordinates must be an array of \(lon\/lat\) pairs/);
 
         options.coordinates = two_test_coordinates;
+        assert.throws(function() { osrm.table(options, { format: 'invalid' }, function(err, response) {}) },
+            /format must be a string:/);
+
         options.sources = true;
         assert.throws(function() { osrm.table(options, function(err, response) {}) },
             /Sources must be an array of indices \(or undefined\)/);
