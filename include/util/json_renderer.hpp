@@ -5,6 +5,7 @@
 #define JSON_RENDERER_HPP
 
 #include "util/cast.hpp"
+#include "util/ieee754.hpp"
 #include "util/string_util.hpp"
 
 #include "osrm/json_container.hpp"
@@ -34,8 +35,31 @@ struct Renderer
 
     void operator()(const Number &number) const
     {
-        out.precision(10);
-        out << number.value;
+        char buffer[256] = {'\0'};
+        ieee754::dtoa_milo(number.value, buffer);
+
+        // Trucate to 10 decimal places
+        int pos = 0;
+        int decimalpos = 0;
+        while (decimalpos == 0 && pos < 256 && buffer[pos] != 0)
+        {
+            if (buffer[pos] == '.')
+            {
+                decimalpos = pos;
+                break;
+            }
+            ++pos;
+        }
+        while (pos < 256 && buffer[pos] != 0)
+        {
+            if (pos - decimalpos == 10)
+            {
+                buffer[pos] = '\0';
+                break;
+            }
+            ++pos;
+        }
+        out << buffer;
     }
 
     void operator()(const Object &object) const
