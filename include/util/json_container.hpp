@@ -82,6 +82,19 @@ struct String
 };
 
 /**
+ * Typed string wrapper.
+ *
+ * Unwrap the type via its value member attribute.
+ */
+struct Buffer
+{
+    Buffer() = default;
+    Buffer(const char *value_) : value{value_} {}
+    Buffer(std::string value_) : value{std::move(value_)} {}
+    std::string value;
+};
+
+/**
  * Typed floating point number.
  *
  * Unwrap the type via its value member attribute.
