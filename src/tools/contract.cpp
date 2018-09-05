@@ -81,7 +81,8 @@ return_code parseArguments(int argc,
         "time-zone-file",
         boost::program_options::value<std::string>(&contractor_config.updater_config.tz_file_path),
         "Required for conditional turn restriction parsing, provide a geojson file containing "
-        "time zone boundaries");
+        "time zone boundaries")("cache-distances",boost::program_options::bool_switch(&contractor_config.cache_distances)->default_value(false),
+        "Store distances for CH edges, avoiding the need for query-time re-calculation.");
 
     // hidden options, will be allowed on command line, but will not be shown to the user
     boost::program_options::options_description hidden_options("Hidden options");

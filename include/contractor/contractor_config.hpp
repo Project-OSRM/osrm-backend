@@ -72,8 +72,14 @@ struct ContractorConfig final : storage::IOConfig
     // The remaining vertices form the core of the hierarchy
     //(e.g. 0.8 contracts 80 percent of the hierarchy, leaving a core of 20%)
     double core_factor;
+
+    // Whether to store distances for CH edges in addition to duration/weight
+    // Defaults to false.  Setting to true will require more storage/memory,
+    // but avoids the need for path unpacking to learn the distance of a CH
+    // route (useful for faster distance results in table queries)
+    bool cache_distances;
 };
-}
-}
+} // namespace contractor
+} // namespace osrm
 
 #endif // EXTRACTOR_OPTIONS_HPP
