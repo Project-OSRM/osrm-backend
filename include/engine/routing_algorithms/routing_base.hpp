@@ -44,19 +44,50 @@ bool needsLoopBackwards(const PhantomNode &source_phantom, const PhantomNode &ta
 bool needsLoopForward(const PhantomNodes &phantoms);
 bool needsLoopBackwards(const PhantomNodes &phantoms);
 
-namespace detail
+template <typename Heap>
+void insertNodesInHeaps(Heap &forward_heap, Heap &reverse_heap, const PhantomNodes &nodes)
 {
-template <typename Algorithm>
-void insertSourceInHeap(typename SearchEngineData<Algorithm>::ManyToManyQueryHeap &heap,
-                        const PhantomNode &phantom_node)
+    const auto &source = nodes.source_phantom;
+    if (source.IsValidForwardSource())
+    {
+        forward_heap.Insert(source.forward_segment_id.id,
+                            -source.GetForwardWeightPlusOffset(),
+                            source.forward_segment_id.id);
+    }
+
+    if (source.IsValidReverseSource())
+    {
+        forward_heap.Insert(source.reverse_segment_id.id,
+                            -source.GetReverseWeightPlusOffset(),
+                            source.reverse_segment_id.id);
+    }
+
+    const auto &target = nodes.target_phantom;
+    if (target.IsValidForwardTarget())
+    {
+        reverse_heap.Insert(target.forward_segment_id.id,
+                            target.GetForwardWeightPlusOffset(),
+                            target.forward_segment_id.id);
+    }
+
+    if (target.IsValidReverseTarget())
+    {
+        reverse_heap.Insert(target.reverse_segment_id.id,
+                            target.GetReverseWeightPlusOffset(),
+                            target.reverse_segment_id.id);
+    }
+}
+
+template <typename ManyToManyQueryHeap>
+void insertSourceInHeap(ManyToManyQueryHeap &heap, const PhantomNode &phantom_node)
 {
-    if (phantom_node.IsValidForwardTarget())
+    if (phantom_node.IsValidForwardSource())
     {
         heap.Insert(phantom_node.forward_segment_id.id,
                     -phantom_node.GetForwardWeightPlusOffset(),
                     {phantom_node.forward_segment_id.id, -phantom_node.GetForwardDuration()});
     }
-    if (phantom_node.IsValidReverseTarget())
+    if (phantom_node.IsValidReverseSource())
     {
         heap.Insert(phantom_node.reverse_segment_id.id,
                     -phantom_node.GetReverseWeightPlusOffset(),
@@ -64,9 +95,8 @@ void insertSourceInHeap(typename SearchEngineData<Algorithm>::ManyToManyQueryHea
     }
 }
 
-template <typename Algorithm>
-void insertTargetInHeap(typename SearchEngineData<Algorithm>::ManyToManyQueryHeap &heap,
-                        const PhantomNode &phantom_node)
+template <typename ManyToManyQueryHeap>
+void insertTargetInHeap(ManyToManyQueryHeap &heap, const PhantomNode &phantom_node)
 {
     if (phantom_node.IsValidForwardTarget())
     {
@@ -79,109 +109,6 @@ void insertTargetInHeap(typename SearchEngineData<Algorithm>::ManyToManyQueryHea
         heap.Insert(phantom_node.reverse_segment_id.id,
                     phantom_node.GetReverseWeightPlusOffset(),
                     {phantom_node.reverse_segment_id.id, phantom_node.GetReverseDuration()});
-    }
-}
-
-template <typename Algorithm>
-void insertSourceInHeap(typename SearchEngineData<Algorithm>::QueryHeap &heap,
-                        const PhantomNode &phantom_node)
-{
-    if (phantom_node.IsValidForwardSource())
-    {
-        heap.Insert(phantom_node.forward_segment_id.id,
-                    -phantom_node.GetForwardWeightPlusOffset(),
-                    phantom_node.forward_segment_id.id);
-    }
-    if (phantom_node.IsValidReverseSource())
-    {
-        heap.Insert(phantom_node.reverse_segment_id.id,
-                    -phantom_node.GetReverseWeightPlusOffset(),
-                    phantom_node.reverse_segment_id.id);
-    }
-}
-
-template <typename Algorithm>
-void insertTargetInHeap(typename SearchEngineData<Algorithm>::QueryHeap &heap,
-                        const PhantomNode &phantom_node)
-{
-    if (phantom_node.IsValidForwardTarget())
-    {
-        heap.Insert(phantom_node.forward_segment_id.id,
-                    phantom_node.GetForwardWeightPlusOffset(),
-                    phantom_node.forward_segment_id.id);
-    }
-    if (phantom_node.IsValidReverseTarget())
-    {
-        heap.Insert(phantom_node.reverse_segment_id.id,
-                    phantom_node.GetReverseWeightPlusOffset(),
-                    phantom_node.reverse_segment_id.id);
-    }
-}
-} // namespace detail
-
-inline void insertTargetInHeap(typename SearchEngineData<mld::Algorithm>::ManyToManyQueryHeap &heap,
-                               const PhantomNode &phantom_node)
-{
-    detail::insertTargetInHeap<mld::Algorithm>(heap, phantom_node);
-}
-inline void insertTargetInHeap(typename SearchEngineData<ch::Algorithm>::ManyToManyQueryHeap &heap,
-                               const PhantomNode &phantom_node)
-{
-    detail::insertTargetInHeap<ch::Algorithm>(heap, phantom_node);
-}
-inline void insertTargetInHeap(typename SearchEngineData<mld::Algorithm>::QueryHeap &heap,
-                               const PhantomNode &phantom_node)
-{
-    detail::insertTargetInHeap<mld::Algorithm>(heap, phantom_node);
-}
-inline void insertTargetInHeap(typename SearchEngineData<ch::Algorithm>::QueryHeap &heap,
-                               const PhantomNode &phantom_node)
-{
-    detail::insertTargetInHeap<ch::Algorithm>(heap, phantom_node);
-}
-inline void insertSourceInHeap(typename SearchEngineData<mld::Algorithm>::ManyToManyQueryHeap &heap,
-                               const PhantomNode &phantom_node)
-{
-    detail::insertSourceInHeap<mld::Algorithm>(heap, phantom_node);
-}
-inline void insertSourceInHeap(typename SearchEngineData<ch::Algorithm>::ManyToManyQueryHeap &heap,
-                               const PhantomNode &phantom_node)
-{
-    detail::insertSourceInHeap<ch::Algorithm>(heap, phantom_node);
-}
-inline void insertSourceInHeap(typename SearchEngineData<mld::Algorithm>::QueryHeap &heap,
-                               const PhantomNode &phantom_node)
-{
-    detail::insertSourceInHeap<mld::Algorithm>(heap, phantom_node);
-}
-inline void insertSourceInHeap(typename SearchEngineData<ch::Algorithm>::QueryHeap &heap,
-                               const PhantomNode &phantom_node)
-{
-    detail::insertSourceInHeap<ch::Algorithm>(heap, phantom_node);
-}
-
-template <typename Heap>
-void insertNodesInHeaps(Heap &forward_heap, Heap &reverse_heap, const PhantomNodes &nodes)
-{
-    insertSourceInHeap(forward_heap, nodes.source_phantom);
-    insertTargetInHeap(reverse_heap, nodes.target_phantom);
-}
-
-template <typename Algorithm>
-void insertSourceInHeap(typename SearchEngineData<Algorithm>::ManyToManyQueryHeap &heap,
-                        const PhantomNode &phantom_node)
-{
-    if (phantom_node.IsValidForwardSource())
-    {
-        heap.Insert(phantom_node.forward_segment_id.id,
-                    -phantom_node.GetForwardWeightPlusOffset(),
-                    {phantom_node.forward_segment_id.id, -phantom_node.GetForwardDuration()});
-    }
-    if (phantom_node.IsValidReverseSource())
-    {
-        heap.Insert(phantom_node.reverse_segment_id.id,
-                    -phantom_node.GetReverseWeightPlusOffset(),
-                    {phantom_node.reverse_segment_id.id, -phantom_node.GetReverseDuration()});
     }
 }
 
@@ -394,10 +321,10 @@ void annotatePath(const FacadeT &facade,
     }
 }
 
-EdgeDistance adjustPathDistanceToPhantomNodes(const std::vector<NodeID> &path,
-                                              const PhantomNode &source_phantom,
-                                              const PhantomNode &target_phantom,
-                                              const EdgeDistance distance);
+void adjustPathDistanceToPhantomNodes(const std::vector<NodeID> &path,
+                                      const PhantomNode &source_phantom,
+                                      const PhantomNode &target_phantom,
+                                      EdgeDistance &distance);
 
 template <typename AlgorithmT>
 InternalRouteResult extractRoute(const DataFacade<AlgorithmT> &facade,
