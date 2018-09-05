@@ -34,10 +34,10 @@ namespace storage
 
 struct OSRMLockFile
 {
-    boost::filesystem::path operator()()
+    template <typename IdentifierT> boost::filesystem::path operator()(const IdentifierT &id)
     {
         boost::filesystem::path temp_dir = boost::filesystem::temp_directory_path();
-        boost::filesystem::path lock_file = temp_dir / "osrm.lock";
+        boost::filesystem::path lock_file = temp_dir / ("osrm-" + std::to_string(id) + ".lock");
         return lock_file;
     }
 };
@@ -93,7 +93,7 @@ class SharedMemory
         try
         {
             OSRMLockFile lock_file;
-            boost::interprocess::xsi_key key(lock_file().string().c_str(), id);
+            boost::interprocess::xsi_key key(lock_file(id).string().c_str(), id);
             result = RegionExists(key);
         }
         catch (...)
@@ -106,7 +106,7 @@ class SharedMemory
     template <typename IdentifierT> static bool Remove(const IdentifierT id)
     {
         OSRMLockFile lock_file;
-        boost::interprocess::xsi_key key(lock_file().string().c_str(), id);
+        boost::interprocess::xsi_key key(lock_file(id).string().c_str(), id);
         return Remove(key);
     }
 
@@ -287,10 +287,11 @@ class SharedMemory
 template <typename IdentifierT, typename LockFileT = OSRMLockFile>
 std::unique_ptr<SharedMemory> makeSharedMemory(const IdentifierT &id, const uint64_t size = 0)
 {
+    static_assert(sizeof(id) == sizeof(std::uint16_t), "Key type is not 16 bits");
     try
     {
         LockFileT lock_file;
-        if (!boost::filesystem::exists(lock_file()))
+        if (!boost::filesystem::exists(lock_file(id)))
         {
             if (0 == size)
             {
@@ -298,10 +299,10 @@ std::unique_ptr<SharedMemory> makeSharedMemory(const IdentifierT &id, const uint
             }
             else
             {
-                boost::filesystem::ofstream ofs(lock_file());
+                boost::filesystem::ofstream ofs(lock_file(id));
             }
         }
-        return std::make_unique<SharedMemory>(lock_file(), id, size);
+        return std::make_unique<SharedMemory>(lock_file(id), id, size);
     }
     catch (const boost::interprocess::interprocess_exception &e)
     {
@@ -310,7 +311,7 @@ std::unique_ptr<SharedMemory> makeSharedMemory(const IdentifierT &id, const uint
         throw util::exception(e.what() + SOURCE_REF);
     }
 }
-}
-}
+} // namespace storage
+} // namespace osrm
 
 #endif // SHARED_MEMORY_HPP
