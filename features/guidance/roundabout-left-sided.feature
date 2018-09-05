@@ -2,6 +2,7 @@
 Feature: Basic Roundabout
 
     Background:
+        Given the valhalla admin db "left"
         Given a grid size of 10 meters
         Given the profile file "car" initialized with
             """

@@ -5,15 +5,15 @@ const request = require('request');
 const ensureDecimal = require('../lib/utils').ensureDecimal;
 
 module.exports = function () {
-    this.requestPath = (service, params, callback) => {
+    this.requestPath = (service, params, logfile, callback) => {
         var uri;
-        if (service == 'timestamp') {
+        if (service == 'timestamp' || this.osrmLoader.method === 'valhalla') {
             uri = [this.HOST, service].join('/');
         } else {
             uri = [this.HOST, service, 'v1', this.profile].join('/');
         }
 
-        return this.sendRequest(uri, params, callback);
+        return this.sendRequest(uri, params, 'GET', logfile, callback);
     };
 
     this.requestUrl = (path, callback) => {
@@ -46,7 +46,7 @@ module.exports = function () {
         return waypoints.map(w => [w.lon, w.lat].map(ensureDecimal).join(','));
     };
 
-    this.requestRoute = (waypoints, bearings, approaches, userParams, callback) => {
+    this.requestRoute = (waypoints, bearings, approaches, userParams, logfile, callback) => {
         if (bearings.length && bearings.length !== waypoints.length) throw new Error('*** number of bearings does not equal the number of waypoints');
         if (approaches.length && approaches.length !== waypoints.length) throw new Error('*** number of approaches does not equal the number of waypoints');
 
@@ -60,6 +60,8 @@ module.exports = function () {
 
         params.coordinates = encodedWaypoints;
 
+        console.log(params);
+
         if (bearings.length) {
             params.bearings = bearings.map(b => {
                 var bs = b.split(',');
@@ -71,7 +73,29 @@ module.exports = function () {
         if (approaches.length) {
             params.approaches = approaches.join(';');
         }
-        return this.requestPath('route', params, callback);
+
+        if (this.osrmLoader.method === 'valhalla') {
+
+        var val_costing = 'auto';
+        if (this.profile === 'bicycle') {
+           val_costing = 'bicycle';
+        } else if (this.profile === 'foot') {
+           val_costing = 'pedestrian';
+        }
+
+        params = {
+            json: JSON.stringify({ 
+                locations: waypoints.map(w => {return{ lat: w.lat, lon: w.lon, node_snap_tolerance: 0};}),
+                costing: val_costing,
+                directions_options:{
+                    units:'miles'}
+                }),
+            format: 'osrm'
+        };
+        }
+
+
+        return this.requestPath('route', params, logfile, callback);
     };
 
     this.requestNearest = (node, userParams, callback) => {
@@ -166,9 +190,10 @@ module.exports = function () {
     };
 
     this.bearingList = (instructions) => {
+
         return this.extractInstructionList(instructions, s => ('in' in s.intersections[0] ? this.reverseBearing(s.intersections[0].bearings[s.intersections[0].in]) : 0)
-                                                              + '->' +
-                                                              ('out' in s.intersections[0] ? s.intersections[0].bearings[s.intersections[0].out] : 0));
+                                                          + '->' +
+                                                          ('out' in s.intersections[0] ? s.intersections[0].bearings[s.intersections[0].out] : 0));
     };
 
     this.lanesList = (instructions) => {

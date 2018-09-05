@@ -2,6 +2,8 @@
 
 var util = require('util');
 var assert = require('assert');
+var polyline = require('polyline');
+var fs = require('fs');
 
 module.exports = function () {
     this.ShouldGetAResponse = () => {
@@ -28,10 +30,11 @@ module.exports = function () {
             if (e) return callback(e);
             var headers = new Set(table.raw()[0]);
 
-            var requestRow = (row, ri, cb) => {
+            var requestRow = (row, rowIndex, cb) => {
                 var got;
 
                 var afterRequest = (err, res, body) => {
+                    console.log(body);
                     if (err) return cb(err);
                     if (body && body.length) {
                         let destinations, exits, pronunciations, instructions, refs, bearings, turns, modes, times, classes,
@@ -40,31 +43,80 @@ module.exports = function () {
 
                         let json = JSON.parse(body);
 
+                        var hasRoute = false;
                         got.code = json.code;
-
-                        let hasRoute = json.code === 'Ok';
+                        hasRoute = json.code === 'Ok' || json.code;
+                        var route;
 
                         if (hasRoute) {
-                            instructions = this.wayList(json.routes[0]);
-                            pronunciations = this.pronunciationList(json.routes[0]);
-                            refs = this.refList(json.routes[0]);
-                            destinations = this.destinationsList(json.routes[0]);
-                            exits = this.exitsList(json.routes[0]);
-                            bearings = this.bearingList(json.routes[0]);
-                            turns = this.turnList(json.routes[0]);
-                            intersections = this.intersectionList(json.routes[0]);
-                            modes = this.modeList(json.routes[0]);
-                            driving_sides = this.drivingSideList(json.routes[0]);
-                            classes = this.classesList(json.routes[0]);
-                            times = this.timeList(json.routes[0]);
-                            distances = this.distanceList(json.routes[0]);
-                            lanes = this.lanesList(json.routes[0]);
-                            summary = this.summary(json.routes[0]);
-                            locations = this.locations(json.routes[0]);
-                            annotation = this.annotationList(json.routes[0]);
-                            weight_name = this.weightName(json.routes[0]);
-                            weights = this.weightList(json.routes[0]);
-                            approaches = this.approachList(json.routes[0]);
+                            route = json.routes[0];
+                            instructions = this.wayList(route);
+                            pronunciations = this.pronunciationList(route);
+                            refs = this.refList(route);
+                            destinations = this.destinationsList(route);
+                            exits = this.exitsList(route);
+                            bearings = this.bearingList(route);
+                            turns = this.turnList(route);
+                            intersections = this.intersectionList(route);
+                            modes = this.modeList(route);
+                            driving_sides = this.drivingSideList(route);
+                            classes = this.classesList(route);
+                            times = this.timeList(route);
+                            distances = this.distanceList(route);
+                            lanes = this.lanesList(route);
+                            summary = this.summary(route);
+                            locations = this.locations(route);
+                            annotation = this.annotationList(route);
+                            weight_name = this.weightName(route);
+                            weights = this.weightList(route);
+                            approaches = this.approachList(route);
+
+
+                            fs.writeFileSync(`${this.scenarioCacheFile}_${rowIndex}_response.json`,body);
+
+                            var geojson = {
+                                type: 'FeatureCollection',
+                                features: [
+                                    {
+                                        type: 'Feature',
+                                        properties: { type: 'startpoint' },
+                                        geometry: {
+                                            type: 'Point',
+                                            coordinates: [parseFloat(waypoints[0].lon),parseFloat(waypoints[0].lat)]
+                                        }
+                                    }
+                                    ,
+                                    {
+                                        type: 'Feature',
+                                        properties: { type: 'endpoint' },
+                                        geometry: {
+                                            type: 'Point',
+                                            coordinates: [parseFloat(waypoints[1].lon), parseFloat(waypoints[1].lat)]
+                                        }
+                                    },
+                                    {
+                                        type: 'Feature',
+                                        geometry: {
+                                            type: 'LineString',
+                                            coordinates: []
+                                        },
+                                        properties: {}
+                                    }
+                                ]
+                            };
+
+                            // OSRM route geometry
+                            // TODO: Assume polyline5 for now
+                            if (typeof route.geometry === 'string') {
+                                if (this.osrmLoader.method === 'valhalla') {
+                                geojson.features[2].geometry.coordinates = polyline.decode(route.geometry,6).map(c => c.reverse());
+                                } else {
+                                geojson.features[2].geometry.coordinates = polyline.decode(route.geometry).map(c => c.reverse());
+                                }
+                            } else {
+                                geojson.features[2].geometry = route.geometry;
+                            }
+                            fs.writeFileSync(`${this.scenarioCacheFile}_${rowIndex}_shape.geojson`,JSON.stringify(geojson));
                         }
 
                         if (headers.has('status')) {
@@ -99,9 +151,9 @@ module.exports = function () {
                                 got.alternative = this.wayList(json.routes[1]);
                         }
 
-                        var distance = hasRoute && json.routes[0].distance,
-                            time = hasRoute && json.routes[0].duration,
-                            weight = hasRoute && json.routes[0].weight;
+                        var distance = hasRoute && route.distance,
+                            time = hasRoute && route.duration,
+                            weight = hasRoute && route.weight;
 
                         if (headers.has('distance')) {
                             if (row.distance.length) {
@@ -200,6 +252,16 @@ module.exports = function () {
                             putValue('driving_side', driving_sides);
                         }
 
+                        var resultdata = {
+                            feature: this.feature.getName(),
+                            scenario: this.scenario.getName(),
+                            row: rowIndex,
+                            expected: table.hashes()[rowIndex],
+                            got: got
+                        }
+                        console.log(resultdata);
+                        fs.writeFileSync(`${this.scenarioCacheFile}_${rowIndex}_results.json`,JSON.stringify(resultdata));
+
                         for (var key in row) {
                             if (this.FuzzyMatch.match(got[key], row[key])) {
                                 got[key] = row[key];
@@ -257,7 +319,9 @@ module.exports = function () {
 
                         got.from = row.from;
                         got.to = row.to;
-                        this.requestRoute(waypoints, bearings, approaches, params, afterRequest);
+
+                        this.currentRowIndex = rowIndex;
+                        this.requestRoute(waypoints, bearings, approaches, params, `${this.scenarioCacheFile}_${rowIndex}_request.txt`, afterRequest);
                     } else if (row.waypoints) {
                         row.waypoints.split(',').forEach((n) => {
                             var node = this.findNodeByName(n.trim());
@@ -265,7 +329,7 @@ module.exports = function () {
                             waypoints.push(node);
                         });
                         got.waypoints = row.waypoints;
-                        this.requestRoute(waypoints, bearings, approaches, params, afterRequest);
+                        this.requestRoute(waypoints, bearings, approaches, params, `${this.scenarioCacheFile}_${rowIndex}_request.txt`, afterRequest);
                     } else {
                         return cb(new Error('*** no waypoints'));
                     }

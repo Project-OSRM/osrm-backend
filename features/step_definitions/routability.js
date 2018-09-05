@@ -111,17 +111,17 @@ module.exports = function () {
     // result is an object containing the calculated values for 'rate', 'status',
     // 'time', 'distance', 'speed' and 'mode', for forwards and backwards routing, as well as
     // a bothw object that diffs forwards/backwards
-    var testRoutabilityRow = (i, cb) => {
+    var testRoutabilityRow = (rowIndex, cb) => {
         var result = {};
 
         var testDirection = (dir, callback) => {
-            var a = new classes.Location(this.origin[0] + (1+this.WAY_SPACING*i) * this.zoom, this.origin[1]),
-                b = new classes.Location(this.origin[0] + (3+this.WAY_SPACING*i) * this.zoom, this.origin[1]),
+            var a = new classes.Location(this.origin[0] + (1+this.WAY_SPACING*rowIndex) * this.zoom, this.origin[1]),
+                b = new classes.Location(this.origin[0] + (3+this.WAY_SPACING*rowIndex) * this.zoom, this.origin[1]),
                 r = {};
 
             r.which = dir;
 
-            this.requestRoute((dir === 'forw' ? [a, b] : [b, a]), [], [], this.queryParams, (err, res, body) => {
+            this.requestRoute((dir === 'forw' ? [a, b] : [b, a]), [], [], this.queryParams, `${this.scenarioCacheFile}_${rowIndex}_request.txt`, (err, res, body) => {
                 if (err) return callback(err);
 
                 r.query = this.query;
@@ -132,7 +132,7 @@ module.exports = function () {
                     r.route = this.wayList(r.json.routes[0]);
                     r.summary = r.json.routes[0].legs.map(l => l.summary).join(',');
 
-                    if (r.route.split(',')[0] === util.format('w%d', i)) {
+                    if (r.route.split(',')[0] === util.format('w%d', rowIndex)) {
                         r.time = r.json.routes[0].duration;
                         r.distance = r.json.routes[0].distance;
                         r.rate = Math.round(r.distance / r.json.routes[0].weight * 10) / 10.;

@@ -1,5 +1,6 @@
 var Timeout = require('node-timeout');
 var request = require('request');
+var fs = require('fs');
 
 module.exports = function () {
     this.paramsToString = (params) => {
@@ -22,22 +23,42 @@ module.exports = function () {
     // FIXME this needs to be simplified!
     // - remove usage of node-timeout
     // - replace with node's native timout mechanism
-    this.sendRequest = (baseUri, parameters, callback) => {
+    this.sendRequest = (baseUri, parameters, type, logfile, callback) => {
         var limit = Timeout(this.TIMEOUT, { err: { statusCode: 408 } });
 
         var runRequest = (cb) => {
-            var params = this.paramsToString(parameters);
-            this.query = baseUri + (params.length ? '/' + params : '');
 
-            request(this.query, (err, res, body) => {
-                if (err && err.code === 'ECONNREFUSED') {
-                    return cb(new Error('*** osrm-routed is not running.'));
-                } else if (err && err.statusCode === 408) {
-                    return cb(new Error());
-                }
+            if (type === 'GET') {
 
-                return cb(err, res, body);
-            });
+                var params = this.paramsToString(parameters);
+                console.log(params);
+                this.query = baseUri + (params.length ? ((params[0] != '?') ? '/' : '' + params) : '');
+
+                console.log(this.query);
+
+                if (logfile && typeof logfile !== 'function') fs.writeFileSync(logfile, `GET ${this.query}`);
+                request(this.query, (err, res, body) => {
+                    if (err && err.code === 'ECONNREFUSED') {
+                        return cb(new Error('*** osrm-routed is not running.'));
+                    } else if (err && err.statusCode === 408) {
+                        return cb(new Error());
+                    }
+
+                    return cb(err, res, body);
+                });
+            } else {
+                this.query = baseUri;
+                if (logfile && typeof logfile !== 'function') fs.writeFileSync(logfile, `POST ${this.query}\n\n${JSON.stringify(parameters)}`);
+                request.post(this.query, {body: JSON.stringify(parameters)}, (err, res, body) => {
+                    if (err && err.code === 'ECONNREFUSED') {
+                        return cb(new Error('*** osrm-routed is not running.'));
+                    } else if (err && err.statusCode === 408) {
+                        return cb(new Error());
+                    }
+
+                    return cb(err, res, body);
+                });
+            }
         };
 
         runRequest(limit((err, res, body) => {

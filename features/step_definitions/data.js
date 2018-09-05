@@ -13,6 +13,11 @@ module.exports = function () {
         callback();
     });
 
+    this.Given(/^the valhalla admin db "(.*?)"$/, (args, callback) => {
+        this.vahallaAdminDB = this.expandOptions(args);
+        callback();
+    });
+
     this.Given(/^the extract extra arguments "(.*?)"$/, (args, callback) => {
         this.extractArgs = this.expandOptions(args);
         callback();
@@ -306,6 +311,11 @@ module.exports = function () {
 
     this.Given(/^data is loaded with datastore$/, (callback) => {
         this.osrmLoader.setLoadMethod('datastore');
+        callback();
+    });
+
+    this.Given(/^data is loaded with valhalla$/, (callback) => {
+        this.osrmLoader.setLoadMethod('valhalla');
         callback();
     });
 

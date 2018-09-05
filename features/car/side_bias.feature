@@ -2,6 +2,7 @@
 Feature: Testbot - side bias
 
     Scenario: Left-hand bias
+        Given the valhalla admin db "left"
         Given the profile file "car" initialized with
         """
         profile.properties.left_hand_driving = true
