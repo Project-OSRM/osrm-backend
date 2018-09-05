@@ -6,6 +6,7 @@
       - ADDED: Node bindings can return pre-rendered JSON buffer. [#5189](https://github.com/Project-OSRM/osrm-backend/pull/5189)
     - Bugfixes:
       - FIXED: collapsing of ExitRoundabout instructions [#5114](https://github.com/Project-OSRM/osrm-backend/issues/5114)
+      - FIXED: fix osrm-routed gdb not work issue [#5156](https://github.com/Project-OSRM/osrm-backend/issues/5156)
       - FIXED: negative distances in table plugin annotation [#5106](https://github.com/Project-OSRM/osrm-backend/issues/5106)
     - Misc:
       - CHANGED: Support up to 512 named shared memory regions [#5185](https://github.com/Project-OSRM/osrm-backend/pull/5185)
