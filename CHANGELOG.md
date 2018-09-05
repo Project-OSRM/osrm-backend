@@ -1,10 +1,7 @@
 # UNRELEASED
   - Changes from 5.18.0:
-    - Optimizations:
-      - CHANGED: Map matching is now almost twice as fast. [#5060](https://github.com/Project-OSRM/osrm-backend/pull/5060)
     - Bugfixes:
       - FIXED: collapsing of ExitRoundabout instructions [#5114](https://github.com/Project-OSRM/osrm-backend/issues/5114)
-      - FIXED: negative distances in table plugin annotation [#5106](https://github.com/Project-OSRM/osrm-backend/issues/5106)
 
 # 5.18.0
   - Changes from 5.17.0:
