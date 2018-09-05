@@ -321,10 +321,24 @@ void annotatePath(const FacadeT &facade,
     }
 }
 
-void adjustPathDistanceToPhantomNodes(const std::vector<NodeID> &path,
-                                      const PhantomNode &source_phantom,
-                                      const PhantomNode &target_phantom,
-                                      EdgeDistance &distance);
+template <typename Algorithm>
+double getPathDistance(const DataFacade<Algorithm> &facade,
+                       const std::vector<PathData> &unpacked_path,
+                       const PhantomNode &source_phantom,
+                       const PhantomNode &target_phantom)
+{
+    double distance = 0;
+    auto prev_coordinate = source_phantom.location;
+    for (const auto &p : unpacked_path)
+    {
+        const auto current_coordinate = facade.GetCoordinateOfNode(p.turn_via_node);
+        distance += util::coordinate_calculation::fccApproximateDistance(prev_coordinate, current_coordinate);
+        prev_coordinate = current_coordinate;
+    }
+    distance += util::coordinate_calculation::fccApproximateDistance(prev_coordinate, target_phantom.location);
+
+    return distance;
+}
 
 template <typename AlgorithmT>
 InternalRouteResult extractRoute(const DataFacade<AlgorithmT> &facade,
