@@ -252,8 +252,6 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
                                                                  target_phantom,
                                                                  weight_upper_bound);
 
-                    network_distance = std::round(network_distance*10)/10;
-
                     // get distance diff between loc1/2 and locs/s_prime
                     const auto d_t = std::abs(network_distance - haversine_distance);
 
