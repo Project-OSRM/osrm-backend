@@ -323,19 +323,53 @@ void annotatePath(const FacadeT &facade,
 
 template <typename Algorithm>
 double getPathDistance(const DataFacade<Algorithm> &facade,
-                       const std::vector<PathData> &unpacked_path,
+                       const std::vector<PathData> unpacked_path,
                        const PhantomNode &source_phantom,
                        const PhantomNode &target_phantom)
 {
+    using util::coordinate_calculation::detail::DEGREE_TO_RAD;
+    using util::coordinate_calculation::detail::EARTH_RADIUS;
+
     double distance = 0;
-    auto prev_coordinate = source_phantom.location;
+    double prev_lat =
+        static_cast<double>(util::toFloating(source_phantom.location.lat)) * DEGREE_TO_RAD;
+    double prev_lon =
+        static_cast<double>(util::toFloating(source_phantom.location.lon)) * DEGREE_TO_RAD;
+    double prev_cos = std::cos(prev_lat);
     for (const auto &p : unpacked_path)
     {
         const auto current_coordinate = facade.GetCoordinateOfNode(p.turn_via_node);
-        distance += util::coordinate_calculation::fccApproximateDistance(prev_coordinate, current_coordinate);
-        prev_coordinate = current_coordinate;
+
+        const double current_lat =
+            static_cast<double>(util::toFloating(current_coordinate.lat)) * DEGREE_TO_RAD;
+        const double current_lon =
+            static_cast<double>(util::toFloating(current_coordinate.lon)) * DEGREE_TO_RAD;
+        const double current_cos = std::cos(current_lat);
+
+        const double sin_dlon = std::sin((prev_lon - current_lon) / 2.0);
+        const double sin_dlat = std::sin((prev_lat - current_lat) / 2.0);
+
+        const double aharv = sin_dlat * sin_dlat + prev_cos * current_cos * sin_dlon * sin_dlon;
+        const double charv = 2. * std::atan2(std::sqrt(aharv), std::sqrt(1.0 - aharv));
+        distance += EARTH_RADIUS * charv;
+
+        prev_lat = current_lat;
+        prev_lon = current_lon;
+        prev_cos = current_cos;
     }
-    distance += util::coordinate_calculation::fccApproximateDistance(prev_coordinate, target_phantom.location);
+
+    const double current_lat =
+        static_cast<double>(util::toFloating(target_phantom.location.lat)) * DEGREE_TO_RAD;
+    const double current_lon =
+        static_cast<double>(util::toFloating(target_phantom.location.lon)) * DEGREE_TO_RAD;
+    const double current_cos = std::cos(current_lat);
+
+    const double sin_dlon = std::sin((prev_lon - current_lon) / 2.0);
+    const double sin_dlat = std::sin((prev_lat - current_lat) / 2.0);
+
+    const double aharv = sin_dlat * sin_dlat + prev_cos * current_cos * sin_dlon * sin_dlon;
+    const double charv = 2. * std::atan2(std::sqrt(aharv), std::sqrt(1.0 - aharv));
+    distance += EARTH_RADIUS * charv;
 
     return distance;
 }
