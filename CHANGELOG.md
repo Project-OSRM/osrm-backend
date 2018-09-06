@@ -1,4 +1,4 @@
-# UNRELEASED
+# 5.19.0 RC 1
   - Changes from 5.18.0:
     - Optimizations:
       - CHANGED: Map matching is now almost twice as fast. [#5060](https://github.com/Project-OSRM/osrm-backend/pull/5060)
