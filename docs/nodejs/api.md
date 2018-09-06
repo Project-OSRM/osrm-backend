@@ -297,6 +297,29 @@ Returns **[Object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Refer
                  2) `waypoint_index`: index of the point in the trip.
 **`trips`**: an array of [`Route`](#route) objects that assemble the trace.
 
+## Plugin behaviour
+
+All plugins support a second additional object that is available to configure some NodeJS specific behaviours.
+
+-   `plugin_config` **[Object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object)** Object literal containing parameters for the trip query.
+    -   `plugin_config.format` **[String](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)?** The format of the result object to various API calls.  Valid options are `object` (default), which returns a standard Javascript object, as described above, and `json_buffer`, which will return a NodeJS **[Buffer](https://nodejs.org/api/buffer.html)** object, containing a JSON string.  The latter has the advantage that it can be immediately serialized to disk/sent over the network, and the generation of the string is performed outside the main NodeJS event loop.  This option is ignored by the `tile` plugin.
+
+**Examples**
+
+```javascript
+var osrm = new OSRM('network.osrm');
+var options = {
+  coordinates: [
+    [13.36761474609375, 52.51663871100423],
+    [13.374481201171875, 52.506191342034576]
+  ]
+};
+osrm.route(options, { format: "json_buffer" }, function(err, response) {
+  if (err) throw err;
+  console.log(response.toString("utf-8"));
+});
+```
+
 ## Responses
 
 Responses

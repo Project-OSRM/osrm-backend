@@ -2,6 +2,7 @@
 #define OSRM_BINDINGS_NODE_SUPPORT_HPP
 
 #include "nodejs/json_v8_renderer.hpp"
+#include "util/json_renderer.hpp"
 
 #include "osrm/approach.hpp"
 #include "osrm/bearing.hpp"
@@ -24,6 +25,7 @@
 #include <algorithm>
 #include <iostream>
 #include <iterator>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -42,6 +44,13 @@ using match_parameters_ptr = std::unique_ptr<osrm::MatchParameters>;
 using nearest_parameters_ptr = std::unique_ptr<osrm::NearestParameters>;
 using table_parameters_ptr = std::unique_ptr<osrm::TableParameters>;
 
+struct PluginParameters
+{
+    bool renderJSONToBuffer = false;
+};
+
+using ObjectOrString = typename mapbox::util::variant<osrm::json::Object, std::string>;
+
 template <typename ResultT> inline v8::Local<v8::Value> render(const ResultT &result);
 
 template <> v8::Local<v8::Value> inline render(const std::string &result)
@@ -49,11 +58,21 @@ template <> v8::Local<v8::Value> inline render(const std::string &result)
     return Nan::CopyBuffer(result.data(), result.size()).ToLocalChecked();
 }
 
-template <> v8::Local<v8::Value> inline render(const osrm::json::Object &result)
+template <> v8::Local<v8::Value> inline render(const ObjectOrString &result)
 {
-    v8::Local<v8::Value> value;
-    renderToV8(value, result);
-    return value;
+    if (result.is<osrm::json::Object>())
+    {
+        // Convert osrm::json object tree into matching v8 object tree
+        v8::Local<v8::Value> value;
+        renderToV8(value, result.get<osrm::json::Object>());
+        return value;
+    }
+    else
+    {
+        // Return the string object as a node Buffer
+        return Nan::CopyBuffer(result.get<std::string>().data(), result.get<std::string>().size())
+            .ToLocalChecked();
+    }
 }
 
 inline void ParseResult(const osrm::Status &result_status, osrm::json::Object &result)
@@ -814,6 +833,50 @@ inline bool parseCommonParameters(const v8::Local<v8::Object> &obj, ParamType &p
     return true;
 }
 
+inline PluginParameters
+argumentsToPluginParameters(const Nan::FunctionCallbackInfo<v8::Value> &args)
+{
+    if (args.Length() < 3 || !args[1]->IsObject())
+    {
+        return {};
+    }
+    v8::Local<v8::Object> obj = Nan::To<v8::Object>(args[1]).ToLocalChecked();
+    if (obj->Has(Nan::New("format").ToLocalChecked()))
+    {
+
+        v8::Local<v8::Value> format = obj->Get(Nan::New("format").ToLocalChecked());
+        if (format.IsEmpty())
+        {
+            return {};
+        }
+
+        if (!format->IsString())
+        {
+            Nan::ThrowError("format must be a string: \"object\" or \"json_buffer\"");
+            return {};
+        }
+
+        const Nan::Utf8String format_utf8str(format);
+        std::string format_str{*format_utf8str, *format_utf8str + format_utf8str.length()};
+
+        if (format_str == "object")
+        {
+            return {false};
+        }
+        else if (format_str == "json_buffer")
+        {
+            return {true};
+        }
+        else
+        {
+            Nan::ThrowError("format must be a string: \"object\" or \"json_buffer\"");
+            return {};
+        }
+    }
+
+    return {};
+}
+
 inline route_parameters_ptr
 argumentsToRouteParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
                           bool requires_multiple_coordinates)
@@ -1357,6 +1420,6 @@ argumentsToMatchParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
     return params;
 }
 
-} // ns node_osrm
+} // namespace node_osrm
 
 #endif
