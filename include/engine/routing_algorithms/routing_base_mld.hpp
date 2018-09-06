@@ -97,6 +97,7 @@ inline LevelID getNodeQueryLevel(const MultiLevelPartition &partition,
                                  const std::vector<std::size_t> &phantom_indices)
 {
     auto min_level = [&partition, node](const PhantomNode &phantom_node) {
+
         const auto &forward_segment = phantom_node.forward_segment_id;
         const auto forward_level =
             forward_segment.enabled ? partition.GetHighestDifferentLevel(node, forward_segment.id)
@@ -119,7 +120,7 @@ inline LevelID getNodeQueryLevel(const MultiLevelPartition &partition,
     }
     return result;
 }
-} // namespace
+}
 
 // Heaps only record for each node its predecessor ("parent") on the shortest path.
 // For re-constructing the actual path we need to trace back all parent "pointers".
@@ -390,27 +391,21 @@ UnpackedPath search(SearchEngineData<Algorithm> &engine_working_data,
                     EdgeWeight weight_upper_bound,
                     Args... args)
 {
-    if (forward_heap.Empty() && reverse_heap.Empty())
+    if (forward_heap.Empty() || reverse_heap.Empty())
     {
         return std::make_tuple(INVALID_EDGE_WEIGHT, std::vector<NodeID>(), std::vector<EdgeID>());
     }
 
     const auto &partition = facade.GetMultiLevelPartition();
 
-    BOOST_ASSERT(forward_heap.Empty() || forward_heap.MinKey() < INVALID_EDGE_WEIGHT);
-    BOOST_ASSERT(reverse_heap.Empty() || reverse_heap.MinKey() < INVALID_EDGE_WEIGHT);
+    BOOST_ASSERT(!forward_heap.Empty() && forward_heap.MinKey() < INVALID_EDGE_WEIGHT);
+    BOOST_ASSERT(!reverse_heap.Empty() && reverse_heap.MinKey() < INVALID_EDGE_WEIGHT);
 
     // run two-Target Dijkstra routing step.
     NodeID middle = SPECIAL_NODEID;
     EdgeWeight weight = weight_upper_bound;
-
-    EdgeWeight forward_heap_min = 0;
-    if (!forward_heap.Empty())
-        forward_heap_min = forward_heap.MinKey();
-    EdgeWeight reverse_heap_min = 0;
-    if (!reverse_heap.Empty())
-        reverse_heap_min = reverse_heap.MinKey();
-
+    EdgeWeight forward_heap_min = forward_heap.MinKey();
+    EdgeWeight reverse_heap_min = reverse_heap.MinKey();
     while (forward_heap.Size() + reverse_heap.Size() > 0 &&
            forward_heap_min + reverse_heap_min < weight)
     {
@@ -662,7 +657,11 @@ double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
                           const PhantomNode &target_phantom,
                           EdgeWeight weight_upper_bound = INVALID_EDGE_WEIGHT)
 {
+    forward_heap.Clear();
+    reverse_heap.Clear();
+
     const PhantomNodes phantom_nodes{source_phantom, target_phantom};
+    insertNodesInHeaps(forward_heap, reverse_heap, phantom_nodes);
 
     EdgeWeight weight = INVALID_EDGE_WEIGHT;
     std::vector<NodeID> unpacked_nodes;
@@ -681,22 +680,11 @@ double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
         return std::numeric_limits<double>::max();
     }
 
-    EdgeDistance distance = 0;
+    std::vector<PathData> unpacked_path;
 
-    if (!unpacked_nodes.empty())
-    {
-        distance = std::accumulate(unpacked_nodes.begin(),
-                                   std::prev(unpacked_nodes.end()),
-                                   EdgeDistance{0},
-                                   [&](const EdgeDistance distance, const auto node_id) {
-                                       return distance + computeEdgeDistance(facade, node_id);
-                                   });
-    }
+    annotatePath(facade, phantom_nodes, unpacked_nodes, unpacked_edges, unpacked_path);
 
-    distance = adjustPathDistanceToPhantomNodes(
-        unpacked_nodes, phantom_nodes.source_phantom, phantom_nodes.target_phantom, distance);
-
-    return distance;
+    return getPathDistance(facade, unpacked_path, source_phantom, target_phantom);
 }
 
 } // namespace mld
