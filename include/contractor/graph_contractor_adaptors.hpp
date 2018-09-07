@@ -41,6 +41,7 @@ ContractorGraph toContractorGraph(NodeID number_of_nodes, InputEdgeContainer inp
                            input_edge.target,
                            std::max(input_edge.data.weight, 1),
                            input_edge.data.duration,
+                           input_edge.data.distance,
                            1,
                            input_edge.data.turn_id,
                            false,
@@ -51,6 +52,7 @@ ContractorGraph toContractorGraph(NodeID number_of_nodes, InputEdgeContainer inp
                            input_edge.source,
                            std::max(input_edge.data.weight, 1),
                            input_edge.data.duration,
+                           input_edge.data.distance,
                            1,
                            input_edge.data.turn_id,
                            false,
@@ -82,6 +84,7 @@ ContractorGraph toContractorGraph(NodeID number_of_nodes, InputEdgeContainer inp
         forward_edge.data.originalEdges = reverse_edge.data.originalEdges = 1;
         forward_edge.data.weight = reverse_edge.data.weight = INVALID_EDGE_WEIGHT;
         forward_edge.data.duration = reverse_edge.data.duration = MAXIMAL_EDGE_DURATION;
+        forward_edge.data.distance = reverse_edge.data.distance = MAXIMAL_EDGE_DISTANCE;
         // remove parallel edges
         while (i < edges.size() && edges[i].source == source && edges[i].target == target)
         {
@@ -90,12 +93,16 @@ ContractorGraph toContractorGraph(NodeID number_of_nodes, InputEdgeContainer inp
                 forward_edge.data.weight = std::min(edges[i].data.weight, forward_edge.data.weight);
                 forward_edge.data.duration =
                     std::min(edges[i].data.duration, forward_edge.data.duration);
+                forward_edge.data.distance =
+                    std::min(edges[i].data.distance, forward_edge.data.distance);
             }
             if (edges[i].data.backward)
             {
                 reverse_edge.data.weight = std::min(edges[i].data.weight, reverse_edge.data.weight);
                 reverse_edge.data.duration =
                     std::min(edges[i].data.duration, reverse_edge.data.duration);
+                reverse_edge.data.distance =
+                    std::min(edges[i].data.distance, reverse_edge.data.distance);
             }
             ++i;
         }
@@ -151,6 +158,7 @@ template <class Edge, typename GraphT> inline std::vector<Edge> toEdges(GraphT g
                 BOOST_ASSERT_MSG(SPECIAL_NODEID != new_edge.target, "Target id invalid");
                 new_edge.data.weight = data.weight;
                 new_edge.data.duration = data.duration;
+                new_edge.data.distance = data.distance;
                 new_edge.data.shortcut = data.shortcut;
                 new_edge.data.turn_id = data.id;
                 BOOST_ASSERT_MSG(new_edge.data.turn_id != INT_MAX, // 2^31
