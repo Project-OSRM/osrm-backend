@@ -103,20 +103,6 @@ int Contractor::Run()
     std::vector<std::vector<bool>> edge_filters;
     std::vector<std::vector<bool>> cores;
 
-    std::cout << "Pre contractor edge-based-graph" << std::endl;
-    for (const auto &edge : edge_based_edge_list)
-    {
-        std::cout << " EdgeBasedEdge {";
-        std::cout << " source " << edge.source << ", target: " << edge.target;
-        std::cout << " EdgeBasedEdgeData data {";
-        std::cout << " turn_id: " << edge.data.turn_id << ", weight: " << edge.data.weight;
-        std::cout << " distance: " << edge.data.distance << ", duration: " << edge.data.duration;
-        std::cout << " forward: " << (edge.data.forward == 0 ? "false" : "true")
-                  << ", backward: " << (edge.data.backward == 0 ? "false" : "true");
-        std::cout << " }";
-        std::cout << "}" << std::endl;
-    }
-
     std::tie(query_graph, edge_filters) = contractExcludableGraph(
         toContractorGraph(number_of_edge_based_nodes, std::move(edge_based_edge_list)),
         std::move(node_weights),

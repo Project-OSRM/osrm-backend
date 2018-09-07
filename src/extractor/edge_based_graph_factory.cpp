@@ -653,8 +653,6 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
             auto duration = boost::numeric_cast<EdgeWeight>(edge_data1.duration + duration_penalty);
             auto distance = boost::numeric_cast<EdgeDistance>(edge_data1.distance);
 
-            std::cout << "EBGF distance: " << distance << std::endl;
-
             EdgeBasedEdge edge_based_edge = {edge_based_node_from,
                                              edge_based_node_to,
                                              SPECIAL_NODEID, // This will be updated once the main

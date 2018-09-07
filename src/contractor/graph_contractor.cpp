@@ -207,8 +207,6 @@ void ContractNode(ContractorThreadData *data,
                     }
                     else
                     {
-                        std::cout << "Contractor: " << in_data.distance << "," << out_data.distance
-                                  << std::endl;
                         // CAREFUL: This only works due to the independent node-setting. This
                         // guarantees that source is not connected to another node that is
                         // contracted
@@ -280,8 +278,6 @@ void ContractNode(ContractorThreadData *data,
                 }
                 else
                 {
-                    std::cout << "Contractor: " << in_data.distance << "," << out_data.distance
-                              << std::endl;
                     inserted_edges.emplace_back(source,
                                                 target,
                                                 path_weight,
