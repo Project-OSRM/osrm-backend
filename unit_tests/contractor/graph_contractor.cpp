@@ -73,36 +73,36 @@ BOOST_AUTO_TEST_CASE(contract_graph)
     reference_graph.DeleteEdgesTo(1, 0);
 
     /* After contracting 3:
-     *
-     * Deletes edges 1 -> 3
-     * Deletes edges 4 -> 3
-     * Insert edge 4 -> 1
-     *
-     *                 <--1---
-     * (0) ---3--> (1) >--3--- (3)
-     *  \          ^  v ^        |
-     *   \        /    \ \       |
-     *    1      1      1 2      1
-     *     \    /        \ \     /
-     *      >(5)          > (4) >
-     */
+    *
+    * Deletes edges 1 -> 3
+    * Deletes edges 4 -> 3
+    * Insert edge 4 -> 1
+    *
+    *                 <--1---
+    * (0) ---3--> (1) >--3--- (3)
+    *  \          ^  v ^        |
+    *   \        /    \ \       |
+    *    1      1      1 2      1
+    *     \    /        \ \     /
+    *      >(5)          > (4) >
+        */
     reference_graph.DeleteEdgesTo(1, 3);
     reference_graph.DeleteEdgesTo(4, 3);
     // Insert shortcut
-    reference_graph.InsertEdge(4, 1, {2, 4, 3, 0, true, true, false});
+    reference_graph.InsertEdge(4, 1, {2, 4, 1.0, 3, 0, true, true, false});
 
     /* After contracting 4:
-     *
-     * Delete edges 1 -> 4
-     *
-     *                 <--1---
-     * (0) ---3--> (1) >--3--- (3)
-     *  \          ^  v ^        |
-     *   \        /    \ \       |
-     *    1      1      1 2      1
-     *     \    /        \ \     /
-     *      >(5)          \ (4) >
-     */
+    *
+    * Delete edges 1 -> 4
+    *
+    *                 <--1---
+    * (0) ---3--> (1) >--3--- (3)
+    *  \          ^  v ^        |
+    *   \        /    \ \       |
+    *    1      1      1 2      1
+    *     \    /        \ \     /
+    *      >(5)          \ (4) >
+    */
     reference_graph.DeleteEdgesTo(1, 4);
 
     /* After contracting 1:

@@ -1,4 +1,4 @@
-#include "extractor/intersection/intersection_analysis.hpp"
+// #include "extractor/intersection/intersection_analysis.hpp"
 
 #include "extractor/graph_compressor.hpp"
 
@@ -169,7 +169,8 @@ BOOST_AUTO_TEST_CASE(roundabout_intersection_connectivity)
     //     0
     //   ↙ ↑ ↘
     //  4  5  6
-    const auto unit_edge = [](const NodeID from, const NodeID to, bool allowed, bool roundabout) {
+    const auto unit_edge = [](const NodeID from, const NodeID to, bool allowed, bool roundabout)
+    {
         return InputEdge{from,
                          to,
                          1,

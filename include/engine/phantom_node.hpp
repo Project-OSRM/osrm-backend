@@ -34,6 +34,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "util/coordinate.hpp"
 #include "util/typedefs.hpp"
 
+#include <iostream>
+
 #include <boost/assert.hpp>
 
 namespace osrm
@@ -234,7 +236,7 @@ struct PhantomNodes
     PhantomNode source_phantom;
     PhantomNode target_phantom;
 };
-}
-}
+} // namespace engine
+} // namespace osrm
 
 #endif // PHANTOM_NODES_H

@@ -102,6 +102,7 @@ int Contractor::Run()
     QueryGraph query_graph;
     std::vector<std::vector<bool>> edge_filters;
     std::vector<std::vector<bool>> cores;
+
     std::tie(query_graph, edge_filters) = contractExcludableGraph(
         toContractorGraph(number_of_edge_based_nodes, std::move(edge_based_edge_list)),
         std::move(node_weights),

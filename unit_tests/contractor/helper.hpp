@@ -20,15 +20,19 @@ inline contractor::ContractorGraph makeGraph(const std::vector<TestEdge> &edges)
         unsigned target;
         int weight;
         std::tie(start, target, weight) = edge;
+        int duration = weight * 2;
+        float distance = 1.0;
         max_id = std::max(std::max(start, target), max_id);
         input_edges.push_back(contractor::ContractorEdge{
             start,
             target,
-            contractor::ContractorEdgeData{weight, weight * 2, id++, 0, false, true, false}});
+            contractor::ContractorEdgeData{
+                weight, duration, distance, id++, 0, false, true, false}});
         input_edges.push_back(contractor::ContractorEdge{
             target,
             start,
-            contractor::ContractorEdgeData{weight, weight * 2, id++, 0, false, false, true}});
+            contractor::ContractorEdgeData{
+                weight, duration, distance, id++, 0, false, false, true}});
     }
     std::sort(input_edges.begin(), input_edges.end());
 
