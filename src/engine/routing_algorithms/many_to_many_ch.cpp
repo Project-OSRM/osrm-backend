@@ -68,7 +68,6 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
 
             const auto edge_duration = data.duration;
             const auto edge_distance = data.distance;
-            std::cout << "edge_distance " << data.distance << std::endl;
 
             BOOST_ASSERT_MSG(edge_weight > 0, "edge_weight invalid");
             const auto to_weight = weight + edge_weight;
