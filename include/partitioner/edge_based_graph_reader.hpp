@@ -14,6 +14,8 @@
 #include <tbb/parallel_for.h>
 #include <tbb/parallel_reduce.h>
 
+#include <iostream>
+
 #include <cstdint>
 
 #include <algorithm>
@@ -38,11 +40,22 @@ splitBidirectionalEdges(const std::vector<extractor::EdgeBasedEdge> &edges)
         if (edge.data.weight == INVALID_EDGE_WEIGHT)
             continue;
 
+        std::cout << " EdgeBasedEdge {";
+        std::cout << " source " << edge.source << ", target: " << edge.target;
+        std::cout << " EdgeBasedEdgeData data {";
+        std::cout << " turn_id: " << edge.data.turn_id << ", weight: " << edge.data.weight;
+        std::cout << " distance: " << edge.data.distance << ", duration: " << edge.data.duration;
+        std::cout << " forward: " << (edge.data.forward == 0 ? "false" : "true")
+                  << ", backward: " << (edge.data.backward == 0 ? "false" : "true");
+        std::cout << " }";
+        std::cout << "}" << std::endl;
+
         directed.emplace_back(edge.source,
                               edge.target,
                               edge.data.turn_id,
                               std::max(edge.data.weight, 1),
                               edge.data.duration,
+                              edge.data.distance,
                               edge.data.forward,
                               edge.data.backward);
 
@@ -51,9 +64,25 @@ splitBidirectionalEdges(const std::vector<extractor::EdgeBasedEdge> &edges)
                               edge.data.turn_id,
                               std::max(edge.data.weight, 1),
                               edge.data.duration,
+                              edge.data.distance,
                               edge.data.backward,
                               edge.data.forward);
     }
+
+    std::cout << "Directed edges" << std::endl;
+    for (const auto &edge : directed)
+    {
+        std::cout << " EdgeBasedEdge {";
+        std::cout << " source " << edge.source << ", target: " << edge.target;
+        std::cout << " EdgeBasedEdgeData data {";
+        std::cout << " turn_id: " << edge.data.turn_id << ", weight: " << edge.data.weight;
+        std::cout << " distance: " << edge.data.distance << ", duration: " << edge.data.duration;
+        std::cout << " forward: " << (edge.data.forward == 0 ? "false" : "true")
+                  << ", backward: " << (edge.data.backward == 0 ? "false" : "true");
+        std::cout << " }";
+        std::cout << "}" << std::endl;
+    }
+    std::cout << "Done directed edges" << std::endl;
 
     return directed;
 }
@@ -68,6 +97,21 @@ std::vector<OutputEdgeT> prepareEdgesForUsageInGraph(std::vector<extractor::Edge
         return std::tie(lhs.source, lhs.target, rhs.data.forward, lhs.data.weight) <
                std::tie(rhs.source, rhs.target, lhs.data.forward, rhs.data.weight);
     });
+
+    std::cout << "Directed edges after sorting" << std::endl;
+    for (const auto &edge : edges)
+    {
+        std::cout << " EdgeBasedEdge {";
+        std::cout << " source " << edge.source << ", target: " << edge.target;
+        std::cout << " EdgeBasedEdgeData data {";
+        std::cout << " turn_id: " << edge.data.turn_id << ", weight: " << edge.data.weight;
+        std::cout << " distance: " << edge.data.distance << ", duration: " << edge.data.duration;
+        std::cout << " forward: " << (edge.data.forward == 0 ? "false" : "true")
+                  << ", backward: " << (edge.data.backward == 0 ? "false" : "true");
+        std::cout << " }";
+        std::cout << "}" << std::endl;
+    }
+    std::cout << "Done sorted directed edges" << std::endl;
 
     std::vector<OutputEdgeT> output_edges;
     output_edges.reserve(edges.size());
@@ -89,6 +133,18 @@ std::vector<OutputEdgeT> prepareEdgesForUsageInGraph(std::vector<extractor::Edge
             begin_interval = end_interval;
             continue;
         }
+
+        std::cout << " EdgeBasedEdge2 {";
+        std::cout << " source " << begin_interval->source << ", target: " << begin_interval->target;
+        std::cout << " EdgeBasedEdgeData data {";
+        std::cout << " turn_id: " << begin_interval->data.turn_id
+                  << ", weight: " << begin_interval->data.weight;
+        std::cout << " distance: " << begin_interval->data.distance
+                  << ", duration: " << begin_interval->data.duration;
+        std::cout << " forward: " << (begin_interval->data.forward == 0 ? "false" : "true")
+                  << ", backward: " << (begin_interval->data.backward == 0 ? "false" : "true");
+        std::cout << " }";
+        std::cout << "}" << std::endl;
 
         BOOST_ASSERT_MSG(begin_interval->data.forward != begin_interval->data.backward,
                          "The forward and backward flag need to be mutally exclusive");
@@ -196,7 +252,7 @@ inline DynamicEdgeBasedGraph LoadEdgeBasedGraph(const boost::filesystem::path &p
     return DynamicEdgeBasedGraph(number_of_edge_based_nodes, std::move(tidied), checksum);
 }
 
-} // ns partition
-} // ns osrm
+} // namespace partitioner
+} // namespace osrm
 
 #endif

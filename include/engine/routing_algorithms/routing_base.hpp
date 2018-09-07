@@ -85,13 +85,17 @@ void insertSourceInHeap(ManyToManyQueryHeap &heap, const PhantomNode &phantom_no
     {
         heap.Insert(phantom_node.forward_segment_id.id,
                     -phantom_node.GetForwardWeightPlusOffset(),
-                    {phantom_node.forward_segment_id.id, -phantom_node.GetForwardDuration()});
+                    {phantom_node.forward_segment_id.id,
+                     -phantom_node.GetForwardDuration(),
+                     -phantom_node.GetForwardDistance()});
     }
     if (phantom_node.IsValidReverseSource())
     {
         heap.Insert(phantom_node.reverse_segment_id.id,
                     -phantom_node.GetReverseWeightPlusOffset(),
-                    {phantom_node.reverse_segment_id.id, -phantom_node.GetReverseDuration()});
+                    {phantom_node.reverse_segment_id.id,
+                     -phantom_node.GetReverseDuration(),
+                     -phantom_node.GetReverseDistance()});
     }
 }
 
@@ -102,13 +106,17 @@ void insertTargetInHeap(ManyToManyQueryHeap &heap, const PhantomNode &phantom_no
     {
         heap.Insert(phantom_node.forward_segment_id.id,
                     phantom_node.GetForwardWeightPlusOffset(),
-                    {phantom_node.forward_segment_id.id, phantom_node.GetForwardDuration()});
+                    {phantom_node.forward_segment_id.id,
+                     phantom_node.GetForwardDuration(),
+                     phantom_node.GetForwardDistance()});
     }
     if (phantom_node.IsValidReverseTarget())
     {
         heap.Insert(phantom_node.reverse_segment_id.id,
                     phantom_node.GetReverseWeightPlusOffset(),
-                    {phantom_node.reverse_segment_id.id, phantom_node.GetReverseDuration()});
+                    {phantom_node.reverse_segment_id.id,
+                     phantom_node.GetReverseDuration(),
+                     phantom_node.GetReverseDistance()});
     }
 }
 
