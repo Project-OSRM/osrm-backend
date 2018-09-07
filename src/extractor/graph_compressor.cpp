@@ -185,17 +185,18 @@ void GraphCompressor::Compress(
                  * just
                  * like a barrier.
                  */
-                const auto selectAnnotation = [&node_data_container](
-                    const AnnotationID front_annotation, const AnnotationID back_annotation) {
-                    // A lane has tags: u - (front) - v - (back) - w
-                    // During contraction, we keep only one of the tags. Usually the one closer
-                    // to the intersection is preferred. If its empty, however, we keep the
-                    // non-empty one
-                    if (node_data_container[back_annotation].lane_description_id ==
-                        INVALID_LANE_DESCRIPTIONID)
-                        return front_annotation;
-                    return back_annotation;
-                };
+                const auto selectAnnotation =
+                    [&node_data_container](const AnnotationID front_annotation,
+                                           const AnnotationID back_annotation) {
+                        // A lane has tags: u - (front) - v - (back) - w
+                        // During contraction, we keep only one of the tags. Usually the one closer
+                        // to the intersection is preferred. If its empty, however, we keep the
+                        // non-empty one
+                        if (node_data_container[back_annotation].lane_description_id ==
+                            INVALID_LANE_DESCRIPTIONID)
+                            return front_annotation;
+                        return back_annotation;
+                    };
 
                 graph.GetEdgeData(forward_e1).annotation_data = selectAnnotation(
                     fwd_edge_data1.annotation_data, fwd_edge_data2.annotation_data);
@@ -259,6 +260,8 @@ void GraphCompressor::Compress(
                 const auto forward_weight2 = fwd_edge_data2.weight;
                 const auto forward_duration1 = fwd_edge_data1.duration;
                 const auto forward_duration2 = fwd_edge_data2.duration;
+                // const auto forward_distance1 = fwd_edge_data1.distance;
+                const auto forward_distance2 = fwd_edge_data2.distance;
 
                 BOOST_ASSERT(0 != forward_weight1);
                 BOOST_ASSERT(0 != forward_weight2);
@@ -267,6 +270,8 @@ void GraphCompressor::Compress(
                 const auto reverse_weight2 = rev_edge_data2.weight;
                 const auto reverse_duration1 = rev_edge_data1.duration;
                 const auto reverse_duration2 = rev_edge_data2.duration;
+                // const auto reverse_distance1 = rev_edge_data1.distance;
+                const auto reverse_distance2 = rev_edge_data2.distance;
 
                 BOOST_ASSERT(0 != reverse_weight1);
                 BOOST_ASSERT(0 != reverse_weight2);
@@ -279,6 +284,10 @@ void GraphCompressor::Compress(
                 graph.GetEdgeData(forward_e1).duration += forward_duration2;
                 graph.GetEdgeData(reverse_e1).duration += reverse_duration2;
 
+                // add duration of e2's to e1
+                graph.GetEdgeData(forward_e1).distance += forward_distance2;
+                graph.GetEdgeData(reverse_e1).distance += reverse_distance2;
+
                 if (node_weight_penalty != INVALID_EDGE_WEIGHT &&
                     node_duration_penalty != MAXIMAL_EDGE_DURATION)
                 {
@@ -286,6 +295,7 @@ void GraphCompressor::Compress(
                     graph.GetEdgeData(reverse_e1).weight += node_weight_penalty;
                     graph.GetEdgeData(forward_e1).duration += node_duration_penalty;
                     graph.GetEdgeData(reverse_e1).duration += node_duration_penalty;
+                    // Note: no penalties for distances
                 }
 
                 // extend e1's to targets of e2's
@@ -359,5 +369,5 @@ void GraphCompressor::PrintStatistics(unsigned original_number_of_nodes,
     util::Log() << "Node compression ratio: " << new_node_count / (double)original_number_of_nodes;
     util::Log() << "Edge compression ratio: " << new_edge_count / (double)original_number_of_edges;
 }
-}
-}
+} // namespace extractor
+} // namespace osrm

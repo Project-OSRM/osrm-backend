@@ -50,31 +50,39 @@ void insertNodesInHeaps(Heap &forward_heap, Heap &reverse_heap, const PhantomNod
     const auto &source = nodes.source_phantom;
     if (source.IsValidForwardSource())
     {
-        forward_heap.Insert(source.forward_segment_id.id,
-                            -source.GetForwardWeightPlusOffset(),
-                            source.forward_segment_id.id);
+        heap.Insert(phantom_node.forward_segment_id.id,
+                    -phantom_node.GetForwardWeightPlusOffset(),
+                    {phantom_node.forward_segment_id.id,
+                     -phantom_node.GetForwardDuration(),
+                     -phantom_node.GetForwardDistance()});
     }
 
     if (source.IsValidReverseSource())
     {
-        forward_heap.Insert(source.reverse_segment_id.id,
-                            -source.GetReverseWeightPlusOffset(),
-                            source.reverse_segment_id.id);
+        heap.Insert(phantom_node.reverse_segment_id.id,
+                    -phantom_node.GetReverseWeightPlusOffset(),
+                    {phantom_node.reverse_segment_id.id,
+                     -phantom_node.GetReverseDuration(),
+                     -phantom_node.GetReverseDistance()});
     }
 
     const auto &target = nodes.target_phantom;
     if (target.IsValidForwardTarget())
     {
-        reverse_heap.Insert(target.forward_segment_id.id,
-                            target.GetForwardWeightPlusOffset(),
-                            target.forward_segment_id.id);
+        heap.Insert(phantom_node.forward_segment_id.id,
+                    phantom_node.GetForwardWeightPlusOffset(),
+                    {phantom_node.forward_segment_id.id,
+                     phantom_node.GetForwardDuration(),
+                     phantom_node.GetForwardDistance()});
     }
 
     if (target.IsValidReverseTarget())
     {
-        reverse_heap.Insert(target.reverse_segment_id.id,
-                            target.GetReverseWeightPlusOffset(),
-                            target.reverse_segment_id.id);
+        heap.Insert(phantom_node.reverse_segment_id.id,
+                    phantom_node.GetReverseWeightPlusOffset(),
+                    {phantom_node.reverse_segment_id.id,
+                     phantom_node.GetReverseDuration(),
+                     phantom_node.GetReverseDistance()});
     }
 }
 

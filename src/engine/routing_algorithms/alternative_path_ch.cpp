@@ -90,7 +90,7 @@ void alternativeRoutingStep(const DataFacade<Algorithm> &facade,
             else
             {
                 // check whether there is a loop present at the node
-                const auto loop_weight = getLoopWeight<false>(facade, node);
+                const auto loop_weight = std::get<0>(getLoopWeight<false>(facade, node));
                 const EdgeWeight new_weight_with_loop = new_weight + loop_weight;
                 if (loop_weight != INVALID_EDGE_WEIGHT &&
                     new_weight_with_loop <= *upper_bound_to_shortest_path_weight)
@@ -558,7 +558,7 @@ bool viaNodeCandidatePassesTTest(SearchEngineData<Algorithm> &engine_working_dat
     }
     return (upper_bound <= t_test_path_weight);
 }
-} // anon. namespace
+} // namespace
 
 InternalManyRoutesResult alternativePathSearch(SearchEngineData<Algorithm> &engine_working_data,
                                                const DataFacade<Algorithm> &facade,
@@ -853,4 +853,4 @@ InternalManyRoutesResult alternativePathSearch(SearchEngineData<Algorithm> &engi
 
 } // namespace routing_algorithms
 } // namespace engine
-} // namespace osrm}
+} // namespace osrm

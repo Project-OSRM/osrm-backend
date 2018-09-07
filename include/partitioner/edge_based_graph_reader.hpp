@@ -14,6 +14,8 @@
 #include <tbb/parallel_for.h>
 #include <tbb/parallel_reduce.h>
 
+#include <iostream>
+
 #include <cstdint>
 
 #include <algorithm>
@@ -43,6 +45,7 @@ splitBidirectionalEdges(const std::vector<extractor::EdgeBasedEdge> &edges)
                               edge.data.turn_id,
                               std::max(edge.data.weight, 1),
                               edge.data.duration,
+                              edge.data.distance,
                               edge.data.forward,
                               edge.data.backward);
 
@@ -51,6 +54,7 @@ splitBidirectionalEdges(const std::vector<extractor::EdgeBasedEdge> &edges)
                               edge.data.turn_id,
                               std::max(edge.data.weight, 1),
                               edge.data.duration,
+                              edge.data.distance,
                               edge.data.backward,
                               edge.data.forward);
     }
@@ -196,7 +200,7 @@ inline DynamicEdgeBasedGraph LoadEdgeBasedGraph(const boost::filesystem::path &p
     return DynamicEdgeBasedGraph(number_of_edge_based_nodes, std::move(tidied), checksum);
 }
 
-} // ns partition
-} // ns osrm
+} // namespace partitioner
+} // namespace osrm
 
 #endif
