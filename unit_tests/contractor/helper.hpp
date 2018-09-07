@@ -24,11 +24,11 @@ inline contractor::ContractorGraph makeGraph(const std::vector<TestEdge> &edges)
         input_edges.push_back(contractor::ContractorEdge{
             start,
             target,
-            contractor::ContractorEdgeData{weight, weight * 2, id++, 0, false, true, false}});
+            contractor::ContractorEdgeData{weight, weight * 2, 1.0, id++, 0, false, true, false}});
         input_edges.push_back(contractor::ContractorEdge{
             target,
             start,
-            contractor::ContractorEdgeData{weight, weight * 2, id++, 0, false, false, true}});
+            contractor::ContractorEdgeData{weight, weight * 2, 1.0, id++, 0, false, false, true}});
     }
     std::sort(input_edges.begin(), input_edges.end());
 
