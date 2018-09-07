@@ -51,7 +51,7 @@ template <> struct hash<std::pair<NodeID, NodeID>>
         return seed;
     }
 };
-}
+} // namespace std
 
 // Buffer size of turn_indexes_write_buffer to reduce number of write(v) syscals
 const constexpr int TURN_INDEX_WRITE_BUFFER_SIZE = 1000;
@@ -555,22 +555,21 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                     &scripting_environment,
                                     weight_multiplier,
                                     &conditional_restriction_map](
-            // what nodes will be used? In most cases this will be the id
-            // stored in the edge_data. In case of duplicated nodes (e.g.
-            // due to via-way restrictions), one/both of these might
-            // refer to a newly added edge based node
-            const auto edge_based_node_from,
-            const auto edge_based_node_to,
-            // the situation of the turn
-            const auto node_along_road_entering,
-            const auto node_based_edge_from,
-            const auto intersection_node,
-            const auto node_based_edge_to,
-            const auto &turn_angle,
-            const auto &road_legs_on_the_right,
-            const auto &road_legs_on_the_left,
-            const auto &edge_geometries) {
-
+                                       // what nodes will be used? In most cases this will be the id
+                                       // stored in the edge_data. In case of duplicated nodes (e.g.
+                                       // due to via-way restrictions), one/both of these might
+                                       // refer to a newly added edge based node
+                                       const auto edge_based_node_from,
+                                       const auto edge_based_node_to,
+                                       // the situation of the turn
+                                       const auto node_along_road_entering,
+                                       const auto node_based_edge_from,
+                                       const auto intersection_node,
+                                       const auto node_based_edge_to,
+                                       const auto &turn_angle,
+                                       const auto &road_legs_on_the_right,
+                                       const auto &road_legs_on_the_left,
+                                       const auto &edge_geometries) {
             const auto node_restricted =
                 isRestricted(node_along_road_entering,
                              intersection_node,
@@ -652,16 +651,19 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
             // auto turn_id = m_edge_based_edge_list.size();
             auto weight = boost::numeric_cast<EdgeWeight>(edge_data1.weight + weight_penalty);
             auto duration = boost::numeric_cast<EdgeWeight>(edge_data1.duration + duration_penalty);
+            auto distance = boost::numeric_cast<EdgeDistance>(edge_data1.distance);
 
-            EdgeBasedEdge edge_based_edge = {
-                edge_based_node_from,
-                edge_based_node_to,
-                SPECIAL_NODEID, // This will be updated once the main loop
-                                // completes!
-                weight,
-                duration,
-                true,
-                false};
+            std::cout << "EBGF distance: " << distance << std::endl;
+
+            EdgeBasedEdge edge_based_edge = {edge_based_node_from,
+                                             edge_based_node_to,
+                                             SPECIAL_NODEID, // This will be updated once the main
+                                                             // loop completes!
+                                             weight,
+                                             duration,
+                                             distance,
+                                             true,
+                                             false};
 
             // We write out the mapping between the edge-expanded edges and the original nodes.
             // Since each edge represents a possible maneuver, external programs can use this to
@@ -693,7 +695,6 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
         //
         tbb::filter_t<tbb::blocked_range<NodeID>, EdgesPipelineBufferPtr> processor_stage(
             tbb::filter::parallel, [&](const tbb::blocked_range<NodeID> &intersection_node_range) {
-
                 auto buffer = std::make_shared<EdgesPipelineBuffer>();
                 buffer->nodes_processed = intersection_node_range.size();
 
@@ -891,7 +892,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                             // TODO: this loop is not optimized - once we have a few
                             //       overrides available, we should index this for faster
                             //       lookups
-                            for (auto & override : unresolved_maneuver_overrides)
+                            for (auto &override : unresolved_maneuver_overrides)
                             {
                                 for (auto &turn : override.turn_sequence)
                                 {
@@ -1032,7 +1033,6 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
         std::vector<EdgeWithData> delayed_data;
         tbb::filter_t<EdgesPipelineBufferPtr, void> output_stage(
             tbb::filter::serial_in_order, [&](auto buffer) {
-
                 routing_progress.PrintAddition(buffer->nodes_processed);
 
                 m_connectivity_checksum = buffer->checksum.update_checksum(m_connectivity_checksum);

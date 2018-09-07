@@ -49,7 +49,7 @@ struct ByEdgeOrByMeterValue
     using value_type = float;
     value_type value;
 };
-}
+} // namespace detail
 
 struct InternalExtractorEdge
 {
@@ -63,7 +63,7 @@ struct InternalExtractorEdge
                                    WeightData weight_data,
                                    DurationData duration_data,
                                    util::Coordinate source_coordinate)
-        : result(source, target, 0, 0, {}, -1, {}), weight_data(std::move(weight_data)),
+        : result(source, target, 0, 0, 0, {}, -1, {}), weight_data(std::move(weight_data)),
           duration_data(std::move(duration_data)), source_coordinate(std::move(source_coordinate))
     {
     }
@@ -113,7 +113,7 @@ struct InternalExtractorEdge
         return v;
     }
 };
-}
-}
+} // namespace extractor
+} // namespace osrm
 
 #endif // INTERNAL_EXTRACTOR_EDGE_HPP

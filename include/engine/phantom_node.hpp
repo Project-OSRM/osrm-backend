@@ -34,6 +34,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "util/coordinate.hpp"
 #include "util/typedefs.hpp"
 
+#include <iostream>
+
 #include <boost/assert.hpp>
 
 namespace osrm
@@ -44,14 +46,15 @@ namespace engine
 struct PhantomNode
 {
     PhantomNode()
-        : forward_segment_id{SPECIAL_SEGMENTID, false},
-          reverse_segment_id{SPECIAL_SEGMENTID, false}, forward_weight(INVALID_EDGE_WEIGHT),
-          reverse_weight(INVALID_EDGE_WEIGHT), forward_weight_offset(0), reverse_weight_offset(0),
+        : forward_segment_id{SPECIAL_SEGMENTID, false}, reverse_segment_id{SPECIAL_SEGMENTID,
+                                                                           false},
+          forward_weight(INVALID_EDGE_WEIGHT), reverse_weight(INVALID_EDGE_WEIGHT),
+          forward_weight_offset(0), reverse_weight_offset(0),
           forward_distance(INVALID_EDGE_DISTANCE), reverse_distance(INVALID_EDGE_DISTANCE),
           forward_distance_offset(0), reverse_distance_offset(0),
           forward_duration(MAXIMAL_EDGE_DURATION), reverse_duration(MAXIMAL_EDGE_DURATION),
-          forward_duration_offset(0), reverse_duration_offset(0), fwd_segment_position(0),
-          is_valid_forward_source{false}, is_valid_forward_target{false},
+          forward_duration_offset(0), reverse_duration_offset(0),
+          fwd_segment_position(0), is_valid_forward_source{false}, is_valid_forward_target{false},
           is_valid_reverse_source{false}, is_valid_reverse_target{false}, bearing(0)
 
     {
@@ -91,6 +94,9 @@ struct PhantomNode
         //         x              <-- this is PhantomNode.location
         // 0----1----2----3----4  <-- EdgeBasedGraph Node segments
         BOOST_ASSERT(forward_segment_id.enabled);
+        std::cout << "forward_distance: " << forward_distance;
+        std::cout << " forward_distance_offset: " << forward_distance_offset;
+        std::cout << std::endl;
         return forward_distance + forward_distance_offset;
     }
 
@@ -102,6 +108,9 @@ struct PhantomNode
         //         x              <-- this is PhantomNode.location
         // 0----1----2----3----4  <-- EdgeBasedGraph Node segments
         BOOST_ASSERT(reverse_segment_id.enabled);
+        std::cout << "reverse_distance: " << reverse_distance;
+        std::cout << " reverse_distance_offset: " << reverse_distance_offset;
+        std::cout << std::endl;
         return reverse_distance + reverse_distance_offset;
     }
 
@@ -109,8 +118,9 @@ struct PhantomNode
 
     bool IsValid(const unsigned number_of_nodes) const
     {
-        return location.IsValid() && ((forward_segment_id.id < number_of_nodes) ||
-                                      (reverse_segment_id.id < number_of_nodes)) &&
+        return location.IsValid() &&
+               ((forward_segment_id.id < number_of_nodes) ||
+                (reverse_segment_id.id < number_of_nodes)) &&
                ((forward_weight != INVALID_EDGE_WEIGHT) ||
                 (reverse_weight != INVALID_EDGE_WEIGHT)) &&
                ((forward_duration != MAXIMAL_EDGE_DURATION) ||
@@ -234,7 +244,7 @@ struct PhantomNodes
     PhantomNode source_phantom;
     PhantomNode target_phantom;
 };
-}
-}
+} // namespace engine
+} // namespace osrm
 
 #endif // PHANTOM_NODES_H

@@ -207,6 +207,8 @@ void ContractNode(ContractorThreadData *data,
                     }
                     else
                     {
+                        std::cout << "Contractor: " << in_data.distance << "," << out_data.distance
+                                  << std::endl;
                         // CAREFUL: This only works due to the independent node-setting. This
                         // guarantees that source is not connected to another node that is
                         // contracted
@@ -215,6 +217,7 @@ void ContractNode(ContractorThreadData *data,
                                                     target,
                                                     path_weight,
                                                     in_data.duration + out_data.duration,
+                                                    in_data.distance + out_data.distance,
                                                     out_data.originalEdges + in_data.originalEdges,
                                                     node,
                                                     SHORTCUT_ARC,
@@ -225,6 +228,7 @@ void ContractNode(ContractorThreadData *data,
                                                     source,
                                                     path_weight,
                                                     in_data.duration + out_data.duration,
+                                                    in_data.distance + out_data.distance,
                                                     out_data.originalEdges + in_data.originalEdges,
                                                     node,
                                                     SHORTCUT_ARC,
@@ -276,10 +280,13 @@ void ContractNode(ContractorThreadData *data,
                 }
                 else
                 {
+                    std::cout << "Contractor: " << in_data.distance << "," << out_data.distance
+                              << std::endl;
                     inserted_edges.emplace_back(source,
                                                 target,
                                                 path_weight,
                                                 in_data.duration + out_data.duration,
+                                                in_data.distance + out_data.distance,
                                                 out_data.originalEdges + in_data.originalEdges,
                                                 node,
                                                 SHORTCUT_ARC,
@@ -290,6 +297,7 @@ void ContractNode(ContractorThreadData *data,
                                                 source,
                                                 path_weight,
                                                 in_data.duration + out_data.duration,
+                                                in_data.distance + out_data.distance,
                                                 out_data.originalEdges + in_data.originalEdges,
                                                 node,
                                                 SHORTCUT_ARC,
@@ -556,7 +564,7 @@ bool IsNodeIndependent(const util::XORFastHash<> &hash,
     }
     return true;
 }
-}
+} // namespace
 
 std::vector<bool> contractGraph(ContractorGraph &graph,
                                 std::vector<bool> node_is_uncontracted_,

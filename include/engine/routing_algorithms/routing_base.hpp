@@ -54,13 +54,17 @@ void insertSourceInHeap(typename SearchEngineData<Algorithm>::ManyToManyQueryHea
     {
         heap.Insert(phantom_node.forward_segment_id.id,
                     -phantom_node.GetForwardWeightPlusOffset(),
-                    {phantom_node.forward_segment_id.id, -phantom_node.GetForwardDuration()});
+                    {phantom_node.forward_segment_id.id,
+                     -phantom_node.GetForwardDuration(),
+                     -phantom_node.GetForwardDistance()});
     }
     if (phantom_node.IsValidReverseTarget())
     {
         heap.Insert(phantom_node.reverse_segment_id.id,
                     -phantom_node.GetReverseWeightPlusOffset(),
-                    {phantom_node.reverse_segment_id.id, -phantom_node.GetReverseDuration()});
+                    {phantom_node.reverse_segment_id.id,
+                     -phantom_node.GetReverseDuration(),
+                     -phantom_node.GetReverseDistance()});
     }
 }
 
@@ -72,13 +76,17 @@ void insertTargetInHeap(typename SearchEngineData<Algorithm>::ManyToManyQueryHea
     {
         heap.Insert(phantom_node.forward_segment_id.id,
                     phantom_node.GetForwardWeightPlusOffset(),
-                    {phantom_node.forward_segment_id.id, phantom_node.GetForwardDuration()});
+                    {phantom_node.forward_segment_id.id,
+                     phantom_node.GetForwardDuration(),
+                     phantom_node.GetForwardDistance()});
     }
     if (phantom_node.IsValidReverseTarget())
     {
         heap.Insert(phantom_node.reverse_segment_id.id,
                     phantom_node.GetReverseWeightPlusOffset(),
-                    {phantom_node.reverse_segment_id.id, phantom_node.GetReverseDuration()});
+                    {phantom_node.reverse_segment_id.id,
+                     phantom_node.GetReverseDuration(),
+                     phantom_node.GetReverseDistance()});
     }
 }
 
