@@ -15,25 +15,20 @@ struct EdgeBasedEdge
   public:
     struct EdgeData
     {
-        EdgeData()
-            : turn_id(0), weight(0), distance(0), duration(0), forward(false), backward(false)
-        {
-        }
+        EdgeData() : turn_id(0), weight(0), duration(0), forward(false), backward(false) {}
 
         EdgeData(const NodeID turn_id,
                  const EdgeWeight weight,
-                 const EdgeDistance distance,
                  const EdgeWeight duration,
                  const bool forward,
                  const bool backward)
-            : turn_id(turn_id), weight(weight), distance(distance), duration(duration),
-              forward(forward), backward(backward)
+            : turn_id(turn_id), weight(weight), duration(duration), forward(forward),
+              backward(backward)
         {
         }
 
         NodeID turn_id; // ID of the edge based node (node based edge)
         EdgeWeight weight;
-        EdgeDistance distance;
         EdgeWeight duration : 30;
         std::uint32_t forward : 1;
         std::uint32_t backward : 1;
@@ -48,7 +43,6 @@ struct EdgeBasedEdge
                   const NodeID edge_id,
                   const EdgeWeight weight,
                   const EdgeWeight duration,
-                  const EdgeDistance distance,
                   const bool forward,
                   const bool backward);
     EdgeBasedEdge(const NodeID source, const NodeID target, const EdgeBasedEdge::EdgeData &data);
@@ -59,7 +53,7 @@ struct EdgeBasedEdge
     NodeID target;
     EdgeData data;
 };
-static_assert(sizeof(extractor::EdgeBasedEdge) == 24,
+static_assert(sizeof(extractor::EdgeBasedEdge) == 20,
               "Size of extractor::EdgeBasedEdge type is "
               "bigger than expected. This will influence "
               "memory consumption.");
@@ -73,10 +67,9 @@ inline EdgeBasedEdge::EdgeBasedEdge(const NodeID source,
                                     const NodeID turn_id,
                                     const EdgeWeight weight,
                                     const EdgeWeight duration,
-                                    const EdgeDistance distance,
                                     const bool forward,
                                     const bool backward)
-    : source(source), target(target), data{turn_id, weight, distance, duration, forward, backward}
+    : source(source), target(target), data{turn_id, weight, duration, forward, backward}
 {
 }
 
@@ -96,7 +89,7 @@ inline bool EdgeBasedEdge::operator<(const EdgeBasedEdge &other) const
     return std::tie(source, target, data.weight, unidirectional) <
            std::tie(other.source, other.target, other.data.weight, other_is_unidirectional);
 }
-} // namespace extractor
-} // namespace osrm
+} // ns extractor
+} // ns osrm
 
 #endif /* EDGE_BASED_EDGE_HPP */

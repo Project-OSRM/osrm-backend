@@ -30,11 +30,7 @@ struct HeapData
 struct ManyToManyHeapData : HeapData
 {
     EdgeWeight duration;
-    EdgeDistance distance;
-    ManyToManyHeapData(NodeID p, EdgeWeight duration, EdgeDistance distance)
-        : HeapData(p), duration(duration), distance(distance)
-    {
-    }
+    ManyToManyHeapData(NodeID p, EdgeWeight duration) : HeapData(p), duration(duration) {}
 };
 
 template <> struct SearchEngineData<routing_algorithms::ch::Algorithm>
@@ -79,16 +75,12 @@ struct MultiLayerDijkstraHeapData
 struct ManyToManyMultiLayerDijkstraHeapData : MultiLayerDijkstraHeapData
 {
     EdgeWeight duration;
-    EdgeDistance distance;
-    ManyToManyMultiLayerDijkstraHeapData(NodeID p, EdgeWeight duration, EdgeDistance distance)
-        : MultiLayerDijkstraHeapData(p), duration(duration), distance(distance)
+    ManyToManyMultiLayerDijkstraHeapData(NodeID p, EdgeWeight duration)
+        : MultiLayerDijkstraHeapData(p), duration(duration)
     {
     }
-    ManyToManyMultiLayerDijkstraHeapData(NodeID p,
-                                         bool from,
-                                         EdgeWeight duration,
-                                         EdgeDistance distance)
-        : MultiLayerDijkstraHeapData(p, from), duration(duration), distance(distance)
+    ManyToManyMultiLayerDijkstraHeapData(NodeID p, bool from, EdgeWeight duration)
+        : MultiLayerDijkstraHeapData(p, from), duration(duration)
     {
     }
 };
@@ -120,7 +112,7 @@ template <> struct SearchEngineData<routing_algorithms::mld::Algorithm>
     void InitializeOrClearManyToManyThreadLocalStorage(unsigned number_of_nodes,
                                                        unsigned number_of_boundary_nodes);
 };
-} // namespace engine
-} // namespace osrm
+}
+}
 
 #endif // SEARCH_ENGINE_DATA_HPP

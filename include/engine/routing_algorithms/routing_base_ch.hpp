@@ -186,10 +186,9 @@ void routingStep(const DataFacade<Algorithm> &facade,
 }
 
 template <bool UseDuration>
-std::tuple<EdgeWeight,EdgeDistance> getLoopWeight(const DataFacade<Algorithm> &facade, NodeID node)
+EdgeWeight getLoopWeight(const DataFacade<Algorithm> &facade, NodeID node)
 {
     EdgeWeight loop_weight = UseDuration ? MAXIMAL_EDGE_DURATION : INVALID_EDGE_WEIGHT;
-    EdgeDistance loop_distance = MAXIMAL_EDGE_DISTANCE;
     for (auto edge : facade.GetAdjacentEdgeRange(node))
     {
         const auto &data = facade.GetEdgeData(edge);
@@ -199,15 +198,11 @@ std::tuple<EdgeWeight,EdgeDistance> getLoopWeight(const DataFacade<Algorithm> &f
             if (to == node)
             {
                 const auto value = UseDuration ? data.duration : data.weight;
-                if (value < loop_weight)
-                {
-                    loop_weight = value;
-                    loop_distance = data.distance;
-                }
+                loop_weight = std::min(loop_weight, value);
             }
         }
     }
-    return std::make_tuple(loop_weight, loop_distance);
+    return loop_weight;
 }
 
 /**
