@@ -34,6 +34,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "util/coordinate.hpp"
 #include "util/typedefs.hpp"
 
+#include <iostream>
+
 #include <boost/assert.hpp>
 
 namespace osrm
@@ -91,6 +93,9 @@ struct PhantomNode
         //         x              <-- this is PhantomNode.location
         // 0----1----2----3----4  <-- EdgeBasedGraph Node segments
         BOOST_ASSERT(forward_segment_id.enabled);
+        std::cout << "forward_distance: " << forward_distance;
+        std::cout << " forward_distance_offset: " << forward_distance_offset;
+        std::cout << std::endl;
         return forward_distance + forward_distance_offset;
     }
 
@@ -102,6 +107,9 @@ struct PhantomNode
         //         x              <-- this is PhantomNode.location
         // 0----1----2----3----4  <-- EdgeBasedGraph Node segments
         BOOST_ASSERT(reverse_segment_id.enabled);
+        std::cout << "reverse_distance: " << reverse_distance;
+        std::cout << " reverse_distance_offset: " << reverse_distance_offset;
+        std::cout << std::endl;
         return reverse_distance + reverse_distance_offset;
     }
 
@@ -234,7 +242,7 @@ struct PhantomNodes
     PhantomNode source_phantom;
     PhantomNode target_phantom;
 };
-}
-}
+} // namespace engine
+} // namespace osrm
 
 #endif // PHANTOM_NODES_H
