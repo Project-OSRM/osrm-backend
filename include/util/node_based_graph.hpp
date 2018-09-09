@@ -10,6 +10,7 @@
 #include <tbb/parallel_sort.h>
 
 #include <memory>
+#include <iostream>
 #include <utility>
 
 namespace osrm
@@ -87,9 +88,13 @@ NodeBasedDynamicGraphFromEdges(NodeID number_of_nodes,
             output_edge.data.flags = input_edge.flags;
             output_edge.data.annotation_data = input_edge.annotation_data;
 
-            BOOST_ASSERT(output_edge.data.weight > 0);
-            BOOST_ASSERT(output_edge.data.duration > 0);
-            BOOST_ASSERT(output_edge.data.distance > 0);
+
+            BOOST_ASSERT(output_edge.data.weight >= 0);
+            BOOST_ASSERT(output_edge.data.duration >= 0);
+            if (output_edge.data.distance <= 0) {
+                std::cout << "output_edge.data.distance " << output_edge.data.distance << std::endl;
+            }
+            BOOST_ASSERT(output_edge.data.distance >= 0);
         });
 
     tbb::parallel_sort(edges_list.begin(), edges_list.end());
