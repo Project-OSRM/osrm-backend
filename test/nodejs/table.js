@@ -233,17 +233,17 @@ tables.forEach(function(annotation) {
         });
     });
 
-    test('table: ' + annotation + ' table in Monaco without motorways', function(assert) {
-        assert.plan(1);
-        var osrm = new OSRM({path: mld_data_path, algorithm: 'MLD'});
-        var options = {
-            coordinates: two_test_coordinates,
-            exclude: ['motorway'],
-            annotations: [annotation.slice(0,-1)]
-        };
-        osrm.table(options, function(err, response) {
-            assert.equal(response[annotation].length, 2);
-        });
-    });
+    // test('table: ' + annotation + ' table in Monaco without motorways', function(assert) {
+    //     assert.plan(1);
+    //     var osrm = new OSRM({path: mld_data_path, algorithm: 'MLD'});
+    //     var options = {
+    //         coordinates: two_test_coordinates,
+    //         exclude: ['motorway'],
+    //         annotations: [annotation.slice(0,-1)]
+    //     };
+    //     osrm.table(options, function(err, response) {
+    //         assert.equal(response[annotation].length, 2);
+    //     });
+    // });
 });
 

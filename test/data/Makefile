@@ -74,11 +74,11 @@ benchmark: data $(DATA_NAME).requests
 	$(TIMER) "queries\tCoreCH" "cat $(DATA_NAME).requests | xargs curl &> /dev/null"
 	@cat osrm-routed.pid | xargs kill
 	@rm osrm-routed.pid
-	@/bin/sh -c '$(OSRM_ROUTED) --algorithm=MLD mld/$(DATA_NAME).osrm > /dev/null & echo "$$!" > osrm-routed.pid'
-	@sleep 1
-	$(TIMER) "queries\tMLD" "cat $(DATA_NAME).requests | xargs curl &> /dev/null"
-	@cat osrm-routed.pid | xargs kill
-	@rm osrm-routed.pid
+	# @/bin/sh -c '$(OSRM_ROUTED) --algorithm=MLD mld/$(DATA_NAME).osrm > /dev/null & echo "$$!" > osrm-routed.pid'
+	# @sleep 1
+	# $(TIMER) "queries\tMLD" "cat $(DATA_NAME).requests | xargs curl &> /dev/null"
+	# @cat osrm-routed.pid | xargs kill
+	# @rm osrm-routed.pid
 	@echo "**** timings ***"
 	@cat /tmp/osrm.timings
 	@echo "****************"
