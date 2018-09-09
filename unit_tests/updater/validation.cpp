@@ -74,7 +74,8 @@ BOOST_AUTO_TEST_CASE(timezone_validation_test)
     // BOOST_CHECK_THROW(util::validateFeature(doc), util::exception);
 
     // char tzid_err[] = "{ \"type\" : \"Feature\","
-    //                   "\"properties\" : { \"TZID\" : []}, \"geometry\" : { \"type\": \"polygon\", "
+    //                   "\"properties\" : { \"TZID\" : []}, \"geometry\" : { \"type\": \"polygon\",
+    //                   "
     //                   "\"coordinates\": [[[8.28369,48.88277], [8.57757, "
     //                   "48.88277], [8.57757, 49.07206], [8.28369, "
     //                   "49.07206], [8.28369, 48.88277]]] }}";
@@ -92,7 +93,8 @@ BOOST_AUTO_TEST_CASE(timezone_validation_test)
 
     // char nonobj_geom[] =
     //     "{ \"type\" : \"Feature\","
-    //     "\"properties\" : { \"TZID\" : \"Europe/Berlin\"}, \"geometry\" : [ \"type\", \"polygon\", "
+    //     "\"properties\" : { \"TZID\" : \"Europe/Berlin\"}, \"geometry\" : [ \"type\",
+    //     \"polygon\", "
     //     "\"coordinates\", [[[8.28369,48.88277], [8.57757, "
     //     "48.88277], [8.57757, 49.07206], [8.28369, "
     //     "49.07206], [8.28369, 48.88277]]] ]}";
@@ -100,7 +102,8 @@ BOOST_AUTO_TEST_CASE(timezone_validation_test)
     // BOOST_CHECK_THROW(util::validateFeature(doc), util::exception);
 
     // char missing_geom_type[] = "{ \"type\" : \"Feature\","
-    //                            "\"properties\" : { \"TZID\" : \"Europe/Berlin\"}, \"geometry\" : { "
+    //                            "\"properties\" : { \"TZID\" : \"Europe/Berlin\"}, \"geometry\" :
+    //                            { "
     //                            "\"no_type\": \"polygon\", "
     //                            "\"coordinates\": [[[8.28369,48.88277], [8.57757, "
     //                            "48.88277], [8.57757, 49.07206], [8.28369, "
@@ -109,7 +112,8 @@ BOOST_AUTO_TEST_CASE(timezone_validation_test)
     // BOOST_CHECK_THROW(util::validateFeature(doc), util::exception);
 
     // char nonstring_geom_type[] = "{ \"type\" : \"Feature\","
-    //                              "\"properties\" : { \"TZID\" : \"Europe/Berlin\"}, \"geometry\" : "
+    //                              "\"properties\" : { \"TZID\" : \"Europe/Berlin\"}, \"geometry\"
+    //                              : "
     //                              "{ \"type\": [\"polygon\"], "
     //                              "\"coordinates\": [[[8.28369,48.88277], [8.57757, "
     //                              "48.88277], [8.57757, 49.07206], [8.28369, "
@@ -119,7 +123,8 @@ BOOST_AUTO_TEST_CASE(timezone_validation_test)
 
     // char missing_coords[] =
     //     "{ \"type\" : \"Feature\","
-    //     "\"properties\" : { \"TZID\" : \"Europe/Berlin\"}, \"geometry\" : { \"type\": \"polygon\", "
+    //     "\"properties\" : { \"TZID\" : \"Europe/Berlin\"}, \"geometry\" : { \"type\":
+    //     \"polygon\", "
     //     "\"coords\": [[[8.28369,48.88277], [8.57757, "
     //     "48.88277], [8.57757, 49.07206], [8.28369, "
     //     "49.07206], [8.28369, 48.88277]]] }}";
@@ -128,7 +133,8 @@ BOOST_AUTO_TEST_CASE(timezone_validation_test)
 
     // char missing_outerring[] =
     //     "{ \"type\" : \"Feature\","
-    //     "\"properties\" : { \"TZID\" : \"Europe/Berlin\"}, \"geometry\" : { \"type\": \"polygon\", "
+    //     "\"properties\" : { \"TZID\" : \"Europe/Berlin\"}, \"geometry\" : { \"type\":
+    //     \"polygon\", "
     //     "\"coordinates\": [[8.28369,48.88277], [8.57757, "
     //     "48.88277], [8.57757, 49.07206], [8.28369, "
     //     "49.07206], [8.28369, 48.88277]] }}";

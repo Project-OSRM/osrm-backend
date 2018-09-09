@@ -186,7 +186,7 @@ void routingStep(const DataFacade<Algorithm> &facade,
 }
 
 template <bool UseDuration>
-std::tuple<EdgeWeight,EdgeDistance> getLoopWeight(const DataFacade<Algorithm> &facade, NodeID node)
+std::tuple<EdgeWeight, EdgeDistance> getLoopWeight(const DataFacade<Algorithm> &facade, NodeID node)
 {
     EdgeWeight loop_weight = UseDuration ? MAXIMAL_EDGE_DURATION : INVALID_EDGE_WEIGHT;
     EdgeDistance loop_distance = MAXIMAL_EDGE_DISTANCE;

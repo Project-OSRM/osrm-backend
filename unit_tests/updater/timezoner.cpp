@@ -15,7 +15,8 @@ BOOST_AUTO_TEST_CASE(timezoner_test)
     // const char json[] =
     //     "{ \"type\" : \"FeatureCollection\", \"features\": ["
     //     "{ \"type\" : \"Feature\","
-    //     "\"properties\" : { \"TZID\" : \"Europe/Berlin\"}, \"geometry\" : { \"type\": \"polygon\", "
+    //     "\"properties\" : { \"TZID\" : \"Europe/Berlin\"}, \"geometry\" : { \"type\":
+    //     \"polygon\", "
     //     "\"coordinates\": [[[8.28369,48.88277], [8.57757, "
     //     "48.88277], [8.57757, 49.07206], [8.28369, "
     //     "49.07206], [8.28369, 48.88277]]] }} ]}";
@@ -29,7 +30,8 @@ BOOST_AUTO_TEST_CASE(timezoner_test)
     // const char bad[] =
     //     "\"type\" : \"FeatureCollection\", \"features\": ["
     //     "{ \"type\" : \"Feature\","
-    //     "\"properties\" : { \"TZID\" : \"Europe/Berlin\"}, \"geometry\" : { \"type\": \"polygon\", "
+    //     "\"properties\" : { \"TZID\" : \"Europe/Berlin\"}, \"geometry\" : { \"type\":
+    //     \"polygon\", "
     //     "\"coordinates\": [[[8.28369,48.88277], [8.57757, "
     //     "48.88277], [8.57757, 49.07206], [8.28369, "
     //     "49.07206], [8.28369, 48.88277]]] }} ]}";
@@ -39,7 +41,8 @@ BOOST_AUTO_TEST_CASE(timezoner_test)
     // const char missing_type[] =
     //     "{ \"FeatureCollection\", \"features\": ["
     //     "{ \"type\" : \"Feature\","
-    //     "\"properties\" : { \"TZID\" : \"Europe/Berlin\"}, \"geometry\" : { \"type\": \"polygon\", "
+    //     "\"properties\" : { \"TZID\" : \"Europe/Berlin\"}, \"geometry\" : { \"type\":
+    //     \"polygon\", "
     //     "\"coordinates\": [[[8.28369,48.88277], [8.57757, "
     //     "48.88277], [8.57757, 49.07206], [8.28369, "
     //     "49.07206], [8.28369, 48.88277]]] }} ]}";
@@ -48,7 +51,8 @@ BOOST_AUTO_TEST_CASE(timezoner_test)
     // const char missing_featc[] =
     //     "{ \"type\" : \"Collection\", \"features\": ["
     //     "{ \"type\" : \"Feature\","
-    //     "\"properties\" : { \"TZID\" : \"Europe/Berlin\"}, \"geometry\" : { \"type\": \"polygon\", "
+    //     "\"properties\" : { \"TZID\" : \"Europe/Berlin\"}, \"geometry\" : { \"type\":
+    //     \"polygon\", "
     //     "\"coordinates\": [[[8.28369,48.88277], [8.57757, "
     //     "48.88277], [8.57757, 49.07206], [8.28369, "
     //     "49.07206], [8.28369, 48.88277]]] }} ]}";

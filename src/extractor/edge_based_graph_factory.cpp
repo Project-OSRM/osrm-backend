@@ -555,21 +555,21 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                     &scripting_environment,
                                     weight_multiplier,
                                     &conditional_restriction_map](
-                                       // what nodes will be used? In most cases this will be the id
-                                       // stored in the edge_data. In case of duplicated nodes (e.g.
-                                       // due to via-way restrictions), one/both of these might
-                                       // refer to a newly added edge based node
-                                       const auto edge_based_node_from,
-                                       const auto edge_based_node_to,
-                                       // the situation of the turn
-                                       const auto node_along_road_entering,
-                                       const auto node_based_edge_from,
-                                       const auto intersection_node,
-                                       const auto node_based_edge_to,
-                                       const auto &turn_angle,
-                                       const auto &road_legs_on_the_right,
-                                       const auto &road_legs_on_the_left,
-                                       const auto &edge_geometries) {
+            // what nodes will be used? In most cases this will be the id
+            // stored in the edge_data. In case of duplicated nodes (e.g.
+            // due to via-way restrictions), one/both of these might
+            // refer to a newly added edge based node
+            const auto edge_based_node_from,
+            const auto edge_based_node_to,
+            // the situation of the turn
+            const auto node_along_road_entering,
+            const auto node_based_edge_from,
+            const auto intersection_node,
+            const auto node_based_edge_to,
+            const auto &turn_angle,
+            const auto &road_legs_on_the_right,
+            const auto &road_legs_on_the_left,
+            const auto &edge_geometries) {
             const auto node_restricted =
                 isRestricted(node_along_road_entering,
                              intersection_node,
@@ -890,7 +890,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                             // TODO: this loop is not optimized - once we have a few
                             //       overrides available, we should index this for faster
                             //       lookups
-                            for (auto &override : unresolved_maneuver_overrides)
+                            for (auto & override : unresolved_maneuver_overrides)
                             {
                                 for (auto &turn : override.turn_sequence)
                                 {

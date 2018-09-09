@@ -277,8 +277,8 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
         {
             if (edge_iterator->result.osm_source_id < node_iterator->node_id)
             {
-                util::Log(logDEBUG)
-                    << "Found invalid node reference " << edge_iterator->result.source;
+                util::Log(logDEBUG) << "Found invalid node reference "
+                                    << edge_iterator->result.source;
                 edge_iterator->result.source = SPECIAL_NODEID;
                 ++edge_iterator;
                 continue;
@@ -1038,9 +1038,8 @@ void ExtractionContainers::PrepareRestrictions()
     // translate the turn from one segment onto another into a node restriction (the ways can
     // only
     // be connected at a single location)
-    auto const get_node_restriction_from_OSM_ids = [&](auto const from_id,
-                                                       auto const to_id,
-                                                       const OSMNodeID via_node) {
+    auto const get_node_restriction_from_OSM_ids = [&](
+        auto const from_id, auto const to_id, const OSMNodeID via_node) {
         auto const from_segment_itr = referenced_ways.find(from_id);
         if (from_segment_itr->second.way_id != from_id)
         {

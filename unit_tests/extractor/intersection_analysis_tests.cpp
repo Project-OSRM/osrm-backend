@@ -169,7 +169,8 @@ using Graph = util::NodeBasedDynamicGraph;
 //     //     0
 //     //   ↙ ↑ ↘
 //     //  4  5  6
-//     const auto unit_edge = [](const NodeID from, const NodeID to, bool allowed, bool roundabout) {
+//     const auto unit_edge = [](const NodeID from, const NodeID to, bool allowed, bool roundabout)
+//     {
 //         return InputEdge{from,
 //                          to,
 //                          1,

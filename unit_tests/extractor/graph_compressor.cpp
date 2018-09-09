@@ -51,7 +51,8 @@
 //         return false;
 
 //     auto const &first_annotation = node_data_container[graph.GetEdgeData(first).annotation_data];
-//     auto const &second_annotation = node_data_container[graph.GetEdgeData(second).annotation_data];
+//     auto const &second_annotation =
+//     node_data_container[graph.GetEdgeData(second).annotation_data];
 
 //     return first_annotation.CanCombineWith(second_annotation);
 // }
