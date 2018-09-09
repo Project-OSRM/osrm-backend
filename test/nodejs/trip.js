@@ -342,17 +342,17 @@ test('trip: fixed start and end combinations', function(assert) {
     assert.end();
 });
 
-// test('trip: trip in Monaco without motorways', function(assert) {
-//     assert.plan(3);
-//     var osrm = new OSRM({path: mld_data_path, algorithm: 'MLD'});
-//     var options = {
-//         coordinates: two_test_coordinates,
-//         exclude: ['motorway']
-//     };
-//     osrm.trip(options, function(err, response) {
-//         assert.ifError(err);
-//         assert.equal(response.waypoints.length, 2);
-//         assert.equal(response.trips.length, 1);
-//     });
-// });
+test('trip: trip in Monaco without motorways', function(assert) {
+    assert.plan(3);
+    var osrm = new OSRM({path: mld_data_path, algorithm: 'MLD'});
+    var options = {
+        coordinates: two_test_coordinates,
+        exclude: ['motorway']
+    };
+    osrm.trip(options, function(err, response) {
+        assert.ifError(err);
+        assert.equal(response.waypoints.length, 2);
+        assert.equal(response.trips.length, 1);
+    });
+});
 
