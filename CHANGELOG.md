@@ -1,9 +1,17 @@
 # UNRELEASED
+  - Changes from 5.19.0:
+
+# 5.19.0
   - Changes from 5.18.0:
     - Optimizations:
-      - CHANGED: Map matching is now almost twice as fast. [#5060](https://github.com/Project-OSRM/osrm-backend/pull/5060)
       - CHANGED: Use Grisu2 for serializing floating point numbers. [#5188](https://github.com/Project-OSRM/osrm-backend/pull/5188)
       - ADDED: Node bindings can return pre-rendered JSON buffer. [#5189](https://github.com/Project-OSRM/osrm-backend/pull/5189)
+    - Profiles:
+      - CHANGED: Bicycle profile now blacklists barriers instead of whitelisting them [#5076
+](https://github.com/Project-OSRM/osrm-backend/pull/5076/)
+      - CHANGED: Foot profile now blacklists barriers instead of whitelisting them [#5077
+](https://github.com/Project-OSRM/osrm-backend/pull/5077/)
+      - CHANGED: Support maxlength and maxweight in car profile [#5101](https://github.com/Project-OSRM/osrm-backend/pull/5101]
     - Bugfixes:
       - FIXED: collapsing of ExitRoundabout instructions [#5114](https://github.com/Project-OSRM/osrm-backend/issues/5114)
     - Misc:
