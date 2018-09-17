@@ -73,15 +73,15 @@ test('nearest: throws on invalid args', function(assert) {
         /format must be a string:/);
 });
 
-test('nearest: nearest in Monaco without motorways', function(assert) {
-    assert.plan(2);
-    var osrm = new OSRM({path: mld_data_path, algorithm: 'MLD'});
-    var options = {
-        coordinates: [two_test_coordinates[0]],
-        exclude: ['motorway']
-    };
-    osrm.nearest(options, function(err, response) {
-        assert.ifError(err);
-        assert.equal(response.waypoints.length, 1);
-    });
-});
+// test('nearest: nearest in Monaco without motorways', function(assert) {
+//     assert.plan(2);
+//     var osrm = new OSRM({path: mld_data_path, algorithm: 'MLD'});
+//     var options = {
+//         coordinates: [two_test_coordinates[0]],
+//         exclude: ['motorway']
+//     };
+//     osrm.nearest(options, function(err, response) {
+//         assert.ifError(err);
+//         assert.equal(response.waypoints.length, 1);
+//     });
+// });
