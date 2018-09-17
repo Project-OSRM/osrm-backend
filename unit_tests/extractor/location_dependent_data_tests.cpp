@@ -30,26 +30,28 @@ struct LocationDataFixture
 BOOST_AUTO_TEST_CASE(polygon_tests)
 {
     LocationDataFixture fixture(R"json({
-"type": "FeatureCollection",
-"features": [
-{
-    "type": "Feature",
-    "properties": {
-      "answer": 42
-    },
-    "geometry": { "type": "Polygon", "coordinates": [
-        [ [3, 0], [1, 1], [0, 3], [-1, 1], [-3, 0], [-1, -1], [0, -3], [1, -1], [3, 0] ],
-        [ [1, 0], [0, 1], [-1, 0], [0, -1], [1, 0] ]
-    ] }
-},
-{
-    "type": "Feature",
-    "properties": {
-      "answer": true
-    },
-    "geometry": { "type": "Polygon", "coordinates": [ [ [0, 10], [3, 5], [1, 5], [10, 0], [-1, 5], [-3, 5], [0, 10] ] ] }
-}
-]})json");
+	"type": "FeatureCollection",
+	"features": [
+	{
+	    "type": "Feature",
+	    "properties": {
+          "tzid" : "Europe/Berlin",
+	      "answer": 42
+	    },
+	    "geometry": { "type": "Polygon", "coordinates": [
+	        [ [3, 0], [1, 1], [0, 3], [-1, 1], [-3, 0], [-1, -1], [0, -3], [1, -1], [3, 0] ],
+	        [ [1, 0], [0, 1], [-1, 0], [0, -1], [1, 0] ]
+	    ] }
+	},
+	{
+	    "type": "Feature",
+	    "properties": {
+          "tzid" : "Europe/Berlin",
+	      "answer": true
+	    },
+	    "geometry": { "type": "Polygon", "coordinates": [ [ [0, 10], [3, 5], [1, 5], [10, 0], [-1, 5], [-3, 5], [0, 10] ] ] }
+	}
+	]})json");
 
     LocationDependentData data({fixture.temporary_file});
 
@@ -77,7 +79,8 @@ BOOST_AUTO_TEST_CASE(multy_polygon_tests)
 {
     "type": "Feature",
     "properties": {
-      "answer": 42
+      "answer": 42,
+      "tzid" : "Europe/Berlin"
     },
     "geometry": { "type": "MultiPolygon", "coordinates": [
     [ [ [1, 0], [0, 1], [-1, 0], [0, -1], [1, 0] ] ],
@@ -103,17 +106,17 @@ BOOST_AUTO_TEST_CASE(polygon_merging_tests)
 "features": [
 {
     "type": "Feature",
-    "properties": { "answer": "a" },
+    "properties": { "tzid" : "Europe/Berlin", "answer": "a" },
     "geometry": { "type": "Polygon", "coordinates": [ [ [3, 3], [-3, 3], [-3, -3], [3, -3], [3, 3] ] ] }
 },
 {
     "type": "Feature",
-    "properties": { "answer": "b" },
+    "properties": { "tzid" : "Europe/Berlin", "answer": "b" },
     "geometry": { "type": "Polygon", "coordinates": [ [ [7, 3], [1, 3], [1, -3], [7, -3], [7, 3] ] ] }
 },
 {
     "type": "Feature",
-    "properties": { "answer": "c" },
+    "properties": { "tzid" : "Europe/Berlin", "answer": "c" },
     "geometry": { "type": "Polygon", "coordinates": [ [ [8, 3], [2, 3], [2, -3], [8, -3], [8, 3] ] ] }
 }
 ]})json");
@@ -149,7 +152,7 @@ BOOST_AUTO_TEST_CASE(staircase_polygon)
 "features": [
 {
     "type": "Feature",
-    "properties": { "answer": "a" },
+    "properties": {  "tzid" : "Europe/Berlin", "answer": "a" },
     "geometry": { "type": "Polygon", "coordinates": [ [ [0, 0], [3, 0], [3, 3], [2, 3], [2, 2], [1, 2], [1, 1], [0, 1], [0, 0] ] ] }
 }
 ]})json");

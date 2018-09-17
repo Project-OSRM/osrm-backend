@@ -48,6 +48,15 @@ inline void validateFeature(const rapidjson::Value &feature)
     {
         throw osrm::util::exception("Feature has non-object properties member.");
     }
+    else if (!feature.GetObject()["properties"].HasMember("tzid"))
+    {
+        throw osrm::util::exception("Feature is missing tzid member.");
+    }
+    else if (!feature["properties"]["tzid"].IsString())
+    {
+        throw osrm::util::exception("Feature has non-string tzid member.");
+    }
+
     if (!feature.HasMember("geometry"))
     {
         throw osrm::util::exception("Feature is missing geometry member.");
@@ -76,6 +85,11 @@ inline void validateFeature(const rapidjson::Value &feature)
     const auto coord_array = feature["geometry"].GetObject()["coordinates"].GetArray();
     if (coord_array.Empty())
         throw osrm::util::exception("Feature geometry coordinates member is empty.");
+
+    if (feature["geometry"].GetObject()["type"] == "polygon" && coord_array[0].IsArray() &&
+        coord_array[0][0].IsNumber())
+        throw osrm::util::exception(
+            "Feature geometry coordinates of type Polygon is missing outterring.");
 }
 }
 }

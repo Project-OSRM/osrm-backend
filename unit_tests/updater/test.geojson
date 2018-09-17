@@ -4,7 +4,7 @@
     {
       "type": "Feature",
       "properties": {
-        "TZID": "Europe\\/Berlin"
+        "tzid": "Europe\\/Berlin"
       },
       "geometry": {
         "type": "Polygon",

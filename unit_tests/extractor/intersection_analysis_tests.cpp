@@ -1,4 +1,4 @@
-// #include "extractor/intersection/intersection_analysis.hpp"
+#include "extractor/intersection/intersection_analysis.hpp"
 
 #include "extractor/graph_compressor.hpp"
 
@@ -45,6 +45,7 @@ BOOST_AUTO_TEST_CASE(simple_intersection_connectivity)
         [](const NodeID from, const NodeID to, bool allowed, AnnotationID annotation) {
             return InputEdge{from,
                              to,
+                             1,
                              1,
                              1,
                              GeometryID{0, false},
@@ -169,10 +170,10 @@ BOOST_AUTO_TEST_CASE(roundabout_intersection_connectivity)
     //     0
     //   ↙ ↑ ↘
     //  4  5  6
-    const auto unit_edge = [](const NodeID from, const NodeID to, bool allowed, bool roundabout)
-    {
+    const auto unit_edge = [](const NodeID from, const NodeID to, bool allowed, bool roundabout) {
         return InputEdge{from,
                          to,
+                         1,
                          1,
                          1,
                          GeometryID{0, false},
@@ -278,7 +279,7 @@ BOOST_AUTO_TEST_CASE(skip_degree_two_nodes)
     //
     const auto unit_edge = [](const NodeID from, const NodeID to, bool allowed) {
         return InputEdge{
-            from, to, 1, 1, GeometryID{0, false}, !allowed, NodeBasedEdgeClassification{}, 0};
+            from, to, 1, 1, 1, GeometryID{0, false}, !allowed, NodeBasedEdgeClassification{}, 0};
     };
     std::vector<InputEdge> edges = {unit_edge(0, 1, true), // 0
                                     unit_edge(1, 0, true),

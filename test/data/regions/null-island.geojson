@@ -3,6 +3,7 @@
 "features": [ {
     "type": "Feature",
     "properties": {
+      "tzid": "Europe/Berlin",
       "driving_side": "left",
       "answer": 42,
       "boolean": true,
