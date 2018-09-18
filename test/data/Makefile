@@ -16,8 +16,7 @@ PROFILE:=$(PROFILE_ROOT)/car.lua
 
 all: data
 
-data: ch/$(DATA_NAME).osrm.hsgr corech/$(DATA_NAME).osrm.hsgr 
-	# mld/$(DATA_NAME).osrm.partition
+data: ch/$(DATA_NAME).osrm.hsgr corech/$(DATA_NAME).osrm.hsgr mld/$(DATA_NAME).osrm.partition
 
 clean:
 	-rm -r $(DATA_NAME).*
@@ -37,9 +36,9 @@ corech/$(DATA_NAME).osrm: $(DATA_NAME).osrm
 	mkdir -p corech
 	cp $(DATA_NAME).osrm $(DATA_NAME).osrm.* corech/
 
-# mld/$(DATA_NAME).osrm: $(DATA_NAME).osrm
-# 	mkdir -p mld
-# 	cp $(DATA_NAME).osrm $(DATA_NAME).osrm.* mld/
+mld/$(DATA_NAME).osrm: $(DATA_NAME).osrm
+	mkdir -p mld
+	cp $(DATA_NAME).osrm $(DATA_NAME).osrm.* mld/
 
 $(DATA_NAME).osrm: $(DATA_NAME).osm.pbf $(DATA_NAME).poly $(PROFILE) $(OSRM_EXTRACT)
 	@echo "Verifiyng data file integrity..."
@@ -55,10 +54,10 @@ corech/$(DATA_NAME).osrm.hsgr: corech/$(DATA_NAME).osrm $(PROFILE) $(OSRM_CONTRA
 	@echo "Running osrm-contract..."
 	$(TIMER) "osrm-contract\t$@" $(OSRM_CONTRACT) --core=0.5 $<
 
-# mld/$(DATA_NAME).osrm.partition: mld/$(DATA_NAME).osrm $(PROFILE) $(OSRM_PARTITION)
-#  	@echo "Running osrm-partition..."
-#  	$(TIMER) "osrm-partition\t$@" $(OSRM_PARTITION) $<
-#  	$(TIMER) "osrm-customize\t$@" $(OSRM_CUSTOMIZE) $<
+mld/$(DATA_NAME).osrm.partition: mld/$(DATA_NAME).osrm $(PROFILE) $(OSRM_PARTITION)
+	@echo "Running osrm-partition..."
+	$(TIMER) "osrm-partition\t$@" $(OSRM_PARTITION) $<
+	$(TIMER) "osrm-customize\t$@" $(OSRM_CUSTOMIZE) $<
 
 $(DATA_NAME).requests: $(DATA_NAME).poly
 	$(POLY2REQ) $(DATA_NAME).poly > $(DATA_NAME).requests
