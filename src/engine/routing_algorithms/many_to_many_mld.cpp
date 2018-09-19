@@ -41,7 +41,7 @@ void relaxOutgoingEdges(const DataFacade<mld::Algorithm> &facade,
                         const NodeID node,
                         const EdgeWeight weight,
                         const EdgeDuration duration,
-                        const EdgeDistance /* distance TODO use this */,
+                        const EdgeDistance distance,
                         typename SearchEngineData<mld::Algorithm>::ManyToManyQueryHeap &query_heap,
                         Args... args)
 {
@@ -66,65 +66,77 @@ void relaxOutgoingEdges(const DataFacade<mld::Algorithm> &facade,
         { // Shortcuts in forward direction
             auto destination = cell.GetDestinationNodes().begin();
             auto shortcut_durations = cell.GetOutDuration(node);
+            auto shortcut_distances = cell.GetOutDistance(node);
             for (auto shortcut_weight : cell.GetOutWeight(node))
             {
                 BOOST_ASSERT(destination != cell.GetDestinationNodes().end());
                 BOOST_ASSERT(!shortcut_durations.empty());
+                BOOST_ASSERT(!shortcut_distances.empty());
                 const NodeID to = *destination;
 
                 if (shortcut_weight != INVALID_EDGE_WEIGHT && node != to)
                 {
                     const auto to_weight = weight + shortcut_weight;
                     const auto to_duration = duration + shortcut_durations.front();
+                    const auto to_distance = distance + shortcut_distances.front();
                     if (!query_heap.WasInserted(to))
                     {
-                        query_heap.Insert(to, to_weight, {node, true, to_duration, 0});
+                        query_heap.Insert(to, to_weight, {node, true, to_duration, to_distance});
                     }
-                    else if (std::tie(to_weight, to_duration, node) <
+                    else if (std::tie(to_weight, to_duration, to_distance, node) <
                              std::tie(query_heap.GetKey(to),
                                       query_heap.GetData(to).duration,
+                                      query_heap.GetData(to).distance,
                                       query_heap.GetData(to).parent))
                     {
-                        query_heap.GetData(to) = {node, true, to_duration, 0};
+                        query_heap.GetData(to) = {node, true, to_duration, to_distance};
                         query_heap.DecreaseKey(to, to_weight);
                     }
                 }
                 ++destination;
                 shortcut_durations.advance_begin(1);
+                shortcut_distances.advance_begin(1);
             }
             BOOST_ASSERT(shortcut_durations.empty());
+            BOOST_ASSERT(shortcut_distances.empty());
         }
         else
         { // Shortcuts in backward direction
             auto source = cell.GetSourceNodes().begin();
             auto shortcut_durations = cell.GetInDuration(node);
+            auto shortcut_distances = cell.GetInDistance(node);
             for (auto shortcut_weight : cell.GetInWeight(node))
             {
                 BOOST_ASSERT(source != cell.GetSourceNodes().end());
                 BOOST_ASSERT(!shortcut_durations.empty());
+                BOOST_ASSERT(!shortcut_distances.empty());
                 const NodeID to = *source;
 
                 if (shortcut_weight != INVALID_EDGE_WEIGHT && node != to)
                 {
                     const auto to_weight = weight + shortcut_weight;
                     const auto to_duration = duration + shortcut_durations.front();
+                    const auto to_distance = distance + shortcut_distances.front();
                     if (!query_heap.WasInserted(to))
                     {
-                        query_heap.Insert(to, to_weight, {node, true, to_duration, 0});
+                        query_heap.Insert(to, to_weight, {node, true, to_duration, to_distance});
                     }
                     else if (std::tie(to_weight, to_duration, node) <
                              std::tie(query_heap.GetKey(to),
                                       query_heap.GetData(to).duration,
+                                      query_heap.GetData(to).distance,
                                       query_heap.GetData(to).parent))
                     {
-                        query_heap.GetData(to) = {node, true, to_duration, 0};
+                        query_heap.GetData(to) = {node, true, to_duration, to_distance};
                         query_heap.DecreaseKey(to, to_weight);
                     }
                 }
                 ++source;
                 shortcut_durations.advance_begin(1);
+                shortcut_distances.advance_begin(1);
             }
             BOOST_ASSERT(shortcut_durations.empty());
+            BOOST_ASSERT(shortcut_distances.empty());
         }
     }
 
@@ -144,6 +156,7 @@ void relaxOutgoingEdges(const DataFacade<mld::Algorithm> &facade,
             const auto node_id = DIRECTION == FORWARD_DIRECTION ? node : facade.GetTarget(edge);
             const auto node_weight = facade.GetNodeWeight(node_id);
             const auto node_duration = facade.GetNodeDuration(node_id);
+            const auto node_distance = facade.GetNodeDistance(node_id);
             const auto turn_weight = node_weight + facade.GetWeightPenaltyForEdgeID(turn_id);
             const auto turn_duration = node_duration + facade.GetDurationPenaltyForEdgeID(turn_id);
 
@@ -154,15 +167,16 @@ void relaxOutgoingEdges(const DataFacade<mld::Algorithm> &facade,
             // New Node discovered -> Add to Heap + Node Info Storage
             if (!query_heap.WasInserted(to))
             {
-                query_heap.Insert(to, to_weight, {node, false, to_duration, 0});
+                query_heap.Insert(to, to_weight, {node, false, to_duration, int(node_distance)});
             }
             // Found a shorter Path -> Update weight and set new parent
-            else if (std::tie(to_weight, to_duration, node) <
+            else if (std::tie(to_weight, to_duration, node_distance, node) <
                      std::tie(query_heap.GetKey(to),
                               query_heap.GetData(to).duration,
+                              query_heap.GetData(to).distance,
                               query_heap.GetData(to).parent))
             {
-                query_heap.GetData(to) = {node, false, to_duration, 0};
+                query_heap.GetData(to) = {node, false, to_duration, node_distance};
                 query_heap.DecreaseKey(to, to_weight);
             }
         }
@@ -511,6 +525,7 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
                         const std::vector<NodeBucket> &search_space_with_buckets,
                         std::vector<EdgeWeight> &weights_table,
                         std::vector<EdgeDuration> &durations_table,
+                        std::vector<EdgeDistance> &distances_table,
                         std::vector<NodeID> &middle_nodes_table,
                         const PhantomNode &phantom_node)
 {
@@ -530,6 +545,7 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
         const auto column_idx = current_bucket.column_index;
         const auto target_weight = current_bucket.weight;
         const auto target_duration = current_bucket.duration;
+        const auto target_distance = current_bucket.distance;
 
         // Get the value location in the results tables:
         //  * row-major direct (row_idx, column_idx) index for forward direction
@@ -539,16 +555,20 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
                                   : row_idx + column_idx * number_of_sources;
         auto &current_weight = weights_table[location];
         auto &current_duration = durations_table[location];
+        auto &current_distance = distances_table[location];
 
         // Check if new weight is better
         auto new_weight = source_weight + target_weight;
         auto new_duration = source_duration + target_duration;
+        auto new_distance = source_distance + target_distance;
 
         if (new_weight >= 0 &&
-            std::tie(new_weight, new_duration) < std::tie(current_weight, current_duration))
+            std::tie(new_weight, new_duration, new_distance) <
+                std::tie(current_weight, current_duration, current_distance))
         {
             current_weight = new_weight;
             current_duration = new_duration;
+            current_distance = new_distance;
             middle_nodes_table[location] = node;
         }
     }
@@ -573,7 +593,7 @@ void backwardRoutingStep(const DataFacade<Algorithm> &facade,
 
     // Store settled nodes in search space bucket
     search_space_with_buckets.emplace_back(
-        node, parent, from_clique_arc, column_idx, target_weight, target_duration);
+        node, parent, from_clique_arc, column_idx, target_weight, target_duration, target_distance);
 
     const auto &partition = facade.GetMultiLevelPartition();
     const auto maximal_level = partition.GetNumberOfLevels() - 1;
@@ -815,7 +835,7 @@ manyToManySearch(SearchEngineData<Algorithm> &engine_working_data,
 
     std::vector<EdgeWeight> weights_table(number_of_entries, INVALID_EDGE_WEIGHT);
     std::vector<EdgeDuration> durations_table(number_of_entries, MAXIMAL_EDGE_DURATION);
-    std::vector<EdgeDistance> distances_table;
+    std::vector<EdgeDistance> distances_table(number_of_entries, INVALID_EDGE_DISTANCE);
     std::vector<NodeID> middle_nodes_table(number_of_entries, SPECIAL_NODEID);
 
     std::vector<NodeBucket> search_space_with_buckets;
@@ -874,6 +894,7 @@ manyToManySearch(SearchEngineData<Algorithm> &engine_working_data,
                                           search_space_with_buckets,
                                           weights_table,
                                           durations_table,
+                                          distances_table,
                                           middle_nodes_table,
                                           source_phantom);
         }
