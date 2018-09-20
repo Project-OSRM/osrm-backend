@@ -58,8 +58,10 @@ class MultiLevelGraph : public partitioner::MultiLevelGraph<EdgeDataT, Ownership
 
     MultiLevelGraph(PartitionerGraphT &&graph,
                     Vector<EdgeWeight> node_weights_,
-                    Vector<EdgeDuration> node_durations_)
-        : node_weights(std::move(node_weights_)), node_durations(std::move(node_durations_))
+                    Vector<EdgeDuration> node_durations_,
+                    Vector<EdgeDistance> node_distances_)
+        : node_weights(std::move(node_weights_)), node_durations(std::move(node_durations_)),
+          node_distances(std::move(node_distances_))
     {
         util::ViewOrVector<PartitionerGraphT::EdgeArrayEntry, storage::Ownership::Container>
             original_edge_array;

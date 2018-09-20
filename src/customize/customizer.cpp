@@ -125,6 +125,8 @@ int Customizer::Run(const CustomizationConfig &config)
 
     std::vector<EdgeWeight> node_weights;
     std::vector<EdgeDuration> node_durations; // TODO: to be removed later
+    std::vector<EdgeDistance>
+        node_distances; // TODO: is this and the above still to be removed later? dont think so
     std::uint32_t connectivity_checksum = 0;
     auto graph = LoadAndUpdateEdgeExpandedGraph(
         config, mlp, node_weights, node_durations, connectivity_checksum);
@@ -166,8 +168,10 @@ int Customizer::Run(const CustomizationConfig &config)
     util::Log() << "MLD customization writing took " << TIMER_SEC(writing_mld_data) << " seconds";
 
     TIMER_START(writing_graph);
-    MultiLevelEdgeBasedGraph shaved_graph{
-        std::move(graph), std::move(node_weights), std::move(node_durations)};
+    MultiLevelEdgeBasedGraph shaved_graph{std::move(graph),
+                                          std::move(node_weights),
+                                          std::move(node_durations),
+                                          std::move(node_distances)};
     customizer::files::writeGraph(
         config.GetPath(".osrm.mldgr"), shaved_graph, connectivity_checksum);
     TIMER_STOP(writing_graph);

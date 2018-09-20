@@ -163,6 +163,7 @@ void relaxOutgoingEdges(const DataFacade<mld::Algorithm> &facade,
             BOOST_ASSERT_MSG(node_weight + turn_weight > 0, "edge weight is invalid");
             const auto to_weight = weight + turn_weight;
             const auto to_duration = duration + turn_duration;
+            const auto to_distance = distance + node_distance;
 
             // New Node discovered -> Add to Heap + Node Info Storage
             if (!query_heap.WasInserted(to))
@@ -170,16 +171,16 @@ void relaxOutgoingEdges(const DataFacade<mld::Algorithm> &facade,
                 query_heap.Insert(
                     to,
                     to_weight,
-                    {node, false, to_duration, static_cast<EdgeDistance>(node_distance)});
+                    {node, false, to_duration, to_distance});
             }
             // Found a shorter Path -> Update weight and set new parent
-            else if (std::tie(to_weight, to_duration, node_distance, node) <
+            else if (std::tie(to_weight, to_duration, to_distance, node) <
                      std::tie(query_heap.GetKey(to),
                               query_heap.GetData(to).duration,
                               query_heap.GetData(to).distance,
                               query_heap.GetData(to).parent))
             {
-                query_heap.GetData(to) = {node, false, to_duration, node_distance};
+                query_heap.GetData(to) = {node, false, to_duration, to_distance};
                 query_heap.DecreaseKey(to, to_weight);
             }
         }
