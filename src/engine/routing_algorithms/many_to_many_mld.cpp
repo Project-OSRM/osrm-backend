@@ -167,7 +167,10 @@ void relaxOutgoingEdges(const DataFacade<mld::Algorithm> &facade,
             // New Node discovered -> Add to Heap + Node Info Storage
             if (!query_heap.WasInserted(to))
             {
-                query_heap.Insert(to, to_weight, {node, false, to_duration, int(node_distance)});
+                query_heap.Insert(
+                    to,
+                    to_weight,
+                    {node, false, to_duration, static_cast<EdgeDistance>(node_distance)});
             }
             // Found a shorter Path -> Update weight and set new parent
             else if (std::tie(to_weight, to_duration, node_distance, node) <

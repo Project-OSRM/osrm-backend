@@ -133,6 +133,46 @@ template <storage::Ownership Ownership> class CellStorageImpl
             const std::size_t stride;
         };
 
+        class ColumnIteratorD : public boost::iterator_facade<ColumnIteratorD,
+                                                              DistanceValueT,
+                                                              boost::random_access_traversal_tag>
+        {
+            using RowIterator = DistanceValueT;
+            typedef boost::iterator_facade<ColumnIteratorD,
+                                           DistanceValueT,
+                                           boost::random_access_traversal_tag>
+                base_t;
+
+          public:
+            typedef typename base_t::value_type value_type;
+            typedef typename base_t::difference_type difference_type;
+            typedef typename base_t::reference reference;
+            typedef std::random_access_iterator_tag iterator_category;
+
+            explicit ColumnIteratorD() : current(nullptr), stride(1) {}
+
+            explicit ColumnIteratorD(DistancePtrT begin, std::size_t row_length)
+                : current(begin), stride(row_length)
+            {
+                BOOST_ASSERT(begin != nullptr);
+            }
+
+          private:
+            void increment() { current += stride; }
+            void decrement() { current -= stride; }
+            void advance(difference_type offset) { current += stride * offset; }
+            bool equal(const ColumnIteratorD &other) const { return current == other.current; }
+            reference dereference() const { return *current; }
+            difference_type distance_to(const ColumnIteratorD &other) const
+            {
+                return (other.current - current) / static_cast<std::intptr_t>(stride);
+            }
+
+            friend class ::boost::iterator_core_access;
+            DistancePtrT current;
+            const std::size_t stride;
+        };
+
         template <typename ValuePtr> auto GetOutRange(const ValuePtr ptr, const NodeID node) const
         {
             auto iter = std::find(source_boundary, source_boundary + num_source_nodes, node);
@@ -159,6 +199,20 @@ template <storage::Ownership Ownership> class CellStorageImpl
             return boost::make_iterator_range(begin, end);
         }
 
+        auto GetInRangeD(const DistancePtrT ptr, const NodeID node) const
+        {
+            auto iter =
+                std::find(destination_boundary, destination_boundary + num_destination_nodes, node);
+            if (iter == destination_boundary + num_destination_nodes)
+                return boost::make_iterator_range(ColumnIteratorD{}, ColumnIteratorD{});
+
+            auto column = std::distance(destination_boundary, iter);
+            auto begin = ColumnIteratorD{ptr + column, num_destination_nodes};
+            auto end = ColumnIteratorD{ptr + column + num_source_nodes * num_destination_nodes,
+                                       num_destination_nodes};
+            return boost::make_iterator_range(begin, end);
+        }
+
       public:
         auto GetOutWeight(NodeID node) const { return GetOutRange(weights, node); }
 
@@ -168,13 +222,11 @@ template <storage::Ownership Ownership> class CellStorageImpl
 
         auto GetInDuration(NodeID node) const { return GetInRange(durations, node); }
 
-        auto GetOutDistance(NodeID node) const
-        {
-            return GetOutRange(distances, node);
-        } // Might be symmetric and may be able to get away with simply having GetDistance and not
-          // have both GetInDistance and GetOutDistance
+        auto GetInDistance(NodeID node) const { return GetInRangeD(distances, node); }
 
-        auto GetInDistance(NodeID node) const { return GetInRange(distances, node); }
+        auto GetOutDistance(NodeID node) const { return GetOutRange(distances, node); }
+
+        // auto GetInDistance(NodeID node) const { return GetInRange(distances, node); }
 
         auto GetSourceNodes() const
         {
@@ -203,7 +255,7 @@ template <storage::Ownership Ownership> class CellStorageImpl
         {
             BOOST_ASSERT(all_weights != nullptr);
             BOOST_ASSERT(all_durations != nullptr);
-            BOOST_ASSERT(all_durations != nullptr);
+            BOOST_ASSERT(all_distances != nullptr);
             BOOST_ASSERT(num_source_nodes == 0 || all_sources != nullptr);
             BOOST_ASSERT(num_destination_nodes == 0 || all_destinations != nullptr);
         }
@@ -376,6 +428,7 @@ template <storage::Ownership Ownership> class CellStorageImpl
 
         metric.weights.resize(total_size + 1, INVALID_EDGE_WEIGHT);
         metric.durations.resize(total_size + 1, MAXIMAL_EDGE_DURATION);
+        metric.distances.resize(total_size + 1, INVALID_EDGE_DISTANCE);
 
         return metric;
     }
