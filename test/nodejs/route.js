@@ -592,17 +592,17 @@ test('route: throws on bad approaches', function(assert) {
 //     });
 // });
 
-// test('route: route in Monaco without motorways', function(assert) {
-//     assert.plan(3);
-//     var osrm = new OSRM({path: monaco_mld_path, algorithm: 'MLD'});
-//     var options = {
-//         coordinates: two_test_coordinates,
-//         exclude: ['motorway']
-//     };
-//     osrm.route(options, function(err, response) {
-//         assert.ifError(err);
-//         assert.equal(response.waypoints.length, 2);
-//         assert.equal(response.routes.length, 1);
-//     });
-// });
+test('route: route in Monaco without motorways', function(assert) {
+    assert.plan(3);
+    var osrm = new OSRM({path: monaco_mld_path, algorithm: 'MLD'});
+    var options = {
+        coordinates: two_test_coordinates,
+        exclude: ['motorway']
+    };
+    osrm.route(options, function(err, response) {
+        assert.ifError(err);
+        assert.equal(response.waypoints.length, 2);
+        assert.equal(response.routes.length, 1);
+    });
+});
 
