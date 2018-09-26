@@ -19,17 +19,17 @@ test('route: routes Monaco', function(assert) {
     });
 });
 
-// test('route: routes Monaco on MLD', function(assert) {
-//     assert.plan(5);
-//     var osrm = new OSRM({path: monaco_mld_path, algorithm: 'MLD'});
-//     osrm.route({coordinates: [[13.43864,52.51993],[13.415852,52.513191]]}, function(err, route) {
-//         assert.ifError(err);
-//         assert.ok(route.waypoints);
-//         assert.ok(route.routes);
-//         assert.ok(route.routes.length);
-//         assert.ok(route.routes[0].geometry);
-//     });
-// });
+test('route: routes Monaco on MLD', function(assert) {
+    assert.plan(5);
+    var osrm = new OSRM({path: monaco_mld_path, algorithm: 'MLD'});
+    osrm.route({coordinates: [[13.43864,52.51993],[13.415852,52.513191]]}, function(err, route) {
+        assert.ifError(err);
+        assert.ok(route.waypoints);
+        assert.ok(route.routes);
+        assert.ok(route.routes.length);
+        assert.ok(route.routes[0].geometry);
+    });
+});
 
 test('route: routes Monaco on CoreCH', function(assert) {
     assert.plan(5);
@@ -566,31 +566,31 @@ test('route: throws on bad approaches', function(assert) {
         /Approach must be a string: \[curb, unrestricted\] or null/);
 });
 
-// test('route: routes Monaco with custom limits on MLD', function(assert) {
-//     assert.plan(2);
-//     var osrm = new OSRM({
-//         path: monaco_mld_path,
-//         algorithm: 'MLD',
-//         max_alternatives: 10,
-//     });
-//     osrm.route({coordinates: two_test_coordinates, alternatives: 10}, function(err, route) {
-//         assert.ifError(err);
-//         assert.ok(Array.isArray(route.routes));
-//     });
-// });
+test('route: routes Monaco with custom limits on MLD', function(assert) {
+    assert.plan(2);
+    var osrm = new OSRM({
+        path: monaco_mld_path,
+        algorithm: 'MLD',
+        max_alternatives: 10,
+    });
+    osrm.route({coordinates: two_test_coordinates, alternatives: 10}, function(err, route) {
+        assert.ifError(err);
+        assert.ok(Array.isArray(route.routes));
+    });
+});
 
-// test('route:  in Monaco with custom limits on MLD', function(assert) {
-//     assert.plan(1);
-//     var osrm = new OSRM({
-//         path: monaco_mld_path,
-//         algorithm: 'MLD',
-//         max_alternatives: 10,
-//     });
-//     osrm.route({coordinates: two_test_coordinates, alternatives: 11}, function(err, route) {
-//         console.log(err)
-//         assert.equal(err.message, 'TooBig');
-//     });
-// });
+test('route:  in Monaco with custom limits on MLD', function(assert) {
+    assert.plan(1);
+    var osrm = new OSRM({
+        path: monaco_mld_path,
+        algorithm: 'MLD',
+        max_alternatives: 10,
+    });
+    osrm.route({coordinates: two_test_coordinates, alternatives: 11}, function(err, route) {
+        console.log(err)
+        assert.equal(err.message, 'TooBig');
+    });
+});
 
 test('route: route in Monaco without motorways', function(assert) {
     assert.plan(3);

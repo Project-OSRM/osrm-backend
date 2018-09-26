@@ -121,7 +121,7 @@ void relaxOutgoingEdges(const DataFacade<mld::Algorithm> &facade,
                     {
                         query_heap.Insert(to, to_weight, {node, true, to_duration, to_distance});
                     }
-                    else if (std::tie(to_weight, to_duration, node) <
+                    else if (std::tie(to_weight, to_duration, to_distance, node) <
                              std::tie(query_heap.GetKey(to),
                                       query_heap.GetData(to).duration,
                                       query_heap.GetData(to).distance,
@@ -168,10 +168,7 @@ void relaxOutgoingEdges(const DataFacade<mld::Algorithm> &facade,
             // New Node discovered -> Add to Heap + Node Info Storage
             if (!query_heap.WasInserted(to))
             {
-                query_heap.Insert(
-                    to,
-                    to_weight,
-                    {node, false, to_duration, to_distance});
+                query_heap.Insert(to, to_weight, {node, false, to_duration, to_distance});
             }
             // Found a shorter Path -> Update weight and set new parent
             else if (std::tie(to_weight, to_duration, to_distance, node) <
@@ -833,7 +830,7 @@ manyToManySearch(SearchEngineData<Algorithm> &engine_working_data,
                  const std::vector<PhantomNode> &phantom_nodes,
                  const std::vector<std::size_t> &source_indices,
                  const std::vector<std::size_t> &target_indices,
-                 const bool calculate_distance)
+                 const bool /*calculate_distance*/)
 {
     const auto number_of_sources = source_indices.size();
     const auto number_of_targets = target_indices.size();
@@ -905,7 +902,8 @@ manyToManySearch(SearchEngineData<Algorithm> &engine_working_data,
                                           source_phantom);
         }
 
-        if (calculate_distance)
+        // if (calculate_distance)
+        if (false)
         {
             distances_table.resize(number_of_entries, INVALID_EDGE_DISTANCE);
             calculateDistances<DIRECTION>(query_heap,

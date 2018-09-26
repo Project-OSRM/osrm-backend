@@ -27,6 +27,7 @@ auto makeGraph(const MultiLevelPartition &mlp, const std::vector<MockEdge> &mock
     {
         EdgeWeight weight;
         EdgeDuration duration;
+        EdgeDistance distance;
         bool forward;
         bool backward;
     };
@@ -36,8 +37,20 @@ auto makeGraph(const MultiLevelPartition &mlp, const std::vector<MockEdge> &mock
     for (const auto &m : mock_edges)
     {
         max_id = std::max<std::size_t>(max_id, std::max(m.start, m.target));
-        edges.push_back(Edge{m.start, m.target, m.weight, 2 * m.weight, true, false});
-        edges.push_back(Edge{m.target, m.start, m.weight, 2 * m.weight, false, true});
+        edges.push_back(Edge{m.start,
+                             m.target,
+                             m.weight,
+                             2 * m.weight,
+                             static_cast<EdgeDistance>(1.0),
+                             true,
+                             false});
+        edges.push_back(Edge{m.target,
+                             m.start,
+                             m.weight,
+                             2 * m.weight,
+                             static_cast<EdgeDistance>(1.0),
+                             false,
+                             true});
     }
     std::sort(edges.begin(), edges.end());
     return partitioner::MultiLevelGraph<EdgeData, osrm::storage::Ownership::Container>(
