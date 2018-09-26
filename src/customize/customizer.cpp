@@ -76,13 +76,14 @@ auto LoadAndUpdateEdgeExpandedGraph(const CustomizationConfig &config,
                                     const partitioner::MultiLevelPartition &mlp,
                                     std::vector<EdgeWeight> &node_weights,
                                     std::vector<EdgeDuration> &node_durations,
+                                    std::vector<EdgeDistance> &node_distances,
                                     std::uint32_t &connectivity_checksum)
 {
     updater::Updater updater(config.updater_config);
 
     std::vector<extractor::EdgeBasedEdge> edge_based_edge_list;
     EdgeID num_nodes = updater.LoadAndUpdateEdgeExpandedGraph(
-        edge_based_edge_list, node_weights, node_durations, connectivity_checksum);
+        edge_based_edge_list, node_weights, node_durations, node_distances, connectivity_checksum);
 
     auto directed = partitioner::splitBidirectionalEdges(edge_based_edge_list);
 
@@ -129,7 +130,7 @@ int Customizer::Run(const CustomizationConfig &config)
         node_distances; // TODO: is this and the above still to be removed later? dont think so
     std::uint32_t connectivity_checksum = 0;
     auto graph = LoadAndUpdateEdgeExpandedGraph(
-        config, mlp, node_weights, node_durations, connectivity_checksum);
+        config, mlp, node_weights, node_durations, node_distances, connectivity_checksum);
     BOOST_ASSERT(graph.GetNumberOfNodes() == node_weights.size());
     std::for_each(node_weights.begin(), node_weights.end(), [](auto &w) { w &= 0x7fffffff; });
     util::Log() << "Loaded edge based graph: " << graph.GetNumberOfEdges() << " edges, "

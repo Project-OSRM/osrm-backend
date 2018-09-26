@@ -541,6 +541,7 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
                                         std::vector<EdgeDuration> &node_durations,
                                         std::uint32_t &connectivity_checksum) const
 {
+
     TIMER_START(load_edges);
 
     EdgeID number_of_edge_based_nodes = 0;
@@ -549,6 +550,299 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
 
     extractor::files::readEdgeBasedNodeWeightsDurations(
         config.GetPath(".osrm.enw"), node_weights, node_durations);
+
+    extractor::files::readEdgeBasedGraph(config.GetPath(".osrm.ebg"),
+                                         number_of_edge_based_nodes,
+                                         edge_based_edge_list,
+                                         connectivity_checksum);
+    extractor::files::readNodes(config.GetPath(".osrm.nbg_nodes"), coordinates, osm_node_ids);
+
+    const bool update_conditional_turns =
+        !config.GetPath(".osrm.restrictions").empty() && config.valid_now;
+    const bool update_edge_weights = !config.segment_speed_lookup_paths.empty();
+    const bool update_turn_penalties = !config.turn_penalty_lookup_paths.empty();
+
+    if (!update_edge_weights && !update_turn_penalties && !update_conditional_turns)
+    {
+        saveDatasourcesNames(config);
+        return number_of_edge_based_nodes;
+    }
+
+    if (config.segment_speed_lookup_paths.size() + config.turn_penalty_lookup_paths.size() > 255)
+        throw util::exception("Limit of 255 segment speed and turn penalty files each reached" +
+                              SOURCE_REF);
+
+    extractor::EdgeBasedNodeDataContainer node_data;
+    extractor::SegmentDataContainer segment_data;
+    extractor::ProfileProperties profile_properties;
+    std::vector<TurnPenalty> turn_weight_penalties;
+    std::vector<TurnPenalty> turn_duration_penalties;
+    if (update_edge_weights || update_turn_penalties || update_conditional_turns)
+    {
+        tbb::parallel_invoke(
+            [&] {
+                extractor::files::readSegmentData(config.GetPath(".osrm.geometry"), segment_data);
+            },
+            [&] { extractor::files::readNodeData(config.GetPath(".osrm.ebg_nodes"), node_data); },
+
+            [&] {
+                extractor::files::readTurnWeightPenalty(
+                    config.GetPath(".osrm.turn_weight_penalties"), turn_weight_penalties);
+            },
+            [&] {
+                extractor::files::readTurnDurationPenalty(
+                    config.GetPath(".osrm.turn_duration_penalties"), turn_duration_penalties);
+            },
+            [&] {
+                extractor::files::readProfileProperties(config.GetPath(".osrm.properties"),
+                                                        profile_properties);
+            });
+    }
+
+    std::vector<extractor::ConditionalTurnPenalty> conditional_turns;
+    if (update_conditional_turns)
+    {
+        extractor::files::readConditionalRestrictions(config.GetPath(".osrm.restrictions"),
+                                                      conditional_turns);
+    }
+
+    tbb::concurrent_vector<GeometryID> updated_segments;
+    if (update_edge_weights)
+    {
+        auto segment_speed_lookup = csv::readSegmentValues(config.segment_speed_lookup_paths);
+
+        TIMER_START(segment);
+        updated_segments = updateSegmentData(config,
+                                             profile_properties,
+                                             segment_speed_lookup,
+                                             segment_data,
+                                             coordinates,
+                                             osm_node_ids);
+        // Now save out the updated compressed geometries
+        extractor::files::writeSegmentData(config.GetPath(".osrm.geometry"), segment_data);
+        TIMER_STOP(segment);
+        util::Log() << "Updating segment data took " << TIMER_MSEC(segment) << "ms.";
+    }
+
+    auto turn_penalty_lookup = csv::readTurnValues(config.turn_penalty_lookup_paths);
+    if (update_turn_penalties)
+    {
+        auto updated_turn_penalties = updateTurnPenalties(config,
+                                                          profile_properties,
+                                                          turn_penalty_lookup,
+                                                          turn_weight_penalties,
+                                                          turn_duration_penalties,
+                                                          osm_node_ids);
+        const auto offset = updated_segments.size();
+        updated_segments.resize(offset + updated_turn_penalties.size());
+        // we need to re-compute all edges that have updated turn penalties.
+        // this marks it for re-computation
+        std::transform(updated_turn_penalties.begin(),
+                       updated_turn_penalties.end(),
+                       updated_segments.begin() + offset,
+                       [&node_data, &edge_based_edge_list](const std::uint64_t turn_id) {
+                           const auto node_id = edge_based_edge_list[turn_id].source;
+                           return node_data.GetGeometryID(node_id);
+                       });
+    }
+
+    if (update_conditional_turns)
+    {
+        // initialize instance of class that handles time zone resolution
+        if (config.valid_now <= 0)
+        {
+            util::Log(logERROR) << "Given UTC time is invalid: " << config.valid_now;
+            throw;
+        }
+        const Timezoner time_zone_handler = Timezoner(config.tz_file_path, config.valid_now);
+
+        auto updated_turn_penalties =
+            updateConditionalTurns(turn_weight_penalties, conditional_turns, time_zone_handler);
+        const auto offset = updated_segments.size();
+        updated_segments.resize(offset + updated_turn_penalties.size());
+        // we need to re-compute all edges that have updated turn penalties.
+        // this marks it for re-computation
+        std::transform(updated_turn_penalties.begin(),
+                       updated_turn_penalties.end(),
+                       updated_segments.begin() + offset,
+                       [&node_data, &edge_based_edge_list](const std::uint64_t turn_id) {
+                           const auto node_id = edge_based_edge_list[turn_id].source;
+                           return node_data.GetGeometryID(node_id);
+                       });
+    }
+
+    tbb::parallel_sort(updated_segments.begin(),
+                       updated_segments.end(),
+                       [](const GeometryID lhs, const GeometryID rhs) {
+                           return std::tie(lhs.id, lhs.forward) < std::tie(rhs.id, rhs.forward);
+                       });
+
+    using WeightAndDuration = std::tuple<EdgeWeight, EdgeWeight>;
+    const auto compute_new_weight_and_duration =
+        [&](const GeometryID geometry_id) -> WeightAndDuration {
+        EdgeWeight new_weight = 0;
+        EdgeWeight new_duration = 0;
+        if (geometry_id.forward)
+        {
+            const auto weights = segment_data.GetForwardWeights(geometry_id.id);
+            for (const auto weight : weights)
+            {
+                if (weight == INVALID_SEGMENT_WEIGHT)
+                {
+                    new_weight = INVALID_EDGE_WEIGHT;
+                    break;
+                }
+                new_weight += weight;
+            }
+            const auto durations = segment_data.GetForwardDurations(geometry_id.id);
+            new_duration = std::accumulate(durations.begin(), durations.end(), EdgeWeight{0});
+        }
+        else
+        {
+            const auto weights = segment_data.GetReverseWeights(geometry_id.id);
+            for (const auto weight : weights)
+            {
+                if (weight == INVALID_SEGMENT_WEIGHT)
+                {
+                    new_weight = INVALID_EDGE_WEIGHT;
+                    break;
+                }
+                new_weight += weight;
+            }
+            const auto durations = segment_data.GetReverseDurations(geometry_id.id);
+            new_duration = std::accumulate(durations.begin(), durations.end(), EdgeWeight{0});
+        }
+        return std::make_tuple(new_weight, new_duration);
+    };
+
+    std::vector<WeightAndDuration> accumulated_segment_data(updated_segments.size());
+    tbb::parallel_for(tbb::blocked_range<std::size_t>(0, updated_segments.size()),
+                      [&](const auto &range) {
+                          for (auto index = range.begin(); index < range.end(); ++index)
+                          {
+                              accumulated_segment_data[index] =
+                                  compute_new_weight_and_duration(updated_segments[index]);
+                          }
+                      });
+
+    const auto update_edge = [&](extractor::EdgeBasedEdge &edge) {
+        const auto node_id = edge.source;
+        const auto geometry_id = node_data.GetGeometryID(node_id);
+        auto updated_iter = std::lower_bound(updated_segments.begin(),
+                                             updated_segments.end(),
+                                             geometry_id,
+                                             [](const GeometryID lhs, const GeometryID rhs) {
+                                                 return std::tie(lhs.id, lhs.forward) <
+                                                        std::tie(rhs.id, rhs.forward);
+                                             });
+        if (updated_iter != updated_segments.end() && updated_iter->id == geometry_id.id &&
+            updated_iter->forward == geometry_id.forward)
+        {
+            // Find a segment with zero speed and simultaneously compute the new edge
+            // weight
+            EdgeWeight new_weight;
+            EdgeWeight new_duration;
+            std::tie(new_weight, new_duration) =
+                accumulated_segment_data[updated_iter - updated_segments.begin()];
+
+            // Update the node-weight cache. This is the weight of the edge-based-node
+            // only, it doesn't include the turn. We may visit the same node multiple times,
+            // but we should always assign the same value here.
+            BOOST_ASSERT(edge.source < node_weights.size());
+            node_weights[edge.source] =
+                node_weights[edge.source] & 0x80000000 ? new_weight | 0x80000000 : new_weight;
+            node_durations[edge.source] = new_duration;
+
+            // We found a zero-speed edge, so we'll skip this whole edge-based-edge
+            // which
+            // effectively removes it from the routing network.
+            if (new_weight == INVALID_EDGE_WEIGHT)
+            {
+                edge.data.weight = INVALID_EDGE_WEIGHT;
+                return;
+            }
+
+            // Get the turn penalty and update to the new value if required
+            auto turn_weight_penalty = turn_weight_penalties[edge.data.turn_id];
+            auto turn_duration_penalty = turn_duration_penalties[edge.data.turn_id];
+            const auto num_nodes = segment_data.GetForwardGeometry(geometry_id.id).size();
+            const auto weight_min_value = static_cast<EdgeWeight>(num_nodes);
+            if (turn_weight_penalty + new_weight < weight_min_value)
+            {
+                if (turn_weight_penalty < 0)
+                {
+                    util::Log(logWARNING) << "turn penalty " << turn_weight_penalty
+                                          << " is too negative: clamping turn weight to "
+                                          << weight_min_value;
+                    turn_weight_penalty = weight_min_value - new_weight;
+                    turn_weight_penalties[edge.data.turn_id] = turn_weight_penalty;
+                }
+                else
+                {
+                    new_weight = weight_min_value;
+                }
+            }
+
+            // Update edge weight
+            edge.data.weight = new_weight + turn_weight_penalty;
+            edge.data.duration = new_duration + turn_duration_penalty;
+        }
+    };
+
+    if (updated_segments.size() > 0)
+    {
+        tbb::parallel_for(tbb::blocked_range<std::size_t>(0, edge_based_edge_list.size()),
+                          [&](const auto &range) {
+                              for (auto index = range.begin(); index < range.end(); ++index)
+                              {
+                                  update_edge(edge_based_edge_list[index]);
+                              }
+                          });
+    }
+
+    if (update_turn_penalties || update_conditional_turns)
+    {
+        tbb::parallel_invoke(
+            [&] {
+                extractor::files::writeTurnWeightPenalty(
+                    config.GetPath(".osrm.turn_weight_penalties"), turn_weight_penalties);
+            },
+            [&] {
+                extractor::files::writeTurnDurationPenalty(
+                    config.GetPath(".osrm.turn_duration_penalties"), turn_duration_penalties);
+            });
+    }
+
+#if !defined(NDEBUG)
+    if (config.turn_penalty_lookup_paths.empty())
+    { // don't check weights consistency with turn updates that can break assertion
+        // condition with turn weight penalties negative updates
+        checkWeightsConsistency(config, edge_based_edge_list);
+    }
+#endif
+
+    saveDatasourcesNames(config);
+
+    TIMER_STOP(load_edges);
+    util::Log() << "Done reading edges in " << TIMER_MSEC(load_edges) << "ms.";
+    return number_of_edge_based_nodes;
+}
+
+EdgeID
+Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &edge_based_edge_list,
+                                        std::vector<EdgeWeight> &node_weights,
+                                        std::vector<EdgeDuration> &node_durations,
+                                        std::vector<EdgeDistance> &node_distances,
+                                        std::uint32_t &connectivity_checksum) const
+{
+    TIMER_START(load_edges);
+
+    EdgeID number_of_edge_based_nodes = 0;
+    std::vector<util::Coordinate> coordinates;
+    extractor::PackedOSMIDs osm_node_ids;
+
+    extractor::files::readEdgeBasedNodeWeightsDurationsDistances(
+        config.GetPath(".osrm.enw"), node_weights, node_durations, node_distances);
 
     extractor::files::readEdgeBasedGraph(config.GetPath(".osrm.ebg"),
                                          number_of_edge_based_nodes,
