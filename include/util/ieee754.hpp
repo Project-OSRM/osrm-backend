@@ -29,6 +29,9 @@ THE SOFTWARE.
 #include <math.h>
 
 #if defined(_MSC_VER)
+#ifndef __STDC_LIMIT_MACROS
+#define __STDC_LIMIT_MACROS
+#endif
 #include "msinttypes/stdint.h"
 #include <intrin.h>
 #else
