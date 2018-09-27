@@ -321,7 +321,7 @@ oneToManySearch(SearchEngineData<Algorithm> &engine_working_data,
                                          facade.GetWeightPenaltyForEdgeID(turn_id);
                 const auto edge_duration = initial_duration + facade.GetNodeDuration(node_id) +
                                            facade.GetDurationPenaltyForEdgeID(turn_id);
-                const auto edge_distance = initial_distance;
+                const auto edge_distance = initial_distance + facade.GetNodeDistance(node_id);
 
                 query_heap.Insert(to, edge_weight, {node, edge_duration, edge_distance});
             }
