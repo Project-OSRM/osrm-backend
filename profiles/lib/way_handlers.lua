@@ -432,7 +432,7 @@ end
 
 -- maxspeed and advisory maxspeed
 function WayHandlers.maxspeed(profile,way,result,data)
-  local keys = Sequence { 'maxspeed', 'source:maxspeed', 'maxspeed:type', 'maxspeed:advisory' }
+  local keys = Sequence {  'maxspeed:advisory', 'maxspeed', 'source:maxspeed', 'maxspeed:type' }
   local forward, backward = Tags.get_forward_backward_by_set(way,data,keys)
   forward = WayHandlers.parse_maxspeed(forward,profile)
   backward = WayHandlers.parse_maxspeed(backward,profile)
