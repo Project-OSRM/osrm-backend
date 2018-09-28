@@ -1,6 +1,7 @@
 # UNRELEASED
   - Changes from 5.19.0:
-
+    - Profile:
+      - ADDED: Parse `source:maxspeed` and `maxspeed:type` tags to apply maxspeeds and add belgian flanders rural speed limit.
 # 5.19.0
   - Changes from 5.18.0:
     - Optimizations:
