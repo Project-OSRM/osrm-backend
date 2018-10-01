@@ -363,7 +363,7 @@ NAN_METHOD(Engine::nearest) //
 
  * @param {Function} callback
  *
- * @returns {Object} containing `durations`, `sources`, and `destinations`.
+ * @returns {Object} containing `durations`, `distances`, `sources`, and `destinations`.
  * **`durations`**: array of arrays that stores the matrix in row-major order. `durations[i][j]` gives the travel time from the i-th waypoint to the j-th waypoint.
  *                  Values are given in seconds.
  * **`distances`**: array of arrays that stores the matrix in row-major order. `distances[i][j]` gives the travel time from the i-th waypoint to the j-th waypoint.
