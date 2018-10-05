@@ -5,21 +5,44 @@ Feature: Basic Distance Matrix
     Background:
         Given the profile "testbot"
         And the partition extra arguments "--small-component-size 1 --max-cell-sizes 2,4,8,16"
+  # Scenario: Testbot - Travel distance matrix of small grid
+  #       Given the node map
+  #           """
+  #           a b c
+  #           d e f
+  #           """
+
+  #       And the ways
+  #           | nodes |
+  #           | abc   |
+  #           | def   |
+  #           | ad    |
+  #           | be    |
+  #           | cf    |
+
+  #       When I request a travel distance matrix I should get
+  #           |   | a      | b      | e      | f      |
+  #           | a | 0      | 100+-1 | 200+-1 | 300+-1 |
+  #           | b | 100+-1 | 0      | 100+-1 | 200+-1 |
+  #           | e | 200+-1 | 100+-1 | 0      | 100+-1 |
+  #           | f | 300+-1 | 200+-1 | 100+-1 | 0      |
 
     Scenario: Testbot - Travel distance matrix of minimal network
         Given the node map
             """
-            a b
+            a z   
+              b
             """
 
         And the ways
             | nodes |
-            | ab    |
+            | az    |
+            | zb    |
 
         When I request a travel distance matrix I should get
             |   | a      | b      |
-            | a | 0      | 100+-1 |
-            | b | 100+-1 | 0      |
+            | a | 0      | 400+-1 |
+            | b | 400+-1 | 0      |
 
     Scenario: Testbot - Travel distance matrix of minimal network with toll exclude
         Given the query options

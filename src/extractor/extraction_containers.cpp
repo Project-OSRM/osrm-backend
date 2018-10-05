@@ -389,6 +389,7 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
 
             const auto accurate_distance =
                 util::coordinate_calculation::fccApproximateDistance(source_coord, target_coord);
+            std::cout << "accurate_distance: " << accurate_distance << std::endl;
 
             ExtractionSegment segment(source_coord, target_coord, distance, weight, duration);
             scripting_environment.ProcessSegment(segment);
