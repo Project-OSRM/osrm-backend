@@ -1,3 +1,8 @@
+#include "osrm/error_codes.hpp"
+
+#include "util/exception.hpp"
+#include "util/exception_utils.hpp"
+
 #include "server/connection.hpp"
 #include "server/request_handler.hpp"
 #include "server/request_parser.hpp"
@@ -140,10 +145,15 @@ std::vector<char> Connection::compress_buffers(const std::vector<char> &uncompre
     boost::iostreams::filtering_ostream gzip_stream;
     gzip_stream.push(boost::iostreams::gzip_compressor(compression_parameters));
     gzip_stream.push(boost::iostreams::back_inserter(compressed_data));
-    gzip_stream.write(&uncompressed_data[0], uncompressed_data.size());
+    const auto &result = gzip_stream.write(&uncompressed_data[0], uncompressed_data.size());
+    if (!result)
+    {
+        throw util::RuntimeError(
+            "compress_buffers", ErrorCode::FileWriteError, SOURCE_REF, std::strerror(errno));
+    }
     boost::iostreams::close(gzip_stream);
 
     return compressed_data;
 }
-}
-}
+} // namespace server
+} // namespace osrm
