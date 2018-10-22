@@ -32,9 +32,8 @@ class ExternalProvider final : public DataFacadeProvider<AlgorithmT, FacadeT>
   public:
     using Facade = typename DataFacadeProvider<AlgorithmT, FacadeT>::Facade;
 
-    ExternalProvider(const storage::StorageConfig &config,
-                     const boost::filesystem::path &memory_file)
-        : facade_factory(std::make_shared<datafacade::MMapMemoryAllocator>(config, memory_file))
+    ExternalProvider(const storage::StorageConfig &config)
+        : facade_factory(std::make_shared<datafacade::MMapMemoryAllocator>(config))
     {
     }
 
@@ -94,7 +93,7 @@ class WatchingProvider : public DataFacadeProvider<AlgorithmT, FacadeT>
         return watchdog.Get(params);
     }
 };
-}
+} // namespace detail
 
 template <typename AlgorithmT>
 using DataFacadeProvider = detail::DataFacadeProvider<AlgorithmT, DataFacade>;
@@ -104,7 +103,7 @@ template <typename AlgorithmT>
 using ImmutableProvider = detail::ImmutableProvider<AlgorithmT, DataFacade>;
 template <typename AlgorithmT>
 using ExternalProvider = detail::ExternalProvider<AlgorithmT, DataFacade>;
-}
-}
+} // namespace engine
+} // namespace osrm
 
 #endif

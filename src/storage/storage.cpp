@@ -44,24 +44,6 @@ namespace
 {
 using Monitor = SharedMonitor<SharedRegionRegister>;
 
-void readBlocks(const boost::filesystem::path &path, DataLayout &layout)
-{
-    tar::FileReader reader(path, tar::FileReader::VerifyFingerprint);
-
-    std::vector<tar::FileReader::FileEntry> entries;
-    reader.List(std::back_inserter(entries));
-
-    for (const auto &entry : entries)
-    {
-        const auto name_end = entry.name.rfind(".meta");
-        if (name_end == std::string::npos)
-        {
-            auto number_of_elements = reader.ReadElementCount64(entry.name);
-            layout.SetBlock(entry.name, Block{number_of_elements, entry.size});
-        }
-    }
-}
-
 struct RegionHandle
 {
     std::unique_ptr<SharedMemory> memory;
@@ -69,7 +51,8 @@ struct RegionHandle
     std::uint16_t shm_key;
 };
 
-auto setupRegion(SharedRegionRegister &shared_register, const DataLayout &layout)
+auto setupRegion(SharedRegionRegister &shared_register,
+                 const std::unique_ptr<storage::BaseDataLayout> &layout)
 {
     // This is safe because we have an exclusive lock for all osrm-datastore processes.
     auto shm_key = shared_register.ReserveKey();
@@ -90,7 +73,7 @@ auto setupRegion(SharedRegionRegister &shared_register, const DataLayout &layout
     auto encoded_static_layout = writer.GetBuffer();
 
     // Allocate shared memory block
-    auto regions_size = encoded_static_layout.size() + layout.GetSizeOfLayout();
+    auto regions_size = encoded_static_layout.size() + layout->GetSizeOfLayout();
     util::Log() << "Data layout has a size of " << encoded_static_layout.size() << " bytes";
     util::Log() << "Allocating shared memory of " << regions_size << " bytes";
     auto memory = makeSharedMemory(shm_key, regions_size);
@@ -182,9 +165,28 @@ bool swapData(Monitor &monitor,
 
     return true;
 }
-}
+} // namespace
 
 Storage::Storage(StorageConfig config_) : config(std::move(config_)) {}
+
+void Storage::readBlocks(const boost::filesystem::path &path,
+                         std::unique_ptr<storage::BaseDataLayout> &layout)
+{
+    tar::FileReader reader(path, tar::FileReader::VerifyFingerprint);
+
+    std::vector<tar::FileReader::FileEntry> entries;
+    reader.List(std::back_inserter(entries));
+
+    for (const auto &entry : entries)
+    {
+        const auto name_end = entry.name.rfind(".meta");
+        if (name_end == std::string::npos)
+        {
+            auto number_of_elements = reader.ReadElementCount64(entry.name);
+            layout->SetBlock(entry.name, Block{number_of_elements, entry.size, entry.offset});
+        }
+    }
+}
 
 int Storage::Run(int max_wait, const std::string &dataset_name, bool only_metric)
 {
@@ -243,29 +245,35 @@ int Storage::Run(int max_wait, const std::string &dataset_name, bool only_metric
         auto static_region = shared_register.GetRegion(region_id);
         auto static_memory = makeSharedMemory(static_region.shm_key);
 
-        DataLayout static_layout;
+        std::unique_ptr<storage::BaseDataLayout> static_layout =
+            std::make_unique<storage::DataLayout>();
         io::BufferReader reader(reinterpret_cast<char *>(static_memory->Ptr()),
                                 static_memory->Size());
         serialization::read(reader, static_layout);
         auto layout_size = reader.GetPosition();
         auto *data_ptr = reinterpret_cast<char *>(static_memory->Ptr()) + layout_size;
 
-        regions.push_back({data_ptr, static_layout});
+        regions.push_back({data_ptr, std::move(static_layout)});
         readonly_handles.push_back({std::move(static_memory), data_ptr, static_region.shm_key});
     }
     else
     {
-        DataLayout static_layout;
-        PopulateStaticLayout(static_layout);
+        std::unique_ptr<storage::BaseDataLayout> static_layout =
+            std::make_unique<storage::DataLayout>();
+        Storage::PopulateLayoutWithRTree(static_layout);
+        std::vector<std::pair<bool, boost::filesystem::path>> files = Storage::GetStaticFiles();
+        Storage::PopulateLayout(static_layout, files);
         auto static_handle = setupRegion(shared_register, static_layout);
-        regions.push_back({static_handle.data_ptr, static_layout});
+        regions.push_back({static_handle.data_ptr, std::move(static_layout)});
         handles[dataset_name + "/static"] = std::move(static_handle);
     }
 
-    DataLayout updatable_layout;
-    PopulateUpdatableLayout(updatable_layout);
+    std::unique_ptr<storage::BaseDataLayout> updatable_layout =
+        std::make_unique<storage::DataLayout>();
+    std::vector<std::pair<bool, boost::filesystem::path>> files = Storage::GetUpdatableFiles();
+    Storage::PopulateLayout(updatable_layout, files);
     auto updatable_handle = setupRegion(shared_register, updatable_layout);
-    regions.push_back({updatable_handle.data_ptr, updatable_layout});
+    regions.push_back({updatable_handle.data_ptr, std::move(updatable_layout)});
     handles[dataset_name + "/updatable"] = std::move(updatable_handle);
 
     SharedDataIndex index{std::move(regions)};
@@ -281,24 +289,12 @@ int Storage::Run(int max_wait, const std::string &dataset_name, bool only_metric
     return EXIT_SUCCESS;
 }
 
-/**
- * This function examines all our data files and figures out how much
- * memory needs to be allocated, and the position of each data structure
- * in that big block.  It updates the fields in the DataLayout parameter.
- */
-void Storage::PopulateStaticLayout(DataLayout &static_layout)
+std::vector<std::pair<bool, boost::filesystem::path>> Storage::GetStaticFiles()
 {
-    {
-        auto absolute_file_index_path =
-            boost::filesystem::absolute(config.GetPath(".osrm.fileIndex"));
-
-        static_layout.SetBlock("/common/rtree/file_index_path",
-                               make_block<char>(absolute_file_index_path.string().length() + 1));
-    }
-
     constexpr bool REQUIRED = true;
     constexpr bool OPTIONAL = false;
-    std::vector<std::pair<bool, boost::filesystem::path>> tar_files = {
+
+    std::vector<std::pair<bool, boost::filesystem::path>> files = {
         {OPTIONAL, config.GetPath(".osrm.cells")},
         {OPTIONAL, config.GetPath(".osrm.partition")},
         {REQUIRED, config.GetPath(".osrm.icd")},
@@ -310,53 +306,74 @@ void Storage::PopulateStaticLayout(DataLayout &static_layout)
         {REQUIRED, config.GetPath(".osrm.maneuver_overrides")},
         {REQUIRED, config.GetPath(".osrm.edges")},
         {REQUIRED, config.GetPath(".osrm.names")},
-        {REQUIRED, config.GetPath(".osrm.ramIndex")},
-    };
+        {REQUIRED, config.GetPath(".osrm.ramIndex")}};
 
-    for (const auto &file : tar_files)
+    for (const auto &file : files)
     {
-        if (boost::filesystem::exists(file.second))
+        if (file.first == REQUIRED && !boost::filesystem::exists(file.second))
         {
-            readBlocks(file.second, static_layout);
-        }
-        else
-        {
-            if (file.first == REQUIRED)
-            {
-                throw util::exception("Could not find required filed: " +
-                                      std::get<1>(file).string());
-            }
+            throw util::exception("Could not find required filed: " + std::get<1>(file).string());
         }
     }
+
+    return files;
 }
 
-void Storage::PopulateUpdatableLayout(DataLayout &updatable_layout)
+std::vector<std::pair<bool, boost::filesystem::path>> Storage::GetUpdatableFiles()
 {
     constexpr bool REQUIRED = true;
     constexpr bool OPTIONAL = false;
-    std::vector<std::pair<bool, boost::filesystem::path>> tar_files = {
+
+    std::vector<std::pair<bool, boost::filesystem::path>> files = {
         {OPTIONAL, config.GetPath(".osrm.mldgr")},
         {OPTIONAL, config.GetPath(".osrm.cell_metrics")},
         {OPTIONAL, config.GetPath(".osrm.hsgr")},
         {REQUIRED, config.GetPath(".osrm.datasource_names")},
         {REQUIRED, config.GetPath(".osrm.geometry")},
         {REQUIRED, config.GetPath(".osrm.turn_weight_penalties")},
-        {REQUIRED, config.GetPath(".osrm.turn_duration_penalties")},
-    };
+        {REQUIRED, config.GetPath(".osrm.turn_duration_penalties")}};
 
-    for (const auto &file : tar_files)
+    for (const auto &file : files)
+    {
+        if (file.first == REQUIRED && !boost::filesystem::exists(file.second))
+        {
+            throw util::exception("Could not find required filed: " + std::get<1>(file).string());
+        }
+    }
+
+    return files;
+}
+
+std::string Storage::PopulateLayoutWithRTree(std::unique_ptr<storage::BaseDataLayout> &layout)
+{
+    // Figure out the path to the rtree file (it's not a tar file)
+    auto absolute_file_index_path = boost::filesystem::absolute(config.GetPath(".osrm.fileIndex"));
+
+    // Convert the boost::filesystem::path object into a plain string
+    // that can then be stored as a member of an allocator object
+    std::string rtree_filename = absolute_file_index_path.string();
+
+    // Here, we hardcode the special file_index_path block name.
+    // The important bit here is that the "offset" is set to zero
+    layout->SetBlock("/common/rtree/file_index_path",
+                     make_block<char>(rtree_filename.length() + 1));
+
+    return rtree_filename;
+}
+
+/**
+ * This function examines all our data files and figures out how much
+ * memory needs to be allocated, and the position of each data structure
+ * in that big block.  It updates the fields in the std::unique_ptr<BaseDataLayout> parameter.
+ */
+void Storage::PopulateLayout(std::unique_ptr<storage::BaseDataLayout> &layout,
+                             std::vector<std::pair<bool, boost::filesystem::path>> files)
+{
+    for (const auto &file : files)
     {
         if (boost::filesystem::exists(file.second))
         {
-            readBlocks(file.second, updatable_layout);
-        }
-        else
-        {
-            if (file.first == REQUIRED)
-            {
-                throw util::exception("Could not find required filed: " +
-                                      std::get<1>(file).string());
-            }
+            readBlocks(file.second, layout);
         }
     }
 }
@@ -569,5 +586,5 @@ void Storage::PopulateUpdatableData(const SharedDataIndex &index)
         }
     }
 }
-}
-}
+} // namespace storage
+} // namespace osrm

@@ -25,7 +25,7 @@ SharedMemoryAllocator::SharedMemoryAllocator(
         auto mem = storage::makeSharedMemory(shm_key);
 
         storage::io::BufferReader reader(reinterpret_cast<char *>(mem->Ptr()), mem->Size());
-        storage::DataLayout layout;
+        std::unique_ptr<storage::BaseDataLayout> layout = std::make_unique<storage::DataLayout>();
         storage::serialization::read(reader, layout);
         auto layout_size = reader.GetPosition();
 

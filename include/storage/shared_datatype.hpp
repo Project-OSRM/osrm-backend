@@ -20,12 +20,12 @@ namespace osrm
 namespace storage
 {
 
-class DataLayout;
+class BaseDataLayout;
 namespace serialization
 {
-inline void read(io::BufferReader &reader, DataLayout &layout);
+inline void read(io::BufferReader &reader, std::unique_ptr<BaseDataLayout> &layout);
 
-inline void write(io::BufferWriter &writer, const DataLayout &layout);
+inline void write(io::BufferWriter &writer, const std::unique_ptr<BaseDataLayout> &layout);
 } // namespace serialization
 
 namespace detail
@@ -54,43 +54,20 @@ inline std::string trimName(const std::string &name_prefix, const std::string &n
 }
 } // namespace detail
 
-class DataLayout
+class BaseDataLayout
 {
   public:
-    DataLayout() : blocks{} {}
+    virtual ~BaseDataLayout() = default;
 
-    inline void SetBlock(const std::string &name, Block block) { blocks[name] = std::move(block); }
+    virtual inline void SetBlock(const std::string &name, Block block) = 0;
 
-    inline uint64_t GetBlockEntries(const std::string &name) const
-    {
-        return GetBlock(name).num_entries;
-    }
+    virtual inline uint64_t GetBlockEntries(const std::string &name) const = 0;
 
-    inline uint64_t GetBlockSize(const std::string &name) const { return GetBlock(name).byte_size; }
+    virtual inline uint64_t GetBlockSize(const std::string &name) const = 0;
 
-    inline bool HasBlock(const std::string &name) const
-    {
-        return blocks.find(name) != blocks.end();
-    }
+    virtual inline bool HasBlock(const std::string &name) const = 0;
 
-    inline uint64_t GetSizeOfLayout() const
-    {
-        uint64_t result = 0;
-        for (const auto &name_and_block : blocks)
-        {
-            result += GetBlockSize(name_and_block.first) + BLOCK_ALIGNMENT;
-        }
-        return result;
-    }
-
-    template <typename T> inline T *GetBlockPtr(char *shared_memory, const std::string &name) const
-    {
-        static_assert(BLOCK_ALIGNMENT % std::alignment_of<T>::value == 0,
-                      "Datatype does not fit alignment constraints.");
-
-        char *ptr = (char *)GetAlignedBlockPtr(shared_memory, name);
-        return (T *)ptr;
-    }
+    virtual inline uint64_t GetSizeOfLayout() const = 0;
 
     // Depending on the name prefix this function either lists all blocks with the same prefix
     // or all entries in the sub-directory.
@@ -115,9 +92,59 @@ class DataLayout
         }
     }
 
+    virtual inline void *GetBlockPtr(char *shared_memory, const std::string &name) const = 0;
+
+    std::map<std::string, Block> blocks;
+};
+
+class DataLayout final : public BaseDataLayout
+{
+  public:
+    inline void SetBlock(const std::string &name, Block block) override final
+    {
+        blocks[name] = std::move(block);
+    }
+
+    inline uint64_t GetBlockEntries(const std::string &name) const override final
+    {
+        return GetBlock(name).num_entries;
+    }
+
+    inline uint64_t GetBlockSize(const std::string &name) const override final
+    {
+        return GetBlock(name).byte_size;
+    }
+
+    inline bool HasBlock(const std::string &name) const override final
+    {
+        return blocks.find(name) != blocks.end();
+    }
+
+    inline uint64_t GetSizeOfLayout() const override final
+    {
+        uint64_t result = 0;
+        for (const auto &name_and_block : blocks)
+        {
+            result += GetBlockSize(name_and_block.first) + BLOCK_ALIGNMENT;
+        }
+        return result;
+    }
+
+    inline void *GetBlockPtr(char *shared_memory, const std::string &name) const override final
+    {
+        // TODO: re-enable this alignment checking somehow
+        // static_assert(BLOCK_ALIGNMENT % std::alignment_of<T>::value == 0,
+        //               "Datatype does not fit alignment constraints.");
+
+        char *ptr = (char *)GetAlignedBlockPtr(shared_memory, name);
+        return ptr;
+    }
+
   private:
-    friend void serialization::read(io::BufferReader &reader, DataLayout &layout);
-    friend void serialization::write(io::BufferWriter &writer, const DataLayout &layout);
+    friend void serialization::read(io::BufferReader &reader,
+                                    std::unique_ptr<BaseDataLayout> &layout);
+    friend void serialization::write(io::BufferWriter &writer,
+                                     const std::unique_ptr<BaseDataLayout> &layout);
 
     const Block &GetBlock(const std::string &name) const
     {
@@ -157,7 +184,64 @@ class DataLayout
     }
 
     static constexpr std::size_t BLOCK_ALIGNMENT = 64;
-    std::map<std::string, Block> blocks;
+};
+
+class TarDataLayout final : public BaseDataLayout
+{
+  public:
+    inline void SetBlock(const std::string &name, Block block) override final
+    {
+        blocks[name] = std::move(block);
+    }
+
+    inline uint64_t GetBlockEntries(const std::string &name) const override final
+    {
+        return GetBlock(name).num_entries;
+    }
+
+    inline uint64_t GetBlockSize(const std::string &name) const override final
+    {
+        return GetBlock(name).byte_size;
+    }
+
+    inline bool HasBlock(const std::string &name) const override final
+    {
+        return blocks.find(name) != blocks.end();
+    }
+
+    inline uint64_t GetSizeOfLayout() const override final
+    {
+        uint64_t result = 0;
+        for (const auto &name_and_block : blocks)
+        {
+            result += GetBlockSize(name_and_block.first);
+        }
+        return result;
+    }
+
+    inline void *GetBlockPtr(char *memory_ptr, const std::string &name) const override final
+    {
+        auto offset = GetBlock(name).offset;
+        const auto offset_memory = memory_ptr + offset;
+        return offset_memory;
+    }
+
+  private:
+    friend void serialization::read(io::BufferReader &reader,
+                                    std::unique_ptr<BaseDataLayout> &layout);
+    friend void serialization::write(io::BufferWriter &writer,
+                                     const std::unique_ptr<BaseDataLayout> &layout);
+
+    const Block &GetBlock(const std::string &name) const
+    {
+        auto iter = blocks.find(name);
+        if (iter == blocks.end())
+        {
+            throw util::exception("Could not find block " + name);
+        }
+
+        return iter->second;
+    }
 };
 
 struct SharedRegion
