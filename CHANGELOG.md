@@ -1,7 +1,12 @@
 # UNRELEASED
+  - Changes from 5.19.0:
+    - Features:
+      - ADDED: direct mmapping of datafiles is now supported via the `-mmap` switch. [#5242](https://github.com/Project-OSRM/osrm-backend/pull/5242)
+      - REMOVED: the previous `--memory_file` switch is now deprecated and will fallback to `--mmap` [#5242](https://github.com/Project-OSRM/osrm-backend/pull/5242)
+
+# 5.19.0
   - Changes from 5.18.0:
     - Optimizations:
-      - CHANGED: Map matching is now almost twice as fast. [#5060](https://github.com/Project-OSRM/osrm-backend/pull/5060)
       - CHANGED: Use Grisu2 for serializing floating point numbers. [#5188](https://github.com/Project-OSRM/osrm-backend/pull/5188)
       - ADDED: Node bindings can return pre-rendered JSON buffer. [#5189](https://github.com/Project-OSRM/osrm-backend/pull/5189)
     - Bugfixes:
