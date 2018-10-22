@@ -30,22 +30,29 @@ namespace serialization
 namespace detail
 {
 template <typename T, typename BlockT = unsigned char>
-inline BlockT packBits(const T &data, std::size_t index, std::size_t count)
+inline BlockT packBits(const T &data, std::size_t base_index, const std::size_t count)
 {
     static_assert(std::is_same<typename T::value_type, bool>::value, "value_type is not bool");
+
+    // Note: if this packing is changed, be sure to update vector_view<bool>
+    //       as well, so that on-disk and in-memory layouts match.
     BlockT value = 0;
-    for (std::size_t bit = 0; bit < count; ++bit, ++index)
-        value = (value << 1) | data[index];
+    for (std::size_t bit = 0; bit < count; ++bit)
+    {
+        value |= (data[base_index + bit] ? BlockT{1} : BlockT{0}) << bit;
+    }
     return value;
 }
 
 template <typename T, typename BlockT = unsigned char>
-inline void unpackBits(T &data, std::size_t index, std::size_t count, BlockT value)
+inline void
+unpackBits(T &data, const std::size_t base_index, const std::size_t count, const BlockT value)
 {
     static_assert(std::is_same<typename T::value_type, bool>::value, "value_type is not bool");
-    const BlockT mask = BlockT{1} << (count - 1);
-    for (std::size_t bit = 0; bit < count; value <<= 1, ++bit, ++index)
-        data[index] = value & mask;
+    for (std::size_t bit = 0; bit < count; ++bit)
+    {
+        data[base_index + bit] = value & (BlockT{1} << bit);
+    }
 }
 
 template <typename VectorT>
