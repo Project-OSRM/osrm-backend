@@ -264,7 +264,7 @@ oneToManySearch(SearchEngineData<Algorithm> &engine_working_data,
                 std::size_t index;
                 EdgeWeight target_weight;
                 EdgeDuration target_duration;
-                EdgeDuration target_distance;
+                EdgeDistance target_distance;
                 std::tie(index, target_weight, target_duration, target_distance) = it->second;
 
                 const auto path_weight = weight + target_weight;
