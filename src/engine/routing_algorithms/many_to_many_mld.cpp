@@ -64,7 +64,6 @@ void relaxOutgoingEdges(const DataFacade<mld::Algorithm> &facade,
         const auto &cell = cells.GetCell(metric, level, partition.GetCell(level, node));
         if (DIRECTION == FORWARD_DIRECTION)
         { // Shortcuts in forward direction
-            // std::cout << "FORWARD_DIRECTION relaxOutgoingEdges" << std::endl;
             auto destination = cell.GetDestinationNodes().begin();
             auto shortcut_durations = cell.GetOutDuration(node);
             auto shortcut_distances = cell.GetOutDistance(node);
@@ -296,6 +295,7 @@ oneToManySearch(SearchEngineData<Algorithm> &engine_working_data,
                            EdgeWeight initial_weight,
                            EdgeDuration initial_duration,
                            EdgeDistance initial_distance) {
+
         // Update single node paths
         update_values(node, initial_weight, initial_duration, initial_distance);
 
@@ -372,6 +372,7 @@ oneToManySearch(SearchEngineData<Algorithm> &engine_working_data,
 
     while (!query_heap.Empty() && !target_nodes_index.empty())
     {
+
         // Extract node from the heap
         const auto node = query_heap.DeleteMin();
         const auto weight = query_heap.GetKey(node);
@@ -534,13 +535,10 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
                         std::vector<NodeID> &middle_nodes_table,
                         const PhantomNode &phantom_node)
 {
-    std::cout << (DIRECTION == FORWARD_DIRECTION ? "forward_routing_step FORWARD_DIRECTION: " : "forward_routing_step REVERSE_DIRECTION: ") << std::endl;
     const auto node = query_heap.DeleteMin();
     const auto source_weight = query_heap.GetKey(node);
     const auto source_duration = query_heap.GetData(node).duration;
     const auto source_distance = query_heap.GetData(node).distance;
-    std::cout << "source_duration: " << source_duration << std::endl;
-    std::cout << "source_distance: " << source_distance << std::endl;
 
     // Check if each encountered node has an entry
     const auto &bucket_list = std::equal_range(search_space_with_buckets.begin(),
@@ -554,9 +552,6 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
         const auto target_weight = current_bucket.weight;
         const auto target_duration = current_bucket.duration;
         const auto target_distance = current_bucket.distance;
-    std::cout << "target_duration: " << target_duration << std::endl;
-    std::cout << "target_distance: " << target_distance << std::endl;
-
 
         // Get the value location in the results tables:
         //  * row-major direct (row_idx, column_idx) index for forward direction
@@ -581,8 +576,6 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
             current_duration = new_duration;
             current_distance = new_distance;
             middle_nodes_table[location] = node;
-            std::cout << "new_duration: " << new_duration << std::endl;
-            std::cout << "new_distance: " << new_distance << std::endl;
         }
     }
 
