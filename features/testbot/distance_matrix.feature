@@ -5,44 +5,49 @@ Feature: Basic Distance Matrix
     Background:
         Given the profile "testbot"
         And the partition extra arguments "--small-component-size 1 --max-cell-sizes 2,4,8,16"
-  # Scenario: Testbot - Travel distance matrix of small grid
-  #       Given the node map
-  #           """
-  #           a b c
-  #           d e f
-  #           """
-
-  #       And the ways
-  #           | nodes |
-  #           | abc   |
-  #           | def   |
-  #           | ad    |
-  #           | be    |
-  #           | cf    |
-
-  #       When I request a travel distance matrix I should get
-  #           |   | a      | b      | e      | f      |
-  #           | a | 0      | 100+-1 | 200+-1 | 300+-1 |
-  #           | b | 100+-1 | 0      | 100+-1 | 200+-1 |
-  #           | e | 200+-1 | 100+-1 | 0      | 100+-1 |
-  #           | f | 300+-1 | 200+-1 | 100+-1 | 0      |
-
-    Scenario: Testbot - Travel distance matrix of minimal network
+  Scenario: Testbot - Travel distance matrix of small grid
         Given the node map
             """
-            a z   
+            a b c
+            d e f
+            """
+
+        And the ways
+            | nodes |
+            | abc   |
+            | def   |
+            | ad    |
+            | be    |
+            | cf    |
+
+        When I request a travel distance matrix I should get
+            |   |    a    |    b    |     e   |   f    |
+            | a |    0    |  100.1  |  199.5  |  299.5 |
+            | b |  100.1  |   0     |  99.4   |  199.5 |
+            | e |  199.5  |  99.4   |   0     |  100.1 |
+            | f |  299.5  |  199.5  |  100.1  |   0    |
+
+    Scenario: Testbot - Travel distance matrix of minimal network exact distances
+        Given the node map
+            """
+            a z
               b
+              c
+              d
             """
 
         And the ways
             | nodes |
             | az    |
-            | zb    |
+            | zbcd  |
 
         When I request a travel distance matrix I should get
-            |   | a      | b      |
-            | a | 0      | 400+-1 |
-            | b | 400+-1 | 0      |
+            |   |   a    |   z     |   b     |   c     |   d     |
+            | a |   0    |  100.1  |  199.5  |  298.9  |  398.3  |
+            | z |  100.1 |  0      |  99.4   |  198.8  |  298.2  |
+            | b |  199.5 |  99.4   |  0      |  99.4   |  198.8  |
+            | c |  298.9 |  198.8  |  99.4   |  0      |  99.4   |
+            | d |  398.3 |  298.2  |  198.8  |  99.4   |  0      |
 
     Scenario: Testbot - Travel distance matrix of minimal network with toll exclude
         Given the query options
@@ -62,11 +67,11 @@ Feature: Basic Distance Matrix
             | bd    | motorway | yes  | not drivable for exclude=toll and exclude=motorway,toll |
 
         When I request a travel distance matrix I should get
-            |   | a      | b      | c      | d      |
-            | a | 0      | 100+-1 |        |        |
-            | b | 100+-1 | 0      |        |        |
-            | c |        |        | 0      | 100+-1 |
-            | d |        |        | 100+-1 | 0      |
+            |   | a     | b     | c     | d     |
+            | a | 0     | 100.1 |       |       |
+            | b | 100.1 | 0     |       |       |
+            | c |       |       | 0     | 100.1 |
+            | d |       |       | 100.1 | 0     |
 
     Scenario: Testbot - Travel distance matrix of minimal network with motorway exclude
         Given the query options
@@ -86,8 +91,8 @@ Feature: Basic Distance Matrix
             | bd    | residential |                                   |
 
         When I request a travel distance matrix I should get
-            |   | a | b      | c      | d      |
-            | a | 0 | 300+-2 | 100+-2 | 200+-2 |
+            |   | a |   b    |  c   |   d   |
+            | a | 0 |  298.9 | 99.4 | 199.5 |
 
     Scenario: Testbot - Travel distance matrix of minimal network disconnected motorway exclude
         Given the query options
@@ -107,8 +112,8 @@ Feature: Basic Distance Matrix
             | efgh  | residential |                                   |
 
         When I request a travel distance matrix I should get
-            |   | a | b     | e |
-            | a | 0 | 50+-1 |   |
+            |   | a | b    | e |
+            | a | 0 | 50.1 |   |
 
     Scenario: Testbot - Travel distance matrix of minimal network with motorway and toll excludes
         Given the query options
@@ -129,7 +134,7 @@ Feature: Basic Distance Matrix
 
         When I request a travel distance matrix I should get
             |   | a | b      | e | g |
-            | a | 0 | 100+-1 |   |   |
+            | a | 0 | 100.1  |   |   |
 
     Scenario: Testbot - Travel distance matrix with different way speeds
         Given the node map
@@ -144,22 +149,22 @@ Feature: Basic Distance Matrix
             | cd    | tertiary  |
 
         When I request a travel distance matrix I should get
-            |   | a      | b      | c      | d      |
-            | a | 0      | 100+-1 | 200+-1 | 300+-1 |
-            | b | 100+-1 | 0      | 100+-1 | 200+-1 |
-            | c | 200+-1 | 100+-1 | 0      | 100+-1 |
-            | d | 300+-1 | 200+-1 | 100+-1 | 0     |
+            |   | a     | b     | c     | d     |
+            | a | 0     | 100.1 | 200.1 | 300.2 |
+            | b | 100.1 | 0     | 100.1 | 200.1 |
+            | c | 200.1 | 100.1 | 0     | 100.1 |
+            | d | 300.2 | 200.1 | 100.1 | 0     |
 
         When I request a travel distance matrix I should get
-            |   | a | b      | c      | d      |
-            | a | 0 | 100+-1 | 200+-1 | 300+-1 |
+            |   | a | b     | c     | d     |
+            | a | 0 | 100.1 | 200.1 | 300.2 |
 
         When I request a travel distance matrix I should get
-            |   | a      |
-            | a | 0      |
-            | b | 100+-1 |
-            | c | 200+-1 |
-            | d | 300+-1 |
+            |   | a     |
+            | a | 0     |
+            | b | 100.1 |
+            | c | 200.1 |
+            | d | 300.2 |
 
     Scenario: Testbot - Travel distance matrix of small grid
         Given the node map
@@ -177,11 +182,11 @@ Feature: Basic Distance Matrix
             | cf    |
 
         When I request a travel distance matrix I should get
-            |   | a      | b      | e      | f      |
-            | a | 0      | 100+-1 | 200+-1 | 300+-1 |
-            | b | 100+-1 | 0      | 100+-1 | 200+-1 |
-            | e | 200+-1 | 100+-1 | 0      | 100+-1 |
-            | f | 300+-1 | 200+-1 | 100+-1 | 0      |
+            |   | a     | b     | e     | f     |
+            | a | 0     | 100.1 | 199.5 | 299.5 |
+            | b | 100.1 | 0     | 99.4  | 199.5 |
+            | e | 199.5 | 99.4  | 0     | 100.1 |
+            | f | 299.5 | 199.5 | 100.1 | 0     |
 
     Scenario: Testbot - Travel distance matrix of network with unroutable parts
         Given the node map
@@ -195,7 +200,7 @@ Feature: Basic Distance Matrix
 
         When I request a travel distance matrix I should get
             |   | a | b      |
-            | a | 0 | 100+-1 |
+            | a | 0 | 100.1  |
             | b |   | 0      |
 
     Scenario: Testbot - Travel distance matrix of network with oneways
@@ -212,11 +217,11 @@ Feature: Basic Distance Matrix
             | by    |        |
 
         When I request a travel distance matrix I should get
-            |   | x      | y      | d      | e      |
-            | x | 0      | 300+-2 | 400+-2 | 300+-2 |
-            | y | 500+-2 | 0      | 300+-2 | 200+-2 |
-            | d | 200+-2 | 300+-2 | 0      | 300+-2 |
-            | e | 300+-2 | 400+-2 | 100+-2 | 0      |
+            |   | x     | y     | d     | e     |
+            | x | 0     | 300.2 | 399.6 | 299.5 |
+            | y | 499   | 0     | 299.5 | 199.5 |
+            | d | 199.5 | 299.5 | 0     | 298.9 |
+            | e | 299.5 | 399.6 | 100.1 | 0     |
 
     Scenario: Testbot - Rectangular travel distance matrix
         Given the node map
@@ -235,53 +240,53 @@ Feature: Basic Distance Matrix
 
         When I route I should get
             | from | to | distance  |
-            | e    | a  | 200m +- 1 |
-            | e    | b  | 100m +- 1 |
-            | f    | a  | 300m +- 1 |
-            | f    | b  | 200m +- 1 |
+            | e    | a  | 200m      |
+            | e    | b  | 100m      |
+            | f    | a  | 299.9m    |
+            | f    | b  | 200m      |
 
         When I request a travel distance matrix I should get
             |   | a | b      | e      | f      |
-            | a | 0 | 100+-1 | 200+-1 | 300+-1 |
+            | a | 0 |  100.1 |  199.5 |  299.5 |
 
         When I request a travel distance matrix I should get
-            |   | a      |
-            | a | 0      |
-            | b | 100+-1 |
-            | e | 200+-1 |
-            | f | 300+-1 |
+            |   | a     |
+            | a | 0     |
+            | b | 100.1 |
+            | e | 199.5 |
+            | f | 299.5 |
 
         When I request a travel distance matrix I should get
-            |   | a      | b      | e      | f      |
-            | a | 0      | 100+-1 | 200+-1 | 300+-1 |
-            | b | 100+-1 | 0      | 100+-1 | 200+-1 |
+            |   | a     | b     | e     | f     |
+            | a | 0     | 100.1 | 199.5 | 299.5 |
+            | b | 100.1 | 0     | 99.4  | 199.5 |
 
         When I request a travel distance matrix I should get
-            |   | a      | b      |
-            | a | 0      | 100+-1 |
-            | b | 100+-1 | 0      |
-            | e | 200+-1 | 100+-1 |
-            | f | 300+-1 | 200+-1 |
+            |   | a     | b     |
+            | a | 0     | 100.1 |
+            | b | 100.1 | 0     |
+            | e | 199.5 | 99.4  |
+            | f | 299.5 | 199.5 |
 
         When I request a travel distance matrix I should get
-            |   | a      | b      | e      | f      |
-            | a | 0      | 100+-1 | 200+-1 | 300+-1 |
-            | b | 100+-1 | 0      | 100+-1 | 200+-1 |
-            | e | 200+-1 | 100+-1 | 0      | 100+-1 |
+            |   | a     | b     | e     | f     |
+            | a | 0     | 100.1 | 199.5 | 299.5 |
+            | b | 100.1 | 0     | 99.4  | 199.5 |
+            | e | 199.5 | 99.4  | 0     | 100.1 |
 
         When I request a travel distance matrix I should get
-            |   | a      | b      | e      |
-            | a | 0      | 100+-1 | 200+-1 |
-            | b | 100+-1 | 0      | 100+-1 |
-            | e | 200+-1 | 100+-1 | 0      |
-            | f | 300+-1 | 200+-1 | 100+-1 |
+             |   | a     | b     | e     |
+             | a | 0     | 100.1 | 199.5 |
+             | b | 100.1 | 0     | 99.4  |
+             | e | 199.5 | 99.4  | 0     |
+             | f | 299.5 | 199.5 | 100.1 |
 
         When I request a travel distance matrix I should get
-            |   | a      | b      | e      | f      |
-            | a | 0      | 100+-1 | 200+-1 | 300+-1 |
-            | b | 100+-1 | 0      | 100+-1 | 200+-1 |
-            | e | 200+-1 | 100+-1 | 0      | 100+-1 |
-            | f | 300+-1 | 200+-1 | 100+-1 | 0      |
+             |   | a     | b     | e     | f     |
+             | a | 0     | 100.1 | 199.5 | 299.5 |
+             | b | 100.1 | 0     | 99.4  | 199.5 |
+             | e | 199.5 | 99.4  | 0     | 100.1 |
+             | f | 299.5 | 199.5 | 100.1 | 0     |
 
      Scenario: Testbot - Travel distance 3x2 matrix
         Given the node map
@@ -300,9 +305,9 @@ Feature: Basic Distance Matrix
 
 
         When I request a travel distance matrix I should get
-            |   | b      | e      | f      |
-            | a | 100+-1 | 200+-1 | 300+-1 |
-            | b | 0      | 100+-1 | 200+-1 |
+            |   | b     | e     | f     |
+            | a | 100.1 | 199.5 | 299.5 |
+            | b | 0     | 99.4  | 199.5 |
 
     Scenario: Testbot - All coordinates are from same small component
         Given a grid size of 300 meters
@@ -322,9 +327,9 @@ Feature: Basic Distance Matrix
             | fg    |
 
         When I request a travel distance matrix I should get
-            |   | f      | g      |
-            | f | 0      | 300+-2 |
-            | g | 300+-2 | 0      |
+            |   | f     | g     |
+            | f | 0     | 298.2 |
+            | g | 298.2 | 0     |
 
     Scenario: Testbot - Coordinates are from different small component and snap to big CC
         Given a grid size of 300 meters
@@ -356,11 +361,11 @@ Feature: Basic Distance Matrix
             | i    | h  | 300m     |
 
         When I request a travel distance matrix I should get
-            |   | f      | g      | h      | i      |
-            | f | 0      | 300+-2 | 0      | 300+-2 |
-            | g | 300+-2 | 0      | 300+-2 | 0      |
-            | h | 0      | 300+-2 | 0      | 300+-2 |
-            | i | 300+-2 | 0      | 300+-2 | 0      |
+            |   | f     | g     | h     | i     |
+            | f | 0     | 298.2 | 0     | 298.2 |
+            | g | 298.2 | 0     | 298.2 | 0     |
+            | h | 0     | 298.2 | 0     | 298.2 |
+            | i | 298.2 | 0     | 298.2 | 0     |
 
     Scenario: Testbot - Travel distance matrix with loops
         Given the node map
@@ -377,11 +382,11 @@ Feature: Basic Distance Matrix
             | da    | yes |
 
         When I request a travel distance matrix I should get
-            |   | 1      | 2      | 3      | 4      |
-            | 1 | 0      | 100+-1 | 400+-1 | 500+-1 |
-            | 2 | 700+-1 | 0      | 300+-1 | 400+-1 |
-            | 3 | 400+-1 | 500+-1 | 0      | 100+-1 |
-            | 4 | 300+-1 | 400+-1 | 700+-1 | 0      |
+            |   | 1     | 2     | 3     | 4     |
+            | 1 | 0     | 100.1 | 399.6 | 499.7 |
+            | 2 | 699.1 | 0     | 299.5 | 399.6 |
+            | 3 | 399.6 | 499.7 | 0     | 100.1 |
+            | 4 | 299.5 | 399.6 | 699.1 | 0     |
 
 
     Scenario: Testbot - Travel distance matrix based on segment durations
@@ -418,12 +423,12 @@ Feature: Basic Distance Matrix
             | ce    |
 
         When I request a travel distance matrix I should get
-            |   | a      | b      | c      | d      | e      |
-            | a | 0      | 100+-2 | 200+-2 | 300+-2 | 400+-2 |
-            | b | 100+-2 | 0      | 100+-2 | 200+-2 | 300+-2 |
-            | c | 200+-2 | 100+-2 | 0      | 100+-2 | 200+-2 |
-            | d | 300+-2 | 200+-2 | 100+-2 | 0      | 300+-2 |
-            | e | 400+-2 | 300+-2 | 200+-2 | 300+-2 | 0      |
+            |   | a     | b     | c     | d     | e     |
+            | a | 0     | 100.1 | 200.1 | 300.2 | 398.9 |
+            | b | 100.1 | 0     | 100.1 | 200.1 | 298.9 |
+            | c | 200.1 | 100.1 | 0     | 100.1 | 198.8 |
+            | d | 300.2 | 200.1 | 100.1 | 0     | 298.9 |
+            | e | 398.9 | 298.9 | 198.8 | 298.9 | 0     |
 
     Scenario: Testbot - Travel distance matrix for alternative loop paths
         Given the profile file
@@ -462,26 +467,26 @@ Feature: Basic Distance Matrix
             | ca    | yes    |
 
         When I request a travel distance matrix I should get
-            |   | 1       | 2       | 3       | 4       | 5       | 6       | 7       | 8       |
-            | 1 | 0       | 1100+-5 | 300+-5  | 200+-5  | 600+-5  | 500+-5  | 900+-5  | 800+-5  |
-            | 2 | 100+-5  | 0       | 400+-5  | 300+-5  | 700+-5  | 600+-5  | 1000+-5 | 900+-5  |
-            | 3 | 900+-5  | 800+-5  | 0       | 1100+-5 | 300+-5  | 200+-5  | 600+-5  | 500+-5  |
-            | 4 | 1000+-5 | 900+-5  | 100+-5  | 0       | 400+-5  | 300+-5  | 700+-5  | 600+-5  |
-            | 5 | 600+-5  | 500+-5  | 900+-5  | 800+-5  | 0       | 1100+-5 | 300+-5  | 200+-5  |
-            | 6 | 700+-5  | 600+-5  | 1000+-5 | 900+-5  | 100+-5  | 0       | 400+-5  | 300+-5  |
-            | 7 | 300+-5  | 200+-5  | 600+-5  | 500+-5  | 900+-5  | 800+-5  | 0       | 1100+-5 |
-            | 8 | 400+-5  | 300+-5  | 700+-5  | 600+-5  | 1000+-5 | 900+-5  | 100+-5  | 0       |
+             |   | 1     | 2      | 3     | 4      | 5     | 6      | 7     | 8      |
+             | 1 | 0     | 1096.7 | 298.9 | 199.5  | 598.4 | 498.3  | 897.3 | 797.9  |
+             | 2 | 100.1 | 0      | 398.9 | 299.5  | 698.5 | 598.4  | 997.3 | 897.9  |
+             | 3 | 897.9 | 797.9  | 0     | 1097.4 | 299.5 | 199.5  | 598.4 | 499    |
+             | 4 | 997.3 | 897.3  | 99.4  | 0      | 398.9 | 298.9  | 697.8 | 598.4  |
+             | 5 | 598.4 | 498.3  | 897.3 | 797.9  | 0     | 1096.7 | 298.9 | 199.5  |
+             | 6 | 698.5 | 598.4  | 997.3 | 897.9  | 100.1 | 0      | 398.9 | 299.5  |
+             | 7 | 299.5 | 199.5  | 598.4 | 499    | 897.9 | 797.9  | 0     | 1097.4 |
+             | 8 | 398.9 | 298.9  | 697.8 | 598.4  | 997.3 | 897.3  | 99.4  | 0      |
 
         When I request a travel distance matrix I should get
-            |   | 1       |
-            | 1 | 0       |
-            | 2 | 100+-5  |
-            | 3 | 900+-5  |
-            | 4 | 1000+-5 |
-            | 5 | 600+-5  |
-            | 6 | 700+-5  |
-            | 7 | 300+-5  |
-            | 8 | 400+-5  |
+             |   | 1     |
+             | 1 | 0     |
+             | 2 | 100.1 |
+             | 3 | 897.9 |
+             | 4 | 997.3 |
+             | 5 | 598.4 |
+             | 6 | 698.5 |
+             | 7 | 299.5 |
+             | 8 | 398.9 |
 
     Scenario: Testbot - Travel distance matrix with ties
         Given the node map
@@ -503,26 +508,26 @@ Feature: Basic Distance Matrix
             | a    | c  | ac,ac | 200m     | 20s  |     20 |
 
         When I route I should get
-            | from | to | route    | distance  |
-            | a    | b  | ab,ab    | 450m      |
-            | a    | c  | ac,ac    | 200m      |
-            | a    | d  | ac,dc,dc | 500m +- 1 |
+            | from | to | route    | distance |
+            | a    | b  | ab,ab    | 450m     |
+            | a    | c  | ac,ac    | 200m     |
+            | a    | d  | ac,dc,dc | 499.9m   |
 
         When I request a travel distance matrix I should get
-            |   | a | b      | c      | d      |
-            | a | 0 | 450+-2 | 200+-2 | 500+-2 |
+            |   | a | b     | c     | d   |
+            | a | 0 | 450.3 | 198.8 | 499 |
 
         When I request a travel distance matrix I should get
-            |   | a      |
-            | a | 0      |
-            | b | 450+-2 |
-            | c | 200+-2 |
-            | d | 500+-2 |
+            |   | a     |
+            | a | 0     |
+            | b | 450.3 |
+            | c | 198.8 |
+            | d | 499   |
 
         When I request a travel distance matrix I should get
-            |   | a      | c      |
-            | a | 0      | 200+-2 |
-            | c | 200+-2 | 0      |
+            |   | a     | c     |
+            | a | 0     | 198.8 |
+            | c | 198.8 | 0     |
 
 
     # Check rounding errors
@@ -538,8 +543,8 @@ Feature: Basic Distance Matrix
             | abcd     |
 
         When I request a travel distance matrix I should get
-            |   | a | b       | c       | d       |
-            | a | 0 | 1000+-3 | 2000+-3 | 3000+-3 |
+            |   | a | b      | c      | d      |
+            | a | 0 | 1000.7 | 2001.4 | 3002.1 |
 
 
     Scenario: Testbot - OneToMany vs ManyToOne
@@ -583,10 +588,10 @@ Feature: Basic Distance Matrix
             | fd     |        |
 
         When I request a travel distance matrix I should get
-            |   | a       | b       | c       | d       | e       | f       |
-            | a | 0       | 100+-1  | 300+-1  | 650+-1  | 1930+-1 | 1533+-1 |
-            | b | 760+-1  | 0       | 200+-1  | 550+-1  | 1830+-1 | 1433+-1 |
-            | c | 560+-2  | 660+-2  | 0       | 350+-1  | 1630+-1 | 1233+-1 |
-            | d | 1480+-2 | 1580+-1 | 1780+-1 | 0       | 1280+-1 | 883+-1  |
-            | e | 200+-2  | 300+-2  | 500+-1  | 710+-1  | 0       | 1593+-1 |
-            | f | 597+-1  | 696+-1  | 896+-1  | 1108+-1 | 400+-3  | 0       |
+            |   | a      | b     | c      | d      | e      | f      |
+            | a | 0      | 100.1 | 300.2  | 650.5  | 1930.6 | 1533   |
+            | b | 759    | 0     | 200.1  | 550.4  | 1830.5 | 1432.9 |
+            | c | 558.8  | 658.9 | 0      | 350.3  | 1630.4 | 1232.8 |
+            | d | 1478.9 | 1579  | 1779.1 | 0      | 1280.1 | 882.5  |
+            | e | 198.8  | 298.9 | 499    | 710.3  | 0      | 1592.8 |
+            | f | 596.4  | 696.5 | 896.6  | 1107.9 | 397.6  | 0      |
