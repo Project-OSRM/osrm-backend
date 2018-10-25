@@ -80,7 +80,7 @@ module.exports = function () {
 
         // eslint-disable-next-line no-console
         console.info(util.format('Node Version', process.version));
-        if (parseInt(process.version.match(/v(\d)/)[1]) < 4) throw new Error('*** Please upgrade to Node 4.+ to run OSRM cucumber tests');
+        if (parseInt(process.version.match(/v(\d+)/)[1]) < 4) throw new Error('*** Please upgrade to Node 4.+ to run OSRM cucumber tests');
 
         fs.exists(this.TEST_PATH, (exists) => {
             if (exists)
