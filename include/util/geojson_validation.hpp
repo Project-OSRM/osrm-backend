@@ -48,20 +48,6 @@ inline void validateFeature(const rapidjson::Value &feature)
     {
         throw osrm::util::exception("Feature has non-object properties member.");
     }
-    if (feature["properties"].HasMember("tzid"))
-    {
-        if (!feature["properties"]["tzid"].IsString())
-            throw osrm::util::exception("Feature has non-string tzid property");
-    }
-    else if (feature["properties"].HasMember("TZID"))
-    {
-        if (!feature["properties"]["TZID"].IsString())
-            throw osrm::util::exception("Feature has non-string TZID property");
-    }
-    else
-    {
-        throw osrm::util::exception("Feature is missing tzid property.");
-    }
     if (!feature.HasMember("geometry"))
     {
         throw osrm::util::exception("Feature is missing geometry member.");
