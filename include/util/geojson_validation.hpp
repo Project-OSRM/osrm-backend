@@ -48,6 +48,20 @@ inline void validateFeature(const rapidjson::Value &feature)
     {
         throw osrm::util::exception("Feature has non-object properties member.");
     }
+    if (feature["properties"].HasMember("tzid"))
+    {
+        if (!feature["properties"]["tzid"].IsString())
+            throw osrm::util::exception("Feature has non-string tzid property");
+    }
+    else if (feature["properties"].HasMember("TZID"))
+    {
+        if (!feature["properties"]["TZID"].IsString())
+            throw osrm::util::exception("Feature has non-string TZID property");
+    }
+    else
+    {
+        throw osrm::util::exception("Feature is missing tzid property.");
+    }
     if (!feature.HasMember("geometry"))
     {
         throw osrm::util::exception("Feature is missing geometry member.");
@@ -76,6 +90,14 @@ inline void validateFeature(const rapidjson::Value &feature)
     const auto coord_array = feature["geometry"].GetObject()["coordinates"].GetArray();
     if (coord_array.Empty())
         throw osrm::util::exception("Feature geometry coordinates member is empty.");
+
+    if (feature["geometry"]["type"] == "polygon" || feature["geometry"]["type"] == "Polygon")
+    {
+        if (!coord_array[0].IsArray() || !coord_array[0][0].IsArray())
+        {
+            throw osrm::util::exception("Polygon geometry missing outer ring");
+        }
+    }
 }
 } // namespace util
 } // namespace osrm
