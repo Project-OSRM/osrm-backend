@@ -1,5 +1,7 @@
 # UNRELEASED
   - Changes from 5.19.0:
+    - Windows:
+      - FIXED: Windows builds again. [#5249](https://github.com/Project-OSRM/osrm-backend/pull/5249)
 
 # 5.19.0
   - Changes from 5.18.0:
