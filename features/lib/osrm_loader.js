@@ -84,7 +84,47 @@ class OSRMDirectLoader extends OSRMBaseLoader {
                 throw new Error(util.format('osrm-routed %s: %s', errorReason(err), err.cmd));
             }
         });
-        callback();
+
+        this.child.readyFunc = (data) => {
+            if (/running and waiting for requests/.test(data)) {
+              this.child.stdout.removeListener('data', this.child.readyFunc);
+              callback();
+            }
+        };
+        this.child.stdout.on('data',this.child.readyFunc);
+    }
+};
+
+class OSRMmmapLoader extends OSRMBaseLoader {
+    constructor (scope) {
+        super(scope);
+    }
+
+    load (inputFile, callback) {
+        this.inputFile = inputFile;
+        this.shutdown(() => {
+            this.launch(callback);
+        });
+    }
+
+    osrmUp (callback) {
+        if (this.osrmIsRunning()) return callback(new Error("osrm-routed already running!"));
+
+        const command_arguments = util.format('%s -p %d -i %s -a %s --mmap', this.inputFile, this.scope.OSRM_PORT, this.scope.OSRM_IP, this.scope.ROUTING_ALGORITHM);
+        this.child = this.scope.runBin('osrm-routed', command_arguments, this.scope.environment, (err) => {
+            if (err && err.signal !== 'SIGINT') {
+                this.child = null;
+                throw new Error(util.format('osrm-routed %s: %s', errorReason(err), err.cmd));
+            }
+        });
+
+        this.child.readyFunc = (data) => {
+          if (/running and waiting for requests/.test(data)) {
+            this.child.stdout.removeListener('data', this.child.readyFunc);
+            callback();
+          }
+        };
+        this.child.stdout.on('data',this.child.readyFunc);
     }
 };
 
@@ -135,21 +175,31 @@ class OSRMLoader {
         this.scope = scope;
         this.sharedLoader = new OSRMDatastoreLoader(this.scope);
         this.directLoader = new OSRMDirectLoader(this.scope);
+        this.mmapLoader = new OSRMmmapLoader(this.scope);
         this.method = scope.DEFAULT_LOAD_METHOD;
     }
 
     load (inputFile, callback) {
+        if (!this.loader) {
+            this.loader = {shutdown: (cb) => cb() };
+        }
         if (this.method === 'datastore') {
-            this.directLoader.shutdown((err) => {
+            this.loader.shutdown((err) => {
               if (err) return callback(err);
               this.loader = this.sharedLoader;
               this.sharedLoader.load(inputFile, callback);
             });
         } else if (this.method === 'directly') {
-            this.sharedLoader.shutdown((err) => {
+            this.loader.shutdown((err) => {
               if (err) return callback(err);
               this.loader = this.directLoader;
               this.directLoader.load(inputFile, callback);
+            });
+        } else if (this.method === 'mmap') {
+            this.loader.shutdown((err) => {
+              if (err) return callback(err);
+              this.loader = this.mmapLoader;
+              this.mmapLoader.load(inputFile, callback);
             });
         } else {
             callback(new Error('*** Unknown load method ' + method));

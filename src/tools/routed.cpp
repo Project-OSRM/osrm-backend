@@ -119,7 +119,10 @@ inline unsigned generateServerProgramOptions(const int argc,
          "Load data from shared memory") //
         ("memory_file",
          value<boost::filesystem::path>(&config.memory_file),
-         "Store data in a memory mapped file rather than in process memory.") //
+         "DEPRECATED: Will behave the same as --mmap.")(
+            "mmap,m",
+            value<bool>(&config.use_mmap)->implicit_value(true)->default_value(false),
+            "Map datafiles directly, do not use any additional memory.") //
         ("dataset-name",
          value<std::string>(&config.dataset_name),
          "Name of the shared memory dataset to connect to.") //

@@ -1,5 +1,8 @@
 # UNRELEASED
   - Changes from 5.19.0:
+    - Features:
+      - ADDED: direct mmapping of datafiles is now supported via the `-mmap` switch. [#5242](https://github.com/Project-OSRM/osrm-backend/pull/5242)
+      - REMOVED: the previous `--memory_file` switch is now deprecated and will fallback to `--mmap` [#5242](https://github.com/Project-OSRM/osrm-backend/pull/5242)
 
 # 5.19.0
   - Changes from 5.18.0:
