@@ -15,14 +15,20 @@ ProcessMemoryAllocator::ProcessMemoryAllocator(const storage::StorageConfig &con
     storage::Storage storage(config);
 
     // Calculate the layout/size of the memory block
-    storage::DataLayout layout;
-    storage.PopulateStaticLayout(layout);
-    storage.PopulateUpdatableLayout(layout);
+    auto static_files = storage.GetStaticFiles();
+    auto updatable_files = storage.GetUpdatableFiles();
+    std::unique_ptr<storage::BaseDataLayout> layout =
+        std::make_unique<storage::ContiguousDataLayout>();
+    storage.PopulateLayoutWithRTree(*layout);
+    storage.PopulateLayout(*layout, static_files);
+    storage.PopulateLayout(*layout, updatable_files);
 
     // Allocate the memory block, then load data from files into it
-    internal_memory = std::make_unique<char[]>(layout.GetSizeOfLayout());
+    internal_memory = std::make_unique<char[]>(layout->GetSizeOfLayout());
 
-    index = storage::SharedDataIndex({{internal_memory.get(), std::move(layout)}});
+    std::vector<storage::SharedDataIndex::AllocatedRegion> regions;
+    regions.push_back({internal_memory.get(), std::move(layout)});
+    index = {std::move(regions)};
 
     storage.PopulateStaticData(index);
     storage.PopulateUpdatableData(index);
