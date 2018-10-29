@@ -195,7 +195,10 @@ template <> class vector_view<bool>
     {
         BOOST_ASSERT_MSG(index < m_size, "invalid size");
         const std::size_t bucket = index / WORD_BITS;
+        // Note: ordering of bits here should match packBits in storage/serialization.hpp
+        //       so that directly mmap-ing data is possible
         const auto offset = index % WORD_BITS;
+        BOOST_ASSERT(WORD_BITS > offset);
         return m_ptr[bucket] & (static_cast<Word>(1) << offset);
     }
 
@@ -224,11 +227,23 @@ template <> class vector_view<bool>
     {
         BOOST_ASSERT(index < m_size);
         const auto bucket = index / WORD_BITS;
+        // Note: ordering of bits here should match packBits in storage/serialization.hpp
+        //       so that directly mmap-ing data is possible
         const auto offset = index % WORD_BITS;
+        BOOST_ASSERT(WORD_BITS > offset);
         return reference{m_ptr + bucket, static_cast<Word>(1) << offset};
     }
 
     template <typename T> friend void swap(vector_view<T> &, vector_view<T> &) noexcept;
+
+    friend std::ostream &operator<<(std::ostream &os, const vector_view<bool> &rhs)
+    {
+        for (std::size_t i = 0; i < rhs.size(); ++i)
+        {
+            os << (i > 0 ? " " : "") << rhs.at(i);
+        }
+        return os;
+    }
 };
 
 // Both vector_view<T> and the vector_view<bool> specializations share this impl.

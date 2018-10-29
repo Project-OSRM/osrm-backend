@@ -142,6 +142,10 @@ inline engine_config_ptr argumentsToEngineConfig(const Nan::FunctionCallbackInfo
     if (shared_memory.IsEmpty())
         return engine_config_ptr();
 
+    auto mmap_memory = params->Get(Nan::New("mmap_memory").ToLocalChecked());
+    if (mmap_memory.IsEmpty())
+        return engine_config_ptr();
+
     if (!memory_file->IsUndefined())
     {
         if (path->IsUndefined())
@@ -187,6 +191,18 @@ inline engine_config_ptr argumentsToEngineConfig(const Nan::FunctionCallbackInfo
         else
         {
             Nan::ThrowError("Shared_memory option must be a boolean");
+            return engine_config_ptr();
+        }
+    }
+    if (!mmap_memory->IsUndefined())
+    {
+        if (mmap_memory->IsBoolean())
+        {
+            engine_config->use_mmap = Nan::To<bool>(mmap_memory).FromJust();
+        }
+        else
+        {
+            Nan::ThrowError("mmap_memory option must be a boolean");
             return engine_config_ptr();
         }
     }

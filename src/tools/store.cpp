@@ -52,14 +52,14 @@ void listRegions(bool show_blocks)
             auto memory = makeSharedMemory(region.shm_key);
             io::BufferReader reader(reinterpret_cast<char *>(memory->Ptr()), memory->Size());
 
-            DataLayout layout;
-            serialization::read(reader, layout);
+            std::unique_ptr<BaseDataLayout> layout = std::make_unique<ContiguousDataLayout>();
+            serialization::read(reader, *layout);
 
             std::vector<std::string> block_names;
-            layout.List("", std::back_inserter(block_names));
+            layout->List("", std::back_inserter(block_names));
             for (auto &name : block_names)
             {
-                osrm::util::Log() << "  " << name << " " << layout.GetBlockSize(name);
+                osrm::util::Log() << "  " << name << " " << layout->GetBlockSize(name);
             }
         }
     }

@@ -63,12 +63,16 @@ template <typename Algorithm> class Engine final : public EngineInterface
                                 << "\" with algorithm " << routing_algorithms::name<Algorithm>();
             facade_provider = std::make_unique<WatchingProvider<Algorithm>>(config.dataset_name);
         }
-        else if (!config.memory_file.empty())
+        else if (!config.memory_file.empty() || config.use_mmap)
         {
-            util::Log(logDEBUG) << "Using memory mapped filed at " << config.memory_file
-                                << " with algorithm " << routing_algorithms::name<Algorithm>();
-            facade_provider = std::make_unique<ExternalProvider<Algorithm>>(config.storage_config,
-                                                                            config.memory_file);
+            if (!config.memory_file.empty())
+            {
+                util::Log(logWARNING)
+                    << "The 'memory_file' option is DEPRECATED - using direct mmaping instead";
+            }
+            util::Log(logDEBUG) << "Using direct memory mapping with algorithm "
+                                << routing_algorithms::name<Algorithm>();
+            facade_provider = std::make_unique<ExternalProvider<Algorithm>>(config.storage_config);
         }
         else
         {
