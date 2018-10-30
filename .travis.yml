@@ -296,7 +296,7 @@ before_install:
     fi
   - |
     if [[ ! -f $(which yarn) ]]; then
-      npm install -g yarn
+      npm install -g yarn@1.11.1
     fi
   - export PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
   - export PUBLISH=$([[ "${TRAVIS_TAG:-}" == "v${PACKAGE_JSON_VERSION}" ]] && echo "On" || echo "Off")
