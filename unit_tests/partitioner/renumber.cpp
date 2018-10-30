@@ -32,9 +32,9 @@ auto makeGraph(const std::vector<MockEdge> &mock_edges)
         max_id = std::max<std::size_t>(max_id, std::max(m.start, m.target));
 
         edges.push_back(InputEdge{
-            m.start, m.target, EdgeBasedGraphEdgeData{SPECIAL_NODEID, 1, 1, true, false}});
+            m.start, m.target, EdgeBasedGraphEdgeData{SPECIAL_NODEID, 1, 1, 1, true, false}});
         edges.push_back(InputEdge{
-            m.target, m.start, EdgeBasedGraphEdgeData{SPECIAL_NODEID, 1, 1, false, true}});
+            m.target, m.start, EdgeBasedGraphEdgeData{SPECIAL_NODEID, 1, 1, 1, false, true}});
     }
     std::sort(edges.begin(), edges.end());
     return DynamicEdgeBasedGraph(max_id + 1, edges);

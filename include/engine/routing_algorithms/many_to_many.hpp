@@ -25,15 +25,17 @@ struct NodeBucket
     unsigned from_clique_arc : 1;
     EdgeWeight weight;
     EdgeDuration duration;
+    EdgeDistance distance;
 
     NodeBucket(NodeID middle_node,
                NodeID parent_node,
                bool from_clique_arc,
                unsigned column_index,
                EdgeWeight weight,
-               EdgeDuration duration)
+               EdgeDuration duration,
+               EdgeDistance distance)
         : middle_node(middle_node), parent_node(parent_node), column_index(column_index),
-          from_clique_arc(from_clique_arc), weight(weight), duration(duration)
+          from_clique_arc(from_clique_arc), weight(weight), duration(duration), distance(distance)
     {
     }
 
@@ -41,9 +43,10 @@ struct NodeBucket
                NodeID parent_node,
                unsigned column_index,
                EdgeWeight weight,
-               EdgeDuration duration)
+               EdgeDuration duration,
+               EdgeDistance distance)
         : middle_node(middle_node), parent_node(parent_node), column_index(column_index),
-          from_clique_arc(false), weight(weight), duration(duration)
+          from_clique_arc(false), weight(weight), duration(duration), distance(distance)
     {
     }
 
@@ -94,8 +97,7 @@ manyToManySearch(SearchEngineData<Algorithm> &engine_working_data,
                  const std::vector<PhantomNode> &phantom_nodes,
                  const std::vector<std::size_t> &source_indices,
                  const std::vector<std::size_t> &target_indices,
-                 const bool calculate_distance,
-                 const bool calculate_duration);
+                 const bool calculate_distance);
 
 } // namespace routing_algorithms
 } // namespace engine

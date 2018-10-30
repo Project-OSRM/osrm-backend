@@ -415,6 +415,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                     OSMNodeID{static_cast<std::uint64_t>(last_node.ref())},
                     0,  // weight
                     0,  // duration
+                    0,  // distance
                     {}, // geometry id
                     static_cast<AnnotationID>(annotation_data_id),
                     {true,
@@ -450,6 +451,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                     OSMNodeID{static_cast<std::uint64_t>(last_node.ref())},
                     0,  // weight
                     0,  // duration
+                    0,  // distance
                     {}, // geometry id
                     static_cast<AnnotationID>(annotation_data_id),
                     {false,

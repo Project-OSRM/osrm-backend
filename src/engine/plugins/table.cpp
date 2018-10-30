@@ -86,7 +86,7 @@ Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
     bool request_duration = params.annotations & api::TableParameters::AnnotationsType::Duration;
 
     auto result_tables_pair = algorithms.ManyToManySearch(
-        snapped_phantoms, params.sources, params.destinations, request_distance, request_duration);
+        snapped_phantoms, params.sources, params.destinations, request_distance);
 
     if ((request_duration && result_tables_pair.first.empty()) ||
         (request_distance && result_tables_pair.second.empty()))

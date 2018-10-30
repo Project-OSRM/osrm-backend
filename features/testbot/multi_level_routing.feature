@@ -38,15 +38,15 @@ Feature: Multi level routing
     Scenario: Testbot - Multi level routing
         Given the node map
             """
-            a───b   e───f
-            │   │   │   │
+           a────b   e─────f
+            \   │   │    /
             d───c   h───g
                  ╲ ╱
                   ╳
                  ╱ ╲
             i───j   m───n
-            │   │   │   │
-            l───k───p───o
+           /    │   │    \
+          l─────k───p─────o
             """
 
         And the nodes
@@ -67,78 +67,76 @@ Feature: Multi level routing
 
         When I route I should get
             | from | to | route                                  | time   |
-            | a    | b  | abcda,abcda                            | 20s    |
-            | a    | f  | abcda,cm,mnopm,kp,ijkli,hj,efghe,efghe | 229.4s |
-            | a    | l  | abcda,cm,mnopm,kp,ijkli,ijkli          | 144.7s |
-            | a    | o  | abcda,cm,mnopm,mnopm,mnopm             | 124.7s |
-            | f    | l  | efghe,hj,ijkli,ijkli,ijkli             | 124.7s |
-            | f    | o  | efghe,hj,ijkli,kp,mnopm,mnopm          | 144.7s |
-            | l    | o  | ijkli,kp,mnopm,mnopm                   | 60s    |
+            | a    | b  | abcda,abcda                            | 25s    |
+            | a    | f  | abcda,cm,mnopm,kp,ijkli,hj,efghe,efghe | 239.2s |
+            | a    | l  | abcda,cm,mnopm,kp,ijkli,ijkli          | 157.1s |
+            | a    | o  | abcda,cm,mnopm,mnopm,mnopm             | 137.1s |
+            | f    | l  | efghe,hj,ijkli,ijkli                   | 136.7s |
+            | f    | o  | efghe,hj,ijkli,kp,mnopm,mnopm          | 162.1s |
+            | l    | o  | ijkli,kp,mnopm,mnopm                   | 80s    |
             | c    | m  | cm,cm                                  | 44.7s  |
+            | f    | a  | efghe,hj,ijkli,kp,mnopm,cm,abcda,abcda | 239.2s |
+            | l    | a  | ijkli,kp,mnopm,cm,abcda,abcda          | 157.1s |
 
         When I request a travel time matrix I should get
-            |   |     a |     f |     l |     o |
-            | a |     0 | 229.4 | 144.7 | 124.7 |
-            | f | 229.4 |     0 | 124.7 | 144.7 |
-            | l | 144.7 | 124.7 |     0 |    60 |
-            | o | 124.7 | 144.7 |    60 |     0 |
+            |   | a     | f     | l     | o     |
+            | a | 0     | 239.2 | 157.1 | 137.1 |
+            | f | 239.2 | 0     | 136.7 | 162.1 |
+            | l | 157.1 | 136.7 | 0     | 80    |
+            | o | 137.1 | 162.1 | 80    | 0     |
 
         When I request a travel time matrix I should get
-            |   |     a |     f |     l |     o |
-            | a |     0 | 229.4 | 144.7 | 124.7 |
+            |   | a | f     | l     | o     |
+            | a | 0 | 239.2 | 157.1 | 137.1 |
 
         When I request a travel time matrix I should get
-            |   |     a |
-            | a |     0 |
-            | f | 229.4 |
-            | l | 144.7 |
-            | o | 124.7 |
+            |   |   a   |
+            | a |   0   |
+            | f | 239.2 |
+            | l | 157.1 |
+            | o | 137.1 |
 
         When I request a travel time matrix I should get
-            |   |     a |     f |     l |     o |
-            | a |     0 | 229.4 | 144.7 | 124.7 |
-            | o | 124.7 | 144.7 |    60 |     0 |
+            |   | a     | f     | l     | o     |
+            | a | 0     | 239.2 | 157.1 | 137.1 |
+            | o | 137.1 | 162.1 | 80    | 0     |
 
         When I request a travel time matrix I should get
             |   |     a |     o |
-            | a |     0 | 124.7 |
-            | f | 229.4 | 144.7 |
-            | l | 144.7 |    60 |
-            | o | 124.7 |     0 |
-
-
-        When I request a travel distance matrix I should get
-            |   |       a |       f |       l |         o |
-            | a |    0+-2 | 2287+-2 | 1443+-2 |   1243+-2 |
-            | f | 2284+-2 |    0+-2 | 1241+-2 |   1443+-2 |
-            | l | 1443+-2 | 1244+-2 |    0+-2 |    600+-2 |
-            | o | 1243+-2 | 1444+-2 |  600+-2 |      0+-2 |
+            | a |     0 | 137.1 |
+            | f | 239.2 | 162.1 |
+            | l | 157.1 |    80 |
+            | o | 137.1 |     0 |
 
         When I request a travel distance matrix I should get
-            |   | a | f          | l          | o        |
-            | a | 0 | 2287.2+-2  | 1443+-2    | 1243+-2  |
+            |   | a      | f      | l      | o      |
+            | a | 0      | 2383.7 | 1566.9 | 1366.8 |
+            | f | 2339.9 | 0      | 1198.1 | 1522.1 |
+            | l | 1618.3 | 1293.3 | 0      | 800.5  |
+            | o | 1418.2 | 1617.3 | 800.5  | 0      |
 
         When I request a travel distance matrix I should get
-            |   |         a |
-            | a |         0 |
-            | f | 2284.5+-2 |
-            | l |    1443.1 |
-            | o |      1243 |
+            |   | a | f      | l      | o      |
+            | a | 0 | 2383.7 | 1566.9 | 1366.8 |
 
         When I request a travel distance matrix I should get
-            |   |    a |      f  |      l  |       o |
-            | a |    0 | 2287+-2 | 1443+-2 | 1243+-2 |
-            | o | 1243 | 1444+-2 |  600+-2 |    0+-2 |
-
+            |   | a      |
+            | a | 0      |
+            | f | 2339.9 |
+            | l | 1618.3 |
+            | o | 1418.2 |
 
         When I request a travel distance matrix I should get
-            |   |         a |        o  |
-            | a |      0+-2 |   1243+-2 |
-            | f |   2284+-2 |   1443+-2 |
-            | l |   1443+-2 |    600+-2 |
-            | o |   1243+-2 |      0+-2 |
+            |   | a      | f      | l      | o      |
+            | a | 0      | 2383.7 | 1566.9 | 1366.8 |
+            | f | 2339.9 | 0      | 1198.1 | 1522.1 |
 
-
+        When I request a travel distance matrix I should get
+            |   | a      | o      |
+            | a | 0      | 1366.8 |
+            | f | 2339.9 | 1522.1 |
+            | l | 1618.3 | 800.5  |
+            | o | 1418.2 | 0      |
 
     Scenario: Testbot - Multi level routing: horizontal road
         Given the node map
