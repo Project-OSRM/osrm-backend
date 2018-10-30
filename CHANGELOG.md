@@ -1,4 +1,4 @@
-# UNRELEASED
+# 5.20.0
   - Changes from 5.19.0:
     - Table:
       - CHANGED: switch to pre-calculated distances for table responses for large speedup and 10% memory increase. [#5251](https://github.com/Project-OSRM/osrm-backend/pull/5251)
