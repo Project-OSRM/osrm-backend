@@ -9,6 +9,7 @@
 
 #include <tbb/parallel_sort.h>
 
+#include <iostream>
 #include <memory>
 #include <utility>
 
@@ -20,24 +21,27 @@ namespace util
 struct NodeBasedEdgeData
 {
     NodeBasedEdgeData()
-        : weight(INVALID_EDGE_WEIGHT), duration(INVALID_EDGE_WEIGHT), geometry_id({0, false}),
-          reversed(false), annotation_data(-1)
+        : weight(INVALID_EDGE_WEIGHT), duration(INVALID_EDGE_WEIGHT),
+          distance(INVALID_EDGE_DISTANCE), geometry_id({0, false}), reversed(false),
+          annotation_data(-1)
     {
     }
 
     NodeBasedEdgeData(EdgeWeight weight,
                       EdgeWeight duration,
+                      EdgeDistance distance,
                       GeometryID geometry_id,
                       bool reversed,
                       extractor::NodeBasedEdgeClassification flags,
                       AnnotationID annotation_data)
-        : weight(weight), duration(duration), geometry_id(geometry_id), reversed(reversed),
-          flags(flags), annotation_data(annotation_data)
+        : weight(weight), duration(duration), distance(distance), geometry_id(geometry_id),
+          reversed(reversed), flags(flags), annotation_data(annotation_data)
     {
     }
 
     EdgeWeight weight;
     EdgeWeight duration;
+    EdgeDistance distance;
     GeometryID geometry_id;
     bool reversed : 1;
     extractor::NodeBasedEdgeClassification flags;
@@ -80,11 +84,13 @@ NodeBasedDynamicGraphFromEdges(NodeID number_of_nodes,
            const extractor::NodeBasedEdge &input_edge) {
             output_edge.data.weight = input_edge.weight;
             output_edge.data.duration = input_edge.duration;
+            output_edge.data.distance = input_edge.distance;
             output_edge.data.flags = input_edge.flags;
             output_edge.data.annotation_data = input_edge.annotation_data;
 
             BOOST_ASSERT(output_edge.data.weight > 0);
             BOOST_ASSERT(output_edge.data.duration > 0);
+            BOOST_ASSERT(output_edge.data.distance >= 0);
         });
 
     tbb::parallel_sort(edges_list.begin(), edges_list.end());

@@ -113,6 +113,7 @@ static const SegmentWeight MAX_SEGMENT_WEIGHT = INVALID_SEGMENT_WEIGHT - 1;
 static const SegmentDuration MAX_SEGMENT_DURATION = INVALID_SEGMENT_DURATION - 1;
 static const EdgeWeight INVALID_EDGE_WEIGHT = std::numeric_limits<EdgeWeight>::max();
 static const EdgeDuration MAXIMAL_EDGE_DURATION = std::numeric_limits<EdgeDuration>::max();
+static const EdgeDistance MAXIMAL_EDGE_DISTANCE = std::numeric_limits<EdgeDistance>::max();
 static const TurnPenalty INVALID_TURN_PENALTY = std::numeric_limits<TurnPenalty>::max();
 static const EdgeDistance INVALID_EDGE_DISTANCE = std::numeric_limits<EdgeDistance>::max();
 

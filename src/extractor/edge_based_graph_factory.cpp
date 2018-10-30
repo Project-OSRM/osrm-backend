@@ -114,6 +114,13 @@ void EdgeBasedGraphFactory::GetEdgeBasedNodeDurations(
     swap(m_edge_based_node_durations, output_node_durations);
 }
 
+void EdgeBasedGraphFactory::GetEdgeBasedNodeDistances(
+    std::vector<EdgeDistance> &output_node_distances)
+{
+    using std::swap; // Koenig swap
+    swap(m_edge_based_node_distances, output_node_distances);
+}
+
 std::uint32_t EdgeBasedGraphFactory::GetConnectivityChecksum() const
 {
     return m_connectivity_checksum;
@@ -291,8 +298,12 @@ unsigned EdgeBasedGraphFactory::LabelEdgeBasedNodes()
 {
     // heuristic: node-based graph node is a simple intersection with four edges
     // (edge-based nodes)
-    m_edge_based_node_weights.reserve(4 * m_node_based_graph.GetNumberOfNodes());
-    m_edge_based_node_durations.reserve(4 * m_node_based_graph.GetNumberOfNodes());
+    constexpr std::size_t ESTIMATED_EDGE_COUNT = 4;
+    m_edge_based_node_weights.reserve(ESTIMATED_EDGE_COUNT * m_node_based_graph.GetNumberOfNodes());
+    m_edge_based_node_durations.reserve(ESTIMATED_EDGE_COUNT *
+                                        m_node_based_graph.GetNumberOfNodes());
+    m_edge_based_node_distances.reserve(ESTIMATED_EDGE_COUNT *
+                                        m_node_based_graph.GetNumberOfNodes());
     nbe_to_ebn_mapping.resize(m_node_based_graph.GetEdgeCapacity(), SPECIAL_NODEID);
 
     // renumber edge based node of outgoing edges
@@ -310,6 +321,7 @@ unsigned EdgeBasedGraphFactory::LabelEdgeBasedNodes()
 
             m_edge_based_node_weights.push_back(edge_data.weight);
             m_edge_based_node_durations.push_back(edge_data.duration);
+            m_edge_based_node_distances.push_back(edge_data.distance);
 
             BOOST_ASSERT(numbered_edges_count < m_node_based_graph.GetNumberOfEdges());
             nbe_to_ebn_mapping[current_edge] = numbered_edges_count;
@@ -407,6 +419,8 @@ EdgeBasedGraphFactory::GenerateEdgeExpandedNodes(const WayRestrictionMap &way_re
             m_edge_based_node_weights.push_back(ebn_weight);
             m_edge_based_node_durations.push_back(
                 m_edge_based_node_durations[nbe_to_ebn_mapping[eid]]);
+            m_edge_based_node_distances.push_back(
+                m_edge_based_node_distances[nbe_to_ebn_mapping[eid]]);
 
             edge_based_node_id++;
             progress.PrintStatus(progress_counter++);
@@ -416,6 +430,7 @@ EdgeBasedGraphFactory::GenerateEdgeExpandedNodes(const WayRestrictionMap &way_re
     BOOST_ASSERT(m_edge_based_node_segments.size() == m_edge_based_node_is_startpoint.size());
     BOOST_ASSERT(m_number_of_edge_based_nodes == m_edge_based_node_weights.size());
     BOOST_ASSERT(m_number_of_edge_based_nodes == m_edge_based_node_durations.size());
+    BOOST_ASSERT(m_number_of_edge_based_nodes == m_edge_based_node_distances.size());
 
     util::Log() << "Generated " << m_number_of_edge_based_nodes << " nodes ("
                 << way_restriction_map.NumberOfDuplicatedNodes()
@@ -652,16 +667,17 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
             // auto turn_id = m_edge_based_edge_list.size();
             auto weight = boost::numeric_cast<EdgeWeight>(edge_data1.weight + weight_penalty);
             auto duration = boost::numeric_cast<EdgeWeight>(edge_data1.duration + duration_penalty);
+            auto distance = boost::numeric_cast<EdgeDistance>(edge_data1.distance);
 
-            EdgeBasedEdge edge_based_edge = {
-                edge_based_node_from,
-                edge_based_node_to,
-                SPECIAL_NODEID, // This will be updated once the main loop
-                                // completes!
-                weight,
-                duration,
-                true,
-                false};
+            EdgeBasedEdge edge_based_edge = {edge_based_node_from,
+                                             edge_based_node_to,
+                                             SPECIAL_NODEID, // This will be updated once the main
+                                                             // loop completes!
+                                             weight,
+                                             duration,
+                                             distance,
+                                             true,
+                                             false};
 
             // We write out the mapping between the edge-expanded edges and the original nodes.
             // Since each edge represents a possible maneuver, external programs can use this to
