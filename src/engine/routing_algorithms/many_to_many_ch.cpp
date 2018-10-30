@@ -120,8 +120,13 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
         const auto target_distance = current_bucket.distance;
 
         auto &current_weight = weights_table[row_index * number_of_targets + column_index];
+
+        EdgeDistance nulldistance = 0;
+
         auto &current_duration = durations_table[row_index * number_of_targets + column_index];
-        auto &current_distance = distances_table[row_index * number_of_targets + column_index];
+        auto &current_distance =
+            distances_table.empty() ? nulldistance
+                                    : distances_table[row_index * number_of_targets + column_index];
 
         // Check if new weight is better
         auto new_weight = source_weight + target_weight;
@@ -180,8 +185,7 @@ manyToManySearch(SearchEngineData<ch::Algorithm> &engine_working_data,
                  const std::vector<PhantomNode> &phantom_nodes,
                  const std::vector<std::size_t> &source_indices,
                  const std::vector<std::size_t> &target_indices,
-                 const bool /* calculate_distance */,
-                 const bool /* calculate_duration */)
+                 const bool calculate_distance)
 {
     const auto number_of_sources = source_indices.size();
     const auto number_of_targets = target_indices.size();
@@ -189,7 +193,8 @@ manyToManySearch(SearchEngineData<ch::Algorithm> &engine_working_data,
 
     std::vector<EdgeWeight> weights_table(number_of_entries, INVALID_EDGE_WEIGHT);
     std::vector<EdgeDuration> durations_table(number_of_entries, MAXIMAL_EDGE_DURATION);
-    std::vector<EdgeDistance> distances_table(number_of_entries, MAXIMAL_EDGE_DISTANCE);
+    std::vector<EdgeDistance> distances_table(calculate_distance ? number_of_entries : 0,
+                                              MAXIMAL_EDGE_DISTANCE);
     std::vector<NodeID> middle_nodes_table(number_of_entries, SPECIAL_NODEID);
 
     std::vector<NodeBucket> search_space_with_buckets;

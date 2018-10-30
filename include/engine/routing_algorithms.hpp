@@ -34,8 +34,7 @@ class RoutingAlgorithmsInterface
     ManyToManySearch(const std::vector<PhantomNode> &phantom_nodes,
                      const std::vector<std::size_t> &source_indices,
                      const std::vector<std::size_t> &target_indices,
-                     const bool calculate_distance,
-                     const bool calculate_duration) const = 0;
+                     const bool calculate_distance) const = 0;
 
     virtual routing_algorithms::SubMatchingList
     MapMatching(const routing_algorithms::CandidateLists &candidates_list,
@@ -88,8 +87,7 @@ template <typename Algorithm> class RoutingAlgorithms final : public RoutingAlgo
     ManyToManySearch(const std::vector<PhantomNode> &phantom_nodes,
                      const std::vector<std::size_t> &source_indices,
                      const std::vector<std::size_t> &target_indices,
-                     const bool calculate_distance,
-                     const bool calculate_duration) const final override;
+                     const bool calculate_distance) const final override;
 
     routing_algorithms::SubMatchingList
     MapMatching(const routing_algorithms::CandidateLists &candidates_list,
@@ -198,8 +196,7 @@ std::pair<std::vector<EdgeDuration>, std::vector<EdgeDistance>>
 RoutingAlgorithms<Algorithm>::ManyToManySearch(const std::vector<PhantomNode> &phantom_nodes,
                                                const std::vector<std::size_t> &_source_indices,
                                                const std::vector<std::size_t> &_target_indices,
-                                               const bool calculate_distance,
-                                               const bool calculate_duration) const
+                                               const bool calculate_distance) const
 {
     BOOST_ASSERT(!phantom_nodes.empty());
 
@@ -222,8 +219,7 @@ RoutingAlgorithms<Algorithm>::ManyToManySearch(const std::vector<PhantomNode> &p
                                                 phantom_nodes,
                                                 std::move(source_indices),
                                                 std::move(target_indices),
-                                                calculate_distance,
-                                                calculate_duration);
+                                                calculate_distance);
 }
 
 template <typename Algorithm>

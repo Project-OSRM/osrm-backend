@@ -193,11 +193,13 @@ oneToManySearch(SearchEngineData<Algorithm> &engine_working_data,
                 const DataFacade<Algorithm> &facade,
                 const std::vector<PhantomNode> &phantom_nodes,
                 std::size_t phantom_index,
-                const std::vector<std::size_t> &phantom_indices)
+                const std::vector<std::size_t> &phantom_indices,
+                const bool calculate_distance)
 {
     std::vector<EdgeWeight> weights(phantom_indices.size(), INVALID_EDGE_WEIGHT);
     std::vector<EdgeDuration> durations(phantom_indices.size(), MAXIMAL_EDGE_DURATION);
-    std::vector<EdgeDistance> distances_table(phantom_indices.size(), MAXIMAL_EDGE_DISTANCE);
+    std::vector<EdgeDistance> distances_table(calculate_distance ? phantom_indices.size() : 0,
+                                              MAXIMAL_EDGE_DISTANCE);
     std::vector<NodeID> middle_nodes_table(phantom_indices.size(), SPECIAL_NODEID);
 
     // Collect destination (source) nodes into a map
@@ -268,12 +270,16 @@ oneToManySearch(SearchEngineData<Algorithm> &engine_working_data,
                     const auto path_duration = duration + target_duration;
                     const auto path_distance = distance + target_distance;
 
+                    EdgeDistance nulldistance = 0;
+                    auto &current_distance =
+                        distances_table.empty() ? nulldistance : distances_table[index];
+
                     if (std::tie(path_weight, path_duration, path_distance) <
-                        std::tie(weights[index], durations[index], distances_table[index]))
+                        std::tie(weights[index], durations[index], current_distance))
                     {
                         weights[index] = path_weight;
                         durations[index] = path_duration;
-                        distances_table[index] = path_distance;
+                        current_distance = path_distance;
                         middle_nodes_table[index] = node;
                     }
 
@@ -434,7 +440,9 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
                                   : row_idx + column_idx * number_of_sources;
         auto &current_weight = weights_table[location];
         auto &current_duration = durations_table[location];
-        auto &current_distance = distances_table[location];
+
+        EdgeDistance nulldistance = 0;
+        auto &current_distance = distances_table.empty() ? nulldistance : distances_table[location];
 
         // Check if new weight is better
         auto new_weight = source_weight + target_weight;
@@ -529,7 +537,8 @@ manyToManySearch(SearchEngineData<Algorithm> &engine_working_data,
                  const DataFacade<Algorithm> &facade,
                  const std::vector<PhantomNode> &phantom_nodes,
                  const std::vector<std::size_t> &source_indices,
-                 const std::vector<std::size_t> &target_indices)
+                 const std::vector<std::size_t> &target_indices,
+                 const bool calculate_distance)
 {
     const auto number_of_sources = source_indices.size();
     const auto number_of_targets = target_indices.size();
@@ -537,7 +546,8 @@ manyToManySearch(SearchEngineData<Algorithm> &engine_working_data,
 
     std::vector<EdgeWeight> weights_table(number_of_entries, INVALID_EDGE_WEIGHT);
     std::vector<EdgeDuration> durations_table(number_of_entries, MAXIMAL_EDGE_DURATION);
-    std::vector<EdgeDistance> distances_table(number_of_entries, INVALID_EDGE_DISTANCE);
+    std::vector<EdgeDistance> distances_table(calculate_distance ? number_of_entries : 0,
+                                              INVALID_EDGE_DISTANCE);
     std::vector<NodeID> middle_nodes_table(number_of_entries, SPECIAL_NODEID);
 
     std::vector<NodeBucket> search_space_with_buckets;
@@ -626,29 +636,44 @@ manyToManySearch(SearchEngineData<mld::Algorithm> &engine_working_data,
                  const std::vector<PhantomNode> &phantom_nodes,
                  const std::vector<std::size_t> &source_indices,
                  const std::vector<std::size_t> &target_indices,
-                 const bool /* calculate_distance */,
-                 const bool /* calculate_duration */)
+                 const bool calculate_distance)
 {
     if (source_indices.size() == 1)
     { // TODO: check if target_indices.size() == 1 and do a bi-directional search
-        return mld::oneToManySearch<FORWARD_DIRECTION>(
-            engine_working_data, facade, phantom_nodes, source_indices.front(), target_indices);
+        return mld::oneToManySearch<FORWARD_DIRECTION>(engine_working_data,
+                                                       facade,
+                                                       phantom_nodes,
+                                                       source_indices.front(),
+                                                       target_indices,
+                                                       calculate_distance);
     }
 
     if (target_indices.size() == 1)
     {
-        return mld::oneToManySearch<REVERSE_DIRECTION>(
-            engine_working_data, facade, phantom_nodes, target_indices.front(), source_indices);
+        return mld::oneToManySearch<REVERSE_DIRECTION>(engine_working_data,
+                                                       facade,
+                                                       phantom_nodes,
+                                                       target_indices.front(),
+                                                       source_indices,
+                                                       calculate_distance);
     }
 
     if (target_indices.size() < source_indices.size())
     {
-        return mld::manyToManySearch<REVERSE_DIRECTION>(
-            engine_working_data, facade, phantom_nodes, target_indices, source_indices);
+        return mld::manyToManySearch<REVERSE_DIRECTION>(engine_working_data,
+                                                        facade,
+                                                        phantom_nodes,
+                                                        target_indices,
+                                                        source_indices,
+                                                        calculate_distance);
     }
 
-    return mld::manyToManySearch<FORWARD_DIRECTION>(
-        engine_working_data, facade, phantom_nodes, source_indices, target_indices);
+    return mld::manyToManySearch<FORWARD_DIRECTION>(engine_working_data,
+                                                    facade,
+                                                    phantom_nodes,
+                                                    source_indices,
+                                                    target_indices,
+                                                    calculate_distance);
 }
 
 } // namespace routing_algorithms

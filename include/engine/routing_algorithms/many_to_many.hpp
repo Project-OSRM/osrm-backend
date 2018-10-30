@@ -97,8 +97,7 @@ manyToManySearch(SearchEngineData<Algorithm> &engine_working_data,
                  const std::vector<PhantomNode> &phantom_nodes,
                  const std::vector<std::size_t> &source_indices,
                  const std::vector<std::size_t> &target_indices,
-                 const bool calculate_distance,
-                 const bool calculate_duration);
+                 const bool calculate_distance);
 
 } // namespace routing_algorithms
 } // namespace engine
