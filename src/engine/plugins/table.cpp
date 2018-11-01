@@ -4,6 +4,7 @@
 #include "engine/api/table_parameters.hpp"
 #include "engine/routing_algorithms/many_to_many.hpp"
 #include "engine/search_engine_data.hpp"
+#include "util/coordinate_calculation.hpp"
 #include "util/json_container.hpp"
 #include "util/string_util.hpp"
 
@@ -94,8 +95,47 @@ Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
         return Error("NoTable", "No table found", result);
     }
 
+    std::vector<api::TableAPI::TableCellRef> estimated_pairs;
+
+    // Scan table for null results - if any exist, replace with distance estimates
+    if (params.fallback_speed > 0)
+    {
+        for (std::size_t row = 0; row < num_sources; row++)
+        {
+            for (std::size_t column = 0; column < num_destinations; column++)
+            {
+                const auto &table_index = row * num_sources + column;
+                if (result_tables_pair.first[table_index] == MAXIMAL_EDGE_DURATION)
+                {
+                    const auto &source =
+                        snapped_phantoms[params.sources.empty() ? row : params.sources[row]];
+                    const auto &destination =
+                        snapped_phantoms[params.destinations.empty() ? column
+                                                                     : params.destinations[column]];
+
+                    auto distance_estimate =
+                        params.fallback_coordinate_type ==
+                                api::TableParameters::FallbackCoordinateType::Input
+                            ? util::coordinate_calculation::fccApproximateDistance(
+                                  source.input_location, destination.input_location)
+                            : util::coordinate_calculation::fccApproximateDistance(
+                                  source.location, destination.location);
+
+                    result_tables_pair.first[table_index] =
+                        distance_estimate / (double)params.fallback_speed;
+                    if (!result_tables_pair.second.empty())
+                    {
+                        result_tables_pair.second[table_index] = distance_estimate;
+                    }
+
+                    estimated_pairs.emplace_back(row, column);
+                }
+            }
+        }
+    }
+
     api::TableAPI table_api{facade, params};
-    table_api.MakeResponse(result_tables_pair, snapped_phantoms, result);
+    table_api.MakeResponse(result_tables_pair, snapped_phantoms, estimated_pairs, result);
 
     return Status::Ok;
 }

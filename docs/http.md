@@ -236,8 +236,9 @@ In addition to the [general options](#general-options) the following options are
 |------------|--------------------------------------------------|---------------------------------------------|
 |sources     |`{index};{index}[;{index} ...]` or `all` (default)|Use location with given index as source.     |
 |destinations|`{index};{index}[;{index} ...]` or `all` (default)|Use location with given index as destination.|
-|annotations |`duration` (default), `distance`, or `duration,distance`|Return the requested table or tables in response. Note that computing the `distances` table is currently only implemented for CH. If `annotations=distance` or `annotations=duration,distance` is requested when running a MLD router, a `NotImplemented` error will be returned.
-|
+|annotations |`duration` (default), `distance`, or `duration,distance`|Return the requested table or tables in response. Note that computing the `distances` table is currently only implemented for CH. If `annotations=distance` or `annotations=duration,distance` is requested when running a MLD router, a `NotImplemented` error will be returned. |
+|fallback_speed|`double > 0`|If no route found between a source/destination pair, calculate the as-the-crow-flies distance, then use this speed to estimate duration.|
+|fallback_coordinate|`input` (default), or `snapped`| When using a `fallback_speed`, use the user-supplied coordinate (`input`), or the snapped location (`snapped`) for calculating distances.|
 
 Unlike other array encoded options, the length of `sources` and `destinations` can be **smaller or equal**
 to number of input locations;
@@ -283,6 +284,7 @@ curl 'http://router.project-osrm.org/table/v1/driving/13.388860,52.517037;13.397
   the i-th waypoint to the j-th waypoint. Values are given in meters. Can be `null` if no route between `i` and `j` can be found. Note that computing the `distances` table is currently only implemented for CH. If `annotations=distance` or `annotations=duration,distance` is requested when running a MLD router, a `NotImplemented` error will be returned.
 - `sources` array of `Waypoint` objects describing all sources in order
 - `destinations` array of `Waypoint` objects describing all destinations in order
+- `estimated_cells` (optional) array of arrays containing `i,j` pairs indicating which cells contain estimated values based on `fallback_speed`.  Will be absent if `fallback_speed` is not used.
 
 In case of error the following `code`s are supported in addition to the general ones:
 
@@ -383,6 +385,10 @@ All other properties might be undefined.
       2361.73,
       0
     ]
+  ],
+  "estimated_cells": [
+    [ 0, 1 ],
+    [ 1, 0 ]
   ]
 }
 ```

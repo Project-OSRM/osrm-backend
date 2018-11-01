@@ -178,6 +178,8 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
     qi::rule<Iterator, Signature> base_rule;
     qi::rule<Iterator, Signature> query_rule;
 
+    qi::real_parser<double, json_policy> double_;
+
   private:
     qi::rule<Iterator, Signature> bearings_rule;
     qi::rule<Iterator, Signature> radiuses_rule;
@@ -195,7 +197,6 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
     qi::rule<Iterator, unsigned char()> base64_char;
     qi::rule<Iterator, std::string()> polyline_chars;
     qi::rule<Iterator, double()> unlimited_rule;
-    qi::real_parser<double, json_policy> double_;
 
     qi::symbols<char, engine::Approach> approach_type;
 };
