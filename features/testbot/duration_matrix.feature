@@ -510,3 +510,26 @@ Feature: Basic Duration Matrix
             |   |   a   |
             | a |   0   |
             | b | 24.1  |
+
+    Scenario: Testbot - Filling in noroutes with estimates
+        Given a grid size of 300 meters
+        Given the extract extra arguments "--small-component-size 4"
+        Given the query options
+            | noroute_estimate | 5 |
+        Given the node map
+            """
+            a b   f h
+            d e   g i
+            """
+
+        And the ways
+            | nodes |
+            | abeda |
+            | fhigf |
+
+        When I request a travel time matrix I should get
+            |   | a  | b  | f  | h  |
+            | a | 0  | 30 | 18 | 24 |
+            | b | 30 | 0  | 12 | 18 |
+            | f | 18 | 12 | 0  | 30 |
+            | h | 24 | 18 | 30 | 0  |

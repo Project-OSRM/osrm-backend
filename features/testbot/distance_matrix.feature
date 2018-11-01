@@ -595,3 +595,27 @@ Feature: Basic Distance Matrix
             | d | 1478.9 | 1579  | 1779.1 | 0      | 1280.1 | 882.5  |
             | e | 198.8  | 298.9 | 499    | 710.3  | 0      | 1592.8 |
             | f | 596.4  | 696.5 | 896.6  | 1107.9 | 397.6  | 0      |
+
+
+    Scenario: Testbot - Filling in noroutes with estimates
+        Given a grid size of 300 meters
+        Given the extract extra arguments "--small-component-size 4"
+        Given the query options
+            | noroute_estimate | 5 |
+        Given the node map
+            """
+            a b   f h
+            d e   g i
+            """
+
+        And the ways
+            | nodes |
+            | abeda |
+            | fhigf |
+
+        When I request a travel distance matrix I should get
+            |   | a      | b     | f     | h      |
+            | a | 0      | 300.2 | 900.7 | 1200.9 |
+            | b | 300.2  | 0     | 600.5 | 900.7  |
+            | f | 900.7  | 600.5 | 0     | 302.2  |
+            | h | 1200.9 | 900.7 | 300.2 | 0      |

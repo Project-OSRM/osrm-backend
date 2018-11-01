@@ -4,6 +4,7 @@
 #include "engine/api/table_parameters.hpp"
 #include "engine/routing_algorithms/many_to_many.hpp"
 #include "engine/search_engine_data.hpp"
+#include "util/coordinate_calculation.hpp"
 #include "util/json_container.hpp"
 #include "util/string_util.hpp"
 
@@ -92,6 +93,33 @@ Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
         (request_distance && result_tables_pair.second.empty()))
     {
         return Error("NoTable", "No table found", result);
+    }
+
+    // Scan table for null results - if any exist, replace with distance estimates
+    if (params.noroute_estimate > 0)
+    {
+        for (std::size_t row = 0; row < num_sources; row++)
+        {
+            for (std::size_t column = 0; column < num_destinations; column++)
+            {
+                if (result_tables_pair.first[row * num_sources + column] == MAXIMAL_EDGE_DURATION)
+                {
+                    auto distance_estimate = util::coordinate_calculation::fccApproximateDistance(
+                        snapped_phantoms[params.sources.empty() ? row : params.sources[row]]
+                            .location,
+                        snapped_phantoms[params.destinations.empty() ? column
+                                                                     : params.destinations[column]]
+                            .location);
+
+                    result_tables_pair.first[row * num_sources + column] =
+                        distance_estimate / (double)params.noroute_estimate;
+                    if (!result_tables_pair.second.empty())
+                    {
+                        result_tables_pair.second[row * num_sources + column] = distance_estimate;
+                    }
+                }
+            }
+        }
     }
 
     api::TableAPI table_api{facade, params};

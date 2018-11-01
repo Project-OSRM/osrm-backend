@@ -48,10 +48,16 @@ struct TableParametersGrammar : public BaseParametersGrammar<Iterator, Signature
             (qi::lit("all") |
              (size_t_ % ';')[ph::bind(&engine::api::TableParameters::sources, qi::_r1) = qi::_1]);
 
+        noroute_estimate_rule =
+            qi::lit("noroute_estimate=") >
+            (size_t_)[ph::bind(&engine::api::TableParameters::noroute_estimate, qi::_r1) = qi::_1];
+
         table_rule = destinations_rule(qi::_r1) | sources_rule(qi::_r1);
 
-        root_rule = BaseGrammar::query_rule(qi::_r1) > -qi::lit(".json") >
-                    -('?' > (table_rule(qi::_r1) | base_rule(qi::_r1)) % '&');
+        root_rule =
+            BaseGrammar::query_rule(qi::_r1) > -qi::lit(".json") >
+            -('?' >
+              (table_rule(qi::_r1) | base_rule(qi::_r1) | noroute_estimate_rule(qi::_r1)) % '&');
     }
 
     TableParametersGrammar(qi::rule<Iterator, Signature> &root_rule_) : BaseGrammar(root_rule_)
@@ -77,6 +83,7 @@ struct TableParametersGrammar : public BaseParametersGrammar<Iterator, Signature
     qi::rule<Iterator, Signature> table_rule;
     qi::rule<Iterator, Signature> sources_rule;
     qi::rule<Iterator, Signature> destinations_rule;
+    qi::rule<Iterator, Signature> noroute_estimate_rule;
     qi::rule<Iterator, std::size_t()> size_t_;
     qi::symbols<char, engine::api::TableParameters::AnnotationsType> annotations;
     qi::rule<Iterator, engine::api::TableParameters::AnnotationsType()> annotations_list;

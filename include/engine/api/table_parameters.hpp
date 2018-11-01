@@ -59,6 +59,7 @@ struct TableParameters : public BaseParameters
 {
     std::vector<std::size_t> sources;
     std::vector<std::size_t> destinations;
+    std::size_t noroute_estimate = 0;
 
     enum class AnnotationsType
     {
@@ -74,19 +75,22 @@ struct TableParameters : public BaseParameters
     template <typename... Args>
     TableParameters(std::vector<std::size_t> sources_,
                     std::vector<std::size_t> destinations_,
+                    std::size_t noroute_estimate_,
                     Args... args_)
         : BaseParameters{std::forward<Args>(args_)...}, sources{std::move(sources_)},
-          destinations{std::move(destinations_)}
+          destinations{std::move(destinations_)}, noroute_estimate{noroute_estimate_}
     {
     }
 
     template <typename... Args>
     TableParameters(std::vector<std::size_t> sources_,
                     std::vector<std::size_t> destinations_,
+                    std::size_t noroute_estimate_,
                     const AnnotationsType annotations_,
                     Args... args_)
         : BaseParameters{std::forward<Args>(args_)...}, sources{std::move(sources_)},
-          destinations{std::move(destinations_)}, annotations{annotations_}
+          destinations{std::move(destinations_)}, noroute_estimate{noroute_estimate_},
+          annotations{annotations_}
     {
     }
 

@@ -1183,6 +1183,19 @@ argumentsToTableParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
         }
     }
 
+    if (obj->Has(Nan::New("noroute_estimate").ToLocalChecked()))
+    {
+        auto noroute_estimate = obj->Get(Nan::New("noroute_estimate").ToLocalChecked());
+
+        if (!noroute_estimate->IsNumber() && !noroute_estimate->IsUint32())
+        {
+            Nan::ThrowError("noroute_estimate must be an integral number");
+            return table_parameters_ptr();
+        }
+
+        params->noroute_estimate = static_cast<size_t>(noroute_estimate->NumberValue());
+    }
+
     return params;
 }
 
