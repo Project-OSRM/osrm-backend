@@ -57,8 +57,12 @@ inline LegGeometry assembleGeometry(const datafacade::BaseDataFacade &facade,
     const auto source_geometry_id = facade.GetGeometryIndex(source_node_id).id;
     const auto source_geometry = facade.GetUncompressedForwardGeometry(source_geometry_id);
 
+    const auto source_geometery_node_id = source_geometry(source_segment_start_coordinate);
+    Coordinate nodeCoordinate = facade.GetCoordinateOfNode(source_geometery_node_id);
+    geometry.node_locations.push_back(nodeCoordinate);
+
     geometry.osm_node_ids.push_back(
-        facade.GetOSMNodeIDOfNode(source_geometry(source_segment_start_coordinate)));
+        facade.GetOSMNodeIDOfNode(source_geometery_node_id));
 
     auto cumulative_distance = 0.;
     auto current_distance = 0.;
@@ -81,6 +85,7 @@ inline LegGeometry assembleGeometry(const datafacade::BaseDataFacade &facade,
         prev_coordinate = coordinate;
 
         const auto osm_node_id = facade.GetOSMNodeIDOfNode(path_point.turn_via_node);
+        Coordinate nodeLocation = facade.GetCoordinateOfNode(path_point.turn_via_node);
 
         if (osm_node_id != geometry.osm_node_ids.back() ||
             path_point.turn_instruction.type != osrm::guidance::TurnType::NoTurn)
@@ -99,6 +104,7 @@ inline LegGeometry assembleGeometry(const datafacade::BaseDataFacade &facade,
                     facade.GetWeightMultiplier(),
                 path_point.datasource_id});
             geometry.locations.push_back(std::move(coordinate));
+            geometry.node_locations.push_back(nodeLocation);
             geometry.osm_node_ids.push_back(osm_node_id);
         }
     }
@@ -158,12 +164,17 @@ inline LegGeometry assembleGeometry(const datafacade::BaseDataFacade &facade,
     const auto target_segment_end_coordinate =
         target_node.fwd_segment_position + (reversed_target ? 0 : 1);
     const auto target_geometry = facade.GetUncompressedForwardGeometry(target_geometry_id);
+
+    const auto target_geometry_itr = target_geometry(target_segment_end_coordinate);
+    Coordinate nodeLocation = facade.GetCoordinateOfNode(target_geometry_itr);
+    geometry.node_locations.push_back(nodeLocation);
     geometry.osm_node_ids.push_back(
-        facade.GetOSMNodeIDOfNode(target_geometry(target_segment_end_coordinate)));
+        facade.GetOSMNodeIDOfNode(target_geometry_itr));
 
     BOOST_ASSERT(geometry.segment_distances.size() == geometry.segment_offsets.size() - 1);
     BOOST_ASSERT(geometry.locations.size() > geometry.segment_distances.size());
     BOOST_ASSERT(geometry.annotations.size() == geometry.locations.size() - 1);
+    BOOST_ASSERT(geometry.node_locations.size() == geometry.osm_node_ids.size());
 
     return geometry;
 }
