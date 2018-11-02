@@ -152,6 +152,10 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
             qi::lit("generate_hints=") >
             qi::bool_[ph::bind(&engine::api::BaseParameters::generate_hints, qi::_r1) = qi::_1];
 
+        return_waypoints_rule =
+            qi::lit("return_waypoints=") >
+            qi::bool_[ph::bind(&engine::api::BaseParameters::return_waypoints, qi::_r1) = qi::_1];
+
         bearings_rule =
             qi::lit("bearings=") >
             (-(qi::short_ > ',' > qi::short_))[ph::bind(add_bearing, qi::_r1, qi::_1)] % ';';
@@ -166,11 +170,12 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
                        (qi::as_string[+qi::char_("a-zA-Z0-9")] %
                         ',')[ph::bind(&engine::api::BaseParameters::exclude, qi::_r1) = qi::_1];
 
-        base_rule = radiuses_rule(qi::_r1)         //
-                    | hints_rule(qi::_r1)          //
-                    | bearings_rule(qi::_r1)       //
-                    | generate_hints_rule(qi::_r1) //
-                    | approach_rule(qi::_r1)       //
+        base_rule = radiuses_rule(qi::_r1)           //
+                    | hints_rule(qi::_r1)            //
+                    | bearings_rule(qi::_r1)         //
+                    | generate_hints_rule(qi::_r1)   //
+                    | return_waypoints_rule(qi::_r1) //
+                    | approach_rule(qi::_r1)         //
                     | exclude_rule(qi::_r1);
     }
 
@@ -178,14 +183,13 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
     qi::rule<Iterator, Signature> base_rule;
     qi::rule<Iterator, Signature> query_rule;
 
-    qi::real_parser<double, json_policy> double_;
-
   private:
     qi::rule<Iterator, Signature> bearings_rule;
     qi::rule<Iterator, Signature> radiuses_rule;
     qi::rule<Iterator, Signature> hints_rule;
 
     qi::rule<Iterator, Signature> generate_hints_rule;
+    qi::rule<Iterator, Signature> return_waypoints_rule;
     qi::rule<Iterator, Signature> approach_rule;
     qi::rule<Iterator, Signature> exclude_rule;
 
@@ -197,6 +201,7 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
     qi::rule<Iterator, unsigned char()> base64_char;
     qi::rule<Iterator, std::string()> polyline_chars;
     qi::rule<Iterator, double()> unlimited_rule;
+    qi::real_parser<double, json_policy> double_;
 
     qi::symbols<char, engine::Approach> approach_type;
 };

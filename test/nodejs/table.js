@@ -6,7 +6,7 @@ var three_test_coordinates = require('./constants').three_test_coordinates;
 var two_test_coordinates = require('./constants').two_test_coordinates;
 
 test('table: test annotations paramater combination', function(assert) {
-    assert.plan(12);
+    assert.plan(19);
     var osrm = new OSRM(data_path);
     var options = {
         coordinates: [three_test_coordinates[0], three_test_coordinates[1]],
@@ -45,7 +45,22 @@ test('table: test annotations paramater combination', function(assert) {
         assert.ifError(err);
         assert.ok(table['durations'], 'durations table result should exist');
         assert.notOk(table['distances'], 'distances table result should not exist');
+        assert.equal(table.sources.length, 2);
+        assert.equal(table.destinations.length, 2);
     });
+
+    options = {
+        coordinates: [three_test_coordinates[0], three_test_coordinates[1]],
+        return_waypoints: false
+    };
+    osrm.table(options, function(err, table) {
+        assert.ifError(err);
+        assert.ok(table['durations'], 'durations table result should exist');
+        assert.notOk(table['distances'], 'distances table result should not exist');
+        assert.equal(table.sources, undefined);
+        assert.equal(table.destinations, undefined);
+    });
+
 });
 
 test('table: returns buffer', function(assert) {

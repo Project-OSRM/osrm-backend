@@ -19,6 +19,18 @@ test('route: routes Monaco', function(assert) {
     });
 });
 
+test('route: routes Monaco - no waypoints returned', function(assert) {
+    assert.plan(5);
+    var osrm = new OSRM(monaco_path);
+    osrm.route({coordinates: two_test_coordinates, return_waypoints: false}, function(err, route) {
+        assert.ifError(err);
+        assert.equal(route.waypoints, undefined);
+        assert.ok(route.routes);
+        assert.ok(route.routes.length);
+        assert.ok(route.routes[0].geometry);
+    });
+});
+
 test('route: routes Monaco on MLD', function(assert) {
     assert.plan(5);
     var osrm = new OSRM({path: monaco_mld_path, algorithm: 'MLD'});

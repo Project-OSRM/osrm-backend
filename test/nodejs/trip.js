@@ -7,13 +7,26 @@ var two_test_coordinates = require('./constants').two_test_coordinates;
 
 
 test('trip: trip in Monaco', function(assert) {
-    assert.plan(2);
+    assert.plan(3);
     var osrm = new OSRM(data_path);
     osrm.trip({coordinates: two_test_coordinates}, function(err, trip) {
         assert.ifError(err);
         for (t = 0; t < trip.trips.length; t++) {
             assert.ok(trip.trips[t].geometry);
         }
+        assert.notEqual(trip.waypoints, undefined);
+    });
+});
+
+test('trip: trip in Monaco - no waypoints', function(assert) {
+    assert.plan(3);
+    var osrm = new OSRM(data_path);
+    osrm.trip({coordinates: two_test_coordinates, return_waypoints: false}, function(err, trip) {
+        assert.ifError(err);
+        for (t = 0; t < trip.trips.length; t++) {
+            assert.ok(trip.trips[t].geometry);
+        }
+        assert.equal(trip.waypoints, undefined);
     });
 });
 

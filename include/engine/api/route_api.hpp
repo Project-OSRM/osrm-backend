@@ -62,8 +62,11 @@ class RouteAPI : public BaseAPI
                                                 route.target_traversed_in_reverse));
         }
 
-        response.values["waypoints"] =
-            BaseAPI::MakeWaypoints(raw_routes.routes[0].segment_end_coordinates);
+        if (parameters.return_waypoints)
+        {
+            response.values["waypoints"] =
+                BaseAPI::MakeWaypoints(raw_routes.routes[0].segment_end_coordinates);
+        }
         response.values["routes"] = std::move(jsRoutes);
         response.values["code"] = "Ok";
     }

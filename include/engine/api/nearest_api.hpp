@@ -84,7 +84,10 @@ class NearestAPI final : public BaseAPI
             });
 
         response.values["code"] = "Ok";
-        response.values["waypoints"] = std::move(waypoints);
+        if (parameters.return_waypoints)
+        {
+            response.values["waypoints"] = std::move(waypoints);
+        }
     }
 
     const NearestParameters &parameters;

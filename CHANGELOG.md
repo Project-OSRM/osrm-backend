@@ -7,6 +7,7 @@
       - ADDED: direct mmapping of datafiles is now supported via the `--mmap` switch. [#5242](https://github.com/Project-OSRM/osrm-backend/pull/5242)
       - REMOVED: the previous `--memory_file` switch is now deprecated and will fallback to `--mmap` [#5242](https://github.com/Project-OSRM/osrm-backend/pull/5242)
       - ADDED: all waypoints in responses now contain a `distance` property between the original coordinate and the snapped location. [#5255](https://github.com/Project-OSRM/osrm-backend/pull/5255)
+      - ADDED: returning waypoints is now optional with the `return_waypoints` parameter [#5256](https://github.com/Project-OSRM/osrm-backend/pull/5256)
     - Windows:
       - FIXED: Windows builds again. [#5249](https://github.com/Project-OSRM/osrm-backend/pull/5249)
 

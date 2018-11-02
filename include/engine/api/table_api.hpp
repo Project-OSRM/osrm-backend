@@ -45,24 +45,27 @@ class TableAPI final : public BaseAPI
         auto number_of_destinations = parameters.destinations.size();
 
         // symmetric case
-        if (parameters.sources.empty())
+        if (parameters.return_waypoints)
         {
-            response.values["sources"] = MakeWaypoints(phantoms);
-            number_of_sources = phantoms.size();
-        }
-        else
-        {
-            response.values["sources"] = MakeWaypoints(phantoms, parameters.sources);
-        }
+            if (parameters.sources.empty())
+            {
+                response.values["sources"] = MakeWaypoints(phantoms);
+                number_of_sources = phantoms.size();
+            }
+            else
+            {
+                response.values["sources"] = MakeWaypoints(phantoms, parameters.sources);
+            }
 
-        if (parameters.destinations.empty())
-        {
-            response.values["destinations"] = MakeWaypoints(phantoms);
-            number_of_destinations = phantoms.size();
-        }
-        else
-        {
-            response.values["destinations"] = MakeWaypoints(phantoms, parameters.destinations);
+            if (parameters.destinations.empty())
+            {
+                response.values["destinations"] = MakeWaypoints(phantoms);
+                number_of_destinations = phantoms.size();
+            }
+            else
+            {
+                response.values["destinations"] = MakeWaypoints(phantoms, parameters.destinations);
+            }
         }
 
         if (parameters.annotations & TableParameters::AnnotationsType::Duration)

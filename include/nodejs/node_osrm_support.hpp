@@ -659,6 +659,22 @@ inline bool argumentsToParameter(const Nan::FunctionCallbackInfo<v8::Value> &arg
         params->generate_hints = generate_hints->BooleanValue();
     }
 
+    if (obj->Has(Nan::New("return_waypoints").ToLocalChecked()))
+    {
+        v8::Local<v8::Value> return_waypoints =
+            obj->Get(Nan::New("return_waypoints").ToLocalChecked());
+        if (return_waypoints.IsEmpty())
+            return false;
+
+        if (!return_waypoints->IsBoolean())
+        {
+            Nan::ThrowError("return_waypoints must be of type Boolean");
+            return false;
+        }
+
+        params->return_waypoints = return_waypoints->BooleanValue();
+    }
+
     if (obj->Has(Nan::New("exclude").ToLocalChecked()))
     {
         v8::Local<v8::Value> exclude = obj->Get(Nan::New("exclude").ToLocalChecked());

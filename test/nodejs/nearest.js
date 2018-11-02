@@ -20,6 +20,18 @@ test('nearest', function(assert) {
 });
 
 test('nearest', function(assert) {
+    assert.plan(2);
+    var osrm = new OSRM(data_path);
+    osrm.nearest({
+        coordinates: [three_test_coordinates[0]],
+        return_waypoints: false,
+    }, function(err, result) {
+        assert.ifError(err);
+        assert.equal(result.waypoints, undefined);
+    });
+});
+
+test('nearest', function(assert) {
     assert.plan(5);
     var osrm = new OSRM(data_path);
     osrm.nearest({

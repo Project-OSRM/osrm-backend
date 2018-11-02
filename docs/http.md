@@ -29,6 +29,7 @@ To pass parameters to each location some options support an array like encoding:
 |bearings        |`{bearing};{bearing}[;{bearing} ...]`                   |Limits the search to segments with given bearing in degrees towards true north in clockwise direction. |
 |radiuses        |`{radius};{radius}[;{radius} ...]`                      |Limits the search to given radius in meters.                                                           |
 |generate\_hints |`true` (default), `false`                               |Adds a Hint to the response which can be used in subsequent requests, see `hints` parameter.           |
+|return\_waypoints|`true` (default), `false`                              |Returns information about the waypoints (snapped location, distance, name)                             |
 |hints           |`{hint};{hint}[;{hint} ...]`                            |Hint from previous request to derive position in street network.                                       |
 |approaches      |`{approach};{approach}[;{approach} ...]`                |Keep waypoints on curb side.                                                                           |
 |exclude         |`{class}[,{class}]`                                     |Additive list of classes to avoid, order does not matter.                                              |
