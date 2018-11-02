@@ -545,6 +545,13 @@ Feature: Basic Duration Matrix
             | f | 18 |
             | 1 | 30 |
 
+        When I request a travel time matrix I should get estimates for
+            |   | a | b | f | 1 |
+            | a |   |   | Y | Y |
+            | b |   |   | Y | Y |
+            | f | Y | Y |   |   |
+            | 1 | Y | Y |   |   |
+
     Scenario: Testbot - Filling in noroutes with estimates - use input coordinate
         Given a grid size of 300 meters
         Given the extract extra arguments "--small-component-size 4"

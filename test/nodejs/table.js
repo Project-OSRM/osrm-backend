@@ -234,7 +234,7 @@ tables.forEach(function(annotation) {
     });
 
     test('table: ' + annotation + ' table in Monaco without motorways', function(assert) {
-        assert.plan(1);
+        assert.plan(2);
         var osrm = new OSRM({path: mld_data_path, algorithm: 'MLD'});
         var options = {
             coordinates: two_test_coordinates,
@@ -243,11 +243,12 @@ tables.forEach(function(annotation) {
         };
         osrm.table(options, function(err, response) {
             assert.equal(response[annotation].length, 2);
+            assert.strictEqual(response.estimated_cells, undefined);
         });
     });
 
     test('table: ' + annotation + ' table in Monaco with fallback speeds', function(assert) {
-        assert.plan(1);
+        assert.plan(2);
         var osrm = new OSRM({path: mld_data_path, algorithm: 'MLD'});
         var options = {
             coordinates: two_test_coordinates,
@@ -257,6 +258,7 @@ tables.forEach(function(annotation) {
         };
         osrm.table(options, function(err, response) {
             assert.equal(response[annotation].length, 2);
+            assert.equal(response['estimated_cells'].length, 0);
         });
     });
 

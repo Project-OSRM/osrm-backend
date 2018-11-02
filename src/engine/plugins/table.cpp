@@ -95,6 +95,8 @@ Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
         return Error("NoTable", "No table found", result);
     }
 
+    std::vector<api::TableAPI::TableCellRef> estimated_pairs;
+
     // Scan table for null results - if any exist, replace with distance estimates
     if (params.fallback_speed != INVALID_FALLBACK_SPEED || params.scale_factor > 0)
     {
@@ -127,6 +129,8 @@ Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
                     {
                         result_tables_pair.second[table_index] = distance_estimate;
                     }
+
+                    estimated_pairs.emplace_back(row, column);
                 }
                 if (params.scale_factor > 0 && params.scale_factor != 1 &&
                     result_tables_pair.first[table_index] != MAXIMAL_EDGE_DURATION &&
@@ -150,7 +154,7 @@ Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
     }
 
     api::TableAPI table_api{facade, params};
-    table_api.MakeResponse(result_tables_pair, snapped_phantoms, result);
+    table_api.MakeResponse(result_tables_pair, snapped_phantoms, estimated_pairs, result);
 
     return Status::Ok;
 }

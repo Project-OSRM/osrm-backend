@@ -284,6 +284,7 @@ curl 'http://router.project-osrm.org/table/v1/driving/13.388860,52.517037;13.397
   the i-th waypoint to the j-th waypoint. Values are given in meters. Can be `null` if no route between `i` and `j` can be found. Note that computing the `distances` table is currently only implemented for CH. If `annotations=distance` or `annotations=duration,distance` is requested when running a MLD router, a `NotImplemented` error will be returned.
 - `sources` array of `Waypoint` objects describing all sources in order
 - `destinations` array of `Waypoint` objects describing all destinations in order
+- `estimated_cells` (optional) array of arrays containing `i,j` pairs indicating which cells contain estimated values based on `fallback_speed`.  Will be absent if `fallback_speed` is not used.
 
 In case of error the following `code`s are supported in addition to the general ones:
 
@@ -384,6 +385,10 @@ All other properties might be undefined.
       2361.73,
       0
     ]
+  ],
+  "estimated_cells": [
+    [ 0, 1 ],
+    [ 1, 0 ]
   ]
 }
 ```
