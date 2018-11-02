@@ -129,6 +129,8 @@ tables. Optionally returns distance table.
     -   `options.destinations` **[Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array)?** An array of `index` elements (`0 <= integer <
         #coordinates`) to use location with given index as destination. Default is to use all.
     -   `options.approaches` **[Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array)?** Keep waypoints on curb side. Can be `null` (unrestricted, default) or `curb`.
+    -   `options.fallback_speed` **[Number](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number)?** Replace `null` responses in result with as-the-crow-flies estimates based on `fallback_speed`.  Value is in metres/second.
+    -   `options.fallback_coordinate` **[String](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)?** Either `input` (default) or `snapped`.  If using a `fallback_speed`, use either the user-supplied coordinate (`input`), or the snapped coordinate (`snapped`) for calculating the as-the-crow-flies diestance between two points.
 -   `callback` **[Function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function)**
 
 **Examples**

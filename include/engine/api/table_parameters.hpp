@@ -59,6 +59,15 @@ struct TableParameters : public BaseParameters
 {
     std::vector<std::size_t> sources;
     std::vector<std::size_t> destinations;
+    double fallback_speed = 0;
+
+    enum class FallbackCoordinateType
+    {
+        Input = 0,
+        Snapped = 1
+    };
+
+    FallbackCoordinateType fallback_coordinate_type = FallbackCoordinateType::Input;
 
     enum class AnnotationsType
     {
@@ -90,6 +99,19 @@ struct TableParameters : public BaseParameters
     {
     }
 
+    template <typename... Args>
+    TableParameters(std::vector<std::size_t> sources_,
+                    std::vector<std::size_t> destinations_,
+                    const AnnotationsType annotations_,
+                    double fallback_speed_,
+                    FallbackCoordinateType fallback_coordinate_type_,
+                    Args... args_)
+        : BaseParameters{std::forward<Args>(args_)...}, sources{std::move(sources_)},
+          destinations{std::move(destinations_)}, fallback_speed{fallback_speed_},
+          fallback_coordinate_type{fallback_coordinate_type_}, annotations{annotations_}
+    {
+    }
+
     bool IsValid() const
     {
         if (!BaseParameters::IsValid())
@@ -115,6 +137,9 @@ struct TableParameters : public BaseParameters
             return false;
 
         if (std::any_of(begin(destinations), end(destinations), not_in_range))
+            return false;
+
+        if (fallback_speed < 0)
             return false;
 
         return true;

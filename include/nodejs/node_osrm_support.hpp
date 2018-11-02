@@ -1183,6 +1183,52 @@ argumentsToTableParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
         }
     }
 
+    if (obj->Has(Nan::New("fallback_speed").ToLocalChecked()))
+    {
+        auto fallback_speed = obj->Get(Nan::New("fallback_speed").ToLocalChecked());
+
+        if (!fallback_speed->IsNumber())
+        {
+            Nan::ThrowError("fallback_speed must be a number");
+            return table_parameters_ptr();
+        }
+        else if (fallback_speed->NumberValue() < 0)
+        {
+            Nan::ThrowError("fallback_speed must be > 0");
+            return table_parameters_ptr();
+        }
+
+        params->fallback_speed = static_cast<double>(fallback_speed->NumberValue());
+    }
+
+    if (obj->Has(Nan::New("fallback_coordinate").ToLocalChecked()))
+    {
+        auto fallback_coordinate = obj->Get(Nan::New("fallback_coordinate").ToLocalChecked());
+
+        if (!fallback_coordinate->IsString())
+        {
+            Nan::ThrowError("fallback_coordinate must be a string: [input, snapped]");
+            return table_parameters_ptr();
+        }
+
+        std::string fallback_coordinate_str = *v8::String::Utf8Value(fallback_coordinate);
+
+        if (fallback_coordinate_str == "snapped")
+        {
+            params->fallback_coordinate_type =
+                osrm::TableParameters::FallbackCoordinateType::Snapped;
+        }
+        else if (fallback_coordinate_str == "input")
+        {
+            params->fallback_coordinate_type = osrm::TableParameters::FallbackCoordinateType::Input;
+        }
+        else
+        {
+            Nan::ThrowError("'fallback_coordinate' param must be one of [input, snapped]");
+            return table_parameters_ptr();
+        }
+    }
+
     return params;
 }
 
