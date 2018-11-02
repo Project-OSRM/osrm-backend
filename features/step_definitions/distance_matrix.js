@@ -66,7 +66,7 @@ function tableParse(table, noRoute, annotation, callback) {
 
             var result = {};
             if (annotation === 'estimated_cells') {
-                result = table.raw().map(row => row.map(cell => ''));
+                result = table.raw().map(row => row.map(() => ''));
                 json[annotation].forEach(pair => {
                     result[pair[0]+1][pair[1]+1] = 'Y';
                 });
