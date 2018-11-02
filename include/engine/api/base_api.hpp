@@ -6,6 +6,7 @@
 
 #include "engine/api/json_factory.hpp"
 #include "engine/hint.hpp"
+#include "util/coordinate_calculation.hpp"
 
 #include <boost/assert.hpp>
 #include <boost/range/algorithm/transform.hpp>
@@ -53,6 +54,8 @@ class BaseAPI
             // TODO: check forward/reverse
             return json::makeWaypoint(
                 phantom.location,
+                util::coordinate_calculation::fccApproximateDistance(phantom.location,
+                                                                     phantom.input_location),
                 facade.GetNameForID(facade.GetNameIndex(phantom.forward_segment_id.id)).to_string(),
                 Hint{phantom, facade.GetCheckSum()});
         }
@@ -61,6 +64,8 @@ class BaseAPI
             // TODO: check forward/reverse
             return json::makeWaypoint(
                 phantom.location,
+                util::coordinate_calculation::fccApproximateDistance(phantom.location,
+                                                                     phantom.input_location),
                 facade.GetNameForID(facade.GetNameIndex(phantom.forward_segment_id.id))
                     .to_string());
         }

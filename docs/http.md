@@ -119,7 +119,6 @@ In addition to the [general options](#general-options) the following options are
 
 - `code` if the request was successful `Ok` otherwise see the service dependent and general status codes.
 - `waypoints` array of `Waypoint` objects sorted by distance to the input coordinate. Each object has at least the following additional properties:
-  - `distance`: Distance in meters to the supplied input coordinate.
   - `nodes`: Array of OpenStreetMap node ids.
 
 #### Example Requests
@@ -906,6 +905,7 @@ Object used to describe waypoint on a route.
 
 - `name` Name of the street the coordinate snapped to
 - `location` Array that contains the `[longitude, latitude]` pair of the snapped coordinate
+- `distance` The distance, in metres, from the input coordinate to the snapped coordinate
 - `hint` Unique internal identifier of the segment (ephemeral, not constant over data updates)
    This can be used on subsequent request to significantly speed up the query and to connect multiple services.
    E.g. you can use the `hint` value obtained by the `nearest` query as `hint` values for `route` inputs.
