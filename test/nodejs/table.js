@@ -245,5 +245,20 @@ tables.forEach(function(annotation) {
             assert.equal(response[annotation].length, 2);
         });
     });
+
+    test('table: ' + annotation + ' table in Monaco with fallback speeds', function(assert) {
+        assert.plan(1);
+        var osrm = new OSRM({path: mld_data_path, algorithm: 'MLD'});
+        var options = {
+            coordinates: two_test_coordinates,
+            annotations: [annotation.slice(0,-1)],
+            fallback_speed: 1,
+            fallback_coordinate: 'input'
+        };
+        osrm.table(options, function(err, response) {
+            assert.equal(response[annotation].length, 2);
+        });
+    });
+
 });
 

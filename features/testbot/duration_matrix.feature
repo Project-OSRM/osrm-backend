@@ -510,3 +510,74 @@ Feature: Basic Duration Matrix
             |   |   a   |
             | a |   0   |
             | b | 24.1  |
+
+    Scenario: Testbot - Filling in noroutes with estimates (defaults to input coordinate location)
+        Given a grid size of 300 meters
+        Given the extract extra arguments "--small-component-size 4"
+        Given the query options
+            | fallback_speed | 5 |
+        Given the node map
+            """
+            a b   f h 1
+            d e   g i
+            """
+
+        And the ways
+            | nodes |
+            | abeda |
+            | fhigf |
+
+        When I request a travel time matrix I should get
+            |   | a  | b  | f  | 1  |
+            | a | 0  | 30 | 18 | 30 |
+            | b | 30 | 0  | 12 | 24 |
+            | f | 18 | 12 | 0  | 30 |
+            | 1 | 30 | 24 | 30 | 0  |
+
+    Scenario: Testbot - Filling in noroutes with estimates - use input coordinate
+        Given a grid size of 300 meters
+        Given the extract extra arguments "--small-component-size 4"
+        Given the query options
+            | fallback_speed | 5 |
+            | fallback_coordinate | input |
+        Given the node map
+            """
+            a b   f h 1
+            d e   g i
+            """
+
+        And the ways
+            | nodes |
+            | abeda |
+            | fhigf |
+
+        When I request a travel time matrix I should get
+            |   | a  | b  | f  | 1  |
+            | a | 0  | 30 | 18 | 30 |
+            | b | 30 | 0  | 12 | 24 |
+            | f | 18 | 12 | 0  | 30 |
+            | 1 | 30 | 24 | 30 | 0  |
+
+    Scenario: Testbot - Filling in noroutes with estimates - use snapped coordinate
+        Given a grid size of 300 meters
+        Given the extract extra arguments "--small-component-size 4"
+        Given the query options
+            | fallback_speed | 5 |
+            | fallback_coordinate | snapped |
+        Given the node map
+            """
+            a b   f h 1
+            d e   g i
+            """
+
+        And the ways
+            | nodes |
+            | abeda |
+            | fhigf |
+
+        When I request a travel time matrix I should get
+            |   | a  | b  | f  | 1  |
+            | a | 0  | 30 | 18 | 24 |
+            | b | 30 | 0  | 12 | 18 |
+            | f | 18 | 12 | 0  | 30 |
+            | 1 | 24 | 18 | 30 | 0  |

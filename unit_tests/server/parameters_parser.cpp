@@ -89,6 +89,8 @@ BOOST_AUTO_TEST_CASE(invalid_table_urls)
     BOOST_CHECK_EQUAL(
         testInvalidOptions<TableParameters>("1,2;3,4?sources=all&destinations=all&annotations=bla"),
         49UL);
+    BOOST_CHECK_EQUAL(testInvalidOptions<TableParameters>("1,2;3,4?fallback_coordinate=asdf"),
+                      28UL);
 }
 
 BOOST_AUTO_TEST_CASE(valid_route_hint)
