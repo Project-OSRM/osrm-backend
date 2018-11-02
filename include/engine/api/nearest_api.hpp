@@ -41,7 +41,6 @@ class NearestAPI final : public BaseAPI
             [this](const PhantomNodeWithDistance &phantom_with_distance) {
                 auto &phantom_node = phantom_with_distance.phantom_node;
                 auto waypoint = MakeWaypoint(phantom_node);
-                waypoint.values["distance"] = phantom_with_distance.distance;
 
                 util::json::Array nodes;
 
