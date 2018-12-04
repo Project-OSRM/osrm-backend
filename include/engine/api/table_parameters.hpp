@@ -123,14 +123,7 @@ struct TableParameters : public BaseParameters
 
         // 1/ The user is able to specify duplicates in srcs and dsts, in that case it's their fault
 
-        // 2/ len(srcs) and len(dsts) smaller or equal to len(locations)
-        if (sources.size() > coordinates.size())
-            return false;
-
-        if (destinations.size() > coordinates.size())
-            return false;
-
-        // 3/ 0 <= index < len(locations)
+        // 2/ 0 <= index < len(locations)
         const auto not_in_range = [this](const std::size_t x) { return x >= coordinates.size(); };
 
         if (std::any_of(begin(sources), end(sources), not_in_range))
