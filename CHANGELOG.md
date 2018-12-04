@@ -3,6 +3,7 @@
     - Table:
       - CHANGED: switch to pre-calculated distances for table responses for large speedup and 10% memory increase. [#5251](https://github.com/Project-OSRM/osrm-backend/pull/5251)
       - ADDED: new parameter `fallback_speed` which will fill `null` cells with estimated value [#5257](https://github.com/Project-OSRM/osrm-backend/pull/5257)
+      - CHANGED: Remove API check for matrix sources/destination length to be less than or equal to coordinates length. [#5298](https://github.com/Project-OSRM/osrm-backend/pull/5289)
     - Features:
       - ADDED: direct mmapping of datafiles is now supported via the `--mmap` switch. [#5242](https://github.com/Project-OSRM/osrm-backend/pull/5242)
       - REMOVED: the previous `--memory_file` switch is now deprecated and will fallback to `--mmap` [#5242](https://github.com/Project-OSRM/osrm-backend/pull/5242)
