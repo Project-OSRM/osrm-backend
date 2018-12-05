@@ -668,7 +668,7 @@ Feature: Basic Distance Matrix
             | f | 900.7  | 600.5 | 0     | 302.2  |
             | 1 | 1200.9 | 900.7 | 300.2 | 0      |
 
-    Scenario: Testbot - Filling in noroutes with estimates - use snapped coordinate - asymetric
+    Scenario: Testbot - Asymetric fallback_speed - more sources than destinations
         Given a grid size of 300 meters
         Given the extract extra arguments "--small-component-size 4"
         Given the query options
@@ -691,4 +691,24 @@ Feature: Basic Distance Matrix
             | b | 300.2  |
             | f | 900.7  |
             | 1 | 1200.9 |
-            
+
+ Scenario: Testbot - Asymetric fallback_speed - more destinations than sources
+        Given a grid size of 300 meters
+        Given the extract extra arguments "--small-component-size 4"
+        Given the query options
+            | fallback_speed | 5 |
+            | fallback_coordinate | snapped |
+        Given the node map
+            """
+            a b   f h 1
+            d e   g i
+            """
+
+        And the ways
+            | nodes |
+            | abeda |
+            | fhigf |
+
+        When I request a travel distance matrix I should get
+            |   | a      | b     | f     | 1      |
+            | a | 0      | 300.2 | 900.7 | 1200.9 |
