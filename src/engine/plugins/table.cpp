@@ -102,7 +102,7 @@ Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
         {
             for (std::size_t column = 0; column < num_destinations; column++)
             {
-                const auto &table_index = row * num_sources + column;
+                const auto &table_index = row * num_destinations + column;
                 BOOST_ASSERT(table_index < result_tables_pair.first.size());
                 if (result_tables_pair.first[table_index] == MAXIMAL_EDGE_DURATION)
                 {
