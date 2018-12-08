@@ -131,8 +131,8 @@ Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
                 if (params.scale_factor > 1.0 &&
                     result_tables_pair.first[table_index] != MAXIMAL_EDGE_DURATION)
                 {
-                    result_tables_pair.first[table_index] =
-                        std::lround(result_tables_pair.first[table_index] * (double)params.scale_factor);
+                    result_tables_pair.first[table_index] = std::lround(
+                        result_tables_pair.first[table_index] * (double)params.scale_factor);
                 }
             }
         }
