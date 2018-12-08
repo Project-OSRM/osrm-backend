@@ -557,6 +557,7 @@ Vector tiles contain two layers:
 | `weight  `   | `integer` | how long this segment takes to traverse, in units (may differ from `duration` when artificial biasing is applied in the Lua profiles).  ACTUAL ROUTING USES THIS VALUE. |
 | `name`       | `string`  | the name of the road this segment belongs to |
 | `rate`       | `float`   | the value of `length/weight` - analagous to `speed`, but using the `weight` value rather than `duration`, rounded to the nearest integer |
+| `is_startpoint` | `boolean` | whether this segment can be used as a start/endpoint for routes |
 
 `turns` layer:
 
