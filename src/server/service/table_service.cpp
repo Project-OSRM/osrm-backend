@@ -61,11 +61,6 @@ std::string getWrongOptionHelp(const engine::api::TableParameters &parameters)
         help = "fallback_speed must be > 0";
     }
 
-    if (parameters.scale_factor < 1)
-    {
-        help = "scale_factor must be > 1";
-    }
-
     return help;
 }
 } // anon. ns

@@ -96,7 +96,7 @@ Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
     }
 
     // Scan table for null results - if any exist, replace with distance estimates
-    if (params.fallback_speed > 0 || params.scale_factor > 1.0)
+    if (params.fallback_speed > 0 || params.scale_factor != 1.0)
     {
         for (std::size_t row = 0; row < num_sources; row++)
         {
@@ -128,11 +128,15 @@ Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
                         result_tables_pair.second[table_index] = distance_estimate;
                     }
                 }
-                if (params.scale_factor > 1.0 &&
+                if (params.scale_factor != 1.0 &&
                     result_tables_pair.first[table_index] != MAXIMAL_EDGE_DURATION)
                 {
-                    result_tables_pair.first[table_index] = std::lround(
-                        result_tables_pair.first[table_index] * (double)params.scale_factor);
+                    double result = std::lround(result_tables_pair.first[table_index] * params.scale_factor);
+                    if (result > MAXIMAL_EDGE_DURATION) {
+                      result_tables_pair.first[table_index] = MAXIMAL_EDGE_DURATION - 1;
+                    } else {
+                      result_tables_pair.first[table_index] = result;
+                    }
                 }
             }
         }

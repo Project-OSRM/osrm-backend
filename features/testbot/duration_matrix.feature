@@ -625,3 +625,21 @@ Feature: Basic Duration Matrix
             |   | a  | b  |
             | a | 0  | 20 |
             | b | 20 | 0  |
+
+    Scenario: Testbot - Travel time matrix of minimal network with overflow factor
+         Given the query options
+            | scale_factor | 2147483647 |
+
+        Given the node map
+            """
+            a b
+            """
+
+        And the ways
+            | nodes |
+            | ab    |
+
+        When I request a travel time matrix I should get
+            |   | a  | b  |
+            | a | 0  | 20 |
+            | b | 20 | 0  |
