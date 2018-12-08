@@ -566,7 +566,9 @@ BOOST_AUTO_TEST_CASE(valid_table_urls)
     CHECK_EQUAL_RANGE(reference_7.sources, result_7->sources);
     CHECK_EQUAL_RANGE(reference_7.destinations, result_7->destinations);
 
-    auto result_8 = parseParameters<TableParameters>("1,2;3,4?sources=all&destinations=all&annotations=duration&fallback_speed=1&fallback_coordinate=snapped&scale_factor=2");
+    auto result_8 = parseParameters<TableParameters>("1,2;3,4?sources=all&destinations=all&"
+                                                     "annotations=duration&fallback_speed=1&"
+                                                     "fallback_coordinate=snapped&scale_factor=2");
     BOOST_CHECK(result_8);
     CHECK_EQUAL_RANGE(reference_1.sources, result_3->sources);
     CHECK_EQUAL_RANGE(reference_1.destinations, result_3->destinations);
