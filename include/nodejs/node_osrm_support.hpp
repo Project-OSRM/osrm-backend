@@ -1229,6 +1229,24 @@ argumentsToTableParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
         }
     }
 
+    if (obj->Has(Nan::New("scale_factor").ToLocalChecked()))
+    {
+        auto scale_factor = obj->Get(Nan::New("scale_factor").ToLocalChecked());
+
+        if (!scale_factor->IsNumber())
+        {
+            Nan::ThrowError("scale_factor must be a number");
+            return table_parameters_ptr();
+        }
+        else if (scale_factor->NumberValue() < 1)
+        {
+            Nan::ThrowError("scale_factor must be > 1");
+            return table_parameters_ptr();
+        }
+
+        params->scale_factor = static_cast<double>(scale_factor->NumberValue());
+    }
+
     return params;
 }
 

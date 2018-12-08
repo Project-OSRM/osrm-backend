@@ -238,6 +238,7 @@ In addition to the [general options](#general-options) the following options are
 |annotations |`duration` (default), `distance`, or `duration,distance`|Return the requested table or tables in response. Note that computing the `distances` table is currently only implemented for CH. If `annotations=distance` or `annotations=duration,distance` is requested when running a MLD router, a `NotImplemented` error will be returned. |
 |fallback_speed|`double > 0`|If no route found between a source/destination pair, calculate the as-the-crow-flies distance, then use this speed to estimate duration.|
 |fallback_coordinate|`input` (default), or `snapped`| When using a `fallback_speed`, use the user-supplied coordinate (`input`), or the snapped location (`snapped`) for calculating distances.|
+|scale_factor|`double > 0`| Multiply the table `duration` values by this number. Default is 1.0.|
 
 Unlike other array encoded options, the length of `sources` and `destinations` can be **smaller or equal**
 to number of input locations;

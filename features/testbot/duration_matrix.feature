@@ -581,3 +581,47 @@ Feature: Basic Duration Matrix
             | b | 30 | 0  | 12 | 18 |
             | f | 18 | 12 | 0  | 30 |
             | 1 | 24 | 18 | 30 | 0  |
+
+    Scenario: Testbot - Test fallback speeds and scale factor
+        Given a grid size of 300 meters
+        Given the extract extra arguments "--small-component-size 4"
+        Given the query options
+            | scale_factor | 2 |
+            | fallback_speed | 5 |
+            | fallback_coordinate | snapped |
+
+        Given the node map
+            """
+            a b   f h 1
+            d e   g i
+            """
+
+        And the ways
+            | nodes |
+            | abeda |
+            | fhigf |
+
+        When I request a travel time matrix I should get
+            |   | a  | b  | f  | 1  |
+            | a | 0  | 60 | 36 | 48 |
+            | b | 60 | 0  | 24 | 36 |
+            | f | 36 | 24 | 0  | 60 |
+            | 1 | 48 | 36 | 60 | 0  |
+
+    Scenario: Testbot - Travel time matrix of minimal network with scale factor
+         Given the query options
+            | scale_factor | 2 |
+
+        Given the node map
+            """
+            a b
+            """
+
+        And the ways
+            | nodes |
+            | ab    |
+
+        When I request a travel time matrix I should get
+            |   | a  | b  |
+            | a | 0  | 20 |
+            | b | 20 | 0  |
