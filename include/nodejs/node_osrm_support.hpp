@@ -1238,7 +1238,7 @@ argumentsToTableParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
             Nan::ThrowError("scale_factor must be a number");
             return table_parameters_ptr();
         }
-        else if (scale_factor->NumberValue() < 0)
+        else if (scale_factor->NumberValue() <= 0)
         {
             Nan::ThrowError("scale_factor must be > 0");
             return table_parameters_ptr();

@@ -260,19 +260,18 @@ tables.forEach(function(annotation) {
         });
     });
 
-    test('table: ' + annotation + ' table in Monaco with scale factor', function(assert) {
-        assert.plan(1);
-        var osrm = new OSRM({path: mld_data_path, algorithm: 'MLD'});
-        var options = {
-            coordinates: two_test_coordinates,
-            annotations: [annotation.slice(0,-1)],
-            scale_factor: 2
-        };
-        osrm.table(options, function(err, response) {
-            console.log(response[annotation]);
-            assert.equal(response[annotation].length, 2);
-        });
-    });
+    // test('table: ' + annotation + ' table in Monaco with invalid scale factor', function(assert) {
+    //     assert.plan(1);
+    //     var osrm = new OSRM({path: mld_data_path, algorithm: 'MLD'});
+    //     var options = {
+    //         coordinates: two_test_coordinates,
+    //         annotations: [annotation.slice(0,-1)],
+    //         scale_factor: -1
+    //     };
+    //     osrm.table(options, function(err, response) {
+    //         assert.notOk(osrm.table(options, function(err, response){}), "scale_factor must be > 0");
+    //     });
+    // });
 
 });
 

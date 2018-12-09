@@ -140,6 +140,9 @@ struct TableParameters : public BaseParameters
         if (fallback_speed < 0)
             return false;
 
+        if (scale_factor <= 0)
+            return false;
+
         return true;
     }
 };

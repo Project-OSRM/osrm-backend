@@ -91,6 +91,10 @@ BOOST_AUTO_TEST_CASE(invalid_table_urls)
         49UL);
     BOOST_CHECK_EQUAL(testInvalidOptions<TableParameters>("1,2;3,4?fallback_coordinate=asdf"),
                       28UL);
+    BOOST_CHECK_EQUAL(
+        testInvalidOptions<TableParameters>("1,2;3,4?annotations=durations&scale_factor=-1"), 28UL);
+    BOOST_CHECK_EQUAL(
+        testInvalidOptions<TableParameters>("1,2;3,4?annotations=durations&scale_factor=0"), 28UL);
 }
 
 BOOST_AUTO_TEST_CASE(valid_route_hint)

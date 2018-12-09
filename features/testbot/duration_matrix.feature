@@ -626,8 +626,20 @@ Feature: Basic Duration Matrix
             | f | 36 | 24 | 0  | 60 |
             | 1 | 48 | 36 | 60 | 0  |
 
+        When I request a travel time matrix I should get
+            |   | a  | b  | f  | 1  |
+            | a | 0  | 60 | 36 | 48 |
+
+        When I request a travel time matrix I should get
+            |   | a  |
+            | a | 0  |
+            | b | 60 |
+            | f | 36 |
+            | 1 | 48 |
+
+
     Scenario: Testbot - Travel time matrix of minimal network with overflow scale factor
-         Given the query options
+        Given the query options
             | scale_factor | 2147483647 |
 
         Given the node map
@@ -640,9 +652,9 @@ Feature: Basic Duration Matrix
             | ab    |
 
         When I request a travel time matrix I should get
-            |   | a  | b  |
-            | a | 0  | 214748364.6 |
-            | b | 214748364.6 | 0  |
+            |   | a           | b           |
+            | a | 0           | 214748364.6 |
+            | b | 214748364.6 | 0           |
 
     Scenario: Testbot - Travel time matrix of minimal network with fraction scale factor
          Given the query options
