@@ -59,7 +59,7 @@ struct TableParameters : public BaseParameters
 {
     std::vector<std::size_t> sources;
     std::vector<std::size_t> destinations;
-    double fallback_speed = 0;
+    double fallback_speed = INVALID_FALLBACK_SPEED;
 
     enum class FallbackCoordinateType
     {
