@@ -96,7 +96,7 @@ Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
     }
 
     // Scan table for null results - if any exist, replace with distance estimates
-    if (params.fallback_speed != INVALID_FALLBACK_SPEED || params.scale_factor > 0)
+    if (params.fallback_speed != INVALID_FALLBACK_SPEED || params.scale_factor != 1)
     {
         for (std::size_t row = 0; row < num_sources; row++)
         {
