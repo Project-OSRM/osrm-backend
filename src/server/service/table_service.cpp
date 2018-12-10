@@ -56,7 +56,7 @@ std::string getWrongOptionHelp(const engine::api::TableParameters &parameters)
         help = "Number of coordinates needs to be at least two.";
     }
 
-    if (parameters.fallback_speed < 0)
+    if (parameters.fallback_speed <= 0)
     {
         help = "fallback_speed must be > 0";
     }
