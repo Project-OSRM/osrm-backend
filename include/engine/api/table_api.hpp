@@ -87,7 +87,7 @@ class TableAPI final : public BaseAPI
                 MakeDistanceTable(tables.second, number_of_sources, number_of_destinations);
         }
 
-        if (parameters.fallback_speed > 0)
+        if (parameters.fallback_speed != INVALID_FALLBACK_SPEED && parameters.fallback_speed > 0)
         {
             response.values["estimated_cells"] = MakeEstimatesTable(estimated_cells);
         }
