@@ -13,7 +13,7 @@ notifications:
 branches:
   only:
     - master
-    - "5.20"
+    - "5.20.1"
     # enable building tags
     - /^v\d+\.\d+(\.\d+)?(-\S*)?$/
 
