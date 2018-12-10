@@ -21,7 +21,7 @@ function tableParse(table, noRoute, annotation, callback) {
 
     const parse = annotation == 'distances' ? distancesParse : (annotation == 'durations' ? durationsParse : estimatesParse);
     const params = this.queryParams;
-    params.annotations = ['durations','estimated_cells'].includes(annotation) ? 'duration' : 'distance';
+    params.annotations = ['durations','estimated_cells'].indexOf(annotation) !== -1 ? 'duration' : 'distance';
 
     var tableRows = table.raw();
 
