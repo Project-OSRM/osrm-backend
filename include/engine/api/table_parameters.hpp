@@ -59,7 +59,7 @@ struct TableParameters : public BaseParameters
 {
     std::vector<std::size_t> sources;
     std::vector<std::size_t> destinations;
-    double fallback_speed = 0;
+    double fallback_speed = INVALID_FALLBACK_SPEED;
 
     enum class FallbackCoordinateType
     {
@@ -137,7 +137,7 @@ struct TableParameters : public BaseParameters
         if (std::any_of(begin(destinations), end(destinations), not_in_range))
             return false;
 
-        if (fallback_speed < 0)
+        if (fallback_speed <= 0)
             return false;
 
         if (scale_factor <= 0)
