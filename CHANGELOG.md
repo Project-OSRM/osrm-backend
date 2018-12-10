@@ -1,4 +1,9 @@
 # UNRELEASED
+  - Changes from 5.20.0
+    - Features:
+      - ADDED: all waypoints in responses now contain a distance property between the original coordinate and the snapped location. [#5255](https://github.com/Project-OSRM/osrm-backend/pull/5255)
+
+# 5.20.0
   - Changes from 5.19.0:
     - Table:
       - CHANGED: switch to pre-calculated distances for table responses for large speedup and 10% memory increase. [#5251](https://github.com/Project-OSRM/osrm-backend/pull/5251)
@@ -8,7 +13,6 @@
     - Features:
       - ADDED: direct mmapping of datafiles is now supported via the `--mmap` switch. [#5242](https://github.com/Project-OSRM/osrm-backend/pull/5242)
       - REMOVED: the previous `--memory_file` switch is now deprecated and will fallback to `--mmap` [#5242](https://github.com/Project-OSRM/osrm-backend/pull/5242)
-      - ADDED: all waypoints in responses now contain a `distance` property between the original coordinate and the snapped location. [#5255](https://github.com/Project-OSRM/osrm-backend/pull/5255)
       - ADDED: Now publishing Node 10.x LTS binary modules [#5246](https://github.com/Project-OSRM/osrm-backend/pull/5246)
     - Windows:
       - FIXED: Windows builds again. [#5249](https://github.com/Project-OSRM/osrm-backend/pull/5249)
