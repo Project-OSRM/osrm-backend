@@ -1,15 +1,13 @@
-FROM alpine:3.6 as buildstage
-
+FROM debian:buster-slim as builder
 ARG DOCKER_TAG
 RUN mkdir -p /src  && mkdir -p /opt
 COPY . /src
 WORKDIR /src
 
 RUN NPROC=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || 1) && \
-    echo "@testing http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories && \
-    apk update && \
-    apk upgrade && \
-    apk add git cmake wget make libc-dev gcc g++ bzip2-dev boost-dev zlib-dev expat-dev lua5.2-dev libtbb@testing libtbb-dev@testing && \
+    apt-get update && \
+    apt-get -y --no-install-recommends install cmake make git gcc g++ libbz2-dev libstxxl-dev libstxxl1v5 libxml2-dev \
+    libzip-dev libboost-all-dev lua5.2 liblua5.2-dev libtbb-dev -o APT::Install-Suggests=0 -o APT::Install-Recommends=0 && \
     NPROC=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || 1) && \
     echo "Building OSRM ${DOCKER_TAG}" && \
     git show --format="%H" | head -n1 > /opt/OSRM_GITSHA && \
@@ -33,13 +31,16 @@ RUN NPROC=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || 1) && \
 
 # Multistage build to reduce image size - https://docs.docker.com/engine/userguide/eng-image/multistage-build/#use-multi-stage-builds
 # Only the content below ends up in the image, this helps remove /src from the image (which is large)
-FROM alpine:3.6 as runstage
+FROM debian:buster-slim as runstage
 RUN mkdir -p /src  && mkdir -p /opt
-RUN echo "@testing http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories && \
-    apk update && \
-    apk add boost-filesystem boost-program_options boost-regex boost-iostreams boost-thread libgomp lua5.2 expat libtbb@testing
-COPY --from=buildstage /usr/local /usr/local
-COPY --from=buildstage /opt /opt
+RUN apt-get update && \
+apt-get install -y --no-install-recommends libboost-program-options1.62.0 libboost-regex1.62.0 \
+libboost-date-time1.62.0 libboost-chrono1.62.0 libboost-filesystem1.62.0 \
+libboost-iostreams1.62.0 libboost-thread1.62.0 expat liblua5.2-0 libtbb2 &&\
+rm -rf /var/lib/apt/lists/*
+COPY --from=builder /usr/local /usr/local
+COPY --from=builder /opt /opt
+RUN chmod 0644 -R /opt
 WORKDIR /opt
 
 EXPOSE 5000

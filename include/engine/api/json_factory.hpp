@@ -33,7 +33,7 @@ namespace json
 namespace detail
 {
 
-util::json::Array coordinateToLonLat(const util::Coordinate coordinate);
+util::json::Array coordinateToLonLat(const util::Coordinate &coordinate);
 
 /**
  * Ensures that a bearing value is a whole number, and clamped to the range 0-359
@@ -86,11 +86,14 @@ util::json::Object makeRoute(const guidance::Route &route,
                              const char *weight_name);
 
 // Creates a Waypoint without Hint, see the Hint overload below
-util::json::Object makeWaypoint(const util::Coordinate location, std::string name);
+util::json::Object
+makeWaypoint(const util::Coordinate &location, const double &distance, std::string name);
 
 // Creates a Waypoint with Hint, see the overload above when Hint is not needed
-util::json::Object
-makeWaypoint(const util::Coordinate location, std::string name, const Hint &hint);
+util::json::Object makeWaypoint(const util::Coordinate &location,
+                                const double &distance,
+                                std::string name,
+                                const Hint &hint);
 
 util::json::Object makeRouteLeg(guidance::RouteLeg leg, util::json::Array steps);
 
