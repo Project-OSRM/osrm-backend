@@ -79,6 +79,8 @@ struct TableParameters : public BaseParameters
 
     AnnotationsType annotations = AnnotationsType::Duration;
 
+    double scale_factor = 1;
+
     TableParameters() = default;
     template <typename... Args>
     TableParameters(std::vector<std::size_t> sources_,
@@ -105,10 +107,13 @@ struct TableParameters : public BaseParameters
                     const AnnotationsType annotations_,
                     double fallback_speed_,
                     FallbackCoordinateType fallback_coordinate_type_,
+                    double scale_factor_,
                     Args... args_)
         : BaseParameters{std::forward<Args>(args_)...}, sources{std::move(sources_)},
           destinations{std::move(destinations_)}, fallback_speed{fallback_speed_},
-          fallback_coordinate_type{fallback_coordinate_type_}, annotations{annotations_}
+          fallback_coordinate_type{fallback_coordinate_type_}, annotations{annotations_},
+          scale_factor{scale_factor_}
+
     {
     }
 
@@ -133,6 +138,9 @@ struct TableParameters : public BaseParameters
             return false;
 
         if (fallback_speed < 0)
+            return false;
+
+        if (scale_factor <= 0)
             return false;
 
         return true;
