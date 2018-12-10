@@ -609,11 +609,11 @@ Feature: Basic Duration Matrix
             | a | 0  | 30 | 18 | 24 |
 
         When I request a travel time matrix I should get
-            |   | a  
-            | a | 0  
-            | b | 30 
-            | f | 18 
-            | 1 | 24 
+            |   | a  |
+            | a | 0  |
+            | b | 30 |
+            | f | 18 |
+            | 1 | 24 |
 
 
     Scenario: Testbot - Travel time matrix of minimal network with scale factor
