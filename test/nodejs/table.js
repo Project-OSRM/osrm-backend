@@ -261,7 +261,7 @@ tables.forEach(function(annotation) {
     });
 
     test('table: ' + annotation + ' table in Monaco with invalid scale factor', function(assert) {
-        assert.plan(1);
+        assert.plan(3);
         var osrm = new OSRM({path: mld_data_path, algorithm: 'MLD'});
         var options = {
             coordinates: two_test_coordinates,
@@ -270,6 +270,13 @@ tables.forEach(function(annotation) {
         };
 
         assert.throws(()=>osrm.table(options, (err, res) => {}), /scale_factor must be > 0/, "should throw on invalid scale_factor value");
+
+        options.scale_factor = '-1';
+        assert.throws(()=>osrm.table(options, (err, res) => {}), /scale_factor must be a number/, "should throw on invalid scale_factor value");
+
+        options.scale_factor = 0;
+        assert.throws(()=>osrm.table(options, (err, res) => {}), /scale_factor must be > 0/, "should throw on invalid scale_factor value");
+
     });
 });
 
