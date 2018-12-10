@@ -99,6 +99,12 @@ BOOST_AUTO_TEST_CASE(invalid_table_urls)
                       28UL);
     BOOST_CHECK_EQUAL(testInvalidOptions<TableParameters>("1,2;3,4?annotations=durations&fallback_speed=-1"),
                       28UL);
+    BOOST_CHECK_EQUAL(
+        testInvalidOptions<TableParameters>("1,2;3,4?annotations=durations&fallback_speed=0"),
+        28UL);
+    BOOST_CHECK_EQUAL(
+        testInvalidOptions<TableParameters>("1,2;3,4?annotations=durations&fallback_speed=-1"),
+        28UL);
 }
 
 BOOST_AUTO_TEST_CASE(valid_route_hint)
@@ -574,9 +580,16 @@ BOOST_AUTO_TEST_CASE(valid_table_urls)
     CHECK_EQUAL_RANGE(reference_7.sources, result_7->sources);
     CHECK_EQUAL_RANGE(reference_7.destinations, result_7->destinations);
 
+<<<<<<< HEAD
     auto result_8 = parseParameters<TableParameters>("1,2;3,4?sources=all&destinations=all&"
                                                      "annotations=duration&fallback_speed=1&"
                                                      "fallback_coordinate=snapped&scale_factor=2");
+=======
+    TableParameters reference_8{};
+    reference_8.coordinates = coords_1;
+    auto result_8 =
+        parseParameters<TableParameters>("1,2;3,4?annotations=distance&fallback_speed=2.5");
+>>>>>>> fix formatting
     BOOST_CHECK(result_8);
     CHECK_EQUAL_RANGE(reference_1.sources, result_3->sources);
     CHECK_EQUAL_RANGE(reference_1.destinations, result_3->destinations);
