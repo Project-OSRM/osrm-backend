@@ -3,7 +3,7 @@
     - Features:
       - ADDED: all waypoints in responses now contain a distance property between the original coordinate and the snapped location. [#5255](https://github.com/Project-OSRM/osrm-backend/pull/5255)
     - Table:
-      - ADDED: new parameter `scale_factor` which will scale the cell `duration` values by this factor.
+      - ADDED: new parameter `scale_factor` which will scale the cell `duration` values by this factor. [#5298](https://github.com/Project-OSRM/osrm-backend/pull/5298)
 
 # 5.20.0
   - Changes from 5.19.0:
