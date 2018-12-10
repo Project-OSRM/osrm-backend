@@ -276,12 +276,9 @@ tables.forEach(function(annotation) {
 
         options.fallback_speed = 10;
         options.fallback_coordinate = 'bla';
-
         assert.throws(()=>osrm.table(options, (err, res) => {}), /fallback_coordinate' param must be one of \[input, snapped\]/, "should throw on invalid fallback_coordinate");
 
-
         options.fallback_coordinate = 10;
-
         assert.throws(()=>osrm.table(options, (err, res) => {}), /fallback_coordinate must be a string: \[input, snapped\]/, "should throw on invalid fallback_coordinate");
 
     });
