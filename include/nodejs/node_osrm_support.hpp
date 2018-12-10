@@ -1192,7 +1192,7 @@ argumentsToTableParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
             Nan::ThrowError("fallback_speed must be a number");
             return table_parameters_ptr();
         }
-        else if (fallback_speed->NumberValue() < 0)
+        else if (fallback_speed->NumberValue() <= 0)
         {
             Nan::ThrowError("fallback_speed must be > 0");
             return table_parameters_ptr();
