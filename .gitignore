@@ -68,6 +68,10 @@ Thumbs.db
 /*.local.bat
 /CMakeSettings.json
 
+# Jetbrains related files #
+###########################
+.idea/
+
 # stxxl related files #
 #######################
 .stxxl
