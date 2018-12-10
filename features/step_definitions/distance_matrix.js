@@ -80,7 +80,7 @@ function tableParse(table, noRoute, annotation, callback) {
             } else {
                 result = json[annotation].map(row => {
                     var hashes = {};
-                     row.forEach((v, i) => { hashes[tableRows[0][i+1]] = parse(v) ? '' : v; });
+                    row.forEach((v, i) => { hashes[tableRows[0][i+1]] = parse(v) ? '' : v; });
                     return hashes;
                 });
             }
