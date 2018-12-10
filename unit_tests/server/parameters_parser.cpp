@@ -96,10 +96,12 @@ BOOST_AUTO_TEST_CASE(invalid_table_urls)
         testInvalidOptions<TableParameters>("1,2;3,4?annotations=durations&scale_factor=-1"), 28UL);
     BOOST_CHECK_EQUAL(
         testInvalidOptions<TableParameters>("1,2;3,4?annotations=durations&scale_factor=0"), 28UL);
-    BOOST_CHECK_EQUAL(testInvalidOptions<TableParameters>("1,2;3,4?annotations=durations&fallback_speed=0"),
-                      28UL);
-    BOOST_CHECK_EQUAL(testInvalidOptions<TableParameters>("1,2;3,4?annotations=durations&fallback_speed=-1"),
-                      28UL);
+    BOOST_CHECK_EQUAL(
+        testInvalidOptions<TableParameters>("1,2;3,4?annotations=durations&fallback_speed=0"),
+        28UL);
+    BOOST_CHECK_EQUAL(
+        testInvalidOptions<TableParameters>("1,2;3,4?annotations=durations&fallback_speed=-1"),
+        28UL);
     BOOST_CHECK_EQUAL(
         testInvalidOptions<TableParameters>("1,2;3,4?annotations=durations&fallback_speed=0"),
         28UL);
@@ -598,7 +600,7 @@ BOOST_AUTO_TEST_CASE(valid_table_urls)
     BOOST_CHECK_EQUAL(result_9->annotations & TableParameters::AnnotationsType::Distance, true);
     CHECK_EQUAL_RANGE(reference_9.sources, result_9->sources);
     CHECK_EQUAL_RANGE(reference_9.destinations, result_9->destinations);
-    
+
     TableParameters reference_10{};
     reference_10.coordinates = coords_1;
     auto result_10 = parseParameters<TableParameters>(
@@ -609,8 +611,8 @@ BOOST_AUTO_TEST_CASE(valid_table_urls)
     CHECK_EQUAL_RANGE(reference_10.destinations, result_10->destinations);
 
     auto result_11 = parseParameters<TableParameters>("1,2;3,4?sources=all&destinations=all&"
-                                                     "annotations=duration&fallback_speed=1&"
-                                                     "fallback_coordinate=snapped&scale_factor=2");
+                                                      "annotations=duration&fallback_speed=1&"
+                                                      "fallback_coordinate=snapped&scale_factor=2");
     BOOST_CHECK(result_11);
     CHECK_EQUAL_RANGE(reference_1.sources, result_11->sources);
     CHECK_EQUAL_RANGE(reference_1.destinations, result_11->destinations);
