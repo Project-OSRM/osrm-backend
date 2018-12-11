@@ -10,7 +10,7 @@ module.exports = function () {
 
     this.When(durationsRegex, function(table, callback) {tableParse.call(this, table, DURATIONS_NO_ROUTE, 'durations', callback);}.bind(this));
     this.When(distancesRegex, function(table, callback) {tableParse.call(this, table, DISTANCES_NO_ROUTE, 'distances', callback);}.bind(this));
-    this.When(estimatesRegex, function(table, callback) {tableParse.call(this, table, DISTANCES_NO_ROUTE, 'estimated_cells', callback);}.bind(this));
+    this.When(estimatesRegex, function(table, callback) {tableParse.call(this, table, DISTANCES_NO_ROUTE, 'fallback_speed_cells', callback);}.bind(this));
 };
 
 const durationsParse = function(v) { return isNaN(parseInt(v)); };
@@ -21,7 +21,7 @@ function tableParse(table, noRoute, annotation, callback) {
 
     const parse = annotation == 'distances' ? distancesParse : (annotation == 'durations' ? durationsParse : estimatesParse);
     const params = this.queryParams;
-    params.annotations = ['durations','estimated_cells'].indexOf(annotation) !== -1 ? 'duration' : 'distance';
+    params.annotations = ['durations','fallback_speed_cells'].indexOf(annotation) !== -1 ? 'duration' : 'distance';
 
     var tableRows = table.raw();
 
@@ -65,7 +65,7 @@ function tableParse(table, noRoute, annotation, callback) {
             var json = JSON.parse(response.body);
 
             var result = {};
-            if (annotation === 'estimated_cells') {
+            if (annotation === 'fallback_speed_cells') {
                 result = table.raw().map(row => row.map(() => ''));
                 json[annotation].forEach(pair => {
                     result[pair[0]+1][pair[1]+1] = 'Y';

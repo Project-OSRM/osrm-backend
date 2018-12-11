@@ -157,7 +157,7 @@ Returns **[Object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Refer
                  Values are given in seconds.
 **`sources`**: array of [`Ẁaypoint`](#waypoint) objects describing all sources in order.
 **`destinations`**: array of [`Ẁaypoint`](#waypoint) objects describing all destinations in order.
-**`estimated_cells`**: (optional) if `fallback_speed` is used, will be an array of arrays of `row,column` values, indicating which cells contain estimated values.
+**`fallback_speed_cells`**: (optional) if `fallback_speed` is used, will be an array of arrays of `row,column` values, indicating which cells contain estimated values.
 
 ### tile
 

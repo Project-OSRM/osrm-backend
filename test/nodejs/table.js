@@ -243,7 +243,7 @@ tables.forEach(function(annotation) {
         };
         osrm.table(options, function(err, response) {
             assert.equal(response[annotation].length, 2);
-            assert.strictEqual(response.estimated_cells, undefined);
+            assert.strictEqual(response.fallback_speed_cells, undefined);
         });
     });
 
@@ -258,7 +258,7 @@ tables.forEach(function(annotation) {
         };
         osrm.table(options, function(err, response) {
             assert.equal(response[annotation].length, 2);
-            assert.equal(response['estimated_cells'].length, 0);
+            assert.equal(response['fallback_speed_cells'].length, 0);
         });
     });
 
