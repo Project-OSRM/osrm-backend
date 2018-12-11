@@ -552,6 +552,17 @@ Feature: Basic Duration Matrix
             | f | Y | Y |   |   |
             | 1 | Y | Y |   |   |
 
+        When I request a travel time matrix I should get estimates for
+            |   | a | b | f | 1 |
+            | a |   |   | Y | Y |
+
+        When I request a travel time matrix I should get estimates for
+            |   | a |
+            | a |   |
+            | b |   |
+            | f | Y |
+            | 1 | Y |
+
     Scenario: Testbot - Filling in noroutes with estimates - use input coordinate
         Given a grid size of 300 meters
         Given the extract extra arguments "--small-component-size 4"
@@ -586,6 +597,25 @@ Feature: Basic Duration Matrix
             | b | 30 |
             | f | 18 |
             | 1 | 30 |
+
+        When I request a travel time matrix I should get estimates for
+            |   | a | b | f | 1 |
+            | a |   |   | Y | Y |
+            | b |   |   | Y | Y |
+            | f | Y | Y |   |   |
+            | 1 | Y | Y |   |   |
+
+        When I request a travel time matrix I should get estimates for
+            |   | a | b | f | 1 |
+            | a |   |   | Y | Y |
+
+        When I request a travel time matrix I should get estimates for
+            |   | a |
+            | a |   |
+            | b |   |
+            | f | Y |
+            | 1 | Y |
+
 
     Scenario: Testbot - Filling in noroutes with estimates - use snapped coordinate
         Given a grid size of 300 meters
@@ -622,18 +652,35 @@ Feature: Basic Duration Matrix
             | f | 18 |
             | 1 | 24 |
 
+        When I request a travel time matrix I should get estimates for
+            |   | a | b | f | 1 |
+            | a |   |   | Y | Y |
+            | b |   |   | Y | Y |
+            | f | Y | Y |   |   |
+            | 1 | Y | Y |   |   |
+
+        When I request a travel time matrix I should get estimates for
+            |   | a | b | f | 1 |
+            | a |   |   | Y | Y |
+
+        When I request a travel time matrix I should get estimates for
+            |   | a |
+            | a |   |
+            | b |   |
+            | f | Y |
+            | 1 | Y |
 
     Scenario: Testbot - Travel time matrix of minimal network with scale factor
-         Given the query options
+        Given the query options
             | scale_factor | 2 |
-         Given the node map
+        Given the node map
             """
             a b
             """
-         And the ways
+        And the ways
             | nodes |
             | ab    |
-         When I request a travel time matrix I should get
+        When I request a travel time matrix I should get
             |   | a  | b  |
             | a | 0  | 20 |
             | b | 20 | 0  |
@@ -645,67 +692,86 @@ Feature: Basic Duration Matrix
             | fallback_speed | 5 |
             | fallback_coordinate | snapped |
 
-         Given the node map
+        Given the node map
             """
             a b   f h 1
             d e   g i
             """
 
-         And the ways
+        And the ways
             | nodes |
             | abeda |
             | fhigf |
 
-         When I request a travel time matrix I should get
+        When I request a travel time matrix I should get
             |   | a  | b  | f  | 1  |
             | a | 0  | 60 | 36 | 48 |
             | b | 60 | 0  | 24 | 36 |
             | f | 36 | 24 | 0  | 60 |
             | 1 | 48 | 36 | 60 | 0  |
 
-         When I request a travel time matrix I should get
+        When I request a travel time matrix I should get
             |   | a  | b  | f  | 1  |
             | a | 0  | 60 | 36 | 48 |
 
-         When I request a travel time matrix I should get
+        When I request a travel time matrix I should get
             |   | a  |
             | a | 0  |
             | b | 60 |
             | f | 36 |
             | 1 | 48 |
 
+        When I request a travel time matrix I should get estimates for
+            |   | a | b | f | 1 |
+            | a |   |   | Y | Y |
+            | b |   |   | Y | Y |
+            | f | Y | Y |   |   |
+            | 1 | Y | Y |   |   |
+
+        When I request a travel time matrix I should get estimates for
+            |   | a | b | f | 1 |
+            | a |   |   | Y | Y |
+
+        When I request a travel time matrix I should get estimates for
+            |   | a |
+            | a |   |
+            | b |   |
+            | f | Y |
+            | 1 | Y |
+
+
      Scenario: Testbot - Travel time matrix of minimal network with overflow scale factor
         Given the query options
             | scale_factor | 2147483647 |
 
-         Given the node map
+        Given the node map
             """
             a b
             """
 
-         And the ways
+        And the ways
             | nodes |
             | ab    |
 
-         When I request a travel time matrix I should get
+        When I request a travel time matrix I should get
             |   | a           | b           |
             | a | 0           | 214748364.6 |
             | b | 214748364.6 | 0           |
 
      Scenario: Testbot - Travel time matrix of minimal network with fraction scale factor
-         Given the query options
+        Given the query options
             | scale_factor | 0.5 |
 
-         Given the node map
+        Given the node map
             """
             a b
             """
 
-         And the ways
+        And the ways
             | nodes |
             | ab    |
 
-         When I request a travel time matrix I should get
+        When I request a travel time matrix I should get
             |   | a  | b  |
             | a | 0  | 5  |
             | b | 5  | 0  |
