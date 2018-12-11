@@ -182,12 +182,13 @@ class TableAPI final : public BaseAPI
     MakeEstimatesTable(const std::vector<TableCellRef> &fallback_speed_cells) const
     {
         util::json::Array json_table;
-        std::for_each(fallback_speed_cells.begin(), fallback_speed_cells.end(), [&](const auto &cell) {
-            util::json::Array row;
-            row.values.push_back(util::json::Number(cell.row));
-            row.values.push_back(util::json::Number(cell.column));
-            json_table.values.push_back(std::move(row));
-        });
+        std::for_each(
+            fallback_speed_cells.begin(), fallback_speed_cells.end(), [&](const auto &cell) {
+                util::json::Array row;
+                row.values.push_back(util::json::Number(cell.row));
+                row.values.push_back(util::json::Number(cell.column));
+                json_table.values.push_back(std::move(row));
+            });
         return json_table;
     }
 
