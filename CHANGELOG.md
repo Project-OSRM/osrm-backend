@@ -2,6 +2,7 @@
   - Changes from 5.20.0
     - Features:
       - ADDED: all waypoints in responses now contain a distance property between the original coordinate and the snapped location. [#5255](https://github.com/Project-OSRM/osrm-backend/pull/5255)
+      - ADDED: if `fallback_speed` is used, a new structure `fallback_speed_cells` will describe which cells contain estimated values [#5259](https://github.com/Project-OSRM/osrm-backend/pull/5259)
     - Table:
       - ADDED: new parameter `scale_factor` which will scale the cell `duration` values by this factor. [#5298](https://github.com/Project-OSRM/osrm-backend/pull/5298)
       - FIXED: only trigger `scale_factor` code to scan matrix when necessary. [#5303](https://github.com/Project-OSRM/osrm-backend/pull/5303)
