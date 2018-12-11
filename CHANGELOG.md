@@ -1,4 +1,4 @@
-# 5.20.1 RC 3
+# 5.20.1 RC 4
   - Changes from 5.20.0
     - Features:
       - ADDED: all waypoints in responses now contain a distance property between the original coordinate and the snapped location. [#5255](https://github.com/Project-OSRM/osrm-backend/pull/5255)
