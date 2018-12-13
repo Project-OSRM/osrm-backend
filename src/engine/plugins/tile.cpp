@@ -559,6 +559,7 @@ void encodeVectorTile(const DataFacadeBase &facade,
                             fbuilder.set_duration(reverse_duration / 10.0);
                             fbuilder.set_name(name);
                             fbuilder.set_rate(reverse_rate / 10.0);
+                            fbuilder.set_is_startpoint(is_startpoint);
 
                             fbuilder.commit();
                         }
