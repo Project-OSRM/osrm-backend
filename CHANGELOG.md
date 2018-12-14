@@ -6,6 +6,9 @@
     - Table:
       - ADDED: new parameter `scale_factor` which will scale the cell `duration` values by this factor. [#5298](https://github.com/Project-OSRM/osrm-backend/pull/5298)
       - FIXED: only trigger `scale_factor` code to scan matrix when necessary. [#5303](https://github.com/Project-OSRM/osrm-backend/pull/5303)
+    - Docker:
+      - FIXED: use consistent boost version between build and runtime [#5311](https://github.com/Project-OSRM/osrm-backend/pull/5311)
+      - FIXED: don't override default permissions on /opt [#5311](https://github.com/Project-OSRM/osrm-backend/pull/5311)
     - Matching:
       - CHANGED: matching will now consider edges marked with is_startpoint=false, allowing matching over ferries and other previously non-matchable edge types. [#5297](https://github.com/Project-OSRM/osrm-backend/pull/5297)
 
