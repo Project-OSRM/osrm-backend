@@ -95,8 +95,10 @@ Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
         return Error("NoTable", "No table found", result);
     }
 
+    std::vector<api::TableAPI::TableCellRef> estimated_pairs;
+
     // Scan table for null results - if any exist, replace with distance estimates
-    if (params.fallback_speed > 0)
+    if (params.fallback_speed != INVALID_FALLBACK_SPEED || params.scale_factor != 1)
     {
         for (std::size_t row = 0; row < num_sources; row++)
         {
@@ -104,7 +106,8 @@ Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
             {
                 const auto &table_index = row * num_destinations + column;
                 BOOST_ASSERT(table_index < result_tables_pair.first.size());
-                if (result_tables_pair.first[table_index] == MAXIMAL_EDGE_DURATION)
+                if (params.fallback_speed != INVALID_FALLBACK_SPEED && params.fallback_speed > 0 &&
+                    result_tables_pair.first[table_index] == MAXIMAL_EDGE_DURATION)
                 {
                     const auto &source =
                         snapped_phantoms[params.sources.empty() ? row : params.sources[row]];
@@ -126,13 +129,32 @@ Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
                     {
                         result_tables_pair.second[table_index] = distance_estimate;
                     }
+
+                    estimated_pairs.emplace_back(row, column);
+                }
+                if (params.scale_factor > 0 && params.scale_factor != 1 &&
+                    result_tables_pair.first[table_index] != MAXIMAL_EDGE_DURATION &&
+                    result_tables_pair.first[table_index] != 0)
+                {
+                    EdgeDuration diff =
+                        MAXIMAL_EDGE_DURATION / result_tables_pair.first[table_index];
+
+                    if (params.scale_factor >= diff)
+                    {
+                        result_tables_pair.first[table_index] = MAXIMAL_EDGE_DURATION - 1;
+                    }
+                    else
+                    {
+                        result_tables_pair.first[table_index] = std::lround(
+                            result_tables_pair.first[table_index] * params.scale_factor);
+                    }
                 }
             }
         }
     }
 
     api::TableAPI table_api{facade, params};
-    table_api.MakeResponse(result_tables_pair, snapped_phantoms, result);
+    table_api.MakeResponse(result_tables_pair, snapped_phantoms, estimated_pairs, result);
 
     return Status::Ok;
 }

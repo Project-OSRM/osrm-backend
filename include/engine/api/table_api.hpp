@@ -31,6 +31,15 @@ namespace api
 class TableAPI final : public BaseAPI
 {
   public:
+    struct TableCellRef
+    {
+        TableCellRef(const std::size_t &row, const std::size_t &column) : row{row}, column{column}
+        {
+        }
+        std::size_t row;
+        std::size_t column;
+    };
+
     TableAPI(const datafacade::BaseDataFacade &facade_, const TableParameters &parameters_)
         : BaseAPI(facade_, parameters_), parameters(parameters_)
     {
@@ -39,6 +48,7 @@ class TableAPI final : public BaseAPI
     virtual void
     MakeResponse(const std::pair<std::vector<EdgeDuration>, std::vector<EdgeDistance>> &tables,
                  const std::vector<PhantomNode> &phantoms,
+                 const std::vector<TableCellRef> &fallback_speed_cells,
                  util::json::Object &response) const
     {
         auto number_of_sources = parameters.sources.size();
@@ -75,6 +85,11 @@ class TableAPI final : public BaseAPI
         {
             response.values["distances"] =
                 MakeDistanceTable(tables.second, number_of_sources, number_of_destinations);
+        }
+
+        if (parameters.fallback_speed != INVALID_FALLBACK_SPEED && parameters.fallback_speed > 0)
+        {
+            response.values["fallback_speed_cells"] = MakeEstimatesTable(fallback_speed_cells);
         }
 
         response.values["code"] = "Ok";
@@ -160,6 +175,20 @@ class TableAPI final : public BaseAPI
                            });
             json_table.values.push_back(std::move(json_row));
         }
+        return json_table;
+    }
+
+    virtual util::json::Array
+    MakeEstimatesTable(const std::vector<TableCellRef> &fallback_speed_cells) const
+    {
+        util::json::Array json_table;
+        std::for_each(
+            fallback_speed_cells.begin(), fallback_speed_cells.end(), [&](const auto &cell) {
+                util::json::Array row;
+                row.values.push_back(util::json::Number(cell.row));
+                row.values.push_back(util::json::Number(cell.column));
+                json_table.values.push_back(std::move(row));
+            });
         return json_table;
     }
 

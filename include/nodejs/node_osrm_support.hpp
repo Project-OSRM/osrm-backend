@@ -1192,7 +1192,7 @@ argumentsToTableParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
             Nan::ThrowError("fallback_speed must be a number");
             return table_parameters_ptr();
         }
-        else if (fallback_speed->NumberValue() < 0)
+        else if (fallback_speed->NumberValue() <= 0)
         {
             Nan::ThrowError("fallback_speed must be > 0");
             return table_parameters_ptr();
@@ -1227,6 +1227,24 @@ argumentsToTableParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
             Nan::ThrowError("'fallback_coordinate' param must be one of [input, snapped]");
             return table_parameters_ptr();
         }
+    }
+
+    if (obj->Has(Nan::New("scale_factor").ToLocalChecked()))
+    {
+        auto scale_factor = obj->Get(Nan::New("scale_factor").ToLocalChecked());
+
+        if (!scale_factor->IsNumber())
+        {
+            Nan::ThrowError("scale_factor must be a number");
+            return table_parameters_ptr();
+        }
+        else if (scale_factor->NumberValue() <= 0)
+        {
+            Nan::ThrowError("scale_factor must be > 0");
+            return table_parameters_ptr();
+        }
+
+        params->scale_factor = static_cast<double>(scale_factor->NumberValue());
     }
 
     return params;
