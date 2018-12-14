@@ -183,3 +183,28 @@ Feature: Snap start/end point to the nearest way
             | x    | n  | xf,xf |
             | x    | o  | xg,xg |
             | x    | p  | xh,xh |
+
+    Scenario: Weighted snapping
+#        Given the query options
+#            | snapping | weighted |
+        Given a grid size of 10 meters
+        Given the node map
+            """
+            a   b    c
+            1 2 3  4
+              5 6 7 8d
+                 9
+                   0 e
+            """
+
+        And the ways
+            | nodes |
+            | ab    |
+            | bc    |
+            | cd    |
+            | de    |
+
+        When I route I should get
+            | from | to | route       |
+            | 1    | 0  | ab,bc,cd,de |
+            | 2    | 0  | bc,cd,de    |
