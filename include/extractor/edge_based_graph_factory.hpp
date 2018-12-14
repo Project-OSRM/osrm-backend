@@ -89,7 +89,6 @@ class EdgeBasedGraphFactory
     // The following get access functions destroy the content in the factory
     void GetEdgeBasedEdges(util::DeallocatingVector<EdgeBasedEdge> &edges);
     void GetEdgeBasedNodeSegments(std::vector<EdgeBasedNodeSegment> &nodes);
-    void GetStartPointMarkers(std::vector<bool> &node_is_startpoint);
     void GetEdgeBasedNodeWeights(std::vector<EdgeWeight> &output_node_weights);
     void GetEdgeBasedNodeDurations(std::vector<EdgeWeight> &output_node_durations);
     void GetEdgeBasedNodeDistances(std::vector<EdgeDistance> &output_node_distances);
@@ -111,10 +110,6 @@ class EdgeBasedGraphFactory
     // assign the correct index to the penalty value stored in the conditional
     std::vector<ConditionalTurnPenalty>
     IndexConditionals(std::vector<Conditional> &&conditionals) const;
-
-    //! maps index from m_edge_based_node_list to ture/false if the node is an entry point to the
-    //! graph
-    std::vector<bool> m_edge_based_node_is_startpoint;
 
     //! node weights that indicate the length of the segment (node based) represented by the
     //! edge-based node
