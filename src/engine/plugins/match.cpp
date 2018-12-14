@@ -213,7 +213,8 @@ Status MatchPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
                        });
     }
 
-    auto candidates_lists = GetPhantomNodesInRange(facade, tidied.parameters, search_radiuses);
+    auto candidates_lists =
+        GetPhantomNodesInRange(facade, tidied.parameters, search_radiuses, true);
 
     filterCandidates(tidied.parameters.coordinates, candidates_lists);
     if (std::all_of(candidates_lists.begin(),

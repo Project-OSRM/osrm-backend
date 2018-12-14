@@ -95,12 +95,6 @@ void EdgeBasedGraphFactory::GetEdgeBasedNodeSegments(std::vector<EdgeBasedNodeSe
     swap(nodes, m_edge_based_node_segments);
 }
 
-void EdgeBasedGraphFactory::GetStartPointMarkers(std::vector<bool> &node_is_startpoint)
-{
-    using std::swap; // Koenig swap
-    swap(m_edge_based_node_is_startpoint, node_is_startpoint);
-}
-
 void EdgeBasedGraphFactory::GetEdgeBasedNodeWeights(std::vector<EdgeWeight> &output_node_weights)
 {
     using std::swap; // Koenig swap
@@ -229,10 +223,9 @@ NBGToEBG EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const N
             edge_id_to_segment_id(nbe_to_ebn_mapping[edge_id_2]),
             current_edge_source_coordinate_id,
             current_edge_target_coordinate_id,
-            i);
+            i,
+            forward_data.flags.startpoint || reverse_data.flags.startpoint);
 
-        m_edge_based_node_is_startpoint.push_back(forward_data.flags.startpoint ||
-                                                  reverse_data.flags.startpoint);
         current_edge_source_coordinate_id = current_edge_target_coordinate_id;
     }
 
@@ -427,7 +420,6 @@ EdgeBasedGraphFactory::GenerateEdgeExpandedNodes(const WayRestrictionMap &way_re
         }
     }
 
-    BOOST_ASSERT(m_edge_based_node_segments.size() == m_edge_based_node_is_startpoint.size());
     BOOST_ASSERT(m_number_of_edge_based_nodes == m_edge_based_node_weights.size());
     BOOST_ASSERT(m_number_of_edge_based_nodes == m_edge_based_node_durations.size());
     BOOST_ASSERT(m_number_of_edge_based_nodes == m_edge_based_node_distances.size());

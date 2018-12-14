@@ -109,3 +109,12 @@ Feature: Car - Handle ferry routes
         When I route I should get
             | from | to | route     | modes       | time  |
             | c    | d  | bcde,bcde | ferry,ferry | 600s  |
+
+        Given the query options
+          | geometries     | geojson                  |
+          | overview       | full                     |
+
+        # Note that matching *should* work across unsnappable ferries
+        When I match I should get
+          | trace | geometry             | duration |
+          | abcdef| 1,1,1.000899,1,1.000899,1,1.002697,1,1.002697,1,1.003596,1,1.003596,1,1.005394,1,1.005394,1,1.006293,1 | 610.9      |

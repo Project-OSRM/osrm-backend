@@ -36,7 +36,7 @@ void validate_feature_layer(vtzero::layer layer)
     BOOST_CHECK_EQUAL(layer.version(), 2);
     BOOST_CHECK_EQUAL(to_string(layer.name()), "speeds");
     BOOST_CHECK_EQUAL(layer.extent(), osrm::util::vector_tile::EXTENT);
-    BOOST_CHECK_EQUAL(layer.key_table().size(), 7);
+    BOOST_CHECK_EQUAL(layer.key_table().size(), 8);
     BOOST_CHECK(layer.num_features() > 2500);
 
     while (auto feature = layer.next_feature())
@@ -62,6 +62,9 @@ void validate_feature_layer(vtzero::layer layer)
         BOOST_CHECK(props.find("is_small") != props.end());
         BOOST_CHECK(props["is_small"].type() == typeid(bool));
 
+        BOOST_CHECK(props.find("is_startpoint") != props.end());
+        BOOST_CHECK(props["is_startpoint"].type() == typeid(bool));
+
         BOOST_CHECK(props.find("datasource") != props.end());
         BOOST_CHECK(props["datasource"].type() == typeid(std::string));
 
@@ -73,7 +76,7 @@ void validate_feature_layer(vtzero::layer layer)
         std::count_if(layer.value_table().begin(), layer.value_table().end(), [](auto v) {
             return v.type() == vtzero::property_value_type::uint_value;
         });
-    BOOST_CHECK_EQUAL(number_of_uint_values, 77);
+    BOOST_CHECK_EQUAL(number_of_uint_values, 78);
 }
 
 void validate_turn_layer(vtzero::layer layer)
@@ -125,7 +128,7 @@ void validate_node_layer(vtzero::layer layer)
     BOOST_CHECK_EQUAL(to_string(layer.name()), "osmnodes");
     BOOST_CHECK_EQUAL(layer.extent(), osrm::util::vector_tile::EXTENT);
     BOOST_CHECK_EQUAL(layer.key_table().size(), 0);
-    BOOST_CHECK_EQUAL(layer.num_features(), 1791);
+    BOOST_CHECK_EQUAL(layer.num_features(), 1810);
 
     while (auto feature = layer.next_feature())
     {
