@@ -14,6 +14,7 @@
       - CHANGED: matching will now consider edges marked with is_startpoint=false, allowing matching over ferries and other previously non-matchable edge types. [#5297](https://github.com/Project-OSRM/osrm-backend/pull/5297)
     - Profile:
       - ADDED: Parse `source:maxspeed` and `maxspeed:type` tags to apply maxspeeds and add belgian flanders rural speed limit. [#5217](https://github.com/Project-OSRM/osrm-backend/pull/5217)
+      - CHANGED: Refactor maxspeed parsing to use common library. [#5144](https://github.com/Project-OSRM/osrm-backend/pull/5144)
 
 # 5.20.0
   - Changes from 5.19.0:

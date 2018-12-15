@@ -7,6 +7,7 @@ Sequence = require('lib/sequence')
 Handlers = require("lib/way_handlers")
 find_access_tag = require("lib/access").find_access_tag
 limit = require("lib/maxspeed").limit
+Measure = require("lib/measure")
 
 function setup()
   local default_speed = 15
@@ -206,20 +207,6 @@ function setup()
   }
 end
 
-local function parse_maxspeed(source)
-    if not source then
-        return 0
-    end
-    local n = tonumber(source:match("%d*"))
-    if not n then
-        n = 0
-    end
-    if string.match(source, "mph") or string.match(source, "mp/h") then
-        n = (n*1609)/1000
-    end
-    return n
-end
-
 function process_node(profile, node, result)
   -- parse access and barrier tags
   local highway = node:get_value_by_key("highway")
@@ -276,9 +263,9 @@ function handle_bicycle_tags(profile,way,result,data)
 
   -- other tags
   data.junction = way:get_value_by_key("junction")
-  data.maxspeed = parse_maxspeed(way:get_value_by_key ( "maxspeed") )
-  data.maxspeed_forward = parse_maxspeed(way:get_value_by_key( "maxspeed:forward"))
-  data.maxspeed_backward = parse_maxspeed(way:get_value_by_key( "maxspeed:backward"))
+  data.maxspeed = Measure.get_max_speed(way:get_value_by_key ("maxspeed")) or 0
+  data.maxspeed_forward = Measure.get_max_speed(way:get_value_by_key("maxspeed:forward")) or 0
+  data.maxspeed_backward = Measure.get_max_speed(way:get_value_by_key("maxspeed:backward")) or 0
   data.barrier = way:get_value_by_key("barrier")
   data.oneway = way:get_value_by_key("oneway")
   data.oneway_bicycle = way:get_value_by_key("oneway:bicycle")
