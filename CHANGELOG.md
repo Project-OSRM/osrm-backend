@@ -12,6 +12,8 @@
       - FIXED: don't override default permissions on /opt [#5311](https://github.com/Project-OSRM/osrm-backend/pull/5311)
     - Matching:
       - CHANGED: matching will now consider edges marked with is_startpoint=false, allowing matching over ferries and other previously non-matchable edge types. [#5297](https://github.com/Project-OSRM/osrm-backend/pull/5297)
+    - Profile:
+      - ADDED: Parse `source:maxspeed` and `maxspeed:type` tags to apply maxspeeds and add belgian flanders rural speed limit. [#5217](https://github.com/Project-OSRM/osrm-backend/pull/5217)
 
 # 5.20.0
   - Changes from 5.19.0:

@@ -137,3 +137,28 @@ OSRM will use 4/5 of the projected free-flow speed.
             | primary |          |                  | 30                | -1     |         | 23 km/h |           | 6.7        |
             | primary | 20       | 30               |                   | -1     |         | 15 km/h |           | 4.4        |
             | primary | 20       |                  | 30                | -1     |         | 23 km/h |           | 6.7        |
+
+
+    Scenario: Car - Respect source:maxspeed
+        Given the node map
+            """
+            a b c d e f g
+            """
+
+        And the ways
+            | nodes | highway | source:maxspeed    | maxspeed |
+            | ab    | trunk   |                    |          |
+            | bc    | trunk   |                    | 60       |
+            | cd    | trunk   | FR:urban           |          |
+            | de    | trunk   | CH:rural           |          |
+            | ef    | trunk   | CH:trunk           |          |
+            | fg    | trunk   | CH:motorway        |          |
+
+        When I route I should get
+            | from | to | route | speed   |
+            | a    | b  | ab,ab | 85 km/h |
+            | b    | c  | bc,bc | 48 km/h |
+            | c    | d  | cd,cd | 40 km/h |
+            | d    | e  | de,de | 64 km/h |
+            | e    | f  | ef,ef | 80 km/h |
+            | f    | g  | fg,fg | 96 km/h |
