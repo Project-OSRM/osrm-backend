@@ -89,6 +89,25 @@ BOOST_AUTO_TEST_CASE(invalid_table_urls)
     BOOST_CHECK_EQUAL(
         testInvalidOptions<TableParameters>("1,2;3,4?sources=all&destinations=all&annotations=bla"),
         49UL);
+    BOOST_CHECK_EQUAL(testInvalidOptions<TableParameters>("1,2;3,4?fallback_coordinate=asdf"),
+                      28UL);
+    BOOST_CHECK_EQUAL(testInvalidOptions<TableParameters>("1,2;3,4?fallback_coordinate=10"), 28UL);
+    BOOST_CHECK_EQUAL(
+        testInvalidOptions<TableParameters>("1,2;3,4?annotations=durations&scale_factor=-1"), 28UL);
+    BOOST_CHECK_EQUAL(
+        testInvalidOptions<TableParameters>("1,2;3,4?annotations=durations&scale_factor=0"), 28UL);
+    BOOST_CHECK_EQUAL(
+        testInvalidOptions<TableParameters>("1,2;3,4?annotations=durations&fallback_speed=0"),
+        28UL);
+    BOOST_CHECK_EQUAL(
+        testInvalidOptions<TableParameters>("1,2;3,4?annotations=durations&fallback_speed=-1"),
+        28UL);
+    BOOST_CHECK_EQUAL(
+        testInvalidOptions<TableParameters>("1,2;3,4?annotations=durations&fallback_speed=0"),
+        28UL);
+    BOOST_CHECK_EQUAL(
+        testInvalidOptions<TableParameters>("1,2;3,4?annotations=durations&fallback_speed=-1"),
+        28UL);
 }
 
 BOOST_AUTO_TEST_CASE(valid_route_hint)
@@ -563,6 +582,44 @@ BOOST_AUTO_TEST_CASE(valid_table_urls)
     BOOST_CHECK_EQUAL(result_7->annotations & TableParameters::AnnotationsType::Distance, true);
     CHECK_EQUAL_RANGE(reference_7.sources, result_7->sources);
     CHECK_EQUAL_RANGE(reference_7.destinations, result_7->destinations);
+
+    TableParameters reference_8{};
+    reference_8.coordinates = coords_1;
+    auto result_8 =
+        parseParameters<TableParameters>("1,2;3,4?annotations=distance&fallback_speed=2.5");
+    BOOST_CHECK(result_8);
+    BOOST_CHECK_EQUAL(result_8->annotations & TableParameters::AnnotationsType::Distance, true);
+    CHECK_EQUAL_RANGE(reference_8.sources, result_8->sources);
+    CHECK_EQUAL_RANGE(reference_8.destinations, result_8->destinations);
+
+    TableParameters reference_9{};
+    reference_9.coordinates = coords_1;
+    auto result_9 = parseParameters<TableParameters>(
+        "1,2;3,4?annotations=distance&fallback_speed=2.5&fallback_coordinate=input");
+    BOOST_CHECK(result_9);
+    BOOST_CHECK_EQUAL(result_9->annotations & TableParameters::AnnotationsType::Distance, true);
+    CHECK_EQUAL_RANGE(reference_9.sources, result_9->sources);
+    CHECK_EQUAL_RANGE(reference_9.destinations, result_9->destinations);
+
+    TableParameters reference_10{};
+    reference_10.coordinates = coords_1;
+    auto result_10 = parseParameters<TableParameters>(
+        "1,2;3,4?annotations=distance&fallback_speed=20&fallback_coordinate=snapped");
+    BOOST_CHECK(result_10);
+    BOOST_CHECK_EQUAL(result_10->annotations & TableParameters::AnnotationsType::Distance, true);
+    CHECK_EQUAL_RANGE(reference_10.sources, result_10->sources);
+    CHECK_EQUAL_RANGE(reference_10.destinations, result_10->destinations);
+
+    auto result_11 = parseParameters<TableParameters>("1,2;3,4?sources=all&destinations=all&"
+                                                      "annotations=duration&fallback_speed=1&"
+                                                      "fallback_coordinate=snapped&scale_factor=2");
+    BOOST_CHECK(result_11);
+    CHECK_EQUAL_RANGE(reference_1.sources, result_11->sources);
+    CHECK_EQUAL_RANGE(reference_1.destinations, result_11->destinations);
+    CHECK_EQUAL_RANGE(reference_1.bearings, result_11->bearings);
+    CHECK_EQUAL_RANGE(reference_1.radiuses, result_11->radiuses);
+    CHECK_EQUAL_RANGE(reference_1.approaches, result_11->approaches);
+    CHECK_EQUAL_RANGE(reference_1.coordinates, result_11->coordinates);
 }
 
 BOOST_AUTO_TEST_CASE(valid_match_urls)

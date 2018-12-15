@@ -148,6 +148,7 @@
         {"key": "maxspeed", "value": "AT:rural"},
         {"key": "maxspeed", "value": "AT:trunk"},
         {"key": "maxspeed", "value": "BE:motorway"},
+        {"key": "maxspeed", "value": "BE-VLG:rural"},
         {"key": "maxspeed", "value": "BY:urban"},
         {"key": "maxspeed", "value": "BY:motorway"},
         {"key": "maxspeed", "value": "CH:rural"},

@@ -17,12 +17,12 @@ module.exports = {
                 return true;
 
             var matchPercent = want.match(/(.*)\s+~(.+)%$/),
-                matchAbs = want.match(/(.*)\s+\+\-(.+)$/),
+                matchAbs = want.match(/(.*)\s+\+-(.+)$/),
                 matchRe = want.match(/^\/(.*)\/$/),
                 // we use this for matching before/after bearing
-                matchBearingListAbs = want.match(/^((\d+)->(\d+))(,(\d+)->(\d+))*\s+\+\-(.+)$/),
-                matchIntersectionListAbs = want.match(/^(((((true|false):\d+)\s{0,1})+,{0,1})+;{0,1})+\s+\+\-(.+)$/),
-                matchRangeNumbers = want.match(/\d+\+\-\d+/);
+                matchBearingListAbs = want.match(/^((\d+)->(\d+))(,(\d+)->(\d+))*\s+\+-(.+)$/),
+                matchIntersectionListAbs = want.match(/^(((((true|false):\d+)\s{0,1})+,{0,1})+;{0,1})+\s+\+-(.+)$/),
+                matchRangeNumbers = want.match(/\d+\+-\d+/);
 
             function inRange(margin, got, want) {
                 var fromR = parseFloat(want) - margin,
@@ -31,12 +31,12 @@ module.exports = {
             }
             function parseIntersectionString(str) {
                 return str.split(';')
-                          .map((turn_intersections) => turn_intersections
-                                                       .split(',')
-                                                       .map((intersection) => intersection
-                                                                               .split(' ')
-                                                                               .map((entry_bearing_pair) => entry_bearing_pair
-                                                                                                            .split(':'))));
+                    .map((turn_intersections) => turn_intersections
+                        .split(',')
+                        .map((intersection) => intersection
+                            .split(' ')
+                            .map((entry_bearing_pair) => entry_bearing_pair
+                                .split(':'))));
             }
 
             if (got === want) {

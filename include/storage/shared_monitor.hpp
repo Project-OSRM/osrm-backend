@@ -33,7 +33,7 @@ template <class Lock> class InvertedLock
     InvertedLock(Lock &lock) : lock(lock) { lock.unlock(); }
     ~InvertedLock() { lock.lock(); }
 };
-}
+} // namespace
 
 // The shared monitor implementation based on a semaphore and mutex
 template <typename Data> struct SharedMonitor
@@ -146,7 +146,9 @@ template <typename Data> struct SharedMonitor
     // like two-turnstile reusable barrier or boost/interprocess/sync/spin/condition.hpp
     // fail if a waiter is killed.
 
-    static constexpr int buffer_size = 256;
+    // Buffer size needs to be large enough to hold all the semaphores for every
+    // listener you want to support.
+    static constexpr int buffer_size = 4096 * 4;
 
     struct InternalData
     {
@@ -232,8 +234,8 @@ template <typename Data> struct SharedMonitor
     bi::shared_memory_object shmem;
     bi::mapped_region region;
 };
-}
-}
+} // namespace storage
+} // namespace osrm
 
 #undef USE_BOOST_INTERPROCESS_CONDITION
 

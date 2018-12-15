@@ -1,13 +1,13 @@
 {
   "name": "osrm",
-  "version": "5.18.0-latest.1",
+  "version": "5.20.0-latest.1",
   "private": false,
   "description": "The Open Source Routing Machine is a high performance routing engine written in C++14 designed to run on OpenStreetMap data.",
   "dependencies": {
     "mkdirp": "^0.5.1",
-    "nan": "^2.6.2",
+    "nan": "^2.11.1",
     "node-cmake": "^2.3.2",
-    "node-pre-gyp": "^0.6.36",
+    "node-pre-gyp": "^0.12.0",
     "rimraf": "^2.5.4"
   },
   "browserify": {
@@ -18,7 +18,7 @@
   },
   "scripts": {
     "lint": "node ./node_modules/eslint/bin/eslint.js -c ./.eslintrc features/step_definitions/ features/support/",
-    "test": "npm run lint && node ./node_modules/cucumber/bin/cucumber.js features/ -p verify && node ./node_modules/cucumber/bin/cucumber.js features/ -p mld",
+    "test": "npm run lint && node ./node_modules/cucumber/bin/cucumber.js features/ -p verify && node ./node_modules/cucumber/bin/cucumber.js features/ -p verify -m mmap && node ./node_modules/cucumber/bin/cucumber.js features/ -p mld && node ./node_modules/cucumber/bin/cucumber.js features/ -p mld -m mmap",
     "clean": "rm -rf test/cache",
     "docs": "./scripts/build_api_docs.sh",
     "install": "node-pre-gyp install --fallback-to-build=false || ./scripts/node_install.sh",
@@ -47,14 +47,14 @@
     "csv-stringify": "^3.0.0",
     "cucumber": "^1.2.1",
     "d3-queue": "^2.0.3",
-    "docbox": "^1.0.6",
+    "docbox": "^1.0.11",
     "documentation": "^4.0.0-rc.1",
-    "eslint": "^2.4.0",
+    "eslint": "^5.10.0",
     "faucet": "^0.0.1",
     "jsonpath": "^1.0.0",
     "node-timeout": "0.0.4",
     "polyline": "^0.2.0",
-    "request": "^2.69.0",
+    "request": "^2.88.0",
     "tape": "^4.7.0",
     "turf": "^3.0.14",
     "xmlbuilder": "^4.2.1"

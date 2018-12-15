@@ -138,7 +138,8 @@ class BasePlugin
     std::vector<std::vector<PhantomNodeWithDistance>>
     GetPhantomNodesInRange(const datafacade::BaseDataFacade &facade,
                            const api::BaseParameters &parameters,
-                           const std::vector<double> radiuses) const
+                           const std::vector<double> radiuses,
+                           bool use_all_edges = false) const
     {
         std::vector<std::vector<PhantomNodeWithDistance>> phantom_nodes(
             parameters.coordinates.size());
@@ -171,12 +172,13 @@ class BasePlugin
                                                       radiuses[i],
                                                       parameters.bearings[i]->bearing,
                                                       parameters.bearings[i]->range,
-                                                      approach);
+                                                      approach,
+                                                      use_all_edges);
             }
             else
             {
                 phantom_nodes[i] = facade.NearestPhantomNodesInRange(
-                    parameters.coordinates[i], radiuses[i], approach);
+                    parameters.coordinates[i], radiuses[i], approach, use_all_edges);
             }
         }
 

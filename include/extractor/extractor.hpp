@@ -85,9 +85,9 @@ class Extractor
         // output data
         EdgeBasedNodeDataContainer &edge_based_nodes_container,
         std::vector<EdgeBasedNodeSegment> &edge_based_node_segments,
-        std::vector<bool> &node_is_startpoint,
         std::vector<EdgeWeight> &edge_based_node_weights,
         std::vector<EdgeDuration> &edge_based_node_durations,
+        std::vector<EdgeDistance> &edge_based_node_distances,
         util::DeallocatingVector<EdgeBasedEdge> &edge_based_edge_list,
         std::uint32_t &connectivity_checksum);
 
@@ -96,7 +96,6 @@ class Extractor
                         const std::vector<EdgeBasedNodeSegment> &input_node_segments,
                         EdgeBasedNodeDataContainer &nodes_container) const;
     void BuildRTree(std::vector<EdgeBasedNodeSegment> edge_based_node_segments,
-                    std::vector<bool> node_is_startpoint,
                     const std::vector<util::Coordinate> &coordinates);
     std::shared_ptr<RestrictionMap> LoadRestrictionMap();
 

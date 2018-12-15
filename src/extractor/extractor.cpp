@@ -239,9 +239,9 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     EdgeBasedNodeDataContainer edge_based_nodes_container;
     std::vector<EdgeBasedNodeSegment> edge_based_node_segments;
     util::DeallocatingVector<EdgeBasedEdge> edge_based_edge_list;
-    std::vector<bool> node_is_startpoint;
     std::vector<EdgeWeight> edge_based_node_weights;
     std::vector<EdgeDuration> edge_based_node_durations;
+    std::vector<EdgeDistance> edge_based_node_distances;
     std::uint32_t ebg_connectivity_checksum = 0;
 
     // Create a node-based graph from the OSRM file
@@ -319,9 +319,9 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
                                scripting_environment,
                                edge_based_nodes_container,
                                edge_based_node_segments,
-                               node_is_startpoint,
                                edge_based_node_weights,
                                edge_based_node_durations,
+                               edge_based_node_distances,
                                edge_based_edge_list,
                                ebg_connectivity_checksum);
 
@@ -345,8 +345,10 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
 
     util::Log() << "Saving edge-based node weights to file.";
     TIMER_START(timer_write_node_weights);
-    extractor::files::writeEdgeBasedNodeWeightsDurations(
-        config.GetPath(".osrm.enw"), edge_based_node_weights, edge_based_node_durations);
+    extractor::files::writeEdgeBasedNodeWeightsDurationsDistances(config.GetPath(".osrm.enw"),
+                                                                  edge_based_node_weights,
+                                                                  edge_based_node_durations,
+                                                                  edge_based_node_distances);
     TIMER_STOP(timer_write_node_weights);
     util::Log() << "Done writing. (" << TIMER_SEC(timer_write_node_weights) << ")";
 
@@ -358,7 +360,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
 
     util::Log() << "Building r-tree ...";
     TIMER_START(rtree);
-    BuildRTree(std::move(edge_based_node_segments), std::move(node_is_startpoint), coordinates);
+    BuildRTree(std::move(edge_based_node_segments), coordinates);
 
     TIMER_STOP(rtree);
 
@@ -733,9 +735,9 @@ EdgeID Extractor::BuildEdgeExpandedGraph(
     // output data
     EdgeBasedNodeDataContainer &edge_based_nodes_container,
     std::vector<EdgeBasedNodeSegment> &edge_based_node_segments,
-    std::vector<bool> &node_is_startpoint,
     std::vector<EdgeWeight> &edge_based_node_weights,
     std::vector<EdgeDuration> &edge_based_node_durations,
+    std::vector<EdgeDistance> &edge_based_node_distances,
     util::DeallocatingVector<EdgeBasedEdge> &edge_based_edge_list,
     std::uint32_t &connectivity_checksum)
 {
@@ -783,9 +785,9 @@ EdgeID Extractor::BuildEdgeExpandedGraph(
 
     edge_based_graph_factory.GetEdgeBasedEdges(edge_based_edge_list);
     edge_based_graph_factory.GetEdgeBasedNodeSegments(edge_based_node_segments);
-    edge_based_graph_factory.GetStartPointMarkers(node_is_startpoint);
     edge_based_graph_factory.GetEdgeBasedNodeWeights(edge_based_node_weights);
     edge_based_graph_factory.GetEdgeBasedNodeDurations(edge_based_node_durations);
+    edge_based_graph_factory.GetEdgeBasedNodeDistances(edge_based_node_distances);
     connectivity_checksum = edge_based_graph_factory.GetConnectivityChecksum();
 
     return number_of_edge_based_nodes;
@@ -797,35 +799,24 @@ EdgeID Extractor::BuildEdgeExpandedGraph(
     Saves tree into '.ramIndex' and leaves into '.fileIndex'.
  */
 void Extractor::BuildRTree(std::vector<EdgeBasedNodeSegment> edge_based_node_segments,
-                           std::vector<bool> node_is_startpoint,
                            const std::vector<util::Coordinate> &coordinates)
 {
     util::Log() << "Constructing r-tree of " << edge_based_node_segments.size()
                 << " segments build on-top of " << coordinates.size() << " coordinates";
 
-    BOOST_ASSERT(node_is_startpoint.size() == edge_based_node_segments.size());
-
     // Filter node based edges based on startpoint
-    auto out_iter = edge_based_node_segments.begin();
-    auto in_iter = edge_based_node_segments.begin();
-    for (auto index : util::irange<std::size_t>(0UL, node_is_startpoint.size()))
-    {
-        BOOST_ASSERT(in_iter != edge_based_node_segments.end());
-        if (node_is_startpoint[index])
-        {
-            *out_iter = *in_iter;
-            out_iter++;
-        }
-        in_iter++;
-    }
-    auto new_size = out_iter - edge_based_node_segments.begin();
-    if (new_size == 0)
+    auto start_point_count = std::accumulate(edge_based_node_segments.begin(),
+                                             edge_based_node_segments.end(),
+                                             0,
+                                             [](const size_t so_far, const auto &segment) {
+                                                 return so_far + (segment.is_startpoint ? 1 : 0);
+                                             });
+    if (start_point_count == 0)
     {
         throw util::exception("There are no snappable edges left after processing.  Are you "
                               "setting travel modes correctly in the profile?  Cannot continue." +
                               SOURCE_REF);
     }
-    edge_based_node_segments.resize(new_size);
 
     TIMER_START(construction);
     util::StaticRTree<EdgeBasedNodeSegment> rtree(

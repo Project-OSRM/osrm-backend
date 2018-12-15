@@ -48,10 +48,28 @@ struct TableParametersGrammar : public BaseParametersGrammar<Iterator, Signature
             (qi::lit("all") |
              (size_t_ % ';')[ph::bind(&engine::api::TableParameters::sources, qi::_r1) = qi::_1]);
 
+        fallback_speed_rule =
+            qi::lit("fallback_speed=") >
+            (double_)[ph::bind(&engine::api::TableParameters::fallback_speed, qi::_r1) = qi::_1];
+
+        fallback_coordinate_type.add("input",
+                                     engine::api::TableParameters::FallbackCoordinateType::Input)(
+            "snapped", engine::api::TableParameters::FallbackCoordinateType::Snapped);
+
+        scale_factor_rule =
+            qi::lit("scale_factor=") >
+            (double_)[ph::bind(&engine::api::TableParameters::scale_factor, qi::_r1) = qi::_1];
+
         table_rule = destinations_rule(qi::_r1) | sources_rule(qi::_r1);
 
         root_rule = BaseGrammar::query_rule(qi::_r1) > -qi::lit(".json") >
-                    -('?' > (table_rule(qi::_r1) | base_rule(qi::_r1)) % '&');
+                    -('?' > (table_rule(qi::_r1) | base_rule(qi::_r1) | scale_factor_rule(qi::_r1) |
+                             fallback_speed_rule(qi::_r1) |
+                             (qi::lit("fallback_coordinate=") >
+                              fallback_coordinate_type
+                                  [ph::bind(&engine::api::TableParameters::fallback_coordinate_type,
+                                            qi::_r1) = qi::_1])) %
+                                '&');
     }
 
     TableParametersGrammar(qi::rule<Iterator, Signature> &root_rule_) : BaseGrammar(root_rule_)
@@ -73,13 +91,20 @@ struct TableParametersGrammar : public BaseParametersGrammar<Iterator, Signature
     qi::rule<Iterator, Signature> base_rule;
 
   private:
+    using json_policy = no_trailing_dot_policy<double, 'j', 's', 'o', 'n'>;
+
     qi::rule<Iterator, Signature> root_rule;
     qi::rule<Iterator, Signature> table_rule;
     qi::rule<Iterator, Signature> sources_rule;
     qi::rule<Iterator, Signature> destinations_rule;
+    qi::rule<Iterator, Signature> fallback_speed_rule;
+    qi::rule<Iterator, Signature> scale_factor_rule;
     qi::rule<Iterator, std::size_t()> size_t_;
     qi::symbols<char, engine::api::TableParameters::AnnotationsType> annotations;
     qi::rule<Iterator, engine::api::TableParameters::AnnotationsType()> annotations_list;
+    qi::symbols<char, engine::api::TableParameters::FallbackCoordinateType>
+        fallback_coordinate_type;
+    qi::real_parser<double, json_policy> double_;
 };
 }
 }

@@ -94,7 +94,7 @@ std::string waypointTypeToString(const guidance::WaypointType waypoint_type)
     return waypoint_type_names[static_cast<std::size_t>(waypoint_type)];
 }
 
-util::json::Array coordinateToLonLat(const util::Coordinate coordinate)
+util::json::Array coordinateToLonLat(const util::Coordinate &coordinate)
 {
     util::json::Array array;
     array.values.push_back(static_cast<double>(util::toFloating(coordinate.lon)));
@@ -240,17 +240,22 @@ util::json::Object makeRoute(const guidance::Route &route,
     return json_route;
 }
 
-util::json::Object makeWaypoint(const util::Coordinate location, std::string name)
+util::json::Object
+makeWaypoint(const util::Coordinate &location, const double &distance, std::string name)
 {
     util::json::Object waypoint;
     waypoint.values["location"] = detail::coordinateToLonLat(location);
     waypoint.values["name"] = std::move(name);
+    waypoint.values["distance"] = distance;
     return waypoint;
 }
 
-util::json::Object makeWaypoint(const util::Coordinate location, std::string name, const Hint &hint)
+util::json::Object makeWaypoint(const util::Coordinate &location,
+                                const double &distance,
+                                std::string name,
+                                const Hint &hint)
 {
-    auto waypoint = makeWaypoint(location, name);
+    auto waypoint = makeWaypoint(location, distance, name);
     waypoint.values["hint"] = hint.ToBase64();
     return waypoint;
 }

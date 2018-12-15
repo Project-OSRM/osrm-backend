@@ -5,6 +5,7 @@
 
 #include <boost/function_output_iterator.hpp>
 
+#include <type_traits>
 #include <unordered_map>
 
 namespace osrm
@@ -19,8 +20,8 @@ class SharedDataIndex
   public:
     struct AllocatedRegion
     {
-        char *memory_ptr;
-        DataLayout layout;
+        void *memory_ptr;
+        std::unique_ptr<BaseDataLayout> layout;
     };
 
     SharedDataIndex() = default;
@@ -29,10 +30,10 @@ class SharedDataIndex
         // Build mapping from block name to region
         for (auto index : util::irange<std::uint32_t>(0, regions.size()))
         {
-            regions[index].layout.List("",
-                                       boost::make_function_output_iterator([&](const auto &name) {
-                                           block_to_region[name] = index;
-                                       }));
+            regions[index].layout->List("",
+                                        boost::make_function_output_iterator([&](const auto &name) {
+                                            block_to_region[name] = index;
+                                        }));
         }
     }
 
@@ -40,32 +41,44 @@ class SharedDataIndex
     {
         for (const auto &region : regions)
         {
-            region.layout.List(name_prefix, out);
+            region.layout->List(name_prefix, out);
         }
     }
 
     template <typename T> auto GetBlockPtr(const std::string &name) const
     {
+#if !defined(__GNUC__) || (__GNUC__ > 4)
+        // is_tivially_copyable only exists in GCC >=5
+        static_assert(std::is_trivially_copyable<T>::value,
+                      "Block-based data must be a trivially copyable type");
+        static_assert(sizeof(T) % alignof(T) == 0, "aligned T* can't be used as an array pointer");
+#endif
         const auto &region = GetBlockRegion(name);
-        return region.layout.GetBlockPtr<T>(region.memory_ptr, name);
+        return reinterpret_cast<T *>(region.layout->GetBlockPtr(region.memory_ptr, name));
     }
 
     template <typename T> auto GetBlockPtr(const std::string &name)
     {
+#if !defined(__GNUC__) || (__GNUC__ > 4)
+        // is_tivially_copyable only exists in GCC >=5
+        static_assert(std::is_trivially_copyable<T>::value,
+                      "Block-based data must be a trivially copyable type");
+        static_assert(sizeof(T) % alignof(T) == 0, "aligned T* can't be used as an array pointer");
+#endif
         const auto &region = GetBlockRegion(name);
-        return region.layout.GetBlockPtr<T>(region.memory_ptr, name);
+        return reinterpret_cast<T *>(region.layout->GetBlockPtr(region.memory_ptr, name));
     }
 
     std::size_t GetBlockEntries(const std::string &name) const
     {
         const auto &region = GetBlockRegion(name);
-        return region.layout.GetBlockEntries(name);
+        return region.layout->GetBlockEntries(name);
     }
 
     std::size_t GetBlockSize(const std::string &name) const
     {
         const auto &region = GetBlockRegion(name);
-        return region.layout.GetBlockSize(name);
+        return region.layout->GetBlockSize(name);
     }
 
   private:

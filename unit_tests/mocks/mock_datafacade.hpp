@@ -113,7 +113,8 @@ class MockBaseDataFacade : public engine::datafacade::BaseDataFacade
                                const float /*max_distance*/,
                                const int /*bearing*/,
                                const int /*bearing_range*/,
-                               const engine::Approach /*approach*/) const override
+                               const engine::Approach /*approach*/,
+                               const bool /*use_all_edges*/) const override
     {
         return {};
     }
@@ -121,7 +122,8 @@ class MockBaseDataFacade : public engine::datafacade::BaseDataFacade
     std::vector<engine::PhantomNodeWithDistance>
     NearestPhantomNodesInRange(const util::Coordinate /*input_coordinate*/,
                                const float /*max_distance*/,
-                               const engine::Approach /*approach*/) const override
+                               const engine::Approach /*approach*/,
+                               const bool /*use_all_edges*/) const override
     {
         return {};
     }

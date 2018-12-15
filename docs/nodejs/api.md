@@ -25,7 +25,9 @@ var osrm = new OSRM('network.osrm');
                Make sure you prepared the dataset with the correct toolchain.
     -   `options.shared_memory` **[Boolean](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean)?** Connects to the persistent shared memory datastore.
                This requires you to run `osrm-datastore` prior to creating an `OSRM` object.
-    -   `options.memory_file` **[String](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)?** Path to a file on disk to store the memory using mmap.
+    -   `options.memory_file` **[String](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)?** *DEPRECATED*
+               Old behaviour: Path to a file on disk to store the memory using mmap.  Current behaviour: setting this value is the same as setting `mmap_memory: true`.
+    -   `options.mmap_memory` **[Boolean](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean)?** Map on-disk files to virtual memory addresses (mmap), rather than loading into RAM.
     -   `options.path` **[String](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)?** The path to the `.osrm` files. This is mutually exclusive with setting {options.shared_memory} to true.
     -   `options.max_locations_trip` **[Number](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number)?** Max. locations supported in trip query (default: unlimited).
     -   `options.max_locations_viaroute` **[Number](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number)?** Max. locations supported in viaroute query (default: unlimited).
@@ -56,7 +58,7 @@ Returns the fastest route between two or more coordinates while visiting the way
     -   `options.continue_straight` **[Boolean](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean)?** Forces the route to keep going straight at waypoints and don't do a uturn even if it would be faster. Default value depends on the profile.
     -   `options.approaches` **[Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array)?** Keep waypoints on curb side. Can be `null` (unrestricted, default) or `curb`.
                          `null`/`true`/`false`
--   `callback` **[Function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function)** 
+-   `callback` **[Function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function)**
 
 **Examples**
 
@@ -88,7 +90,7 @@ Note: `coordinates` in the general options only supports a single `{longitude},{
     -   `options.number` **[Number](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number)** Number of nearest segments that should be returned.
         Must be an integer greater than or equal to `1`. (optional, default `1`)
     -   `options.approaches` **[Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array)?** Keep waypoints on curb side. Can be `null` (unrestricted, default) or `curb`.
--   `callback` **[Function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function)** 
+-   `callback` **[Function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function)**
 
 **Examples**
 
@@ -127,7 +129,10 @@ tables. Optionally returns distance table.
     -   `options.destinations` **[Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array)?** An array of `index` elements (`0 <= integer <
         #coordinates`) to use location with given index as destination. Default is to use all.
     -   `options.approaches` **[Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array)?** Keep waypoints on curb side. Can be `null` (unrestricted, default) or `curb`.
--   `callback` **[Function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function)** 
+    -   `options.fallback_speed` **[Number](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number)?** Replace `null` responses in result with as-the-crow-flies estimates based on `fallback_speed`.  Value is in metres/second.
+    -   `options.fallback_coordinate` **[String](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)?** Either `input` (default) or `snapped`.  If using a `fallback_speed`, use either the user-supplied coordinate (`input`), or the snapped coordinate (`snapped`) for calculating the as-the-crow-flies diestance between two points.
+    -   `options.scale_factor` **[Number](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number)?** Multiply the table duration values in the table by this number for more controlled input into a route optimization solver.
+-   `callback` **[Function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function)**
 
 **Examples**
 
@@ -152,6 +157,7 @@ Returns **[Object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Refer
                  Values are given in seconds.
 **`sources`**: array of [`Ẁaypoint`](#waypoint) objects describing all sources in order.
 **`destinations`**: array of [`Ẁaypoint`](#waypoint) objects describing all destinations in order.
+**`fallback_speed_cells`**: (optional) if `fallback_speed` is used, will be an array of arrays of `row,column` values, indicating which cells contain estimated values.
 
 ### tile
 
@@ -167,7 +173,7 @@ and what weights they have applied.
 -   `ZXY` **[Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array)** an array consisting of `x`, `y`, and `z` values representing tile coordinates like
            [wiki.openstreetmap.org/wiki/Slippy_map_tilenames](https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames)
            and are supported by vector tile viewers like [Mapbox GL JS](https://www.mapbox.com/mapbox-gl-js/api/).
--   `callback` **[Function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function)** 
+-   `callback` **[Function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function)**
 
 **Examples**
 
@@ -204,7 +210,7 @@ if they can not be matched successfully.
     -   `options.radiuses` **[Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array)?** Standard deviation of GPS precision used for map matching. If applicable use GPS accuracy. Can be `null` for default value `5` meters or `double >= 0`.
     -   `options.gaps` **[String](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)?** Allows the input track splitting based on huge timestamp gaps between points. Either `split` or `ignore` (optional, default `split`).
     -   `options.tidy` **[Boolean](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean)?** Allows the input track modification to obtain better matching quality for noisy tracks (optional, default `false`).
--   `callback` **[Function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function)** 
+-   `callback` **[Function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function)**
 
 **Examples**
 
@@ -268,7 +274,7 @@ Right now, the following combinations are possible:
     -   `options.source` **[String](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)** Return route starts at `any` or `first` coordinate. (optional, default `any`)
     -   `options.destination` **[String](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)** Return route ends at `any` or `last` coordinate. (optional, default `any`)
     -   `options.approaches` **[Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array)?** Keep waypoints on curb side. Can be `null` (unrestricted, default) or `curb`.
--   `callback` **[Function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function)** 
+-   `callback` **[Function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function)**
 
 **Examples**
 
@@ -297,9 +303,30 @@ Returns **[Object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Refer
                  2) `waypoint_index`: index of the point in the trip.
 **`trips`**: an array of [`Route`](#route) objects that assemble the trace.
 
-## Responses
+## Plugin behaviour
 
-Responses
+All plugins support a second additional object that is available to configure some NodeJS specific behaviours.
+
+-   `plugin_config` **[Object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object)** Object literal containing parameters for the trip query.
+    -   `plugin_config.format` **[String](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)?** The format of the result object to various API calls.  Valid options are `object` (default), which returns a standard Javascript object, as described above, and `json_buffer`, which will return a NodeJS **[Buffer](https://nodejs.org/api/buffer.html)** object, containing a JSON string.  The latter has the advantage that it can be immediately serialized to disk/sent over the network, and the generation of the string is performed outside the main NodeJS event loop.  This option is ignored by the `tile` plugin.
+
+**Examples**
+
+```javascript
+var osrm = new OSRM('network.osrm');
+var options = {
+  coordinates: [
+    [13.36761474609375, 52.51663871100423],
+    [13.374481201171875, 52.506191342034576]
+  ]
+};
+osrm.route(options, { format: "json_buffer" }, function(err, response) {
+  if (err) throw err;
+  console.log(response.toString("utf-8"));
+});
+```
+
+## Responses
 
 ### Route
 
@@ -307,8 +334,8 @@ Represents a route through (potentially multiple) waypoints.
 
 **Parameters**
 
--   `exteral` **documentation** in
-    [`osrm-backend`](../http.md#route)
+-   **documentation** in
+    [`osrm-backend`](../http.md#route-object)
 
 ### RouteLeg
 
@@ -316,8 +343,8 @@ Represents a route between two waypoints.
 
 **Parameters**
 
--   `exteral` **documentation** in
-    [`osrm-backend`](../http.md#routeleg)
+-   **documentation** in
+    [`osrm-backend`](../http.md#routeleg-object)
 
 ### RouteStep
 
@@ -326,15 +353,15 @@ single way to the subsequent step.
 
 **Parameters**
 
--   `exteral` **documentation** in
-    [`osrm-backend`](https://github.com/Project-OSRM/osrm-backend/blob/master/docs/http.md#routestep)
+-   **documentation** in
+    [`osrm-backend`](../http.md#routestep-object)
 
 ### StepManeuver
 
 **Parameters**
 
--   `exteral` **documentation** in
-    [`osrm-backend`](https://github.com/Project-OSRM/osrm-backend/blob/master/docs/http.md#stepmaneuver)
+-   **documentation** in
+    [`osrm-backend`](../http.md#stepmaneuver-object)
 
 ### Waypoint
 
@@ -342,5 +369,5 @@ Object used to describe waypoint on a route.
 
 **Parameters**
 
--   `exteral` **documentation** in
-    [`osrm-backend`](https://github.com/Project-OSRM/osrm-backend/blob/master/docs/http.md#waypoint)
+-   **documentation** in
+    [`osrm-backend`](../http.md#waypoint-object)

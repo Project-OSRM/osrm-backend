@@ -2,6 +2,7 @@
 #define OSRM_BINDINGS_NODE_SUPPORT_HPP
 
 #include "nodejs/json_v8_renderer.hpp"
+#include "util/json_renderer.hpp"
 
 #include "osrm/approach.hpp"
 #include "osrm/bearing.hpp"
@@ -24,6 +25,7 @@
 #include <algorithm>
 #include <iostream>
 #include <iterator>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -42,6 +44,13 @@ using match_parameters_ptr = std::unique_ptr<osrm::MatchParameters>;
 using nearest_parameters_ptr = std::unique_ptr<osrm::NearestParameters>;
 using table_parameters_ptr = std::unique_ptr<osrm::TableParameters>;
 
+struct PluginParameters
+{
+    bool renderJSONToBuffer = false;
+};
+
+using ObjectOrString = typename mapbox::util::variant<osrm::json::Object, std::string>;
+
 template <typename ResultT> inline v8::Local<v8::Value> render(const ResultT &result);
 
 template <> v8::Local<v8::Value> inline render(const std::string &result)
@@ -49,11 +58,21 @@ template <> v8::Local<v8::Value> inline render(const std::string &result)
     return Nan::CopyBuffer(result.data(), result.size()).ToLocalChecked();
 }
 
-template <> v8::Local<v8::Value> inline render(const osrm::json::Object &result)
+template <> v8::Local<v8::Value> inline render(const ObjectOrString &result)
 {
-    v8::Local<v8::Value> value;
-    renderToV8(value, result);
-    return value;
+    if (result.is<osrm::json::Object>())
+    {
+        // Convert osrm::json object tree into matching v8 object tree
+        v8::Local<v8::Value> value;
+        renderToV8(value, result.get<osrm::json::Object>());
+        return value;
+    }
+    else
+    {
+        // Return the string object as a node Buffer
+        return Nan::CopyBuffer(result.get<std::string>().data(), result.get<std::string>().size())
+            .ToLocalChecked();
+    }
 }
 
 inline void ParseResult(const osrm::Status &result_status, osrm::json::Object &result)
@@ -123,6 +142,10 @@ inline engine_config_ptr argumentsToEngineConfig(const Nan::FunctionCallbackInfo
     if (shared_memory.IsEmpty())
         return engine_config_ptr();
 
+    auto mmap_memory = params->Get(Nan::New("mmap_memory").ToLocalChecked());
+    if (mmap_memory.IsEmpty())
+        return engine_config_ptr();
+
     if (!memory_file->IsUndefined())
     {
         if (path->IsUndefined())
@@ -168,6 +191,18 @@ inline engine_config_ptr argumentsToEngineConfig(const Nan::FunctionCallbackInfo
         else
         {
             Nan::ThrowError("Shared_memory option must be a boolean");
+            return engine_config_ptr();
+        }
+    }
+    if (!mmap_memory->IsUndefined())
+    {
+        if (mmap_memory->IsBoolean())
+        {
+            engine_config->use_mmap = Nan::To<bool>(mmap_memory).FromJust();
+        }
+        else
+        {
+            Nan::ThrowError("mmap_memory option must be a boolean");
             return engine_config_ptr();
         }
     }
@@ -814,6 +849,50 @@ inline bool parseCommonParameters(const v8::Local<v8::Object> &obj, ParamType &p
     return true;
 }
 
+inline PluginParameters
+argumentsToPluginParameters(const Nan::FunctionCallbackInfo<v8::Value> &args)
+{
+    if (args.Length() < 3 || !args[1]->IsObject())
+    {
+        return {};
+    }
+    v8::Local<v8::Object> obj = Nan::To<v8::Object>(args[1]).ToLocalChecked();
+    if (obj->Has(Nan::New("format").ToLocalChecked()))
+    {
+
+        v8::Local<v8::Value> format = obj->Get(Nan::New("format").ToLocalChecked());
+        if (format.IsEmpty())
+        {
+            return {};
+        }
+
+        if (!format->IsString())
+        {
+            Nan::ThrowError("format must be a string: \"object\" or \"json_buffer\"");
+            return {};
+        }
+
+        const Nan::Utf8String format_utf8str(format);
+        std::string format_str{*format_utf8str, *format_utf8str + format_utf8str.length()};
+
+        if (format_str == "object")
+        {
+            return {false};
+        }
+        else if (format_str == "json_buffer")
+        {
+            return {true};
+        }
+        else
+        {
+            Nan::ThrowError("format must be a string: \"object\" or \"json_buffer\"");
+            return {};
+        }
+    }
+
+    return {};
+}
+
 inline route_parameters_ptr
 argumentsToRouteParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
                           bool requires_multiple_coordinates)
@@ -1104,6 +1183,70 @@ argumentsToTableParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
         }
     }
 
+    if (obj->Has(Nan::New("fallback_speed").ToLocalChecked()))
+    {
+        auto fallback_speed = obj->Get(Nan::New("fallback_speed").ToLocalChecked());
+
+        if (!fallback_speed->IsNumber())
+        {
+            Nan::ThrowError("fallback_speed must be a number");
+            return table_parameters_ptr();
+        }
+        else if (fallback_speed->NumberValue() <= 0)
+        {
+            Nan::ThrowError("fallback_speed must be > 0");
+            return table_parameters_ptr();
+        }
+
+        params->fallback_speed = static_cast<double>(fallback_speed->NumberValue());
+    }
+
+    if (obj->Has(Nan::New("fallback_coordinate").ToLocalChecked()))
+    {
+        auto fallback_coordinate = obj->Get(Nan::New("fallback_coordinate").ToLocalChecked());
+
+        if (!fallback_coordinate->IsString())
+        {
+            Nan::ThrowError("fallback_coordinate must be a string: [input, snapped]");
+            return table_parameters_ptr();
+        }
+
+        std::string fallback_coordinate_str = *v8::String::Utf8Value(fallback_coordinate);
+
+        if (fallback_coordinate_str == "snapped")
+        {
+            params->fallback_coordinate_type =
+                osrm::TableParameters::FallbackCoordinateType::Snapped;
+        }
+        else if (fallback_coordinate_str == "input")
+        {
+            params->fallback_coordinate_type = osrm::TableParameters::FallbackCoordinateType::Input;
+        }
+        else
+        {
+            Nan::ThrowError("'fallback_coordinate' param must be one of [input, snapped]");
+            return table_parameters_ptr();
+        }
+    }
+
+    if (obj->Has(Nan::New("scale_factor").ToLocalChecked()))
+    {
+        auto scale_factor = obj->Get(Nan::New("scale_factor").ToLocalChecked());
+
+        if (!scale_factor->IsNumber())
+        {
+            Nan::ThrowError("scale_factor must be a number");
+            return table_parameters_ptr();
+        }
+        else if (scale_factor->NumberValue() <= 0)
+        {
+            Nan::ThrowError("scale_factor must be > 0");
+            return table_parameters_ptr();
+        }
+
+        params->scale_factor = static_cast<double>(scale_factor->NumberValue());
+    }
+
     return params;
 }
 
@@ -1357,6 +1500,6 @@ argumentsToMatchParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
     return params;
 }
 
-} // ns node_osrm
+} // namespace node_osrm
 
 #endif

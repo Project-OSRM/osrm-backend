@@ -135,6 +135,7 @@ template <unsigned NUM_NODES, unsigned NUM_EDGES> struct RandomGraphFixture
             TestData data;
             data.u = edge_udist(g);
             data.v = edge_udist(g);
+            data.is_startpoint = true;
             if (used_edges.find(std::pair<unsigned, unsigned>(
                     std::min(data.u, data.v), std::max(data.u, data.v))) == used_edges.end())
             {
@@ -151,7 +152,7 @@ template <unsigned NUM_NODES, unsigned NUM_EDGES> struct RandomGraphFixture
 struct GraphFixture
 {
     GraphFixture(const std::vector<std::pair<FloatLongitude, FloatLatitude>> &input_coords,
-                 const std::vector<std::pair<unsigned, unsigned>> &input_edges)
+                 const std::vector<std::tuple<unsigned, unsigned, bool>> &input_edges)
     {
 
         for (unsigned i = 0; i < input_coords.size(); i++)
@@ -162,15 +163,16 @@ struct GraphFixture
         for (const auto &pair : input_edges)
         {
             TestData d;
-            d.u = pair.first;
-            d.v = pair.second;
+            d.u = std::get<0>(pair);
+            d.v = std::get<1>(pair);
             // We set the forward nodes to the target node-based-node IDs, just
             // so we have something to test against.  Because this isn't a real
             // graph, the actual values aren't important, we just need something
             // to examine during tests.
-            d.forward_segment_id = {pair.second, true};
-            d.reverse_segment_id = {pair.first, true};
+            d.forward_segment_id = {std::get<1>(pair), true};
+            d.reverse_segment_id = {std::get<0>(pair), true};
             d.fwd_segment_position = 0;
+            d.is_startpoint = std::get<2>(pair);
             edges.emplace_back(d);
         }
     }
@@ -299,7 +301,7 @@ BOOST_FIXTURE_TEST_CASE(construct_multiple_levels_test, TestRandomGraphFixture_M
 BOOST_AUTO_TEST_CASE(regression_test)
 {
     using Coord = std::pair<FloatLongitude, FloatLatitude>;
-    using Edge = std::pair<unsigned, unsigned>;
+    using Edge = std::tuple<unsigned, unsigned, bool>;
     GraphFixture fixture(
         {
             Coord{FloatLongitude{0.0}, FloatLatitude{40.0}},   //
@@ -313,7 +315,7 @@ BOOST_AUTO_TEST_CASE(regression_test)
             Coord{FloatLongitude{105.0}, FloatLatitude{5.0}},  //
             Coord{FloatLongitude{110.0}, FloatLatitude{0.0}},  //
         },
-        {Edge(0, 1), Edge(2, 3), Edge(4, 5), Edge(6, 7), Edge(8, 9)});
+        {Edge(0, 1, true), Edge(2, 3, true), Edge(4, 5, true), Edge(6, 7, true), Edge(8, 9, true)});
 
     TemporaryFile tmp;
     auto rtree = make_rtree<MiniStaticRTree>(tmp.path, fixture);
@@ -335,13 +337,13 @@ BOOST_AUTO_TEST_CASE(regression_test)
 BOOST_AUTO_TEST_CASE(radius_regression_test)
 {
     using Coord = std::pair<FloatLongitude, FloatLatitude>;
-    using Edge = std::pair<unsigned, unsigned>;
+    using Edge = std::tuple<unsigned, unsigned, bool>;
     GraphFixture fixture(
         {
             Coord(FloatLongitude{0.0}, FloatLatitude{0.0}),
             Coord(FloatLongitude{10.0}, FloatLatitude{10.0}),
         },
-        {Edge(0, 1), Edge(1, 0)});
+        {Edge(0, 1, true), Edge(1, 0, true)});
 
     TemporaryFile tmp;
     auto rtree = make_rtree<MiniStaticRTree>(tmp.path, fixture);
@@ -352,22 +354,54 @@ BOOST_AUTO_TEST_CASE(radius_regression_test)
     Coordinate input(FloatLongitude{5.2}, FloatLatitude{5.0});
 
     {
-        auto results =
-            query.NearestPhantomNodesInRange(input, 0.01, osrm::engine::Approach::UNRESTRICTED);
+        auto results = query.NearestPhantomNodesInRange(
+            input, 0.01, osrm::engine::Approach::UNRESTRICTED, true);
         BOOST_CHECK_EQUAL(results.size(), 0);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(permissive_edge_snapping)
+{
+    using Coord = std::pair<FloatLongitude, FloatLatitude>;
+    using Edge = std::tuple<unsigned, unsigned, bool>;
+    GraphFixture fixture(
+        {
+            Coord(FloatLongitude{0.0}, FloatLatitude{0.0}),
+            Coord(FloatLongitude{0.001}, FloatLatitude{0.001}),
+        },
+        {Edge(0, 1, true), Edge(1, 0, false)});
+
+    TemporaryFile tmp;
+    auto rtree = make_rtree<MiniStaticRTree>(tmp.path, fixture);
+    TestDataFacade mockfacade;
+    engine::GeospatialQuery<MiniStaticRTree, TestDataFacade> query(
+        rtree, fixture.coords, mockfacade);
+
+    Coordinate input(FloatLongitude{0.0005}, FloatLatitude{0.0005});
+
+    {
+        auto results = query.NearestPhantomNodesInRange(
+            input, 1000, osrm::engine::Approach::UNRESTRICTED, false);
+        BOOST_CHECK_EQUAL(results.size(), 1);
+    }
+
+    {
+        auto results = query.NearestPhantomNodesInRange(
+            input, 1000, osrm::engine::Approach::UNRESTRICTED, true);
+        BOOST_CHECK_EQUAL(results.size(), 2);
     }
 }
 
 BOOST_AUTO_TEST_CASE(bearing_tests)
 {
     using Coord = std::pair<FloatLongitude, FloatLatitude>;
-    using Edge = std::pair<unsigned, unsigned>;
+    using Edge = std::tuple<unsigned, unsigned, bool>;
     GraphFixture fixture(
         {
             Coord(FloatLongitude{0.0}, FloatLatitude{0.0}),
             Coord(FloatLongitude{10.0}, FloatLatitude{10.0}),
         },
-        {Edge(0, 1), Edge(1, 0)});
+        {Edge(0, 1, true), Edge(1, 0, true)});
 
     TemporaryFile tmp;
     auto rtree = make_rtree<MiniStaticRTree>(tmp.path, fixture);
@@ -405,20 +439,20 @@ BOOST_AUTO_TEST_CASE(bearing_tests)
     }
 
     {
-        auto results =
-            query.NearestPhantomNodesInRange(input, 11000, osrm::engine::Approach::UNRESTRICTED);
+        auto results = query.NearestPhantomNodesInRange(
+            input, 11000, osrm::engine::Approach::UNRESTRICTED, true);
         BOOST_CHECK_EQUAL(results.size(), 2);
     }
 
     {
         auto results = query.NearestPhantomNodesInRange(
-            input, 11000, 270, 10, osrm::engine::Approach::UNRESTRICTED);
+            input, 11000, 270, 10, osrm::engine::Approach::UNRESTRICTED, true);
         BOOST_CHECK_EQUAL(results.size(), 0);
     }
 
     {
         auto results = query.NearestPhantomNodesInRange(
-            input, 11000, 45, 10, osrm::engine::Approach::UNRESTRICTED);
+            input, 11000, 45, 10, osrm::engine::Approach::UNRESTRICTED, true);
         BOOST_CHECK_EQUAL(results.size(), 2);
 
         BOOST_CHECK(results[0].phantom_node.forward_segment_id.enabled);
@@ -434,7 +468,7 @@ BOOST_AUTO_TEST_CASE(bearing_tests)
 BOOST_AUTO_TEST_CASE(bbox_search_tests)
 {
     using Coord = std::pair<FloatLongitude, FloatLatitude>;
-    using Edge = std::pair<unsigned, unsigned>;
+    using Edge = std::tuple<unsigned, unsigned, bool>;
 
     GraphFixture fixture(
         {
@@ -444,7 +478,7 @@ BOOST_AUTO_TEST_CASE(bbox_search_tests)
             Coord(FloatLongitude{3.0}, FloatLatitude{3.0}),
             Coord(FloatLongitude{4.0}, FloatLatitude{4.0}),
         },
-        {Edge(0, 1), Edge(1, 2), Edge(2, 3), Edge(3, 4)});
+        {Edge(0, 1, true), Edge(1, 2, true), Edge(2, 3, true), Edge(3, 4, true)});
 
     TemporaryFile tmp;
     auto rtree = make_rtree<MiniStaticRTree>(tmp.path, fixture);

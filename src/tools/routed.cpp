@@ -70,8 +70,8 @@ std::istream &operator>>(std::istream &in, EngineConfig::Algorithm &algorithm)
         throw util::RuntimeError(token, ErrorCode::UnknownAlgorithm, SOURCE_REF);
     return in;
 }
-}
-}
+} // namespace engine
+} // namespace osrm
 
 // generate boost::program_options object for the routing part
 inline unsigned generateServerProgramOptions(const int argc,
@@ -119,7 +119,10 @@ inline unsigned generateServerProgramOptions(const int argc,
          "Load data from shared memory") //
         ("memory_file",
          value<boost::filesystem::path>(&config.memory_file),
-         "Store data in a memory mapped file rather than in process memory.") //
+         "DEPRECATED: Will behave the same as --mmap.")(
+            "mmap,m",
+            value<bool>(&config.use_mmap)->implicit_value(true)->default_value(false),
+            "Map datafiles directly, do not use any additional memory.") //
         ("dataset-name",
          value<std::string>(&config.dataset_name),
          "Name of the shared memory dataset to connect to.") //
@@ -273,10 +276,12 @@ int main(int argc, const char *argv[]) try
 
 #ifndef _WIN32
     int sig = 0;
-    sigset_t new_mask;
-    sigset_t old_mask;
-    sigfillset(&new_mask);
-    pthread_sigmask(SIG_BLOCK, &new_mask, &old_mask);
+    sigset_t wait_mask;
+    sigemptyset(&wait_mask);
+    sigaddset(&wait_mask, SIGINT);
+    sigaddset(&wait_mask, SIGQUIT);
+    sigaddset(&wait_mask, SIGTERM);
+    pthread_sigmask(SIG_BLOCK, &wait_mask, nullptr); // only block necessary signals
 #endif
 
     auto service_handler = std::make_unique<server::ServiceHandler>(config);
@@ -298,19 +303,13 @@ int main(int argc, const char *argv[]) try
         std::thread server_thread(std::move(server_task));
 
 #ifndef _WIN32
-        sigset_t wait_mask;
-        pthread_sigmask(SIG_SETMASK, &old_mask, nullptr);
-        sigemptyset(&wait_mask);
-        sigaddset(&wait_mask, SIGINT);
-        sigaddset(&wait_mask, SIGQUIT);
-        sigaddset(&wait_mask, SIGTERM);
-        pthread_sigmask(SIG_BLOCK, &wait_mask, nullptr);
         util::Log() << "running and waiting for requests";
         if (std::getenv("SIGNAL_PARENT_WHEN_READY"))
         {
             kill(getppid(), SIGUSR1);
         }
         sigwait(&wait_mask, &sig);
+        util::Log() << "received signal " << sig;
 #else
         // Set console control handler to allow server to be stopped.
         console_ctrl_function = std::bind(&server::Server::Stop, routing_server);

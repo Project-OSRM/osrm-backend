@@ -30,7 +30,11 @@ struct HeapData
 struct ManyToManyHeapData : HeapData
 {
     EdgeWeight duration;
-    ManyToManyHeapData(NodeID p, EdgeWeight duration) : HeapData(p), duration(duration) {}
+    EdgeDistance distance;
+    ManyToManyHeapData(NodeID p, EdgeWeight duration, EdgeDistance distance)
+        : HeapData(p), duration(duration), distance(distance)
+    {
+    }
 };
 
 template <> struct SearchEngineData<routing_algorithms::ch::Algorithm>
@@ -75,12 +79,16 @@ struct MultiLayerDijkstraHeapData
 struct ManyToManyMultiLayerDijkstraHeapData : MultiLayerDijkstraHeapData
 {
     EdgeWeight duration;
-    ManyToManyMultiLayerDijkstraHeapData(NodeID p, EdgeWeight duration)
-        : MultiLayerDijkstraHeapData(p), duration(duration)
+    EdgeDistance distance;
+    ManyToManyMultiLayerDijkstraHeapData(NodeID p, EdgeWeight duration, EdgeDistance distance)
+        : MultiLayerDijkstraHeapData(p), duration(duration), distance(distance)
     {
     }
-    ManyToManyMultiLayerDijkstraHeapData(NodeID p, bool from, EdgeWeight duration)
-        : MultiLayerDijkstraHeapData(p, from), duration(duration)
+    ManyToManyMultiLayerDijkstraHeapData(NodeID p,
+                                         bool from,
+                                         EdgeWeight duration,
+                                         EdgeDistance distance)
+        : MultiLayerDijkstraHeapData(p, from), duration(duration), distance(distance)
     {
     }
 };

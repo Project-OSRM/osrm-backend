@@ -20,13 +20,13 @@ namespace osrm
 namespace storage
 {
 
-class DataLayout;
+class BaseDataLayout;
 namespace serialization
 {
-inline void read(io::BufferReader &reader, DataLayout &layout);
+inline void read(io::BufferReader &reader, BaseDataLayout &layout);
 
-inline void write(io::BufferWriter &writer, const DataLayout &layout);
-}
+inline void write(io::BufferWriter &writer, const BaseDataLayout &layout);
+} // namespace serialization
 
 namespace detail
 {
@@ -52,44 +52,28 @@ inline std::string trimName(const std::string &name_prefix, const std::string &n
         return name;
     }
 }
-}
+} // namespace detail
 
-class DataLayout
+class BaseDataLayout
 {
   public:
-    DataLayout() : blocks{} {}
+    virtual ~BaseDataLayout() = default;
 
     inline void SetBlock(const std::string &name, Block block) { blocks[name] = std::move(block); }
 
-    inline uint64_t GetBlockEntries(const std::string &name) const
+    inline std::uint64_t GetBlockEntries(const std::string &name) const
     {
         return GetBlock(name).num_entries;
     }
 
-    inline uint64_t GetBlockSize(const std::string &name) const { return GetBlock(name).byte_size; }
+    inline std::uint64_t GetBlockSize(const std::string &name) const
+    {
+        return GetBlock(name).byte_size;
+    }
 
     inline bool HasBlock(const std::string &name) const
     {
         return blocks.find(name) != blocks.end();
-    }
-
-    inline uint64_t GetSizeOfLayout() const
-    {
-        uint64_t result = 0;
-        for (const auto &name_and_block : blocks)
-        {
-            result += GetBlockSize(name_and_block.first) + BLOCK_ALIGNMENT;
-        }
-        return result;
-    }
-
-    template <typename T> inline T *GetBlockPtr(char *shared_memory, const std::string &name) const
-    {
-        static_assert(BLOCK_ALIGNMENT % std::alignment_of<T>::value == 0,
-                      "Datatype does not fit alignment constraints.");
-
-        char *ptr = (char *)GetAlignedBlockPtr(shared_memory, name);
-        return (T *)ptr;
     }
 
     // Depending on the name prefix this function either lists all blocks with the same prefix
@@ -115,10 +99,10 @@ class DataLayout
         }
     }
 
-  private:
-    friend void serialization::read(io::BufferReader &reader, DataLayout &layout);
-    friend void serialization::write(io::BufferWriter &writer, const DataLayout &layout);
+    virtual inline void *GetBlockPtr(void *base_ptr, const std::string &name) const = 0;
+    virtual inline std::uint64_t GetSizeOfLayout() const = 0;
 
+  protected:
     const Block &GetBlock(const std::string &name) const
     {
         auto iter = blocks.find(name);
@@ -130,10 +114,42 @@ class DataLayout
         return iter->second;
     }
 
+    friend void serialization::read(io::BufferReader &reader, BaseDataLayout &layout);
+    friend void serialization::write(io::BufferWriter &writer, const BaseDataLayout &layout);
+
+    std::map<std::string, Block> blocks;
+};
+
+class ContiguousDataLayout final : public BaseDataLayout
+{
+  public:
+    inline std::uint64_t GetSizeOfLayout() const override final
+    {
+        std::uint64_t result = 0;
+        for (const auto &name_and_block : blocks)
+        {
+            result += GetBlockSize(name_and_block.first) + BLOCK_ALIGNMENT;
+        }
+        return result;
+    }
+
+    inline void *GetBlockPtr(void *base_ptr, const std::string &name) const override final
+    {
+        // TODO: re-enable this alignment checking somehow
+        // static_assert(BLOCK_ALIGNMENT % std::alignment_of<T>::value == 0,
+        //               "Datatype does not fit alignment constraints.");
+
+        return GetAlignedBlockPtr(base_ptr, name);
+    }
+
+  private:
+    friend void serialization::read(io::BufferReader &reader, BaseDataLayout &layout);
+    friend void serialization::write(io::BufferWriter &writer, const BaseDataLayout &layout);
+
     // Fit aligned storage in buffer to 64 bytes to conform with AVX 512 types
     inline void *align(void *&ptr) const noexcept
     {
-        const auto intptr = reinterpret_cast<uintptr_t>(ptr);
+        const auto intptr = reinterpret_cast<std::uintptr_t>(ptr);
         const auto aligned = (intptr - 1u + BLOCK_ALIGNMENT) & -BLOCK_ALIGNMENT;
         return ptr = reinterpret_cast<void *>(aligned);
     }
@@ -157,7 +173,27 @@ class DataLayout
     }
 
     static constexpr std::size_t BLOCK_ALIGNMENT = 64;
-    std::map<std::string, Block> blocks;
+};
+
+class TarDataLayout final : public BaseDataLayout
+{
+  public:
+    inline std::uint64_t GetSizeOfLayout() const override final
+    {
+        std::uint64_t result = 0;
+        for (const auto &name_and_block : blocks)
+        {
+            result += GetBlockSize(name_and_block.first);
+        }
+        return result;
+    }
+
+    inline void *GetBlockPtr(void *base_ptr, const std::string &name) const override final
+    {
+        auto offset = GetBlock(name).offset;
+        const auto offset_address = reinterpret_cast<std::uintptr_t>(base_ptr) + offset;
+        return reinterpret_cast<void *>(offset_address);
+    }
 };
 
 struct SharedRegion
@@ -165,7 +201,7 @@ struct SharedRegion
     static constexpr const int MAX_NAME_LENGTH = 254;
 
     SharedRegion() : name{0}, timestamp{0} {}
-    SharedRegion(const std::string &name_, std::uint64_t timestamp, std::uint8_t shm_key)
+    SharedRegion(const std::string &name_, std::uint64_t timestamp, std::uint16_t shm_key)
         : name{0}, timestamp{timestamp}, shm_key{shm_key}
     {
         std::copy_n(name_.begin(), std::min<std::size_t>(MAX_NAME_LENGTH, name_.size()), name);
@@ -175,14 +211,14 @@ struct SharedRegion
 
     char name[MAX_NAME_LENGTH + 1];
     std::uint64_t timestamp;
-    std::uint8_t shm_key;
+    std::uint16_t shm_key;
 };
 
 // Keeps a list of all shared regions in a fixed-sized struct
 // for fast access and deserialization.
 struct SharedRegionRegister
 {
-    using RegionID = std::uint8_t;
+    using RegionID = std::uint16_t;
     static constexpr const RegionID INVALID_REGION_ID = std::numeric_limits<RegionID>::max();
     using ShmKey = decltype(SharedRegion::shm_key);
 
@@ -250,12 +286,11 @@ struct SharedRegionRegister
 
     void ReleaseKey(ShmKey key) { shm_key_in_use[key] = false; }
 
-    static constexpr const std::uint8_t MAX_SHARED_REGIONS =
-        std::numeric_limits<RegionID>::max() - 1;
+    static constexpr const std::size_t MAX_SHARED_REGIONS = 512;
     static_assert(MAX_SHARED_REGIONS < std::numeric_limits<RegionID>::max(),
                   "Number of shared memory regions needs to be less than the region id size.");
 
-    static constexpr const std::uint8_t MAX_SHM_KEYS = std::numeric_limits<std::uint8_t>::max() - 1;
+    static constexpr const std::size_t MAX_SHM_KEYS = MAX_SHARED_REGIONS * 2;
 
     static constexpr const char *name = "osrm-region";
 
@@ -263,7 +298,7 @@ struct SharedRegionRegister
     std::array<SharedRegion, MAX_SHARED_REGIONS> regions;
     std::array<bool, MAX_SHM_KEYS> shm_key_in_use;
 };
-}
-}
+} // namespace storage
+} // namespace osrm
 
 #endif /* SHARED_DATA_TYPE_HPP */

@@ -75,28 +75,35 @@ template <storage::Ownership Ownership> class CellStorageImpl
 
     // Implementation of the cell view. We need a template parameter here
     // because we need to derive a read-only and read-write view from this.
-    template <typename WeightValueT, typename DurationValueT> class CellImpl
+    template <typename WeightValueT, typename DurationValueT, typename DistanceValueT>
+    class CellImpl
     {
       private:
         using WeightPtrT = WeightValueT *;
         using DurationPtrT = DurationValueT *;
+        using DistancePtrT = DistanceValueT *;
         BoundarySize num_source_nodes;
         BoundarySize num_destination_nodes;
 
         WeightPtrT const weights;
         DurationPtrT const durations;
+        DistancePtrT const distances;
         const NodeID *const source_boundary;
         const NodeID *const destination_boundary;
 
         using RowIterator = WeightPtrT;
         // Possibly replace with
         // http://www.boost.org/doc/libs/1_55_0/libs/range/doc/html/range/reference/adaptors/reference/strided.html
-        class ColumnIterator : public boost::iterator_facade<ColumnIterator,
-                                                             WeightValueT,
+
+        template <typename ValuePtrT>
+        class ColumnIterator : public boost::iterator_facade<ColumnIterator<ValuePtrT>,
+                                                             decltype(*std::declval<ValuePtrT>()),
                                                              boost::random_access_traversal_tag>
         {
-            typedef boost::iterator_facade<ColumnIterator,
-                                           WeightValueT,
+
+            using ValueT = decltype(*std::declval<ValuePtrT>());
+            typedef boost::iterator_facade<ColumnIterator<ValueT>,
+                                           ValueT,
                                            boost::random_access_traversal_tag>
                 base_t;
 
@@ -108,7 +115,7 @@ template <storage::Ownership Ownership> class CellStorageImpl
 
             explicit ColumnIterator() : current(nullptr), stride(1) {}
 
-            explicit ColumnIterator(WeightPtrT begin, std::size_t row_length)
+            explicit ColumnIterator(ValuePtrT begin, std::size_t row_length)
                 : current(begin), stride(row_length)
             {
                 BOOST_ASSERT(begin != nullptr);
@@ -126,7 +133,7 @@ template <storage::Ownership Ownership> class CellStorageImpl
             }
 
             friend class ::boost::iterator_core_access;
-            WeightPtrT current;
+            ValuePtrT current;
             const std::size_t stride;
         };
 
@@ -147,12 +154,13 @@ template <storage::Ownership Ownership> class CellStorageImpl
             auto iter =
                 std::find(destination_boundary, destination_boundary + num_destination_nodes, node);
             if (iter == destination_boundary + num_destination_nodes)
-                return boost::make_iterator_range(ColumnIterator{}, ColumnIterator{});
+                return boost::make_iterator_range(ColumnIterator<ValuePtr>{},
+                                                  ColumnIterator<ValuePtr>{});
 
             auto column = std::distance(destination_boundary, iter);
-            auto begin = ColumnIterator{ptr + column, num_destination_nodes};
-            auto end = ColumnIterator{ptr + column + num_source_nodes * num_destination_nodes,
-                                      num_destination_nodes};
+            auto begin = ColumnIterator<ValuePtr>{ptr + column, num_destination_nodes};
+            auto end = ColumnIterator<ValuePtr>{
+                ptr + column + num_source_nodes * num_destination_nodes, num_destination_nodes};
             return boost::make_iterator_range(begin, end);
         }
 
@@ -164,6 +172,10 @@ template <storage::Ownership Ownership> class CellStorageImpl
         auto GetOutDuration(NodeID node) const { return GetOutRange(durations, node); }
 
         auto GetInDuration(NodeID node) const { return GetInRange(durations, node); }
+
+        auto GetInDistance(NodeID node) const { return GetInRange(distances, node); }
+
+        auto GetOutDistance(NodeID node) const { return GetOutRange(distances, node); }
 
         auto GetSourceNodes() const
         {
@@ -179,17 +191,20 @@ template <storage::Ownership Ownership> class CellStorageImpl
         CellImpl(const CellData &data,
                  WeightPtrT const all_weights,
                  DurationPtrT const all_durations,
+                 DistancePtrT const all_distances,
                  const NodeID *const all_sources,
                  const NodeID *const all_destinations)
             : num_source_nodes{data.num_source_nodes},
               num_destination_nodes{data.num_destination_nodes},
               weights{all_weights + data.value_offset},
               durations{all_durations + data.value_offset},
+              distances{all_distances + data.value_offset},
               source_boundary{all_sources + data.source_boundary_offset},
               destination_boundary{all_destinations + data.destination_boundary_offset}
         {
             BOOST_ASSERT(all_weights != nullptr);
             BOOST_ASSERT(all_durations != nullptr);
+            BOOST_ASSERT(all_distances != nullptr);
             BOOST_ASSERT(num_source_nodes == 0 || all_sources != nullptr);
             BOOST_ASSERT(num_destination_nodes == 0 || all_destinations != nullptr);
         }
@@ -201,7 +216,8 @@ template <storage::Ownership Ownership> class CellStorageImpl
                  const NodeID *const all_destinations)
             : num_source_nodes{data.num_source_nodes},
               num_destination_nodes{data.num_destination_nodes}, weights{nullptr},
-              durations{nullptr}, source_boundary{all_sources + data.source_boundary_offset},
+              durations{nullptr}, distances{nullptr},
+              source_boundary{all_sources + data.source_boundary_offset},
               destination_boundary{all_destinations + data.destination_boundary_offset}
         {
             BOOST_ASSERT(num_source_nodes == 0 || all_sources != nullptr);
@@ -212,8 +228,8 @@ template <storage::Ownership Ownership> class CellStorageImpl
     std::size_t LevelIDToIndex(LevelID level) const { return level - 1; }
 
   public:
-    using Cell = CellImpl<EdgeWeight, EdgeDuration>;
-    using ConstCell = CellImpl<const EdgeWeight, const EdgeDuration>;
+    using Cell = CellImpl<EdgeWeight, EdgeDuration, EdgeDistance>;
+    using ConstCell = CellImpl<const EdgeWeight, const EdgeDuration, const EdgeDistance>;
 
     CellStorageImpl() {}
 
@@ -361,6 +377,7 @@ template <storage::Ownership Ownership> class CellStorageImpl
 
         metric.weights.resize(total_size + 1, INVALID_EDGE_WEIGHT);
         metric.durations.resize(total_size + 1, MAXIMAL_EDGE_DURATION);
+        metric.distances.resize(total_size + 1, INVALID_EDGE_DISTANCE);
 
         return metric;
     }
@@ -388,6 +405,7 @@ template <storage::Ownership Ownership> class CellStorageImpl
         return ConstCell{cells[cell_index],
                          metric.weights.data(),
                          metric.durations.data(),
+                         metric.distances.data(),
                          source_boundary.empty() ? nullptr : source_boundary.data(),
                          destination_boundary.empty() ? nullptr : destination_boundary.data()};
     }
@@ -415,6 +433,7 @@ template <storage::Ownership Ownership> class CellStorageImpl
         return Cell{cells[cell_index],
                     metric.weights.data(),
                     metric.durations.data(),
+                    metric.distances.data(),
                     source_boundary.data(),
                     destination_boundary.data()};
     }
