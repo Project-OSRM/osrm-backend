@@ -465,6 +465,7 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
                             EdgeDuration{0});
 
         EdgeDistance forward_distance_offset = 0;
+        // Sum up the distance from the start to the fwd_segment_position
         for (auto current = forward_geometry.begin();
              current < forward_geometry.begin() + data.fwd_segment_position;
              ++current)
@@ -494,8 +495,9 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
                             EdgeDuration{0});
 
         EdgeDistance reverse_distance_offset = 0;
-        for (auto current = forward_geometry.begin();
-             current < forward_geometry.end() - data.fwd_segment_position - 2;
+        // Sum up the distance from just after the fwd_segment_position to the end
+        for (auto current = forward_geometry.begin() + data.fwd_segment_position + 1;
+             current != std::prev(forward_geometry.end());
              ++current)
         {
             reverse_distance_offset += util::coordinate_calculation::fccApproximateDistance(
