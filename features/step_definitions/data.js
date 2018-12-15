@@ -295,7 +295,7 @@ module.exports = function () {
         this.reprocess(callback);
     });
 
-    this.Given(/^osrm\-routed is stopped$/, (callback) => {
+    this.Given(/^osrm-routed is stopped$/, (callback) => {
         this.OSRMLoader.shutdown(callback);
     });
 

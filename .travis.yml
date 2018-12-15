@@ -54,7 +54,6 @@ matrix:
         - nvm use $NODE
         - npm --version
         - npm ci --ignore-scripts
-        - npm link --ignore-scripts
       script:
         - ./scripts/check_taginfo.py taginfo.json profiles/car.lua
         - ${MASON} install clang-format 3.8.1

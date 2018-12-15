@@ -69,7 +69,7 @@ module.exports = function () {
                                 outputRow[direction] = result[direction].status ?
                                     'x' : '';
                                 break;
-                            case /^[\d\.]+ s/.test(want):
+                            case /^[\d.]+ s/.test(want):
                                 // the result here can come back as a non-number value like
                                 // `diff`, but we only want to apply the unit when it comes
                                 // back as a number, for tableDiff's literal comparison

@@ -29,7 +29,7 @@ module.exports = function() {
 
             // setup cache for feature data
             // if OSRM_PROFILE is set to force a specific profile, then
-             // include the profile name in the hash of the profile file
+            // include the profile name in the hash of the profile file
             hash.hashOfFile(uri, this.OSRM_PROFILE, (err, hash) => {
                 if (err) return callback(err);
 
@@ -45,10 +45,10 @@ module.exports = function() {
                 this.featureProcessedCacheDirectories[uri] = featureProcessedCacheDirectory;
 
                 d3.queue(1)
-                  .defer(mkdirp, featureProcessedCacheDirectory)
-                  .defer(this.cleanupFeatureCache.bind(this), featureCacheDirectory, hash)
-                  .defer(this.cleanupProcessedFeatureCache.bind(this), featureProcessedCacheDirectory, this.osrmHash)
-                  .awaitAll(callback);
+                    .defer(mkdirp, featureProcessedCacheDirectory)
+                    .defer(this.cleanupFeatureCache.bind(this), featureCacheDirectory, hash)
+                    .defer(this.cleanupProcessedFeatureCache.bind(this), featureProcessedCacheDirectory, this.osrmHash)
+                    .awaitAll(callback);
             });
         }
 
@@ -87,7 +87,7 @@ module.exports = function() {
         fs.readdir(parentPath, (err, files) => {
             let q = d3.queue();
             files.filter(name => { return name !== featureHash;})
-                 .map((f) => { q.defer(rimraf, path.join(parentPath, f)); });
+                .map((f) => { q.defer(rimraf, path.join(parentPath, f)); });
             q.awaitAll(callback);
         });
     };
@@ -145,7 +145,7 @@ module.exports = function() {
 
     // converts the scenario titles in file prefixes
     this.getScenarioID = (scenario) => {
-        let name = scenario.getName().toLowerCase().replace(/[\/\-'=,\(\):\*#]/g, '')
+        let name = scenario.getName().toLowerCase().replace(/[/\-'=,():*#]/g, '')
             .replace(/\s/g, '_').replace(/__/g, '_').replace(/\.\./g, '.')
             .substring(0, 64);
         return util.format('%d_%s', scenario.getLine(), name);
