@@ -294,11 +294,14 @@ inline auto make_filtered_cell_metric_view(const SharedDataIndex &index,
     auto prefix = name + "/exclude/" + std::to_string(exclude_index);
     auto weights_block_id = prefix + "/weights";
     auto durations_block_id = prefix + "/durations";
+    auto distances_block_id = prefix + "/distances";
 
     auto weights = make_vector_view<EdgeWeight>(index, weights_block_id);
     auto durations = make_vector_view<EdgeDuration>(index, durations_block_id);
+    auto distances = make_vector_view<EdgeDistance>(index, distances_block_id);
 
-    return customizer::CellMetricView{std::move(weights), std::move(durations)};
+    return customizer::CellMetricView{
+        std::move(weights), std::move(durations), std::move(distances)};
 }
 
 inline auto make_cell_metric_view(const SharedDataIndex &index, const std::string &name)
@@ -311,12 +314,14 @@ inline auto make_cell_metric_view(const SharedDataIndex &index, const std::strin
     {
         auto weights_block_id = prefix + "/weights";
         auto durations_block_id = prefix + "/durations";
+        auto distances_block_id = prefix + "/distances";
 
         auto weights = make_vector_view<EdgeWeight>(index, weights_block_id);
         auto durations = make_vector_view<EdgeDuration>(index, durations_block_id);
+        auto distances = make_vector_view<EdgeDistance>(index, distances_block_id);
 
-        cell_metric_excludes.push_back(
-            customizer::CellMetricView{std::move(weights), std::move(durations)});
+        cell_metric_excludes.push_back(customizer::CellMetricView{
+            std::move(weights), std::move(durations), std::move(distances)});
     }
 
     return cell_metric_excludes;
@@ -332,6 +337,7 @@ inline auto make_multi_level_graph_view(const SharedDataIndex &index, const std:
         index, name + "/node_to_edge_offset");
     auto node_weights = make_vector_view<EdgeWeight>(index, name + "/node_weights");
     auto node_durations = make_vector_view<EdgeDuration>(index, name + "/node_durations");
+    auto node_distances = make_vector_view<EdgeDistance>(index, name + "/node_distances");
     auto is_forward_edge = make_vector_view<bool>(index, name + "/is_forward_edge");
     auto is_backward_edge = make_vector_view<bool>(index, name + "/is_backward_edge");
 
@@ -340,6 +346,7 @@ inline auto make_multi_level_graph_view(const SharedDataIndex &index, const std:
                                                     std::move(node_to_offset),
                                                     std::move(node_weights),
                                                     std::move(node_durations),
+                                                    std::move(node_distances),
                                                     std::move(is_forward_edge),
                                                     std::move(is_backward_edge));
 }

@@ -153,7 +153,7 @@ double perpendicularDistance(const Coordinate segment_source,
                               web_mercator::fromWGS84(query_location));
     nearest_location = web_mercator::toWGS84(projected_nearest);
 
-    const double approximate_distance = greatCircleDistance(query_location, nearest_location);
+    const double approximate_distance = fccApproximateDistance(query_location, nearest_location);
     BOOST_ASSERT(0.0 <= approximate_distance);
     return approximate_distance;
 }

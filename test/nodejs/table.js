@@ -234,7 +234,7 @@ tables.forEach(function(annotation) {
     });
 
     test('table: ' + annotation + ' table in Monaco without motorways', function(assert) {
-        assert.plan(1);
+        assert.plan(2);
         var osrm = new OSRM({path: mld_data_path, algorithm: 'MLD'});
         var options = {
             coordinates: two_test_coordinates,
@@ -243,7 +243,65 @@ tables.forEach(function(annotation) {
         };
         osrm.table(options, function(err, response) {
             assert.equal(response[annotation].length, 2);
+            assert.strictEqual(response.fallback_speed_cells, undefined);
         });
+    });
+
+    test('table: ' + annotation + ' table in Monaco with fallback speeds', function(assert) {
+        assert.plan(2);
+        var osrm = new OSRM({path: mld_data_path, algorithm: 'MLD'});
+        var options = {
+            coordinates: two_test_coordinates,
+            annotations: [annotation.slice(0,-1)],
+            fallback_speed: 1,
+            fallback_coordinate: 'input'
+        };
+        osrm.table(options, function(err, response) {
+            assert.equal(response[annotation].length, 2);
+            assert.equal(response['fallback_speed_cells'].length, 0);
+        });
+    });
+
+    test('table: ' + annotation + ' table in Monaco with invalid fallback speeds and fallback coordinates', function(assert) {
+        assert.plan(4);
+        var osrm = new OSRM({path: mld_data_path, algorithm: 'MLD'});
+        var options = {
+            coordinates: two_test_coordinates,
+            annotations: [annotation.slice(0,-1)],
+            fallback_speed: -1
+        };
+
+        assert.throws(()=>osrm.table(options, (err, res) => {}), /fallback_speed must be > 0/, "should throw on invalid fallback_speeds");
+
+        options.fallback_speed = '10';
+        assert.throws(()=>osrm.table(options, (err, res) => {}), /fallback_speed must be a number/, "should throw on invalid fallback_speeds");
+
+        options.fallback_speed = 10;
+        options.fallback_coordinate = 'bla';
+        assert.throws(()=>osrm.table(options, (err, res) => {}), /fallback_coordinate' param must be one of \[input, snapped\]/, "should throw on invalid fallback_coordinate");
+
+        options.fallback_coordinate = 10;
+        assert.throws(()=>osrm.table(options, (err, res) => {}), /fallback_coordinate must be a string: \[input, snapped\]/, "should throw on invalid fallback_coordinate");
+
+    });
+
+    test('table: ' + annotation + ' table in Monaco with invalid scale factor', function(assert) {
+        assert.plan(3);
+        var osrm = new OSRM({path: mld_data_path, algorithm: 'MLD'});
+        var options = {
+            coordinates: two_test_coordinates,
+            annotations: [annotation.slice(0,-1)],
+            scale_factor: -1
+        };
+
+        assert.throws(()=>osrm.table(options, (err, res) => {}), /scale_factor must be > 0/, "should throw on invalid scale_factor value");
+
+        options.scale_factor = '-1';
+        assert.throws(()=>osrm.table(options, (err, res) => {}), /scale_factor must be a number/, "should throw on invalid scale_factor value");
+
+        options.scale_factor = 0;
+        assert.throws(()=>osrm.table(options, (err, res) => {}), /scale_factor must be > 0/, "should throw on invalid scale_factor value");
+
     });
 });
 

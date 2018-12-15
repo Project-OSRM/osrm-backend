@@ -35,22 +35,28 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/filesystem/path.hpp>
 
 #include <string>
+#include <vector>
 
 namespace osrm
 {
 namespace storage
 {
+
+void populateLayoutFromFile(const boost::filesystem::path &path, storage::BaseDataLayout &layout);
+
 class Storage
 {
   public:
     Storage(StorageConfig config);
 
     int Run(int max_wait, const std::string &name, bool only_metric);
-
-    void PopulateStaticLayout(DataLayout &layout);
-    void PopulateUpdatableLayout(DataLayout &layout);
     void PopulateStaticData(const SharedDataIndex &index);
     void PopulateUpdatableData(const SharedDataIndex &index);
+    void PopulateLayout(storage::BaseDataLayout &layout,
+                        const std::vector<std::pair<bool, boost::filesystem::path>> &files);
+    std::string PopulateLayoutWithRTree(storage::BaseDataLayout &layout);
+    std::vector<std::pair<bool, boost::filesystem::path>> GetUpdatableFiles();
+    std::vector<std::pair<bool, boost::filesystem::path>> GetStaticFiles();
 
   private:
     StorageConfig config;

@@ -53,13 +53,15 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
     std::vector<PhantomNodeWithDistance>
     NearestPhantomNodesInRange(const util::Coordinate input_coordinate,
                                const double max_distance,
-                               const Approach approach) const
+                               const Approach approach,
+                               const bool use_all_edges) const
     {
         auto results = rtree.Nearest(
             input_coordinate,
-            [this, approach, &input_coordinate](const CandidateSegment &segment) {
-                return boolPairAnd(boolPairAnd(HasValidEdge(segment), CheckSegmentExclude(segment)),
-                                   CheckApproach(input_coordinate, segment, approach));
+            [this, approach, &input_coordinate, use_all_edges](const CandidateSegment &segment) {
+                return boolPairAnd(
+                    boolPairAnd(HasValidEdge(segment, use_all_edges), CheckSegmentExclude(segment)),
+                    CheckApproach(input_coordinate, segment, approach));
             },
             [this, max_distance, input_coordinate](const std::size_t,
                                                    const CandidateSegment &segment) {
@@ -76,15 +78,17 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
                                const double max_distance,
                                const int bearing,
                                const int bearing_range,
-                               const Approach approach) const
+                               const Approach approach,
+                               const bool use_all_edges) const
     {
         auto results = rtree.Nearest(
             input_coordinate,
-            [this, approach, &input_coordinate, bearing, bearing_range](
+            [this, approach, &input_coordinate, bearing, bearing_range, use_all_edges](
                 const CandidateSegment &segment) {
                 auto use_direction =
                     boolPairAnd(CheckSegmentBearing(segment, bearing, bearing_range),
-                                boolPairAnd(HasValidEdge(segment), CheckSegmentExclude(segment)));
+                                boolPairAnd(HasValidEdge(segment, use_all_edges),
+                                            CheckSegmentExclude(segment)));
                 use_direction =
                     boolPairAnd(use_direction, CheckApproach(input_coordinate, segment, approach));
                 return use_direction;
@@ -628,7 +632,8 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
      * which means that this edge is not currently traversible.  If this is the case,
      * then we shouldn't snap to this edge.
      */
-    std::pair<bool, bool> HasValidEdge(const CandidateSegment &segment) const
+    std::pair<bool, bool> HasValidEdge(const CandidateSegment &segment,
+                                       const bool use_all_edges = false) const
     {
 
         bool forward_edge_valid = false;
@@ -651,6 +656,9 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
         {
             reverse_edge_valid = data.reverse_segment_id.enabled;
         }
+
+        forward_edge_valid = forward_edge_valid && (data.is_startpoint || use_all_edges);
+        reverse_edge_valid = reverse_edge_valid && (data.is_startpoint || use_all_edges);
 
         return std::make_pair(forward_edge_valid, reverse_edge_valid);
     }

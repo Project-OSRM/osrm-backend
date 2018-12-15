@@ -32,7 +32,7 @@ module.exports = function () {
         this.DEFAULT_ENVIRONMENT = Object.assign({STXXLCFG: stxxl_config}, process.env);
         this.DEFAULT_PROFILE = 'bicycle';
         this.DEFAULT_INPUT_FORMAT = 'osm';
-        this.DEFAULT_LOAD_METHOD = 'datastore';
+        this.DEFAULT_LOAD_METHOD = process.argv[process.argv.indexOf('-m') +1].match('mmap') ? 'mmap' : 'datastore';
         this.DEFAULT_ORIGIN = [1,1];
         this.OSM_USER = 'osrm';
         this.OSM_UID = 1;
@@ -80,7 +80,7 @@ module.exports = function () {
 
         // eslint-disable-next-line no-console
         console.info(util.format('Node Version', process.version));
-        if (parseInt(process.version.match(/v(\d)/)[1]) < 4) throw new Error('*** Please upgrade to Node 4.+ to run OSRM cucumber tests');
+        if (parseInt(process.version.match(/v(\d+)/)[1]) < 4) throw new Error('*** Please upgrade to Node 4.+ to run OSRM cucumber tests');
 
         fs.exists(this.TEST_PATH, (exists) => {
             if (exists)

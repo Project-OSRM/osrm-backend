@@ -1,7 +1,34 @@
 # UNRELEASED
-  - Changes from 5.19.0:
+  - Changes from 5.20.0
+    - Features:
+      - ADDED: all waypoints in responses now contain a distance property between the original coordinate and the snapped location. [#5255](https://github.com/Project-OSRM/osrm-backend/pull/5255)
+      - ADDED: if `fallback_speed` is used, a new structure `fallback_speed_cells` will describe which cells contain estimated values [#5259](https://github.com/Project-OSRM/osrm-backend/pull/5259)
+      - REMOVED: we no longer publish Node 4 or 6 binary modules (they are still buildable from source) [#5314](https://github.com/Project-OSRM/osrm-backend/pull/5314)
+    - Table:
+      - ADDED: new parameter `scale_factor` which will scale the cell `duration` values by this factor. [#5298](https://github.com/Project-OSRM/osrm-backend/pull/5298)
+      - FIXED: only trigger `scale_factor` code to scan matrix when necessary. [#5303](https://github.com/Project-OSRM/osrm-backend/pull/5303)
+    - Docker:
+      - FIXED: use consistent boost version between build and runtime [#5311](https://github.com/Project-OSRM/osrm-backend/pull/5311)
+      - FIXED: don't override default permissions on /opt [#5311](https://github.com/Project-OSRM/osrm-backend/pull/5311)
+    - Matching:
+      - CHANGED: matching will now consider edges marked with is_startpoint=false, allowing matching over ferries and other previously non-matchable edge types. [#5297](https://github.com/Project-OSRM/osrm-backend/pull/5297)
     - Profile:
       - ADDED: Parse `source:maxspeed` and `maxspeed:type` tags to apply maxspeeds and add belgian flanders rural speed limit. [#5217](https://github.com/Project-OSRM/osrm-backend/pull/5217)
+
+# 5.20.0
+  - Changes from 5.19.0:
+    - Table:
+      - CHANGED: switch to pre-calculated distances for table responses for large speedup and 10% memory increase. [#5251](https://github.com/Project-OSRM/osrm-backend/pull/5251)
+      - ADDED: new parameter `fallback_speed` which will fill `null` cells with estimated value [#5257](https://github.com/Project-OSRM/osrm-backend/pull/5257)
+      - CHANGED: Remove API check for matrix sources/destination length to be less than or equal to coordinates length. [#5298](https://github.com/Project-OSRM/osrm-backend/pull/5289)
+      - FIXED: Fix crashing bug when using fallback_speed parameter with more sources than destinations. [#5291](https://github.com/Project-OSRM/osrm-backend/pull/5291)
+    - Features:
+      - ADDED: direct mmapping of datafiles is now supported via the `--mmap` switch. [#5242](https://github.com/Project-OSRM/osrm-backend/pull/5242)
+      - REMOVED: the previous `--memory_file` switch is now deprecated and will fallback to `--mmap` [#5242](https://github.com/Project-OSRM/osrm-backend/pull/5242)
+      - ADDED: Now publishing Node 10.x LTS binary modules [#5246](https://github.com/Project-OSRM/osrm-backend/pull/5246)
+    - Windows:
+      - FIXED: Windows builds again. [#5249](https://github.com/Project-OSRM/osrm-backend/pull/5249)
+
 # 5.19.0
   - Changes from 5.18.0:
     - Optimizations:

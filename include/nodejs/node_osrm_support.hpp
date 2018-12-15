@@ -142,6 +142,10 @@ inline engine_config_ptr argumentsToEngineConfig(const Nan::FunctionCallbackInfo
     if (shared_memory.IsEmpty())
         return engine_config_ptr();
 
+    auto mmap_memory = params->Get(Nan::New("mmap_memory").ToLocalChecked());
+    if (mmap_memory.IsEmpty())
+        return engine_config_ptr();
+
     if (!memory_file->IsUndefined())
     {
         if (path->IsUndefined())
@@ -187,6 +191,18 @@ inline engine_config_ptr argumentsToEngineConfig(const Nan::FunctionCallbackInfo
         else
         {
             Nan::ThrowError("Shared_memory option must be a boolean");
+            return engine_config_ptr();
+        }
+    }
+    if (!mmap_memory->IsUndefined())
+    {
+        if (mmap_memory->IsBoolean())
+        {
+            engine_config->use_mmap = Nan::To<bool>(mmap_memory).FromJust();
+        }
+        else
+        {
+            Nan::ThrowError("mmap_memory option must be a boolean");
             return engine_config_ptr();
         }
     }
@@ -1165,6 +1181,70 @@ argumentsToTableParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
                 return table_parameters_ptr();
             }
         }
+    }
+
+    if (obj->Has(Nan::New("fallback_speed").ToLocalChecked()))
+    {
+        auto fallback_speed = obj->Get(Nan::New("fallback_speed").ToLocalChecked());
+
+        if (!fallback_speed->IsNumber())
+        {
+            Nan::ThrowError("fallback_speed must be a number");
+            return table_parameters_ptr();
+        }
+        else if (fallback_speed->NumberValue() <= 0)
+        {
+            Nan::ThrowError("fallback_speed must be > 0");
+            return table_parameters_ptr();
+        }
+
+        params->fallback_speed = static_cast<double>(fallback_speed->NumberValue());
+    }
+
+    if (obj->Has(Nan::New("fallback_coordinate").ToLocalChecked()))
+    {
+        auto fallback_coordinate = obj->Get(Nan::New("fallback_coordinate").ToLocalChecked());
+
+        if (!fallback_coordinate->IsString())
+        {
+            Nan::ThrowError("fallback_coordinate must be a string: [input, snapped]");
+            return table_parameters_ptr();
+        }
+
+        std::string fallback_coordinate_str = *v8::String::Utf8Value(fallback_coordinate);
+
+        if (fallback_coordinate_str == "snapped")
+        {
+            params->fallback_coordinate_type =
+                osrm::TableParameters::FallbackCoordinateType::Snapped;
+        }
+        else if (fallback_coordinate_str == "input")
+        {
+            params->fallback_coordinate_type = osrm::TableParameters::FallbackCoordinateType::Input;
+        }
+        else
+        {
+            Nan::ThrowError("'fallback_coordinate' param must be one of [input, snapped]");
+            return table_parameters_ptr();
+        }
+    }
+
+    if (obj->Has(Nan::New("scale_factor").ToLocalChecked()))
+    {
+        auto scale_factor = obj->Get(Nan::New("scale_factor").ToLocalChecked());
+
+        if (!scale_factor->IsNumber())
+        {
+            Nan::ThrowError("scale_factor must be a number");
+            return table_parameters_ptr();
+        }
+        else if (scale_factor->NumberValue() <= 0)
+        {
+            Nan::ThrowError("scale_factor must be > 0");
+            return table_parameters_ptr();
+        }
+
+        params->scale_factor = static_cast<double>(scale_factor->NumberValue());
     }
 
     return params;

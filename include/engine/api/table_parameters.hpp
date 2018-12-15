@@ -59,6 +59,15 @@ struct TableParameters : public BaseParameters
 {
     std::vector<std::size_t> sources;
     std::vector<std::size_t> destinations;
+    double fallback_speed = INVALID_FALLBACK_SPEED;
+
+    enum class FallbackCoordinateType
+    {
+        Input = 0,
+        Snapped = 1
+    };
+
+    FallbackCoordinateType fallback_coordinate_type = FallbackCoordinateType::Input;
 
     enum class AnnotationsType
     {
@@ -69,6 +78,8 @@ struct TableParameters : public BaseParameters
     };
 
     AnnotationsType annotations = AnnotationsType::Duration;
+
+    double scale_factor = 1;
 
     TableParameters() = default;
     template <typename... Args>
@@ -90,6 +101,22 @@ struct TableParameters : public BaseParameters
     {
     }
 
+    template <typename... Args>
+    TableParameters(std::vector<std::size_t> sources_,
+                    std::vector<std::size_t> destinations_,
+                    const AnnotationsType annotations_,
+                    double fallback_speed_,
+                    FallbackCoordinateType fallback_coordinate_type_,
+                    double scale_factor_,
+                    Args... args_)
+        : BaseParameters{std::forward<Args>(args_)...}, sources{std::move(sources_)},
+          destinations{std::move(destinations_)}, fallback_speed{fallback_speed_},
+          fallback_coordinate_type{fallback_coordinate_type_}, annotations{annotations_},
+          scale_factor{scale_factor_}
+
+    {
+    }
+
     bool IsValid() const
     {
         if (!BaseParameters::IsValid())
@@ -101,20 +128,19 @@ struct TableParameters : public BaseParameters
 
         // 1/ The user is able to specify duplicates in srcs and dsts, in that case it's their fault
 
-        // 2/ len(srcs) and len(dsts) smaller or equal to len(locations)
-        if (sources.size() > coordinates.size())
-            return false;
-
-        if (destinations.size() > coordinates.size())
-            return false;
-
-        // 3/ 0 <= index < len(locations)
+        // 2/ 0 <= index < len(locations)
         const auto not_in_range = [this](const std::size_t x) { return x >= coordinates.size(); };
 
         if (std::any_of(begin(sources), end(sources), not_in_range))
             return false;
 
         if (std::any_of(begin(destinations), end(destinations), not_in_range))
+            return false;
+
+        if (fallback_speed <= 0)
+            return false;
+
+        if (scale_factor <= 0)
             return false;
 
         return true;

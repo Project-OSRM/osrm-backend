@@ -229,7 +229,8 @@ class ContiguousInternalMemoryDataFacade<routing_algorithms::offline::Algorithm>
                                const float /*max_distance*/,
                                const int /*bearing*/,
                                const int /*bearing_range*/,
-                               const Approach /*approach*/) const override
+                               const Approach /*approach*/,
+                               const bool /*use_all_edges*/) const override
     {
         return {};
     }
@@ -237,7 +238,8 @@ class ContiguousInternalMemoryDataFacade<routing_algorithms::offline::Algorithm>
     std::vector<PhantomNodeWithDistance>
     NearestPhantomNodesInRange(const util::Coordinate /*input_coordinate*/,
                                const float /*max_distance*/,
-                               const Approach /*approach*/) const override
+                               const Approach /*approach*/,
+                               const bool /*use_all_edges*/) const override
     {
         return {};
     }

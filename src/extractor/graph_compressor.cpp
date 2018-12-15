@@ -259,6 +259,7 @@ void GraphCompressor::Compress(
                 const auto forward_weight2 = fwd_edge_data2.weight;
                 const auto forward_duration1 = fwd_edge_data1.duration;
                 const auto forward_duration2 = fwd_edge_data2.duration;
+                const auto forward_distance2 = fwd_edge_data2.distance;
 
                 BOOST_ASSERT(0 != forward_weight1);
                 BOOST_ASSERT(0 != forward_weight2);
@@ -267,6 +268,17 @@ void GraphCompressor::Compress(
                 const auto reverse_weight2 = rev_edge_data2.weight;
                 const auto reverse_duration1 = rev_edge_data1.duration;
                 const auto reverse_duration2 = rev_edge_data2.duration;
+                const auto reverse_distance2 = rev_edge_data2.distance;
+
+#ifndef NDEBUG
+                // Because distances are symmetrical, we only need one
+                // per edge - here we double-check that they match
+                // their mirrors.
+                const auto reverse_distance1 = rev_edge_data1.distance;
+                const auto forward_distance1 = fwd_edge_data1.distance;
+                BOOST_ASSERT(forward_distance1 == reverse_distance2);
+                BOOST_ASSERT(forward_distance2 == reverse_distance1);
+#endif
 
                 BOOST_ASSERT(0 != reverse_weight1);
                 BOOST_ASSERT(0 != reverse_weight2);
@@ -279,6 +291,10 @@ void GraphCompressor::Compress(
                 graph.GetEdgeData(forward_e1).duration += forward_duration2;
                 graph.GetEdgeData(reverse_e1).duration += reverse_duration2;
 
+                // add distance of e2's to e1
+                graph.GetEdgeData(forward_e1).distance += forward_distance2;
+                graph.GetEdgeData(reverse_e1).distance += reverse_distance2;
+
                 if (node_weight_penalty != INVALID_EDGE_WEIGHT &&
                     node_duration_penalty != MAXIMAL_EDGE_DURATION)
                 {
@@ -286,6 +302,7 @@ void GraphCompressor::Compress(
                     graph.GetEdgeData(reverse_e1).weight += node_weight_penalty;
                     graph.GetEdgeData(forward_e1).duration += node_duration_penalty;
                     graph.GetEdgeData(reverse_e1).duration += node_duration_penalty;
+                    // Note: no penalties for distances
                 }
 
                 // extend e1's to targets of e2's

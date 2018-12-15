@@ -90,7 +90,7 @@ void alternativeRoutingStep(const DataFacade<Algorithm> &facade,
             else
             {
                 // check whether there is a loop present at the node
-                const auto loop_weight = getLoopWeight<false>(facade, node);
+                const auto loop_weight = std::get<0>(getLoopWeight<false>(facade, node));
                 const EdgeWeight new_weight_with_loop = new_weight + loop_weight;
                 if (loop_weight != INVALID_EDGE_WEIGHT &&
                     new_weight_with_loop <= *upper_bound_to_shortest_path_weight)

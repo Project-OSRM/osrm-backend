@@ -312,12 +312,13 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     std::vector<PhantomNodeWithDistance>
     NearestPhantomNodesInRange(const util::Coordinate input_coordinate,
                                const float max_distance,
-                               const Approach approach) const override final
+                               const Approach approach,
+                               const bool use_all_edges) const override final
     {
         BOOST_ASSERT(m_geospatial_query.get());
 
         return m_geospatial_query->NearestPhantomNodesInRange(
-            input_coordinate, max_distance, approach);
+            input_coordinate, max_distance, approach, use_all_edges);
     }
 
     std::vector<PhantomNodeWithDistance>
@@ -325,12 +326,13 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
                                const float max_distance,
                                const int bearing,
                                const int bearing_range,
-                               const Approach approach) const override final
+                               const Approach approach,
+                               const bool use_all_edges) const override final
     {
         BOOST_ASSERT(m_geospatial_query.get());
 
         return m_geospatial_query->NearestPhantomNodesInRange(
-            input_coordinate, max_distance, bearing, bearing_range, approach);
+            input_coordinate, max_distance, bearing, bearing_range, approach, use_all_edges);
     }
 
     std::vector<PhantomNodeWithDistance>
@@ -695,6 +697,11 @@ template <> class ContiguousInternalMemoryAlgorithmDataFacade<MLD> : public Algo
     EdgeDuration GetNodeDuration(const NodeID node) const override final
     {
         return query_graph.GetNodeDuration(node);
+    }
+
+    EdgeDistance GetNodeDistance(const NodeID node) const override final
+    {
+        return query_graph.GetNodeDistance(node);
     }
 
     bool IsForwardEdge(const NodeID node) const override final

@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(contract_graph)
     reference_graph.DeleteEdgesTo(1, 3);
     reference_graph.DeleteEdgesTo(4, 3);
     // Insert shortcut
-    reference_graph.InsertEdge(4, 1, {2, 4, 3, 0, true, true, false});
+    reference_graph.InsertEdge(4, 1, {2, 4, 1.0, 3, 0, true, true, false});
 
     /* After contracting 4:
      *

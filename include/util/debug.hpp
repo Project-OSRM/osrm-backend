@@ -1,9 +1,11 @@
 #ifndef OSRM_UTIL_DEBUG_HPP_
 #define OSRM_UTIL_DEBUG_HPP_
 
+#include "extractor/edge_based_edge.hpp"
 #include "extractor/node_data_container.hpp"
 #include "extractor/query_node.hpp"
 #include "guidance/intersection.hpp"
+#include "guidance/turn_instruction.hpp"
 #include "guidance/turn_lane_data.hpp"
 #include "engine/guidance/route_step.hpp"
 #include "util/node_based_graph.hpp"
@@ -184,6 +186,23 @@ inline std::ostream &operator<<(std::ostream &out, const LaneDataVector &turn_la
 
     return out;
 }
+}
+}
+
+namespace extractor
+{
+inline std::ostream &operator<<(std::ostream &out, const EdgeBasedEdge &edge)
+{
+    out << " EdgeBasedEdge {";
+    out << " source " << edge.source << ", target: " << edge.target;
+    out << " EdgeBasedEdgeData data {";
+    out << " turn_id: " << edge.data.turn_id << ", weight: " << edge.data.weight;
+    out << " distance: " << edge.data.distance << ", duration: " << edge.data.duration;
+    out << " forward: " << (edge.data.forward == 0 ? "false" : "true")
+        << ", backward: " << (edge.data.backward == 0 ? "false" : "true");
+    out << " }";
+    out << "}";
+    return out;
 }
 }
 }

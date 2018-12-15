@@ -1,6 +1,8 @@
 #include <boost/test/test_case_template.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include <cmath>
+
 #include "coordinates.hpp"
 #include "equal_json.hpp"
 #include "fixture.hpp"
@@ -32,18 +34,28 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates_fixture)
 
     // unset snapping dependent hint
     for (auto &itr : result.values["waypoints"].get<json::Array>().values)
+    {
+        // Hint values aren't stable, so blank it out
         itr.get<json::Object>().values["hint"] = "";
+
+        // Round value to 6 decimal places for double comparison later
+        itr.get<json::Object>().values["distance"] =
+            round(itr.get<json::Object>().values["distance"].get<json::Number>().value * 1000000);
+    }
 
     const auto location = json::Array{{{7.437070}, {43.749248}}};
 
     json::Object reference{
         {{"code", "Ok"},
          {"waypoints",
-          json::Array{
-              {json::Object{
-                   {{"name", "Boulevard du Larvotto"}, {"location", location}, {"hint", ""}}},
-               json::Object{
-                   {{"name", "Boulevard du Larvotto"}, {"location", location}, {"hint", ""}}}}}},
+          json::Array{{json::Object{{{"name", "Boulevard du Larvotto"},
+                                     {"location", location},
+                                     {"distance", round(0.137249 * 1000000)},
+                                     {"hint", ""}}},
+                       json::Object{{{"name", "Boulevard du Larvotto"},
+                                     {"location", location},
+                                     {"distance", round(0.137249 * 1000000)},
+                                     {"hint", ""}}}}}},
          {"routes",
           json::Array{{json::Object{
               {{"distance", 0.},
