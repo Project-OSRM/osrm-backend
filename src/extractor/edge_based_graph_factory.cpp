@@ -715,14 +715,14 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                         ++node_based_edge_counter;
 
                         const auto connected_roads =
-                            extractor::intersection::getConnectedRoads<false>(m_node_based_graph,
-                                                     m_edge_based_node_container,
-                                                     m_coordinates,
-                                                     m_compressed_edge_container,
-                                                     unconditional_node_restriction_map,
-                                                     m_barrier_nodes,
-                                                     turn_lanes_data,
-                                                     incoming_edge);
+                            extractor::intersection::getConnectedRoadsForEdgeGeometries(m_node_based_graph,
+                                                                                        m_edge_based_node_container,
+                                                                                        unconditional_node_restriction_map,
+                                                                                        m_barrier_nodes,
+                                                                                        turn_lanes_data,
+                                                                                        incoming_edge,
+                                                                                        edge_geometries,
+                                                                                        merged_edge_ids);
 
                         // check if this edge is part of a restriction via-way
                         const auto is_restriction_via_edge =
