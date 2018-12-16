@@ -616,7 +616,7 @@ Feature: Basic Distance Matrix
             |   | a      | b      | f     | 1      |
             | a | 0      | 300.2  | 900.7 | 1501.1 |
             | b | 300.2  | 0      | 600.5 | 1200.9 |
-            | f | 900.7  | 600.5  | 0     | 302.2  |
+            | f | 900.7  | 600.5  | 0     | 300.2  |
             | 1 | 1501.1 | 1200.9 | 300.2 | 0      |
 
         When I request a travel distance matrix I should get
@@ -651,7 +651,7 @@ Feature: Basic Distance Matrix
             |   | a      | b      | f     | 1      |
             | a | 0      | 300.2  | 900.7 | 1501.1 |
             | b | 300.2  | 0      | 600.5 | 1200.9 |
-            | f | 900.7  | 600.5  | 0     | 302.2  |
+            | f | 900.7  | 600.5  | 0     | 300.2  |
             | 1 | 1501.1 | 1200.9 | 300.2 | 0      |
 
         When I request a travel distance matrix I should get
@@ -687,7 +687,7 @@ Feature: Basic Distance Matrix
             |   | a      | b     | f     | 1      |
             | a | 0      | 300.2 | 900.7 | 1200.9 |
             | b | 300.2  | 0     | 600.5 | 900.7  |
-            | f | 900.7  | 600.5 | 0     | 302.2  |
+            | f | 900.7  | 600.5 | 0     | 300.2  |
             | 1 | 1200.9 | 900.7 | 300.2 | 0      |
 
         When I request a travel distance matrix I should get
@@ -701,3 +701,25 @@ Feature: Basic Distance Matrix
             | f | 900.7  |
             | 1 | 1200.9 |
 
+    Scenario: Ensure consistency with route, and make sure offsets work in both directions
+        Given a grid size of 100 meters
+        Given the node map
+            """
+            a   b   c   d   e   f   g   h  i  j
+                  1                   2
+            """
+
+        And the ways
+            | nodes |
+            | abcdef  |
+            | fghij  |
+
+        When I route I should get
+            | from | to | route              | distance |
+            | 1    | 2  | abcdef,fghij,fghij | 999.9m  |
+
+        # TODO: this is "correct", but inconsistent with viaroute
+        When I request a travel distance matrix I should get
+            |   |   1    | 2      |
+            | 1 |   0    | 1000.7 |
+            | 2 | 1000.7 | 0      |
