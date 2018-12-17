@@ -3,9 +3,7 @@ language: cpp
 git:
   depth: 10
 
-# sudo:required is needed for trusty images
 sudo: required
-dist: trusty
 
 notifications:
   email: false
@@ -25,16 +23,16 @@ cache:
 
 env:
   global:
-   - secure: "hk+32aXXF5t1ApaM2Wjqooz3dx1si907L87WRMkO47WlpJmUUU/Ye+MJk9sViH8MdhOcceocVAmdYl5/WFWOIbDWNlBya9QvXDZyIu2KIre/0QyOCTZbrsif8paBXKIO5O/R4OTvIZ8rvWZsadBdmAT9GSbDhih6FzqXAEgeIYQ="
-   - secure: "VE+cFkseFwW4jK6XwkP0yW3h4DixPJ8+Eb3yKcchGZ5iIJxlZ/8i1vKHYxadgPRwSYwPSB14tF70xj2OmiT2keGzZUfphmPXinBaLEhYk+Bde+GZZkoSl5ND109I/LcyNr0nG9dDgtV6pkvFchgchpyP9JnVOOS0+crEZlAz0RE="
-   - CCACHE_TEMPDIR=/tmp/.ccache-temp
-   - CCACHE_COMPRESS=1
-   - CASHER_TIME_OUT=599 # one second less than 10m to avoid 10m timeout error: https://github.com/Project-OSRM/osrm-backend/issues/2742
-   - CCACHE_VERSION=3.3.1
-   - CMAKE_VERSION=3.7.2
-   - MASON="$(pwd)/scripts/mason.sh"
-   - ENABLE_NODE_BINDINGS=On
-   - NODE="10"
+    - secure: "hk+32aXXF5t1ApaM2Wjqooz3dx1si907L87WRMkO47WlpJmUUU/Ye+MJk9sViH8MdhOcceocVAmdYl5/WFWOIbDWNlBya9QvXDZyIu2KIre/0QyOCTZbrsif8paBXKIO5O/R4OTvIZ8rvWZsadBdmAT9GSbDhih6FzqXAEgeIYQ="
+    - secure: "VE+cFkseFwW4jK6XwkP0yW3h4DixPJ8+Eb3yKcchGZ5iIJxlZ/8i1vKHYxadgPRwSYwPSB14tF70xj2OmiT2keGzZUfphmPXinBaLEhYk+Bde+GZZkoSl5ND109I/LcyNr0nG9dDgtV6pkvFchgchpyP9JnVOOS0+crEZlAz0RE="
+    - CCACHE_TEMPDIR=/tmp/.ccache-temp
+    - CCACHE_COMPRESS=1
+    - CASHER_TIME_OUT=599 # one second less than 10m to avoid 10m timeout error: https://github.com/Project-OSRM/osrm-backend/issues/2742
+    - CCACHE_VERSION=3.3.1
+    - CMAKE_VERSION=3.7.2
+    - MASON="$(pwd)/scripts/mason.sh"
+    - ENABLE_NODE_BINDINGS=On
+    - NODE_VERSION=node
 
 matrix:
   fast_finish: true
@@ -45,13 +43,14 @@ matrix:
     # Debug Builds
     - os: linux
       compiler: "format-taginfo-docs"
-      env: NODE=10
       sudo: false
       before_install:
       install:
-        - source $NVM_DIR/nvm.sh
-        - nvm install $NODE
-        - nvm use $NODE
+        - rm -rf ~/.nvm/ && git clone --depth 1 https://github.com/creationix/nvm.git ~/.nvm
+        - source ~/.nvm/nvm.sh
+        - nvm --version
+        - nvm install $NODE_VERSION
+        - nvm use $NODE_VERSION
         - npm --version
         - npm ci --ignore-scripts
       script:
@@ -125,9 +124,7 @@ matrix:
 
     - os: linux
       compiler: "gcc-7-release-i686"
-      env: >
-        TARGET_ARCH='i686' CCOMPILER='gcc-7' CXXCOMPILER='g++-7' BUILD_TYPE='Release'
-        CFLAGS='-m32 -msse2 -mfpmath=sse' CXXFLAGS='-m32 -msse2 -mfpmath=sse'
+      env: TARGET_ARCH='i686' CCOMPILER='gcc-7' CXXCOMPILER='g++-7' BUILD_TYPE='Release' CFLAGS='-m32 -msse2 -mfpmath=sse' CXXFLAGS='-m32 -msse2 -mfpmath=sse'
 
     - os: linux
       compiler: "gcc-7-stxxl"
@@ -154,18 +151,23 @@ matrix:
       env: CCOMPILER='gcc-6' CXXCOMPILER='g++-6' BUILD_TYPE='Release'
 
     - os: osx
-      osx_image: xcode9.2
-      compiler: "mason-osx-release-node-10"
+      compiler: "mason-osx-release-node-8"
       # we use the xcode provides clang and don't install our own
-      env: ENABLE_MASON=ON BUILD_TYPE='Release' CUCUMBER_TIMEOUT=60000 CCOMPILER='clang' CXXCOMPILER='clang++' ENABLE_ASSERTIONS=ON ENABLE_LTO=ON NODE="10"
+      env: ENABLE_MASON=ON BUILD_TYPE='Release' CUCUMBER_TIMEOUT=60000 CCOMPILER='clang' CXXCOMPILER='clang++' ENABLE_ASSERTIONS=ON ENABLE_LTO=ON NODE_VERSION=8
       after_success:
         - ./scripts/travis/publish.sh
 
     - os: osx
-      osx_image: xcode9.2
-      compiler: "mason-osx-release-node-8"
+      compiler: "mason-osx-release-node-10"
       # we use the xcode provides clang and don't install our own
-      env: ENABLE_MASON=ON BUILD_TYPE='Release' CUCUMBER_TIMEOUT=60000 CCOMPILER='clang' CXXCOMPILER='clang++' ENABLE_ASSERTIONS=ON ENABLE_LTO=ON NODE="8"
+      env: ENABLE_MASON=ON BUILD_TYPE='Release' CUCUMBER_TIMEOUT=60000 CCOMPILER='clang' CXXCOMPILER='clang++' ENABLE_ASSERTIONS=ON ENABLE_LTO=ON NODE_VERSION=10
+      after_success:
+        - ./scripts/travis/publish.sh
+
+    - os: osx
+      compiler: "mason-osx-release-node-latest"
+      # we use the xcode provides clang and don't install our own
+      env: ENABLE_MASON=ON BUILD_TYPE='Release' CUCUMBER_TIMEOUT=60000 CCOMPILER='clang' CXXCOMPILER='clang++' ENABLE_ASSERTIONS=ON ENABLE_LTO=ON NODE_VERSION=node
       after_success:
         - ./scripts/travis/publish.sh
 
@@ -181,12 +183,12 @@ matrix:
     # Node build jobs. These skip running the tests.
     - os: linux
       sudo: false
-      compiler: "node-8-mason-linux-release"
+      compiler: "node-latest-mason-linux-release"
       addons:
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['libstdc++-4.9-dev']
-      env: CLANG_VERSION='5.0.0' BUILD_TYPE='Release' ENABLE_MASON=ON ENABLE_LTO=ON JOBS=3 NODE="8"
+      env: CLANG_VERSION='5.0.0' BUILD_TYPE='Release' ENABLE_MASON=ON ENABLE_LTO=ON JOBS=3 NODE_VERSION=node
       install:
         - pushd ${OSRM_BUILD_DIR}
         - |
@@ -205,12 +207,12 @@ matrix:
 
     - os: linux
       sudo: false
-      compiler: "node-8-mason-linux-debug"
+      compiler: "node-latest-mason-linux-debug"
       addons:
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['libstdc++-4.9-dev']
-      env: CLANG_VERSION='5.0.0' BUILD_TYPE='Debug' ENABLE_MASON=ON ENABLE_LTO=ON JOBS=3 NODE="8"
+      env: CLANG_VERSION='5.0.0' BUILD_TYPE='Debug' ENABLE_MASON=ON ENABLE_LTO=ON JOBS=3 NODE_VERSION=node
       install:
         - pushd ${OSRM_BUILD_DIR}
         - |
@@ -234,7 +236,7 @@ matrix:
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['libstdc++-4.9-dev']
-      env: CLANG_VERSION='5.0.0' BUILD_TYPE='Release' ENABLE_MASON=ON ENABLE_LTO=ON JOBS=3 NODE="10"
+      env: CLANG_VERSION='5.0.0' BUILD_TYPE='Release' ENABLE_MASON=ON ENABLE_LTO=ON JOBS=3 NODE_VERSION=10
       install:
         - pushd ${OSRM_BUILD_DIR}
         - |
@@ -258,7 +260,55 @@ matrix:
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['libstdc++-4.9-dev']
-      env: CLANG_VERSION='5.0.0' BUILD_TYPE='Debug' ENABLE_MASON=ON ENABLE_LTO=ON JOBS=3 NODE="10"
+      env: CLANG_VERSION='5.0.0' BUILD_TYPE='Debug' ENABLE_MASON=ON ENABLE_LTO=ON JOBS=3 NODE_VERSION=10
+      install:
+        - pushd ${OSRM_BUILD_DIR}
+        - |
+          cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
+              -DENABLE_MASON=${ENABLE_MASON:-OFF} \
+              -DENABLE_NODE_BINDINGS=${ENABLE_NODE_BINDINGS:-OFF} \
+              -DENABLE_CCACHE=ON \
+              -DCMAKE_INSTALL_PREFIX=${OSRM_INSTALL_DIR} \
+              -DENABLE_GLIBC_WORKAROUND=ON
+        - make --jobs=${JOBS}
+        - popd
+      script:
+        - npm run nodejs-tests
+      after_success:
+        - ./scripts/travis/publish.sh
+
+    - os: linux
+      sudo: false
+      compiler: "node-8-mason-linux-release"
+      addons:
+        apt:
+          sources: ['ubuntu-toolchain-r-test']
+          packages: ['libstdc++-4.9-dev']
+      env: CLANG_VERSION='5.0.0' BUILD_TYPE='Release' ENABLE_MASON=ON ENABLE_LTO=ON JOBS=3 NODE_VERSION=8
+      install:
+        - pushd ${OSRM_BUILD_DIR}
+        - |
+          cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
+              -DENABLE_MASON=${ENABLE_MASON:-OFF} \
+              -DENABLE_NODE_BINDINGS=${ENABLE_NODE_BINDINGS:-OFF} \
+              -DENABLE_CCACHE=ON \
+              -DCMAKE_INSTALL_PREFIX=${OSRM_INSTALL_DIR} \
+              -DENABLE_GLIBC_WORKAROUND=ON
+        - make --jobs=${JOBS}
+        - popd
+      script:
+        - npm run nodejs-tests
+      after_success:
+        - ./scripts/travis/publish.sh
+
+    - os: linux
+      sudo: false
+      compiler: "node-8-mason-linux-debug"
+      addons:
+        apt:
+          sources: ['ubuntu-toolchain-r-test']
+          packages: ['libstdc++-4.9-dev']
+      env: CLANG_VERSION='5.0.0' BUILD_TYPE='Debug' ENABLE_MASON=ON ENABLE_LTO=ON JOBS=3 NODE_VERSION=8
       install:
         - pushd ${OSRM_BUILD_DIR}
         - |
@@ -276,9 +326,11 @@ matrix:
         - ./scripts/travis/publish.sh
 
 before_install:
-  - source $NVM_DIR/nvm.sh
-  - nvm install $NODE
-  - nvm use $NODE
+  - rm -rf ~/.nvm/ && git clone --depth 1 https://github.com/creationix/nvm.git ~/.nvm
+  - source ~/.nvm/nvm.sh
+  - nvm --version
+  - nvm install $NODE_VERSION
+  - nvm use $NODE_VERSION
   - node --version
   - if [[ ! -z $TARGET_ARCH ]] ; then source ./scripts/travis/before_install.$TARGET_ARCH.sh ; fi
   - |
@@ -297,7 +349,7 @@ before_install:
   - export PUBLISH=$([[ "${TRAVIS_TAG:-}" == "v${PACKAGE_JSON_VERSION}" ]] && echo "On" || echo "Off")
   - echo "Using ${JOBS} jobs"
   - npm ci --ignore-scripts
-    # Bootstrap cmake to be able to run mason
+  # Bootstrap cmake to be able to run mason
   - CMAKE_URL="https://mason-binaries.s3.amazonaws.com/${TRAVIS_OS_NAME}-x86_64/cmake/${CMAKE_VERSION}.tar.gz"
   - CMAKE_DIR="mason_packages/${TRAVIS_OS_NAME}-x86_64/cmake/${CMAKE_VERSION}"
   - mkdir -p ${CMAKE_DIR}
