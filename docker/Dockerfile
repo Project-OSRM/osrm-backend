@@ -33,7 +33,7 @@ RUN NPROC=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || 1) && \
 FROM debian:buster-slim as runstage
 RUN mkdir -p /src  && mkdir -p /opt
 RUN apt-get update && \
-apt-get install -y --no-install-recommends libboost-program-options1.67.0 libboost-regex1.67.0 \
+apt-get install -y --no-install-recommends libc6 libboost-program-options1.67.0 libboost-regex1.67.0 \
 libboost-date-time1.67.0 libboost-chrono1.67.0 libboost-filesystem1.67.0 \
 libboost-iostreams1.67.0 libboost-thread1.67.0 expat liblua5.2-0 libtbb2 &&\
 rm -rf /var/lib/apt/lists/*
