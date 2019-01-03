@@ -372,6 +372,45 @@ inline auto make_filtered_graph_view(const SharedDataIndex &index,
     auto edge_list = make_vector_view<contractor::QueryGraphView::EdgeArrayEntry>(
         index, name + "/contracted_graph/edge_array");
 
+    // DEBUG - dump CH
+    std::cout << "digraph {" << std::endl;
+    for (std::size_t i = 0; i < node_list.size(); i++)
+    {
+        for (auto edge = node_list[i].first_edge;
+             edge < (i == node_list.size() - 1 ? edge_list.size() : node_list[i + 1].first_edge);
+             edge++)
+        {
+            const auto &e = edge_list[edge];
+            if (e.data.forward)
+            {
+                std::cout << i << " -> " << e.target;
+                std::cout << "[";
+                std::cout << "label=\"↑" << e.data.weight << "\",weight=\"" << e.data.weight
+                          << "\"";
+                if (e.data.maneuver_restricted)
+                {
+                    std::cout << ",color=red,penwidth=3.0";
+                }
+                std::cout << "];";
+                std::cout << std::endl;
+            }
+            if (e.data.backward)
+            {
+                std::cout << e.target << " -> " << i;
+                std::cout << "[";
+                std::cout << "label=\"↓" << e.data.weight << "\",weight=\"" << e.data.weight
+                          << "\"";
+                if (e.data.maneuver_restricted)
+                {
+                    std::cout << ",color=red,penwidth=3.0";
+                }
+                std::cout << "];";
+                std::cout << std::endl;
+            }
+        }
+    }
+    std::cout << "}" << std::endl;
+
     return util::FilteredGraphView<contractor::QueryGraphView>({node_list, edge_list}, edge_filter);
 }
 }

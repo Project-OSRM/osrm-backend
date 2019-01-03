@@ -218,6 +218,8 @@ void ContractNode(ContractorThreadData *data,
                                                     in_data.distance + out_data.distance,
                                                     out_data.originalEdges + in_data.originalEdges,
                                                     node,
+                                                    in_data.maneuver_restricted ||
+                                                        out_data.maneuver_restricted,
                                                     SHORTCUT_ARC,
                                                     FORWARD_DIRECTION_ENABLED,
                                                     REVERSE_DIRECTION_DISABLED);
@@ -229,6 +231,8 @@ void ContractNode(ContractorThreadData *data,
                                                     in_data.distance + out_data.distance,
                                                     out_data.originalEdges + in_data.originalEdges,
                                                     node,
+                                                    in_data.maneuver_restricted ||
+                                                        out_data.maneuver_restricted,
                                                     SHORTCUT_ARC,
                                                     FORWARD_DIRECTION_DISABLED,
                                                     REVERSE_DIRECTION_ENABLED);
@@ -285,6 +289,8 @@ void ContractNode(ContractorThreadData *data,
                                                 in_data.distance + out_data.distance,
                                                 out_data.originalEdges + in_data.originalEdges,
                                                 node,
+                                                in_data.maneuver_restricted ||
+                                                    out_data.maneuver_restricted,
                                                 SHORTCUT_ARC,
                                                 FORWARD_DIRECTION_ENABLED,
                                                 REVERSE_DIRECTION_DISABLED);
@@ -296,6 +302,8 @@ void ContractNode(ContractorThreadData *data,
                                                 in_data.distance + out_data.distance,
                                                 out_data.originalEdges + in_data.originalEdges,
                                                 node,
+                                                in_data.maneuver_restricted ||
+                                                    out_data.maneuver_restricted,
                                                 SHORTCUT_ARC,
                                                 FORWARD_DIRECTION_DISABLED,
                                                 REVERSE_DIRECTION_ENABLED);
@@ -326,6 +334,11 @@ void ContractNode(ContractorThreadData *data,
                     continue;
                 }
                 if (inserted_edges[other].data.shortcut != inserted_edges[i].data.shortcut)
+                {
+                    continue;
+                }
+                if (inserted_edges[other].data.maneuver_restricted !=
+                    inserted_edges[i].data.maneuver_restricted)
                 {
                     continue;
                 }

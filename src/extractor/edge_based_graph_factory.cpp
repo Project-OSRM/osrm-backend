@@ -656,6 +656,11 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
             BOOST_ASSERT(SPECIAL_NODEID != nbe_to_ebn_mapping[node_based_edge_from]);
             BOOST_ASSERT(SPECIAL_NODEID != nbe_to_ebn_mapping[node_based_edge_to]);
 
+            // If a source is not restricted, and the target is restricted, then we
+            // call this a "restricted maneuver"
+            const bool restricted_maneuver =
+                !edge_data1.flags.restricted && edge_data2.flags.restricted;
+
             // auto turn_id = m_edge_based_edge_list.size();
             auto weight = boost::numeric_cast<EdgeWeight>(edge_data1.weight + weight_penalty);
             auto duration = boost::numeric_cast<EdgeWeight>(edge_data1.duration + duration_penalty);
@@ -665,6 +670,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                              edge_based_node_to,
                                              SPECIAL_NODEID, // This will be updated once the main
                                                              // loop completes!
+                                             restricted_maneuver,
                                              weight,
                                              duration,
                                              distance,

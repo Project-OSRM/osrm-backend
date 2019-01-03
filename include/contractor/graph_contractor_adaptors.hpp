@@ -44,6 +44,7 @@ ContractorGraph toContractorGraph(NodeID number_of_nodes, InputEdgeContainer inp
                            input_edge.data.distance,
                            1,
                            input_edge.data.turn_id,
+                           input_edge.data.maneuver_restricted,
                            false,
                            input_edge.data.forward ? true : false,
                            input_edge.data.backward ? true : false);
@@ -55,6 +56,7 @@ ContractorGraph toContractorGraph(NodeID number_of_nodes, InputEdgeContainer inp
                            input_edge.data.distance,
                            1,
                            input_edge.data.turn_id,
+                           input_edge.data.maneuver_restricted, // Note: inverted
                            false,
                            input_edge.data.backward ? true : false,
                            input_edge.data.forward ? true : false);
@@ -85,6 +87,7 @@ ContractorGraph toContractorGraph(NodeID number_of_nodes, InputEdgeContainer inp
         forward_edge.data.weight = reverse_edge.data.weight = INVALID_EDGE_WEIGHT;
         forward_edge.data.duration = reverse_edge.data.duration = MAXIMAL_EDGE_DURATION;
         forward_edge.data.distance = reverse_edge.data.distance = MAXIMAL_EDGE_DISTANCE;
+        forward_edge.data.maneuver_restricted = reverse_edge.data.maneuver_restricted = false;
         // remove parallel edges
         while (i < edges.size() && edges[i].source == source && edges[i].target == target)
         {
@@ -95,6 +98,7 @@ ContractorGraph toContractorGraph(NodeID number_of_nodes, InputEdgeContainer inp
                     std::min(edges[i].data.duration, forward_edge.data.duration);
                 forward_edge.data.distance =
                     std::min(edges[i].data.distance, forward_edge.data.distance);
+                forward_edge.data.maneuver_restricted = edges[i].data.maneuver_restricted;
             }
             if (edges[i].data.backward)
             {
@@ -103,11 +107,13 @@ ContractorGraph toContractorGraph(NodeID number_of_nodes, InputEdgeContainer inp
                     std::min(edges[i].data.duration, reverse_edge.data.duration);
                 reverse_edge.data.distance =
                     std::min(edges[i].data.distance, reverse_edge.data.distance);
+                reverse_edge.data.maneuver_restricted = edges[i].data.maneuver_restricted;
             }
             ++i;
         }
         // merge edges (s,t) and (t,s) into bidirectional edge
-        if (forward_edge.data.weight == reverse_edge.data.weight)
+        if (forward_edge.data.weight == reverse_edge.data.weight &&
+            forward_edge.data.maneuver_restricted == reverse_edge.data.maneuver_restricted)
         {
             if ((int)forward_edge.data.weight != INVALID_EDGE_WEIGHT)
             {
@@ -165,6 +171,7 @@ template <class Edge, typename GraphT> inline std::vector<Edge> toEdges(GraphT g
                                  "edge id invalid");
                 new_edge.data.forward = data.forward;
                 new_edge.data.backward = data.backward;
+                new_edge.data.maneuver_restricted = data.maneuver_restricted;
             }
         }
         BOOST_ASSERT(edge_index == edges.size());

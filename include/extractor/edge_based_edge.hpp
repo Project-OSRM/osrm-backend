@@ -16,22 +16,25 @@ struct EdgeBasedEdge
     struct EdgeData
     {
         EdgeData()
-            : turn_id(0), weight(0), distance(0), duration(0), forward(false), backward(false)
+            : turn_id(0), maneuver_restricted(false), weight(0), distance(0), duration(0),
+              forward(false), backward(false)
         {
         }
 
         EdgeData(const NodeID turn_id,
+                 const bool maneuver_restricted,
                  const EdgeWeight weight,
                  const EdgeDistance distance,
                  const EdgeWeight duration,
                  const bool forward,
                  const bool backward)
-            : turn_id(turn_id), weight(weight), distance(distance), duration(duration),
-              forward(forward), backward(backward)
+            : turn_id(turn_id), maneuver_restricted(maneuver_restricted), weight(weight),
+              distance(distance), duration(duration), forward(forward), backward(backward)
         {
         }
 
-        NodeID turn_id; // ID of the edge based node (node based edge)
+        NodeID turn_id : 31; // ID of the edge based node (node based edge)
+        bool maneuver_restricted : 1;
         EdgeWeight weight;
         EdgeDistance distance;
         EdgeWeight duration : 30;
@@ -46,6 +49,7 @@ struct EdgeBasedEdge
     EdgeBasedEdge(const NodeID source,
                   const NodeID target,
                   const NodeID edge_id,
+                  const bool maneuver_restricted,
                   const EdgeWeight weight,
                   const EdgeWeight duration,
                   const EdgeDistance distance,
@@ -71,12 +75,14 @@ inline EdgeBasedEdge::EdgeBasedEdge() : source(0), target(0) {}
 inline EdgeBasedEdge::EdgeBasedEdge(const NodeID source,
                                     const NodeID target,
                                     const NodeID turn_id,
+                                    const bool maneuver_restricted,
                                     const EdgeWeight weight,
                                     const EdgeWeight duration,
                                     const EdgeDistance distance,
                                     const bool forward,
                                     const bool backward)
-    : source(source), target(target), data{turn_id, weight, distance, duration, forward, backward}
+    : source(source), target(target),
+      data{turn_id, maneuver_restricted, weight, distance, duration, forward, backward}
 {
 }
 

@@ -17,8 +17,8 @@ struct QueryEdge
     struct EdgeData
     {
         explicit EdgeData()
-            : turn_id(0), shortcut(false), weight(0), duration(0), forward(false), backward(false),
-              distance(0)
+            : turn_id(0), shortcut(false), maneuver_restricted(false), weight(0), duration(0),
+              forward(false), backward(false), distance(0)
         {
         }
 
@@ -28,9 +28,11 @@ struct QueryEdge
                  const EdgeWeight duration,
                  const EdgeDistance distance,
                  const bool forward,
-                 const bool backward)
-            : turn_id(turn_id), shortcut(shortcut), weight(weight), duration(duration),
-              forward(forward), backward(backward), distance(distance)
+                 const bool backward,
+                 const bool maneuver_restricted)
+            : turn_id(turn_id), shortcut(shortcut), maneuver_restricted(maneuver_restricted),
+              weight(weight), duration(duration), forward(forward), backward(backward),
+              distance(distance)
         {
         }
 
@@ -43,12 +45,14 @@ struct QueryEdge
             forward = other.forward;
             backward = other.backward;
             distance = other.distance;
+            maneuver_restricted = other.maneuver_restricted;
         }
         // this ID is either the middle node of the shortcut, or the ID of the edge based node (node
         // based edge) storing the appropriate data. If `shortcut` is set to true, we get the middle
         // node. Otherwise we see the edge based node to access node data.
-        NodeID turn_id : 31;
+        NodeID turn_id : 30;
         bool shortcut : 1;
+        bool maneuver_restricted : 1;
         EdgeWeight weight;
         EdgeWeight duration : 30;
         std::uint32_t forward : 1;
@@ -74,7 +78,8 @@ struct QueryEdge
                 data.weight == right.data.weight && data.duration == right.data.duration &&
                 data.shortcut == right.data.shortcut && data.forward == right.data.forward &&
                 data.backward == right.data.backward && data.turn_id == right.data.turn_id &&
-                data.distance == right.data.distance);
+                data.distance == right.data.distance &&
+                data.maneuver_restricted == data.maneuver_restricted);
     }
 };
 }

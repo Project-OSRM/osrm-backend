@@ -483,9 +483,9 @@ function process_turn(profile, turn)
 
   if profile.properties.weight_name == 'routability' then
       -- penalize turns from non-local access only segments onto local access only tags
-      if not turn.source_restricted and turn.target_restricted then
-          turn.weight = constants.max_turn_weight
-      end
+      -- if not turn.source_restricted and turn.target_restricted then
+      --    turn.weight = constants.max_turn_weight
+      -- end
   end
 end
 
