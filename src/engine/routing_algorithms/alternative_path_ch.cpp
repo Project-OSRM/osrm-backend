@@ -159,7 +159,8 @@ void computeWeightAndSharingOfViaPath(SearchEngineData<Algorithm> &engine_workin
                                       EdgeWeight *real_weight_of_via_path,
                                       EdgeWeight *sharing_of_via_path,
                                       const std::vector<NodeID> &packed_shortest_path,
-                                      const EdgeWeight min_edge_offset)
+                                      const EdgeWeight min_edge_offset,
+                                      const bool permit_private)
 {
     engine_working_data.InitializeOrClearSecondThreadLocalStorage(facade.GetNumberOfNodes());
 
@@ -187,7 +188,8 @@ void computeWeightAndSharingOfViaPath(SearchEngineData<Algorithm> &engine_workin
                                        upper_bound_s_v_path_weight,
                                        min_edge_offset,
                                        DO_NOT_FORCE_LOOPS,
-                                       DO_NOT_FORCE_LOOPS);
+                                       DO_NOT_FORCE_LOOPS,
+                                       permit_private);
     }
     // compute path <v,..,t> by reusing backward search from node t
     NodeID v_t_middle = SPECIAL_NODEID;
@@ -202,7 +204,8 @@ void computeWeightAndSharingOfViaPath(SearchEngineData<Algorithm> &engine_workin
                                        upper_bound_of_v_t_path_weight,
                                        min_edge_offset,
                                        DO_NOT_FORCE_LOOPS,
-                                       DO_NOT_FORCE_LOOPS);
+                                       DO_NOT_FORCE_LOOPS,
+                                       permit_private);
     }
     *real_weight_of_via_path = upper_bound_s_v_path_weight + upper_bound_of_v_t_path_weight;
 
@@ -328,7 +331,8 @@ bool viaNodeCandidatePassesTTest(SearchEngineData<Algorithm> &engine_working_dat
                                  EdgeWeight *weight_of_via_path,
                                  NodeID *s_v_middle,
                                  NodeID *v_t_middle,
-                                 const EdgeWeight min_edge_offset)
+                                 const EdgeWeight min_edge_offset,
+                                 const bool permit_private)
 {
     new_forward_heap.Clear();
     new_reverse_heap.Clear();
@@ -348,7 +352,8 @@ bool viaNodeCandidatePassesTTest(SearchEngineData<Algorithm> &engine_working_dat
                                        upper_bound_s_v_path_weight,
                                        min_edge_offset,
                                        DO_NOT_FORCE_LOOPS,
-                                       DO_NOT_FORCE_LOOPS);
+                                       DO_NOT_FORCE_LOOPS,
+                                       permit_private);
     }
 
     if (INVALID_EDGE_WEIGHT == upper_bound_s_v_path_weight)
@@ -369,7 +374,8 @@ bool viaNodeCandidatePassesTTest(SearchEngineData<Algorithm> &engine_working_dat
                                        upper_bound_of_v_t_path_weight,
                                        min_edge_offset,
                                        DO_NOT_FORCE_LOOPS,
-                                       DO_NOT_FORCE_LOOPS);
+                                       DO_NOT_FORCE_LOOPS,
+                                       permit_private);
     }
 
     if (INVALID_EDGE_WEIGHT == upper_bound_of_v_t_path_weight)
@@ -542,7 +548,8 @@ bool viaNodeCandidatePassesTTest(SearchEngineData<Algorithm> &engine_working_dat
                                            upper_bound,
                                            min_edge_offset,
                                            DO_NOT_FORCE_LOOPS,
-                                           DO_NOT_FORCE_LOOPS);
+                                           DO_NOT_FORCE_LOOPS,
+                                           permit_private);
         }
         if (!reverse_heap3.Empty())
         {
@@ -553,7 +560,8 @@ bool viaNodeCandidatePassesTTest(SearchEngineData<Algorithm> &engine_working_dat
                                            upper_bound,
                                            min_edge_offset,
                                            DO_NOT_FORCE_LOOPS,
-                                           DO_NOT_FORCE_LOOPS);
+                                           DO_NOT_FORCE_LOOPS,
+                                           permit_private);
         }
     }
     return (upper_bound <= t_test_path_weight);
@@ -757,7 +765,8 @@ InternalManyRoutesResult alternativePathSearch(SearchEngineData<Algorithm> &engi
                                          &weight_of_via_path,
                                          &sharing_of_via_path,
                                          packed_shortest_path,
-                                         min_edge_offset);
+                                         min_edge_offset,
+                                         routing_algorithms::AVOID_PRIVATE); // danpat TODO: parameterize this
         const EdgeWeight maximum_allowed_sharing =
             static_cast<EdgeWeight>(upper_bound_to_shortest_path_weight * VIAPATH_GAMMA);
         if (sharing_of_via_path <= maximum_allowed_sharing &&
@@ -784,7 +793,8 @@ InternalManyRoutesResult alternativePathSearch(SearchEngineData<Algorithm> &engi
                                         &weight_of_via_path,
                                         &s_v_middle,
                                         &v_t_middle,
-                                        min_edge_offset))
+                                        min_edge_offset,
+                                        routing_algorithms::AVOID_PRIVATE))  // danpat TODO: parameterize permit_private
         {
             // select first admissable
             selected_via_node = candidate.node;

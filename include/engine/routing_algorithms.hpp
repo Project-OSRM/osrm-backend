@@ -25,10 +25,11 @@ class RoutingAlgorithmsInterface
 
     virtual InternalRouteResult
     ShortestPathSearch(const std::vector<PhantomNodes> &phantom_node_pair,
-                       const boost::optional<bool> continue_straight_at_waypoint) const = 0;
+                       const boost::optional<bool> continue_straight_at_waypoint,
+                       const bool permit_private) const = 0;
 
     virtual InternalRouteResult
-    DirectShortestPathSearch(const PhantomNodes &phantom_node_pair) const = 0;
+    DirectShortestPathSearch(const PhantomNodes &phantom_node_pair, const bool permit_private) const = 0;
 
     virtual std::pair<std::vector<EdgeDuration>, std::vector<EdgeDistance>>
     ManyToManySearch(const std::vector<PhantomNode> &phantom_nodes,
@@ -78,10 +79,11 @@ template <typename Algorithm> class RoutingAlgorithms final : public RoutingAlgo
 
     InternalRouteResult ShortestPathSearch(
         const std::vector<PhantomNodes> &phantom_node_pair,
-        const boost::optional<bool> continue_straight_at_waypoint) const final override;
+        const boost::optional<bool> continue_straight_at_waypoint,
+        const bool permit_private) const final override;
 
     InternalRouteResult
-    DirectShortestPathSearch(const PhantomNodes &phantom_nodes) const final override;
+    DirectShortestPathSearch(const PhantomNodes &phantom_nodes, const bool permit_private) const final override;
 
     virtual std::pair<std::vector<EdgeDuration>, std::vector<EdgeDistance>>
     ManyToManySearch(const std::vector<PhantomNode> &phantom_nodes,
@@ -161,17 +163,18 @@ RoutingAlgorithms<Algorithm>::AlternativePathSearch(const PhantomNodes &phantom_
 template <typename Algorithm>
 InternalRouteResult RoutingAlgorithms<Algorithm>::ShortestPathSearch(
     const std::vector<PhantomNodes> &phantom_node_pair,
-    const boost::optional<bool> continue_straight_at_waypoint) const
+    const boost::optional<bool> continue_straight_at_waypoint,
+    const bool permit_private) const
 {
     return routing_algorithms::shortestPathSearch(
-        heaps, *facade, phantom_node_pair, continue_straight_at_waypoint);
+        heaps, *facade, phantom_node_pair, continue_straight_at_waypoint, permit_private);
 }
 
 template <typename Algorithm>
 InternalRouteResult
-RoutingAlgorithms<Algorithm>::DirectShortestPathSearch(const PhantomNodes &phantom_nodes) const
+RoutingAlgorithms<Algorithm>::DirectShortestPathSearch(const PhantomNodes &phantom_nodes, const bool permit_private) const
 {
-    return routing_algorithms::directShortestPathSearch(heaps, *facade, phantom_nodes);
+    return routing_algorithms::directShortestPathSearch(heaps, *facade, phantom_nodes, permit_private);
 }
 
 template <typename Algorithm>

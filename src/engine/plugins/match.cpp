@@ -289,7 +289,7 @@ Status MatchPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
         // we split the phantom nodes anyway and only have bi-directional phantom nodes for
         // possible uturns
         sub_routes[index] =
-            algorithms.ShortestPathSearch(sub_routes[index].segment_end_coordinates, {false});
+            algorithms.ShortestPathSearch(sub_routes[index].segment_end_coordinates, {false}, routing_algorithms::PERMIT_PRIVATE);
         BOOST_ASSERT(sub_routes[index].shortest_path_weight != INVALID_EDGE_WEIGHT);
         if (collapse_legs)
         {

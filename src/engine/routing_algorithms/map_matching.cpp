@@ -244,7 +244,8 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
                                            reverse_heap,
                                            prev_unbroken_timestamps_list[s].phantom_node,
                                            current_timestamps_list[s_prime].phantom_node,
-                                           weight_upper_bound);
+                                           weight_upper_bound,
+                                           PERMIT_PRIVATE);
 
                     // get distance diff between loc1/2 and locs/s_prime
                     const auto d_t = std::abs(network_distance - haversine_distance);

@@ -52,7 +52,8 @@ template <bool DIRECTION>
 void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
                         const NodeID node,
                         const EdgeWeight weight,
-                        SearchEngineData<Algorithm>::QueryHeap &heap)
+                        SearchEngineData<Algorithm>::QueryHeap &heap,
+                        const bool permit_private)
 {
     for (const auto edge : facade.GetAdjacentEdgeRange(node))
     {
@@ -63,7 +64,8 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
             const EdgeWeight edge_weight = data.weight;
 
             BOOST_ASSERT_MSG(edge_weight > 0, "edge_weight invalid");
-            const EdgeWeight to_weight = weight + edge_weight;
+            const EdgeWeight to_weight = weight + edge_weight + ((!permit_private && data.maneuver_restricted) ? std::numeric_limits<TurnPenalty>::max() : 0);
+            // const EdgeWeight to_weight = weight + edge_weight;
 
             // New Node discovered -> Add to Heap + Node Info Storage
             if (!heap.WasInserted(to))
@@ -120,7 +122,8 @@ void routingStep(const DataFacade<Algorithm> &facade,
                  EdgeWeight &upper_bound,
                  EdgeWeight min_edge_offset,
                  const bool force_loop_forward,
-                 const bool force_loop_reverse)
+                 const bool force_loop_reverse,
+                 const bool permit_private)
 {
     const NodeID node = forward_heap.DeleteMin();
     const EdgeWeight weight = forward_heap.GetKey(node);
@@ -182,7 +185,7 @@ void routingStep(const DataFacade<Algorithm> &facade,
         return;
     }
 
-    relaxOutgoingEdges<DIRECTION>(facade, node, weight, forward_heap);
+    relaxOutgoingEdges<DIRECTION>(facade, node, weight, forward_heap, permit_private);
 }
 
 template <bool UseDuration>
@@ -471,7 +474,8 @@ void search(SearchEngineData<Algorithm> &engine_working_data,
             const bool force_loop_forward,
             const bool force_loop_reverse,
             const PhantomNodes &phantom_nodes,
-            const int duration_upper_bound = INVALID_EDGE_WEIGHT);
+            const int duration_upper_bound,
+            const bool permit_private);
 
 // Requires the heaps for be empty
 // If heaps should be adjusted to be initialized outside of this function,
@@ -482,7 +486,8 @@ double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
                           SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
                           const PhantomNode &source_phantom,
                           const PhantomNode &target_phantom,
-                          int duration_upper_bound = INVALID_EDGE_WEIGHT);
+                          int duration_upper_bound,
+                          const bool permit_private);
 
 } // namespace ch
 } // namespace routing_algorithms

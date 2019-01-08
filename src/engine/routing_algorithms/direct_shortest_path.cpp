@@ -19,7 +19,8 @@ namespace routing_algorithms
 template <>
 InternalRouteResult directShortestPathSearch(SearchEngineData<ch::Algorithm> &engine_working_data,
                                              const DataFacade<ch::Algorithm> &facade,
-                                             const PhantomNodes &phantom_nodes)
+                                             const PhantomNodes &phantom_nodes,
+                                             const bool permit_private)
 {
     engine_working_data.InitializeOrClearFirstThreadLocalStorage(facade.GetNumberOfNodes());
     auto &forward_heap = *engine_working_data.forward_heap_1;
@@ -39,7 +40,9 @@ InternalRouteResult directShortestPathSearch(SearchEngineData<ch::Algorithm> &en
            packed_leg,
            DO_NOT_FORCE_LOOPS,
            DO_NOT_FORCE_LOOPS,
-           phantom_nodes);
+           phantom_nodes,
+           MAXIMAL_EDGE_WEIGHT,
+           permit_private);
 
     std::vector<NodeID> unpacked_nodes;
     std::vector<EdgeID> unpacked_edges;
@@ -66,7 +69,8 @@ InternalRouteResult directShortestPathSearch(SearchEngineData<ch::Algorithm> &en
 template <>
 InternalRouteResult directShortestPathSearch(SearchEngineData<mld::Algorithm> &engine_working_data,
                                              const DataFacade<mld::Algorithm> &facade,
-                                             const PhantomNodes &phantom_nodes)
+                                             const PhantomNodes &phantom_nodes,
+                                             const bool /* permit_private */)
 {
     engine_working_data.InitializeOrClearFirstThreadLocalStorage(facade.GetNumberOfNodes(),
                                                                  facade.GetMaxBorderNodeID() + 1);

@@ -68,6 +68,15 @@ Status ViaRoutePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithm
                      json_result);
     }
 
+    if (route_parameters.permit.size() > 0) {
+        if (route_parameters.permit.size() > 1) {
+            return Error("InvalidValue", "Invalid numer of permit values - only 1 allowed.", json_result);
+        }
+        if (route_parameters.permit.front() != "private") {
+            return Error("InvalidValue", "Invalid permit value.", json_result);
+        }
+    }
+
     if (!CheckAllCoordinates(route_parameters.coordinates))
     {
         return Error("InvalidValue", "Invalid coordinate value.", json_result);
@@ -107,6 +116,8 @@ Status ViaRoutePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithm
         (route_parameters.alternatives || route_parameters.number_of_alternatives > 0);
     const auto number_of_alternatives = std::max(1u, route_parameters.number_of_alternatives);
 
+    const bool permit_private = route_parameters.permit.size() == 1 && route_parameters.permit.front() == "private";
+
     // Alternatives do not support vias, only direct s,t queries supported
     // See the implementation notes and high-level outline.
     // https://github.com/Project-OSRM/osrm-backend/issues/3905
@@ -116,11 +127,11 @@ Status ViaRoutePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithm
     }
     else if (1 == start_end_nodes.size() && algorithms.HasDirectShortestPathSearch())
     {
-        routes = algorithms.DirectShortestPathSearch(start_end_nodes.front());
+        routes = algorithms.DirectShortestPathSearch(start_end_nodes.front(), permit_private);
     }
     else
     {
-        routes = algorithms.ShortestPathSearch(start_end_nodes, route_parameters.continue_straight);
+        routes = algorithms.ShortestPathSearch(start_end_nodes, route_parameters.continue_straight, permit_private);
     }
 
     // The post condition for all path searches is we have at least one route in our result.

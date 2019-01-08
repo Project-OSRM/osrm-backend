@@ -37,6 +37,8 @@ namespace routing_algorithms
 static constexpr bool FORWARD_DIRECTION = true;
 static constexpr bool REVERSE_DIRECTION = false;
 static constexpr bool DO_NOT_FORCE_LOOPS = false;
+static constexpr bool PERMIT_PRIVATE = true;
+static constexpr bool AVOID_PRIVATE = false;
 
 bool needsLoopForward(const PhantomNode &source_phantom, const PhantomNode &target_phantom);
 bool needsLoopBackwards(const PhantomNode &source_phantom, const PhantomNode &target_phantom);

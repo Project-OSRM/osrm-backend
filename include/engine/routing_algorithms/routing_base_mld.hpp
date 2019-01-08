@@ -520,7 +520,8 @@ inline void search(SearchEngineData<Algorithm> &engine_working_data,
                    const bool force_loop_forward,
                    const bool force_loop_reverse,
                    const PhantomNodes &phantom_nodes,
-                   const EdgeWeight weight_upper_bound = INVALID_EDGE_WEIGHT)
+                   const EdgeWeight weight_upper_bound,
+                   const bool /* permit_private */) // danpat TODO: implement this pls :-P
 {
     // TODO: change search calling interface to use unpacked_edges result
     std::tie(weight, unpacked_nodes, std::ignore) = search(engine_working_data,
@@ -571,7 +572,8 @@ double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
                           typename SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
                           const PhantomNode &source_phantom,
                           const PhantomNode &target_phantom,
-                          EdgeWeight weight_upper_bound = INVALID_EDGE_WEIGHT)
+                          EdgeWeight weight_upper_bound,
+                          const bool /* permit_private */) // danpat TODO: implement this
 {
     forward_heap.Clear();
     reverse_heap.Clear();

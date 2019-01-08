@@ -55,7 +55,8 @@ bool IsSupportedParameterCombination(const bool fixed_start,
 InternalRouteResult TripPlugin::ComputeRoute(const RoutingAlgorithmsInterface &algorithms,
                                              const std::vector<PhantomNode> &snapped_phantoms,
                                              const std::vector<NodeID> &trip,
-                                             const bool roundtrip) const
+                                             const bool roundtrip,
+                                             const bool permit_private = false) const
 {
     InternalRouteResult min_route;
     // given the final trip, compute total duration and return the route and location permutation
@@ -85,7 +86,7 @@ InternalRouteResult TripPlugin::ComputeRoute(const RoutingAlgorithmsInterface &a
         BOOST_ASSERT(min_route.segment_end_coordinates.size() == trip.size() - 1);
     }
 
-    min_route = algorithms.ShortestPathSearch(min_route.segment_end_coordinates, {false});
+    min_route = algorithms.ShortestPathSearch(min_route.segment_end_coordinates, {false}, permit_private);
     BOOST_ASSERT_MSG(min_route.shortest_path_weight < INVALID_EDGE_WEIGHT, "unroutable route");
     return min_route;
 }
@@ -267,9 +268,12 @@ Status TripPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
         std::rotate(std::begin(duration_trip), desired_start_index, std::end(duration_trip));
     }
 
+    // TODO validate:
+    const bool permit_private = parameters.permit.size() == 1 && parameters.permit.front() == "private";
+
     // get the route when visiting all destinations in optimized order
     InternalRouteResult route =
-        ComputeRoute(algorithms, snapped_phantoms, duration_trip, parameters.roundtrip);
+        ComputeRoute(algorithms, snapped_phantoms, duration_trip, parameters.roundtrip, permit_private);
 
     // get api response
     const std::vector<std::vector<NodeID>> trips = {duration_trip};

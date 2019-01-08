@@ -305,3 +305,58 @@ Feature: Car - Restricted access
             | primary    | psv          |       |
             | primary    | no           |       |
             | primary    | customers    |   x   |
+
+    # TODO: implement this for MLD
+    @ch
+    Scenario: Car - routing over private roads (default penalty)
+        Given the node map
+            """
+            a       f
+            |       |
+            b---1---e
+            |       |
+            c-------d
+            """
+
+        And the ways
+            | nodes  | access  |
+            | ab     |         |
+            | bc     |         |
+            | cd     |         |
+            | de     |         |
+            | ef     |         |
+            | be     | private |
+
+        When I route I should get
+            | from | to | route             |
+            | a    | f  | ab,bc,cd,de,ef,ef |
+            | a    | 1  | ab,be,be          |
+
+    # TODO: implement this for MLD
+    @ch
+    Scenario: Car - routing over private roads (no penalty)
+        Given the node map
+            """
+            a       f
+            |       |
+            b---1---e
+            |       |
+            c-------d
+            """
+
+        And the ways
+            | nodes  | access  |
+            | ab     |         |
+            | bc     |         |
+            | cd     |         |
+            | de     |         |
+            | ef     |         |
+            | be     | private |
+
+        And the query options
+            | permit  | private |
+
+        When I route I should get
+            | from | to | route       |
+            | a    | f  | ab,be,ef,ef |
+            | a    | 1  | ab,be,be    |

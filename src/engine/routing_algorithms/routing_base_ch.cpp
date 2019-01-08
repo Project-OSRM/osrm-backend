@@ -98,7 +98,8 @@ void search(SearchEngineData<Algorithm> & /*engine_working_data*/,
             const bool force_loop_forward,
             const bool force_loop_reverse,
             const PhantomNodes & /*phantom_nodes*/,
-            const EdgeWeight weight_upper_bound)
+            const EdgeWeight weight_upper_bound,
+            const bool permit_private)
 {
     if (forward_heap.Empty() || reverse_heap.Empty())
     {
@@ -127,7 +128,8 @@ void search(SearchEngineData<Algorithm> & /*engine_working_data*/,
                                            weight,
                                            min_edge_offset,
                                            force_loop_forward,
-                                           force_loop_reverse);
+                                           force_loop_reverse,
+                                           permit_private);
         }
         if (!reverse_heap.Empty())
         {
@@ -138,7 +140,8 @@ void search(SearchEngineData<Algorithm> & /*engine_working_data*/,
                                            weight,
                                            min_edge_offset,
                                            force_loop_reverse,
-                                           force_loop_forward);
+                                           force_loop_forward,
+                                           permit_private);
         }
     }
 
@@ -174,7 +177,8 @@ double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
                           SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
                           const PhantomNode &source_phantom,
                           const PhantomNode &target_phantom,
-                          EdgeWeight weight_upper_bound)
+                          EdgeWeight weight_upper_bound,
+                          const bool permit_private)
 {
     forward_heap.Clear();
     reverse_heap.Clear();
@@ -192,7 +196,8 @@ double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
            DO_NOT_FORCE_LOOPS,
            DO_NOT_FORCE_LOOPS,
            {source_phantom, target_phantom},
-           weight_upper_bound);
+           weight_upper_bound,
+           permit_private);
 
     if (weight == INVALID_EDGE_WEIGHT)
     {

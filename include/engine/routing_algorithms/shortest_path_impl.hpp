@@ -34,7 +34,8 @@ void searchWithUTurn(SearchEngineData<Algorithm> &engine_working_data,
                      const int total_weight_to_forward,
                      const int total_weight_to_reverse,
                      int &new_total_weight,
-                     std::vector<NodeID> &leg_packed_path)
+                     std::vector<NodeID> &leg_packed_path,
+                     const bool permit_private)
 {
     forward_heap.Clear();
     reverse_heap.Clear();
@@ -79,7 +80,9 @@ void searchWithUTurn(SearchEngineData<Algorithm> &engine_working_data,
            leg_packed_path,
            needs_loop_forwards,
            needs_loop_backwards,
-           {source_phantom, target_phantom});
+           {source_phantom, target_phantom},
+           MAXIMAL_EDGE_WEIGHT,
+           permit_private);
 
     // if no route is found between two parts of the via-route, the entire route becomes
     // invalid. Adding to invalid edge weight sadly doesn't return an invalid edge weight. Here
@@ -107,7 +110,8 @@ void search(SearchEngineData<Algorithm> &engine_working_data,
             int &new_total_weight_to_forward,
             int &new_total_weight_to_reverse,
             std::vector<NodeID> &leg_packed_path_forward,
-            std::vector<NodeID> &leg_packed_path_reverse)
+            std::vector<NodeID> &leg_packed_path_reverse,
+            const bool permit_private)
 {
     if (search_to_forward_node)
     {
@@ -140,7 +144,9 @@ void search(SearchEngineData<Algorithm> &engine_working_data,
                leg_packed_path_forward,
                needsLoopForward(source_phantom, target_phantom),
                routing_algorithms::DO_NOT_FORCE_LOOP,
-               {source_phantom, target_phantom});
+               {source_phantom, target_phantom},
+               MAXIMAL_EDGE_WEIGHT,
+               permit_private);
     }
 
     if (search_to_reverse_node)
@@ -173,7 +179,9 @@ void search(SearchEngineData<Algorithm> &engine_working_data,
                leg_packed_path_reverse,
                routing_algorithms::DO_NOT_FORCE_LOOP,
                needsLoopBackwards(source_phantom, target_phantom),
-               {source_phantom, target_phantom});
+               {source_phantom, target_phantom},
+               MAXIMAL_EDGE_WEIGHT,
+               permit_private);
     }
 }
 
@@ -232,7 +240,8 @@ template <typename Algorithm>
 InternalRouteResult shortestPathSearch(SearchEngineData<Algorithm> &engine_working_data,
                                        const DataFacade<Algorithm> &facade,
                                        const std::vector<PhantomNodes> &phantom_nodes_vector,
-                                       const boost::optional<bool> continue_straight_at_waypoint)
+                                       const boost::optional<bool> continue_straight_at_waypoint,
+                                       const bool permit_private)
 {
     InternalRouteResult raw_route_data;
     raw_route_data.segment_end_coordinates = phantom_nodes_vector;
@@ -297,7 +306,8 @@ InternalRouteResult shortestPathSearch(SearchEngineData<Algorithm> &engine_worki
                                 total_weight_to_forward,
                                 total_weight_to_reverse,
                                 new_total_weight_to_forward,
-                                packed_leg_to_forward);
+                                packed_leg_to_forward,
+                                permit_private);
                 // if only the reverse node is valid (e.g. when using the match plugin) we
                 // actually need to move
                 if (!target_phantom.IsValidForwardTarget())
@@ -335,7 +345,8 @@ InternalRouteResult shortestPathSearch(SearchEngineData<Algorithm> &engine_worki
                        new_total_weight_to_forward,
                        new_total_weight_to_reverse,
                        packed_leg_to_forward,
-                       packed_leg_to_reverse);
+                       packed_leg_to_reverse,
+                       permit_private);
             }
         }
 

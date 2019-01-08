@@ -69,6 +69,7 @@ struct BaseParameters
     std::vector<boost::optional<Bearing>> bearings;
     std::vector<boost::optional<Approach>> approaches;
     std::vector<std::string> exclude;
+    std::vector<std::string> permit;
 
     // Adds hints to response which can be included in subsequent requests, see `hints` above.
     bool generate_hints = true;
@@ -79,9 +80,10 @@ struct BaseParameters
                    std::vector<boost::optional<Bearing>> bearings_ = {},
                    std::vector<boost::optional<Approach>> approaches_ = {},
                    bool generate_hints_ = true,
-                   std::vector<std::string> exclude = {})
+                   std::vector<std::string> exclude = {},
+                   std::vector<std::string> permit = {})
         : coordinates(coordinates_), hints(hints_), radiuses(radiuses_), bearings(bearings_),
-          approaches(approaches_), exclude(std::move(exclude)), generate_hints(generate_hints_)
+          approaches(approaches_), exclude(std::move(exclude)), permit(std::move(permit)), generate_hints(generate_hints_)
     {
     }
 
@@ -91,6 +93,7 @@ struct BaseParameters
         return (hints.empty() || hints.size() == coordinates.size()) &&
                (bearings.empty() || bearings.size() == coordinates.size()) &&
                (radiuses.empty() || radiuses.size() == coordinates.size()) &&
+               (permit.empty() || (permit.size() == 1 && permit.front() == "private")) &&
                (approaches.empty() || approaches.size() == coordinates.size()) &&
                std::all_of(bearings.begin(),
                            bearings.end(),

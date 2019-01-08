@@ -166,12 +166,17 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
                        (qi::as_string[+qi::char_("a-zA-Z0-9")] %
                         ',')[ph::bind(&engine::api::BaseParameters::exclude, qi::_r1) = qi::_1];
 
+        permit_rule = qi::lit("permit=") >
+                       (qi::as_string[+qi::char_("a-zA-Z0-9")] %
+                        ',')[ph::bind(&engine::api::BaseParameters::permit, qi::_r1) = qi::_1];
+
         base_rule = radiuses_rule(qi::_r1)         //
                     | hints_rule(qi::_r1)          //
                     | bearings_rule(qi::_r1)       //
                     | generate_hints_rule(qi::_r1) //
                     | approach_rule(qi::_r1)       //
-                    | exclude_rule(qi::_r1);
+                    | exclude_rule(qi::_r1)        //
+                    | permit_rule(qi::_r1);
     }
 
   protected:
@@ -188,6 +193,7 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
     qi::rule<Iterator, Signature> generate_hints_rule;
     qi::rule<Iterator, Signature> approach_rule;
     qi::rule<Iterator, Signature> exclude_rule;
+    qi::rule<Iterator, Signature> permit_rule;
 
     qi::rule<Iterator, osrm::engine::Bearing()> bearing_rule;
     qi::rule<Iterator, osrm::util::Coordinate()> location_rule;

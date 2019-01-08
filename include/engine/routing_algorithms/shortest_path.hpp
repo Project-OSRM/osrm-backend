@@ -17,7 +17,8 @@ template <typename Algorithm>
 InternalRouteResult shortestPathSearch(SearchEngineData<Algorithm> &engine_working_data,
                                        const DataFacade<Algorithm> &facade,
                                        const std::vector<PhantomNodes> &phantom_nodes_vector,
-                                       const boost::optional<bool> continue_straight_at_waypoint);
+                                       const boost::optional<bool> continue_straight_at_waypoint,
+                                       const bool permit_private);
 
 } // namespace routing_algorithms
 } // namespace engine
