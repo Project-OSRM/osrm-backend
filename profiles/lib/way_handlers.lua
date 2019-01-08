@@ -221,6 +221,26 @@ function WayHandlers.hov(profile,way,result,data)
   end
 end
 
+-- set restricted flags for toll roads; later on the profile can apply turn penalties
+function WayHandlers.penalize_toll_roads(profile,way,result,data)
+  -- if user tells us to avoid toll roads completely,
+  -- there is no need to set high penalties
+  if profile.avoid.toll then
+    return
+  end
+
+  local toll = way:get_value_by_key("toll")
+
+  if "yes" == toll then
+    result.forward_restricted = true
+    result.backward_restricted = true
+  end
+
+  -- Todo:
+  -- - forward/backward namespaces
+  -- - other tag values not only "yes"
+end
+
 
 -- set highway and access classification by user preference
 function WayHandlers.way_classification_for_turn(profile,way,result,data)

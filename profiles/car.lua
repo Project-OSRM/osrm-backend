@@ -416,6 +416,9 @@ function process_way(profile, way, result, relations)
     -- handle hov
     WayHandlers.hov,
 
+    -- apply high penalty for turns onto toll roads, starting on them still works
+    WayHandlers.penalize_toll_roads,
+
     -- compute speed taking into account way type, maxspeed tags, etc.
     WayHandlers.speed,
     WayHandlers.surface,
