@@ -7,6 +7,7 @@ Sequence = require('lib/sequence')
 Handlers = require("lib/way_handlers")
 find_access_tag = require("lib/access").find_access_tag
 limit = require("lib/maxspeed").limit
+Measure = require("lib/measure")
 
 function setup()
   local default_speed = 15
@@ -38,20 +39,10 @@ function setup()
       mode.pushing_bike
     },
 
-    barrier_whitelist = Set {
-      'sump_buster',
-      'bus_trap',
-      'cycle_barrier',
-      'bollard',
-      'entrance',
-      'cattle_grid',
-      'border_control',
-      'toll_booth',
-      'sally_port',
-      'gate',
-      'lift_gate',
-      'no',
-      'block'
+    barrier_blacklist = Set {
+      'yes',
+      'wall',
+      'fence'
     },
 
     access_tag_whitelist = Set {
@@ -70,7 +61,22 @@ function setup()
 
     restricted_access_tag_list = Set { },
 
-    restricted_highway_whitelist = Set { },
+    restricted_highway_whitelist = Set {
+      'motorway',
+      'motorway_link',
+      'trunk',
+      'trunk_link',
+      'primary',
+      'primary_link',
+      'secondary',
+      'secondary_link',
+      'tertiary',
+      'tertiary_link',
+      'residential',
+      'living_street',
+      'unclassified',
+      'service'
+    },
 
     -- tags disallow access to in combination with highway=service
     service_access_tag_blacklist = Set { },
@@ -122,6 +128,10 @@ function setup()
     },
 
     bicycle_speeds = {
+      motorway        = default_speed,
+      motorway_link   = default_speed,
+      trunk           = default_speed,
+      trunk_link      = default_speed,
       cycleway = default_speed,
       primary = default_speed,
       primary_link = default_speed,
@@ -216,20 +226,6 @@ function setup()
   }
 end
 
-local function parse_maxspeed(source)
-    if not source then
-        return 0
-    end
-    local n = tonumber(source:match("%d*"))
-    if not n then
-        n = 0
-    end
-    if string.match(source, "mph") or string.match(source, "mp/h") then
-        n = (n*1609)/1000
-    end
-    return n
-end
-
 function process_node(profile, node, result)
   -- parse access and barrier tags
   local highway = node:get_value_by_key("highway")
@@ -245,7 +241,7 @@ function process_node(profile, node, result)
   else
     local barrier = node:get_value_by_key("barrier")
     if barrier and "" ~= barrier then
-      if not profile.barrier_whitelist[barrier] then
+      if profile.barrier_blacklist[barrier] then
         result.barrier = true
       end
     end
@@ -286,9 +282,9 @@ function handle_bicycle_tags(profile,way,result,data)
 
   -- other tags
   data.junction = way:get_value_by_key("junction")
-  data.maxspeed = parse_maxspeed(way:get_value_by_key ( "maxspeed") )
-  data.maxspeed_forward = parse_maxspeed(way:get_value_by_key( "maxspeed:forward"))
-  data.maxspeed_backward = parse_maxspeed(way:get_value_by_key( "maxspeed:backward"))
+  data.maxspeed = 12
+  data.maxspeed_forward = 12
+  data.maxspeed_backward = 12
   data.barrier = way:get_value_by_key("barrier")
   data.oneway = way:get_value_by_key("oneway")
   data.oneway_bicycle = way:get_value_by_key("oneway:bicycle")
