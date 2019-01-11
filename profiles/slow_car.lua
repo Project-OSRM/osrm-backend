@@ -1,4 +1,4 @@
--- Car profile
+-- Small Car/Scooter profile
 
 api_version = 4
 
@@ -30,7 +30,7 @@ function setup()
     },
 
     default_mode              = mode.driving,
-    default_speed             = 10,
+    default_speed             = 20,
     oneway_handling           = true,
     side_road_multiplier      = 0.8,
     turn_penalty              = 7.5,
@@ -134,20 +134,20 @@ function setup()
     
     speeds = Sequence {
       highway = {
-        motorway        = 20,
-        motorway_link   = 20,
-        trunk           = 20,
-        trunk_link      = 20,
-        primary         = 20,
-        primary_link    = 20,
-        secondary       = 20,
-        secondary_link  = 20,
-        tertiary        = 20,
-        tertiary_link   = 20,
-        unclassified    = 20,
-        residential     = 20,
-        living_street   = 20,
-        service         = 20
+        motorway        = default_speed,
+        motorway_link   = default_speed,
+        trunk           = default_speed,
+        trunk_link      = default_speed,
+        primary         = default_speed,
+        primary_link    = default_speed,
+        secondary       = default_speed,
+        secondary_link  = default_speed,
+        tertiary        = default_speed,
+        tertiary_link   = default_speed,
+        unclassified    = default_speed,
+        residential     = default_speed,
+        living_street   = default_speed,
+        service         = default_speed
       }
     },
 
@@ -203,50 +203,50 @@ function setup()
       ["concrete:lanes"] = nil,
       paved = nil,
 
-      cement = 20,
-      compacted = 20,
-      fine_gravel = 20,
+      cement = default_speed,
+      compacted = default_speed,
+      fine_gravel = default_speed,
 
-      paving_stones = 20,
-      metal = 20,
-      bricks = 20,
+      paving_stones = default_speed,
+      metal = default_speed,
+      bricks = default_speed,
 
-      grass = 20,
-      wood = 20,
-      sett = 20,
-      grass_paver = 20,
-      gravel = 20,
-      unpaved = 20,
-      ground = 20,
-      dirt = 20,
-      pebblestone = 20,
-      tartan = 20,
+      grass = default_speed,
+      wood = default_speed,
+      sett = default_speed,
+      grass_paver = default_speed,
+      gravel = default_speed,
+      unpaved = default_speed,
+      ground = default_speed,
+      dirt = default_speed,
+      pebblestone = default_speed,
+      tartan = default_speed,
 
-      cobblestone = 20,
-      clay = 20,
+      cobblestone = default_speed,
+      clay = default_speed,
 
-      earth = 20,
-      stone = 20,
-      rocky = 20,
-      sand = 20,
+      earth = default_speed,
+      stone = default_speed,
+      rocky = default_speed,
+      sand = default_speed,
 
       mud = 10
     },
 
     -- max speed for tracktypes
     tracktype_speeds = {
-      grade1 =  20,
-      grade2 =  20,
-      grade3 =  20,
-      grade4 =  20,
-      grade5 =  20
+      grade1 =  default_speed,
+      grade2 =  default_speed,
+      grade3 =  default_speed,
+      grade4 =  default_speed,
+      grade5 =  default_speed
     },
 
     -- max speed for smoothnesses
     smoothness_speeds = {
-      intermediate    =  20,
-      bad             =  20,
-      very_bad        =  20,
+      intermediate    =  default_speed,
+      bad             =  default_speed,
+      very_bad        =  default_speed,
       horrible        =  10,
       very_horrible   =  5,
       impassable      =  0
@@ -254,10 +254,10 @@ function setup()
 
     -- http://wiki.openstreetmap.org/wiki/Speed_limits
     maxspeed_table_default = {
-      urban = 20,
-      rural = 20,
-      trunk = 20,
-      motorway = 20
+      urban = default_speed,
+      rural = default_speed,
+      trunk = default_speed,
+      motorway = default_speed
     },
 
     -- List only exceptions
