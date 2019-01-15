@@ -2,6 +2,7 @@
   - Changes from 5.21.0
     - Features:
       - ADDED: new waypoints parameter to the `route` plugin, enabling silent waypoints [#5345](https://github.com/Project-OSRM/osrm-backend/pull/5345)
+      - ADDED: data timestamp information in the response. [#5115](https://github.com/Project-OSRM/osrm-backend/issues/5115)
 
 # 5.21.0
   - Changes from 5.20.0

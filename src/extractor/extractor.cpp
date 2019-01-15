@@ -51,6 +51,7 @@
 #include <osmium/handler/node_locations_for_ways.hpp>
 #include <osmium/index/map/flex_mem.hpp>
 #include <osmium/io/any_input.hpp>
+#include <osmium/osm/timestamp.hpp>
 #include <osmium/thread/pool.hpp>
 #include <osmium/visitor.hpp>
 
@@ -425,11 +426,17 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
 
         // write .timestamp data file
         std::string timestamp = header.get("osmosis_replication_timestamp");
+        osmium::Timestamp ts;
         if (timestamp.empty())
         {
             timestamp = "n/a";
         }
+        else
+        {
+            ts = osmium::Timestamp(timestamp);
+        }
         util::Log() << "timestamp: " << timestamp;
+        files::writeTimestamp(config.GetPath(".osrm.timestamp").string(), DataTimestamp(ts));
     }
 
     // Extraction containers and restriction parser

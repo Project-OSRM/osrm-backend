@@ -55,6 +55,7 @@ struct ExtractorConfig final : storage::IOConfig
                                       ".osrm.geometry",
                                       ".osrm.nbg_nodes",
                                       ".osrm.ebg_nodes",
+                                      ".osrm.timestamp",
                                       ".osrm.edges",
                                       ".osrm.ebg",
                                       ".osrm.ramIndex",

@@ -74,6 +74,8 @@ class BaseDataFacade
 
     virtual std::uint32_t GetCheckSum() const = 0;
 
+    virtual std::string GetTimestamp() const = 0;
+
     // node and edge information access
     virtual util::Coordinate GetCoordinateOfNode(const NodeID id) const = 0;
 
