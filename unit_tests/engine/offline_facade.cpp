@@ -341,6 +341,7 @@ class ContiguousInternalMemoryDataFacade<routing_algorithms::offline::Algorithm>
     StringView GetDestinationsForID(const NameID /*id*/) const override { return StringView{}; }
     StringView GetExitsForID(const NameID /*id*/) const override { return StringView{}; }
     bool GetContinueStraightDefault() const override { return false; }
+    std::string GetTimestamp() const override { return ""; }
     double GetMapMatchingMaxSpeed() const override { return 0; }
     const char *GetWeightName() const override { return ""; }
     unsigned GetWeightPrecision() const override { return 0; }

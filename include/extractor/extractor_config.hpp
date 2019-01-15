@@ -55,6 +55,7 @@ struct ExtractorConfig final : storage::IOConfig
                                       ".osrm.geometry",
                                       ".osrm.nbg_nodes",
                                       ".osrm.ebg_nodes",
+                                      ".osrm.timestamp",
                                       ".osrm.edges",
                                       ".osrm.ebg",
                                       ".osrm.ramIndex",
@@ -82,6 +83,7 @@ struct ExtractorConfig final : storage::IOConfig
     boost::filesystem::path input_path;
     boost::filesystem::path profile_path;
     std::vector<boost::filesystem::path> location_dependent_data_paths;
+    std::string data_version;
 
     unsigned requested_num_threads;
     unsigned small_component_size;

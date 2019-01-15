@@ -302,6 +302,7 @@ std::vector<std::pair<bool, boost::filesystem::path>> Storage::GetStaticFiles()
         {REQUIRED, config.GetPath(".osrm.ebg_nodes")},
         {REQUIRED, config.GetPath(".osrm.tls")},
         {REQUIRED, config.GetPath(".osrm.tld")},
+        {REQUIRED, config.GetPath(".osrm.timestamp")},
         {REQUIRED, config.GetPath(".osrm.maneuver_overrides")},
         {REQUIRED, config.GetPath(".osrm.edges")},
         {REQUIRED, config.GetPath(".osrm.names")},
@@ -399,6 +400,17 @@ void Storage::PopulateStaticData(const SharedDataIndex &index)
     {
         auto name_table = make_name_table_view(index, "/common/names");
         extractor::files::readNames(config.GetPath(".osrm.names"), name_table);
+    }
+
+    // Timestamp mark
+    {
+        auto timestamp_ref = make_timestamp_view(index, "/common/timestamp");
+        std::string ts;
+        extractor::files::readTimestamp(config.GetPath(".osrm.timestamp"), ts);
+        if (!ts.empty())
+        {
+            memcpy(const_cast<char *>(timestamp_ref.data()), ts.data(), ts.size());
+        }
     }
 
     // Turn lane data

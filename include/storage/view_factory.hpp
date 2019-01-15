@@ -272,6 +272,11 @@ inline auto make_partition_view(const SharedDataIndex &index, const std::string 
         level_data_ptr, std::move(partition), std::move(cell_to_children)};
 }
 
+inline auto make_timestamp_view(const SharedDataIndex &index, const std::string &name)
+{
+    return util::StringView(index.GetBlockPtr<char>(name), index.GetBlockEntries(name));
+}
+
 inline auto make_cell_storage_view(const SharedDataIndex &index, const std::string &name)
 {
     auto source_boundary = make_vector_view<NodeID>(index, name + "/source_boundary");

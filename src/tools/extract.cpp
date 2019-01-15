@@ -43,6 +43,10 @@ return_code parseArguments(int argc,
         boost::program_options::value<boost::filesystem::path>(&extractor_config.profile_path)
             ->default_value("profiles/car.lua"),
         "Path to LUA routing profile")(
+        "data_version,d",
+        boost::program_options::value<std::string>(&extractor_config.data_version)
+            ->default_value(""),
+        "Data version. Leave blank to avoid. osmosis - to get timestamp from file")(
         "threads,t",
         boost::program_options::value<unsigned int>(&extractor_config.requested_num_threads)
             ->default_value(tbb::task_scheduler_init::default_num_threads()),
