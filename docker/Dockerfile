@@ -1,10 +1,11 @@
 FROM debian:stretch-slim as builder
 ARG DOCKER_TAG
+ARG BUILD_CONCURRENCY
 RUN mkdir -p /src  && mkdir -p /opt
 COPY . /src
 WORKDIR /src
 
-RUN NPROC=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || 1) && \
+RUN NPROC=${BUILD_CONCURRENCY:-$(grep -c ^processor /proc/cpuinfo 2>/dev/null || 1)} && \
     apt-get update && \
     apt-get -y --no-install-recommends install cmake make git gcc g++ libbz2-dev libxml2-dev \
     libzip-dev libboost1.62-all-dev lua5.2 liblua5.2-dev libtbb-dev -o APT::Install-Suggests=0 -o APT::Install-Recommends=0 && \
