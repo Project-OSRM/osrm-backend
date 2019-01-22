@@ -47,7 +47,6 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates_fixture)
 
     json::Object reference{
         {{"code", "Ok"},
-         {"data_version", "2016-03-05T00:26:02Z"},
          {"waypoints",
           json::Array{{json::Object{{{"name", "Boulevard du Larvotto"},
                                      {"location", location},

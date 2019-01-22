@@ -404,8 +404,12 @@ void Storage::PopulateStaticData(const SharedDataIndex &index)
 
     // Timestamp mark
     {
-        auto timestamp = make_timestamp_view(index, "/common/timestamp");
-        extractor::files::readTimestamp(config.GetPath(".osrm.timestamp"), *timestamp);
+        auto timestamp_ref = make_timestamp_view(index, "/common/timestamp");
+        std::string ts;
+        extractor::files::readTimestamp(config.GetPath(".osrm.timestamp"), ts);
+        if (!ts.empty()) {
+            memcpy(const_cast<char *>(timestamp_ref.data()), ts.data(), ts.size());
+        }
     }
 
     // Turn lane data

@@ -426,17 +426,19 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
 
         // write .timestamp data file
         std::string timestamp = header.get("osmosis_replication_timestamp");
-        osmium::Timestamp ts;
+        if (config.data_version == "osmosis")
+        {
+            files::writeTimestamp(config.GetPath(".osrm.timestamp").string(), timestamp);
+        }
+        else
+        {
+            files::writeTimestamp(config.GetPath(".osrm.timestamp").string(), config.data_version);
+        }
         if (timestamp.empty())
         {
             timestamp = "n/a";
         }
-        else
-        {
-            ts = osmium::Timestamp(timestamp);
-        }
         util::Log() << "timestamp: " << timestamp;
-        files::writeTimestamp(config.GetPath(".osrm.timestamp").string(), DataTimestamp(ts));
     }
 
     // Extraction containers and restriction parser

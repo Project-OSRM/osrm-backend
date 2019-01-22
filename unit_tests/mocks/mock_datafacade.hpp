@@ -53,7 +53,7 @@ class MockBaseDataFacade : public engine::datafacade::BaseDataFacade
     {
         return 0;
     }
-    std::string GetTimestamp() const override { return "n/a"; }
+    std::string GetTimestamp() const override { return ""; }
     NodeForwardRange GetUncompressedForwardGeometry(const EdgeID /* id */) const override
     {
         static NodeID data[] = {0, 1, 2, 3};

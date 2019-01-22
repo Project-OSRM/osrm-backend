@@ -91,7 +91,7 @@ Every response object has a `code` property containing one of the strings below 
 
 #### Data version
 
-Every response object has a `data_version` propetry containing timestamp from the original OpenStreetMap file. May be `n/a` if original OSM file has not `osmosis_replication_timestamp` section.
+Every response object has a `data_version` propetry containing timestamp from the original OpenStreetMap file. This field is optional. It can be ommited if data_version parametr was not set on osrm-extract stage or OSM file has not `osmosis_replication_timestamp` section.
 
 #### Example response
 

@@ -137,7 +137,7 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     extractor::Datasources *m_datasources;
 
     std::uint32_t m_check_sum;
-    DataTimestamp m_data_timestamp;
+    StringView m_data_timestamp;
     util::vector_view<util::Coordinate> m_coordinate_list;
     extractor::PackedOSMIDsView m_osmnodeid_list;
     util::vector_view<std::uint32_t> m_lane_description_offsets;
@@ -184,7 +184,7 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
 
         m_check_sum = *index.GetBlockPtr<std::uint32_t>("/common/connectivity_checksum");
 
-        m_data_timestamp = *index.GetBlockPtr<DataTimestamp>("/common/timestamp");
+        m_data_timestamp = make_timestamp_view(index, "/common/timestamp");
 
         std::tie(m_coordinate_list, m_osmnodeid_list) =
             make_nbn_data_view(index, "/common/nbn_data");
@@ -437,14 +437,7 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
 
     std::string GetTimestamp() const override final
     {
-        if (!m_data_timestamp)
-        {
-            return "n/a";
-        }
-        time_t ts(m_data_timestamp);
-        char buf[21]; // sizeof "2019-01-01T01:01:01Z\n"];
-        strftime(buf, 21, "%FT%TZ", gmtime(&ts));
-        return std::string(buf, 20);
+       return std::string(m_data_timestamp.begin(), m_data_timestamp.end());
     }
 
     GeometryID GetGeometryIndex(const NodeID id) const override final

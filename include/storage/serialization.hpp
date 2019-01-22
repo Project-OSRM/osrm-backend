@@ -201,18 +201,6 @@ inline void read(tar::FileReader &reader, const std::string &name, std::string &
     reader.ReadInto(name, const_cast<char *>(data.data()), count);
 }
 
-inline void write(tar::FileWriter &writer, const std::string &name, const std::uint64_t &data)
-{
-    writer.WriteElementCount64(name, data);
-    writer.WriteFrom(name, &data, 1);
-}
-
-inline void read(tar::FileReader &reader, const std::string &name, std::uint64_t &data)
-{
-    data = reader.ReadElementCount64(name);
-    reader.ReadInto(name, &data, 1);
-}
-
 template <typename T>
 inline void read(tar::FileReader &reader, const std::string &name, std::vector<T> &data)
 {

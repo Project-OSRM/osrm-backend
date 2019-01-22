@@ -68,7 +68,11 @@ class RouteAPI : public BaseAPI
         response.values["waypoints"] = BaseAPI::MakeWaypoints(all_start_end_points);
         response.values["routes"] = std::move(jsRoutes);
         response.values["code"] = "Ok";
-        response.values["data_version"] = facade.GetTimestamp();
+        auto data_timestamp = facade.GetTimestamp();
+        if (!data_timestamp.empty())
+        {
+            response.values["data_version"] = facade.GetTimestamp();
+        }
     }
 
   protected:
