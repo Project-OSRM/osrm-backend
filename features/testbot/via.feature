@@ -18,6 +18,23 @@ Feature: Via points
             | waypoints | route           |
             | a,b,c     | abc,abc,abc,abc |
 
+    Scenario: Simple via point with waypoints collapsing
+        Given the node map
+            """
+            a b c
+            """
+
+        And the ways
+            | nodes |
+            | abc   |
+
+       Given the query options
+            | waypoints | 0;2   |
+
+        When I route I should get
+            | waypoints | route       |
+            | a,b,c     | abc,abc     |
+
     Scenario: Simple via point with core factor
         Given the contract extra arguments "--core 0.8"
         Given the node map

@@ -31,10 +31,10 @@ class BaseAPI
     util::json::Array MakeWaypoints(const std::vector<PhantomNodes> &segment_end_coordinates) const
     {
         BOOST_ASSERT(parameters.coordinates.size() > 0);
-        BOOST_ASSERT(parameters.coordinates.size() == segment_end_coordinates.size() + 1);
+        // BOOST_ASSERT(parameters.coordinates.size() == segment_end_coordinates.size() + 1);
 
         util::json::Array waypoints;
-        waypoints.values.resize(parameters.coordinates.size());
+        waypoints.values.resize(segment_end_coordinates.size() + 1);
         waypoints.values[0] = MakeWaypoint(segment_end_coordinates.front().source_phantom);
 
         auto out_iter = std::next(waypoints.values.begin());
@@ -75,8 +75,8 @@ class BaseAPI
     const BaseParameters &parameters;
 };
 
-} // ns api
-} // ns engine
-} // ns osrm
+} // namespace api
+} // namespace engine
+} // namespace osrm
 
 #endif

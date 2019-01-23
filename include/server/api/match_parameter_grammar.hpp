@@ -18,7 +18,7 @@ namespace
 {
 namespace ph = boost::phoenix;
 namespace qi = boost::spirit::qi;
-}
+} // namespace
 
 template <typename Iterator = std::string::iterator,
           typename Signature = void(engine::api::MatchParameters &)>
@@ -42,10 +42,6 @@ struct MatchParametersGrammar final : public RouteParametersGrammar<Iterator, Si
             (qi::uint_ %
              ';')[ph::bind(&engine::api::MatchParameters::timestamps, qi::_r1) = qi::_1];
 
-        waypoints_rule =
-            qi::lit("waypoints=") >
-            (size_t_ % ';')[ph::bind(&engine::api::MatchParameters::waypoints, qi::_r1) = qi::_1];
-
         gaps_type.add("split", engine::api::MatchParameters::GapsType::Split)(
             "ignore", engine::api::MatchParameters::GapsType::Ignore);
 
@@ -68,8 +64,8 @@ struct MatchParametersGrammar final : public RouteParametersGrammar<Iterator, Si
 
     qi::symbols<char, engine::api::MatchParameters::GapsType> gaps_type;
 };
-}
-}
-}
+} // namespace api
+} // namespace server
+} // namespace osrm
 
 #endif

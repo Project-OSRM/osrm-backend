@@ -209,7 +209,6 @@ Status MatchPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
                            {
                                return routing_algorithms::DEFAULT_GPS_PRECISION * RADIUS_MULTIPLIER;
                            }
-
                        });
     }
 
@@ -317,6 +316,6 @@ Status MatchPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
 
     return Status::Ok;
 }
-}
-}
-}
+} // namespace plugins
+} // namespace engine
+} // namespace osrm

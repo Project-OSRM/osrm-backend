@@ -73,6 +73,28 @@ Status ViaRoutePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithm
         return Error("InvalidValue", "Invalid coordinate value.", json_result);
     }
 
+    // Error: first and last points should be waypoints
+    if (!route_parameters.waypoints.empty() &&
+        (route_parameters.waypoints[0] != 0 ||
+         route_parameters.waypoints.back() != (route_parameters.coordinates.size() - 1)))
+    {
+        return Error("InvalidValue",
+                     "First and last coordinates must be specified as waypoints.",
+                     json_result);
+    }
+
+    if (!route_parameters.waypoints.empty())
+    {
+        for (std::size_t i = 0; i < route_parameters.waypoints.size() - 1; i++)
+        {
+            if (route_parameters.waypoints[i] >= route_parameters.waypoints[i + 1])
+            {
+                return Error(
+                    "InvalidValue", "Waypoints must be supplied in increasing order", json_result);
+            }
+        }
+    }
+
     if (!CheckAlgorithms(route_parameters, algorithms, json_result))
         return Status::Error;
 
@@ -132,6 +154,29 @@ Status ViaRoutePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithm
 
     if (routes.routes[0].is_valid())
     {
+        auto collapse_legs = !route_parameters.waypoints.empty();
+        if (collapse_legs)
+        {
+            std::vector<bool> waypoint_legs;
+            auto waypoints_itr = route_parameters.waypoints.begin();
+            for (std::size_t i = 0; i < route_parameters.coordinates.size(); i++)
+            {
+                if (i == *waypoints_itr)
+                {
+                    waypoint_legs.push_back(true);
+                    waypoints_itr++;
+                }
+                else
+                {
+                    waypoint_legs.push_back(false);
+                }
+            }
+            for (std::size_t i = 0; i < routes.routes.size(); i++)
+            {
+                routes.routes[i] = CollapseInternalRouteResult(routes.routes[i], waypoint_legs);
+            }
+        }
+
         route_api.MakeResponse(routes, json_result);
     }
     else
@@ -155,6 +200,6 @@ Status ViaRoutePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithm
 
     return Status::Ok;
 }
-}
-}
-}
+} // namespace plugins
+} // namespace engine
+} // namespace osrm
