@@ -83,18 +83,6 @@ Status ViaRoutePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithm
                      json_result);
     }
 
-    if (!route_parameters.waypoints.empty())
-    {
-        for (std::size_t i = 0; i < route_parameters.waypoints.size() - 1; i++)
-        {
-            if (route_parameters.waypoints[i] >= route_parameters.waypoints[i + 1])
-            {
-                return Error(
-                    "InvalidValue", "Waypoints must be supplied in increasing order", json_result);
-            }
-        }
-    }
-
     if (!CheckAlgorithms(route_parameters, algorithms, json_result))
         return Status::Error;
 
@@ -157,20 +145,17 @@ Status ViaRoutePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithm
         auto collapse_legs = !route_parameters.waypoints.empty();
         if (collapse_legs)
         {
-            std::vector<bool> waypoint_legs;
-            auto waypoints_itr = route_parameters.waypoints.begin();
-            for (std::size_t i = 0; i < route_parameters.coordinates.size(); i++)
-            {
-                if (i == *waypoints_itr)
-                {
-                    waypoint_legs.push_back(true);
-                    waypoints_itr++;
-                }
-                else
-                {
-                    waypoint_legs.push_back(false);
-                }
-            }
+            std::vector<bool> waypoint_legs(route_parameters.coordinates.size(), false);
+            std::for_each(route_parameters.waypoints.begin(),
+                          route_parameters.waypoints.end(),
+                          [&](const std::size_t waypoint_index) {
+                              BOOST_ASSERT(waypoint_index < waypoint_legs.size());
+                              waypoint_legs[waypoint_index] = true;
+                          });
+            // First and last coordinates should always be waypoints
+            // This gets validated earlier, but double-checking here, jic
+            BOOST_ASSERT(waypoint_legs.front());
+            BOOST_ASSERT(waypoint_legs.back());
             for (std::size_t i = 0; i < routes.routes.size(); i++)
             {
                 routes.routes[i] = CollapseInternalRouteResult(routes.routes[i], waypoint_legs);

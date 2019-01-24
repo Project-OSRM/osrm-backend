@@ -996,6 +996,18 @@ argumentsToRouteParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
             }
             params->waypoints.emplace_back(static_cast<unsigned>(waypoint_value->NumberValue()));
         }
+
+        if (!params->waypoints.empty())
+        {
+            for (std::size_t i = 0; i < params->waypoints.size() - 1; i++)
+            {
+                if (params->waypoints[i] >= params->waypoints[i + 1])
+                {
+                    Nan::ThrowError("Waypoints must be supplied in increasing order");
+                    return route_parameters_ptr();
+                }
+            }
+        }
     }
 
     bool parsedSuccessfully = parseCommonParameters(obj, params);

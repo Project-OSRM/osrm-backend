@@ -678,3 +678,15 @@ test('route: throws on invalid waypoints values, waypoints must be an array of i
     assert.throws(function () { osrm.route(options, function (err, response) { console.log(err); }); },
         'Waypoint values must be an array of integers');
 });
+
+test('route: throws on invalid waypoints values, waypoints must be an array of integers in increasing order', function (assert) {
+    assert.plan(1);
+    var osrm = new OSRM(monaco_path);
+    var options = {
+        steps: true,
+        coordinates: three_test_coordinates.concat(three_test_coordinates),
+        waypoints: [0,2,1,5]
+    };
+    assert.throws(function () { osrm.route(options, function (err, response) { console.error(`response: ${response}`); console.error(`error: ${err}`); }); },
+        /Waypoints must be supplied in increasing order/);
+});
