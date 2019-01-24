@@ -90,10 +90,16 @@ struct RouteParameters : public BaseParameters
                     Args... args_)
         // Once we perfectly-forward `args` (see #2990) this constructor can delegate to the one
         // below.
-        : BaseParameters{std::forward<Args>(args_)...}, steps{steps_}, alternatives{alternatives_},
-          number_of_alternatives{alternatives_ ? 1u : 0u}, annotations{false},
-          annotations_type{AnnotationsType::None}, geometries{geometries_}, overview{overview_},
-          continue_straight{continue_straight_}
+        : BaseParameters{std::forward<Args>(args_)...},
+          steps{steps_},
+          alternatives{alternatives_},
+          number_of_alternatives{alternatives_ ? 1u : 0u},
+          annotations{false},
+          annotations_type{AnnotationsType::None},
+          geometries{geometries_},
+          overview{overview_},
+          continue_straight{continue_straight_},
+          waypoints()
     {
     }
 
@@ -109,7 +115,9 @@ struct RouteParameters : public BaseParameters
         : BaseParameters{std::forward<Args>(args_)...}, steps{steps_}, alternatives{alternatives_},
           number_of_alternatives{alternatives_ ? 1u : 0u}, annotations{annotations_},
           annotations_type{annotations_ ? AnnotationsType::All : AnnotationsType::None},
-          geometries{geometries_}, overview{overview_}, continue_straight{continue_straight_}
+          geometries{geometries_}, overview{overview_}, continue_straight{continue_straight_},
+          waypoints()
+
     {
     }
 
@@ -126,7 +134,43 @@ struct RouteParameters : public BaseParameters
           number_of_alternatives{alternatives_ ? 1u : 0u},
           annotations{annotations_ == AnnotationsType::None ? false : true},
           annotations_type{annotations_}, geometries{geometries_}, overview{overview_},
-          continue_straight{continue_straight_}
+          continue_straight{continue_straight_}, waypoints()
+    {
+    }
+
+    // RouteParameters constructor adding the `waypoints` parameter
+    template <typename... Args>
+    RouteParameters(const bool steps_,
+                    const bool alternatives_,
+                    const bool annotations_,
+                    const GeometriesType geometries_,
+                    const OverviewType overview_,
+                    const boost::optional<bool> continue_straight_,
+                    std::vector<std::size_t> waypoints_,
+                    const Args... args_)
+        : BaseParameters{std::forward<Args>(args_)...}, steps{steps_}, alternatives{alternatives_},
+          number_of_alternatives{alternatives_ ? 1u : 0u}, annotations{annotations_},
+          annotations_type{annotations_ ? AnnotationsType::All : AnnotationsType::None},
+          geometries{geometries_}, overview{overview_}, continue_straight{continue_straight_},
+          waypoints{waypoints_}
+    {
+    }
+
+    // RouteParameters constructor adding the `waypoints` parameter
+    template <typename... Args>
+    RouteParameters(const bool steps_,
+                    const bool alternatives_,
+                    const AnnotationsType annotations_,
+                    const GeometriesType geometries_,
+                    const OverviewType overview_,
+                    const boost::optional<bool> continue_straight_,
+                    std::vector<std::size_t> waypoints_,
+                    Args... args_)
+        : BaseParameters{std::forward<Args>(args_)...}, steps{steps_}, alternatives{alternatives_},
+          number_of_alternatives{alternatives_ ? 1u : 0u},
+          annotations{annotations_ == AnnotationsType::None ? false : true},
+          annotations_type{annotations_}, geometries{geometries_}, overview{overview_},
+          continue_straight{continue_straight_}, waypoints{waypoints_}
     {
     }
 
@@ -145,7 +189,11 @@ struct RouteParameters : public BaseParameters
     {
         const auto coordinates_ok = coordinates.size() >= 2;
         const auto base_params_ok = BaseParameters::IsValid();
-        return coordinates_ok && base_params_ok;
+        const auto valid_waypoints =
+            std::all_of(waypoints.begin(), waypoints.end(), [this](const auto &w) {
+                return w < coordinates.size();
+            });
+        return coordinates_ok && base_params_ok && valid_waypoints;
     }
 };
 
@@ -169,8 +217,8 @@ inline RouteParameters::AnnotationsType operator|=(RouteParameters::AnnotationsT
 {
     return lhs = lhs | rhs;
 }
-} // namespace api
-} // namespace engine
-} // namespace osrm
+} // ns api
+} // ns engine
+} // ns osrm
 
 #endif

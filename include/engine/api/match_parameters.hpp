@@ -63,7 +63,7 @@ struct MatchParameters : public RouteParameters
                           RouteParameters::GeometriesType::Polyline,
                           RouteParameters::OverviewType::Simplified,
                           {}),
-          gaps(GapsType::Split), tidy(false), waypoints()
+          gaps(GapsType::Split), tidy(false)
     {
     }
 
@@ -79,24 +79,19 @@ struct MatchParameters : public RouteParameters
                     bool tidy_,
                     std::vector<std::size_t> waypoints_,
                     Args... args_)
-        : RouteParameters{std::forward<Args>(args_)...}, timestamps{std::move(timestamps_)},
-          gaps(gaps_), tidy(tidy_), waypoints{std::move(waypoints_)}
+        : RouteParameters{std::forward<Args>(args_)..., waypoints_},
+          timestamps{std::move(timestamps_)}, gaps(gaps_), tidy(tidy_)
     {
     }
 
     std::vector<unsigned> timestamps;
     GapsType gaps;
     bool tidy;
-    std::vector<std::size_t> waypoints;
 
     bool IsValid() const
     {
-        const auto valid_waypoints =
-            std::all_of(waypoints.begin(), waypoints.end(), [this](const auto &w) {
-                return w < coordinates.size();
-            });
         return RouteParameters::IsValid() &&
-               (timestamps.empty() || timestamps.size() == coordinates.size()) && valid_waypoints;
+               (timestamps.empty() || timestamps.size() == coordinates.size());
     }
 };
 }

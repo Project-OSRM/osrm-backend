@@ -359,8 +359,8 @@ class RouteAPI : public BaseAPI
     const RouteParameters &parameters;
 };
 
-} // namespace api
-} // namespace engine
-} // namespace osrm
+} // ns api
+} // ns engine
+} // ns osrm
 
 #endif
