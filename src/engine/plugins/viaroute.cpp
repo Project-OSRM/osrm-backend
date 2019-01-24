@@ -177,7 +177,7 @@ Status ViaRoutePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithm
             }
         }
 
-        route_api.MakeResponse(routes, json_result);
+        route_api.MakeResponse(routes, start_end_nodes, json_result);
     }
     else
     {

@@ -44,8 +44,11 @@ class RouteAPI : public BaseAPI
     {
     }
 
-    void MakeResponse(const InternalManyRoutesResult &raw_routes,
-                      util::json::Object &response) const
+    void
+    MakeResponse(const InternalManyRoutesResult &raw_routes,
+                 const std::vector<PhantomNodes>
+                     &all_start_end_points, // all used coordinates, ignoring waypoints= parameter
+                 util::json::Object &response) const
     {
         BOOST_ASSERT(!raw_routes.routes.empty());
 
@@ -62,8 +65,7 @@ class RouteAPI : public BaseAPI
                                                 route.target_traversed_in_reverse));
         }
 
-        response.values["waypoints"] =
-            BaseAPI::MakeWaypoints(raw_routes.routes[0].segment_end_coordinates);
+        response.values["waypoints"] = BaseAPI::MakeWaypoints(all_start_end_points);
         response.values["routes"] = std::move(jsRoutes);
         response.values["code"] = "Ok";
     }
