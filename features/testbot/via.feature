@@ -21,19 +21,49 @@ Feature: Via points
     Scenario: Simple via point with waypoints collapsing
         Given the node map
             """
-            a b c
+                 a
+
+            b   1c    d
+                 2
+
+                 e
             """
 
         And the ways
             | nodes |
-            | abc   |
+            | ace   |
+            | bcd   |
 
        Given the query options
             | waypoints | 0;2   |
 
         When I route I should get
-            | waypoints | route       |
-            | a,b,c     | abc,abc     |
+            | waypoints | route       | turns                    |
+            | b,1,e     | bcd,ace,ace | depart,turn right,arrive |
+            | b,2,e     | bcd,ace,ace | depart,turn right,arrive |
+
+    Scenario: Simple via point with waypoints collapsing
+        Given the node map
+            """
+            a  2  b
+
+            c     d
+             1   3
+            """
+
+        And the ways
+            | nodes |
+            | ab   |
+            | bd   |
+            | cd   |
+            | ac   |
+
+       Given the query options
+            | waypoints | 0;2   |
+
+        When I route I should get
+            | waypoints | route          | turns                                                      |
+            | 1,2,3     | cd,ac,ab,bd,cd | depart,new name right,new name right,new name right,arrive |
 
     Scenario: Simple via point with core factor
         Given the contract extra arguments "--core 0.8"
