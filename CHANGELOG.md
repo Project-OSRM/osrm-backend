@@ -1,4 +1,4 @@
-# Unreleased
+# 5.22.0-rc.1
   - Changes from 5.21.0
     - Features:
       - ADDED: new waypoints parameter to the `route` plugin, enabling silent waypoints [#5345](https://github.com/Project-OSRM/osrm-backend/pull/5345)
