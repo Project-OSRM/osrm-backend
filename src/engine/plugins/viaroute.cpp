@@ -73,6 +73,16 @@ Status ViaRoutePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithm
         return Error("InvalidValue", "Invalid coordinate value.", json_result);
     }
 
+    // Error: first and last points should be waypoints
+    if (!route_parameters.waypoints.empty() &&
+        (route_parameters.waypoints[0] != 0 ||
+         route_parameters.waypoints.back() != (route_parameters.coordinates.size() - 1)))
+    {
+        return Error("InvalidValue",
+                     "First and last coordinates must be specified as waypoints.",
+                     json_result);
+    }
+
     if (!CheckAlgorithms(route_parameters, algorithms, json_result))
         return Status::Error;
 
@@ -132,7 +142,27 @@ Status ViaRoutePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithm
 
     if (routes.routes[0].is_valid())
     {
-        route_api.MakeResponse(routes, json_result);
+        auto collapse_legs = !route_parameters.waypoints.empty();
+        if (collapse_legs)
+        {
+            std::vector<bool> waypoint_legs(route_parameters.coordinates.size(), false);
+            std::for_each(route_parameters.waypoints.begin(),
+                          route_parameters.waypoints.end(),
+                          [&](const std::size_t waypoint_index) {
+                              BOOST_ASSERT(waypoint_index < waypoint_legs.size());
+                              waypoint_legs[waypoint_index] = true;
+                          });
+            // First and last coordinates should always be waypoints
+            // This gets validated earlier, but double-checking here, jic
+            BOOST_ASSERT(waypoint_legs.front());
+            BOOST_ASSERT(waypoint_legs.back());
+            for (std::size_t i = 0; i < routes.routes.size(); i++)
+            {
+                routes.routes[i] = CollapseInternalRouteResult(routes.routes[i], waypoint_legs);
+            }
+        }
+
+        route_api.MakeResponse(routes, start_end_nodes, json_result);
     }
     else
     {

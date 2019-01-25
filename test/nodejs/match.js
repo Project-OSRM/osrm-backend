@@ -319,6 +319,30 @@ test('match: throws on invalid waypoints values, waypoints must correspond with 
         'Waypoints must correspond with the index of an input coordinate');
 });
 
+test('match: throws on invalid waypoints values, waypoints must be an array', function (assert) {
+    assert.plan(1);
+    var osrm = new OSRM(data_path);
+    var options = {
+        steps: true,
+        coordinates: three_test_coordinates,
+        waypoints: "string"
+    };
+    assert.throws(function () { osrm.match(options, function (err, response) { console.log(err); }); },
+        'Waypoints must be an array of integers corresponding to the input coordinates.');
+});
+
+test('match: throws on invalid waypoints values, waypoints must be an array of integers', function (assert) {
+    assert.plan(1);
+    var osrm = new OSRM(data_path);
+    var options = {
+        steps: true,
+        coordinates: three_test_coordinates,
+        waypoints: [0,1,"string"]
+    };
+    assert.throws(function () { osrm.match(options, function (err, response) { console.log(err); }); },
+        'Waypoint values must be an array of integers');
+});
+
 test('match: error on split trace', function(assert) {
     assert.plan(1);
     var osrm = new OSRM(data_path);

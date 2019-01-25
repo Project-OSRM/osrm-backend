@@ -42,17 +42,12 @@ struct MatchParametersGrammar final : public RouteParametersGrammar<Iterator, Si
             (qi::uint_ %
              ';')[ph::bind(&engine::api::MatchParameters::timestamps, qi::_r1) = qi::_1];
 
-        waypoints_rule =
-            qi::lit("waypoints=") >
-            (size_t_ % ';')[ph::bind(&engine::api::MatchParameters::waypoints, qi::_r1) = qi::_1];
-
         gaps_type.add("split", engine::api::MatchParameters::GapsType::Split)(
             "ignore", engine::api::MatchParameters::GapsType::Ignore);
 
         root_rule =
             BaseGrammar::query_rule(qi::_r1) > -qi::lit(".json") >
             -('?' > (timestamps_rule(qi::_r1) | BaseGrammar::base_rule(qi::_r1) |
-                     waypoints_rule(qi::_r1) |
                      (qi::lit("gaps=") >
                       gaps_type[ph::bind(&engine::api::MatchParameters::gaps, qi::_r1) = qi::_1]) |
                      (qi::lit("tidy=") >
@@ -63,7 +58,6 @@ struct MatchParametersGrammar final : public RouteParametersGrammar<Iterator, Si
   private:
     qi::rule<Iterator, Signature> root_rule;
     qi::rule<Iterator, Signature> timestamps_rule;
-    qi::rule<Iterator, Signature> waypoints_rule;
     qi::rule<Iterator, std::size_t()> size_t_;
 
     qi::symbols<char, engine::api::MatchParameters::GapsType> gaps_type;

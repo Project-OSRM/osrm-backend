@@ -48,6 +48,14 @@ struct RouteParametersGrammar : public BaseParametersGrammar<Iterator, Signature
 
     RouteParametersGrammar(qi::rule<Iterator, Signature> &root_rule_) : BaseGrammar(root_rule_)
     {
+#ifdef BOOST_HAS_LONG_LONG
+        if (std::is_same<std::size_t, unsigned long long>::value)
+            size_t_ = qi::ulong_long;
+        else
+            size_t_ = qi::ulong_;
+#else
+        size_t_ = qi::ulong_;
+#endif
         using AnnotationsType = engine::api::RouteParameters::AnnotationsType;
 
         const auto add_annotation = [](engine::api::RouteParameters &route_parameters,
@@ -70,8 +78,12 @@ struct RouteParametersGrammar : public BaseParametersGrammar<Iterator, Signature
             "distance", AnnotationsType::Distance)("weight", AnnotationsType::Weight)(
             "datasources", AnnotationsType::Datasources)("speed", AnnotationsType::Speed);
 
+        waypoints_rule =
+            qi::lit("waypoints=") >
+            (size_t_ % ';')[ph::bind(&engine::api::RouteParameters::waypoints, qi::_r1) = qi::_1];
+
         base_rule =
-            BaseGrammar::base_rule(qi::_r1) |
+            BaseGrammar::base_rule(qi::_r1) | waypoints_rule(qi::_r1) |
             (qi::lit("steps=") >
              qi::bool_[ph::bind(&engine::api::RouteParameters::steps, qi::_r1) = qi::_1]) |
             (qi::lit("geometries=") >
@@ -94,6 +106,8 @@ struct RouteParametersGrammar : public BaseParametersGrammar<Iterator, Signature
   private:
     qi::rule<Iterator, Signature> root_rule;
     qi::rule<Iterator, Signature> route_rule;
+    qi::rule<Iterator, Signature> waypoints_rule;
+    qi::rule<Iterator, std::size_t()> size_t_;
 
     qi::symbols<char, engine::api::RouteParameters::GeometriesType> geometries_type;
     qi::symbols<char, engine::api::RouteParameters::OverviewType> overview_type;
