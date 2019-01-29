@@ -437,7 +437,7 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
 
     std::string GetTimestamp() const override final
     {
-       return std::string(m_data_timestamp.begin(), m_data_timestamp.end());
+        return std::string(m_data_timestamp.begin(), m_data_timestamp.end());
     }
 
     GeometryID GetGeometryIndex(const NodeID id) const override final

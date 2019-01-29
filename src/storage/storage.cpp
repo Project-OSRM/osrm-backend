@@ -407,7 +407,8 @@ void Storage::PopulateStaticData(const SharedDataIndex &index)
         auto timestamp_ref = make_timestamp_view(index, "/common/timestamp");
         std::string ts;
         extractor::files::readTimestamp(config.GetPath(".osrm.timestamp"), ts);
-        if (!ts.empty()) {
+        if (!ts.empty())
+        {
             memcpy(const_cast<char *>(timestamp_ref.data()), ts.data(), ts.size());
         }
     }
