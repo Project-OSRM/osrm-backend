@@ -71,7 +71,7 @@ class RouteAPI : public BaseAPI
         auto data_timestamp = facade.GetTimestamp();
         if (!data_timestamp.empty())
         {
-            response.values["data_version"] = facade.GetTimestamp();
+            response.values["data_version"] = data_timestamp;
         }
     }
 
