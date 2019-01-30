@@ -137,6 +137,7 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     extractor::Datasources *m_datasources;
 
     std::uint32_t m_check_sum;
+    StringView m_data_timestamp;
     util::vector_view<util::Coordinate> m_coordinate_list;
     extractor::PackedOSMIDsView m_osmnodeid_list;
     util::vector_view<std::uint32_t> m_lane_description_offsets;
@@ -182,6 +183,8 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         exclude_mask = m_profile_properties->excludable_classes[exclude_index];
 
         m_check_sum = *index.GetBlockPtr<std::uint32_t>("/common/connectivity_checksum");
+
+        m_data_timestamp = make_timestamp_view(index, "/common/timestamp");
 
         std::tie(m_coordinate_list, m_osmnodeid_list) =
             make_nbn_data_view(index, "/common/nbn_data");
@@ -431,6 +434,11 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     }
 
     std::uint32_t GetCheckSum() const override final { return m_check_sum; }
+
+    std::string GetTimestamp() const override final
+    {
+        return std::string(m_data_timestamp.begin(), m_data_timestamp.end());
+    }
 
     GeometryID GetGeometryIndex(const NodeID id) const override final
     {

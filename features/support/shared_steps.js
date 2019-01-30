@@ -75,6 +75,10 @@ module.exports = function () {
                             got.message = json.message || '';
                         }
 
+                        if (headers.has('data_version')) {
+                            got.data_version = json.data_version || '';
+                        }
+
                         if (headers.has('#')) {
                             // comment column
                             got['#'] = row['#'];

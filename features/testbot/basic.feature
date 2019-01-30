@@ -17,9 +17,26 @@ Feature: Basic Routing
             | ab    |
 
         When I route I should get
-            | from | to | route    |
-            | a    | b  | ab,ab    |
-            | b    | a  | ab,ab    |
+            | from | to | route    | data_version |
+            | a    | b  | ab,ab    |              |
+            | b    | a  | ab,ab    |              |
+
+    Scenario: Data_version test
+        Given the node map
+            """
+            a b
+            """
+
+        And the extract extra arguments "--data_version cucumber_data_version"
+
+        And the ways
+            | nodes |
+            | ab    |
+
+        When I route I should get
+            | from | to | route    | data_version          |
+            | a    | b  | ab,ab    | cucumber_data_version |
+            | b    | a  | ab,ab    | cucumber_data_version |
 
     Scenario: Routing in between two nodes of way
         Given the node map

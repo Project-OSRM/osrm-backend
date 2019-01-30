@@ -308,6 +308,26 @@ inline void writeTurnLaneData(const boost::filesystem::path &path,
     storage::serialization::write(writer, "/common/turn_lanes/data", turn_lane_data);
 }
 
+// reads .osrm.timestamp
+template <typename TimestampDataT>
+inline void readTimestamp(const boost::filesystem::path &path, TimestampDataT &timestamp)
+{
+    const auto fingerprint = storage::tar::FileReader::VerifyFingerprint;
+    storage::tar::FileReader reader{path, fingerprint};
+
+    storage::serialization::read(reader, "/common/timestamp", timestamp);
+}
+
+// writes .osrm.timestamp
+template <typename TimestampDataT>
+inline void writeTimestamp(const boost::filesystem::path &path, const TimestampDataT &timestamp)
+{
+    const auto fingerprint = storage::tar::FileWriter::GenerateFingerprint;
+    storage::tar::FileWriter writer{path, fingerprint};
+
+    storage::serialization::write(writer, "/common/timestamp", timestamp);
+}
+
 // reads .osrm.maneuver_overrides
 template <typename StorageManeuverOverrideT, typename NodeSequencesT>
 inline void readManeuverOverrides(const boost::filesystem::path &path,

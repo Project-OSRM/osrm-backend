@@ -10,7 +10,6 @@
 #include "extractor/turn_lane_types.hpp"
 #include "guidance/turn_bearing.hpp"
 #include "guidance/turn_instruction.hpp"
-#include "guidance/turn_instruction.hpp"
 
 #include "engine/algorithm.hpp"
 #include "engine/datafacade/algorithm_datafacade.hpp"
@@ -54,6 +53,7 @@ class MockBaseDataFacade : public engine::datafacade::BaseDataFacade
     {
         return 0;
     }
+    std::string GetTimestamp() const override { return ""; }
     NodeForwardRange GetUncompressedForwardGeometry(const EdgeID /* id */) const override
     {
         static NodeID data[] = {0, 1, 2, 3};

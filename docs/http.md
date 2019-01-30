@@ -70,6 +70,8 @@ curl 'http://router.project-osrm.org/route/v1/driving/polyline(ofp_Ik_vpAilAyu@t
 
 ### Responses
 
+#### Code
+
 Every response object has a `code` property containing one of the strings below or a service dependent code:
 
 | Type              | Description                                                                      |
@@ -87,12 +89,17 @@ Every response object has a `code` property containing one of the strings below 
 - `message` is a **optional** human-readable error message. All other status types are service dependent.
 - In case of an error the HTTP status code will be `400`. Otherwise the HTTP status code will be `200` and `code` will be `Ok`.
 
+#### Data version
+
+Every response object has a `data_version` propetry containing timestamp from the original OpenStreetMap file. This field is optional. It can be ommited if data_version parametr was not set on osrm-extract stage or OSM file has not `osmosis_replication_timestamp` section.
+
 #### Example response
 
 ```json
 {
 "code": "Ok",
-"message": "Everything worked"
+"message": "Everything worked",
+"data_version": "2017-11-17T21:43:02Z"
 }
 ```
 

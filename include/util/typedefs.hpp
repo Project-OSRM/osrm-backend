@@ -79,6 +79,7 @@ using EdgeDistance = float;
 using SegmentWeight = std::uint32_t;
 using SegmentDuration = std::uint32_t;
 using TurnPenalty = std::int16_t; // turn penalty in 100ms units
+using DataTimestamp = std::string;
 
 static const std::size_t INVALID_INDEX = std::numeric_limits<std::size_t>::max();
 
