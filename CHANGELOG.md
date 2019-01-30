@@ -1,4 +1,4 @@
-# 5.22.0-rc.2
+# 5.22.0
   - Changes from 5.21.0
     - Build:
       - ADDED: optionally build Node `lts` and `latest` bindings [#5347](https://github.com/Project-OSRM/osrm-backend/pull/5347)
