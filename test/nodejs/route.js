@@ -690,3 +690,24 @@ test('route: throws on invalid waypoints values, waypoints must be an array of i
     assert.throws(function () { osrm.route(options, function (err, response) { console.error(`response: ${response}`); console.error(`error: ${err}`); }); },
         /Waypoints must be supplied in increasing order/);
 });
+
+test('route: throws on invalid snapping values', function (assert) {
+    assert.plan(1);
+    var osrm = new OSRM(monaco_path);
+    var options = {
+        steps: true,
+        coordinates: three_test_coordinates.concat(three_test_coordinates),
+        snapping: "zing"
+    };
+    assert.throws(function () { osrm.route(options, function (err, response) { console.error(`response: ${response}`); console.error(`error: ${err}`); }); },
+        /'snapping' param must be one of \[default, any\]/);
+});
+
+test('route: snapping parameter passed through OK', function(assert) {
+    assert.plan(2);
+    var osrm = new OSRM(monaco_path);
+    osrm.route({snapping: "any", coordinates: [[7.448205209414596,43.754001097311544],[7.447122039202185,43.75306156811368]]}, function(err, route) {
+        assert.ifError(err);
+        assert.equal(Math.round(route.routes[0].distance * 10), 1314); // Round it to nearest 0.1m to eliminate floating point comparison error
+    });
+});

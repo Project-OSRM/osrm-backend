@@ -262,7 +262,8 @@ class BasePlugin
     }
 
     std::vector<PhantomNodePair> GetPhantomNodes(const datafacade::BaseDataFacade &facade,
-                                                 const api::BaseParameters &parameters) const
+                                                 const api::BaseParameters &parameters,
+                                                 const bool use_all_edges = false) const
     {
         std::vector<PhantomNodePair> phantom_node_pairs(parameters.coordinates.size());
 
@@ -296,7 +297,8 @@ class BasePlugin
                             *parameters.radiuses[i],
                             parameters.bearings[i]->bearing,
                             parameters.bearings[i]->range,
-                            approach);
+                            approach,
+                            use_all_edges);
                 }
                 else
                 {
@@ -305,7 +307,8 @@ class BasePlugin
                             parameters.coordinates[i],
                             parameters.bearings[i]->bearing,
                             parameters.bearings[i]->range,
-                            approach);
+                            approach,
+                            use_all_edges);
                 }
             }
             else
@@ -314,13 +317,16 @@ class BasePlugin
                 {
                     phantom_node_pairs[i] =
                         facade.NearestPhantomNodeWithAlternativeFromBigComponent(
-                            parameters.coordinates[i], *parameters.radiuses[i], approach);
+                            parameters.coordinates[i],
+                            *parameters.radiuses[i],
+                            approach,
+                            use_all_edges);
                 }
                 else
                 {
                     phantom_node_pairs[i] =
                         facade.NearestPhantomNodeWithAlternativeFromBigComponent(
-                            parameters.coordinates[i], approach);
+                            parameters.coordinates[i], approach, use_all_edges);
                 }
             }
 

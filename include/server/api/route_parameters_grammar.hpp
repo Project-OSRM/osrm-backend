@@ -82,6 +82,9 @@ struct RouteParametersGrammar : public BaseParametersGrammar<Iterator, Signature
             qi::lit("waypoints=") >
             (size_t_ % ';')[ph::bind(&engine::api::RouteParameters::waypoints, qi::_r1) = qi::_1];
 
+        snapping_type.add("default", engine::api::RouteParameters::SnappingType::Default)(
+            "any", engine::api::RouteParameters::SnappingType::Any);
+
         base_rule =
             BaseGrammar::base_rule(qi::_r1) | waypoints_rule(qi::_r1) |
             (qi::lit("steps=") >
@@ -91,6 +94,8 @@ struct RouteParametersGrammar : public BaseParametersGrammar<Iterator, Signature
                                  qi::_1]) |
             (qi::lit("overview=") >
              overview_type[ph::bind(&engine::api::RouteParameters::overview, qi::_r1) = qi::_1]) |
+            (qi::lit("snapping=") >
+             snapping_type[ph::bind(&engine::api::RouteParameters::snapping, qi::_r1) = qi::_1]) |
             (qi::lit("annotations=") >
              (qi::lit("true")[ph::bind(add_annotation, qi::_r1, AnnotationsType::All)] |
               qi::lit("false")[ph::bind(add_annotation, qi::_r1, AnnotationsType::None)] |
@@ -112,6 +117,7 @@ struct RouteParametersGrammar : public BaseParametersGrammar<Iterator, Signature
     qi::symbols<char, engine::api::RouteParameters::GeometriesType> geometries_type;
     qi::symbols<char, engine::api::RouteParameters::OverviewType> overview_type;
     qi::symbols<char, engine::api::RouteParameters::AnnotationsType> annotations_type;
+    qi::symbols<char, engine::api::RouteParameters::SnappingType> snapping_type;
 };
 }
 }

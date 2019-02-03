@@ -78,6 +78,11 @@ struct RouteParameters : public BaseParameters
         Speed = 0x20,
         All = Duration | Nodes | Distance | Weight | Datasources | Speed
     };
+    enum class SnappingType
+    {
+        Default,
+        Any
+    };
 
     RouteParameters() = default;
 
@@ -147,12 +152,13 @@ struct RouteParameters : public BaseParameters
                     const OverviewType overview_,
                     const boost::optional<bool> continue_straight_,
                     std::vector<std::size_t> waypoints_,
+                    const SnappingType snapping_,
                     const Args... args_)
         : BaseParameters{std::forward<Args>(args_)...}, steps{steps_}, alternatives{alternatives_},
           number_of_alternatives{alternatives_ ? 1u : 0u}, annotations{annotations_},
           annotations_type{annotations_ ? AnnotationsType::All : AnnotationsType::None},
           geometries{geometries_}, overview{overview_}, continue_straight{continue_straight_},
-          waypoints{waypoints_}
+          waypoints{waypoints_}, snapping{snapping_}
     {
     }
 
@@ -165,12 +171,13 @@ struct RouteParameters : public BaseParameters
                     const OverviewType overview_,
                     const boost::optional<bool> continue_straight_,
                     std::vector<std::size_t> waypoints_,
+                    const SnappingType snapping_,
                     Args... args_)
         : BaseParameters{std::forward<Args>(args_)...}, steps{steps_}, alternatives{alternatives_},
           number_of_alternatives{alternatives_ ? 1u : 0u},
           annotations{annotations_ == AnnotationsType::None ? false : true},
           annotations_type{annotations_}, geometries{geometries_}, overview{overview_},
-          continue_straight{continue_straight_}, waypoints{waypoints_}
+          continue_straight{continue_straight_}, waypoints{waypoints_}, snapping{snapping_}
     {
     }
 
@@ -184,6 +191,7 @@ struct RouteParameters : public BaseParameters
     OverviewType overview = OverviewType::Simplified;
     boost::optional<bool> continue_straight;
     std::vector<std::size_t> waypoints;
+    SnappingType snapping = SnappingType::Default;
 
     bool IsValid() const
     {
