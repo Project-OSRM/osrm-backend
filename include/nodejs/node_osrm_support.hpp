@@ -1014,16 +1014,15 @@ argumentsToRouteParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
     {
         v8::Local<v8::Value> snapping = obj->Get(Nan::New("snapping").ToLocalChecked());
         if (snapping.IsEmpty())
-                    return route_parameters_ptr();
+            return route_parameters_ptr();
 
         if (!snapping->IsString())
         {
             Nan::ThrowError("Snapping must be a string: [default, any]");
-                    return route_parameters_ptr();
+            return route_parameters_ptr();
         }
         const Nan::Utf8String snapping_utf8str(snapping);
-        std::string snapping_str{*snapping_utf8str,
-                                   *snapping_utf8str + snapping_utf8str.length()};
+        std::string snapping_str{*snapping_utf8str, *snapping_utf8str + snapping_utf8str.length()};
 
         if (snapping_str == "default")
         {
@@ -1036,7 +1035,7 @@ argumentsToRouteParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
         else
         {
             Nan::ThrowError("'snapping' param must be one of [default, any]");
-                    return route_parameters_ptr();
+            return route_parameters_ptr();
         }
     }
 

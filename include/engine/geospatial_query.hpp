@@ -212,8 +212,12 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
         bool has_big_component = false;
         auto results = rtree.Nearest(
             input_coordinate,
-            [this, approach, &input_coordinate, &has_big_component, &has_small_component, &use_all_edges](
-                const CandidateSegment &segment) {
+            [this,
+             approach,
+             &input_coordinate,
+             &has_big_component,
+             &has_small_component,
+             &use_all_edges](const CandidateSegment &segment) {
                 auto use_segment =
                     (!has_small_component || (!has_big_component && !IsTinyComponent(segment)));
                 auto use_directions = std::make_pair(use_segment, use_segment);
@@ -259,8 +263,12 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
         bool has_big_component = false;
         auto results = rtree.Nearest(
             input_coordinate,
-            [this, approach, &input_coordinate, &has_big_component, &has_small_component, &use_all_edges](
-                const CandidateSegment &segment) {
+            [this,
+             approach,
+             &input_coordinate,
+             &has_big_component,
+             &has_small_component,
+             &use_all_edges](const CandidateSegment &segment) {
                 auto use_segment =
                     (!has_small_component || (!has_big_component && !IsTinyComponent(segment)));
                 auto use_directions = std::make_pair(use_segment, use_segment);

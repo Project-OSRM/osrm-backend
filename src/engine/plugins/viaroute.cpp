@@ -87,7 +87,10 @@ Status ViaRoutePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithm
         return Status::Error;
 
     const auto &facade = algorithms.GetFacade();
-    auto phantom_node_pairs = GetPhantomNodes(facade, route_parameters, (route_parameters.snapping == api::RouteParameters::SnappingType::Any));
+    auto phantom_node_pairs =
+        GetPhantomNodes(facade,
+                        route_parameters,
+                        (route_parameters.snapping == api::RouteParameters::SnappingType::Any));
     if (phantom_node_pairs.size() != route_parameters.coordinates.size())
     {
         return Error("NoSegment",
