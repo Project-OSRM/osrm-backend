@@ -205,18 +205,23 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
     std::pair<PhantomNode, PhantomNode>
     NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
                                                       const double max_distance,
-                                                      const Approach approach) const
+                                                      const Approach approach,
+                                                      const bool use_all_edges) const
     {
         bool has_small_component = false;
         bool has_big_component = false;
         auto results = rtree.Nearest(
             input_coordinate,
-            [this, approach, &input_coordinate, &has_big_component, &has_small_component](
-                const CandidateSegment &segment) {
+            [this,
+             approach,
+             &input_coordinate,
+             &has_big_component,
+             &has_small_component,
+             &use_all_edges](const CandidateSegment &segment) {
                 auto use_segment =
                     (!has_small_component || (!has_big_component && !IsTinyComponent(segment)));
                 auto use_directions = std::make_pair(use_segment, use_segment);
-                const auto valid_edges = HasValidEdge(segment);
+                const auto valid_edges = HasValidEdge(segment, use_all_edges);
                 const auto admissible_segments = CheckSegmentExclude(segment);
                 use_directions = boolPairAnd(use_directions, admissible_segments);
                 use_directions = boolPairAnd(use_directions, valid_edges);
@@ -251,19 +256,24 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
     // a second phantom node is return that is the nearest coordinate in a big component.
     std::pair<PhantomNode, PhantomNode>
     NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
-                                                      const Approach approach) const
+                                                      const Approach approach,
+                                                      const bool use_all_edges) const
     {
         bool has_small_component = false;
         bool has_big_component = false;
         auto results = rtree.Nearest(
             input_coordinate,
-            [this, approach, &input_coordinate, &has_big_component, &has_small_component](
-                const CandidateSegment &segment) {
+            [this,
+             approach,
+             &input_coordinate,
+             &has_big_component,
+             &has_small_component,
+             &use_all_edges](const CandidateSegment &segment) {
                 auto use_segment =
                     (!has_small_component || (!has_big_component && !IsTinyComponent(segment)));
                 auto use_directions = std::make_pair(use_segment, use_segment);
 
-                const auto valid_edges = HasValidEdge(segment);
+                const auto valid_edges = HasValidEdge(segment, use_all_edges);
                 const auto admissible_segments = CheckSegmentExclude(segment);
                 use_directions = boolPairAnd(use_directions, admissible_segments);
                 use_directions = boolPairAnd(use_directions, valid_edges);
@@ -298,7 +308,8 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
     NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
                                                       const int bearing,
                                                       const int bearing_range,
-                                                      const Approach approach) const
+                                                      const Approach approach,
+                                                      const bool use_all_edges) const
     {
         bool has_small_component = false;
         bool has_big_component = false;
@@ -310,12 +321,13 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
              bearing,
              bearing_range,
              &has_big_component,
-             &has_small_component](const CandidateSegment &segment) {
+             &has_small_component,
+             &use_all_edges](const CandidateSegment &segment) {
                 auto use_segment =
                     (!has_small_component || (!has_big_component && !IsTinyComponent(segment)));
                 auto use_directions = std::make_pair(use_segment, use_segment);
                 const auto admissible_segments = CheckSegmentExclude(segment);
-                use_directions = boolPairAnd(use_directions, HasValidEdge(segment));
+                use_directions = boolPairAnd(use_directions, HasValidEdge(segment, use_all_edges));
 
                 if (use_segment)
                 {
@@ -356,7 +368,8 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
                                                       const double max_distance,
                                                       const int bearing,
                                                       const int bearing_range,
-                                                      const Approach approach) const
+                                                      const Approach approach,
+                                                      const bool use_all_edges) const
     {
         bool has_small_component = false;
         bool has_big_component = false;
@@ -368,12 +381,13 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
              bearing,
              bearing_range,
              &has_big_component,
-             &has_small_component](const CandidateSegment &segment) {
+             &has_small_component,
+             &use_all_edges](const CandidateSegment &segment) {
                 auto use_segment =
                     (!has_small_component || (!has_big_component && !IsTinyComponent(segment)));
                 auto use_directions = std::make_pair(use_segment, use_segment);
                 const auto admissible_segments = CheckSegmentExclude(segment);
-                use_directions = boolPairAnd(use_directions, HasValidEdge(segment));
+                use_directions = boolPairAnd(use_directions, HasValidEdge(segment, use_all_edges));
 
                 if (use_segment)
                 {
