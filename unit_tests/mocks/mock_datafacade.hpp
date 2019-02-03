@@ -169,7 +169,8 @@ class MockBaseDataFacade : public engine::datafacade::BaseDataFacade
     std::pair<engine::PhantomNode, engine::PhantomNode>
     NearestPhantomNodeWithAlternativeFromBigComponent(
         const util::Coordinate /*input_coordinate*/,
-        const engine::Approach /*approach*/) const override
+        const engine::Approach /*approach*/,
+        const bool /* use_all_edges */) const override
     {
         return {};
     }
@@ -178,7 +179,8 @@ class MockBaseDataFacade : public engine::datafacade::BaseDataFacade
     NearestPhantomNodeWithAlternativeFromBigComponent(
         const util::Coordinate /*input_coordinate*/,
         const double /*max_distance*/,
-        const engine::Approach /*approach*/) const override
+        const engine::Approach /*approach*/,
+        const bool /* use_all_edges */) const override
     {
         return {};
     }
@@ -189,7 +191,8 @@ class MockBaseDataFacade : public engine::datafacade::BaseDataFacade
         const double /*max_distance*/,
         const int /*bearing*/,
         const int /*bearing_range*/,
-        const engine::Approach /*approach*/) const override
+        const engine::Approach /*approach*/,
+        const bool /* use_all_edges */) const override
     {
         return {};
     }
@@ -199,7 +202,8 @@ class MockBaseDataFacade : public engine::datafacade::BaseDataFacade
         const util::Coordinate /*input_coordinate*/,
         const int /*bearing*/,
         const int /*bearing_range*/,
-        const engine::Approach /*approach*/) const override
+        const engine::Approach /*approach*/,
+        const bool /* use_all_edges */) const override
     {
         return {};
     }
