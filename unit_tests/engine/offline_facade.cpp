@@ -285,7 +285,7 @@ class ContiguousInternalMemoryDataFacade<routing_algorithms::offline::Algorithm>
     std::pair<PhantomNode, PhantomNode>
     NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate /*input_coordinate*/,
                                                       const Approach /*approach*/,
-        const bool /* use_all_edges */) const override
+                                                      const bool /* use_all_edges */) const override
     {
         return {};
     }
@@ -294,7 +294,7 @@ class ContiguousInternalMemoryDataFacade<routing_algorithms::offline::Algorithm>
     NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate /*input_coordinate*/,
                                                       const double /*max_distance*/,
                                                       const Approach /*approach*/,
-        const bool /* use_all_edges */) const override
+                                                      const bool /* use_all_edges */) const override
     {
         return {};
     }
@@ -305,7 +305,7 @@ class ContiguousInternalMemoryDataFacade<routing_algorithms::offline::Algorithm>
                                                       const int /*bearing*/,
                                                       const int /*bearing_range*/,
                                                       const Approach /*approach*/,
-        const bool /* use_all_edges */) const override
+                                                      const bool /* use_all_edges */) const override
     {
         return {};
     }
@@ -315,7 +315,7 @@ class ContiguousInternalMemoryDataFacade<routing_algorithms::offline::Algorithm>
                                                       const int /*bearing*/,
                                                       const int /*bearing_range*/,
                                                       const Approach /*approach*/,
-        const bool /* use_all_edges */) const override
+                                                      const bool /* use_all_edges */) const override
     {
         return {};
     }
