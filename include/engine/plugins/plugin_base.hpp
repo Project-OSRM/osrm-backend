@@ -270,6 +270,7 @@ class BasePlugin
         const bool use_bearings = !parameters.bearings.empty();
         const bool use_radiuses = !parameters.radiuses.empty();
         const bool use_approaches = !parameters.approaches.empty();
+        const bool use_all_edges = parameters.snapping == api::BaseParameters::SnappingType::Any;
 
         BOOST_ASSERT(parameters.IsValid());
         for (const auto i : util::irange<std::size_t>(0UL, parameters.coordinates.size()))
@@ -296,7 +297,8 @@ class BasePlugin
                             *parameters.radiuses[i],
                             parameters.bearings[i]->bearing,
                             parameters.bearings[i]->range,
-                            approach);
+                            approach,
+                            use_all_edges);
                 }
                 else
                 {
@@ -305,7 +307,8 @@ class BasePlugin
                             parameters.coordinates[i],
                             parameters.bearings[i]->bearing,
                             parameters.bearings[i]->range,
-                            approach);
+                            approach,
+                            use_all_edges);
                 }
             }
             else
@@ -314,13 +317,16 @@ class BasePlugin
                 {
                     phantom_node_pairs[i] =
                         facade.NearestPhantomNodeWithAlternativeFromBigComponent(
-                            parameters.coordinates[i], *parameters.radiuses[i], approach);
+                            parameters.coordinates[i],
+                            *parameters.radiuses[i],
+                            approach,
+                            use_all_edges);
                 }
                 else
                 {
                     phantom_node_pairs[i] =
                         facade.NearestPhantomNodeWithAlternativeFromBigComponent(
-                            parameters.coordinates[i], approach);
+                            parameters.coordinates[i], approach, use_all_edges);
                 }
             }
 
