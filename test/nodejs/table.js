@@ -48,6 +48,21 @@ test('table: test annotations paramater combination', function(assert) {
     });
 });
 
+test('table: snapping parameter passed through OK', function(assert) {
+    assert.plan(2);
+    var osrm = new OSRM(data_path);
+    var options = {
+        coordinates: [[7.448205209414596,43.754001097311544],[7.447122039202185,43.75306156811368]],
+        annotations: ['duration', 'distance'],
+        snapping: 'any'
+    };
+    console.log(options);
+    osrm.table(options, function(err, result) {
+        assert.ifError(err);
+        assert.equal(Math.round(result.distances[0][1] * 10), 1315); // Round it to nearest 0.1m to eliminate floating point comparison error
+    });
+});
+
 test('table: returns buffer', function(assert) {
     assert.plan(3);
     var osrm = new OSRM(data_path);
