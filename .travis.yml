@@ -14,7 +14,7 @@ branches:
   only:
     - master
     # enable building tags
-    - /^v\d+\.\d+(\.\d+)?(\+[^-]+)?(-\S*)?$/
+    - /^v\d+\.\d+(\.\d+)?(-\S*)?$/
 
 cache:
   npm: true
