@@ -162,6 +162,13 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
                         (-approach_type %
                          ';')[ph::bind(&engine::api::BaseParameters::approaches, qi::_r1) = qi::_1];
 
+        snapping_type.add("default", engine::api::BaseParameters::SnappingType::Default)(
+            "any", engine::api::BaseParameters::SnappingType::Any);
+
+        snapping_rule =
+            qi::lit("snapping=") >
+            snapping_type[ph::bind(&engine::api::BaseParameters::snapping, qi::_r1) = qi::_1];
+
         exclude_rule = qi::lit("exclude=") >
                        (qi::as_string[+qi::char_("a-zA-Z0-9")] %
                         ',')[ph::bind(&engine::api::BaseParameters::exclude, qi::_r1) = qi::_1];
@@ -171,7 +178,8 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
                     | bearings_rule(qi::_r1)       //
                     | generate_hints_rule(qi::_r1) //
                     | approach_rule(qi::_r1)       //
-                    | exclude_rule(qi::_r1);
+                    | exclude_rule(qi::_r1)        //
+                    | snapping_rule(qi::_r1);
     }
 
   protected:
@@ -197,8 +205,10 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
     qi::rule<Iterator, unsigned char()> base64_char;
     qi::rule<Iterator, std::string()> polyline_chars;
     qi::rule<Iterator, double()> unlimited_rule;
+    qi::rule<Iterator, Signature> snapping_rule;
 
     qi::symbols<char, engine::Approach> approach_type;
+    qi::symbols<char, engine::api::BaseParameters::SnappingType> snapping_type;
 };
 }
 }
