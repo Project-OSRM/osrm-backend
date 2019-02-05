@@ -60,7 +60,8 @@ function setup()
       'lift_gate',
       'no',
       'entrance',
-      'height_restrictor'
+      'height_restrictor',
+      'arch'
     },
 
     access_tag_whitelist = Set {
