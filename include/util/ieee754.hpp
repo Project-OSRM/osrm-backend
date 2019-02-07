@@ -488,8 +488,8 @@ inline void Prettify(char *buffer, int length, int k)
 inline void dtoa_milo(double value, char *buffer)
 {
     // Not handling NaN and inf
-    assert(!isnan(value));
-    assert(!isinf(value));
+    assert(!std::isnan(value));
+    assert(!std::isinf(value));
 
     if (value == 0)
     {

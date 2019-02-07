@@ -721,6 +721,48 @@ inline bool argumentsToParameter(const Nan::FunctionCallbackInfo<v8::Value> &arg
         }
     }
 
+    if (obj->Has(Nan::New("acceleration_profile").ToLocalChecked()))
+    {
+        v8::Local<v8::Value> acceleration_profile =
+            obj->Get(Nan::New("acceleration_profile").ToLocalChecked());
+        if (acceleration_profile.IsEmpty())
+            return false;
+
+        if (!acceleration_profile->IsNumber() || !acceleration_profile->IsString())
+        {
+            Nan::ThrowError("acceleration_profile must be a decimal number or one of 'car', 'fast_car', 'slow_car', 'truck', or 'tractor_trailer'");
+            return false;
+        }
+
+        if (acceleration_profile->IsString()) {
+                std::string ssaf = *v8::String::Utf8Value(acceleration_profile);
+                // If they say 'yes', they get the default
+                if (ssaf == "car") {
+                    params->waypoint_acceleration_factor = ACCELERATION_ALPHA_CAR;
+                } else if (ssaf == "fast_car") {
+                    params->waypoint_acceleration_factor = ACCELERATION_ALPHA_FAST_CAR;
+                } else if (ssaf == "slow_car") {
+                    params->waypoint_acceleration_factor = ACCELERATION_ALPHA_SLOW_CAR;
+                } else if (ssaf == "truck") {
+                    params->waypoint_acceleration_factor = ACCELERATION_ALPHA_TRUCK;
+                } else if (ssaf == "tractor_trailer") {
+                    params->waypoint_acceleration_factor = ACCELERATION_ALPHA_TRACTOR_TRAILER;
+                } else {
+                    Nan::ThrowError("acceleration_profile must be a decimal number or one of 'car', 'fast_car', 'slow_car', 'truck', or 'tractor_trailer'");
+                    return false;
+                }
+                return true;
+        }
+
+        const auto value = acceleration_profile->NumberValue();
+        if (value < 0) {
+            Nan::ThrowError("acceleration_profile cannot be negative");
+            return false;
+        }
+
+        params->waypoint_acceleration_factor = value;
+    }
+
     return true;
 }
 
