@@ -721,6 +721,51 @@ inline bool argumentsToParameter(const Nan::FunctionCallbackInfo<v8::Value> &arg
         }
     }
 
+    if (obj->Has(Nan::New("stoppage_penalty").ToLocalChecked()))
+    {
+        v8::Local<v8::Value> stoppage_penalty =
+            obj->Get(Nan::New("stoppage_penalty").ToLocalChecked());
+        if (stoppage_penalty.IsEmpty())
+            return false;
+
+        if (!stoppage_penalty->IsArray())
+        {
+            Nan::ThrowError("Stoppage penalty must be an array of 2 numbers [min,max]");
+            return false;
+        }
+
+        auto stoppage_penalty_array = v8::Local<v8::Array>::Cast(stoppage_penalty);
+
+        if (stoppage_penalty_array->Length() != 2)
+        {
+            Nan::ThrowError("Stoppage penalty must be an array of 2 numbers [min,max]");
+            return false;
+        }
+
+        if (!stoppage_penalty_array->Get(0)->IsNumber() ||
+            !stoppage_penalty_array->Get(1)->IsNumber())
+        {
+            Nan::ThrowError("Stoppage penalty must be an array of 2 numbers [min,max]");
+            return false;
+        }
+        const auto min = static_cast<short>(stoppage_penalty_array->Get(0)->NumberValue());
+        const auto max = static_cast<short>(stoppage_penalty_array->Get(1)->NumberValue());
+
+        if (min < 0 || max < 0)
+        {
+            Nan::ThrowError("Stoppage penalty min/max can't be less than zero");
+            return false;
+        }
+        if (max < min)
+        {
+            Nan::ThrowError("Stoppage penalty max must be larger than min");
+            return false;
+        }
+
+        params->max_stoppage_penalty = min;
+        params->min_stoppage_penalty = max;
+    }
+
     return true;
 }
 

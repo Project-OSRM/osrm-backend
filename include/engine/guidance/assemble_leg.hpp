@@ -122,7 +122,7 @@ std::array<std::uint32_t, SegmentNumber> summarizeRoute(const datafacade::BaseDa
                    [](const NamedSegment &segment) { return segment.name_id; });
     return summary;
 }
-}
+} // namespace detail
 
 inline RouteLeg assembleLeg(const datafacade::BaseDataFacade &facade,
                             const std::vector<PathData> &route_data,
@@ -166,7 +166,7 @@ inline RouteLeg assembleLeg(const datafacade::BaseDataFacade &facade,
     // `forward_duration`: duration of (d,t)
     // `forward_offset`: duration of (c, d)
     // path_data will have entries for (s,b), (b, c), (c, d) but (d, t) is only
-    // caputed by the phantom node. So we need to add the target duration here.
+    // captured by the phantom node. So we need to add the target duration here.
     // On local segments, the target duration is already part of the duration, however.
 
     duration = duration + target_duration;
@@ -181,6 +181,13 @@ inline RouteLeg assembleLeg(const datafacade::BaseDataFacade &facade,
         // due to flooring errors in phantom snapping
         duration = std::max(0, duration);
     }
+
+    // Add start and stop penalties
+    if (distance > 0)
+        duration +=
+            (target_traversed_in_reverse
+                 ? source_node.reverse_duration_penalty + target_node.reverse_duration_penalty
+                 : source_node.forward_duration_penalty + target_node.forward_duration_penalty);
 
     std::string summary;
     if (needs_summary)

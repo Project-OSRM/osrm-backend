@@ -48,7 +48,7 @@ struct osm_way_id
 struct duplicated_node
 {
 };
-}
+} // namespace tag
 using OSMNodeID = osrm::Alias<std::uint64_t, tag::osm_node_id>;
 static_assert(std::is_pod<OSMNodeID>(), "OSMNodeID is not a valid alias");
 using OSMWayID = osrm::Alias<std::uint64_t, tag::osm_way_id>;
@@ -116,7 +116,11 @@ static const EdgeDuration MAXIMAL_EDGE_DURATION = std::numeric_limits<EdgeDurati
 static const EdgeDistance MAXIMAL_EDGE_DISTANCE = std::numeric_limits<EdgeDistance>::max();
 static const TurnPenalty INVALID_TURN_PENALTY = std::numeric_limits<TurnPenalty>::max();
 static const EdgeDistance INVALID_EDGE_DISTANCE = std::numeric_limits<EdgeDistance>::max();
-static const EdgeDistance INVALID_FALLBACK_SPEED = std::numeric_limits<double>::max();
+static const EdgeDistance INVALID_FALLBACK_SPEED = std::numeric_limits<EdgeDistance>::max();
+constexpr EdgeDuration INVALID_MINIMUM_STOPPAGE_PENALTY = std::numeric_limits<EdgeDuration>::max();
+constexpr EdgeDuration INVALID_MAXIMUM_STOPPAGE_PENALTY = std::numeric_limits<EdgeDuration>::max();
+constexpr double MINIMAL_ACCEL_DECEL_PENALIZABLE_SPEED = 10; // metres/second
+constexpr double MAXIMAL_ACCEL_DECEL_PENALIZABLE_SPEED = 40; // metres/sec
 
 // FIXME the bitfields we use require a reduced maximal duration, this should be kept consistent
 // within the code base. For now we have to ensure that we don't case 30 bit to -1 and break any

@@ -318,5 +318,33 @@ tables.forEach(function(annotation) {
         assert.throws(()=>osrm.table(options, (err, res) => {}), /scale_factor must be > 0/, "should throw on invalid scale_factor value");
 
     });
+
+    test('table: ' + annotation + ' table in Monaco with stoppage_penalty values', function(assert) {
+        assert.plan(6);
+        var osrm = new OSRM({path: mld_data_path, algorithm: 'MLD'});
+        var options = {
+            coordinates: two_test_coordinates,
+            annotations: [annotation.slice(0,-1)],
+            stoppage_penalty: [],
+        };
+
+        assert.throws(()=>osrm.table(options, (err, res) => {}), /Stoppage penalty must be an array of 2 numbers/, "should throw on empty array");
+
+        options.stoppage_penalty = ['a',1];
+        assert.throws(()=>osrm.table(options, (err, res) => {}), /Stoppage penalty must be an array of 2 numbers/, "should throw on non-numeric value");
+
+        options.stoppage_penalty = [1,2,3];
+        assert.throws(()=>osrm.table(options, (err, res) => {}), /Stoppage penalty must be an array of 2 numbers/, "should throw on too many values");
+
+        options.stoppage_penalty = [1];
+        assert.throws(()=>osrm.table(options, (err, res) => {}), /Stoppage penalty must be an array of 2 numbers/, "should throw on not enough values");
+
+        options.stoppage_penalty = [2,1];
+        assert.throws(()=>osrm.table(options, (err, res) => {}), /Stoppage penalty max must be larger than min/, "should throw on max < min");
+
+        options.stoppage_penalty = [-1,2];
+        assert.throws(()=>osrm.table(options, (err, res) => {}), /Stoppage penalty min\/max can't be less than zero/, "should throw on negative value");
+
+    });
 });
 

@@ -98,7 +98,9 @@ Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
     std::vector<api::TableAPI::TableCellRef> estimated_pairs;
 
     // Scan table for null results - if any exist, replace with distance estimates
-    if (params.fallback_speed != INVALID_FALLBACK_SPEED || params.scale_factor != 1)
+    if (params.fallback_speed != INVALID_FALLBACK_SPEED || params.scale_factor != 1 ||
+        (params.min_stoppage_penalty != INVALID_MINIMUM_STOPPAGE_PENALTY &&
+         params.max_stoppage_penalty != INVALID_MAXIMUM_STOPPAGE_PENALTY))
     {
         for (std::size_t row = 0; row < num_sources; row++)
         {
@@ -106,6 +108,10 @@ Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
             {
                 const auto &table_index = row * num_destinations + column;
                 BOOST_ASSERT(table_index < result_tables_pair.first.size());
+                // Zero out the diagonal
+                if (result_tables_pair.first[table_index] != MAXIMAL_EDGE_DURATION && row == column)
+                    result_tables_pair.first[table_index] = 0;
+                // Estimate null results based on fallback_speed (if valid) and distance
                 if (params.fallback_speed != INVALID_FALLBACK_SPEED && params.fallback_speed > 0 &&
                     result_tables_pair.first[table_index] == MAXIMAL_EDGE_DURATION)
                 {
@@ -132,6 +138,7 @@ Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
 
                     estimated_pairs.emplace_back(row, column);
                 }
+                // Apply a scale factor to non-null result if requested
                 if (params.scale_factor > 0 && params.scale_factor != 1 &&
                     result_tables_pair.first[table_index] != MAXIMAL_EDGE_DURATION &&
                     result_tables_pair.first[table_index] != 0)
@@ -158,6 +165,6 @@ Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
 
     return Status::Ok;
 }
-}
-}
-}
+} // namespace plugins
+} // namespace engine
+} // namespace osrm

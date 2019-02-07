@@ -18,7 +18,7 @@ namespace
 {
 namespace ph = boost::phoenix;
 namespace qi = boost::spirit::qi;
-}
+} // namespace
 
 template <typename Iterator = std::string::iterator,
           typename Signature = void(engine::api::TableParameters &)>
@@ -106,8 +106,8 @@ struct TableParametersGrammar : public BaseParametersGrammar<Iterator, Signature
         fallback_coordinate_type;
     qi::real_parser<double, json_policy> double_;
 };
-}
-}
-}
+} // namespace api
+} // namespace server
+} // namespace osrm
 
 #endif

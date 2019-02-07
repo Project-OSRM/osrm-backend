@@ -50,9 +50,10 @@ struct PhantomNode
           forward_distance(INVALID_EDGE_DISTANCE), reverse_distance(INVALID_EDGE_DISTANCE),
           forward_distance_offset(0), reverse_distance_offset(0),
           forward_duration(MAXIMAL_EDGE_DURATION), reverse_duration(MAXIMAL_EDGE_DURATION),
-          forward_duration_offset(0), reverse_duration_offset(0), fwd_segment_position(0),
-          is_valid_forward_source{false}, is_valid_forward_target{false},
-          is_valid_reverse_source{false}, is_valid_reverse_target{false}, bearing(0)
+          forward_duration_offset(0), reverse_duration_offset(0), forward_duration_penalty(0),
+          reverse_duration_penalty(0), fwd_segment_position(0), is_valid_forward_source{false},
+          is_valid_forward_target{false}, is_valid_reverse_source{false},
+          is_valid_reverse_target{false}, bearing(0)
 
     {
     }
@@ -69,13 +70,13 @@ struct PhantomNode
         return reverse_weight_offset + reverse_weight;
     }
 
-    EdgeWeight GetForwardDuration() const
+    EdgeDuration GetForwardDuration() const
     {
         BOOST_ASSERT(forward_segment_id.enabled);
         return forward_duration + forward_duration_offset;
     }
 
-    EdgeWeight GetReverseDuration() const
+    EdgeDuration GetReverseDuration() const
     {
         BOOST_ASSERT(reverse_segment_id.enabled);
         return reverse_duration + reverse_duration_offset;
@@ -163,10 +164,12 @@ struct PhantomNode
                          EdgeDistance reverse_distance,
                          EdgeDistance forward_distance_offset,
                          EdgeDistance reverse_distance_offset,
-                         EdgeWeight forward_duration,
-                         EdgeWeight reverse_duration,
-                         EdgeWeight forward_duration_offset,
-                         EdgeWeight reverse_duration_offset,
+                         EdgeDuration forward_duration,
+                         EdgeDuration reverse_duration,
+                         EdgeDuration forward_duration_offset,
+                         EdgeDuration reverse_duration_offset,
+                         EdgeDuration forward_duration_penalty,
+                         EdgeDuration reverse_duration_penalty,
                          bool is_valid_forward_source,
                          bool is_valid_forward_target,
                          bool is_valid_reverse_source,
@@ -182,6 +185,8 @@ struct PhantomNode
           reverse_distance_offset{reverse_distance_offset}, forward_duration{forward_duration},
           reverse_duration{reverse_duration}, forward_duration_offset{forward_duration_offset},
           reverse_duration_offset{reverse_duration_offset},
+          forward_duration_penalty{forward_duration_penalty},
+          reverse_duration_penalty{reverse_duration_penalty},
           component{component.id, component.is_tiny}, location{location},
           input_location{input_location}, fwd_segment_position{other.fwd_segment_position},
           is_valid_forward_source{is_valid_forward_source},
@@ -201,10 +206,13 @@ struct PhantomNode
     EdgeDistance reverse_distance;
     EdgeDistance forward_distance_offset; // TODO: try to remove -> requires path unpacking changes
     EdgeDistance reverse_distance_offset; // TODO: try to remove -> requires path unpacking changes
-    EdgeWeight forward_duration;
-    EdgeWeight reverse_duration;
-    EdgeWeight forward_duration_offset; // TODO: try to remove -> requires path unpacking changes
-    EdgeWeight reverse_duration_offset; // TODO: try to remove -> requires path unpacking changes
+    EdgeDuration forward_duration;
+    EdgeDuration reverse_duration;
+    EdgeDuration forward_duration_offset; // TODO: try to remove -> requires path unpacking changes
+    EdgeDuration reverse_duration_offset; // TODO: try to remove -> requires path unpacking changes
+    EdgeDuration forward_duration_penalty;
+    EdgeDuration reverse_duration_penalty;
+
     ComponentID component;
 
     util::Coordinate location; // this is the coordinate of x
@@ -219,7 +227,7 @@ struct PhantomNode
     unsigned short bearing : 12;
 };
 
-static_assert(sizeof(PhantomNode) == 80, "PhantomNode has more padding then expected");
+static_assert(sizeof(PhantomNode) == 88, "PhantomNode has more padding then expected");
 
 using PhantomNodePair = std::pair<PhantomNode, PhantomNode>;
 
@@ -234,7 +242,7 @@ struct PhantomNodes
     PhantomNode source_phantom;
     PhantomNode target_phantom;
 };
-}
-}
+} // namespace engine
+} // namespace osrm
 
 #endif // PHANTOM_NODES_H

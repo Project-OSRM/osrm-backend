@@ -135,6 +135,16 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
                                            },
                                            qi::_1)];
 
+        stoppage_rule = qi::lit("stoppage_penalty=") >
+                        (qi::double_ > ',' > qi::double_)[ph::bind(
+                            [](engine::api::BaseParameters &params, double min, double max) {
+                                params.min_stoppage_penalty = min;
+                                params.max_stoppage_penalty = max;
+                            },
+                            qi::_r1,
+                            qi::_1,
+                            qi::_2)];
+
         query_rule =
             ((location_rule % ';') | polyline_rule |
              polyline6_rule)[ph::bind(&engine::api::BaseParameters::coordinates, qi::_r1) = qi::_1];
@@ -179,7 +189,8 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
                     | generate_hints_rule(qi::_r1) //
                     | approach_rule(qi::_r1)       //
                     | exclude_rule(qi::_r1)        //
-                    | snapping_rule(qi::_r1);
+                    | snapping_rule(qi::_r1)       //
+                    | stoppage_rule(qi::_r1);      //
     }
 
   protected:
@@ -196,6 +207,7 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
     qi::rule<Iterator, Signature> generate_hints_rule;
     qi::rule<Iterator, Signature> approach_rule;
     qi::rule<Iterator, Signature> exclude_rule;
+    qi::rule<Iterator, Signature> stoppage_rule;
 
     qi::rule<Iterator, osrm::engine::Bearing()> bearing_rule;
     qi::rule<Iterator, osrm::util::Coordinate()> location_rule;
