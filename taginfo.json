@@ -6,8 +6,8 @@
         "description": "High-performance routing engine for shortest paths in road networks.",
         "project_url": "http://project-osrm.org",
         "icon_url": "http://project-osrm.org/images/osrm_icon.png",
-        "contact_name": "Patrick Niklaus",
-        "contact_email": "patrick@mapbox.com"
+        "contact_name": "Daniel Patterson",
+        "contact_email": "daniel@mapbox.com"
     },
     "tags": [
         {
