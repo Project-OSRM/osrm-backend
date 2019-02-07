@@ -4,7 +4,7 @@
 | ------------- | ------- | ------------- |
 | [![Travis](https://travis-ci.org/Project-OSRM/osrm-backend.png?branch=master)](https://travis-ci.org/Project-OSRM/osrm-backend) | [![AppVeyor](https://ci.appveyor.com/api/projects/status/4iuo3s9gxprmcjjh)](https://ci.appveyor.com/project/DennisOSRM/osrm-backend) | [![Codecov](https://codecov.io/gh/Project-OSRM/osrm-backend/branch/master/graph/badge.svg)](https://codecov.io/gh/Project-OSRM/osrm-backend) |
 
-High performance routing engine written in C++14 designed to run on OpenStreetMap data.
+High performance routing engine written in C++14 designed to run on OpenStreetMap data.  
 
 The following services are available via HTTP API, C++ library interface and NodeJs wrapper:
 - Nearest - Snaps coordinates to the street network and returns the nearest matches
