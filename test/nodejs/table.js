@@ -303,5 +303,46 @@ tables.forEach(function(annotation) {
         assert.throws(()=>osrm.table(options, (err, res) => {}), /scale_factor must be > 0/, "should throw on invalid scale_factor value");
 
     });
+
+    test('table: ' + annotation + ' table in Monaco with acceleration_profile values', function(assert) {
+        assert.plan(12);
+        var osrm = new OSRM({path: mld_data_path, algorithm: 'MLD'});
+        var options = {
+            coordinates: two_test_coordinates,
+            annotations: [annotation.slice(0,-1)],
+            acceleration_profile: []
+        };
+
+        assert.throws(()=>osrm.table(options, (err, res) => {}), /acceleration_profile must be a decimal number or one of/, "should throw on empty array");
+
+        options.acceleration_profile = 'a';
+        assert.throws(()=>osrm.table(options, (err, res) => {}), /acceleration_profile must be a decimal number or one of/, "should throw on non-numeric value");
+
+        options.acceleration_profile = [1];
+        assert.throws(()=>osrm.table(options, (err, res) => {}), /acceleration_profile must be a decimal number or one of/, "should throw on non-numeric value");
+
+        options.acceleration_profile = -0.1;
+        assert.throws(()=>osrm.table(options, (err, res) => {}), /acceleration_profile cannot be negative/, "should throw on non-numeric value");
+
+        options.acceleration_profile = 0.;
+        assert.ok(()=>osrm.table(options, (err, res) => {}), "should work with zero");
+
+        options.acceleration_profile = 2.0;
+        assert.ok(()=>osrm.table(options, (err, res) => {}), "Should work with positive numeric values");
+        options.acceleration_profile = 'car';
+        assert.ok(()=>osrm.table(options, (err, res) => {}), "Should work with car defaults");
+        options.acceleration_profile = 'fast_car';
+        assert.ok(()=>osrm.table(options, (err, res) => {}), "Should work with fast car defaults");
+        options.acceleration_profile = 'slow_car';
+        assert.ok(()=>osrm.table(options, (err, res) => {}), "Should work with slow car defaults");
+        options.acceleration_profile = 'truck';
+        assert.ok(()=>osrm.table(options, (err, res) => {}), "Should work with truck defaults");
+        options.acceleration_profile = 'tractor_trailer';
+        assert.ok(()=>osrm.table(options, (err, res) => {}), "Should work with tractor trailer defaults");
+
+        options.acceleration_profile = 'yes';
+        assert.throws(()=>osrm.table(options, (err, res) => {}), /acceleration_profile must be a decimal number or one of/, "should throw on non-recognized string");
+
+    });
 });
 

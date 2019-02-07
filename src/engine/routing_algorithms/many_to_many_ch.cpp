@@ -143,7 +143,8 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
                 middle_nodes_table[row_index * number_of_targets + column_index] = node;
             }
         }
-        else if (std::tie(new_weight, new_duration) < std::tie(current_weight, current_duration))
+        else if (std::tie(new_weight, new_duration) < std::tie(current_weight, current_duration) &&
+                 new_distance >= 0)
         {
             current_weight = new_weight;
             current_duration = new_duration;

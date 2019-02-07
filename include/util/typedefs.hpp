@@ -119,6 +119,14 @@ static const TurnPenalty INVALID_TURN_PENALTY = std::numeric_limits<TurnPenalty>
 static const EdgeDistance INVALID_EDGE_DISTANCE = std::numeric_limits<EdgeDistance>::max();
 static const EdgeDistance INVALID_FALLBACK_SPEED = std::numeric_limits<double>::max();
 
+// Recommended value for passenger vehicles from
+// https://fdotwww.blob.core.windows.net/sitefinity/docs/default-source/content/rail/publications/studies/safety/accelerationresearch.pdf?sfvrsn=716a4bb1_0
+static const double ACCELERATION_ALPHA_CAR = 6.0;
+static const double ACCELERATION_ALPHA_FAST_CAR = 18;
+static const double ACCELERATION_ALPHA_SLOW_CAR = 2;
+static const double ACCELERATION_ALPHA_TRUCK = 1.5;
+static const double ACCELERATION_ALPHA_TRACTOR_TRAILER = 0.5;
+
 // FIXME the bitfields we use require a reduced maximal duration, this should be kept consistent
 // within the code base. For now we have to ensure that we don't case 30 bit to -1 and break any
 // min() / operator< checks due to the invalid truncation. In addition, using signed and unsigned
