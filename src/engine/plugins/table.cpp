@@ -17,6 +17,31 @@
 
 #include <boost/assert.hpp>
 
+namespace
+{
+
+// where does this speed lie with respect to the min/max penalizable speeds
+inline double stoppage_penalty(double speed, double min_penalty, double penalty_range)
+{
+    // You're so slow already you don't get a penalty
+    if (speed < MINIMAL_ACCEL_DECEL_PENALIZABLE_SPEED)
+        return 0;
+
+    // Find where it is on the scale
+    constexpr auto max =
+        MAXIMAL_ACCEL_DECEL_PENALIZABLE_SPEED - MINIMAL_ACCEL_DECEL_PENALIZABLE_SPEED;
+    auto ratio = (speed - MINIMAL_ACCEL_DECEL_PENALIZABLE_SPEED) / max;
+
+    // You're faster than the max so you get the max
+    if (ratio >= 1)
+        return min_penalty + penalty_range;
+
+    // You're in between so you get a linear combination
+    return min_penalty + ratio * penalty_range;
+}
+
+} // namespace
+
 namespace osrm
 {
 namespace engine
@@ -96,6 +121,7 @@ Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
     }
 
     std::vector<api::TableAPI::TableCellRef> estimated_pairs;
+    const auto stoppage_penalty_range = params.max_stoppage_penalty - params.min_stoppage_penalty;
 
     // Scan table for null results - if any exist, replace with distance estimates
     if (params.fallback_speed != INVALID_FALLBACK_SPEED || params.scale_factor != 1)
@@ -106,6 +132,30 @@ Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
             {
                 const auto &table_index = row * num_destinations + column;
                 BOOST_ASSERT(table_index < result_tables_pair.first.size());
+                // Add decel/accel penalty to account for stoppage at the start/end of trip
+                if (stoppage_penalty_range >= 0 &&
+                    result_tables_pair.first[table_index] != MAXIMAL_EDGE_DURATION)
+                {
+                    const auto &source =
+                        snapped_phantoms[params.sources.empty() ? row : params.sources[row]];
+                    const auto &destination =
+                        snapped_phantoms[params.destinations.empty() ? column
+                                                                     : params.destinations[column]];
+
+                    // TODO: if phantom node is actual node, will the distance/duration be 0?
+
+                    auto source_penalty =
+                        stoppage_penalty(source.forward_distance / source.forward_duration,
+                                         params.min_stoppage_penalty,
+                                         stoppage_penalty_range);
+                    auto dest_penalty = stoppage_penalty(destination.forward_distance /
+                                                             destination.forward_duration,
+                                                         params.min_stoppage_penalty,
+                                                         stoppage_penalty_range);
+
+                    result_tables_pair.first[table_index] += source_penalty + dest_penalty;
+                }
+                // Estimate null results based on fallback_speed (if valid) and distance
                 if (params.fallback_speed != INVALID_FALLBACK_SPEED && params.fallback_speed > 0 &&
                     result_tables_pair.first[table_index] == MAXIMAL_EDGE_DURATION)
                 {
@@ -132,6 +182,7 @@ Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
 
                     estimated_pairs.emplace_back(row, column);
                 }
+                // Apply a scale factor to non-null result if requested
                 if (params.scale_factor > 0 && params.scale_factor != 1 &&
                     result_tables_pair.first[table_index] != MAXIMAL_EDGE_DURATION &&
                     result_tables_pair.first[table_index] != 0)
@@ -158,6 +209,6 @@ Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
 
     return Status::Ok;
 }
-}
-}
-}
+} // namespace plugins
+} // namespace engine
+} // namespace osrm

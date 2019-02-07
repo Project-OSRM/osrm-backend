@@ -60,6 +60,8 @@ struct TableParameters : public BaseParameters
     std::vector<std::size_t> sources;
     std::vector<std::size_t> destinations;
     double fallback_speed = INVALID_FALLBACK_SPEED;
+    double min_stoppage_penalty = INVALID_MINIMUM_STOPAGE_PENALTY;
+    double max_stoppage_penalty = INVALID_MAXIMUM_STOPAGE_PENALTY;
 
     enum class FallbackCoordinateType
     {
@@ -108,11 +110,14 @@ struct TableParameters : public BaseParameters
                     double fallback_speed_,
                     FallbackCoordinateType fallback_coordinate_type_,
                     double scale_factor_,
+                    double min_stoppage_penalty_,
+                    double max_stoppage_penalty_,
                     Args... args_)
         : BaseParameters{std::forward<Args>(args_)...}, sources{std::move(sources_)},
           destinations{std::move(destinations_)}, fallback_speed{fallback_speed_},
           fallback_coordinate_type{fallback_coordinate_type_}, annotations{annotations_},
-          scale_factor{scale_factor_}
+          scale_factor{scale_factor_}, min_stoppage_penalty{min_stoppage_penalty_},
+          max_stoppage_penalty{max_stoppage_penalty_}
 
     {
     }
@@ -141,6 +146,10 @@ struct TableParameters : public BaseParameters
             return false;
 
         if (scale_factor <= 0)
+            return false;
+
+        if (min_stoppage_penalty <= 0 || max_stoppage_penalty <= 0 ||
+                max_stoppage_penalty > min_stoppage_penalty)
             return false;
 
         return true;
