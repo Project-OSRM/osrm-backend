@@ -762,8 +762,8 @@ inline bool argumentsToParameter(const Nan::FunctionCallbackInfo<v8::Value> &arg
             return false;
         }
 
-        params->max_stoppage_penalty = min;
-        params->min_stoppage_penalty = max;
+        params->max_stoppage_penalty = max;
+        params->min_stoppage_penalty = min;
     }
 
     return true;
