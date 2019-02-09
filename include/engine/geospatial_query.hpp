@@ -466,6 +466,7 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
         return distance_and_phantoms;
     }
 
+    // TODO: remove stoppage penalty as its not needed here anymore
     PhantomNodeWithDistance MakePhantomNode(const util::Coordinate input_coordinate,
                                             const EdgeData &data,
                                             const double min_stoppage_penalty = 0,
@@ -555,36 +556,11 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
             point_on_segment,
             datafacade.GetCoordinateOfNode(forward_geometry(data.fwd_segment_position + 1)));
 
-        // where does this speed lie with respect to the min/max penalizable speeds
-        auto penalty_range = min_stoppage_penalty != INVALID_MINIMUM_STOPPAGE_PENALTY &&
-                                     max_stoppage_penalty != INVALID_MAXIMUM_STOPPAGE_PENALTY
-                                 ? max_stoppage_penalty - min_stoppage_penalty
-                                 : 0;
-        auto stoppage_penalty =
-            [penalty_range, min_stoppage_penalty, max_stoppage_penalty](double speed) -> double {
-            // You're so slow already you don't get a penalty
-            if (speed < MINIMAL_ACCEL_DECEL_PENALIZABLE_SPEED)
-                return 0;
-
-            // Find where it is on the scale
-            constexpr auto max =
-                MAXIMAL_ACCEL_DECEL_PENALIZABLE_SPEED - MINIMAL_ACCEL_DECEL_PENALIZABLE_SPEED;
-            auto ratio = (speed - MINIMAL_ACCEL_DECEL_PENALIZABLE_SPEED) / max;
-
-            // You're faster than the max so you get the max
-            if (ratio >= 1)
-                return max_stoppage_penalty;
-
-            // You're in between so you get a linear combination
-            return min_stoppage_penalty + ratio * penalty_range;
-        };
-
         // We may end up adding a stoppage penalty
-        EdgeDuration forward_stoppage_penalty = 0;
-        EdgeDuration reverse_stoppage_penalty = 0;
-        auto total_distance = penalty_range > 0 ? appx_distance(forward_geometry.begin(),
-                                                                std::prev(forward_geometry.end()))
-                                                : 0.0;
+        double forward_speed = 0;
+        double reverse_speed = 0;
+        auto total_distance = 0;
+        auto penalty_range = max_stoppage_penalty - min_stoppage_penalty;
         ratio = std::min(1.0, std::max(0.0, ratio));
         if (data.forward_segment_id.id != SPECIAL_SEGMENTID)
         {
@@ -593,11 +569,12 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
             // Stoppage penalty based on speed
             if (data.forward_segment_id.enabled && penalty_range > 0)
             {
+                total_distance =
+                    appx_distance(forward_geometry.begin(), std::prev(forward_geometry.end()));
                 const auto total_duration = std::accumulate(
                     forward_durations.begin(), forward_durations.end(), EdgeDuration{0});
-                const auto speed = total_distance / (total_duration * 0.1);
-                forward_stoppage_penalty =
-                    static_cast<EdgeDuration>((stoppage_penalty(speed) * 10) + .5);
+                forward_speed = total_distance / (total_duration * 0.1);
+                reverse_speed = forward_speed;
             }
         }
         if (data.reverse_segment_id.id != SPECIAL_SEGMENTID)
@@ -607,11 +584,14 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
             // Stoppage penalty based on speed
             if (data.reverse_segment_id.enabled && penalty_range > 0)
             {
+                if (total_distance == 0)
+                    total_distance =
+                        appx_distance(forward_geometry.begin(), std::prev(forward_geometry.end()));
                 const auto total_duration = std::accumulate(
                     reverse_durations.begin(), reverse_durations.end(), EdgeDuration{0});
-                const auto speed = total_distance / (total_duration * 0.1);
-                reverse_stoppage_penalty =
-                    static_cast<EdgeDuration>((stoppage_penalty(speed) * 10) + .5);
+                reverse_speed = total_distance / (total_duration * 0.1);
+                if (forward_speed == 0)
+                    forward_speed = reverse_speed;
             }
         }
 
@@ -643,8 +623,7 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
                         reverse_duration,
                         forward_duration_offset,
                         reverse_duration_offset,
-                        forward_stoppage_penalty,
-                        reverse_stoppage_penalty,
+                        static_cast<float>((forward_speed + reverse_speed) / 2.0),
                         is_forward_valid_source,
                         is_forward_valid_target,
                         is_reverse_valid_source,

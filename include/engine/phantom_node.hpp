@@ -44,16 +44,16 @@ namespace engine
 struct PhantomNode
 {
     PhantomNode()
-        : forward_segment_id{SPECIAL_SEGMENTID, false},
-          reverse_segment_id{SPECIAL_SEGMENTID, false}, forward_weight(INVALID_EDGE_WEIGHT),
-          reverse_weight(INVALID_EDGE_WEIGHT), forward_weight_offset(0), reverse_weight_offset(0),
+        : forward_segment_id{SPECIAL_SEGMENTID, false}, reverse_segment_id{SPECIAL_SEGMENTID,
+                                                                           false},
+          forward_weight(INVALID_EDGE_WEIGHT), reverse_weight(INVALID_EDGE_WEIGHT),
+          forward_weight_offset(0), reverse_weight_offset(0),
           forward_distance(INVALID_EDGE_DISTANCE), reverse_distance(INVALID_EDGE_DISTANCE),
           forward_distance_offset(0), reverse_distance_offset(0),
           forward_duration(MAXIMAL_EDGE_DURATION), reverse_duration(MAXIMAL_EDGE_DURATION),
-          forward_duration_offset(0), reverse_duration_offset(0), forward_duration_penalty(0),
-          reverse_duration_penalty(0), fwd_segment_position(0), is_valid_forward_source{false},
-          is_valid_forward_target{false}, is_valid_reverse_source{false},
-          is_valid_reverse_target{false}, bearing(0)
+          forward_duration_offset(0), reverse_duration_offset(0), speed_approximation(0),
+          fwd_segment_position(0), is_valid_forward_source{false}, is_valid_forward_target{false},
+          is_valid_reverse_source{false}, is_valid_reverse_target{false}, bearing(0)
 
     {
     }
@@ -110,8 +110,9 @@ struct PhantomNode
 
     bool IsValid(const unsigned number_of_nodes) const
     {
-        return location.IsValid() && ((forward_segment_id.id < number_of_nodes) ||
-                                      (reverse_segment_id.id < number_of_nodes)) &&
+        return location.IsValid() &&
+               ((forward_segment_id.id < number_of_nodes) ||
+                (reverse_segment_id.id < number_of_nodes)) &&
                ((forward_weight != INVALID_EDGE_WEIGHT) ||
                 (reverse_weight != INVALID_EDGE_WEIGHT)) &&
                ((forward_duration != MAXIMAL_EDGE_DURATION) ||
@@ -168,8 +169,7 @@ struct PhantomNode
                          EdgeDuration reverse_duration,
                          EdgeDuration forward_duration_offset,
                          EdgeDuration reverse_duration_offset,
-                         EdgeDuration forward_duration_penalty,
-                         EdgeDuration reverse_duration_penalty,
+                         EdgeDistance speed_approximation,
                          bool is_valid_forward_source,
                          bool is_valid_forward_target,
                          bool is_valid_reverse_source,
@@ -185,10 +185,9 @@ struct PhantomNode
           reverse_distance_offset{reverse_distance_offset}, forward_duration{forward_duration},
           reverse_duration{reverse_duration}, forward_duration_offset{forward_duration_offset},
           reverse_duration_offset{reverse_duration_offset},
-          forward_duration_penalty{forward_duration_penalty},
-          reverse_duration_penalty{reverse_duration_penalty},
-          component{component.id, component.is_tiny}, location{location},
-          input_location{input_location}, fwd_segment_position{other.fwd_segment_position},
+          speed_approximation{speed_approximation}, component{component.id, component.is_tiny},
+          location{location}, input_location{input_location},
+          fwd_segment_position{other.fwd_segment_position},
           is_valid_forward_source{is_valid_forward_source},
           is_valid_forward_target{is_valid_forward_target},
           is_valid_reverse_source{is_valid_reverse_source},
@@ -210,8 +209,7 @@ struct PhantomNode
     EdgeDuration reverse_duration;
     EdgeDuration forward_duration_offset; // TODO: try to remove -> requires path unpacking changes
     EdgeDuration reverse_duration_offset; // TODO: try to remove -> requires path unpacking changes
-    EdgeDuration forward_duration_penalty;
-    EdgeDuration reverse_duration_penalty;
+    EdgeDistance speed_approximation;     // m/s
 
     ComponentID component;
 
@@ -227,7 +225,7 @@ struct PhantomNode
     unsigned short bearing : 12;
 };
 
-static_assert(sizeof(PhantomNode) == 88, "PhantomNode has more padding then expected");
+static_assert(sizeof(PhantomNode) == 84, "PhantomNode has more padding then expected");
 
 using PhantomNodePair = std::pair<PhantomNode, PhantomNode>;
 

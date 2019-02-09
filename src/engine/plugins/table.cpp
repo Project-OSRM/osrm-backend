@@ -97,6 +97,22 @@ Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
 
     std::vector<api::TableAPI::TableCellRef> estimated_pairs;
 
+    auto penalize = [&params](float speed, EdgeDuration duration) -> EdgeDuration {
+        // this is the penalty before adjusting for the length of the route
+        auto speed_ratio = speed * MAXIMAL_ACCEL_DECEL_PENALIZABLE_SPEED_INVERSE;
+        auto penalty = speed_ratio * (params.max_stoppage_penalty - params.min_stoppage_penalty) +
+                       params.min_stoppage_penalty;
+        // how much distance would we cover if we took half of it at this speed
+        // scale the penalty based on this distance, if its small we dont get much
+        // of the penalty, buf if its large we get up to the whole penalty
+        // .05 is to scale the duration to second and cut it in half
+        // .005 is like / 200m, so the estimated distance as a ratio of 200m
+        // so you get the full penalty if your route is 200m or more
+        auto distance_ratio = (speed * duration * .05) * 0.008;
+        return static_cast<EdgeDuration>(
+            (distance_ratio < 1.f ? distance_ratio * penalty : penalty) * 10.);
+    };
+
     // Scan table for null results - if any exist, replace with distance estimates
     if (params.fallback_speed != INVALID_FALLBACK_SPEED || params.scale_factor != 1 ||
         (params.min_stoppage_penalty != INVALID_MINIMUM_STOPPAGE_PENALTY &&
@@ -108,9 +124,20 @@ Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
             {
                 const auto &table_index = row * num_destinations + column;
                 BOOST_ASSERT(table_index < result_tables_pair.first.size());
-                // Zero out the diagonal
-                if (result_tables_pair.first[table_index] != MAXIMAL_EDGE_DURATION && row == column)
-                    result_tables_pair.first[table_index] = 0;
+                // apply an accel/deceleration penalty to the duration
+                if (result_tables_pair.first[table_index] != MAXIMAL_EDGE_DURATION && row != column)
+                {
+                    const auto &source =
+                        snapped_phantoms[params.sources.empty() ? row : params.sources[row]];
+                    const auto &destination =
+                        snapped_phantoms[params.destinations.empty() ? column
+                                                                     : params.destinations[column]];
+                    result_tables_pair.first[table_index] +=
+                        penalize(source.speed_approximation,
+                                 result_tables_pair.first[table_index]) +
+                        penalize(destination.speed_approximation,
+                                 result_tables_pair.first[table_index]);
+                }
                 // Estimate null results based on fallback_speed (if valid) and distance
                 if (params.fallback_speed != INVALID_FALLBACK_SPEED && params.fallback_speed > 0 &&
                     result_tables_pair.first[table_index] == MAXIMAL_EDGE_DURATION)

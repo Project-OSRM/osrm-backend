@@ -64,7 +64,7 @@ struct Hint
 };
 
 static_assert(sizeof(Hint) == sizeof(PhantomNode) + 4, "Hint is bigger than expected");
-constexpr std::size_t ENCODED_HINT_SIZE = 124;
+constexpr std::size_t ENCODED_HINT_SIZE = 120;
 static_assert(ENCODED_HINT_SIZE / 4 * 3 >= sizeof(Hint),
               "ENCODED_HINT_SIZE does not match size of Hint");
 } // namespace engine
