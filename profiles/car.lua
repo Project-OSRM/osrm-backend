@@ -120,9 +120,6 @@ function setup()
 
     -- classes to support for exclude flags
     excludable = Sequence {
-        Set {'toll'},
-        Set {'motorway'},
-        Set {'ferry'}
     },
 
     avoid = Set {
