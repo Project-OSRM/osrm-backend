@@ -112,7 +112,7 @@ Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
         // here, but tiny numbers is what this adjustment lambda is all about,
         // so we do try to be reasonable.
         const auto average_speed =
-            duration == 0 ? 10 : distance /
+            duration == 0 ? 10 : std::abs(distance) /
                                      (duration / 10.); // duration is in deciseconds, we need m/sec
 
         // The following reference has a nice model (equations 9 through 12)
@@ -141,7 +141,7 @@ Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
 
         BOOST_ASSERT(distance_to_full_speed >= 0);
 
-        if (distance_to_full_speed > distance / 2)
+        if (distance_to_full_speed > std::abs(distance) / 2)
         {
             // Because equation 12 requires velocity at halfway, and
             // solving equation 11 for t requires a Lambert W function,
@@ -149,13 +149,13 @@ Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
             // over distance_to_full_speed using s = ut + 1/2at^2
             const auto average_acceleration =
                 2 * distance_to_full_speed / (time_to_full_speed * time_to_full_speed);
-            const auto time_to_halfway = std::sqrt(distance / average_acceleration);
+            const auto time_to_halfway = std::sqrt(std::abs(distance) / average_acceleration);
             BOOST_ASSERT(time_to_halfway >= 0);
             return (2 * time_to_halfway) * 10; // result is in deciseconds
         }
         else
         {
-            const auto cruising_distance = distance - 2 * distance_to_full_speed;
+            const auto cruising_distance = std::abs(distance) - 2 * distance_to_full_speed;
             const auto cruising_time = cruising_distance / average_speed;
             BOOST_ASSERT(cruising_time >= 0);
             return (cruising_time + 2 * time_to_full_speed) * 10; // result is in deciseconds
