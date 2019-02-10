@@ -325,19 +325,19 @@ tables.forEach(function(annotation) {
         var options = {
             coordinates: two_test_coordinates,
             annotations: [annotation.slice(0,-1)],
-            start_stop_acceleration_factor: []
+            acceleration_profile: []
         };
 
-        assert.throws(()=>osrm.table(options, (err, res) => {}), /start_stop_acceleration_factor must be a decimal number or one of/, "should throw on empty array");
+        assert.throws(()=>osrm.table(options, (err, res) => {}), /acceleration_profile must be a decimal number or one of/, "should throw on empty array");
 
         options.start_stop_acceleration_factor = 'a';
-        assert.throws(()=>osrm.table(options, (err, res) => {}), /start_stop_acceleration_factor must be a decimal number or one of/, "should throw on non-numeric value");
+        assert.throws(()=>osrm.table(options, (err, res) => {}), /acceleration_profile must be a decimal number or one of/, "should throw on non-numeric value");
 
         options.start_stop_acceleration_factor = [1];
-        assert.throws(()=>osrm.table(options, (err, res) => {}), /start_stop_acceleration_factor must be a decimal number or one of/, "should throw on non-numeric value");
+        assert.throws(()=>osrm.table(options, (err, res) => {}), /acceleration_profile must be a decimal number or one of/, "should throw on non-numeric value");
 
         options.start_stop_acceleration_factor = -0.1;
-        assert.throws(()=>osrm.table(options, (err, res) => {}), /start_stop_acceleration_factor must be a decimal number or one of/, "should throw on non-numeric value");
+        assert.throws(()=>osrm.table(options, (err, res) => {}), /acceleration_profile must be a decimal number or one of/, "should throw on non-numeric value");
 
         options.start_stop_acceleration_factor = 0.;
         assert.ok(()=>osrm.table(options, (err, res) => {}), "should work with zero");
@@ -356,7 +356,7 @@ tables.forEach(function(annotation) {
         assert.ok(()=>osrm.table(options, (err, res) => {}), "Should work with tractor trailer defaults");
 
         options.start_stop_acceleration_factor = 'yes';
-        assert.throws(()=>osrm.table(options, (err, res) => {}), /start_stop_acceleration_factor must be a decimal number or one of/, "should throw on non-recognized string");
+        assert.throws(()=>osrm.table(options, (err, res) => {}), /acceleration_profile must be a decimal number or one of/, "should throw on non-recognized string");
 
     });
 });
