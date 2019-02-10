@@ -728,7 +728,7 @@ inline bool argumentsToParameter(const Nan::FunctionCallbackInfo<v8::Value> &arg
         if (acceleration_profile.IsEmpty())
             return false;
 
-        if (!acceleration_profile->IsNumber() || !acceleration_profile->IsString())
+        if (!acceleration_profile->IsNumber() && !acceleration_profile->IsString())
         {
             Nan::ThrowError("acceleration_profile must be a decimal number or one of 'car', 'fast_car', 'slow_car', 'truck', or 'tractor_trailer'");
             return false;
