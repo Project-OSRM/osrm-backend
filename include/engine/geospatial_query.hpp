@@ -206,9 +206,7 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
     NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
                                                       const double max_distance,
                                                       const Approach approach,
-                                                      const bool use_all_edges,
-                                                      const double min_stoppage_penalty,
-                                                      const double max_stoppage_penalty) const
+                                                      const bool use_all_edges) const
     {
         bool has_small_component = false;
         bool has_big_component = false;
@@ -250,13 +248,8 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
         }
 
         BOOST_ASSERT(results.size() == 1 || results.size() == 2);
-        return std::make_pair(
-            MakePhantomNode(
-                input_coordinate, results.front(), min_stoppage_penalty, max_stoppage_penalty)
-                .phantom_node,
-            MakePhantomNode(
-                input_coordinate, results.back(), min_stoppage_penalty, max_stoppage_penalty)
-                .phantom_node);
+        return std::make_pair(MakePhantomNode(input_coordinate, results.front()).phantom_node,
+                              MakePhantomNode(input_coordinate, results.back()).phantom_node);
     }
 
     // Returns the nearest phantom node. If this phantom node is not from a big component
@@ -264,9 +257,7 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
     std::pair<PhantomNode, PhantomNode>
     NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
                                                       const Approach approach,
-                                                      const bool use_all_edges,
-                                                      const double min_stoppage_penalty,
-                                                      const double max_stoppage_penalty) const
+                                                      const bool use_all_edges) const
     {
         bool has_small_component = false;
         bool has_big_component = false;
@@ -307,13 +298,8 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
         }
 
         BOOST_ASSERT(results.size() == 1 || results.size() == 2);
-        return std::make_pair(
-            MakePhantomNode(
-                input_coordinate, results.front(), min_stoppage_penalty, max_stoppage_penalty)
-                .phantom_node,
-            MakePhantomNode(
-                input_coordinate, results.back(), min_stoppage_penalty, max_stoppage_penalty)
-                .phantom_node);
+        return std::make_pair(MakePhantomNode(input_coordinate, results.front()).phantom_node,
+                              MakePhantomNode(input_coordinate, results.back()).phantom_node);
     }
 
     // Returns the nearest phantom node. If this phantom node is not from a big component
@@ -323,9 +309,7 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
                                                       const int bearing,
                                                       const int bearing_range,
                                                       const Approach approach,
-                                                      const bool use_all_edges,
-                                                      const double min_stoppage_penalty,
-                                                      const double max_stoppage_penalty) const
+                                                      const bool use_all_edges) const
     {
         bool has_small_component = false;
         bool has_big_component = false;
@@ -373,13 +357,8 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
         }
 
         BOOST_ASSERT(results.size() > 0);
-        return std::make_pair(
-            MakePhantomNode(
-                input_coordinate, results.front(), min_stoppage_penalty, max_stoppage_penalty)
-                .phantom_node,
-            MakePhantomNode(
-                input_coordinate, results.back(), min_stoppage_penalty, max_stoppage_penalty)
-                .phantom_node);
+        return std::make_pair(MakePhantomNode(input_coordinate, results.front()).phantom_node,
+                              MakePhantomNode(input_coordinate, results.back()).phantom_node);
     }
 
     // Returns the nearest phantom node. If this phantom node is not from a big component
@@ -390,9 +369,7 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
                                                       const int bearing,
                                                       const int bearing_range,
                                                       const Approach approach,
-                                                      const bool use_all_edges,
-                                                      const double min_stoppage_penalty,
-                                                      const double max_stoppage_penalty) const
+                                                      const bool use_all_edges) const
     {
         bool has_small_component = false;
         bool has_big_component = false;
@@ -442,13 +419,8 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
         }
 
         BOOST_ASSERT(results.size() > 0);
-        return std::make_pair(
-            MakePhantomNode(
-                input_coordinate, results.front(), min_stoppage_penalty, max_stoppage_penalty)
-                .phantom_node,
-            MakePhantomNode(
-                input_coordinate, results.back(), min_stoppage_penalty, max_stoppage_penalty)
-                .phantom_node);
+        return std::make_pair(MakePhantomNode(input_coordinate, results.front()).phantom_node,
+                              MakePhantomNode(input_coordinate, results.back()).phantom_node);
     }
 
   private:
@@ -467,9 +439,7 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
     }
 
     PhantomNodeWithDistance MakePhantomNode(const util::Coordinate input_coordinate,
-                                            const EdgeData &data,
-                                            const double min_stoppage_penalty = 0,
-                                            const double max_stoppage_penalty = 0) const
+                                            const EdgeData &data) const
     {
         util::Coordinate point_on_segment;
         double ratio;
@@ -508,21 +478,16 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
                             forward_durations.begin() + data.fwd_segment_position,
                             EdgeDuration{0});
 
-        // For measuring distance from begin up to end
-        const auto appx_distance = [this](decltype(forward_geometry.begin()) begin,
-                                          decltype(forward_geometry.begin()) end) {
-            EdgeDistance dist = 0;
-            for (; begin != end; ++begin)
-            {
-                dist += util::coordinate_calculation::fccApproximateDistance(
-                    datafacade.GetCoordinateOfNode(*begin),
-                    datafacade.GetCoordinateOfNode(*std::next(begin)));
-            }
-            return dist;
-        };
-
-        EdgeDistance forward_distance_offset = appx_distance(
-            forward_geometry.begin(), forward_geometry.begin() + data.fwd_segment_position);
+        EdgeDistance forward_distance_offset = 0;
+        // Sum up the distance from the start to the fwd_segment_position
+        for (auto current = forward_geometry.begin();
+             current < forward_geometry.begin() + data.fwd_segment_position;
+             ++current)
+        {
+            forward_distance_offset += util::coordinate_calculation::fccApproximateDistance(
+                datafacade.GetCoordinateOfNode(*current),
+                datafacade.GetCoordinateOfNode(*std::next(current)));
+        }
 
         BOOST_ASSERT(data.fwd_segment_position <
                      std::distance(forward_durations.begin(), forward_durations.end()));
@@ -543,9 +508,16 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
                             reverse_durations.end() - data.fwd_segment_position - 1,
                             EdgeDuration{0});
 
-        EdgeDistance reverse_distance_offset =
-            appx_distance(forward_geometry.begin() + data.fwd_segment_position + 1,
-                          std::prev(forward_geometry.end()));
+        EdgeDistance reverse_distance_offset = 0;
+        // Sum up the distance from just after the fwd_segment_position to the end
+        for (auto current = forward_geometry.begin() + data.fwd_segment_position + 1;
+             current != std::prev(forward_geometry.end());
+             ++current)
+        {
+            reverse_distance_offset += util::coordinate_calculation::fccApproximateDistance(
+                datafacade.GetCoordinateOfNode(*current),
+                datafacade.GetCoordinateOfNode(*std::next(current)));
+        }
 
         EdgeWeight reverse_weight =
             reverse_weights[reverse_weights.size() - data.fwd_segment_position - 1];
@@ -555,64 +527,16 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
             point_on_segment,
             datafacade.GetCoordinateOfNode(forward_geometry(data.fwd_segment_position + 1)));
 
-        // where does this speed lie with respect to the min/max penalizable speeds
-        auto penalty_range = min_stoppage_penalty != INVALID_MINIMUM_STOPPAGE_PENALTY &&
-                                     max_stoppage_penalty != INVALID_MAXIMUM_STOPPAGE_PENALTY
-                                 ? max_stoppage_penalty - min_stoppage_penalty
-                                 : 0;
-        auto stoppage_penalty =
-            [penalty_range, min_stoppage_penalty, max_stoppage_penalty](double speed) -> double {
-            // You're so slow already you don't get a penalty
-            if (speed < MINIMAL_ACCEL_DECEL_PENALIZABLE_SPEED)
-                return 0;
-
-            // Find where it is on the scale
-            constexpr auto max =
-                MAXIMAL_ACCEL_DECEL_PENALIZABLE_SPEED - MINIMAL_ACCEL_DECEL_PENALIZABLE_SPEED;
-            auto ratio = (speed - MINIMAL_ACCEL_DECEL_PENALIZABLE_SPEED) / max;
-
-            // You're faster than the max so you get the max
-            if (ratio >= 1)
-                return max_stoppage_penalty;
-
-            // You're in between so you get a linear combination
-            return min_stoppage_penalty + ratio * penalty_range;
-        };
-
-        // We may end up adding a stoppage penalty
-        EdgeDuration forward_stoppage_penalty = 0;
-        EdgeDuration reverse_stoppage_penalty = 0;
-        auto total_distance = penalty_range > 0 ? appx_distance(forward_geometry.begin(),
-                                                                std::prev(forward_geometry.end()))
-                                                : 0.0;
         ratio = std::min(1.0, std::max(0.0, ratio));
         if (data.forward_segment_id.id != SPECIAL_SEGMENTID)
         {
             forward_weight = static_cast<EdgeWeight>(forward_weight * ratio);
             forward_duration = static_cast<EdgeDuration>(forward_duration * ratio);
-            // Stoppage penalty based on speed
-            if (data.forward_segment_id.enabled && penalty_range > 0)
-            {
-                const auto total_duration = std::accumulate(
-                    forward_durations.begin(), forward_durations.end(), EdgeDuration{0});
-                const auto speed = total_distance / (total_duration * 0.1);
-                forward_stoppage_penalty =
-                    static_cast<EdgeDuration>((stoppage_penalty(speed) * 10) + .5);
-            }
         }
         if (data.reverse_segment_id.id != SPECIAL_SEGMENTID)
         {
             reverse_weight -= static_cast<EdgeWeight>(reverse_weight * ratio);
             reverse_duration -= static_cast<EdgeDuration>(reverse_duration * ratio);
-            // Stoppage penalty based on speed
-            if (data.reverse_segment_id.enabled && penalty_range > 0)
-            {
-                const auto total_duration = std::accumulate(
-                    reverse_durations.begin(), reverse_durations.end(), EdgeDuration{0});
-                const auto speed = total_distance / (total_duration * 0.1);
-                reverse_stoppage_penalty =
-                    static_cast<EdgeDuration>((stoppage_penalty(speed) * 10) + .5);
-            }
         }
 
         // check phantom node segments validity
@@ -643,8 +567,6 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
                         reverse_duration,
                         forward_duration_offset,
                         reverse_duration_offset,
-                        forward_stoppage_penalty,
-                        reverse_stoppage_penalty,
                         is_forward_valid_source,
                         is_forward_valid_target,
                         is_reverse_valid_source,
@@ -795,7 +717,7 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
     const CoordinateList &coordinates;
     DataFacadeT &datafacade;
 };
-} // namespace engine
-} // namespace osrm
+}
+}
 
 #endif

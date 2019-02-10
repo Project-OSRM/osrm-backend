@@ -81,8 +81,6 @@ struct BaseParameters
     bool generate_hints = true;
 
     SnappingType snapping = SnappingType::Default;
-    double min_stoppage_penalty = INVALID_MINIMUM_STOPPAGE_PENALTY;
-    double max_stoppage_penalty = INVALID_MAXIMUM_STOPPAGE_PENALTY;
 
     BaseParameters(const std::vector<util::Coordinate> coordinates_ = {},
                    const std::vector<boost::optional<Hint>> hints_ = {},
@@ -91,23 +89,16 @@ struct BaseParameters
                    std::vector<boost::optional<Approach>> approaches_ = {},
                    bool generate_hints_ = true,
                    std::vector<std::string> exclude = {},
-                   const SnappingType snapping_ = SnappingType::Default,
-                   double min_stoppage_penalty_ = INVALID_MINIMUM_STOPPAGE_PENALTY,
-                   double max_stoppage_penalty_ = INVALID_MAXIMUM_STOPPAGE_PENALTY)
+                   const SnappingType snapping_ = SnappingType::Default)
         : coordinates(coordinates_), hints(hints_), radiuses(radiuses_), bearings(bearings_),
           approaches(approaches_), exclude(std::move(exclude)), generate_hints(generate_hints_),
-          snapping(snapping_), min_stoppage_penalty(min_stoppage_penalty_),
-          max_stoppage_penalty(max_stoppage_penalty_)
+          snapping(snapping_)
     {
     }
 
     // FIXME add validation for invalid bearing values
     bool IsValid() const
     {
-        if (min_stoppage_penalty <= 0 || max_stoppage_penalty <= 0 ||
-            min_stoppage_penalty > max_stoppage_penalty)
-            return false;
-
         return (hints.empty() || hints.size() == coordinates.size()) &&
                (bearings.empty() || bearings.size() == coordinates.size()) &&
                (radiuses.empty() || radiuses.size() == coordinates.size()) &&

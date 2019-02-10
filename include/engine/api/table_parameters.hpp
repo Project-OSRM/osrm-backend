@@ -78,6 +78,7 @@ struct TableParameters : public BaseParameters
     };
 
     AnnotationsType annotations = AnnotationsType::Duration;
+
     double scale_factor = 1;
 
     TableParameters() = default;
@@ -112,6 +113,7 @@ struct TableParameters : public BaseParameters
           destinations{std::move(destinations_)}, fallback_speed{fallback_speed_},
           fallback_coordinate_type{fallback_coordinate_type_}, annotations{annotations_},
           scale_factor{scale_factor_}
+
     {
     }
 
@@ -164,8 +166,8 @@ inline TableParameters::AnnotationsType &operator|=(TableParameters::Annotations
 {
     return lhs = lhs | rhs;
 }
-} // namespace api
-} // namespace engine
-} // namespace osrm
+}
+}
+}
 
 #endif // ENGINE_API_TABLE_PARAMETERS_HPP

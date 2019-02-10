@@ -157,36 +157,28 @@ class BaseDataFacade
                         const double max_distance,
                         const Approach approach) const = 0;
 
-    virtual std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
-        const util::Coordinate input_coordinate,
-        const Approach approach,
-        const bool use_all_edges,
-        const double minimum_stoppage_penalty,
-        const double maximum_stoppage_penalty) const = 0;
-    virtual std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
-        const util::Coordinate input_coordinate,
-        const double max_distance,
-        const Approach approach,
-        const bool use_all_edges,
-        const double minimum_stoppage_penalty,
-        const double maximum_stoppage_penalty) const = 0;
-    virtual std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
-        const util::Coordinate input_coordinate,
-        const double max_distance,
-        const int bearing,
-        const int bearing_range,
-        const Approach approach,
-        const bool use_all_edges,
-        const double minimum_stoppage_penalty,
-        const double maximum_stoppage_penalty) const = 0;
-    virtual std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
-        const util::Coordinate input_coordinate,
-        const int bearing,
-        const int bearing_range,
-        const Approach approach,
-        const bool use_all_edges,
-        const double minimum_stoppage_penalty,
-        const double maximum_stoppage_penalty) const = 0;
+    virtual std::pair<PhantomNode, PhantomNode>
+    NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
+                                                      const Approach approach,
+                                                      const bool use_all_edges) const = 0;
+    virtual std::pair<PhantomNode, PhantomNode>
+    NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
+                                                      const double max_distance,
+                                                      const Approach approach,
+                                                      const bool use_all_edges) const = 0;
+    virtual std::pair<PhantomNode, PhantomNode>
+    NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
+                                                      const double max_distance,
+                                                      const int bearing,
+                                                      const int bearing_range,
+                                                      const Approach approach,
+                                                      const bool use_all_edges) const = 0;
+    virtual std::pair<PhantomNode, PhantomNode>
+    NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
+                                                      const int bearing,
+                                                      const int bearing_range,
+                                                      const Approach approach,
+                                                      const bool use_all_edges = false) const = 0;
 
     virtual bool HasLaneData(const EdgeID id) const = 0;
     virtual util::guidance::LaneTupleIdPair GetLaneData(const EdgeID id) const = 0;
