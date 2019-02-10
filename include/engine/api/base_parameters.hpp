@@ -123,8 +123,8 @@ struct BaseParameters
                            });
     }
 };
-} // namespace api
-} // namespace engine
-} // namespace osrm
+}
+}
+}
 
 #endif // ROUTE_PARAMETERS_HPP

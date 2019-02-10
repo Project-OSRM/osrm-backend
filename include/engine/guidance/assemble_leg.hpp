@@ -182,8 +182,12 @@ inline RouteLeg assembleLeg(const datafacade::BaseDataFacade &facade,
         duration = std::max(0, duration);
     }
 
-    // TODO: Add start and stop penalties to the duration to simulate accel/deceleration
-    //
+    // Add start and stop penalties
+    if (distance > 0)
+        duration +=
+            (target_traversed_in_reverse
+                 ? source_node.reverse_duration_penalty + target_node.reverse_duration_penalty
+                 : source_node.forward_duration_penalty + target_node.forward_duration_penalty);
 
     std::string summary;
     if (needs_summary)

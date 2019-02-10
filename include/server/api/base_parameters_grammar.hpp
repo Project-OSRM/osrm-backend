@@ -25,7 +25,7 @@ namespace
 {
 namespace ph = boost::phoenix;
 namespace qi = boost::spirit::qi;
-} // namespace
+}
 
 template <typename T, char... Fmt> struct no_trailing_dot_policy : qi::real_policies<T>
 {
@@ -222,8 +222,8 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
     qi::symbols<char, engine::Approach> approach_type;
     qi::symbols<char, engine::api::BaseParameters::SnappingType> snapping_type;
 };
-} // namespace api
-} // namespace server
-} // namespace osrm
+}
+}
+}
 
 #endif
