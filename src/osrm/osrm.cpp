@@ -10,6 +10,8 @@
 #include "engine/engine_config.hpp"
 #include "engine/status.hpp"
 
+#include <boost/algorithm/string/join.hpp>
+
 #include <memory>
 
 namespace osrm
@@ -25,8 +27,11 @@ OSRM::OSRM(engine::EngineConfig &config)
     // First, check that necessary core data is available
     if (!config.use_shared_memory && !config.storage_config.IsValid())
     {
-        throw util::exception("Required files are missing, cannot continue.  Have all the "
-                              "pre-processing steps been run?");
+        const auto &missingFiles = config.storage_config.GetMissingFiles();
+        throw util::exception("Required files are missing, cannot continue. Have all the "
+                              "pre-processing steps been run? "
+                              "Missing files: " +
+                              boost::algorithm::join(missingFiles, ", "));
     }
 
     // Now, check that the algorithm requested can be used with the data
