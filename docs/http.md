@@ -32,6 +32,7 @@ To pass parameters to each location some options support an array like encoding:
 |hints           |`{hint};{hint}[;{hint} ...]`                            |Hint from previous request to derive position in street network.                                       |
 |approaches      |`{approach};{approach}[;{approach} ...]`                |Keep waypoints on curb side.                                                                           |
 |exclude         |`{class}[,{class}]`                                     |Additive list of classes to avoid, order does not matter.                                              |
+|snapping        |`default` (default), `any`                              |Default snapping avoids is_startpoint (see profile) edges, `any` will snap to any edge in the graph    |
 
 Where the elements follow the following format:
 
