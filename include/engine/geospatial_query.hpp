@@ -327,13 +327,12 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
                     (!has_small_component || (!has_big_component && !IsTinyComponent(segment)));
                 auto use_directions = std::make_pair(use_segment, use_segment);
                 const auto admissible_segments = CheckSegmentExclude(segment);
-                use_directions = boolPairAnd(use_directions, HasValidEdge(segment, use_all_edges));
 
                 if (use_segment)
                 {
                     use_directions =
                         boolPairAnd(CheckSegmentBearing(segment, bearing, bearing_range),
-                                    HasValidEdge(segment));
+                                    HasValidEdge(segment, use_all_edges));
                     use_directions = boolPairAnd(use_directions, admissible_segments);
                     use_directions = boolPairAnd(
                         use_directions, CheckApproach(input_coordinate, segment, approach));
@@ -387,13 +386,12 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
                     (!has_small_component || (!has_big_component && !IsTinyComponent(segment)));
                 auto use_directions = std::make_pair(use_segment, use_segment);
                 const auto admissible_segments = CheckSegmentExclude(segment);
-                use_directions = boolPairAnd(use_directions, HasValidEdge(segment, use_all_edges));
 
                 if (use_segment)
                 {
                     use_directions =
                         boolPairAnd(CheckSegmentBearing(segment, bearing, bearing_range),
-                                    HasValidEdge(segment));
+                                    HasValidEdge(segment, use_all_edges));
                     use_directions = boolPairAnd(use_directions, admissible_segments);
                     use_directions = boolPairAnd(
                         use_directions, CheckApproach(input_coordinate, segment, approach));
