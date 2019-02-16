@@ -60,3 +60,66 @@ Feature: Car - Allowed start/end modes
             | from | to | route    |
             | 1    | 2  | ab,bc,cd |
             | 2    | 1  | cd,bc,ab |
+
+    Scenario: Car - URL override of non-startpoints
+        Given the node map
+            """
+            a 1 b   c 2 d
+            """
+
+        Given the query options
+            | snapping  | any          |
+            | bearings  | 90,180;      |
+
+        And the ways
+            | nodes | highway | access  |
+            | ab    | service | private |
+            | bc    | primary |         |
+            | cd    | service | private |
+
+        When I route I should get
+            | from | to | route    |
+            | 1    | 2  | ab,bc,cd |
+            | 2    | 1  | cd,bc,ab |
+
+    Scenario: Car - URL override of non-startpoints
+        Given the node map
+            """
+            a 1 b   c 2 d
+            """
+
+        Given the query options
+            | snapping  | any           |
+            | radiuses  | 100;unlimited |
+
+        And the ways
+            | nodes | highway | access  |
+            | ab    | service | private |
+            | bc    | primary |         |
+            | cd    | service | private |
+
+        When I route I should get
+            | from | to | route    |
+            | 1    | 2  | ab,bc,cd |
+            | 2    | 1  | cd,bc,ab |
+
+    Scenario: Car - URL override of non-startpoints
+        Given the node map
+            """
+            a 1 b   c 2 d
+            """
+
+        Given the query options
+            | snapping  | any            |
+            | bearings  | 90,180;0,180;; |
+
+        And the ways
+            | nodes | highway | access  |
+            | ab    | service | private |
+            | bc    | primary |         |
+            | cd    | service | private |
+
+        When I request a travel time matrix I should get
+            |   | 2    | c    |
+            | 1 | 59.1 | 35.1 |
+            | b | 35.1 | 11.1 |
