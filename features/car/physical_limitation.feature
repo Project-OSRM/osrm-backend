@@ -62,6 +62,7 @@ Feature: Car - Handle physical limitation
             | highway | maxweight | bothw |
             | primary |           | x     |
             | primary | 1         |       |
+            | primary | 2         | x     |
             | primary | 3.5       | x     |
             | primary | 35000 kg  | x     |
             | primary | 8.9t      | x     |
