@@ -2,6 +2,8 @@
   - Changes from 5.23.0
     - Infrastructure
       - CHANGED: Bundled protozero updated to v1.7.0. [#5858](https://github.com/Project-OSRM/osrm-backend/pull/5858)
+    - Features
+      - CHANGED: missing files list is included in exception message. [#5360](https://github.com/Project-OSRM/osrm-backend/pull/5360)
 
 # 5.23.0
   - Changes from 5.22.0
