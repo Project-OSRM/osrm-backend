@@ -44,7 +44,7 @@ function setup()
 
     -- Size of the vehicle, to be limited mostly by legal restriction of the way
     vehicle_length = 4.8, -- in meters, 4.8m is the length of large or familly car
-    vehicle_weight = 3500, -- in kilograms
+    vehicle_weight = 2000, -- in kilograms
 
     -- a list of suffixes to suppress in name change instructions. The suffixes also include common substrings of each other
     suffix_list = {
