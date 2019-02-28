@@ -478,7 +478,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                    });
 
     external_memory.way_start_end_id_list.push_back(
-        {OSMWayID{static_cast<std::uint32_t>(input_way.id())},
+        {OSMWayID{static_cast<std::uint64_t>(input_way.id())},
          OSMNodeID{static_cast<std::uint64_t>(nodes[0].ref())},
          OSMNodeID{static_cast<std::uint64_t>(nodes[1].ref())},
          OSMNodeID{static_cast<std::uint64_t>(nodes[nodes.size() - 2].ref())},
