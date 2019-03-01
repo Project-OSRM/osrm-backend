@@ -206,12 +206,7 @@ void GraphCompressor::Compress(
                 graph.GetEdgeData(reverse_e2).annotation_data = selectAnnotation(
                     rev_edge_data2.annotation_data, rev_edge_data1.annotation_data);
 
-                /*
-                // Do not compress edge if it crosses a traffic signal.
-                // This can't be done in CanCombineWith, becase we only store the
-                // traffic signals in the `traffic signal` list, which EdgeData
-                // doesn't have access to.
-                */
+                // add node penalty when compress edge if it crosses a traffic signal.
                 const bool has_node_penalty = traffic_signals.find(node_v) != traffic_signals.end();
                 EdgeDuration node_duration_penalty = MAXIMAL_EDGE_DURATION;
                 EdgeWeight node_weight_penalty = INVALID_EDGE_WEIGHT;
