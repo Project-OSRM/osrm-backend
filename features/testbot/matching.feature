@@ -21,8 +21,27 @@ Feature: Basic Map Matching
             | abcd  | no     |
 
         When I match I should get
-            | trace | timestamps | matchings |
-            | ab1d  | 0 1 2 3    | ad        |
+            | trace | timestamps | matchings | data_version |
+            | ab1d  | 0 1 2 3    | ad        |              |
+
+    Scenario: Data_version test on matching
+        Given a grid size of 100 meters
+        Given the node map
+            """
+            a b c d
+
+                1
+            """
+
+        And the extract extra arguments "--data_version cucumber_data_version"
+
+        And the ways
+            | nodes | oneway |
+            | abcd  | no     |
+
+        When I match I should get
+            | trace | timestamps | matchings | data_version          |
+            | ab1d  | 0 1 2 3    | ad        | cucumber_data_version |
 
     Scenario: Testbot - Map matching with trace splitting
         Given the node map
