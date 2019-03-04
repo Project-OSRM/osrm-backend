@@ -39,7 +39,7 @@ function setup()
     cardinal_directions       = false,
 
     -- Size of the vehicle, to be limited by physical restriction of the way
-    vehicle_height = 2.5, -- in meters, 2.5m is the height of van
+    vehicle_height = 2.0, -- in meters, 2.5m is the height of van
     vehicle_width = 1.9, -- in meters, ways with narrow tag are considered narrower than 2.2m
 
     -- Size of the vehicle, to be limited mostly by legal restriction of the way
