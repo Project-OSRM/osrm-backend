@@ -45,6 +45,11 @@ class TripAPI final : public RouteAPI
         response.values["waypoints"] = MakeWaypoints(sub_trips, phantoms);
         response.values["trips"] = std::move(routes);
         response.values["code"] = "Ok";
+        auto data_timestamp = facade.GetTimestamp();
+        if (!data_timestamp.empty())
+        {
+            response.values["data_version"] = data_timestamp;
+        }
     }
 
   protected:
