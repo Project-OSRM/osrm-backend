@@ -25,6 +25,8 @@ var osrm = new OSRM('network.osrm');
                Make sure you prepared the dataset with the correct toolchain.
     -   `options.shared_memory` **[Boolean](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean)?** Connects to the persistent shared memory datastore.
                This requires you to run `osrm-datastore` prior to creating an `OSRM` object.
+    -   `options.dataset_name` **[String](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)?** Connects to the persistent shared memory datastore defined by `--dataset_name` option when running `osrm-datastore`
+               This requires you to run `osrm-datastore --dataset_name` prior to creating an `OSRM` object.
     -   `options.memory_file` **[String](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)?** *DEPRECATED*
                Old behaviour: Path to a file on disk to store the memory using mmap.  Current behaviour: setting this value is the same as setting `mmap_memory: true`.
     -   `options.mmap_memory` **[Boolean](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean)?** Map on-disk files to virtual memory addresses (mmap), rather than loading into RAM.
