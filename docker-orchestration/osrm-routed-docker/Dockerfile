@@ -13,5 +13,5 @@ RUN cd /osrm-bin && \
 
 EXPOSE 5000
 
-ENTRYPOINT ["osrm-routed"]
+ENTRYPOINT ["/osrm-bin/osrm-routed"]
 
