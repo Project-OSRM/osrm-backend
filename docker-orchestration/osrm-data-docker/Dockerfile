@@ -8,7 +8,7 @@ ARG MAPDATA_PATH
 ENV MAPDATA_PATH ${MAPDATA_PATH}
 
 WORKDIR /mapdata
-ADD ${MAPDATA_PATH}/* /mapdata/
+ADD ${MAPDATA_PATH} /mapdata/
 
 # make the folder mountable
 VOLUME /mapdata
