@@ -290,7 +290,7 @@ curl 'http://router.project-osrm.org/table/v1/driving/13.388860,52.517037;13.397
 - `durations` array of arrays that stores the matrix in row-major order. `durations[i][j]` gives the travel time from
   the i-th waypoint to the j-th waypoint. Values are given in seconds. Can be `null` if no route between `i` and `j` can be found.
 - `distances` array of arrays that stores the matrix in row-major order. `distances[i][j]` gives the travel distance from
-  the i-th waypoint to the j-th waypoint. Values are given in meters. Can be `null` if no route between `i` and `j` can be found. Note that computing the `distances` table is currently only implemented for CH. If `annotations=distance` or `annotations=duration,distance` is requested when running a MLD router, a `NotImplemented` error will be returned.
+  the i-th waypoint to the j-th waypoint. Values are given in meters. Can be `null` if no route between `i` and `j` can be found.
 - `sources` array of `Waypoint` objects describing all sources in order
 - `destinations` array of `Waypoint` objects describing all destinations in order
 - `fallback_speed_cells` (optional) array of arrays containing `i,j` pairs indicating which cells contain estimated values based on `fallback_speed`.  Will be absent if `fallback_speed` is not used.

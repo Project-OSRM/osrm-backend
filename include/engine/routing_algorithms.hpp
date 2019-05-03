@@ -8,6 +8,7 @@
 #include "engine/routing_algorithms/direct_shortest_path.hpp"
 #include "engine/routing_algorithms/many_to_many.hpp"
 #include "engine/routing_algorithms/map_matching.hpp"
+#include "engine/routing_algorithms/multi_heading_path.hpp"
 #include "engine/routing_algorithms/shortest_path.hpp"
 #include "engine/routing_algorithms/tile_turns.hpp"
 
@@ -22,6 +23,9 @@ class RoutingAlgorithmsInterface
     virtual InternalManyRoutesResult
     AlternativePathSearch(const PhantomNodes &phantom_node_pair,
                           unsigned number_of_alternatives) const = 0;
+
+    virtual InternalManyRoutesResult
+    MultiHeadingDirectShortestPathsSearch(const PhantomNodes &phantom_node_pair) const = 0;
 
     virtual InternalRouteResult
     ShortestPathSearch(const std::vector<PhantomNodes> &phantom_node_pair,
@@ -50,13 +54,21 @@ class RoutingAlgorithmsInterface
     virtual const DataFacadeBase &GetFacade() const = 0;
 
     virtual bool HasAlternativePathSearch() const = 0;
+
     virtual bool HasShortestPathSearch() const = 0;
+
     virtual bool HasDirectShortestPathSearch() const = 0;
+
     virtual bool HasMapMatching() const = 0;
+
     virtual bool HasManyToManySearch() const = 0;
+
     virtual bool SupportsDistanceAnnotationType() const = 0;
+
     virtual bool HasGetTileTurns() const = 0;
+
     virtual bool HasExcludeFlags() const = 0;
+
     virtual bool IsValid() const = 0;
 };
 
@@ -79,6 +91,9 @@ template <typename Algorithm> class RoutingAlgorithms final : public RoutingAlgo
     InternalRouteResult ShortestPathSearch(
         const std::vector<PhantomNodes> &phantom_node_pair,
         const boost::optional<bool> continue_straight_at_waypoint) const final override;
+
+    InternalManyRoutesResult
+    MultiHeadingDirectShortestPathsSearch(const PhantomNodes &phantom_nodes) const final override;
 
     InternalRouteResult
     DirectShortestPathSearch(const PhantomNodes &phantom_nodes) const final override;
@@ -159,6 +174,13 @@ RoutingAlgorithms<Algorithm>::AlternativePathSearch(const PhantomNodes &phantom_
 }
 
 template <typename Algorithm>
+InternalManyRoutesResult RoutingAlgorithms<Algorithm>::MultiHeadingDirectShortestPathsSearch(
+    const PhantomNodes &phantom_nodes) const
+{
+    return routing_algorithms::multiHeadingDirectShortestPathsSearch(heaps, *facade, phantom_nodes);
+}
+
+template <typename Algorithm>
 InternalRouteResult RoutingAlgorithms<Algorithm>::ShortestPathSearch(
     const std::vector<PhantomNodes> &phantom_node_pair,
     const boost::optional<bool> continue_straight_at_waypoint) const
@@ -230,7 +252,7 @@ inline std::vector<routing_algorithms::TurnData> RoutingAlgorithms<Algorithm>::G
     return routing_algorithms::getTileTurns(*facade, edges, sorted_edge_indexes);
 }
 
-} // ns engine
-} // ns osrm
+} // namespace engine
+} // namespace osrm
 
 #endif
