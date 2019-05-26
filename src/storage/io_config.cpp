@@ -12,10 +12,12 @@ namespace storage
 {
 bool IOConfig::IsValid() const
 {
+    namespace fs = boost::filesystem;
+
     bool success = true;
     for (auto &fileName : required_input_files)
     {
-        if (!boost::filesystem::is_regular_file({base_path.string() + fileName.string()}))
+        if (!fs::is_regular_file(fs::status(base_path.string() + fileName.string())))
         {
             util::Log(logWARNING) << "Missing/Broken File: " << base_path.string()
                                   << fileName.string();
@@ -24,5 +26,5 @@ bool IOConfig::IsValid() const
     }
     return success;
 }
-}
-}
+} // namespace storage
+} // namespace osrm
