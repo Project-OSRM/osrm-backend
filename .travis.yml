@@ -122,6 +122,14 @@ matrix:
       env: CLANG_VERSION='5.0.0' BUILD_TYPE='Release' ENABLE_MASON=ON RUN_CLANG_FORMAT=ON ENABLE_LTO=ON
 
     - os: linux
+      compiler: "gcc-8-release"
+      addons: &gcc8
+        apt:
+          sources: ['ubuntu-toolchain-r-test']
+          packages: ['g++-8', 'libbz2-dev', 'libxml2-dev', 'libzip-dev', 'liblua5.2-dev', 'libtbb-dev', 'libboost-all-dev']
+      env: CCOMPILER='gcc-8' CXXCOMPILER='g++-8' BUILD_TYPE='Release' CXXFLAGS='-Wno-cast-function-type'
+
+    - os: linux
       compiler: "gcc-7-release"
       addons: &gcc7
         apt:
