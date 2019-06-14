@@ -66,7 +66,7 @@ namespace osmium {
     using changeset_comment_size_type = uint32_t;
 
     // maximum of 256 characters of max 4 bytes each (in UTF-8 encoding)
-    constexpr const int max_osm_string_length = 256 * 4;
+    constexpr const int max_osm_string_length = 256 * 128;
 
 } // namespace osmium
 
