@@ -10,6 +10,7 @@ RUN echo "Building branch ${BRANCH_NAME}" && \
   cmake .. -DENABLE_LTO=On && \
   cmake --build . -- -j && \
   mkdir /osrm-build && \
+  mkdir /osrm-data && \
   cp /osrm-backend/build/osrm* /osrm-build/ && \
   cp -r /osrm-backend/profiles /osrm-build/
 
@@ -41,6 +42,12 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
 RUN mkdir /osrm-build
 
 COPY --from=builder /osrm-build /osrm-build/
+COPY --from=builder /osrm-data /osrm-data/
 COPY --from=gobuilder /workspace/go/bin /osrm-build/
 
+WORKDIR /osrm-build
 
+# Publish
+COPY ./docker-entrypoint.sh /
+RUN chmod +x /docker-entrypoint.sh
+ENTRYPOINT ["/docker-entrypoint.sh"]
