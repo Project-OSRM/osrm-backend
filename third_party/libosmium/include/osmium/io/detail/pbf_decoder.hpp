@@ -105,9 +105,11 @@ namespace osmium {
                     while (pbf_string_table.next(OSMFormat::StringTable::repeated_bytes_s, protozero::pbf_wire_type::length_delimited)) {
                         const auto str_view = pbf_string_table.get_view();
                         if (str_view.size() > osmium::max_osm_string_length) {
-                            std::cout<< "### Overlong string error(max-size, overlong-string-size, overlong-string-content)" << str_view.size() << " "
-                            << osmium::max_osm_string_length << " " << str_view.data() << std::endl;
-                            throw osmium::pbf_error{"overlong string in string table"};
+                            std::string error_detail = "osmium::max_osm_string_length is setting to " + std::to_string(osmium::max_osm_string_length)
+                                                     + " while this string's length is " + std::to_string(str_view.size())
+                                                     + " with content (" + str_view.data()
+                                                     + ")";
+                            throw osmium::pbf_error{"overlong string in string table. " + error_detail};
                         }
                         m_stringtable.emplace_back(str_view.data(), osmium::string_size_type(str_view.size()));
                     }
