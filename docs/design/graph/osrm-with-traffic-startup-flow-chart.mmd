@@ -1,0 +1,31 @@
+%% Call below command to convert .mmd to .png
+%%  Adjust -w or -H if necessary
+%% mmdc -p puppeteer-config.json -i osrm-with-traffic-startup-flow-chart.mmd -o osrm-with-traffic-startup-flow-chart.mmd.png
+
+graph TD
+
+Title[<u>OSRM with Telenav Traffic Container Startup Flow Chart</u>]
+Title-->Start
+style Title fill:#FFF,stroke:#FFF
+linkStyle 0 stroke:#FFF,stroke-width:0;
+
+Start("Start") --> PrepareCompiledMapdata["Prepare Compile Mapdata<p></p>- NA compile mapdata size based on OSM: about 43 GB <p></p>- Way 1: Package compiled mapdata inside the docker image <p></p>- Way 2: Pull compiled mapdata from network when startup the container "]
+style PrepareCompiledMapdata fill:#acbfff,stroke-dasharray: 5, 5
+
+PrepareCompiledMapdata --> ConnectTrafficProxy["OSRMTrafficUpdate Connect TrafficProxy by RPC"]
+
+subgraph OSRM Traffic Updater
+ConnectTrafficProxy --> PullLatestTraffic["Pull latest traffic(from node, to node, speed) of full region"]
+PullLatestTraffic --> WriteToCSV["Write to traffic.csv(as OSRM format)"]
+WriteToCSV --> ExitOSRMTrafficUpdater["Exit ExitOSRMTrafficUpdater"]
+end
+
+subgraph OSRM customize
+ExitOSRMTrafficUpdater --> OSRMCustomize["Run osrm-customize on mapdata with traffic.csv"]
+end
+
+subgraph OSRM routed
+OSRMCustomize --> OSRMRouted["Run osrm-routed based on customized mapdata"]
+end
+
+OSRMRouted --> End("End")
