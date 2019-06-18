@@ -12,3 +12,7 @@ $ DOCKER_BUILDKIT=1 docker build -t telenav/osrm-backend .
 $ DOCKER_BUILDKIT=1 docker build -t telenav/osrm-backend:telenav-import-internal-pbf --build-arg BRANCH_NAME=feature/telenav-import-internal-pbf .
 
 ```
+
+## Example
+- [Build Berlin Server with OSM data](./example-berlin-osm.md)
+

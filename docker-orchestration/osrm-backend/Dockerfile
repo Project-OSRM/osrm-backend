@@ -36,7 +36,7 @@ FROM debian:stretch-slim as runstage
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends libboost-program-options1.62.0 libboost-regex1.62.0 \
     libboost-date-time1.62.0 libboost-chrono1.62.0 libboost-filesystem1.62.0 \
-    libboost-iostreams1.62.0 libboost-thread1.62.0 expat liblua5.2-0 libtbb2 && \
+    libboost-iostreams1.62.0 libboost-thread1.62.0 expat liblua5.2-0 libtbb2 curl ca-certificates && \
   rm -rf /var/lib/apt/lists/*
 
 RUN mkdir /osrm-build

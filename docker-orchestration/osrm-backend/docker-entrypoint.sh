@@ -10,13 +10,13 @@ if [ "$1" = 'routed_startup' ]; then
   ./osrm-routed $DATA_PATH/$2.osrm -a MLD --max-table-size 8000 &
   child=$!
   wait "$child"
-elif [ "$1" = 'compile_mapdata']; then
+elif [ "$1" = 'compile_mapdata' ]; then
   trap _sig SIGKILL SIGTERM SIGHUP SIGINT EXIT
   if [ ! -f $DATA_PATH/$2.osrm ]; then
     if [ ! -f $DATA_PATH/$2.osm.pbf ]; then
       curl $3 > $DATA_PATH/$2.osm.pbf
     fi
-    ./osrm-extract $DATA_PATH/$2.osm.pbf -p profile.lua
+    ./osrm-extract $DATA_PATH/$2.osm.pbf -p profiles/car.lua
     ./osrm-partition $DATA_PATH/$2.osrm
     ./osrm-customize $DATA_PATH/$2.osrm
   fi  
