@@ -2,21 +2,28 @@
 
 - Generate docker image
 ```bash
-DOCKER_BUILDKIT=1 docker build --no-cache -t telenav/osrm-backend:docker-orchestration-perry --build-arg BRANCH_NAME=feature/docker-orchestration-perry .
+$ DOCKER_BUILDKIT=1 docker build --no-cache -t telenav/osrm-backend:compile-data-inside-docker --build-arg BRANCH_NAME=feature/compile-data-inside-docker .
 ```
 
 - Generate OSRM data
 ```bash
- docker run -d -v /Users/ngxuser/osrm-data/berlin_osm:/osrm-data --name osrm-data telenav/osrm-backend:docker-orchestration-perry compile_mapdata berlin "https://download.geofabrik.de/europe/germany/berlin-latest.osm.pbf"
+$ mkdir -p compiled-data
+$ docker run -it --mount "src=$(pwd)/compiled-data,dst=/save-data,type=bind" telenav/osrm-backend:compile-data-inside-docker compile_mapdata "https://download.geofabrik.de/europe/germany/berlin-latest.osm.pbf" false true
+$ ll compiled-data/                                                                                  
+total 34968
+-rw-r--r-- 1 root root 35805710 Jun 17 23:34 map.tar.gz
 ```
 
 - Start OSRM server
 ```bash
-docker run -d -p 5000:5000 -v /Users/ngxuser/osrm-data/berlin_osm:/osrm-data --name osrm-api telenav/osrm-backend:docker-orchestration-perry routed_startup berlin
+$ cd compiled-data
+$ tar -zxf map.tar.gz
+$ docker run -d -p 5000:5000 --mount "src=$(pwd),dst=/osrm-data,type=bind" --name osrm-api telenav/osrm-backend:compile-data-inside-docker routed_startup
+05227a108a66e7c59f7515f8f174a65f9932f36fe3807f83991806c0194a7e50
 ```
 You should see such logs in docker
 ```
-# docker logs -f container_id
+$ docker logs 05227a108a66e7c59f7515f8f174a65f9932f36fe3807f83991806c0194a7e50
 [info] starting up engines, v5.22.0
 [info] Threads: 10
 [info] IP address: 0.0.0.0

@@ -6,7 +6,7 @@ Base image for telenav osrm-backend development, include all building and runnin
 See details in [osrm-backend-dev docker](./osrm-backend-dev/).    
 
 ### osrm-backend
-Image within built osrm binaries(`osrm-extract/osrm-partition/osrm-customize/...`) and running dependencies.  
+Image within built osrm binaries(`osrm-extract/osrm-partition/osrm-customize/...`) and running dependencies. It can be used to **compile data** or **startup routed**.      
 See details in [osrm-backend docker](./osrm-backend/)
 
 ### osrm-frontend
