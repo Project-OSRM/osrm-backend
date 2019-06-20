@@ -46,6 +46,10 @@ COPY --from=gobuilder /workspace/go/bin /osrm-build/
 COPY ./docker-entrypoint.sh /
 RUN chmod +x /docker-entrypoint.sh
 
+# for shown on runtime
+ARG IMAGE_TAG
+ENV IMAGE_TAG ${IMAGE_TAG}
+
 EXPOSE 5000
 ENTRYPOINT ["/docker-entrypoint.sh"]
 

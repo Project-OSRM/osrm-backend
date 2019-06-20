@@ -1,7 +1,7 @@
 #!/bin/bash -x
 BUILD_PATH=${BUILD_PATH:="/osrm-build"}
 DATA_PATH=${DATA_PATH:="/osrm-data"}
-OSRM_EXTRA_COMMAND="-l --verbosity"
+OSRM_EXTRA_COMMAND="-l DEBUG"
 MAPDATA_NAME_WITH_SUFFIX=map
 
 _sig() {
@@ -29,8 +29,15 @@ elif [ "$1" = 'compile_mapdata' ]; then
   KEEP_COMPILED_DATA=${3:-"false"}
   GENERATE_DATA_PACKAGE=${4:-"false"}
 
+  # use PBF file name + IMAGE_TAG as data_version which can be returned in each JSON response
+  DATA_VERSION=`echo ${PBF_FILE_URL} | rev | cut -d / -f 1 | rev`
+  if [ x${IMAGE_TAG} != x ]; then
+    DATA_VERSION=${DATA_VERSION}--compiled-by-${IMAGE_TAG}
+  fi
+  echo ${DATA_VERSION} 
+
   curl ${PBF_FILE_URL} > $DATA_PATH/${MAPDATA_NAME_WITH_SUFFIX}.osm.pbf
-  ${BUILD_PATH}/osrm-extract $DATA_PATH/${MAPDATA_NAME_WITH_SUFFIX}.osm.pbf -p ${BUILD_PATH}/profiles/car.lua ${OSRM_EXTRA_COMMAND}
+  ${BUILD_PATH}/osrm-extract $DATA_PATH/${MAPDATA_NAME_WITH_SUFFIX}.osm.pbf -p ${BUILD_PATH}/profiles/car.lua -d ${DATA_VERSION} ${OSRM_EXTRA_COMMAND}
   ${BUILD_PATH}/osrm-partition $DATA_PATH/${MAPDATA_NAME_WITH_SUFFIX}.osrm ${OSRM_EXTRA_COMMAND}
   ${BUILD_PATH}/osrm-customize $DATA_PATH/${MAPDATA_NAME_WITH_SUFFIX}.osrm ${OSRM_EXTRA_COMMAND}
   
