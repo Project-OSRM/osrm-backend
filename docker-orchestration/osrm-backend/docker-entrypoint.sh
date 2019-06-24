@@ -2,6 +2,7 @@
 BUILD_PATH=${BUILD_PATH:="/osrm-build"}
 DATA_PATH=${DATA_PATH:="/osrm-data"}
 OSRM_EXTRA_COMMAND="-l DEBUG"
+OSRM_ROUTED_STARTUP_COMMAND=" -a MLD --max-table-size 8000 "
 MAPDATA_NAME_WITH_SUFFIX=map
 
 _sig() {
@@ -18,7 +19,15 @@ if [ "$1" = 'routed_startup' ]; then
   ${BUILD_PATH}/osrm_traffic_updater -c ${TRAFFIC_PROXY_IP} -d=false -f ${TRAFFIC_FILE}
   ls -lh
   ${BUILD_PATH}/osrm-customize ${MAPDATA_NAME_WITH_SUFFIX}.osrm  --segment-speed-file ${TRAFFIC_FILE} ${OSRM_EXTRA_COMMAND}
-  ${BUILD_PATH}/osrm-routed ${MAPDATA_NAME_WITH_SUFFIX}.osrm -a MLD --max-table-size 8000 &
+  ${BUILD_PATH}/osrm-routed ${MAPDATA_NAME_WITH_SUFFIX}.osrm ${OSRM_ROUTED_STARTUP_COMMAND} &
+  child=$!
+  wait "$child"
+
+elif [ "$1" = 'routed_no_traffic_startup' ]; then
+  trap _sig SIGKILL SIGTERM SIGHUP SIGINT EXIT
+
+  cd ${DATA_PATH}
+  ${BUILD_PATH}/osrm-routed ${MAPDATA_NAME_WITH_SUFFIX}.osrm ${OSRM_ROUTED_STARTUP_COMMAND} &
   child=$!
   wait "$child"
 
