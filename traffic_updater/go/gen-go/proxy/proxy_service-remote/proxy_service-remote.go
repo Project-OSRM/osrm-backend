@@ -24,6 +24,7 @@ func Usage() {
   fmt.Fprintln(os.Stderr, "\nFunctions:")
   fmt.Fprintln(os.Stderr, "   getAllFlows()")
   fmt.Fprintln(os.Stderr, "  Flow getFlowById(i64 wayId)")
+  fmt.Fprintln(os.Stderr, "   getFlowsByIds( wayIds)")
   fmt.Fprintln(os.Stderr)
   os.Exit(0)
 }
@@ -158,13 +159,39 @@ func main() {
       fmt.Fprintln(os.Stderr, "GetFlowById requires 1 args")
       flag.Usage()
     }
-    argvalue0, err7 := (strconv.ParseInt(flag.Arg(1), 10, 64))
-    if err7 != nil {
+    argvalue0, err11 := (strconv.ParseInt(flag.Arg(1), 10, 64))
+    if err11 != nil {
       Usage()
       return
     }
     value0 := argvalue0
     fmt.Print(client.GetFlowById(context.Background(), value0))
+    fmt.Print("\n")
+    break
+  case "getFlowsByIds":
+    if flag.NArg() - 1 != 1 {
+      fmt.Fprintln(os.Stderr, "GetFlowsByIds requires 1 args")
+      flag.Usage()
+    }
+    arg12 := flag.Arg(1)
+    mbTrans13 := thrift.NewTMemoryBufferLen(len(arg12))
+    defer mbTrans13.Close()
+    _, err14 := mbTrans13.WriteString(arg12)
+    if err14 != nil { 
+      Usage()
+      return
+    }
+    factory15 := thrift.NewTJSONProtocolFactory()
+    jsProt16 := factory15.GetProtocol(mbTrans13)
+    containerStruct0 := proxy.NewProxyServiceGetFlowsByIdsArgs()
+    err17 := containerStruct0.ReadField1(jsProt16)
+    if err17 != nil {
+      Usage()
+      return
+    }
+    argvalue0 := containerStruct0.WayIds
+    value0 := argvalue0
+    fmt.Print(client.GetFlowsByIds(context.Background(), value0))
     fmt.Print("\n")
     break
   case "":
