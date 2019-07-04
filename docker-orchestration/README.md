@@ -14,3 +14,7 @@ Image contains web tool to check routing and guidance result.
 It uses MapBox GL JS and apply routing response on top of Mapbox vector tiles.  
 See details in [osrm-frontend-docker](./osrm-frontend-docker/README.md)
 
+## Kubernetes Deployment
+### k8s-rolling-update
+Use kubernetes rolling update deployment strategy for timed replace container with new one. Latest traffic will be used during container startup.  
+See details in [k8s rolling update](./k8s-rolling-update/)
