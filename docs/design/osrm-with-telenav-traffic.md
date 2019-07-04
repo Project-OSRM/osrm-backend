@@ -1,17 +1,17 @@
-# OSRM with Telenav Traffic Design (Draft)
+# OSRM with Telenav Traffic Design
 
 ## Architecture
 ![osrm-with-telenav-traffic-architecture](./graph/osrm-with-telenav-traffic-architecture.mmd.png)
 
 ### OSRMTrafficUpdater
-- as client
+- as `RPC` client
 - connect `TrafficProxy` by `RPC`
 - convert contents from `RPC` protocol to `OSRM` required `csv` format, then write to file
 
 ### TrafficProxy
-- as server
+- as `RPC` server
 - provide traffic contents by region
-- contents include at least `from node, to node, speed`(both `from node` and `to node` are come from original mapdata)
+- contents include at least `+/-wayid, speed`
 
 ## OSRM with Traffic Startup Flow
 ![osrm-with-traffic-startup-flow-chart](./graph/osrm-with-traffic-startup-flow-chart.mmd.png)

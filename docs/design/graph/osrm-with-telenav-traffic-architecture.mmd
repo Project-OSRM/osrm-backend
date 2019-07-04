@@ -12,10 +12,16 @@ linkStyle 0 stroke:#FFF,stroke-width:0;
 User["User"] -- request --> OSRM_ROUTED["osrm-routed"]
 
 subgraph OSRM Containers
+OSRM_Traffic_Updater["OSRMTrafficUpdater"] 
+OSRM_Customize["osrm-customize"]
 OSRM_ROUTED
-OSRM_Traffic_Updater["OSRMTrafficUpdater"]
+
 style OSRM_Traffic_Updater fill:#acbfff,stroke-dasharray: 5, 5
+style OSRM_Customize fill:#acbfff,stroke-dasharray: 5, 5
+
 end
+
+
 
 OSRM_Traffic_Updater -- RPC --> TrafficProxy["TrafficProxy"]
 subgraph Traffic Containers

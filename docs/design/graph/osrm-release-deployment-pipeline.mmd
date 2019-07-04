@@ -11,8 +11,8 @@ sequenceDiagram
     J ->> U: Build done
 
     U ->> K: Trigger deployment by Kubernetes
-    Loop e.g. every 5 minutes
-    K ->> K: Blue/Green deploy based on docker image
+    Loop e.g. every 20 minutes
+    K ->> K: Rolling update based on docker image
     note over K: update traffic when container startup
     end
 

@@ -15,8 +15,9 @@ style PrepareCompiledMapdata fill:#acbfff,stroke-dasharray: 5, 5
 PrepareCompiledMapdata --> ConnectTrafficProxy["OSRMTrafficUpdate Connect TrafficProxy by RPC"]
 
 subgraph OSRM Traffic Updater
-ConnectTrafficProxy --> PullLatestTraffic["Pull latest traffic(from node, to node, speed) of full region"]
-PullLatestTraffic --> WriteToCSV["Write to traffic.csv(as OSRM format)"]
+ConnectTrafficProxy --> PullLatestTraffic["Pull latest traffic(+/-wayid, speed) of full region"]
+PullLatestTraffic --> ConvertWayid2NodeIds["Convert wayid to nodeids, i.e. (from_nodeid, to_nodeid, speed)"]
+ConvertWayid2NodeIds --> WriteToCSV["Write to traffic.csv(from_nodeid, to_nodeid, speed)"]
 WriteToCSV --> ExitOSRMTrafficUpdater["Exit ExitOSRMTrafficUpdater"]
 end
 
