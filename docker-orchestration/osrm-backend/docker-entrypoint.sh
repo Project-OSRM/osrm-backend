@@ -4,6 +4,7 @@ DATA_PATH=${DATA_PATH:="/osrm-data"}
 OSRM_EXTRA_COMMAND="-l DEBUG"
 OSRM_ROUTED_STARTUP_COMMAND=" -a MLD --max-table-size 8000 "
 MAPDATA_NAME_WITH_SUFFIX=map
+WAYID2NODEIDS_MAPPING_FILE=wayid2nodeids.csv
 
 _sig() {
   kill -TERM $child 2>/dev/null
@@ -16,7 +17,7 @@ if [ "$1" = 'routed_startup' ]; then
   TRAFFIC_PROXY_IP=${2:-"10.189.102.81"}
 
   cd ${DATA_PATH}
-  ${BUILD_PATH}/osrm_traffic_updater -c ${TRAFFIC_PROXY_IP} -d=false -f ${TRAFFIC_FILE}
+  ${BUILD_PATH}/osrm_traffic_updater -c ${TRAFFIC_PROXY_IP} -d=false -m ${WAYID2NODEIDS_MAPPING_FILE} -f ${TRAFFIC_FILE}
   ls -lh
   ${BUILD_PATH}/osrm-customize ${MAPDATA_NAME_WITH_SUFFIX}.osrm  --segment-speed-file ${TRAFFIC_FILE} ${OSRM_EXTRA_COMMAND}
   ${BUILD_PATH}/osrm-routed ${MAPDATA_NAME_WITH_SUFFIX}.osrm ${OSRM_ROUTED_STARTUP_COMMAND} &
@@ -37,6 +38,7 @@ elif [ "$1" = 'compile_mapdata' ]; then
   PBF_FILE_URL=${2}
   KEEP_COMPILED_DATA=${3:-"false"}
   GENERATE_DATA_PACKAGE=${4:-"false"}
+  IS_TELENAV_PBF=${5:-"false"}
 
   # use PBF file name + IMAGE_TAG as data_version which can be returned in each JSON response
   DATA_VERSION=`echo ${PBF_FILE_URL} | rev | cut -d / -f 1 | rev`
@@ -49,7 +51,9 @@ elif [ "$1" = 'compile_mapdata' ]; then
   ${BUILD_PATH}/osrm-extract $DATA_PATH/${MAPDATA_NAME_WITH_SUFFIX}.osm.pbf -p ${BUILD_PATH}/profiles/car.lua -d ${DATA_VERSION} ${OSRM_EXTRA_COMMAND}
   ${BUILD_PATH}/osrm-partition $DATA_PATH/${MAPDATA_NAME_WITH_SUFFIX}.osrm ${OSRM_EXTRA_COMMAND}
   ${BUILD_PATH}/osrm-customize $DATA_PATH/${MAPDATA_NAME_WITH_SUFFIX}.osrm ${OSRM_EXTRA_COMMAND}
-  
+  ${BUILD_PATH}/wayid2nodeid_extractor -i $DATA_PATH/${MAPDATA_NAME_WITH_SUFFIX}.osm.pbf -o $DATA_PATH/${WAYID2NODEIDS_MAPPING_FILE}  -b=${IS_TELENAV_PBF}
+  ls -lh $DATA_PATH/
+
   # clean source pbf and temp .osrm
   rm -f $DATA_PATH/${MAPDATA_NAME_WITH_SUFFIX}.osm.pbf
   rm -f $DATA_PATH/${MAPDATA_NAME_WITH_SUFFIX}.osrm

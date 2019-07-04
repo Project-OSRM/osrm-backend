@@ -25,8 +25,10 @@ RUN echo "Building branch ${BRANCH_NAME}" && \
   git clone -b ${BRANCH_NAME} https://github.com/Telenav/osrm-backend.git && \
   cd ../../../ && \
   if [ -d "src/github.com/Telenav/osrm-backend/traffic_updater/go/osrm_traffic_updater" ]; then \
+  go get github.com/qedus/osmpbf && \
   go install github.com/Telenav/osrm-backend/traffic_updater/go/gen-go/proxy && \
   go install github.com/Telenav/osrm-backend/traffic_updater/go/osrm_traffic_updater && \
+  go install github.com/Telenav/osrm-backend/traffic_updater/go/wayid2nodeid_extractor && \
   ls -lh bin/ \
   ;fi
 
