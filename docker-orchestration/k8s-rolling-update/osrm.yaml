@@ -21,7 +21,10 @@ spec:
         - name: osrm-backend
           image: TELENAV_OSRM_BACKEND_DOCKER_IMAGE
           imagePullPolicy: IfNotPresent
-          args: ["routed_startup"]
+          command: ["/bin/sh", "-c", "export LOG_FILE=/osrm-logs/$(date -u +%Y%m%dT%H%M%S)-${HOSTNAME}.log; /docker-entrypoint.sh routed_startup 10.189.100.132 2>&1 | while read LINE; do echo \"[$(date \"+%Y-%m-%dT%H:%M:%S %Z\")] ${LINE}\">>${LOG_FILE}; done;"]
+          volumeMounts:
+          - mountPath: "/osrm-logs"
+            name: osrm-logs-volume
           ports:
           - containerPort: 5000
             protocol: TCP 
@@ -31,3 +34,8 @@ spec:
             initialDelaySeconds: 10
             periodSeconds: 5
             failureThreshold: 1000
+      volumes:
+        - name: osrm-logs-volume
+          nfs:
+            server: fs-3941ca92.efs.us-west-2.amazonaws.com
+            path: /

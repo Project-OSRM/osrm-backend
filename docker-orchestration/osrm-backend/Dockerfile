@@ -41,7 +41,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     libboost-iostreams1.62.0 libboost-thread1.62.0 expat liblua5.2-0 libtbb2 curl ca-certificates && \
   rm -rf /var/lib/apt/lists/*
 
-RUN mkdir /osrm-build && mkdir /osrm-data
+RUN mkdir -p /osrm-build /osrm-data /osrm-logs
 
 COPY --from=builder /osrm-build /osrm-build/
 COPY --from=gobuilder /workspace/go/bin /osrm-build/
