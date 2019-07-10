@@ -1,7 +1,7 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: osrm
+  name: osrm-backend
   namespace: routing-osrm
 spec:
   replicas: 1

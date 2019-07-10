@@ -1,0 +1,1 @@
+*/20 * * * * export PATH=$HOME/bin:$PATH && kubectl set env --env="LAST_MANUAL_RESTART=$(date -u +\%Y\%m\%dT\%H\%M\%S)" deploy/osrm-backend -n routing-osrm >> ${HOME}/osrm-backend-cronjob.log 2>&1
