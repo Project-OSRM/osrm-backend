@@ -32,13 +32,4 @@ ENV GO_HOME=/usr/local/go
 ENV PATH=${GO_HOME}/bin/:$PATH
 ENV GOPATH=/workspace/go
 
-# install thrift 0.12.0 go pkg
-RUN cd /workspace/go && \
-  mkdir -p src/github.com/apache && \
-  cd src/github.com/apache && \
-  git clone -b 0.12.0 https://github.com/apache/thrift.git && \
-  cd thrift && \
-  git branch && \
-  cd /workspace/go && \
-  go install github.com/apache/thrift/lib/go/thrift
 

@@ -1,4 +1,9 @@
 
+# binaries
+go/osrm_traffic_updater/osrm_traffic_updater
+go/wayid2nodeid_extractor/wayid2nodeid_extractor
+go/snappy_command/snappy_command
+
 *.py[cod]
 
 traffic.csv

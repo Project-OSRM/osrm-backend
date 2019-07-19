@@ -1,36 +1,38 @@
 
 
 FROM wangyoucao577/osrm-backend-dev as builder
-ARG BRANCH_NAME=master-telenav
 
+RUN mkdir -p /osrm-build
+WORKDIR /workspace/
+
+ARG BRANCH_NAME=master-telenav
 RUN echo "Building branch ${BRANCH_NAME}" && \
-  git clone -b ${BRANCH_NAME} https://github.com/Telenav/osrm-backend.git && \
-  mkdir -p osrm-backend/build && \
+  git clone -b ${BRANCH_NAME} https://github.com/Telenav/osrm-backend.git
+  
+RUN mkdir -p osrm-backend/build && \
   cd osrm-backend/build && \
   cmake .. -DENABLE_LTO=On && \
   cmake --build . -- -j && \
-  mkdir /osrm-build && \
-  mkdir /osrm-data && \
-  cp /osrm-backend/build/osrm* /osrm-build/ && \
-  cp -r /osrm-backend/profiles /osrm-build/
+  cp /workspace/osrm-backend/build/osrm* /osrm-build/ && \
+  cp -r /workspace/osrm-backend/profiles /osrm-build/
 
-
-FROM wangyoucao577/osrm-backend-dev as gobuilder
-ARG BRANCH_NAME=master-telenav
-
-WORKDIR /workspace/go
-RUN echo "Building branch ${BRANCH_NAME}" && \
-  mkdir -p src/github.com/Telenav && \
-  cd src/github.com/Telenav && \
-  git clone -b ${BRANCH_NAME} https://github.com/Telenav/osrm-backend.git && \
-  cd ../../../ && \
-  if [ -d "src/github.com/Telenav/osrm-backend/traffic_updater/go/osrm_traffic_updater" ]; then \
-  go get github.com/qedus/osmpbf && \
-  go install github.com/Telenav/osrm-backend/traffic_updater/go/gen-go/proxy && \
-  go install github.com/Telenav/osrm-backend/traffic_updater/go/osrm_traffic_updater && \
-  go install github.com/Telenav/osrm-backend/traffic_updater/go/wayid2nodeid_extractor && \
-  ls -lh bin/ \
-  ;fi
+RUN cd /workspace/osrm-backend && \
+  if [ -d "traffic_updater/go/osrm_traffic_updater" ]; then \
+  cd traffic_updater/go/osrm_traffic_updater && \
+  go install && \
+  cd ../../../ \
+  ;fi && \
+  if [ -d "traffic_updater/go/wayid2nodeid_extractor" ]; then \
+  cd traffic_updater/go/wayid2nodeid_extractor && \
+  go install && \
+  cd ../../../ \
+  ;fi && \
+  if [ -d "traffic_updater/go/snappy_command" ]; then \
+  cd traffic_updater/go/snappy_command && \
+  go install && \
+  cd ../../../ \
+  ;fi && \
+  ls -lh /workspace/go/bin
 
 
 FROM debian:stretch-slim as runstage
@@ -44,7 +46,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
 RUN mkdir -p /osrm-build /osrm-data /osrm-logs
 
 COPY --from=builder /osrm-build /osrm-build/
-COPY --from=gobuilder /workspace/go/bin /osrm-build/
+COPY --from=builder /workspace/go/bin /osrm-build/
 COPY ./docker-entrypoint.sh /
 RUN chmod +x /docker-entrypoint.sh
 
