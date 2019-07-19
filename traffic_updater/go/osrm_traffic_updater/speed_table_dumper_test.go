@@ -29,9 +29,12 @@ func TestSpeedTableDumper1(t *testing.T) {
 	wayid2speed := make(map[int64]int)
 	flows2map(flows, wayid2speed)
 
-	dumpSpeedTable4Customize(wayid2speed, sources, "./testdata/target.csv")
+	var ds dumperStatistic
+	ds.Init(TASKNUM)
+	dumpSpeedTable4Customize(wayid2speed, sources, "./testdata/target.csv", &ds)
 
 	compareFileContentUnstable("./testdata/target.csv", "./testdata/expect.csv", t)
+	validateStatistic(&ds, t)
 }
 
 func TestGenerateSingleRecord1(t *testing.T) {
@@ -45,6 +48,14 @@ func TestGenerateSingleRecord2(t *testing.T) {
 	str := generateSingleRecord(12345, 54321, 33, false)
 	if strings.Compare(str, "54321,12345,33\n") != 0 {
 		t.Error("Test GenerateSingleRecord failed.\n")
+	}
+}
+
+
+func validateStatistic(ds *dumperStatistic, t *testing.T) {
+	sum := ds.Sum()
+	if (sum.wayCnt != 4) || (sum.nodeCnt != 9) || (sum.fwdRecordCnt != 4) || (sum.bwdRecordCnt != 3) || (sum.wayMatchedCnt != 4) || (sum.nodeMatchedCnt != 9) {
+		t.Error("TestLoadWay2Nodeids failed with incorrect statistic.\n")
 	}
 }
 

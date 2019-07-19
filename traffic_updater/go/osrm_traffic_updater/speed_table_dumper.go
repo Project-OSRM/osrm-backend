@@ -14,7 +14,8 @@ import (
 var tasksWg sync.WaitGroup
 var dumpFinishedWg sync.WaitGroup
 
-func dumpSpeedTable4Customize(wayid2speed map[int64]int, sources [TASKNUM]chan string, outputPath string) {
+func dumpSpeedTable4Customize(wayid2speed map[int64]int, sources [TASKNUM]chan string, 
+	outputPath string, ds *dumperStatistic) {
 	startTime := time.Now()
 
 	if len(wayid2speed) == 0 {
@@ -22,18 +23,19 @@ func dumpSpeedTable4Customize(wayid2speed map[int64]int, sources [TASKNUM]chan s
 	}
 
 	sink := make(chan string)
-	startTasks(wayid2speed, sources, sink)
+	startTasks(wayid2speed, sources, sink, ds)
 	startDump(outputPath, sink)
-	wait4AllTasksFinished(sink)
+	wait4AllTasksFinished(sink, ds)
 
 	endTime := time.Now()
 	fmt.Printf("Processing time for dumpSpeedTable4Customize takes %f seconds\n", endTime.Sub(startTime).Seconds())
 }
 
-func startTasks(wayid2speed map[int64]int, sources [TASKNUM]chan string, sink chan<- string) {
+func startTasks(wayid2speed map[int64]int, sources [TASKNUM]chan string, 
+	sink chan<- string, ds *dumperStatistic) {
 	tasksWg.Add(TASKNUM)
 	for i := 0; i < TASKNUM; i++ {
-		go task(wayid2speed, sources[i], sink)
+		go task(wayid2speed, sources[i], sink, ds)
 	}
 }
 
@@ -42,16 +44,20 @@ func startDump(outputPath string, sink <-chan string) {
 	go write(outputPath, sink)
 }
 
-func wait4AllTasksFinished(sink chan string) {
+func wait4AllTasksFinished(sink chan string, ds *dumperStatistic) {
 	tasksWg.Wait()
 	close(sink)
+	ds.Close()
 	dumpFinishedWg.Wait()
 }
 
-func task(wayid2speed map[int64]int, source <-chan string, sink chan<- string) {
+func task(wayid2speed map[int64]int, source <-chan string, sink chan<- string, ds *dumperStatistic) {
+	var wayCnt, nodeCnt, fwdRecordCnt, bwdRecordCnt, wayMatched, nodeMatched uint64
 	var err error
 	for str := range source {
 		elements := strings.Split(str, ",")
+		wayCnt += 1
+		nodeCnt += (uint64)(len(elements) - 1)
 		if len(elements) < 3 {
 			continue
 		}
@@ -67,6 +73,8 @@ func task(wayid2speed map[int64]int, source <-chan string, sink chan<- string) {
 
 		if okFwd || okBwd {
 			var nodes []string = elements[1:]
+			wayMatched += 1
+			nodeMatched += (uint64)(len(nodes))
 			for i := 0; (i + 1) < len(nodes); i++ {
 				var n1, n2 uint64
 				if n1, err = strconv.ParseUint(nodes[i], 10, 64); err != nil {
@@ -78,16 +86,19 @@ func task(wayid2speed map[int64]int, source <-chan string, sink chan<- string) {
 					continue
 				}
 				if okFwd {
+					fwdRecordCnt += 1
 					sink <- generateSingleRecord(n1, n2, speedFwd, true)
 				}
 				if okBwd {
+					bwdRecordCnt += 1
 					sink <- generateSingleRecord(n1, n2, speedBwd, false)
 				}
 				
 			}
 		}
-
 	}
+
+	ds.Update(wayCnt, nodeCnt, fwdRecordCnt, bwdRecordCnt, wayMatched, nodeMatched)
 	tasksWg.Done() 
 }
 

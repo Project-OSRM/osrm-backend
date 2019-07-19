@@ -70,8 +70,17 @@ func getTrafficFlow(ip string, port int, m map[int64]int, c chan<- bool) {
 }
 
 func flows2map(flows []*proxy.Flow, m map[int64]int) {
+	var fwdCnt, bwdCnt uint64
 	for _, flow := range flows {
 		wayid := flow.WayId
 		m[wayid] = int(flow.Speed)
+
+		if wayid > 0 {
+			fwdCnt++
+		} else {
+			bwdCnt++
+		}
 	}
+
+	fmt.Printf("Load map[wayid] to speed with %d items, %d forward and %d backward.\n", (fwdCnt+bwdCnt), fwdCnt, bwdCnt)
 }

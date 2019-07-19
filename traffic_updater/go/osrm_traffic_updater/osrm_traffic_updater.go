@@ -22,7 +22,7 @@ func init() {
 }
 
 const TASKNUM = 128
-const CACHEDOBJECTS = 1000000
+const CACHEDOBJECTS = 4000000
 
 func main() {
 	flag.Parse()
@@ -39,7 +39,10 @@ func main() {
 
 	isFlowDone := wait4PreConditions(isFlowDoneChan)
 	if isFlowDone {
-		dumpSpeedTable4Customize(wayid2speed, sources, flags.csvFile)
+		var ds dumperStatistic
+		ds.Init(TASKNUM)
+		dumpSpeedTable4Customize(wayid2speed, sources, flags.csvFile, &ds)
+		ds.Output()
 	}
 }
 

@@ -2,6 +2,7 @@ package main
 
 import (
 	"testing"
+	"fmt"
 )
 
 func setChan2True(c chan<- bool) {
@@ -24,6 +25,7 @@ func TestWait4AllPreconditions1(t *testing.T) {
 }
 
 func TestWait4AllPreconditions2(t *testing.T) {
+	fmt.Printf("Expect to see: [ERROR] Communication with traffic server failed.\n")
 	c2 := make(chan bool, 1)
 
 	go setChan2False(c2)
