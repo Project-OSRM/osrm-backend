@@ -1,8 +1,8 @@
 package main
 
 import (
-	"testing"
 	"sync"
+	"testing"
 )
 
 func TestDumperStatistic(t *testing.T) {
@@ -17,16 +17,15 @@ func TestDumperStatistic(t *testing.T) {
 	wg.Wait()
 	d.Close()
 
-	sum:= d.Sum()
+	sum := d.Sum()
 
 	if (sum.wayCnt != 10) || (sum.nodeCnt != 20) || (sum.fwdRecordCnt != 30) || (sum.bwdRecordCnt != 40) || (sum.wayMatchedCnt != 50) || (sum.nodeMatchedCnt != 60) {
-			t.Error("TestDumperStatistic failed.\n")
-		}
+		t.Error("TestDumperStatistic failed.\n")
+	}
 
 }
 
 func accumulateDumper(d *dumperStatistic, wg *sync.WaitGroup) {
-	d.Update(1,2,3,4,5,6)
+	d.Update(1, 2, 3, 4, 5, 6, 7, 8)
 	wg.Done()
 }
-

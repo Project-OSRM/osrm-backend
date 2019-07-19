@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"time"
 )
 
 var flags struct {
@@ -27,6 +28,12 @@ const CACHEDOBJECTS = 4000000
 func main() {
 	flag.Parse()
 
+	startTime := time.Now()
+	defer func() {
+		endTime := time.Now()
+		fmt.Printf("Total processing time %f seconds\n", endTime.Sub(startTime).Seconds())
+	}()
+
 	isFlowDoneChan := make(chan bool, 1)
 	wayid2speed := make(map[int64]int)
 	go getTrafficFlow(flags.ip, flags.port, wayid2speed, isFlowDoneChan)
@@ -46,19 +53,19 @@ func main() {
 	}
 }
 
-func wait4PreConditions(flowChan <-chan bool) (bool) {
+func wait4PreConditions(flowChan <-chan bool) bool {
 	var isFlowDone bool
-	loop:
+loop:
 	for {
 		select {
-			case f := <- flowChan :
-				if !f {
-					fmt.Printf("[ERROR] Communication with traffic server failed.\n")
-					break loop
-				} else {
-					isFlowDone = true
-					break loop
-				}
+		case f := <-flowChan:
+			if !f {
+				fmt.Printf("[ERROR] Communication with traffic server failed.\n")
+				break loop
+			} else {
+				isFlowDone = true
+				break loop
+			}
 		}
 	}
 	return isFlowDone

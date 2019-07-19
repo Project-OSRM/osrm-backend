@@ -1,20 +1,20 @@
 package main
 
 import (
-	"os"
-	"log"
-	"fmt"
 	"bufio"
+	"fmt"
+	"log"
+	"os"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
-	"strings"
-	"strconv"
 )
 
 var tasksWg sync.WaitGroup
 var dumpFinishedWg sync.WaitGroup
 
-func dumpSpeedTable4Customize(wayid2speed map[int64]int, sources [TASKNUM]chan string, 
+func dumpSpeedTable4Customize(wayid2speed map[int64]int, sources [TASKNUM]chan string,
 	outputPath string, ds *dumperStatistic) {
 	startTime := time.Now()
 
@@ -31,7 +31,7 @@ func dumpSpeedTable4Customize(wayid2speed map[int64]int, sources [TASKNUM]chan s
 	fmt.Printf("Processing time for dumpSpeedTable4Customize takes %f seconds\n", endTime.Sub(startTime).Seconds())
 }
 
-func startTasks(wayid2speed map[int64]int, sources [TASKNUM]chan string, 
+func startTasks(wayid2speed map[int64]int, sources [TASKNUM]chan string,
 	sink chan<- string, ds *dumperStatistic) {
 	tasksWg.Add(TASKNUM)
 	for i := 0; i < TASKNUM; i++ {
@@ -52,7 +52,7 @@ func wait4AllTasksFinished(sink chan string, ds *dumperStatistic) {
 }
 
 func task(wayid2speed map[int64]int, source <-chan string, sink chan<- string, ds *dumperStatistic) {
-	var wayCnt, nodeCnt, fwdRecordCnt, bwdRecordCnt, wayMatched, nodeMatched uint64
+	var wayCnt, nodeCnt, fwdRecordCnt, bwdRecordCnt, wayMatched, nodeMatched, fwdTrafficMatched, bwdTrafficMatched uint64
 	var err error
 	for str := range source {
 		elements := strings.Split(str, ",")
@@ -75,6 +75,13 @@ func task(wayid2speed map[int64]int, source <-chan string, sink chan<- string, d
 			var nodes []string = elements[1:]
 			wayMatched += 1
 			nodeMatched += (uint64)(len(nodes))
+			if okFwd {
+				fwdTrafficMatched += 1
+			}
+			if okBwd {
+				bwdTrafficMatched += 1
+			}
+
 			for i := 0; (i + 1) < len(nodes); i++ {
 				var n1, n2 uint64
 				if n1, err = strconv.ParseUint(nodes[i], 10, 64); err != nil {
@@ -93,19 +100,19 @@ func task(wayid2speed map[int64]int, source <-chan string, sink chan<- string, d
 					bwdRecordCnt += 1
 					sink <- generateSingleRecord(n1, n2, speedBwd, false)
 				}
-				
+
 			}
 		}
 	}
 
-	ds.Update(wayCnt, nodeCnt, fwdRecordCnt, bwdRecordCnt, wayMatched, nodeMatched)
-	tasksWg.Done() 
+	ds.Update(wayCnt, nodeCnt, fwdRecordCnt, bwdRecordCnt, wayMatched, nodeMatched, fwdTrafficMatched, bwdTrafficMatched)
+	tasksWg.Done()
 }
 
 // format
 // if dir = true, means traffic for forward, generate: from, to, speed
 // if dir = false, means this speed is for backward flow, generate: to, from, speed
-func generateSingleRecord(from, to uint64, speed int, dir bool) (string){
+func generateSingleRecord(from, to uint64, speed int, dir bool) string {
 	if dir {
 		return fmt.Sprintf("%d,%d,%d\n", from, to, speed)
 	} else {
