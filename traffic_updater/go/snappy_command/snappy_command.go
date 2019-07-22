@@ -2,19 +2,20 @@ package main
 
 import (
 	"flag"
-	"strings"
 	"fmt"
-	"os"
 	"io"
+	"os"
+	"strings"
+
 	"github.com/golang/snappy"
 )
 
 const snappySuffix string = ".snappy"
 
 var flags struct {
-	input        string
-	output       string
-	suffix       string
+	input  string
+	output string
+	suffix string
 }
 
 func init() {
@@ -48,9 +49,9 @@ func main() {
 	defer fo.Close()
 	defer fo.Sync()
 
-	buf := make([]byte, 128 * 1024)
+	buf := make([]byte, 128*1024)
 	if inputCompressed {
-		_, err := io.CopyBuffer(fo, snappy.NewReader(fi), buf)	
+		_, err := io.CopyBuffer(fo, snappy.NewReader(fi), buf)
 		if err != nil {
 			fmt.Printf("Decompression failed\n")
 		}

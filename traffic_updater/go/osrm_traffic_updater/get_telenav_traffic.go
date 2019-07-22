@@ -82,5 +82,5 @@ func flows2map(flows []*proxy.Flow, m map[int64]int) {
 		}
 	}
 
-	fmt.Printf("Load map[wayid] to speed with %d items, %d forward and %d backward.\n", (fwdCnt+bwdCnt), fwdCnt, bwdCnt)
+	fmt.Printf("Load map[wayid] to speed with %d items, %d forward and %d backward.\n", (fwdCnt + bwdCnt), fwdCnt, bwdCnt)
 }

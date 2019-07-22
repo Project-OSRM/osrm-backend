@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"time"
+
 	"github.com/golang/snappy"
 )
 
@@ -36,8 +37,7 @@ func load(mappingPath string, data chan<- string) {
 	for scanner.Scan() {
 		data <- (scanner.Text())
 	}
-} 
-
+}
 
 // input data format
 // wayid1, n1, n2
@@ -54,5 +54,3 @@ func convert(data <-chan string, sources [TASKNUM]chan string) {
 		sources[chanIndex] <- str
 	}
 }
-
-

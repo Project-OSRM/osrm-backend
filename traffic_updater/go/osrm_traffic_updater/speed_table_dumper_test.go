@@ -1,16 +1,16 @@
 package main
 
 import (
-	"testing"
-	"os"
-	"log"
-	"fmt"
-	"strconv"
-	"io"
 	"encoding/csv"
+	"fmt"
+	"io"
 	"io/ioutil"
-	"strings"
+	"log"
+	"os"
 	"reflect"
+	"strconv"
+	"strings"
+	"testing"
 
 	"github.com/Telenav/osrm-backend/traffic_updater/go/gen-go/proxy"
 )
@@ -50,7 +50,6 @@ func TestGenerateSingleRecord2(t *testing.T) {
 		t.Error("Test GenerateSingleRecord failed.\n")
 	}
 }
-
 
 func validateStatistic(ds *dumperStatistic, t *testing.T) {
 	sum := ds.Sum()
@@ -105,46 +104,46 @@ type tNodePair struct {
 }
 
 func loadSpeedCsv(f string, m map[tNodePair]int) {
-		// load mock traffic file
-		mockfile, err := os.Open(f)
-		defer mockfile.Close()
+	// load mock traffic file
+	mockfile, err := os.Open(f)
+	defer mockfile.Close()
+	if err != nil {
+		log.Fatal(err)
+		fmt.Printf("Open file of %v failed.\n", f)
+		return
+	}
+	fmt.Printf("Open file of %s succeed.\n", f)
+
+	csvr := csv.NewReader(mockfile)
+	for {
+		row, err := csvr.Read()
 		if err != nil {
-			log.Fatal(err)
-			fmt.Printf("Open file of %v failed.\n", f)
+			if err == io.EOF {
+				err = nil
+				break
+			} else {
+				fmt.Printf("Error during decoding file %s, err = %v\n", f, err)
+				return
+			}
+		}
+
+		var from, to uint64
+		var speed int
+		if from, err = strconv.ParseUint(row[0], 10, 64); err != nil {
+			fmt.Printf("#Error during decoding, row = %v\n", row)
 			return
 		}
-		fmt.Printf("Open file of %s succeed.\n", f)
-
-		csvr := csv.NewReader(mockfile)
-		for {
-			row, err := csvr.Read()
-			if err != nil {
-				if err == io.EOF {
-					err = nil
-					break
-				} else {
-					fmt.Printf("Error during decoding file %s, err = %v\n", f, err)
-					return
-				}
-			}
-
-			var from, to uint64
-			var speed int
-			if from, err = strconv.ParseUint(row[0], 10, 64); err != nil {
-				fmt.Printf("#Error during decoding, row = %v\n", row)
-				return
-			}
-			if to, err = strconv.ParseUint(row[1], 10, 64); err != nil {
-				fmt.Printf("#Error during decoding, row = %v\n", row)
-				return
-			}
-			if speed, err = strconv.Atoi(row[2]); err != nil {
-				fmt.Printf("#Error during decoding, row = %v\n", row)
-				return
-			}
-
-			m[tNodePair{from, to}] = speed
+		if to, err = strconv.ParseUint(row[1], 10, 64); err != nil {
+			fmt.Printf("#Error during decoding, row = %v\n", row)
+			return
 		}
+		if speed, err = strconv.Atoi(row[2]); err != nil {
+			fmt.Printf("#Error during decoding, row = %v\n", row)
+			return
+		}
+
+		m[tNodePair{from, to}] = speed
+	}
 }
 
 func compareFileContentStable(f1, f2 string, t *testing.T) {
@@ -177,4 +176,3 @@ func compareFileContentUnstable(f1, f2 string, t *testing.T) {
 		t.Error("TestLoadWay2Nodeids failed to generate correct map\n")
 	}
 }
-

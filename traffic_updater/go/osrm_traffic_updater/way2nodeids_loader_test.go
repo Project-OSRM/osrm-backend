@@ -1,11 +1,10 @@
 package main
 
 import (
-	"testing"
 	"reflect"
 	"sync"
+	"testing"
 )
-
 
 func TestLoadWay2Nodeids(t *testing.T) {
 	// load result into sources
@@ -19,7 +18,7 @@ func TestLoadWay2Nodeids(t *testing.T) {
 	allWay2NodesChan := make(chan string, 10000)
 	var wgs sync.WaitGroup
 	wgs.Add(TASKNUM)
-	for i:= 0; i < TASKNUM; i++ {
+	for i := 0; i < TASKNUM; i++ {
 		//fmt.Printf("### current i is %d\n", i)
 		go mergeChannels(sources[i], allWay2NodesChan, &wgs)
 	}
@@ -61,4 +60,3 @@ func generateMockWay2nodeids(way2nodeids map[string]bool) {
 	way2nodeids["24418343,84760849102,84760850102"] = true
 	way2nodeids["24418344,84760846102,84760858102"] = true
 }
-

@@ -156,4 +156,3 @@ func main() {
 	endTime := time.Now()
 	fmt.Printf("Total processing time for wayid2nodeids-extract takes %f seconds\n", endTime.Sub(startTime).Seconds())
 }
-
