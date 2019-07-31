@@ -5,6 +5,24 @@ Feature: Basic trip planning
         Given the profile "testbot"
         Given a grid size of 10 meters
 
+    Scenario: Testbot - Trip: Invalid options (like was in test suite for a long time)
+        Given the node map
+            """
+            a b
+            c d
+            """
+
+        And the ways
+            | nodes |
+            | ab    |
+            | bc    |
+            | cb    |
+            | da    |
+
+        When I plan a trip I should get
+            | waypoints   | trips  | code           |
+            | a           | aa     | InvalidOptions |
+
     Scenario: Testbot - Trip: Roundtrip with one waypoint
         Given the node map
             """
@@ -20,8 +38,28 @@ Feature: Basic trip planning
             | da    |
 
         When I plan a trip I should get
-            | waypoints | trips  |
-            | a         | aa     |
+            | waypoints   | trips  | code |
+            | a,a         | aa     | Ok   |
+
+    Scenario: Testbot - Trip: data version check
+        Given the node map
+            """
+            a b
+            c d
+            """
+
+        And the ways
+            | nodes |
+            | ab    |
+            | bc    |
+            | cb    |
+            | da    |
+
+        And the extract extra arguments "--data_version cucumber_data_version"
+
+        When I plan a trip I should get
+            | waypoints   | trips  | data_version          | code |
+            | a,a         | aa     | cucumber_data_version | Ok   |
 
     Scenario: Testbot - Trip: Roundtrip with waypoints (less than 10)
         Given the node map
@@ -38,9 +76,9 @@ Feature: Basic trip planning
             | da    |
 
         When I plan a trip I should get
-            | waypoints | trips  | durations |
-            | a,b,c,d   | abcda  | 7.6       |
-            | d,b,c,a   | dbcad  | 7.6       |
+            | waypoints | trips  | durations | code |
+            | a,b,c,d   | abcda  | 7.6       | Ok   |
+            | d,b,c,a   | dbcad  | 7.6       | Ok   |
 
     Scenario: Testbot - Trip: Roundtrip waypoints (more than 10)
         Given the node map
