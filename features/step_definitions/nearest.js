@@ -5,6 +5,7 @@ module.exports = function () {
         this.reprocessAndLoadData((e) => {
             if (e) return callback(e);
             var testRow = (row, ri, cb) => {
+
                 var inNode = this.findNodeByName(row.in);
                 if (!inNode) throw new Error(util.format('*** unknown in-node "%s"', row.in));
 
@@ -14,6 +15,7 @@ module.exports = function () {
                 this.requestNearest(inNode, this.queryParams, (err, response) => {
                     if (err) return cb(err);
                     var coord;
+                    var headers = new Set(table.raw()[0]);
 
                     if (response.statusCode === 200 && response.body.length) {
                         var json = JSON.parse(response.body);
@@ -21,6 +23,10 @@ module.exports = function () {
                         coord = json.waypoints[0].location;
 
                         var got = { in: row.in, out: row.out };
+
+                        if (headers.has('data_version')) {
+                            got.data_version = json.data_version || '';
+                        }
 
                         Object.keys(row).forEach((key) => {
                             if (key === 'out') {
