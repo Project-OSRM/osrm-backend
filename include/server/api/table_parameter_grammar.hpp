@@ -62,7 +62,7 @@ struct TableParametersGrammar : public BaseParametersGrammar<Iterator, Signature
 
         table_rule = destinations_rule(qi::_r1) | sources_rule(qi::_r1);
 
-        root_rule = BaseGrammar::query_rule(qi::_r1) > -qi::lit(".json") >
+        root_rule = BaseGrammar::query_rule(qi::_r1) > BaseGrammar::format_rule(qi::_r1) >
                     -('?' > (table_rule(qi::_r1) | base_rule(qi::_r1) | scale_factor_rule(qi::_r1) |
                              fallback_speed_rule(qi::_r1) |
                              (qi::lit("fallback_coordinate=") >
