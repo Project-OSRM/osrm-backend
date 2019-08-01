@@ -9,6 +9,7 @@
 #include "engine/api/trip_parameters.hpp"
 #include "engine/datafacade_provider.hpp"
 #include "engine/engine_config.hpp"
+#include "engine/engine_info.hpp"
 #include "engine/plugins/match.hpp"
 #include "engine/plugins/nearest.hpp"
 #include "engine/plugins/table.hpp"
@@ -39,6 +40,8 @@ class EngineInterface
     virtual Status Trip(const api::TripParameters &parameters, api::ResultT &result) const = 0;
     virtual Status Match(const api::MatchParameters &parameters, api::ResultT &result) const = 0;
     virtual Status Tile(const api::TileParameters &parameters, api::ResultT &result) const = 0;
+
+    virtual const EngineInfo &GetInfo() const = 0;
 };
 
 template <typename Algorithm> class Engine final : public EngineInterface
@@ -76,6 +79,9 @@ template <typename Algorithm> class Engine final : public EngineInterface
                                 << routing_algorithms::name<Algorithm>();
             facade_provider = std::make_unique<ImmutableProvider<Algorithm>>(config.storage_config);
         }
+        info["algorithm"] = routing_algorithms::name<Algorithm>();
+        info["code_version"] = OSRM_VERSION;
+        info["data_version"] = GetAlgorithms(api::RouteParameters()).GetFacade().GetTimestamp();
     }
 
     Engine(Engine &&) noexcept = delete;
@@ -115,11 +121,14 @@ template <typename Algorithm> class Engine final : public EngineInterface
         return tile_plugin.HandleRequest(GetAlgorithms(params), params, result);
     }
 
+    const EngineInfo &GetInfo() const override final { return info; };
+
   private:
     template <typename ParametersT> auto GetAlgorithms(const ParametersT &params) const
     {
         return RoutingAlgorithms<Algorithm>{heaps, facade_provider->Get(params)};
     }
+    EngineInfo info;
     std::unique_ptr<DataFacadeProvider<Algorithm>> facade_provider;
     mutable SearchEngineData<Algorithm> heaps;
 
@@ -130,7 +139,7 @@ template <typename Algorithm> class Engine final : public EngineInterface
     const plugins::MatchPlugin match_plugin;
     const plugins::TilePlugin tile_plugin;
 };
-}
-}
+} // namespace engine
+} // namespace osrm
 
 #endif // OSRM_IMPL_HPP

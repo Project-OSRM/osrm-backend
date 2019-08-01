@@ -92,4 +92,9 @@ engine::Status OSRM::Tile(const engine::api::TileParameters &params,
     return engine_->Tile(params, result);
 }
 
+const engine::EngineInfo & OSRM::Info() const
+{
+    return engine_->GetInfo();
+}
+
 } // ns osrm

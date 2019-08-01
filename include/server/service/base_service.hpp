@@ -7,6 +7,7 @@
 
 #include <mapbox/variant.hpp>
 
+#include <atomic>
 #include <string>
 #include <vector>
 
@@ -20,16 +21,18 @@ namespace service
 class BaseService
 {
   public:
-    BaseService(OSRM &routing_machine) : routing_machine(routing_machine) {}
+    BaseService(OSRM &routing_machine) : routing_machine(routing_machine), usage(0) {}
     virtual ~BaseService() = default;
 
     virtual engine::Status
     RunQuery(std::size_t prefix_length, std::string &query, osrm::engine::api::ResultT &result) = 0;
 
     virtual unsigned GetVersion() = 0;
+    uint32_t GetUsage() {return usage;}
 
   protected:
     OSRM &routing_machine;
+    std::atomic_uint usage;
 };
 }
 }

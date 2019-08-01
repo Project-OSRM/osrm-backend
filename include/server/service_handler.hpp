@@ -5,7 +5,9 @@
 
 #include "engine/api/base_api.hpp"
 #include "osrm/osrm.hpp"
+#include "engine/engine_info.hpp"
 
+#include <atomic>
 #include <unordered_map>
 
 namespace osrm
@@ -24,12 +26,17 @@ namespace api
 struct ParsedURL;
 }
 
+using HandlersCounter = std::unordered_map<std::string, std::uint32_t>;
+
 class ServiceHandlerInterface
 {
   public:
     virtual ~ServiceHandlerInterface() {}
     virtual engine::Status RunQuery(api::ParsedURL parsed_url,
                                     osrm::engine::api::ResultT &result) = 0;
+    virtual const engine::EngineInfo & GetEngineInfo() const = 0;
+    virtual const HandlersCounter GetUsage() const = 0;
+    virtual std::uint32_t GetLoad() const = 0;
 };
 
 class ServiceHandler final : public ServiceHandlerInterface
@@ -40,9 +47,15 @@ class ServiceHandler final : public ServiceHandlerInterface
 
     virtual engine::Status RunQuery(api::ParsedURL parsed_url, ResultT &result) override;
 
+    virtual const engine::EngineInfo & GetEngineInfo() const override;
+    virtual const HandlersCounter GetUsage() const override;
+    virtual std::uint32_t GetLoad() const override;
+
   private:
     std::unordered_map<std::string, std::unique_ptr<service::BaseService>> service_map;
     OSRM routing_machine;
+    std::atomic_uint errors;
+    std::atomic_uint load;
 };
 }
 }

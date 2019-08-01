@@ -85,10 +85,12 @@ class Server
 
     void Stop() { io_service.stop(); }
 
-    void RegisterServiceHandler(std::unique_ptr<ServiceHandlerInterface> service_handler_)
+    void RegisterServiceHandler(std::shared_ptr<ServiceHandlerInterface> service_handler_)
     {
-        request_handler.RegisterServiceHandler(std::move(service_handler_));
+        request_handler.RegisterServiceHandler(service_handler_);
     }
+
+    unsigned GetWorkerThreadsCount() { return thread_pool_size; }
 
   private:
     void HandleAccept(const boost::system::error_code &e)

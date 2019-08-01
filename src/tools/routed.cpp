@@ -1,3 +1,4 @@
+#include "monitoring/monitoring.hpp"
 #include "server/server.hpp"
 #include "util/exception_utils.hpp"
 #include "util/log.hpp"
@@ -29,6 +30,7 @@
 
 #ifdef _WIN32
 boost::function0<void> console_ctrl_function;
+boost::function0<void> console_ctrl_function_monitoring;
 
 BOOL WINAPI console_ctrl_handler(DWORD ctrl_type)
 {
@@ -39,6 +41,7 @@ BOOL WINAPI console_ctrl_handler(DWORD ctrl_type)
     case CTRL_CLOSE_EVENT:
     case CTRL_SHUTDOWN_EVENT:
         console_ctrl_function();
+        console_ctrl_function_monitoring();
         return TRUE;
     default:
         return FALSE;
@@ -79,6 +82,7 @@ inline unsigned generateServerProgramOptions(const int argc,
                                              boost::filesystem::path &base_path,
                                              std::string &ip_address,
                                              int &ip_port,
+                                             int &ip_port_metrics,
                                              bool &trial,
                                              EngineConfig &config,
                                              int &requested_thread_num)
@@ -111,6 +115,11 @@ inline unsigned generateServerProgramOptions(const int argc,
         ("port,p",
          value<int>(&ip_port)->default_value(5000),
          "TCP/IP port") //
+        (
+         "metrics_port,P",
+         value<int>(&ip_port_metrics)->default_value(0),
+         "TCP/IP port for prometheus metrics exporter. Leave 0 if do not start server for "
+         "metrics") //
         ("threads,t",
          value<int>(&requested_thread_num)->default_value(hardware_threads),
          "Number of threads to use") //
@@ -227,13 +236,21 @@ int main(int argc, const char *argv[]) try
     bool trial_run = false;
     std::string ip_address;
     int ip_port;
+    int ip_port_metrics;
 
     EngineConfig config;
     boost::filesystem::path base_path;
 
     int requested_thread_num = 1;
-    const unsigned init_result = generateServerProgramOptions(
-        argc, argv, base_path, ip_address, ip_port, trial_run, config, requested_thread_num);
+    const unsigned init_result = generateServerProgramOptions(argc,
+                                                              argv,
+                                                              base_path,
+                                                              ip_address,
+                                                              ip_port,
+                                                              ip_port_metrics,
+                                                              trial_run,
+                                                              config,
+                                                              requested_thread_num);
     if (init_result == INIT_OK_DO_NOT_START_ENGINE)
     {
         return EXIT_SUCCESS;
@@ -284,10 +301,13 @@ int main(int argc, const char *argv[]) try
     pthread_sigmask(SIG_BLOCK, &wait_mask, nullptr); // only block necessary signals
 #endif
 
-    auto service_handler = std::make_unique<server::ServiceHandler>(config);
+    auto service_handler = std::make_shared<server::ServiceHandler>(config);
     auto routing_server = server::Server::CreateServer(ip_address, ip_port, requested_thread_num);
+    auto monitoring_server = server::Monitoring::CreateMonitoring(
+        ip_address, ip_port_metrics, routing_server->GetWorkerThreadsCount());
 
-    routing_server->RegisterServiceHandler(std::move(service_handler));
+    routing_server->RegisterServiceHandler(service_handler);
+    monitoring_server->RegisterServiceHandler(service_handler);
 
     if (trial_run)
     {
@@ -299,8 +319,13 @@ int main(int argc, const char *argv[]) try
             routing_server->Run();
             return 0;
         });
+        std::packaged_task<int()> monitoring_task([&] {
+            monitoring_server->Run();
+            return 0;
+        });
         auto future = server_task.get_future();
         std::thread server_thread(std::move(server_task));
+        std::thread monitoring_thread(std::move(monitoring_task));
 
 #ifndef _WIN32
         util::Log() << "running and waiting for requests";
@@ -313,12 +338,17 @@ int main(int argc, const char *argv[]) try
 #else
         // Set console control handler to allow server to be stopped.
         console_ctrl_function = std::bind(&server::Server::Stop, routing_server);
+        console_ctrl_function_monitoring =
+            std::bind(&monitoring::Monitoring::Stop, monitoring_server);
         SetConsoleCtrlHandler(console_ctrl_handler, TRUE);
+        SetConsoleCtrlHandler(console_ctrl_handler_monitoring, TRUE);
         util::Log() << "running and waiting for requests";
+        monitoring_server->Run();
         routing_server->Run();
 #endif
         util::Log() << "initiating shutdown";
         routing_server->Stop();
+        monitoring_server->Stop();
         util::Log() << "stopping threads";
 
         auto status = future.wait_for(std::chrono::seconds(2));
@@ -326,6 +356,7 @@ int main(int argc, const char *argv[]) try
         if (status == std::future_status::ready)
         {
             server_thread.join();
+            monitoring_thread.join();
         }
         else
         {
@@ -336,6 +367,7 @@ int main(int argc, const char *argv[]) try
 
     util::Log() << "freeing objects";
     routing_server.reset();
+    monitoring_server.reset();
     util::Log() << "shutdown completed";
 }
 catch (const osrm::RuntimeError &e)

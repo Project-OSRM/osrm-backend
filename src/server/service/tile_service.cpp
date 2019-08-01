@@ -19,6 +19,7 @@ engine::Status TileService::RunQuery(std::size_t prefix_length,
                                      std::string &query,
                                      osrm::engine::api::ResultT &result)
 {
+    usage++;
     auto query_iterator = query.begin();
     auto parameters =
         api::parseParameters<engine::api::TileParameters>(query_iterator, query.end());
