@@ -439,6 +439,10 @@ include_directories(SYSTEM ${PROTOZERO_INCLUDE_DIR})
 set(VTZERO_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/vtzero/include")
 include_directories(SYSTEM ${VTZERO_INCLUDE_DIR})
 
+set(FLATBUFFERS_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/flatbuffers")
+add_subdirectory(${FLATBUFFERS_SRC_DIR}
+        ${CMAKE_CURRENT_BINARY_DIR}/flatbuffers-build
+        EXCLUDE_FROM_ALL)
 
 # if mason is enabled no find_package calls are made
 # to ensure that we are only compiling and linking against
