@@ -1,0 +1,14 @@
+include "position.fbs";
+namespace osrm.engine.api.fbresult;
+
+table Waypoint {
+    longitute: double;
+    latitude:  double;
+    name: string;
+    location: Position;
+    nodes: [double]; //Used only by 'Nearest' service
+    matchings_index: uint; //Used only by 'Match' service
+    waypoint_index: uint; //Used by 'Match' and 'Trip' services
+    alternatives_count: uint; //Used only by 'Match' service
+    trips_index: uint; //Used only by 'Trip' service
+}

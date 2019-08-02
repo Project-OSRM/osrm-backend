@@ -1,0 +1,21 @@
+include "match.fbs";
+include "nearest.fbs";
+include "route.fbs";
+include "table.fbs";
+include "trip.fbs";
+
+namespace osrm.engine.api.fbresult;
+
+union ServiceResponse {
+    match: Match,
+    nearest: Nearest,
+    route: Route,
+    table: Table,
+    trip: Trip
+}
+
+table FBResult {
+    code: string;
+    message: string;
+    response: ServiceResponse;
+}

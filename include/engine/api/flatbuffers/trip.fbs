@@ -1,0 +1,7 @@
+include "route.fbs";
+namespace osrm.engine.api.fbresult;
+
+table Trip {
+    waypoints: [Waypoint];
+    trips: [Route];
+}
