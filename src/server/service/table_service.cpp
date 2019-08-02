@@ -71,7 +71,7 @@ std::string getWrongOptionHelp(const engine::api::TableParameters &parameters)
 } // anon. ns
 
 engine::Status
-TableService::RunQuery(std::size_t prefix_length, std::string &query, ResultT &result)
+TableService::RunQuery(std::size_t prefix_length, std::string &query, osrm::engine::api::ResultT &result)
 {
     result = util::json::Object();
     auto &json_result = result.get<util::json::Object>();
@@ -97,7 +97,7 @@ TableService::RunQuery(std::size_t prefix_length, std::string &query, ResultT &r
     }
     BOOST_ASSERT(parameters->IsValid());
 
-    return BaseService::routing_machine.Table(*parameters, json_result);
+    return BaseService::routing_machine.Table(*parameters, result);
 }
 }
 }

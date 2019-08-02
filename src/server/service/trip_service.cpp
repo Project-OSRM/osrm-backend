@@ -41,7 +41,7 @@ std::string getWrongOptionHelp(const engine::api::TripParameters &parameters)
 }
 } // anon. ns
 
-engine::Status TripService::RunQuery(std::size_t prefix_length, std::string &query, ResultT &result)
+engine::Status TripService::RunQuery(std::size_t prefix_length, std::string &query, osrm::engine::api::ResultT &result)
 {
     result = util::json::Object();
     auto &json_result = result.get<util::json::Object>();
@@ -69,7 +69,7 @@ engine::Status TripService::RunQuery(std::size_t prefix_length, std::string &que
     }
     BOOST_ASSERT(parameters->IsValid());
 
-    return BaseService::routing_machine.Trip(*parameters, json_result);
+    return BaseService::routing_machine.Trip(*parameters, result);
 }
 }
 }

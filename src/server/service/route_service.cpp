@@ -40,7 +40,7 @@ std::string getWrongOptionHelp(const engine::api::RouteParameters &parameters)
 } // anon. ns
 
 engine::Status
-RouteService::RunQuery(std::size_t prefix_length, std::string &query, ResultT &result)
+RouteService::RunQuery(std::size_t prefix_length, std::string &query, osrm::engine::api::ResultT &result)
 {
     result = util::json::Object();
     auto &json_result = result.get<util::json::Object>();
@@ -66,7 +66,7 @@ RouteService::RunQuery(std::size_t prefix_length, std::string &query, ResultT &r
     }
     BOOST_ASSERT(parameters->IsValid());
 
-    return BaseService::routing_machine.Route(*parameters, json_result);
+    return BaseService::routing_machine.Route(*parameters, result);
 }
 }
 }

@@ -2,6 +2,7 @@
 #define BASE_PLUGIN_HPP
 
 #include "engine/api/base_parameters.hpp"
+#include "engine/api/base_result.hpp"
 #include "engine/datafacade/datafacade_base.hpp"
 #include "engine/phantom_node.hpp"
 #include "engine/routing_algorithms.hpp"
@@ -39,7 +40,7 @@ class BasePlugin
 
     bool CheckAlgorithms(const api::BaseParameters &params,
                          const RoutingAlgorithmsInterface &algorithms,
-                         util::json::Object &result) const
+                         osrm::engine::api::ResultT &result) const
     {
         if (algorithms.IsValid())
         {
@@ -64,8 +65,10 @@ class BasePlugin
 
     Status Error(const std::string &code,
                  const std::string &message,
-                 util::json::Object &json_result) const
+                 osrm::engine::api::ResultT &result) const
     {
+        result = util::json::Object();
+        auto& json_result = result.get<util::json::Object>();
         json_result.values["code"] = code;
         json_result.values["message"] = message;
         return Status::Error;

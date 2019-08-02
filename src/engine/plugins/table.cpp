@@ -31,8 +31,9 @@ TablePlugin::TablePlugin(const int max_locations_distance_table)
 
 Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
                                   const api::TableParameters &params,
-                                  util::json::Object &result) const
+                                  osrm::engine::api::ResultT &result) const
 {
+    auto& json_result = result.get<util::json::Object>();
     if (!algorithms.HasManyToManySearch())
     {
         return Error("NotImplemented",
@@ -154,7 +155,7 @@ Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
     }
 
     api::TableAPI table_api{facade, params};
-    table_api.MakeResponse(result_tables_pair, snapped_phantoms, estimated_pairs, result);
+    table_api.MakeResponse(result_tables_pair, snapped_phantoms, estimated_pairs, json_result);
 
     return Status::Ok;
 }
