@@ -78,6 +78,7 @@ class BasePlugin
             osrm::engine::api::fbresult::FBResultBuilder error(fb_result);
             error.add_code(fb_result.CreateString(code));
             error.add_message(fb_result.CreateString(message));
+            error.add_response_type(osrm::engine::api::fbresult::ServiceResponse::ServiceResponse_NONE);
             fb_result.Finish(error.Finish());
         };
         void operator()(std::string& str_result) {

@@ -154,8 +154,7 @@ Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
     }
 
     api::TableAPI table_api{facade, params};
-    auto& json_result = result.get<util::json::Object>();
-    table_api.MakeResponse(result_tables_pair, snapped_phantoms, estimated_pairs, json_result);
+    table_api.MakeResponse(result_tables_pair, snapped_phantoms, estimated_pairs, result);
 
     return Status::Ok;
 }

@@ -2,8 +2,8 @@ include "position.fbs";
 namespace osrm.engine.api.fbresult;
 
 table Waypoint {
-    longitute: double;
-    latitude:  double;
+    hint: string;
+    distance:  double;
     name: string;
     location: Position;
     nodes: [double]; //Used only by 'Nearest' service

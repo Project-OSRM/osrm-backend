@@ -1,15 +1,15 @@
 include "waypoint.fbs";
 namespace osrm.engine.api.fbresult;
 
-table VectorUint {
-    column: [uint];
+table VectorDouble {
+    column: [double];
 }
 
 table Table {
     waypoints: [Waypoint];
-    durations: [VectorUint];
-    distances: [VectorUint];
+    durations: [VectorDouble];
+    distances: [VectorDouble];
     sources: [Waypoint];
     destinations: [Waypoint];
-    fallback_speed_cells: [VectorUint];
+    fallback_speed_cells: [VectorDouble];
 }
