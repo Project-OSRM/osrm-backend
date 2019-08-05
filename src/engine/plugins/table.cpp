@@ -33,7 +33,6 @@ Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
                                   const api::TableParameters &params,
                                   osrm::engine::api::ResultT &result) const
 {
-    auto& json_result = result.get<util::json::Object>();
     if (!algorithms.HasManyToManySearch())
     {
         return Error("NotImplemented",
@@ -155,6 +154,7 @@ Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
     }
 
     api::TableAPI table_api{facade, params};
+    auto& json_result = result.get<util::json::Object>();
     table_api.MakeResponse(result_tables_pair, snapped_phantoms, estimated_pairs, json_result);
 
     return Status::Ok;

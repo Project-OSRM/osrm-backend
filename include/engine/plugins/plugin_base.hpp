@@ -3,6 +3,7 @@
 
 #include "engine/api/base_parameters.hpp"
 #include "engine/api/base_result.hpp"
+#include "engine/api/flatbuffers/fbresult_generated.h"
 #include "engine/datafacade/datafacade_base.hpp"
 #include "engine/phantom_node.hpp"
 #include "engine/routing_algorithms.hpp"
@@ -63,14 +64,32 @@ class BasePlugin
         return false;
     }
 
+    struct ErrorRenderer {
+        std::string code;
+        std::string message;
+
+        ErrorRenderer(std::string code, std::string message) : code(std::move(code)), message(std::move(message)) {};
+
+        void operator()(util::json::Object& json_result) {
+            json_result.values["code"] = code;
+            json_result.values["message"] = message;
+        };
+        void operator()(flatbuffers::FlatBufferBuilder& fb_result) {
+            osrm::engine::api::fbresult::FBResultBuilder error(fb_result);
+            error.add_code(fb_result.CreateString(code));
+            error.add_message(fb_result.CreateString(message));
+            fb_result.Finish(error.Finish());
+        };
+        void operator()(std::string& str_result) {
+            str_result = str(boost::format("code=%1% message=%2%") % code % message);
+        };
+    };
+
     Status Error(const std::string &code,
                  const std::string &message,
                  osrm::engine::api::ResultT &result) const
     {
-        result = util::json::Object();
-        auto& json_result = result.get<util::json::Object>();
-        json_result.values["code"] = code;
-        json_result.values["message"] = message;
+        mapbox::util::apply_visitor(ErrorRenderer(code, message), result);
         return Status::Error;
     }
 
