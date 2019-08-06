@@ -76,9 +76,10 @@ class BaseAPI
     // protected:
     flatbuffers::Offset<fbresult::Waypoint> MakeWaypoint(flatbuffers::FlatBufferBuilder& builder, const PhantomNode &phantom) const
     {
-        auto location = fbresult::CreatePosition(builder, static_cast<double>(util::toFloating(phantom.location.lon)), static_cast<double>(util::toFloating(phantom.location.lat)));
+
+        auto location = fbresult::Position(static_cast<double>(util::toFloating(phantom.location.lon)), static_cast<double>(util::toFloating(phantom.location.lat)));
         fbresult::WaypointBuilder waypoint(builder);
-        waypoint.add_location(location);
+        waypoint.add_location(&location);
         waypoint.add_distance(util::coordinate_calculation::fccApproximateDistance(phantom.location,
                                                                                    phantom.input_location));
         waypoint.add_name(builder.CreateString(facade.GetNameForID(facade.GetNameIndex(phantom.forward_segment_id.id)).to_string()));

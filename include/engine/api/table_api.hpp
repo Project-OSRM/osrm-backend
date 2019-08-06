@@ -96,14 +96,16 @@ class TableAPI final : public BaseAPI
             table.add_destinations(MakeWaypoints(fb_result, phantoms, parameters.destinations));
         }
 
+        table.add_rows(number_of_sources);
+        table.add_cols(number_of_destinations);
         if (parameters.annotations & TableParameters::AnnotationsType::Duration)
         {
-            table.add_durations(MakeDurationTable(fb_result, tables.first, number_of_sources, number_of_destinations));
+            table.add_durations(MakeDurationTable(fb_result, tables.first));
         }
 
         if (parameters.annotations & TableParameters::AnnotationsType::Distance)
         {
-            table.add_distances(MakeDistanceTable(fb_result, tables.second, number_of_sources, number_of_destinations));
+            table.add_distances(MakeDistanceTable(fb_result, tables.second));
         }
 
         if (parameters.fallback_speed != INVALID_FALLBACK_SPEED && parameters.fallback_speed > 0)
@@ -195,74 +197,45 @@ class TableAPI final : public BaseAPI
         return builder.CreateVector(waypoints);
     }
 
-    virtual flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<fbresult::VectorDouble>>>
+    virtual flatbuffers::Offset<flatbuffers::Vector<float>>
     MakeDurationTable(flatbuffers::FlatBufferBuilder& builder,
-                      const std::vector<EdgeWeight> &values,
-                      std::size_t number_of_rows,
-                      std::size_t number_of_columns) const
+                      const std::vector<EdgeWeight> &values) const
     {
-        std::vector<flatbuffers::Offset<fbresult::VectorDouble>> fb_table;
-        for (const auto row : util::irange<std::size_t>(0UL, number_of_rows))
-        {
-            std::vector<double> fb_row;
-            auto row_begin_iterator = values.begin() + (row * number_of_columns);
-            auto row_end_iterator = values.begin() + ((row + 1) * number_of_columns);
-            fb_row.resize(number_of_columns);
-            std::transform(row_begin_iterator,
-                           row_end_iterator,
-                           fb_row.begin(),
-                           [](const EdgeWeight duration) -> double {
-                               if (duration == MAXIMAL_EDGE_DURATION)
-                               {
-                                   return MAXIMAL_EDGE_DURATION;
-                               }
-                               // division by 10 because the duration is in deciseconds (10s)
-                               return duration / 10.;
-                           });
-            fb_table.push_back(fbresult::CreateVectorDoubleDirect(builder, &fb_row));
-        }
-        return builder.CreateVector(fb_table);
+        std::vector<float> distance_table;
+        distance_table.resize(values.size());
+        std::transform(values.begin(), values.end(), distance_table.begin(), [](const EdgeWeight duration) {
+            if (duration == MAXIMAL_EDGE_DURATION) {
+                return 0.;
+            }
+            return duration / 10.;
+        });
+        return builder.CreateVector(distance_table);
     }
 
-    virtual flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<fbresult::VectorDouble>>>
+    virtual flatbuffers::Offset<flatbuffers::Vector<float>>
     MakeDistanceTable(flatbuffers::FlatBufferBuilder& builder,
-                      const std::vector<EdgeDistance> &values,
-                      std::size_t number_of_rows,
-                      std::size_t number_of_columns) const
+                      const std::vector<EdgeDistance> &values) const
     {
-        std::vector<flatbuffers::Offset<fbresult::VectorDouble>> fb_table;
-        for (const auto row : util::irange<std::size_t>(0UL, number_of_rows))
-        {
-            std::vector<double> fb_row;
-            auto row_begin_iterator = values.begin() + (row * number_of_columns);
-            auto row_end_iterator = values.begin() + ((row + 1) * number_of_columns);
-            fb_row.resize(number_of_columns);
-            std::transform(row_begin_iterator,
-                           row_end_iterator,
-                           fb_row.begin(),
-                           [](const EdgeDistance distance) -> double {
-                               if (distance == INVALID_EDGE_DISTANCE) {
-                                   return INVALID_EDGE_DISTANCE;
-                               }
-                               // round to single decimal place
-                               return std::round(distance * 10) / 10.;
-                           });
-            fb_table.push_back(fbresult::CreateVectorDoubleDirect(builder, &fb_row));
-        }
-        return builder.CreateVector(fb_table);
+        std::vector<float> duration_table;
+        duration_table.resize(values.size());
+        std::transform(values.begin(), values.end(), duration_table.begin(), [](const EdgeDistance distance) {
+            if (distance == INVALID_EDGE_DISTANCE) {
+                return 0.;
+            }
+            return std::round(distance * 10) / 10.;
+        });
+        return builder.CreateVector(duration_table);
     }
 
-    virtual flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<fbresult::VectorDouble>>>
+    virtual flatbuffers::Offset<flatbuffers::Vector<uint32_t>>
     MakeEstimatesTable(flatbuffers::FlatBufferBuilder& builder, const std::vector<TableCellRef> &fallback_speed_cells) const
     {
-        std::vector<flatbuffers::Offset<fbresult::VectorDouble>> fb_table;
+        std::vector<uint32_t> fb_table;
         fb_table.reserve(fallback_speed_cells.size());
         std::for_each(
                 fallback_speed_cells.begin(), fallback_speed_cells.end(), [&](const auto &cell) {
-                    std::vector<double> fb_row;
-                    fb_row.push_back(cell.row);
-                    fb_row.push_back(cell.column);
-                    fb_table.push_back(fbresult::CreateVectorDoubleDirect(builder, &fb_row));
+                    fb_table.push_back(cell.row);
+                    fb_table.push_back(cell.column);
                 });
         return builder.CreateVector(fb_table);
     }
