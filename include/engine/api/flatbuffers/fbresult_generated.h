@@ -13,6 +13,8 @@ namespace fbresult {
 
 struct Position;
 
+struct Uint64Pair;
+
 struct Waypoint;
 struct WaypointT;
 
@@ -434,13 +436,35 @@ FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(8) Position FLATBUFFERS_FINAL_CLASS {
 };
 FLATBUFFERS_STRUCT_END(Position, 16);
 
+FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(8) Uint64Pair FLATBUFFERS_FINAL_CLASS {
+ private:
+  uint64_t first_;
+  uint64_t second_;
+
+ public:
+  Uint64Pair() {
+    memset(static_cast<void *>(this), 0, sizeof(Uint64Pair));
+  }
+  Uint64Pair(uint64_t _first, uint64_t _second)
+      : first_(flatbuffers::EndianScalar(_first)),
+        second_(flatbuffers::EndianScalar(_second)) {
+  }
+  uint64_t first() const {
+    return flatbuffers::EndianScalar(first_);
+  }
+  uint64_t second() const {
+    return flatbuffers::EndianScalar(second_);
+  }
+};
+FLATBUFFERS_STRUCT_END(Uint64Pair, 16);
+
 struct WaypointT : public flatbuffers::NativeTable {
   typedef Waypoint TableType;
   std::string hint;
   double distance;
   std::string name;
   std::unique_ptr<osrm::engine::api::fbresult::Position> location;
-  std::vector<double> nodes;
+  std::unique_ptr<osrm::engine::api::fbresult::Uint64Pair> nodes;
   uint32_t matchings_index;
   uint32_t waypoint_index;
   uint32_t alternatives_count;
@@ -479,8 +503,8 @@ struct Waypoint FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   const osrm::engine::api::fbresult::Position *location() const {
     return GetStruct<const osrm::engine::api::fbresult::Position *>(VT_LOCATION);
   }
-  const flatbuffers::Vector<double> *nodes() const {
-    return GetPointer<const flatbuffers::Vector<double> *>(VT_NODES);
+  const osrm::engine::api::fbresult::Uint64Pair *nodes() const {
+    return GetStruct<const osrm::engine::api::fbresult::Uint64Pair *>(VT_NODES);
   }
   uint32_t matchings_index() const {
     return GetField<uint32_t>(VT_MATCHINGS_INDEX, 0);
@@ -502,8 +526,7 @@ struct Waypoint FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
            VerifyOffset(verifier, VT_NAME) &&
            verifier.VerifyString(name()) &&
            VerifyField<osrm::engine::api::fbresult::Position>(verifier, VT_LOCATION) &&
-           VerifyOffset(verifier, VT_NODES) &&
-           verifier.VerifyVector(nodes()) &&
+           VerifyField<osrm::engine::api::fbresult::Uint64Pair>(verifier, VT_NODES) &&
            VerifyField<uint32_t>(verifier, VT_MATCHINGS_INDEX) &&
            VerifyField<uint32_t>(verifier, VT_WAYPOINT_INDEX) &&
            VerifyField<uint32_t>(verifier, VT_ALTERNATIVES_COUNT) &&
@@ -530,8 +553,8 @@ struct WaypointBuilder {
   void add_location(const osrm::engine::api::fbresult::Position *location) {
     fbb_.AddStruct(Waypoint::VT_LOCATION, location);
   }
-  void add_nodes(flatbuffers::Offset<flatbuffers::Vector<double>> nodes) {
-    fbb_.AddOffset(Waypoint::VT_NODES, nodes);
+  void add_nodes(const osrm::engine::api::fbresult::Uint64Pair *nodes) {
+    fbb_.AddStruct(Waypoint::VT_NODES, nodes);
   }
   void add_matchings_index(uint32_t matchings_index) {
     fbb_.AddElement<uint32_t>(Waypoint::VT_MATCHINGS_INDEX, matchings_index, 0);
@@ -563,7 +586,7 @@ inline flatbuffers::Offset<Waypoint> CreateWaypoint(
     double distance = 0.0,
     flatbuffers::Offset<flatbuffers::String> name = 0,
     const osrm::engine::api::fbresult::Position *location = 0,
-    flatbuffers::Offset<flatbuffers::Vector<double>> nodes = 0,
+    const osrm::engine::api::fbresult::Uint64Pair *nodes = 0,
     uint32_t matchings_index = 0,
     uint32_t waypoint_index = 0,
     uint32_t alternatives_count = 0,
@@ -587,21 +610,20 @@ inline flatbuffers::Offset<Waypoint> CreateWaypointDirect(
     double distance = 0.0,
     const char *name = nullptr,
     const osrm::engine::api::fbresult::Position *location = 0,
-    const std::vector<double> *nodes = nullptr,
+    const osrm::engine::api::fbresult::Uint64Pair *nodes = 0,
     uint32_t matchings_index = 0,
     uint32_t waypoint_index = 0,
     uint32_t alternatives_count = 0,
     uint32_t trips_index = 0) {
   auto hint__ = hint ? _fbb.CreateString(hint) : 0;
   auto name__ = name ? _fbb.CreateString(name) : 0;
-  auto nodes__ = nodes ? _fbb.CreateVector<double>(*nodes) : 0;
   return osrm::engine::api::fbresult::CreateWaypoint(
       _fbb,
       hint__,
       distance,
       name__,
       location,
-      nodes__,
+      nodes,
       matchings_index,
       waypoint_index,
       alternatives_count,
@@ -2423,7 +2445,7 @@ inline void Waypoint::UnPackTo(WaypointT *_o, const flatbuffers::resolver_functi
   { auto _e = distance(); _o->distance = _e; };
   { auto _e = name(); if (_e) _o->name = _e->str(); };
   { auto _e = location(); if (_e) _o->location = std::unique_ptr<osrm::engine::api::fbresult::Position>(new osrm::engine::api::fbresult::Position(*_e)); };
-  { auto _e = nodes(); if (_e) { _o->nodes.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->nodes[_i] = _e->Get(_i); } } };
+  { auto _e = nodes(); if (_e) _o->nodes = std::unique_ptr<osrm::engine::api::fbresult::Uint64Pair>(new osrm::engine::api::fbresult::Uint64Pair(*_e)); };
   { auto _e = matchings_index(); _o->matchings_index = _e; };
   { auto _e = waypoint_index(); _o->waypoint_index = _e; };
   { auto _e = alternatives_count(); _o->alternatives_count = _e; };
@@ -2442,7 +2464,7 @@ inline flatbuffers::Offset<Waypoint> CreateWaypoint(flatbuffers::FlatBufferBuild
   auto _distance = _o->distance;
   auto _name = _o->name.empty() ? 0 : _fbb.CreateString(_o->name);
   auto _location = _o->location ? _o->location.get() : 0;
-  auto _nodes = _o->nodes.size() ? _fbb.CreateVector(_o->nodes) : 0;
+  auto _nodes = _o->nodes ? _o->nodes.get() : 0;
   auto _matchings_index = _o->matchings_index;
   auto _waypoint_index = _o->waypoint_index;
   auto _alternatives_count = _o->alternatives_count;

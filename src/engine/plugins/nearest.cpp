@@ -25,7 +25,6 @@ Status NearestPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms
 {
     BOOST_ASSERT(params.IsValid());
 
-    auto& json_result = result.get<util::json::Object>();
     if (!CheckAlgorithms(params, algorithms, result))
         return Status::Error;
 
@@ -57,7 +56,7 @@ Status NearestPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms
     BOOST_ASSERT(phantom_nodes.front().size() > 0);
 
     api::NearestAPI nearest_api(facade, params);
-    nearest_api.MakeResponse(phantom_nodes, json_result);
+    nearest_api.MakeResponse(phantom_nodes, result);
 
     return Status::Ok;
 }

@@ -54,11 +54,12 @@ class TableAPI final : public BaseAPI
         if(response.is<flatbuffers::FlatBufferBuilder>()) {
             auto& fb_result = response.get<flatbuffers::FlatBufferBuilder>();
             MakeResponse(tables, phantoms, fallback_speed_cells, fb_result);
-        } else {
+        }
+        else
+        {
             auto& json_result = response.get<util::json::Object>();
             MakeResponse(tables, phantoms, fallback_speed_cells, json_result);
         }
-
     }
 
     virtual void
@@ -177,7 +178,7 @@ class TableAPI final : public BaseAPI
         boost::range::transform(
                 phantoms,
                 std::back_inserter(waypoints),
-                [this, &builder](const PhantomNode &phantom) { return BaseAPI::MakeWaypoint(builder, phantom); });
+                [this, &builder](const PhantomNode &phantom) { return BaseAPI::MakeWaypoint(builder, phantom).Finish(); });
         return builder.CreateVector(waypoints);
     }
 
@@ -192,7 +193,7 @@ class TableAPI final : public BaseAPI
                                 std::back_inserter(waypoints),
                                 [this, &builder, phantoms](const std::size_t idx) {
                                     BOOST_ASSERT(idx < phantoms.size());
-                                    return BaseAPI::MakeWaypoint(builder, phantoms[idx]);
+                                    return BaseAPI::MakeWaypoint(builder, phantoms[idx]).Finish();
                                 });
         return builder.CreateVector(waypoints);
     }

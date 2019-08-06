@@ -62,6 +62,12 @@ NearestService::RunQuery(std::size_t prefix_length, std::string &query, osrm::en
     }
     BOOST_ASSERT(parameters->IsValid());
 
+    if (parameters->format)
+    {
+        if (parameters->format == engine::api::BaseParameters::OutputFormatType::FLATBUFFERS) {
+            result = flatbuffers::FlatBufferBuilder();
+        }
+    }
     return BaseService::routing_machine.Nearest(*parameters, result);
 }
 }
