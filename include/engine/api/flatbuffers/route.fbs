@@ -62,7 +62,7 @@ table Lane {
 
 table Intersection {
     location: Position;
-    bearings: [ushort];
+    bearings: [short];
     classes: [string];
     entry: [bool];
     in: uint;
@@ -70,31 +70,28 @@ table Intersection {
     lanes: [Lane];
 }
 
-table Polyline {
-    polyline: [Position];
-}
-
-union Geometry {
-    polyline: string,
-    polyline6: string,
-    coordinates: Polyline
+table Geometry {
+    polyline: string;
+    polyline6: string;
+    coordinates: [Position];
 }
 
 table Step {
     distance: double;
     duration: double;
     geometry: Geometry;
+    weight: double;
     name: string;
-    ref: uint;
+    ref: string;
     pronunciation: string;
-    destinations: [string];
-    exits: [string];
+    destinations: string;
+    exits: string;
     mode: string;
     maneuver: StepManeuver;
     intersections: [Intersection];
     rotary_name: string;
     rotary_pronunciation: string;
-    driving_side: bool; //Where true stands for the right side.
+    driving_side: bool; //Where true stands for the left side.
 }
 
 table Leg {

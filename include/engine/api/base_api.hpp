@@ -72,6 +72,21 @@ class BaseAPI
         }
     }
 
+    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<fbresult::Waypoint>>> MakeWaypoints(flatbuffers::FlatBufferBuilder& builder, const std::vector<PhantomNodes> &segment_end_coordinates) const
+    {
+        BOOST_ASSERT(parameters.coordinates.size() > 0);
+        BOOST_ASSERT(parameters.coordinates.size() == segment_end_coordinates.size() + 1);
+
+        std::vector<flatbuffers::Offset<fbresult::Waypoint>> waypoints;
+        waypoints.resize(parameters.coordinates.size());
+        waypoints[0] = MakeWaypoint(builder, segment_end_coordinates.front().source_phantom).Finish();
+
+        std::transform(segment_end_coordinates.begin(), segment_end_coordinates.end(), std::next(waypoints.begin()), [this, &builder](const PhantomNodes &phantom_pair) {
+            return MakeWaypoint(builder, phantom_pair.target_phantom).Finish();
+        });
+        return builder.CreateVector(waypoints);
+    }
+
     // FIXME: gcc 4.9 does not like MakeWaypoints to be protected
     // protected:
     fbresult::WaypointBuilder MakeWaypoint(flatbuffers::FlatBufferBuilder& builder, const PhantomNode &phantom) const

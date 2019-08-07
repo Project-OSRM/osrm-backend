@@ -32,8 +32,6 @@ Status ViaRoutePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithm
 {
     BOOST_ASSERT(route_parameters.IsValid());
 
-    auto& json_result = result.get<util::json::Object>();
-
     if (!algorithms.HasShortestPathSearch() && route_parameters.coordinates.size() > 2)
     {
         return Error("NotImplemented",
@@ -164,7 +162,7 @@ Status ViaRoutePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithm
             }
         }
 
-        route_api.MakeResponse(routes, start_end_nodes, json_result);
+        route_api.MakeResponse(routes, start_end_nodes, result);
     }
     else
     {

@@ -17,5 +17,6 @@ union ServiceResponse {
 table FBResult {
     code: string;
     message: string;
+    data_version: string;
     response: ServiceResponse;
 }

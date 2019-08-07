@@ -33,8 +33,8 @@ struct LaneT;
 struct Intersection;
 struct IntersectionT;
 
-struct Polyline;
-struct PolylineT;
+struct Geometry;
+struct GeometryT;
 
 struct Step;
 struct StepT;
@@ -185,91 +185,6 @@ inline const char *EnumNameTurn(Turn e) {
   const size_t index = static_cast<size_t>(e);
   return EnumNamesTurn()[index];
 }
-
-enum Geometry {
-  Geometry_NONE = 0,
-  Geometry_polyline = 1,
-  Geometry_polyline6 = 2,
-  Geometry_coordinates = 3,
-  Geometry_MIN = Geometry_NONE,
-  Geometry_MAX = Geometry_coordinates
-};
-
-inline const Geometry (&EnumValuesGeometry())[4] {
-  static const Geometry values[] = {
-    Geometry_NONE,
-    Geometry_polyline,
-    Geometry_polyline6,
-    Geometry_coordinates
-  };
-  return values;
-}
-
-inline const char * const *EnumNamesGeometry() {
-  static const char * const names[5] = {
-    "NONE",
-    "polyline",
-    "polyline6",
-    "coordinates",
-    nullptr
-  };
-  return names;
-}
-
-inline const char *EnumNameGeometry(Geometry e) {
-  if (e < Geometry_NONE || e > Geometry_coordinates) return "";
-  const size_t index = static_cast<size_t>(e);
-  return EnumNamesGeometry()[index];
-}
-
-struct GeometryUnion {
-  Geometry type;
-  void *value;
-
-  GeometryUnion() : type(Geometry_NONE), value(nullptr) {}
-  GeometryUnion(GeometryUnion&& u) FLATBUFFERS_NOEXCEPT :
-    type(Geometry_NONE), value(nullptr)
-    { std::swap(type, u.type); std::swap(value, u.value); }
-  GeometryUnion(const GeometryUnion &) FLATBUFFERS_NOEXCEPT;
-  GeometryUnion &operator=(const GeometryUnion &u) FLATBUFFERS_NOEXCEPT
-    { GeometryUnion t(u); std::swap(type, t.type); std::swap(value, t.value); return *this; }
-  GeometryUnion &operator=(GeometryUnion &&u) FLATBUFFERS_NOEXCEPT
-    { std::swap(type, u.type); std::swap(value, u.value); return *this; }
-  ~GeometryUnion() { Reset(); }
-
-  void Reset();
-
-  static void *UnPack(const void *obj, Geometry type, const flatbuffers::resolver_function_t *resolver);
-  flatbuffers::Offset<void> Pack(flatbuffers::FlatBufferBuilder &_fbb, const flatbuffers::rehasher_function_t *_rehasher = nullptr) const;
-
-  std::string *Aspolyline() {
-    return type == Geometry_polyline ?
-      reinterpret_cast<std::string *>(value) : nullptr;
-  }
-  const std::string *Aspolyline() const {
-    return type == Geometry_polyline ?
-      reinterpret_cast<const std::string *>(value) : nullptr;
-  }
-  std::string *Aspolyline6() {
-    return type == Geometry_polyline6 ?
-      reinterpret_cast<std::string *>(value) : nullptr;
-  }
-  const std::string *Aspolyline6() const {
-    return type == Geometry_polyline6 ?
-      reinterpret_cast<const std::string *>(value) : nullptr;
-  }
-  osrm::engine::api::fbresult::PolylineT *Ascoordinates() {
-    return type == Geometry_coordinates ?
-      reinterpret_cast<osrm::engine::api::fbresult::PolylineT *>(value) : nullptr;
-  }
-  const osrm::engine::api::fbresult::PolylineT *Ascoordinates() const {
-    return type == Geometry_coordinates ?
-      reinterpret_cast<const osrm::engine::api::fbresult::PolylineT *>(value) : nullptr;
-  }
-};
-
-bool VerifyGeometry(flatbuffers::Verifier &verifier, const void *obj, Geometry type);
-bool VerifyGeometryVector(flatbuffers::Verifier &verifier, const flatbuffers::Vector<flatbuffers::Offset<void>> *values, const flatbuffers::Vector<uint8_t> *types);
 
 enum ServiceResponse {
   ServiceResponse_NONE = 0,
@@ -1041,7 +956,7 @@ flatbuffers::Offset<Lane> CreateLane(flatbuffers::FlatBufferBuilder &_fbb, const
 struct IntersectionT : public flatbuffers::NativeTable {
   typedef Intersection TableType;
   std::unique_ptr<osrm::engine::api::fbresult::Position> location;
-  std::vector<uint16_t> bearings;
+  std::vector<int16_t> bearings;
   std::vector<std::string> classes;
   std::vector<bool> entry;
   uint32_t in;
@@ -1067,8 +982,8 @@ struct Intersection FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   const osrm::engine::api::fbresult::Position *location() const {
     return GetStruct<const osrm::engine::api::fbresult::Position *>(VT_LOCATION);
   }
-  const flatbuffers::Vector<uint16_t> *bearings() const {
-    return GetPointer<const flatbuffers::Vector<uint16_t> *>(VT_BEARINGS);
+  const flatbuffers::Vector<int16_t> *bearings() const {
+    return GetPointer<const flatbuffers::Vector<int16_t> *>(VT_BEARINGS);
   }
   const flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>> *classes() const {
     return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>> *>(VT_CLASSES);
@@ -1113,7 +1028,7 @@ struct IntersectionBuilder {
   void add_location(const osrm::engine::api::fbresult::Position *location) {
     fbb_.AddStruct(Intersection::VT_LOCATION, location);
   }
-  void add_bearings(flatbuffers::Offset<flatbuffers::Vector<uint16_t>> bearings) {
+  void add_bearings(flatbuffers::Offset<flatbuffers::Vector<int16_t>> bearings) {
     fbb_.AddOffset(Intersection::VT_BEARINGS, bearings);
   }
   void add_classes(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> classes) {
@@ -1146,7 +1061,7 @@ struct IntersectionBuilder {
 inline flatbuffers::Offset<Intersection> CreateIntersection(
     flatbuffers::FlatBufferBuilder &_fbb,
     const osrm::engine::api::fbresult::Position *location = 0,
-    flatbuffers::Offset<flatbuffers::Vector<uint16_t>> bearings = 0,
+    flatbuffers::Offset<flatbuffers::Vector<int16_t>> bearings = 0,
     flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> classes = 0,
     flatbuffers::Offset<flatbuffers::Vector<uint8_t>> entry = 0,
     uint32_t in = 0,
@@ -1166,13 +1081,13 @@ inline flatbuffers::Offset<Intersection> CreateIntersection(
 inline flatbuffers::Offset<Intersection> CreateIntersectionDirect(
     flatbuffers::FlatBufferBuilder &_fbb,
     const osrm::engine::api::fbresult::Position *location = 0,
-    const std::vector<uint16_t> *bearings = nullptr,
+    const std::vector<int16_t> *bearings = nullptr,
     const std::vector<flatbuffers::Offset<flatbuffers::String>> *classes = nullptr,
     const std::vector<uint8_t> *entry = nullptr,
     uint32_t in = 0,
     uint32_t out = 0,
     const std::vector<flatbuffers::Offset<osrm::engine::api::fbresult::Lane>> *lanes = nullptr) {
-  auto bearings__ = bearings ? _fbb.CreateVector<uint16_t>(*bearings) : 0;
+  auto bearings__ = bearings ? _fbb.CreateVector<int16_t>(*bearings) : 0;
   auto classes__ = classes ? _fbb.CreateVector<flatbuffers::Offset<flatbuffers::String>>(*classes) : 0;
   auto entry__ = entry ? _fbb.CreateVector<uint8_t>(*entry) : 0;
   auto lanes__ = lanes ? _fbb.CreateVector<flatbuffers::Offset<osrm::engine::api::fbresult::Lane>>(*lanes) : 0;
@@ -1189,79 +1104,110 @@ inline flatbuffers::Offset<Intersection> CreateIntersectionDirect(
 
 flatbuffers::Offset<Intersection> CreateIntersection(flatbuffers::FlatBufferBuilder &_fbb, const IntersectionT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 
-struct PolylineT : public flatbuffers::NativeTable {
-  typedef Polyline TableType;
-  std::vector<osrm::engine::api::fbresult::Position> polyline;
-  PolylineT() {
+struct GeometryT : public flatbuffers::NativeTable {
+  typedef Geometry TableType;
+  std::string polyline;
+  std::string polyline6;
+  std::vector<osrm::engine::api::fbresult::Position> coordinates;
+  GeometryT() {
   }
 };
 
-struct Polyline FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef PolylineT NativeTableType;
+struct Geometry FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef GeometryT NativeTableType;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_POLYLINE = 4
+    VT_POLYLINE = 4,
+    VT_POLYLINE6 = 6,
+    VT_COORDINATES = 8
   };
-  const flatbuffers::Vector<const osrm::engine::api::fbresult::Position *> *polyline() const {
-    return GetPointer<const flatbuffers::Vector<const osrm::engine::api::fbresult::Position *> *>(VT_POLYLINE);
+  const flatbuffers::String *polyline() const {
+    return GetPointer<const flatbuffers::String *>(VT_POLYLINE);
+  }
+  const flatbuffers::String *polyline6() const {
+    return GetPointer<const flatbuffers::String *>(VT_POLYLINE6);
+  }
+  const flatbuffers::Vector<const osrm::engine::api::fbresult::Position *> *coordinates() const {
+    return GetPointer<const flatbuffers::Vector<const osrm::engine::api::fbresult::Position *> *>(VT_COORDINATES);
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_POLYLINE) &&
-           verifier.VerifyVector(polyline()) &&
+           verifier.VerifyString(polyline()) &&
+           VerifyOffset(verifier, VT_POLYLINE6) &&
+           verifier.VerifyString(polyline6()) &&
+           VerifyOffset(verifier, VT_COORDINATES) &&
+           verifier.VerifyVector(coordinates()) &&
            verifier.EndTable();
   }
-  PolylineT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  void UnPackTo(PolylineT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  static flatbuffers::Offset<Polyline> Pack(flatbuffers::FlatBufferBuilder &_fbb, const PolylineT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
+  GeometryT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  void UnPackTo(GeometryT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  static flatbuffers::Offset<Geometry> Pack(flatbuffers::FlatBufferBuilder &_fbb, const GeometryT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 };
 
-struct PolylineBuilder {
+struct GeometryBuilder {
   flatbuffers::FlatBufferBuilder &fbb_;
   flatbuffers::uoffset_t start_;
-  void add_polyline(flatbuffers::Offset<flatbuffers::Vector<const osrm::engine::api::fbresult::Position *>> polyline) {
-    fbb_.AddOffset(Polyline::VT_POLYLINE, polyline);
+  void add_polyline(flatbuffers::Offset<flatbuffers::String> polyline) {
+    fbb_.AddOffset(Geometry::VT_POLYLINE, polyline);
   }
-  explicit PolylineBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+  void add_polyline6(flatbuffers::Offset<flatbuffers::String> polyline6) {
+    fbb_.AddOffset(Geometry::VT_POLYLINE6, polyline6);
+  }
+  void add_coordinates(flatbuffers::Offset<flatbuffers::Vector<const osrm::engine::api::fbresult::Position *>> coordinates) {
+    fbb_.AddOffset(Geometry::VT_COORDINATES, coordinates);
+  }
+  explicit GeometryBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  PolylineBuilder &operator=(const PolylineBuilder &);
-  flatbuffers::Offset<Polyline> Finish() {
+  GeometryBuilder &operator=(const GeometryBuilder &);
+  flatbuffers::Offset<Geometry> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<Polyline>(end);
+    auto o = flatbuffers::Offset<Geometry>(end);
     return o;
   }
 };
 
-inline flatbuffers::Offset<Polyline> CreatePolyline(
+inline flatbuffers::Offset<Geometry> CreateGeometry(
     flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::Vector<const osrm::engine::api::fbresult::Position *>> polyline = 0) {
-  PolylineBuilder builder_(_fbb);
+    flatbuffers::Offset<flatbuffers::String> polyline = 0,
+    flatbuffers::Offset<flatbuffers::String> polyline6 = 0,
+    flatbuffers::Offset<flatbuffers::Vector<const osrm::engine::api::fbresult::Position *>> coordinates = 0) {
+  GeometryBuilder builder_(_fbb);
+  builder_.add_coordinates(coordinates);
+  builder_.add_polyline6(polyline6);
   builder_.add_polyline(polyline);
   return builder_.Finish();
 }
 
-inline flatbuffers::Offset<Polyline> CreatePolylineDirect(
+inline flatbuffers::Offset<Geometry> CreateGeometryDirect(
     flatbuffers::FlatBufferBuilder &_fbb,
-    const std::vector<osrm::engine::api::fbresult::Position> *polyline = nullptr) {
-  auto polyline__ = polyline ? _fbb.CreateVectorOfStructs<osrm::engine::api::fbresult::Position>(*polyline) : 0;
-  return osrm::engine::api::fbresult::CreatePolyline(
+    const char *polyline = nullptr,
+    const char *polyline6 = nullptr,
+    const std::vector<osrm::engine::api::fbresult::Position> *coordinates = nullptr) {
+  auto polyline__ = polyline ? _fbb.CreateString(polyline) : 0;
+  auto polyline6__ = polyline6 ? _fbb.CreateString(polyline6) : 0;
+  auto coordinates__ = coordinates ? _fbb.CreateVectorOfStructs<osrm::engine::api::fbresult::Position>(*coordinates) : 0;
+  return osrm::engine::api::fbresult::CreateGeometry(
       _fbb,
-      polyline__);
+      polyline__,
+      polyline6__,
+      coordinates__);
 }
 
-flatbuffers::Offset<Polyline> CreatePolyline(flatbuffers::FlatBufferBuilder &_fbb, const PolylineT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
+flatbuffers::Offset<Geometry> CreateGeometry(flatbuffers::FlatBufferBuilder &_fbb, const GeometryT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 
 struct StepT : public flatbuffers::NativeTable {
   typedef Step TableType;
   double distance;
   double duration;
-  GeometryUnion geometry;
+  std::unique_ptr<osrm::engine::api::fbresult::GeometryT> geometry;
+  double weight;
   std::string name;
-  uint32_t ref;
+  std::string ref;
   std::string pronunciation;
-  std::vector<std::string> destinations;
-  std::vector<std::string> exits;
+  std::string destinations;
+  std::string exits;
   std::string mode;
   std::unique_ptr<osrm::engine::api::fbresult::StepManeuverT> maneuver;
   std::vector<std::unique_ptr<osrm::engine::api::fbresult::IntersectionT>> intersections;
@@ -1271,7 +1217,7 @@ struct StepT : public flatbuffers::NativeTable {
   StepT()
       : distance(0.0),
         duration(0.0),
-        ref(0),
+        weight(0.0),
         driving_side(false) {
   }
 };
@@ -1281,8 +1227,8 @@ struct Step FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_DISTANCE = 4,
     VT_DURATION = 6,
-    VT_GEOMETRY_TYPE = 8,
-    VT_GEOMETRY = 10,
+    VT_GEOMETRY = 8,
+    VT_WEIGHT = 10,
     VT_NAME = 12,
     VT_REF = 14,
     VT_PRONUNCIATION = 16,
@@ -1301,35 +1247,26 @@ struct Step FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   double duration() const {
     return GetField<double>(VT_DURATION, 0.0);
   }
-  osrm::engine::api::fbresult::Geometry geometry_type() const {
-    return static_cast<osrm::engine::api::fbresult::Geometry>(GetField<uint8_t>(VT_GEOMETRY_TYPE, 0));
+  const osrm::engine::api::fbresult::Geometry *geometry() const {
+    return GetPointer<const osrm::engine::api::fbresult::Geometry *>(VT_GEOMETRY);
   }
-  const void *geometry() const {
-    return GetPointer<const void *>(VT_GEOMETRY);
-  }
-  const flatbuffers::String *geometry_as_polyline() const {
-    return geometry_type() == osrm::engine::api::fbresult::Geometry_polyline ? static_cast<const flatbuffers::String *>(geometry()) : nullptr;
-  }
-  const flatbuffers::String *geometry_as_polyline6() const {
-    return geometry_type() == osrm::engine::api::fbresult::Geometry_polyline6 ? static_cast<const flatbuffers::String *>(geometry()) : nullptr;
-  }
-  const osrm::engine::api::fbresult::Polyline *geometry_as_coordinates() const {
-    return geometry_type() == osrm::engine::api::fbresult::Geometry_coordinates ? static_cast<const osrm::engine::api::fbresult::Polyline *>(geometry()) : nullptr;
+  double weight() const {
+    return GetField<double>(VT_WEIGHT, 0.0);
   }
   const flatbuffers::String *name() const {
     return GetPointer<const flatbuffers::String *>(VT_NAME);
   }
-  uint32_t ref() const {
-    return GetField<uint32_t>(VT_REF, 0);
+  const flatbuffers::String *ref() const {
+    return GetPointer<const flatbuffers::String *>(VT_REF);
   }
   const flatbuffers::String *pronunciation() const {
     return GetPointer<const flatbuffers::String *>(VT_PRONUNCIATION);
   }
-  const flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>> *destinations() const {
-    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>> *>(VT_DESTINATIONS);
+  const flatbuffers::String *destinations() const {
+    return GetPointer<const flatbuffers::String *>(VT_DESTINATIONS);
   }
-  const flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>> *exits() const {
-    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>> *>(VT_EXITS);
+  const flatbuffers::String *exits() const {
+    return GetPointer<const flatbuffers::String *>(VT_EXITS);
   }
   const flatbuffers::String *mode() const {
     return GetPointer<const flatbuffers::String *>(VT_MODE);
@@ -1353,20 +1290,19 @@ struct Step FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
     return VerifyTableStart(verifier) &&
            VerifyField<double>(verifier, VT_DISTANCE) &&
            VerifyField<double>(verifier, VT_DURATION) &&
-           VerifyField<uint8_t>(verifier, VT_GEOMETRY_TYPE) &&
            VerifyOffset(verifier, VT_GEOMETRY) &&
-           VerifyGeometry(verifier, geometry(), geometry_type()) &&
+           verifier.VerifyTable(geometry()) &&
+           VerifyField<double>(verifier, VT_WEIGHT) &&
            VerifyOffset(verifier, VT_NAME) &&
            verifier.VerifyString(name()) &&
-           VerifyField<uint32_t>(verifier, VT_REF) &&
+           VerifyOffset(verifier, VT_REF) &&
+           verifier.VerifyString(ref()) &&
            VerifyOffset(verifier, VT_PRONUNCIATION) &&
            verifier.VerifyString(pronunciation()) &&
            VerifyOffset(verifier, VT_DESTINATIONS) &&
-           verifier.VerifyVector(destinations()) &&
-           verifier.VerifyVectorOfStrings(destinations()) &&
+           verifier.VerifyString(destinations()) &&
            VerifyOffset(verifier, VT_EXITS) &&
-           verifier.VerifyVector(exits()) &&
-           verifier.VerifyVectorOfStrings(exits()) &&
+           verifier.VerifyString(exits()) &&
            VerifyOffset(verifier, VT_MODE) &&
            verifier.VerifyString(mode()) &&
            VerifyOffset(verifier, VT_MANEUVER) &&
@@ -1395,25 +1331,25 @@ struct StepBuilder {
   void add_duration(double duration) {
     fbb_.AddElement<double>(Step::VT_DURATION, duration, 0.0);
   }
-  void add_geometry_type(osrm::engine::api::fbresult::Geometry geometry_type) {
-    fbb_.AddElement<uint8_t>(Step::VT_GEOMETRY_TYPE, static_cast<uint8_t>(geometry_type), 0);
-  }
-  void add_geometry(flatbuffers::Offset<void> geometry) {
+  void add_geometry(flatbuffers::Offset<osrm::engine::api::fbresult::Geometry> geometry) {
     fbb_.AddOffset(Step::VT_GEOMETRY, geometry);
+  }
+  void add_weight(double weight) {
+    fbb_.AddElement<double>(Step::VT_WEIGHT, weight, 0.0);
   }
   void add_name(flatbuffers::Offset<flatbuffers::String> name) {
     fbb_.AddOffset(Step::VT_NAME, name);
   }
-  void add_ref(uint32_t ref) {
-    fbb_.AddElement<uint32_t>(Step::VT_REF, ref, 0);
+  void add_ref(flatbuffers::Offset<flatbuffers::String> ref) {
+    fbb_.AddOffset(Step::VT_REF, ref);
   }
   void add_pronunciation(flatbuffers::Offset<flatbuffers::String> pronunciation) {
     fbb_.AddOffset(Step::VT_PRONUNCIATION, pronunciation);
   }
-  void add_destinations(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> destinations) {
+  void add_destinations(flatbuffers::Offset<flatbuffers::String> destinations) {
     fbb_.AddOffset(Step::VT_DESTINATIONS, destinations);
   }
-  void add_exits(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> exits) {
+  void add_exits(flatbuffers::Offset<flatbuffers::String> exits) {
     fbb_.AddOffset(Step::VT_EXITS, exits);
   }
   void add_mode(flatbuffers::Offset<flatbuffers::String> mode) {
@@ -1450,13 +1386,13 @@ inline flatbuffers::Offset<Step> CreateStep(
     flatbuffers::FlatBufferBuilder &_fbb,
     double distance = 0.0,
     double duration = 0.0,
-    osrm::engine::api::fbresult::Geometry geometry_type = osrm::engine::api::fbresult::Geometry_NONE,
-    flatbuffers::Offset<void> geometry = 0,
+    flatbuffers::Offset<osrm::engine::api::fbresult::Geometry> geometry = 0,
+    double weight = 0.0,
     flatbuffers::Offset<flatbuffers::String> name = 0,
-    uint32_t ref = 0,
+    flatbuffers::Offset<flatbuffers::String> ref = 0,
     flatbuffers::Offset<flatbuffers::String> pronunciation = 0,
-    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> destinations = 0,
-    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> exits = 0,
+    flatbuffers::Offset<flatbuffers::String> destinations = 0,
+    flatbuffers::Offset<flatbuffers::String> exits = 0,
     flatbuffers::Offset<flatbuffers::String> mode = 0,
     flatbuffers::Offset<osrm::engine::api::fbresult::StepManeuver> maneuver = 0,
     flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::Intersection>>> intersections = 0,
@@ -1464,6 +1400,7 @@ inline flatbuffers::Offset<Step> CreateStep(
     flatbuffers::Offset<flatbuffers::String> rotary_pronunciation = 0,
     bool driving_side = false) {
   StepBuilder builder_(_fbb);
+  builder_.add_weight(weight);
   builder_.add_duration(duration);
   builder_.add_distance(distance);
   builder_.add_rotary_pronunciation(rotary_pronunciation);
@@ -1478,7 +1415,6 @@ inline flatbuffers::Offset<Step> CreateStep(
   builder_.add_name(name);
   builder_.add_geometry(geometry);
   builder_.add_driving_side(driving_side);
-  builder_.add_geometry_type(geometry_type);
   return builder_.Finish();
 }
 
@@ -1486,13 +1422,13 @@ inline flatbuffers::Offset<Step> CreateStepDirect(
     flatbuffers::FlatBufferBuilder &_fbb,
     double distance = 0.0,
     double duration = 0.0,
-    osrm::engine::api::fbresult::Geometry geometry_type = osrm::engine::api::fbresult::Geometry_NONE,
-    flatbuffers::Offset<void> geometry = 0,
+    flatbuffers::Offset<osrm::engine::api::fbresult::Geometry> geometry = 0,
+    double weight = 0.0,
     const char *name = nullptr,
-    uint32_t ref = 0,
+    const char *ref = nullptr,
     const char *pronunciation = nullptr,
-    const std::vector<flatbuffers::Offset<flatbuffers::String>> *destinations = nullptr,
-    const std::vector<flatbuffers::Offset<flatbuffers::String>> *exits = nullptr,
+    const char *destinations = nullptr,
+    const char *exits = nullptr,
     const char *mode = nullptr,
     flatbuffers::Offset<osrm::engine::api::fbresult::StepManeuver> maneuver = 0,
     const std::vector<flatbuffers::Offset<osrm::engine::api::fbresult::Intersection>> *intersections = nullptr,
@@ -1500,9 +1436,10 @@ inline flatbuffers::Offset<Step> CreateStepDirect(
     const char *rotary_pronunciation = nullptr,
     bool driving_side = false) {
   auto name__ = name ? _fbb.CreateString(name) : 0;
+  auto ref__ = ref ? _fbb.CreateString(ref) : 0;
   auto pronunciation__ = pronunciation ? _fbb.CreateString(pronunciation) : 0;
-  auto destinations__ = destinations ? _fbb.CreateVector<flatbuffers::Offset<flatbuffers::String>>(*destinations) : 0;
-  auto exits__ = exits ? _fbb.CreateVector<flatbuffers::Offset<flatbuffers::String>>(*exits) : 0;
+  auto destinations__ = destinations ? _fbb.CreateString(destinations) : 0;
+  auto exits__ = exits ? _fbb.CreateString(exits) : 0;
   auto mode__ = mode ? _fbb.CreateString(mode) : 0;
   auto intersections__ = intersections ? _fbb.CreateVector<flatbuffers::Offset<osrm::engine::api::fbresult::Intersection>>(*intersections) : 0;
   auto rotary_name__ = rotary_name ? _fbb.CreateString(rotary_name) : 0;
@@ -1511,10 +1448,10 @@ inline flatbuffers::Offset<Step> CreateStepDirect(
       _fbb,
       distance,
       duration,
-      geometry_type,
       geometry,
+      weight,
       name__,
-      ref,
+      ref__,
       pronunciation__,
       destinations__,
       exits__,
@@ -1670,7 +1607,7 @@ struct RouteObjectT : public flatbuffers::NativeTable {
   double weight;
   std::string weight_name;
   double confidence;
-  GeometryUnion geometry;
+  std::unique_ptr<osrm::engine::api::fbresult::GeometryT> geometry;
   std::vector<std::unique_ptr<osrm::engine::api::fbresult::LegT>> legs;
   RouteObjectT()
       : distance(0.0),
@@ -1688,9 +1625,8 @@ struct RouteObject FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
     VT_WEIGHT = 8,
     VT_WEIGHT_NAME = 10,
     VT_CONFIDENCE = 12,
-    VT_GEOMETRY_TYPE = 14,
-    VT_GEOMETRY = 16,
-    VT_LEGS = 18
+    VT_GEOMETRY = 14,
+    VT_LEGS = 16
   };
   double distance() const {
     return GetField<double>(VT_DISTANCE, 0.0);
@@ -1707,20 +1643,8 @@ struct RouteObject FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   double confidence() const {
     return GetField<double>(VT_CONFIDENCE, 0.0);
   }
-  osrm::engine::api::fbresult::Geometry geometry_type() const {
-    return static_cast<osrm::engine::api::fbresult::Geometry>(GetField<uint8_t>(VT_GEOMETRY_TYPE, 0));
-  }
-  const void *geometry() const {
-    return GetPointer<const void *>(VT_GEOMETRY);
-  }
-  const flatbuffers::String *geometry_as_polyline() const {
-    return geometry_type() == osrm::engine::api::fbresult::Geometry_polyline ? static_cast<const flatbuffers::String *>(geometry()) : nullptr;
-  }
-  const flatbuffers::String *geometry_as_polyline6() const {
-    return geometry_type() == osrm::engine::api::fbresult::Geometry_polyline6 ? static_cast<const flatbuffers::String *>(geometry()) : nullptr;
-  }
-  const osrm::engine::api::fbresult::Polyline *geometry_as_coordinates() const {
-    return geometry_type() == osrm::engine::api::fbresult::Geometry_coordinates ? static_cast<const osrm::engine::api::fbresult::Polyline *>(geometry()) : nullptr;
+  const osrm::engine::api::fbresult::Geometry *geometry() const {
+    return GetPointer<const osrm::engine::api::fbresult::Geometry *>(VT_GEOMETRY);
   }
   const flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::Leg>> *legs() const {
     return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::Leg>> *>(VT_LEGS);
@@ -1733,9 +1657,8 @@ struct RouteObject FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
            VerifyOffset(verifier, VT_WEIGHT_NAME) &&
            verifier.VerifyString(weight_name()) &&
            VerifyField<double>(verifier, VT_CONFIDENCE) &&
-           VerifyField<uint8_t>(verifier, VT_GEOMETRY_TYPE) &&
            VerifyOffset(verifier, VT_GEOMETRY) &&
-           VerifyGeometry(verifier, geometry(), geometry_type()) &&
+           verifier.VerifyTable(geometry()) &&
            VerifyOffset(verifier, VT_LEGS) &&
            verifier.VerifyVector(legs()) &&
            verifier.VerifyVectorOfTables(legs()) &&
@@ -1764,10 +1687,7 @@ struct RouteObjectBuilder {
   void add_confidence(double confidence) {
     fbb_.AddElement<double>(RouteObject::VT_CONFIDENCE, confidence, 0.0);
   }
-  void add_geometry_type(osrm::engine::api::fbresult::Geometry geometry_type) {
-    fbb_.AddElement<uint8_t>(RouteObject::VT_GEOMETRY_TYPE, static_cast<uint8_t>(geometry_type), 0);
-  }
-  void add_geometry(flatbuffers::Offset<void> geometry) {
+  void add_geometry(flatbuffers::Offset<osrm::engine::api::fbresult::Geometry> geometry) {
     fbb_.AddOffset(RouteObject::VT_GEOMETRY, geometry);
   }
   void add_legs(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::Leg>>> legs) {
@@ -1792,8 +1712,7 @@ inline flatbuffers::Offset<RouteObject> CreateRouteObject(
     double weight = 0.0,
     flatbuffers::Offset<flatbuffers::String> weight_name = 0,
     double confidence = 0.0,
-    osrm::engine::api::fbresult::Geometry geometry_type = osrm::engine::api::fbresult::Geometry_NONE,
-    flatbuffers::Offset<void> geometry = 0,
+    flatbuffers::Offset<osrm::engine::api::fbresult::Geometry> geometry = 0,
     flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::Leg>>> legs = 0) {
   RouteObjectBuilder builder_(_fbb);
   builder_.add_confidence(confidence);
@@ -1803,7 +1722,6 @@ inline flatbuffers::Offset<RouteObject> CreateRouteObject(
   builder_.add_legs(legs);
   builder_.add_geometry(geometry);
   builder_.add_weight_name(weight_name);
-  builder_.add_geometry_type(geometry_type);
   return builder_.Finish();
 }
 
@@ -1814,8 +1732,7 @@ inline flatbuffers::Offset<RouteObject> CreateRouteObjectDirect(
     double weight = 0.0,
     const char *weight_name = nullptr,
     double confidence = 0.0,
-    osrm::engine::api::fbresult::Geometry geometry_type = osrm::engine::api::fbresult::Geometry_NONE,
-    flatbuffers::Offset<void> geometry = 0,
+    flatbuffers::Offset<osrm::engine::api::fbresult::Geometry> geometry = 0,
     const std::vector<flatbuffers::Offset<osrm::engine::api::fbresult::Leg>> *legs = nullptr) {
   auto weight_name__ = weight_name ? _fbb.CreateString(weight_name) : 0;
   auto legs__ = legs ? _fbb.CreateVector<flatbuffers::Offset<osrm::engine::api::fbresult::Leg>>(*legs) : 0;
@@ -1826,7 +1743,6 @@ inline flatbuffers::Offset<RouteObject> CreateRouteObjectDirect(
       weight,
       weight_name__,
       confidence,
-      geometry_type,
       geometry,
       legs__);
 }
@@ -2296,6 +2212,7 @@ struct FBResultT : public flatbuffers::NativeTable {
   typedef FBResult TableType;
   std::string code;
   std::string message;
+  std::string data_version;
   ServiceResponseUnion response;
   FBResultT() {
   }
@@ -2306,14 +2223,18 @@ struct FBResult FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_CODE = 4,
     VT_MESSAGE = 6,
-    VT_RESPONSE_TYPE = 8,
-    VT_RESPONSE = 10
+    VT_DATA_VERSION = 8,
+    VT_RESPONSE_TYPE = 10,
+    VT_RESPONSE = 12
   };
   const flatbuffers::String *code() const {
     return GetPointer<const flatbuffers::String *>(VT_CODE);
   }
   const flatbuffers::String *message() const {
     return GetPointer<const flatbuffers::String *>(VT_MESSAGE);
+  }
+  const flatbuffers::String *data_version() const {
+    return GetPointer<const flatbuffers::String *>(VT_DATA_VERSION);
   }
   osrm::engine::api::fbresult::ServiceResponse response_type() const {
     return static_cast<osrm::engine::api::fbresult::ServiceResponse>(GetField<uint8_t>(VT_RESPONSE_TYPE, 0));
@@ -2343,6 +2264,8 @@ struct FBResult FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
            verifier.VerifyString(code()) &&
            VerifyOffset(verifier, VT_MESSAGE) &&
            verifier.VerifyString(message()) &&
+           VerifyOffset(verifier, VT_DATA_VERSION) &&
+           verifier.VerifyString(data_version()) &&
            VerifyField<uint8_t>(verifier, VT_RESPONSE_TYPE) &&
            VerifyOffset(verifier, VT_RESPONSE) &&
            VerifyServiceResponse(verifier, response(), response_type()) &&
@@ -2382,6 +2305,9 @@ struct FBResultBuilder {
   void add_message(flatbuffers::Offset<flatbuffers::String> message) {
     fbb_.AddOffset(FBResult::VT_MESSAGE, message);
   }
+  void add_data_version(flatbuffers::Offset<flatbuffers::String> data_version) {
+    fbb_.AddOffset(FBResult::VT_DATA_VERSION, data_version);
+  }
   void add_response_type(osrm::engine::api::fbresult::ServiceResponse response_type) {
     fbb_.AddElement<uint8_t>(FBResult::VT_RESPONSE_TYPE, static_cast<uint8_t>(response_type), 0);
   }
@@ -2404,10 +2330,12 @@ inline flatbuffers::Offset<FBResult> CreateFBResult(
     flatbuffers::FlatBufferBuilder &_fbb,
     flatbuffers::Offset<flatbuffers::String> code = 0,
     flatbuffers::Offset<flatbuffers::String> message = 0,
+    flatbuffers::Offset<flatbuffers::String> data_version = 0,
     osrm::engine::api::fbresult::ServiceResponse response_type = osrm::engine::api::fbresult::ServiceResponse_NONE,
     flatbuffers::Offset<void> response = 0) {
   FBResultBuilder builder_(_fbb);
   builder_.add_response(response);
+  builder_.add_data_version(data_version);
   builder_.add_message(message);
   builder_.add_code(code);
   builder_.add_response_type(response_type);
@@ -2418,14 +2346,17 @@ inline flatbuffers::Offset<FBResult> CreateFBResultDirect(
     flatbuffers::FlatBufferBuilder &_fbb,
     const char *code = nullptr,
     const char *message = nullptr,
+    const char *data_version = nullptr,
     osrm::engine::api::fbresult::ServiceResponse response_type = osrm::engine::api::fbresult::ServiceResponse_NONE,
     flatbuffers::Offset<void> response = 0) {
   auto code__ = code ? _fbb.CreateString(code) : 0;
   auto message__ = message ? _fbb.CreateString(message) : 0;
+  auto data_version__ = data_version ? _fbb.CreateString(data_version) : 0;
   return osrm::engine::api::fbresult::CreateFBResult(
       _fbb,
       code__,
       message__,
+      data_version__,
       response_type,
       response);
 }
@@ -2666,30 +2597,36 @@ inline flatbuffers::Offset<Intersection> CreateIntersection(flatbuffers::FlatBuf
       _lanes);
 }
 
-inline PolylineT *Polyline::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
-  auto _o = new PolylineT();
+inline GeometryT *Geometry::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
+  auto _o = new GeometryT();
   UnPackTo(_o, _resolver);
   return _o;
 }
 
-inline void Polyline::UnPackTo(PolylineT *_o, const flatbuffers::resolver_function_t *_resolver) const {
+inline void Geometry::UnPackTo(GeometryT *_o, const flatbuffers::resolver_function_t *_resolver) const {
   (void)_o;
   (void)_resolver;
-  { auto _e = polyline(); if (_e) { _o->polyline.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->polyline[_i] = *_e->Get(_i); } } };
+  { auto _e = polyline(); if (_e) _o->polyline = _e->str(); };
+  { auto _e = polyline6(); if (_e) _o->polyline6 = _e->str(); };
+  { auto _e = coordinates(); if (_e) { _o->coordinates.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->coordinates[_i] = *_e->Get(_i); } } };
 }
 
-inline flatbuffers::Offset<Polyline> Polyline::Pack(flatbuffers::FlatBufferBuilder &_fbb, const PolylineT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
-  return CreatePolyline(_fbb, _o, _rehasher);
+inline flatbuffers::Offset<Geometry> Geometry::Pack(flatbuffers::FlatBufferBuilder &_fbb, const GeometryT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
+  return CreateGeometry(_fbb, _o, _rehasher);
 }
 
-inline flatbuffers::Offset<Polyline> CreatePolyline(flatbuffers::FlatBufferBuilder &_fbb, const PolylineT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
+inline flatbuffers::Offset<Geometry> CreateGeometry(flatbuffers::FlatBufferBuilder &_fbb, const GeometryT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
   (void)_rehasher;
   (void)_o;
-  struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const PolylineT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _polyline = _o->polyline.size() ? _fbb.CreateVectorOfStructs(_o->polyline) : 0;
-  return osrm::engine::api::fbresult::CreatePolyline(
+  struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const GeometryT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
+  auto _polyline = _o->polyline.empty() ? 0 : _fbb.CreateString(_o->polyline);
+  auto _polyline6 = _o->polyline6.empty() ? 0 : _fbb.CreateString(_o->polyline6);
+  auto _coordinates = _o->coordinates.size() ? _fbb.CreateVectorOfStructs(_o->coordinates) : 0;
+  return osrm::engine::api::fbresult::CreateGeometry(
       _fbb,
-      _polyline);
+      _polyline,
+      _polyline6,
+      _coordinates);
 }
 
 inline StepT *Step::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
@@ -2703,13 +2640,13 @@ inline void Step::UnPackTo(StepT *_o, const flatbuffers::resolver_function_t *_r
   (void)_resolver;
   { auto _e = distance(); _o->distance = _e; };
   { auto _e = duration(); _o->duration = _e; };
-  { auto _e = geometry_type(); _o->geometry.type = _e; };
-  { auto _e = geometry(); if (_e) _o->geometry.value = GeometryUnion::UnPack(_e, geometry_type(), _resolver); };
+  { auto _e = geometry(); if (_e) _o->geometry = std::unique_ptr<osrm::engine::api::fbresult::GeometryT>(_e->UnPack(_resolver)); };
+  { auto _e = weight(); _o->weight = _e; };
   { auto _e = name(); if (_e) _o->name = _e->str(); };
-  { auto _e = ref(); _o->ref = _e; };
+  { auto _e = ref(); if (_e) _o->ref = _e->str(); };
   { auto _e = pronunciation(); if (_e) _o->pronunciation = _e->str(); };
-  { auto _e = destinations(); if (_e) { _o->destinations.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->destinations[_i] = _e->Get(_i)->str(); } } };
-  { auto _e = exits(); if (_e) { _o->exits.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->exits[_i] = _e->Get(_i)->str(); } } };
+  { auto _e = destinations(); if (_e) _o->destinations = _e->str(); };
+  { auto _e = exits(); if (_e) _o->exits = _e->str(); };
   { auto _e = mode(); if (_e) _o->mode = _e->str(); };
   { auto _e = maneuver(); if (_e) _o->maneuver = std::unique_ptr<osrm::engine::api::fbresult::StepManeuverT>(_e->UnPack(_resolver)); };
   { auto _e = intersections(); if (_e) { _o->intersections.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->intersections[_i] = std::unique_ptr<osrm::engine::api::fbresult::IntersectionT>(_e->Get(_i)->UnPack(_resolver)); } } };
@@ -2728,13 +2665,13 @@ inline flatbuffers::Offset<Step> CreateStep(flatbuffers::FlatBufferBuilder &_fbb
   struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const StepT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
   auto _distance = _o->distance;
   auto _duration = _o->duration;
-  auto _geometry_type = _o->geometry.type;
-  auto _geometry = _o->geometry.Pack(_fbb);
+  auto _geometry = _o->geometry ? CreateGeometry(_fbb, _o->geometry.get(), _rehasher) : 0;
+  auto _weight = _o->weight;
   auto _name = _o->name.empty() ? 0 : _fbb.CreateString(_o->name);
-  auto _ref = _o->ref;
+  auto _ref = _o->ref.empty() ? 0 : _fbb.CreateString(_o->ref);
   auto _pronunciation = _o->pronunciation.empty() ? 0 : _fbb.CreateString(_o->pronunciation);
-  auto _destinations = _o->destinations.size() ? _fbb.CreateVectorOfStrings(_o->destinations) : 0;
-  auto _exits = _o->exits.size() ? _fbb.CreateVectorOfStrings(_o->exits) : 0;
+  auto _destinations = _o->destinations.empty() ? 0 : _fbb.CreateString(_o->destinations);
+  auto _exits = _o->exits.empty() ? 0 : _fbb.CreateString(_o->exits);
   auto _mode = _o->mode.empty() ? 0 : _fbb.CreateString(_o->mode);
   auto _maneuver = _o->maneuver ? CreateStepManeuver(_fbb, _o->maneuver.get(), _rehasher) : 0;
   auto _intersections = _o->intersections.size() ? _fbb.CreateVector<flatbuffers::Offset<osrm::engine::api::fbresult::Intersection>> (_o->intersections.size(), [](size_t i, _VectorArgs *__va) { return CreateIntersection(*__va->__fbb, __va->__o->intersections[i].get(), __va->__rehasher); }, &_va ) : 0;
@@ -2745,8 +2682,8 @@ inline flatbuffers::Offset<Step> CreateStep(flatbuffers::FlatBufferBuilder &_fbb
       _fbb,
       _distance,
       _duration,
-      _geometry_type,
       _geometry,
+      _weight,
       _name,
       _ref,
       _pronunciation,
@@ -2815,8 +2752,7 @@ inline void RouteObject::UnPackTo(RouteObjectT *_o, const flatbuffers::resolver_
   { auto _e = weight(); _o->weight = _e; };
   { auto _e = weight_name(); if (_e) _o->weight_name = _e->str(); };
   { auto _e = confidence(); _o->confidence = _e; };
-  { auto _e = geometry_type(); _o->geometry.type = _e; };
-  { auto _e = geometry(); if (_e) _o->geometry.value = GeometryUnion::UnPack(_e, geometry_type(), _resolver); };
+  { auto _e = geometry(); if (_e) _o->geometry = std::unique_ptr<osrm::engine::api::fbresult::GeometryT>(_e->UnPack(_resolver)); };
   { auto _e = legs(); if (_e) { _o->legs.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->legs[_i] = std::unique_ptr<osrm::engine::api::fbresult::LegT>(_e->Get(_i)->UnPack(_resolver)); } } };
 }
 
@@ -2833,8 +2769,7 @@ inline flatbuffers::Offset<RouteObject> CreateRouteObject(flatbuffers::FlatBuffe
   auto _weight = _o->weight;
   auto _weight_name = _o->weight_name.empty() ? 0 : _fbb.CreateString(_o->weight_name);
   auto _confidence = _o->confidence;
-  auto _geometry_type = _o->geometry.type;
-  auto _geometry = _o->geometry.Pack(_fbb);
+  auto _geometry = _o->geometry ? CreateGeometry(_fbb, _o->geometry.get(), _rehasher) : 0;
   auto _legs = _o->legs.size() ? _fbb.CreateVector<flatbuffers::Offset<osrm::engine::api::fbresult::Leg>> (_o->legs.size(), [](size_t i, _VectorArgs *__va) { return CreateLeg(*__va->__fbb, __va->__o->legs[i].get(), __va->__rehasher); }, &_va ) : 0;
   return osrm::engine::api::fbresult::CreateRouteObject(
       _fbb,
@@ -2843,7 +2778,6 @@ inline flatbuffers::Offset<RouteObject> CreateRouteObject(flatbuffers::FlatBuffe
       _weight,
       _weight_name,
       _confidence,
-      _geometry_type,
       _geometry,
       _legs);
 }
@@ -3016,6 +2950,7 @@ inline void FBResult::UnPackTo(FBResultT *_o, const flatbuffers::resolver_functi
   (void)_resolver;
   { auto _e = code(); if (_e) _o->code = _e->str(); };
   { auto _e = message(); if (_e) _o->message = _e->str(); };
+  { auto _e = data_version(); if (_e) _o->data_version = _e->str(); };
   { auto _e = response_type(); _o->response.type = _e; };
   { auto _e = response(); if (_e) _o->response.value = ServiceResponseUnion::UnPack(_e, response_type(), _resolver); };
 }
@@ -3030,125 +2965,16 @@ inline flatbuffers::Offset<FBResult> CreateFBResult(flatbuffers::FlatBufferBuild
   struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const FBResultT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
   auto _code = _o->code.empty() ? 0 : _fbb.CreateString(_o->code);
   auto _message = _o->message.empty() ? 0 : _fbb.CreateString(_o->message);
+  auto _data_version = _o->data_version.empty() ? 0 : _fbb.CreateString(_o->data_version);
   auto _response_type = _o->response.type;
   auto _response = _o->response.Pack(_fbb);
   return osrm::engine::api::fbresult::CreateFBResult(
       _fbb,
       _code,
       _message,
+      _data_version,
       _response_type,
       _response);
-}
-
-inline bool VerifyGeometry(flatbuffers::Verifier &verifier, const void *obj, Geometry type) {
-  switch (type) {
-    case Geometry_NONE: {
-      return true;
-    }
-    case Geometry_polyline: {
-      auto ptr = reinterpret_cast<const flatbuffers::String *>(obj);
-      return verifier.VerifyString(ptr);
-    }
-    case Geometry_polyline6: {
-      auto ptr = reinterpret_cast<const flatbuffers::String *>(obj);
-      return verifier.VerifyString(ptr);
-    }
-    case Geometry_coordinates: {
-      auto ptr = reinterpret_cast<const osrm::engine::api::fbresult::Polyline *>(obj);
-      return verifier.VerifyTable(ptr);
-    }
-    default: return false;
-  }
-}
-
-inline bool VerifyGeometryVector(flatbuffers::Verifier &verifier, const flatbuffers::Vector<flatbuffers::Offset<void>> *values, const flatbuffers::Vector<uint8_t> *types) {
-  if (!values || !types) return !values && !types;
-  if (values->size() != types->size()) return false;
-  for (flatbuffers::uoffset_t i = 0; i < values->size(); ++i) {
-    if (!VerifyGeometry(
-        verifier,  values->Get(i), types->GetEnum<Geometry>(i))) {
-      return false;
-    }
-  }
-  return true;
-}
-
-inline void *GeometryUnion::UnPack(const void *obj, Geometry type, const flatbuffers::resolver_function_t *resolver) {
-  switch (type) {
-    case Geometry_polyline: {
-      auto ptr = reinterpret_cast<const flatbuffers::String *>(obj);
-      return new std::string(ptr->c_str(), ptr->size());
-    }
-    case Geometry_polyline6: {
-      auto ptr = reinterpret_cast<const flatbuffers::String *>(obj);
-      return new std::string(ptr->c_str(), ptr->size());
-    }
-    case Geometry_coordinates: {
-      auto ptr = reinterpret_cast<const osrm::engine::api::fbresult::Polyline *>(obj);
-      return ptr->UnPack(resolver);
-    }
-    default: return nullptr;
-  }
-}
-
-inline flatbuffers::Offset<void> GeometryUnion::Pack(flatbuffers::FlatBufferBuilder &_fbb, const flatbuffers::rehasher_function_t *_rehasher) const {
-  switch (type) {
-    case Geometry_polyline: {
-      auto ptr = reinterpret_cast<const std::string *>(value);
-      return _fbb.CreateString(*ptr).Union();
-    }
-    case Geometry_polyline6: {
-      auto ptr = reinterpret_cast<const std::string *>(value);
-      return _fbb.CreateString(*ptr).Union();
-    }
-    case Geometry_coordinates: {
-      auto ptr = reinterpret_cast<const osrm::engine::api::fbresult::PolylineT *>(value);
-      return CreatePolyline(_fbb, ptr, _rehasher).Union();
-    }
-    default: return 0;
-  }
-}
-
-inline GeometryUnion::GeometryUnion(const GeometryUnion &u) FLATBUFFERS_NOEXCEPT : type(u.type), value(nullptr) {
-  switch (type) {
-    case Geometry_polyline: {
-      value = new std::string(*reinterpret_cast<std::string *>(u.value));
-      break;
-    }
-    case Geometry_polyline6: {
-      value = new std::string(*reinterpret_cast<std::string *>(u.value));
-      break;
-    }
-    case Geometry_coordinates: {
-      FLATBUFFERS_ASSERT(false);  // osrm::engine::api::fbresult::PolylineT not copyable.
-      break;
-    }
-    default:
-      break;
-  }
-}
-
-inline void GeometryUnion::Reset() {
-  switch (type) {
-    case Geometry_polyline: {
-      auto ptr = reinterpret_cast<std::string *>(value);
-      delete ptr;
-      break;
-    }
-    case Geometry_polyline6: {
-      auto ptr = reinterpret_cast<std::string *>(value);
-      delete ptr;
-      break;
-    }
-    case Geometry_coordinates: {
-      auto ptr = reinterpret_cast<osrm::engine::api::fbresult::PolylineT *>(value);
-      delete ptr;
-      break;
-    }
-    default: break;
-  }
-  value = nullptr;
-  type = Geometry_NONE;
 }
 
 inline bool VerifyServiceResponse(flatbuffers::Verifier &verifier, const void *obj, ServiceResponse type) {
