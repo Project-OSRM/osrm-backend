@@ -16,6 +16,24 @@ module.exports = function () {
         return this.sendRequest(uri, params, callback);
     };
 
+    this.requestMonitoring = (callback) => {
+        var uri = this.query = this.MONITORING_HOST,
+            limit = Timeout(this.TIMEOUT, { err: { statusCode: 408 } });
+        function runRequest (cb) {
+            request(uri, cb);
+        }
+
+        runRequest(limit((err, res, body) => {
+            if (err) {
+                if (err.statusCode === 408) throw new Error('*** osrm monitoring endpoint did not respond');
+                else if (err.code === 'ECONNREFUSED')
+                    throw new Error('*** osrm monitoring endpoint is not running', uri);
+            } else
+                return callback(err, res, body);
+        }));
+
+    };
+
     this.requestUrl = (path, callback) => {
         var uri = this.query = [this.HOST, path].join('/'),
             limit = Timeout(this.TIMEOUT, { err: { statusCode: 408 } });
