@@ -12,6 +12,7 @@
       - ADDED: keepalive support to the osrm-routed HTTP server [#5518](https://github.com/Project-OSRM/osrm-backend/pull/5518)
       - ADDED: flatbuffers output format support [#5513](https://github.com/Project-OSRM/osrm-backend/pull/5513)
       - ADDED: Global 'skip_waypoints' option [#5556](https://github.com/Project-OSRM/osrm-backend/pull/5556)
+      - ADDED: monitoring endpoint in prometheus format [#5180](https://github.com/Project-OSRM/osrm-backend/pull/5180)
       - FIXED: Install the libosrm_guidance library correctly [#5604](https://github.com/Project-OSRM/osrm-backend/pull/5604)
       - FIXED: Http Handler can now deal witch optional whitespace between header-key and -value [#5606](https://github.com/Project-OSRM/osrm-backend/issues/5606)
     - Routing:
