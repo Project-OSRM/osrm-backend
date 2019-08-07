@@ -26,7 +26,7 @@ class RequestHandler
 
     void RegisterServiceHandler(std::shared_ptr<ServiceHandlerInterface> service_handler);
 
-    //TODO make interface and two siblings
+    // TODO make interface and two siblings for the regular request handler and for the monitoring
     virtual void HandleRequest(const http::request &current_request, http::reply &current_reply);
 
   protected:

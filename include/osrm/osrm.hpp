@@ -29,9 +29,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define OSRM_HPP
 
 #include "engine/api/base_result.hpp"
+#include "osrm/engine_info.hpp"
 #include "osrm/osrm_fwd.hpp"
 #include "osrm/status.hpp"
-#include "osrm/engine_info.hpp"
 
 #include <memory>
 #include <string>
@@ -135,11 +135,11 @@ class OSRM final
     /**
      * Tile: engine state information for monitoring purposes
      */
-    const EngineInfo & Info() const;
+    const EngineInfo &Info() const;
 
   private:
     std::unique_ptr<engine::EngineInterface> engine_;
 };
-}
+} // namespace osrm
 
 #endif // OSRM_HPP

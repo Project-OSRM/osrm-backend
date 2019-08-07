@@ -115,8 +115,7 @@ inline unsigned generateServerProgramOptions(const int argc,
         ("port,p",
          value<int>(&ip_port)->default_value(5000),
          "TCP/IP port") //
-        (
-         "metrics_port,P",
+        ("metrics_port,P",
          value<int>(&ip_port_metrics)->default_value(0),
          "TCP/IP port for prometheus metrics exporter. Leave 0 if do not start server for "
          "metrics") //
@@ -338,10 +337,8 @@ int main(int argc, const char *argv[]) try
 #else
         // Set console control handler to allow server to be stopped.
         console_ctrl_function = std::bind(&server::Server::Stop, routing_server);
-        console_ctrl_function_monitoring =
-            std::bind(&monitoring::Monitoring::Stop, monitoring_server);
+        console_ctrl_function_monitoring = std::bind(&server::Monitoring::Stop, monitoring_server);
         SetConsoleCtrlHandler(console_ctrl_handler, TRUE);
-        SetConsoleCtrlHandler(console_ctrl_handler_monitoring, TRUE);
         util::Log() << "running and waiting for requests";
         monitoring_server->Run();
         routing_server->Run();

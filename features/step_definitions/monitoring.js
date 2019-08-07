@@ -1,7 +1,5 @@
 'use strict';
 
-var util = require('util');
-
 module.exports = function () {
     this.When(/^I monitor I should get$/, (table, callback) => {
         var got = {};
@@ -16,9 +14,8 @@ module.exports = function () {
                     var metrics = {};
                     rows.forEach((r) => {
                         if (r.includes('{')) {
-                            var k = r.split('{')[0],
-                                v = r.split('}')[1].split(' ')[1];
-                            metrics[k] = v;
+                            var k = r.split('{')[0];
+                            metrics[k] = r.split('}')[1].split(' ')[1];
                         } else {
                             var kv = r.split(' ');
                             metrics[kv[0]] = kv[1];
@@ -34,13 +31,13 @@ module.exports = function () {
                     }
 
 
-                    if (!metrics.hasOwnProperty("osrm_routed_instance_info")) {
-                        throw new Error("Have no instance information inside the monitoring!");
+                    if (!metrics.hasOwnProperty('osrm_routed_instance_info')) {
+                        throw new Error('Have no instance information inside the monitoring!');
                     }
                     cb(null, got);
                 };
                 this.requestMonitoring(afterRequest);
-            }
+            };
             this.processRowsAndDiff(table, testRow, callback);
         });
     });

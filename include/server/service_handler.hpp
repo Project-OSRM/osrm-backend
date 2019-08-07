@@ -4,8 +4,8 @@
 #include "server/service/base_service.hpp"
 
 #include "engine/api/base_api.hpp"
-#include "osrm/osrm.hpp"
 #include "engine/engine_info.hpp"
+#include "osrm/osrm.hpp"
 
 #include <atomic>
 #include <unordered_map>
@@ -47,7 +47,7 @@ class ServiceHandler final : public ServiceHandlerInterface
 
     virtual engine::Status RunQuery(api::ParsedURL parsed_url, ResultT &result) override;
 
-    virtual const engine::EngineInfo & GetEngineInfo() const override;
+    virtual const engine::EngineInfo &GetEngineInfo() const override;
     virtual const HandlersCounter GetUsage() const override;
     virtual std::uint32_t GetLoad() const override;
 

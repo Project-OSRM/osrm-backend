@@ -1,6 +1,6 @@
 ## Abstract
 
-OSRM routed daemon publish helath information in prometheus format.
+OSRM routed daemon publish health information in prometheus format.
 This option switched off by default. To enable this feature please set `-P <monitoring_port>` option on OSRM routed startup.
 
 

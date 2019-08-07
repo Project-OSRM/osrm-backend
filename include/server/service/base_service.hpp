@@ -28,7 +28,7 @@ class BaseService
     RunQuery(std::size_t prefix_length, std::string &query, osrm::engine::api::ResultT &result) = 0;
 
     virtual unsigned GetVersion() = 0;
-    uint32_t GetUsage() {return usage;}
+    uint32_t GetUsage() { return usage; }
 
   protected:
     OSRM &routing_machine;

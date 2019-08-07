@@ -27,7 +27,7 @@ module.exports = function () {
             if (err) {
                 if (err.statusCode === 408) throw new Error('*** osrm monitoring endpoint did not respond');
                 else if (err.code === 'ECONNREFUSED')
-                    throw new Error('*** osrm monitoring endpoint is not running', uri);
+                    throw new Error('*** osrm monitoring endpoint is not running');
             } else
                 return callback(err, res, body);
         }));

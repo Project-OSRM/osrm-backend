@@ -9,6 +9,9 @@
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
 
+#include <string>
+#include <thread>
+
 namespace osrm
 {
 namespace server
