@@ -42,7 +42,7 @@ public:
             : BaseAPI(facade_, parameters_), parameters(parameters_) {
     }
 
-    virtual void
+    void
     MakeResponse(const InternalManyRoutesResult &raw_routes,
                  const std::vector<PhantomNodes>
                  &all_start_end_points, // all used coordinates, ignoring waypoints= parameter
@@ -64,25 +64,9 @@ public:
                  &all_start_end_points, // all used coordinates, ignoring waypoints= parameter
                  flatbuffers::FlatBufferBuilder &fb_result) const
     {
-
-        fbresult::FBResultBuilder response(fb_result);
-
-        std::vector<flatbuffers::Offset<fbresult::RouteObject>> routes;
-        for (const auto &raw_route : raw_routes.routes)
-        {
-            if (!raw_route.is_valid())
-                continue;
-
-            routes.push_back(MakeRoute(fb_result,
-                                       raw_route.segment_end_coordinates,
-                                       raw_route.unpacked_path_segments,
-                                       raw_route.source_traversed_in_reverse,
-                                       raw_route.target_traversed_in_reverse));
-        }
-
-        auto routes_vector = fb_result.CreateVector(routes);
-        response.add_routes(routes_vector);
-        response.add_waypoints(BaseAPI::MakeWaypoints(fb_result, all_start_end_points));
+        auto response = MakeFBResponse(raw_routes, fb_result, [this, &all_start_end_points, &fb_result]() {
+            return BaseAPI::MakeWaypoints(fb_result, all_start_end_points);
+        });
 
         auto data_timestamp = facade.GetTimestamp();
         if (!data_timestamp.empty())
@@ -93,6 +77,7 @@ public:
 
         fb_result.Finish(response.Finish());
     }
+
     void
     MakeResponse(const InternalManyRoutesResult &raw_routes,
                  const std::vector<PhantomNodes>
@@ -123,6 +108,35 @@ public:
     }
 
   protected:
+    template <typename GetWptsFn>
+    fbresult::FBResultBuilder
+    MakeFBResponse(const InternalManyRoutesResult &raw_routes,
+                   flatbuffers::FlatBufferBuilder &fb_result,
+                   GetWptsFn getWaypoints) const
+    {
+
+        fbresult::FBResultBuilder response(fb_result);
+
+        std::vector<flatbuffers::Offset<fbresult::RouteObject>> routes;
+        for (const auto &raw_route : raw_routes.routes)
+        {
+            if (!raw_route.is_valid())
+                continue;
+
+            routes.push_back(MakeRoute(fb_result,
+                                       raw_route.segment_end_coordinates,
+                                       raw_route.unpacked_path_segments,
+                                       raw_route.source_traversed_in_reverse,
+                                       raw_route.target_traversed_in_reverse));
+        }
+
+        auto routes_vector = fb_result.CreateVector(routes);
+        response.add_routes(routes_vector);
+        response.add_waypoints(getWaypoints());
+
+        return response;
+    }
+
     template <typename BuilderType, typename ForwardIter>
     void MakeGeometry(BuilderType builder, ForwardIter begin, ForwardIter end) const
     {

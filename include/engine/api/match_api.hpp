@@ -46,20 +46,7 @@ class MatchAPI final : public RouteAPI
                       const std::vector<InternalRouteResult> &sub_routes,
                       flatbuffers::FlatBufferBuilder &fb_result) const
     {
-        fbresult::FBResultBuilder response(fb_result);
-
-        std::vector<flatbuffers::Offset<fbresult::RouteObject>> routes;
-        routes.reserve(sub_matchings.size());
-        for (auto index : util::irange<std::size_t>(0UL, sub_matchings.size()))
-        {
-            routes.push_back(MakeRoute(fb_result,
-                                       sub_routes[index].segment_end_coordinates,
-                                       sub_routes[index].unpacked_path_segments,
-                                       sub_routes[index].source_traversed_in_reverse,
-                                       sub_routes[index].target_traversed_in_reverse));
-        }
-        response.add_routes(fb_result.CreateVector(routes));
-        response.add_waypoints(fb_result.CreateVector(MakeTracepoints(fb_result, sub_matchings)));
+        auto response = MakeFBResponse(sub_routes, fb_result, [this, &fb_result, &sub_matchings]() { return MakeTracepoints(fb_result, sub_matchings); });
 
         fb_result.Finish(response.Finish());
     }
@@ -106,7 +93,7 @@ class MatchAPI final : public RouteAPI
         }
     };
 
-    std::vector<flatbuffers::Offset<fbresult::Waypoint>>
+    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<fbresult::Waypoint>>>
     MakeTracepoints(flatbuffers::FlatBufferBuilder &fb_result, const std::vector<map_matching::SubMatching> &sub_matchings) const
     {
         std::vector<flatbuffers::Offset<fbresult::Waypoint>> waypoints;
@@ -156,7 +143,7 @@ class MatchAPI final : public RouteAPI
             waypoints.push_back(waypoint.Finish());
         }
 
-        return waypoints;
+        return fb_result.CreateVector(waypoints);
     }
 
     util::json::Array

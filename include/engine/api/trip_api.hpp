@@ -45,20 +45,8 @@ class TripAPI final : public RouteAPI
                       const std::vector<PhantomNode> &phantoms,
                       flatbuffers::FlatBufferBuilder &fb_result) const
     {
-        fbresult::FBResultBuilder response(fb_result);
+        auto response = MakeFBResponse(sub_routes, fb_result, [this, &fb_result, &sub_trips, &phantoms]() { return MakeWaypoints(fb_result, sub_trips, phantoms); });
 
-        std::vector<flatbuffers::Offset<fbresult::RouteObject>> routes;
-        routes.reserve(sub_trips.size());
-        for (auto index : util::irange<std::size_t>(0UL, sub_trips.size()))
-        {
-            routes.push_back(MakeRoute(fb_result,
-                                   sub_routes[index].segment_end_coordinates,
-                                   sub_routes[index].unpacked_path_segments,
-                                   sub_routes[index].source_traversed_in_reverse,
-                                   sub_routes[index].target_traversed_in_reverse));
-        }
-        response.add_routes(fb_result.CreateVector(routes));
-        response.add_waypoints(fb_result.CreateVector(MakeWaypoints(fb_result, sub_trips, phantoms)));
         fb_result.Finish(response.Finish());
     }
     void MakeResponse(const std::vector<std::vector<NodeID>> &sub_trips,
@@ -102,7 +90,7 @@ class TripAPI final : public RouteAPI
         }
     };
 
-    std::vector<flatbuffers::Offset<fbresult::Waypoint>> MakeWaypoints(flatbuffers::FlatBufferBuilder &fb_result,
+    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<fbresult::Waypoint>>> MakeWaypoints(flatbuffers::FlatBufferBuilder &fb_result,
                                                                        const std::vector<std::vector<NodeID>> &sub_trips,
                                                                        const std::vector<PhantomNode> &phantoms) const
     {
@@ -122,7 +110,7 @@ class TripAPI final : public RouteAPI
             waypoints.push_back(waypoint.Finish());
         }
 
-        return waypoints;
+        return fb_result.CreateVector(waypoints);
     }
 
     util::json::Array MakeWaypoints(const std::vector<std::vector<NodeID>> &sub_trips,
