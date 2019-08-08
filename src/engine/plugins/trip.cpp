@@ -146,7 +146,6 @@ Status TripPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
                                  const api::TripParameters &parameters,
                                  osrm::engine::api::ResultT &result) const
 {
-    auto& json_result = result.get<util::json::Object>();
     if (!algorithms.HasShortestPathSearch())
     {
         return Error("NotImplemented",
@@ -276,7 +275,7 @@ Status TripPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
     const std::vector<std::vector<NodeID>> trips = {duration_trip};
     const std::vector<InternalRouteResult> routes = {route};
     api::TripAPI trip_api{facade, parameters};
-    trip_api.MakeResponse(trips, routes, snapped_phantoms, json_result);
+    trip_api.MakeResponse(trips, routes, snapped_phantoms, result);
 
     return Status::Ok;
 }

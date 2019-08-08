@@ -69,6 +69,12 @@ engine::Status TripService::RunQuery(std::size_t prefix_length, std::string &que
     }
     BOOST_ASSERT(parameters->IsValid());
 
+    if (parameters->format)
+    {
+        if (parameters->format == engine::api::BaseParameters::OutputFormatType::FLATBUFFERS) {
+            result = flatbuffers::FlatBufferBuilder();
+        }
+    }
     return BaseService::routing_machine.Trip(*parameters, result);
 }
 }

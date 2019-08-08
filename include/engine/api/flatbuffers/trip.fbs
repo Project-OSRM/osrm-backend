@@ -3,5 +3,5 @@ namespace osrm.engine.api.fbresult;
 
 table Trip {
     waypoints: [Waypoint];
-    trips: [Route];
+    trips: [RouteObject];
 }
