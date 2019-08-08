@@ -3,5 +3,5 @@ namespace osrm.engine.api.fbresult;
 
 table Match {
     tracepoints: [Waypoint];
-    matchings: [Route];
+    matchings: [RouteObject];
 }

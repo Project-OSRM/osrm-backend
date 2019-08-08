@@ -1628,7 +1628,7 @@ flatbuffers::Offset<Route> CreateRoute(flatbuffers::FlatBufferBuilder &_fbb, con
 struct MatchT : public flatbuffers::NativeTable {
   typedef Match TableType;
   std::vector<std::unique_ptr<osrm::engine::api::fbresult::WaypointT>> tracepoints;
-  std::vector<std::unique_ptr<osrm::engine::api::fbresult::RouteT>> matchings;
+  std::vector<std::unique_ptr<osrm::engine::api::fbresult::RouteObjectT>> matchings;
   MatchT() {
   }
 };
@@ -1642,8 +1642,8 @@ struct Match FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   const flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>> *tracepoints() const {
     return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>> *>(VT_TRACEPOINTS);
   }
-  const flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::Route>> *matchings() const {
-    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::Route>> *>(VT_MATCHINGS);
+  const flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::RouteObject>> *matchings() const {
+    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::RouteObject>> *>(VT_MATCHINGS);
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
@@ -1666,7 +1666,7 @@ struct MatchBuilder {
   void add_tracepoints(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>>> tracepoints) {
     fbb_.AddOffset(Match::VT_TRACEPOINTS, tracepoints);
   }
-  void add_matchings(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::Route>>> matchings) {
+  void add_matchings(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::RouteObject>>> matchings) {
     fbb_.AddOffset(Match::VT_MATCHINGS, matchings);
   }
   explicit MatchBuilder(flatbuffers::FlatBufferBuilder &_fbb)
@@ -1684,7 +1684,7 @@ struct MatchBuilder {
 inline flatbuffers::Offset<Match> CreateMatch(
     flatbuffers::FlatBufferBuilder &_fbb,
     flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>>> tracepoints = 0,
-    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::Route>>> matchings = 0) {
+    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::RouteObject>>> matchings = 0) {
   MatchBuilder builder_(_fbb);
   builder_.add_matchings(matchings);
   builder_.add_tracepoints(tracepoints);
@@ -1694,9 +1694,9 @@ inline flatbuffers::Offset<Match> CreateMatch(
 inline flatbuffers::Offset<Match> CreateMatchDirect(
     flatbuffers::FlatBufferBuilder &_fbb,
     const std::vector<flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>> *tracepoints = nullptr,
-    const std::vector<flatbuffers::Offset<osrm::engine::api::fbresult::Route>> *matchings = nullptr) {
+    const std::vector<flatbuffers::Offset<osrm::engine::api::fbresult::RouteObject>> *matchings = nullptr) {
   auto tracepoints__ = tracepoints ? _fbb.CreateVector<flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>>(*tracepoints) : 0;
-  auto matchings__ = matchings ? _fbb.CreateVector<flatbuffers::Offset<osrm::engine::api::fbresult::Route>>(*matchings) : 0;
+  auto matchings__ = matchings ? _fbb.CreateVector<flatbuffers::Offset<osrm::engine::api::fbresult::RouteObject>>(*matchings) : 0;
   return osrm::engine::api::fbresult::CreateMatch(
       _fbb,
       tracepoints__,
@@ -2675,7 +2675,7 @@ inline void Match::UnPackTo(MatchT *_o, const flatbuffers::resolver_function_t *
   (void)_o;
   (void)_resolver;
   { auto _e = tracepoints(); if (_e) { _o->tracepoints.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->tracepoints[_i] = std::unique_ptr<osrm::engine::api::fbresult::WaypointT>(_e->Get(_i)->UnPack(_resolver)); } } };
-  { auto _e = matchings(); if (_e) { _o->matchings.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->matchings[_i] = std::unique_ptr<osrm::engine::api::fbresult::RouteT>(_e->Get(_i)->UnPack(_resolver)); } } };
+  { auto _e = matchings(); if (_e) { _o->matchings.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->matchings[_i] = std::unique_ptr<osrm::engine::api::fbresult::RouteObjectT>(_e->Get(_i)->UnPack(_resolver)); } } };
 }
 
 inline flatbuffers::Offset<Match> Match::Pack(flatbuffers::FlatBufferBuilder &_fbb, const MatchT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
@@ -2687,7 +2687,7 @@ inline flatbuffers::Offset<Match> CreateMatch(flatbuffers::FlatBufferBuilder &_f
   (void)_o;
   struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const MatchT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
   auto _tracepoints = _o->tracepoints.size() ? _fbb.CreateVector<flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>> (_o->tracepoints.size(), [](size_t i, _VectorArgs *__va) { return CreateWaypoint(*__va->__fbb, __va->__o->tracepoints[i].get(), __va->__rehasher); }, &_va ) : 0;
-  auto _matchings = _o->matchings.size() ? _fbb.CreateVector<flatbuffers::Offset<osrm::engine::api::fbresult::Route>> (_o->matchings.size(), [](size_t i, _VectorArgs *__va) { return CreateRoute(*__va->__fbb, __va->__o->matchings[i].get(), __va->__rehasher); }, &_va ) : 0;
+  auto _matchings = _o->matchings.size() ? _fbb.CreateVector<flatbuffers::Offset<osrm::engine::api::fbresult::RouteObject>> (_o->matchings.size(), [](size_t i, _VectorArgs *__va) { return CreateRouteObject(*__va->__fbb, __va->__o->matchings[i].get(), __va->__rehasher); }, &_va ) : 0;
   return osrm::engine::api::fbresult::CreateMatch(
       _fbb,
       _tracepoints,

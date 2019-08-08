@@ -114,7 +114,6 @@ Status MatchPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
                                   const api::MatchParameters &parameters,
                                   osrm::engine::api::ResultT &result) const
 {
-    auto& json_result = result.get<util::json::Object>();
     if (!algorithms.HasMapMatching())
     {
         return Error("NotImplemented",
@@ -314,7 +313,7 @@ Status MatchPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
     }
 
     api::MatchAPI match_api{facade, parameters, tidied};
-    match_api.MakeResponse(sub_matchings, sub_routes, json_result);
+    match_api.MakeResponse(sub_matchings, sub_routes, result);
 
     return Status::Ok;
 }
