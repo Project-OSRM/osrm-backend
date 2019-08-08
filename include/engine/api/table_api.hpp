@@ -71,8 +71,6 @@ class TableAPI final : public BaseAPI
         auto number_of_destinations = parameters.destinations.size();
 
         fbresult::FBResultBuilder response(fb_result);
-        response.add_code(fb_result.CreateString("Ok"));
-        response.add_response_type(osrm::engine::api::fbresult::ServiceResponse::ServiceResponse_table);
 
         fbresult::TableBuilder table(fb_result);
 
@@ -113,7 +111,7 @@ class TableAPI final : public BaseAPI
         {
             table.add_fallback_speed_cells(MakeEstimatesTable(fb_result, fallback_speed_cells));
         }
-
+        response.add_table(table.Finish());
         fb_result.Finish(response.Finish());
     }
 

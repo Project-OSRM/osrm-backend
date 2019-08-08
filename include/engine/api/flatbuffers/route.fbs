@@ -70,16 +70,11 @@ table Intersection {
     lanes: [Lane];
 }
 
-table Geometry {
-    polyline: string;
-    polyline6: string;
-    coordinates: [Position];
-}
-
 table Step {
     distance: double;
     duration: double;
-    geometry: Geometry;
+    polyline: string;
+    coordinates: [Position];
     weight: double;
     name: string;
     ref: string;
@@ -109,7 +104,8 @@ table RouteObject {
     weight: double;
     weight_name: string;
     confidence: double; //Used only by 'Match' service
-    geometry: Geometry;
+    polyline: string;
+    coordinates: [Position];
     legs: [Leg];
 }
 

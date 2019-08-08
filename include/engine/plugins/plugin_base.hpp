@@ -75,10 +75,13 @@ class BasePlugin
             json_result.values["message"] = message;
         };
         void operator()(flatbuffers::FlatBufferBuilder& fb_result) {
-            osrm::engine::api::fbresult::FBResultBuilder error(fb_result);
-            error.add_code(fb_result.CreateString(code));
-            error.add_message(fb_result.CreateString(message));
-            error.add_response_type(osrm::engine::api::fbresult::ServiceResponse::ServiceResponse_NONE);
+            api::fbresult::FBResultBuilder error(fb_result);
+            error.add_error(true);
+
+            api::fbresult::ErrorBuilder codeBuilder(fb_result);
+            codeBuilder.add_code(fb_result.CreateString(code));
+            codeBuilder.add_message(fb_result.CreateString(message));
+            error.add_code(codeBuilder.Finish());
             fb_result.Finish(error.Finish());
         };
         void operator()(std::string& str_result) {

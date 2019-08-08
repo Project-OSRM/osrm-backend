@@ -66,8 +66,6 @@ public:
     {
 
         fbresult::FBResultBuilder response(fb_result);
-        response.add_code(fb_result.CreateString("Ok"));
-        response.add_response_type(osrm::engine::api::fbresult::ServiceResponse::ServiceResponse_route);
 
         fbresult::RouteBuilder route(fb_result);
         std::vector<flatbuffers::Offset<fbresult::RouteObject>> routes;
@@ -86,7 +84,7 @@ public:
         auto routes_vector = fb_result.CreateVector(routes);
         route.add_routes(routes_vector);
         route.add_waypoints(BaseAPI::MakeWaypoints(fb_result, all_start_end_points));
-        response.add_response(route.Finish().Union());
+        response.add_route(route.Finish());
         
         auto data_timestamp = facade.GetTimestamp();
         if (!data_timestamp.empty())
@@ -127,16 +125,15 @@ public:
     }
 
   protected:
-    template <typename ForwardIter>
-    flatbuffers::Offset<fbresult::Geometry> MakeGeometry(flatbuffers::FlatBufferBuilder& builder, ForwardIter begin, ForwardIter end) const
+    template <typename BuilderType, typename ForwardIter>
+    void MakeGeometry(BuilderType builder, ForwardIter begin, ForwardIter end) const
     {
-        fbresult::GeometryBuilder geometry(builder);
         if (parameters.geometries == RouteParameters::GeometriesType::Polyline) {
-            auto polyline_string = builder.CreateString(encodePolyline<100000>(begin, end));
-            geometry.add_polyline(polyline_string);
+            auto polyline_string = builder.fbb_.CreateString(encodePolyline<100000>(begin, end));
+            builder.add_polyline(polyline_string);
         } else if (parameters.geometries == RouteParameters::GeometriesType::Polyline6) {
-            auto polyline_string = builder.CreateString(encodePolyline<1000000>(begin, end));
-            geometry.add_polyline6(polyline_string);
+            auto polyline_string = builder.fbb_.CreateString(encodePolyline<1000000>(begin, end));
+            builder.add_polyline(polyline_string);
         } else {
             std::vector<fbresult::Position> coordinates;
             coordinates.resize(std::distance(begin, end));
@@ -144,10 +141,9 @@ public:
                 return fbresult::Position{static_cast<double>(util::toFloating(c.lon)),
                                      static_cast<double>(util::toFloating(c.lat))};
             });
-            auto coordinates_vector = builder.CreateVectorOfStructs(coordinates);
-            geometry.add_coordinates(coordinates_vector);
+            auto coordinates_vector = builder.fbb_.CreateVectorOfStructs(coordinates);
+            builder.add_coordinates(coordinates_vector);
         }
-        return geometry.Finish();
     }
 
     boost::optional<util::json::Value> MakeGeometry(boost::optional<std::vector<Coordinate>>&& annotations) const
@@ -304,8 +300,7 @@ public:
         //Fill geometry
         auto overview = MakeOverview(leg_geometries);
         if(overview) {
-            auto geometry = MakeGeometry(fb_result, overview->begin(), overview->end());
-            routeObject.add_geometry(geometry);
+            MakeGeometry(routeObject, overview->begin(), overview->end());
         }
 
         //Fill legs
@@ -363,8 +358,7 @@ public:
                     stepBuilder.add_driving_side(step.is_left_hand_driving);
 
                     //Geometry
-                    auto geometry = MakeGeometry(fb_result, leg_geometry.locations.begin() + step.geometry_begin, leg_geometry.locations.begin() + step.geometry_end);
-                    stepBuilder.add_geometry(geometry);
+                    MakeGeometry(stepBuilder, leg_geometry.locations.begin() + step.geometry_begin, leg_geometry.locations.begin() + step.geometry_end);
                     //Maneuver
                     fbresult::StepManeuverBuilder maneuver(fb_result);
                     fbresult::Position maneuverPosition{static_cast<double>(util::toFloating(step.maneuver.location.lon)),

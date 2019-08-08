@@ -33,9 +33,6 @@ struct LaneT;
 struct Intersection;
 struct IntersectionT;
 
-struct Geometry;
-struct GeometryT;
-
 struct Step;
 struct StepT;
 
@@ -59,6 +56,9 @@ struct TableT;
 
 struct Trip;
 struct TripT;
+
+struct Error;
+struct ErrorT;
 
 struct FBResult;
 struct FBResultT;
@@ -185,149 +185,6 @@ inline const char *EnumNameTurn(Turn e) {
   const size_t index = static_cast<size_t>(e);
   return EnumNamesTurn()[index];
 }
-
-enum ServiceResponse {
-  ServiceResponse_NONE = 0,
-  ServiceResponse_match = 1,
-  ServiceResponse_nearest = 2,
-  ServiceResponse_route = 3,
-  ServiceResponse_table = 4,
-  ServiceResponse_trip = 5,
-  ServiceResponse_MIN = ServiceResponse_NONE,
-  ServiceResponse_MAX = ServiceResponse_trip
-};
-
-inline const ServiceResponse (&EnumValuesServiceResponse())[6] {
-  static const ServiceResponse values[] = {
-    ServiceResponse_NONE,
-    ServiceResponse_match,
-    ServiceResponse_nearest,
-    ServiceResponse_route,
-    ServiceResponse_table,
-    ServiceResponse_trip
-  };
-  return values;
-}
-
-inline const char * const *EnumNamesServiceResponse() {
-  static const char * const names[7] = {
-    "NONE",
-    "match",
-    "nearest",
-    "route",
-    "table",
-    "trip",
-    nullptr
-  };
-  return names;
-}
-
-inline const char *EnumNameServiceResponse(ServiceResponse e) {
-  if (e < ServiceResponse_NONE || e > ServiceResponse_trip) return "";
-  const size_t index = static_cast<size_t>(e);
-  return EnumNamesServiceResponse()[index];
-}
-
-template<typename T> struct ServiceResponseTraits {
-  static const ServiceResponse enum_value = ServiceResponse_NONE;
-};
-
-template<> struct ServiceResponseTraits<osrm::engine::api::fbresult::Match> {
-  static const ServiceResponse enum_value = ServiceResponse_match;
-};
-
-template<> struct ServiceResponseTraits<osrm::engine::api::fbresult::Nearest> {
-  static const ServiceResponse enum_value = ServiceResponse_nearest;
-};
-
-template<> struct ServiceResponseTraits<osrm::engine::api::fbresult::Route> {
-  static const ServiceResponse enum_value = ServiceResponse_route;
-};
-
-template<> struct ServiceResponseTraits<osrm::engine::api::fbresult::Table> {
-  static const ServiceResponse enum_value = ServiceResponse_table;
-};
-
-template<> struct ServiceResponseTraits<osrm::engine::api::fbresult::Trip> {
-  static const ServiceResponse enum_value = ServiceResponse_trip;
-};
-
-struct ServiceResponseUnion {
-  ServiceResponse type;
-  void *value;
-
-  ServiceResponseUnion() : type(ServiceResponse_NONE), value(nullptr) {}
-  ServiceResponseUnion(ServiceResponseUnion&& u) FLATBUFFERS_NOEXCEPT :
-    type(ServiceResponse_NONE), value(nullptr)
-    { std::swap(type, u.type); std::swap(value, u.value); }
-  ServiceResponseUnion(const ServiceResponseUnion &) FLATBUFFERS_NOEXCEPT;
-  ServiceResponseUnion &operator=(const ServiceResponseUnion &u) FLATBUFFERS_NOEXCEPT
-    { ServiceResponseUnion t(u); std::swap(type, t.type); std::swap(value, t.value); return *this; }
-  ServiceResponseUnion &operator=(ServiceResponseUnion &&u) FLATBUFFERS_NOEXCEPT
-    { std::swap(type, u.type); std::swap(value, u.value); return *this; }
-  ~ServiceResponseUnion() { Reset(); }
-
-  void Reset();
-
-#ifndef FLATBUFFERS_CPP98_STL
-  template <typename T>
-  void Set(T&& val) {
-    using RT = typename std::remove_reference<T>::type;
-    Reset();
-    type = ServiceResponseTraits<typename RT::TableType>::enum_value;
-    if (type != ServiceResponse_NONE) {
-      value = new RT(std::forward<T>(val));
-    }
-  }
-#endif  // FLATBUFFERS_CPP98_STL
-
-  static void *UnPack(const void *obj, ServiceResponse type, const flatbuffers::resolver_function_t *resolver);
-  flatbuffers::Offset<void> Pack(flatbuffers::FlatBufferBuilder &_fbb, const flatbuffers::rehasher_function_t *_rehasher = nullptr) const;
-
-  osrm::engine::api::fbresult::MatchT *Asmatch() {
-    return type == ServiceResponse_match ?
-      reinterpret_cast<osrm::engine::api::fbresult::MatchT *>(value) : nullptr;
-  }
-  const osrm::engine::api::fbresult::MatchT *Asmatch() const {
-    return type == ServiceResponse_match ?
-      reinterpret_cast<const osrm::engine::api::fbresult::MatchT *>(value) : nullptr;
-  }
-  osrm::engine::api::fbresult::NearestT *Asnearest() {
-    return type == ServiceResponse_nearest ?
-      reinterpret_cast<osrm::engine::api::fbresult::NearestT *>(value) : nullptr;
-  }
-  const osrm::engine::api::fbresult::NearestT *Asnearest() const {
-    return type == ServiceResponse_nearest ?
-      reinterpret_cast<const osrm::engine::api::fbresult::NearestT *>(value) : nullptr;
-  }
-  osrm::engine::api::fbresult::RouteT *Asroute() {
-    return type == ServiceResponse_route ?
-      reinterpret_cast<osrm::engine::api::fbresult::RouteT *>(value) : nullptr;
-  }
-  const osrm::engine::api::fbresult::RouteT *Asroute() const {
-    return type == ServiceResponse_route ?
-      reinterpret_cast<const osrm::engine::api::fbresult::RouteT *>(value) : nullptr;
-  }
-  osrm::engine::api::fbresult::TableT *Astable() {
-    return type == ServiceResponse_table ?
-      reinterpret_cast<osrm::engine::api::fbresult::TableT *>(value) : nullptr;
-  }
-  const osrm::engine::api::fbresult::TableT *Astable() const {
-    return type == ServiceResponse_table ?
-      reinterpret_cast<const osrm::engine::api::fbresult::TableT *>(value) : nullptr;
-  }
-  osrm::engine::api::fbresult::TripT *Astrip() {
-    return type == ServiceResponse_trip ?
-      reinterpret_cast<osrm::engine::api::fbresult::TripT *>(value) : nullptr;
-  }
-  const osrm::engine::api::fbresult::TripT *Astrip() const {
-    return type == ServiceResponse_trip ?
-      reinterpret_cast<const osrm::engine::api::fbresult::TripT *>(value) : nullptr;
-  }
-};
-
-bool VerifyServiceResponse(flatbuffers::Verifier &verifier, const void *obj, ServiceResponse type);
-bool VerifyServiceResponseVector(flatbuffers::Verifier &verifier, const flatbuffers::Vector<flatbuffers::Offset<void>> *values, const flatbuffers::Vector<uint8_t> *types);
 
 FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(8) Position FLATBUFFERS_FINAL_CLASS {
  private:
@@ -1104,104 +961,12 @@ inline flatbuffers::Offset<Intersection> CreateIntersectionDirect(
 
 flatbuffers::Offset<Intersection> CreateIntersection(flatbuffers::FlatBufferBuilder &_fbb, const IntersectionT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 
-struct GeometryT : public flatbuffers::NativeTable {
-  typedef Geometry TableType;
-  std::string polyline;
-  std::string polyline6;
-  std::vector<osrm::engine::api::fbresult::Position> coordinates;
-  GeometryT() {
-  }
-};
-
-struct Geometry FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef GeometryT NativeTableType;
-  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_POLYLINE = 4,
-    VT_POLYLINE6 = 6,
-    VT_COORDINATES = 8
-  };
-  const flatbuffers::String *polyline() const {
-    return GetPointer<const flatbuffers::String *>(VT_POLYLINE);
-  }
-  const flatbuffers::String *polyline6() const {
-    return GetPointer<const flatbuffers::String *>(VT_POLYLINE6);
-  }
-  const flatbuffers::Vector<const osrm::engine::api::fbresult::Position *> *coordinates() const {
-    return GetPointer<const flatbuffers::Vector<const osrm::engine::api::fbresult::Position *> *>(VT_COORDINATES);
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
-    return VerifyTableStart(verifier) &&
-           VerifyOffset(verifier, VT_POLYLINE) &&
-           verifier.VerifyString(polyline()) &&
-           VerifyOffset(verifier, VT_POLYLINE6) &&
-           verifier.VerifyString(polyline6()) &&
-           VerifyOffset(verifier, VT_COORDINATES) &&
-           verifier.VerifyVector(coordinates()) &&
-           verifier.EndTable();
-  }
-  GeometryT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  void UnPackTo(GeometryT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  static flatbuffers::Offset<Geometry> Pack(flatbuffers::FlatBufferBuilder &_fbb, const GeometryT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
-};
-
-struct GeometryBuilder {
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_polyline(flatbuffers::Offset<flatbuffers::String> polyline) {
-    fbb_.AddOffset(Geometry::VT_POLYLINE, polyline);
-  }
-  void add_polyline6(flatbuffers::Offset<flatbuffers::String> polyline6) {
-    fbb_.AddOffset(Geometry::VT_POLYLINE6, polyline6);
-  }
-  void add_coordinates(flatbuffers::Offset<flatbuffers::Vector<const osrm::engine::api::fbresult::Position *>> coordinates) {
-    fbb_.AddOffset(Geometry::VT_COORDINATES, coordinates);
-  }
-  explicit GeometryBuilder(flatbuffers::FlatBufferBuilder &_fbb)
-        : fbb_(_fbb) {
-    start_ = fbb_.StartTable();
-  }
-  GeometryBuilder &operator=(const GeometryBuilder &);
-  flatbuffers::Offset<Geometry> Finish() {
-    const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<Geometry>(end);
-    return o;
-  }
-};
-
-inline flatbuffers::Offset<Geometry> CreateGeometry(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::String> polyline = 0,
-    flatbuffers::Offset<flatbuffers::String> polyline6 = 0,
-    flatbuffers::Offset<flatbuffers::Vector<const osrm::engine::api::fbresult::Position *>> coordinates = 0) {
-  GeometryBuilder builder_(_fbb);
-  builder_.add_coordinates(coordinates);
-  builder_.add_polyline6(polyline6);
-  builder_.add_polyline(polyline);
-  return builder_.Finish();
-}
-
-inline flatbuffers::Offset<Geometry> CreateGeometryDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    const char *polyline = nullptr,
-    const char *polyline6 = nullptr,
-    const std::vector<osrm::engine::api::fbresult::Position> *coordinates = nullptr) {
-  auto polyline__ = polyline ? _fbb.CreateString(polyline) : 0;
-  auto polyline6__ = polyline6 ? _fbb.CreateString(polyline6) : 0;
-  auto coordinates__ = coordinates ? _fbb.CreateVectorOfStructs<osrm::engine::api::fbresult::Position>(*coordinates) : 0;
-  return osrm::engine::api::fbresult::CreateGeometry(
-      _fbb,
-      polyline__,
-      polyline6__,
-      coordinates__);
-}
-
-flatbuffers::Offset<Geometry> CreateGeometry(flatbuffers::FlatBufferBuilder &_fbb, const GeometryT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
-
 struct StepT : public flatbuffers::NativeTable {
   typedef Step TableType;
   double distance;
   double duration;
-  std::unique_ptr<osrm::engine::api::fbresult::GeometryT> geometry;
+  std::string polyline;
+  std::vector<osrm::engine::api::fbresult::Position> coordinates;
   double weight;
   std::string name;
   std::string ref;
@@ -1227,19 +992,20 @@ struct Step FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_DISTANCE = 4,
     VT_DURATION = 6,
-    VT_GEOMETRY = 8,
-    VT_WEIGHT = 10,
-    VT_NAME = 12,
-    VT_REF = 14,
-    VT_PRONUNCIATION = 16,
-    VT_DESTINATIONS = 18,
-    VT_EXITS = 20,
-    VT_MODE = 22,
-    VT_MANEUVER = 24,
-    VT_INTERSECTIONS = 26,
-    VT_ROTARY_NAME = 28,
-    VT_ROTARY_PRONUNCIATION = 30,
-    VT_DRIVING_SIDE = 32
+    VT_POLYLINE = 8,
+    VT_COORDINATES = 10,
+    VT_WEIGHT = 12,
+    VT_NAME = 14,
+    VT_REF = 16,
+    VT_PRONUNCIATION = 18,
+    VT_DESTINATIONS = 20,
+    VT_EXITS = 22,
+    VT_MODE = 24,
+    VT_MANEUVER = 26,
+    VT_INTERSECTIONS = 28,
+    VT_ROTARY_NAME = 30,
+    VT_ROTARY_PRONUNCIATION = 32,
+    VT_DRIVING_SIDE = 34
   };
   double distance() const {
     return GetField<double>(VT_DISTANCE, 0.0);
@@ -1247,8 +1013,11 @@ struct Step FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   double duration() const {
     return GetField<double>(VT_DURATION, 0.0);
   }
-  const osrm::engine::api::fbresult::Geometry *geometry() const {
-    return GetPointer<const osrm::engine::api::fbresult::Geometry *>(VT_GEOMETRY);
+  const flatbuffers::String *polyline() const {
+    return GetPointer<const flatbuffers::String *>(VT_POLYLINE);
+  }
+  const flatbuffers::Vector<const osrm::engine::api::fbresult::Position *> *coordinates() const {
+    return GetPointer<const flatbuffers::Vector<const osrm::engine::api::fbresult::Position *> *>(VT_COORDINATES);
   }
   double weight() const {
     return GetField<double>(VT_WEIGHT, 0.0);
@@ -1290,8 +1059,10 @@ struct Step FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
     return VerifyTableStart(verifier) &&
            VerifyField<double>(verifier, VT_DISTANCE) &&
            VerifyField<double>(verifier, VT_DURATION) &&
-           VerifyOffset(verifier, VT_GEOMETRY) &&
-           verifier.VerifyTable(geometry()) &&
+           VerifyOffset(verifier, VT_POLYLINE) &&
+           verifier.VerifyString(polyline()) &&
+           VerifyOffset(verifier, VT_COORDINATES) &&
+           verifier.VerifyVector(coordinates()) &&
            VerifyField<double>(verifier, VT_WEIGHT) &&
            VerifyOffset(verifier, VT_NAME) &&
            verifier.VerifyString(name()) &&
@@ -1331,8 +1102,11 @@ struct StepBuilder {
   void add_duration(double duration) {
     fbb_.AddElement<double>(Step::VT_DURATION, duration, 0.0);
   }
-  void add_geometry(flatbuffers::Offset<osrm::engine::api::fbresult::Geometry> geometry) {
-    fbb_.AddOffset(Step::VT_GEOMETRY, geometry);
+  void add_polyline(flatbuffers::Offset<flatbuffers::String> polyline) {
+    fbb_.AddOffset(Step::VT_POLYLINE, polyline);
+  }
+  void add_coordinates(flatbuffers::Offset<flatbuffers::Vector<const osrm::engine::api::fbresult::Position *>> coordinates) {
+    fbb_.AddOffset(Step::VT_COORDINATES, coordinates);
   }
   void add_weight(double weight) {
     fbb_.AddElement<double>(Step::VT_WEIGHT, weight, 0.0);
@@ -1386,7 +1160,8 @@ inline flatbuffers::Offset<Step> CreateStep(
     flatbuffers::FlatBufferBuilder &_fbb,
     double distance = 0.0,
     double duration = 0.0,
-    flatbuffers::Offset<osrm::engine::api::fbresult::Geometry> geometry = 0,
+    flatbuffers::Offset<flatbuffers::String> polyline = 0,
+    flatbuffers::Offset<flatbuffers::Vector<const osrm::engine::api::fbresult::Position *>> coordinates = 0,
     double weight = 0.0,
     flatbuffers::Offset<flatbuffers::String> name = 0,
     flatbuffers::Offset<flatbuffers::String> ref = 0,
@@ -1413,7 +1188,8 @@ inline flatbuffers::Offset<Step> CreateStep(
   builder_.add_pronunciation(pronunciation);
   builder_.add_ref(ref);
   builder_.add_name(name);
-  builder_.add_geometry(geometry);
+  builder_.add_coordinates(coordinates);
+  builder_.add_polyline(polyline);
   builder_.add_driving_side(driving_side);
   return builder_.Finish();
 }
@@ -1422,7 +1198,8 @@ inline flatbuffers::Offset<Step> CreateStepDirect(
     flatbuffers::FlatBufferBuilder &_fbb,
     double distance = 0.0,
     double duration = 0.0,
-    flatbuffers::Offset<osrm::engine::api::fbresult::Geometry> geometry = 0,
+    const char *polyline = nullptr,
+    const std::vector<osrm::engine::api::fbresult::Position> *coordinates = nullptr,
     double weight = 0.0,
     const char *name = nullptr,
     const char *ref = nullptr,
@@ -1435,6 +1212,8 @@ inline flatbuffers::Offset<Step> CreateStepDirect(
     const char *rotary_name = nullptr,
     const char *rotary_pronunciation = nullptr,
     bool driving_side = false) {
+  auto polyline__ = polyline ? _fbb.CreateString(polyline) : 0;
+  auto coordinates__ = coordinates ? _fbb.CreateVectorOfStructs<osrm::engine::api::fbresult::Position>(*coordinates) : 0;
   auto name__ = name ? _fbb.CreateString(name) : 0;
   auto ref__ = ref ? _fbb.CreateString(ref) : 0;
   auto pronunciation__ = pronunciation ? _fbb.CreateString(pronunciation) : 0;
@@ -1448,7 +1227,8 @@ inline flatbuffers::Offset<Step> CreateStepDirect(
       _fbb,
       distance,
       duration,
-      geometry,
+      polyline__,
+      coordinates__,
       weight,
       name__,
       ref__,
@@ -1607,7 +1387,8 @@ struct RouteObjectT : public flatbuffers::NativeTable {
   double weight;
   std::string weight_name;
   double confidence;
-  std::unique_ptr<osrm::engine::api::fbresult::GeometryT> geometry;
+  std::string polyline;
+  std::vector<osrm::engine::api::fbresult::Position> coordinates;
   std::vector<std::unique_ptr<osrm::engine::api::fbresult::LegT>> legs;
   RouteObjectT()
       : distance(0.0),
@@ -1625,8 +1406,9 @@ struct RouteObject FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
     VT_WEIGHT = 8,
     VT_WEIGHT_NAME = 10,
     VT_CONFIDENCE = 12,
-    VT_GEOMETRY = 14,
-    VT_LEGS = 16
+    VT_POLYLINE = 14,
+    VT_COORDINATES = 16,
+    VT_LEGS = 18
   };
   double distance() const {
     return GetField<double>(VT_DISTANCE, 0.0);
@@ -1643,8 +1425,11 @@ struct RouteObject FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   double confidence() const {
     return GetField<double>(VT_CONFIDENCE, 0.0);
   }
-  const osrm::engine::api::fbresult::Geometry *geometry() const {
-    return GetPointer<const osrm::engine::api::fbresult::Geometry *>(VT_GEOMETRY);
+  const flatbuffers::String *polyline() const {
+    return GetPointer<const flatbuffers::String *>(VT_POLYLINE);
+  }
+  const flatbuffers::Vector<const osrm::engine::api::fbresult::Position *> *coordinates() const {
+    return GetPointer<const flatbuffers::Vector<const osrm::engine::api::fbresult::Position *> *>(VT_COORDINATES);
   }
   const flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::Leg>> *legs() const {
     return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::Leg>> *>(VT_LEGS);
@@ -1657,8 +1442,10 @@ struct RouteObject FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
            VerifyOffset(verifier, VT_WEIGHT_NAME) &&
            verifier.VerifyString(weight_name()) &&
            VerifyField<double>(verifier, VT_CONFIDENCE) &&
-           VerifyOffset(verifier, VT_GEOMETRY) &&
-           verifier.VerifyTable(geometry()) &&
+           VerifyOffset(verifier, VT_POLYLINE) &&
+           verifier.VerifyString(polyline()) &&
+           VerifyOffset(verifier, VT_COORDINATES) &&
+           verifier.VerifyVector(coordinates()) &&
            VerifyOffset(verifier, VT_LEGS) &&
            verifier.VerifyVector(legs()) &&
            verifier.VerifyVectorOfTables(legs()) &&
@@ -1687,8 +1474,11 @@ struct RouteObjectBuilder {
   void add_confidence(double confidence) {
     fbb_.AddElement<double>(RouteObject::VT_CONFIDENCE, confidence, 0.0);
   }
-  void add_geometry(flatbuffers::Offset<osrm::engine::api::fbresult::Geometry> geometry) {
-    fbb_.AddOffset(RouteObject::VT_GEOMETRY, geometry);
+  void add_polyline(flatbuffers::Offset<flatbuffers::String> polyline) {
+    fbb_.AddOffset(RouteObject::VT_POLYLINE, polyline);
+  }
+  void add_coordinates(flatbuffers::Offset<flatbuffers::Vector<const osrm::engine::api::fbresult::Position *>> coordinates) {
+    fbb_.AddOffset(RouteObject::VT_COORDINATES, coordinates);
   }
   void add_legs(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::Leg>>> legs) {
     fbb_.AddOffset(RouteObject::VT_LEGS, legs);
@@ -1712,7 +1502,8 @@ inline flatbuffers::Offset<RouteObject> CreateRouteObject(
     double weight = 0.0,
     flatbuffers::Offset<flatbuffers::String> weight_name = 0,
     double confidence = 0.0,
-    flatbuffers::Offset<osrm::engine::api::fbresult::Geometry> geometry = 0,
+    flatbuffers::Offset<flatbuffers::String> polyline = 0,
+    flatbuffers::Offset<flatbuffers::Vector<const osrm::engine::api::fbresult::Position *>> coordinates = 0,
     flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::Leg>>> legs = 0) {
   RouteObjectBuilder builder_(_fbb);
   builder_.add_confidence(confidence);
@@ -1720,7 +1511,8 @@ inline flatbuffers::Offset<RouteObject> CreateRouteObject(
   builder_.add_duration(duration);
   builder_.add_distance(distance);
   builder_.add_legs(legs);
-  builder_.add_geometry(geometry);
+  builder_.add_coordinates(coordinates);
+  builder_.add_polyline(polyline);
   builder_.add_weight_name(weight_name);
   return builder_.Finish();
 }
@@ -1732,9 +1524,12 @@ inline flatbuffers::Offset<RouteObject> CreateRouteObjectDirect(
     double weight = 0.0,
     const char *weight_name = nullptr,
     double confidence = 0.0,
-    flatbuffers::Offset<osrm::engine::api::fbresult::Geometry> geometry = 0,
+    const char *polyline = nullptr,
+    const std::vector<osrm::engine::api::fbresult::Position> *coordinates = nullptr,
     const std::vector<flatbuffers::Offset<osrm::engine::api::fbresult::Leg>> *legs = nullptr) {
   auto weight_name__ = weight_name ? _fbb.CreateString(weight_name) : 0;
+  auto polyline__ = polyline ? _fbb.CreateString(polyline) : 0;
+  auto coordinates__ = coordinates ? _fbb.CreateVectorOfStructs<osrm::engine::api::fbresult::Position>(*coordinates) : 0;
   auto legs__ = legs ? _fbb.CreateVector<flatbuffers::Offset<osrm::engine::api::fbresult::Leg>>(*legs) : 0;
   return osrm::engine::api::fbresult::CreateRouteObject(
       _fbb,
@@ -1743,7 +1538,8 @@ inline flatbuffers::Offset<RouteObject> CreateRouteObjectDirect(
       weight,
       weight_name__,
       confidence,
-      geometry,
+      polyline__,
+      coordinates__,
       legs__);
 }
 
@@ -2208,24 +2004,19 @@ inline flatbuffers::Offset<Trip> CreateTripDirect(
 
 flatbuffers::Offset<Trip> CreateTrip(flatbuffers::FlatBufferBuilder &_fbb, const TripT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 
-struct FBResultT : public flatbuffers::NativeTable {
-  typedef FBResult TableType;
+struct ErrorT : public flatbuffers::NativeTable {
+  typedef Error TableType;
   std::string code;
   std::string message;
-  std::string data_version;
-  ServiceResponseUnion response;
-  FBResultT() {
+  ErrorT() {
   }
 };
 
-struct FBResult FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef FBResultT NativeTableType;
+struct Error FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef ErrorT NativeTableType;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_CODE = 4,
-    VT_MESSAGE = 6,
-    VT_DATA_VERSION = 8,
-    VT_RESPONSE_TYPE = 10,
-    VT_RESPONSE = 12
+    VT_MESSAGE = 6
   };
   const flatbuffers::String *code() const {
     return GetPointer<const flatbuffers::String *>(VT_CODE);
@@ -2233,42 +2024,132 @@ struct FBResult FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   const flatbuffers::String *message() const {
     return GetPointer<const flatbuffers::String *>(VT_MESSAGE);
   }
-  const flatbuffers::String *data_version() const {
-    return GetPointer<const flatbuffers::String *>(VT_DATA_VERSION);
-  }
-  osrm::engine::api::fbresult::ServiceResponse response_type() const {
-    return static_cast<osrm::engine::api::fbresult::ServiceResponse>(GetField<uint8_t>(VT_RESPONSE_TYPE, 0));
-  }
-  const void *response() const {
-    return GetPointer<const void *>(VT_RESPONSE);
-  }
-  template<typename T> const T *response_as() const;
-  const osrm::engine::api::fbresult::Match *response_as_match() const {
-    return response_type() == osrm::engine::api::fbresult::ServiceResponse_match ? static_cast<const osrm::engine::api::fbresult::Match *>(response()) : nullptr;
-  }
-  const osrm::engine::api::fbresult::Nearest *response_as_nearest() const {
-    return response_type() == osrm::engine::api::fbresult::ServiceResponse_nearest ? static_cast<const osrm::engine::api::fbresult::Nearest *>(response()) : nullptr;
-  }
-  const osrm::engine::api::fbresult::Route *response_as_route() const {
-    return response_type() == osrm::engine::api::fbresult::ServiceResponse_route ? static_cast<const osrm::engine::api::fbresult::Route *>(response()) : nullptr;
-  }
-  const osrm::engine::api::fbresult::Table *response_as_table() const {
-    return response_type() == osrm::engine::api::fbresult::ServiceResponse_table ? static_cast<const osrm::engine::api::fbresult::Table *>(response()) : nullptr;
-  }
-  const osrm::engine::api::fbresult::Trip *response_as_trip() const {
-    return response_type() == osrm::engine::api::fbresult::ServiceResponse_trip ? static_cast<const osrm::engine::api::fbresult::Trip *>(response()) : nullptr;
-  }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_CODE) &&
            verifier.VerifyString(code()) &&
            VerifyOffset(verifier, VT_MESSAGE) &&
            verifier.VerifyString(message()) &&
+           verifier.EndTable();
+  }
+  ErrorT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  void UnPackTo(ErrorT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  static flatbuffers::Offset<Error> Pack(flatbuffers::FlatBufferBuilder &_fbb, const ErrorT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
+};
+
+struct ErrorBuilder {
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_code(flatbuffers::Offset<flatbuffers::String> code) {
+    fbb_.AddOffset(Error::VT_CODE, code);
+  }
+  void add_message(flatbuffers::Offset<flatbuffers::String> message) {
+    fbb_.AddOffset(Error::VT_MESSAGE, message);
+  }
+  explicit ErrorBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ErrorBuilder &operator=(const ErrorBuilder &);
+  flatbuffers::Offset<Error> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<Error>(end);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<Error> CreateError(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    flatbuffers::Offset<flatbuffers::String> code = 0,
+    flatbuffers::Offset<flatbuffers::String> message = 0) {
+  ErrorBuilder builder_(_fbb);
+  builder_.add_message(message);
+  builder_.add_code(code);
+  return builder_.Finish();
+}
+
+inline flatbuffers::Offset<Error> CreateErrorDirect(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    const char *code = nullptr,
+    const char *message = nullptr) {
+  auto code__ = code ? _fbb.CreateString(code) : 0;
+  auto message__ = message ? _fbb.CreateString(message) : 0;
+  return osrm::engine::api::fbresult::CreateError(
+      _fbb,
+      code__,
+      message__);
+}
+
+flatbuffers::Offset<Error> CreateError(flatbuffers::FlatBufferBuilder &_fbb, const ErrorT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
+
+struct FBResultT : public flatbuffers::NativeTable {
+  typedef FBResult TableType;
+  bool error;
+  std::unique_ptr<osrm::engine::api::fbresult::ErrorT> code;
+  std::string data_version;
+  std::unique_ptr<osrm::engine::api::fbresult::MatchT> match;
+  std::unique_ptr<osrm::engine::api::fbresult::NearestT> nearest;
+  std::unique_ptr<osrm::engine::api::fbresult::RouteT> route;
+  std::unique_ptr<osrm::engine::api::fbresult::TableT> table;
+  std::unique_ptr<osrm::engine::api::fbresult::TripT> trip;
+  FBResultT()
+      : error(false) {
+  }
+};
+
+struct FBResult FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef FBResultT NativeTableType;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_ERROR = 4,
+    VT_CODE = 6,
+    VT_DATA_VERSION = 8,
+    VT_MATCH = 10,
+    VT_NEAREST = 12,
+    VT_ROUTE = 14,
+    VT_TABLE = 16,
+    VT_TRIP = 18
+  };
+  bool error() const {
+    return GetField<uint8_t>(VT_ERROR, 0) != 0;
+  }
+  const osrm::engine::api::fbresult::Error *code() const {
+    return GetPointer<const osrm::engine::api::fbresult::Error *>(VT_CODE);
+  }
+  const flatbuffers::String *data_version() const {
+    return GetPointer<const flatbuffers::String *>(VT_DATA_VERSION);
+  }
+  const osrm::engine::api::fbresult::Match *match() const {
+    return GetPointer<const osrm::engine::api::fbresult::Match *>(VT_MATCH);
+  }
+  const osrm::engine::api::fbresult::Nearest *nearest() const {
+    return GetPointer<const osrm::engine::api::fbresult::Nearest *>(VT_NEAREST);
+  }
+  const osrm::engine::api::fbresult::Route *route() const {
+    return GetPointer<const osrm::engine::api::fbresult::Route *>(VT_ROUTE);
+  }
+  const osrm::engine::api::fbresult::Table *table() const {
+    return GetPointer<const osrm::engine::api::fbresult::Table *>(VT_TABLE);
+  }
+  const osrm::engine::api::fbresult::Trip *trip() const {
+    return GetPointer<const osrm::engine::api::fbresult::Trip *>(VT_TRIP);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint8_t>(verifier, VT_ERROR) &&
+           VerifyOffset(verifier, VT_CODE) &&
+           verifier.VerifyTable(code()) &&
            VerifyOffset(verifier, VT_DATA_VERSION) &&
            verifier.VerifyString(data_version()) &&
-           VerifyField<uint8_t>(verifier, VT_RESPONSE_TYPE) &&
-           VerifyOffset(verifier, VT_RESPONSE) &&
-           VerifyServiceResponse(verifier, response(), response_type()) &&
+           VerifyOffset(verifier, VT_MATCH) &&
+           verifier.VerifyTable(match()) &&
+           VerifyOffset(verifier, VT_NEAREST) &&
+           verifier.VerifyTable(nearest()) &&
+           VerifyOffset(verifier, VT_ROUTE) &&
+           verifier.VerifyTable(route()) &&
+           VerifyOffset(verifier, VT_TABLE) &&
+           verifier.VerifyTable(table()) &&
+           VerifyOffset(verifier, VT_TRIP) &&
+           verifier.VerifyTable(trip()) &&
            verifier.EndTable();
   }
   FBResultT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
@@ -2276,43 +2157,32 @@ struct FBResult FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   static flatbuffers::Offset<FBResult> Pack(flatbuffers::FlatBufferBuilder &_fbb, const FBResultT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 };
 
-template<> inline const osrm::engine::api::fbresult::Match *FBResult::response_as<osrm::engine::api::fbresult::Match>() const {
-  return response_as_match();
-}
-
-template<> inline const osrm::engine::api::fbresult::Nearest *FBResult::response_as<osrm::engine::api::fbresult::Nearest>() const {
-  return response_as_nearest();
-}
-
-template<> inline const osrm::engine::api::fbresult::Route *FBResult::response_as<osrm::engine::api::fbresult::Route>() const {
-  return response_as_route();
-}
-
-template<> inline const osrm::engine::api::fbresult::Table *FBResult::response_as<osrm::engine::api::fbresult::Table>() const {
-  return response_as_table();
-}
-
-template<> inline const osrm::engine::api::fbresult::Trip *FBResult::response_as<osrm::engine::api::fbresult::Trip>() const {
-  return response_as_trip();
-}
-
 struct FBResultBuilder {
   flatbuffers::FlatBufferBuilder &fbb_;
   flatbuffers::uoffset_t start_;
-  void add_code(flatbuffers::Offset<flatbuffers::String> code) {
-    fbb_.AddOffset(FBResult::VT_CODE, code);
+  void add_error(bool error) {
+    fbb_.AddElement<uint8_t>(FBResult::VT_ERROR, static_cast<uint8_t>(error), 0);
   }
-  void add_message(flatbuffers::Offset<flatbuffers::String> message) {
-    fbb_.AddOffset(FBResult::VT_MESSAGE, message);
+  void add_code(flatbuffers::Offset<osrm::engine::api::fbresult::Error> code) {
+    fbb_.AddOffset(FBResult::VT_CODE, code);
   }
   void add_data_version(flatbuffers::Offset<flatbuffers::String> data_version) {
     fbb_.AddOffset(FBResult::VT_DATA_VERSION, data_version);
   }
-  void add_response_type(osrm::engine::api::fbresult::ServiceResponse response_type) {
-    fbb_.AddElement<uint8_t>(FBResult::VT_RESPONSE_TYPE, static_cast<uint8_t>(response_type), 0);
+  void add_match(flatbuffers::Offset<osrm::engine::api::fbresult::Match> match) {
+    fbb_.AddOffset(FBResult::VT_MATCH, match);
   }
-  void add_response(flatbuffers::Offset<void> response) {
-    fbb_.AddOffset(FBResult::VT_RESPONSE, response);
+  void add_nearest(flatbuffers::Offset<osrm::engine::api::fbresult::Nearest> nearest) {
+    fbb_.AddOffset(FBResult::VT_NEAREST, nearest);
+  }
+  void add_route(flatbuffers::Offset<osrm::engine::api::fbresult::Route> route) {
+    fbb_.AddOffset(FBResult::VT_ROUTE, route);
+  }
+  void add_table(flatbuffers::Offset<osrm::engine::api::fbresult::Table> table) {
+    fbb_.AddOffset(FBResult::VT_TABLE, table);
+  }
+  void add_trip(flatbuffers::Offset<osrm::engine::api::fbresult::Trip> trip) {
+    fbb_.AddOffset(FBResult::VT_TRIP, trip);
   }
   explicit FBResultBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -2328,37 +2198,47 @@ struct FBResultBuilder {
 
 inline flatbuffers::Offset<FBResult> CreateFBResult(
     flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::String> code = 0,
-    flatbuffers::Offset<flatbuffers::String> message = 0,
+    bool error = false,
+    flatbuffers::Offset<osrm::engine::api::fbresult::Error> code = 0,
     flatbuffers::Offset<flatbuffers::String> data_version = 0,
-    osrm::engine::api::fbresult::ServiceResponse response_type = osrm::engine::api::fbresult::ServiceResponse_NONE,
-    flatbuffers::Offset<void> response = 0) {
+    flatbuffers::Offset<osrm::engine::api::fbresult::Match> match = 0,
+    flatbuffers::Offset<osrm::engine::api::fbresult::Nearest> nearest = 0,
+    flatbuffers::Offset<osrm::engine::api::fbresult::Route> route = 0,
+    flatbuffers::Offset<osrm::engine::api::fbresult::Table> table = 0,
+    flatbuffers::Offset<osrm::engine::api::fbresult::Trip> trip = 0) {
   FBResultBuilder builder_(_fbb);
-  builder_.add_response(response);
+  builder_.add_trip(trip);
+  builder_.add_table(table);
+  builder_.add_route(route);
+  builder_.add_nearest(nearest);
+  builder_.add_match(match);
   builder_.add_data_version(data_version);
-  builder_.add_message(message);
   builder_.add_code(code);
-  builder_.add_response_type(response_type);
+  builder_.add_error(error);
   return builder_.Finish();
 }
 
 inline flatbuffers::Offset<FBResult> CreateFBResultDirect(
     flatbuffers::FlatBufferBuilder &_fbb,
-    const char *code = nullptr,
-    const char *message = nullptr,
+    bool error = false,
+    flatbuffers::Offset<osrm::engine::api::fbresult::Error> code = 0,
     const char *data_version = nullptr,
-    osrm::engine::api::fbresult::ServiceResponse response_type = osrm::engine::api::fbresult::ServiceResponse_NONE,
-    flatbuffers::Offset<void> response = 0) {
-  auto code__ = code ? _fbb.CreateString(code) : 0;
-  auto message__ = message ? _fbb.CreateString(message) : 0;
+    flatbuffers::Offset<osrm::engine::api::fbresult::Match> match = 0,
+    flatbuffers::Offset<osrm::engine::api::fbresult::Nearest> nearest = 0,
+    flatbuffers::Offset<osrm::engine::api::fbresult::Route> route = 0,
+    flatbuffers::Offset<osrm::engine::api::fbresult::Table> table = 0,
+    flatbuffers::Offset<osrm::engine::api::fbresult::Trip> trip = 0) {
   auto data_version__ = data_version ? _fbb.CreateString(data_version) : 0;
   return osrm::engine::api::fbresult::CreateFBResult(
       _fbb,
-      code__,
-      message__,
+      error,
+      code,
       data_version__,
-      response_type,
-      response);
+      match,
+      nearest,
+      route,
+      table,
+      trip);
 }
 
 flatbuffers::Offset<FBResult> CreateFBResult(flatbuffers::FlatBufferBuilder &_fbb, const FBResultT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
@@ -2597,38 +2477,6 @@ inline flatbuffers::Offset<Intersection> CreateIntersection(flatbuffers::FlatBuf
       _lanes);
 }
 
-inline GeometryT *Geometry::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
-  auto _o = new GeometryT();
-  UnPackTo(_o, _resolver);
-  return _o;
-}
-
-inline void Geometry::UnPackTo(GeometryT *_o, const flatbuffers::resolver_function_t *_resolver) const {
-  (void)_o;
-  (void)_resolver;
-  { auto _e = polyline(); if (_e) _o->polyline = _e->str(); };
-  { auto _e = polyline6(); if (_e) _o->polyline6 = _e->str(); };
-  { auto _e = coordinates(); if (_e) { _o->coordinates.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->coordinates[_i] = *_e->Get(_i); } } };
-}
-
-inline flatbuffers::Offset<Geometry> Geometry::Pack(flatbuffers::FlatBufferBuilder &_fbb, const GeometryT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
-  return CreateGeometry(_fbb, _o, _rehasher);
-}
-
-inline flatbuffers::Offset<Geometry> CreateGeometry(flatbuffers::FlatBufferBuilder &_fbb, const GeometryT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
-  (void)_rehasher;
-  (void)_o;
-  struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const GeometryT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _polyline = _o->polyline.empty() ? 0 : _fbb.CreateString(_o->polyline);
-  auto _polyline6 = _o->polyline6.empty() ? 0 : _fbb.CreateString(_o->polyline6);
-  auto _coordinates = _o->coordinates.size() ? _fbb.CreateVectorOfStructs(_o->coordinates) : 0;
-  return osrm::engine::api::fbresult::CreateGeometry(
-      _fbb,
-      _polyline,
-      _polyline6,
-      _coordinates);
-}
-
 inline StepT *Step::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
   auto _o = new StepT();
   UnPackTo(_o, _resolver);
@@ -2640,7 +2488,8 @@ inline void Step::UnPackTo(StepT *_o, const flatbuffers::resolver_function_t *_r
   (void)_resolver;
   { auto _e = distance(); _o->distance = _e; };
   { auto _e = duration(); _o->duration = _e; };
-  { auto _e = geometry(); if (_e) _o->geometry = std::unique_ptr<osrm::engine::api::fbresult::GeometryT>(_e->UnPack(_resolver)); };
+  { auto _e = polyline(); if (_e) _o->polyline = _e->str(); };
+  { auto _e = coordinates(); if (_e) { _o->coordinates.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->coordinates[_i] = *_e->Get(_i); } } };
   { auto _e = weight(); _o->weight = _e; };
   { auto _e = name(); if (_e) _o->name = _e->str(); };
   { auto _e = ref(); if (_e) _o->ref = _e->str(); };
@@ -2665,7 +2514,8 @@ inline flatbuffers::Offset<Step> CreateStep(flatbuffers::FlatBufferBuilder &_fbb
   struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const StepT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
   auto _distance = _o->distance;
   auto _duration = _o->duration;
-  auto _geometry = _o->geometry ? CreateGeometry(_fbb, _o->geometry.get(), _rehasher) : 0;
+  auto _polyline = _o->polyline.empty() ? 0 : _fbb.CreateString(_o->polyline);
+  auto _coordinates = _o->coordinates.size() ? _fbb.CreateVectorOfStructs(_o->coordinates) : 0;
   auto _weight = _o->weight;
   auto _name = _o->name.empty() ? 0 : _fbb.CreateString(_o->name);
   auto _ref = _o->ref.empty() ? 0 : _fbb.CreateString(_o->ref);
@@ -2682,7 +2532,8 @@ inline flatbuffers::Offset<Step> CreateStep(flatbuffers::FlatBufferBuilder &_fbb
       _fbb,
       _distance,
       _duration,
-      _geometry,
+      _polyline,
+      _coordinates,
       _weight,
       _name,
       _ref,
@@ -2752,7 +2603,8 @@ inline void RouteObject::UnPackTo(RouteObjectT *_o, const flatbuffers::resolver_
   { auto _e = weight(); _o->weight = _e; };
   { auto _e = weight_name(); if (_e) _o->weight_name = _e->str(); };
   { auto _e = confidence(); _o->confidence = _e; };
-  { auto _e = geometry(); if (_e) _o->geometry = std::unique_ptr<osrm::engine::api::fbresult::GeometryT>(_e->UnPack(_resolver)); };
+  { auto _e = polyline(); if (_e) _o->polyline = _e->str(); };
+  { auto _e = coordinates(); if (_e) { _o->coordinates.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->coordinates[_i] = *_e->Get(_i); } } };
   { auto _e = legs(); if (_e) { _o->legs.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->legs[_i] = std::unique_ptr<osrm::engine::api::fbresult::LegT>(_e->Get(_i)->UnPack(_resolver)); } } };
 }
 
@@ -2769,7 +2621,8 @@ inline flatbuffers::Offset<RouteObject> CreateRouteObject(flatbuffers::FlatBuffe
   auto _weight = _o->weight;
   auto _weight_name = _o->weight_name.empty() ? 0 : _fbb.CreateString(_o->weight_name);
   auto _confidence = _o->confidence;
-  auto _geometry = _o->geometry ? CreateGeometry(_fbb, _o->geometry.get(), _rehasher) : 0;
+  auto _polyline = _o->polyline.empty() ? 0 : _fbb.CreateString(_o->polyline);
+  auto _coordinates = _o->coordinates.size() ? _fbb.CreateVectorOfStructs(_o->coordinates) : 0;
   auto _legs = _o->legs.size() ? _fbb.CreateVector<flatbuffers::Offset<osrm::engine::api::fbresult::Leg>> (_o->legs.size(), [](size_t i, _VectorArgs *__va) { return CreateLeg(*__va->__fbb, __va->__o->legs[i].get(), __va->__rehasher); }, &_va ) : 0;
   return osrm::engine::api::fbresult::CreateRouteObject(
       _fbb,
@@ -2778,7 +2631,8 @@ inline flatbuffers::Offset<RouteObject> CreateRouteObject(flatbuffers::FlatBuffe
       _weight,
       _weight_name,
       _confidence,
-      _geometry,
+      _polyline,
+      _coordinates,
       _legs);
 }
 
@@ -2939,6 +2793,35 @@ inline flatbuffers::Offset<Trip> CreateTrip(flatbuffers::FlatBufferBuilder &_fbb
       _trips);
 }
 
+inline ErrorT *Error::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
+  auto _o = new ErrorT();
+  UnPackTo(_o, _resolver);
+  return _o;
+}
+
+inline void Error::UnPackTo(ErrorT *_o, const flatbuffers::resolver_function_t *_resolver) const {
+  (void)_o;
+  (void)_resolver;
+  { auto _e = code(); if (_e) _o->code = _e->str(); };
+  { auto _e = message(); if (_e) _o->message = _e->str(); };
+}
+
+inline flatbuffers::Offset<Error> Error::Pack(flatbuffers::FlatBufferBuilder &_fbb, const ErrorT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
+  return CreateError(_fbb, _o, _rehasher);
+}
+
+inline flatbuffers::Offset<Error> CreateError(flatbuffers::FlatBufferBuilder &_fbb, const ErrorT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
+  (void)_rehasher;
+  (void)_o;
+  struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const ErrorT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
+  auto _code = _o->code.empty() ? 0 : _fbb.CreateString(_o->code);
+  auto _message = _o->message.empty() ? 0 : _fbb.CreateString(_o->message);
+  return osrm::engine::api::fbresult::CreateError(
+      _fbb,
+      _code,
+      _message);
+}
+
 inline FBResultT *FBResult::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
   auto _o = new FBResultT();
   UnPackTo(_o, _resolver);
@@ -2948,11 +2831,14 @@ inline FBResultT *FBResult::UnPack(const flatbuffers::resolver_function_t *_reso
 inline void FBResult::UnPackTo(FBResultT *_o, const flatbuffers::resolver_function_t *_resolver) const {
   (void)_o;
   (void)_resolver;
-  { auto _e = code(); if (_e) _o->code = _e->str(); };
-  { auto _e = message(); if (_e) _o->message = _e->str(); };
+  { auto _e = error(); _o->error = _e; };
+  { auto _e = code(); if (_e) _o->code = std::unique_ptr<osrm::engine::api::fbresult::ErrorT>(_e->UnPack(_resolver)); };
   { auto _e = data_version(); if (_e) _o->data_version = _e->str(); };
-  { auto _e = response_type(); _o->response.type = _e; };
-  { auto _e = response(); if (_e) _o->response.value = ServiceResponseUnion::UnPack(_e, response_type(), _resolver); };
+  { auto _e = match(); if (_e) _o->match = std::unique_ptr<osrm::engine::api::fbresult::MatchT>(_e->UnPack(_resolver)); };
+  { auto _e = nearest(); if (_e) _o->nearest = std::unique_ptr<osrm::engine::api::fbresult::NearestT>(_e->UnPack(_resolver)); };
+  { auto _e = route(); if (_e) _o->route = std::unique_ptr<osrm::engine::api::fbresult::RouteT>(_e->UnPack(_resolver)); };
+  { auto _e = table(); if (_e) _o->table = std::unique_ptr<osrm::engine::api::fbresult::TableT>(_e->UnPack(_resolver)); };
+  { auto _e = trip(); if (_e) _o->trip = std::unique_ptr<osrm::engine::api::fbresult::TripT>(_e->UnPack(_resolver)); };
 }
 
 inline flatbuffers::Offset<FBResult> FBResult::Pack(flatbuffers::FlatBufferBuilder &_fbb, const FBResultT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
@@ -2963,171 +2849,24 @@ inline flatbuffers::Offset<FBResult> CreateFBResult(flatbuffers::FlatBufferBuild
   (void)_rehasher;
   (void)_o;
   struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const FBResultT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _code = _o->code.empty() ? 0 : _fbb.CreateString(_o->code);
-  auto _message = _o->message.empty() ? 0 : _fbb.CreateString(_o->message);
+  auto _error = _o->error;
+  auto _code = _o->code ? CreateError(_fbb, _o->code.get(), _rehasher) : 0;
   auto _data_version = _o->data_version.empty() ? 0 : _fbb.CreateString(_o->data_version);
-  auto _response_type = _o->response.type;
-  auto _response = _o->response.Pack(_fbb);
+  auto _match = _o->match ? CreateMatch(_fbb, _o->match.get(), _rehasher) : 0;
+  auto _nearest = _o->nearest ? CreateNearest(_fbb, _o->nearest.get(), _rehasher) : 0;
+  auto _route = _o->route ? CreateRoute(_fbb, _o->route.get(), _rehasher) : 0;
+  auto _table = _o->table ? CreateTable(_fbb, _o->table.get(), _rehasher) : 0;
+  auto _trip = _o->trip ? CreateTrip(_fbb, _o->trip.get(), _rehasher) : 0;
   return osrm::engine::api::fbresult::CreateFBResult(
       _fbb,
+      _error,
       _code,
-      _message,
       _data_version,
-      _response_type,
-      _response);
-}
-
-inline bool VerifyServiceResponse(flatbuffers::Verifier &verifier, const void *obj, ServiceResponse type) {
-  switch (type) {
-    case ServiceResponse_NONE: {
-      return true;
-    }
-    case ServiceResponse_match: {
-      auto ptr = reinterpret_cast<const osrm::engine::api::fbresult::Match *>(obj);
-      return verifier.VerifyTable(ptr);
-    }
-    case ServiceResponse_nearest: {
-      auto ptr = reinterpret_cast<const osrm::engine::api::fbresult::Nearest *>(obj);
-      return verifier.VerifyTable(ptr);
-    }
-    case ServiceResponse_route: {
-      auto ptr = reinterpret_cast<const osrm::engine::api::fbresult::Route *>(obj);
-      return verifier.VerifyTable(ptr);
-    }
-    case ServiceResponse_table: {
-      auto ptr = reinterpret_cast<const osrm::engine::api::fbresult::Table *>(obj);
-      return verifier.VerifyTable(ptr);
-    }
-    case ServiceResponse_trip: {
-      auto ptr = reinterpret_cast<const osrm::engine::api::fbresult::Trip *>(obj);
-      return verifier.VerifyTable(ptr);
-    }
-    default: return false;
-  }
-}
-
-inline bool VerifyServiceResponseVector(flatbuffers::Verifier &verifier, const flatbuffers::Vector<flatbuffers::Offset<void>> *values, const flatbuffers::Vector<uint8_t> *types) {
-  if (!values || !types) return !values && !types;
-  if (values->size() != types->size()) return false;
-  for (flatbuffers::uoffset_t i = 0; i < values->size(); ++i) {
-    if (!VerifyServiceResponse(
-        verifier,  values->Get(i), types->GetEnum<ServiceResponse>(i))) {
-      return false;
-    }
-  }
-  return true;
-}
-
-inline void *ServiceResponseUnion::UnPack(const void *obj, ServiceResponse type, const flatbuffers::resolver_function_t *resolver) {
-  switch (type) {
-    case ServiceResponse_match: {
-      auto ptr = reinterpret_cast<const osrm::engine::api::fbresult::Match *>(obj);
-      return ptr->UnPack(resolver);
-    }
-    case ServiceResponse_nearest: {
-      auto ptr = reinterpret_cast<const osrm::engine::api::fbresult::Nearest *>(obj);
-      return ptr->UnPack(resolver);
-    }
-    case ServiceResponse_route: {
-      auto ptr = reinterpret_cast<const osrm::engine::api::fbresult::Route *>(obj);
-      return ptr->UnPack(resolver);
-    }
-    case ServiceResponse_table: {
-      auto ptr = reinterpret_cast<const osrm::engine::api::fbresult::Table *>(obj);
-      return ptr->UnPack(resolver);
-    }
-    case ServiceResponse_trip: {
-      auto ptr = reinterpret_cast<const osrm::engine::api::fbresult::Trip *>(obj);
-      return ptr->UnPack(resolver);
-    }
-    default: return nullptr;
-  }
-}
-
-inline flatbuffers::Offset<void> ServiceResponseUnion::Pack(flatbuffers::FlatBufferBuilder &_fbb, const flatbuffers::rehasher_function_t *_rehasher) const {
-  switch (type) {
-    case ServiceResponse_match: {
-      auto ptr = reinterpret_cast<const osrm::engine::api::fbresult::MatchT *>(value);
-      return CreateMatch(_fbb, ptr, _rehasher).Union();
-    }
-    case ServiceResponse_nearest: {
-      auto ptr = reinterpret_cast<const osrm::engine::api::fbresult::NearestT *>(value);
-      return CreateNearest(_fbb, ptr, _rehasher).Union();
-    }
-    case ServiceResponse_route: {
-      auto ptr = reinterpret_cast<const osrm::engine::api::fbresult::RouteT *>(value);
-      return CreateRoute(_fbb, ptr, _rehasher).Union();
-    }
-    case ServiceResponse_table: {
-      auto ptr = reinterpret_cast<const osrm::engine::api::fbresult::TableT *>(value);
-      return CreateTable(_fbb, ptr, _rehasher).Union();
-    }
-    case ServiceResponse_trip: {
-      auto ptr = reinterpret_cast<const osrm::engine::api::fbresult::TripT *>(value);
-      return CreateTrip(_fbb, ptr, _rehasher).Union();
-    }
-    default: return 0;
-  }
-}
-
-inline ServiceResponseUnion::ServiceResponseUnion(const ServiceResponseUnion &u) FLATBUFFERS_NOEXCEPT : type(u.type), value(nullptr) {
-  switch (type) {
-    case ServiceResponse_match: {
-      FLATBUFFERS_ASSERT(false);  // osrm::engine::api::fbresult::MatchT not copyable.
-      break;
-    }
-    case ServiceResponse_nearest: {
-      FLATBUFFERS_ASSERT(false);  // osrm::engine::api::fbresult::NearestT not copyable.
-      break;
-    }
-    case ServiceResponse_route: {
-      FLATBUFFERS_ASSERT(false);  // osrm::engine::api::fbresult::RouteT not copyable.
-      break;
-    }
-    case ServiceResponse_table: {
-      FLATBUFFERS_ASSERT(false);  // osrm::engine::api::fbresult::TableT not copyable.
-      break;
-    }
-    case ServiceResponse_trip: {
-      FLATBUFFERS_ASSERT(false);  // osrm::engine::api::fbresult::TripT not copyable.
-      break;
-    }
-    default:
-      break;
-  }
-}
-
-inline void ServiceResponseUnion::Reset() {
-  switch (type) {
-    case ServiceResponse_match: {
-      auto ptr = reinterpret_cast<osrm::engine::api::fbresult::MatchT *>(value);
-      delete ptr;
-      break;
-    }
-    case ServiceResponse_nearest: {
-      auto ptr = reinterpret_cast<osrm::engine::api::fbresult::NearestT *>(value);
-      delete ptr;
-      break;
-    }
-    case ServiceResponse_route: {
-      auto ptr = reinterpret_cast<osrm::engine::api::fbresult::RouteT *>(value);
-      delete ptr;
-      break;
-    }
-    case ServiceResponse_table: {
-      auto ptr = reinterpret_cast<osrm::engine::api::fbresult::TableT *>(value);
-      delete ptr;
-      break;
-    }
-    case ServiceResponse_trip: {
-      auto ptr = reinterpret_cast<osrm::engine::api::fbresult::TripT *>(value);
-      delete ptr;
-      break;
-    }
-    default: break;
-  }
-  value = nullptr;
-  type = ServiceResponse_NONE;
+      _match,
+      _nearest,
+      _route,
+      _table,
+      _trip);
 }
 
 }  // namespace fbresult

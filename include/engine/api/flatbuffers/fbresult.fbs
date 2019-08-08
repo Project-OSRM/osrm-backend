@@ -6,17 +6,18 @@ include "trip.fbs";
 
 namespace osrm.engine.api.fbresult;
 
-union ServiceResponse {
-    match: Match,
-    nearest: Nearest,
-    route: Route,
-    table: Table,
-    trip: Trip
+table Error {
+    code: string;
+    message: string;
 }
 
 table FBResult {
-    code: string;
-    message: string;
+    error: bool = false;
+    code: Error;
     data_version: string;
-    response: ServiceResponse;
+    match: Match;
+    nearest: Nearest;
+    route: Route;
+    table: Table;
+    trip: Trip;
 }
