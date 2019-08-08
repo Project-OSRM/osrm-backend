@@ -108,8 +108,3 @@ table RouteObject {
     coordinates: [Position];
     legs: [Leg];
 }
-
-table Route{
-    routes: [RouteObject];
-    waypoints: [Waypoint];
-}

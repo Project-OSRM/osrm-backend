@@ -77,12 +77,12 @@ class TableAPI final : public BaseAPI
         // symmetric case
         if (parameters.sources.empty())
         {
-            table.add_sources(MakeWaypoints(fb_result, phantoms));
+            response.add_waypoints(MakeWaypoints(fb_result, phantoms));
             number_of_sources = phantoms.size();
         }
         else
         {
-            table.add_sources(MakeWaypoints(fb_result, phantoms, parameters.sources));
+            response.add_waypoints(MakeWaypoints(fb_result, phantoms, parameters.sources));
         }
 
         if (parameters.destinations.empty())

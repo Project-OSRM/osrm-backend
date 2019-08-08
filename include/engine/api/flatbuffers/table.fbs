@@ -6,7 +6,6 @@ table Table {
     rows: [ushort];
     cols: [ushort];
     distances: [float];
-    sources: [Waypoint];
     destinations: [Waypoint];
     fallback_speed_cells: [uint];
 }

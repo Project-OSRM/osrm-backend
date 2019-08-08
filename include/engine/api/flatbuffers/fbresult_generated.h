@@ -42,20 +42,8 @@ struct LegT;
 struct RouteObject;
 struct RouteObjectT;
 
-struct Route;
-struct RouteT;
-
-struct Match;
-struct MatchT;
-
-struct Nearest;
-struct NearestT;
-
 struct Table;
 struct TableT;
-
-struct Trip;
-struct TripT;
 
 struct Error;
 struct ErrorT;
@@ -1545,237 +1533,12 @@ inline flatbuffers::Offset<RouteObject> CreateRouteObjectDirect(
 
 flatbuffers::Offset<RouteObject> CreateRouteObject(flatbuffers::FlatBufferBuilder &_fbb, const RouteObjectT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 
-struct RouteT : public flatbuffers::NativeTable {
-  typedef Route TableType;
-  std::vector<std::unique_ptr<osrm::engine::api::fbresult::RouteObjectT>> routes;
-  std::vector<std::unique_ptr<osrm::engine::api::fbresult::WaypointT>> waypoints;
-  RouteT() {
-  }
-};
-
-struct Route FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef RouteT NativeTableType;
-  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_ROUTES = 4,
-    VT_WAYPOINTS = 6
-  };
-  const flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::RouteObject>> *routes() const {
-    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::RouteObject>> *>(VT_ROUTES);
-  }
-  const flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>> *waypoints() const {
-    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>> *>(VT_WAYPOINTS);
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
-    return VerifyTableStart(verifier) &&
-           VerifyOffset(verifier, VT_ROUTES) &&
-           verifier.VerifyVector(routes()) &&
-           verifier.VerifyVectorOfTables(routes()) &&
-           VerifyOffset(verifier, VT_WAYPOINTS) &&
-           verifier.VerifyVector(waypoints()) &&
-           verifier.VerifyVectorOfTables(waypoints()) &&
-           verifier.EndTable();
-  }
-  RouteT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  void UnPackTo(RouteT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  static flatbuffers::Offset<Route> Pack(flatbuffers::FlatBufferBuilder &_fbb, const RouteT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
-};
-
-struct RouteBuilder {
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_routes(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::RouteObject>>> routes) {
-    fbb_.AddOffset(Route::VT_ROUTES, routes);
-  }
-  void add_waypoints(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>>> waypoints) {
-    fbb_.AddOffset(Route::VT_WAYPOINTS, waypoints);
-  }
-  explicit RouteBuilder(flatbuffers::FlatBufferBuilder &_fbb)
-        : fbb_(_fbb) {
-    start_ = fbb_.StartTable();
-  }
-  RouteBuilder &operator=(const RouteBuilder &);
-  flatbuffers::Offset<Route> Finish() {
-    const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<Route>(end);
-    return o;
-  }
-};
-
-inline flatbuffers::Offset<Route> CreateRoute(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::RouteObject>>> routes = 0,
-    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>>> waypoints = 0) {
-  RouteBuilder builder_(_fbb);
-  builder_.add_waypoints(waypoints);
-  builder_.add_routes(routes);
-  return builder_.Finish();
-}
-
-inline flatbuffers::Offset<Route> CreateRouteDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    const std::vector<flatbuffers::Offset<osrm::engine::api::fbresult::RouteObject>> *routes = nullptr,
-    const std::vector<flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>> *waypoints = nullptr) {
-  auto routes__ = routes ? _fbb.CreateVector<flatbuffers::Offset<osrm::engine::api::fbresult::RouteObject>>(*routes) : 0;
-  auto waypoints__ = waypoints ? _fbb.CreateVector<flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>>(*waypoints) : 0;
-  return osrm::engine::api::fbresult::CreateRoute(
-      _fbb,
-      routes__,
-      waypoints__);
-}
-
-flatbuffers::Offset<Route> CreateRoute(flatbuffers::FlatBufferBuilder &_fbb, const RouteT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
-
-struct MatchT : public flatbuffers::NativeTable {
-  typedef Match TableType;
-  std::vector<std::unique_ptr<osrm::engine::api::fbresult::WaypointT>> tracepoints;
-  std::vector<std::unique_ptr<osrm::engine::api::fbresult::RouteObjectT>> matchings;
-  MatchT() {
-  }
-};
-
-struct Match FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef MatchT NativeTableType;
-  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_TRACEPOINTS = 4,
-    VT_MATCHINGS = 6
-  };
-  const flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>> *tracepoints() const {
-    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>> *>(VT_TRACEPOINTS);
-  }
-  const flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::RouteObject>> *matchings() const {
-    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::RouteObject>> *>(VT_MATCHINGS);
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
-    return VerifyTableStart(verifier) &&
-           VerifyOffset(verifier, VT_TRACEPOINTS) &&
-           verifier.VerifyVector(tracepoints()) &&
-           verifier.VerifyVectorOfTables(tracepoints()) &&
-           VerifyOffset(verifier, VT_MATCHINGS) &&
-           verifier.VerifyVector(matchings()) &&
-           verifier.VerifyVectorOfTables(matchings()) &&
-           verifier.EndTable();
-  }
-  MatchT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  void UnPackTo(MatchT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  static flatbuffers::Offset<Match> Pack(flatbuffers::FlatBufferBuilder &_fbb, const MatchT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
-};
-
-struct MatchBuilder {
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_tracepoints(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>>> tracepoints) {
-    fbb_.AddOffset(Match::VT_TRACEPOINTS, tracepoints);
-  }
-  void add_matchings(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::RouteObject>>> matchings) {
-    fbb_.AddOffset(Match::VT_MATCHINGS, matchings);
-  }
-  explicit MatchBuilder(flatbuffers::FlatBufferBuilder &_fbb)
-        : fbb_(_fbb) {
-    start_ = fbb_.StartTable();
-  }
-  MatchBuilder &operator=(const MatchBuilder &);
-  flatbuffers::Offset<Match> Finish() {
-    const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<Match>(end);
-    return o;
-  }
-};
-
-inline flatbuffers::Offset<Match> CreateMatch(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>>> tracepoints = 0,
-    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::RouteObject>>> matchings = 0) {
-  MatchBuilder builder_(_fbb);
-  builder_.add_matchings(matchings);
-  builder_.add_tracepoints(tracepoints);
-  return builder_.Finish();
-}
-
-inline flatbuffers::Offset<Match> CreateMatchDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    const std::vector<flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>> *tracepoints = nullptr,
-    const std::vector<flatbuffers::Offset<osrm::engine::api::fbresult::RouteObject>> *matchings = nullptr) {
-  auto tracepoints__ = tracepoints ? _fbb.CreateVector<flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>>(*tracepoints) : 0;
-  auto matchings__ = matchings ? _fbb.CreateVector<flatbuffers::Offset<osrm::engine::api::fbresult::RouteObject>>(*matchings) : 0;
-  return osrm::engine::api::fbresult::CreateMatch(
-      _fbb,
-      tracepoints__,
-      matchings__);
-}
-
-flatbuffers::Offset<Match> CreateMatch(flatbuffers::FlatBufferBuilder &_fbb, const MatchT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
-
-struct NearestT : public flatbuffers::NativeTable {
-  typedef Nearest TableType;
-  std::vector<std::unique_ptr<osrm::engine::api::fbresult::WaypointT>> waypoints;
-  NearestT() {
-  }
-};
-
-struct Nearest FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef NearestT NativeTableType;
-  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_WAYPOINTS = 4
-  };
-  const flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>> *waypoints() const {
-    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>> *>(VT_WAYPOINTS);
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
-    return VerifyTableStart(verifier) &&
-           VerifyOffset(verifier, VT_WAYPOINTS) &&
-           verifier.VerifyVector(waypoints()) &&
-           verifier.VerifyVectorOfTables(waypoints()) &&
-           verifier.EndTable();
-  }
-  NearestT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  void UnPackTo(NearestT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  static flatbuffers::Offset<Nearest> Pack(flatbuffers::FlatBufferBuilder &_fbb, const NearestT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
-};
-
-struct NearestBuilder {
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_waypoints(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>>> waypoints) {
-    fbb_.AddOffset(Nearest::VT_WAYPOINTS, waypoints);
-  }
-  explicit NearestBuilder(flatbuffers::FlatBufferBuilder &_fbb)
-        : fbb_(_fbb) {
-    start_ = fbb_.StartTable();
-  }
-  NearestBuilder &operator=(const NearestBuilder &);
-  flatbuffers::Offset<Nearest> Finish() {
-    const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<Nearest>(end);
-    return o;
-  }
-};
-
-inline flatbuffers::Offset<Nearest> CreateNearest(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>>> waypoints = 0) {
-  NearestBuilder builder_(_fbb);
-  builder_.add_waypoints(waypoints);
-  return builder_.Finish();
-}
-
-inline flatbuffers::Offset<Nearest> CreateNearestDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    const std::vector<flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>> *waypoints = nullptr) {
-  auto waypoints__ = waypoints ? _fbb.CreateVector<flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>>(*waypoints) : 0;
-  return osrm::engine::api::fbresult::CreateNearest(
-      _fbb,
-      waypoints__);
-}
-
-flatbuffers::Offset<Nearest> CreateNearest(flatbuffers::FlatBufferBuilder &_fbb, const NearestT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
-
 struct TableT : public flatbuffers::NativeTable {
   typedef Table TableType;
   std::vector<float> durations;
   std::vector<uint16_t> rows;
   std::vector<uint16_t> cols;
   std::vector<float> distances;
-  std::vector<std::unique_ptr<osrm::engine::api::fbresult::WaypointT>> sources;
   std::vector<std::unique_ptr<osrm::engine::api::fbresult::WaypointT>> destinations;
   std::vector<uint32_t> fallback_speed_cells;
   TableT() {
@@ -1789,9 +1552,8 @@ struct Table FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
     VT_ROWS = 6,
     VT_COLS = 8,
     VT_DISTANCES = 10,
-    VT_SOURCES = 12,
-    VT_DESTINATIONS = 14,
-    VT_FALLBACK_SPEED_CELLS = 16
+    VT_DESTINATIONS = 12,
+    VT_FALLBACK_SPEED_CELLS = 14
   };
   const flatbuffers::Vector<float> *durations() const {
     return GetPointer<const flatbuffers::Vector<float> *>(VT_DURATIONS);
@@ -1804,9 +1566,6 @@ struct Table FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
   const flatbuffers::Vector<float> *distances() const {
     return GetPointer<const flatbuffers::Vector<float> *>(VT_DISTANCES);
-  }
-  const flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>> *sources() const {
-    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>> *>(VT_SOURCES);
   }
   const flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>> *destinations() const {
     return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>> *>(VT_DESTINATIONS);
@@ -1824,9 +1583,6 @@ struct Table FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
            verifier.VerifyVector(cols()) &&
            VerifyOffset(verifier, VT_DISTANCES) &&
            verifier.VerifyVector(distances()) &&
-           VerifyOffset(verifier, VT_SOURCES) &&
-           verifier.VerifyVector(sources()) &&
-           verifier.VerifyVectorOfTables(sources()) &&
            VerifyOffset(verifier, VT_DESTINATIONS) &&
            verifier.VerifyVector(destinations()) &&
            verifier.VerifyVectorOfTables(destinations()) &&
@@ -1854,9 +1610,6 @@ struct TableBuilder {
   void add_distances(flatbuffers::Offset<flatbuffers::Vector<float>> distances) {
     fbb_.AddOffset(Table::VT_DISTANCES, distances);
   }
-  void add_sources(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>>> sources) {
-    fbb_.AddOffset(Table::VT_SOURCES, sources);
-  }
   void add_destinations(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>>> destinations) {
     fbb_.AddOffset(Table::VT_DESTINATIONS, destinations);
   }
@@ -1881,13 +1634,11 @@ inline flatbuffers::Offset<Table> CreateTable(
     flatbuffers::Offset<flatbuffers::Vector<uint16_t>> rows = 0,
     flatbuffers::Offset<flatbuffers::Vector<uint16_t>> cols = 0,
     flatbuffers::Offset<flatbuffers::Vector<float>> distances = 0,
-    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>>> sources = 0,
     flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>>> destinations = 0,
     flatbuffers::Offset<flatbuffers::Vector<uint32_t>> fallback_speed_cells = 0) {
   TableBuilder builder_(_fbb);
   builder_.add_fallback_speed_cells(fallback_speed_cells);
   builder_.add_destinations(destinations);
-  builder_.add_sources(sources);
   builder_.add_distances(distances);
   builder_.add_cols(cols);
   builder_.add_rows(rows);
@@ -1901,14 +1652,12 @@ inline flatbuffers::Offset<Table> CreateTableDirect(
     const std::vector<uint16_t> *rows = nullptr,
     const std::vector<uint16_t> *cols = nullptr,
     const std::vector<float> *distances = nullptr,
-    const std::vector<flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>> *sources = nullptr,
     const std::vector<flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>> *destinations = nullptr,
     const std::vector<uint32_t> *fallback_speed_cells = nullptr) {
   auto durations__ = durations ? _fbb.CreateVector<float>(*durations) : 0;
   auto rows__ = rows ? _fbb.CreateVector<uint16_t>(*rows) : 0;
   auto cols__ = cols ? _fbb.CreateVector<uint16_t>(*cols) : 0;
   auto distances__ = distances ? _fbb.CreateVector<float>(*distances) : 0;
-  auto sources__ = sources ? _fbb.CreateVector<flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>>(*sources) : 0;
   auto destinations__ = destinations ? _fbb.CreateVector<flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>>(*destinations) : 0;
   auto fallback_speed_cells__ = fallback_speed_cells ? _fbb.CreateVector<uint32_t>(*fallback_speed_cells) : 0;
   return osrm::engine::api::fbresult::CreateTable(
@@ -1917,92 +1666,11 @@ inline flatbuffers::Offset<Table> CreateTableDirect(
       rows__,
       cols__,
       distances__,
-      sources__,
       destinations__,
       fallback_speed_cells__);
 }
 
 flatbuffers::Offset<Table> CreateTable(flatbuffers::FlatBufferBuilder &_fbb, const TableT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
-
-struct TripT : public flatbuffers::NativeTable {
-  typedef Trip TableType;
-  std::vector<std::unique_ptr<osrm::engine::api::fbresult::WaypointT>> waypoints;
-  std::vector<std::unique_ptr<osrm::engine::api::fbresult::RouteObjectT>> trips;
-  TripT() {
-  }
-};
-
-struct Trip FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef TripT NativeTableType;
-  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_WAYPOINTS = 4,
-    VT_TRIPS = 6
-  };
-  const flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>> *waypoints() const {
-    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>> *>(VT_WAYPOINTS);
-  }
-  const flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::RouteObject>> *trips() const {
-    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::RouteObject>> *>(VT_TRIPS);
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
-    return VerifyTableStart(verifier) &&
-           VerifyOffset(verifier, VT_WAYPOINTS) &&
-           verifier.VerifyVector(waypoints()) &&
-           verifier.VerifyVectorOfTables(waypoints()) &&
-           VerifyOffset(verifier, VT_TRIPS) &&
-           verifier.VerifyVector(trips()) &&
-           verifier.VerifyVectorOfTables(trips()) &&
-           verifier.EndTable();
-  }
-  TripT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  void UnPackTo(TripT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  static flatbuffers::Offset<Trip> Pack(flatbuffers::FlatBufferBuilder &_fbb, const TripT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
-};
-
-struct TripBuilder {
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_waypoints(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>>> waypoints) {
-    fbb_.AddOffset(Trip::VT_WAYPOINTS, waypoints);
-  }
-  void add_trips(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::RouteObject>>> trips) {
-    fbb_.AddOffset(Trip::VT_TRIPS, trips);
-  }
-  explicit TripBuilder(flatbuffers::FlatBufferBuilder &_fbb)
-        : fbb_(_fbb) {
-    start_ = fbb_.StartTable();
-  }
-  TripBuilder &operator=(const TripBuilder &);
-  flatbuffers::Offset<Trip> Finish() {
-    const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<Trip>(end);
-    return o;
-  }
-};
-
-inline flatbuffers::Offset<Trip> CreateTrip(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>>> waypoints = 0,
-    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::RouteObject>>> trips = 0) {
-  TripBuilder builder_(_fbb);
-  builder_.add_trips(trips);
-  builder_.add_waypoints(waypoints);
-  return builder_.Finish();
-}
-
-inline flatbuffers::Offset<Trip> CreateTripDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    const std::vector<flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>> *waypoints = nullptr,
-    const std::vector<flatbuffers::Offset<osrm::engine::api::fbresult::RouteObject>> *trips = nullptr) {
-  auto waypoints__ = waypoints ? _fbb.CreateVector<flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>>(*waypoints) : 0;
-  auto trips__ = trips ? _fbb.CreateVector<flatbuffers::Offset<osrm::engine::api::fbresult::RouteObject>>(*trips) : 0;
-  return osrm::engine::api::fbresult::CreateTrip(
-      _fbb,
-      waypoints__,
-      trips__);
-}
-
-flatbuffers::Offset<Trip> CreateTrip(flatbuffers::FlatBufferBuilder &_fbb, const TripT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 
 struct ErrorT : public flatbuffers::NativeTable {
   typedef Error TableType;
@@ -2087,11 +1755,9 @@ struct FBResultT : public flatbuffers::NativeTable {
   bool error;
   std::unique_ptr<osrm::engine::api::fbresult::ErrorT> code;
   std::string data_version;
-  std::unique_ptr<osrm::engine::api::fbresult::MatchT> match;
-  std::unique_ptr<osrm::engine::api::fbresult::NearestT> nearest;
-  std::unique_ptr<osrm::engine::api::fbresult::RouteT> route;
+  std::vector<std::unique_ptr<osrm::engine::api::fbresult::WaypointT>> waypoints;
+  std::vector<std::unique_ptr<osrm::engine::api::fbresult::RouteObjectT>> routes;
   std::unique_ptr<osrm::engine::api::fbresult::TableT> table;
-  std::unique_ptr<osrm::engine::api::fbresult::TripT> trip;
   FBResultT()
       : error(false) {
   }
@@ -2103,11 +1769,9 @@ struct FBResult FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
     VT_ERROR = 4,
     VT_CODE = 6,
     VT_DATA_VERSION = 8,
-    VT_MATCH = 10,
-    VT_NEAREST = 12,
-    VT_ROUTE = 14,
-    VT_TABLE = 16,
-    VT_TRIP = 18
+    VT_WAYPOINTS = 10,
+    VT_ROUTES = 12,
+    VT_TABLE = 14
   };
   bool error() const {
     return GetField<uint8_t>(VT_ERROR, 0) != 0;
@@ -2118,20 +1782,14 @@ struct FBResult FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   const flatbuffers::String *data_version() const {
     return GetPointer<const flatbuffers::String *>(VT_DATA_VERSION);
   }
-  const osrm::engine::api::fbresult::Match *match() const {
-    return GetPointer<const osrm::engine::api::fbresult::Match *>(VT_MATCH);
+  const flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>> *waypoints() const {
+    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>> *>(VT_WAYPOINTS);
   }
-  const osrm::engine::api::fbresult::Nearest *nearest() const {
-    return GetPointer<const osrm::engine::api::fbresult::Nearest *>(VT_NEAREST);
-  }
-  const osrm::engine::api::fbresult::Route *route() const {
-    return GetPointer<const osrm::engine::api::fbresult::Route *>(VT_ROUTE);
+  const flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::RouteObject>> *routes() const {
+    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::RouteObject>> *>(VT_ROUTES);
   }
   const osrm::engine::api::fbresult::Table *table() const {
     return GetPointer<const osrm::engine::api::fbresult::Table *>(VT_TABLE);
-  }
-  const osrm::engine::api::fbresult::Trip *trip() const {
-    return GetPointer<const osrm::engine::api::fbresult::Trip *>(VT_TRIP);
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
@@ -2140,16 +1798,14 @@ struct FBResult FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
            verifier.VerifyTable(code()) &&
            VerifyOffset(verifier, VT_DATA_VERSION) &&
            verifier.VerifyString(data_version()) &&
-           VerifyOffset(verifier, VT_MATCH) &&
-           verifier.VerifyTable(match()) &&
-           VerifyOffset(verifier, VT_NEAREST) &&
-           verifier.VerifyTable(nearest()) &&
-           VerifyOffset(verifier, VT_ROUTE) &&
-           verifier.VerifyTable(route()) &&
+           VerifyOffset(verifier, VT_WAYPOINTS) &&
+           verifier.VerifyVector(waypoints()) &&
+           verifier.VerifyVectorOfTables(waypoints()) &&
+           VerifyOffset(verifier, VT_ROUTES) &&
+           verifier.VerifyVector(routes()) &&
+           verifier.VerifyVectorOfTables(routes()) &&
            VerifyOffset(verifier, VT_TABLE) &&
            verifier.VerifyTable(table()) &&
-           VerifyOffset(verifier, VT_TRIP) &&
-           verifier.VerifyTable(trip()) &&
            verifier.EndTable();
   }
   FBResultT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
@@ -2169,20 +1825,14 @@ struct FBResultBuilder {
   void add_data_version(flatbuffers::Offset<flatbuffers::String> data_version) {
     fbb_.AddOffset(FBResult::VT_DATA_VERSION, data_version);
   }
-  void add_match(flatbuffers::Offset<osrm::engine::api::fbresult::Match> match) {
-    fbb_.AddOffset(FBResult::VT_MATCH, match);
+  void add_waypoints(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>>> waypoints) {
+    fbb_.AddOffset(FBResult::VT_WAYPOINTS, waypoints);
   }
-  void add_nearest(flatbuffers::Offset<osrm::engine::api::fbresult::Nearest> nearest) {
-    fbb_.AddOffset(FBResult::VT_NEAREST, nearest);
-  }
-  void add_route(flatbuffers::Offset<osrm::engine::api::fbresult::Route> route) {
-    fbb_.AddOffset(FBResult::VT_ROUTE, route);
+  void add_routes(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::RouteObject>>> routes) {
+    fbb_.AddOffset(FBResult::VT_ROUTES, routes);
   }
   void add_table(flatbuffers::Offset<osrm::engine::api::fbresult::Table> table) {
     fbb_.AddOffset(FBResult::VT_TABLE, table);
-  }
-  void add_trip(flatbuffers::Offset<osrm::engine::api::fbresult::Trip> trip) {
-    fbb_.AddOffset(FBResult::VT_TRIP, trip);
   }
   explicit FBResultBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -2201,17 +1851,13 @@ inline flatbuffers::Offset<FBResult> CreateFBResult(
     bool error = false,
     flatbuffers::Offset<osrm::engine::api::fbresult::Error> code = 0,
     flatbuffers::Offset<flatbuffers::String> data_version = 0,
-    flatbuffers::Offset<osrm::engine::api::fbresult::Match> match = 0,
-    flatbuffers::Offset<osrm::engine::api::fbresult::Nearest> nearest = 0,
-    flatbuffers::Offset<osrm::engine::api::fbresult::Route> route = 0,
-    flatbuffers::Offset<osrm::engine::api::fbresult::Table> table = 0,
-    flatbuffers::Offset<osrm::engine::api::fbresult::Trip> trip = 0) {
+    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>>> waypoints = 0,
+    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::RouteObject>>> routes = 0,
+    flatbuffers::Offset<osrm::engine::api::fbresult::Table> table = 0) {
   FBResultBuilder builder_(_fbb);
-  builder_.add_trip(trip);
   builder_.add_table(table);
-  builder_.add_route(route);
-  builder_.add_nearest(nearest);
-  builder_.add_match(match);
+  builder_.add_routes(routes);
+  builder_.add_waypoints(waypoints);
   builder_.add_data_version(data_version);
   builder_.add_code(code);
   builder_.add_error(error);
@@ -2223,22 +1869,20 @@ inline flatbuffers::Offset<FBResult> CreateFBResultDirect(
     bool error = false,
     flatbuffers::Offset<osrm::engine::api::fbresult::Error> code = 0,
     const char *data_version = nullptr,
-    flatbuffers::Offset<osrm::engine::api::fbresult::Match> match = 0,
-    flatbuffers::Offset<osrm::engine::api::fbresult::Nearest> nearest = 0,
-    flatbuffers::Offset<osrm::engine::api::fbresult::Route> route = 0,
-    flatbuffers::Offset<osrm::engine::api::fbresult::Table> table = 0,
-    flatbuffers::Offset<osrm::engine::api::fbresult::Trip> trip = 0) {
+    const std::vector<flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>> *waypoints = nullptr,
+    const std::vector<flatbuffers::Offset<osrm::engine::api::fbresult::RouteObject>> *routes = nullptr,
+    flatbuffers::Offset<osrm::engine::api::fbresult::Table> table = 0) {
   auto data_version__ = data_version ? _fbb.CreateString(data_version) : 0;
+  auto waypoints__ = waypoints ? _fbb.CreateVector<flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>>(*waypoints) : 0;
+  auto routes__ = routes ? _fbb.CreateVector<flatbuffers::Offset<osrm::engine::api::fbresult::RouteObject>>(*routes) : 0;
   return osrm::engine::api::fbresult::CreateFBResult(
       _fbb,
       error,
       code,
       data_version__,
-      match,
-      nearest,
-      route,
-      table,
-      trip);
+      waypoints__,
+      routes__,
+      table);
 }
 
 flatbuffers::Offset<FBResult> CreateFBResult(flatbuffers::FlatBufferBuilder &_fbb, const FBResultT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
@@ -2636,90 +2280,6 @@ inline flatbuffers::Offset<RouteObject> CreateRouteObject(flatbuffers::FlatBuffe
       _legs);
 }
 
-inline RouteT *Route::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
-  auto _o = new RouteT();
-  UnPackTo(_o, _resolver);
-  return _o;
-}
-
-inline void Route::UnPackTo(RouteT *_o, const flatbuffers::resolver_function_t *_resolver) const {
-  (void)_o;
-  (void)_resolver;
-  { auto _e = routes(); if (_e) { _o->routes.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->routes[_i] = std::unique_ptr<osrm::engine::api::fbresult::RouteObjectT>(_e->Get(_i)->UnPack(_resolver)); } } };
-  { auto _e = waypoints(); if (_e) { _o->waypoints.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->waypoints[_i] = std::unique_ptr<osrm::engine::api::fbresult::WaypointT>(_e->Get(_i)->UnPack(_resolver)); } } };
-}
-
-inline flatbuffers::Offset<Route> Route::Pack(flatbuffers::FlatBufferBuilder &_fbb, const RouteT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
-  return CreateRoute(_fbb, _o, _rehasher);
-}
-
-inline flatbuffers::Offset<Route> CreateRoute(flatbuffers::FlatBufferBuilder &_fbb, const RouteT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
-  (void)_rehasher;
-  (void)_o;
-  struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const RouteT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _routes = _o->routes.size() ? _fbb.CreateVector<flatbuffers::Offset<osrm::engine::api::fbresult::RouteObject>> (_o->routes.size(), [](size_t i, _VectorArgs *__va) { return CreateRouteObject(*__va->__fbb, __va->__o->routes[i].get(), __va->__rehasher); }, &_va ) : 0;
-  auto _waypoints = _o->waypoints.size() ? _fbb.CreateVector<flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>> (_o->waypoints.size(), [](size_t i, _VectorArgs *__va) { return CreateWaypoint(*__va->__fbb, __va->__o->waypoints[i].get(), __va->__rehasher); }, &_va ) : 0;
-  return osrm::engine::api::fbresult::CreateRoute(
-      _fbb,
-      _routes,
-      _waypoints);
-}
-
-inline MatchT *Match::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
-  auto _o = new MatchT();
-  UnPackTo(_o, _resolver);
-  return _o;
-}
-
-inline void Match::UnPackTo(MatchT *_o, const flatbuffers::resolver_function_t *_resolver) const {
-  (void)_o;
-  (void)_resolver;
-  { auto _e = tracepoints(); if (_e) { _o->tracepoints.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->tracepoints[_i] = std::unique_ptr<osrm::engine::api::fbresult::WaypointT>(_e->Get(_i)->UnPack(_resolver)); } } };
-  { auto _e = matchings(); if (_e) { _o->matchings.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->matchings[_i] = std::unique_ptr<osrm::engine::api::fbresult::RouteObjectT>(_e->Get(_i)->UnPack(_resolver)); } } };
-}
-
-inline flatbuffers::Offset<Match> Match::Pack(flatbuffers::FlatBufferBuilder &_fbb, const MatchT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
-  return CreateMatch(_fbb, _o, _rehasher);
-}
-
-inline flatbuffers::Offset<Match> CreateMatch(flatbuffers::FlatBufferBuilder &_fbb, const MatchT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
-  (void)_rehasher;
-  (void)_o;
-  struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const MatchT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _tracepoints = _o->tracepoints.size() ? _fbb.CreateVector<flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>> (_o->tracepoints.size(), [](size_t i, _VectorArgs *__va) { return CreateWaypoint(*__va->__fbb, __va->__o->tracepoints[i].get(), __va->__rehasher); }, &_va ) : 0;
-  auto _matchings = _o->matchings.size() ? _fbb.CreateVector<flatbuffers::Offset<osrm::engine::api::fbresult::RouteObject>> (_o->matchings.size(), [](size_t i, _VectorArgs *__va) { return CreateRouteObject(*__va->__fbb, __va->__o->matchings[i].get(), __va->__rehasher); }, &_va ) : 0;
-  return osrm::engine::api::fbresult::CreateMatch(
-      _fbb,
-      _tracepoints,
-      _matchings);
-}
-
-inline NearestT *Nearest::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
-  auto _o = new NearestT();
-  UnPackTo(_o, _resolver);
-  return _o;
-}
-
-inline void Nearest::UnPackTo(NearestT *_o, const flatbuffers::resolver_function_t *_resolver) const {
-  (void)_o;
-  (void)_resolver;
-  { auto _e = waypoints(); if (_e) { _o->waypoints.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->waypoints[_i] = std::unique_ptr<osrm::engine::api::fbresult::WaypointT>(_e->Get(_i)->UnPack(_resolver)); } } };
-}
-
-inline flatbuffers::Offset<Nearest> Nearest::Pack(flatbuffers::FlatBufferBuilder &_fbb, const NearestT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
-  return CreateNearest(_fbb, _o, _rehasher);
-}
-
-inline flatbuffers::Offset<Nearest> CreateNearest(flatbuffers::FlatBufferBuilder &_fbb, const NearestT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
-  (void)_rehasher;
-  (void)_o;
-  struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const NearestT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _waypoints = _o->waypoints.size() ? _fbb.CreateVector<flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>> (_o->waypoints.size(), [](size_t i, _VectorArgs *__va) { return CreateWaypoint(*__va->__fbb, __va->__o->waypoints[i].get(), __va->__rehasher); }, &_va ) : 0;
-  return osrm::engine::api::fbresult::CreateNearest(
-      _fbb,
-      _waypoints);
-}
-
 inline TableT *Table::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
   auto _o = new TableT();
   UnPackTo(_o, _resolver);
@@ -2733,7 +2293,6 @@ inline void Table::UnPackTo(TableT *_o, const flatbuffers::resolver_function_t *
   { auto _e = rows(); if (_e) { _o->rows.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->rows[_i] = _e->Get(_i); } } };
   { auto _e = cols(); if (_e) { _o->cols.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->cols[_i] = _e->Get(_i); } } };
   { auto _e = distances(); if (_e) { _o->distances.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->distances[_i] = _e->Get(_i); } } };
-  { auto _e = sources(); if (_e) { _o->sources.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->sources[_i] = std::unique_ptr<osrm::engine::api::fbresult::WaypointT>(_e->Get(_i)->UnPack(_resolver)); } } };
   { auto _e = destinations(); if (_e) { _o->destinations.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->destinations[_i] = std::unique_ptr<osrm::engine::api::fbresult::WaypointT>(_e->Get(_i)->UnPack(_resolver)); } } };
   { auto _e = fallback_speed_cells(); if (_e) { _o->fallback_speed_cells.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->fallback_speed_cells[_i] = _e->Get(_i); } } };
 }
@@ -2750,7 +2309,6 @@ inline flatbuffers::Offset<Table> CreateTable(flatbuffers::FlatBufferBuilder &_f
   auto _rows = _o->rows.size() ? _fbb.CreateVector(_o->rows) : 0;
   auto _cols = _o->cols.size() ? _fbb.CreateVector(_o->cols) : 0;
   auto _distances = _o->distances.size() ? _fbb.CreateVector(_o->distances) : 0;
-  auto _sources = _o->sources.size() ? _fbb.CreateVector<flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>> (_o->sources.size(), [](size_t i, _VectorArgs *__va) { return CreateWaypoint(*__va->__fbb, __va->__o->sources[i].get(), __va->__rehasher); }, &_va ) : 0;
   auto _destinations = _o->destinations.size() ? _fbb.CreateVector<flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>> (_o->destinations.size(), [](size_t i, _VectorArgs *__va) { return CreateWaypoint(*__va->__fbb, __va->__o->destinations[i].get(), __va->__rehasher); }, &_va ) : 0;
   auto _fallback_speed_cells = _o->fallback_speed_cells.size() ? _fbb.CreateVector(_o->fallback_speed_cells) : 0;
   return osrm::engine::api::fbresult::CreateTable(
@@ -2759,38 +2317,8 @@ inline flatbuffers::Offset<Table> CreateTable(flatbuffers::FlatBufferBuilder &_f
       _rows,
       _cols,
       _distances,
-      _sources,
       _destinations,
       _fallback_speed_cells);
-}
-
-inline TripT *Trip::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
-  auto _o = new TripT();
-  UnPackTo(_o, _resolver);
-  return _o;
-}
-
-inline void Trip::UnPackTo(TripT *_o, const flatbuffers::resolver_function_t *_resolver) const {
-  (void)_o;
-  (void)_resolver;
-  { auto _e = waypoints(); if (_e) { _o->waypoints.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->waypoints[_i] = std::unique_ptr<osrm::engine::api::fbresult::WaypointT>(_e->Get(_i)->UnPack(_resolver)); } } };
-  { auto _e = trips(); if (_e) { _o->trips.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->trips[_i] = std::unique_ptr<osrm::engine::api::fbresult::RouteObjectT>(_e->Get(_i)->UnPack(_resolver)); } } };
-}
-
-inline flatbuffers::Offset<Trip> Trip::Pack(flatbuffers::FlatBufferBuilder &_fbb, const TripT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
-  return CreateTrip(_fbb, _o, _rehasher);
-}
-
-inline flatbuffers::Offset<Trip> CreateTrip(flatbuffers::FlatBufferBuilder &_fbb, const TripT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
-  (void)_rehasher;
-  (void)_o;
-  struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const TripT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _waypoints = _o->waypoints.size() ? _fbb.CreateVector<flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>> (_o->waypoints.size(), [](size_t i, _VectorArgs *__va) { return CreateWaypoint(*__va->__fbb, __va->__o->waypoints[i].get(), __va->__rehasher); }, &_va ) : 0;
-  auto _trips = _o->trips.size() ? _fbb.CreateVector<flatbuffers::Offset<osrm::engine::api::fbresult::RouteObject>> (_o->trips.size(), [](size_t i, _VectorArgs *__va) { return CreateRouteObject(*__va->__fbb, __va->__o->trips[i].get(), __va->__rehasher); }, &_va ) : 0;
-  return osrm::engine::api::fbresult::CreateTrip(
-      _fbb,
-      _waypoints,
-      _trips);
 }
 
 inline ErrorT *Error::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
@@ -2834,11 +2362,9 @@ inline void FBResult::UnPackTo(FBResultT *_o, const flatbuffers::resolver_functi
   { auto _e = error(); _o->error = _e; };
   { auto _e = code(); if (_e) _o->code = std::unique_ptr<osrm::engine::api::fbresult::ErrorT>(_e->UnPack(_resolver)); };
   { auto _e = data_version(); if (_e) _o->data_version = _e->str(); };
-  { auto _e = match(); if (_e) _o->match = std::unique_ptr<osrm::engine::api::fbresult::MatchT>(_e->UnPack(_resolver)); };
-  { auto _e = nearest(); if (_e) _o->nearest = std::unique_ptr<osrm::engine::api::fbresult::NearestT>(_e->UnPack(_resolver)); };
-  { auto _e = route(); if (_e) _o->route = std::unique_ptr<osrm::engine::api::fbresult::RouteT>(_e->UnPack(_resolver)); };
+  { auto _e = waypoints(); if (_e) { _o->waypoints.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->waypoints[_i] = std::unique_ptr<osrm::engine::api::fbresult::WaypointT>(_e->Get(_i)->UnPack(_resolver)); } } };
+  { auto _e = routes(); if (_e) { _o->routes.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->routes[_i] = std::unique_ptr<osrm::engine::api::fbresult::RouteObjectT>(_e->Get(_i)->UnPack(_resolver)); } } };
   { auto _e = table(); if (_e) _o->table = std::unique_ptr<osrm::engine::api::fbresult::TableT>(_e->UnPack(_resolver)); };
-  { auto _e = trip(); if (_e) _o->trip = std::unique_ptr<osrm::engine::api::fbresult::TripT>(_e->UnPack(_resolver)); };
 }
 
 inline flatbuffers::Offset<FBResult> FBResult::Pack(flatbuffers::FlatBufferBuilder &_fbb, const FBResultT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
@@ -2852,21 +2378,17 @@ inline flatbuffers::Offset<FBResult> CreateFBResult(flatbuffers::FlatBufferBuild
   auto _error = _o->error;
   auto _code = _o->code ? CreateError(_fbb, _o->code.get(), _rehasher) : 0;
   auto _data_version = _o->data_version.empty() ? 0 : _fbb.CreateString(_o->data_version);
-  auto _match = _o->match ? CreateMatch(_fbb, _o->match.get(), _rehasher) : 0;
-  auto _nearest = _o->nearest ? CreateNearest(_fbb, _o->nearest.get(), _rehasher) : 0;
-  auto _route = _o->route ? CreateRoute(_fbb, _o->route.get(), _rehasher) : 0;
+  auto _waypoints = _o->waypoints.size() ? _fbb.CreateVector<flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>> (_o->waypoints.size(), [](size_t i, _VectorArgs *__va) { return CreateWaypoint(*__va->__fbb, __va->__o->waypoints[i].get(), __va->__rehasher); }, &_va ) : 0;
+  auto _routes = _o->routes.size() ? _fbb.CreateVector<flatbuffers::Offset<osrm::engine::api::fbresult::RouteObject>> (_o->routes.size(), [](size_t i, _VectorArgs *__va) { return CreateRouteObject(*__va->__fbb, __va->__o->routes[i].get(), __va->__rehasher); }, &_va ) : 0;
   auto _table = _o->table ? CreateTable(_fbb, _o->table.get(), _rehasher) : 0;
-  auto _trip = _o->trip ? CreateTrip(_fbb, _o->trip.get(), _rehasher) : 0;
   return osrm::engine::api::fbresult::CreateFBResult(
       _fbb,
       _error,
       _code,
       _data_version,
-      _match,
-      _nearest,
-      _route,
-      _table,
-      _trip);
+      _waypoints,
+      _routes,
+      _table);
 }
 
 }  // namespace fbresult

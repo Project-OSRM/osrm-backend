@@ -67,7 +67,6 @@ public:
 
         fbresult::FBResultBuilder response(fb_result);
 
-        fbresult::RouteBuilder route(fb_result);
         std::vector<flatbuffers::Offset<fbresult::RouteObject>> routes;
         for (const auto &raw_route : raw_routes.routes)
         {
@@ -82,10 +81,9 @@ public:
         }
 
         auto routes_vector = fb_result.CreateVector(routes);
-        route.add_routes(routes_vector);
-        route.add_waypoints(BaseAPI::MakeWaypoints(fb_result, all_start_end_points));
-        response.add_route(route.Finish());
-        
+        response.add_routes(routes_vector);
+        response.add_waypoints(BaseAPI::MakeWaypoints(fb_result, all_start_end_points));
+
         auto data_timestamp = facade.GetTimestamp();
         if (!data_timestamp.empty())
         {

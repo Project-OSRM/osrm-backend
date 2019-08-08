@@ -49,7 +49,6 @@ class NearestAPI final : public BaseAPI
     {
         fbresult::FBResultBuilder response(fb_result);
 
-        fbresult::NearestBuilder nearest(fb_result);
         std::vector<flatbuffers::Offset<fbresult::Waypoint>> waypoints;
         waypoints.resize(phantom_nodes.front().size());
         std::transform(
@@ -69,8 +68,7 @@ class NearestAPI final : public BaseAPI
                 });
 
         auto waypoints_vector = fb_result.CreateVector(waypoints);
-        nearest.add_waypoints(waypoints_vector);
-        response.add_nearest(nearest.Finish());
+        response.add_waypoints(waypoints_vector);
         fb_result.Finish(response.Finish());
     }
         void MakeResponse(const std::vector<std::vector<PhantomNodeWithDistance>> &phantom_nodes,

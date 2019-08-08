@@ -47,7 +47,6 @@ class MatchAPI final : public RouteAPI
                       flatbuffers::FlatBufferBuilder &fb_result) const
     {
         fbresult::FBResultBuilder response(fb_result);
-        fbresult::MatchBuilder match(fb_result);
 
         std::vector<flatbuffers::Offset<fbresult::RouteObject>> routes;
         routes.reserve(sub_matchings.size());
@@ -59,10 +58,9 @@ class MatchAPI final : public RouteAPI
                                        sub_routes[index].source_traversed_in_reverse,
                                        sub_routes[index].target_traversed_in_reverse));
         }
-        match.add_matchings(fb_result.CreateVector(routes));
-        match.add_tracepoints(fb_result.CreateVector(MakeTracepoints(fb_result, sub_matchings)));
+        response.add_routes(fb_result.CreateVector(routes));
+        response.add_waypoints(fb_result.CreateVector(MakeTracepoints(fb_result, sub_matchings)));
 
-        response.add_match(match.Finish());
         fb_result.Finish(response.Finish());
     }
     void MakeResponse(const std::vector<map_matching::SubMatching> &sub_matchings,

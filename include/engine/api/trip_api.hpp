@@ -46,7 +46,6 @@ class TripAPI final : public RouteAPI
                       flatbuffers::FlatBufferBuilder &fb_result) const
     {
         fbresult::FBResultBuilder response(fb_result);
-        fbresult::TripBuilder trip(fb_result);
 
         std::vector<flatbuffers::Offset<fbresult::RouteObject>> routes;
         routes.reserve(sub_trips.size());
@@ -58,9 +57,8 @@ class TripAPI final : public RouteAPI
                                    sub_routes[index].source_traversed_in_reverse,
                                    sub_routes[index].target_traversed_in_reverse));
         }
-        trip.add_trips(fb_result.CreateVector(routes));
-        trip.add_waypoints(fb_result.CreateVector(MakeWaypoints(fb_result, sub_trips, phantoms)));
-        response.add_trip(trip.Finish());
+        response.add_routes(fb_result.CreateVector(routes));
+        response.add_waypoints(fb_result.CreateVector(MakeWaypoints(fb_result, sub_trips, phantoms)));
         fb_result.Finish(response.Finish());
     }
     void MakeResponse(const std::vector<std::vector<NodeID>> &sub_trips,

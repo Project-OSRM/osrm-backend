@@ -1,8 +1,5 @@
-include "match.fbs";
-include "nearest.fbs";
 include "route.fbs";
 include "table.fbs";
-include "trip.fbs";
 
 namespace osrm.engine.api.fbresult;
 
@@ -15,9 +12,7 @@ table FBResult {
     error: bool = false;
     code: Error;
     data_version: string;
-    match: Match;
-    nearest: Nearest;
-    route: Route;
+    waypoints: [Waypoint]; //Used as 'sources' waypoints for a 'Table' service
+    routes: [RouteObject];
     table: Table;
-    trip: Trip;
 }
