@@ -11,7 +11,7 @@ table Annotation {
     datasources: [uint];
     nodes: [uint];
     weight: [uint];
-    speed: [double];
+    speed: [float];
     metadata: Metadata;
 }
 
@@ -71,11 +71,11 @@ table Intersection {
 }
 
 table Step {
-    distance: double;
-    duration: double;
+    distance: float;
+    duration: float;
     polyline: string;
     coordinates: [Position];
-    weight: double;
+    weight: float;
     name: string;
     ref: string;
     pronunciation: string;
@@ -99,11 +99,11 @@ table Leg {
 }
 
 table RouteObject {
-    distance: double;
-    duration: double;
-    weight: double;
+    distance: float;
+    duration: float;
+    weight: float;
     weight_name: string;
-    confidence: double; //Used only by 'Match' service
+    confidence: float; //Used only by 'Match' service
     polyline: string;
     coordinates: [Position];
     legs: [Leg];

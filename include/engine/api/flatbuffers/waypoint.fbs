@@ -8,7 +8,7 @@ struct Uint64Pair {
 
 table Waypoint {
     hint: string;
-    distance:  double;
+    distance: float;
     name: string;
     location: Position;
     nodes: Uint64Pair; //Used only by 'Nearest' service

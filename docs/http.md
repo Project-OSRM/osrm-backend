@@ -1095,8 +1095,8 @@ Exactly same as `json` annotation object.
 A point on Earth. 
 
 ***Properties***
-- `longitute`: `double` Point's longitude
-- `latitude`: `double` Point's latitude
+- `longitute`: `float` Point's longitude
+- `latitude`: `float` Point's latitude
 
 ### Uint64Pair
 

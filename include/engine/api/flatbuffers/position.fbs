@@ -1,6 +1,6 @@
 namespace osrm.engine.api.fbresult;
 
 struct Position {
-    longitute: double;
-    latitude:  double;
+    longitute: float;
+    latitude:  float;
 }

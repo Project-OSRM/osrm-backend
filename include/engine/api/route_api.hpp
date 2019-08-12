@@ -150,8 +150,8 @@ public:
             std::vector<fbresult::Position> coordinates;
             coordinates.resize(std::distance(begin, end));
             std::transform(begin, end, coordinates.begin(), [](const Coordinate &c) {
-                return fbresult::Position{static_cast<double>(util::toFloating(c.lon)),
-                                     static_cast<double>(util::toFloating(c.lat))};
+                return fbresult::Position{static_cast<float>(util::toFloating(c.lon).__value),
+                                     static_cast<float>(util::toFloating(c.lat).__value)};
             });
             auto coordinates_vector = builder.fbb_.CreateVectorOfStructs(coordinates);
             builder.add_coordinates(coordinates_vector);
@@ -367,8 +367,8 @@ public:
                     MakeGeometry(stepBuilder, leg_geometry.locations.begin() + step.geometry_begin, leg_geometry.locations.begin() + step.geometry_end);
                     //Maneuver
                     fbresult::StepManeuverBuilder maneuver(fb_result);
-                    fbresult::Position maneuverPosition{static_cast<double>(util::toFloating(step.maneuver.location.lon)),
-                                                        static_cast<double>(util::toFloating(step.maneuver.location.lat))};
+                    fbresult::Position maneuverPosition{static_cast<float>(util::toFloating(step.maneuver.location.lon).__value),
+                                                        static_cast<float>(util::toFloating(step.maneuver.location.lat).__value)};
                     maneuver.add_location(&maneuverPosition);
                     maneuver.add_bearing_before(step.maneuver.bearing_before);
                     maneuver.add_bearing_after(step.maneuver.bearing_after);
@@ -388,8 +388,8 @@ public:
                     intersections.resize(step.intersections.size());
                     std::transform(step.intersections.begin(), step.intersections.end(), intersections.begin(), [&fb_result, this](const guidance::IntermediateIntersection& intersection) {
                         fbresult::IntersectionBuilder intersectionBuilder(fb_result);
-                        fbresult::Position maneuverPosition{static_cast<double>(util::toFloating(intersection.location.lon)),
-                                                            static_cast<double>(util::toFloating(intersection.location.lat))};
+                        fbresult::Position maneuverPosition{static_cast<float>(util::toFloating(intersection.location.lon).__value),
+                                                            static_cast<float>(util::toFloating(intersection.location.lat).__value)};
                         intersectionBuilder.add_location(&maneuverPosition);
                         auto bearings_vector = fb_result.CreateVector(intersection.bearings);
                         intersectionBuilder.add_bearings(bearings_vector);
@@ -457,9 +457,9 @@ public:
                 if (parameters.annotations_type & RouteParameters::AnnotationsType::Speed)
                 {
                     double prev_speed = 0;
-                    auto speed = GetAnnotations<double>(
+                    auto speed = GetAnnotations<float>(
                             fb_result, leg_geometry, [&prev_speed](const guidance::LegGeometry::Annotation &anno) {
-                                if (anno.duration < std::numeric_limits<double>::min())
+                                if (anno.duration < std::numeric_limits<float>::min())
                                 {
                                     return prev_speed;
                                 }
