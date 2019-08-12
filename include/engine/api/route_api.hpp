@@ -130,9 +130,9 @@ public:
                                        raw_route.target_traversed_in_reverse));
         }
 
+        response.add_waypoints(getWaypoints());
         auto routes_vector = fb_result.CreateVector(routes);
         response.add_routes(routes_vector);
-        response.add_waypoints(getWaypoints());
 
         return response;
     }
@@ -303,17 +303,11 @@ public:
 
         //Fill basix route info
         auto route = guidance::assembleRoute(legs);
-        auto weight_name_string = fb_result.CreateString(facade.GetWeightName());
-        routeObject.add_weight_name(weight_name_string);
         routeObject.add_distance(route.distance);
         routeObject.add_duration(route.duration);
         routeObject.add_weight(route.weight);
-
-        //Fill geometry
-        auto overview = MakeOverview(leg_geometries);
-        if(overview) {
-            MakeGeometry(routeObject, overview->begin(), overview->end());
-        }
+        auto weight_name_string = fb_result.CreateString(facade.GetWeightName());
+        routeObject.add_weight_name(weight_name_string);
 
         //Fill legs
         std::vector<flatbuffers::Offset<fbresult::Leg>> routeLegs;
@@ -547,6 +541,12 @@ public:
         }
         auto legs_vector = fb_result.CreateVector(routeLegs);
         routeObject.add_legs(legs_vector);
+
+        //Fill geometry
+        auto overview = MakeOverview(leg_geometries);
+        if(overview) {
+            MakeGeometry(routeObject, overview->begin(), overview->end());
+        }
 
         return routeObject.Finish();
     }

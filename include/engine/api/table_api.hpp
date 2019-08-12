@@ -95,8 +95,6 @@ class TableAPI final : public BaseAPI
             table.add_destinations(MakeWaypoints(fb_result, phantoms, parameters.destinations));
         }
 
-        table.add_rows(number_of_sources);
-        table.add_cols(number_of_destinations);
         if (parameters.annotations & TableParameters::AnnotationsType::Duration)
         {
             table.add_durations(MakeDurationTable(fb_result, tables.first));
@@ -111,6 +109,10 @@ class TableAPI final : public BaseAPI
         {
             table.add_fallback_speed_cells(MakeEstimatesTable(fb_result, fallback_speed_cells));
         }
+
+        table.add_rows(number_of_sources);
+        table.add_cols(number_of_destinations);
+
         response.add_table(table.Finish());
         fb_result.Finish(response.Finish());
     }
