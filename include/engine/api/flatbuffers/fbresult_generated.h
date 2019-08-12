@@ -1536,12 +1536,14 @@ flatbuffers::Offset<RouteObject> CreateRouteObject(flatbuffers::FlatBufferBuilde
 struct TableT : public flatbuffers::NativeTable {
   typedef Table TableType;
   std::vector<float> durations;
-  std::vector<uint16_t> rows;
-  std::vector<uint16_t> cols;
+  uint16_t rows;
+  uint16_t cols;
   std::vector<float> distances;
   std::vector<std::unique_ptr<osrm::engine::api::fbresult::WaypointT>> destinations;
   std::vector<uint32_t> fallback_speed_cells;
-  TableT() {
+  TableT()
+      : rows(0),
+        cols(0) {
   }
 };
 
@@ -1558,11 +1560,11 @@ struct Table FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   const flatbuffers::Vector<float> *durations() const {
     return GetPointer<const flatbuffers::Vector<float> *>(VT_DURATIONS);
   }
-  const flatbuffers::Vector<uint16_t> *rows() const {
-    return GetPointer<const flatbuffers::Vector<uint16_t> *>(VT_ROWS);
+  uint16_t rows() const {
+    return GetField<uint16_t>(VT_ROWS, 0);
   }
-  const flatbuffers::Vector<uint16_t> *cols() const {
-    return GetPointer<const flatbuffers::Vector<uint16_t> *>(VT_COLS);
+  uint16_t cols() const {
+    return GetField<uint16_t>(VT_COLS, 0);
   }
   const flatbuffers::Vector<float> *distances() const {
     return GetPointer<const flatbuffers::Vector<float> *>(VT_DISTANCES);
@@ -1577,10 +1579,8 @@ struct Table FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_DURATIONS) &&
            verifier.VerifyVector(durations()) &&
-           VerifyOffset(verifier, VT_ROWS) &&
-           verifier.VerifyVector(rows()) &&
-           VerifyOffset(verifier, VT_COLS) &&
-           verifier.VerifyVector(cols()) &&
+           VerifyField<uint16_t>(verifier, VT_ROWS) &&
+           VerifyField<uint16_t>(verifier, VT_COLS) &&
            VerifyOffset(verifier, VT_DISTANCES) &&
            verifier.VerifyVector(distances()) &&
            VerifyOffset(verifier, VT_DESTINATIONS) &&
@@ -1601,11 +1601,11 @@ struct TableBuilder {
   void add_durations(flatbuffers::Offset<flatbuffers::Vector<float>> durations) {
     fbb_.AddOffset(Table::VT_DURATIONS, durations);
   }
-  void add_rows(flatbuffers::Offset<flatbuffers::Vector<uint16_t>> rows) {
-    fbb_.AddOffset(Table::VT_ROWS, rows);
+  void add_rows(uint16_t rows) {
+    fbb_.AddElement<uint16_t>(Table::VT_ROWS, rows, 0);
   }
-  void add_cols(flatbuffers::Offset<flatbuffers::Vector<uint16_t>> cols) {
-    fbb_.AddOffset(Table::VT_COLS, cols);
+  void add_cols(uint16_t cols) {
+    fbb_.AddElement<uint16_t>(Table::VT_COLS, cols, 0);
   }
   void add_distances(flatbuffers::Offset<flatbuffers::Vector<float>> distances) {
     fbb_.AddOffset(Table::VT_DISTANCES, distances);
@@ -1631,8 +1631,8 @@ struct TableBuilder {
 inline flatbuffers::Offset<Table> CreateTable(
     flatbuffers::FlatBufferBuilder &_fbb,
     flatbuffers::Offset<flatbuffers::Vector<float>> durations = 0,
-    flatbuffers::Offset<flatbuffers::Vector<uint16_t>> rows = 0,
-    flatbuffers::Offset<flatbuffers::Vector<uint16_t>> cols = 0,
+    uint16_t rows = 0,
+    uint16_t cols = 0,
     flatbuffers::Offset<flatbuffers::Vector<float>> distances = 0,
     flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>>> destinations = 0,
     flatbuffers::Offset<flatbuffers::Vector<uint32_t>> fallback_speed_cells = 0) {
@@ -1640,31 +1640,29 @@ inline flatbuffers::Offset<Table> CreateTable(
   builder_.add_fallback_speed_cells(fallback_speed_cells);
   builder_.add_destinations(destinations);
   builder_.add_distances(distances);
+  builder_.add_durations(durations);
   builder_.add_cols(cols);
   builder_.add_rows(rows);
-  builder_.add_durations(durations);
   return builder_.Finish();
 }
 
 inline flatbuffers::Offset<Table> CreateTableDirect(
     flatbuffers::FlatBufferBuilder &_fbb,
     const std::vector<float> *durations = nullptr,
-    const std::vector<uint16_t> *rows = nullptr,
-    const std::vector<uint16_t> *cols = nullptr,
+    uint16_t rows = 0,
+    uint16_t cols = 0,
     const std::vector<float> *distances = nullptr,
     const std::vector<flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>> *destinations = nullptr,
     const std::vector<uint32_t> *fallback_speed_cells = nullptr) {
   auto durations__ = durations ? _fbb.CreateVector<float>(*durations) : 0;
-  auto rows__ = rows ? _fbb.CreateVector<uint16_t>(*rows) : 0;
-  auto cols__ = cols ? _fbb.CreateVector<uint16_t>(*cols) : 0;
   auto distances__ = distances ? _fbb.CreateVector<float>(*distances) : 0;
   auto destinations__ = destinations ? _fbb.CreateVector<flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>>(*destinations) : 0;
   auto fallback_speed_cells__ = fallback_speed_cells ? _fbb.CreateVector<uint32_t>(*fallback_speed_cells) : 0;
   return osrm::engine::api::fbresult::CreateTable(
       _fbb,
       durations__,
-      rows__,
-      cols__,
+      rows,
+      cols,
       distances__,
       destinations__,
       fallback_speed_cells__);
@@ -2290,8 +2288,8 @@ inline void Table::UnPackTo(TableT *_o, const flatbuffers::resolver_function_t *
   (void)_o;
   (void)_resolver;
   { auto _e = durations(); if (_e) { _o->durations.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->durations[_i] = _e->Get(_i); } } };
-  { auto _e = rows(); if (_e) { _o->rows.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->rows[_i] = _e->Get(_i); } } };
-  { auto _e = cols(); if (_e) { _o->cols.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->cols[_i] = _e->Get(_i); } } };
+  { auto _e = rows(); _o->rows = _e; };
+  { auto _e = cols(); _o->cols = _e; };
   { auto _e = distances(); if (_e) { _o->distances.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->distances[_i] = _e->Get(_i); } } };
   { auto _e = destinations(); if (_e) { _o->destinations.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->destinations[_i] = std::unique_ptr<osrm::engine::api::fbresult::WaypointT>(_e->Get(_i)->UnPack(_resolver)); } } };
   { auto _e = fallback_speed_cells(); if (_e) { _o->fallback_speed_cells.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->fallback_speed_cells[_i] = _e->Get(_i); } } };
@@ -2306,8 +2304,8 @@ inline flatbuffers::Offset<Table> CreateTable(flatbuffers::FlatBufferBuilder &_f
   (void)_o;
   struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const TableT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
   auto _durations = _o->durations.size() ? _fbb.CreateVector(_o->durations) : 0;
-  auto _rows = _o->rows.size() ? _fbb.CreateVector(_o->rows) : 0;
-  auto _cols = _o->cols.size() ? _fbb.CreateVector(_o->cols) : 0;
+  auto _rows = _o->rows;
+  auto _cols = _o->cols;
   auto _distances = _o->distances.size() ? _fbb.CreateVector(_o->distances) : 0;
   auto _destinations = _o->destinations.size() ? _fbb.CreateVector<flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>> (_o->destinations.size(), [](size_t i, _VectorArgs *__va) { return CreateWaypoint(*__va->__fbb, __va->__o->destinations[i].get(), __va->__rehasher); }, &_va ) : 0;
   auto _fallback_speed_cells = _o->fallback_speed_cells.size() ? _fbb.CreateVector(_o->fallback_speed_cells) : 0;
@@ -2389,6 +2387,48 @@ inline flatbuffers::Offset<FBResult> CreateFBResult(flatbuffers::FlatBufferBuild
       _waypoints,
       _routes,
       _table);
+}
+
+inline const osrm::engine::api::fbresult::FBResult *GetFBResult(const void *buf) {
+  return flatbuffers::GetRoot<osrm::engine::api::fbresult::FBResult>(buf);
+}
+
+inline const osrm::engine::api::fbresult::FBResult *GetSizePrefixedFBResult(const void *buf) {
+  return flatbuffers::GetSizePrefixedRoot<osrm::engine::api::fbresult::FBResult>(buf);
+}
+
+inline bool VerifyFBResultBuffer(
+    flatbuffers::Verifier &verifier) {
+  return verifier.VerifyBuffer<osrm::engine::api::fbresult::FBResult>(nullptr);
+}
+
+inline bool VerifySizePrefixedFBResultBuffer(
+    flatbuffers::Verifier &verifier) {
+  return verifier.VerifySizePrefixedBuffer<osrm::engine::api::fbresult::FBResult>(nullptr);
+}
+
+inline void FinishFBResultBuffer(
+    flatbuffers::FlatBufferBuilder &fbb,
+    flatbuffers::Offset<osrm::engine::api::fbresult::FBResult> root) {
+  fbb.Finish(root);
+}
+
+inline void FinishSizePrefixedFBResultBuffer(
+    flatbuffers::FlatBufferBuilder &fbb,
+    flatbuffers::Offset<osrm::engine::api::fbresult::FBResult> root) {
+  fbb.FinishSizePrefixed(root);
+}
+
+inline std::unique_ptr<osrm::engine::api::fbresult::FBResultT> UnPackFBResult(
+    const void *buf,
+    const flatbuffers::resolver_function_t *res = nullptr) {
+  return std::unique_ptr<osrm::engine::api::fbresult::FBResultT>(GetFBResult(buf)->UnPack(res));
+}
+
+inline std::unique_ptr<osrm::engine::api::fbresult::FBResultT> UnPackSizePrefixedFBResult(
+    const void *buf,
+    const flatbuffers::resolver_function_t *res = nullptr) {
+  return std::unique_ptr<osrm::engine::api::fbresult::FBResultT>(GetSizePrefixedFBResult(buf)->UnPack(res));
 }
 
 }  // namespace fbresult

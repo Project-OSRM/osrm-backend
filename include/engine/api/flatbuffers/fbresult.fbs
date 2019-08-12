@@ -16,3 +16,5 @@ table FBResult {
     routes: [RouteObject];
     table: Table;
 }
+
+root_type FBResult;
