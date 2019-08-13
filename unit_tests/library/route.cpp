@@ -28,12 +28,13 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates_fixture)
     params.coordinates.push_back(get_dummy_location());
     params.coordinates.push_back(get_dummy_location());
 
-    json::Object result;
+    engine::api::ResultT result = json::Object();
     const auto rc = osrm.Route(params, result);
     BOOST_CHECK(rc == Status::Ok);
 
+    auto& json_result=result.get<json::Object>();
     // unset snapping dependent hint
-    for (auto &itr : result.values["waypoints"].get<json::Array>().values)
+    for (auto &itr : json_result.values["waypoints"].get<json::Array>().values)
     {
         // Hint values aren't stable, so blank it out
         itr.get<json::Object>().values["hint"] = "";
@@ -112,7 +113,7 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates_fixture)
 
                                    }}}}}}}}}}}}}}}}};
 
-    CHECK_EQUAL_JSON(reference, result);
+    CHECK_EQUAL_JSON(reference, json_result);
 }
 
 BOOST_AUTO_TEST_CASE(test_route_same_coordinates)
@@ -127,14 +128,15 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates)
     params.coordinates.push_back(get_dummy_location());
     params.coordinates.push_back(get_dummy_location());
 
-    json::Object result;
+    engine::api::ResultT result = json::Object();
     const auto rc = osrm.Route(params, result);
     BOOST_CHECK(rc == Status::Ok);
 
-    const auto code = result.values.at("code").get<json::String>().value;
+    auto& json_result=result.get<json::Object>();
+    const auto code = json_result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
-    const auto &waypoints = result.values.at("waypoints").get<json::Array>().values;
+    const auto &waypoints = json_result.values.at("waypoints").get<json::Array>().values;
     BOOST_CHECK(waypoints.size() == params.coordinates.size());
 
     for (const auto &waypoint : waypoints)
@@ -155,7 +157,7 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates)
         BOOST_CHECK(!hint.empty());
     }
 
-    const auto &routes = result.values.at("routes").get<json::Array>().values;
+    const auto &routes = json_result.values.at("routes").get<json::Array>().values;
     BOOST_REQUIRE_GT(routes.size(), 0);
 
     for (const auto &route : routes)
@@ -280,14 +282,15 @@ BOOST_AUTO_TEST_CASE(test_route_response_for_locations_in_small_component)
     params.coordinates.push_back(locations.at(1));
     params.coordinates.push_back(locations.at(2));
 
-    json::Object result;
+    engine::api::ResultT result = json::Object();
     const auto rc = osrm.Route(params, result);
     BOOST_CHECK(rc == Status::Ok);
 
-    const auto code = result.values.at("code").get<json::String>().value;
+    auto& json_result=result.get<json::Object>();
+    const auto code = json_result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
-    const auto &waypoints = result.values.at("waypoints").get<json::Array>().values;
+    const auto &waypoints = json_result.values.at("waypoints").get<json::Array>().values;
     BOOST_CHECK_EQUAL(waypoints.size(), params.coordinates.size());
 
     for (const auto &waypoint : waypoints)
@@ -315,14 +318,15 @@ BOOST_AUTO_TEST_CASE(test_route_response_for_locations_in_big_component)
     params.coordinates.push_back(locations.at(1));
     params.coordinates.push_back(locations.at(2));
 
-    json::Object result;
+    engine::api::ResultT result = json::Object();
     const auto rc = osrm.Route(params, result);
     BOOST_CHECK(rc == Status::Ok);
 
-    const auto code = result.values.at("code").get<json::String>().value;
+    auto& json_result=result.get<json::Object>();
+    const auto code = json_result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
-    const auto &waypoints = result.values.at("waypoints").get<json::Array>().values;
+    const auto &waypoints = json_result.values.at("waypoints").get<json::Array>().values;
     BOOST_CHECK_EQUAL(waypoints.size(), params.coordinates.size());
 
     for (const auto &waypoint : waypoints)
@@ -352,14 +356,15 @@ BOOST_AUTO_TEST_CASE(test_route_response_for_locations_across_components)
     params.coordinates.push_back(small_component.at(1));
     params.coordinates.push_back(big_component.at(1));
 
-    json::Object result;
+    engine::api::ResultT result = json::Object();
     const auto rc = osrm.Route(params, result);
     BOOST_CHECK(rc == Status::Ok);
 
-    const auto code = result.values.at("code").get<json::String>().value;
+    auto& json_result=result.get<json::Object>();
+    const auto code = json_result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
-    const auto &waypoints = result.values.at("waypoints").get<json::Array>().values;
+    const auto &waypoints = json_result.values.at("waypoints").get<json::Array>().values;
     BOOST_CHECK_EQUAL(waypoints.size(), params.coordinates.size());
 
     for (const auto &waypoint : waypoints)
@@ -386,11 +391,12 @@ BOOST_AUTO_TEST_CASE(test_route_user_disables_generating_hints)
     params.coordinates.push_back(get_dummy_location());
     params.generate_hints = false;
 
-    json::Object result;
+    engine::api::ResultT result = json::Object();
     const auto rc = osrm.Route(params, result);
     BOOST_CHECK(rc == Status::Ok);
 
-    for (auto waypoint : result.values["waypoints"].get<json::Array>().values)
+    auto& json_result=result.get<json::Object>();
+    for (auto waypoint : json_result.values["waypoints"].get<json::Array>().values)
         BOOST_CHECK_EQUAL(waypoint.get<json::Object>().values.count("hint"), 0);
 }
 
@@ -407,11 +413,12 @@ BOOST_AUTO_TEST_CASE(speed_annotation_matches_duration_and_distance)
     params.coordinates.push_back(get_dummy_location());
     params.coordinates.push_back(get_dummy_location());
 
-    json::Object result;
+    engine::api::ResultT result = json::Object();
     const auto rc = osrm.Route(params, result);
     BOOST_CHECK(rc == Status::Ok);
 
-    const auto &routes = result.values["routes"].get<json::Array>().values;
+    auto& json_result=result.get<json::Object>();
+    const auto &routes = json_result.values["routes"].get<json::Array>().values;
     const auto &legs = routes[0].get<json::Object>().values.at("legs").get<json::Array>().values;
     const auto &annotation =
         legs[0].get<json::Object>().values.at("annotation").get<json::Object>();
@@ -447,14 +454,15 @@ BOOST_AUTO_TEST_CASE(test_manual_setting_of_annotations_property)
     params.coordinates.push_back(get_dummy_location());
     params.coordinates.push_back(get_dummy_location());
 
-    json::Object result;
+    engine::api::ResultT result = json::Object();
     const auto rc = osrm.Route(params, result);
     BOOST_CHECK(rc == Status::Ok);
 
-    const auto code = result.values.at("code").get<json::String>().value;
+    auto& json_result=result.get<json::Object>();
+    const auto code = json_result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
-    auto annotations = result.values["routes"]
+    auto annotations = json_result.values["routes"]
                            .get<json::Array>()
                            .values[0]
                            .get<json::Object>()

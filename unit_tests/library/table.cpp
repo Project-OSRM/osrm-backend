@@ -29,17 +29,18 @@ BOOST_AUTO_TEST_CASE(test_table_three_coords_one_source_one_dest_matrix)
     params.destinations.push_back(2);
     params.annotations = TableParameters::AnnotationsType::All;
 
-    json::Object result;
+    engine::api::ResultT result = json::Object();
 
     const auto rc = osrm.Table(params, result);
 
+    auto& json_result=result.get<json::Object>();
     BOOST_CHECK(rc == Status::Ok || rc == Status::Error);
-    const auto code = result.values.at("code").get<json::String>().value;
+    const auto code = json_result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
     // check that returned durations error is expected size and proportions
     // this test expects a 1x1 matrix
-    const auto &durations_array = result.values.at("durations").get<json::Array>().values;
+    const auto &durations_array = json_result.values.at("durations").get<json::Array>().values;
     BOOST_CHECK_EQUAL(durations_array.size(), params.sources.size());
     for (unsigned int i = 0; i < durations_array.size(); i++)
     {
@@ -50,7 +51,7 @@ BOOST_AUTO_TEST_CASE(test_table_three_coords_one_source_one_dest_matrix)
 
     // check that returned distances error is expected size and proportions
     // this test expects a 1x1 matrix
-    const auto &distances_array = result.values.at("distances").get<json::Array>().values;
+    const auto &distances_array = json_result.values.at("distances").get<json::Array>().values;
     BOOST_CHECK_EQUAL(distances_array.size(), params.sources.size());
     for (unsigned int i = 0; i < distances_array.size(); i++)
     {
@@ -60,14 +61,14 @@ BOOST_AUTO_TEST_CASE(test_table_three_coords_one_source_one_dest_matrix)
     }
 
     // check destinations array of waypoint objects
-    const auto &destinations_array = result.values.at("destinations").get<json::Array>().values;
+    const auto &destinations_array = json_result.values.at("destinations").get<json::Array>().values;
     BOOST_CHECK_EQUAL(destinations_array.size(), params.destinations.size());
     for (const auto &destination : destinations_array)
     {
         BOOST_CHECK(waypoint_check(destination));
     }
     // check sources array of waypoint objects
-    const auto &sources_array = result.values.at("sources").get<json::Array>().values;
+    const auto &sources_array = json_result.values.at("sources").get<json::Array>().values;
     BOOST_CHECK_EQUAL(sources_array.size(), params.sources.size());
     for (const auto &source : sources_array)
     {
@@ -86,17 +87,18 @@ BOOST_AUTO_TEST_CASE(test_table_three_coords_one_source_matrix)
     params.coordinates.push_back(get_dummy_location());
     params.coordinates.push_back(get_dummy_location());
     params.sources.push_back(0);
-    json::Object result;
+    engine::api::ResultT result = json::Object();
 
     const auto rc = osrm.Table(params, result);
 
+    auto& json_result=result.get<json::Object>();
     BOOST_CHECK(rc == Status::Ok || rc == Status::Error);
-    const auto code = result.values.at("code").get<json::String>().value;
+    const auto code = json_result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
     // check that returned durations error is expected size and proportions
     // this test expects a 1x3 matrix
-    const auto &durations_array = result.values.at("durations").get<json::Array>().values;
+    const auto &durations_array = json_result.values.at("durations").get<json::Array>().values;
     BOOST_CHECK_EQUAL(durations_array.size(), params.sources.size());
     for (unsigned int i = 0; i < durations_array.size(); i++)
     {
@@ -106,14 +108,14 @@ BOOST_AUTO_TEST_CASE(test_table_three_coords_one_source_matrix)
                           params.sources.size() * params.coordinates.size());
     }
     // check destinations array of waypoint objects
-    const auto &destinations_array = result.values.at("destinations").get<json::Array>().values;
+    const auto &destinations_array = json_result.values.at("destinations").get<json::Array>().values;
     BOOST_CHECK_EQUAL(destinations_array.size(), params.coordinates.size());
     for (const auto &destination : destinations_array)
     {
         BOOST_CHECK(waypoint_check(destination));
     }
     // check sources array of waypoint objects
-    const auto &sources_array = result.values.at("sources").get<json::Array>().values;
+    const auto &sources_array = json_result.values.at("sources").get<json::Array>().values;
     BOOST_CHECK_EQUAL(sources_array.size(), params.sources.size());
     for (const auto &source : sources_array)
     {
@@ -133,17 +135,18 @@ BOOST_AUTO_TEST_CASE(test_table_three_coordinates_matrix)
     params.coordinates.push_back(get_dummy_location());
     params.annotations = TableParameters::AnnotationsType::Duration;
 
-    json::Object result;
+    engine::api::ResultT result = json::Object();
 
     const auto rc = osrm.Table(params, result);
 
+    auto& json_result=result.get<json::Object>();
     BOOST_CHECK(rc == Status::Ok || rc == Status::Error);
-    const auto code = result.values.at("code").get<json::String>().value;
+    const auto code = json_result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
     // check that returned durations error is expected size and proportions
     // this test expects a 3x3 matrix
-    const auto &durations_array = result.values.at("durations").get<json::Array>().values;
+    const auto &durations_array = json_result.values.at("durations").get<json::Array>().values;
     BOOST_CHECK_EQUAL(durations_array.size(), params.coordinates.size());
     for (unsigned int i = 0; i < durations_array.size(); i++)
     {
@@ -151,12 +154,12 @@ BOOST_AUTO_TEST_CASE(test_table_three_coordinates_matrix)
         BOOST_CHECK_EQUAL(durations_matrix[i].get<json::Number>().value, 0);
         BOOST_CHECK_EQUAL(durations_matrix.size(), params.coordinates.size());
     }
-    const auto &destinations_array = result.values.at("destinations").get<json::Array>().values;
+    const auto &destinations_array = json_result.values.at("destinations").get<json::Array>().values;
     for (const auto &destination : destinations_array)
     {
         BOOST_CHECK(waypoint_check(destination));
     }
-    const auto &sources_array = result.values.at("sources").get<json::Array>().values;
+    const auto &sources_array = json_result.values.at("sources").get<json::Array>().values;
     BOOST_CHECK_EQUAL(sources_array.size(), params.coordinates.size());
     for (const auto &source : sources_array)
     {
@@ -178,12 +181,13 @@ BOOST_AUTO_TEST_CASE(test_table_no_segment_for_some_coordinates)
     params.radiuses.push_back(boost::make_optional(0.));
     params.radiuses.push_back(boost::none);
 
-    json::Object result;
+    engine::api::ResultT result = json::Object();
 
     const auto rc = osrm.Table(params, result);
 
+    auto& json_result=result.get<json::Object>();
     BOOST_CHECK(rc == Status::Error);
-    const auto code = result.values.at("code").get<json::String>().value;
+    const auto code = json_result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "NoSegment");
 }
 
