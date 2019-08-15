@@ -102,17 +102,23 @@ class BaseAPI
         auto location =
             fbresult::Position(static_cast<double>(util::toFloating(phantom.location.lon)),
                                static_cast<double>(util::toFloating(phantom.location.lat)));
+        auto name_string = builder.CreateString(
+            facade.GetNameForID(facade.GetNameIndex(phantom.forward_segment_id.id)).to_string());
+
+        boost::optional<flatbuffers::Offset<flatbuffers::String>> hint_string = boost::none;
+        if (parameters.generate_hints)
+        {
+            hint_string = builder.CreateString(Hint{phantom, facade.GetCheckSum()}.ToBase64());
+        }
+
         fbresult::WaypointBuilder waypoint(builder);
         waypoint.add_location(&location);
         waypoint.add_distance(util::coordinate_calculation::fccApproximateDistance(
             phantom.location, phantom.input_location));
-        auto name_string = builder.CreateString(
-            facade.GetNameForID(facade.GetNameIndex(phantom.forward_segment_id.id)).to_string());
         waypoint.add_name(name_string);
-        if (parameters.generate_hints)
+        if (hint_string)
         {
-            auto hint_string = builder.CreateString(Hint{phantom, facade.GetCheckSum()}.ToBase64());
-            waypoint.add_hint(hint_string);
+            waypoint.add_hint(*hint_string);
         }
         return waypoint;
     }

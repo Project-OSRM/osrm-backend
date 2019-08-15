@@ -79,14 +79,11 @@ class BasePlugin
         };
         void operator()(flatbuffers::FlatBufferBuilder &fb_result)
         {
-            api::fbresult::FBResultBuilder error(fb_result);
-            error.add_error(true);
-
-            api::fbresult::ErrorBuilder codeBuilder(fb_result);
-            codeBuilder.add_code(fb_result.CreateString(code));
-            codeBuilder.add_message(fb_result.CreateString(message));
-            error.add_code(codeBuilder.Finish());
-            fb_result.Finish(error.Finish());
+            auto error = api::fbresult::CreateErrorDirect(fb_result, code.c_str(), message.c_str());
+            api::fbresult::FBResultBuilder response(fb_result);
+            response.add_error(true);
+            response.add_code(error);
+            fb_result.Finish(response.Finish());
         };
         void operator()(std::string &str_result)
         {

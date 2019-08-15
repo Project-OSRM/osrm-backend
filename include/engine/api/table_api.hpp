@@ -72,50 +72,71 @@ class TableAPI final : public BaseAPI
         auto number_of_sources = parameters.sources.size();
         auto number_of_destinations = parameters.destinations.size();
 
-        fbresult::FBResultBuilder response(fb_result);
-
-        fbresult::TableBuilder table(fb_result);
-
         // symmetric case
+        flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<fbresult::Waypoint>>> sources;
         if (parameters.sources.empty())
         {
-            response.add_waypoints(MakeWaypoints(fb_result, phantoms));
+            sources = MakeWaypoints(fb_result, phantoms);
             number_of_sources = phantoms.size();
         }
         else
         {
-            response.add_waypoints(MakeWaypoints(fb_result, phantoms, parameters.sources));
+            sources = MakeWaypoints(fb_result, phantoms, parameters.sources);
         }
 
+        flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<fbresult::Waypoint>>>
+            destinations;
         if (parameters.destinations.empty())
         {
-            table.add_destinations(MakeWaypoints(fb_result, phantoms));
+            destinations = MakeWaypoints(fb_result, phantoms);
             number_of_destinations = phantoms.size();
         }
         else
         {
-            table.add_destinations(MakeWaypoints(fb_result, phantoms, parameters.destinations));
+            destinations = MakeWaypoints(fb_result, phantoms, parameters.destinations);
         }
 
+        boost::optional<flatbuffers::Offset<flatbuffers::Vector<float>>> durations = boost::none;
         if (parameters.annotations & TableParameters::AnnotationsType::Duration)
         {
-            table.add_durations(MakeDurationTable(fb_result, tables.first));
+            durations = MakeDurationTable(fb_result, tables.first);
         }
 
+        boost::optional<flatbuffers::Offset<flatbuffers::Vector<float>>> distances = boost::none;
         if (parameters.annotations & TableParameters::AnnotationsType::Distance)
         {
-            table.add_distances(MakeDistanceTable(fb_result, tables.second));
+            distances = MakeDistanceTable(fb_result, tables.second);
         }
 
+        boost::optional<flatbuffers::Offset<flatbuffers::Vector<uint32_t>>> speed_cells =
+            boost::none;
         if (parameters.fallback_speed != INVALID_FALLBACK_SPEED && parameters.fallback_speed > 0)
         {
-            table.add_fallback_speed_cells(MakeEstimatesTable(fb_result, fallback_speed_cells));
+            speed_cells = MakeEstimatesTable(fb_result, fallback_speed_cells);
         }
 
+        fbresult::TableBuilder table(fb_result);
+        table.add_destinations(destinations);
         table.add_rows(number_of_sources);
         table.add_cols(number_of_destinations);
+        if (durations)
+        {
+            table.add_durations(*durations);
+        }
+        if (distances)
+        {
+            table.add_distances(*distances);
+        }
+        if (speed_cells)
+        {
+            table.add_fallback_speed_cells(*speed_cells);
+        }
+        auto table_buffer = table.Finish();
 
-        response.add_table(table.Finish());
+        fbresult::FBResultBuilder response(fb_result);
+
+        response.add_table(table_buffer);
+        response.add_waypoints(sources);
         fb_result.Finish(response.Finish());
     }
 

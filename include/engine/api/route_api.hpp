@@ -70,18 +70,23 @@ class RouteAPI : public BaseAPI
                      &all_start_end_points, // all used coordinates, ignoring waypoints= parameter
                  flatbuffers::FlatBufferBuilder &fb_result) const
     {
+
+        auto data_timestamp = facade.GetTimestamp();
+        boost::optional<flatbuffers::Offset<flatbuffers::String>> data_version_string = boost::none;
+        if (!data_timestamp.empty())
+        {
+            data_version_string = fb_result.CreateString(data_timestamp);
+        }
+
         auto response =
             MakeFBResponse(raw_routes, fb_result, [this, &all_start_end_points, &fb_result]() {
                 return BaseAPI::MakeWaypoints(fb_result, all_start_end_points);
             });
 
-        auto data_timestamp = facade.GetTimestamp();
-        if (!data_timestamp.empty())
+        if (data_version_string)
         {
-            auto data_version_string = fb_result.CreateString(data_timestamp);
-            response.add_data_version(data_version_string);
+            response.add_data_version(*data_version_string);
         }
-
         fb_result.Finish(response.Finish());
     }
 
@@ -121,8 +126,6 @@ class RouteAPI : public BaseAPI
                                              GetWptsFn getWaypoints) const
     {
 
-        fbresult::FBResultBuilder response(fb_result);
-
         std::vector<flatbuffers::Offset<fbresult::RouteObject>> routes;
         for (const auto &raw_route : raw_routes.routes)
         {
@@ -136,37 +139,36 @@ class RouteAPI : public BaseAPI
                                        raw_route.target_traversed_in_reverse));
         }
 
-        response.add_waypoints(getWaypoints());
         auto routes_vector = fb_result.CreateVector(routes);
+        auto waypoints_vector = getWaypoints();
+
+        fbresult::FBResultBuilder response(fb_result);
         response.add_routes(routes_vector);
+        response.add_waypoints(waypoints_vector);
 
         return response;
     }
 
-    template <typename BuilderType, typename ForwardIter>
-    void MakeGeometry(BuilderType builder, ForwardIter begin, ForwardIter end) const
+    template <typename ForwardIter>
+    mapbox::util::variant<flatbuffers::Offset<flatbuffers::String>,
+                          flatbuffers::Offset<flatbuffers::Vector<const fbresult::Position *>>>
+    MakeGeometry(flatbuffers::FlatBufferBuilder &builder, ForwardIter begin, ForwardIter end) const
     {
         if (parameters.geometries == RouteParameters::GeometriesType::Polyline)
         {
-            auto polyline_string = builder.fbb_.CreateString(encodePolyline<100000>(begin, end));
-            builder.add_polyline(polyline_string);
+            return builder.CreateString(encodePolyline<100000>(begin, end));
         }
         else if (parameters.geometries == RouteParameters::GeometriesType::Polyline6)
         {
-            auto polyline_string = builder.fbb_.CreateString(encodePolyline<1000000>(begin, end));
-            builder.add_polyline(polyline_string);
+            return builder.CreateString(encodePolyline<1000000>(begin, end));
         }
-        else
-        {
-            std::vector<fbresult::Position> coordinates;
-            coordinates.resize(std::distance(begin, end));
-            std::transform(begin, end, coordinates.begin(), [](const Coordinate &c) {
-                return fbresult::Position{static_cast<float>(util::toFloating(c.lon).__value),
-                                          static_cast<float>(util::toFloating(c.lat).__value)};
-            });
-            auto coordinates_vector = builder.fbb_.CreateVectorOfStructs(coordinates);
-            builder.add_coordinates(coordinates_vector);
-        }
+        std::vector<fbresult::Position> coordinates;
+        coordinates.resize(std::distance(begin, end));
+        std::transform(begin, end, coordinates.begin(), [](const Coordinate &c) {
+            return fbresult::Position{static_cast<float>(util::toFloating(c.lon).__value),
+                                      static_cast<float>(util::toFloating(c.lat).__value)};
+        });
+        return builder.CreateVectorOfStructs(coordinates);
     }
 
     boost::optional<util::json::Value>
@@ -313,6 +315,7 @@ class RouteAPI : public BaseAPI
         }
         return result;
     }
+
     flatbuffers::Offset<fbresult::RouteObject>
     MakeRoute(flatbuffers::FlatBufferBuilder &fb_result,
               const std::vector<PhantomNodes> &segment_end_coordinates,
@@ -320,22 +323,13 @@ class RouteAPI : public BaseAPI
               const std::vector<bool> &source_traversed_in_reverse,
               const std::vector<bool> &target_traversed_in_reverse) const
     {
-        fbresult::RouteObjectBuilder routeObject(fb_result);
-
         auto legs_info = MakeLegs(segment_end_coordinates,
                                   unpacked_path_segments,
                                   source_traversed_in_reverse,
                                   target_traversed_in_reverse);
         std::vector<guidance::RouteLeg> legs = legs_info.first;
         std::vector<guidance::LegGeometry> leg_geometries = legs_info.second;
-
-        // Fill basix route info
         auto route = guidance::assembleRoute(legs);
-        routeObject.add_distance(route.distance);
-        routeObject.add_duration(route.duration);
-        routeObject.add_weight(route.weight);
-        auto weight_name_string = fb_result.CreateString(facade.GetWeightName());
-        routeObject.add_weight_name(weight_name_string);
 
         // Fill legs
         std::vector<flatbuffers::Offset<fbresult::Leg>> routeLegs;
@@ -344,166 +338,20 @@ class RouteAPI : public BaseAPI
         {
             auto leg = legs[idx];
             auto &leg_geometry = leg_geometries[idx];
-            fbresult::LegBuilder legBuilder(fb_result);
-            legBuilder.add_distance(leg.distance);
-            legBuilder.add_duration(leg.duration);
-            legBuilder.add_weight(leg.weight);
-            if (!leg.summary.empty())
-            {
-                auto summary_string = fb_result.CreateString(leg.summary);
-                legBuilder.add_summary(summary_string);
-            }
 
             // Fill steps
+            std::vector<flatbuffers::Offset<fbresult::Step>> legSteps;
             if (!leg.steps.empty())
             {
-                std::vector<flatbuffers::Offset<fbresult::Step>> legSteps;
                 legSteps.resize(leg.steps.size());
-                std::transform(
-                    leg.steps.begin(),
-                    leg.steps.end(),
-                    legSteps.begin(),
-                    [this, &leg_geometry, &fb_result](const guidance::RouteStep &step) {
-                        fbresult::StepBuilder stepBuilder(fb_result);
-                        stepBuilder.add_duration(step.duration);
-                        stepBuilder.add_distance(step.distance);
-                        stepBuilder.add_weight(step.weight);
-                        auto name_string = fb_result.CreateString(step.name);
-                        stepBuilder.add_name(name_string);
-                        if (!step.ref.empty())
-                        {
-                            auto ref_string = fb_result.CreateString(step.ref);
-                            stepBuilder.add_ref(ref_string);
-                        }
-                        if (!step.pronunciation.empty())
-                        {
-                            auto pronunciation_string = fb_result.CreateString(step.pronunciation);
-                            stepBuilder.add_pronunciation(pronunciation_string);
-                        }
-                        if (!step.destinations.empty())
-                        {
-                            auto destinations_string = fb_result.CreateString(step.destinations);
-                            stepBuilder.add_destinations(destinations_string);
-                        }
-                        if (!step.exits.empty())
-                        {
-                            auto exists_string = fb_result.CreateString(step.exits);
-                            stepBuilder.add_exits(exists_string);
-                        }
-                        if (!step.rotary_name.empty())
-                        {
-                            auto rotary_name_string = fb_result.CreateString(step.rotary_name);
-                            stepBuilder.add_rotary_name(rotary_name_string);
-                            if (!step.rotary_pronunciation.empty())
-                            {
-                                auto rotary_pronunciation_string =
-                                    fb_result.CreateString(step.rotary_pronunciation);
-                                stepBuilder.add_rotary_pronunciation(rotary_pronunciation_string);
-                            }
-                        }
-                        auto mode_string =
-                            fb_result.CreateString(extractor::travelModeToString(step.mode));
-                        stepBuilder.add_mode(mode_string);
-                        stepBuilder.add_driving_side(step.is_left_hand_driving);
-
-                        // Geometry
-                        MakeGeometry(stepBuilder,
-                                     leg_geometry.locations.begin() + step.geometry_begin,
-                                     leg_geometry.locations.begin() + step.geometry_end);
-                        // Maneuver
-                        fbresult::StepManeuverBuilder maneuver(fb_result);
-                        fbresult::Position maneuverPosition{
-                            static_cast<float>(
-                                util::toFloating(step.maneuver.location.lon).__value),
-                            static_cast<float>(
-                                util::toFloating(step.maneuver.location.lat).__value)};
-                        maneuver.add_location(&maneuverPosition);
-                        maneuver.add_bearing_before(step.maneuver.bearing_before);
-                        maneuver.add_bearing_after(step.maneuver.bearing_after);
-                        if (step.maneuver.waypoint_type == guidance::WaypointType::None)
-                            maneuver.add_type(TurnTypeToFB(step.maneuver.instruction.type));
-                        else
-                            maneuver.add_type(WaypointTypeToFB(step.maneuver.waypoint_type));
-                        if (osrm::engine::api::json::detail::isValidModifier(step.maneuver))
-                        {
-                            maneuver.add_modifier(
-                                TurnModifierToFB(step.maneuver.instruction.direction_modifier));
-                        }
-                        if (step.maneuver.exit != 0)
-                        {
-                            maneuver.add_exit(step.maneuver.exit);
-                        }
-
-                        // intersections
-                        std::vector<flatbuffers::Offset<fbresult::Intersection>> intersections;
-                        intersections.resize(step.intersections.size());
-                        std::transform(
-                            step.intersections.begin(),
-                            step.intersections.end(),
-                            intersections.begin(),
-                            [&fb_result,
-                             this](const guidance::IntermediateIntersection &intersection) {
-                                fbresult::IntersectionBuilder intersectionBuilder(fb_result);
-                                fbresult::Position maneuverPosition{
-                                    static_cast<float>(
-                                        util::toFloating(intersection.location.lon).__value),
-                                    static_cast<float>(
-                                        util::toFloating(intersection.location.lat).__value)};
-                                intersectionBuilder.add_location(&maneuverPosition);
-                                auto bearings_vector =
-                                    fb_result.CreateVector(intersection.bearings);
-                                intersectionBuilder.add_bearings(bearings_vector);
-                                std::vector<flatbuffers::Offset<flatbuffers::String>> classes;
-                                classes.resize(intersection.classes.size());
-                                std::transform(intersection.classes.begin(),
-                                               intersection.classes.end(),
-                                               classes.begin(),
-                                               [&fb_result](const std::string cls) {
-                                                   return fb_result.CreateString(cls);
-                                               });
-                                auto classes_vector = fb_result.CreateVector(classes);
-                                intersectionBuilder.add_classes(classes_vector);
-                                auto entry_vector = fb_result.CreateVector(intersection.entry);
-                                intersectionBuilder.add_entry(entry_vector);
-                                intersectionBuilder.add_in(intersection.in);
-                                intersectionBuilder.add_out(intersection.out);
-                                if (api::json::detail::hasValidLanes(intersection))
-                                {
-                                    BOOST_ASSERT(intersection.lanes.lanes_in_turn >= 1);
-                                    std::vector<flatbuffers::Offset<fbresult::Lane>> lanes;
-                                    lanes.resize(intersection.lane_description.size());
-                                    LaneID lane_id = intersection.lane_description.size();
-
-                                    for (const auto &lane_desc : intersection.lane_description)
-                                    {
-                                        --lane_id;
-                                        fbresult::LaneBuilder laneBuilder(fb_result);
-                                        auto indications_vector =
-                                            fb_result.CreateVector(TurnLaneTypeToFB(lane_desc));
-                                        laneBuilder.add_indications(indications_vector);
-                                        if (lane_id >=
-                                                intersection.lanes.first_lane_from_the_right &&
-                                            lane_id < intersection.lanes.first_lane_from_the_right +
-                                                          intersection.lanes.lanes_in_turn)
-                                            laneBuilder.add_valid(true);
-                                        else
-                                            laneBuilder.add_valid(false);
-
-                                        lanes.emplace_back(laneBuilder.Finish());
-                                    }
-                                    auto lanes_vector = fb_result.CreateVector(lanes);
-                                    intersectionBuilder.add_lanes(lanes_vector);
-                                }
-
-                                return intersectionBuilder.Finish();
-                            });
-                        auto intersections_vector = fb_result.CreateVector(intersections);
-                        stepBuilder.add_intersections(intersections_vector);
-                        return stepBuilder.Finish();
-                    });
-                auto steps_vector = fb_result.CreateVector(legSteps);
-                legBuilder.add_steps(steps_vector);
+                std::transform(leg.steps.begin(),
+                               leg.steps.end(),
+                               legSteps.begin(),
+                               [this, &fb_result, &leg_geometry](auto &step) {
+                                   return this->MakeFBStep(fb_result, leg_geometry, step);
+                               });
             }
+            auto steps_vector = fb_result.CreateVector(legSteps);
 
             // Fill annotations
             // To maintain support for uses of the old default constructors, we check
@@ -515,111 +363,337 @@ class RouteAPI : public BaseAPI
                 requested_annotations = RouteParameters::AnnotationsType::All;
             }
 
+            boost::optional<flatbuffers::Offset<fbresult::Annotation>> annotation_buffer =
+                boost::none;
             if (requested_annotations != RouteParameters::AnnotationsType::None)
             {
-                fbresult::AnnotationBuilder annotation(fb_result);
-
-                // AnnotationsType uses bit flags, & operator checks if a property is set
-                if (parameters.annotations_type & RouteParameters::AnnotationsType::Speed)
-                {
-                    double prev_speed = 0;
-                    auto speed = GetAnnotations<float>(
-                        fb_result,
-                        leg_geometry,
-                        [&prev_speed](const guidance::LegGeometry::Annotation &anno) {
-                            if (anno.duration < std::numeric_limits<float>::min())
-                            {
-                                return prev_speed;
-                            }
-                            else
-                            {
-                                auto speed = std::round(anno.distance / anno.duration * 10.) / 10.;
-                                prev_speed = speed;
-                                return util::json::clamp_float(speed);
-                            }
-                        });
-                    annotation.add_speed(speed);
-                }
-
-                if (requested_annotations & RouteParameters::AnnotationsType::Duration)
-                {
-                    auto duration = GetAnnotations<uint32_t>(
-                        fb_result, leg_geometry, [](const guidance::LegGeometry::Annotation &anno) {
-                            return anno.duration;
-                        });
-                    annotation.add_duration(duration);
-                }
-                if (requested_annotations & RouteParameters::AnnotationsType::Distance)
-                {
-                    auto distance = GetAnnotations<uint32_t>(
-                        fb_result, leg_geometry, [](const guidance::LegGeometry::Annotation &anno) {
-                            return anno.distance;
-                        });
-                    annotation.add_distance(distance);
-                }
-                if (requested_annotations & RouteParameters::AnnotationsType::Weight)
-                {
-                    auto weight = GetAnnotations<uint32_t>(
-                        fb_result, leg_geometry, [](const guidance::LegGeometry::Annotation &anno) {
-                            return anno.weight;
-                        });
-                    annotation.add_weight(weight);
-                }
-                if (requested_annotations & RouteParameters::AnnotationsType::Datasources)
-                {
-                    auto datasources = GetAnnotations<uint32_t>(
-                        fb_result, leg_geometry, [](const guidance::LegGeometry::Annotation &anno) {
-                            return anno.datasource;
-                        });
-                    annotation.add_datasources(datasources);
-                }
-                if (requested_annotations & RouteParameters::AnnotationsType::Nodes)
-                {
-                    std::vector<uint32_t> nodes;
-                    nodes.reserve(leg_geometry.osm_node_ids.size());
-                    for (const auto node_id : leg_geometry.osm_node_ids)
-                    {
-                        nodes.emplace_back(static_cast<std::uint64_t>(node_id));
-                    }
-                    auto nodes_vector = fb_result.CreateVector(nodes);
-                    annotation.add_nodes(nodes_vector);
-                }
-                // Add any supporting metadata, if needed
-                if (requested_annotations & RouteParameters::AnnotationsType::Datasources)
-                {
-                    const auto MAX_DATASOURCE_ID = 255u;
-                    fbresult::MetadataBuilder metadata(fb_result);
-                    std::vector<flatbuffers::Offset<flatbuffers::String>> names;
-                    for (auto i = 0u; i < MAX_DATASOURCE_ID; i++)
-                    {
-                        const auto name = facade.GetDatasourceName(i);
-                        // Length of 0 indicates the first empty name, so we can stop here
-                        if (name.size() == 0)
-                            break;
-                        names.emplace_back(
-                            fb_result.CreateString(std::string(facade.GetDatasourceName(i))));
-                    }
-                    auto datasource_names_vector = fb_result.CreateVector(names);
-                    metadata.add_datasource_names(datasource_names_vector);
-                    annotation.add_metadata(metadata.Finish());
-                }
-
-                legBuilder.add_annotations(annotation.Finish());
+                annotation_buffer =
+                    MakeFBAnnotations(fb_result, leg_geometry, requested_annotations);
             }
 
+            flatbuffers::Offset<flatbuffers::String> summary_string;
+            if (!leg.summary.empty())
+            {
+                summary_string = fb_result.CreateString(leg.summary);
+            }
+
+            fbresult::LegBuilder legBuilder(fb_result);
+            legBuilder.add_distance(leg.distance);
+            legBuilder.add_duration(leg.duration);
+            legBuilder.add_weight(leg.weight);
+            if (!leg.summary.empty())
+            {
+                legBuilder.add_summary(summary_string);
+            }
+            legBuilder.add_steps(steps_vector);
+
+            if (annotation_buffer)
+            {
+                legBuilder.add_annotations(*annotation_buffer);
+            }
             routeLegs.emplace_back(legBuilder.Finish());
         }
         auto legs_vector = fb_result.CreateVector(routeLegs);
-        routeObject.add_legs(legs_vector);
 
         // Fill geometry
         auto overview = MakeOverview(leg_geometries);
+        mapbox::util::variant<flatbuffers::Offset<flatbuffers::String>,
+                              flatbuffers::Offset<flatbuffers::Vector<const fbresult::Position *>>>
+            geometry;
         if (overview)
         {
-            MakeGeometry(routeObject, overview->begin(), overview->end());
+            geometry = MakeGeometry(fb_result, overview->begin(), overview->end());
+        }
+
+        auto weight_name_string = fb_result.CreateString(facade.GetWeightName());
+
+        fbresult::RouteObjectBuilder routeObject(fb_result);
+        routeObject.add_distance(route.distance);
+        routeObject.add_duration(route.duration);
+        routeObject.add_weight(route.weight);
+        routeObject.add_weight_name(weight_name_string);
+        routeObject.add_legs(legs_vector);
+        if (overview)
+        {
+            mapbox::util::apply_visitor(GeometryVisitor<fbresult::RouteObjectBuilder>(routeObject),
+                                        geometry);
         }
 
         return routeObject.Finish();
+    }
+
+    flatbuffers::Offset<fbresult::Annotation>
+    MakeFBAnnotations(flatbuffers::FlatBufferBuilder &fb_result,
+                      guidance::LegGeometry &leg_geometry,
+                      const RouteParameters::AnnotationsType &requested_annotations) const
+    {
+        // AnnotationsType uses bit flags, & operator checks if a property is set
+        flatbuffers::Offset<flatbuffers::Vector<float>> speed;
+        if (parameters.annotations_type & RouteParameters::AnnotationsType::Speed)
+        {
+            double prev_speed = 0;
+            speed =
+                GetAnnotations<float>(fb_result,
+                                      leg_geometry,
+                                      [&prev_speed](const guidance::LegGeometry::Annotation &anno) {
+                                          if (anno.duration < std::numeric_limits<float>::min())
+                                          {
+                                              return prev_speed;
+                                          }
+                                          else
+                                          {
+                                              auto speed =
+                                                  round(anno.distance / anno.duration * 10.) / 10.;
+                                              prev_speed = speed;
+                                              return util::json::clamp_float(speed);
+                                          }
+                                      });
+        }
+
+        flatbuffers::Offset<flatbuffers::Vector<uint32_t>> duration;
+        if (requested_annotations & RouteParameters::AnnotationsType::Duration)
+        {
+            duration = GetAnnotations<uint32_t>(
+                fb_result, leg_geometry, [](const guidance::LegGeometry::Annotation &anno) {
+                    return anno.duration;
+                });
+        }
+
+        flatbuffers::Offset<flatbuffers::Vector<uint32_t>> distance;
+        if (requested_annotations & RouteParameters::AnnotationsType::Distance)
+        {
+            distance = GetAnnotations<uint32_t>(
+                fb_result, leg_geometry, [](const guidance::LegGeometry::Annotation &anno) {
+                    return anno.distance;
+                });
+        }
+
+        flatbuffers::Offset<flatbuffers::Vector<uint32_t>> weight;
+        if (requested_annotations & RouteParameters::AnnotationsType::Weight)
+        {
+            weight = GetAnnotations<uint32_t>(
+                fb_result, leg_geometry, [](const guidance::LegGeometry::Annotation &anno) {
+                    return anno.weight;
+                });
+        }
+
+        flatbuffers::Offset<flatbuffers::Vector<uint32_t>> datasources;
+        if (requested_annotations & RouteParameters::AnnotationsType::Datasources)
+        {
+            datasources = GetAnnotations<uint32_t>(
+                fb_result, leg_geometry, [](const guidance::LegGeometry::Annotation &anno) {
+                    return anno.datasource;
+                });
+        }
+        std::vector<uint32_t> nodes;
+        if (requested_annotations & RouteParameters::AnnotationsType::Nodes)
+        {
+            nodes.reserve(leg_geometry.osm_node_ids.size());
+            for (const auto node_id : leg_geometry.osm_node_ids)
+            {
+                nodes.emplace_back(static_cast<uint64_t>(node_id));
+            }
+        }
+        auto nodes_vector = fb_result.CreateVector(nodes);
+        // Add any supporting metadata, if needed
+        boost::optional<flatbuffers::Offset<fbresult::Metadata>> metadata_buffer = boost::none;
+        if (requested_annotations & RouteParameters::AnnotationsType::Datasources)
+        {
+            const auto MAX_DATASOURCE_ID = 255u;
+            std::vector<flatbuffers::Offset<flatbuffers::String>> names;
+            for (auto i = 0u; i < MAX_DATASOURCE_ID; i++)
+            {
+                const auto name = facade.GetDatasourceName(i);
+                // Length of 0 indicates the first empty name, so we can stop here
+                if (name.size() == 0)
+                    break;
+                names.emplace_back(
+                    fb_result.CreateString(std::string(facade.GetDatasourceName(i))));
+            }
+            metadata_buffer = fbresult::CreateMetadataDirect(fb_result, &names);
+        }
+        fbresult::AnnotationBuilder annotation(fb_result);
+        annotation.add_speed(speed);
+        annotation.add_duration(duration);
+        annotation.add_distance(distance);
+        annotation.add_weight(weight);
+        annotation.add_datasources(datasources);
+        annotation.add_nodes(nodes_vector);
+        if (metadata_buffer)
+        {
+            annotation.add_metadata(*metadata_buffer);
+        }
+
+        return annotation.Finish();
+    }
+
+    template <typename Builder> class GeometryVisitor
+    {
+      public:
+        GeometryVisitor(Builder &builder) : builder(builder) {}
+
+        void operator()(const flatbuffers::Offset<flatbuffers::String> &value)
+        {
+            builder.add_polyline(value);
+        }
+        void operator()(
+            const flatbuffers::Offset<flatbuffers::Vector<const fbresult::Position *>> &value)
+        {
+            builder.add_coordinates(value);
+        }
+
+      private:
+        Builder &builder;
+    };
+
+    flatbuffers::Offset<fbresult::Step> MakeFBStep(flatbuffers::FlatBufferBuilder &builder,
+                                                   const guidance::LegGeometry &leg_geometry,
+                                                   const guidance::RouteStep &step) const
+    {
+        auto name_string = builder.CreateString(step.name);
+
+        flatbuffers::Offset<flatbuffers::String> ref_string;
+        if (!step.ref.empty())
+        {
+            ref_string = builder.CreateString(step.ref);
+        }
+
+        flatbuffers::Offset<flatbuffers::String> pronunciation_string;
+        if (!step.pronunciation.empty())
+        {
+            pronunciation_string = builder.CreateString(step.pronunciation);
+        }
+
+        flatbuffers::Offset<flatbuffers::String> destinations_string;
+        if (!step.destinations.empty())
+        {
+            destinations_string = builder.CreateString(step.destinations);
+        }
+
+        flatbuffers::Offset<flatbuffers::String> exists_string;
+        if (!step.exits.empty())
+        {
+            exists_string = builder.CreateString(step.exits);
+        }
+
+        flatbuffers::Offset<flatbuffers::String> rotary_name_string;
+        flatbuffers::Offset<flatbuffers::String> rotary_pronunciation_string;
+        if (!step.rotary_name.empty())
+        {
+            rotary_name_string = builder.CreateString(step.rotary_name);
+            if (!step.rotary_pronunciation.empty())
+            {
+                rotary_pronunciation_string = builder.CreateString(step.rotary_pronunciation);
+            }
+        }
+        auto mode_string = builder.CreateString(extractor::travelModeToString(step.mode));
+
+        // Geometry
+        auto geometry = MakeGeometry(builder,
+                                     leg_geometry.locations.begin() + step.geometry_begin,
+                                     leg_geometry.locations.begin() + step.geometry_end);
+        // Maneuver
+        fbresult::StepManeuverBuilder maneuver(builder);
+        fbresult::Position maneuverPosition{
+            static_cast<float>(util::toFloating(step.maneuver.location.lon).__value),
+            static_cast<float>(util::toFloating(step.maneuver.location.lat).__value)};
+        maneuver.add_location(&maneuverPosition);
+        maneuver.add_bearing_before(step.maneuver.bearing_before);
+        maneuver.add_bearing_after(step.maneuver.bearing_after);
+        if (step.maneuver.waypoint_type == guidance::WaypointType::None)
+            maneuver.add_type(TurnTypeToFB(step.maneuver.instruction.type));
+        else
+            maneuver.add_type(WaypointTypeToFB(step.maneuver.waypoint_type));
+        if (osrm::engine::api::json::detail::isValidModifier(step.maneuver))
+        {
+            maneuver.add_modifier(TurnModifierToFB(step.maneuver.instruction.direction_modifier));
+        }
+        if (step.maneuver.exit != 0)
+        {
+            maneuver.add_exit(step.maneuver.exit);
+        }
+        auto maneuver_buffer = maneuver.Finish();
+
+        // intersections
+        auto intersections_vector = MakeFBIntersections(builder, step);
+
+        fbresult::StepBuilder stepBuilder(builder);
+        stepBuilder.add_duration(step.duration);
+        stepBuilder.add_distance(step.distance);
+        stepBuilder.add_weight(step.weight);
+        stepBuilder.add_name(name_string);
+        stepBuilder.add_mode(mode_string);
+        stepBuilder.add_driving_side(step.is_left_hand_driving);
+        stepBuilder.add_ref(ref_string);
+        stepBuilder.add_pronunciation(pronunciation_string);
+        stepBuilder.add_destinations(destinations_string);
+        stepBuilder.add_exits(exists_string);
+        stepBuilder.add_rotary_name(rotary_name_string);
+        stepBuilder.add_rotary_pronunciation(rotary_pronunciation_string);
+        stepBuilder.add_intersections(intersections_vector);
+        stepBuilder.add_maneuver(maneuver_buffer);
+        mapbox::util::apply_visitor(GeometryVisitor<fbresult::StepBuilder>(stepBuilder), geometry);
+        return stepBuilder.Finish();
+    };
+
+    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<fbresult::Intersection>>>
+    MakeFBIntersections(flatbuffers::FlatBufferBuilder &fb_result,
+                        const guidance::RouteStep &step) const
+    {
+        std::vector<flatbuffers::Offset<fbresult::Intersection>> intersections;
+        intersections.resize(step.intersections.size());
+        std::transform(
+            step.intersections.begin(),
+            step.intersections.end(),
+            intersections.begin(),
+            [&fb_result, this](const guidance::IntermediateIntersection &intersection) {
+
+                std::vector<flatbuffers::Offset<fbresult::Lane>> lanes;
+                if (json::detail::hasValidLanes(intersection))
+                {
+                    BOOST_ASSERT(intersection.lanes.lanes_in_turn >= 1);
+                    lanes.reserve(intersection.lane_description.size());
+                    LaneID lane_id = intersection.lane_description.size();
+
+                    for (const auto &lane_desc : intersection.lane_description)
+                    {
+                        --lane_id;
+                        auto indications = TurnLaneTypeToFB(lane_desc);
+
+                        auto lane_valid = lane_id >= intersection.lanes.first_lane_from_the_right &&
+                                          lane_id < intersection.lanes.first_lane_from_the_right +
+                                                        intersection.lanes.lanes_in_turn;
+                        lanes.push_back(
+                            fbresult::CreateLaneDirect(fb_result, &indications, lane_valid));
+                    }
+                }
+                auto lanes_vector = fb_result.CreateVector(lanes);
+
+                fbresult::Position maneuverPosition{
+                    static_cast<float>(util::toFloating(intersection.location.lon).__value),
+                    static_cast<float>(util::toFloating(intersection.location.lat).__value)};
+                auto bearings_vector = fb_result.CreateVector(intersection.bearings);
+                std::vector<flatbuffers::Offset<flatbuffers::String>> classes;
+                classes.resize(intersection.classes.size());
+                std::transform(
+                    intersection.classes.begin(),
+                    intersection.classes.end(),
+                    classes.begin(),
+                    [&fb_result](const std::string cls) { return fb_result.CreateString(cls); });
+                auto classes_vector = fb_result.CreateVector(classes);
+                auto entry_vector = fb_result.CreateVector(intersection.entry);
+
+                fbresult::IntersectionBuilder intersectionBuilder(fb_result);
+                intersectionBuilder.add_location(&maneuverPosition);
+                intersectionBuilder.add_bearings(bearings_vector);
+                intersectionBuilder.add_classes(classes_vector);
+                intersectionBuilder.add_entry(entry_vector);
+                intersectionBuilder.add_in(intersection.in);
+                intersectionBuilder.add_out(intersection.out);
+                intersectionBuilder.add_lanes(lanes_vector);
+                return intersectionBuilder.Finish();
+            });
+        return fb_result.CreateVector(intersections);
     }
 
     util::json::Object MakeRoute(const std::vector<PhantomNodes> &segment_end_coordinates,
