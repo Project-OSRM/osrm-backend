@@ -57,7 +57,7 @@ int main(int argc, const char *argv[])
     // Execute routing request, this does the heavy lifting
     const auto status = osrm.Route(params, result);
 
-    auto& json_result=result.get<json::Object>();
+    auto &json_result = result.get<json::Object>();
     if (status == Status::Ok)
     {
         auto &routes = json_result.values["routes"].get<json::Array>();

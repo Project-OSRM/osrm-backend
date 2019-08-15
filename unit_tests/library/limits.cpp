@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(test_trip_limits)
     BOOST_CHECK(rc == Status::Error);
 
     // Make sure we're not accidentally hitting a guard code path before
-    auto& json_result=result.get<json::Object>();
+    auto &json_result = result.get<json::Object>();
     const auto code = json_result.values["code"].get<json::String>().value;
     BOOST_CHECK(code == "TooBig"); // per the New-Server API spec
 }
@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(test_route_limits)
     BOOST_CHECK(rc == Status::Error);
 
     // Make sure we're not accidentally hitting a guard code path before
-    auto& json_result=result.get<json::Object>();
+    auto &json_result = result.get<json::Object>();
     const auto code = json_result.values["code"].get<json::String>().value;
     BOOST_CHECK(code == "TooBig"); // per the New-Server API spec
 }
@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(test_table_limits)
     BOOST_CHECK(rc == Status::Error);
 
     // Make sure we're not accidentally hitting a guard code path before
-    auto& json_result=result.get<json::Object>();
+    auto &json_result = result.get<json::Object>();
     const auto code = json_result.values["code"].get<json::String>().value;
     BOOST_CHECK(code == "TooBig"); // per the New-Server API spec
 }
@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE(test_match_coordinate_limits)
     BOOST_CHECK(rc == Status::Error);
 
     // Make sure we're not accidentally hitting a guard code path before
-    auto& json_result=result.get<json::Object>();
+    auto &json_result = result.get<json::Object>();
     const auto code = json_result.values["code"].get<json::String>().value;
     BOOST_CHECK(code == "TooBig"); // per the New-Server API spec
 }
@@ -163,7 +163,7 @@ BOOST_AUTO_TEST_CASE(test_match_radiuses_limits)
     BOOST_CHECK(rc == Status::Error);
 
     // Make sure we're not accidentally hitting a guard code path before
-    auto& json_result=result.get<json::Object>();
+    auto &json_result = result.get<json::Object>();
     const auto code = json_result.values["code"].get<json::String>().value;
     BOOST_CHECK(code == "TooBig"); // per the New-Server API spec
 }
@@ -190,7 +190,7 @@ BOOST_AUTO_TEST_CASE(test_nearest_limits)
     BOOST_CHECK(rc == Status::Error);
 
     // Make sure we're not accidentally hitting a guard code path before
-    auto& json_result=result.get<json::Object>();
+    auto &json_result = result.get<json::Object>();
     const auto code = json_result.values["code"].get<json::String>().value;
     BOOST_CHECK(code == "TooBig"); // per the New-Server API spec
 }

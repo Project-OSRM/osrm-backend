@@ -51,13 +51,14 @@ class TableAPI final : public BaseAPI
                  const std::vector<TableCellRef> &fallback_speed_cells,
                  osrm::engine::api::ResultT &response) const
     {
-        if(response.is<flatbuffers::FlatBufferBuilder>()) {
-            auto& fb_result = response.get<flatbuffers::FlatBufferBuilder>();
+        if (response.is<flatbuffers::FlatBufferBuilder>())
+        {
+            auto &fb_result = response.get<flatbuffers::FlatBufferBuilder>();
             MakeResponse(tables, phantoms, fallback_speed_cells, fb_result);
         }
         else
         {
-            auto& json_result = response.get<util::json::Object>();
+            auto &json_result = response.get<util::json::Object>();
             MakeResponse(tables, phantoms, fallback_speed_cells, json_result);
         }
     }
@@ -66,7 +67,8 @@ class TableAPI final : public BaseAPI
     MakeResponse(const std::pair<std::vector<EdgeDuration>, std::vector<EdgeDistance>> &tables,
                  const std::vector<PhantomNode> &phantoms,
                  const std::vector<TableCellRef> &fallback_speed_cells,
-                 flatbuffers::FlatBufferBuilder &fb_result) const {
+                 flatbuffers::FlatBufferBuilder &fb_result) const
+    {
         auto number_of_sources = parameters.sources.size();
         auto number_of_destinations = parameters.destinations.size();
 
@@ -169,21 +171,22 @@ class TableAPI final : public BaseAPI
 
   protected:
     virtual flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<fbresult::Waypoint>>>
-    MakeWaypoints(flatbuffers::FlatBufferBuilder& builder, const std::vector<PhantomNode> &phantoms) const
+    MakeWaypoints(flatbuffers::FlatBufferBuilder &builder,
+                  const std::vector<PhantomNode> &phantoms) const
     {
         std::vector<flatbuffers::Offset<fbresult::Waypoint>> waypoints;
         waypoints.reserve(phantoms.size());
         BOOST_ASSERT(phantoms.size() == parameters.coordinates.size());
 
         boost::range::transform(
-                phantoms,
-                std::back_inserter(waypoints),
-                [this, &builder](const PhantomNode &phantom) { return BaseAPI::MakeWaypoint(builder, phantom).Finish(); });
+            phantoms, std::back_inserter(waypoints), [this, &builder](const PhantomNode &phantom) {
+                return BaseAPI::MakeWaypoint(builder, phantom).Finish();
+            });
         return builder.CreateVector(waypoints);
     }
 
     virtual flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<fbresult::Waypoint>>>
-    MakeWaypoints(flatbuffers::FlatBufferBuilder& builder,
+    MakeWaypoints(flatbuffers::FlatBufferBuilder &builder,
                   const std::vector<PhantomNode> &phantoms,
                   const std::vector<std::size_t> &indices) const
     {
@@ -199,48 +202,52 @@ class TableAPI final : public BaseAPI
     }
 
     virtual flatbuffers::Offset<flatbuffers::Vector<float>>
-    MakeDurationTable(flatbuffers::FlatBufferBuilder& builder,
+    MakeDurationTable(flatbuffers::FlatBufferBuilder &builder,
                       const std::vector<EdgeWeight> &values) const
     {
         std::vector<float> distance_table;
         distance_table.resize(values.size());
-        std::transform(values.begin(), values.end(), distance_table.begin(), [](const EdgeWeight duration) {
-            if (duration == MAXIMAL_EDGE_DURATION) {
-                return 0.;
-            }
-            return duration / 10.;
-        });
+        std::transform(
+            values.begin(), values.end(), distance_table.begin(), [](const EdgeWeight duration) {
+                if (duration == MAXIMAL_EDGE_DURATION)
+                {
+                    return 0.;
+                }
+                return duration / 10.;
+            });
         return builder.CreateVector(distance_table);
     }
 
     virtual flatbuffers::Offset<flatbuffers::Vector<float>>
-    MakeDistanceTable(flatbuffers::FlatBufferBuilder& builder,
+    MakeDistanceTable(flatbuffers::FlatBufferBuilder &builder,
                       const std::vector<EdgeDistance> &values) const
     {
         std::vector<float> duration_table;
         duration_table.resize(values.size());
-        std::transform(values.begin(), values.end(), duration_table.begin(), [](const EdgeDistance distance) {
-            if (distance == INVALID_EDGE_DISTANCE) {
-                return 0.;
-            }
-            return std::round(distance * 10) / 10.;
-        });
+        std::transform(
+            values.begin(), values.end(), duration_table.begin(), [](const EdgeDistance distance) {
+                if (distance == INVALID_EDGE_DISTANCE)
+                {
+                    return 0.;
+                }
+                return std::round(distance * 10) / 10.;
+            });
         return builder.CreateVector(duration_table);
     }
 
     virtual flatbuffers::Offset<flatbuffers::Vector<uint32_t>>
-    MakeEstimatesTable(flatbuffers::FlatBufferBuilder& builder, const std::vector<TableCellRef> &fallback_speed_cells) const
+    MakeEstimatesTable(flatbuffers::FlatBufferBuilder &builder,
+                       const std::vector<TableCellRef> &fallback_speed_cells) const
     {
         std::vector<uint32_t> fb_table;
         fb_table.reserve(fallback_speed_cells.size());
         std::for_each(
-                fallback_speed_cells.begin(), fallback_speed_cells.end(), [&](const auto &cell) {
-                    fb_table.push_back(cell.row);
-                    fb_table.push_back(cell.column);
-                });
+            fallback_speed_cells.begin(), fallback_speed_cells.end(), [&](const auto &cell) {
+                fb_table.push_back(cell.row);
+                fb_table.push_back(cell.column);
+            });
         return builder.CreateVector(fb_table);
     }
-
 
     virtual util::json::Array MakeWaypoints(const std::vector<PhantomNode> &phantoms) const
     {

@@ -30,7 +30,7 @@ BOOST_AUTO_TEST_CASE(test_roundtrip_response_for_locations_in_small_component)
     const auto rc = osrm.Trip(params, result);
     BOOST_CHECK(rc == Status::Ok);
 
-    auto& json_result=result.get<json::Object>();
+    auto &json_result = result.get<json::Object>();
     const auto code = json_result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(test_roundtrip_response_for_locations_in_big_component)
     const auto rc = osrm.Trip(params, result);
     BOOST_CHECK(rc == Status::Ok);
 
-    auto& json_result=result.get<json::Object>();
+    auto &json_result = result.get<json::Object>();
     const auto code = json_result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(test_roundtrip_response_for_locations_across_components)
     const auto rc = osrm.Trip(params, result);
     BOOST_CHECK(rc == Status::Ok);
 
-    auto& json_result=result.get<json::Object>();
+    auto &json_result = result.get<json::Object>();
     const auto code = json_result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
@@ -167,7 +167,7 @@ BOOST_AUTO_TEST_CASE(test_tfse_1)
     const auto rc = osrm.Trip(params, result);
     BOOST_CHECK(rc == Status::Ok);
 
-    auto& json_result=result.get<json::Object>();
+    auto &json_result = result.get<json::Object>();
     const auto code = json_result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
@@ -214,7 +214,7 @@ BOOST_AUTO_TEST_CASE(test_tfse_2)
     const auto rc = osrm.Trip(params, result);
     BOOST_CHECK(rc == Status::Ok);
 
-    auto& json_result=result.get<json::Object>();
+    auto &json_result = result.get<json::Object>();
     const auto code = json_result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
@@ -254,7 +254,7 @@ void CheckNotImplemented(const osrm::OSRM &osrm, osrm::TripParameters &params)
     engine::api::ResultT result = json::Object();
     auto rc = osrm.Trip(params, result);
     BOOST_REQUIRE(rc == osrm::Status::Error);
-    auto& json_result=result.get<json::Object>();
+    auto &json_result = result.get<json::Object>();
     auto code = json_result.values.at("code").get<osrm::json::String>().value;
     BOOST_CHECK_EQUAL(code, "NotImplemented");
 }
@@ -265,7 +265,7 @@ void CheckOk(const osrm::OSRM &osrm, osrm::TripParameters &params)
     engine::api::ResultT result = json::Object();
     auto rc = osrm.Trip(params, result);
     BOOST_REQUIRE(rc == osrm::Status::Ok);
-    auto& json_result=result.get<json::Object>();
+    auto &json_result = result.get<json::Object>();
     auto code = json_result.values.at("code").get<osrm::json::String>().value;
     BOOST_CHECK_EQUAL(code, "Ok");
 }

@@ -30,7 +30,7 @@ BOOST_AUTO_TEST_CASE(test_match)
 
     const auto rc = osrm.Match(params, result);
 
-    auto& json_result=result.get<json::Object>();
+    auto &json_result = result.get<json::Object>();
     BOOST_CHECK(rc == Status::Ok || rc == Status::Error);
     const auto code = json_result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "Ok");
@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(test_match_split)
 
     const auto rc = osrm.Match(params, result);
 
-    auto& json_result=result.get<json::Object>();
+    auto &json_result = result.get<json::Object>();
     BOOST_CHECK(rc == Status::Ok || rc == Status::Error);
     const auto code = json_result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "Ok");

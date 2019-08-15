@@ -169,10 +169,11 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
             qi::lit("snapping=") >
             snapping_type[ph::bind(&engine::api::BaseParameters::snapping, qi::_r1) = qi::_1];
 
-        format_type.add(".json", engine::api::BaseParameters::OutputFormatType::JSON)
-        (".flatbuffers", engine::api::BaseParameters::OutputFormatType::FLATBUFFERS);
+        format_type.add(".json", engine::api::BaseParameters::OutputFormatType::JSON)(
+            ".flatbuffers", engine::api::BaseParameters::OutputFormatType::FLATBUFFERS);
 
-        format_rule = -format_type[ph::bind(&engine::api::BaseParameters::format, qi::_r1) = qi::_1];
+        format_rule =
+            -format_type[ph::bind(&engine::api::BaseParameters::format, qi::_r1) = qi::_1];
 
         exclude_rule = qi::lit("exclude=") >
                        (qi::as_string[+qi::char_("a-zA-Z0-9")] %

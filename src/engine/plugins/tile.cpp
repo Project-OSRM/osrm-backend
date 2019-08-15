@@ -669,7 +669,7 @@ Status TilePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
 {
     BOOST_ASSERT(parameters.IsValid());
 
-    auto& pbf_buffer = result.get<std::string>();
+    auto &pbf_buffer = result.get<std::string>();
     const auto &facade = algorithms.GetFacade();
     auto edges = getEdges(facade, parameters.x, parameters.y, parameters.z);
     auto segregated_nodes = getSegregatedNodes(facade, edges);

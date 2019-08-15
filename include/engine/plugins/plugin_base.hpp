@@ -64,17 +64,21 @@ class BasePlugin
         return false;
     }
 
-    struct ErrorRenderer {
+    struct ErrorRenderer
+    {
         std::string code;
         std::string message;
 
-        ErrorRenderer(std::string code, std::string message) : code(std::move(code)), message(std::move(message)) {};
+        ErrorRenderer(std::string code, std::string message)
+            : code(std::move(code)), message(std::move(message)){};
 
-        void operator()(util::json::Object& json_result) {
+        void operator()(util::json::Object &json_result)
+        {
             json_result.values["code"] = code;
             json_result.values["message"] = message;
         };
-        void operator()(flatbuffers::FlatBufferBuilder& fb_result) {
+        void operator()(flatbuffers::FlatBufferBuilder &fb_result)
+        {
             api::fbresult::FBResultBuilder error(fb_result);
             error.add_error(true);
 
@@ -84,7 +88,8 @@ class BasePlugin
             error.add_code(codeBuilder.Finish());
             fb_result.Finish(error.Finish());
         };
-        void operator()(std::string& str_result) {
+        void operator()(std::string &str_result)
+        {
             str_result = str(boost::format("code=%1% message=%2%") % code % message);
         };
     };

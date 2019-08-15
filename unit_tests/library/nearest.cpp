@@ -27,7 +27,7 @@ BOOST_AUTO_TEST_CASE(test_nearest_response)
     const auto rc = osrm.Nearest(params, result);
     BOOST_REQUIRE(rc == Status::Ok);
 
-    auto& json_result=result.get<json::Object>();
+    auto &json_result = result.get<json::Object>();
     const auto code = json_result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(test_nearest_response_no_coordinates)
     const auto rc = osrm.Nearest(params, result);
     BOOST_REQUIRE(rc == Status::Error);
 
-    auto& json_result=result.get<json::Object>();
+    auto &json_result = result.get<json::Object>();
     const auto code = json_result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "InvalidOptions");
 }
@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(test_nearest_response_multiple_coordinates)
     const auto rc = osrm.Nearest(params, result);
     BOOST_REQUIRE(rc == Status::Error);
 
-    auto& json_result=result.get<json::Object>();
+    auto &json_result = result.get<json::Object>();
     const auto code = json_result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "InvalidOptions");
 }
@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE(test_nearest_response_for_location_in_small_component)
     const auto rc = osrm.Nearest(params, result);
     BOOST_REQUIRE(rc == Status::Ok);
 
-    auto& json_result=result.get<json::Object>();
+    auto &json_result = result.get<json::Object>();
     const auto code = json_result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "Ok");
 

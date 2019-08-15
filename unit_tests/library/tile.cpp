@@ -166,7 +166,7 @@ void validate_tile(const osrm::OSRM &osrm)
     const auto rc = osrm.Tile(params, result);
     BOOST_CHECK(rc == Status::Ok);
 
-    auto& str_result = result.get<std::string>();
+    auto &str_result = result.get<std::string>();
     BOOST_CHECK(str_result.size() > 114000);
 
     vtzero::vector_tile tile{str_result};
@@ -212,7 +212,7 @@ void test_tile_turns(const osrm::OSRM &osrm)
     const auto rc = osrm.Tile(params, result);
     BOOST_CHECK(rc == Status::Ok);
 
-    auto& str_result = result.get<std::string>();
+    auto &str_result = result.get<std::string>();
     BOOST_CHECK_GT(str_result.size(), 128);
 
     vtzero::vector_tile tile{str_result};
@@ -354,7 +354,7 @@ void test_tile_speeds(const osrm::OSRM &osrm)
     const auto rc = osrm.Tile(params, result);
     BOOST_CHECK(rc == Status::Ok);
 
-    auto& str_result = result.get<std::string>();
+    auto &str_result = result.get<std::string>();
     BOOST_CHECK_GT(str_result.size(), 128);
 
     vtzero::vector_tile tile{str_result};
@@ -435,7 +435,7 @@ void test_tile_nodes(const osrm::OSRM &osrm)
     const auto rc = osrm.Tile(params, result);
     BOOST_CHECK(rc == Status::Ok);
 
-    auto& str_result = result.get<std::string>();
+    auto &str_result = result.get<std::string>();
     BOOST_CHECK_GT(str_result.size(), 128);
 
     vtzero::vector_tile tile{str_result};

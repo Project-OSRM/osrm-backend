@@ -32,18 +32,13 @@ class EngineInterface
 {
   public:
     virtual ~EngineInterface() = default;
-    virtual Status Route(const api::RouteParameters &parameters,
-                         api::ResultT &result) const = 0;
-    virtual Status Table(const api::TableParameters &parameters,
-                         api::ResultT &result) const = 0;
+    virtual Status Route(const api::RouteParameters &parameters, api::ResultT &result) const = 0;
+    virtual Status Table(const api::TableParameters &parameters, api::ResultT &result) const = 0;
     virtual Status Nearest(const api::NearestParameters &parameters,
                            api::ResultT &result) const = 0;
-    virtual Status Trip(const api::TripParameters &parameters,
-                        api::ResultT &result) const = 0;
-    virtual Status Match(const api::MatchParameters &parameters,
-                         api::ResultT &result) const = 0;
-    virtual Status Tile(const api::TileParameters &parameters,
-                        api::ResultT &result) const = 0;
+    virtual Status Trip(const api::TripParameters &parameters, api::ResultT &result) const = 0;
+    virtual Status Match(const api::MatchParameters &parameters, api::ResultT &result) const = 0;
+    virtual Status Tile(const api::TileParameters &parameters, api::ResultT &result) const = 0;
 };
 
 template <typename Algorithm> class Engine final : public EngineInterface
@@ -90,38 +85,32 @@ template <typename Algorithm> class Engine final : public EngineInterface
     Engine &operator=(const Engine &) = delete;
     virtual ~Engine() = default;
 
-    Status Route(const api::RouteParameters &params,
-                 api::ResultT &result) const override final
+    Status Route(const api::RouteParameters &params, api::ResultT &result) const override final
     {
         return route_plugin.HandleRequest(GetAlgorithms(params), params, result);
     }
 
-    Status Table(const api::TableParameters &params,
-                 api::ResultT &result) const override final
+    Status Table(const api::TableParameters &params, api::ResultT &result) const override final
     {
         return table_plugin.HandleRequest(GetAlgorithms(params), params, result);
     }
 
-    Status Nearest(const api::NearestParameters &params,
-                   api::ResultT &result) const override final
+    Status Nearest(const api::NearestParameters &params, api::ResultT &result) const override final
     {
         return nearest_plugin.HandleRequest(GetAlgorithms(params), params, result);
     }
 
-    Status Trip(const api::TripParameters &params,
-                api::ResultT &result) const override final
+    Status Trip(const api::TripParameters &params, api::ResultT &result) const override final
     {
         return trip_plugin.HandleRequest(GetAlgorithms(params), params, result);
     }
 
-    Status Match(const api::MatchParameters &params,
-                 api::ResultT &result) const override final
+    Status Match(const api::MatchParameters &params, api::ResultT &result) const override final
     {
         return match_plugin.HandleRequest(GetAlgorithms(params), params, result);
     }
 
-    Status Tile(const api::TileParameters &params,
-                api::ResultT &result) const override final
+    Status Tile(const api::TileParameters &params, api::ResultT &result) const override final
     {
         return tile_plugin.HandleRequest(GetAlgorithms(params), params, result);
     }

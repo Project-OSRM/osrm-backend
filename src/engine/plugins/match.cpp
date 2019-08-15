@@ -158,8 +158,7 @@ Status MatchPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
 
     if (!time_increases_monotonically)
     {
-        return Error(
-            "InvalidValue", "Timestamps need to be monotonically increasing.", result);
+        return Error("InvalidValue", "Timestamps need to be monotonically increasing.", result);
     }
 
     SubMatchingList sub_matchings;
@@ -180,9 +179,8 @@ Status MatchPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
         (tidied.parameters.waypoints[0] != 0 ||
          tidied.parameters.waypoints.back() != (tidied.parameters.coordinates.size() - 1)))
     {
-        return Error("InvalidValue",
-                     "First and last coordinates must be specified as waypoints.",
-                     result);
+        return Error(
+            "InvalidValue", "First and last coordinates must be specified as waypoints.", result);
     }
 
     // assuming radius is the standard deviation of a normal distribution
@@ -260,8 +258,7 @@ Status MatchPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
         }
         if (!tidied_waypoints.empty())
         {
-            return Error(
-                "NoMatch", "Requested waypoint parameter could not be matched.", result);
+            return Error("NoMatch", "Requested waypoint parameter could not be matched.", result);
         }
     }
     // we haven't errored yet, only allow leg collapsing if it was originally requested

@@ -31,21 +31,26 @@ class TripAPI final : public RouteAPI
     {
         BOOST_ASSERT(sub_trips.size() == sub_routes.size());
 
-        if (response.is<flatbuffers::FlatBufferBuilder>()) {
+        if (response.is<flatbuffers::FlatBufferBuilder>())
+        {
             auto &fb_result = response.get<flatbuffers::FlatBufferBuilder>();
             MakeResponse(sub_trips, sub_routes, phantoms, fb_result);
-        } else {
+        }
+        else
+        {
             auto &json_result = response.get<util::json::Object>();
             MakeResponse(sub_trips, sub_routes, phantoms, json_result);
         }
-
     }
     void MakeResponse(const std::vector<std::vector<NodeID>> &sub_trips,
                       const std::vector<InternalRouteResult> &sub_routes,
                       const std::vector<PhantomNode> &phantoms,
                       flatbuffers::FlatBufferBuilder &fb_result) const
     {
-        auto response = MakeFBResponse(sub_routes, fb_result, [this, &fb_result, &sub_trips, &phantoms]() { return MakeWaypoints(fb_result, sub_trips, phantoms); });
+        auto response =
+            MakeFBResponse(sub_routes, fb_result, [this, &fb_result, &sub_trips, &phantoms]() {
+                return MakeWaypoints(fb_result, sub_trips, phantoms);
+            });
 
         fb_result.Finish(response.Finish());
     }
@@ -74,25 +79,29 @@ class TripAPI final : public RouteAPI
     // FIXME this logic is a little backwards. We should change the output format of the
     // trip plugin routing algorithm to be easier to consume here.
 
-    struct TripIndex {
+    struct TripIndex
+    {
         TripIndex() = default;
 
         TripIndex(unsigned sub_trip_index_, unsigned point_index_)
-                : sub_trip_index(sub_trip_index_), point_index(point_index_) {
+            : sub_trip_index(sub_trip_index_), point_index(point_index_)
+        {
         }
 
         unsigned sub_trip_index = std::numeric_limits<unsigned>::max();
         unsigned point_index = std::numeric_limits<unsigned>::max();
 
-        bool NotUsed() {
+        bool NotUsed()
+        {
             return sub_trip_index == std::numeric_limits<unsigned>::max() &&
                    point_index == std::numeric_limits<unsigned>::max();
         }
     };
 
-    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<fbresult::Waypoint>>> MakeWaypoints(flatbuffers::FlatBufferBuilder &fb_result,
-                                                                       const std::vector<std::vector<NodeID>> &sub_trips,
-                                                                       const std::vector<PhantomNode> &phantoms) const
+    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<fbresult::Waypoint>>>
+    MakeWaypoints(flatbuffers::FlatBufferBuilder &fb_result,
+                  const std::vector<std::vector<NodeID>> &sub_trips,
+                  const std::vector<PhantomNode> &phantoms) const
     {
         std::vector<flatbuffers::Offset<fbresult::Waypoint>> waypoints;
         waypoints.reserve(parameters.coordinates.size());
@@ -135,13 +144,15 @@ class TripAPI final : public RouteAPI
         return waypoints;
     }
 
-    std::vector<TripIndex>
-    MakeTripIndices(const std::vector<std::vector<NodeID>> &sub_trips) const {
+    std::vector<TripIndex> MakeTripIndices(const std::vector<std::vector<NodeID>> &sub_trips) const
+    {
         std::vector<TripIndex> input_idx_to_trip_idx(parameters.coordinates.size());
-        for (auto sub_trip_index : util::irange<unsigned>(0u, sub_trips.size())) {
-            for (auto point_index : util::irange<unsigned>(0u, sub_trips[sub_trip_index].size())) {
+        for (auto sub_trip_index : util::irange<unsigned>(0u, sub_trips.size()))
+        {
+            for (auto point_index : util::irange<unsigned>(0u, sub_trips[sub_trip_index].size()))
+            {
                 input_idx_to_trip_idx[sub_trips[sub_trip_index][point_index]] =
-                        TripIndex{sub_trip_index, point_index};
+                    TripIndex{sub_trip_index, point_index};
             }
         }
         return input_idx_to_trip_idx;

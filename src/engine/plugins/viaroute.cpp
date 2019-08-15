@@ -78,9 +78,8 @@ Status ViaRoutePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithm
         (route_parameters.waypoints[0] != 0 ||
          route_parameters.waypoints.back() != (route_parameters.coordinates.size() - 1)))
     {
-        return Error("InvalidValue",
-                     "First and last coordinates must be specified as waypoints.",
-                     result);
+        return Error(
+            "InvalidValue", "First and last coordinates must be specified as waypoints.", result);
     }
 
     if (!CheckAlgorithms(route_parameters, algorithms, result))

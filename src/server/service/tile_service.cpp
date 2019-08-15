@@ -15,7 +15,9 @@ namespace server
 namespace service
 {
 
-engine::Status TileService::RunQuery(std::size_t prefix_length, std::string &query, osrm::engine::api::ResultT &result)
+engine::Status TileService::RunQuery(std::size_t prefix_length,
+                                     std::string &query,
+                                     osrm::engine::api::ResultT &result)
 {
     auto query_iterator = query.begin();
     auto parameters =

@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_CASE(test_table_three_coords_one_source_one_dest_matrix)
 
     const auto rc = osrm.Table(params, result);
 
-    auto& json_result=result.get<json::Object>();
+    auto &json_result = result.get<json::Object>();
     BOOST_CHECK(rc == Status::Ok || rc == Status::Error);
     const auto code = json_result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "Ok");
@@ -61,7 +61,8 @@ BOOST_AUTO_TEST_CASE(test_table_three_coords_one_source_one_dest_matrix)
     }
 
     // check destinations array of waypoint objects
-    const auto &destinations_array = json_result.values.at("destinations").get<json::Array>().values;
+    const auto &destinations_array =
+        json_result.values.at("destinations").get<json::Array>().values;
     BOOST_CHECK_EQUAL(destinations_array.size(), params.destinations.size());
     for (const auto &destination : destinations_array)
     {
@@ -91,7 +92,7 @@ BOOST_AUTO_TEST_CASE(test_table_three_coords_one_source_matrix)
 
     const auto rc = osrm.Table(params, result);
 
-    auto& json_result=result.get<json::Object>();
+    auto &json_result = result.get<json::Object>();
     BOOST_CHECK(rc == Status::Ok || rc == Status::Error);
     const auto code = json_result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "Ok");
@@ -108,7 +109,8 @@ BOOST_AUTO_TEST_CASE(test_table_three_coords_one_source_matrix)
                           params.sources.size() * params.coordinates.size());
     }
     // check destinations array of waypoint objects
-    const auto &destinations_array = json_result.values.at("destinations").get<json::Array>().values;
+    const auto &destinations_array =
+        json_result.values.at("destinations").get<json::Array>().values;
     BOOST_CHECK_EQUAL(destinations_array.size(), params.coordinates.size());
     for (const auto &destination : destinations_array)
     {
@@ -139,7 +141,7 @@ BOOST_AUTO_TEST_CASE(test_table_three_coordinates_matrix)
 
     const auto rc = osrm.Table(params, result);
 
-    auto& json_result=result.get<json::Object>();
+    auto &json_result = result.get<json::Object>();
     BOOST_CHECK(rc == Status::Ok || rc == Status::Error);
     const auto code = json_result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "Ok");
@@ -154,7 +156,8 @@ BOOST_AUTO_TEST_CASE(test_table_three_coordinates_matrix)
         BOOST_CHECK_EQUAL(durations_matrix[i].get<json::Number>().value, 0);
         BOOST_CHECK_EQUAL(durations_matrix.size(), params.coordinates.size());
     }
-    const auto &destinations_array = json_result.values.at("destinations").get<json::Array>().values;
+    const auto &destinations_array =
+        json_result.values.at("destinations").get<json::Array>().values;
     for (const auto &destination : destinations_array)
     {
         BOOST_CHECK(waypoint_check(destination));
@@ -185,7 +188,7 @@ BOOST_AUTO_TEST_CASE(test_table_no_segment_for_some_coordinates)
 
     const auto rc = osrm.Table(params, result);
 
-    auto& json_result=result.get<json::Object>();
+    auto &json_result = result.get<json::Object>();
     BOOST_CHECK(rc == Status::Error);
     const auto code = json_result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "NoSegment");

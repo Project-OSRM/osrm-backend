@@ -152,7 +152,7 @@ inline void async(const Nan::FunctionCallbackInfo<v8::Value> &info,
         void Execute() override try
         {
             osrm::engine::api::ResultT r;
-            r=osrm::util::json::Object();
+            r = osrm::util::json::Object();
             const auto status = ((*osrm).*(service))(*params, r);
             auto json_result = r.get<osrm::json::Object>();
             ParseResult(status, json_result);

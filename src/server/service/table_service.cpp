@@ -70,8 +70,9 @@ std::string getWrongOptionHelp(const engine::api::TableParameters &parameters)
 }
 } // anon. ns
 
-engine::Status
-TableService::RunQuery(std::size_t prefix_length, std::string &query, osrm::engine::api::ResultT &result)
+engine::Status TableService::RunQuery(std::size_t prefix_length,
+                                      std::string &query,
+                                      osrm::engine::api::ResultT &result)
 {
     result = util::json::Object();
     auto &json_result = result.get<util::json::Object>();
@@ -99,7 +100,8 @@ TableService::RunQuery(std::size_t prefix_length, std::string &query, osrm::engi
 
     if (parameters->format)
     {
-        if (parameters->format == engine::api::BaseParameters::OutputFormatType::FLATBUFFERS) {
+        if (parameters->format == engine::api::BaseParameters::OutputFormatType::FLATBUFFERS)
+        {
             result = flatbuffers::FlatBufferBuilder();
         }
     }

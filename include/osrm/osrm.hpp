@@ -28,9 +28,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef OSRM_HPP
 #define OSRM_HPP
 
+#include "engine/api/base_result.hpp"
 #include "osrm/osrm_fwd.hpp"
 #include "osrm/status.hpp"
-#include "engine/api/base_result.hpp"
 
 #include <memory>
 #include <string>

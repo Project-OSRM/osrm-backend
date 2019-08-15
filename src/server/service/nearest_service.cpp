@@ -35,8 +35,9 @@ std::string getWrongOptionHelp(const engine::api::NearestParameters &parameters)
 }
 } // anon. ns
 
-engine::Status
-NearestService::RunQuery(std::size_t prefix_length, std::string &query, osrm::engine::api::ResultT &result)
+engine::Status NearestService::RunQuery(std::size_t prefix_length,
+                                        std::string &query,
+                                        osrm::engine::api::ResultT &result)
 {
     result = util::json::Object();
     auto &json_result = result.get<util::json::Object>();
@@ -64,7 +65,8 @@ NearestService::RunQuery(std::size_t prefix_length, std::string &query, osrm::en
 
     if (parameters->format)
     {
-        if (parameters->format == engine::api::BaseParameters::OutputFormatType::FLATBUFFERS) {
+        if (parameters->format == engine::api::BaseParameters::OutputFormatType::FLATBUFFERS)
+        {
             result = flatbuffers::FlatBufferBuilder();
         }
     }

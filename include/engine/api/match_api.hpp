@@ -34,10 +34,13 @@ class MatchAPI final : public RouteAPI
                       osrm::engine::api::ResultT &response) const
     {
         BOOST_ASSERT(sub_matchings.size() == sub_routes.size());
-        if (response.is<flatbuffers::FlatBufferBuilder>()) {
+        if (response.is<flatbuffers::FlatBufferBuilder>())
+        {
             auto &fb_result = response.get<flatbuffers::FlatBufferBuilder>();
             MakeResponse(sub_matchings, sub_routes, fb_result);
-        } else {
+        }
+        else
+        {
             auto &json_result = response.get<util::json::Object>();
             MakeResponse(sub_matchings, sub_routes, json_result);
         }
@@ -46,7 +49,9 @@ class MatchAPI final : public RouteAPI
                       const std::vector<InternalRouteResult> &sub_routes,
                       flatbuffers::FlatBufferBuilder &fb_result) const
     {
-        auto response = MakeFBResponse(sub_routes, fb_result, [this, &fb_result, &sub_matchings]() { return MakeTracepoints(fb_result, sub_matchings); });
+        auto response = MakeFBResponse(sub_routes, fb_result, [this, &fb_result, &sub_matchings]() {
+            return MakeTracepoints(fb_result, sub_matchings);
+        });
 
         fb_result.Finish(response.Finish());
     }
@@ -79,7 +84,7 @@ class MatchAPI final : public RouteAPI
     {
         MatchingIndex() = default;
         MatchingIndex(unsigned sub_matching_index_, unsigned point_index_)
-                : sub_matching_index(sub_matching_index_), point_index(point_index_)
+            : sub_matching_index(sub_matching_index_), point_index(point_index_)
         {
         }
 
@@ -94,7 +99,8 @@ class MatchAPI final : public RouteAPI
     };
 
     flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<fbresult::Waypoint>>>
-    MakeTracepoints(flatbuffers::FlatBufferBuilder &fb_result, const std::vector<map_matching::SubMatching> &sub_matchings) const
+    MakeTracepoints(flatbuffers::FlatBufferBuilder &fb_result,
+                    const std::vector<map_matching::SubMatching> &sub_matchings) const
     {
         std::vector<flatbuffers::Offset<fbresult::Waypoint>> waypoints;
         waypoints.reserve(parameters.coordinates.size());
@@ -119,11 +125,11 @@ class MatchAPI final : public RouteAPI
                 continue;
             }
             const auto &phantom =
-                    sub_matchings[matching_index.sub_matching_index].nodes[matching_index.point_index];
+                sub_matchings[matching_index.sub_matching_index].nodes[matching_index.point_index];
             auto waypoint = BaseAPI::MakeWaypoint(fb_result, phantom);
             waypoint.add_matchings_index(matching_index.sub_matching_index);
             waypoint.add_alternatives_count(sub_matchings[matching_index.sub_matching_index]
-                                                    .alternatives_count[matching_index.point_index]);
+                                                .alternatives_count[matching_index.point_index]);
             // waypoint indices need to be adjusted if route legs were collapsed
             // waypoint parameter assumes there is only one match object
             if (!parameters.waypoints.empty())
@@ -137,7 +143,9 @@ class MatchAPI final : public RouteAPI
                 {
                     waypoint.add_waypoint_index(0);
                 }
-            } else {
+            }
+            else
+            {
                 waypoint.add_waypoint_index(matching_index.point_index);
             }
             waypoints.push_back(waypoint.Finish());
@@ -198,20 +206,24 @@ class MatchAPI final : public RouteAPI
         return waypoints;
     }
 
-    std::vector<MatchingIndex> MakeMatchingIndices(const std::vector<map_matching::SubMatching> &sub_matchings) const {
+    std::vector<MatchingIndex>
+    MakeMatchingIndices(const std::vector<map_matching::SubMatching> &sub_matchings) const
+    {
         std::vector<MatchingIndex> trace_idx_to_matching_idx(parameters.coordinates.size());
         for (auto sub_matching_index :
-                util::irange(0u, static_cast<unsigned>(sub_matchings.size()))) {
+             util::irange(0u, static_cast<unsigned>(sub_matchings.size())))
+        {
             for (auto point_index : util::irange(
-                    0u, static_cast<unsigned>(sub_matchings[sub_matching_index].indices.size()))) {
+                     0u, static_cast<unsigned>(sub_matchings[sub_matching_index].indices.size())))
+            {
                 // tidied_to_original: index of the input coordinate that a tidied coordinate
                 // corresponds to.
                 // sub_matching indices: index of the coordinate passed to map matching plugin that
                 // a matched node corresponds to.
                 trace_idx_to_matching_idx[tidy_result
-                        .tidied_to_original[sub_matchings[sub_matching_index]
-                        .indices[point_index]]] =
-                        MatchingIndex{sub_matching_index, point_index};
+                                              .tidied_to_original[sub_matchings[sub_matching_index]
+                                                                      .indices[point_index]]] =
+                    MatchingIndex{sub_matching_index, point_index};
             }
         }
         return trace_idx_to_matching_idx;
