@@ -7,6 +7,7 @@
 #include "equal_json.hpp"
 #include "fixture.hpp"
 
+#include "engine/api/flatbuffers/fbresult_generated.h"
 #include "osrm/coordinate.hpp"
 #include "osrm/engine_config.hpp"
 #include "osrm/exception.hpp"
@@ -474,6 +475,104 @@ BOOST_AUTO_TEST_CASE(test_manual_setting_of_annotations_property)
                            .get<json::Object>()
                            .values;
     BOOST_CHECK_EQUAL(annotations.size(), 6);
+}
+
+BOOST_AUTO_TEST_CASE(test_route_serialize_fb)
+{
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm");
+
+    using namespace osrm;
+
+    RouteParameters params;
+    params.steps = true;
+    params.coordinates.push_back(get_dummy_location());
+    params.coordinates.push_back(get_dummy_location());
+    params.coordinates.push_back(get_dummy_location());
+
+    engine::api::ResultT result = flatbuffers::FlatBufferBuilder();
+    const auto rc = osrm.Route(params, result);
+    BOOST_CHECK(rc == Status::Ok);
+
+    auto &fb_result = result.get<flatbuffers::FlatBufferBuilder>();
+    auto fb = engine::api::fbresult::GetFBResult(fb_result.GetBufferPointer());
+    BOOST_CHECK(!fb->error());
+
+    BOOST_CHECK(fb->waypoints() != nullptr);
+    const auto waypoints = fb->waypoints();
+    BOOST_CHECK(waypoints->size() == params.coordinates.size());
+
+    for (const auto &waypoint : *waypoints)
+    {
+        const auto longitude = waypoint->location()->longitute();
+        const auto latitude = waypoint->location()->latitude();
+        BOOST_CHECK(longitude >= -180. && longitude <= 180.);
+        BOOST_CHECK(latitude >= -90. && latitude <= 90.);
+
+        BOOST_CHECK(!waypoint->hint()->str().empty());
+    }
+
+    BOOST_CHECK(fb->routes() != nullptr);
+    const auto routes = fb->routes();
+    BOOST_REQUIRE_GT(routes->size(), 0);
+
+    for (const auto &route : *routes)
+    {
+        BOOST_CHECK_EQUAL(route->distance(), 0);
+        BOOST_CHECK_EQUAL(route->duration(), 0);
+
+        const auto &legs = route->legs();
+        BOOST_CHECK(legs->size() > 0);
+
+        for (const auto &leg : *legs)
+        {
+            BOOST_CHECK_EQUAL(leg->distance(), 0);
+
+            BOOST_CHECK_EQUAL(leg->duration(), 0);
+
+            BOOST_CHECK(leg->steps() != nullptr);
+            const auto steps = leg->steps();
+            BOOST_CHECK(steps->size() > 0);
+
+            std::size_t step_count = 0;
+
+            for (const auto step : *steps)
+            {
+                BOOST_CHECK_EQUAL(step->distance(), 0);
+
+                BOOST_CHECK_EQUAL(step->duration(), 0);
+
+                BOOST_CHECK(step->maneuver() != nullptr);
+
+                BOOST_CHECK(step->intersections() != nullptr);
+                const auto intersections = step->intersections();
+
+                for (auto intersection : *intersections)
+                {
+                    const auto longitude = intersection->location()->longitute();
+                    const auto latitude = intersection->location()->latitude();
+                    BOOST_CHECK(longitude >= -180. && longitude <= 180.);
+                    BOOST_CHECK(latitude >= -90. && latitude <= 90.);
+
+                    BOOST_CHECK(intersection->bearings() != nullptr);
+                    const auto bearings = intersection->bearings();
+                    BOOST_CHECK(bearings->size() > 0);
+
+                    for (const auto bearing : *bearings)
+                        BOOST_CHECK(0. <= bearing && bearing <= 360.);
+
+                    if (step_count > 0)
+                    {
+                        BOOST_CHECK(intersection->in() < bearings->size());
+                    }
+                    if (step_count + 1 < steps->size())
+                    {
+                        BOOST_CHECK(intersection->out() < bearings->size());
+                    }
+                }
+                ++step_count;
+            }
+        }
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

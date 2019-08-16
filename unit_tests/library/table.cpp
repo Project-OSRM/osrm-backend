@@ -194,4 +194,57 @@ BOOST_AUTO_TEST_CASE(test_table_no_segment_for_some_coordinates)
     BOOST_CHECK_EQUAL(code, "NoSegment");
 }
 
+BOOST_AUTO_TEST_CASE(test_table_serialiaze_fb)
+{
+    using namespace osrm;
+
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm");
+
+    TableParameters params;
+    params.coordinates.push_back(get_dummy_location());
+    params.coordinates.push_back(get_dummy_location());
+    params.coordinates.push_back(get_dummy_location());
+    params.sources.push_back(0);
+    params.destinations.push_back(2);
+    params.annotations = TableParameters::AnnotationsType::All;
+
+    engine::api::ResultT result = flatbuffers::FlatBufferBuilder();
+
+    const auto rc = osrm.Table(params, result);
+
+    BOOST_CHECK(rc == Status::Ok || rc == Status::Error);
+
+    auto &fb_result = result.get<flatbuffers::FlatBufferBuilder>();
+    auto fb = engine::api::fbresult::GetFBResult(fb_result.GetBufferPointer());
+    BOOST_CHECK(!fb->error());
+    BOOST_CHECK(fb->table() != nullptr);
+
+    // check that returned durations error is expected size and proportions
+    // this test expects a 1x1 matrix
+    BOOST_CHECK(fb->table()->durations() != nullptr);
+    auto durations_array = fb->table()->durations();
+    BOOST_CHECK_EQUAL(durations_array->size(), params.sources.size() * params.destinations.size());
+
+    // check that returned distances error is expected size and proportions
+    // this test expects a 1x1 matrix
+    BOOST_CHECK(fb->table()->distances() != nullptr);
+    auto distances_array = fb->table()->distances();
+    BOOST_CHECK_EQUAL(distances_array->size(), params.sources.size() * params.destinations.size());
+
+    // check destinations array of waypoint objects
+    const auto &destinations_array = fb->table()->destinations();
+    BOOST_CHECK_EQUAL(destinations_array->size(), params.destinations.size());
+    for (const auto &destination : *destinations_array)
+    {
+        BOOST_CHECK(waypoint_check(destination));
+    }
+    // check sources array of waypoint objects
+    const auto &sources_array = fb->waypoints();
+    BOOST_CHECK_EQUAL(sources_array->size(), params.sources.size());
+    for (const auto &source : *sources_array)
+    {
+        BOOST_CHECK(waypoint_check(source));
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
