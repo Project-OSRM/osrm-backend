@@ -19,7 +19,7 @@ namespace server
 {
 
 Connection::Connection(boost::asio::io_service &io_service, RequestHandler &handler)
-    : strand(io_service), TCP_socket(io_service), request_handler(handler)
+    : strand(io_service), TCP_socket(io_service), timer(io_service), request_handler(handler)
 {
 }
 
@@ -28,12 +28,19 @@ boost::asio::ip::tcp::socket &Connection::socket() { return TCP_socket; }
 /// Start the first asynchronous operation for the connection.
 void Connection::start()
 {
-        TCP_socket.async_read_some(
+    TCP_socket.async_read_some(
                 boost::asio::buffer(incoming_data_buffer),
                 strand.wrap(boost::bind(&Connection::handle_read,
                                         this->shared_from_this(),
                                         boost::asio::placeholders::error,
                                         boost::asio::placeholders::bytes_transferred)));
+
+    //init async timer
+    timer.cancel();
+    timer.expires_from_now(boost::posix_time::seconds(keepalive_timeout));
+    timer.async_wait(boost::bind(&Connection::handle_timeout,
+                                 this->shared_from_this()));
+
 }
 
 void Connection::handle_read(const boost::system::error_code &error, std::size_t bytes_transferred)
@@ -133,10 +140,16 @@ void Connection::handle_write(const boost::system::error_code &error)
             this->start();
         } else {
             // Initiate graceful connection closure.
-            boost::system::error_code ignore_error;
-            TCP_socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ignore_error);
+            handle_timeout();
         }
     }
+}
+
+/// Handle completion of a write operation.
+void Connection::handle_timeout()
+{
+    boost::system::error_code ignore_error;
+    TCP_socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ignore_error);
 }
 
 std::vector<char> Connection::compress_buffers(const std::vector<char> &uncompressed_data,
