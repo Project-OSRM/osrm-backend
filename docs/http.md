@@ -1,3 +1,8 @@
+# OSRM HTTP server
+
+Built-in HTTP server is a basic HTTP/1.0 server that supports 'keep-alive' extension. Persistent connections are limited to 512 requests per
+connection and allow no more then 5 seconds between requests.
+
 ## General options
 
 All OSRM HTTP requests use a common structure.
