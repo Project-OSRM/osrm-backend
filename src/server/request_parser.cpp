@@ -180,6 +180,11 @@ RequestParser::RequestStatus RequestParser::consume(http::request &current_reque
             current_request.agent = current_header.value;
         }
 
+        if (boost::iequals(current_header.name, "Connection"))
+        {
+            current_request.connection = current_header.value;
+        }
+
         if (input == '\r')
         {
             state = internal_state::expecting_newline_3;
