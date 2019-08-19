@@ -103,11 +103,7 @@ boost::asio::const_buffer reply::status_to_buffer(const reply::status_type statu
     return boost::asio::buffer(http_bad_request_string);
 }
 
-reply::reply() : status(ok)
-{
-    // We do not currently support keep alive. Always set 'Connection: close'.
-    headers.emplace_back("Connection", "close");
-}
+reply::reply() : status(ok) {}
 }
 }
 }
