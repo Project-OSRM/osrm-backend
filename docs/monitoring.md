@@ -6,7 +6,7 @@ This option switched off by default. To enable this feature please set `-P <moni
 
 ## Available metrics
 
-- `osrm_routed_instance_info` metric with base instanse information inside labels
+- `osrm_routed_instance_info` metric with base instance information inside labels
 -- `algorithm` routing algorithm;
 -- `code_version` OSRM version. Same with `-v` command line option;
 -- `data_version` OSM data version if available. This value can be setted at the `osrm-extract` phase;
