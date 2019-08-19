@@ -69,7 +69,7 @@ class Connection : public std::enable_shared_from_this<Connection>
     std::vector<char> compressed_output;
     // Header compression_header;
     std::vector<boost::asio::const_buffer> output_buffer;
-    //Keep alive support
+    // Keep alive support
     bool keep_alive = false;
     short processed_requests = 512;
     short keepalive_timeout = 5; // In seconds
