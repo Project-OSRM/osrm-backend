@@ -10,7 +10,6 @@
 
 #include <iterator>
 #include <string>
-#include <util/log.hpp>
 #include <vector>
 
 namespace osrm
@@ -35,10 +34,14 @@ void Connection::start()
                                 boost::asio::placeholders::error,
                                 boost::asio::placeholders::bytes_transferred)));
 
-    // init async timer
-    timer.cancel();
-    timer.expires_from_now(boost::posix_time::seconds(keepalive_timeout));
-    timer.async_wait(boost::bind(&Connection::handle_timeout, this->shared_from_this()));
+    if (keep_alive)
+    {
+        // Ok, we know it is not a first request, as we switched to keepalive
+        timer.cancel();
+        timer.expires_from_now(boost::posix_time::seconds(keepalive_timeout));
+        timer.async_wait(std::bind(
+            &Connection::handle_timeout, this->shared_from_this(), std::placeholders::_1));
+    }
 }
 
 void Connection::handle_read(const boost::system::error_code &error, std::size_t bytes_transferred)
@@ -46,6 +49,12 @@ void Connection::handle_read(const boost::system::error_code &error, std::size_t
     if (error)
     {
         return;
+    }
+
+    if (keep_alive)
+    {
+        timer.cancel();
+        timer.expires_from_now(boost::posix_time::seconds(0));
     }
 
     // no error detected, let's parse the request
@@ -143,15 +152,27 @@ void Connection::handle_write(const boost::system::error_code &error)
         }
         else
         {
-            // Initiate graceful connection closure.
-            handle_timeout();
+            handle_shutdown();
         }
     }
 }
 
-/// Handle completion of a write operation.
-void Connection::handle_timeout()
+/// Handle completion of a timeout timer..
+void Connection::handle_timeout(boost::system::error_code ec)
 {
+    // We can get there for 3 reasons: spurious wakeup by timer.cancel(), which should be ignored
+    // Slow client with a delayed _first_ request, which should be ignored too
+    // Absent next request during waiting time in the keepalive mode - should stop right there.
+    if (ec != boost::asio::error::operation_aborted)
+    {
+        TCP_socket.cancel();
+        handle_shutdown();
+    }
+}
+
+void Connection::handle_shutdown()
+{
+    // Initiate graceful connection closure.
     boost::system::error_code ignore_error;
     TCP_socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ignore_error);
 }

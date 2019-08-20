@@ -53,7 +53,9 @@ class Connection : public std::enable_shared_from_this<Connection>
     void handle_write(const boost::system::error_code &e);
 
     /// Handle read timeout
-    void handle_timeout();
+    void handle_timeout(boost::system::error_code);
+
+    void handle_shutdown();
 
     std::vector<char> compress_buffers(const std::vector<char> &uncompressed_data,
                                        const http::compression_type compression_type);
