@@ -47,6 +47,13 @@ class NearestAPI final : public BaseAPI
     void MakeResponse(const std::vector<std::vector<PhantomNodeWithDistance>> &phantom_nodes,
                       flatbuffers::FlatBufferBuilder &fb_result) const
     {
+        auto data_timestamp = facade.GetTimestamp();
+        boost::optional<flatbuffers::Offset<flatbuffers::String>> data_version_string = boost::none;
+        if (!data_timestamp.empty())
+        {
+            data_version_string = fb_result.CreateString(data_timestamp);
+        }
+
         std::vector<flatbuffers::Offset<fbresult::Waypoint>> waypoints;
         waypoints.resize(phantom_nodes.front().size());
         std::transform(phantom_nodes.front().begin(),
@@ -67,6 +74,10 @@ class NearestAPI final : public BaseAPI
         auto waypoints_vector = fb_result.CreateVector(waypoints);
         fbresult::FBResultBuilder response(fb_result);
         response.add_waypoints(waypoints_vector);
+        if (data_version_string)
+        {
+            response.add_data_version(*data_version_string);
+        }
         fb_result.Finish(response.Finish());
     }
     void MakeResponse(const std::vector<std::vector<PhantomNodeWithDistance>> &phantom_nodes,

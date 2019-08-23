@@ -72,6 +72,13 @@ class TableAPI final : public BaseAPI
         auto number_of_sources = parameters.sources.size();
         auto number_of_destinations = parameters.destinations.size();
 
+        auto data_timestamp = facade.GetTimestamp();
+        boost::optional<flatbuffers::Offset<flatbuffers::String>> data_version_string = boost::none;
+        if (!data_timestamp.empty())
+        {
+            data_version_string = fb_result.CreateString(data_timestamp);
+        }
+
         // symmetric case
         flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<fbresult::Waypoint>>> sources;
         if (parameters.sources.empty())
@@ -134,7 +141,10 @@ class TableAPI final : public BaseAPI
         auto table_buffer = table.Finish();
 
         fbresult::FBResultBuilder response(fb_result);
-
+        if (data_version_string)
+        {
+            response.add_data_version(*data_version_string);
+        }
         response.add_table(table_buffer);
         response.add_waypoints(sources);
         fb_result.Finish(response.Finish());

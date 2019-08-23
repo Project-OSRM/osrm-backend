@@ -49,9 +49,21 @@ class MatchAPI final : public RouteAPI
                       const std::vector<InternalRouteResult> &sub_routes,
                       flatbuffers::FlatBufferBuilder &fb_result) const
     {
+        auto data_timestamp = facade.GetTimestamp();
+        boost::optional<flatbuffers::Offset<flatbuffers::String>> data_version_string = boost::none;
+        if (!data_timestamp.empty())
+        {
+            data_version_string = fb_result.CreateString(data_timestamp);
+        }
+
         auto response = MakeFBResponse(sub_routes, fb_result, [this, &fb_result, &sub_matchings]() {
             return MakeTracepoints(fb_result, sub_matchings);
         });
+
+        if (data_version_string)
+        {
+            response.add_data_version(*data_version_string);
+        }
 
         fb_result.Finish(response.Finish());
     }
