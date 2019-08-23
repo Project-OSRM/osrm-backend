@@ -52,11 +52,17 @@ class Connection : public std::enable_shared_from_this<Connection>
     /// Handle completion of a write operation.
     void handle_write(const boost::system::error_code &e);
 
+    /// Handle read timeout
+    void handle_timeout(boost::system::error_code);
+
+    void handle_shutdown();
+
     std::vector<char> compress_buffers(const std::vector<char> &uncompressed_data,
                                        const http::compression_type compression_type);
 
     boost::asio::io_service::strand strand;
     boost::asio::ip::tcp::socket TCP_socket;
+    boost::asio::deadline_timer timer;
     RequestHandler &request_handler;
     RequestParser request_parser;
     boost::array<char, 8192> incoming_data_buffer;
@@ -65,6 +71,10 @@ class Connection : public std::enable_shared_from_this<Connection>
     std::vector<char> compressed_output;
     // Header compression_header;
     std::vector<boost::asio::const_buffer> output_buffer;
+    // Keep alive support
+    bool keep_alive = false;
+    short processed_requests = 512;
+    short keepalive_timeout = 5; // In seconds
 };
 }
 }
