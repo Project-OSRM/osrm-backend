@@ -127,7 +127,7 @@ osrm.engine.api.fbresult.Position.prototype.__init = function(i, bb) {
 /**
  * @returns {number}
  */
-osrm.engine.api.fbresult.Position.prototype.longitute = function() {
+osrm.engine.api.fbresult.Position.prototype.longitude = function() {
   return this.bb.readFloat32(this.bb_pos);
 };
 
@@ -140,14 +140,14 @@ osrm.engine.api.fbresult.Position.prototype.latitude = function() {
 
 /**
  * @param {flatbuffers.Builder} builder
- * @param {number} longitute
+ * @param {number} longitude
  * @param {number} latitude
  * @returns {flatbuffers.Offset}
  */
-osrm.engine.api.fbresult.Position.createPosition = function(builder, longitute, latitude) {
+osrm.engine.api.fbresult.Position.createPosition = function(builder, longitude, latitude) {
   builder.prep(4, 8);
   builder.writeFloat32(latitude);
-  builder.writeFloat32(longitute);
+  builder.writeFloat32(longitude);
   return builder.offset();
 };
 

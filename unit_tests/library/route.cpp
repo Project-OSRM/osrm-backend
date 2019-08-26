@@ -503,7 +503,7 @@ BOOST_AUTO_TEST_CASE(test_route_serialize_fb)
 
     for (const auto &waypoint : *waypoints)
     {
-        const auto longitude = waypoint->location()->longitute();
+        const auto longitude = waypoint->location()->longitude();
         const auto latitude = waypoint->location()->latitude();
         BOOST_CHECK(longitude >= -180. && longitude <= 180.);
         BOOST_CHECK(latitude >= -90. && latitude <= 90.);
@@ -548,7 +548,7 @@ BOOST_AUTO_TEST_CASE(test_route_serialize_fb)
 
                 for (auto intersection : *intersections)
                 {
-                    const auto longitude = intersection->location()->longitute();
+                    const auto longitude = intersection->location()->longitude();
                     const auto latitude = intersection->location()->latitude();
                     BOOST_CHECK(longitude >= -180. && longitude <= 180.);
                     BOOST_CHECK(latitude >= -90. && latitude <= 90.);

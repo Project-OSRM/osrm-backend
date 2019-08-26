@@ -176,19 +176,19 @@ inline const char *EnumNameTurn(Turn e) {
 
 FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(4) Position FLATBUFFERS_FINAL_CLASS {
  private:
-  float longitute_;
+  float longitude_;
   float latitude_;
 
  public:
   Position() {
     memset(static_cast<void *>(this), 0, sizeof(Position));
   }
-  Position(float _longitute, float _latitude)
-      : longitute_(flatbuffers::EndianScalar(_longitute)),
+  Position(float _longitude, float _latitude)
+      : longitude_(flatbuffers::EndianScalar(_longitude)),
         latitude_(flatbuffers::EndianScalar(_latitude)) {
   }
-  float longitute() const {
-    return flatbuffers::EndianScalar(longitute_);
+  float longitude() const {
+    return flatbuffers::EndianScalar(longitude_);
   }
   float latitude() const {
     return flatbuffers::EndianScalar(latitude_);

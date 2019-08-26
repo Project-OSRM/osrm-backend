@@ -72,7 +72,7 @@ module.exports = function () {
                         var fb = FBResult.getRootAsFBResult(buf);
                         var location = fb.waypoints(0).location();
 
-                        coord = [location.longitute(), location.latitude()];
+                        coord = [location.longitude(), location.latitude()];
 
                         var got = { in: row.in, out: row.out };
 

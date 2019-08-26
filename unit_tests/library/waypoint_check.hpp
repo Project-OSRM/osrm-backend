@@ -24,7 +24,7 @@ inline bool waypoint_check(json::Value waypoint)
 
 inline bool waypoint_check(const osrm::engine::api::fbresult::Waypoint *const waypoint)
 {
-    util::FloatLongitude lon{waypoint->location()->longitute()};
+    util::FloatLongitude lon{waypoint->location()->longitude()};
     util::FloatLatitude lat{waypoint->location()->latitude()};
     util::Coordinate location_coordinate(lon, lat);
     return location_coordinate.IsValid();
