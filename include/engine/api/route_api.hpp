@@ -688,8 +688,8 @@ class RouteAPI : public BaseAPI
                 intersectionBuilder.add_bearings(bearings_vector);
                 intersectionBuilder.add_classes(classes_vector);
                 intersectionBuilder.add_entry(entry_vector);
-                intersectionBuilder.add_in(intersection.in);
-                intersectionBuilder.add_out(intersection.out);
+                intersectionBuilder.add_in_bearing(intersection.in);
+                intersectionBuilder.add_out_bearing(intersection.out);
                 intersectionBuilder.add_lanes(lanes_vector);
                 return intersectionBuilder.Finish();
             });

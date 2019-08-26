@@ -804,12 +804,12 @@ struct IntersectionT : public flatbuffers::NativeTable {
   std::vector<int16_t> bearings;
   std::vector<std::string> classes;
   std::vector<bool> entry;
-  uint32_t in;
-  uint32_t out;
+  uint32_t in_bearing;
+  uint32_t out_bearing;
   std::vector<std::unique_ptr<osrm::engine::api::fbresult::LaneT>> lanes;
   IntersectionT()
-      : in(0),
-        out(0) {
+      : in_bearing(0),
+        out_bearing(0) {
   }
 };
 
@@ -820,8 +820,8 @@ struct Intersection FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
     VT_BEARINGS = 6,
     VT_CLASSES = 8,
     VT_ENTRY = 10,
-    VT_IN = 12,
-    VT_OUT = 14,
+    VT_IN_BEARING = 12,
+    VT_OUT_BEARING = 14,
     VT_LANES = 16
   };
   const osrm::engine::api::fbresult::Position *location() const {
@@ -836,11 +836,11 @@ struct Intersection FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   const flatbuffers::Vector<uint8_t> *entry() const {
     return GetPointer<const flatbuffers::Vector<uint8_t> *>(VT_ENTRY);
   }
-  uint32_t in() const {
-    return GetField<uint32_t>(VT_IN, 0);
+  uint32_t in_bearing() const {
+    return GetField<uint32_t>(VT_IN_BEARING, 0);
   }
-  uint32_t out() const {
-    return GetField<uint32_t>(VT_OUT, 0);
+  uint32_t out_bearing() const {
+    return GetField<uint32_t>(VT_OUT_BEARING, 0);
   }
   const flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::Lane>> *lanes() const {
     return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::Lane>> *>(VT_LANES);
@@ -855,8 +855,8 @@ struct Intersection FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
            verifier.VerifyVectorOfStrings(classes()) &&
            VerifyOffset(verifier, VT_ENTRY) &&
            verifier.VerifyVector(entry()) &&
-           VerifyField<uint32_t>(verifier, VT_IN) &&
-           VerifyField<uint32_t>(verifier, VT_OUT) &&
+           VerifyField<uint32_t>(verifier, VT_IN_BEARING) &&
+           VerifyField<uint32_t>(verifier, VT_OUT_BEARING) &&
            VerifyOffset(verifier, VT_LANES) &&
            verifier.VerifyVector(lanes()) &&
            verifier.VerifyVectorOfTables(lanes()) &&
@@ -882,11 +882,11 @@ struct IntersectionBuilder {
   void add_entry(flatbuffers::Offset<flatbuffers::Vector<uint8_t>> entry) {
     fbb_.AddOffset(Intersection::VT_ENTRY, entry);
   }
-  void add_in(uint32_t in) {
-    fbb_.AddElement<uint32_t>(Intersection::VT_IN, in, 0);
+  void add_in_bearing(uint32_t in_bearing) {
+    fbb_.AddElement<uint32_t>(Intersection::VT_IN_BEARING, in_bearing, 0);
   }
-  void add_out(uint32_t out) {
-    fbb_.AddElement<uint32_t>(Intersection::VT_OUT, out, 0);
+  void add_out_bearing(uint32_t out_bearing) {
+    fbb_.AddElement<uint32_t>(Intersection::VT_OUT_BEARING, out_bearing, 0);
   }
   void add_lanes(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::Lane>>> lanes) {
     fbb_.AddOffset(Intersection::VT_LANES, lanes);
@@ -909,13 +909,13 @@ inline flatbuffers::Offset<Intersection> CreateIntersection(
     flatbuffers::Offset<flatbuffers::Vector<int16_t>> bearings = 0,
     flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> classes = 0,
     flatbuffers::Offset<flatbuffers::Vector<uint8_t>> entry = 0,
-    uint32_t in = 0,
-    uint32_t out = 0,
+    uint32_t in_bearing = 0,
+    uint32_t out_bearing = 0,
     flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<osrm::engine::api::fbresult::Lane>>> lanes = 0) {
   IntersectionBuilder builder_(_fbb);
   builder_.add_lanes(lanes);
-  builder_.add_out(out);
-  builder_.add_in(in);
+  builder_.add_out_bearing(out_bearing);
+  builder_.add_in_bearing(in_bearing);
   builder_.add_entry(entry);
   builder_.add_classes(classes);
   builder_.add_bearings(bearings);
@@ -929,8 +929,8 @@ inline flatbuffers::Offset<Intersection> CreateIntersectionDirect(
     const std::vector<int16_t> *bearings = nullptr,
     const std::vector<flatbuffers::Offset<flatbuffers::String>> *classes = nullptr,
     const std::vector<uint8_t> *entry = nullptr,
-    uint32_t in = 0,
-    uint32_t out = 0,
+    uint32_t in_bearing = 0,
+    uint32_t out_bearing = 0,
     const std::vector<flatbuffers::Offset<osrm::engine::api::fbresult::Lane>> *lanes = nullptr) {
   auto bearings__ = bearings ? _fbb.CreateVector<int16_t>(*bearings) : 0;
   auto classes__ = classes ? _fbb.CreateVector<flatbuffers::Offset<flatbuffers::String>>(*classes) : 0;
@@ -942,8 +942,8 @@ inline flatbuffers::Offset<Intersection> CreateIntersectionDirect(
       bearings__,
       classes__,
       entry__,
-      in,
-      out,
+      in_bearing,
+      out_bearing,
       lanes__);
 }
 
@@ -2088,8 +2088,8 @@ inline void Intersection::UnPackTo(IntersectionT *_o, const flatbuffers::resolve
   { auto _e = bearings(); if (_e) { _o->bearings.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->bearings[_i] = _e->Get(_i); } } };
   { auto _e = classes(); if (_e) { _o->classes.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->classes[_i] = _e->Get(_i)->str(); } } };
   { auto _e = entry(); if (_e) { _o->entry.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->entry[_i] = _e->Get(_i) != 0; } } };
-  { auto _e = in(); _o->in = _e; };
-  { auto _e = out(); _o->out = _e; };
+  { auto _e = in_bearing(); _o->in_bearing = _e; };
+  { auto _e = out_bearing(); _o->out_bearing = _e; };
   { auto _e = lanes(); if (_e) { _o->lanes.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->lanes[_i] = std::unique_ptr<osrm::engine::api::fbresult::LaneT>(_e->Get(_i)->UnPack(_resolver)); } } };
 }
 
@@ -2105,8 +2105,8 @@ inline flatbuffers::Offset<Intersection> CreateIntersection(flatbuffers::FlatBuf
   auto _bearings = _o->bearings.size() ? _fbb.CreateVector(_o->bearings) : 0;
   auto _classes = _o->classes.size() ? _fbb.CreateVectorOfStrings(_o->classes) : 0;
   auto _entry = _o->entry.size() ? _fbb.CreateVector(_o->entry) : 0;
-  auto _in = _o->in;
-  auto _out = _o->out;
+  auto _in_bearing = _o->in_bearing;
+  auto _out_bearing = _o->out_bearing;
   auto _lanes = _o->lanes.size() ? _fbb.CreateVector<flatbuffers::Offset<osrm::engine::api::fbresult::Lane>> (_o->lanes.size(), [](size_t i, _VectorArgs *__va) { return CreateLane(*__va->__fbb, __va->__o->lanes[i].get(), __va->__rehasher); }, &_va ) : 0;
   return osrm::engine::api::fbresult::CreateIntersection(
       _fbb,
@@ -2114,8 +2114,8 @@ inline flatbuffers::Offset<Intersection> CreateIntersection(flatbuffers::FlatBuf
       _bearings,
       _classes,
       _entry,
-      _in,
-      _out,
+      _in_bearing,
+      _out_bearing,
       _lanes);
 }
 

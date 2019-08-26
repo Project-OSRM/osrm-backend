@@ -562,11 +562,11 @@ BOOST_AUTO_TEST_CASE(test_route_serialize_fb)
 
                     if (step_count > 0)
                     {
-                        BOOST_CHECK(intersection->in() < bearings->size());
+                        BOOST_CHECK(intersection->in_bearing() < bearings->size());
                     }
                     if (step_count + 1 < steps->size())
                     {
-                        BOOST_CHECK(intersection->out() < bearings->size());
+                        BOOST_CHECK(intersection->out_bearing() < bearings->size());
                     }
                 }
                 ++step_count;

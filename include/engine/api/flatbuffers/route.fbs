@@ -65,8 +65,8 @@ table Intersection {
     bearings: [short];
     classes: [string];
     entry: [bool];
-    in: uint;
-    out: uint;
+    in_bearing: uint;
+    out_bearing: uint;
     lanes: [Lane];
 }
 
