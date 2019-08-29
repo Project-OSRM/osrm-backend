@@ -147,6 +147,7 @@ void Connection::handle_write(const boost::system::error_code &error)
         {
             --processed_requests;
             current_request = http::request();
+            current_reply = http::reply();
             request_parser = RequestParser();
             this->start();
         }
