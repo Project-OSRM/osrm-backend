@@ -169,6 +169,12 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
             qi::lit("snapping=") >
             snapping_type[ph::bind(&engine::api::BaseParameters::snapping, qi::_r1) = qi::_1];
 
+        format_type.add(".json", engine::api::BaseParameters::OutputFormatType::JSON)(
+            ".flatbuffers", engine::api::BaseParameters::OutputFormatType::FLATBUFFERS);
+
+        format_rule =
+            -format_type[ph::bind(&engine::api::BaseParameters::format, qi::_r1) = qi::_1];
+
         exclude_rule = qi::lit("exclude=") >
                        (qi::as_string[+qi::char_("a-zA-Z0-9")] %
                         ',')[ph::bind(&engine::api::BaseParameters::exclude, qi::_r1) = qi::_1];
@@ -185,6 +191,9 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
   protected:
     qi::rule<Iterator, Signature> base_rule;
     qi::rule<Iterator, Signature> query_rule;
+    qi::rule<Iterator, Signature> format_rule;
+
+    qi::symbols<char, engine::api::BaseParameters::OutputFormatType> format_type;
 
     qi::real_parser<double, json_policy> double_;
 

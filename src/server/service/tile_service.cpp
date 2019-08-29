@@ -15,7 +15,9 @@ namespace server
 namespace service
 {
 
-engine::Status TileService::RunQuery(std::size_t prefix_length, std::string &query, ResultT &result)
+engine::Status TileService::RunQuery(std::size_t prefix_length,
+                                     std::string &query,
+                                     osrm::engine::api::ResultT &result)
 {
     auto query_iterator = query.begin();
     auto parameters =
@@ -43,8 +45,7 @@ engine::Status TileService::RunQuery(std::size_t prefix_length, std::string &que
     BOOST_ASSERT(parameters->IsValid());
 
     result = std::string();
-    auto &string_result = result.get<std::string>();
-    return BaseService::routing_machine.Tile(*parameters, string_result);
+    return BaseService::routing_machine.Tile(*parameters, result);
 }
 }
 }

@@ -151,18 +151,20 @@ inline void async(const Nan::FunctionCallbackInfo<v8::Value> &info,
 
         void Execute() override try
         {
-            osrm::json::Object r;
+            osrm::engine::api::ResultT r;
+            r = osrm::util::json::Object();
             const auto status = ((*osrm).*(service))(*params, r);
-            ParseResult(status, r);
+            auto json_result = r.get<osrm::json::Object>();
+            ParseResult(status, json_result);
             if (pluginParams.renderJSONToBuffer)
             {
                 std::ostringstream buf;
-                osrm::util::json::render(buf, r);
+                osrm::util::json::render(buf, json_result);
                 result = buf.str();
             }
             else
             {
-                result = r;
+                result = json_result;
             }
         }
         catch (const std::exception &e)
@@ -230,8 +232,10 @@ inline void asyncForTiles(const Nan::FunctionCallbackInfo<v8::Value> &info,
 
         void Execute() override try
         {
+            result = std::string();
             const auto status = ((*osrm).*(service))(*params, result);
-            ParseResult(status, result);
+            auto str_result = result.get<std::string>();
+            ParseResult(status, str_result);
         }
         catch (const std::exception &e)
         {
@@ -243,7 +247,8 @@ inline void asyncForTiles(const Nan::FunctionCallbackInfo<v8::Value> &info,
             Nan::HandleScope scope;
 
             const constexpr auto argc = 2u;
-            v8::Local<v8::Value> argv[argc] = {Nan::Null(), render(result)};
+            auto str_result = result.get<std::string>();
+            v8::Local<v8::Value> argv[argc] = {Nan::Null(), render(str_result)};
 
             callback->Call(argc, argv);
         }
@@ -254,7 +259,7 @@ inline void asyncForTiles(const Nan::FunctionCallbackInfo<v8::Value> &info,
         const ParamPtr params;
         const PluginParameters pluginParams;
 
-        std::string result;
+        osrm::engine::api::ResultT result;
     };
 
     auto *callback = new Nan::Callback{info[info.Length() - 1].As<v8::Function>()};

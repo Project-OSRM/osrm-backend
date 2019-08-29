@@ -26,18 +26,19 @@ BOOST_AUTO_TEST_CASE(test_match)
     params.coordinates.push_back(get_dummy_location());
     params.coordinates.push_back(get_dummy_location());
 
-    json::Object result;
+    engine::api::ResultT result = json::Object();
 
     const auto rc = osrm.Match(params, result);
 
+    auto &json_result = result.get<json::Object>();
     BOOST_CHECK(rc == Status::Ok || rc == Status::Error);
-    const auto code = result.values.at("code").get<json::String>().value;
+    const auto code = json_result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
-    const auto &tracepoints = result.values.at("tracepoints").get<json::Array>().values;
+    const auto &tracepoints = json_result.values.at("tracepoints").get<json::Array>().values;
     BOOST_CHECK_EQUAL(tracepoints.size(), params.coordinates.size());
 
-    const auto &matchings = result.values.at("matchings").get<json::Array>().values;
+    const auto &matchings = json_result.values.at("matchings").get<json::Array>().values;
     const auto &number_of_matchings = matchings.size();
     for (const auto &waypoint : tracepoints)
     {
@@ -74,18 +75,19 @@ BOOST_AUTO_TEST_CASE(test_match_split)
     params.coordinates = get_split_trace_locations();
     params.timestamps = {1, 2, 1700, 1800};
 
-    json::Object result;
+    engine::api::ResultT result = json::Object();
 
     const auto rc = osrm.Match(params, result);
 
+    auto &json_result = result.get<json::Object>();
     BOOST_CHECK(rc == Status::Ok || rc == Status::Error);
-    const auto code = result.values.at("code").get<json::String>().value;
+    const auto code = json_result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
-    const auto &tracepoints = result.values.at("tracepoints").get<json::Array>().values;
+    const auto &tracepoints = json_result.values.at("tracepoints").get<json::Array>().values;
     BOOST_CHECK_EQUAL(tracepoints.size(), params.coordinates.size());
 
-    const auto &matchings = result.values.at("matchings").get<json::Array>().values;
+    const auto &matchings = json_result.values.at("matchings").get<json::Array>().values;
     const auto &number_of_matchings = matchings.size();
     BOOST_CHECK_EQUAL(number_of_matchings, 2);
     std::size_t current_matchings_index = 0, expected_waypoint_index = 0;

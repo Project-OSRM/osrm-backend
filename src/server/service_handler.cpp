@@ -27,7 +27,7 @@ ServiceHandler::ServiceHandler(osrm::EngineConfig &config) : routing_machine(con
 }
 
 engine::Status ServiceHandler::RunQuery(api::ParsedURL parsed_url,
-                                        service::BaseService::ResultT &result)
+                                        osrm::engine::api::ResultT &result)
 {
     const auto &service_iter = service_map.find(parsed_url.service);
     if (service_iter == service_map.end())

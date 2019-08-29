@@ -52,14 +52,15 @@ int main(int argc, const char *argv[])
     params.coordinates.push_back({util::FloatLongitude{7.419505}, util::FloatLatitude{43.736825}});
 
     // Response is in JSON format
-    json::Object result;
+    engine::api::ResultT result = json::Object();
 
     // Execute routing request, this does the heavy lifting
     const auto status = osrm.Route(params, result);
 
+    auto &json_result = result.get<json::Object>();
     if (status == Status::Ok)
     {
-        auto &routes = result.values["routes"].get<json::Array>();
+        auto &routes = json_result.values["routes"].get<json::Array>();
 
         // Let's just use the first route
         auto &route = routes.values.at(0).get<json::Object>();
@@ -79,8 +80,8 @@ int main(int argc, const char *argv[])
     }
     else if (status == Status::Error)
     {
-        const auto code = result.values["code"].get<json::String>().value;
-        const auto message = result.values["message"].get<json::String>().value;
+        const auto code = json_result.values["code"].get<json::String>().value;
+        const auto message = json_result.values["message"].get<json::String>().value;
 
         std::cout << "Code: " << code << "\n";
         std::cout << "Message: " << code << "\n";

@@ -39,14 +39,15 @@ BOOST_AUTO_TEST_CASE(test_trip_limits)
     params.coordinates.emplace_back(getZeroCoordinate());
     params.coordinates.emplace_back(getZeroCoordinate());
 
-    json::Object result;
+    engine::api::ResultT result = json::Object();
 
     const auto rc = osrm.Trip(params, result);
 
     BOOST_CHECK(rc == Status::Error);
 
     // Make sure we're not accidentally hitting a guard code path before
-    const auto code = result.values["code"].get<json::String>().value;
+    auto &json_result = result.get<json::Object>();
+    const auto code = json_result.values["code"].get<json::String>().value;
     BOOST_CHECK(code == "TooBig"); // per the New-Server API spec
 }
 
@@ -66,14 +67,15 @@ BOOST_AUTO_TEST_CASE(test_route_limits)
     params.coordinates.emplace_back(getZeroCoordinate());
     params.coordinates.emplace_back(getZeroCoordinate());
 
-    json::Object result;
+    engine::api::ResultT result = json::Object();
 
     const auto rc = osrm.Route(params, result);
 
     BOOST_CHECK(rc == Status::Error);
 
     // Make sure we're not accidentally hitting a guard code path before
-    const auto code = result.values["code"].get<json::String>().value;
+    auto &json_result = result.get<json::Object>();
+    const auto code = json_result.values["code"].get<json::String>().value;
     BOOST_CHECK(code == "TooBig"); // per the New-Server API spec
 }
 
@@ -93,14 +95,15 @@ BOOST_AUTO_TEST_CASE(test_table_limits)
     params.coordinates.emplace_back(getZeroCoordinate());
     params.coordinates.emplace_back(getZeroCoordinate());
 
-    json::Object result;
+    engine::api::ResultT result = json::Object();
 
     const auto rc = osrm.Table(params, result);
 
     BOOST_CHECK(rc == Status::Error);
 
     // Make sure we're not accidentally hitting a guard code path before
-    const auto code = result.values["code"].get<json::String>().value;
+    auto &json_result = result.get<json::Object>();
+    const auto code = json_result.values["code"].get<json::String>().value;
     BOOST_CHECK(code == "TooBig"); // per the New-Server API spec
 }
 
@@ -120,14 +123,15 @@ BOOST_AUTO_TEST_CASE(test_match_coordinate_limits)
     params.coordinates.emplace_back(getZeroCoordinate());
     params.coordinates.emplace_back(getZeroCoordinate());
 
-    json::Object result;
+    engine::api::ResultT result = json::Object();
 
     const auto rc = osrm.Match(params, result);
 
     BOOST_CHECK(rc == Status::Error);
 
     // Make sure we're not accidentally hitting a guard code path before
-    const auto code = result.values["code"].get<json::String>().value;
+    auto &json_result = result.get<json::Object>();
+    const auto code = json_result.values["code"].get<json::String>().value;
     BOOST_CHECK(code == "TooBig"); // per the New-Server API spec
 }
 
@@ -152,14 +156,15 @@ BOOST_AUTO_TEST_CASE(test_match_radiuses_limits)
     params.radiuses.emplace_back(3.0);
     params.radiuses.emplace_back(2.0);
 
-    json::Object result;
+    engine::api::ResultT result = json::Object();
 
     const auto rc = osrm.Match(params, result);
 
     BOOST_CHECK(rc == Status::Error);
 
     // Make sure we're not accidentally hitting a guard code path before
-    const auto code = result.values["code"].get<json::String>().value;
+    auto &json_result = result.get<json::Object>();
+    const auto code = json_result.values["code"].get<json::String>().value;
     BOOST_CHECK(code == "TooBig"); // per the New-Server API spec
 }
 
@@ -178,14 +183,15 @@ BOOST_AUTO_TEST_CASE(test_nearest_limits)
     params.coordinates.emplace_back(getZeroCoordinate());
     params.number_of_results = 10000;
 
-    json::Object result;
+    engine::api::ResultT result = json::Object();
 
     const auto rc = osrm.Nearest(params, result);
 
     BOOST_CHECK(rc == Status::Error);
 
     // Make sure we're not accidentally hitting a guard code path before
-    const auto code = result.values["code"].get<json::String>().value;
+    auto &json_result = result.get<json::Object>();
+    const auto code = json_result.values["code"].get<json::String>().value;
     BOOST_CHECK(code == "TooBig"); // per the New-Server API spec
 }
 

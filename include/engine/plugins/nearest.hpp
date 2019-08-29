@@ -21,7 +21,7 @@ class NearestPlugin final : public BasePlugin
 
     Status HandleRequest(const RoutingAlgorithmsInterface &algorithms,
                          const api::NearestParameters &params,
-                         util::json::Object &result) const;
+                         osrm::engine::api::ResultT &result) const;
 
   private:
     const int max_results;

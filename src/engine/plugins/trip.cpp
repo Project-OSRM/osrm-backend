@@ -144,19 +144,19 @@ void ManipulateTableForFSE(const std::size_t source_id,
 
 Status TripPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
                                  const api::TripParameters &parameters,
-                                 util::json::Object &json_result) const
+                                 osrm::engine::api::ResultT &result) const
 {
     if (!algorithms.HasShortestPathSearch())
     {
         return Error("NotImplemented",
                      "Shortest path search is not implemented for the chosen search algorithm.",
-                     json_result);
+                     result);
     }
     if (!algorithms.HasManyToManySearch())
     {
         return Error("NotImplemented",
                      "Many to many search is not implemented for the chosen search algorithm.",
-                     json_result);
+                     result);
     }
 
     BOOST_ASSERT(parameters.IsValid());
@@ -177,21 +177,21 @@ Status TripPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
     bool fixed_end = (destination_id == number_of_locations - 1);
     if (!IsSupportedParameterCombination(fixed_start, fixed_end, parameters.roundtrip))
     {
-        return Error("NotImplemented", "This request is not supported", json_result);
+        return Error("NotImplemented", "This request is not supported", result);
     }
 
     // enforce maximum number of locations for performance reasons
     if (max_locations_trip > 0 && static_cast<int>(number_of_locations) > max_locations_trip)
     {
-        return Error("TooBig", "Too many trip coordinates", json_result);
+        return Error("TooBig", "Too many trip coordinates", result);
     }
 
     if (!CheckAllCoordinates(parameters.coordinates))
     {
-        return Error("InvalidValue", "Invalid coordinate value.", json_result);
+        return Error("InvalidValue", "Invalid coordinate value.", result);
     }
 
-    if (!CheckAlgorithms(parameters, algorithms, json_result))
+    if (!CheckAlgorithms(parameters, algorithms, result))
         return Status::Error;
 
     const auto &facade = algorithms.GetFacade();
@@ -201,14 +201,14 @@ Status TripPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
         return Error("NoSegment",
                      std::string("Could not find a matching segment for coordinate ") +
                          std::to_string(phantom_node_pairs.size()),
-                     json_result);
+                     result);
     }
     BOOST_ASSERT(phantom_node_pairs.size() == number_of_locations);
 
     if (fixed_start && fixed_end && (source_id >= parameters.coordinates.size() ||
                                      destination_id >= parameters.coordinates.size()))
     {
-        return Error("InvalidValue", "Invalid source or destination value.", json_result);
+        return Error("InvalidValue", "Invalid source or destination value.", result);
     }
 
     auto snapped_phantoms = SnapPhantomNodes(phantom_node_pairs);
@@ -231,7 +231,7 @@ Status TripPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
 
     if (!IsStronglyConnectedComponent(result_duration_table))
     {
-        return Error("NoTrips", "No trip visiting all destinations possible.", json_result);
+        return Error("NoTrips", "No trip visiting all destinations possible.", result);
     }
 
     if (fixed_start && fixed_end)
@@ -275,7 +275,7 @@ Status TripPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
     const std::vector<std::vector<NodeID>> trips = {duration_trip};
     const std::vector<InternalRouteResult> routes = {route};
     api::TripAPI trip_api{facade, parameters};
-    trip_api.MakeResponse(trips, routes, snapped_phantoms, json_result);
+    trip_api.MakeResponse(trips, routes, snapped_phantoms, result);
 
     return Status::Ok;
 }

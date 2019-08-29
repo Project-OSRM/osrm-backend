@@ -70,12 +70,19 @@ struct BaseParameters
         Any
     };
 
+    enum class OutputFormatType
+    {
+        JSON,
+        FLATBUFFERS
+    };
+
     std::vector<util::Coordinate> coordinates;
     std::vector<boost::optional<Hint>> hints;
     std::vector<boost::optional<double>> radiuses;
     std::vector<boost::optional<Bearing>> bearings;
     std::vector<boost::optional<Approach>> approaches;
     std::vector<std::string> exclude;
+    boost::optional<OutputFormatType> format = OutputFormatType::JSON;
 
     // Adds hints to response which can be included in subsequent requests, see `hints` above.
     bool generate_hints = true;

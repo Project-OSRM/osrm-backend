@@ -32,7 +32,7 @@ class MatchPlugin : public BasePlugin
 
     Status HandleRequest(const RoutingAlgorithmsInterface &algorithms,
                          const api::MatchParameters &parameters,
-                         util::json::Object &json_result) const;
+                         osrm::engine::api::ResultT &json_result) const;
 
   private:
     const int max_locations_map_matching;

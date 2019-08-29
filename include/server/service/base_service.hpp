@@ -20,13 +20,11 @@ namespace service
 class BaseService
 {
   public:
-    using ResultT = mapbox::util::variant<util::json::Object, std::string>;
-
     BaseService(OSRM &routing_machine) : routing_machine(routing_machine) {}
     virtual ~BaseService() = default;
 
     virtual engine::Status
-    RunQuery(std::size_t prefix_length, std::string &query, ResultT &result) = 0;
+    RunQuery(std::size_t prefix_length, std::string &query, osrm::engine::api::ResultT &result) = 0;
 
     virtual unsigned GetVersion() = 0;
 

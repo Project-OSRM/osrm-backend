@@ -7,6 +7,7 @@
 #include "equal_json.hpp"
 #include "fixture.hpp"
 
+#include "engine/api/flatbuffers/fbresult_generated.h"
 #include "osrm/coordinate.hpp"
 #include "osrm/engine_config.hpp"
 #include "osrm/exception.hpp"
@@ -28,12 +29,13 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates_fixture)
     params.coordinates.push_back(get_dummy_location());
     params.coordinates.push_back(get_dummy_location());
 
-    json::Object result;
+    engine::api::ResultT result = json::Object();
     const auto rc = osrm.Route(params, result);
     BOOST_CHECK(rc == Status::Ok);
 
+    auto &json_result = result.get<json::Object>();
     // unset snapping dependent hint
-    for (auto &itr : result.values["waypoints"].get<json::Array>().values)
+    for (auto &itr : json_result.values["waypoints"].get<json::Array>().values)
     {
         // Hint values aren't stable, so blank it out
         itr.get<json::Object>().values["hint"] = "";
@@ -112,7 +114,7 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates_fixture)
 
                                    }}}}}}}}}}}}}}}}};
 
-    CHECK_EQUAL_JSON(reference, result);
+    CHECK_EQUAL_JSON(reference, json_result);
 }
 
 BOOST_AUTO_TEST_CASE(test_route_same_coordinates)
@@ -127,14 +129,15 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates)
     params.coordinates.push_back(get_dummy_location());
     params.coordinates.push_back(get_dummy_location());
 
-    json::Object result;
+    engine::api::ResultT result = json::Object();
     const auto rc = osrm.Route(params, result);
     BOOST_CHECK(rc == Status::Ok);
 
-    const auto code = result.values.at("code").get<json::String>().value;
+    auto &json_result = result.get<json::Object>();
+    const auto code = json_result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
-    const auto &waypoints = result.values.at("waypoints").get<json::Array>().values;
+    const auto &waypoints = json_result.values.at("waypoints").get<json::Array>().values;
     BOOST_CHECK(waypoints.size() == params.coordinates.size());
 
     for (const auto &waypoint : waypoints)
@@ -155,7 +158,7 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates)
         BOOST_CHECK(!hint.empty());
     }
 
-    const auto &routes = result.values.at("routes").get<json::Array>().values;
+    const auto &routes = json_result.values.at("routes").get<json::Array>().values;
     BOOST_REQUIRE_GT(routes.size(), 0);
 
     for (const auto &route : routes)
@@ -280,14 +283,15 @@ BOOST_AUTO_TEST_CASE(test_route_response_for_locations_in_small_component)
     params.coordinates.push_back(locations.at(1));
     params.coordinates.push_back(locations.at(2));
 
-    json::Object result;
+    engine::api::ResultT result = json::Object();
     const auto rc = osrm.Route(params, result);
     BOOST_CHECK(rc == Status::Ok);
 
-    const auto code = result.values.at("code").get<json::String>().value;
+    auto &json_result = result.get<json::Object>();
+    const auto code = json_result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
-    const auto &waypoints = result.values.at("waypoints").get<json::Array>().values;
+    const auto &waypoints = json_result.values.at("waypoints").get<json::Array>().values;
     BOOST_CHECK_EQUAL(waypoints.size(), params.coordinates.size());
 
     for (const auto &waypoint : waypoints)
@@ -315,14 +319,15 @@ BOOST_AUTO_TEST_CASE(test_route_response_for_locations_in_big_component)
     params.coordinates.push_back(locations.at(1));
     params.coordinates.push_back(locations.at(2));
 
-    json::Object result;
+    engine::api::ResultT result = json::Object();
     const auto rc = osrm.Route(params, result);
     BOOST_CHECK(rc == Status::Ok);
 
-    const auto code = result.values.at("code").get<json::String>().value;
+    auto &json_result = result.get<json::Object>();
+    const auto code = json_result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
-    const auto &waypoints = result.values.at("waypoints").get<json::Array>().values;
+    const auto &waypoints = json_result.values.at("waypoints").get<json::Array>().values;
     BOOST_CHECK_EQUAL(waypoints.size(), params.coordinates.size());
 
     for (const auto &waypoint : waypoints)
@@ -352,14 +357,15 @@ BOOST_AUTO_TEST_CASE(test_route_response_for_locations_across_components)
     params.coordinates.push_back(small_component.at(1));
     params.coordinates.push_back(big_component.at(1));
 
-    json::Object result;
+    engine::api::ResultT result = json::Object();
     const auto rc = osrm.Route(params, result);
     BOOST_CHECK(rc == Status::Ok);
 
-    const auto code = result.values.at("code").get<json::String>().value;
+    auto &json_result = result.get<json::Object>();
+    const auto code = json_result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
-    const auto &waypoints = result.values.at("waypoints").get<json::Array>().values;
+    const auto &waypoints = json_result.values.at("waypoints").get<json::Array>().values;
     BOOST_CHECK_EQUAL(waypoints.size(), params.coordinates.size());
 
     for (const auto &waypoint : waypoints)
@@ -386,11 +392,12 @@ BOOST_AUTO_TEST_CASE(test_route_user_disables_generating_hints)
     params.coordinates.push_back(get_dummy_location());
     params.generate_hints = false;
 
-    json::Object result;
+    engine::api::ResultT result = json::Object();
     const auto rc = osrm.Route(params, result);
     BOOST_CHECK(rc == Status::Ok);
 
-    for (auto waypoint : result.values["waypoints"].get<json::Array>().values)
+    auto &json_result = result.get<json::Object>();
+    for (auto waypoint : json_result.values["waypoints"].get<json::Array>().values)
         BOOST_CHECK_EQUAL(waypoint.get<json::Object>().values.count("hint"), 0);
 }
 
@@ -407,11 +414,12 @@ BOOST_AUTO_TEST_CASE(speed_annotation_matches_duration_and_distance)
     params.coordinates.push_back(get_dummy_location());
     params.coordinates.push_back(get_dummy_location());
 
-    json::Object result;
+    engine::api::ResultT result = json::Object();
     const auto rc = osrm.Route(params, result);
     BOOST_CHECK(rc == Status::Ok);
 
-    const auto &routes = result.values["routes"].get<json::Array>().values;
+    auto &json_result = result.get<json::Object>();
+    const auto &routes = json_result.values["routes"].get<json::Array>().values;
     const auto &legs = routes[0].get<json::Object>().values.at("legs").get<json::Array>().values;
     const auto &annotation =
         legs[0].get<json::Object>().values.at("annotation").get<json::Object>();
@@ -447,14 +455,15 @@ BOOST_AUTO_TEST_CASE(test_manual_setting_of_annotations_property)
     params.coordinates.push_back(get_dummy_location());
     params.coordinates.push_back(get_dummy_location());
 
-    json::Object result;
+    engine::api::ResultT result = json::Object();
     const auto rc = osrm.Route(params, result);
     BOOST_CHECK(rc == Status::Ok);
 
-    const auto code = result.values.at("code").get<json::String>().value;
+    auto &json_result = result.get<json::Object>();
+    const auto code = json_result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
-    auto annotations = result.values["routes"]
+    auto annotations = json_result.values["routes"]
                            .get<json::Array>()
                            .values[0]
                            .get<json::Object>()
@@ -466,6 +475,104 @@ BOOST_AUTO_TEST_CASE(test_manual_setting_of_annotations_property)
                            .get<json::Object>()
                            .values;
     BOOST_CHECK_EQUAL(annotations.size(), 6);
+}
+
+BOOST_AUTO_TEST_CASE(test_route_serialize_fb)
+{
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm");
+
+    using namespace osrm;
+
+    RouteParameters params;
+    params.steps = true;
+    params.coordinates.push_back(get_dummy_location());
+    params.coordinates.push_back(get_dummy_location());
+    params.coordinates.push_back(get_dummy_location());
+
+    engine::api::ResultT result = flatbuffers::FlatBufferBuilder();
+    const auto rc = osrm.Route(params, result);
+    BOOST_CHECK(rc == Status::Ok);
+
+    auto &fb_result = result.get<flatbuffers::FlatBufferBuilder>();
+    auto fb = engine::api::fbresult::GetFBResult(fb_result.GetBufferPointer());
+    BOOST_CHECK(!fb->error());
+
+    BOOST_CHECK(fb->waypoints() != nullptr);
+    const auto waypoints = fb->waypoints();
+    BOOST_CHECK(waypoints->size() == params.coordinates.size());
+
+    for (const auto &waypoint : *waypoints)
+    {
+        const auto longitude = waypoint->location()->longitude();
+        const auto latitude = waypoint->location()->latitude();
+        BOOST_CHECK(longitude >= -180. && longitude <= 180.);
+        BOOST_CHECK(latitude >= -90. && latitude <= 90.);
+
+        BOOST_CHECK(!waypoint->hint()->str().empty());
+    }
+
+    BOOST_CHECK(fb->routes() != nullptr);
+    const auto routes = fb->routes();
+    BOOST_REQUIRE_GT(routes->size(), 0);
+
+    for (const auto &route : *routes)
+    {
+        BOOST_CHECK_EQUAL(route->distance(), 0);
+        BOOST_CHECK_EQUAL(route->duration(), 0);
+
+        const auto &legs = route->legs();
+        BOOST_CHECK(legs->size() > 0);
+
+        for (const auto &leg : *legs)
+        {
+            BOOST_CHECK_EQUAL(leg->distance(), 0);
+
+            BOOST_CHECK_EQUAL(leg->duration(), 0);
+
+            BOOST_CHECK(leg->steps() != nullptr);
+            const auto steps = leg->steps();
+            BOOST_CHECK(steps->size() > 0);
+
+            std::size_t step_count = 0;
+
+            for (const auto step : *steps)
+            {
+                BOOST_CHECK_EQUAL(step->distance(), 0);
+
+                BOOST_CHECK_EQUAL(step->duration(), 0);
+
+                BOOST_CHECK(step->maneuver() != nullptr);
+
+                BOOST_CHECK(step->intersections() != nullptr);
+                const auto intersections = step->intersections();
+
+                for (auto intersection : *intersections)
+                {
+                    const auto longitude = intersection->location()->longitude();
+                    const auto latitude = intersection->location()->latitude();
+                    BOOST_CHECK(longitude >= -180. && longitude <= 180.);
+                    BOOST_CHECK(latitude >= -90. && latitude <= 90.);
+
+                    BOOST_CHECK(intersection->bearings() != nullptr);
+                    const auto bearings = intersection->bearings();
+                    BOOST_CHECK(bearings->size() > 0);
+
+                    for (const auto bearing : *bearings)
+                        BOOST_CHECK(0. <= bearing && bearing <= 360.);
+
+                    if (step_count > 0)
+                    {
+                        BOOST_CHECK(intersection->in_bearing() < bearings->size());
+                    }
+                    if (step_count + 1 < steps->size())
+                    {
+                        BOOST_CHECK(intersection->out_bearing() < bearings->size());
+                    }
+                }
+                ++step_count;
+            }
+        }
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

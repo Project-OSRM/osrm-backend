@@ -439,6 +439,12 @@ include_directories(SYSTEM ${PROTOZERO_INCLUDE_DIR})
 set(VTZERO_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/vtzero/include")
 include_directories(SYSTEM ${VTZERO_INCLUDE_DIR})
 
+set(FLATBUFFERS_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/flatbuffers")
+set(FLATBUFFERS_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/flatbuffers/include")
+include_directories(${FLATBUFFERS_INCLUDE_DIR})
+add_subdirectory(${FLATBUFFERS_SRC_DIR}
+        ${CMAKE_CURRENT_BINARY_DIR}/flatbuffers-build
+        EXCLUDE_FROM_ALL)
 
 # if mason is enabled no find_package calls are made
 # to ensure that we are only compiling and linking against
@@ -738,8 +744,10 @@ set_property(TARGET osrm-datastore PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
 set_property(TARGET osrm-routed PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 file(GLOB VariantGlob third_party/variant/include/mapbox/*.hpp)
+file(GLOB FlatbuffersGlob third_party/flatbuffers/include/flatbuffers/*.h)
 file(GLOB LibraryGlob include/osrm/*.hpp)
 file(GLOB ParametersGlob include/engine/api/*_parameters.hpp)
+set(ApiHeader include/engine/api/base_result.hpp)
 set(EngineHeader include/engine/status.hpp include/engine/engine_config.hpp include/engine/hint.hpp include/engine/bearing.hpp include/engine/approach.hpp include/engine/phantom_node.hpp)
 set(UtilHeader include/util/coordinate.hpp include/util/json_container.hpp include/util/typedefs.hpp include/util/alias.hpp include/util/exception.hpp include/util/bearing.hpp)
 set(ExtractorHeader include/extractor/extractor.hpp include/storage/io_config.hpp include/extractor/extractor_config.hpp include/extractor/travel_mode.hpp)
@@ -754,7 +762,9 @@ install(FILES ${PartitionerHeader} DESTINATION include/osrm/partitioner)
 install(FILES ${ContractorHeader} DESTINATION include/osrm/contractor)
 install(FILES ${LibraryGlob} DESTINATION include/osrm)
 install(FILES ${ParametersGlob} DESTINATION include/osrm/engine/api)
+install(FILES ${ApiHeader} DESTINATION include/osrm/engine/api)
 install(FILES ${VariantGlob} DESTINATION include/mapbox)
+install(FILES ${FlatbuffersGlob} DESTINATION include/flatbuffers)
 install(TARGETS osrm-extract DESTINATION bin)
 install(TARGETS osrm-partition DESTINATION bin)
 install(TARGETS osrm-customize DESTINATION bin)

@@ -33,6 +33,18 @@ namespace json
 namespace detail
 {
 
+// Check whether to include a modifier in the result of the API
+inline bool isValidModifier(const guidance::StepManeuver maneuver)
+{
+    return (maneuver.waypoint_type == guidance::WaypointType::None ||
+            maneuver.instruction.direction_modifier != osrm::guidance::DirectionModifier::UTurn);
+}
+
+inline bool hasValidLanes(const guidance::IntermediateIntersection &intersection)
+{
+    return intersection.lanes.lanes_in_turn > 0;
+}
+
 util::json::Array coordinateToLonLat(const util::Coordinate &coordinate);
 
 /**

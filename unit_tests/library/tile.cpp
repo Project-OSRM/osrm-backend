@@ -161,13 +161,15 @@ void validate_tile(const osrm::OSRM &osrm)
     // This tile should contain most of monaco
     TileParameters params{17059, 11948, 15};
 
-    std::string result;
+    engine::api::ResultT result = std::string();
+
     const auto rc = osrm.Tile(params, result);
     BOOST_CHECK(rc == Status::Ok);
 
-    BOOST_CHECK(result.size() > 114000);
+    auto &str_result = result.get<std::string>();
+    BOOST_CHECK(str_result.size() > 114000);
 
-    vtzero::vector_tile tile{result};
+    vtzero::vector_tile tile{str_result};
 
     validate_feature_layer(tile.next_layer());
     validate_turn_layer(tile.next_layer());
@@ -206,13 +208,14 @@ void test_tile_turns(const osrm::OSRM &osrm)
     // Small tile where we can test all the values
     TileParameters params{272953, 191177, 19};
 
-    std::string result;
+    engine::api::ResultT result = std::string();
     const auto rc = osrm.Tile(params, result);
     BOOST_CHECK(rc == Status::Ok);
 
-    BOOST_CHECK_GT(result.size(), 128);
+    auto &str_result = result.get<std::string>();
+    BOOST_CHECK_GT(str_result.size(), 128);
 
-    vtzero::vector_tile tile{result};
+    vtzero::vector_tile tile{str_result};
 
     tile.next_layer();
     auto layer = tile.next_layer();
@@ -347,13 +350,14 @@ void test_tile_speeds(const osrm::OSRM &osrm)
     // TileParameters params{272953, 191177, 19};
     TileParameters params{136477, 95580, 18};
 
-    std::string result;
+    engine::api::ResultT result = std::string();
     const auto rc = osrm.Tile(params, result);
     BOOST_CHECK(rc == Status::Ok);
 
-    BOOST_CHECK_GT(result.size(), 128);
+    auto &str_result = result.get<std::string>();
+    BOOST_CHECK_GT(str_result.size(), 128);
 
-    vtzero::vector_tile tile{result};
+    vtzero::vector_tile tile{str_result};
 
     auto layer = tile.next_layer();
     BOOST_CHECK_EQUAL(to_string(layer.name()), "speeds");
@@ -427,13 +431,14 @@ void test_tile_nodes(const osrm::OSRM &osrm)
     // Small tile where we can test all the values
     TileParameters params{272953, 191177, 19};
 
-    std::string result;
+    engine::api::ResultT result = std::string();
     const auto rc = osrm.Tile(params, result);
     BOOST_CHECK(rc == Status::Ok);
 
-    BOOST_CHECK_GT(result.size(), 128);
+    auto &str_result = result.get<std::string>();
+    BOOST_CHECK_GT(str_result.size(), 128);
 
-    vtzero::vector_tile tile{result};
+    vtzero::vector_tile tile{str_result};
 
     tile.next_layer();
     tile.next_layer();

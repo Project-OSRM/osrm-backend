@@ -22,8 +22,9 @@ class TileService final : public BaseService
   public:
     TileService(OSRM &routing_machine) : BaseService(routing_machine) {}
 
-    engine::Status
-    RunQuery(std::size_t prefix_length, std::string &query, ResultT &result) final override;
+    engine::Status RunQuery(std::size_t prefix_length,
+                            std::string &query,
+                            osrm::engine::api::ResultT &result) final override;
 
     unsigned GetVersion() final override { return 1; }
 };

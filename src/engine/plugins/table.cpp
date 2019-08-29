@@ -31,7 +31,7 @@ TablePlugin::TablePlugin(const int max_locations_distance_table)
 
 Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
                                   const api::TableParameters &params,
-                                  util::json::Object &result) const
+                                  osrm::engine::api::ResultT &result) const
 {
     if (!algorithms.HasManyToManySearch())
     {
