@@ -12,6 +12,7 @@
       - CHANGED: allow routing past `barrier=arch` [#5352](https://github.com/Project-OSRM/osrm-backend/pull/5352)
       - CHANGED: default car weight was reduced to 2000 kg. [#5371](https://github.com/Project-OSRM/osrm-backend/pull/5371)
       - CHANGED: default car height was reduced to 2 meters. [#5389](https://github.com/Project-OSRM/osrm-backend/pull/5389)
+      - CHANGED: updated extent of Hong Kong as left hand drive country. [#5535](https://github.com/Project-OSRM/osrm-backend/issues/5535)
 
 # 5.21.0
   - Changes from 5.20.0
