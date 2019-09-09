@@ -149,6 +149,8 @@ void Connection::handle_write(const boost::system::error_code &error)
             current_request = http::request();
             current_reply = http::reply();
             request_parser = RequestParser();
+            incoming_data_buffer = boost::array<char, 8192>();
+            output_buffer.clear();
             this->start();
         }
         else
