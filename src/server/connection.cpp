@@ -68,7 +68,14 @@ void Connection::handle_read(const boost::system::error_code &error, std::size_t
     // the request has been parsed
     if (result == RequestParser::RequestStatus::valid)
     {
-        current_request.endpoint = TCP_socket.remote_endpoint().address();
+
+        boost::system::error_code ec;
+        current_request.endpoint = TCP_socket.remote_endpoint(ec).address();
+        if (ec)
+        {
+            handle_shutdown();
+            return;
+        }
         request_handler.HandleRequest(current_request, current_reply);
 
         if (boost::iequals(current_request.connection, "close"))
@@ -149,6 +156,8 @@ void Connection::handle_write(const boost::system::error_code &error)
             current_request = http::request();
             current_reply = http::reply();
             request_parser = RequestParser();
+            incoming_data_buffer = boost::array<char, 8192>();
+            output_buffer.clear();
             this->start();
         }
         else
@@ -166,7 +175,8 @@ void Connection::handle_timeout(boost::system::error_code ec)
     // Absent next request during waiting time in the keepalive mode - should stop right there.
     if (ec != boost::asio::error::operation_aborted)
     {
-        TCP_socket.cancel();
+        boost::system::error_code ignore_error;
+        TCP_socket.cancel(ignore_error);
         handle_shutdown();
     }
 }
