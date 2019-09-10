@@ -71,7 +71,8 @@ void Connection::handle_read(const boost::system::error_code &error, std::size_t
 
         boost::system::error_code ec;
         current_request.endpoint = TCP_socket.remote_endpoint(ec).address();
-        if (ec) {
+        if (ec)
+        {
             handle_shutdown();
             return;
         }
