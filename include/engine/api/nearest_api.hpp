@@ -2,11 +2,11 @@
 #define ENGINE_API_NEAREST_API_HPP
 
 #include "engine/api/base_api.hpp"
+#include "engine/api/base_result.hpp"
 #include "engine/api/nearest_parameters.hpp"
 
 #include "engine/api/json_factory.hpp"
 #include "engine/phantom_node.hpp"
-#include "base_result.hpp"
 
 #include <boost/assert.hpp>
 

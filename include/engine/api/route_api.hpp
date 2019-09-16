@@ -3,6 +3,7 @@
 
 #include "extractor/maneuver_override.hpp"
 #include "engine/api/base_api.hpp"
+#include "engine/api/base_result.hpp"
 #include "engine/api/json_factory.hpp"
 #include "engine/api/route_parameters.hpp"
 
