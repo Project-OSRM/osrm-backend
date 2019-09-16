@@ -58,6 +58,30 @@ BOOST_AUTO_TEST_CASE(test_roundtrip_response_for_locations_in_small_component)
     }
 }
 
+BOOST_AUTO_TEST_CASE(test_roundtrip_response_for_locations_in_small_component_skip_waypoints)
+{
+    using namespace osrm;
+
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm");
+    const auto locations = get_locations_in_small_component();
+
+    TripParameters params;
+    params.skip_waypoints = true;
+    params.coordinates.push_back(locations.at(0));
+    params.coordinates.push_back(locations.at(1));
+    params.coordinates.push_back(locations.at(2));
+
+    engine::api::ResultT result = json::Object();
+    const auto rc = osrm.Trip(params, result);
+    BOOST_CHECK(rc == Status::Ok);
+
+    auto &json_result = result.get<json::Object>();
+    const auto code = json_result.values.at("code").get<json::String>().value;
+    BOOST_CHECK_EQUAL(code, "Ok");
+
+    BOOST_CHECK(json_result.values.find("waypoints") == json_result.values.end());
+}
+
 BOOST_AUTO_TEST_CASE(test_roundtrip_response_for_locations_in_big_component)
 {
     using namespace osrm;
@@ -464,6 +488,31 @@ BOOST_AUTO_TEST_CASE(test_roundtrip_response_fb_serialization)
         BOOST_CHECK(trip < trips->size());
         BOOST_CHECK(pos < waypoints->size());
     }
+}
+
+BOOST_AUTO_TEST_CASE(test_roundtrip_response_fb_serialization_skip_waypoints)
+{
+    using namespace osrm;
+
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm");
+    const auto locations = get_locations_in_small_component();
+
+    TripParameters params;
+    params.skip_waypoints = true;
+    params.coordinates.push_back(locations.at(0));
+    params.coordinates.push_back(locations.at(1));
+    params.coordinates.push_back(locations.at(2));
+
+    engine::api::ResultT result = flatbuffers::FlatBufferBuilder();
+    const auto rc = osrm.Trip(params, result);
+    BOOST_CHECK(rc == Status::Ok);
+
+    auto &fb_result = result.get<flatbuffers::FlatBufferBuilder>();
+    auto fb = engine::api::fbresult::GetFBResult(fb_result.GetBufferPointer());
+
+    BOOST_CHECK(!fb->error());
+
+    BOOST_CHECK(fb->waypoints() == nullptr);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

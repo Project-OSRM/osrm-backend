@@ -65,6 +65,30 @@ BOOST_AUTO_TEST_CASE(test_match)
     }
 }
 
+BOOST_AUTO_TEST_CASE(test_match_skip_waypoints)
+{
+    using namespace osrm;
+
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm");
+
+    MatchParameters params;
+    params.skip_waypoints = true;
+    params.coordinates.push_back(get_dummy_location());
+    params.coordinates.push_back(get_dummy_location());
+    params.coordinates.push_back(get_dummy_location());
+
+    engine::api::ResultT result = json::Object();
+
+    const auto rc = osrm.Match(params, result);
+
+    auto &json_result = result.get<json::Object>();
+    BOOST_CHECK(rc == Status::Ok || rc == Status::Error);
+    const auto code = json_result.values.at("code").get<json::String>().value;
+    BOOST_CHECK_EQUAL(code, "Ok");
+
+    BOOST_CHECK(json_result.values.find("tracepoints") == json_result.values.end());
+}
+
 BOOST_AUTO_TEST_CASE(test_match_split)
 {
     using namespace osrm;
@@ -157,6 +181,31 @@ BOOST_AUTO_TEST_CASE(test_match_fb_serialization)
         BOOST_CHECK_LT(waypoint_index, route_legs->size() + 1);
         BOOST_CHECK_LT(matchings_index, number_of_matchings);
     }
+}
+
+BOOST_AUTO_TEST_CASE(test_match_fb_serialization_skip_waypoints)
+{
+    using namespace osrm;
+
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm");
+
+    MatchParameters params;
+    params.skip_waypoints = true;
+    params.coordinates.push_back(get_dummy_location());
+    params.coordinates.push_back(get_dummy_location());
+    params.coordinates.push_back(get_dummy_location());
+
+    engine::api::ResultT result = flatbuffers::FlatBufferBuilder();
+
+    const auto rc = osrm.Match(params, result);
+    BOOST_CHECK(rc == Status::Ok);
+
+    auto &fb_result = result.get<flatbuffers::FlatBufferBuilder>();
+    auto fb = engine::api::fbresult::GetFBResult(fb_result.GetBufferPointer());
+
+    BOOST_CHECK(!fb->error());
+
+    BOOST_CHECK(fb->waypoints() == nullptr);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
