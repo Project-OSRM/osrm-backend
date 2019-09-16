@@ -77,6 +77,57 @@ BOOST_AUTO_TEST_CASE(test_table_three_coords_one_source_one_dest_matrix)
     }
 }
 
+BOOST_AUTO_TEST_CASE(test_table_three_coords_one_source_one_dest_matrix_no_waypoints)
+{
+    using namespace osrm;
+
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm");
+
+    TableParameters params;
+    params.skip_waypoints = true;
+    params.coordinates.push_back(get_dummy_location());
+    params.coordinates.push_back(get_dummy_location());
+    params.coordinates.push_back(get_dummy_location());
+    params.sources.push_back(0);
+    params.destinations.push_back(2);
+    params.annotations = TableParameters::AnnotationsType::All;
+
+    engine::api::ResultT result = json::Object();
+
+    const auto rc = osrm.Table(params, result);
+
+    auto &json_result = result.get<json::Object>();
+    BOOST_CHECK(rc == Status::Ok || rc == Status::Error);
+    const auto code = json_result.values.at("code").get<json::String>().value;
+    BOOST_CHECK_EQUAL(code, "Ok");
+
+    // check that returned durations error is expected size and proportions
+    // this test expects a 1x1 matrix
+    const auto &durations_array = json_result.values.at("durations").get<json::Array>().values;
+    BOOST_CHECK_EQUAL(durations_array.size(), params.sources.size());
+    for (unsigned int i = 0; i < durations_array.size(); i++)
+    {
+        const auto durations_matrix = durations_array[i].get<json::Array>().values;
+        BOOST_CHECK_EQUAL(durations_matrix.size(),
+                          params.sources.size() * params.destinations.size());
+    }
+
+    // check that returned distances error is expected size and proportions
+    // this test expects a 1x1 matrix
+    const auto &distances_array = json_result.values.at("distances").get<json::Array>().values;
+    BOOST_CHECK_EQUAL(distances_array.size(), params.sources.size());
+    for (unsigned int i = 0; i < distances_array.size(); i++)
+    {
+        const auto distances_matrix = distances_array[i].get<json::Array>().values;
+        BOOST_CHECK_EQUAL(distances_matrix.size(),
+                          params.sources.size() * params.destinations.size());
+    }
+
+    // waypoint arrays should be missing
+    BOOST_CHECK(json_result.values.find("destinations") == json_result.values.end());
+    BOOST_CHECK(json_result.values.find("sources") == json_result.values.end());
+}
+
 BOOST_AUTO_TEST_CASE(test_table_three_coords_one_source_matrix)
 {
     using namespace osrm;
@@ -245,6 +296,48 @@ BOOST_AUTO_TEST_CASE(test_table_serialiaze_fb)
     {
         BOOST_CHECK(waypoint_check(source));
     }
+}
+
+BOOST_AUTO_TEST_CASE(test_table_serialiaze_fb_no_waypoints)
+{
+    using namespace osrm;
+
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm");
+
+    TableParameters params;
+    params.skip_waypoints = true;
+    params.coordinates.push_back(get_dummy_location());
+    params.coordinates.push_back(get_dummy_location());
+    params.coordinates.push_back(get_dummy_location());
+    params.sources.push_back(0);
+    params.destinations.push_back(2);
+    params.annotations = TableParameters::AnnotationsType::All;
+
+    engine::api::ResultT result = flatbuffers::FlatBufferBuilder();
+
+    const auto rc = osrm.Table(params, result);
+
+    BOOST_CHECK(rc == Status::Ok || rc == Status::Error);
+
+    auto &fb_result = result.get<flatbuffers::FlatBufferBuilder>();
+    auto fb = engine::api::fbresult::GetFBResult(fb_result.GetBufferPointer());
+    BOOST_CHECK(!fb->error());
+    BOOST_CHECK(fb->table() != nullptr);
+
+    // check that returned durations error is expected size and proportions
+    // this test expects a 1x1 matrix
+    BOOST_CHECK(fb->table()->durations() != nullptr);
+    auto durations_array = fb->table()->durations();
+    BOOST_CHECK_EQUAL(durations_array->size(), params.sources.size() * params.destinations.size());
+
+    // check that returned distances error is expected size and proportions
+    // this test expects a 1x1 matrix
+    BOOST_CHECK(fb->table()->distances() != nullptr);
+    auto distances_array = fb->table()->distances();
+    BOOST_CHECK_EQUAL(distances_array->size(), params.sources.size() * params.destinations.size());
+
+    BOOST_CHECK(fb->table()->destinations() == nullptr);
+    BOOST_CHECK(fb->waypoints() == nullptr);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
