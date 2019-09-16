@@ -4,6 +4,7 @@
 #include "coordinates.hpp"
 #include "fixture.hpp"
 
+#include <engine/api/flatbuffers/fbresult_generated.h>
 #include "osrm/trip_parameters.hpp"
 
 #include "osrm/coordinate.hpp"
@@ -420,6 +421,49 @@ BOOST_AUTO_TEST_CASE(test_tfse_legal_parameters)
     params.destination = TripParameters::DestinationType::Last;
     params.roundtrip = true;
     CheckOk(osrm, params);
+}
+
+BOOST_AUTO_TEST_CASE(test_roundtrip_response_fb_serialization)
+{
+    using namespace osrm;
+
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm");
+    const auto locations = get_locations_in_small_component();
+
+    TripParameters params;
+    params.coordinates.push_back(locations.at(0));
+    params.coordinates.push_back(locations.at(1));
+    params.coordinates.push_back(locations.at(2));
+
+    engine::api::ResultT result = flatbuffers::FlatBufferBuilder();
+    const auto rc = osrm.Trip(params, result);
+    BOOST_CHECK(rc == Status::Ok);
+
+    auto &fb_result = result.get<flatbuffers::FlatBufferBuilder>();
+    auto fb = engine::api::fbresult::GetFBResult(fb_result.GetBufferPointer());
+
+    BOOST_CHECK(!fb->error());
+
+    BOOST_CHECK(fb->waypoints() != nullptr);
+    const auto waypoints = fb->waypoints();
+    BOOST_CHECK(waypoints->size() == params.coordinates.size());
+
+    BOOST_CHECK(fb->routes() != nullptr);
+    const auto trips = fb->routes();
+    BOOST_CHECK_EQUAL(trips->size(), 1);
+
+    for (const auto &waypoint : *waypoints)
+    {
+        const auto longitude = waypoint->location()->longitude();
+        const auto latitude = waypoint->location()->latitude();
+        BOOST_CHECK(longitude >= -180. && longitude <= 180.);
+        BOOST_CHECK(latitude >= -90. && latitude <= 90.);
+
+        const auto trip = waypoint->trips_index();
+        const auto pos = waypoint->waypoint_index();
+        BOOST_CHECK(trip < trips->size());
+        BOOST_CHECK(pos < waypoints->size());
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

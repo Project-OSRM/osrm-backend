@@ -118,4 +118,45 @@ BOOST_AUTO_TEST_CASE(test_match_split)
     }
 }
 
+BOOST_AUTO_TEST_CASE(test_match_fb_serialization)
+{
+    using namespace osrm;
+
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm");
+
+    MatchParameters params;
+    params.coordinates.push_back(get_dummy_location());
+    params.coordinates.push_back(get_dummy_location());
+    params.coordinates.push_back(get_dummy_location());
+
+    engine::api::ResultT result = flatbuffers::FlatBufferBuilder();
+
+    const auto rc = osrm.Match(params, result);
+    BOOST_CHECK(rc == Status::Ok);
+
+    auto &fb_result = result.get<flatbuffers::FlatBufferBuilder>();
+    auto fb = engine::api::fbresult::GetFBResult(fb_result.GetBufferPointer());
+
+    BOOST_CHECK(!fb->error());
+
+    BOOST_CHECK(fb->waypoints() != nullptr);
+    const auto waypoints = fb->waypoints();
+    BOOST_CHECK(waypoints->size() == params.coordinates.size());
+
+    BOOST_CHECK(fb->routes() != nullptr);
+    const auto matchings = fb->routes();
+    const auto &number_of_matchings = matchings->size();
+
+    for (const auto &waypoint : *waypoints)
+    {
+        BOOST_CHECK(waypoint_check(waypoint));
+        const auto matchings_index = waypoint->matchings_index();
+        const auto waypoint_index = waypoint->waypoint_index();
+        const auto &route_legs = matchings->operator[](matchings_index)->legs();
+
+        BOOST_CHECK_LT(waypoint_index, route_legs->size() + 1);
+        BOOST_CHECK_LT(matchings_index, number_of_matchings);
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
