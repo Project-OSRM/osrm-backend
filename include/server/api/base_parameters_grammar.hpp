@@ -153,8 +153,8 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
             qi::bool_[ph::bind(&engine::api::BaseParameters::generate_hints, qi::_r1) = qi::_1];
 
         skip_waypoints_rule =
-                qi::lit("skip_waypoints=") >
-                qi::bool_[ph::bind(&engine::api::BaseParameters::skip_waypoints, qi::_r1) = qi::_1];
+            qi::lit("skip_waypoints=") >
+            qi::bool_[ph::bind(&engine::api::BaseParameters::skip_waypoints, qi::_r1) = qi::_1];
 
         bearings_rule =
             qi::lit("bearings=") >

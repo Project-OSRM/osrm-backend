@@ -4,8 +4,8 @@
 #include "coordinates.hpp"
 #include "fixture.hpp"
 
-#include <engine/api/flatbuffers/fbresult_generated.h>
 #include "osrm/trip_parameters.hpp"
+#include <engine/api/flatbuffers/fbresult_generated.h>
 
 #include "osrm/coordinate.hpp"
 #include "osrm/engine_config.hpp"

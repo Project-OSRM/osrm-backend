@@ -83,7 +83,8 @@ class MatchAPI final : public RouteAPI
             route.values["confidence"] = sub_matchings[index].confidence;
             routes.values.push_back(std::move(route));
         }
-        if (!parameters.skip_waypoints) {
+        if (!parameters.skip_waypoints)
+        {
             response.values["tracepoints"] = MakeTracepoints(sub_matchings);
         }
         response.values["matchings"] = std::move(routes);

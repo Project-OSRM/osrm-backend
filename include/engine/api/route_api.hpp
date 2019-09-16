@@ -110,7 +110,8 @@ class RouteAPI : public BaseAPI
                                                 route.target_traversed_in_reverse));
         }
 
-        if (!parameters.skip_waypoints) {
+        if (!parameters.skip_waypoints)
+        {
             response.values["waypoints"] = BaseAPI::MakeWaypoints(all_start_end_points);
         }
         response.values["routes"] = std::move(jsRoutes);
@@ -143,8 +144,10 @@ class RouteAPI : public BaseAPI
         }
 
         auto routes_vector = fb_result.CreateVector(routes);
-        flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<fbresult::Waypoint>>> waypoints_vector;
-        if (!parameters.skip_waypoints) {
+        flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<fbresult::Waypoint>>>
+            waypoints_vector;
+        if (!parameters.skip_waypoints)
+        {
             waypoints_vector = getWaypoints();
         }
 

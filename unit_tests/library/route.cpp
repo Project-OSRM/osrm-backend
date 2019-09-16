@@ -313,7 +313,7 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates_no_waypoints)
         const auto &legs = route_object.values.at("legs").get<json::Array>().values;
         BOOST_CHECK(!legs.empty());
 
-        //The rest of legs contents is verified by test_route_same_coordinates
+        // The rest of legs contents is verified by test_route_same_coordinates
     }
 }
 

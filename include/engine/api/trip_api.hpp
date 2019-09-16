@@ -81,7 +81,8 @@ class TripAPI final : public RouteAPI
                                    sub_routes[index].target_traversed_in_reverse);
             routes.values.push_back(std::move(route));
         }
-        if (!parameters.skip_waypoints) {
+        if (!parameters.skip_waypoints)
+        {
             response.values["waypoints"] = MakeWaypoints(sub_trips, phantoms);
         }
         response.values["trips"] = std::move(routes);

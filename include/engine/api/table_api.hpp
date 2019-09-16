@@ -84,14 +84,16 @@ class TableAPI final : public BaseAPI
         flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<fbresult::Waypoint>>> sources;
         if (parameters.sources.empty())
         {
-            if (!parameters.skip_waypoints) {
+            if (!parameters.skip_waypoints)
+            {
                 sources = MakeWaypoints(fb_result, phantoms);
             }
             number_of_sources = phantoms.size();
         }
         else
         {
-            if (!parameters.skip_waypoints) {
+            if (!parameters.skip_waypoints)
+            {
                 sources = MakeWaypoints(fb_result, phantoms, parameters.sources);
             }
         }
@@ -100,14 +102,16 @@ class TableAPI final : public BaseAPI
             destinations;
         if (parameters.destinations.empty())
         {
-            if (!parameters.skip_waypoints) {
+            if (!parameters.skip_waypoints)
+            {
                 destinations = MakeWaypoints(fb_result, phantoms);
             }
             number_of_destinations = phantoms.size();
         }
         else
         {
-            if (!parameters.skip_waypoints) {
+            if (!parameters.skip_waypoints)
+            {
                 destinations = MakeWaypoints(fb_result, phantoms, parameters.destinations);
             }
         }
@@ -171,28 +175,32 @@ class TableAPI final : public BaseAPI
         // symmetric case
         if (parameters.sources.empty())
         {
-            if (!parameters.skip_waypoints) {
+            if (!parameters.skip_waypoints)
+            {
                 response.values["sources"] = MakeWaypoints(phantoms);
             }
             number_of_sources = phantoms.size();
         }
         else
         {
-            if (!parameters.skip_waypoints) {
+            if (!parameters.skip_waypoints)
+            {
                 response.values["sources"] = MakeWaypoints(phantoms, parameters.sources);
             }
         }
 
         if (parameters.destinations.empty())
         {
-            if (!parameters.skip_waypoints) {
+            if (!parameters.skip_waypoints)
+            {
                 response.values["destinations"] = MakeWaypoints(phantoms);
             }
             number_of_destinations = phantoms.size();
         }
         else
         {
-            if (!parameters.skip_waypoints) {
+            if (!parameters.skip_waypoints)
+            {
                 response.values["destinations"] = MakeWaypoints(phantoms, parameters.destinations);
             }
         }

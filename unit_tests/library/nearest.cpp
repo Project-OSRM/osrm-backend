@@ -175,7 +175,7 @@ BOOST_AUTO_TEST_CASE(test_nearest_fb_serialization_skip_waypoints)
     using namespace osrm;
 
     NearestParameters params;
-    params.skip_waypoints=true;
+    params.skip_waypoints = true;
     params.coordinates.push_back(get_dummy_location());
 
     engine::api::ResultT result = flatbuffers::FlatBufferBuilder();
