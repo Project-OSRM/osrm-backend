@@ -122,7 +122,7 @@ template <typename Key, typename Value> struct CSVFilesParser
 
             util::Log() << "Loaded " << filename << " with " << result.size() << "values";
 
-            return std::move(result);
+            return result;
         }
         catch (const boost::exception &e)
         {
