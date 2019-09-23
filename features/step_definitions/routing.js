@@ -12,4 +12,9 @@ module.exports = function () {
 
         q.awaitAll(callback);
     });
+
+    this.Given(/^skip waypoints$/, (callback) => {
+        this.queryParams['skip_waypoints'] = true;
+        callback();
+    });
 };
