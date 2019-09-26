@@ -2,6 +2,7 @@
 #define ENGINE_API_TABLE_HPP
 
 #include "engine/api/base_api.hpp"
+#include "engine/api/base_result.hpp"
 #include "engine/api/json_factory.hpp"
 #include "engine/api/table_parameters.hpp"
 
@@ -83,24 +84,36 @@ class TableAPI final : public BaseAPI
         flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<fbresult::Waypoint>>> sources;
         if (parameters.sources.empty())
         {
-            sources = MakeWaypoints(fb_result, phantoms);
+            if (!parameters.skip_waypoints)
+            {
+                sources = MakeWaypoints(fb_result, phantoms);
+            }
             number_of_sources = phantoms.size();
         }
         else
         {
-            sources = MakeWaypoints(fb_result, phantoms, parameters.sources);
+            if (!parameters.skip_waypoints)
+            {
+                sources = MakeWaypoints(fb_result, phantoms, parameters.sources);
+            }
         }
 
         flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<fbresult::Waypoint>>>
             destinations;
         if (parameters.destinations.empty())
         {
-            destinations = MakeWaypoints(fb_result, phantoms);
+            if (!parameters.skip_waypoints)
+            {
+                destinations = MakeWaypoints(fb_result, phantoms);
+            }
             number_of_destinations = phantoms.size();
         }
         else
         {
-            destinations = MakeWaypoints(fb_result, phantoms, parameters.destinations);
+            if (!parameters.skip_waypoints)
+            {
+                destinations = MakeWaypoints(fb_result, phantoms, parameters.destinations);
+            }
         }
 
         boost::optional<flatbuffers::Offset<flatbuffers::Vector<float>>> durations = boost::none;
@@ -162,22 +175,34 @@ class TableAPI final : public BaseAPI
         // symmetric case
         if (parameters.sources.empty())
         {
-            response.values["sources"] = MakeWaypoints(phantoms);
+            if (!parameters.skip_waypoints)
+            {
+                response.values["sources"] = MakeWaypoints(phantoms);
+            }
             number_of_sources = phantoms.size();
         }
         else
         {
-            response.values["sources"] = MakeWaypoints(phantoms, parameters.sources);
+            if (!parameters.skip_waypoints)
+            {
+                response.values["sources"] = MakeWaypoints(phantoms, parameters.sources);
+            }
         }
 
         if (parameters.destinations.empty())
         {
-            response.values["destinations"] = MakeWaypoints(phantoms);
+            if (!parameters.skip_waypoints)
+            {
+                response.values["destinations"] = MakeWaypoints(phantoms);
+            }
             number_of_destinations = phantoms.size();
         }
         else
         {
-            response.values["destinations"] = MakeWaypoints(phantoms, parameters.destinations);
+            if (!parameters.skip_waypoints)
+            {
+                response.values["destinations"] = MakeWaypoints(phantoms, parameters.destinations);
+            }
         }
 
         if (parameters.annotations & TableParameters::AnnotationsType::Duration)

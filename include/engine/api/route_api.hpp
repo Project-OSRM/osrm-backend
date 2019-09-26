@@ -3,6 +3,7 @@
 
 #include "extractor/maneuver_override.hpp"
 #include "engine/api/base_api.hpp"
+#include "engine/api/base_result.hpp"
 #include "engine/api/json_factory.hpp"
 #include "engine/api/route_parameters.hpp"
 
@@ -109,7 +110,10 @@ class RouteAPI : public BaseAPI
                                                 route.target_traversed_in_reverse));
         }
 
-        response.values["waypoints"] = BaseAPI::MakeWaypoints(all_start_end_points);
+        if (!parameters.skip_waypoints)
+        {
+            response.values["waypoints"] = BaseAPI::MakeWaypoints(all_start_end_points);
+        }
         response.values["routes"] = std::move(jsRoutes);
         response.values["code"] = "Ok";
         auto data_timestamp = facade.GetTimestamp();
@@ -140,7 +144,12 @@ class RouteAPI : public BaseAPI
         }
 
         auto routes_vector = fb_result.CreateVector(routes);
-        auto waypoints_vector = getWaypoints();
+        flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<fbresult::Waypoint>>>
+            waypoints_vector;
+        if (!parameters.skip_waypoints)
+        {
+            waypoints_vector = getWaypoints();
+        }
 
         fbresult::FBResultBuilder response(fb_result);
         response.add_routes(routes_vector);

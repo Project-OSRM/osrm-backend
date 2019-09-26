@@ -43,6 +43,27 @@ BOOST_AUTO_TEST_CASE(test_nearest_response)
     }
 }
 
+BOOST_AUTO_TEST_CASE(test_nearest_response_skip_waypoints)
+{
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm");
+
+    using namespace osrm;
+
+    NearestParameters params;
+    params.skip_waypoints = true;
+    params.coordinates.push_back(get_dummy_location());
+
+    engine::api::ResultT result = json::Object();
+    const auto rc = osrm.Nearest(params, result);
+    BOOST_REQUIRE(rc == Status::Ok);
+
+    auto &json_result = result.get<json::Object>();
+    const auto code = json_result.values.at("code").get<json::String>().value;
+    BOOST_CHECK_EQUAL(code, "Ok");
+
+    BOOST_CHECK(json_result.values.find("waypoints") == json_result.values.end());
+}
+
 BOOST_AUTO_TEST_CASE(test_nearest_response_no_coordinates)
 {
     auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm");
@@ -118,7 +139,7 @@ BOOST_AUTO_TEST_CASE(test_nearest_response_for_location_in_small_component)
     }
 }
 
-BOOST_AUTO_TEST_CASE(test_nearest_fb_serilization)
+BOOST_AUTO_TEST_CASE(test_nearest_fb_serialization)
 {
     auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm");
 
@@ -145,6 +166,27 @@ BOOST_AUTO_TEST_CASE(test_nearest_fb_serilization)
         BOOST_CHECK(waypoint->nodes()->first() != 0);
         BOOST_CHECK(waypoint->nodes()->second() != 0);
     }
+}
+
+BOOST_AUTO_TEST_CASE(test_nearest_fb_serialization_skip_waypoints)
+{
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm");
+
+    using namespace osrm;
+
+    NearestParameters params;
+    params.skip_waypoints = true;
+    params.coordinates.push_back(get_dummy_location());
+
+    engine::api::ResultT result = flatbuffers::FlatBufferBuilder();
+    const auto rc = osrm.Nearest(params, result);
+    BOOST_REQUIRE(rc == Status::Ok);
+
+    auto &fb_result = result.get<flatbuffers::FlatBufferBuilder>();
+    auto fb = engine::api::fbresult::GetFBResult(fb_result.GetBufferPointer());
+    BOOST_CHECK(!fb->error());
+
+    BOOST_CHECK(fb->waypoints() == nullptr);
 }
 
 BOOST_AUTO_TEST_CASE(test_nearest_fb_error)

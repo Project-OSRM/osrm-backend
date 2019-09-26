@@ -17,9 +17,9 @@ Feature: Basic Routing
             | ab    |
 
         When I route I should get
-            | from | to | route    | data_version |
-            | a    | b  | ab,ab    |              |
-            | b    | a  | ab,ab    |              |
+            | from | to | route    | data_version | waypoints_count |
+            | a    | b  | ab,ab    |              | 2               |
+            | b    | a  | ab,ab    |              | 2               |
 
     Scenario: Data_version test
         Given the node map
@@ -37,6 +37,23 @@ Feature: Basic Routing
             | from | to | route    | data_version          |
             | a    | b  | ab,ab    | cucumber_data_version |
             | b    | a  | ab,ab    | cucumber_data_version |
+
+    Scenario: Skip_waypoints test
+        Given the node map
+            """
+            a b
+            """
+
+        And skip waypoints
+
+        And the ways
+            | nodes |
+            | ab    |
+
+        When I route I should get
+            | from | to | route    | waypoints_count       |
+            | a    | b  | ab,ab    | 0                     |
+            | b    | a  | ab,ab    | 0                     |
 
     Scenario: Routing in between two nodes of way
         Given the node map
