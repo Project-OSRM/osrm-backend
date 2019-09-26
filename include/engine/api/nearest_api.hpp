@@ -71,10 +71,9 @@ class NearestAPI final : public BaseAPI
                     auto node_values = MakeNodes(phantom_node);
                     fbresult::Uint64Pair nodes{node_values.first, node_values.second};
 
-                    auto waypoint = MakeWaypoint(fb_result, phantom_node);
-                    waypoint.add_nodes(&nodes);
-
-                    return waypoint.Finish();
+                    auto waypoint = MakeWaypoint(&fb_result, phantom_node);
+                    waypoint->add_nodes(&nodes);
+                    return waypoint->Finish();
                 });
 
             waypoints_vector = fb_result.CreateVector(waypoints);

@@ -61,9 +61,9 @@ class TripAPI final : public RouteAPI
 
         if (data_version_string)
         {
-            response.add_data_version(*data_version_string);
+            response->add_data_version(*data_version_string);
         }
-        fb_result.Finish(response.Finish());
+        fb_result.Finish(response->Finish());
     }
     void MakeResponse(const std::vector<std::vector<NodeID>> &sub_trips,
                       const std::vector<InternalRouteResult> &sub_routes,
@@ -127,10 +127,10 @@ class TripAPI final : public RouteAPI
             auto trip_index = input_idx_to_trip_idx[input_index];
             BOOST_ASSERT(!trip_index.NotUsed());
 
-            auto waypoint = BaseAPI::MakeWaypoint(fb_result, phantoms[input_index]);
-            waypoint.add_waypoint_index(trip_index.point_index);
-            waypoint.add_trips_index(trip_index.sub_trip_index);
-            waypoints.push_back(waypoint.Finish());
+            auto waypoint = BaseAPI::MakeWaypoint(&fb_result, phantoms[input_index]);
+            waypoint->add_waypoint_index(trip_index.point_index);
+            waypoint->add_trips_index(trip_index.sub_trip_index);
+            waypoints.push_back(waypoint->Finish());
         }
 
         return fb_result.CreateVector(waypoints);

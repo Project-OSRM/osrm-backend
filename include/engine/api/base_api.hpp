@@ -12,6 +12,7 @@
 #include <boost/assert.hpp>
 #include <boost/range/algorithm/transform.hpp>
 
+#include <memory>
 #include <vector>
 
 namespace osrm
@@ -73,7 +74,7 @@ class BaseAPI
     }
 
     flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<fbresult::Waypoint>>>
-    MakeWaypoints(flatbuffers::FlatBufferBuilder &builder,
+    MakeWaypoints(flatbuffers::FlatBufferBuilder *builder,
                   const std::vector<PhantomNodes> &segment_end_coordinates) const
     {
         BOOST_ASSERT(parameters.coordinates.size() > 0);
@@ -82,43 +83,43 @@ class BaseAPI
         std::vector<flatbuffers::Offset<fbresult::Waypoint>> waypoints;
         waypoints.resize(parameters.coordinates.size());
         waypoints[0] =
-            MakeWaypoint(builder, segment_end_coordinates.front().source_phantom).Finish();
+            MakeWaypoint(builder, segment_end_coordinates.front().source_phantom)->Finish();
 
         std::transform(segment_end_coordinates.begin(),
                        segment_end_coordinates.end(),
                        std::next(waypoints.begin()),
-                       [this, &builder](const PhantomNodes &phantom_pair) {
-                           return MakeWaypoint(builder, phantom_pair.target_phantom).Finish();
+                       [this, builder](const PhantomNodes &phantom_pair) {
+                           return MakeWaypoint(builder, phantom_pair.target_phantom)->Finish();
                        });
-        return builder.CreateVector(waypoints);
+        return builder->CreateVector(waypoints);
     }
 
     // FIXME: gcc 4.9 does not like MakeWaypoints to be protected
     // protected:
-    fbresult::WaypointBuilder MakeWaypoint(flatbuffers::FlatBufferBuilder &builder,
-                                           const PhantomNode &phantom) const
+    std::unique_ptr<fbresult::WaypointBuilder> MakeWaypoint(flatbuffers::FlatBufferBuilder *builder,
+                                                            const PhantomNode &phantom) const
     {
 
         auto location =
             fbresult::Position(static_cast<double>(util::toFloating(phantom.location.lon)),
                                static_cast<double>(util::toFloating(phantom.location.lat)));
-        auto name_string = builder.CreateString(
+        auto name_string = builder->CreateString(
             facade.GetNameForID(facade.GetNameIndex(phantom.forward_segment_id.id)).to_string());
 
         boost::optional<flatbuffers::Offset<flatbuffers::String>> hint_string = boost::none;
         if (parameters.generate_hints)
         {
-            hint_string = builder.CreateString(Hint{phantom, facade.GetCheckSum()}.ToBase64());
+            hint_string = builder->CreateString(Hint{phantom, facade.GetCheckSum()}.ToBase64());
         }
 
-        fbresult::WaypointBuilder waypoint(builder);
-        waypoint.add_location(&location);
-        waypoint.add_distance(util::coordinate_calculation::fccApproximateDistance(
+        auto waypoint = std::make_unique<fbresult::WaypointBuilder>(*builder);
+        waypoint->add_location(&location);
+        waypoint->add_distance(util::coordinate_calculation::fccApproximateDistance(
             phantom.location, phantom.input_location));
-        waypoint.add_name(name_string);
+        waypoint->add_name(name_string);
         if (hint_string)
         {
-            waypoint.add_hint(*hint_string);
+            waypoint->add_hint(*hint_string);
         }
         return waypoint;
     }

@@ -236,7 +236,7 @@ class TableAPI final : public BaseAPI
 
         boost::range::transform(
             phantoms, std::back_inserter(waypoints), [this, &builder](const PhantomNode &phantom) {
-                return BaseAPI::MakeWaypoint(builder, phantom).Finish();
+                return BaseAPI::MakeWaypoint(&builder, phantom)->Finish();
             });
         return builder.CreateVector(waypoints);
     }
@@ -252,7 +252,7 @@ class TableAPI final : public BaseAPI
                                 std::back_inserter(waypoints),
                                 [this, &builder, phantoms](const std::size_t idx) {
                                     BOOST_ASSERT(idx < phantoms.size());
-                                    return BaseAPI::MakeWaypoint(builder, phantoms[idx]).Finish();
+                                    return BaseAPI::MakeWaypoint(&builder, phantoms[idx])->Finish();
                                 });
         return builder.CreateVector(waypoints);
     }

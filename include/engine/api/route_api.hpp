@@ -81,14 +81,14 @@ class RouteAPI : public BaseAPI
 
         auto response =
             MakeFBResponse(raw_routes, fb_result, [this, &all_start_end_points, &fb_result]() {
-                return BaseAPI::MakeWaypoints(fb_result, all_start_end_points);
+                return BaseAPI::MakeWaypoints(&fb_result, all_start_end_points);
             });
 
         if (data_version_string)
         {
-            response.add_data_version(*data_version_string);
+            response->add_data_version(*data_version_string);
         }
-        fb_result.Finish(response.Finish());
+        fb_result.Finish(response->Finish());
     }
 
     void
@@ -125,9 +125,10 @@ class RouteAPI : public BaseAPI
 
   protected:
     template <typename GetWptsFn>
-    fbresult::FBResultBuilder MakeFBResponse(const InternalManyRoutesResult &raw_routes,
-                                             flatbuffers::FlatBufferBuilder &fb_result,
-                                             GetWptsFn getWaypoints) const
+    std::unique_ptr<fbresult::FBResultBuilder>
+    MakeFBResponse(const InternalManyRoutesResult &raw_routes,
+                   flatbuffers::FlatBufferBuilder &fb_result,
+                   GetWptsFn getWaypoints) const
     {
 
         std::vector<flatbuffers::Offset<fbresult::RouteObject>> routes;
@@ -151,9 +152,9 @@ class RouteAPI : public BaseAPI
             waypoints_vector = getWaypoints();
         }
 
-        fbresult::FBResultBuilder response(fb_result);
-        response.add_routes(routes_vector);
-        response.add_waypoints(waypoints_vector);
+        auto response = std::make_unique<fbresult::FBResultBuilder>(fb_result);
+        response->add_routes(routes_vector);
+        response->add_waypoints(waypoints_vector);
 
         return response;
     }
@@ -656,7 +657,6 @@ class RouteAPI : public BaseAPI
             step.intersections.end(),
             intersections.begin(),
             [&fb_result, this](const guidance::IntermediateIntersection &intersection) {
-
                 std::vector<flatbuffers::Offset<fbresult::Lane>> lanes;
                 if (json::detail::hasValidLanes(intersection))
                 {
