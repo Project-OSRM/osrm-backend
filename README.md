@@ -78,7 +78,7 @@ Optionally start a user-friendly frontend on port 9966, and open it up in your b
     docker run -p 9966:9966 osrm/osrm-frontend
     xdg-open 'http://127.0.0.1:9966'
 
-In case Docker complains about not being able to connect to the Docker daemon make sure you are in the `docker` group.
+In case, Docker complains about not being able to connect to the Docker daemon make sure you are in the `docker` group.
 
     sudo usermod -aG docker $USER
 
