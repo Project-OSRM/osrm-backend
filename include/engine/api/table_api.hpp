@@ -74,7 +74,7 @@ class TableAPI final : public BaseAPI
         auto number_of_destinations = parameters.destinations.size();
 
         auto data_timestamp = facade.GetTimestamp();
-        boost::optional<flatbuffers::Offset<flatbuffers::String>> data_version_string = boost::none;
+        flatbuffers::Offset<flatbuffers::String> data_version_string;
         if (!data_timestamp.empty())
         {
             data_version_string = fb_result.CreateString(data_timestamp);
@@ -116,21 +116,24 @@ class TableAPI final : public BaseAPI
             }
         }
 
-        boost::optional<flatbuffers::Offset<flatbuffers::Vector<float>>> durations = boost::none;
-        if (parameters.annotations & TableParameters::AnnotationsType::Duration)
+        bool use_durations = parameters.annotations & TableParameters::AnnotationsType::Duration;
+        flatbuffers::Offset<flatbuffers::Vector<float>> durations;
+        if (use_durations)
         {
             durations = MakeDurationTable(fb_result, tables.first);
         }
 
-        boost::optional<flatbuffers::Offset<flatbuffers::Vector<float>>> distances = boost::none;
-        if (parameters.annotations & TableParameters::AnnotationsType::Distance)
+        bool use_distances = parameters.annotations & TableParameters::AnnotationsType::Distance;
+        flatbuffers::Offset<flatbuffers::Vector<float>> distances;
+        if (use_distances)
         {
             distances = MakeDistanceTable(fb_result, tables.second);
         }
 
-        boost::optional<flatbuffers::Offset<flatbuffers::Vector<uint32_t>>> speed_cells =
-            boost::none;
-        if (parameters.fallback_speed != INVALID_FALLBACK_SPEED && parameters.fallback_speed > 0)
+        bool have_speed_cells =
+            parameters.fallback_speed != INVALID_FALLBACK_SPEED && parameters.fallback_speed > 0;
+        flatbuffers::Offset<flatbuffers::Vector<uint32_t>> speed_cells;
+        if (have_speed_cells)
         {
             speed_cells = MakeEstimatesTable(fb_result, fallback_speed_cells);
         }
@@ -139,24 +142,24 @@ class TableAPI final : public BaseAPI
         table.add_destinations(destinations);
         table.add_rows(number_of_sources);
         table.add_cols(number_of_destinations);
-        if (durations)
+        if (use_durations)
         {
-            table.add_durations(*durations);
+            table.add_durations(durations);
         }
-        if (distances)
+        if (use_distances)
         {
-            table.add_distances(*distances);
+            table.add_distances(distances);
         }
-        if (speed_cells)
+        if (have_speed_cells)
         {
-            table.add_fallback_speed_cells(*speed_cells);
+            table.add_fallback_speed_cells(speed_cells);
         }
         auto table_buffer = table.Finish();
 
         fbresult::FBResultBuilder response(fb_result);
-        if (data_version_string)
+        if (!data_timestamp.empty())
         {
-            response.add_data_version(*data_version_string);
+            response.add_data_version(data_version_string);
         }
         response.add_table(table_buffer);
         response.add_waypoints(sources);
