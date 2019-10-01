@@ -62,10 +62,10 @@ class MatchAPI final : public RouteAPI
 
         if (data_version_string)
         {
-            response.add_data_version(*data_version_string);
+            response->add_data_version(*data_version_string);
         }
 
-        fb_result.Finish(response.Finish());
+        fb_result.Finish(response->Finish());
     }
     void MakeResponse(const std::vector<map_matching::SubMatching> &sub_matchings,
                       const std::vector<InternalRouteResult> &sub_routes,
@@ -141,29 +141,29 @@ class MatchAPI final : public RouteAPI
             }
             const auto &phantom =
                 sub_matchings[matching_index.sub_matching_index].nodes[matching_index.point_index];
-            auto waypoint = BaseAPI::MakeWaypoint(fb_result, phantom);
-            waypoint.add_matchings_index(matching_index.sub_matching_index);
-            waypoint.add_alternatives_count(sub_matchings[matching_index.sub_matching_index]
-                                                .alternatives_count[matching_index.point_index]);
+            auto waypoint = BaseAPI::MakeWaypoint(&fb_result, phantom);
+            waypoint->add_matchings_index(matching_index.sub_matching_index);
+            waypoint->add_alternatives_count(sub_matchings[matching_index.sub_matching_index]
+                                                 .alternatives_count[matching_index.point_index]);
             // waypoint indices need to be adjusted if route legs were collapsed
             // waypoint parameter assumes there is only one match object
             if (!parameters.waypoints.empty())
             {
                 if (tidy_result.was_waypoint[trace_index])
                 {
-                    waypoint.add_waypoint_index(was_waypoint_idx);
+                    waypoint->add_waypoint_index(was_waypoint_idx);
                     was_waypoint_idx++;
                 }
                 else
                 {
-                    waypoint.add_waypoint_index(0);
+                    waypoint->add_waypoint_index(0);
                 }
             }
             else
             {
-                waypoint.add_waypoint_index(matching_index.point_index);
+                waypoint->add_waypoint_index(matching_index.point_index);
             }
-            waypoints.push_back(waypoint.Finish());
+            waypoints.push_back(waypoint->Finish());
         }
 
         return fb_result.CreateVector(waypoints);
