@@ -10,6 +10,7 @@
 #include "util/log.hpp"
 #include "util/version.hpp"
 
+#include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/iostreams/device/array.hpp>
 #include <boost/iostreams/seek.hpp>
@@ -60,6 +61,15 @@ class FileReader
 
     std::size_t GetSize()
     {
+        const boost::filesystem::path path(filepath);
+        try {
+            return std::size_t(boost::filesystem::file_size(path)) - ((fingerprint == FingerprintFlag::VerifyFingerprint) ? sizeof(util::FingerPrint) : 0);
+        }
+        catch (boost::filesystem::filesystem_error& ex) {
+            std::cout << ex.what() << std::endl;
+            throw;
+        }
+/*
         const boost::filesystem::ifstream::pos_type position = input_stream.tellg();
         input_stream.seekg(0, std::ios::end);
         const boost::filesystem::ifstream::pos_type file_size = input_stream.tellg();
@@ -84,6 +94,7 @@ class FileReader
         {
             return file_size;
         }
+ */
     }
 
     /* Read count objects of type T into pointer dest */
