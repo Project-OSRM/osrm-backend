@@ -43,6 +43,7 @@ class RasterGrid
         xdim = _xdim;
         ydim = _ydim;
         _data.reserve(ydim * xdim);
+        BOOST_ASSERT(_data.capacity() >= ydim * xdim);
 
         storage::io::FileReader file_reader(filepath, storage::io::FileReader::HasNoFingerprint);
 
