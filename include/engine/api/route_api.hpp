@@ -73,7 +73,7 @@ class RouteAPI : public BaseAPI
     {
 
         auto data_timestamp = facade.GetTimestamp();
-        boost::optional<flatbuffers::Offset<flatbuffers::String>> data_version_string = boost::none;
+        flatbuffers::Offset<flatbuffers::String> data_version_string;
         if (!data_timestamp.empty())
         {
             data_version_string = fb_result.CreateString(data_timestamp);
@@ -84,9 +84,9 @@ class RouteAPI : public BaseAPI
                 return BaseAPI::MakeWaypoints(&fb_result, all_start_end_points);
             });
 
-        if (data_version_string)
+        if (!data_timestamp.empty())
         {
-            response->add_data_version(*data_version_string);
+            response->add_data_version(data_version_string);
         }
         fb_result.Finish(response->Finish());
     }
@@ -373,8 +373,7 @@ class RouteAPI : public BaseAPI
                 requested_annotations = RouteParameters::AnnotationsType::All;
             }
 
-            boost::optional<flatbuffers::Offset<fbresult::Annotation>> annotation_buffer =
-                boost::none;
+            flatbuffers::Offset<fbresult::Annotation> annotation_buffer;
             if (requested_annotations != RouteParameters::AnnotationsType::None)
             {
                 annotation_buffer =
@@ -397,9 +396,9 @@ class RouteAPI : public BaseAPI
             }
             legBuilder.add_steps(steps_vector);
 
-            if (annotation_buffer)
+            if (requested_annotations != RouteParameters::AnnotationsType::None)
             {
-                legBuilder.add_annotations(*annotation_buffer);
+                legBuilder.add_annotations(annotation_buffer);
             }
             routeLegs.emplace_back(legBuilder.Finish());
         }
@@ -506,8 +505,9 @@ class RouteAPI : public BaseAPI
         }
         auto nodes_vector = fb_result.CreateVector(nodes);
         // Add any supporting metadata, if needed
-        boost::optional<flatbuffers::Offset<fbresult::Metadata>> metadata_buffer = boost::none;
-        if (requested_annotations & RouteParameters::AnnotationsType::Datasources)
+        bool use_metadata = requested_annotations & RouteParameters::AnnotationsType::Datasources;
+        flatbuffers::Offset<fbresult::Metadata> metadata_buffer;
+        if (use_metadata)
         {
             const auto MAX_DATASOURCE_ID = 255u;
             std::vector<flatbuffers::Offset<flatbuffers::String>> names;
@@ -529,9 +529,9 @@ class RouteAPI : public BaseAPI
         annotation.add_weight(weight);
         annotation.add_datasources(datasources);
         annotation.add_nodes(nodes_vector);
-        if (metadata_buffer)
+        if (use_metadata)
         {
-            annotation.add_metadata(*metadata_buffer);
+            annotation.add_metadata(metadata_buffer);
         }
 
         return annotation.Finish();

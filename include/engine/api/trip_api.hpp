@@ -48,7 +48,7 @@ class TripAPI final : public RouteAPI
                       flatbuffers::FlatBufferBuilder &fb_result) const
     {
         auto data_timestamp = facade.GetTimestamp();
-        boost::optional<flatbuffers::Offset<flatbuffers::String>> data_version_string = boost::none;
+        flatbuffers::Offset<flatbuffers::String> data_version_string;
         if (!data_timestamp.empty())
         {
             data_version_string = fb_result.CreateString(data_timestamp);
@@ -59,9 +59,9 @@ class TripAPI final : public RouteAPI
                 return MakeWaypoints(fb_result, sub_trips, phantoms);
             });
 
-        if (data_version_string)
+        if (!data_timestamp.empty())
         {
-            response->add_data_version(*data_version_string);
+            response->add_data_version(data_version_string);
         }
         fb_result.Finish(response->Finish());
     }
