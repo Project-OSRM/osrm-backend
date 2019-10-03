@@ -5,15 +5,22 @@
 #include "util/exception.hpp"
 
 #include <boost/algorithm/string/trim.hpp>
+#include <boost/algorithm/string.hpp>
 #include <boost/assert.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/qi_int.hpp>
+#include <boost/foreach.hpp>
+
 #include <storage/io.hpp>
 
 #include <iterator>
 #include <unordered_map>
+#include <string>
+#include <list>
+#include <iostream>
+using namespace std;
 
 namespace osrm
 {
@@ -45,8 +52,29 @@ class RasterGrid
         _data.reserve(ydim * xdim);
         BOOST_ASSERT(_data.capacity() >= ydim * xdim);
 
+        // Construct FileReader
         storage::io::FileReader file_reader(filepath, storage::io::FileReader::HasNoFingerprint);
+        std::string buf;
+        buf.resize(xdim * 11); // INT32_MAX = 2147483647 = 10 chars + 1 white space = 11
+        BOOST_ASSERT(buf.size() >= xdim * 11);
 
+        for (unsigned int y = 0 ; y < ydim ; y++) {
+            // read one line from file.
+            file_reader.ReadLine(&buf[0], xdim * 11);
+            boost::algorithm::trim(buf);
+
+            std::vector<std::string> result;
+            std::string delim (" ");
+            //boost::split(result, buf, boost::is_any_of(delim), boost::algorithm::token_compress_on);
+            boost::split(result, buf, boost::is_any_of(delim));
+            unsigned int x = 0;
+            BOOST_FOREACH(std::string s, result) {
+                _data[(y * xdim) + x] = atoi(s.c_str());
+                ++x;
+            }
+            BOOST_ASSERT(x == xdim);
+        }
+/*
         std::string buffer;
         buffer.resize(file_reader.GetSize());
 
@@ -76,6 +104,7 @@ class RasterGrid
             throw util::exception("Failed to parse raster source: " + filepath.string() +
                                   SOURCE_REF);
         }
+*/
     }
 
     RasterGrid(const RasterGrid &) = default;
@@ -144,8 +173,8 @@ class RasterContainer
     RasterDatum GetRasterInterpolateFromSource(unsigned int source_id, double lon, double lat);
 
   private:
-    std::vector<RasterSource> LoadedSources;
-    std::unordered_map<std::string, int> LoadedSourcePaths;
+    static std::vector<RasterSource> LoadedSources;
+    static std::unordered_map<std::string, int> LoadedSourcePaths;
 };
 }
 }

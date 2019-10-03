@@ -69,7 +69,10 @@ class FileReader
             std::cout << ex.what() << std::endl;
             throw;
         }
+    }
 /*
+    std::size_t GetSize()
+    {
         const boost::filesystem::ifstream::pos_type position = input_stream.tellg();
         input_stream.seekg(0, std::ios::end);
         const boost::filesystem::ifstream::pos_type file_size = input_stream.tellg();
@@ -94,7 +97,16 @@ class FileReader
         {
             return file_size;
         }
- */
+    }
+*/
+    /* Read one line */
+    template <typename T> void ReadLine(T *dest, const std::size_t count) {
+        if (0 < count) {
+            const auto &ios = input_stream.getline(reinterpret_cast<char *>(dest), count * sizeof(T));
+            for (std::size_t n = ios.gcount(); n < count; ++n) {
+                reinterpret_cast<char *>(dest)[n] = '\0';
+            }
+        }
     }
 
     /* Read count objects of type T into pointer dest */

@@ -78,6 +78,10 @@ RasterDatum RasterSource::GetRasterInterpolate(const int lon, const int lat) con
                                       raster_data(right, bottom) * (fromLeft * fromTop))};
 }
 
+// static member of Raster Container
+std::vector<RasterSource> RasterContainer::LoadedSources;
+std::unordered_map<std::string, int> RasterContainer::LoadedSourcePaths;
+
 // Load raster source into memory
 int RasterContainer::LoadRasterSource(const std::string &path_string,
                                       double xmin,
@@ -91,7 +95,13 @@ int RasterContainer::LoadRasterSource(const std::string &path_string,
     const auto _xmax = static_cast<std::int32_t>(util::toFixed(util::FloatLongitude{xmax}));
     const auto _ymin = static_cast<std::int32_t>(util::toFixed(util::FloatLatitude{ymin}));
     const auto _ymax = static_cast<std::int32_t>(util::toFixed(util::FloatLatitude{ymax}));
-
+/*
+    // for debug : list up all keys and values
+    util::Log() << "Num of Raster Sources : " << LoadedSourcePaths.size();
+    for (auto i = LoadedSourcePaths.begin(); i != LoadedSourcePaths.end(); ++i) {
+        util::Log() << "Key : " << i->first << " Value: " << i->second;
+    }
+*/
     const auto itr = LoadedSourcePaths.find(path_string);
     if (itr != LoadedSourcePaths.end())
     {
@@ -120,7 +130,13 @@ int RasterContainer::LoadRasterSource(const std::string &path_string,
     LoadedSources.push_back(std::move(source));
 
     util::Log() << "[source loader] ok, after " << TIMER_SEC(loading_source) << "s";
-
+/*
+    // for debug : list up all keys and values
+    util::Log() << "Num of Raster Sources : " << LoadedSourcePaths.size();
+    for (auto i = LoadedSourcePaths.begin(); i != LoadedSourcePaths.end(); ++i) {
+        util::Log() << "Key : " << i->first << " Value: " << i->second;
+    }
+*/
     return source_id;
 }
 
