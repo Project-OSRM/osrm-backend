@@ -70,35 +70,7 @@ class FileReader
             throw;
         }
     }
-/*
-    std::size_t GetSize()
-    {
-        const boost::filesystem::ifstream::pos_type position = input_stream.tellg();
-        input_stream.seekg(0, std::ios::end);
-        const boost::filesystem::ifstream::pos_type file_size = input_stream.tellg();
 
-        if (file_size == boost::filesystem::ifstream::pos_type(-1))
-        {
-            throw util::RuntimeError("Unable to determine file size for " +
-                                         std::string(filepath.string()),
-                                     ErrorCode::FileIOError,
-                                     SOURCE_REF,
-                                     std::strerror(errno));
-        }
-
-        // restore the current position
-        input_stream.seekg(position, std::ios::beg);
-
-        if (fingerprint == FingerprintFlag::VerifyFingerprint)
-        {
-            return std::size_t(file_size) - sizeof(util::FingerPrint);
-        }
-        else
-        {
-            return file_size;
-        }
-    }
-*/
     /* Read one line */
     template <typename T> void ReadLine(T *dest, const std::size_t count) {
         if (0 < count) {

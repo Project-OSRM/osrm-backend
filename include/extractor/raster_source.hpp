@@ -50,13 +50,13 @@ class RasterGrid
         xdim = _xdim;
         ydim = _ydim;
         _data.reserve(ydim * xdim);
-        BOOST_ASSERT(_data.capacity() >= ydim * xdim);
+        BOOST_ASSERT(ydim * xdim <= _data.capacity());
 
         // Construct FileReader
         storage::io::FileReader file_reader(filepath, storage::io::FileReader::HasNoFingerprint);
         std::string buf;
         buf.resize(xdim * 11); // INT32_MAX = 2147483647 = 10 chars + 1 white space = 11
-        BOOST_ASSERT(buf.size() >= xdim * 11);
+        BOOST_ASSERT(xdim * 11 <= buf.size());
 
         for (unsigned int y = 0 ; y < ydim ; y++) {
             // read one line from file.
@@ -74,37 +74,6 @@ class RasterGrid
             }
             BOOST_ASSERT(x == xdim);
         }
-/*
-        std::string buffer;
-        buffer.resize(file_reader.GetSize());
-
-        BOOST_ASSERT(buffer.size() > 1);
-
-        file_reader.ReadInto(&buffer[0], buffer.size());
-
-        boost::algorithm::trim(buffer);
-
-        auto itr = buffer.begin();
-        auto end = buffer.end();
-
-        bool r = false;
-        try
-        {
-            r = boost::spirit::qi::parse(
-                itr, end, +boost::spirit::qi::int_ % +boost::spirit::qi::space, _data);
-        }
-        catch (std::exception const &ex)
-        {
-            throw util::exception("Failed to read from raster source " + filepath.string() + ": " +
-                                  ex.what() + SOURCE_REF);
-        }
-
-        if (!r || itr != end)
-        {
-            throw util::exception("Failed to parse raster source: " + filepath.string() +
-                                  SOURCE_REF);
-        }
-*/
     }
 
     RasterGrid(const RasterGrid &) = default;
