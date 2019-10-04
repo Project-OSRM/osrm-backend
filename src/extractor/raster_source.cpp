@@ -124,13 +124,7 @@ int RasterContainer::LoadRasterSource(const std::string &path_string,
     LoadedSources.push_back(std::move(source));
 
     util::Log() << "[source loader] ok, after " << TIMER_SEC(loading_source) << "s";
-/*
-    // for debug : list up all keys and values
-    util::Log() << "Num of Raster Sources : " << LoadedSourcePaths.size();
-    for (auto i = LoadedSourcePaths.begin(); i != LoadedSourcePaths.end(); ++i) {
-        util::Log() << "Key : " << i->first << " Value: " << i->second;
-    }
-*/
+
     return source_id;
 }
 
