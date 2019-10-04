@@ -47,6 +47,8 @@ class RasterGrid
   public:
     RasterGrid(const boost::filesystem::path &filepath, std::size_t _xdim, std::size_t _ydim)
     {
+        util::Log() << " filepath : " << filepath;
+
         xdim = _xdim;
         ydim = _ydim;
         _data.reserve(ydim * xdim);
@@ -65,8 +67,8 @@ class RasterGrid
 
             std::vector<std::string> result;
             std::string delim (" ");
-            //boost::split(result, buf, boost::is_any_of(delim), boost::algorithm::token_compress_on);
-            boost::split(result, buf, boost::is_any_of(delim));
+            boost::split(result, buf, boost::is_any_of(delim), boost::algorithm::token_compress_on);
+            //boost::split(result, buf, boost::is_any_of(delim));
             unsigned int x = 0;
             BOOST_FOREACH(std::string s, result) {
                 _data[(y * xdim) + x] = atoi(s.c_str());
