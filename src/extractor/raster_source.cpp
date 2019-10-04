@@ -81,6 +81,7 @@ RasterDatum RasterSource::GetRasterInterpolate(const int lon, const int lat) con
 // static member of Raster Container
 std::vector<RasterSource> RasterContainer::LoadedSources;
 std::unordered_map<std::string, int> RasterContainer::LoadedSourcePaths;
+int RasterContainer::count = 0;
 
 // Load raster source into memory
 int RasterContainer::LoadRasterSource(const std::string &path_string,

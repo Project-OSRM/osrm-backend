@@ -126,7 +126,14 @@ class RasterSource
 class RasterContainer
 {
   public:
-    RasterContainer() = default;
+    RasterContainer() { ++count; }
+    ~RasterContainer() {
+        --count;
+        if (0 == count) {
+            LoadedSources.clear();
+            LoadedSourcePaths.clear();
+        }
+    }
 
     int LoadRasterSource(const std::string &path_string,
                          double xmin,
@@ -143,6 +150,7 @@ class RasterContainer
   private:
     static std::vector<RasterSource> LoadedSources;
     static std::unordered_map<std::string, int> LoadedSourcePaths;
+    static int count;
 };
 }
 }
