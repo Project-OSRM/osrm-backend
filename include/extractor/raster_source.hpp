@@ -64,12 +64,11 @@ class RasterGrid
             boost::algorithm::trim(buf);
 
             std::vector<std::string> result;
-            std::string delim (" \r\n\0");
-            boost::split(result, buf, boost::is_any_of(delim), boost::algorithm::token_compress_on);
-            //boost::split(result, buf, boost::is_any_of(delim));
+            boost::split(result, buf, boost::is_any_of(" \r\n\0"), boost::algorithm::token_compress_on);
+            //boost::split(result, buf, boost::is_any_of(" \r\n\0"));
             unsigned int x = 0;
             BOOST_FOREACH(std::string s, result) {
-                _data[(y * xdim) + x] = atoi(s.c_str());
+                if (x < xdim) _data[(y * xdim) + x] = atoi(s.c_str());
                 ++x;
             }
             BOOST_ASSERT(x == xdim);
