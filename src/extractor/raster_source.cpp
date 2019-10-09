@@ -130,7 +130,8 @@ RasterDatum RasterContainer::GetRasterDataFromSource(unsigned int source_id, dou
     if (RasterCache::getInstance().getLoadedSources().size() < source_id + 1)
     {
         throw util::exception("Attempted to access source " + std::to_string(source_id) +
-                              ", but there are only " + std::to_string(RasterCache::getInstance().getLoadedSources().size()) +
+                              ", but there are only " +
+                              std::to_string(RasterCache::getInstance().getLoadedSources().size()) +
                               " loaded" + SOURCE_REF);
     }
 
@@ -151,7 +152,8 @@ RasterContainer::GetRasterInterpolateFromSource(unsigned int source_id, double l
     if (RasterCache::getInstance().getLoadedSources().size() < source_id + 1)
     {
         throw util::exception("Attempted to access source " + std::to_string(source_id) +
-                              ", but there are only " + std::to_string(RasterCache::getInstance().getLoadedSources().size()) +
+                              ", but there are only " +
+                              std::to_string(RasterCache::getInstance().getLoadedSources().size()) +
                               " loaded" + SOURCE_REF);
     }
 

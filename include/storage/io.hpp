@@ -62,20 +62,28 @@ class FileReader
     std::size_t GetSize()
     {
         const boost::filesystem::path path(filepath);
-        try {
-            return std::size_t(boost::filesystem::file_size(path)) - ((fingerprint == FingerprintFlag::VerifyFingerprint) ? sizeof(util::FingerPrint) : 0);
+        try
+        {
+            return std::size_t(boost::filesystem::file_size(path)) -
+                   ((fingerprint == FingerprintFlag::VerifyFingerprint) ? sizeof(util::FingerPrint)
+                                                                        : 0);
         }
-        catch (boost::filesystem::filesystem_error& ex) {
+        catch (boost::filesystem::filesystem_error &ex)
+        {
             std::cout << ex.what() << std::endl;
             throw;
         }
     }
 
     /* Read one line */
-    template <typename T> void ReadLine(T *dest, const std::size_t count) {
-        if (0 < count) {
-            const auto &ios = input_stream.getline(reinterpret_cast<char *>(dest), count * sizeof(T));
-            for (std::size_t n = ios.gcount(); n < count; ++n) {
+    template <typename T> void ReadLine(T *dest, const std::size_t count)
+    {
+        if (0 < count)
+        {
+            const auto &ios =
+                input_stream.getline(reinterpret_cast<char *>(dest), count * sizeof(T));
+            for (std::size_t n = ios.gcount(); n < count; ++n)
+            {
                 reinterpret_cast<char *>(dest)[n] = '\0';
             }
         }

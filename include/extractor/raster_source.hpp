@@ -4,22 +4,22 @@
 #include "util/coordinate.hpp"
 #include "util/exception.hpp"
 
-#include <boost/algorithm/string/trim.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/trim.hpp>
 #include <boost/assert.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
+#include <boost/foreach.hpp>
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/qi_int.hpp>
-#include <boost/foreach.hpp>
 
 #include <storage/io.hpp>
 
-#include <iterator>
-#include <unordered_map>
-#include <string>
-#include <list>
 #include <iostream>
+#include <iterator>
+#include <list>
+#include <string>
+#include <unordered_map>
 using namespace std;
 
 namespace osrm
@@ -58,17 +58,21 @@ class RasterGrid
         buf.resize(xdim * 11); // INT32_MAX = 2147483647 = 10 chars + 1 white space = 11
         BOOST_ASSERT(xdim * 11 <= buf.size());
 
-        for (unsigned int y = 0 ; y < ydim ; y++) {
+        for (unsigned int y = 0; y < ydim; y++)
+        {
             // read one line from file.
             file_reader.ReadLine(&buf[0], xdim * 11);
             boost::algorithm::trim(buf);
 
             std::vector<std::string> result;
-            boost::split(result, buf, boost::is_any_of(" \r\n\0"), boost::algorithm::token_compress_on);
-            //boost::split(result, buf, boost::is_any_of(" \r\n\0"));
+            boost::split(
+                result, buf, boost::is_any_of(" \r\n\0"), boost::algorithm::token_compress_on);
+            // boost::split(result, buf, boost::is_any_of(" \r\n\0"));
             unsigned int x = 0;
-            BOOST_FOREACH(std::string s, result) {
-                if (x < xdim) _data[(y * xdim) + x] = atoi(s.c_str());
+            BOOST_FOREACH (std::string s, result)
+            {
+                if (x < xdim)
+                    _data[(y * xdim) + x] = atoi(s.c_str());
                 ++x;
             }
             BOOST_ASSERT(x == xdim);
@@ -146,18 +150,20 @@ class RasterContainer
 // << singletone >> RasterCache
 class RasterCache
 {
-public:
+  public:
     // class method to get the instance
-    static RasterCache& getInstance() {
-        if (NULL == g_instance) {
+    static RasterCache &getInstance()
+    {
+        if (NULL == g_instance)
+        {
             g_instance = new RasterCache();
         }
         return *g_instance;
     }
     // get reference of cache
-    std::vector<RasterSource>& getLoadedSources() { return LoadedSources; }
-    std::unordered_map<std::string, int>& getLoadedSourcePaths() { return LoadedSourcePaths; }
-private:
+    std::vector<RasterSource> &getLoadedSources() { return LoadedSources; }
+    std::unordered_map<std::string, int> &getLoadedSourcePaths() { return LoadedSourcePaths; }
+  private:
     // constructor
     RasterCache() = default;
     // member
