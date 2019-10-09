@@ -126,14 +126,7 @@ class RasterSource
 class RasterContainer
 {
   public:
-    RasterContainer() { ++count; }
-    ~RasterContainer() {
-        --count;
-        if (0 == count) {
-            LoadedSources.clear();
-            LoadedSourcePaths.clear();
-        }
-    }
+    RasterContainer() = default;
 
     int LoadRasterSource(const std::string &path_string,
                          double xmin,
@@ -148,9 +141,30 @@ class RasterContainer
     RasterDatum GetRasterInterpolateFromSource(unsigned int source_id, double lon, double lat);
 
   private:
-    static std::vector<RasterSource> LoadedSources;
-    static std::unordered_map<std::string, int> LoadedSourcePaths;
-    static int count;
+};
+
+// << singletone >> RasterCache
+class RasterCache
+{
+public:
+    // class method to get the instance
+    static RasterCache& getInstance() {
+        if (NULL == g_instance) {
+            g_instance = new RasterCache();
+        }
+        return *g_instance;
+    }
+    // get reference of cache
+    std::vector<RasterSource>& getLoadedSources() { return LoadedSources; }
+    std::unordered_map<std::string, int>& getLoadedSourcePaths() { return LoadedSourcePaths; }
+private:
+    // constructor
+    RasterCache() = default;
+    // member
+    std::vector<RasterSource> LoadedSources;
+    std::unordered_map<std::string, int> LoadedSourcePaths;
+    // the instance
+    static RasterCache *g_instance;
 };
 }
 }
