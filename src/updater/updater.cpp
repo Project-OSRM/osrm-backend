@@ -145,13 +145,22 @@ void checkWeightsConsistency(
 
 static const constexpr std::size_t LUA_SOURCE = 0;
 
+void recordsUpdatedNodes(NodeSetPtr& node_updated, const NodeID n)
+{
+    if (node_updated)
+    {
+       node_updated->insert(n);
+    }
+ }
+
 tbb::concurrent_vector<GeometryID>
 updateSegmentData(const UpdaterConfig &config,
                   const extractor::ProfileProperties &profile_properties,
                   const SegmentLookupTable &segment_speed_lookup,
                   extractor::SegmentDataContainer &segment_data,
                   std::vector<util::Coordinate> &coordinates,
-                  extractor::PackedOSMIDs &osm_node_ids)
+                  extractor::PackedOSMIDs &osm_node_ids,
+                  NodeSetPtr node_updated)
 {
     // vector to count used speeds for logging
     // size offset by one since index 0 is used for speeds not from external file
@@ -255,6 +264,9 @@ updateSegmentData(const UpdaterConfig &config,
                     fwd_durations_range[segment_offset] = new_duration;
                     fwd_datasources_range[segment_offset] = value->source;
                     counters[value->source] += 1;
+
+                    recordsUpdatedNodes(node_updated, nodes_range[segment_offset]);
+                    recordsUpdatedNodes(node_updated, nodes_range[segment_offset + 1]);
                 }
                 else
                 {
@@ -295,6 +307,9 @@ updateSegmentData(const UpdaterConfig &config,
                     rev_durations_range[segment_offset] = new_duration;
                     rev_datasources_range[segment_offset] = value->source;
                     counters[value->source] += 1;
+
+                    recordsUpdatedNodes(node_updated, nodes_range[segment_offset]);
+                    recordsUpdatedNodes(node_updated, nodes_range[segment_offset + 1]);
                 }
                 else
                 {
@@ -428,7 +443,8 @@ updateTurnPenalties(const UpdaterConfig &config,
                     const TurnLookupTable &turn_penalty_lookup,
                     std::vector<TurnPenalty> &turn_weight_penalties,
                     std::vector<TurnPenalty> &turn_duration_penalties,
-                    extractor::PackedOSMIDs osm_node_ids)
+                    extractor::PackedOSMIDs osm_node_ids,
+                    NodeSetPtr node_updated)
 {
     const auto weight_multiplier = profile_properties.GetWeightMultiplier();
 
@@ -466,6 +482,8 @@ updateTurnPenalties(const UpdaterConfig &config,
             turn_duration_penalties[edge_index] = turn_duration_penalty;
             turn_weight_penalties[edge_index] = turn_weight_penalty;
             updated_turns.push_back(edge_index);
+
+            recordsUpdatedNodes(node_updated, internal_turn.via_id);
         }
 
         if (turn_weight_penalty < 0)
@@ -528,18 +546,20 @@ updateConditionalTurns(std::vector<TurnPenalty> &turn_weight_penalties,
 EdgeID
 Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &edge_based_edge_list,
                                         std::vector<EdgeWeight> &node_weights,
-                                        std::uint32_t &connectivity_checksum) const
+                                        std::uint32_t &connectivity_checksum,
+                                        NodeSetPtr node_updated) const
 {
     std::vector<EdgeDuration> node_durations(node_weights.size());
     return LoadAndUpdateEdgeExpandedGraph(
-        edge_based_edge_list, node_weights, node_durations, connectivity_checksum);
+        edge_based_edge_list, node_weights, node_durations, connectivity_checksum, node_updated);
 }
 
 EdgeID
 Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &edge_based_edge_list,
                                         std::vector<EdgeWeight> &node_weights,
                                         std::vector<EdgeDuration> &node_durations,
-                                        std::uint32_t &connectivity_checksum) const
+                                        std::uint32_t &connectivity_checksum,
+                                        NodeSetPtr node_updated) const
 {
     TIMER_START(load_edges);
 
@@ -616,7 +636,8 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
                                              segment_speed_lookup,
                                              segment_data,
                                              coordinates,
-                                             osm_node_ids);
+                                             osm_node_ids,
+                                             node_updated);
         // Now save out the updated compressed geometries
         extractor::files::writeSegmentData(config.GetPath(".osrm.geometry"), segment_data);
         TIMER_STOP(segment);
@@ -631,7 +652,8 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
                                                           turn_penalty_lookup,
                                                           turn_weight_penalties,
                                                           turn_duration_penalties,
-                                                          osm_node_ids);
+                                                          osm_node_ids,
+                                                          node_updated);
         const auto offset = updated_segments.size();
         updated_segments.resize(offset + updated_turn_penalties.size());
         // we need to re-compute all edges that have updated turn penalties.
@@ -645,6 +667,7 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
                        });
     }
 
+    // @Telenav, after the modification of #49, conditional_turns related cell will also need to be adjusted
     if (update_conditional_turns)
     {
         // initialize instance of class that handles time zone resolution

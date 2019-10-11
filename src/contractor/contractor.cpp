@@ -72,8 +72,10 @@ int Contractor::Run()
 
     updater::Updater updater(config.updater_config);
     std::uint32_t connectivity_checksum = 0;
+    // For contractor, no need to collect updated node set
+    updater::NodeSetPtr node_updated = nullptr;
     EdgeID number_of_edge_based_nodes = updater.LoadAndUpdateEdgeExpandedGraph(
-        edge_based_edge_list, node_weights, connectivity_checksum);
+        edge_based_edge_list, node_weights, connectivity_checksum, node_updated);
 
     // Convert node weights for oneway streets to INVALID_EDGE_WEIGHT
     for (auto &weight : node_weights)

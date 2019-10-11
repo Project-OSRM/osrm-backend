@@ -57,7 +57,8 @@ struct UpdaterConfig final : storage::IOConfig
                     ".osrm.enw"},
                    {},
                    {".osrm.datasource_names"}),
-          valid_now(0)
+          valid_now(0),
+          incremental(false)
     {
     }
 
@@ -72,6 +73,7 @@ struct UpdaterConfig final : storage::IOConfig
     std::vector<std::string> segment_speed_lookup_paths;
     std::vector<std::string> turn_penalty_lookup_paths;
     std::string tz_file_path;
+    bool incremental;
 };
 }
 }

@@ -16,6 +16,7 @@ file(GLOB PartitionTestsSources
 
 file(GLOB CustomizerTestsSources
     customizer_tests.cpp
+    cell_update_record.cpp
     customizer/*.cpp)
 
 file(GLOB UpdaterTestsSources

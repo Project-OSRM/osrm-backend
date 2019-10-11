@@ -4,6 +4,7 @@
 #include "partitioner/cell_storage.hpp"
 #include "partitioner/multi_level_partition.hpp"
 #include "util/query_heap.hpp"
+#include "customizer/cell_update_record.hpp"
 
 #include <tbb/enumerable_thread_specific.h>
 #include <tbb/parallel_for.h>
@@ -116,7 +117,8 @@ class CellCustomizer
     void Customize(const GraphT &graph,
                    const partitioner::CellStorage &cells,
                    const std::vector<bool> &allowed_nodes,
-                   CellMetric &metric) const
+                   CellMetric &metric,
+                   const CellUpdateRecord &cell_update_record) const
     {
         Heap heap_exemplar(graph.GetNumberOfNodes());
         HeapPtr heaps(heap_exemplar);
@@ -128,8 +130,11 @@ class CellCustomizer
                                   auto &heap = heaps.local();
                                   for (auto id = range.begin(), end = range.end(); id != end; ++id)
                                   {
-                                      Customize(
+                                      if (cell_update_record.Check(level, id))
+                                      {
+                                          Customize(
                                           graph, heap, cells, allowed_nodes, metric, level, id);
+                                      }
                                   }
                               });
         }

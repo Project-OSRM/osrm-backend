@@ -70,7 +70,11 @@ return_code parseArguments(int argc,
                 &customization_config.updater_config.tz_file_path)
                 ->default_value(""),
             "Required for conditional turn restriction parsing, provide a geojson file containing "
-            "time zone boundaries");
+            "time zone boundaries")(
+            "incremental",
+            boost::program_options::value<bool>(&customization_config.updater_config.incremental)->default_value(false),
+            "Setting incremental to true means reuse matrix table be calculated before and only customize cells with incremental traffic."
+            );
 
     // hidden options, will be allowed on command line, but will not be
     // shown to the user
