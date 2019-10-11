@@ -263,9 +263,10 @@ function handle_bicycle_tags(profile,way,result,data)
 
   -- other tags
   data.junction = way:get_value_by_key("junction")
-  data.maxspeed = Measure.get_max_speed(way:get_value_by_key ("maxspeed")) or 0
-  data.maxspeed_forward = Measure.get_max_speed(way:get_value_by_key("maxspeed:forward")) or 0
-  data.maxspeed_backward = Measure.get_max_speed(way:get_value_by_key("maxspeed:backward")) or 0
+  data.maxspeed = Measure.get_max_speed(way:get_value_by_key("maxspeed"), way:get_value_by_key("speed_unit")) or 0
+  data.maxspeed_forward = Measure.get_max_speed(way:get_value_by_key("maxspeed:forward"), way:get_value_by_key("speed_unit")) or 0
+  data.maxspeed_backward = Measure.get_max_speed(way:get_value_by_key("maxspeed:backward"), way:get_value_by_key("speed_unit")) or 0
+
   data.barrier = way:get_value_by_key("barrier")
   data.oneway = way:get_value_by_key("oneway")
   data.oneway_bicycle = way:get_value_by_key("oneway:bicycle")

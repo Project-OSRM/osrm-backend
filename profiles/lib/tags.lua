@@ -2,6 +2,15 @@
 
 local Tags = {}
 
+-- return speed unit values for a specific tag.
+
+function Tags.get_speed_unit_by_key(way, key)
+  local speed_unit = way:get_value_by_key(key)
+
+  return speed_unit
+  
+end
+
 -- return [forward,backward] values for a specific tag.
 -- e.g. for maxspeed search forward:
 --   maxspeed:forward
