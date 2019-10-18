@@ -509,6 +509,11 @@ function safety_handler(profile,way,result,data)
       safety_penalty = safety_penalty * 0.6
     end
 
+    -- embedded rails may require reduced speeds for safe passing
+    if (way:get_value_by_key('embedded_rails')) then
+      safety_penalty = safety_penalty * 0.25
+    end
+
     local forward_is_unsafe = is_unsafe and not data.has_cycleway_forward
     local backward_is_unsafe = is_unsafe and not data.has_cycleway_backward
     local is_undesireable = data.highway == "service" and profile.service_penalties[data.service]
