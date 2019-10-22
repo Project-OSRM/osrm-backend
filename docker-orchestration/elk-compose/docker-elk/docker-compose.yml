@@ -28,8 +28,9 @@ services:
       context: logstash/
       args:
         ELK_VERSION: $ELK_VERSION
+        DATA_PATH: $DATA_PATH
     volumes:
-      - /Users/xunliu/Desktop/git/elastic-example/data/:/data/
+      - ${DATA_PATH}:/data/
       - type: bind
         source: ./logstash/config/logstash.yml
         target: /usr/share/logstash/config/logstash.yml

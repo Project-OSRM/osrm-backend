@@ -1,10 +1,9 @@
 # ELK Stack
 
-Specify your log location in docker-compose.yml->logstash->volume mapping
+Specify your log location in .env file and change DATA_PATH there
 ```
 // change "/Users/xunliu/Desktop/git/elastic-example/data/" to your data location
-// later will abstract this to parameters
-/Users/xunliu/Desktop/git/elastic-example/data/:/data
+DATA_PATH=/Users/xunliu/Desktop/go/src/github.com/Telenav/logs/
 ```
 
 Start
@@ -20,6 +19,8 @@ docker-compose -f docker-compose.yml down -v
 You could go to following link for Kibana
 ```
 http://localhost:5601
+// username: elastic
+// password: changeme
 ```
 
 If you need one component specific logs, you could use
