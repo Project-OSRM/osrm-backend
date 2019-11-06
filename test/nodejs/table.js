@@ -130,7 +130,7 @@ tables.forEach(function(annotation) {
     });
 
     test('table: ' + annotation + ' throws on invalid arguments', function(assert) {
-        assert.plan(15);
+        assert.plan(17);
         var osrm = new OSRM(data_path);
         var options = {annotations: [annotation.slice(0,-1)]};
         assert.throws(function() { osrm.table(options); },
@@ -157,10 +157,13 @@ tables.forEach(function(annotation) {
             /Sources must be an array of indices \(or undefined\)/);
         options.sources = [0, 4];
         assert.throws(function() { osrm.table(options, function(err, response) {}) },
-            /Source indices must be less than or equal to the number of coordinates/);
+            /Source indices must be less than the number of coordinates/);
         options.sources = [0.3, 1.1];
         assert.throws(function() { osrm.table(options, function(err, response) {}) },
             /Source must be an integer/);
+        options.sources = [0, 1, 2];
+        assert.throws(function() { osrm.table(options, function(err, response) {}) },
+            /Source indices must be less than the number of coordinates/);
 
         options.destinations = true;
         delete options.sources;
@@ -168,10 +171,13 @@ tables.forEach(function(annotation) {
             /Destinations must be an array of indices \(or undefined\)/);
         options.destinations = [0, 4];
         assert.throws(function() { osrm.table(options, function(err, response) {}) },
-            /Destination indices must be less than or equal to the number of coordinates/);
+            /Destination indices must be less than the number of coordinates/);
         options.destinations = [0.3, 1.1];
         assert.throws(function() { osrm.table(options, function(err, response) {}) },
             /Destination must be an integer/);
+        options.destinations = [0, 4];
+        assert.throws(function() { osrm.table(options, function(err, response) {}) },
+            /Destination indices must be less than the number of coordinates/);
 
         // does not throw: the following two have been changed in OSRM v5
         options.sources = [0, 1];

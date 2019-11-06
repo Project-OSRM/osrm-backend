@@ -108,6 +108,8 @@ BOOST_AUTO_TEST_CASE(invalid_table_urls)
     BOOST_CHECK_EQUAL(
         testInvalidOptions<TableParameters>("1,2;3,4?annotations=durations&fallback_speed=-1"),
         28UL);
+    BOOST_CHECK_EQUAL(testInvalidOptions<TableParameters>("1,2;3,4?sources=2"), 7UL);
+    BOOST_CHECK_EQUAL(testInvalidOptions<TableParameters>("1,2;3,4?destinations=2"), 7UL);
 }
 
 BOOST_AUTO_TEST_CASE(valid_route_hint)
