@@ -80,12 +80,8 @@ class FileReader
     {
         if (0 < count)
         {
-            const auto &ios =
-                input_stream.getline(reinterpret_cast<char *>(dest), count * sizeof(T));
-            for (std::size_t n = ios.gcount(); n < count; ++n)
-            {
-                reinterpret_cast<char *>(dest)[n] = '\0';
-            }
+            memset(dest, 0, count * sizeof(T));
+            input_stream.getline(reinterpret_cast<char *>(dest), count * sizeof(T));
         }
     }
 

@@ -54,22 +54,21 @@ class RasterGrid
 
         // Construct FileReader
         storage::io::FileReader file_reader(filepath, storage::io::FileReader::HasNoFingerprint);
-        std::string buf;
-        buf.resize(xdim * 11); // INT32_MAX = 2147483647 = 10 chars + 1 white space = 11
-        BOOST_ASSERT(xdim * 11 <= buf.size());
+        std::string buffer;
+        buffer.resize(xdim * 11); // INT32_MAX = 2147483647 = 10 chars + 1 white space = 11
+        BOOST_ASSERT(xdim * 11 <= buffer.size());
 
         for (unsigned int y = 0; y < ydim; y++)
         {
             // read one line from file.
-            file_reader.ReadLine(&buf[0], xdim * 11);
-            boost::algorithm::trim(buf);
+            file_reader.ReadLine(&buffer[0], xdim * 11);
+            boost::algorithm::trim(buffer);
 
             std::vector<std::string> result;
             boost::split(
-                result, buf, boost::is_any_of(" \r\n\0"), boost::algorithm::token_compress_on);
-            // boost::split(result, buf, boost::is_any_of(" \r\n\0"));
+                result, buffer, boost::is_any_of(" \r\n\0"), boost::algorithm::token_compress_on);
             unsigned int x = 0;
-            BOOST_FOREACH (std::string s, result)
+            for (const auto &s : result)
             {
                 if (x < xdim)
                     _data[(y * xdim) + x] = atoi(s.c_str());
