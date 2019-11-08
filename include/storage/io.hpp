@@ -68,7 +68,7 @@ class FileReader
                    ((fingerprint == FingerprintFlag::VerifyFingerprint) ? sizeof(util::FingerPrint)
                                                                         : 0);
         }
-        catch (boost::filesystem::filesystem_error &ex)
+        catch (const boost::filesystem::filesystem_error &ex)
         {
             std::cout << ex.what() << std::endl;
             throw;
