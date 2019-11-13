@@ -145,6 +145,10 @@ class RasterContainer
 };
 
 // << singletone >> RasterCache
+// The instance of RasterContainer is created for every threads osrm-extract uses.
+// To avoid multiple load of same file on each RasterContainer,
+// The LoadedSources and LoadedSourcePaths are separated to RasterCache class
+// and handled as the singletone pattern to avoid duplicate creation.
 class RasterCache
 {
   public:
