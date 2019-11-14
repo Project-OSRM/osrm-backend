@@ -1,0 +1,81 @@
+language: generic
+
+matrix:
+  include:
+    # clang-tidy/format specific job
+    - os: linux
+      sudo: false
+      env: CLANG_FORMAT CLANG_TIDY
+      addons:
+        apt:
+          sources: [ 'ubuntu-toolchain-r-test' ]
+          packages: [ 'libstdc++6', 'libstdc++-5-dev' ]
+      script:
+        - make tidy
+        - make format
+    - os: linux
+      sudo: false
+      env: CXX=g++-4.9
+      addons:
+        apt:
+          sources: [ 'ubuntu-toolchain-r-test' ]
+          packages: [ 'g++-4.9' ]
+    - os: linux
+      sudo: false
+      env: CXX=g++-5
+      addons:
+        apt:
+          sources: [ 'ubuntu-toolchain-r-test' ]
+          packages: [ 'g++-5' ]
+    - os: linux
+      sudo: false
+      env: CXX=clang++
+      addons:
+        apt:
+          sources: [ 'ubuntu-toolchain-r-test' ]
+          packages: [ 'libstdc++6', 'libstdc++-5-dev' ]
+    - os: linux
+      sudo: required
+      env: CXXFLAGS="-fsanitize=address,undefined,integer -fno-sanitize-recover=all"
+      addons:
+        apt:
+          sources: [ 'ubuntu-toolchain-r-test' ]
+          packages: [ 'libstdc++6', 'libstdc++-5-dev' ]
+    # coverage build
+    - os: linux
+      sudo: false
+      env: CXXFLAGS="--coverage" LDFLAGS="--coverage"
+      addons:
+        apt:
+          sources: [ 'ubuntu-toolchain-r-test' ]
+          packages: [ 'libstdc++6', 'libstdc++-5-dev' ]
+      script:
+        - make debug
+        - make test
+        # MASON_LLVM_RELEASE comes from the setup.sh script
+        - mason install llvm-cov ${MASON_LLVM_RELEASE}
+        - mason link llvm-cov ${MASON_LLVM_RELEASE}
+        - curl -S -f https://codecov.io/bash -o codecov
+        - chmod +x codecov
+        - ./codecov -x "llvm-cov gcov" -Z
+
+env:
+  global:
+   - CMAKE_VERSION="3.8.2"
+
+install:
+  # set up the environment by installing mason and clang++
+  - ./scripts/setup.sh --config local.env
+  # put mason and clang++ on PATH
+  - source local.env
+  - mason install cmake ${CMAKE_VERSION}
+  - mason link cmake ${CMAKE_VERSION}
+  - which cmake
+
+script:
+  - make release
+  - make test
+  - make clean
+  - make debug
+  - make test
+  - make clean

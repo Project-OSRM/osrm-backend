@@ -14,12 +14,12 @@ box<T> envelope(G const& geometry)
     using limits = std::numeric_limits<T>;
 
     T min_t = limits::has_infinity ? -limits::infinity() : limits::min();
-    T max_t = limits::has_infinity ?  limits::infinity() : limits::max();
+    T max_t = limits::has_infinity ? limits::infinity() : limits::max();
 
     point<T> min(max_t, max_t);
     point<T> max(min_t, min_t);
 
-    for_each_point(geometry, [&] (point<T> const& point) {
+    for_each_point(geometry, [&](point<T> const& point) {
         if (min.x > point.x) min.x = point.x;
         if (min.y > point.y) min.y = point.y;
         if (max.x < point.x) max.x = point.x;

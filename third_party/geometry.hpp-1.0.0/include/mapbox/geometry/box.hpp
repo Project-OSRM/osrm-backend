@@ -8,11 +8,13 @@ namespace geometry {
 template <typename T>
 struct box
 {
-    using point_type = point<T>;
+    using coordinate_type = T;
+    using point_type = point<coordinate_type>;
 
     constexpr box(point_type const& min_, point_type const& max_)
         : min(min_), max(max_)
-    {}
+    {
+    }
 
     point_type min;
     point_type max;

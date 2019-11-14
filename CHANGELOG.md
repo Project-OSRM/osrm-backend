@@ -16,6 +16,7 @@
       - CHANGED: default car height was reduced to 2 meters. [#5389](https://github.com/Project-OSRM/osrm-backend/pull/5389)
     - Misc:
       - CHANGED: Reduce memory usage for raster source handling. [#5572](https://github.com/Project-OSRM/osrm-backend/pull/5572)
+      - CHANGED: Bump geometry.hpp dependency to v1.0.0
 
 # 5.21.0
   - Changes from 5.20.0

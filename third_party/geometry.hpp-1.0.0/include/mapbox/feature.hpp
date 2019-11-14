@@ -1,6 +1,6 @@
 #pragma once
 
-#include <mapbox/geometry/geometry.hpp>
+#include <mapbox/geometry.hpp>
 
 #include <mapbox/variant.hpp>
 
@@ -8,17 +8,14 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
-#include <mapbox/optional.hpp>
 
 namespace mapbox {
-namespace geometry {
+namespace feature {
 
 struct value;
 
 struct null_value_t
 {
-    constexpr null_value_t() {}
-    constexpr null_value_t(std::nullptr_t) {}
 };
 
 constexpr bool operator==(const null_value_t&, const null_value_t&) { return true; }
@@ -44,7 +41,7 @@ struct value : value_base
 using property_map = std::unordered_map<std::string, value>;
 
 // The same considerations and requirement for numeric types apply as for `value_base`.
-using identifier = mapbox::util::variant<uint64_t, int64_t, double, std::string>;
+using identifier = mapbox::util::variant<null_value_t, uint64_t, int64_t, double, std::string>;
 
 template <class T>
 struct feature
@@ -53,16 +50,34 @@ struct feature
     using geometry_type = mapbox::geometry::geometry<T>; // Fully qualified to avoid GCC -fpermissive error.
 
     geometry_type geometry;
-    property_map properties {};
-    mapbox::util::optional<identifier> id {};
+    property_map properties;
+    identifier id;
 
-    // GCC 4.9 does not support C++14 aggregates with non-static data member
-    // initializers.
-    feature(geometry_type geometry_,
-            property_map properties_ = property_map {},
-            mapbox::util::optional<identifier> id_ = mapbox::util::optional<identifier> {})
-        : geometry(std::move(geometry_)),
-          properties(std::move(properties_)),
+    feature()
+        : geometry(),
+          properties(),
+          id() {}
+    feature(geometry_type const& geom_)
+        : geometry(geom_),
+          properties(),
+          id() {}
+    feature(geometry_type&& geom_)
+        : geometry(std::move(geom_)),
+          properties(),
+          id() {}
+    feature(geometry_type const& geom_, property_map const& prop_)
+        : geometry(geom_), properties(prop_), id() {}
+    feature(geometry_type&& geom_, property_map&& prop_)
+        : geometry(std::move(geom_)),
+          properties(std::move(prop_)),
+          id() {}
+    feature(geometry_type const& geom_, property_map const& prop_, identifier const& id_)
+        : geometry(geom_),
+          properties(prop_),
+          id(id_) {}
+    feature(geometry_type&& geom_, property_map&& prop_, identifier&& id_)
+        : geometry(std::move(geom_)),
+          properties(std::move(prop_)),
           id(std::move(id_)) {}
 };
 
@@ -84,8 +99,15 @@ struct feature_collection : Cont<feature<T>>
     using coordinate_type = T;
     using feature_type = feature<T>;
     using container_type = Cont<feature_type>;
-    using container_type::container_type;
+    using size_type = typename container_type::size_type;
+
+    template <class... Args>
+    feature_collection(Args&&... args) : container_type(std::forward<Args>(args)...)
+    {
+    }
+    feature_collection(std::initializer_list<feature_type> args)
+        : container_type(std::move(args)) {}
 };
 
-} // namespace geometry
+} // namespace feature
 } // namespace mapbox
