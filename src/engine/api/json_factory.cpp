@@ -242,7 +242,7 @@ util::json::Object makeWaypoint(const util::Coordinate &location,
                                 std::string name,
                                 const Hint &hint)
 {
-    auto waypoint = makeWaypoint(location, distance, name);
+    auto waypoint = makeWaypoint(location, distance, std::move(name));
     waypoint.values["hint"] = hint.ToBase64();
     return waypoint;
 }

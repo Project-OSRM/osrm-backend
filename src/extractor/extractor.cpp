@@ -509,7 +509,7 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
 
     // OSM elements Lua parser
     tbb::filter_t<SharedBuffer, ParsedBuffer> buffer_transformer(
-        tbb::filter::parallel, [&](const SharedBuffer buffer) {
+        tbb::filter::parallel, [&](const SharedBuffer& buffer) {
 
             ParsedBuffer parsed_buffer;
             parsed_buffer.buffer = buffer;
@@ -559,7 +559,7 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
         });
 
     tbb::filter_t<SharedBuffer, std::shared_ptr<ExtractionRelationContainer>> buffer_relation_cache(
-        tbb::filter::parallel, [&](const SharedBuffer buffer) {
+        tbb::filter::parallel, [&](const SharedBuffer& buffer) {
             if (!buffer)
                 return std::shared_ptr<ExtractionRelationContainer>{};
 
@@ -596,7 +596,7 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
     unsigned number_of_relations = 0;
     tbb::filter_t<std::shared_ptr<ExtractionRelationContainer>, void> buffer_storage_relation(
         tbb::filter::serial_in_order,
-        [&](const std::shared_ptr<ExtractionRelationContainer> parsed_relations) {
+        [&](const std::shared_ptr<ExtractionRelationContainer> &parsed_relations) {
 
             number_of_relations += parsed_relations->GetRelationsNum();
             relations.Merge(std::move(*parsed_relations));

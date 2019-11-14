@@ -243,7 +243,7 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates)
                     const auto &entries = intersection_object.at("entry").get<json::Array>().values;
                     BOOST_CHECK(bearings.size() == entries.size());
 
-                    for (const auto bearing : bearings)
+                    for (const auto& bearing : bearings)
                         BOOST_CHECK(0. <= bearing.get<json::Number>().value &&
                                     bearing.get<json::Number>().value <= 360.);
 

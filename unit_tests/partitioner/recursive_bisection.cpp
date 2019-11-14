@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(dividing_four_grid_cells)
 
     RecursiveBisection bisection(graph, 120, 1.1, 0.25, 10, 1);
 
-    const auto result = bisection.BisectionIDs();
+    const auto& result = bisection.BisectionIDs();
     // all same IDs withing a group
     for (int i = 0; i < 4; ++i)
         for (int j = 0; j < rows * cols; ++j)

@@ -507,7 +507,7 @@ bool IsRestrictionValid(const Timezoner &tz_handler, const extractor::Conditiona
 std::vector<std::uint64_t>
 updateConditionalTurns(std::vector<TurnPenalty> &turn_weight_penalties,
                        const std::vector<extractor::ConditionalTurnPenalty> &conditional_turns,
-                       Timezoner time_zone_handler)
+                       const Timezoner& time_zone_handler)
 {
     std::vector<std::uint64_t> updated_turns;
     if (conditional_turns.size() == 0)
