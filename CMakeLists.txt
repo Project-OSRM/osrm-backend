@@ -778,6 +778,7 @@ install(TARGETS osrm_customize DESTINATION lib)
 install(TARGETS osrm_update DESTINATION lib)
 install(TARGETS osrm_contract DESTINATION lib)
 install(TARGETS osrm_store DESTINATION lib)
+install(TARGETS osrm_guidance DESTINATION lib)
 
 
 # Install profiles and support library to /usr/local/share/osrm/profiles by default
