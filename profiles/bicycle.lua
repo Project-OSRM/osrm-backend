@@ -56,7 +56,13 @@ function setup()
       'private',
       'agricultural',
       'forestry',
-      'delivery'
+      'delivery',
+      -- When a way is tagged with `use_sidepath` a parallel way suitable for
+      -- cyclists is mapped and must be used instead (by law). This tag is
+      -- used on ways that normally may be used by cyclists, but not when
+      -- a signposted parallel cycleway is available. For purposes of routing
+      -- cyclists, this value should be treated as 'no access for bicycles'.
+      'use_sidepath'
     },
 
     restricted_access_tag_list = Set { },
