@@ -16,9 +16,7 @@ namespace
 static const char COL_RESET[]{"\x1b[0m"};
 static const char RED[]{"\x1b[31m"};
 static const char YELLOW[]{"\x1b[33m"};
-#ifndef NDEBUG
 static const char MAGENTA[]{"\x1b[35m"};
-#endif
 // static const char GREEN[] { "\x1b[32m"};
 // static const char BLUE[] { "\x1b[34m"};
 // static const char CYAN[] { "\x1b[36m"};
@@ -80,9 +78,7 @@ Log::Log(LogLevel level_, std::ostream &ostream) : level(level_), stream(ostream
             stream << (is_terminal ? RED : "") << "[error] ";
             break;
         case logDEBUG:
-#ifndef NDEBUG
             stream << (is_terminal ? MAGENTA : "") << "[debug] ";
-#endif
             break;
         default: // logINFO:
             stream << "[info] ";
@@ -126,9 +122,6 @@ Log::~Log()
                 std::cerr << std::endl;
                 break;
             case logDEBUG:
-#ifdef NDEBUG
-                break;
-#endif
             case logINFO:
             default:
                 std::cout << buffer.str();
