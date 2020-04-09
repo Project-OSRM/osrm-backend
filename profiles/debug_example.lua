@@ -38,7 +38,7 @@ local way = {
 local result = {}
 
 -- call the way function
-Debug.way_function(way,result)
+Debug.process_way(way,result)
 
 -- print input and output
 pprint(way)
