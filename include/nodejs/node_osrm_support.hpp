@@ -116,8 +116,8 @@ inline engine_config_ptr argumentsToEngineConfig(const Nan::FunctionCallbackInfo
 
     if (args[0]->IsString())
     {
-        engine_config->storage_config = osrm::StorageConfig(
-            *Nan::Utf8String(Nan::To<v8::String>(args[0]).ToLocalChecked()));
+        engine_config->storage_config =
+            osrm::StorageConfig(*Nan::Utf8String(Nan::To<v8::String>(args[0]).ToLocalChecked()));
         engine_config->use_shared_memory = false;
         return engine_config;
     }
@@ -292,8 +292,7 @@ inline engine_config_ptr argumentsToEngineConfig(const Nan::FunctionCallbackInfo
     if (max_locations_trip->IsNumber())
         engine_config->max_locations_trip = Nan::To<int>(max_locations_trip).FromJust();
     if (max_locations_viaroute->IsNumber())
-        engine_config->max_locations_viaroute =
-            Nan::To<int>(max_locations_viaroute).FromJust();
+        engine_config->max_locations_viaroute = Nan::To<int>(max_locations_viaroute).FromJust();
     if (max_locations_distance_table->IsNumber())
         engine_config->max_locations_distance_table =
             Nan::To<int>(max_locations_distance_table).FromJust();
@@ -537,7 +536,8 @@ inline bool argumentsToParameter(const Nan::FunctionCallbackInfo<v8::Value> &arg
                         return false;
                     }
 
-                    params->bearings.push_back(osrm::Bearing{static_cast<short>(bearing), static_cast<short>(range)});
+                    params->bearings.push_back(
+                        osrm::Bearing{static_cast<short>(bearing), static_cast<short>(range)});
                 }
                 else
                 {
@@ -587,8 +587,7 @@ inline bool argumentsToParameter(const Nan::FunctionCallbackInfo<v8::Value> &arg
                     return false;
                 }
 
-                params->hints.push_back(
-                    osrm::engine::Hint::FromBase64(*Nan::Utf8String(hint)));
+                params->hints.push_back(osrm::engine::Hint::FromBase64(*Nan::Utf8String(hint)));
             }
             else if (hint->IsNull())
             {
@@ -1582,7 +1581,8 @@ argumentsToMatchParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
                 Nan::ThrowError("Waypoints must correspond with the index of an input coordinate");
                 return match_parameters_ptr();
             }
-            params->waypoints.emplace_back(static_cast<unsigned>(Nan::To<unsigned>(waypoint_value).FromJust()));
+            params->waypoints.emplace_back(
+                static_cast<unsigned>(Nan::To<unsigned>(waypoint_value).FromJust()));
         }
     }
 

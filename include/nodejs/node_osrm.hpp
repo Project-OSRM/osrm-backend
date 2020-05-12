@@ -37,7 +37,7 @@ struct Engine final : public Nan::ObjectWrap
     std::shared_ptr<osrm::OSRM> this_;
 };
 
-} // ns node_osrm
+} // namespace node_osrm
 
 NODE_MODULE(osrm, node_osrm::Engine::Init)
 
