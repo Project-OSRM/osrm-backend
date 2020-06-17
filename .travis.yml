@@ -152,14 +152,6 @@ matrix:
         CFLAGS='-m32 -msse2 -mfpmath=sse' CXXFLAGS='-m32 -msse2 -mfpmath=sse'
 
     - os: linux
-      compiler: "gcc-7-stxxl"
-      addons: &gcc7
-        apt:
-          sources: ['ubuntu-toolchain-r-test']
-          packages: ['g++-7', 'libbz2-dev', 'libstxxl-dev', 'libxml2-dev', 'libzip-dev', 'liblua5.2-dev', 'libtbb-dev', 'libboost-all-dev']
-      env: CCOMPILER='gcc-7' CXXCOMPILER='g++-7' BUILD_TYPE='Release' ENABLE_STXXL=On
-
-    - os: linux
       compiler: "gcc-5-release"
       addons: &gcc49
         apt:
@@ -483,7 +475,6 @@ install:
              -DENABLE_COVERAGE=${ENABLE_COVERAGE:-OFF} \
              -DENABLE_NODE_BINDINGS=${ENABLE_NODE_BINDINGS:-OFF} \
              -DENABLE_SANITIZER=${ENABLE_SANITIZER:-OFF} \
-             -DENABLE_STXXL=${ENABLE_STXXL:-OFF} \
              -DBUILD_TOOLS=ON \
              -DENABLE_CCACHE=ON \
              -DCMAKE_INSTALL_PREFIX=${OSRM_INSTALL_DIR} \
