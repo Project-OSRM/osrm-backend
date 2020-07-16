@@ -530,8 +530,8 @@ else()
 
   find_package(TBB REQUIRED)
   add_dependency_includes(${TBB_INCLUDE_DIR})
-  if(WIN32 AND CMAKE_BUILD_TYPE MATCHES Debug)
-    set(TBB_LIBRARIES ${TBB_DEBUG_LIBRARIES})
+  if(WIN32)
+    set(TBB_LIBRARIES optimized ${TBB_LIBRARY} optimized ${TBB_MALLOC_LIBRARY} debug ${TBB_LIBRARY_DEBUG} debug ${TBB_MALLOC_LIBRARY_DEBUG})
   endif()
 
   find_package(EXPAT REQUIRED)
