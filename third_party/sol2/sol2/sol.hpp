@@ -3399,7 +3399,9 @@ namespace sol {
 		runtime = LUA_ERRRUN,
 		memory = LUA_ERRMEM,
 		handler = LUA_ERRERR,
+#if SOL_LUA_VERSION < 504
 		gc = LUA_ERRGCMM,
+#endif
 		syntax = LUA_ERRSYNTAX,
 		file = LUA_ERRFILE,
 	};
@@ -3409,7 +3411,9 @@ namespace sol {
 		yielded = LUA_YIELD,
 		runtime = LUA_ERRRUN,
 		memory = LUA_ERRMEM,
+#if SOL_LUA_VERSION < 504
 		gc = LUA_ERRGCMM,
+#endif
 		handler = LUA_ERRERR,
 		dead = -1,
 	};
@@ -3418,7 +3422,9 @@ namespace sol {
 		ok = LUA_OK,
 		syntax = LUA_ERRSYNTAX,
 		memory = LUA_ERRMEM,
+#if SOL_LUA_VERSION < 504
 		gc = LUA_ERRGCMM,
+#endif
 		file = LUA_ERRFILE,
 	};
 
@@ -3462,8 +3468,10 @@ namespace sol {
 			return names[3];
 		case call_status::handler:
 			return names[4];
+#if SOL_LUA_VERSION < 504
 		case call_status::gc:
 			return names[5];
+#endif
 		case call_status::syntax:
 			return names[6];
 		case call_status::file:
@@ -3485,8 +3493,10 @@ namespace sol {
 			return names[0];
 		case load_status::memory:
 			return names[1];
+#if SOL_LUA_VERSION < 504
 		case load_status::gc:
 			return names[2];
+#endif
 		case load_status::syntax:
 			return names[3];
 		case load_status::file:
@@ -14374,9 +14384,12 @@ namespace sol {
 		void luacall(std::ptrdiff_t argcount, std::ptrdiff_t) {
 #if SOL_LUA_VERSION < 502
 			stats = static_cast<call_status>(lua_resume(lua_state(), static_cast<int>(argcount)));
-#else
+#elif SOL_LUA_VERSION < 504
 			stats = static_cast<call_status>(lua_resume(lua_state(), nullptr, static_cast<int>(argcount)));
-#endif // Lua 5.1 compat
+#else
+			int nstack = 0;
+			stats = static_cast<call_status>(lua_resume(lua_state(), nullptr, static_cast<int>(argcount), &nstack));
+#endif
 		}
 
 		template<std::size_t... I, typename... Ret>
