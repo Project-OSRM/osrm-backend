@@ -89,7 +89,7 @@ They all return a table of functions when you use `require` to load them. You ca
 ### setup()
 The `setup` function is called once when the profile is loaded and must return a table of configurations. It's also where you can do other global setup, like loading data sources that are used during processing.
 
-Note that processing of data is parallelized and several unconnected LUA interpreters will be running at the same time. The `setup` function will be called once for each. Each LUA iinterpreter will have its own set of globals.
+Note that processing of data is parallelized and several unconnected LUA interpreters will be running at the same time. The `setup` function will be called once for each. Each LUA interpreter will have its own set of globals.
 
 The following global properties can be set under `properties` in the hash you return in the `setup` function:
 
