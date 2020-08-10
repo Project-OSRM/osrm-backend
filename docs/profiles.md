@@ -178,7 +178,7 @@ exits                                   | String   | The ramp's exit numbers or 
 pronunciation                           | String   | Name pronunciation
 road_classification.motorway_class      | Boolean  | Guidance: way is a motorway
 road_classification.link_class          | Boolean  | Guidance: way is a slip/link road
-road_classification.road_priority_class | Enum     | Guidance: order in priority list. Defined in `include/extractor/guidance/road_classification.hpp`
+road_classification.road_priority_class | Enum     | Guidance: order in priority list. Defined in `include/extractor/road_classification.hpp`
 road_classification.may_be_ignored      | Boolean  | Guidance: way is non-highway
 road_classification.num_lanes           | Unsigned | Guidance: total number of lanes in way
 
@@ -223,7 +223,7 @@ source_number_of_lanes             | Read          | Integer                   |
 source_highway_turn_classification | Read          | Integer                   | Classification based on highway tag defined by user during setup. (default when not set: 0, allowed classification values are: 0-15))
 source_access_turn_classification  | Read          | Integer                   | Classification based on access tag defined by user during setup. (default when not set: 0, allowed classification values are: 0-15))
 source_speed                       | Read          | Integer                   | Speed on this source road in km/h
-source_priority_class              | Read          | Enum                      | The type of road priority class of the source. Defined in `include/extractor/guidance/road_classification.hpp`
+source_priority_class              | Read          | Enum                      | The type of road priority class of the source. Defined in `include/extractor/road_classification.hpp`
 target_restricted                  | Read          | Boolean                   | Is the target a restricted access road? (See definition in `process_way`)
 target_mode                        | Read          | Enum                      | Travel mode after the turn. Defined in `include/extractor/travel_mode.hpp`
 target_is_motorway                 | Read          | Boolean                   | Is the target road a motorway?
@@ -232,7 +232,7 @@ target_number_of_lanes             | Read          | Integer                   |
 target_highway_turn_classification | Read          | Integer                   | Classification based on highway tag defined by user during setup. (default when not set: 0, allowed classification values are: 0-15))
 target_access_turn_classification  | Read          | Integer                   | Classification based on access tag defined by user during setup. (default when not set: 0, allowed classification values are: 0-15))
 target_speed                       | Read          | Integer                   | Speed on this target road in km/h
-target_priority_class              | Read          | Enum                      | The type of road priority class of the target. Defined in `include/extractor/guidance/road_classification.hpp`
+target_priority_class              | Read          | Enum                      | The type of road priority class of the target. Defined in `include/extractor/road_classification.hpp`
 roads_on_the_right                 | Read          | Vector<ExtractionTurnLeg> | Vector with information about other roads on the right of the turn that are also connected at the intersection
 roads_on_the_left                  | Read          | Vector<ExtractionTurnLeg> | Vector with information about other roads on the left of the turn that are also connected at the intersection. If turn is a u turn, this is empty.
 weight                             | Read/write    | Float                     | Penalty to be applied for this turn (routing weight)
@@ -252,7 +252,7 @@ number_of_lanes             | Read          | Integer   | How many lanes does th
 highway_turn_classification | Read          | Integer   | Classification based on highway tag defined by user during setup. (default when not set: 0, allowed classification values are: 0-15)
 access_turn_classification  | Read          | Integer   | Classification based on access tag defined by user during setup. (default when not set: 0, allowed classification values are: 0-15)
 speed                       | Read          | Integer   | Speed on this road in km/h
-priority_class              | Read          | Enum      | The type of road priority class of the leg. Defined in `include/extractor/guidance/road_classification.hpp`
+priority_class              | Read          | Enum      | The type of road priority class of the leg. Defined in `include/extractor/road_classification.hpp`
 is_incoming                 | Read          | Boolean   | Is the road an incoming road of the intersection
 is_outgoing                 | Read          | Boolean   | Is the road an outgoing road of the intersection
 
