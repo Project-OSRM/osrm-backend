@@ -72,12 +72,6 @@ Thumbs.db
 ###########################
 .idea/
 
-# stxxl related files #
-#######################
-.stxxl
-stxxl.log
-stxxl.errlog
-
 # Compiled Binary Files #
 ####################################
 /osrm-extract
