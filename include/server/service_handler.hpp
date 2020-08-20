@@ -34,7 +34,7 @@ class ServiceHandlerInterface
     virtual ~ServiceHandlerInterface() {}
     virtual engine::Status RunQuery(api::ParsedURL parsed_url,
                                     osrm::engine::api::ResultT &result) = 0;
-    virtual const engine::EngineInfo & GetEngineInfo() const = 0;
+    virtual const engine::EngineInfo &GetEngineInfo() const = 0;
     virtual const HandlersCounter GetUsage() const = 0;
     virtual std::uint32_t GetLoad() const = 0;
 };

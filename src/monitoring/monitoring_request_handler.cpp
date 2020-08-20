@@ -28,8 +28,8 @@ void MonitoringRequestHandler::HandleRequest(const http::request &, http::reply 
     auto counters = service_handler->GetUsage();
     for (auto counter : counters)
     {
-        out_stream << "osrm_http_requests_count{plugin=\"" << counter.first << "\"} " << counter.second
-                   << "\n";
+        out_stream << "osrm_http_requests_count{plugin=\"" << counter.first << "\"} "
+                   << counter.second << "\n";
     }
 
     out_stream << "osrm_workers_busy " << service_handler->GetLoad() << "\n";
