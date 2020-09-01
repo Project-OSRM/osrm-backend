@@ -116,8 +116,8 @@ inline engine_config_ptr argumentsToEngineConfig(const Nan::FunctionCallbackInfo
 
     if (args[0]->IsString())
     {
-        engine_config->storage_config = osrm::StorageConfig(
-            *v8::String::Utf8Value(Nan::To<v8::String>(args[0]).ToLocalChecked()));
+        engine_config->storage_config =
+            osrm::StorageConfig(*Nan::Utf8String(Nan::To<v8::String>(args[0]).ToLocalChecked()));
         engine_config->use_shared_memory = false;
         return engine_config;
     }
@@ -155,7 +155,7 @@ inline engine_config_ptr argumentsToEngineConfig(const Nan::FunctionCallbackInfo
         }
 
         engine_config->memory_file =
-            *v8::String::Utf8Value(Nan::To<v8::String>(memory_file).ToLocalChecked());
+            *Nan::Utf8String(Nan::To<v8::String>(memory_file).ToLocalChecked());
     }
 
     auto dataset_name = params->Get(Nan::New("dataset_name").ToLocalChecked());
@@ -166,7 +166,7 @@ inline engine_config_ptr argumentsToEngineConfig(const Nan::FunctionCallbackInfo
         if (dataset_name->IsString())
         {
             engine_config->dataset_name =
-                *v8::String::Utf8Value(Nan::To<v8::String>(dataset_name).ToLocalChecked());
+                *Nan::Utf8String(Nan::To<v8::String>(dataset_name).ToLocalChecked());
         }
         else
         {
@@ -178,7 +178,7 @@ inline engine_config_ptr argumentsToEngineConfig(const Nan::FunctionCallbackInfo
     if (!path->IsUndefined())
     {
         engine_config->storage_config =
-            osrm::StorageConfig(*v8::String::Utf8Value(Nan::To<v8::String>(path).ToLocalChecked()));
+            osrm::StorageConfig(*Nan::Utf8String(Nan::To<v8::String>(path).ToLocalChecked()));
 
         engine_config->use_shared_memory = false;
     }
@@ -221,15 +221,15 @@ inline engine_config_ptr argumentsToEngineConfig(const Nan::FunctionCallbackInfo
     if (algorithm->IsString())
     {
         auto algorithm_str = Nan::To<v8::String>(algorithm).ToLocalChecked();
-        if (*v8::String::Utf8Value(algorithm_str) == std::string("CH"))
+        if (*Nan::Utf8String(algorithm_str) == std::string("CH"))
         {
             engine_config->algorithm = osrm::EngineConfig::Algorithm::CH;
         }
-        else if (*v8::String::Utf8Value(algorithm_str) == std::string("CoreCH"))
+        else if (*Nan::Utf8String(algorithm_str) == std::string("CoreCH"))
         {
             engine_config->algorithm = osrm::EngineConfig::Algorithm::CH;
         }
-        else if (*v8::String::Utf8Value(algorithm_str) == std::string("MLD"))
+        else if (*Nan::Utf8String(algorithm_str) == std::string("MLD"))
         {
             engine_config->algorithm = osrm::EngineConfig::Algorithm::MLD;
         }
@@ -290,23 +290,22 @@ inline engine_config_ptr argumentsToEngineConfig(const Nan::FunctionCallbackInfo
     }
 
     if (max_locations_trip->IsNumber())
-        engine_config->max_locations_trip = static_cast<int>(max_locations_trip->NumberValue());
+        engine_config->max_locations_trip = Nan::To<int>(max_locations_trip).FromJust();
     if (max_locations_viaroute->IsNumber())
-        engine_config->max_locations_viaroute =
-            static_cast<int>(max_locations_viaroute->NumberValue());
+        engine_config->max_locations_viaroute = Nan::To<int>(max_locations_viaroute).FromJust();
     if (max_locations_distance_table->IsNumber())
         engine_config->max_locations_distance_table =
-            static_cast<int>(max_locations_distance_table->NumberValue());
+            Nan::To<int>(max_locations_distance_table).FromJust();
     if (max_locations_map_matching->IsNumber())
         engine_config->max_locations_map_matching =
-            static_cast<int>(max_locations_map_matching->NumberValue());
+            Nan::To<int>(max_locations_map_matching).FromJust();
     if (max_results_nearest->IsNumber())
-        engine_config->max_results_nearest = static_cast<int>(max_results_nearest->NumberValue());
+        engine_config->max_results_nearest = Nan::To<int>(max_results_nearest).FromJust();
     if (max_alternatives->IsNumber())
-        engine_config->max_alternatives = static_cast<int>(max_alternatives->NumberValue());
+        engine_config->max_alternatives = Nan::To<int>(max_alternatives).FromJust();
     if (max_radius_map_matching->IsNumber())
         engine_config->max_radius_map_matching =
-            static_cast<double>(max_radius_map_matching->NumberValue());
+            Nan::To<double>(max_radius_map_matching).FromJust();
 
     return engine_config;
 }
@@ -343,8 +342,8 @@ parseCoordinateArray(const v8::Local<v8::Array> &coordinates_array)
             return resulting_coordinates;
         }
 
-        double lon = coordinate_pair->Get(0)->NumberValue();
-        double lat = coordinate_pair->Get(1)->NumberValue();
+        double lon = Nan::To<double>(coordinate_pair->Get(0)).FromJust();
+        double lat = Nan::To<double>(coordinate_pair->Get(1)).FromJust();
 
         if (std::isnan(lon) || std::isnan(lat) || std::isinf(lon) || std::isinf(lat))
         {
@@ -430,7 +429,7 @@ inline bool argumentsToParameter(const Nan::FunctionCallbackInfo<v8::Value> &arg
         return false;
     }
 
-    if (obj->Has(Nan::New("approaches").ToLocalChecked()))
+    if (Nan::Has(obj, Nan::New("approaches").ToLocalChecked()).FromJust())
     {
         v8::Local<v8::Value> approaches = obj->Get(Nan::New("approaches").ToLocalChecked());
         if (approaches.IsEmpty())
@@ -487,7 +486,7 @@ inline bool argumentsToParameter(const Nan::FunctionCallbackInfo<v8::Value> &arg
         }
     }
 
-    if (obj->Has(Nan::New("bearings").ToLocalChecked()))
+    if (Nan::Has(obj, Nan::New("bearings").ToLocalChecked()).FromJust())
     {
         v8::Local<v8::Value> bearings = obj->Get(Nan::New("bearings").ToLocalChecked());
         if (bearings.IsEmpty())
@@ -528,8 +527,8 @@ inline bool argumentsToParameter(const Nan::FunctionCallbackInfo<v8::Value> &arg
                         return false;
                     }
 
-                    const auto bearing = static_cast<short>(bearing_pair->Get(0)->NumberValue());
-                    const auto range = static_cast<short>(bearing_pair->Get(1)->NumberValue());
+                    const auto bearing = Nan::To<int>(bearing_pair->Get(0)).FromJust();
+                    const auto range = Nan::To<int>(bearing_pair->Get(1)).FromJust();
 
                     if (bearing < 0 || bearing > 360 || range < 0 || range > 180)
                     {
@@ -537,7 +536,8 @@ inline bool argumentsToParameter(const Nan::FunctionCallbackInfo<v8::Value> &arg
                         return false;
                     }
 
-                    params->bearings.push_back(osrm::Bearing{bearing, range});
+                    params->bearings.push_back(
+                        osrm::Bearing{static_cast<short>(bearing), static_cast<short>(range)});
                 }
                 else
                 {
@@ -553,7 +553,7 @@ inline bool argumentsToParameter(const Nan::FunctionCallbackInfo<v8::Value> &arg
         }
     }
 
-    if (obj->Has(Nan::New("hints").ToLocalChecked()))
+    if (Nan::Has(obj, Nan::New("hints").ToLocalChecked()).FromJust())
     {
         v8::Local<v8::Value> hints = obj->Get(Nan::New("hints").ToLocalChecked());
         if (hints.IsEmpty())
@@ -581,14 +581,13 @@ inline bool argumentsToParameter(const Nan::FunctionCallbackInfo<v8::Value> &arg
 
             if (hint->IsString())
             {
-                if (hint->ToString()->Length() == 0)
+                if (Nan::To<v8::String>(hint).ToLocalChecked()->Length() == 0)
                 {
                     Nan::ThrowError("Hint cannot be an empty string");
                     return false;
                 }
 
-                params->hints.push_back(
-                    osrm::engine::Hint::FromBase64(*v8::String::Utf8Value(hint)));
+                params->hints.push_back(osrm::engine::Hint::FromBase64(*Nan::Utf8String(hint)));
             }
             else if (hint->IsNull())
             {
@@ -602,7 +601,7 @@ inline bool argumentsToParameter(const Nan::FunctionCallbackInfo<v8::Value> &arg
         }
     }
 
-    if (obj->Has(Nan::New("radiuses").ToLocalChecked()))
+    if (Nan::Has(obj, Nan::New("radiuses").ToLocalChecked()).FromJust())
     {
         v8::Local<v8::Value> radiuses = obj->Get(Nan::New("radiuses").ToLocalChecked());
         if (radiuses.IsEmpty())
@@ -632,9 +631,9 @@ inline bool argumentsToParameter(const Nan::FunctionCallbackInfo<v8::Value> &arg
             {
                 params->radiuses.emplace_back();
             }
-            else if (radius->IsNumber() && radius->NumberValue() >= 0)
+            else if (radius->IsNumber() && Nan::To<double>(radius).FromJust() >= 0)
             {
-                params->radiuses.push_back(static_cast<double>(radius->NumberValue()));
+                params->radiuses.push_back(Nan::To<double>(radius).FromJust());
             }
             else
             {
@@ -644,7 +643,7 @@ inline bool argumentsToParameter(const Nan::FunctionCallbackInfo<v8::Value> &arg
         }
     }
 
-    if (obj->Has(Nan::New("generate_hints").ToLocalChecked()))
+    if (Nan::Has(obj, Nan::New("generate_hints").ToLocalChecked()).FromJust())
     {
         v8::Local<v8::Value> generate_hints = obj->Get(Nan::New("generate_hints").ToLocalChecked());
         if (generate_hints.IsEmpty())
@@ -656,10 +655,10 @@ inline bool argumentsToParameter(const Nan::FunctionCallbackInfo<v8::Value> &arg
             return false;
         }
 
-        params->generate_hints = generate_hints->BooleanValue();
+        params->generate_hints = Nan::To<bool>(generate_hints).FromJust();
     }
 
-    if (obj->Has(Nan::New("exclude").ToLocalChecked()))
+    if (Nan::Has(obj, Nan::New("exclude").ToLocalChecked()).FromJust())
     {
         v8::Local<v8::Value> exclude = obj->Get(Nan::New("exclude").ToLocalChecked());
         if (exclude.IsEmpty())
@@ -681,7 +680,7 @@ inline bool argumentsToParameter(const Nan::FunctionCallbackInfo<v8::Value> &arg
 
             if (class_name->IsString())
             {
-                std::string class_name_str = *v8::String::Utf8Value(class_name);
+                std::string class_name_str = *Nan::Utf8String(class_name);
                 params->exclude.emplace_back(class_name_str);
             }
             else
@@ -698,7 +697,7 @@ inline bool argumentsToParameter(const Nan::FunctionCallbackInfo<v8::Value> &arg
 template <typename ParamType>
 inline bool parseCommonParameters(const v8::Local<v8::Object> &obj, ParamType &params)
 {
-    if (obj->Has(Nan::New("steps").ToLocalChecked()))
+    if (Nan::Has(obj, Nan::New("steps").ToLocalChecked()).FromJust())
     {
         auto steps = obj->Get(Nan::New("steps").ToLocalChecked());
         if (steps.IsEmpty())
@@ -706,7 +705,7 @@ inline bool parseCommonParameters(const v8::Local<v8::Object> &obj, ParamType &p
 
         if (steps->IsBoolean())
         {
-            params->steps = steps->BooleanValue();
+            params->steps = Nan::To<bool>(steps).FromJust();
         }
         else
         {
@@ -715,7 +714,7 @@ inline bool parseCommonParameters(const v8::Local<v8::Object> &obj, ParamType &p
         }
     }
 
-    if (obj->Has(Nan::New("annotations").ToLocalChecked()))
+    if (Nan::Has(obj, Nan::New("annotations").ToLocalChecked()).FromJust())
     {
         auto annotations = obj->Get(Nan::New("annotations").ToLocalChecked());
         if (annotations.IsEmpty())
@@ -723,7 +722,7 @@ inline bool parseCommonParameters(const v8::Local<v8::Object> &obj, ParamType &p
 
         if (annotations->IsBoolean())
         {
-            params->annotations = annotations->BooleanValue();
+            params->annotations = Nan::To<bool>(annotations).FromJust();
         }
         else if (annotations->IsArray())
         {
@@ -778,7 +777,7 @@ inline bool parseCommonParameters(const v8::Local<v8::Object> &obj, ParamType &p
         }
     }
 
-    if (obj->Has(Nan::New("geometries").ToLocalChecked()))
+    if (Nan::Has(obj, Nan::New("geometries").ToLocalChecked()).FromJust())
     {
         v8::Local<v8::Value> geometries = obj->Get(Nan::New("geometries").ToLocalChecked());
         if (geometries.IsEmpty())
@@ -812,7 +811,7 @@ inline bool parseCommonParameters(const v8::Local<v8::Object> &obj, ParamType &p
         }
     }
 
-    if (obj->Has(Nan::New("overview").ToLocalChecked()))
+    if (Nan::Has(obj, Nan::New("overview").ToLocalChecked()).FromJust())
     {
         v8::Local<v8::Value> overview = obj->Get(Nan::New("overview").ToLocalChecked());
         if (overview.IsEmpty())
@@ -857,7 +856,7 @@ argumentsToPluginParameters(const Nan::FunctionCallbackInfo<v8::Value> &args)
         return {};
     }
     v8::Local<v8::Object> obj = Nan::To<v8::Object>(args[1]).ToLocalChecked();
-    if (obj->Has(Nan::New("format").ToLocalChecked()))
+    if (Nan::Has(obj, Nan::New("format").ToLocalChecked()).FromJust())
     {
 
         v8::Local<v8::Value> format = obj->Get(Nan::New("format").ToLocalChecked());
@@ -904,7 +903,7 @@ argumentsToRouteParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
 
     v8::Local<v8::Object> obj = Nan::To<v8::Object>(args[0]).ToLocalChecked();
 
-    if (obj->Has(Nan::New("continue_straight").ToLocalChecked()))
+    if (Nan::Has(obj, Nan::New("continue_straight").ToLocalChecked()).FromJust())
     {
         auto value = obj->Get(Nan::New("continue_straight").ToLocalChecked());
         if (value.IsEmpty())
@@ -917,11 +916,11 @@ argumentsToRouteParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
         }
         if (value->IsBoolean())
         {
-            params->continue_straight = value->BooleanValue();
+            params->continue_straight = Nan::To<bool>(value).FromJust();
         }
     }
 
-    if (obj->Has(Nan::New("alternatives").ToLocalChecked()))
+    if (Nan::Has(obj, Nan::New("alternatives").ToLocalChecked()).FromJust())
     {
         auto value = obj->Get(Nan::New("alternatives").ToLocalChecked());
         if (value.IsEmpty())
@@ -929,13 +928,13 @@ argumentsToRouteParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
 
         if (value->IsBoolean())
         {
-            params->alternatives = value->BooleanValue();
-            params->number_of_alternatives = value->BooleanValue() ? 1u : 0u;
+            params->alternatives = Nan::To<bool>(value).FromJust();
+            params->number_of_alternatives = Nan::To<bool>(value).FromJust() ? 1u : 0u;
         }
         else if (value->IsNumber())
         {
-            params->alternatives = value->BooleanValue();
-            params->number_of_alternatives = static_cast<unsigned>(value->NumberValue());
+            params->alternatives = Nan::To<bool>(value).FromJust();
+            params->number_of_alternatives = Nan::To<unsigned>(value).FromJust();
         }
         else
         {
@@ -944,7 +943,7 @@ argumentsToRouteParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
         }
     }
 
-    if (obj->Has(Nan::New("waypoints").ToLocalChecked()))
+    if (Nan::Has(obj, Nan::New("waypoints").ToLocalChecked()).FromJust())
     {
         v8::Local<v8::Value> waypoints = obj->Get(Nan::New("waypoints").ToLocalChecked());
         if (waypoints.IsEmpty())
@@ -994,7 +993,7 @@ argumentsToRouteParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
                 Nan::ThrowError("Waypoints must correspond with the index of an input coordinate");
                 return route_parameters_ptr();
             }
-            params->waypoints.emplace_back(static_cast<unsigned>(waypoint_value->NumberValue()));
+            params->waypoints.emplace_back(Nan::To<unsigned>(waypoint_value).FromJust());
         }
 
         if (!params->waypoints.empty())
@@ -1010,7 +1009,7 @@ argumentsToRouteParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
         }
     }
 
-    if (obj->Has(Nan::New("snapping").ToLocalChecked()))
+    if (Nan::Has(obj, Nan::New("snapping").ToLocalChecked()).FromJust())
     {
         v8::Local<v8::Value> snapping = obj->Get(Nan::New("snapping").ToLocalChecked());
         if (snapping.IsEmpty())
@@ -1095,9 +1094,9 @@ argumentsToTileParameters(const Nan::FunctionCallbackInfo<v8::Value> &args, bool
         return tile_parameters_ptr();
     }
 
-    params->x = x->Uint32Value();
-    params->y = y->Uint32Value();
-    params->z = z->Uint32Value();
+    params->x = Nan::To<uint32_t>(x).FromJust();
+    params->y = Nan::To<uint32_t>(y).FromJust();
+    params->z = Nan::To<uint32_t>(z).FromJust();
 
     if (!params->IsValid())
     {
@@ -1121,7 +1120,7 @@ argumentsToNearestParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
     if (obj.IsEmpty())
         return nearest_parameters_ptr();
 
-    if (obj->Has(Nan::New("number").ToLocalChecked()))
+    if (Nan::Has(obj, Nan::New("number").ToLocalChecked()).FromJust())
     {
         v8::Local<v8::Value> number = obj->Get(Nan::New("number").ToLocalChecked());
 
@@ -1132,7 +1131,7 @@ argumentsToNearestParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
         }
         else
         {
-            unsigned number_value = static_cast<unsigned>(number->NumberValue());
+            unsigned number_value = Nan::To<unsigned>(number).FromJust();
 
             if (number_value < 1)
             {
@@ -1140,7 +1139,7 @@ argumentsToNearestParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
                 return nearest_parameters_ptr();
             }
 
-            params->number_of_results = static_cast<unsigned>(number->NumberValue());
+            params->number_of_results = Nan::To<unsigned>(number).FromJust();
         }
     }
 
@@ -1160,7 +1159,7 @@ argumentsToTableParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
     if (obj.IsEmpty())
         return table_parameters_ptr();
 
-    if (obj->Has(Nan::New("sources").ToLocalChecked()))
+    if (Nan::Has(obj, Nan::New("sources").ToLocalChecked()).FromJust())
     {
         v8::Local<v8::Value> sources = obj->Get(Nan::New("sources").ToLocalChecked());
         if (sources.IsEmpty())
@@ -1181,7 +1180,7 @@ argumentsToTableParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
 
             if (source->IsUint32())
             {
-                size_t source_value = static_cast<size_t>(source->NumberValue());
+                size_t source_value = Nan::To<unsigned>(source).FromJust();
                 if (source_value >= params->coordinates.size())
                 {
                     Nan::ThrowError(
@@ -1189,7 +1188,7 @@ argumentsToTableParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
                     return table_parameters_ptr();
                 }
 
-                params->sources.push_back(static_cast<size_t>(source->NumberValue()));
+                params->sources.push_back(Nan::To<unsigned>(source).FromJust());
             }
             else
             {
@@ -1199,7 +1198,7 @@ argumentsToTableParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
         }
     }
 
-    if (obj->Has(Nan::New("destinations").ToLocalChecked()))
+    if (Nan::Has(obj, Nan::New("destinations").ToLocalChecked()).FromJust())
     {
         v8::Local<v8::Value> destinations = obj->Get(Nan::New("destinations").ToLocalChecked());
         if (destinations.IsEmpty())
@@ -1220,7 +1219,7 @@ argumentsToTableParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
 
             if (destination->IsUint32())
             {
-                size_t destination_value = static_cast<size_t>(destination->NumberValue());
+                size_t destination_value = Nan::To<unsigned>(destination).FromJust();
                 if (destination_value >= params->coordinates.size())
                 {
                     Nan::ThrowError("Destination indices must be less than the number "
@@ -1228,7 +1227,7 @@ argumentsToTableParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
                     return table_parameters_ptr();
                 }
 
-                params->destinations.push_back(static_cast<size_t>(destination->NumberValue()));
+                params->destinations.push_back(Nan::To<unsigned>(destination).FromJust());
             }
             else
             {
@@ -1238,7 +1237,7 @@ argumentsToTableParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
         }
     }
 
-    if (obj->Has(Nan::New("annotations").ToLocalChecked()))
+    if (Nan::Has(obj, Nan::New("annotations").ToLocalChecked()).FromJust())
     {
         v8::Local<v8::Value> annotations = obj->Get(Nan::New("annotations").ToLocalChecked());
         if (annotations.IsEmpty())
@@ -1278,7 +1277,7 @@ argumentsToTableParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
         }
     }
 
-    if (obj->Has(Nan::New("fallback_speed").ToLocalChecked()))
+    if (Nan::Has(obj, Nan::New("fallback_speed").ToLocalChecked()).FromJust())
     {
         auto fallback_speed = obj->Get(Nan::New("fallback_speed").ToLocalChecked());
 
@@ -1287,16 +1286,16 @@ argumentsToTableParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
             Nan::ThrowError("fallback_speed must be a number");
             return table_parameters_ptr();
         }
-        else if (fallback_speed->NumberValue() <= 0)
+        else if (Nan::To<double>(fallback_speed).FromJust() <= 0)
         {
             Nan::ThrowError("fallback_speed must be > 0");
             return table_parameters_ptr();
         }
 
-        params->fallback_speed = static_cast<double>(fallback_speed->NumberValue());
+        params->fallback_speed = Nan::To<double>(fallback_speed).FromJust();
     }
 
-    if (obj->Has(Nan::New("fallback_coordinate").ToLocalChecked()))
+    if (Nan::Has(obj, Nan::New("fallback_coordinate").ToLocalChecked()).FromJust())
     {
         auto fallback_coordinate = obj->Get(Nan::New("fallback_coordinate").ToLocalChecked());
 
@@ -1306,7 +1305,7 @@ argumentsToTableParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
             return table_parameters_ptr();
         }
 
-        std::string fallback_coordinate_str = *v8::String::Utf8Value(fallback_coordinate);
+        std::string fallback_coordinate_str = *Nan::Utf8String(fallback_coordinate);
 
         if (fallback_coordinate_str == "snapped")
         {
@@ -1324,7 +1323,7 @@ argumentsToTableParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
         }
     }
 
-    if (obj->Has(Nan::New("scale_factor").ToLocalChecked()))
+    if (Nan::Has(obj, Nan::New("scale_factor").ToLocalChecked()).FromJust())
     {
         auto scale_factor = obj->Get(Nan::New("scale_factor").ToLocalChecked());
 
@@ -1333,13 +1332,13 @@ argumentsToTableParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
             Nan::ThrowError("scale_factor must be a number");
             return table_parameters_ptr();
         }
-        else if (scale_factor->NumberValue() <= 0)
+        else if (Nan::To<double>(scale_factor).FromJust() <= 0)
         {
             Nan::ThrowError("scale_factor must be > 0");
             return table_parameters_ptr();
         }
 
-        params->scale_factor = static_cast<double>(scale_factor->NumberValue());
+        params->scale_factor = Nan::To<double>(scale_factor).FromJust();
     }
 
     return params;
@@ -1362,7 +1361,7 @@ argumentsToTripParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
         return trip_parameters_ptr();
     }
 
-    if (obj->Has(Nan::New("roundtrip").ToLocalChecked()))
+    if (Nan::Has(obj, Nan::New("roundtrip").ToLocalChecked()).FromJust())
     {
         auto roundtrip = obj->Get(Nan::New("roundtrip").ToLocalChecked());
         if (roundtrip.IsEmpty())
@@ -1370,7 +1369,7 @@ argumentsToTripParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
 
         if (roundtrip->IsBoolean())
         {
-            params->roundtrip = roundtrip->BooleanValue();
+            params->roundtrip = Nan::To<bool>(roundtrip).FromJust();
         }
         else
         {
@@ -1379,7 +1378,7 @@ argumentsToTripParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
         }
     }
 
-    if (obj->Has(Nan::New("source").ToLocalChecked()))
+    if (Nan::Has(obj, Nan::New("source").ToLocalChecked()).FromJust())
     {
         v8::Local<v8::Value> source = obj->Get(Nan::New("source").ToLocalChecked());
         if (source.IsEmpty())
@@ -1391,7 +1390,7 @@ argumentsToTripParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
             return trip_parameters_ptr();
         }
 
-        std::string source_str = *v8::String::Utf8Value(source);
+        std::string source_str = *Nan::Utf8String(source);
 
         if (source_str == "first")
         {
@@ -1408,7 +1407,7 @@ argumentsToTripParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
         }
     }
 
-    if (obj->Has(Nan::New("destination").ToLocalChecked()))
+    if (Nan::Has(obj, Nan::New("destination").ToLocalChecked()).FromJust())
     {
         v8::Local<v8::Value> destination = obj->Get(Nan::New("destination").ToLocalChecked());
         if (destination.IsEmpty())
@@ -1420,7 +1419,7 @@ argumentsToTripParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
             return trip_parameters_ptr();
         }
 
-        std::string destination_str = *v8::String::Utf8Value(destination);
+        std::string destination_str = *Nan::Utf8String(destination);
 
         if (destination_str == "last")
         {
@@ -1451,7 +1450,7 @@ argumentsToMatchParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
 
     v8::Local<v8::Object> obj = Nan::To<v8::Object>(args[0]).ToLocalChecked();
 
-    if (obj->Has(Nan::New("timestamps").ToLocalChecked()))
+    if (Nan::Has(obj, Nan::New("timestamps").ToLocalChecked()).FromJust())
     {
         v8::Local<v8::Value> timestamps = obj->Get(Nan::New("timestamps").ToLocalChecked());
         if (timestamps.IsEmpty())
@@ -1483,11 +1482,11 @@ argumentsToMatchParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
                 Nan::ThrowError("Timestamps array items must be numbers");
                 return match_parameters_ptr();
             }
-            params->timestamps.emplace_back(static_cast<std::size_t>(timestamp->NumberValue()));
+            params->timestamps.emplace_back(Nan::To<unsigned>(timestamp).FromJust());
         }
     }
 
-    if (obj->Has(Nan::New("gaps").ToLocalChecked()))
+    if (Nan::Has(obj, Nan::New("gaps").ToLocalChecked()).FromJust())
     {
         v8::Local<v8::Value> gaps = obj->Get(Nan::New("gaps").ToLocalChecked());
         if (gaps.IsEmpty())
@@ -1517,7 +1516,7 @@ argumentsToMatchParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
         }
     }
 
-    if (obj->Has(Nan::New("tidy").ToLocalChecked()))
+    if (Nan::Has(obj, Nan::New("tidy").ToLocalChecked()).FromJust())
     {
         v8::Local<v8::Value> tidy = obj->Get(Nan::New("tidy").ToLocalChecked());
         if (tidy.IsEmpty())
@@ -1529,10 +1528,10 @@ argumentsToMatchParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
             return match_parameters_ptr();
         }
 
-        params->tidy = tidy->BooleanValue();
+        params->tidy = Nan::To<bool>(tidy).FromJust();
     }
 
-    if (obj->Has(Nan::New("waypoints").ToLocalChecked()))
+    if (Nan::Has(obj, Nan::New("waypoints").ToLocalChecked()).FromJust())
     {
         v8::Local<v8::Value> waypoints = obj->Get(Nan::New("waypoints").ToLocalChecked());
         if (waypoints.IsEmpty())
@@ -1582,7 +1581,8 @@ argumentsToMatchParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
                 Nan::ThrowError("Waypoints must correspond with the index of an input coordinate");
                 return match_parameters_ptr();
             }
-            params->waypoints.emplace_back(static_cast<unsigned>(waypoint_value->NumberValue()));
+            params->waypoints.emplace_back(
+                static_cast<unsigned>(Nan::To<unsigned>(waypoint_value).FromJust()));
         }
     }
 

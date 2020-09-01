@@ -22,14 +22,9 @@ module.exports = function () {
         this.PROFILES_PATH = path.resolve(this.ROOT_PATH, 'profiles');
         this.FIXTURES_PATH = path.resolve(this.ROOT_PATH, 'unit_tests/fixtures');
         this.BIN_PATH = process.env.OSRM_BUILD_DIR && process.env.OSRM_BUILD_DIR || path.resolve(this.ROOT_PATH, 'build');
-        var stxxl_config = path.resolve(this.ROOT_PATH, 'test/.stxxl');
-        if (!fs.existsSync(stxxl_config)) {
-            return callback(new Error('*** '+stxxl_config+ 'does not exist'));
-        }
-
         this.DATASET_NAME = 'cucumber';
         this.PLATFORM_WINDOWS = process.platform.match(/^win.*/);
-        this.DEFAULT_ENVIRONMENT = Object.assign({STXXLCFG: stxxl_config}, process.env);
+        this.DEFAULT_ENVIRONMENT = process.env;
         this.DEFAULT_PROFILE = 'bicycle';
         this.DEFAULT_INPUT_FORMAT = 'osm';
         this.DEFAULT_LOAD_METHOD = process.argv[process.argv.indexOf('-m') +1].match('mmap') ? 'mmap' : 'datastore';
