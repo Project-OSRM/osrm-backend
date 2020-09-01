@@ -10,7 +10,8 @@
 
 #include <tbb/blocked_range.h>
 #include <tbb/pipeline.h>
-#include <tbb/task_scheduler_init.h>
+
+#include <thread>
 
 namespace osrm
 {
@@ -324,7 +325,7 @@ void annotateTurns(const util::NodeBasedDynamicGraph &node_based_graph,
         // to be balanced with the GRAINSIZE above - ideally, the pipeline puts as much work
         // as possible in the `intersection_handler` step so that those parallel workers don't
         // get blocked too much by the slower (io-performing) `buffer_storage`
-        tbb::parallel_pipeline(tbb::task_scheduler_init::default_num_threads() * 5,
+        tbb::parallel_pipeline(std::thread::hardware_concurrency() * 5,
                                generator_stage & guidance_stage & guidance_output_stage);
 
         // NOTE: EBG edges delayed_data and turns delayed_turn_data have the same index
