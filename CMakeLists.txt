@@ -23,9 +23,9 @@ option(ENABLE_CCACHE "Speed up incremental rebuilds via ccache" ON)
 option(BUILD_TOOLS "Build OSRM tools" OFF)
 option(BUILD_PACKAGE "Build OSRM package" OFF)
 option(ENABLE_ASSERTIONS "Use assertions in release mode" OFF)
+option(ENABLE_DEBUG_LOGGING "Use debug logging in release mode" OFF)
 option(ENABLE_COVERAGE "Build with coverage instrumentalisation" OFF)
 option(ENABLE_SANITIZER "Use memory sanitizer for Debug build" OFF)
-option(ENABLE_STXXL "Use STXXL library" OFF)
 option(ENABLE_LTO "Use LTO if available" OFF)
 option(ENABLE_FUZZING "Fuzz testing using LLVM's libFuzzer" OFF)
 option(ENABLE_GOLD_LINKER "Use GNU gold linker if available" ON)
@@ -37,7 +37,6 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 if(ENABLE_MASON)
   # versions in use
   set(MASON_BOOST_VERSION "1.65.1")
-  set(MASON_STXXL_VERSION "1.4.1-1")
   set(MASON_EXPAT_VERSION "2.2.0")
   set(MASON_LUA_VERSION "5.2.4")
   set(MASON_BZIP2_VERSION "1.0.6")
@@ -56,6 +55,12 @@ endif()
 # be compatible with version handling before cmake 3.x
 if (POLICY CMP0048)
   cmake_policy(SET CMP0048 OLD)
+endif()
+if (POLICY CMP0057)
+  cmake_policy(SET CMP0057 NEW)
+endif()
+if (POLICY CMP0074)
+  cmake_policy(SET CMP0074 NEW)
 endif()
 project(OSRM C CXX)
 
@@ -227,6 +232,7 @@ endif()
 if(CMAKE_BUILD_TYPE MATCHES Debug OR CMAKE_BUILD_TYPE MATCHES RelWithDebInfo)
   message(STATUS "Configuring debug mode flags")
   set(ENABLE_ASSERTIONS ON)
+  set(ENABLE_DEBUG_LOGGING ON)
 endif()
 
 if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
@@ -472,13 +478,6 @@ if(ENABLE_MASON)
   mason_use(boost_libsystem VERSION ${MASON_BOOST_VERSION})
   set(Boost_SYSTEM_LIBRARY ${MASON_PACKAGE_boost_libsystem_STATIC_LIBS})
 
-  if (ENABLE_STXXL)
-    mason_use(stxxl VERSION ${MASON_STXXL_VERSION})
-    add_dependency_includes(${MASON_PACKAGE_stxxl_INCLUDE_DIRS})
-    set(MAYBE_STXXL_LIBRARY ${MASON_PACKAGE_stxxl_STATIC_LIBS})
-    add_definitions(-DUSE_STXXL_LIBRARY)
-  endif()
-
   mason_use(expat VERSION ${MASON_EXPAT_VERSION})
   add_dependency_includes(${MASON_PACKAGE_expat_INCLUDE_DIRS})
   set(EXPAT_LIBRARIES ${MASON_PACKAGE_expat_STATIC_LIBS})
@@ -524,29 +523,15 @@ else()
 
   find_package(Boost 1.54 REQUIRED COMPONENTS ${BOOST_COMPONENTS})
   add_dependency_includes(${Boost_INCLUDE_DIRS})
-  if(WIN32 AND Boost_VERSION VERSION_LESS 106200)
-    message(FATAL_ERROR "Building with MSVC needs Boost 1.62 with CXX11_CONSTEXPR support")
-  endif()
 
   find_package(TBB REQUIRED)
   add_dependency_includes(${TBB_INCLUDE_DIR})
-  if(WIN32 AND CMAKE_BUILD_TYPE MATCHES Debug)
-    set(TBB_LIBRARIES ${TBB_DEBUG_LIBRARIES})
+  if(WIN32)
+    set(TBB_LIBRARIES optimized ${TBB_LIBRARY} optimized ${TBB_MALLOC_LIBRARY} debug ${TBB_LIBRARY_DEBUG} debug ${TBB_MALLOC_LIBRARY_DEBUG})
   endif()
 
   find_package(EXPAT REQUIRED)
   add_dependency_includes(${EXPAT_INCLUDE_DIRS})
-
-  if (ENABLE_STXXL)
-    find_package(STXXL)
-    if (STXXL_FOUND)
-      add_dependency_includes(${STXXL_INCLUDE_DIR})
-      set(MAYBE_STXXL_LIBRARY ${STXXL_LIBRARY})
-      add_definitions(-DUSE_STXXL_LIBRARY)
-    else()
-      MESSAGE(STATUS "STXXL was requested but not found, default STL will be used")
-    endif()
-  endif()
 
   find_package(BZip2 REQUIRED)
   add_dependency_includes(${BZIP2_INCLUDE_DIR})
@@ -607,15 +592,6 @@ add_dependency_defines(-DBOOST_SPIRIT_USE_PHOENIX_V3)
 add_dependency_defines(-DBOOST_RESULT_OF_USE_DECLTYPE)
 add_dependency_defines(-DBOOST_FILESYSTEM_NO_DEPRECATED)
 
-if (ENABLE_STXXL)
-  set(OpenMP_FIND_QUIETLY ON)
-  find_package(OpenMP)
-  if(OPENMP_FOUND)
-    message(STATUS "OpenMP support found. Linking just in case for stxxl")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-  endif()
-endif()
-
 add_definitions(${OSRM_DEFINES})
 include_directories(SYSTEM ${DEPENDENCIES_INCLUDE_DIRS})
 
@@ -648,7 +624,6 @@ set(EXTRACTOR_LIBRARIES
     ${EXPAT_LIBRARIES}
     ${USED_LUA_LIBRARIES}
     ${OSMIUM_LIBRARIES}
-    ${MAYBE_STXXL_LIBRARY}
     ${TBB_LIBRARIES}
     ${ZLIB_LIBRARY}
     ${MAYBE_COVERAGE_LIBRARIES})
@@ -682,7 +657,6 @@ set(CONTRACTOR_LIBRARIES
     ${BOOST_BASE_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
     ${USED_LUA_LIBRARIES}
-    ${MAYBE_STXXL_LIBRARY}
     ${TBB_LIBRARIES}
     ${MAYBE_RT_LIBRARY}
     ${MAYBE_COVERAGE_LIBRARIES})
@@ -702,7 +676,6 @@ set(STORAGE_LIBRARIES
 set(UTIL_LIBRARIES
     ${BOOST_BASE_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
-    ${MAYBE_STXXL_LIBRARY}
     ${TBB_LIBRARIES}
     ${MAYBE_COVERAGE_LIBRARIES}
     ${ZLIB_LIBRARY})
@@ -732,6 +705,11 @@ endif()
 if (ENABLE_ASSERTIONS)
   message(STATUS "Enabling assertions")
   add_definitions(-DBOOST_ENABLE_ASSERT_HANDLER)
+endif()
+
+if (ENABLE_DEBUG_LOGGING)
+  message(STATUS "Enabling debug logging")
+  add_definitions(-DENABLE_DEBUG_LOGGING)
 endif()
 
 # Add RPATH info to executables so that when they are run after being installed
@@ -778,6 +756,7 @@ install(TARGETS osrm_customize DESTINATION lib)
 install(TARGETS osrm_update DESTINATION lib)
 install(TARGETS osrm_contract DESTINATION lib)
 install(TARGETS osrm_store DESTINATION lib)
+install(TARGETS osrm_guidance DESTINATION lib)
 
 
 # Install profiles and support library to /usr/local/share/osrm/profiles by default

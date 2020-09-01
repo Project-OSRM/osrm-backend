@@ -189,21 +189,18 @@ int main(int argc, char *argv[]) try
 
     osrm::contract(contractor_config);
 
-    util::DumpSTXXLStats();
     util::DumpMemoryStats();
 
     return EXIT_SUCCESS;
 }
 catch (const osrm::RuntimeError &e)
 {
-    util::DumpSTXXLStats();
     util::DumpMemoryStats();
     util::Log(logERROR) << e.what();
     return e.GetCode();
 }
 catch (const std::bad_alloc &e)
 {
-    util::DumpSTXXLStats();
     util::DumpMemoryStats();
     util::Log(logERROR) << e.what();
     util::Log(logERROR) << "Please provide more memory or consider using a larger swapfile";

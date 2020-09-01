@@ -155,6 +155,13 @@ module.exports = function () {
                         if (headers.has('locations')){
                             got.locations = (locations || '').trim();
                         }
+                        if (headers.has('waypoints_count')) {
+                            if ('waypoints' in json) {
+                                got.waypoints_count = json.waypoints.length;
+                            } else{
+                                got.waypoints_count = 0;
+                            }
+                        }
                         /*
                         if (headers.has('approaches')){
                             got.approaches = (approaches || '').trim();

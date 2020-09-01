@@ -3,6 +3,7 @@
 
 #include "extractor/maneuver_override.hpp"
 #include "engine/api/base_api.hpp"
+#include "engine/api/base_result.hpp"
 #include "engine/api/json_factory.hpp"
 #include "engine/api/route_parameters.hpp"
 
@@ -72,7 +73,7 @@ class RouteAPI : public BaseAPI
     {
 
         auto data_timestamp = facade.GetTimestamp();
-        boost::optional<flatbuffers::Offset<flatbuffers::String>> data_version_string = boost::none;
+        flatbuffers::Offset<flatbuffers::String> data_version_string;
         if (!data_timestamp.empty())
         {
             data_version_string = fb_result.CreateString(data_timestamp);
@@ -80,14 +81,14 @@ class RouteAPI : public BaseAPI
 
         auto response =
             MakeFBResponse(raw_routes, fb_result, [this, &all_start_end_points, &fb_result]() {
-                return BaseAPI::MakeWaypoints(fb_result, all_start_end_points);
+                return BaseAPI::MakeWaypoints(&fb_result, all_start_end_points);
             });
 
-        if (data_version_string)
+        if (!data_timestamp.empty())
         {
-            response.add_data_version(*data_version_string);
+            response->add_data_version(data_version_string);
         }
-        fb_result.Finish(response.Finish());
+        fb_result.Finish(response->Finish());
     }
 
     void
@@ -109,7 +110,10 @@ class RouteAPI : public BaseAPI
                                                 route.target_traversed_in_reverse));
         }
 
-        response.values["waypoints"] = BaseAPI::MakeWaypoints(all_start_end_points);
+        if (!parameters.skip_waypoints)
+        {
+            response.values["waypoints"] = BaseAPI::MakeWaypoints(all_start_end_points);
+        }
         response.values["routes"] = std::move(jsRoutes);
         response.values["code"] = "Ok";
         auto data_timestamp = facade.GetTimestamp();
@@ -121,9 +125,10 @@ class RouteAPI : public BaseAPI
 
   protected:
     template <typename GetWptsFn>
-    fbresult::FBResultBuilder MakeFBResponse(const InternalManyRoutesResult &raw_routes,
-                                             flatbuffers::FlatBufferBuilder &fb_result,
-                                             GetWptsFn getWaypoints) const
+    std::unique_ptr<fbresult::FBResultBuilder>
+    MakeFBResponse(const InternalManyRoutesResult &raw_routes,
+                   flatbuffers::FlatBufferBuilder &fb_result,
+                   GetWptsFn getWaypoints) const
     {
 
         std::vector<flatbuffers::Offset<fbresult::RouteObject>> routes;
@@ -140,11 +145,16 @@ class RouteAPI : public BaseAPI
         }
 
         auto routes_vector = fb_result.CreateVector(routes);
-        auto waypoints_vector = getWaypoints();
+        flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<fbresult::Waypoint>>>
+            waypoints_vector;
+        if (!parameters.skip_waypoints)
+        {
+            waypoints_vector = getWaypoints();
+        }
 
-        fbresult::FBResultBuilder response(fb_result);
-        response.add_routes(routes_vector);
-        response.add_waypoints(waypoints_vector);
+        auto response = std::make_unique<fbresult::FBResultBuilder>(fb_result);
+        response->add_routes(routes_vector);
+        response->add_waypoints(waypoints_vector);
 
         return response;
     }
@@ -363,8 +373,7 @@ class RouteAPI : public BaseAPI
                 requested_annotations = RouteParameters::AnnotationsType::All;
             }
 
-            boost::optional<flatbuffers::Offset<fbresult::Annotation>> annotation_buffer =
-                boost::none;
+            flatbuffers::Offset<fbresult::Annotation> annotation_buffer;
             if (requested_annotations != RouteParameters::AnnotationsType::None)
             {
                 annotation_buffer =
@@ -387,9 +396,9 @@ class RouteAPI : public BaseAPI
             }
             legBuilder.add_steps(steps_vector);
 
-            if (annotation_buffer)
+            if (requested_annotations != RouteParameters::AnnotationsType::None)
             {
-                legBuilder.add_annotations(*annotation_buffer);
+                legBuilder.add_annotations(annotation_buffer);
             }
             routeLegs.emplace_back(legBuilder.Finish());
         }
@@ -496,8 +505,9 @@ class RouteAPI : public BaseAPI
         }
         auto nodes_vector = fb_result.CreateVector(nodes);
         // Add any supporting metadata, if needed
-        boost::optional<flatbuffers::Offset<fbresult::Metadata>> metadata_buffer = boost::none;
-        if (requested_annotations & RouteParameters::AnnotationsType::Datasources)
+        bool use_metadata = requested_annotations & RouteParameters::AnnotationsType::Datasources;
+        flatbuffers::Offset<fbresult::Metadata> metadata_buffer;
+        if (use_metadata)
         {
             const auto MAX_DATASOURCE_ID = 255u;
             std::vector<flatbuffers::Offset<flatbuffers::String>> names;
@@ -519,9 +529,9 @@ class RouteAPI : public BaseAPI
         annotation.add_weight(weight);
         annotation.add_datasources(datasources);
         annotation.add_nodes(nodes_vector);
-        if (metadata_buffer)
+        if (use_metadata)
         {
-            annotation.add_metadata(*metadata_buffer);
+            annotation.add_metadata(metadata_buffer);
         }
 
         return annotation.Finish();
@@ -647,7 +657,6 @@ class RouteAPI : public BaseAPI
             step.intersections.end(),
             intersections.begin(),
             [&fb_result, this](const guidance::IntermediateIntersection &intersection) {
-
                 std::vector<flatbuffers::Offset<fbresult::Lane>> lanes;
                 if (json::detail::hasValidLanes(intersection))
                 {

@@ -10,7 +10,7 @@ local pprint = require('lib/pprint')
 
 -- globals that are normally set from C++
 
--- should match values defined in include/extractor/guidance/road_classification.hpp
+-- should match values defined in include/extractor/road_classification.hpp
 road_priority_class = {
   motorway = 0,
   trunk = 2,

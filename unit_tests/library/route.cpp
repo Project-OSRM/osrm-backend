@@ -270,6 +270,53 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates)
     }
 }
 
+BOOST_AUTO_TEST_CASE(test_route_same_coordinates_no_waypoints)
+{
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm");
+
+    using namespace osrm;
+
+    RouteParameters params;
+    params.skip_waypoints = true;
+    params.steps = true;
+    params.coordinates.push_back(get_dummy_location());
+    params.coordinates.push_back(get_dummy_location());
+    params.coordinates.push_back(get_dummy_location());
+
+    engine::api::ResultT result = json::Object();
+    const auto rc = osrm.Route(params, result);
+    BOOST_CHECK(rc == Status::Ok);
+
+    auto &json_result = result.get<json::Object>();
+    const auto code = json_result.values.at("code").get<json::String>().value;
+    BOOST_CHECK_EQUAL(code, "Ok");
+
+    BOOST_CHECK(json_result.values.find("waypoints") == json_result.values.end());
+
+    const auto &routes = json_result.values.at("routes").get<json::Array>().values;
+    BOOST_REQUIRE_GT(routes.size(), 0);
+
+    for (const auto &route : routes)
+    {
+        const auto &route_object = route.get<json::Object>();
+
+        const auto distance = route_object.values.at("distance").get<json::Number>().value;
+        BOOST_CHECK_EQUAL(distance, 0);
+
+        const auto duration = route_object.values.at("duration").get<json::Number>().value;
+        BOOST_CHECK_EQUAL(duration, 0);
+
+        // geometries=polyline by default
+        const auto geometry = route_object.values.at("geometry").get<json::String>().value;
+        BOOST_CHECK(!geometry.empty());
+
+        const auto &legs = route_object.values.at("legs").get<json::Array>().values;
+        BOOST_CHECK(!legs.empty());
+
+        // The rest of legs contents is verified by test_route_same_coordinates
+    }
+}
+
 BOOST_AUTO_TEST_CASE(test_route_response_for_locations_in_small_component)
 {
     auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm");
@@ -572,6 +619,45 @@ BOOST_AUTO_TEST_CASE(test_route_serialize_fb)
                 ++step_count;
             }
         }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(test_route_serialize_fb_skip_waypoints)
+{
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm");
+
+    using namespace osrm;
+
+    RouteParameters params;
+    params.skip_waypoints = true;
+    params.steps = true;
+    params.coordinates.push_back(get_dummy_location());
+    params.coordinates.push_back(get_dummy_location());
+    params.coordinates.push_back(get_dummy_location());
+
+    engine::api::ResultT result = flatbuffers::FlatBufferBuilder();
+    const auto rc = osrm.Route(params, result);
+    BOOST_CHECK(rc == Status::Ok);
+
+    auto &fb_result = result.get<flatbuffers::FlatBufferBuilder>();
+    auto fb = engine::api::fbresult::GetFBResult(fb_result.GetBufferPointer());
+    BOOST_CHECK(!fb->error());
+
+    BOOST_CHECK(fb->waypoints() == nullptr);
+
+    BOOST_CHECK(fb->routes() != nullptr);
+    const auto routes = fb->routes();
+    BOOST_REQUIRE_GT(routes->size(), 0);
+
+    for (const auto &route : *routes)
+    {
+        BOOST_CHECK_EQUAL(route->distance(), 0);
+        BOOST_CHECK_EQUAL(route->duration(), 0);
+
+        const auto &legs = route->legs();
+        BOOST_CHECK(legs->size() > 0);
+
+        // Rest of the content is verified by test_route_serialize_fb
     }
 }
 

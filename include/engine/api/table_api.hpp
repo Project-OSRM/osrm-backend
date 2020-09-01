@@ -2,6 +2,7 @@
 #define ENGINE_API_TABLE_HPP
 
 #include "engine/api/base_api.hpp"
+#include "engine/api/base_result.hpp"
 #include "engine/api/json_factory.hpp"
 #include "engine/api/table_parameters.hpp"
 
@@ -73,7 +74,7 @@ class TableAPI final : public BaseAPI
         auto number_of_destinations = parameters.destinations.size();
 
         auto data_timestamp = facade.GetTimestamp();
-        boost::optional<flatbuffers::Offset<flatbuffers::String>> data_version_string = boost::none;
+        flatbuffers::Offset<flatbuffers::String> data_version_string;
         if (!data_timestamp.empty())
         {
             data_version_string = fb_result.CreateString(data_timestamp);
@@ -83,41 +84,56 @@ class TableAPI final : public BaseAPI
         flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<fbresult::Waypoint>>> sources;
         if (parameters.sources.empty())
         {
-            sources = MakeWaypoints(fb_result, phantoms);
+            if (!parameters.skip_waypoints)
+            {
+                sources = MakeWaypoints(fb_result, phantoms);
+            }
             number_of_sources = phantoms.size();
         }
         else
         {
-            sources = MakeWaypoints(fb_result, phantoms, parameters.sources);
+            if (!parameters.skip_waypoints)
+            {
+                sources = MakeWaypoints(fb_result, phantoms, parameters.sources);
+            }
         }
 
         flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<fbresult::Waypoint>>>
             destinations;
         if (parameters.destinations.empty())
         {
-            destinations = MakeWaypoints(fb_result, phantoms);
+            if (!parameters.skip_waypoints)
+            {
+                destinations = MakeWaypoints(fb_result, phantoms);
+            }
             number_of_destinations = phantoms.size();
         }
         else
         {
-            destinations = MakeWaypoints(fb_result, phantoms, parameters.destinations);
+            if (!parameters.skip_waypoints)
+            {
+                destinations = MakeWaypoints(fb_result, phantoms, parameters.destinations);
+            }
         }
 
-        boost::optional<flatbuffers::Offset<flatbuffers::Vector<float>>> durations = boost::none;
-        if (parameters.annotations & TableParameters::AnnotationsType::Duration)
+        bool use_durations = parameters.annotations & TableParameters::AnnotationsType::Duration;
+        flatbuffers::Offset<flatbuffers::Vector<float>> durations;
+        if (use_durations)
         {
             durations = MakeDurationTable(fb_result, tables.first);
         }
 
-        boost::optional<flatbuffers::Offset<flatbuffers::Vector<float>>> distances = boost::none;
-        if (parameters.annotations & TableParameters::AnnotationsType::Distance)
+        bool use_distances = parameters.annotations & TableParameters::AnnotationsType::Distance;
+        flatbuffers::Offset<flatbuffers::Vector<float>> distances;
+        if (use_distances)
         {
             distances = MakeDistanceTable(fb_result, tables.second);
         }
 
-        boost::optional<flatbuffers::Offset<flatbuffers::Vector<uint32_t>>> speed_cells =
-            boost::none;
-        if (parameters.fallback_speed != INVALID_FALLBACK_SPEED && parameters.fallback_speed > 0)
+        bool have_speed_cells =
+            parameters.fallback_speed != INVALID_FALLBACK_SPEED && parameters.fallback_speed > 0;
+        flatbuffers::Offset<flatbuffers::Vector<uint32_t>> speed_cells;
+        if (have_speed_cells)
         {
             speed_cells = MakeEstimatesTable(fb_result, fallback_speed_cells);
         }
@@ -126,24 +142,24 @@ class TableAPI final : public BaseAPI
         table.add_destinations(destinations);
         table.add_rows(number_of_sources);
         table.add_cols(number_of_destinations);
-        if (durations)
+        if (use_durations)
         {
-            table.add_durations(*durations);
+            table.add_durations(durations);
         }
-        if (distances)
+        if (use_distances)
         {
-            table.add_distances(*distances);
+            table.add_distances(distances);
         }
-        if (speed_cells)
+        if (have_speed_cells)
         {
-            table.add_fallback_speed_cells(*speed_cells);
+            table.add_fallback_speed_cells(speed_cells);
         }
         auto table_buffer = table.Finish();
 
         fbresult::FBResultBuilder response(fb_result);
-        if (data_version_string)
+        if (!data_timestamp.empty())
         {
-            response.add_data_version(*data_version_string);
+            response.add_data_version(data_version_string);
         }
         response.add_table(table_buffer);
         response.add_waypoints(sources);
@@ -162,22 +178,34 @@ class TableAPI final : public BaseAPI
         // symmetric case
         if (parameters.sources.empty())
         {
-            response.values["sources"] = MakeWaypoints(phantoms);
+            if (!parameters.skip_waypoints)
+            {
+                response.values["sources"] = MakeWaypoints(phantoms);
+            }
             number_of_sources = phantoms.size();
         }
         else
         {
-            response.values["sources"] = MakeWaypoints(phantoms, parameters.sources);
+            if (!parameters.skip_waypoints)
+            {
+                response.values["sources"] = MakeWaypoints(phantoms, parameters.sources);
+            }
         }
 
         if (parameters.destinations.empty())
         {
-            response.values["destinations"] = MakeWaypoints(phantoms);
+            if (!parameters.skip_waypoints)
+            {
+                response.values["destinations"] = MakeWaypoints(phantoms);
+            }
             number_of_destinations = phantoms.size();
         }
         else
         {
-            response.values["destinations"] = MakeWaypoints(phantoms, parameters.destinations);
+            if (!parameters.skip_waypoints)
+            {
+                response.values["destinations"] = MakeWaypoints(phantoms, parameters.destinations);
+            }
         }
 
         if (parameters.annotations & TableParameters::AnnotationsType::Duration)
@@ -211,7 +239,7 @@ class TableAPI final : public BaseAPI
 
         boost::range::transform(
             phantoms, std::back_inserter(waypoints), [this, &builder](const PhantomNode &phantom) {
-                return BaseAPI::MakeWaypoint(builder, phantom).Finish();
+                return BaseAPI::MakeWaypoint(&builder, phantom)->Finish();
             });
         return builder.CreateVector(waypoints);
     }
@@ -227,7 +255,7 @@ class TableAPI final : public BaseAPI
                                 std::back_inserter(waypoints),
                                 [this, &builder, phantoms](const std::size_t idx) {
                                     BOOST_ASSERT(idx < phantoms.size());
-                                    return BaseAPI::MakeWaypoint(builder, phantoms[idx]).Finish();
+                                    return BaseAPI::MakeWaypoint(&builder, phantoms[idx])->Finish();
                                 });
         return builder.CreateVector(waypoints);
     }

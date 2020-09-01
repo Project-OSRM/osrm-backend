@@ -2,6 +2,7 @@
 #define ENGINE_API_NEAREST_API_HPP
 
 #include "engine/api/base_api.hpp"
+#include "engine/api/base_result.hpp"
 #include "engine/api/nearest_parameters.hpp"
 
 #include "engine/api/json_factory.hpp"
@@ -54,25 +55,32 @@ class NearestAPI final : public BaseAPI
             data_version_string = fb_result.CreateString(data_timestamp);
         }
 
-        std::vector<flatbuffers::Offset<fbresult::Waypoint>> waypoints;
-        waypoints.resize(phantom_nodes.front().size());
-        std::transform(phantom_nodes.front().begin(),
-                       phantom_nodes.front().end(),
-                       waypoints.begin(),
-                       [this, &fb_result](const PhantomNodeWithDistance &phantom_with_distance) {
-                           auto &phantom_node = phantom_with_distance.phantom_node;
+        flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<fbresult::Waypoint>>>
+            waypoints_vector;
+        if (!parameters.skip_waypoints)
+        {
+            std::vector<flatbuffers::Offset<fbresult::Waypoint>> waypoints;
+            waypoints.resize(phantom_nodes.front().size());
+            std::transform(
+                phantom_nodes.front().begin(),
+                phantom_nodes.front().end(),
+                waypoints.begin(),
+                [this, &fb_result](const PhantomNodeWithDistance &phantom_with_distance) {
+                    auto &phantom_node = phantom_with_distance.phantom_node;
 
-                           auto node_values = MakeNodes(phantom_node);
-                           fbresult::Uint64Pair nodes{node_values.first, node_values.second};
+                    auto node_values = MakeNodes(phantom_node);
+                    fbresult::Uint64Pair nodes{node_values.first, node_values.second};
 
-                           auto waypoint = MakeWaypoint(fb_result, phantom_node);
-                           waypoint.add_nodes(&nodes);
+                    auto waypoint = MakeWaypoint(&fb_result, phantom_node);
+                    waypoint->add_nodes(&nodes);
+                    return waypoint->Finish();
+                });
 
-                           return waypoint.Finish();
-                       });
+            waypoints_vector = fb_result.CreateVector(waypoints);
+        }
 
-        auto waypoints_vector = fb_result.CreateVector(waypoints);
         fbresult::FBResultBuilder response(fb_result);
+
         response.add_waypoints(waypoints_vector);
         if (data_version_string)
         {
@@ -83,28 +91,31 @@ class NearestAPI final : public BaseAPI
     void MakeResponse(const std::vector<std::vector<PhantomNodeWithDistance>> &phantom_nodes,
                       util::json::Object &response) const
     {
-        util::json::Array waypoints;
-        waypoints.values.resize(phantom_nodes.front().size());
-        std::transform(phantom_nodes.front().begin(),
-                       phantom_nodes.front().end(),
-                       waypoints.values.begin(),
-                       [this](const PhantomNodeWithDistance &phantom_with_distance) {
-                           auto &phantom_node = phantom_with_distance.phantom_node;
-                           auto waypoint = MakeWaypoint(phantom_node);
+        if (!parameters.skip_waypoints)
+        {
+            util::json::Array waypoints;
+            waypoints.values.resize(phantom_nodes.front().size());
+            std::transform(phantom_nodes.front().begin(),
+                           phantom_nodes.front().end(),
+                           waypoints.values.begin(),
+                           [this](const PhantomNodeWithDistance &phantom_with_distance) {
+                               auto &phantom_node = phantom_with_distance.phantom_node;
+                               auto waypoint = MakeWaypoint(phantom_node);
 
-                           util::json::Array nodes;
+                               util::json::Array nodes;
 
-                           auto node_values = MakeNodes(phantom_node);
+                               auto node_values = MakeNodes(phantom_node);
 
-                           nodes.values.push_back(node_values.first);
-                           nodes.values.push_back(node_values.second);
-                           waypoint.values["nodes"] = std::move(nodes);
+                               nodes.values.push_back(node_values.first);
+                               nodes.values.push_back(node_values.second);
+                               waypoint.values["nodes"] = std::move(nodes);
 
-                           return waypoint;
-                       });
+                               return waypoint;
+                           });
+            response.values["waypoints"] = std::move(waypoints);
+        }
 
         response.values["code"] = "Ok";
-        response.values["waypoints"] = std::move(waypoints);
     }
 
     const NearestParameters &parameters;

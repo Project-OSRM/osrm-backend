@@ -51,8 +51,8 @@ struct Parameters
     // Alternative paths are still reasonable around the via node candidate (local optimality).
     // At least optimal around 10% sub-paths around the via node candidate.
     double kAtLeastOptimalAroundViaBy = 0.1;
-    // Alternative paths similarity requirement (sharing) based on calles.
-    // At least 15% different than the shortest path.
+    // Alternative paths similarity requirement (sharing) based on cells.
+    // At least 5% different than the shortest path.
     double kCellsAtMostSameBy = 0.95;
 };
 

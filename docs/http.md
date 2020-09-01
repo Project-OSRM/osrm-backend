@@ -29,15 +29,16 @@ To pass parameters to each location some options support an array like encoding:
 
 **Request options**
 
-| Option         | Values                                                 | Description                                                                                           |
-|----------------|--------------------------------------------------------|-------------------------------------------------------------------------------------------------------|
-|bearings        |`{bearing};{bearing}[;{bearing} ...]`                   |Limits the search to segments with given bearing in degrees towards true north in clockwise direction. |
-|radiuses        |`{radius};{radius}[;{radius} ...]`                      |Limits the search to given radius in meters.                                                           |
-|generate\_hints |`true` (default), `false`                               |Adds a Hint to the response which can be used in subsequent requests, see `hints` parameter.           |
-|hints           |`{hint};{hint}[;{hint} ...]`                            |Hint from previous request to derive position in street network.                                       |
-|approaches      |`{approach};{approach}[;{approach} ...]`                |Keep waypoints on curb side.                                                                           |
-|exclude         |`{class}[,{class}]`                                     |Additive list of classes to avoid, order does not matter.                                              |
-|snapping        |`default` (default), `any`                              |Default snapping avoids is_startpoint (see profile) edges, `any` will snap to any edge in the graph    |
+| Option         | Values                                                 | Description                                                                                                                                                                                               |
+|----------------|--------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|bearings        |`{bearing};{bearing}[;{bearing} ...]`                   |Limits the search to segments with given bearing in degrees towards true north in clockwise direction.                                                                                                     |
+|radiuses        |`{radius};{radius}[;{radius} ...]`                      |Limits the search to given radius in meters.                                                                                                                                                               |
+|generate\_hints |`true` (default), `false`                               |Adds a Hint to the response which can be used in subsequent requests, see `hints` parameter.                                                                                                               |
+|hints           |`{hint};{hint}[;{hint} ...]`                            |Hint from previous request to derive position in street network.                                                                                                                                           |
+|approaches      |`{approach};{approach}[;{approach} ...]`                |Keep waypoints on curb side.                                                                                                                                                                               |
+|exclude         |`{class}[,{class}]`                                     |Additive list of classes to avoid, order does not matter.                                                                                                                                                  |
+|snapping        |`default` (default), `any`                              |Default snapping avoids is_startpoint (see profile) edges, `any` will snap to any edge in the graph                                                                                                        |
+|skip_waypoints  |`true`, `false` (default)                               |Removes waypoints from the response. Waypoints are still calculated, but not serialized. Could be useful in case you are interested in some other part of response and do not want to transfer waste data. |
 
 Where the elements follow the following format:
 
@@ -128,6 +129,9 @@ In addition to the [general options](#general-options) the following options are
 |------------|------------------------------|----------------------------------------------------|
 |number      |`integer >= 1` (default `1`)  |Number of nearest segments that should be returned. |
 
+As `waypoints` is a single thing, returned byt that service, using it with option `skip_waypoints` set to `true` is quite useless, but still
+possible. In that case only `code` field will be returned. 
+
 **Response**
 
 - `code` if the request was successful `Ok` otherwise see the service dependent and general status codes.
@@ -207,8 +211,8 @@ In addition to the [general options](#general-options) the following options are
 |annotations |`true`, `false` (default), `nodes`, `distance`, `duration`, `datasources`, `weight`, `speed`  |Returns additional metadata for each coordinate along the route geometry.      |
 |geometries  |`polyline` (default), `polyline6`, `geojson` |Returned route geometry format (influences overview and per step)              |
 |overview    |`simplified` (default), `full`, `false`      |Add overview geometry either full, simplified according to highest zoom level it could be display on, or not at all.|
-|continue\_straight |`default` (default), `true`, `false` |Forces the route to keep going straight at waypoints constraining uturns there even if it would be faster. Default value depends on the profile. |
-|waypoints   | `{index};{index};{index}...`                   |Treats input coordinates indicated by given indices as waypoints in returned Match object. Default is to treat all input coordinates as waypoints.    |
+|continue\_straight |`default` (default), `true`, `false`  |Forces the route to keep going straight at waypoints constraining uturns there even if it would be faster. Default value depends on the profile. |
+|waypoints   | `{index};{index};{index}...`                |Treats input coordinates indicated by given indices as waypoints in returned Match object. Default is to treat all input coordinates as waypoints.    |
 
 \* Please note that even if alternative routes are requested, a result cannot be guaranteed.
 
@@ -256,6 +260,8 @@ In addition to the [general options](#general-options) the following options are
 
 Unlike other array encoded options, the length of `sources` and `destinations` can be **smaller or equal**
 to number of input locations;
+
+With `skip_waypoints` set to `true`, both `sources` and `destinations` arrays will be skipped.
 
 **Example:**
 
@@ -967,7 +973,7 @@ Root object is the only object, available from a 'raw' `flatbuffers` buffer. It 
 
 - `error`: `bool` Marks response as erroneous. Erroneus response should include `code` field set, all the other field may not present. 
 - `code`: `Error` Error description object, only present, when `error` is `true`
-- `waypoints`: `[Waypoint]` Array of `Waypoint` objects. Should present for every service call. Table service will put `sources` array here.
+- `waypoints`: `[Waypoint]` Array of `Waypoint` objects. Should present for every service call, unless `skip_waypoints` is set to `true`. Table service will put `sources` array here.
 - `routes`: `[RouteObject]` Array of `RouteObject` objects. May be empty or absent. Should present for Route/Trip/Match services call.
 - `table`: `Table` Table object, may absent. Should be present in case of Table service call.
 
@@ -1112,6 +1118,7 @@ Almost same as `json` Table object. The main difference is that 'sources' field 
 used instead. All the other differences follow:
 
 - `durations`: `[float]` Flat representation of a durations matrix. Element at row;col can be adressed as [row * cols + col]
-- `destinations`: `[float]` Flat representation of a destinations matrix. Element at row;col can be adressed as [row * cols + col]
+- `distances`: `[float]` Flat representation of a destinations matrix. Element at row;col can be adressed as [row * cols + col]
+- `destinations`: `[Waypoint]` Array of `Waypoint` objects. Will be `null` if `skip_waypoints` will be set to `true`
 - `rows`: `ushort` Number of rows in durations/destinations matrices.
 - `cols`: `ushort` Number of cols in durations/destinations matrices.
