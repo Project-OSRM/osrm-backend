@@ -122,6 +122,15 @@ matrix:
       env: CLANG_VERSION='5.0.0' BUILD_TYPE='Release' ENABLE_MASON=ON RUN_CLANG_FORMAT=ON ENABLE_LTO=ON
 
     - os: linux
+      dist: focal
+      compiler: "gcc-10-release"
+      addons: &gcc10
+        apt:
+          sources: ['ubuntu-toolchain-r-test']
+          packages: ['g++-10', 'libbz2-dev', 'libxml2-dev', 'libzip-dev', 'liblua5.2-dev', 'libtbb-dev', 'libboost-all-dev', 'ccache', 'cmake']
+      env: CCOMPILER='gcc-10' CXXCOMPILER='g++-10' BUILD_TYPE='Release' CXXFLAGS='-Wno-cast-function-type'
+
+    - os: linux
       compiler: "gcc-9-release"
       addons: &gcc9
         apt:
@@ -444,9 +453,12 @@ before_install:
   - CMAKE_DIR="mason_packages/${TRAVIS_OS_NAME}-x86_64/cmake/${CMAKE_VERSION}"
   - mkdir -p ${CMAKE_DIR}
   - travis_retry wget --quiet -O - ${CMAKE_URL} | tar --strip-components=1 -xz -C ${CMAKE_DIR} || travis_terminate 1
-  - export PATH=${CMAKE_DIR}/bin:${PATH}
-  - ${MASON} install tbb 2017_U7 && export LD_LIBRARY_PATH=$(${MASON} prefix tbb 2017_U7)/lib/:${LD_LIBRARY_PATH}
-  - ${MASON} install ccache ${CCACHE_VERSION} && export PATH=$(${MASON} prefix ccache ${CCACHE_VERSION})/bin:${PATH}
+  - |
+    if [[ "${TRAVIS_DIST}" != "focal" ]]; then
+      export PATH=${CMAKE_DIR}/bin:${PATH}
+      ${MASON} install tbb 2017_U7 && export LD_LIBRARY_PATH=$(${MASON} prefix tbb 2017_U7)/lib/:${LD_LIBRARY_PATH}
+      ${MASON} install ccache ${CCACHE_VERSION} && export PATH=$(${MASON} prefix ccache ${CCACHE_VERSION})/bin:${PATH}
+    fi
   - |
     if [[ ! -z ${CLANG_VERSION} ]]; then
       export CCOMPILER='clang'
