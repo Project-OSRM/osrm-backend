@@ -7,7 +7,6 @@
 
 #include "../unit_tests/mocks/mock_scripting_environment.hpp"
 
-#include <boost/test/test_case_template.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include <iostream>
