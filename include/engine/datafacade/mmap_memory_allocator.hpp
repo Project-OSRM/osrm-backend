@@ -33,7 +33,7 @@ class MMapMemoryAllocator : public ContiguousBlockAllocator
 
   private:
     storage::SharedDataIndex index;
-    std::vector<boost::iostreams::mapped_file> mapped_memory_files;
+    std::vector<boost::iostreams::mapped_file_source> mapped_memory_files;
     std::string rtree_filename;
 };
 
