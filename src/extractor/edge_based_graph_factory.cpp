@@ -31,13 +31,13 @@
 #include <limits>
 #include <sstream>
 #include <string>
+#include <thread>
 #include <tuple>
 #include <unordered_map>
 
 #include <tbb/blocked_range.h>
 #include <tbb/parallel_for.h>
 #include <tbb/pipeline.h>
-#include <tbb/task_scheduler_init.h>
 
 namespace std
 {
@@ -1080,7 +1080,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
         // to be balanced with the GRAINSIZE above - ideally, the pipeline puts as much work
         // as possible in the `intersection_handler` step so that those parallel workers don't
         // get blocked too much by the slower (io-performing) `buffer_storage`
-        tbb::parallel_pipeline(tbb::task_scheduler_init::default_num_threads() * 5,
+        tbb::parallel_pipeline(std::thread::hardware_concurrency() * 5,
                                generator_stage & processor_stage & output_stage);
 
         // NOTE: buffer.delayed_data and buffer.delayed_turn_data have the same index
