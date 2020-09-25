@@ -2,14 +2,27 @@
   - Changes from 5.21.0
     - Build:
       - ADDED: optionally build Node `lts` and `latest` bindings [#5347](https://github.com/Project-OSRM/osrm-backend/pull/5347)
+      - FIXED: pessimistic calls to std::move [#5560](https://github.com/Project-OSRM/osrm-backend/pull/5561)
     - Features:
       - ADDED: new waypoints parameter to the `route` plugin, enabling silent waypoints [#5345](https://github.com/Project-OSRM/osrm-backend/pull/5345)
       - ADDED: data timestamp information in the response (saved in new file `.osrm.timestamp`). [#5115](https://github.com/Project-OSRM/osrm-backend/issues/5115)
       - ADDED: new API parameter - `snapping=any|default` to allow snapping to previously unsnappable edges [#5361](https://github.com/Project-OSRM/osrm-backend/pull/5361)
+      - ADDED: keepalive support to the osrm-routed HTTP server [#5518](https://github.com/Project-OSRM/osrm-backend/pull/5518)
+      - ADDED: flatbuffers output format support [#5513](https://github.com/Project-OSRM/osrm-backend/pull/5513)
+      - ADDED: Global 'skip_waypoints' option [#5556](https://github.com/Project-OSRM/osrm-backend/pull/5556)
+      - FIXED: Install the libosrm_guidance library correctly [#5604](https://github.com/Project-OSRM/osrm-backend/pull/5604)
+      - FIXED: Http Handler can now deal witch optional whitespace between header-key and -value [#5606](https://github.com/Project-OSRM/osrm-backend/issues/5606)
     - Routing:
       - CHANGED: allow routing past `barrier=arch` [#5352](https://github.com/Project-OSRM/osrm-backend/pull/5352)
       - CHANGED: default car weight was reduced to 2000 kg. [#5371](https://github.com/Project-OSRM/osrm-backend/pull/5371)
-
+      - CHANGED: default car height was reduced to 2 meters. [#5389](https://github.com/Project-OSRM/osrm-backend/pull/5389)
+      - FIXED: treat `bicycle=use_sidepath` as no access on the tagged way. [#5622](https://github.com/Project-OSRM/osrm-backend/pull/5622)
+    - Misc:
+      - CHANGED: Reduce memory usage for raster source handling. [#5572](https://github.com/Project-OSRM/osrm-backend/pull/5572)
+      - CHANGED: Add cmake option `ENABLE_DEBUG_LOGGING` to control whether output debug logging. [#3427](https://github.com/Project-OSRM/osrm-backend/issues/3427)
+      - CHANGED: updated extent of Hong Kong as left hand drive country. [#5535](https://github.com/Project-OSRM/osrm-backend/issues/5535)
+    - Infrastructure
+      - REMOVED: STXXL support removed as STXXL became abandonware. [#5760](https://github.com/Project-OSRM/osrm-backend/pull/5760)
 # 5.21.0
   - Changes from 5.20.0
     - Features:

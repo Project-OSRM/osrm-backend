@@ -39,11 +39,11 @@ function setup()
     cardinal_directions       = false,
 
     -- Size of the vehicle, to be limited by physical restriction of the way
-    vehicle_height = 2.5, -- in meters, 2.5m is the height of van
+    vehicle_height = 2.0, -- in meters, 2.0m is the height slightly above biggest SUVs
     vehicle_width = 1.9, -- in meters, ways with narrow tag are considered narrower than 2.2m
 
     -- Size of the vehicle, to be limited mostly by legal restriction of the way
-    vehicle_length = 4.8, -- in meters, 4.8m is the length of large or familly car
+    vehicle_length = 4.8, -- in meters, 4.8m is the length of large or family car
     vehicle_weight = 2000, -- in kilograms
 
     -- a list of suffixes to suppress in name change instructions. The suffixes also include common substrings of each other

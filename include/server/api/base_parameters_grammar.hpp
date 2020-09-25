@@ -152,6 +152,10 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
             qi::lit("generate_hints=") >
             qi::bool_[ph::bind(&engine::api::BaseParameters::generate_hints, qi::_r1) = qi::_1];
 
+        skip_waypoints_rule =
+            qi::lit("skip_waypoints=") >
+            qi::bool_[ph::bind(&engine::api::BaseParameters::skip_waypoints, qi::_r1) = qi::_1];
+
         bearings_rule =
             qi::lit("bearings=") >
             (-(qi::short_ > ',' > qi::short_))[ph::bind(add_bearing, qi::_r1, qi::_1)] % ';';
@@ -169,6 +173,12 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
             qi::lit("snapping=") >
             snapping_type[ph::bind(&engine::api::BaseParameters::snapping, qi::_r1) = qi::_1];
 
+        format_type.add(".json", engine::api::BaseParameters::OutputFormatType::JSON)(
+            ".flatbuffers", engine::api::BaseParameters::OutputFormatType::FLATBUFFERS);
+
+        format_rule =
+            -format_type[ph::bind(&engine::api::BaseParameters::format, qi::_r1) = qi::_1];
+
         exclude_rule = qi::lit("exclude=") >
                        (qi::as_string[+qi::char_("a-zA-Z0-9")] %
                         ',')[ph::bind(&engine::api::BaseParameters::exclude, qi::_r1) = qi::_1];
@@ -177,6 +187,7 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
                     | hints_rule(qi::_r1)          //
                     | bearings_rule(qi::_r1)       //
                     | generate_hints_rule(qi::_r1) //
+                    | skip_waypoints_rule(qi::_r1) //
                     | approach_rule(qi::_r1)       //
                     | exclude_rule(qi::_r1)        //
                     | snapping_rule(qi::_r1);
@@ -185,6 +196,9 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
   protected:
     qi::rule<Iterator, Signature> base_rule;
     qi::rule<Iterator, Signature> query_rule;
+    qi::rule<Iterator, Signature> format_rule;
+
+    qi::symbols<char, engine::api::BaseParameters::OutputFormatType> format_type;
 
     qi::real_parser<double, json_policy> double_;
 
@@ -194,6 +208,7 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
     qi::rule<Iterator, Signature> hints_rule;
 
     qi::rule<Iterator, Signature> generate_hints_rule;
+    qi::rule<Iterator, Signature> skip_waypoints_rule;
     qi::rule<Iterator, Signature> approach_rule;
     qi::rule<Iterator, Signature> exclude_rule;
 

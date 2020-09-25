@@ -112,16 +112,16 @@ void filterCandidates(const std::vector<util::Coordinate> &coordinates,
 
 Status MatchPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
                                   const api::MatchParameters &parameters,
-                                  util::json::Object &json_result) const
+                                  osrm::engine::api::ResultT &result) const
 {
     if (!algorithms.HasMapMatching())
     {
         return Error("NotImplemented",
                      "Map matching is not implemented for the chosen search algorithm.",
-                     json_result);
+                     result);
     }
 
-    if (!CheckAlgorithms(parameters, algorithms, json_result))
+    if (!CheckAlgorithms(parameters, algorithms, result))
         return Status::Error;
 
     const auto &facade = algorithms.GetFacade();
@@ -132,12 +132,12 @@ Status MatchPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
     if (max_locations_map_matching > 0 &&
         static_cast<int>(parameters.coordinates.size()) > max_locations_map_matching)
     {
-        return Error("TooBig", "Too many trace coordinates", json_result);
+        return Error("TooBig", "Too many trace coordinates", result);
     }
 
     if (!CheckAllCoordinates(parameters.coordinates))
     {
-        return Error("InvalidValue", "Invalid coordinate value.", json_result);
+        return Error("InvalidValue", "Invalid coordinate value.", result);
     }
 
     if (max_radius_map_matching > 0 && std::any_of(parameters.radiuses.begin(),
@@ -148,7 +148,7 @@ Status MatchPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
                                                        return *radius > max_radius_map_matching;
                                                    }))
     {
-        return Error("TooBig", "Radius search size is too large for map matching.", json_result);
+        return Error("TooBig", "Radius search size is too large for map matching.", result);
     }
 
     // Check for same or increasing timestamps. Impl. note: Incontrast to `sort(first,
@@ -158,8 +158,7 @@ Status MatchPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
 
     if (!time_increases_monotonically)
     {
-        return Error(
-            "InvalidValue", "Timestamps need to be monotonically increasing.", json_result);
+        return Error("InvalidValue", "Timestamps need to be monotonically increasing.", result);
     }
 
     SubMatchingList sub_matchings;
@@ -180,9 +179,8 @@ Status MatchPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
         (tidied.parameters.waypoints[0] != 0 ||
          tidied.parameters.waypoints.back() != (tidied.parameters.coordinates.size() - 1)))
     {
-        return Error("InvalidValue",
-                     "First and last coordinates must be specified as waypoints.",
-                     json_result);
+        return Error(
+            "InvalidValue", "First and last coordinates must be specified as waypoints.", result);
     }
 
     // assuming radius is the standard deviation of a normal distribution
@@ -225,7 +223,7 @@ Status MatchPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
     {
         return Error("NoSegment",
                      std::string("Could not find a matching segment for any coordinate."),
-                     json_result);
+                     result);
     }
 
     // call the actual map matching
@@ -238,13 +236,13 @@ Status MatchPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
 
     if (sub_matchings.size() == 0)
     {
-        return Error("NoMatch", "Could not match the trace.", json_result);
+        return Error("NoMatch", "Could not match the trace.", result);
     }
 
     // trace was split, we don't support the waypoints parameter across multiple match objects
     if (sub_matchings.size() > 1 && !parameters.waypoints.empty())
     {
-        return Error("NoMatch", "Could not match the trace with the given waypoints.", json_result);
+        return Error("NoMatch", "Could not match the trace with the given waypoints.", result);
     }
 
     // Error: Check if user-supplied waypoints can be found in the resulting matches
@@ -260,8 +258,7 @@ Status MatchPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
         }
         if (!tidied_waypoints.empty())
         {
-            return Error(
-                "NoMatch", "Requested waypoint parameter could not be matched.", json_result);
+            return Error("NoMatch", "Requested waypoint parameter could not be matched.", result);
         }
     }
     // we haven't errored yet, only allow leg collapsing if it was originally requested
@@ -313,7 +310,7 @@ Status MatchPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
     }
 
     api::MatchAPI match_api{facade, parameters, tidied};
-    match_api.MakeResponse(sub_matchings, sub_routes, json_result);
+    match_api.MakeResponse(sub_matchings, sub_routes, result);
 
     return Status::Ok;
 }

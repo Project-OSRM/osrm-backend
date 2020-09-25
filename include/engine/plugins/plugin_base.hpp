@@ -2,6 +2,8 @@
 #define BASE_PLUGIN_HPP
 
 #include "engine/api/base_parameters.hpp"
+#include "engine/api/base_result.hpp"
+#include "engine/api/flatbuffers/fbresult_generated.h"
 #include "engine/datafacade/datafacade_base.hpp"
 #include "engine/phantom_node.hpp"
 #include "engine/routing_algorithms.hpp"
@@ -39,7 +41,7 @@ class BasePlugin
 
     bool CheckAlgorithms(const api::BaseParameters &params,
                          const RoutingAlgorithmsInterface &algorithms,
-                         util::json::Object &result) const
+                         osrm::engine::api::ResultT &result) const
     {
         if (algorithms.IsValid())
         {
@@ -62,12 +64,38 @@ class BasePlugin
         return false;
     }
 
+    struct ErrorRenderer
+    {
+        std::string code;
+        std::string message;
+
+        ErrorRenderer(std::string code, std::string message)
+            : code(std::move(code)), message(std::move(message)){};
+
+        void operator()(util::json::Object &json_result)
+        {
+            json_result.values["code"] = code;
+            json_result.values["message"] = message;
+        };
+        void operator()(flatbuffers::FlatBufferBuilder &fb_result)
+        {
+            auto error = api::fbresult::CreateErrorDirect(fb_result, code.c_str(), message.c_str());
+            api::fbresult::FBResultBuilder response(fb_result);
+            response.add_error(true);
+            response.add_code(error);
+            fb_result.Finish(response.Finish());
+        };
+        void operator()(std::string &str_result)
+        {
+            str_result = str(boost::format("code=%1% message=%2%") % code % message);
+        };
+    };
+
     Status Error(const std::string &code,
                  const std::string &message,
-                 util::json::Object &json_result) const
+                 osrm::engine::api::ResultT &result) const
     {
-        json_result.values["code"] = code;
-        json_result.values["message"] = message;
+        mapbox::util::apply_visitor(ErrorRenderer(code, message), result);
         return Status::Error;
     }
 

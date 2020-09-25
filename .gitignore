@@ -49,7 +49,7 @@ Thumbs.db
 /_build*
 /build/
 /example/build/
-/test/data/monaco*
+/test/data/monaco.osrm*
 /test/data/ch
 /test/data/corech
 /test/data/mld
@@ -71,12 +71,6 @@ Thumbs.db
 # Jetbrains related files #
 ###########################
 .idea/
-
-# stxxl related files #
-#######################
-.stxxl
-stxxl.log
-stxxl.errlog
 
 # Compiled Binary Files #
 ####################################

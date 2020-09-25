@@ -180,6 +180,11 @@ RequestParser::RequestStatus RequestParser::consume(http::request &current_reque
             current_request.agent = current_header.value;
         }
 
+        if (boost::iequals(current_header.name, "Connection"))
+        {
+            current_request.connection = current_header.value;
+        }
+
         if (input == '\r')
         {
             state = internal_state::expecting_newline_3;
@@ -212,7 +217,7 @@ RequestParser::RequestStatus RequestParser::consume(http::request &current_reque
     case internal_state::header_name:
         if (input == ':')
         {
-            state = internal_state::space_before_header_value;
+            state = internal_state::header_value;
             return RequestStatus::indeterminate;
         }
         if (!is_char(input) || is_CTL(input) || is_special(input))
@@ -221,14 +226,12 @@ RequestParser::RequestStatus RequestParser::consume(http::request &current_reque
         }
         current_header.name.push_back(input);
         return RequestStatus::indeterminate;
-    case internal_state::space_before_header_value:
+    case internal_state::header_value:
         if (input == ' ')
         {
             state = internal_state::header_value;
             return RequestStatus::indeterminate;
         }
-        return RequestStatus::invalid;
-    case internal_state::header_value:
         if (input == '\r')
         {
             state = internal_state::expecting_newline_2;

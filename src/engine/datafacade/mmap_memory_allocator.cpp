@@ -52,11 +52,11 @@ MMapMemoryAllocator::MMapMemoryAllocator(const storage::StorageConfig &config)
         {
             std::unique_ptr<storage::BaseDataLayout> layout =
                 std::make_unique<storage::TarDataLayout>();
-            boost::iostreams::mapped_file mapped_memory_file;
-            util::mmapFile<char>(file.second, mapped_memory_file);
+            boost::iostreams::mapped_file_source mapped_memory_file;
+            auto data = util::mmapFile<char>(file.second, mapped_memory_file).data();
             mapped_memory_files.push_back(std::move(mapped_memory_file));
             storage::populateLayoutFromFile(file.second, *layout);
-            allocated_regions.push_back({mapped_memory_file.data(), std::move(layout)});
+            allocated_regions.push_back({const_cast<char *>(data), std::move(layout)});
         }
     }
 

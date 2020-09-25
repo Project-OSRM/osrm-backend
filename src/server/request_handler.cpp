@@ -110,6 +110,17 @@ void RequestHandler::HandleRequest(const http::request &current_request, http::r
 
             util::json::render(current_reply.content, result.get<util::json::Object>());
         }
+        else if (result.is<flatbuffers::FlatBufferBuilder>())
+        {
+            auto &buffer = result.get<flatbuffers::FlatBufferBuilder>();
+            current_reply.content.resize(buffer.GetSize());
+            std::copy(buffer.GetBufferPointer(),
+                      buffer.GetBufferPointer() + buffer.GetSize(),
+                      current_reply.content.begin());
+
+            current_reply.headers.emplace_back(
+                "Content-Type", "application/x-flatbuffers;schema=osrm.engine.api.fbresult");
+        }
         else
         {
             BOOST_ASSERT(result.is<std::string>());

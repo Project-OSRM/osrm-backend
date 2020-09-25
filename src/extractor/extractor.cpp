@@ -55,8 +55,12 @@
 #include <osmium/thread/pool.hpp>
 #include <osmium/visitor.hpp>
 
-#include <tbb/pipeline.h>
+#if TBB_VERSION_MAJOR == 2020
+#include <tbb/global_control.h>
+#else
 #include <tbb/task_scheduler_init.h>
+#endif
+#include <tbb/pipeline.h>
 
 #include <cstdlib>
 
@@ -214,11 +218,16 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
 {
     util::LogPolicy::GetInstance().Unmute();
 
-    const unsigned recommended_num_threads = tbb::task_scheduler_init::default_num_threads();
+    const unsigned recommended_num_threads = std::thread::hardware_concurrency();
     const auto number_of_threads = std::min(recommended_num_threads, config.requested_num_threads);
-    tbb::task_scheduler_init init(number_of_threads ? number_of_threads
-                                                    : tbb::task_scheduler_init::automatic);
+
+#if TBB_VERSION_MAJOR == 2020
+    tbb::global_control gc(tbb::global_control::max_allowed_parallelism,
+                           config.requested_num_threads);
+#else
+    tbb::task_scheduler_init init(config.requested_num_threads);
     BOOST_ASSERT(init.is_active());
+#endif
 
     LaneDescriptionMap turn_lane_map;
     std::vector<TurnRestriction> turn_restrictions;
@@ -604,7 +613,7 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
 
     // Parse OSM elements with parallel transformer
     // Number of pipeline tokens that yielded the best speedup was about 1.5 * num_cores
-    const auto num_threads = tbb::task_scheduler_init::default_num_threads() * 1.5;
+    const auto num_threads = std::thread::hardware_concurrency() * 1.5;
     const auto read_meta =
         config.use_metadata ? osmium::io::read_meta::yes : osmium::io::read_meta::no;
 

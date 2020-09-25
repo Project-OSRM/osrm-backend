@@ -43,6 +43,7 @@ Feature: Car - Handle physical limitation
             | primary | 1                  |           |       |
             | primary | 3                  |           | x     |
             | primary |                    | 1         |       |
+            | primary |                    | 8'        | x     |
             | primary |                    | 3         | x     |
             | primary |                    | default   | x     |
             | primary |                    | none      | x     |

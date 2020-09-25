@@ -25,6 +25,8 @@ var osrm = new OSRM('network.osrm');
                Make sure you prepared the dataset with the correct toolchain.
     -   `options.shared_memory` **[Boolean](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean)?** Connects to the persistent shared memory datastore.
                This requires you to run `osrm-datastore` prior to creating an `OSRM` object.
+    -   `options.dataset_name` **[String](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)?** Connects to the persistent shared memory datastore defined by `--dataset_name` option when running `osrm-datastore`
+               This requires you to run `osrm-datastore --dataset_name` prior to creating an `OSRM` object.
     -   `options.memory_file` **[String](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)?** *DEPRECATED*
                Old behaviour: Path to a file on disk to store the memory using mmap.  Current behaviour: setting this value is the same as setting `mmap_memory: true`.
     -   `options.mmap_memory` **[Boolean](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean)?** Map on-disk files to virtual memory addresses (mmap), rather than loading into RAM.
@@ -48,6 +50,7 @@ Returns the fastest route between two or more coordinates while visiting the way
                                           Can be `null` or an array of `[{value},{range}]` with `integer 0 .. 360,integer 0 .. 180`.
     -   `options.radiuses` **[Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array)?** Limits the coordinate snapping to streets in the given radius in meters. Can be `null` (unlimited, default) or `double >= 0`.
     -   `options.hints` **[Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array)?** Hints for the coordinate snapping. Array of base64 encoded strings.
+    -   `options.generate_hints` **[Boolean](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean)?** Whether or not adds a Hint to the response which can be used in subsequent requests. (optional, default `true`)
     -   `options.alternatives` **[Boolean](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean)** Search for alternative routes. (optional, default `false`)
     -   `options.alternatives` **[Number](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number)** Search for up to this many alternative routes.
         _Please note that even if alternative routes are requested, a result cannot be guaranteed._ (optional, default `0`)
@@ -89,6 +92,7 @@ Note: `coordinates` in the general options only supports a single `{longitude},{
                                           Can be `null` or an array of `[{value},{range}]` with `integer 0 .. 360,integer 0 .. 180`.
     -   `options.radiuses` **[Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array)?** Limits the coordinate snapping to streets in the given radius in meters. Can be `null` (unlimited, default) or `double >= 0`.
     -   `options.hints` **[Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array)?** Hints for the coordinate snapping. Array of base64 encoded strings.
+    -   `options.generate_hints` **[Boolean](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean)?** Whether or not adds a Hint to the response which can be used in subsequent requests. (optional, default `true`)
     -   `options.number` **[Number](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number)** Number of nearest segments that should be returned.
         Must be an integer greater than or equal to `1`. (optional, default `1`)
     -   `options.approaches` **[Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array)?** Keep waypoints on curb side. Can be `null` (unrestricted, default) or `curb`.
@@ -126,6 +130,7 @@ tables. Optionally returns distance table.
                                           Can be `null` or an array of `[{value},{range}]` with `integer 0 .. 360,integer 0 .. 180`.
     -   `options.radiuses` **[Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array)?** Limits the coordinate snapping to streets in the given radius in meters. Can be `null` (unlimited, default) or `double >= 0`.
     -   `options.hints` **[Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array)?** Hints for the coordinate snapping. Array of base64 encoded strings.
+    -   `options.generate_hints` **[Boolean](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean)?** Whether or not adds a Hint to the response which can be used in subsequent requests. (optional, default `true`)
     -   `options.sources` **[Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array)?** An array of `index` elements (`0 <= integer < #coordinates`) to
         use
         location with given index as source. Default is to use all.
@@ -136,6 +141,8 @@ tables. Optionally returns distance table.
     -   `options.fallback_coordinate` **[String](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)?** Either `input` (default) or `snapped`.  If using a `fallback_speed`, use either the user-supplied coordinate (`input`), or the snapped coordinate (`snapped`) for calculating the as-the-crow-flies diestance between two points.
     -   `options.scale_factor` **[Number](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number)?** Multiply the table duration values in the table by this number for more controlled input into a route optimization solver.
     -   `options.snapping` **[String](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)?** Which edges can be snapped to, either `default`, or `any`.  `default` only snaps to edges marked by the profile as `is_startpoint`, `any` will allow snapping to any edge in the routing graph.
+    -   `options.annotations` **[Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array)?** Return the requested table or tables in response. Can be `['duration']` (return the duration matrix, default) or `['duration', distance']` (return both the duration matrix and the distance matrix). 
+     
 -   `callback` **[Function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function)**
 
 **Examples**
@@ -206,6 +213,7 @@ if they can not be matched successfully.
     -   `options.bearings` **[Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array)?** Limits the search to segments with given bearing in degrees towards true north in clockwise direction.
                                           Can be `null` or an array of `[{value},{range}]` with `integer 0 .. 360,integer 0 .. 180`.
     -   `options.hints` **[Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array)?** Hints for the coordinate snapping. Array of base64 encoded strings.
+    -   `options.generate_hints` **[Boolean](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean)?** Whether or not adds a Hint to the response which can be used in subsequent requests. (optional, default `true`)
     -   `options.steps` **[Boolean](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean)** Return route steps for each route. (optional, default `false`)
     -   `options.annotations` **([Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array) \| [Boolean](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean))** An array with strings of `duration`, `nodes`, `distance`, `weight`, `datasources`, `speed` or boolean for enabling/disabling all. (optional, default `false`)
     -   `options.geometries` **[String](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)** Returned route geometry format (influences overview and per step). Can also be `geojson`. (optional, default `polyline`)
@@ -272,6 +280,7 @@ Right now, the following combinations are possible:
                                           Can be `null` or an array of `[{value},{range}]` with `integer 0 .. 360,integer 0 .. 180`.
     -   `options.radiuses` **[Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array)?** Limits the coordinate snapping to streets in the given radius in meters. Can be `double >= 0` or `null` (unlimited, default).
     -   `options.hints` **[Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array)?** Hints for the coordinate snapping. Array of base64 encoded strings.
+    -   `options.generate_hints` **[Boolean](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean)?** Whether or not adds a Hint to the response which can be used in subsequent requests. (optional, default `true`)
     -   `options.steps` **[Boolean](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean)** Return route steps for each route. (optional, default `false`)
     -   `options.annotations` **([Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array) \| [Boolean](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean))** An array with strings of `duration`, `nodes`, `distance`, `weight`, `datasources`, `speed` or boolean for enabling/disabling all. (optional, default `false`)
     -   `options.geometries` **[String](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)** Returned route geometry format (influences overview and per step). Can also be `geojson`. (optional, default `polyline`)

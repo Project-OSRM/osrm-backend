@@ -42,7 +42,7 @@ struct RouteParametersGrammar : public BaseParametersGrammar<Iterator, Signature
               qi::bool_[ph::bind(&engine::api::RouteParameters::continue_straight, qi::_r1) =
                             qi::_1]));
 
-        root_rule = query_rule(qi::_r1) > -qi::lit(".json") >
+        root_rule = query_rule(qi::_r1) > BaseGrammar::format_rule(qi::_r1) >
                     -('?' > (route_rule(qi::_r1) | base_rule(qi::_r1)) % '&');
     }
 

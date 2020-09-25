@@ -32,7 +32,7 @@ struct NearestParametersGrammar final : public BaseParametersGrammar<Iterator, S
                         qi::uint_)[ph::bind(&engine::api::NearestParameters::number_of_results,
                                             qi::_r1) = qi::_1];
 
-        root_rule = BaseGrammar::query_rule(qi::_r1) > -qi::lit(".json") >
+        root_rule = BaseGrammar::query_rule(qi::_r1) > BaseGrammar::format_rule(qi::_r1) >
                     -('?' > (nearest_rule(qi::_r1) | BaseGrammar::base_rule(qi::_r1)) % '&');
     }
 

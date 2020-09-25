@@ -2,6 +2,7 @@
 #include "server/request_handler.hpp"
 #include "server/request_parser.hpp"
 
+#include <boost/algorithm/string/predicate.hpp>
 #include <boost/assert.hpp>
 #include <boost/bind.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
@@ -17,7 +18,7 @@ namespace server
 {
 
 Connection::Connection(boost::asio::io_service &io_service, RequestHandler &handler)
-    : strand(io_service), TCP_socket(io_service), request_handler(handler)
+    : strand(io_service), TCP_socket(io_service), timer(io_service), request_handler(handler)
 {
 }
 
@@ -32,6 +33,15 @@ void Connection::start()
                                 this->shared_from_this(),
                                 boost::asio::placeholders::error,
                                 boost::asio::placeholders::bytes_transferred)));
+
+    if (keep_alive)
+    {
+        // Ok, we know it is not a first request, as we switched to keepalive
+        timer.cancel();
+        timer.expires_from_now(boost::posix_time::seconds(keepalive_timeout));
+        timer.async_wait(std::bind(
+            &Connection::handle_timeout, this->shared_from_this(), std::placeholders::_1));
+    }
 }
 
 void Connection::handle_read(const boost::system::error_code &error, std::size_t bytes_transferred)
@@ -39,6 +49,12 @@ void Connection::handle_read(const boost::system::error_code &error, std::size_t
     if (error)
     {
         return;
+    }
+
+    if (keep_alive)
+    {
+        timer.cancel();
+        timer.expires_from_now(boost::posix_time::seconds(0));
     }
 
     // no error detected, let's parse the request
@@ -52,8 +68,26 @@ void Connection::handle_read(const boost::system::error_code &error, std::size_t
     // the request has been parsed
     if (result == RequestParser::RequestStatus::valid)
     {
-        current_request.endpoint = TCP_socket.remote_endpoint().address();
+
+        boost::system::error_code ec;
+        current_request.endpoint = TCP_socket.remote_endpoint(ec).address();
+        if (ec)
+        {
+            handle_shutdown();
+            return;
+        }
         request_handler.HandleRequest(current_request, current_reply);
+
+        if (boost::iequals(current_request.connection, "close"))
+        {
+            current_reply.headers.emplace_back("Connection", "close");
+        }
+        else
+        {
+            keep_alive = true;
+            current_reply.headers.emplace_back("Connection", "keep-alive");
+            current_reply.headers.emplace_back("Keep-Alive", "timeout=5, max=512");
+        }
 
         // compress the result w/ gzip/deflate if requested
         switch (compression_type)
@@ -116,10 +150,42 @@ void Connection::handle_write(const boost::system::error_code &error)
 {
     if (!error)
     {
-        // Initiate graceful connection closure.
-        boost::system::error_code ignore_error;
-        TCP_socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ignore_error);
+        if (keep_alive && processed_requests > 0)
+        {
+            --processed_requests;
+            current_request = http::request();
+            current_reply = http::reply();
+            request_parser = RequestParser();
+            incoming_data_buffer = boost::array<char, 8192>();
+            output_buffer.clear();
+            this->start();
+        }
+        else
+        {
+            handle_shutdown();
+        }
     }
+}
+
+/// Handle completion of a timeout timer..
+void Connection::handle_timeout(boost::system::error_code ec)
+{
+    // We can get there for 3 reasons: spurious wakeup by timer.cancel(), which should be ignored
+    // Slow client with a delayed _first_ request, which should be ignored too
+    // Absent next request during waiting time in the keepalive mode - should stop right there.
+    if (ec != boost::asio::error::operation_aborted)
+    {
+        boost::system::error_code ignore_error;
+        TCP_socket.cancel(ignore_error);
+        handle_shutdown();
+    }
+}
+
+void Connection::handle_shutdown()
+{
+    // Initiate graceful connection closure.
+    boost::system::error_code ignore_error;
+    TCP_socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ignore_error);
 }
 
 std::vector<char> Connection::compress_buffers(const std::vector<char> &uncompressed_data,

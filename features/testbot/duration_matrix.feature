@@ -21,6 +21,21 @@ Feature: Basic Duration Matrix
             | a | 0  | 10 |
             | b | 10 | 0  |
 
+    Scenario: Testbot - Travel time matrix of minimal network requested with flatbuffer format
+        Given the node map
+            """
+            a b
+            """
+
+        And the ways
+            | nodes |
+            | ab    |
+
+        When I request a travel time matrix with flatbuffers I should get
+            |   | a  | b  |
+            | a | 0  | 10 |
+            | b | 10 | 0  |
+
     @ch
     Scenario: Testbot - Travel time matrix of minimal network with toll exclude
         Given the query options
