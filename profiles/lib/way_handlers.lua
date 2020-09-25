@@ -598,6 +598,9 @@ function WayHandlers.weights(profile,way,result,data)
     if (result.backward_mode ~= mode.inaccessible and result.backward_speed > 0) then
        result.backward_rate = 1
     end
+  elseif profile.standard_rate then
+      result.forward_rate = 1
+      result.backward_rate = 1
   end
 end
 

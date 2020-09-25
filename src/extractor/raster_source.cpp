@@ -42,8 +42,8 @@ RasterDatum RasterSource::GetRasterData(const int lon, const int lat) const
         return {};
     }
 
-    const std::size_t xth = static_cast<std::size_t>(round((lon - xmin) / xstep));
-    const std::size_t yth = static_cast<std::size_t>(round((ymax - lat) / ystep));
+    const std::size_t xth = static_cast<std::size_t>(round((lat - xmin) / xstep));
+    const std::size_t yth = static_cast<std::size_t>(round((lon - ymin) / ystep));
 
     return {raster_data(xth, yth)};
 }
@@ -57,9 +57,7 @@ RasterDatum RasterSource::GetRasterInterpolate(const int lon, const int lat) con
     }
 
     const auto xthP = (lon - xmin) / xstep;
-    const auto ythP =
-        (ymax - lat) /
-        ystep; // the raster texture uses a different coordinate system with y pointing downwards
+    const auto ythP = (lat - ymin) / ystep;
 
     const std::size_t top = static_cast<std::size_t>(fmax(floor(ythP), 0));
     const std::size_t bottom = static_cast<std::size_t>(fmin(ceil(ythP), height - 1));
