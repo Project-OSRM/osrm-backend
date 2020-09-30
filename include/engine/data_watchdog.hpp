@@ -120,7 +120,8 @@ class DataWatchdogImpl<AlgorithmT, datafacade::ContiguousInternalMemoryDataFacad
 
             {
                 boost::unique_lock<boost::shared_mutex> swap_lock(factory_mutex);
-                facade_factory =DataFacadeFactory<datafacade::ContiguousInternalMemoryDataFacade, AlgorithmT>(
+                facade_factory =
+                    DataFacadeFactory<datafacade::ContiguousInternalMemoryDataFacade, AlgorithmT>(
                         std::make_shared<datafacade::SharedMemoryAllocator>(
                             std::vector<storage::SharedRegionRegister::ShmKey>{
                                 static_region.shm_key, updatable_region.shm_key}));
