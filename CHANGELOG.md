@@ -21,6 +21,7 @@
       - CHANGED: Reduce memory usage for raster source handling. [#5572](https://github.com/Project-OSRM/osrm-backend/pull/5572)
       - CHANGED: Add cmake option `ENABLE_DEBUG_LOGGING` to control whether output debug logging. [#3427](https://github.com/Project-OSRM/osrm-backend/issues/3427)
       - CHANGED: updated extent of Hong Kong as left hand drive country. [#5535](https://github.com/Project-OSRM/osrm-backend/issues/5535)
+      - FIXED: corrected error message when failing to snap input coordinates [#5846](https://github.com/Project-OSRM/osrm-backend/pull/5846)
     - Infrastructure
       - REMOVED: STXXL support removed as STXXL became abandonware. [#5760](https://github.com/Project-OSRM/osrm-backend/pull/5760)
 # 5.21.0

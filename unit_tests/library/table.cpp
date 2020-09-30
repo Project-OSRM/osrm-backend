@@ -242,6 +242,8 @@ BOOST_AUTO_TEST_CASE(test_table_no_segment_for_some_coordinates)
     BOOST_CHECK(rc == Status::Error);
     const auto code = json_result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "NoSegment");
+    const auto message = json_result.values.at("message").get<json::String>().value;
+    BOOST_CHECK_EQUAL(message, "Could not find a matching segment for coordinate 0");
 }
 
 BOOST_AUTO_TEST_CASE(test_table_serialiaze_fb)
