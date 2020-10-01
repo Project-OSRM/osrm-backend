@@ -371,6 +371,22 @@ class BasePlugin
         }
         return phantom_node_pairs;
     }
+
+    std::string MissingPhantomErrorMessage(const std::vector<PhantomNodePair> &phantom_nodes,
+                                           const std::vector<util::Coordinate> &coordinates) const
+    {
+        BOOST_ASSERT(phantom_nodes.size() < coordinates.size());
+        auto mismatch = std::mismatch(phantom_nodes.begin(),
+                                      phantom_nodes.end(),
+                                      coordinates.begin(),
+                                      coordinates.end(),
+                                      [](const auto &phantom_node, const auto &coordinate) {
+                                          return phantom_node.first.input_location == coordinate;
+                                      });
+        std::size_t missing_index = std::distance(phantom_nodes.begin(), mismatch.first);
+        return std::string("Could not find a matching segment for coordinate ") +
+               std::to_string(missing_index);
+    }
 };
 }
 }
