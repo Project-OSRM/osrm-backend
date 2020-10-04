@@ -1,5 +1,7 @@
 # Unreleased
   - Changes from 5.23.0
+    - Features
+      - ADDED: Added support for multiple via-way restrictions. [#5907](https://github.com/Project-OSRM/osrm-backend/pull/5907)
     - Misc:
       - CHANGED: Unify `.osrm.turn_penalites_index` dump processing same with `.osrm.turn_weight_penalties` and `.osrm.turn_duration_penalties` [#5868](https://github.com/Project-OSRM/osrm-backend/pull/5868)
     - Infrastructure

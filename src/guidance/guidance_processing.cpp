@@ -201,9 +201,9 @@ void annotateTurns(const util::NodeBasedDynamicGraph &node_based_graph,
                         // be fine.
                         bearing_class_by_node_based_node[intersection_node] = bearing_class_id;
 
-                        // check if we are turning off a via way
-                        const auto turning_off_via_way =
-                            way_restriction_map.IsViaWay(incoming_edge.node, intersection_node);
+                        // check if we on a restriction via edge
+                        const auto is_restriction_via_edge =
+                            way_restriction_map.IsViaWayEdge(incoming_edge.node, intersection_node);
 
                         for (const auto &outgoing_edge : outgoing_edges)
                         {
@@ -239,11 +239,11 @@ void annotateTurns(const util::NodeBasedDynamicGraph &node_based_graph,
                                 guidance::TurnBearing(intersection[0].perceived_bearing),
                                 guidance::TurnBearing(turn->perceived_bearing)});
 
-                            // when turning off a a via-way turn restriction, we need to not only
+                            // When on the edge of a via-way turn restriction, we need to not only
                             // handle the normal edges for the way, but also add turns for every
                             // duplicated node. This process is integrated here to avoid doing the
                             // turn analysis multiple times.
-                            if (turning_off_via_way)
+                            if (is_restriction_via_edge)
                             {
                                 const auto duplicated_nodes = way_restriction_map.DuplicatedNodeIDs(
                                     incoming_edge.node, intersection_node);
@@ -261,10 +261,18 @@ void annotateTurns(const util::NodeBasedDynamicGraph &node_based_graph,
 
                                     if (is_way_restricted)
                                     {
-                                        auto const restriction = way_restriction_map.GetRestriction(
-                                            duplicated_node_id, node_at_end_of_turn);
+                                        auto const restrictions =
+                                            way_restriction_map.GetRestrictions(
+                                                duplicated_node_id, node_at_end_of_turn);
 
-                                        if (restriction.condition.empty())
+                                        auto has_unconditional =
+                                            std::any_of(restrictions.begin(),
+                                                        restrictions.end(),
+                                                        [](const auto &restriction) {
+                                                            return restriction->IsUnconditional();
+                                                        });
+
+                                        if (has_unconditional)
                                             continue;
 
                                         buffer->delayed_turn_data.push_back(guidance::TurnData{

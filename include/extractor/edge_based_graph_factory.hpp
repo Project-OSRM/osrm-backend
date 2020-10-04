@@ -12,8 +12,8 @@
 #include "extractor/name_table.hpp"
 #include "extractor/nbg_to_ebg.hpp"
 #include "extractor/node_data_container.hpp"
+#include "extractor/node_restriction_map.hpp"
 #include "extractor/query_node.hpp"
-#include "extractor/restriction_index.hpp"
 #include "extractor/turn_lane_types.hpp"
 #include "extractor/way_restriction_map.hpp"
 
