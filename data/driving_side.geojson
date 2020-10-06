@@ -4,7 +4,7 @@
     {
       "type": "Feature",
       "properties": {
-        
+        "driving_side": "left"
       },
       "geometry": {
         "type": "Polygon",
@@ -301,7 +301,7 @@
     {
       "type": "Feature",
       "properties": {
-        
+        "driving_side": "left"
       },
       "geometry": {
         "type": "Polygon",
@@ -334,7 +334,7 @@
     {
       "type": "Feature",
       "properties": {
-        
+        "driving_side": "left"
       },
       "geometry": {
         "type": "Polygon",
@@ -783,7 +783,7 @@
     {
       "type": "Feature",
       "properties": {
-        
+        "driving_side": "left"
       },
       "geometry": {
         "type": "Polygon",
@@ -1528,7 +1528,7 @@
     {
       "type": "Feature",
       "properties": {
-        
+        "driving_side": "left"
       },
       "geometry": {
         "type": "Polygon",
@@ -1557,7 +1557,7 @@
     {
       "type": "Feature",
       "properties": {
-        
+        "driving_side": "left"
       },
       "geometry": {
         "type": "Polygon",
@@ -1586,7 +1586,7 @@
     {
       "type": "Feature",
       "properties": {
-        
+        "driving_side": "left"
       },
       "geometry": {
         "type": "Polygon",
@@ -1623,7 +1623,7 @@
     {
       "type": "Feature",
       "properties": {
-        
+        "driving_side": "left"
       },
       "geometry": {
         "type": "Polygon",
@@ -3040,7 +3040,7 @@
     {
       "type": "Feature",
       "properties": {
-        
+        "driving_side": "left"
       },
       "geometry": {
         "type": "Polygon",
@@ -3081,7 +3081,7 @@
     {
       "type": "Feature",
       "properties": {
-        
+        "driving_side": "left"
       },
       "geometry": {
         "type": "Polygon",
@@ -3126,7 +3126,7 @@
     {
       "type": "Feature",
       "properties": {
-        
+        "driving_side": "left"
       },
       "geometry": {
         "type": "Polygon",
