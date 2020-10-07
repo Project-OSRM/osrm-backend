@@ -36,6 +36,59 @@ inline LevelID getNodeQueryLevel(const MultiLevelPartition &partition,
     return node_level;
 }
 
+template <bool DIRECTION>
+void relaxBorderEdges(const DataFacade<mld::Algorithm> &facade,
+                      const NodeID node,
+                      const EdgeWeight weight,
+                      const EdgeDuration duration,
+                      const EdgeDistance distance,
+                      typename SearchEngineData<mld::Algorithm>::ManyToManyQueryHeap &query_heap,
+                      LevelID level)
+{
+    for (const auto edge : facade.GetBorderEdgeRange(level, node))
+    {
+        const auto &data = facade.GetEdgeData(edge);
+        if ((DIRECTION == FORWARD_DIRECTION) ? facade.IsForwardEdge(edge)
+                                             : facade.IsBackwardEdge(edge))
+        {
+            const NodeID to = facade.GetTarget(edge);
+            if (facade.ExcludeNode(to))
+            {
+                continue;
+            }
+
+            const auto turn_id = data.turn_id;
+            const auto node_id = DIRECTION == FORWARD_DIRECTION ? node : facade.GetTarget(edge);
+            const auto node_weight = facade.GetNodeWeight(node_id);
+            const auto node_duration = facade.GetNodeDuration(node_id);
+            const auto node_distance = facade.GetNodeDistance(node_id);
+            const auto turn_weight = node_weight + facade.GetWeightPenaltyForEdgeID(turn_id);
+            const auto turn_duration = node_duration + facade.GetDurationPenaltyForEdgeID(turn_id);
+
+            BOOST_ASSERT_MSG(node_weight + turn_weight > 0, "edge weight is invalid");
+            const auto to_weight = weight + turn_weight;
+            const auto to_duration = duration + turn_duration;
+            const auto to_distance = distance + node_distance;
+
+            // New Node discovered -> Add to Heap + Node Info Storage
+            if (!query_heap.WasInserted(to))
+            {
+                query_heap.Insert(to, to_weight, {node, false, to_duration, to_distance});
+            }
+            // Found a shorter Path -> Update weight and set new parent
+            else if (std::tie(to_weight, to_duration, to_distance, node) <
+                     std::tie(query_heap.GetKey(to),
+                              query_heap.GetData(to).duration,
+                              query_heap.GetData(to).distance,
+                              query_heap.GetData(to).parent))
+            {
+                query_heap.GetData(to) = {node, false, to_duration, to_distance};
+                query_heap.DecreaseKey(to, to_weight);
+            }
+        }
+    }
+}
+
 template <bool DIRECTION, typename... Args>
 void relaxOutgoingEdges(const DataFacade<mld::Algorithm> &facade,
                         const NodeID node,
@@ -140,48 +193,7 @@ void relaxOutgoingEdges(const DataFacade<mld::Algorithm> &facade,
         }
     }
 
-    for (const auto edge : facade.GetBorderEdgeRange(level, node))
-    {
-        const auto &data = facade.GetEdgeData(edge);
-        if ((DIRECTION == FORWARD_DIRECTION) ? facade.IsForwardEdge(edge)
-                                             : facade.IsBackwardEdge(edge))
-        {
-            const NodeID to = facade.GetTarget(edge);
-            if (facade.ExcludeNode(to))
-            {
-                continue;
-            }
-
-            const auto turn_id = data.turn_id;
-            const auto node_id = DIRECTION == FORWARD_DIRECTION ? node : facade.GetTarget(edge);
-            const auto node_weight = facade.GetNodeWeight(node_id);
-            const auto node_duration = facade.GetNodeDuration(node_id);
-            const auto node_distance = facade.GetNodeDistance(node_id);
-            const auto turn_weight = node_weight + facade.GetWeightPenaltyForEdgeID(turn_id);
-            const auto turn_duration = node_duration + facade.GetDurationPenaltyForEdgeID(turn_id);
-
-            BOOST_ASSERT_MSG(node_weight + turn_weight > 0, "edge weight is invalid");
-            const auto to_weight = weight + turn_weight;
-            const auto to_duration = duration + turn_duration;
-            const auto to_distance = distance + node_distance;
-
-            // New Node discovered -> Add to Heap + Node Info Storage
-            if (!query_heap.WasInserted(to))
-            {
-                query_heap.Insert(to, to_weight, {node, false, to_duration, to_distance});
-            }
-            // Found a shorter Path -> Update weight and set new parent
-            else if (std::tie(to_weight, to_duration, to_distance, node) <
-                     std::tie(query_heap.GetKey(to),
-                              query_heap.GetData(to).duration,
-                              query_heap.GetData(to).distance,
-                              query_heap.GetData(to).parent))
-            {
-                query_heap.GetData(to) = {node, false, to_duration, to_distance};
-                query_heap.DecreaseKey(to, to_weight);
-            }
-        }
-    }
+    relaxBorderEdges<DIRECTION>(facade, node, weight, duration, distance, query_heap, level);
 }
 
 //
@@ -297,37 +309,19 @@ oneToManySearch(SearchEngineData<Algorithm> &engine_working_data,
                            EdgeWeight initial_weight,
                            EdgeDuration initial_duration,
                            EdgeDistance initial_distance) {
-
-        // Update single node paths
-        update_values(node, initial_weight, initial_duration, initial_distance);
-
-        query_heap.Insert(node, initial_weight, {node, initial_duration, initial_distance});
-
-        // Place adjacent nodes into heap
-        for (auto edge : facade.GetAdjacentEdgeRange(node))
+        if (target_nodes_index.count(node))
         {
-            const auto &data = facade.GetEdgeData(edge);
-            const auto to = facade.GetTarget(edge);
-
-            if (facade.ExcludeNode(to))
-            {
-                continue;
-            }
-
-            if ((DIRECTION == FORWARD_DIRECTION ? facade.IsForwardEdge(edge)
-                                                : facade.IsBackwardEdge(edge)) &&
-                !query_heap.WasInserted(to))
-            {
-                const auto turn_id = data.turn_id;
-                const auto node_id = DIRECTION == FORWARD_DIRECTION ? node : to;
-                const auto edge_weight = initial_weight + facade.GetNodeWeight(node_id) +
-                                         facade.GetWeightPenaltyForEdgeID(turn_id);
-                const auto edge_duration = initial_duration + facade.GetNodeDuration(node_id) +
-                                           facade.GetDurationPenaltyForEdgeID(turn_id);
-                const auto edge_distance = initial_distance + facade.GetNodeDistance(node_id);
-
-                query_heap.Insert(to, edge_weight, {node, edge_duration, edge_distance});
-            }
+            // Source and target on the same edge node. If target is not reachable directly via
+            // the node (e.g destination is before source on oneway segment) we want to allow
+            // node to be visited later in the search along a reachable path.
+            // Therefore, we manually run first step of search without marking node as visited.
+            update_values(node, initial_weight, initial_duration, initial_distance);
+            relaxBorderEdges<DIRECTION>(
+                facade, node, initial_weight, initial_duration, initial_distance, query_heap, 0);
+        }
+        else
+        {
+            query_heap.Insert(node, initial_weight, {node, initial_duration, initial_distance});
         }
     };
 
