@@ -16,6 +16,7 @@
       - FIXED: treat `bicycle=use_sidepath` as no access on the tagged way. [#5622](https://github.com/Project-OSRM/osrm-backend/pull/5622)
       - FIXED: fix table result when source and destination on same one-way segment. [#5828](https://github.com/Project-OSRM/osrm-backend/pull/5828)
       - FIXED: fix occasional segfault when swapping data with osrm-datastore and using `exclude=` [#5844](https://github.com/Project-OSRM/osrm-backend/pull/5844)
+      - FIXED: fix crash in MLD alternative search if source or target are invalid [#5851](https://github.com/Project-OSRM/osrm-backend/pull/5851)
     - Misc:
       - CHANGED: Reduce memory usage for raster source handling. [#5572](https://github.com/Project-OSRM/osrm-backend/pull/5572)
       - CHANGED: Add cmake option `ENABLE_DEBUG_LOGGING` to control whether output debug logging. [#3427](https://github.com/Project-OSRM/osrm-backend/issues/3427)
