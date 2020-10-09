@@ -1,4 +1,4 @@
-# 5.23.0-rc.1
+# 5.23.0-rc.2
   - Changes from 5.22.0
     - Build:
       - FIXED: pessimistic calls to std::move [#5560](https://github.com/Project-OSRM/osrm-backend/pull/5561)
