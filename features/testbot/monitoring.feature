@@ -17,5 +17,5 @@ Feature: Basic Prometheus monitoring
             | ab    |
 
         When I monitor I should get
-            | key          | value |
-            | workers_busy | 0     |
+            | key               | value |
+            | osrm_workers_busy | 0     |
