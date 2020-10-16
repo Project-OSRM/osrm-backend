@@ -25,6 +25,6 @@ TEST_CASE("length value must be dividable by sizeof(T)") {
     protozero::pbf_reader item{data};
 
     REQUIRE(item.next());
-    REQUIRE_THROWS_AS(item.get_packed_sfixed32(), const protozero::invalid_length_exception&);
+    REQUIRE_THROWS_AS(item.get_packed_sfixed32(), protozero::invalid_length_exception);
 }
 
