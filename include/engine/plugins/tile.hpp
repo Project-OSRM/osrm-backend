@@ -28,7 +28,7 @@ class TilePlugin final : public BasePlugin
   public:
     Status HandleRequest(const RoutingAlgorithmsInterface &algorithms,
                          const api::TileParameters &parameters,
-                         osrm::engine::api::ResultT &pbf_buffer) const;
+                         osrm::engine::api::ResultT &result) const;
 };
 }
 }

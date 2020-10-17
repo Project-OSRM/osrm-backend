@@ -26,18 +26,17 @@ BOOST_AUTO_TEST_CASE(test_roundtrip_response_for_locations_in_small_component)
     params.coordinates.push_back(locations.at(1));
     params.coordinates.push_back(locations.at(2));
 
-    engine::api::ResultT result = json::Object();
+    json::Object result;
     const auto rc = osrm.Trip(params, result);
     BOOST_CHECK(rc == Status::Ok);
 
-    auto &json_result = result.get<json::Object>();
-    const auto code = json_result.values.at("code").get<json::String>().value;
+    const auto code = result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
-    const auto &waypoints = json_result.values.at("waypoints").get<json::Array>().values;
+    const auto &waypoints = result.values.at("waypoints").get<json::Array>().values;
     BOOST_CHECK_EQUAL(waypoints.size(), params.coordinates.size());
 
-    const auto &trips = json_result.values.at("trips").get<json::Array>().values;
+    const auto &trips = result.values.at("trips").get<json::Array>().values;
     BOOST_CHECK_EQUAL(trips.size(), 1);
 
     for (const auto &waypoint : waypoints)
@@ -70,15 +69,14 @@ BOOST_AUTO_TEST_CASE(test_roundtrip_response_for_locations_in_small_component_sk
     params.coordinates.push_back(locations.at(1));
     params.coordinates.push_back(locations.at(2));
 
-    engine::api::ResultT result = json::Object();
+    json::Object result;
     const auto rc = osrm.Trip(params, result);
     BOOST_CHECK(rc == Status::Ok);
 
-    auto &json_result = result.get<json::Object>();
-    const auto code = json_result.values.at("code").get<json::String>().value;
+    const auto code = result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
-    BOOST_CHECK(json_result.values.find("waypoints") == json_result.values.end());
+    BOOST_CHECK(result.values.find("waypoints") == result.values.end());
 }
 
 BOOST_AUTO_TEST_CASE(test_roundtrip_response_for_locations_in_big_component)
@@ -93,18 +91,17 @@ BOOST_AUTO_TEST_CASE(test_roundtrip_response_for_locations_in_big_component)
     params.coordinates.push_back(locations.at(1));
     params.coordinates.push_back(locations.at(2));
 
-    engine::api::ResultT result = json::Object();
+    json::Object result;
     const auto rc = osrm.Trip(params, result);
     BOOST_CHECK(rc == Status::Ok);
 
-    auto &json_result = result.get<json::Object>();
-    const auto code = json_result.values.at("code").get<json::String>().value;
+    const auto code = result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
-    const auto &waypoints = json_result.values.at("waypoints").get<json::Array>().values;
+    const auto &waypoints = result.values.at("waypoints").get<json::Array>().values;
     BOOST_CHECK_EQUAL(waypoints.size(), params.coordinates.size());
 
-    const auto &trips = json_result.values.at("trips").get<json::Array>().values;
+    const auto &trips = result.values.at("trips").get<json::Array>().values;
     BOOST_CHECK_EQUAL(trips.size(), 1);
 
     for (const auto &waypoint : waypoints)
@@ -138,18 +135,17 @@ BOOST_AUTO_TEST_CASE(test_roundtrip_response_for_locations_across_components)
     params.coordinates.push_back(small.at(1));
     params.coordinates.push_back(big.at(1));
 
-    engine::api::ResultT result = json::Object();
+    json::Object result;
     const auto rc = osrm.Trip(params, result);
     BOOST_CHECK(rc == Status::Ok);
 
-    auto &json_result = result.get<json::Object>();
-    const auto code = json_result.values.at("code").get<json::String>().value;
+    const auto code = result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
-    const auto &waypoints = json_result.values.at("waypoints").get<json::Array>().values;
+    const auto &waypoints = result.values.at("waypoints").get<json::Array>().values;
     BOOST_CHECK_EQUAL(waypoints.size(), params.coordinates.size());
 
-    const auto &trips = json_result.values.at("trips").get<json::Array>().values;
+    const auto &trips = result.values.at("trips").get<json::Array>().values;
     BOOST_CHECK_EQUAL(trips.size(), 1);
     // ^ First snapping, then SCC decomposition (see plugins/trip.cpp). Therefore only a single
     // trip.
@@ -187,18 +183,17 @@ BOOST_AUTO_TEST_CASE(test_tfse_1)
     params.destination = TripParameters::DestinationType::Last;
     params.roundtrip = false;
 
-    engine::api::ResultT result = json::Object();
+    json::Object result;
     const auto rc = osrm.Trip(params, result);
     BOOST_CHECK(rc == Status::Ok);
 
-    auto &json_result = result.get<json::Object>();
-    const auto code = json_result.values.at("code").get<json::String>().value;
+    const auto code = result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
-    const auto &waypoints = json_result.values.at("waypoints").get<json::Array>().values;
+    const auto &waypoints = result.values.at("waypoints").get<json::Array>().values;
     BOOST_CHECK_EQUAL(waypoints.size(), params.coordinates.size());
 
-    const auto &trips = json_result.values.at("trips").get<json::Array>().values;
+    const auto &trips = result.values.at("trips").get<json::Array>().values;
     BOOST_CHECK_EQUAL(trips.size(), 1);
 
     for (const auto &waypoint : waypoints)
@@ -234,18 +229,17 @@ BOOST_AUTO_TEST_CASE(test_tfse_2)
     params.destination = TripParameters::DestinationType::Last;
     params.roundtrip = false;
 
-    engine::api::ResultT result = json::Object();
+    json::Object result;
     const auto rc = osrm.Trip(params, result);
     BOOST_CHECK(rc == Status::Ok);
 
-    auto &json_result = result.get<json::Object>();
-    const auto code = json_result.values.at("code").get<json::String>().value;
+    const auto code = result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
-    const auto &waypoints = json_result.values.at("waypoints").get<json::Array>().values;
+    const auto &waypoints = result.values.at("waypoints").get<json::Array>().values;
     BOOST_CHECK_EQUAL(waypoints.size(), params.coordinates.size());
 
-    const auto &trips = json_result.values.at("trips").get<json::Array>().values;
+    const auto &trips = result.values.at("trips").get<json::Array>().values;
     BOOST_CHECK_EQUAL(trips.size(), 1);
 
     for (const auto &waypoint : waypoints)
@@ -275,22 +269,20 @@ void ResetParams(const Locations &locations, osrm::TripParameters &params)
 void CheckNotImplemented(const osrm::OSRM &osrm, osrm::TripParameters &params)
 {
     using namespace osrm;
-    engine::api::ResultT result = json::Object();
+    json::Object result;
     auto rc = osrm.Trip(params, result);
     BOOST_REQUIRE(rc == osrm::Status::Error);
-    auto &json_result = result.get<json::Object>();
-    auto code = json_result.values.at("code").get<osrm::json::String>().value;
+    auto code = result.values.at("code").get<osrm::json::String>().value;
     BOOST_CHECK_EQUAL(code, "NotImplemented");
 }
 
 void CheckOk(const osrm::OSRM &osrm, osrm::TripParameters &params)
 {
     using namespace osrm;
-    engine::api::ResultT result = json::Object();
+    json::Object result;
     auto rc = osrm.Trip(params, result);
     BOOST_REQUIRE(rc == osrm::Status::Ok);
-    auto &json_result = result.get<json::Object>();
-    auto code = json_result.values.at("code").get<osrm::json::String>().value;
+    auto code = result.values.at("code").get<osrm::json::String>().value;
     BOOST_CHECK_EQUAL(code, "Ok");
 }
 
@@ -458,12 +450,11 @@ BOOST_AUTO_TEST_CASE(test_roundtrip_response_fb_serialization)
     params.coordinates.push_back(locations.at(1));
     params.coordinates.push_back(locations.at(2));
 
-    engine::api::ResultT result = flatbuffers::FlatBufferBuilder();
+    flatbuffers::FlatBufferBuilder result;
     const auto rc = osrm.Trip(params, result);
     BOOST_CHECK(rc == Status::Ok);
 
-    auto &fb_result = result.get<flatbuffers::FlatBufferBuilder>();
-    auto fb = engine::api::fbresult::GetFBResult(fb_result.GetBufferPointer());
+    auto fb = engine::api::fbresult::GetFBResult(result.GetBufferPointer());
 
     BOOST_CHECK(!fb->error());
 
@@ -502,12 +493,11 @@ BOOST_AUTO_TEST_CASE(test_roundtrip_response_fb_serialization_skip_waypoints)
     params.coordinates.push_back(locations.at(1));
     params.coordinates.push_back(locations.at(2));
 
-    engine::api::ResultT result = flatbuffers::FlatBufferBuilder();
+    flatbuffers::FlatBufferBuilder result;
     const auto rc = osrm.Trip(params, result);
     BOOST_CHECK(rc == Status::Ok);
 
-    auto &fb_result = result.get<flatbuffers::FlatBufferBuilder>();
-    auto fb = engine::api::fbresult::GetFBResult(fb_result.GetBufferPointer());
+    auto fb = engine::api::fbresult::GetFBResult(result.GetBufferPointer());
 
     BOOST_CHECK(!fb->error());
 

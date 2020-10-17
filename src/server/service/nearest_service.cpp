@@ -68,9 +68,11 @@ engine::Status NearestService::RunQuery(std::size_t prefix_length,
         if (parameters->format == engine::api::BaseParameters::OutputFormatType::FLATBUFFERS)
         {
             result = flatbuffers::FlatBufferBuilder();
+            auto &fb_result = result.get<flatbuffers::FlatBufferBuilder>();
+            return BaseService::routing_machine.Nearest(*parameters, fb_result);
         }
     }
-    return BaseService::routing_machine.Nearest(*parameters, result);
+    return BaseService::routing_machine.Nearest(*parameters, json_result);
 }
 }
 }

@@ -1,4 +1,6 @@
 # Unreleased
+    - API:
+      - FIXED: Undo libosrm API break by overloading method response types [#5860](https://github.com/Project-OSRM/osrm-backend/pull/5860)
 
 # 5.23.0
   - Changes from 5.22.0

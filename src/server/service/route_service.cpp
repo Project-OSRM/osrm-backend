@@ -72,9 +72,11 @@ engine::Status RouteService::RunQuery(std::size_t prefix_length,
         if (parameters->format == engine::api::BaseParameters::OutputFormatType::FLATBUFFERS)
         {
             result = flatbuffers::FlatBufferBuilder();
+            auto &fb_result = result.get<flatbuffers::FlatBufferBuilder>();
+            return BaseService::routing_machine.Route(*parameters, fb_result);
         }
     }
-    return BaseService::routing_machine.Route(*parameters, result);
+    return BaseService::routing_machine.Route(*parameters, json_result);
 }
 }
 }

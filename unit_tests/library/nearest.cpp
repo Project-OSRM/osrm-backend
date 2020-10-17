@@ -23,15 +23,14 @@ BOOST_AUTO_TEST_CASE(test_nearest_response)
     NearestParameters params;
     params.coordinates.push_back(get_dummy_location());
 
-    engine::api::ResultT result = json::Object();
+    json::Object result;
     const auto rc = osrm.Nearest(params, result);
     BOOST_REQUIRE(rc == Status::Ok);
 
-    auto &json_result = result.get<json::Object>();
-    const auto code = json_result.values.at("code").get<json::String>().value;
+    const auto code = result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
-    const auto &waypoints = json_result.values.at("waypoints").get<json::Array>().values;
+    const auto &waypoints = result.values.at("waypoints").get<json::Array>().values;
     BOOST_CHECK(!waypoints.empty()); // the dataset has at least one nearest coordinate
 
     for (const auto &waypoint : waypoints)
@@ -52,15 +51,14 @@ BOOST_AUTO_TEST_CASE(test_nearest_response_skip_waypoints)
     params.skip_waypoints = true;
     params.coordinates.push_back(get_dummy_location());
 
-    engine::api::ResultT result = json::Object();
+    json::Object result;
     const auto rc = osrm.Nearest(params, result);
     BOOST_REQUIRE(rc == Status::Ok);
 
-    auto &json_result = result.get<json::Object>();
-    const auto code = json_result.values.at("code").get<json::String>().value;
+    const auto code = result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
-    BOOST_CHECK(json_result.values.find("waypoints") == json_result.values.end());
+    BOOST_CHECK(result.values.find("waypoints") == result.values.end());
 }
 
 BOOST_AUTO_TEST_CASE(test_nearest_response_no_coordinates)
@@ -71,12 +69,11 @@ BOOST_AUTO_TEST_CASE(test_nearest_response_no_coordinates)
 
     NearestParameters params;
 
-    engine::api::ResultT result = json::Object();
+    json::Object result;
     const auto rc = osrm.Nearest(params, result);
     BOOST_REQUIRE(rc == Status::Error);
 
-    auto &json_result = result.get<json::Object>();
-    const auto code = json_result.values.at("code").get<json::String>().value;
+    const auto code = result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "InvalidOptions");
 }
 
@@ -90,12 +87,11 @@ BOOST_AUTO_TEST_CASE(test_nearest_response_multiple_coordinates)
     params.coordinates.push_back(get_dummy_location());
     params.coordinates.push_back(get_dummy_location());
 
-    engine::api::ResultT result = json::Object();
+    json::Object result;
     const auto rc = osrm.Nearest(params, result);
     BOOST_REQUIRE(rc == Status::Error);
 
-    auto &json_result = result.get<json::Object>();
-    const auto code = json_result.values.at("code").get<json::String>().value;
+    const auto code = result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "InvalidOptions");
 }
 
@@ -111,15 +107,14 @@ BOOST_AUTO_TEST_CASE(test_nearest_response_for_location_in_small_component)
     params.coordinates.push_back(locations.at(0));
     params.number_of_results = 3;
 
-    engine::api::ResultT result = json::Object();
+    json::Object result;
     const auto rc = osrm.Nearest(params, result);
     BOOST_REQUIRE(rc == Status::Ok);
 
-    auto &json_result = result.get<json::Object>();
-    const auto code = json_result.values.at("code").get<json::String>().value;
+    const auto code = result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
-    const auto &waypoints = json_result.values.at("waypoints").get<json::Array>().values;
+    const auto &waypoints = result.values.at("waypoints").get<json::Array>().values;
     BOOST_CHECK(!waypoints.empty());
 
     for (const auto &waypoint : waypoints)
@@ -147,12 +142,11 @@ BOOST_AUTO_TEST_CASE(test_nearest_fb_serialization)
     NearestParameters params;
     params.coordinates.push_back(get_dummy_location());
 
-    engine::api::ResultT result = flatbuffers::FlatBufferBuilder();
+    flatbuffers::FlatBufferBuilder result;
     const auto rc = osrm.Nearest(params, result);
     BOOST_REQUIRE(rc == Status::Ok);
 
-    auto &fb_result = result.get<flatbuffers::FlatBufferBuilder>();
-    auto fb = engine::api::fbresult::GetFBResult(fb_result.GetBufferPointer());
+    auto fb = engine::api::fbresult::GetFBResult(result.GetBufferPointer());
     BOOST_CHECK(!fb->error());
 
     BOOST_CHECK(fb->waypoints() != nullptr);
@@ -177,12 +171,11 @@ BOOST_AUTO_TEST_CASE(test_nearest_fb_serialization_skip_waypoints)
     params.skip_waypoints = true;
     params.coordinates.push_back(get_dummy_location());
 
-    engine::api::ResultT result = flatbuffers::FlatBufferBuilder();
+    flatbuffers::FlatBufferBuilder result;
     const auto rc = osrm.Nearest(params, result);
     BOOST_REQUIRE(rc == Status::Ok);
 
-    auto &fb_result = result.get<flatbuffers::FlatBufferBuilder>();
-    auto fb = engine::api::fbresult::GetFBResult(fb_result.GetBufferPointer());
+    auto fb = engine::api::fbresult::GetFBResult(result.GetBufferPointer());
     BOOST_CHECK(!fb->error());
 
     BOOST_CHECK(fb->waypoints() == nullptr);
@@ -196,12 +189,11 @@ BOOST_AUTO_TEST_CASE(test_nearest_fb_error)
 
     NearestParameters params;
 
-    engine::api::ResultT result = flatbuffers::FlatBufferBuilder();
+    flatbuffers::FlatBufferBuilder result;
     const auto rc = osrm.Nearest(params, result);
     BOOST_REQUIRE(rc == Status::Error);
 
-    auto &fb_result = result.get<flatbuffers::FlatBufferBuilder>();
-    auto fb = engine::api::fbresult::GetFBResult(fb_result.GetBufferPointer());
+    auto fb = engine::api::fbresult::GetFBResult(result.GetBufferPointer());
     BOOST_CHECK(fb->error());
     BOOST_CHECK_EQUAL(fb->code()->code()->str(), "InvalidOptions");
 }

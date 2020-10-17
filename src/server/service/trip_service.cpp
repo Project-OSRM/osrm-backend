@@ -76,9 +76,11 @@ engine::Status TripService::RunQuery(std::size_t prefix_length,
         if (parameters->format == engine::api::BaseParameters::OutputFormatType::FLATBUFFERS)
         {
             result = flatbuffers::FlatBufferBuilder();
+            auto &fb_result = result.get<flatbuffers::FlatBufferBuilder>();
+            return BaseService::routing_machine.Trip(*parameters, fb_result);
         }
     }
-    return BaseService::routing_machine.Trip(*parameters, result);
+    return BaseService::routing_machine.Trip(*parameters, json_result);
 }
 }
 }

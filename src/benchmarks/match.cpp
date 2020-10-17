@@ -214,11 +214,9 @@ int main(int argc, const char *argv[]) try
     auto NUM = 100;
     for (int i = 0; i < NUM; ++i)
     {
-        engine::api::ResultT result = json::Object();
+        json::Object result;
         const auto rc = osrm.Match(params, result);
-        auto &json_result = result.get<json::Object>();
-        if (rc != Status::Ok ||
-            json_result.values.at("matchings").get<json::Array>().values.size() != 1)
+        if (rc != Status::Ok || result.values.at("matchings").get<json::Array>().values.size() != 1)
         {
             return EXIT_FAILURE;
         }

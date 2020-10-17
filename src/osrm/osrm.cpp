@@ -56,40 +56,96 @@ OSRM &OSRM::operator=(OSRM &&) noexcept = default;
 
 // Forward to implementation
 
-engine::Status OSRM::Route(const engine::api::RouteParameters &params,
-                           osrm::engine::api::ResultT &result) const
+Status OSRM::Route(const engine::api::RouteParameters &params, json::Object &json_result) const
 {
-    return engine_->Route(params, result);
+    osrm::engine::api::ResultT result = json::Object();
+    auto status = engine_->Route(params, result);
+    json_result = std::move(result.get<json::Object>());
+    return status;
 }
 
-engine::Status OSRM::Table(const engine::api::TableParameters &params,
-                           osrm::engine::api::ResultT &result) const
+Status OSRM::Route(const RouteParameters &params, flatbuffers::FlatBufferBuilder &fb_result) const
 {
-    return engine_->Table(params, result);
+    osrm::engine::api::ResultT result = flatbuffers::FlatBufferBuilder();
+    auto status = engine_->Route(params, result);
+    fb_result = std::move(result.get<flatbuffers::FlatBufferBuilder>());
+    return status;
 }
 
-engine::Status OSRM::Nearest(const engine::api::NearestParameters &params,
-                             osrm::engine::api::ResultT &result) const
+Status OSRM::Table(const engine::api::TableParameters &params, json::Object &json_result) const
 {
-    return engine_->Nearest(params, result);
+    osrm::engine::api::ResultT result = json::Object();
+    auto status = engine_->Table(params, result);
+    json_result = std::move(result.get<json::Object>());
+    return status;
+}
+
+Status OSRM::Table(const TableParameters &parameters,
+                   flatbuffers::FlatBufferBuilder &fb_result) const
+{
+    osrm::engine::api::ResultT result = flatbuffers::FlatBufferBuilder();
+    auto status = engine_->Table(parameters, result);
+    fb_result = std::move(result.get<flatbuffers::FlatBufferBuilder>());
+    return status;
+}
+
+Status OSRM::Nearest(const engine::api::NearestParameters &params, json::Object &json_result) const
+{
+    osrm::engine::api::ResultT result = json::Object();
+    auto status = engine_->Nearest(params, result);
+    json_result = std::move(result.get<json::Object>());
+    return status;
+}
+
+Status OSRM::Nearest(const NearestParameters &parameters,
+                     flatbuffers::FlatBufferBuilder &fb_result) const
+{
+    osrm::engine::api::ResultT result = flatbuffers::FlatBufferBuilder();
+    auto status = engine_->Nearest(parameters, result);
+    fb_result = std::move(result.get<flatbuffers::FlatBufferBuilder>());
+    return status;
+}
+
+Status OSRM::Trip(const engine::api::TripParameters &params, json::Object &json_result) const
+{
+    osrm::engine::api::ResultT result = json::Object();
+    auto status = engine_->Trip(params, result);
+    json_result = std::move(result.get<json::Object>());
+    return status;
 }
 
 engine::Status OSRM::Trip(const engine::api::TripParameters &params,
-                          osrm::engine::api::ResultT &result) const
+                          flatbuffers::FlatBufferBuilder &fb_result) const
 {
-    return engine_->Trip(params, result);
+    osrm::engine::api::ResultT result = flatbuffers::FlatBufferBuilder();
+    auto status = engine_->Trip(params, result);
+    fb_result = std::move(result.get<flatbuffers::FlatBufferBuilder>());
+    return status;
 }
 
-engine::Status OSRM::Match(const engine::api::MatchParameters &params,
-                           osrm::engine::api::ResultT &result) const
+Status OSRM::Match(const engine::api::MatchParameters &params, json::Object &json_result) const
 {
-    return engine_->Match(params, result);
+    osrm::engine::api::ResultT result = json::Object();
+    auto status = engine_->Match(params, result);
+    json_result = std::move(result.get<json::Object>());
+    return status;
 }
 
-engine::Status OSRM::Tile(const engine::api::TileParameters &params,
-                          osrm::engine::api::ResultT &result) const
+Status OSRM::Match(const MatchParameters &parameters,
+                   flatbuffers::FlatBufferBuilder &fb_result) const
 {
-    return engine_->Tile(params, result);
+    osrm::engine::api::ResultT result = flatbuffers::FlatBufferBuilder();
+    auto status = engine_->Match(parameters, result);
+    fb_result = std::move(result.get<flatbuffers::FlatBufferBuilder>());
+    return status;
+}
+
+Status OSRM::Tile(const engine::api::TileParameters &params, std::string &str_result) const
+{
+    osrm::engine::api::ResultT result = std::string();
+    auto status = engine_->Tile(params, result);
+    str_result = std::move(result.get<std::string>());
+    return status;
 }
 
 } // ns osrm

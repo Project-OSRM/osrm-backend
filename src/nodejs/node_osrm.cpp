@@ -151,20 +151,18 @@ inline void async(const Nan::FunctionCallbackInfo<v8::Value> &info,
 
         void Execute() override try
         {
-            osrm::engine::api::ResultT r;
-            r = osrm::util::json::Object();
+            osrm::json::Object r;
             const auto status = ((*osrm).*(service))(*params, r);
-            auto json_result = r.get<osrm::json::Object>();
-            ParseResult(status, json_result);
+            ParseResult(status, r);
             if (pluginParams.renderJSONToBuffer)
             {
                 std::ostringstream buf;
-                osrm::util::json::render(buf, json_result);
+                osrm::util::json::render(buf, r);
                 result = buf.str();
             }
             else
             {
-                result = json_result;
+                result = r;
             }
         }
         catch (const std::exception &e)
@@ -232,10 +230,8 @@ inline void asyncForTiles(const Nan::FunctionCallbackInfo<v8::Value> &info,
 
         void Execute() override try
         {
-            result = std::string();
             const auto status = ((*osrm).*(service))(*params, result);
-            auto str_result = result.get<std::string>();
-            ParseResult(status, str_result);
+            ParseResult(status, result);
         }
         catch (const std::exception &e)
         {
@@ -247,8 +243,7 @@ inline void asyncForTiles(const Nan::FunctionCallbackInfo<v8::Value> &info,
             Nan::HandleScope scope;
 
             const constexpr auto argc = 2u;
-            auto str_result = result.get<std::string>();
-            v8::Local<v8::Value> argv[argc] = {Nan::Null(), render(str_result)};
+            v8::Local<v8::Value> argv[argc] = {Nan::Null(), render(result)};
 
             callback->Call(argc, argv);
         }
@@ -259,7 +254,7 @@ inline void asyncForTiles(const Nan::FunctionCallbackInfo<v8::Value> &info,
         const ParamPtr params;
         const PluginParameters pluginParams;
 
-        osrm::engine::api::ResultT result;
+        std::string result;
     };
 
     auto *callback = new Nan::Callback{info[info.Length() - 1].As<v8::Function>()};
@@ -304,7 +299,9 @@ inline void asyncForTiles(const Nan::FunctionCallbackInfo<v8::Value> &info,
 // clang-format on
 NAN_METHOD(Engine::route) //
 {
-    async(info, &argumentsToRouteParameter, &osrm::OSRM::Route, true);
+    osrm::engine::Status (osrm::OSRM::*route_fn)(const osrm::RouteParameters &,
+                                                 osrm::json::Object &) const = &osrm::OSRM::Route;
+    async(info, &argumentsToRouteParameter, route_fn, true);
 }
 
 // clang-format off
@@ -344,7 +341,10 @@ NAN_METHOD(Engine::route) //
 // clang-format on
 NAN_METHOD(Engine::nearest) //
 {
-    async(info, &argumentsToNearestParameter, &osrm::OSRM::Nearest, false);
+
+    osrm::engine::Status (osrm::OSRM::*nearest_fn)(
+        const osrm::NearestParameters &, osrm::json::Object &) const = &osrm::OSRM::Nearest;
+    async(info, &argumentsToNearestParameter, nearest_fn, false);
 }
 
 // clang-format off
@@ -396,7 +396,9 @@ NAN_METHOD(Engine::nearest) //
 // clang-format on
 NAN_METHOD(Engine::table) //
 {
-    async(info, &argumentsToTableParameter, &osrm::OSRM::Table, true);
+    osrm::engine::Status (osrm::OSRM::*table_fn)(const osrm::TableParameters &,
+                                                 osrm::json::Object &) const = &osrm::OSRM::Table;
+    async(info, &argumentsToTableParameter, table_fn, true);
 }
 
 // clang-format off
@@ -481,7 +483,9 @@ NAN_METHOD(Engine::tile)
 // clang-format on
 NAN_METHOD(Engine::match) //
 {
-    async(info, &argumentsToMatchParameter, &osrm::OSRM::Match, true);
+    osrm::engine::Status (osrm::OSRM::*match_fn)(const osrm::MatchParameters &,
+                                                 osrm::json::Object &) const = &osrm::OSRM::Match;
+    async(info, &argumentsToMatchParameter, match_fn, true);
 }
 
 // clang-format off
@@ -551,7 +555,9 @@ NAN_METHOD(Engine::match) //
 // clang-format on
 NAN_METHOD(Engine::trip) //
 {
-    async(info, &argumentsToTripParameter, &osrm::OSRM::Trip, true);
+    osrm::engine::Status (osrm::OSRM::*trip_fn)(const osrm::TripParameters &, osrm::json::Object &)
+        const = &osrm::OSRM::Trip;
+    async(info, &argumentsToTripParameter, trip_fn, true);
 }
 
 /**

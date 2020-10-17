@@ -103,9 +103,11 @@ engine::Status TableService::RunQuery(std::size_t prefix_length,
         if (parameters->format == engine::api::BaseParameters::OutputFormatType::FLATBUFFERS)
         {
             result = flatbuffers::FlatBufferBuilder();
+            auto &fb_result = result.get<flatbuffers::FlatBufferBuilder>();
+            return BaseService::routing_machine.Table(*parameters, fb_result);
         }
     }
-    return BaseService::routing_machine.Table(*parameters, result);
+    return BaseService::routing_machine.Table(*parameters, json_result);
 }
 }
 }

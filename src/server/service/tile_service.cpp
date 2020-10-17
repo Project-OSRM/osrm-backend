@@ -45,7 +45,8 @@ engine::Status TileService::RunQuery(std::size_t prefix_length,
     BOOST_ASSERT(parameters->IsValid());
 
     result = std::string();
-    return BaseService::routing_machine.Tile(*parameters, result);
+    auto &str_result = result.get<std::string>();
+    return BaseService::routing_machine.Tile(*parameters, str_result);
 }
 }
 }

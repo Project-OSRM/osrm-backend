@@ -25,19 +25,18 @@ BOOST_AUTO_TEST_CASE(test_match)
     params.coordinates.push_back(get_dummy_location());
     params.coordinates.push_back(get_dummy_location());
 
-    engine::api::ResultT result = json::Object();
+    json::Object result;
 
     const auto rc = osrm.Match(params, result);
 
-    auto &json_result = result.get<json::Object>();
     BOOST_CHECK(rc == Status::Ok || rc == Status::Error);
-    const auto code = json_result.values.at("code").get<json::String>().value;
+    const auto code = result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
-    const auto &tracepoints = json_result.values.at("tracepoints").get<json::Array>().values;
+    const auto &tracepoints = result.values.at("tracepoints").get<json::Array>().values;
     BOOST_CHECK_EQUAL(tracepoints.size(), params.coordinates.size());
 
-    const auto &matchings = json_result.values.at("matchings").get<json::Array>().values;
+    const auto &matchings = result.values.at("matchings").get<json::Array>().values;
     const auto &number_of_matchings = matchings.size();
     for (const auto &waypoint : tracepoints)
     {
@@ -76,16 +75,15 @@ BOOST_AUTO_TEST_CASE(test_match_skip_waypoints)
     params.coordinates.push_back(get_dummy_location());
     params.coordinates.push_back(get_dummy_location());
 
-    engine::api::ResultT result = json::Object();
+    json::Object result;
 
     const auto rc = osrm.Match(params, result);
 
-    auto &json_result = result.get<json::Object>();
     BOOST_CHECK(rc == Status::Ok || rc == Status::Error);
-    const auto code = json_result.values.at("code").get<json::String>().value;
+    const auto code = result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
-    BOOST_CHECK(json_result.values.find("tracepoints") == json_result.values.end());
+    BOOST_CHECK(result.values.find("tracepoints") == result.values.end());
 }
 
 BOOST_AUTO_TEST_CASE(test_match_split)
@@ -98,19 +96,18 @@ BOOST_AUTO_TEST_CASE(test_match_split)
     params.coordinates = get_split_trace_locations();
     params.timestamps = {1, 2, 1700, 1800};
 
-    engine::api::ResultT result = json::Object();
+    json::Object result;
 
     const auto rc = osrm.Match(params, result);
 
-    auto &json_result = result.get<json::Object>();
     BOOST_CHECK(rc == Status::Ok || rc == Status::Error);
-    const auto code = json_result.values.at("code").get<json::String>().value;
+    const auto code = result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
-    const auto &tracepoints = json_result.values.at("tracepoints").get<json::Array>().values;
+    const auto &tracepoints = result.values.at("tracepoints").get<json::Array>().values;
     BOOST_CHECK_EQUAL(tracepoints.size(), params.coordinates.size());
 
-    const auto &matchings = json_result.values.at("matchings").get<json::Array>().values;
+    const auto &matchings = result.values.at("matchings").get<json::Array>().values;
     const auto &number_of_matchings = matchings.size();
     BOOST_CHECK_EQUAL(number_of_matchings, 2);
     std::size_t current_matchings_index = 0, expected_waypoint_index = 0;
@@ -152,13 +149,12 @@ BOOST_AUTO_TEST_CASE(test_match_fb_serialization)
     params.coordinates.push_back(get_dummy_location());
     params.coordinates.push_back(get_dummy_location());
 
-    engine::api::ResultT result = flatbuffers::FlatBufferBuilder();
+    flatbuffers::FlatBufferBuilder result;
 
     const auto rc = osrm.Match(params, result);
     BOOST_CHECK(rc == Status::Ok);
 
-    auto &fb_result = result.get<flatbuffers::FlatBufferBuilder>();
-    auto fb = engine::api::fbresult::GetFBResult(fb_result.GetBufferPointer());
+    auto fb = engine::api::fbresult::GetFBResult(result.GetBufferPointer());
 
     BOOST_CHECK(!fb->error());
 
@@ -194,13 +190,12 @@ BOOST_AUTO_TEST_CASE(test_match_fb_serialization_skip_waypoints)
     params.coordinates.push_back(get_dummy_location());
     params.coordinates.push_back(get_dummy_location());
 
-    engine::api::ResultT result = flatbuffers::FlatBufferBuilder();
+    flatbuffers::FlatBufferBuilder result;
 
     const auto rc = osrm.Match(params, result);
     BOOST_CHECK(rc == Status::Ok);
 
-    auto &fb_result = result.get<flatbuffers::FlatBufferBuilder>();
-    auto fb = engine::api::fbresult::GetFBResult(fb_result.GetBufferPointer());
+    auto fb = engine::api::fbresult::GetFBResult(result.GetBufferPointer());
 
     BOOST_CHECK(!fb->error());
 
