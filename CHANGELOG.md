@@ -1,4 +1,6 @@
 # Unreleased
+    - API:
+      - FIXED: Undo libosrm API break by adding old interface as method overload [#5861](https://github.com/Project-OSRM/osrm-backend/pull/5861)
 
 # 5.23.0
   - Changes from 5.22.0
