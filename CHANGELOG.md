@@ -1,4 +1,7 @@
 # Unreleased
+  - Changes from 5.23.0
+    - Infrastructure
+      - CHANGED: Bundled protozero updated to v1.7.0. [#5858](https://github.com/Project-OSRM/osrm-backend/pull/5858)
 
 # 5.23.0
   - Changes from 5.22.0

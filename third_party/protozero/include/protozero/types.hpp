@@ -16,7 +16,7 @@ documentation.
  * @brief Contains the declaration of low-level types used in the pbf format.
  */
 
-#include <protozero/config.hpp>
+#include "config.hpp"
 
 #include <algorithm>
 #include <cstddef>
@@ -53,7 +53,7 @@ enum class pbf_wire_type : uint32_t {
  */
 template <typename T>
 constexpr inline uint32_t tag_and_type(T tag, pbf_wire_type wire_type) noexcept {
-    return (static_cast<uint32_t>(static_cast<pbf_tag_type>(tag)) << 3u) | static_cast<uint32_t>(wire_type);
+    return (static_cast<uint32_t>(static_cast<pbf_tag_type>(tag)) << 3U) | static_cast<uint32_t>(wire_type);
 }
 
 /**

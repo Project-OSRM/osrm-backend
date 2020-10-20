@@ -24,6 +24,9 @@ environment:
     autocrlf: false
   - config: RelWithDebInfo
     autocrlf: false
+  - config: Debug
+    autocrlf: false
+    platform: x86
 
 #-----------------------------------------------------------------------------
 
@@ -36,22 +39,32 @@ init:
 # halts: "msys2-runtime and catgets are in conflict. Remove catgets?"
 # See also: https://github.com/Alexpux/MSYS2-packages/issues/1141
 install:
-  - if [%config%]==[MSYS2] (
-          C:\msys64\usr\bin\pacman --noconfirm --sync --refresh --refresh --sysupgrade --sysupgrade --ask=20
-       && C:\msys64\usr\bin\pacman -Rc --noconfirm mingw-w64-x86_64-gcc-libs
+  - if "%config%"=="MSYS2" (
+      set "PATH=C:\msys64\mingw64\bin;C:\msys64\usr\bin;%PATH%" &&
+      pacman --noconfirm --sync --refresh --refresh --sysupgrade --sysupgrade --ask=20 &&
+      pacman -Rc --noconfirm mingw-w64-x86_64-gcc-libs &&
+      pacman -S --needed --noconfirm mingw-w64-x86_64-gcc mingw-w64-x86_64-cmake mingw-w64-x86_64-doxygen mingw-w64-x86_64-protobuf
     )
 
 build_script:
-  - if [%config%]==[MSYS2] (
-        build-msys2.bat
+  - cd c:\projects\protozero
+  - mkdir build
+  - cd build
+  - if "%platform%"=="x64" (
+      set vcvarsall_arg=amd64
     ) else (
-        build-appveyor.bat
+      set vcvarsall_arg=x86
+    )
+  - if "%config%"=="MSYS2" (
+      cmake .. -LA -G "MSYS Makefiles" &&
+      make VERBOSE=1
+    ) else (
+      "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall" %vcvarsall_arg% &&
+      cmake .. -LA -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=%config% &&
+      nmake VERBOSE=1
     )
 
-# remove garbage VS messages
-# http://help.appveyor.com/discussions/problems/4569-the-target-_convertpdbfiles-listed-in-a-beforetargets-attribute-at-c-does-not-exist-in-the-project-and-will-be-ignored
-before_build:
-  - del "C:\Program Files (x86)\MSBuild\14.0\Microsoft.Common.targets\ImportAfter\Xamarin.Common.targets"
-
+test_script:
+  - ctest --output-on-failure
 
 #-----------------------------------------------------------------------------

@@ -6,9 +6,15 @@ TEST_CASE("read message field: string") {
 
     protozero::pbf_reader item{buffer};
 
+    REQUIRE(item.data().data() == buffer.data());
+    REQUIRE(item.data().size() == buffer.size());
+
     REQUIRE(item.next());
     protozero::pbf_reader subitem{item.get_message()};
     REQUIRE_FALSE(item.next());
+
+    REQUIRE(item.data().data() == buffer.data() + buffer.size());
+    REQUIRE(item.data().empty());
 
     REQUIRE(subitem.next());
     REQUIRE(subitem.get_string() == "foobar");
@@ -21,7 +27,7 @@ TEST_CASE("read message field: end of buffer") {
     for (std::string::size_type i = 1; i < buffer.size(); ++i) {
         protozero::pbf_reader item{buffer.data(), i};
         REQUIRE(item.next());
-        REQUIRE_THROWS_AS(item.get_string(), const protozero::end_of_buffer_exception&);
+        REQUIRE_THROWS_AS(item.get_string(), protozero::end_of_buffer_exception);
     }
 }
 
