@@ -53,9 +53,6 @@ template <> struct hash<std::pair<NodeID, NodeID>>
 };
 }
 
-// Buffer size of turn_indexes_write_buffer to reduce number of write(v) syscals
-const constexpr int TURN_INDEX_WRITE_BUFFER_SIZE = 1000;
-
 namespace osrm
 {
 namespace extractor
@@ -449,10 +446,6 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
     std::size_t node_based_edge_counter = 0;
 
-    storage::tar::FileWriter turn_penalties_index_file(
-        turn_penalties_index_filename, storage::tar::FileWriter::GenerateFingerprint);
-    turn_penalties_index_file.WriteFrom("/extractor/turn_index", (char *)nullptr, 0);
-
     SuffixTable street_name_suffix_table(scripting_environment);
     const auto &turn_lanes_data = transformTurnLaneMapIntoArrays(lane_description_map);
     intersection::MergableRoadDetector mergable_road_detector(m_node_based_graph,
@@ -468,6 +461,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     // FIXME these need to be tuned in pre-allocated size
     std::vector<TurnPenalty> turn_weight_penalties;
     std::vector<TurnPenalty> turn_duration_penalties;
+    std::vector<lookup::TurnIndexBlock> turn_penalties_index;
 
     // Now, renumber all our maneuver overrides to use edge-based-nodes
     std::vector<StorageManeuverOverride> storage_maneuver_overrides;
@@ -487,14 +481,6 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     {
         const NodeID node_count = m_node_based_graph.GetNumberOfNodes();
 
-        // Because we write TurnIndexBlock data as we go, we'll
-        // buffer them into groups of 1000 to reduce the syscall
-        // count by 1000x.  This doesn't need much memory, but
-        // greatly reduces the syscall overhead of writing lots
-        // of small objects
-        std::vector<lookup::TurnIndexBlock> turn_indexes_write_buffer;
-        turn_indexes_write_buffer.reserve(TURN_INDEX_WRITE_BUFFER_SIZE);
-
         // This struct is the buffered output of the `processor_stage`.  This data is
         // appended to the various output arrays/files by the `output_stage`.
         // same as IntersectionData, but grouped with edge to allow sorting after creating.
@@ -510,7 +496,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
             m_edge_based_edge_list.push_back(edge_with_data.edge);
             turn_weight_penalties.push_back(edge_with_data.turn_weight_penalty);
             turn_duration_penalties.push_back(edge_with_data.turn_duration_penalty);
-            turn_indexes_write_buffer.push_back(edge_with_data.turn_index);
+            turn_penalties_index.push_back(edge_with_data.turn_index);
         };
 
         struct EdgesPipelineBuffer
@@ -1054,15 +1040,6 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 // NOTE: potential overflow here if we hit 2^32 routable edges
                 BOOST_ASSERT(m_edge_based_edge_list.size() <= std::numeric_limits<NodeID>::max());
 
-                // Buffer writes to reduce syscall count
-                if (turn_indexes_write_buffer.size() >= TURN_INDEX_WRITE_BUFFER_SIZE)
-                {
-                    turn_penalties_index_file.ContinueFrom("/extractor/turn_index",
-                                                           turn_indexes_write_buffer.data(),
-                                                           turn_indexes_write_buffer.size());
-                    turn_indexes_write_buffer.clear();
-                }
-
                 // Copy via-way restrictions delayed data
                 delayed_data.insert(
                     delayed_data.end(), buffer->delayed_data.begin(), buffer->delayed_data.end());
@@ -1118,15 +1095,6 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
             storage_maneuver_overrides.push_back(storage_override);
         }
-
-        // Flush the turn_indexes_write_buffer if it's not empty
-        if (!turn_indexes_write_buffer.empty())
-        {
-            turn_penalties_index_file.ContinueFrom("/extractor/turn_index",
-                                                   turn_indexes_write_buffer.data(),
-                                                   turn_indexes_write_buffer.size());
-            turn_indexes_write_buffer.clear();
-        }
     }
     {
         util::Log() << "Sorting and writing " << storage_maneuver_overrides.size()
@@ -1162,9 +1130,10 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                                    indexed_conditionals);
 
     // write weight penalties per turn
-    BOOST_ASSERT(turn_weight_penalties.size() == turn_duration_penalties.size());
+    BOOST_ASSERT(turn_weight_penalties.size() == turn_duration_penalties.size() && turn_weight_penalties.size() == turn_penalties_index.size());
     files::writeTurnWeightPenalty(turn_weight_penalties_filename, turn_weight_penalties);
     files::writeTurnDurationPenalty(turn_duration_penalties_filename, turn_duration_penalties);
+    files::writeTurnPenaltiesIndex(turn_penalties_index_filename, turn_penalties_index);
 
     util::Log() << "Generated " << m_edge_based_node_segments.size() << " edge based node segments";
     util::Log() << "Node-based graph contains " << node_based_edge_counter << " edges";

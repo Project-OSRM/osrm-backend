@@ -432,6 +432,9 @@ updateTurnPenalties(const UpdaterConfig &config,
 {
     const auto weight_multiplier = profile_properties.GetWeightMultiplier();
 
+    // [NOTE] turn_index_blocks could be simply loaded by `files::readTurnPenaltiesIndex()`, 
+    //      however, we leave the below mmap to keep compatiblity. 
+    //      Use `files::readTurnPenaltiesIndex()` instead once the compatiblity is not that important.         
     // Mapped file pointer for turn indices
     boost::iostreams::mapped_file_source turn_index_region;
     const extractor::lookup::TurnIndexBlock *turn_index_blocks;
