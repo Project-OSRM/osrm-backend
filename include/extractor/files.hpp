@@ -402,7 +402,7 @@ inline void readTurnDurationPenalty(const boost::filesystem::path &path, TurnPen
 // writes .osrm.turn_penalties_index
 template <typename TurnIndexT>
 inline void writeTurnPenaltiesIndex(const boost::filesystem::path &path,
-                                   const TurnIndexT &turn_penalties_index)
+                                    const TurnIndexT &turn_penalties_index)
 {
     const auto fingerprint = storage::tar::FileWriter::GenerateFingerprint;
     storage::tar::FileWriter writer{path, fingerprint};
@@ -412,7 +412,8 @@ inline void writeTurnPenaltiesIndex(const boost::filesystem::path &path,
 
 // read .osrm.turn_penalties_index
 template <typename TurnIndexT>
-inline void readTurnPenaltiesIndex(const boost::filesystem::path &path, TurnIndexT &turn_penalties_index)
+inline void readTurnPenaltiesIndex(const boost::filesystem::path &path,
+                                   TurnIndexT &turn_penalties_index)
 {
     const auto fingerprint = storage::tar::FileReader::VerifyFingerprint;
     storage::tar::FileReader reader{path, fingerprint};

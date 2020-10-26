@@ -1130,7 +1130,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                                    indexed_conditionals);
 
     // write weight penalties per turn
-    BOOST_ASSERT(turn_weight_penalties.size() == turn_duration_penalties.size() && turn_weight_penalties.size() == turn_penalties_index.size());
+    BOOST_ASSERT(turn_weight_penalties.size() == turn_duration_penalties.size() &&
+                 turn_weight_penalties.size() == turn_penalties_index.size());
     files::writeTurnWeightPenalty(turn_weight_penalties_filename, turn_weight_penalties);
     files::writeTurnDurationPenalty(turn_duration_penalties_filename, turn_duration_penalties);
     files::writeTurnPenaltiesIndex(turn_penalties_index_filename, turn_penalties_index);
