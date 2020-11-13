@@ -36,9 +36,13 @@ function WayHandlers.names(profile,way,result,data)
   local ref = way:get_value_by_key("ref")
   local exits = way:get_value_by_key("junction:ref")
 
+  local keys = Sequence { 'maxspeed:advisory', 'maxspeed' }
+  local forward, backward = Tags.get_forward_backward_by_set(way,data,keys)
+  forward = WayHandlers.parse_maxspeed(forward,profile)
+
   -- Set the name that will be used for instructions
   if name then
-    result.name = name
+    result.name = name.."|"..forward
   end
 
   if ref then
