@@ -1,6 +1,9 @@
 #include <boost/numeric/conversion/cast.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include <util/integer_range.hpp>
+#include <util/msb.hpp>
+
 #include "partitioner/multi_level_partition.hpp"
 
 #define CHECK_SIZE_RANGE(range, ref) BOOST_CHECK_EQUAL(range.second - range.first, ref)
@@ -173,6 +176,58 @@ BOOST_AUTO_TEST_CASE(mlp_sorted)
 
     BOOST_CHECK_EQUAL(mlp.BeginChildren(4, 0), 0);
     BOOST_CHECK_EQUAL(mlp.EndChildren(4, 0), 2);
+}
+
+BOOST_AUTO_TEST_CASE(large_cell_number)
+{
+    size_t num_nodes = 256;
+    size_t num_levels = 9;
+    std::vector<std::vector<CellID>> levels(num_levels, std::vector<CellID>(num_nodes));
+    std::vector<uint32_t> levels_to_num_cells(num_levels);
+
+    std::iota(levels[0].begin(), levels[0].end(), 0);
+    levels_to_num_cells[0] = num_nodes;
+
+    for (auto l : util::irange<size_t>(1UL, num_levels))
+    {
+        std::transform(levels[l - 1].begin(), levels[l - 1].end(), levels[l].begin(), [](auto val) {
+            return val / 2;
+        });
+        levels_to_num_cells[l] = levels_to_num_cells[l - 1] / 2;
+    }
+
+    // level 1:             0  1  2  3 ... 252 253 254 255
+    // level 2:             0  0  1  1 ... 126 126 127 127
+    // level 3:             0  0  0  0 ... 63  63  63  63
+    // ...
+    // level 9:             0  0  0  0 ... 0   0   0   0
+    MultiLevelPartition mlp{levels, levels_to_num_cells};
+
+    for (const auto l : util::irange<size_t>(1UL, num_levels + 1))
+    {
+        BOOST_REQUIRE_EQUAL(mlp.GetNumberOfCells(l), num_nodes >> (l - 1));
+        for (const auto n : util::irange<size_t>(0UL, num_nodes))
+        {
+            BOOST_REQUIRE_EQUAL(mlp.GetCell(l, n), levels[l - 1][n]);
+        }
+    }
+
+    for (const auto m : util::irange<size_t>(0UL, num_nodes))
+    {
+        for (const auto n : util::irange(m + 1, num_nodes))
+        {
+            BOOST_REQUIRE_EQUAL(mlp.GetHighestDifferentLevel(m, n), 1 + util::msb(m ^ n));
+        }
+    }
+
+    for (const auto l : util::irange<size_t>(2UL, num_levels + 1))
+    {
+        for (const auto c : util::irange<size_t>(0UL, levels_to_num_cells[l - 1]))
+        {
+            BOOST_REQUIRE_EQUAL(mlp.BeginChildren(l, c), 2 * c);
+            BOOST_REQUIRE_EQUAL(mlp.EndChildren(l, c), 2 * (c + 1));
+        }
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
