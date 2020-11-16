@@ -88,7 +88,7 @@ TEST_CASE("read field: " PBF_TYPE_NAME) {
         for (std::string::size_type i = 1; i < buffer.size(); ++i) {
             protozero::pbf_reader item{buffer.data(), i};
             REQUIRE(item.next());
-            REQUIRE_THROWS_AS(item.GET_TYPE(), const protozero::end_of_buffer_exception&);
+            REQUIRE_THROWS_AS(item.GET_TYPE(), protozero::end_of_buffer_exception);
         }
     }
 }

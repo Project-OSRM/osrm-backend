@@ -9,9 +9,9 @@ TEST_CASE("check assert on non-varint access to varint") {
     REQUIRE(item.next());
 
     REQUIRE(item.get_int32() == 0);
-    REQUIRE_THROWS_AS(item.get_fixed64(), const assert_error&);
-    REQUIRE_THROWS_AS(item.get_string(), const assert_error&);
-    REQUIRE_THROWS_AS(item.get_fixed32(), const assert_error&);
+    REQUIRE_THROWS_AS(item.get_fixed64(), assert_error);
+    REQUIRE_THROWS_AS(item.get_string(), assert_error);
+    REQUIRE_THROWS_AS(item.get_fixed32(), assert_error);
 }
 
 // protobuf wire type 1
@@ -21,10 +21,10 @@ TEST_CASE("check assert on non-fixed access to fixed64") {
     protozero::pbf_reader item{buffer};
     REQUIRE(item.next());
 
-    REQUIRE_THROWS_AS(item.get_int32(), const assert_error&);
+    REQUIRE_THROWS_AS(item.get_int32(), assert_error);
     REQUIRE(item.get_fixed64() == 0);
-    REQUIRE_THROWS_AS(item.get_string(), const assert_error&);
-    REQUIRE_THROWS_AS(item.get_fixed32(), const assert_error&);
+    REQUIRE_THROWS_AS(item.get_string(), assert_error);
+    REQUIRE_THROWS_AS(item.get_fixed32(), assert_error);
 }
 
 // protobuf wire type 2
@@ -34,10 +34,10 @@ TEST_CASE("check assert on non-string access to string") {
     protozero::pbf_reader item{buffer};
     REQUIRE(item.next());
 
-    REQUIRE_THROWS_AS(item.get_int32(), const assert_error&);
-    REQUIRE_THROWS_AS(item.get_fixed64(), const assert_error&);
+    REQUIRE_THROWS_AS(item.get_int32(), assert_error);
+    REQUIRE_THROWS_AS(item.get_fixed64(), assert_error);
     REQUIRE(item.get_string() == "foobar");
-    REQUIRE_THROWS_AS(item.get_fixed32(), const assert_error&);
+    REQUIRE_THROWS_AS(item.get_fixed32(), assert_error);
 }
 
 // protobuf wire type 5
@@ -47,9 +47,9 @@ TEST_CASE("check assert on non-fixed access to fixed32") {
     protozero::pbf_reader item{buffer};
     REQUIRE(item.next());
 
-    REQUIRE_THROWS_AS(item.get_int32(), const assert_error&);
-    REQUIRE_THROWS_AS(item.get_fixed64(), const assert_error&);
-    REQUIRE_THROWS_AS(item.get_string(), const assert_error&);
+    REQUIRE_THROWS_AS(item.get_int32(), assert_error);
+    REQUIRE_THROWS_AS(item.get_fixed64(), assert_error);
+    REQUIRE_THROWS_AS(item.get_string(), assert_error);
     REQUIRE(item.get_fixed32() == 0);
 }
 

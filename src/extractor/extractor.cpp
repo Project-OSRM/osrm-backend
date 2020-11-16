@@ -1,5 +1,6 @@
 #include "extractor/extractor.hpp"
 
+#include "extractor/compressed_edge_container.hpp"
 #include "extractor/compressed_node_based_graph_edge.hpp"
 #include "extractor/edge_based_edge.hpp"
 #include "extractor/extraction_containers.hpp"
@@ -11,47 +12,34 @@
 #include "extractor/maneuver_override_relation_parser.hpp"
 #include "extractor/name_table.hpp"
 #include "extractor/node_based_graph_factory.hpp"
-#include "extractor/raster_source.hpp"
 #include "extractor/restriction_filter.hpp"
+#include "extractor/restriction_index.hpp"
 #include "extractor/restriction_parser.hpp"
 #include "extractor/scripting_environment.hpp"
+#include "extractor/tarjan_scc.hpp"
+#include "extractor/way_restriction_map.hpp"
 
 #include "guidance/files.hpp"
 #include "guidance/guidance_processing.hpp"
 #include "guidance/segregated_intersection_classification.hpp"
 #include "guidance/turn_data_container.hpp"
 
-#include "storage/io.hpp"
-
 #include "util/exception.hpp"
 #include "util/exception_utils.hpp"
 #include "util/integer_range.hpp"
 #include "util/log.hpp"
-#include "util/range_table.hpp"
-#include "util/timing_util.hpp"
-
-#include "extractor/compressed_edge_container.hpp"
-#include "extractor/restriction_index.hpp"
-#include "extractor/way_restriction_map.hpp"
 #include "util/static_graph.hpp"
 #include "util/static_rtree.hpp"
+#include "util/timing_util.hpp"
 
 // Keep debug include to make sure the debug header is in sync with types.
 #include "util/debug.hpp"
 
-#include "extractor/tarjan_scc.hpp"
-
 #include <boost/assert.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/filesystem/fstream.hpp>
-#include <boost/iterator/function_input_iterator.hpp>
-#include <boost/optional/optional.hpp>
-#include <boost/scope_exit.hpp>
 
 #include <osmium/handler/node_locations_for_ways.hpp>
 #include <osmium/index/map/flex_mem.hpp>
 #include <osmium/io/any_input.hpp>
-#include <osmium/osm/timestamp.hpp>
 #include <osmium/thread/pool.hpp>
 #include <osmium/visitor.hpp>
 
@@ -62,15 +50,11 @@
 #endif
 #include <tbb/pipeline.h>
 
-#include <cstdlib>
-
 #include <algorithm>
 #include <atomic>
 #include <bitset>
 #include <chrono>
-#include <future>
 #include <iostream>
-#include <iterator>
 #include <memory>
 #include <thread>
 #include <tuple>
@@ -193,7 +177,7 @@ std::vector<CompressedNodeBasedGraphEdge> toEdgeList(const util::NodeBasedDynami
 
     return edges;
 }
-}
+} // namespace
 
 /**
  * TODO: Refactor this function into smaller functions for better readability.
@@ -288,16 +272,6 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     //
     // Luckily node based node ids still coincide with the coordinate array.
     // That's the reason we can only here write out the final compressed node based graph.
-
-    // Dumps to file asynchronously and makes sure we wait for its completion.
-    std::future<void> compressed_node_based_graph_writing;
-
-    BOOST_SCOPE_EXIT_ALL(&)
-    {
-        if (compressed_node_based_graph_writing.valid())
-            compressed_node_based_graph_writing.wait();
-    };
-
     files::writeCompressedNodeBasedGraph(config.GetPath(".osrm.cnbg").string(),
                                          toEdgeList(node_based_graph));
 
@@ -519,7 +493,6 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
     // OSM elements Lua parser
     tbb::filter_t<SharedBuffer, ParsedBuffer> buffer_transformer(
         tbb::filter::parallel, [&](const SharedBuffer buffer) {
-
             ParsedBuffer parsed_buffer;
             parsed_buffer.buffer = buffer;
             scripting_environment.ProcessElements(*buffer,
@@ -540,7 +513,6 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
     unsigned number_of_maneuver_overrides = 0;
     tbb::filter_t<ParsedBuffer, void> buffer_storage(
         tbb::filter::serial_in_order, [&](const ParsedBuffer &parsed_buffer) {
-
             number_of_nodes += parsed_buffer.resulting_nodes.size();
             // put parsed objects thru extractor callbacks
             for (const auto &result : parsed_buffer.resulting_nodes)
@@ -564,7 +536,6 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
             {
                 extractor_callbacks->ProcessManeuverOverride(result);
             }
-
         });
 
     tbb::filter_t<SharedBuffer, std::shared_ptr<ExtractionRelationContainer>> buffer_relation_cache(
@@ -606,7 +577,6 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
     tbb::filter_t<std::shared_ptr<ExtractionRelationContainer>, void> buffer_storage_relation(
         tbb::filter::serial_in_order,
         [&](const std::shared_ptr<ExtractionRelationContainer> parsed_relations) {
-
             number_of_relations += parsed_relations->GetRelationsNum();
             relations.Merge(std::move(*parsed_relations));
         });

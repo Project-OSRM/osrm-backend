@@ -212,10 +212,10 @@ template <storage::Ownership Ownership> class MultiLevelPartitionImpl final
                                 // create mask that has `bits` ones at its LSBs.
                                 // 000011
                                 BOOST_ASSERT(offset < NUM_PARTITION_BITS);
-                                PartitionID mask = (1UL << offset) - 1UL;
+                                PartitionID mask = (1ULL << offset) - 1ULL;
                                 // 001111
                                 BOOST_ASSERT(next_offset < NUM_PARTITION_BITS);
-                                PartitionID next_mask = (1UL << next_offset) - 1UL;
+                                PartitionID next_mask = (1ULL << next_offset) - 1ULL;
                                 // 001100
                                 masks[lidx++] = next_mask ^ mask;
                             });

@@ -1,6 +1,8 @@
 
 #include <test.hpp>
 
+#include <array>
+
 TEST_CASE("read repeated packed bool field: empty") {
     const std::string buffer = load_data("repeated_packed_bool/data-empty");
 
@@ -51,7 +53,7 @@ TEST_CASE("read repeated packed bool field: end of buffer") {
     for (std::string::size_type i = 1; i < buffer.size(); ++i) {
         protozero::pbf_reader item{buffer.data(), i};
         REQUIRE(item.next());
-        REQUIRE_THROWS_AS(item.get_packed_bool(), const protozero::end_of_buffer_exception&);
+        REQUIRE_THROWS_AS(item.get_packed_bool(), protozero::end_of_buffer_exception);
     }
 }
 
@@ -60,21 +62,21 @@ TEST_CASE("write repeated packed bool field") {
     protozero::pbf_writer pw{buffer};
 
     SECTION("empty") {
-        const bool data[] = { true };
+        const std::array<bool, 1> data = {{ true }};
         pw.add_packed_bool(1, std::begin(data), std::begin(data) /* !!!! */);
 
         REQUIRE(buffer == load_data("repeated_packed_bool/data-empty"));
     }
 
     SECTION("one") {
-        const bool data[] = { true };
+        const std::array<bool, 1> data = {{ true }};
         pw.add_packed_bool(1, std::begin(data), std::end(data));
 
         REQUIRE(buffer == load_data("repeated_packed_bool/data-one"));
     }
 
     SECTION("many") {
-        const bool data[] = { true, true, false, true };
+        const std::array<bool, 4> data = {{ true, true, false, true }};
         pw.add_packed_bool(1, std::begin(data), std::end(data));
 
         REQUIRE(buffer == load_data("repeated_packed_bool/data-many"));

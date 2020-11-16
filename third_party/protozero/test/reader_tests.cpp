@@ -1,5 +1,7 @@
 
+#include <cstdlib>
 #include <fstream>
+#include <iterator>
 #include <stdexcept>
 #include <string>
 
