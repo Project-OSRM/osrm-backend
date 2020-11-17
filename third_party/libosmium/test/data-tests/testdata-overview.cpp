@@ -79,23 +79,28 @@ int main(int argc, char* argv[]) {
         std::exit(1);
     }
 
-    const std::string output_format{"SQLite"};
-    const std::string input_filename{argv[1]};
-    const std::string output_filename{"testdata-overview.db"};
-    ::unlink(output_filename.c_str());
+    try {
+        const std::string output_format{"SQLite"};
+        const std::string input_filename{argv[1]};
+        const std::string output_filename{"testdata-overview.db"};
+        ::unlink(output_filename.c_str());
 
-    CPLSetConfigOption("OGR_SQLITE_SYNCHRONOUS", "FALSE");
-    gdalcpp::Dataset dataset{output_format, output_filename, gdalcpp::SRS{}, {"SPATIALITE=TRUE"}};
+        CPLSetConfigOption("OGR_SQLITE_SYNCHRONOUS", "FALSE");
+        gdalcpp::Dataset dataset{output_format, output_filename, gdalcpp::SRS{}, {"SPATIALITE=TRUE"}};
 
-    osmium::io::Reader reader{input_filename};
+        osmium::io::Reader reader{input_filename};
 
-    index_type index;
-    location_handler_type location_handler{index};
-    location_handler.ignore_errors();
+        index_type index;
+        location_handler_type location_handler{index};
+        location_handler.ignore_errors();
 
-    TestOverviewHandler handler{dataset};
+        TestOverviewHandler handler{dataset};
 
-    osmium::apply(reader, location_handler, handler);
-    reader.close();
+        osmium::apply(reader, location_handler, handler);
+        reader.close();
+    } catch (const std::exception& e) {
+        std::cerr << e.what() << '\n';
+        std::exit(1);
+    }
 }
 

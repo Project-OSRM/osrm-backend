@@ -25,18 +25,24 @@ int main(int argc, char* argv[]) {
         std::exit(1);
     }
 
-    // The Reader is initialized here with an osmium::io::File, but could
-    // also be directly initialized with a file name.
-    osmium::io::File input_file{argv[1]};
-    osmium::io::Reader reader{input_file};
+    try {
+        // The Reader is initialized here with an osmium::io::File, but could
+        // also be directly initialized with a file name.
+        osmium::io::File input_file{argv[1]};
+        osmium::io::Reader reader{input_file};
 
-    // OSM data comes in buffers, read until there are no more.
-    while (osmium::memory::Buffer buffer = reader.read()) {
-        // do nothing
+        // OSM data comes in buffers, read until there are no more.
+        while (osmium::memory::Buffer buffer = reader.read()) {
+            // do nothing
+        }
+
+        // You do not have to close the Reader explicitly, but because the
+        // destructor can't throw, you will not see any errors otherwise.
+        reader.close();
+    } catch (const std::exception& e) {
+        // All exceptions used by the Osmium library derive from std::exception.
+        std::cerr << e.what() << '\n';
+        std::exit(1);
     }
-
-    // You do not have to close the Reader explicitly, but because the
-    // destructor can't throw, you will not see any errors otherwise.
-    reader.close();
 }
 

@@ -46,7 +46,7 @@ SET CMAKE_CMD=cmake .. -LA -G "Visual Studio 14 Win64" ^
 -DOsmium_DEBUG=TRUE ^
 -DCMAKE_BUILD_TYPE=%config% ^
 -DBUILD_HEADERS=OFF ^
--DBOOST_ROOT=C:/Libraries/boost_1_63_0 ^
+-DBOOST_ROOT=C:/Libraries/boost_1_67_0 ^
 -DZLIB_INCLUDE_DIR=C:/projects/zlib-vc140-static-64.1.2.11/lib/native/include ^
 -DZLIB_LIBRARY=C:/projects/zlib-vc140-static-64.1.2.11/lib/native/libs/x64/static/%config%/zlibstatic.lib ^
 -DEXPAT_INCLUDE_DIR=C:/projects/expat.v140.2.2.5/build/native/include ^
@@ -68,7 +68,7 @@ msbuild libosmium.sln ^
 /p:PlatformToolset=v140 %avlogger%
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
-ctest --output-on-failure -C %config% -E testdata-overview
+ctest --output-on-failure -C %config%
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
 GOTO DONE

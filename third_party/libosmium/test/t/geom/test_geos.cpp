@@ -10,6 +10,8 @@
 
 #include <osmium/geom/mercator_projection.hpp>
 
+#include <memory>
+
 TEST_CASE("GEOS geometry factory - create point") {
     osmium::geom::GEOSFactory<> factory;
 

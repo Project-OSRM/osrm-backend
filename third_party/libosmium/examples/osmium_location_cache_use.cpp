@@ -78,31 +78,37 @@ int main(int argc, char* argv[]) {
         std::exit(1);
     }
 
-    const std::string input_filename{argv[1]};
-    const std::string cache_filename{argv[2]};
+    try {
+        const std::string input_filename{argv[1]};
+        const std::string cache_filename{argv[2]};
 
-    // Construct Reader reading only ways
-    osmium::io::Reader reader{input_filename, osmium::osm_entity_bits::way};
+        // Construct Reader reading only ways
+        osmium::io::Reader reader{input_filename, osmium::osm_entity_bits::way};
 
-    // Initialize location index on disk using an existing file
-    const int fd = ::open(cache_filename.c_str(), O_RDWR);
-    if (fd == -1) {
-        std::cerr << "Can not open location cache file '" << cache_filename << "': " << std::strerror(errno) << "\n";
-        return 1;
-    }
+        // Initialize location index on disk using an existing file
+        const int fd = ::open(cache_filename.c_str(), O_RDWR);
+        if (fd == -1) {
+            std::cerr << "Can not open location cache file '" << cache_filename << "': " << std::strerror(errno) << "\n";
+            return 1;
+        }
 #ifdef _WIN32
-    _setmode(fd, _O_BINARY);
+        _setmode(fd, _O_BINARY);
 #endif
-    index_type index{fd};
+        index_type index{fd};
 
-    // The handler that adds node locations from the index to the ways.
-    location_handler_type location_handler{index};
+        // The handler that adds node locations from the index to the ways.
+        location_handler_type location_handler{index};
 
-    // Feed all ways through the location handler and then our own handler.
-    MyHandler handler;
-    osmium::apply(reader, location_handler, handler);
+        // Feed all ways through the location handler and then our own handler.
+        MyHandler handler;
+        osmium::apply(reader, location_handler, handler);
 
-    // Explicitly close input so we get notified of any errors.
-    reader.close();
+        // Explicitly close input so we get notified of any errors.
+        reader.close();
+    } catch (const std::exception& e) {
+        // All exceptions used by the Osmium library derive from std::exception.
+        std::cerr << e.what() << '\n';
+        std::exit(1);
+    }
 }
 

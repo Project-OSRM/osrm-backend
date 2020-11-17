@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -50,19 +50,19 @@ namespace osmium {
         template <typename TMember>
         friend class osmium::memory::CollectionIterator;
 
-        static unsigned char* after_null(unsigned char* ptr) {
+        static unsigned char* after_null(unsigned char* ptr) noexcept {
             return reinterpret_cast<unsigned char*>(std::strchr(reinterpret_cast<char*>(ptr), 0) + 1);
         }
 
-        static const unsigned char* after_null(const unsigned char* ptr) {
+        static const unsigned char* after_null(const unsigned char* ptr) noexcept {
             return reinterpret_cast<const unsigned char*>(std::strchr(reinterpret_cast<const char*>(ptr), 0) + 1);
         }
 
-        unsigned char* next() {
+        unsigned char* next() noexcept {
             return after_null(after_null(data()));
         }
 
-        const unsigned char* next() const {
+        const unsigned char* next() const noexcept {
             return after_null(after_null(data()));
         }
 
@@ -78,22 +78,32 @@ namespace osmium {
 
         static constexpr item_type collection_type = item_type::tag_list;
 
+        /**
+         * Get a pointer to the C string containing the tag key.
+         *
+         * Complexity: Constant.
+         */
         const char* key() const noexcept {
             return reinterpret_cast<const char*>(data());
         }
 
-        const char* value() const {
+        /**
+         * Get a pointer to the C string containing the tag value.
+         *
+         * Complexity: Linear on the number of characters in the key!
+         */
+        const char* value() const noexcept {
             return reinterpret_cast<const char*>(after_null(data()));
         }
 
     }; // class Tag
 
-    inline bool operator==(const Tag& lhs, const Tag& rhs) {
+    inline bool operator==(const Tag& lhs, const Tag& rhs) noexcept {
         return !std::strcmp(lhs.key(), rhs.key()) &&
                !std::strcmp(lhs.value(), rhs.value());
     }
 
-    inline bool operator<(const Tag& lhs, const Tag& rhs) {
+    inline bool operator<(const Tag& lhs, const Tag& rhs) noexcept {
         const auto c = std::strcmp(lhs.key(), rhs.key());
         return (c == 0 ? std::strcmp(lhs.value(), rhs.value()) : c) < 0;
     }

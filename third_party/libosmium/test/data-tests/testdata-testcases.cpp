@@ -18,6 +18,11 @@ int main(int argc, char* argv[]) {
         std::exit(1);
     }
 
-    return Catch::Session().run(argc, argv);
+    try {
+        return Catch::Session().run(argc, argv);
+    } catch (const std::exception& e) {
+        std::cerr << e.what() << '\n';
+        std::exit(1);
+    }
 }
 

@@ -6,6 +6,8 @@
 #include <osmium/geom/mercator_projection.hpp>
 #include <osmium/geom/wkt.hpp>
 
+#include <string>
+
 TEST_CASE("WKT geometry for point") {
     const osmium::geom::WKTFactory<> factory;
     const std::string wkt{factory.create_point(osmium::Location{3.2, 4.2})};

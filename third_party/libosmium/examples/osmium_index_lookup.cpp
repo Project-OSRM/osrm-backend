@@ -182,7 +182,7 @@ class Options {
     bool m_array_format = false;
     bool m_list_format = false;
 
-    void print_help() {
+    static void print_help() {
         std::cout << "Usage: osmium_index_lookup [OPTIONS]\n\n"
                   << "-h, --help        Print this help message\n"
                   << "-a, --array=FILE  Read given index file in array format\n"
@@ -193,7 +193,7 @@ class Options {
         ;
     }
 
-    void print_usage(const char* prgname) {
+    static void print_usage(const char* prgname) {
         std::cout << "Usage: " << prgname << " [OPTIONS]\n\n";
         std::exit(0);
     }
@@ -363,7 +363,8 @@ int main(int argc, char* argv[]) {
         const auto index = create<std::size_t>(options.dense_format(), fd);
         return run(*index, options);
     } catch (const std::exception& e) {
-        std::cerr << "Error: " << e.what() << '\n';
+        // All exceptions used by the Osmium library derive from std::exception.
+        std::cerr << e.what() << '\n';
         std::exit(1);
     }
 }

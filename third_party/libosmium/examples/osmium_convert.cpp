@@ -135,7 +135,7 @@ int main(int argc, char* argv[]) {
         // a time. This is much easier and faster than copying each object
         // in the file. Buffers are moved around, so there is no cost for
         // copying in memory.
-        while (osmium::memory::Buffer buffer = reader.read()) {
+        while (osmium::memory::Buffer buffer = reader.read()) { // NOLINT(bugprone-use-after-move) Bug in clang-tidy https://bugs.llvm.org/show_bug.cgi?id=36516
             writer(std::move(buffer));
         }
 
@@ -147,7 +147,7 @@ int main(int argc, char* argv[]) {
         reader.close();
     } catch (const std::exception& e) {
         // All exceptions used by the Osmium library derive from std::exception.
-        std::cerr << e.what() << "\n";
+        std::cerr << e.what() << '\n';
         std::exit(1);
     }
 }

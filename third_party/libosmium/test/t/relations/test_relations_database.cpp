@@ -5,6 +5,8 @@
 #include <osmium/relations/relations_database.hpp>
 #include <osmium/storage/item_stash.hpp>
 
+#include <vector>
+
 osmium::memory::Buffer fill_buffer() {
     using namespace osmium::builder::attr; // NOLINT(google-build-using-namespace)
     osmium::memory::Buffer buffer{1024 * 1024, osmium::memory::Buffer::auto_grow::yes};
