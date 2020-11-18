@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -71,10 +71,6 @@ namespace osmium {
          * and their members.
          */
         class AssemblerLegacy : public detail::BasicAssemblerWithTags {
-
-            void add_tags_to_area(osmium::builder::AreaBuilder& builder, const osmium::Way& way) const {
-                builder.add_item(way.tags());
-            }
 
             void add_common_tags(osmium::builder::TagListBuilder& tl_builder, std::set<const osmium::Way*>& ways) const {
                 std::map<std::string, std::size_t> counter;
@@ -166,7 +162,7 @@ namespace osmium {
 
                 const bool area_okay = create_rings();
                 if (area_okay || config().create_empty_areas) {
-                    add_tags_to_area(builder, way);
+                    builder.add_item(way.tags());
                 }
                 if (area_okay) {
                     add_rings_to_area(builder);

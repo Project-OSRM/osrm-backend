@@ -2,8 +2,12 @@
 
 #include <osmium/osm/location.hpp>
 
+#include <cstdlib>
+#include <cstring>
+#include <iterator>
 #include <limits>
 #include <sstream>
+#include <string>
 #include <type_traits>
 
 // fails on MSVC and doesn't really matter

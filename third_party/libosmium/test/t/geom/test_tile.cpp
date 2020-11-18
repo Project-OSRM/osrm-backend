@@ -41,7 +41,7 @@ TEST_CASE("Tile from x180.0 y90.0 at zoom 4") {
 
     osmium::geom::Tile t{4, l};
 
-    REQUIRE(t.x == (1u << 4u) - 1);
+    REQUIRE(t.x == (1U << 4U) - 1);
     REQUIRE(t.y == 0);
     REQUIRE(t.z == 4);
     REQUIRE(t.valid());
@@ -52,7 +52,7 @@ TEST_CASE("Tile from x0.0 y0.0 at zoom 4") {
 
     osmium::geom::Tile t{4, l};
 
-    const auto n = 1u << (4u - 1u);
+    const auto n = 1U << (4U - 1U);
     REQUIRE(t.x == n);
     REQUIRE(t.y == n);
     REQUIRE(t.z == 4);
@@ -60,12 +60,12 @@ TEST_CASE("Tile from x0.0 y0.0 at zoom 4") {
 }
 
 TEST_CASE("Tile from max values at zoom 4") {
-    osmium::geom::Tile t{4u, 15u, 15u};
+    osmium::geom::Tile t{4U, 15U, 15U};
     REQUIRE(t.valid());
 }
 
 TEST_CASE("Tile from max values at zoom 30") {
-    osmium::geom::Tile t{30u, (1u << 30u) - 1, (1u << 30u) - 1};
+    osmium::geom::Tile t{30U, (1U << 30U) - 1, (1U << 30U) - 1};
     REQUIRE(t.valid());
 }
 
@@ -100,8 +100,12 @@ TEST_CASE("Tile order") {
 TEST_CASE("Check a random list of tiles") {
     std::istringstream input_data(s);
     while (input_data) {
-        double lon, lat;
-        uint32_t x, y, zoom;
+        double lon;
+        double lat;
+        uint32_t x;
+        uint32_t y;
+        uint32_t zoom;
+
         input_data >> lon;
         input_data >> lat;
         input_data >> x;

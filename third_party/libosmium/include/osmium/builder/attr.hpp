@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -45,6 +45,7 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/osm/relation.hpp>
 #include <osmium/osm/timestamp.hpp>
 #include <osmium/osm/types.hpp>
+#include <osmium/util/string.hpp>
 
 #include <cstddef>
 #include <cstdint>
@@ -226,8 +227,8 @@ namespace osmium {
             OSMIUM_ATTRIBUTE(node_handler, _location, osmium::Location)
                 constexpr explicit _location(const osmium::Location& value) noexcept :
                     type_wrapper(value) {}
-                explicit _location(double lat, double lon) :
-                    type_wrapper(osmium::Location{lat, lon}) {}
+                explicit _location(double lon, double lat) :
+                    type_wrapper(osmium::Location{lon, lat}) {}
             };
 
             OSMIUM_ATTRIBUTE(entity_handler, _user, const char*)
@@ -252,6 +253,10 @@ namespace osmium {
                     m_type(type),
                     m_ref(ref),
                     m_role(role) {
+                }
+
+                member_type(char type, osmium::object_id_type ref, const char* role = "") noexcept :
+                    member_type(osmium::char_to_item_type(type), ref, role) {
                 }
 
                 constexpr osmium::item_type type() const noexcept {
@@ -280,6 +285,10 @@ namespace osmium {
                     m_type(type),
                     m_ref(ref),
                     m_role(std::move(role)) {
+                }
+
+                member_type_string(char type, osmium::object_id_type ref, std::string&& role) noexcept :
+                    member_type_string(osmium::char_to_item_type(type), ref, std::forward<std::string>(role)) {
                 }
 
                 osmium::item_type type() const noexcept {
@@ -360,6 +369,15 @@ namespace osmium {
                     type_wrapper(std::make_pair(key, val)) {}
                 explicit _tag(const std::string& key, const std::string& val) :
                     type_wrapper(std::make_pair(key.c_str(), val.c_str())) {}
+                explicit _tag(const char* const key_value) :
+                    type_wrapper(pair_of_cstrings{key_value, nullptr}) {}
+                explicit _tag(const std::string& key_value) :
+                    type_wrapper(pair_of_cstrings{key_value.c_str(), nullptr}) {}
+            };
+
+            OSMIUM_ATTRIBUTE(tags_handler, _t, const char*)
+                explicit _t(const char *tags) :
+                    type_wrapper(tags) {}
             };
 
             template <typename TTagIterator>
@@ -659,13 +677,40 @@ namespace osmium {
                 }
 
                 static void set_value(TagListBuilder& builder, const attr::_tag& tag) {
-                    builder.add_tag(tag.value);
+                    if (tag.value.second != nullptr) {
+                        builder.add_tag(tag.value);
+                        return;
+                    }
+                    const char* key = tag.value.first;
+                    auto const equal_sign = std::strchr(key, '=');
+                    if (!equal_sign) {
+                        builder.add_tag(key, "");
+                        return;
+                    }
+                    const char* value = equal_sign + 1;
+                    builder.add_tag(key, equal_sign - key,
+                                    value, std::strlen(value));
                 }
 
                 template <typename TIterator>
                 static void set_value(TagListBuilder& builder, const attr::detail::tags_from_iterator_pair<TIterator>& tags) {
                     for (const auto& tag : tags) {
                         builder.add_tag(tag);
+                    }
+                }
+
+                static void set_value(TagListBuilder& builder, const attr::_t& tags) {
+                    const auto taglist = osmium::split_string(tags.value, ',', true);
+                    for (const auto& tag : taglist) {
+                        const std::size_t pos = tag.find_first_of('=');
+                        if (pos == std::string::npos) {
+                            builder.add_tag(tag, "");
+                        } else {
+                            const char* value = tag.c_str() + pos + 1;
+                            builder.add_tag(tag.c_str(), pos,
+                                            value, tag.size() - pos - 1);
+                        }
+
                     }
                 }
 
@@ -764,7 +809,7 @@ namespace osmium {
             template <typename TBuilder, typename THandler, typename... TArgs>
             inline typename std::enable_if<is_handled_by<THandler, TArgs...>::value>::type
             add_list(osmium::builder::Builder& parent, const TArgs&... args) {
-                TBuilder builder(parent.buffer(), &parent);
+                TBuilder builder{parent.buffer(), &parent};
                 (void)std::initializer_list<int>{
                     (THandler::set_value(builder, args), 0)...
                 };
@@ -792,7 +837,7 @@ namespace osmium {
             static_assert(detail::are_all_handled_by<detail::any_node_handlers, TArgs...>::value, "Attribute not allowed in add_node()");
 
             {
-                NodeBuilder builder(buffer);
+                NodeBuilder builder{buffer};
 
                 detail::add_basic<detail::node_handler>(builder, args...);
                 detail::add_user(builder, args...);
@@ -815,7 +860,7 @@ namespace osmium {
             static_assert(detail::are_all_handled_by<detail::any_way_handlers, TArgs...>::value, "Attribute not allowed in add_way()");
 
             {
-                WayBuilder builder(buffer);
+                WayBuilder builder{buffer};
 
                 detail::add_basic<detail::object_handler>(builder, args...);
                 detail::add_user(builder, args...);
@@ -839,7 +884,7 @@ namespace osmium {
             static_assert(detail::are_all_handled_by<detail::any_relation_handlers, TArgs...>::value, "Attribute not allowed in add_relation()");
 
             {
-                RelationBuilder builder(buffer);
+                RelationBuilder builder{buffer};
 
                 detail::add_basic<detail::object_handler>(builder, args...);
                 detail::add_user(builder, args...);
@@ -863,7 +908,7 @@ namespace osmium {
             static_assert(detail::are_all_handled_by<detail::any_changeset_handlers, TArgs...>::value, "Attribute not allowed in add_changeset()");
 
             {
-                ChangesetBuilder builder(buffer);
+                ChangesetBuilder builder{buffer};
 
                 detail::add_basic<detail::changeset_handler>(builder, args...);
                 detail::add_user(builder, args...);
@@ -887,7 +932,7 @@ namespace osmium {
             static_assert(detail::are_all_handled_by<detail::any_area_handlers, TArgs...>::value, "Attribute not allowed in add_area()");
 
             {
-                AreaBuilder builder(buffer);
+                AreaBuilder builder{buffer};
 
                 detail::add_basic<detail::object_handler>(builder, args...);
                 detail::add_user(builder, args...);
@@ -914,7 +959,7 @@ namespace osmium {
             static_assert(detail::are_all_handled_by<detail::nodes_handler, TArgs...>::value, "Attribute not allowed in add_way_node_list()");
 
             {
-                WayNodeListBuilder builder(buffer);
+                WayNodeListBuilder builder{buffer};
                 (void)std::initializer_list<int>{
                     (detail::nodes_handler::set_value(builder, args), 0)...
                 };
@@ -936,7 +981,7 @@ namespace osmium {
             static_assert(detail::are_all_handled_by<detail::tags_handler, TArgs...>::value, "Attribute not allowed in add_tag_list()");
 
             {
-                TagListBuilder builder(buffer);
+                TagListBuilder builder{buffer};
                 (void)std::initializer_list<int>{
                     (detail::tags_handler::set_value(builder, args), 0)...
                 };

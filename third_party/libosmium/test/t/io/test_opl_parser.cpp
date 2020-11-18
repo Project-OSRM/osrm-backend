@@ -8,6 +8,9 @@
 
 #include <algorithm>
 #include <cstring>
+#include <initializer_list>
+#include <string>
+#include <vector>
 
 namespace oid = osmium::io::detail;
 
@@ -717,7 +720,6 @@ TEST_CASE("Parse node") {
         REQUIRE(node.location() == loc);
         REQUIRE(node.tags().empty());
     }
-
 }
 
 TEST_CASE("Parse way") {
@@ -1039,6 +1041,54 @@ TEST_CASE("Parse line with external interface") {
         REQUIRE(buffer.committed() == 0);
     }
 
+}
+
+TEST_CASE("Duplicate attributes") {
+    osmium::memory::Buffer buffer{1024};
+    REQUIRE_THROWS_WITH(osmium::opl_parse("n123 v1 v2", buffer),
+                        "OPL error: Duplicate attribute: version (v) on line 0 column 0");
+    REQUIRE_THROWS_WITH(osmium::opl_parse("w123 c1 c2", buffer),
+                        "OPL error: Duplicate attribute: changeset_id (c) on line 0 column 0");
+    REQUIRE_THROWS_WITH(osmium::opl_parse("r123 Ta=b Tc=d", buffer),
+                        "OPL error: Duplicate attribute: tags (T) on line 0 column 0");
+    REQUIRE_THROWS_WITH(osmium::opl_parse("c123 k1 k2", buffer),
+                        "OPL error: Duplicate attribute: num_changes (k) on line 0 column 0");
+
+    for (const char *attr : {"v1", "dV", "c2", "t2020-01-01T00:00:01Z", "i3", "utest", "Ta=b", "x1.0", "y2.0"}) {
+        auto line = std::string{"n1 "} + attr;
+        REQUIRE_NOTHROW(osmium::opl_parse(line.c_str(), buffer));
+        line += " ";
+        line += attr;
+        REQUIRE_THROWS_AS(osmium::opl_parse(line.c_str(), buffer),
+                          const osmium::opl_error &);
+    }
+
+    for (const char *attr : {"v1", "dV", "c2", "t2020-01-01T00:00:01Z", "i3", "utest", "Ta=b", "Nn1"}) {
+        auto line = std::string{"w1 "} + attr;
+        REQUIRE_NOTHROW(osmium::opl_parse(line.c_str(), buffer));
+        line += " ";
+        line += attr;
+        REQUIRE_THROWS_AS(osmium::opl_parse(line.c_str(), buffer),
+                          const osmium::opl_error &);
+    }
+
+    for (const char *attr : {"v1", "dV", "c2", "t2020-01-01T00:00:01Z", "i3", "utest", "Ta=b", "Mn1@foo"}) {
+        auto line = std::string{"r1 "} + attr;
+        REQUIRE_NOTHROW(osmium::opl_parse(line.c_str(), buffer));
+        line += " ";
+        line += attr;
+        REQUIRE_THROWS_AS(osmium::opl_parse(line.c_str(), buffer),
+                          const osmium::opl_error &);
+    }
+
+    for (const char *attr : {"k1", "s2020-01-01T00:00:01Z", "e2020-01-01T00:00:02Z", "d1", "i3", "utest", "Ta=b", "x1", "y2", "X3", "Y4"}) {
+        auto line = std::string{"c1 "} + attr;
+        REQUIRE_NOTHROW(osmium::opl_parse(line.c_str(), buffer));
+        line += " ";
+        line += attr;
+        REQUIRE_THROWS_AS(osmium::opl_parse(line.c_str(), buffer),
+                          const osmium::opl_error &);
+    }
 }
 
 TEST_CASE("Parse OPL using Reader") {

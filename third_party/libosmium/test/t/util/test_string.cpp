@@ -2,6 +2,9 @@
 
 #include <osmium/util/string.hpp>
 
+#include <string>
+#include <vector>
+
 TEST_CASE("split_string string") {
     const std::string str{"foo,baramba,baz"};
     const std::vector<std::string> result = {"foo", "baramba", "baz"};

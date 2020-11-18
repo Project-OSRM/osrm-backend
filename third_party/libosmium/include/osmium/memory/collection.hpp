@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -75,7 +75,7 @@ namespace osmium {
             }
 
             CollectionIterator<TMember> operator++(int) {
-                CollectionIterator<TMember> tmp(*this);
+                CollectionIterator<TMember> tmp{*this};
                 operator++();
                 return tmp;
             }
@@ -85,7 +85,7 @@ namespace osmium {
             }
 
             bool operator!=(const CollectionIterator<TMember>& rhs) const noexcept {
-                return m_data != rhs.m_data;
+                return !(*this == rhs);
             }
 
             unsigned char* data() const noexcept {
@@ -123,11 +123,11 @@ namespace osmium {
             using const_reference = const TMember&;
             using iterator        = CollectionIterator<TMember>;
             using const_iterator  = CollectionIterator<const TMember>;
-            using size_type       = size_t;
+            using size_type       = std::size_t;
 
             static constexpr osmium::item_type itemtype = TCollectionItemType;
 
-            constexpr static bool is_compatible_to(osmium::item_type t) noexcept {
+            constexpr static bool is_compatible_to(const osmium::item_type t) noexcept {
                 return t == itemtype;
             }
 
@@ -154,19 +154,19 @@ namespace osmium {
             }
 
             iterator begin() noexcept {
-                return iterator(data() + sizeof(Collection<TMember, TCollectionItemType>));
+                return iterator{data() + sizeof(Collection<TMember, TCollectionItemType>)};
             }
 
             iterator end() noexcept {
-                return iterator(data() + byte_size());
+                return iterator{data() + byte_size()};
             }
 
             const_iterator cbegin() const noexcept {
-                return const_iterator(data() + sizeof(Collection<TMember, TCollectionItemType>));
+                return const_iterator{data() + sizeof(Collection<TMember, TCollectionItemType>)};
             }
 
             const_iterator cend() const noexcept {
-                return const_iterator(data() + byte_size());
+                return const_iterator{data() + byte_size()};
             }
 
             const_iterator begin() const noexcept {

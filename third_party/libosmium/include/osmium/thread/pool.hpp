@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -56,7 +56,9 @@ namespace osmium {
 
             // Maximum number of allowed pool threads (just to keep the user
             // from setting something silly).
-            constexpr const int max_pool_threads = 32;
+            enum {
+                max_pool_threads = 32
+            };
 
             inline int get_pool_size(int num_threads, int user_setting, unsigned hardware_concurrency) {
                 if (num_threads == 0) {
@@ -77,8 +79,7 @@ namespace osmium {
             }
 
             inline std::size_t get_work_queue_size() noexcept {
-                const std::size_t n = osmium::config::get_max_queue_size("WORK", 10);
-                return n > 2 ? n : 2;
+                return osmium::config::get_max_queue_size("WORK", 10);
             }
 
         } // namespace detail
@@ -138,8 +139,13 @@ namespace osmium {
 
         public:
 
-            static constexpr int default_num_threads = 0;
-            static constexpr int default_queue_size = 0;
+            enum {
+                default_num_threads = 0
+            };
+
+            enum {
+                default_queue_size = 0U
+            };
 
             /**
              * Create thread pool with the given number of threads. If

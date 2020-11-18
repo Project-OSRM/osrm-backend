@@ -5,6 +5,8 @@
 TEST_CASE("Set a single option value from string") {
     osmium::Options o;
 
+    REQUIRE(o.empty());
+
     o.set("foo", "bar");
     REQUIRE("bar" == o.get("foo"));
     REQUIRE(o.get("empty").empty());
@@ -17,6 +19,7 @@ TEST_CASE("Set a single option value from string") {
     REQUIRE(o.is_not_false("empty"));
 
     REQUIRE(1 == o.size());
+    REQUIRE_FALSE(o.empty());
 }
 
 TEST_CASE("Set option values from booleans") {

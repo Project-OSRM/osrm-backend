@@ -68,25 +68,31 @@ int main(int argc, char* argv[]) {
         std::exit(1);
     }
 
-    // Initialize the reader with the filename from the command line and
-    // tell it to only read nodes and ways.
-    osmium::io::Reader reader{argv[1], osmium::osm_entity_bits::node | osmium::osm_entity_bits::way};
+    try {
+        // Initialize the reader with the filename from the command line and
+        // tell it to only read nodes and ways.
+        osmium::io::Reader reader{argv[1], osmium::osm_entity_bits::node | osmium::osm_entity_bits::way};
 
-    // The index to hold node locations.
-    index_type index;
+        // The index to hold node locations.
+        index_type index;
 
-    // The location handler will add the node locations to the index and then
-    // to the ways
-    location_handler_type location_handler{index};
+        // The location handler will add the node locations to the index and then
+        // to the ways
+        location_handler_type location_handler{index};
 
-    // Our handler defined above
-    RoadLengthHandler road_length_handler;
+        // Our handler defined above
+        RoadLengthHandler road_length_handler;
 
-    // Apply input data to first the location handler and then our own handler
-    osmium::apply(reader, location_handler, road_length_handler);
+        // Apply input data to first the location handler and then our own handler
+        osmium::apply(reader, location_handler, road_length_handler);
 
-    // Output the length. The haversine function calculates it in meters,
-    // so we first devide by 1000 to get kilometers.
-    std::cout << "Length: " << road_length_handler.length / 1000 << " km\n";
+        // Output the length. The haversine function calculates it in meters,
+        // so we first devide by 1000 to get kilometers.
+        std::cout << "Length: " << road_length_handler.length / 1000 << " km\n";
+    } catch (const std::exception& e) {
+        // All exceptions used by the Osmium library derive from std::exception.
+        std::cerr << e.what() << '\n';
+        std::exit(1);
+    }
 }
 
