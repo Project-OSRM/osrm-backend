@@ -164,11 +164,11 @@ template <storage::Ownership Ownership> class MultiLevelPartitionImpl final
     // of cell ids efficiently.
     inline NodeID GetSentinelNode() const { return partition.size() - 1; }
 
-    void SetCellID(LevelID l, NodeID node, std::size_t cell_id)
+    void SetCellID(LevelID l, NodeID node, CellID cell_id)
     {
         auto lidx = LevelIDToIndex(l);
 
-        auto shifted_id = cell_id << level_data->lidx_to_offset[lidx];
+        auto shifted_id = static_cast<std::uint64_t>(cell_id) << level_data->lidx_to_offset[lidx];
         auto cleared_cell = partition[node] & ~level_data->lidx_to_mask[lidx];
         partition[node] = cleared_cell | shifted_id;
     }
