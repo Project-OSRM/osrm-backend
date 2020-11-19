@@ -259,7 +259,7 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
         "version",
         &osmium::Way::version,
         "get_nodes",
-        [](const osmium::Way &way) { return sol::as_table(way.nodes()); },
+        [](const osmium::Way &way) { return sol::as_table(&way.nodes()); },
         "get_location_tag",
         [&context, &get_location_tag](const osmium::Way &way, const char *key) {
             // HEURISTIC: use a single node (last) of the way to localize the way
