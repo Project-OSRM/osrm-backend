@@ -11,9 +11,11 @@
         const auto &rhs = {__VA_ARGS__};                                                           \
         BOOST_CHECK_EQUAL_COLLECTIONS(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());             \
     } while (0)
-#define CHECK_EQUAL_COLLECTIONS(lhs, rhs)                                                          \
+#define CHECK_EQUAL_COLLECTIONS(coll_lhs, coll_rhs)                                                \
     do                                                                                             \
     {                                                                                              \
+        const auto &lhs = coll_lhs;                                                                \
+        const auto &rhs = coll_rhs;                                                                \
         BOOST_CHECK_EQUAL_COLLECTIONS(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());             \
     } while (0)
 

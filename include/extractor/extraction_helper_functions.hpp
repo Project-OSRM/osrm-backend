@@ -127,7 +127,9 @@ inline std::string canonicalizeStringList(std::string strlist, const std::string
 
     // collapse spaces; this is needed in case we expand "; X" => ";  X" above
     // but also makes sense to do irregardless of the fact - canonicalizing strings.
-    const auto spaces = [](auto lhs, auto rhs) { return ::isspace(lhs) && ::isspace(rhs); };
+    const auto spaces = [](unsigned char lhs, unsigned char rhs) {
+        return ::isspace(lhs) && ::isspace(rhs);
+    };
     auto it = std::unique(begin(strlist), end(strlist), spaces);
     strlist.erase(it, end(strlist));
 

@@ -47,7 +47,7 @@ class RasterGrid
     {
         xdim = _xdim;
         ydim = _ydim;
-        _data.reserve(ydim * xdim);
+        _data.resize(ydim * xdim);
         BOOST_ASSERT(ydim * xdim <= _data.capacity());
 
         // Construct FileReader
@@ -164,6 +164,7 @@ class RasterCache
     // get reference of cache
     std::vector<RasterSource> &getLoadedSources() { return LoadedSources; }
     std::unordered_map<std::string, int> &getLoadedSourcePaths() { return LoadedSourcePaths; }
+
   private:
     // constructor
     RasterCache() = default;
@@ -173,7 +174,7 @@ class RasterCache
     // the instance
     static RasterCache *g_instance;
 };
-}
-}
+} // namespace extractor
+} // namespace osrm
 
 #endif /* RASTER_SOURCE_HPP */

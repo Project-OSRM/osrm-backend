@@ -6,6 +6,7 @@
       - CHANGED: Bundled protozero updated to v1.7.0. [#5858](https://github.com/Project-OSRM/osrm-backend/pull/5858)
     - Windows:
       - FIXED: Fix bit-shift overflow in MLD partition step. [#5878](https://github.com/Project-OSRM/osrm-backend/pull/5878)
+      - FIXED: Fix vector bool permutation in graph contraction step [#5882](https://github.com/Project-OSRM/osrm-backend/pull/5882)
 
 
 # 5.23.0
