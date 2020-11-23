@@ -79,7 +79,7 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
             }
             // Found a shorter Path -> Update weight and set new parent
             else if (std::tie(to_weight, to_duration) <
-                     std::tie(query_heap.GetKey(to), query_heap.GetData(to).duration))
+                     std::tie(toHeapNode->weight, toHeapNode->data.duration))
             {
                 toHeapNode->data = {heapNode.node, to_duration, to_distance};
                 toHeapNode->weight=to_weight;

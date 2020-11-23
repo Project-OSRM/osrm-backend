@@ -121,7 +121,7 @@ void alternativeRoutingStep(const DataFacade<Algorithm> &facade,
                 forward_heap.Insert(to, to_weight, heapNode.node);
             }
             // Found a shorter Path -> Update weight
-            else if (to_weight < forward_heap.GetKey(to))
+            else if (to_weight < toHeapNode->weight)
             {
                 // new parent
                 toHeapNode->data.parent = heapNode.node;

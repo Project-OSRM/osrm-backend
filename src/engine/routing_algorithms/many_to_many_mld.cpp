@@ -78,7 +78,7 @@ void relaxBorderEdges(const DataFacade<mld::Algorithm> &facade,
             }
             // Found a shorter Path -> Update weight and set new parent
             else if (std::tie(to_weight, to_duration, to_distance, node) <
-                     std::tie(query_heap.GetKey(to),
+                     std::tie(toHeapNode->weight,
                               toHeapNode->data.duration,
                               toHeapNode->data.distance,
                               toHeapNode->data.parent))
@@ -140,7 +140,7 @@ void relaxOutgoingEdges(const DataFacade<mld::Algorithm> &facade,
                         query_heap.Insert(to, to_weight, {node, true, to_duration, to_distance});
                     }
                     else if (std::tie(to_weight, to_duration, to_distance, node) <
-                             std::tie(query_heap.GetKey(to),
+                             std::tie(toHeapNode->weight,
                                       toHeapNode->data.duration,
                                       toHeapNode->data.distance,
                                       toHeapNode->data.parent))
@@ -180,7 +180,7 @@ void relaxOutgoingEdges(const DataFacade<mld::Algorithm> &facade,
                         query_heap.Insert(to, to_weight, {node, true, to_duration, to_distance});
                     }
                     else if (std::tie(to_weight, to_duration, to_distance, node) <
-                             std::tie(query_heap.GetKey(to),
+                             std::tie(toHeapNode->weight,
                                       toHeapNode->data.duration,
                                       toHeapNode->data.distance,
                                       toHeapNode->data.parent))

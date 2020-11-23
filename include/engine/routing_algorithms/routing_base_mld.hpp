@@ -255,16 +255,16 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
                 {
                     const EdgeWeight to_weight = weight + shortcut_weight;
                     BOOST_ASSERT(to_weight >= weight);
-                    auto toNodeData= forward_heap.GetHeapNodeIfWasInserted(to);
-                    if (!toNodeData)
+                    auto toHeapNode = forward_heap.GetHeapNodeIfWasInserted(to);
+                    if (!toHeapNode)
                     {
                         forward_heap.Insert(to, to_weight, {heapNode.node, true});
                     }
-                    else if (to_weight < forward_heap.GetKey(to))
+                    else if (to_weight < toHeapNode->weight)
                     {
-                        toNodeData->data = {heapNode.node, true};
-                        toNodeData->weight=to_weight;
-                        forward_heap.DecreaseKey(*toNodeData);
+                        toHeapNode->data = {heapNode.node, true};
+                        toHeapNode->weight=to_weight;
+                        forward_heap.DecreaseKey(*toHeapNode);
                     }
                 }
                 ++destination;
@@ -284,16 +284,16 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
                 {
                     const EdgeWeight to_weight = weight + shortcut_weight;
                     BOOST_ASSERT(to_weight >= weight);
-                    auto toNodeData= forward_heap.GetHeapNodeIfWasInserted(to);
-                    if (!toNodeData)
+                    auto toHeapNode = forward_heap.GetHeapNodeIfWasInserted(to);
+                    if (!toHeapNode)
                     {
                         forward_heap.Insert(to, to_weight, {heapNode.node, true});
                     }
-                    else if (to_weight < forward_heap.GetKey(to))
+                    else if (to_weight < toHeapNode->weight)
                     {
-                        toNodeData->data = {heapNode.node, true};
-                        toNodeData->weight=to_weight;
-                        forward_heap.DecreaseKey(*toNodeData);
+                        toHeapNode->data = {heapNode.node, true};
+                        toHeapNode->weight=to_weight;
+                        forward_heap.DecreaseKey(*toHeapNode);
                     }
                 }
                 ++source;
@@ -322,16 +322,16 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
 
                 const EdgeWeight to_weight = weight + node_weight + turn_penalty;
 
-                auto toNodeData= forward_heap.GetHeapNodeIfWasInserted(to);
-                if (!toNodeData)
+                auto toHeapNode = forward_heap.GetHeapNodeIfWasInserted(to);
+                if (!toHeapNode)
                 {
                     forward_heap.Insert(to, to_weight, {heapNode.node, false});
                 }
-                else if (to_weight < forward_heap.GetKey(to))
+                else if (to_weight < toHeapNode->weight)
                 {
-                    toNodeData->data  = {heapNode.node, false};
-                    toNodeData->weight=to_weight;
-                    forward_heap.DecreaseKey(*toNodeData);
+                    toHeapNode->data  = {heapNode.node, false};
+                    toHeapNode->weight=to_weight;
+                    forward_heap.DecreaseKey(*toHeapNode);
                 }
             }
         }
@@ -358,16 +358,16 @@ void routingStep(const DataFacade<Algorithm> &facade,
     // is weight + reverse_weight
     // More tighter upper bound requires additional condition reverse_heap.WasRemoved(to)
     // with weight(to -> target) = reverse_weight and all weights ≥ 0
-    auto reverveNodeData= reverse_heap.GetHeapNodeIfWasInserted(heapNode.node);
-    if (reverveNodeData)
+    auto reverseNodeData = reverse_heap.GetHeapNodeIfWasInserted(heapNode.node);
+    if (reverseNodeData)
     {
-        auto reverse_weight = reverveNodeData->weight;
+        auto reverse_weight = reverseNodeData->weight;
         auto path_weight = weight + reverse_weight;
 
         // MLD uses loops forcing only to prune single node paths in forward and/or
         // backward direction (there is no need to force loops in MLD but in CH)
         if (!(force_loop_forward && heapNode.data.parent == heapNode.node) &&
-            !(force_loop_reverse && reverveNodeData->data.parent == heapNode.node) &&
+            !(force_loop_reverse && reverseNodeData->data.parent == heapNode.node) &&
             (path_weight >= 0) && (path_weight < path_upper_bound))
         {
             middle_node = heapNode.node;
