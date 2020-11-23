@@ -76,7 +76,7 @@ void alternativeRoutingStep(const DataFacade<Algorithm> &facade,
 
     search_space.emplace_back(heapNode.data.parent, heapNode.node);
 
-    const auto& reverseHeapNode=reverse_heap.WasInsertedGetHeapNode(heapNode.node);
+    const auto& reverseHeapNode= reverse_heap.GetHeapNodeIfWasInserted(heapNode.node);
     if (reverseHeapNode)
     {
         search_space_intersection.emplace_back(heapNode.node);
@@ -114,7 +114,7 @@ void alternativeRoutingStep(const DataFacade<Algorithm> &facade,
             BOOST_ASSERT(edge_weight > 0);
             const EdgeWeight to_weight = weight + edge_weight;
 
-            const auto& toHeapNode=forward_heap.WasInsertedGetHeapNode(to);
+            const auto& toHeapNode= forward_heap.GetHeapNodeIfWasInserted(to);
             // New Node discovered -> Add to Heap + Node Info Storage
             if (!toHeapNode)
             {

@@ -255,7 +255,7 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
                 {
                     const EdgeWeight to_weight = weight + shortcut_weight;
                     BOOST_ASSERT(to_weight >= weight);
-                    auto toNodeData= forward_heap.WasInsertedGetHeapNode(to);
+                    auto toNodeData= forward_heap.GetHeapNodeIfWasInserted(to);
                     if (!toNodeData)
                     {
                         forward_heap.Insert(to, to_weight, {heapNode.node, true});
@@ -284,7 +284,7 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
                 {
                     const EdgeWeight to_weight = weight + shortcut_weight;
                     BOOST_ASSERT(to_weight >= weight);
-                    auto toNodeData= forward_heap.WasInsertedGetHeapNode(to);
+                    auto toNodeData= forward_heap.GetHeapNodeIfWasInserted(to);
                     if (!toNodeData)
                     {
                         forward_heap.Insert(to, to_weight, {heapNode.node, true});
@@ -322,7 +322,7 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
 
                 const EdgeWeight to_weight = weight + node_weight + turn_penalty;
 
-                auto toNodeData= forward_heap.WasInsertedGetHeapNode(to);
+                auto toNodeData= forward_heap.GetHeapNodeIfWasInserted(to);
                 if (!toNodeData)
                 {
                     forward_heap.Insert(to, to_weight, {heapNode.node, false});
@@ -358,7 +358,7 @@ void routingStep(const DataFacade<Algorithm> &facade,
     // is weight + reverse_weight
     // More tighter upper bound requires additional condition reverse_heap.WasRemoved(to)
     // with weight(to -> target) = reverse_weight and all weights ≥ 0
-    auto reverveNodeData= reverse_heap.WasInsertedGetHeapNode(heapNode.node);
+    auto reverveNodeData= reverse_heap.GetHeapNodeIfWasInserted(heapNode.node);
     if (reverveNodeData)
     {
         auto reverse_weight = reverveNodeData->weight;

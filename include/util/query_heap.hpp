@@ -294,7 +294,7 @@ class QueryHeap
         return inserted_nodes[index].node == node;
     }
 
-    boost::optional<HeapNode&> WasInsertedGetHeapNode(const NodeID node)
+    boost::optional<HeapNode&> GetHeapNodeIfWasInserted(const NodeID node)
     {
         const auto index = node_index.peek_index(node);
         if (index >= static_cast<decltype(index)>(inserted_nodes.size()))
@@ -304,7 +304,7 @@ class QueryHeap
         return inserted_nodes[index];
     }
 
-    const boost::optional<const HeapNode&> WasInsertedGetHeapNode(const NodeID node) const
+    const boost::optional<const HeapNode&> GetHeapNodeIfWasInserted(const NodeID node) const
     {
         const auto index = node_index.peek_index(node);
         if (index >= static_cast<decltype(index)>(inserted_nodes.size()))

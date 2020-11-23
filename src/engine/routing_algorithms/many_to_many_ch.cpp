@@ -46,19 +46,16 @@ inline bool addLoopWeight(const DataFacade<ch::Algorithm> &facade,
 
 template <bool DIRECTION>
 void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
-                        const NodeID node,
-                        const EdgeWeight weight,
-                        const EdgeDuration duration,
-                        const EdgeDistance distance,
+                        const typename SearchEngineData<Algorithm>::ManyToManyQueryHeap::HeapNode& heapNode,
                         typename SearchEngineData<Algorithm>::ManyToManyQueryHeap &query_heap,
                         const PhantomNode &)
 {
-    if (stallAtNode<DIRECTION>(facade, node, weight, query_heap))
+    if (stallAtNode<DIRECTION>(facade, heapNode, query_heap))
     {
         return;
     }
 
-    for (auto edge : facade.GetAdjacentEdgeRange(node))
+    for (auto edge : facade.GetAdjacentEdgeRange(heapNode.node))
     {
         const auto &data = facade.GetEdgeData(edge);
         if (DIRECTION == FORWARD_DIRECTION ? data.forward : data.backward)
@@ -70,21 +67,21 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
             const auto edge_distance = data.distance;
 
             BOOST_ASSERT_MSG(edge_weight > 0, "edge_weight invalid");
-            const auto to_weight = weight + edge_weight;
-            const auto to_duration = duration + edge_duration;
-            const auto to_distance = distance + edge_distance;
+            const auto to_weight = heapNode.weight + edge_weight;
+            const auto to_duration = heapNode.data.duration + edge_duration;
+            const auto to_distance = heapNode.data.distance + edge_distance;
 
-            const auto& toHeapNode=query_heap.WasInsertedGetHeapNode(to);
+            const auto& toHeapNode= query_heap.GetHeapNodeIfWasInserted(to);
             // New Node discovered -> Add to Heap + Node Info Storage
             if (!toHeapNode)
             {
-                query_heap.Insert(to, to_weight, {node, to_duration, to_distance});
+                query_heap.Insert(to, to_weight, {heapNode.node, to_duration, to_distance});
             }
             // Found a shorter Path -> Update weight and set new parent
             else if (std::tie(to_weight, to_duration) <
                      std::tie(query_heap.GetKey(to), query_heap.GetData(to).duration))
             {
-                toHeapNode->data = {node, to_duration, to_distance};
+                toHeapNode->data = {heapNode.node, to_duration, to_distance};
                 toHeapNode->weight=to_weight;
                 query_heap.DecreaseKey(*toHeapNode);
             }
@@ -155,7 +152,7 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
     }
 
     relaxOutgoingEdges<FORWARD_DIRECTION>(
-        facade, heapNode.node, source_weight, source_duration, source_distance, query_heap, phantom_node);
+        facade, heapNode, query_heap, phantom_node);
 }
 
 void backwardRoutingStep(const DataFacade<Algorithm> &facade,
@@ -175,7 +172,7 @@ void backwardRoutingStep(const DataFacade<Algorithm> &facade,
         heapNode.node, parent, column_index, target_weight, target_duration, target_distance);
 
     relaxOutgoingEdges<REVERSE_DIRECTION>(
-        facade, heapNode.node, target_weight, target_duration, target_distance, query_heap, phantom_node);
+        facade, heapNode, query_heap, phantom_node);
 }
 
 } // namespace ch

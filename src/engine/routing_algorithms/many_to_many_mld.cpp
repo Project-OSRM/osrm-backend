@@ -71,7 +71,7 @@ void relaxBorderEdges(const DataFacade<mld::Algorithm> &facade,
             const auto to_distance = distance + node_distance;
 
             // New Node discovered -> Add to Heap + Node Info Storage
-            const auto& toHeapNode=query_heap.WasInsertedGetHeapNode(to);
+            const auto& toHeapNode= query_heap.GetHeapNodeIfWasInserted(to);
             if (!toHeapNode)
             {
                 query_heap.Insert(to, to_weight, {node, false, to_duration, to_distance});
@@ -134,7 +134,7 @@ void relaxOutgoingEdges(const DataFacade<mld::Algorithm> &facade,
                     const auto to_weight = weight + shortcut_weight;
                     const auto to_duration = duration + shortcut_durations.front();
                     const auto to_distance = distance + shortcut_distances.front();
-                    const auto& toHeapNode=query_heap.WasInsertedGetHeapNode(to);
+                    const auto& toHeapNode= query_heap.GetHeapNodeIfWasInserted(to);
                     if (!toHeapNode)
                     {
                         query_heap.Insert(to, to_weight, {node, true, to_duration, to_distance});
@@ -174,7 +174,7 @@ void relaxOutgoingEdges(const DataFacade<mld::Algorithm> &facade,
                     const auto to_weight = weight + shortcut_weight;
                     const auto to_duration = duration + shortcut_durations.front();
                     const auto to_distance = distance + shortcut_distances.front();
-                    const auto& toHeapNode=query_heap.WasInsertedGetHeapNode(to);
+                    const auto& toHeapNode= query_heap.GetHeapNodeIfWasInserted(to);
                     if (!toHeapNode)
                     {
                         query_heap.Insert(to, to_weight, {node, true, to_duration, to_distance});
