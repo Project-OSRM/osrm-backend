@@ -74,8 +74,9 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
             const auto to_duration = duration + edge_duration;
             const auto to_distance = distance + edge_distance;
 
+            const auto& toHeapNode=query_heap.WasInsertedGetHeapNode(to);
             // New Node discovered -> Add to Heap + Node Info Storage
-            if (!query_heap.WasInserted(to))
+            if (!toHeapNode)
             {
                 query_heap.Insert(to, to_weight, {node, to_duration, to_distance});
             }
@@ -83,8 +84,9 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
             else if (std::tie(to_weight, to_duration) <
                      std::tie(query_heap.GetKey(to), query_heap.GetData(to).duration))
             {
-                query_heap.GetData(to) = {node, to_duration, to_distance};
-                query_heap.DecreaseKey(to, to_weight);
+                toHeapNode->data = {node, to_duration, to_distance};
+                toHeapNode->weight=to_weight;
+                query_heap.DecreaseKey(*toHeapNode);
             }
         }
     }
@@ -101,15 +103,15 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
                         std::vector<NodeID> &middle_nodes_table,
                         const PhantomNode &phantom_node)
 {
-    const auto node = query_heap.DeleteMin();
-    const auto source_weight = query_heap.GetKey(node);
-    const auto source_duration = query_heap.GetData(node).duration;
-    const auto source_distance = query_heap.GetData(node).distance;
+    const auto& heapNode=query_heap.DeleteMinGetHeapNode();
+    const auto source_weight = heapNode.weight;
+    const auto source_duration = heapNode.data.duration;
+    const auto source_distance = heapNode.data.distance;
 
     // Check if each encountered node has an entry
     const auto &bucket_list = std::equal_range(search_space_with_buckets.begin(),
                                                search_space_with_buckets.end(),
-                                               node,
+                                               heapNode.node,
                                                NodeBucket::Compare());
     for (const auto &current_bucket : boost::make_iterator_range(bucket_list))
     {
@@ -135,12 +137,12 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
 
         if (new_weight < 0)
         {
-            if (addLoopWeight(facade, node, new_weight, new_duration, new_distance))
+            if (addLoopWeight(facade, heapNode.node, new_weight, new_duration, new_distance))
             {
                 current_weight = std::min(current_weight, new_weight);
                 current_duration = std::min(current_duration, new_duration);
                 current_distance = std::min(current_distance, new_distance);
-                middle_nodes_table[row_index * number_of_targets + column_index] = node;
+                middle_nodes_table[row_index * number_of_targets + column_index] = heapNode.node;
             }
         }
         else if (std::tie(new_weight, new_duration) < std::tie(current_weight, current_duration))
@@ -148,12 +150,12 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
             current_weight = new_weight;
             current_duration = new_duration;
             current_distance = new_distance;
-            middle_nodes_table[row_index * number_of_targets + column_index] = node;
+            middle_nodes_table[row_index * number_of_targets + column_index] = heapNode.node;
         }
     }
 
     relaxOutgoingEdges<FORWARD_DIRECTION>(
-        facade, node, source_weight, source_duration, source_distance, query_heap, phantom_node);
+        facade, heapNode.node, source_weight, source_duration, source_distance, query_heap, phantom_node);
 }
 
 void backwardRoutingStep(const DataFacade<Algorithm> &facade,
@@ -162,18 +164,18 @@ void backwardRoutingStep(const DataFacade<Algorithm> &facade,
                          std::vector<NodeBucket> &search_space_with_buckets,
                          const PhantomNode &phantom_node)
 {
-    const auto node = query_heap.DeleteMin();
-    const auto target_weight = query_heap.GetKey(node);
-    const auto target_duration = query_heap.GetData(node).duration;
-    const auto target_distance = query_heap.GetData(node).distance;
-    const auto parent = query_heap.GetData(node).parent;
+    const auto heapNode=query_heap.DeleteMinGetHeapNode();
+    const auto target_weight = heapNode.weight;
+    const auto target_duration = heapNode.data.duration;
+    const auto target_distance = heapNode.data.distance;
+    const auto parent = heapNode.data.parent;
 
     // Store settled nodes in search space bucket
     search_space_with_buckets.emplace_back(
-        node, parent, column_index, target_weight, target_duration, target_distance);
+        heapNode.node, parent, column_index, target_weight, target_duration, target_distance);
 
     relaxOutgoingEdges<REVERSE_DIRECTION>(
-        facade, node, target_weight, target_duration, target_distance, query_heap, phantom_node);
+        facade, heapNode.node, target_weight, target_duration, target_distance, query_heap, phantom_node);
 }
 
 } // namespace ch
