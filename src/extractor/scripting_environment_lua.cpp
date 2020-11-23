@@ -259,7 +259,7 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
         "version",
         &osmium::Way::version,
         "get_nodes",
-        [](const osmium::Way &way) { return sol::as_table(&way.nodes()); },
+        [&context](const osmium::Way &way) { return sol::as_table(&way.nodes()); },
         "get_location_tag",
         [&context, &get_location_tag](const osmium::Way &way, const char *key) {
             // HEURISTIC: use a single node (last) of the way to localize the way
@@ -944,6 +944,9 @@ Sol2ScriptingEnvironment::GetStringListFromTable(const std::string &table_name)
     auto &context = GetSol2Context();
     BOOST_ASSERT(context.state.lua_state() != nullptr);
     std::vector<std::string> strings;
+    if(context.profile_table[table_name] == sol::nil){
+      return strings;
+    }
     sol::table table = context.profile_table[table_name];
     if (table.valid())
     {
@@ -962,6 +965,9 @@ Sol2ScriptingEnvironment::GetStringListsFromTable(const std::string &table_name)
 
     auto &context = GetSol2Context();
     BOOST_ASSERT(context.state.lua_state() != nullptr);
+    if(context.profile_table[table_name] == sol::nil){
+      return string_lists;
+    }
     sol::table table = context.profile_table[table_name];
     if (!table.valid())
     {
