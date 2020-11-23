@@ -358,16 +358,16 @@ void routingStep(const DataFacade<Algorithm> &facade,
     // is weight + reverse_weight
     // More tighter upper bound requires additional condition reverse_heap.WasRemoved(to)
     // with weight(to -> target) = reverse_weight and all weights ≥ 0
-    auto reverseNodeData = reverse_heap.GetHeapNodeIfWasInserted(heapNode.node);
-    if (reverseNodeData)
+    auto reverseHeapNode = reverse_heap.GetHeapNodeIfWasInserted(heapNode.node);
+    if (reverseHeapNode)
     {
-        auto reverse_weight = reverseNodeData->weight;
+        auto reverse_weight = reverseHeapNode->weight;
         auto path_weight = weight + reverse_weight;
 
         // MLD uses loops forcing only to prune single node paths in forward and/or
         // backward direction (there is no need to force loops in MLD but in CH)
         if (!(force_loop_forward && heapNode.data.parent == heapNode.node) &&
-            !(force_loop_reverse && reverseNodeData->data.parent == heapNode.node) &&
+            !(force_loop_reverse && reverseHeapNode->data.parent == heapNode.node) &&
             (path_weight >= 0) && (path_weight < path_upper_bound))
         {
             middle_node = heapNode.node;
