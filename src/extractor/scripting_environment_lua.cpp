@@ -88,7 +88,7 @@ struct to_lua_object : public boost::static_visitor<sol::object>
 {
     to_lua_object(sol::state &state) : state(state) {}
     template <typename T> auto operator()(T &v) const { return sol::make_object(state, v); }
-    auto operator()(boost::blank &) const { return sol::nil; }
+    auto operator()(boost::blank &) const { return sol::lua_nil; }
     sol::state &state;
 };
 } // namespace
@@ -236,7 +236,7 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
 
     auto get_location_tag = [](auto &context, const auto &location, const char *key) {
         if (context.location_dependent_data.empty())
-            return sol::object(sol::nil);
+            return sol::object(sol::lua_nil);
 
         const LocationDependentData::point_t point{location.lon(), location.lat()};
         if (!boost::geometry::equals(context.last_location_point, point))
@@ -943,7 +943,7 @@ Sol2ScriptingEnvironment::GetStringListFromTable(const std::string &table_name)
     auto &context = GetSol2Context();
     BOOST_ASSERT(context.state.lua_state() != nullptr);
     std::vector<std::string> strings;
-    if (context.profile_table[table_name] == sol::nil)
+    if (context.profile_table[table_name] == nullptr)
     {
         return strings;
     }
@@ -965,7 +965,7 @@ Sol2ScriptingEnvironment::GetStringListsFromTable(const std::string &table_name)
 
     auto &context = GetSol2Context();
     BOOST_ASSERT(context.state.lua_state() != nullptr);
-    if (context.profile_table[table_name] == sol::nil)
+    if (context.profile_table[table_name] == nullptr)
     {
         return string_lists;
     }
