@@ -130,7 +130,7 @@ struct ExtractionTurn
     double weight;
     double duration;
 };
-}
-}
+} // namespace extractor
+} // namespace osrm
 
 #endif
