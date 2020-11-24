@@ -230,7 +230,6 @@ template <bool DIRECTION, typename Algorithm, typename... Args>
 void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
                         typename SearchEngineData<Algorithm>::QueryHeap &forward_heap,
                         const typename SearchEngineData<Algorithm>::QueryHeap::HeapNode& heapNode,
-                        const EdgeWeight weight,
                         Args... args)
 {
     const auto &partition = facade.GetMultiLevelPartition();
@@ -253,8 +252,8 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
 
                 if (shortcut_weight != INVALID_EDGE_WEIGHT && heapNode.node != to)
                 {
-                    const EdgeWeight to_weight = weight + shortcut_weight;
-                    BOOST_ASSERT(to_weight >= weight);
+                    const EdgeWeight to_weight = heapNode.weight + shortcut_weight;
+                    BOOST_ASSERT(to_weight >= heapNode.weight);
                     auto toHeapNode = forward_heap.GetHeapNodeIfWasInserted(to);
                     if (!toHeapNode)
                     {
@@ -282,8 +281,8 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
 
                 if (shortcut_weight != INVALID_EDGE_WEIGHT && heapNode.node != to)
                 {
-                    const EdgeWeight to_weight = weight + shortcut_weight;
-                    BOOST_ASSERT(to_weight >= weight);
+                    const EdgeWeight to_weight = heapNode.weight + shortcut_weight;
+                    BOOST_ASSERT(to_weight >= heapNode.weight);
                     auto toHeapNode = forward_heap.GetHeapNodeIfWasInserted(to);
                     if (!toHeapNode)
                     {
@@ -320,7 +319,7 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
 
                 // TODO: BOOST_ASSERT(edge_data.weight == node_weight + turn_penalty);
 
-                const EdgeWeight to_weight = weight + node_weight + turn_penalty;
+                const EdgeWeight to_weight = heapNode.weight + node_weight + turn_penalty;
 
                 auto toHeapNode = forward_heap.GetHeapNodeIfWasInserted(to);
                 if (!toHeapNode)
@@ -376,7 +375,7 @@ void routingStep(const DataFacade<Algorithm> &facade,
     }
 
     // Relax outgoing edges from node
-    relaxOutgoingEdges<DIRECTION>(facade, forward_heap, heapNode, weight, args...);
+    relaxOutgoingEdges<DIRECTION>(facade, forward_heap, heapNode, args...);
 }
 
 // With (s, middle, t) we trace back the paths middle -> s and middle -> t.

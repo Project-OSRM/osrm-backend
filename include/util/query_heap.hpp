@@ -297,17 +297,17 @@ class QueryHeap
     boost::optional<HeapNode&> GetHeapNodeIfWasInserted(const NodeID node)
     {
         const auto index = node_index.peek_index(node);
-        if (index >= static_cast<decltype(index)>(inserted_nodes.size()))
+        if (index >= static_cast<decltype(index)>(inserted_nodes.size()) || inserted_nodes[index].node!=node)
         {
             return {};
         }
         return inserted_nodes[index];
     }
 
-    const boost::optional<const HeapNode&> GetHeapNodeIfWasInserted(const NodeID node) const
+    boost::optional<const HeapNode&> GetHeapNodeIfWasInserted(const NodeID node) const
     {
         const auto index = node_index.peek_index(node);
-        if (index >= static_cast<decltype(index)>(inserted_nodes.size()))
+        if (index >= static_cast<decltype(index)>(inserted_nodes.size()) || inserted_nodes[index].node!=node)
         {
             return {};
         }

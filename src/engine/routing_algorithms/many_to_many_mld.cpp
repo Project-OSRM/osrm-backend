@@ -94,9 +94,6 @@ void relaxBorderEdges(const DataFacade<mld::Algorithm> &facade,
 template <bool DIRECTION, typename... Args>
 void relaxOutgoingEdges(const DataFacade<mld::Algorithm> &facade,
                         const SearchEngineData<mld::Algorithm>::ManyToManyQueryHeap::HeapNode& heapNode,
-                        const EdgeWeight weight,
-                        const EdgeDuration duration,
-                        const EdgeDistance distance,
                         typename SearchEngineData<mld::Algorithm>::ManyToManyQueryHeap &query_heap,
                         Args... args)
 {
@@ -131,9 +128,9 @@ void relaxOutgoingEdges(const DataFacade<mld::Algorithm> &facade,
 
                 if (shortcut_weight != INVALID_EDGE_WEIGHT && node != to)
                 {
-                    const auto to_weight = weight + shortcut_weight;
-                    const auto to_duration = duration + shortcut_durations.front();
-                    const auto to_distance = distance + shortcut_distances.front();
+                    const auto to_weight = heapNode.weight + shortcut_weight;
+                    const auto to_duration = heapNode.data.duration + shortcut_durations.front();
+                    const auto to_distance =  heapNode.data.distance + shortcut_distances.front();
                     const auto& toHeapNode= query_heap.GetHeapNodeIfWasInserted(to);
                     if (!toHeapNode)
                     {
@@ -171,9 +168,9 @@ void relaxOutgoingEdges(const DataFacade<mld::Algorithm> &facade,
 
                 if (shortcut_weight != INVALID_EDGE_WEIGHT && node != to)
                 {
-                    const auto to_weight = weight + shortcut_weight;
-                    const auto to_duration = duration + shortcut_durations.front();
-                    const auto to_distance = distance + shortcut_distances.front();
+                    const auto to_weight = heapNode.weight + shortcut_weight;
+                    const auto to_duration =  heapNode.data.duration + shortcut_durations.front();
+                    const auto to_distance =  heapNode.data.distance + shortcut_distances.front();
                     const auto& toHeapNode= query_heap.GetHeapNodeIfWasInserted(to);
                     if (!toHeapNode)
                     {
@@ -199,7 +196,7 @@ void relaxOutgoingEdges(const DataFacade<mld::Algorithm> &facade,
         }
     }
 
-    relaxBorderEdges<DIRECTION>(facade, node, weight, duration, distance, query_heap, level);
+    relaxBorderEdges<DIRECTION>(facade, node, heapNode.weight, heapNode.data.duration, heapNode.data.distance, query_heap, level);
 }
 
 //
@@ -386,9 +383,6 @@ oneToManySearch(SearchEngineData<Algorithm> &engine_working_data,
         // Relax outgoing edges
         relaxOutgoingEdges<DIRECTION>(facade,
                                       heapNode,
-                                      weight,
-                                      duration,
-                                      distance,
                                       query_heap,
                                       phantom_nodes,
                                       phantom_index,
@@ -461,7 +455,7 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
     }
 
     relaxOutgoingEdges<DIRECTION>(
-        facade, heapNode, source_weight, source_duration, source_distance, query_heap, phantom_node);
+        facade, heapNode, query_heap, phantom_node);
 }
 
 template <bool DIRECTION>
@@ -487,9 +481,6 @@ void backwardRoutingStep(const DataFacade<Algorithm> &facade,
 
     relaxOutgoingEdges<!DIRECTION>(facade,
                                    heapNode,
-                                   target_weight,
-                                   target_duration,
-                                   target_distance,
                                    query_heap,
                                    phantom_node,
                                    maximal_level);
