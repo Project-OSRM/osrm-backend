@@ -16,15 +16,15 @@ namespace osmium
 class Node;
 class Way;
 class Relation;
-}
+} // namespace osmium
 
 namespace std
 {
 template <> struct hash<std::tuple<std::string, std::string, std::string, std::string, std::string>>
 {
     std::size_t operator()(
-        const std::tuple<std::string, std::string, std::string, std::string, std::string> &mk) const
-        noexcept
+        const std::tuple<std::string, std::string, std::string, std::string, std::string> &mk)
+        const noexcept
     {
         std::size_t seed = 0;
         boost::hash_combine(seed, std::get<0>(mk));
@@ -35,7 +35,7 @@ template <> struct hash<std::tuple<std::string, std::string, std::string, std::s
         return seed;
     }
 };
-}
+} // namespace std
 
 namespace osrm
 {
@@ -93,9 +93,9 @@ class ExtractorCallbacks
     void ProcessWay(const osmium::Way &current_way, const ExtractionWay &result_way);
 
     // warning: caller needs to take care of synchronization!
-    void ProcessManeuverOverride(const InputManeuverOverride & override);
+    void ProcessManeuverOverride(const InputManeuverOverride &override);
 };
-}
-}
+} // namespace extractor
+} // namespace osrm
 
 #endif /* EXTRACTOR_CALLBACKS_HPP */

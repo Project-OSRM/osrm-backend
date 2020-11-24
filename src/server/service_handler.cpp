@@ -51,5 +51,5 @@ engine::Status ServiceHandler::RunQuery(api::ParsedURL parsed_url,
 
     return service->RunQuery(parsed_url.prefix_length, parsed_url.query, result);
 }
-}
-}
+} // namespace server
+} // namespace osrm

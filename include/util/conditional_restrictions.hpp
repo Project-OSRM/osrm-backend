@@ -21,7 +21,7 @@ struct ConditionalRestriction
 
 std::vector<ConditionalRestriction> ParseConditionalRestrictions(const std::string &str);
 
-} // util
-} // osrm
+} // namespace util
+} // namespace osrm
 
 #endif // OSRM_CONDITIONAL_RESTRICTIONS_HPP

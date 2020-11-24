@@ -39,7 +39,7 @@ unsigned calculateOverviewZoomLevel(const std::vector<LegGeometry> &leg_geometri
 
     return util::viewport::getFittedZoom(south_west, north_east);
 }
-}
+} // namespace
 
 std::vector<util::Coordinate> assembleOverview(const std::vector<LegGeometry> &leg_geometries,
                                                const bool use_simplification)

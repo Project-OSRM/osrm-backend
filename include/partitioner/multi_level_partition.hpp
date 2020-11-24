@@ -41,7 +41,7 @@ template <storage::Ownership Ownership>
 void write(storage::tar::FileWriter &writer,
            const std::string &name,
            const detail::MultiLevelPartitionImpl<Ownership> &mlp);
-}
+} // namespace serialization
 
 namespace detail
 {
@@ -338,8 +338,8 @@ inline MultiLevelPartitionImpl<storage::Ownership::View>::MultiLevelPartitionImp
     : level_data(nullptr)
 {
 }
-}
-}
-}
+} // namespace detail
+} // namespace partitioner
+} // namespace osrm
 
 #endif

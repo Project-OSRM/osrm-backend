@@ -79,8 +79,9 @@ struct MatchParameters : public RouteParameters
                     bool tidy_,
                     std::vector<std::size_t> waypoints_,
                     Args... args_)
-        : RouteParameters{std::forward<Args>(args_)..., waypoints_},
-          timestamps{std::move(timestamps_)}, gaps(gaps_), tidy(tidy_)
+        : RouteParameters{std::forward<Args>(args_)..., waypoints_}, timestamps{std::move(
+                                                                         timestamps_)},
+          gaps(gaps_), tidy(tidy_)
     {
     }
 
@@ -94,8 +95,8 @@ struct MatchParameters : public RouteParameters
                (timestamps.empty() || timestamps.size() == coordinates.size());
     }
 };
-}
-}
-}
+} // namespace api
+} // namespace engine
+} // namespace osrm
 
 #endif

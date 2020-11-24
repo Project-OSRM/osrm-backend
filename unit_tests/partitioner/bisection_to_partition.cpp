@@ -149,7 +149,18 @@ BOOST_AUTO_TEST_CASE(power_of_two_case)
      0   1   2   3   4   5   6   7   8   9   10   11
     */
     const std::vector<BisectionID> ids_1 = {
-        0b000, 0b000, 0b001, 0b001, 0b010, 0b010, 0b011, 0b011, 0b100, 0b100, 0b101, 0b101,
+        0b000,
+        0b000,
+        0b001,
+        0b001,
+        0b010,
+        0b010,
+        0b011,
+        0b011,
+        0b100,
+        0b100,
+        0b101,
+        0b101,
     };
 
     // If cell sizes are not a factor of two we will see sub-optimal results like below
@@ -276,7 +287,18 @@ BOOST_AUTO_TEST_CASE(non_factor_two_case)
      0   1   2   3   4   5   6   7   8   9   10   11
     */
     const std::vector<BisectionID> ids_1 = {
-        0b000, 0b000, 0b001, 0b001, 0b010, 0b010, 0b011, 0b011, 0b100, 0b100, 0b101, 0b101,
+        0b000,
+        0b000,
+        0b001,
+        0b001,
+        0b010,
+        0b010,
+        0b011,
+        0b011,
+        0b100,
+        0b100,
+        0b101,
+        0b101,
     };
 
     // If cell sizes are not a factor of two we will see sub-optimal results like below

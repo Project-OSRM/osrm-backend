@@ -49,7 +49,7 @@ struct ByEdgeOrByMeterValue
     using value_type = float;
     value_type value;
 };
-}
+} // namespace detail
 
 struct InternalExtractorEdge
 {
@@ -86,7 +86,7 @@ struct InternalExtractorEdge
     // coordinate of the source node
     util::Coordinate source_coordinate;
 };
-}
-}
+} // namespace extractor
+} // namespace osrm
 
 #endif // INTERNAL_EXTRACTOR_EDGE_HPP

@@ -250,7 +250,7 @@ struct ConditionalTurnRestriction : TurnRestriction
 {
     std::vector<util::OpeningHours> condition;
 };
-}
-}
+} // namespace extractor
+} // namespace osrm
 
 #endif // RESTRICTION_HPP

@@ -34,7 +34,7 @@ Fn group_by(Iter first, Iter last, Pred pred, Fn fn)
     return fn;
 }
 
-} // ns util
-} // ns osrm
+} // namespace util
+} // namespace osrm
 
 #endif

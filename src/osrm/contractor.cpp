@@ -9,4 +9,4 @@ namespace osrm
 
 void contract(const contractor::ContractorConfig &config) { contractor::Contractor(config).Run(); }
 
-} // ns osrm
+} // namespace osrm

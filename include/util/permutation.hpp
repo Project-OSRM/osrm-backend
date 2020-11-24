@@ -56,7 +56,7 @@ std::vector<IndexT> orderingToPermutation(const std::vector<IndexT> &ordering)
 
     return permutation;
 }
-}
-}
+} // namespace util
+} // namespace osrm
 
 #endif

@@ -79,8 +79,8 @@ IntersectionView getConnectedRoads(const util::NodeBasedDynamicGraph &graph,
 // for getConnectedRoads.
 IntersectionEdge skipDegreeTwoNodes(const util::NodeBasedDynamicGraph &graph,
                                     IntersectionEdge road);
-}
-}
-}
+} // namespace intersection
+} // namespace extractor
+} // namespace osrm
 
 #endif

@@ -45,7 +45,7 @@ void relaxNode(ContractorHeap &heap,
         }
     }
 }
-}
+} // namespace
 
 void search(ContractorHeap &heap,
             const ContractorGraph &graph,
@@ -83,5 +83,5 @@ void search(ContractorHeap &heap,
         relaxNode(heap, graph, node, node_weight, forbidden_node);
     }
 }
-}
-}
+} // namespace contractor
+} // namespace osrm

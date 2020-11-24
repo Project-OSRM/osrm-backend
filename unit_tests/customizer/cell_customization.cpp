@@ -56,7 +56,7 @@ auto makeGraph(const MultiLevelPartition &mlp, const std::vector<MockEdge> &mock
     return partitioner::MultiLevelGraph<EdgeData, osrm::storage::Ownership::Container>(
         mlp, max_id + 1, edges);
 }
-}
+} // namespace
 
 BOOST_AUTO_TEST_SUITE(cell_customization_tests)
 

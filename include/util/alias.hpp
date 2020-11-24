@@ -130,7 +130,7 @@ inline std::ostream &operator<<(std::ostream &stream, const Alias<From, Tag> &in
 {
     return stream << inst.__value;
 }
-}
+} // namespace osrm
 
 namespace std
 {
@@ -143,6 +143,6 @@ template <typename From, typename Tag> struct hash<osrm::Alias<From, Tag>>
         return std::hash<From>()(static_cast<const From>(s));
     }
 };
-}
+} // namespace std
 
 #endif // OSRM_ALIAS_HPP

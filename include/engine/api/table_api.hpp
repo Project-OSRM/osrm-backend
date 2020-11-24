@@ -407,8 +407,8 @@ class TableAPI final : public BaseAPI
     const TableParameters &parameters;
 };
 
-} // ns api
-} // ns engine
-} // ns osrm
+} // namespace api
+} // namespace engine
+} // namespace osrm
 
 #endif

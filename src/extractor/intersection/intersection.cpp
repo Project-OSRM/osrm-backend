@@ -21,8 +21,8 @@ bool IntersectionViewData::CompareByAngle(const IntersectionViewData &other) con
 
 std::string toString(const IntersectionEdgeGeometry &shape)
 {
-    std::string result = "[shape] " + std::to_string(shape.eid) + " bearing: " +
-                         std::to_string(shape.perceived_bearing);
+    std::string result = "[shape] " + std::to_string(shape.eid) +
+                         " bearing: " + std::to_string(shape.perceived_bearing);
     return result;
 }
 

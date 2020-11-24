@@ -75,7 +75,7 @@ struct StorageConfig final : IOConfig
     {
     }
 };
-}
-}
+} // namespace storage
+} // namespace osrm
 
 #endif

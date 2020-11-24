@@ -36,7 +36,7 @@ template <typename BlockPolicy, storage::Ownership Ownership>
 inline void write(storage::tar::FileWriter &writer,
                   const std::string &name,
                   const detail::IndexedDataImpl<BlockPolicy, Ownership> &index_data);
-}
+} // namespace serialization
 
 template <int N, typename T = std::string> struct VariableGroupBlock
 {
@@ -69,9 +69,7 @@ template <int N, typename T = std::string> struct VariableGroupBlock
     inline void
     var_advance(DataIterator &data, DataIterator &length, std::uint32_t byte_length) const
     {
-        if (byte_length == 0)
-        {
-        }
+        if (byte_length == 0) {}
         else if (byte_length == 1)
         {
             data += static_cast<unsigned char>(*length++);
@@ -377,12 +375,12 @@ template <typename GroupBlockPolicy, storage::Ownership Ownership> struct Indexe
     Vector<BlockReference> blocks;
     Vector<ValueType> values;
 };
-}
+} // namespace detail
 
 template <typename GroupBlockPolicy>
 using IndexedData = detail::IndexedDataImpl<GroupBlockPolicy, storage::Ownership::Container>;
 template <typename GroupBlockPolicy>
 using IndexedDataView = detail::IndexedDataImpl<GroupBlockPolicy, storage::Ownership::View>;
-}
-}
+} // namespace util
+} // namespace osrm
 #endif // OSRM_INDEXED_DATA_HPP

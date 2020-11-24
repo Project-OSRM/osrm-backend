@@ -118,7 +118,6 @@ void annotateTurns(const util::NodeBasedDynamicGraph &node_based_graph,
         //
         tbb::filter_t<tbb::blocked_range<NodeID>, TurnsPipelineBufferPtr> guidance_stage(
             tbb::filter::parallel, [&](const tbb::blocked_range<NodeID> &intersection_node_range) {
-
                 auto buffer = std::make_shared<TurnsPipelineBuffer>();
                 buffer->nodes_processed = intersection_node_range.size();
 
@@ -302,7 +301,6 @@ void annotateTurns(const util::NodeBasedDynamicGraph &node_based_graph,
 
         tbb::filter_t<TurnsPipelineBufferPtr, void> guidance_output_stage(
             tbb::filter::serial_in_order, [&](auto buffer) {
-
                 guidance_progress.PrintAddition(buffer->nodes_processed);
 
                 connectivity_checksum = buffer->checksum.update_checksum(connectivity_checksum);

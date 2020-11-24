@@ -37,7 +37,7 @@ template <> struct is_container<osmium::Way> : std::false_type
 template <> struct is_container<osmium::Relation> : std::false_type
 {
 };
-}
+} // namespace sol
 
 namespace osrm
 {
@@ -91,7 +91,7 @@ struct to_lua_object : public boost::static_visitor<sol::object>
     auto operator()(boost::blank &) const { return sol::nil; }
     sol::state &state;
 };
-}
+} // namespace
 
 Sol2ScriptingEnvironment::Sol2ScriptingEnvironment(
     const std::string &file_name,
@@ -424,8 +424,8 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
         "get_relations",
         [&getTypedRefBySol](ExtractionRelationContainer &cont, const sol::object &obj)
             -> const ExtractionRelationContainer::RelationIDList & {
-                return cont.GetRelations(getTypedRefBySol(obj));
-            },
+            return cont.GetRelations(getTypedRefBySol(obj));
+        },
         "relation",
         [](ExtractionRelationContainer &cont, const ExtractionRelation::OsmIDTyped &rel_id)
             -> const ExtractionRelation & { return cont.GetRelationData(rel_id); });
@@ -589,7 +589,6 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
     };
 
     auto initialize_V3_extraction_turn = [&]() {
-
         context.state.new_usertype<ExtractionTurn>(
             "ExtractionTurn",
             "angle",

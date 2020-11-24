@@ -109,7 +109,7 @@ std::size_t removeUnconnectedBoundaryNodes(const GraphT &edge_based_graph,
 
     return num_unconnected;
 }
-}
-}
+} // namespace partitioner
+} // namespace osrm
 
 #endif

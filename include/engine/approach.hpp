@@ -42,5 +42,5 @@ enum class Approach : std::uint8_t
 
 };
 }
-}
+} // namespace osrm
 #endif
