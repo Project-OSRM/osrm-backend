@@ -254,7 +254,7 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
                 {
                     const EdgeWeight to_weight = heapNode.weight + shortcut_weight;
                     BOOST_ASSERT(to_weight >= heapNode.weight);
-                    auto toHeapNode = forward_heap.GetHeapNodeIfWasInserted(to);
+                    const auto toHeapNode = forward_heap.GetHeapNodeIfWasInserted(to);
                     if (!toHeapNode)
                     {
                         forward_heap.Insert(to, to_weight, {heapNode.node, true});
@@ -283,7 +283,7 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
                 {
                     const EdgeWeight to_weight = heapNode.weight + shortcut_weight;
                     BOOST_ASSERT(to_weight >= heapNode.weight);
-                    auto toHeapNode = forward_heap.GetHeapNodeIfWasInserted(to);
+                    const auto toHeapNode = forward_heap.GetHeapNodeIfWasInserted(to);
                     if (!toHeapNode)
                     {
                         forward_heap.Insert(to, to_weight, {heapNode.node, true});
@@ -321,7 +321,7 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
 
                 const EdgeWeight to_weight = heapNode.weight + node_weight + turn_penalty;
 
-                auto toHeapNode = forward_heap.GetHeapNodeIfWasInserted(to);
+                const auto toHeapNode = forward_heap.GetHeapNodeIfWasInserted(to);
                 if (!toHeapNode)
                 {
                     forward_heap.Insert(to, to_weight, {heapNode.node, false});
@@ -357,7 +357,7 @@ void routingStep(const DataFacade<Algorithm> &facade,
     // is weight + reverse_weight
     // More tighter upper bound requires additional condition reverse_heap.WasRemoved(to)
     // with weight(to -> target) = reverse_weight and all weights ≥ 0
-    auto reverseHeapNode = reverse_heap.GetHeapNodeIfWasInserted(heapNode.node);
+    const auto reverseHeapNode = reverse_heap.GetHeapNodeIfWasInserted(heapNode.node);
     if (reverseHeapNode)
     {
         auto reverse_weight = reverseHeapNode->weight;

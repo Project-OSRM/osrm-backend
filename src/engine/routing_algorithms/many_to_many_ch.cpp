@@ -71,7 +71,7 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
             const auto to_duration = heapNode.data.duration + edge_duration;
             const auto to_distance = heapNode.data.distance + edge_distance;
 
-            const auto& toHeapNode= query_heap.GetHeapNodeIfWasInserted(to);
+            const auto toHeapNode= query_heap.GetHeapNodeIfWasInserted(to);
             // New Node discovered -> Add to Heap + Node Info Storage
             if (!toHeapNode)
             {
@@ -100,10 +100,8 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
                         std::vector<NodeID> &middle_nodes_table,
                         const PhantomNode &phantom_node)
 {
-    const auto& heapNode=query_heap.DeleteMinGetHeapNode();
-    const auto source_weight = heapNode.weight;
-    const auto source_duration = heapNode.data.duration;
-    const auto source_distance = heapNode.data.distance;
+    // Take a copy of the extracted node because otherwise could be modified later if toHeapNode is the same
+    const auto heapNode=query_heap.DeleteMinGetHeapNode();
 
     // Check if each encountered node has an entry
     const auto &bucket_list = std::equal_range(search_space_with_buckets.begin(),
@@ -128,9 +126,9 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
                                     : distances_table[row_index * number_of_targets + column_index];
 
         // Check if new weight is better
-        auto new_weight = source_weight + target_weight;
-        auto new_duration = source_duration + target_duration;
-        auto new_distance = source_distance + target_distance;
+        auto new_weight = heapNode.weight + target_weight;
+        auto new_duration = heapNode.data.duration + target_duration;
+        auto new_distance = heapNode.data.distance + target_distance;
 
         if (new_weight < 0)
         {
@@ -161,15 +159,12 @@ void backwardRoutingStep(const DataFacade<Algorithm> &facade,
                          std::vector<NodeBucket> &search_space_with_buckets,
                          const PhantomNode &phantom_node)
 {
+    // Take a copy (no ref &) of the extracted node because otherwise could be modified later if toHeapNode is the same
     const auto heapNode=query_heap.DeleteMinGetHeapNode();
-    const auto target_weight = heapNode.weight;
-    const auto target_duration = heapNode.data.duration;
-    const auto target_distance = heapNode.data.distance;
-    const auto parent = heapNode.data.parent;
 
     // Store settled nodes in search space bucket
     search_space_with_buckets.emplace_back(
-        heapNode.node, parent, column_index, target_weight, target_duration, target_distance);
+        heapNode.node, heapNode.data.parent, column_index, heapNode.weight, heapNode.data.duration, heapNode.data.distance);
 
     relaxOutgoingEdges<REVERSE_DIRECTION>(
         facade, heapNode, query_heap, phantom_node);

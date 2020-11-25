@@ -62,11 +62,11 @@ void alternativeRoutingStep(const DataFacade<Algorithm> &facade,
     QueryHeap &forward_heap = DIRECTION == FORWARD_DIRECTION ? heap1 : heap2;
     QueryHeap &reverse_heap = DIRECTION == FORWARD_DIRECTION ? heap2 : heap1;
 
-    auto & heapNode=forward_heap.DeleteMinGetHeapNode();
-    const EdgeWeight weight = heapNode.weight;
+    // Take a copy (no ref &) of the extracted node because otherwise could be modified later if toHeapNode is the same
+    const auto heapNode=forward_heap.DeleteMinGetHeapNode();
 
     const auto scaled_weight =
-        static_cast<EdgeWeight>((weight + min_edge_offset) / (1. + VIAPATH_EPSILON));
+        static_cast<EdgeWeight>((heapNode.weight + min_edge_offset) / (1. + VIAPATH_EPSILON));
     if ((INVALID_EDGE_WEIGHT != *upper_bound_to_shortest_path_weight) &&
         (scaled_weight > *upper_bound_to_shortest_path_weight))
     {
@@ -76,11 +76,11 @@ void alternativeRoutingStep(const DataFacade<Algorithm> &facade,
 
     search_space.emplace_back(heapNode.data.parent, heapNode.node);
 
-    const auto& reverseHeapNode= reverse_heap.GetHeapNodeIfWasInserted(heapNode.node);
+    const auto reverseHeapNode= reverse_heap.GetHeapNodeIfWasInserted(heapNode.node);
     if (reverseHeapNode)
     {
         search_space_intersection.emplace_back(heapNode.node);
-        const EdgeWeight new_weight = reverseHeapNode->weight + weight;
+        const EdgeWeight new_weight = reverseHeapNode->weight + heapNode.weight;
         if (new_weight < *upper_bound_to_shortest_path_weight)
         {
             if (new_weight >= 0)
@@ -112,9 +112,9 @@ void alternativeRoutingStep(const DataFacade<Algorithm> &facade,
             const EdgeWeight edge_weight = data.weight;
 
             BOOST_ASSERT(edge_weight > 0);
-            const EdgeWeight to_weight = weight + edge_weight;
+            const EdgeWeight to_weight = heapNode.weight + edge_weight;
 
-            const auto& toHeapNode= forward_heap.GetHeapNodeIfWasInserted(to);
+            const auto toHeapNode= forward_heap.GetHeapNodeIfWasInserted(to);
             // New Node discovered -> Add to Heap + Node Info Storage
             if (!toHeapNode)
             {

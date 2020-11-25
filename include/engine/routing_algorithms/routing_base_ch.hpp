@@ -35,7 +35,7 @@ bool stallAtNode(const DataFacade<Algorithm> &facade,
             const NodeID to = facade.GetTarget(edge);
             const EdgeWeight edge_weight = data.weight;
             BOOST_ASSERT_MSG(edge_weight > 0, "edge_weight invalid");
-            const auto& toHeapNode= query_heap.GetHeapNodeIfWasInserted(to);
+            const auto toHeapNode= query_heap.GetHeapNodeIfWasInserted(to);
             if (toHeapNode)
             {
                 if (toHeapNode->weight + edge_weight < heapNode.weight)
@@ -64,7 +64,7 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
             BOOST_ASSERT_MSG(edge_weight > 0, "edge_weight invalid");
             const EdgeWeight to_weight = heapNode.weight + edge_weight;
 
-            auto toHeapNode = heap.GetHeapNodeIfWasInserted(to);
+            const auto toHeapNode = heap.GetHeapNodeIfWasInserted(to);
             // New Node discovered -> Add to Heap + Node Info Storage
             if (!toHeapNode)
             {
@@ -124,7 +124,7 @@ void routingStep(const DataFacade<Algorithm> &facade,
                  const bool force_loop_reverse)
 {
     auto heapNode = forward_heap.DeleteMinGetHeapNode();
-    auto reverseHeapNode = reverse_heap.GetHeapNodeIfWasInserted(heapNode.node);
+    const auto reverseHeapNode = reverse_heap.GetHeapNodeIfWasInserted(heapNode.node);
 
     if (reverseHeapNode)
     {
