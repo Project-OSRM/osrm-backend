@@ -98,7 +98,7 @@ void relaxOutgoingEdges(
     typename SearchEngineData<mld::Algorithm>::ManyToManyQueryHeap &query_heap,
     Args... args)
 {
-    BOOST_ASSERT(!facade.ExcludeNode(node));
+    BOOST_ASSERT(!facade.ExcludeNode(heapNode.node));
 
     const auto &partition = facade.GetMultiLevelPartition();
 
