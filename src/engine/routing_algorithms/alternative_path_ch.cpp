@@ -62,8 +62,9 @@ void alternativeRoutingStep(const DataFacade<Algorithm> &facade,
     QueryHeap &forward_heap = DIRECTION == FORWARD_DIRECTION ? heap1 : heap2;
     QueryHeap &reverse_heap = DIRECTION == FORWARD_DIRECTION ? heap2 : heap1;
 
-    // Take a copy (no ref &) of the extracted node because otherwise could be modified later if toHeapNode is the same
-    const auto heapNode=forward_heap.DeleteMinGetHeapNode();
+    // Take a copy (no ref &) of the extracted node because otherwise could be modified later if
+    // toHeapNode is the same
+    const auto heapNode = forward_heap.DeleteMinGetHeapNode();
 
     const auto scaled_weight =
         static_cast<EdgeWeight>((heapNode.weight + min_edge_offset) / (1. + VIAPATH_EPSILON));
@@ -76,7 +77,7 @@ void alternativeRoutingStep(const DataFacade<Algorithm> &facade,
 
     search_space.emplace_back(heapNode.data.parent, heapNode.node);
 
-    const auto reverseHeapNode= reverse_heap.GetHeapNodeIfWasInserted(heapNode.node);
+    const auto reverseHeapNode = reverse_heap.GetHeapNodeIfWasInserted(heapNode.node);
     if (reverseHeapNode)
     {
         search_space_intersection.emplace_back(heapNode.node);
@@ -114,7 +115,7 @@ void alternativeRoutingStep(const DataFacade<Algorithm> &facade,
             BOOST_ASSERT(edge_weight > 0);
             const EdgeWeight to_weight = heapNode.weight + edge_weight;
 
-            const auto toHeapNode= forward_heap.GetHeapNodeIfWasInserted(to);
+            const auto toHeapNode = forward_heap.GetHeapNodeIfWasInserted(to);
             // New Node discovered -> Add to Heap + Node Info Storage
             if (!toHeapNode)
             {
@@ -126,7 +127,7 @@ void alternativeRoutingStep(const DataFacade<Algorithm> &facade,
                 // new parent
                 toHeapNode->data.parent = heapNode.node;
                 // decreased weight
-                toHeapNode->weight=to_weight;
+                toHeapNode->weight = to_weight;
                 forward_heap.DecreaseKey(*toHeapNode);
             }
         }
@@ -561,7 +562,7 @@ bool viaNodeCandidatePassesTTest(SearchEngineData<Algorithm> &engine_working_dat
     }
     return (upper_bound <= t_test_path_weight);
 }
-} // anon. namespace
+} // namespace
 
 InternalManyRoutesResult alternativePathSearch(SearchEngineData<Algorithm> &engine_working_data,
                                                const DataFacade<Algorithm> &facade,
@@ -856,4 +857,4 @@ InternalManyRoutesResult alternativePathSearch(SearchEngineData<Algorithm> &engi
 
 } // namespace routing_algorithms
 } // namespace engine
-} // namespace osrm}
+} // namespace osrm

@@ -45,10 +45,11 @@ inline bool addLoopWeight(const DataFacade<ch::Algorithm> &facade,
 }
 
 template <bool DIRECTION>
-void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
-                        const typename SearchEngineData<Algorithm>::ManyToManyQueryHeap::HeapNode& heapNode,
-                        typename SearchEngineData<Algorithm>::ManyToManyQueryHeap &query_heap,
-                        const PhantomNode &)
+void relaxOutgoingEdges(
+    const DataFacade<Algorithm> &facade,
+    const typename SearchEngineData<Algorithm>::ManyToManyQueryHeap::HeapNode &heapNode,
+    typename SearchEngineData<Algorithm>::ManyToManyQueryHeap &query_heap,
+    const PhantomNode &)
 {
     if (stallAtNode<DIRECTION>(facade, heapNode, query_heap))
     {
@@ -71,7 +72,7 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
             const auto to_duration = heapNode.data.duration + edge_duration;
             const auto to_distance = heapNode.data.distance + edge_distance;
 
-            const auto toHeapNode= query_heap.GetHeapNodeIfWasInserted(to);
+            const auto toHeapNode = query_heap.GetHeapNodeIfWasInserted(to);
             // New Node discovered -> Add to Heap + Node Info Storage
             if (!toHeapNode)
             {
@@ -82,7 +83,7 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
                      std::tie(toHeapNode->weight, toHeapNode->data.duration))
             {
                 toHeapNode->data = {heapNode.node, to_duration, to_distance};
-                toHeapNode->weight=to_weight;
+                toHeapNode->weight = to_weight;
                 query_heap.DecreaseKey(*toHeapNode);
             }
         }
@@ -100,8 +101,9 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
                         std::vector<NodeID> &middle_nodes_table,
                         const PhantomNode &phantom_node)
 {
-    // Take a copy of the extracted node because otherwise could be modified later if toHeapNode is the same
-    const auto heapNode=query_heap.DeleteMinGetHeapNode();
+    // Take a copy of the extracted node because otherwise could be modified later if toHeapNode is
+    // the same
+    const auto heapNode = query_heap.DeleteMinGetHeapNode();
 
     // Check if each encountered node has an entry
     const auto &bucket_list = std::equal_range(search_space_with_buckets.begin(),
@@ -149,8 +151,7 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
         }
     }
 
-    relaxOutgoingEdges<FORWARD_DIRECTION>(
-        facade, heapNode, query_heap, phantom_node);
+    relaxOutgoingEdges<FORWARD_DIRECTION>(facade, heapNode, query_heap, phantom_node);
 }
 
 void backwardRoutingStep(const DataFacade<Algorithm> &facade,
@@ -159,15 +160,19 @@ void backwardRoutingStep(const DataFacade<Algorithm> &facade,
                          std::vector<NodeBucket> &search_space_with_buckets,
                          const PhantomNode &phantom_node)
 {
-    // Take a copy (no ref &) of the extracted node because otherwise could be modified later if toHeapNode is the same
-    const auto heapNode=query_heap.DeleteMinGetHeapNode();
+    // Take a copy (no ref &) of the extracted node because otherwise could be modified later if
+    // toHeapNode is the same
+    const auto heapNode = query_heap.DeleteMinGetHeapNode();
 
     // Store settled nodes in search space bucket
-    search_space_with_buckets.emplace_back(
-        heapNode.node, heapNode.data.parent, column_index, heapNode.weight, heapNode.data.duration, heapNode.data.distance);
+    search_space_with_buckets.emplace_back(heapNode.node,
+                                           heapNode.data.parent,
+                                           column_index,
+                                           heapNode.weight,
+                                           heapNode.data.duration,
+                                           heapNode.data.distance);
 
-    relaxOutgoingEdges<REVERSE_DIRECTION>(
-        facade, heapNode, query_heap, phantom_node);
+    relaxOutgoingEdges<REVERSE_DIRECTION>(facade, heapNode, query_heap, phantom_node);
 }
 
 } // namespace ch

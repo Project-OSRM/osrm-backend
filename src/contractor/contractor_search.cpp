@@ -32,7 +32,7 @@ void relaxNode(ContractorHeap &heap,
         }
         const EdgeWeight to_weight = node_weight + data.weight;
 
-        const auto toHeapNode= heap.GetHeapNodeIfWasInserted(to);
+        const auto toHeapNode = heap.GetHeapNodeIfWasInserted(to);
         // New Node discovered -> Add to Heap + Node Info Storage
         if (!toHeapNode)
         {
@@ -41,13 +41,13 @@ void relaxNode(ContractorHeap &heap,
         // Found a shorter Path -> Update weight
         else if (to_weight < toHeapNode->weight)
         {
-            toHeapNode->weight=to_weight;
+            toHeapNode->weight = to_weight;
             heap.DecreaseKey(*toHeapNode);
             toHeapNode->data.hop = current_hop;
         }
     }
 }
-}
+} // namespace
 
 void search(ContractorHeap &heap,
             const ContractorGraph &graph,
@@ -85,5 +85,5 @@ void search(ContractorHeap &heap,
         relaxNode(heap, graph, node, node_weight, forbidden_node);
     }
 }
-}
-}
+} // namespace contractor
+} // namespace osrm

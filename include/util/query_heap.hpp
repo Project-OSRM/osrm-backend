@@ -2,8 +2,8 @@
 #define OSRM_UTIL_QUERY_HEAP_HPP
 
 #include <boost/assert.hpp>
-#include <boost/optional.hpp>
 #include <boost/heap/d_ary_heap.hpp>
+#include <boost/optional.hpp>
 
 #include <algorithm>
 #include <limits>
@@ -196,12 +196,11 @@ template <typename NodeID,
 class QueryHeap
 {
   private:
-
     using HeapData = std::pair<Weight, Key>;
     using HeapContainer = boost::heap::d_ary_heap<HeapData,
-        boost::heap::arity<4>,
-        boost::heap::mutable_<true>,
-        boost::heap::compare<std::greater<HeapData>>>;
+                                                  boost::heap::arity<4>,
+                                                  boost::heap::mutable_<true>,
+                                                  boost::heap::compare<std::greater<HeapData>>>;
     using HeapHandle = typename HeapContainer::handle_type;
 
   public:
@@ -248,7 +247,7 @@ class QueryHeap
         return inserted_nodes[index].data;
     }
 
-    HeapNode& getHeapNode(NodeID node)
+    HeapNode &getHeapNode(NodeID node)
     {
         const auto index = node_index.peek_index(node);
         BOOST_ASSERT((int)index >= 0 && (int)index < (int)inserted_nodes.size());
@@ -294,27 +293,27 @@ class QueryHeap
         return inserted_nodes[index].node == node;
     }
 
-    boost::optional<HeapNode&> GetHeapNodeIfWasInserted(const NodeID node)
+    boost::optional<HeapNode &> GetHeapNodeIfWasInserted(const NodeID node)
     {
         const auto index = node_index.peek_index(node);
-        if (index >= static_cast<decltype(index)>(inserted_nodes.size()) || inserted_nodes[index].node!=node)
+        if (index >= static_cast<decltype(index)>(inserted_nodes.size()) ||
+            inserted_nodes[index].node != node)
         {
             return {};
         }
         return inserted_nodes[index];
     }
 
-    boost::optional<const HeapNode&> GetHeapNodeIfWasInserted(const NodeID node) const
+    boost::optional<const HeapNode &> GetHeapNodeIfWasInserted(const NodeID node) const
     {
         const auto index = node_index.peek_index(node);
-        if (index >= static_cast<decltype(index)>(inserted_nodes.size()) || inserted_nodes[index].node!=node)
+        if (index >= static_cast<decltype(index)>(inserted_nodes.size()) ||
+            inserted_nodes[index].node != node)
         {
             return {};
         }
         return inserted_nodes[index];
     }
-
-
 
     NodeID Min() const
     {
@@ -337,7 +336,7 @@ class QueryHeap
         return inserted_nodes[removedIndex].node;
     }
 
-    HeapNode& DeleteMinGetHeapNode()
+    HeapNode &DeleteMinGetHeapNode()
     {
         BOOST_ASSERT(!heap.empty());
         const Key removedIndex = heap.top().second;
@@ -364,7 +363,7 @@ class QueryHeap
         heap.increase(reference.handle, std::make_pair(weight, index));
     }
 
-    void DecreaseKey(const HeapNode& heapNode)
+    void DecreaseKey(const HeapNode &heapNode)
     {
         BOOST_ASSERT(!WasRemoved(heapNode.node));
         heap.increase(heapNode.handle, std::make_pair(heapNode.weight, (*heapNode.handle).second));
@@ -375,7 +374,7 @@ class QueryHeap
     HeapContainer heap;
     IndexStorage node_index;
 };
-}
-}
+} // namespace util
+} // namespace osrm
 
 #endif // OSRM_UTIL_QUERY_HEAP_HPP

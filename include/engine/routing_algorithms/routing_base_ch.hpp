@@ -24,7 +24,7 @@ namespace ch
 // Stalling
 template <bool DIRECTION, typename HeapT>
 bool stallAtNode(const DataFacade<Algorithm> &facade,
-                 const typename HeapT::HeapNode& heapNode,
+                 const typename HeapT::HeapNode &heapNode,
                  const HeapT &query_heap)
 {
     for (auto edge : facade.GetAdjacentEdgeRange(heapNode.node))
@@ -35,7 +35,7 @@ bool stallAtNode(const DataFacade<Algorithm> &facade,
             const NodeID to = facade.GetTarget(edge);
             const EdgeWeight edge_weight = data.weight;
             BOOST_ASSERT_MSG(edge_weight > 0, "edge_weight invalid");
-            const auto toHeapNode= query_heap.GetHeapNodeIfWasInserted(to);
+            const auto toHeapNode = query_heap.GetHeapNodeIfWasInserted(to);
             if (toHeapNode)
             {
                 if (toHeapNode->weight + edge_weight < heapNode.weight)
@@ -50,7 +50,7 @@ bool stallAtNode(const DataFacade<Algorithm> &facade,
 
 template <bool DIRECTION>
 void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
-                        const SearchEngineData<Algorithm>::QueryHeap::HeapNode& heapNode,
+                        const SearchEngineData<Algorithm>::QueryHeap::HeapNode &heapNode,
                         SearchEngineData<Algorithm>::QueryHeap &heap)
 {
     for (const auto edge : facade.GetAdjacentEdgeRange(heapNode.node))
@@ -75,7 +75,7 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
             {
                 // new parent
                 toHeapNode->data.parent = heapNode.node;
-                toHeapNode->weight=to_weight;
+                toHeapNode->weight = to_weight;
                 heap.DecreaseKey(*toHeapNode);
             }
         }
