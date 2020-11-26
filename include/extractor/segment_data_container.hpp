@@ -39,7 +39,7 @@ template <storage::Ownership Ownership>
 inline void write(storage::tar::FileWriter &writer,
                   const std::string &name,
                   const detail::SegmentDataContainerImpl<Ownership> &segment_data);
-}
+} // namespace serialization
 
 namespace detail
 {
@@ -221,11 +221,11 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
     SegmentDatasourceVector fwd_datasources;
     SegmentDatasourceVector rev_datasources;
 };
-}
+} // namespace detail
 
 using SegmentDataView = detail::SegmentDataContainerImpl<storage::Ownership::View>;
 using SegmentDataContainer = detail::SegmentDataContainerImpl<storage::Ownership::Container>;
-}
-}
+} // namespace extractor
+} // namespace osrm
 
 #endif

@@ -99,8 +99,8 @@ template <> class AlgorithmDataFacade<MLD>
     // searches for a specific edge
     virtual EdgeID FindEdge(const NodeID from, const NodeID to) const = 0;
 };
-}
-}
-}
+} // namespace datafacade
+} // namespace engine
+} // namespace osrm
 
 #endif

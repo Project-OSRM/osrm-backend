@@ -22,8 +22,8 @@ struct ParsedURL final
     std::size_t prefix_length;
 };
 
-} // api
-} // server
-} // osrm
+} // namespace api
+} // namespace server
+} // namespace osrm
 
 #endif

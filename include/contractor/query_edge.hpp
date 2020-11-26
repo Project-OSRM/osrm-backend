@@ -77,7 +77,7 @@ struct QueryEdge
                 data.distance == right.data.distance);
     }
 };
-}
-}
+} // namespace contractor
+} // namespace osrm
 
 #endif // QUERYEDGE_HPP

@@ -29,7 +29,7 @@ excludeFlagsToNodeFilter(const NodeID number_of_nodes,
     }
     return filters;
 }
-}
-}
+} // namespace util
+} // namespace osrm
 
 #endif

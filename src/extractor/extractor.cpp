@@ -552,9 +552,9 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
                 const auto &rel = static_cast<const osmium::Relation &>(*entity);
 
                 const char *rel_type = rel.get_value_by_key("type");
-                if (!rel_type ||
-                    !std::binary_search(
-                        relation_types.begin(), relation_types.end(), std::string(rel_type)))
+                if (!rel_type || !std::binary_search(relation_types.begin(),
+                                                     relation_types.end(),
+                                                     std::string(rel_type)))
                     continue;
 
                 ExtractionRelation extracted_rel({rel.id(), osmium::item_type::relation});

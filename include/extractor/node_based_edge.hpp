@@ -206,7 +206,7 @@ static_assert(sizeof(extractor::NodeBasedEdge) == 32,
               "bigger than expected. This will influence "
               "memory consumption.");
 
-} // ns extractor
-} // ns osrm
+} // namespace extractor
+} // namespace osrm
 
 #endif /* NODE_BASED_EDGE_HPP */

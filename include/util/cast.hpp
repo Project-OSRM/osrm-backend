@@ -42,8 +42,8 @@ template <typename T, int Precision = 6> inline std::string to_string_with_preci
 
     return rv;
 }
-}
-}
-}
+} // namespace cast
+} // namespace util
+} // namespace osrm
 
 #endif // CAST_HPP

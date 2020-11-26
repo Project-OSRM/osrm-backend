@@ -58,8 +58,9 @@ bool DrivewayHandler::canProcess(const NodeID /*nid*/,
     return static_cast<std::size_t>(low_priority_count) + 2 == intersection.size();
 }
 
-Intersection DrivewayHandler::
-operator()(const NodeID nid, const EdgeID source_edge_id, Intersection intersection) const
+Intersection DrivewayHandler::operator()(const NodeID nid,
+                                         const EdgeID source_edge_id,
+                                         Intersection intersection) const
 {
     auto road =
         std::find_if(intersection.begin() + 1, intersection.end(), [this](const auto &road) {

@@ -36,7 +36,7 @@ template <typename EdgeDataT, storage::Ownership Ownership>
 void write(storage::tar::FileWriter &writer,
            const std::string &name,
            const StaticGraph<EdgeDataT, Ownership> &graph);
-}
+} // namespace serialization
 
 namespace static_graph_details
 {

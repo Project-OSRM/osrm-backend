@@ -715,7 +715,7 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
     const CoordinateList &coordinates;
     DataFacadeT &datafacade;
 };
-}
-}
+} // namespace engine
+} // namespace osrm
 
 #endif

@@ -69,9 +69,7 @@ template <int N, typename T = std::string> struct VariableGroupBlock
     inline void
     var_advance(DataIterator &data, DataIterator &length, std::uint32_t byte_length) const
     {
-        if (byte_length == 0)
-        {
-        }
+        if (byte_length == 0) {}
         else if (byte_length == 1)
         {
             data += static_cast<unsigned char>(*length++);

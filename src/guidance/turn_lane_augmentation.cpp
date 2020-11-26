@@ -227,9 +227,8 @@ LaneDataVector handleRenamingSituations(const std::size_t none_index,
                 lane_data[none_index].to = lane_data[none_index].from;
             }
         }
-        else if (has_through &&
-                 (lane_data.size() == 1 ||
-                  lane_data[none_index + 1].tag != extractor::TurnLaneType::straight))
+        else if (has_through && (lane_data.size() == 1 || lane_data[none_index + 1].tag !=
+                                                              extractor::TurnLaneType::straight))
         {
             lane_data[none_index].tag = extractor::TurnLaneType::straight;
         }

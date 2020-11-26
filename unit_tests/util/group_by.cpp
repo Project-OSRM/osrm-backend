@@ -34,7 +34,7 @@ struct SubRangeCounter
     template <typename Range> void operator()(Range &&) { count += 1; }
     std::size_t count = 0;
 };
-}
+} // namespace
 
 BOOST_AUTO_TEST_CASE(grouped_empty_test)
 {

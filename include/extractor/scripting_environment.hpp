@@ -18,7 +18,7 @@ namespace osmium
 class Node;
 class Way;
 class Relation;
-}
+} // namespace osmium
 
 namespace osrm
 {
@@ -73,7 +73,7 @@ class ScriptingEnvironment
 
     virtual bool HasLocationDependentData() const = 0;
 };
-}
-}
+} // namespace extractor
+} // namespace osrm
 
 #endif /* SCRIPTING_ENVIRONMENT_HPP */

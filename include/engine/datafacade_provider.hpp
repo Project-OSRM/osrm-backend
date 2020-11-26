@@ -93,7 +93,7 @@ class WatchingProvider : public DataFacadeProvider<AlgorithmT, FacadeT>
         return watchdog.Get(params);
     }
 };
-}
+} // namespace detail
 
 template <typename AlgorithmT>
 using DataFacadeProvider = detail::DataFacadeProvider<AlgorithmT, DataFacade>;
@@ -103,7 +103,7 @@ template <typename AlgorithmT>
 using ImmutableProvider = detail::ImmutableProvider<AlgorithmT, DataFacade>;
 template <typename AlgorithmT>
 using ExternalProvider = detail::ExternalProvider<AlgorithmT, DataFacade>;
-}
-}
+} // namespace engine
+} // namespace osrm
 
 #endif

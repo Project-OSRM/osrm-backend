@@ -159,8 +159,8 @@ class NearestAPI final : public BaseAPI
     }
 };
 
-} // ns api
-} // ns engine
-} // ns osrm
+} // namespace api
+} // namespace engine
+} // namespace osrm
 
 #endif

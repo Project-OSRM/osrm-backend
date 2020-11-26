@@ -32,6 +32,6 @@ enum ErrorCode
     __ENDMARKER__
 #endif
 };
-}
+} // namespace osrm
 
 #endif // OSRM_ERRORCODES_HPP

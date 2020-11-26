@@ -87,7 +87,7 @@ class Percent
         }
     }
 };
-}
-}
+} // namespace util
+} // namespace osrm
 
 #endif // PERCENT_HPP

@@ -90,16 +90,10 @@ struct RouteParameters : public BaseParameters
                     Args... args_)
         // Once we perfectly-forward `args` (see #2990) this constructor can delegate to the one
         // below.
-        : BaseParameters{std::forward<Args>(args_)...},
-          steps{steps_},
-          alternatives{alternatives_},
-          number_of_alternatives{alternatives_ ? 1u : 0u},
-          annotations{false},
-          annotations_type{AnnotationsType::None},
-          geometries{geometries_},
-          overview{overview_},
-          continue_straight{continue_straight_},
-          waypoints()
+        : BaseParameters{std::forward<Args>(args_)...}, steps{steps_}, alternatives{alternatives_},
+          number_of_alternatives{alternatives_ ? 1u : 0u}, annotations{false},
+          annotations_type{AnnotationsType::None}, geometries{geometries_}, overview{overview_},
+          continue_straight{continue_straight_}, waypoints()
     {
     }
 
@@ -151,8 +145,8 @@ struct RouteParameters : public BaseParameters
         : BaseParameters{std::forward<Args>(args_)...}, steps{steps_}, alternatives{alternatives_},
           number_of_alternatives{alternatives_ ? 1u : 0u}, annotations{annotations_},
           annotations_type{annotations_ ? AnnotationsType::All : AnnotationsType::None},
-          geometries{geometries_}, overview{overview_}, continue_straight{continue_straight_},
-          waypoints{waypoints_}
+          geometries{geometries_}, overview{overview_},
+          continue_straight{continue_straight_}, waypoints{waypoints_}
     {
     }
 
@@ -217,8 +211,8 @@ inline RouteParameters::AnnotationsType operator|=(RouteParameters::AnnotationsT
 {
     return lhs = lhs | rhs;
 }
-} // ns api
-} // ns engine
-} // ns osrm
+} // namespace api
+} // namespace engine
+} // namespace osrm
 
 #endif
