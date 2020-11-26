@@ -46,7 +46,7 @@ inline bool operator==(const Bearing lhs, const Bearing rhs)
     return lhs.bearing == rhs.bearing && lhs.range == rhs.range;
 }
 inline bool operator!=(const Bearing lhs, const Bearing rhs) { return !(lhs == rhs); }
-}
-}
+} // namespace engine
+} // namespace osrm
 
 #endif

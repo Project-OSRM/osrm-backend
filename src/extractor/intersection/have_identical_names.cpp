@@ -25,6 +25,6 @@ bool HaveIdenticalNames(const NameID lhs,
            !util::guidance::requiresNameAnnounced(rhs, lhs, name_table, street_name_suffix_table);
 }
 
-} // namespace guidance
+} // namespace intersection
 } // namespace extractor
 } // namespace osrm

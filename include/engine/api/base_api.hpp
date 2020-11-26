@@ -128,8 +128,8 @@ class BaseAPI
     const BaseParameters &parameters;
 };
 
-} // ns api
-} // ns engine
-} // ns osrm
+} // namespace api
+} // namespace engine
+} // namespace osrm
 
 #endif

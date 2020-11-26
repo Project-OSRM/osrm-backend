@@ -16,7 +16,7 @@ using PackedOSMIDs = util::detail::PackedVector<OSMNodeID, 33, Ownership>;
 
 using PackedOSMIDsView = detail::PackedOSMIDs<storage::Ownership::View>;
 using PackedOSMIDs = detail::PackedOSMIDs<storage::Ownership::Container>;
-}
-}
+} // namespace extractor
+} // namespace osrm
 
 #endif

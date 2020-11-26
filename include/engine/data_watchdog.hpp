@@ -142,14 +142,14 @@ class DataWatchdogImpl<AlgorithmT, datafacade::ContiguousInternalMemoryDataFacad
     storage::SharedRegion *updatable_shared_region;
     DataFacadeFactory<datafacade::ContiguousInternalMemoryDataFacade, AlgorithmT> facade_factory;
 };
-}
+} // namespace detail
 
 // This class monitors the shared memory region that contains the pointers to
 // the data and layout regions that should be used. This region is updated
 // once a new dataset arrives.
 template <typename AlgorithmT, template <typename A> class FacadeT>
 using DataWatchdog = detail::DataWatchdogImpl<AlgorithmT, FacadeT<AlgorithmT>>;
-}
-}
+} // namespace engine
+} // namespace osrm
 
 #endif

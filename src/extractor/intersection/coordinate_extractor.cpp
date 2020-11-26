@@ -55,7 +55,7 @@ double GetOffsetCorrectionFactor(const RoadClassification &road_classification)
         return 1.0;
     };
 }
-}
+} // namespace
 
 CoordinateExtractor::CoordinateExtractor(
     const util::NodeBasedDynamicGraph &node_based_graph,
@@ -146,9 +146,8 @@ util::Coordinate CoordinateExtractor::ExtractRepresentativeCoordinate(
         // do the best of what we can.
         coordinates =
             TrimCoordinatesToLength(std::move(coordinates), LOOKAHEAD_DISTANCE_WITHOUT_LANES);
-        if (coordinates.size() > 2 &&
-            util::coordinate_calculation::haversineDistance(turn_coordinate, coordinates[1]) <
-                ASSUMED_LANE_WIDTH)
+        if (coordinates.size() > 2 && util::coordinate_calculation::haversineDistance(
+                                          turn_coordinate, coordinates[1]) < ASSUMED_LANE_WIDTH)
         {
             const auto initial_distance =
                 util::coordinate_calculation::haversineDistance(turn_coordinate, coordinates[1]);
@@ -442,7 +441,7 @@ CoordinateExtractor::ExtractCoordinateAtLength(const double distance,
     auto length_cache_itr = length_cache.begin() + 1;
     // find the end of the segment containing the coordinate which is at least distance away
     const auto find_coordinate_at_distance = [distance, &accumulated_distance, &length_cache_itr](
-        const util::Coordinate /*coordinate*/) mutable {
+                                                 const util::Coordinate /*coordinate*/) mutable {
         const auto result = (accumulated_distance + *length_cache_itr) >= distance;
         if (!result)
         {
@@ -474,20 +473,19 @@ util::Coordinate CoordinateExtractor::ExtractCoordinateAtLength(
     double accumulated_distance = 0.;
     // checks (via its state) for an accumulated distance
     const auto coordinate_at_distance =
-        [ distance, &accumulated_distance, last_coordinate = coordinates.front() ](
-            const util::Coordinate coordinate) mutable
-    {
-        const double segment_distance =
-            util::coordinate_calculation::haversineDistance(last_coordinate, coordinate);
-        const auto result = (accumulated_distance + segment_distance) >= distance;
-        if (!result)
-        {
-            accumulated_distance += segment_distance;
-            last_coordinate = coordinate;
-        }
+        [distance, &accumulated_distance, last_coordinate = coordinates.front()](
+            const util::Coordinate coordinate) mutable {
+            const double segment_distance =
+                util::coordinate_calculation::haversineDistance(last_coordinate, coordinate);
+            const auto result = (accumulated_distance + segment_distance) >= distance;
+            if (!result)
+            {
+                accumulated_distance += segment_distance;
+                last_coordinate = coordinate;
+            }
 
-        return result;
-    };
+            return result;
+        };
 
     // find the begin of the segment containing the coordinate
     const auto coordinate_after =
@@ -532,11 +530,12 @@ util::Coordinate CoordinateExtractor::GetCoordinateCloseToTurn(const NodeID from
         // OSM data has a tendency to include repeated nodes with identical coordinates. To skip
         // over these, we search for the first coordinate along the path that is at least a meter
         // away from the first entry
-        const auto far_enough_away = [start_coordinate, compressedGeometryToCoordinate](
-            const CompressedEdgeContainer::OnewayCompressedEdge &compressed_edge) {
-            return util::coordinate_calculation::haversineDistance(
-                       compressedGeometryToCoordinate(compressed_edge), start_coordinate) > 1;
-        };
+        const auto far_enough_away =
+            [start_coordinate, compressedGeometryToCoordinate](
+                const CompressedEdgeContainer::OnewayCompressedEdge &compressed_edge) {
+                return util::coordinate_calculation::haversineDistance(
+                           compressedGeometryToCoordinate(compressed_edge), start_coordinate) > 1;
+            };
 
         // find the first coordinate, that is at least unequal to the begin of the edge
         if (traversed_in_reverse)
@@ -893,19 +892,19 @@ CoordinateExtractor::PrepareLengthCache(const std::vector<util::Coordinate> &coo
     segment_distances.reserve(coordinates.size());
     segment_distances.push_back(0);
     // sentinel
-    std::find_if(std::next(std::begin(coordinates)), std::end(coordinates), [
-        last_coordinate = coordinates.front(),
-        limit,
-        &segment_distances,
-        accumulated_distance = 0.
-    ](const util::Coordinate current_coordinate) mutable {
-        const auto distance =
-            util::coordinate_calculation::haversineDistance(last_coordinate, current_coordinate);
-        accumulated_distance += distance;
-        last_coordinate = current_coordinate;
-        segment_distances.push_back(distance);
-        return accumulated_distance >= limit;
-    });
+    std::find_if(std::next(std::begin(coordinates)),
+                 std::end(coordinates),
+                 [last_coordinate = coordinates.front(),
+                  limit,
+                  &segment_distances,
+                  accumulated_distance = 0.](const util::Coordinate current_coordinate) mutable {
+                     const auto distance = util::coordinate_calculation::haversineDistance(
+                         last_coordinate, current_coordinate);
+                     accumulated_distance += distance;
+                     last_coordinate = current_coordinate;
+                     segment_distances.push_back(distance);
+                     return accumulated_distance >= limit;
+                 });
     return segment_distances;
 }
 

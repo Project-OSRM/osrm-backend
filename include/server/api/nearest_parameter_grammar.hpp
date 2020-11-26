@@ -18,7 +18,7 @@ namespace
 {
 namespace ph = boost::phoenix;
 namespace qi = boost::spirit::qi;
-}
+} // namespace
 
 template <typename Iterator = std::string::iterator,
           typename Signature = void(engine::api::NearestParameters &)>
@@ -40,8 +40,8 @@ struct NearestParametersGrammar final : public BaseParametersGrammar<Iterator, S
     qi::rule<Iterator, Signature> root_rule;
     qi::rule<Iterator, Signature> nearest_rule;
 };
-}
-}
-}
+} // namespace api
+} // namespace server
+} // namespace osrm
 
 #endif

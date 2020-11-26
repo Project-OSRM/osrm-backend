@@ -39,7 +39,7 @@ std::string getWrongOptionHelp(const engine::api::TripParameters &parameters)
 
     return help;
 }
-} // anon. ns
+} // namespace
 
 engine::Status TripService::RunQuery(std::size_t prefix_length,
                                      std::string &query,
@@ -80,6 +80,6 @@ engine::Status TripService::RunQuery(std::size_t prefix_length,
     }
     return BaseService::routing_machine.Trip(*parameters, result);
 }
-}
-}
-}
+} // namespace service
+} // namespace server
+} // namespace osrm

@@ -1,7 +1,6 @@
 #include "guidance/turn_instruction.hpp"
 
 #include "engine/plugins/plugin_base.hpp"
-#include "engine/plugins/plugin_base.hpp"
 #include "engine/plugins/tile.hpp"
 
 #include "util/coordinate_calculation.hpp"
@@ -661,7 +660,7 @@ void encodeVectorTile(const DataFacadeBase &facade,
 
     tile.serialize(pbf_buffer);
 }
-}
+} // namespace
 
 Status TilePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
                                  const api::TileParameters &parameters,
@@ -697,6 +696,6 @@ Status TilePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
 
     return Status::Ok;
 }
-}
-}
-}
+} // namespace plugins
+} // namespace engine
+} // namespace osrm

@@ -42,7 +42,7 @@ enum class Status
     Ok,
     Error
 };
-}
-}
+} // namespace engine
+} // namespace osrm
 
 #endif

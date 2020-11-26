@@ -57,5 +57,5 @@ bool operator==(const Hint &lhs, const Hint &rhs)
 
 std::ostream &operator<<(std::ostream &out, const Hint &hint) { return out << hint.ToBase64(); }
 
-} // ns engine
-} // ns osrm
+} // namespace engine
+} // namespace osrm

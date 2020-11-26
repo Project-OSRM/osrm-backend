@@ -31,7 +31,7 @@ inline auto makeCheckRoadForName(const NameID name_id,
                                  const SuffixTable &suffix_table)
 {
     return [name_id, &node_based_graph, &node_data_container, &name_table, &suffix_table](
-        const MergableRoadDetector::MergableRoadData &road) {
+               const MergableRoadDetector::MergableRoadData &road) {
         // since we filter here, we don't want any other name than the one we are looking for
         const auto road_name_id =
             node_data_container
@@ -49,7 +49,7 @@ inline auto makeCheckRoadForName(const NameID name_id,
         return requires_announcement;
     };
 }
-}
+} // namespace
 
 MergableRoadDetector::MergableRoadDetector(
     const util::NodeBasedDynamicGraph &node_based_graph,

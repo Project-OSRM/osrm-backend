@@ -82,7 +82,7 @@ template <typename Iterator> struct iso_8601_grammar : qi::grammar<Iterator, uns
     qi::uint_parser<unsigned, 10, 1, 2> uint_p;
     qi::uint_parser<unsigned, 10, 2, 2> uint2_p;
 };
-}
+} // namespace detail
 
 inline bool durationIsValid(const std::string &s)
 {
@@ -136,7 +136,7 @@ inline std::string canonicalizeStringList(std::string strlist, const std::string
     return strlist;
 }
 
-} // extractor
-} // osrm
+} // namespace extractor
+} // namespace osrm
 
 #endif // EXTRACTION_HELPER_FUNCTIONS_HPP

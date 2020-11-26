@@ -123,7 +123,7 @@ class RuntimeError : public exception
         return result;
     }
 };
-}
-}
+} // namespace util
+} // namespace osrm
 
 #endif /* OSRM_EXCEPTION_HPP */

@@ -34,7 +34,8 @@ namespace lanes
 
 namespace
 {
-typedef enum TurnLaneScenario {
+typedef enum TurnLaneScenario
+{
     SIMPLE,             // a straightforward assignment
     PARTITION_LOCAL,    // an assignment that requires partitioning, using local turns
     SIMPLE_PREVIOUS,    // an assignemtnn using the turns specified at the previous road (e.g.

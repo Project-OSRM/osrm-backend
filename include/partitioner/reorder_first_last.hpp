@@ -49,7 +49,7 @@ void reorderFirstLast(RandomAccessRange &rng, std::size_t n, Compare comp)
     return reorderFirstLast(begin(rng), end(rng), n, comp);
 }
 
-} // ns partition
-} // ns osrm
+} // namespace partitioner
+} // namespace osrm
 
 #endif

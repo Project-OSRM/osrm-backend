@@ -44,7 +44,7 @@ class Timezoner
     rtree_t rtree;
     std::vector<local_time_t> local_times;
 };
-}
-}
+} // namespace updater
+} // namespace osrm
 
 #endif

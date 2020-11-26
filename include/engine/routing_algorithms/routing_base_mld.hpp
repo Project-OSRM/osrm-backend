@@ -97,7 +97,6 @@ inline LevelID getNodeQueryLevel(const MultiLevelPartition &partition,
                                  const std::vector<std::size_t> &phantom_indices)
 {
     auto min_level = [&partition, node](const PhantomNode &phantom_node) {
-
         const auto &forward_segment = phantom_node.forward_segment_id;
         const auto forward_level =
             forward_segment.enabled ? partition.GetHighestDifferentLevel(node, forward_segment.id)
@@ -120,7 +119,7 @@ inline LevelID getNodeQueryLevel(const MultiLevelPartition &partition,
     }
     return result;
 }
-}
+} // namespace
 
 // Heaps only record for each node its predecessor ("parent") on the shortest path.
 // For re-constructing the actual path we need to trace back all parent "pointers".

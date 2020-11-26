@@ -73,7 +73,7 @@ class ExtractionContainers
                      const std::string &osrm_path,
                      const std::string &names_data_path);
 };
-}
-}
+} // namespace extractor
+} // namespace osrm
 
 #endif /* EXTRACTION_CONTAINERS_HPP */

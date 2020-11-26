@@ -95,7 +95,7 @@ filtered_irange(const Integer first,
 {
     return filtered_range<Integer, Filter>(first, last, filter);
 }
-}
-}
+} // namespace util
+} // namespace osrm
 
 #endif // INTEGER_RANGE_HPP

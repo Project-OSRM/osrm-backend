@@ -200,9 +200,9 @@ inline Result tidy(const MatchParameters &params, Thresholds cfg = {15., 5})
     return result;
 }
 
-} // ns tidy
-} // ns api
-} // ns engine
-} // ns osrm
+} // namespace tidy
+} // namespace api
+} // namespace engine
+} // namespace osrm
 
 #endif

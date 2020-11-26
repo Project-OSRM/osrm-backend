@@ -118,7 +118,7 @@ std::vector<CellMetric> customizeFilteredMetrics(const partitioner::MultiLevelEd
 
     return metrics;
 }
-}
+} // namespace
 
 int Customizer::Run(const CustomizationConfig &config)
 {
@@ -191,5 +191,5 @@ int Customizer::Run(const CustomizationConfig &config)
     return 0;
 }
 
-} // namespace customizer$
+} // namespace customizer
 } // namespace osrm

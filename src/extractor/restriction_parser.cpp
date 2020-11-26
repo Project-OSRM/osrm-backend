@@ -255,5 +255,5 @@ bool RestrictionParser::ShouldIgnoreRestriction(const std::string &except_tag_st
                    std::find(std::begin(restrictions), std::end(restrictions), current_string);
         });
 }
-}
-}
+} // namespace extractor
+} // namespace osrm

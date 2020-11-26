@@ -16,7 +16,7 @@ void append_to_container(Container &&container, T value, Args &&... args)
     container.emplace_back(value);
     append_to_container(std::forward<Container>(container), std::forward<Args>(args)...);
 }
-}
-}
+} // namespace util
+} // namespace osrm
 
 #endif

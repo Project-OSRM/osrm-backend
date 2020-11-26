@@ -586,8 +586,8 @@ void readCompressedNodeBasedGraph(const boost::filesystem::path &path, EdgeListT
 
     storage::serialization::read(reader, "/extractor/cnbg", edge_list);
 }
-}
-}
-}
+} // namespace files
+} // namespace extractor
+} // namespace osrm
 
 #endif

@@ -248,7 +248,7 @@ getIntersectionOutgoingGeometries(const util::NodeBasedDynamicGraph &graph,
     });
     return edge_geometries;
 }
-}
+} // namespace
 
 std::pair<IntersectionEdgeGeometries, std::unordered_set<EdgeID>>
 getIntersectionGeometries(const util::NodeBasedDynamicGraph &graph,
@@ -827,6 +827,6 @@ IntersectionEdge skipDegreeTwoNodes(const util::NodeBasedDynamicGraph &graph, In
 
     return road;
 }
-}
-}
-}
+} // namespace intersection
+} // namespace extractor
+} // namespace osrm

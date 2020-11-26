@@ -39,7 +39,7 @@ auto makeGraph(const std::vector<MockEdge> &mock_edges)
     std::sort(edges.begin(), edges.end());
     return DynamicEdgeBasedGraph(max_id + 1, edges);
 }
-}
+} // namespace
 
 BOOST_AUTO_TEST_SUITE(renumber_tests)
 

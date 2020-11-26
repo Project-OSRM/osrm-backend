@@ -132,7 +132,7 @@ BOOST_AUTO_TEST_CASE(simple_intersection_connectivity)
                       1, 0, 0, 1, // from node 1 to nodes 0 and 4
                       1, 1, 0, 1  // from node 3 to nodes 0, 1 and 4
                       // clang-format on
-                      );
+    );
     REQUIRE_SIZE_RANGE(connectivity_matrix(3), 0); // no incoming edges, empty matrix
     CHECK_EQUAL_RANGE(connectivity_matrix(4), 0);  // from node 2 not allowed U-turn
     CHECK_EQUAL_RANGE(connectivity_matrix(5),
@@ -140,14 +140,14 @@ BOOST_AUTO_TEST_CASE(simple_intersection_connectivity)
                       0, 1, // from node 0 to node 6
                       0, 1, // from node 6 a U-turn to node 6
                       // clang-format on
-                      );
+    );
 
     CHECK_EQUAL_RANGE(connectivity_matrix(6),
                       // clang-format off
                       1, 0, // from node 5 a U-turn to node 5
                       0, 1, // from node 7 a U-turn to node 7
                       // clang-format on
-                      );
+    );
 }
 
 BOOST_AUTO_TEST_CASE(roundabout_intersection_connectivity)
@@ -254,7 +254,7 @@ BOOST_AUTO_TEST_CASE(roundabout_intersection_connectivity)
                       0, 1, 0, 1, 0, 0, // from node 3 to nodes 2 and 4
                       0, 1, 0, 1, 0, 1  // from node 5 to nodes 2, 4 and 6
                       // clang-format on
-                      );
+    );
 }
 
 BOOST_AUTO_TEST_CASE(skip_degree_two_nodes)

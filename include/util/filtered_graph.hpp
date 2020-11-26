@@ -153,13 +153,13 @@ class FilteredGraphImpl<util::StaticGraph<EdgeDataT, Ownership>, Ownership>
     Graph graph;
     Vector<bool> edge_filter;
 };
-}
+} // namespace detail
 
 template <typename GraphT>
 using FilteredGraphContainer = detail::FilteredGraphImpl<GraphT, storage::Ownership::Container>;
 template <typename GraphT>
 using FilteredGraphView = detail::FilteredGraphImpl<GraphT, storage::Ownership::View>;
-}
-}
+} // namespace util
+} // namespace osrm
 
 #endif

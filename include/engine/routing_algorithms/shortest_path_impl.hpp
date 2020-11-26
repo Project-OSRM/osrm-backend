@@ -226,7 +226,7 @@ inline void initializeHeap<mld::Algorithm>(SearchEngineData<mld::Algorithm> &eng
     const auto border_nodes_number = facade.GetMaxBorderNodeID() + 1;
     engine_working_data.InitializeOrClearFirstThreadLocalStorage(nodes_number, border_nodes_number);
 }
-}
+} // namespace
 
 template <typename Algorithm>
 InternalRouteResult shortestPathSearch(SearchEngineData<Algorithm> &engine_working_data,

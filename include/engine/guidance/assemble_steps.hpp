@@ -35,7 +35,7 @@ std::pair<short, short> getDepartBearings(const LegGeometry &leg_geometry,
 std::pair<short, short> getArriveBearings(const LegGeometry &leg_geometry,
                                           const PhantomNode &target_node,
                                           const bool traversed_in_reverse);
-} // ns detail
+} // namespace detail
 
 inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &facade,
                                             const std::vector<PathData> &leg_data,

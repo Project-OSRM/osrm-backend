@@ -53,7 +53,7 @@ struct FirstAndLastSegmentOfWayCompare
     value_type max_value() { return FirstAndLastSegmentOfWay::max_value(); }
     value_type min_value() { return FirstAndLastSegmentOfWay::min_value(); }
 };
-}
-}
+} // namespace extractor
+} // namespace osrm
 
 #endif /* FIRST_AND_LAST_SEGMENT_OF_WAY_HPP */

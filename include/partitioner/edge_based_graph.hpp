@@ -53,7 +53,7 @@ struct DynamicEdgeBasedGraphEdge : DynamicEdgeBasedGraph::InputEdge
     using Base = DynamicEdgeBasedGraph::InputEdge;
     using Base::Base;
 };
-}
-}
+} // namespace partitioner
+} // namespace osrm
 
 #endif
