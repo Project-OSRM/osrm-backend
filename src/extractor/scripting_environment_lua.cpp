@@ -236,7 +236,7 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
 
     auto get_location_tag = [](auto &context, const auto &location, const char *key) {
         if (context.location_dependent_data.empty())
-            return sol::object(sol::lua_nil);
+            return sol::object(context.state);
 
         const LocationDependentData::point_t point{location.lon(), location.lat()};
         if (!boost::geometry::equals(context.last_location_point, point))
