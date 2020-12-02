@@ -927,7 +927,7 @@ std::vector<std::string>
 Sol2ScriptingEnvironment::GetStringListFromFunction(const std::string &function_name)
 {
     auto &context = GetSol2Context();
-    BOOST_ASSERT(context.state.lua_state() != nullptr);
+    BOOST_ASSERT(context.state.lua_state());
     std::vector<std::string> strings;
     sol::function function = context.state[function_name];
     if (function.valid())
@@ -943,7 +943,7 @@ Sol2ScriptingEnvironment::GetStringListFromTable(const std::string &table_name)
     auto &context = GetSol2Context();
     BOOST_ASSERT(context.state.lua_state() != nullptr);
     std::vector<std::string> strings;
-    if (context.profile_table[table_name] == nullptr)
+    if (context.profile_table[table_name])
     {
         return strings;
     }
