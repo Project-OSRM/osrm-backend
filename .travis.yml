@@ -5,7 +5,7 @@ git:
 
 # sudo:required is needed for trusty images
 sudo: required
-dist: trusty
+dist: xenial
 
 notifications:
   email: false
