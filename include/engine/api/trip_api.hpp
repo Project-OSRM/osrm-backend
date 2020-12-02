@@ -175,8 +175,8 @@ class TripAPI final : public RouteAPI
     const TripParameters &parameters;
 };
 
-} // ns api
-} // ns engine
-} // ns osrm
+} // namespace api
+} // namespace engine
+} // namespace osrm
 
 #endif

@@ -14,8 +14,8 @@ struct Route
     double duration;
     double weight;
 };
-}
-}
-}
+} // namespace guidance
+} // namespace engine
+} // namespace osrm
 
 #endif

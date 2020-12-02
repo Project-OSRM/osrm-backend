@@ -104,6 +104,6 @@ boost::asio::const_buffer reply::status_to_buffer(const reply::status_type statu
 }
 
 reply::reply() : status(ok) {}
-}
-}
-}
+} // namespace http
+} // namespace server
+} // namespace osrm

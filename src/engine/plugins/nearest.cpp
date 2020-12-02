@@ -60,6 +60,6 @@ Status NearestPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms
 
     return Status::Ok;
 }
-}
-}
-}
+} // namespace plugins
+} // namespace engine
+} // namespace osrm

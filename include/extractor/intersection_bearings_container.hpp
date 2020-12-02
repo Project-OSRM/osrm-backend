@@ -30,7 +30,7 @@ template <storage::Ownership Ownership>
 void write(storage::tar::FileWriter &writer,
            const std::string &name,
            const detail::IntersectionBearingsContainer<Ownership> &turn_data);
-}
+} // namespace serialization
 
 namespace detail
 {
@@ -99,12 +99,12 @@ template <storage::Ownership Ownership> class IntersectionBearingsContainer
     Vector<BearingClassID> node_to_class_id;
     RangeTable<16> class_id_to_ranges_table;
 };
-}
+} // namespace detail
 
 using IntersectionBearingsContainer =
     detail::IntersectionBearingsContainer<storage::Ownership::Container>;
 using IntersectionBearingsView = detail::IntersectionBearingsContainer<storage::Ownership::View>;
-}
-}
+} // namespace extractor
+} // namespace osrm
 
 #endif

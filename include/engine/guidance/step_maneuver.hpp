@@ -46,5 +46,5 @@ inline StepManeuver getInvalidStepManeuver()
 
 } // namespace guidance
 } // namespace engine
-} // namespace osrmn
+} // namespace osrm
 #endif

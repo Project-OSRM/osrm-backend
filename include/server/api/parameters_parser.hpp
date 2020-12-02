@@ -25,7 +25,7 @@ using is_parameter_t =
     std::integral_constant<bool,
                            std::is_base_of<engine::api::BaseParameters, T>::value ||
                                std::is_same<engine::api::TileParameters, T>::value>;
-} // ns detail
+} // namespace detail
 
 // Starts parsing and iter and modifies it until iter == end or parsing failed
 template <typename ParameterT,
@@ -43,8 +43,8 @@ boost::optional<ParameterT> parseParameters(std::string options_string)
     return parseParameters<ParameterT>(first, last);
 }
 
-} // ns api
-} // ns server
-} // ns osrm
+} // namespace api
+} // namespace server
+} // namespace osrm
 
 #endif

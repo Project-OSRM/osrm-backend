@@ -106,8 +106,8 @@ inline void writeGraph(const boost::filesystem::path &path,
     writer.WriteFrom("/mld/connectivity_checksum", connectivity_checksum);
     serialization::write(writer, "/mld/multilevelgraph", graph);
 }
-}
-}
-}
+} // namespace files
+} // namespace customizer
+} // namespace osrm
 
 #endif

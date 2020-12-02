@@ -22,11 +22,11 @@ template <storage::Ownership Ownership> struct CellMetricImpl
     Vector<EdgeDuration> durations;
     Vector<EdgeDistance> distances;
 };
-}
+} // namespace detail
 
 using CellMetric = detail::CellMetricImpl<storage::Ownership::Container>;
 using CellMetricView = detail::CellMetricImpl<storage::Ownership::View>;
-}
-}
+} // namespace customizer
+} // namespace osrm
 
 #endif

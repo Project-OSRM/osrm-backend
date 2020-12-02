@@ -131,8 +131,10 @@ class BasePlugin
                 return phantom_pair.first;
             };
 
-        const auto use_closed_phantom = [](
-            const std::pair<PhantomNode, PhantomNode> &phantom_pair) { return phantom_pair.first; };
+        const auto use_closed_phantom =
+            [](const std::pair<PhantomNode, PhantomNode> &phantom_pair) {
+                return phantom_pair.first;
+            };
 
         const bool every_phantom_is_in_tiny_cc = std::all_of(std::begin(phantom_node_pair_list),
                                                              std::end(phantom_node_pair_list),
@@ -388,8 +390,8 @@ class BasePlugin
                std::to_string(missing_index);
     }
 };
-}
-}
-}
+} // namespace plugins
+} // namespace engine
+} // namespace osrm
 
 #endif /* BASE_PLUGIN_HPP */

@@ -558,7 +558,7 @@ bool viaNodeCandidatePassesTTest(SearchEngineData<Algorithm> &engine_working_dat
     }
     return (upper_bound <= t_test_path_weight);
 }
-} // anon. namespace
+} // namespace
 
 InternalManyRoutesResult alternativePathSearch(SearchEngineData<Algorithm> &engine_working_data,
                                                const DataFacade<Algorithm> &facade,
@@ -853,4 +853,4 @@ InternalManyRoutesResult alternativePathSearch(SearchEngineData<Algorithm> &engi
 
 } // namespace routing_algorithms
 } // namespace engine
-} // namespace osrm}
+} // namespace osrm

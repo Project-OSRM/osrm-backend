@@ -54,7 +54,7 @@ class RestrictionParser
     bool parse_conditionals;
     std::vector<std::string> restrictions;
 };
-}
-}
+} // namespace extractor
+} // namespace osrm
 
 #endif /* RESTRICTION_PARSER_HPP */

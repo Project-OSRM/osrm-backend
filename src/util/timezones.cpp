@@ -162,5 +162,5 @@ boost::optional<struct tm> Timezoner::operator()(const point_t &point) const
     }
     return boost::none;
 }
-}
-}
+} // namespace updater
+} // namespace osrm

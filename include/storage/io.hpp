@@ -388,8 +388,8 @@ class BufferWriter
   private:
     std::ostringstream output_stream;
 };
-} // ns io
-} // ns storage
-} // ns osrm
+} // namespace io
+} // namespace storage
+} // namespace osrm
 
 #endif

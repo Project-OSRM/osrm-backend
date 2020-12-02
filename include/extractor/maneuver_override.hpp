@@ -71,19 +71,19 @@ struct UnresolvedManeuverOverride
     // check if all parts of the restriction reference an actual node
     bool Valid() const
     {
-        return !turn_sequence.empty() && std::none_of(turn_sequence.begin(),
-                                                      turn_sequence.end(),
-                                                      [](const auto &n) {
-                                                          return n.from == SPECIAL_NODEID ||
-                                                                 n.via == SPECIAL_NODEID ||
-                                                                 n.to == SPECIAL_NODEID;
-                                                      }) &&
+        return !turn_sequence.empty() &&
+               std::none_of(turn_sequence.begin(),
+                            turn_sequence.end(),
+                            [](const auto &n) {
+                                return n.from == SPECIAL_NODEID || n.via == SPECIAL_NODEID ||
+                                       n.to == SPECIAL_NODEID;
+                            }) &&
                (direction != guidance::DirectionModifier::MaxDirectionModifier ||
                 override_type != guidance::TurnType::Invalid);
     }
 };
-}
-}
+} // namespace extractor
+} // namespace osrm
 
 // custom specialization of std::hash can be injected in namespace std
 namespace std
@@ -104,7 +104,7 @@ template <> struct hash<osrm::extractor::NodeBasedTurn>
         return seed;
     }
 };
-}
+} // namespace std
 
 #endif
 /*

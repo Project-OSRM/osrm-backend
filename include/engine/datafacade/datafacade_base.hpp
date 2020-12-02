@@ -223,8 +223,8 @@ class BaseDataFacade
     virtual std::vector<extractor::ManeuverOverride>
     GetOverridesThatStartAt(const NodeID edge_based_node_id) const = 0;
 };
-}
-}
-}
+} // namespace datafacade
+} // namespace engine
+} // namespace osrm
 
 #endif // DATAFACADE_BASE_HPP

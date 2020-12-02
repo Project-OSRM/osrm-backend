@@ -52,8 +52,8 @@ inline void writeGraph(const boost::filesystem::path &path,
         serialization::write(writer, "/ch/metrics/" + pair.first, pair.second);
     }
 }
-}
-}
-}
+} // namespace files
+} // namespace contractor
+} // namespace osrm
 
 #endif

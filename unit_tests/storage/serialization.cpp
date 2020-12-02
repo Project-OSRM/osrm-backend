@@ -150,7 +150,11 @@ BOOST_AUTO_TEST_CASE(tar_serialize_deallocting_vector)
 BOOST_AUTO_TEST_CASE(buffer_serialize_map)
 {
     std::map<std::string, std::int32_t> map = {
-        {"foo", 1}, {"barrrr", 2}, {"bal", 3}, {"bazbar", 4}, {"foofofofo", 5},
+        {"foo", 1},
+        {"barrrr", 2},
+        {"bal", 3},
+        {"bazbar", 4},
+        {"foofofofo", 5},
     };
 
     std::string buffer;

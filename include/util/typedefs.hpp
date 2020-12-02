@@ -48,7 +48,7 @@ struct osm_way_id
 struct duplicated_node
 {
 };
-}
+} // namespace tag
 using OSMNodeID = osrm::Alias<std::uint64_t, tag::osm_node_id>;
 static_assert(std::is_pod<OSMNodeID>(), "OSMNodeID is not a valid alias");
 using OSMWayID = osrm::Alias<std::uint64_t, tag::osm_way_id>;

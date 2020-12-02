@@ -37,7 +37,7 @@ template <typename T, std::size_t Bits, storage::Ownership Ownership>
 inline void write(storage::tar::FileWriter &writer,
                   const std::string &name,
                   const detail::PackedVector<T, Bits, Ownership> &vec);
-}
+} // namespace serialization
 
 namespace detail
 {
@@ -546,13 +546,13 @@ template <typename T, std::size_t Bits, storage::Ownership Ownership> class Pack
     util::ViewOrVector<WordT, Ownership> vec;
     std::uint64_t num_elements = 0;
 };
-}
+} // namespace detail
 
 template <typename T, std::size_t Bits>
 using PackedVector = detail::PackedVector<T, Bits, storage::Ownership::Container>;
 template <typename T, std::size_t Bits>
 using PackedVectorView = detail::PackedVector<T, Bits, storage::Ownership::View>;
-}
-}
+} // namespace util
+} // namespace osrm
 
 #endif /* PACKED_VECTOR_HPP */

@@ -443,9 +443,8 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
         auto new_duration = source_duration + target_duration;
         auto new_distance = source_distance + target_distance;
 
-        if (new_weight >= 0 &&
-            std::tie(new_weight, new_duration, new_distance) <
-                std::tie(current_weight, current_duration, current_distance))
+        if (new_weight >= 0 && std::tie(new_weight, new_duration, new_distance) <
+                                   std::tie(current_weight, current_duration, current_distance))
         {
             current_weight = new_weight;
             current_duration = new_duration;

@@ -33,7 +33,7 @@ std::string getWrongOptionHelp(const engine::api::NearestParameters &parameters)
 
     return help;
 }
-} // anon. ns
+} // namespace
 
 engine::Status NearestService::RunQuery(std::size_t prefix_length,
                                         std::string &query,
@@ -72,6 +72,6 @@ engine::Status NearestService::RunQuery(std::size_t prefix_length,
     }
     return BaseService::routing_machine.Nearest(*parameters, result);
 }
-}
-}
-}
+} // namespace service
+} // namespace server
+} // namespace osrm

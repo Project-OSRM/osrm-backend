@@ -38,7 +38,7 @@ using BinaryFromBase64 = boost::archive::iterators::transform_width<
     8, // get a view of 8 bit
     6  // from a sequence of 6 bit
     >;
-} // ns detail
+} // namespace detail
 namespace engine
 {
 
@@ -135,7 +135,7 @@ template <typename T> T decodeBase64Bytewise(const std::string &encoded)
     return x;
 }
 
-} // ns engine
-} // ns osrm
+} // namespace engine
+} // namespace osrm
 
 #endif /* OSRM_BASE64_HPP */

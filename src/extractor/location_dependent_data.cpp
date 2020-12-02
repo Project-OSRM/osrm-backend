@@ -218,7 +218,6 @@ std::vector<std::size_t> LocationDependentData::GetPropertyIndexes(const point_t
     // Search the R-tree and collect a Lua table of tags that correspond to the location
     rtree.query(boost::geometry::index::intersects(point) &&
                     boost::geometry::index::satisfies([this, &point](const rtree_t::value_type &v) {
-
                         // Simple point-in-polygon algorithm adapted from
                         // https://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
 
@@ -276,5 +275,5 @@ std::vector<std::size_t> LocationDependentData::GetPropertyIndexes(const point_t
 
     return result;
 }
-}
-}
+} // namespace extractor
+} // namespace osrm

@@ -70,12 +70,12 @@ SelectRoadByNameOnlyChoiceAndStraightness::SelectRoadByNameOnlyChoiceAndStraight
 {
 }
 
-boost::optional<EdgeID> SelectRoadByNameOnlyChoiceAndStraightness::
-operator()(const NodeID /*nid*/,
-           const EdgeID /*via_edge_id*/,
-           const IntersectionView &intersection,
-           const util::NodeBasedDynamicGraph &node_based_graph,
-           const EdgeBasedNodeDataContainer &node_data_container) const
+boost::optional<EdgeID> SelectRoadByNameOnlyChoiceAndStraightness::operator()(
+    const NodeID /*nid*/,
+    const EdgeID /*via_edge_id*/,
+    const IntersectionView &intersection,
+    const util::NodeBasedDynamicGraph &node_based_graph,
+    const EdgeBasedNodeDataContainer &node_data_container) const
 {
     BOOST_ASSERT(!intersection.empty());
     const auto comparator = [&](const IntersectionViewData &lhs, const IntersectionViewData &rhs) {
@@ -120,12 +120,12 @@ SelectStraightmostRoadByNameAndOnlyChoice::SelectStraightmostRoadByNameAndOnlyCh
 {
 }
 
-boost::optional<EdgeID> SelectStraightmostRoadByNameAndOnlyChoice::
-operator()(const NodeID /*nid*/,
-           const EdgeID /*via_edge_id*/,
-           const IntersectionView &intersection,
-           const util::NodeBasedDynamicGraph &node_based_graph,
-           const EdgeBasedNodeDataContainer &node_data_container) const
+boost::optional<EdgeID> SelectStraightmostRoadByNameAndOnlyChoice::operator()(
+    const NodeID /*nid*/,
+    const EdgeID /*via_edge_id*/,
+    const IntersectionView &intersection,
+    const util::NodeBasedDynamicGraph &node_based_graph,
+    const EdgeBasedNodeDataContainer &node_data_container) const
 {
     BOOST_ASSERT(!intersection.empty());
     if (intersection.size() == 1)

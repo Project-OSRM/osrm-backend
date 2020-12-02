@@ -9,7 +9,8 @@
 
 #include <boost/filesystem/path.hpp>
 
-extern "C" {
+extern "C"
+{
 #include "microtar.h"
 }
 
@@ -70,7 +71,7 @@ checkMTarError(int error_code, const boost::filesystem::path &filepath, const st
         throw util::exception(filepath.string() + " : " + name + ":" + mtar_strerror(error_code));
     }
 }
-}
+} // namespace detail
 
 class FileReader
 {
@@ -311,8 +312,8 @@ class FileWriter
     boost::filesystem::path path;
     mtar_t handle;
 };
-}
-}
-}
+} // namespace tar
+} // namespace storage
+} // namespace osrm
 
 #endif

@@ -27,8 +27,8 @@ class TablePlugin final : public BasePlugin
   private:
     const int max_locations_distance_table;
 };
-}
-}
-}
+} // namespace plugins
+} // namespace engine
+} // namespace osrm
 
 #endif // TABLE_HPP

@@ -44,7 +44,7 @@ void annotateTurns(const util::NodeBasedDynamicGraph &node_based_graph,
                    EntryClassesMap &entry_class_hash,
                    std::uint32_t &connectivity_checksum);
 
-} // namespace customizer
+} // namespace guidance
 } // namespace osrm
 
 #endif

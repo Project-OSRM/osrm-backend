@@ -77,6 +77,6 @@ inline void validateFeature(const rapidjson::Value &feature)
     if (coord_array.Empty())
         throw osrm::util::exception("Feature geometry coordinates member is empty.");
 }
-}
-}
+} // namespace util
+} // namespace osrm
 #endif // OSRM_GEOJSON_VALIDATION_HPP
