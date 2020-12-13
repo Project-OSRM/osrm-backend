@@ -1,0 +1,18 @@
+@import url('haiku.css');
+
+.header-left {
+	float: left;
+	display: inline-block;
+	vertical-align: top;
+}
+
+.header-right {
+	float: right;
+	display: inline-block;
+	vertical-align: top;
+}
+
+.header-right h3 {
+	margin: 0;
+    padding-top: 15px;
+}

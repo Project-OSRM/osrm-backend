@@ -12,7 +12,7 @@
 #include <mutex>
 #include <string>
 
-#include <sol2/sol.hpp>
+#include <sol.hpp>
 
 namespace osrm
 {

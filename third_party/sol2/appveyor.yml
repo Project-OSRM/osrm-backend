@@ -1,0 +1,174 @@
+# # # # sol2
+# The MIT License (MIT)
+# 
+# Copyright (c) 2013-2018 Rapptz, ThePhD, and contributors
+# 
+# Permission is hereby granted, free of charge, to any person obtaining a copy of
+# this software and associated documentation files (the "Software"), to deal in
+# the Software without restriction, including without limitation the rights to
+# use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+# the Software, and to permit persons to whom the Software is furnished to do so,
+# subject to the following conditions:
+# 
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+# FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+# COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+# IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+version: 2.20.0-{build}
+
+max_jobs: 4
+
+pull_requests:
+  do_not_increment_build_number: true
+
+# Ordering is important!
+# specifying VS 2015 first makes all the 2015 jobs run first
+# we need this so the MinGW jobs can run first
+# In general, the matrix seems to order by appearance of first-order
+# dimensions (Image, Platform, Configuration) and then 
+# the order of whatever elements are in the matrix
+image:
+- Visual Studio 2015
+- Visual Studio 2017
+
+# Run x64 first, x86 second
+platform:
+- x64
+- x86
+
+environment:
+  matrix:
+    # apparently, I can't quite make LLVM work right now...
+  #- LUA_VERSION: 5.3.4
+  #  LLVM_VERSION: 4.0.0
+  - LUA_VERSION: 5.3.4
+    MINGW_VERSION: 7.2.0
+  - LUA_VERSION: 5.3.4
+    MINGW_VERSION: 6.3.0
+  - LUA_VERSION: luajit-2.0.5
+    MINGW_VERSION: 6.3.0
+  - LUA_VERSION: luajit-2.1.0-beta3
+    MINGW_VERSION: 6.3.0
+  - LUA_VERSION: 5.3.4
+  - LUA_VERSION: 5.2.4
+  - LUA_VERSION: 5.1.5
+  - LUA_VERSION: luajit-2.0.5
+  - LUA_VERSION: luajit-2.1.0-beta3
+
+matrix:
+  allow_failures:
+    # 32-bit builds are temperamental with exceptions
+    - platform: x86
+    # Visual Studio 2015 builds are allowed to fail, since I have no intention of dealing with bad old builds
+    - image: Visual Studio 2015
+    # LLVM is experimental as all get-out
+    - LLVM_VERSION: 4.0.0
+  exclude:
+    # Necessary: MinGW doesn't exist on VS 2017 images
+    # Also does not have MinGW x64 for 5.3.0
+    - image: Visual Studio 2017
+      MINGW_VERSION: 6.3.0
+    # LLVM exists in all images, and we only want the VS 2017 x64 versions
+    - image: Visual Studio 2015
+      LLVM_VERSION: 4.0.0
+    - platform: x86
+      LLVM_VERSION: 4.0.0
+    # Get rid of x86 builds
+    - platform: x86
+      LUA_VERSION: 5.2.4
+    - platform: x86
+      LUA_VERSION: 5.1.5
+    - platform: x86
+      MINGW_VERSION: 7.2.0
+    # Get rid of redundant Visual Studio 2015 builds
+    - image: Visual Studio 2015
+      LUA_VERSION: 5.1.5
+    - image: Visual Studio 2015
+      LUA_VERSION: 5.2.4
+
+init:
+# # Ninja
+  # make sure we have Ninja
+- set top_level=%cd%
+- cd ..
+- md tools
+- cd tools
+- set ninja_path=%cd%\ninja
+- set NINJA_URL="https://github.com/ninja-build/ninja/releases/download/v1.8.2/ninja-win.zip"
+- appveyor DownloadFile %NINJA_URL% -FileName ninja.zip
+- 7z x ninja.zip -o%cd%\ninja
+- cd "%top_level%"
+# # PATH
+  # manipulations to manupulations need to be done here
+- set python_path=C:\Python36
+- set mingw_path=
+- set llvm_path=
+- if "%MINGW_VERSION%"=="5.3.0" (set mingw_path=C:\mingw-w64\i686-5.3.0-posix-dwarf-rt_v4-rev0\mingw32\bin)
+- if "%MINGW_VERSION%"=="6.3.0" (if "%PLATFORM%"=="x64" (set mingw_path=C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1\mingw64\bin) else ( set mingw_path=C:\mingw-w64\i686-6.3.0-posix-dwarf-rt_v5-rev1\mingw32\bin))
+- if "%MINGW_VERSION%"=="7.2.0" (if "%PLATFORM%"=="x64" (set mingw_path=C:\mingw-w64\x86_64-7.2.0-posix-seh-rt_v5-rev1\mingw64\bin) else ( set mingw_path=C:\mingw-w64\i686-7.2.0-posix-seh-rt_v5-rev1\mingw32\bin))
+- if "%LLVM_VERSION%"=="4.0.0" (set llvm_path=C:\Program Files\LLVM\bin)
+- if "%PLATFORM%"=="x64" (set python_path=C:\Python36-x64)
+- set PATH=%python_path%;%PATH%
+- set PATH=%mingw_path%;%PATH%
+- set PATH=%llvm_path%;%PATH%
+- set PATH=%ninja_path%;%PATH%
+- echo PATH=%PATH%
+# # Generators and CMake arguments
+  # configure the generator appropriately
+- set arch=
+- set parallelism=
+- set logger=
+- set build_type=
+- set build_compiler=
+- set lua_build_type=OFF
+- set vcvars_script="C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" amd64
+- if "%PLATFORM%"=="x64" (set arch= Win64)
+- if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2017" (set CMAKE_GENERATOR=Visual Studio 15 2017%arch%&&set parallelism=/maxcpucount&&set logger=/verbosity:quiet /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"&&set vcvars_script="C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat")
+- if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2015" (set CMAKE_GENERATOR=Visual Studio 14 2015%arch%&&set parallelism=/maxcpucount&&set logger=/verbosity:quiet /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll")
+- if "%MINGW_VERSION%"=="5.3.0" (set CMAKE_GENERATOR=Ninja&&set parallelism= &&set logger= &&set build_type=-DCMAKE_BUILD_TYPE=Release&&set build_compiler=-DCMAKE_CXX_COMPILER=g++.exe -DCMAKE_C_COMPILER=gcc.exe)
+- if "%MINGW_VERSION%"=="6.3.0" (set CMAKE_GENERATOR=Ninja&&set parallelism= &&set logger= &&set build_type=-DCMAKE_BUILD_TYPE=Release&&set build_compiler=-DCMAKE_CXX_COMPILER=g++.exe -DCMAKE_C_COMPILER=gcc.exe)
+- if "%MINGW_VERSION%"=="7.2.0" (set CMAKE_GENERATOR=Ninja&&set parallelism= &&set logger= &&set build_type=-DCMAKE_BUILD_TYPE=Release&&set build_compiler=-DCMAKE_CXX_COMPILER=g++.exe -DCMAKE_C_COMPILER=gcc.exe)
+- if "%LLVM_VERSION%"=="4.0.0"  (set CMAKE_GENERATOR=Ninja&&set parallelism= &&set logger= &&set build_type=-DCMAKE_BUILD_TYPE=Release&&set build_compiler=-DCMAKE_CXX_COMPILER=clang-cl.exe -DCMAKE_C_COMPILER=clang-cl.exe)
+# # Last printouts
+  # print out generator information
+- echo Appveyor Image is %APPVEYOR_BUILD_WORKER_IMAGE% (vcvars script is %vcvars_script%)
+- echo cmake generator is %CMAKE_GENERATOR% using build_type=%build_type% and build_compiler=%build_compiler% with special flags logger=%logger% parallelism=%parallelism%
+  # print out useful tool information
+- ninja --version
+- cmake --version
+- if DEFINED LLVM_VERSION (clang-cl.exe -v)
+- if DEFINED MINGW_VERSION (g++.exe --version)
+
+# We need to use CMAKE_BUILD_TYPE=Release since there are no "configuration"
+# toolsets for Ninja or Makefiles as far as cmake is concerned, so 
+# the --config / -C switches on builds do nothing...!
+before_build:
+- if DEFINED LLVM_VERSION (call %vcvars_script% && cd C:\projects\sol2)
+- md build-sol2
+- cd build-sol2
+- cmake .. -G "%CMAKE_GENERATOR%" %build_type% %build_compiler% -DLUA_VERSION="%LUA_VERSION%" -DCI=ON -DBUILD_LUA=ON -DBUILD_LUA_AS_DLL=%lua_build_type% -DTESTS=ON -DEXAMPLES=ON -DSINGLE=ON -DTESTS_EXAMPLES=ON -DEXAMPLES_SINGLE=ON -DTESTS_SINGLE=ON
+
+# We do not build the debug versions because the compiler
+# generates too much debug info for MinGW to handle
+# TODO: fix the damn compilation space and time already
+build_script:
+- if NOT "%build_type%"=="-DCMAKE_BUILD_TYPE=Release" (cmake --build . --config Debug -- %parallelism% %logger%)
+- cmake --build . --config Release -- %parallelism% %logger%
+
+test_script:
+- if NOT "%build_type%"=="-DCMAKE_BUILD_TYPE=Release" (ctest -C Debug --output-on-failure)
+- ctest -C Release --output-on-failure
+
+notifications:
+- provider: Webhook
+  url: https://webhooks.gitter.im/e/1af10e654a918bef7f1e
+  method: POST
+  on_build_success: true
+  on_build_failure: true
+  on_build_status_changed: true
