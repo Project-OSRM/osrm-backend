@@ -1,13 +1,13 @@
 --
 -- Fetch a way from the OpenStreetMap API and run the given profile over it.
 --
--- You'll need to install luasec and xml2lua first:
---    > luarocks-5.1 install xml2lua
---    > luarocks-5.1 install luasec
--- [may require admin privileges]
--- 
+-- You'll need to install xml2lua first (may require admin privileges):
+--    > luarocks install xml2lua
+--
+-- You may also need to install luasec and luasocket if you don't have them already.
+--
 -- Then to test way 2606296 using the foot profile:
---    > lua5.1 debug_way.lua foot 2606296
+--    > lua debug_way.lua foot 2606296
 --
 
 -- initialise libraries
