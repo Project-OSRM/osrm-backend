@@ -177,9 +177,9 @@ matrix:
 
     - os: osx
       osx_image: xcode9.2
-      compiler: "mason-osx-release-node-8"
+      compiler: "mason-osx-release-node-14"
       # we use the xcode provides clang and don't install our own
-      env: ENABLE_MASON=ON BUILD_TYPE='Release' CUCUMBER_TIMEOUT=60000 CCOMPILER='clang' CXXCOMPILER='clang++' ENABLE_ASSERTIONS=ON ENABLE_LTO=ON NODE="8"
+      env: ENABLE_MASON=ON BUILD_TYPE='Release' CUCUMBER_TIMEOUT=60000 CCOMPILER='clang' CXXCOMPILER='clang++' ENABLE_ASSERTIONS=ON ENABLE_LTO=ON NODE="14"
       after_success:
         - ./scripts/travis/publish.sh
 
@@ -195,12 +195,12 @@ matrix:
     # Node build jobs. These skip running the tests.
     - os: linux
       sudo: false
-      compiler: "node-8-mason-linux-release"
+      compiler: "node-14-mason-linux-release"
       addons:
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['libstdc++-4.9-dev']
-      env: CLANG_VERSION='5.0.0' BUILD_TYPE='Release' ENABLE_MASON=ON ENABLE_LTO=ON JOBS=3 NODE="8"
+      env: CLANG_VERSION='5.0.0' BUILD_TYPE='Release' ENABLE_MASON=ON ENABLE_LTO=ON JOBS=3 NODE="14"
       install:
         - pushd ${OSRM_BUILD_DIR}
         - |
@@ -219,12 +219,12 @@ matrix:
 
     - os: linux
       sudo: false
-      compiler: "node-8-mason-linux-debug"
+      compiler: "node-14-mason-linux-debug"
       addons:
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['libstdc++-4.9-dev']
-      env: CLANG_VERSION='5.0.0' BUILD_TYPE='Debug' ENABLE_MASON=ON ENABLE_LTO=ON JOBS=3 NODE="8"
+      env: CLANG_VERSION='5.0.0' BUILD_TYPE='Debug' ENABLE_MASON=ON ENABLE_LTO=ON JOBS=3 NODE="14"
       install:
         - pushd ${OSRM_BUILD_DIR}
         - |
