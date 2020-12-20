@@ -329,6 +329,9 @@ template <typename GroupBlockPolicy, storage::Ownership Ownership> struct Indexe
     // Return value at the given index
     ResultType at(std::uint32_t index) const
     {
+        if (values.empty())
+            return ResultType();
+
         // Get block external ad internal indices
         const BlocksNumberType block_idx = index / (BLOCK_SIZE + 1);
         const std::uint32_t internal_idx = index % (BLOCK_SIZE + 1);
